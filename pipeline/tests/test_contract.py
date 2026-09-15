@@ -277,13 +277,35 @@ def test_history_requires_a_name_or_a_photo_link_and_drops_small_memorials():
 def test_getting_there_leaves_out_heritage_railways_and_keeps_the_bike_tags():
     """A museum tram stop is a day out, not a way to get somewhere with a bike:
     node/521261183 Medemblik is railway=station usage=tourism. In the NL
-    extract 44 F points carry usage=tourism and 3 usage=leisure. The bike tags
+    extract 44 F points carry usage=tourism and 3 usage=leisure. A ferry that
+    takes no bikes (bicycle=no) gets no cyclist anywhere either: 80 NL F points,
+    such as Veerdienst Zuiderzeemuseum. The bike tags
     are what the drawer's Bikes on board row reads (coverage-provider.md §5):
     368 of 580 NL ferry routes carry `bicycle`."""
     contract = load_contract()
-    assert contract.letters["F"].exclude_tag_values == {"usage": ["leisure", "tourism"]}
+    assert contract.letters["F"].exclude_tag_values == {
+        "bicycle": ["no"], "cc:bicycle_from_route": ["no"], "usage": ["leisure", "tourism"]}
     assert contract.letters["F"].name_or_tags is None
     assert {"bicycle", "bicycle:fee", "usage"} <= set(contract.stored_tag_keys)
+
+
+def test_getting_there_stores_the_ferry_facts_and_what_a_dock_inherits():
+    """A dock takes the bike answer of the ferry routes that end at it
+    (parse.py), stored under its own keys so the drawer never mistakes it for
+    the dock's own tag. A ferry route's crossing time, season and toll are
+    drawer rows (coverage-provider.md §5). NL 2026-09-15: 125 of 575 ferry
+    routes carry `duration`, 110 `seasonal`, 199 `toll`."""
+    from coverage.contract import ROUTE_INHERITED_TAG_KEYS
+    assert ROUTE_INHERITED_TAG_KEYS == frozenset(
+        {"cc:bicycle:fee_from_route", "cc:bicycle_from_route", "cc:ferry_route"})
+    assert ROUTE_INHERITED_TAG_KEYS | {"duration", "seasonal", "toll"} <= set(load_contract().stored_tag_keys)
+
+
+def test_rejects_stored_tag_keys_dropping_an_inherited_key(tmp_path):
+    raw = _raw()
+    raw["storedTagKeys"] = [k for k in raw["storedTagKeys"] if k != "cc:ferry_route"]
+    with pytest.raises(ValueError, match="cc:ferry_route"):
+        load_contract(_reload(tmp_path, raw))
 
 
 def test_rejects_an_exclude_tag_values_key_not_in_the_stored_tags(tmp_path):

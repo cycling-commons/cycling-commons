@@ -188,19 +188,22 @@ them — while nothing in the codebase read more than **29**. That is the bulk-O
 duplication [osm-data-architecture.md §1](osm-data-architecture.md) principle 1
 forbids, arrived at by omission rather than by decision.
 
-The serve-set is three groups:
+The serve-set is five groups:
 
 | Group | Count | Keys | Read by |
 |---|---|---|---|
 | **Selectors** | 11 | `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`, `route`, `shelter_type`, `shop`, `tourism`, `waterway` | Classification (letter + `serviceKind`); `tiles.py::_label_case` re-reads them at tile-build time |
-| **Rules** | 2 | `memorial`, `usage` | `load.py` `excludeTagValues`: Q leaves out small memorials, F leaves out heritage railways (§7) |
-| **Display** | 19 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity`, `ele`, `direction`, `height`, `bicycle`, `bicycle:fee` | `CoverageRepository::TAG_WHITELIST`: exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
+| **Rules** | 2 | `memorial`, `usage` | `load.py` `excludeTagValues`: Q leaves out small memorials, F leaves out heritage railways (§7). `bicycle` and `cc:bicycle_from_route` are counted in their own groups: F also leaves out a `no` in either |
+| **Display** | 22 | `opening_hours`, `website`, `contact:website`, `url`, `phone`, `contact:phone`, `addr:city`, `addr:street`, `addr:housenumber`, `operator`, `description`, `wheelchair`, `fee`, `capacity`, `ele`, `direction`, `height`, `bicycle`, `bicycle:fee`, `duration`, `seasonal`, `toll` | `CoverageRepository::TAG_WHITELIST`: exactly what the drawer renders (§5). `wheelchair`/`drinking_water` also feed tile props (§4) |
+| **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | `image`, `wikimedia_commons` and `wikidata` are in `TAG_WHITELIST`: the drawer links the Commons photo and the Wikidata item, and the media pipeline caches a copy `PhotoValidator` accepts (`FetchCommonsPhotoHandler`, photo-uploads.md §5h). `wikipedia` is stored, not served. Cost: 19 B/row, about 89 MB planet-wide |
+| **Inherited** | 3 | `cc:bicycle_from_route`, `cc:bicycle:fee_from_route`, `cc:ferry_route` | Written by `parse.py`, never read from OSM: what a ferry dock takes from the ferry routes that end at it (§3). In `TAG_WHITELIST`; the drawer says where the answer came from (§5) |
 
-`TAG_WHITELIST` has **25** entries: the 19 display keys, three selectors the
-drawer also renders (`amenity`, `shop`, `drinking_water`), and three media keys
-(`image`, `wikimedia_commons`, `wikidata`). Those six are counted in their own
-rows, so these groups and `check_date` (§4, the `cd` tile prop) sum to
-11 + 2 + 19 + 4 + 1 = **37** distinct keys.
+`TAG_WHITELIST` has **32** entries: the 22 display keys, four selectors the
+drawer also reads (`amenity`, `shop`, `drinking_water`, and `route`, which tells
+a ferry route from a station), three media keys (`image`, `wikimedia_commons`,
+`wikidata`) and the three inherited keys. Those are counted in their own rows,
+so these groups and `check_date` (§4, the `cd` tile prop) sum to
+11 + 2 + 22 + 4 + 3 + 1 = **43** distinct keys.
 
 `ele`, `direction` and `height` were added on 2026-08-21 for the scenic-view
 letter (P), where OSM's own record is often richer than what the drawer showed:
@@ -209,7 +212,7 @@ waterfall the metres it drops. The drawer reads all three for letter P only
 (`covProps` in `assets/map/coverage.js`), but the whitelist is per-tag rather
 than per-letter, so the same facts appear wherever else they are tagged. Values
 are free text in OSM, so `assets/map/osm-tags.js` refuses anything that is not
-plainly metres instead of guessing — "1200 ft" renders verbatim, never as 1200
+plainly metres instead of guessing: "1200 ft" renders verbatim, never as 1200
 metres. **Existing rows do not gain the tags until the country is re-harvested**
 (§3); this is the first contract change to prove that path.
 
@@ -218,7 +221,11 @@ come aboard a ferry or train, and whether it costs extra. The drawer reads them
 for F only and words them in its Bikes on board row (§5). OSM carries them on
 ferries far more than on stations: in the Netherlands extract 368 of 580 ferry
 routes and 28 of 884 ferry terminals carry `bicycle`, and no station does.
-| **Media/reference** | 4 | `wikidata`, `wikipedia`, `image`, `wikimedia_commons` | `image`, `wikimedia_commons` and `wikidata` are in `TAG_WHITELIST`: the drawer links the Commons photo and the Wikidata item, and the media pipeline caches a copy `PhotoValidator` accepts (`FetchCommonsPhotoHandler`, photo-uploads.md §5h). `wikipedia` is stored, not served. Cost: 19 B/row, about 89 MB planet-wide |
+
+`duration`, `seasonal` and `toll` are a ferry route's crossing time, season and
+fare, which the drawer shows beside its `opening_hours`, `fee` and website
+(§5). In the Netherlands extract (2026-09-15) 125 of 575 ferry routes carry
+`duration`, 110 `seasonal` and 199 `toll`.
 
 Measured impact of the trim across BE + NL + DE (then 375,078 rows; 377,558 after
 the Luxembourg onboarding): tags payload
@@ -250,7 +257,8 @@ displayed, so the keep-set and the display whitelist are one contract, enforced
 from both sides:
 
 - `load_contract()` rejects a `storedTagKeys` that drops a selector key, drops a
-  key `tiles.py::_EXTRA_SQL` reads, or lists `name`.
+  key `tiles.py::_EXTRA_SQL` reads, drops an inherited `cc:` key, or lists
+  `name`.
 - `pipeline/tests/test_tiles.py` pins `contract.py::TILE_DERIVED_TAG_KEYS` to the
   keys that SQL actually reads.
 - `web/tests/Catalog/CoverageContractTest.php` asserts
@@ -329,6 +337,32 @@ Per region in `COVERAGE_REGIONS`, independently:
    (coverage-provider.md §7) — the same mapping as
    `App\Catalog\ServiceKind::fromOsmTags()`
    (`web/src/Catalog/ServiceKind.php`).
+   **A ferry dock links its ferry routes, and without a `bicycle` tag of its
+   own inherits their bike answer, by OSM topology, never by position.** For
+   each F `amenity=ferry_terminal` node, `parse.py` looks at the `route=ferry`
+   ways whose first or last node it is (the filtered extract keeps way node
+   refs). A dock with no `bicycle` tag takes their answer: any route with
+   `bicycle` = `yes`, `designated` or `permissive` gives that value; otherwise
+   any with `dismount` gives `dismount`; otherwise, when every route that has a
+   `bicycle` tag says `no`, the dock gets `no` and the F `excludeTagValues`
+   rule leaves it out (§7). A route with no `bicycle` tag adds nothing to the
+   answer, and a value the drawer cannot word keeps the dock from a `no`. The
+   answer is stored under keys OSM never uses, so nobody mistakes it for the
+   dock's own tag: `cc:bicycle_from_route` (the winning route's value, lowest
+   way id first), `cc:ferry_route` (the refs of the routes that gave it,
+   `;`-separated, as `way/<id>`), and `cc:bicycle:fee_from_route=yes` when
+   every one of those routes says `bicycle:fee=yes`. A dock that takes no
+   answer, because it has its own `bicycle` tag or because no route gives one,
+   still gets `cc:ferry_route`, naming every route that ends at it: its own tag
+   answers Bikes on board, and its one route's crossing facts still reach the
+   drawer (§5). A dock with no route gets nothing. An OSM tag under the `cc:`
+   prefix is never stored. The parse logs how many docks it linked and how many
+   inherited each answer. Measured on the Netherlands (2026-09-15): 793 docks
+   linked, 547 of them with an inherited answer (`yes` 455, `permissive` 2,
+   `dismount` 2, `no` 88). After the load rules, the cache holds 688 linked
+   docks: 447 with an inherited answer, 18 with their own `bicycle` tag and 223
+   with a route link only; 636 of them link one route that is in the cache and
+   so show its facts.
 4. **Load — per-region atomic swap with an ownership filter and a drift
    guard.** `COPY` into a staging table, then **before** the drift count: an
    ownership filter deletes staged rows this extract does not own — nearest-region-wins,
@@ -699,7 +733,7 @@ itemId?}`.
 | `GET /map/coverage/search?q=` | in-memory `ITEM_INDEX` sidebar search (coverage part) | `{"results": entry[], "attribution"}` — ranked curated first, then community; trgm-backed; default limit `CoverageRepository::SEARCH_LIMIT` (value `12`); ETag + `max-age=300` |
 | `GET /map/coverage/nearby?lat=&lng=&km=` | town-card 5 km client-side haversine scan | `{"groups": [{letter, total, items: entry[]}], "attribution"}` — `ST_DWithin`, grouped by letter, community capped per group (`CoverageRepository::NEARBY_COMMUNITY_CAP`, value `3`) behind a "show all" expander; 422 on bad coords; `max-age=300` |
 | `GET /map/coverage/counts` | rail totals | `{"counts": {"B": n, …}, "attribution"}`; **scope-aware** (Phase 3); `max-age=3600` |
-| `GET /map/coverage/poi/{osmType}/{osmId}` | new: drawer detail for tile POIs | `{ref, letter, name, kind, ll, tags, curated, attribution}` — `tags` filtered to `CoverageRepository::TAG_WHITELIST` (store rich, serve trimmed); `curated` = `{itemId, state, fields, confirmations}` or `null`; `osmType ∈ {node, way}`; 404 when the ref is not cached; ETag + `max-age=300` |
+| `GET /map/coverage/poi/{osmType}/{osmId}` | new: drawer detail for tile POIs | `{ref, letter, name, kind, ll, tags, photo, ferryRoute, curated, attribution}`: `tags` filtered to `CoverageRepository::TAG_WHITELIST` (store rich, serve trimmed); `ferryRoute` = `{ref, name, tags}` for the one ferry route a dock links, else `null` (§5); `curated` = `{itemId, state, fields, confirmations}` or `null`; `osmType ∈ {node, way}`; 404 when the ref is not cached; ETag + `max-age=300` |
 
 - **A gone row lists nowhere (catalog-data-model.md §7; 2026-09-07).** The
   curated arm of `search` and `nearby` carries `GoneRows::notGoneSql('i')`,
@@ -812,11 +846,35 @@ Rules:
   drawer turns `bicycle` and `bicycle:fee` into a Bikes on board row
   (`bikesOnBoard` in `assets/map/osm-tags.js`, the one place that holds the
   vocabulary): `yes`, `designated` and `permissive` read "Allowed", `no` reads
-  "Not allowed", `dismount` reads "Walk your bike", and `bicycle:fee=yes` adds
+  "Not allowed" (a coverage point with `bicycle=no` is not loaded at all, §7, so
+  only a curated item shows it), `dismount` reads "Walk your bike", and `bicycle:fee=yes` adds
   "with a fee" to the first and the last. Any other value, or no `bicycle` tag,
   gives no row. The row carries the F field label "Bikes on board"
   (`CatalogFormRegistry`), so a curated item's stored value takes its place and
   an empty "+ add" prompt gives way to it.
+- **A dock's inherited answer says where it came from.** A ferry dock with no
+  `bicycle` tag may carry the answer of its ferry routes (§3); a dock with its
+  own tag shows that tag's answer with no source words. `bikeAccess` in
+  `osm-tags.js` reads the dock's own tag first and the `cc:` keys only without
+  one; the row then reads "Allowed · from the ferry Enkhuizen - Stavoren" when
+  one named route gave the answer, and "via its ferry route" or "via its ferry
+  routes" otherwise (`bikeSourceText`). The route's name comes from the
+  `poi` response: `ferryRoute` is `{ref, name, tags}` (tags whitelisted) for
+  the one route in a dock's `cc:ferry_route`, whether or not the dock has its
+  own `bicycle` tag, and `null` for a dock with several routes, a route not in
+  the cache, or any other point.
+- **A ferry route shows its crossing facts.** For a `route=ferry` point, and for
+  a dock through `ferryRoute`, the drawer adds rows from `ferryFacts` in
+  `osm-tags.js`: Crossing time from `duration` ("HH:MM", "HH:MM:SS" or ISO 8601
+  such as `PT85M`, written "1 h 25 min"; a bare number, which could be minutes
+  or hours, gives no row), Season from `seasonal` (`yes` reads "Seasonal", `no`
+  "All year", free text verbatim), Service hours from `opening_hours`
+  verbatim, Fare from `toll` or `fee` (`yes` in either reads "Paid", otherwise
+  `no` reads "Free", a price gives no row), and the website (`website`,
+  `contact:website`, `url`). A route's own website fills the drawer's usual
+  Website row. Facts a dock borrows carry a "Ferry" badge, and the route's
+  website gets its own badged row unless it is the dock's. Only a ferry route
+  has these rows; a station's `fee` is not a fare.
 - These are **site-internal map endpoints**, not the future public API.
   [osm-data-architecture.md §7](osm-data-architecture.md)'s reference-only
   rule governs the public API; the serving cache may serve OSM fields with
@@ -933,10 +991,13 @@ source of truth for the mapping both languages need:
   statue. Every key must be in `storedTagKeys`. Q and F carry it. Q:
   `memorial` = `bench`, `blue_plaque`, `ghost_bike`, `grave`, `plaque`,
   `stolperstein`, `tomb`. A Stolperstein or a plaque is a memorial, not a place
-  to ride to (owner 2026-09-15). F: `usage` = `leisure`, `tourism`. A heritage
-  railway such as the Museumstoomtram Hoorn-Medemblik (node/521261183,
-  `railway=station`, `usage=tourism`) is a day out, not a way to get somewhere
-  (owner 2026-09-15). `load_region` applies it after `nameOrTags`,
+  to ride to (owner 2026-09-15). F: `usage` = `leisure`, `tourism`, and
+  `bicycle` = `no`, and `cc:bicycle_from_route` = `no`. A heritage railway such
+  as the Museumstoomtram Hoorn-Medemblik (node/521261183, `railway=station`,
+  `usage=tourism`) is a day out, not a way to get somewhere, and a ferry that
+  takes no bikes gets no cyclist anywhere, whether the ferry route says so or
+  its dock inherited it from every tagged route that ends there, such as the
+  Veerdienst Zuiderzeemuseum (node/47228717, §3) (owner 2026-09-15). `load_region` applies it after `nameOrTags`,
   and a letter it filters is left out of the drift guard like the other rules.
   Measured on the Netherlands (2026-09-15), History and culture went from 9,056
   points to 3,400: 4,033 had no name and no photo link (mostly unnamed
@@ -954,7 +1015,9 @@ source of truth for the mapping both languages need:
   `coverage_poi.tags` (§2 storage policy). Sorted + unique, and validated on
   load — `load_contract()` raises if it drops a selector key, drops a key
   `tiles.py::_EXTRA_SQL` reads (`contract.py::TILE_DERIVED_TAG_KEYS`, itself
-  pinned to that SQL by `pipeline/tests/test_tiles.py`), or lists `name`.
+  pinned to that SQL by `pipeline/tests/test_tiles.py`), drops a key `parse.py`
+  writes on a ferry dock (`contract.py::ROUTE_INHERITED_TAG_KEYS`), or lists
+  `name`.
 - The **Python job consumes it** (`pipeline/coverage/contract.py::load_contract`,
   dataclasses `Selector`/`LetterSpec`/`Contract` with `letters_for(tags)` and
   `kind_for(tags)`); PHP never reads it at runtime.

@@ -81,3 +81,79 @@ export const BIKES_ON_BOARD_LABEL = {
   dismount_fee: 'bikesDismountFee',
   no: 'bikesNotAllowed',
 };
+
+/* The Bikes on board answer and where it came from. A dock's own `bicycle` tag
+   always wins (`routes: 0`). Without one, the harvest may have given it the
+   answer of the ferry routes that end at it, under its own `cc:` keys
+   (docs/specs/coverage-provider.md §3); `routes` is how many routes gave it. */
+export function bikeAccess(tags){
+  const t = tags || {};
+  if(String(t.bicycle ?? '').trim()){
+    const own = bikesOnBoard(t);
+    return own ? {answer:own, routes:0} : null;
+  }
+  const answer = bikesOnBoard({bicycle:t['cc:bicycle_from_route'], 'bicycle:fee':t['cc:bicycle:fee_from_route']});
+  if(!answer) return null;
+  const routes = String(t['cc:ferry_route'] ?? '').split(';').filter(r => OSM_REF.test(r.trim())).length;
+  return {answer, routes:Math.max(routes, 1)};
+}
+
+/* Where an inherited answer came from, in words: "from the ferry {name}" for
+   one named route, else "via its ferry route(s)". Null for the dock's own tag.
+   `words` = {one, route, routes} from the drawer strings. */
+export function bikeSourceText(access, routeName, words){
+  if(!access || !access.routes) return null;
+  if(access.routes > 1) return words.routes;
+  const name = String(routeName ?? '').trim();
+  return name ? words.one.replace('{name}', name) : words.route;
+}
+
+/* OSM `duration` as whole minutes (rounded up, so a crossing is never "0 min"):
+   "HH:MM", "HH:MM:SS" or ISO 8601 "PT1H25M". A bare number is refused, because
+   nothing says whether it counts minutes or hours. */
+export function osmDuration(raw){
+  const v = String(raw ?? '').trim();
+  let seconds = null;
+  let m = v.match(/^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?$/);
+  if(m) seconds = Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3] || 0);
+  m = v.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/i);
+  if(m && (m[1] || m[2] || m[3])) seconds = Number(m[1] || 0) * 3600 + Number(m[2] || 0) * 60 + Number(m[3] || 0);
+  return seconds ? Math.ceil(seconds / 60) : null;
+}
+
+/* Minutes as "1 h 25 min". `words` = {h, min, hMin} with {h} and {m} slots. */
+export function durationText(minutes, words){
+  const h = Math.floor(minutes / 60), mm = minutes % 60;
+  const fill = s => s.replace('{h}', String(h)).replace('{m}', String(mm));
+  return fill(h && mm ? words.hMin : h ? words.h : words.min);
+}
+
+/* What a `route=ferry` object says beyond bikes (docs/specs/coverage-provider.md §5):
+   crossing time, season (`seasonal` yes/no as a word, free text verbatim),
+   service hours, fare (`toll` or `fee`, yes wins) and website. Null when the
+   object is not a ferry route or says none of it. */
+export function ferryFacts(tags){
+  const t = tags || {};
+  if(t.route !== 'ferry') return null;
+  const word = k => String(t[k] ?? '').trim();
+  const seasonal = word('seasonal');
+  const low = seasonal.toLowerCase();
+  const fares = [word('toll').toLowerCase(), word('fee').toLowerCase()];
+  const facts = {
+    minutes: osmDuration(t.duration),
+    season: low === 'yes' ? 'seasonal' : low === 'no' ? 'allYear' : null,
+    seasonText: seasonal && low !== 'yes' && low !== 'no' ? seasonal : null,
+    hours: word('opening_hours') || null,
+    fare: fares.includes('yes') ? 'paid' : fares.includes('no') ? 'free' : null,
+    web: word('website') || word('contact:website') || word('url') || null,
+  };
+  return Object.values(facts).some(v => v != null) ? facts : null;
+}
+
+/** The drawer string (D in i18n.js) for each ferryFacts token. */
+export const FERRY_FACT_LABEL = {
+  seasonal: 'ferrySeasonal',
+  allYear: 'ferryAllYear',
+  paid: 'ferryPaid',
+  free: 'ferryFree',
+};

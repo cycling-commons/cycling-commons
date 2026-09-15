@@ -56,4 +56,18 @@ Location metadata (EXIF GPS) is stripped from uploaded photos before storage —
   and `route=ferry` with their `bicycle` and `bicycle:fee` tags, plus community
   edits. Heritage railways (`usage=tourism` or `usage=leisure`, such as the
   Museumstoomtram Hoorn-Medemblik) are left out: they are a day out, not a way
-  to get somewhere ([coverage-provider.md §7](../coverage-provider.md)).
+  to get somewhere. So is a ferry or terminal tagged `bicycle=no`: it takes no
+  bikes ([coverage-provider.md §7](../coverage-provider.md)).
+- **A dock without a `bicycle` tag inherits the answer of the ferry routes that
+  end at it** (the route's first or last node is the dock). Allowed wins over
+  walk your bike, which wins over no; a dock whose every tagged route says no
+  is left out. The answer is stored apart from the dock's own tags
+  (`cc:bicycle_from_route`, `cc:bicycle:fee_from_route`, `cc:ferry_route`), and
+  the drawer says so: "Bikes on board: Allowed · from the ferry Enkhuizen -
+  Stavoren" ([coverage-provider.md §3, §5](../coverage-provider.md)).
+- **A ferry route shows its crossing facts** when OSM has them: crossing time
+  (`duration`), season (`seasonal`), service hours (`opening_hours`), fare
+  (`toll` or `fee`) and website. Every dock links the ferry routes that end at
+  it, including a dock with its own `bicycle` tag (whose tag still answers Bikes
+  on board), and a dock with exactly one route shows that route's facts with a
+  "Ferry" badge.

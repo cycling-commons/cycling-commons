@@ -131,7 +131,100 @@ final class CoveragePoiDetailTest extends WebTestCase
 
         $data = $this->getJson($client, '/map/coverage/poi/way/1078891286');
         self::assertResponseIsSuccessful();
-        self::assertEquals(['bicycle' => 'yes', 'bicycle:fee' => 'yes'], $data['tags']);
+        self::assertEquals(['route' => 'ferry', 'bicycle' => 'yes', 'bicycle:fee' => 'yes'], $data['tags']);
+        self::assertNull($data['ferryRoute'], 'a route is not a dock');
+    }
+
+    public function testFerryRouteServesItsCrossingFacts(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // way/146810803 Enkhuizen - Stavoren (OSM, 2026-09-15). The drawer
+        // words `duration`, `seasonal` and `toll` (coverage-provider.md §5).
+        self::insertCoveragePoi($db, [
+            'ref' => 'way/146810803', 'letter' => 'F', 'name' => 'Enkhuizen - Stavoren',
+            'tags' => self::stavorenTags(),
+        ]);
+
+        $data = $this->getJson($client, '/map/coverage/poi/way/146810803');
+        self::assertResponseIsSuccessful();
+        self::assertEquals(self::stavorenTags(), $data['tags']);
+    }
+
+    public function testDockServesTheFerryRouteItInheritedFrom(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // node/4986359087 has no `bicycle` tag; the harvest gave it the answer
+        // of the one ferry route that ends at it (coverage-provider.md §3).
+        // The drawer names that route and shows its facts as the route's.
+        self::insertCoveragePoi($db, [
+            'ref' => 'way/146810803', 'letter' => 'F', 'name' => 'Enkhuizen - Stavoren',
+            'tags' => self::stavorenTags(),
+        ]);
+        self::insertCoveragePoi($db, [
+            'ref' => 'node/4986359087', 'letter' => 'F', 'name' => 'Enkhuizen (-Stavoren)',
+            'tags' => ['amenity' => 'ferry_terminal', 'wheelchair' => 'limited',
+                'cc:bicycle_from_route' => 'yes', 'cc:ferry_route' => 'way/146810803'],
+        ]);
+
+        $data = $this->getJson($client, '/map/coverage/poi/node/4986359087');
+        self::assertResponseIsSuccessful();
+        self::assertEquals(['amenity' => 'ferry_terminal', 'wheelchair' => 'limited',
+            'cc:bicycle_from_route' => 'yes', 'cc:ferry_route' => 'way/146810803'], $data['tags']);
+        self::assertSame('way/146810803', $data['ferryRoute']['ref']);
+        self::assertSame('Enkhuizen - Stavoren', $data['ferryRoute']['name']);
+        self::assertEquals(self::stavorenTags(), $data['ferryRoute']['tags']);
+    }
+
+    public function testDockWithItsOwnBicycleTagStillServesItsFerryRoute(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        // A dock tagged `bicycle` keeps its own answer, and the harvest still
+        // links the one route that ends at it, so the drawer shows that route's
+        // crossing facts (coverage-provider.md §3, §5).
+        self::insertCoveragePoi($db, [
+            'ref' => 'way/146810803', 'letter' => 'F', 'name' => 'Enkhuizen - Stavoren',
+            'tags' => self::stavorenTags(),
+        ]);
+        self::insertCoveragePoi($db, [
+            'ref' => 'node/505', 'letter' => 'F', 'name' => 'Stavoren',
+            'tags' => ['amenity' => 'ferry_terminal', 'bicycle' => 'yes', 'cc:ferry_route' => 'way/146810803'],
+        ]);
+
+        $data = $this->getJson($client, '/map/coverage/poi/node/505');
+        self::assertResponseIsSuccessful();
+        self::assertEquals(['amenity' => 'ferry_terminal', 'bicycle' => 'yes', 'cc:ferry_route' => 'way/146810803'], $data['tags']);
+        self::assertSame('way/146810803', $data['ferryRoute']['ref']);
+        self::assertEquals(self::stavorenTags(), $data['ferryRoute']['tags']);
+    }
+
+    public function testDockWithSeveralRoutesOrAMissingRouteServesNoRoute(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'way/501', 'letter' => 'F', 'name' => 'A', 'tags' => ['route' => 'ferry', 'bicycle' => 'yes']]);
+        self::insertCoveragePoi($db, ['ref' => 'way/502', 'letter' => 'F', 'name' => 'B', 'tags' => ['route' => 'ferry', 'bicycle' => 'yes']]);
+        self::insertCoveragePoi($db, ['ref' => 'node/503', 'letter' => 'F', 'tags' => [
+            'amenity' => 'ferry_terminal', 'cc:bicycle_from_route' => 'yes', 'cc:ferry_route' => 'way/501;way/502']]);
+        self::insertCoveragePoi($db, ['ref' => 'node/504', 'letter' => 'F', 'tags' => [
+            'amenity' => 'ferry_terminal', 'cc:bicycle_from_route' => 'yes', 'cc:ferry_route' => 'way/999']]);
+
+        self::assertNull($this->getJson($client, '/map/coverage/poi/node/503')['ferryRoute'], 'two routes: no one route speaks for the dock');
+        self::assertNull($this->getJson($client, '/map/coverage/poi/node/504')['ferryRoute'], 'a route not in the cache');
+    }
+
+    /** @return array<string, string> */
+    private static function stavorenTags(): array
+    {
+        return ['route' => 'ferry', 'bicycle' => 'yes', 'duration' => 'PT85M', 'seasonal' => 'April-October',
+            'opening_hours' => 'Apr 13,14,20-22,Apr 27-May 05,May-Sep 08:45-17:25; Oct Sa,Su 08:45-17:25',
+            'toll' => 'yes', 'operator' => 'Rederij V&O b.v.', 'website' => 'https://www.veerboot.info'];
     }
 
     public function testWayRefResolves(): void

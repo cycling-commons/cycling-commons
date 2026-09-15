@@ -25,6 +25,13 @@ LETTERS = frozenset("BCDFGOPQ")
 # test_tiles.py pins this constant to the SQL so the two cannot drift.
 TILE_DERIVED_TAG_KEYS = frozenset({"amenity", "check_date", "drinking_water", "shop", "wheelchair"})
 
+# Tag keys parse.py writes itself, never read from OSM: what a ferry dock
+# inherits from the `route=ferry` ways that end at it (coverage-provider.md §3).
+# The `cc:` prefix keeps them apart from the dock's own OSM tags, so the drawer
+# can say where the answer came from. An OSM tag under that prefix is dropped.
+DERIVED_TAG_PREFIX = "cc:"
+ROUTE_INHERITED_TAG_KEYS = frozenset({"cc:bicycle:fee_from_route", "cc:bicycle_from_route", "cc:ferry_route"})
+
 
 @dataclass(frozen=True)
 class Selector:
@@ -95,8 +102,9 @@ class Contract:
     # coverage-provider.md §2). `osmium tags-filter` selects OBJECTS, not keys,
     # so a matching object arrives with every tag it carries; without this trim
     # the cache stores ~4,200 distinct keys of which nothing reads more than 27.
-    # Three groups: selector keys (classification + tiles.py label), the drawer's
-    # TAG_WHITELIST, and the provisional media/reference group. `name` is absent
+    # Groups: selector keys (classification + tiles.py label), the load rules'
+    # keys, the drawer's TAG_WHITELIST, the provisional media/reference group,
+    # and the keys parse.py derives (ROUTE_INHERITED_TAG_KEYS). `name` is absent
     # by design — it is promoted to the coverage_poi.name column.
     stored_tag_keys: list[str]
 
@@ -314,6 +322,10 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
         raise ValueError(
             f"storedTagKeys drops tile-derived key(s) {missing} — tiles.py::_EXTRA_SQL "
             "reads them back out of tags, so the derived property would always be NULL")
+    if missing := sorted(ROUTE_INHERITED_TAG_KEYS - set(stored)):
+        raise ValueError(
+            f"storedTagKeys drops inherited key(s) {missing}: parse.py writes them on a "
+            "ferry dock and the F excludeTagValues rule reads them")
 
     # A required tag the cache never stores could never be present, so the rule
     # would drop every unnamed point without saying why.

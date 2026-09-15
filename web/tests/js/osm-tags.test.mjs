@@ -8,7 +8,8 @@
 // plainly metres is handed back untouched instead.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { osmMetres, viewDirection, osmRefUrl, OSM_REF, bikesOnBoard, BIKES_ON_BOARD_LABEL } from '../../assets/map/osm-tags.js';
+import { osmMetres, viewDirection, osmRefUrl, OSM_REF, bikesOnBoard, BIKES_ON_BOARD_LABEL, bikeAccess, bikeSourceText,
+  osmDuration, durationText, ferryFacts, FERRY_FACT_LABEL } from '../../assets/map/osm-tags.js';
 
 test('metres are read from the shapes OSM actually writes', () => {
   assert.equal(osmMetres('484'), 484);        // Costo Liso, node 12969271187
@@ -106,4 +107,92 @@ test('every answer has exactly one drawer label key', () => {
   for (const tags of [{bicycle:'yes'}, {bicycle:'no'}, {bicycle:'dismount', 'bicycle:fee':'yes'}]) {
     assert.ok(BIKES_ON_BOARD_LABEL[bikesOnBoard(tags)]);
   }
+});
+
+// bikeAccess: the dock's own `bicycle` tag, or what it inherited from the ferry
+// routes that end at it (`cc:` keys the harvest writes, coverage-provider.md §3).
+// The drawer has to say which, so a rider never reads a route's answer as the
+// dock's own tag.
+test('the dock\'s own tag is its own answer', () => {
+  assert.deepEqual(bikeAccess({bicycle:'yes'}), {answer:'allowed', routes:0});
+  assert.deepEqual(bikeAccess({bicycle:'no', 'cc:bicycle_from_route':'yes', 'cc:ferry_route':'way/1'}), {answer:'no', routes:0});
+});
+
+test('an inherited answer says how many routes gave it', () => {
+  // node/4986359087 Enkhuizen (-Stavoren), from way/146810803
+  assert.deepEqual(bikeAccess({'cc:bicycle_from_route':'yes', 'cc:ferry_route':'way/146810803'}), {answer:'allowed', routes:1});
+  assert.deepEqual(bikeAccess({'cc:bicycle_from_route':'dismount', 'cc:bicycle:fee_from_route':'yes', 'cc:ferry_route':'way/1;way/2'}),
+    {answer:'dismount_fee', routes:2});
+  assert.equal(bikeAccess({'cc:bicycle_from_route':'maybe', 'cc:ferry_route':'way/1'}), null);
+  assert.equal(bikeAccess({}), null);
+});
+
+test('the source of an inherited answer is worded, with the route name when there is one', () => {
+  const words = {one:'from the ferry {name}', route:'via its ferry route', routes:'via its ferry routes'};
+  assert.equal(bikeSourceText({answer:'allowed', routes:1}, 'Enkhuizen - Stavoren', words), 'from the ferry Enkhuizen - Stavoren');
+  assert.equal(bikeSourceText({answer:'allowed', routes:1}, null, words), 'via its ferry route');
+  assert.equal(bikeSourceText({answer:'allowed', routes:2}, 'Enkhuizen - Stavoren', words), 'via its ferry routes');
+  assert.equal(bikeSourceText({answer:'allowed', routes:0}, 'X', words), null);
+});
+
+// osmDuration: OSM `duration` is "HH:MM", "HH:MM:SS" or ISO 8601 ("PT85M").
+// Anything else, a bare "10" among them (minutes? hours?), is refused.
+test('a crossing time is read from the duration shapes OSM documents', () => {
+  assert.equal(osmDuration('PT85M'), 85);        // way/146810803 Enkhuizen - Stavoren
+  assert.equal(osmDuration('PT1H35M'), 95);
+  assert.equal(osmDuration('PT2H'), 120);
+  assert.equal(osmDuration('00:05'), 5);
+  assert.equal(osmDuration('0:08'), 8);
+  assert.equal(osmDuration('01:30'), 90);
+  assert.equal(osmDuration('00:05:00'), 5);
+  assert.equal(osmDuration('PT30S'), 1);         // a chain ferry is under a minute, never "0 min"
+});
+
+test('a value that is not plainly a duration is refused', () => {
+  for(const raw of ['10', '1', '5 min', 'about an hour', '00:75', 'PT', 'P1D', '00:00', 'PT0M', '', null, undefined]){
+    assert.equal(osmDuration(raw), null, String(raw));
+  }
+});
+
+test('a duration is written in hours and minutes', () => {
+  const words = {h:'{h} h', min:'{m} min', hMin:'{h} h {m} min'};
+  assert.equal(durationText(85, words), '1 h 25 min');
+  assert.equal(durationText(120, words), '2 h');
+  assert.equal(durationText(5, words), '5 min');
+});
+
+// ferryFacts: what a `route=ferry` object says beyond bikes. Only a ferry route
+// has them; a station's `fee` is not a fare.
+test('a ferry route gives its crossing time, season, hours, fare and website', () => {
+  assert.deepEqual(ferryFacts({route:'ferry', duration:'PT85M', seasonal:'April-October', toll:'yes',
+    opening_hours:'May-Sep 08:45-17:25', website:'https://www.veerboot.info'}),
+    {minutes:85, season:null, seasonText:'April-October', hours:'May-Sep 08:45-17:25', fare:'paid', web:'https://www.veerboot.info'});
+});
+
+test('season yes and no are words; free text stays verbatim', () => {
+  assert.equal(ferryFacts({route:'ferry', seasonal:'yes'}).season, 'seasonal');
+  assert.equal(ferryFacts({route:'ferry', seasonal:'no'}).season, 'allYear');
+  assert.equal(ferryFacts({route:'ferry', seasonal:' summer '}).seasonText, 'summer');
+});
+
+test('the fare reads toll or fee; yes wins, a price we cannot word gives no row', () => {
+  assert.equal(ferryFacts({route:'ferry', fee:'yes'}).fare, 'paid');
+  assert.equal(ferryFacts({route:'ferry', toll:'no', fee:'yes'}).fare, 'paid');
+  assert.equal(ferryFacts({route:'ferry', toll:'no'}).fare, 'free');
+  assert.equal(ferryFacts({route:'ferry', fee:'0.50 euro', duration:'PT5M'}).fare, null);
+});
+
+test('the website falls back through contact:website and url', () => {
+  assert.equal(ferryFacts({route:'ferry', 'contact:website':'https://a.example'}).web, 'https://a.example');
+  assert.equal(ferryFacts({route:'ferry', url:'https://b.example'}).web, 'https://b.example');
+});
+
+test('only a ferry route has ferry facts, and one with none gives null', () => {
+  assert.equal(ferryFacts({railway:'station', fee:'yes'}), null);
+  assert.equal(ferryFacts({route:'ferry', duration:'10'}), null);
+  assert.equal(ferryFacts(null), null);
+});
+
+test('every fact token names a drawer string', () => {
+  for(const k of ['seasonal', 'allYear', 'paid', 'free']) assert.ok(FERRY_FACT_LABEL[k], k);
 });

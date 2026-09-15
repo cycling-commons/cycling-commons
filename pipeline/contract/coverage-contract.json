@@ -80,7 +80,7 @@
           "label": "Ferry"
         }
       ],
-      "excludeTagValues": {"usage": ["leisure", "tourism"]},
+      "excludeTagValues": {"bicycle": ["no"], "cc:bicycle_from_route": ["no"], "usage": ["leisure", "tourism"]},
       "tileProps": [
         "cd"
       ]
@@ -259,12 +259,16 @@
     "bicycle",
     "bicycle:fee",
     "capacity",
+    "cc:bicycle:fee_from_route",
+    "cc:bicycle_from_route",
+    "cc:ferry_route",
     "check_date",
     "contact:phone",
     "contact:website",
     "description",
     "direction",
     "drinking_water",
+    "duration",
     "ele",
     "fee",
     "height",
@@ -278,8 +282,10 @@
     "phone",
     "railway",
     "route",
+    "seasonal",
     "shelter_type",
     "shop",
+    "toll",
     "tourism",
     "url",
     "usage",

@@ -46,7 +46,7 @@ final class CoverageRepository
     public const string ATTRIBUTION = '© OpenStreetMap contributors (ODbL)';
 
     /**
-     * Tags sent to the drawer; the cache stores every OSM tag (docs/specs/coverage-provider.md §5).
+     * Tags sent to the drawer; the cache stores the contract's storedTagKeys (docs/specs/coverage-provider.md §5).
      */
     public const array TAG_WHITELIST = [
         'opening_hours', 'website', 'contact:website', 'url', 'phone', 'contact:phone',
@@ -69,6 +69,15 @@ final class CoverageRepository
         // ferry or train, and whether it costs extra. The drawer turns them
         // into its Bikes on board row (web/assets/map/osm-tags.js).
         'bicycle', 'bicycle:fee',
+        // A ferry dock carries the refs of the ferry routes that end at it and,
+        // with no `bicycle` tag of its own, their bike answer, under keys the
+        // harvest writes and OSM never does, so the drawer can say where the
+        // answer came from and show its route's facts (coverage-provider.md §3).
+        'cc:bicycle_from_route', 'cc:bicycle:fee_from_route', 'cc:ferry_route',
+        // A ferry route's own facts: `route` tells a ferry from a station, and
+        // the drawer words its crossing time, season and toll (`fee` and
+        // `opening_hours` are above).
+        'route', 'duration', 'seasonal', 'toll',
         // What a photo of this place might be found under
         // (coverage-provider.md §7). Served as well as read here, because they
         // are the citation for a picture a rider is looking at.
@@ -142,6 +151,7 @@ final class CoverageRepository
 
         /** @var array<string, mixed> $tags */
         $tags = json_decode($row['tags'], true, 512, \JSON_THROW_ON_ERROR);
+        $routeRef = self::ferryRouteRef($row['letter'], $tags);
 
         return [
             'ref' => $row['ref'],
@@ -158,6 +168,7 @@ final class CoverageRepository
             // no-store. The boolean also saves a second request for the 99.7%
             // of POIs that have no Commons file at all.
             'photo' => self::photoPossible($tags),
+            'ferryRoute' => null === $routeRef ? null : $this->ferryRoute($routeRef),
             'curated' => null === $row['item_id']
                 ? null
                 : $this->curatedOverlay(
@@ -167,6 +178,51 @@ final class CoverageRepository
                     is_numeric($row['item_lng']) ? (float) $row['item_lng'] : null,
                 ),
             'attribution' => self::ATTRIBUTION,
+        ];
+    }
+
+    /**
+     * The one ferry route a dock links, or null when it links several routes
+     * or none (coverage-provider.md §3, §5). A dock with its own `bicycle` tag
+     * links its route too: its own tag answers Bikes on board, the route's
+     * crossing facts still show.
+     *
+     * @param array<string, mixed> $tags
+     */
+    private static function ferryRouteRef(string $letter, array $tags): ?string
+    {
+        $ref = $tags['cc:ferry_route'] ?? null;
+        if ('F' !== $letter || !\is_string($ref) || 1 !== preg_match('~^way/\d+$~', $ref)) {
+            return null;
+        }
+
+        return $ref;
+    }
+
+    /**
+     * That route's name and drawer tags, so the dock's drawer shows the
+     * route's crossing facts as the route's. Null when the route is not in
+     * the cache.
+     *
+     * @return array{ref: string, name: string|null, tags: object}|null
+     */
+    private function ferryRoute(string $ref): ?array
+    {
+        /** @var array{name: string|null, tags: string}|false $row */
+        $row = $this->db->fetchAssociative(
+            "SELECT name, tags FROM coverage_poi WHERE ref = :ref AND letter = 'F'",
+            ['ref' => $ref],
+        );
+        if (false === $row) {
+            return null;
+        }
+        /** @var array<string, mixed> $tags */
+        $tags = json_decode($row['tags'], true, 512, \JSON_THROW_ON_ERROR);
+
+        return [
+            'ref' => $ref,
+            'name' => $row['name'],
+            'tags' => (object) array_intersect_key($tags, array_flip(self::TAG_WHITELIST)),
         ];
     }
 

@@ -11,7 +11,7 @@ import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
-import { viewDirection, OSM_REF, bikesOnBoard, tileTypeLabel, coverageSourceLayers } from './osm-tags.js';
+import { viewDirection, OSM_REF, bikeAccess, ferryFacts, tileTypeLabel, coverageSourceLayers } from './osm-tags.js';
 
 // Coverage tiles (docs/specs/coverage-provider.md §6). [rail key, lowercase letter]
 // must stay in step with catalog.js LETTER_KEY (covKeysTest.cjs).
@@ -246,8 +246,20 @@ export function covProps(key, tp, d){
       if(tags.direction!=null) p.viewDir=viewDirection(tags.direction);
     }
     if(key==='transit'){
-      const bikes=bikesOnBoard(tags);
-      if(bikes) p.osmBikes=bikes;
+      // Bikes on board: the dock's own tag, or the answer it inherited from the
+      // ferry routes that end at it, which the drawer says it did
+      // (coverage-provider.md §3, §5).
+      const bikes=bikeAccess(tags);
+      if(bikes){
+        p.osmBikes=bikes.answer;
+        if(bikes.routes){ p.osmBikesRoutes=bikes.routes; if(d.ferryRoute && d.ferryRoute.name) p.osmBikesRouteName=d.ferryRoute.name; }
+      }
+      // A ferry route's own crossing facts, or those of the one route a dock
+      // inherited from, shown as the route's.
+      const own=ferryFacts(tags);
+      const borrowed=!own && d.ferryRoute ? ferryFacts(d.ferryRoute.tags) : null;
+      if(own){ p.ferry=own; if(!p.web && own.web) p.web=own.web; }
+      else if(borrowed) p.ferry=Object.assign({borrowed:true}, borrowed);
     }
     if(key==='water' && tags.drinking_water==='no') p.osmPotable=false;   // hydrated tag wins over tile boolean
     if(d.curated){
@@ -407,15 +419,6 @@ export function widenForDeepLink(ll){
   if(s && s.kind!=='everywhere' && s.regionIds && s.regionIds.indexOf(r.id)!==-1) return;
   const cc=window.CCScope.countryAt(+ll[0], +ll[1]);
   if(cc) window.CCScope.setCountry(cc, {persist:false});
-}
-// [lat, lng] of a catalogue feature, whichever shape it carries.
-export function featureLL(f){
-  if(!f) return null;
-  if(Array.isArray(f.ll) && f.ll.length===2) return [+f.ll[0], +f.ll[1]];
-  const c=f.geometry && f.geometry.coordinates;
-  if(Array.isArray(c) && c.length>=2 && typeof c[0]==='number') return [+c[1], +c[0]];
-  if(f.geom && Array.isArray(f.geom.ll)) return [+f.geom.ll[0], +f.geom.ll[1]];
-  return null;
 }
 // ?feature= fallback (docs/specs/coverage-provider.md §6): one unscoped search lookup, then widen.
 export function openCoverageFeatureByName(name){
