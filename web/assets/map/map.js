@@ -45,7 +45,7 @@ import { layerGlyph } from './icons.js';
 
 
 
-  map.on('load',()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage(); addSurfaceTiles();
+  const bootMap=()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage(); addSurfaceTiles();
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     renderScopeChips(); applyScope(curScope(), {fit:false}); setupConfClusters();
     // Cluster markers on settle (moveend/idle), never per render frame during a fly.
@@ -98,7 +98,11 @@ import { layerGlyph } from './icons.js';
     // ?finding=<id> — curator duplicate resolve. Last, so it owns the drawer
     // if a link ever carries both params.
     initDuplicateResolve();
-  });
+  };
+  // `load` fires once and is not replayed. This module is injected after the
+  // catalog fetch resolves, which on a slow catalog lands after the style is
+  // already loaded, so ask the map where it is rather than only listening.
+  if(map.isStyleLoaded()) bootMap(); else map.on('load', bootMap);
 
   initCoordPopup();
 

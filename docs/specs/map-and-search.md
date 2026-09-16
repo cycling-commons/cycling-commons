@@ -132,6 +132,13 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   before the style loads, and `addSource`/`addLayer` throw on an unloaded
   style. The `load` handler runs `render()` itself and sees all state mutated
   so far.
+- **Boot runs whether or not `load` is still coming** (`map.js`): the whole
+  handler above is the named `bootMap()`, and `map.js` calls it at once when
+  `map.isStyleLoaded()` already holds, otherwise binds it to `load`. `load`
+  fires once and is never replayed, while `map.js` is injected only after the
+  catalog fetch resolves; on a slow catalog (1.3 s against a 0.6 s style) that
+  injection lands after the event, and a map that only listened got no catalog
+  pins, no coverage layers and no deep link at all.
 - **Page-injected globals** (all nonce'd inline scripts in
   `templates/map/index.html.twig`):
 
