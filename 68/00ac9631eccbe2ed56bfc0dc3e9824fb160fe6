@@ -2,6 +2,7 @@ web/translations/messages.en.yaml
   s_190feadae0fef2::t_8f2d538d0c80aa 853
   s_bda768b13cee07::t_08d6c18a98ebb1 882
   s_e382572451f2d6::t_c6284c53651fcb 881
+  s_985a6f4653b290::t_8fcb505773c6ba 853,881-882
 web/templates/pages/regions.html.twig
   s_985a6f4653b290::t_edb75364f2d642 81-88,90-92,223
   s_985a6f4653b290::t_1329f6c3838919 89,93-103,135,240,243
@@ -16,6 +17,7 @@ web/translations/messages.fr.yaml
   s_bda768b13cee07::t_497f0c95f65fc8 882
   s_190feadae0fef2::t_077dcc95c1ce2f 853
   s_e382572451f2d6::t_147bd4263f6aac 881
+  s_985a6f4653b290::t_3a713a1137f597 853,881-882
 docs/specs/map-and-search.md
   s_985a6f4653b290::t_e4209bfa2890ce 483-506,511
   s_985a6f4653b290::t_6f85da79211236 507-510
@@ -23,15 +25,18 @@ web/translations/messages.de.yaml
   s_e382572451f2d6::t_a7e13d0c21813a 881
   s_190feadae0fef2::t_ca85dd4e190619 853
   s_bda768b13cee07::t_7caabcb412d375 882
+  s_985a6f4653b290::t_0e750b8b9b8635 853,881-882
 web/tests/Controller/RegionOutlinesTest.php
   s_985a6f4653b290::t_b79d3132d6db6a 14-15,19,38-39,41
 web/translations/messages.nl.yaml
   s_e382572451f2d6::t_f2b16441f6dc93 881
   s_190feadae0fef2::t_e6dfa4f02bcb08 853
   s_bda768b13cee07::t_0f4dcacfdc6557 882
+  s_985a6f4653b290::t_d67475dc24d749 853,881-882
 web/translations/messages.es.yaml
   s_e382572451f2d6::t_9555358a0272f1 882
   s_40a002d02fdfd2::t_22be381c5bfec1 854,883
+  s_985a6f4653b290::t_1c15e5f4d8af42 854,882-883
 web/src/Controller/PageController.php
   s_985a6f4653b290::t_edb75364f2d642 12
   s_985a6f4653b290::t_358ea053c329d4 24-25,124-131,134,136-157,159,174,180,182-193,197
