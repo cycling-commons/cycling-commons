@@ -56,9 +56,7 @@ final class RouteClimbService
      */
     public function climbsOn(int $routeId, bool $allowSubmitted): ?array
     {
-        $states = $allowSubmitted
-            ? "('".implode("', '", [...array_map(static fn (ItemState $s): string => $s->value, ItemState::SERVED), ItemState::Submitted->value])."')"
-            : ItemState::servedSqlTuple();
+        $states = $allowSubmitted ? ItemState::servedOrSubmittedSqlTuple() : ItemState::servedSqlTuple();
 
         $exists = $this->db->fetchOne('SELECT 1 FROM recommended_route WHERE id = :id AND state IN '.$states, ['id' => $routeId]);
         if (false === $exists) {

@@ -1105,6 +1105,38 @@ the newest rung of that same ladder.
   databases with that same SQL, and `RegionRegistryProvider` drops any adj id it
   is not itself shipping — so a stale row cannot reach the client either.
 
+- **What a scope change costs, and what says so.** Picking a region is seconds
+  of work, not a frame, so the map says it is busy. `scope-ui.js` answers
+  `cc:scopechange` with `drawScope()`: it shows `#scopeBusy` ("Drawing {area}…",
+  `map.scope_busy`, the drawer's `cc-d-spin` spinner), waits **two animation
+  frames** so the browser has painted that line, and only then runs
+  `renderScopeChips()` + `applyScope()`. The wait is the point: `applyScope`
+  blocks the main thread, so a busy line shown without it would only ever exist
+  inside the freeze. The line clears on the map's next `idle` (the new scope
+  drawn, tiles in), with a 20 s cap so a source that never settles cannot leave
+  it spinning, and a `_drawReq` race token so a rider who picks again mid-draw
+  owns the map. It sits on the `.map-top` subtitle row rather than beside it:
+  showing it hides no further map and moves no box.
+
+  Measured North Holland → Wallonia, 1440×900, dev stack, median of three runs
+  (the probe rewrites `scope-ui.js` in flight with `performance.measure` marks;
+  no measurement code ships). `applyScope` was **3449 ms** of blocked main
+  thread, **2728 ms** of it in `updateCoverageScopeFilter`. That call is 320
+  `map.setFilter` calls (8 coverage keys × 20 country source-layers, icon +
+  heat), and MapLibre validates a filter against a serialisation of the **whole
+  style** (663 layers here), so each call cost about 8.5 ms whatever the filter
+  said. The filters are built in `coverage.js` from fixed shapes and land on
+  layers `addCoverage()` already validated, so they now go in with
+  `NO_VALIDATE` (`{validate: false}`) and one filter object serves the whole
+  grid instead of one per layer: **2728 ms → 22 ms**, `applyScope` **3449 ms →
+  724 ms**, map idle on the new scope **10.2 s → 8.2 s**. What is left of
+  `applyScope` is `render()` (688 ms), and 675 ms of *that* is the same
+  validation on `addSource`/`addLayer` as it rebuilds the dynamic line layers:
+  `Map.addSource`/`Map.addLayer` take no options argument in MapLibre v6, so
+  there is no supported way to skip it and it stands. Everything past the block
+  (tile fetch, re-rasterisation) is MapLibre's; the dev browser rasterises on
+  the CPU (SwiftShader, no GPU), so those numbers are a floor, not a rider's.
+
 #### 4.5a Boxes that cross the antimeridian
 
 A scope box whose **west value is greater than its east value** crosses ±180°
@@ -1861,8 +1893,12 @@ km is the distance along the route in the rider's unit, whole units
 lead with. The list is fetched when the drawer opens from
 `GET /map/route/{id}/climbs` (the rule and access are in
 [route-domain.md](route-domain.md) §6.4), so the cached catalog payload does not
-grow; a route that rides no climb shows no section, and a failed fetch shows
-nothing. A route waiting for review (a `?route=` preview, §8) gets the list too,
+grow. While it is on its way the section shows the drawer's waiting line (the
+spinner a Commons photo waits with, `.cc-d-spin` in a one-line
+`.cc-d-list-wait`) reading "Looking for climbs on the route…"
+(`d_route_climbs_wait`), so a long route whose preview answer is not cached
+(about a second for a 248 km route) never looks frozen; the list replaces it, and
+a route that rides no climb, or a failed fetch, removes it and shows no section. A route waiting for review (a `?route=` preview, §8) gets the list too,
 for whoever may preview it. The rows use the one drawing path: nothing draws a
 pin of its own. Click opens the climb through its item-index entry
 (`entry.go()`), with the mode lift and "shown anyway" rule of a ride-check row
@@ -1870,11 +1906,58 @@ pin of its own. Click opens the climb through its item-index entry
 climb's country when the scope hides it (`widenForDeepLink`); hover rings the
 climb's pin at its foot with `highlightAt`. Code: `route-climbs.js` writes the
 rows, `hydrateRouteClimbs()` in `listed-place.js` fetches and wires them.
-The climb drawer opened from a row starts with a **‹ route name** button that
-reopens the route and its list (`setDrawerHop` in `drawer.js`). It is a one-step
-return: it shows only while that climb is on screen, any other place drops it,
-and it wins over a loaded ride's "‹ Ride summary" for that one drawer
-(`pickDrawerReturn` in `ride-places.js`, §9).
+
+**Along this route** (route drawer, owner decision 2026-09-15). Under the climbs,
+a route with a DB id shows what is along it, the same lists the ride check
+summary shows for an uploaded GPX (map-and-search.md §9), run on the route's own
+stored line: "In the Commons along the route" (`d_along_route_h`) with the
+corridor under it ("Within 250 m of the route", `d_along_route_within`), places
+grouped by layer with `km along · m off`, then "Open coverage along the route"
+(`d_along_route_cov_h`) with the open-data note. The corridor is the ride
+check's default, 250 m (`RideCheckService::DEFAULT_RADIUS`); the route drawer
+offers no radius choice. Climbs are left out of the commons list, because
+"Climbs on this route" decides which climbs the route rides (route-domain.md
+§6.4). No commons place: "Nothing in the Commons within 250 m of this route
+yet." (`d_nothing_along_route`). The lists are fetched when the drawer opens
+from `GET /map/route/{id}/along` (`RideCheckService::alongRoute()`, access as
+for the climbs, route-domain.md §6.4). Until they arrive the section shows the
+same waiting line, "Looking along the route…" (`d_along_route_wait`); the lists
+replace it, and a failed fetch removes it and shows nothing. One
+renderer and one binder serve both drawers: `along-list.js` writes the rows,
+`bindAlongList()` in `listed-place.js` wires hover and click exactly as a ride
+check row (map-and-search.md §9), after moving the scope to the place's country
+when the scope hides it (`widenForDeepLink`). `hydrateRouteAlong()` fetches and
+fills the slot.
+
+**The route stays while its lists are in use.** Opening the route drawer holds
+the route (`holdRoute()` in `drawer.js`). While it is held:
+
+- the route stays drawn as the selected route (`highlightRoute`: full orange,
+  the others dimmed), also behind a place, climb or coverage point opened from
+  its lists; the map flies to that place and the route line stays on the map;
+- its listed pool places are leaf pins, never folded into a count bubble
+  (`setListedPlaces(keys, 'route')` in `osm-pools.js`, run when the list
+  arrives, not when the drawer opens; the ride check lists under its own owner
+  and a place either lists stays a leaf, `mergeListed()`). Only the pools whose
+  listed places changed have their clustered source re-split
+  (`listedLettersChanged()` in `ride-places.js`): each `setData` makes the map
+  re-render, so the same set again, or letting go of a route whose list never
+  arrived or listed nothing, touches no source;
+- the place drawer opened from a row (climb, commons place or coverage point)
+  starts with a **‹ route name** button that reopens the route and its lists
+  (`setDrawerHop` in `drawer.js`, the hop carries the route id). It is a
+  one-step return: it shows only while that place is on screen, keyed by the
+  place's `letter:id` or, for an open coverage point, `letter:ref`
+  (`drawerPlaceKeys()`), any other place drops it, and it wins over a loaded
+  ride's "‹ Ride summary" for that one drawer (`pickDrawerReturn` in
+  `ride-places.js`, map-and-search.md §9).
+
+Any other drawer (an unrelated place, another route), closing the drawer, or the
+ride summary lets the route go (`letRouteGo()`): the route highlight is cleared
+and the listed places cluster again (`releaseRouteList()`), the way Clear
+releases a ride. `keepsRouteHold()` in `ride-places.js` decides which drawer
+keeps it. A new record opens scrolled to its top, so the return button is in
+view.
 
 **No id ⇒ no edit/add links**: the edit-bridge only ever binds to a real DB
 item id — a name-slug guess is never a faithful target.
@@ -2298,6 +2381,11 @@ requirement).
   limit, why it exists and that an account raises it — a bare 429 teaches the
   visitor nothing. Limits in the inventory:
   [security-architecture.md](security-architecture.md).
+- **While the check runs** the ride panel's status line reads "Checking…"
+  (`map.rc_checking`) beside the drawer's spinner (`.cc-d-spin`, the status
+  line gets `is-busy`); the loaded line ("93.2 km · results · clear") or the
+  error replaces both. The summary drawer opens only with the answer, which
+  carries every list at once, so it has no waiting state of its own.
 - **Validation** (`App\Catalog\RideCheckService`): radius ∈
   `ALLOWED_RADII = {100, 250, 500, 1000}` m, default `DEFAULT_RADIUS = 250`;
   raw track length within `MIN_RAW_M = 500` m … `MAX_RAW_M = 400 km` (the
@@ -2310,7 +2398,9 @@ requirement).
   `WITH track AS MATERIALIZED (…GeomFromGeoJSON…), corridor AS MATERIALIZED (ST_Buffer(track::geography, :radius)::geometry)`
   probed with **`ST_Intersects(i.geom, corridor)`** — `ST_DWithin(::geography)`
   cannot use the GIST index, and an inlined track CTE re-parses the GeoJSON per
-  row per `ST_*` call. Letters **B–G and N–Q only** (the SQL excludes A; R is absent
+  row per `ST_*` call. The same corridor arms answer for a recommended route's
+  own line in the route drawer (`RideCheckService::alongRoute()`, map-and-search.md
+  §6.3), which also leaves climbs (N) out. Letters **B–G and N–Q only** (the SQL excludes A; R is absent
   because routes live in `recommended_route` and get their own overlap query).
   States gated by `ItemState::servedSqlTuple()`. Per match:
   `ST_Distance` (metres off-track) and
@@ -2371,6 +2461,12 @@ requirement).
     `showPlaceAnyway()` in render.js). Followed-route rows open the same way.
   - In the drawer, coverage is a separate section under its own heading with a
     provenance note, so uncurated OSM never reads as a verified Commons pick.
+    The summary's two lists are written by `along-list.js` and wired by
+    `bindAlongList()` in `listed-place.js`, the same code as the route drawer's
+    lists (map-and-search.md §6.3).
+  - A followed route opened from the summary holds its route like any route
+    drawer (map-and-search.md §6.3); "‹ Ride summary" lets it go, so the summary
+    never sits over a highlighted route.
   - **Clear** removes the track, releases the listed set (the pools cluster
     every place again) and the place shown anyway, and restores the rider's
     view mode and scope. The mode goes back to the one from before the ride's

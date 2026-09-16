@@ -506,7 +506,16 @@
     <div id="map" data-credits="{{ path('credits') }}"></div>
     <div class="map-top">
       <div class="rg" id="regionLine">{{ 'map.region_line'|trans }}</div>
-      <div class="sub">{{ 'map.curated'|trans }}</div>
+      {# The subtitle row doubles as the scope-change busy line
+         (map-and-search.md §4.5): #scopeBusy sits ON TOP of .sub for as long as
+         a newly picked region is being drawn, so the card neither grows nor
+         shifts and no further map is covered. scope-ui.js owns both. #}
+      <div class="map-top-status">
+        <div class="sub">{{ 'map.curated'|trans }}</div>
+        <div class="cc-scope-busy" id="scopeBusy" role="status" hidden>
+          <span class="cc-d-spin" aria-hidden="true"></span><span class="cc-scope-busy-txt"></span>
+        </div>
+      </div>
       <a class="add-climb" href="{{ path('contribute') }}">{{ 'map.contribute'|trans }}</a>
     </div>
     <div class="legend">

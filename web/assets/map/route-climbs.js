@@ -6,10 +6,11 @@
    through the normal map path (listed-place.js). */
 import { escPend } from './util.js';
 import { uKmValue, uDistUnit } from './units.js';
+import { listWaitHtml } from './along-list.js';
 
-/** The empty slot the drawer renders for a route with a database id; filled once the list arrives. */
-export function routeClimbsSlot(f){
-  return f && f.id != null ? `<div class="cc-d-climbs" id="cc-d-climbs-slot" data-route="${escPend(f.id)}" hidden></div>` : '';
+/** The slot the drawer renders for a route with a database id, showing `waitLabel` until the list arrives (listed-place.js hydrateRouteClimbs fills it, or removes it when the route rides no climb). */
+export function routeClimbsSlot(f, waitLabel){
+  return f && f.id != null ? `<div class="cc-d-climbs" id="cc-d-climbs-slot" data-route="${escPend(f.id)}" aria-busy="true">${listWaitHtml(waitLabel)}</div>` : '';
 }
 
 /** "km 112" in the rider's unit: the distance along the route to where it meets the climb, whole units. */

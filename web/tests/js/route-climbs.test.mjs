@@ -44,6 +44,8 @@ test('km come from units.js in whole units, in the order the label puts them', (
 });
 
 test('the slot is rendered only for a route with a database id', () => {
-  assert.match(routeClimbsSlot({ id: 23 }), /id="cc-d-climbs-slot" data-route="23" hidden/);
-  assert.equal(routeClimbsSlot({ name: 'demo' }), '');
+  const slot = routeClimbsSlot({ id: 23 }, 'Looking for climbs…');
+  assert.match(slot, /id="cc-d-climbs-slot" data-route="23" aria-busy="true">/);
+  assert.match(slot, /class="cc-d-spin"[^>]*><\/span><span role="status">Looking for climbs…<\/span>/);
+  assert.equal(routeClimbsSlot({ name: 'demo' }, 'Looking for climbs…'), '');
 });

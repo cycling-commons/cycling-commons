@@ -156,6 +156,39 @@ export function initScope(){
   { const myBtn = document.getElementById('myAreaBtn'); if (myBtn && window.CCScope && window.CCScope.myAreaAvailable()) myBtn.hidden = false; }
 }
 
+/* Busy while a newly picked scope is drawn (docs/specs/map-and-search.md §4.5).
+   Named region to Wallonia costs seconds, most of it MapLibre re-filtering and
+   re-rasterising, so the map says so instead of looking hung. The line lives in
+   the .map-top card over the subtitle row: it hides no further map and moves
+   no box. `_drawReq` is the race token: a rider who picks again mid-draw owns
+   the map, and the older draw neither applies nor clears the line. */
+let _drawReq = 0;
+function setScopeBusy(on, area){
+  const el=document.getElementById('scopeBusy');
+  if(!el) return;
+  const txt=el.querySelector('.cc-scope-busy-txt');
+  if(txt) txt.textContent = on ? tpl(I18N.scopeBusy||'Drawing {area}…', {area: area||''}) : '';
+  el.hidden = !on;
+}
+/* A scope change blocks the main thread, so the browser must be given a frame
+   to paint the busy line BEFORE that work starts, or the line only ever exists
+   inside the freeze. Two frames: the first callback runs before its own paint,
+   the second after it. */
+function drawScope(s){
+  const req = ++_drawReq;
+  setScopeBusy(true, scopeLabel(s));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(req!==_drawReq) return;
+    renderScopeChips();
+    applyScope(s, {fit:true});
+    // Drawn = the map has settled on the new scope with its tiles in.
+    const done=()=>{ if(req===_drawReq) setScopeBusy(false); };
+    map.once('idle', done);
+    // A tile source that never settles must not leave the line spinning.
+    setTimeout(done, 20000);
+  }));
+}
+
 export function initScopeRail(){
   // Static myarea button; region/country chips bind in renderScopeChips().
   // There is no Everywhere button: a country is the widest place to look at.
@@ -166,7 +199,7 @@ export function initScopeRail(){
     else if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
     else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
   });
-  window.addEventListener('cc:scopechange', e=>{ renderScopeChips(); applyScope(e.detail, {fit:true}); });
+  window.addEventListener('cc:scopechange', e=>drawScope(e.detail));
 }
 
 // Pan-away nudge (docs/specs/map-and-search.md §4.5). One chip, two arms;

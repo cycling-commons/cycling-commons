@@ -9,7 +9,7 @@ import { inScope } from './scope-ui.js';
 import { mintKindIcons, pinEl, clusterEl } from './icons.js';
 import { staysAccessible, shownAnyway } from './render.js';
 import { modeShows } from './filters.js';
-import { splitPool } from './ride-places.js';
+import { splitPool, mergeListed, listedLettersChanged } from './ride-places.js';
 import { openDrawer, osmDrawer, waterDrawer } from './drawer.js';
 
 export function addWaterOsm(){
@@ -51,15 +51,28 @@ export function addOsmDots(key, data, srcDesc){
 }
 export const confState = {};
 
-/* Places a loaded ride check lists (docs/specs/map-and-search.md §9), as
-   `letter:id`. The pool keeps them out of its clustered source and draws each
-   as its own leaf pin, so none folds into a count bubble along the track. Layer
-   counts read `st.confirmed`, never the source, so they do not move. Empty when
-   no ride is loaded. */
+/* Places a list in the drawer names, as `letter:id`: a loaded ride check
+   (docs/specs/map-and-search.md §9) and an open route's along-the-route list
+   (§6.3), each under its own owner so one letting go leaves the other standing.
+   The pool keeps them out of its clustered source and draws each as its own
+   leaf pin, so none folds into a count bubble along the line. Layer counts read
+   `st.confirmed`, never the source, so they do not move. Empty when no list is
+   showing. Only a pool whose listed places changed has its source re-split: a
+   setData re-renders the whole map (a few hundred ms on a slow GPU), so an
+   unchanged set, or letting go of a list that listed nothing, touches no source. */
+const _listedBy = new Map();
 let _listed = new Set();
-export function setListedPlaces(keys){
-  _listed = new Set(keys || []);
-  refilterClusters();
+export function setListedPlaces(keys, owner = 'ride'){
+  const next = new Set(keys || []);
+  if(next.size) _listedBy.set(owner, next); else _listedBy.delete(owner);
+  const merged = mergeListed(_listedBy);
+  const letters = listedLettersChanged(_listed, merged);
+  _listed = merged;
+  if(!letters.size) return;
+  Object.keys(confState).forEach(srcId => {
+    const st = confState[srcId], src = map.getSource(srcId);
+    if(src && st.layer && letters.has(st.layer.letter)) src.setData(clusterData(st));
+  });
   updateConfMarkers();
 }
 function poolSplit(st){

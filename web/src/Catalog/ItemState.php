@@ -29,4 +29,10 @@ enum ItemState: string
     {
         return "('".implode("', '", array_map(static fn (self $s): string => $s->value, self::SERVED))."')";
     }
+
+    /** SQL tuple literal of the served states plus Submitted: what a rider allowed to preview a waiting row may read (docs/specs/map-and-search.md §8). */
+    public static function servedOrSubmittedSqlTuple(): string
+    {
+        return "('".implode("', '", array_map(static fn (self $s): string => $s->value, [...self::SERVED, self::Submitted]))."')";
+    }
 }

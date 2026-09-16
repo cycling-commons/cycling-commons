@@ -7,6 +7,12 @@ import { uKm } from './units.js';
 export const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // docs/specs/security-architecture.md §4.2 — http(s) or site-relative only; else '#'.
 export const safeHref = u => { const s = String(u ?? '').trim(); return (/^https?:\/\//i.test(s) || (s.startsWith('/') && !s.startsWith('//'))) ? escPend(s) : '#'; };
+/* A person named on the pending card as the curator desks name them
+   (App\Moderation\DeskRider): the name linked to their profile when the
+   server sent a uuid (a public profile), plain text otherwise. */
+export const deskRiderHtml = (name, uuid) => uuid
+  ? `<a class="desk-rider" href="/riders/${encodeURIComponent(uuid)}">${escPend(name)}</a>`
+  : escPend(name);
 // docs/specs/map-and-search.md §7.4: a pasted point. The search row's chip and
 // the place card's badge are the same thing and must not drift apart.
 export const COORD_COLOR='#556070';
@@ -97,7 +103,9 @@ export const photonLang = htmlLang => { const l = String(htmlLang || '').slice(0
    the top half instead (owner 2026-09-15: a pin opened from the ride list
    landed under the sheet). docs/specs/map-and-search.md §6. */
 export function pinOffset(viewportWidth, viewportHeight, mapTop, mapHeight){
-  if(viewportWidth > 820) return [-150, 0];
+  // Half the room the drawer takes on the right (drawerFitPadding's 400), so a
+  // spot lands in the middle of the free part and never under the panel.
+  if(viewportWidth > 820) return [-200, 0];
   const visibleMiddle = (mapTop + viewportHeight * 0.5) / 2;
   return [0, Math.round(visibleMiddle - (mapTop + mapHeight / 2))];
 }
@@ -134,7 +142,7 @@ export function locateOffset(drawerOpen, viewportWidth, viewportHeight, mapTop, 
    MapLibre's fitBounds applies an `offset` twice (once when it computes the
    camera, again in the flyTo it hands that camera to) and `padding` once, so
    the Locate me camera says where to land as padding: shifting the centre
-   left by 150 px is 300 px of padding on the right. */
+   left by 200 px is 400 px of padding on the right. */
 export function offsetAsPadding([x, y]){
   return {left:Math.max(0, 2*x), right:Math.max(0, -2*x), top:Math.max(0, 2*y), bottom:Math.max(0, -2*y)};
 }

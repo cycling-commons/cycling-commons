@@ -11,7 +11,8 @@ use App\Contribution\Gpx\TrackProcessor;
 use Doctrine\DBAL\Connection;
 
 /**
- * Given an uploaded GPX, list served items in a corridor of the track. The GPX is never persisted. No privacy trim — unlike route intake.
+ * Given an uploaded GPX, list served items in a corridor of the track. The GPX is never persisted. No privacy trim, unlike route intake.
+ * The same corridor arms answer for a recommended route's own line (alongRoute).
  *
  * @see docs/specs/map-and-search.md §9
  *
@@ -90,10 +91,52 @@ final class RideCheckService
     }
 
     /**
+     * What is along a recommended route: the ride check's two corridor arms, run on the route's own stored line at the ride check's default radius.
+     *
+     * The route drawer lists climbs through RouteClimbService, which decides
+     * which climbs the route really rides, so the commons arm leaves letter N
+     * out. Null when there is no such route, or it is not served and
+     * $allowSubmitted does not let a waiting route through.
+     *
+     * @see docs/specs/map-and-search.md §6.3
+     * @see docs/specs/route-domain.md §6.4
+     *
+     * @return array{
+     *     radiusM: int,
+     *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>,
+     *     coverage: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>
+     * }|null
+     */
+    public function alongRoute(int $routeId, bool $allowSubmitted, int $radiusM = self::DEFAULT_RADIUS): ?array
+    {
+        $states = $allowSubmitted ? ItemState::servedOrSubmittedSqlTuple() : ItemState::servedSqlTuple();
+        /** @var array{geom: string, len_m: string|float}|false $route */
+        $route = $this->db->fetchAssociative(
+            'SELECT ST_AsGeoJSON(geom) AS geom, ST_Length(geom::geography) AS len_m
+               FROM recommended_route
+              WHERE id = :id AND state IN '.$states.' AND geom IS NOT NULL',
+            ['id' => $routeId],
+        );
+        if (false === $route) {
+            return null;
+        }
+
+        return [
+            'radiusM' => $radiusM,
+            'groups' => $this->corridorGroups($route['geom'], $radiusM, (float) $route['len_m'], ['A', 'N']),
+            'coverage' => $this->corridorCoverage($route['geom'], $radiusM, (float) $route['len_m']),
+        ];
+    }
+
+    /**
+     * @param list<string> $excludedLetters surface segments (A) are corridor noise on every list
+     *
      * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>
      */
-    private function corridorGroups(string $geoJson, int $radiusM, float $rawM): array
+    private function corridorGroups(string $geoJson, int $radiusM, float $rawM, array $excludedLetters = ['A']): array
     {
+        // Catalog letters from this class only, never request input.
+        $excluded = "('".implode("', '", $excludedLetters)."')";
         // The rows the map payload serves (CatalogProvider::itemRows()): an
         // untouched OSM import is the coverage tiles' point, and a row reported
         // gone is served nowhere. The ride lists a place where the map draws it.
@@ -106,7 +149,7 @@ final class RideCheckService
                     ST_Distance(i.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
                     ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
              FROM item i
-             WHERE i.letter <> \'A\'
+             WHERE i.letter NOT IN '.$excluded.'
                AND i.state IN '.ItemState::servedSqlTuple().'
                AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
                AND '.GoneRows::notGoneSql('i').'

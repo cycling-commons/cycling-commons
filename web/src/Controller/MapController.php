@@ -20,6 +20,7 @@ use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
 use App\Catalog\RegionRegistryProvider;
+use App\Catalog\RideCheckService;
 use App\Catalog\RidingStyle;
 use App\Catalog\RouteClimbService;
 use App\Catalog\RouteRankingService;
@@ -206,31 +207,59 @@ final class MapController extends AbstractController
     /**
      * The climbs a route rides, in order along it, for the route drawer.
      *
-     * A live route answers anyone and is cached publicly. A route waiting for
-     * review answers only whoever may preview it, never cached. Anything else
-     * is 404, the same answer as no route at all.
-     *
      * @see docs/specs/route-domain.md §6.4
      * @see docs/specs/map-and-search.md §6.3
      */
     #[Route('/map/route/{id}/climbs', name: 'map_route_climbs', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function routeClimbs(int $id, Request $request, RouteClimbService $routeClimbs, CatalogProvider $catalogProvider, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
     {
+        return $this->routeListResponse(
+            $id, $request, $catalogProvider, $scopeProvider, $twoFactorPolicy,
+            static function (bool $allowSubmitted) use ($routeClimbs, $id): ?array {
+                $climbs = $routeClimbs->climbsOn($id, $allowSubmitted);
+
+                return null === $climbs ? null : ['climbs' => $climbs];
+            },
+        );
+    }
+
+    /**
+     * What is along a route, for the route drawer: the ride check's commons and
+     * open-coverage arms on the route's own line (RideCheckService::alongRoute).
+     *
+     * @see docs/specs/route-domain.md §6.4
+     * @see docs/specs/map-and-search.md §6.3
+     */
+    #[Route('/map/route/{id}/along', name: 'map_route_along', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function routeAlong(int $id, Request $request, RideCheckService $rideCheck, CatalogProvider $catalogProvider, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
+    {
+        return $this->routeListResponse(
+            $id, $request, $catalogProvider, $scopeProvider, $twoFactorPolicy,
+            static fn (bool $allowSubmitted): ?array => $rideCheck->alongRoute($id, $allowSubmitted),
+        );
+    }
+
+    /**
+     * One per-route list for the route drawer. A live route answers anyone and
+     * is cached publicly. A route waiting for review answers only whoever may
+     * preview it, never cached. Anything else is 404, the same answer as no
+     * route at all.
+     *
+     * @param \Closure(bool): (array<string, mixed>|null) $answer given whether a waiting route may be read
+     */
+    private function routeListResponse(int $id, Request $request, CatalogProvider $catalogProvider, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, \Closure $answer): Response
+    {
         $user = $this->getUser();
         $submitted = $catalogProvider->submittedRoute($id);
-        if (null !== $submitted) {
-            if (!$user instanceof User || !$this->mayPreviewRoute($user, $submitted, $scopeProvider, $twoFactorPolicy)) {
-                throw $this->createNotFoundException();
-            }
-            $climbs = $routeClimbs->climbsOn($id, allowSubmitted: true);
-        } else {
-            $climbs = $routeClimbs->climbsOn($id, allowSubmitted: false);
+        if (null !== $submitted && (!$user instanceof User || !$this->mayPreviewRoute($user, $submitted, $scopeProvider, $twoFactorPolicy))) {
+            throw $this->createNotFoundException();
         }
-        if (null === $climbs) {
+        $payload = $answer(null !== $submitted);
+        if (null === $payload) {
             throw $this->createNotFoundException();
         }
 
-        $json = json_encode(['climbs' => $climbs], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE);
+        $json = json_encode($payload, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE);
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
         if (null !== $submitted) {
@@ -417,7 +446,10 @@ final class MapController extends AbstractController
             'raceEditions' => 'd_race_editions', 'raceOnce' => 'd_race_once',
             'routesH' => 'd_routes_h', 'routeKm' => 'd_route_km',
             // docs/specs/map-and-search.md §6.3: climbs on this route.
-            'routeClimbsH' => 'd_route_climbs_h', 'routeClimbAt' => 'd_route_climb_at',
+            'routeClimbsH' => 'd_route_climbs_h', 'routeClimbAt' => 'd_route_climb_at', 'routeClimbsWait' => 'd_route_climbs_wait',
+            // docs/specs/map-and-search.md §6.3: places along this route.
+            'alongRouteH' => 'd_along_route_h', 'alongRouteWithin' => 'd_along_route_within', 'alongRouteWait' => 'd_along_route_wait',
+            'alongRouteCovH' => 'd_along_route_cov_h', 'nothingAlongRoute' => 'd_nothing_along_route',
             'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',
@@ -485,6 +517,7 @@ final class MapController extends AbstractController
             'myAreaSet' => $t->trans('map.my_area_set'),
             'myAreaSetAnon' => $t->trans('map.my_area_set_anon'),
             'outsideArea' => $t->trans('map.outside_area'),
+            'scopeBusy' => $t->trans('map.scope_busy'),
             'scopeMiss' => $t->trans('map.scope_miss'),
             'scopeMissGo' => $t->trans('map.scope_miss_go'),
             'areaDismiss' => $t->trans('map.area_dismiss'),

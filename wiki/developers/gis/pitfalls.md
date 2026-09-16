@@ -50,7 +50,7 @@ too. The shipped rewrite moves both costs off the per-row path:
       corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
  SELECT i.id, i.letter, i.name, ST_AsGeoJSON(i.geom) AS geom,
 ...
- WHERE i.letter <> \'A\'
+ WHERE i.letter NOT IN '.$excluded.'
    AND i.state IN '.ItemState::servedSqlTuple().'
    AND ST_Intersects(i.geom, (SELECT b FROM corridor))
 ```

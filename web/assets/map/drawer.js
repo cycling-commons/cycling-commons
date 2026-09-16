@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Item drawer: registry-driven rows, history, open/close.
    @see docs/specs/map-and-search.md §6 */
-import { pickDrawerReturn } from './ride-places.js';
+import { pickDrawerReturn, drawerPlaceKeys, keepsRouteHold } from './ride-places.js';
 import { I18N, D, tpl, trVal, sourceLabel, isRiderSource, DIFF_LABELS } from './i18n.js';
 import { drawerSource, drawerOrigin } from './origin.js';
 import { escPend, safeHref, stars, txtOn, gradColor, DIFF_PURPLE, ccUrl, attachPhotos, haversine } from './util.js';
@@ -29,7 +29,8 @@ import { CC_VOTABLE, CC_CONFIRMABLE, CC_BREAKABLE, routeCommunityPanel, hydrateR
 import { showPendingShape, fitPendingShape, clearPendingShape } from './pending-shape.js';
 import { clearCorrections } from './corrections.js';
 import { routeClimbsSlot } from './route-climbs.js';
-import { hydrateRouteClimbs } from './listed-place.js';
+import { hydrateRouteClimbs, hydrateRouteAlong, releaseRouteList } from './listed-place.js';
+import { routeAlongSlot } from './along-list.js';
 
 
 // Race-guard: bumped on every openDrawer() so a slow history fetch cannot paint a stale drawer.
@@ -788,7 +789,7 @@ function buildRecord(layer, f){
 
   return `<div class="cc-d-head"><span class="cc-d-type" style="--c:${layer.color};color:${txtOn(layer.color)}"><i class="cc-g">${layerGlyph(layer)}</i> ${layer.label}</span>${share}</div>
     <div class="cc-d-name">${escPend(f.name)}</div>${cur}${photo}${hiddenSlot}${desc}${diff}${elev}${len}${grad}
-    <ul class="cc-d-rec">${rows}</ul>${layer.key==='experience' ? routeClimbsSlot(f) : ''}${fresh}${survey}${mine}${up}
+    <ul class="cc-d-rec">${rows}</ul>${layer.key==='experience' ? routeClimbsSlot(f, D.routeClimbsWait||'Looking for climbs on the route…')+routeAlongSlot(f, D.alongRouteWait||'Looking along the route…') : ''}${fresh}${survey}${mine}${up}
     <div class="cc-d-src">${D.source||'Source'} · ${who || srcLine(f, osmHref)}${
       who ? `<div class="cc-d-prov">${srcLine(f, osmHref)}</div>` : ''}</div>${act}${moderate}${histSlot}${reportLink}`;
 }
@@ -1094,7 +1095,7 @@ function startPhotoWatch(name){
 /* A view the rider came from and can go back to from a place drawer
    (docs/specs/map-and-search.md §6.3, §9). `_drawerReturn` lasts while a ride is
    loaded (its summary); `_drawerHop` is one step back to the list a place was
-   opened from, such as the route whose climbs listed it, and lasts only while
+   opened from, such as the route whose lists named it, and lasts only while
    that place is on screen. pickDrawerReturn decides which one shows. */
 let _drawerReturn = null;
 let _drawerHop = null;
@@ -1102,10 +1103,26 @@ export function setDrawerReturn(target){ _drawerReturn = target && typeof target
 export function setDrawerHop(target, forKey){
   _drawerHop = target && typeof target.go === 'function' && forKey ? {...target, forKey} : null;
 }
+/* The route held behind the drawer while its lists are in use
+   (docs/specs/map-and-search.md §6.3): its own drawer, and a place opened from
+   its lists, keep the route highlighted and its listed places unclustered.
+   The route drawer holds it when it opens. Any other drawer, closing the
+   drawer, or the ride summary lets it go: `release` runs once
+   (listed-place.js releaseRouteList). keepsRouteHold decides. */
+let _routeHold = null;
+export function holdRoute(routeId, release){
+  if(_routeHold && String(_routeHold.routeId) !== String(routeId)) letRouteGo();
+  _routeHold = {routeId, release};
+}
+export function letRouteGo(){
+  const hold = _routeHold;
+  _routeHold = null;
+  if(hold && typeof hold.release === 'function') hold.release();
+}
 export function renderDrawerBody(layer, f){
   const body = document.getElementById('drawerBody');
   body.innerHTML = buildRecord(layer, f);
-  const pick = pickDrawerReturn(_drawerReturn, _drawerHop, (layer.letter||'')+':'+f.id);
+  const pick = pickDrawerReturn(_drawerReturn, _drawerHop, drawerPlaceKeys(layer.letter||'', f));
   if(!pick.keepHop) _drawerHop = null;
   if(pick.target){
     const back = document.createElement('button');
@@ -1118,7 +1135,7 @@ export function renderDrawerBody(layer, f){
   }
   startPhotoWatch(f.name);
   if(layer.key==='experience' && f.id!=null && f.state!=='submitted') hydrateRouteCommunity(f.id);
-  if(layer.key==='experience' && f.id!=null) hydrateRouteClimbs(f.id);   // climbs on this route, map-and-search.md §6.3
+  if(layer.key==='experience' && f.id!=null){ hydrateRouteClimbs(f.id); hydrateRouteAlong(f.id); }   // climbs on and places along this route, map-and-search.md §6.3
   if(CC_CONFIRMABLE.has(layer.key) && f.id!=null) hydrateItemConfirm(f.id);
   /* Pending shape: show After first; fit so a moved summit is on screen. */
   const pShape = f.pending && f.pending.shape;
@@ -1177,12 +1194,17 @@ export function openDrawer(layer, f){
   clearSelectedCoverageIcon();
   releaseShownAnyway(layer.letter, f.id);   // a place shown anyway stays only while its own drawer is up (map-and-search.md §9)
   invalidateCoverageDrawer(); bumpPlaceReq();   // Invalidate in-flight coverage POI detail and town-card nearby; this render supersedes them.
+  // A place opened from the held route's lists keeps the route drawn as selected (§6.3).
+  const keepRoute = keepsRouteHold(_routeHold, _drawerHop,
+    {routeId: layer.key==='experience' ? (f.id!=null ? f.id : '') : null, keys: drawerPlaceKeys(layer.letter||'', f)});
+  if(!keepRoute) letRouteGo();
+  if(layer.key==='experience' && f.id!=null) holdRoute(f.id, releaseRouteList);
   if(layer.key==='experience'){
     const i=layer.features.indexOf(f);
     if(i>=0 && map.getLayer('experience-'+i)) highlightRoute('experience-'+i);
     clearHighlight();                    // routes read as the wide line halo, not a point halo
   } else {
-    clearRouteHighlight();
+    if(!keepRoute) clearRouteHighlight();
     clearRouteSelection();
     // Selected surface segment lights up as a shape so its length is visible.
     if(layer.key==='surface' && f.geom && Array.isArray(f.geom.path) && f.geom.path.length>1) showSurfaceSelection(f.geom.path);
@@ -1195,6 +1217,7 @@ export function openDrawer(layer, f){
   }
   renderDrawerBody(layer, f);
   const d=document.getElementById('drawer'); d.classList.add('open'); d.classList.remove('folded'); d.setAttribute('aria-hidden','false');
+  d.scrollTop=0;   // a new record starts at its top, where its "‹ back" button is, not where the list it came from was scrolled
   syncMapWrap();   // a new record always arrives unfolded, and the toolbar steps aside
   d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
   if(window.innerWidth<=820) sheet.reset();          // land at half; desktop untouched
@@ -1256,6 +1279,7 @@ export function closeDrawer(){
   clearSelectedCoverageIcon();                        // remove the selected coverage POI's persistent icon overlay
   clearRevealPin();
   releaseShownAnyway(null, null);                     // the place shown anyway leaves with its drawer
+  letRouteGo();                                       // the route held behind the drawer, and its listed places
   clearRouteHighlight();
   clearRouteSelection();   // the OSM corridor highlight (routes-tiles.js), not the K layer above
   clearSurfaceSelection();

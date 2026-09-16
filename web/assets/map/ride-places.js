@@ -61,8 +61,50 @@ export function ringOffset(pinDrawn, pinOffset){
    return to the list a place was opened from, such as a route's climbs, kept
    only while that very place (`hop.forKey`, `letter:id`) is on screen. The
    nearest step back wins. Any other place drops the hop. */
-export function pickDrawerReturn(base, hop, key){
-  if(hop && hop.forKey === key) return { target: hop, keepHop: true };
+export function pickDrawerReturn(base, hop, keys){
+  const list = Array.isArray(keys) ? keys : [keys];
+  if(hop && list.includes(hop.forKey)) return { target: hop, keepHop: true };
   return { target: base || null, keepHop: false };
 }
 
+/** Every key a place drawer answers to: `letter:id` for a commons row, `letter:ref` for an open coverage point. */
+export function drawerPlaceKeys(letter, f){
+  const keys = [];
+  if(f && f.id != null) keys.push(letter + ':' + f.id);
+  if(f && f.osmRef) keys.push(letter + ':' + f.osmRef);
+  return keys;
+}
+
+/**
+ * Whether a drawer about to open keeps the route held open behind it
+ * (docs/specs/map-and-search.md §6.3): the held route's own drawer
+ * (`next.routeId`), or the place its list opened (the hop from that route,
+ * matched by `next.keys`). Anything else lets the route go.
+ */
+export function keepsRouteHold(hold, hop, next){
+  if(!hold || !next) return false;
+  if(next.routeId != null) return String(next.routeId) === String(hold.routeId);
+  return !!hop && String(hop.routeId) === String(hold.routeId) && (next.keys || []).includes(hop.forKey);
+}
+
+/** One set of listed places from every list showing at once (a loaded ride, an open route), so a place either lists stands as a leaf pin. */
+export function mergeListed(byOwner){
+  const out = new Set();
+  byOwner.forEach(keys => (keys || []).forEach(k => out.add(k)));
+  return out;
+}
+
+
+/**
+ * The letters whose listed places differ between two merged sets (`letter:id`
+ * keys). Only those pools need their clustered source re-split: each re-split
+ * is a setData that costs the map a full re-render, so an unchanged set
+ * answers none.
+ */
+export function listedLettersChanged(prev, next){
+  const letters = new Set();
+  const letterOf = k => String(k).slice(0, String(k).indexOf(':'));
+  (prev || new Set()).forEach(k => { if(!next || !next.has(k)) letters.add(letterOf(k)); });
+  (next || new Set()).forEach(k => { if(!prev || !prev.has(k)) letters.add(letterOf(k)); });
+  return letters;
+}

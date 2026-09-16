@@ -2,7 +2,7 @@
 /* Map entry (docs/specs/map-and-search.md §4). ES module: catalog-load.js
    injects it once the catalog fetch has populated the CC_* globals. */
 import { I18N, LAYER_L10N, D, tpl, VALUE_TR, trVal, sourceLabel, isRiderSource } from './i18n.js';
-import { escPend, pinPoint, featureLL, attachPhotos } from './util.js';
+import { escPend, pinPoint, featureLL, attachPhotos, deskRiderHtml } from './util.js';
 import { uKm } from './units.js';
 import { map, initMapControls, addSatellite, markStyleReady, initCoordPopup,
          localiseBasemapLabels } from './map-init.js';
@@ -236,7 +236,7 @@ import { layerGlyph } from './icons.js';
           const name = LAYER_L10N[lyr.key] || lyr.label || s.letter;
           return {label:D.type||'Type', html:true, value:layerGlyph(lyr, 13)+' '+escPend(name)};
         })(),
-        {label:D.submittedBy||'Submitted by', value:s.who},
+        {label:D.submittedBy||'Submitted by', html:true, value:deskRiderHtml(s.who, s.whoUuid)},
         {label:D.age||'Age', value:s.when},
         {label:D.where||'Where', value:`${s.region||''} · ${s.country||''}`}
       ],

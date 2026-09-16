@@ -9,8 +9,10 @@ import assert from 'node:assert/strict';
 import { pinOffset, drawerFitPadding, pathBounds } from '../../assets/map/util.js';
 
 test('on a desktop the spot moves left, clear of the right-hand drawer', () => {
-  assert.deepEqual(pinOffset(1920, 1080, 0, 1080), [-150, 0]);
-  assert.deepEqual(pinOffset(821, 900, 0, 900), [-150, 0]);
+  // Half the room the drawer takes on the right (drawerFitPadding), so the spot
+  // lands in the middle of what is left, not under the panel.
+  assert.deepEqual(pinOffset(1920, 1080, 0, 1080), [-200, 0]);
+  assert.deepEqual(pinOffset(821, 900, 0, 900), [-200, 0]);
 });
 
 test('on a phone the spot moves up into the half above the sheet', () => {

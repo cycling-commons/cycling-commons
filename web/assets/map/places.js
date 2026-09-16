@@ -284,6 +284,15 @@ export function openLocalFeature(layer, f){
     render();
   }
   openDrawer(layer,f);
+  // A climb or a stretch is a line: frame the whole of it beside the drawer, the
+  // way a route is framed, rather than flying to its first point and leaving the
+  // rest under the panel (owner 2026-09-16, Cote de la Roche-aux-Faucons).
+  const line = (Array.isArray(f.route) && f.route.length ? f.route : (f.geom && f.geom.path)) || null;
+  const bounds = pathBounds(line);
+  if(bounds){
+    map.fitBounds(bounds, {padding: drawerFitPadding(window.innerWidth, window.innerHeight), maxZoom: 14, duration: 900, essential: true});
+    return true;
+  }
   const p=featurePoint(f); if(p) flyToPin([p[1],p[0]]);
   return true;
 }

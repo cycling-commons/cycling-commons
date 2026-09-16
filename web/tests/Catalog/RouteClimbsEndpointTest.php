@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Catalog;
 
 use App\Entity\User;
+use App\Tests\Coverage\CoverageSchema;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -14,12 +15,15 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * GET /map/route/{id}/climbs (docs/specs/route-domain.md §6.4): public and cached
- * for a live route; for a route waiting for review, only for whoever may
- * preview it (the `?route=` gate, docs/specs/map-and-search.md §8), never cached.
+ * GET /map/route/{id}/climbs and GET /map/route/{id}/along
+ * (docs/specs/route-domain.md §6.4): public and cached for a live route; for a
+ * route waiting for review, only for whoever may preview it (the `?route=`
+ * gate, docs/specs/map-and-search.md §8), never cached.
  */
 final class RouteClimbsEndpointTest extends WebTestCase
 {
+    use CoverageSchema;
+
     private function login(KernelBrowser $client, string $email): User
     {
         $container = static::getContainer();
@@ -124,6 +128,50 @@ final class RouteClimbsEndpointTest extends WebTestCase
         $client->request('GET', '/map/route/'.$rejected.'/climbs');
         self::assertResponseStatusCodeSame(404);
         $client->request('GET', '/map/route/999999999/climbs');
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testAlongALiveRouteAnswersAnyoneWithBothArmsAndIsCachedPublicly(): void
+    {
+        $client = static::createClient();
+        self::ensureCoverageSchema($this->db());
+        $route = $this->seedRoute('unverified');
+        $this->db()->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('B', 'Endpoint fountain', ST_SetSRID(ST_MakePoint(5.81, 50.4004), 4326), 'BE', 'verified', 'manual', :ref, '{}', NOW(), NOW())",
+            ['ref' => 'along-endpoint-'.bin2hex(random_bytes(6))],
+        );
+        self::insertCoveragePoi($this->db(), ['letter' => 'D', 'name' => 'Endpoint pump', 'lat' => 50.4004, 'lng' => 5.82, 'ref' => 'node/along-endpoint']);
+
+        $client->request('GET', '/map/route/'.$route.'/along');
+
+        self::assertResponseIsSuccessful();
+        /** @var array{radiusM: int, groups: list<array{letter: string, items: list<array{name: string}>}>, coverage: list<array{letter: string, items: list<array{name: string, ref: string}>}>} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame(250, $body['radiusM']);
+        self::assertSame('Endpoint fountain', $body['groups'][0]['items'][0]['name']);
+        self::assertSame('node/along-endpoint', $body['coverage'][0]['items'][0]['ref']);
+        self::assertStringContainsString('public', (string) $client->getResponse()->headers->get('Cache-Control'));
+    }
+
+    public function testAlongARouteWaitingForReviewAnswersOnlyWhoMayPreviewIt(): void
+    {
+        $client = static::createClient();
+        self::ensureCoverageSchema($this->db());
+        $waiting = $this->seedRoute('submitted');
+
+        $client->request('GET', '/map/route/'.$waiting.'/along');
+        self::assertResponseStatusCodeSame(404);
+
+        $me = $this->login($client, 'route-along-proposer@example.com');
+        $mine = $this->seedRoute('submitted', (int) $me->getId());
+        $client->request('GET', '/map/route/'.$mine.'/along');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('no-store', (string) $client->getResponse()->headers->get('Cache-Control'));
+
+        $client->request('GET', '/map/route/'.$waiting.'/along');
+        self::assertResponseStatusCodeSame(404);
+        $client->request('GET', '/map/route/999999999/along');
         self::assertResponseStatusCodeSame(404);
     }
 }

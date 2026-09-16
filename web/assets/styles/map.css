@@ -687,6 +687,17 @@
   .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgb(var(--paper-glass) / .95);border-radius:8px;padding:.7rem 1rem}
   .map-top .rg{font-family:var(--serif);font-weight:600;font-size:1.05rem}
   .map-top .sub{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:#5a5d4d;text-transform:uppercase;margin-top:.15rem}
+  /* Scope-change busy line (map-and-search.md §4.5). It covers the subtitle row
+     rather than joining it, so showing it changes no box on the page: same
+     position, same height, no extra map hidden. The spinner is the drawer's
+     (.cc-d-spin), sized down to the mono line it shares. */
+  .map-top-status{position:relative}
+  .cc-scope-busy{position:absolute;inset:0;display:flex;align-items:center;gap:.4rem;
+    background:rgb(var(--paper-glass) / .95);
+    font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:#5a5d4d;text-transform:uppercase;margin-top:.15rem}
+  .cc-scope-busy[hidden]{display:none}
+  .cc-scope-busy .cc-d-spin{width:11px;height:11px;border-width:1.5px;flex:none;
+    border-color:rgba(90,93,77,.25);border-top-color:#5a5d4d}
   .map-top .add-climb{display:inline-block;margin-top:.6rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--trail);padding:.4rem .7rem;border-radius:5px;font-weight:500}
   .map-top .add-climb:hover{background:#ff703d}
   .contrib-fab{display:none}
@@ -695,6 +706,10 @@
     .map-top{top:.8rem;left:.8rem;padding:.4rem .6rem;max-width:52vw}
     .map-top .rg{font-size:.85rem}
     .map-top .sub,.map-top .add-climb{display:none}   /* contribute moves to the FAB */
+    /* No subtitle row to sit on here, so the busy line takes a line of its own
+       for as long as the scope is being drawn. The page does not reflow: the
+       card is absolutely positioned over the map. */
+    .cc-scope-busy{position:static;margin-top:.25rem;font-size:.62rem;letter-spacing:.08em}
     /* a top-level FAB anchored to the map, sitting in the top-right control row just left of the
        legend/layers icons. z-index below those panels (1000) so an opened panel covers it rather
        than the FAB poking through. */
@@ -1288,6 +1303,11 @@
   .cc-d-spin{width:18px;height:18px;border:2px solid rgb(var(--chrome-fg) / .2);
     border-top-color:var(--chrome-head);border-radius:50%;animation:mly-spin .8s linear infinite}
   @media (prefers-reduced-motion: reduce){.cc-d-spin{animation-duration:2.4s}}
+  /* The submitter on a pending card, named as the curator desks name them (a public profile is a visible link). */
+  .cc-d-rec .desk-rider{color:inherit;text-decoration:underline;text-decoration-color:var(--trail);text-underline-offset:2px}
+  .cc-d-rec .desk-rider:hover{color:var(--trail)}
+  /* A drawer list on its way (a route's climbs and places along it): the same wait, one line tall. */
+  .cc-d-list-wait{aspect-ratio:auto;justify-content:flex-start;padding:.7rem .8rem;margin:.9rem 0 0}
   /* no-photo placeholder = a contributor CTA (links to the improve wizard's media step) */
   .cc-d-addphoto{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45rem;margin:1rem 0 0;padding:1.5rem 1rem;min-height:118px;border:1.5px dashed rgb(var(--chrome-fg) / .26);border-radius:8px;background:rgb(var(--chrome-fg) / .03);text-decoration:none;text-align:center;transition:border-color .15s,background .15s}
   .cc-d-addphoto:hover{border-color:var(--trail);background:rgba(255,90,31,.06)}
@@ -1527,6 +1547,7 @@
   .cc-ride-radius{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72)}
   .cc-ride-radius select{background:var(--chrome-field);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;font-size:.78rem;padding:.25rem .35rem}
   .cc-ride-status{margin-top:.5rem;font-size:.8rem;color:var(--ochre)}
+  .cc-ride-status.is-busy{display:flex;align-items:center;gap:.5rem}
   .cc-ride-status .cc-ride-lnk{color:var(--trail);text-decoration:underline;cursor:pointer}
   .cc-ride-note{margin:.55rem 0 0;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
   /* results live in the standard drawer (.cc-near list styles); just the Clear action */

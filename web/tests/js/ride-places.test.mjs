@@ -7,7 +7,7 @@
 // ring sits on the pin body only when a bottom-anchored pin is really there.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { listedPlaceKeys, splitPool, ringOffset } from '../../assets/map/ride-places.js';
+import { listedPlaceKeys, splitPool, ringOffset, mergeListed, listedLettersChanged } from '../../assets/map/ride-places.js';
 
 const feature = (id, extra = {}) => ({ type: 'Feature', properties: { id, ...extra }, geometry: { type: 'Point', coordinates: [5, 52] } });
 
@@ -58,4 +58,19 @@ test('the ring sits on the pin body only when a pin is drawn there', () => {
   assert.deepEqual(ringOffset(true, [0, -16]), [0, -16]);
   assert.deepEqual(ringOffset(false, [0, -16]), [0, 0]);
   assert.deepEqual(ringOffset(true, undefined), [0, 0]);
+});
+
+test('two lists at once (a loaded ride and an open route): a place either lists stays a leaf', () => {
+  const merged = mergeListed(new Map([['ride', new Set(['B:1', 'B:2'])], ['route', new Set(['B:2', 'O:9'])]]));
+  assert.deepEqual([...merged].sort(), ['B:1', 'B:2', 'O:9']);
+  assert.equal(mergeListed(new Map()).size, 0);
+});
+
+test('only the pools whose listed places changed are re-split, and an unchanged set re-splits none', () => {
+  // Each re-split is a setData on a clustered source, and each costs the map a full re-render.
+  assert.deepEqual([...listedLettersChanged(new Set(['B:1', 'O:9']), new Set(['B:1', 'O:9']))], []);
+  assert.deepEqual([...listedLettersChanged(new Set(), new Set())], []);
+  assert.deepEqual([...listedLettersChanged(new Set(['B:1', 'O:9']), new Set(['B:1']))], ['O']);
+  assert.deepEqual([...listedLettersChanged(new Set(), new Set(['B:1', 'B:2', 'G:7']))].sort(), ['B', 'G']);
+  assert.deepEqual([...listedLettersChanged(new Set(['B:1']), new Set(['B:2']))], ['B']);
 });

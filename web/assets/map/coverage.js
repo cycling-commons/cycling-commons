@@ -51,17 +51,29 @@ export function covIconFilter(extra){
 export function covHeatFilter(){
   return covScopeFilter() || null;
 }
+/* Coverage filters go in unvalidated. MapLibre validates a filter against a
+   serialisation of the WHOLE style (Style._validate calls this.serialize(),
+   663 layers here), so every setFilter call costs about 8.5 ms no matter how
+   small the filter is, and the coverage grid is 8 keys x 20 countries = 160
+   icon layers + 160 heat layers. These filters are built a few lines up from
+   fixed shapes, and every layer they land on was validated when addCoverage()
+   added it, so there is nothing here for the validator to find. */
+export const NO_VALIDATE = {validate: false};
 export function updateCoverageScopeFilter(){
   if(!COVERAGE_ON) return;
+  /* One icon filter and one heat filter for the whole grid: both read the
+     active scope and the curated-ref list, never the layer they land on.
+     MapLibre clones what it is given, so one object can serve every layer. */
+  const icon = covIconFilter(), heat = covHeatFilter();
   COVERAGE_KEYS.forEach(([key])=>{
     COVERAGE_CCS.forEach(cc=>{
       const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
       if(map.getLayer(id)){
         if(key==='stays'){ if(cc===COVERAGE_CCS[0]) applyStaysAccessFilter(); }  // once per key; it loops CCS itself
-        else map.setFilter(id, covIconFilter());
+        else map.setFilter(id, icon, NO_VALIDATE);
       }
       const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
-      if(map.getLayer(heatId)) map.setFilter(heatId, covHeatFilter());
+      if(map.getLayer(heatId)) map.setFilter(heatId, heat, NO_VALIDATE);
     });
   });
 }

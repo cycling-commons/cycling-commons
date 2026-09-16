@@ -14,15 +14,15 @@ test('with no drawer open the dot lands in the middle of the map', () => {
 });
 
 test('with a drawer open the dot lands where a clicked spot does', () => {
-  assert.deepEqual(locateOffset(true, 1920, 1080, 0, 1080), [-150, 0]);
+  assert.deepEqual(locateOffset(true, 1920, 1080, 0, 1080), [-200, 0]);
   // Phone: the free half above the sheet, same numbers as pinOffset.
   assert.deepEqual(locateOffset(true, 400, 1000, 0, 1000), [0, -250]);
 });
 
 test('the offset becomes padding on the side the point moves away from', () => {
   assert.deepEqual(offsetAsPadding([0, 0]), { left: 0, right: 0, top: 0, bottom: 0 });
-  // Desktop drawer: 150 px left is 300 px of padding on the right.
-  assert.deepEqual(offsetAsPadding([-150, 0]), { left: 0, right: 300, top: 0, bottom: 0 });
+  // Desktop drawer: 200 px left is 400 px of padding on the right.
+  assert.deepEqual(offsetAsPadding([-200, 0]), { left: 0, right: 400, top: 0, bottom: 0 });
   // Phone sheet: 195 px up is 390 px of padding at the bottom.
   assert.deepEqual(offsetAsPadding([0, -195]), { left: 0, right: 0, top: 0, bottom: 390 });
   assert.deepEqual(offsetAsPadding([20, 10]), { left: 40, right: 0, top: 20, bottom: 0 });

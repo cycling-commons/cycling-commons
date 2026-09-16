@@ -459,6 +459,65 @@ final class RideCheckServiceTest extends KernelTestCase
         self::assertSame([$province], array_column($regions, 'id'), 'the level-2 outline is not a scope chip');
     }
 
+    /** A route along the test ride's line, in the given state. */
+    private function seedRouteInState(ItemState $state): int
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = (new RecommendedRoute())->setName('Along route')
+            ->setGeom(self::line([[5.8000, 50.4000], [5.8150, 50.4000], [5.8300, 50.4000]]))
+            ->setDistanceM(2_130)->setAscentM(0)
+            ->setState($state)->setSource(ItemSource::Auto)
+            ->setSourceRef('fx:along-'.bin2hex(random_bytes(4)))
+            ->setAttributes([]);
+        $em->persist($route);
+        $em->flush();
+
+        return (int) $route->getId();
+    }
+
+    public function testAlongARouteListsTheCorridorOfTheRoutesOwnLine(): void
+    {
+        $route = $this->seedRouteInState(ItemState::Unverified);
+        $early = $this->seedItem('B', 'Route fountain early', self::point(50.40045, 5.8050), 'along-early');
+        $late = $this->seedItem('B', 'Route fountain late', self::point(50.40045, 5.8250), 'along-late');
+        $this->seedItem('B', 'Route fountain far', self::point(50.4450, 5.8150), 'along-far');
+        self::insertCoveragePoi($this->db(), ['letter' => 'D', 'name' => 'OSM route pump', 'lat' => 50.40045, 'lng' => 5.8150, 'ref' => 'node/along-pump']);
+
+        $result = $this->service()->alongRoute($route, allowSubmitted: false);
+
+        self::assertNotNull($result);
+        self::assertSame(RideCheckService::DEFAULT_RADIUS, $result['radiusM']);
+        $letters = array_column($result['groups'], 'letter');
+        $group = $result['groups'][array_search('B', $letters, true)];
+        self::assertSame([$early, $late], array_column($group['items'], 'id'), 'in order along the route, the far one left out');
+        self::assertEqualsWithDelta(0.4, $group['items'][0]['alongKm'], 0.1, 'km along the route line itself');
+        self::assertContains('OSM route pump', self::coverageNames($result));
+    }
+
+    public function testAlongARouteLeavesClimbsToTheirOwnList(): void
+    {
+        // A climb beside the route is in the corridor, but "Climbs on this
+        // route" (RouteClimbService) decides which climbs the route rides.
+        $route = $this->seedRouteInState(ItemState::Verified);
+        $this->seedItem('N', 'Corridor climb', self::point(50.40045, 5.8050), 'along-climb');
+
+        $result = $this->service()->alongRoute($route, allowSubmitted: false);
+
+        self::assertNotNull($result);
+        self::assertNotContains('N', array_column($result['groups'], 'letter'));
+    }
+
+    public function testAlongARouteWaitingForReviewNeedsThePreviewAllowance(): void
+    {
+        $waiting = $this->seedRouteInState(ItemState::Submitted);
+        $rejected = $this->seedRouteInState(ItemState::Rejected);
+
+        self::assertNull($this->service()->alongRoute($waiting, allowSubmitted: false));
+        self::assertNotNull($this->service()->alongRoute($waiting, allowSubmitted: true));
+        self::assertNull($this->service()->alongRoute($rejected, allowSubmitted: true));
+        self::assertNull($this->service()->alongRoute(999_999_999, allowSubmitted: true));
+    }
+
     public function testARideOutsideEveryRegionAnswersWithNone(): void
     {
         $this->seedRegion('rc-elsewhere', 'Elsewhere', 'BE', 6.50, 6.60);
