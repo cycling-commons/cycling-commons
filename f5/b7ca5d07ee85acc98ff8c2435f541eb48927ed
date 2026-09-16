@@ -1,0 +1,290 @@
+web/src/Catalog/Entity/RecommendedRoute.php
+  s_d34f17e49b47aa::t_974216061269ee 166-167,175,179
+  s_d34f17e49b47aa::t_7356034cf8ad01 256-260
+  s_d34f17e49b47aa::t_23d549c7687f98 117
+  s_d34f17e49b47aa::t_a64e0acb5399fd 130
+  s_d34f17e49b47aa::t_761f92ff02c647 168-174
+  s_d34f17e49b47aa::t_d0fb5b1426fe2e 156
+  s_d34f17e49b47aa::t_b02139deb43a6a 218
+  s_d34f17e49b47aa::t_3e7e18835800e1 104
+  s_d34f17e49b47aa::t_5e01de7bf0e1c7 143
+web/src/Moderation/RouteModerationService.php
+  s_d34f17e49b47aa::t_6fa1bbff15b75a 161,170,179
+  s_d34f17e49b47aa::t_3048684e8d6f05 205
+  s_d34f17e49b47aa::t_4f3db870901c8b 122-126,133,135-137,144
+  s_d34f17e49b47aa::t_df713eb8960781 13
+  s_d34f17e49b47aa::t_3347243d697279 116-121,127-129,131,142-143,145-153,156-157,169,171-178,180
+  s_d34f17e49b47aa::t_dd956d425e3dfc 130
+  s_d34f17e49b47aa::t_b791a41a2217bf 181,302-326
+  s_d34f17e49b47aa::t_42185ff924a1d5 182
+web/config/packages/security.yaml
+  s_d34f17e49b47aa::t_bc9c4aaf63dddf 77-81
+web/templates/moderate_routes/_correction_item.html.twig
+  s_d34f17e49b47aa::t_3b356b33b52e61 97-99,111
+  s_d34f17e49b47aa::t_84ffc71be53ed3 16,25,114-118
+  s_d34f17e49b47aa::t_f9c6ac5d932337 100-110
+web/translations/messages.nl.yaml
+  s_d34f17e49b47aa::t_ef9510e8273e5e 2441-2444
+  s_d34f17e49b47aa::t_076430d3ced6ea 3229
+  s_d34f17e49b47aa::t_ada021924e9236 2117-2123
+web/src/Catalog/RouteMetadata.php
+  s_d34f17e49b47aa::t_552686a016cfeb 174-220,224-229
+  s_d34f17e49b47aa::t_fb4d50d184f83e 221-223
+  s_d34f17e49b47aa::t_552c5702e736e5 120-124
+  s_d34f17e49b47aa::t_57d758c1eb3dde 1-52,114-119,125-173,230-292
+  s_d34f17e49b47aa::t_730dab1cf00818 53-113
+web/src/Form/RouteMetadataFields.php
+  s_d34f17e49b47aa::t_18708e44cb584a 1-30,33-129
+  s_d34f17e49b47aa::t_94fe2929dd379f 31-32
+web/src/Contribution/RouteProposalService.php
+  s_d34f17e49b47aa::t_10e8a9e7fb6b12 12
+  s_d34f17e49b47aa::t_dfc5babc344e36 47-48
+  s_d34f17e49b47aa::t_caca11d98aeaf7 86-87,89-91
+  s_d34f17e49b47aa::t_893b077ca034a7 59
+docs/specs/moderation-and-contribution.md
+  s_d34f17e49b47aa::t_b651b2055bcd86 471-481
+  s_d34f17e49b47aa::t_b5de05546b9c73 661-667,676
+web/src/Form/RouteEditType.php
+  s_d34f17e49b47aa::t_4f0460dcfae271 1-57
+web/tests/Moderation/RouteModerateTest.php
+  s_d34f17e49b47aa::t_f19ec877e7eee2 374,376
+  s_d34f17e49b47aa::t_b69c9d8356a8a2 326-327,329-359
+  s_d34f17e49b47aa::t_8cd0bb9dabaed8 387
+  s_d34f17e49b47aa::t_c219358b0fd613 395,397
+  s_d34f17e49b47aa::t_75cccf89677c61 299-325,328,360-373,375,377-386,388-394,396,398-422
+  s_d34f17e49b47aa::t_4912f959d926bd 17
+web/src/Controller/RouteCommunityController.php
+  s_d34f17e49b47aa::t_44608b21758413 128
+  s_d34f17e49b47aa::t_1ffc893be0c3fb 145-147
+  s_d34f17e49b47aa::t_88230247068871 12,125-127,137-144,148-155,157
+web/templates/map/index.html.twig
+  s_d34f17e49b47aa::t_ac9a092e15674c 827-829
+  s_d34f17e49b47aa::t_f98126885567db 715-719
+web/assets/styles/map.css
+  s_d34f17e49b47aa::t_4c4ffb8df3908f 1160-1180
+web/templates/contribute/improve.html.twig
+  s_d34f17e49b47aa::t_c79dd2d5771b2e 346-352
+web/tests/Smoke/CatalogEndpointTest.php
+  s_d34f17e49b47aa::t_89c10b00dfaf53 19
+  s_d34f17e49b47aa::t_b02326996e94b9 65-137
+  s_d34f17e49b47aa::t_7ac1f3b98e977b 42-46
+web/templates/messages/index.html.twig
+  s_d34f17e49b47aa::t_8e9d0c8499fde8 122-126,210-213
+web/templates/moderate_routes/detail.html.twig
+  s_d34f17e49b47aa::t_56a31e6e1e903f 142-144,149-216
+  s_d34f17e49b47aa::t_7e110b4845ada2 32-41
+web/src/Form/ProposeRouteType.php
+  s_d34f17e49b47aa::t_b64a37db71d8b4 42-44,64-65,68
+  s_d34f17e49b47aa::t_c1c6efef3958b2 19,21-28,49-63,67
+  s_d34f17e49b47aa::t_fa1002082d7c21 9
+  s_d34f17e49b47aa::t_6818e079dde3b0 66
+web/assets/map/community.js
+  s_d34f17e49b47aa::t_e441ae3d800eae 254-257,259-269
+  s_d34f17e49b47aa::t_9fd0296c8acd08 16-18,20-22
+  s_d34f17e49b47aa::t_ce56845655ffe5 101,117
+  s_d34f17e49b47aa::t_b0dc7139a2a44e 146-151
+  s_d34f17e49b47aa::t_024a40acb477a5 49-58
+  s_d34f17e49b47aa::t_4244a9e11c8594 126-135
+  s_d34f17e49b47aa::t_5e7e200f43b200 12,47-48
+  s_d34f17e49b47aa::t_0409e502c9ab5b 40-46,59-100
+  s_d34f17e49b47aa::t_bb71ded988e148 106-107
+wiki/developers/numbers.md
+  s_d34f17e49b47aa::t_161557ec9b9fc0 29
+web/src/Moderation/ModerationScopeProvider.php
+  s_d34f17e49b47aa::t_de2acf43027ed2 74-90,92-98
+  s_d34f17e49b47aa::t_e9dbca7104dc02 91
+  s_d34f17e49b47aa::t_049e509b34476a 73
+web/tests/Catalog/CatalogProviderTest.php
+  s_d34f17e49b47aa::t_d3d8c8f236bbcd 880-882,887-893,895-900,908-918,920
+  s_d34f17e49b47aa::t_d58a0705c2f228 919
+  s_d34f17e49b47aa::t_885034834ac58d 894
+  s_d34f17e49b47aa::t_41e218067f1059 829,831-835,837,841-842,844-847,851-857,863-868,874-879,921-945,947-961,963-1000
+  s_d34f17e49b47aa::t_92839ebe5b8162 830,860
+  s_d34f17e49b47aa::t_893a777e752e79 545-546,586
+  s_d34f17e49b47aa::t_bb5b8c221feb32 10-11
+  s_d34f17e49b47aa::t_9dd455a9004854 883-886
+  s_d34f17e49b47aa::t_9fe7fe6dd5ab0d 901-907
+web/src/Controller/MessagesController.php
+  s_d34f17e49b47aa::t_3ec25f5149d2bc 226-228,231
+  s_d34f17e49b47aa::t_7d030ab918ed6b 245-275
+  s_d34f17e49b47aa::t_46e647473e4e0e 97
+  s_d34f17e49b47aa::t_0813580ec0c649 74,98-111,125
+  s_d34f17e49b47aa::t_77cc9eef27592f 195,200-201,204-211,216-217
+web/src/Catalog/Entity/RouteChangeHistory.php
+  s_d34f17e49b47aa::t_0274ae62ca8402 13-15
+  s_d34f17e49b47aa::t_004a21adb81a81 44,48-51,55,62
+  s_d34f17e49b47aa::t_f082094cee759c 96-100
+web/translations/messages.de.yaml
+  s_d34f17e49b47aa::t_ef9510e8273e5e 2444-2447
+  s_d34f17e49b47aa::t_076430d3ced6ea 3230
+  s_d34f17e49b47aa::t_ada021924e9236 2120-2126
+docs/specs/edit-items/R-quality-rides.md
+  s_d34f17e49b47aa::t_dd63af519694ff 139
+  s_d34f17e49b47aa::t_e3e6b17eb85bd5 111,114
+  s_d34f17e49b47aa::t_8c3e36beabf04e 75-83,92
+  s_d34f17e49b47aa::t_08da4b55cfd430 112-113
+  s_d34f17e49b47aa::t_ed150109666e44 131,133-138,140-141,143-147
+  s_d34f17e49b47aa::t_c3b807ee4233a0 132
+  s_d34f17e49b47aa::t_4fdbe360ef7a35 9,73-74,84-91,127-130
+web/src/Catalog/RouteSuggestionReason.php
+  s_d34f17e49b47aa::t_f196cb20e9a7a2 27-29,33-36,39
+  s_d34f17e49b47aa::t_b5da479e94a0e5 26,30-32,37-38,40
+web/tests/js/route-desk-shortcut.test.mjs
+  s_d34f17e49b47aa::t_5e7e200f43b200 11
+  s_d34f17e49b47aa::t_6cf3a003a801c0 1-10,12-40
+docs/specs/catalog-data-model.md
+  s_d34f17e49b47aa::t_92839ebe5b8162 1003,1027
+  s_d34f17e49b47aa::t_2a96e0d96eb36f 1001-1002,1004-1015,1019,1021-1026,1028-1041,1054-1056,1062
+  s_d34f17e49b47aa::t_16679c4fbce3f4 952-954
+  s_d34f17e49b47aa::t_c6630104b10216 1016-1018,1020
+  s_d34f17e49b47aa::t_5325e33237f93d 1057-1061
+  s_d34f17e49b47aa::t_ed371e777211d1 981
+  s_d34f17e49b47aa::t_9eed8299dcd284 1042-1053
+docs/specs/route-domain.md
+  s_d34f17e49b47aa::t_f879b4d102f1e6 710-716
+  s_d34f17e49b47aa::t_ea545792129483 311,315-321
+  s_d34f17e49b47aa::t_b1b5f9d33154b5 545,547-550,552
+  s_d34f17e49b47aa::t_7f6779bb21c2f2 730
+  s_d34f17e49b47aa::t_c4bff02ecaefa7 111-112
+  s_d34f17e49b47aa::t_4fdbe360ef7a35 117-118,312-314
+  s_d34f17e49b47aa::t_351b2ced910811 302-305
+  s_d34f17e49b47aa::t_5527bde2a8a53b 726
+  s_d34f17e49b47aa::t_640c2bcaa304c7 546
+  s_d34f17e49b47aa::t_ade527dae0c511 515-544,551,553-588
+  s_d34f17e49b47aa::t_4e7d00eb65df32 589
+web/src/Catalog/Entity/RouteSuggestion.php
+  s_d34f17e49b47aa::t_1784a394f80021 69,71-73,80
+  s_d34f17e49b47aa::t_8b6b3ece4ce2bc 15-16,18
+  s_d34f17e49b47aa::t_dd956d425e3dfc 70
+  s_d34f17e49b47aa::t_f6cc9da57c185f 123-128
+  s_d34f17e49b47aa::t_e08b1ac114601d 48-56
+web/assets/map/map.js
+  s_d34f17e49b47aa::t_4d5cf8e5e2619f 151-155
+web/src/Catalog/CatalogFormRegistry.php
+  s_d34f17e49b47aa::t_9acd70c8c0bbfe 246
+  s_d34f17e49b47aa::t_0bfc886fbbc46e 255-256
+web/src/Controller/ContributeController.php
+  s_d34f17e49b47aa::t_7c5fb371b2c91e 296
+  s_d34f17e49b47aa::t_cd46c5754861d3 245-257,265
+  s_d34f17e49b47aa::t_13820b90cc9ba8 471-477
+web/translations/messages.en.yaml
+  s_d34f17e49b47aa::t_ada021924e9236 2684-2690
+  s_d34f17e49b47aa::t_ef9510e8273e5e 1878-1881
+  s_d34f17e49b47aa::t_076430d3ced6ea 3248
+web/translations/messages.fr.yaml
+  s_d34f17e49b47aa::t_ef9510e8273e5e 2436-2439
+  s_d34f17e49b47aa::t_076430d3ced6ea 3222
+  s_d34f17e49b47aa::t_ada021924e9236 2112-2118
+web/tests/Community/RouteMetadataCorrectionTest.php
+  s_d34f17e49b47aa::t_6734d198eb28d9 282,285-289,299-303
+  s_d34f17e49b47aa::t_d77ec0097fe583 1-281,283-284,290-298,304-343
+web/src/Community/RouteCommunityService.php
+  s_d34f17e49b47aa::t_f196cb20e9a7a2 152,162
+  s_d34f17e49b47aa::t_e9dbca7104dc02 146
+  s_d34f17e49b47aa::t_c0224c4a9036c4 143-145,147
+web/tests/Moderation/RouteModerationServiceTest.php
+  s_d34f17e49b47aa::t_63ce9929c9f011 147-167,170-267
+  s_d34f17e49b47aa::t_2ac58d7f950d75 168-169
+  s_d34f17e49b47aa::t_e7c4cf866b4706 125
+  s_d34f17e49b47aa::t_9255cb822393e0 13
+  s_d34f17e49b47aa::t_e531ffa756d5f9 130-132
+  s_d34f17e49b47aa::t_77d7c9cae58528 146
+web/assets/map/drawer.js
+  s_d34f17e49b47aa::t_38c69a121589c7 41-51
+  s_d34f17e49b47aa::t_acd1e452036819 30
+  s_d34f17e49b47aa::t_e71153f6d51400 94
+  s_d34f17e49b47aa::t_ce56845655ffe5 563
+  s_d34f17e49b47aa::t_f8d73b9921d341 556-562
+web/src/Controller/MapController.php
+  s_d34f17e49b47aa::t_f98126885567db 160-164
+  s_d34f17e49b47aa::t_92839ebe5b8162 645
+  s_d34f17e49b47aa::t_ac58a3f784a58f 615-644,646-665
+  s_d34f17e49b47aa::t_eee3a24b4d12a3 417-419
+  s_d34f17e49b47aa::t_ac9a092e15674c 91-93
+web/src/Moderation/RouteChangeRows.php
+  s_d34f17e49b47aa::t_1f32457d89745c 1-42,44-48,50-102
+  s_d34f17e49b47aa::t_b73e29b137ae60 43,49
+web/src/Catalog/CatalogSchemaProvider.php
+  s_d34f17e49b47aa::t_abe022ef35af6a 52-81
+web/translations/messages.es.yaml
+  s_d34f17e49b47aa::t_ef9510e8273e5e 1887-1890
+  s_d34f17e49b47aa::t_ada021924e9236 2692-2698
+  s_d34f17e49b47aa::t_076430d3ced6ea 3256
+web/src/Moderation/RouteProposalDetails.php
+  s_d34f17e49b47aa::t_6940dcac4c8a05 15-17
+  s_d34f17e49b47aa::t_cb0404c133fa4f 11
+  s_d34f17e49b47aa::t_274d5c19e8a168 50,52-53
+web/migrations/Version20260916213000.php
+  s_d34f17e49b47aa::t_d20e8ee62e943e 1-45
+web/templates/contribute/_route_metadata_fields.html.twig
+  s_d34f17e49b47aa::t_0915dc077b789f 1-74
+docs/specs/map-and-search.md
+  s_d34f17e49b47aa::t_92839ebe5b8162 202,212
+  s_d34f17e49b47aa::t_b20c61f6192059 2069-2073,2088
+  s_d34f17e49b47aa::t_56825f3b87e802 2080
+  s_d34f17e49b47aa::t_4d2fb45529fcae 2074-2079,2081-2087
+  s_d34f17e49b47aa::t_3337ea33523a12 117-120
+  s_d34f17e49b47aa::t_b92b886b1eb919 199-201,203-211,213-231
+  s_d34f17e49b47aa::t_7d9d373d4f3e51 173-174,178
+web/tests/Contribution/ImproveTest.php
+  s_d34f17e49b47aa::t_6e35a92367e911 186-230
+web/templates/contribute/propose_route.html.twig
+  s_d34f17e49b47aa::t_36bc2b6e089cd2 131
+web/src/Catalog/CatalogProvider.php
+  s_d34f17e49b47aa::t_e5160a79765f83 226
+  s_d34f17e49b47aa::t_eae9ee75fdf425 50-54,57,59-67,72-73,75-77,80,86-94,96-97,101,103
+  s_d34f17e49b47aa::t_44b9b5706effcd 248
+  s_d34f17e49b47aa::t_2abc04bb700ee9 517,520
+  s_d34f17e49b47aa::t_447e5d8942d29d 200
+  s_d34f17e49b47aa::t_e1aaf393320d92 292-297
+  s_d34f17e49b47aa::t_f52e29f3707f0b 329,333
+  s_d34f17e49b47aa::t_8d3c7522b8a7ee 158-161,163-166
+  s_d34f17e49b47aa::t_9cdf0cef1b7e8b 148,150
+  s_d34f17e49b47aa::t_52e6ad7641a6c0 149,151-153,155-157,167-168,172-189,192-199,201-221,223,225
+  s_d34f17e49b47aa::t_7c83bca7e57329 190-191
+  s_d34f17e49b47aa::t_d9344f8424bdc4 222,224
+  s_d34f17e49b47aa::t_54afae10b07431 624,626-631,636-637
+  s_d34f17e49b47aa::t_92839ebe5b8162 162
+  s_d34f17e49b47aa::t_fe766cc4d3f0bc 564,567
+  s_d34f17e49b47aa::t_f8149364929720 317,320
+  s_d34f17e49b47aa::t_dbadffd924a2d7 95
+web/src/Moderation/RouteQueue.php
+  s_d34f17e49b47aa::t_f7b4d40cd2d5d4 86
+  s_d34f17e49b47aa::t_0a753044adb0d7 119-121
+  s_d34f17e49b47aa::t_54c33dd4e1d671 84-85,88,93-99,122
+web/assets/map/catalog-load.js
+  s_d34f17e49b47aa::t_2f44ea6eb51de7 247-248,250,257
+  s_d34f17e49b47aa::t_9dbbb0b8bbf622 175-179
+  s_d34f17e49b47aa::t_be08fbd99aeb91 134-140
+  s_d34f17e49b47aa::t_530c4abc141d14 122-124
+  s_d34f17e49b47aa::t_92839ebe5b8162 169,249
+  s_d34f17e49b47aa::t_425d565ea72416 182,185-223,233,245
+  s_d34f17e49b47aa::t_0d45cce75aef4b 97-99
+  s_d34f17e49b47aa::t_0fb295809468f6 121,125-126,128,132-133,141-168,170-174,180-181,183-184,224-225,232,234-236,244
+  s_d34f17e49b47aa::t_8a5bc898c71710 253
+  s_d34f17e49b47aa::t_062f0245fec0e8 246
+web/assets/map/util.js
+  s_d34f17e49b47aa::t_5e7e200f43b200 8-23
+web/src/Controller/RouteModerateController.php
+  s_d34f17e49b47aa::t_f0a37e5241c7d4 252-262,264-266,271,279
+  s_d34f17e49b47aa::t_a53e0d2b7d3dc0 188-194,196-197
+  s_d34f17e49b47aa::t_2b3a03056501e4 10,15
+web/src/Catalog/ClaimedOsmRefs.php
+  s_d34f17e49b47aa::t_cbbf1e894092aa 26-30,32,34-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f5b7ca5d07ee85acc98ff8c2435f541eb48927ed",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
