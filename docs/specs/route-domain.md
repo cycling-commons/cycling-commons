@@ -271,16 +271,41 @@ directly (`App\Moderation\RouteQueue`).
 
 - **Queue list**: pending proposals and pending corrections, **oldest first**,
   optional per-region filter, restricted to the curator's moderation scope.
-  Each proposal row carries its region's `activeInRegion` count vs the cap.
+  Each proposal row names its proposer and its region and carries the region's
+  `activeInRegion` count vs the cap (§5.1).
   The shell's ROUTES tab badge counts proposals **plus** pending corrections,
   so a waiting correction is never invisible.
 - **Decisions happen only on the detail page** (the review surface: trimmed
   track on a map, metadata, distance/ascent, proposer, region count vs cap):
   approve / reject (note) / retire (note required) per the route-domain.md §3
-  guards. The metadata table's "Proposed by" row names the proposer's display
-  name and links it to their rider profile (`/riders/{uuid}`) only when the
-  rider made that profile public; otherwise it says the profile is not public
-  (owner 2026-09-15).
+  guards. The decision select starts empty ("Choose a decision") and must be
+  set; a proposal offers approve and reject, and retiring a live route is its
+  own form. The decision's text field is the message sent to the proposer with
+  the decision; the separate edit form's note is the route's public "Note for
+  riders" in the map drawer, and the labels say so.
+- **Who proposed it** follows the desks' one naming rule
+  (moderation-and-contribution.md, "Curator-facing naming follows the rider's
+  own choice"), the same on the queue card, the review page and a route
+  correction card (which names the rider who filed it before its stretch
+  count):
+  `App\Moderation\DeskRider` gives the display name, linked to
+  `/riders/{uuid}`, when the rider's profile is public and they have a display
+  name, and the stable pseudonym `rider#<hash4>` with no link otherwise
+  (`moderate/_rider_name.html.twig`). The link is styled as a link.
+- **Region** is the region's name in the page's language: `region.<slug>.label`
+  through the `cc_region_label()` Twig function
+  (`App\Twig\RegionLabelExtension`), falling back to the registry name, and
+  "No region" for a route without one. The same name is used on the queue card,
+  the review page and the region filter; a region id is never shown.
+- **The rider's route details**: the review page's metadata table lists every
+  field the rider fills in on `/propose-route`, in the form's order and under
+  the form's own labels: difficulty, dominant surface, best season, suitable
+  bike types, gradient cap and note for riders
+  (`App\Moderation\RouteProposalDetails`). Values show in the page's
+  language (difficulty and surface by their msgids, seasons as
+  `map.season_*`, bike types as `map.bike_*` via `BikeType::labelKey()`, the
+  gradient cap as `propose_route.gradient_*`); the note is shown as the rider
+  wrote it. A field left unset shows a dash, as every other empty row does.
 - **Curator metadata edit**: registry-driven form (same field definitions as
   the proposal form, route-domain.md §9); every changed field appends one
   `route_change_history` row with the route's *actual* old value; unchanged
@@ -312,6 +337,17 @@ NULL region as its own bucket
 is a deliberate unlocked COUNT (**known TOCTOU**: two concurrent approvals at
 cap−1 can both pass — accepted tradeoff for a soft editorial cap with few
 curators, recoverable via retire).
+
+The cap is about live routes only; it has nothing to do with Best of. The desk
+shows it as "N / cap active" on each queue card and in the review page's header
+(`moderate_routes/_region_cap.html.twig`), and the count explains itself: the
+explanation is its `title` on hover, and a description tied to it by
+`aria-describedby` that shows under the count when it has keyboard focus. The
+words, in five locales (`moderate_routes.region_cap_help`, or
+`region_cap_help_none` for a route without a region): "Live recommended routes
+in Wallonia: 11 of at most 30. Approving adds one; once there are 30, a route
+must be retired first." Approving at the cap is refused with "This region is
+already at its active-route cap."
 
 ## 6. Community loop — the JSON API
 
@@ -388,7 +424,7 @@ uncached `/community` fetch on drawer-open; best-of is a separate public
 endpoint (route-domain.md §8). Community writes therefore never invalidate
 the bulk payload.
 
-### 6.4 Climbs on a route: the rule
+### 6.4 Climbs and places along a route
 
 A climb (letter N) is a line from foot to summit (`attributes.route`, see
 [edit-items/N-climbs.md](edit-items/N-climbs.md)). It is listed on a route when
@@ -428,6 +464,15 @@ when a drawer opens.
 Known limit: a route that rides the same road up and down (out and back)
 locates both passes to one of them, so the direction test can read the ascent
 as a descent.
+
+**Along a route.** `GET /map/route/{id}/along` answers the route drawer's
+places along the route (map-and-search.md §6.3) with the same access as the
+climbs above (both go through `MapController::routeListResponse`):
+`{radiusM, groups, coverage}` from `RideCheckService::alongRoute()`, the ride
+check's commons and open-coverage corridor arms (map-and-search.md §9) run on
+the route's stored geometry at `DEFAULT_RADIUS` (250 m), km along measured on
+that line. Climbs (N) are not in `groups`: the rule above decides which climbs a
+route rides.
 
 ## 7. Located corrections (stretches on a suggestion)
 
@@ -592,7 +637,7 @@ backfill):
 | `season` | `list<string>` | multi-select over Spring/Summer/Autumn/Winter (capitalized attribute values — distinct from the lowercase `Season` vote enum); **no "Any"** — all four selected is the new "any". One stored shape everywhere: the importer canonicalizes the harvest artifact's lowercase scalar at intake and `Version20260719120000` backfilled the pre-normalization rows, so no reader tolerates a scalar |
 | `dominantSurface` | string | `SurfaceVocabulary::DECLARABLE` — the full 9-value set (Asphalt, Concrete, Paving stones, Sett — pavé, Compacted, Fine gravel, Gravel, Dirt, Rock), shared with the A-layer curator `surface` field; no route stores anything outside this set (`Mixed` is only a coarse bucket output, never a stored value; harvested *A-layer* rows do hold harvester-only labels — Cycleway · RAVeL, Sett (pavé), Unhewn cobblestone, Cobblestone, Surface unverified — which display as-is). `SurfaceVocabulary::BUCKETS` folds these to coarse Asphalt/Mixed/Gravel for the desk's measured-vs-declared hint |
 | `bikeTypes` | `list<string>` over `BikeType::values()` | **semantics: designed-for, not physically rideable** (a route rideable on MTB but built for road excludes MTB — consistent with the route-domain.md §8.3 gate); Handbike is one of these values, selected like any other. `BikeTypeVocabulary::normalize()` filters to valid values and de-duplicates |
-| `gradientLimited` | string | stored values stay `No` / `≤6%` / `≤9%`; display-only labels ("No cap" / "Whole route ≤ 6%" / "Whole route ≤ 9%") — an accessibility guarantee that the whole route stays under the cap |
+| `gradientLimited` | string | stored values stay `No` / `≤6%` / `≤9%`; display-only labels ("No cap" / "Whole route ≤ 6%" / "Whole route ≤ 9%", translated as `propose_route.gradient_none` / `gradient_6` / `gradient_9`, keyed by stored value in `RouteProposalDetails::GRADIENT_LABELS`): an accessibility guarantee that the whole route stays under the cap |
 | `note` | string ≤ 2000 | free text for riders |
 | `surfaces` | profile object | **derived, never user-supplied** — `SurfaceProfiler` A-layer intersect with disclosed coverage |
 | `quietness` / `scenic` / `friendliness` | string "1".."5" | curator add-fields (ratings) |

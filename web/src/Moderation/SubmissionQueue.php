@@ -10,7 +10,6 @@ use App\Catalog\Entity\Item;
 use App\Catalog\ItemType;
 use App\Catalog\Links\LinkVerdictStore;
 use App\Catalog\Links\SafeBrowsing;
-use App\Catalog\RiderPseudonym;
 use App\Catalog\SubmissionType;
 use App\Contribution\ChangeValue;
 use App\Media\Entity\MediaUpload;
@@ -185,7 +184,7 @@ final class SubmissionQueue
      * @param ?int    $decidedBy scope to one moderator's own decisions
      * @param ?string $status    'approved' | 'rejected'; null = both
      *
-     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
+     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
      */
     public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null): array
     {
@@ -195,7 +194,7 @@ final class SubmissionQueue
 
         $rows = $this->db->fetchAllAssociative(
             'SELECT s.id, s.item_id, s.title, s.type, s.letter, s.status, s.user_id, s.decided_at, s.decision_note,
-                    s.changes, u.display_name AS decided_by_name,
+                    s.changes, u.display_name AS decided_by_name, u.public_profile AS decided_by_public, u.uuid AS decided_by_uuid,
                     su.public_profile, su.display_name, su.uuid AS user_uuid,
                     rr.body_text AS rider_reply
              FROM submission s LEFT JOIN users u ON u.id = s.decided_by
@@ -236,12 +235,14 @@ final class SubmissionQueue
                 'now' => $new,
                 'photos' => $photosBySubmission[(int) $r['id']] ?? [],
                 'who' => self::submitterLabel($r),
+                'whoUuid' => self::submitterUuid($r),
                 'when' => null !== $r['decided_at']
                     ? RelativeTime::ago(new \DateTimeImmutable((string) $r['decided_at']), $now)
                     : '',
                 'status' => (string) $r['status'],
-                // Curator display name, not a pseudonym.
-                'decidedBy' => null !== $r['decided_by_name'] ? (string) $r['decided_by_name'] : null,
+                // A fellow curator: display name, linked when their profile is public (DeskRider::colleague).
+                'decidedBy' => DeskRider::colleague($r['decided_by_name'], $r['decided_by_public'], $r['decided_by_uuid'])['name'] ?? null,
+                'decidedByUuid' => DeskRider::colleague($r['decided_by_name'], $r['decided_by_public'], $r['decided_by_uuid'])['uuid'] ?? null,
                 'note' => null !== $r['decision_note'] && '' !== $r['decision_note'] ? (string) $r['decision_note'] : null,
                 'riderReply' => null !== $r['rider_reply'] && '' !== $r['rider_reply'] ? (string) $r['rider_reply'] : null,
                 'sortAt' => null !== $r['decided_at'] ? (new \DateTimeImmutable((string) $r['decided_at']))->getTimestamp() : 0,
@@ -367,7 +368,7 @@ final class SubmissionQueue
     /**
      * Trash entries, rebuilt from the content-free audit log.
      *
-     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,when:string,status:string,decidedBy:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
+     * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
      */
     private function trashed(?int $decidedBy, int $limit, \DateTimeImmutable $now): array
     {
@@ -378,7 +379,7 @@ final class SubmissionQueue
             $params['me'] = $decidedBy;
         }
         $rows = $this->db->fetchAllAssociative(
-            'SELECT l.note, l.created_at, u.display_name AS actor_name
+            'SELECT l.note, l.created_at, u.display_name AS actor_name, u.public_profile AS actor_public, u.uuid AS actor_uuid
              FROM admin_action_log l LEFT JOIN users u ON u.id = l.actor_id
              WHERE '.implode(' AND ', $where).'
              ORDER BY l.created_at DESC, l.id DESC
@@ -400,9 +401,11 @@ final class SubmissionQueue
                 // Content-free: empty photos keep the shared row shape.
                 'photos' => [],
                 'who' => '',
+                'whoUuid' => '',
                 'when' => RelativeTime::ago($at, $now),
                 'status' => 'trashed',
-                'decidedBy' => null !== $r['actor_name'] ? (string) $r['actor_name'] : null,
+                'decidedBy' => DeskRider::colleague($r['actor_name'], $r['actor_public'], $r['actor_uuid'])['name'] ?? null,
+                'decidedByUuid' => DeskRider::colleague($r['actor_name'], $r['actor_public'], $r['actor_uuid'])['uuid'] ?? null,
                 'note' => null,
                 'riderReply' => null,
                 'was' => '',
@@ -517,7 +520,7 @@ final class SubmissionQueue
                 'lat' => (float) $r['lat'],
                 'lng' => (float) $r['lng'],
                 'who' => self::submitterLabel($r),
-                'whoUuid' => ($r['public_profile'] ?? false) ? (string) ($r['user_uuid'] ?? '') : '',
+                'whoUuid' => self::submitterUuid($r),
                 'when' => RelativeTime::ago(new \DateTimeImmutable((string) $r['created_at']), $now),
                 'body' => (string) $r['body'],
                 'was' => $was,
@@ -633,18 +636,23 @@ final class SubmissionQueue
     }
 
     /**
-     * Pseudonymous unless `public_profile` (docs/specs/account-and-auth.md).
+     * The submitter's desk name (DeskRider: display name when public, else pseudonym).
      *
      * @param array<string, mixed> $row
      */
     private static function submitterLabel(array $row): string
     {
-        $name = trim((string) ($row['display_name'] ?? ''));
-        if (($row['public_profile'] ?? false) && '' !== $name) {
-            return $name;
-        }
+        return DeskRider::of((int) $row['user_id'], $row['display_name'] ?? null, $row['public_profile'] ?? null, $row['user_uuid'] ?? null)['name'];
+    }
 
-        return RiderPseudonym::for($row['user_id']);
+    /**
+     * The submitter's profile uuid when the desk may link their name (DeskRider), else ''.
+     *
+     * @param array<string, mixed> $row
+     */
+    private static function submitterUuid(array $row): string
+    {
+        return DeskRider::of((int) $row['user_id'], $row['display_name'] ?? null, $row['public_profile'] ?? null, $row['user_uuid'] ?? null)['uuid'] ?? '';
     }
 
     /**

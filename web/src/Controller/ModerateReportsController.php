@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Moderation\DeskRider;
 use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use App\Support\ContentReportService;
@@ -123,7 +124,9 @@ final class ModerateReportsController extends AbstractController
             'resolved' => $resolved,
             'siblings' => $siblings,
             'statuses' => ReportStatus::all(),
-            'decided_by' => $this->curator($report),
+            // Named the way every desk names people (DeskRider).
+            'author_rider' => null !== $resolved['author'] ? DeskRider::ofUser($resolved['author']) : null,
+            'decided_by' => null !== ($curator = $this->curator($report)) ? DeskRider::colleagueUser($curator) : null,
         ]);
     }
 

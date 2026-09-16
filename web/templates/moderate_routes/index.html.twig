@@ -36,7 +36,7 @@
     <label>{{ 'moderate_routes.filter.region'|trans }}
       <select name="region">
         <option value="">{{ 'moderate_routes.filter.all_regions'|trans }}</option>
-        {% for r in regions %}<option value="{{ r.id }}"{{ filter_region == r.id ? ' selected' }}>{{ r.name }}</option>{% endfor %}
+        {% for r in regions %}<option value="{{ r.id }}"{{ filter_region == r.id ? ' selected' }}>{{ cc_region_label(r.slug, r.name) }}</option>{% endfor %}
       </select>
     </label>
     <button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button>

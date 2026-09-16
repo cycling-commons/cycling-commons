@@ -28,10 +28,11 @@
         <h3 class="q-title">{{ item.name }}</h3>
         <span class="q-when">{{ item.when }}</span>
       </div>
+      {% set region_label = item.regionId is null ? '' : cc_region_label(item.regionSlug, item.region) %}
       <div class="q-submitter">
-        {{ item.who }} &middot; {{ item.region ?? 'moderate_routes.region_none'|trans }}
+        {% include 'moderate/_rider_name.html.twig' with {rider: item.proposer} only %} &middot; {{ region_label ?: 'moderate_routes.region_none'|trans }}
         &middot;
-        <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': item.activeInRegion, '%cap%': item.cap}) }}</span>
+        {% include 'moderate_routes/_region_cap.html.twig' with {active: item.activeInRegion, cap: item.cap, region_label: region_label, cap_id: 'rcap-' ~ item.id} only %}
       </div>
     </div>
 

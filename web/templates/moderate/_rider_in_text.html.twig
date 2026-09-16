@@ -1,0 +1,16 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Partial: a translated sentence with a person's name in it ("by %who%"), the
+  name written by moderate/_rider_name.html.twig so it can be a link. The
+  caller translates with the placeholder set to the marker `@@rider@@`; the
+  text either side of it is escaped as usual.
+
+  Parameters:
+    text   string                            the translated sentence
+    rider  array{name:string, uuid:?string}
+#}
+{%- set parts = text|split('@@rider@@', 2) -%}
+{{ parts[0] }}
+{%- if parts|length > 1 -%}
+{% include 'moderate/_rider_name.html.twig' with {rider: rider} only %}{{ parts[1] }}
+{%- endif -%}

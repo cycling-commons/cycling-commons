@@ -12,6 +12,7 @@ use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Moderation\DeskRider;
 use App\Security\PseudonymousKey;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -332,14 +333,14 @@ final class MediaTakedownService
     /**
      * Answered rights requests, newest first. Read from the event log.
      *
-     * @return list<array{action: string, note: ?string, requestedAt: ?\DateTimeImmutable, decidedAt: \DateTimeImmutable, waitedHours: ?int, actor: ?string, uuid: string, itemName: string, gone: bool}>
+     * @return list<array{action: string, note: ?string, requestedAt: ?\DateTimeImmutable, decidedAt: \DateTimeImmutable, waitedHours: ?int, actor: array{name: string, uuid: string|null}|null, uuid: string, itemName: string, gone: bool}>
      */
     public function decidedCards(int $page = 1, int $perPage = self::PER_PAGE): array
     {
-        /** @var list<array{action: string, note: ?string, created_at: string, display_name: ?string, public_profile: ?bool, media_id: string, requested_at: ?string}> $rows */
+        /** @var list<array{action: string, note: ?string, created_at: string, display_name: ?string, public_profile: ?bool, user_uuid: ?string, media_id: string, requested_at: ?string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             "SELECT e.action, e.note, e.created_at, e.media_id,
-                    u.display_name, u.public_profile,
+                    u.display_name, u.public_profile, u.uuid AS user_uuid,
                     req.created_at AS requested_at
                FROM media_moderation_event e
           LEFT JOIN users u ON u.id = e.actor_id
@@ -378,7 +379,9 @@ final class MediaTakedownService
                 'waitedHours' => null !== $requestedAt
                     ? max(0, (int) round(($decidedAt->getTimestamp() - $requestedAt->getTimestamp()) / 3600))
                     : null,
-                'actor' => ($r['public_profile'] ?? false) ? (string) ($r['display_name'] ?? '') : null,
+                // A colleague is always named here; the link follows their public profile
+                // (DeskRider::colleague, moderation-and-contribution.md curator-facing naming).
+                'actor' => DeskRider::colleague($r['display_name'], $r['public_profile'] ?? false, $r['user_uuid']),
                 'uuid' => (string) $r['media_id'],
                 'itemName' => null !== $upload ? ($this->item($upload)?->getName() ?? '') : '',
                 'gone' => null === $upload,

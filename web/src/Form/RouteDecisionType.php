@@ -23,7 +23,13 @@ final class RouteDecisionType extends AbstractType
         $builder
             ->add('route_id', HiddenType::class, ['constraints' => [new NotBlank()]])
             ->add('decision', ChoiceType::class, [
-                'choices' => ['Approve' => 'approve', 'Reject' => 'reject', 'Retire' => 'retire'],
+                // A submitted proposal is approved or rejected; retiring is for a live route.
+                'choices' => $options['with_retire']
+                    ? ['moderate_routes.decision.approve' => 'approve', 'moderate_routes.decision.reject' => 'reject', 'moderate_routes.decision.retire' => 'retire']
+                    : ['moderate_routes.decision.approve' => 'approve', 'moderate_routes.decision.reject' => 'reject'],
+                // No decision is picked for the curator: they choose one before saving.
+                'placeholder' => 'moderate_routes.decision.placeholder',
+                'required' => true,
                 'constraints' => [new NotBlank()],
             ])
             ->add('note', TextareaType::class, ['required' => false]);
@@ -32,6 +38,7 @@ final class RouteDecisionType extends AbstractType
     #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults(['data_class' => null]);
+        $resolver->setDefaults(['data_class' => null, 'with_retire' => true]);
+        $resolver->setAllowedTypes('with_retire', 'bool');
     }
 }

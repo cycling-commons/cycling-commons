@@ -11,11 +11,13 @@ use App\Catalog\RouteSuggestionStatus;
 use App\Catalog\SurfaceVocabulary;
 use App\Entity\User;
 use App\Form\RouteDecisionType;
+use App\Moderation\DeskRider;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RegionFullException;
 use App\Moderation\RetentionService;
 use App\Moderation\RouteModerationService;
+use App\Moderation\RouteProposalDetails;
 use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TrashBlockedException;
@@ -160,8 +162,12 @@ final class RouteModerateController extends AbstractController
     {
         $row = $db->fetchAssociative(
             'SELECT r.id, r.name, ST_AsGeoJSON(r.geom) AS geom, r.distance_m, r.ascent_m, r.region_id, r.attributes, r.state,
-                    u.display_name AS proposer_name, u.uuid AS proposer_uuid, u.public_profile AS proposer_public
-             FROM recommended_route r LEFT JOIN users u ON u.id = r.proposed_by WHERE r.id = :id',
+                    r.proposed_by, u.display_name AS proposer_name, u.uuid AS proposer_uuid, u.public_profile AS proposer_public,
+                    reg.name AS region_name, reg.slug AS region_slug
+             FROM recommended_route r
+                  LEFT JOIN users u ON u.id = r.proposed_by
+                  LEFT JOIN region reg ON reg.id = r.region_id
+             WHERE r.id = :id',
             ['id' => $id],
         );
         $servedValues = array_map(static fn (ItemState $s): string => $s->value, ItemState::SERVED);
@@ -189,6 +195,7 @@ final class RouteModerateController extends AbstractController
             ? $this->createForm(RouteDecisionType::class, null, [
                 'action' => $this->generateUrl('moderate_routes_decide'),
                 'method' => 'POST',
+                'with_retire' => false,
             ])
             : null;
 
@@ -210,14 +217,13 @@ final class RouteModerateController extends AbstractController
             'route' => [
                 'id' => $id, 'name' => (string) $row['name'], 'geom' => $row['geom'],
                 'km' => round(((int) $row['distance_m']) / 1000, 1), 'ascent' => $row['ascent_m'],
-                'regionId' => $row['region_id'], 'state' => $row['state'], 'attributes' => $attrs,
-                // Who proposed it. The public profile is linked only when the rider made it public.
-                'proposer' => null === $row['proposer_name'] ? null : [
-                    'name' => (string) $row['proposer_name'],
-                    'uuid' => null !== $row['proposer_uuid'] ? (string) $row['proposer_uuid'] : null,
-                    'public' => (bool) $row['proposer_public'],
-                ],
+                'regionId' => $row['region_id'], 'region' => $row['region_name'], 'regionSlug' => $row['region_slug'],
+                'state' => $row['state'], 'attributes' => $attrs,
+                // Named by the same rule as the queue card (DeskRider).
+                'proposer' => null === $row['proposed_by'] ? null
+                    : DeskRider::of((int) $row['proposed_by'], $row['proposer_name'], $row['proposer_public'], $row['proposer_uuid']),
             ],
+            'details' => RouteProposalDetails::rows($attrs),
             'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),
             'region_cap' => $this->moderation->regionCap(),
             'suggested_surface' => $suggested,

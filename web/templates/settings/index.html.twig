@@ -396,6 +396,13 @@
            Said here rather than only on /privacy, because this is the screen
            where somebody flips the switch and then goes looking. #}
         <p class="hint" style="margin:.5rem 0 0">{{ 'settings.toggle_public_delay'|trans }}</p>
+        {# A curator is named to other curators on the moderation desks whatever
+           this toggle says, because a decision has an author. Their public
+           profile on the site follows the toggle like every rider's
+           (moderation-and-contribution.md, curator-facing naming). #}
+        {% if is_granted('ROLE_CURATOR') %}
+          <p class="hint" style="margin:.5rem 0 0">{{ 'settings.toggle_public_curator'|trans }}</p>
+        {% endif %}
       </div>
       <div class="field">
         {# The release list. Beside the public-profile toggle because both are

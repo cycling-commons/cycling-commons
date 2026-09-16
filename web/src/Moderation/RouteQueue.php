@@ -38,13 +38,14 @@ final class RouteQueue
     {
         ['sql' => $where, 'params' => $params, 'types' => $types] = $this->pendingWhere($scope, $regionId);
 
-        $sql = 'SELECT r.id, r.name, r.region_id, reg.name AS region_name, r.distance_m, r.ascent_m,
-                       r.proposed_by, r.created_at,
+        $sql = 'SELECT r.id, r.name, r.region_id, reg.name AS region_name, reg.slug AS region_slug, r.distance_m, r.ascent_m,
+                       r.proposed_by, r.created_at, u.display_name, u.public_profile, u.uuid AS user_uuid,
                        (SELECT COUNT(*) FROM recommended_route a
                          WHERE a.state IN '.ItemState::servedSqlTuple()."
                            AND a.region_id IS NOT DISTINCT FROM r.region_id) AS active_in_region
                 FROM recommended_route r
                 LEFT JOIN region reg ON reg.id = r.region_id
+                LEFT JOIN users u ON u.id = r.proposed_by
                 WHERE {$where}
                 ORDER BY r.created_at ASC, r.id ASC
                 LIMIT :lim OFFSET :off";
@@ -59,9 +60,10 @@ final class RouteQueue
             'name' => (string) $row['name'],
             'regionId' => null === $row['region_id'] ? null : (int) $row['region_id'],
             'region' => $row['region_name'],
+            'regionSlug' => $row['region_slug'],
             'km' => round(((int) $row['distance_m']) / 1000, 1),
             'ascent' => null === $row['ascent_m'] ? null : (int) $row['ascent_m'],
-            'who' => 'rider#'.substr(hash('crc32b', 'cc-sub-'.$row['proposed_by']), 0, 4),
+            'proposer' => DeskRider::of((int) $row['proposed_by'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'activeInRegion' => (int) $row['active_in_region'],
             'cap' => $cap,
@@ -80,9 +82,11 @@ final class RouteQueue
         ['sql' => $where, 'params' => $params, 'types' => $types] = $this->suggestionWhere($scope, $regionId);
 
         $sql = "SELECT s.id, s.route_id, r.name AS route_name, s.reason, s.note, s.user_id, s.created_at,
-                       COALESCE(jsonb_array_length(s.segments), 0) AS seg_count
+                       COALESCE(jsonb_array_length(s.segments), 0) AS seg_count,
+                       u.display_name, u.public_profile, u.uuid AS user_uuid
                 FROM route_suggestion s
                 JOIN recommended_route r ON r.id = s.route_id
+                LEFT JOIN users u ON u.id = s.user_id
                 WHERE {$where}
                 ORDER BY s.created_at ASC, s.id ASC
                 LIMIT :lim OFFSET :off";
@@ -99,7 +103,7 @@ final class RouteQueue
             'routeName' => (string) $row['route_name'],
             'reason' => (string) $row['reason'],
             'note' => $row['note'],
-            'who' => 'rider#'.substr(hash('crc32b', 'cc-sub-'.$row['user_id']), 0, 4),
+            'rider' => DeskRider::of((int) $row['user_id'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'segmentCount' => (int) $row['seg_count'],
         ], $rows);
@@ -251,16 +255,16 @@ final class RouteQueue
         return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
     }
 
-    /** @return list<array{id:int,name:string}> */
+    /** @return list<array{id:int,name:string,slug:string}> */
     public function regions(ModerationScope $scope): array
     {
         $frag = $scope->sqlFragment('r');
-        $sql = "SELECT DISTINCT reg.id, reg.name FROM recommended_route r
+        $sql = "SELECT DISTINCT reg.id, reg.name, reg.slug FROM recommended_route r
                 JOIN region reg ON reg.id = r.region_id
                 WHERE r.state = 'submitted'"
             .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '')
             .' ORDER BY reg.name';
 
-        return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'name' => (string) $row['name']], $this->db->fetchAllAssociative($sql, $frag['params'], $frag['types']));
+        return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'name' => (string) $row['name'], 'slug' => (string) $row['slug']], $this->db->fetchAllAssociative($sql, $frag['params'], $frag['types']));
     }
 }

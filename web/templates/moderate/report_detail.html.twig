@@ -105,11 +105,11 @@
          and "nobody in particular" told the curator nothing (owner 2026-09-08). #}
       {% if resolved.author %}
         <dt>{{ 'report.desk.field_author'|trans }}</dt>
-        <dd>{{ resolved.author.displayName }}</dd>
+        <dd>{% include 'moderate/_rider_name.html.twig' with {rider: author_rider} only %}</dd>
       {% endif %}
       {% if report.decidedAt %}
         <dt>{{ 'report.desk.field_decided'|trans }}</dt>
-        <dd>{{ report.decidedAt|cc_datetime }}{% if decided_by %} · {{ decided_by.displayName }}{% endif %}</dd>
+        <dd>{{ report.decidedAt|cc_datetime }}{% if decided_by %} · {% include 'moderate/_rider_name.html.twig' with {rider: decided_by} only %}{% endif %}</dd>
         <dt>{{ 'report.desk.field_author_told'|trans }}</dt>
         <dd>{{ report.isAuthorTold ? ('report.desk.told_yes'|trans) : ('report.desk.told_no'|trans) }}</dd>
       {% endif %}
@@ -153,7 +153,7 @@
       {% if resolved.author and not report.isAuthorTold %}
         <div class="check">
           <input type="checkbox" id="d-tell" name="tell_author" value="1">
-          <label for="d-tell">{{ 'report.desk.tell_author'|trans({'%name%': resolved.author.displayName}) }}</label>
+          <label for="d-tell">{{ 'report.desk.tell_author'|trans({'%name%': author_rider.name}) }}</label>
         </div>
         <p class="warn">{{ 'report.desk.tell_author_note'|trans }}</p>
       {% endif %}

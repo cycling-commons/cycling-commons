@@ -1015,9 +1015,12 @@ at a time, so the row is sized for that:
   server-side (town names come from Photon, in the browser); pulling
   `place=city/town/village` into the coverage extract is the way in if it is
   ever wanted.
-- **The submitter's chosen name, when they chose one.** `submitterLabel()`
-  honours `public_profile`: a rider who has made their profile public is shown
-  by display name, and everyone else stays `rider#<hash4>`. Showing the
+- **The submitter's chosen name, when they chose one.** Every desk names a
+  rider through `App\Moderation\DeskRider`: a rider who has made their profile
+  public and has a display name is shown by that name (with their
+  `/riders/{uuid}` as the link target), and everyone else stays
+  `rider#<hash4>` with no link. Wherever a desk shows the name, a public one is
+  a link to that profile (the list follows the naming rule below). Showing the
   pseudonym to a rider who had deliberately gone public read as the setting
   being broken (owner-reported 2026-08-12).
 - **Thumbnails in the row, in both lists** (2026-08-12). A photo is the fastest
@@ -2793,6 +2796,43 @@ name on the contributors wall and on `/riders/{uuid}`, so hiding it from the one
 person who has to read the work was inconsistent rather than protective. A
 private account still shows `rider#<hash>`, which is where the protection
 matters. Public change history is unchanged.
+
+One class decides it for every desk (`App\Moderation\DeskRider`), and one
+partial writes it (`templates/moderate/_rider_name.html.twig`): a public name is
+a link to `/riders/{uuid}` in the desks' link style (`.desk-rider`, clay,
+underlined, in `moderate/_card_styles.html.twig`); a pseudonym is plain text. A
+name inside a translated sentence ("by %who%") goes through
+`moderate/_rider_in_text.html.twig`, which splits the sentence at a marker so the
+name can still be a link and the rest stays escaped. Where it applies (owner
+decision 2026-09-15):
+
+- **Riders** (`DeskRider::of()`, `ofUser()`): the submitter on a submissions
+  queue card (`SubmissionQueue` `who` + `whoUuid`) and on a History card; the
+  submitter on the map drawer's pending card for curators ("Submitted by",
+  `deskRiderHtml()` in `util.js`, the same markup); the proposer on the Routes
+  desk's queue card and review page and the rider on a route correction card
+  (route-domain.md §5); the submitter and reviewer on the translations desk's
+  history and detail pages; the author of reported content on a content report
+  (and in its "tell the author" line).
+- **Fellow curators** (`DeskRider::colleague()`, `colleagueUser()`): curators
+  are named to each other on the desks (the rulebook says a curator's name is on
+  their decisions), so the display name shows whatever the profile setting, and
+  links to the profile only when it is public. This covers "by" on a History
+  card (decisions and Trash entries), the author and the direct-message
+  recipient in the curator room, who decided a content report, and the deciding
+  curator on the takedown desk's handling record (owner 2026-09-16, option 1).
+  A curator is told: the public-profile switch in their settings carries a line
+  saying other curators see their display name on the desks whatever it says,
+  and that their public profile on the site follows the switch like every
+  rider's (`settings.toggle_public_curator`, shown only with ROLE_CURATOR).
+
+Not rider identities, and left as they are: the contact inbox's sender name
+(free text typed into the form) and account number; a copyright claimant's name
+(free text); the bug desk (a reporter is "answerable" or "anonymous", never
+named); the photo-withheld list's reporter (a salted hash); and the admin pages
+that name accounts with their email for administration (moderator areas
+overview, country requests, dashboard, escalated photos and submissions, user
+pages). Curator applications already link the applicant's profile.
 
 **A curator can open a pending item in the wizard.** `/improve?item=` binds only
 publicly-served states for everyone else, and the pending drawer was offering an

@@ -112,7 +112,10 @@
               </div>
               {# A trashed row carries no title and no rider: the audit is
                  content-free by design, so all there is to show is who did it. #}
-              <div class="q-submitter"><span class="q-who">{{ h.who }}{% if h.decidedBy %}{% if h.who %} · {% endif %}{{ 'moderate.history.by'|trans({'%who%': h.decidedBy}) }}{% endif %}</span></div>
+              <div class="q-submitter"><span class="q-who">
+                {%- if h.who %}{% include 'moderate/_rider_name.html.twig' with {rider: {name: h.who, uuid: h.whoUuid ?: null}} only %}{% endif -%}
+                {%- if h.decidedBy %}{% if h.who %} · {% endif %}{% include 'moderate/_rider_in_text.html.twig' with {text: 'moderate.history.by'|trans({'%who%': '@@rider@@'}), rider: {name: h.decidedBy, uuid: h.decidedByUuid}} only %}{% endif -%}
+              </span></div>
             </div>
             <div class="q-acts">
               <span class="q-when">{{ h.when }}</span>

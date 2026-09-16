@@ -645,10 +645,11 @@ word-diff against the previous live (first-ever diffs against the YAML
 default). If English changed between two versions, that new English is
 inserted between them. An open proposal is the last Change, with the
 editable proposed field and the three verbs under it. Settled GET is
-the same story without the form. Who submitted (`rider#`, plus the
-public display name linking to `/riders/{uuid}` when they opted in;
-otherwise the handle only; missing submitter → “Anonymous translator”)
-sits on each change. Approve publishes **whatever is in
+the same story without the form. Who submitted, and who reviewed, is
+named by the desks' one rule (`App\Moderation\DeskRider`,
+moderation-and-contribution.md, curator-facing naming): the display name
+linking to `/riders/{uuid}` when they opted in, otherwise the `rider#`
+handle; missing submitter → “Anonymous translator”. It sits on each change. Approve publishes **whatever is in
 that field** into the overlay and stores it as `published_value`. The
 rider’s `proposed_value` is not rewritten. Reject / needs-info ignore
 the edited field.
@@ -660,7 +661,7 @@ only on that detail page.
 Rejected drafts stay out of the approved chain. Opening a rejected
 proposal appends that attempt after the published story. If the
 curator copy-edited on approve, a second small diff shows rider text →
-published, labelled as edited on publish by the reviewer’s `rider#`.
+published, labelled as edited on publish by the reviewer, named by the same rule.
 Older proposal rows remaining after overlay last-wins **are** that
 history; there is no extra table.
 

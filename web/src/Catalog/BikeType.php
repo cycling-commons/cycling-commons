@@ -30,6 +30,21 @@ enum BikeType: string
         return array_map(static fn (self $t): string => $t->value, self::cases());
     }
 
+    /** Translation key of the bike type's name, shared by every form and desk that shows it. */
+    public function labelKey(): string
+    {
+        return match ($this) {
+            self::Road => 'map.bike_road',
+            self::Gravel => 'map.bike_gravel',
+            self::Mtb => 'map.bike_mtb',
+            self::Ebike => 'map.bike_ebike',
+            self::Handbike => 'map.bike_handbike',
+            self::Recumbent => 'map.bike_recumbent',
+            self::Trike => 'map.bike_trike',
+            self::Tandem => 'map.bike_tandem',
+        };
+    }
+
     /**
      * Specialty hardware: best-of is gated by declared suitability.
      *

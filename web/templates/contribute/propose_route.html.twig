@@ -153,7 +153,7 @@
             {% for child in form.season %}
               <label class="chip-check">
                 {{ form_widget(child) }}
-                <span>{{ child.vars.label ?? child.vars.value }}</span>
+                <span>{{ (child.vars.label ?? child.vars.value)|trans }}</span>
               </label>
             {% endfor %}
           </div>
@@ -174,7 +174,7 @@
           {% for child in form.bikeTypes %}
             <label class="chip-check">
               {{ form_widget(child) }}
-              <span>{{ child.vars.label ?? child.vars.value }}</span>
+              <span>{{ (child.vars.label ?? child.vars.value)|trans }}</span>
             </label>
           {% endfor %}
         </div>

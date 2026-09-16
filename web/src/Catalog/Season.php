@@ -26,6 +26,12 @@ enum Season: string
         return array_map(static fn (self $s): string => $s->value, self::cases());
     }
 
+    /** Translation key of the season's name. */
+    public function labelKey(): string
+    {
+        return 'map.season_'.$this->value;
+    }
+
     public static function current(\DateTimeImmutable $now): self
     {
         return match ((int) $now->format('n')) {

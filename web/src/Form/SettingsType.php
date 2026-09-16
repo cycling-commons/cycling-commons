@@ -176,16 +176,7 @@ final class SettingsType extends AbstractType
                 'required' => false,
                 'multiple' => true,
                 'expanded' => true,
-                'choice_label' => static fn (BikeType $t): string => match ($t) {
-                    BikeType::Road => 'map.bike_road',
-                    BikeType::Gravel => 'map.bike_gravel',
-                    BikeType::Mtb => 'map.bike_mtb',
-                    BikeType::Ebike => 'map.bike_ebike',
-                    BikeType::Handbike => 'map.bike_handbike',
-                    BikeType::Recumbent => 'map.bike_recumbent',
-                    BikeType::Trike => 'map.bike_trike',
-                    BikeType::Tandem => 'map.bike_tandem',
-                },
+                'choice_label' => static fn (BikeType $t): string => $t->labelKey(),
             ])
             ->add('ridingStyles', EnumType::class, [
                 'class' => RidingStyle::class,

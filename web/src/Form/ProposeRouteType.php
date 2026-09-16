@@ -8,7 +8,9 @@ namespace App\Form;
 
 use App\Catalog\BikeType;
 use App\Catalog\DifficultyVocabulary;
+use App\Catalog\Season;
 use App\Catalog\SurfaceVocabulary;
+use App\Moderation\RouteProposalDetails;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -88,7 +90,9 @@ final class ProposeRouteType extends AbstractType
                 'required' => false,
                 'multiple' => true,
                 'expanded' => true,
+                // Stored values stay capitalized (route-domain.md §9); labels are the seasons' names.
                 'choices' => ['Spring' => 'Spring', 'Summer' => 'Summer', 'Autumn' => 'Autumn', 'Winter' => 'Winter'],
+                'choice_label' => static fn (string $s): string => Season::from(strtolower($s))->labelKey(),
             ])
             ->add('dominantSurface', ChoiceType::class, [
                 'label' => false,
@@ -100,12 +104,14 @@ final class ProposeRouteType extends AbstractType
                 'multiple' => true,
                 'expanded' => true,
                 'choices' => array_combine(BikeType::values(), BikeType::values()),
+                'choice_label' => static fn (string $b): string => BikeType::from($b)->labelKey(),
             ])
             ->add('gradientLimited', ChoiceType::class, [
                 'label' => false,
                 'required' => false,
                 // Stored values stay 'No'/'≤6%'/'≤9%' (docs/specs/route-domain.md §9).
-                'choices' => ['No cap' => 'No', 'Whole route ≤ 6%' => '≤6%', 'Whole route ≤ 9%' => '≤9%'],
+                'choices' => array_combine(array_keys(RouteProposalDetails::GRADIENT_LABELS), array_keys(RouteProposalDetails::GRADIENT_LABELS)),
+                'choice_label' => static fn (string $g): string => RouteProposalDetails::GRADIENT_LABELS[$g],
             ])
         ;
     }

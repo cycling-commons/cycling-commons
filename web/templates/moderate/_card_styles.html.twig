@@ -46,6 +46,20 @@
   .q-view{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35);white-space:nowrap}
   .q-view:hover{color:var(--ink);border-bottom-color:var(--ink)}
   .q-view:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:2px}
+  /* A rider named on a desk (moderate/_rider_name): a public profile is a visible link. */
+  .desk-rider{color:var(--clay);text-decoration:underline;text-decoration-color:rgba(184,89,58,.45);text-underline-offset:2px}
+  .desk-rider:hover{color:var(--ink);text-decoration-color:var(--ink)}
+  .desk-rider:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:2px}
+  /* The region cap count (moderate_routes/_region_cap): its explanation is the
+     title on hover, and shows under the count when it has keyboard focus. */
+  /* The explanation spans the line the count sits on, so it stays on screen at phone width. */
+  .stat-line:has(> .rcap-wrap),.q-submitter:has(> .rcap-wrap){position:relative}
+  .rcap{cursor:help;text-decoration:underline dotted;text-underline-offset:2px}
+  .rcap:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:2px}
+  .rcap-help{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .rcap:focus-visible + .rcap-help{clip:auto;width:max-content;max-width:min(32rem,100%);height:auto;margin:0;overflow:visible;white-space:normal;
+    left:0;top:calc(100% + .35rem);z-index:5;box-sizing:border-box;padding:.45rem .6rem;border-radius:5px;background:var(--ink);color:var(--paper);
+    font-family:var(--sans);font-size:.8rem;letter-spacing:0;text-transform:none;line-height:1.4}
   .q-body{font-size:.9rem;line-height:1.5;color:#333;margin-bottom:.6rem}
   .q-diff{background:rgba(20,22,14,.05);border-radius:5px;padding:.55rem .75rem;font-size:.86rem;margin-bottom:.7rem}
   /* pending rider photos (docs/specs/photo-uploads.md §5) */

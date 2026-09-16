@@ -1,0 +1,24 @@
+{#
+  Partial: a person named on a curator desk, as App\Moderation\DeskRider
+  answers. A rider with a public profile is their display name linked to that
+  profile; everyone else is their stable pseudonym, not linked. A fellow curator
+  (DeskRider::colleague) is always their display name, linked the same way
+  (moderation-and-contribution.md, curator-facing naming).
+
+  Parameters:
+    rider  array{name:string, uuid:?string}
+#}
+{#
+  Partial: a rider named on the Routes desk, by App\Moderation\DeskRider.
+  A rider with a public profile is their display name linked to that profile;
+  everyone else is their stable pseudonym, not linked
+  (moderation-and-contribution.md, curator-facing naming).
+
+  Parameters:
+    rider  array{name:string, uuid:?string}
+#}
+{%- if rider.uuid -%}
+<a class="desk-rider" href="{{ path('rider_profile', {uuid: rider.uuid}) }}">{{ rider.name }}</a>
+{%- else -%}
+{{ rider.name }}
+{%- endif -%}

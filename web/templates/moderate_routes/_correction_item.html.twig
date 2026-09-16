@@ -13,7 +13,7 @@
   WHEN-to-use copy plus a ticked acknowledgement inside it.
 
   Parameters:
-    s           array: correction row (id, routeId, routeName, reason, note, segmentCount, photos)
+    s           array: correction row (id, routeId, routeName, reason, note, rider, segmentCount, photos)
     show_route  bool  — link the route's name (overview); false on a route's own page
 #}
 <div class="q-item q-item--corr" data-item-id="c{{ s.id }}" data-suggestion-id="{{ s.id }}">
@@ -26,9 +26,12 @@
           <h3 class="q-title"><a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a></h3>
         {% endif %}
       </div>
-      {% if s.segmentCount is defined and s.segmentCount > 0 %}
+      {% set has_stretches = s.segmentCount is defined and s.segmentCount > 0 %}
+      {% if s.rider is defined or has_stretches %}
         <div class="q-submitter">
-          {{ (s.segmentCount == 1 ? 'moderate_routes.suggestions.count_stretch' : 'moderate_routes.suggestions.count_stretches')|trans({'%n%': s.segmentCount}) }}
+          {%- if s.rider is defined %}{% include 'moderate/_rider_name.html.twig' with {rider: s.rider} only %}{% endif -%}
+          {%- if s.rider is defined and has_stretches %} &middot; {% endif -%}
+          {%- if has_stretches %}{{ (s.segmentCount == 1 ? 'moderate_routes.suggestions.count_stretch' : 'moderate_routes.suggestions.count_stretches')|trans({'%n%': s.segmentCount}) }}{% endif -%}
         </div>
       {% endif %}
     </div>

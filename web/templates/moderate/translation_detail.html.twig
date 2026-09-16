@@ -35,7 +35,7 @@
 {% macro who(w) %}{%- if w.anonymous -%}
     {{ 'moderate.translation.anonymous'|trans }}
   {%- else -%}
-    {{ w.handle }}{% if w.name %} · {% if w.profile_url %}<a href="{{ w.profile_url }}">{{ w.name }}</a>{% else %}{{ w.name }}{% endif %}{% endif %}
+    {% include 'moderate/_rider_name.html.twig' with {rider: w.rider} only %}
   {%- endif -%}{% endmacro %}
 
 {% macro worddiff(segments) %}{%- for s in segments -%}
@@ -58,7 +58,7 @@
   </div>
   {% if event.edit %}
     <div class="tr-hist-edit">
-      <span class="tr-hist-k">{{ 'moderate.translation.edited_by'|trans({'%who%': event.edit.who.anonymous ? ('moderate.translation.anonymous'|trans) : event.edit.who.handle}) }}</span>
+      <span class="tr-hist-k">{{ 'moderate.translation.edited_by'|trans({'%who%': event.edit.who.anonymous ? ('moderate.translation.anonymous'|trans) : event.edit.who.rider.name}) }}</span>
       <div class="q-diff">{{ _self.worddiff(event.edit.diff) }}</div>
     </div>
   {% endif %}

@@ -7,8 +7,10 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\Entity\Region;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\RiderPseudonym;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -146,10 +148,27 @@ final class RouteModerateTest extends WebTestCase
         // the real configured cap (30, route.region_active_cap), not the active count itself.
         self::assertSelectorExists('[data-region-cap]');
         self::assertSelectorTextContains('[data-region-cap]', '0 / 30');
+        // The curator picks the decision; nothing is preselected, and a proposal cannot be retired.
+        self::assertSelectorExists('select[name="route_decision[decision]"][required] option[value=""][selected]');
+        self::assertSelectorNotExists('select[name="route_decision[decision]"] option[value="retire"]');
     }
 
-    /** The review page names who proposed the route, linked to their profile only when it is public. */
-    public function testDetailLinksTheProposersPublicProfile(): void
+    private function wallonia(EntityManagerInterface $em): Region
+    {
+        $region = (new Region())->setSlug('wallonia')->setName('Wallonia registry name')->setCountryCode('BE');
+        $em->persist($region);
+        $em->flush();
+
+        return $region;
+    }
+
+    /**
+     * One pseudonym rule on both desk pages (moderation-and-contribution.md):
+     * a private proposer is `rider#<hash4>` with no link, a public one is their
+     * display name linked to /riders/{uuid}, and the queue card agrees with the
+     * review page.
+     */
+    public function testQueueAndDetailNameTheProposerByTheSameRule(): void
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -158,17 +177,104 @@ final class RouteModerateTest extends WebTestCase
         self::assertInstanceOf(User::class, $proposer);
         $proposer->setDisplayName('Route Rider');
         $em->flush();
+        $pseudonym = RiderPseudonym::for((int) $proposer->getId());
 
         $client->loginUser($this->curator());
         $client->request('GET', '/moderate/routes/'.$route->getId());
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.rd-meta', 'Route Rider');
+        self::assertSelectorTextContains('.rd-meta [data-meta="proposer"]', $pseudonym);
+        self::assertSelectorTextNotContains('.rd-meta', 'Route Rider');
         self::assertSelectorNotExists('.rd-meta a[href*="/riders/"]');
+        $client->request('GET', '/moderate/routes');
+        self::assertSelectorTextContains('.q-item[data-item-id="'.$route->getId().'"] .q-submitter', $pseudonym);
+        self::assertSelectorNotExists('.q-item[data-item-id="'.$route->getId().'"] a[href*="/riders/"]');
 
-        $proposer->setPublicProfile(true);
+        // The client rebooted the kernel between requests, so the change goes through the live container.
+        static::getContainer()->get(EntityManagerInterface::class)->getConnection()
+            ->executeStatement('UPDATE users SET public_profile = TRUE WHERE id = ?', [$proposer->getId()]);
+        $profile = 'a[href$="/riders/'.$proposer->getUuid().'"]';
+        $client->request('GET', '/moderate/routes/'.$route->getId());
+        self::assertSelectorTextContains('.rd-meta [data-meta="proposer"] '.$profile, 'Route Rider');
+        self::assertSelectorTextNotContains('.rd-meta', $pseudonym);
+        $client->request('GET', '/moderate/routes');
+        self::assertSelectorTextContains('.q-item[data-item-id="'.$route->getId().'"] .q-submitter '.$profile, 'Route Rider');
+        self::assertSelectorTextNotContains('.q-item[data-item-id="'.$route->getId().'"] .q-submitter', $pseudonym);
+    }
+
+    /** The Region row names the region in the page's language, never its id. */
+    public function testDetailNamesTheRegionInThePageLanguage(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $region = $this->wallonia($em);
+        $route->setRegionId((int) $region->getId());
+        $em->flush();
+
+        $client->loginUser($this->curator());
+        $client->request('GET', '/fr/moderate/routes/'.$route->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('.rd-meta [data-meta="region"] td:last-child', 'Wallonie');
+        $client->request('GET', '/fr/moderate/routes');
+        self::assertSelectorTextContains('.q-item[data-item-id="'.$route->getId().'"] .q-submitter', 'Wallonie');
+    }
+
+    /** Every detail the rider filled in on /propose-route is on the review page, in the page's language. */
+    public function testDetailShowsTheRidersRouteDetails(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $route->setAttributes([
+            'difficulty' => ['score' => 5, 'label' => 'Very hard'],
+            'dominantSurface' => 'Asphalt',
+            'season' => ['Spring', 'Autumn'],
+            'bikeTypes' => ['Road', 'MTB'],
+            'gradientLimited' => '≤6%',
+            'note' => 'Start at the station.',
+        ]);
+        $em->flush();
+
+        $client->loginUser($this->curator());
+        $client->request('GET', '/fr/moderate/routes/'.$route->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('[data-meta="difficulty"] td:last-child', 'Très difficile');
+        self::assertSelectorTextContains('[data-meta="dominant_surface"] td:last-child', 'Asphalte');
+        self::assertSelectorTextSame('[data-meta="season"] td:last-child', 'Printemps, Automne');
+        self::assertSelectorTextSame('[data-meta="bike_types"] td:last-child', 'Route, VTT');
+        self::assertSelectorTextSame('[data-meta="gradient"] td:last-child', 'Tout le parcours ≤ 6 %');
+        self::assertSelectorTextSame('[data-meta="rider_note"] td:last-child', 'Start at the station.');
+
+        // A detail the rider left unset shows a dash, the same as every other empty row.
+        $route->setAttributes(['dominantSurface' => 'Gravel']);
         $em->flush();
         $client->request('GET', '/moderate/routes/'.$route->getId());
-        self::assertSelectorExists('.rd-meta a[href$="/riders/'.$proposer->getUuid().'"]');
+        foreach (['difficulty', 'season', 'bike_types', 'gradient', 'rider_note'] as $row) {
+            self::assertSelectorTextSame('[data-meta="'.$row.'"] td:last-child', '-');
+        }
+    }
+
+    /** "N / cap active" explains itself on hover and to assistive technology, on both pages. */
+    public function testRegionCapExplainsItself(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $region = $this->wallonia($em);
+        $route->setRegionId((int) $region->getId());
+        $em->flush();
+        $help = 'Live recommended routes in Wallonia: 0 of at most 30. Approving adds one; once there are 30, a route must be retired first.';
+
+        $client->loginUser($this->curator());
+        foreach (['/moderate/routes/'.$route->getId(), '/moderate/routes'] as $url) {
+            $crawler = $client->request('GET', $url);
+            self::assertResponseIsSuccessful();
+            $cap = $crawler->filter('[data-region-cap]')->first();
+            self::assertSame($help, $cap->attr('title'));
+            $describedBy = (string) $cap->attr('aria-describedby');
+            self::assertNotSame('', $describedBy);
+            self::assertSame($help, trim($crawler->filter('#'.$describedBy)->text()));
+        }
     }
 
     public function testCuratorEditsRouteNoteViaTheDetailForm(): void

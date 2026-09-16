@@ -13,6 +13,7 @@ use App\Messaging\CuratorRoomPin;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
@@ -153,6 +154,39 @@ final class CuratorRoomTest extends WebTestCase
         $bodies = array_column($board['posts'], 'body');
 
         self::assertContains('Is this hut inside my area?', $bodies);
+    }
+
+    /**
+     * Curators are named to each other in the room by display name; the name
+     * links to the author's profile only when that profile is public
+     * (DeskRider::colleague).
+     */
+    public function testAnAuthorIsNamedAndLinkedOnlyWithAPublicProfile(): void
+    {
+        $client = static::createClient();
+        $this->loginAs($client, 'reader', ['ROLE_CURATOR']);
+        $open = $this->makeUser('open', ['ROLE_CURATOR']);
+        $open->setPublicProfile(true);
+        $closed = $this->makeUser('closed', ['ROLE_CURATOR']);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $this->room()->post((int) $open->getId(), CuratorRoomCategory::Ask, null, 'Posted by a public curator');
+        $this->room()->post((int) $closed->getId(), CuratorRoomCategory::Ask, null, 'Posted by a private curator');
+
+        $crawler = $client->request('GET', '/moderate/room');
+        self::assertResponseIsSuccessful();
+        $public = $crawler->filter('.rm-post')->reduce(static fn (Crawler $p): bool => str_contains($p->text(), 'Posted by a public curator'));
+        $private = $crawler->filter('.rm-post')->reduce(static fn (Crawler $p): bool => str_contains($p->text(), 'Posted by a private curator'));
+        self::assertSame(1, $public->count());
+        self::assertSame(1, $private->count());
+
+        $link = $public->filter('.rm-who a.desk-rider');
+        self::assertSame(1, $link->count());
+        self::assertSame('room-open', trim($link->text()));
+        self::assertStringEndsWith('/riders/'.$open->getUuid(), (string) $link->attr('href'));
+
+        self::assertSame(0, $private->filter('.rm-who a')->count());
+        self::assertSame('room-closed', trim($private->filter('.rm-who')->text()));
     }
 
     public function testADirectMessageIsHiddenFromEveryoneElse(): void

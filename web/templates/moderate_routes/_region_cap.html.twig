@@ -1,0 +1,14 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Partial: "N / cap active" for a route's region, with its explanation
+  (route-domain.md §5.1): the title on hover, and a description tied by
+  aria-describedby that shows under the count on keyboard focus.
+
+  Parameters:
+    active        int     live (served) recommended routes in the region
+    cap           int     route.region_active_cap
+    region_label  string  the region's name in the page language, '' for no region
+    cap_id        string  id for the description, unique on the page
+#}
+{%- set cap_help = (region_label ? 'moderate_routes.region_cap_help' : 'moderate_routes.region_cap_help_none')|trans({'%region%': region_label, '%active%': active, '%cap%': cap}) -%}
+<span class="rcap-wrap"><span class="rcap" data-region-cap tabindex="0" title="{{ cap_help }}" aria-describedby="{{ cap_id }}">{{ 'moderate_routes.region_cap'|trans({'%active%': active, '%cap%': cap}) }}</span><span class="rcap-help" id="{{ cap_id }}">{{ cap_help }}</span></span>

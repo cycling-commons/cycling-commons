@@ -56,7 +56,7 @@
          for the one case where the exact spot is the question - and the map
          itself is one click away in the row below. #}
       <div class="q-submitter" title="{{ item.lat|number_format(4) }}&deg;N {{ item.lng|number_format(4) }}&deg;E">
-        <span class="q-who">{{ item.who }}{% if item.region %} &middot; {{ item.region }}{% endif %}{% if item.country %} &middot; {{ item.country }}{% endif %}</span>
+        <span class="q-who">{% include 'moderate/_rider_name.html.twig' with {rider: {name: item.who, uuid: item.whoUuid ?: null}} only %}{% if item.region %} &middot; {{ item.region }}{% endif %}{% if item.country %} &middot; {{ item.country }}{% endif %}</span>
         {# The OSM identity of a new place (catalog-data-model.md §5b) as one
            chip, so a curator sees at a glance whether the question is still
            open, and what the answer was. Open: the chip pops the candidates and

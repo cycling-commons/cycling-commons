@@ -154,7 +154,7 @@
                   {%- if d.waitedHours is not null %} · {{ (d.waitedHours < 48
                       ? 'moderate.takedown.log_waited_h'|trans({'%n%': d.waitedHours})
                       : 'moderate.takedown.log_waited_d'|trans({'%n%': (d.waitedHours / 24)|round})) }}{% endif -%}
-                  {%- if d.actor %} · {{ 'moderate.takedown.log_by'|trans({'%who%': d.actor}) }}{% endif -%}
+                  {%- if d.actor %} · {% include 'moderate/_rider_in_text.html.twig' with {text: 'moderate.takedown.log_by'|trans({'%who%': '@@rider@@'}), rider: d.actor} only %}{% endif -%}
                 </span>
               </div>
             </div>

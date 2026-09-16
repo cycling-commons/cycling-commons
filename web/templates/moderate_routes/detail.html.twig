@@ -16,6 +16,7 @@
   .rd-meta{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.2rem 1.4rem;margin:1.4rem 0;background:var(--paper)}
   .rd-meta table{width:100%;border-collapse:collapse;font-size:.90rem}
   .rd-meta td{padding:.4rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
+  .rd-meta td:last-child{white-space:pre-line}
   .rd-meta td:first-child{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;width:35%}
 
   .rd-edit{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.2rem 1.4rem;margin:1.4rem 0;background:var(--paper)}
@@ -48,6 +49,7 @@
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_routes', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null} %}{% endblock %}
 
 {% block body %}
+{% set region_label = route.regionId is null ? '' : cc_region_label(route.regionSlug, route.region) %}
 <div class="mh">
   <div class="wrap">
     <div class="kicker">{{ 'moderate_routes.kicker'|trans }}</div>
@@ -55,7 +57,7 @@
     <div class="stat-line">
       {{ route.km|cc_km }}
       {% if route.ascent is not null %}&middot; {{ 'moderate_routes.stat_ascent'|trans({'%v%': route.ascent|cc_elev}) }}{% endif %}
-      &middot; <span data-region-cap>{{ 'moderate_routes.region_cap'|trans({'%active%': active_in_region, '%cap%': region_cap}) }}</span>
+      &middot; {% include 'moderate_routes/_region_cap.html.twig' with {active: active_in_region, cap: region_cap, region_label: region_label, cap_id: 'rcap-detail'} only %}
       &middot; <a class="rd-maplink" href="{{ path('map') }}?route={{ route.id }}" target="_blank" rel="noopener">{{ 'moderate_routes.map_open'|trans }} &#8599;</a>
     </div>
   </div>
@@ -72,29 +74,33 @@
     <table>
       <tr><td>{{ 'moderate_routes.meta.state'|trans }}</td><td>{{ ('account.route_state_' ~ route.state)|trans }}</td></tr>
       {% if route.proposer %}
-      <tr>
+      <tr data-meta="proposer">
         <td>{{ 'moderate_routes.meta.proposed_by'|trans }}</td>
-        <td>
-          {% if route.proposer.public and route.proposer.uuid %}
-            <a href="{{ path('rider_profile', {uuid: route.proposer.uuid}) }}">{{ route.proposer.name }}</a>
-          {% else %}
-            {{ route.proposer.name }} <span class="surface-hint">{{ 'moderate_routes.meta.profile_private'|trans }}</span>
-          {% endif %}
-        </td>
+        <td>{% include 'moderate/_rider_name.html.twig' with {rider: route.proposer} only %}</td>
       </tr>
       {% endif %}
-      <tr><td>{{ 'moderate_routes.meta.distance'|trans }}</td><td>{{ route.km|cc_km }}</td></tr>
-      <tr><td>{{ 'moderate_routes.meta.ascent'|trans }}</td><td>{{ route.ascent is null ? '—' : route.ascent|cc_elev }}</td></tr>
-      <tr><td>{{ 'moderate_routes.meta.region'|trans }}</td><td>{{ route.regionId ?? '—' }}</td></tr>
-      <tr>
-        <td>{{ 'moderate_routes.meta.dominant_surface'|trans }}</td>
+      <tr data-meta="distance"><td>{{ 'moderate_routes.meta.distance'|trans }}</td><td>{{ route.km|cc_km }}</td></tr>
+      <tr data-meta="ascent"><td>{{ 'moderate_routes.meta.ascent'|trans }}</td><td>{{ route.ascent is null ? '-' : route.ascent|cc_elev }}</td></tr>
+      <tr data-meta="region"><td>{{ 'moderate_routes.meta.region'|trans }}</td><td>{{ region_label ?: 'moderate_routes.region_none'|trans }}</td></tr>
+      {# What the rider filled in on /propose-route, under the form's own labels;
+         a field left unset is a dash (App\Moderation\RouteProposalDetails). #}
+      {% for d in details %}
+      <tr data-meta="{{ d.key }}">
+        <td>{{ d.label|trans }}</td>
         <td>
-          {{ route.attributes.dominantSurface ?? '—' }}
-          {% if suggested_surface is not null and suggested_surface != route.attributes.dominantSurface %}
-            <div class="surface-hint">{{ 'moderate_routes.surface_hint'|trans({'%surface%': suggested_surface}) }}</div>
-          {% endif %}
+          {%- if d.values is empty -%}
+            -
+          {%- elseif d.translate -%}
+            {{ d.values|map(v => v|trans)|join(', ') }}
+          {%- else -%}
+            {{ d.values|join(', ') }}
+          {%- endif -%}
+          {%- if d.key == 'dominant_surface' and suggested_surface is not null and suggested_surface != route.attributes.dominantSurface|default(null) -%}
+            <div class="surface-hint">{{ 'moderate_routes.surface_hint'|trans({'%surface%': suggested_surface|trans}) }}</div>
+          {%- endif -%}
         </td>
       </tr>
+      {% endfor %}
     </table>
   </div>
 
@@ -115,7 +121,8 @@
         <p class="rd-photos-h">{{ 'moderate_routes.photos.heading'|trans }}</p>
         {% include 'moderate_routes/_photos.html.twig' with {photos: proposal_photos} %}
       {% endif %}
-      <label for="{{ decision_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>
+      {# Sent to the rider who proposed the route, with the decision. #}
+      <label for="{{ decision_form.note.vars.id }}">{{ 'moderate_routes.decision.note'|trans }}</label>
       {{ form_widget(decision_form.note) }}
       <button type="submit" class="btn-act btn-decide">{{ 'moderate_routes.action.decide'|trans }}</button>
     {{ form_end(decision_form) }}
@@ -126,7 +133,8 @@
     {{ form_start(edit_form, {attr: {novalidate: 'novalidate'}}) }}
     {% include 'partials/_form_errors.html.twig' with {form: edit_form} %}
       {{ form_widget(edit_form.route_id) }}
-      <label for="{{ edit_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>
+      {# The route's public note, shown to every rider in the map drawer. #}
+      <label for="{{ edit_form.note.vars.id }}">{{ 'moderate_routes.meta.rider_note'|trans }}</label>
       {{ form_widget(edit_form.note) }}
       <button type="submit" class="btn-act btn-save">{{ 'moderate_routes.action.save'|trans }}</button>
     {{ form_end(edit_form) }}
@@ -139,8 +147,8 @@
     {% include 'partials/_form_errors.html.twig' with {form: retire_form} %}
       {{ form_widget(retire_form.route_id) }}
       {{ form_widget(retire_form.decision) }}
-      <label for="{{ retire_form.note.vars.id }}">{{ 'moderate_routes.meta.note'|trans }}</label>
-      {{ form_widget(retire_form.note) }}
+      <label for="{{ retire_form.note.vars.id }}">{{ 'moderate_routes.decision.retire_note'|trans }}</label>
+      {{ form_widget(retire_form.note, {attr: {required: 'required'}}) }}
       <button type="submit" class="btn-act btn-dismiss">{{ 'moderate_routes.action.retire_route'|trans }}</button>
     {{ form_end(retire_form) }}
   </div>

@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Submission;
+use App\Catalog\RiderPseudonym;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -159,6 +160,40 @@ final class ModerateTest extends WebTestCase
         // Decisions moved to the map drawer — the queue item now links there
         // to review & decide, instead of carrying an inline decision form.
         self::assertSelectorExists('.q-item a.q-review');
+    }
+
+    /**
+     * The queue card names the submitter the way every desk does (DeskRider):
+     * a private rider is their pseudonym with no link, a public one is their
+     * display name linked to their rider profile.
+     */
+    public function testQueueCardLinksAPublicSubmitterToTheirProfile(): void
+    {
+        $client = static::createClient();
+        $sub = $this->seedSubmission('Col du Rider Link');
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submitter = $em->find(User::class, $sub->getUserId());
+        self::assertInstanceOf(User::class, $submitter);
+        $submitter->setDisplayName('Queue Rider');
+        $em->flush();
+
+        $curator = $this->createUser('moderate-link-curator@example.com', 'hunter2secure!', roles: ['ROLE_CURATOR'], totpSecret: 'JBSWY3DPEHPK3PXP', twoFaEnabled: true);
+        $client->loginUser($curator);
+        $card = '.q-item[data-item-id="'.$sub->getId().'"] .q-who';
+
+        $crawler = $client->request('GET', '/moderate');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains($card, RiderPseudonym::for((int) $submitter->getId()));
+        self::assertSame(0, $crawler->filter($card.' a')->count());
+
+        $submitter->setPublicProfile(true);
+        $em->flush();
+        $crawler = $client->request('GET', '/moderate');
+        $link = $crawler->filter($card.' a.desk-rider');
+        self::assertSame(1, $link->count());
+        self::assertSame('Queue Rider', trim($link->text()));
+        self::assertStringEndsWith('/riders/'.$submitter->getUuid(), (string) $link->attr('href'));
     }
 
     public function testQueueAndHistoryAreDeskChipsNotATopTab(): void

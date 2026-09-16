@@ -6,10 +6,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Catalog\RiderPseudonym;
 use App\Entity\User;
 use App\Form\TranslationDecisionType;
 use App\Moderation\AlreadyDecidedException;
+use App\Moderation\DeskRider;
 use App\Moderation\MissingQuestionException;
 use App\Moderation\ModerationScopeProvider;
 use App\Pagination\Pager;
@@ -375,7 +375,7 @@ final class ModerateTranslationsController extends AbstractController
     }
 
     /**
-     * @param array{diff: list<array{type: string, text: string}>, who: array{anonymous: bool, handle: string, name: ?string, profile_url: ?string}}|null $edit
+     * @param array{diff: list<array{type: string, text: string}>, who: array{anonymous: bool, rider: array{name: string, uuid: ?string}|null}}|null $edit
      *
      * @return array<string, mixed>
      */
@@ -403,11 +403,11 @@ final class ModerateTranslationsController extends AbstractController
     }
 
     /**
-     * @return array{anonymous: bool, handle: string, name: ?string, profile_url: ?string}
+     * @return array{anonymous: bool, rider: array{name: string, uuid: ?string}|null}
      */
     private function who(?int $userId): array
     {
-        $anon = ['anonymous' => true, 'handle' => '', 'name' => null, 'profile_url' => null];
+        $anon = ['anonymous' => true, 'rider' => null];
         if (null === $userId) {
             return $anon;
         }
@@ -415,13 +415,8 @@ final class ModerateTranslationsController extends AbstractController
         if (!$user instanceof User) {
             return $anon;
         }
-        $uuid = $user->isPublicProfile() ? $user->getUuid()?->toRfc4122() : null;
 
-        return [
-            'anonymous' => false,
-            'handle' => RiderPseudonym::for((int) $user->getId()),
-            'name' => null !== $uuid ? $user->getDisplayName() : null,
-            'profile_url' => null !== $uuid ? $this->generateUrl('rider_profile', ['uuid' => $uuid]) : null,
-        ];
+        // Named the way every desk names a rider (DeskRider).
+        return ['anonymous' => false, 'rider' => DeskRider::ofUser($user)];
     }
 }

@@ -8,6 +8,7 @@ namespace App\Messaging;
 
 use App\Messaging\Entity\CuratorPost;
 use App\Messaging\Entity\CuratorRoomVisit;
+use App\Moderation\DeskRider;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -24,10 +25,10 @@ use Doctrine\ORM\EntityManagerInterface;
  * @phpstan-type RoomCard array{
  *     id: int,
  *     author_id: int|null,
- *     author_name: string|null,
+ *     author: array{name: string, uuid: string|null}|null,
  *     category: string|null,
  *     recipient_id: int|null,
- *     recipient_name: string|null,
+ *     recipient: array{name: string, uuid: string|null}|null,
  *     pin: string,
  *     body: string,
  *     about_submission_id: int|null,
@@ -40,10 +41,10 @@ use Doctrine\ORM\EntityManagerInterface;
  * @psalm-type RoomCard = array{
  *     id: int,
  *     author_id: int|null,
- *     author_name: string|null,
+ *     author: array{name: string, uuid: string|null}|null,
  *     category: string|null,
  *     recipient_id: int|null,
- *     recipient_name: string|null,
+ *     recipient: array{name: string, uuid: string|null}|null,
  *     pin: string,
  *     body: string,
  *     about_submission_id: int|null,
@@ -261,8 +262,8 @@ final class CuratorRoom
      */
     private function select(array $where): string
     {
-        return 'SELECT p.id, p.author_id, a.display_name AS author_name, p.category,
-                       p.recipient_id, r.display_name AS recipient_name, p.pin, p.body,
+        return 'SELECT p.id, p.author_id, a.display_name AS author_name, a.public_profile AS author_public, a.uuid AS author_uuid, p.category,
+                       p.recipient_id, r.display_name AS recipient_name, r.public_profile AS recipient_public, r.uuid AS recipient_uuid, p.pin, p.body,
                        p.about_submission_id, p.created_at, p.edited_at
                 FROM curator_post p
                 LEFT JOIN users a ON a.id = p.author_id
@@ -300,10 +301,11 @@ final class CuratorRoom
         return [
             'id' => (int) $row['id'],
             'author_id' => $authorId,
-            'author_name' => null !== $row['author_name'] ? (string) $row['author_name'] : null,
+            // Curators name each other; the name links to a public profile (DeskRider::colleague).
+            'author' => DeskRider::colleague($row['author_name'], $row['author_public'], $row['author_uuid']),
             'category' => null !== $row['category'] ? (string) $row['category'] : null,
             'recipient_id' => $recipientId,
-            'recipient_name' => null !== $row['recipient_name'] ? (string) $row['recipient_name'] : null,
+            'recipient' => DeskRider::colleague($row['recipient_name'], $row['recipient_public'], $row['recipient_uuid']),
             'pin' => (string) $row['pin'],
             'body' => (string) $row['body'],
             'about_submission_id' => null !== $row['about_submission_id'] ? (int) $row['about_submission_id'] : null,

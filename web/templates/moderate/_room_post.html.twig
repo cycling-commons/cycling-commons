@@ -5,14 +5,20 @@
    outlives the account (§13.3). #}
 <article class="rm-post {{ pinned_block ? 'rm-pinned' : '' }} {{ post.direct ? 'rm-direct' : '' }}">
   <div class="rm-meta">
-    <span class="rm-who">{{ post.author_name ?? 'room.former_curator'|trans }}</span>
+    <span class="rm-who">{% if post.author %}{% include 'moderate/_rider_name.html.twig' with {rider: post.author} only %}{% else %}{{ 'room.former_curator'|trans }}{% endif %}</span>
     <span>{{ post.created_at|cc_datetime }}</span>
     {% if post.edited_at %}<span>{{ 'room.edited'|trans }}</span>{% endif %}
     {% if post.category %}<span class="rm-tag">{{ ('room.cat.' ~ post.category)|trans }}</span>{% endif %}
     {% if post.direct %}
-      <span class="rm-tag rm-tag-direct">{{ post.mine
-        ? 'room.to_person'|trans({'%name%': post.recipient_name ?? 'room.former_curator'|trans})
-        : 'room.to_you'|trans }}</span>
+      <span class="rm-tag rm-tag-direct">
+        {%- if not post.mine -%}
+          {{ 'room.to_you'|trans }}
+        {%- elseif post.recipient -%}
+          {% include 'moderate/_rider_in_text.html.twig' with {text: 'room.to_person'|trans({'%name%': '@@rider@@'}), rider: post.recipient} only %}
+        {%- else -%}
+          {{ 'room.to_person'|trans({'%name%': 'room.former_curator'|trans}) }}
+        {%- endif -%}
+      </span>
     {% endif %}
     {% if post.pin != 'none' %}<span class="rm-tag">{{ ('room.pin.' ~ post.pin)|trans }}</span>{% endif %}
   </div>
