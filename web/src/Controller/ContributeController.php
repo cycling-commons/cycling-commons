@@ -470,6 +470,7 @@ final class ContributeController extends AbstractController
         if (null === $item) {
             // A link that named a target says why it could not be opened.
             $named = '' !== $itemParam || '' !== $ref;
+
             return $this->renderUnbound(match (true) {
                 ItemType::QualityRides === $requestedType => 'route',
                 $named => 'missing',
