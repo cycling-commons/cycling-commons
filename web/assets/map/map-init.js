@@ -3,6 +3,7 @@
    right-click coordinates (docs/specs/map-and-search.md §2).
    `map` is adopted from catalog-load.js (built before the catalog fetch). */
 import { pinOffset, locateOffset, locateErrorMessage, offsetAsPadding } from './util.js';
+import { hopIsNear } from './camera-hop.js';
 
 export const map = (function(){
   if(window.__ccMapInstance) return window.__ccMapInstance;
@@ -114,10 +115,75 @@ export function addSatellite(){
   map.addLayer({id:'satellite',type:'raster',source:'satellite',layout:{visibility:'none'}});
 }
 
+/* Every camera move the app makes goes through moveCamera()
+   (docs/specs/map-and-search.md §8), which animates when there is map under
+   the move and cuts through a short fade when there is not. camera-hop.js
+   holds the decision; this holds the mechanism. */
+const CUT_FADE_MS = 180;      // long enough to read as deliberate, short enough not to wait on
+const CUT_DARK_MAX_MS = 900;  // the map comes back even if it never paints
+let _cutBack = null;
+
+/* The fade hides the TRANSITION, never the loading: it comes back on the first
+   frame drawn at the destination, not when the tiles have settled. Waiting for
+   `idle` measured 2.2 s of dark on a first visit, which is a longer blank than
+   the grey slide it replaced; tiles arriving into a view that is already in
+   front of the rider is what any map does, and it reads as loading rather than
+   as breakage. */
+function cutCamera(cam){
+  const el = map.getCanvasContainer();
+  if(_cutBack) _cutBack();                       // a second cut mid-fade: finish the first
+  el.classList.add('cc-cut');
+  setTimeout(() => {
+    map.jumpTo(cam);
+    const back = () => {
+      if(_cutBack !== back) return;
+      _cutBack = null;
+      clearTimeout(timer);
+      map.off('render', back);
+      el.classList.remove('cc-cut');
+    };
+    const timer = setTimeout(back, CUT_DARK_MAX_MS);
+    _cutBack = back;
+    map.on('render', back);                      // back on the first frame drawn where we landed
+  }, CUT_FADE_MS);
+}
+
+/**
+ * Put the camera on `cam` ({center, zoom, ...}). Animated when the ground it
+ * crosses is ground the rider is already looking at, cut when it is not:
+ * a map animates over the tiles it has, and it has none for ground it has
+ * never shown (docs/specs/map-and-search.md §8). `anim` is passed to flyTo.
+ * Answers 'fly' or 'cut', for the tests and for a caller that wants to know.
+ */
+export function moveCamera(cam, anim){
+  const box = map.getContainer().getBoundingClientRect();
+  const c = cam.center;
+  const to = {center: Array.isArray(c) ? [+c[0], +c[1]] : [c.lng, c.lat],
+              zoom: cam.zoom == null ? map.getZoom() : cam.zoom};
+  const from = {center: [map.getCenter().lng, map.getCenter().lat], zoom: map.getZoom(),
+                width: box.width, height: box.height};
+  if(hopIsNear(from, to)){
+    map.flyTo({...cam, ...(anim || {}), essential: true});
+    return 'fly';
+  }
+  cutCamera(cam);
+  return 'cut';
+}
+
+/** fitBounds through the same door: the camera is computed without moving
+ *  (`cameraForBounds` bakes the padding into centre and zoom), then judged. */
+export function fitMapTo(bounds, opts){
+  const o = opts || {};
+  const cam = map.cameraForBounds(bounds, o);
+  if(!cam){ map.fitBounds(bounds, o); return 'fly'; }   // degenerate bounds: leave it to MapLibre
+  return moveCamera({center: cam.center, zoom: cam.zoom},
+    {duration: o.duration == null ? 900 : o.duration});
+}
+
 export function flyToPin(lngLat){   // centre + slow zoom-in on click, in the part of the map the drawer leaves free
   const box = map.getContainer().getBoundingClientRect();
   const offset = pinOffset(window.innerWidth, window.innerHeight, box.top, box.height);
-  map.flyTo({center:lngLat, zoom:Math.max(map.getZoom(),14), offset, duration:1700, essential:true});
+  return moveCamera({center:lngLat, zoom:Math.max(map.getZoom(),14), offset}, {duration:1700});
 }
 
 /* Style-load race: sources cannot be added, and render() must not paint, until MapLibre has the style. */

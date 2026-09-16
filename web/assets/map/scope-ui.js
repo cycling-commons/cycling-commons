@@ -3,7 +3,7 @@
    curScope/inScope/scopeToken/scopeLabel, the chip rail, the header, applyScope
    (the one visual update path), and the pan-away widen prompt.
    State lives in window.CCScope (scope.js); chip decisions in scope-chips.js. */
-import { map } from './map-init.js';
+import { map, fitMapTo } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend } from './util.js';
 import { setSpotlight, setCountrySpotlight, setCircleSpotlight } from './spotlight.js';
@@ -16,6 +16,7 @@ import { COVERAGE_KEYS, COVERAGE_CCS } from './coverage.js';
 import { isPicking } from './picking.js';
 import { corrLayerIds } from './corrections.js';
 import { hitScopeFor } from './hit-scope.js';
+import { parkTiledOverlays, unparkTiledOverlays } from './tile-park.js';
 
 
 // Region scope (docs/specs/map-and-search.md §4.5): area the map + search
@@ -144,7 +145,7 @@ export function applyScope(s, opts){
        The scope box would otherwise land last and show the whole area instead
        of the place in it. */
     if(!opts || !opts.keepCamera){
-      const bb = window.CCScope && window.CCScope.viewBbox(); if(bb) map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
+      const bb = window.CCScope && window.CCScope.viewBbox(); if(bb) fitMapTo([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
     }
     // Everything: refreshBestOf() is the render. Curated: render now, re-render K when best-of lands.
     if(mode()==='curated') render();
@@ -171,12 +172,15 @@ export function initScope(){
    the map, and the older draw neither applies nor clears the line. */
 let _drawReq = 0;
 /* The camera belongs to whatever asked for the next scope change
-   (docs/specs/map-and-search.md §8). A scope change repaints two frames late,
-   so a hit that framed itself synchronously would be overruled by the scope
-   box; the opener claims the camera first and the scope draws without moving
-   it. One change only: cleared the moment cc:scopechange is handled. */
+   (docs/specs/map-and-search.md §8): the opener claims it, the scope neither
+   fits to its own box nor draws until that framing has landed. One change
+   only: cleared the moment cc:scopechange is handled. */
 let _keepCamera = false;
 export function keepCameraForNextScope(){ _keepCamera = true; }
+/* How long the draw waits for the opener's framing to land. Longer than the
+   900 ms ease every opener uses, and short enough that an opener which moves
+   no camera at all still gets its region drawn promptly. */
+const CAMERA_WAIT_MS = 1400;
 function setScopeBusy(on, area){
   const el=document.getElementById('scopeBusy');
   if(!el) return;
@@ -192,7 +196,7 @@ function drawScope(s){
   const req = ++_drawReq;
   const keepCamera = _keepCamera; _keepCamera = false;   // read at event time: the flag is about THIS change
   setScopeBusy(true, scopeLabel(s));
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  const draw = () => requestAnimationFrame(()=>requestAnimationFrame(()=>{
     if(req!==_drawReq) return;
     renderScopeChips();
     applyScope(s, {fit:true, keepCamera});
@@ -202,6 +206,35 @@ function drawScope(s){
     // A tile source that never settles must not leave the line spinning.
     setTimeout(done, 20000);
   }));
+  if(!keepCamera){ draw(); return; }
+  /* The opener frames its own hit the moment this returns (liftScopeForHit),
+     and that ease must not share the thread with anything. Two things would
+     otherwise take it (owner-reported 2026-09-16: "it teleports", then "page
+     goes blank and rebuild on the now focussed route"):
+
+     - this draw, which holds the main thread for about a second while the
+       ease's clock runs on, so the browser skips the animation entirely. It
+       waits for the camera to land instead. An opener that moves no camera at
+       all still draws, on the timer.
+     - the tiled overlays loading the area being flown into, measured as one
+       1432 ms block mid-flight with nothing rendered at all. They park for the
+       flight (tile-park.js) and come back with the region.
+
+     What carries the animation is the basemap and the catalogue lines already
+     in memory, which is why the rider's second visit to the same region always
+     looked right: its data was loaded by then. */
+  parkTiledOverlays();
+  let started = false;
+  const go = () => {
+    if(started) return;
+    started = true;
+    clearTimeout(timer);
+    map.off('moveend', go);
+    unparkTiledOverlays();
+    draw();
+  };
+  const timer = setTimeout(go, CAMERA_WAIT_MS);
+  map.on('moveend', go);
 }
 
 export function initScopeRail(){

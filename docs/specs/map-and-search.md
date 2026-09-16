@@ -1023,14 +1023,20 @@ the newest rung of that same ladder.
   - **Never persisted** (`persist:false`, like the ride check's): neither
     `localStorage` nor `?scope=` changes, so a reload is still the rider's own
     scope.
-  - **The rider's scope comes back when the drawer that asked for it closes**
-    (`restoreHitScope()`, called from `closeDrawer()`), unpersisted too. A
-    scope the rider picks themselves in the meantime, or one a loaded ride
-    asks for, retires the memo: that scope is theirs, and nothing may put the
-    old one back over it.
-  - **The hit's own framing is the last word** (§8): the lift holds the camera
-    for that scope change, so the map lands on the place and not on the region
-    around it.
+  - **The rider's scope comes back when the rider drops what they went to see**
+    (`restoreHitScope()`, called from `closeDrawer()`), unpersisted too. It
+    follows the same life as a picked route (§6.3): opening another place over
+    the hit keeps the lifted scope, because the rider is still looking at that
+    region; the hand-closed drawer gives it back. A scope the rider picks
+    themselves in the meantime, or one a loaded ride asks for, retires the
+    memo: that scope is theirs, and nothing may put the old one back over it.
+  - **The hit's own framing is the last word** (§8): the lift claims the
+    camera for that scope change, so the map lands on the place and not on the
+    region around it, and the scope does not draw until the framing has landed,
+    so the flight is not eaten by the draw's freeze.
+  - **The pick survives the draw**: a route selected while its line is still
+    unscoped keeps its emphasis, because the selection is recorded by id and
+    `render()` re-applies it (§6.2, `selectedRouteLayerId`).
   Rides crossing a border keep every crossed region in one region set
   (`ride-scope.js`), never Everywhere.
 - **Cold-start chip:** a rider/anonymous visitor with no base location sees a
@@ -1640,6 +1646,19 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   **selected** route gets full brand orange, a wider halo, and dims every
   sibling (`highlightRoute()`); selection survives `render()` rebuilds and is
   cleared on drawer close / non-route open.
+  **The pick lasts until the rider drops it** (§6.3): opening any other place,
+  including one tapped on the map, leaves the route picked; only the
+  hand-closed drawer or another route takes it.
+  **The pick is recorded before the line exists.** `openDrawer()` selects by
+  index (`experience-<i>`, the feature's place in `layer.features`, which does
+  not move when a scope hides some of them) whether or not that layer is
+  drawn: `highlightRoute()` stores `selectedRouteLayerId` first, and
+  `render()`'s tail re-applies the emphasis the moment the line is there. A
+  route reached from OUTSIDE the rider's scope has no line yet at that
+  instant, because the scope lift (§4.5) draws its region afterwards; guarding
+  the selection on the drawn layer left the picked route at the same salmon
+  and the same width as every other (owner-reported 2026-09-16, searching
+  "Liege to Spa, the Vesdre valley" from a Friesland scope).
 - **Stacking rule** (bottom → top): route lines, climb lines, road-surface
   lines, Mapillary coverage — re-applied after any selection `moveLayer` so a
   highlighted route never buries the surface colours
@@ -1986,12 +2005,19 @@ check row (map-and-search.md §9), after lifting the scope to the place's own re
 when the scope hides it (`liftScopeForHit`, §4.5). `hydrateRouteAlong()` fetches
 and fills the slot.
 
-**The route stays while its lists are in use.** Opening the route drawer holds
-the route (`holdRoute()` in `drawer.js`). While it is held:
+**A picked route stays picked until the rider drops it** (owner 2026-09-16:
+"A selected route or a loaded gpx should always stay active also when a user
+clicks on a spot in the map themselves. The drawers only close and drop route
+focus when they close the drawer by hand with the X button"). Opening the route
+drawer holds the route (`holdRoute()` in `drawer.js`). While it is held:
 
 - the route stays drawn as the selected route (`highlightRoute`: full orange,
-  the others dimmed), also behind a place, climb or coverage point opened from
-  its lists; the map flies to that place and the route line stays on the map;
+  the others dimmed), behind ANY drawer the rider opens next: a place, climb or
+  coverage point from its own lists, and equally a pin, a coverage icon or a
+  town the rider clicked on the map themselves. The map flies to that place and
+  the route line stays on the map. Before 2026-09-16 only the route's own lists
+  kept it, so a tap on a water pin beside the line lost the line the rider was
+  reading;
 - its listed pool places are leaf pins, never folded into a count bubble
   (`setListedPlaces(keys, 'route')` in `osm-pools.js`, run when the list
   arrives, not when the drawer opens; the ride check lists under its own owner
@@ -2000,21 +2026,28 @@ the route (`holdRoute()` in `drawer.js`). While it is held:
   (`listedLettersChanged()` in `ride-places.js`): each `setData` makes the map
   re-render, so the same set again, or letting go of a route whose list never
   arrived or listed nothing, touches no source;
-- the place drawer opened from a row (climb, commons place or coverage point)
-  starts with a **‹ route name** button that reopens the route and its lists
-  (`setDrawerHop` in `drawer.js`, the hop carries the route id). It is a
-  one-step return: it shows only while that place is on screen, keyed by the
-  place's `letter:id` or, for an open coverage point, `letter:ref`
-  (`drawerPlaceKeys()`), any other place drops it, and it wins over a loaded
-  ride's "‹ Ride summary" for that one drawer (`pickDrawerReturn` in
+- **every** drawer opened over it starts with a **‹ route name** button back to
+  the route and its lists, whether the place came from one of its rows or from
+  a tap on the map (`routeHoldReturn()` in `drawer.js`, from the held route's
+  own name). The route's own drawer gets none: a record offers no step back to
+  itself.
+- a place opened from a ROW also carries a one-step hop (`setDrawerHop`, the
+  hop carries the route id), which shows only while that very place is on
+  screen, keyed by its `letter:id` or, for an open coverage point, `letter:ref`
+  (`drawerPlaceKeys()`). The nearest step back wins: the hop, then the held
+  route, then a loaded ride's "‹ Ride summary" (`pickDrawerReturn` in
   `ride-places.js`, map-and-search.md §9).
 
-Any other drawer (an unrelated place, another route), closing the drawer, or the
-ride summary lets the route go (`letRouteGo()`): the route highlight is cleared
-and the listed places cluster again (`releaseRouteList()`), the way Clear
-releases a ride. `keepsRouteHold()` in `ride-places.js` decides which drawer
-keeps it. A new record opens scrolled to its top, so the return button is in
-view.
+Three things let the route go (`letRouteGo()`): **closing the drawer by hand**
+(the ✕, the scrim, Escape, the phone sheet swiped away, all of which are
+`closeDrawer()`), **picking another route**, and the ride summary taking the
+map back. The highlight is cleared and the listed places cluster again
+(`releaseRouteList()`), the way Clear releases a ride, and the same moment
+gives the rider back a scope that was lifted to reach the route
+(`restoreHitScope()`, §4.5). `keepsRouteHold()` in `ride-places.js` decides,
+and it is asked about the route alone: it is given no list and no keys, so no
+place can drop a route by not being on one of its rows. A new record opens
+scrolled to its top, so the return button is in view.
 
 **No id ⇒ no edit/add links**: the edit-bridge only ever binds to a real DB
 item id — a name-slug guess is never a faithful target.
@@ -2370,15 +2403,71 @@ not to its country.** Every link below resolves its target first, then lifts the
 scope when the rider's scope would not draw it (`liftScopeForHit`, §4.5: the
 target's own region, transient, given back when the drawer closes), and only
 then frames it: a point lands at its own zoom clear of the drawer (`flyToPin`
-with `pinOffset`), a line or an area is framed with `drawerFitPadding`. A scope
-change repaints two frames late (`drawScope()` in `scope-ui.js` waits for two
-`requestAnimationFrame`s so the busy line can paint before the freeze), so its
-own `fitBounds` would otherwise land AFTER the target's and show the whole
-region instead of the place in it. The lift therefore claims the camera for that
-one change (`keepCameraForNextScope()`, read by `applyScope`'s `keepCamera`),
-and the scope draws without moving the view. The ride check claims it the same
-way (§9). Owner-reported 2026-09-16: a city card for Liege left the map at z7.3
-over the whole of Belgium, and Liege was never framed.
+with `pinOffset`), a line or an area is framed with `drawerFitPadding`. The lift
+**claims the camera** for that one scope change (`keepCameraForNextScope()`,
+read as `applyScope`'s `keepCamera`), and claiming it means two things:
+
+- **The scope does not fit to its own box.** A scope change repaints two frames
+  late (`drawScope()` waits for two `requestAnimationFrame`s so the busy line
+  can paint before the freeze), so its `fitBounds` would land AFTER the
+  target's and show the whole region instead of the place in it.
+  Owner-reported 2026-09-16: a city card for Liege left the map at z7.3 over
+  the whole of Belgium, and Liege was never framed.
+- **The scope does not DRAW until that framing has landed** (`drawScope()`
+  waits for the map's `moveend`, or `CAMERA_WAIT_MS` = 1400 ms for an opener
+  that moves no camera at all). Drawing a scope holds the main thread for about
+  a second; an ease started before that loses every frame it had, because the
+  animation's clock runs on while nothing renders and the map draws only the
+  final position. Owner-reported 2026-09-16: "it teleports", measured at 18
+  frames in 3.5 s with the zoom crossing 9.13 to 10.52 in one 1.2 s gap. The
+  flight now runs on the OLD scope's layers, which are cheap because they are
+  the ones already drawn, and the busy line names the region being drawn while
+  it flies.
+- **A hop onto ground the map has never drawn is CUT, not panned**
+  (`moveCamera()` in `map-init.js`, decision in `camera-hop.js`). A map
+  animates over the tiles it has, and it only ever fetched the ones for
+  viewports it has actually drawn, so a long first hop slides for a second over
+  the style's background colour: owner-reported 2026-09-16, "now it scrolls to
+  the location while show a grey screen". **No arc shape fixes that.** A
+  flatter arc (`flyTo`'s `curve` / `minZoom`) keeps the camera at higher zooms,
+  where the same 270 km corridor needs MORE tiles and none of those are cached
+  either; zooming further out needs low-zoom tiles the session never fetched;
+  prefetching the whole corridor first buys the pan at the price of seconds of
+  nothing happening after a click. So the rule is to animate when there IS map
+  under the move and to cut when there is not:
+  - **near** (animate): the camera moves no further than the width of what is
+    on screen, and the target does not zoom out to more than four times the
+    ground now on screen (`hopIsNear`, thresholds `reach` 1 and `spread` 4).
+  - **far** (cut): the canvas fades out over 180 ms, `jumpTo`, and fades back
+    in on the first frame drawn where it landed (`CUT_DARK_MAX_MS` = 900 ms as
+    the floor under a map that never paints). The fade hides the TRANSITION,
+    never the loading: waiting for `idle` instead measured 2.2 s of dark on a
+    first visit, a longer blank than the grey slide it replaced.
+  - Measured on the owner's own hops at a 1391 px map: Friesland to the Liege
+    route is a 269 km move against a 234 km viewport, so it cuts; Friesland to
+    Groningen is 62 km and a pin in the town being read is under a kilometre,
+    so both animate. Those are exactly the moves they called wrong and right
+    ("when i now go back to groningen it does pan and zoom").
+  - Every camera move the app makes goes through this door: `flyToPin()`,
+    `fitMapTo()` (which asks `cameraForBounds` for the camera without moving,
+    so the padding is already baked into centre and zoom) and `moveCamera()`
+    itself. `prefers-reduced-motion` drops the fade, not the cut: the cut IS
+    the reduced-motion answer.
+- **The tiled overlays park for the flight** (`tile-park.js`, parked by
+  `drawScope()` and put back when the camera lands). The coverage archive and
+  the surface archive carry 320 and 152 of the style's 637 layers; flying into
+  an area nobody has asked for yet makes the map fetch, parse and place every
+  one of them for the new viewport while the ease runs. A source with no
+  visible layer is asked for nothing, so the basemap and the catalogue lines
+  already in memory carry the animation, and the overlays come back with the
+  region. Owner-reported 2026-09-16: "page goes blank and rebuild on the now
+  focussed route", and the tell that named it, "back to Liege it also works so
+  it is only when it loads new data": the second visit has that data.
+  Visibility is the whole mechanism, 472 `setLayoutProperty` calls measured
+  under 1 ms, unlike `setFilter`, which revalidates the whole style each time
+  (coverage.js `NO_VALIDATE`).
+
+The ride check claims the camera the same way (§9).
 
 | Param | Behaviour |
 |---|---|
@@ -2578,7 +2667,8 @@ requirement).
   `fitBounds`, and that framing is the last word: `applyRideScope()` runs before
   it and claims the camera for its own scope change
   (`keepCameraForNextScope()`, §8), so the map lands on the ride rather than on
-  the region set the ride asked for. The summary opens through `showDrawer()`
+  the region set the ride asked for, and the region is drawn once the track is
+  framed rather than in the middle of the flight. The summary opens through `showDrawer()`
   like every other drawer, so the Ride tools panel closes with it (§4.0); the
   drawer's own "✕ Clear ride" button, and the panel's status line when it is
   reopened, both still tear the ride down. Results render in the **standard
@@ -2590,6 +2680,12 @@ requirement).
   clicking a pin or icon on the map) starts with a **‹ Ride summary** button
   that brings the summary back (`setDrawerReturn` in `drawer.js`, drawn by
   `renderDrawerBody`, `d_ride_summary`); Clear removes it (owner 2026-09-15).
+  **A loaded ride stays loaded the same way a picked route stays picked**
+  (§6.3): opening anything else, a pin the rider tapped included, leaves the
+  track drawn, the along-the-ride lists standing and the summary one step back.
+  Only **Clear** tears a ride down, from the drawer's own "✕ Clear ride" or the
+  panel's status line; closing the drawer by hand drops the route focus and a
+  lifted scope, never the ride.
   Radius change re-posts; a new file replaces the previous overlay.
   Ride-check owns the **`.cc-ride-*`** CSS namespace (it once collided with
   the route-community `.cc-rc-*`). Errors surface as translated inline

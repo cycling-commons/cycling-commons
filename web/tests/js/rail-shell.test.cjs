@@ -477,3 +477,29 @@ test('every way into the feature drawer closes the rail panel', () => {
       `${f} opens #drawer without showDrawer(); the rail panel would stay open`);
   }
 });
+
+test('a hit frames itself before the scope draws over it', () => {
+  // Owner-reported 2026-09-16: "it teleports". A scope draw holds the main
+  // thread for about a second (measured 1.2 s here), and an ease started
+  // before it loses every frame it had: the clock runs on and the map renders
+  // only the final position. So a scope change that a hit asked for neither
+  // fits to its own box nor draws until that hit's framing has landed.
+  const scopeUi = read('assets/map/scope-ui.js');
+  assert.ok(scopeUi.includes('export function keepCameraForNextScope()'),
+    'nothing lets an opener claim the camera for its own scope change');
+  // applyScope must skip ONLY the fit, not the rest of the scope work.
+  assert.match(scopeUi, /if\(!opts \|\| !opts\.keepCamera\)\{[\s\S]{0,200}fitMapTo\(/,
+    'the scope fit is not gated on the camera claim');
+  assert.match(scopeUi, /fetchCoverageCounts\(\);/, 'a held camera must not also skip the coverage totals');
+  // And the draw waits for the framing to land, with a timer for an opener
+  // that moves no camera at all.
+  assert.match(scopeUi, /map\.on\('moveend', go\)/, 'the draw does not wait for the camera to land');
+  assert.match(scopeUi, /const timer = setTimeout\(go, CAMERA_WAIT_MS\)/,
+    'an opener that moves no camera would leave its region undrawn');
+  assert.match(scopeUi, /if\(!keepCamera\)\{ draw\(\); return; \}/,
+    'a scope the rider picked themselves must draw at once, camera and all');
+  // The one claimant beside a hit is the ride check, whose own fitBounds is
+  // the framing for a loaded GPX (map-and-search.md §9).
+  const ride = read('assets/map/ride-check.js');
+  assert.ok(ride.includes('keepCameraForNextScope()'), 'the ride check must claim the camera for its own framing');
+});

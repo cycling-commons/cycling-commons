@@ -440,6 +440,18 @@
      340px grid it inherited the 1fr track and needed nothing. */
   .mapcol{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}
   #map{position:absolute;inset:0;background:var(--paper-deep)}
+  /* A hop onto ground the map has never drawn is cut, not panned: it would
+     otherwise slide for a second over the style's background colour, with no
+     tiles to show (docs/specs/map-and-search.md §8, map-init.js moveCamera).
+     The canvas container carries the fade so the pins drawn as markers go with
+     it; the controls beside it stay put, and #map's own paper shows through.
+     prefers-reduced-motion drops the fade, not the cut: the cut IS the
+     reduced-motion answer. */
+  .maplibregl-canvas-container{transition:opacity .18s ease}
+  .maplibregl-canvas-container.cc-cut{opacity:0}
+  @media (prefers-reduced-motion: reduce){
+    .maplibregl-canvas-container{transition:none}
+  }
   /* Replaces the canvas when MapLibre cannot get a WebGL2 context
      (catalog-load.js). Centred in the map area because there is no map
      left to sit beside. */

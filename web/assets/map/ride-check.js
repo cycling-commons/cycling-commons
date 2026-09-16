@@ -4,7 +4,7 @@
    never touches them). The places it lists are drawn by the normal map: pool
    pins through osm-pools.js, coverage icons through the coverage tiles and the
    `cov-sel` overlay. The server parses the GPX in memory and stores nothing. */
-import { map } from './map-init.js';
+import { map, fitMapTo } from './map-init.js';
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, txtOn, drawerFitPadding } from './util.js';
 import { uKm, uM, uElev } from './units.js';
@@ -145,8 +145,8 @@ export function initRideCheck(){
       let minLat=90,maxLat=-90,minLng=180,maxLng=-180;
       d.track.forEach(p=>{ if(p[0]<minLat)minLat=p[0]; if(p[0]>maxLat)maxLat=p[0]; if(p[1]<minLng)minLng=p[1]; if(p[1]>maxLng)maxLng=p[1]; });
       // Drawer-aware framing, same as openPlace and a ?route= link.
-      map.fitBounds([[minLng,minLat],[maxLng,maxLat]],
-        {padding:drawerFitPadding(window.innerWidth, window.innerHeight), duration:900, essential:true});
+      fitMapTo([[minLng,minLat],[maxLng,maxLat]],
+        {padding:drawerFitPadding(window.innerWidth, window.innerHeight), duration:900});
       renderRideDrawer(d);
     }
     function renderRideDrawer(d){

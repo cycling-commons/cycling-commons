@@ -16,7 +16,7 @@
  * ROLE_CURATOR and scoped to the curator's own area, so a rider following a
  * shared link gets a 404 and this module quietly does nothing.
  */
-import { map } from './map-init.js';
+import { map, fitMapTo } from './map-init.js';
 import { D } from './i18n.js';
 import { liftScopeForHit } from './scope-ui.js';
 import { showDrawer } from './drawer.js';
@@ -77,7 +77,7 @@ function fitBoth(pts) {
     (acc, p) => acc.extend(p),
     new maplibregl.LngLatBounds(pts[0], pts[0]),
   );
-  map.fitBounds(b, { padding: 90, maxZoom: 17, duration: 500 });
+  fitMapTo(b, { padding: 90, maxZoom: 17, duration: 500 });
 }
 
 function esc(s) {

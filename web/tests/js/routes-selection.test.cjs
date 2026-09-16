@@ -94,3 +94,24 @@ test('the selection layer is walked with the others, so no country is missed', (
   // corridor prefix.
   assert.match(routes, /const selId = LINE_PREFIX \+ 'sel-' \+ cc;/);
 });
+
+test('a K route is selected even before its line is drawn', () => {
+  // Owner-reported 2026-09-16: a route reached from outside the rider's scope
+  // opened with every line the same salmon and the same width, the picked one
+  // included. Its layer did not exist yet at that moment (the scope lifts to
+  // the route's region, §4.5, and the region's layers are drawn after), and
+  // openDrawer only selected when `map.getLayer()` already answered. Selecting
+  // regardless records which route is picked; render()'s tail re-applies the
+  // emphasis the moment the line exists.
+  const render = read('assets/map/render.js');
+  assert.match(drawer, /const i=layer\.features\.indexOf\(f\);\n(?:\s*\/\*[\s\S]*?\*\/\n)?\s*if\(i>=0\) highlightRoute\('experience-'\+i\);/,
+    'openDrawer must select the route without asking whether its layer is drawn');
+  assert.doesNotMatch(drawer, /if\(i>=0 && map\.getLayer\('experience-'\+i\)\) highlightRoute/,
+    'gating the selection on the drawn layer loses the emphasis for an out-of-scope route');
+  // The other half of the contract: render() re-applies whatever is selected.
+  assert.match(render, /if\(selectedRouteLayerId && map\.getLayer\(selectedRouteLayerId\)\) highlightRoute\(selectedRouteLayerId\);/,
+    'render() must re-apply the selection after it rebuilds the dynamic layers');
+  // highlightRoute records the pick before it touches any layer, so a pick
+  // made with nothing drawn is still the pick.
+  assert.match(render, /export function highlightRoute\(selId\)\{\n\s*selectedRouteLayerId=selId;/);
+});

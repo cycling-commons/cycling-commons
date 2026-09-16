@@ -25,7 +25,7 @@ import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
-import { openCity, bumpPlaceReq } from './places.js';
+import { openCity, openRouteById, bumpPlaceReq } from './places.js';
 import { CC_VOTABLE, CC_CONFIRMABLE, CC_BREAKABLE, routeCommunityPanel, hydrateRouteCommunity,
          hydrateItemConfirm, setPendingShape } from './community.js';
 import { showPendingShape, fitPendingShape, clearPendingShape } from './pending-shape.js';
@@ -1112,9 +1112,18 @@ export function setDrawerHop(target, forKey){
    drawer, or the ride summary lets it go: `release` runs once
    (listed-place.js releaseRouteList). keepsRouteHold decides. */
 let _routeHold = null;
-export function holdRoute(routeId, release){
+export function holdRoute(routeId, release, label){
   if(_routeHold && String(_routeHold.routeId) !== String(routeId)) letRouteGo();
-  _routeHold = {routeId, release};
+  _routeHold = {routeId, release, label};
+}
+/* The way back to the route being held, for a place opened while it is
+   (docs/specs/map-and-search.md §6.3). The route's own drawer gets none: a
+   record does not offer a step back to itself. */
+function routeHoldReturn(layer, f){
+  if(!_routeHold) return null;
+  if(layer && layer.key === 'experience' && f && String(f.id) === String(_routeHold.routeId)) return null;
+  return {label: _routeHold.label || D.backToRoute || 'Back to route',
+          go: () => openRouteById(_routeHold.routeId)};
 }
 export function letRouteGo(){
   const hold = _routeHold;
@@ -1124,7 +1133,10 @@ export function letRouteGo(){
 export function renderDrawerBody(layer, f){
   const body = document.getElementById('drawerBody');
   body.innerHTML = buildRecord(layer, f);
-  const pick = pickDrawerReturn(_drawerReturn, _drawerHop, drawerPlaceKeys(layer.letter||'', f));
+  /* Nearest step back wins: the one-step hop from a list, then the route still
+     held behind this drawer, then the lasting return of a loaded ride. */
+  const pick = pickDrawerReturn(routeHoldReturn(layer, f) || _drawerReturn, _drawerHop,
+    drawerPlaceKeys(layer.letter||'', f));
   if(!pick.keepHop) _drawerHop = null;
   if(pick.target){
     const back = document.createElement('button');
@@ -1198,14 +1210,23 @@ export function openDrawer(layer, f){
   clearSelectedCoverageIcon();
   releaseShownAnyway(layer.letter, f.id);   // a place shown anyway stays only while its own drawer is up (map-and-search.md §9)
   invalidateCoverageDrawer(); bumpPlaceReq();   // Invalidate in-flight coverage POI detail and town-card nearby; this render supersedes them.
-  // A place opened from the held route's lists keeps the route drawn as selected (§6.3).
-  const keepRoute = keepsRouteHold(_routeHold, _drawerHop,
-    {routeId: layer.key==='experience' ? (f.id!=null ? f.id : '') : null, keys: drawerPlaceKeys(layer.letter||'', f)});
+  /* A picked route stays picked behind whatever the rider opens next, until
+     they close the drawer by hand or pick another route (§6.3, owner
+     2026-09-16). keepsRouteHold decides. */
+  const keepRoute = keepsRouteHold(_routeHold,
+    {routeId: layer.key==='experience' ? (f.id!=null ? f.id : '') : null});
   if(!keepRoute) letRouteGo();
-  if(layer.key==='experience' && f.id!=null) holdRoute(f.id, releaseRouteList);
+  if(layer.key==='experience' && f.id!=null) holdRoute(f.id, releaseRouteList, f.name);
   if(layer.key==='experience'){
     const i=layer.features.indexOf(f);
-    if(i>=0 && map.getLayer('experience-'+i)) highlightRoute('experience-'+i);
+    /* The line may not be drawn YET: a route reached from outside the rider's
+       scope lifts the scope (§4.5), and the layers for the new region are drawn
+       after this. Selecting it anyway records which route is picked, and
+       render()'s tail re-applies the emphasis the moment the line exists
+       (`selectedRouteLayerId`, render.js). Guarding on the layer left the
+       picked route at the same salmon and the same width as the rest
+       (owner-reported 2026-09-16). */
+    if(i>=0) highlightRoute('experience-'+i);
     clearHighlight();                    // routes read as the wide line halo, not a point halo
   } else {
     if(!keepRoute) clearRouteHighlight();

@@ -77,14 +77,21 @@ export function drawerPlaceKeys(letter, f){
 
 /**
  * Whether a drawer about to open keeps the route held open behind it
- * (docs/specs/map-and-search.md §6.3): the held route's own drawer
- * (`next.routeId`), or the place its list opened (the hop from that route,
- * matched by `next.keys`). Anything else lets the route go.
+ * (docs/specs/map-and-search.md §6.3).
+ *
+ * A picked route stays picked (owner 2026-09-16): its line stays thick, the
+ * others stay faded, and its listed places stay leaf pins, while the rider
+ * opens anything else on the map. Only two things take the focus off it: the
+ * rider closing the drawer by hand, which is `closeDrawer()`'s job and never
+ * reaches here, and picking ANOTHER route, which is the one case this answers
+ * false to. Before that, opening any place that was not in the route's own
+ * lists dropped the route the rider was reading, so a tap on a water pin
+ * beside the line lost the line.
  */
-export function keepsRouteHold(hold, hop, next){
+export function keepsRouteHold(hold, next){
   if(!hold || !next) return false;
-  if(next.routeId != null) return String(next.routeId) === String(hold.routeId);
-  return !!hop && String(hop.routeId) === String(hold.routeId) && (next.keys || []).includes(hop.forKey);
+  if(next.routeId != null && String(next.routeId) !== String(hold.routeId)) return false;
+  return true;
 }
 
 /** One set of listed places from every list showing at once (a loaded ride, an open route), so a place either lists stands as a leaf pin. */
