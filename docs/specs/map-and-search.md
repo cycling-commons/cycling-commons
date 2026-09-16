@@ -218,6 +218,11 @@ by default and a rider asks for one section at a time.
 
 ### 4.0 Rail, drawer, corner
 
+**Opening a place closes the rail panel** (`closeRailPanel()` in `shell.js`,
+called by `openDrawer()`; owner 2026-09-16). The rider has chosen: the panel
+would otherwise keep a third of the map, and a route framed clear of the
+right-hand feature drawer would sit behind the panel instead.
+
 - **The rail** is 48px on the left edge, at every screen width. Top: the brand
   mark. Then one icon per rider section, in this order: **Search & region**
   (magnifier), **Layers & filters** (layer stack), **Ride tools** (bicycle).

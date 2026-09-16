@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Item drawer: registry-driven rows, history, open/close.
    @see docs/specs/map-and-search.md §6 */
+import { closeRailPanel } from './shell.js';
 import { pickDrawerReturn, drawerPlaceKeys, keepsRouteHold } from './ride-places.js';
 import { I18N, D, tpl, trVal, sourceLabel, isRiderSource, DIFF_LABELS } from './i18n.js';
 import { drawerSource, drawerOrigin } from './origin.js';
@@ -1188,6 +1189,8 @@ export function renderDrawerBody(layer, f){
   });
 }
 export function openDrawer(layer, f){
+  // The rider has chosen: the rail panel gives the map back (shell.js).
+  closeRailPanel();
   // docs/specs/route-domain.md §7 — while picking corrections, do not also open the drawer.
   if(isPicking()) return;
   clearRevealPin();

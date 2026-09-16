@@ -29,6 +29,20 @@ function resizeWhenSettled(dwr){
   setTimeout(once, 220);
 }
 
+/* Close the rail panel (search, layers, tools, key) from anywhere. A feature
+   drawer opening means the rider has chosen: the panel would otherwise keep
+   half the map, and a route framed for the drawer would sit behind it
+   (owner 2026-09-16). docs/specs/map-and-search.md §4. */
+export function closeRailPanel(){
+  const dwr = document.getElementById('dwr');
+  if(!dwr || !dwr.classList.contains('open')) return false;
+  const x = document.getElementById('dwr-x');
+  if(x){ x.click(); return true; }
+  dwr.classList.remove('open');
+  dwr.setAttribute('aria-hidden', 'true');
+  return true;
+}
+
 export function initShell(){
   const dwr = document.getElementById('dwr');
   const title = document.getElementById('dwr-title');
