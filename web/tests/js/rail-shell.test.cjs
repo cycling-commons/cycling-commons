@@ -178,7 +178,12 @@ test('the widen ladder ends in "Search everywhere", a reach for this search only
   assert.ok(searchUi.includes('class="search-widen"'), 'no widen row in the results list');
   assert.ok(/setReach\(true\)/.test(searchUi), 'widening at the top must set the search reach, not the scope');
   assert.ok(searchUi.includes("getElementById('searchReach')"), 'the reach has a visible switch beside the search title');
-  assert.ok(searchUi.includes('countryAt('), 'a worldwide hit must move the scope to its country when picked');
+  // Picking a hit the scope does not draw moves the scope to that hit's own
+  // REGION, transiently, and puts the rider's scope back when its drawer
+  // closes (owner 2026-09-16; map-and-search.md §4.5). The country rung threw
+  // away a Friesland rider's scope to show them one town in Belgium.
+  assert.ok(searchUi.includes('liftScopeForHit('), 'a hit outside the scope must lift the scope to reach it');
+  assert.ok(!searchUi.includes('countryAt('), 'a picked hit must not jump the scope to a whole country');
   const scopeUi = read('assets/map/scope-ui.js');
   assert.ok(!/setEverywhere\(\)/.test(scopeUi), 'the rail and the nudge must not set Everywhere');
 });
@@ -446,4 +451,29 @@ test('an overlay row says whether it is on, like every other row in the list', (
   }
   const panels = read('assets/map/panels.js');
   assert.ok(panels.includes('const paintOverlay='), 'the two overlay rows are painted separately and can drift');
+});
+
+test('every way into the feature drawer closes the rail panel', () => {
+  // Owner-reported 2026-09-16: the rail panel stayed open over a town card for
+  // Liege, because a town card writes #drawerBody and opens #drawer itself
+  // instead of going through openDrawer(), which is where closeRailPanel()
+  // used to sit. showDrawer() in drawer.js is now the one door, so the panel
+  // closes for a record, a town or city card, a pasted coordinate, the ride
+  // summary and a curator duplicate alike (map-and-search.md §4.0).
+  const drawerJs = read('assets/map/drawer.js');
+  assert.ok(/export function showDrawer\(/.test(drawerJs), 'drawer.js no longer exports showDrawer()');
+  const body = drawerJs.slice(drawerJs.indexOf('export function showDrawer('));
+  assert.ok(body.slice(0, body.indexOf('\n}')).includes('closeRailPanel()'),
+    'showDrawer() does not close the rail panel');
+
+  // No module may open the drawer behind showDrawer's back.
+  const OPENERS = ['drawer.js', 'places.js', 'ride-check.js', 'duplicate-resolve.js', 'coverage.js', 'community.js'];
+  for (const f of OPENERS) {
+    const src = read(path.join('assets/map', f));
+    const rogue = [...src.matchAll(/getElementById\('drawer'\)[^\n]*classList\.add\('open'\)/g)]
+      .concat([...src.matchAll(/\bd(?:r|rawer)?\.classList\.add\('open'\)/g)]);
+    const allowed = f === 'drawer.js' ? 1 : 0;   // showDrawer() itself
+    assert.equal(rogue.length, allowed,
+      `${f} opens #drawer without showDrawer(); the rail panel would stay open`);
+  }
 });

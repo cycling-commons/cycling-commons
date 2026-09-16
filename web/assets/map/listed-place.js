@@ -13,8 +13,8 @@ import { mapToast, highlightAt, clearHighlight, setDrawerHop } from './drawer.js
 import { poolPinDrawn, setListedPlaces } from './osm-pools.js';
 import { flyToPin } from './map-init.js';
 import { itemIndex } from './item-index.js';
-import { widenForDeepLink, openCoverageByRef } from './coverage.js';
-import { inScope } from './scope-ui.js';
+import { openCoverageByRef } from './coverage.js';
+import { inScope, liftScopeForHit } from './scope-ui.js';
 import { ringOffset, listedPlaceKeys } from './ride-places.js';
 import { routeClimbsHtml } from './route-climbs.js';
 import { alongListHtml } from './along-list.js';
@@ -67,8 +67,8 @@ function catalogMeta(letter){
  *
  * `o.beforeOpen(key)` runs before a place opens, with the key its drawer will
  * answer to (`letter:id`, or `letter:ref` for coverage); `o.onLifted(from, to)`
- * hears every view-mode lift; `o.widen` moves the scope to a place's country
- * when the scope hides it (widenForDeepLink), for a list that does not set the
+ * hears every view-mode lift; `o.widen` moves the scope to a place's own region
+ * when the scope hides it (liftScopeForHit), for a list that does not set the
  * scope itself.
  */
 export function bindAlongList(root, d, o = {}){
@@ -79,7 +79,7 @@ export function bindAlongList(root, d, o = {}){
     const entry = idxByKey.get(letter+':'+it.id);
     b.onclick = () => {
       if(!entry){ flyToPin([it.ll[1], it.ll[0]]); highlightAt(it.ll); return; }
-      if(o.widen && !inScope(entry.rid)) widenForDeepLink(entry.ll || it.ll);
+      if(o.widen && !inScope(entry.rid)) liftScopeForHit(entry.ll || it.ll, entry.rid);
       if(o.beforeOpen) o.beforeOpen(letter+':'+it.id);
       const from = openListedPlace(entry.layer, entry.modeF, () => entry.go());
       if(from != null && o.onLifted) o.onLifted(from, mode());
@@ -93,7 +93,7 @@ export function bindAlongList(root, d, o = {}){
     b.onclick = () => {
       const k = LETTER_KEY[letter], layer = k && layerByKey[k];
       if(!it.ref || !layer){ flyToPin([it.ll[1], it.ll[0]]); highlightAt(it.ll); return; }
-      if(o.widen) widenForDeepLink(it.ll);
+      if(o.widen) liftScopeForHit(it.ll);
       if(o.beforeOpen) o.beforeOpen(letter+':'+it.ref);
       showLayer(k);
       const from = mode();
@@ -139,8 +139,8 @@ function hydrateRouteSlot(routeId, slotId, path, fill){
 
 /* The route drawer's "Climbs on this route" (docs/specs/map-and-search.md §6.3).
    A row opens the climb through its item-index entry, the same path search and
-   the ride check use, after moving the scope to the climb's country when the
-   scope hides it (widenForDeepLink); hover rings the climb's foot. */
+   the ride check use, after moving the scope to the climb's own region when the
+   scope hides it (liftScopeForHit); hover rings the climb's foot. */
 export function hydrateRouteClimbs(routeId){
   hydrateRouteSlot(routeId, 'cc-d-climbs-slot', 'climbs', (slot, d) => {
     if(!Array.isArray(d.climbs)) return false;
@@ -155,7 +155,7 @@ export function hydrateRouteClimbs(routeId){
       b.onclick = () => {
         clearHighlight();
         if(!entry){ flyToPin([c.ll[1], c.ll[0]]); highlightAt(c.ll); return; }
-        if(!inScope(entry.rid)) widenForDeepLink(c.ll);
+        if(!inScope(entry.rid)) liftScopeForHit(c.ll, entry.rid);
         setDrawerHop(routeHop(routeId), 'N:'+c.id);   // the climb drawer offers the way back to this route
         openListedPlace(entry.layer, entry.modeF, () => entry.go());
       };

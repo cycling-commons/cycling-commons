@@ -25,8 +25,8 @@ stale without the build saying so.
 | `selector-rules` | **42** | OSM tag rules that decide whether an object is worth keeping | `pipeline/contract/coverage-contract.json` |
 | `stored-tag-keys` | **43** | tag keys the harvest keeps on a coverage row; every other key is dropped at parse time | `pipeline/contract/coverage-contract.json` |
 | `drawer-tag-whitelist` | **32** | of those keys the POI drawer is allowed to render | `web/src/Coverage/CoverageRepository.php` |
-| `map-modules` | **50** | JavaScript modules the map is split into | `web/assets/map/` |
-| `map-js-lines` | **322** | lines in `map.js` itself, which is imports plus the boot sequence | `web/assets/map/map.js` |
+| `map-modules` | **51** | JavaScript modules the map is split into | `web/assets/map/` |
+| `map-js-lines` | **327** | lines in `map.js` itself, which is imports plus the boot sequence | `web/assets/map/map.js` |
 | `geofabrik-regions` | **22** | Geofabrik extracts the harvest runs by default | `developers/docker/compose.yaml` |
 | `seeded-pins` | **30** | hand-authored pins `make course-data` seeds | `web/src/Catalog/Command/SeedManualCatalogCommand.php` |
 | `api-rate-limit-per-minute` | **120** | requests a minute per client address on the public API | `web/config/packages/rate_limiter.yaml` |

@@ -18,7 +18,8 @@
  */
 import { map } from './map-init.js';
 import { D } from './i18n.js';
-import { widenForDeepLink } from './coverage.js';
+import { liftScopeForHit } from './scope-ui.js';
+import { showDrawer } from './drawer.js';
 
 const ENDPOINT = '/moderate/data/finding/';
 
@@ -60,16 +61,13 @@ function showResolve(finding) {
   });
 
   // The rows may sit outside the current scope; a resolve link that shows an
-  // empty map would be worse than no link. The scope follows the first row
-  // to its country.
-  if (pts.length) { try { widenForDeepLink([pts[0][1], pts[0][0]]); } catch (e) { /* noop */ } }
+  // empty map would be worse than no link. The scope follows the first row to
+  // its own region, and fitBoth below is the framing (map-and-search.md §8).
+  if (pts.length) { try { liftScopeForHit([pts[0][1], pts[0][0]]); } catch (e) { /* noop */ } }
   if (pts.length >= 2) fitBoth(pts);
 
   document.getElementById('drawerBody').innerHTML = panelHtml(finding);
-  const d = document.getElementById('drawer');
-  d.classList.add('open');
-  d.setAttribute('aria-hidden', 'false');
-  d.focus({ preventScroll: true });
+  showDrawer();   // one way in: the rail panel closes here too (map-and-search.md §4.0)
 }
 
 /* Two points 1 m apart must not zoom to street level and two 500 m apart must

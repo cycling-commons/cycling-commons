@@ -2,6 +2,7 @@
 /* Item drawer: registry-driven rows, history, open/close.
    @see docs/specs/map-and-search.md §6 */
 import { closeRailPanel } from './shell.js';
+import { restoreHitScope } from './scope-ui.js';
 import { pickDrawerReturn, drawerPlaceKeys, keepsRouteHold } from './ride-places.js';
 import { I18N, D, tpl, trVal, sourceLabel, isRiderSource, DIFF_LABELS } from './i18n.js';
 import { drawerSource, drawerOrigin } from './origin.js';
@@ -1219,9 +1220,29 @@ export function openDrawer(layer, f){
     highlightAt(hlAt, isPin ? [0,-16] : [0,0]);
   }
   renderDrawerBody(layer, f);
-  const d=document.getElementById('drawer'); d.classList.add('open'); d.classList.remove('folded'); d.setAttribute('aria-hidden','false');
-  d.scrollTop=0;   // a new record starts at its top, where its "‹ back" button is, not where the list it came from was scrolled
-  syncMapWrap();   // a new record always arrives unfolded, and the toolbar steps aside
+  showDrawer({fresh:true});
+}
+
+/* Bring the feature drawer up. THE way it opens, for every path: a record
+   (openDrawer), a town or city card and a pasted coordinate (places.js), the
+   ride summary (ride-check.js), a curator duplicate (duplicate-resolve.js).
+   Opening a place closes the rail panel, and the panel would otherwise keep a
+   third of the map and sit over anything framed clear of the drawer (owner
+   2026-09-16; docs/specs/map-and-search.md §4.0). `fresh` is a new record
+   rather than a re-render of the one showing: it arrives unfolded, at its top.
+   The re-render a late fetch triggers (a town's nearby coverage) passes
+   nothing, so it cannot scroll the rider back or unfold what they folded. */
+export function showDrawer(opts){
+  const o = opts || {};
+  closeRailPanel();
+  const d = document.getElementById('drawer');
+  d.classList.add('open');
+  if(o.fresh){
+    d.classList.remove('folded');
+    d.scrollTop = 0;   // a new record starts at its top, where its "‹ back" button is, not where the list it came from was scrolled
+  }
+  d.setAttribute('aria-hidden','false');
+  syncMapWrap();       // the top-right toolbar steps aside
   d.focus({preventScroll:true});   // move focus into the panel (not the close X — avoids a focus ring on tap/click open)
   if(window.innerWidth<=820) sheet.reset();          // land at half; desktop untouched
 }
@@ -1290,6 +1311,7 @@ export function closeDrawer(){
   clearPendingShape();                               // drop the before/after climb overlay with the card that owns it
   setPendingShape(null);
   setPendingContext(null);
+  restoreHitScope();                                 // a scope lifted to reach this hit goes back to the rider's own (map-and-search.md §4.5)
   sheet.clear();                                     // drop snap classes + inline transform for the next open
 }
 // Close: X and scrim (tap the dimmed area above the mobile sheet).

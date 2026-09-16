@@ -219,9 +219,25 @@ by default and a rider asks for one section at a time.
 ### 4.0 Rail, drawer, corner
 
 **Opening a place closes the rail panel** (`closeRailPanel()` in `shell.js`,
-called by `openDrawer()`; owner 2026-09-16). The rider has chosen: the panel
-would otherwise keep a third of the map, and a route framed clear of the
-right-hand feature drawer would sit behind the panel instead.
+called by `showDrawer()` in `drawer.js`; owner 2026-09-16). The rider has
+chosen: the panel would otherwise keep a third of the map, and a route framed
+clear of the right-hand feature drawer would sit behind the panel instead.
+
+`showDrawer()` is the ONE way the feature drawer opens, and every path goes
+through it: a record (`openDrawer()`), a town or city card and a pasted
+coordinate (`places.js` `renderPlaceCard()`), the ride summary (`ride-check.js`
+`renderRideDrawer()`) and a curator duplicate (`duplicate-resolve.js`). It
+closes the rail panel, opens `#drawer`, syncs `.map-wrap` so the top-right
+toolbar steps aside, moves focus into the panel and resets the phone sheet to
+half height. `showDrawer({fresh: true})` is a NEW record: it also unfolds the
+drawer and scrolls it to its top. A re-render of the card already showing (a
+town's nearby coverage landing a second later) passes nothing, so it can
+neither scroll the rider back nor unfold what they folded. Owner-reported
+2026-09-16: a town card for Liege left the Search & region panel open over the
+map, because the card wrote `#drawerBody` and opened `#drawer` itself instead
+of going through `openDrawer()`, which was where `closeRailPanel()` sat.
+`rail-shell.test.cjs` pins both halves: `showDrawer()` closes the panel, and no
+map module opens `#drawer` behind its back.
 
 - **The rail** is 48px on the left edge, at every screen width. Top: the brand
   mark. Then one icon per rider section, in this order: **Search & region**
@@ -972,16 +988,44 @@ the newest rung of that same ladder.
   That row widens THIS search only (`search-ui.js` `_worldwide`): the item
   index stops filtering on `inScope()`, the coverage lookup and Photon go
   unscoped, and the scope itself does not move. Picking a hit found that way
-  first sets the scope to the hit's country (`CCScope.countryAt()`, the
-  registry's region under the point), then opens it. Closing the search
-  drops the reach. `CCScope.setEverywhere()` and the `everywhere` kind stay
-  in the model for that use; `deserialize('everywhere')` returns null, so an
-  old `?scope=everywhere` link or stored token falls through to the default.
-- **Deep links follow their target to its country.** `widenForDeepLink(ll)`
-  takes the target's [lat, lng], finds the registry region under it and sets
-  that country transiently (`persist:false`); a target outside every
-  onboarded region leaves the scope alone. Rides crossing a border keep every
-  crossed region in one region set (`ride-scope.js`), never Everywhere.
+  lifts the scope to the hit's own region (the rule below), then opens it.
+  Closing the search drops the reach. `CCScope.setEverywhere()` and the
+  `everywhere` kind stay in the model for that use;
+  `deserialize('everywhere')` returns null, so an old `?scope=everywhere` link
+  or stored token falls through to the default.
+- **A hit the scope does not draw lifts the scope to that hit's own region,
+  and gives it back.** One rule for every way of reaching a place the rider's
+  scope hides: a search hit, a deep link (§8), a town or city card, a row in
+  the route drawer's lists (§6.3) or the ride check's (§9), and a curator
+  duplicate finding. `liftScopeForHit(ll, rid)` in `scope-ui.js` is the one
+  door; the decision itself is `hitScopeFor(current, target)` in
+  `hit-scope.js`, a leaf with a Node test (`hit-scope.test.mjs`).
+  - **The target's own REGION, never its country.** A region is the smallest
+    area that draws the hit, and it keeps as much of the rider's own scope as
+    reaching the place allows. Owner-reported 2026-09-16: a rider scoped to
+    Friesland clicked the city card for Liege and was moved to **All Belgium**,
+    which threw their scope away to show them one town. Liege is in Wallonia,
+    so Wallonia is the answer.
+  - **The region id when the caller knows it** (an item index entry, a served
+    feature: `rid`), because that is the region the row itself is stamped
+    with; `CCScope.regionOfPoint()` off the point otherwise, since a coverage
+    POI and a Photon town carry no `rid`. A target outside every onboarded
+    region leaves the scope alone: there is nothing better to show it with.
+  - **Nothing moves when the scope already draws it**: Everywhere, or a scope
+    (region, country or myArea) whose region set already holds the target's.
+  - **Never persisted** (`persist:false`, like the ride check's): neither
+    `localStorage` nor `?scope=` changes, so a reload is still the rider's own
+    scope.
+  - **The rider's scope comes back when the drawer that asked for it closes**
+    (`restoreHitScope()`, called from `closeDrawer()`), unpersisted too. A
+    scope the rider picks themselves in the meantime, or one a loaded ride
+    asks for, retires the memo: that scope is theirs, and nothing may put the
+    old one back over it.
+  - **The hit's own framing is the last word** (§8): the lift holds the camera
+    for that scope change, so the map lands on the place and not on the region
+    around it.
+  Rides crossing a border keep every crossed region in one region set
+  (`ride-scope.js`), never Everywhere.
 - **Cold-start chip:** a rider/anonymous visitor with no base location sees a
   dismissable "Set my area" chip driven from the current map centre
   (`map.set_my_area`); dismissal persists in localStorage
@@ -1023,12 +1067,12 @@ the newest rung of that same ladder.
   deliberately, so panning to South Africa under a Netherlands scope drew an
   empty map reading `0 places shown` and nothing naming the cause.
   It read as broken data and cost a real dig from the inside (2026-08-14).
-- **Out-of-scope town opens transiently widen:**
+- **Out-of-scope town opens lift the scope transiently:**
   town search is scope-exempt (a place is an explicit location choice), so
   opening a town whose coordinates fall **outside the current scope's bbox**
-  transiently moves the scope to the town's country via the deep-link mechanism
-  (`persist:false` — localStorage/URL keep the saved scope, which returns on
-  the next plain load). Without this, the scope-exempt town drawer filled
+  lifts the scope to the town's own region through the one hit mechanism above
+  (`liftScopeForHit`, `persist:false`: localStorage/URL keep the saved scope,
+  which also comes back the moment the card is closed). Without this, the scope-exempt town drawer filled
   with nearby items while the scoped map rendered the same area empty — the
   worst case being a myArea scope with an **empty derived set** (base
   location outside every seeded region, e.g. a Dutch base today), where the
@@ -1852,8 +1896,9 @@ description and every record row — a scroll away from the name being shared on
 any drawer with content. It stays out of the footer action row, which is for
 verbs that change data. It copies `?item=<id>`, then `?ref=<osm ref>` for a
 coverage POI with no catalog id, and `?feature=<name>` only when neither id
-exists. All three are read on load by map.js, which widens the scope first so
-the link opens for a recipient whose saved scope is elsewhere.
+exists. All three are read on load by map.js, which lifts the scope to
+the target's own region first (§4.5) so the link opens for a recipient whose
+saved scope is elsewhere, and hands the framing to the target itself (§8).
 
 `?ref=` exists because the name is not an identifier. Most OSM scenic views
 carry no `name` at all, so the drawer titles them by type and every one of them
@@ -1907,9 +1952,9 @@ a route that rides no climb, or a failed fetch, removes it and shows no section.
 for whoever may preview it. The rows use the one drawing path: nothing draws a
 pin of its own. Click opens the climb through its item-index entry
 (`entry.go()`), with the mode lift and "shown anyway" rule of a ride-check row
-(§9, `openListedPlace()` in `listed-place.js`), after moving the scope to the
-climb's country when the scope hides it (`widenForDeepLink`); hover rings the
-climb's pin at its foot with `highlightAt`. Code: `route-climbs.js` writes the
+(§9, `openListedPlace()` in `listed-place.js`), after lifting the scope to the
+climb's own region when the scope hides it (`liftScopeForHit`, §4.5); hover
+rings the climb's pin at its foot with `highlightAt`. Code: `route-climbs.js` writes the
 rows, `hydrateRouteClimbs()` in `listed-place.js` fetches and wires them.
 
 **Along this route** (route drawer, owner decision 2026-09-15). Under the climbs,
@@ -1930,9 +1975,9 @@ same waiting line, "Looking along the route…" (`d_along_route_wait`); the list
 replace it, and a failed fetch removes it and shows nothing. One
 renderer and one binder serve both drawers: `along-list.js` writes the rows,
 `bindAlongList()` in `listed-place.js` wires hover and click exactly as a ride
-check row (map-and-search.md §9), after moving the scope to the place's country
-when the scope hides it (`widenForDeepLink`). `hydrateRouteAlong()` fetches and
-fills the slot.
+check row (map-and-search.md §9), after lifting the scope to the place's own region
+when the scope hides it (`liftScopeForHit`, §4.5). `hydrateRouteAlong()` fetches
+and fills the slot.
 
 **The route stays while its lists are in use.** Opening the route drawer holds
 the route (`holdRoute()` in `drawer.js`). While it is held:
@@ -2311,17 +2356,32 @@ Pinned by `tests/js/coord-search.test.cjs`.
 ## 8. Deep links
 
 Handled in the map `load` handler; all query-param based (no hash state — §13.1
-is the pending permalink contract):
+is the pending permalink contract).
+
+**The target's own framing is the last word, and the scope lifts to its region,
+not to its country.** Every link below resolves its target first, then lifts the
+scope when the rider's scope would not draw it (`liftScopeForHit`, §4.5: the
+target's own region, transient, given back when the drawer closes), and only
+then frames it: a point lands at its own zoom clear of the drawer (`flyToPin`
+with `pinOffset`), a line or an area is framed with `drawerFitPadding`. A scope
+change repaints two frames late (`drawScope()` in `scope-ui.js` waits for two
+`requestAnimationFrame`s so the busy line can paint before the freeze), so its
+own `fitBounds` would otherwise land AFTER the target's and show the whole
+region instead of the place in it. The lift therefore claims the camera for that
+one change (`keepCameraForNextScope()`, read by `applyScope`'s `keepCamera`),
+and the scope draws without moving the view. The ride check claims it the same
+way (§9). Owner-reported 2026-09-16: a city card for Liege left the map at z7.3
+over the whole of Belgium, and Liege was never framed.
 
 | Param | Behaviour |
 |---|---|
 | `?feature=<name>` | exact-name match over `CATALOG` features: activates the layer if hidden, opens the drawer, flies to the pin. The profile-card → map contract. Falls back to one unscoped coverage search when the local index misses. |
-| `?ref=<osm ref>` | one coverage POI by its OSM id (`node/462149319`, `way/…`). Resolved by a single `/map/coverage/poi/{osmType}/{osmId}` call, which is the only thing that knows the letter and the coordinates; widens the scope on its own hit, like `?feature=`. |
+| `?ref=<osm ref>` | one coverage POI by its OSM id (`node/462149319`, `way/…`). Resolved by a single `/map/coverage/poi/{osmType}/{osmId}` call, which is the only thing that knows the letter and the coordinates; lifts the scope on its own hit, like `?feature=`, and flies to the point straight after. |
 | `?item=<id>` | one catalog item by DB id: the desk's "what did I approve" link and the drawer's share link. Opens the drawer, flies to the pin. **Lifts the view mode** when the rider's own mode would not draw the target: to the lowest rung that does (Confirmed before Everything), for this visit only, never persisted, with a toast naming both modes (`liftModeFor`, panels.js; the rung rule is `modeShows` in filters.js, the same predicate `featureVisible` reads). `?feature=` and `?route=` lift the same way. Owner decision 2026-08-25: a curator approved a climb, opened the link in their own Best of mode, and found the halo over an empty map, because the climb was Verified but not a pick. |
 
 **Both id params may carry a readable tail:** `?item=482/cote-de-wanne`, `?ref=node/462149319/roche-aux-faucons`. The id is everything before the first `/` after it (`idFromShare` / `refFromShare` in `share-links.js`); the slug is discarded on read. A renamed place, a hand-trimmed link and every bare-id link already sent out all open the same point. Slashes stay unencoded in the query value, because a `%2F` in the middle defeats the reason the slug is there.
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
-| `?route=<id>` | opens that R route **selected** (curator Routes desk link, a rider's proposals, the town card): moves the scope to the country of the route's first point when it is outside the scope (`widenForDeepLink`, `featureLL` in util.js reads a line's first point), lifts the view mode like `?item=` (above), opens the drawer, and frames the **whole route** clear of the drawer (`fitBounds` with `drawerFitPadding` and `pathBounds`, util.js: 400 px on the right on a desktop, the half-screen sheet on a phone; max zoom 14), then highlights it and shows the curator corrections overlay. The route's camera runs after the scope's own fit, so it has the last word. **A route waiting for review** is not in the catalog payload: when the link names one, `MapController` puts that one route in the page as `window.CC_ROUTE_PREVIEW` (`CatalogProvider::submittedRoute`), for a curator whose moderation scope covers its region (the same 2FA-complete gate as the pending payload) and for the rider who proposed it, and for nobody else. It joins the routes layer for that visit with a "Status: waiting for review" row and no ride, vote, correction, download or report controls, because none of those endpoints take a route that is not live. The reveal pin (§12) stays as the fallback when the target is still not drawn. Owner-reported 2026-09-15: the Routes desk's "Open this route on the map" for route 111 left the map on North Holland. |
+| `?route=<id>` | opens that R route **selected** (curator Routes desk link, a rider's proposals, the town card): lifts the scope to the region of the route's first point when it is outside the scope (`liftScopeForHit`, `featureLL` in util.js reads a line's first point), lifts the view mode like `?item=` (above), opens the drawer, and frames the **whole route** clear of the drawer (`fitBounds` with `drawerFitPadding` and `pathBounds`, util.js: 400 px on the right on a desktop, the half-screen sheet on a phone; max zoom 14), then highlights it and shows the curator corrections overlay. The scope holds the camera for its own change, so the route's framing has the last word. **A route waiting for review** is not in the catalog payload: when the link names one, `MapController` puts that one route in the page as `window.CC_ROUTE_PREVIEW` (`CatalogProvider::submittedRoute`), for a curator whose moderation scope covers its region (the same 2FA-complete gate as the pending payload) and for the rider who proposed it, and for nobody else. It joins the routes layer for that visit with a "Status: waiting for review" row and no ride, vote, correction, download or report controls, because none of those endpoints take a route that is not live. The reveal pin (§12) stays as the fallback when the target is still not drawn. Owner-reported 2026-09-15: the Routes desk's "Open this route on the map" for route 111 left the map on North Holland. |
 
 The same lift applies to a ride-check row (§9), commons places and followed routes alike: opening a listed place the rider's mode hides lifts to the lowest rung that draws it, exactly as `?item=` does. Clear undoes a ride's lift (§4.2).
 
@@ -2508,7 +2568,14 @@ requirement).
   a fixed 300 m fails at larger radii, where a mere perpendicular crossing
   yields ~2×radius of overlap inside the buffer.
 - **UI:** track draws as a distinct dashed dark overlay with drawer-aware
-  `fitBounds`; results render in the **standard right-hand drawer** (town-card
+  `fitBounds`, and that framing is the last word: `applyRideScope()` runs before
+  it and claims the camera for its own scope change
+  (`keepCameraForNextScope()`, §8), so the map lands on the ride rather than on
+  the region set the ride asked for. The summary opens through `showDrawer()`
+  like every other drawer, so the Ride tools panel closes with it (§4.0); the
+  drawer's own "✕ Clear ride" button, and the panel's status line when it is
+  reopened, both still tear the ride down. Results render in the **standard
+  right-hand drawer** (town-card
   styling: per-letter group headers, "name — km 23.4 · 80 m off" rows, followed
   routes with shared km, Clear button). **Closing the drawer keeps the track
   overlay**; the panel status shows "X km · results · clear" to re-open or tear

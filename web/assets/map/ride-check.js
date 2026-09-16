@@ -11,13 +11,13 @@ import { uKm, uM, uElev } from './units.js';
 import { layerGlyph } from './icons.js';
 import { invalidateCoverageDrawer } from './coverage.js';
 import { CATALOG, layerByKey, mode } from './catalog.js';
-import { sheet } from './sheet.js';
-import { closeDrawer, clearHighlight, setDrawerReturn, letRouteGo } from './drawer.js';
+import { closeDrawer, showDrawer, clearHighlight, setDrawerReturn, letRouteGo } from './drawer.js';
 import { openRouteById, bumpPlaceReq } from './places.js';
 import { rideScopeFor, scopeKey } from './ride-scope.js';
 import { listedPlaceKeys, createRideModeMemo } from './ride-places.js';
 import { setListedPlaces } from './osm-pools.js';
 import { applyMode } from './panels.js';
+import { keepCameraForNextScope } from './scope-ui.js';
 import { releaseShownAnyway, clearRouteHighlight } from './render.js';
 import { openListedPlace, bindAlongList } from './listed-place.js';
 import { alongListHtml } from './along-list.js';
@@ -66,6 +66,9 @@ export function initRideCheck(){
       const cur=S.get();
       if(_prevScope==null) _prevScope=cur;
       if(scopeKey(cur)===scopeKey(next)){ noteRideScope(); return; }   // already looking there
+      // The ride's own fitBounds below is the framing; a scope change repaints
+      // two frames later and would otherwise land last (map-and-search.md §8).
+      keepCameraForNextScope();
       S.set(next,{persist:false});
       noteRideScope();
     }
@@ -127,8 +130,8 @@ export function initRideCheck(){
       _last=d;
       // Every place opened from here offers the way back to this summary.
       setDrawerReturn({label:D.rideSummary||'Ride summary', go:()=>{ if(_last) renderRideDrawer(_last); }});
-      // Before the fitBounds below: cc:scopechange re-fits to the scope bbox,
-      // and the ride's own framing must have the last word.
+      // Before the fitBounds below: the scope holds the camera for the ride
+      // (keepCameraForNextScope), so the ride's framing is the last word.
       applyRideScope(d.regions);
       setListedPlaces(listedPlaceKeys(d.groups));
       const coords=d.track.map(p=>[p[1],p[0]]);            // [lat,lng] → [lng,lat]
@@ -184,9 +187,7 @@ export function initRideCheck(){
          (docs/specs/map-and-search.md §8), to the lowest rung that draws it; one
          the chips hide is shown anyway. Each lift is remembered for Clear. */
       bindAlongList(body, d, {onLifted:(from, to)=>rideMode.lifted(from, to)});
-      const dr=document.getElementById('drawer'); dr.classList.add('open'); dr.setAttribute('aria-hidden','false');
-      dr.focus({preventScroll:true});
-      if(window.innerWidth<=820) sheet.reset();        // land at half; desktop untouched
+      showDrawer();   // one way in: the rail panel closes here too (map-and-search.md §4.0)
     }
     pick.onclick=()=>fileIn.click();
     fileIn.addEventListener('change',()=>{ const f=fileIn.files && fileIn.files[0]; if(!f) return;

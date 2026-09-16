@@ -4,7 +4,7 @@
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, slug, txtOn, photonLang, COORD_COLOR } from './util.js';
 import { CITIES, layerByKey, LETTER_KEY } from './catalog.js';
-import { inScope, scopeLabel } from './scope-ui.js';
+import { inScope, scopeLabel, liftScopeForHit } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
 import { openPlace, openCity } from './places.js';
 import { COVERAGE_ON, covScopeIsZero, covScopeQuery, openCoverageByRef } from './coverage.js';
@@ -69,13 +69,14 @@ export function initSearchUi(){
       if(window.CCScope.canWiden()) window.CCScope.widen(); else setReach(true);
       runPhoton(sBox.value); runCoverageSearch(sBox.value); runS();
     }
-    /* A hit found worldwide sits in some country: look there before opening it. */
+    /* A hit the rider's scope does not draw sits in some region: look there
+       before opening it (docs/specs/map-and-search.md §4.5, §8). The hit's own
+       region, never its country, transiently, and the hit's own framing has the
+       last word; closing its drawer puts the rider's scope back. A hit already
+       in scope moves nothing (liftScopeForHit answers that itself). */
     function followHit(m){
-      if(!_worldwide || !window.CCScope || !Array.isArray(m.ll)) return;
-      if(m.rid!=null && inScope(m.rid)) return;
-      const cc=window.CCScope.countryAt(+m.ll[0], +m.ll[1]);
-      const s=window.CCScope.get();
-      if(cc && !(s && s.kind==='country' && s.countryCode===cc)) window.CCScope.setCountry(cc);
+      if(!Array.isArray(m.ll)) return;                 // a town row has no point here: openPlace lifts for it
+      liftScopeForHit(m.ll, m.rid);
     }
     function pickS(i){ const m=sMatches[i]; if(!m) return;
       if(m.widen){ m.go(); return; }

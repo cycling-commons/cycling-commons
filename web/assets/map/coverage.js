@@ -5,7 +5,7 @@
 import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
-import { curScope } from './scope-ui.js';
+import { liftScopeForHit } from './scope-ui.js';
 import { mintKindIcons, miniIcon, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff } from './icons.js';
 import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
@@ -413,26 +413,12 @@ export function openCoverageByOsmRef(ref){
     .then(d=>{
       if(myReq!==_covReq || !d || !Array.isArray(d.ll) || d.ll.length!==2) return;
       const key=LETTER_KEY[d.letter]; if(!key) return;
-      widenForDeepLink(d.ll);
+      liftScopeForHit(d.ll);   // a coverage POI carries no region id: the region is read off the point
       flyToPin([d.ll[1], d.ll[0]]);
       paintCoverageDetail(key, ref, d.ll, d.name, d);
     });
 }
-// A resolved deep link outside the scope moves the scope to the target's
-// COUNTRY, transiently (persist:false), never to Everywhere: drawing every item
-// on Earth to show one of them is what made the browser sluggish (owner,
-// 2026-09-06; docs/specs/map-and-search.md §4.5). `ll` is [lat, lng]; a
-// target outside every onboarded region leaves the scope alone.
-export function widenForDeepLink(ll){
-  if(!window.CCScope || !Array.isArray(ll) || ll.length!==2) return;
-  const r=window.CCScope.regionOfPoint(+ll[1], +ll[0]);
-  if(!r) return;
-  const s=curScope();
-  if(s && s.kind!=='everywhere' && s.regionIds && s.regionIds.indexOf(r.id)!==-1) return;
-  const cc=window.CCScope.countryAt(+ll[0], +ll[1]);
-  if(cc) window.CCScope.setCountry(cc, {persist:false});
-}
-// ?feature= fallback (docs/specs/coverage-provider.md §6): one unscoped search lookup, then widen.
+// ?feature= fallback (docs/specs/coverage-provider.md §6): one unscoped search lookup, then the scope lift.
 export function openCoverageFeatureByName(name){
   if(!COVERAGE_ON) return;
   fetch('/map/coverage/search?q='+encodeURIComponent(name), {headers:{'Accept':'application/json'}})
@@ -442,7 +428,7 @@ export function openCoverageFeatureByName(name){
       const hits=((d&&d.results)||[]).filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll));
       if(!hits.length) return;
       const hit=hits.find(h=>h.n.toLowerCase()===name.toLowerCase())||hits[0];
-      widenForDeepLink(hit.ll);
+      liftScopeForHit(hit.ll);
       openCoverageByRef(hit.ref, hit.letter, hit.ll, hit.n, hit.itemId);
     });
 }

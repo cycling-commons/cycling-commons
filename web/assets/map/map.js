@@ -10,13 +10,13 @@ import { initRideCheck } from './ride-check.js';
 import { CATALOG, active, layerByKey, cityLink, mode } from './catalog.js';
 import { addMapillary, initMapillaryDock, initStreetToggle } from './mapillary.js';
 import { curScope, scopeLabel, renderScopeChips, applyScope, initScope, initScopeRail,
-         initAreaNudge, initClickToScope } from './scope-ui.js';
+         initAreaNudge, initClickToScope, liftScopeForHit } from './scope-ui.js';
 import { OSM_BULK, addWaterOsm, addOsmDots, setupConfClusters, updateConfMarkers, refreshPools } from './osm-pools.js';
 import { trimEnds, rebuildItemIndex } from './item-index.js';
 import { sheet, initSheet } from './sheet.js';
 import { initLightbox } from './lightbox.js';
 import { render, updateZoomHint } from './render.js';
-import { COVERAGE_ON, addCoverage, widenForDeepLink, openCoverageFeatureByName,
+import { COVERAGE_ON, addCoverage, openCoverageFeatureByName,
          openCoverageByOsmRef, fetchCoverageCounts, covShownCount } from './coverage.js';
 import { addSurfaceTiles, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
 import { schemaRows, initDrawerChrome, mapToast } from './drawer.js';
@@ -56,8 +56,8 @@ import { layerGlyph } from './icons.js';
     // Coverage counts once at load (and on each scope change via applyScope).
     if(COVERAGE_ON) fetchCoverageCounts();
     render();
-    // Deep links (docs/specs/map-and-search.md §4.5, §8): widen to Everywhere
-    // only when the target actually resolves. Coverage-only ?feature widens inside
+    // Deep links (docs/specs/map-and-search.md §4.5, §8): the scope moves only
+    // when the target actually resolves. Coverage-only ?feature lifts inside
     // openCoverageFeatureByName on its own hit.
     const _dl = new URLSearchParams(location.search);
     const fp=_dl.get('feature'), pp=_dl.get('pending'), rp=_dl.get('route'), rawIp=_dl.get('item');
@@ -78,8 +78,13 @@ import { layerGlyph } from './icons.js';
       const hit = (ip && resolveLocalFeatureById(ip))
         || (fp && resolveLocalFeature(fp))
         || (rp && (()=>{ const l=layerByKey['experience']; const f=l && (l.features||[]).find(x=>String(x.id)===String(rp)); return f ? {layer:l, f} : null; })());
-      // The scope follows the target to its country, not to Everywhere.
-      if(hit && hit.f) widenForDeepLink(featureLL(hit.f));
+      /* The scope follows the target to the target's own REGION, transiently,
+         and holds the camera so the opener below frames the target rather than
+         the scope (docs/specs/map-and-search.md §8). The rider's scope goes
+         back when the drawer closes. */
+      // A catalog feature carries `rid`; a pool feature carries it in properties.
+      if(hit && hit.f) liftScopeForHit(featureLL(hit.f),
+        hit.f.rid != null ? hit.f.rid : (hit.f.properties && hit.f.properties.rid));
       if(hit && hit.layer && hit.f) liftModeFor(hit.layer, hit.f);
     }
     // ?feature=<name> drawer + zoom; coverage POIs via search when local index misses.

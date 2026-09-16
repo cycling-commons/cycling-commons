@@ -15,6 +15,7 @@ import { refreshBestOf } from './panels.js';
 import { COVERAGE_KEYS, COVERAGE_CCS } from './coverage.js';
 import { isPicking } from './picking.js';
 import { corrLayerIds } from './corrections.js';
+import { hitScopeFor } from './hit-scope.js';
 
 
 // Region scope (docs/specs/map-and-search.md §4.5): area the map + search
@@ -138,7 +139,13 @@ export function applyScope(s, opts){
     // Re-fetch coverage totals so the legend matches the scoped dots
     // (docs/specs/map-and-search.md §4.5).
     fetchCoverageCounts();
-    const bb = window.CCScope && window.CCScope.viewBbox(); if(bb) map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
+    /* keepCamera: the scope moved to reach something the rider asked for, and
+       that thing's own framing is the answer (docs/specs/map-and-search.md §8).
+       The scope box would otherwise land last and show the whole area instead
+       of the place in it. */
+    if(!opts || !opts.keepCamera){
+      const bb = window.CCScope && window.CCScope.viewBbox(); if(bb) map.fitBounds([[bb[0],bb[1]],[bb[2],bb[3]]],{padding:24});
+    }
     // Everything: refreshBestOf() is the render. Curated: render now, re-render K when best-of lands.
     if(mode()==='curated') render();
     refreshBestOf();
@@ -163,6 +170,13 @@ export function initScope(){
    no box. `_drawReq` is the race token: a rider who picks again mid-draw owns
    the map, and the older draw neither applies nor clears the line. */
 let _drawReq = 0;
+/* The camera belongs to whatever asked for the next scope change
+   (docs/specs/map-and-search.md §8). A scope change repaints two frames late,
+   so a hit that framed itself synchronously would be overruled by the scope
+   box; the opener claims the camera first and the scope draws without moving
+   it. One change only: cleared the moment cc:scopechange is handled. */
+let _keepCamera = false;
+export function keepCameraForNextScope(){ _keepCamera = true; }
 function setScopeBusy(on, area){
   const el=document.getElementById('scopeBusy');
   if(!el) return;
@@ -176,11 +190,12 @@ function setScopeBusy(on, area){
    the second after it. */
 function drawScope(s){
   const req = ++_drawReq;
+  const keepCamera = _keepCamera; _keepCamera = false;   // read at event time: the flag is about THIS change
   setScopeBusy(true, scopeLabel(s));
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     if(req!==_drawReq) return;
     renderScopeChips();
-    applyScope(s, {fit:true});
+    applyScope(s, {fit:true, keepCamera});
     // Drawn = the map has settled on the new scope with its tiles in.
     const done=()=>{ if(req===_drawReq) setScopeBusy(false); };
     map.once('idle', done);
@@ -199,7 +214,58 @@ export function initScopeRail(){
     else if(tok.startsWith('country:')) window.CCScope.setCountry(tok.slice(8));
     else if(tok.startsWith('region:')) window.CCScope.setRegion(tok.slice(7));
   });
-  window.addEventListener('cc:scopechange', e=>drawScope(e.detail));
+  window.addEventListener('cc:scopechange', e=>{ forgetRiderScope(); drawScope(e.detail); });
+}
+
+/* A hit's scope lift (docs/specs/map-and-search.md §4.5, §8).
+
+   A search hit, a deep link or a drawer row may name a place the rider's scope
+   does not draw. Reaching it moves the scope to the target's own REGION, never
+   to its country and never to Everywhere: that is the smallest area that shows
+   the place, and it keeps as much of the rider's own scope as reaching it
+   allows. The lift is never persisted (`persist:false`, like the ride check's),
+   and the rider's scope goes back when the drawer that asked for it closes.
+   A scope the rider picks themselves, or one a loaded ride asks for, retires
+   the memo: that scope is theirs and nothing may put the old one back. */
+let _riderScope = null, _lifting = false;
+
+// Every scopechange that is not one of ours means someone else now owns the scope.
+function forgetRiderScope(){ if(!_lifting) _riderScope = null; }
+
+function setTransientScope(next){
+  _lifting = true;
+  try { window.CCScope.set(next, {persist:false}); }
+  finally { _lifting = false; }
+}
+
+/**
+ * Move the scope to the region of one target so the map draws it, remembering
+ * the rider's own scope for restoreHitScope(). `ll` is [lat, lng]; `rid` is the
+ * target's region id when the caller knows it (an item index entry, a served
+ * feature), which beats reading the region off the point. Answers whether the
+ * scope moved. The caller frames the target itself, right after: the camera is
+ * held for this change (keepCameraForNextScope).
+ */
+export function liftScopeForHit(ll, rid){
+  const S = window.CCScope;
+  if(!S) return false;
+  const known = rid != null ? (_regionById.get(rid) || _regionById.get(+rid)) : null;
+  const region = known
+    || (Array.isArray(ll) && ll.length === 2 ? S.regionOfPoint(+ll[1], +ll[0]) : null);
+  if(!region) return false;
+  const next = hitScopeFor(S.get(), {id: region.id, countryCode: region.countryCode || null});
+  if(!next) return false;
+  if(_riderScope == null) _riderScope = S.get();
+  keepCameraForNextScope();
+  setTransientScope(next);
+  return true;
+}
+
+/** Put the rider's own scope back after a lift; a no-op when nothing was lifted. */
+export function restoreHitScope(){
+  const prev = _riderScope;
+  _riderScope = null;
+  if(prev && window.CCScope) setTransientScope(prev);
 }
 
 // Pan-away nudge (docs/specs/map-and-search.md §4.5). One chip, two arms;

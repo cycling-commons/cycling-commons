@@ -10,11 +10,10 @@ import { CATALOG, CITIES, active, layerByKey, LETTER_KEY, mode } from './catalog
 import { osmLayers } from './osm-pools.js';
 import { nearbyItems, idxIds } from './item-index.js';
 import { render } from './render.js';
-import { sheet } from './sheet.js';
-import { openDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, revealPinAt, commonsPhotoHtml } from './drawer.js';
+import { openDrawer, showDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, revealPinAt, commonsPhotoHtml } from './drawer.js';
 import { openLightbox } from './lightbox.js';
-import { COVERAGE_ON, widenForDeepLink, openCoverageByRef,
-         invalidateCoverageDrawer } from './coverage.js';
+import { COVERAGE_ON, openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
+import { liftScopeForHit } from './scope-ui.js';
 import { showRouteCorrections } from './corrections.js';
 import { layerGlyph } from './icons.js';
 import { watchJson } from './commons-photo.js';
@@ -28,12 +27,15 @@ let _placeReq=0;
 const NEARBY_KM = 5;
 
 export function openPlace(name, meta){
-  // docs/specs/map-and-search.md §4.5 — town outside the saved scope transiently widens (persist:false).
-  /* CCScope owns the comparison: a scope box may cross the antimeridian and
+  /* docs/specs/map-and-search.md §4.5, §8: a town outside the rider's scope
+     lifts the scope to that town's own region, transiently (persist:false);
+     closing the card puts the rider's scope back. Before the framing below:
+     the lift holds the camera, so this card's own fit is the last word.
+     CCScope owns the comparison: a scope box may cross the antimeridian and
      read west > east (RFC 7946 §5.2), which no inline test gets right. meta.ll
-     is [lat, lng]; the helper takes them the other way round. */
+     is [lat, lng]; the helpers take them the other way round. */
   if(window.CCScope && window.CCScope.bboxHasPoint && !window.CCScope.bboxHasPoint(meta.ll[1], meta.ll[0])){
-    widenForDeepLink(meta.ll);
+    liftScopeForHit(meta.ll);
   }
   // A · segments are corridor data, not places — they would flood the card.
   const near = nearbyItems(meta.ll, NEARBY_KM).filter(n=>n.e.letter!=='A');
@@ -118,9 +120,7 @@ function renderPlaceCard(name, meta, near, covGroups){
     b.onclick=()=>{ document.querySelectorAll(`#drawerBody li[data-more="${b.dataset.grp}"]`).forEach(li=>li.hidden=false);
       b.closest('li').hidden=true; };
   });
-  const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false');
-  d.focus({preventScroll:true});
-  if(window.innerWidth<=820) sheet.reset();
+  showDrawer();   // one way in: the rail panel closes here too (map-and-search.md §4.0)
 }
 /* docs/specs/map-and-search.md §6.5: what Wikipedia and Wikidata know about a
    town, fetched the first time anyone opens it and cached, the way the
