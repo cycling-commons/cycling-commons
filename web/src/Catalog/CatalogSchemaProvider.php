@@ -49,6 +49,36 @@ final class CatalogSchemaProvider
         return $out;
     }
 
+    /**
+     * The route fields a rider may ask to have changed, for the drawer's
+     * correction box: one descriptor per field, from {@see RouteMetadata} and
+     * under the same labels the forms use, localized here the way
+     * {@see self::displayFields()} localizes the registry.
+     *
+     * @return list<array{key: string, label: string, kind: string, choices: array<string, string>}>
+     *
+     * @see docs/specs/route-domain.md §7.1
+     */
+    public function routeCorrectionFields(): array
+    {
+        $out = [];
+        foreach (RouteMetadata::EDITABLE_FIELDS as $field) {
+            $choices = [];
+            // Stored values stay canonical English; only the labels localize.
+            foreach (RouteMetadata::choicesFor($field) as $value => $label) {
+                $choices[$value] = $this->translator->trans($label);
+            }
+            $out[] = [
+                'key' => $field,
+                'label' => $this->translator->trans(RouteMetadata::LABELS[$field]),
+                'kind' => RouteMetadata::kindFor($field),
+                'choices' => $choices,
+            ];
+        }
+
+        return $out;
+    }
+
     /** @return array<string, list<array{key: string, label: string, kind: string, choices?: array<string, string>}>> */
     public function all(): array
     {

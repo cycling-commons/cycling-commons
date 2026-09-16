@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Tests\Catalog;
 
 use App\Catalog\CatalogProvider;
+use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\ItemState;
 use App\Entity\User;
 use App\Moderation\ModerationScope;
 use App\Tests\Coverage\CoverageSchema;
@@ -540,8 +542,8 @@ final class CatalogProviderTest extends KernelTestCase
         // A verified and an unverified route both serve; each carries its state
         // so the map can badge "proposed" (unverified) vs a normal (verified) pin.
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        foreach ([['verified', \App\Catalog\ItemState::Verified], ['proposed', \App\Catalog\ItemState::Unverified]] as [$tag, $state]) {
-            $em->persist((new \App\Catalog\Entity\RecommendedRoute())
+        foreach ([['verified', ItemState::Verified], ['proposed', ItemState::Unverified]] as [$tag, $state]) {
+            $em->persist((new RecommendedRoute())
                 ->setName('State route '.$tag)
                 ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
                 ->setDistanceM(9000)->setState($state)
@@ -581,7 +583,7 @@ final class CatalogProviderTest extends KernelTestCase
 
         // Approve it (a real proposal never serves while `submitted`) and confirm
         // CatalogProvider hands the map the same canonical shape.
-        $route->setState(\App\Catalog\ItemState::Unverified);
+        $route->setState(ItemState::Unverified);
         $this->em->flush();
 
         $routes = static::getContainer()->get(CatalogProvider::class)->payload()['R'];
@@ -824,48 +826,178 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
-     * The version tag is what busts the browser's hour-long catalog.json cache
-     * the moment the catalog actually changes (owner-reported 2026-08-13: an
-     * approved submission "disappeared" — the item was in the DB and in the
-     * payload, but the rider's browser replayed the pre-approval JSON for up
-     * to an hour). /map embeds the tag as ?v= on CC_CATALOG_URL, so a change
-     * mints a new URL and the stale cache entry is simply never asked for.
+     * A region stamp is what reaches a rider whose catalog is an hour-cached
+     * copy (owner-reported 2026-08-13: an approved submission "disappeared":
+     * the item was in the DB and in the payload, but the rider's browser
+     * replayed the pre-approval JSON for up to an hour). Every path that
+     * changes what a region serves has to move that region's stamp, because
+     * the map only refetches a region whose stamp differs from the one baked
+     * into the copy it holds.
      */
-    public function testVersionTagFollowsEveryCatalogMutationPath(): void
+    public function testARegionStampFollowsEveryCatalogMutationPath(): void
     {
         $provider = static::getContainer()->get(CatalogProvider::class);
         $db = $this->em->getConnection();
+        $rid = (string) $db->fetchOne('SELECT region_id FROM item WHERE region_id IS NOT NULL ORDER BY id LIMIT 1');
+        self::assertNotSame('', $rid, 'the fixture import region-stamps its rows');
 
-        $v0 = $provider->versionTag();
-        self::assertMatchesRegularExpression('/^[0-9a-f]{8,}$/', $v0, 'a compact hex tag, URL-safe');
-        self::assertSame($v0, $provider->versionTag(), 'stable while nothing changes');
+        $stamp = static fn (): string => $provider->regionStamps()[$rid] ?? '';
+        $s0 = $stamp();
+        self::assertMatchesRegularExpression('/^[0-9a-f]{8,}$/', $s0, 'a compact hex stamp, URL-safe');
+        self::assertSame($s0, $stamp(), 'stable while nothing changes');
 
         // An UPDATE (moderation decision, materialize-on-edit, closure expiry
         // sweep — they all touch updated_at).
-        $db->executeStatement("UPDATE item SET updated_at = updated_at + interval '1 second' WHERE id = (SELECT min(id) FROM item)");
-        $v1 = $provider->versionTag();
-        self::assertNotSame($v0, $v1, 'an item update must mint a new version');
+        $db->executeStatement(
+            "UPDATE item SET updated_at = updated_at + interval '1 second'
+              WHERE id = (SELECT min(id) FROM item WHERE region_id = :rid)",
+            ['rid' => $rid],
+        );
+        $s1 = $stamp();
+        self::assertNotSame($s0, $s1, 'an item update must move its region stamp');
 
         // A DELETE without any other change (takedown, trash purge): max
-        // timestamps do not move, so the tag must also see the row count — a
+        // timestamps do not move, so the stamp must also see the row count. A
         // removed item kept alive by a cached payload is the takedown-critical
         // case.
-        $db->executeStatement('DELETE FROM item WHERE id = (SELECT max(id) FROM item)');
-        $v2 = $provider->versionTag();
-        self::assertNotSame($v1, $v2, 'an item delete must mint a new version');
+        $db->executeStatement(
+            'DELETE FROM item WHERE id = (SELECT max(id) FROM item WHERE region_id = :rid)',
+            ['rid' => $rid],
+        );
+        $s2 = $stamp();
+        self::assertNotSame($s1, $s2, 'an item delete must move its region stamp');
 
         // A confirmation flips the served verified flag without touching item.
         // user_id 1 exists in the test DB, same shape ManualSourceTest uses.
         $db->executeStatement(
             "INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at)
-             SELECT min(id), 1, 'exists', now(), now() FROM item",
+             SELECT min(id), 1, 'exists', now(), now() FROM item WHERE region_id = :rid",
+            ['rid' => $rid],
         );
-        $v3 = $provider->versionTag();
-        self::assertNotSame($v2, $v3, 'a confirmation must mint a new version');
+        $s3 = $stamp();
+        self::assertNotSame($s2, $s3, 'a confirmation must move its region stamp');
 
-        // R rides the same payload: a route change must mint one too.
-        $db->executeStatement("UPDATE recommended_route SET updated_at = updated_at + interval '1 second' WHERE id = (SELECT min(id) FROM recommended_route)");
-        self::assertNotSame($v3, $provider->versionTag(), 'a route update must mint a new version');
+        // R rides the same payload, under whichever region holds the route.
+        $routeRid = (string) $db->fetchOne('SELECT coalesce(region_id, 0) FROM recommended_route ORDER BY id LIMIT 1');
+        $before = $provider->regionStamps()[$routeRid] ?? '';
+        // A day, not a second: a real UPDATE writes now() and becomes the
+        // region's latest change, which a one-second nudge on the oldest row
+        // would not.
+        $db->executeStatement("UPDATE recommended_route SET updated_at = updated_at + interval '1 day' WHERE id = (SELECT min(id) FROM recommended_route)");
+        self::assertNotSame($before, $provider->regionStamps()[$routeRid] ?? '', 'a route update must move its region stamp');
+    }
+
+    /**
+     * A curator's decision changes nothing on the row but `state`, and the row
+     * already exists as `submitted`, so neither a count nor any other column
+     * moves. The entity has to move `updatedAt` itself or the decision is
+     * invisible to every freshness read, which is what kept an approved route
+     * out of the map for an hour (owner-reported 2026-09-16, route 111).
+     */
+    public function testApprovingARouteMovesItsRegionStamp(): void
+    {
+        $provider = static::getContainer()->get(CatalogProvider::class);
+        $db = $this->em->getConnection();
+        // Dated back so the assertion reads the decision, not the import: both
+        // land in the same second otherwise, and second precision is all the
+        // column carries.
+        $db->executeStatement(
+            "UPDATE recommended_route SET state = 'submitted', updated_at = now() - interval '2 days'
+              WHERE id = (SELECT min(id) FROM recommended_route)",
+        );
+        $this->em->clear();
+
+        $route = $this->em->find(RecommendedRoute::class, (int) $db->fetchOne("SELECT min(id) FROM recommended_route WHERE state = 'submitted'"));
+        self::assertInstanceOf(RecommendedRoute::class, $route);
+        $rid = (string) ($route->getRegionId() ?? 0);
+        $before = $provider->regionStamps()[$rid] ?? '';
+        $stampedAt = $route->getUpdatedAt();
+
+        $route->setState(ItemState::Unverified);
+        $this->em->flush();
+
+        self::assertGreaterThan($stampedAt, $route->getUpdatedAt(), 'the decision stamps the row');
+        self::assertNotSame($before, $provider->regionStamps()[$rid] ?? '', 'an approved route must move its region stamp');
+    }
+
+    /**
+     * The worldwide `?v=` tag is a cache key on a ~1 MB document, so it must
+     * ignore what happens inside a region: a curator's decision in Wallonia is
+     * not a reason for a rider in Japan to redownload every continent's rows
+     * (owner 2026-09-16, "the token must be region bound"). It still answers
+     * for the rows no region holds, which no scope draws and no region stamp
+     * covers.
+     */
+    public function testTheWorldwideTagIgnoresARegionAndFollowsTheRegionlessRows(): void
+    {
+        $provider = static::getContainer()->get(CatalogProvider::class);
+        $db = $this->em->getConnection();
+        $rid = (string) $db->fetchOne('SELECT region_id FROM item WHERE region_id IS NOT NULL ORDER BY id LIMIT 1');
+
+        $v0 = $provider->versionTag();
+        self::assertMatchesRegularExpression('/^[0-9a-f]{8,}$/', $v0, 'a compact hex tag, URL-safe');
+        self::assertSame($v0, $provider->versionTag(), 'stable while nothing changes');
+
+        $before = $provider->regionStamps();
+        $db->executeStatement(
+            "UPDATE item SET updated_at = updated_at + interval '1 second'
+              WHERE id = (SELECT min(id) FROM item WHERE region_id = :rid)",
+            ['rid' => $rid],
+        );
+        self::assertSame($v0, $provider->versionTag(), 'a change inside a region leaves the worldwide URL alone');
+
+        $after = $provider->regionStamps();
+        self::assertNotSame($before[$rid], $after[$rid], 'the region that changed has a new stamp');
+        unset($before[$rid], $after[$rid]);
+        self::assertSame($before, $after, 'no other region is disturbed');
+
+        // A row outside every region: no stamp covers it, so the tag does.
+        $db->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('B', 'Regionless tap', ST_GeomFromText('POINT(4.5 50.4)', 4326), 'BE', 'verified', 'manual', 'manual:regionless-tap',
+                     CAST('{\"t\":\"Drinking water\"}' AS jsonb), now(), now())",
+        );
+        self::assertNotSame($v0, $provider->versionTag(), 'a row belonging to no region must mint a new worldwide URL');
+    }
+
+    /**
+     * The region slice `GET /map/catalog/region/{rid}.json` serves is the same
+     * rows in the same shapes as the worldwide document, so the map can drop a
+     * region's rows and splice the slice in without a second code path. What it
+     * must never carry is another region's row: that is what makes the fetch
+     * small enough to be worth doing.
+     */
+    public function testARegionSliceCarriesThatRegionAndNothingElse(): void
+    {
+        $provider = static::getContainer()->get(CatalogProvider::class);
+        $db = $this->em->getConnection();
+        $rid = (int) $db->fetchOne('SELECT region_id FROM item WHERE region_id IS NOT NULL ORDER BY id LIMIT 1');
+
+        $whole = $provider->payload();
+        $slice = $provider->payload($rid);
+        self::assertSame($rid, $slice['rid']);
+        self::assertSame($provider->regionStamps()[(string) $rid], $slice['stamp'], 'the slice names the stamp it answers for');
+        self::assertArrayNotHasKey('stamps', $slice, 'only the worldwide document carries the whole map of stamps');
+
+        $ridsOf = static function (mixed $layer): array {
+            if (isset($layer['features'])) {
+                return array_map(static fn (array $f): mixed => $f['properties']['rid'] ?? null, $layer['features']);
+            }
+
+            return array_map(static fn (array $row): mixed => $row['rid'] ?? null, (array) $layer);
+        };
+        foreach (['A', 'N', 'R', 'B', 'C', 'D', 'E', 'F', 'G', 'P', 'Q'] as $letter) {
+            foreach ($ridsOf($slice[$letter]) as $seen) {
+                self::assertSame($rid, $seen, sprintf('letter %s carries only region %d', $letter, $rid));
+            }
+            $inWhole = \count(array_filter($ridsOf($whole[$letter]), static fn (mixed $r): bool => $r === $rid));
+            self::assertCount($inWhole, $ridsOf($slice[$letter]), sprintf('letter %s serves every one of the region\'s rows', $letter));
+        }
+        foreach (['osm', 'authority'] as $bucket) {
+            foreach ($ridsOf($slice['O'][$bucket]) as $seen) {
+                self::assertSame($rid, $seen, 'the stays buckets carry only the region');
+            }
+        }
     }
 
     /**

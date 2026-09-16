@@ -9,11 +9,17 @@ import { _pickSegs } from './picking.js';
 import { dropPendingFromSearch } from './search-ui.js';
 import { addCuratedFeature } from './osm-pools.js';
 import { showPendingShape } from './pending-shape.js';
+import { escPend, curatorMayEdit } from './util.js';
 
 const CC_BIKES=['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
 const CC_SEASONS=['spring','summer','autumn','winter'];
-const CC_REASONS=[['broken-track',D.reasonBroken||'Wrong / broken track'],['trim-privacy',D.reasonPrivacy||'Trim a private start/end'],['duplicate',D.reasonDuplicate||'Duplicate of another route'],['not-rideable',D.reasonNotRideable||'Not actually rideable'],['other',D.reasonOther||'Something else']];
+/* `metadata` leads: asking for a detail to be corrected is the common errand,
+   and the five after it report a problem (docs/specs/route-domain.md §7.1). */
+const CC_REASONS=[['metadata',D.reasonMetadata||'A detail is wrong'],['broken-track',D.reasonBroken||'Wrong / broken track'],['trim-privacy',D.reasonPrivacy||'Trim a private start/end'],['duplicate',D.reasonDuplicate||'Duplicate of another route'],['not-rideable',D.reasonNotRideable||'Not actually rideable'],['other',D.reasonOther||'Something else']];
 const _rcTokens={};
+/* What each route says now, so the value widget can start from it rather than
+   making the rider retype it. Handed over by the drawer when it builds a panel. */
+const _rcCurrent={};
 
 export const CC_VOTABLE=new Set(['climbs','stays','scenic','history']);
 export const CC_CONFIRMABLE=new Set(['water','services','hazards','transit','shelter','toilets','scenic','history','stays','climbs','surface']);
@@ -31,12 +37,74 @@ function markItemVerified(itemId){
   }
 }
 
-export function routeCommunityPanel(id, state){
+/* The fields a rider may ask to have changed, served once per page from
+   RouteMetadata (CatalogSchemaProvider::routeCorrectionFields). Public
+   vocabulary, identical for every reader, so it rides the page like any label. */
+const routeFields = () => Array.isArray(window.CC_ROUTE_FIELDS) ? window.CC_ROUTE_FIELDS : [];
+
+export function setRouteCurrent(id, values){ _rcCurrent[id] = values || {}; }
+
+/* The curator's shortcut to this route's form on the Routes desk. Editing
+   still happens only on the desk; this is the doorway (route-domain.md §7.1). */
+function deskLink(id, regionId){
+  if(!curatorMayEdit(regionId)) return '';
+  const lbl = escPend(D.editOnDesk||'Edit this route on the desk');
+  return `<a class="cc-rc-desk" href="/moderate/routes/${encodeURIComponent(id)}" aria-label="${lbl}" title="${lbl}">`
+    + '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none"'
+    + ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<path d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>'
+    + '</svg></a>';
+}
+
+/* The value widget for ONE field, prefilled with what the route says now. A
+   narrow drawer box fits one field at a time: a picker plus its widget, never
+   an eight-field form (docs/specs/route-domain.md §7.1). */
+function fieldWidget(field, current){
+  const opts = Object.entries(field.choices || {});
+  if(field.kind === 'select'){
+    const chosen = typeof current === 'string' ? current : ((current && current.label) || '');
+    return `<select class="cc-rc-val" data-kind="select"><option value="">${escPend(D.notSet||'Not set')}</option>`
+      + opts.map(([v,l])=>`<option value="${escPend(v)}"${v===chosen?' selected':''}>${escPend(l)}</option>`).join('')
+      + '</select>';
+  }
+  if(field.kind === 'multiselect'){
+    const on = Array.isArray(current) ? current.map(String) : [];
+    return '<div class="cc-rc-chips" data-kind="multiselect">'
+      + opts.map(([v,l])=>`<label class="cc-rc-chip"><input type="checkbox" value="${escPend(v)}"${on.includes(v)?' checked':''}><span>${escPend(l)}</span></label>`).join('')
+      + '</div>';
+  }
+  if(field.kind === 'textarea'){
+    return `<textarea class="cc-rc-val" data-kind="textarea" maxlength="2000">${escPend(typeof current==='string'?current:'')}</textarea>`;
+  }
+  return `<input type="text" class="cc-rc-val" data-kind="text" maxlength="200" value="${escPend(typeof current==='string'?current:'')}">`;
+}
+
+/* Repaint the value widget under the picker, and show it only for a detail
+   correction; a reported problem points at the line instead. */
+export function paintRouteField(box){
+  const reason = box.querySelector('.cc-rc-reason');
+  const meta = box.querySelector('[data-rc-meta]');
+  const marker = box.querySelector('[data-rc-marker]');
+  if(!reason || !meta) return;
+  const isMeta = reason.value === 'metadata';
+  meta.hidden = !isMeta;
+  if(marker) marker.hidden = isMeta;
+  if(!isMeta) return;
+  const slot = box.querySelector('[data-rc-field-slot]');
+  const picker = box.querySelector('.cc-rc-field');
+  const field = routeFields().find(f=>f.key===picker.value);
+  if(!slot || !field){ if(slot) slot.innerHTML=''; return; }
+  const now = _rcCurrent[box.dataset.route] || {};
+  slot.innerHTML = `<label class="cc-rc-l">${escPend(D.shouldBe||'What should it say?')}</label>` + fieldWidget(field, now[field.key]);
+}
+
+export function routeCommunityPanel(id, state, regionId){
   const bikeL=I18N.bikes||{};
   const bikeOpts=CC_BIKES.map(b=>`<option value="${b}">${bikeL[b]||b}</option>`).join('');
   const bikePickOpts=`<option value="" selected disabled>${D.bikeTypePh||'Bike type…'}</option>`+bikeOpts;
   const seasonOpts=CC_SEASONS.map(s=>`<option value="${s}">${CC_SEASON_LABEL[s]||s[0].toUpperCase()+s.slice(1)}</option>`).join('');
-  const reasonOpts=CC_REASONS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  const reasonOpts=CC_REASONS.map(([v,l])=>`<option value="${escPend(v)}">${escPend(l)}</option>`).join('');
+  const fieldOpts=routeFields().map(f=>`<option value="${escPend(f.key)}">${escPend(f.label)}</option>`).join('');
   // docs/specs/route-domain.md §6 — vote only for verified routes; rode-it for both.
   const voteBlock = state==='verified' ? `
     <div class="cc-rc-vote">
@@ -46,6 +114,7 @@ export function routeCommunityPanel(id, state){
     </div>` : '';
   const rideProgress = state==='unverified' ? `<span class="cc-rc-count" data-rc="rides">…</span>` : '';
   return `<div class="cc-rc" data-route="${id}" data-state="${state||''}">
+    ${deskLink(id, regionId)}
     <div class="cc-rc-ride">
       <label class="cc-rc-l">${D.rodeThis||'I rode this'} ${rideProgress}</label>
       <div class="cc-rc-row"><select class="cc-rc-rbike">${bikePickOpts}</select>
@@ -54,9 +123,17 @@ export function routeCommunityPanel(id, state){
     ${voteBlock}
     <details class="cc-rc-suggest"><summary>${D.suggestCorrection||'Suggest a correction'}</summary>
       <select class="cc-rc-reason">${reasonOpts}</select>
+      <div class="cc-rc-meta" data-rc-meta hidden>
+        <label class="cc-rc-l">${D.whichDetail||'Which detail?'}</label>
+        <select class="cc-rc-field">${fieldOpts}</select>
+        <div data-rc-field-slot></div>
+      </div>
+      <div data-rc-marker>
+        <button type="button" class="cc-rc-mark" data-rc-mark="${id}">✎ ${D.markParts||'Mark the part(s) on the map'}</button>
+        <span class="cc-rc-marks" data-rc-marks></span>
+      </div>
+      <label class="cc-rc-l cc-rc-notel">${D.curatorNote||'Note for the curator (optional)'}</label>
       <textarea class="cc-rc-note" placeholder="${D.optionalDetail||'Optional detail…'}"></textarea>
-      <button type="button" class="cc-rc-mark" data-rc-mark="${id}">✎ ${D.markParts||'Mark the part(s) on the map'}</button>
-      <span class="cc-rc-marks" data-rc-marks></span>
       <button class="cc-rc-btn" data-rc-act="suggest">${D.send||'Send'}</button>
     </details>
     <a class="cc-d-act edit" href="/routes/${id}.gpx">⤓ ${D.downloadGpx||'Download GPX'}</a>
@@ -66,6 +143,12 @@ export function routeCommunityPanel(id, state){
 
 export function hydrateRouteCommunity(id){
   const box=document.querySelector(`.cc-rc[data-route="${id}"]`); if(!box) return;
+  // The correction box follows its two pickers: which kind of correction, and
+  // for a detail correction, which field (docs/specs/route-domain.md §7.1).
+  const reason=box.querySelector('.cc-rc-reason'), field=box.querySelector('.cc-rc-field');
+  if(reason) reason.addEventListener('change', ()=>paintRouteField(box));
+  if(field) field.addEventListener('change', ()=>paintRouteField(box));
+  paintRouteField(box);
   const segs=_pickSegs[id];
   if(segs && segs.length){
     const m=box.querySelector('[data-rc-marks]');
@@ -168,9 +251,22 @@ function rcPost(box, act){
     body.set('season', box.querySelector('.cc-rc-season').value); body.set('bike_type', sel.value);
   }
   if(act==='suggest'){
-    body.set('reason', box.querySelector('.cc-rc-reason').value);
+    const reason=box.querySelector('.cc-rc-reason').value;
+    body.set('reason', reason);
+    // The note is the rider's word to the curator, not route content: the
+    // public "Note for riders" is one of the fields below.
     body.set('note', box.querySelector('.cc-rc-note').value);
-    const segs=_pickSegs[id]; if(segs && segs.length) body.set('segments', JSON.stringify(segs));
+    if(reason==='metadata'){
+      const picker=box.querySelector('.cc-rc-field');
+      if(!picker || !picker.value){ warnPick(picker, D.pickDetail||'Pick the detail you want changed first.'); return; }
+      body.set('field', picker.value);
+      const chips=box.querySelectorAll('.cc-rc-chips input:checked');
+      const val=box.querySelector('.cc-rc-val');
+      if(box.querySelector('.cc-rc-chips')) chips.forEach(c=>body.append('value[]', c.value));
+      else if(val) body.set('value', val.value);
+    } else {
+      const segs=_pickSegs[id]; if(segs && segs.length) body.set('segments', JSON.stringify(segs));
+    }
   }
   box.querySelectorAll('.cc-rc-btn').forEach(b=>b.disabled=true);
   fetch(`/routes/${id}/${act}`, {method:'POST', credentials:'same-origin',

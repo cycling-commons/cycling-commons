@@ -10,6 +10,7 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteChangeHistory;
 use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\ItemState;
+use App\Catalog\RouteMetadata;
 use App\Catalog\RouteSuggestionStatus;
 use App\Entity\User;
 use App\Media\MediaDecisionService;
@@ -112,32 +113,71 @@ final class RouteModerationService
     }
 
     /**
-     * @param array<string, mixed> $changes field => proposed value; `name` is a
-     *                                      pseudo-field (Route::name), all others attributes
+     * Apply a curator's metadata edit: every field is canonicalized through
+     * {@see RouteMetadata::canonical()}, so a value a curator sets is stored in
+     * the same shape as one the proposer set, and a field sent empty clears the
+     * attribute instead of storing a blank. Each real change is snapshotted in
+     * `route_change_history` with the curator as its author.
+     *
+     * `$author` credits the rider whose correction this is, not the curator who
+     * approved it, the way an item's history credits its submitter
+     * (moderation-and-contribution.md §4.1); `$suggestionId` links the row back
+     * to that correction. Both are null for a curator's own desk edit.
+     *
+     * @param array<string, mixed> $changes field => proposed value; {@see RouteMetadata::NAME_FIELD}
+     *                                      is the pseudo-field for Route::name, all others attributes
+     *
+     * @throws OutOfScopeException       the route is outside the curator's areas
+     * @throws \InvalidArgumentException a field outside the registry, or a blank route name
      */
-    public function editMetadata(int $routeId, array $changes, User $curator): RecommendedRoute
+    public function editMetadata(int $routeId, array $changes, User $curator, ?int $author = null, ?int $suggestionId = null): RecommendedRoute
     {
-        return $this->em->wrapInTransaction(function () use ($routeId, $changes, $curator): RecommendedRoute {
+        $creditTo = $author ?? $curator->getId();
+
+        return $this->em->wrapInTransaction(function () use ($routeId, $changes, $curator, $creditTo, $suggestionId): RecommendedRoute {
             $route = $this->load($routeId);
             $this->assertInScope($curator, $route->getRegionId());
             $attributes = $route->getAttributes();
 
-            foreach ($changes as $field => $new) {
-                $current = 'name' === $field ? $route->getName() : ($attributes[$field] ?? null);
-                if ($current === $new || (null === $new && null === ($current ?? null))) {
+            foreach ($changes as $field => $raw) {
+                if (RouteMetadata::NAME_FIELD === $field) {
+                    $this->renameRoute($route, $raw, (int) $creditTo, $suggestionId);
+                    continue;
+                }
+                // The registry is the whole editable surface: nothing else reaches `attributes`.
+                if (!\in_array($field, RouteMetadata::ATTRIBUTE_FIELDS, true)) {
+                    throw new \InvalidArgumentException(sprintf('"%s" is not an editable route field.', $field));
+                }
+                $current = $attributes[$field] ?? null;
+                $new = RouteMetadata::canonical($field, $raw);
+                if (RouteMetadata::isSame($current, $new)) {
                     continue; // no-op: never snapshot an unchanged field
                 }
-                if ('name' === $field) {
-                    $route->setName((string) $new);
+                if (null === $new) {
+                    unset($attributes[$field]); // cleared: an absent key, never a blank
                 } else {
                     $attributes[$field] = $new;
                 }
-                $this->em->persist(new RouteChangeHistory((int) $route->getId(), (string) $field, $current, $new, $curator->getId()));
+                $this->em->persist(new RouteChangeHistory((int) $route->getId(), $field, $current, $new, (int) $creditTo, $suggestionId));
             }
             $route->setAttributes($attributes);
 
             return $route;
         });
+    }
+
+    /** History files a rename under `name`, the column it changes. */
+    private function renameRoute(RecommendedRoute $route, mixed $raw, int $creditTo, ?int $suggestionId): void
+    {
+        $name = \is_string($raw) ? trim($raw) : '';
+        if ('' === $name) {
+            throw new \InvalidArgumentException('A route keeps a name.');
+        }
+        if ($name === $route->getName()) {
+            return;
+        }
+        $this->em->persist(new RouteChangeHistory((int) $route->getId(), 'name', $route->getName(), $name, $creditTo, $suggestionId));
+        $route->setName($name);
     }
 
     /**
@@ -162,6 +202,7 @@ final class RouteModerationService
             $s->resolve($status, $curator->getId());
             if (null !== $route) {
                 $this->decidePhotos($route, (int) $s->getId(), $status->value, $curator, null, $rejectMediaIds);
+                $this->applyMetadata($route, $s, $status, $curator);
             }
             // A curator's own correction applied at once owes nobody a message.
             if ($s->getUserId() === $curator->getId()) {
@@ -256,6 +297,31 @@ final class RouteModerationService
         if (null !== $change) {
             $this->em->persist(new RouteChangeHistory((int) $route->getId(), 'photos', $change['old'], $change['new'], $curator->getId()));
         }
+    }
+
+    /**
+     * A `metadata` correction marked done lands its proposed values on the
+     * route through the same intake gate a curator's desk edit uses, credited
+     * to the rider who sent it. Dismissing one applies nothing, the way a
+     * dismissed photo correction attaches nothing.
+     *
+     * Values are re-checked against the route as it stands now, not as it
+     * stood when the rider sent them: a field a curator has since changed to
+     * the proposed value simply records no second history row.
+     */
+    private function applyMetadata(RecommendedRoute $route, RouteSuggestion $s, RouteSuggestionStatus $status, User $curator): void
+    {
+        $changes = $s->getChanges();
+        if (RouteSuggestionStatus::Done !== $status || null === $changes || [] === $changes) {
+            return;
+        }
+        $this->editMetadata(
+            (int) $route->getId(),
+            RouteMetadata::applyable($changes),
+            $curator,
+            author: $s->getUserId(),
+            suggestionId: (int) $s->getId(),
+        );
     }
 
     private function transition(RecommendedRoute $route, ItemState $to, User $curator, ?string $note = null): void

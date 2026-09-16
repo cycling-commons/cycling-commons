@@ -23,10 +23,16 @@ final class ClaimedOsmRefs
 {
     /**
      * A SELECT yielding one non-null `ref` column per claimed ref (duplicates removed).
+     *
+     * `$regionId` narrows every arm to one region, for the region slice the
+     * map splices over its cached payload (catalog-data-model.md §9.1). The
+     * value is an integer, cast by the caller, so this stays a plain SQL
+     * string the other callers can embed.
      */
-    public static function selectSql(): string
+    public static function selectSql(?int $regionId = null): string
     {
-        $served = 'i.state IN '.ItemState::servedSqlTuple();
+        $served = 'i.state IN '.ItemState::servedSqlTuple()
+            .(null === $regionId ? '' : ' AND i.region_id = '.$regionId);
         $sourced = "SELECT i.source_ref AS ref FROM item i WHERE i.source = 'osm' AND ".$served
             .' AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple()
             .' AND '.CoverageRetirement::untouchedOsmSql('i').')';

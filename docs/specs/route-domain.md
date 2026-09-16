@@ -108,12 +108,14 @@ Deskside display pseudonymizes contributors (`rider#<hash>`,
 | `created_at` | timestamp |
 | | **UNIQUE (`route_id`, `user_id`)** (`uniq_route_ride`) |
 
-**`route_suggestion`** — the moderated correction channel:
+**`route_suggestion`** — the moderated correction channel, for a reported
+problem, photos, or the metadata the route's own creator edited (§7.1):
 
 | Column | Type / constraint |
 |---|---|
 | `route_id`, `user_id` | bigint (no FK) |
-| `reason` | `RouteSuggestionReason` enum: `broken-track / trim-privacy / duplicate / not-rideable / other / photo` (`photo` only from the route photo form, route-domain.md §4.5; its photos are `media_upload` rows with `route_suggestion_id`) |
+| `reason` | `RouteSuggestionReason` enum: `broken-track / trim-privacy / duplicate / not-rideable / other / photo / metadata`. All but `photo` come from the drawer's correction box (`isReportable()`); `photo` carries photos, so it has its own form (§4.5; its photos are `media_upload` rows with `route_suggestion_id`) |
+| `changes` | jsonb NULL, the value a `metadata` correction asks for, `{field: {was, now}}`, the route counterpart of `submission.changes`; NULL on every other reason |
 | `note` | text, nullable, ≤ 2000 chars (`RouteCommunityService::NOTE_MAX_LENGTH`) — stored raw, HTML-escaped on desk render |
 | `segments` | jsonb, nullable — located stretches (route-domain.md §7) |
 | `status` | `RouteSuggestionStatus` enum: `pending / done / dismissed` |
@@ -297,21 +299,26 @@ directly (`App\Moderation\RouteQueue`).
   (`App\Twig\RegionLabelExtension`), falling back to the registry name, and
   "No region" for a route without one. The same name is used on the queue card,
   the review page and the region filter; a region id is never shown.
-- **The rider's route details**: the review page's metadata table lists every
-  field the rider fills in on `/propose-route`, in the form's order and under
-  the form's own labels: difficulty, dominant surface, best season, suitable
-  bike types, gradient cap and note for riders
+- **The route's details**: the review page's metadata table lists the route's
+  editorial fields, in the form's order and under the form's own labels:
+  difficulty, dominant surface, best season, suitable bike types, gradient
+  cap, note for riders and best direction
   (`App\Moderation\RouteProposalDetails`). Values show in the page's
   language (difficulty and surface by their msgids, seasons as
   `map.season_*`, bike types as `map.bike_*` via `BikeType::labelKey()`, the
   gradient cap as `propose_route.gradient_*`); the note is shown as the rider
   wrote it. A field left unset shows a dash, as every other empty row does.
-- **Curator metadata edit**: registry-driven form (same field definitions as
-  the proposal form, route-domain.md §9); every changed field appends one
-  `route_change_history` row with the route's *actual* old value; unchanged
-  fields are never snapshotted. `name` is a pseudo-field (entity column);
-  everything else lives in `attributes`. Track replacement is out of scope
-  (workaround: retire + re-propose).
+- **Curator metadata edit**: `RouteEditType`, carrying all eight fields from
+  the same widget definitions as the proposal form (`RouteMetadataFields`,
+  §9). This is the only place a route's data is edited; riders ask through the
+  drawer's correction box (§7.1). Every field is offered empty and may be saved empty,
+  which clears the attribute rather than storing a blank. Every changed field
+  appends one `route_change_history` row with the route's *actual* old value
+  and the curator as its author; unchanged fields are never snapshotted.
+  `rName` is a pseudo-field posting the entity column, filed in history under
+  `name`; everything else lives in `attributes`, and a key outside the
+  registry is refused. Track replacement is out of scope (workaround: retire +
+  re-propose).
 - **Corrections**: listed against their route with a located-stretch count
   (`jsonb_array_length(segments)`); curator marks done / dismissed (each
   messages the rider) or Trashes spam (hard delete, no message).
@@ -505,6 +512,81 @@ curator sees them on the map. Data contract (presentation details belong to
   corrections only** — and renders every one (colour per correction,
   numbered stretch endpoints, side list). Non-curators get nothing extra.
 
+## 7.1 Asking for a detail to be corrected
+
+A route's data is never edited by a rider. Once it is proposed, the only way a
+rider changes anything is the drawer's **correction box**, and a curator makes
+the change on the Routes desk.
+
+- **Where:** the `Suggest a correction` box already in the route drawer, under
+  "I rode this". Picking **"A detail is wrong"** shows a **field picker** and
+  the value widget for the chosen field, prefilled with what the route says
+  now. One field per correction: the box is a narrow column in the drawer, so a
+  picker plus one widget is what fits, and each correction is one decision for
+  the curator. The five other reasons stay as they were and point at stretches
+  of the line instead.
+- **Who:** any signed-in rider, on any route, exactly as the other reasons
+  already work. There is no ownership gate: this is a suggestion, not an edit.
+- **The vocabulary** comes from `RouteMetadata` through
+  `CatalogSchemaProvider::routeCorrectionFields()` (`CC_ROUTE_FIELDS`): the
+  same eight fields, labels and options the proposal form and the desk form
+  use. Public, identical for every reader.
+- **What it becomes:** a `route_suggestion` with reason `metadata`, carrying
+  the proposed value in `changes` (`{field: {was, now}}`, the same contract as
+  `submission.changes`, moderation-and-contribution.md §3.2). The server
+  computes was/now against the route as it stands, refuses a field outside the
+  registry, a value outside its vocabulary, and a "change" that changes
+  nothing. Asking for a field to be emptied is a change like any other, stored
+  as `now: null`.
+- **How it is moderated: the existing channel, unchanged.** It lands on the
+  Routes desk beside every other correction, shown as a was/now card, and is
+  resolved by the same **done / dismissed** verbs, messaged, Trashed and GC'd
+  the same way. No second queue, no new state, no new verb.
+- **Why not the item pipeline:** `/improve` builds an *edit submission*, and
+  the `submission` table's letter range is A-G, N-Q, and **R bypasses it**
+  (moderation-and-contribution.md §3.1), because `submission.item_id`
+  addresses `item` rows and a route id in that column is the route-id/item-id
+  collision that the 2026-07-07 security review raised as critical #1.
+  `route_suggestion` is that mechanic on the route's own tables.
+- **On done:** the value applies through the one intake gate
+  (`RouteMetadata::canonical()` via `editMetadata()`), re-checked against the
+  route as it stands then. The applied field writes a `route_change_history`
+  row credited to **the rider who asked, not the curator who approved**
+  (moderation-and-contribution.md §4.1), carrying `suggestion_id`, the route
+  counterpart of `change_history.submission_id`. Dismissing applies nothing.
+
+### The message on a correction is a conversation
+
+Every correction carries a **note for the curator**, separate from the fields
+being changed and never route content: the public "Note for riders" is one of
+the eight fields a rider can ask to change, while this note is private to the
+desk. It is `route_suggestion.note`, the same field a photo correction already
+uses under the same label.
+
+The thread runs both ways, on the messaging that already exists:
+
+- the rider opens it with that note;
+- the curator answers from the card's **Message the rider** box
+  (`ModerateMessageController`, channel `correction`), which was already
+  region-scoped and already worked;
+- the rider answers back from `/messages` (`messages_reply`), which now also
+  accepts a curator's message on the `correction` channel while the correction
+  is still `pending`, delivering it to the curator who wrote it. No status
+  flips: a correction has no needs-info state.
+- the desk card shows the rider's latest answer and an **Answered** tag, the
+  way a submission card does, from the same `user_message` LATERAL join.
+
+### The curator's shortcut from the drawer
+
+A route drawer carries a small drawn edit icon linking to that route's form on
+the Routes desk. It changes nothing about where editing happens; it is a
+doorway. It is drawn for a curator whose **areas cover that route's region**
+(`ModerationScopeProvider::allowedRegionIds()`, the same rule
+`allowsRegion()` applies, answered once for the whole map). A curator of other
+areas sees no icon, and a rider never does. Like every per-viewer fact it
+rides the map page (`CC_MOD_REGIONS`), never `catalog.json`, which is publicly
+cached (catalog-data-model.md §9.1).
+
 ## 8. Rankings / best-of
 
 ### 8.1 Endpoint
@@ -625,9 +707,13 @@ would offer a search engine a page of invented results.
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
 backs both the proposal form and the curator edit form — not a rider improve
-form. Canonical shapes (enforced at intake by `RouteProposalService` and
-re-canonicalized at serve time by `CatalogProvider`, so legacy stored shapes
-never leak; the importer validates attribute **keys**, never values —
+form. `RouteMetadata` holds the set itself: which fields exist, each one's
+vocabulary, and the shape its value is stored in. Canonical shapes (enforced
+at intake by `RouteMetadata::canonical()`, the one gate both the proposal and
+the curator edit pass through, and re-canonicalized at serve time by
+`CatalogProvider`, so legacy stored shapes never leak; a value outside a
+vocabulary is not a value and stores no key at all; the importer validates
+attribute **keys**, never values —
 `AttributeVocabulary::assertValid()` — so vocabulary changes need no
 backfill):
 
@@ -637,11 +723,11 @@ backfill):
 | `season` | `list<string>` | multi-select over Spring/Summer/Autumn/Winter (capitalized attribute values — distinct from the lowercase `Season` vote enum); **no "Any"** — all four selected is the new "any". One stored shape everywhere: the importer canonicalizes the harvest artifact's lowercase scalar at intake and `Version20260719120000` backfilled the pre-normalization rows, so no reader tolerates a scalar |
 | `dominantSurface` | string | `SurfaceVocabulary::DECLARABLE` — the full 9-value set (Asphalt, Concrete, Paving stones, Sett — pavé, Compacted, Fine gravel, Gravel, Dirt, Rock), shared with the A-layer curator `surface` field; no route stores anything outside this set (`Mixed` is only a coarse bucket output, never a stored value; harvested *A-layer* rows do hold harvester-only labels — Cycleway · RAVeL, Sett (pavé), Unhewn cobblestone, Cobblestone, Surface unverified — which display as-is). `SurfaceVocabulary::BUCKETS` folds these to coarse Asphalt/Mixed/Gravel for the desk's measured-vs-declared hint |
 | `bikeTypes` | `list<string>` over `BikeType::values()` | **semantics: designed-for, not physically rideable** (a route rideable on MTB but built for road excludes MTB — consistent with the route-domain.md §8.3 gate); Handbike is one of these values, selected like any other. `BikeTypeVocabulary::normalize()` filters to valid values and de-duplicates |
-| `gradientLimited` | string | stored values stay `No` / `≤6%` / `≤9%`; display-only labels ("No cap" / "Whole route ≤ 6%" / "Whole route ≤ 9%", translated as `propose_route.gradient_none` / `gradient_6` / `gradient_9`, keyed by stored value in `RouteProposalDetails::GRADIENT_LABELS`): an accessibility guarantee that the whole route stays under the cap |
+| `gradientLimited` | string | stored values stay `No` / `≤6%` / `≤9%`; display-only labels ("No cap" / "Whole route ≤ 6%" / "Whole route ≤ 9%", translated as `propose_route.gradient_none` / `gradient_6` / `gradient_9`, keyed by stored value in `RouteMetadata::GRADIENT_LABELS`): an accessibility guarantee that the whole route stays under the cap |
 | `note` | string ≤ 2000 | free text for riders |
 | `surfaces` | profile object | **derived, never user-supplied** — `SurfaceProfiler` A-layer intersect with disclosed coverage |
 | `quietness` / `scenic` / `friendliness` | string "1".."5" | curator add-fields (ratings) |
-| `bestDirection` | string | Clockwise / Counter-clockwise / Either |
+| `bestDirection` | string | `RouteMetadata::DIRECTIONS`: Clockwise / Counter-clockwise / Either |
 
 ## 10. Rate limiters
 

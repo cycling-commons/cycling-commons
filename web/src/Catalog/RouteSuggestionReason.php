@@ -23,6 +23,21 @@ enum RouteSuggestionReason: string
      * the drawer's correction endpoint (route-domain.md §4.5).
      */
     case Photo = 'photo';
+    /**
+     * A rider asking for one of the route's details to be corrected, from the
+     * drawer's correction box, carrying what it should say in
+     * `RouteSuggestion::getChanges()` (route-domain.md §7.1).
+     */
+    case Metadata = 'metadata';
+
+    /**
+     * The reasons a rider may send from the drawer's correction box. A photo
+     * correction carries photos, so it has its own form (route-domain.md §4.5).
+     */
+    public function isReportable(): bool
+    {
+        return self::Photo !== $this;
+    }
 
     /**
      * @return list<string>

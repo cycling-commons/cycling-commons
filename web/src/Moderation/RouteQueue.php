@@ -81,12 +81,22 @@ final class RouteQueue
     {
         ['sql' => $where, 'params' => $params, 'types' => $types] = $this->suggestionWhere($scope, $regionId);
 
-        $sql = "SELECT s.id, s.route_id, r.name AS route_name, s.reason, s.note, s.user_id, s.created_at,
+        // The rider's latest answer on this correction's thread, the way the
+        // submissions desk surfaces one (SubmissionQueue, moderation-and-contribution.md §7.3).
+        $sql = "SELECT s.id, s.route_id, r.name AS route_name, s.reason, s.note, s.user_id, s.created_at, s.changes,
                        COALESCE(jsonb_array_length(s.segments), 0) AS seg_count,
+                       rr.body_text AS rider_reply,
                        u.display_name, u.public_profile, u.uuid AS user_uuid
                 FROM route_suggestion s
                 JOIN recommended_route r ON r.id = s.route_id
                 LEFT JOIN users u ON u.id = s.user_id
+                LEFT JOIN LATERAL (
+                    SELECT um.body_text
+                    FROM user_message um
+                    WHERE um.channel = 'correction' AND um.ref_id = s.id AND um.sender = 'rider'
+                    ORDER BY um.id DESC
+                    LIMIT 1
+                ) rr ON TRUE
                 WHERE {$where}
                 ORDER BY s.created_at ASC, s.id ASC
                 LIMIT :lim OFFSET :off";
@@ -106,6 +116,10 @@ final class RouteQueue
             'rider' => DeskRider::of((int) $row['user_id'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'segmentCount' => (int) $row['seg_count'],
+            // What a `metadata` correction proposes, one row per field, so the
+            // curator decides on the values and not on a bare "edited".
+            'changes' => RouteChangeRows::of($row['changes']),
+            'riderReply' => \is_string($row['rider_reply'] ?? null) && '' !== $row['rider_reply'] ? $row['rider_reply'] : null,
         ], $rows);
     }
 

@@ -6,7 +6,7 @@
 
 - **Catalog layer:** R · Quality rides
 - **Map depiction:** line, icon ★, colour #FF5A1F (brand orange); `unverified` routes carry a **"proposed"** badge
-- **Editable:** **no, curator-only.** R is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Riders **propose**, **vote**, **confirm rides**, **download GPX**, **suggest corrections** and **add photos** (`/propose-route?route=<id>`, a moderated photo correction, [`../route-domain.md`](../route-domain.md) §4.5); they never edit route data. Design source of truth: [`../route-domain.md`](../route-domain.md).
+- **Editable:** **no, curator-only.** R is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Once a route is proposed nobody edits it but a curator, on the Routes desk. Riders **propose**, **vote**, **confirm rides**, **download GPX**, **add photos** (`/propose-route?route=<id>`, a moderated photo correction, [`../route-domain.md`](../route-domain.md) §4.5) and **ask for a detail to be corrected** from the drawer's correction box (§7.1), which a curator then applies. Design source of truth: [`../route-domain.md`](../route-domain.md).
 - **Lifecycle:** route-specific state machine (NOT the shared item funnel): `submitted` (rider proposal) → curator desk approval → `unverified` ("proposed" on the map) → X independent **"I rode this"** confirmations → `verified` (votable) · plus `rejected` and `retired`. A configurable **per-region cap (~30 active routes)** bounds supply; a full region admits a new route only by retiring a weaker one.
 
 ## What it is
@@ -70,6 +70,26 @@ never reveals where its proposer started or finished. The drawer states this
 - All metadata is curator-owned (`[curator]` provenance); rider signal shows
   as vote/ride counts, not editable fields.
 
+**The map offers a rider no edit affordance for R.** The route drawer draws no
+"Edit this item" and no per-field "＋ add" row
+(`IMPROVABLE_LETTER` in `drawer.js` `schemaRows()`, map-and-search.md §6.2),
+and a route's photo prompt goes to `/propose-route?route=<id>`
+(`add-photo.js`). Until 2026-09-16 the empty registry rows DID draw "＋ add",
+pointing at `/improve?item=<route id>&type=R&field=<name>`; all eight landed
+on the no-target page, because `/improve` refuses `type=R` (above).
+Owner-reported on route 111's Gradient-limited row. An old link of that shape
+now says "Routes are not edited here" rather than "Pick a place to improve"
+(moderation-and-contribution.md §1.4).
+
+**A route's metadata is set on the desk.** The curator form in the
+next-but-one section carries all eight fields, so every one of them can be
+changed after a route is proposed. `RouteModerateController::detail()` builds
+it from `RouteEditType`, whose widgets come from `RouteMetadataFields`, the
+same definitions the proposal form builds from, so a curator's value carries
+the proposal form's wording, options and validation. A rider asks for a
+detail to be corrected from the drawer's correction box; marking it done
+applies it through this same gate, credited to the rider who asked (§7.1).
+
 ## Rider actions (replaces the edit form)
 
 | Action | Who | Effect |
@@ -88,7 +108,10 @@ dismissed corrections are retained 3 months then GC'd, and spam can be Trashed
 ## Curator form (proposal review + metadata edit)
 
 The registry fields (proposal form and curator edit share them; canonical
-vocabularies and stored shapes: [`../route-domain.md`](../route-domain.md) §9):
+vocabularies and stored shapes: [`../route-domain.md`](../route-domain.md) §9).
+`RouteMetadata` is the one definition of the set (which fields exist, each
+one's vocabulary, and the shape its value is stored in), read by the proposal
+form, the curator form and the drawer's field schema alike:
 
 | Field | Control |
 |---|---|
@@ -101,9 +124,27 @@ vocabularies and stored shapes: [`../route-domain.md`](../route-domain.md) §9):
 | Gradient-limited? | select (No/≤6%/≤9%) |
 | Best direction | select (Clockwise/Counter-clockwise/Either) |
 
+Both forms (the first proposal and the curator's desk form) offer the same
+eight fields. The only difference the rules force is what is required: a first
+proposal asks for a difficulty and a dominant surface, the desk form takes the
+route as it is. A field with
+no value shows empty rather than a guessed default, and saving it empty
+**clears the attribute**: an absent key, never a blank, so "nobody has said"
+and "somebody said nothing" stay one state.
+
+`RouteMetadata::canonical()` is the single intake gate for both forms: it
+canonicalizes the value (difficulty to `{score,label}`, bike types
+deduplicated) and refuses anything outside the vocabulary, so a value a
+curator sets is indistinguishable from one the proposer set. The registry is
+also the whole editable surface: `editMetadata()` rejects any field outside
+it, so no request can write an arbitrary key into `attributes`.
+
 Every curator field change writes an append-only `route_change_history` row
-(same provenance principle as item `change_history`, route-scoped table).
-Track replacement is v1-out-of-scope: retire + re-propose.
+with the curator as its author (same provenance principle as item
+`change_history`, route-scoped table); a rename files under `name`, a cleared
+field records its old value against a null. A field that comes back unchanged
+is never snapshotted. Track replacement is v1-out-of-scope: retire +
+re-propose.
 
 ## Implementation
 

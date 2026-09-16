@@ -343,9 +343,13 @@
 {% if unbound|default(false) %}
 {# ── UNBOUND EXPLAINER (spec §6: no fake default editor) ── #}
 <div class="wrap" id="main">
-  <section class="improve-unbound" data-improve-unbound>
-    <h2>{{ 'improve.unbound_title'|trans }}</h2>
-    <p>{{ 'improve.unbound_body'|trans }}</p>
+  {# A link that NAMED a target is not answered by "pick a place": the rider
+     picked one. The reason says what happened instead (ContributeController
+     renderUnbound, owner-reported 2026-09-16). #}
+  {% set ub = {'route': 'improve.unbound_route_', 'missing': 'improve.unbound_missing_'}[unbound_reason|default(null)]|default('improve.unbound_') %}
+  <section class="improve-unbound" data-improve-unbound data-reason="{{ unbound_reason|default('none') }}">
+    <h2>{{ (ub ~ 'title')|trans }}</h2>
+    <p>{{ (ub ~ 'body')|trans }}</p>
     {# New tab: the reader arrived here from a row they were working through. #}
     <a class="btn" href="{{ path('map') }}"
        target="_blank" rel="noopener">{{ 'improve.unbound_cta'|trans }} &#8599;</a>

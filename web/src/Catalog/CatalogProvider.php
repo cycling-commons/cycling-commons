@@ -47,43 +47,60 @@ final class CatalogProvider
     /**
      * The full catalog payload: practical letters A-G, experiential letters N-R.
      *
+     * `$regionId` narrows every layer to one region, which is what
+     * `GET /map/catalog/region/{rid}.json` serves: the same shapes, so the map
+     * splices a region's rows over the hour-cached worldwide document without
+     * downloading it again (catalog-data-model.md §9.1).
+     *
      * @return array<string, mixed>
      */
-    public function payload(): array
+    public function payload(?int $regionId = null): array
     {
-        return [
-            'A' => $this->surfaceSegments(),
-            'B' => $this->featureCollection('B'),
-            'C' => $this->featureCollection('C'),
-            'D' => $this->featureCollection('D'),
-            'E' => $this->featureCollection('E'),
-            'F' => $this->featureCollection('F'),
-            'G' => $this->featureCollection('G'),
-            'N' => $this->climbs(),
+        $payload = [
+            'A' => $this->surfaceSegments($regionId),
+            'B' => $this->featureCollection('B', regionId: $regionId),
+            'C' => $this->featureCollection('C', regionId: $regionId),
+            'D' => $this->featureCollection('D', regionId: $regionId),
+            'E' => $this->featureCollection('E', regionId: $regionId),
+            'F' => $this->featureCollection('F', regionId: $regionId),
+            'G' => $this->featureCollection('G', regionId: $regionId),
+            'N' => $this->climbs($regionId),
             // O splits by source: an authority's rows are their own
             // bucket, because they carry their publisher's citation and
             // licence; every other source lands in 'osm'.
             'O' => [
-                'osm' => $this->featureCollection('O', excludeSource: 'authority'),
-                'authority' => $this->featureCollection('O', 'authority'),
+                'osm' => $this->featureCollection('O', excludeSource: 'authority', regionId: $regionId),
+                'authority' => $this->featureCollection('O', 'authority', regionId: $regionId),
             ],
-            'P' => $this->featureCollection('P'),
-            'Q' => $this->featureCollection('Q'),
-            'R' => $this->routes(),
+            'P' => $this->featureCollection('P', regionId: $regionId),
+            'Q' => $this->featureCollection('Q', regionId: $regionId),
+            'R' => $this->routes($regionId),
             // The heat layer is derived and carries no letter; it is /map/heat.json, not this payload.
             // docs/specs/osm-data-architecture.md §8 — client-side tile dedupe.
-            'refs' => $this->curatedRefs(),
+            'refs' => $this->curatedRefs($regionId),
             // Who to credit, keyed by the `pk` a feature carries. The map used
             // to hold one provider's citation as a front-end constant; a table
             // of them belongs where the table is (data-provider-hierarchy.md §7).
             'providers' => $this->citations->all(),
         ];
+        if (null === $regionId) {
+            // What each region looked like when these bytes were built. The map
+            // compares them against the live stamps and patches only the
+            // regions it is showing (catalog-data-model.md §9.1).
+            $payload['stamps'] = $this->regionStamps();
+
+            return $payload;
+        }
+        $payload['rid'] = $regionId;
+        $payload['stamp'] = $this->regionStamps()[$regionId] ?? '';
+
+        return $payload;
     }
 
     /** Encoded once so the controller can ETag the exact bytes. */
-    public function json(): string
+    public function json(?int $regionId = null): string
     {
-        return json_encode($this->payload(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
+        return json_encode($this->payload($regionId), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
     }
 
     /**
@@ -128,23 +145,85 @@ final class CatalogProvider
     }
 
     /**
-     * Cache-busting `?v=` tag. Includes COUNT (deletes do not move max(updated_at)) and the build stamp (same rows can serialize differently after a deploy).
+     * The region-less rows' bucket in {@see regionStamps()}: no region carries id 0.
+     */
+    private const int NO_REGION = 0;
+
+    /**
+     * Cache-busting `?v=` tag for the worldwide document.
      *
-     * @see docs/specs/catalog-data-model.md §9
+     * It answers for what a region stamp cannot: the build stamp (the same
+     * rows serialize differently after a deploy) and the rows that belong to
+     * no region (`region_id IS NULL`, which no rider's scope draws). Anything
+     * that happens *inside* a region is deliberately NOT in here. This tag is
+     * a global cache key on a ~1 MB worldwide document, so every curator
+     * decision it notices is a fresh megabyte for every rider on every
+     * continent (owner 2026-09-16: "the token must be region bound"). What
+     * reaches a rider promptly is their own region's stamp: see
+     * {@see regionStamps()} and `GET /map/catalog/region/{rid}.json`. Other
+     * regions ride the hour-long max-age and the content ETag, which is what
+     * their pins are worth to this rider: a scope never draws them, only
+     * "Search everywhere" reaches them.
+     *
+     * @see docs/specs/catalog-data-model.md §9.1
      */
     public function versionTag(): string
     {
-        $row = $this->db->fetchNumeric(
-            'SELECT (SELECT count(*) FROM item),
-                    (SELECT coalesce(max(updated_at)::text, \'\') FROM item),
-                    (SELECT count(*) FROM item_confirmation),
-                    (SELECT coalesce(max(created_at)::text, \'\') FROM item_confirmation),
-                    (SELECT count(*) FROM recommended_route),
-                    (SELECT coalesce(max(updated_at)::text, \'\') FROM recommended_route)',
-        ) ?: [];
-        $row[] = $this->buildVersion->stamp()['number'];
+        $parts = [
+            $this->buildVersion->stamp()['number'],
+            $this->regionStamps()[self::NO_REGION] ?? '',
+        ];
 
-        return substr(hash('xxh128', implode('|', array_map(strval(...), $row))), 0, 16);
+        return substr(hash('xxh128', implode('|', array_map(strval(...), $parts))), 0, 16);
+    }
+
+    /**
+     * One freshness stamp per region, keyed by `region_id` as a string, with
+     * `'0'` holding every served row that belongs to no region.
+     *
+     * A stamp covers everything that changes what the region's rows serialize
+     * to: its items, its routes (both count + latest change, because a
+     * takedown deletes without moving any timestamp) and the confirmations
+     * that flip a pin's freshness. The map fetches these on every boot and on
+     * every scope change, and patches only the regions whose stamp moved.
+     *
+     * Known limit: Doctrine writes second-precision timestamps
+     * (`AbstractPlatform::getDateTimeFormatString()`),
+     * so two edits to one region inside the same second that leave the row
+     * count alone share a stamp. The collision-proof answer is a counter the
+     * database bumps itself, recorded in catalog-data-model.md §9; it is not
+     * built here because every write to `item` already pays a statement-level
+     * trigger for the coverage counts.
+     *
+     * @see docs/specs/catalog-data-model.md §9.1
+     *
+     * @return array<int, string>
+     */
+    public function regionStamps(): array
+    {
+        $served = ItemState::servedSqlTuple();
+        /** @var list<array{rid: int|string, n: int|string, t: string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT rid, sum(n) AS n, max(t) AS t FROM (
+                 SELECT coalesce(i.region_id, 0) AS rid, count(*) AS n, coalesce(max(i.updated_at)::text, '') AS t
+                   FROM item i WHERE i.state IN {$served} GROUP BY 1
+                 UNION ALL
+                 SELECT coalesce(r.region_id, 0) AS rid, count(*) AS n, coalesce(max(r.updated_at)::text, '') AS t
+                   FROM recommended_route r WHERE r.state IN {$served} GROUP BY 1
+                 UNION ALL
+                 SELECT coalesce(i.region_id, 0) AS rid, count(*) AS n, coalesce(max(c.created_at)::text, '') AS t
+                   FROM item_confirmation c JOIN item i ON i.id = c.item_id
+                  WHERE i.state IN {$served} GROUP BY 1
+             ) AS per_table GROUP BY rid",
+        );
+
+        $stamps = [];
+        foreach ($rows as $row) {
+            $stamps[(int) $row['rid']] = substr(hash('xxh128', $row['rid'].'|'.$row['n'].'|'.$row['t']), 0, 16);
+        }
+        ksort($stamps);
+
+        return $stamps;
     }
 
     /**
@@ -166,7 +245,7 @@ final class CatalogProvider
      *
      * @return list<array{id: int, name: string, geom: string, attributes: string, source_ref: string, source: string, prov: string|null, pk: string|null, region_id: int|null, verified: bool, by_name: string|null, by_public: bool|null, by_uuid: string|null, letter: string, last_confirmed: string|null, state: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, pin_lat: float|string|null, pin_lng: float|string|null}>
      */
-    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null, bool $anyState = false): array
+    private function itemRows(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $onlyId = null, bool $anyState = false, ?int $regionId = null): array
     {
         // Creator is the earliest type=new submission; harvested rows stay anonymous.
         $sql = 'SELECT i.id, i.name, i.letter, ST_AsGeoJSON(i.geom) AS geom, i.attributes, i.source_ref, i.source, s.name AS prov, i.region_id, dp.provider_key AS pk,
@@ -210,6 +289,12 @@ final class CatalogProvider
             $sql .= ' AND i.id = :onlyId';
             $params['onlyId'] = $onlyId;
         }
+        // One region's slice, in the shapes the worldwide payload uses, so the
+        // map can splice it over a cached document (catalog-data-model.md §9.1).
+        if (null !== $regionId) {
+            $sql .= ' AND i.region_id = :regionId';
+            $params['regionId'] = $regionId;
+        }
         // docs/specs/coverage-provider.md §9 — drop untouched OSM that coverage_poi now serves.
         if (\in_array($letter, CoverageRetirement::LETTERS, true)) {
             $sql .= ' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').')';
@@ -229,10 +314,10 @@ final class CatalogProvider
      *
      * @return list<string>
      */
-    private function curatedRefs(): array
+    private function curatedRefs(?int $regionId = null): array
     {
         /* @var list<string> */
-        return $this->db->fetchFirstColumn('SELECT ref FROM ('.ClaimedOsmRefs::selectSql().') AS u ORDER BY ref');
+        return $this->db->fetchFirstColumn('SELECT ref FROM ('.ClaimedOsmRefs::selectSql($regionId).') AS u ORDER BY ref');
     }
 
     /**
@@ -241,11 +326,11 @@ final class CatalogProvider
      *
      * @return array{type: string, features: list<array<string, mixed>>}
      */
-    private function featureCollection(string $letter, ?string $source = null, ?string $excludeSource = null): array
+    private function featureCollection(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $regionId = null): array
     {
         $features = [];
         $photoRefs = $this->osmPhotoRefs($letter);
-        foreach ($this->itemRows($letter, $source, $excludeSource) as $row) {
+        foreach ($this->itemRows($letter, $source, $excludeSource, regionId: $regionId) as $row) {
             $features[] = $this->feature($row, $photoRefs[(int) $row['id']] ?? null);
         }
 
@@ -429,10 +514,10 @@ final class CatalogProvider
      *
      * @return list<array<string, mixed>>
      */
-    private function climbs(): array
+    private function climbs(?int $regionId = null): array
     {
         $climbs = [];
-        foreach ($this->itemRows('N') as $row) {
+        foreach ($this->itemRows('N', regionId: $regionId) as $row) {
             $climbs[] = $this->climbFromRow($row);
         }
 
@@ -476,10 +561,10 @@ final class CatalogProvider
      *
      * @return list<array<string, mixed>>
      */
-    private function surfaceSegments(): array
+    private function surfaceSegments(?int $regionId = null): array
     {
         $segments = [];
-        foreach ($this->itemRows('A') as $row) {
+        foreach ($this->itemRows('A', regionId: $regionId) as $row) {
             // Only the photos PhotoValidator shows on this segment, as feature() does.
             $attrs = PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes'];
             $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $attrs;
@@ -536,13 +621,20 @@ final class CatalogProvider
      *
      * @return list<array<string, mixed>>
      */
-    private function routes(): array
+    private function routes(?int $regionId = null): array
     {
+        $where = 'state IN '.ItemState::servedSqlTuple();
+        $params = [];
+        if (null !== $regionId) {
+            $where .= ' AND region_id = :regionId';
+            $params['regionId'] = $regionId;
+        }
         /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, pin_lat: float|string|null, pin_lng: float|string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state, region_id,
                     ST_Y(ST_PointOnSurface(geom)) AS pin_lat, ST_X(ST_PointOnSurface(geom)) AS pin_lng
-             FROM recommended_route WHERE state IN '.ItemState::servedSqlTuple().' ORDER BY id',
+             FROM recommended_route WHERE '.$where.' ORDER BY id',
+            $params,
         );
 
         return array_map($this->routeFromRow(...), $rows);

@@ -7,10 +7,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\ItemState;
+use App\Catalog\RouteMetadata;
 use App\Catalog\RouteSuggestionStatus;
 use App\Catalog\SurfaceVocabulary;
 use App\Entity\User;
 use App\Form\RouteDecisionType;
+use App\Form\RouteEditType;
 use App\Moderation\DeskRider;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\OutOfScopeException;
@@ -183,12 +185,16 @@ final class RouteModerateController extends AbstractController
         /** @var array<string,mixed> $attrs */
         $attrs = json_decode((string) $row['attributes'], true) ?: [];
 
-        $editForm = $this->container->get('form.factory')->createNamedBuilder('route_edit', \Symfony\Component\Form\Extension\Core\Type\FormType::class, null, [
+        // Every registry field, prefilled from what the route actually holds; a
+        // field with no value is offered empty (R-quality-rides.md).
+        $editForm = $this->createForm(RouteEditType::class, [
+            'route_id' => (string) $id,
+            RouteMetadata::NAME_FIELD => (string) $row['name'],
+            ...RouteMetadata::formValues($attrs),
+        ], [
             'action' => $this->generateUrl('moderate_routes_edit'),
-        ])
-            ->add('route_id', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, ['data' => (string) $id])
-            ->add('note', \Symfony\Component\Form\Extension\Core\Type\TextareaType::class, ['required' => false, 'data' => $attrs['note'] ?? null])
-            ->setMethod('POST')->getForm();
+            'method' => 'POST',
+        ]);
 
         // docs/specs/moderation-and-contribution.md §5.1 — decisions live on the detail page.
         $decisionForm = 'submitted' === $row['state']
@@ -243,17 +249,26 @@ final class RouteModerateController extends AbstractController
     #[Route('/moderate/routes/edit', name: 'moderate_routes_edit', methods: ['POST'])]
     public function edit(Request $request): Response
     {
-        $payload = (array) $request->request->all('route_edit');
-        if (!$this->isCsrfTokenValid('route_edit', (string) ($payload['_token'] ?? ''))) {
-            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        $form = $this->createForm(RouteEditType::class);
+        $form->handleRequest($request);
+        $id = (int) ($request->request->all('route_edit')['route_id'] ?? 0);
+        $back = $id > 0
+            ? $this->redirectToRoute('moderate_routes_detail', ['id' => $id])
+            : $this->redirectToRoute('moderate_routes');
+
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            $this->addFlash('danger', 'moderate_routes.error.undecidable');
+
+            return $back;
         }
+        /** @var array<string, mixed> $data */
+        $data = $form->getData();
+        unset($data['route_id']);
         /** @var User $curator */
         $curator = $this->getUser();
-        $id = (int) ($payload['route_id'] ?? 0);
-        unset($payload['route_id'], $payload['_token']);
 
         try {
-            $this->moderation->editMetadata($id, $payload, $curator);
+            $this->moderation->editMetadata($id, $data, $curator);
             $this->addFlash('success', 'moderate_routes.flash.edited');
         } catch (OutOfScopeException) {
             throw $this->createAccessDeniedException('Out of moderation scope.');
@@ -261,7 +276,7 @@ final class RouteModerateController extends AbstractController
             $this->addFlash('danger', 'moderate_routes.error.undecidable');
         }
 
-        return $this->redirectToRoute('moderate_routes_detail', ['id' => $id]);
+        return $back;
     }
 
     /**

@@ -242,7 +242,19 @@ final class ContributeController extends AbstractController
         return $was;
     }
 
-    private function renderUnbound(): Response
+    /**
+     * The no-target page.
+     *
+     * `$reason` says WHY, because a link that named a target and still landed
+     * here is not answered by "pick a place to improve": the rider picked one
+     * (owner-reported 2026-09-16, following a route's "+ add" row).
+     * - `route`: a `type=R` link. Route data is not edited here by anyone
+     *   (docs/specs/edit-items/R-quality-rides.md).
+     * - `missing`: a target that named an id or a ref this rider cannot open:
+     *   gone, not served, not theirs, or the wrong type for the id.
+     * - null: a bare /improve, where "pick a place" IS the answer.
+     */
+    private function renderUnbound(?string $reason = null): Response
     {
         return $this->render('contribute/improve.html.twig', [
             'page_title' => 'meta.improve_title',
@@ -250,6 +262,7 @@ final class ContributeController extends AbstractController
             'nav_active' => 'improve',
             'item_type' => ItemType::default(),
             'unbound' => true,
+            'unbound_reason' => $reason,
             'receipt' => null,
             'form' => null,
         ]);
@@ -280,7 +293,7 @@ final class ContributeController extends AbstractController
                 $poi = null;
             }
             if (null === $poi || $poi['letter'] !== $type->letter()) {
-                return $this->renderUnbound();
+                return $this->renderUnbound('missing');   // the ref named a point the coverage set does not hold
             }
         }
 
@@ -455,7 +468,13 @@ final class ContributeController extends AbstractController
         }
 
         if (null === $item) {
-            return $this->renderUnbound();
+            // A link that named a target says why it could not be opened.
+            $named = '' !== $itemParam || '' !== $ref;
+            return $this->renderUnbound(match (true) {
+                ItemType::QualityRides === $requestedType => 'route',
+                $named => 'missing',
+                default => null,
+            });
         }
 
         $type = ItemType::fromParam($item->getLetter());

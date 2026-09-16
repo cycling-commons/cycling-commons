@@ -6,11 +6,10 @@ declare(strict_types=1);
 
 namespace App\Contribution;
 
-use App\Catalog\BikeTypeVocabulary;
-use App\Catalog\DifficultyVocabulary;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\RouteMetadata;
 use App\Catalog\SurfaceProfiler;
 use App\Contribution\Gpx\GpxParser;
 use App\Contribution\Gpx\TrackProcessor;
@@ -33,9 +32,6 @@ final class RouteProposalService
     public const int MIN_RAW_M = 2_000;     // spec §4.1
     public const int MAX_RAW_M = 400_000;   // spec §4.1
 
-    /** Attribute keys copied from the metadata form when non-empty. */
-    private const array META_KEYS = ['difficulty', 'season', 'dominantSurface', 'note', 'bikeTypes', 'gradientLimited'];
-
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly GpxParser $parser,
@@ -48,7 +44,8 @@ final class RouteProposalService
     }
 
     /**
-     * @param array<string, mixed> $meta form data (rName + META_KEYS, and the photos' mediaIds/mediaAlts)
+     * @param array<string, mixed> $meta form data ({@see RouteMetadata::NAME_FIELD} +
+     *                                   {@see RouteMetadata::ATTRIBUTE_FIELDS}, and the photos' mediaIds/mediaAlts)
      *
      * @throws TooManyRequestsHttpException over the daily proposal limit
      * @throws \InvalidArgumentException    validation failure (message = translation key)
@@ -59,7 +56,7 @@ final class RouteProposalService
             throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
         }
 
-        $rName = $meta['rName'] ?? null;
+        $rName = $meta[RouteMetadata::NAME_FIELD] ?? null;
         $name = \is_string($rName) ? trim($rName) : '';
         if ('' === $name) {
             throw new \InvalidArgumentException('propose_route.error.name_required');
@@ -86,26 +83,14 @@ final class RouteProposalService
             \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION,
         );
 
+        // One intake gate for both forms: canonical shapes, vocabularies
+        // enforced, and a field that carries nothing storing no key at all.
         $attributes = [];
-        foreach (self::META_KEYS as $key) {
-            $value = $meta[$key] ?? null;
-            if (null !== $value && '' !== $value && [] !== $value) {
+        foreach (RouteMetadata::ATTRIBUTE_FIELDS as $key) {
+            $value = RouteMetadata::canonical($key, $meta[$key] ?? null);
+            if (null !== $value) {
                 $attributes[$key] = $value;
             }
-        }
-        // Canonicalize difficulty to {score,label} (docs/specs/route-domain.md §9).
-        $canonicalDifficulty = DifficultyVocabulary::canonical($meta['difficulty'] ?? null);
-        if (null !== $canonicalDifficulty) {
-            $attributes['difficulty'] = $canonicalDifficulty;
-        } else {
-            unset($attributes['difficulty']);
-        }
-        // Deduplicated valid BikeType values (docs/specs/route-domain.md §9).
-        $bikeTypes = BikeTypeVocabulary::normalize($meta['bikeTypes'] ?? null);
-        if ([] !== $bikeTypes) {
-            $attributes['bikeTypes'] = $bikeTypes;
-        } else {
-            unset($attributes['bikeTypes']);
         }
 
         // Derived surfaces from the trimmed track; never user-supplied.

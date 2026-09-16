@@ -13,7 +13,7 @@
   WHEN-to-use copy plus a ticked acknowledgement inside it.
 
   Parameters:
-    s           array: correction row (id, routeId, routeName, reason, note, rider, segmentCount, photos)
+    s           array: correction row (id, routeId, routeName, reason, note, rider, segmentCount, photos, changes, riderReply)
     show_route  bool  — link the route's name (overview); false on a route's own page
 #}
 <div class="q-item q-item--corr" data-item-id="c{{ s.id }}" data-suggestion-id="{{ s.id }}">
@@ -22,6 +22,7 @@
       <div class="q-head">
         {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
         <span class="q-tag q-tag--edit">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</span>
+        {% if s.riderReply|default(null) %}<span class="q-tag q-tag--answered">{{ 'moderate.answered'|trans }}</span>{% endif %}
         {% if show_route|default(false) %}
           <h3 class="q-title"><a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a></h3>
         {% endif %}
@@ -93,7 +94,27 @@
   {% if s.note %}
     <p class="q-body">{{ s.note }}</p>
   {% endif %}
+  {# A metadata correction's proposed values: what Done would apply, field by
+     field, current value beside it (docs/specs/route-domain.md §7.1). #}
+  {% if s.changes|default([]) is not empty %}
+    <div class="q-diff">
+      <dl>
+        {% for row in s.changes %}
+          <dt>{{ row.label|trans }}</dt>
+          <dd>
+            {%- if row.was is not empty %}<span class="q-was">{{ row.translate ? row.was|map(v => v|trans)|join(', ') : row.was|join(', ') }}</span>{% endif -%}
+            <span class="q-now">{% if row.now is empty %}&mdash;{% else %}{{ row.translate ? row.now|map(v => v|trans)|join(', ') : row.now|join(', ') }}{% endif %}</span>
+          </dd>
+        {% endfor %}
+      </dl>
+    </div>
+  {% endif %}
   {# A photo correction's photos: Done keeps the ticked ones, Dismiss rejects
      them all (docs/specs/photo-uploads.md §5i). #}
+  {# The rider's own answer on this correction's thread, the way a submission
+     card shows one (moderation-and-contribution.md §7.3). #}
+  {% if s.riderReply|default(null) %}
+    <p class="q-rider-reply"><strong>{{ 'moderate.rider_reply'|trans }}:</strong> {{ s.riderReply }}</p>
+  {% endif %}
   {% include 'moderate_routes/_photos.html.twig' with {photos: s.photos|default([]), form_id: 'rs-done-' ~ s.id} %}
 </div>

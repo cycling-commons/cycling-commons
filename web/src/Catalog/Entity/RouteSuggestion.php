@@ -12,9 +12,10 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * A rider-reported correction on a route.
+ * A rider-reported correction on a route: a reported problem, photos, or the
+ * metadata the route's own creator edited.
  *
- * @see docs/specs/route-domain.md §2.2, §7
+ * @see docs/specs/route-domain.md §2.2, §7, §7.1
  *
  * @api
  */
@@ -44,6 +45,15 @@ class RouteSuggestion
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $segments;
 
+    /**
+     * Proposed metadata on a `metadata` correction, `{field: {was, now}}`, the
+     * route counterpart of `Submission::changes`. NULL on every other reason.
+     *
+     * @var array<string, array{was: mixed, now: mixed}>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $changes;
+
     #[ORM\Column(type: Types::STRING, length: 12, enumType: RouteSuggestionStatus::class)]
     private RouteSuggestionStatus $status;
 
@@ -56,14 +66,18 @@ class RouteSuggestion
     #[ORM\Column(name: 'resolved_by', type: Types::BIGINT, nullable: true)]
     private ?int $resolvedBy = null;
 
-    /** @param list<array{start: float, end: float}>|null $segments */
-    public function __construct(int $routeId, int $userId, RouteSuggestionReason $reason, ?string $note, ?array $segments = null)
+    /**
+     * @param list<array{start: float, end: float}>|null        $segments
+     * @param array<string, array{was: mixed, now: mixed}>|null $changes
+     */
+    public function __construct(int $routeId, int $userId, RouteSuggestionReason $reason, ?string $note, ?array $segments = null, ?array $changes = null)
     {
         $this->routeId = $routeId;
         $this->userId = $userId;
         $this->reason = $reason;
         $this->note = $note;
         $this->segments = $segments;
+        $this->changes = $changes;
         $this->status = RouteSuggestionStatus::Pending;
         $this->createdAt = new \DateTimeImmutable();
     }
@@ -104,6 +118,12 @@ class RouteSuggestion
     public function getSegments(): ?array
     {
         return $this->segments;
+    }
+
+    /** @return array<string, array{was: mixed, now: mixed}>|null */
+    public function getChanges(): ?array
+    {
+        return $this->changes;
     }
 
     public function getStatus(): RouteSuggestionStatus

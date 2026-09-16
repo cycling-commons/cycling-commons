@@ -74,6 +74,11 @@ security:
         # "private, must-revalidate" (AbstractSessionListener). See
         # TwoFactorAccessDecider::isPubliclyAccessible().
         - { path: ^/map/catalog\.json$, roles: PUBLIC_ACCESS }
+        # The two halves of region-bound freshness (catalog-data-model.md §9.1):
+        # the stamps a browser checks on every boot, and the region slice it
+        # splices over its cached payload. Same lazy-firewall rationale.
+        - { path: ^/map/catalog/stamps\.json$, roles: PUBLIC_ACCESS }
+        - { path: '^/map/catalog/region/\d+\.json$', roles: PUBLIC_ACCESS }
         - { path: ^/map/best-of$, roles: PUBLIC_ACCESS }
         - { path: '^/map/item/\d+/history$', roles: PUBLIC_ACCESS }
         # Region spotlight polygon (map-and-search.md §4.5): the cacheable

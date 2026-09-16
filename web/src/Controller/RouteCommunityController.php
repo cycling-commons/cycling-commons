@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemState;
+use App\Catalog\RouteMetadata;
 use App\Catalog\RouteSuggestionReason;
 use App\Catalog\Season;
 use App\Community\RouteCommunityService;
@@ -121,8 +122,10 @@ final class RouteCommunityController extends AbstractController
         $route = $this->activeRoute($id);
 
         $reason = RouteSuggestionReason::tryFrom((string) $request->request->get('reason'));
-        // A photo correction carries photos, so it comes through the route's photo form (route-domain.md §4.5).
-        if (null === $reason || RouteSuggestionReason::Photo === $reason) {
+        // A photo correction carries photos, so it comes through the route's
+        // photo form (route-domain.md §4.5). Everything else a rider asks for on
+        // a route is asked for here, in the drawer's correction box (§7.1).
+        if (null === $reason || !$reason->isReportable()) {
             return $this->json(['error' => 'invalid_reason'], 422);
         }
         $note = $request->request->get('note');
@@ -131,8 +134,27 @@ final class RouteCommunityController extends AbstractController
             return $this->json(['error' => 'invalid_segments'], 422);
         }
 
+        // A detail correction names one field and what it should say; the
+        // server computes was/now against the route as it stands (§7.1).
+        $changes = null;
+        if (RouteSuggestionReason::Metadata === $reason) {
+            $field = (string) $request->request->get('field');
+            if (!\in_array($field, RouteMetadata::EDITABLE_FIELDS, true)) {
+                return $this->json(['error' => 'invalid_field'], 422);
+            }
+            // A multi-select posts `value[]`, so read the bag directly:
+            // `get()` refuses a non-scalar and would 400 before we see it.
+            $value = $request->request->all()['value'] ?? null;
+            $changes = RouteMetadata::changesAgainst([$field => $value], $route->getAttributes(), $route->getName());
+            if ([] === $changes) {
+                return $this->json(['error' => 'nothing_changed'], 422);
+            }
+            // Segments describe a stretch of the line, which a field does not.
+            $segments = null;
+        }
+
         try {
-            $this->community->recordSuggestion($route, $user, $reason, \is_string($note) ? $note : null, $segments);
+            $this->community->recordSuggestion($route, $user, $reason, \is_string($note) ? $note : null, $segments, $changes);
         } catch (TooManyRequestsHttpException) {
             return $this->json(['error' => 'rate_limited'], 429);
         } catch (\InvalidArgumentException) {

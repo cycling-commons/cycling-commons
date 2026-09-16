@@ -148,6 +148,11 @@ import { layerGlyph } from './icons.js';
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
       bikeTypes: Array.isArray(r.bikeTypes) ? r.bikeTypes : [],   // declared suitability (may be empty = undeclared)
+      // The rest of the R registry, so the drawer's correction box can start
+      // its value widget from what the route says now (route-domain.md §7.1).
+      // The rows themselves still come from schemaRows() over the raw payload.
+      season:r.season, dominantSurface:r.dominantSurface, note:r.note,
+      gradientLimited:r.gradientLimited, bestDirection:r.bestDirection,
       // The stored photo the server let through PhotoValidator, or none.
       photo:r.photo,
       // The gallery an approved rider photo lands in (docs/specs/photo-uploads.md §5i).

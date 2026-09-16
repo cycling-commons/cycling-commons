@@ -114,7 +114,10 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   contribution.
 - **Boot sequence** (`catalog-load.js`): fetch `window.CC_CATALOG_URL`
   (`GET /map/catalog.json`, `MapController::catalog()`, public, ETag,
-  `max-age 3600`) → expose the layers as the `window.CC_*` globals → apply the
+  `max-age 3600`) alongside `GET /map/catalog/stamps.json` → splice in every
+  region of the active scope whose stamp moved since the payload in hand was
+  built (catalog-data-model.md §9.1) → expose the layers as the `window.CC_*`
+  globals → apply the
   stays merge (PIVOT features tagged `src='pivot'` and appended once to the OSM
   stays pool — a deliberate merge driving the Tourisme-Wallonie attribution
   branch and a single dot-render path) → inject `map.js`
@@ -167,10 +170,12 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 | Endpoint | Purpose | Caching |
 |---|---|---|
 | `GET /map/catalog.json` | whole served catalog, letters keyed (transitional, §7.1) | public, ETag, max-age 3600, **URL-versioned** |
+| `GET /map/catalog/stamps.json` | one freshness stamp per region, so a browser knows which regions moved (catalog-data-model.md §9.1) | public, ETag, **no-cache** (always revalidated) |
+| `GET /map/catalog/region/{rid}.json` | one region's rows in the payload's shapes, spliced over a cached catalog | public, ETag, max-age 3600, **URL-versioned by the stamp** |
 | `GET /map/item/{id}/history` | per-item change log for the drawer's "Recent changes"; empty list (200) for never-edited items, never 404 | public, ETag, max-age 60 |
 | `GET /map/best-of?season=&bike=` | ranked verified-route ids for the Curated facet (§4.2) | public, ETag, max-age 300 |
 
-All three are exact-path `PUBLIC_ACCESS` in `security.yaml` (the scheb
+All five are exact-path `PUBLIC_ACCESS` in `security.yaml` (the scheb
 lazy-firewall caching gotcha — see
 [account-and-auth.md](account-and-auth.md) §5).
 
@@ -191,30 +196,39 @@ fragment fails the drawer is still correct, only shorter.
 
 **catalog.json is fetched through a versioned URL** (2026-08-13): /map embeds
 `CC_CATALOG_URL = /map/catalog.json?v=<tag>` where the tag
-(`CatalogProvider::versionTag()`) hashes the feeding tables' row counts +
-latest change (`item`, `item_confirmation`, `recommended_route`) plus the
-build version. The hour-long max-age is the deliberate critical-path
-optimisation; the tag is what keeps it honest — without it, a rider whose
-submission was just approved reloaded into the pre-approval payload and
-watched their contribution "disappear" until the cache expired
-(owner-reported, the Zuiderdijk approval). Row counts are in the hash because
-a takedown deletes without moving any timestamp; the build version is in it
-because a deploy can change what the same rows serialize to.
+(`CatalogProvider::versionTag()`) hashes the build version and the rows that
+belong to no region. The hour-long max-age is the deliberate critical-path
+optimisation; the tag answers for the two things that change the whole
+document for everybody: a deploy serializing the same rows differently, and a
+row no scope draws. It deliberately ignores what happens *inside* a region:
+this is a cache key on ~1 MB gzipped, so a tag that moved on every curator
+decision made one approval in Wallonia a fresh megabyte for a rider in Japan
+(owner 2026-09-16: "the token must be region bound").
 
-An **already-open map tab hot-refreshes on tab return** (2026-08-13): the
-versioned URL keeps fresh page loads honest, but a moderator's loop is
-approve-in-the-desk-tab → switch back to the open map, and that tab never
-refetched anything. catalog-load.js keeps the boot ETag and revalidates on
-`visibilitychange`/`focus` (throttled); a 304 costs headers, a change
-re-assigns the CC_* globals and calls `window.__ccApplyCatalog` (registered
-by map.js): `populateCatalogLayers()` re-maps climbs, routes, hazards and
-the surface features from the new variables, `refreshPools()` (osm-pools.js)
-swaps every pool's data, re-seeds its cluster source and drops the on-screen
-markers so they are minted again from the new properties, the search index
-is rebuilt, the tile dedupe filters re-apply, and `render()` runs. Until
-2026-09-08 only the surface re-mapped and every other letter waited for a
-reload: a stand approved on the desk kept its old icon and its old drawer in
-the open tab (owner: "it should invalidate the old drawer and icon cache").
+**A region reaches its riders on its own** (2026-09-16, catalog-data-model.md
+§9.1): `GET /map/catalog/stamps.json` is revalidated on every boot, and any
+region of the active scope whose stamp moved is refetched from
+`GET /map/catalog/region/{rid}.json?v=<stamp>` and spliced over the payload in
+hand: the region's rows out, the slice's rows in. Wallonia's slice is 93 kB
+gzipped against the worldwide 1,015 kB on the dev catalog. This is what keeps
+the hour honest: a rider whose submission is approved reloads into it, rather
+than watching their contribution "disappear" until the cache expires
+(owner-reported, the Zuiderdijk approval). A rider scoped to another region
+downloads nothing but the stamps.
+
+An **already-open map tab hot-refreshes on tab return** (2026-08-13): a
+moderator's loop is approve-in-the-desk-tab → switch back to the open map, and
+that tab asks for nothing on its own. catalog-load.js re-reads the stamps on
+`visibilitychange`/`focus` (throttled) and pulls only the regions on screen
+that moved; a change calls `window.__ccApplyCatalog` (registered by map.js):
+`populateCatalogLayers()` re-maps climbs, routes, hazards and the surface
+features from the new variables, `refreshPools()` (osm-pools.js) swaps every
+pool's data, re-seeds its cluster source and drops the on-screen markers so
+they are minted again from the new properties, the search index is rebuilt,
+the tile dedupe filters re-apply, and `render()` runs. Until 2026-09-08 only
+the surface re-mapped and every other letter waited for a reload: a stand
+approved on the desk kept its old icon and its old drawer in the open tab
+(owner: "it should invalidate the old drawer and icon cache").
 
 ## 4. The shell: icon rail and drawer
 
@@ -2051,6 +2065,26 @@ scrolled to its top, so the return button is in view.
 
 **No id ⇒ no edit/add links**: the edit-bridge only ever binds to a real DB
 item id — a name-slug guess is never a faithful target.
+
+**No R ⇒ no add links either.** An empty registry row offers "＋ add" only for
+letters `/improve` can bind (`IMPROVABLE_LETTER` in `drawer.js`
+`schemaRows()`). R is not one: a route is a curated composition, not an atomic
+map feature, and `/improve` refuses `type=R` outright since the 2026-07-07
+review found the route-id / item-id collision
+(docs/specs/edit-items/R-quality-rides.md, "Editable: no, curator-only").
+The link was drawn for R all the same, and every one of its eight fields
+landed on the no-target page: owner-reported 2026-09-16 on route 111's
+Gradient-limited row. This is the rule that already keeps "Edit this item" off
+a route drawer (§6.3) and sends a route's photo prompt to `/propose-route`
+(`add-photo.js`).
+
+What a rider gets instead is the drawer's **correction box**: picking "A
+detail is wrong" offers a field picker and that field's own value widget,
+prefilled from the route, and sends a moderated correction rather than an edit
+(route-domain.md §7.1). A curator of that route's region also gets a small
+drawn edit icon linking to the route's form on the Routes desk, from
+`CC_IS_CURATOR` / `CC_MOD_REGIONS` on the map page and never from the catalog
+payload, which is publicly cached (catalog-data-model.md §9.1).
 
 **Async hydration:** the drawer HTML lands synchronously; "Recent changes"
 (`/map/item/{id}/history`), route community state, and confirmation counts are

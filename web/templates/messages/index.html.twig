@@ -119,7 +119,11 @@
                 </h3>
                 <time class="q-when" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|cc_datetime }}</time>
               </div>
-              {% set is_question = m.kind.value == 'submission_needs_info' %}
+              {# What the rider can answer: a needs-info question on a submission,
+                 or a curator's message on an open route correction, which is a
+                 two-way thread (docs/specs/route-domain.md §7.1). #}
+              {% set is_question = m.kind.value == 'submission_needs_info'
+                 or (m.channel == 'correction' and m.kind.value == 'curator_message') %}
               {# NOT `answers` — assigning to the loop variable would clobber the
                  whole map on the first row, and every later card would find its
                  answer missing. #}
@@ -203,7 +207,10 @@
           {% if mine %}
             <div class="msg-from-curator msg-from-you">{{ 'messages.you_sent'|trans }}</div>
           {% endif %}
-          {% if not mine and is_question and my_answers is empty and m.refId in replyable_submission_ids %}
+          {% set replyable = m.channel == 'correction'
+             ? m.refId in replyable_correction_ids
+             : m.refId in replyable_submission_ids %}
+          {% if not mine and is_question and my_answers is empty and replyable %}
             <form class="q-reply msg-reply" method="post" action="{{ path('messages_reply', {id: m.id}) }}">
               <input type="hidden" name="_token" value="{{ csrf_token('message-reply') }}">
               <label for="msg-reply-{{ m.id }}">{{ 'messages.reply_label'|trans }}</label>

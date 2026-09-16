@@ -10,6 +10,7 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteChangeHistory;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\RouteMetadata;
 use App\Entity\User;
 use App\Moderation\RegionFullException;
 use App\Moderation\RouteModerationService;
@@ -121,14 +122,14 @@ final class RouteModerationServiceTest extends KernelTestCase
     public function testEditMetadataAppliesOnlyChangedFieldsWithHistory(): void
     {
         $route = $this->route(ItemState::Unverified);
-        $route->setName('Old name')->setAttributes(['note' => 'Old note', 'season' => 'Spring']);
+        $route->setName('Old name')->setAttributes(['note' => 'Old note', 'season' => ['Spring']]);
         $this->em->flush();
         $curator = $this->curator();
 
         $this->svc->editMetadata((int) $route->getId(), [
-            'name' => 'Old name',                 // unchanged — must NOT snapshot
-            'note' => 'A resurfaced descent now', // changed
-            'season' => 'Spring',                 // unchanged
+            RouteMetadata::NAME_FIELD => 'Old name',  // unchanged — must NOT snapshot
+            'note' => 'A resurfaced descent now',     // changed
+            'season' => ['Spring'],                   // unchanged
         ], $curator);
 
         $this->em->clear();
@@ -141,6 +142,128 @@ final class RouteModerationServiceTest extends KernelTestCase
         self::assertSame(['note'], $fields, 'only the changed field is snapshotted');
         self::assertSame('Old note', $rows[0]->getOldValue());
         self::assertSame('A resurfaced descent now', $rows[0]->getNewValue());
+    }
+
+    /** A curator's value is stored in the same shape the proposal form stores. */
+    public function testEditMetadataStoresEveryFieldCanonically(): void
+    {
+        $route = $this->route(ItemState::Unverified);
+        $curator = $this->curator();
+
+        $this->svc->editMetadata((int) $route->getId(), [
+            RouteMetadata::NAME_FIELD => 'Liege Bastogne Liege',
+            'difficulty' => 'Very hard',
+            'season' => ['Spring', 'Autumn'],
+            'dominantSurface' => 'Asphalt',
+            'note' => '  Steep through the Ardennes.  ',
+            'bikeTypes' => ['Road', 'Gravel', 'Road'],
+            'gradientLimited' => '≤9%',
+            'bestDirection' => 'Clockwise',
+        ], $curator);
+
+        $this->em->clear();
+        $reloaded = $this->em->find(RecommendedRoute::class, $route->getId());
+        $attrs = $reloaded->getAttributes();
+        self::assertSame('Liege Bastogne Liege', $reloaded->getName());
+        // jsonb hands the object back in its own key order; the content is the value.
+        self::assertEquals(['score' => 5, 'label' => 'Very hard'], $attrs['difficulty']);
+        self::assertSame(['Spring', 'Autumn'], $attrs['season']);
+        self::assertSame('Asphalt', $attrs['dominantSurface']);
+        self::assertSame('Steep through the Ardennes.', $attrs['note']);
+        self::assertSame(['Road', 'Gravel'], $attrs['bikeTypes'], 'deduplicated');
+        self::assertSame('≤9%', $attrs['gradientLimited']);
+        self::assertSame('Clockwise', $attrs['bestDirection']);
+
+        $fields = array_map(
+            static fn (RouteChangeHistory $h): string => $h->getField(),
+            $this->em->getRepository(RouteChangeHistory::class)->findBy(['routeId' => $route->getId()]),
+        );
+        self::assertSame(
+            ['name', 'difficulty', 'season', 'dominantSurface', 'note', 'bikeTypes', 'gradientLimited', 'bestDirection'],
+            $fields,
+            'every field change is recorded, the rename under `name`',
+        );
+    }
+
+    /** Saving a field empty clears it: an absent key, never a blank. */
+    public function testEditMetadataClearsAFieldSentEmpty(): void
+    {
+        $route = $this->route(ItemState::Unverified);
+        $route->setAttributes(['gradientLimited' => '≤6%', 'note' => 'Old note']);
+        $this->em->flush();
+        $curator = $this->curator();
+
+        $this->svc->editMetadata((int) $route->getId(), [
+            'gradientLimited' => '',
+            'note' => '   ',
+        ], $curator);
+
+        $this->em->clear();
+        $attrs = $this->em->find(RecommendedRoute::class, $route->getId())->getAttributes();
+        self::assertArrayNotHasKey('gradientLimited', $attrs);
+        self::assertArrayNotHasKey('note', $attrs);
+
+        $rows = $this->em->getRepository(RouteChangeHistory::class)->findBy(['routeId' => $route->getId()]);
+        self::assertCount(2, $rows);
+        self::assertNull($rows[0]->getNewValue(), 'a cleared field is recorded as unset');
+    }
+
+    /** Re-saving a route unchanged writes no history at all. */
+    public function testEditMetadataSnapshotsNothingWhenTheFormComesBackUnchanged(): void
+    {
+        $route = $this->route(ItemState::Unverified);
+        $route->setName('Liege Bastogne Liege')->setAttributes([
+            // Key order as PostgreSQL hands the JSON back, not as the vocabulary builds it.
+            'difficulty' => ['label' => 'Very hard', 'score' => 5],
+            'bikeTypes' => ['Road'],
+        ]);
+        $this->em->flush();
+        $curator = $this->curator();
+
+        $this->svc->editMetadata((int) $route->getId(), [
+            RouteMetadata::NAME_FIELD => 'Liege Bastogne Liege',
+            'difficulty' => 'Very hard',
+            'season' => [],
+            'dominantSurface' => '',
+            'note' => '',
+            'bikeTypes' => ['Road'],
+            'gradientLimited' => '',
+            'bestDirection' => '',
+        ], $curator);
+
+        $this->em->clear();
+        self::assertSame([], $this->em->getRepository(RouteChangeHistory::class)->findBy(['routeId' => $route->getId()]));
+    }
+
+    public function testEditMetadataRefusesAFieldOutsideTheRegistry(): void
+    {
+        $route = $this->route(ItemState::Unverified);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->svc->editMetadata((int) $route->getId(), ['surfaces' => 'anything'], $this->curator());
+    }
+
+    public function testEditMetadataRefusesToBlankARouteName(): void
+    {
+        $route = $this->route(ItemState::Unverified);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->svc->editMetadata((int) $route->getId(), [RouteMetadata::NAME_FIELD => '  '], $this->curator());
+    }
+
+    /** A value outside the vocabulary is not a value: it never reaches `attributes`. */
+    public function testEditMetadataDropsAValueOutsideTheVocabulary(): void
+    {
+        $route = $this->route(ItemState::Unverified);
+        $curator = $this->curator();
+
+        $this->svc->editMetadata((int) $route->getId(), [
+            'gradientLimited' => 'BOGUS',
+            'bikeTypes' => ['Road', 'Hovercraft'],
+        ], $curator);
+
+        $this->em->clear();
+        $attrs = $this->em->find(RecommendedRoute::class, $route->getId())->getAttributes();
+        self::assertArrayNotHasKey('gradientLimited', $attrs);
+        self::assertSame(['Road'], $attrs['bikeTypes']);
     }
 
     public function testResolveSuggestionMarksItDone(): void

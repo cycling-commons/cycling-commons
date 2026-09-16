@@ -140,12 +140,16 @@ final class RouteCommunityService
     /**
      * Moderated correction (docs/specs/route-domain.md §10). Validate before the limiter.
      *
-     * @param list<array{start: float, end: float}>|null $segments located stretches (docs/specs/route-domain.md §7)
+     * `$note` is the rider's word to the curator and is never route content:
+     * the public "Note for riders" is one of the fields `$changes` can carry.
+     *
+     * @param list<array{start: float, end: float}>|null        $segments located stretches (docs/specs/route-domain.md §7)
+     * @param array<string, array{was: mixed, now: mixed}>|null $changes  what a detail correction asks for (§7.1)
      *
      * @throws TooManyRequestsHttpException over the daily suggestion limit
      * @throws \InvalidArgumentException    if the trimmed note exceeds 2000 characters
      */
-    public function recordSuggestion(RecommendedRoute $route, User $user, RouteSuggestionReason $reason, ?string $note, ?array $segments = null): void
+    public function recordSuggestion(RecommendedRoute $route, User $user, RouteSuggestionReason $reason, ?string $note, ?array $segments = null, ?array $changes = null): void
     {
         $trimmed = null !== $note ? trim($note) : null;
         if (null !== $trimmed && mb_strlen($trimmed) > self::NOTE_MAX_LENGTH) {
@@ -155,7 +159,7 @@ final class RouteCommunityService
         if (!$this->routeSuggestLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
             throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
         }
-        $this->em->persist(new RouteSuggestion((int) $route->getId(), $user->getId(), $reason, '' !== $trimmed ? $trimmed : null, $segments));
+        $this->em->persist(new RouteSuggestion((int) $route->getId(), $user->getId(), $reason, '' !== $trimmed ? $trimmed : null, $segments, $changes));
         $this->em->flush();
     }
 }

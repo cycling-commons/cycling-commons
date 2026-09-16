@@ -71,7 +71,7 @@ final class MessagesController extends AbstractController
             $userId,
             array_values(array_unique(array_map(
                 static fn (UserMessage $m): int => $m->getRefId(),
-                array_filter($heads, static fn (UserMessage $m): bool => 'submission' === $m->getChannel()),
+                array_filter($heads, static fn (UserMessage $m): bool => \in_array($m->getChannel(), ['submission', 'correction'], true)),
             ))),
         )];
 
@@ -94,6 +94,21 @@ final class MessagesController extends AbstractController
             $heads,
         ));
 
+        // docs/specs/route-domain.md §7.1: a correction's thread runs both ways,
+        // the rider answers the curator who wrote to them, while it is pending.
+        $correctionRefIds = array_values(array_unique(array_map(
+            static fn (UserMessage $m): int => $m->getRefId(),
+            array_filter($list, static fn (UserMessage $m): bool => 'correction' === $m->getChannel()
+                && UserMessageKind::CuratorMessage === $m->getKind()),
+        )));
+        $replyableCorrectionIds = [] !== $correctionRefIds
+            ? array_map(intval(...), $db->fetchFirstColumn(
+                "SELECT id FROM route_suggestion WHERE id IN (:ids) AND status = 'pending'",
+                ['ids' => $correctionRefIds],
+                ['ids' => ArrayParameterType::INTEGER],
+            ))
+            : [];
+
         $answers = self::answersToQuestions($list, $userId);
 
         return $this->render('messages/index.html.twig', [
@@ -107,6 +122,7 @@ final class MessagesController extends AbstractController
             )),
             'answers' => $answers['byQuestion'],
             'replyable_submission_ids' => $replyableSubmissionIds,
+            'replyable_correction_ids' => $replyableCorrectionIds,
             'message_photos' => $this->messagePhotos($list),
             'submission_changes' => $this->submissionChanges($list, $userId, $changes),
             'pager' => $pager,
@@ -176,22 +192,29 @@ final class MessagesController extends AbstractController
             static fn (UserMessage $a, UserMessage $b): int => [$a->getCreatedAt(), (int) $a->getId()]
                 <=> [$b->getCreatedAt(), (int) $b->getId()],
         );
-        $openQuestion = []; // submission id => unanswered question
+        $openQuestion = []; // "<channel>:<ref id>" => the message being answered
         $byQuestion = [];
         $attached = [];
 
         foreach ($chronological as $m) {
-            if ('submission' !== $m->getChannel()) {
+            $channel = $m->getChannel();
+            if (!\in_array($channel, ['submission', 'correction'], true)) {
                 continue;
             }
-            if (UserMessageKind::SubmissionNeedsInfo === $m->getKind()) {
-                $openQuestion[$m->getRefId()] = (int) $m->getId();
+            $thread = $channel.':'.$m->getRefId();
+            // What the rider answers: a needs-info question on a submission, a
+            // curator's message on a correction (docs/specs/route-domain.md §7.1).
+            $isQuestion = 'submission' === $channel
+                ? UserMessageKind::SubmissionNeedsInfo === $m->getKind()
+                : UserMessageKind::CuratorMessage === $m->getKind();
+            if ($isQuestion) {
+                $openQuestion[$thread] = (int) $m->getId();
                 continue;
             }
             // Only the reader's own replies fold in.
             if (UserMessageKind::RiderReply === $m->getKind() && $userId === $m->getSenderId()
-                && isset($openQuestion[$m->getRefId()])) {
-                $byQuestion[$openQuestion[$m->getRefId()]][] = $m;
+                && isset($openQuestion[$thread])) {
+                $byQuestion[$openQuestion[$thread]][] = $m;
                 $attached[(int) $m->getId()] = true;
             }
         }
@@ -200,9 +223,12 @@ final class MessagesController extends AbstractController
     }
 
     /**
-     * Rider answers needs-info; submission returns to `pending`.
+     * The rider's side of a moderation thread: answering a needs-info question
+     * (the submission returns to `pending`), or answering a curator's message
+     * about a route correction while that correction is still open.
      *
      * @see docs/specs/moderation-and-contribution.md §7.3
+     * @see docs/specs/route-domain.md §7.1
      */
     #[Route('/messages/{id}/reply', name: 'messages_reply', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function reply(int $id, Request $request, EntityManagerInterface $em, MessageService $messages, Connection $db): Response
@@ -216,7 +242,37 @@ final class MessagesController extends AbstractController
         $userId = (int) $user->getId();
 
         $message = $em->find(UserMessage::class, $id);
-        if (null === $message || $userId !== $message->getUserId() || UserMessageKind::SubmissionNeedsInfo !== $message->getKind()) {
+        if (null === $message || $userId !== $message->getUserId()) {
+            throw $this->createNotFoundException();
+        }
+
+        // A correction's thread: the rider answers the curator who wrote to
+        // them, on the same channel, while the correction is still open. No
+        // status to flip, so nothing but the message moves.
+        if ('correction' === $message->getChannel() && UserMessageKind::CuratorMessage === $message->getKind()) {
+            $suggestionId = $message->getRefId();
+            $curatorId = $message->getSenderId();
+            $stillOpen = null !== $curatorId
+                && false !== $db->fetchOne('SELECT 1 FROM route_suggestion WHERE id = :id AND status = :s', ['id' => $suggestionId, 's' => 'pending'])
+                && false !== $db->fetchOne('SELECT 1 FROM users WHERE id = :id', ['id' => $curatorId]);
+            if (!$stillOpen) {
+                $this->addFlash('danger', 'messages.reply_too_late');
+
+                return $this->redirectToRoute('messages');
+            }
+            try {
+                $messages->sendRiderReply($curatorId, $userId, 'correction', $suggestionId, $message->getRefLabel(), (string) $request->request->get('body', ''));
+            } catch (\InvalidArgumentException $e) {
+                $this->addFlash('danger', $e->getMessage());
+
+                return $this->redirectToRoute('messages');
+            }
+            $this->addFlash('success', 'messages.reply_sent');
+
+            return $this->redirectToRoute('messages');
+        }
+
+        if (UserMessageKind::SubmissionNeedsInfo !== $message->getKind()) {
             throw $this->createNotFoundException();
         }
 

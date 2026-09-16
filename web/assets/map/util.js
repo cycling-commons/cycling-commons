@@ -5,6 +5,22 @@ import { uKm } from './units.js';
 
 // docs/specs/security-architecture.md §4.2 — every interpolated value through escPend.
 export const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Who may open a route's form on the Routes desk (docs/specs/route-domain.md
+   §7.1): a curator whose areas cover that route's region. Both facts arrive
+   per viewer on the map page (CC_IS_CURATOR, CC_MOD_REGIONS, the latter from
+   the server's own ModerationScopeProvider), never in catalog.json, which is
+   one publicly cached document every reader shares. The server re-checks scope
+   on the desk; this only decides whether to draw the shortcut. */
+export const curatorMayEdit = (regionId, scope) => {
+  const w = scope || (typeof window !== 'undefined' ? window : {});
+  if (!w.CC_IS_CURATOR) return false;
+  const regions = w.CC_MOD_REGIONS;
+  // null or absent = every region; a region-less route is in every scope, the
+  // same answer ModerationScopeProvider::allowsRegion() gives.
+  if (regions == null || regionId == null) return true;
+  return Array.isArray(regions) && regions.some(r => String(r) === String(regionId));
+};
+
 // docs/specs/security-architecture.md §4.2 — http(s) or site-relative only; else '#'.
 export const safeHref = u => { const s = String(u ?? '').trim(); return (/^https?:\/\//i.test(s) || (s.startsWith('/') && !s.startsWith('//'))) ? escPend(s) : '#'; };
 /* A person named on the pending card as the curator desks name them

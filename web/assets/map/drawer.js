@@ -27,7 +27,7 @@ import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, openRouteById, bumpPlaceReq } from './places.js';
 import { CC_VOTABLE, CC_CONFIRMABLE, CC_BREAKABLE, routeCommunityPanel, hydrateRouteCommunity,
-         hydrateItemConfirm, setPendingShape } from './community.js';
+         hydrateItemConfirm, setPendingShape, setRouteCurrent } from './community.js';
 import { showPendingShape, fitPendingShape, clearPendingShape } from './pending-shape.js';
 import { clearCorrections } from './corrections.js';
 import { routeClimbsSlot } from './route-climbs.js';
@@ -37,6 +37,17 @@ import { routeAlongSlot } from './along-list.js';
 
 // Race-guard: bumped on every openDrawer() so a slow history fetch cannot paint a stale drawer.
 let _historyReq = 0;
+
+/* Which letters an empty field may offer "＋ add" for (docs/specs/map-and-search.md
+   §6.2). Every letter but R: a route is a curated composition, not an atomic map
+   feature, and `/improve` refuses `type=R` outright since the 2026-07-07 review
+   (the route-id/item-id collision; docs/specs/edit-items/R-quality-rides.md,
+   "Editable: no, curator-only"). The link was still drawn for R, and every one
+   of its eight fields landed on the "Pick a place to improve" fallback:
+   owner-reported 2026-09-16 on route 111's Gradient-limited row. This is the
+   same rule that already keeps "Edit this item" off a route drawer below, and
+   that sends a route's photo prompt to /propose-route (add-photo.js). */
+const IMPROVABLE_LETTER = letter => 'R' !== letter;
 
 // docs/specs/map-and-search.md §6.2 — registry-driven rows; skip = structural; fixed = assumed default.
 export function schemaRows(letter, src, id, opts){
@@ -80,7 +91,7 @@ export function schemaRows(letter, src, id, opts){
       }
     } else if(fixed[f.key] != null){
       rows.push({label:f.label, value:tv(fixed[f.key])});
-    } else if(id != null){
+    } else if(id != null && IMPROVABLE_LETTER(letter)){
       const href = `/improve?item=${encodeURIComponent(id)}&type=${encodeURIComponent(letter)}&field=${encodeURIComponent(f.key)}`;
       rows.push({label:f.label, html:true, empty:true, value:`<a class="cc-d-add" href="${href}">＋ ${D.add||'add'}</a>`});
     }
@@ -542,7 +553,14 @@ function buildRecord(layer, f){
       // docs/specs/route-domain.md §6 — community panel; GPX download stays.
       // A route waiting for review (a ?route= preview, map-and-search.md §8)
       // takes no rides, votes, corrections or downloads until it is live.
-      edit = f.state==='submitted' ? '' : routeCommunityPanel(f.id, f.state);
+      // What the route says now, so the correction box's value widget starts
+      // from it rather than from an empty field (route-domain.md §7.1).
+      setRouteCurrent(f.id, {
+        rName: f.name, difficulty: f.difficulty, season: f.season,
+        dominantSurface: f.dominantSurface, note: f.note,
+        bikeTypes: f.bikeTypes, gradientLimited: f.gradientLimited, bestDirection: f.bestDirection,
+      });
+      edit = f.state==='submitted' ? '' : routeCommunityPanel(f.id, f.state, f.rid);
     } else {
       // f.letter wins: mixed-letter layers must open each item's own form.
       const editQ = `item=${f.id}&name=${encodeURIComponent(f.name)}`

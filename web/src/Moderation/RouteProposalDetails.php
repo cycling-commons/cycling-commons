@@ -8,12 +8,13 @@ namespace App\Moderation;
 
 use App\Catalog\BikeType;
 use App\Catalog\DifficultyVocabulary;
+use App\Catalog\RouteMetadata;
 use App\Catalog\Season;
 
 /**
- * The route details a rider fills in on /propose-route, read back from a
- * route's `attributes` for the curator's review page: one row per form field,
- * in the form's order, under the form's own label.
+ * A route's editorial metadata read back from its `attributes` for the
+ * curator's review page: one row per field, in the form's order, under the
+ * form's own label.
  *
  * `values` are translation keys (or msgids) when `translate` is true; the
  * rider's note is their own text and is shown as written. A field the rider
@@ -25,17 +26,6 @@ use App\Catalog\Season;
  */
 final class RouteProposalDetails
 {
-    /**
-     * Stored `gradientLimited` value => its label key (route-domain.md §9).
-     *
-     * @var array<string, string>
-     */
-    public const array GRADIENT_LABELS = [
-        'No' => 'propose_route.gradient_none',
-        '≤6%' => 'propose_route.gradient_6',
-        '≤9%' => 'propose_route.gradient_9',
-    ];
-
     /**
      * @param array<string, mixed> $attributes
      *
@@ -57,8 +47,10 @@ final class RouteProposalDetails
                 static fn (string $b): string => BikeType::tryFrom($b)?->labelKey() ?? $b,
                 self::texts($attributes['bikeTypes'] ?? null),
             )),
-            self::row('gradient', 'propose_route.gradient_label', null !== $gradient ? [self::GRADIENT_LABELS[$gradient] ?? $gradient] : []),
+            self::row('gradient', 'propose_route.gradient_label', null !== $gradient ? [RouteMetadata::GRADIENT_LABELS[$gradient] ?? $gradient] : []),
             self::row('rider_note', 'propose_route.note_label', self::texts($attributes['note'] ?? null), translate: false),
+            // A curator's own call, so it appears here only once one has made it.
+            self::row('direction', 'Best direction', self::texts($attributes['bestDirection'] ?? null)),
         ];
     }
 

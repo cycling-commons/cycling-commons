@@ -29,6 +29,16 @@
   .rd-decide-row select{max-width:240px}
   .rd-edit label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
   .rd-edit textarea{width:100%;min-height:110px;font-family:var(--sans);font-size:.9rem;padding:.6rem;border:1px solid rgba(20,22,14,.25);border-radius:6px}
+  .rd-field{margin-bottom:1rem}
+  .rd-edit input[type=text],.rd-edit select{width:100%;font-family:var(--sans);font-size:.9rem;padding:.55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
+  /* Two to a row on a desk, one to a row on a phone. */
+  .rd-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 1rem}
+  .rd-chips{display:flex;flex-wrap:wrap;gap:.45rem}
+  .rd-chip{display:inline-flex;align-items:center;gap:.4rem;margin:0;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:999px;cursor:pointer;
+           font-family:var(--sans);font-size:.85rem;letter-spacing:0;text-transform:none;color:var(--ink)}
+  .rd-chip:has(input:checked){border-color:var(--clay);background:rgba(184,89,58,.08)}
+  .rd-chip input{margin:0}
+  .rd-hint{font-family:var(--sans);font-size:.82rem;color:#6b6e5c;margin:.35rem 0 0;line-height:1.4}
   /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system);
      only the layout margin is detail-specific here. */
   .btn-act{margin-top:.8rem}
@@ -129,13 +139,81 @@
   </div>
   {% endif %}
 
+  {# Every editorial field a route carries, in the proposal form's own wording
+     and options (docs/specs/edit-items/R-quality-rides.md). A field with no
+     value stands empty and may be saved empty, which clears it. #}
   <div class="rd-edit">
     {{ form_start(edit_form, {attr: {novalidate: 'novalidate'}}) }}
     {% include 'partials/_form_errors.html.twig' with {form: edit_form} %}
       {{ form_widget(edit_form.route_id) }}
-      {# The route's public note, shown to every rider in the map drawer. #}
-      <label for="{{ edit_form.note.vars.id }}">{{ 'moderate_routes.meta.rider_note'|trans }}</label>
-      {{ form_widget(edit_form.note) }}
+
+      <div class="rd-field">
+        <label for="{{ edit_form.rName.vars.id }}">{{ 'propose_route.name_label'|trans }}</label>
+        {{ form_widget(edit_form.rName) }}
+        {{ form_errors(edit_form.rName) }}
+      </div>
+
+      <div class="rd-pair">
+        <div class="rd-field">
+          <label for="{{ edit_form.difficulty.vars.id }}">{{ 'propose_route.difficulty_label'|trans }}</label>
+          {{ form_widget(edit_form.difficulty) }}
+          {{ form_errors(edit_form.difficulty) }}
+        </div>
+        <div class="rd-field">
+          <label for="{{ edit_form.dominantSurface.vars.id }}">{{ 'propose_route.surface_label'|trans }}</label>
+          {{ form_widget(edit_form.dominantSurface) }}
+          {{ form_errors(edit_form.dominantSurface) }}
+        </div>
+      </div>
+
+      <div class="rd-field">
+        <label>{{ 'propose_route.season_label'|trans }}</label>
+        <div class="rd-chips">
+          {% for child in edit_form.season %}
+            <label class="rd-chip">
+              {{ form_widget(child) }}
+              <span>{{ (child.vars.label ?? child.vars.value)|trans }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        {{ form_errors(edit_form.season) }}
+      </div>
+
+      <div class="rd-field">
+        <label>{{ 'propose_route.bike_types_label'|trans }}</label>
+        <div class="rd-chips">
+          {% for child in edit_form.bikeTypes %}
+            <label class="rd-chip">
+              {{ form_widget(child) }}
+              <span>{{ (child.vars.label ?? child.vars.value)|trans }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        <p class="rd-hint">{{ 'propose_route.bike_types_hint'|trans }}</p>
+        {{ form_errors(edit_form.bikeTypes) }}
+      </div>
+
+      <div class="rd-pair">
+        <div class="rd-field">
+          <label for="{{ edit_form.gradientLimited.vars.id }}">{{ 'propose_route.gradient_label'|trans }}</label>
+          {{ form_widget(edit_form.gradientLimited) }}
+          <p class="rd-hint">{{ 'propose_route.gradient_hint'|trans }}</p>
+          {{ form_errors(edit_form.gradientLimited) }}
+        </div>
+        <div class="rd-field">
+          <label for="{{ edit_form.bestDirection.vars.id }}">{{ 'Best direction'|trans }}</label>
+          {{ form_widget(edit_form.bestDirection) }}
+          {{ form_errors(edit_form.bestDirection) }}
+        </div>
+      </div>
+
+      <div class="rd-field">
+        {# The route's public note, shown to every rider in the map drawer. #}
+        <label for="{{ edit_form.note.vars.id }}">{{ 'moderate_routes.meta.rider_note'|trans }}</label>
+        {{ form_widget(edit_form.note) }}
+        {{ form_errors(edit_form.note) }}
+      </div>
+
       <button type="submit" class="btn-act btn-save">{{ 'moderate_routes.action.save'|trans }}</button>
     {{ form_end(edit_form) }}
   </div>

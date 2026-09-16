@@ -183,6 +183,51 @@ final class ImproveTest extends WebTestCase
         self::assertStringNotContainsString('secret pending note', (string) $client->getResponse()->getContent());
     }
 
+    /**
+     * A link that NAMED a target and still cannot be opened says why, rather
+     * than answering "pick a place to improve" to a rider who picked one.
+     *
+     * Owner-reported 2026-09-16: the route drawer's "+ add" on route 111's
+     * Gradient-limited row went to /improve?item=111&type=R and landed on the
+     * generic explainer. /improve refuses type=R by design (the route-id /
+     * item-id collision, 2026-07-07 review; docs/specs/edit-items/R-quality-rides.md),
+     * so the page now says routes are not edited here. The drawer no longer
+     * draws that link at all (drawer.js schemaRows).
+     */
+    public function testRouteLinkSaysRoutesAreNotEditedHere(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'r-reason');
+
+        $client->request('GET', '/improve?item=111&type=R&field=gradientLimited');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-improve-unbound][data-reason="route"]');
+        self::assertSelectorNotExists('form[name="improve"]');
+    }
+
+    public function testNamedButUnopenableTargetSaysSo(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'missing-reason');
+
+        $client->request('GET', '/improve?item=99999999&type=B');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-improve-unbound][data-reason="missing"]');
+    }
+
+    public function testBareImproveStillAsksForAPlace(): void
+    {
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'bare-reason');
+
+        $client->request('GET', '/improve');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-improve-unbound][data-reason="none"]');
+    }
+
     public function testRejectedItemIsTreatedAsUnbound(): void
     {
         $client = static::createClient();

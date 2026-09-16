@@ -14,6 +14,7 @@ use App\Catalog\RiderPseudonym;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Form;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class RouteModerateTest extends WebTestCase
@@ -294,5 +295,129 @@ final class RouteModerateTest extends WebTestCase
 
         $em->clear();
         self::assertSame('A quiet Condroz loop, resurfaced 2025.', $em->find(RecommendedRoute::class, $route->getId())->getAttributes()['note']);
+    }
+
+    /**
+     * The desk form carries every registry field, and a route that has none of
+     * them set renders each one empty rather than guessing a default.
+     *
+     * @see docs/specs/edit-items/R-quality-rides.md
+     */
+    public function testTheDeskFormCarriesEveryFieldAndOffersAnUnsetRouteEmptyOnes(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $route->setAttributes([]);
+        $em->flush();
+
+        $client->loginUser($this->curator());
+        $crawler = $client->request('GET', '/moderate/routes/'.$route->getId());
+        self::assertResponseIsSuccessful();
+        $form = $crawler->selectButton('Save changes')->form();
+
+        foreach (['rName', 'difficulty', 'season', 'dominantSurface', 'note', 'bikeTypes', 'gradientLimited', 'bestDirection'] as $field) {
+            self::assertTrue($form->has('route_edit['.$field.']'), $field.' is on the curator form');
+        }
+        self::assertSame($route->getName(), $form['route_edit[rName]']->getValue());
+        foreach (['difficulty', 'dominantSurface', 'gradientLimited', 'bestDirection'] as $select) {
+            self::assertSame('', $form['route_edit['.$select.']']->getValue(), $select.' shows empty, not a guessed default');
+        }
+        self::assertSame([], self::ticked($form, 'route_edit[season]'));
+        self::assertSame([], self::ticked($form, 'route_edit[bikeTypes]'));
+        self::assertSame('', $form['route_edit[note]']->getValue());
+    }
+
+    /**
+     * The values ticked in an expanded multi-select. DomCrawler hands such a
+     * group back as one field per box, not as a single multi-valued field.
+     *
+     * @return list<string>
+     */
+    private static function ticked(Form $form, string $name): array
+    {
+        $out = [];
+        foreach ($form[$name] as $box) {
+            if (null !== $box->getValue() && '' !== $box->getValue()) {
+                $out[] = (string) $box->getValue();
+            }
+        }
+
+        return $out;
+    }
+
+    /** @param list<string> $values */
+    private static function tick(Form $form, string $name, array $values): void
+    {
+        foreach ($form[$name] as $box) {
+            $options = array_values(array_filter($box->availableOptionValues(), static fn (string $v): bool => '' !== $v));
+            if (\in_array($options[0] ?? '', $values, true)) {
+                $box->tick();
+            } else {
+                $box->untick();
+            }
+        }
+    }
+
+    /** A curator sets the seven fields, and the form reads them back on reload. */
+    public function testCuratorSetsEveryFieldAndTheFormReadsThemBack(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+
+        $client->loginUser($this->curator());
+        $crawler = $client->request('GET', '/moderate/routes/'.$route->getId());
+        $form = $crawler->selectButton('Save changes')->form();
+        $form['route_edit[rName]'] = 'Condroz · the long way round';
+        $form['route_edit[difficulty]'] = 'Hard';
+        self::tick($form, 'route_edit[season]', ['Spring', 'Autumn']);
+        $form['route_edit[dominantSurface]'] = 'Asphalt';
+        self::tick($form, 'route_edit[bikeTypes]', ['Road', 'Gravel']);
+        $form['route_edit[gradientLimited]'] = '≤6%';
+        $form['route_edit[bestDirection]'] = 'Clockwise';
+        $form['route_edit[note]'] = 'Gentle all the way round.';
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        $em->clear();
+        $saved = $em->find(RecommendedRoute::class, $route->getId());
+        self::assertSame('Condroz · the long way round', $saved->getName());
+        // The canonical {score,label} shape a proposal stores, not the bare label.
+        self::assertEquals(['score' => 4, 'label' => 'Hard'], $saved->getAttributes()['difficulty']);
+        self::assertSame('≤6%', $saved->getAttributes()['gradientLimited']);
+        self::assertSame('Clockwise', $saved->getAttributes()['bestDirection']);
+
+        $crawler = $client->request('GET', '/moderate/routes/'.$route->getId());
+        $form = $crawler->selectButton('Save changes')->form();
+        self::assertSame('Condroz · the long way round', $form['route_edit[rName]']->getValue());
+        self::assertSame('Hard', $form['route_edit[difficulty]']->getValue());
+        self::assertSame(['Spring', 'Autumn'], self::ticked($form, 'route_edit[season]'));
+        self::assertSame('Asphalt', $form['route_edit[dominantSurface]']->getValue());
+        self::assertSame(['Road', 'Gravel'], self::ticked($form, 'route_edit[bikeTypes]'));
+        self::assertSame('≤6%', $form['route_edit[gradientLimited]']->getValue());
+        self::assertSame('Clockwise', $form['route_edit[bestDirection]']->getValue());
+        self::assertSame('Gentle all the way round.', $form['route_edit[note]']->getValue());
+    }
+
+    /** Clearing a field on the desk form unsets it rather than storing a blank. */
+    public function testCuratorClearsAFieldAndItIsUnsetNotBlank(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $route->setAttributes(['gradientLimited' => '≤9%']);
+        $em->flush();
+
+        $client->loginUser($this->curator());
+        $crawler = $client->request('GET', '/moderate/routes/'.$route->getId());
+        $form = $crawler->selectButton('Save changes')->form();
+        self::assertSame('≤9%', $form['route_edit[gradientLimited]']->getValue());
+        $form['route_edit[gradientLimited]'] = '';
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        $em->clear();
+        self::assertArrayNotHasKey('gradientLimited', $em->find(RecommendedRoute::class, $route->getId())->getAttributes());
     }
 }

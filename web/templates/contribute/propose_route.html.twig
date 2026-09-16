@@ -128,65 +128,7 @@
         {{ form_errors(form.gpx) }}
       </fieldset>
 
-      <fieldset>
-        <legend>{{ 'propose_route.details_label'|trans }}</legend>
-        <div class="field">
-          <label for="{{ form.rName.vars.id }}">{{ 'propose_route.name_label'|trans }}</label>
-          {{ form_widget(form.rName) }}
-          {{ form_errors(form.rName) }}
-        </div>
-        <div class="two">
-          <div class="field">
-            <label for="{{ form.difficulty.vars.id }}">{{ 'propose_route.difficulty_label'|trans }}</label>
-            {{ form_widget(form.difficulty) }}
-            {{ form_errors(form.difficulty) }}
-          </div>
-          <div class="field">
-            <label for="{{ form.dominantSurface.vars.id }}">{{ 'propose_route.surface_label'|trans }}</label>
-            {{ form_widget(form.dominantSurface) }}
-            {{ form_errors(form.dominantSurface) }}
-          </div>
-        </div>
-        <div class="field">
-          <label>{{ 'propose_route.season_label'|trans }}</label>
-          <div class="chip-list">
-            {% for child in form.season %}
-              <label class="chip-check">
-                {{ form_widget(child) }}
-                <span>{{ (child.vars.label ?? child.vars.value)|trans }}</span>
-              </label>
-            {% endfor %}
-          </div>
-          {{ form_errors(form.season) }}
-        </div>
-        <div class="field">
-          <label for="{{ form.note.vars.id }}">{{ 'propose_route.note_label'|trans }}</label>
-          {{ form_widget(form.note) }}
-          {{ form_errors(form.note) }}
-        </div>
-      </fieldset>
-
-      {{ include('contribute/_route_photo_field.html.twig', {form: form, help: 'propose_route.photos_help'}) }}
-
-      <fieldset>
-        <legend>{{ 'propose_route.bike_types_label'|trans }}</legend>
-        <div class="chip-list">
-          {% for child in form.bikeTypes %}
-            <label class="chip-check">
-              {{ form_widget(child) }}
-              <span>{{ (child.vars.label ?? child.vars.value)|trans }}</span>
-            </label>
-          {% endfor %}
-        </div>
-        <p class="hint">{{ 'propose_route.bike_types_hint'|trans }}</p>
-        {{ form_errors(form.bikeTypes) }}
-        <div class="field" style="margin-top:1.3rem">
-          <label for="{{ form.gradientLimited.vars.id }}">{{ 'propose_route.gradient_label'|trans }}</label>
-          {{ form_widget(form.gradientLimited) }}
-          <p class="hint">{{ 'propose_route.gradient_hint'|trans }}</p>
-          {{ form_errors(form.gradientLimited) }}
-        </div>
-      </fieldset>
+      {{ include('contribute/_route_metadata_fields.html.twig', {form: form, with_photos: true}) }}
 
       <button type="submit" class="btn btn-p">{{ 'propose_route.submit'|trans }}</button>
     {{ form_end(form) }}

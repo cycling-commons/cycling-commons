@@ -10,7 +10,9 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Append-only audit of curator route decisions. Routes live outside `item`, so they keep their own table.
+ * Append-only audit of what changed on a route: a curator's decision or desk
+ * edit, and an approved rider correction. Routes live outside `item`, so they
+ * keep their own table.
  *
  * @see docs/specs/route-domain.md §2.2
  *
@@ -39,19 +41,25 @@ class RouteChangeHistory
     #[ORM\Column(name: 'new_value', type: Types::JSON, nullable: true)]
     private mixed $newValue;
 
+    /** The rider whose word this is, which on an approved correction is its author, not its approver. */
     #[ORM\Column(name: 'changed_by', type: Types::BIGINT)]
     private int $changedBy;
+
+    /** The correction whose approval wrote this row; NULL for a curator's own desk edit. */
+    #[ORM\Column(name: 'suggestion_id', type: Types::BIGINT, nullable: true)]
+    private ?int $suggestionId;
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    public function __construct(int $routeId, string $field, mixed $oldValue, mixed $newValue, int $changedBy)
+    public function __construct(int $routeId, string $field, mixed $oldValue, mixed $newValue, int $changedBy, ?int $suggestionId = null)
     {
         $this->routeId = $routeId;
         $this->field = $field;
         $this->oldValue = $oldValue;
         $this->newValue = $newValue;
         $this->changedBy = $changedBy;
+        $this->suggestionId = $suggestionId;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -83,6 +91,11 @@ class RouteChangeHistory
     public function getChangedBy(): int
     {
         return $this->changedBy;
+    }
+
+    public function getSuggestionId(): ?int
+    {
+        return $this->suggestionId;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

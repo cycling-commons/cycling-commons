@@ -468,6 +468,17 @@ data-loss bug class this contract closes.
   live in `recommended_route`, a separate sequence from `item`, so resolving a
   R id against the item table would bind an unrelated item. Riders interact
   with routes via the community loop ([route-domain.md](route-domain.md)).
+- **The explainer says WHY when the link named a target.** "Pick a place to
+  improve" is no answer to a rider who picked one, and that is what a route's
+  "＋ add" row used to land on (owner-reported 2026-09-16, route 111's
+  Gradient-limited field). `renderUnbound($reason)` takes one of three:
+  `route` ("Routes are not edited here", `improve.unbound_route_*`) for a
+  `type=R` link, `missing` ("That place could not be opened",
+  `improve.unbound_missing_*`) for a link that named an `item` or a `ref` this
+  rider cannot open (gone, not served, not theirs, wrong type for the id), and
+  none for a bare `/improve`, where "pick a place" IS the answer. The reason
+  is on the section as `data-reason` so a test can assert which one ran. The
+  map no longer draws the R link at all (map-and-search.md §6.2).
 - The form is prefilled with the item's current `name` + attribute values;
   was → now is computed server-side at submit (§3.2), never trusted from the
   client.
@@ -647,6 +658,13 @@ queued for review and not yet persisted to a live tally").
 Wiring voting to a real tally means building it on the verification gate, and
 then `/vote` should stop calling this service at all.
 
+**The rider's reply is not submissions-only.** `messages_reply` also answers a
+curator's message on the `correction` channel, while that route correction is
+still `pending`, delivering it to the curator who wrote it and flipping no
+status (a correction has no needs-info state). The Routes desk card shows the
+latest rider answer and an **Answered** tag from the same `user_message`
+LATERAL join the submissions desk uses (route-domain.md §7.1).
+
 ## 3. Submission persistence
 
 ### 3.1 `submission` (entity `App\Catalog\Entity\Submission`)
@@ -655,7 +673,7 @@ then `/vote` should stop calling this service at all.
 |---|---|---|
 | `id` | bigint identity | receipt ref is `SUB-<id>` |
 | `type` | varchar(8), enum `SubmissionType` | `new` \| `edit` \| `hazard` \| `photo`; queue renders all four, intake produces `new`/`edit` only (§8) |
-| `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table) |
+| `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table: a rider asks for a route change through `route_suggestion`, route-domain.md §7.1) |
 | `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction |
 | `user_id` | bigint | submitter — deliberately **no FK** (survives account deletion as anonymous data; see §5.6) |
 | `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) |

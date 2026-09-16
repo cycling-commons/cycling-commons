@@ -243,7 +243,7 @@ final class CatalogFormRegistry
                     CatalogField::text('rideName', 'Ride name', placeholder: 'e.g. Spa · Sankt Vith', display: false),
                     CatalogField::select('difficulty', 'Difficulty', array_values(DifficultyVocabulary::LABELS)),
                     // Keyed `season` so CatalogProvider and map.js see it. All four selected is the retired 'Any'.
-                    CatalogField::multiselect('season', 'Best season', ['Spring', 'Summer', 'Autumn', 'Winter']),
+                    CatalogField::multiselect('season', 'Best season', RouteMetadata::seasons()),
                     CatalogField::select('dominantSurface', 'Dominant surface', SurfaceVocabulary::DECLARABLE),
                     CatalogField::textarea('note', 'Note for riders', 'What is this loop like?'),
                 ],
@@ -252,8 +252,8 @@ final class CatalogFormRegistry
                     CatalogField::select('scenic', 'Scenic rating (1–5)', ['1', '2', '3', '4', '5']),
                     CatalogField::select('friendliness', 'Cycling-friendliness (1–5)', ['1', '2', '3', '4', '5']),
                     CatalogField::multiselect('bikeTypes', 'Suitable bike types', BikeType::values()),
-                    CatalogField::select('gradientLimited', 'Gradient-limited?', ['No', '≤6%', '≤9%']),
-                    CatalogField::select('bestDirection', 'Best direction', ['Clockwise', 'Counter-clockwise', 'Either']),
+                    CatalogField::select('gradientLimited', 'Gradient-limited?', array_keys(RouteMetadata::GRADIENT_LABELS)),
+                    CatalogField::select('bestDirection', 'Best direction', RouteMetadata::DIRECTIONS),
                 ],
             ),
         };

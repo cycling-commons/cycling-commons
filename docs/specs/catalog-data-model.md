@@ -949,6 +949,9 @@ Harvest-side rules that shape what arrives (toolchain:
 - **Public and cacheable**: `ETag` (md5 of the exact encoded bytes — the
   provider encodes once), `Cache-Control: public, max-age=3600`
   (`setMaxAge(3600)` in `MapController::catalog()`), conditional-request 304s.
+  The hour is safe because freshness is region-bound, not document-bound
+  (§9.1): a rider's own region reaches them through a stamp and a small
+  per-region slice.
 - **States served: `unverified` + `verified` only** (via
   `ItemState::servedSqlTuple()`), for items and routes alike. Heat serves
   `source='auto'` rows only. Items carrying `condition = 'Not there anymore'`
@@ -975,6 +978,7 @@ Harvest-side rules that shape what arrives (toolchain:
 | `O` | `{osm, authority}` | the only source-split letter: an authority's rows are their own bucket, because they carry their publisher's citation and licence; every other source lands in `osm` |
 | `R` | routes list | includes raw `state` (map badges "proposed"), canonicalized `difficulty` and `bikeTypes` |
 | `refs` | `["node/123", …]` | source_ref of every served `source='osm'` item, so the client can drop the coverage-tile twin (osm-data-architecture.md §8) |
+| `stamps` | `{"<region id>": "<stamp>"}` | what each region looked like when these bytes were built, so a browser holding them knows which regions moved (§9.1); `"0"` is the region-less rows |
 | heat | **absent** | the ride heatmap (no letter) moved to its own endpoint on 2026-08-09 (below) |
 
 `E` (hazards) joined the payload on 2026-07-21 and `C` (public toilets) on
@@ -993,6 +997,68 @@ something most of them never turn on (frontend review 2026-08-09).
   legibly attributed.
 - Explicitly the **named interim until vector tiles** (catalog-data-model.md
   §11).
+
+### 9.1 Region-bound freshness (2026-09-16)
+
+`catalog.json` is **one worldwide document**: every layer holds every region's
+rows, because the client search index reaches the whole world ("Search
+everywhere", map-and-search.md §7.3) even though a scope never draws past a
+country. A cache key on that document can only ever be all-or-nothing, so the
+promptness a curator's decision needs and the bytes a rider pays are split
+across three resources:
+
+| Resource | Cache-Control | Carries | Moves when |
+|---|---|---|---|
+| `GET /map/catalog.json?v=<tag>` | `public, max-age=3600` + ETag | every region's rows, plus `stamps` | the build version, or a row belonging to no region (`CatalogProvider::versionTag()`) |
+| `GET /map/catalog/stamps.json` | `public, no-cache` + ETag | `{ "<region id>": "<stamp>" }`, `"0"` = the region-less rows | any served row of that region (`CatalogProvider::regionStamps()`) |
+| `GET /map/catalog/region/{rid}.json?v=<stamp>` | `public, max-age=3600` + ETag | one region's rows in the worldwide document's shapes, plus `rid` and `stamp` | the URL carries the stamp, so a decision mints a new URL |
+
+**The worldwide tag deliberately ignores what happens inside a region.** A tag
+that hashes the feeding tables' counts and latest change mints a new URL for
+every rider on every continent the moment a curator decides anything: ~1 MB
+gzipped (4.5 MB raw) redownloaded for a change in one region. The owner's
+instruction on 2026-09-16: "for every approval the currators make the token
+changes, then the token must be region bound".
+
+**How a rider stays current** (`web/assets/map/catalog-load.js`): the stamps
+document is fetched in parallel with the catalog on boot, so checking it costs
+the first paint nothing. Every region in the active scope whose live stamp
+differs from the one baked into the payload in hand is refetched on its own
+URL and **spliced** in, so the region's rows are dropped from each layer and the
+slice's rows take their place, which is why a retired place needs no tombstone.
+The same check runs on `cc:scopechange` and on tab return. Measured on the dev
+catalog: worldwide 1,015 kB gzipped, Wallonia's slice 93 kB, the stamps
+document 2.8 kB across 107 regions.
+
+**What a region stamp does not cover**, and rides the hour-long `max-age` + ETag
+instead: another region's rows (a scope never draws them; only a widened search
+reaches them), and the rows belonging to no region, which the worldwide tag
+carries because no scope draws those either.
+
+**Splice caveat, deliberate**: `refs` (tile dedupe) is a union, so a ref a region
+*stops* claiming stays listed until a whole document arrives. A pin missing from
+the coverage tiles is the harmless direction; a doubled pin is not.
+
+**Scale, measured and pending.** `regionStamps()` aggregates every served row,
+so it is a sequential scan of `item` that grows with the catalog: 2.5 ms over
+4,767 dev rows, and it runs twice per map load (the page's `?v=` tag, then
+`stamps.json`, which is uncached by design). Two remedies, neither built,
+**in this order**: a partial covering index
+`(region_id, updated_at) WHERE state IN ('unverified','verified')` turns the
+scan into an index-only GroupAggregate and needs nothing else; failing that,
+`proxy_cache` on the frontends for a few seconds of `stamps.json`. The
+counter-kept-by-triggers answer below is the last resort here, not the first:
+every write to `item` already pays a statement-level trigger for the coverage
+counts, and that is the meter that ran a curator's one-tap confirm to 5.5 s.
+
+**A decision must move the row's timestamp.** `regionStamps()` reads
+`count(*)` + `max(updated_at)` per region, so a moderation decision that changes
+only `state` is invisible unless the entity stamps itself: `Item::setState()`
+and `RecommendedRoute::setState()` both call `touch()`. The row count cannot
+stand in for it, because an approved route already exists as `submitted`. This
+is the 2026-09-16 route-111 report: approved at 19:52, absent from the rider's
+map until the hour ran out. The second-precision limit recorded below applies to
+a stamp as much as to the tag.
 
 ### No server-side memo, and why (decided 2026-08-09)
 

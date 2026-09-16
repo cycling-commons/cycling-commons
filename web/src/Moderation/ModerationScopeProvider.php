@@ -71,6 +71,32 @@ final class ModerationScopeProvider
     }
 
     /**
+     * Every region id this scope covers, or null when it covers all of them.
+     * The same rule as {@see self::allowsRegion()}, answered for the whole map
+     * at once so a page can decide per region without a query each time.
+     *
+     * @return list<int>|null null = global
+     */
+    public function allowedRegionIds(ModerationScope $scope): ?array
+    {
+        if ($scope->global) {
+            return null;
+        }
+        $ids = $scope->regionIds;
+        if ([] !== $scope->countryCodes) {
+            /** @var list<int|string> $byCountry */
+            $byCountry = $this->db->fetchFirstColumn(
+                'SELECT id FROM region WHERE UPPER(country_code) IN (:cc)',
+                ['cc' => $scope->countryCodes],
+                ['cc' => ArrayParameterType::STRING],
+            );
+            $ids = [...$ids, ...array_map(intval(...), $byCountry)];
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
      * Display names of assigned areas. [] = global.
      *
      * @return list<string>

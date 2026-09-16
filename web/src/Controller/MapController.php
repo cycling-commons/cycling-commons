@@ -88,6 +88,9 @@ final class MapController extends AbstractController
         );
         $params = [
             'field_schema' => $schema->all(),
+            // The fields a rider may ask to have changed on a route, for the
+            // drawer's correction box (docs/specs/route-domain.md §7.1).
+            'route_fields' => $schema->routeCorrectionFields(),
             // The one category icon set (ItemType::iconSet()); catalog.js and icons.js read it.
             'type_icons' => ItemType::iconSet(),
             // The one kind glyph set (KindIcons::set()); icons.js mints tile icons from it.
@@ -154,6 +157,11 @@ final class MapController extends AbstractController
             }
             // Do not re-derive with is_granted(): setup-pending curators hold the role without this payload.
             $params['pending_is_curator'] = true;
+            // The regions this curator moderates, so a route drawer can offer
+            // the desk shortcut only where they may act (route-domain.md §7.1).
+            // Per viewer, on this page: never in the publicly cached catalog
+            // document (catalog-data-model.md §9.1). null = every region.
+            $params['mod_region_ids'] = $scopeProvider->allowedRegionIds($scope);
             $params['gone'] = $catalogProvider->goneForMap($scope);
         } elseif ($user instanceof User) {
             // Rider's own undecided submissions; no curator chrome.
@@ -406,6 +414,9 @@ final class MapController extends AbstractController
             'markParts' => 'd_mark_parts', 'send' => 'd_send', 'loginRate' => 'd_login_rate',
             'ridesProgress' => 'd_rides_progress', 'voteOne' => 'd_vote_one', 'voteMany' => 'd_vote_many',
             'youRode' => 'd_you_rode', 'votedSeason' => 'd_voted_season',
+            'reasonMetadata' => 'd_reason_metadata', 'whichDetail' => 'd_which_detail',
+            'shouldBe' => 'd_should_be', 'notSet' => 'd_not_set', 'pickDetail' => 'd_pick_detail',
+            'curatorNote' => 'd_curator_note', 'editOnDesk' => 'd_edit_on_desk',
             'reasonBroken' => 'd_reason_broken', 'reasonPrivacy' => 'd_reason_privacy',
             'reasonDuplicate' => 'd_reason_duplicate', 'reasonNotRideable' => 'd_reason_notrideable',
             'reasonOther' => 'd_reason_other',
@@ -590,6 +601,57 @@ final class MapController extends AbstractController
         $closures->sweepOpportunistically();
 
         $json = $catalog->json();
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
+        $response->setMaxAge(3600);
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    /**
+     * One freshness stamp per region, so a rider's browser can tell whether
+     * the regions it is showing moved since its cached catalog was built.
+     *
+     * Always revalidated (`no-cache` + ETag): it is the one thing that has to
+     * be current on a plain reload, and it is two kilobytes, so a 304 is the
+     * usual answer. Everything expensive stays behind the hour-long max-age.
+     *
+     * @see docs/specs/catalog-data-model.md §9.1
+     */
+    #[Route('/map/catalog/stamps.json', name: 'map_catalog_stamps', methods: ['GET'])]
+    public function catalogStamps(Request $request, CatalogProvider $catalog): Response
+    {
+        $json = json_encode($catalog->regionStamps(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES);
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
+        $response->setEtag(md5($json));
+        $response->setPublic();
+        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
+        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
+        $response->headers->addCacheControlDirective('no-cache');
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    /**
+     * One region's slice of the catalog, in the worldwide document's shapes.
+     *
+     * The map splices it over the copy it already holds, so a curator's
+     * approval reaches the riders of that region at once without anyone
+     * redownloading the whole document, and without touching the cache of a
+     * rider whose scope is somewhere else. Cacheable for an hour because the
+     * URL carries the region's stamp: a new decision mints a new URL.
+     *
+     * @see docs/specs/catalog-data-model.md §9.1
+     */
+    #[Route('/map/catalog/region/{rid}.json', name: 'map_catalog_region', requirements: ['rid' => '\d+'], methods: ['GET'])]
+    public function catalogRegion(int $rid, Request $request, CatalogProvider $catalog): Response
+    {
+        $json = $catalog->json($rid);
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();

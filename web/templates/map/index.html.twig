@@ -712,7 +712,11 @@ window.CC_VENDOR = {{ {
      render without any decide controls. The flag comes from the CONTROLLER,
      never is_granted() here: a setup-pending curator holds the role but not
      the capability (the 2FA policy applies in exactly one place). #}
-  {% if pending_is_curator|default(false) %}window.CC_IS_CURATOR = true;{% endif %}
+  {% if pending_is_curator|default(false) %}window.CC_IS_CURATOR = true;
+  {# The regions this curator moderates (null = all): the route drawer offers
+     the desk shortcut only where they may act (route-domain.md §7.1). Per
+     viewer, like the pending rows, never in the cached catalog. #}
+  window.CC_MOD_REGIONS = {{ mod_region_ids|default(null)|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};{% endif %}
   {# A route waiting for review that `?route=` names, for a curator who may
      moderate it or the rider who proposed it (MapController,
      docs/specs/map-and-search.md §8). Never part of the catalog payload. #}
@@ -820,6 +824,9 @@ window.CC_VENDOR = {{ {
   window.CC_VOTING_LIVE = {{ voting_live|default(false) ? 'true' : 'false' }};
   window.CC_MAP_SRC = {{ asset('map/map.js')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_FIELD_SCHEMA = {{ field_schema|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# The route fields the drawer's correction box offers (route-domain.md §7.1).
+     Public vocabulary, the same for every reader: nothing per viewer here. #}
+  window.CC_ROUTE_FIELDS = {{ route_fields|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# The category icon set, letter → {glyph, svg}: ItemType::iconSet(), the only definition. #}
   window.CC_TYPE_ICONS = {{ type_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# The kind glyph set, letter → kind → drawing: KindIcons::set(), the only definition. #}

@@ -94,7 +94,9 @@
   // Before the fetch: the basemap must not queue behind the catalog.
   buildMap();
 
-  // Shared by the boot fetch and the tab-return refresh.
+  // Shared by the boot fetch, the region patch and the tab-return refresh.
+  // Never mutates `d`: the raw payload is kept and re-applied every time a
+  // region is patched into it, so a second pass must not double-append.
   function applyCatalog(d) {
     window.CC_SURFACE = { segments: d.A };
     window.CC_CLIMBS = d.N;
@@ -116,26 +118,122 @@
     // payload rather than held here, so adding a provider is a row in a table
     // and never a deploy (docs/specs/data-provider-hierarchy.md §7).
     window.CC_PROVIDERS = d.providers || {};
-    // Stays merge: tag the authority's features and append them once, so
-    // the drawer can credit their publisher instead of OSM.
-    var O = window.CC_STAYS_OSM, P = window.CC_STAYS_AUTHORITY;
-    if (O && P && !O._authority) {
+    // Stays merge: tag the authority's features and hand the map one list, so
+    // the drawer can credit their publisher instead of OSM. A fresh collection
+    // rather than an append into `d.O.osm`, because `d` is re-applied after
+    // every region patch and an append would grow the list each time.
+    var O = d.O && d.O.osm, P = d.O && d.O.authority;
+    if (O && P) {
       P.features.forEach(function (f) { f.properties.src = 'authority'; });
-      O.features = O.features.concat(P.features);
-      O._authority = 1;
+      window.CC_STAYS_OSM = { type: 'FeatureCollection', features: O.features.concat(P.features) };
     }
   }
 
-  var catalogEtag = null;
+  /* Region-bound freshness (docs/specs/catalog-data-model.md §9.1).
+
+     The worldwide document is cached for an hour and its ?v= tag ignores what
+     happens inside a region, so a curator's decision costs no rider on another
+     continent anything. What reaches a rider at once is their OWN region:
+     /map/catalog/stamps.json is revalidated on every boot, and any region in
+     the active scope whose stamp differs from the one baked into the cached
+     payload is refetched on its own small URL and spliced in. A rider scoped
+     somewhere else asks for nothing but the stamps. */
+  var rawCatalog = null;
+
+  function activeRegionIds() {
+    var s = window.CCScope && window.CCScope.get ? window.CCScope.get() : null;
+    return (s && s.regionIds) ? s.regionIds : [];
+  }
+
+  // Replace every row of one region, in each shape the payload uses. Removal
+  // comes free: the region's old rows are dropped before the new ones land, so
+  // a retired place leaves without needing a tombstone.
+  function spliceRegion(d, rid, slice) {
+    var keep = function (list) { return list.filter(function (x) { return x && x.rid !== rid; }); };
+    var keepF = function (fc) {
+      return fc.features.filter(function (f) { return !f.properties || f.properties.rid !== rid; });
+    };
+    d.A = keep(d.A).concat(slice.A || []);
+    d.N = keep(d.N).concat(slice.N || []);
+    d.R = keep(d.R).concat(slice.R || []);
+    ['B', 'C', 'D', 'E', 'F', 'G', 'P', 'Q'].forEach(function (L) {
+      if (!d[L] || !slice[L]) { return; }
+      d[L] = { type: 'FeatureCollection', features: keepF(d[L]).concat(slice[L].features || []) };
+    });
+    ['osm', 'authority'].forEach(function (k) {
+      if (!d.O || !d.O[k] || !slice.O || !slice.O[k]) { return; }
+      d.O[k] = { type: 'FeatureCollection', features: keepF(d.O[k]).concat(slice.O[k].features || []) };
+    });
+    // Tile dedupe: a ref this region now claims must hide its coverage twin at
+    // once. A ref the region STOPPED claiming stays in the list until the hour
+    // brings a whole document. One pin missing from the tiles is the harmless
+    // direction, a doubled pin is not.
+    var refs = d.refs || [];
+    (slice.refs || []).forEach(function (r) { if (refs.indexOf(r) < 0) { refs.push(r); } });
+    d.refs = refs;
+    d.providers = slice.providers || d.providers;
+    // A region emptied by a takedown serves no stamp at all, and neither does
+    // the stamps document; recording that as "" instead of absent would make
+    // the pair disagree forever and refetch the empty slice on every boot.
+    var stamps = d.stamps || (d.stamps = {});
+    if (slice.stamp) { stamps[String(rid)] = slice.stamp; } else { delete stamps[String(rid)]; }
+  }
+
+  function fetchStamps() {
+    return fetch('/map/catalog/stamps.json', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
+  // Started alongside the catalog, not after it: on a cold load the stamps are
+  // already in hand when the big document lands, so checking them costs the
+  // first paint nothing.
+  var bootStamps = fetchStamps();
+
+  /* Patch every region of the active scope whose stamp moved. Resolves to true
+     when the payload in hand changed. `stamps` is the boot pair on the first
+     call and a fresh read afterwards. */
+  function refreshRegions(stamps) {
+    if (!rawCatalog) { return Promise.resolve(false); }
+    return stamps.then(function (live) {
+      if (!live) { return false; }
+      // What the payload in hand holds for a region: the stamp it was built
+      // with, or the one the last splice left there.
+      var held = rawCatalog.stamps || {};
+      var stale = activeRegionIds().filter(function (rid) { return live[String(rid)] !== held[String(rid)]; });
+      if (!stale.length) { return false; }
+      return Promise.all(stale.map(function (rid) {
+        var k = String(rid);
+        return fetch('/map/catalog/region/' + rid + '.json?v=' + encodeURIComponent(live[k] || '0'),
+          { headers: { Accept: 'application/json' } })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (slice) { if (slice) { spliceRegion(rawCatalog, rid, slice); } });
+      })).then(function () { return true; });
+    }).catch(function () { return false; });
+  }
+
+  // A region that moved is patched in before the first paint, so an approval in
+  // the rider's own region is simply there on a plain reload.
+  function repaintAfter(stamps) {
+    return refreshRegions(stamps).then(function (moved) {
+      if (!moved) { return false; }
+      applyCatalog(rawCatalog);
+      if (window.__ccApplyCatalog) { window.__ccApplyCatalog(); }
+      return true;
+    });
+  }
+
   fetch(window.CC_CATALOG_URL)
     .then(function (r) {
       if (!r.ok) { throw new Error('catalog.json HTTP ' + r.status); }
-      catalogEtag = r.headers.get('ETag');
       return r.json();
     })
     .then(function (d) {
-      applyCatalog(d);
-      window.CC_CATALOG_STATE = 'ok';
+      rawCatalog = d;
+      return refreshRegions(bootStamps).then(function () {
+        applyCatalog(rawCatalog);
+        window.CC_CATALOG_STATE = 'ok';
+      });
     })
     .catch(function (e) {
       window.CC_CATALOG_STATE = 'FAILED: ' + (e && e.message ? e.message : e);
@@ -143,28 +241,20 @@
     })
     .then(boot);
 
-  // Tab-return: revalidate against the boot ETag so an already-open map picks up approvals.
+  // A new scope draws regions this tab may never have checked.
+  window.addEventListener('cc:scopechange', function () { repaintAfter(fetchStamps()); });
+
+  /* Tab-return: a moderator's loop is approve-in-the-desk-tab, switch back to
+     the open map, and that tab asks for nothing on its own. It reads the
+     stamps document, two kilobytes, and pulls only the regions on screen
+     whose stamp moved, so watching one approval never costs a continent. */
   var lastCheck = 0;
   function recheckCatalog() {
-    if (document.visibilityState !== 'visible' || !catalogEtag) { return; }
+    if (document.visibilityState !== 'visible' || !rawCatalog) { return; }
     var now = Date.now();
     if (now - lastCheck < 15000) { return; }
     lastCheck = now;
-    fetch(window.CC_CATALOG_URL, {
-      cache: 'no-store',
-      headers: { 'If-None-Match': catalogEtag },
-    })
-      .then(function (r) {
-        if (r.status === 304 || !r.ok) { return null; }
-        catalogEtag = r.headers.get('ETag');
-        return r.json();
-      })
-      .then(function (d) {
-        if (!d) { return; }
-        applyCatalog(d);
-        if (window.__ccApplyCatalog) { window.__ccApplyCatalog(); }
-      })
-      .catch(function () { /* transient — the next tab return retries */ });
+    repaintAfter(fetchStamps());
   }
   document.addEventListener('visibilitychange', recheckCatalog);
   window.addEventListener('focus', recheckCatalog);
