@@ -14,6 +14,24 @@
   /* Done/Dismiss are POSTs, so each is its own <form> inside the action row —
      without this they would each claim a block-level line of their own. */
   .q-acts > form{display:contents}
+
+  /* Active routes (route-domain.md §5.2): a reach list, not a queue, so the
+     rows carry no action row and the whole title is the way in. */
+  .q-item--active .q-head{align-items:center}
+  .q-item--active .q-title{font-size:.95rem}
+  .q-item--active .q-title a{color:inherit;text-decoration:none}
+  .q-item--active .q-title a:hover,
+  .q-item--active .q-title a:focus-visible{color:var(--trail);text-decoration:underline;text-underline-offset:3px}
+  .q-tag--state{background:rgba(20,22,14,.07);color:#4a4d40}
+  .active-head{font-size:.88rem;color:#595c4d;margin:.2rem 0 .8rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+  .q-active-gaps{font-size:.86rem;color:#595c4d;margin:.5rem 0 0;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+  .q-active-full{font-size:.86rem;color:#6b6e5c;margin:.5rem 0 0}
+  .q-active-gaps .cc-chip{display:inline-block;padding:.15rem .5rem;border-radius:999px;
+    border:1px solid rgba(20,22,14,.2);background:var(--paper);font-size:.78rem;color:#4a4d40}
+  .active-regions{list-style:none;padding:0;margin:.2rem 0 0;display:flex;flex-wrap:wrap;gap:.5rem .9rem}
+  .active-regions a{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35)}
+  .active-regions a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+  .active-regions-n{font-family:var(--mono);font-size:.72rem;color:#8a8674}
 </style>
 {% endblock %}
 
@@ -34,8 +52,9 @@
     {# Explicit Apply button, no onchange auto-submit (WCAG 3.2.2: changing a
        setting must not automatically change context). #}
     <label>{{ 'moderate_routes.filter.region'|trans }}
-      <select name="region">
-        <option value="">{{ 'moderate_routes.filter.all_regions'|trans }}</option>
+      {# autocomplete=off: a reload shows the region applied, not the last one picked. #}
+      <select name="region" autocomplete="off">
+        <option value="">{{ (scope_global ? 'moderate_routes.filter.all_regions' : 'moderate_routes.filter.all_my_regions')|trans }}</option>
         {% for r in regions %}<option value="{{ r.id }}"{{ filter_region == r.id ? ' selected' }}>{{ cc_region_label(r.slug, r.name) }}</option>{% endfor %}
       </select>
     </label>
@@ -77,6 +96,57 @@
     {% endfor %}
   </div>
   {% include 'partials/_pager.html.twig' with {pager: suggestion_pager, route: 'moderate_routes', params: pager_params|merge({page: pager.page}), key: 'spage'} %}
+  {% endif %}
+
+  {# ── Active routes: live routes, to reach one without the map ──
+     Not a queue: nothing here waits for a decision. One group per region,
+     because the cap is per region and keeps each group short
+     (route-domain.md §5.2). Each group's counter IS its list's length, from
+     the same "active" definition the cap counts by. #}
+  {% set active_total = 0 %}
+  {% for g in active_groups %}{% set active_total = active_total + g.routes|length %}{% endfor %}
+  <h2 class="sec-band sec-band--active">
+    {{ 'moderate_routes.active.title'|trans }}
+    {%- if not active_pick %} <span class="sec-count">{{ active_total }}</span>{% endif %}
+  </h2>
+  {% if active_pick %}
+    {# A global curator: pick a region rather than be handed the world. #}
+    {% if active_regions is empty %}
+      <p class="sec-empty">{{ 'moderate_routes.active.none_anywhere'|trans }}</p>
+    {% else %}
+      <p class="sec-empty">{{ 'moderate_routes.active.pick_region'|trans }}</p>
+      <ul class="active-regions">
+        {% for r in active_regions %}
+          <li><a href="{{ path('moderate_routes', {region: r.id}) }}">{{ cc_region_label(r.slug, r.name) }}</a>
+            <span class="active-regions-n">{{ 'moderate_routes.active.n_active'|trans({'%n%': r.active}) }}</span></li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% else %}
+    {% for g in active_groups %}
+      {% set label = cc_region_label(g.region.slug, g.region.name) %}
+      {% if g.routes is empty %}
+        <p class="sec-empty">{{ 'moderate_routes.active.empty'|trans({'%region%': label}) }}</p>
+      {% else %}
+        <p class="active-head">
+          {{ 'moderate_routes.active.in_region'|trans({'%region%': label}) }}
+          {% include 'moderate_routes/_region_cap.html.twig' with {
+            active: g.routes|length, cap: region_cap,
+            region_label: label, cap_id: 'rcap-active-' ~ g.region.id
+          } %}
+        </p>
+        <div class="q-list active-list">
+          {% for a in g.routes %}
+            {% include 'moderate_routes/_active_item.html.twig' with {a: a} %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+    {% if active_empty is not empty %}
+      <p class="sec-empty">{{ 'moderate_routes.active.empty_many'|trans({'%regions%': active_empty|map(r => cc_region_label(r.slug, r.name))|join(', ')}) }}</p>
+    {% elseif active_groups is empty %}
+      <p class="sec-empty">{{ 'moderate_routes.active.none_anywhere'|trans }}</p>
+    {% endif %}
   {% endif %}
 </div>
 

@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\ItemState;
+use App\Catalog\RouteMetadata;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaStorage;
 use App\Settings\SettingsProviderInterface;
@@ -74,6 +75,122 @@ final class RouteQueue
     public function regionCap(): int
     {
         return $this->settings->get(SettingsRegistry::ROUTE_REGION_ACTIVE_CAP);
+    }
+
+    /**
+     * Every active route in one region, for the desk's reach list: a curator
+     * opens any of them without finding it on the map first
+     * (docs/specs/route-domain.md §5.2).
+     *
+     * "Active" is `ItemState::SERVED`, the same definition the cap counts
+     * (`RouteModerationService::activeCountForRegion()`), so the list and the
+     * "N / cap active" counter cannot disagree: the counter IS this list's
+     * length. Bounded by the cap, so it takes no pager.
+     *
+     * Ordered by name: this is a lookup list, not a queue of work, and a
+     * curator reaching for a route they already have in mind scans names.
+     *
+     * @return list<array{id:int, name:string, state:string, km:float, ascent:?int, missing:list<array{key:string, label:string}>}>
+     */
+    public function activeInRegion(ModerationScope $scope, ?int $regionId): array
+    {
+        $where = 'r.state IN '.ItemState::servedSqlTuple();
+        $params = [];
+        $types = [];
+        if (null === $regionId) {
+            $where .= ' AND r.region_id IS NULL';
+        } else {
+            $where .= ' AND r.region_id = :region';
+            $params['region'] = $regionId;
+        }
+        $frag = $scope->sqlFragment('r');
+        if ('' !== $frag['sql']) {
+            $where .= ' AND '.$frag['sql'];
+            $params += $frag['params'];
+            $types += $frag['types'];
+        }
+
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT r.id, r.name, r.state, r.distance_m, r.ascent_m, r.attributes
+             FROM recommended_route r
+             WHERE {$where}
+             ORDER BY r.name ASC, r.id ASC",
+            $params,
+            $types,
+        );
+
+        return array_map(static function (array $row): array {
+            /** @var array<string, mixed> $attrs */
+            $attrs = json_decode((string) $row['attributes'], true) ?: [];
+
+            return [
+                'id' => (int) $row['id'],
+                'name' => (string) $row['name'],
+                'state' => (string) $row['state'],
+                'km' => round(((int) $row['distance_m']) / 1000, 1),
+                'ascent' => null === $row['ascent_m'] ? null : (int) $row['ascent_m'],
+                // The registry fields nobody has filled in: the likeliest
+                // reason to open this route, each under the label every other
+                // surface shows it by (RouteMetadata::LABELS), never a second
+                // set of words for the same field.
+                'missing' => array_map(
+                    static fn (string $f): array => ['key' => $f, 'label' => RouteMetadata::LABELS[$f]],
+                    RouteMetadata::unsetFields($attrs),
+                ),
+            ];
+        }, $rows);
+    }
+
+    /**
+     * One region the curator may moderate, by id, so the desk can name a
+     * region that holds nothing yet: "no routes are live in X" needs X even
+     * when X has no rows to join against. Null when the region does not exist
+     * or falls outside the curator's areas, which the desk reads as no region
+     * in hand rather than naming a region they may not act in.
+     *
+     * @return array{id:int, name:string, slug:string}|null
+     */
+    public function regionInScope(ModerationScope $scope, int $regionId): ?array
+    {
+        // The scope predicate reads `<alias>.region_id`, so it is applied to a
+        // row shaped that way rather than to `region.id` directly.
+        $frag = $scope->sqlFragment('sc');
+        $sql = 'SELECT reg.id, reg.name, reg.slug
+                FROM region reg
+                JOIN (SELECT CAST(:id AS BIGINT) AS region_id) sc ON sc.region_id = reg.id'
+            .('' !== $frag['sql'] ? ' WHERE '.$frag['sql'] : '');
+        $row = $this->db->fetchAssociative(
+            $sql,
+            ['id' => $regionId] + $frag['params'],
+            ['id' => \Doctrine\DBAL\ParameterType::INTEGER] + $frag['types'],
+        );
+
+        return false === $row ? null : ['id' => (int) $row['id'], 'name' => (string) $row['name'], 'slug' => (string) $row['slug']];
+    }
+
+    /**
+     * Regions in scope that hold at least one active route, with the count,
+     * for the active list's own region chooser. {@see self::regions()} is the
+     * desk's filter: every region a curator's areas cover.
+     *
+     * @return list<array{id:int, name:string, slug:string, active:int}>
+     */
+    public function activeRegions(ModerationScope $scope): array
+    {
+        $frag = $scope->sqlFragment('r');
+        $sql = 'SELECT reg.id, reg.name, reg.slug, COUNT(*) AS active
+                FROM recommended_route r
+                JOIN region reg ON reg.id = r.region_id
+                WHERE r.state IN '.ItemState::servedSqlTuple()
+            .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '')
+            .' GROUP BY reg.id, reg.name, reg.slug ORDER BY reg.name';
+
+        return array_map(static fn (array $row): array => [
+            'id' => (int) $row['id'],
+            'name' => (string) $row['name'],
+            'slug' => (string) $row['slug'],
+            'active' => (int) $row['active'],
+        ], $this->db->fetchAllAssociative($sql, $frag['params'], $frag['types']));
     }
 
     /** @return list<array<string, mixed>> */
@@ -269,16 +386,36 @@ final class RouteQueue
         return (int) $this->db->fetchOne($sql, $frag['params'], $frag['types']);
     }
 
-    /** @return list<array{id:int,name:string,slug:string}> */
+    /**
+     * The regions the desk's region filter offers. A curator with areas gets
+     * every region those areas cover, whether or not anything waits there, so
+     * the list is their whole patch. A global curator gets the regions where
+     * the desk has something to show (a proposal or a correction waiting, or a
+     * live route), because every region on earth is no choice at all.
+     *
+     * @return list<array{id:int,name:string,slug:string}>
+     */
     public function regions(ModerationScope $scope): array
     {
-        $frag = $scope->sqlFragment('r');
-        $sql = "SELECT DISTINCT reg.id, reg.name, reg.slug FROM recommended_route r
-                JOIN region reg ON reg.id = r.region_id
-                WHERE r.state = 'submitted'"
-            .('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '')
-            .' ORDER BY reg.name';
+        if ($scope->global) {
+            $sql = "SELECT reg.id, reg.name, reg.slug FROM region reg
+                    WHERE EXISTS (
+                        SELECT 1 FROM recommended_route r
+                        WHERE r.region_id = reg.id
+                          AND (r.state = 'submitted' OR r.state IN ".ItemState::servedSqlTuple()."
+                               OR EXISTS (SELECT 1 FROM route_suggestion s WHERE s.route_id = r.id AND s.status = 'pending')))
+                    ORDER BY reg.name";
+            $rows = $this->db->fetchAllAssociative($sql);
+        } else {
+            // The scope predicate reads `<alias>.region_id`, so region rows are
+            // shaped that way before it is applied.
+            $frag = $scope->sqlFragment('sc');
+            $sql = 'SELECT sc.region_id AS id, sc.name, sc.slug
+                    FROM (SELECT id AS region_id, name, slug FROM region) sc
+                    WHERE '.$frag['sql'].' ORDER BY sc.name';
+            $rows = $this->db->fetchAllAssociative($sql, $frag['params'], $frag['types']);
+        }
 
-        return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'name' => (string) $row['name'], 'slug' => (string) $row['slug']], $this->db->fetchAllAssociative($sql, $frag['params'], $frag['types']));
+        return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'name' => (string) $row['name'], 'slug' => (string) $row['slug']], $rows);
     }
 }

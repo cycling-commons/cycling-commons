@@ -3198,6 +3198,19 @@ moderate_routes:
   meta_title: 'Moderate routes'
   meta_description: 'Review pending route proposals and suggestions before they publish.'
   section_proposals: 'New route proposals'
+  active:
+    title: 'Active routes'
+    in_region: 'Live routes in %region%.'
+    pick_region: 'Pick a region to see the routes that are live there.'
+    n_active: '%n% active'
+    empty: 'No routes are live in %region% yet.'
+    none_anywhere: 'No routes are live in your areas yet.'
+    empty_many: 'No routes are live yet in %regions%.'
+    missing: 'Still blank:'
+    complete: 'Every detail is filled in.'
+    ascent: '%m% m ascent'
+    state_unverified: 'Proposed'
+    state_verified: 'Verified'
   map_placeholder: 'Track preview'
   map_open: 'Open this route on the map'
   region_none: 'No region'
@@ -3211,6 +3224,7 @@ moderate_routes:
   filter:
     region: 'Region'
     all_regions: 'All regions'
+    all_my_regions: 'All my regions'
   meta:
     state: 'State'
     proposed_by: 'Proposed by'

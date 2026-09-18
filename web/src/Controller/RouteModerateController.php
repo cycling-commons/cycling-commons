@@ -78,12 +78,48 @@ final class RouteModerateController extends AbstractController
 
         $rows = $this->queue->pending($scope, $regionId, $pager['page'], $pager['perPage']);
 
+        $activeRegions = $this->queue->activeRegions($scope);
+        $filterRegions = $this->queue->regions($scope);
+        // The live routes the desk shows, one group per region (route-domain.md
+        // §5.2). A region applied in the filter is shown alone, empty or not.
+        // With none applied, a curator with areas sees every region of theirs
+        // that holds live routes, since the cap keeps each short; the regions
+        // with none are named in one line. Only a global curator picks a
+        // region first, rather than being handed every region on earth.
+        $activeGroups = [];
+        $activeEmpty = [];
+        $activePick = false;
+        if (null !== $regionId) {
+            $region = $this->queue->regionInScope($scope, $regionId);
+            if (null !== $region) {
+                $activeGroups[] = ['region' => $region, 'routes' => $this->queue->activeInRegion($scope, $region['id'])];
+            }
+        } elseif ($scope->global) {
+            $activePick = true;
+        } else {
+            $live = array_column($activeRegions, null, 'id');
+            foreach ($filterRegions as $region) {
+                if (isset($live[$region['id']])) {
+                    $activeGroups[] = ['region' => $region, 'routes' => $this->queue->activeInRegion($scope, $region['id'])];
+                } else {
+                    $activeEmpty[] = $region;
+                }
+            }
+        }
+
         return $this->render('moderate_routes/index.html.twig', [
             'nav_active' => 'moderate_routes',
             'routes' => $rows,
             'suggestions' => $this->queue->pendingSuggestions($scope, $regionId, $suggestionPager['page'], $suggestionPager['perPage']),
             'total' => $this->queue->total($scope),
-            'regions' => $this->queue->regions($scope),
+            'regions' => $filterRegions,
+            // "All regions" only when it is true; a curator with areas sees "All my regions".
+            'scope_global' => $scope->global,
+            'active_groups' => $activeGroups,
+            'active_empty' => $activeEmpty,
+            'active_pick' => $activePick,
+            'active_regions' => $activeRegions,
+            'region_cap' => $this->queue->regionCap(),
             'filter_region' => $regionId,
             'pager' => $pager,
             'suggestion_pager' => $suggestionPager,

@@ -273,6 +273,13 @@ directly (`App\Moderation\RouteQueue`).
 
 - **Queue list**: pending proposals and pending corrections, **oldest first**,
   optional per-region filter, restricted to the curator's moderation scope.
+  The filter offers a curator with areas **every region those areas cover**,
+  whether or not anything waits there, and its empty choice reads "All my
+  regions". A global curator's filter offers the regions where the desk has
+  something to show (a proposal or a correction waiting, or a live route),
+  and its empty choice reads "All regions" (`RouteQueue::regions()`).
+  A third section lists the chosen region's **active routes** (§5.2), which is
+  reach rather than work: nothing there waits for a decision.
   Each proposal row names its proposer and its region and carries the region's
   `activeInRegion` count vs the cap (§5.1).
   The shell's ROUTES tab badge counts proposals **plus** pending corrections,
@@ -355,6 +362,63 @@ words, in five locales (`moderate_routes.region_cap_help`, or
 in Wallonia: 11 of at most 30. Approving adds one; once there are 30, a route
 must be retired first." Approving at the cap is refused with "This region is
 already at its active-route cap."
+
+**Approve is the only gate, and the only one needed.** It is the single
+transition into a served state for a route: a proposal enters as `submitted`
+(`RouteProposalService`), and the other write inside SERVED, unverified to
+verified on the ride threshold (`RouteCommunityService::recordRide()`), moves
+no count because both states are active. So a region cannot pass the cap by
+any other path.
+
+**`region.active_cap` is declared but read by nothing.** The column exists
+(`Version20260719140000`) with an entity getter and setter, and this section
+has described it as a per-region override, but both `regionCap()` readers
+(`RouteModerationService`, `RouteQueue`) return the global setting alone.
+Every region therefore shares one number today. Lowering that number also
+retires nothing, so a region can legitimately sit above its cap.
+
+### 5.2 Active routes on the desk
+
+The desk lists a region's active routes, so a curator opens any of them
+without finding it on the map first. Curator surface only, on
+`/moderate/routes`, which is `ROLE_CURATOR`; nothing about it reaches a rider
+and it adds no public listing of routes.
+
+- **One definition.** The list is `RouteQueue::activeInRegion()`, filtered by
+  the same `ItemState::SERVED` the cap counts by, so the section's count, the
+  list's length and the "N / cap active" counter beside it are one number by
+  construction, not three that agree by luck.
+- **Per region, because the cap is.** At most ~30 rows, so the list takes no
+  pager. The section follows the desk's `?region=` filter, not a second
+  control, and shows one group per region, each with its own "N / cap active"
+  counter:
+  - **A region applied**: that region alone, empty or not.
+  - **"All my regions"** (a curator with areas): every region of theirs that
+    holds live routes, one group each, and the regions with none named in one
+    line ("No routes are live yet in North Holland, Utrecht."). A curator's
+    areas are a handful of regions and the cap keeps each group short, so
+    nothing asks them to pick first.
+  - **"All regions"** (a global curator): the section lists the regions that
+    hold live routes, with a count each, to pick from, so nobody is handed
+    every region on earth as one list.
+  The filter's select carries `autocomplete="off"`, so a reload shows the
+  region applied rather than one picked and never applied.
+- **Scope.** `ModerationScope` throughout: the list, the region picker and the
+  region's own name all pass through it, so a region outside a curator's areas
+  is neither listed nor named.
+- **Rows.** The state a rider sees, the distance, the name (the link to that
+  route's own desk form, the same form and permissions as every other way in),
+  the ascent, and **which of the eight registry fields are still blank**, each
+  under the label every other surface uses (`RouteMetadata::LABELS`). A blank
+  field is the likeliest reason to open a live route, and a value the
+  vocabulary no longer knows counts as blank because that is what the form
+  will show. A route with nothing missing says so.
+- **Ordering** is by name: this is a lookup list, not a queue of work, so it is
+  ordered for finding a route the curator already has in mind, not by age.
+- **Empty** names the region: "No routes are live in Drenthe yet."
+- A route with no region is not offered by the picker, which joins `region`
+  the way the desk's existing picker does, though the cap counts NULL as its
+  own bucket.
 
 ## 6. Community loop — the JSON API
 

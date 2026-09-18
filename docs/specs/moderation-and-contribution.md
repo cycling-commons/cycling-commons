@@ -658,6 +658,13 @@ queued for review and not yet persisted to a live tally").
 Wiring voting to a real tally means building it on the verification gate, and
 then `/vote` should stop calling this service at all.
 
+**The Routes desk carries a non-queue section.** Below its two queues it
+lists the active routes of the curator's regions, one group per region, so
+a curator reaches a live route
+without finding it on the map (route-domain.md §5.2). It is a curator surface
+like the rest of the desk, scoped by `ModerationScope`, and it decides
+nothing: the rows are links into the route's own desk form.
+
 **The rider's reply is not submissions-only.** `messages_reply` also answers a
 curator's message on the `correction` channel, while that route correction is
 still `pending`, delivering it to the curator who wrote it and flipping no

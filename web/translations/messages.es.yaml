@@ -3206,6 +3206,19 @@ moderate_routes:
   meta_title: 'Moderar rutas'
   meta_description: 'Revisa las propuestas y las sugerencias de rutas pendientes antes de publicarlas.'
   section_proposals: 'Propuestas de rutas nuevas'
+  active:
+    title: 'Rutas activas'
+    in_region: 'Rutas activas en %region%.'
+    pick_region: 'Elige una región para ver las rutas activas allí.'
+    n_active: '%n% activas'
+    empty: 'Todavía no hay rutas activas en %region%.'
+    none_anywhere: 'Todavía no hay rutas activas en tus zonas.'
+    empty_many: 'Todavía no hay rutas activas en %regions%.'
+    missing: 'Aún sin rellenar:'
+    complete: 'Todos los detalles están rellenados.'
+    ascent: '%m% m de desnivel'
+    state_unverified: 'Propuesta'
+    state_verified: 'Verificada'
   map_placeholder: 'Vista previa del track'
   map_open: 'Abrir esta ruta en el mapa'
   region_none: 'Sin región'
@@ -3219,6 +3232,7 @@ moderate_routes:
   filter:
     region: 'Región'
     all_regions: 'Todas las regiones'
+    all_my_regions: 'Todas mis regiones'
   meta:
     state: 'Estado'
     proposed_by: 'Propuesto por'

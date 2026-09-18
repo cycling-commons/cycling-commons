@@ -3172,6 +3172,19 @@ moderate_routes:
   meta_title: 'Modérer les itinéraires'
   meta_description: 'Examinez les propositions et suggestions d''itinéraires en attente avant leur publication.'
   section_proposals: 'Nouvelles propositions'
+  active:
+    title: 'Itinéraires actifs'
+    in_region: 'Itinéraires en ligne en %region%.'
+    pick_region: 'Choisissez une région pour voir les itinéraires en ligne.'
+    n_active: '%n% actifs'
+    empty: 'Aucun itinéraire n''est encore en ligne en %region%.'
+    none_anywhere: 'Aucun itinéraire n''est encore en ligne dans vos zones.'
+    empty_many: 'Aucun itinéraire n''est encore en ligne en %regions%.'
+    missing: 'Encore vide :'
+    complete: 'Tous les détails sont renseignés.'
+    ascent: '%m% m de dénivelé'
+    state_unverified: 'Proposé'
+    state_verified: 'Vérifié'
   map_placeholder: 'Aperçu de la trace'
   map_open: 'Ouvrir cet itinéraire sur la carte'
   region_none: 'Aucune région'
@@ -3185,6 +3198,7 @@ moderate_routes:
   filter:
     region: 'Région'
     all_regions: 'Toutes les régions'
+    all_my_regions: 'Toutes mes régions'
   meta:
     state: 'État'
     proposed_by: 'Proposé par'

@@ -3179,6 +3179,19 @@ moderate_routes:
   meta_title: 'Routes modereren'
   meta_description: 'Beoordeel ingediende routevoorstellen en suggesties vóór publicatie.'
   section_proposals: 'Nieuwe routevoorstellen'
+  active:
+    title: 'Actieve routes'
+    in_region: 'Routes die live staan in %region%.'
+    pick_region: 'Kies een regio om te zien welke routes daar live staan.'
+    n_active: '%n% actief'
+    empty: 'Er staan nog geen routes live in %region%.'
+    none_anywhere: 'Er staan nog geen routes live in jouw gebieden.'
+    empty_many: 'Nog geen routes live in %regions%.'
+    missing: 'Nog leeg:'
+    complete: 'Alle details zijn ingevuld.'
+    ascent: '%m% m klim'
+    state_unverified: 'Voorgesteld'
+    state_verified: 'Geverifieerd'
   map_placeholder: 'Trackvoorbeeld'
   map_open: 'Open deze route op de kaart'
   region_none: 'Geen regio'
@@ -3192,6 +3205,7 @@ moderate_routes:
   filter:
     region: 'Regio'
     all_regions: 'Alle regio''s'
+    all_my_regions: 'Al mijn regio''s'
   meta:
     state: 'Status'
     proposed_by: 'Voorgesteld door'

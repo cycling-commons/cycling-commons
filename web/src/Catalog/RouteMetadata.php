@@ -148,6 +148,30 @@ final class RouteMetadata
     }
 
     /**
+     * The attribute fields this route carries nothing for, in the forms' order.
+     * A value the vocabulary no longer knows counts as nothing, the same way
+     * the forms prefill it as empty, so the desk never reports a field as
+     * filled that its own form would show blank.
+     *
+     * The name is not among them: a route always has one.
+     *
+     * @param array<string, mixed> $attributes
+     *
+     * @return list<string>
+     */
+    public static function unsetFields(array $attributes): array
+    {
+        $missing = [];
+        foreach (self::ATTRIBUTE_FIELDS as $field) {
+            if (null === self::canonical($field, $attributes[$field] ?? null)) {
+                $missing[] = $field;
+            }
+        }
+
+        return $missing;
+    }
+
+    /**
      * Every attribute a form prefills from, keyed by field: the stored value in
      * the shape its widget speaks. A field holding nothing, or holding a value
      * the vocabulary no longer knows, prefills as null and shows empty.

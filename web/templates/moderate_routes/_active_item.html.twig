@@ -1,0 +1,37 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Partial: one active route on the desk's reach list (route-domain.md §5.2).
+
+  Not a moderation card: there is nothing here to decide, so it carries no
+  verbs. It is a way in, so the whole row is the link to the route's own desk
+  form, the same form and the same permissions as every other way in.
+
+  Parameters:
+    a  array: active row (id, name, state, km, ascent, missing)
+#}
+<div class="q-item q-item--active" data-item-id="r{{ a.id }}">
+  <div class="q-top">
+    <div class="q-headwrap">
+      <div class="q-head">
+        {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
+        {# The state a rider sees on the map, in the desk's own tag shape. #}
+        <span class="q-tag q-tag--state">{{ ('moderate_routes.active.state_' ~ a.state)|trans }}</span>
+        <span class="q-tag q-tag--new">{{ a.km|cc_km }}</span>
+        <h3 class="q-title"><a href="{{ path('moderate_routes_detail', {id: a.id}) }}">{{ a.name }}</a></h3>
+      </div>
+      {% if a.ascent is not null %}
+        <div class="q-submitter">{{ 'moderate_routes.active.ascent'|trans({'%m%': a.ascent}) }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# What is still blank on it: the likeliest reason to open a live route. #}
+  {% if a.missing is empty %}
+    <p class="q-active-full">{{ 'moderate_routes.active.complete'|trans }}</p>
+  {% else %}
+    <p class="q-active-gaps">
+      <strong>{{ 'moderate_routes.active.missing'|trans({'%n%': a.missing|length}) }}</strong>
+      {% for f in a.missing %}<span class="cc-chip">{{ f.label|trans }}</span>{% endfor %}
+    </p>
+  {% endif %}
+</div>

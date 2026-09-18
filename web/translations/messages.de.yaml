@@ -3180,6 +3180,19 @@ moderate_routes:
   meta_title: 'Routen moderieren'
   meta_description: 'Ausstehende Routenvorschläge und Hinweise vor der Veröffentlichung prüfen.'
   section_proposals: 'Neue Routenvorschläge'
+  active:
+    title: 'Aktive Routen'
+    in_region: 'Routen, die in %region% live sind.'
+    pick_region: 'Wähle eine Region, um die dort aktiven Routen zu sehen.'
+    n_active: '%n% aktiv'
+    empty: 'In %region% ist noch keine Route live.'
+    none_anywhere: 'In deinen Gebieten ist noch keine Route live.'
+    empty_many: 'Noch keine Route live in %regions%.'
+    missing: 'Noch leer:'
+    complete: 'Alle Details sind ausgefüllt.'
+    ascent: '%m% m Anstieg'
+    state_unverified: 'Vorgeschlagen'
+    state_verified: 'Verifiziert'
   map_placeholder: 'Track-Vorschau'
   map_open: 'Diese Route auf der Karte öffnen'
   region_none: 'Keine Region'
@@ -3193,6 +3206,7 @@ moderate_routes:
   filter:
     region: 'Region'
     all_regions: 'Alle Regionen'
+    all_my_regions: 'Alle meine Regionen'
   meta:
     state: 'Status'
     proposed_by: 'Vorgeschlagen von'
