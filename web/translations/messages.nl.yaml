@@ -748,8 +748,9 @@ home:
   way_curate_h: 'Zorg voor een regio'
   way_extend_k: 'Uitbreiden'
   way_extend_h: 'Laat het platform groeien'
-  way_build_k: 'Nakomelingen'
+  way_build_k: 'Hergebruiken'
   way_build_h: 'Bouw op de data'
+  way_sources: 'Open data'
 join:
   kicker: 'Doe mee'
   title: 'Bouw de Commons met ons.'

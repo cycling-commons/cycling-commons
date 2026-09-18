@@ -748,8 +748,9 @@ home:
   way_curate_h: 'Look after a region'
   way_extend_k: 'Extending'
   way_extend_h: 'Grow the platform'
-  way_build_k: 'Offspring'
+  way_build_k: 'Reusing'
   way_build_h: 'Build on the data'
+  way_sources: 'Open data'
 join:
   kicker: 'Get involved'
   title: 'Build the Commons with us.'

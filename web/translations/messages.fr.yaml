@@ -743,8 +743,9 @@ home:
   way_curate_h: 'Prenez soin d''une région'
   way_extend_k: 'Étendre'
   way_extend_h: 'Faites grandir la plateforme'
-  way_build_k: 'Descendance'
+  way_build_k: 'Réutiliser'
   way_build_h: 'Bâtissez sur les données'
+  way_sources: 'Données ouvertes'
 join:
   kicker: 'Participer'
   title: 'Construisez le Commons avec nous.'

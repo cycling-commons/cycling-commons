@@ -106,22 +106,28 @@ rule between the three.
   in what you found" (Contribute, paper) are the two big stops; Curating
   "Look after a region" (the contributors-and-curators page), Extending
   "Grow the platform" (Get involved, the same URL as the header button) and
-  Offspring "Build on the data" (the API reference) the small ones. Each stop
+  Reusing "Build on the data" (the API reference: other apps, commercial
+  or not, that use the data and give new finds back) the small ones. Each stop
   is a kicker (the kind of person) and one verb phrase, nothing under it,
   nothing in the middle but the brand globe: the owner's earthGlobe.svg,
   inlined as `partials/_earth_globe.svg.twig` so CSS colours it, a green a
   shade darker than the hero, tilted 23.4 degrees, 54 units wide. One arrow
   halfway along each stretch; three dotted lines with arrowheads leave the
-  Offspring stop to three small nodes at different distances, tinted trail,
+  Reusing stop to three small nodes at different distances, tinted trail,
   ochre and glacier; from the lowest node one dotted way back swings wide
-  under both lower cards and arrives under Adding. The owner's rendered
+  under both lower cards and arrives under Adding. Open data comes in the
+  other way: three faint paper nodes above and right of the lap, where the
+  outside providers sit, send dotted lines that meet in the gap between
+  Riding and Adding and run on as one line into the globe, labelled
+  `home.way_sources` ("Open data"): many sources, one commons. Each card
+  carries a soft drop shadow. The owner's rendered
   image (`assets/brand/cc-ecosystem-mainpage.webp`, English text baked in,
   alt `home.ecosystem_alt`) is kept as a test state: a CSS-only switch
   under the drawing, two hidden radio boxes and the labels "1 / 3"
   (`home.loop_toggle`), the drawn loop checked by default; the switch and
   the image go when the choice is final. Below 1000px the lap goes and the
-  stops stack in two columns; the dashes creep at 150 s a lap and stop under
-  prefers-reduced-motion. A faint 56px grid lies over the hero and the
+  stops stack in two columns. The lap stands still: a moving dash forced a
+  repaint of the whole hero on every frame, about a third of a laptop GPU. A faint 56px grid lies over the hero and the
   closing band, fading to the foot; the five thin trail contours sit in the
   lower third, clear of the drawing; the discipline label sits on its own
   line above its chips, no trailing dash.

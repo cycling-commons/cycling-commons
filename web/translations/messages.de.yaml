@@ -748,8 +748,9 @@ home:
   way_curate_h: 'Kümmere dich um eine Region'
   way_extend_k: 'Erweitern'
   way_extend_h: 'Lass die Plattform wachsen'
-  way_build_k: 'Ableger'
+  way_build_k: 'Nachnutzen'
   way_build_h: 'Bau auf den Daten'
+  way_sources: 'Offene Daten'
 join:
   kicker: 'Mitmachen'
   title: 'Bau The Commons mit uns.'

@@ -78,7 +78,7 @@
   .loop-col{position:relative}
   .loop{position:relative;aspect-ratio:1;max-width:476px;width:85%;margin-left:auto}
   .loop svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-  .loop .ring{fill:none;stroke:rgba(239,230,212,.45);stroke-width:.5;stroke-dasharray:1.2 2.2;animation:loop-run 150s linear infinite}
+  .loop .ring{fill:none;stroke:rgba(239,230,212,.45);stroke-width:.5;stroke-dasharray:1.2 2.2}
   .loop .globe{fill:#15301F;opacity:1}
   .loop .arrow{fill:var(--trail)}
   .loop .off{stroke-width:.55;stroke-dasharray:1.2 1.2}
@@ -89,8 +89,9 @@
   .loop .offnode.n0{stroke:var(--trail);fill:rgba(255,90,31,.25)}
   .loop .offnode.n1{stroke:var(--ochre);fill:rgba(200,146,58,.25)}
   .loop .offnode.n2{stroke:var(--glacier);fill:rgba(143,182,168,.25)}
-  @keyframes loop-run{to{stroke-dashoffset:-256}}
-  .stop{position:absolute;transform:translate(-50%,-50%);display:block;width:31%;text-align:center;background:rgba(16,30,22,.85);border:1px solid rgba(239,230,212,.18);border-radius:8px;padding:.5rem .65rem .6rem;color:var(--paper);text-decoration:none;backdrop-filter:blur(2px)}
+  .loop .srcnode{fill:rgba(239,230,212,.12);stroke:rgba(239,230,212,.6);stroke-width:.5}
+  .loop .srclabel{font-family:var(--mono);font-size:2.4px;letter-spacing:.14em;text-transform:uppercase;fill:rgba(239,230,212,.6)}
+  .stop{position:absolute;transform:translate(-50%,-50%);display:block;width:31%;text-align:center;background:rgba(16,30,22,.85);border:1px solid rgba(239,230,212,.18);border-radius:8px;box-shadow:0 6px 16px -6px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.25);padding:.5rem .65rem .6rem;color:var(--paper);text-decoration:none;/* backdrop-filter:blur(2px) */}
   .stop:hover{border-color:rgba(239,230,212,.5);background:rgba(16,30,22,.95)}
   .stop.big{width:38%;padding:.7rem .8rem .8rem;background:var(--trail);border-color:var(--trail);color:var(--ink)}
   .stop.big:hover{background:var(--clay);border-color:var(--clay)}
@@ -461,7 +462,7 @@
   .cta-band .btn-ghost{background:var(--paper);border-color:transparent;color:var(--ink)}
   .cta-band .btn-ghost:hover{background:var(--paper-deep);border-color:transparent;color:var(--ink)}
 
-  @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.loop .ring{animation:none}.rv{transition:none;opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.hero .hero-contours{animation:none;clip-path:none}.rv{transition:none;opacity:1;transform:none}
     .silo .ph-app,.silo .ph-dock{opacity:1;animation:none}
     .silo .ph-app.shut .ph-ic,.silo .ph-cc,.silo .ph-cc-nm{animation:none}
     /* nothing plays, so there is nothing to replay */
@@ -510,6 +511,9 @@
         <linearGradient id="offfade0" gradientUnits="userSpaceOnUse" x1="15.5" y1="32.0" x2="0.5" y2="10.0"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".85"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".25"/></linearGradient>
         <linearGradient id="offfade1" gradientUnits="userSpaceOnUse" x1="15.5" y1="32.0" x2="-11.5" y2="35.0"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".85"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".25"/></linearGradient>
         <linearGradient id="offfade2" gradientUnits="userSpaceOnUse" x1="15.5" y1="32.0" x2="0.5" y2="59.0"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".85"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".25"/></linearGradient>
+        <linearGradient id="srcfade0" gradientUnits="userSpaceOnUse" x1="86" y1="-6" x2="72.5" y2="25.5"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".25"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".85"/></linearGradient>
+        <linearGradient id="srcfade1" gradientUnits="userSpaceOnUse" x1="100" y1="4" x2="72.5" y2="25.5"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".25"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".85"/></linearGradient>
+        <linearGradient id="srcfade2" gradientUnits="userSpaceOnUse" x1="110" y1="18" x2="72.5" y2="25.5"><stop offset="0" stop-color="#EFE6D4" stop-opacity=".25"/><stop offset="1" stop-color="#EFE6D4" stop-opacity=".85"/></linearGradient>
       </defs>
         {# The brand globe inside the lap (owner 2026-09-08: "use the
            earthGlobe.svg file in the brand folder"), the owner's drawing in
@@ -524,7 +528,7 @@
         <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(45.3,89.6) rotate(-176)"/>
         <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(8.1,57.3) rotate(-94)"/>
         <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(23.5,20.1) rotate(-38)"/>
-        {# OFFSPRING: three fading lines out of the lap to what gets built on the data #}
+        {# REUSING: three fading lines out of the lap to what gets built on the data #}
         <line class="off" x1="15.5" y1="32.0" x2="0.5" y2="10.0" stroke="url(#offfade0)"/>
         <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(2.3,12.6) rotate(-124)"/>
         <circle class="offnode n0" cx="0.5" cy="10.0" r="1.7"/>
@@ -539,6 +543,21 @@
            clear the two cards it passes. #}
         <path class="back" d="M0.5,59.0 C-9,118 130,112 91.0,54.5"/>
         <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(91.0,54.5) rotate(-124)"/>
+        {# SOURCES: open data from outside providers, three faint nodes top right,
+           their lines meeting in the gap between Riding and Adding and running on
+           into the globe as one: many sources, one commons. #}
+        <line class="off" x1="86.0" y1="-6.0" x2="72.5" y2="25.5" stroke="url(#srcfade0)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(82.0,3.5) rotate(113)"/>
+        <circle class="srcnode" cx="86.0" cy="-6.0" r="1.7"/>
+        <line class="off" x1="100.0" y1="4.0" x2="72.5" y2="25.5" stroke="url(#srcfade1)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(91.8,10.5) rotate(142)"/>
+        <circle class="srcnode" cx="100.0" cy="4.0" r="1.7"/>
+        <line class="off" x1="110.0" y1="18.0" x2="72.5" y2="25.5" stroke="url(#srcfade2)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(98.8,20.3) rotate(169)"/>
+        <circle class="srcnode" cx="110.0" cy="18.0" r="1.7"/>
+        <line class="off" x1="72.5" y1="25.5" x2="63.6" y2="35.6" stroke="rgba(239,230,212,.85)"/>
+        <polygon class="arrow" points="-1.8,-1.3 1.2,0 -1.8,1.3" transform="translate(64.4,34.7) rotate(131)"/>
+        <text class="srclabel" x="103.5" y="3.0">{{ 'home.way_sources'|trans }}</text>
       </svg>
       <a class="stop big s1" href="{{ path('map') }}"><span class="k">{{ 'home.way_ride_k'|trans }}</span><b>{{ 'home.way_ride_h'|trans }}</b></a>
       <a class="stop big add s2" href="{{ path('contribute') }}"><span class="k">{{ 'home.way_add_k'|trans }}</span><b>{{ 'home.way_add_h'|trans }}</b></a>
