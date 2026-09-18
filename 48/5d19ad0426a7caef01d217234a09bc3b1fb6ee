@@ -1,0 +1,19 @@
+web/tests/Smoke/MapToolsLockedTest.php
+  s_f47a817d6ad683::t_3d5322abed4ed0 38,47,50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "485d19ad0426a7caef01d217234a09bc3b1fb6ee",
+  "prompts": {},
+  "sessions": {
+    "s_f47a817d6ad683": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "610ca1d1-6828-4822-a153-1be243f02d0a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
