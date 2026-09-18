@@ -29,10 +29,12 @@ final class SurfaceVocabulary
     ];
 
     /**
-     * @var array<string, string> Tile class → line colour. The only palette:
-     * the map lines (render.js SURFACE_STYLE via CC_SURFACE_COLOURS), the
-     * legend box, the Key panel and the /map-key page all read it. Red is
-     * reserved for `unverified` (drawn dashed).
+     * Tile class → line colour. The only palette: the map lines (render.js
+     * SURFACE_STYLE via CC_SURFACE_COLOURS), the legend box, the Key panel and
+     * the /map-key page all read it. Red is reserved for `unverified` (drawn
+     * dashed).
+     *
+     * @var array<string, string>
      */
     public const array LINE_COLOUR = [
         'paved' => '#577A71',
