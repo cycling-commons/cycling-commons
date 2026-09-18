@@ -127,8 +127,9 @@ catalog-data-model.md §6) · `country_code` varchar(2) (added by
 `Version20260704222148` for moderation filtering) · `iso_code` varchar(10)
 nullable (ISO 3166-2, joins World `Subdivision.code`, e.g. `BE-WAL`) ·
 `admin_level` smallint nullable · `source` varchar(32) nullable (polygon
-provenance: `osm` | `overture`) · `active_cap` smallint nullable (per-region
-override of `route.region_active_cap`; NULL = the global default) · timestamps.
+provenance: `osm` | `overture`) · `active_cap` smallint nullable (declared as a
+per-region override of `route.region_active_cap`, but read by nothing: every
+region uses the global setting, route-domain.md §5.1) · timestamps.
 The last four columns were added by `Version20260719140000` (region-scoping
 Phase 1); `importRegions` stamps `country_code`/`iso_code`/`admin_level`/
 `source` from the artifact and **requires `country_code`** (invariants below).

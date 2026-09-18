@@ -1707,9 +1707,10 @@ A curator's pending layer is a **work queue**, not a view of a region. It is
 already scoped server-side to their own moderation area
 (`SubmissionQueue::pendingForMap` + `ModerationScope`), and running it through
 the map's region gate as well meant a curator whose map happened to be scoped
-elsewhere read "Pending review 0/0" and concluded there was nothing to do — the
-submissions were only findable by arriving from the desk, whose `?pending=`
-link widens the scope to Everywhere as a side effect (owner-reported).
+elsewhere would read "Pending review 0/0" and conclude there was nothing to
+do (owner-reported). A desk's `?pending=` link changes no scope either: it
+turns the pending layer on and opens the submission in whatever scope the
+rider is in.
 
 Two scopes for one question is one too many, and the server's is the one with
 authority. `featureVisible()` returns true for `pendingLayer` before any gate,
