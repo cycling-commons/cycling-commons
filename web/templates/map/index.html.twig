@@ -358,7 +358,9 @@
            requirement and stays; it answers a question a rider only asks once
            they already know what they would be uploading. #}
         <div class="hint" style="margin-top:0">{{ 'map.ride_check_intro'|trans }}</div>
-        <div class="hint">{{ 'ride_check.hint'|trans }}</div>
+        {# The notice is a requirement and stays visible; it sits above the
+           button so a rider reads it before choosing a file. #}
+        <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
         <input type="file" id="rcFile" accept=".gpx" hidden>
         <div class="cc-ride-row">
           <button class="cc-ride-btn" id="rcPick" type="button">{{ 'ride_check.button'|trans }}</button>
@@ -375,9 +377,6 @@
           </label>
         </div>
         <div class="cc-ride-status" id="rcStatus" role="status" hidden></div>
-        {# The notice stays in both states: it answers what would happen to a
-           file, which is worth knowing before deciding to sign up. #}
-        <p class="cc-ride-note">{{ 'ride_check.notice'|trans }}</p>
       </div>
 
       {# Scout: the same ride file, read the other way round. Ride check asks
@@ -385,13 +384,13 @@
          submissions. /scout/review is ROLE_USER, so logged out this renders
          locked rather than as a link that would land on a login wall. #}
       <div class="grp">
-        <h3>{{ 'map.scout_heading'|trans }}</h3>
+        <h3 class="tool-h-logo">{{ include('partials/_scout_logo.html.twig', {size: 26, decorative: true}) }}{{ 'map.scout_heading'|trans }}</h3>
+        <p class="cc-addclimb-note">{{ 'map.scout_hint'|trans }}</p>
         {% if is_granted('ROLE_USER') %}
         <a class="cc-addclimb-go" href="{{ path('scout_review') }}">{{ 'map.scout_review'|trans }}</a>
         {% else %}
         {% include 'map/_locked_tool.html.twig' with {label: 'map.scout_review'|trans} only %}
         {% endif %}
-        <p class="cc-addclimb-note">{{ 'map.scout_hint'|trans }}</p>
       </div>
 
       {# "Add a climb here" (owner asked 2026-08-14: "how do we add a new climb
@@ -408,21 +407,33 @@
          move, so what the wizard opens on is what the rider was looking at. #}
       <div class="grp cc-addclimb">
         <h3>{{ 'map.add_climb_heading'|trans }}</h3>
+        <p class="cc-addclimb-note">{{ 'map.add_climb_note'|trans }}</p>
         {% if is_granted('ROLE_USER') %}
         <a class="cc-addclimb-go" id="addClimbHere" href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">{{ 'map.add_climb_here'|trans }}</a>
         {% else %}
         {% include 'map/_locked_tool.html.twig' with {label: 'map.add_climb_here'|trans} only %}
         {% endif %}
-        <p class="cc-addclimb-note">{{ 'map.add_climb_note'|trans }}</p>
       </div>
 
-      {# Anything that is not a climb goes through the wizard, which the map's
-         own orange Contribute button opens. Said here because this is the
-         panel a rider opens looking for "how do I add something". #}
+      {# Propose a route: its own tool, like adding a climb (owner 2026-09-18).
+         /propose-route is ROLE_USER, so logged out this renders locked. #}
+      <div class="grp">
+        <h3>{{ 'propose_route.title'|trans }}</h3>
+        <p class="cc-addclimb-note">{{ 'map.propose_route_note'|trans }}</p>
+        {% if is_granted('ROLE_USER') %}
+        <a class="cc-addclimb-go" href="{{ path('propose_route') }}">{{ 'map.propose_route_go'|trans }}</a>
+        {% else %}
+        {% include 'map/_locked_tool.html.twig' with {label: 'map.propose_route_go'|trans} only %}
+        {% endif %}
+      </div>
+
+      {# Anything else goes through the wizard, which the map's own orange
+         Contribute button opens. Last, because it is the catch-all; said here
+         because this is the panel a rider opens looking for "how do I add
+         something". #}
       <div class="grp">
         <h3>{{ 'nav.contribute'|trans }}</h3>
         <a class="cc-addclimb-go" href="{{ path('contribute') }}">{{ 'map.contribute'|trans }}</a>
-        <a class="cc-addclimb-go" href="{{ path('propose_route') }}">{{ 'propose_route.title'|trans }}</a>
       </div>
 
       </section>
@@ -478,6 +489,15 @@
         {% if pending_is_curator|default(false) %}
         <div class="mkp-row mk-curator"><span class="mkp-sw"><span class="cc-pin pending" style="--c:#D92D20"><span style="filter:brightness(0) invert(1)">⏳</span></span></span><div class="mkp-t"><b>{{ 'legend.state_pending_h'|trans }}</b><span>{{ 'legend.state_pending_t'|trans }}</span></div></div>
         {% endif %}
+      </div>
+      {# Road surface lines (owner 2026-09-18): the same six classes and
+         colours as the map and the legend box, read from the one palette. #}
+      <div class="grp">
+        <h3>{{ 'item_type.road-surface.label'|trans }}</h3>
+        {% set ksc = cc_surface_colours() %}
+        {% for cls, lbl in {'paved': 'map.legend_paved', 'pave': 'map.legend_cobbles', 'gravel': 'map.legend_gravel', 'dirt': 'map.legend_dirt', 'rock': 'map.legend_rock', 'unverified': 'map.legend_unverified'} %}
+        <div class="mkp-row mk-surface" data-surf="{{ cls }}"><span class="mkp-sw"><span class="mkp-line{{ cls == 'unverified' ? ' dash' : '' }}" style="--sc:{{ ksc[cls] }}" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ lbl|trans }}</b></div></div>
+        {% endfor %}
       </div>
       <div class="grp">
         <a class="cc-addclimb-go" href="{{ path('map_key') }}">{{ 'map.key_full'|trans }}</a>
@@ -539,14 +559,15 @@
          switched off, six colours were being explained for a map that had none
          of them on it. #}
       <div class="skey-block" id="surfaceKey">
+      {% set sc = cc_surface_colours() %}
       <h4>{{ 'item_type.road-surface.label'|trans }}</h4>
       <div class="skey">
-        <button type="button" class="skey-row" data-surf-cls="paved" aria-pressed="true"><span class="skey-ln" style="--sc:#4E6E66"></span>{{ 'map.legend_paved'|trans }}</button>
-        <button type="button" class="skey-row" data-surf-cls="gravel" aria-pressed="true"><span class="skey-ln" style="--sc:#C8923A"></span>{{ 'map.legend_gravel'|trans }}</button>
-        <button type="button" class="skey-row" data-surf-cls="pave" aria-pressed="true"><span class="skey-ln" style="--sc:#6E7B96"></span>{{ 'map.legend_cobbles'|trans }}</button>
-        <button type="button" class="skey-row" data-surf-cls="dirt" aria-pressed="true"><span class="skey-ln" style="--sc:#6E5849"></span>{{ 'map.legend_dirt'|trans }}</button>
-        <button type="button" class="skey-row" data-surf-cls="rock" aria-pressed="true"><span class="skey-ln" style="--sc:#5F5A54"></span>{{ 'map.legend_rock'|trans }}</button>
-        <button type="button" class="skey-row" data-surf-cls="unverified" aria-pressed="true"><span class="skey-ln dash" style="--sc:#D92D20"></span>{{ 'map.legend_unverified'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="paved" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.paved }}"></span>{{ 'map.legend_paved'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="gravel" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.gravel }}"></span>{{ 'map.legend_gravel'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="pave" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.pave }}"></span>{{ 'map.legend_cobbles'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="dirt" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.dirt }}"></span>{{ 'map.legend_dirt'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="rock" aria-pressed="true"><span class="skey-ln" style="--sc:{{ sc.rock }}"></span>{{ 'map.legend_rock'|trans }}</button>
+        <button type="button" class="skey-row" data-surf-cls="unverified" aria-pressed="true"><span class="skey-ln dash" style="--sc:{{ sc.unverified }}"></span>{{ 'map.legend_unverified'|trans }}</button>
       </div>
       {# Quality ticks are an ANNOTATION on the class lines, not an eighth
          class: this row explains, it does not filter (surface-tiles.js draws
@@ -832,6 +853,8 @@ window.CC_VENDOR = {{ {
   {# The kind glyph set, letter → kind → drawing: KindIcons::set(), the only definition. #}
   window.CC_KIND_ICONS = {{ kind_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_BASEMAP_ICONS = {{ basemap_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Surface line colours, class → hex: SurfaceVocabulary::LINE_COLOUR, the only palette. #}
+  window.CC_SURFACE_COLOURS = {{ cc_surface_colours()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Locale bundle for the strings map.js renders itself (layer list, subtitle,
      drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
   window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
@@ -885,6 +908,9 @@ window.CC_VENDOR = {{ {
      rides; it does not need a tile artifact to exist. #}
   window.CC_SCOUT_TAGS = {{ scout_tags|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_SCOUT_DETAILS = {{ scout_details|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Surface label → map line class (SurfaceVocabulary::TO_TILE_CLASS): a stretch
+     recolours when the rider changes its surface. #}
+  window.CC_SURFACE_CLASS = {{ scout_surface_class|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# The stateless 'scout-tags' CSRF token scout-review.js sends as X-CC-Token
      (config/packages/csrf.yaml stateless_token_ids). #}
   window.CC_SCOUT_TOKEN = {{ csrf_token('scout-tags')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
@@ -1098,6 +1124,14 @@ window.CC_VENDOR = {{ {
    base.html.twig, so it has to include the partial itself; that is why the
    button was missing here rather than any deliberate exclusion. The map is the
    page a rider is most likely to be on when something breaks. #}
+{# The map key, one tap away in the corner the rider already knows, above the
+   bug button (owner 2026-09-18). It opens the same Key panel as the rail
+   button (shell.js). Before the bug button in the page, so an open bug panel
+   covers it rather than the other way round. #}
+<button type="button" id="cc-keyfab" class="keyfab" aria-controls="dwr" aria-expanded="false"
+        aria-label="{{ 'map.rail_key'|trans }}" title="{{ 'map.rail_key'|trans }}">
+  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="6" cy="6" r="2"/><path d="M11.5 6H20"/><circle cx="6" cy="12" r="2"/><path d="M11.5 12H20"/><circle cx="6" cy="18" r="2"/><path d="M11.5 18H20"/></svg>
+</button>
 {% include 'partials/_bug_fab.html.twig' with {bug_fab: bug_fab_context(), on_map: true} only %}
 <script src="{{ asset('support/pow.js') }}"></script>
 <script src="{{ asset('support/bug-fab.js') }}" defer></script>

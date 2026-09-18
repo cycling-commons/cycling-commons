@@ -7,12 +7,16 @@
   .plats{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.8rem}
   .plat{display:inline-flex;align-items:center;gap:.55rem;border:1.5px solid rgba(239,230,212,.28);border-radius:8px;padding:.7rem 1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;min-height:44px}
   a.plat:hover{border-color:var(--trail);background:rgba(200,146,58,.12)}
+  .plat-badge{display:inline-flex;align-items:center;border-radius:8px}
+  .plat-badge img{display:block;height:48px;width:auto}
+  .plat-badge:focus-visible{outline:2px solid var(--trail);outline-offset:3px}
+  .plat-logo{display:block;height:1.15rem;width:auto;flex:none}
   .plat .st{font-size:.7rem;letter-spacing:.1em;color:rgba(239,230,212,.55)}
   .plat.soon,.plat.planned{opacity:.72}
   .plat.live .st{color:var(--trail)}
   .tags-tbl{width:100%;border-collapse:collapse;margin-top:1.2rem}
   .tags-tbl th{text-align:left;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;padding:.6rem .8rem;border-bottom:1px solid rgba(20,22,14,.15)}
-  .tags-tbl td{padding:.75rem .8rem;border-bottom:1px solid rgba(20,22,14,.08);font-size:.93rem;vertical-align:top}
+  .tags-tbl td{padding:.75rem .8rem;border-bottom:1px solid rgba(20,22,14,.08);font-size:.93rem;vertical-align:baseline}
   .tags-tbl td.k{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;color:var(--ink)}
   .tags-tbl td .opts{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:#7a7d6c;margin-top:.3rem}
   .steps3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.4rem;margin-top:1.6rem}
@@ -20,10 +24,33 @@
   .steps3 .s .no{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;color:var(--trail)}
   .note{font-size:.92rem;color:#4a4d40;max-width:72ch;line-height:1.6}
   .sbrand{display:flex;align-items:center;gap:1rem;margin-bottom:1.1rem}
-  .sherolay{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(1.6rem,5vw,3.5rem);align-items:center}
-  @media(max-width:900px){.sherolay{grid-template-columns:1fr}.sherolay .scout-devices{justify-content:flex-start}}
+  .sherolay{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(1.6rem,5vw,3.5rem);align-items:center}
+  @media(max-width:900px){.sherolay{grid-template-columns:1fr}}
+  .sshot{margin:0}
+  .sbrowser,.sview{display:block}
+  .sbrowser{border-radius:10px;overflow:hidden;background:#2A2E26;border:1px solid rgba(239,230,212,.16);box-shadow:0 18px 44px -18px rgba(0,0,0,.7)}
+  .sbar{display:flex;align-items:center;gap:.8rem;padding:.5rem .7rem;background:#2A2E26;border-bottom:1px solid rgba(0,0,0,.35)}
+  .surl{display:flex;align-items:center;gap:.4rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(0,0,0,.28);border-radius:5px;padding:.22rem .6rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.02em;color:rgba(239,230,212,.7)}
+  .sshot img{display:block;width:100%;height:auto}
+  /* A thin scrollbar at the right edge, so the frame reads as a page in a browser. */
+  .sview{position:relative}
+  .sview::before{content:"";position:absolute;top:0;right:0;bottom:0;width:10px;background:#E4DCCB;border-left:1px solid rgba(20,22,14,.12)}
+  .sview::after{content:"";position:absolute;top:6%;right:2px;width:6px;height:28%;border-radius:3px;background:#8A8D7D}
+  .sshot figcaption{margin-top:.7rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+  .sdev{margin-top:2.4rem}
+  .sdev .scout-devices{justify-content:flex-start}
+  .szoom{position:relative;display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in;text-align:left;border-radius:10px}
+  .szoom:focus-visible{outline:2px solid var(--trail);outline-offset:4px}
+  .szoom-hint{position:absolute;right:18px;bottom:10px;display:flex;padding:.4rem;border-radius:6px;background:rgba(16,30,22,.82);color:var(--paper);opacity:.85;transition:opacity .15s}
+  .szoom:hover .szoom-hint{opacity:1}
+  .szoom-dlg{position:fixed;inset:0;margin:auto;padding:0;border:0;background:none;width:fit-content;height:fit-content;max-width:96vw;max-height:94vh;overflow:visible}
+  .szoom-dlg::backdrop{background:rgba(10,14,11,.86)}
+  .szoom-dlg img{display:block;max-width:96vw;max-height:94vh;width:auto;height:auto;border-radius:8px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .szoom-x{position:absolute;top:.6rem;right:.6rem;width:2.4rem;height:2.4rem;border-radius:50%;border:0;background:var(--paper);color:var(--ink);font-size:1.4rem;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .szoom-x:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
 </style>
 {% endblock %}
+{% block body_scripts %}<script src="{{ asset('js/shot-zoom.js') }}" defer></script>{% endblock %}
 {% block body %}
 
 <div class="shero"><div class="wrap sherolay">
@@ -39,14 +66,42 @@
     {# Garmin is live and links to the real store listing. The other two say
        what they are instead of pretending — an unlinked "download" would be the
        fake-mechanism pattern the go-live gate exists to catch. #}
-    <a class="plat live" href="https://apps.garmin.com/apps/7849af70-3769-4143-bea7-8c1ea5e5f847" rel="noopener">
-      {% trans %}scout.plat_garmin{% endtrans %} <span class="st">{% trans %}scout.plat_available{% endtrans %}</span>
+    {# Garmin's own store badge, unaltered (Garmin Connect IQ brand guidelines:
+       it promotes apps available in the store, which Scout is). #}
+    <a class="plat-badge" href="https://apps.garmin.com/apps/7849af70-3769-4143-bea7-8c1ea5e5f847" rel="noopener">
+      <img src="{{ asset('scout/connect-iq-badge-black.png') }}" width="278" height="95" alt="{{ 'scout.plat_garmin_badge'|trans }}">
     </a>
-    <span class="plat soon">{% trans %}scout.plat_android{% endtrans %} <span class="st">{% trans %}scout.plat_soon{% endtrans %}</span></span>
+    <span class="plat soon"><img class="plat-logo" src="{{ asset('scout/android-robot.svg') }}" alt="" width="17" height="20">{% trans %}scout.plat_android{% endtrans %} <span class="st">{% trans %}scout.plat_soon{% endtrans %}</span></span>
     <span class="plat planned">{% trans %}scout.plat_karoo{% endtrans %} <span class="st">{% trans %}scout.plat_planned{% endtrans %}</span></span>
+    <span class="plat planned">{% trans %}scout.plat_iphone{% endtrans %} <span class="st">{% trans %}scout.plat_planned{% endtrans %}</span></span>
   </div>
   </div>
-  {{ include('partials/_scout_devices.html.twig') }}
+  {# The review screen, where a ride's tags become submissions (owner
+     2026-09-18). Four widths; the browser takes the one its layout needs.
+     Source: brand-src/import-a-scout-ride.webp. #}
+  <figure class="sshot">
+    {# A neutral browser frame, drawn in CSS: an address bar with a lock, and
+       no window buttons, so it looks like no one system's browser. #}
+    <button type="button" class="szoom" data-zoom="scoutShotBig" aria-haspopup="dialog" title="{{ 'scout.shot_zoom'|trans }}">
+    <span class="sbrowser">
+    <span class="sbar" aria-hidden="true"><span class="surl"><svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1zm2 0h6V7a3 3 0 0 0-6 0v3z"/></svg>cyclingcommons.org/scout/review</span></span>
+    <span class="sview">
+    <img src="{{ asset('scout/review/review-960.webp') }}"
+         srcset="{{ asset('scout/review/review-480.webp') }} 480w, {{ asset('scout/review/review-960.webp') }} 960w, {{ asset('scout/review/review-1440.webp') }} 1440w, {{ asset('scout/review/review-1900.webp') }} 1900w"
+         sizes="(max-width: 900px) calc(100vw - 2.5rem), 46vw"
+         width="1900" height="1611" alt="{{ 'scout.shot_review_alt'|trans }}" fetchpriority="high" decoding="async">
+    </span>
+    </span>
+    <span class="szoom-hint" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>
+    </button>
+    <figcaption>{% trans %}scout.shot_review_cap{% endtrans %}</figcaption>
+  </figure>
+  {# The same screen, large. A native <dialog>: Esc and the close button shut
+     it, focus returns to the thumbnail (assets/js/shot-zoom.js). #}
+  <dialog class="szoom-dlg" id="scoutShotBig" aria-label="{{ 'scout.shot_review_alt'|trans }}">
+    <button type="button" class="szoom-x" data-close aria-label="{{ 'scout.shot_close'|trans }}">×</button>
+    <img src="{{ asset('scout/review/review-1900.webp') }}" width="1900" height="1611" alt="{{ 'scout.shot_review_alt'|trans }}" loading="lazy" decoding="async">
+  </dialog>
 </div></div>
 
 <section class="pad"><div class="wrap">
@@ -59,6 +114,10 @@
     <div class="s"><span class="no">{% trans %}scout.step2_no{% endtrans %}</span><h4>{% trans %}scout.step2_h{% endtrans %}</h4><p class="note">{% trans %}scout.step2_p{% endtrans %}</p></div>
     <div class="s"><span class="no">{% trans %}scout.step3_no{% endtrans %}</span><h4>{% trans %}scout.step3_h{% endtrans %}</h4><p class="note">{% trans %}scout.step3_p{% endtrans %}</p></div>
   </div>
+
+  {# The two devices it runs on, small, where the page talks about riding
+     with it. The review screenshot holds the hero. #}
+  <div class="sdev">{{ include('partials/_scout_devices.html.twig', {decorative: false, uid: 'page'}) }}</div>
 </div></section>
 
 <section class="pad" style="background:var(--paper-deep)"><div class="wrap">

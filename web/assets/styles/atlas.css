@@ -302,7 +302,7 @@ a .card:hover,.card.rv:hover,.card.is-link:hover{transform:translateY(-3px);box-
 /* sections + footer */
 section.pad{padding:clamp(3rem,7vw,6rem) 0}
 /* a dark hero already separates the intro — tighten the first section under it */
-.ahero+section.pad,.dhero+section.pad,.lhero+section.pad,.chero+section.pad,.phero+section.pad,.rhero+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
+.ahero+section.pad,.dhero+section.pad,.lhero+section.pad,.chero+section.pad,.phero+section.pad,.rhero+section.pad,.shero+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
 /* Where two sections meet, their paddings ADD UP: 6rem + 6rem is ~197px of
    nothing, which reads as the end of the page rather than a break in it, and
    people stop scrolling. Each side of a seam gets about half, so the gap says

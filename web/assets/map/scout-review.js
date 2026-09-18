@@ -8,7 +8,13 @@ import { uSpeed } from './units.js';
 import { parseFit, extractTags, buildSurfaceSegments, countVehicles, MESG, semiToDeg,
          fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY, SURF_TYPE } from '../lib/scout-fit.js';
 import { surfaceStyle } from './render.js';
-import { DEVICE_CLASS, DEVICE_DECLARABLE, cutTrack, nearestTrackIndex, sliceTrack } from './scout-segments.js';
+import { DEVICE_CLASS, DEVICE_DECLARABLE, cutTrack, nearestTrackIndex, sliceTrack, endIndexFor,
+         trackIndexAt, openBareTaps as openBare } from './scout-segments.js';
+import { claimMapClicks, releaseMapClicks } from './picking.js';
+import { mapToast } from './drawer.js';
+import { enhanceSelect } from './select-box.js';
+import { unzipSync } from '../lib/fflate-0.8.3.js';
+import { readBundle, isZip, bundleKey } from './scout-bundle.js';
 
 const RIDE_SRC = 'cc-scout-ride';
 const RIDE_LINE = 'cc-scout-ride-line';
@@ -26,6 +32,11 @@ let stretches = [];
 /** Points and stretches in ride order - the numbering the map and list share. */
 let order = [];
 let segMarkers = [];
+/** Surface taps with no type: grey pins, never sent. One may be a lost END. */
+let bareTaps = [];
+let bareMarkers = [];
+/** The stretch whose end the next map click sets, or null. */
+let endPick = null;
 
 const el = id => document.getElementById(id);
 const t = (k, fallback) => (D && D[k]) || fallback;
@@ -57,6 +68,17 @@ function fitTagName(tag, detail) {
 function readFit(buffer) {
   const parsed = parseFit(buffer);
   const { tags: raw } = extractTags(parsed, 'poi_type', 'poi_detail');
+  /* Bundle link (docs/specs/scout-bundle.md): the tag's second, plus its place
+     within that second in FIT order. Every tag record counts, cancelled or not,
+     because the phone numbers what it wrote. */
+  const perSecond = new Map();
+  raw.forEach(t => {
+    const first = t.time ? bundleKey(t.time, 0) : null;
+    if (!first) { t.bkey = null; return; }
+    const n = perSecond.get(first) || 0;
+    perSecond.set(first, n + 1);
+    t.bkey = bundleKey(t.time, n);
+  });
 
   // Ride line from RECORD messages. Drawn here; never sent.
   const track = [];
@@ -70,6 +92,12 @@ function readFit(buffer) {
 
   const rideEnd = track.length ? track[track.length - 1].at : null;
   const segments = buildSurfaceSegments(raw, rideEnd);
+  /* A stretch is keyed on the tap that starts it. */
+  segments.forEach(seg => {
+    const t0 = seg.startTime ? seg.startTime.getTime() : NaN;
+    const tap = raw.find(t => t.type === SURF_TYPE && t.time && t.time.getTime() === t0 && t.detail === seg.type);
+    seg.bkey = tap ? tap.bkey : null;
+  });
 
   /* Overtake count if the rider had a radar: shown, never sent
      (docs/specs/moderation-and-contribution.md (Scout intake)). */
@@ -80,7 +108,9 @@ function readFit(buffer) {
 
   /* Cancelled = rider retracted on the device (Scout undo). Hidden. */
   /* Bare surface tap (picker timed out): hidden from review, but counted. */
-  const bareSurface = raw.filter(t => !t.cancelled && t.type === SURF_TYPE && !(t.detail >= 1)).length;
+  const bare = raw.filter(t => !t.cancelled && t.type === SURF_TYPE && !(t.detail >= 1));
+  const bareSurface = bare.length;
+  const bareTaps = bare.filter(t => t.lat != null && t.lon != null).map(t => ({ lat: t.lat, lng: t.lon, at: t.time }));
 
   const tags = raw
     /* Surface tags never join the point list — they belong to stretches. */
@@ -103,10 +133,11 @@ function readFit(buffer) {
         osmSurface: tag === 'surface' ? (OSM_SURFACE[detail] || '') : '',
         // Sub-menu number; the server maps it to fields.
         detail: detail || null,
+        bkey: t.bkey,
       };
     });
 
-  return { track, tags, segments, radar, unplaceable, bareSurface };
+  return { track, tags, segments, radar, unplaceable, bareSurface, bareTaps };
 }
 
 function msg(text, isError) {
@@ -219,8 +250,13 @@ function placePasses(radar) {
 
 /* Close clears the ride off the map. Unsent tags stay in the ride file (we never had a copy). */
 function clearRide() {
+  stopEndPick();
+  [...tags, ...stretches].forEach(x => (x.bundleUrls || new Map()).forEach(u => URL.revokeObjectURL(u)));
   passMarkers.forEach(m => m.remove());
   passMarkers = [];
+  bareMarkers.forEach(m => m.remove());
+  bareMarkers = [];
+  bareTaps = [];
   tags.forEach(entry => { if (entry.marker) entry.marker.remove(); });
   segMarkers.forEach(m => m.remove());
   segMarkers = [];
@@ -261,6 +297,35 @@ function stretchPinEl(entry, cls) {
   d.textContent = String(entry.n);
   d.title = t('scoutTag_surface', 'Surface');
   return d;
+}
+
+/* Grey "?" where a surface tap carried no type. Placed on the ride by time,
+   so a ride that crosses itself still puts it on the right pass. A click
+   opens the stretch it sits inside; in end-pick mode it sets the end there. */
+function placeBareTaps(list) {
+  bareTaps = (list || []).map(b => {
+    let idx = trackIndexAt(track, b.at);
+    if (idx < 0) idx = nearestTrackIndex(track, b);
+    return { ...b, idx };
+  });
+  bareTaps.forEach(b => {
+    const d = document.createElement('div');
+    d.className = 'scout-pin bare';
+    d.textContent = '?';
+    d.title = t('scoutBareTitle', 'Surface tap with no type');
+    d.addEventListener('click', () => {
+      if (endPick) { setStretchEnd(endPick, b.idx); return; }
+      const owner = stretches.find(x => bareInside(x) === b);
+      if (owner) { openCardFor(owner); fitStretch(owner); }
+    });
+    bareMarkers.push(new maplibregl.Marker({ element: d, anchor: 'center' }).setLngLat([b.lng, b.lat]).addTo(map));
+  });
+}
+
+/* The first no-type tap strictly inside an unsent stretch: likely its lost END. */
+function bareInside(entry) {
+  if (!entry.geom || entry.approved || entry.dismissed) return null;
+  return bareTaps.find(b => b.idx > entry.startIdx && b.idx < entry.endIdx) || null;
 }
 
 /* Icon buttons: words in title/aria-label. SVG is static, never user content. */
@@ -343,7 +408,7 @@ function renderList() {
     const photo = document.createElement('button');
     photo.type = 'button';
     photo.className = 'scout-photo';
-    photoBtnState(photo, entry.mediaIds ? 1 : 0);
+    photoBtnState(photo, photoCount(entry));
     photo.addEventListener('click', () => requestPhotoFor(entry, photo));
     row.appendChild(photo);
 
@@ -355,92 +420,297 @@ function renderList() {
     row.appendChild(approve);
 
     body.appendChild(row);
+    const strip = bundleStrip(entry);
+    if (strip) body.appendChild(strip);
 
     li.appendChild(body);
     list.appendChild(li);
   };
 
-  /* Stretch card: no letter dropdown — a stretch is road surface (letter A). */
-  const surfChoices = (((window.CC_FIELD_SCHEMA || {}).A) || []).find(f => f['key'] === 'surface');
-  const buildStretch = (entry) => {
-    const li = document.createElement('li');
-    li.className = 'scout-tag open' + (entry.approved ? ' done' : '');
-    li.dataset.n = String(entry.n);
-    li.appendChild(removeBtn(entry));
+  order.forEach(x => {
+    if (x.ref.dismissed) return;
+    if ('point' === x.kind) buildPoint(x.ref);
+    else list.appendChild(stretchCard(x.ref));
+  });
 
-    const head = document.createElement('button');
-    head.type = 'button';
-    head.className = 'scout-tag-head';
-    head.textContent = entry.n + ' · ' + t('scoutTag_surface', 'Surface');
-    head.addEventListener('click', () => {
-      if (!entry.geom) return;
-      const b = new maplibregl.LngLatBounds(entry.geom.a, entry.geom.a);
-      entry.geom.line.forEach(c => b.extend(c));
-      map.fitBounds(b, { padding: 100 });
-    });
-    li.appendChild(head);
+  updateCounts();
+}
 
-    const body = document.createElement('div');
-    body.className = 'scout-tag-body';
-
-    const sel = document.createElement('select');
-    sel.className = 'scout-letter';
-    const choices = surfChoices ? Object.keys(surfChoices.choices || {}) : [];
-    (choices.length ? choices : [entry.surface].filter(Boolean)).forEach(label => {
-      const o = document.createElement('option');
-      o.value = label;
-      o.textContent = label;
-      if (label === entry.surface) o.selected = true;
-      sel.appendChild(o);
-    });
-    sel.addEventListener('change', () => { entry.surface = sel.value; });
-    body.appendChild(sel);
-
-    const row = document.createElement('div');
-    row.className = 'scout-row';
-
-    const name = document.createElement('input');
-    name.type = 'text';
-    name.className = 'scout-name';
-    name.placeholder = t('scoutNamePh', 'Name it');
-    name.addEventListener('input', () => { entry.name = name.value; });
-    row.appendChild(name);
-
-    if (entry.seg.unterminated) {
-      const warn = document.createElement('div');
-      warn.className = 'scout-fact';
-      warn.textContent = t('scoutStretchToEnd', 'No END tap: the stretch runs to the end of the ride. Check the line before sending.');
-      body.appendChild(warn);
-    }
-
-    const photo = document.createElement('button');
-    photo.type = 'button';
-    photo.className = 'scout-photo';
-    photoBtnState(photo, entry.mediaIds ? 1 : 0);
-    photo.addEventListener('click', () => requestPhotoFor(entry, photo));
-    row.appendChild(photo);
-
-    const approve = document.createElement('button');
-    approve.type = 'button';
-    approve.className = 'scout-approve';
-    sendBtnState(approve, entry.approved ? 'sent' : 'idle');
-    if (!entry.geom) approve.disabled = true;
-    approve.addEventListener('click', () => sendStretch(entry, approve, li));
-    row.appendChild(approve);
-
-    body.appendChild(row);
-
-    li.appendChild(body);
-    list.appendChild(li);
-  };
-
-  order.forEach(x => { if (!x.ref.dismissed) ('point' === x.kind ? buildPoint : buildStretch)(x.ref); });
-
+/* One place for the "n / m sent" line and the bulk button's label:
+   "Send all" before anything went, "Send the rest" after. */
+function updateCounts() {
+  refreshNotices();
   const live = [...tags, ...stretches].filter(x => !x.dismissed);
+  const sent = live.filter(x => x.approved).length;
   const total = el('scoutTotal');
   const done = el('scoutDone');
   if (total) total.textContent = String(live.length);
-  if (done) done.textContent = String(live.filter(x => x.approved).length);
+  if (done) done.textContent = String(sent);
+  const bulk = el('scoutSendAll');
+  if (bulk && !bulk.dataset.busy) {
+    bulk.textContent = 0 === sent ? t('scoutSendEverything', 'Send all') : t('scoutSendAll', 'Send the rest');
+    bulk.disabled = sent === live.length;
+  }
+}
+
+/* Stretch card: no letter dropdown - a stretch is road surface (letter A).
+   Built alone so fixing an end redraws one card, not the list. */
+function stretchCard(entry) {
+  const surfChoices = (((window.CC_FIELD_SCHEMA || {}).A) || []).find(f => f['key'] === 'surface');
+  const li = document.createElement('li');
+  li.className = 'scout-tag open' + (entry.approved ? ' done' : '');
+  li.dataset.n = String(entry.n);
+  li.appendChild(removeBtn(entry));
+
+  const head = document.createElement('button');
+  head.type = 'button';
+  head.className = 'scout-tag-head';
+  head.textContent = entry.n + ' · ' + t('scoutTag_surface', 'Surface');
+  head.addEventListener('click', () => fitStretch(entry));
+  li.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'scout-tag-body';
+
+  const choices = surfChoices ? Object.keys(surfChoices.choices || {}) : [];
+  body.appendChild(surfacePicker(entry, choices.length ? choices : [entry.surface].filter(Boolean)));
+
+  /* No END tap: the line runs to the ride's end, which is rarely true.
+     Sending stays off until the rider sets the end or keeps it on purpose. */
+  if (entry.needsEnd) {
+    const warn = document.createElement('div');
+    warn.className = 'scout-fact';
+    warn.textContent = t('scoutStretchToEnd', 'No END tap. This stretch runs to the end of the ride. Set where it ends before you send it.');
+    body.appendChild(warn);
+  }
+
+  const inside = bareInside(entry);
+  if (inside) {
+    const note = document.createElement('div');
+    note.className = 'scout-fact';
+    note.textContent = tpl(t('scoutBareInside', 'A tap with no type (grey ?) is on this stretch. Did the surface you started at {n} end there?'), { n: entry.n });
+    body.appendChild(note);
+  }
+
+  /* Only an end in doubt gets the end controls: no END tap, or a no-type tap
+     inside the line. A tapped end is trusted; the red circle still drags. */
+  if (entry.geom && !entry.approved && (entry.needsEnd || inside || endPick === entry)) {
+    const ends = document.createElement('div');
+    ends.className = 'scout-ends';
+    if (inside) {
+      const atBare = document.createElement('button');
+      atBare.type = 'button';
+      atBare.className = 'scout-end-btn';
+      atBare.textContent = t('scoutEndAtBare', 'End it at the ?');
+      atBare.addEventListener('click', () => setStretchEnd(entry, inside.idx));
+      ends.appendChild(atBare);
+    }
+    const setEnd = document.createElement('button');
+    setEnd.type = 'button';
+    setEnd.className = 'scout-end-btn' + (endPick === entry ? ' on' : '');
+    setEnd.textContent = t('scoutSetEnd', 'Set the end on the map');
+    setEnd.addEventListener('click', () => (endPick === entry ? stopEndPick() : startEndPick(entry)));
+    ends.appendChild(setEnd);
+    if (entry.needsEnd) {
+      const keep = document.createElement('button');
+      keep.type = 'button';
+      keep.className = 'scout-end-btn';
+      keep.textContent = t('scoutKeepEnd', 'It runs to the end');
+      keep.addEventListener('click', () => {
+        if (endPick === entry) stopEndPick();
+        entry.needsEnd = false;
+        redrawStretchCard(entry);
+      });
+      ends.appendChild(keep);
+    }
+    body.appendChild(ends);
+  }
+
+  const row = document.createElement('div');
+  row.className = 'scout-row';
+
+  const name = document.createElement('input');
+  name.type = 'text';
+  name.className = 'scout-name';
+  name.placeholder = t('scoutNamePh', 'Name it');
+  name.value = entry.name || '';
+  name.addEventListener('input', () => { entry.name = name.value; });
+  row.appendChild(name);
+
+  const photo = document.createElement('button');
+  photo.type = 'button';
+  photo.className = 'scout-photo';
+  photoBtnState(photo, photoCount(entry));
+  photo.addEventListener('click', () => requestPhotoFor(entry, photo));
+  row.appendChild(photo);
+
+  const approve = document.createElement('button');
+  approve.type = 'button';
+  approve.className = 'scout-approve';
+  sendBtnState(approve, entry.approved ? 'sent' : 'idle');
+  if (!entry.geom) approve.disabled = true;
+  if (entry.needsEnd) {
+    approve.disabled = true;
+    approve.title = t('scoutEndFirst', 'Set the end first');
+    approve.setAttribute('aria-label', approve.title);
+  }
+  approve.addEventListener('click', () => sendStretch(entry, approve, li));
+  row.appendChild(approve);
+
+  body.appendChild(row);
+  const strip = bundleStrip(entry);
+  if (strip) body.appendChild(strip);
+  li.appendChild(body);
+  return li;
+}
+
+/* Surface picker: each choice with the line it draws on the map, on the
+   map's cream casing. The shared dropdown (select-box.js) draws it; the
+   native select underneath holds the value. */
+function surfacePicker(entry, labels) {
+  const classOf = label => (window.CC_SURFACE_CLASS || {})[label] || '';
+  const sel = document.createElement('select');
+  sel.className = 'scout-letter';
+  sel.setAttribute('aria-label', t('scoutTag_surface', 'Surface'));
+  labels.forEach(label => {
+    const o = document.createElement('option');
+    o.value = label;
+    o.textContent = label;
+    if (label === entry.surface) o.selected = true;
+    sel.appendChild(o);
+  });
+  /* The line wears the chosen surface's map colour, not the device's. */
+  sel.addEventListener('change', () => {
+    entry.surface = sel.value;
+    const cls = classOf(sel.value);
+    if (SEG_CLS.includes(cls)) { entry.cls = cls; refreshStretches(); }
+  });
+  const holder = document.createElement('div');
+  holder.appendChild(sel);
+  enhanceSelect(sel, {
+    decorate: o => {
+      const cls = classOf(o.value);
+      if (!cls) return [];
+      const line = document.createElement('span');
+      line.className = 'scout-swatch';
+      line.style.background = surfaceStyle(cls).color;
+      line.setAttribute('aria-hidden', 'true');
+      return [line];
+    },
+  });
+  return holder;
+}
+
+function redrawStretchCard(entry) {
+  const li = document.querySelector('#scoutTags [data-n="' + entry.n + '"]');
+  if (li) li.replaceWith(stretchCard(entry));
+  refreshNotices();
+}
+
+function fitStretch(entry) {
+  if (!entry.geom) return;
+  const b = new maplibregl.LngLatBounds(entry.geom.a, entry.geom.a);
+  entry.geom.line.forEach(c => b.extend(c));
+  map.fitBounds(b, { padding: 100 });
+}
+
+/* End-pick mode: the next click on the ride sets this stretch's end. Map
+   clicks are claimed, so a catalogue place under the click opens no drawer. */
+function startEndPick(entry) {
+  stopEndPick();
+  endPick = entry;
+  claimMapClicks();
+  /* A class, not canvas.style.cursor: layer hover handlers reset that one. */
+  map.getContainer().classList.add('scout-picking');
+  map.on('click', endPickClick);
+  document.addEventListener('keydown', onPickEsc);
+  fitStretch(entry);
+  pickBar(tpl(t('scoutPickEnd', 'Click the ride where stretch {n} ends. Press Esc to stop.'), { n: entry.n }));
+  redrawStretchCard(entry);
+}
+
+/* Pick-mode words live on the map, where the rider is looking. A mistake
+   shows in the bar for a moment, then the instruction comes back. */
+let pickBarTimer = 0;
+function pickBar(text, isErr) {
+  let bar = el('scoutPickbar');
+  if (!text) { if (bar) bar.hidden = true; clearTimeout(pickBarTimer); return; }
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'scoutPickbar';
+    bar.className = 'cc-pickbar scout-pickbar';
+    bar.setAttribute('role', 'status');
+    const span = document.createElement('span');
+    const stop = document.createElement('button');
+    stop.type = 'button';
+    stop.textContent = t('scoutPickStop', 'Stop');
+    stop.addEventListener('click', () => stopEndPick());
+    bar.append(span, stop);
+    document.body.appendChild(bar);
+  }
+  const span = bar.firstChild;
+  clearTimeout(pickBarTimer);
+  if (isErr) {
+    const back = bar.dataset.hint || '';
+    span.textContent = text;
+    bar.classList.add('err');
+    pickBarTimer = setTimeout(() => { span.textContent = back; bar.classList.remove('err'); }, 3200);
+  } else {
+    bar.dataset.hint = text;
+    span.textContent = text;
+    bar.classList.remove('err');
+  }
+  bar.hidden = false;
+}
+
+function stopEndPick() {
+  if (!endPick) return;
+  const entry = endPick;
+  endPick = null;
+  map.off('click', endPickClick);
+  document.removeEventListener('keydown', onPickEsc);
+  map.getContainer().classList.remove('scout-picking');
+  releaseMapClicks();
+  pickBar('');
+  redrawStretchCard(entry);
+}
+
+function onPickEsc(e) {
+  if ('Escape' === e.key) stopEndPick();
+}
+
+const PICK_REACH_PX = 30;
+
+function endPickClick(e) {
+  const entry = endPick;
+  if (!entry) return;
+  const px = e.point;
+  const near = nearestTrackIndex(track, e.lngLat);
+  const q = near < 0 ? null : map.project([track[near].lng, track[near].lat]);
+  if (!q || Math.hypot(q.x - px.x, q.y - px.y) > PICK_REACH_PX) {
+    pickBar(t('scoutPickOnRide', 'Click on the ride line.'), true);
+    return;
+  }
+  setStretchEnd(entry, endIndexFor(track, entry.startIdx, e.lngLat));
+}
+
+/* Move a stretch's end to a ride index: pick click, grey pin, or card button. */
+function setStretchEnd(entry, idx) {
+  if (idx <= entry.startIdx || idx < 0) {
+    const say = t('scoutPickAfterStart', 'The end must come after the green start. Click further along the ride.');
+    if (endPick) pickBar(say, true); else mapToast(say);
+    return;
+  }
+  const geom = sliceTrack(track, entry.startIdx, idx);
+  if (!geom) return;
+  entry.endIdx = idx;
+  entry.geom = geom;
+  entry.needsEnd = false;
+  if (entry.endMarker) entry.endMarker.setLngLat([track[idx].lng, track[idx].lat]);
+  /* The map stays put: the rider is looking at the end they just set. */
+  refreshStretches();
+  if (endPick) stopEndPick();
+  else redrawStretchCard(entry);
 }
 
 /* Remove from this review only. The tag stays in the ride file. */
@@ -452,6 +722,7 @@ function removeBtn(entry) {
   b.title = t('scoutRemove', 'Remove this tag from the review');
   b.setAttribute('aria-label', b.title);
   b.addEventListener('click', () => {
+    if (endPick === entry) stopEndPick();
     entry.dismissed = true;
     if (entry.marker) entry.marker.remove();
     if (entry.markers) entry.markers.forEach(m => m.remove());
@@ -469,8 +740,9 @@ function fallbackName(entry) {
 }
 
 /* Stretch sent on the same wire as a point tag, plus `segment` and surface. */
-function sendStretch(entry, button, li) {
-  if (entry.approved || entry.sending) return Promise.resolve();
+async function sendStretch(entry, button, li) {
+  if (entry.approved || entry.sending || entry.needsEnd || !entry.geom) return;
+  if (!(await sendBundlePhotos(entry, button, li))) return;
   entry.sending = true;
   const wire = {
     tag: 'surface',
@@ -493,8 +765,7 @@ function sendStretch(entry, button, li) {
     if (entry.approved && entry.markers) {
       entry.markers.forEach(m => { m.getElement().classList.add('done'); m.setDraggable(false); });
     }
-    const done = el('scoutDone');
-    if (done) done.textContent = String(tags.filter(x => x.approved).length + stretches.filter(x => x.approved).length);
+    updateCounts();
   });
 }
 
@@ -507,6 +778,7 @@ async function sendOne(entry, button, li) {
     msg(t('scoutNeedName', 'Give the tag a name before sending it.'), true);
     return;
   }
+  if (!(await sendBundlePhotos(entry, button, li))) return;
   entry.sending = true;
   if (!entry.name || !entry.name.trim()) entry.name = fallbackName(entry);
   sendBtnState(button, 'sending');
@@ -544,8 +816,7 @@ async function sendOne(entry, button, li) {
     msg(t('scoutSendFailed', 'That tag could not be sent — try again.'), true);
   }
   entry.sending = false;
-  const done = el('scoutDone');
-  if (done) done.textContent = String(tags.filter(x => x.approved).length);
+  updateCounts();
 }
 
 function placeTags() {
@@ -585,10 +856,13 @@ function placeStretchMarkers() {
         if (geom) entry.geom = geom;
         m.setLngLat([track[idx].lng, track[idx].lat]);
         refreshStretches();
+        if (!isStart) entry.needsEnd = false;
+        redrawStretchCard(entry);
       });
       m.getElement().addEventListener('click', () => openCardFor(entry));
       segMarkers.push(m);
       (entry.markers = entry.markers || []).push(m);
+      if ('seg-end' === cls) entry.endMarker = m;
     });
   });
 }
@@ -599,7 +873,7 @@ function renderRideFacts(parsed) {
   box.textContent = '';
   const lines = [];
   if (parsed.radar && parsed.radar.total > 0) {
-    lines.push(tplCount(t('scoutRadar', '{n} vehicles passed you on this ride — measured, not sent'), parsed.radar.total));
+    lines.push(tplCount(t('scoutRadar', '{n} vehicles passed you on this ride'), parsed.radar.total));
     /* Passes we could not place. */
     const placed = parsed.radar.passes.filter(x => x.lat != null && x.lon != null).length;
     if (placed < parsed.radar.total) {
@@ -609,8 +883,8 @@ function renderRideFacts(parsed) {
   if (parsed.unplaceable > 0) {
     lines.push(tplCount(t('scoutNoFix', '{n} tag(s) had no GPS fix and cannot be placed'), parsed.unplaceable));
   }
-  if (parsed.bareSurface > 0) {
-    lines.push(tplCount(t('scoutBareSurface', 'Hidden: {n} surface tap(s) carried no type (the picker timed out)'), parsed.bareSurface));
+  if (parsed.bundleUnmatched > 0) {
+    lines.push(tplCount(t('scoutBundleUnmatched', '{n} note(s) or photo(s) in the bundle match no tag, so they are not used'), parsed.bundleUnmatched));
   }
   lines.forEach(text => {
     const p = document.createElement('p');
@@ -618,14 +892,63 @@ function renderRideFacts(parsed) {
     p.textContent = text;
     box.appendChild(p);
   });
+  /* No-type taps: a live line, filled by refreshNotices() once the pins are
+     on the ride. The grey pins are small and sit among the red ones, so the
+     link takes the rider to the ones still open. */
+  if ((parsed.bareTaps || []).length) {
+    const p = document.createElement('p');
+    p.className = 'scout-fact';
+    p.id = 'scoutBareFact';
+    p.hidden = true;
+    const text = document.createElement('span');
+    const go = document.createElement('button');
+    go.type = 'button';
+    go.className = 'scout-fact-go';
+    go.textContent = t('scoutShowBare', 'Show on the map');
+    go.addEventListener('click', () => {
+      const open = openBareTaps();
+      if (!open.length) return;
+      if (1 === open.length) { map.flyTo({ center: [open[0].lng, open[0].lat], zoom: 15 }); return; }
+      const b = new maplibregl.LngLatBounds([open[0].lng, open[0].lat], [open[0].lng, open[0].lat]);
+      open.forEach(x => b.extend([x.lng, x.lat]));
+      map.fitBounds(b, { padding: 120, maxZoom: 15 });
+    });
+    p.append(text, go);
+    box.appendChild(p);
+  }
   box.hidden = !lines.length;
+}
+
+function openBareTaps() {
+  return openBare(bareTaps, stretches);
+}
+
+/* Notices shrink as the rider fixes things and vanish with the last fix. */
+let noEndText = '';
+function refreshNotices() {
+  const box = el('scoutFacts');
+  const bareLine = el('scoutBareFact');
+  if (bareLine) {
+    const n = openBareTaps().length;
+    bareLine.firstChild.textContent = tplCount(t('scoutBareSurface', 'Surface taps with no type (grey ?): {n}'), n);
+    bareLine.hidden = 0 === n;
+  }
+  if (box) box.hidden = ![...box.children].some(c => !c.hidden);
+
+  const out = el('scoutMsg');
+  if (noEndText && out && out.textContent === noEndText) {
+    const n = stretches.filter(x => x.needsEnd && !x.dismissed && !x.approved).length;
+    noEndText = n ? tplCount(t('scoutNeedEnd', '{n} stretch(es) have no end yet and were not sent. Set the end, then send them.'), n) : '';
+    msg(noEndText, true);
+  } else {
+    noEndText = '';
+  }
 }
 
 function show(parsed) {
   const panel = el('scoutPanel');
   if (panel) panel.hidden = false;
   clearRide();
-  renderRideFacts(parsed);
   placePasses(parsed.radar);
   track = parsed.track;
   tags = parsed.tags.map(w => ({
@@ -649,6 +972,8 @@ function show(parsed) {
       endIdx: geom ? nearestTrackIndex(parsed.track, { lng: geom.b[0], lat: geom.b[1] }) : -1,
       name: '',
       approved: false,
+      /* No END tap: blocked until the rider sets the end or keeps it. */
+      needsEnd: !!(seg.unterminated && geom),
     };
   });
   /* One chronological list: stretch at start tap, point at tap. */
@@ -661,12 +986,30 @@ function show(parsed) {
   ].sort((a, b) => when(a) - when(b));
   order.forEach((x, i) => { x.ref.n = i + 1; });
 
+  /* A phone bundle: notes into the name fields, photos onto the cards. */
+  let unmatched = 0;
+  if (parsed.bundle) {
+    const byKey = new Map();
+    tags.forEach(x => { if (x.bkey) byKey.set(x.bkey, x); });
+    stretches.forEach(x => { if (x.seg.bkey) byKey.set(x.seg.bkey, x); });
+    parsed.bundle.entries.forEach((e, key) => {
+      const ref = byKey.get(key);
+      if (!ref) { unmatched += (e.note ? 1 : 0) + e.photos.length; return; }
+      if (e.note && !ref.name) ref.name = e.note;
+      if (e.photos.length) ref.bundlePhotos = e.photos.map(p => new File([p.bytes], p.name, { type: p.type }));
+    });
+    unmatched += parsed.bundle.skipped;
+  }
+  parsed.bundleUnmatched = unmatched;
+  renderRideFacts(parsed);
+
   drawRide();
   drawStretches();
   raiseScoutLayers();
   hookRaise();
   placeTags();
   placeStretchMarkers();
+  placeBareTaps(parsed.bareTaps);
   renderList();
   const list = el('scoutList');
   if (list) list.hidden = false;
@@ -676,13 +1019,36 @@ function show(parsed) {
 
 function loadFile(file) {
   if (!file) return;
-  if (!/\.fit$/i.test(file.name)) {
-    msg(t('scoutNeedFit', 'Scout writes .fit files — that is the ride to open here.'), true);
+  if (!/\.(fit|zip)$/i.test(file.name)) {
+    msg(t('scoutNeedFit', 'Open the .fit file of your ride, or the .zip your Scout phone app exported.'), true);
     return;
   }
   const reader = new FileReader();
   reader.onload = () => {
     let parsed;
+    const bytes = new Uint8Array(reader.result);
+    /* A phone's bundle (docs/specs/scout-bundle.md): unpacked here, in memory. */
+    if (isZip(bytes)) {
+      let bundle;
+      try {
+        bundle = readBundle(bytes, unzipSync);
+      } catch (e) {
+        const code = e && e.code;
+        msg('version' === code ? t('scoutBundleVersion', 'This bundle is from a newer Scout app. Reload the page and try again.')
+          : 'too-large' === code ? t('scoutBundleTooLarge', 'This bundle is too large to open here.')
+          : t('scoutBundleBad', 'That .zip is not a Scout ride export.'), true);
+        return;
+      }
+      try {
+        parsed = readFit(bundle.fit.buffer.slice(bundle.fit.byteOffset, bundle.fit.byteOffset + bundle.fit.byteLength));
+      } catch (e) {
+        msg(t('scoutBadFile', 'That file could not be read as a ride.'), true);
+        return;
+      }
+      parsed.bundle = bundle;
+      show(parsed);
+      return;
+    }
     try {
       parsed = readFit(reader.result);
     } catch (e) {
@@ -701,12 +1067,114 @@ let photoTarget = null;
 let photoButton = null;
 let photoIndex = 0;          // the tag number the queue is currently filling
 const attributed = new Set(); // ids already assigned to a tag
+let uploader = null;
+let mediaBusy = false;
+if (typeof document !== 'undefined') {
+  document.addEventListener('cc:media-busy', e => { mediaBusy = !!(e.detail && e.detail.busy); });
+}
+
+function idCount(entry) {
+  try { const a = JSON.parse(entry.mediaIds || '[]'); return Array.isArray(a) ? a.length : 0; } catch (e) { return 0; }
+}
+function photoCount(entry) {
+  return idCount(entry) + ((entry.bundlePhotos || []).length);
+}
+
+/* The phone's photos for one card: thumbnails, each removable. Nothing has
+   uploaded yet; they go when the card is sent. */
+function bundleStrip(entry) {
+  const files = entry.bundlePhotos || [];
+  if (!files.length || entry.approved) return null;
+  const wrap = document.createElement('div');
+  wrap.className = 'scout-bphotos';
+  const label = document.createElement('span');
+  label.className = 'scout-bphotos-l';
+  label.textContent = tplCount(t('scoutBundlePhotos', '{n} photo(s) from your phone, sent with this tag'), files.length);
+  wrap.appendChild(label);
+  entry.bundleUrls = entry.bundleUrls || new Map();
+  files.forEach(f => {
+    if (!entry.bundleUrls.has(f)) entry.bundleUrls.set(f, URL.createObjectURL(f));
+    const fig = document.createElement('span');
+    fig.className = 'scout-bphoto';
+    const img = document.createElement('img');
+    img.src = entry.bundleUrls.get(f);
+    img.alt = '';
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.textContent = '\u00d7';
+    x.title = t('scoutBundlePhotoRemove', 'Do not send this photo');
+    x.setAttribute('aria-label', x.title);
+    x.addEventListener('click', () => {
+      entry.bundlePhotos = entry.bundlePhotos.filter(g => g !== f);
+      URL.revokeObjectURL(entry.bundleUrls.get(f));
+      entry.bundleUrls.delete(f);
+      const card = wrap.closest('li');
+      const btn = card && card.querySelector('.scout-photo');
+      if (btn) photoBtnState(btn, photoCount(entry));
+      const next = bundleStrip(entry);
+      if (next) wrap.replaceWith(next); else wrap.remove();
+    });
+    fig.append(img, x);
+    wrap.appendChild(fig);
+  });
+  return wrap;
+}
+
+/* Before a card sends, its phone photos go through the one uploader, consent
+   gate and all. The card waits for their ids; a photo that fails stops the
+   send so the rider can decide, and is not tried again. */
+async function sendBundlePhotos(entry, button, li) {
+  const files = entry.bundlePhotos || [];
+  if (!files.length) return true;
+  if (!uploader || !uploader.accept) return false;
+  const want = idCount(entry) + files.length;
+  photoTarget = entry;
+  photoButton = li ? li.querySelector('.scout-photo') : null;
+  photoIndex = entry.n || 0;
+  const media = el('scoutMedia');
+  if (media) media.hidden = false;
+  sendBtnState(button, 'sending');
+  entry.sending = true;
+  uploader.accept(files);
+  const started = Date.now();
+  const ok = await new Promise(resolve => {
+    const tick = () => {
+      if (idCount(entry) >= want && !mediaBusy) { resolve(true); return; }
+      const modal = document.getElementById('modal');
+      const asking = modal && modal.classList.contains('open');
+      if (!asking && !mediaBusy && Date.now() - started > 800) { resolve(idCount(entry) >= want); return; }
+      if (Date.now() - started > 180000) { resolve(false); return; }
+      setTimeout(tick, 300);
+    };
+    tick();
+  });
+  entry.sending = false;
+  (entry.bundleUrls || new Map()).forEach(u => URL.revokeObjectURL(u));
+  entry.bundleUrls = new Map();
+  entry.bundlePhotos = [];
+  const strip = li && li.querySelector('.scout-bphotos');
+  if (strip) strip.remove();
+  if (photoButton) photoBtnState(photoButton, photoCount(entry));
+  if (!ok) {
+    sendBtnState(button, 'idle');
+    msg(t('scoutBundlePhotosFailed', 'Not every photo could be added. Check the photo list below, then send the tag again.'), true);
+  }
+  return ok;
+}
 
 function mountPhotos() {
   const hidden = el('scoutMediaIds');
   if (!hidden || !window.Cc || !window.Cc.mountMediaUploads) return;
-  window.Cc.mountMediaUploads({
+  uploader = window.Cc.mountMediaUploads({
     hidden,
+    /* Where the photo is for (the upload refuses one without a place): the
+       tag being filled, or the start of the stretch. */
+    pin: () => {
+      const e = photoTarget;
+      if (!e) return null;
+      if (e.geom && e.geom.a) return { lat: e.geom.a[1], lng: e.geom.a[0] };
+      return e.lat != null && e.lng != null ? { lat: e.lat, lng: e.lng } : null;
+    },
     onChange: () => {
       /* Hidden field is a JSON array of ids; unattributed ids go to whoever asked last. */
       let ids = [];
@@ -761,18 +1229,26 @@ function requestPhotoFor(entry, button) {
 async function sendAll(button) {
   const list = el('scoutTags');
   button.disabled = true;
+  button.dataset.busy = '1';
   button.textContent = t('scoutSending', 'Sending…');
+  if (endPick) stopEndPick();
+  let noEnd = 0;
   for (const x of order) {
     const entry = x.ref;
     if (entry.approved || entry.dismissed) continue;
+    if ('stretch' === x.kind && entry.needsEnd) { noEnd++; continue; }
     const li = list && list.querySelector('[data-n="' + entry.n + '"]');
     const rowBtn = li && li.querySelector('.scout-approve');
     if (!rowBtn) continue;
     if ('stretch' === x.kind) await sendStretch(entry, rowBtn, li);
     else await sendOne(entry, rowBtn, li);
   }
-  button.disabled = false;
-  button.textContent = t('scoutSendAll', 'Send the rest');
+  delete button.dataset.busy;
+  updateCounts();
+  if (noEnd) {
+    noEndText = tplCount(t('scoutNeedEnd', '{n} stretch(es) have no end yet and were not sent. Set the end, then send them.'), noEnd);
+    msg(noEndText, true);
+  }
 }
 
 /** Mount the panel. A no-op everywhere except /scout/review. */

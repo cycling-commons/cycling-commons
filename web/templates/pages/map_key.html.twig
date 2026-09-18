@@ -268,13 +268,14 @@
   <h2>{{ 'legend.lines_h'|trans }}</h2>
   <p class="mk-note">{{ 'legend.lines_note'|trans }}</p>
   <p class="mk-grp">{{ 'legend.lines_surfaces'|trans }}</p>
+  {% set mksc = cc_surface_colours() %}
   <div class="mk-rows">
-    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#4E6E66" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_paved'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
-    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#C8923A" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_gravel'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
-    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#6E7B96" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_cobbles'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
-    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#6E5849" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_dirt'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
-    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#5F5A54" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_rock'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
-    <div class="mk-row"><div class="mk-sw"><span class="mk-line dash" style="border-top-color:#D92D20" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_unverified'|trans }}</strong><span>{{ 'legend.line_unverified_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:{{ mksc.paved }}" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_paved'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:{{ mksc.gravel }}" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_gravel'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:{{ mksc.pave }}" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_cobbles'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:{{ mksc.dirt }}" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_dirt'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:{{ mksc.rock }}" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_rock'|trans }}</strong></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line dash" style="border-top-color:{{ mksc.unverified }}" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'map.legend_unverified'|trans }}</strong><span>{{ 'legend.line_unverified_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
     <div class="mk-row"><div class="mk-sw"><span class="mk-ticks" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.line_ticks_h'|trans }}</strong><span>{{ 'legend.line_ticks_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
   </div>
   <p class="mk-grp">{{ 'legend.lines_climbs'|trans }}</p>

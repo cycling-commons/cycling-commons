@@ -11,6 +11,7 @@
    a one-line change whenever the dark hero wants the mark bare.
 #}
 {% set size = size|default(76) %}
-<img class="scout-logo" src="{{ asset('brand/scout-logo.svg') }}" alt="{{ 'scout.logo_alt'|trans }}"
+{# `decorative: true` beside a heading that already says "Scout": empty alt, so a screen reader says it once. #}
+<img class="scout-logo" src="{{ asset('brand/scout-logo.svg') }}" alt="{{ decorative|default(false) ? '' : 'scout.logo_alt'|trans }}"
      width="{{ size }}" height="{{ size }}" loading="lazy" decoding="async"
      style="width:{{ size }}px;height:{{ size }}px">

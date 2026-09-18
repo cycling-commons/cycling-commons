@@ -1,28 +1,82 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {#
-   Scout on the two devices it ships for. The bezels are CSS; the screens are
-   ordinary <img>s pointing at assets/scout/*.svg.
+   Scout on the devices it runs on, drawn (owner 2026-09-18: drawn, not photos,
+   and each one must look like the real thing). Each device is one inline SVG:
+   the body, buttons and camera are shapes, the screen is an <image> clipped to
+   the display. No maker's wordmark on any body: the shape says which device
+   it is, and the marks are not ours to draw.
 
-   That split is the point: to put a real screenshot in, overwrite
-   assets/scout/garmin-screen.svg or assets/scout/android-screen.svg and change
-   nothing else. PNG works as well as SVG — object-fit crops either to the
-   frame, so only the rough aspect ratio matters.
+   Screens live in assets/scout/. The Garmin one is the real app, cut from the
+   Connect IQ store screenshot; the others are drawn stand-ins until real
+   screenshots exist. To swap one, overwrite the file and change nothing else:
+   the screen is cropped to the display (`slice`), so only the rough aspect
+   ratio matters.
 
    Params:
-     compact — smaller pair for the homepage CTA (default false)
+     compact    : the smaller set (default false)
+     decorative : hidden from screen readers, no captions (default: compact)
+     devices    : which to draw, in order (default: all four)
+     uid        : suffix for the SVG clip ids when a page draws the set twice
 #}
 {% set compact = compact|default(false) %}
-<div class="scout-devices{{ compact ? ' compact' : '' }}" aria-hidden="{{ compact ? 'true' : 'false' }}">
-  <figure class="dev dev-garmin">
-    <div class="screen">
-      <img src="{{ asset('scout/garmin-screen.svg') }}" alt="{{ compact ? '' : 'scout.shot_garmin_alt'|trans }}" loading="lazy" decoding="async">
-    </div>
-    {% if not compact %}<figcaption>{% trans %}scout.shot_garmin_cap{% endtrans %}</figcaption>{% endif %}
+{% set decorative = decorative ?? compact %}
+{% set devices = devices|default(['garmin', 'android', 'karoo', 'iphone']) %}
+{% set uid = uid|default('d') %}
+{% set status = {garmin: 'scout.plat_available', android: 'scout.plat_soon', karoo: 'scout.plat_planned', iphone: 'scout.plat_planned'} %}
+{% set name = {garmin: 'scout.plat_garmin', android: 'scout.plat_android', karoo: 'scout.plat_karoo', iphone: 'scout.plat_iphone'} %}
+<div class="scout-devices{{ compact ? ' compact' : '' }}" aria-hidden="{{ decorative ? 'true' : 'false' }}">
+{% for d in devices %}
+  <figure class="dev dev-{{ d }}">
+  {% if d == 'garmin' %}
+    {# Edge 1040 class: light shell, black face, red side key, dark bumper. #}
+    <svg viewBox="0 0 160 272" role="img" aria-label="{{ decorative ? '' : 'scout.shot_garmin_alt'|trans }}">
+      <defs><clipPath id="scr-g-{{ uid }}"><rect x="28" y="36" width="104" height="173" rx="2"/></clipPath></defs>
+      <rect x="1" y="54" width="8" height="28" rx="3" fill="#D6453A"/>
+      <rect x="151" y="62" width="7" height="20" rx="3" fill="#B9BAB5"/>
+      <rect x="151" y="90" width="7" height="20" rx="3" fill="#B9BAB5"/>
+      <rect x="42" y="252" width="76" height="16" rx="7" fill="#2A2C2F"/>
+      <rect x="6" y="4" width="148" height="258" rx="42" fill="#ECECE8" stroke="#C4C4BE" stroke-width="1.5"/>
+      <rect x="14" y="12" width="132" height="242" rx="34" fill="#141618"/>
+      <image href="{{ asset('scout/garmin-screen.webp') }}" x="28" y="36" width="104" height="173" preserveAspectRatio="xMidYMid slice" clip-path="url(#scr-g-{{ uid }})"/>
+      <path d="M80 226l-5 7h10z" fill="#5A5D61"/>
+    </svg>
+  {% elseif d == 'android' %}
+    {# A current Android phone: flat, thin bezels, punch-hole camera, keys on the right. #}
+    <svg viewBox="0 0 160 330" role="img" aria-label="{{ decorative ? '' : 'scout.shot_android_alt'|trans }}">
+      <defs><clipPath id="scr-a-{{ uid }}"><rect x="12" y="10" width="136" height="310" rx="21"/></clipPath></defs>
+      <rect x="152" y="86" width="5" height="28" rx="2" fill="#3A3D42"/>
+      <rect x="152" y="126" width="5" height="46" rx="2" fill="#3A3D42"/>
+      <rect x="5" y="3" width="150" height="324" rx="28" fill="#1C1E21" stroke="#44474D" stroke-width="1.5"/>
+      <image href="{{ asset('scout/android-screen.svg') }}" x="12" y="10" width="136" height="310" preserveAspectRatio="xMidYMid slice" clip-path="url(#scr-a-{{ uid }})"/>
+      <circle cx="80" cy="22" r="4.5" fill="#050505"/>
+    </svg>
+  {% elseif d == 'karoo' %}
+    {# Karoo class: black slab, big screen, two page keys under it, side keys. #}
+    <svg viewBox="0 0 170 282" role="img" aria-label="{{ decorative ? '' : 'scout.shot_karoo_alt'|trans }}">
+      <defs><clipPath id="scr-k-{{ uid }}"><rect x="21" y="22" width="128" height="196" rx="5"/></clipPath></defs>
+      <rect x="1" y="64" width="7" height="30" rx="3" fill="#3B3D41"/>
+      <rect x="162" y="64" width="7" height="30" rx="3" fill="#3B3D41"/>
+      <rect x="162" y="104" width="7" height="30" rx="3" fill="#3B3D41"/>
+      <rect x="6" y="4" width="158" height="274" rx="30" fill="#17181B" stroke="#3A3C40" stroke-width="1.5"/>
+      <rect x="14" y="12" width="142" height="258" rx="24" fill="none" stroke="#26282C" stroke-width="2"/>
+      <image href="{{ asset('scout/garmin-screen.svg') }}" x="21" y="22" width="128" height="196" preserveAspectRatio="xMidYMid slice" clip-path="url(#scr-k-{{ uid }})"/>
+      <rect x="38" y="236" width="38" height="16" rx="8" fill="#2A2C30" stroke="#44474C"/>
+      <rect x="94" y="236" width="38" height="16" rx="8" fill="#2A2C30" stroke="#44474C"/>
+    </svg>
+  {% elseif d == 'iphone' %}
+    {# An iPhone: metal band, round corners, island at the top, keys both sides. #}
+    <svg viewBox="0 0 160 330" role="img" aria-label="{{ decorative ? '' : 'scout.shot_iphone_alt'|trans }}">
+      <defs><clipPath id="scr-i-{{ uid }}"><rect x="13" y="11" width="134" height="308" rx="26"/></clipPath></defs>
+      <rect x="2" y="70" width="5" height="16" rx="2" fill="#8C8D91"/>
+      <rect x="2" y="98" width="5" height="30" rx="2" fill="#8C8D91"/>
+      <rect x="2" y="136" width="5" height="30" rx="2" fill="#8C8D91"/>
+      <rect x="153" y="110" width="5" height="46" rx="2" fill="#8C8D91"/>
+      <rect x="5" y="3" width="150" height="324" rx="34" fill="#1B1B1D" stroke="#9A9BA0" stroke-width="3"/>
+      <image href="{{ asset('scout/android-screen.svg') }}" x="13" y="11" width="134" height="308" preserveAspectRatio="xMidYMid slice" clip-path="url(#scr-i-{{ uid }})"/>
+      <rect x="57" y="19" width="46" height="14" rx="7" fill="#000"/>
+    </svg>
+  {% endif %}
+  {% if not decorative %}<figcaption>{{ name[d]|trans }} <span class="st">{{ status[d]|trans }}</span></figcaption>{% endif %}
   </figure>
-  <figure class="dev dev-phone">
-    <div class="screen">
-      <img src="{{ asset('scout/android-screen.svg') }}" alt="{{ compact ? '' : 'scout.shot_android_alt'|trans }}" loading="lazy" decoding="async">
-    </div>
-    {% if not compact %}<figcaption>{% trans %}scout.shot_android_cap{% endtrans %}</figcaption>{% endif %}
-  </figure>
+{% endfor %}
 </div>

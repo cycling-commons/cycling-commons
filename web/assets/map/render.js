@@ -252,13 +252,15 @@ export function drawLine(id, latlngs, color, layer, f){
 }
 /* A · Road surface: colour = class. Road type is a separate pale core (not a colour here). */
 /* Colour = class; dash = quality ticks. Exception: unverified red dash is the meaning. */
+/* Colours come from SurfaceVocabulary::LINE_COLOUR (window.CC_SURFACE_COLOURS), the only palette. */
+const SURF_COL=(typeof window!=='undefined' && window.CC_SURFACE_COLOURS) || {};
 export const SURFACE_STYLE={
-  paved:{color:'#4E6E66'},                           // asphalt/concrete — slate
-  gravel:{color:'#C8923A'},                          // gravel/compacted — ochre
-  pave:{color:'#6E7B96'},                            // sett/cobbles (pavé) — slate-grey
-  dirt:{color:'#6E5849'},                            // dirt — brown
-  rock:{color:'#5F5A54'},                            // rock — dark grey
-  unverified:{color:'#D92D20',dash:[2.5,2.5],cap:'butt'} // OSM has no surface tag — red dashes over the white casing ("needs a tag")
+  paved:{color:SURF_COL.paved},                      // asphalt/concrete
+  gravel:{color:SURF_COL.gravel},                    // gravel/compacted
+  pave:{color:SURF_COL.pave},                        // sett/cobbles (pavé)
+  dirt:{color:SURF_COL.dirt},                        // dirt
+  rock:{color:SURF_COL.rock},                        // rock
+  unverified:{color:SURF_COL.unverified,dash:[2.5,2.5],cap:'butt'} // OSM has no surface tag: red dashes over the white casing ("needs a tag")
 };
 export const surfaceStyle=cls=>SURFACE_STYLE[cls]||{color:'#4E8C84'};
 // One GeoJSON source for all A segments + shared casing + one line layer per class.

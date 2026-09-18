@@ -28,6 +28,21 @@ final class SurfaceVocabulary
         'Fine gravel' => 'Gravel', 'Gravel' => 'Gravel', 'Dirt' => 'Gravel', 'Rock' => 'Gravel',
     ];
 
+    /**
+     * @var array<string, string> Tile class → line colour. The only palette:
+     * the map lines (render.js SURFACE_STYLE via CC_SURFACE_COLOURS), the
+     * legend box, the Key panel and the /map-key page all read it. Red is
+     * reserved for `unverified` (drawn dashed).
+     */
+    public const array LINE_COLOUR = [
+        'paved' => '#577A71',
+        'gravel' => '#C8923A',
+        'pave' => '#B89AD9',
+        'dirt' => '#6E5849',
+        'rock' => '#98A1AB',
+        'unverified' => '#D92D20',
+    ];
+
     /** @var array<string, string> Tile class → declarable label. `cycleway` and `unverified` are absent: they confirm nothing. */
     public const array TILE_CLASS = [
         'paved' => 'Asphalt',

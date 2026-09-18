@@ -122,6 +122,34 @@ precedence = "override"
 SPDX-FileCopyrightText = "© Meta Platforms (mapillary-js); © Redocly (redoc)"
 SPDX-License-Identifier = "MIT"
 
+# The Android robot, Google's artwork shared under CC BY 3.0, taken from
+# Wikimedia Commons (File:Android_robot.svg). Modified: the white separator
+# strokes are the dark hero colour, so the shape reads on /scout's dark
+# chips. Credited on /credits as the licence asks. Not the Android wordmark.
+[[annotations]]
+path = "web/assets/scout/android-robot.svg"
+precedence = "override"
+SPDX-FileCopyrightText = "© Google LLC"
+SPDX-License-Identifier = "CC-BY-3.0"
+
+# Garmin's Connect IQ Store badge: Garmin's artwork and marks, used unaltered
+# under Garmin's Connect IQ brand guidelines to link Scout's live store page.
+# Not ours and not licensed by us; see the LicenseRef text.
+[[annotations]]
+path = "web/assets/scout/connect-iq-badge-*.png"
+precedence = "override"
+SPDX-FileCopyrightText = "© Garmin Ltd. or its subsidiaries"
+SPDX-License-Identifier = "LicenseRef-Garmin-Connect-IQ-Badge"
+
+# fflate, the zip reader Scout's review page opens ride bundles with
+# (docs/specs/scout-bundle.md). Its ESM browser build, vendored verbatim from
+# the npm tarball (sha512 as published on the registry).
+[[annotations]]
+path = "web/assets/lib/fflate-*"
+precedence = "override"
+SPDX-FileCopyrightText = "© Arjun Barrett"
+SPDX-License-Identifier = "MIT"
+
 # Scout's FIT reader, copied verbatim from the Scout repository's
 # tools/fit-viewer.html between its own PARSER-START/PARSER-END markers. Same
 # owner as this project, MIT rather than AGPL, so it stays annotated as what it

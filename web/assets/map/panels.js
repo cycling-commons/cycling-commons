@@ -19,7 +19,7 @@ import { curScope, inScope } from './scope-ui.js';
 import { modeToShow } from './filters.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          toggleSurfaceClass, setStudyMode, studyModeOn,
-         setGapsGrid, gapsGridOn, CLASSIFIED_MIN_ZOOM } from './surface-tiles.js';
+         setGapsGrid, gapsGridOn, CLASSIFIED_MIN_ZOOM, GAPS_MAX_ZOOM } from './surface-tiles.js';
 import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './routes-tiles.js';
 import { setFilterDot } from './shell.js';
 
@@ -105,9 +105,11 @@ export function initLayerList(){
       studyBtn.disabled=!on;
       if(!on && studyModeOn()){ setStudyMode(false); studyBtn.setAttribute('aria-pressed','false'); }
     }
-    // Gaps toggle exists only while the skin is on.
-    if(gapsBtn) gapsBtn.hidden=!surfaceTilesVisible();
+    // Gaps toggle exists only while the skin is on, and only up to the zoom
+    // the grid draws at: above it the button would switch on nothing.
+    if(gapsBtn) gapsBtn.hidden=!surfaceTilesVisible() || map.getZoom() > GAPS_MAX_ZOOM + 1;
   };
+  map.on('zoomend', syncStudyGate);
   if(gapsBtn){
     gapsBtn.onclick=()=>{
       const on=setGapsGrid(!gapsGridOn());

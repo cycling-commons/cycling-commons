@@ -25,6 +25,7 @@ use App\Catalog\RidingStyle;
 use App\Catalog\RouteClimbService;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
+use App\Catalog\SurfaceVocabulary;
 use App\Coverage\CoverageManifest;
 use App\Coverage\RoutesManifest;
 use App\Coverage\SurfaceManifest;
@@ -189,6 +190,8 @@ final class MapController extends AbstractController
         }
         $params['scout_tags'] = array_map(static fn (array $byDetail): array => $byDetail[''], $offers);
         $params['scout_details'] = $offers;
+        // Surface label → map line class, so a changed dropdown recolours the stretch.
+        $params['scout_surface_class'] = SurfaceVocabulary::TO_TILE_CLASS;
 
         return $this->render('map/index.html.twig', $params);
     }
@@ -370,14 +373,25 @@ final class MapController extends AbstractController
             'scoutNeedName' => 'd_scout_need_name', 'scoutSendFailed' => 'd_scout_send_failed',
             'scoutBadFile' => 'd_scout_bad_file', 'scoutNoTags' => 'd_scout_no_tags',
             'scoutNeedFit' => 'd_scout_need_fit',
+            'scoutBundleBad' => 'd_scout_bundle_bad', 'scoutBundleVersion' => 'd_scout_bundle_version',
+            'scoutBundleTooLarge' => 'd_scout_bundle_too_large', 'scoutBundlePhotos' => 'd_scout_bundle_photos',
+            'scoutBundlePhotoRemove' => 'd_scout_bundle_photo_remove', 'scoutBundlePhotosFailed' => 'd_scout_bundle_photos_failed',
+            'scoutBundleUnmatched' => 'd_scout_bundle_unmatched',
             'scoutAddPhoto' => 'd_scout_add_photo', 'scoutPhotoAttached' => 'd_scout_photo_attached', 'scoutPhotosAttached' => 'd_scout_photos_attached',
             'scoutRadar' => 'd_scout_radar',
             'scoutPassNoFix' => 'd_scout_pass_nofix',
             'scoutCloseUnsent' => 'd_scout_close_unsent', 'scoutNoFix' => 'd_scout_no_fix',
             'scoutStretchToEnd' => 'd_scout_stretch_to_end',
+            'scoutSetEnd' => 'd_scout_set_end', 'scoutKeepEnd' => 'd_scout_keep_end',
+            'scoutEndFirst' => 'd_scout_end_first', 'scoutPickEnd' => 'd_scout_pick_end',
+            'scoutPickOnRide' => 'd_scout_pick_on_ride', 'scoutPickAfterStart' => 'd_scout_pick_after_start',
+            'scoutNeedEnd' => 'd_scout_need_end',
             'scoutDescribe' => 'd_scout_describe', 'scoutRemove' => 'd_scout_remove',
-            'scoutBareSurface' => 'd_scout_bare_surface',
-            'scoutSendAll' => 'd_scout_send_all',
+            'scoutBareSurface' => 'd_scout_bare_surface', 'scoutShowBare' => 'd_scout_show_bare',
+            'scoutBareTitle' => 'd_scout_bare_title', 'scoutBareInside' => 'd_scout_bare_inside',
+            'scoutEndAtBare' => 'd_scout_end_at_bare',
+            'scoutPickStop' => 'd_scout_pick_stop',
+            'scoutSendAll' => 'd_scout_send_all', 'scoutSendEverything' => 'd_scout_send_everything',
             'roadMain' => 'd_road_main', 'roadLocal' => 'd_road_local',
             'roadResidential' => 'd_road_residential', 'roadTrack' => 'd_road_track',
             'roadPath' => 'd_road_path', 'roadCycleway' => 'd_road_cycleway',

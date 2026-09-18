@@ -6,45 +6,25 @@
    sensible aspect ratio crops into the frame instead of stretching, so a real
    screenshot never needs the CSS touched. */
 
-.scout-devices{display:flex;align-items:flex-end;justify-content:center;gap:clamp(1.5rem,4vw,3rem);flex-wrap:wrap}
-.scout-devices .dev{margin:0;display:flex;flex-direction:column;align-items:center;gap:.7rem}
-.scout-devices figcaption{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.55)}
-.scout-devices .screen{position:relative;overflow:hidden;background:#101E16}
-.scout-devices .screen img{display:block;width:100%;height:100%;object-fit:cover}
-
-/* ---- Garmin Edge: squat body, screen inset, three buttons ---- */
-.dev-garmin .screen{
-  width:186px;height:244px;border-radius:9px;
-  border:11px solid #23262b;box-shadow:0 0 0 1px #3b3f46, 0 14px 30px -12px rgba(0,0,0,.65);
-}
-.dev-garmin{position:relative}
-/* the two side buttons and the bottom one, drawn on the bezel */
-.dev-garmin .screen::before,
-.dev-garmin .screen::after{content:"";position:absolute;width:3px;height:20px;background:#3b3f46;border-radius:2px}
-.dev-garmin .screen::before{left:-8px;top:64px}
-.dev-garmin .screen::after{right:-8px;top:64px}
-
-/* ---- Android phone: tall, rounded, a pill for the camera ---- */
-.dev-phone .screen{
-  width:172px;height:372px;border-radius:22px;
-  border:8px solid #23262b;box-shadow:0 0 0 1px #3b3f46, 0 14px 30px -12px rgba(0,0,0,.65);
-}
-.dev-phone .screen::after{
-  content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);
-  width:38px;height:5px;border-radius:3px;background:#23262b;
-}
-
-/* On the dark Scout hero the captions are pale; on the light homepage CTA they
-   are not used at all (compact), so nothing needs re-colouring there. */
-.scout-devices.compact{gap:1.1rem;align-items:flex-end}
-.scout-devices.compact .dev-garmin .screen{width:104px;height:136px;border-width:7px;border-radius:7px}
-.scout-devices.compact .dev-garmin .screen::before,
-.scout-devices.compact .dev-garmin .screen::after{display:none}
-.scout-devices.compact .dev-phone .screen{width:92px;height:198px;border-width:5px;border-radius:14px}
-.scout-devices.compact .dev-phone .screen::after{width:22px;height:3px;top:4px}
+.scout-devices{display:flex;align-items:flex-end;justify-content:center;gap:clamp(1.2rem,3.5vw,2.6rem);flex-wrap:wrap}
+.scout-devices .dev{margin:0;display:flex;flex-direction:column;align-items:center;gap:.75rem}
+.scout-devices svg{display:block;height:auto;filter:drop-shadow(0 12px 18px rgba(0,0,0,.28))}
+.scout-devices figcaption{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#3f4236;text-align:center;line-height:1.5}
+.scout-devices figcaption .st{display:block;color:#7a7d6c}
+.scout-devices .dev-garmin figcaption .st{color:#B8431A}
+/* Not out yet: the device greys back; its caption stays at full contrast. */
+.scout-devices .dev:not(.dev-garmin) svg{filter:grayscale(.85) drop-shadow(0 12px 18px rgba(0,0,0,.18));opacity:.55}
+/* Real-size ratios: a bike computer is squatter than a phone, so the widths differ. */
+.dev-garmin svg{width:118px}
+.dev-karoo svg{width:124px}
+.dev-android svg,.dev-iphone svg{width:112px}
+.scout-devices.compact .dev-garmin svg{width:78px}
+.scout-devices.compact .dev-karoo svg{width:82px}
+.scout-devices.compact .dev-android svg,.scout-devices.compact .dev-iphone svg{width:74px}
 
 @media(max-width:560px){
-  .scout-devices.compact{display:none}   /* the CTA text carries it on a phone */
+  .scout-devices.compact[aria-hidden="true"]{display:none}   /* the homepage CTA text carries it on a phone */
+  .scout-devices:not(.compact) svg{width:96px}
 }
 
 /* The Scout mark (partials/_scout_logo.html.twig). A hard-edged square tile

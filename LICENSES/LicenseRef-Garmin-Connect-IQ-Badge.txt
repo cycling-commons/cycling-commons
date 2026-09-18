@@ -1,0 +1,14 @@
+Garmin Connect IQ Store badge
+
+The "Available on the Connect IQ Store" badge and the Garmin and Connect IQ
+marks in it are trademarks of Garmin Ltd. or its subsidiaries. They are NOT
+licensed by this project, and none of this project's licences apply to them.
+
+They are used, unaltered, under Garmin's Connect IQ brand guidelines, which
+allow the badge to promote apps that are compatible with and available in
+the Connect IQ Store:
+
+  https://developer.garmin.com/brand-guidelines/connect-iq/
+
+Anyone else who wants to use the badge must get it from Garmin and follow
+Garmin's terms.

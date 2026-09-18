@@ -91,3 +91,29 @@ export function sliceTrack(track, i0, i1) {
   const sampled = downsample(line, MAX_SEGMENT_POINTS);
   return { a: sampled[0], b: sampled[sampled.length - 1], line: sampled };
 }
+
+/* End index for a stretch from a point the rider clicked: the nearest ride
+   sample, or -1 when that sample is not after the start (a stretch runs
+   forward along the ride). */
+export function endIndexFor(track, startIdx, lngLat) {
+  const idx = nearestTrackIndex(track, lngLat);
+  return idx > startIdx && startIdx >= 0 ? idx : -1;
+}
+
+/* First ride sample at or after `when`: where a tap sits on the ride by time,
+   right even where the ride crosses itself. -1 when there is none. */
+export function trackIndexAt(track, when) {
+  if (!(when instanceof Date)) return -1;
+  const ms = when.getTime();
+  for (let i = 0; i < track.length; i++) {
+    if (track[i].at instanceof Date && track[i].at.getTime() >= ms) return i;
+  }
+  return -1;
+}
+
+/* No-type taps still inside an unsent stretch: the ones a rider can act on.
+   Used as an end, or on a stretch that was sent or removed, a tap is settled. */
+export function openBareTaps(bareTaps, stretches) {
+  return bareTaps.filter(b => stretches.some(x => x.geom && !x.approved && !x.dismissed
+    && b.idx > x.startIdx && b.idx < x.endIdx));
+}

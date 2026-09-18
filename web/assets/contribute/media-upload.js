@@ -560,6 +560,8 @@
       });
     });
 
-    return { count: function () { return items.length; } };
+    /* `accept` lets a page hand over files it already holds (a Scout bundle's
+       photos); they take the same consent gate as a picked file. */
+    return { count: function () { return items.length; }, accept: accept };
   };
 })();

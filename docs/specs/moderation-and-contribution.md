@@ -2652,15 +2652,30 @@ road. The card is titled
 no longer appear as bogus point cards defaulting to Water & food —
 owner-reported 2026-08-18); its surface dropdown is the A form's own
 vocabulary, preselected from the device's OSM value, and an explicit choice
-outranks the device at intake. Sending posts the ordinary tag wire plus
+outranks the device at intake. Each choice in it shows the line colour it draws on the map, on
+the map's cream casing (the map page's own dropdown, `select-box.js`,
+with a `decorate` hook for the line). Changing it recolours the
+stretch on the map at once (owner 2026-09-18), through `SurfaceVocabulary::TO_TILE_CLASS` handed to the
+page as `CC_SURFACE_CLASS`, so the line always shows what will be sent. Sending posts the ordinary tag wire plus
 `segment` = `{a, b, line}` in `[lng, lat]` pairs, cut from the ride strictly
 between the taps (`scout-segments.js` `cutTrack`, tap points win the
 endpoints, ≤ 3000 points) and re-validated by the same
 `CatalogContributionService::decodeSegment` the map wizard uses (endpoint
-drift ≤ 1 km). A stretch with **no END tap** runs to the next transition or
-the ride's end and its card says so, telling the rider to check the line
-before sending — the plan's "ask in the viewer", answered by showing rather
-than prompting. The raw OSM value (`surface=gravel`) is kept **verbatim in
+drift ≤ 1 km). A stretch closed by the next type tap ends there. A stretch
+with **no END tap and no later type tap** runs to the ride's end, and that is
+rarely true, so **it cannot be sent until the rider decides** (owner,
+2026-09-18): its card says "No END tap", its send button is off, and "Send
+the rest" skips it and says how many it skipped. The rider fixes it in one of
+three ways: **Set the end on the map** (the next click on the ride sets the
+end; `scout-segments.js` `endIndexFor` snaps it to the nearest ride sample
+and refuses a click at or before the green start; the instruction and any
+refusal show in a bar on the map with a Stop button, not in the panel; the
+click opens no drawer,
+because `picking.js` `claimMapClicks` holds the map), dragging the red end
+circle, or **It runs to the end** (the ride end was right). Only a stretch
+whose end is in doubt offers Set the end: no END tap, or a no-type tap inside
+its line (owner 2026-09-18). A tapped end is trusted; its red circle still
+drags along the ride. The raw OSM value (`surface=gravel`) is kept **verbatim in
 the submission payload** beside the declarable label, because this data is
 meant to be fit to hand back to OSM one day (owner, 2026-08-18) and the OSM
 spelling is the OSM-side fact. A surface tap with no stretch is still refused
@@ -2676,7 +2691,10 @@ are about to contradict. That judgement is the task.
 
 **Tags are red until they are resolved.** Red is the one colour the map does not
 use for a place, so a rider scanning a ride can find what still needs them; a
-sent tag turns green. Dragging a tag is **free** (owner 2026-08-18, reversing
+sent tag turns green. Scout markers draw **above every map pin** (owner,
+2026-09-18): tag pins and stretch ends on top, vehicle passes just below them,
+catalogue pins under both, so a mapped place never hides a tag the rider must
+resolve. Dragging a tag is **free** (owner 2026-08-18, reversing
 the 2026-08-12 clamp): the ride is where the rider *was*, not where the thing
 *is* — a castle tagged from the road stands beside it, and the clamp made the
 correct position unreachable. The rider reviewing their own ride is the
@@ -2706,13 +2724,28 @@ it carries no category on the device and asks for none in review — its card is
 a free-text description only, and the intake auto-files it as an **E notice**
 with `hazardType: Other`, the curator's read of the text being the filing
 decision. An empty description refuses to send: "Other" as a name tells the
-curator nothing. A **bare surface tap** (the device's type picker timed out:
-"surface, here", no type, no stretch) is **hidden from the review and counted
-in the panel's fact lines** (owner 2026-08-18: "if it times out just hide
-it") — it cannot become an A point, and its old fallback dropdown defaulted
-to Water & food inside a card titled Surface, which read as a bug because it
-was one. Counted, never silent: a rider who counts thirteen taps and sees
+curator nothing. A **bare surface tap** (the device's type picker closed
+before the rider chose: "surface, here", no type, no stretch) gets **no card
+and is never sent** (owner 2026-08-18: "if it times out just hide it"): it
+cannot become an A point. It is **a grey `?` pin on the ride**, drawn above the
+red pins so a tag never covers it, and counted in the panel's fact lines with
+a "Show on the map" link that flies there (owner 2026-09-18). The line
+counts only taps still inside an unsent stretch, drops by one as each is
+used, and vanishes with the last; the "Send all" warning about stretches
+with no end shrinks and vanishes the same way. The pin exists because a
+timed-out picker is often a lost END: the rider tapped to close a stretch and the picker closed
+first. The pin sits on the ride by its time (`trackIndexAt`), so a ride that
+crosses itself still puts it on the right pass. A stretch with a grey pin
+inside it says so on its card and offers **End it at the ?**; a click on the
+pin opens that card, and in end-pick mode sets the end there. Counted, never silent: a rider who counts thirteen taps and sees
 twelve cards deserves the difference named.
+
+**A phone app sends a bundle, not a bare FIT** (owner 2026-09-18). The
+review page opens a `.fit` from a bike computer, or a `.zip` a Scout phone app
+exported: the ride plus the notes and photos taken at each tag, linked by the
+tag's FIT timestamp. It is unpacked in the browser, the notes fill the name
+fields and the photos sit on their cards until that card is sent. The format
+is its own spec: [scout-bundle.md](scout-bundle.md).
 
 **The review screen shows everything at once** (2026-08-12). Rows are open, not
 collapsed: a rider came to check that thirteen tags are the right thirteen
@@ -2721,7 +2754,8 @@ carries its letter and one compact control row — the name field with a camera
 and a send icon button at its right (owner 2026-08-18; the words live in the
 buttons' title/aria-label, and the send icon walks send → sending → sent as a
 plane, a dimmed plane, a check); **Send the rest** clears whatever is still
-outstanding, in order.
+outstanding, in order. It reads **Send all** until the first tag has gone
+(owner 2026-09-18), and is off once everything is sent.
 
 - **A tag can be waved away** (owner 2026-08-18): a ✕ on each card removes
   it from THIS review — card, pin(s), and a stretch's line — and nothing
@@ -2788,6 +2822,25 @@ outstanding, in order.
   where a first-time rider actually reads it). This replaced the
   measured-width mechanism the taller mark needed; the ResizeObserver went
   with it.
+- **The `/scout` page shows this review screen in its hero** (owner
+  2026-09-18): a real screenshot, `brand-src/import-a-scout-ride.webp`,
+  served as four widths (480, 960, 1440, 1900 px) from
+  `assets/scout/review/` through `srcset`, in a neutral CSS browser frame
+  (address bar with a lock, a thin scrollbar, no window buttons). A click
+  opens it large in a native `<dialog>` (`assets/js/shot-zoom.js`).
+  Under the three steps sit **four drawn devices** (`_scout_devices.html.twig`,
+  inline SVG, no maker's wordmark): Garmin Edge (the real app screen, cut
+  from the Connect IQ store screenshot, `assets/scout/garmin-screen.webp`),
+  Android, Hammerhead Karoo and iPhone, each captioned with its status. Those
+  not out yet are greyed; their captions keep full contrast. The hero's
+  platform chips list the same four. Brand marks follow each owner's rules
+  (owner 2026-09-18): Garmin's own "Available on the Connect IQ Store" badge
+  (unaltered, `LicenseRef-Garmin-Connect-IQ-Badge`) replaces the Garmin chip
+  and links the live store page; the Android robot (Google, CC BY 3.0,
+  credited on `/credits`) sits in its chip; Hammerhead and Apple marks need
+  their owners' permission, so those chips stay text. A store badge appears
+  only once the app is live in that store. The homepage keeps two, small and
+  decorative.
 - **The category dropdown is opaque.** A translucent control mixed with the
   system white behind the native popup and rendered pale cream on pale grey;
   both the closed control and its `option`s now state their own colours.

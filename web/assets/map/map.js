@@ -32,6 +32,7 @@ import { initLayerList, initMapCtrl, initRailChrome, initBestOf, initFilterPill,
          initChips, initViewMode, initAddClimbHere, liftModeFor } from './panels.js';
 import { initTheme } from './theme.js';
 import { initShell } from './shell.js';
+import { initSelectBoxes } from './select-box.js';
 import { layerGlyph } from './icons.js';
 
   initScope();
@@ -41,6 +42,7 @@ import { layerGlyph } from './icons.js';
 
   initMapControls({toast: mapToast});
   initShell();
+  initSelectBoxes();
   initTheme();
 
 

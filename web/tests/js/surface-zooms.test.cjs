@@ -38,7 +38,16 @@ test('the client hands over at the zoom the build hands over at', () => {
   assert.equal(clientHandover(), todo.minZoom,
     'the to-do lines would be asked for at zooms the artifact has no tiles for');
   assert.equal(clientHandover(), gaps.maxZoom,
-    'the grid would keep drawing over the roads it summarises, or stop before they start');
+    'the build hands the grid over where the to-do lines begin');
+});
+
+test('the grid draws past the handover by overzoom, never short of it', () => {
+  // The build stops the grid at gaps.maxZoom; the client may stretch those
+  // tiles further (owner 2026-09-18: squares until z12), never stop earlier.
+  const m = source.match(/^export const GAPS_MAX_ZOOM\s*=\s*(\d+);/m);
+  assert.ok(m, 'GAPS_MAX_ZOOM not found in surface-tiles.js');
+  assert.ok(Number(m[1]) >= contract.surface.gaps.maxZoom);
+  assert.equal(Number(m[1]), 12);
 });
 
 test('the to-do arm is a subset of the extracted network', () => {

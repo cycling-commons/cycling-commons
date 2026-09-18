@@ -28,6 +28,10 @@ const TODO_PREFIX = 'surftodo-';
 /* To-do lines start here; the gaps grid stops. Pinned to contract
    surface.todo.minZoom / surface.gaps.maxZoom by surface-zooms.test.cjs. */
 const TODO_MIN_ZOOM = 11;
+/* The grid draws one level past the handover (owner 2026-09-18): MapLibre
+   stretches the z11 tiles, so squares and to-do lines overlap from z11 to
+   z12. The build still stops the grid at the handover; no rebuild needed. */
+export const GAPS_MAX_ZOOM = 12;
 
 /* Classified-skin floor (docs/specs/coverage-provider.md §4): MapLibre derives
    the source zoom range from layers, so this stops z8/z9 tile fetches. */
@@ -248,7 +252,7 @@ export function addGapsGrid() {
     type: 'fill',
     source: SURFACE_GAPS_SOURCE,
     'source-layer': 'gaps',
-    maxzoom: TODO_MIN_ZOOM,
+    maxzoom: GAPS_MAX_ZOOM + 1,
     layout: { visibility: 'none' },
     paint: { 'fill-color': surfaceStyle('unverified').color, 'fill-opacity': shade },
   }, under);
@@ -257,7 +261,7 @@ export function addGapsGrid() {
     type: 'line',
     source: SURFACE_GAPS_SOURCE,
     'source-layer': 'gaps',
-    maxzoom: TODO_MIN_ZOOM,
+    maxzoom: GAPS_MAX_ZOOM + 1,
     layout: { visibility: 'none' },
     // Hairline so the grid reads as a grid rather than a stain.
     paint: { 'line-color': surfaceStyle('unverified').color, 'line-width': 0.4, 'line-opacity': 0.35 },

@@ -82,3 +82,16 @@ test('motorways, trunk roads and service roads stay out', () => {
     );
   }
 });
+
+test('every class the client draws has a colour in the one palette', () => {
+  // SurfaceVocabulary::LINE_COLOUR is the only palette; render.js reads it
+  // through CC_SURFACE_COLOURS. A class without an entry draws with no colour.
+  const php = fs.readFileSync(path.join(ROOT, 'src/Catalog/SurfaceVocabulary.php'), 'utf8');
+  const block = php.match(/const array LINE_COLOUR = \[([\s\S]*?)\];/);
+  assert.ok(block, 'LINE_COLOUR not found in SurfaceVocabulary.php');
+  const palette = Object.fromEntries([...block[1].matchAll(/'([a-z]+)'\s*=>\s*'(#[0-9A-Fa-f]{6})'/g)].map((m) => [m[1], m[2]]));
+  assert.deepEqual(Object.keys(palette).sort(), [...styleKeys()].sort());
+  // Red means "not recorded" and nothing else.
+  const red = Object.entries(palette).filter(([, hex]) => hex.toUpperCase() === '#D92D20').map(([k]) => k);
+  assert.deepEqual(red, ['unverified']);
+});

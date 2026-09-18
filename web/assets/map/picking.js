@@ -11,7 +11,11 @@ import { mapToast } from './drawer.js';
 
 export const _pickSegs={};   // route id → list<{start,end}>
 let _pick=null;       // active picking session or null
-export const isPicking = () => !!_pick;
+let _claimed=false;   // another module owns map clicks (Scout stretch end)
+export const isPicking = () => !!_pick || _claimed;
+/* A click that places something must not also open a drawer. */
+export function claimMapClicks(){ _claimed=true; }
+export function releaseMapClicks(){ _claimed=false; }
 
 
 function startPicking(routeId){

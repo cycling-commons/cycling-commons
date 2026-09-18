@@ -412,6 +412,16 @@ map module opens `#drawer` behind its back.
   for one; nothing in the app exports GeoJSON, so it would have been a button
   that does nothing. Owner call 2026-08-20: leave it out until the export
   itself exists (the ODbL credit has to travel inside the file).
+- **Dropdowns are ours** (owner 2026-09-18). Every `<select>` on the map page
+  (ride-check radius, Scout cards, the route drawer's community box, the bug
+  form) draws as a button plus a listbox from `select-box.js`, not the
+  browser's popup. The native select stays in the page, hidden, and stays the
+  truth: forms submit it, code reads and writes `.value` (the box repaints on
+  a write), and `change` fires on it. One watcher picks up selects added
+  later; `data-native` opts one out. The list is `position: fixed` in the
+  colours of the button it opened from, so no panel with overflow hidden
+  cuts it off. Keyboard: arrows, Home/End, type-ahead, Enter/Space, Esc, Tab.
+  The Scout surface picker uses its `decorate` hook to add each class's line.
 
 ### 4.1 Layer toggles
 
@@ -1329,7 +1339,12 @@ The marks stack four independent signals on one shape, and the key says so in
 two places, sized to their audience:
 
 - **The Key rail panel** (`data-panel="key"`, `#p-key`, title
-  `map.rail_key`). The quick reference while riding: the four grammar rows
+  `map.rail_key`). It opens from the rail and from a **corner Key button**
+  (`#cc-keyfab`, owner 2026-09-18) stacked on the bug button at the bottom
+  right, same size and right edge, lifted with it by the translate bar; both
+  buttons show the panel's open state (`aria-expanded`). It ends with a **Road
+  surface** group: the five class lines plus "not recorded", drawn on the
+  map's cream casing from the one palette, `SurfaceVocabulary::LINE_COLOUR`. The quick reference while riding: the four grammar rows
   (data-provider-hierarchy.md §6.7: small disc for a gross provider, dashed
   for a specialty provider, solid paper for ours, and the `?` badge for
   nobody-has-stood-here, on any border)
@@ -1435,10 +1450,15 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   class** — MapLibre cannot data-drive `line-dasharray`, so dash/cap vary per
   class layer, not per feature. Style keys **primarily on `surface=`,
   secondarily on `smoothness=`** (avoiding CyclOSM's known bug that hides
-  gravel under `smoothness=intermediate`). Class palette in `SURFACE_STYLE`
-  (map.js): purple cycleway, slate paved, dashed ochre gravel, square slate-grey
-  pavé dashes, dashed brown dirt, dotted dark-grey rock, and red dashes for
-  `unverified` (no surface tag — "needs a tag"). Re-render is a single
+  gravel under `smoothness=intermediate`). The palette is ONE table,
+  `SurfaceVocabulary::LINE_COLOUR` (owner 2026-09-18): paved slate green `#577A71`,
+  gravel ochre `#C8923A`, pavé light purple `#B89AD9`, dirt brown `#6E5849`,
+  rock light grey `#98A1AB`, and red `#D92D20` dashes for `unverified` (no
+  surface tag, "needs a tag"; red means nothing else). The map lines read it
+  through `CC_SURFACE_COLOURS` into `render.js` `SURFACE_STYLE`; the legend box,
+  the Key panel's Road surface group and the `/map-key` page read it through
+  `cc_surface_colours()`. `surface-classes.test.cjs` fails when a drawn class
+  has no colour. Re-render is a single
   `setData`; click/hover listeners bind once per class layer and resolve the
   feature via `properties.idx`.
 - **A · the OSM surface skin** is a *second* A layer and a different thing: the
@@ -1634,9 +1654,12 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   dark, not 400,000 line geometries they cannot read at that zoom. Shading is
   the **share**, not the absolute kilometres, so a dense city cell does not
   out-shout the empty countryside that actually needs surveying.
-  The grid stops at exactly the zoom the lines
+  The build stops the grid at exactly the zoom the lines
   start (contract `gaps.maxZoom` == `todo.minZoom`, pinned on both sides by
-  `web/tests/js/surface-zooms.test.cjs`). **The grid is opt-in since
+  `web/tests/js/surface-zooms.test.cjs`). The client draws it **through z12**
+  (`GAPS_MAX_ZOOM`, owner 2026-09-18) by stretching the z11 tiles, so squares
+  and to-do lines overlap from z11 to z12; the `#skeyGaps` button hides above
+  z12, where it would switch on nothing. **The grid is opt-in since
   2026-08-14** (`#skeyGaps`, below Study mode in the legend, shown only while
   the skin is on): arriving with the skin, the squares tinted whole regions
   pink at planning zoom — and translucent red over blue water reads PURPLE,
@@ -2527,8 +2550,15 @@ opens the wizard with its ref and geometry seeded, while a climb had only the
 and then re-locate the climb from scratch in its own small map having just been
 looking straight at it.)*
 
-- **Where:** a `.grp.cc-addclimb` block in the Ride tools panel, under ride-check,
-  inside the same `ROLE_USER` gate. The target, `/improve`, is `ROLE_USER`, and
+- **Where:** a `.grp.cc-addclimb` block in the Ride tools panel, under ride-check
+  and Scout, inside the same `ROLE_USER` gate. The panel's order (owner
+  2026-09-18): Check my ride, Scout (with the Scout mark, "Add your scouted
+  ride"), Add a climb, Propose a route (its own item, `ROLE_USER`, locked when
+  logged out), and Contribute last as the catch-all. Its actions carry the map's
+  button colour as an accent: orange outline, panel-coloured text, filled
+  orange with ink text (5.5:1) on hover. Every tool's text sits above its
+  button, so a rider reads what it does (and, for ride check, that the GPX is
+  never stored) before pressing it. The target, `/improve`, is `ROLE_USER`, and
   a link that lands on a login wall is worse than no link; anonymous riders
   reach it through `/contribute`, which lists it.
 - **Target (since 2026-08-25):** `/improve?type=climbs&mode=add&lat=&lng=&z=`,
