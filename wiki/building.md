@@ -41,9 +41,10 @@ confirmation, password reset, account deletion) is caught by a bundled Mailpit a
 `http://localhost:8025`; nothing is ever really sent. Redis carries sessions, the application
 cache, the rate limiters and the Messenger transport; the `worker` service consumes the async
 queue (Commons photo fetches, upload scanning and release); ClamAV scans every upload before it
-reaches a public bucket. Heavier pieces are opt-in profiles: `make up-routing` adds a Valhalla
-routing engine, `make up-storage` adds S3-compatible MinIO with the `media-proxy` and
-`tiles-proxy` nginx fronts that mirror how production serves media and tiles.
+reaches a public bucket. S3-compatible MinIO holds the tiles and the photos, behind the
+`media-proxy` and `tiles-proxy` nginx fronts that mirror how production serves them. One piece
+is an opt-in profile: `make up-routing` adds a Valhalla routing engine, which needs a tile set
+you download yourself.
 The full service table, ports, and troubleshooting live in the stack's
 [README](https://github.com/cycling-commons/cycling-commons/blob/main/developers/docker/README.md).
 

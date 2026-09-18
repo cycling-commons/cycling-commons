@@ -112,9 +112,11 @@ Named volumes: `cc_pgdata`, `cc_api_vendor`, `cc_minio`.
 - **Code is bind-mounted for hot reload** (Symfony dev cache, `uvicorn
   --reload`, mkdocs live reload, static nginx mounts).
 - **Heavy data never enters git or images.** Valhalla tiles and the DEM are
-  downloaded by the developer and mounted via `.env` path vars; the opt-in
-  profiles (`make up-routing` / `make up-storage` / `make up-all`) keep them
-  off the default `up`.
+  downloaded by the developer and mounted via `.env` path vars; the one opt-in
+  profile (`make up-routing`) keeps Valhalla off the default `up`. MinIO and
+  its two nginx fronts (`media-proxy`, `tiles-proxy`) are in the default `up`:
+  the map's coverage layer and every rider photo read through them, so a stack
+  without them looks broken in ways that read as product bugs.
 - PHP upload ceilings for the dev container live in `web/Dockerfile`
   (`cc-uploads.ini`: `upload_max_filesize = 16M`, `post_max_size = 20M`) and
   in the nginx vhost (`client_max_body_size 16m`,

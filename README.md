@@ -88,10 +88,11 @@ docker compose exec app php bin/console doctrine:fixtures:load --no-interaction 
 | Web app | http://localhost:8001/ · `/health` · `/api/db-check` | Symfony 7 LTS on nginx + PHP-FPM → PostGIS |
 | Pipeline | http://localhost:8012/health · `/db` | Python/FastAPI geospatial tier → PostGIS |
 | Database | `localhost:5433` | PostgreSQL 18 + PostGIS (host port 5433) |
+| Object storage | http://localhost:9100 · console http://localhost:9101 | MinIO, behind the media (`:9102`) and tiles (`:9103`) nginx fronts |
 
-Heavy, data-dependent services are opt-in: `--profile routing` (Valhalla, on a prebuilt tile set
-you download) and `--profile storage` (MinIO for PMTiles). Full details and the architecture
-diagram are in [`developers/docker/README.md`](developers/docker/README.md).
+One service is opt-in, because it needs a tile set you download yourself: `--profile routing`
+(Valhalla). Full details and the architecture diagram are in
+[`developers/docker/README.md`](developers/docker/README.md).
 
 > The API and pipeline currently ship connectivity scaffolding (health + DB-version endpoints);
 > the real query/contribution logic and the geo pipeline get built on top. See

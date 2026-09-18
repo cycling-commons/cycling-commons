@@ -128,9 +128,27 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
-## Opt-in profiles (heavy; off by default)
+## Storage — MinIO (part of the default stack)
 
-These need data you download yourself — it never enters git.
+MinIO (S3-compatible) and the two nginx fronts in front of it start with a
+plain `docker compose up` / `make up`:
+
+| Service | URL | Serves |
+|---------|-----|--------|
+| `minio` | http://localhost:9100 · console http://localhost:9101 | the buckets themselves |
+| `media-proxy` | http://localhost:9102 | rider photos, in `MediaStorage::url()`'s `<base>/<shard>/<key>` shape |
+| `tiles-proxy` | http://localhost:9103 | PMTiles under the public `/cc-maps/` prefix, as staging does |
+
+`minio-media-bucket` is a one-shot container: it creates the media buckets
+with their anonymous-read policy, then exits. An exited `minio-media-bucket`
+is the healthy state, not a failure.
+
+The coverage batch (`make coverage-refresh` from the repo root) publishes its
+weekly PMTiles artifact + manifest here — see `developers/coverage-batch.md`.
+
+## Opt-in profile (heavy; off by default)
+
+This needs data you download yourself — it never enters git.
 
 **Routing — Valhalla** (consumes a *prebuilt* tile set; no multi-hour build):
 ```sh
@@ -138,15 +156,6 @@ These need data you download yourself — it never enters git.
 docker compose --profile routing up
 # → http://localhost:8003 (Valhalla HTTP API)
 ```
-
-**Storage — MinIO** (S3-compatible, for PMTiles):
-```sh
-docker compose --profile storage up
-# → http://localhost:9100 (API)  ·  http://localhost:9101 (console)
-```
-
-The coverage batch (`make coverage-refresh` from the repo root) publishes its
-weekly PMTiles artifact + manifest here — see `developers/coverage-batch.md`.
 
 The **DEM** directory (`DEM_DIR`, default `./data/dem`) is mounted into the pipeline at
 `/data/dem` even without a profile; drop your downloaded DEM there and check
@@ -157,11 +166,10 @@ http://localhost:8012/dem.
 The map's uncurated-OSM layer is served from artefacts built by the pipeline
 container (`docs/specs/coverage-provider.md`): the
 `coverage_poi` PostGIS table + a `coverage.pmtiles` file on S3 storage. In dev
-the S3 side is the bundled MinIO (profile `storage`, bucket `cc-maps`).
+the S3 side is the bundled MinIO (bucket `cc-maps`).
 
 ```sh
-docker compose --profile storage up -d   # MinIO must be running
-make coverage-refresh                    # from the repo root
+make coverage-refresh   # from the repo root; it waits for MinIO itself
 ```
 
 `make coverage-refresh` runs the whole chain inside the pipeline container:

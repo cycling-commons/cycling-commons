@@ -334,9 +334,11 @@ services:
     ports:
       - "${BIND_ADDR:-127.0.0.1}:${MAILPIT_UI_PORT:-8025}:8025"
 
-  # ---- opt-in: S3-compatible object storage for PMTiles + rider media ------
+  # ---- S3-compatible object storage for PMTiles + rider media --------------
+  # Part of the default stack: the map's coverage layer (COVERAGE_TILES=1) and
+  # every rider photo are read through this bucket, so a stack without it
+  # gives a map with no OSM layer and a photo page with no photos.
   minio:
-    profiles: ["storage"]
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
@@ -354,7 +356,7 @@ services:
       retries: 12
 
   # One-shot: create the rider-media bucket with the anonymous-read policy the
-  # browser needs, so a contributor running `make up-storage` never has to open
+  # browser needs, so a contributor running `make up` never has to open
   # the MinIO console (docs/specs/photo-uploads.md §2). The coverage bucket is
   # not created here — pipeline/coverage/publish.py::ensure_bucket already does
   # that for itself, and duplicating it would give two owners for one bucket.
@@ -364,11 +366,10 @@ services:
   # verdict physically moves derivatives to the public bucket (media plan
   # task 2).
   #
-  # Exits immediately after; `mb --ignore-existing` makes reruns free. Skipped
-  # entirely when the storage profile is off, which is exactly the topology
-  # where MEDIA_S3_* points at a MinIO the developer already runs and manages.
+  # Exits immediately after; `mb --ignore-existing` makes reruns free, so it
+  # costs one short-lived container per `make up` and is a no-op from the
+  # second run on.
   minio-media-bucket:
-    profiles: ["storage"]
     image: minio/mc:latest
     depends_on:
       minio:
@@ -396,7 +397,6 @@ services:
   # Staging and production have the equivalent as a real vhost; without this,
   # dev is the only environment that cannot display a photo.
   media-proxy:
-    profiles: ["storage"]
     image: nginx:alpine
     depends_on:
       minio:
@@ -417,7 +417,6 @@ services:
   # where /cc-maps/ resolves only because the dev bucket happens to carry that
   # name - so the rewrite staging relies on was never exercised locally.
   tiles-proxy:
-    profiles: ["storage"]
     image: nginx:alpine
     depends_on:
       minio:

@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing up-storage up-all git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -178,15 +178,9 @@ git-status: ## Show git status of this repo + the BikeCodersLife repos
 	done
 	@echo "✅ Check complete."
 
-## -- 🧩 Opt-in profiles ------------------------------------------------------
+## -- 🧩 Opt-in profile -------------------------------------------------------
 up-routing: ## Start the stack + Valhalla (needs prebuilt tiles in ./data/valhalla)
 	@$(DOCKER_COMP) --profile routing up --detach
-
-up-storage: ## Start the stack + MinIO (S3-compatible, ports 9100/9101)
-	@$(DOCKER_COMP) --profile storage up --detach
-
-up-all: ## Start the stack + every opt-in profile (routing + storage)
-	@$(DOCKER_COMP) --profile routing --profile storage up --detach
 
 ## -- 🌐 Symfony web app ----------------------------------------------------------
 app-install: ## install PHP deps for the Symfony app
@@ -336,7 +330,7 @@ coverage-regions: ## Echo the committed COVERAGE_REGIONS default (the full onboa
 	  | sed -E 's/.*COVERAGE_REGIONS:-//; s/\}$$//'
 
 coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → PostGIS → MinIO)
-	@$(DOCKER_COMP) --profile storage up --detach --wait minio
+	@$(DOCKER_COMP) up --detach --wait minio
 	@$(DOCKER_COMP) run --rm \
 		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
 		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
@@ -354,7 +348,7 @@ provider-harvest: ## Ingest a fetched file (DRY by default; add write=1): make p
 	@$(DOCKER_COMP) exec -T app php bin/console app:providers:harvest $(key) $(file) $(if $(write),--write)
 
 coverage-tiles: ## Rebuild + publish the coverage PMTiles from the rows already in PostGIS (no harvest)
-	@$(DOCKER_COMP) --profile storage up --detach --wait minio
+	@$(DOCKER_COMP) up --detach --wait minio
 	@$(DOCKER_COMP) run --rm \
 		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
 		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
@@ -375,7 +369,7 @@ coverage-tiles: ## Rebuild + publish the coverage PMTiles from the rows already 
 # `ARGS=--no-publish` builds without uploading (size experiments); `offline=1`
 # uses the PBFs already in the workdir instead of asking Geofabrik.
 surface-tiles: ## Build + publish the road-surface line, to-do and gap-grid PMTiles (regions=csv)
-	@$(DOCKER_COMP) --profile storage up --detach --wait minio
+	@$(DOCKER_COMP) up --detach --wait minio
 	@$(DOCKER_COMP) run --rm \
 		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
 		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
@@ -392,7 +386,7 @@ surface-tiles: ## Build + publish the road-surface line, to-do and gap-grid PMTi
 # its to-do arm route-aware. When rebuilding both, run routes-tiles FIRST and
 # surface-tiles second, so the surface extracts see fresh way-id files.
 routes-tiles: ## Build + publish the cycle-route network PMTiles (regions=csv)
-	@$(DOCKER_COMP) --profile storage up --detach --wait minio
+	@$(DOCKER_COMP) up --detach --wait minio
 	@$(DOCKER_COMP) run --rm \
 		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
 		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
