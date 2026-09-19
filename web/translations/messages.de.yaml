@@ -4832,6 +4832,8 @@ room:
   compose:
     heading: 'An den Raum schreiben'
     heading_edit: 'Deinen Beitrag bearbeiten'
+    title_label: 'Titel'
+    title_placeholder: 'Worum es geht, in wenigen Worten'
     body_label: 'Dein Beitrag'
     placeholder: 'Was brauchst du?'
     category_label: 'Kategorie'
@@ -4856,6 +4858,8 @@ room:
     posted: 'Gesendet.'
     edited: 'Gespeichert.'
   error:
+    title_required: 'Gib dem Beitrag einen Titel.'
+    title_too_long: 'Der Titel darf höchstens 120 Zeichen haben.'
     body_required: 'Schreibe zuerst etwas.'
     body_too_long: 'Das ist zu lang. Bleibe unter 2000 Zeichen.'
     unknown_recipient: 'Diese Person hat keine Kuratorenrolle.'

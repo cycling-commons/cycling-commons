@@ -6,6 +6,7 @@
    of reach afterwards. #}
 {% set editing = mode == 'edit' %}
 {% set body_now = draft is not empty ? draft : (editing ? post.body : '') %}
+{% set title_now = draft_title is defined and draft_title is not empty ? draft_title : (editing ? post.title : '') %}
 {% set cat_now = editing ? (post.category ? post.category.value : '') : view %}
 {% set to_now = editing ? (post.recipientId ?? '') : '' %}
 {% set pin_now = editing ? post.pin.value : 'none' %}
@@ -14,6 +15,10 @@
     <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-post') }}">
     <input type="hidden" name="c" value="{{ view }}">
     <h2>{{ (editing ? 'room.compose.heading_edit' : 'room.compose.heading')|trans }}</h2>
+    <div class="rm-field rm-title">
+      <label for="rm-title">{{ 'room.compose.title_label'|trans }}</label>
+      <input id="rm-title" name="title" type="text" maxlength="{{ title_max }}" required value="{{ title_now }}" placeholder="{{ 'room.compose.title_placeholder'|trans }}">
+    </div>
     <textarea id="rm-body" name="body" aria-label="{{ 'room.compose.body_label'|trans }}" maxlength="{{ body_max }}" required placeholder="{{ 'room.compose.placeholder'|trans }}">{{ body_now }}</textarea>
     <div class="rm-row">
       <div class="rm-field">

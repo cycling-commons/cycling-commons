@@ -32,6 +32,7 @@ use Doctrine\ORM\EntityManagerInterface;
  *     recipient_id: int|null,
  *     recipient: array{name: string, uuid: string|null}|null,
  *     pin: string,
+ *     title: string,
  *     body: string,
  *     about_submission_id: int|null,
  *     about_title: string|null,
@@ -50,6 +51,7 @@ use Doctrine\ORM\EntityManagerInterface;
  *     recipient_id: int|null,
  *     recipient: array{name: string, uuid: string|null}|null,
  *     pin: string,
+ *     title: string,
  *     body: string,
  *     about_submission_id: int|null,
  *     about_title: string|null,
@@ -65,9 +67,12 @@ use Doctrine\ORM\EntityManagerInterface;
 final class CuratorRoom
 {
     public const int BODY_MAX_LENGTH = 2000;
+    public const int TITLE_MAX_LENGTH = 120;
     public const int PER_PAGE = 50;
 
     private const string ERROR_REQUIRED = 'room.error.body_required';
+    private const string ERROR_TITLE_REQUIRED = 'room.error.title_required';
+    private const string ERROR_TITLE_TOO_LONG = 'room.error.title_too_long';
     private const string ERROR_TOO_LONG = 'room.error.body_too_long';
     private const string ERROR_UNKNOWN_RECIPIENT = 'room.error.unknown_recipient';
     private const string ERROR_PIN_DIRECT = 'room.error.pin_direct';
@@ -134,11 +139,13 @@ final class CuratorRoom
         array $images = [],
         array $imageIds = [],
         CuratorRoomPin $pin = CuratorRoomPin::None,
+        ?string $title = null,
     ): CuratorPost {
         $body = $this->normalizeBody($body);
+        $title = $this->normalizeTitle($title ?? self::firstLine($body));
         $this->checkAddressing($recipientId, $aboutSubmissionId, $pin);
 
-        $post = new CuratorPost($authorId, $category, $recipientId, $body, $aboutSubmissionId);
+        $post = new CuratorPost($authorId, $category, $recipientId, $body, $aboutSubmissionId, $title);
         $post->setPin($pin);
         $this->attachImages($post, $authorId, $imageIds, $images);
         $this->em->persist($post);
@@ -169,12 +176,14 @@ final class CuratorRoom
         array $imageIds = [],
         array $dropImageIds = [],
         bool $admin = false,
+        ?string $title = null,
     ): CuratorPost {
         $post = $this->own($postId, $authorId, $admin);
         if (!$post instanceof CuratorPost) {
             throw new \InvalidArgumentException('room.error.not_yours');
         }
         $body = $this->normalizeBody($body);
+        $title = $this->normalizeTitle($title ?? self::firstLine($body));
         $this->checkAddressing($recipientId, $aboutSubmissionId, $pin);
 
         foreach ($post->getImages()->toArray() as $image) {
@@ -182,7 +191,7 @@ final class CuratorRoom
                 $post->removeImage($image);
             }
         }
-        $post->update($category, $recipientId, $body, $aboutSubmissionId, $pin);
+        $post->update($category, $recipientId, $body, $aboutSubmissionId, $pin, $title);
         $this->attachImages($post, $authorId, $imageIds, $images);
         $this->em->flush();
 
@@ -491,7 +500,7 @@ final class CuratorRoom
     private function select(array $where): string
     {
         return 'SELECT p.id, p.author_id, a.display_name AS author_name, a.public_profile AS author_public, a.uuid AS author_uuid, p.category,
-                       p.recipient_id, r.display_name AS recipient_name, r.public_profile AS recipient_public, r.uuid AS recipient_uuid, p.pin, p.body,
+                       p.recipient_id, r.display_name AS recipient_name, r.public_profile AS recipient_public, r.uuid AS recipient_uuid, p.pin, p.title, p.body,
                        p.about_submission_id, s.title AS about_title, p.created_at, p.edited_at
                 FROM curator_post p
                 LEFT JOIN users a ON a.id = p.author_id
@@ -555,6 +564,7 @@ final class CuratorRoom
             'recipient_id' => $recipientId,
             'recipient' => DeskRider::colleague($row['recipient_name'], $row['recipient_public'], $row['recipient_uuid']),
             'pin' => (string) $row['pin'],
+            'title' => (string) $row['title'],
             'body' => (string) $row['body'],
             'about_submission_id' => null !== $row['about_submission_id'] ? (int) $row['about_submission_id'] : null,
             'about_title' => null !== $row['about_title'] ? (string) $row['about_title'] : null,
@@ -588,6 +598,28 @@ final class CuratorRoom
             SQL;
 
         return false !== $this->db->fetchOne($sql, ['id' => $userId]);
+    }
+
+    /** A title for a caller that gave none: the body's first line, cut to fit. */
+    private static function firstLine(string $body): string
+    {
+        return mb_substr(trim(strtok($body, "\n") ?: $body), 0, self::TITLE_MAX_LENGTH);
+    }
+
+    /**
+     * @throws \InvalidArgumentException with a translation key, for the flash
+     */
+    private function normalizeTitle(string $title): string
+    {
+        $title = trim((string) preg_replace('/\s+/', ' ', $title));
+        if ('' === $title) {
+            throw new \InvalidArgumentException(self::ERROR_TITLE_REQUIRED);
+        }
+        if (mb_strlen($title) > self::TITLE_MAX_LENGTH) {
+            throw new \InvalidArgumentException(self::ERROR_TITLE_TOO_LONG);
+        }
+
+        return $title;
     }
 
     /**

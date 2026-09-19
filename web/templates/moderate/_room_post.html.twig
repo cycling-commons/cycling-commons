@@ -27,6 +27,7 @@
     {% if post.pin != 'none' %}<span class="rm-tag">{{ ('room.pin.' ~ post.pin)|trans }}</span>{% endif %}
   </div>
 
+  <h3>{{ post.title }}</h3>
   <p class="rm-body">{{ post.body }}</p>
 
   {% if post.images is not empty %}

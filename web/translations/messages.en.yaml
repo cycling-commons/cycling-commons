@@ -4853,6 +4853,8 @@ room:
   compose:
     heading: 'Write to the room'
     heading_edit: 'Edit your post'
+    title_label: 'Title'
+    title_placeholder: 'What is this about, in a few words'
     body_label: 'Your post'
     placeholder: 'What do you need?'
     category_label: 'Category'
@@ -4877,6 +4879,8 @@ room:
     posted: 'Posted.'
     edited: 'Saved.'
   error:
+    title_required: 'Give the post a title.'
+    title_too_long: 'The title must be 120 characters or fewer.'
     body_required: 'Write something first.'
     body_too_long: 'That is too long. Please keep it under 2000 characters.'
     unknown_recipient: 'That person does not hold a curator role.'

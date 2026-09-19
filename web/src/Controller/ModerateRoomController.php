@@ -147,11 +147,13 @@ final class ModerateRoomController extends AbstractController
                 $this->renderUploads($request),
                 $imageIds,
                 $pin,
+                $request->request->getString('title'),
             );
             $this->addFlash('success', 'room.flash.posted');
         } catch (\InvalidArgumentException|ScreenshotRejected $e) {
             $this->addFlash('danger', $e->getMessage());
             $this->addFlash('room_draft', $body);
+            $this->addFlash('room_draft_title', $request->request->getString('title'));
 
             return $this->redirectToRoute('moderate_room_new', CuratorRoomCategory::VIEW_ALL === $view ? [] : ['c' => $view]);
         }
@@ -178,6 +180,8 @@ final class ModerateRoomController extends AbstractController
             'images_max' => CuratorPost::MAX_IMAGES,
             'image_bytes_max' => ScreenshotStore::MAX_UPLOAD_BYTES,
             'draft' => $this->draft($request),
+            'draft_title' => $this->draft($request, 'room_draft_title'),
+            'title_max' => CuratorRoom::TITLE_MAX_LENGTH,
             'mod_scope_names' => $this->scopeProvider->describe($curator),
         ]);
     }
@@ -208,6 +212,8 @@ final class ModerateRoomController extends AbstractController
             'images_max' => CuratorPost::MAX_IMAGES,
             'image_bytes_max' => ScreenshotStore::MAX_UPLOAD_BYTES,
             'draft' => $this->draft($request),
+            'draft_title' => $this->draft($request, 'room_draft_title'),
+            'title_max' => CuratorRoom::TITLE_MAX_LENGTH,
             'mod_scope_names' => $this->scopeProvider->describe($curator),
         ]);
     }
@@ -243,11 +249,13 @@ final class ModerateRoomController extends AbstractController
                 $this->imageIds($request),
                 $drop,
                 $this->isGranted('ROLE_ADMIN'),
+                $request->request->getString('title'),
             );
             $this->addFlash('success', 'room.flash.edited');
         } catch (\InvalidArgumentException|ScreenshotRejected $e) {
             $this->addFlash('danger', $e->getMessage());
             $this->addFlash('room_draft', $body);
+            $this->addFlash('room_draft_title', $request->request->getString('title'));
 
             return $this->redirectToRoute('moderate_room_edit', ['id' => $id] + (CuratorRoomCategory::VIEW_ALL === $view ? [] : ['c' => $view]));
         }
@@ -394,13 +402,13 @@ final class ModerateRoomController extends AbstractController
     }
 
     /** The words of a post that was refused, so the composer shows them again. */
-    private function draft(Request $request): string
+    private function draft(Request $request, string $key = 'room_draft'): string
     {
         $session = $request->getSession();
         if (!$session instanceof FlashBagAwareSessionInterface) {
             return '';
         }
-        $drafts = $session->getFlashBag()->get('room_draft');
+        $drafts = $session->getFlashBag()->get($key);
 
         return isset($drafts[0]) && \is_string($drafts[0]) ? $drafts[0] : '';
     }

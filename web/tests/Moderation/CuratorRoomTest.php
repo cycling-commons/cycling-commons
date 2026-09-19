@@ -121,6 +121,7 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'The gate at the top of the col is locked.';
+        $form['title'] = 'Test post';
         $form['category'] = 'tools';
         $client->submit($form);
 
@@ -269,13 +270,13 @@ final class CuratorRoomTest extends WebTestCase
         $author = $this->makeUser('del-author', ['ROLE_CURATOR']);
         $other = $this->makeUser('del-other', ['ROLE_CURATOR']);
 
-        $post = $this->room()->post((int) $author->getId(), null, null, 'Mine to remove.');
+        $post = $this->room()->post((int) $author->getId(), null, null, 'Mine to remove.', title: 'Mine');
 
         self::assertFalse($this->room()->deleteOwn((int) $post->getId(), (int) $other->getId()));
         self::assertTrue($this->room()->deleteOwn((int) $post->getId(), (int) $author->getId()));
 
         // An administrator may take down any post, and reaches its edit page.
-        $post = $this->room()->post((int) $author->getId(), null, null, 'Admin may remove.');
+        $post = $this->room()->post((int) $author->getId(), null, null, 'Admin may remove.', title: 'Admin');
         self::assertTrue($this->room()->deleteOwn((int) $post->getId(), (int) $other->getId(), admin: true));
     }
 
@@ -283,7 +284,7 @@ final class CuratorRoomTest extends WebTestCase
     {
         $client = static::createClient();
         $author = $this->makeUser('adm-author', ['ROLE_CURATOR']);
-        $post = $this->room()->post((int) $author->getId(), null, null, 'Written by a curator.');
+        $post = $this->room()->post((int) $author->getId(), null, null, 'Written by a curator.', title: 'Curator');
 
         $this->loginAs($client, 'adm', ['ROLE_ADMIN']);
         $crawler = $client->request('GET', '/moderate/room');
@@ -292,6 +293,7 @@ final class CuratorRoomTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Reworded by an administrator.';
+        $form['title'] = 'Test post';
         $client->submit($form);
         $crawler = $client->followRedirect();
         self::assertStringContainsString('Reworded by an administrator.', $crawler->filter('.rm-post')->text());
@@ -368,6 +370,7 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Is this one in reach of anybody?';
+        $form['title'] = 'Test post';
         // The no-script path: a number typed into the search box.
         $form['about_q'] = 'SUB-'.$sub->getId();
         $client->submit($form);
@@ -386,6 +389,7 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Words that must not be lost.';
+        $form['title'] = 'Test post';
         $form['about_q'] = '99999999';
         $client->submit($form);
         $crawler = $client->followRedirect();
@@ -456,6 +460,7 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'The sign at the junction, photographed.';
+        $form['title'] = 'Test post';
         $form['images'] = json_encode([$up['id']]);
         $client->submit($form);
         $crawler = $client->followRedirect();
@@ -478,6 +483,7 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Trying to reuse the same picture.';
+        $form['title'] = 'Test post';
         $form['images'] = json_encode([$up['id']]);
         $client->submit($form);
         $crawler = $client->followRedirect();
@@ -494,6 +500,7 @@ final class CuratorRoomTest extends WebTestCase
         // The no-script path: the file rides with the form itself.
         $client->request('POST', '/moderate/room/post', [
             '_token' => $this->tokenOn($crawler, 'rm-compose'),
+            'title' => 'The plate on the gate',
             'body' => 'For your eyes: the plate on the gate.',
             'to' => (string) $recipient->getId(),
             'category' => '',
@@ -558,6 +565,7 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Pinned from the start.';
+        $form['title'] = 'Test post';
         $form['category'] = 'rules';
         $form['pin'] = 'room';
         $client->submit($form);
@@ -579,6 +587,7 @@ final class CuratorRoomTest extends WebTestCase
 
         // Every field changes: words, category, pin off, a submission, and a recipient.
         $form['body'] = 'Reworded, filed under tools, no longer pinned.';
+        $form['title'] = 'Test post';
         $form['category'] = 'tools';
         $form['pin'] = 'none';
         $form['about_q'] = (string) $sub->getId();
@@ -606,7 +615,7 @@ final class CuratorRoomTest extends WebTestCase
     {
         $client = static::createClient();
         $author = $this->loginAs($client, 'edit-own', ['ROLE_CURATOR']);
-        $post = $this->room()->post((int) $author->getId(), null, null, 'Mine to change.');
+        $post = $this->room()->post((int) $author->getId(), null, null, 'Mine to change.', title: 'Mine');
 
         $this->loginAs($client, 'edit-other', ['ROLE_CURATOR']);
         $client->request('GET', '/moderate/room/'.$post->getId().'/edit');
@@ -623,7 +632,31 @@ final class CuratorRoomTest extends WebTestCase
         $author = $this->loginAs($client, 'pin-dm', ['ROLE_CURATOR']);
         $to = $this->makeUser('pin-dm-to', ['ROLE_CURATOR']);
         $this->expectException(\InvalidArgumentException::class);
-        $this->room()->post((int) $author->getId(), null, (int) $to->getId(), 'Private and pinned?', null, [], [], CuratorRoomPin::Room);
+        $this->room()->post((int) $author->getId(), null, (int) $to->getId(), 'Private and pinned?', null, [], [], CuratorRoomPin::Room, 'Private');
+    }
+
+    public function testATitleHeadsTheCardAndAnEmptyOneIsRefused(): void
+    {
+        $client = static::createClient();
+        $this->loginAs($client, 'title', ['ROLE_CURATOR']);
+
+        $crawler = $client->request('GET', '/moderate/room/new');
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['title'] = 'Gate at the top';
+        $form['body'] = 'Locked since Tuesday.';
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+        self::assertSame('Gate at the top', $crawler->filter('.rm-post h3')->text());
+
+        // The form requires a title; the server refuses a blank one and keeps the words.
+        $crawler = $client->request('GET', '/moderate/room/new');
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['title'] = '   ';
+        $form['body'] = 'No title here.';
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+        self::assertSelectorTextContains('.flash-error', 'Give the post a title');
+        self::assertSame('No title here.', $crawler->filter('#rm-body')->text());
     }
 
     public function testAnEmptyPostIsRefused(): void

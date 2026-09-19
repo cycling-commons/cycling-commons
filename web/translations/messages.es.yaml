@@ -4864,6 +4864,8 @@ room:
   compose:
     heading: 'Escribir a la sala'
     heading_edit: 'Editar tu entrada'
+    title_label: 'Título'
+    title_placeholder: 'De qué trata, en pocas palabras'
     body_label: 'Tu mensaje'
     placeholder: '¿Qué necesitas?'
     category_label: 'Categoría'
@@ -4888,6 +4890,8 @@ room:
     posted: 'Publicado.'
     edited: 'Guardado.'
   error:
+    title_required: 'Ponle un título a la entrada.'
+    title_too_long: 'El título debe tener 120 caracteres o menos.'
     body_required: 'Escribe algo primero.'
     body_too_long: 'Es demasiado largo. No pases de 2000 caracteres.'
     unknown_recipient: 'Esa persona no tiene rol de curador.'

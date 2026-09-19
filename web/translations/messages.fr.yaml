@@ -4824,6 +4824,8 @@ room:
   compose:
     heading: 'Écrire à la salle'
     heading_edit: 'Modifier votre message'
+    title_label: 'Titre'
+    title_placeholder: 'De quoi il s’agit, en quelques mots'
     body_label: 'Votre message'
     placeholder: 'De quoi avez-vous besoin ?'
     category_label: 'Catégorie'
@@ -4848,6 +4850,8 @@ room:
     posted: 'Publié.'
     edited: 'Enregistré.'
   error:
+    title_required: 'Donnez un titre au message.'
+    title_too_long: 'Le titre doit faire 120 caractères ou moins.'
     body_required: 'Écrivez d''abord quelque chose.'
     body_too_long: 'C''est trop long. Restez sous 2000 caractères.'
     unknown_recipient: 'Cette personne n''a pas de rôle de curateur.'

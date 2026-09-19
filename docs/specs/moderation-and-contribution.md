@@ -3083,6 +3083,7 @@ unread bulb. The room stores one row per post instead.
 | `category` | varchar(32), null | a `CuratorRoomCategory` value, or `null` for the root. |
 | `recipient_id` | bigint, null | `null` means addressed to every curator. Non-null makes it a direct message. `ON DELETE CASCADE`: a direct message to a deleted account has no second reader. |
 | `pin` | varchar(8) | `none`, `category` or `room`. See §13.5. |
+| `title` | varchar(120) | one line, 1 to 120 characters, the card's heading (owner 2026-09-19). A caller that gives none gets the body's first line; the composer requires one. |
 | `body` | text | trimmed, 1 to 2000 characters, the same bound `MessageService` applies to a curator note. |
 | `about_submission_id` | bigint, null | optional link to the queue card the post is about. `ON DELETE SET NULL`. |
 | `created_at` | timestamptz | |

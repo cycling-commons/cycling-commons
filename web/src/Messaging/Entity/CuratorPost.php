@@ -54,6 +54,9 @@ class CuratorPost
     #[ORM\Column(type: Types::STRING, length: 8, enumType: CuratorRoomPin::class)]
     private CuratorRoomPin $pin = CuratorRoomPin::None;
 
+    #[ORM\Column(type: Types::STRING, length: 120)]
+    private string $title;
+
     #[ORM\Column(type: Types::TEXT)]
     private string $body;
 
@@ -77,10 +80,12 @@ class CuratorPost
         ?int $recipientId,
         string $body,
         ?int $aboutSubmissionId = null,
+        string $title = '',
     ) {
         $this->authorId = $authorId;
         $this->category = $category;
         $this->recipientId = $recipientId;
+        $this->title = $title;
         $this->body = $body;
         $this->aboutSubmissionId = $aboutSubmissionId;
         $this->createdAt = new \DateTimeImmutable();
@@ -137,6 +142,11 @@ class CuratorPost
         $this->pin = $pin;
     }
 
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
     public function getBody(): string
     {
         return $this->body;
@@ -147,12 +157,14 @@ class CuratorPost
      * something actually differs, so a save that changes nothing is not an
      * edit the card has to announce.
      */
-    public function update(?CuratorRoomCategory $category, ?int $recipientId, string $body, ?int $aboutSubmissionId, CuratorRoomPin $pin): void
+    public function update(?CuratorRoomCategory $category, ?int $recipientId, string $body, ?int $aboutSubmissionId, CuratorRoomPin $pin, string $title = ''): void
     {
         $changed = $category !== $this->category || $recipientId !== $this->recipientId
-            || $body !== $this->body || $aboutSubmissionId !== $this->aboutSubmissionId || $pin !== $this->pin;
+            || $body !== $this->body || $aboutSubmissionId !== $this->aboutSubmissionId || $pin !== $this->pin
+            || $title !== $this->title;
         $this->category = $category;
         $this->recipientId = $recipientId;
+        $this->title = $title;
         $this->body = $body;
         $this->aboutSubmissionId = $aboutSubmissionId;
         $this->pin = $pin;

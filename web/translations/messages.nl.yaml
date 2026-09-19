@@ -4831,6 +4831,8 @@ room:
   compose:
     heading: 'Schrijf aan de kamer'
     heading_edit: 'Je bericht bewerken'
+    title_label: 'Titel'
+    title_placeholder: 'Waar het over gaat, in een paar woorden'
     body_label: 'Je bericht'
     placeholder: 'Wat heb je nodig?'
     category_label: 'Categorie'
@@ -4855,6 +4857,8 @@ room:
     posted: 'Geplaatst.'
     edited: 'Opgeslagen.'
   error:
+    title_required: 'Geef het bericht een titel.'
+    title_too_long: 'De titel mag hoogstens 120 tekens zijn.'
     body_required: 'Schrijf eerst iets.'
     body_too_long: 'Dat is te lang. Blijf onder de 2000 tekens.'
     unknown_recipient: 'Die persoon heeft geen curatorrol.'
