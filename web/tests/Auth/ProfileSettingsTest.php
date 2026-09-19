@@ -93,7 +93,7 @@ final class ProfileSettingsTest extends WebTestCase
     public function testAnonIsRedirectedFromProfile(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
 
         self::assertResponseRedirects('/login', 302);
     }
@@ -101,7 +101,7 @@ final class ProfileSettingsTest extends WebTestCase
     public function testAnonIsRedirectedFromSettings(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/settings');
+        $client->request('GET', '/account/settings');
 
         self::assertResponseRedirects('/login', 302);
     }
@@ -116,7 +116,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Hanne V');
         $this->loginAs($client, $email, $plain);
 
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
 
         self::assertResponseIsSuccessful();
         // Account dashboard shows the display name in the page head + top bar.
@@ -132,7 +132,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Settings Rider');
         $this->loginAs($client, $email, $plain);
 
-        $client->request('GET', '/settings');
+        $client->request('GET', '/account/settings');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Settings');
@@ -153,7 +153,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Old Name');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         // Submit the profile settings form
@@ -163,8 +163,8 @@ final class ProfileSettingsTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        // Should redirect back to /settings
-        self::assertResponseRedirects('/settings');
+        // Should redirect back to /account/settings
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
 
@@ -187,7 +187,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Theme Rider');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Save profile')->form([
@@ -195,7 +195,7 @@ final class ProfileSettingsTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
 
@@ -219,7 +219,7 @@ final class ProfileSettingsTest extends WebTestCase
 
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         // Submit without publicProfile checkbox (should set to false)
@@ -230,7 +230,7 @@ final class ProfileSettingsTest extends WebTestCase
         $form['settings[publicProfile]']->untick();
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
 
@@ -246,7 +246,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Good Name');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Save profile')->form([
@@ -270,7 +270,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Pw Rider');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Change password')->form([
@@ -281,7 +281,7 @@ final class ProfileSettingsTest extends WebTestCase
         $client->submit($form);
 
         // Should redirect back with a password_error flash
-        self::assertResponseRedirects('/settings?tab=security');
+        self::assertResponseRedirects('/account/settings?tab=security');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
         // Error flash must appear
@@ -298,7 +298,7 @@ final class ProfileSettingsTest extends WebTestCase
         $this->createUser($email, $oldPlain, 'Pw Change Rider');
         $this->loginAs($client, $email, $oldPlain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Change password')->form([
@@ -308,7 +308,7 @@ final class ProfileSettingsTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings?tab=security');
+        self::assertResponseRedirects('/account/settings?tab=security');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
         // Success flash must appear
@@ -319,7 +319,7 @@ final class ProfileSettingsTest extends WebTestCase
         $client->submitForm('Log out');
 
         $this->loginAs($client, $email, $newPlain);
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
     }
 
@@ -331,7 +331,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Short Pw Rider');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Change password')->form([
@@ -359,7 +359,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Rider');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('select[name="settings[country]"]');
 
@@ -368,7 +368,7 @@ final class ProfileSettingsTest extends WebTestCase
             'settings[country]' => (string) $belgium->getId(),
         ]);
         $client->submit($form);
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
 
         $user = $this->fetchUser($email);
         self::assertSame('BE', $user->getCountry()?->getIso2());
@@ -404,7 +404,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Base Rider');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Save profile')->form([
@@ -416,7 +416,7 @@ final class ProfileSettingsTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
 
@@ -445,7 +445,7 @@ final class ProfileSettingsTest extends WebTestCase
         $em->flush();
         self::assertTrue($user->hasBaseLocation());
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Save profile')->form([
@@ -454,7 +454,7 @@ final class ProfileSettingsTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
 
@@ -479,7 +479,7 @@ final class ProfileSettingsTest extends WebTestCase
         $svc->apply($user, 0.451234, -45.851234, 'Namur', 40);
         $em->flush();
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         // Hidden lat/lng/place fields stay empty — only the slider moves — so
@@ -490,7 +490,7 @@ final class ProfileSettingsTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
 
@@ -509,7 +509,7 @@ final class ProfileSettingsTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Old Name');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Save profile')->form([
@@ -520,7 +520,7 @@ final class ProfileSettingsTest extends WebTestCase
         $client->submit($form);
 
         // Garbage coords are silently ignored — the rest of the form still saves.
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
 

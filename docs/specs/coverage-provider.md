@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
   query the app runs casts to geography (`ST_DWithin(cp.geom::geography, …)`
   in `OsmLinker` and `/map/coverage/nearby`), and the geometry GiST cannot
   serve that predicate: without it the planner walked the letter index and
-  measured 375k rows per lookup, 2.8 s per queue card on `/moderate`
+  measured 375k rows per lookup, 2.8 s per queue card on `/moderate/submissions`
   (owner-reported). With it: 2 ms. Pipeline-owned like the rest
   (`load.py` `_INDEX_DDL`, created CONCURRENTLY by `ensure_schema`); prod
   gets it on the next harvest or by hand before go-live.

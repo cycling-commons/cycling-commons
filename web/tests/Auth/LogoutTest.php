@@ -56,7 +56,7 @@ final class LogoutTest extends WebTestCase
         $client->loginUser($user);
 
         // Confirm we are authenticated by visiting a protected page
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
 
         // Obtain a valid CSRF token from the container
@@ -73,7 +73,7 @@ final class LogoutTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         // After logout, accessing a protected page must redirect to /login
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseRedirects('/login', 302);
     }
 
@@ -94,7 +94,7 @@ final class LogoutTest extends WebTestCase
         self::assertResponseStatusCodeSame(405);
 
         // Session still intact — protected page still accessible
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
     }
 }

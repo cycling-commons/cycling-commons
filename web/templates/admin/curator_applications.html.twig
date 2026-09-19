@@ -112,7 +112,7 @@
                             &middot; <a href="{{ path('moderate_history', {by: row.user.id}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_submissions'|trans }}</a>
                             {# Both halves of the record: what was decided, and what
                                of theirs is still waiting on a curator. #}
-                            &middot; <a href="{{ path('moderate', {by: row.user.id}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_open'|trans }}</a>
+                            &middot; <a href="{{ path('moderate_submissions', {by: row.user.id}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_open'|trans }}</a>
                             {% if row.user.publicProfile %}
                                 &middot; <a href="{{ path('rider_profile', {uuid: row.user.uuid}) }}" target="_blank" rel="noopener">{{ 'admin.curator.see_profile'|trans }}</a>
                             {% endif %}
@@ -188,7 +188,7 @@
                            stay translated. #}
                         <div class="cur-tpl">
                             <button type="button" class="btn btn-sm btn-outline-success"
-                                    data-note-fill="{{ "Welcome to the paceline. You are now a curator for " ~ scope ~ ".\n\nHow to get started:\n\n1. Read the moderation rulebook: " ~ url('moderate_rulebook') ~ "\n2. Open your curator desk: " ~ url('moderate') ~ "\n\nIf anything is unclear, just reply to this message." }}"
+                                    data-note-fill="{{ "Welcome to the paceline. You are now a curator for " ~ scope ~ ".\n\nHow to get started:\n\n1. Read the moderation rulebook: " ~ url('moderate_rulebook') ~ "\n2. Open your curator desk: " ~ url('moderate_dashboard') ~ "\n\nIf anything is unclear, just reply to this message." }}"
                                     >{{ 'admin.curator.tpl_approve_btn'|trans }}</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary"
                                     data-note-fill="{{ "Thank you for offering to look after " ~ scope ~ ".\n\nWe are not taking this one forward for now. You are welcome to apply again later." }}"

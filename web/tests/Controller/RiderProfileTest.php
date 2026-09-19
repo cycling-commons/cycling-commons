@@ -248,7 +248,7 @@ final class RiderProfileTest extends WebTestCase
         $user = $this->makeUser('viewlink@example.com', 'Viewlink Rider', true);
         $this->loginAs($client, 'viewlink@example.com', 'securepass12345!');
 
-        $client->request('GET', '/settings');
+        $client->request('GET', '/account/settings');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[href$="/riders/'.$user->getUuid().'"]');
@@ -292,7 +292,7 @@ final class RiderProfileTest extends WebTestCase
         $user = $this->makeUser('nolink@example.com', 'Nolink Rider', false);
         $this->loginAs($client, 'nolink@example.com', 'securepass12345!');
 
-        $client->request('GET', '/settings');
+        $client->request('GET', '/account/settings');
 
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();

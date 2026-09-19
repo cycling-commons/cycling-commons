@@ -7,7 +7,7 @@
 {% include 'moderate/_room_styles.html.twig' %}
 {% endblock %}
 {% block body_scripts %}<script src="{{ asset('js/room.js') }}" defer></script>{% endblock %}
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_room', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_room'} %}{% endblock %}
 
 {% block body %}
 <div class="dbody" id="main">

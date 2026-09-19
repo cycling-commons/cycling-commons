@@ -374,12 +374,37 @@ final readonly class SupportRepository
             ->select('b')
             ->from(BugReport::class, 'b')
             ->where('b.isPublic = true')
-            ->orderBy('b.updatedAt', 'DESC')
+            // Fixed: newest fix first. Open: most recently changed first.
+            ->orderBy($fixed ? 'b.resolvedAt' : 'b.updatedAt', 'DESC')
+            ->addOrderBy('b.id', 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
 
         /** @var list<BugReport> $rows */
         $rows = self::narrow($qb, $fixed)->getQuery()->getResult();
+
+        return $rows;
+    }
+
+    /**
+     * The newest open entries on the known-issues list, for the column beside
+     * the bug form: somebody about to write a report sees what is already on
+     * the list first. Public and still open only, like the list's default tab.
+     *
+     * @return list<BugReport>
+     */
+    public function recentPublicIssues(int $limit): array
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('b')
+            ->from(BugReport::class, 'b')
+            ->where('b.isPublic = true')
+            ->orderBy('b.createdAt', 'DESC')
+            ->addOrderBy('b.id', 'DESC')
+            ->setMaxResults($limit);
+
+        /** @var list<BugReport> $rows */
+        $rows = self::narrow($qb, false)->getQuery()->getResult();
 
         return $rows;
     }
@@ -436,6 +461,20 @@ final readonly class SupportRepository
             ->from(BugReport::class, 'b')
             ->where('b.userId = :uid')
             ->setParameter('uid', $userId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /** A rider's own reports that are not resolved or declined yet. */
+    public function countOpenBugsByUser(int $userId): int
+    {
+        return (int) $this->em->createQueryBuilder()
+            ->select('COUNT(b.id)')
+            ->from(BugReport::class, 'b')
+            ->where('b.userId = :uid')
+            ->andWhere('b.status IN (:open)')
+            ->setParameter('uid', $userId)
+            ->setParameter('open', BugStatus::open())
             ->getQuery()
             ->getSingleScalarResult();
     }

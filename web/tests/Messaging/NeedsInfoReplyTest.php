@@ -24,7 +24,7 @@ use Symfony\Component\DomCrawler\Crawler;
 
 /**
  * Task 9 (moderation-feedback spec M6b): the needs-info reply loop — a rider
- * answers a curator's needs-info request from their own /messages page, and
+ * answers a curator's needs-info request from their own /account/messages page, and
  * the reply re-queues the submission (back to `pending`) plus delivers a
  * `rider_reply` message addressed to the deciding curator. That address is a
  * lookup key, not a destination: since 2026-08-03 the reply is deliberately
@@ -142,7 +142,7 @@ final class NeedsInfoReplyTest extends WebTestCase
     private function loginAndVisitMessages(KernelBrowser $client, User $user): Crawler
     {
         $client->loginUser($user);
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
 
         return $crawler;
@@ -194,11 +194,11 @@ final class NeedsInfoReplyTest extends WebTestCase
         $sub = $this->seedNeedsInfo($rider, $curator, 'Côte du Reply · Thread');
 
         $crawler = $this->loginAndVisitMessages($client, $rider);
-        $client->request('POST', '/messages/'.$this->needsInfoMessageId((int) $rider->getId()).'/reply', [
+        $client->request('POST', '/account/messages/'.$this->needsInfoMessageId((int) $rider->getId()).'/reply', [
             'body' => 'Answered the first time.',
             '_token' => $this->replyTokenFrom($crawler),
         ]);
-        self::assertResponseRedirects('/messages');
+        self::assertResponseRedirects('/account/messages');
         $this->em()->clear();
 
         $rows = static::getContainer()->get(SubmissionQueue::class)
@@ -233,11 +233,11 @@ final class NeedsInfoReplyTest extends WebTestCase
 
         $crawler = $this->loginAndVisitMessages($client, $rider);
         $token = $this->replyTokenFrom($crawler);
-        $client->request('POST', '/messages/'.$this->needsInfoMessageId((int) $rider->getId()).'/reply', [
+        $client->request('POST', '/account/messages/'.$this->needsInfoMessageId((int) $rider->getId()).'/reply', [
             'body' => 'Shut off from November to March.',
             '_token' => $token,
         ]);
-        self::assertResponseRedirects('/messages');
+        self::assertResponseRedirects('/account/messages');
         $this->em()->clear();
 
         // The row exists — the desk depends on it.
@@ -269,11 +269,11 @@ final class NeedsInfoReplyTest extends WebTestCase
 
         $msgId = $this->needsInfoMessageId((int) $rider->getId());
 
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => 'Confirmed — loose gravel for the last 200m.',
             '_token' => $token,
         ]);
-        self::assertResponseRedirects('/messages');
+        self::assertResponseRedirects('/account/messages');
 
         $this->em()->clear();
         /** @var Submission $reloaded */
@@ -309,18 +309,18 @@ final class NeedsInfoReplyTest extends WebTestCase
         $token = $this->replyTokenFrom($crawler);
         $msgId = $this->needsInfoMessageId((int) $rider->getId());
 
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => 'First reply.',
             '_token' => $token,
         ]);
-        self::assertResponseRedirects('/messages');
+        self::assertResponseRedirects('/account/messages');
         self::assertCount(1, $this->riderReplyMessagesFor((int) $curator->getId()));
 
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => 'Second reply — should not land.',
             '_token' => $token,
         ]);
-        self::assertResponseRedirects('/messages');
+        self::assertResponseRedirects('/account/messages');
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-error', 'no longer waiting');
 
@@ -347,7 +347,7 @@ final class NeedsInfoReplyTest extends WebTestCase
         $crawler = $this->loginAndVisitMessages($client, $intruder);
         $token = $this->replyTokenFrom($crawler);
 
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => 'Trying to answer someone elses needs-info request.',
             '_token' => $token,
         ]);
@@ -368,11 +368,11 @@ final class NeedsInfoReplyTest extends WebTestCase
         $token = $this->replyTokenFrom($crawler);
         $msgId = $this->needsInfoMessageId((int) $rider->getId());
 
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => str_repeat('x', 2001),
             '_token' => $token,
         ]);
-        self::assertResponseRedirects('/messages');
+        self::assertResponseRedirects('/account/messages');
 
         self::assertCount(0, $this->riderReplyMessagesFor((int) $curator->getId()));
         $this->em()->clear();
@@ -392,11 +392,11 @@ final class NeedsInfoReplyTest extends WebTestCase
         $token = $this->replyTokenFrom($crawler);
         $msgId = $this->needsInfoMessageId((int) $rider->getId());
 
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => '   ',
             '_token' => $token,
         ]);
-        self::assertResponseRedirects('/messages');
+        self::assertResponseRedirects('/account/messages');
 
         self::assertCount(0, $this->riderReplyMessagesFor((int) $curator->getId()));
         $this->em()->clear();
@@ -428,7 +428,7 @@ final class NeedsInfoReplyTest extends WebTestCase
         $token = $this->replyTokenFrom($crawler);
         $msgId = $this->needsInfoMessageId((int) $rider->getId());
 
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => 'It is the tap by the second bench.',
             '_token' => $token,
         ]);
@@ -441,7 +441,7 @@ final class NeedsInfoReplyTest extends WebTestCase
         $this->moderation()->decide((int) $sub->getId(), 'approve', $curator, null);
         $this->em()->clear();
 
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
         self::assertGreaterThan(1, $crawler->filter('.msg-row')->count());
         self::assertSame(0, $crawler->filter('.msg-list > .msg-row')->first()->filter('.msg-answer')->count(), 'the card on top is not the question');
@@ -454,7 +454,7 @@ final class NeedsInfoReplyTest extends WebTestCase
         // Answered, so nothing left to reply to.
         self::assertSame(0, $card->filter('form.msg-reply')->count());
         // The subject links back to the contribution it is about.
-        self::assertStringEndsWith('/profile#sub-'.$sub->getId(), (string) $card->filter('a.msg-subject')->attr('href'));
+        self::assertStringEndsWith('/account/contributions#sub-'.$sub->getId(), (string) $card->filter('a.msg-subject')->attr('href'));
     }
 
     /**
@@ -490,12 +490,12 @@ final class NeedsInfoReplyTest extends WebTestCase
         $msgId = $this->needsInfoMessageId((int) $rider->getId());
 
         $client->loginUser($rider);
-        $crawler = $client->request('GET', '/profile');
+        $crawler = $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
 
         $answer = $crawler->filter('a.q-link--act');
         self::assertSame(1, $answer->count(), 'A needs-info row must offer a way to answer.');
-        self::assertStringEndsWith('/messages#msg-'.$msgId, (string) $answer->attr('href'));
+        self::assertStringEndsWith('/account/messages#msg-'.$msgId, (string) $answer->attr('href'));
     }
 
     /**
@@ -512,12 +512,12 @@ final class NeedsInfoReplyTest extends WebTestCase
         $crawler = $this->loginAndVisitMessages($client, $rider);
         $token = $this->replyTokenFrom($crawler);
         $msgId = $this->needsInfoMessageId((int) $rider->getId());
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => 'Gravel, and the gate is open.',
             '_token' => $token,
         ]);
 
-        $crawler = $client->request('GET', '/profile');
+        $crawler = $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Gravel, and the gate is open.', $crawler->filter('.q-note--answer')->text());
         // Back in the queue, so there is no question left to answer.
@@ -565,7 +565,7 @@ final class NeedsInfoReplyTest extends WebTestCase
         $msgId = $this->needsInfoMessageId((int) $rider->getId());
 
         $client->loginUser($rider);
-        $client->request('POST', '/messages/'.$msgId.'/reply', [
+        $client->request('POST', '/account/messages/'.$msgId.'/reply', [
             'body' => 'Hello',
             '_token' => 'not-a-real-token',
         ]);

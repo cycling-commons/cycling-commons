@@ -104,7 +104,7 @@ final class ModerateTest extends WebTestCase
     public function testAnonRedirectsToLogin(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
 
         self::assertResponseRedirects('/login', 302);
     }
@@ -117,7 +117,7 @@ final class ModerateTest extends WebTestCase
         $user = $this->createUser('moderate-rider@example.com', 'hunter2secure!');
         $client->loginUser($user);
 
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -143,7 +143,7 @@ final class ModerateTest extends WebTestCase
         );
         $client->loginUser($curator);
 
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
 
         self::assertResponseIsSuccessful();
 
@@ -182,14 +182,14 @@ final class ModerateTest extends WebTestCase
         $client->loginUser($curator);
         $card = '.q-item[data-item-id="'.$sub->getId().'"] .q-who';
 
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains($card, RiderPseudonym::for((int) $submitter->getId()));
         self::assertSame(0, $crawler->filter($card.' a')->count());
 
         $submitter->setPublicProfile(true);
         $em->flush();
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
         $link = $crawler->filter($card.' a.desk-rider');
         self::assertSame(1, $link->count());
         self::assertSame('Queue Rider', trim($link->text()));
@@ -208,18 +208,18 @@ final class ModerateTest extends WebTestCase
         );
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
-        self::assertSame(1, $crawler->filter('a.lchip.on[href$="/moderate"]')->count());
-        self::assertSame(1, $crawler->filter('a.mod-desk-hist[href$="/moderate/history"]')->count());
-        self::assertSame(0, $crawler->filter('nav.dtabs a[href$="/moderate/history"]')->count());
-        self::assertSame(0, $crawler->filter('.acct-dropdown a[href$="/moderate/history"]')->count());
+        self::assertSame(1, $crawler->filter('a.lchip.on[href$="/moderate/submissions"]')->count());
+        self::assertSame(1, $crawler->filter('a.mod-desk-hist[href$="/moderate/submissions/history"]')->count());
+        self::assertSame(0, $crawler->filter('nav.dtabs a[href$="/moderate/submissions/history"]')->count());
+        self::assertSame(0, $crawler->filter('.acct-dropdown a[href$="/moderate/submissions/history"]')->count());
 
-        $crawler = $client->request('GET', '/moderate/history');
+        $crawler = $client->request('GET', '/moderate/submissions/history');
         self::assertResponseIsSuccessful();
-        self::assertSame(1, $crawler->filter('a.mod-desk-hist.on[href$="/moderate/history"]')->count());
-        self::assertSame(1, $crawler->filter('nav.dtabs a.dtab-mod.on[href$="/moderate"]')->count());
-        self::assertSame(0, $crawler->filter('nav.dtabs a[href$="/moderate/history"]')->count());
+        self::assertSame(1, $crawler->filter('a.mod-desk-hist.on[href$="/moderate/submissions/history"]')->count());
+        self::assertSame(1, $crawler->filter('nav.dtabs a.dtab-mod.on[href$="/moderate/submissions"]')->count());
+        self::assertSame(0, $crawler->filter('nav.dtabs a[href$="/moderate/submissions/history"]')->count());
     }
 
     /**
@@ -242,7 +242,7 @@ final class ModerateTest extends WebTestCase
         );
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
 
         // One review link per queued item, opening in a new tab.
@@ -297,7 +297,7 @@ final class ModerateTest extends WebTestCase
             ],
         ]);
 
-        self::assertResponseRedirects('/moderate');
+        self::assertResponseRedirects('/moderate/submissions');
 
         // Following the redirect lands back on the (unfiltered) queue. The
         // decided submission is now Approved (ModerationService applied the
@@ -342,7 +342,7 @@ final class ModerateTest extends WebTestCase
             ],
         ]);
 
-        self::assertResponseRedirects('/moderate?country=NL');
+        self::assertResponseRedirects('/moderate/submissions?country=NL');
     }
 
     /**
@@ -364,7 +364,7 @@ final class ModerateTest extends WebTestCase
         );
         $client->loginUser($curator);
 
-        $client->request('GET', '/moderate?country=NL');
+        $client->request('GET', '/moderate/submissions?country=NL');
         self::assertResponseIsSuccessful();
 
         $client->request('GET', '/map');

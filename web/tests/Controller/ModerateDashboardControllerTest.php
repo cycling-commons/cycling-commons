@@ -25,13 +25,13 @@ final class ModerateDashboardControllerTest extends WebTestCase
         $client->disableReboot();
         $this->login($client, 'dash-curator@example.com', ['ROLE_CURATOR']);
 
-        $crawler = $client->request('GET', '/moderate/dashboard');
+        $crawler = $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Dashboard');
-        self::assertSelectorExists('.dtabs-modmode a.on[href$="/moderate/dashboard"]', 'the dashboard tab is the active one');
+        self::assertSelectorExists('.dtabs-modmode a.on[href$="/moderate"]', 'the dashboard tab is the active one');
 
         $tiles = $crawler->filter('a.db-tile')->each(static fn ($a): string => (string) $a->attr('href'));
-        foreach (['/moderate/takedowns', '/moderate/reports', '/moderate', '/moderate/routes', '/moderate/data', '/moderate/bugs', '/moderate/translations', '/moderate/room'] as $desk) {
+        foreach (['/moderate/takedowns', '/moderate/reports', '/moderate/submissions', '/moderate/routes', '/moderate/data', '/moderate/bugs', '/moderate/translations', '/moderate/room'] as $desk) {
             self::assertContains($desk, $tiles, $desk.' has a tile');
         }
     }
@@ -55,7 +55,7 @@ final class ModerateDashboardControllerTest extends WebTestCase
         $room->post((int) $author->getId(), null, null, 'Cobbles near Oudenaarde: keep or drop?', title: 'Dashboard test post');
         self::assertSame(1, $room->unreadCount((int) $reader->getId()));
 
-        $client->request('GET', '/moderate/dashboard');
+        $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.db-list', 'Dashboard test post');
         self::assertSame(1, $room->unreadCount((int) $reader->getId()), 'only the room itself marks posts seen');
@@ -67,7 +67,7 @@ final class ModerateDashboardControllerTest extends WebTestCase
         $client->disableReboot();
         $this->login($client, 'dash-rider@example.com', []);
 
-        $client->request('GET', '/moderate/dashboard');
+        $client->request('GET', '/moderate');
         self::assertResponseStatusCodeSame(403);
     }
 

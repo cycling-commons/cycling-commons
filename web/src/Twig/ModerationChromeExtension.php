@@ -50,6 +50,7 @@ final class ModerationChromeExtension extends AbstractExtension
             new TwigFunction('open_contact_count', $this->openContactCount(...)),
             new TwigFunction('open_bug_count', $this->openBugCount(...)),
             new TwigFunction('open_report_count', $this->openReportCount(...)),
+            new TwigFunction('moderation_scope_names', $this->moderationScopeNames(...)),
         ];
     }
 
@@ -60,6 +61,23 @@ final class ModerationChromeExtension extends AbstractExtension
      * badge shared out by geography would leave one sitting behind whichever
      * curator happens to be away.
      */
+    /**
+     * The viewing curator's area names for the moderation bar, [] for a
+     * curator who sees every area. Read here, not passed by each page, so the
+     * bar shows the same line on every desk (moderation-and-contribution.md §9).
+     *
+     * @return list<string>
+     */
+    public function moderationScopeNames(): array
+    {
+        $user = $this->security->getUser();
+        if (!$user instanceof User || !$this->security->isGranted('ROLE_CURATOR')) {
+            return [];
+        }
+
+        return $this->scopes->describe($user);
+    }
+
     public function openContactCount(): int
     {
         if (!$this->security->getUser() instanceof User || !$this->security->isGranted('ROLE_CURATOR')) {

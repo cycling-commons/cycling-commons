@@ -3302,6 +3302,7 @@ account:
   menu_personal: 'Personnel'
   menu_moderation: 'Modération'
   mod_scope_all: 'Toutes les zones'
+  menu_more: 'Plus'
   unread_messages: '%count% message(s) non lu(s)'
   open_items: '%count% élément(s) ouvert(s)'
   mod_takedowns_open: 'Demandes de retrait ouvertes'
@@ -3479,8 +3480,10 @@ support:
     where_message: 'À côté dun message reçu, dans vos messages.'
     where_photo: 'Sous la photo : « Cette photo me montre, la signaler ». Une photo signalée parce quelle montre une personne est masquée aussitôt, avant quun curateur lait vue.'
     what_kicker: 'Et ensuite'
-    what_p: 'Si vous laissez une adresse, vous recevez aussitôt une confirmation avec une référence, puis la décision du curateur avec ses raisons, quelle quelle soit. Si la chose a un auteur et que le signalement est retenu, il apprend ce qui a été restreint, pourquoi, et comment le contester. Une personne décide, à chaque fois. Les motifs sont les règles que nous publions dans les conditions.'
-    what_terms: 'Lire les règles.'
+    what_p1: 'Si vous laissez une adresse, vous recevez aussitôt une confirmation avec une référence. Quand un curateur a pris une décision sur votre signalement, vous en êtes informé, avec la raison.'
+    what_p2: 'Une personne décide, à chaque fois. Les motifs sont les règles publiées dans nos conditions.'
+    what_terms: 'Lire les règles ici.'
+    what_p3: 'Si ce que vous avez signalé a un auteur et que le signalement est retenu, cette personne apprend ce qui a été restreint et pourquoi. Elle a le droit de contester la décision.'
     not_kicker: 'Pas cette page'
     not_bug: 'Le site lui-même est cassé, ou la carte dessine mal quelque chose de chez nous :'
     not_contact: 'Tout le reste :'
@@ -3599,6 +3602,10 @@ support:
     sent_again: 'En signaler un autre'
     known_link: 'Voir ce que nous savons déjà'
     check_known: 'Avant d''écrire : c''est peut-être déjà sur la liste.'
+    recent_heading: 'Bugs ajoutés récemment'
+    recent_sub: 'Les bugs que nous connaissons déjà, les plus récents d''abord. Si le vôtre y est, inutile de le signaler à nouveau.'
+    recent_empty: 'Aucun bug connu sur la liste pour le moment.'
+    recent_all: 'Toute la liste'
     no_js_note: 'Ce formulaire fonctionne aussi sans JavaScript. Il envoie alors un peu moins sur votre navigateur, et un peu moins est permis par jour.'
     severity.critical: 'Critique'
     severity.major: 'Majeur'
@@ -3648,6 +3655,8 @@ support:
     block_word: 'collez le journal ici'
     hint: 'Vous pouvez utiliser **gras**, *italique*, `code`, des listes, et ``` autour d''un bloc de journal. Les liens et les images ne sont pas affichés.'
   known:
+    fixed_on: 'Corrigé le %date%'
+    updated_on: 'Mis à jour le %date%'
     kicker: 'Problèmes connus'
     desk_link: 'Ouvrir sur le bureau'
     title: 'Ce que nous savons déjà cassé.'
@@ -3737,7 +3746,7 @@ support:
     search_found: '%count% résultat(s) pour « %q% »'
     search_none: 'Rien ne correspond à « %q% ». Essayez le numéro seul, ou un seul mot.'
   mine:
-    title: 'Mes signalements'
+    title: 'Mes bugs'
     lede: 'Les bogues que vous nous avez signalés, et ce qu''ils sont devenus.'
     empty: 'Vous n''avez encore rien signalé.'
     empty_link: 'Signaler un bogue'
@@ -3907,6 +3916,8 @@ meta:
   moderate_room_description: 'Le tableau interne des curateurs et des modérateurs.'
   moderate_dashboard_title: 'Tableau de bord des curateurs'
   moderate_dashboard_description: 'Chaque bureau de modération et son travail en attente, sur une page.'
+  rider_dashboard_title: 'Tableau de bord'
+  rider_dashboard_description: 'Votre travail en cours et ce qui vous attend, sur une seule page.'
   moderate_title: 'Cycling Commons — Modération'
   moderate_description: 'Espace curateur du Commons — examinez les soumissions, résolvez les signalements et maintenez la fiabilité de l''atlas cycliste ouvert.'
   contribute_title: 'Cycling Commons — Contribuer'
@@ -4970,7 +4981,7 @@ report:
     back: 'Retour à vos messages'
   desk:
     title: 'Signalements'
-    lede: 'Ce que les cyclistes ont signalé sur les itinéraires, lieux, textes de région, profils, messages et photos. Les réclamations légales et les abus passent en tête. Les demandes de retrait d''une photo sont sur le <a href="%takedowns%">bureau des retraits</a>.'
+    lede: 'Ce que les cyclistes ont signalé sur les itinéraires, lieux, textes de région et de ville, profils, messages et photos. Les réclamations légales et les abus passent en tête. Quand l''auteur d''une photo demande à retirer sa propre photo, la demande est sur le <a href="%takedowns%">bureau des retraits</a>.'
     empty: 'Rien en attente. Chaque signalement a une réponse.'
     target_gone: 'plus sur le site'
     no_author: 'personne en particulier'
@@ -5142,7 +5153,6 @@ markers:
 # Curator dashboard (moderation-and-contribution.md §5.0).
 curator_dashboard:
   title: 'Tableau de bord'
-  clear: 'Rien'
   clocks:
     heading: 'Délais légaux'
     due: 'Les retraits et les signalements ont un délai légal. Traitez-les en premier.'
@@ -5161,3 +5171,32 @@ curator_dashboard:
     area: 'Dans votre zone'
     everywhere: 'Partout'
     room: 'Nouveau depuis votre dernière visite'
+
+# Shared by both dashboards (account/_dashboard_tile.html.twig).
+dashboard:
+  clear: 'Rien'
+
+# Rider dashboard (account-and-auth.md §8).
+rider_dashboard:
+  title: 'Tableau de bord'
+  waiting:
+    heading: 'En attente de vous'
+    due: 'Un curateur vous a posé une question, ou quelqu''un vous a écrit. Répondez d''abord à ceci.'
+  work:
+    heading: 'Votre travail'
+  tile:
+    questions: 'Questions'
+  note:
+    contributions: 'Sur vos contributions'
+    translations: 'Sur vos traductions'
+    unread: 'Non lus'
+    with_curator: 'Chez un curateur'
+    not_fixed: 'Pas encore corrigés'
+  recent:
+    heading: 'Vos dernières contributions'
+    all: 'Toutes vos contributions'
+    empty: 'Vous n''avez encore ajouté ni modifié aucun lieu.'
+  nearby:
+    no_base: 'Indiquez une base pour voir les lieux proches de vous à vérifier.'
+    settings: 'Ouvrir les paramètres'
+    empty: 'Chaque lieu près de vous a été vérifié récemment.'

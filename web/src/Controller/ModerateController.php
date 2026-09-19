@@ -79,7 +79,7 @@ final class ModerateController extends AbstractController
     ) {
     }
 
-    #[Route('/moderate', name: 'moderate')]
+    #[Route('/moderate/submissions', name: 'moderate_submissions')]
     public function index(Request $request): Response
     {
         $this->retention->sweepOpportunistically();
@@ -99,7 +99,7 @@ final class ModerateController extends AbstractController
      *
      * @see docs/specs/moderation-and-contribution.md §5.2
      */
-    #[Route('/moderate/history', name: 'moderate_history')]
+    #[Route('/moderate/submissions/history', name: 'moderate_history')]
     public function history(Request $request): Response
     {
         /** @var User $user */
@@ -235,12 +235,11 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * @return array{mod_scope_names: list<string>, mod_submission_count: int, mod_route_count: int, mod_takedown_count: int}
+     * @return array{mod_submission_count: int, mod_route_count: int, mod_takedown_count: int}
      */
     private function deskBadges(User $user, ModerationScope $scope): array
     {
         return [
-            'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
             'mod_submission_count' => $this->queue->total($scope),
             'mod_route_count' => $this->routeQueue->total($scope) + $this->routeQueue->pendingSuggestionCount($scope),
             'mod_takedown_count' => $this->takedowns->pendingCount(),
@@ -364,14 +363,14 @@ final class ModerateController extends AbstractController
         if ('' !== $ref && 1 !== preg_match('~^(node|way)/\d+$~', $ref)) {
             $this->addFlash('danger', 'moderate.osm.bad_ref');
 
-            return $this->redirectToRoute('moderate');
+            return $this->redirectToRoute('moderate_submissions');
         }
 
         $submission = $this->em->find(Submission::class, $submissionId);
         if (null === $submission || null === $submission->getItemId()) {
             $this->addFlash('danger', 'moderate.osm.bad_ref');
 
-            return $this->redirectToRoute('moderate');
+            return $this->redirectToRoute('moderate_submissions');
         }
         // Same boundary decide() enforces, before anything is written.
         if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
@@ -382,7 +381,7 @@ final class ModerateController extends AbstractController
         if (null === $item) {
             $this->addFlash('danger', 'moderate.osm.bad_ref');
 
-            return $this->redirectToRoute('moderate');
+            return $this->redirectToRoute('moderate_submissions');
         }
 
         // Identity is exclusive: linking to an object another served row
@@ -390,14 +389,14 @@ final class ModerateController extends AbstractController
         if ('' !== $ref && $this->linker->refIsTaken($ref, $item->getLetter(), (int) $item->getId())) {
             $this->addFlash('danger', 'moderate.osm.ref_taken');
 
-            return $this->redirectToRoute('moderate');
+            return $this->redirectToRoute('moderate_submissions');
         }
 
         $item->answerOsm('' === $ref ? null : $ref);
         $this->em->flush();
         $this->addFlash('success', '' === $ref ? 'moderate.osm.answered_none' : 'moderate.osm.answered_linked');
 
-        return $this->redirectToRoute('moderate');
+        return $this->redirectToRoute('moderate_submissions');
     }
 
     #[Route('/moderate/decide', name: 'moderate_decide', methods: ['POST'])]
@@ -432,7 +431,7 @@ final class ModerateController extends AbstractController
 
                 $this->addFlash('error', 'moderate.error.needs_info_note_required');
 
-                return $this->redirectToRoute('moderate');
+                return $this->redirectToRoute('moderate_submissions');
             } catch (OsmUnansweredException) {
                 // catalog-data-model.md §5b - the card shows the question; this
                 // is the curator clicking approve before answering it.
@@ -442,13 +441,13 @@ final class ModerateController extends AbstractController
 
                 $this->addFlash('error', 'moderate.error.osm_unanswered');
 
-                return $this->redirectToRoute('moderate');
+                return $this->redirectToRoute('moderate_submissions');
             } catch (AlreadyDecidedException|\InvalidArgumentException|\LogicException) {
                 if ($wantsJson) {
                     return $this->json(['error' => 'undecidable_submission'], Response::HTTP_CONFLICT);
                 }
 
-                return $this->redirectToRoute('moderate');
+                return $this->redirectToRoute('moderate_submissions');
             }
 
             // docs/specs/moderation-and-contribution.md (A curator's confirmation verifies the item) — best-effort after approve.
@@ -474,7 +473,7 @@ final class ModerateController extends AbstractController
             }
 
             // docs/specs/moderation-and-contribution.md §5.1 — keep active filters.
-            return $this->redirectToRoute('moderate', array_filter([
+            return $this->redirectToRoute('moderate_submissions', array_filter([
                 'country' => $request->query->getString('country'),
                 'region' => $request->query->getString('region'),
                 'type' => $request->query->getString('type'),
@@ -522,7 +521,7 @@ final class ModerateController extends AbstractController
             $this->addFlash('danger', 'moderate.trash.error');
         }
 
-        return $this->redirectToRoute('moderate', array_filter([
+        return $this->redirectToRoute('moderate_submissions', array_filter([
             'country' => $request->query->getString('country'),
             'region' => $request->query->getString('region'),
             'type' => $request->query->getString('type'),
@@ -540,7 +539,7 @@ final class ModerateController extends AbstractController
         if (!$this->isCsrfTokenValid('moderate_escalate', (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'flash.invalid_token');
 
-            return $this->redirectToRoute('moderate');
+            return $this->redirectToRoute('moderate_submissions');
         }
 
         /** @var User $curator */
@@ -558,7 +557,7 @@ final class ModerateController extends AbstractController
             $this->addFlash('error', $e->getMessage());
         }
 
-        return $this->redirectToRoute('moderate');
+        return $this->redirectToRoute('moderate_submissions');
     }
 
     /**
@@ -572,7 +571,7 @@ final class ModerateController extends AbstractController
         if (!$this->isCsrfTokenValid('moderate_escalate', (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'flash.invalid_token');
 
-            return $this->redirectToRoute('moderate');
+            return $this->redirectToRoute('moderate_submissions');
         }
 
         /** @var User $curator */
@@ -600,7 +599,7 @@ final class ModerateController extends AbstractController
             $this->addFlash('error', $e->getMessage());
         }
 
-        return $this->redirectToRoute('moderate');
+        return $this->redirectToRoute('moderate_submissions');
     }
 
     /**
@@ -676,7 +675,7 @@ final class ModerateController extends AbstractController
             }
         }
 
-        return $this->redirectToRoute('moderate');
+        return $this->redirectToRoute('moderate_submissions');
     }
 
     /**

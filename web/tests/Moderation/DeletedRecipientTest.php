@@ -197,15 +197,15 @@ final class DeletedRecipientTest extends WebTestCase
         self::assertInstanceOf(UserMessage::class, $needsInfoMessage);
 
         $client->loginUser($rider);
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
         $token = (string) $crawler->filter('form.msg-reply input[name="_token"]')->first()->attr('value');
 
-        $client->request('POST', '/messages/'.$needsInfoMessage->getId().'/reply', [
+        $client->request('POST', '/account/messages/'.$needsInfoMessage->getId().'/reply', [
             'body' => 'Confirmed — loose gravel for the last 200m.',
             '_token' => $token,
         ]);
-        self::assertResponseRedirects('/messages');
+        self::assertResponseRedirects('/account/messages');
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-error', 'no longer waiting');
 

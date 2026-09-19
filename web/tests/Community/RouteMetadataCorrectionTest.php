@@ -296,9 +296,9 @@ final class RouteMetadataCorrectionTest extends WebTestCase
 
         // The rider answers it from their messages page.
         $this->client->loginUser($rider);
-        $page = $this->client->request('GET', '/messages');
+        $page = $this->client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
-        $reply = $page->filter('form[action*="/messages/'.$question->getId().'/reply"]')->form();
+        $reply = $page->filter('form[action*="/account/messages/'.$question->getId().'/reply"]')->form();
         $reply->setValues(['body' => 'Anticlockwise, from the square.']);
         $this->client->submit($reply);
         self::assertResponseRedirects();

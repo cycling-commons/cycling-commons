@@ -252,7 +252,7 @@ final class TranslateModeTest extends WebTestCase
     /**
      * A POST is never marked, whatever else holds.
      *
-     * `POST /settings/export` renders `export.readme` through the translator
+     * `POST /account/settings/export` renders `export.readme` through the translator
      * into a ZIP, and a translated string inside a downloadable artifact is
      * unreachable by both response nets (translations.md §4.1). The guard is
      * on the method rather than on that one route, so this pins the rule where

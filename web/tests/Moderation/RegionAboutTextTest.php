@@ -138,8 +138,10 @@ final class RegionAboutTextTest extends WebTestCase
            who opens one region loses every way back to the desks - and it fails
            silently, because the page still renders and still works. */
         self::assertStringContainsString('dtabs-modmode', $html, 'the moderator tab bar must be here');
-        self::assertStringContainsString('/moderate/regions" class="dtab-mod on', $html,
-            'and the Regions tab stays lit: this is a sub-page of that desk');
+        self::assertStringContainsString('dtabs-more-btn on', $html,
+            'and More, which holds Regions, stays lit: this is a sub-page of that desk');
+        self::assertStringContainsString('/moderate/regions" class="on', $html,
+            'with Regions itself marked inside it');
 
         /* Country, flag and a way back (owner 2026-08-16). A region name alone
            is ambiguous across nineteen countries, and the only way out used to

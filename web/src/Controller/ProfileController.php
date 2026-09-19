@@ -4,10 +4,9 @@
 
 namespace App\Controller;
 
-use App\Catalog\ConfirmationFreshness;
+use App\Account\StaleNearby;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
-use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\SubmissionStatus;
 use App\Contribution\SubmissionChangeSummary;
@@ -46,7 +45,7 @@ final class ProfileController extends AbstractController
      *
      * @see docs/specs/moderation-and-contribution.md §3.4
      */
-    #[Route('/profile/withdraw/{id}', name: 'profile_withdraw', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[Route('/account/contributions/withdraw/{id}', name: 'profile_withdraw', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function withdraw(int $id, Request $request, ModerationService $moderation): Response
     {
         /** @var User $user */
@@ -72,7 +71,7 @@ final class ProfileController extends AbstractController
         return $this->redirectToRoute('profile', $params, Response::HTTP_SEE_OTHER);
     }
 
-    #[Route('/profile', name: 'profile')]
+    #[Route('/account/contributions', name: 'profile')]
     public function show(
         Request $request,
         EntityManagerInterface $em,
@@ -80,7 +79,7 @@ final class ProfileController extends AbstractController
         Connection $db,
         SubmissionChangeSummary $changes,
         PageSize $pageSize,
-        ConfirmationFreshness $freshness,
+        StaleNearby $staleNearby,
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -201,7 +200,7 @@ final class ProfileController extends AbstractController
                 ['uid' => $userId],
             ),
             'confirmations' => $this->confirmations($db, $userId),
-            'stale_nearby' => $this->staleNearby($db, $user, $freshness),
+            'stale_nearby' => $staleNearby->for($user, 12),
             'curator_applications' => $db->fetchAllAssociative(
                 'SELECT ca.country_code, ca.status, ca.created_at, ca.decision_note, r.slug AS region_slug
                    FROM curator_application ca
@@ -304,52 +303,6 @@ final class ProfileController extends AbstractController
         }
 
         return ['state' => 'unknown', 'slug' => '', 'country' => ''];
-    }
-
-    /**
-     * Stale places inside the rider's area. Same three narrowings as the map.
-     *
-     * @see docs/specs/moderation-and-contribution.md §10.1a
-     *
-     * @return list<array<string, mixed>>
-     */
-    private function staleNearby(Connection $db, User $user, ConfirmationFreshness $freshness): array
-    {
-        $ages = array_values(array_filter(
-            array_map(static fn (ItemType $t): string => $t->letter(), ItemType::cases()),
-            static fn (string $l): bool => ItemType::fromLetter($l)?->confirmationAges() ?? false,
-        ));
-        if ([] === $ages) {
-            return [];
-        }
-        $rows = $db->fetchAllAssociative(
-            'SELECT i.id, i.name, i.letter, last.at AS last_confirmed,
-                    round((ST_Distance(i.geom::geography, u.base_point::geography) / 1000)::numeric, 1) AS km
-               FROM users u
-               JOIN item i ON i.letter IN (:letters) AND i.state IN '.ItemState::servedSqlTuple()."
-               JOIN LATERAL (
-                    SELECT max(c.created_at) AS at FROM item_confirmation c
-                     WHERE c.item_id = i.id AND c.source <> 'form'
-               ) last ON last.at IS NOT NULL
-              WHERE u.id = :uid
-                AND u.base_point IS NOT NULL
-                AND last.at < :cut
-                AND ST_DWithin(i.geom::geography, u.base_point::geography, u.base_radius_km * 1000)
-              ORDER BY last.at ASC, i.id ASC
-              LIMIT 12",
-            [
-                'uid' => (int) $user->getId(),
-                'letters' => $ages,
-                'cut' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d H:i:s'),
-            ],
-            ['letters' => ArrayParameterType::STRING],
-        );
-        foreach ($rows as &$row) {
-            $row['typeLabelKey'] = ItemType::fromParam((string) $row['letter'])->labelKey();
-        }
-
-        /* @var list<array<string, mixed>> */
-        return $rows;
     }
 
     /**

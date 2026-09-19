@@ -291,7 +291,7 @@ final class BugReportTest extends WebTestCase
     {
         // /nl/map is the map, not "unsure".
         self::assertSame(BugArea::Map, BugArea::guessFromPath('/nl/map'));
-        self::assertSame(BugArea::Account, BugArea::guessFromPath('/de/settings'));
+        self::assertSame(BugArea::Account, BugArea::guessFromPath('/de/account/settings'));
         self::assertSame(BugArea::Unsure, BugArea::guessFromPath('/'));
     }
 
@@ -449,6 +449,29 @@ final class BugReportTest extends WebTestCase
     }
 
     /**
+     * The column beside the form lists the newest public open entries, under
+     * their public wording, and never a report a curator has not published.
+     */
+    public function testTheFormListsRecentKnownIssuesBesideIt(): void
+    {
+        $client = $this->client();
+        $public = new BugReport('Reporter wrote this about Dave', 'body');
+        $public->setPublicTitle('Region page loads slowly');
+        $public->setPublic(true);
+        $this->em()->persist($public);
+        $this->em()->persist(new BugReport('An unpublished private report', 'body'));
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/report-bug');
+        self::assertResponseIsSuccessful();
+        $aside = $page->filter('aside.bugrecent')->text();
+        self::assertStringContainsString('Region page loads slowly', $aside);
+        self::assertStringNotContainsString('Dave', $aside);
+        self::assertStringNotContainsString('An unpublished private report', $aside);
+        self::assertCount(1, $page->filter('aside.bugrecent a[href$="#issue-'.$public->getId().'"]'));
+    }
+
+    /**
      * "We are not fixing this" is a conversation with the reporter, not a
      * public notice.
      */
@@ -487,6 +510,31 @@ final class BugReportTest extends WebTestCase
             'the open list carries only what is still wrong');
         self::assertStringContainsString('Fixed thing', $client->request('GET', '/known-issues?show=fixed')->html(),
             'and the fixed list is where somebody who hit it looks');
+    }
+
+    /**
+     * The Fixed tab dates the fix, not the last edit, and names the release
+     * it shipped in, linked to that release on the changelog.
+     */
+    public function testAFixedEntryShowsItsFixDateAndRelease(): void
+    {
+        $client = $this->client();
+        $report = new BugReport('Grey map', 'body');
+        $report->setPublic(true);
+        $report->setStatus(BugStatus::Resolved);
+        $report->setFixRelease('v0.9.0');
+        $this->em()->persist($report);
+        $this->em()->flush();
+
+        self::assertNotNull($report->getResolvedAt(), 'becoming resolved stamps the fix date');
+        $page = $client->request('GET', '/known-issues?show=fixed');
+        $row = $page->filter('#issue-'.$report->getId().' summary')->text();
+        self::assertStringContainsString('Fixed on', $row);
+        self::assertStringNotContainsString('Updated', $row);
+        self::assertCount(1, $page->filter('#issue-'.$report->getId().' a.tag-rel[href$="/changelog#v0.9.0"]'));
+
+        $report->setStatus(BugStatus::InProgress);
+        self::assertNull($report->getResolvedAt(), 'reopening clears it');
     }
 
     public function testADeclinedReportIsOnNeitherList(): void
@@ -672,7 +720,7 @@ final class BugReportTest extends WebTestCase
         $this->em()->flush();
 
         $client->loginUser($mine);
-        $html = $client->request('GET', '/profile/reports')->html();
+        $html = $client->request('GET', '/account/reports')->html();
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('My own report', $html);

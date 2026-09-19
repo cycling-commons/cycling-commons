@@ -173,6 +173,14 @@ class BugReport
     private \DateTimeImmutable $updatedAt;
 
     /** Set when the reporter was told the outcome, so they are never told twice. */
+    /**
+     * When the status last became Resolved, and null while it is anything
+     * else. The known-issues Fixed tab shows this date: `updatedAt` moves on
+     * every edit, so it cannot say when a fix happened.
+     */
+    #[ORM\Column(name: 'resolved_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $resolvedAt = null;
+
     #[ORM\Column(name: 'notified_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $notifiedAt = null;
 
@@ -273,8 +281,18 @@ class BugReport
 
     public function setStatus(BugStatus $status): void
     {
+        if (BugStatus::Resolved === $status && BugStatus::Resolved !== $this->status) {
+            $this->resolvedAt = new \DateTimeImmutable();
+        } elseif (BugStatus::Resolved !== $status) {
+            $this->resolvedAt = null;
+        }
         $this->status = $status;
         $this->touch();
+    }
+
+    public function getResolvedAt(): ?\DateTimeImmutable
+    {
+        return $this->resolvedAt;
     }
 
     public function getUserId(): ?int

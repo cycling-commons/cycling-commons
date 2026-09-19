@@ -3337,6 +3337,7 @@ account:
   menu_personal: 'Personal'
   menu_moderation: 'Moderación'
   mod_scope_all: 'Todas las zonas'
+  menu_more: 'Más'
   unread_messages: '%count% mensaje(s) sin leer'
   open_items: '%count% elemento(s) abierto(s)'
   mod_takedowns_open: 'Solicitudes de retirada abiertas'
@@ -3514,8 +3515,10 @@ support:
     where_message: 'Junto a un mensaje recibido, en tus mensajes.'
     where_photo: 'Bajo la foto: «Esta foto me muestra, denunciarla». Una foto denunciada por mostrar a una persona se oculta de inmediato, antes de que un curador la vea.'
     what_kicker: 'Qué pasa después'
-    what_p: 'Si dejas una dirección, recibes de inmediato una confirmación con referencia, y después la decisión del curador con sus razones, sea cual sea. Si la cosa tiene autor y la denuncia se acepta, se le dice qué se restringió, por qué y cómo impugnarlo. Decide una persona, cada vez. Los motivos son las reglas que publicamos en las condiciones.'
-    what_terms: 'Leer las reglas.'
+    what_p1: 'Si dejas una dirección, recibes de inmediato una confirmación con referencia. Cuando un curador haya decidido sobre tu denuncia, te lo comunicaremos, con el motivo.'
+    what_p2: 'Decide una persona, cada vez. Los motivos son las reglas publicadas en nuestras condiciones.'
+    what_terms: 'Lee aquí las reglas.'
+    what_p3: 'Si lo que denunciaste tiene autor y la denuncia se acepta, se le dice qué se restringió y por qué. Tiene derecho a impugnar la decisión.'
     not_kicker: 'No esta página'
     not_bug: 'El sitio en sí está roto, o el mapa dibuja mal algo nuestro:'
     not_contact: 'Cualquier otra cosa:'
@@ -3634,6 +3637,10 @@ support:
     sent_again: 'Informar de otro'
     known_link: 'Ver lo que ya sabemos'
     check_known: 'Antes de escribir: puede que ya esté en la lista.'
+    recent_heading: 'Errores añadidos hace poco'
+    recent_sub: 'Errores que ya conocemos, los más recientes primero. Si el tuyo está aquí, no hace falta que lo vuelvas a informar.'
+    recent_empty: 'Ahora no hay errores conocidos en la lista.'
+    recent_all: 'La lista completa'
     no_js_note: 'Este formulario también funciona sin JavaScript. Entonces envía algo menos sobre su navegador, y se permite algo menos al día.'
     severity.critical: 'Crítico'
     severity.major: 'Grave'
@@ -3683,6 +3690,8 @@ support:
     block_word: 'pega aquí el registro'
     hint: 'Puedes usar **negrita**, *cursiva*, `código`, listas y ``` alrededor de un bloque de registro. Los enlaces y las imágenes no se muestran.'
   known:
+    fixed_on: 'Corregido el %date%'
+    updated_on: 'Actualizado el %date%'
     kicker: 'Problemas conocidos'
     desk_link: 'Abrir en el escritorio'
     title: 'Lo que ya sabemos que está roto.'
@@ -3772,7 +3781,7 @@ support:
     search_found: '%count% resultados para «%q%»'
     search_none: 'Nada coincide con «%q%». Prueba solo el número, o una palabra.'
   mine:
-    title: 'Mis informes'
+    title: 'Mis errores'
     lede: 'Los errores que nos ha comunicado, y qué ha pasado con ellos.'
     empty: 'Todavía no ha informado de nada.'
     empty_link: 'Informar de un error'
@@ -3942,6 +3951,8 @@ meta:
   moderate_room_description: 'El tablón interno para curadores y moderadores.'
   moderate_dashboard_title: 'Panel de curadores'
   moderate_dashboard_description: 'Cada mesa de moderación y su trabajo pendiente en una página.'
+  rider_dashboard_title: 'Panel'
+  rider_dashboard_description: 'Tu trabajo abierto y lo que te espera, en una sola página.'
   moderate_title: 'Cycling Commons — Moderar'
   moderate_description: 'La pantalla de los curadores del Commons — revisa envíos, resuelve avisos y mantén fiable el atlas ciclista abierto.'
   contribute_title: 'Cycling Commons — Aportar'
@@ -5010,7 +5021,7 @@ report:
     back: 'Volver a tus mensajes'
   desk:
     title: 'Denuncias'
-    lede: 'Lo que han denunciado las personas que pedalean sobre rutas, lugares, textos de región, perfiles, mensajes y fotos. Las reclamaciones legales y los abusos van arriba. Las solicitudes de retirar una foto están en la <a href="%takedowns%">mesa de retiradas</a>.'
+    lede: 'Lo que han denunciado las personas que pedalean sobre rutas, lugares, textos de región y de ciudad, perfiles, mensajes y fotos. Las reclamaciones legales y los abusos van arriba. Cuando alguien pide retirar una foto propia, la solicitud está en la <a href="%takedowns%">mesa de retiradas</a>.'
     empty: 'Nada pendiente. Cada denuncia tiene respuesta.'
     target_gone: 'ya no está en el sitio'
     no_author: 'nadie en concreto'
@@ -5182,7 +5193,6 @@ markers:
 # Curator dashboard (moderation-and-contribution.md §5.0).
 curator_dashboard:
   title: 'Panel'
-  clear: 'Nada'
   clocks:
     heading: 'Plazos legales'
     due: 'Las retiradas y los avisos tienen un plazo legal. Atiéndelos primero.'
@@ -5201,3 +5211,32 @@ curator_dashboard:
     area: 'En tu zona'
     everywhere: 'En todas partes'
     room: 'Nuevo desde tu última visita'
+
+# Shared by both dashboards (account/_dashboard_tile.html.twig).
+dashboard:
+  clear: 'Nada'
+
+# Rider dashboard (account-and-auth.md §8).
+rider_dashboard:
+  title: 'Panel'
+  waiting:
+    heading: 'Te espera'
+    due: 'Un curador te hizo una pregunta, o alguien te escribió. Responde esto primero.'
+  work:
+    heading: 'Tu trabajo'
+  tile:
+    questions: 'Preguntas'
+  note:
+    contributions: 'Sobre tus contribuciones'
+    translations: 'Sobre tus traducciones'
+    unread: 'Sin leer'
+    with_curator: 'Con un curador'
+    not_fixed: 'Aún sin arreglar'
+  recent:
+    heading: 'Tus últimas contribuciones'
+    all: 'Todas tus contribuciones'
+    empty: 'Todavía no has añadido ni cambiado ningún lugar.'
+  nearby:
+    no_base: 'Define una ubicación base para ver los lugares cerca de ti que necesitan una revisión.'
+    settings: 'Abrir ajustes'
+    empty: 'Cada lugar cerca de ti tuvo una revisión reciente.'

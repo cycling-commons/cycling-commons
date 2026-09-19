@@ -633,7 +633,7 @@ The thread runs both ways, on the messaging that already exists:
 - the curator answers from the card's **Message the rider** box
   (`ModerateMessageController`, channel `correction`), which was already
   region-scoped and already worked;
-- the rider answers back from `/messages` (`messages_reply`), which now also
+- the rider answers back from `/account/messages` (`messages_reply`), which now also
   accepts a curator's message on the `correction` channel while the correction
   is still `pending`, delivering it to the curator who wrote it. No status
   flips: a correction has no needs-info state.

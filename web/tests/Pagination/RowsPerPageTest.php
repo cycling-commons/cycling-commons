@@ -48,7 +48,7 @@ final class RowsPerPageTest extends WebTestCase
         );
         static::getContainer()->get(EntityManagerInterface::class)->flush();
 
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
 
         return (string) $crawler->filter('.pager-size input[name="_token"]')->attr('value');
@@ -85,7 +85,7 @@ final class RowsPerPageTest extends WebTestCase
         static::getContainer()->get(EntityManagerInterface::class)->flush();
         $client->loginUser($rider, 'main');
         // A request so the firewall actually holds the token the resolver reads.
-        $client->request('GET', '/messages');
+        $client->request('GET', '/account/messages');
 
         $size = static::getContainer()->get(PageSize::class);
         self::assertSame(100, $size->resolve(20), 'the messages default gives way');
@@ -125,11 +125,11 @@ final class RowsPerPageTest extends WebTestCase
         // control only exists once there is a list to page.
         $token = $this->tokenFromAPager($client, (int) $rider->getId());
 
-        $client->request('POST', '/settings/rows-per-page', [
-            '_token' => $token, 'rows' => '50', 'back' => '/messages?cat=notices',
+        $client->request('POST', '/account/settings/rows-per-page', [
+            '_token' => $token, 'rows' => '50', 'back' => '/account/messages?cat=notices',
         ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
 
-        self::assertResponseRedirects('/messages?cat=notices', null, 'it goes back to the list, filter and all');
+        self::assertResponseRedirects('/account/messages?cat=notices', null, 'it goes back to the list, filter and all');
 
         static::getContainer()->get(EntityManagerInterface::class)->clear();
         $fresh = static::getContainer()->get(EntityManagerInterface::class)->find(User::class, $rider->getId());
@@ -152,7 +152,7 @@ final class RowsPerPageTest extends WebTestCase
         // "/\t//host" would leave the browser protocol-relative. The trailing
         // "\n" one pins the \A...\z anchoring ($ matches before a final newline).
         foreach (['https://evil.example/', '//evil.example/', 'javascript:alert(1)', "/\t//evil.example", "/\n//evil.example", "/messages\n.evil.example"] as $hostile) {
-            $client->request('POST', '/settings/rows-per-page', [
+            $client->request('POST', '/account/settings/rows-per-page', [
                 '_token' => $token, 'rows' => '25', 'back' => $hostile,
             ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
 
@@ -183,14 +183,14 @@ final class RowsPerPageTest extends WebTestCase
         $client->loginUser($rider, 'main');
 
         // The messages default is 20, so 30 messages are two pages…
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertSame(20, $crawler->filter('.msg-row')->count());
 
         $rider->setRowsPerPage(RowsPerPage::N50);
         $em->flush();
 
         // …and one page at 50.
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertSame(30, $crawler->filter('.msg-row')->count());
     }
 }

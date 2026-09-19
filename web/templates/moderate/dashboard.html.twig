@@ -6,37 +6,10 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  /* Compact: a tile is one line tall, number left, what it counts right. */
-  .db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.45rem;margin:0 0 .4rem}
-  .db-tile{display:flex;align-items:center;gap:.7rem;padding:.5rem .75rem;border:1px solid rgba(20,22,14,.14);
-    border-radius:8px;background:var(--paper-deep);color:var(--ink);text-decoration:none;transition:border-color .15s}
-  .db-tile:hover{border-color:var(--ink)}
-  .db-tile:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
-  .db-n{font-family:var(--serif);font-weight:700;font-size:1.45rem;line-height:1;min-width:2ch;text-align:center}
-  .db-clear .db-n{display:inline-flex;justify-content:center;color:#3e7d4f}
-  .db-what{display:flex;flex-direction:column;min-width:0}
-  .db-label{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-  .db-note{font-size:.76rem;color:#595c4d}
-  /* A legal clock with work on it is the one thing on this page in red. */
-  .db-tile.db-due{border:1.5px solid var(--danger);background:rgba(179,38,30,.07)}
-  .db-tile.db-due .db-n{color:var(--danger-ink)}
-  .dbody .sec-band{margin:1.1rem 0 .55rem}
-  .dbody .sec-lead{margin:0 0 .5rem}
-  .dbody .sec-empty{padding:.1rem 0 .4rem}
-  .sec-band .db-more{margin-left:auto;font-weight:600;letter-spacing:.08em;color:var(--clay);text-decoration:none}
-  .sec-band .db-more:hover{text-decoration:underline}
-  /* Room and your decisions side by side when there is room for both. */
-  .db-cols{display:grid;grid-template-columns:1fr;gap:0 1.6rem}
-  @media (min-width:900px){.db-cols{grid-template-columns:1fr 1fr}}
-  .db-list{list-style:none;margin:0 0 .4rem;padding:0;display:flex;flex-direction:column;gap:.3rem}
-  .db-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.4rem .7rem;border:1px solid rgba(20,22,14,.12);border-radius:8px}
-  .db-row-title{font-weight:600;font-size:.92rem;flex:1 1 10rem;min-width:0;overflow-wrap:anywhere}
-  .db-row-meta{font-size:.78rem;color:#595c4d}
-</style>
+{% include 'account/_dashboard_styles.html.twig' %}
 {% endblock %}
 
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: nav_active, mod_scope_names: mod_scope_names, mod_submission_count: mod_submission_count, mod_route_count: mod_route_count, mod_takedown_count: mod_takedown_count} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: nav_active, mod_submission_count: mod_submission_count, mod_route_count: mod_route_count, mod_takedown_count: mod_takedown_count} %}{% endblock %}
 
 {% block body %}
 <div class="dbody" id="main">
@@ -51,14 +24,14 @@
   {% if clocks_open > 0 %}<p class="sec-lead">{{ 'curator_dashboard.clocks.due'|trans }}</p>{% endif %}
   <div class="db-grid">
     {% for d in clocks %}
-      {% include 'moderate/_dashboard_tile.html.twig' with {d: d, due: d.count > 0, note: 'curator_dashboard.note.everywhere'} only %}
+      {% include 'account/_dashboard_tile.html.twig' with {d: d, due: d.count > 0, note: 'curator_dashboard.note.everywhere'} only %}
     {% endfor %}
   </div>
 
   <h2 class="sec-band">{{ 'curator_dashboard.desks.heading'|trans }}</h2>
   <div class="db-grid">
     {% for d in desks %}
-      {% include 'moderate/_dashboard_tile.html.twig' with {d: d, due: false, note: d.key == 'room' ? 'curator_dashboard.note.room' : (d.scoped ? 'curator_dashboard.note.area' : 'curator_dashboard.note.everywhere')} only %}
+      {% include 'account/_dashboard_tile.html.twig' with {d: d, due: false, note: d.key == 'room' ? 'curator_dashboard.note.room' : (d.scoped ? 'curator_dashboard.note.area' : 'curator_dashboard.note.everywhere')} only %}
     {% endfor %}
   </div>
 

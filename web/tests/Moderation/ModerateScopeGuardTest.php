@@ -139,7 +139,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($curator, (int) $regionA->getId());
         $client->loginUser($curator);
 
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
 
         self::assertSelectorTextContains('.q-title', $subA->getTitle());
@@ -160,7 +160,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         // scoped to nothing).
         $client->loginUser($curator);
 
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
 
         $body = (string) $client->getResponse()->getContent();
@@ -180,7 +180,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($curator, (int) $regionA->getId());
         $client->loginUser($curator);
 
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         // The decision form lives on the map drawer now; mint the stateless
         // "submit" CSRF token from window.CC_MOD_TOKEN there.
@@ -218,7 +218,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($curator, (int) $regionA->getId());
         $client->loginUser($curator);
 
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         $client->request('GET', '/map');
         self::assertResponseIsSuccessful();
@@ -234,7 +234,7 @@ final class ModerateScopeGuardTest extends WebTestCase
             ],
         ]);
 
-        self::assertResponseRedirects('/moderate');
+        self::assertResponseRedirects('/moderate/submissions');
     }
 
     public function testTrashOutOfScopeIs403(): void
@@ -253,7 +253,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         // submissionTrashToken pattern): read it off the trash-confirm form
         // the queue renders for the in-scope item — the token is keyed to
         // (session, token id) only, not to the row id.
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         $token = (string) $crawler->filter('.trash-confirm input[name="_token"]')->first()->attr('value');
 
@@ -289,7 +289,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         // The queue renders one .q-act--message form per visible (in-scope) item —
         // the CSRF token id ('moderate-message') is fixed, not tied to the
         // particular submission it happened to render alongside.
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         $token = (string) $crawler->filter('.q-act--message input[name="_token"]')->first()->attr('value');
 
@@ -331,7 +331,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($admin, (int) $regionA->getId());
         $client->loginUser($admin);
 
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         $body = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('Admin sees A', $body);
@@ -351,7 +351,7 @@ final class ModerateScopeGuardTest extends WebTestCase
             ],
         ]);
 
-        self::assertResponseRedirects('/moderate');
+        self::assertResponseRedirects('/moderate/submissions');
     }
 
     public function testModeratorBarShowsAssignedRegionName(): void
@@ -363,9 +363,31 @@ final class ModerateScopeGuardTest extends WebTestCase
         $this->assignRegion($curator, (int) $region->getId());
         $client->loginUser($curator);
 
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.dtabs-modlabel', 'Wallonia');
+        self::assertSelectorNotExists('.dtabs-scope--off', 'the submissions queue filters by area, so it shows the line');
+    }
+
+    /**
+     * A desk that does not filter by area hides the area line, and the line
+     * keeps its room so the tabs never shift sideways between pages.
+     */
+    public function testAnUnscopedDeskHidesTheAreaLineButKeepsItsRoom(): void
+    {
+        $client = static::createClient();
+        $region = $this->seedRegion('wallonia', 'Wallonia', 'BE');
+
+        $curator = $this->curator('guard-label-providers@example.com');
+        $this->assignRegion($curator, (int) $region->getId());
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/moderate/providers');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.dtabs-modlabel .dtabs-scope.dtabs-scope--off', 'Wallonia');
+        // Providers sits under More, which is lit while it is on screen.
+        self::assertCount(1, $crawler->filter('.dtabs-more-btn.on'));
+        self::assertCount(1, $crawler->filter('.dtabs-more-dd a.on[href$="/moderate/providers"]'));
     }
 
     public function testModeratorBarShowsAllAreasForUnassignedCurator(): void
@@ -374,7 +396,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         $curator = $this->curator('guard-label-all@example.com');
         $client->loginUser($curator);
 
-        $client->request('GET', '/moderate');
+        $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.dtabs-modlabel', 'All areas');
     }

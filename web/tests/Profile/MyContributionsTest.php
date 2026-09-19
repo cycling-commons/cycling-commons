@@ -42,7 +42,7 @@ final class MyContributionsTest extends WebTestCase
         $em->flush();
 
         $client->loginUser($me);
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
 
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
@@ -76,12 +76,12 @@ final class MyContributionsTest extends WebTestCase
         $em->flush();
 
         $client->loginUser($me);
-        $html = (string) $client->request('GET', '/profile?letter=Q')->html();
+        $html = (string) $client->request('GET', '/account/contributions?letter=Q')->html();
         self::assertStringContainsString('My castle edit', $html);
         self::assertStringNotContainsString('My fountain edit', $html);
         self::assertStringContainsString('?letter=B', $html, 'the other category stays one click away');
 
-        $html = (string) $client->request('GET', '/profile?letter=%27%22zz')->html();
+        $html = (string) $client->request('GET', '/account/contributions?letter=%27%22zz')->html();
         self::assertStringContainsString('My castle edit', $html, 'garbage filter = unfiltered, never empty');
         self::assertStringContainsString('My fountain edit', $html);
     }
@@ -112,12 +112,12 @@ final class MyContributionsTest extends WebTestCase
         $em->flush();
         $client->loginUser($me);
 
-        $html = (string) $client->request('GET', '/profile?status=withdrawn')->html();
+        $html = (string) $client->request('GET', '/account/contributions?status=withdrawn')->html();
         self::assertStringContainsString('Castle withdrawn', $html);
         self::assertStringContainsString('Fountain withdrawn', $html);
         self::assertStringNotContainsString('Castle pending', $html);
 
-        $html = (string) $client->request('GET', '/profile?status=withdrawn&letter=Q')->html();
+        $html = (string) $client->request('GET', '/account/contributions?status=withdrawn&letter=Q')->html();
         self::assertStringContainsString('Castle withdrawn', $html, 'both filters AND together');
         self::assertStringNotContainsString('Fountain withdrawn', $html);
         self::assertStringContainsString('letter=B&amp;status=withdrawn', $html, 'category chips keep the status filter');

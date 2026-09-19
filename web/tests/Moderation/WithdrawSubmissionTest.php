@@ -104,7 +104,7 @@ final class WithdrawSubmissionTest extends WebTestCase
         // Through the endpoint: the race with a curator ends in a flash and an
         // unchanged status, never a half-withdrawal.
         $client->loginUser($me);
-        $crawler = $client->request('GET', '/profile');
+        $crawler = $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('withdraw/'.$sub->getId(), (string) $client->getResponse()->getContent(),
             'no withdraw button on a decided row');
@@ -113,8 +113,8 @@ final class WithdrawSubmissionTest extends WebTestCase
         // Withdraw FROM a category-filtered view: the redirect must land back
         // on the same filter (owner 2026-08-16: "the system loses the
         // selected category").
-        $crawler = $client->request('GET', '/profile?letter=Q');
-        $form = $crawler->filter('form[action$="/profile/withdraw/'.$pending->getId().'"]')->form();
+        $crawler = $client->request('GET', '/account/contributions?letter=Q');
+        $form = $crawler->filter('form[action$="/account/contributions/withdraw/'.$pending->getId().'"]')->form();
         $client->submit($form);
         self::assertResponseRedirects();
         self::assertStringContainsString('letter=Q', (string) $client->getResponse()->headers->get('Location'));

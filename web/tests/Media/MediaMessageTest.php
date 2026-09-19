@@ -90,7 +90,7 @@ final class MediaMessageTest extends WebTestCase
      */
     private function messageToken(KernelBrowser $client): string
     {
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
 
         return (string) $crawler->filter('form[action$="/moderate/message"] input[name="_token"]')->first()->attr('value');
     }
@@ -181,7 +181,7 @@ final class MediaMessageTest extends WebTestCase
         $em->flush();
 
         $this->login($client, $rider);
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
         self::assertGreaterThan(
             0,

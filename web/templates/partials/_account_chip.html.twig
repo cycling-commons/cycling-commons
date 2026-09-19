@@ -47,6 +47,7 @@
     {% if _hasWork %}
       <div class="acct-group acct-group-personal">
         <div class="acct-sec acct-sec-personal">{{ 'account.menu_personal'|trans }}</div>
+        <a href="{{ path('dashboard') }}">{{ 'nav.dashboard'|trans }}</a>
         <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
         <a href="{{ path('scout_review') }}">{{ 'account.tab_scout'|trans }}</a>
         <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}
@@ -68,6 +69,7 @@
         <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
       </div>
     {% else %}
+      <a href="{{ path('dashboard') }}">{{ 'nav.dashboard'|trans }}</a>
       <a href="{{ path('profile') }}">{{ 'account.tab_contributions'|trans }}</a>
       <a href="{{ path('scout_review') }}">{{ 'account.tab_scout'|trans }}</a>
       <a href="{{ path('translate') }}">{{ 'account.tab_translate'|trans }}
@@ -94,7 +96,7 @@
       <div class="acct-group acct-group-mod">
         <div class="acct-sec acct-sec-mod">{{ 'account.menu_moderation'|trans }}</div>
         <a href="{{ path('moderate_dashboard') }}">{{ 'nav.dashboard'|trans }}</a>
-        <a href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}{% if _sub_open > 0 %}<span class="acct-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ _sub_open }}</span>{% endif %}</a>
+        <a href="{{ path('moderate_submissions') }}">{{ 'nav.moderate'|trans }}{% if _sub_open > 0 %}<span class="acct-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ _sub_open }}</span>{% endif %}</a>
         <a href="{{ path('moderate_routes') }}">{{ 'nav.routes'|trans }}</a>
         <a href="{{ path('moderate_takedowns') }}">{{ 'nav.takedowns'|trans }}</a>
         <a href="{{ path('moderate_translations') }}">{{ 'nav.translations'|trans }}{% if _tr_open > 0 %}<span class="acct-count" title="{{ 'account.mod_translations_open'|trans }}">{{ _tr_open }}</span>{% endif %}</a>

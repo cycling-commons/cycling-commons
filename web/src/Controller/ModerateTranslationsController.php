@@ -11,7 +11,6 @@ use App\Form\TranslationDecisionType;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\DeskRider;
 use App\Moderation\MissingQuestionException;
-use App\Moderation\ModerationScopeProvider;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -48,7 +47,6 @@ final class ModerateTranslationsController extends AbstractController
     public function __construct(
         private readonly DecisionService $decisions,
         private readonly CatalogueBrowser $browser,
-        private readonly ModerationScopeProvider $scopeProvider,
         private readonly EntityManagerInterface $em,
         private readonly PageSize $pageSize,
         private readonly StaleIndex $stale,
@@ -70,14 +68,10 @@ final class ModerateTranslationsController extends AbstractController
             ];
         }
 
-        /** @var User $curator */
-        $curator = $this->getUser();
-
         return $this->render('moderate/translations.html.twig', [
             'page_title' => 'meta.moderate_translations_title',
             'page_description' => 'meta.moderate_translations_description',
             'cards' => $cards,
-            ...$this->chrome($curator),
         ]);
     }
 
@@ -95,15 +89,11 @@ final class ModerateTranslationsController extends AbstractController
             $cards[] = $this->settledCard($proposal);
         }
 
-        /** @var User $curator */
-        $curator = $this->getUser();
-
         return $this->render('moderate/translations_history.html.twig', [
             'page_title' => 'meta.moderate_translations_title',
             'page_description' => 'meta.moderate_translations_description',
             'cards' => $cards,
             'pager' => $pager,
-            ...$this->chrome($curator),
         ]);
     }
 
@@ -125,8 +115,6 @@ final class ModerateTranslationsController extends AbstractController
             $entry = $this->em->find(TranslationEntry::class, $row['id']);
             $rows[] = $row + ['live' => null !== $entry ? $this->browser->liveFor($entry, $locale)['live'] : ''];
         }
-        /** @var User $curator */
-        $curator = $this->getUser();
 
         return $this->render('moderate/translations_stale.html.twig', [
             'page_title' => 'meta.moderate_translations_title',
@@ -134,7 +122,6 @@ final class ModerateTranslationsController extends AbstractController
             'locale' => $locale,
             'locales' => TranslationLimits::LOCALES,
             'rows' => $rows,
-            ...$this->chrome($curator),
         ]);
     }
 
@@ -155,15 +142,11 @@ final class ModerateTranslationsController extends AbstractController
                 return $this->redirectToRoute('moderate_translations_detail', ['id' => $id]);
             }
 
-            /** @var User $curator */
-            $curator = $this->getUser();
-
             return $this->render('moderate/translation_detail.html.twig', [
                 'page_title' => 'meta.moderate_translations_title',
                 'page_description' => 'meta.moderate_translations_description',
                 'card' => $this->detailCard($proposal),
                 'proposed_max' => TranslationLimits::PROPOSED_VALUE_MAX,
-                ...$this->chrome($curator),
             ]);
         }
 
@@ -209,28 +192,12 @@ final class ModerateTranslationsController extends AbstractController
             return $this->redirectToRoute('moderate_translations_detail', ['id' => $id]);
         }
 
-        /** @var User $curator */
-        $curator = $this->getUser();
-
         return $this->render('moderate/translation_detail.html.twig', [
             'page_title' => 'meta.moderate_translations_title',
             'page_description' => 'meta.moderate_translations_description',
             'card' => $this->detailCard($proposal),
             'proposed_max' => TranslationLimits::PROPOSED_VALUE_MAX,
-            ...$this->chrome($curator),
         ]);
-    }
-
-    /**
-     * @return array{mod_scope_names: list<string>}
-     */
-    private function chrome(User $curator): array
-    {
-        $scope = $this->scopeProvider->scopeFor($curator);
-
-        return [
-            'mod_scope_names' => $this->scopeProvider->describe($curator, $scope),
-        ];
     }
 
     /**

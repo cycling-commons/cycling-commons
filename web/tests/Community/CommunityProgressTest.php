@@ -91,6 +91,7 @@ final class CommunityProgressTest extends KernelTestCase
         // Alice writes a curator post.
         $this->db->insert('curator_post', [
             'author_id' => $alice->getId(),
+            'title' => 'Bath gravel',
             'body' => 'Bath gravel notes.',
             'created_at' => '2026-09-10 12:00:00+00',
         ]);

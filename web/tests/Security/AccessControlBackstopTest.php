@@ -24,7 +24,7 @@ final class AccessControlBackstopTest extends WebTestCase
     public function testAnonymousMessagesBouncesToLogin(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/messages');
+        $client->request('GET', '/account/messages');
         self::assertResponseRedirects();
         self::assertStringContainsString('/login', (string) $client->getResponse()->headers->get('Location'));
     }
@@ -32,7 +32,7 @@ final class AccessControlBackstopTest extends WebTestCase
     public function testAnonymousLocalizedMessagesBouncesToLogin(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/fr/messages');
+        $client->request('GET', '/fr/account/messages');
         self::assertResponseRedirects();
         self::assertStringContainsString('/login', (string) $client->getResponse()->headers->get('Location'));
     }

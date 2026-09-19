@@ -73,7 +73,7 @@ enum BugArea: string
             str_starts_with($path, '/photo'), str_starts_with($path, '/media') => self::Photos,
             str_starts_with($path, '/routes'), str_starts_with($path, '/propose-route') => self::Routes,
             str_starts_with($path, '/contribute'), str_starts_with($path, '/improve') => self::Contributing,
-            str_starts_with($path, '/profile'), str_starts_with($path, '/settings'),
+            str_starts_with($path, '/account'),
             str_starts_with($path, '/login'), str_starts_with($path, '/register'),
             str_starts_with($path, '/reset-password'), str_starts_with($path, '/2fa') => self::Account,
             str_starts_with($path, '/regions'), str_starts_with($path, '/region') => self::Regions,

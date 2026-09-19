@@ -21,8 +21,8 @@ security:
                 login_path: login
                 check_path: login
                 enable_csrf: true
-                default_target_path: profile
-                success_handler: App\Security\LoginSuccessHandler  # enforces 2FA setup for elevated roles; else default target
+                default_target_path: dashboard
+                success_handler: App\Security\LoginSuccessHandler  # enforces 2FA setup for elevated roles; else /profile on the first sign-in, /dashboard after
             logout: { path: logout, target: home, enable_csrf: true }
             remember_me:
                 secret: '%kernel.secret%'
@@ -125,7 +125,7 @@ security:
         # where the token is only IS_AUTHENTICATED_2FA_IN_PROGRESS, not yet fully authenticated.
         - { path: '^(/[a-z]{2})?/2fa/setup', roles: ROLE_USER }
         - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
-        - { path: '^(/[a-z]{2})?/(profile|settings)', roles: ROLE_USER }
+        - { path: '^(/[a-z]{2})?/account(/|$)', roles: ROLE_USER }
         # Backstops mirroring the controllers' own IsGranted attributes (review
         # 2026-08-16 finding 7): if a route is ever added to these controllers
         # without the attribute, it stays behind login anyway. Deliberately NOT
@@ -133,7 +133,6 @@ security:
         # stateless-JSON pattern (security-architecture.md §5.1) whose clean
         # in-controller 401 an access_control rule would replace with a 302 to
         # the login page; their auth is pinned by their own controller tests.
-        - { path: '^(/[a-z]{2})?/messages', roles: ROLE_USER }
         - { path: '^(/[a-z]{2})?/translate', roles: ROLE_USER }
         - { path: ^/scout/tags, roles: ROLE_USER }
         - { path: '^(/[a-z]{2})?/moderate', roles: ROLE_CURATOR }

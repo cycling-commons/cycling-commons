@@ -36,6 +36,10 @@
   .tag.sev-critical{background:#5a2716;color:#FFD9C8}
   .tag.sev-major{background:#FFE0D2;color:#5a2716}
   .tag.st-resolved{background:var(--spruce);color:var(--paper)}
+  /* The release a fix shipped in: a link to it on the changelog, and the git
+     tag kept as written (`v0.9.0`, not `V0.9.0`). */
+  a.tag.tag-rel{text-transform:none;color:var(--ink);text-decoration:none}
+  a.tag.tag-rel:hover{text-decoration:underline}
   .tag.st-in_progress,.tag.st-needs_testing{background:var(--ochre);color:var(--ink)}
   .when{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060}
   .tabs{display:flex;gap:.4rem;margin:0 0 1.4rem;flex-wrap:wrap}
@@ -92,7 +96,15 @@
               <span class="tag st-{{ issue.status.value }}">{{ ('support.bug.status.' ~ issue.status.value)|trans }}</span>
               <span class="tag sev-{{ issue.severity.value }}">{{ ('support.bug.severity.' ~ issue.severity.value)|trans }}</span>
               <span class="tag">{{ ('support.bug.area.' ~ issue.area.value)|trans }}</span>
-              <span class="when">{{ issue.updatedAt|cc_date }}</span>
+              {# The Fixed tab dates the fix and names the release it shipped
+                 in, linked to that release on the changelog. The Open tab's
+                 date is the last change, and says so. #}
+              {% if issue.status.value == 'resolved' %}
+                {% if issue.fixRelease %}<a class="tag tag-rel" href="{{ path('changelog') }}#{{ issue.fixRelease }}">{{ issue.fixRelease }}</a>{% endif %}
+                {% if issue.resolvedAt %}<span class="when">{{ 'support.known.fixed_on'|trans({'%date%': issue.resolvedAt|cc_date}) }}</span>{% endif %}
+              {% else %}
+                <span class="when">{{ 'support.known.updated_on'|trans({'%date%': issue.updatedAt|cc_date}) }}</span>
+              {% endif %}
             </div>
           </summary>
           {# The public DESCRIPTION, not the reply. The outcome note is written

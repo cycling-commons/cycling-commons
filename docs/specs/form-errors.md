@@ -75,7 +75,7 @@ Two details that are load-bearing:
   | `.form-errors .fe-msg`, 14.4px, auth card | 4.02 | **5.11** |
   | `.field-errors li`, 12.8px, auth card | 4.12 | **5.24** |
   | `.alert-error`, 14.4px, auth card | 4.09 | **5.20** |
-  | the same two rules on `/settings` (paper) | 4.80 / 4.71 | 6.10 / 5.99 |
+  | the same two rules on `/account/settings` (paper) | 4.80 / 4.71 | 6.10 / 5.99 |
 
   The last row is the trap: on `--paper` the old colour scraped past, and only
   the darker auth card failed. A rule copied into two templates can be wrong in

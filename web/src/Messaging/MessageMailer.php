@@ -98,9 +98,9 @@ final readonly class MessageMailer
         }
     }
 
-    /** `/messages` in the recipient's locale (no router: this runs on terminate). */
+    /** `/account/messages` in the recipient's locale (no router: this runs on terminate). */
     private function inboxPath(string $locale): string
     {
-        return (\App\Routing\LocalePrefix::PATHS[$locale] ?? '').'/messages';
+        return (\App\Routing\LocalePrefix::PATHS[$locale] ?? '').'/account/messages';
     }
 }

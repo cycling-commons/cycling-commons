@@ -46,7 +46,7 @@ final class MessagesController extends AbstractController
     ) {
     }
 
-    #[Route('/messages', name: 'messages')]
+    #[Route('/account/messages', name: 'messages')]
     public function index(Request $request, MessageService $messages, Connection $db, SubmissionChangeSummary $changes): Response
     {
         /** @var User $user */
@@ -230,7 +230,7 @@ final class MessagesController extends AbstractController
      * @see docs/specs/moderation-and-contribution.md §7.3
      * @see docs/specs/route-domain.md §7.1
      */
-    #[Route('/messages/{id}/reply', name: 'messages_reply', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[Route('/account/messages/{id}/reply', name: 'messages_reply', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function reply(int $id, Request $request, EntityManagerInterface $em, MessageService $messages, Connection $db): Response
     {
         if (!$this->isCsrfTokenValid('message-reply', (string) $request->request->get('_token'))) {

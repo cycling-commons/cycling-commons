@@ -262,7 +262,7 @@ aim at:
 
 Deliberately out of scope: `/contributors` (a paged wall that moves), `/map`
 (per-rider preferences, and the heaviest page to store), anything under
-`/moderate`, `/admin`, `/profile` or `/translate`, and `/report/{id}/answer`,
+`/moderate`, `/admin`, `/account/contributions` or `/translate`, and `/report/{id}/answer`,
 which is a private link for one reporter.
 
 The contribution forms need no rule: `/improve`, `/propose-route` and their

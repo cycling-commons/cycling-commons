@@ -1,0 +1,78 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# The rider dashboard (account-and-auth.md §8): what waits for the rider
+   first (a curator's question, unread messages), then their own work still
+   with a curator, their last contributions and the places near them worth a
+   check. Same look as the curator dashboard (account/_dashboard_*).
+   Read-only: every action lives on the page a tile links to. #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+{% include 'account/_dashboard_styles.html.twig' %}
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'dashboard'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+    <h1>{{ 'rider_dashboard.title'|trans }}</h1>
+  </div>
+
+  <h2 class="sec-band">{{ 'rider_dashboard.waiting.heading'|trans }}</h2>
+  {% if waiting_open > 0 %}<p class="sec-lead">{{ 'rider_dashboard.waiting.due'|trans }}</p>{% endif %}
+  <div class="db-grid">
+    {% for d in waiting %}
+      {% include 'account/_dashboard_tile.html.twig' with {d: d, due: d.count > 0, note: d.note} only %}
+    {% endfor %}
+  </div>
+
+  <h2 class="sec-band">{{ 'rider_dashboard.work.heading'|trans }}</h2>
+  <div class="db-grid">
+    {% for d in work %}
+      {% include 'account/_dashboard_tile.html.twig' with {d: d, due: false, note: d.note} only %}
+    {% endfor %}
+  </div>
+
+  <div class="db-cols">
+  <section>
+  <h2 class="sec-band">{{ 'rider_dashboard.recent.heading'|trans }}<a class="db-more" href="{{ path('profile') }}">{{ 'rider_dashboard.recent.all'|trans }} →</a></h2>
+  {% set sub_pill = {'approved': 'ok', 'pending': 'pend', 'needs_info': 'pend', 'rejected': 'rej', 'withdrawn': 'rej'} %}
+  {% if recent is empty %}
+    <p class="sec-empty">{{ 'rider_dashboard.recent.empty'|trans }}</p>
+  {% else %}
+    <ul class="db-list">
+      {% for sub in recent %}
+        <li class="db-row">
+          <span class="q-pill q-pill--{{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
+          <span class="db-row-title">{{ sub.title }}</span>
+          <span class="db-row-meta">{{ sub.createdAt|cc_date }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  </section>
+
+  {# Without a base location there is no "near you": the block says how to
+     get one instead of showing a national list (moderation-and-contribution.md §10.1a). #}
+  <section>
+  <h2 class="sec-band">{{ 'account.stale_nearby_h'|trans }}</h2>
+  {% if not has_base %}
+    <p class="sec-empty">{{ 'rider_dashboard.nearby.no_base'|trans }} <a href="{{ path('settings') }}">{{ 'rider_dashboard.nearby.settings'|trans }} →</a></p>
+  {% elseif stale_nearby is empty %}
+    <p class="sec-empty">{{ 'rider_dashboard.nearby.empty'|trans }}</p>
+  {% else %}
+    <ul class="db-list">
+      {% for s in stale_nearby %}
+        <li class="db-row">
+          <span class="q-pill q-pill--ret">{{ s.typeLabelKey|trans }}</span>
+          <span class="db-row-title">{{ s.name }}</span>
+          <span class="db-row-meta">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }} · <a href="{{ path('map') }}?feature={{ s.name|url_encode }}" target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  </section>
+  </div>
+</div>
+{% endblock %}

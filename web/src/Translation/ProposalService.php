@@ -236,6 +236,15 @@ final class ProposalService
     }
 
     /**
+     * How many of this rider's (locale, key) groups stand at a status now,
+     * counting only the latest version of each (translations.md §4).
+     */
+    public function latestCountFor(int $userId, TranslationProposalStatus $status): int
+    {
+        return $this->latestGroupCount($userId, $status, null);
+    }
+
+    /**
      * This rider's versions of one key+locale, newest first.
      *
      * @return list<TranslationProposal>

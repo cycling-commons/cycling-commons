@@ -240,7 +240,7 @@ final class AccountDeletionTest extends WebTestCase
     public function testDeleteRequestRouteRequiresAuth(): void
     {
         $client = static::createClient();
-        $client->request('POST', '/settings/delete-request', ['_token' => 'anything']);
+        $client->request('POST', '/account/settings/delete-request', ['_token' => 'anything']);
 
         self::assertResponseRedirects('/login', 302);
     }
@@ -258,28 +258,28 @@ final class AccountDeletionTest extends WebTestCase
         $this->loginAs($client, $email, $plain);
 
         // Get valid CSRF token by loading the settings page
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         // Extract the CSRF token from THIS form, not from whichever form the
         // settings page happens to render first — the page carries several,
         // each with its own token id, and picking by document order breaks
         // silently the next time one is added above it.
-        $token = $crawler->filter('form[action$="/settings/delete-request"] input[name="_token"]')->attr('value');
+        $token = $crawler->filter('form[action$="/account/settings/delete-request"] input[name="_token"]')->attr('value');
 
         // The password rides the request since 2026-08-13 (owner): an open
         // session on a shared machine must not be enough to start a deletion.
-        $client->request('POST', '/settings/delete-request', ['_token' => $token, 'current_password' => $plain]);
+        $client->request('POST', '/account/settings/delete-request', ['_token' => $token, 'current_password' => $plain]);
 
-        self::assertResponseRedirects('/settings?tab=security');
+        self::assertResponseRedirects('/account/settings?tab=security');
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-success', 'Check your email');
 
         // Without the password (or with a wrong one) no code is sent.
-        $crawler = $client->request('GET', '/settings');
-        $token = $crawler->filter('form[action$="/settings/delete-request"] input[name="_token"]')->attr('value');
-        $client->request('POST', '/settings/delete-request', ['_token' => $token, 'current_password' => 'wrong-password']);
-        self::assertResponseRedirects('/settings?tab=security');
+        $crawler = $client->request('GET', '/account/settings');
+        $token = $crawler->filter('form[action$="/account/settings/delete-request"] input[name="_token"]')->attr('value');
+        $client->request('POST', '/account/settings/delete-request', ['_token' => $token, 'current_password' => 'wrong-password']);
+        self::assertResponseRedirects('/account/settings?tab=security');
         $client->followRedirect();
         self::assertSelectorExists('.flash-error');
 
@@ -312,14 +312,14 @@ final class AccountDeletionTest extends WebTestCase
         $this->loginAs($client, $email, $plain);
 
         // Get a confirm CSRF token
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         // Selected by the form's own action, not by position among the page's
         // several _token inputs: document order is not a contract.
-        $confirmToken = $crawler->filter('form[action$="/settings/delete-confirm"] input[name="_token"]')->attr('value');
+        $confirmToken = $crawler->filter('form[action$="/account/settings/delete-confirm"] input[name="_token"]')->attr('value');
 
-        $client->request('POST', '/settings/delete-confirm', [
+        $client->request('POST', '/account/settings/delete-confirm', [
             '_token' => $confirmToken,
             'deletion_code' => $code,
         ]);

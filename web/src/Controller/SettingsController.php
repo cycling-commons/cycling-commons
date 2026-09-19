@@ -45,7 +45,7 @@ final class SettingsController extends AbstractController
     ) {
     }
 
-    #[Route('/settings', name: 'settings')]
+    #[Route('/account/settings', name: 'settings')]
     public function index(Request $request): Response
     {
         /** @var User $user */
@@ -167,7 +167,7 @@ final class SettingsController extends AbstractController
      *
      * @see docs/specs/account-and-auth.md §9.4
      */
-    #[Route('/settings/rows-per-page', name: 'settings_rows_per_page', methods: ['POST'])]
+    #[Route('/account/settings/rows-per-page', name: 'settings_rows_per_page', methods: ['POST'])]
     public function rowsPerPage(Request $request, EntityManagerInterface $em): Response
     {
         /** @var User $user */
@@ -195,7 +195,7 @@ final class SettingsController extends AbstractController
     /**
      * @see docs/specs/account-and-auth.md §10
      */
-    #[Route('/settings/delete-request', name: 'settings_delete_request', methods: ['POST'])]
+    #[Route('/account/settings/delete-request', name: 'settings_delete_request', methods: ['POST'])]
     public function deleteRequest(Request $request): Response
     {
         /** @var User $user */
@@ -224,7 +224,7 @@ final class SettingsController extends AbstractController
     /**
      * @see docs/specs/account-and-auth.md §10
      */
-    #[Route('/settings/delete-confirm', name: 'settings_delete_confirm', methods: ['POST'])]
+    #[Route('/account/settings/delete-confirm', name: 'settings_delete_confirm', methods: ['POST'])]
     public function deleteConfirm(Request $request): Response
     {
         /** @var User $user */

@@ -145,16 +145,16 @@ final class MessageFilterTest extends WebTestCase
         $this->send($id, UserMessageKind::MediaHiddenPendingReview, 2);
         $client->loginUser($rider, 'main');
 
-        $client->request('GET', '/messages');
+        $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('msg-filters', (string) $client->getResponse()->getContent());
 
-        $crawler = $client->request('GET', '/messages?cat=notices');
+        $crawler = $client->request('GET', '/account/messages?cat=notices');
         self::assertResponseIsSuccessful();
         self::assertSame(1, $crawler->filter('.msg-row')->count(), 'one notice, and only the notice');
 
         // A shelf that holds nothing says so, and does not read as an empty inbox.
-        $client->request('GET', '/messages?cat=general');
+        $client->request('GET', '/account/messages?cat=general');
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('No messages match this filter', $html);
@@ -169,7 +169,7 @@ final class MessageFilterTest extends WebTestCase
         $this->send((int) $rider->getId(), UserMessageKind::SubmissionApproved, 1);
         $client->loginUser($rider, 'main');
 
-        $crawler = $client->request('GET', '/messages?cat=not-a-shelf');
+        $crawler = $client->request('GET', '/account/messages?cat=not-a-shelf');
         self::assertResponseIsSuccessful();
         self::assertSame(1, $crawler->filter('.msg-row')->count());
     }

@@ -592,8 +592,8 @@ final class ImproveTest extends WebTestCase
            answers a curator's question, sees the decision. Back to the map is
            the way back, not the way forward, so it is the quieter of the two
            (owner-requested 2026-08-31). */
-        self::assertSelectorExists('.receipt-cta a[href="/profile"]');
-        self::assertSelectorTextContains('.receipt-cta a[href="/profile"]', 'contributions');
+        self::assertSelectorExists('.receipt-cta a[href="/account/contributions"]');
+        self::assertSelectorTextContains('.receipt-cta a[href="/account/contributions"]', 'contributions');
         self::assertSelectorExists('.receipt-cta a[href="/map"]');
     }
 

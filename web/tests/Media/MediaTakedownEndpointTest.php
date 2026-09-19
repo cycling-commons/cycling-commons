@@ -227,7 +227,7 @@ final class MediaTakedownEndpointTest extends WebTestCase
         // legal clock does not belong at the bottom of the editorial queue
         // (moderation-and-contribution.md §5.2). The submissions desk must NOT
         // carry it any more, so both halves are asserted.
-        $queue = $client->request('GET', '/moderate');
+        $queue = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('That is me in the reflection.', $queue->text());
 

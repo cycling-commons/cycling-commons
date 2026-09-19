@@ -221,7 +221,7 @@ A second round, 2026-08-27, after the owner read it again:
 | Was | Is |
 |---|---|
 | "The climbs, places, fixes and votes you submit" | Also routes, on-the-spot checks, region descriptions, translations, reports, bug reports and messages. The old list named four of eleven things a rider actually sends |
-| The `/settings` link shown to everyone | Only a link when signed in. `/settings` is behind the firewall, so it sent a signed-out reader to a login form for a page they were only being told about |
+| The `/account/settings` link shown to everyone | Only a link when signed in. `/account/settings` is behind the firewall, so it sent a signed-out reader to a login form for a page they were only being told about |
 | Nothing about mail retention | Kept while the matter is open, deleted within **24 months** of it ending; legal threads until the matter finishes. Art. 13(2)(a) allows criteria where no fixed period is possible, and "while it is open" is the criterion |
 | Silence about dormant accounts | Stated plainly: nothing deletes them today, and if that changes we write first. See `docs/TODO.md` 5g |
 | Nothing about what we host ourselves | A paragraph before the tables. The lists are short because routing, elevation, tiles, photos and analytics all run on our own machines; two external services were brought in-house in 2026 |

@@ -88,10 +88,10 @@ final class DataExportTest extends WebTestCase
     /** Reads the CSRF token straight off the rendered settings form. */
     private function exportToken(KernelBrowser $client): string
     {
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
-        return (string) $crawler->filter('form[action$="/settings/export"] input[name="_token"]')->attr('value');
+        return (string) $crawler->filter('form[action$="/account/settings/export"] input[name="_token"]')->attr('value');
     }
 
     /** Gives the rider one of everything the export is supposed to reach. */
@@ -137,7 +137,7 @@ final class DataExportTest extends WebTestCase
      */
     private function download(KernelBrowser $client, string $token): array
     {
-        $client->request('POST', '/settings/export', ['_token' => $token, 'current_password' => self::PASSWORD]);
+        $client->request('POST', '/account/settings/export', ['_token' => $token, 'current_password' => self::PASSWORD]);
 
         $response = $client->getResponse();
         self::assertInstanceOf(BinaryFileResponse::class, $response);
@@ -169,7 +169,7 @@ final class DataExportTest extends WebTestCase
     public function testAnonymousCannotExport(): void
     {
         $client = $this->client();
-        $client->request('POST', '/settings/export', ['_token' => 'nope']);
+        $client->request('POST', '/account/settings/export', ['_token' => 'nope']);
 
         self::assertResponseRedirects();
         self::assertStringContainsString('/login', (string) $client->getResponse()->headers->get('Location'));
@@ -180,7 +180,7 @@ final class DataExportTest extends WebTestCase
         $client = $this->client();
         $this->login($client, 'csrf');
 
-        $client->request('POST', '/settings/export', ['_token' => 'wrong', 'current_password' => self::PASSWORD]);
+        $client->request('POST', '/account/settings/export', ['_token' => 'wrong', 'current_password' => self::PASSWORD]);
 
         self::assertResponseRedirects();
         self::assertNotInstanceOf(BinaryFileResponse::class, $client->getResponse());
@@ -192,7 +192,7 @@ final class DataExportTest extends WebTestCase
         $this->login($client, 'password');
         $token = $this->exportToken($client);
 
-        $client->request('POST', '/settings/export', ['_token' => $token, 'current_password' => 'not-my-password']);
+        $client->request('POST', '/account/settings/export', ['_token' => $token, 'current_password' => 'not-my-password']);
 
         self::assertResponseRedirects();
         self::assertNotInstanceOf(BinaryFileResponse::class, $client->getResponse());
@@ -206,7 +206,7 @@ final class DataExportTest extends WebTestCase
         $this->login($client, 'empty');
         $token = $this->exportToken($client);
 
-        $client->request('POST', '/settings/export', ['_token' => $token, 'current_password' => '']);
+        $client->request('POST', '/account/settings/export', ['_token' => $token, 'current_password' => '']);
 
         self::assertResponseRedirects();
         self::assertNotInstanceOf(BinaryFileResponse::class, $client->getResponse());
@@ -345,7 +345,7 @@ final class DataExportTest extends WebTestCase
      * MediaUploadEndpointTest records the identical trap for media_upload.
      *
      * That is also why login and the CSRF token are set up without HTTP: a
-     * GET /settings would spend the one request that has to be the export.
+     * GET /account/settings would spend the one request that has to be the export.
      */
     public function testAnExhaustedDailyAllowanceIsRefused(): void
     {
@@ -368,7 +368,7 @@ final class DataExportTest extends WebTestCase
         }
         self::assertFalse($limiter->create($key)->consume()->isAccepted(), 'three exports a day, then no more');
 
-        $client->request('POST', '/settings/export', ['_token' => 'seeded-token', 'current_password' => self::PASSWORD]);
+        $client->request('POST', '/account/settings/export', ['_token' => 'seeded-token', 'current_password' => self::PASSWORD]);
 
         self::assertNotInstanceOf(BinaryFileResponse::class, $client->getResponse());
         $client->followRedirect();

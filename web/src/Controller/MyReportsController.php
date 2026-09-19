@@ -52,7 +52,7 @@ final class MyReportsController extends AbstractController
     ) {
     }
 
-    #[Route('/profile/reports', name: 'my_reports', methods: ['GET'])]
+    #[Route('/account/reports', name: 'my_reports', methods: ['GET'])]
     public function index(Request $request): Response
     {
         $user = $this->getUser();

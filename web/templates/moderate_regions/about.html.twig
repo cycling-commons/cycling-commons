@@ -44,7 +44,7 @@
    back to the desks they came from. `active: 'moderate_regions'` on purpose:
    this is a sub-page of the Regions desk, not a desk of its own, so the tab
    the curator arrived through stays lit. #}
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_regions', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_regions'} %}{% endblock %}
 
 {% block body %}
 <div class="mh">

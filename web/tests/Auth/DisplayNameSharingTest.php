@@ -120,7 +120,7 @@ final class DisplayNameSharingTest extends WebTestCase
         $this->createUser('renamer@example.test', 'Someone Else');
 
         $this->loginAs($client, 'renamer@example.test');
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->filter('form[name="settings"]')->form();

@@ -142,7 +142,7 @@ final class SitemapController extends AbstractController
 
         // Crawl hint, not ACL — private surfaces sit behind the firewall.
         $disallow = [
-            '/admin', '/moderate', '/profile', '/settings', '/messages',
+            '/admin', '/moderate', '/account',
             '/login', '/register', '/reset-password', '/2fa', '/i18n/',
             '/contribute', '/improve', '/propose-route',
             '/map/', '/api/', '/photo/',

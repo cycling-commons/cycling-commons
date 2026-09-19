@@ -73,14 +73,18 @@ final class ModerateDataController extends AbstractController
         $scope = $this->scopeProvider->scopeFor($user);
 
         $kind = FindingKind::tryFrom($request->query->getString('kind'));
+        $country = $request->query->getString('country');
+        $region = $request->query->getString('region');
 
         return $this->render('moderate_data/index.html.twig', [
             'active' => 'moderate_data',
-            'findings' => $this->findings->open($scope, $kind),
+            'findings' => $this->findings->open($scope, $kind, $country, $region),
             'kind' => $kind,
             'kinds' => FindingKind::cases(),
+            'filters' => ['country' => $country, 'region' => $region],
+            'countries' => $this->findings->countries($scope),
+            'regions' => $this->findings->regions($scope),
             'mod_data_count' => $this->findings->openCount($scope),
-            'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
         ]);
     }
 
@@ -166,7 +170,12 @@ final class ModerateDataController extends AbstractController
 
         $this->addFlash('success', $yes ? 'moderate_data.flash_applied' : 'moderate_data.flash_dismissed');
 
-        return $this->redirectToRoute('moderate_data', ['kind' => $request->request->getString('kind')]);
+        // Back to the same view: kind and place filters survive a decision.
+        return $this->redirectToRoute('moderate_data', array_filter([
+            'kind' => $request->request->getString('kind'),
+            'country' => $request->request->getString('country'),
+            'region' => $request->request->getString('region'),
+        ], static fn (string $v): bool => '' !== $v));
     }
 
     /**

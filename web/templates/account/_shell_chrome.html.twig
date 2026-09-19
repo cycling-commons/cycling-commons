@@ -1,12 +1,11 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {# Shared account-shell chrome: dark identity bar + section tabs.
-   Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
-   moderation queue (/moderate) so the logged-in area is one continuous
+   Included by every rider page under /account, 2FA setup, and every
+   moderation page under /moderate, so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate_dashboard | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_providers | moderate_room | moderate_rulebook | moderate_reports. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
-   Param: `mod_scope_names` (moderator-areas spec 2026-07-14) = the curator's
-   assigned area names (ModerationScopeProvider::describe()) — [] for global,
-   omitted/null for pages that don't pass it. Only rendered in moderator mode.
+   Param: `active` = dashboard | contrib | votes | saved | scout | translate | messages | settings | moderate_dashboard | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_providers | moderate_room | moderate_rulebook | moderate_reports. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
+   The curator's area names come from moderation_scope_names() on every
+   moderation page, so the label block never changes between desks.
    Moderator tabs render ONLY inside the moderator section itself (curators
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
@@ -31,17 +30,25 @@
 {% set mod_bug_count = open_bug_count() %}
 {% set mod_report_count = open_report_count() %}
 {% set mod_room_count = curator_room_unread() %}
+{% set _scope_names = moderation_scope_names() %}
+{% set _scope_line = _scope_names is empty ? 'account.mod_scope_all'|trans : _scope_names|join(' · ') %}
+{# The desks that filter by the curator's areas. On every other desk the area
+   line is invisible but keeps its room, so the tabs never shift sideways. #}
+{% set _scoped = active in ['moderate_dashboard', 'moderate', 'moderate_routes', 'moderate_data', 'moderate_regions'] %}
+{# The less-used desks sit under More (Data findings, then the desks with no
+   queue of their own), so the strip fits a laptop screen without a sideways
+   scrollbar. More is lit when one of them
+   is the page on screen. #}
+{% set _more = ['moderate_data', 'moderate_regions', 'moderate_providers', 'moderate_rulebook', 'moderate_markers'] %}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
-  <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
+  {# Two lines: the section name, then the curator's areas under it. #}
+  <span class="dtabs-modlabel" aria-hidden="true"><span>{{ 'account.menu_moderation'|trans }}</span><span class="dtabs-scope{{ _scoped ? '' : ' dtabs-scope--off' }}"{% if _scoped %} title="{{ _scope_line }}"{% endif %}>{{ _scope_line }}</span></span>
+  <div class="dtabs-strip">
   {# The dashboard: every desk's open count on one page (§5.0). No badge:
      it holds no work of its own. #}
   <a href="{{ path('moderate_dashboard') }}" class="dtab-mod {{ active == 'moderate_dashboard' ? 'on' : '' }}">{{ 'nav.dashboard'|trans }}</a>
-  <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count is defined and mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
+  <a href="{{ path('moderate_submissions') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count is defined and mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
   <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}{% if mod_route_count is defined and mod_route_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_route_count }}</span>{% endif %}</a>
-  {# Data desk, right after Routes (owner 2026-08-25): machine-raised findings about catalog rows. Badged, because
-     unlike Regions this one does queue — and it was invisible console output
-     before it had a tab. #}
-  <a href="{{ path('moderate_data') }}" class="dtab-mod {{ active == 'moderate_data' ? 'on' : '' }}">{{ 'nav.data'|trans }}{% if mod_data_count is defined and mod_data_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_data_count }}</span>{% endif %}</a>
   {# Takedowns: their own desk since 2026-08-03. A rights request on a legal
      clock does not belong at the bottom of an editorial backlog. Badge counts
      every open request, unscoped — these are not shared out by jurisdiction. #}
@@ -62,25 +69,38 @@
   <a href="{{ path('moderate_bugs') }}" class="dtab-mod {{ active == 'moderate_bugs' ? 'on' : '' }}">{{ 'support.bugs.title'|trans }}{% if mod_bug_count %}<span class="dtab-count" title="{{ 'support.bugs.title'|trans }}">{{ mod_bug_count }}</span>{% endif %}</a>
   {# Translations: site-wide overlays, unscoped like takedowns (translations.md §5). #}
   <a href="{{ path('moderate_translations') }}" class="dtab-mod {{ active == 'moderate_translations' ? 'on' : '' }}">{{ 'nav.translations'|trans }}{% if mod_translation_count %}<span class="dtab-count" title="{{ 'account.mod_translations_open'|trans }}">{{ mod_translation_count }}</span>{% endif %}</a>
-  {# Regions desk: the gated
-     curated-by-default flag. No badge — nothing queues here. #}
-  <a href="{{ path('moderate_regions') }}" class="dtab-mod {{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>
-  {# Providers desk: who we take data from, and what we owe them
-     (data-provider-hierarchy.md §8). No badge — nothing queues here. #}
-  <a href="{{ path('moderate_providers') }}" class="dtab-mod {{ active == 'moderate_providers' ? 'on' : '' }}">{{ 'provider.desk.title'|trans }}</a>
   {# The curator room: the in-desk board the rulebook's "ask before acting"
      points at (moderation-and-contribution.md §13). Badge counts posts since
      this curator last had the room open, so it reads zero while you are in it. #}
   <a href="{{ path('moderate_room') }}" class="dtab-mod {{ active == 'moderate_room' ? 'on' : '' }}">{{ 'nav.room'|trans }}{% if mod_room_count %}<span class="dtab-count" title="{{ 'account.mod_room_new'|trans }}">{{ mod_room_count }}</span>{% endif %}</a>
-  {# The rulebook, moderators-only (it used to be a public wiki page). #}
-  <a href="{{ path('moderate_rulebook') }}" class="dtab-mod {{ active == 'moderate_rulebook' ? 'on' : '' }}">{{ 'nav.rulebook'|trans }}</a>
-  {# The marker grammar, every rung drawn by the map's own rules, checked by
-     eye (data-provider-hierarchy.md §6.7.7). No badge: nothing queues here. #}
-  <a href="{{ path('curator_marker_grammar') }}" class="dtab-mod {{ active == 'moderate_markers' ? 'on' : '' }}">{{ 'markers.title'|trans }}</a>
+  </div>
+  <div class="dtabs-more" data-nav-menu>
+    <button type="button" class="dtab-mod dtabs-more-btn{{ active in _more ? ' on' }}" data-nav-toggle aria-expanded="false" aria-controls="cc-mod-more">{{ 'account.menu_more'|trans }}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
+    <div class="dtabs-more-dd" id="cc-mod-more" data-nav-dd hidden>
+    {# Data desk: machine-raised findings about catalog rows. First under
+       More, and badged there, because unlike Regions this one does queue. #}
+    <a href="{{ path('moderate_data') }}" class="{{ active == 'moderate_data' ? 'on' : '' }}">{{ 'nav.data'|trans }}{% if mod_data_count is defined and mod_data_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_data_count }}</span>{% endif %}</a>
+    {# Regions desk: the gated
+       curated-by-default flag. No badge: nothing queues here. #}
+    <a href="{{ path('moderate_regions') }}" class="{{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>
+    {# Providers desk: who we take data from, and what we owe them
+       (data-provider-hierarchy.md §8). No badge: nothing queues here. #}
+    <a href="{{ path('moderate_providers') }}" class="{{ active == 'moderate_providers' ? 'on' : '' }}">{{ 'provider.desk.title'|trans }}</a>
+    {# The rulebook, moderators-only (it used to be a public wiki page). #}
+    <a href="{{ path('moderate_rulebook') }}" class="{{ active == 'moderate_rulebook' ? 'on' : '' }}">{{ 'nav.rulebook'|trans }}</a>
+    {# The marker grammar, every rung drawn by the map's own rules, checked by
+       eye (data-provider-hierarchy.md §6.7.7). No badge: nothing queues here. #}
+    <a href="{{ path('curator_marker_grammar') }}" class="{{ active == 'moderate_markers' ? 'on' : '' }}">{{ 'markers.title'|trans }}</a>
+    </div>
+  </div>
 </nav>
 {% else %}
 <nav class="dtabs" aria-label="{{ 'account.sections'|trans }}">
   <span class="dtabs-modlabel dtabs-personallabel" aria-hidden="true">{{ 'account.menu_personal'|trans }}</span>
+  <div class="dtabs-strip">
+  {# The dashboard: the rider's open counts on one page (account-and-auth.md
+     §8). No badge: it holds no work of its own. #}
+  <a href="{{ path('dashboard') }}" class="{{ active == 'dashboard' ? 'on' : '' }}">{{ 'nav.dashboard'|trans }}</a>
   <a href="{{ path('profile') }}" data-pane="contrib" class="{{ active == 'contrib' ? 'on' : '' }}">{{ 'account.tab_contributions'|trans }}</a>
   <a href="{{ path('profile') }}?tab=votes" data-pane="votes" class="{{ active == 'votes' ? 'on' : '' }}">{{ 'account.tab_votes'|trans }}</a>
   {# Saved regions is hidden until it has a backend (owner, 2026-08-26). The
@@ -99,5 +119,6 @@
      second time. This is where they find out (contact-and-support.md §10). #}
   <a href="{{ path('my_reports') }}" class="{{ active == 'reports' ? 'on' : '' }}">{{ 'support.mine.title'|trans }}</a>
   <a href="{{ path('settings') }}" class="{{ active == 'settings' ? 'on' : '' }}">{{ 'nav.settings'|trans }}</a>
+  </div>
 </nav>
 {% endif %}

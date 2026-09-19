@@ -67,7 +67,7 @@ final class SettingsTabsTest extends WebTestCase
         $plain = $this->createUser('tabs-default@example.com', 'securepass12345!', 'Tabs Rider');
         $this->loginAs($client, 'tabs-default@example.com', $plain);
 
-        $client->request('GET', '/settings');
+        $client->request('GET', '/account/settings');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('#tabbtn-profile[aria-selected="true"]');
@@ -82,7 +82,7 @@ final class SettingsTabsTest extends WebTestCase
         $plain = $this->createUser('tabs-sec@example.com', 'securepass12345!', 'Tabs Sec Rider');
         $this->loginAs($client, 'tabs-sec@example.com', $plain);
 
-        $client->request('GET', '/settings?tab=security');
+        $client->request('GET', '/account/settings?tab=security');
 
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('#tabbtn-security[aria-selected="true"]');
@@ -96,7 +96,7 @@ final class SettingsTabsTest extends WebTestCase
         $plain = $this->createUser('tabs-pw@example.com', 'securepass12345!', 'Tabs Pw Rider');
         $this->loginAs($client, 'tabs-pw@example.com', $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         $form = $crawler->selectButton('Change password')->form([
             'settings_password[currentPassword]' => 'WRONG',
             'settings_password[newPassword][first]' => 'newsecurepass12!',
@@ -104,7 +104,7 @@ final class SettingsTabsTest extends WebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings?tab=security');
+        self::assertResponseRedirects('/account/settings?tab=security');
         $client->followRedirect();
         self::assertSelectorExists('#tab-security.on');
         self::assertSelectorTextContains('.flash-error', 'Current password is incorrect');

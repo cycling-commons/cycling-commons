@@ -267,7 +267,10 @@ Invariant for fixtures and seeded elevated accounts: set **both**
    `requiresSetup()` is true is redirected to `/2fa/setup` (localized). Users
    mid-2FA (`TwoFactorTokenInterface`) are sent to the scheb interstitial.
    Also applies the user's saved locale to the session and localizes the
-   default target so the path-prefix router cannot clobber it.
+   default target so the path-prefix router cannot clobber it. The default
+   target is `/account/contributions` on the very first sign-in (`lastLoginAt` still null,
+   read before the handler stamps it) and `/account` on every sign-in after
+   that (§8). A saved target path wins over both.
 2. `App\Security\TwoFactorSetupEnforcer` (`kernel.request` listener,
    priority 7): closes the remember-me / direct-navigation gap — a
    not-fully-enrolled elevated user is redirected to `/2fa/setup` on **every**
@@ -339,7 +342,7 @@ key from a wrong code. That asymmetry is why the audit names TOTP only.
   code already counts against (§ above). Every authenticator app makes the same
   trade.
 - The 2FA setup page carries a "Settings · Security" breadcrumb back-link and
-  its post-enrolment Done button targets `/settings?tab=security` (§8).
+  its post-enrolment Done button targets `/account/settings?tab=security` (§8).
 
 ### The interstitial is a hard stop, not just a page
 
@@ -394,8 +397,8 @@ stay unprefixed):
 | `^/map/catalog\.json$`, `^/map/best-of$`, `^/map/item/\d+/history$`, `^/routes/\d+\.gpx$`, `^/items/\d+/confirmations$` | `PUBLIC_ACCESS` — **exact-path, explicitly public** so scheb's lazy-firewall `TwoFactorAccessListener` skips the session read that would downgrade `Cache-Control` to private (data contracts: [catalog-data-model.md](catalog-data-model.md), [route-domain.md](route-domain.md), [moderation-and-contribution.md](moderation-and-contribution.md)) |
 | `(/[a-z]{2})?/2fa/setup` | `ROLE_USER` — must precede the interstitial rule: setup is reached *fully* authenticated |
 | `^/2fa` | `IS_AUTHENTICATED_2FA_IN_PROGRESS` (scheb interstitial) |
-| `(/[a-z]{2})?/(profile\|settings)` | `ROLE_USER` |
-| `(/[a-z]{2})?/messages`, `(/[a-z]{2})?/translate`, `^/scout/tags` | `ROLE_USER` — backstops mirroring the controllers' `IsGranted` attributes (review 2026-08-16 finding 7). `/media/*` and `/contribute/elevation` are deliberately absent: THE stateless-JSON pattern ([security-architecture.md](security-architecture.md) §5.1) owns their clean 401s, and an `access_control` rule would turn those into login redirects |
+| `(/[a-z]{2})?/account(/\|$)` | `ROLE_USER`: the whole rider area (§8) |
+| `(/[a-z]{2})?/translate`, `^/scout/tags` | `ROLE_USER`: backstops mirroring the controllers' `IsGranted` attributes (review 2026-08-16 finding 7). `/media/*` and `/contribute/elevation` are deliberately absent: THE stateless-JSON pattern ([security-architecture.md](security-architecture.md) §5.1) owns their clean 401s, and an `access_control` rule would turn those into login redirects |
 | `(/[a-z]{2})?/moderate` | `ROLE_CURATOR` |
 | `^/admin` | `ROLE_ADMIN` |
 
@@ -742,18 +745,31 @@ consequences, including that a dry run changes nothing).
 ### Shell (`web/templates/account/_shell_chrome.html.twig`)
 
 One continuous logged-in environment — dark identity bar + section tabs —
-included by `/profile`, `/settings`, `/2fa/setup`, and the moderation pages.
+included by `/account/contributions`, `/account/settings`, `/2fa/setup`, and the moderation pages.
 The same account chip (`partials/_account_chip.html.twig`) is used everywhere,
 including the public nav; the language switcher (`partials/_lang_menu.html.twig`)
 lives in the shell header.
 
-- **Personal mode** tabs: Contributions · Votes · Saved · Messages · Settings,
-  under a "Personal" label.
-- **Moderator mode** (`/moderate`, `/moderate/routes`): the bar carries **only**
+- **Personal mode** tabs: Dashboard · Contributions · Votes · Saved · Messages
+  · Settings, under a "Personal" label. The account chip lists Dashboard first
+  too.
+- **Moderator mode** (`/moderate/submissions`, `/moderate/routes`): the bar carries **only**
   the moderation tabs (Submissions, Routes, with open counts) on its own darker
   colour under a **MODERATION** label — no user items. Curators cross between
   the two modes via the account-chip dropdown in both directions. The label
-  also shows the curator's moderation scope (assigned area names, or "all").
+  block has two lines: MODERATION, then the curator's areas (assigned area
+  names, or "All areas"), read by `moderation_scope_names()`. The line shows
+  on the desks that filter by area (Dashboard, Submissions, Routes, Data,
+  Regions); on every other desk it is invisible (`visibility:hidden`) but keeps
+  its room, so the block is the same width on every desk and the tabs never
+  shift. A long list is cut with an ellipsis and reads in full on hover.
+  The less-used desks (Data findings, with its count, then Regions,
+  Providers, Rulebook, Marker grammar) sit under a **More** dropdown at the
+  end of the strip, so the bar
+  fits a laptop screen; More is lit while one of them is on screen. Example:
+  a curator for Wallonia sees "MODERATION / Wallonia" on
+  `/moderate/submissions`, and only "MODERATION" with a lit More on
+  `/moderate/providers`.
 - Dashboard **Contributions pane** renders the user's real submissions
   (retention-filtered — a rejected submission past the retention cutoff never
   renders, see [moderation-and-contribution.md](moderation-and-contribution.md))
@@ -782,11 +798,64 @@ lives in the shell header.
   the shared `.empty-state` block (`account/_shell_styles.html.twig`):
   left-aligned message plus a bordered door link (the same block every desk
   uses), with `.dbody`/`.dmin` holding a 46vh minimum so sparse account pages
-  keep their vertical shape. `/messages` and `/settings` open with the same
-  head and container; `/messages` rows are the same card with `msg-*` state
+  keep their vertical shape. `/account/messages` and `/account/settings` open with the same
+  head and container; `/account/messages` rows are the same card with `msg-*` state
   hooks (new, mine) layered on.
 
-### Settings (`App\Controller\SettingsController`, `/settings`)
+### Rider dashboard (`App\Controller\DashboardController`, `/account`, 2026-09-19)
+
+One read-only page with the rider's own open counts, route `dashboard`,
+`ROLE_USER`. It has the curator dashboard's look
+(moderation-and-contribution.md §5.0): the tile partial
+`account/_dashboard_tile.html.twig` and the styles
+`account/_dashboard_styles.html.twig` are shared by both pages.
+
+**The rider area lives under `/account`**, the way the curator area lives
+under `/moderate`. Both start with their dashboard at the root. One access
+rule (`^(/[a-z]{2})?/account(/|$)`, `ROLE_USER`) covers the whole area. The
+tools (`/translate`, `/scout`) stay where they are: they are workspaces, not
+pages about the account.
+
+| Page | Path | Route |
+|---|---|---|
+| Dashboard | `/account` | `dashboard` |
+| Contributions | `/account/contributions` | `profile` |
+| Bug reports | `/account/reports` | `my_reports` |
+| Messages | `/account/messages` | `messages` |
+| Settings | `/account/settings` | `settings` |
+
+The first paths (`/profile`, `/profile/reports`, `/messages`, `/settings`)
+redirect (301) to these with their query string
+(`App\Controller\MovedAccountPathsController`), so a link in a sent email or
+a bookmark still lands. Example: `/fr/messages` goes to
+`/fr/account/messages`.
+
+| Block | Content | Links to |
+|---|---|---|
+| Waiting for you | Questions on your contributions (`submission` rows at `needs_info`), questions on your translations (latest proposal per key at `needs_info`), unread messages. A tile with a count has a red edge. | `/account/contributions`, `/translate/mine?status=needs_info`, `/account/messages` |
+| Your work | Contributions at `pending`, route proposals at `submitted`, translations at `pending` (latest per key), own bug reports still open (`BugStatus::open()`) | `/account/contributions`, `/account/contributions`, `/translate/mine?status=pending`, `/account/reports` |
+| Your last contributions | The 5 newest submissions with their status pill, after the same retention filter as `/account/contributions` | `/account/contributions` |
+| Worth a look near you | The 5 stale places inside the base area (`App\Account\StaleNearby`, the same query `/account/contributions` uses; moderation-and-contribution.md §10.1a). Without a base location: a line and a link to `/account/settings`. | the map, per place |
+
+A zero shows the drawn check mark, named "Clear" for a screen reader. The
+"Waiting for you" lead shows only when one of its tiles has a count.
+
+Example: a rider with 2 pending submissions and 1 at `needs_info` sees a red
+"1" on the first Questions tile and "2" on the Contributions tile.
+
+The page marks nothing read: the Messages badge keeps counting until the
+rider opens `/account/messages`.
+
+**Where a sign-in lands.** The first sign-in of an account lands on
+`/account/contributions`: a new rider has nothing to count yet, and the contributions page
+carries the curating invitation. Every later sign-in lands on `/account`.
+A saved target path (a gated page the rider was sent away from) wins over
+both (§4, `LoginSuccessHandler`).
+
+Example: a rider signs up, verifies, and signs in: `/account/contributions`. They sign out
+and sign in the next day: `/account`.
+
+### Settings (`App\Controller\SettingsController`, `/account/settings`)
 
 Two tabs:
 
@@ -1199,7 +1268,7 @@ Art. 13(2)(a). Neither identifies the person once the `users` row is gone.
 
 ## 11. Data export (GDPR Art. 15 + Art. 20)
 
-`POST /settings/export` → one ZIP, built by `App\Account\DataExportService`.
+`POST /account/settings/export` → one ZIP, built by `App\Account\DataExportService`.
 
 **One export, not two.** Art. 20 portability strictly covers only what the
 subject *provided*, while Art. 15 access is broader. Making a rider choose

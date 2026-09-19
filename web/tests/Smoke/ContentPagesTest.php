@@ -171,7 +171,7 @@ final class ContentPagesTest extends WebTestCase
 
         // The surfaces that were missing entirely until the same audit. Named
         // one by one, because "some links exist" is what the bug looked like.
-        foreach (['/join', '/scout', '/propose-route', '/messages', '/settings', '/privacy', '/terms',
+        foreach (['/join', '/scout', '/propose-route', '/account/messages', '/account/settings', '/privacy', '/terms',
             '/contribute', '/improve'] as $path) {
             self::assertContains($path, $hrefs, $path.' is a live surface and belongs in the directory');
         }

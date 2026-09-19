@@ -88,7 +88,7 @@ final class MessageMailTest extends KernelTestCase
         self::assertStringContainsString('Contribution approved', (string) $mail->getSubject());
         $body = (string) $mail->getHtmlBody();
         self::assertStringContainsString('Col du Test', $body, 'the body line is rendered with its params');
-        self::assertStringContainsString('/messages', $body, 'and it links to the dashboard');
+        self::assertStringContainsString('/account/messages', $body, 'and it links to the dashboard');
     }
 
     /**
@@ -141,7 +141,7 @@ final class MessageMailTest extends KernelTestCase
         self::assertStringContainsString('curador', (string) $mail->getSubject(), 'subject is Spanish');
         self::assertStringContainsString('¿Por qué lado empieza?', (string) $mail->getHtmlBody(),
             "the curator's own question travels — on a needs-info it IS the message");
-        self::assertStringContainsString('/es/messages', (string) $mail->getHtmlBody());
+        self::assertStringContainsString('/es/account/messages', (string) $mail->getHtmlBody());
     }
 
     /** A rider's reply is desk work; it must not mail the curator. */

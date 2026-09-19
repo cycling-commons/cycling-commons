@@ -27,7 +27,7 @@
 </style>
 {% endblock %}
 
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_data', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_data'} %}{% endblock %}
 
 {% block body %}
 <div class="dbody" id="main">
@@ -40,13 +40,35 @@
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('warning') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
+  {# The kind chips and the country/region filter COMBINE: each chip carries
+     the place filter along, and the form carries the kind, so switching one
+     never resets the other. The same selects as the submissions queue. #}
+  {% set place = {country: filters.country, region: filters.region}|filter(v => v) %}
+  <nav class="lfilter" aria-label="{{ 'moderate_data.title'|trans }}">
+    <a href="{{ path('moderate_data', place) }}" class="lchip {{ kind is null ? 'on' : '' }}">{{ 'moderate_data.all'|trans }}</a>
+    {% for k in kinds %}
+      <a href="{{ path('moderate_data', {kind: k.value}|merge(place)) }}" class="lchip {{ kind is not null and kind.value == k.value ? 'on' : '' }}">{{ k.labelKey|trans }}</a>
+    {% endfor %}
+  </nav>
+
   <div class="mod-bar">
-    <nav class="lfilter" aria-label="{{ 'moderate_data.title'|trans }}">
-      <a href="{{ path('moderate_data') }}" class="lchip {{ kind is null ? 'on' : '' }}">{{ 'moderate_data.all'|trans }}</a>
-      {% for k in kinds %}
-        <a href="{{ path('moderate_data', {kind: k.value}) }}" class="lchip {{ kind is not null and kind.value == k.value ? 'on' : '' }}">{{ k.labelKey|trans }}</a>
-      {% endfor %}
-    </nav>
+    <form class="mod-filters" method="get" action="{{ path('moderate_data') }}">
+      <label>{{ 'moderate.filter.country'|trans }}
+        <select name="country" data-autosubmit>
+          <option value="">{{ 'moderate.filter.all'|trans }}</option>
+          {% for c in countries %}<option value="{{ c }}"{{ filters.country == c ? ' selected' }}>{{ c }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>{{ 'moderate.filter.region'|trans }}
+        <select name="region" data-autosubmit>
+          <option value="">{{ 'moderate.filter.all'|trans }}</option>
+          {% for r in regions %}<option value="{{ r }}"{{ filters.region == r ? ' selected' }}>{{ r }}</option>{% endfor %}
+        </select>
+      </label>
+      {% if kind is not null %}<input type="hidden" name="kind" value="{{ kind.value }}">{% endif %}
+      <noscript><button type="submit" class="btn-act btn-needs-info">{{ 'moderate.filter.apply'|trans }}</button></noscript>
+      <button type="submit" class="btn-act btn-secondary mod-go">{{ 'moderate.filter.apply'|trans }}</button>
+    </form>
     {% if findings is not empty %}
       {% include 'account/_density.html.twig' %}
     {% endif %}
@@ -113,6 +135,8 @@
           <input type="hidden" name="_token" value="{{ csrf_token('catalog-finding-decide') }}">
           <input type="hidden" name="finding" value="{{ f.id }}">
           <input type="hidden" name="kind" value="{{ kind is not null ? kind.value : '' }}">
+          <input type="hidden" name="country" value="{{ filters.country }}">
+          <input type="hidden" name="region" value="{{ filters.region }}">
           <input type="text" name="note" maxlength="500" placeholder="{{ 'moderate_data.note_placeholder'|trans }}" aria-label="{{ 'moderate_data.note_placeholder'|trans }}">
           <button type="submit" name="verdict" value="yes" class="btn-act">{{ 'moderate_data.yes'|trans }}</button>
           <button type="submit" name="verdict" value="no" class="btn-act btn-secondary">{{ 'moderate_data.no'|trans }}</button>

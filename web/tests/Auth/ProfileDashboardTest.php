@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * The /profile dashboard renders REAL rows only: no leftover preview/sample
+ * The /account/contributions dashboard renders REAL rows only: no leftover preview/sample
  * data, the user's own route ballots, and their curator applications with a
  * door to apply when there are none.
  */
@@ -36,7 +36,7 @@ final class ProfileDashboardTest extends WebTestCase
         $client = static::createClient();
         $client->loginUser($this->makeUser('dash-empty@test.test'));
 
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
 
@@ -87,7 +87,7 @@ final class ProfileDashboardTest extends WebTestCase
         );
 
         $client->loginUser($user);
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
 

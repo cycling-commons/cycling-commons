@@ -17,6 +17,7 @@ use App\Routing\LocalePrefix;
 use App\Support\SupportRepository;
 use App\Translation\DecisionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -54,9 +55,16 @@ final class ModerateDashboardController extends AbstractController
     ) {
     }
 
-    #[Route('/moderate/dashboard', name: 'moderate_dashboard', methods: ['GET'])]
-    public function index(): Response
+    #[Route('/moderate', name: 'moderate_dashboard', methods: ['GET'])]
+    public function index(Request $request): Response
     {
+        // The dashboard takes no query. A query here is a submissions-queue
+        // link with filters (in a sent email or a bookmark): it goes on to
+        // the queue.
+        if ($request->query->count() > 0) {
+            return $this->redirectToRoute('moderate_submissions', $request->query->all(), Response::HTTP_MOVED_PERMANENTLY);
+        }
+
         /** @var User $curator */
         $curator = $this->getUser();
         $curatorId = (int) $curator->getId();
@@ -69,7 +77,7 @@ final class ModerateDashboardController extends AbstractController
         // Scoped desks count what is in this curator's area; the rest count
         // everything, like their tabs do.
         $desks = [
-            ['key' => 'submissions', 'route' => 'moderate', 'label' => 'nav.moderate', 'count' => $submissionCount, 'scoped' => true],
+            ['key' => 'submissions', 'route' => 'moderate_submissions', 'label' => 'nav.moderate', 'count' => $submissionCount, 'scoped' => true],
             ['key' => 'routes', 'route' => 'moderate_routes', 'label' => 'nav.routes', 'count' => $routeCount, 'scoped' => true],
             ['key' => 'data', 'route' => 'moderate_data', 'label' => 'nav.data', 'count' => $this->findings->openCount($scope), 'scoped' => true],
             ['key' => 'bugs', 'route' => 'moderate_bugs', 'label' => 'support.bugs.title', 'count' => $this->support->openBugCount(), 'scoped' => false],
@@ -95,7 +103,6 @@ final class ModerateDashboardController extends AbstractController
             'desks' => $desks,
             'room_posts' => \array_slice($board['posts'], 0, self::ROOM_POSTS),
             'my_decisions' => $this->submissions->history($scope, $curatorId, perPage: self::MY_DECISIONS),
-            'mod_scope_names' => $this->scopeProvider->describe($curator, $scope),
             'mod_submission_count' => $submissionCount,
             'mod_route_count' => $routeCount,
             'mod_takedown_count' => $takedownCount,

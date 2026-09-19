@@ -60,7 +60,7 @@ final class SecurityTest extends WebTestCase
     public function testAnonymousProfileRedirectsToLogin(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
 
         self::assertResponseRedirects('/login', 302);
     }
@@ -82,8 +82,29 @@ final class SecurityTest extends WebTestCase
         $client->submit($form);
 
         // form_login posts to check_path (same /login); LoginSuccessHandler then
-        // sends a plain user to the account dashboard (/profile), not home.
-        self::assertResponseRedirects('/profile');
+        // sends a plain user on their first sign-in to their contributions
+        // (/account/contributions), not home.
+        self::assertResponseRedirects('/account/contributions');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+    }
+
+    /** Every sign-in after the first lands on the dashboard (account-and-auth.md §8). */
+    public function testALaterLoginRedirectsToTheDashboard(): void
+    {
+        $client = static::createClient();
+        $email = 'rider-back@example.com';
+        $plain = $this->createVerifiedUser($email, 'hunter2secure!');
+
+        foreach (['/account/contributions', '/account'] as $landing) {
+            $client->restart();
+            $crawler = $client->request('GET', '/login');
+            $client->submit($crawler->selectButton('Sign in')->form([
+                '_username' => $email,
+                '_password' => $plain,
+            ]));
+            self::assertResponseRedirects($landing);
+        }
         $client->followRedirect();
         self::assertResponseIsSuccessful();
     }
@@ -108,7 +129,7 @@ final class SecurityTest extends WebTestCase
         ]);
         $form['_remember_me']->tick();
         $client->submit($form);
-        self::assertResponseRedirects('/profile');
+        self::assertResponseRedirects('/account/contributions');
         self::assertNotNull($client->getCookieJar()->get('REMEMBERME'), 'the remember-me cookie was set');
 
         // Age the clock and leave a warning on file, then drop the session so
@@ -121,7 +142,7 @@ final class SecurityTest extends WebTestCase
         $em->flush();
         $client->getCookieJar()->expire('MOCKSESSID');
 
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
 
         $em = static::getContainer()->get(EntityManagerInterface::class);

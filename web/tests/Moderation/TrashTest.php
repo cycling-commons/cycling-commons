@@ -173,7 +173,7 @@ final class TrashTest extends WebTestCase
      */
     private function submissionTrashToken(KernelBrowser $client): string
     {
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
 
         return (string) $crawler->filter('.trash-confirm input[name="_token"]')->first()->attr('value');
     }

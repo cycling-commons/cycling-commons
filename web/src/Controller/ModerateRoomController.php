@@ -12,7 +12,6 @@ use App\Messaging\CuratorRoomCategory;
 use App\Messaging\CuratorRoomPin;
 use App\Messaging\Entity\CuratorPost;
 use App\Messaging\Entity\CuratorPostImage;
-use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
 use App\Support\ScreenshotRejected;
 use App\Support\ScreenshotStore;
@@ -44,7 +43,6 @@ final class ModerateRoomController extends AbstractController
 {
     public function __construct(
         private readonly CuratorRoom $room,
-        private readonly ModerationScopeProvider $scopeProvider,
         private readonly ScreenshotStore $images,
         private readonly TranslatorInterface $translator,
     ) {
@@ -72,7 +70,6 @@ final class ModerateRoomController extends AbstractController
             'categories' => CuratorRoomCategory::cases(),
             'pinned' => $board['pinned'],
             'posts' => $board['posts'],
-            'mod_scope_names' => $this->scopeProvider->describe($curator),
         ]);
     }
 
@@ -182,7 +179,6 @@ final class ModerateRoomController extends AbstractController
             'draft' => $this->draft($request),
             'draft_title' => $this->draft($request, 'room_draft_title'),
             'title_max' => CuratorRoom::TITLE_MAX_LENGTH,
-            'mod_scope_names' => $this->scopeProvider->describe($curator),
         ]);
     }
 
@@ -214,7 +210,6 @@ final class ModerateRoomController extends AbstractController
             'draft' => $this->draft($request),
             'draft_title' => $this->draft($request, 'room_draft_title'),
             'title_max' => CuratorRoom::TITLE_MAX_LENGTH,
-            'mod_scope_names' => $this->scopeProvider->describe($curator),
         ]);
     }
 

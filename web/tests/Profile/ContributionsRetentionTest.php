@@ -58,7 +58,7 @@ final class ContributionsRetentionTest extends WebTestCase
 
         // No sweep has run — this is purely the lazy read-filter.
         $client->loginUser($me);
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
 
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();

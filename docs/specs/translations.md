@@ -418,7 +418,7 @@ main request as the attribute `_translate_mode`. All of these must hold:
 - the request is a **GET**. Translate mode is a reading mode, and a
   translated string rendered into a downloadable artifact is reachable by
   neither net: `App\Account\DataExportService` puts `export.readme` through
-  the translator on `POST /settings/export`, and net 1 cannot strip inside a
+  the translator on `POST /account/settings/export`, and net 1 cannot strip inside a
   `BinaryFileResponse` (review 2026-08-31);
 - the session flag is set and the user is granted `ROLE_USER`;
 - the request locale is one a rider may propose (`fr`, `nl`, `de`, `es`), or

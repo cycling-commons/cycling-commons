@@ -3328,6 +3328,7 @@ account:
   menu_personal: 'Personal'
   menu_moderation: 'Moderation'
   mod_scope_all: 'All areas'
+  menu_more: 'More'
   unread_messages: '%count% unread message(s)'
   open_items: '%count% open item(s)'
   mod_takedowns_open: 'Open removal requests'
@@ -3505,8 +3506,10 @@ support:
     where_message: 'Next to a message you received, in your messages.'
     where_photo: 'Under the photo: "This photo shows me, report it". A photo reported for showing a person is hidden at once, before a curator has looked.'
     what_kicker: 'What happens next'
-    what_p: 'If you leave an address, you get a confirmation with a reference at once, and the curators decision with their reasons, whichever way it goes. If the thing has an author and the report is upheld, they are told what was restricted and why, and how to contest it. A person decides, every time. The grounds are the rules we publish in the terms.'
-    what_terms: 'Read the rules.'
+    what_p1: 'If you leave an address, you get a confirmation with a reference at once. When a curator has made a decision about your report, you''ll be informed of it, with the reason.'
+    what_p2: 'A person decides, every time. The grounds are the rules published in our terms.'
+    what_terms: 'Read the rules here.'
+    what_p3: 'If the thing you reported has an author and the report is upheld, they are told what was restricted and why. They have the right to contest the decision.'
     not_kicker: 'Not this page'
     not_bug: 'The site itself is broken, or the map draws something of ours wrongly:'
     not_contact: 'Anything else:'
@@ -3625,6 +3628,10 @@ support:
     sent_again: 'Report another one'
     known_link: 'See what we already know'
     check_known: 'Before you write: it may already be on the list.'
+    recent_heading: 'Recently added bugs'
+    recent_sub: 'Bugs we already know about, newest first. If yours is here, there is no need to report it again.'
+    recent_empty: 'No known bugs on the list right now.'
+    recent_all: 'The whole list'
     no_js_note: 'This form still works with JavaScript off. It sends a little less about your browser, and a little less is allowed per day.'
     severity.critical: 'Critical'
     severity.major: 'Major'
@@ -3674,6 +3681,8 @@ support:
     block_word: 'paste the log here'
     hint: 'You can use **bold**, *italic*, `code`, lists, and ``` around a block of log output. Links and pictures are not shown.'
   known:
+    fixed_on: 'Fixed on %date%'
+    updated_on: 'Updated %date%'
     kicker: 'Known issues'
     desk_link: 'Open on the desk'
     title: 'What we already know is broken.'
@@ -3763,7 +3772,7 @@ support:
     search_found: '%count% matching "%q%"'
     search_none: 'Nothing matches "%q%". Try the number on its own, or one word.'
   mine:
-    title: 'My reports'
+    title: 'My bugs'
     lede: 'The bugs you have told us about, and what happened to them.'
     empty: 'You have not reported anything yet.'
     empty_link: 'Report a bug'
@@ -3933,6 +3942,8 @@ meta:
   moderate_room_description: 'The in-desk board for curators and moderators.'
   moderate_dashboard_title: 'Curator dashboard'
   moderate_dashboard_description: 'Every moderation desk and its open work on one page.'
+  rider_dashboard_title: 'Dashboard'
+  rider_dashboard_description: 'Your open work and what waits for you, on one page.'
   moderate_title: 'Cycling Commons — Moderate'
   moderate_description: 'Curator surface for the Commons — review submissions, resolve flags, and keep the open cycling atlas trustworthy.'
   contribute_title: 'Cycling Commons — Contribute'
@@ -4999,7 +5010,7 @@ report:
     back: 'Back to your messages'
   desk:
     title: 'Reports'
-    lede: 'What riders have reported about routes, places, region texts, profiles, messages and photos. Legal claims and abuse sort to the top. Requests to take down a photo are on the <a href="%takedowns%">takedowns desk</a>.'
+    lede: 'What riders have reported about routes, places, region and town texts, profiles, messages and photos. Legal claims and abuse sort to the top. When uploaders ask us to remove their own photo, that request is on the <a href="%takedowns%">takedowns desk</a>.'
     empty: 'Nothing waiting. Every report has an answer.'
     target_gone: 'no longer on the site'
     no_author: 'nobody in particular'
@@ -5171,7 +5182,6 @@ markers:
 # Curator dashboard (moderation-and-contribution.md §5.0).
 curator_dashboard:
   title: 'Dashboard'
-  clear: 'Clear'
   clocks:
     heading: 'Legal deadlines'
     due: 'Takedowns and reports have a legal deadline. Answer these first.'
@@ -5190,3 +5200,32 @@ curator_dashboard:
     area: 'In your area'
     everywhere: 'Everywhere'
     room: 'New since your last visit'
+
+# Shared by both dashboards (account/_dashboard_tile.html.twig).
+dashboard:
+  clear: 'Clear'
+
+# Rider dashboard (account-and-auth.md §8).
+rider_dashboard:
+  title: 'Dashboard'
+  waiting:
+    heading: 'Waiting for you'
+    due: 'A curator asked you something, or somebody wrote to you. Answer these first.'
+  work:
+    heading: 'Your work'
+  tile:
+    questions: 'Questions'
+  note:
+    contributions: 'On your contributions'
+    translations: 'On your translations'
+    unread: 'Unread'
+    with_curator: 'With a curator'
+    not_fixed: 'Not fixed yet'
+  recent:
+    heading: 'Your last contributions'
+    all: 'All your contributions'
+    empty: 'You have not added or changed a place yet.'
+  nearby:
+    no_base: 'Set a base location to see the places near you that need a check.'
+    settings: 'Open Settings'
+    empty: 'Every place near you had a recent check.'

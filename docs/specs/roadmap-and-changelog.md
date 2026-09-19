@@ -1,7 +1,7 @@
 # Roadmap, changelog, and the release list
 
 Canonical. Covers `/roadmap`, `/changelog`, `/changelog.atom`, the release-notes
-opt-in on `/settings`, and `/unsubscribe`.
+opt-in on `/account/settings`, and `/unsubscribe`.
 
 Related: [privacy-notice.md](privacy-notice.md) for the consent line,
 [contact-and-support.md](contact-and-support.md) for the other ways in.

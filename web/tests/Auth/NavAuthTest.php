@@ -71,8 +71,8 @@ final class NavAuthTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('nav', 'Log in');
-        self::assertSelectorNotExists('a[href*="/profile"]');
-        self::assertSelectorNotExists('a[href*="/settings"]');
+        self::assertSelectorNotExists('a[href*="/account/contributions"]');
+        self::assertSelectorNotExists('a[href*="/account/settings"]');
         // logout is now a POST form button — no <a href="/logout"> for anon users
         self::assertSelectorNotExists('form[action*="/logout"]');
         self::assertSelectorNotExists('a[href*="/moderate"]');
@@ -93,8 +93,8 @@ final class NavAuthTest extends WebTestCase
         $client->request('GET', '/about');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('a[href*="/profile"]');
-        self::assertSelectorExists('a[href*="/settings"]');
+        self::assertSelectorExists('a[href*="/account/contributions"]');
+        self::assertSelectorExists('a[href*="/account/settings"]');
         // logout is a POST form with CSRF token, not a bare link
         self::assertSelectorExists('form[action*="/logout"]');
         self::assertSelectorExists('form[action*="/logout"] input[name="_csrf_token"]');

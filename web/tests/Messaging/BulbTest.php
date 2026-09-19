@@ -100,7 +100,7 @@ final class BulbTest extends WebTestCase
 
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/profile');
+        $crawler = $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.acct-bulb');
         self::assertSame('1', trim($crawler->filter('.acct-bulb')->text()));
@@ -130,7 +130,7 @@ final class BulbTest extends WebTestCase
 
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/profile');
+        $crawler = $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.acct-bulb');
         self::assertSame('12', trim($crawler->filter('.acct-bulb')->text()));
@@ -157,14 +157,14 @@ final class BulbTest extends WebTestCase
 
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/profile');
+        $crawler = $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.acct-bulb');
 
-        $client->request('GET', '/messages');
+        $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
 
-        $crawler2 = $client->request('GET', '/profile');
+        $crawler2 = $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('.acct-bulb');
         unset($crawler, $crawler2);

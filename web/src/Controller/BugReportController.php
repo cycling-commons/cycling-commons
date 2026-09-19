@@ -65,6 +65,9 @@ final class BugReportController extends AbstractController
     private const string CSRF_TOKEN_ID = 'bug_report';
     private const int PER_PAGE = 25;
 
+    /** Known issues listed beside the bug form, newest first. */
+    private const int RECENT_ISSUES = 6;
+
     public function __construct(
         private readonly FormGuard $guard,
         private readonly ProofOfWork $proofOfWork,
@@ -375,6 +378,7 @@ final class BugReportController extends AbstractController
             'nav_active' => '',
             'sent' => $sent,
             'error' => $error,
+            'recent_issues' => $this->repository->recentPublicIssues(self::RECENT_ISSUES),
             'severities' => BugSeverity::all(),
             'areas' => BugArea::all(),
             'selected_severity' => $posted('severity', BugSeverity::Minor->value),

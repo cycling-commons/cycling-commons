@@ -15,7 +15,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * `/messages` account-shell page (moderation-feedback spec M3): row display,
+ * `/account/messages` account-shell page (moderation-feedback spec M3): row display,
  * unread styling, the mark-all-read-on-visit side effect, per-user isolation,
  * and the anon auth gate.
  *
@@ -84,7 +84,7 @@ final class MessagesPageTest extends WebTestCase
     public function testAnonIsRedirectedFromMessages(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/messages');
+        $client->request('GET', '/account/messages');
 
         self::assertResponseRedirects('/login', 302);
     }
@@ -119,7 +119,7 @@ final class MessagesPageTest extends WebTestCase
 
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
 
         // Both rows are present, translated headline included, and marked new.
@@ -134,7 +134,7 @@ final class MessagesPageTest extends WebTestCase
         self::assertSame(0, $svc->unreadCount($riderId));
 
         // A second visit shows the same rows, but none flagged as new.
-        $crawler2 = $client->request('GET', '/messages');
+        $crawler2 = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
         self::assertCount(2, $crawler2->filter('.msg-row'));
         self::assertCount(0, $crawler2->filter('.msg-row.msg-new'));
@@ -148,7 +148,7 @@ final class MessagesPageTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Empty Rider');
         $this->loginAs($client, $email, $plain);
 
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter('.msg-row'));
         self::assertSelectorExists('.empty-state');
@@ -171,7 +171,7 @@ final class MessagesPageTest extends WebTestCase
         $viewerPlain = $this->createUser($viewerEmail, 'securepass12345!', 'Viewer Rider');
         $this->loginAs($client, $viewerEmail, $viewerPlain);
 
-        $crawler = $client->request('GET', '/messages');
+        $crawler = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter('.msg-row'));
         self::assertSelectorTextNotContains('.dbody', 'This belongs to owner only.');

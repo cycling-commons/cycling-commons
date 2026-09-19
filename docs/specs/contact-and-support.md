@@ -7,7 +7,7 @@ How a person reaches the Cycling Commons, how they tell us something is broken,
 and how those two arrive at a desk somebody actually reads.
 
 Canonical. Owns `/contact`, `/report-bug`, `/known-issues`, the floating bug
-button, `/moderate/inbox`, `/moderate/bugs`, `/profile/reports`, and the legal
+button, `/moderate/inbox`, `/moderate/bugs`, `/account/reports`, and the legal
 identity block.
 
 ## 1. Why this exists
@@ -185,6 +185,16 @@ other.
 There are two because the panel cannot serve everyone: it needs JavaScript, and
 it cannot be linked to, so "report it here" in a message has nowhere to point.
 
+**Recently added bugs, beside the form (2026-09-19).** `/report-bug` has a
+second column, "Recently added bugs": the 6 newest entries of the public
+known-issues list that are still open (`SupportRepository::
+recentPublicIssues()`, newest `createdAt` first), each under its public title
+with status and date, linking to its entry on `/known-issues`. Only what a
+curator marked public ever appears (§10), never a raw report. From 1000px the
+column sits to the right of the form and stays in view while scrolling;
+narrower, it follows the form. Example: a published "Region page loads slowly"
+shows as the first row, and a click opens `/known-issues#issue-<id>`.
+
 **The plain page really does work with scripting off.** For a while it did not,
 and that was the only reason it existed: the proof of work was mandatory, nothing
 solved it without JavaScript, and the form refused exactly the visitor it was
@@ -301,7 +311,7 @@ two apart, and refuses to call a forged string "expired".
 **A signed-in reporter cannot type a different address.** The field is not
 offered; the account address is shown as text with a link to settings. Anything
 posted in `email` by hand is discarded. Two reasons: a form post leaves nothing
-in a sent folder, so the reporter's own `/messages` is the only record they get
+in a sent folder, so the reporter's own `/account/messages` is the only record they get
 (§9); and an editable field would let a report make our server mail an address
 the reporter chose for somebody else.
 
@@ -557,7 +567,7 @@ including it.
 Every report carries `#123`, from `BugReport::getReference()`. It lives on the
 entity rather than in `SupportMailer` because three surfaces show it and only
 one of them sends mail: the desk list, the desk detail page, and
-`/profile/reports`. The reporter also gets it in every mail we send them.
+`/account/reports`. The reporter also gets it in every mail we send them.
 
 **It was `CC-B-000123` for a day** (owner, 2026-08-28: "just #1 #2 etc"). The
 long form was unambiguous, and nobody reads it out loud or types it twice.
@@ -709,7 +719,7 @@ site-wide `.mono` utility, which uppercases and wide-tracks for chrome labels:
 `/regions` shown as `/REGIONS` is a different path, and a user-agent string in
 capitals is unreadable.
 
-## 10. `/known-issues` and `/profile/reports`
+## 10. `/known-issues` and `/account/reports`
 
 **Known issues** is public and carries only what a curator has marked public.
 Off by default, always. The list is worth reading only because somebody checked
@@ -724,6 +734,17 @@ they used to sit in the one list was a real one, that somebody who hits last
 week's bug should find it already answered rather than file it again. A fix
 moves; it does not disappear. Declined appears on neither: "we are not fixing
 this" is a conversation with the reporter, not a public notice.
+
+**Dates and releases (2026-09-19).** A Fixed entry shows "Fixed on <date>"
+from `bug_report.resolved_at`, stamped when the status becomes Resolved and
+cleared when it leaves it (`BugReport::setStatus()`), and the bare git tag
+(`v0.9.0`) as a link to that release on `/changelog#<tag>` when `fix_release` is set. The
+Fixed tab sorts by that date, newest fix first. An Open entry's date is
+`updated_at` and reads "Updated <date>": it moves on every edit, so it never
+stands in for a fix date. `Version20260919200000` backfilled resolved rows
+from their release's `released_at`, else their `updated_at`. Example: a bug
+fixed in `v0.9.0` on 12 September reads "v0.9.0 · Fixed on September 12,
+2026".
 
 The tab is a link carrying `?show=fixed`, never a script toggle, and the pager
 carries it too. The route is shared-cached, so a filter a shared cache cannot
@@ -745,12 +766,19 @@ what a curator changed on the desk, and a resolved one stays resolved.
 Deploying a new entry is: add it to the file, deploy, run the command once.
 Pinned by `SeedKnownIssuesCommandTest`.
 
-**My reports** shows a rider their own rows and only their own. The query
+**My bugs** (`/account/reports`, tab and heading "My bugs") shows a rider
+their own bug reports and only their own. It is not called "reports": the
+moderation side has a Reports desk for content reports (content-reports.md),
+a different thing, and one word for both confused them. The query
 filters on the signed-in user's id and is never handed an id from the request.
 
 Reports filed while signed out are not there and cannot be: they carry no
 account, and signing in afterwards does not adopt them. Both the form and the
 page say so, rather than leaving somebody hunting.
+
+The page closes with one "See also" link, to `/known-issues`. Reporting a bug
+and contacting us are already one click away from every page (the floating bug
+button and the footer), so the page does not repeat them.
 
 ## 11. Data model
 
@@ -1013,7 +1041,7 @@ touches the buttons still knows.
 |---|---|
 | `/moderate/bugs/{id}` | the reporter's body and steps, and the curator's note |
 | `/known-issues` | the curator's published note |
-| `/profile/reports` | the curator's note, to the reporter |
+| `/account/reports` | the curator's note, to the reporter |
 
 The reporter's own words are rendered only on the curator desk. Publishing a
 report to `/known-issues` publishes the curator's note, never the raw body:

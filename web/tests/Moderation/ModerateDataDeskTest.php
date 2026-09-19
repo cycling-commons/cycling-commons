@@ -68,6 +68,32 @@ final class ModerateDataDeskTest extends WebTestCase
         self::assertStringContainsString('#'.$loser->getId(), $text);
     }
 
+    /** The same country filter as the submissions queue, combined with the kind chips. */
+    public function testTheCountryFilterNarrowsTheList(): void
+    {
+        $client = static::createClient();
+        [$beKeeper, $beLoser] = $this->pair('filter-be');
+        $this->finding(FindingKind::Duplicate, $beLoser, $beKeeper);
+        [$nlKeeper, $nlLoser] = $this->pair('filter-nl');
+        $nlKeeper->setCountryCode('NL');
+        $nlLoser->setCountryCode('NL');
+        $this->em()->flush();
+        $this->finding(FindingKind::Duplicate, $nlLoser, $nlKeeper);
+
+        $client->loginUser($this->curator('data-filter@test.test'));
+        $crawler = $client->request('GET', '/moderate/data?country=NL');
+
+        self::assertResponseIsSuccessful();
+        $options = $crawler->filter('select[name="country"] option')->extract(['value']);
+        self::assertContains('BE', $options);
+        self::assertContains('NL', $options);
+        $text = $crawler->filter('#qList')->text();
+        self::assertStringContainsString('#'.$nlLoser->getId(), $text);
+        self::assertStringNotContainsString('#'.$beLoser->getId(), $text);
+        // A kind chip keeps the place filter.
+        self::assertCount(1, $crawler->filter('a.lchip[href$="kind=duplicate&country=NL"]'));
+    }
+
     public function testAcceptingADuplicateRetiresTheLoserAndKeepsTheOther(): void
     {
         $client = static::createClient();

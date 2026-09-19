@@ -79,6 +79,21 @@
   .sevrow label:hover span{border-color:var(--clay);color:var(--ink)}
   .sevrow input:checked + span{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .sevrow input:focus-visible + span{outline:2px solid var(--clay);outline-offset:2px}
+  {# The form and, beside it from 1000px, the newest known issues. Narrower,
+     the list follows the form. #}
+  .buglayout{display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem}
+  @media (min-width:1000px){.buglayout{grid-template-columns:minmax(0,640px) minmax(0,340px);gap:4rem;align-items:start}}
+  .bugrecent{border-top:2px solid var(--clay);padding-top:1rem}
+  @media (min-width:1000px){.bugrecent{position:sticky;top:1.5rem}}
+  .bugrecent h2{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:0 0 .35rem}
+  .bugrecent .sub{font-size:.85rem;color:#595c4d;margin:0 0 .8rem;line-height:1.5}
+  .bugrecent ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem}
+  .bugrecent li a{display:block;padding:.55rem .7rem;border:1px solid rgba(20,22,14,.12);border-radius:6px;background:var(--paper-deep);color:var(--ink);text-decoration:none}
+  .bugrecent li a:hover{border-color:var(--clay)}
+  .bugrecent li a:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+  .bugrecent .rt{display:block;font-weight:600;font-size:.9rem;line-height:1.35;overflow-wrap:anywhere}
+  .bugrecent .rm{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-top:.25rem}
+  .bugrecent .all{display:inline-block;margin-top:.8rem;font-size:.88rem;color:var(--clay);text-decoration:underline;text-underline-offset:3px}
 </style>
 {% endblock %}
 
@@ -98,6 +113,7 @@
 </div></div>
 
 <section class="pad"><div class="wrap">
+  <div class="buglayout">
   <div class="bugpage">
     {% if sent %}
       <div class="csent">
@@ -265,6 +281,28 @@
         </div>
       </noscript>
     {% endif %}
+  </div>
+
+  {# The newest open entries on the public known-issues list (only what a
+     curator marked public, never a raw report), so somebody about to write
+     sees what is already known first (contact-and-support.md §10). #}
+  <aside class="bugrecent" aria-labelledby="bugrecent-h">
+    <h2 id="bugrecent-h">{{ 'support.bug.recent_heading'|trans }}</h2>
+    <p class="sub">{{ 'support.bug.recent_sub'|trans }}</p>
+    {% if recent_issues is empty %}
+      <p class="sub">{{ 'support.bug.recent_empty'|trans }}</p>
+    {% else %}
+      <ul>
+        {% for issue in recent_issues %}
+          <li><a href="{{ path('known_issues') }}#issue-{{ issue.id }}">
+            <span class="rt">{{ issue.publicTitle }}</span>
+            <span class="rm">{{ ('support.bug.status.' ~ issue.status.value)|trans }} · {{ issue.createdAt|cc_date }}</span>
+          </a></li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <a class="all" href="{{ path('known_issues') }}">{{ 'support.bug.recent_all'|trans }} →</a>
+  </aside>
   </div>
 </div></section>
 {% endblock %}

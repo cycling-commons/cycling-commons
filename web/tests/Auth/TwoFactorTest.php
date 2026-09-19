@@ -142,9 +142,9 @@ final class TwoFactorTest extends WebTestCase
         self::assertSelectorExists('input[name="_auth_code"]');
 
         // Not yet able to reach a ROLE_USER area.
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseRedirects();
-        self::assertStringNotContainsString('/profile', (string) $client->getResponse()->headers->get('Location'));
+        self::assertStringNotContainsString('/account/contributions', (string) $client->getResponse()->headers->get('Location'));
 
         // Submit a valid TOTP code at the check path.
         $code = $this->currentTotpCode($data['secret']);
@@ -158,9 +158,9 @@ final class TwoFactorTest extends WebTestCase
         self::assertStringNotContainsString('/2fa', $location);
 
         // Can now reach a ROLE_USER area without bouncing to /2fa or /login.
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         $status = $client->getResponse()->getStatusCode();
-        // /profile may 404 (no controller yet) but must NOT redirect to /login or /2fa.
+        // /account/contributions may 404 (no controller yet) but must NOT redirect to /login or /2fa.
         if ($client->getResponse()->isRedirection()) {
             $loc = (string) $client->getResponse()->headers->get('Location');
             self::assertStringNotContainsString('/login', $loc);
@@ -258,8 +258,8 @@ final class TwoFactorTest extends WebTestCase
 
         $this->submitLogin($client, $email, $data['plain']);
 
-        // No interstitial, no forced setup → default target (account dashboard, /profile).
-        self::assertResponseRedirects('/profile');
+        // No interstitial, no forced setup → default target (account dashboard, /account/contributions).
+        self::assertResponseRedirects('/account/contributions');
         $location = (string) $client->getResponse()->headers->get('Location');
         self::assertStringNotContainsString('/2fa', $location);
     }
@@ -271,7 +271,7 @@ final class TwoFactorTest extends WebTestCase
      * subsequent request, not only immediately after login (gate test).
      *
      * Without the TwoFactorSetupEnforcer subscriber this test FAILS: the user is fully
-     * authenticated and can reach /profile directly. With the subscriber it PASSES.
+     * authenticated and can reach /account/contributions directly. With the subscriber it PASSES.
      */
     public function testElevatedRoleWithoutSecretIsBlockedOnEveryRequest(): void
     {
@@ -284,12 +284,12 @@ final class TwoFactorTest extends WebTestCase
         $this->submitLogin($client, $email, $data['plain']);
         self::assertResponseRedirects('/2fa/setup');
 
-        // Attempt to navigate directly to /profile, bypassing the login redirect.
-        $client->request('GET', '/profile');
-        self::assertTrue($client->getResponse()->isRedirection(), 'Should be redirected away from /profile');
+        // Attempt to navigate directly to /account/contributions, bypassing the login redirect.
+        $client->request('GET', '/account/contributions');
+        self::assertTrue($client->getResponse()->isRedirection(), 'Should be redirected away from /account/contributions');
         $location = (string) $client->getResponse()->headers->get('Location');
         self::assertStringContainsString('/2fa/setup', $location, 'Must redirect to 2FA setup, not elsewhere');
-        self::assertStringNotContainsString('/profile', $location, 'Must NOT reach /profile without 2FA');
+        self::assertStringNotContainsString('/account/contributions', $location, 'Must NOT reach /account/contributions without 2FA');
     }
 
     /**
@@ -316,7 +316,7 @@ final class TwoFactorTest extends WebTestCase
         self::assertResponseRedirects();
 
         // Now fully authenticated + enrolled — must NOT be bounced to setup.
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         if ($client->getResponse()->isRedirection()) {
             $loc = (string) $client->getResponse()->headers->get('Location');
             self::assertStringNotContainsString('/2fa/setup', $loc, 'Enrolled user must not be redirected to setup');
@@ -340,7 +340,7 @@ final class TwoFactorTest extends WebTestCase
         $this->submitLogin($client, $email, $data['plain']);
         $client->followRedirect(); // follow → home
 
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         if ($client->getResponse()->isRedirection()) {
             $loc = (string) $client->getResponse()->headers->get('Location');
             self::assertStringNotContainsString('/2fa/setup', $loc, 'Plain user must not be sent to 2FA setup');
@@ -409,7 +409,7 @@ final class TwoFactorTest extends WebTestCase
 
         // A twoFaEnabled=false user is NOT challenged, so log in completes fully.
         $this->submitLogin($client, $email, 'hunter2secure!');
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertTrue($client->getResponse()->isRedirection());
         self::assertStringContainsString('/2fa/setup', (string) $client->getResponse()->headers->get('Location'));
     }

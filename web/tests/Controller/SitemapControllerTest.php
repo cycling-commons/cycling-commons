@@ -48,7 +48,7 @@ final class SitemapControllerTest extends WebTestCase
         // Each entry is named so a deletion fails loudly instead of quietly
         // publishing a surface.
         foreach ([
-            '/admin', '/moderate', '/profile', '/settings', '/messages',
+            '/admin', '/moderate', '/account',
             '/login', '/register', '/reset-password', '/2fa', '/i18n/',
             '/contribute', '/improve', '/propose-route',
             '/map/', '/api/', '/photo/',

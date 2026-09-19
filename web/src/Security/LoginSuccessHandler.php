@@ -18,7 +18,9 @@ use Symfony\Component\Security\Http\HttpUtils;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 
 /**
- * After full authentication: seed locale, then 2FA setup if still required.
+ * After full authentication: seed locale, then 2FA setup if still required,
+ * then the page the rider was sent away from, else the landing: the
+ * contributions page on the very first sign-in, the dashboard after that.
  *
  * @see docs/specs/account-and-auth.md §4
  *
@@ -29,7 +31,8 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
     use TargetPathTrait;
 
     private const string FIREWALL_NAME = 'main';
-    private const string DEFAULT_TARGET_ROUTE = 'profile';
+    private const string DEFAULT_TARGET_ROUTE = 'dashboard';
+    private const string FIRST_LOGIN_ROUTE = 'profile';
     private const string TWO_FACTOR_LOGIN_ROUTE = '2fa_login';
 
     public function __construct(
@@ -49,6 +52,11 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         }
 
         $user = $token->getUser();
+
+        // Read before the stamp below overwrites it. A new account has
+        // nothing to count yet, so its first landing is the contributions
+        // page with the curating invitation (account-and-auth.md §8).
+        $firstLogin = $user instanceof User && null === $user->getLastLoginAt();
 
         // The dormancy clock, and only here: this runs after 2FA, so it means
         // "somebody actually got in", not "somebody typed a password".
@@ -76,7 +84,7 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         }
 
         // Default target in the user's locale so LocaleListener does not clobber session locale.
-        return new RedirectResponse($this->localizedUrl(self::DEFAULT_TARGET_ROUTE, $locale));
+        return new RedirectResponse($this->localizedUrl($firstLogin ? self::FIRST_LOGIN_ROUTE : self::DEFAULT_TARGET_ROUTE, $locale));
     }
 
     private function localizedUrl(string $route, ?string $locale): string

@@ -71,7 +71,7 @@ final class ModerateOverviewTest extends WebTestCase
         $this->seedSubmission('Côte de Recherche', 'BE');
         $this->seedSubmission('Fontaine ailleurs', 'BE');
 
-        $crawler = $client->request('GET', '/moderate?q=recherche');
+        $crawler = $client->request('GET', '/moderate/submissions?q=recherche');
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Côte de Recherche', $crawler->text());
@@ -86,7 +86,7 @@ final class ModerateOverviewTest extends WebTestCase
         $this->seedSubmission('Col du 100%', 'BE');
         $this->seedSubmission('Plain title', 'BE');
 
-        $crawler = $client->request('GET', '/moderate?q=100%25');
+        $crawler = $client->request('GET', '/moderate/submissions?q=100%25');
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Col du 100%', $crawler->text());
@@ -129,7 +129,7 @@ final class ModerateOverviewTest extends WebTestCase
         $this->seedSubmission('Vaalserberg', 'NL');
         $this->seedSubmission('Repair station · Malmedy', 'BE');
 
-        $client->request('GET', '/moderate?country=NL');
+        $client->request('GET', '/moderate/submissions?country=NL');
 
         self::assertResponseIsSuccessful();
         $body = (string) $client->getResponse()->getContent();
@@ -143,7 +143,7 @@ final class ModerateOverviewTest extends WebTestCase
         $this->loginCurator($client);
         $this->seedSubmission('Côte de la Vecquée', 'BE');
 
-        $crawler = $client->request('GET', '/moderate');
+        $crawler = $client->request('GET', '/moderate/submissions');
 
         self::assertResponseIsSuccessful();
         $href = (string) $crawler->filter('.q-item a.q-review')->first()->attr('href');

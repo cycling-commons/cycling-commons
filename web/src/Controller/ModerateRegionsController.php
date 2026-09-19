@@ -142,7 +142,6 @@ final class ModerateRegionsController extends AbstractController
             'confirmed_threshold' => $confirmedThreshold,
             'min_blocks' => $this->readiness->minBlocks(),
             'min_per_block' => $minPerBlock,
-            'mod_scope_names' => $this->scopeProvider->describe($user, $this->scopeProvider->scopeFor($user)),
         ]);
     }
 
@@ -225,7 +224,6 @@ final class ModerateRegionsController extends AbstractController
             ],
             'locales' => $locales,
             'max_len' => self::ABOUT_MAX,
-            'mod_scope_names' => $this->scopeProvider->describe($user, $this->scopeProvider->scopeFor($user)),
         ]);
     }
 

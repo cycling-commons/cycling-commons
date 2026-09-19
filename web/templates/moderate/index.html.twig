@@ -7,7 +7,7 @@
 {% include 'account/_shell_styles.html.twig' %}
 {% endblock %}
 
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: nav_active|default('moderate'), mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: nav_active|default('moderate'), mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
 {% block body %}
 <div class="dbody" id="main">
@@ -17,7 +17,7 @@
   </div>
 
   <nav class="lfilter" aria-label="{{ 'moderate.desk_aria'|trans }}">
-    <a class="lchip on" href="{{ path('moderate') }}">{{ 'moderate.desk_queue'|trans }}</a>
+    <a class="lchip on" href="{{ path('moderate_submissions') }}">{{ 'moderate.desk_queue'|trans }}</a>
     <a class="lchip mod-desk-hist" href="{{ path('moderate_history') }}">{{ 'moderate.desk_history'|trans }}</a>
   </nav>
 
@@ -25,7 +25,7 @@
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
   <div class="mod-bar">
-  <form class="mod-filters" method="get" action="{{ path('moderate') }}">
+  <form class="mod-filters" method="get" action="{{ path('moderate_submissions') }}">
     <label>{{ 'moderate.filter.country'|trans }}
       <select name="country" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
@@ -69,7 +69,7 @@
   {% if filters.by %}
     <p class="mod-byuser" role="status">
       {{ 'moderate.filter.by_user'|trans }}
-      <a href="{{ path('moderate', filters.country or filters.region or filters.type or filters.q
+      <a href="{{ path('moderate_submissions', filters.country or filters.region or filters.type or filters.q
         ? {country: filters.country, region: filters.region, type: filters.type, q: filters.q}
         : {}) }}">{{ 'moderate.filter.by_user_clear'|trans }}</a>
     </p>
@@ -86,7 +86,7 @@
       {% include 'moderate/_queue_item.html.twig' with {item: item} %}
     {% endfor %}
   </div>
-  {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate', params: filters} %}
+  {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_submissions', params: filters} %}
   {% endif %}
 
 </div>

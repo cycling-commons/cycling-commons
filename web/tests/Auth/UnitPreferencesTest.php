@@ -14,7 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Kilometres-or-miles and metres-or-feet on /settings
+ * Kilometres-or-miles and metres-or-feet on /account/settings
  * (docs/specs/account-and-auth.md §9): the two dropdowns round-trip, and what
  * they change is the page a rider then reads — not anything stored.
  *
@@ -92,7 +92,7 @@ final class UnitPreferencesTest extends WebTestCase
         $plain = $this->createUser('units-view@example.com', 'securepass12345!', 'Units Viewer');
         $this->loginAs($client, 'units-view@example.com', $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         self::assertCount(
@@ -115,14 +115,14 @@ final class UnitPreferencesTest extends WebTestCase
         $plain = $this->createUser('units-save@example.com', 'securepass12345!', 'Units Saver');
         $this->loginAs($client, 'units-save@example.com', $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         $form = $crawler->selectButton('Save profile')->form();
         $form['settings[displayName]'] = 'Units Saver';
         $form['settings[distanceUnit]'] = DistanceUnit::Mi->value;
         $form['settings[elevationUnit]'] = ElevationUnit::M->value;
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
 
         $user = $this->fetchUser('units-save@example.com');
@@ -130,7 +130,7 @@ final class UnitPreferencesTest extends WebTestCase
         self::assertSame(ElevationUnit::M, $user->getElevationUnit());
 
         // And the saved choice comes back selected.
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertSame(
             'mi',
             $crawler->filter('select[name="settings[distanceUnit]"] option[selected]')->attr('value'),
@@ -148,12 +148,12 @@ final class UnitPreferencesTest extends WebTestCase
         $plain = $this->createUser('units-bridge@example.com', 'securepass12345!', 'Units Bridge');
         $this->loginAs($client, 'units-bridge@example.com', $plain);
 
-        $client->request('GET', '/settings');
+        $client->request('GET', '/account/settings');
         // On <body>, not in a script: boot.js is one shared file for everyone
         // and reads the two per-rider values from there (page-caching.md §3.2).
         self::assertStringContainsString('data-cc-distance-unit="km"', (string) $client->getResponse()->getContent());
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         $form = $crawler->selectButton('Save profile')->form();
         $form['settings[displayName]'] = 'Units Bridge';
         $form['settings[distanceUnit]'] = DistanceUnit::Mi->value;
@@ -179,7 +179,7 @@ final class UnitPreferencesTest extends WebTestCase
         $user->setBaseRadiusKm(80);
         $em->flush();
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertSame('80 km', trim($crawler->filter('output[data-radius-output]')->text()));
 
         $form = $crawler->selectButton('Save profile')->form();

@@ -61,7 +61,7 @@
     {% if done %}
       <h2>{{ 'report.answer.sent_title'|trans }}</h2>
       <p>{{ 'report.answer.sent_body'|trans|rich }}</p>
-      <p><a href="{{ path('messages_index') }}">{{ 'report.answer.back'|trans }}</a></p>
+      <p><a href="{{ path('messages') }}">{{ 'report.answer.back'|trans }}</a></p>
     {% else %}
       {% if error %}<div class="cerr" role="alert">{{ error|trans }}</div>{% endif %}
 

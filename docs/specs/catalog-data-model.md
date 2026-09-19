@@ -535,6 +535,15 @@ data desk shows. The desk is the queue for everything the gate does not catch:
 rows that existed before the gate, rows whose OSM counterpart appeared later,
 and links that need a human because they fall in the 100 m to 250 m band.
 
+The desk (`/moderate/data`) filters like the submissions queue
+(moderation-and-contribution.md §5.2): kind chips (Everything, Duplicates, OSM
+links), then a country and a region select. The selects list only places with
+an open finding inside the curator's area (`CatalogFindingRepository::
+countries()`, `regions()`), read through the item, like the scope itself. The
+chips carry the place filter, the form carries the kind, and a decision
+returns to the same view. Example: `/moderate/data?kind=duplicate&country=NL`
+shows only duplicate findings on Dutch rows.
+
 **Built 2026-08-25** (plan `docs/plans/2026-08-25-osm-identity-spine.md`):
 materialisation answers by construction, `Version20260825110000` added
 `osm_checked_at` and backfilled the 775 by-construction rows, the approval gate

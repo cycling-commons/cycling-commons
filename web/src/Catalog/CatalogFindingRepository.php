@@ -29,11 +29,13 @@ final readonly class CatalogFindingRepository
     }
 
     /**
-     * Open findings a curator may act on, newest first.
+     * Open findings a curator may act on, newest first. `$country` (ISO2) and
+     * `$region` (region name) narrow the list inside the scope, like the
+     * submissions queue's filters (moderation-and-contribution.md §5.2).
      *
      * @return list<array<string, mixed>>
      */
-    public function open(ModerationScope $scope, ?FindingKind $kind = null, int $limit = 200): array
+    public function open(ModerationScope $scope, ?FindingKind $kind = null, ?string $country = null, ?string $region = null, int $limit = 200): array
     {
         $params = ['status' => FindingStatus::Open->value];
         $types = [];
@@ -49,6 +51,14 @@ final readonly class CatalogFindingRepository
         if (null !== $kind) {
             $sql .= ' AND f.kind = :kind';
             $params['kind'] = $kind->value;
+        }
+        if (null !== $country && '' !== $country) {
+            $sql .= ' AND i.country_code = :country';
+            $params['country'] = $country;
+        }
+        if (null !== $region && '' !== $region) {
+            $sql .= ' AND EXISTS (SELECT 1 FROM region fr WHERE fr.id = i.region_id AND fr.name = :region)';
+            $params['region'] = $region;
         }
         $sql .= $this->scopeArm($scope, $params, $types);
 
@@ -110,6 +120,37 @@ final readonly class CatalogFindingRepository
         return ['id' => (int) $row['id'], 'kind' => (string) $row['kind'], 'items' => $items];
     }
 
+    /**
+     * Countries with an open finding in this curator's scope, for the filter.
+     *
+     * @return list<string>
+     */
+    public function countries(ModerationScope $scope): array
+    {
+        $params = ['status' => FindingStatus::Open->value];
+        $types = [];
+        $sql = "SELECT DISTINCT i.country_code FROM catalog_finding f JOIN item i ON i.id = f.item_id
+                 WHERE f.status = :status AND i.country_code <> ''";
+
+        return $this->sorted($this->db->fetchFirstColumn($sql.$this->scopeArm($scope, $params, $types), $params, $types));
+    }
+
+    /**
+     * Region names with an open finding in this curator's scope, for the filter.
+     *
+     * @return list<string>
+     */
+    public function regions(ModerationScope $scope): array
+    {
+        $params = ['status' => FindingStatus::Open->value];
+        $types = [];
+        $sql = 'SELECT DISTINCT fr.name FROM catalog_finding f JOIN item i ON i.id = f.item_id
+                  JOIN region fr ON fr.id = i.region_id
+                 WHERE f.status = :status';
+
+        return $this->sorted($this->db->fetchFirstColumn($sql.$this->scopeArm($scope, $params, $types), $params, $types));
+    }
+
     /** How many open findings this curator is being asked about (the tab badge). */
     public function openCount(ModerationScope $scope): int
     {
@@ -164,5 +205,18 @@ final readonly class CatalogFindingRepository
         }
 
         return ' AND ('.implode(' OR ', $arms).')';
+    }
+
+    /**
+     * @param list<mixed> $values
+     *
+     * @return list<string>
+     */
+    private function sorted(array $values): array
+    {
+        $strings = array_map(strval(...), $values);
+        (new \Collator('en'))->sort($strings);
+
+        return array_values($strings);
     }
 }

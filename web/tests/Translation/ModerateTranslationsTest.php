@@ -489,11 +489,11 @@ final class ModerateTranslationsTest extends WebTestCase
         self::assertSame((string) $total, trim($crawler->filter('.acct-chip .acct-bulb')->text()));
         self::assertSame(
             (string) $messages,
-            trim($crawler->filter('.acct-dropdown a[href$="/messages"] .acct-count')->text()),
+            trim($crawler->filter('.acct-dropdown a[href$="/account/messages"] .acct-count')->text()),
         );
         self::assertSame(
             (string) $submissions,
-            trim($crawler->filter('.acct-dropdown a[href$="/moderate"] .acct-count')->text()),
+            trim($crawler->filter('.acct-dropdown a[href$="/moderate/submissions"] .acct-count')->text()),
         );
         self::assertSame(
             (string) $translations,

@@ -45,7 +45,7 @@
   {% if post.about_submission_id %}
     {# The queue card. The reader's own area still decides whether it opens, so
        a link out of scope refuses at the target rather than here (§9.3). #}
-    <p class="rm-about"><a href="{{ path('moderate', {q: 'SUB-' ~ post.about_submission_id}) }}">
+    <p class="rm-about"><a href="{{ path('moderate_submissions', {q: 'SUB-' ~ post.about_submission_id}) }}">
       {%- if post.about_title -%}{{ 'room.about_submission_titled'|trans({'%id%': post.about_submission_id, '%title%': post.about_title}) }}{%- else -%}{{ 'room.about_submission'|trans({'%id%': post.about_submission_id}) }}{%- endif -%}
     </a></p>
   {% endif %}

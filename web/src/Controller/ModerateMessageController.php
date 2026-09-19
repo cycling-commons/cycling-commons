@@ -156,6 +156,6 @@ final class ModerateMessageController extends AbstractController
             }
         }
 
-        return $this->redirectToRoute('submission' === $channel ? 'moderate' : 'moderate_routes');
+        return $this->redirectToRoute('submission' === $channel ? 'moderate_submissions' : 'moderate_routes');
     }
 }

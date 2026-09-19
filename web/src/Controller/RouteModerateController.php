@@ -126,7 +126,6 @@ final class RouteModerateController extends AbstractController
             'pager_params' => null === $regionId ? [] : ['region' => $regionId],
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
-            'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
             'mod_submission_count' => $this->submissionQueue->total($scope),
             'mod_route_count' => $this->queue->total($scope) + $this->queue->pendingSuggestionCount($scope),
         ]);
@@ -276,7 +275,6 @@ final class RouteModerateController extends AbstractController
             'proposal_photos' => 'submitted' === $row['state'] ? $this->queue->proposalPhotos($id) : [],
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
-            'mod_scope_names' => $this->scopeProvider->describe($user, $scope),
             'mod_submission_count' => $this->submissionQueue->total($scope),
             'mod_route_count' => $this->queue->total($scope) + $this->queue->pendingSuggestionCount($scope),
         ]);

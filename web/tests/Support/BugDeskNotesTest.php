@@ -371,7 +371,7 @@ final class BugDeskNotesTest extends WebTestCase
     /**
      * A signed-in reporter hears back THROUGH their account.
      *
-     * The outcome lands in `/messages` and the mail that follows is the
+     * The outcome lands in `/account/messages` and the mail that follows is the
      * notification of it. Two reasons that is the right shape: a form post
      * leaves nothing in a sent folder, so their own messages are the only
      * record they have; and the address is the account's, not one typed into a

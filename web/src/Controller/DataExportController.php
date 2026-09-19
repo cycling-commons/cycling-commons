@@ -38,7 +38,7 @@ final class DataExportController extends AbstractController
     ) {
     }
 
-    #[Route('/settings/export', name: 'settings_export', methods: ['POST'])]
+    #[Route('/account/settings/export', name: 'settings_export', methods: ['POST'])]
     public function export(Request $request, RateLimiterFactoryInterface $dataExportLimiter): Response
     {
         /** @var User $user */

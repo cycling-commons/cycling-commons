@@ -3309,6 +3309,7 @@ account:
   menu_personal: 'Persoonlijk'
   menu_moderation: 'Moderatie'
   mod_scope_all: 'Alle gebieden'
+  menu_more: 'Meer'
   unread_messages: '%count% ongelezen bericht(en)'
   open_items: '%count% openstaande item(s)'
   mod_takedowns_open: 'Openstaande verwijderverzoeken'
@@ -3486,8 +3487,10 @@ support:
     where_message: 'Naast een ontvangen bericht, in je berichten.'
     where_photo: 'Onder de foto: "Deze foto toont mij, meld hem". Een foto die gemeld wordt omdat er een persoon op staat, wordt meteen verborgen, nog voor een curator kijkt.'
     what_kicker: 'Wat er dan gebeurt'
-    what_p: 'Laat je een adres achter, dan krijg je meteen een bevestiging met een referentie, en daarna het besluit van de curator met de redenen, hoe het ook uitvalt. Heeft het ding een auteur en wordt de melding gegrond verklaard, dan hoort die wat is beperkt, waarom, en hoe dat aan te vechten. Een mens beslist, elke keer. De gronden zijn de regels die we in de voorwaarden publiceren.'
-    what_terms: 'Lees de regels.'
+    what_p1: 'Laat je een adres achter, dan krijg je meteen een bevestiging met een referentie. Heeft een curator over je melding beslist, dan hoor je dat, met de reden.'
+    what_p2: 'Een mens beslist, elke keer. De gronden zijn de regels in onze voorwaarden.'
+    what_terms: 'Lees hier de regels.'
+    what_p3: 'Heeft wat je meldde een auteur en wordt de melding gegrond verklaard, dan hoort die wat is beperkt en waarom. Die heeft het recht het besluit aan te vechten.'
     not_kicker: 'Niet deze pagina'
     not_bug: 'De site zelf is stuk, of de kaart tekent iets van ons verkeerd:'
     not_contact: 'Al het andere:'
@@ -3606,6 +3609,10 @@ support:
     sent_again: 'Nog een melden'
     known_link: 'Bekijk wat we al weten'
     check_known: 'Voor je schrijft: het staat misschien al op de lijst.'
+    recent_heading: 'Onlangs toegevoegde bugs'
+    recent_sub: 'Bugs die we al kennen, nieuwste eerst. Staat die van jou erbij, dan hoef je hem niet opnieuw te melden.'
+    recent_empty: 'Er staan nu geen bekende bugs op de lijst.'
+    recent_all: 'De hele lijst'
     no_js_note: 'Dit formulier werkt ook zonder JavaScript. Er gaat dan wat minder over je browser mee, en er mag wat minder per dag.'
     severity.critical: 'Kritiek'
     severity.major: 'Groot'
@@ -3655,6 +3662,8 @@ support:
     block_word: 'plak het log hier'
     hint: 'Je kunt **vet**, *cursief*, `code`, lijsten en ``` rond een blok logtekst gebruiken. Links en afbeeldingen worden niet getoond.'
   known:
+    fixed_on: 'Opgelost op %date%'
+    updated_on: 'Bijgewerkt op %date%'
     kicker: 'Bekende problemen'
     desk_link: 'Open op de desk'
     title: 'Wat we al weten dat stuk is.'
@@ -3744,7 +3753,7 @@ support:
     search_found: '%count% resultaten voor "%q%"'
     search_none: 'Niets komt overeen met "%q%". Probeer alleen het nummer, of één woord.'
   mine:
-    title: 'Mijn meldingen'
+    title: 'Mijn bugs'
     lede: 'De bugs die je ons hebt gemeld, en wat ermee is gebeurd.'
     empty: 'Je hebt nog niets gemeld.'
     empty_link: 'Bug melden'
@@ -3914,6 +3923,8 @@ meta:
   moderate_room_description: 'Het interne prikbord voor curatoren en moderatoren.'
   moderate_dashboard_title: 'Curatordashboard'
   moderate_dashboard_description: 'Elke moderatiebalie en het openstaande werk op één pagina.'
+  rider_dashboard_title: 'Dashboard'
+  rider_dashboard_description: 'Je openstaande werk en wat op jou wacht, op één pagina.'
   moderate_title: 'Cycling Commons — Moderatie'
   moderate_description: 'Curatoroppervlak voor de Commons — beoordeel inzendingen, los meldingen op en houd de open fietsatlas betrouwbaar.'
   contribute_title: 'Cycling Commons — Bijdragen'
@@ -4977,7 +4988,7 @@ report:
     back: 'Terug naar je berichten'
   desk:
     title: 'Meldingen'
-    lede: 'Wat fietsers hebben gemeld over routes, plekken, regioteksten, profielen, berichten en foto''s. Juridische claims en misbruik staan bovenaan. Verzoeken om een foto te verwijderen staan op het <a href="%takedowns%">verwijderingsbureau</a>.'
+    lede: 'Wat fietsers hebben gemeld over routes, plekken, regio- en stadsteksten, profielen, berichten en foto''s. Juridische claims en misbruik staan bovenaan. Vraagt iemand om een eigen foto te verwijderen, dan staat dat verzoek op het <a href="%takedowns%">verwijderingsbureau</a>.'
     empty: 'Niets in de wacht. Elke melding heeft een antwoord.'
     target_gone: 'niet meer op de site'
     no_author: 'niemand in het bijzonder'
@@ -5149,7 +5160,6 @@ markers:
 # Curator dashboard (moderation-and-contribution.md §5.0).
 curator_dashboard:
   title: 'Dashboard'
-  clear: 'Leeg'
   clocks:
     heading: 'Wettelijke termijnen'
     due: 'Verwijderverzoeken en meldingen hebben een wettelijke termijn. Behandel deze eerst.'
@@ -5168,3 +5178,32 @@ curator_dashboard:
     area: 'In je gebied'
     everywhere: 'Overal'
     room: 'Nieuw sinds je laatste bezoek'
+
+# Shared by both dashboards (account/_dashboard_tile.html.twig).
+dashboard:
+  clear: 'Leeg'
+
+# Rider dashboard (account-and-auth.md §8).
+rider_dashboard:
+  title: 'Dashboard'
+  waiting:
+    heading: 'Wacht op jou'
+    due: 'Een curator stelde je een vraag, of iemand schreef je. Beantwoord deze eerst.'
+  work:
+    heading: 'Jouw werk'
+  tile:
+    questions: 'Vragen'
+  note:
+    contributions: 'Over je bijdragen'
+    translations: 'Over je vertalingen'
+    unread: 'Ongelezen'
+    with_curator: 'Bij een curator'
+    not_fixed: 'Nog niet opgelost'
+  recent:
+    heading: 'Je laatste bijdragen'
+    all: 'Al je bijdragen'
+    empty: 'Je hebt nog geen plek toegevoegd of gewijzigd.'
+  nearby:
+    no_base: 'Stel een thuisbasis in om plekken in de buurt te zien die een controle nodig hebben.'
+    settings: 'Instellingen openen'
+    empty: 'Elke plek bij jou in de buurt is recent gecontroleerd.'

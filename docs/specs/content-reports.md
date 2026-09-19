@@ -270,8 +270,11 @@ a taken-up report twice. `ReportDeskFiltersTest` pins it.
 ground, the status and the target ("IT IS ADVERTISING · OPEN · A PLACE ON THE
 MAP", a legal or abuse ground dark red, "no longer on the site" appended when
 the target resolves to nothing), and the date. Not the reporter's words: they
-wait on the detail page. The lede names the takedowns desk, with a link, as
-the place for requests to take a photo down.
+wait on the detail page. The lede lists what can be reported (routes, places,
+region and town texts, profiles, messages, photos) and names the takedowns
+desk, with a link, as the place where uploaders ask to remove their OWN photo.
+A photo anybody else reports is on this desk; the lede says who asks, so the
+two desks do not read as overlapping.
 
 **The detail page** shows the target line with an "Open it" button (the
 resolver's link, `/map?item=<id>` for a place), the path the reporter stood
@@ -372,5 +375,8 @@ it next to Report a bug.
 - **What happens next** repeats §6 and §7 in plain words, and claims no
   more: a confirmation with a reference, the decision with reasons, the
   author told only when a report is upheld, a person deciding every time.
+  Three paragraphs (`what_p1`, `what_p2` with the "Read the rules here." link
+  to the terms, `what_p3`): what the reporter gets, who decides and on what
+  grounds, then what the author is told and their right to contest.
 - Pinned by `tests/Support/ReportGuideTest.php`.
 

@@ -193,7 +193,7 @@ final class CuratorMessageTest extends WebTestCase
         $post('http://localhost/settings');
         self::assertResponseRedirects();
         $location = (string) $client->getResponse()->headers->get('Location');
-        self::assertStringNotContainsString('/settings', $location);
+        self::assertStringNotContainsString('/account/settings', $location);
     }
 
     public function testCuratorMessagesARouteCorrectionsRider(): void

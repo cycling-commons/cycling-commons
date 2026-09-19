@@ -14,7 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Rider preference selectors on /settings (spec 2026-07-14): bike types +
+ * Rider preference selectors on /account/settings (spec 2026-07-14): bike types +
  * riding styles round-trip through the settings form as multi-select
  * checkbox groups; both are optional.
  *
@@ -86,7 +86,7 @@ final class RiderPreferencesTest extends WebTestCase
         $plain = $this->createUser('prefs-view@example.com', 'securepass12345!', 'Prefs Viewer');
         $this->loginAs($client, 'prefs-view@example.com', $plain);
 
-        $client->request('GET', '/settings');
+        $client->request('GET', '/account/settings');
 
         self::assertResponseIsSuccessful();
         // One checkbox per BikeType case (8) and per RidingStyle case (7).
@@ -106,7 +106,7 @@ final class RiderPreferencesTest extends WebTestCase
         $plain = $this->createUser('prefs-save@example.com', 'securepass12345!', 'Prefs Saver');
         $this->loginAs($client, 'prefs-save@example.com', $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
 
         $form = $crawler->selectButton('Save profile')->form();
@@ -119,7 +119,7 @@ final class RiderPreferencesTest extends WebTestCase
         $form['settings[ridingStyles]'][3]->tick();
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
 
@@ -128,7 +128,7 @@ final class RiderPreferencesTest extends WebTestCase
         self::assertSame([RidingStyle::Bikepacking], $user->getRidingStyles());
 
         // The saved boxes come back pre-checked.
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         self::assertCount(2, $crawler->filter('input[name="settings[bikeTypes][]"][checked]'));
         self::assertCount(1, $crawler->filter('input[name="settings[ridingStyles][]"][checked]'));
     }
@@ -148,14 +148,14 @@ final class RiderPreferencesTest extends WebTestCase
 
         $this->loginAs($client, 'prefs-clear@example.com', $plain);
 
-        $crawler = $client->request('GET', '/settings');
+        $crawler = $client->request('GET', '/account/settings');
         $form = $crawler->selectButton('Save profile')->form();
         $form['settings[displayName]'] = 'Prefs Clearer';
         $form['settings[bikeTypes]'][2]->untick(); // MTB, pre-checked from setup
         $form['settings[ridingStyles]'][5]->untick(); // Urban, pre-checked from setup
         $client->submit($form);
 
-        self::assertResponseRedirects('/settings');
+        self::assertResponseRedirects('/account/settings');
         $user = $this->fetchUser('prefs-clear@example.com');
         self::assertSame([], $user->getBikeTypes());
         self::assertSame([], $user->getRidingStyles());

@@ -254,7 +254,7 @@ final class ProposeRouteFlowTest extends WebTestCase
             'propose_route' => ['gpx' => new UploadedFile(self::gpxFixture(), 'condroz.gpx', 'application/gpx+xml', null, true)],
         ]);
 
-        $crawler = $client->request('GET', '/profile');
+        $crawler = $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Condroz · profile test', (string) $client->getResponse()->getContent());
         // Route proposals render as shared record cards carrying the route tag

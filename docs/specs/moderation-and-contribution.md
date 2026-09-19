@@ -266,8 +266,8 @@ default scope with nothing selected. Only **approved** rows link — a rejected
 item is not on the map, and a link that lands nowhere is worse than no link.
 
 **The record is its own page under the submissions desk, and both desks page
-and search** (2026-08-03, owner; chips 2026-08-26). `/moderate/history`
-carries the settled submissions; `/moderate` stays about what is still to
+and search** (2026-08-03, owner; chips 2026-08-26). `/moderate/submissions/history`
+carries the settled submissions; `/moderate/submissions` stays about what is still to
 do. Queue and History chips on both pages switch between them, the same
 pattern as the translations desk — History is not a top-level moderation
 tab. Both take **25 rows a page** (`SubmissionQueue::PER_PAGE`)
@@ -322,13 +322,17 @@ queue the visitor cannot see. Each contributing row inside the menu
 repeats its own count, from the same `{% set %}`s, so the two can never
 disagree: the bulb says something is waiting, the row says where.
 
-**The moderation tab strip no longer grows a phantom vertical scrollbar.**
-`.dtabs` sets `overflow-x:auto` for the horizontal tab list, which makes the
-other axis compute to `auto` as well (CSS overflow), and `.dtabs a` carries
-`margin-bottom:-1px` to pull the active tab's border over the bar's — exactly
-one pixel of vertical overflow, which is all a scrollbar track needs. It read
-as the account menu having a scrollbar, since the open menu sits over that
-strip. `overflow-y:hidden` pins it: this strip scrolls sideways or not at all.
+**The tab strip scrolls sideways or not at all.** The tabs sit in
+`.dtabs-strip` inside `.dtabs`, so the More dropdown beside the strip is not
+inside a clipping box. `.dtabs-strip` sets `overflow-x:auto` for the horizontal tab list, which makes the other axis
+compute to `auto` as well (CSS overflow), so one pixel of vertical overflow
+would grow a scrollbar track beside the tabs. `overflow-y:hidden` pins it, and
+the strip then clips whatever reaches below its edge. So the active tab's
+orange underline is an inset `box-shadow` inside the tab's own box, never a
+border pulled over the bar's edge. A pulled border was cut off on the
+personal bar and cut to one pixel on the moderation bar (owner-reported
+2026-09-19). Both bars share these rules (`account/_shell_styles.html.twig`),
+with `.3rem` between tabs and `.85rem` of side padding in each.
 
 **`hidden` must actually hide** (2026-08-03, owner-reported). An author rule
 that sets `display` beats the UA's `[hidden]{display:none}` — author styles win
@@ -487,7 +491,7 @@ data-loss bug class this contract closes.
 
 After submitting, the only thing on the page was "Back to the map". The
 reference printed directly above it is a real submission id, and Contributions
-(`/profile`) is the page that tracks it: where a rider answers a curator's
+(`/account/contributions`) is the page that tracks it: where a rider answers a curator's
 question and sees the decision. Sending them back to the map left the one thing
 they might want to do next off the screen.
 
@@ -729,7 +733,7 @@ user - their rows are theirs wherever they are) as the same pending layer -
 WITHOUT `CC_IS_CURATOR`, which is now set by the CONTROLLER only where the
 2FA policy was applied (a setup-pending curator holds the role, not the
 capability), so a rider's pending card is a preview: badge, proposed change,
-shape switch, conversation - never decide controls. The /profile rows link
+shape switch, conversation - never decide controls. The /account/contributions rows link
 Map (pending deep-link) and Edit for every item-bound row, and carry the
 region + country stamps as words (town-level waits on the gazetteer item).
 Pinned by `MapCuratorInjectionTest` (own rows only, no chrome flag, no
@@ -738,7 +742,7 @@ capability before 2FA) and `MyContributionsTest`.
 ### 3.4 Withdraw — the rider's own exit (built 2026-08-16)
 
 A rider may take back their own submission while it is `pending` or
-`needs_info` (owner 2026-08-16): a Withdraw chip on the /profile
+`needs_info` (owner 2026-08-16): a Withdraw chip on the /account/contributions
 contributions row, POST + per-row CSRF to `profile_withdraw`, handled by
 `ModerationService::withdraw()`. It reuses the REJECT mechanics on purpose -
 same row lock, a `new`-item's minted row goes to state `rejected` (off the
@@ -748,7 +752,7 @@ decision: only the submitter may do it (`NotTheSubmitterException`), there is
 no scope check, no outcome message to the person who did it themselves, and
 `withdrawn` never counts in the admin moderation-activity view (which filters
 approved/rejected). `decided_by` records the rider and `decided_at` starts
-the retention clock: the sweep and /profile's lazy filter treat `withdrawn`
+the retention clock: the sweep and /account/contributions's lazy filter treat `withdrawn`
 exactly like `rejected`. A race with a curator ends in a flash and the real
 outcome, never a half-withdrawal (`AlreadyDecidedException` under the lock).
 Pinned by `WithdrawSubmissionTest`.
@@ -814,26 +818,35 @@ was → now diff and public history panel (`ChangeHistoryView`), and the
 
 ## 5. Moderation surfaces
 
-### 5.0 `/moderate/dashboard`, where a curator starts (2026-09-19)
+### 5.0 `/moderate`, where a curator starts (2026-09-19)
 
 One read-only page with every desk's open count
 (`App\Controller\ModerateDashboardController`, route `moderate_dashboard`,
 `ROLE_CURATOR`). It is the first tab on the moderation bar and the first link
-in the account chip's moderation group. `/moderate` stays the submissions
-queue, so every existing link to it still lands on the queue.
+in the account chip's moderation group. The submissions queue is
+`/moderate/submissions` (route `moderate_submissions`), its history
+`/moderate/submissions/history`.
+
+A `/moderate` link with a query string is a queue link with filters (in a
+sent email or a bookmark), so it redirects (301) to `/moderate/submissions`
+with the same query. `/moderate/history` redirects the same way
+(`App\Controller\MovedAccountPathsController`).
 
 | Block | Content | Scope |
 |---|---|---|
 | Legal deadlines | Takedowns, Reports. A tile with open work has a red edge. | Unscoped, like their tabs |
 | Desks | Submissions, Routes (proposals + suggestions), Data, Bugs, Translations, Room (unread) | Submissions, Routes, Data: the curator's area (§9). The rest: everywhere. |
 | Curator room | The 3 newest non-pinned posts the reader can see, from `CuratorRoom::board()` | As the room (§13.6) |
-| Your last decisions | The 5 newest rows of `SubmissionQueue::history()` decided by this curator, with a link to `/moderate/history?handled=mine` | The curator's area |
+| Your last decisions | The 5 newest rows of `SubmissionQueue::history()` decided by this curator, with a link to `/moderate/submissions/history?handled=mine` | The curator's area |
 
 Each tile links to its desk. A zero shows a green check mark, named "Clear"
 for a screen reader. The page is compact: a
 tile is one line tall (count left, desk name right), the deadline lead shows
 only when a clock has work, and the room and decisions blocks sit side by side
-from 900px wide, with their "open" links in the section heading.
+from 900px wide, with their "open" links in the section heading. The tile
+partial and the page styles are shared with the rider dashboard
+(account-and-auth.md §8): `account/_dashboard_tile.html.twig`,
+`account/_dashboard_styles.html.twig`.
 
 Example: a curator for Flanders with 4 pending submissions and 1 open report
 sees "4" on the Submissions tile and a red "1" on the Reports tile.
@@ -857,7 +870,7 @@ A curator must see the item in place before deciding:
   preserving the curator's active `country`/`region`/`type` filters for the
   HTML path.
 
-### 5.2 `/moderate` — filterable world overview
+### 5.2 `/moderate/submissions`: filterable world overview
 
 The queue (`App\Moderation\SubmissionQueue`) lists `pending` + `needs_info`
 submissions, filterable by country / region / type via query params. Filters
@@ -902,8 +915,8 @@ the density switch (`account/_density.html.twig`) and the pager are defined
 **once**, in `account/_shell_styles.html.twig`, which includes
 `moderate/_card_styles.html.twig`. Every list page draws from there: the
 submissions desk, History, Routes, Takedowns, Translations, Data, Regions, and on the rider
-side `/profile` (contributions, route proposals, curator applications, votes)
-and `/messages`. A page's own `<style>` block keeps only what is truly its own
+side `/account/contributions` (contributions, route proposals, curator applications, votes)
+and `/account/messages`. A page's own `<style>` block keeps only what is truly its own
 (the data desk's side-by-side pair, the takedown photo size). A rider reading
 their own contribution and a curator deciding it are looking at one card; the
 desks that had grown their own row shapes (History's one-liners, Takedowns'
@@ -1105,7 +1118,7 @@ at a time, so the row is sized for that:
   is revealed by script, so a JS-less curator keeps the full-context cards.
 
 **The routes desk joined the shared card (2026-08-03).** It was the last desk on
-the older `.msg-rider` stacked layout. A curator moves between `/moderate`,
+the older `.msg-rider` stacked layout. A curator moves between `/moderate/submissions`,
 `/moderate/routes` and `/moderate/takedowns` in one sitting, so the card must
 not change shape under them — and one desk learning something the others do not
 is exactly how the routes desk ended up months behind.
@@ -1181,7 +1194,7 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
   no second endpoint and no second mechanism. Approving approves every photo
   except the unticked ones; rejecting rejects all of them with no per-photo
   escape; needs-info leaves them pending, because the rider is still being
-  asked. The `/moderate` list shows the same thumbs as review context, and
+  asked. The `/moderate/submissions` list shows the same thumbs as review context, and
   keeps routing the decision to the map.
 
 **Approving keeps the curator on the item** (2026-08-03, owner-reported). The
@@ -1444,8 +1457,8 @@ it.
 Both now render the change, as the same was → now shape the desk's `.q-diff`
 uses:
 
-- **`/profile` contributions list** — under every row that changed something.
-- **`/messages`** — inside the decision card, headed "What you changed", **folded
+- **`/account/contributions` contributions list**: under every row that changed something.
+- **`/account/messages`**: inside the decision card, headed "What you changed", **folded
   by default** behind a small "Show details" link (a native `<details>`, no
   script). The card says what happened; the diff is there for the rider who
   wants to check it, not pushed at everyone (owner 2026-08-25). The unread
@@ -1628,7 +1641,7 @@ than on nothing.
 | Surface | Rows/page | Constant |
 |---|---|---|
 | Messages | 20 | `MessageService::PER_PAGE` |
-| Contributions · route proposals (`/profile`) | 20 each | `ProfileController::PER_PAGE` |
+| Contributions · route proposals (`/account/contributions`) | 20 each | `ProfileController::PER_PAGE` |
 | Submission queue · decided history | 25 | `SubmissionQueue::PER_PAGE` |
 | Routes desk — proposals · corrections | 25 each | `RouteQueue::PER_PAGE` |
 | Takedown desk | 25 | `MediaTakedownService::PER_PAGE` |
@@ -2126,7 +2139,7 @@ path either"). `CatalogProvider::feature()` is that path; the drawer lit up
 with no client change. The key is **absent** for every item rules 1 and 2
 exclude, so those payloads stay byte-identical to what they served before.
 
-**The rider's half.** The ring is a passive colour; `/profile` carries the half
+**The rider's half.** The ring is a passive colour; `/account/contributions` carries the half
 a rider can act on - a short "worth a look near you" list, stale places inside
 their own base-location radius, soonest-forgotten first. It is absent entirely
 without a base location: there is no "near you" to answer, and a national list
@@ -2478,7 +2491,7 @@ rows that did not need it. `SubmissionQueue::history()` resolves it from
 when it would merely repeat the title.
 
 **The desk links to the person's record.** The evidence line answers *how many*
-submissions they have had approved; `?by=<user id>` on `/moderate/history`
+submissions they have had approved; `?by=<user id>` on `/moderate/submissions/history`
 answers *which ones*, which is the question a reviewer actually has in front of
 an application. Filtered on `submission.user_id` by id, never by display name -
 names stopped being unique on 2026-07-31. Trash rows are suppressed under this

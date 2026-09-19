@@ -742,7 +742,7 @@ is never re-derived in SQL or in JavaScript.
 
 **The grammar on the map, and the page that checks it.** `styles/pins.css` is
 the one definition of the pin; the map, `/map-key` and the curator page
-`/curator/markers` (`ROLE_CURATOR`, on the moderation bar as Markers) link it
+`/curator/markers` (`ROLE_CURATOR`, under More on the moderation bar) link it
 rather than copying its rules. The DOM pin reads `custody` for its border class
 (`dashed`, `disc`, or none for solid paper) and `rung` for its badge class (`q`)
 through `pinClasses()` in `web/assets/map/icons.js`; the coverage symbol layer
@@ -777,7 +777,7 @@ catalog, rather than holding a table of providers in a front-end constant.
 
 ## 8. The curator desk
 
-`/moderate/providers`, `ROLE_CURATOR`, on the moderation bar. One list, one form
+`/moderate/providers`, `ROLE_CURATOR`, under More on the moderation bar. One list, one form
 per provider, following the desks that already exist rather than inventing a
 shape (moderation-and-contribution.md §5).
 

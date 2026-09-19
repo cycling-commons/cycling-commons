@@ -52,9 +52,9 @@ final class LocalePreferenceTest extends WebTestCase
 
         $this->login($client, 'fr-rider@example.com', 'securepass12345!');
 
-        // The default target must land on the FR-prefixed profile, not /profile
+        // The default target must land on the FR-prefixed profile, not /account/contributions
         // (English), which would clobber the saved preference (#32).
-        self::assertResponseRedirects('/fr/profile');
+        self::assertResponseRedirects('/fr/account/contributions');
     }
 
     public function testEnglishUserLandsOnUnprefixedProfile(): void
@@ -64,7 +64,7 @@ final class LocalePreferenceTest extends WebTestCase
 
         $this->login($client, 'en-rider@example.com', 'securepass12345!');
 
-        self::assertResponseRedirects('/profile');
+        self::assertResponseRedirects('/account/contributions');
     }
 
     public function testSwitcherDoesNotPersistToAccount(): void

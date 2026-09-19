@@ -122,10 +122,10 @@ final class TwoFactorBruteForceTest extends WebTestCase
         self::assertResponseRedirects('/2fa', null, 'a locked account must not complete 2FA with a valid code');
 
         // Nothing behind the gate opened either.
-        $client->request('GET', '/profile');
+        $client->request('GET', '/account/contributions');
         self::assertResponseRedirects();
         self::assertStringNotContainsString(
-            '/profile',
+            '/account/contributions',
             (string) $client->getResponse()->headers->get('Location'),
         );
     }

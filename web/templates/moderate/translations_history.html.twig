@@ -5,7 +5,7 @@
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 {% endblock %}
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null, mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations', mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
 {% macro who(w) %}{%- if w.anonymous -%}
     {{ 'moderate.translation.anonymous'|trans }}
