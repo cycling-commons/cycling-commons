@@ -1,0 +1,19 @@
+web/templates/account/_dashboard_tile.html.twig
+  s_e0bebdd9c445ca::t_7655e5b8756754 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "de91a42669795269e6197fe1f103a63ee7f5b18f",
+  "prompts": {},
+  "sessions": {
+    "s_e0bebdd9c445ca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa62971e-74d9-467c-a29e-fc341985db53",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
