@@ -58,7 +58,7 @@ final class ModerateRoomController extends AbstractController
         $curatorId = (int) $curator->getId();
         $view = $this->view($request);
 
-        $board = $this->room->board($curatorId, $view);
+        $board = $this->room->board($curatorId, $view, $this->isGranted('ROLE_ADMIN'));
 
         // Stamped before the response renders, so the tab this page owns does
         // not badge the page you are looking at.
@@ -189,7 +189,7 @@ final class ModerateRoomController extends AbstractController
         /** @var User $curator */
         $curator = $this->getUser();
         $curatorId = (int) $curator->getId();
-        $post = $this->room->own($id, $curatorId);
+        $post = $this->room->own($id, $curatorId, $this->isGranted('ROLE_ADMIN'));
         if (!$post instanceof CuratorPost) {
             throw $this->createNotFoundException();
         }
@@ -242,6 +242,7 @@ final class ModerateRoomController extends AbstractController
                 $this->renderUploads($request),
                 $this->imageIds($request),
                 $drop,
+                $this->isGranted('ROLE_ADMIN'),
             );
             $this->addFlash('success', 'room.flash.edited');
         } catch (\InvalidArgumentException|ScreenshotRejected $e) {
@@ -330,7 +331,7 @@ final class ModerateRoomController extends AbstractController
         $curator = $this->getUser();
         $view = $this->view($request);
 
-        if (!$this->room->deleteOwn((int) $request->request->getString('id'), (int) $curator->getId())) {
+        if (!$this->room->deleteOwn((int) $request->request->getString('id'), (int) $curator->getId(), $this->isGranted('ROLE_ADMIN'))) {
             $this->addFlash('danger', 'room.error.not_yours');
         }
 

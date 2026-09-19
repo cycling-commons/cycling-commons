@@ -9,6 +9,9 @@
     <span class="rm-dates">{{ 'room.posted_on'|trans({'%date%': post.created_at|cc_datetime}) }}</span>
     {# Edited shows only when something changed after posting. #}
     {% if post.edited_at %}<span class="rm-dates">{{ 'room.edited_on'|trans({'%date%': post.edited_at|cc_datetime}) }}</span>{% endif %}
+    {# The author, or an administrator, changes the post from its edit page:
+       pin, words, pictures, and deleting it, all live there. #}
+    {% if post.mine %}<a class="rm-edit-ic" href="{{ path('moderate_room_edit', view == 'all' ? {id: post.id} : {id: post.id, c: view}) }}" title="{{ 'room.edit'|trans }}" aria-label="{{ 'room.edit'|trans }}"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16v4z"/><path fill="none" stroke="currentColor" stroke-width="2" d="M13.5 6.5l4 4"/></svg></a>{% endif %}
     {% if post.category %}<span class="rm-tag">{{ ('room.cat.' ~ post.category)|trans }}</span>{% endif %}
     {% if post.direct %}
       <span class="rm-tag rm-tag-direct">
@@ -46,31 +49,4 @@
     </a></p>
   {% endif %}
 
-  <div class="rm-acts">
-    {% if not post.direct %}
-      <form method="post" action="{{ path('moderate_room_pin') }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-pin') }}">
-        <input type="hidden" name="id" value="{{ post.id }}">
-        <input type="hidden" name="c" value="{{ view }}">
-        <select id="rm-pin-{{ post.id }}" name="pin" aria-label="{{ 'room.pin_label'|trans }}">
-          <option value="none" {{ post.pin == 'none' ? 'selected' : '' }}>{{ 'room.pin.none'|trans }}</option>
-          {% if post.category %}<option value="category" {{ post.pin == 'category' ? 'selected' : '' }}>{{ 'room.pin.category'|trans }}</option>{% endif %}
-          <option value="room" {{ post.pin == 'room' ? 'selected' : '' }}>{{ 'room.pin.room'|trans }}</option>
-        </select>
-        <button class="rm-mini" type="submit">{{ 'room.pin_apply'|trans }}</button>
-      </form>
-    {% endif %}
-    {% if post.mine %}
-      <a class="rm-edit" href="{{ path('moderate_room_edit', view == 'all' ? {id: post.id} : {id: post.id, c: view}) }}">{{ 'room.edit'|trans }}</a>
-      {# Apart from the pin control and named for what it removes: the whole
-         post, not the pin (owner 2026-09-19, after deleting one by mistake).
-         room.js asks before it goes; without the script the button still works. #}
-      <form method="post" action="{{ path('moderate_room_delete') }}" class="rm-del" data-confirm="{{ 'room.delete_confirm'|trans }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-delete') }}">
-        <input type="hidden" name="id" value="{{ post.id }}">
-        <input type="hidden" name="c" value="{{ view }}">
-        <button class="rm-mini rm-mini-danger" type="submit">{{ 'room.delete'|trans }}</button>
-      </form>
-    {% endif %}
-  </div>
 </article>

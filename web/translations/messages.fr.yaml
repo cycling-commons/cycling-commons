@@ -4798,6 +4798,7 @@ room:
   empty_heading: 'Rien pour le moment'
   empty_body: 'Écrivez le premier message. Une question encore sans réponse mérite d''être posée : le prochain curateur la lira.'
   former_curator: 'Ancien curateur'
+  new_post: 'Nouveau message'
   edit: 'Modifier'
   edit_heading: 'Modifier un message'
   posted_on: 'Publié le %date%'

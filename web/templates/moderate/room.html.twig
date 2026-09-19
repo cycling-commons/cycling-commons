@@ -39,8 +39,6 @@
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
   <p class="sec-lead">{{ 'room.lead'|trans }}</p>
-  {# Writing happens on its own page; the board only lists (owner 2026-09-19). #}
-  <p><a class="btn-act" href="{{ path('moderate_room_new', view == 'all' ? {} : {c: view}) }}">{{ 'room.compose.heading'|trans }}</a></p>
 
   <nav class="rm-chips" aria-label="{{ 'room.filter_label'|trans }}">
     <a class="rm-chip {{ view == 'all' ? 'on' : '' }}" href="{{ path('moderate_room') }}">{{ 'room.view.all'|trans }}</a>
@@ -49,6 +47,8 @@
     {% endfor %}
     <a class="rm-chip {{ view == 'root' ? 'on' : '' }}" href="{{ path('moderate_room', {c: 'root'}) }}">{{ 'room.view.root'|trans }}</a>
     <a class="rm-chip {{ view == 'direct' ? 'on' : '' }}" href="{{ path('moderate_room', {c: 'direct'}) }}">{{ 'room.view.direct'|trans }}</a>
+    {# Writing happens on its own page; the board only lists (owner 2026-09-19). #}
+    <a class="btn-act rm-new" href="{{ path('moderate_room_new', view == 'all' ? {} : {c: view}) }}">{{ 'room.new_post'|trans }}</a>
   </nav>
 
   {% if pinned is not empty %}

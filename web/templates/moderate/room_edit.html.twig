@@ -22,5 +22,14 @@
   <p class="rm-dates">{{ 'room.posted_on'|trans({'%date%': post.createdAt|cc_datetime}) }}{% if post.editedAt %} · {{ 'room.edited_on'|trans({'%date%': post.editedAt|cc_datetime}) }}{% endif %}</p>
 
   {% include 'moderate/_room_form.html.twig' with {mode: 'edit'} %}
+
+  {# Deleting lives here, on the edit page only: the board itself carries no
+     destructive control (owner 2026-09-19). room.js asks first. #}
+  <form method="post" action="{{ path('moderate_room_delete') }}" class="rm-del rm-del-page" data-confirm="{{ 'room.delete_confirm'|trans }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-delete') }}">
+    <input type="hidden" name="id" value="{{ post.id }}">
+    <input type="hidden" name="c" value="{{ view }}">
+    <button class="rm-mini rm-mini-danger" type="submit">{{ 'room.delete'|trans }}</button>
+  </form>
 </div>
 {% endblock %}

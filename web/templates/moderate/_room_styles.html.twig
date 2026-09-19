@@ -1,7 +1,11 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {# The room's styles, shared by the board and the edit page. #}
 <style>
-  .rm-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1.4rem}
+  .rm-chips{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin:0 0 1.4rem}
+  .rm-chips .rm-new{margin-left:auto}
+  .rm-edit-ic{display:inline-flex;align-items:center;color:var(--clay);padding:0 .15rem;line-height:1}
+  .rm-edit-ic:hover{color:var(--ink)}
+  .rm-del-page{margin-top:1.4rem}
   .rm-chip{font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink);
     border:1px solid rgba(58,61,51,.25);border-radius:30px;padding:.32rem .7rem;text-decoration:none;background:transparent}
   .rm-chip:hover{border-color:var(--clay);color:var(--clay)}

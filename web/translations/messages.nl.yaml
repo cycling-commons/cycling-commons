@@ -4805,6 +4805,7 @@ room:
   empty_heading: 'Nog niets'
   empty_body: 'Schrijf het eerste bericht. Een vraag zonder antwoord is het stellen nog steeds waard: de volgende curator leest hem.'
   former_curator: 'Voormalige curator'
+  new_post: 'Nieuw bericht'
   edit: 'Bewerken'
   edit_heading: 'Een bericht bewerken'
   posted_on: 'Geplaatst %date%'

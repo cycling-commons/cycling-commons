@@ -4827,6 +4827,7 @@ room:
   empty_heading: 'Nothing here yet'
   empty_body: 'Write the first post. A question with no answer yet is still worth asking: the next curator will read it.'
   former_curator: 'Former curator'
+  new_post: 'New post'
   edit: 'Edit'
   edit_heading: 'Edit a post'
   posted_on: 'Posted %date%'

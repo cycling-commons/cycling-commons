@@ -4806,6 +4806,7 @@ room:
   empty_heading: 'Noch nichts hier'
   empty_body: 'Schreibe den ersten Beitrag. Eine Frage ohne Antwort lohnt sich trotzdem: der nächste Kurator liest sie.'
   former_curator: 'Ehemaliger Kurator'
+  new_post: 'Neuer Beitrag'
   edit: 'Bearbeiten'
   edit_heading: 'Einen Beitrag bearbeiten'
   posted_on: 'Veröffentlicht %date%'

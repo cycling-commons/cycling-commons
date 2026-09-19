@@ -81,6 +81,9 @@ final class CuratorRoom
     /** An uploaded picture nobody posted: gone after this. */
     private const string UNCLAIMED_TTL = '-1 day';
 
+    /** Set by board(): an administrator may edit and delete every post. */
+    private bool $readerIsAdmin = false;
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
@@ -94,8 +97,9 @@ final class CuratorRoom
      *
      * @return array{pinned: list<RoomCard>, posts: list<RoomCard>}
      */
-    public function board(int $readerId, string $view): array
+    public function board(int $readerId, string $view, bool $admin = false): array
     {
+        $this->readerIsAdmin = $admin;
         $category = CuratorRoomCategory::tryFromView($view);
         $direct = CuratorRoomCategory::VIEW_DIRECT === $view;
         $root = CuratorRoomCategory::VIEW_ROOT === $view;
@@ -164,8 +168,9 @@ final class CuratorRoom
         array $images = [],
         array $imageIds = [],
         array $dropImageIds = [],
+        bool $admin = false,
     ): CuratorPost {
-        $post = $this->own($postId, $authorId);
+        $post = $this->own($postId, $authorId, $admin);
         if (!$post instanceof CuratorPost) {
             throw new \InvalidArgumentException('room.error.not_yours');
         }
@@ -185,13 +190,17 @@ final class CuratorRoom
     }
 
     /**
-     * The author's own post, for the edit page. Null when it is not theirs.
+     * A post this person may change: their own, or any post when they are an
+     * administrator. Null otherwise, or when it is gone.
      */
-    public function own(int $postId, int $authorId): ?CuratorPost
+    public function own(int $postId, int $readerId, bool $admin = false): ?CuratorPost
     {
         $post = $this->em->getRepository(CuratorPost::class)->find($postId);
+        if (!$post instanceof CuratorPost) {
+            return null;
+        }
 
-        return $post instanceof CuratorPost && $post->getAuthorId() === $authorId ? $post : null;
+        return $admin || $post->getAuthorId() === $readerId ? $post : null;
     }
 
     /**
@@ -360,15 +369,16 @@ final class CuratorRoom
     }
 
     /**
-     * Delete your own post. Returns false when it is not yours, or is gone.
+     * Delete a post: your own, or any as an administrator. Returns false when
+     * it is not yours to delete, or is gone.
      *
      * A hard delete with no tombstone: a staffroom note is not a moderation
      * record, and §8's keep-the-record principle covers decisions.
      */
-    public function deleteOwn(int $postId, int $authorId): bool
+    public function deleteOwn(int $postId, int $authorId, bool $admin = false): bool
     {
-        $post = $this->em->getRepository(CuratorPost::class)->find($postId);
-        if (!$post instanceof CuratorPost || $post->getAuthorId() !== $authorId) {
+        $post = $this->own($postId, $authorId, $admin);
+        if (!$post instanceof CuratorPost) {
             return false;
         }
 
@@ -551,7 +561,8 @@ final class CuratorRoom
             'images' => [],
             'created_at' => new \DateTimeImmutable((string) $row['created_at']),
             'edited_at' => null !== $row['edited_at'] ? new \DateTimeImmutable((string) $row['edited_at']) : null,
-            'mine' => null !== $authorId && $authorId === $readerId,
+            // "mine" is "may change it": the author, or an administrator.
+            'mine' => $this->readerIsAdmin || (null !== $authorId && $authorId === $readerId),
             'direct' => null !== $recipientId,
         ];
     }

@@ -129,17 +129,22 @@ final class CuratorRoomTest extends WebTestCase
         self::assertSelectorTextContains('.flash-success', 'Posted');
         self::assertStringContainsString('The gate at the top of the col is locked.', $crawler->filter('.rm-post')->text());
 
-        // Pin it to the room, then find it above a different category's view.
-        $pin = $crawler->filter('.rm-post form[action$="/moderate/room/pin"]')->form();
-        $pin['pin'] = 'room';
-        $client->submit($pin);
+        // Pin it, from the edit page, then find it above a different category's view.
+        $crawler = $client->click($crawler->filter('.rm-post a.rm-edit-ic')->link());
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['pin'] = 'room';
+        $client->submit($form);
         $client->followRedirect();
 
         $rules = $client->request('GET', '/moderate/room?c=rules');
         self::assertStringContainsString('The gate at the top of the col is locked.', $rules->filter('.rm-post.rm-pinned')->text());
+        // The board carries no pin control and no delete: those live on the edit page.
+        self::assertSame(0, $rules->filter('.rm-post select')->count());
+        self::assertSame(0, $rules->filter('.rm-post form[action$="/moderate/room/delete"]')->count());
 
-        // And delete it again, because it is this curator's own post.
-        $delete = $rules->filter('.rm-post form[action$="/moderate/room/delete"]')->form();
+        // And delete it again, from its edit page, because it is this curator's own post.
+        $crawler = $client->click($rules->filter('.rm-post a.rm-edit-ic')->link());
+        $delete = $crawler->filter('form.rm-del')->form();
         $client->submit($delete);
         $client->followRedirect();
 
@@ -258,7 +263,7 @@ final class CuratorRoomTest extends WebTestCase
         self::assertContains('The drawer eats clicks.', array_column($all['posts'], 'body'));
     }
 
-    public function testOnlyTheAuthorDeletes(): void
+    public function testOnlyTheAuthorOrAnAdminDeletes(): void
     {
         static::createClient();
         $author = $this->makeUser('del-author', ['ROLE_CURATOR']);
@@ -268,6 +273,28 @@ final class CuratorRoomTest extends WebTestCase
 
         self::assertFalse($this->room()->deleteOwn((int) $post->getId(), (int) $other->getId()));
         self::assertTrue($this->room()->deleteOwn((int) $post->getId(), (int) $author->getId()));
+
+        // An administrator may take down any post, and reaches its edit page.
+        $post = $this->room()->post((int) $author->getId(), null, null, 'Admin may remove.');
+        self::assertTrue($this->room()->deleteOwn((int) $post->getId(), (int) $other->getId(), admin: true));
+    }
+
+    public function testAnAdminEditsAnotherCuratorsPost(): void
+    {
+        $client = static::createClient();
+        $author = $this->makeUser('adm-author', ['ROLE_CURATOR']);
+        $post = $this->room()->post((int) $author->getId(), null, null, 'Written by a curator.');
+
+        $this->loginAs($client, 'adm', ['ROLE_ADMIN']);
+        $crawler = $client->request('GET', '/moderate/room');
+        self::assertSame(1, $crawler->filter('.rm-post a.rm-edit-ic')->count(), 'the admin sees the pencil on a post that is not theirs');
+        $crawler = $client->request('GET', '/moderate/room/'.$post->getId().'/edit');
+        self::assertResponseIsSuccessful();
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['body'] = 'Reworded by an administrator.';
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+        self::assertStringContainsString('Reworded by an administrator.', $crawler->filter('.rm-post')->text());
     }
 
     public function testTheBadgeCountsWhatArrivedSinceTheLastVisit(): void
@@ -542,7 +569,7 @@ final class CuratorRoomTest extends WebTestCase
         self::assertStringNotContainsString('Edited', $meta);
 
         // The edit page, prefilled.
-        $edit = $crawler->filter('.rm-post a.rm-edit');
+        $edit = $crawler->filter('.rm-post a.rm-edit-ic');
         $crawler = $client->click($edit->link());
         self::assertResponseIsSuccessful();
         $form = $crawler->filter('form.rm-compose')->form();
@@ -575,7 +602,7 @@ final class CuratorRoomTest extends WebTestCase
         self::assertSame(0, $crawler->filter('.rm-post')->count());
     }
 
-    public function testOnlyTheAuthorReachesTheEditPage(): void
+    public function testOnlyTheAuthorOrAnAdminReachesTheEditPage(): void
     {
         $client = static::createClient();
         $author = $this->loginAs($client, 'edit-own', ['ROLE_CURATOR']);

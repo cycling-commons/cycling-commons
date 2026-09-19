@@ -3148,9 +3148,10 @@ in All, and when pinned to the room it appears at the top of every category.
 - `room`: pinned to the top of every view, category views included.
 
 A post can be pinned as it is written (the composer's Pin field) or later.
-Any curator may pin, unpin, or move a pin. There is no separate pinning right,
-because curator and moderator are the same role today (§9.4), and a group
-trusted to destroy a contribution is trusted to pin a note about it. A direct
+Pinning is the author's, or an administrator's, from the post's edit page;
+the board itself carries no pin control (owner 2026-09-19). A group trusted
+to destroy a contribution is trusted to pin a note about it, but the person
+who wrote the note decides how far it reaches. A direct
 message cannot be pinned: the form refuses it, and the server refuses it again.
 
 ### 13.6 Visibility
@@ -3193,9 +3194,9 @@ other desks.
 | GET | `/moderate/room` | `moderate_room` | the board. `?c=<category>` filters, `?c=direct` shows the reader's direct messages. An unknown `c` falls back to All rather than 404ing. |
 | POST | `/moderate/room/post` | `moderate_room_post` | write a post: body, category, optional recipient, optional submission id. CSRF-protected. |
 | POST | `/moderate/room/pin` | `moderate_room_pin` | set a post's `pin`. CSRF-protected. |
-| GET | `/moderate/room/{id}/edit` | `moderate_room_edit` | the composer again, prefilled, for **your own** post; 404 for anyone else's. |
+| GET | `/moderate/room/{id}/edit` | `moderate_room_edit` | the composer again, prefilled, for **your own** post, or any post as `ROLE_ADMIN`; 404 for anyone else's. |
 | POST | `/moderate/room/{id}/edit` | `moderate_room_edit_save` | save every field: body, category, recipient, submission, pin, pictures added or removed (`drop[]`). Stamps `edited_at` only when something differs. CSRF-protected. |
-| POST | `/moderate/room/delete` | `moderate_room_delete` | delete **your own** post. A hard delete with no tombstone: this is a staffroom note, not a moderation record, and §8's record-keeping principle covers decisions, not conversation. |
+| POST | `/moderate/room/delete` | `moderate_room_delete` | delete **your own** post, or any as `ROLE_ADMIN`; the form lives on the edit page. A hard delete with no tombstone: this is a staffroom note, not a moderation record, and §8's record-keeping principle covers decisions, not conversation. |
 | GET | `/moderate/room/image/{id}` | `moderate_room_image` | one picture, from the database, `private, no-store`, inline. §13.6 applies: a picture on a direct post answers 404 to anyone but its two people; an unposted picture answers only its uploader. |
 | POST | `/moderate/room/upload` | `moderate_room_upload` | one picture from the composer's uploader, JSON `{id, width, height, bytes, url}` (201) or `{error}` (422). CSRF-protected (`moderate-room-upload`). |
 | POST | `/moderate/room/upload/{id}/remove` | `moderate_room_upload_remove` | take back a picture uploaded and not yet posted. |
@@ -3229,8 +3230,8 @@ top (owner 2026-09-19):
   back. At most four. The ids travel in a hidden `images`. Without the script
   the plain file input posts with the form.
 
-The board only lists (owner 2026-09-19): a "Write to the room" button
-opens the composer on its own page, `/moderate/room/new`
+The board only lists (owner 2026-09-19): a **New post** button at the right
+of the filter chips opens the composer on its own page, `/moderate/room/new`
 (`moderate_room_new`, `room_new.html.twig`); a refused post returns there
 with its words. The composer is one partial, `_room_form.html.twig`, used by
 that page for a new post and by `room_edit.html.twig` for an existing one;
@@ -3240,9 +3241,12 @@ one room and "to the room" named nothing; the card is
 `_room_styles.html.twig` (owner 2026-09-19: form, list and detail kept
 apart). Every field a post has is on the form, pin included, so nothing set
 at posting is out of reach afterwards. A card shows **Posted <date>** always
-and **Edited <date>** only once something changed; the author's own card
-carries an Edit link beside the delete, which sits apart from the pin
-control, says what it deletes, and asks first.
+and **Edited <date>** only once something changed, then a small pencil for
+whoever may change it: the author, or an administrator. **Every change
+happens on the edit page**: words, category, recipient, submission, pin,
+pictures, and deleting the post, which sits below the form, says what it
+deletes, and asks first. The board carries no control that changes or
+destroys anything.
 
 A post shows its pictures as thumbnails; a click opens a lightbox (one
 picture large, prev/next and arrow keys when the post has more, Esc or the
