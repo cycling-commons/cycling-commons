@@ -61,12 +61,11 @@
   .country .ch .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
   .country .ch .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
   .viewrow{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 1rem}
-  .viewrow .chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;background:transparent;color:#595c4d;cursor:pointer}
-  .viewrow .chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
   .viewrow .vhint{font-size:.85rem;color:#6d7060;margin-left:.4rem}
   {# The globe's own rules (.globe) are in atlas.css, shared with /coverage. #}
   #regions-map{margin:0 0 1.4rem}
-  .regtab{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;color:#595c4d;background:transparent;margin:0 0 .2rem}
+  {# A chip (atlas.css) that opens the country's region list. #}
+  .regtab{margin:0 0 .2rem}
   .regtab::after{content:'▾'}
   .regtab[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
   .regtab[aria-expanded=true]::after{content:'▴'}
@@ -196,7 +195,7 @@
           </svg>
         </a>
       </div>
-      <button type="button" class="regtab" data-country="{{ country.code }}" aria-expanded="false" aria-controls="regions-{{ country.code }}">{{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}</button>
+      <button type="button" class="chip regtab" data-country="{{ country.code }}" aria-expanded="false" aria-controls="regions-{{ country.code }}">{{ (country.regions|length == 1 ? 'regions.count_region' : 'regions.count_regions')|trans({'%n%': country.regions|length}) }}</button>
     </div>
       <div class="regions" id="regions-{{ country.code }}">
         <div class="rhead"><img src="{{ asset(country.flag) }}" alt="" width="20" height="15">{{ country.name }}</div>

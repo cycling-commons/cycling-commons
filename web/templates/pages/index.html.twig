@@ -197,7 +197,6 @@
      the way there is the chip row wrapping to two: at this width the eleven
      chips fit on one line if they give back a little padding. */
   @media(max-height:700px){
-    .chip{padding:.3rem .65rem;font-size:.74rem}
     .disc .chips{gap:.3rem}
   }
 
@@ -208,7 +207,9 @@
   .disc .wrap{display:flex;flex-direction:column;align-items:flex-start;gap:.55rem}
   .disc .label{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;color:var(--glacier);flex:none;white-space:nowrap}
   .disc .chips{display:flex;flex-wrap:wrap;gap:.4rem;min-width:0}
-  .chip{font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;padding:.4rem .85rem;border:1px solid rgba(239,230,212,.28);border-radius:40px;color:var(--paper);user-select:none;white-space:nowrap}
+  {# The hero's chips are atlas.css chips in the hero's colours: light on the
+     dark photograph, and only labels, so no pointer. #}
+  .disc .chip,.disc .chip:hover{border-color:rgba(239,230,212,.28);color:var(--paper);cursor:default}
   /* On a phone the label takes a line of its own and eleven chips wrap to
      three rows, which is the last ~17px that pushed the strip off a 844px
      screen. The strip pays for its own extra rows rather than the headline

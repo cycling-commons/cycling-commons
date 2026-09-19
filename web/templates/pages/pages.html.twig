@@ -6,10 +6,8 @@
   /* The toggle: two links that read as one control. */
   .dirbar{display:flex;justify-content:flex-end;margin-bottom:1.4rem}
   .dirnote{font-size:.85rem;color:#4a4d40;margin-top:1.2rem}
-  .dirtoggle{display:inline-flex;border:1px solid var(--ink);border-radius:30px;overflow:hidden;flex:none}
-  .dirtoggle a{font-family:var(--sans);font-size:.9rem;padding:.45rem 1.05rem;color:var(--ink);text-decoration:none;min-height:34px;display:inline-flex;align-items:center}
-  .dirtoggle a[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-  .dirtoggle a:focus-visible{outline:2px solid var(--trail);outline-offset:-3px}
+  /* The toggle: two chips (atlas.css), the current view in ink. */
+  .dirtoggle{margin:0}
   /* The map. Pans sideways on a narrow screen rather than shrinking to a smudge. */
   .pmap-wrap{overflow-x:auto;border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper)}
   .pmap{display:block;min-width:820px;width:100%;height:auto;font-family:var(--sans)}
@@ -137,9 +135,9 @@
 
 <section class="pad"><div class="wrap" id="dir">
   <div class="dirbar">
-    <nav class="dirtoggle" aria-label="{{ 'pages.view_aria'|trans }}">
-      <a href="{{ path('pages', {view: 'map'}) }}" data-view="map" aria-pressed="{{ view == 'map' ? 'true' : 'false' }}">{% trans %}pages.view_map{% endtrans %}</a>
-      <a href="{{ path('pages', {view: 'list'}) }}" data-view="list" aria-pressed="{{ view == 'list' ? 'true' : 'false' }}">{% trans %}pages.view_list{% endtrans %}</a>
+    <nav class="lfilter dirtoggle" aria-label="{{ 'pages.view_aria'|trans }}">
+      <a class="lchip" href="{{ path('pages', {view: 'map'}) }}" data-view="map" aria-pressed="{{ view == 'map' ? 'true' : 'false' }}">{% trans %}pages.view_map{% endtrans %}</a>
+      <a class="lchip" href="{{ path('pages', {view: 'list'}) }}" data-view="list" aria-pressed="{{ view == 'list' ? 'true' : 'false' }}">{% trans %}pages.view_list{% endtrans %}</a>
     </nav>
   </div>
 

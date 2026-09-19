@@ -42,12 +42,8 @@
   a.tag.tag-rel:hover{text-decoration:underline}
   .tag.st-in_progress,.tag.st-needs_testing{background:var(--ochre);color:var(--ink)}
   .when{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060}
-  .tabs{display:flex;gap:.4rem;margin:0 0 1.4rem;flex-wrap:wrap}
-  .tabs a{display:inline-flex;align-items:baseline;gap:.45rem;padding:.45rem .85rem;border-radius:999px;
-    border:1px solid rgba(20,22,14,.2);color:#4a4d40;text-decoration:none;font-size:.9rem;background:var(--paper)}
-  .tabs a:hover{border-color:var(--clay);color:var(--ink)}
-  .tabs a[aria-current="page"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-  .tabs .n{font-family:var(--mono);font-size:.76rem;opacity:.75}
+  {# The two tabs are atlas.css chips, the count inside each. #}
+  .tabs{margin:0 0 1.4rem}
   .tabnote{font-size:.9rem;color:#6d7060;margin:0 0 1.1rem;line-height:1.6}
   .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
     border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40;line-height:1.6}
@@ -68,11 +64,11 @@
      shared cache cannot see in the URL serves one visitor's choice to the next
      (docs/specs/page-caching.md §3.2). Each tab carries its own count, because
      a tab that cannot say what is behind it is a tab nobody opens. #}
-  <nav class="tabs" aria-label="{{ 'support.known.tabs_label'|trans|e('html_attr') }}">
-    <a href="{{ path('known_issues') }}"{{ fixed ? '' : ' aria-current="page"' }}>
+  <nav class="lfilter tabs" aria-label="{{ 'support.known.tabs_label'|trans|e('html_attr') }}">
+    <a class="lchip" href="{{ path('known_issues') }}"{{ fixed ? '' : ' aria-current="page"' }}>
       {{ 'support.known.tab_open'|trans }} <span class="n">{{ open_count }}</span>
     </a>
-    <a href="{{ path('known_issues', {show: 'fixed'}) }}"{{ fixed ? ' aria-current="page"' : '' }}>
+    <a class="lchip" href="{{ path('known_issues', {show: 'fixed'}) }}"{{ fixed ? ' aria-current="page"' : '' }}>
       {{ 'support.known.tab_fixed'|trans }} <span class="n">{{ fixed_count }}</span>
     </a>
   </nav>

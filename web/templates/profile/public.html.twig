@@ -12,7 +12,6 @@
   .rp-since{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin:.4rem 0 2rem}
   .rp-sec{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--trail);margin:2.2rem 0 .8rem}
   .rp-chips{display:flex;flex-wrap:wrap;gap:.5rem}
-  .rp-chip{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.35rem .75rem;border:1px solid rgba(20,22,14,.25);border-radius:30px}
   .rp-routes li{margin:.35rem 0}
   .rp-empty{font-size:.9rem;color:#595c4d}
   .rp-report{margin:2rem 0 0;padding-top:1rem;border-top:1px solid rgba(20,22,14,.12);font-size:.82rem}
@@ -37,8 +36,8 @@
   {% if rider.bikeTypes is not empty or rider.ridingStyles is not empty %}
     <h2 class="rp-sec">{{ 'profile.public_preferences'|trans }}</h2>
     <div class="rp-chips">
-      {% for bt in rider.bikeTypes %}<span class="rp-chip">{{ ('map.bike_' ~ (bt.value|lower|replace({'-': ''})))|trans }}</span>{% endfor %}
-      {% for rs in rider.ridingStyles %}<span class="rp-chip">{{ ('form.riding_' ~ rs.value|lower)|trans }}</span>{% endfor %}
+      {% for bt in rider.bikeTypes %}<span class="chip chip--static">{{ ('map.bike_' ~ (bt.value|lower|replace({'-': ''})))|trans }}</span>{% endfor %}
+      {% for rs in rider.ridingStyles %}<span class="chip chip--static">{{ ('form.riding_' ~ rs.value|lower)|trans }}</span>{% endfor %}
     </div>
   {% endif %}
 

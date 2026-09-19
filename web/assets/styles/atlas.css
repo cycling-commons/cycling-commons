@@ -217,8 +217,30 @@ input[type="checkbox"]:disabled,input[type="radio"]:disabled{cursor:not-allowed;
 .btn{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--sans);font-weight:700;font-size:.95rem;padding:.8rem 1.4rem;border-radius:5px;border:1.5px solid transparent;cursor:pointer;transition:all .2s}
 .btn-p{background:var(--trail);color:var(--ink)}.btn-p:hover{background:#ff703d}
 .btn-g{border-color:rgba(20,22,14,.3);color:var(--ink)}.btn-g:hover{background:var(--ink);color:var(--paper)}
-.chip{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none}
-.chip:hover{border-color:var(--ink)}.chip.on{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+/* THE chip: one size and one look on every page, public and account or
+   moderation alike (owner 2026-09-19). `.chip` and `.lchip` are the same
+   thing under two names; `.chip-check` is a checkbox wearing it. Selected is
+   ink, whether the page marks it with .on, aria-pressed, aria-current or a
+   checked box. A page may lay chips out, never restyle one. The map keeps its
+   own colours for its dark theme (map.css) at this same size. */
+.chip,.lchip,.chip-check span{display:inline-flex;align-items:center;gap:.3rem;min-height:30px;padding:.3rem .7rem;
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;line-height:1.2;
+  border:1px solid rgba(20,22,14,.3);border-radius:30px;background:transparent;color:#595c4d;
+  text-decoration:none;cursor:pointer;user-select:none;white-space:nowrap;transition:border-color .15s,color .15s,background .15s}
+.chip:hover,.lchip:hover,.chip-check:hover span{border-color:var(--clay);color:var(--clay)}
+.chip.on,.lchip.on,.chip[aria-pressed="true"],.lchip[aria-pressed="true"],.chip[aria-current="page"],.lchip[aria-current="page"],
+.chip-check:has(input:checked) span{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chip:focus-visible,.lchip:focus-visible,.chip-check input:focus-visible + span{outline:2px solid var(--trail);outline-offset:2px}
+/* A count inside a chip: the number in the sans, bold. */
+.chip b,.lchip b,.chip .n,.lchip .n{font-family:var(--sans);font-size:.74rem;font-weight:700;letter-spacing:0;color:var(--ink)}
+.chip.on b,.lchip.on b,.chip.on .n,.lchip.on .n,.lchip[aria-current="page"] b{color:var(--paper)}
+/* A label that only names something (a rider's bike types): the chip's
+   shape, none of its behaviour. */
+.chip--static,.chip--static:hover{cursor:default;border-color:rgba(20,22,14,.3);color:#595c4d}
+.chip-check{display:inline-flex}
+.chip-check input{position:absolute;opacity:0;width:1px;height:1px}
+.lfilter,.chip-list{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+.lfilter{margin:0 0 1rem}
 
 /* cards + bars */
 .grid{display:grid;gap:1rem}

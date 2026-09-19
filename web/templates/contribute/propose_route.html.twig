@@ -23,14 +23,6 @@
   .gpx-drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:1.6rem;text-align:center}
   .gpx-drop input[type=file]{display:block;margin:0 auto;font-family:var(--sans);font-size:.9rem}
 
-  /* bike-type checkbox chips: reuse the global .chip look, driven by :has() on the checked input */
-  .chip-list{display:flex;flex-wrap:wrap;gap:.5rem}
-  .chip-check{display:inline-flex}
-  .chip-check input{position:absolute;opacity:0;width:1px;height:1px}
-  .chip-check span{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none;display:inline-block}
-  .chip-check:hover span{border-color:var(--ink)}
-  .chip-check:has(input:checked) span{background:var(--trail);border-color:var(--trail);color:var(--ink)}
-  .chip-check input:focus-visible + span{outline:2px solid var(--trail);outline-offset:2px}
 
   .flash{border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
   .flash-error{background:rgba(179,38,30,.1);border:1px solid rgba(179,38,30,.45);color:var(--danger-ink)}

@@ -904,6 +904,21 @@ made (§5.1): `.q-prior-reject` on the card and `.cc-mod-prior` directly under
 the pending badge. It stays visible in list density, unlike body/diff/photos
 — it changes what the decision *is*, not the context it is made in.
 
+**One chip on every page (owner 2026-09-19).** A chip (a filter, a view
+toggle, a tab row of choices, a checkbox choice) has one size and one look on
+public, account and moderation pages alike, defined once in
+`assets/styles/atlas.css`: `.chip` and `.lchip` are the same rule,
+`.chip-check` is a checkbox wearing it, `.lfilter` and `.chip-list` lay a row
+out. 30px tall, mono .7rem uppercase, a 1px outline; selected is ink, whether
+the page marks it with `.on`, `aria-pressed`, `aria-current` or a checked box;
+a count inside is `<b>` or `.n`. `.chip--static` is a label with the shape
+and none of the behaviour (a public profile's bike types). A page may lay
+chips out but never restyle one; the landing hero only recolours its labels
+for the dark photograph. The map keeps its own colours in `map.css`
+(selected stays trail orange, since ink disappears on its dark chrome) at the
+same size. Example: Globe/List on `/regions`, Still open/Fixed on
+`/known-issues` and the kind chips on `/moderate/data` are the same 30px chip.
+
 **One list system for every shell page (owner 2026-08-25).** The record card
 below, the page head (eyebrow · title · count or lead), the container
 (`.dbody`, 1120px, `id="main"`), the filter bar (`.mod-bar` holding

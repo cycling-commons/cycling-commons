@@ -85,15 +85,8 @@
     min-height:32px}
   .base-clear-row input{margin:0;width:18px;height:18px;flex:0 0 18px;accent-color:var(--trail)}
 
-  /* bike-type/riding-style checkbox chips: same pattern as propose_route.html.twig */
-  .chip-list{display:flex;flex-wrap:wrap;gap:.5rem}
-  .chip-check{display:inline-flex;margin:0}
-  .chip-check input{position:absolute;opacity:0;width:1px;height:1px}
-  .chip-check span{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:30px;cursor:pointer;transition:all .18s;user-select:none;display:inline-block}
-  .chip-check:hover span{border-color:var(--ink)}
-  .chip-check:has(input:checked) span{background:var(--trail);border-color:var(--trail);color:var(--ink)}
-  .chip-check input:focus-visible + span{outline:2px solid var(--trail);outline-offset:2px}
-  /* .field label has higher specificity than .chip-check alone; force the override explicitly */
+  /* Bike-type and riding-style checkbox chips: the atlas.css chip.
+     `.field label` outranks `.chip-check` alone, so the layout is forced here. */
   .field label.chip-check{display:inline-flex;margin:0}
   {# Field-error styling lives in atlas.css (see .field-errors there). #}
   input.is-invalid{border-bottom-color:var(--clay)}
