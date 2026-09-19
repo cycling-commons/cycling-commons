@@ -111,6 +111,7 @@
   });
   q.addEventListener('blur', function () { setTimeout(close, 120); });
   pick.addEventListener('click', function (e) { if (e.target.closest('button')) clear(); });
+  /* Edit mode: the page arrives with a pick already showing; nothing to do. */
 
   /* A number typed by hand still works: it is read as the id on the server. */
   q.setAttribute('role', 'combobox');

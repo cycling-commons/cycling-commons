@@ -142,9 +142,35 @@ class CuratorPost
         return $this->body;
     }
 
-    public function rewrite(string $body): void
+    /**
+     * Every field the composer set, set again. Stamps `edited_at` only when
+     * something actually differs, so a save that changes nothing is not an
+     * edit the card has to announce.
+     */
+    public function update(?CuratorRoomCategory $category, ?int $recipientId, string $body, ?int $aboutSubmissionId, CuratorRoomPin $pin): void
     {
+        $changed = $category !== $this->category || $recipientId !== $this->recipientId
+            || $body !== $this->body || $aboutSubmissionId !== $this->aboutSubmissionId || $pin !== $this->pin;
+        $this->category = $category;
+        $this->recipientId = $recipientId;
         $this->body = $body;
+        $this->aboutSubmissionId = $aboutSubmissionId;
+        $this->pin = $pin;
+        if ($changed) {
+            $this->editedAt = new \DateTimeImmutable();
+        }
+    }
+
+    /** A picture taken off the post: the row goes (orphanRemoval), the rest close ranks. */
+    public function removeImage(CuratorPostImage $image): void
+    {
+        if (!$this->images->removeElement($image)) {
+            return;
+        }
+        $i = 0;
+        foreach ($this->images as $rest) {
+            $rest->attachTo($this, $i++);
+        }
         $this->editedAt = new \DateTimeImmutable();
     }
 

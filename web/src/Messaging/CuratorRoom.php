@@ -129,9 +129,76 @@ final class CuratorRoom
         ?int $aboutSubmissionId = null,
         array $images = [],
         array $imageIds = [],
+        CuratorRoomPin $pin = CuratorRoomPin::None,
     ): CuratorPost {
         $body = $this->normalizeBody($body);
+        $this->checkAddressing($recipientId, $aboutSubmissionId, $pin);
 
+        $post = new CuratorPost($authorId, $category, $recipientId, $body, $aboutSubmissionId);
+        $post->setPin($pin);
+        $this->attachImages($post, $authorId, $imageIds, $images);
+        $this->em->persist($post);
+        $this->em->flush();
+
+        return $post;
+    }
+
+    /**
+     * The author changes any field of their own post. `$dropImageIds` names
+     * pictures to take off it; `$imageIds` and `$images` add, as on post().
+     *
+     * @param list<int>         $imageIds
+     * @param list<StoredImage> $images
+     * @param list<int>         $dropImageIds
+     *
+     * @throws \InvalidArgumentException with a translation key, for the flash
+     */
+    public function edit(
+        int $postId,
+        int $authorId,
+        ?CuratorRoomCategory $category,
+        ?int $recipientId,
+        string $body,
+        ?int $aboutSubmissionId,
+        CuratorRoomPin $pin,
+        array $images = [],
+        array $imageIds = [],
+        array $dropImageIds = [],
+    ): CuratorPost {
+        $post = $this->own($postId, $authorId);
+        if (!$post instanceof CuratorPost) {
+            throw new \InvalidArgumentException('room.error.not_yours');
+        }
+        $body = $this->normalizeBody($body);
+        $this->checkAddressing($recipientId, $aboutSubmissionId, $pin);
+
+        foreach ($post->getImages()->toArray() as $image) {
+            if (\in_array($image->getId(), $dropImageIds, true)) {
+                $post->removeImage($image);
+            }
+        }
+        $post->update($category, $recipientId, $body, $aboutSubmissionId, $pin);
+        $this->attachImages($post, $authorId, $imageIds, $images);
+        $this->em->flush();
+
+        return $post;
+    }
+
+    /**
+     * The author's own post, for the edit page. Null when it is not theirs.
+     */
+    public function own(int $postId, int $authorId): ?CuratorPost
+    {
+        $post = $this->em->getRepository(CuratorPost::class)->find($postId);
+
+        return $post instanceof CuratorPost && $post->getAuthorId() === $authorId ? $post : null;
+    }
+
+    /**
+     * @throws \InvalidArgumentException with a translation key
+     */
+    private function checkAddressing(?int $recipientId, ?int $aboutSubmissionId, CuratorRoomPin $pin): void
+    {
         if (null !== $recipientId && !$this->isCurator($recipientId)) {
             throw new \InvalidArgumentException(self::ERROR_UNKNOWN_RECIPIENT);
         }
@@ -140,8 +207,20 @@ final class CuratorRoom
         if (null !== $aboutSubmissionId && !$this->submissionExists($aboutSubmissionId)) {
             throw new \InvalidArgumentException(self::ERROR_UNKNOWN_SUBMISSION);
         }
+        // A two-person note has no business at the top of the board (§13.5).
+        if (null !== $recipientId && $pin->isPinned()) {
+            throw new \InvalidArgumentException(self::ERROR_PIN_DIRECT);
+        }
+    }
 
-        $post = new CuratorPost($authorId, $category, $recipientId, $body, $aboutSubmissionId);
+    /**
+     * @param list<int>         $imageIds
+     * @param list<StoredImage> $images
+     *
+     * @throws \InvalidArgumentException with a translation key
+     */
+    private function attachImages(CuratorPost $post, int $authorId, array $imageIds, array $images): void
+    {
         foreach (array_values(array_unique($imageIds)) as $id) {
             $upload = $this->em->getRepository(CuratorPostImage::class)->find($id);
             // Somebody else's upload, or one already on a post, is not this
@@ -154,10 +233,6 @@ final class CuratorRoom
         foreach ($images as $image) {
             $post->addImage(new CuratorPostImage($image, $authorId));
         }
-        $this->em->persist($post);
-        $this->em->flush();
-
-        return $post;
     }
 
     /**
@@ -479,6 +554,14 @@ final class CuratorRoom
             'mine' => null !== $authorId && $authorId === $readerId,
             'direct' => null !== $recipientId,
         ];
+    }
+
+    /** The title the edit page shows in the about chip. */
+    public function submissionTitle(int $id): ?string
+    {
+        $t = $this->db->fetchOne('SELECT title FROM submission WHERE id = :id', ['id' => $id]);
+
+        return false === $t ? null : (string) $t;
     }
 
     private function submissionExists(int $id): bool

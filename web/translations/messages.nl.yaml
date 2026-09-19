@@ -4805,7 +4805,10 @@ room:
   empty_heading: 'Nog niets'
   empty_body: 'Schrijf het eerste bericht. Een vraag zonder antwoord is het stellen nog steeds waard: de volgende curator leest hem.'
   former_curator: 'Voormalige curator'
-  edited: 'bewerkt'
+  edit: 'Bewerken'
+  edit_heading: 'Een bericht bewerken'
+  posted_on: 'Geplaatst %date%'
+  edited_on: 'Bewerkt %date%'
   to_person: 'aan %name%'
   to_you: 'aan jou'
   about_submission: 'Over inzending #%id%'
@@ -4825,6 +4828,7 @@ room:
   delete_confirm: 'Dit bericht verwijderen? Het is dan voorgoed weg, afbeeldingen inbegrepen.'
   compose:
     heading: 'Schrijf aan de kamer'
+    heading_edit: 'Je bericht bewerken'
     note: 'Iedereen met een curatorrol leest dit, tenzij je één persoon kiest. Niets hiervan verlaat het bureau.'
     body_label: 'Je bericht'
     placeholder: 'Wat heb je nodig?'
@@ -4842,8 +4846,13 @@ room:
     checking: 'Controleren…'
     remove_image: 'Deze afbeelding verwijderen'
     send: 'Plaatsen'
+    save: 'Wijzigingen opslaan'
+    cancel: 'Annuleren'
+    pin_label: 'Vastpinnen'
+    drop_image: 'Verwijderen'
   flash:
     posted: 'Geplaatst.'
+    edited: 'Opgeslagen.'
   error:
     body_required: 'Schrijf eerst iets.'
     body_too_long: 'Dat is te lang. Blijf onder de 2000 tekens.'

@@ -4798,7 +4798,10 @@ room:
   empty_heading: 'Rien pour le moment'
   empty_body: 'Écrivez le premier message. Une question encore sans réponse mérite d''être posée : le prochain curateur la lira.'
   former_curator: 'Ancien curateur'
-  edited: 'modifié'
+  edit: 'Modifier'
+  edit_heading: 'Modifier un message'
+  posted_on: 'Publié le %date%'
+  edited_on: 'Modifié le %date%'
   to_person: 'à %name%'
   to_you: 'pour vous'
   about_submission: 'À propos de la contribution n° %id%'
@@ -4818,6 +4821,7 @@ room:
   delete_confirm: 'Supprimer ce message ? Il disparaît pour de bon, images comprises.'
   compose:
     heading: 'Écrire à la salle'
+    heading_edit: 'Modifier votre message'
     note: 'Toute personne ayant un rôle de curateur lit ceci, sauf si vous nommez quelqu''un. Rien ne quitte le bureau.'
     body_label: 'Votre message'
     placeholder: 'De quoi avez-vous besoin ?'
@@ -4835,8 +4839,13 @@ room:
     checking: 'Vérification…'
     remove_image: 'Retirer cette image'
     send: 'Publier'
+    save: 'Enregistrer'
+    cancel: 'Annuler'
+    pin_label: 'Épingler'
+    drop_image: 'Retirer'
   flash:
     posted: 'Publié.'
+    edited: 'Enregistré.'
   error:
     body_required: 'Écrivez d''abord quelque chose.'
     body_too_long: 'C''est trop long. Restez sous 2000 caractères.'

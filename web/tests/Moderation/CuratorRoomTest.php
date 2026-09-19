@@ -519,6 +519,84 @@ final class CuratorRoomTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testAPostCanBePinnedAtCreationAndEveryFieldChangedAfterwards(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'edit', ['ROLE_CURATOR']);
+        $colleague = $this->makeUser('edit-to', ['ROLE_CURATOR']);
+        $sub = $this->seedSubmission((int) $author->getId(), 'The gate at Les Croisettes');
+
+        $crawler = $client->request('GET', '/moderate/room');
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['body'] = 'Pinned from the start.';
+        $form['category'] = 'rules';
+        $form['pin'] = 'room';
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+        self::assertStringContainsString('Pinned from the start.', $crawler->filter('.rm-post.rm-pinned')->text());
+        // Posted shows; Edited does not, nothing changed yet.
+        $meta = $crawler->filter('.rm-post .rm-meta')->text();
+        self::assertStringContainsString('Posted', $meta);
+        self::assertStringNotContainsString('Edited', $meta);
+
+        // The edit page, prefilled.
+        $edit = $crawler->filter('.rm-post a.rm-edit');
+        $crawler = $client->click($edit->link());
+        self::assertResponseIsSuccessful();
+        $form = $crawler->filter('form.rm-compose')->form();
+        self::assertSame('Pinned from the start.', $form['body']->getValue());
+        self::assertSame('rules', $form['category']->getValue());
+        self::assertSame('room', $form['pin']->getValue());
+
+        // Every field changes: words, category, pin off, a submission, and a recipient.
+        $form['body'] = 'Reworded, filed under tools, no longer pinned.';
+        $form['category'] = 'tools';
+        $form['pin'] = 'none';
+        $form['about_q'] = (string) $sub->getId();
+        $form['to'] = (string) $colleague->getId();
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+        self::assertSelectorTextContains('.flash-success', 'Saved');
+        $post = $crawler->filter('.rm-post')->first();
+        self::assertStringContainsString('Reworded, filed under tools', $post->text());
+        self::assertStringContainsString('Edited', $post->filter('.rm-meta')->text());
+        self::assertStringContainsString('Tools', $post->filter('.rm-meta')->text());
+        self::assertSame(0, $crawler->filter('.rm-post.rm-pinned')->count());
+        self::assertStringContainsString('SUB-'.$sub->getId().' · The gate at Les Croisettes', $post->filter('.rm-about')->text());
+
+        // Now direct: the colleague reads it, a third curator does not.
+        $client->loginUser($colleague);
+        $crawler = $client->request('GET', '/moderate/room?c=direct');
+        self::assertStringContainsString('Reworded', $crawler->filter('.rm-post')->text());
+        $this->loginAs($client, 'edit-third', ['ROLE_CURATOR']);
+        $crawler = $client->request('GET', '/moderate/room');
+        self::assertSame(0, $crawler->filter('.rm-post')->count());
+    }
+
+    public function testOnlyTheAuthorReachesTheEditPage(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'edit-own', ['ROLE_CURATOR']);
+        $post = $this->room()->post((int) $author->getId(), null, null, 'Mine to change.');
+
+        $this->loginAs($client, 'edit-other', ['ROLE_CURATOR']);
+        $client->request('GET', '/moderate/room/'.$post->getId().'/edit');
+        self::assertResponseStatusCodeSame(404);
+
+        $client->loginUser($author);
+        $client->request('GET', '/moderate/room/'.$post->getId().'/edit');
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testAPinnedDirectPostIsRefusedAtCreation(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'pin-dm', ['ROLE_CURATOR']);
+        $to = $this->makeUser('pin-dm-to', ['ROLE_CURATOR']);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->room()->post((int) $author->getId(), null, (int) $to->getId(), 'Private and pinned?', null, [], [], CuratorRoomPin::Room);
+    }
+
     public function testAnEmptyPostIsRefused(): void
     {
         static::createClient();

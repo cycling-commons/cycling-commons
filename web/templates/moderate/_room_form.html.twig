@@ -1,0 +1,87 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# The room's composer, for a new post and for editing one
+   (moderation-and-contribution.md §13.9). `mode` is 'new' or 'edit'; in
+   edit mode `post` is the CuratorPost and `about_title` its submission's
+   title. Every field a post has is here, so nothing set at posting is out
+   of reach afterwards. #}
+{% set editing = mode == 'edit' %}
+{% set body_now = draft is not empty ? draft : (editing ? post.body : '') %}
+{% set cat_now = editing ? (post.category ? post.category.value : '') : view %}
+{% set to_now = editing ? (post.recipientId ?? '') : '' %}
+{% set pin_now = editing ? post.pin.value : 'none' %}
+{% set about_now = editing ? (post.aboutSubmissionId ?? '') : '' %}
+<form class="rm-compose" method="post" action="{{ editing ? path('moderate_room_edit_save', {id: post.id}) : path('moderate_room_post') }}" enctype="multipart/form-data">
+    <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-post') }}">
+    <input type="hidden" name="c" value="{{ view }}">
+    <h2>{{ (editing ? 'room.compose.heading_edit' : 'room.compose.heading')|trans }}</h2>
+    <p class="rm-note">{{ 'room.compose.note'|trans }}</p>
+    <textarea id="rm-body" name="body" aria-label="{{ 'room.compose.body_label'|trans }}" maxlength="{{ body_max }}" required placeholder="{{ 'room.compose.placeholder'|trans }}">{{ body_now }}</textarea>
+    <div class="rm-row">
+      <div class="rm-field">
+        <label for="rm-cat">{{ 'room.compose.category_label'|trans }}</label>
+        <select id="rm-cat" name="category">
+          <option value="">{{ 'room.compose.category_none'|trans }}</option>
+          {% for cat in categories %}
+            <option value="{{ cat.value }}" {{ cat_now == cat.value ? 'selected' : '' }}>{{ cat.labelKey|trans }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="rm-field">
+        <label for="rm-to">{{ 'room.compose.to_label'|trans }}</label>
+        <select id="rm-to" name="to">
+          <option value="">{{ 'room.compose.to_everyone'|trans }}</option>
+          {% for c in curators %}
+            <option value="{{ c.id }}" {{ to_now == c.id ? 'selected' : '' }}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="rm-field rm-about-wrap">
+        <label for="rm-about-q">{{ 'room.compose.about_label'|trans }}</label>
+        {# The search box. room.js fills the hidden id from a pick; with no
+           script a number typed here is read as the id. #}
+        <input id="rm-about-q" name="about_q" type="text" autocomplete="off" {{ about_now != '' ? 'hidden' : '' }} placeholder="{{ 'room.compose.about_placeholder'|trans }}"
+               data-search-url="{{ path('moderate_room_submissions') }}"
+               data-none="{{ 'room.compose.about_none'|trans }}" data-clear="{{ 'room.compose.about_clear'|trans }}">
+        <input id="rm-about" name="about" type="hidden" value="{{ about_now }}">
+        {# In edit mode the current link is shown picked; room.js keeps the chip's × working. #}
+        <div id="rm-about-pick" class="rm-about-pick" {{ about_now == '' ? 'hidden' : '' }}>{% if about_now != '' %}<span>SUB-{{ about_now }}{% if about_title %} · {{ about_title }}{% endif %}</span><button type="button" aria-label="{{ 'room.compose.about_clear'|trans }}">×</button>{% endif %}</div>
+        <ul id="rm-about-list" class="rm-about-list" role="listbox" hidden></ul>
+      </div>
+      <div class="rm-field">
+        <label for="rm-pin">{{ 'room.compose.pin_label'|trans }}</label>
+        {# A direct post cannot be pinned (§13.5): the server refuses it; the
+           label says so. #}
+        <select id="rm-pin" name="pin">
+          <option value="none" {{ pin_now == 'none' ? 'selected' : '' }}>{{ 'room.pin.none'|trans }}</option>
+          <option value="category" {{ pin_now == 'category' ? 'selected' : '' }}>{{ 'room.pin.category'|trans }}</option>
+          <option value="room" {{ pin_now == 'room' ? 'selected' : '' }}>{{ 'room.pin.room'|trans }}</option>
+        </select>
+      </div>
+    </div>
+    {# Pictures. room.js turns this into a drop zone that uploads at once, with
+       the bytes' own progress; the ids land in #rm-images. Without the script
+       the file input posts with the form and the server renders the files. #}
+    <div class="rm-field rm-pics" id="rm-pics" data-upload-url="{{ path('moderate_room_upload') }}" data-remove-url="{{ path('moderate_room_upload_remove', {id: 0}) }}"
+         data-token="{{ csrf_token('moderate-room-upload') }}" data-max="{{ images_max }}" data-max-bytes="{{ image_bytes_max }}"
+         data-t-too-many="{{ 'room.error.too_many_images'|trans }}" data-t-too-big="{{ 'support.bug.error.shot_too_large'|trans }}"
+         data-t-failed="{{ 'room.error.upload_failed'|trans }}" data-t-remove="{{ 'room.compose.remove_image'|trans }}" data-t-checking="{{ 'room.compose.checking'|trans }}">
+      <label for="rm-image">{{ 'room.compose.images_label'|trans }}</label>
+      {% if editing and post.images|length %}
+        {# Pictures already on the post: untick one to take it off. #}
+        <div class="rm-have">
+          {% for image in post.images %}
+            <label class="rm-have-one"><img src="{{ path('moderate_room_image', {id: image.id}) }}" alt="{{ 'room.image_alt'|trans({'%n%': loop.index}) }}"><span><input type="checkbox" name="drop[]" value="{{ image.id }}"> {{ 'room.compose.drop_image'|trans }}</span></label>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div class="rm-drop" id="rm-drop" role="button" tabindex="0" aria-controls="rm-image" hidden>{{ 'room.compose.drop'|trans }}</div>
+      <input id="rm-image" name="image[]" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+      <input id="rm-images" name="images" type="hidden" value="">
+      <div class="rm-queue" id="rm-queue"></div>
+      <p class="rm-hint">{{ 'room.compose.images_hint'|trans({'%n%': images_max, '%mb%': (image_bytes_max / 1048576)|round}) }}</p>
+    </div>
+    <div class="rm-send-row">
+      <button class="btn-act rm-send" type="submit">{{ (editing ? 'room.compose.save' : 'room.compose.send')|trans }}</button>
+      {% if editing %}<a class="rm-cancel" href="{{ path('moderate_room', view == 'all' ? {} : {c: view}) }}">{{ 'room.compose.cancel'|trans }}</a>{% endif %}
+    </div>
+</form>

@@ -4827,7 +4827,10 @@ room:
   empty_heading: 'Nothing here yet'
   empty_body: 'Write the first post. A question with no answer yet is still worth asking: the next curator will read it.'
   former_curator: 'Former curator'
-  edited: 'edited'
+  edit: 'Edit'
+  edit_heading: 'Edit a post'
+  posted_on: 'Posted %date%'
+  edited_on: 'Edited %date%'
   to_person: 'to %name%'
   to_you: 'to you'
   about_submission: 'About submission #%id%'
@@ -4847,6 +4850,7 @@ room:
   delete_confirm: 'Delete this post? It goes for good, pictures included.'
   compose:
     heading: 'Write to the room'
+    heading_edit: 'Edit your post'
     note: 'Everyone with a curator role reads this, unless you name one person. Nothing here leaves the desk.'
     body_label: 'Your post'
     placeholder: 'What do you need?'
@@ -4864,8 +4868,13 @@ room:
     checking: 'Checking…'
     remove_image: 'Remove this picture'
     send: 'Post'
+    save: 'Save changes'
+    cancel: 'Cancel'
+    pin_label: 'Pin'
+    drop_image: 'Remove'
   flash:
     posted: 'Posted.'
+    edited: 'Saved.'
   error:
     body_required: 'Write something first.'
     body_too_long: 'That is too long. Please keep it under 2000 characters.'

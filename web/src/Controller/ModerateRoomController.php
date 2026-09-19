@@ -141,6 +141,7 @@ final class ModerateRoomController extends AbstractController
         }
 
         $imageIds = $this->imageIds($request);
+        $pin = CuratorRoomPin::tryFrom($request->request->getString('pin')) ?? CuratorRoomPin::None;
 
         try {
             $this->room->post(
@@ -151,11 +152,84 @@ final class ModerateRoomController extends AbstractController
                 $aboutId,
                 $this->renderUploads($request),
                 $imageIds,
+                $pin,
             );
             $this->addFlash('success', 'room.flash.posted');
         } catch (\InvalidArgumentException|ScreenshotRejected $e) {
             $this->addFlash('danger', $e->getMessage());
             $this->addFlash('room_draft', $body);
+        }
+
+        return $this->backToRoom($view);
+    }
+
+    /** The author's own post, every field open again. */
+    #[Route('/moderate/room/{id}/edit', name: 'moderate_room_edit', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function editForm(int $id, Request $request): Response
+    {
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $curatorId = (int) $curator->getId();
+        $post = $this->room->own($id, $curatorId);
+        if (!$post instanceof CuratorPost) {
+            throw $this->createNotFoundException();
+        }
+        $about = $post->getAboutSubmissionId();
+
+        return $this->render('moderate/room_edit.html.twig', [
+            'page_title' => 'meta.moderate_room_title',
+            'page_description' => 'meta.moderate_room_description',
+            'nav_active' => 'moderate_room',
+            'view' => $this->view($request),
+            'post' => $post,
+            'about_title' => null !== $about ? $this->room->submissionTitle($about) : null,
+            'categories' => CuratorRoomCategory::cases(),
+            'curators' => $this->room->curators($curatorId),
+            'body_max' => CuratorRoom::BODY_MAX_LENGTH,
+            'images_max' => CuratorPost::MAX_IMAGES,
+            'image_bytes_max' => ScreenshotStore::MAX_UPLOAD_BYTES,
+            'draft' => $this->draft($request),
+            'mod_scope_names' => $this->scopeProvider->describe($curator),
+        ]);
+    }
+
+    #[Route('/moderate/room/{id}/edit', name: 'moderate_room_edit_save', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function editSave(int $id, Request $request): Response
+    {
+        $this->assertToken($request, 'moderate-room-post');
+
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $view = $this->view($request);
+        $recipientId = (int) $request->request->getString('to') ?: null;
+        $category = CuratorRoomCategory::tryFrom($request->request->getString('category'));
+        $body = $request->request->getString('body');
+        $aboutId = (int) $request->request->getString('about') ?: null;
+        if (null === $aboutId && preg_match('/^\s*(?:SUB-?)?(\d{1,12})\s*$/i', $request->request->getString('about_q'), $m)) {
+            $aboutId = (int) $m[1];
+        }
+        $pin = CuratorRoomPin::tryFrom($request->request->getString('pin')) ?? CuratorRoomPin::None;
+        $drop = array_values(array_filter(array_map('intval', $request->request->all('drop')), static fn (int $i): bool => $i > 0));
+
+        try {
+            $this->room->edit(
+                $id,
+                (int) $curator->getId(),
+                $category,
+                $recipientId,
+                $body,
+                $aboutId,
+                $pin,
+                $this->renderUploads($request),
+                $this->imageIds($request),
+                $drop,
+            );
+            $this->addFlash('success', 'room.flash.edited');
+        } catch (\InvalidArgumentException|ScreenshotRejected $e) {
+            $this->addFlash('danger', $e->getMessage());
+            $this->addFlash('room_draft', $body);
+
+            return $this->redirectToRoute('moderate_room_edit', ['id' => $id] + (CuratorRoomCategory::VIEW_ALL === $view ? [] : ['c' => $view]));
         }
 
         return $this->backToRoom($view);

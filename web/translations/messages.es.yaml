@@ -4838,7 +4838,10 @@ room:
   empty_heading: 'Aquí todavía no hay nada'
   empty_body: 'Escribe el primer mensaje. Una pregunta sin respuesta vale la pena igual: el siguiente curador la leerá.'
   former_curator: 'Curador anterior'
-  edited: 'editado'
+  edit: 'Editar'
+  edit_heading: 'Editar una entrada'
+  posted_on: 'Publicado %date%'
+  edited_on: 'Editado %date%'
   to_person: 'para %name%'
   to_you: 'para ti'
   about_submission: 'Sobre la contribución n.º %id%'
@@ -4858,6 +4861,7 @@ room:
   delete_confirm: '¿Borrar esta entrada? Desaparece para siempre, imágenes incluidas.'
   compose:
     heading: 'Escribir a la sala'
+    heading_edit: 'Editar tu entrada'
     note: 'Todo el mundo con rol de curador lee esto, salvo que nombres a una persona. Nada de esto sale del escritorio.'
     body_label: 'Tu mensaje'
     placeholder: '¿Qué necesitas?'
@@ -4875,8 +4879,13 @@ room:
     checking: 'Comprobando…'
     remove_image: 'Quitar esta imagen'
     send: 'Publicar'
+    save: 'Guardar cambios'
+    cancel: 'Cancelar'
+    pin_label: 'Fijar'
+    drop_image: 'Quitar'
   flash:
     posted: 'Publicado.'
+    edited: 'Guardado.'
   error:
     body_required: 'Escribe algo primero.'
     body_too_long: 'Es demasiado largo. No pases de 2000 caracteres.'

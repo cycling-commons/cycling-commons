@@ -4806,7 +4806,10 @@ room:
   empty_heading: 'Noch nichts hier'
   empty_body: 'Schreibe den ersten Beitrag. Eine Frage ohne Antwort lohnt sich trotzdem: der nächste Kurator liest sie.'
   former_curator: 'Ehemaliger Kurator'
-  edited: 'bearbeitet'
+  edit: 'Bearbeiten'
+  edit_heading: 'Einen Beitrag bearbeiten'
+  posted_on: 'Veröffentlicht %date%'
+  edited_on: 'Bearbeitet %date%'
   to_person: 'an %name%'
   to_you: 'an dich'
   about_submission: 'Zu Beitrag #%id%'
@@ -4826,6 +4829,7 @@ room:
   delete_confirm: 'Diesen Beitrag löschen? Er ist dann endgültig weg, Bilder eingeschlossen.'
   compose:
     heading: 'An den Raum schreiben'
+    heading_edit: 'Deinen Beitrag bearbeiten'
     note: 'Alle mit einer Kuratorenrolle lesen das, außer du nennst eine Person. Nichts davon verlässt den Platz.'
     body_label: 'Dein Beitrag'
     placeholder: 'Was brauchst du?'
@@ -4843,8 +4847,13 @@ room:
     checking: 'Prüfen…'
     remove_image: 'Dieses Bild entfernen'
     send: 'Senden'
+    save: 'Änderungen speichern'
+    cancel: 'Abbrechen'
+    pin_label: 'Anheften'
+    drop_image: 'Entfernen'
   flash:
     posted: 'Gesendet.'
+    edited: 'Gespeichert.'
   error:
     body_required: 'Schreibe zuerst etwas.'
     body_too_long: 'Das ist zu lang. Bleibe unter 2000 Zeichen.'

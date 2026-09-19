@@ -6,8 +6,9 @@
 <article class="rm-post {{ pinned_block ? 'rm-pinned' : '' }} {{ post.direct ? 'rm-direct' : '' }}">
   <div class="rm-meta">
     <span class="rm-who">{% if post.author %}{% include 'moderate/_rider_name.html.twig' with {rider: post.author} only %}{% else %}{{ 'room.former_curator'|trans }}{% endif %}</span>
-    <span>{{ post.created_at|cc_datetime }}</span>
-    {% if post.edited_at %}<span>{{ 'room.edited'|trans }}</span>{% endif %}
+    <span class="rm-dates">{{ 'room.posted_on'|trans({'%date%': post.created_at|cc_datetime}) }}</span>
+    {# Edited shows only when something changed after posting. #}
+    {% if post.edited_at %}<span class="rm-dates">{{ 'room.edited_on'|trans({'%date%': post.edited_at|cc_datetime}) }}</span>{% endif %}
     {% if post.category %}<span class="rm-tag">{{ ('room.cat.' ~ post.category)|trans }}</span>{% endif %}
     {% if post.direct %}
       <span class="rm-tag rm-tag-direct">
@@ -60,6 +61,7 @@
       </form>
     {% endif %}
     {% if post.mine %}
+      <a class="rm-edit" href="{{ path('moderate_room_edit', view == 'all' ? {id: post.id} : {id: post.id, c: view}) }}">{{ 'room.edit'|trans }}</a>
       {# Apart from the pin control and named for what it removes: the whole
          post, not the pin (owner 2026-09-19, after deleting one by mistake).
          room.js asks before it goes; without the script the button still works. #}

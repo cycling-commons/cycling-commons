@@ -1,0 +1,26 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# Editing one curator-room post: the same composer, every field open again
+   (moderation-and-contribution.md §13.9). Own posts only; the controller
+   answers 404 for anyone else's. #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+{% include 'moderate/_room_styles.html.twig' %}
+{% endblock %}
+{% block body_scripts %}<script src="{{ asset('js/room.js') }}" defer></script>{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_room', mod_scope_names: mod_scope_names is defined ? mod_scope_names : null} %}{% endblock %}
+
+{% block body %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'room.kicker'|trans }}</div>
+    <h1>{{ 'room.edit_heading'|trans }}</h1>
+  </div>
+
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  <p class="rm-dates">{{ 'room.posted_on'|trans({'%date%': post.createdAt|cc_datetime}) }}{% if post.editedAt %} · {{ 'room.edited_on'|trans({'%date%': post.editedAt|cc_datetime}) }}{% endif %}</p>
+
+  {% include 'moderate/_room_form.html.twig' with {mode: 'edit'} %}
+</div>
+{% endblock %}
