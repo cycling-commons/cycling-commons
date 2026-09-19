@@ -7,8 +7,10 @@ declare(strict_types=1);
 namespace App\Messaging;
 
 use App\Messaging\Entity\CuratorPost;
+use App\Messaging\Entity\CuratorPostImage;
 use App\Messaging\Entity\CuratorRoomVisit;
 use App\Moderation\DeskRider;
+use App\Support\StoredImage;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -32,6 +34,8 @@ use Doctrine\ORM\EntityManagerInterface;
  *     pin: string,
  *     body: string,
  *     about_submission_id: int|null,
+ *     about_title: string|null,
+ *     images: list<array{id: int, width: int, height: int}>,
  *     created_at: \DateTimeImmutable,
  *     edited_at: \DateTimeImmutable|null,
  *     mine: bool,
@@ -48,6 +52,8 @@ use Doctrine\ORM\EntityManagerInterface;
  *     pin: string,
  *     body: string,
  *     about_submission_id: int|null,
+ *     about_title: string|null,
+ *     images: list<array{id: int, width: int, height: int}>,
  *     created_at: \DateTimeImmutable,
  *     edited_at: \DateTimeImmutable|null,
  *     mine: bool,
@@ -65,6 +71,15 @@ final class CuratorRoom
     private const string ERROR_TOO_LONG = 'room.error.body_too_long';
     private const string ERROR_UNKNOWN_RECIPIENT = 'room.error.unknown_recipient';
     private const string ERROR_PIN_DIRECT = 'room.error.pin_direct';
+    private const string ERROR_UNKNOWN_SUBMISSION = 'room.error.unknown_submission';
+
+    /** Cards the composer's search lists. Enough to pick from, not a queue. */
+    public const int SEARCH_LIMIT = 8;
+
+    private const string ERROR_IMAGE_MISSING = 'room.error.image_missing';
+
+    /** An uploaded picture nobody posted: gone after this. */
+    private const string UNCLAIMED_TTL = '-1 day';
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -96,6 +111,14 @@ final class CuratorRoom
     /**
      * Write a post. `$recipientId` null addresses every curator.
      *
+     * Pictures arrive two ways: `$imageIds` name uploads this author made
+     * through {@see upload()} and not yet posted (the composer with its
+     * script); `$images` are files rendered at post time (the composer
+     * without it). Both end up as the post's images, uploads first.
+     *
+     * @param list<int>         $imageIds
+     * @param list<StoredImage> $images
+     *
      * @throws \InvalidArgumentException with a translation key, for the flash
      */
     public function post(
@@ -104,18 +127,139 @@ final class CuratorRoom
         ?int $recipientId,
         string $body,
         ?int $aboutSubmissionId = null,
+        array $images = [],
+        array $imageIds = [],
     ): CuratorPost {
         $body = $this->normalizeBody($body);
 
         if (null !== $recipientId && !$this->isCurator($recipientId)) {
             throw new \InvalidArgumentException(self::ERROR_UNKNOWN_RECIPIENT);
         }
+        // The column is a foreign key: an id nobody typed correctly would
+        // otherwise fail at the database, as a 500 instead of a sentence.
+        if (null !== $aboutSubmissionId && !$this->submissionExists($aboutSubmissionId)) {
+            throw new \InvalidArgumentException(self::ERROR_UNKNOWN_SUBMISSION);
+        }
 
         $post = new CuratorPost($authorId, $category, $recipientId, $body, $aboutSubmissionId);
+        foreach (array_values(array_unique($imageIds)) as $id) {
+            $upload = $this->em->getRepository(CuratorPostImage::class)->find($id);
+            // Somebody else's upload, or one already on a post, is not this
+            // author's to attach: refused as missing, never silently skipped.
+            if (!$upload instanceof CuratorPostImage || $upload->isClaimed() || $upload->getUploaderId() !== $authorId) {
+                throw new \InvalidArgumentException(self::ERROR_IMAGE_MISSING);
+            }
+            $post->addImage($upload);
+        }
+        foreach ($images as $image) {
+            $post->addImage(new CuratorPostImage($image, $authorId));
+        }
         $this->em->persist($post);
         $this->em->flush();
 
         return $post;
+    }
+
+    /**
+     * Hold a rendered picture for a post this curator has not written yet.
+     */
+    public function upload(int $uploaderId, StoredImage $image): CuratorPostImage
+    {
+        $upload = new CuratorPostImage($image, $uploaderId);
+        $this->em->persist($upload);
+        $this->em->flush();
+
+        return $upload;
+    }
+
+    /**
+     * Drop a picture this curator uploaded and has not posted. False when it
+     * is not theirs, already posted, or gone.
+     */
+    public function removeUnclaimed(int $imageId, int $uploaderId): bool
+    {
+        $upload = $this->em->getRepository(CuratorPostImage::class)->find($imageId);
+        if (!$upload instanceof CuratorPostImage || $upload->isClaimed() || $upload->getUploaderId() !== $uploaderId) {
+            return false;
+        }
+        $this->em->remove($upload);
+        $this->em->flush();
+
+        return true;
+    }
+
+    /**
+     * Pictures uploaded and never posted, older than a day: gone. Run by
+     * `app:media:gc` beside the photo pipeline's own sweep.
+     */
+    public function collectUnclaimedImages(): int
+    {
+        return (int) $this->db->executeStatement(
+            'DELETE FROM curator_post_image WHERE post_id IS NULL AND created_at < :cutoff',
+            ['cutoff' => (new \DateTimeImmutable(self::UNCLAIMED_TTL))->format('Y-m-d H:i:s')],
+        );
+    }
+
+    /**
+     * One image, if this reader may see the post it is on: a direct post shows
+     * its pictures to its two people and nobody else (§13.6).
+     */
+    public function image(int $imageId, int $readerId): ?CuratorPostImage
+    {
+        $image = $this->em->getRepository(CuratorPostImage::class)->find($imageId);
+        if (!$image instanceof CuratorPostImage) {
+            return null;
+        }
+        $post = $image->getPost();
+        // Not posted yet: only its uploader sees it, in their own composer.
+        if (null === $post) {
+            return $image->getUploaderId() === $readerId ? $image : null;
+        }
+        if ($post->isDirect() && $post->getAuthorId() !== $readerId && $post->getRecipientId() !== $readerId) {
+            return null;
+        }
+
+        return $image;
+    }
+
+    /**
+     * Submissions matching what a curator typed into the composer: an id, a
+     * word of the title, or a region name. Unscoped, like the room: the card
+     * out of your reach is the one you came here to ask about.
+     *
+     * @return list<array{id: int, title: string, type: string, status: string, region: string|null, country: string}>
+     */
+    public function searchSubmissions(string $q): array
+    {
+        $q = trim($q);
+        if ('' === $q) {
+            return [];
+        }
+        $id = null;
+        if (preg_match('/^(?:SUB-?)?(\d{1,12})$/i', $q, $m)) {
+            $id = (int) $m[1];
+        }
+        $rows = $this->db->fetchAllAssociative(
+            <<<'SQL'
+                SELECT s.id, s.title, s.type, s.status, s.country_code, r.name AS region
+                FROM submission s
+                LEFT JOIN region r ON r.id = s.region_id
+                WHERE s.id = :id OR s.title ILIKE :like OR r.name ILIKE :like
+                ORDER BY (s.id = :id) DESC, (s.status = 'pending') DESC, s.id DESC
+                LIMIT :lim
+                SQL,
+            ['id' => $id ?? -1, 'like' => '%'.addcslashes($q, '%_\\').'%', 'lim' => self::SEARCH_LIMIT],
+            ['lim' => \Doctrine\DBAL\ParameterType::INTEGER],
+        );
+
+        return array_map(static fn (array $r): array => [
+            'id' => (int) $r['id'],
+            'title' => (string) $r['title'],
+            'type' => (string) $r['type'],
+            'status' => (string) $r['status'],
+            'region' => null !== $r['region'] ? (string) $r['region'] : null,
+            'country' => (string) $r['country_code'],
+        ], $rows);
     }
 
     /**
@@ -264,10 +408,11 @@ final class CuratorRoom
     {
         return 'SELECT p.id, p.author_id, a.display_name AS author_name, a.public_profile AS author_public, a.uuid AS author_uuid, p.category,
                        p.recipient_id, r.display_name AS recipient_name, r.public_profile AS recipient_public, r.uuid AS recipient_uuid, p.pin, p.body,
-                       p.about_submission_id, p.created_at, p.edited_at
+                       p.about_submission_id, s.title AS about_title, p.created_at, p.edited_at
                 FROM curator_post p
                 LEFT JOIN users a ON a.id = p.author_id
                 LEFT JOIN users r ON r.id = p.recipient_id
+                LEFT JOIN submission s ON s.id = p.about_submission_id
                 WHERE '.implode(' AND ', $where).'
                 ORDER BY p.created_at DESC
                 LIMIT '.self::PER_PAGE;
@@ -283,6 +428,25 @@ final class CuratorRoom
         $cards = [];
         foreach ($this->db->fetchAllAssociative($sql, $params) as $row) {
             $cards[] = $this->card($row, $readerId);
+        }
+        if ([] === $cards) {
+            return $cards;
+        }
+
+        // One query for every card's pictures: id and size only, the bytes
+        // stay in the database until an <img> asks for them.
+        $ids = array_map(static fn (array $c): int => $c['id'], $cards);
+        $images = $this->db->fetchAllAssociative(
+            'SELECT id, post_id, width, height FROM curator_post_image WHERE post_id IN (:ids) ORDER BY post_id, position',
+            ['ids' => $ids],
+            ['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER],
+        );
+        $byPost = [];
+        foreach ($images as $i) {
+            $byPost[(int) $i['post_id']][] = ['id' => (int) $i['id'], 'width' => (int) $i['width'], 'height' => (int) $i['height']];
+        }
+        foreach ($cards as $k => $card) {
+            $cards[$k]['images'] = $byPost[$card['id']] ?? [];
         }
 
         return $cards;
@@ -309,11 +473,18 @@ final class CuratorRoom
             'pin' => (string) $row['pin'],
             'body' => (string) $row['body'],
             'about_submission_id' => null !== $row['about_submission_id'] ? (int) $row['about_submission_id'] : null,
+            'about_title' => null !== $row['about_title'] ? (string) $row['about_title'] : null,
+            'images' => [],
             'created_at' => new \DateTimeImmutable((string) $row['created_at']),
             'edited_at' => null !== $row['edited_at'] ? new \DateTimeImmutable((string) $row['edited_at']) : null,
             'mine' => null !== $authorId && $authorId === $readerId,
             'direct' => null !== $recipientId,
         ];
+    }
+
+    private function submissionExists(int $id): bool
+    {
+        return false !== $this->db->fetchOne('SELECT 1 FROM submission WHERE id = :id', ['id' => $id]);
     }
 
     private function isCurator(int $userId): bool

@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Submission;
+use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Messaging\CuratorRoom;
 use App\Messaging\CuratorRoomCategory;
@@ -14,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
@@ -293,6 +296,221 @@ final class CuratorRoomTest extends WebTestCase
         $this->room()->post((int) $author->getId(), null, (int) $author->getId(), 'A note to somebody else.');
 
         self::assertSame(2, $this->room()->unreadCount($readerId));
+    }
+
+    private function seedSubmission(int $userId, string $title): Submission
+    {
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('N')->setUserId($userId)
+            ->setTitle($title)
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setChanges([])->setPayload([]);
+        $em->persist($sub);
+        $em->flush();
+
+        return $sub;
+    }
+
+    /** A real PNG on disk, for the composer's file input. */
+    private function pngFile(string $colour = 'red'): string
+    {
+        $image = new \Imagick();
+        $image->newImage(64, 48, $colour);
+        $image->setImageFormat('png');
+        $path = tempnam(sys_get_temp_dir(), 'room').'.png';
+        file_put_contents($path, $image->getImageBlob());
+        $image->clear();
+
+        return $path;
+    }
+
+    private function tokenOn(Crawler $crawler, string $formClass): string
+    {
+        return (string) $crawler->filter('form.'.$formClass.' input[name=_token]')->attr('value');
+    }
+
+    public function testATypedNumberLinksTheSubmissionAndShowsItsTitle(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'about', ['ROLE_CURATOR']);
+        $sub = $this->seedSubmission((int) $author->getId(), 'Col du Rosier water point');
+
+        $crawler = $client->request('GET', '/moderate/room');
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['body'] = 'Is this one in reach of anybody?';
+        // The no-script path: a number typed into the search box.
+        $form['about_q'] = 'SUB-'.$sub->getId();
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+
+        $about = $crawler->filter('.rm-post .rm-about a');
+        self::assertStringContainsString('SUB-'.$sub->getId().' · Col du Rosier water point', $about->text());
+        self::assertStringContainsString('q=SUB-'.$sub->getId(), (string) $about->attr('href'));
+    }
+
+    public function testAnUnknownSubmissionNumberIsRefusedAndTheWordsSurvive(): void
+    {
+        $client = static::createClient();
+        $this->loginAs($client, 'about-bad', ['ROLE_CURATOR']);
+
+        $crawler = $client->request('GET', '/moderate/room');
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['body'] = 'Words that must not be lost.';
+        $form['about_q'] = '99999999';
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+
+        self::assertSelectorTextContains('.flash-error', 'no submission with that number');
+        self::assertSame(0, $crawler->filter('.rm-post')->count());
+        self::assertSame('Words that must not be lost.', $crawler->filter('#rm-body')->text());
+    }
+
+    public function testTheSearchFindsByNumberTitleAndRegionForCuratorsOnly(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'search', ['ROLE_CURATOR']);
+        $sub = $this->seedSubmission((int) $author->getId(), 'Fontaine de Malchamps');
+
+        $client->request('GET', '/moderate/room/submissions?q=Malchamps');
+        self::assertResponseIsSuccessful();
+        /** @var list<array{id: int, title: string}> $found */
+        $found = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertSame($sub->getId(), $found[0]['id']);
+        self::assertSame('Fontaine de Malchamps', $found[0]['title']);
+
+        $client->request('GET', '/moderate/room/submissions?q='.$sub->getId());
+        /** @var list<array{id: int}> $byId */
+        $byId = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertSame($sub->getId(), $byId[0]['id']);
+
+        $client->request('GET', '/moderate/room/submissions?q=');
+        self::assertSame('[]', $client->getResponse()->getContent());
+
+        $this->loginAs($client, 'search-rider', ['ROLE_USER']);
+        $client->request('GET', '/moderate/room/submissions?q=Malchamps');
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testAPictureUploadsFirstAndThePostClaimsIt(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'pics', ['ROLE_CURATOR']);
+        $crawler = $client->request('GET', '/moderate/room');
+        $token = (string) $crawler->filter('#rm-pics')->attr('data-token');
+
+        // The composer's uploader: one picture, sent on its own, answered with an id.
+        $client->request('POST', '/moderate/room/upload', ['_token' => $token], [
+            'image' => new UploadedFile($this->pngFile(), 'shot.png', 'image/png', null, true),
+        ], ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+        self::assertResponseStatusCodeSame(201);
+        /** @var array{id: int, url: string} $up */
+        $up = json_decode((string) $client->getResponse()->getContent(), true);
+
+        // Its uploader sees it before it is posted; another curator does not.
+        $client->request('GET', $up['url']);
+        self::assertResponseIsSuccessful();
+        self::assertSame('image/webp', $client->getResponse()->headers->get('Content-Type'));
+        $other = $this->makeUser('pics-other', ['ROLE_CURATOR']);
+        $client->loginUser($other);
+        $client->request('GET', $up['url']);
+        self::assertResponseStatusCodeSame(404);
+
+        // The post claims it.
+        $client->loginUser($author);
+        $crawler = $client->request('GET', '/moderate/room');
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['body'] = 'The sign at the junction, photographed.';
+        $form['images'] = json_encode([$up['id']]);
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+        $img = $crawler->filter('.rm-post .rm-images img');
+        self::assertSame(1, $img->count());
+        self::assertSame($up['url'], $img->attr('src'));
+
+        // Now every curator sees it, a rider does not, and it cannot be claimed twice.
+        $client->loginUser($other);
+        $client->request('GET', $up['url']);
+        self::assertResponseIsSuccessful();
+        $cache = (string) $client->getResponse()->headers->get('Cache-Control');
+        self::assertStringContainsString('no-store', $cache);
+        self::assertStringContainsString('private', $cache);
+        $this->loginAs($client, 'pics-rider', ['ROLE_USER']);
+        $client->request('GET', $up['url']);
+        self::assertResponseStatusCodeSame(403);
+
+        $client->loginUser($author);
+        $crawler = $client->request('GET', '/moderate/room');
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['body'] = 'Trying to reuse the same picture.';
+        $form['images'] = json_encode([$up['id']]);
+        $client->submit($form);
+        $crawler = $client->followRedirect();
+        self::assertSelectorTextContains('.flash-error', 'picture on this post is missing');
+    }
+
+    public function testAPictureOnADirectPostIsForItsTwoPeopleOnly(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'dm-pic', ['ROLE_CURATOR']);
+        $recipient = $this->makeUser('dm-pic-to', ['ROLE_CURATOR']);
+        $crawler = $client->request('GET', '/moderate/room');
+
+        // The no-script path: the file rides with the form itself.
+        $client->request('POST', '/moderate/room/post', [
+            '_token' => $this->tokenOn($crawler, 'rm-compose'),
+            'body' => 'For your eyes: the plate on the gate.',
+            'to' => (string) $recipient->getId(),
+            'category' => '',
+            'c' => 'all',
+        ], ['image' => [new UploadedFile($this->pngFile('blue'), 'gate.png', 'image/png', null, true)]]);
+        $crawler = $client->followRedirect();
+        $src = (string) $crawler->filter('.rm-post .rm-images img')->attr('src');
+        self::assertStringContainsString('/moderate/room/image/', $src);
+
+        $client->loginUser($recipient);
+        $client->request('GET', $src);
+        self::assertResponseIsSuccessful();
+
+        $this->loginAs($client, 'dm-pic-third', ['ROLE_CURATOR']);
+        $client->request('GET', $src);
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testAnUnpostedPictureCanBeTakenBackAndOldOnesAreSwept(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'sweep', ['ROLE_CURATOR']);
+        $crawler = $client->request('GET', '/moderate/room');
+        $token = (string) $crawler->filter('#rm-pics')->attr('data-token');
+        $client->request('POST', '/moderate/room/upload', ['_token' => $token], [
+            'image' => new UploadedFile($this->pngFile(), 'shot.png', 'image/png', null, true),
+        ]);
+        /** @var array{id: int, url: string} $up */
+        $up = json_decode((string) $client->getResponse()->getContent(), true);
+
+        $client->request('POST', '/moderate/room/upload/'.$up['id'].'/remove', ['_token' => $token]);
+        self::assertSame('{"removed":true}', $client->getResponse()->getContent());
+        $client->request('GET', $up['url']);
+        self::assertResponseStatusCodeSame(404);
+
+        // The sweep: an unposted picture from yesterday goes, one from now stays.
+        $client->request('POST', '/moderate/room/upload', ['_token' => $token], [
+            'image' => new UploadedFile($this->pngFile(), 'shot.png', 'image/png', null, true),
+        ]);
+        /** @var array{id: int} $fresh */
+        $fresh = json_decode((string) $client->getResponse()->getContent(), true);
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->getConnection()->executeStatement(
+            "INSERT INTO curator_post_image (post_id, uploader_id, position, mime_type, bytes, byte_size, width, height, created_at)
+             VALUES (NULL, :u, 0, 'image/webp', '\\x00'::bytea, 1, 1, 1, NOW() - INTERVAL '2 days')",
+            ['u' => (int) $author->getId()],
+        );
+        $swept = $this->room()->collectUnclaimedImages();
+        self::assertSame(1, $swept);
+        $client->request('GET', '/moderate/room/image/'.$fresh['id']);
+        self::assertResponseIsSuccessful();
     }
 
     public function testAnEmptyPostIsRefused(): void

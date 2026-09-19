@@ -8,6 +8,8 @@ namespace App\Messaging\Entity;
 
 use App\Messaging\CuratorRoomCategory;
 use App\Messaging\CuratorRoomPin;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -32,6 +34,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_curator_post_recipient', columns: ['recipient_id', 'created_at'])]
 class CuratorPost
 {
+    /** Pictures per post. A question needs one or two; a gallery is not a question. */
+    public const int MAX_IMAGES = 4;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::BIGINT)]
@@ -61,6 +66,11 @@ class CuratorPost
     #[ORM\Column(name: 'edited_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $editedAt = null;
 
+    /** @var Collection<int, CuratorPostImage> */
+    #[ORM\OneToMany(targetEntity: CuratorPostImage::class, mappedBy: 'post', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    private Collection $images;
+
     public function __construct(
         ?int $authorId,
         ?CuratorRoomCategory $category,
@@ -74,6 +84,22 @@ class CuratorPost
         $this->body = $body;
         $this->aboutSubmissionId = $aboutSubmissionId;
         $this->createdAt = new \DateTimeImmutable();
+        $this->images = new ArrayCollection();
+    }
+
+    /** @return Collection<int, CuratorPostImage> */
+    public function getImages(): Collection
+    {
+        return $this->images;
+    }
+
+    public function addImage(CuratorPostImage $image): void
+    {
+        if ($this->images->count() >= self::MAX_IMAGES) {
+            throw new \InvalidArgumentException('room.error.too_many_images');
+        }
+        $image->attachTo($this, $this->images->count());
+        $this->images->add($image);
     }
 
     public function getId(): ?int

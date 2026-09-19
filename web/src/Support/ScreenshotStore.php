@@ -32,8 +32,10 @@ use Psr\Log\LoggerInterface;
  *    re-encoding, because a screenshot of a photograph re-encodes larger than
  *    a screenshot of a form.
  *
- * Output is always PNG. A screenshot is flat colour, sharp text and straight
- * edges, which is exactly what PNG is good at and exactly what JPEG smears.
+ * Output is PNG for a screenshot: flat colour, sharp text and straight edges,
+ * which is exactly what PNG is good at and exactly what JPEG smears. The
+ * curator room asks {@see render()} for WebP instead, because its pictures
+ * are photographs as often as screens.
  *
  * **The virus scanner runs too**, on the bytes as uploaded, before Imagick sees
  * them. Rider photographs get scanned ({@see \App\Media\Scan\ClamAvScanner}),
@@ -84,6 +86,22 @@ final class ScreenshotStore
      */
     public function accept(string $bytes): BugScreenshot
     {
+        $image = $this->render($bytes);
+
+        return new BugScreenshot($image->mimeType, $image->bytes, $image->width, $image->height);
+    }
+
+    /**
+     * The same defences for any caller: scan, refuse the bomb, draw it again.
+     *
+     * `$as` is what comes out: `png` for a screenshot (flat colour, sharp
+     * text), `webp` for a photograph (a curator's picture of a place, which
+     * PNG would store at four times the size). `$maxBytes` bounds the result.
+     *
+     * @throws ScreenshotRejected with a translation key
+     */
+    public function render(string $bytes, string $as = 'png', int $maxBytes = BugScreenshot::MAX_BYTES): StoredImage
+    {
         if ('' === $bytes) {
             throw new ScreenshotRejected('support.bug.error.shot_empty');
         }
@@ -121,9 +139,13 @@ final class ScreenshotStore
         try {
             $image->readImageBlob($bytes);
 
-            // An animated GIF is one image here, not a flipbook.
+            // An animated GIF is one image here, not a flipbook. getImage()
+            // then takes that one frame out of the list: a list writes as a
+            // sequence, which WebP refuses ("failed to get the image contents").
             $image = $image->coalesceImages();
             $image->setFirstIterator();
+            $image = $image->getImage();
+            $image->setImagePage(0, 0, 0, 0);
 
             // Screenshots arrive right way up; orientation metadata on one is
             // noise, but honouring it costs nothing and never hurts.
@@ -147,8 +169,8 @@ final class ScreenshotStore
             // and comment, which is where a screenshot's incidental metadata
             // (the window title, the file path, the tool that took it) lives.
             $image->stripImage();
-            $image->setImageFormat('png');
-            $image->setImageCompressionQuality(90);
+            $image->setImageFormat('webp' === $as ? 'webp' : 'png');
+            $image->setImageCompressionQuality('webp' === $as ? 82 : 90);
 
             $out = $image->getImageBlob();
             $outWidth = $image->getImageWidth();
@@ -159,11 +181,11 @@ final class ScreenshotStore
             $image->clear();
         }
 
-        if (\strlen($out) > BugScreenshot::MAX_BYTES) {
+        if (\strlen($out) > $maxBytes) {
             throw new ScreenshotRejected('support.bug.error.shot_too_large');
         }
 
-        return new BugScreenshot('image/png', $out, $outWidth, $outHeight);
+        return new StoredImage('webp' === $as ? 'image/webp' : 'image/png', $out, $outWidth, $outHeight);
     }
 
     /**

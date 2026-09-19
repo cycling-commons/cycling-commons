@@ -8,6 +8,7 @@ namespace App\Media\Command;
 
 use App\Media\MediaDisposalService;
 use App\Media\MediaTakedownService;
+use App\Messaging\CuratorRoom;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,6 +28,7 @@ final class MediaGcCommand extends Command
     public function __construct(
         private readonly MediaDisposalService $disposal,
         private readonly MediaTakedownService $takedowns,
+        private readonly CuratorRoom $room,
     ) {
         parent::__construct();
     }
@@ -39,12 +41,15 @@ final class MediaGcCommand extends Command
         $orphans = $this->disposal->collectOrphans();
         $rejected = $this->disposal->collectRejected();
         $contacts = $this->takedowns->purgeExpiredContacts(new \DateTimeImmutable());
+        // Curator-room pictures uploaded and never posted (moderation-and-contribution.md §13.3).
+        $roomImages = $this->room->collectUnclaimedImages();
 
         $io->success(\sprintf(
-            'Collected %d orphaned upload(s); deleted the objects of %d expired rejected photo(s); cleared %d expired reporter contact(s).',
+            'Collected %d orphaned upload(s); deleted the objects of %d expired rejected photo(s); cleared %d expired reporter contact(s); dropped %d unposted room picture(s).',
             $orphans,
             $rejected,
             $contacts,
+            $roomImages,
         ));
 
         return Command::SUCCESS;

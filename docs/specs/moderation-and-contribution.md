@@ -3033,7 +3033,8 @@ hundred approved submissions behind them; contributor standing is in
 
 ## 13. The curator room, the in-desk board
 
-**Status: specified 2026-08-26 (owner), building on `feat/curator-room`.**
+**Status: specified 2026-08-26 (owner), built (849fe97e). Pictures and the
+submission search added 2026-09-19 (owner).**
 
 ### 13.1 Why it exists
 
@@ -3052,11 +3053,18 @@ CSP. Nothing leaves the application.
 ### 13.2 What it is not
 
 Named here so the next reader does not build them by accident: no push, no
-email, no threads, no replies-to-a-reply, no reactions, no attachments, no
-presence, no typing indicators, no JavaScript. The desk already has a
-notification channel for riders (§7), and the room deliberately does not reuse
-it for curators. A room that emails is a room people answer from their phone,
-and the rulebook's whole point is that this conversation stays at the desk.
+email, no threads, no replies-to-a-reply, no reactions, no presence, no typing
+indicators. The desk already has a notification channel for riders (§7), and
+the room deliberately does not reuse it for curators. A room that emails is a
+room people answer from their phone, and the rulebook's whole point is that
+this conversation stays at the desk.
+
+Two things this list once held and no longer does (owner 2026-09-19):
+**pictures** (§13.3, `curator_post_image`: a curator asking about a sign or a
+gate needs to show it, and a picture kept in the database and served to
+curators only has not left the desk) and **JavaScript** (§13.9: the composer's
+submission search and its uploader are scripts, over a plain form that still
+works without them).
 
 ### 13.3 Model: a board, not an inbox
 
@@ -3085,6 +3093,31 @@ created_at DESC)` for the Direct view and the badge.
 
 `curator_room_visit`: `user_id` (primary key, `ON DELETE CASCADE`) and
 `last_seen_at`. One row per curator, written when the room is opened.
+
+`curator_post_image` (2026-09-19): a picture on a post, kept **in the
+database** and served to curators only, the way a bug report's screenshot is
+(contact-and-support.md §6). The bytes are what `ScreenshotStore::render()`
+drew after the virus scan, as WebP at most 2000 px on the long side and
+`CuratorPostImage::MAX_BYTES` (3 MB); never the uploaded file.
+
+| column | type | meaning |
+| --- | --- | --- |
+| `id` | bigint | |
+| `post_id` | bigint, null | the post. `ON DELETE CASCADE`. NULL while the picture is uploaded and not yet posted. |
+| `uploader_id` | bigint, null | who uploaded it; only they may attach it to a post. `ON DELETE SET NULL`. |
+| `position` | smallint | order on the post, at most `CuratorPost::MAX_IMAGES` (4). |
+| `mime_type`, `bytes`, `byte_size`, `width`, `height`, `created_at` | | as `bug_screenshot`. |
+
+A picture uploads **before** its post exists, so the composer can show the
+bytes' own progress; the post claims it by id. A picture uploaded and never
+posted is swept by `app:media:gc` after a day
+(`CuratorRoom::collectUnclaimedImages()`). Without the script, the composer's
+file input posts with the form and the server renders the files at post time;
+both paths end in the same rows.
+
+`about_submission_id` is checked against `submission` before the write: the
+column is a foreign key, and an id nobody typed correctly must come back as a
+sentence, not as a 500.
 
 ### 13.4 Categories, a fixed list in code
 
@@ -3160,6 +3193,10 @@ other desks.
 | POST | `/moderate/room/post` | `moderate_room_post` | write a post: body, category, optional recipient, optional submission id. CSRF-protected. |
 | POST | `/moderate/room/pin` | `moderate_room_pin` | set a post's `pin`. CSRF-protected. |
 | POST | `/moderate/room/delete` | `moderate_room_delete` | delete **your own** post. A hard delete with no tombstone: this is a staffroom note, not a moderation record, and §8's record-keeping principle covers decisions, not conversation. |
+| GET | `/moderate/room/image/{id}` | `moderate_room_image` | one picture, from the database, `private, no-store`, inline. §13.6 applies: a picture on a direct post answers 404 to anyone but its two people; an unposted picture answers only its uploader. |
+| POST | `/moderate/room/upload` | `moderate_room_upload` | one picture from the composer's uploader, JSON `{id, width, height, bytes, url}` (201) or `{error}` (422). CSRF-protected (`moderate-room-upload`). |
+| POST | `/moderate/room/upload/{id}/remove` | `moderate_room_upload_remove` | take back a picture uploaded and not yet posted. |
+| GET | `/moderate/room/submissions?q=` | `moderate_room_submissions` | the composer's search: up to 8 submissions whose id, title or region matches, pending first, as JSON `{id, title, type, status, region, country}`. Unscoped, like the room. |
 
 Every POST redirects back to the room with the active category preserved,
 matching `ModerateController`'s existing redirect discipline.
@@ -3171,11 +3208,30 @@ matching `ModerateController`'s existing redirect discipline.
 its `in_moderation` list, and a Room tab carrying the §13.7 badge.
 
 Category chips across the top, pinned posts in their own block, then the list
-newest first, then the composer. **No JavaScript at all**: plain forms, so the
-strict CSP has nothing to allow, and a curator whose script tag never loaded
-can still ask their question. `about_submission_id` renders as a link to the
-queue card. The reader's own scope still decides whether that card opens, so a
-link to an item outside their area refuses at the target, as §9.3 requires.
+newest first, then the composer. **Plain forms first**, so the strict CSP has
+nothing to allow and a curator whose script tag never loaded can still ask
+their question; `assets/js/room.js` (a file, never inline) adds two things on
+top (owner 2026-09-19):
+
+- **About submission is a search**, not a number box. Type a number, a word of
+  the title or a region name; the list under the box shows `SUB-id · title ·
+  region · type · status`, arrows and Enter pick, the pick shows as a chip
+  with an ×. The picked id travels in a hidden `about`; without the script, a
+  number typed into the same box (`about_q`, `123` or `SUB-123`) is read as
+  the id. Owner: "linking a number by hand will go wrong".
+- **Pictures are a drop zone** with real progress: each file uploads the
+  moment it is chosen, dropped, or pasted into the post, its bar showing the
+  bytes on the wire and then "Checking…" while the server draws it again;
+  a finished upload shows its size, a refused one its reason, and × takes it
+  back. At most four. The ids travel in a hidden `images`. Without the script
+  the plain file input posts with the form.
+
+A post shows its pictures as thumbnails that open the picture full size, and
+`about_submission_id` as a link to the queue card reading `SUB-id · title`.
+The reader's own scope still decides whether that card opens, so a link to an
+item outside their area refuses at the target, as §9.3 requires. A post
+refused for its picture or its submission number comes back with its words
+still in the box.
 
 ### 13.10 The rulebook's link
 
