@@ -1,0 +1,19 @@
+docs/specs/operations.md
+  s_f47a817d6ad683::t_155ecec3bdbf86 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "26a5f9b2c130a5a93f46562eaf8c07b357838fb9",
+  "prompts": {},
+  "sessions": {
+    "s_f47a817d6ad683": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "610ca1d1-6828-4822-a153-1be243f02d0a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
