@@ -1,0 +1,30 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Our own dropdown (assets/js/select-box.js): the button that stands in for
+   a <select>, the list it opens, and the select itself kept rendered but out
+   of sight so the browser's validation still runs on it.
+
+   The button's colours, borders and font come from the page: select-box.js
+   copies every rule the page wrote for `select` onto `.cc-sel-btn`. What is
+   here is only the shape. The list wears the colours of its button. */
+
+.cc-sel{display:contents}
+.cc-sel-native{position:absolute!important;width:1px!important;height:1px!important;margin:0!important;padding:0!important;
+  border:0!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important;clip:rect(0 0 0 0)}
+.cc-sel-btn{display:inline-flex;align-items:center;gap:.6rem;text-align:left;cursor:pointer;min-height:24px}
+.cc-sel-btn:disabled{opacity:.55;cursor:default}
+.cc-sel-btn::after{content:"";flex:none;width:.42rem;height:.42rem;margin:0 .15rem 0 0;
+  border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-25%) rotate(45deg)}
+.cc-sel-btn[aria-expanded="true"]::after{transform:translateY(25%) rotate(-135deg)}
+.cc-sel-btn[aria-invalid="true"]{outline:2px solid #B5532E;outline-offset:1px}
+.cc-sel-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cc-sel-msg{display:block;margin:.3rem 0 0;font-size:.82rem;color:#B5532E}
+.cc-sel-list{position:fixed;z-index:3200;margin:0;padding:.2rem;list-style:none;overflow-y:auto;
+  background:var(--sel-bg,var(--paper,#EFE6D4));color:var(--sel-fg,var(--ink,#101E16));
+  border:1px solid rgba(16,30,22,.25);border-radius:6px;box-shadow:0 10px 28px -8px rgba(0,0,0,.45);font-size:.82rem}
+.cc-sel-list:focus{outline:none}
+.cc-sel-list:focus-visible{outline:2px solid var(--trail,#FF5A1F);outline-offset:1px}
+.cc-sel-list li{display:flex;align-items:center;gap:.7rem;padding:.42rem .55rem;border-radius:4px;cursor:pointer;white-space:nowrap}
+.cc-sel-list li .cc-sel-name{flex:1}
+.cc-sel-list li.active{background:color-mix(in srgb,currentColor 14%,transparent)}
+.cc-sel-list li[aria-selected="true"]{font-weight:700}
+.cc-sel-list li[aria-disabled="true"]{opacity:.5;cursor:default}

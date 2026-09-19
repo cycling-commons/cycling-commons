@@ -412,16 +412,24 @@ map module opens `#drawer` behind its back.
   for one; nothing in the app exports GeoJSON, so it would have been a button
   that does nothing. Owner call 2026-08-20: leave it out until the export
   itself exists (the ODbL credit has to travel inside the file).
-- **Dropdowns are ours** (owner 2026-09-18). Every `<select>` on the map page
-  (ride-check radius, Scout cards, the route drawer's community box, the bug
-  form) draws as a button plus a listbox from `select-box.js`, not the
-  browser's popup. The native select stays in the page, hidden, and stays the
-  truth: forms submit it, code reads and writes `.value` (the box repaints on
-  a write), and `change` fires on it. One watcher picks up selects added
-  later; `data-native` opts one out. The list is `position: fixed` in the
-  colours of the button it opened from, so no panel with overflow hidden
-  cuts it off. Keyboard: arrows, Home/End, type-ahead, Enter/Space, Esc, Tab.
-  The Scout surface picker uses its `decorate` hook to add each class's line.
+- **Dropdowns are ours** (owner 2026-09-18, the whole site 2026-09-19).
+  Every `<select>` on every page draws as a button plus a listbox from
+  `assets/js/select-box.js` (loaded by `base.html.twig` and by the map page;
+  `assets/map/select-box.js` is the modules' door to it) with
+  `assets/styles/select-box.css`, not the browser's popup. The native select
+  stays in the page, rendered but out of sight, and stays the truth: forms
+  submit it, code reads and writes `.value` (the box repaints on a write),
+  `change` fires on it (so `data-autosubmit` filters still submit), and the
+  browser's own validation still runs on it: a `required` select left empty
+  blocks the form and its message shows under the button. The button wears
+  whatever the page gave its selects: at load, every stylesheet rule written
+  for `select` is copied for `.cc-sel-btn`, so a context's look follows with
+  no per-page CSS. One watcher picks up selects added later; `data-native`
+  opts one out, and `multiple` or `size` selects stay native. The list is
+  `position: fixed` in the colours of the button it opened from, so no panel
+  with overflow hidden cuts it off. Keyboard: arrows, Home/End, type-ahead,
+  Enter/Space, Esc, Tab. The Scout surface picker uses its `decorate` hook to
+  add each class's line.
 
 ### 4.1 Layer toggles
 

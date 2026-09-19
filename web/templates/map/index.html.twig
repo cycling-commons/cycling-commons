@@ -47,6 +47,7 @@
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/pins.css') }}" />
+<link rel="stylesheet" href="{{ asset('styles/select-box.css') }}" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
 {# No nonce: script-src names the analytics host directly, so neither this file
@@ -714,6 +715,8 @@
    window.CC_COVERAGE_URL is set (the COVERAGE_TILES manifest injection), so
    with the flag off this script is inert. #}
 <script src="{{ asset('lib/pmtiles-4.4.1.js') }}"></script>
+{# Our own dropdown, before the map's modules run (map-and-search.md §4.0). #}
+<script src="{{ asset('js/select-box.js') }}"></script>
 <script nonce="{{ csp_nonce() }}">window.MAPILLARY_TOKEN = {{ mapillary_token|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 {# The satellite layer's Esri key. Public by design — it ships to the browser,
    like MAPILLARY_TOKEN — and restricted at Esri to our referrers. Empty means

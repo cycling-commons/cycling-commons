@@ -834,27 +834,7 @@
   .scout-letter,.scout-name{background:var(--chrome-field);border:1px solid rgb(var(--chrome-fg) / .22);
     border-radius:5px;color:var(--chrome-fg-solid);font-family:inherit;font-size:.78rem;padding:.35rem .45rem}
   .scout-letter option{background:var(--chrome-field);color:var(--chrome-fg-solid)}
-  /* Our dropdown (select-box.js, owner 2026-09-18). The wrapper takes no box
-     of its own, so the button sits where the select sat and the context's
-     select rules below style it. The list opens fixed on top of everything,
-     in the colours of the button it came from. */
-  .cc-sel{display:contents}
-  .cc-sel-btn{display:inline-flex;align-items:center;gap:.6rem;text-align:left;cursor:pointer;font:inherit;min-height:24px}
-  .cc-sel-btn:disabled{opacity:.55;cursor:default}
-  .cc-sel-btn::after{content:"";flex:none;width:.42rem;height:.42rem;margin:0 .15rem 0 0;
-    border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-25%) rotate(45deg)}
-  .cc-sel-btn[aria-expanded="true"]::after{transform:translateY(25%) rotate(-135deg)}
-  .cc-sel-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .cc-sel-list{position:fixed;z-index:3200;margin:0;padding:.2rem;list-style:none;overflow-y:auto;
-    background:var(--sel-bg,var(--chrome-field));color:var(--sel-fg,var(--chrome-fg-solid));
-    border:1px solid rgb(var(--chrome-fg) / .25);border-radius:6px;box-shadow:0 10px 28px -8px rgba(0,0,0,.45);font-size:.82rem}
-  .cc-sel-list:focus{outline:none}
-  .cc-sel-list:focus-visible{outline:2px solid var(--trail);outline-offset:1px}
-  .cc-sel-list li{display:flex;align-items:center;gap:.7rem;padding:.42rem .55rem;border-radius:4px;cursor:pointer;white-space:nowrap}
-  .cc-sel-list li .cc-sel-name{flex:1}
-  .cc-sel-list li.active{background:color-mix(in srgb,currentColor 14%,transparent)}
-  .cc-sel-list li[aria-selected="true"]{font-weight:700}
-  .cc-sel-list li[aria-disabled="true"]{opacity:.5;cursor:default}
+  /* The dropdown itself is site-wide: assets/styles/select-box.css + assets/js/select-box.js. */
   /* A surface choice shows the line it draws on the map, on the map's cream casing. */
   .scout-swatch{flex:none;width:2.2rem;height:8px;border-radius:4px;
     box-shadow:0 0 0 1.5px #FBF4E4,0 0 0 2.5px rgba(16,30,22,.3)}
