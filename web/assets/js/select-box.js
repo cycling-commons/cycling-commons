@@ -154,6 +154,8 @@
       var below = window.innerHeight - r.bottom - 8;
       var above = r.top - 8;
       list.style.minWidth = r.width + 'px';
+      list.style.width = 'max-content';
+      list.style.maxWidth = Math.min(window.innerWidth - 16, Math.max(r.width, 480)) + 'px';
       list.style.left = Math.max(8, Math.min(r.left, window.innerWidth - list.offsetWidth - 8)) + 'px';
       var h = Math.min(list.scrollHeight, 352);
       if (below >= Math.min(h, 200) || below >= above) {

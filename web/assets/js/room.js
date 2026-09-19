@@ -261,3 +261,61 @@
     if (files.length) { e.preventDefault(); accept(files); }
   });
 })();
+
+/* ---- Lightbox: a post's pictures large, prev/next when there are more ---- */
+(function () {
+  var lb = document.getElementById('rm-lb');
+  if (!lb) return;
+  var img = lb.querySelector('img');
+  var prev = lb.querySelector('[data-lb=prev]');
+  var next = lb.querySelector('[data-lb=next]');
+  var count = lb.querySelector('.rm-lb-n');
+  var set = [];
+  var at = 0;
+  var opener = null;
+
+  function show(i) {
+    at = (i + set.length) % set.length;
+    var a = set[at];
+    img.src = a.getAttribute('href');
+    img.alt = a.querySelector('img') ? a.querySelector('img').alt : '';
+    prev.hidden = next.hidden = set.length < 2;
+    count.textContent = set.length > 1 ? (at + 1) + ' / ' + set.length : '';
+  }
+  function open(group, i, from) {
+    set = Array.prototype.slice.call(group.querySelectorAll('a[href]'));
+    opener = from;
+    lb.hidden = false;
+    show(i);
+    lb.querySelector('[data-lb=close]').focus();
+  }
+  function close() {
+    lb.hidden = true;
+    img.src = '';
+    if (opener) opener.focus();
+  }
+
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-lightbox] a[href]');
+    if (a && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      var group = a.closest('[data-lightbox]');
+      open(group, Array.prototype.indexOf.call(group.querySelectorAll('a[href]'), a), a);
+      return;
+    }
+    if (lb.hidden) return;
+    var b = e.target.closest('[data-lb]');
+    if (b) {
+      var act = b.getAttribute('data-lb');
+      if ('close' === act) close(); else if ('prev' === act) show(at - 1); else show(at + 1);
+    } else if (e.target === lb) close();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (lb.hidden) return;
+    if ('Escape' === e.key) close();
+    else if ('ArrowLeft' === e.key && set.length > 1) show(at - 1);
+    else if ('ArrowRight' === e.key && set.length > 1) show(at + 1);
+    else return;
+    e.preventDefault();
+  });
+})();

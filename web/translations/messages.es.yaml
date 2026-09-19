@@ -4844,6 +4844,10 @@ room:
   about_submission: 'Sobre la contribución n.º %id%'
   about_submission_titled: 'Sobre SUB-%id% · %title%'
   image_alt: 'Imagen %n% de esta entrada'
+  lightbox_label: 'Imagen'
+  lightbox_close: 'Cerrar'
+  lightbox_prev: 'Imagen anterior'
+  lightbox_next: 'Imagen siguiente'
   pin:
     none: 'Sin fijar'
     category: 'Fijado en esta categoría'

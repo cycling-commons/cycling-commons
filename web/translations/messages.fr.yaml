@@ -4804,6 +4804,10 @@ room:
   about_submission: 'À propos de la contribution n° %id%'
   about_submission_titled: 'À propos de SUB-%id% · %title%'
   image_alt: 'Image %n% de ce message'
+  lightbox_label: 'Image'
+  lightbox_close: 'Fermer'
+  lightbox_prev: 'Image précédente'
+  lightbox_next: 'Image suivante'
   pin:
     none: 'Non épinglé'
     category: 'Épinglé à cette catégorie'

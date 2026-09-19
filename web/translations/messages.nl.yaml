@@ -4811,6 +4811,10 @@ room:
   about_submission: 'Over inzending #%id%'
   about_submission_titled: 'Over SUB-%id% · %title%'
   image_alt: 'Afbeelding %n% bij dit bericht'
+  lightbox_label: 'Afbeelding'
+  lightbox_close: 'Sluiten'
+  lightbox_prev: 'Vorige afbeelding'
+  lightbox_next: 'Volgende afbeelding'
   pin:
     none: 'Niet vastgezet'
     category: 'Vastgezet in deze categorie'

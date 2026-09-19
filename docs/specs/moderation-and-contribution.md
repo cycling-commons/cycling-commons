@@ -3226,7 +3226,11 @@ top (owner 2026-09-19):
   back. At most four. The ids travel in a hidden `images`. Without the script
   the plain file input posts with the form.
 
-A post shows its pictures as thumbnails that open the picture full size, and
+A post shows its pictures as thumbnails; a click opens a lightbox (one
+picture large, prev/next and arrow keys when the post has more, Esc or the
+backdrop closes, focus returns to the thumbnail); without the script each
+thumbnail is a plain link to the picture. The search's number match is a
+prefix: "11" lists 11, 118 and 1103, the exact id first. The post shows
 `about_submission_id` as a link to the queue card reading `SUB-id · title`.
 The reader's own scope still decides whether that card opens, so a link to an
 item outside their area refuses at the target, as §9.3 requires. A post

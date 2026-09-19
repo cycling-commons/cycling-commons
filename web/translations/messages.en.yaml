@@ -4833,6 +4833,10 @@ room:
   about_submission: 'About submission #%id%'
   about_submission_titled: 'About SUB-%id% · %title%'
   image_alt: 'Picture %n% on this post'
+  lightbox_label: 'Picture'
+  lightbox_close: 'Close'
+  lightbox_prev: 'Previous picture'
+  lightbox_next: 'Next picture'
   pin:
     none: 'Not pinned'
     category: 'Pinned to this category'

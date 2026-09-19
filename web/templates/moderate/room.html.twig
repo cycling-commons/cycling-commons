@@ -79,6 +79,18 @@
   .rm-images{display:flex;flex-wrap:wrap;gap:.5rem;margin:.2rem 0 .5rem}
   .rm-images a{display:block;width:120px;height:90px;border-radius:5px;overflow:hidden;border:1px solid rgba(58,61,51,.2);background:rgba(58,61,51,.06)}
   .rm-images img{width:100%;height:100%;object-fit:cover;display:block}
+  /* The lightbox: one picture large, prev/next when the post has more. */
+  .rm-lb{position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;background:rgba(10,14,11,.88)}
+  .rm-lb[hidden]{display:none}
+  .rm-lb img{max-width:calc(100vw - 8rem);max-height:calc(100vh - 6rem);border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  .rm-lb button{position:absolute;border:0;border-radius:50%;background:var(--paper);color:var(--ink);cursor:pointer;
+    width:2.6rem;height:2.6rem;font-size:1.3rem;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .rm-lb button:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  .rm-lb .rm-lb-x{top:1rem;right:1rem}
+  .rm-lb .rm-lb-prev{left:1rem;top:50%;transform:translateY(-50%)}
+  .rm-lb .rm-lb-next{right:1rem;top:50%;transform:translateY(-50%)}
+  .rm-lb button[hidden]{display:none}
+  .rm-lb-n{position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;color:var(--paper)}
 </style>
 {% endblock %}
 {% block body_scripts %}<script src="{{ asset('js/room.js') }}" defer></script>{% endblock %}
@@ -89,6 +101,15 @@
   <div class="mh">
     <div class="kicker">{{ 'room.kicker'|trans }}</div>
     <h1>{{ 'room.heading'|trans }}</h1>
+  </div>
+
+  {# The pictures' lightbox (room.js). One for the page, hidden until a thumbnail is clicked. #}
+  <div class="rm-lb" id="rm-lb" role="dialog" aria-modal="true" aria-label="{{ 'room.lightbox_label'|trans }}" hidden>
+    <button type="button" class="rm-lb-x" data-lb="close" aria-label="{{ 'room.lightbox_close'|trans }}">×</button>
+    <button type="button" class="rm-lb-prev" data-lb="prev" aria-label="{{ 'room.lightbox_prev'|trans }}">‹</button>
+    <img src="" alt="">
+    <button type="button" class="rm-lb-next" data-lb="next" aria-label="{{ 'room.lightbox_next'|trans }}">›</button>
+    <span class="rm-lb-n" aria-live="polite"></span>
   </div>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}

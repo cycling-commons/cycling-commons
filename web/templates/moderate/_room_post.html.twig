@@ -28,7 +28,9 @@
   {% if post.images is not empty %}
     {# Pictures the author attached: served to curators only, from the
        database, so nothing on this board leaves the desk (§13.3). #}
-    <div class="rm-images">
+    {# room.js opens these in a lightbox with prev/next; without it each is a
+       plain link to the picture. #}
+    <div class="rm-images" data-lightbox>
       {% for image in post.images %}
         <a href="{{ path('moderate_room_image', {id: image.id}) }}" target="_blank" rel="noopener"><img src="{{ path('moderate_room_image', {id: image.id}) }}" width="{{ image.width }}" height="{{ image.height }}" alt="{{ 'room.image_alt'|trans({'%n%': loop.index}) }}" loading="lazy"></a>
       {% endfor %}

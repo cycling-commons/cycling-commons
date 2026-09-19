@@ -235,20 +235,19 @@ final class CuratorRoom
         if ('' === $q) {
             return [];
         }
-        $id = null;
-        if (preg_match('/^(?:SUB-?)?(\d{1,12})$/i', $q, $m)) {
-            $id = (int) $m[1];
-        }
+        // A number matches every id that starts with it: "11" lists 11, 118, 1103.
+        $idPrefix = preg_match('/^(?:SUB-?)?(\d{1,12})$/i', $q, $m) ? $m[1] : null;
         $rows = $this->db->fetchAllAssociative(
             <<<'SQL'
                 SELECT s.id, s.title, s.type, s.status, s.country_code, r.name AS region
                 FROM submission s
                 LEFT JOIN region r ON r.id = s.region_id
-                WHERE s.id = :id OR s.title ILIKE :like OR r.name ILIKE :like
-                ORDER BY (s.id = :id) DESC, (s.status = 'pending') DESC, s.id DESC
+                WHERE (:idp::text IS NOT NULL AND s.id::text LIKE :idp || '%')
+                   OR s.title ILIKE :like OR r.name ILIKE :like
+                ORDER BY (s.id::text = :idp) DESC, (s.status = 'pending') DESC, s.id DESC
                 LIMIT :lim
                 SQL,
-            ['id' => $id ?? -1, 'like' => '%'.addcslashes($q, '%_\\').'%', 'lim' => self::SEARCH_LIMIT],
+            ['idp' => $idPrefix, 'like' => '%'.addcslashes($q, '%_\\').'%', 'lim' => self::SEARCH_LIMIT],
             ['lim' => \Doctrine\DBAL\ParameterType::INTEGER],
         );
 

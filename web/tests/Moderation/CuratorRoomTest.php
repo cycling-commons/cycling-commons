@@ -384,6 +384,12 @@ final class CuratorRoomTest extends WebTestCase
         $byId = json_decode((string) $client->getResponse()->getContent(), true);
         self::assertSame($sub->getId(), $byId[0]['id']);
 
+        // A number is a prefix: the first digit alone still lists the card.
+        $client->request('GET', '/moderate/room/submissions?q='.substr((string) $sub->getId(), 0, 1));
+        /** @var list<array{id: int}> $byPrefix */
+        $byPrefix = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertContains($sub->getId(), array_column($byPrefix, 'id'));
+
         $client->request('GET', '/moderate/room/submissions?q=');
         self::assertSame('[]', $client->getResponse()->getContent());
 

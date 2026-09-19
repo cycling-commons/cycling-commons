@@ -4812,6 +4812,10 @@ room:
   about_submission: 'Zu Beitrag #%id%'
   about_submission_titled: 'Zu SUB-%id% · %title%'
   image_alt: 'Bild %n% zu diesem Beitrag'
+  lightbox_label: 'Bild'
+  lightbox_close: 'Schließen'
+  lightbox_prev: 'Vorheriges Bild'
+  lightbox_next: 'Nächstes Bild'
   pin:
     none: 'Nicht angeheftet'
     category: 'In dieser Kategorie angeheftet'
