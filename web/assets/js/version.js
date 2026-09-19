@@ -4,7 +4,11 @@
 (function () {
   var T = window.ccT || function (k, fb) { return fb; };
   var V = window.CC_VERSION || { number: 'dev', date: '' };
-  var label = T('build', 'Build') + ' ' + V.number + (V.date ? ' · ' + V.date : '');
+  /* The build date reads as every other date on the site does: the rider's
+     own format (js/cc-dates.js, account-and-auth.md §9). The ISO the server
+     sends is the value, not the wording. */
+  var when = V.date ? ((window.ccDate && window.ccDate(V.date)) || V.date) : '';
+  var label = T('build', 'Build') + ' ' + V.number + (when ? ' · ' + when : '');
 
   function stamp() {
     /* A page that offers a slot decides where the marker goes. Everything below
@@ -23,7 +27,7 @@
     if (rail) {
       var r = document.createElement('span');
       r.className = 'cc-ver';
-      r.innerHTML = (T('build', 'Build') + ' ' + V.number).toUpperCase() + (V.date ? '<br>' + V.date : '');
+      r.innerHTML = (T('build', 'Build') + ' ' + V.number).toUpperCase() + (when ? '<br>' + when : '');
       r.style.cssText = 'font-family:var(--mono,monospace);font-size:.58rem;letter-spacing:.08em;opacity:.7;line-height:1.35;text-align:right';
       rail.appendChild(r);
       return;

@@ -70,7 +70,7 @@
         {% else %}
           {{ 'media.page.by_anonymous'|trans }}
         {% endif %}
-        {% if photo.takenAt %} &middot; {{ photo.takenAt }}{% endif %}
+        {% if photo.takenAt %} &middot; {{ photo.takenAt|cc_month }}{% endif %}
       </figcaption>
     </figure>
 

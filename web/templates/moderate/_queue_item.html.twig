@@ -161,7 +161,7 @@
                 <select name="mediaId">
                   <option value="">{{ 'moderate.msg.no_photo'|trans }}</option>
                   {% for p in item.photos %}
-                    <option value="{{ p.id }}">{{ loop.index }}{% if p.takenAt %} &middot; {{ p.takenAt }}{% endif %}</option>
+                    <option value="{{ p.id }}">{{ loop.index }}{% if p.takenAt %} &middot; {{ p.takenAt|cc_month }}{% endif %}</option>
                   {% endfor %}
                 </select>
               </label>
@@ -296,7 +296,7 @@
           <img src="{{ p.sm }}" alt="{{ 'moderate.media.alt'|trans }}" loading="lazy" width="110" height="82">
           <figcaption>
             {%- if p.distanceM is not null %}{{ 'moderate.media.distance'|trans({'%v%': p.distanceM|cc_m}) }}{% else %}{{ 'moderate.media.no_gps'|trans }}{% endif -%}
-            {%- if p.takenAt %} &middot; {{ p.takenAt }}{% endif -%}
+            {%- if p.takenAt %} &middot; {{ p.takenAt|cc_month }}{% endif -%}
           </figcaption>
         </figure>
       {% endfor %}

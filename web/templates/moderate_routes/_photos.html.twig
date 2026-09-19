@@ -19,7 +19,7 @@
       <a href="{{ p.lg }}" target="_blank" rel="noopener"><img src="{{ p.sm }}" alt="{{ 'moderate.media.alt'|trans }}" loading="lazy" width="110" height="82"></a>
       <figcaption>
         {%- if p.distanceM is not null %}{{ 'moderate_routes.photos.distance'|trans({'%v%': p.distanceM|cc_m}) }}{% else %}{{ 'moderate.media.no_gps'|trans }}{% endif -%}
-        {%- if p.takenAt %} &middot; {{ p.takenAt }}{% endif -%}
+        {%- if p.takenAt %} &middot; {{ p.takenAt|cc_month }}{% endif -%}
       </figcaption>
       <input type="hidden" name="photo_ids[]" value="{{ p.id }}"{% if form_id is defined and form_id %} form="{{ form_id }}"{% endif %}>
       <label class="rq-keep"><input type="checkbox" name="photo_keep[]" value="{{ p.id }}" checked{% if form_id is defined and form_id %} form="{{ form_id }}"{% endif %}> {{ 'moderate_routes.photos.keep'|trans }}</label>

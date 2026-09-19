@@ -17,7 +17,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -33,6 +32,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 final class AdminActionLogCrudController extends AbstractCrudController
 {
+    use RiderDatedFields;
+
     #[\Override]
     public static function getEntityFqcn(): string
     {
@@ -58,7 +59,7 @@ final class AdminActionLogCrudController extends AbstractCrudController
     #[\Override]
     public function configureFields(string $pageName): iterable
     {
-        yield DateTimeField::new('createdAt', 'When');
+        yield $this->riderDateTime('createdAt', 'When');
         yield TextField::new('action', 'Action');
         yield AssociationField::new('actor', 'By')->formatValue(
             static fn (mixed $v, AdminActionLog $l): string => $l->getActor()?->getEmail() ?? 'system'

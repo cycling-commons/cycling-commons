@@ -1000,6 +1000,20 @@ live on the entity beside the maximum.
 `App\Account\DateFormat` — `auto | ymd | dmy | mdy | long`, stored on
 `users.date_format`, default `auto`.
 
+**Three halves of one answer, and nothing else formats a date (2026-09-20).**
+Twig uses `cc_date`, `cc_datetime` and `cc_month`
+(`App\Twig\DateDisplayExtension`), the browser uses `window.ccDate`,
+`ccMonth`, `ccTime` and `ccDateTime` (`assets/js/cc-dates.js`, fed by
+`window.CC_DATE`), and PHP outside Twig asks `App\Account\DatePreference`
+for the ICU pattern (the admin screens' `DateTimeField`s, through
+`Controller\Admin\RiderDatedFields`). Anything that writes a date itself
+writes it in a format the rider did not choose. The footer build stamp did
+exactly that until 2026-09-20, and `/map`, which does not extend
+`base.html.twig`, carried the units bridge but not the date one. ISO stays
+where a machine reads it: `datetime="…"` attributes, the Atom feed, the data
+export's own header. Pinned by `tests/js/rider-date-format.test.cjs`, which
+also fails on a template printing a date-looking property with no filter.
+
 **A separate preference from language, deliberately.** The two are genuinely
 independent: plenty of people read a site in English and still expect
 `01-08-2026`, and `2026-08-01` reads as a filename to most of Europe. Deriving

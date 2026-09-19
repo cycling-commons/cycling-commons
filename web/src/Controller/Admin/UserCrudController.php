@@ -22,7 +22,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
@@ -50,6 +49,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 #[IsGranted('ROLE_ADMIN')]
 final class UserCrudController extends AbstractCrudController
 {
+    use RiderDatedFields;
+
     /** CSRF token id shared by the action form template and {@see run()}. */
     public const string CSRF_TOKEN_ID = 'ea-user-support';
 
@@ -107,9 +108,9 @@ final class UserCrudController extends AbstractCrudController
             ->hideOnForm();
         yield BooleanField::new('emailVerified', 'Email Verified')->hideOnForm();
         yield BooleanField::new('twoFaEnabled', '2FA Enabled')->hideOnForm();
-        yield DateTimeField::new('lockedUntil', 'Locked Until')->setRequired(false)->hideOnForm();
+        yield $this->riderDateTime('lockedUntil', 'Locked Until')->setRequired(false)->hideOnForm();
         yield BooleanField::new('publicProfile', 'Public Profile');
-        yield DateTimeField::new('createdAt', 'Registered')->hideOnForm();
+        yield $this->riderDateTime('createdAt', 'Registered')->hideOnForm();
         yield TextField::new('email', $this->t('admin.field.mod_areas'))
             ->onlyOnDetail()
             ->formatValue(fn ($v, User $u): string => implode(' · ', $this->scopeProvider->describe($u)) ?: $this->translator->trans('account.mod_scope_all'));

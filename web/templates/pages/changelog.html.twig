@@ -42,7 +42,7 @@
       <div class="crel" id="v{{ release.version }}">
         <div class="crel-head">
           <span class="crel-v">{{ release.version }}</span>
-          <span class="crel-d">{{ release.date }}</span>
+          <span class="crel-d">{{ release.date|cc_date }}</span>
         </div>
         {% for key in release.keys %}
           <div class="cline">{{ key|trans|rich }}</div>

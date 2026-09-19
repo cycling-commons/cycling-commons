@@ -14,7 +14,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -29,6 +28,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 final class ResetPasswordRequestCrudController extends AbstractCrudController
 {
+    use RiderDatedFields;
+
     #[\Override]
     public static function getEntityFqcn(): string
     {
@@ -58,8 +59,8 @@ final class ResetPasswordRequestCrudController extends AbstractCrudController
         yield AssociationField::new('user', 'Account')->formatValue(
             static fn (mixed $v, ResetPasswordRequest $r): string => $r->getUser() instanceof User ? $r->getUser()->getEmail() : '—'
         );
-        yield DateTimeField::new('requestedAt', 'Requested');
-        yield DateTimeField::new('expiresAt', 'Expires');
+        yield $this->riderDateTime('requestedAt', 'Requested');
+        yield $this->riderDateTime('expiresAt', 'Expires');
         yield BooleanField::new('active', 'Active')->renderAsSwitch(false);
     }
 }

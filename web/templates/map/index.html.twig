@@ -1068,6 +1068,17 @@ window.CC_VENDOR = {{ {
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>
 <script src="{{ asset('js/cc-units.js') }}"></script>
+{# The rider's date and time formats, for the same reason and by the same
+   route: a photo month in the drawer must read as it does on every other
+   page (account-and-auth.md §9). #}
+<script nonce="{{ csp_nonce() }}">
+  window.CC_DATE = {{ {
+    format: cc_user_date_format(),
+    time: cc_user_time_format(),
+    locale: app.request.locale|default('en')
+  }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+</script>
+<script src="{{ asset('js/cc-dates.js') }}"></script>
 {# contribute/coords.js registers window.Cc.parseLatLng. The search box reads
    a pasted "lat, lng" back (docs/specs/map-and-search.md §7.4). One parser,
    shared with the contribute wizard. #}

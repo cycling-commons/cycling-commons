@@ -14,7 +14,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -45,6 +44,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 final class BlogPostCrudController extends AbstractCrudController
 {
+    use RiderDatedFields;
+
     #[\Override]
     public static function getEntityFqcn(): string
     {
@@ -104,8 +105,8 @@ final class BlogPostCrudController extends AbstractCrudController
             ->setHelp('The id of the post this one is the other language of. Links the pair for readers.')
             ->hideOnIndex();
 
-        yield DateTimeField::new('publishedAt')->setDisabled()->hideOnForm();
-        yield DateTimeField::new('updatedAt')->setDisabled()->hideOnForm();
+        yield $this->riderDateTime('publishedAt')->setDisabled()->hideOnForm();
+        yield $this->riderDateTime('updatedAt')->setDisabled()->hideOnForm();
     }
 
     /**
