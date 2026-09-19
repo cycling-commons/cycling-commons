@@ -3,7 +3,7 @@
    Included by the dashboard (/profile), settings (/settings), 2FA setup, and the
    moderation queue (/moderate) so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_providers | moderate_room | moderate_rulebook | moderate_reports. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
+   Param: `active` = contrib | votes | saved | scout | translate | messages | settings | moderate_dashboard | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_providers | moderate_room | moderate_rulebook | moderate_reports. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
    Param: `mod_scope_names` (moderator-areas spec 2026-07-14) = the curator's
    assigned area names (ModerationScopeProvider::describe()) — [] for global,
    omitted/null for pages that don't pass it. Only rendered in moderator mode.
@@ -11,7 +11,7 @@
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate', 'moderate_routes', 'moderate_regions', 'moderate_providers', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports', 'moderate_markers'] %}
+{% set in_moderation = active in ['moderate_dashboard', 'moderate', 'moderate_routes', 'moderate_regions', 'moderate_providers', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports', 'moderate_markers'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -33,6 +33,9 @@
 {% set mod_room_count = curator_room_unread() %}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
   <span class="dtabs-modlabel" aria-hidden="true">{{ 'account.menu_moderation'|trans }}{% if mod_scope_names is defined and mod_scope_names is not null %} · {{ mod_scope_names is empty ? 'account.mod_scope_all'|trans : mod_scope_names|join(' · ') }}{% endif %}</span>
+  {# The dashboard: every desk's open count on one page (§5.0). No badge:
+     it holds no work of its own. #}
+  <a href="{{ path('moderate_dashboard') }}" class="dtab-mod {{ active == 'moderate_dashboard' ? 'on' : '' }}">{{ 'nav.dashboard'|trans }}</a>
   <a href="{{ path('moderate') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count is defined and mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
   <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}{% if mod_route_count is defined and mod_route_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_route_count }}</span>{% endif %}</a>
   {# Data desk, right after Routes (owner 2026-08-25): machine-raised findings about catalog rows. Badged, because

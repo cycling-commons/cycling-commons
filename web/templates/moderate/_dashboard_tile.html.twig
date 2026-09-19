@@ -1,0 +1,11 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# One desk on the curator dashboard: its open count, linked to the desk.
+   `d` = {route, label, count}; `due` paints a legal clock with work on it;
+   `note` = translation key for the line under the label. #}
+<a class="db-tile{{ d.count == 0 ? ' db-clear' }}{{ due ? ' db-due' }}" href="{{ path(d.route) }}">
+  <span class="db-n">{{ d.count > 0 ? d.count : 'curator_dashboard.clear'|trans }}</span>
+  <span class="db-what">
+    <span class="db-label">{{ d.label|trans }}</span>
+    <span class="db-note">{{ note|trans }}</span>
+  </span>
+</a>

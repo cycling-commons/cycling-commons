@@ -814,6 +814,32 @@ was → now diff and public history panel (`ChangeHistoryView`), and the
 
 ## 5. Moderation surfaces
 
+### 5.0 `/moderate/dashboard`, where a curator starts (2026-09-19)
+
+One read-only page with every desk's open count
+(`App\Controller\ModerateDashboardController`, route `moderate_dashboard`,
+`ROLE_CURATOR`). It is the first tab on the moderation bar and the first link
+in the account chip's moderation group. `/moderate` stays the submissions
+queue, so every existing link to it still lands on the queue.
+
+| Block | Content | Scope |
+|---|---|---|
+| Legal deadlines | Takedowns, Reports. A tile with open work has a red edge. | Unscoped, like their tabs |
+| Desks | Submissions, Routes (proposals + suggestions), Data, Bugs, Translations, Room (unread) | Submissions, Routes, Data: the curator's area (§9). The rest: everywhere. |
+| Curator room | The 3 newest non-pinned posts the reader can see, from `CuratorRoom::board()` | As the room (§13.6) |
+| Your last decisions | The 5 newest rows of `SubmissionQueue::history()` decided by this curator, with a link to `/moderate/history?handled=mine` | The curator's area |
+
+Each tile links to its desk. A zero reads "Clear". The page is compact: a
+tile is one line tall (count left, desk name right), the deadline lead shows
+only when a clock has work, and the room and decisions blocks sit side by side
+from 900px wide, with their "open" links in the section heading.
+
+Example: a curator for Flanders with 4 pending submissions and 1 open report
+sees "4" on the Submissions tile and a red "1" on the Reports tile.
+
+The page decides nothing. It does **not** stamp the room visit: the Room
+badge (§13.7) keeps counting until the curator opens `/moderate/room`.
+
 ### 5.1 Decisions live off the queue lists
 
 A curator must see the item in place before deciding:
@@ -3183,7 +3209,8 @@ reader's own posts, and excluding directed posts not addressed to them. A
 curator with no visit row counts nothing on their first load, because the
 room's whole history is not unread, it is history. `last_seen_at` is stamped on
 every room load, whatever category is showing: the room is one room, so seeing
-it is seeing it.
+it is seeing it. The dashboard's Room tile (§5.0) shows the same count and
+stamps nothing, even though it lists the newest posts.
 
 ### 13.8 Routes
 

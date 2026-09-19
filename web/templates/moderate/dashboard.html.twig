@@ -1,0 +1,105 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# The curator dashboard (moderation-and-contribution.md §5.0): every desk's
+   open count on one page. The two legal clocks come first, then the
+   editorial desks, the newest room posts, and this curator's own last
+   decisions. Read-only: every action lives on the desk it links to. #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  /* Compact: a tile is one line tall, number left, what it counts right. */
+  .db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.45rem;margin:0 0 .4rem}
+  .db-tile{display:flex;align-items:center;gap:.7rem;padding:.5rem .75rem;border:1px solid rgba(20,22,14,.14);
+    border-radius:8px;background:var(--paper-deep);color:var(--ink);text-decoration:none;transition:border-color .15s}
+  .db-tile:hover{border-color:var(--ink)}
+  .db-tile:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  .db-n{font-family:var(--serif);font-weight:700;font-size:1.45rem;line-height:1;min-width:2ch;text-align:center}
+  .db-clear .db-n{font-size:.8rem;font-weight:600;color:#595c4d}
+  .db-what{display:flex;flex-direction:column;min-width:0}
+  .db-label{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
+  .db-note{font-size:.76rem;color:#595c4d}
+  /* A legal clock with work on it is the one thing on this page in red. */
+  .db-tile.db-due{border:1.5px solid var(--danger);background:rgba(179,38,30,.07)}
+  .db-tile.db-due .db-n{color:var(--danger-ink)}
+  .dbody .sec-band{margin:1.1rem 0 .55rem}
+  .dbody .sec-lead{margin:0 0 .5rem}
+  .dbody .sec-empty{padding:.1rem 0 .4rem}
+  .sec-band .db-more{margin-left:auto;font-weight:600;letter-spacing:.08em;color:var(--clay);text-decoration:none}
+  .sec-band .db-more:hover{text-decoration:underline}
+  /* Room and your decisions side by side when there is room for both. */
+  .db-cols{display:grid;grid-template-columns:1fr;gap:0 1.6rem}
+  @media (min-width:900px){.db-cols{grid-template-columns:1fr 1fr}}
+  .db-list{list-style:none;margin:0 0 .4rem;padding:0;display:flex;flex-direction:column;gap:.3rem}
+  .db-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.4rem .7rem;border:1px solid rgba(20,22,14,.12);border-radius:8px}
+  .db-row-title{font-weight:600;font-size:.92rem;flex:1 1 10rem;min-width:0;overflow-wrap:anywhere}
+  .db-row-meta{font-size:.78rem;color:#595c4d}
+</style>
+{% endblock %}
+
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: nav_active, mod_scope_names: mod_scope_names, mod_submission_count: mod_submission_count, mod_route_count: mod_route_count, mod_takedown_count: mod_takedown_count} %}{% endblock %}
+
+{% block body %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'moderate.kicker'|trans }}</div>
+    <h1>{{ 'curator_dashboard.title'|trans }}</h1>
+  </div>
+
+  {# The legal clocks. Unscoped, like their tabs: a request with a deadline
+     is never shared out by region. #}
+  <h2 class="sec-band">{{ 'curator_dashboard.clocks.heading'|trans }}</h2>
+  {% if clocks_open > 0 %}<p class="sec-lead">{{ 'curator_dashboard.clocks.due'|trans }}</p>{% endif %}
+  <div class="db-grid">
+    {% for d in clocks %}
+      {% include 'moderate/_dashboard_tile.html.twig' with {d: d, due: d.count > 0, note: 'curator_dashboard.note.everywhere'} only %}
+    {% endfor %}
+  </div>
+
+  <h2 class="sec-band">{{ 'curator_dashboard.desks.heading'|trans }}</h2>
+  <div class="db-grid">
+    {% for d in desks %}
+      {% include 'moderate/_dashboard_tile.html.twig' with {d: d, due: false, note: d.key == 'room' ? 'curator_dashboard.note.room' : (d.scoped ? 'curator_dashboard.note.area' : 'curator_dashboard.note.everywhere')} only %}
+    {% endfor %}
+  </div>
+
+  <div class="db-cols">
+  <section>
+  <h2 class="sec-band">{{ 'curator_dashboard.room.heading'|trans }}<a class="db-more" href="{{ path('moderate_room') }}">{{ 'curator_dashboard.room.open'|trans }} →</a></h2>
+  {% if room_posts is empty %}
+    <p class="sec-empty">{{ 'curator_dashboard.room.empty'|trans }}</p>
+  {% else %}
+    <ul class="db-list">
+      {% for post in room_posts %}
+        <li class="db-row">
+          <span class="db-row-title">{{ post.title }}</span>
+          {% if post.category %}<span class="q-pill q-pill--ret">{{ ('room.cat.' ~ post.category)|trans }}</span>{% endif %}
+          {% if post.direct %}<span class="q-pill q-pill--conf">{{ post.mine ? 'curator_dashboard.room.direct_sent'|trans : 'room.to_you'|trans }}</span>{% endif %}
+          <span class="db-row-meta">
+            {%- if post.author %}{% include 'moderate/_rider_name.html.twig' with {rider: post.author} only %}{% else %}{{ 'room.former_curator'|trans }}{% endif %} · {{ post.created_at|cc_datetime -}}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  </section>
+
+  <section>
+  <h2 class="sec-band">{{ 'curator_dashboard.mine.heading'|trans }}<a class="db-more" href="{{ path('moderate_history', {handled: 'mine'}) }}">{{ 'curator_dashboard.mine.all'|trans }} →</a></h2>
+  {% set verdict_pill = {'approved': 'ok', 'rejected': 'rej', 'trashed': 'danger'} %}
+  {% if my_decisions is empty %}
+    <p class="sec-empty">{{ 'curator_dashboard.mine.empty'|trans }}</p>
+  {% else %}
+    <ul class="db-list">
+      {% for h in my_decisions %}
+        <li class="db-row">
+          <span class="q-pill q-pill--{{ verdict_pill[h.status] ?? 'ret' }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
+          <span class="db-row-title">{{ h.title }}</span>
+          <span class="db-row-meta">{{ h.when }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  </section>
+  </div>
+</div>
+{% endblock %}

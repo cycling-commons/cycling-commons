@@ -52,6 +52,7 @@ nav:
   translations: 'Translations'
   rulebook: 'Rulebook'
   room: 'Room'
+  dashboard: 'Dashboard'
   admin: 'Admin'
   language: 'Language'
 footer:
@@ -3930,6 +3931,8 @@ meta:
   moderate_rulebook_description: 'The rules the moderation desks run on.'
   moderate_room_title: 'Curator room'
   moderate_room_description: 'The in-desk board for curators and moderators.'
+  moderate_dashboard_title: 'Curator dashboard'
+  moderate_dashboard_description: 'Every moderation desk and its open work on one page.'
   moderate_title: 'Cycling Commons — Moderate'
   moderate_description: 'Curator surface for the Commons — review submissions, resolve flags, and keep the open cycling atlas trustworthy.'
   contribute_title: 'Cycling Commons — Contribute'
@@ -5164,3 +5167,26 @@ markers:
   grade_high: 'high'
   not_produced: 'not produced yet'
   utility: 'The rungs are utility and never reach Best of. Fifty riders saying a viewpoint is there is none of them saying it is good.'
+
+# Curator dashboard (moderation-and-contribution.md §5.0).
+curator_dashboard:
+  title: 'Dashboard'
+  clear: 'Clear'
+  clocks:
+    heading: 'Legal deadlines'
+    due: 'Takedowns and reports have a legal deadline. Answer these first.'
+  desks:
+    heading: 'Desks'
+  room:
+    heading: 'Curator room'
+    empty: 'Nobody has posted in the room yet.'
+    open: 'Open the room'
+    direct_sent: 'Direct'
+  mine:
+    heading: 'Your last decisions'
+    empty: 'You have not decided a submission yet.'
+    all: 'All your decisions'
+  note:
+    area: 'In your area'
+    everywhere: 'Everywhere'
+    room: 'New since your last visit'

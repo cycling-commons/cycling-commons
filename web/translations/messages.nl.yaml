@@ -52,6 +52,7 @@ nav:
   translations: 'Vertalingen'
   rulebook: 'Handboek'
   room: 'Kamer'
+  dashboard: 'Dashboard'
   admin: 'Admin'
   language: 'Taal'
 footer:
@@ -3911,6 +3912,8 @@ meta:
   moderate_rulebook_description: 'De regels waar de moderatiebureaus op draaien.'
   moderate_room_title: 'Curatorenkamer'
   moderate_room_description: 'Het interne prikbord voor curatoren en moderatoren.'
+  moderate_dashboard_title: 'Curatordashboard'
+  moderate_dashboard_description: 'Elke moderatiebalie en het openstaande werk op één pagina.'
   moderate_title: 'Cycling Commons — Moderatie'
   moderate_description: 'Curatoroppervlak voor de Commons — beoordeel inzendingen, los meldingen op en houd de open fietsatlas betrouwbaar.'
   contribute_title: 'Cycling Commons — Bijdragen'
@@ -5142,3 +5145,26 @@ markers:
   grade_high: 'hoog'
   not_produced: 'nog niet geproduceerd'
   utility: 'De sporten zijn nut en bereiken nooit de Best of. Vijftig fietsers die zeggen dat een uitzichtpunt er is, is geen van hen die zegt dat het mooi is.'
+
+# Curator dashboard (moderation-and-contribution.md §5.0).
+curator_dashboard:
+  title: 'Dashboard'
+  clear: 'Leeg'
+  clocks:
+    heading: 'Wettelijke termijnen'
+    due: 'Verwijderverzoeken en meldingen hebben een wettelijke termijn. Behandel deze eerst.'
+  desks:
+    heading: 'Balies'
+  room:
+    heading: 'Curatorkamer'
+    empty: 'Niemand heeft nog iets in de kamer geplaatst.'
+    open: 'Open de kamer'
+    direct_sent: 'Direct'
+  mine:
+    heading: 'Je laatste beslissingen'
+    empty: 'Je hebt nog geen inzending beoordeeld.'
+    all: 'Al je beslissingen'
+  note:
+    area: 'In je gebied'
+    everywhere: 'Overal'
+    room: 'Nieuw sinds je laatste bezoek'

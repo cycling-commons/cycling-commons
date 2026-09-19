@@ -52,6 +52,7 @@ nav:
   translations: 'Übersetzungen'
   rulebook: 'Regelwerk'
   room: 'Raum'
+  dashboard: 'Übersicht'
   admin: 'Admin'
   language: 'Sprache'
 footer:
@@ -3912,6 +3913,8 @@ meta:
   moderate_rulebook_description: 'Die Regeln, nach denen die Moderationsplätze arbeiten.'
   moderate_room_title: 'Kuratorenraum'
   moderate_room_description: 'Das interne Brett für Kuratoren und Moderatoren.'
+  moderate_dashboard_title: 'Kuratoren-Übersicht'
+  moderate_dashboard_description: 'Jeder Moderationsschalter und seine offene Arbeit auf einer Seite.'
   moderate_title: 'Cycling Commons — Moderation'
   moderate_description: 'Kuratoren-Bereich des Commons — Einreichungen prüfen, Meldungen bearbeiten und den offenen Cycling Atlas zuverlässig halten.'
   contribute_title: 'Cycling Commons — Beitragen'
@@ -5143,3 +5146,26 @@ markers:
   grade_high: 'hoch'
   not_produced: 'noch nicht erzeugt'
   utility: 'Die Sprossen sind Nutzwert und erreichen nie das Best of. Fünfzig Fahrer, die sagen, ein Aussichtspunkt sei da, sind keiner, der sagt, er sei schön.'
+
+# Curator dashboard (moderation-and-contribution.md §5.0).
+curator_dashboard:
+  title: 'Übersicht'
+  clear: 'Leer'
+  clocks:
+    heading: 'Gesetzliche Fristen'
+    due: 'Löschanträge und Meldungen haben eine gesetzliche Frist. Bearbeite sie zuerst.'
+  desks:
+    heading: 'Schalter'
+  room:
+    heading: 'Kuratorenraum'
+    empty: 'Im Raum hat noch niemand etwas gepostet.'
+    open: 'Raum öffnen'
+    direct_sent: 'Direkt'
+  mine:
+    heading: 'Deine letzten Entscheidungen'
+    empty: 'Du hast noch keinen Beitrag entschieden.'
+    all: 'Alle deine Entscheidungen'
+  note:
+    area: 'In deinem Gebiet'
+    everywhere: 'Überall'
+    room: 'Neu seit deinem letzten Besuch'

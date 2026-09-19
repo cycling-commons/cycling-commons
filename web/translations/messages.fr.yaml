@@ -52,6 +52,7 @@ nav:
   translations: 'Traductions'
   rulebook: 'Manuel'
   room: 'Salle'
+  dashboard: 'Tableau de bord'
   admin: 'Admin'
   language: 'Langue'
 footer:
@@ -3904,6 +3905,8 @@ meta:
   moderate_rulebook_description: 'Les règles des bureaux de modération.'
   moderate_room_title: 'Salle des curateurs'
   moderate_room_description: 'Le tableau interne des curateurs et des modérateurs.'
+  moderate_dashboard_title: 'Tableau de bord des curateurs'
+  moderate_dashboard_description: 'Chaque bureau de modération et son travail en attente, sur une page.'
   moderate_title: 'Cycling Commons — Modération'
   moderate_description: 'Espace curateur du Commons — examinez les soumissions, résolvez les signalements et maintenez la fiabilité de l''atlas cycliste ouvert.'
   contribute_title: 'Cycling Commons — Contribuer'
@@ -5135,3 +5138,26 @@ markers:
   grade_high: 'élevé'
   not_produced: 'pas encore produit'
   utility: 'Les échelons sont utilitaires et n''atteignent jamais le Best of. Cinquante cyclistes disant qu''un point de vue existe, ce n''est aucun d''eux disant qu''il est beau.'
+
+# Curator dashboard (moderation-and-contribution.md §5.0).
+curator_dashboard:
+  title: 'Tableau de bord'
+  clear: 'Rien'
+  clocks:
+    heading: 'Délais légaux'
+    due: 'Les retraits et les signalements ont un délai légal. Traitez-les en premier.'
+  desks:
+    heading: 'Bureaux'
+  room:
+    heading: 'Salle des curateurs'
+    empty: 'Personne n’a encore publié dans la salle.'
+    open: 'Ouvrir la salle'
+    direct_sent: 'Direct'
+  mine:
+    heading: 'Vos dernières décisions'
+    empty: 'Vous n’avez encore décidé aucune proposition.'
+    all: 'Toutes vos décisions'
+  note:
+    area: 'Dans votre zone'
+    everywhere: 'Partout'
+    room: 'Nouveau depuis votre dernière visite'

@@ -89,9 +89,11 @@
       <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
     {% endif %}
     {% if is_granted('ROLE_CURATOR') %}
-      {# Two moderation queues: submissions (everything except routes) + routes. #}
+      {# The dashboard first (every desk on one page), then the two moderation
+         queues: submissions (everything except routes) + routes. #}
       <div class="acct-group acct-group-mod">
         <div class="acct-sec acct-sec-mod">{{ 'account.menu_moderation'|trans }}</div>
+        <a href="{{ path('moderate_dashboard') }}">{{ 'nav.dashboard'|trans }}</a>
         <a href="{{ path('moderate') }}">{{ 'nav.moderate'|trans }}{% if _sub_open > 0 %}<span class="acct-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ _sub_open }}</span>{% endif %}</a>
         <a href="{{ path('moderate_routes') }}">{{ 'nav.routes'|trans }}</a>
         <a href="{{ path('moderate_takedowns') }}">{{ 'nav.takedowns'|trans }}</a>
