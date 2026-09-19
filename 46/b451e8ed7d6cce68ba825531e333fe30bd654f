@@ -1,0 +1,42 @@
+web/assets/js/room.js
+  s_f47a817d6ad683::t_82df3efae8625f 264-321
+web/templates/moderate/room.html.twig
+  s_f47a817d6ad683::t_82df3efae8625f 82-93,106-112
+  s_f47a817d6ad683::t_ed5b562cf10bf3 113-114
+docs/specs/moderation-and-contribution.md
+  s_f47a817d6ad683::t_d630160652bf25 3229-3233
+web/translations/messages.fr.yaml
+  s_f47a817d6ad683::t_82df3efae8625f 4807-4810
+web/translations/messages.en.yaml
+  s_f47a817d6ad683::t_82df3efae8625f 4836-4839
+web/tests/Moderation/CuratorRoomTest.php
+  s_f47a817d6ad683::t_de0124e62baeff 387-392
+web/assets/js/select-box.js
+  s_f47a817d6ad683::t_de0124e62baeff 157-158
+web/templates/moderate/_room_post.html.twig
+  s_f47a817d6ad683::t_82df3efae8625f 31-33
+web/translations/messages.es.yaml
+  s_f47a817d6ad683::t_82df3efae8625f 4847-4850
+web/src/Messaging/CuratorRoom.php
+  s_f47a817d6ad683::t_de0124e62baeff 238-239,245-247,250
+web/translations/messages.de.yaml
+  s_f47a817d6ad683::t_82df3efae8625f 4815-4818
+web/translations/messages.nl.yaml
+  s_f47a817d6ad683::t_82df3efae8625f 4814-4817
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "46b451e8ed7d6cce68ba825531e333fe30bd654f",
+  "prompts": {},
+  "sessions": {
+    "s_f47a817d6ad683": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "610ca1d1-6828-4822-a153-1be243f02d0a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
