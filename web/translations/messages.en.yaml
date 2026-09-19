@@ -4845,7 +4845,7 @@ room:
   pin:
     none: 'Not pinned'
     category: 'Pinned in its category'
-    room: 'Pinned at the top'
+    room: 'Pinned in every view'
   pin_label: 'How far to pin this post'
   pin_apply: 'Apply'
   delete: 'Delete this post'

@@ -3235,8 +3235,8 @@ of the filter chips opens the composer on its own page, `/moderate/room/new`
 (`moderate_room_new`, `room_new.html.twig`); a refused post returns there
 with its words. The composer is one partial, `_room_form.html.twig`, used by
 that page for a new post and by `room_edit.html.twig` for an existing one;
-the pin's labels say "in its category" and "at the top", because there is
-one room and "to the room" named nothing; the card is
+the pin's labels say "in its category" and "in every view", because there
+is one room and "to the room" named nothing; the card is
 `_room_post.html.twig`; the styles both pages share are
 `_room_styles.html.twig` (owner 2026-09-19: form, list and detail kept
 apart). Every field a post has is on the form, pin included, so nothing set

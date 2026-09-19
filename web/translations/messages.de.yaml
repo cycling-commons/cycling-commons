@@ -4824,7 +4824,7 @@ room:
   pin:
     none: 'Nicht angeheftet'
     category: 'In seiner Kategorie angeheftet'
-    room: 'Ganz oben angeheftet'
+    room: 'In jeder Ansicht angeheftet'
   pin_label: 'Wie weit dieser Beitrag angeheftet wird'
   pin_apply: 'Anwenden'
   delete: 'Diesen Beitrag löschen'

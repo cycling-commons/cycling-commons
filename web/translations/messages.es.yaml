@@ -4856,7 +4856,7 @@ room:
   pin:
     none: 'Sin fijar'
     category: 'Fijada en su categoría'
-    room: 'Fijada arriba del todo'
+    room: 'Fijada en todas las vistas'
   pin_label: 'Hasta dónde fijar este mensaje'
   pin_apply: 'Aplicar'
   delete: 'Borrar esta entrada'

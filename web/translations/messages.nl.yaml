@@ -4823,7 +4823,7 @@ room:
   pin:
     none: 'Niet vastgezet'
     category: 'Vastgepind in zijn categorie'
-    room: 'Vastgepind bovenaan'
+    room: 'Vastgepind in elke weergave'
   pin_label: 'Hoe ver dit bericht vastzetten'
   pin_apply: 'Toepassen'
   delete: 'Dit bericht verwijderen'
