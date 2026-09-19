@@ -1,0 +1,21 @@
+web/templates/moderate/_room_form.html.twig
+  s_f47a817d6ad683::t_229357651eaf0d 85-90,93-99
+web/templates/moderate/_room_styles.html.twig
+  s_f47a817d6ad683::t_229357651eaf0d 8-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6c0c2fe050da4a6fb6ee1be842f6cc1bef4d46a2",
+  "prompts": {},
+  "sessions": {
+    "s_f47a817d6ad683": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "610ca1d1-6828-4822-a153-1be243f02d0a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
