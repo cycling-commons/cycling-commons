@@ -1,0 +1,24 @@
+docs/specs/moderation-and-contribution.md
+  s_c91df8f096781d::t_5de6e753e2989c 832-833
+web/templates/moderate/dashboard.html.twig
+  s_c91df8f096781d::t_5de6e753e2989c 17
+  s_c91df8f096781d::t_70cbcb7ac3bde3 19
+web/templates/moderate/_dashboard_tile.html.twig
+  s_c91df8f096781d::t_5de6e753e2989c 6-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1f0abe05adf6b1c1aefabc59b6311a8732fd6edd",
+  "prompts": {},
+  "sessions": {
+    "s_c91df8f096781d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "60388143-cdf2-4d14-8408-dca7299c84cf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
