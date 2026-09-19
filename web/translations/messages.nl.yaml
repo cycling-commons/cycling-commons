@@ -4821,7 +4821,8 @@ room:
     room: 'Vastgezet in de hele kamer'
   pin_label: 'Hoe ver dit bericht vastzetten'
   pin_apply: 'Toepassen'
-  delete: 'Verwijderen'
+  delete: 'Dit bericht verwijderen'
+  delete_confirm: 'Dit bericht verwijderen? Het is dan voorgoed weg, afbeeldingen inbegrepen.'
   compose:
     heading: 'Schrijf aan de kamer'
     note: 'Iedereen met een curatorrol leest dit, tenzij je één persoon kiest. Niets hiervan verlaat het bureau.'

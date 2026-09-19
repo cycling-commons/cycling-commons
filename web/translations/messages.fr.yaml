@@ -4814,7 +4814,8 @@ room:
     room: 'Épinglé à toute la salle'
   pin_label: 'Jusqu''où épingler ce message'
   pin_apply: 'Appliquer'
-  delete: 'Supprimer'
+  delete: 'Supprimer ce message'
+  delete_confirm: 'Supprimer ce message ? Il disparaît pour de bon, images comprises.'
   compose:
     heading: 'Écrire à la salle'
     note: 'Toute personne ayant un rôle de curateur lit ceci, sauf si vous nommez quelqu''un. Rien ne quitte le bureau.'

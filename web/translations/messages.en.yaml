@@ -4843,7 +4843,8 @@ room:
     room: 'Pinned to the room'
   pin_label: 'How far to pin this post'
   pin_apply: 'Apply'
-  delete: 'Delete'
+  delete: 'Delete this post'
+  delete_confirm: 'Delete this post? It goes for good, pictures included.'
   compose:
     heading: 'Write to the room'
     note: 'Everyone with a curator role reads this, unless you name one person. Nothing here leaves the desk.'

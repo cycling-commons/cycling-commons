@@ -319,3 +319,9 @@
     e.preventDefault();
   });
 })();
+
+/* ---- Delete asks first: the whole post goes, pictures included ---- */
+document.addEventListener('submit', function (e) {
+  var f = e.target.closest('form.rm-del');
+  if (f && f.dataset.confirm && !window.confirm(f.dataset.confirm)) e.preventDefault();
+});

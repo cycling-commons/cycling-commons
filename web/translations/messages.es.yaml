@@ -4854,7 +4854,8 @@ room:
     room: 'Fijado en toda la sala'
   pin_label: 'Hasta dónde fijar este mensaje'
   pin_apply: 'Aplicar'
-  delete: 'Borrar'
+  delete: 'Borrar esta entrada'
+  delete_confirm: '¿Borrar esta entrada? Desaparece para siempre, imágenes incluidas.'
   compose:
     heading: 'Escribir a la sala'
     note: 'Todo el mundo con rol de curador lee esto, salvo que nombres a una persona. Nada de esto sale del escritorio.'

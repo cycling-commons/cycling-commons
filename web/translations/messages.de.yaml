@@ -4822,7 +4822,8 @@ room:
     room: 'Im ganzen Raum angeheftet'
   pin_label: 'Wie weit dieser Beitrag angeheftet wird'
   pin_apply: 'Anwenden'
-  delete: 'Löschen'
+  delete: 'Diesen Beitrag löschen'
+  delete_confirm: 'Diesen Beitrag löschen? Er ist dann endgültig weg, Bilder eingeschlossen.'
   compose:
     heading: 'An den Raum schreiben'
     note: 'Alle mit einer Kuratorenrolle lesen das, außer du nennst eine Person. Nichts davon verlässt den Platz.'

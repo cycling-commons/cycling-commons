@@ -60,11 +60,14 @@
       </form>
     {% endif %}
     {% if post.mine %}
-      <form method="post" action="{{ path('moderate_room_delete') }}">
+      {# Apart from the pin control and named for what it removes: the whole
+         post, not the pin (owner 2026-09-19, after deleting one by mistake).
+         room.js asks before it goes; without the script the button still works. #}
+      <form method="post" action="{{ path('moderate_room_delete') }}" class="rm-del" data-confirm="{{ 'room.delete_confirm'|trans }}">
         <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-delete') }}">
         <input type="hidden" name="id" value="{{ post.id }}">
         <input type="hidden" name="c" value="{{ view }}">
-        <button class="rm-mini" type="submit">{{ 'room.delete'|trans }}</button>
+        <button class="rm-mini rm-mini-danger" type="submit">{{ 'room.delete'|trans }}</button>
       </form>
     {% endif %}
   </div>
