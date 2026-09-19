@@ -38,7 +38,7 @@
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
-  <p class="sec-lead">{{ 'room.lead'|trans }}</p>
+  <p class="sec-lead">{{ 'room.lead'|trans }}<br>{{ 'room.lead_2'|trans }}</p>
 
   <nav class="rm-chips" aria-label="{{ 'room.filter_label'|trans }}">
     <a class="rm-chip {{ view == 'all' ? 'on' : '' }}" href="{{ path('moderate_room') }}">{{ 'room.view.all'|trans }}</a>

@@ -4782,7 +4782,8 @@ moderate_data:
 room:
   kicker: 'Moderatie · de curatorenkamer'
   heading: 'De curatorenkamer'
-  lead: 'Vraag het hier bij twijfel, voordat je handelt. Inhoud in afwachting blijft binnen Cycling Commons, dus hier bespreek je die.'
+  lead: 'Vraag het hier bij twijfel, voordat je handelt.'
+  lead_2: 'Inhoud in afwachting blijft binnen Cycling Commons, dus hier bespreek je die.'
   filter_label: 'Categorieën van de kamer'
   view:
     all: 'Alles'
