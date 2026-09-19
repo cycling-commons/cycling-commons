@@ -82,5 +82,18 @@
     <div class="rm-send-row">
       <button class="btn-act rm-send" type="submit">{{ (editing ? 'room.compose.save' : 'room.compose.send')|trans }}</button>
       {% if editing %}<a class="rm-cancel" href="{{ path('moderate_room', view == 'all' ? {} : {c: view}) }}">{{ 'room.compose.cancel'|trans }}</a>{% endif %}
+      {% if editing %}
+        {# Delete sits on this row, at its right. A form cannot hold a second
+           form, so the button posts through `form=` to the sibling below.
+           room.js asks first; the board carries no delete (owner 2026-09-19). #}
+        <button class="btn-act btn-danger-outline" type="submit" form="rm-del-{{ post.id }}">{{ 'room.delete'|trans }}</button>
+      {% endif %}
     </div>
 </form>
+{% if editing %}
+<form id="rm-del-{{ post.id }}" method="post" action="{{ path('moderate_room_delete') }}" class="rm-del" data-confirm="{{ 'room.delete_confirm'|trans }}" hidden>
+  <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-delete') }}">
+  <input type="hidden" name="id" value="{{ post.id }}">
+  <input type="hidden" name="c" value="{{ view }}">
+</form>
+{% endif %}
