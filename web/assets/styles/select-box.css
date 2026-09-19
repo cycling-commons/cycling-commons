@@ -18,6 +18,10 @@
 .cc-sel-btn[aria-invalid="true"]{outline:2px solid #B5532E;outline-offset:1px}
 .cc-sel-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cc-sel-msg{display:block;margin:.3rem 0 0;font-size:.82rem;color:#B5532E}
+/* The message line is empty and hidden until a choice is refused. Without
+   this, display:block beats the hidden attribute and the empty line still
+   takes room, which lifts every dropdown above the fields beside it. */
+.cc-sel-msg[hidden]{display:none}
 .cc-sel-list{position:fixed;z-index:3200;margin:0;padding:.2rem;list-style:none;overflow-y:auto;
   background:var(--sel-bg,var(--paper,#EFE6D4));color:var(--sel-fg,var(--ink,#101E16));
   border:1px solid rgba(16,30,22,.25);border-radius:6px;box-shadow:0 10px 28px -8px rgba(0,0,0,.45);font-size:.82rem}
