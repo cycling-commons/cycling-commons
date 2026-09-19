@@ -302,12 +302,13 @@ the same contract wording and asserts the version its user ticked in-app.
 - The drop zone becomes a real `<input type="file"
   accept="image/jpeg,image/png,image/webp,image/heic" multiple>` + drag/drop;
   each file POSTs immediately with a **per-file upload progress bar** on its
-  queue chip (XHR upload progress — real bytes, not a spinner; indeterminate
+  queue row (`.ulq .uq-row`, named `uq-*` rather than `chip*`: a chip is the
+  site's filter control, moderation-and-contribution.md) (XHR upload progress — real bytes, not a spinner; indeterminate
   pulse when the browser can't compute length). The fake `IMG_1003.jpg`
   generator dies.
-- **The upload is asynchronous, so the chip has a pending state**
+- **The upload is asynchronous, so the row has a pending state**
   (media-storage-architecture.md §3.3). Two owner decisions, 2026-08-16:
-  - **Optimistic preview.** While the worker runs, the chip shows the rider's
+  - **Optimistic preview.** While the worker runs, the row shows the rider's
     OWN file via `URL.createObjectURL`, dimmed and breathing, and swaps it for
     the served `sm` when the poll resolves. It is never another rider's
     unscanned bytes, because those bytes never leave the uploader's browser.
@@ -327,7 +328,7 @@ the same contract wording and asserts the version its user ticked in-app.
   a second, for at most half a minute, answered from one row. A socket for this
   would be more machinery than the question deserves.
 - Cap **6 photos per submission** (client-enforced, server re-checked at
-  intake). Removing a chip forgets the id (the object becomes an orphan and
+  intake). Removing a row forgets the id (the object becomes an orphan and
   is GC'd, §6).
 - The **consent modal becomes enforcing, and consent is stored BEFORE any
   upload is possible** — but it is put to the rider **at the moment they drop

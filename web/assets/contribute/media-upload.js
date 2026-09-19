@@ -225,22 +225,22 @@
 
     function addRow(name) {
       var row = document.createElement('span');
-      row.className = 'chip up';
+      row.className = 'uq-row up';
       row.innerHTML =
-        '<span class="chip-thumb"></span>' +
-        '<span class="chip-name">' + esc(name) + '</span>' +
-        '<span class="chip-bar"><i style="width:0%"></i></span>' +
-        '<button type="button" class="chip-x" aria-label="' + esc(t('remove', 'Remove')) + '">×</button>' +
+        '<span class="uq-thumb"></span>' +
+        '<span class="uq-name">' + esc(name) + '</span>' +
+        '<span class="uq-bar"><i style="width:0%"></i></span>' +
+        '<button type="button" class="uq-x" aria-label="' + esc(t('remove', 'Remove')) + '">×</button>' +
         /* Hidden until the upload has an id to attach a description to. The
            prompt asks what somebody who cannot see it needs to know, rather
            than saying "alt text", which means nothing to a rider. */
-        '<label class="chip-alt" hidden><span class="vh">' + esc(t('altLabel', 'Describe this photo')) + '</span>' +
+        '<label class="uq-alt" hidden><span class="vh">' + esc(t('altLabel', 'Describe this photo')) + '</span>' +
         '<input type="text" maxlength="300" placeholder="' + esc(t('altPlaceholder', 'What would somebody who cannot see it need to know?')) + '" /></label>';
       queueEl.appendChild(row);
-      var item = { id: null, name: name, alt: '', row: row, bar: row.querySelector('.chip-bar i'), state: 'uploading' };
-      row.querySelector('.chip-x').addEventListener('click', function () { removeItem(item); });
+      var item = { id: null, name: name, alt: '', row: row, bar: row.querySelector('.uq-bar i'), state: 'uploading' };
+      row.querySelector('.uq-x').addEventListener('click', function () { removeItem(item); });
 
-      var altInput = row.querySelector('.chip-alt input');
+      var altInput = row.querySelector('.uq-alt input');
       /* Every keystroke reaches the hidden copy, so the last word typed
          before Next is in the submission even if no change event fires. */
       altInput.addEventListener('input', function () {
@@ -266,7 +266,7 @@
         }).then(function (r) {
           /* Silent on success. A failure must not eat what they typed, so the
              field keeps its value and the next change tries again. */
-          row.querySelector('.chip-alt').classList.toggle('saved', r.ok);
+          row.querySelector('.uq-alt').classList.toggle('saved', r.ok);
         }).catch(function () { /* offline: the value stays, retried on next change */ });
       });
       items.push(item);
@@ -297,14 +297,14 @@
     function received(item, data, file) {
       item.id = data.id;
       /* There is now something to attach a description to, so offer the field. */
-      var altWrap = item.row.querySelector('.chip-alt');
+      var altWrap = item.row.querySelector('.uq-alt');
       if (altWrap) altWrap.hidden = false;
       item.state = 'checking';
       item.row.classList.remove('indeterminate');
       item.row.classList.add('checking');
       setThumb(item, localPreview(item, file), item.name);
-      var bar = item.row.querySelector('.chip-bar');
-      if (bar) bar.outerHTML = '<span class="chip-note">' + esc(t('checking', 'Checking…')) + '</span>';
+      var bar = item.row.querySelector('.uq-bar');
+      if (bar) bar.outerHTML = '<span class="uq-note">' + esc(t('checking', 'Checking…')) + '</span>';
       syncHidden();
       pollState(item, Date.now());
     }
@@ -325,7 +325,7 @@
 
     function setThumb(item, src, alt) {
       if (!src) return;
-      var thumb = item.row.querySelector('.chip-thumb');
+      var thumb = item.row.querySelector('.uq-thumb');
       if (!thumb) return;
       var img = thumb.querySelector('img');
       if (!img) {
@@ -344,7 +344,7 @@
       item.row.classList.add('done');
       setThumb(item, data.sm, item.name);
       releaseBlob(item);
-      var note = item.row.querySelector('.chip-note');
+      var note = item.row.querySelector('.uq-note');
       if (note && note.parentNode) note.parentNode.removeChild(note);
       syncHidden();
     }
@@ -354,7 +354,7 @@
       item.state = 'waiting';
       item.row.classList.remove('checking');
       item.row.classList.add('waiting');
-      var note = item.row.querySelector('.chip-note');
+      var note = item.row.querySelector('.uq-note');
       if (note) note.textContent = t('stillChecking', 'Still checking. We will let you know.');
       syncHidden();
     }
@@ -394,8 +394,8 @@
       item.row.classList.remove('indeterminate');
       item.row.classList.remove('checking');
       item.row.classList.add('failed');
-      var slot = item.row.querySelector('.chip-bar') || item.row.querySelector('.chip-note');
-      if (slot) slot.outerHTML = '<span class="chip-err">' + esc(errorText(reason)) + '</span>';
+      var slot = item.row.querySelector('.uq-bar') || item.row.querySelector('.uq-note');
+      if (slot) slot.outerHTML = '<span class="uq-err">' + esc(errorText(reason)) + '</span>';
       syncHidden();
     }
 
@@ -473,7 +473,7 @@
       for (var i = 0; i < files.length; i++) {
         if (items.length >= MAX) {
           var full = document.createElement('span');
-          full.className = 'chip failed';
+          full.className = 'uq-row failed';
           full.textContent = t('tooMany', '');
           queueEl.appendChild(full);
           (function (el) {

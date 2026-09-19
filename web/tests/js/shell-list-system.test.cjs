@@ -49,7 +49,7 @@ const SHELL_PAGES = LIST_PAGES.concat([
 // these has forked the system.
 const SHARED_RULES = [
   '.mh{', '.mh .kicker{', '.mh h1{', '.dbody{', '.mod-bar{', '.mod-filters{',
-  '.lchip{', '.hchip{', '.msg-chip{', '.pill{', '.q-pill{', '.q-item{', '.q-list{',
+  '.lchip{', '.chip{', '.hchip{', '.msg-chip{', '.pill{', '.q-pill{', '.q-item{', '.q-list{',
   '.empty-queue{', '.empty-state{', '.pager{', '.btn-act{', '.flash-success{', '.flash-error{',
   '.mod-search{', '.sec-band{', '.q-note{', '.q-diff dl{', '.wrap{',
 ];
@@ -64,10 +64,37 @@ test('the pager is defined once, in the global stylesheet', () => {
   assert.ok(!read(SHELL).includes('.pager{'), 'the shell defines .pager a second time');
 });
 
+// `.lchip{` is deliberately NOT in the list below either, and for the pager's
+// reason: THE chip is one rule for every page, public and shell alike, so it
+// lives in assets/styles/atlas.css (owner 2026-09-19). Defined exactly once,
+// one level out.
+test('the chip is defined once, in the global stylesheet', () => {
+  const atlas = read('assets/styles/atlas.css');
+  assert.match(atlas, /\.chip,\.lchip,\.chip-check span\{/, 'the chip must be defined in atlas.css');
+  assert.ok(!read(SHELL).includes('.lchip{'), 'the shell defines the chip a second time');
+});
+
+test('no page carries its own copy of the chip', () => {
+  // Two keep their own colours at the shared size and say so: the map's dark
+  // chrome (assets/styles/map.css) and the landing hero's photograph.
+  const skip = new Set(['assets/styles/map.css', 'assets/styles/atlas.css', 'templates/pages/index.html.twig']);
+  const walk = dir => fs.readdirSync(path.join(ROOT, dir), {withFileTypes: true}).flatMap(e => {
+    const rel = dir + '/' + e.name;
+    return e.isDirectory() ? walk(rel) : (/\.(twig|css)$/.test(e.name) ? [rel] : []);
+  });
+  for (const file of walk('templates').concat(walk('assets/styles'))) {
+    if (skip.has(file)) continue;
+    const src = read(file);
+    for (const rule of ['.chip{', '.lchip{', '.chip-check span{']) {
+      assert.ok(!src.includes(rule), `${file} defines ${rule} locally; the chip lives in atlas.css`);
+    }
+  }
+});
+
 test('the shell defines the system once', () => {
   const shell = read(SHELL);
   for (const rule of ['.dbody{', '.mh{', '.mh .kicker{', '.mh h1{', '.mod-bar{', '.mod-filters{',
-                      '.lchip{', '.q-pill{', '.q-note{', '.q-diff dl{', '.sec-band{', '.empty-state{',
+                      '.q-pill{', '.q-note{', '.q-diff dl{', '.sec-band{', '.empty-state{',
                       '.btn-act{']) {
     assert.ok(shell.includes(rule), `${rule} must be defined in the shell`);
   }
