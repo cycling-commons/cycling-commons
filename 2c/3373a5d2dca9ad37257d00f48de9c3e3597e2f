@@ -1,0 +1,29 @@
+docs/specs/moderation-and-contribution.md
+  s_f47a817d6ad683::t_d178fa2d7610db 3238-3239
+web/translations/messages.de.yaml
+  s_f47a817d6ad683::t_422bd04868471c 4827
+web/translations/messages.en.yaml
+  s_f47a817d6ad683::t_6df959cb905c42 4848
+web/translations/messages.es.yaml
+  s_f47a817d6ad683::t_2a45e9e519517e 4859
+web/translations/messages.fr.yaml
+  s_f47a817d6ad683::t_93ae045ed0609f 4819
+web/translations/messages.nl.yaml
+  s_f47a817d6ad683::t_ae35d62e9363c4 4826
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2c3373a5d2dca9ad37257d00f48de9c3e3597e2f",
+  "prompts": {},
+  "sessions": {
+    "s_f47a817d6ad683": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "610ca1d1-6828-4822-a153-1be243f02d0a",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
