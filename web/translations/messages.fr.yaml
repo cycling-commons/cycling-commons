@@ -4775,7 +4775,7 @@ moderate_data:
 room:
   kicker: 'Modération · la salle des curateurs'
   heading: 'La salle des curateurs'
-  lead: 'Le tableau que ce bureau tient pour ses curateurs. Demandez ici avant d''agir, et dites ensuite ce que vous avez décidé. Le contenu en attente ne quitte jamais le bureau : c''est donc le seul endroit où en parler.'
+  lead: 'En cas de doute, demandez ici avant d’agir. Le contenu en attente reste sur le bureau : c’est donc ici qu’on en discute.'
   filter_label: 'Catégories de la salle'
   view:
     all: 'Tout'

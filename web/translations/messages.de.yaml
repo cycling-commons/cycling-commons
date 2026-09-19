@@ -4783,7 +4783,7 @@ moderate_data:
 room:
   kicker: 'Moderation · der Kuratorenraum'
   heading: 'Der Kuratorenraum'
-  lead: 'Das Brett, das dieser Platz für seine Kuratoren führt. Frage hier, bevor du handelst, und sage danach, was du entschieden hast. Offene Inhalte verlassen den Platz nie, also ist dies der einzige Ort, an dem darüber gesprochen wird.'
+  lead: 'Im Zweifel hier fragen, bevor du handelst. Ausstehende Inhalte bleiben am Schreibtisch, also werden sie hier besprochen.'
   filter_label: 'Kategorien des Raums'
   view:
     all: 'Alles'

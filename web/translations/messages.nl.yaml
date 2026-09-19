@@ -4782,7 +4782,7 @@ moderate_data:
 room:
   kicker: 'Moderatie · de curatorenkamer'
   heading: 'De curatorenkamer'
-  lead: 'Het prikbord dat dit bureau bijhoudt voor zijn curatoren. Vraag hier voordat je handelt, en zeg achteraf wat je besloot. Inzendingen in behandeling verlaten het bureau nooit, dus dit is de enige plek om erover te praten.'
+  lead: 'Vraag het hier bij twijfel, voordat je handelt. Inhoud in afwachting blijft op het bureau, dus hier bespreek je die.'
   filter_label: 'Categorieën van de kamer'
   view:
     all: 'Alles'

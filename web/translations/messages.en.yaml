@@ -4804,7 +4804,7 @@ moderate_data:
 room:
   kicker: 'Moderation · the curator room'
   heading: 'The curator room'
-  lead: 'The board this desk keeps for its curators. Ask here before you act, and say what you decided afterwards. Pending content never leaves the desk, so this is the one place it can be discussed.'
+  lead: 'Ask here when in doubt, before you act. Pending content stays on the desk, so this is where to discuss it.'
   filter_label: 'Room categories'
   view:
     all: 'All'
