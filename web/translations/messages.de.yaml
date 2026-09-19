@@ -4821,8 +4821,8 @@ room:
   lightbox_next: 'Nächstes Bild'
   pin:
     none: 'Nicht angeheftet'
-    category: 'In dieser Kategorie angeheftet'
-    room: 'Im ganzen Raum angeheftet'
+    category: 'In seiner Kategorie angeheftet'
+    room: 'Ganz oben angeheftet'
   pin_label: 'Wie weit dieser Beitrag angeheftet wird'
   pin_apply: 'Anwenden'
   delete: 'Diesen Beitrag löschen'
@@ -4830,7 +4830,6 @@ room:
   compose:
     heading: 'An den Raum schreiben'
     heading_edit: 'Deinen Beitrag bearbeiten'
-    note: 'Alle mit einer Kuratorenrolle lesen das, außer du nennst eine Person. Nichts davon verlässt den Platz.'
     body_label: 'Dein Beitrag'
     placeholder: 'Was brauchst du?'
     category_label: 'Kategorie'

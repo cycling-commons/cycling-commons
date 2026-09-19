@@ -3229,8 +3229,13 @@ top (owner 2026-09-19):
   back. At most four. The ids travel in a hidden `images`. Without the script
   the plain file input posts with the form.
 
-The composer is one partial, `_room_form.html.twig`, used by the board for
-a new post and by `room_edit.html.twig` for an existing one; the card is
+The board only lists (owner 2026-09-19): a "Write to the room" button
+opens the composer on its own page, `/moderate/room/new`
+(`moderate_room_new`, `room_new.html.twig`); a refused post returns there
+with its words. The composer is one partial, `_room_form.html.twig`, used by
+that page for a new post and by `room_edit.html.twig` for an existing one;
+the pin's labels say "in its category" and "at the top", because there is
+one room and "to the room" named nothing; the card is
 `_room_post.html.twig`; the styles both pages share are
 `_room_styles.html.twig` (owner 2026-09-19: form, list and detail kept
 apart). Every field a post has is on the form, pin included, so nothing set

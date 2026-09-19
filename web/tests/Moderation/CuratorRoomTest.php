@@ -102,8 +102,10 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->request('GET', '/moderate/room');
 
         self::assertResponseIsSuccessful();
-        // The composer is the point of the page.
-        self::assertGreaterThan(0, $crawler->filter('form.rm-compose textarea[name="body"]')->count());
+        // The board lists; writing has its own page, one link away.
+        self::assertSame(0, $crawler->filter('form.rm-compose')->count());
+        $compose = $client->click($crawler->filter('a[href$="/moderate/room/new"]')->link());
+        self::assertGreaterThan(0, $compose->filter('form.rm-compose textarea[name="body"]')->count());
 
         // The rulebook's dead literal link is now a real route.
         $rulebook = $client->request('GET', '/moderate/rulebook');
@@ -116,7 +118,7 @@ final class CuratorRoomTest extends WebTestCase
         $client = static::createClient();
         $this->loginAs($client, 'loop', ['ROLE_CURATOR']);
 
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'The gate at the top of the col is locked.';
         $form['category'] = 'tools';
@@ -336,7 +338,7 @@ final class CuratorRoomTest extends WebTestCase
         $author = $this->loginAs($client, 'about', ['ROLE_CURATOR']);
         $sub = $this->seedSubmission((int) $author->getId(), 'Col du Rosier water point');
 
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Is this one in reach of anybody?';
         // The no-script path: a number typed into the search box.
@@ -354,7 +356,7 @@ final class CuratorRoomTest extends WebTestCase
         $client = static::createClient();
         $this->loginAs($client, 'about-bad', ['ROLE_CURATOR']);
 
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Words that must not be lost.';
         $form['about_q'] = '99999999';
@@ -362,8 +364,8 @@ final class CuratorRoomTest extends WebTestCase
         $crawler = $client->followRedirect();
 
         self::assertSelectorTextContains('.flash-error', 'no submission with that number');
-        self::assertSame(0, $crawler->filter('.rm-post')->count());
         self::assertSame('Words that must not be lost.', $crawler->filter('#rm-body')->text());
+        self::assertSame(0, $client->request('GET', '/moderate/room')->filter('.rm-post')->count());
     }
 
     public function testTheSearchFindsByNumberTitleAndRegionForCuratorsOnly(): void
@@ -402,7 +404,7 @@ final class CuratorRoomTest extends WebTestCase
     {
         $client = static::createClient();
         $author = $this->loginAs($client, 'pics', ['ROLE_CURATOR']);
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
         $token = (string) $crawler->filter('#rm-pics')->attr('data-token');
 
         // The composer's uploader: one picture, sent on its own, answered with an id.
@@ -424,7 +426,7 @@ final class CuratorRoomTest extends WebTestCase
 
         // The post claims it.
         $client->loginUser($author);
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'The sign at the junction, photographed.';
         $form['images'] = json_encode([$up['id']]);
@@ -446,7 +448,7 @@ final class CuratorRoomTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
 
         $client->loginUser($author);
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Trying to reuse the same picture.';
         $form['images'] = json_encode([$up['id']]);
@@ -460,7 +462,7 @@ final class CuratorRoomTest extends WebTestCase
         $client = static::createClient();
         $author = $this->loginAs($client, 'dm-pic', ['ROLE_CURATOR']);
         $recipient = $this->makeUser('dm-pic-to', ['ROLE_CURATOR']);
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
 
         // The no-script path: the file rides with the form itself.
         $client->request('POST', '/moderate/room/post', [
@@ -487,7 +489,7 @@ final class CuratorRoomTest extends WebTestCase
     {
         $client = static::createClient();
         $author = $this->loginAs($client, 'sweep', ['ROLE_CURATOR']);
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
         $token = (string) $crawler->filter('#rm-pics')->attr('data-token');
         $client->request('POST', '/moderate/room/upload', ['_token' => $token], [
             'image' => new UploadedFile($this->pngFile(), 'shot.png', 'image/png', null, true),
@@ -526,7 +528,7 @@ final class CuratorRoomTest extends WebTestCase
         $colleague = $this->makeUser('edit-to', ['ROLE_CURATOR']);
         $sub = $this->seedSubmission((int) $author->getId(), 'The gate at Les Croisettes');
 
-        $crawler = $client->request('GET', '/moderate/room');
+        $crawler = $client->request('GET', '/moderate/room/new');
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Pinned from the start.';
         $form['category'] = 'rules';

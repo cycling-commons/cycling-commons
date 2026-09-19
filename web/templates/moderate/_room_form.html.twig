@@ -14,7 +14,6 @@
     <input type="hidden" name="_token" value="{{ csrf_token('moderate-room-post') }}">
     <input type="hidden" name="c" value="{{ view }}">
     <h2>{{ (editing ? 'room.compose.heading_edit' : 'room.compose.heading')|trans }}</h2>
-    <p class="rm-note">{{ 'room.compose.note'|trans }}</p>
     <textarea id="rm-body" name="body" aria-label="{{ 'room.compose.body_label'|trans }}" maxlength="{{ body_max }}" required placeholder="{{ 'room.compose.placeholder'|trans }}">{{ body_now }}</textarea>
     <div class="rm-row">
       <div class="rm-field">

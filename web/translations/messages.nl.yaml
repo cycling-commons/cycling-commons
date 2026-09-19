@@ -4820,8 +4820,8 @@ room:
   lightbox_next: 'Volgende afbeelding'
   pin:
     none: 'Niet vastgezet'
-    category: 'Vastgezet in deze categorie'
-    room: 'Vastgezet in de hele kamer'
+    category: 'Vastgepind in zijn categorie'
+    room: 'Vastgepind bovenaan'
   pin_label: 'Hoe ver dit bericht vastzetten'
   pin_apply: 'Toepassen'
   delete: 'Dit bericht verwijderen'
@@ -4829,7 +4829,6 @@ room:
   compose:
     heading: 'Schrijf aan de kamer'
     heading_edit: 'Je bericht bewerken'
-    note: 'Iedereen met een curatorrol leest dit, tenzij je één persoon kiest. Niets hiervan verlaat het bureau.'
     body_label: 'Je bericht'
     placeholder: 'Wat heb je nodig?'
     category_label: 'Categorie'

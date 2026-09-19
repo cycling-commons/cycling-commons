@@ -4853,8 +4853,8 @@ room:
   lightbox_next: 'Imagen siguiente'
   pin:
     none: 'Sin fijar'
-    category: 'Fijado en esta categoría'
-    room: 'Fijado en toda la sala'
+    category: 'Fijada en su categoría'
+    room: 'Fijada arriba del todo'
   pin_label: 'Hasta dónde fijar este mensaje'
   pin_apply: 'Aplicar'
   delete: 'Borrar esta entrada'
@@ -4862,7 +4862,6 @@ room:
   compose:
     heading: 'Escribir a la sala'
     heading_edit: 'Editar tu entrada'
-    note: 'Todo el mundo con rol de curador lee esto, salvo que nombres a una persona. Nada de esto sale del escritorio.'
     body_label: 'Tu mensaje'
     placeholder: '¿Qué necesitas?'
     category_label: 'Categoría'

@@ -72,12 +72,6 @@ final class ModerateRoomController extends AbstractController
             'categories' => CuratorRoomCategory::cases(),
             'pinned' => $board['pinned'],
             'posts' => $board['posts'],
-            'curators' => $this->room->curators($curatorId),
-            'body_max' => CuratorRoom::BODY_MAX_LENGTH,
-            'images_max' => CuratorPost::MAX_IMAGES,
-            'image_bytes_max' => ScreenshotStore::MAX_UPLOAD_BYTES,
-            // A post refused for its picture comes back with its words intact.
-            'draft' => $this->draft($request),
             'mod_scope_names' => $this->scopeProvider->describe($curator),
         ]);
     }
@@ -158,9 +152,34 @@ final class ModerateRoomController extends AbstractController
         } catch (\InvalidArgumentException|ScreenshotRejected $e) {
             $this->addFlash('danger', $e->getMessage());
             $this->addFlash('room_draft', $body);
+
+            return $this->redirectToRoute('moderate_room_new', CuratorRoomCategory::VIEW_ALL === $view ? [] : ['c' => $view]);
         }
 
         return $this->backToRoom($view);
+    }
+
+    /** The composer, on its own page. The board only lists. */
+    #[Route('/moderate/room/new', name: 'moderate_room_new', methods: ['GET'])]
+    public function newForm(Request $request): Response
+    {
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $curatorId = (int) $curator->getId();
+
+        return $this->render('moderate/room_new.html.twig', [
+            'page_title' => 'meta.moderate_room_title',
+            'page_description' => 'meta.moderate_room_description',
+            'nav_active' => 'moderate_room',
+            'view' => $this->view($request),
+            'categories' => CuratorRoomCategory::cases(),
+            'curators' => $this->room->curators($curatorId),
+            'body_max' => CuratorRoom::BODY_MAX_LENGTH,
+            'images_max' => CuratorPost::MAX_IMAGES,
+            'image_bytes_max' => ScreenshotStore::MAX_UPLOAD_BYTES,
+            'draft' => $this->draft($request),
+            'mod_scope_names' => $this->scopeProvider->describe($curator),
+        ]);
     }
 
     /** The author's own post, every field open again. */

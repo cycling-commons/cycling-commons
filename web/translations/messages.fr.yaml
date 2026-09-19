@@ -4813,8 +4813,8 @@ room:
   lightbox_next: 'Image suivante'
   pin:
     none: 'Non épinglé'
-    category: 'Épinglé à cette catégorie'
-    room: 'Épinglé à toute la salle'
+    category: 'Épinglé dans sa catégorie'
+    room: 'Épinglé tout en haut'
   pin_label: 'Jusqu''où épingler ce message'
   pin_apply: 'Appliquer'
   delete: 'Supprimer ce message'
@@ -4822,7 +4822,6 @@ room:
   compose:
     heading: 'Écrire à la salle'
     heading_edit: 'Modifier votre message'
-    note: 'Toute personne ayant un rôle de curateur lit ceci, sauf si vous nommez quelqu''un. Rien ne quitte le bureau.'
     body_label: 'Votre message'
     placeholder: 'De quoi avez-vous besoin ?'
     category_label: 'Catégorie'

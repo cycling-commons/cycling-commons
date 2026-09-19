@@ -4842,8 +4842,8 @@ room:
   lightbox_next: 'Next picture'
   pin:
     none: 'Not pinned'
-    category: 'Pinned to this category'
-    room: 'Pinned to the room'
+    category: 'Pinned in its category'
+    room: 'Pinned at the top'
   pin_label: 'How far to pin this post'
   pin_apply: 'Apply'
   delete: 'Delete this post'
@@ -4851,7 +4851,6 @@ room:
   compose:
     heading: 'Write to the room'
     heading_edit: 'Edit your post'
-    note: 'Everyone with a curator role reads this, unless you name one person. Nothing here leaves the desk.'
     body_label: 'Your post'
     placeholder: 'What do you need?'
     category_label: 'Category'
