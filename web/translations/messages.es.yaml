@@ -4815,7 +4815,7 @@ moderate_data:
 room:
   kicker: 'Moderación · la sala de curadores'
   heading: 'La sala de curadores'
-  lead: 'Si dudas, pregunta aquí antes de actuar. El contenido pendiente se queda en la mesa, así que aquí es donde se comenta.'
+  lead: 'Si dudas, pregunta aquí antes de actuar. El contenido pendiente se queda dentro de Cycling Commons, así que aquí es donde se comenta.'
   filter_label: 'Categorías de la sala'
   view:
     all: 'Todo'

@@ -4775,7 +4775,7 @@ moderate_data:
 room:
   kicker: 'Modération · la salle des curateurs'
   heading: 'La salle des curateurs'
-  lead: 'En cas de doute, demandez ici avant d’agir. Le contenu en attente reste sur le bureau : c’est donc ici qu’on en discute.'
+  lead: 'En cas de doute, demandez ici avant d’agir. Le contenu en attente reste dans Cycling Commons : c’est donc ici qu’on en discute.'
   filter_label: 'Catégories de la salle'
   view:
     all: 'Tout'
