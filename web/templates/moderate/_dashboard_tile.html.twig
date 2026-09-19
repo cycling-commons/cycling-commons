@@ -3,7 +3,8 @@
    `d` = {route, label, count}; `due` paints a legal clock with work on it;
    `note` = translation key for the line under the label. #}
 <a class="db-tile{{ d.count == 0 ? ' db-clear' }}{{ due ? ' db-due' }}" href="{{ path(d.route) }}">
-  <span class="db-n">{{ d.count > 0 ? d.count : 'curator_dashboard.clear'|trans }}</span>
+  {# Nothing waiting: a drawn check mark, named "Clear" for a screen reader. #}
+  {% if d.count > 0 %}<span class="db-n">{{ d.count }}</span>{% else %}<span class="db-n" role="img" aria-label="{{ 'curator_dashboard.clear'|trans }}" title="{{ 'curator_dashboard.clear'|trans }}"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>{% endif %}
   <span class="db-what">
     <span class="db-label">{{ d.label|trans }}</span>
     <span class="db-note">{{ note|trans }}</span>

@@ -829,7 +829,8 @@ queue, so every existing link to it still lands on the queue.
 | Curator room | The 3 newest non-pinned posts the reader can see, from `CuratorRoom::board()` | As the room (§13.6) |
 | Your last decisions | The 5 newest rows of `SubmissionQueue::history()` decided by this curator, with a link to `/moderate/history?handled=mine` | The curator's area |
 
-Each tile links to its desk. A zero reads "Clear". The page is compact: a
+Each tile links to its desk. A zero shows a green check mark, named "Clear"
+for a screen reader. The page is compact: a
 tile is one line tall (count left, desk name right), the deadline lead shows
 only when a clock has work, and the room and decisions blocks sit side by side
 from 900px wide, with their "open" links in the section heading.
