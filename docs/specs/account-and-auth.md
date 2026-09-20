@@ -535,10 +535,14 @@ outlive removed accounts), `note`, `createdAt`. Contract points:
 Commons rule: contributed data is community-owned and **never cascade-deletes
 with an account**. Removal targets personal data only.
 
-- Admin removal (`UserAdminService::removeAccount()`) and self-service
-  deletion (§10) both route through the **shared seam**
+- Admin removal (`UserAdminService::removeAccount()`), self-service
+  deletion (§10) and the operator's console command `app:user:purge <email>...`
+  (2026-09-20: dry run by default, `--force` to act, refuses the last
+  `ROLE_ADMIN`; for accounts that never asked, such as test riders left on a
+  deployed database) all route through the **shared seam**
   `UserDeletionService::purge()`: run every `UserDeletionHookInterface`
   pre-delete hook, then remove the `User` row.
+  `tests/Account/PurgeUserCommandTest.php` pins the command.
 - **One hook implementation exists**: `App\Service\ResetPasswordCleanupHook`
   — purges the user's
   `reset_password_request` rows via the bundle's `removeRequests()` before
