@@ -1,0 +1,28 @@
+web/tests/js/surface-is-an-overlay.test.cjs
+  s_bd35b13142b2fa::t_1f39e099cd2629 63-75
+web/assets/map/catalog.js
+  s_bd35b13142b2fa::t_516a55b9f530c8 79-83
+web/assets/map/panels.js
+  s_bd35b13142b2fa::t_112ad213664319 10,68,70-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "e41ca66d89b5477342bf14e38b2220ae2fd59c88",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bd35b13142b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c348108d-a15c-4a6f-a1f0-9ab7e633bdf4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

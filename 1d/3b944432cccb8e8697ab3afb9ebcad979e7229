@@ -1,0 +1,115 @@
+.github/workflows/ci-wiki.yml
+  s_0f0d3ca1895aee::t_5c2c5dbc6b3b42 29-32,49-52,80-93
+.pre-commit-config.yaml
+  s_0f0d3ca1895aee::t_a51c98fb0bcaa9 118-155
+Makefile
+  s_0f0d3ca1895aee::t_750bd7226ebf33 23,62-63,65-66,68-75,87-93,96,100,287-288,295-306
+REUSE.toml
+  s_0f0d3ca1895aee::t_97d1b4a8c1c72e 53-65
+mkdocs.yml
+  s_0f0d3ca1895aee::t_529d1b7c57454f 76,93,115,118,120,126-127
+pipeline/coverage/load.py
+  s_0f0d3ca1895aee::t_c42fa4dd2c404b 181,355-364
+tools/check-course-data.py
+  s_0f0d3ca1895aee::t_329b3dbdad5883 1-240
+tools/check-wiki-code-drift.py
+  s_0f0d3ca1895aee::t_928869029b37e5 34-59,98-128,194-233,238,242-243,259-267
+tools/wiki-numbers.py
+  s_0f0d3ca1895aee::t_b6b27e53276809 1-189
+wiki/developers/api/index.md
+  s_0f0d3ca1895aee::t_d3a84d3c89d6c7 49-54,59-119
+wiki/developers/api/serving-map-data.md
+  s_0f0d3ca1895aee::t_f60a3567d19b06 40-42,109-113,173-176,217-293
+wiki/developers/api/worked-example-route-planner.md
+  s_0f0d3ca1895aee::t_6e40cd63722fce 12-18,31-33,71,86-93,114-115,117,121-125,164,167,190-204,220-254,258-261
+wiki/developers/data-ops/elevation-dem-concepts.md
+  s_3b3b121fcbab96::t_d9ae49f9da671e 1-307
+wiki/developers/data-ops/elevation-tiles.md
+  s_3b3b121fcbab96::t_95b0aeec255456 5-8,10-18,21-24,141-151,200-203,237-242,407-410,413,445-448,513,515-518,520-523,525-530,532-536,538-539,541-545,547-552
+wiki/developers/data-ops/harvesting.md
+  s_0f0d3ca1895aee::t_e5338ca76014b5 28,75,83-88,94,117-123,135,198-260
+wiki/developers/data-ops/index.md
+  s_0f0d3ca1895aee::t_b792d364e17857 1-134
+wiki/developers/data-ops/measuring-a-climb.md
+  s_3b3b121fcbab96::t_ef1045d416cbb1 1-240
+wiki/developers/data-ops/onboarding-a-country.md
+  s_3b3b121fcbab96::t_82a879d77b5dd2 28-29,62-76,114,193,203,210-211,233,277-281,283-288,291-294,302-371
+wiki/developers/data-ops/surface-tiles.md
+  s_3b3b121fcbab96::t_447201da68af0e 20,51,111,188,208,229-268
+wiki/developers/gis-beyond/edge-cases.md
+  s_0f0d3ca1895aee::t_060e319696da8b 113-119,167-173,231-237,264-266,291-296,299,314,334,355,363-368
+wiki/developers/gis-beyond/elevation.md
+  s_0f0d3ca1895aee::t_7640b09b795190 18-22,148-151,160,207-211,223-225,268-272,288,314,345
+wiki/developers/gis-beyond/geocoding.md
+  s_0f0d3ca1895aee::t_c220036285417d 27-39,149-152,200,214,227
+wiki/developers/gis-beyond/index.md
+  s_0f0d3ca1895aee::t_1ffc6f0dc32af4 5-9,39,41,43,46,48,50,53-61,66-68,80,96,115
+wiki/developers/gis-beyond/relations.md
+  s_0f0d3ca1895aee::t_08483ecc1cfd87 5-11,145-149,192-197,216,227,237,254
+wiki/developers/gis-beyond/reprojection.md
+  s_0f0d3ca1895aee::t_653470c8071f71 168-173,188-189,194,196-198,209-217
+wiki/developers/gis-beyond/routing.md
+  s_0f0d3ca1895aee::t_a7ceee2abbeeec 9,33,105,124-166,217-218,220,229-231,234-239,251,258,280,299,314
+wiki/developers/gis/coordinates.md
+  s_0f0d3ca1895aee::t_2c5d744912a651 19-20,28-34,41-49,53-67,69-70,162,194,294,335-337,355-356,360-362,435-441,457,460,464,468-469,479,482,491
+wiki/developers/gis/index.md
+  s_0f0d3ca1895aee::t_6beb9dd35ee7ad 5-10,32-41,95-99,102-104,106,110,113,117,121,125,128,131,134,138,148,175,179,189,191-195
+wiki/developers/gis/making-it-fast.md
+  s_0f0d3ca1895aee::t_3c7d96b661b4eb 43-47,425-430,450,474,498
+wiki/developers/gis/metres-vs-degrees.md
+  s_0f0d3ca1895aee::t_ed51aa55736421 82-84,274-278,301,322
+wiki/developers/gis/on-screen.md
+  s_0f0d3ca1895aee::t_b64fda3719bbba 17-20,36-39,97-98,382,414-435
+wiki/developers/gis/osm-to-database.md
+  s_b9a825ae5f1aab::t_ca57f81b30648f 10-19,45-49,132,188,203-207,209,214,218-233,247,267,299,303,307-312,318-326,401,411
+wiki/developers/gis/pitfalls.md
+  s_0f0d3ca1895aee::t_9bbeb5f4c11758 25,27,74,81-82,106-110,147-151,183-186,262-265,277-280,352-356,372,395,410
+wiki/developers/gis/routes.md
+  s_0f0d3ca1895aee::t_d0a0ecc5bc8cf2 154-162,240-242,244,248-250,275-279,296
+wiki/developers/gis/shapes.md
+  s_0f0d3ca1895aee::t_21773e8fc5a026 13-14,21,29,52,69,72-90,144,148,198,221-226,243,265,277,280
+wiki/developers/gis/spatial-questions.md
+  s_0f0d3ca1895aee::t_39ce300f3d591d 206-210,348-351,403,431
+wiki/developers/gis/tiles.md
+  s_0f0d3ca1895aee::t_d4b80ac5fa38db 5-6,82,102,266-268,328-329,478-484,500,514-529,544,546
+wiki/developers/index.md
+  s_0f0d3ca1895aee::t_8a4f3abd270977 1-42
+wiki/developers/numbers.md
+  s_0f0d3ca1895aee::t_7d60cff3020a5b 1-77
+wiki/developers/troubleshooting.md
+  s_0f0d3ca1895aee::t_51575aab4115a9 1-128
+wiki/stylesheets/extra.css
+  s_0f0d3ca1895aee::t_15c838c2fcfe03 168-179,239,244-257,310
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1d3b944432cccb8e8697ab3afb9ebcad979e7229",
+  "prompts": {},
+  "sessions": {
+    "s_0f0d3ca1895aee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4dcab164-5d71-4c41-b932-ab0d05c4e71e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_3b3b121fcbab96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef68f16-50de-4bc2-b718-847e4744d25a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_b9a825ae5f1aab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6ae225ea-7245-4042-a229-6b80b1865e79",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

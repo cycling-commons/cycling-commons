@@ -1,0 +1,150 @@
+web/tests/Translation/TranslateModeTest.php
+  s_c9732475dad57d::t_b1dba824e93bf0 20
+  s_c9732475dad57d::t_d23e7af35f796a 302-360
+  s_c9732475dad57d::t_bcc8f9f2c5419c 361
+web/templates/translate/index.html.twig
+  s_c9732475dad57d::t_fea23db25177b7 66-83
+  s_c9732475dad57d::t_4d85c3bb0b8f29 14
+  s_c9732475dad57d::t_d99c396ac66430 7-8,11-13,15-20
+web/tests/Translation/fixtures/messages.fr.yaml
+  s_c9732475dad57d::t_3e06fd346a3289 127-142
+  s_c9732475dad57d::t_edaf4a797e325a 1-122
+  s_c9732475dad57d::t_d3529a709e7e87 123-126
+web/src/Controller/TranslateController.php
+  s_c9732475dad57d::t_48f1262b6ba38f 611-612,642,885
+  s_c9732475dad57d::t_176e7337a3659a 651-657
+  s_c9732475dad57d::t_445a69be81d7c5 816-831,844-854
+  s_c9732475dad57d::t_69a37b54bec8f5 801,812-813
+  s_c9732475dad57d::t_7d0a534cf6083b 641
+  s_c9732475dad57d::t_3fd7962bedb77e 698-709
+  s_c9732475dad57d::t_9bdf7a3ee901bf 861-866
+  s_c9732475dad57d::t_0ffc1bad0bcd21 693-696
+  s_c9732475dad57d::t_c4bc4c9a690bbe 43
+  s_c9732475dad57d::t_047f3cd24e7ad4 631-635
+  s_c9732475dad57d::t_0e3d24ddeb5460 513-517,522-524
+  s_c9732475dad57d::t_788e0565b9c31c 832-843,855-860,867-884
+  s_c9732475dad57d::t_56fc096626884e 79-85,92-97,105-106
+  s_c9732475dad57d::t_c3b0759c69b06e 697
+  s_c9732475dad57d::t_769067a9e9e264 659-666,671,681-688,710-713,715
+  s_c9732475dad57d::t_7b62eca43ea3bb 757,760-764
+  s_c9732475dad57d::t_027ea9a8c577e6 740
+  s_c9732475dad57d::t_a5cb4d88107b23 758-759
+  s_c9732475dad57d::t_7ad3c7774629aa 802-811
+  s_c9732475dad57d::t_529c84de19310e 98-104,107-110
+  s_c9732475dad57d::t_d75924efe0765f 86-91
+  s_c9732475dad57d::t_bb42773ccb9ed8 525,560
+  s_c9732475dad57d::t_8e939060d43290 689-692
+  s_c9732475dad57d::t_8bdbce57621b62 432-445
+  s_c9732475dad57d::t_59aefdf60045ad 37,566,756
+  s_c9732475dad57d::t_d79cafb8560035 47
+  s_c9732475dad57d::t_830723814586e7 747-755
+  s_c9732475dad57d::t_167fa9bc435724 795-799
+  s_c9732475dad57d::t_fe5b9cb2ec7e3d 15-17,20-21,24,26-30,36,52-53
+  s_c9732475dad57d::t_0bbd12ff7f0ae9 22-23,50
+  s_c9732475dad57d::t_728a36922a41ff 547-559,563-565,568,573-610
+  s_c9732475dad57d::t_217937ac3e389b 624-630,636-640
+  s_c9732475dad57d::t_5d07c1813ceff4 455-512,518-521,526-546,561-562,567,569-572
+web/tests/Translation/DeepLClientTest.php
+  s_c9732475dad57d::t_834b9c9c5493c3 259-263,275
+  s_c9732475dad57d::t_2c36b70e133f9e 74-95
+  s_c9732475dad57d::t_2ccb5beb3a5d74 1-15,17-41,45-49,51-52,54-60,67,69-73,96-124,162-258,264-274,276-304
+  s_c9732475dad57d::t_1b9b4041ebf7a5 16
+  s_c9732475dad57d::t_bbc03e2ef59370 42-44,50,53,61-66,68
+  s_c9732475dad57d::t_870809f10687b4 125-161
+web/tests/Translation/DeepLAvailabilityTest.php
+  s_c9732475dad57d::t_0f56aa2624d3cb 1-41
+web/templates/translate/_form.html.twig
+  s_c9732475dad57d::t_6c9c08300dc904 131
+  s_c9732475dad57d::t_d5017bd915cf40 29-30
+  s_c9732475dad57d::t_b2861fd5b7aba4 87
+  s_c9732475dad57d::t_2cf60a8f65f7f1 81-82,84-86,88-90,92-93,95-97,105-111
+  s_c9732475dad57d::t_611b3a85d7cc92 83,94
+  s_c9732475dad57d::t_9f813cc9b0edcc 14
+  s_c9732475dad57d::t_fa3b6f93f83d2b 9
+  s_c9732475dad57d::t_ca34c0dc4fe96f 91
+  s_c9732475dad57d::t_4f568726260d0e 98-104,161-165
+  s_c9732475dad57d::t_25ec9ccdaff558 125-130,132-133
+  s_c9732475dad57d::t_e9bd7bbf009a7c 11-13,15-16
+  s_c9732475dad57d::t_d4e574695601d0 10,31-32
+web/templates/translate/edit.html.twig
+  s_c9732475dad57d::t_aa8963eafb3e30 20-29
+web/tests/Translation/DeepLDevToolTest.php
+  s_c9732475dad57d::t_7459c19e3086a9 773-1021
+  s_c9732475dad57d::t_6dfdaff71589da 313-322
+  s_c9732475dad57d::t_99ca0203b8ce62 699-702,709
+  s_c9732475dad57d::t_0a4ae4c376d466 156-161,163-170,172,189,193-195,202-203,205-207,209-211
+  s_c9732475dad57d::t_c5bea35edd8073 736
+  s_c9732475dad57d::t_19399af485b54f 695-698,703-708
+  s_c9732475dad57d::t_e7339f5db451e2 343,346
+  s_c9732475dad57d::t_32bda2c7f24b4f 738
+  s_c9732475dad57d::t_c9da035de9dfd5 185
+  s_c9732475dad57d::t_811521b14ff1df 19,21,27
+  s_c9732475dad57d::t_771af040a5ee98 356
+  s_c9732475dad57d::t_2058d1ba73edd4 379,382
+  s_c9732475dad57d::t_a7de98f0dee026 1-16,18,23,26,29,31,33-35,37-82,87,93-155,162,171,173-184,186,188,190-192,212-285,287-312,323-342,345,347-355,357-378,381,383-426,428-479,1022-1051
+  s_c9732475dad57d::t_b1610bbf29e945 651-694,710-732,734-735,737,739-752,767-772
+  s_c9732475dad57d::t_ab7167ef253705 427
+  s_c9732475dad57d::t_7cc9908ca71a3f 17,22,24,28,32,36
+  s_c9732475dad57d::t_0f627202a7ad38 20,753-766
+  s_c9732475dad57d::t_b8a05bd14e4671 83-86
+  s_c9732475dad57d::t_2d7e931a9904e8 594
+  s_c9732475dad57d::t_4222b3ffcc5744 30,187,196-201,204,208,344,380,733
+  s_c9732475dad57d::t_e6ad6ff65c3cff 286
+  s_c9732475dad57d::t_101cda16992d95 88-92
+  s_c9732475dad57d::t_712a4d3a33942e 25
+  s_c9732475dad57d::t_c5903ca17cca0e 480-593,595-650
+web/assets/js/deepl-draft.js
+  s_c9732475dad57d::t_03ac0807b76a90 1-113,127-152
+  s_c9732475dad57d::t_145357f67ac53c 114-126
+web/tests/Translation/fixtures/messages.nl.yaml
+  s_c9732475dad57d::t_7e08307275f5c7 1-6
+web/tests/Translation/TranslatePageTest.php
+  s_c9732475dad57d::t_508927de176cfc 119-156
+web/templates/translate/embed.html.twig
+  s_c9732475dad57d::t_ece3fcedd09fdf 11-20
+web/src/Translation/CatalogueBrowser.php
+  s_c9732475dad57d::t_2a37151a85d17b 142-154,156-157
+  s_c9732475dad57d::t_f59cc8ed16d705 155
+web/templates/base.html.twig
+  s_c9732475dad57d::t_8a4b6f5272f635 68-76
+web/tests/Translation/CatalogueWriterTest.php
+  s_c9732475dad57d::t_b2179c103c3ffe 48
+  s_c9732475dad57d::t_468cdc461e9ed0 201-218
+  s_c9732475dad57d::t_e164829b67aba9 12-13,72,95-101,103,332-510
+  s_c9732475dad57d::t_cce69d51126ccf 285,303
+  s_c9732475dad57d::t_1887e9942ce710 536-601
+  s_c9732475dad57d::t_36e9db8ec29b90 1-11,14-16,18-47,49-71,102,104-200,219-284,286-302,304-331,511-535,602
+  s_c9732475dad57d::t_f0a0f6ec8c62c6 73-94
+  s_c9732475dad57d::t_deeea4745f5e91 17
+web/templates/partials/_translate_bar.html.twig
+  s_c9732475dad57d::t_a8d2611bc3e984 88-89
+  s_c9732475dad57d::t_aea4d3b43c05b2 109
+  s_c9732475dad57d::t_e32a32e5a7fb5a 93
+  s_c9732475dad57d::t_4228b4a9682435 63-72
+web/tests/Translation/StaleSourceWarningTest.php
+  s_c9732475dad57d::t_698606f3190eee 18
+  s_c9732475dad57d::t_e74c33a8771301 1-17,19-119,121-139,141-189
+  s_c9732475dad57d::t_80aec482ff9db5 120
+  s_c9732475dad57d::t_9d44b1c98c2d0d 140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "99c207bd3c07207cc4afb0364df382b2295f0546",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c9732475dad57d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "46c5725f-c3f2-432b-800a-d5b4d3807b37",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

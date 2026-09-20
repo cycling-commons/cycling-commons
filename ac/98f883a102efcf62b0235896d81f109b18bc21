@@ -1,0 +1,98 @@
+web/src/Controller/ScoutIntakeController.php
+  s_dd35dcc1b6eafa::t_b3d08dce8b15d7 97-106,178
+  s_dd35dcc1b6eafa::t_3a454eb484b633 175-177
+  s_c6f332c201127d::t_8be044eca303c7 50-55,121-130,132-139,156-158,208-215
+web/translations/messages.nl.yaml
+  s_dd35dcc1b6eafa::t_a5eb11ccb620fb 2023
+  s_dd35dcc1b6eafa::t_87e6e719f082e4 2025
+  s_dd35dcc1b6eafa::t_ab0440d629f09a 2024
+web/tests/Scout/ScoutIntakeTest.php
+  s_dd35dcc1b6eafa::t_ef3119bf39788c 358,360-366,376-379
+  s_dd35dcc1b6eafa::t_14c0c65c5bd7c1 117-198,222-237
+  s_dd35dcc1b6eafa::t_0d784b6a8cf062 199-221
+web/src/Scout/ScoutTag.php
+  s_c6f332c201127d::t_8be044eca303c7 162-169,181-186
+web/translations/messages.en.yaml
+  s_dd35dcc1b6eafa::t_87e6e719f082e4 2358
+  s_dd35dcc1b6eafa::t_a5eb11ccb620fb 2356
+  s_dd35dcc1b6eafa::t_ab0440d629f09a 2357
+web/translations/messages.de.yaml
+  s_dd35dcc1b6eafa::t_a5eb11ccb620fb 2026
+  s_dd35dcc1b6eafa::t_87e6e719f082e4 2028
+  s_dd35dcc1b6eafa::t_ab0440d629f09a 2027
+web/translations/messages.fr.yaml
+  s_dd35dcc1b6eafa::t_ab0440d629f09a 2024
+  s_dd35dcc1b6eafa::t_87e6e719f082e4 2025
+  s_dd35dcc1b6eafa::t_a5eb11ccb620fb 2023
+web/translations/messages.es.yaml
+  s_dd35dcc1b6eafa::t_a5eb11ccb620fb 2365
+  s_dd35dcc1b6eafa::t_87e6e719f082e4 2367
+  s_dd35dcc1b6eafa::t_ab0440d629f09a 2366
+docs/specs/moderation-and-contribution.md
+  s_c6f332c201127d::t_9cd06577100139 1921-1926
+  s_c6f332c201127d::t_7b333d79ca0846 1980-1985
+  s_dd35dcc1b6eafa::t_6210cc041f9a9f 1990-1994
+  s_dd35dcc1b6eafa::t_a6e1328e5d66a6 1963-1967
+  s_dd35dcc1b6eafa::t_ceab56d467604e 1996-2003
+  s_dd35dcc1b6eafa::t_e5b727bca9e7c5 1908-1920,1927-1947
+  s_dd35dcc1b6eafa::t_d13a79f82e288a 1955-1959,2006
+  s_dd35dcc1b6eafa::t_04abf934fa7a88 1995,2045-2050
+web/assets/styles/map.css
+  s_dd35dcc1b6eafa::t_2725967d71aa31 554-558
+  s_dd35dcc1b6eafa::t_857abf51c92147 593-600,602-603,605
+  s_dd35dcc1b6eafa::t_87e6e719f082e4 576,661-665
+  s_dd35dcc1b6eafa::t_c6c5feab3376b4 666-671
+web/src/Controller/MapController.php
+  s_dd35dcc1b6eafa::t_87e6e719f082e4 329
+  s_dd35dcc1b6eafa::t_c6c5feab3376b4 328
+web/assets/map/scout-segments.js
+  s_dd35dcc1b6eafa::t_c8cb783c8efee2 1-96
+web/tests/js/scout-segments.test.mjs
+  s_dd35dcc1b6eafa::t_03546df1100aed 1-71
+web/assets/map/scout-review.js
+  s_dd35dcc1b6eafa::t_a6ed25d212eb55 577-578,594,605-610,617,666
+  s_dd35dcc1b6eafa::t_62ce83ac6950f0 676-683
+  s_dd35dcc1b6eafa::t_dc3c516dce0023 380-381,461-462,530,532,535-557,691-692
+  s_dd35dcc1b6eafa::t_983c2a085fb448 376-377,390,451-456,458,467,528-529,597
+  s_dd35dcc1b6eafa::t_3ec1388023aa1c 343,601,672-673,685,690,693-707,709,765-776,780
+  s_dd35dcc1b6eafa::t_857abf51c92147 619,660,663,852,882
+  s_dd35dcc1b6eafa::t_ab0440d629f09a 400-417,426-428,611-614
+  s_dd35dcc1b6eafa::t_982f10599b7de2 345-369,419-421,431-448,492-494,500,512,514,519-520,522-524
+  s_c6f332c201127d::t_9cd06577100139 763-764
+  s_dd35dcc1b6eafa::t_a068707ba27164 45-47,302-303,307,326,329,334-341
+  s_c6f332c201127d::t_8be044eca303c7 28-30,34-36,43-44,131-137,194-197,201-205,217-233,306,310-312,457,459-460,463-466,468-478,481-482,484-486,489,501-507,521,531,573-576,579-592,595-596,598-600,633-643,708,752-762,778,784-785
+  s_dd35dcc1b6eafa::t_1fac966a280b65 143-147,418,615-616,748-749
+  s_dd35dcc1b6eafa::t_87e6e719f082e4 198-200,206-216,593,894-896,898,901-904,906-908,931
+  s_dd35dcc1b6eafa::t_588d0dd5a16e6c 342,344,422-425,429-430,449-450,602,710
+web/templates/map/_scout_review.html.twig
+  s_dd35dcc1b6eafa::t_2725967d71aa31 17-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ac98f883a102efcf62b0235896d81f109b18bc21",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

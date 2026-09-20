@@ -1,0 +1,30 @@
+wiki/data-priority.md
+  s_3b3b121fcbab96::t_c54663262e697a 137,140,273-330
+  s_3b3b121fcbab96::t_0fb4739fa2be70 331
+REUSE.toml
+  s_3b3b121fcbab96::t_c1ef913076b54e 47-52
+  s_3b3b121fcbab96::t_61bb273301bc8a 46
+wiki/developers/gis/on-screen.md
+  s_3b3b121fcbab96::t_3c60f4b34d2de6 279-280,287-295,298-299,304-308,310-311,316-319
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "efec89e44cf3ae352924ed821c97718528d18539",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_3b3b121fcbab96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef68f16-50de-4bc2-b718-847e4744d25a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

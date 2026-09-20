@@ -1,0 +1,77 @@
+web/config/services.yaml
+  s_c9732475dad57d::t_0d05264f798b9e 103-114
+web/src/Translation/DeepL/DeepLAvailability.php
+  s_c9732475dad57d::t_fe738ee065edd7 24-30
+  s_c9732475dad57d::t_3d57f3d2c58ded 1-23,31-48
+web/src/Translation/Exception/DeepLAuthenticationException.php
+  s_c9732475dad57d::t_d39273f64534f7 1-22
+web/src/Translation/Exception/CatalogueKeyNotFoundException.php
+  s_c9732475dad57d::t_01d5c30e9fd985 1-23
+web/src/Translation/Exception/DeepLQuotaExceededException.php
+  s_c9732475dad57d::t_469ec8236296e7 1-18
+web/src/Translation/CatalogueWriter.php
+  s_c9732475dad57d::t_ccfa83174535bf 239,244-245
+  s_c9732475dad57d::t_1edfcc25d976b6 122-129,133,138
+  s_c9732475dad57d::t_534a63025e5f56 357-366,368
+  s_c9732475dad57d::t_9d8a1dd0733afb 1-10,13-44,52,55-60,64,74,76-77,87-92,100,119-121,130,137,139-140,156-157,168-172,174-178,185,187-190,228-238,240-243,246-266,268-273,275,277-283,286-289,295-296,298-301,303-309,311-314,316-356,369-370,372-381,383-385,387-409
+  s_c9732475dad57d::t_bb42773ccb9ed8 75,144,154
+  s_c9732475dad57d::t_727d3a85219535 183-184
+  s_c9732475dad57d::t_d3d051559dcc10 45-51,53-54,61-63,65-73,78-86,93-99,101-118,131-132,142-143,145-153,155
+  s_c9732475dad57d::t_6388e9965238b0 179-182,186
+  s_c9732475dad57d::t_8fc6a4bcd625b5 134-136,141,173,276,285,315,367,371,382,386
+  s_c9732475dad57d::t_2000c94db7241a 158-167
+  s_c9732475dad57d::t_8184dec39c1e4d 191-227
+  s_c9732475dad57d::t_b0d92fa4690bea 290-294,297,302
+  s_c9732475dad57d::t_8702204a1475e9 267,274,284,310
+  s_c9732475dad57d::t_71eb17e61ff671 11-12
+web/.env
+  s_c9732475dad57d::t_cd7a732de38309 146-153
+  s_c9732475dad57d::t_46dc70b33c38c5 154-175
+web/src/Translation/Exception/PlaceholderMismatchException.php
+  s_c9732475dad57d::t_254a76dae73a84 1-30
+web/src/Translation/Exception/NotDevEnvironmentException.php
+  s_c9732475dad57d::t_b86a2dfde8a13e 1-24
+web/src/Twig/DeepLExtension.php
+  s_c9732475dad57d::t_a21acec1434fd4 1-48
+web/src/Translation/Exception/CatalogueWriteVerificationException.php
+  s_c9732475dad57d::t_cd837cbfccabac 1-26
+web/src/Translation/Exception/CatalogueWriteNotOptedInException.php
+  s_c9732475dad57d::t_2041d26b4868ef 1-38
+web/src/Translation/Exception/CatalogueProtectedKeyException.php
+  s_c9732475dad57d::t_f14d18816d350d 1-29
+web/src/Translation/Exception/DeepLRequestException.php
+  s_c9732475dad57d::t_083a79c94c4eea 1-22
+web/src/Translation/Exception/DeepLNetworkException.php
+  s_c9732475dad57d::t_ea534e6c47e2cc 1-20
+web/src/Translation/DeepL/DeepLClient.php
+  s_c9732475dad57d::t_4daf44099cd3f0 62-69,126-141,144,158-159,163,165-173,178
+  s_c9732475dad57d::t_2124cbb0d55071 1-17,19-61,70-80,87-104,143,150-157,186,188-230
+  s_c9732475dad57d::t_c36c4ed9de95b9 18
+  s_c9732475dad57d::t_2bcb0bed9b282c 105-125,142,145-149,160-162,164,174-177,179-185,187
+  s_c9732475dad57d::t_583eab0c5746a5 81-86
+web/src/Translation/Exception/DeepLRateLimitedException.php
+  s_c9732475dad57d::t_d2b2ac5ff88949 1-21
+web/src/Translation/Exception/CatalogueBlockScalarException.php
+  s_c9732475dad57d::t_0631b6002da16c 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "11b77bb36c5b5bb72ee899683f3394ffaab8d031",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c9732475dad57d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "46c5725f-c3f2-432b-800a-d5b4d3807b37",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,40 @@
+mkdocs.yml
+  h_fb5318cde6cf17 26
+wiki/assets/fonts/fraunces-italic-400_600-latin-ext.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/fraunces-italic-400_600-latin.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/fraunces-normal-400_600-latin-ext.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/fraunces-normal-400_600-latin.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/hanken-grotesk-italic-100_900-latin-ext.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/hanken-grotesk-italic-100_900-latin.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/hanken-grotesk-normal-100_900-latin-ext.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/hanken-grotesk-normal-100_900-latin.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/spline-sans-mono-italic-300_700-latin-ext.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/spline-sans-mono-italic-300_700-latin.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/spline-sans-mono-normal-300_700-latin-ext.woff2.license
+  h_fb5318cde6cf17 1
+wiki/assets/fonts/spline-sans-mono-normal-300_700-latin.woff2.license
+  h_fb5318cde6cf17 1
+wiki/stylesheets/extra.css
+  h_fb5318cde6cf17 5-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ef65e10a9f321e77a9599cfde10a877b8c10c076",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

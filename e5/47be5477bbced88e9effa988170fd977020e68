@@ -1,0 +1,107 @@
+web/tests/Moderation/OsmGateTest.php
+  s_f945338197163d::t_12ce2eef7d3a71 1-50,52-66,68-144
+  s_d6eab02dcad899::t_f14acf983908f3 51,67
+web/src/Catalog/Import/OsmLinker.php
+  s_f945338197163d::t_5bf6a4032e1d6d 106-135
+  s_6398fb008aa96e::t_22c5bbb2b33591 105
+web/tests/Catalog/OsmIdentityTest.php
+  s_f945338197163d::t_81c750114b4a67 1-60
+web/src/Contribution/CatalogContributionService.php
+  s_71e62148fd80e8::t_45f6ce561d2619 11
+  s_f945338197163d::t_1fd19ae9fa8f62 65,518-525,530-534
+web/src/Controller/ModerateController.php
+  s_f945338197163d::t_5d192b69b0208f 14,29
+  s_f945338197163d::t_5bf6a4032e1d6d 70,265-266,285-307,313,315-317,322,331-334,337-400,433-441
+  s_71e62148fd80e8::t_f0071655232b62 13,71,312,314,318-320,325
+  s_d6eab02dcad899::t_945a2da69c7bab 308-311,321,323-324,326-330,335-336
+  s_6398fb008aa96e::t_f03026e400fa2f 442
+web/tests/Contribution/MaterializeFlowTest.php
+  s_f945338197163d::t_2c19b1bc312885 147-149
+  s_f945338197163d::t_841c441f9e202d 150-151
+web/migrations/Version20260825231000.php
+  s_71e62148fd80e8::t_18d9fd0682a230 1-42
+web/src/Moderation/ModerationService.php
+  s_71e62148fd80e8::t_f0071655232b62 54,282-286
+  s_71e62148fd80e8::t_45f6ce561d2619 13
+  s_f945338197163d::t_f8e2ea84ebc45b 94-100
+web/migrations/Version20260825110000.php
+  s_f945338197163d::t_e8dd5eeaba4463 1-50
+web/tests/Command/LinkOsmAnswersTest.php
+  s_f945338197163d::t_b7943676f1c4e6 1-40,42-87,89-115
+  s_d6eab02dcad899::t_eff1749fd64854 88
+  s_d6eab02dcad899::t_f14acf983908f3 41
+web/src/Moderation/OsmUnansweredException.php
+  s_f945338197163d::t_f8e2ea84ebc45b 1-19
+web/src/Catalog/Command/LinkOsmCommand.php
+  s_f945338197163d::t_51e954582e2ff7 106-108,110,167-170
+web/tests/Moderation/ModerationServiceTest.php
+  s_d6eab02dcad899::t_f14acf983908f3 56
+  s_f945338197163d::t_e8d9f34a06e108 82,181
+web/src/Catalog/Entity/Item.php
+  s_71e62148fd80e8::t_f0071655232b62 101-117,273-283
+  s_6398fb008aa96e::t_0415ce0c62121e 304-308
+  s_f945338197163d::t_fa84278eda5b77 89-100,271-272,284-303
+web/src/Controller/ModerateDataController.php
+  s_f945338197163d::t_51e954582e2ff7 152-159,220,226-228
+web/src/Catalog/Import/OsmCandidates.php
+  s_71e62148fd80e8::t_814765b41bde69 1-32,35-81,84-90,92,94-103,111-122
+  s_71e62148fd80e8::t_7a5caf72a7ee0d 104-110
+  s_71e62148fd80e8::t_11ad40ec566426 33-34,82-83,91,93
+docs/specs/catalog-data-model.md
+  s_f945338197163d::t_ea2f3eb623206a 457-481,510-520
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_f945338197163d::t_97705c2eec37b1 229
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e547be5477bbced88e9effa988170fd977020e68",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1d74c3a779ae0e": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "53fd183c-44c9-49cd-bd8a-16313c2b9a5e",
+        "model": "cursor-grok-4.6-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_6398fb008aa96e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c13c5402-c41d-4755-ac7a-851077053192",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_71e62148fd80e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e135c2f1-9eca-49d8-bc4f-2ead6e883463",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d6eab02dcad899": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5577347-6bee-425e-a6b0-d01f31e69be7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f945338197163d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3e27fcd-7437-4dc7-bcd8-4f46fc8d24ef",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,133 @@
+web/src/Catalog/BikeType.php
+  s_d34f17e49b47aa::t_9f47330708ba95 33-47
+web/src/Catalog/Season.php
+  s_d34f17e49b47aa::t_9f47330708ba95 29-34
+web/src/Form/SettingsType.php
+  s_d34f17e49b47aa::t_9f47330708ba95 179
+web/src/Controller/ModerateReportsController.php
+  s_d34f17e49b47aa::t_b6fa479e940dde 10,127-129
+web/tests/js/desk-rider.test.mjs
+  s_d34f17e49b47aa::t_e48101bbf8240e 1-22
+web/src/Form/RouteDecisionType.php
+  s_d34f17e49b47aa::t_aebc93301a26ce 26-32,41-42
+web/src/Twig/RegionLabelExtension.php
+  s_d34f17e49b47aa::t_40192c7c4d1da8 1-25,27-39,41-47
+  s_d34f17e49b47aa::t_19a55d94d8f467 26,40
+web/tests/Moderation/CuratorRoomTest.php
+  s_d34f17e49b47aa::t_5da91ba01df52e 159-177,180-191
+  s_d34f17e49b47aa::t_f752c003cb17cc 16,178-179
+web/src/Controller/ModerateTranslationsController.php
+  s_d34f17e49b47aa::t_48b180abe7686c 12,378,406,410,419-420
+web/src/Moderation/SubmissionQueue.php
+  s_d34f17e49b47aa::t_8f2a144020335f 187,197,238,243-245,371,382,404,407-408,523,646,648-655
+  s_d34f17e49b47aa::t_5a4150c24ffddb 639
+  s_d34f17e49b47aa::t_7dc829275b76aa 645
+web/src/Moderation/DeskRider.php
+  s_d34f17e49b47aa::t_5a4150c24ffddb 36
+  s_d34f17e49b47aa::t_3e7353b16e8b71 10,15-16,18-22,43-76
+  s_d34f17e49b47aa::t_53fb27a05533ca 1-9,11-14,17,23-35,37-42,77-78
+web/src/Form/ProposeRouteType.php
+  s_d34f17e49b47aa::t_e53cfe34a4aa44 107,113-114
+  s_d34f17e49b47aa::t_072fb4d7221e58 11,13
+  s_d34f17e49b47aa::t_030c7aafdfea09 93,95
+web/templates/moderate/_card_styles.html.twig
+  s_d34f17e49b47aa::t_589c6e4b436fa3 49
+  s_d34f17e49b47aa::t_86f4947f312a41 55,60-61
+  s_d34f17e49b47aa::t_e97b951e9e8972 50-54,57-59,62
+  s_d34f17e49b47aa::t_71ba54284c58cf 56
+web/templates/moderate/report_detail.html.twig
+  s_d34f17e49b47aa::t_b6fa479e940dde 108,112,156
+web/templates/moderate_routes/_queue_item.html.twig
+  s_d34f17e49b47aa::t_ec9d4b8eb31d53 31,35
+  s_d34f17e49b47aa::t_589c6e4b436fa3 33
+web/templates/moderate/_queue_item.html.twig
+  s_d34f17e49b47aa::t_94688a334b4a70 59
+web/templates/moderate/history.html.twig
+  s_d34f17e49b47aa::t_8f2a144020335f 115-118
+web/src/Moderation/RouteQueue.php
+  s_d34f17e49b47aa::t_e94a7a6dcb6e73 41-42,48,63,66,85-86,89,258,262,268
+  s_d34f17e49b47aa::t_7b997117cc94b2 106
+docs/specs/route-domain.md
+  s_d34f17e49b47aa::t_9e596a125fdd1e 427
+  s_d34f17e49b47aa::t_437cbdbd05629e 281-284
+  s_d34f17e49b47aa::t_12eb96d9d3e689 468-476
+  s_d34f17e49b47aa::t_0ad8a748ca04fa 640
+  s_d34f17e49b47aa::t_dd118aa8682cca 288-290
+  s_d34f17e49b47aa::t_589c6e4b436fa3 294
+  s_d34f17e49b47aa::t_1f3362cfd97d30 274-275,285-287,291-293,295-308,341-351
+web/src/Media/MediaTakedownService.php
+  s_d34f17e49b47aa::t_0ad2a362c90651 382-384
+  s_d34f17e49b47aa::t_05d01e7e05ace2 336,340,343
+  s_d34f17e49b47aa::t_a90678c5d92ce9 15
+web/templates/contribute/propose_route.html.twig
+  s_d34f17e49b47aa::t_b68839093f44aa 156,177
+web/tests/Moderation/DeskRiderTest.php
+  s_d34f17e49b47aa::t_7680773a8aca8d 1-9,11-12,14-35,65-66
+  s_d34f17e49b47aa::t_a524476038bebf 10,36-64
+  s_d34f17e49b47aa::t_f752c003cb17cc 13
+web/templates/moderate_routes/index.html.twig
+  s_d34f17e49b47aa::t_ec9d4b8eb31d53 39
+web/templates/moderate/_rider_name.html.twig
+  s_d34f17e49b47aa::t_94688a334b4a70 1-24
+web/templates/moderate_routes/_region_cap.html.twig
+  s_d34f17e49b47aa::t_e97b951e9e8972 1-14
+web/templates/moderate_routes/_correction_item.html.twig
+  s_d34f17e49b47aa::t_e9c97162540b99 16,29-30,32-34
+web/templates/moderate/_room_post.html.twig
+  s_d34f17e49b47aa::t_eeafdb73d8c345 8,13-21
+docs/specs/moderation-and-contribution.md
+  s_d34f17e49b47aa::t_b605c6cc0824d2 2822-2827
+  s_d34f17e49b47aa::t_1f3362cfd97d30 1018-1021
+  s_d34f17e49b47aa::t_dd118aa8682cca 1022-1023,2800-2821,2828-2835
+  s_d34f17e49b47aa::t_0f3ce61c12daee 2836
+web/templates/moderate/translation_detail.html.twig
+  s_d34f17e49b47aa::t_48b180abe7686c 38,61
+web/templates/moderate/translations_history.html.twig
+  s_d34f17e49b47aa::t_48b180abe7686c 13
+web/src/Messaging/CuratorRoom.php
+  s_d34f17e49b47aa::t_eeafdb73d8c345 11,28,31,44,47,265-266,304-305,308
+web/templates/settings/index.html.twig
+  s_d34f17e49b47aa::t_ded17665e1b572 399-405
+web/src/Controller/RouteModerateController.php
+  s_d34f17e49b47aa::t_aebc93301a26ce 198
+  s_d34f17e49b47aa::t_b8f5e847d781b3 14,20,165-170,220-224,226
+web/src/Moderation/RouteProposalDetails.php
+  s_d34f17e49b47aa::t_d1ebe7ac6e1764 1-92
+web/tests/Moderation/RouteModerateTest.php
+  s_d34f17e49b47aa::t_437cbdbd05629e 151-153
+  s_d34f17e49b47aa::t_f93e2e43f861da 10
+  s_d34f17e49b47aa::t_cb8a7f2ea01bc1 156-171,180,185-186,188-190,195,197-236,238-249,252-277
+  s_d34f17e49b47aa::t_a3870d0439f254 192-194,196
+  s_d34f17e49b47aa::t_c47d0f29846e91 13
+  s_d34f17e49b47aa::t_1387bc8639dec1 191
+web/templates/moderate/takedowns.html.twig
+  s_d34f17e49b47aa::t_a90678c5d92ce9 157
+web/templates/moderate_routes/detail.html.twig
+  s_d34f17e49b47aa::t_589c6e4b436fa3 79
+  s_d34f17e49b47aa::t_ec9d4b8eb31d53 19,52,60,77,82-89,91-100,103
+  s_d34f17e49b47aa::t_aebc93301a26ce 124-125,136-137,150-151
+web/tests/Moderation/ModerateTest.php
+  s_d34f17e49b47aa::t_5da91ba01df52e 165-186,188-198
+  s_d34f17e49b47aa::t_f752c003cb17cc 10,187
+web/templates/moderate/_rider_in_text.html.twig
+  s_d34f17e49b47aa::t_8f2a144020335f 1-16
+docs/specs/translations.md
+  s_d34f17e49b47aa::t_dd118aa8682cca 648-652
+  s_d34f17e49b47aa::t_bea94b18aa10fd 664
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bc50f612de5110c45161f675351db59b4083b46d",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

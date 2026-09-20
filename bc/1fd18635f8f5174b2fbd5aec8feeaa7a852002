@@ -1,0 +1,51 @@
+web/src/Translation/Entity/TranslationProposal.php
+  s_3dc2e5ada923bf::t_d9e3642f58d85d 88-102
+web/tests/Translation/ProposalServiceTest.php
+  s_3dc2e5ada923bf::t_f5c322a0027a59 1-249
+web/translations/messages.en.yaml
+  s_3dc2e5ada923bf::t_4859d483e4d20b 2032-2036
+web/src/Translation/Exception/ConsentRequiredException.php
+  s_3dc2e5ada923bf::t_da64abc6a407d3 1-18
+web/src/Translation/Exception/EmptyTranslationException.php
+  s_3dc2e5ada923bf::t_05e8496b61cb5c 1-18
+web/translations/messages.fr.yaml
+  s_3dc2e5ada923bf::t_021514faf57dab 2487-2489
+web/src/Translation/TranslationConsentService.php
+  s_3dc2e5ada923bf::t_230ba628893d6b 1-51
+web/translations/messages.de.yaml
+  s_3dc2e5ada923bf::t_4da0eb209a7e5a 2490-2492
+web/src/Translation/TranslationConsent.php
+  s_3dc2e5ada923bf::t_412e938583d664 1-27
+web/src/Translation/Exception/EnglishNotTranslatableException.php
+  s_3dc2e5ada923bf::t_ac0d12fcafda46 1-18
+web/config/services.yaml
+  s_3dc2e5ada923bf::t_ccf024efa41291 211-215
+web/config/packages/rate_limiter.yaml
+  s_3dc2e5ada923bf::t_0ec7e877cd9d6f 42-43
+  s_3dc2e5ada923bf::t_2a89e1e9aebdd2 207-213
+  s_3dc2e5ada923bf::t_03bfc3c8aebd8a 301-302
+web/translations/messages.nl.yaml
+  s_3dc2e5ada923bf::t_a1abb453b18355 2487-2489
+web/src/Translation/Exception/KeyNotFoundException.php
+  s_3dc2e5ada923bf::t_e5a2d8c689087f 1-18
+web/translations/messages.es.yaml
+  s_3dc2e5ada923bf::t_da6f949845ede3 2040-2042
+web/src/Translation/ProposalService.php
+  s_3dc2e5ada923bf::t_150ae47dfe9bcb 1-143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "bc1fd18635f8f5174b2fbd5aec8feeaa7a852002",
+  "prompts": {},
+  "sessions": {
+    "s_3dc2e5ada923bf": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "4afead1a-4847-43df-8eda-b1eab69e36ad",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

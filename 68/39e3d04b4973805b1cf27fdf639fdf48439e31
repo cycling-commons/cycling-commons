@@ -1,0 +1,40 @@
+.github/workflows/ci-wiki.yml
+  s_44e524b97d649c::t_11a345b6fc18ff 35-37,39
+.github/workflows/ci-app.yml
+  s_44e524b97d649c::t_11a345b6fc18ff 11-13,17
+.github/workflows/reuse.yml
+  s_44e524b97d649c::t_11a345b6fc18ff 12
+.github/workflows/ci-pipeline.yml
+  s_44e524b97d649c::t_11a345b6fc18ff 33
+docs/specs/dev-environment.md
+  s_44e524b97d649c::t_49d9c96d4cfd5f 408-410
+tools/app-gate-prepush.sh
+  s_44e524b97d649c::t_11a345b6fc18ff 9
+.pre-commit-config.yaml
+  s_44e524b97d649c::t_11a345b6fc18ff 42
+.github/workflows/ci-credits.yml
+  s_44e524b97d649c::t_11a345b6fc18ff 18,21
+.github/workflows/ci-tools.yml
+  s_44e524b97d649c::t_11a345b6fc18ff 7-9,11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "6839e3d04b4973805b1cf27fdf639fdf48439e31",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_44e524b97d649c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36300f48-cb72-4d2d-a7ba-063d0a7bd733",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

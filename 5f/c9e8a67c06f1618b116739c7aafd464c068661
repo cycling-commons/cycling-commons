@@ -1,0 +1,26 @@
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_9a6b8d8611c934::t_b6bd86acf1860d 21
+web/tests/Media/MediaStorageTest.php
+  s_9a6b8d8611c934::t_b6bd86acf1860d 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5fc9e8a67c06f1618b116739c7aafd464c068661",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_9a6b8d8611c934": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5ab7bb79-587a-4b27-803b-dbb4f99c167a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

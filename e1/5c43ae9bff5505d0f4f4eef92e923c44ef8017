@@ -1,0 +1,46 @@
+pipeline/contract/coverage-contract.json
+  s_d34f17e49b47aa::t_9b62425cfa5ff9 234-235,271
+wiki/developers/gis/osm-to-database.md
+  s_d34f17e49b47aa::t_8e550e7b0d5803 190,196-198,215,220
+  s_d34f17e49b47aa::t_622b63518e8e60 232,239,417
+  s_d34f17e49b47aa::t_2feae43110bc68 305
+pipeline/coverage/load.py
+  s_d34f17e49b47aa::t_f983efc305bccf 547-561
+  s_d34f17e49b47aa::t_bffae858247652 570-574
+  s_d34f17e49b47aa::t_4d5535a62e7f1c 405
+pipeline/tests/test_contract.py
+  s_d34f17e49b47aa::t_9dcdc374f2f0c9 262-292
+docs/specs/coverage-provider.md
+  s_d34f17e49b47aa::t_8e550e7b0d5803 196,202-203,332-333,907-923
+pipeline/tests/test_run.py
+  s_d34f17e49b47aa::t_575a4fea6ee986 383
+  s_d34f17e49b47aa::t_9dcdc374f2f0c9 175-176,180-183
+pipeline/tests/test_load.py
+  s_d34f17e49b47aa::t_9dcdc374f2f0c9 839-856,875-883
+  s_d34f17e49b47aa::t_6e704dea6091d4 884-887
+pipeline/coverage/contract.py
+  s_d34f17e49b47aa::t_5b31850f1c2fa6 325-328
+  s_d34f17e49b47aa::t_e227ef1b047f8d 186
+  s_d34f17e49b47aa::t_8776be80d09073 158-170
+  s_d34f17e49b47aa::t_090cbfccd600e5 66-69
+wiki/developers/numbers.md
+  s_d34f17e49b47aa::t_8e550e7b0d5803 26
+pipeline/coverage/run.py
+  s_d34f17e49b47aa::t_a2d012538ad768 574-576,599-600
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e15c43ae9bff5505d0f4f4eef92e923c44ef8017",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

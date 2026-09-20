@@ -1,0 +1,26 @@
+web/assets/map/search-ui.js
+  s_ec895423d98b88::t_e6e44349e6ecec 44-45,54-62
+  s_ec895423d98b88::t_185ec2c667da89 43,46-53
+  s_ec895423d98b88::t_a76a49e789f1e2 224-225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "c37860d2e82ec65a609226bb16151df41558b06a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ec895423d98b88": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0de6d79-989a-45d6-9f80-10287ec2dd13",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

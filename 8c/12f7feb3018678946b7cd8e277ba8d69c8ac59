@@ -1,0 +1,33 @@
+web/templates/partials/_scout_logo.html.twig
+  s_1c0464d81ce126::t_09fdeea2c1d06c 5-11,14
+brand-src/gen_scout_logo.py
+  s_1c0464d81ce126::t_5ef4ef6d337d77 19-23
+  s_1c0464d81ce126::t_fa2de5cf459459 1-18,24-169
+web/assets/brand/scout-logo.svg
+  s_1c0464d81ce126::t_acf74c6ab8ba18 1
+web/templates/partials/_vclip.html.twig
+  s_1c0464d81ce126::t_e6287a86f8df4b 1
+web/templates/map/_scout_review.html.twig
+  s_1c0464d81ce126::t_8ea1467d0dbd84 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "8c12f7feb3018678946b7cd8e277ba8d69c8ac59",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

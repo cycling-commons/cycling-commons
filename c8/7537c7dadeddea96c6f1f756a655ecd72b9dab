@@ -1,0 +1,41 @@
+pipeline/coverage/extract.py
+  s_bbe01d4f023787::t_8af351cb366553 28-34,40,48-52
+pipeline/coverage/tiles.py
+  s_bbe01d4f023787::t_c3878ea9a3f003 281-313
+pipeline/contract/coverage-contract.json
+  s_bbe01d4f023787::t_e654de909cd99e 2-217,219-288,290-324,326-330,332
+pipeline/coverage/run.py
+  s_bbe01d4f023787::t_8af351cb366553 24,28-30
+  s_bbe01d4f023787::t_7e2321fc1d657c 119-150,153-162,174-175
+pipeline/coverage/contract.py
+  s_bbe01d4f023787::t_09c26ad97e2596 54-59,128-145
+  s_bbe01d4f023787::t_8941123f122bbc 187
+  s_bbe01d4f023787::t_67748edb33b762 146
+pipeline/coverage/surface.py
+  s_bbe01d4f023787::t_a2f3755cbae62a 1-153
+web/tests/js/surface-classes.test.cjs
+  s_bbe01d4f023787::t_3b21eb18210504 1-78
+pipeline/tests/test_surface.py
+  s_bbe01d4f023787::t_68145e55362fe5 1-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "c87537c7dadeddea96c6f1f756a655ecd72b9dab",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

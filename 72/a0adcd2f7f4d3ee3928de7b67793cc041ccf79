@@ -1,0 +1,102 @@
+web/src/Form/TranslationProposalType.php
+  s_7e0805b9b01558::t_30f5f128d34bcc 27-44,49-56
+  s_7e0805b9b01558::t_b9f2baa013c15c 83-108,112,114-118,125-128
+  s_7e0805b9b01558::t_803a43bdf4f874 136
+  s_7e0805b9b01558::t_656a1d6ac824dc 109-111,113
+web/templates/base.html.twig
+  s_7e0805b9b01558::t_2866dab49c73bc 77-82
+web/templates/translate/edit.html.twig
+  s_7e0805b9b01558::t_fd12bde1061c47 44
+  s_7e0805b9b01558::t_2ab581e0cf5b75 29-43
+web/assets/js/catalogue-form.js
+  s_7e0805b9b01558::t_f83c3bcb9ff615 1-92
+web/templates/translate/_form.html.twig
+  s_7e0805b9b01558::t_52d8569a2c0220 115-120,125-126,128-136
+  s_7e0805b9b01558::t_656a1d6ac824dc 121-124,127,186-197
+  s_7e0805b9b01558::t_c448f3c3285f08 93-108,110
+  s_7e0805b9b01558::t_fd12bde1061c47 181-185,199-201
+  s_7e0805b9b01558::t_26e334d3594243 198
+web/src/Translation/CatalogueCommit.php
+  s_7e0805b9b01558::t_812a814b401aed 1-69
+web/tests/Translation/DeepLDevToolTest.php
+  s_7e0805b9b01558::t_a0765abc52170a 950-955,965-967
+  s_7e0805b9b01558::t_9ac6870e3fddde 973,978-979,989,992-997,1000,1006,1008-1014,1019-1020,1023-1028,1031-1034,1036-1042,1044-1052,1056,1061-1062,1066-1070
+  s_7e0805b9b01558::t_5a6b880959b51e 385-387,422-431,434-439,442-467
+  s_7e0805b9b01558::t_4992ab90c2b264 388-392,397-398,400-401,403-406,408-421
+  s_7e0805b9b01558::t_d18e682b8a6a7c 300,302-303
+  s_7e0805b9b01558::t_b6dee993289fff 472-530
+  s_7e0805b9b01558::t_552c87a5abde71 228-230,243-244,257-258,276-277
+  s_7e0805b9b01558::t_1f47d2236ad221 330-335,340,343,347-351,355-358,360,362,364-366,368-382
+  s_7e0805b9b01558::t_0f952b0cc4adff 547,557-559,573,803,826,1092
+  s_7e0805b9b01558::t_32211a37402bb6 674-678,869-873
+  s_7e0805b9b01558::t_85fafc73c4b0b6 13,184,1072-1074
+web/translations/messages.de.yaml
+  s_7e0805b9b01558::t_640a56a631c2aa 2591
+  s_7e0805b9b01558::t_7fd81d1853ab16 2592
+  s_7e0805b9b01558::t_08ba6d42315793 2595-2597
+web/src/Twig/DeepLExtension.php
+  s_7e0805b9b01558::t_2866dab49c73bc 9,39-42,51
+web/assets/js/deepl-draft.js
+  s_7e0805b9b01558::t_dad4b13dd5674f 2,4-14,17,42-57,59-61,77,80,98,101,104-105,109-113,122-123,125,129
+web/translations/messages.es.yaml
+  s_7e0805b9b01558::t_7fd81d1853ab16 2137
+  s_7e0805b9b01558::t_640a56a631c2aa 2136
+  s_7e0805b9b01558::t_e563f75f20156a 2140-2142
+docs/specs/translations.md
+  s_7e0805b9b01558::t_dd7f5bbd011628 976-992
+  s_7e0805b9b01558::t_1871e0828228e6 930-931,933-944,946,967-975,993-997,1032-1036
+web/src/Controller/TranslateController.php
+  s_7e0805b9b01558::t_540419fe861b40 864-874,884-887,891
+  s_7e0805b9b01558::t_f29850be7e769f 15
+  s_7e0805b9b01558::t_05119ec7c3053b 640-654
+  s_7e0805b9b01558::t_76e34725dd40df 81-86,88
+  s_7e0805b9b01558::t_c508627157b817 704-708
+  s_7e0805b9b01558::t_d62ab5d7077a6d 722-723
+  s_7e0805b9b01558::t_00fb277ff0bc69 37
+  s_7e0805b9b01558::t_1ab293c3884c11 781-785
+  s_7e0805b9b01558::t_330c7116abaeb9 469-479,497,506-513,515,520,524-528,530,532,534-537,540,542-545
+  s_7e0805b9b01558::t_91a3e6e93015bc 662-666,670-673
+  s_7e0805b9b01558::t_a49ec631d54607 813-816
+  s_7e0805b9b01558::t_d68ddff0a683c6 820-863,875-883,888-890,892-893
+  s_7e0805b9b01558::t_7e2a6c69f48eae 659,668-669,685,687
+web/src/Translation/Exception/NoLocaleTickedException.php
+  s_7e0805b9b01558::t_b9590116470223 1-19
+web/tests/Translation/StaleSourceWarningTest.php
+  s_7e0805b9b01558::t_d76d5d43a61883 13,119-123
+web/templates/partials/_translate_bar.html.twig
+  s_7e0805b9b01558::t_2ab581e0cf5b75 72-86
+  s_7e0805b9b01558::t_fd12bde1061c47 87
+web/tests/Translation/CatalogueCommitTest.php
+  s_7e0805b9b01558::t_c3d9e578499dd2 1-154
+web/translations/messages.fr.yaml
+  s_7e0805b9b01558::t_7fd81d1853ab16 2589
+  s_7e0805b9b01558::t_640a56a631c2aa 2588
+  s_7e0805b9b01558::t_a0bb3279593bbc 2592-2594
+web/translations/messages.en.yaml
+  s_7e0805b9b01558::t_7fd81d1853ab16 2134
+  s_7e0805b9b01558::t_640a56a631c2aa 2133
+  s_7e0805b9b01558::t_ed5ce80abd6887 2137-2139
+web/translations/messages.nl.yaml
+  s_7e0805b9b01558::t_3d094db60a600d 2588-2589,2592-2594
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "72a0adcd2f7f4d3ee3928de7b67793cc041ccf79",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7e0805b9b01558": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33a81c58-e18b-4166-9873-c160cdde84a9",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

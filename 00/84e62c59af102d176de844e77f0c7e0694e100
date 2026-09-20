@@ -1,0 +1,30 @@
+web/tests/js/emoji-font-stack.test.cjs
+  s_bbe01d4f023787::t_e3ec1fef8935ec 1-80
+web/assets/styles/map.css
+  s_bbe01d4f023787::t_4ffd6f02794a15 215-218
+  s_bbe01d4f023787::t_fa58a49ddc26c1 7-13,145,214,544
+  s_bbe01d4f023787::t_6d03dc03a155a8 118
+web/assets/map/drawer.js
+  s_bbe01d4f023787::t_4ffd6f02794a15 619
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "0084e62c59af102d176de844e77f0c7e0694e100",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

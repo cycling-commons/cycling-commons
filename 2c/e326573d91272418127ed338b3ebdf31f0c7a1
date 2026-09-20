@@ -1,0 +1,67 @@
+tools/wikimedia/out/item-links.json
+  s_6df2cc515a46f1::t_f73ab1ae63140e 143-4930
+  s_6df2cc515a46f1::t_ffb1ee27c15c9c 1-142,4931-4932
+web/translations/messages.en.yaml
+  s_6df2cc515a46f1::t_6c5a1f53f066f5 2266-2267
+web/src/Controller/MapController.php
+  s_6df2cc515a46f1::t_0cac75159a25ee 254
+web/translations/messages.de.yaml
+  s_6df2cc515a46f1::t_7dade8d406fb5f 1940-1941
+web/assets/map/links.js
+  s_6df2cc515a46f1::t_a2e9d0489aafeb 1-50
+web/tests/js/links.test.mjs
+  s_6df2cc515a46f1::t_675182c09e8efd 1-51
+web/src/Catalog/Command/ImportItemLinksCommand.php
+  s_6df2cc515a46f1::t_7f4223bcd23090 1-111
+web/src/Catalog/CatalogFormRegistry.php
+  s_6df2cc515a46f1::t_d5ecb19f43eaf6 361-362
+  s_6df2cc515a46f1::t_e3c1244da09fe3 345,363
+  s_6df2cc515a46f1::t_7beb7770280eea 340-344
+docs/specs/catalog-data-model.md
+  s_6df2cc515a46f1::t_cc283e3cc5ece4 337-376
+  s_6df2cc515a46f1::t_7efa954bedfa5d 326
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_6df2cc515a46f1::t_b5d7e130e5f654 26-30
+web/translations/messages.fr.yaml
+  s_6df2cc515a46f1::t_7dade8d406fb5f 1937-1938
+web/tests/Catalog/ImportItemLinksCommandTest.php
+  s_6df2cc515a46f1::t_1f3e33b75cb105 1-73,75-96
+  s_6df2cc515a46f1::t_e621f2f1a8be2c 74
+web/tests/Catalog/Import/OutboundLinksTest.php
+  s_6df2cc515a46f1::t_d030c0934b5668 1-62
+tools/wikimedia/item_links.py
+  s_6df2cc515a46f1::t_a56eb8d9147be9 1-50,56-59,66-93,99-108,111-121
+  s_6df2cc515a46f1::t_b24abf5bb2196e 51-55,60-65
+  s_6df2cc515a46f1::t_ebfc59edb690c6 94-98,109-110
+web/translations/messages.es.yaml
+  s_6df2cc515a46f1::t_7dade8d406fb5f 2279-2280
+web/assets/map/drawer.js
+  s_6df2cc515a46f1::t_fb687f3764d783 26
+  s_6df2cc515a46f1::t_aa34301b7e2d7e 210-213
+  s_6df2cc515a46f1::t_8671f557c56338 94-102
+web/translations/messages.nl.yaml
+  s_6df2cc515a46f1::t_7dade8d406fb5f 1937-1938
+web/src/Catalog/Import/OutboundLinks.php
+  s_6df2cc515a46f1::t_b20c150ee77f48 1-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "2ce326573d91272418127ed338b3ebdf31f0c7a1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

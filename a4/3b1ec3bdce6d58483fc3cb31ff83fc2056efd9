@@ -1,0 +1,180 @@
+Makefile
+  s_95012dc2a2124f::t_e92cd4d9840ddb 12,265-271,279,284
+  s_95012dc2a2124f::t_8fb168e7b8ba8f 272-278,280-283,285-286
+web/config/services.yaml
+  s_95012dc2a2124f::t_b4afcbbb1a7f5b 39-45
+web/.env
+  s_95012dc2a2124f::t_b4afcbbb1a7f5b 57-60
+  s_95012dc2a2124f::t_0556dbe763a839 62-68
+web/src/Controller/MapController.php
+  s_95012dc2a2124f::t_35fb13a6b95a29 19,59,61,65,140-148
+web/tests/js/surface-zooms.test.cjs
+  s_95012dc2a2124f::t_d4845a6c27af87 1-60,65-66
+  s_95012dc2a2124f::t_2d62469a06785a 61-64
+web/assets/styles/atlas.css
+  s_95012dc2a2124f::t_a100fd28f86512 183-186
+web/templates/map/index.html.twig
+  s_95012dc2a2124f::t_faebc5292684ff 446-451,453-454,456,459-464
+web/translations/messages.es.yaml
+  s_95012dc2a2124f::t_fd122233d219fc 2028-2032
+  s_95012dc2a2124f::t_eb6d629f37b45b 1539-1542
+web/assets/map/surface-tiles.js
+  s_95012dc2a2124f::t_c362837cf81b35 522,524-530,538,550-553,560-569,571
+  s_95012dc2a2124f::t_7d4077f5c2f3d6 253
+  s_95012dc2a2124f::t_0f9c90c88de7eb 180,185,187-190,197-199
+  s_95012dc2a2124f::t_da2af1ffd5591a 178
+  s_95012dc2a2124f::t_404334c82ac8a6 473-480
+  s_95012dc2a2124f::t_738f7387fd55ef 285
+  s_95012dc2a2124f::t_a97c615162cad8 201
+  s_95012dc2a2124f::t_e98109449bf956 150-165
+  s_bbe01d4f023787::t_c0194f6ffc0ae6 133
+  s_95012dc2a2124f::t_2c5df0cdba071c 242
+  s_bbe01d4f023787::t_504569fec86802 523
+  s_95012dc2a2124f::t_6e680e6993444c 554-559
+  s_95012dc2a2124f::t_aca88c67a6b6aa 52-84
+  s_95012dc2a2124f::t_2754b9d47f04c0 138-145,148,168-169,171-172
+  s_95012dc2a2124f::t_45811d8a63e0f7 231
+  s_95012dc2a2124f::t_acc47622c19e84 210-230,232-241,243-252,254-284,286-290
+  s_bbe01d4f023787::t_a393a64e9c0c30 149,291
+web/config/packages/coverage.yaml
+  s_95012dc2a2124f::t_b4afcbbb1a7f5b 14-23
+pipeline/coverage/tiles.py
+  s_95012dc2a2124f::t_10d9021422dd0d 301-313,318-319,327-350
+  s_95012dc2a2124f::t_de4287cbfc6f6e 283-285
+pipeline/coverage/run.py
+  s_95012dc2a2124f::t_c7999953bf936d 78-94
+  s_95012dc2a2124f::t_92b502aa06f2d0 250-252,255,257-262,266-267,271-273,291,301-303,305-308,310-312
+  s_bbe01d4f023787::t_2359e58e9c993b 313
+  s_95012dc2a2124f::t_1215bbf38dca0f 292-298,300
+  s_95012dc2a2124f::t_f5b77a6258b72a 216-221
+  s_95012dc2a2124f::t_ab33aaf0eb7c5c 198-199,268-270,314-322,340-353,370-373,391-392
+  s_95012dc2a2124f::t_d3654179597ba0 28-29,222,323-339
+  s_bbe01d4f023787::t_23b04c9b0f8902 304
+  s_95012dc2a2124f::t_6d8460b86288ec 206-211,213-215,228-237
+  s_bbe01d4f023787::t_0ebe6a9c687061 299,354
+  s_95012dc2a2124f::t_8eb6e375c8f8e6 144-168,171-180,183,189-195
+  s_95012dc2a2124f::t_b2334319acf4d1 277-290
+  s_95012dc2a2124f::t_52694b9fd8c4b5 30,32-33
+  s_95012dc2a2124f::t_9ce69e0bfcc14b 361-369
+  s_95012dc2a2124f::t_28e32cc035c853 253-254,263-265
+  s_95012dc2a2124f::t_a147121fa8a6cd 374-378
+  s_bbe01d4f023787::t_4f1a87c5ce0c65 14
+pipeline/tests/test_publish_surface.py
+  s_95012dc2a2124f::t_c3144cd19bd5d1 1-6,8-26,33-119
+  s_95012dc2a2124f::t_d3ca43bcf0773d 7,27-32
+  s_95012dc2a2124f::t_d3654179597ba0 120-147
+pipeline/tests/test_extract_cache.py
+  s_95012dc2a2124f::t_28e32cc035c853 78-120
+docs/specs/coverage-provider.md
+  s_95012dc2a2124f::t_626c67db8b577d 471-486
+web/assets/contribute/improve.js
+  s_95012dc2a2124f::t_39aff8574df84b 702-705
+  s_95012dc2a2124f::t_f8b6306f879b9d 476-489,498-536
+  s_bbe01d4f023787::t_889ec0b3fd58ff 706
+docs/specs/edit-items/A-road-surface.md
+  s_95012dc2a2124f::t_c3ac5f55b2a2ae 101-137
+wiki/developers/data-ops/surface-tiles.md
+  s_95012dc2a2124f::t_d904a77d2482db 83-96,98
+  s_95012dc2a2124f::t_db7b795c33c27f 201-208
+  s_95012dc2a2124f::t_93ed1bf6ee053d 138-190
+  s_95012dc2a2124f::t_ec2fc66bf6be91 97,99
+  s_95012dc2a2124f::t_8eb3e1be8de16e 1-53,62-82,100-132,191,195
+  s_95012dc2a2124f::t_60c67e1e4a84c1 54-61
+  s_95012dc2a2124f::t_b4106b7b7ffa68 133-137,192-194,196-200
+pipeline/tests/test_run.py
+  s_95012dc2a2124f::t_96601f8eafcfb1 53-79,81
+web/src/Coverage/SurfaceManifest.php
+  s_95012dc2a2124f::t_36f6331a241aff 1-176
+web/assets/map/render.js
+  s_bbe01d4f023787::t_c0194f6ffc0ae6 326-334
+web/translations/messages.nl.yaml
+  s_95012dc2a2124f::t_eb6d629f37b45b 1911-1914
+  s_95012dc2a2124f::t_fd122233d219fc 1693-1697
+pipeline/coverage/surface.py
+  s_bbe01d4f023787::t_28d0f261985666 80
+  s_95012dc2a2124f::t_80ceab4ec076ca 115-119,122,125
+  s_95012dc2a2124f::t_537ca626914542 156,159-161,163-167
+  s_95012dc2a2124f::t_c34b190186903c 170-171,177-193
+  s_bbe01d4f023787::t_23b04c9b0f8902 345-346
+  s_95012dc2a2124f::t_bd47a9675182b9 15,18-42,48-50
+  s_95012dc2a2124f::t_66f02f9a15c592 197,202-344
+  s_bbe01d4f023787::t_4a83a282d3153b 73-79,81-84
+  s_bbe01d4f023787::t_81cc3caeb26738 169
+web/tests/js/surface-classes.test.cjs
+  s_bbe01d4f023787::t_a07db39a252f68 35-40,44-45
+web/tests/browser/map-smoke.js
+  s_95012dc2a2124f::t_f4c09939bc811e 159
+  s_95012dc2a2124f::t_9f00dabf7882e5 155-158,160-191
+  s_bbe01d4f023787::t_7fb83c020351d7 154
+pipeline/coverage/publish.py
+  s_95012dc2a2124f::t_d3654179597ba0 116-132
+  s_95012dc2a2124f::t_171765f15aba8b 110-115,133-214
+wiki/developers/gis/tiles.md
+  s_95012dc2a2124f::t_ec2fc66bf6be91 375-393
+  s_bbe01d4f023787::t_49630a958e30e7 356-374,394-402
+developers/coverage-batch.md
+  s_95012dc2a2124f::t_0d4bb37fe96519 53-55,60-78
+  s_bbe01d4f023787::t_43c05576eb4614 79
+web/tests/Coverage/SurfaceManifestTest.php
+  s_95012dc2a2124f::t_80f70c4bcbc763 1-122
+web/templates/contribute/improve.html.twig
+  s_95012dc2a2124f::t_ba61b1504593ba 357-360
+pipeline/contract/coverage-contract.json
+  s_bbe01d4f023787::t_8be25cdddbaa9b 327,331
+  s_bbe01d4f023787::t_4a83a282d3153b 351-352
+  s_bbe01d4f023787::t_b2c873da47ed02 326,328-330,332-346
+web/translations/messages.en.yaml
+  s_95012dc2a2124f::t_eb6d629f37b45b 1529-1532
+  s_95012dc2a2124f::t_fd122233d219fc 2015-2019
+web/translations/messages.de.yaml
+  s_95012dc2a2124f::t_fd122233d219fc 1696-1700
+  s_95012dc2a2124f::t_eb6d629f37b45b 1914-1917
+web/translations/messages.fr.yaml
+  s_95012dc2a2124f::t_fd122233d219fc 1693-1697
+  s_95012dc2a2124f::t_eb6d629f37b45b 1911-1914
+web/config/packages/twig.yaml
+  s_95012dc2a2124f::t_35fb13a6b95a29 11-15
+pipeline/tests/test_surface.py
+  s_bbe01d4f023787::t_ac803885d7cf3e 32,139-148,150-152
+  s_bbe01d4f023787::t_8be25cdddbaa9b 137-138,153-159
+  s_95012dc2a2124f::t_3d069611ce73c3 125-136,149,160-257
+  s_bbe01d4f023787::t_d1467dac3a0197 19-31
+pipeline/coverage/contract.py
+  s_bbe01d4f023787::t_d53fd2a8e7e866 131-133
+  s_95012dc2a2124f::t_694ac277ecf359 149-173
+  s_bbe01d4f023787::t_ab784216754b76 174
+wiki/developers/data-ops/harvesting.md
+  s_95012dc2a2124f::t_8eb3e1be8de16e 95-99
+  s_95012dc2a2124f::t_8d3af1ce99c9fb 100
+web/symfony.lock
+  s_bbe01d4f023787::t_cef123a76fd129 320-332
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "a43b1ec3bdce6d58483fc3cb31ff83fc2056efd9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_95012dc2a2124f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "334c4e6c-f005-4794-863e-29860877cf2f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+web/src/Controller/ModerateTranslationsController.php
+  s_c05586667a10a2::t_b5dc4d40f95bb5 13
+  s_c05586667a10a2::t_5f542e45c25339 92-95,100
+  s_c05586667a10a2::t_2ba5c8fbdbd699 37
+docs/specs/moderation-and-contribution.md
+  s_c05586667a10a2::t_ec6c91f14066b4 652
+web/templates/account/_shell_chrome.html.twig
+  s_c05586667a10a2::t_bab58309dfb7bb 6
+docs/specs/translations.md
+  s_c05586667a10a2::t_a145d67eac5a57 254-255
+docs/specs/osm-data-architecture.md
+  s_c05586667a10a2::t_47c1a1e912808e 82-83
+web/templates/moderate/translations.html.twig
+  s_c05586667a10a2::t_ea5b8afe384ec5 8
+  s_c05586667a10a2::t_5096f380ed8d14 46-52,54-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c2971a828755b736f23e6b9345283251a84f8e0b",
+  "prompts": {},
+  "sessions": {
+    "s_c05586667a10a2": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7b9fd57a-1b4e-4f86-a9c1-9724be316cdf",
+        "model": "grok-4.6"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

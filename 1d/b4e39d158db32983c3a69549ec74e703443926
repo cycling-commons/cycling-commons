@@ -1,0 +1,77 @@
+web/src/Controller/MapController.php
+  s_3b3b121fcbab96::t_821240c450bb02 120
+web/tests/Catalog/EvidenceRungTest.php
+  s_3b3b121fcbab96::t_821240c450bb02 43,45,55,60,66,68,77,91,100,106,111,117,126,136,142,148,156-157,164,169,172,181-183,185-186,193
+  s_3b3b121fcbab96::t_ae1884860fd09f 15,140
+web/translations/messages.en.yaml
+  s_3b3b121fcbab96::t_821240c450bb02 4829,4831-4840
+web/translations/messages.fr.yaml
+  s_3b3b121fcbab96::t_821240c450bb02 4805,4807-4816
+web/tests/Controller/MapWitnessCutoffTest.php
+  s_3b3b121fcbab96::t_821240c450bb02 15
+web/translations/messages.es.yaml
+  s_3b3b121fcbab96::t_821240c450bb02 4836,4838-4847
+web/tests/Smoke/MapKeyTest.php
+  s_3b3b121fcbab96::t_821240c450bb02 94,97,99-101
+web/translations/messages.nl.yaml
+  s_3b3b121fcbab96::t_821240c450bb02 4805,4807-4816
+wiki/data-priority.md
+  s_3b3b121fcbab96::t_99cf07df0b7191 288,300,302-313,321,323,325
+pipeline/tests/test_contract.py
+  s_3b3b121fcbab96::t_821240c450bb02 53
+web/tests/Catalog/ItemEvidenceResolverTest.php
+  s_3b3b121fcbab96::t_821240c450bb02 64,90,127,139,152,164,176,187
+web/templates/map/index.html.twig
+  s_3b3b121fcbab96::t_821240c450bb02 441-444
+web/src/Catalog/EvidenceRung.php
+  s_3b3b121fcbab96::t_777a241787290a 10,18,20-24,26,28,30-33,35,46,49,69,72,75,78,83,86-91,112-114
+web/assets/styles/map.css
+  s_3b3b121fcbab96::t_821240c450bb02 367-369
+web/src/Controller/CuratorMarkersController.php
+  s_3b3b121fcbab96::t_821240c450bb02 33,39,42,44-45,48,52
+web/tests/js/marker-grammar.test.cjs
+  s_3b3b121fcbab96::t_821240c450bb02 33,47,50,72-73,75-76,101
+docs/specs/coverage-provider.md
+  s_3b3b121fcbab96::t_821240c450bb02 496
+web/tests/Controller/MarkerGrammarPageTest.php
+  s_3b3b121fcbab96::t_821240c450bb02 51-53,55,57-60
+web/src/Provider/ProviderHarvest.php
+  s_3b3b121fcbab96::t_821240c450bb02 509,512
+web/tests/Catalog/CatalogProviderTest.php
+  s_3b3b121fcbab96::t_821240c450bb02 212,223,235,240,243,253
+web/assets/map/icons.js
+  s_3b3b121fcbab96::t_821240c450bb02 23,209,221
+web/templates/pages/map_key.html.twig
+  s_3b3b121fcbab96::t_821240c450bb02 61-63,152-154,158-159,163-164
+web/src/Provider/Entity/DataProvider.php
+  s_3b3b121fcbab96::t_821240c450bb02 252
+docs/specs/data-provider-hierarchy.md
+  s_3b3b121fcbab96::t_821240c450bb02 560,652,664,669,688,690-706,740,744-746,748,750,752
+web/src/Catalog/Entity/Item.php
+  s_3b3b121fcbab96::t_821240c450bb02 157,159
+web/translations/messages.de.yaml
+  s_3b3b121fcbab96::t_821240c450bb02 4808,4810-4819
+pipeline/coverage/tiles.py
+  s_3b3b121fcbab96::t_821240c450bb02 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1db4e39d158db32983c3a69549ec74e703443926",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_3b3b121fcbab96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef68f16-50de-4bc2-b718-847e4744d25a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

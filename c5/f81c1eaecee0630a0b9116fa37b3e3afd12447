@@ -1,0 +1,25 @@
+.github/workflows/deploy-staging.yaml
+  s_3c09144b065c7c::t_62bd6d43cb5db8 123-125,128-129
+  s_3c09144b065c7c::t_8f129a5848cbf8 109-115,126,131-136
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c5f81c1eaecee0630a0b9116fa37b3e3afd12447",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_3c09144b065c7c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "85b19aba-dc1f-4004-aa4b-473d181133b4",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

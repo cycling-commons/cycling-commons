@@ -1,0 +1,50 @@
+web/assets/map/render.js
+  s_45ec9b3f519700::t_795d755b489f2d 424-428
+  s_45ec9b3f519700::t_4d29c4e08c8f45 77-83,146,148,268,270
+web/assets/map/ride-check.js
+  s_45ec9b3f519700::t_fcc1f6f70e4a11 179-182,186
+web/assets/map/sheet.js
+  s_45ec9b3f519700::t_6ca4795285abfc 41,54-56,70
+web/templates/partials/_head.html.twig
+  s_45ec9b3f519700::t_a3844b0a978864 23-28
+web/assets/map/coverage.js
+  s_45ec9b3f519700::t_a2d6f604708eca 181,260,263-276
+web/src/Controller/MapController.php
+  s_45ec9b3f519700::t_795d755b489f2d 65-70
+  s_45ec9b3f519700::t_187face8ff9899 366-372,393-399,456-462,488-494,540-546
+  s_45ec9b3f519700::t_83f94079b505b4 27
+  s_45ec9b3f519700::t_170d89a6f46986 174
+web/assets/map/panels.js
+  s_45ec9b3f519700::t_795d755b489f2d 281
+  s_45ec9b3f519700::t_94c308496e8ab0 30
+web/templates/map/index.html.twig
+  s_45ec9b3f519700::t_e38b2aa63d89b9 458-463
+  s_45ec9b3f519700::t_86dfe815eca827 423-439,441-457
+web/tests/Controller/MapPrefsTest.php
+  s_45ec9b3f519700::t_e2ad07eadaa4fc 78
+web/assets/js/nav.js
+  s_45ec9b3f519700::t_1d71577c5582e5 243-249,255-257,259-260,262-265
+web/assets/styles/map.css
+  s_45ec9b3f519700::t_6ca4795285abfc 588-592
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "3aaa53237224e141b90cb6d22efe6afabd11db8b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_45ec9b3f519700": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42c83203-4754-4e8f-b14b-28903077507b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

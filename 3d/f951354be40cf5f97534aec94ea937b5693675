@@ -1,0 +1,48 @@
+web/src/Controller/MapController.php
+  s_4e536eec984e8d::t_861b422728ca00 269
+web/assets/map/community.js
+  s_4e536eec984e8d::t_514d6901c46178 157-158
+  s_4e536eec984e8d::t_9852f908309159 219-224,227,229-230
+web/translations/messages.de.yaml
+  s_4e536eec984e8d::t_d44bf626d35053 1702-1704
+web/src/Community/ItemConfirmationService.php
+  s_4e536eec984e8d::t_69761c4d8fa072 40,47,60
+web/translations/messages.fr.yaml
+  s_4e536eec984e8d::t_d44bf626d35053 1699-1701
+web/translations/messages.nl.yaml
+  s_4e536eec984e8d::t_d44bf626d35053 1699-1701
+web/assets/styles/map.css
+  s_4e536eec984e8d::t_861b422728ca00 747-749
+web/migrations/Version20260813210000.php
+  s_4e536eec984e8d::t_25eeb39cf42d82 13,16-19,26
+web/src/Controller/ItemConfirmationController.php
+  s_4e536eec984e8d::t_cc5f84d53c066b 86
+  s_4e536eec984e8d::t_e403b905540e04 112,116-118
+web/translations/messages.en.yaml
+  s_4e536eec984e8d::t_d44bf626d35053 2021-2023
+web/translations/messages.es.yaml
+  s_4e536eec984e8d::t_d44bf626d35053 2034-2036
+docs/specs/edit-items/A-road-surface.md
+  s_4e536eec984e8d::t_0875add39aceda 310-320,324-327
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "3df951354be40cf5f97534aec94ea937b5693675",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e536eec984e8d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef3615e2-4e64-4afe-8b18-be74e8cc28ce",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

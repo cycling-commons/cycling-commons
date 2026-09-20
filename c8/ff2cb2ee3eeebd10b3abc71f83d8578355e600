@@ -1,0 +1,37 @@
+web/src/Translation/TranslationLimits.php
+  s_78b7d7e9817be5::t_54afb4e45c9e5b 1-31
+web/tests/Translation/TranslationPersistenceTest.php
+  s_78b7d7e9817be5::t_533cfc9c5a3f82 1-42
+web/src/Translation/Entity/TranslationProposal.php
+  s_78b7d7e9817be5::t_19af22562b88d0 1-147
+web/src/Translation/Entity/TranslationEntry.php
+  s_78b7d7e9817be5::t_e037556dca38e8 1-87
+web/config/packages/doctrine.yaml
+  s_78b7d7e9817be5::t_9ee0ecdec0b4b9 53-57
+web/migrations/Version20260825220000.php
+  s_78b7d7e9817be5::t_170732f0eb5c72 73,90
+  s_78b7d7e9817be5::t_1b8cc4ab280173 1-72,74-89,91-100
+web/src/Translation/TranslationProposalStatus.php
+  s_78b7d7e9817be5::t_0ec3117e5d5e79 1-22
+web/src/Translation/Entity/TranslationOverlay.php
+  s_78b7d7e9817be5::t_197de1894e0d44 1-14,18-23,25-27,32-64,70-101
+  s_78b7d7e9817be5::t_e2dae1cd1fdc58 15-17,24,28-31,65-69
+web/config/services.yaml
+  s_78b7d7e9817be5::t_210051f9e7eb54 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c8ff2cb2ee3eeebd10b3abc71f83d8578355e600",
+  "prompts": {},
+  "sessions": {
+    "s_78b7d7e9817be5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6e7af1ef-8f20-4c81-ab76-dfbaf5519e71",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

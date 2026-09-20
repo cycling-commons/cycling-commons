@@ -1,0 +1,19 @@
+wiki/governance.md
+  s_c6cd3322f35403::t_d338d7c855341f 76-78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1fa8729dc4273f398de270f83d42cee372eff96c",
+  "prompts": {},
+  "sessions": {
+    "s_c6cd3322f35403": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03caed64-5d94-4429-94bd-cccc8c2759e4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

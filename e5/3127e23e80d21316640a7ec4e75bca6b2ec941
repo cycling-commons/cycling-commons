@@ -1,0 +1,68 @@
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_d34f17e49b47aa::t_8c0e1ead3f0c56 134-181,206-227
+  s_d34f17e49b47aa::t_36042c2384655b 182-205
+pipeline/tests/test_contract.py
+  s_d34f17e49b47aa::t_336a3fd43f1155 280-282
+  s_d34f17e49b47aa::t_8d1ebf16b03437 286-287,292-308
+  s_d34f17e49b47aa::t_7959f041833377 309-310
+docs/specs/edit-items/P-scenic-views.md
+  s_d34f17e49b47aa::t_ff770c756a9d1b 55
+docs/specs/osm-data-architecture.md
+  s_d34f17e49b47aa::t_0bb7f197a845cf 227
+  s_d34f17e49b47aa::t_ff770c756a9d1b 230
+pipeline/contract/coverage-contract.json
+  s_d34f17e49b47aa::t_3f63ead6cadcd9 83,262-264,271,285,288
+web/assets/map/osm-tags.js
+  s_d34f17e49b47aa::t_afe9517fadcf6c 84-159
+web/src/Coverage/CoverageRepository.php
+  s_d34f17e49b47aa::t_4d870548dc90fc 49,154,171
+  s_d34f17e49b47aa::t_36042c2384655b 72-75,185-188
+  s_d34f17e49b47aa::t_c07b3f0bab87b4 76-80,184,189-225,227
+  s_d34f17e49b47aa::t_1f7e2398b2e02b 226,228
+web/assets/map/coverage.js
+  s_d34f17e49b47aa::t_a4fb173e3c944c 14,249-262
+pipeline/coverage/contract.py
+  s_d34f17e49b47aa::t_2a15b8ff95af72 327
+  s_d34f17e49b47aa::t_1a6156f8d46921 325-326,328
+  s_d34f17e49b47aa::t_06ef23d0a11c02 105-107
+  s_d34f17e49b47aa::t_f75f3779ccd47c 28-34
+wiki/developers/gis/osm-to-database.md
+  s_d34f17e49b47aa::t_a519819461f016 219-224
+  s_d34f17e49b47aa::t_a988b6ccae0881 190,199-200,203,207-208,218,225-226,228,230-232,236-237,242,244,251,317,429
+pipeline/tests/test_parse.py
+  s_d34f17e49b47aa::t_77379041f75bc0 213,215,218-220,225-232
+  s_d34f17e49b47aa::t_a4c5695e1049a7 152-212,214,216-217,221-224,233-258
+pipeline/coverage/parse.py
+  s_d34f17e49b47aa::t_329fb8bc3222f9 8,12,17,19-20,27-33,61-63,65-66,79-82,123-148,164-165,167,169-170,178,182-184,195
+  s_d34f17e49b47aa::t_9342dd7eff0509 9-11,149-163,166,168,171-177,179-181
+web/tests/js/osm-tags.test.mjs
+  s_d34f17e49b47aa::t_e35432064aedd1 182
+  s_d34f17e49b47aa::t_43aac418272e2c 11-12,111-181,183-198
+docs/specs/coverage-provider.md
+  s_d34f17e49b47aa::t_062b2e789a7155 363
+  s_d34f17e49b47aa::t_a6ae9c0e32e615 191,196-199,201-206,215,224-228,260-261,855,858-862,866-877,995-1000,1018-1020
+  s_d34f17e49b47aa::t_9e54179a483e49 340-362,364-365,736,856-857,863-865
+  s_d34f17e49b47aa::t_d9adb3377d486d 849-850,994
+pipeline/tests/test_run.py
+  s_d34f17e49b47aa::t_6c4bb77d537fa0 182-183
+docs/specs/edit-items/F-getting-there.md
+  s_d34f17e49b47aa::t_d9adb3377d486d 59-60
+  s_d34f17e49b47aa::t_a519819461f016 70-73
+  s_d34f17e49b47aa::t_0bb7f197a845cf 61-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e53127e23e80d21316640a7ec4e75bca6b2ec941",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

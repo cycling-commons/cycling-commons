@@ -1,0 +1,74 @@
+LICENSES/OFL-1.1.txt
+  s_45ec9b3f519700::t_bc2dd381b134cd 1-43
+web/templates/pages/credits.html.twig
+  s_45ec9b3f519700::t_e4222b8c3fdf08 51-60,78-85
+REUSE.toml
+  s_45ec9b3f519700::t_dc71f9630af7eb 18-21,51-57
+  s_45ec9b3f519700::t_1ad28dbd0edd28 1-12,22,24-50,58-63
+  s_f4f6a57ae087b5::t_a7eebd221f7f56 13-17,23
+tools/wallonia/enrich.py
+  s_45ec9b3f519700::t_0273708d5a9c48 33
+README.md
+  s_45ec9b3f519700::t_265414217cb7d4 143-147
+tools/wallonia/build_all.py
+  s_45ec9b3f519700::t_736fd90a3903ea 21-22,24,150-151,153
+web/assets/map/mapillary.js
+  s_45ec9b3f519700::t_62dd4a14d06bc9 25-28
+LICENSES/CC-BY-SA-4.0.txt
+  s_45ec9b3f519700::t_4b85423566e98c 1-170
+tools/check-wiki-spdx.sh
+  s_45ec9b3f519700::t_736fd90a3903ea 12-13,15-17,19
+tools/wallonia/tests/test_export.py
+  s_45ec9b3f519700::t_736fd90a3903ea 80-81,83
+docs/specs/account-and-auth.md
+  s_45ec9b3f519700::t_4bfad6816634a6 88-90
+LICENSES/CC-BY-4.0.txt
+  s_45ec9b3f519700::t_55313e0fa120ba 1-156
+GOVERNANCE.md
+  s_45ec9b3f519700::t_0273708d5a9c48 15
+LICENSES/LicenseRef-PolyForm-Shield-1.0.0.txt
+  s_45ec9b3f519700::t_4b85423566e98c 1-91
+LICENSES/ODbL-1.0.txt
+  s_45ec9b3f519700::t_4b85423566e98c 1-540
+LICENSES/Apache-2.0.txt
+  s_45ec9b3f519700::t_55313e0fa120ba 1-73
+tools/wallonia/climbs.py
+  s_45ec9b3f519700::t_736fd90a3903ea 210-211,213
+tools/wallonia/pivot.py
+  s_45ec9b3f519700::t_736fd90a3903ea 149-150,152
+tools/wallonia/tests/test_fixture_valid.py
+  s_45ec9b3f519700::t_736fd90a3903ea 11-12,14
+.github/workflows/reuse.yml
+  s_45ec9b3f519700::t_dc7d963cffb868 1-18
+web/README.md
+  s_45ec9b3f519700::t_265414217cb7d4 1,37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "d9ff0aad923715a5391ebe86314c4cb369e18fb0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_45ec9b3f519700": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42c83203-4754-4e8f-b14b-28903077507b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f4f6a57ae087b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3cc1dc99-8bd8-4895-bd29-e3731c4b2852",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

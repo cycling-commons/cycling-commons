@@ -1,0 +1,48 @@
+web/tests/Support/BugChallengeEndpointTest.php
+  s_bd35b13142b2fa::t_7364505e79e587 1-122
+web/templates/partials/_bug_fab.html.twig
+  s_bd35b13142b2fa::t_2fa99afa805b81 33
+docs/specs/page-caching.md
+  s_bd35b13142b2fa::t_65675723121f33 120,122,138-139
+  s_bd35b13142b2fa::t_4c30e5fd8e0b55 5-6,119,121,123-137,151-155
+  s_bd35b13142b2fa::t_d75ad223113ea8 140-148
+  s_bd35b13142b2fa::t_71f1a7ba13c164 1-4,7-118,149-150,156-199
+web/src/Routing/LocalizedPath.php
+  s_bd35b13142b2fa::t_17854d2bfdb5e2 244-260
+web/assets/support/bug-fab.js
+  s_bd35b13142b2fa::t_a31236216b8450 245-264,269-272,280-285,440,447-449,482
+  s_bd35b13142b2fa::t_ec75ffcf2ba82c 63-64
+  s_bd35b13142b2fa::t_a3928585200fdb 407
+  s_bd35b13142b2fa::t_3aa04a780f1b3c 286
+web/src/Twig/BugFabExtension.php
+  s_bd35b13142b2fa::t_961efe778930f6 51-57
+web/config/packages/rate_limiter.yaml
+  s_bd35b13142b2fa::t_51262a8f41fce2 69-70,288-297,384
+  s_bd35b13142b2fa::t_ff13a693cee2ed 385
+web/src/Controller/BugReportController.php
+  s_bd35b13142b2fa::t_7e322b583ffe9d 76,87-117,119-124
+  s_bd35b13142b2fa::t_dcb58523d3457e 77,118
+  s_bd35b13142b2fa::t_07eca844cb5459 28
+  s_bd35b13142b2fa::t_f53c31d53e7976 125-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "9163dc921c722f5852d01820277942ecef095a8b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bd35b13142b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c348108d-a15c-4a6f-a1f0-9ab7e633bdf4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

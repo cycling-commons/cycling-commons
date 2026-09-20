@@ -1,0 +1,34 @@
+tools/valhalla/README.md
+  s_c2b3d3b1e5aa0b::t_df4d046a5e3e05 1-78
+tools/valhalla/build-continent-tiles.sh
+  s_c2b3d3b1e5aa0b::t_c92e9a676d6113 1-262
+tools/valhalla/fetch-geofabrik-pbf.sh
+  s_c2b3d3b1e5aa0b::t_ed7e53c795701d 1-162
+tools/valhalla/fetch-global-dem.sh
+  s_c2b3d3b1e5aa0b::t_30b2ad4e8cae11 1-315
+tools/valhalla/run-continents.sh
+  s_c2b3d3b1e5aa0b::t_ee00bc291334e8 1-225
+wiki/developers/data-ops/elevation-tiles.md
+  s_c2b3d3b1e5aa0b::t_5b5e8161305631 395,397-403,409-410,420-450,452,454-456,458-460,462-463,654-655
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "448b8a975a25fd7453a617df0b7f0bdfa33c41c7",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c2b3d3b1e5aa0b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5114fafd-15ff-4217-9290-b7aeef55ebb0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

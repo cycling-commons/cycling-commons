@@ -1,0 +1,163 @@
+web/assets/map/util.js
+  s_985a6f4653b290::t_5eba3588c21045 75-79
+web/tests/js/photon-lang.test.mjs
+  s_985a6f4653b290::t_5eba3588c21045 1-23
+web/src/Support/ReportResolver.php
+  s_985a6f4653b290::t_f92a1899899015 55-77,90
+  s_187a0c212550de::t_e341a581782ec2 54
+web/translations/messages.fr.yaml
+  s_985a6f4653b290::t_66bb5c244691c7 2260-2261,2757-2767
+  s_985a6f4653b290::t_786e79af4a4fb1 2262-2265
+  s_985a6f4653b290::t_8103333d0bcfed 2266-2268
+  s_985a6f4653b290::t_634d788b7c36a9 2257-2259
+  s_985a6f4653b290::t_16045b9d58d52f 2269
+  s_985a6f4653b290::t_604558108e04de 2768
+web/assets/map/places.js
+  s_985a6f4653b290::t_786e79af4a4fb1 149-156
+  s_985a6f4653b290::t_8e66f1bbb45ab3 120
+  s_985a6f4653b290::t_81e10fd500e658 14-15
+  s_985a6f4653b290::t_e0e392b378d415 161-162
+  s_985a6f4653b290::t_f92a1899899015 145,157-160,163-178
+  s_985a6f4653b290::t_8103333d0bcfed 134-143
+  s_187a0c212550de::t_2a2d81f9e53271 20,102-103,106,121-133,144,146-148,179-194
+web/assets/styles/map.css
+  s_985a6f4653b290::t_f92a1899899015 1214-1215
+  s_985a6f4653b290::t_786e79af4a4fb1 1217-1219
+  s_985a6f4653b290::t_977063dbc13cae 1223
+  s_985a6f4653b290::t_e0e392b378d415 1216
+  s_187a0c212550de::t_32f5a93b12bd88 1212-1213,1220-1222
+web/src/Controller/CoverageController.php
+  s_985a6f4653b290::t_3a97c64545cab6 11,36-37,144,209-210
+web/src/Town/TownSourceUnavailable.php
+  s_985a6f4653b290::t_439724855d28a7 1-12
+web/translations/messages.nl.yaml
+  s_985a6f4653b290::t_786e79af4a4fb1 2262-2265
+  s_985a6f4653b290::t_8103333d0bcfed 2266-2268
+  s_985a6f4653b290::t_66bb5c244691c7 2260-2261,2757-2767
+  s_985a6f4653b290::t_ec707b80b03976 2257-2259
+  s_985a6f4653b290::t_8bdf9a564edce0 2269
+  s_985a6f4653b290::t_0c0e18ebdbbed8 2768
+web/translations/messages.de.yaml
+  s_985a6f4653b290::t_66bb5c244691c7 2263-2264,2760-2770
+  s_985a6f4653b290::t_786e79af4a4fb1 2265-2268
+  s_985a6f4653b290::t_8103333d0bcfed 2269-2271
+  s_985a6f4653b290::t_d795802ba1806a 2260-2262
+  s_985a6f4653b290::t_26ed96d5a8fd6b 2272
+  s_985a6f4653b290::t_cd4391672f3978 2771
+web/config/packages/messenger.yaml
+  s_985a6f4653b290::t_3a97c64545cab6 31
+web/tests/js/commons-photo.test.mjs
+  s_985a6f4653b290::t_34741fd618ddf2 91-111
+web/assets/map/search-ui.js
+  s_985a6f4653b290::t_8e66f1bbb45ab3 131
+  s_985a6f4653b290::t_5eba3588c21045 5,119
+  s_187a0c212550de::t_e568bc8df56141 130,132-133,135
+web/translations/messages.en.yaml
+  s_985a6f4653b290::t_786e79af4a4fb1 2738-2741
+  s_985a6f4653b290::t_66bb5c244691c7 2736-2737,2778-2788
+  s_985a6f4653b290::t_8103333d0bcfed 2742-2744
+  s_985a6f4653b290::t_0ea5ee4595a725 2733-2735
+  s_985a6f4653b290::t_039f8f56302fa2 2745
+  s_985a6f4653b290::t_ef1536305470eb 2789
+web/src/Media/Commons/CommonsApi.php
+  s_985a6f4653b290::t_a6946b0af6ac65 112,115,121,130-131,136,139-140,142-145,148,216,228-232,238,259,270,292,461
+  s_985a6f4653b290::t_8e66f1bbb45ab3 117,151-152
+  s_985a6f4653b290::t_3a97c64545cab6 13-15,113-114,116,118-120,122-129,132-135,137-138,141,146-147,149-150,153-215,233,235-237,239,242-243,245-246,258,262,264,269,271-272,274,276,278-285,289-290,294-302,304-305,394-407
+  s_985a6f4653b290::t_8103333d0bcfed 217-227,234,275,286-288
+  s_985a6f4653b290::t_786e79af4a4fb1 111,306-344,346-393,408
+  s_985a6f4653b290::t_48a7299befa180 345
+  s_985a6f4653b290::t_c372335d1a2c07 244,247-257,260-261,263,265-268,454,460
+  s_985a6f4653b290::t_34741fd618ddf2 240-241,273,277,291,293,303
+  s_187a0c212550de::t_4d8b3c103c3c78 409
+web/src/Controller/TownController.php
+  s_985a6f4653b290::t_f92a1899899015 99
+  s_985a6f4653b290::t_786e79af4a4fb1 98
+  s_985a6f4653b290::t_4abbd86d801caa 34-35
+  s_985a6f4653b290::t_3a97c64545cab6 1-33,36-97,100-165
+web/src/Controller/MapController.php
+  s_985a6f4653b290::t_8103333d0bcfed 318,320
+  s_985a6f4653b290::t_f92a1899899015 319
+  s_187a0c212550de::t_65dd40879fae83 315-317
+web/src/Town/Message/ResolveTownSummary.php
+  s_985a6f4653b290::t_439724855d28a7 1-26
+web/src/Town/TownSummaryRepository.php
+  s_985a6f4653b290::t_786e79af4a4fb1 21,53-54,64,74,76,79,82
+  s_985a6f4653b290::t_f92a1899899015 22,45,65,93-135
+  s_985a6f4653b290::t_439724855d28a7 1-20,23-44,46-52,55-63,66-73,75,77-78,80-81,83-92,136-146
+web/src/Controller/ModerateTownController.php
+  s_985a6f4653b290::t_4d80bc96d6d2a7 55,63
+  s_985a6f4653b290::t_f92a1899899015 1-54,56-62,64-93
+web/src/Controller/ThirdPartyBudget.php
+  s_985a6f4653b290::t_3a97c64545cab6 1-58
+docs/specs/content-reports.md
+  s_985a6f4653b290::t_66bb5c244691c7 52,61
+web/src/Town/MessageHandler/ResolveTownSummaryHandler.php
+  s_985a6f4653b290::t_a6946b0af6ac65 101,146,150,158-160,167,170,176
+  s_985a6f4653b290::t_786e79af4a4fb1 75,83,114-130
+  s_985a6f4653b290::t_439724855d28a7 1-42,46-74,76-82,84-100,102-113,131-145,147-149,151-157,168-169,171-175,177-181
+  s_985a6f4653b290::t_8e66f1bbb45ab3 43-45,161-166
+web/migrations/Version20260907233000.php
+  s_985a6f4653b290::t_439724855d28a7 1-12,16-45,49-55,58-65
+  s_985a6f4653b290::t_786e79af4a4fb1 13-15,46,57
+  s_985a6f4653b290::t_f92a1899899015 47-48,56
+web/templates/moderate/town.html.twig
+  s_985a6f4653b290::t_66bb5c244691c7 1-83
+web/src/Town/OsmElementApi.php
+  s_985a6f4653b290::t_439724855d28a7 1-77
+web/tests/Controller/ModerateTownControllerTest.php
+  s_985a6f4653b290::t_e0e392b378d415 68-70,72
+  s_985a6f4653b290::t_66bb5c244691c7 1-67,71,73-129
+web/translations/messages.es.yaml
+  s_985a6f4653b290::t_66bb5c244691c7 2740-2741,2782-2792
+  s_985a6f4653b290::t_786e79af4a4fb1 2742-2745
+  s_985a6f4653b290::t_8103333d0bcfed 2746-2748
+  s_985a6f4653b290::t_c77677191faeff 2737-2739
+  s_985a6f4653b290::t_6833ec79dd0a3f 2749
+  s_985a6f4653b290::t_e5104b8a098a27 2793
+web/tests/Town/ResolveTownSummaryHandlerTest.php
+  s_985a6f4653b290::t_34741fd618ddf2 1-63,71-105,107-179,183,190-192,198-208,211-224
+  s_985a6f4653b290::t_8e66f1bbb45ab3 68,180-181
+  s_985a6f4653b290::t_8103333d0bcfed 67,69-70,182,193-197
+  s_985a6f4653b290::t_786e79af4a4fb1 64-66,106,184-189,209-210
+docs/specs/map-and-search.md
+  s_985a6f4653b290::t_8103333d0bcfed 1674-1681
+  s_985a6f4653b290::t_66bb5c244691c7 1698-1716
+  s_985a6f4653b290::t_5eba3588c21045 1801-1807
+  s_985a6f4653b290::t_a17e71bcb6c6f1 1642-1662,1672-1673,1682-1697,1717-1723,2262-2264
+  s_985a6f4653b290::t_786e79af4a4fb1 1663-1671
+web/src/Media/Commons/CommonsPhotoAdmission.php
+  s_985a6f4653b290::t_4abbd86d801caa 41
+  s_985a6f4653b290::t_3a97c64545cab6 1-40,42-84
+web/src/Support/ReportTarget.php
+  s_985a6f4653b290::t_f92a1899899015 44-49,67
+web/tests/Controller/TownControllerTest.php
+  s_985a6f4653b290::t_66bb5c244691c7 63
+  s_985a6f4653b290::t_34741fd618ddf2 1-49,52-59,62,64-79,81-125
+  s_985a6f4653b290::t_786e79af4a4fb1 50-51,60-61,80
+web/assets/map/commons-photo.js
+  s_187a0c212550de::t_ac16188b3187fc 30-47,60,64-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "588d0dd274aab4c6b311f7514f94186d1f3729e7",
+  "prompts": {},
+  "sessions": {
+    "s_187a0c212550de": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "17775e38-d86d-44d9-ba73-9a0b966c3166",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

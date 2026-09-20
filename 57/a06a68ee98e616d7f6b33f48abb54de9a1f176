@@ -1,0 +1,26 @@
+web/tests/js/rail-shell.test.cjs
+  s_573608e5fb8d70::t_6bbc82c2b15b2c 143-183
+web/assets/map/shell.js
+  s_573608e5fb8d70::t_412dd662fc7b36 80-85,88-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "57a06a68ee98e616d7f6b33f48abb54de9a1f176",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_573608e5fb8d70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "434ec033-3fb6-4aba-b649-e625d8799f68",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+web/config/packages/rate_limiter.yaml
+  s_16e7d98f40a315::t_57408e3e34344e 20-21
+  s_16e7d98f40a315::t_46f4e93b157637 209
+  s_16e7d98f40a315::t_d5424adcd0007e 91-101
+  s_16e7d98f40a315::t_99317e9d49c04c 210
+web/assets/contribute/improve.js
+  s_16e7d98f40a315::t_e1f8e6a1a9cd30 443-444
+docs/specs/climb-elevation.md
+  s_16e7d98f40a315::t_04e1e0ee50c239 756-776
+web/templates/contribute/improve.html.twig
+  s_16e7d98f40a315::t_e40f644a200759 453-455
+web/templates/contribute/add_climb.html.twig
+  s_16e7d98f40a315::t_7ed2a4e8e74367 165-166
+web/assets/contribute/climb-editor.js
+  s_16e7d98f40a315::t_1825f90a98d083 220-221
+wiki/developers/gis-beyond/routing.md
+  s_16e7d98f40a315::t_820787d306b6fc 157-158
+  s_16e7d98f40a315::t_11cecd3e337d6f 174-177
+docs/specs/security-architecture.md
+  s_16e7d98f40a315::t_db298e167e548b 436
+  s_16e7d98f40a315::t_3dad3748c31421 338
+  s_16e7d98f40a315::t_8846396cab73c0 299
+  s_16e7d98f40a315::t_64bf3a81bc18f4 319-320
+  s_16e7d98f40a315::t_00418630cb176c 411
+web/tests/Controller/RouteControllerTest.php
+  s_16e7d98f40a315::t_dffb1878339456 1-189
+web/src/Controller/RouteController.php
+  s_16e7d98f40a315::t_b571881f14da67 10,14-16,22-28,30-31,38-47,51-53,69-72
+  s_16e7d98f40a315::t_f5a2a80e247e6f 48-50
+  s_16e7d98f40a315::t_ca2656a5838c90 73-74
+web/config/packages/csrf.yaml
+  s_16e7d98f40a315::t_24d3e7ea2f3d96 15-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "8017c850352a4398cae7d3f6298695bec1bdd9c6",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

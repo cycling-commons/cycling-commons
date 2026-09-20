@@ -1,0 +1,76 @@
+web/templates/pages/index.html.twig
+  s_d6eab02dcad899::t_b79dba9aed2507 205
+  s_d8f44836ef68cd::t_84375b86e74f7a 247-250
+  s_d8f44836ef68cd::t_bca49c8939ad1c 145-146
+  s_d8f44836ef68cd::t_33255fd6ad92c2 147-148
+  s_d8f44836ef68cd::t_9a2d2dc94820d6 170-171,174
+  s_d6eab02dcad899::t_d7c72cfe7f1883 189
+  s_d8f44836ef68cd::t_0fc13a01254ab5 257
+  s_d6eab02dcad899::t_d42bfcd515f575 336,338
+  s_d6eab02dcad899::t_0c2a87e862528a 347
+  s_d8f44836ef68cd::t_768d2ec845bcb9 231-234
+  s_d8f44836ef68cd::t_38771aaa0386cf 172
+  s_d6eab02dcad899::t_a51bdfd3110138 337,339-341,348-351
+  s_d8f44836ef68cd::t_97abe4068a13c0 319-326
+  s_d6eab02dcad899::t_05a423c757abf9 187-188,203
+  s_d8f44836ef68cd::t_0122786741ceea 224-228,230,238-239
+  s_d8f44836ef68cd::t_005504f38f8c85 245-246,253,255-256,259-261
+  s_d8f44836ef68cd::t_e4bded5bce8482 4-6
+  s_d8f44836ef68cd::t_6b7d12dbce8e65 303-304
+  s_d8f44836ef68cd::t_330d4fee520845 357-364
+  s_d8f44836ef68cd::t_b676dea2d8b58d 160,162
+  s_d8f44836ef68cd::t_aab787104ef0c9 194
+  s_d8f44836ef68cd::t_2e9b5877c0d837 88-89
+  s_d8f44836ef68cd::t_520e1866c354cd 151-154
+  s_d8f44836ef68cd::t_b5343460adec01 190
+  s_d8f44836ef68cd::t_6f528945a0692a 252,254,258
+  s_d6eab02dcad899::t_1ae88a5a4d192e 200-202
+  s_d8f44836ef68cd::t_98cf8f55321248 251
+web/templates/pages/_home_scout.html.twig
+  s_d8f44836ef68cd::t_378c9795eaacab 12
+  s_d8f44836ef68cd::t_d28d53957dbd0e 1-10,13-18
+  s_d8f44836ef68cd::t_fbc4f0b9556444 11
+web/templates/pages/_home_curation.html.twig
+  s_d8f44836ef68cd::t_3a626b1687596b 12
+  s_d8f44836ef68cd::t_cf1013b9613877 1-7,9-11,13,15,17-20
+  s_d8f44836ef68cd::t_7921b9c9f409bd 8
+  s_d8f44836ef68cd::t_5712bd6a597fc0 14,16
+web/src/Controller/PageController.php
+  s_d8f44836ef68cd::t_126d54149364db 39-56
+  s_d8f44836ef68cd::t_4b1f2370fc966e 57-75
+web/templates/pages/_home_how.html.twig
+  s_d8f44836ef68cd::t_e7c8dce8b31b71 8-10
+  s_d8f44836ef68cd::t_0c30300de693ed 1-7,11-13
+web/templates/pages/_home_principle.html.twig
+  s_d8f44836ef68cd::t_56d66f11765166 8
+  s_d8f44836ef68cd::t_40159de81f6ad7 1-7,9-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "15851f1ffcdf93d099fed575469d4776882bcacd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_d6eab02dcad899": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5577347-6bee-425e-a6b0-d01f31e69be7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d8f44836ef68cd": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "6a138544-543c-46a3-b50a-765172aed096",
+        "model": "grok-4.6"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

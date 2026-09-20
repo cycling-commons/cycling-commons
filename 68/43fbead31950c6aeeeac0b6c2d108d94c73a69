@@ -1,0 +1,36 @@
+web/tests/Moderation/WithdrawSubmissionTest.php
+  s_6df2cc515a46f1::t_4970cc6527a0e2 113-116,120
+web/templates/profile/show.html.twig
+  s_6df2cc515a46f1::t_f21debeca062c3 78-82,84,86,88-90
+  s_6df2cc515a46f1::t_9dd763cb100d47 177,196
+  s_6df2cc515a46f1::t_d451c1a91455ac 124-127
+web/src/Controller/ProfileController.php
+  s_6df2cc515a46f1::t_e8aa92fcbfe251 105-107
+  s_6df2cc515a46f1::t_184a6d13c29099 181
+  s_6df2cc515a46f1::t_2a8af159118095 73-82
+  s_6df2cc515a46f1::t_3701a5b00de333 114,127-128
+  s_6df2cc515a46f1::t_dd58daa58d5b2c 129
+web/tests/Profile/MyContributionsTest.php
+  s_6df2cc515a46f1::t_5fe75289eb8485 88-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "6843fbead31950c6aeeeac0b6c2d108d94c73a69",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

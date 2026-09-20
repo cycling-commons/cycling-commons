@@ -1,0 +1,33 @@
+tools/wallonia/export.py
+  s_bbe01d4f023787::t_00c1d7efa89d40 107-110,112-127
+web/assets/map/panels.js
+  s_bbe01d4f023787::t_bdb225a187a709 101-114,117,121-122,127
+web/assets/styles/map.css
+  s_bbe01d4f023787::t_7f79a7dc166308 115-118,123-126
+  s_bbe01d4f023787::t_bdb225a187a709 111-114,119
+tools/wallonia/tests/test_export.py
+  s_bbe01d4f023787::t_4c054392649729 34-45
+docs/specs/edit-items/A-road-surface.md
+  s_bbe01d4f023787::t_3f197c5a424b95 129-141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "7f3a7b5031bc9d35a207cfc31e659b0cae36986a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

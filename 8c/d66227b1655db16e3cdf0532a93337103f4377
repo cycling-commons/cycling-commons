@@ -1,0 +1,166 @@
+docs/specs/security-architecture.md
+  s_d34f17e49b47aa::t_3d248b2da1d68d 116
+web/src/Controller/PhotoPageController.php
+  s_d34f17e49b47aa::t_75ed7391617841 15,35,135-139,142,144
+web/src/Controller/MediaController.php
+  s_d34f17e49b47aa::t_d444457dddc7d1 23,69,318-319
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_d34f17e49b47aa::t_207db428a865b3 15
+  s_d34f17e49b47aa::t_f0f61dffa945e6 9,150-165
+docs/specs/edit-items/R-quality-rides.md
+  s_d34f17e49b47aa::t_6bf802917e8e07 9
+web/src/Media/MediaClaimService.php
+  s_d34f17e49b47aa::t_ae3ec7a90746b8 9-10,18,20,45-104,114,121
+web/src/Media/MediaDecisionService.php
+  s_d34f17e49b47aa::t_095e9cb908d1bd 10,24-27,63-113,134,139-151,155,162
+web/tests/Media/RoutePhotoTest.php
+  s_d34f17e49b47aa::t_b10bd02cceed57 1-26,28-70,72-228,230-325
+  s_d34f17e49b47aa::t_7412e48c4547d6 229
+  s_d34f17e49b47aa::t_207db428a865b3 27,71
+web/tests/js/media-pending.test.cjs
+  s_d34f17e49b47aa::t_488a40c88af975 109-114
+web/tests/js/add-photo.test.mjs
+  s_d34f17e49b47aa::t_3470416bd98019 1-24
+docs/specs/photo-uploads.md
+  s_d34f17e49b47aa::t_5741abdb33c973 1079,1089-1170,1183,1193
+  s_d34f17e49b47aa::t_3d248b2da1d68d 564-566
+  s_d34f17e49b47aa::t_fb3bfc31ad326f 563,567-586,601,626-627,974-979,1036,1040-1041
+  s_d34f17e49b47aa::t_6bf802917e8e07 1192
+web/src/Media/MediaTakedownService.php
+  s_d34f17e49b47aa::t_d444457dddc7d1 10,64,469,489-490,492
+web/src/Contribution/RouteProposalService.php
+  s_d34f17e49b47aa::t_c424124ab1d3c2 18,46,51,131-140,142-143
+web/src/Media/Commons/CommonsFile.php
+  s_d34f17e49b47aa::t_cf428ac2c1cd39 47-70
+web/src/Controller/ProposeRouteController.php
+  s_d34f17e49b47aa::t_d27ee884fca00b 16-17,141-144,154-155
+  s_d34f17e49b47aa::t_5b255f6ede90d6 132
+  s_d34f17e49b47aa::t_cee1eb1ab768a8 10-12,20,32,34,45-46,54-59,96,99-131,133-140,145-147,151-153,156,158-188
+  s_d34f17e49b47aa::t_16f3ca1710ceca 148-150,157,189
+web/templates/moderate/_card_styles.html.twig
+  s_d34f17e49b47aa::t_2f2ad0c0e41547 55
+web/src/Moderation/RouteQueue.php
+  s_d34f17e49b47aa::t_207db428a865b3 126
+  s_d34f17e49b47aa::t_52c2e6e43bec36 10-11,14,32,92-94,98,105-125,127-157
+web/assets/contribute/media-upload.js
+  s_d34f17e49b47aa::t_43eef89ad016d7 407-409,411-415
+web/templates/contribute/improve.html.twig
+  s_d34f17e49b47aa::t_67116d3f9ee06d 223,401
+web/templates/moderate_routes/_photos.html.twig
+  s_d34f17e49b47aa::t_2f2ad0c0e41547 11-13,24-25
+  s_d34f17e49b47aa::t_5d6581fd539954 1-10,14-23,26-29
+web/tests/Moderation/RouteModerateTest.php
+  s_d34f17e49b47aa::t_06d4e8397f7f3e 151-173
+web/tests/Media/LocaliseCommonsPhotosCommandTest.php
+  s_d34f17e49b47aa::t_57a6d2e15bd8b2 543
+  s_d34f17e49b47aa::t_78d7716d2d4630 36
+  s_d34f17e49b47aa::t_5819952a623df7 302-436
+web/src/Media/MediaDisposalService.php
+  s_d34f17e49b47aa::t_75ed7391617841 134-143
+  s_d34f17e49b47aa::t_d444457dddc7d1 32,88,178
+  s_d34f17e49b47aa::t_668dbb5b21b19c 144-150
+web/templates/contribute/propose_route.html.twig
+  s_d34f17e49b47aa::t_16f3ca1710ceca 170
+  s_d34f17e49b47aa::t_7f9f918fbfed5b 106
+  s_d34f17e49b47aa::t_f7db06c0e38297 44-47,55-61,67-78,89-105,107-117,119,169,195-211
+web/src/Media/PhotoPlace.php
+  s_d34f17e49b47aa::t_00a3b2d505bb13 16-17
+  s_d34f17e49b47aa::t_96066bf20ea5ca 38-47
+  s_d34f17e49b47aa::t_e330891915109d 48-49
+web/src/Form/ProposeRouteType.php
+  s_d34f17e49b47aa::t_fd26dc65c9dac2 15,26-27,29-34,42-58,118,120
+web/src/Catalog/Command/SeedWikidataPlacesCommand.php
+  s_d34f17e49b47aa::t_e58a6f9a3d9660 14
+  s_d34f17e49b47aa::t_cf428ac2c1cd39 295
+web/src/Media/Entity/MediaUpload.php
+  s_d34f17e49b47aa::t_5897d906fd48c6 29-30,107-119,393-410,429,586-594
+  s_d34f17e49b47aa::t_049b52221c6bf9 595
+web/tests/js/route-photos.test.cjs
+  s_d34f17e49b47aa::t_bc93f357f57098 1-28
+web/src/Media/RiderCreditSync.php
+  s_d34f17e49b47aa::t_d444457dddc7d1 45,80
+web/assets/map/add-photo.js
+  s_d34f17e49b47aa::t_9aa55508e183e6 1-14
+web/templates/contribute/_media_styles.html.twig
+  s_d34f17e49b47aa::t_67116d3f9ee06d 1-84
+web/src/Moderation/RouteModerationService.php
+  s_d34f17e49b47aa::t_16f3ca1710ceca 259-260
+  s_d34f17e49b47aa::t_a385fbced89d8c 15-16,27-30,44-45,56-59,61,72,88,143-146,152,163-169,199,220,247-258
+web/templates/media/photo.html.twig
+  s_d34f17e49b47aa::t_75ed7391617841 86
+web/src/Media/GpsDistance.php
+  s_d34f17e49b47aa::t_207db428a865b3 49
+  s_d34f17e49b47aa::t_ff5308ae0c0670 13-16,50-97
+  s_d34f17e49b47aa::t_16f3ca1710ceca 98
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_d34f17e49b47aa::t_c00846ac0824ec 468-469
+  s_d34f17e49b47aa::t_a387306daec4a5 439-467,470-486
+web/templates/contribute/_media_config.html.twig
+  s_d34f17e49b47aa::t_67116d3f9ee06d 1-53
+web/migrations/Version20260915200000.php
+  s_d34f17e49b47aa::t_39e467e95bc6ae 1-53
+web/templates/moderate_routes/_correction_item.html.twig
+  s_d34f17e49b47aa::t_2f2ad0c0e41547 40,93-95
+  s_d34f17e49b47aa::t_6bf802917e8e07 16
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_d34f17e49b47aa::t_a9f46b6837a26c 349-350
+  s_d34f17e49b47aa::t_cf428ac2c1cd39 259,310-334
+  s_d34f17e49b47aa::t_e58a6f9a3d9660 18
+  s_d34f17e49b47aa::t_94322b5c70950e 335-336
+web/src/Controller/RouteModerateController.php
+  s_d34f17e49b47aa::t_16f3ca1710ceca 306-307
+  s_d34f17e49b47aa::t_2f2ad0c0e41547 117,147,228,294-305
+  s_d34f17e49b47aa::t_8ddd2b1acdcba5 162-164,214-219
+web/templates/contribute/_route_photo_field.html.twig
+  s_d34f17e49b47aa::t_f7db06c0e38297 1-8,11-12,14-27
+  s_d34f17e49b47aa::t_7f9f918fbfed5b 9-10,13
+web/src/Media/MediaEscalationService.php
+  s_d34f17e49b47aa::t_d444457dddc7d1 32,122,146
+web/assets/contribute/route-photos.js
+  s_d34f17e49b47aa::t_00f674f0695f5b 1-79
+web/src/Account/DataExportService.php
+  s_d34f17e49b47aa::t_bad63ed5e164d4 232
+web/src/Media/PhotoGallery.php
+  s_d34f17e49b47aa::t_5a0968bbb9df66 1-62
+web/src/Media/Command/LocaliseCommonsPhotosCommand.php
+  s_d34f17e49b47aa::t_b604b72da2fec2 29,31-37,39-43,45-54,57-63,76,139-140,231
+  s_d34f17e49b47aa::t_450ce3101767b6 9,172,174,179,190,194,196,198-200,205,207,227-230,232,236-237,245,249-250,286-287,289-290,293-294,296,304-305,326-327,336,339,400-402,404,406-435,439-452,456,458-464,466,472-474,479-485,489
+  s_d34f17e49b47aa::t_26f9270cc60319 436-438
+  s_d34f17e49b47aa::t_16f3ca1710ceca 453-455,457,465
+  s_d34f17e49b47aa::t_ccdb521eacfdb7 90-91,94-95,98-121
+web/src/Contribution/RoutePhotoService.php
+  s_d34f17e49b47aa::t_7b13a22ff54a6c 1-112
+web/tests/Contribution/RoutePhotoFlowTest.php
+  s_d34f17e49b47aa::t_dd3a01619d93a5 1-92,94-121,123-134,136-157,159-176,178-223,225-240,243-247
+  s_d34f17e49b47aa::t_207db428a865b3 135,177,224
+  s_d34f17e49b47aa::t_3039f864308207 93,241-242
+  s_d34f17e49b47aa::t_5b255f6ede90d6 158
+  s_d34f17e49b47aa::t_1e396d756f75a4 122
+web/templates/moderate_routes/detail.html.twig
+  s_d34f17e49b47aa::t_2f2ad0c0e41547 44,113-117
+  s_d34f17e49b47aa::t_8ddd2b1acdcba5 74-85
+  s_d34f17e49b47aa::t_8caa77a4f61fdc 7-8,189,191
+web/src/Catalog/RouteSuggestionReason.php
+  s_d34f17e49b47aa::t_fe2e7661d87c59 10,12,21-25
+web/src/Controller/RouteCommunityController.php
+  s_d34f17e49b47aa::t_fe2e7661d87c59 124-125
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_d34f17e49b47aa::t_cf428ac2c1cd39 521,527
+  s_d34f17e49b47aa::t_e58a6f9a3d9660 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8cd66227b1655db16e3cdf0532a93337103f4377",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

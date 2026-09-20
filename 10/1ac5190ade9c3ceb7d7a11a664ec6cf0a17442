@@ -1,0 +1,24 @@
+tools/valhalla/run-continents.sh
+  s_c2b3d3b1e5aa0b::t_0b723a88f8c45c 195-200
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "101ac5190ade9c3ceb7d7a11a664ec6cf0a17442",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c2b3d3b1e5aa0b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5114fafd-15ff-4217-9290-b7aeef55ebb0",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

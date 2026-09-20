@@ -1,0 +1,75 @@
+web/migrations/Version20260809120000.php
+  s_51f279dd04af7d::t_e73bf1e5e67adb 1-41
+web/src/Controller/ProfileController.php
+  s_51f279dd04af7d::t_b3615bdafe9c8a 52,74,90
+  s_51f279dd04af7d::t_daef24eeb804cc 15
+web/src/Controller/ModerateController.php
+  s_51f279dd04af7d::t_daef24eeb804cc 27
+  s_51f279dd04af7d::t_a1b67d887e650c 63
+  s_51f279dd04af7d::t_5fca0beea85f33 104,111,118,214,216,228
+  s_51f279dd04af7d::t_bd024a9959f535 142
+web/src/Account/RowsPerPage.php
+  s_51f279dd04af7d::t_dbaefa7312dd65 1-55
+web/src/Controller/SettingsController.php
+  s_51f279dd04af7d::t_9119adf7bfe910 7
+  s_51f279dd04af7d::t_fa4db8be1c834d 175-176,179-196,198-209
+  s_51f279dd04af7d::t_f6fde45c3128e6 177-178,197,210
+  s_51f279dd04af7d::t_5e3c7c0ddf8309 174,211-212
+web/templates/settings/index.html.twig
+  s_51f279dd04af7d::t_1ebe0ba4bf9459 353-361
+web/src/Controller/PageController.php
+  s_51f279dd04af7d::t_daef24eeb804cc 11
+  s_51f279dd04af7d::t_4d2b955f4ff0b6 163,175
+web/src/Twig/RowsPerPageExtension.php
+  s_51f279dd04af7d::t_72d55d703179c1 1-37
+web/src/Pagination/PageSize.php
+  s_51f279dd04af7d::t_decdf50f47110f 1-42
+web/src/Entity/User.php
+  s_51f279dd04af7d::t_c6b69d04a3c478 10
+  s_51f279dd04af7d::t_043d5cac2454b0 202-209
+  s_51f279dd04af7d::t_c27412ff48e42f 703-710,713
+  s_51f279dd04af7d::t_06762dce767851 711-712,714
+web/src/Controller/Admin/DashboardController.php
+  s_51f279dd04af7d::t_641e685d32ba49 271,421,480
+  s_51f279dd04af7d::t_daef24eeb804cc 22
+  s_51f279dd04af7d::t_bd024a9959f535 331,458,511-512
+web/src/Controller/RouteModerateController.php
+  s_51f279dd04af7d::t_bd024a9959f535 74,79
+  s_51f279dd04af7d::t_daef24eeb804cc 23
+  s_51f279dd04af7d::t_a1b67d887e650c 49
+web/src/Controller/ModerateRegionsController.php
+  s_51f279dd04af7d::t_daef24eeb804cc 14
+  s_51f279dd04af7d::t_bd024a9959f535 85
+  s_51f279dd04af7d::t_a1b67d887e650c 54
+web/src/Form/SettingsType.php
+  s_51f279dd04af7d::t_ce49d1ff088309 10,154-162
+  s_51f279dd04af7d::t_d2ac3ca0e7a728 163
+web/tests/Pagination/RowsPerPageTest.php
+  s_51f279dd04af7d::t_daef24eeb804cc 98
+  s_51f279dd04af7d::t_44c6707c377d8e 34-56,106,124-126,148
+  s_51f279dd04af7d::t_d793b5cb9a42a3 1-33,57-94,100-104,107-123,127-147,149-192
+  s_51f279dd04af7d::t_f73c7c2e169f58 95-97,99,105
+docs/specs/account-and-auth.md
+  s_51f279dd04af7d::t_172f7febf0a3d4 850-880
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "853c9eea17e4d19f4927c810303b911661ea641e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_51f279dd04af7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ffbf0480-8c49-47aa-8570-af5cdd0802af",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+web/config/packages/framework.yaml
+  s_dd35dcc1b6eafa::t_f12b9c27151dac 17-29
+web/.env
+  s_dd35dcc1b6eafa::t_825aeb0528a185 10-13
+docs/specs/security-architecture.md
+  s_dd35dcc1b6eafa::t_50932f78e1a77e 428-436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "65ab636d1df9bf5e8246a28c6b72a53addb064ab",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+tools/elevation/dem-install.sh
+  s_1c0464d81ce126::t_8f83fd7d1dc6b7 31-40,42
+  s_1c0464d81ce126::t_87043121be2869 76-87,89
+tools/elevation/README.md
+  s_1c0464d81ce126::t_b3b38b74c116bf 26-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "18478cbb2f67a969ec0606ea17e80abf5ce36256",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

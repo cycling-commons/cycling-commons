@@ -1,0 +1,89 @@
+web/src/Coverage/CoverageRepository.php
+  s_d34f17e49b47aa::t_a49f065ebffcc1 13
+  s_d34f17e49b47aa::t_588115c9b449f2 134,138-139,172-177,448-451,454,458-460
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_d34f17e49b47aa::t_9e9afb7cdc3892 176-205
+web/src/Media/Commons/CommonsApi.php
+  s_d34f17e49b47aa::t_a49f065ebffcc1 36
+  s_d34f17e49b47aa::t_a3084c76fe9048 37-41,43-46,48,59,61-64,71-72,91-92,98-133,135-234,807-831
+  s_d34f17e49b47aa::t_acc6e299cd6d08 832-834
+web/tests/Media/MediaBackfillPhotoCameraCommandTest.php
+  s_d34f17e49b47aa::t_057fe322111847 103
+  s_d34f17e49b47aa::t_f448c6b271156d 97-99
+  s_d34f17e49b47aa::t_d0670332e7907e 80,91,109,115,123
+  s_d34f17e49b47aa::t_960df4960dbfc5 1-79,81-90,92-96,100-102,104-108,110-114,116-122,124-175
+web/src/Contribution/BikeWayReading.php
+  s_d34f17e49b47aa::t_e3f978e387a9db 1-55
+web/tests/Media/CommonsApiCameraTest.php
+  s_d34f17e49b47aa::t_83f7917b9d77b5 1-134
+docs/specs/coverage-provider.md
+  s_d34f17e49b47aa::t_f5fe1fc5e2419c 782-792
+web/tests/Contribution/BikeWayReadingTest.php
+  s_d34f17e49b47aa::t_e0779031a1fed5 1-35
+web/tests/Controller/CoveragePhotoControllerTest.php
+  s_d34f17e49b47aa::t_9e9afb7cdc3892 58-96,143-154,158,179-180
+  s_d34f17e49b47aa::t_acc6e299cd6d08 155-156
+web/tests/Media/MediaModerationTest.php
+  s_d34f17e49b47aa::t_9b022050028bdc 144
+  s_d34f17e49b47aa::t_7ea894eaaae63c 128-143,145-146
+web/src/Controller/CoverageController.php
+  s_d34f17e49b47aa::t_588115c9b449f2 9,210-222
+web/tests/Catalog/BestOfPreviewScenicPhotoTest.php
+  s_d34f17e49b47aa::t_68903283fff456 1-84
+web/src/Media/MediaDecisionService.php
+  s_d34f17e49b47aa::t_9b022050028bdc 122-126
+web/src/Catalog/ScenicPhotoRule.php
+  s_d34f17e49b47aa::t_20a8dbf6e4d8d5 1-8,11-30,32-37,46-136
+  s_d34f17e49b47aa::t_519e5b958b8498 31
+  s_d34f17e49b47aa::t_d0670332e7907e 9-10,38-45
+web/src/Media/Commons/CommonsPhotoRepository.php
+  s_d34f17e49b47aa::t_5f400d21e798d5 44,49,69-70,74-79,81,84-85,88-105,109-128
+  s_d34f17e49b47aa::t_d5e2c4063c5c4c 129
+web/migrations/Version20260914140000.php
+  s_d34f17e49b47aa::t_519e5b958b8498 42
+  s_d34f17e49b47aa::t_bf20583fd8fa96 26
+  s_d34f17e49b47aa::t_edc749b233b48c 1-25,27-41,43-54
+web/src/Media/Command/MediaBackfillPhotoCameraCommand.php
+  s_d34f17e49b47aa::t_057fe322111847 213-219,225
+  s_d34f17e49b47aa::t_3377c943b0224c 1-51,53-124,126-212,220-224,226-311,314-375
+  s_d34f17e49b47aa::t_bd29d14136369a 125
+  s_d34f17e49b47aa::t_519e5b958b8498 52
+  s_d34f17e49b47aa::t_a49f065ebffcc1 312-313
+web/src/Media/Commons/CommonsPhotoAdmission.php
+  s_d34f17e49b47aa::t_5f400d21e798d5 96,107-114
+web/src/Catalog/CatalogProvider.php
+  s_d34f17e49b47aa::t_c936634cd8461a 164,170-171,217,294,301-309
+web/src/Media/MessageHandler/FetchCommonsPhotoHandler.php
+  s_d34f17e49b47aa::t_5f400d21e798d5 149
+web/tests/Catalog/ScenicPhotoRuleTest.php
+  s_d34f17e49b47aa::t_537fa3d0937d32 80,82
+  s_d34f17e49b47aa::t_2bcda0fd557261 1-79,81,83-84
+docs/specs/photo-uploads.md
+  s_d34f17e49b47aa::t_f5fe1fc5e2419c 404-407,746-779
+  s_d34f17e49b47aa::t_e5813390eb87be 780
+web/tests/Catalog/CatalogProviderTest.php
+  s_d34f17e49b47aa::t_d06d166533e136 849,852
+  s_d34f17e49b47aa::t_a0110f730a8c5d 811-848,850-851,853-857
+  s_d34f17e49b47aa::t_a49f065ebffcc1 810
+web/tests/Media/FetchCommonsPhotoHandlerTest.php
+  s_d34f17e49b47aa::t_5f400d21e798d5 10,156-190,236-237,244,247-261,287
+web/src/Catalog/BestOfPreview.php
+  s_d34f17e49b47aa::t_a49f065ebffcc1 344-345
+  s_d34f17e49b47aa::t_19e5f819e4b57f 225,227,250-252,257-264,338,343,383-397,403,594,599-601,615-616,631,662,666,717
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0770e2d4947c4317df504b2db9a8887708601334",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

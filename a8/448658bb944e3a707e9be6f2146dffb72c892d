@@ -1,0 +1,150 @@
+web/assets/map/coverage.js
+  s_d34f17e49b47aa::t_b32ec50934c0d2 54-61,64-67,73,76
+web/assets/map/ride-check.js
+  s_d34f17e49b47aa::t_1dcde0ae40bacc 7,12-13,15,18,20-23,163-171,175,183-186
+  s_d34f17e49b47aa::t_4e62704405226b 31-38,116
+  s_d34f17e49b47aa::t_d2df115794a52e 40
+web/tests/js/route-climbs.test.mjs
+  s_d34f17e49b47aa::t_6457df2fefb5bb 47-50
+web/assets/map/listed-place.js
+  s_d34f17e49b47aa::t_45c1e2e1cb4673 3-8,11,13,16,18,20-22,45-115,122,124,128,138-145,147,149-164,167,170-172,177-178,180-189,191
+  s_d34f17e49b47aa::t_0d22cbd4e19f2c 192,196
+  s_d34f17e49b47aa::t_5b3eb2085d30ae 116-121,132-137,146,148,166,179,190
+  s_d34f17e49b47aa::t_eccacb53b8a3d1 173-176,193-195
+web/translations/messages.fr.yaml
+  s_d34f17e49b47aa::t_3ef0f986eedbfb 2894-2896,3167-3169
+  s_d34f17e49b47aa::t_965f7db71b8ece 2339-2340,2342-2343
+  s_d34f17e49b47aa::t_ded17665e1b572 1664
+  s_d34f17e49b47aa::t_aebc93301a26ce 3183,3198-3201
+  s_d34f17e49b47aa::t_f3b9c4548d44d6 1861
+  s_d34f17e49b47aa::t_4e62704405226b 2338,2341
+web/src/Catalog/RideCheckService.php
+  s_d34f17e49b47aa::t_a8b121758f22d5 94-133,136
+  s_d34f17e49b47aa::t_7dc088139e4c9a 138-139
+  s_d34f17e49b47aa::t_f1910d80303e15 152
+  s_d34f17e49b47aa::t_ded37f9cdff920 14-15
+wiki/developers/numbers.md
+  s_d34f17e49b47aa::t_9e596a125fdd1e 28
+web/assets/map/map.js
+  s_d34f17e49b47aa::t_e48101bbf8240e 5,239
+web/translations/messages.nl.yaml
+  s_d34f17e49b47aa::t_3ef0f986eedbfb 2901-2903,3174-3176
+  s_d34f17e49b47aa::t_aebc93301a26ce 3190,3205-3208
+  s_d34f17e49b47aa::t_4e62704405226b 2343,2346
+  s_d34f17e49b47aa::t_ded17665e1b572 1669
+  s_d34f17e49b47aa::t_965f7db71b8ece 2344-2345,2347-2348
+  s_d34f17e49b47aa::t_f3b9c4548d44d6 1866
+web/translations/messages.es.yaml
+  s_d34f17e49b47aa::t_ded17665e1b572 1676
+  s_d34f17e49b47aa::t_4e62704405226b 2914,2917
+  s_d34f17e49b47aa::t_f3b9c4548d44d6 2433
+  s_d34f17e49b47aa::t_3ef0f986eedbfb 2370-2372,3201-3203
+  s_d34f17e49b47aa::t_965f7db71b8ece 2915-2916,2918-2919
+  s_d34f17e49b47aa::t_aebc93301a26ce 3217,3232-3235
+web/src/Controller/MapController.php
+  s_d34f17e49b47aa::t_aba66861755caa 520
+  s_d34f17e49b47aa::t_4e62704405226b 449,451
+  s_d34f17e49b47aa::t_83d3ce48d378e8 450,452
+  s_d34f17e49b47aa::t_18127fb27514ca 23,215-250,254-255,257-258,262
+web/tests/js/locate-me.test.mjs
+  s_d34f17e49b47aa::t_bb09c43ef6bdca 17,24-25
+web/src/Catalog/ItemState.php
+  s_d34f17e49b47aa::t_0075b8ed477607 32-37
+web/assets/map/ride-places.js
+  s_d34f17e49b47aa::t_24a87761cd1b08 97-110
+  s_d34f17e49b47aa::t_0d22cbd4e19f2c 95-96
+  s_d34f17e49b47aa::t_9116d41776b7fd 64-66,70-94
+web/assets/map/render.js
+  s_d34f17e49b47aa::t_5f6c6e6bd380a5 14
+  s_d34f17e49b47aa::t_9777ff3d919766 363,365,368
+  s_d34f17e49b47aa::t_19043e758a361d 364
+web/tests/js/drawer-return.test.mjs
+  s_d34f17e49b47aa::t_31b8b067844662 11
+  s_d34f17e49b47aa::t_67cffa88112a92 35-58
+  s_d34f17e49b47aa::t_0d22cbd4e19f2c 59
+web/assets/map/route-climbs.js
+  s_d34f17e49b47aa::t_4aea684a6cbe1e 9,11-13
+web/tests/js/ride-places.test.mjs
+  s_d34f17e49b47aa::t_c86970bd712512 10,67-75
+  s_d34f17e49b47aa::t_3ac2e2b12b1d64 62-66
+  s_d34f17e49b47aa::t_0d22cbd4e19f2c 76
+web/assets/map/places.js
+  s_d34f17e49b47aa::t_f0132a551629d4 287-295
+web/tests/Catalog/RideCheckServiceTest.php
+  s_d34f17e49b47aa::t_8ab8417b80e4af 462-520
+web/assets/map/scope-ui.js
+  s_d34f17e49b47aa::t_19043e758a361d 163
+  s_d34f17e49b47aa::t_c7518165e20264 159-162,164-191,202
+web/translations/messages.de.yaml
+  s_d34f17e49b47aa::t_965f7db71b8ece 2347-2348,2350-2351
+  s_d34f17e49b47aa::t_3ef0f986eedbfb 2902-2904,3175-3177
+  s_d34f17e49b47aa::t_aebc93301a26ce 3191,3206-3209
+  s_d34f17e49b47aa::t_f3b9c4548d44d6 1869
+  s_d34f17e49b47aa::t_ded17665e1b572 1669
+  s_d34f17e49b47aa::t_4e62704405226b 2346,2349
+web/assets/styles/map.css
+  s_d34f17e49b47aa::t_77416265500f03 1309-1310,1550
+  s_d34f17e49b47aa::t_1cf7b1b8cb5539 709-712
+  s_d34f17e49b47aa::t_a80254806f3d2c 1306-1308
+  s_d34f17e49b47aa::t_b29381d5c1029e 690-700
+web/tests/Catalog/RouteClimbsEndpointTest.php
+  s_d34f17e49b47aa::t_0d22cbd4e19f2c 10,18-21,25-26,133-176
+wiki/developers/gis/pitfalls.md
+  s_d34f17e49b47aa::t_5a1a51cc54acbf 53
+web/tests/js/along-list.test.mjs
+  s_d34f17e49b47aa::t_6457df2fefb5bb 9,64-66,68-74
+  s_d34f17e49b47aa::t_0202427c22cdce 67
+  s_d34f17e49b47aa::t_f8c22319c4ea11 1-8,10-55,75
+  s_d34f17e49b47aa::t_e97b951e9e8972 56-63
+web/src/Catalog/RouteClimbService.php
+  s_d34f17e49b47aa::t_158a5c58c10c06 59
+web/templates/map/index.html.twig
+  s_d34f17e49b47aa::t_8ea94351f750b7 509-518
+web/assets/map/osm-pools.js
+  s_d34f17e49b47aa::t_236cd63c97b707 54-59,63,65-67
+  s_d34f17e49b47aa::t_3e8a634e997c0a 12,60-62,68-75
+docs/specs/map-and-search.md
+  s_d34f17e49b47aa::t_9c43e747868a1a 2384-2388
+  s_d34f17e49b47aa::t_12eb96d9d3e689 1910-1922,1926-1938,1946-1960,2401-2403,2464-2469
+  s_d34f17e49b47aa::t_19043e758a361d 1127,1134
+  s_d34f17e49b47aa::t_bb2a72c0a41a14 1896-1901,1923-1925,1939-1945
+  s_d34f17e49b47aa::t_ca66569d8aa46f 1108-1126,1128-1133,1135-1139
+  s_d34f17e49b47aa::t_347706d075ef06 1909
+web/assets/map/along-list.js
+  s_d34f17e49b47aa::t_e97b951e9e8972 27-28,35,44-45
+  s_d34f17e49b47aa::t_178e65e5836bea 1-26,29-34,36-43,54
+  s_d34f17e49b47aa::t_4aea684a6cbe1e 46-53
+web/translations/messages.en.yaml
+  s_d34f17e49b47aa::t_3ef0f986eedbfb 2363-2365,3193-3195
+  s_d34f17e49b47aa::t_f3b9c4548d44d6 2426
+  s_d34f17e49b47aa::t_4e62704405226b 2906,2909
+  s_d34f17e49b47aa::t_965f7db71b8ece 2907-2908,2910-2911
+  s_d34f17e49b47aa::t_ded17665e1b572 1673
+  s_d34f17e49b47aa::t_aebc93301a26ce 3209,3224-3227
+web/assets/map/util.js
+  s_d34f17e49b47aa::t_e48101bbf8240e 10-15
+  s_d34f17e49b47aa::t_bb09c43ef6bdca 106-108,145
+web/assets/map/drawer.js
+  s_d34f17e49b47aa::t_eccacb53b8a3d1 32,1109-1111,1201
+  s_d34f17e49b47aa::t_5b3eb2085d30ae 792
+  s_d34f17e49b47aa::t_045f1837ad0541 4,33,1098,1106-1108,1112-1121,1125,1138,1197-1200,1207,1282
+  s_d34f17e49b47aa::t_1372a9efbc5942 1220
+web/tests/js/pin-offset.test.mjs
+  s_d34f17e49b47aa::t_7d4dfdee6fa070 12-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a8448658bb944e3a707e9be6f2146dffb72c892d",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

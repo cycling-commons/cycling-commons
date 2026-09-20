@@ -1,0 +1,32 @@
+developers/docker/compose.yaml
+  s_c9732475dad57d::t_ed5c8f0f02ee3c 114-119,123-125
+Makefile
+  s_c9732475dad57d::t_735c11845be356 258
+  s_c9732475dad57d::t_709227f8ddc560 31-32,34,36
+  s_c9732475dad57d::t_10155568c11e17 8-18
+docs/specs/dev-environment.md
+  s_c9732475dad57d::t_2b0d82d5088a62 205-219
+  s_c9732475dad57d::t_c87a668ba20d4c 325
+  s_c9732475dad57d::t_1117672317d6b0 326-349
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "c0c1f9f7c5cf68ba3f2ac45b3fbeb01735afd60b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c9732475dad57d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "46c5725f-c3f2-432b-800a-d5b4d3807b37",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

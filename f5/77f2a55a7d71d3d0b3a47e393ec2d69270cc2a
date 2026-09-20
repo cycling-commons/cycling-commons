@@ -1,0 +1,55 @@
+web/src/Elevation/ElevationClient.php
+  s_211a43b5d2da58::t_c91b123f7b800f 68
+  s_211a43b5d2da58::t_eadaaa6e001844 69-72
+web/src/Contribution/ClimbGeometry.php
+  s_211a43b5d2da58::t_f45decd224129c 47
+web/src/Elevation/ClimbProfiler.php
+  s_211a43b5d2da58::t_eadaaa6e001844 271-273,539
+  s_211a43b5d2da58::t_af5e56da543eb9 246-248,268-270,353-355,396-398,465,536-538,564-566
+  s_211a43b5d2da58::t_685de9218cf6da 316,369,415,441,443,496-498
+web/src/Controller/ItemConfirmationController.php
+  s_211a43b5d2da58::t_438a94f752d41f 108
+web/src/Moderation/SubmissionQueue.php
+  s_211a43b5d2da58::t_fd83e23dd8d0b1 535
+  s_211a43b5d2da58::t_72ac2a2f008ddf 47
+  s_211a43b5d2da58::t_938edf90a8106e 141,802
+web/psalm.xml
+  s_211a43b5d2da58::t_2d385f3d74b524 3-9,12
+web/src/Settings/SystemSettings.php
+  s_211a43b5d2da58::t_21b213d66f84c6 58
+web/src/Elevation/CoveredSpans.php
+  s_211a43b5d2da58::t_50a24b64712c4e 106-109
+web/src/Controller/Admin/DashboardController.php
+  s_211a43b5d2da58::t_4642df25d50d7b 166
+web/src/Command/RecomputeClimbProfilesCommand.php
+  s_211a43b5d2da58::t_632742a7872645 34-36
+web/src/Command/ExpireClosuresCommand.php
+  s_211a43b5d2da58::t_632742a7872645 29-31,44,50
+web/src/Scout/ScoutTag.php
+  s_211a43b5d2da58::t_6dc4a2eb7f1d22 152-158
+web/src/Service/BuildVersion.php
+  s_211a43b5d2da58::t_6dc4a2eb7f1d22 54-58
+web/src/Controller/ElevationController.php
+  s_211a43b5d2da58::t_632742a7872645 35-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "f577f2a55a7d71d3d0b3a47e393ec2d69270cc2a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_211a43b5d2da58": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "959456e4-f02b-4488-9392-9a9990cd2581",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

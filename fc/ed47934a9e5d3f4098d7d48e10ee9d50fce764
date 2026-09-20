@@ -1,0 +1,69 @@
+web/tests/Moderation/CuratorRoomTest.php
+  s_504d29ab0e31e9::t_91f7484d3f943d 110-143
+  s_504d29ab0e31e9::t_daa768f4aa9b38 248-254
+  s_504d29ab0e31e9::t_4aa81f8802342e 1-109,144-247,255-282
+web/src/Controller/ModerateRoomController.php
+  s_504d29ab0e31e9::t_ce0ff0d0a4e45f 79-83,111,128
+  s_504d29ab0e31e9::t_0d2bfa4bc5d231 1-78,84-110,112-127,129-156,160-169
+  s_504d29ab0e31e9::t_9708f507b48b1a 157-159
+web/src/Messaging/CuratorRoom.php
+  s_504d29ab0e31e9::t_12b669d49f9622 206,321
+  s_504d29ab0e31e9::t_83359dd67ee8b9 226-245,254-257,259-264,273,275-281
+  s_504d29ab0e31e9::t_286e0746ac9027 1-205,207-225,246-253,258,265-272,274,282-320,322-342
+web/templates/moderate/_room_post.html.twig
+  s_504d29ab0e31e9::t_63363e80c8e7b8 34
+  s_504d29ab0e31e9::t_cb09d2ad721e5f 1-33,35-51
+web/templates/moderate/rulebook.html.twig
+  s_504d29ab0e31e9::t_2cd35330285a23 124-126
+web/migrations/Version20260826150000.php
+  s_504d29ab0e31e9::t_1c7e3268e78139 1-73
+web/templates/moderate/room.html.twig
+  s_504d29ab0e31e9::t_cb09d2ad721e5f 1-99,101-124,126-128
+  s_504d29ab0e31e9::t_63363e80c8e7b8 100,125
+web/src/Messaging/Entity/CuratorPost.php
+  s_504d29ab0e31e9::t_8ee4080d727270 1-139
+web/src/Messaging/CuratorRoomCategory.php
+  s_504d29ab0e31e9::t_5fb6e47c41c21f 1-66
+web/src/Messaging/Entity/CuratorRoomVisit.php
+  s_504d29ab0e31e9::t_8ee4080d727270 1-54
+docs/specs/moderation-and-contribution.md
+  s_504d29ab0e31e9::t_8358525cb2e3ca 2372,2382,2395-2397,2399,2402,2412,2414-2416,2424,2427,2437,2440,2445,2451-2453,2455-2458,2465-2468,2472-2478,2482,2485-2486,2500,2509,2513-2516,2520,2523-2524
+  s_504d29ab0e31e9::t_8fe38531abdcce 1458,2373-2381,2383-2394,2398,2400-2401,2403-2411,2413,2417-2423,2425-2426,2428-2436,2438-2439,2441-2444,2446-2450,2454,2459-2464,2469-2471,2479-2481,2483-2484,2487-2499,2501-2508,2510-2512,2517-2519,2521-2522,2525-2526
+  s_504d29ab0e31e9::t_30930548e0e9d1 793-795
+web/src/Messaging/CuratorRoomPin.php
+  s_504d29ab0e31e9::t_5fb6e47c41c21f 1-34
+web/src/Twig/ModerationChromeExtension.php
+  s_504d29ab0e31e9::t_e18288e353795d 10,20,24-26,37,47,60,71-81
+  s_504d29ab0e31e9::t_069780034acee7 82
+  s_504d29ab0e31e9::t_a591ff20a83bba 27
+  s_504d29ab0e31e9::t_df595ba0b670dc 21-23,70
+web/templates/account/_shell_chrome.html.twig
+  s_504d29ab0e31e9::t_2cd35330285a23 14,29,47-50
+  s_504d29ab0e31e9::t_03e01c729b8774 6
+web/translations/messages.de.yaml
+  s_504d29ab0e31e9::t_9c06b1a3f362a9 26,2805,3016-3017,3720-3776
+web/translations/messages.en.yaml
+  s_504d29ab0e31e9::t_18ccca66204260 26,2821,3032-3033,3739-3795
+web/translations/messages.es.yaml
+  s_504d29ab0e31e9::t_a4a6f58825037c 26,2828,3039-3040,3748-3804
+web/translations/messages.fr.yaml
+  s_504d29ab0e31e9::t_2a04202b169993 26,2802,3013-3014,3717-3773
+web/translations/messages.nl.yaml
+  s_504d29ab0e31e9::t_0a17bdff6b16e7 26,2802,3013-3014,3717-3773
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fced47934a9e5d3f4098d7d48e10ee9d50fce764",
+  "prompts": {},
+  "sessions": {
+    "s_504d29ab0e31e9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5b5cea66-640f-406d-9d78-5154b9257410",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

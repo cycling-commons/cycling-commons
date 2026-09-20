@@ -1,0 +1,230 @@
+docs/specs/edit-items/B-water-food.md
+  s_e0ffb8a06b8555::t_9d633c5de07ccf 28
+  s_e0ffb8a06b8555::t_eb643571d562c2 25
+web/tests/js/water-drawer-provider.test.cjs
+  s_e0ffb8a06b8555::t_5e925070544b1b 1-45,50-52
+  s_e0ffb8a06b8555::t_16debc2fa06f10 46-49
+docs/specs/moderation-and-contribution.md
+  s_e0ffb8a06b8555::t_eb3d88c32208fa 1694
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 410-424
+web/templates/partials/_kind_icon.html.twig
+  s_e0ffb8a06b8555::t_4aa37994d1472a 1-23
+web/assets/map/ride-check.js
+  s_e0ffb8a06b8555::t_5c7b6e20769b76 9,86,88-89,92
+web/src/Catalog/Import/OsmLinker.php
+  s_e0ffb8a06b8555::t_14e572832aedd6 51-59,146-170
+  s_e0ffb8a06b8555::t_ec0528d5773cea 171-172
+docs/specs/map-and-search.md
+  s_e0ffb8a06b8555::t_16debc2fa06f10 1507-1509
+  s_e0ffb8a06b8555::t_d8d987b52bec30 978-981,986-993,1001-1019
+  s_e0ffb8a06b8555::t_6bf964bd61d1e7 1500-1506,1510
+  s_e0ffb8a06b8555::t_4c0bd2831c4be1 1978-1985
+web/migrations/Version20260905030000.php
+  s_e0ffb8a06b8555::t_2435cabe106e78 1-48
+web/translations/messages.nl.yaml
+  s_e0ffb8a06b8555::t_ae20f2f8a4802c 2016,3557,3561,3577-3594,3610
+  s_e0ffb8a06b8555::t_7130a8b20a0360 2319
+  s_e0ffb8a06b8555::t_1afaa79942d8dd 3612
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 2370-2371
+  s_e0ffb8a06b8555::t_86d958d7a27fb2 4083,4086-4087
+  s_e0ffb8a06b8555::t_eb643571d562c2 4122
+  s_e0ffb8a06b8555::t_764a43e6805fef 3572
+  s_e0ffb8a06b8555::t_2e1d7f932b9d6e 4579-4590
+web/src/Controller/ItemConfirmationController.php
+  s_e0ffb8a06b8555::t_eb3d88c32208fa 96
+web/src/Provider/ProviderHarvest.php
+  s_e0ffb8a06b8555::t_ace8141088249d 9,65-73,83,87-90,102-114,126,162,339-392,400-415,418-419,425,427-429,432,434
+  s_e0ffb8a06b8555::t_b40283d876f114 138,143-161
+  s_e0ffb8a06b8555::t_764a43e6805fef 318-324
+  s_e0ffb8a06b8555::t_2b8ce41cdc9714 163
+web/src/Controller/ModerateProvidersController.php
+  s_e0ffb8a06b8555::t_2e1d7f932b9d6e 83-91
+web/src/Twig/TypeIconExtension.php
+  s_e0ffb8a06b8555::t_3132dc7d4693ce 10,18-20,30
+web/src/Controller/ContributeController.php
+  s_e0ffb8a06b8555::t_7130a8b20a0360 39,306,389-395
+web/assets/map/icons.js
+  s_e0ffb8a06b8555::t_a4c63a5f27c834 4,7-19,22-50,52-53,62-106,179-186,191,199-209
+  s_e0ffb8a06b8555::t_9d633c5de07ccf 54
+  s_e0ffb8a06b8555::t_1afaa79942d8dd 51,55-61
+web/tests/Provider/ModerateProvidersTest.php
+  s_e0ffb8a06b8555::t_e191d081ce50b9 47-56
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 47-97
+  s_e0ffb8a06b8555::t_7130a8b20a0360 211-232
+web/src/Community/ItemConfirmationService.php
+  s_e0ffb8a06b8555::t_eb3d88c32208fa 36-69,75,144
+  s_e0ffb8a06b8555::t_d2191e94600e31 35
+web/src/Service/ContributionReceipt.php
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 20-21
+web/tests/Provider/ProviderCitationsTest.php
+  s_e0ffb8a06b8555::t_35745f2af8377f 41
+web/templates/contribute/improve.html.twig
+  s_e0ffb8a06b8555::t_7130a8b20a0360 349-352,669-674
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 372-375,378
+  s_e0ffb8a06b8555::t_eb643571d562c2 338
+web/src/Controller/MapController.php
+  s_e0ffb8a06b8555::t_67d49a60764c67 15
+  s_e0ffb8a06b8555::t_6fda26ebde6482 86-87,200
+web/assets/map/coverage.js
+  s_e0ffb8a06b8555::t_5c7b6e20769b76 9,103,111-117,119-121,151,153-157,186-189,192-193,195,223-224,378,381
+  s_e0ffb8a06b8555::t_53b1b8c7a3f3b8 261-265,281,305-306,308
+web/tests/Smoke/MapKeyTest.php
+  s_e0ffb8a06b8555::t_76575ce2b783f9 7,61-62,70-71,73,79-80,82-105,107-108,110-113,115-118
+  s_e0ffb8a06b8555::t_67d49a60764c67 9,81,106,114
+  s_e0ffb8a06b8555::t_8f1ee7c223be93 109
+pipeline/coverage/tiles.py
+  s_e0ffb8a06b8555::t_5d106411285e19 40-49
+web/templates/pages/map_key.html.twig
+  s_e0ffb8a06b8555::t_1aaa557dad74aa 13-21,44-45,90-95,169,174,179,184,190-204,209,239,241,244,246
+web/translations/messages.en.yaml
+  s_e0ffb8a06b8555::t_764a43e6805fef 3593
+  s_e0ffb8a06b8555::t_ae20f2f8a4802c 2487,3578,3582,3598-3615,3631
+  s_e0ffb8a06b8555::t_1afaa79942d8dd 3633
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 1900-1901
+  s_e0ffb8a06b8555::t_7130a8b20a0360 1849
+  s_e0ffb8a06b8555::t_2e1d7f932b9d6e 4603-4614
+  s_e0ffb8a06b8555::t_eb643571d562c2 4146
+  s_e0ffb8a06b8555::t_86d958d7a27fb2 4107,4110-4111
+docs/specs/catalog-data-model.md
+  s_e0ffb8a06b8555::t_14e572832aedd6 489-496
+web/templates/moderate_providers/index.html.twig
+  s_e0ffb8a06b8555::t_2e1d7f932b9d6e 46-51,127-148
+  s_e0ffb8a06b8555::t_140d841ca36752 42-43,150-151
+  s_e0ffb8a06b8555::t_db1ac3a17591c5 149
+web/tests/Provider/ProviderHarvestTest.php
+  s_e0ffb8a06b8555::t_2ad126e1bb9453 37,39-66
+  s_e0ffb8a06b8555::t_ace8141088249d 38,165-241
+  s_e0ffb8a06b8555::t_7b3f3c289fa900 242
+web/src/Catalog/KindIcons.php
+  s_e0ffb8a06b8555::t_60000d6bedbb3a 75-76,78
+  s_e0ffb8a06b8555::t_58cb35fcb35e83 23-25
+  s_e0ffb8a06b8555::t_7d5050b40609f0 1-22,26-74,77,79-100
+web/templates/map/index.html.twig
+  s_e0ffb8a06b8555::t_b842ce13a1dbc1 424-425,429-444,448-450
+  s_e0ffb8a06b8555::t_6fda26ebde6482 784-785
+web/tests/Moderation/MovedPinLinksOsmTest.php
+  s_e0ffb8a06b8555::t_43109d03d084df 1-164
+web/tests/Community/ItemConfirmationControllerTest.php
+  s_e0ffb8a06b8555::t_eb3d88c32208fa 64-91,96,98-99
+  s_e0ffb8a06b8555::t_e6210dbc56d996 92-95,97
+web/translations/messages.fr.yaml
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 2370-2371
+  s_e0ffb8a06b8555::t_764a43e6805fef 3572
+  s_e0ffb8a06b8555::t_2e1d7f932b9d6e 4579-4590
+  s_e0ffb8a06b8555::t_ae20f2f8a4802c 2016,3557,3561,3577-3594,3610
+  s_e0ffb8a06b8555::t_7130a8b20a0360 2319
+  s_e0ffb8a06b8555::t_eb643571d562c2 4122
+  s_e0ffb8a06b8555::t_86d958d7a27fb2 4083,4086-4087
+  s_e0ffb8a06b8555::t_1afaa79942d8dd 3612
+web/src/Contribution/CatalogContributionService.php
+  s_e0ffb8a06b8555::t_7130a8b20a0360 452-455,458
+  s_e0ffb8a06b8555::t_711de17a356894 26-27,33
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 58-59,517,521-541
+  s_e0ffb8a06b8555::t_049475531eaf2a 542-543
+web/assets/map/osm-pools.js
+  s_e0ffb8a06b8555::t_5c7b6e20769b76 9,16
+web/src/Provider/Command/HarvestProviderCommand.php
+  s_e0ffb8a06b8555::t_ace8141088249d 121-122
+web/assets/styles/atlas.css
+  s_e0ffb8a06b8555::t_60b1eed438b24d 70-73,75
+web/src/Provider/ProviderCitations.php
+  s_e0ffb8a06b8555::t_35745f2af8377f 59,64,66,80-82
+web/migrations/Version20260905000000.php
+  s_e0ffb8a06b8555::t_9264e11e8ce52d 1-60
+web/tests/Catalog/CatalogProviderTest.php
+  s_e0ffb8a06b8555::t_c2562f108f9d87 163-168,170,180-183,185-193
+  s_e0ffb8a06b8555::t_5fda6af5470b91 527-545
+  s_e0ffb8a06b8555::t_6efae666834b6c 526
+web/tests/js/kind-icons.test.cjs
+  s_e0ffb8a06b8555::t_9cf818f5a60134 1-21,23-29,31-33,36-70,73,83-85
+  s_e0ffb8a06b8555::t_9d633c5de07ccf 79-82
+  s_e0ffb8a06b8555::t_1afaa79942d8dd 22,30,34-35,71-72,74-78
+pipeline/providers/normalise.py
+  s_e0ffb8a06b8555::t_9d633c5de07ccf 82-83,86-93,99-108
+web/src/Moderation/ModerationService.php
+  s_e0ffb8a06b8555::t_14e572832aedd6 14,58,287-298
+docs/specs/data-provider-hierarchy.md
+  s_e0ffb8a06b8555::t_2ad126e1bb9453 242
+  s_e0ffb8a06b8555::t_2e1d7f932b9d6e 222-226,438-447
+  s_e0ffb8a06b8555::t_d8d987b52bec30 283,289,292-294,298-323,330-348,365,367-370,372-376
+  s_e0ffb8a06b8555::t_ace8141088249d 228-233,235-241
+  s_e0ffb8a06b8555::t_764a43e6805fef 214-221,227,234
+  s_e0ffb8a06b8555::t_9d633c5de07ccf 85,657-660,737-744
+  s_e0ffb8a06b8555::t_1afaa79942d8dd 324-329,664-666
+  s_e0ffb8a06b8555::t_6bf964bd61d1e7 661-663
+  s_e0ffb8a06b8555::t_90846af6041b88 816-822
+  s_e0ffb8a06b8555::t_5c1b19d61e6cf6 448,745
+web/assets/map/drawer.js
+  s_e0ffb8a06b8555::t_35745f2af8377f 196-201
+  s_e0ffb8a06b8555::t_300b00e54ad295 311-315,326,334-338,344-345,352
+  s_e0ffb8a06b8555::t_16debc2fa06f10 328-332
+  s_e0ffb8a06b8555::t_cb4c17a64bbc25 10,316-319,327,333,341-343,346,648-649
+web/translations/messages.de.yaml
+  s_e0ffb8a06b8555::t_2e1d7f932b9d6e 4582-4593
+  s_e0ffb8a06b8555::t_eb643571d562c2 4125
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 2373-2374
+  s_e0ffb8a06b8555::t_86d958d7a27fb2 4086,4089-4090
+  s_e0ffb8a06b8555::t_764a43e6805fef 3575
+  s_e0ffb8a06b8555::t_1afaa79942d8dd 3615
+  s_e0ffb8a06b8555::t_7130a8b20a0360 2322
+  s_e0ffb8a06b8555::t_ae20f2f8a4802c 2019,3560,3564,3580-3597,3613
+web/migrations/Version20260905010000.php
+  s_e0ffb8a06b8555::t_107ac434db6a94 1-48
+web/migrations/Version20260905020000.php
+  s_e0ffb8a06b8555::t_fdd63913c7ffdd 1-43
+docs/specs/coverage-provider.md
+  s_e0ffb8a06b8555::t_5fda6af5470b91 782-785
+  s_e0ffb8a06b8555::t_d8d987b52bec30 491-492,498
+pipeline/tests/test_tiles.py
+  s_e0ffb8a06b8555::t_5d106411285e19 37-40,79-80,82-85,179-180
+pipeline/tests/test_providers_normalise.py
+  s_e0ffb8a06b8555::t_9d633c5de07ccf 70-87
+web/src/Catalog/CatalogProvider.php
+  s_e0ffb8a06b8555::t_25714a05a5e5d2 145-149,160
+  s_e0ffb8a06b8555::t_5fda6af5470b91 223-227,230
+web/src/Catalog/CatalogFormRegistry.php
+  s_e0ffb8a06b8555::t_9d633c5de07ccf 81-84
+  s_e0ffb8a06b8555::t_eb643571d562c2 78
+web/src/Provider/Entity/DataProvider.php
+  s_e0ffb8a06b8555::t_9d633c5de07ccf 434-440
+  s_e0ffb8a06b8555::t_f2d7eab7ed7044 180,428
+web/tests/Catalog/KindIconsTest.php
+  s_e0ffb8a06b8555::t_c1d20ea3c69b6b 1-68,70-76
+  s_e0ffb8a06b8555::t_58cb35fcb35e83 69
+web/assets/styles/map.css
+  s_e0ffb8a06b8555::t_cb4c17a64bbc25 443-454
+  s_e0ffb8a06b8555::t_eb643571d562c2 574
+web/translations/messages.es.yaml
+  s_e0ffb8a06b8555::t_7130a8b20a0360 1859
+  s_e0ffb8a06b8555::t_eb643571d562c2 4152
+  s_e0ffb8a06b8555::t_6bf2eb155c6ad7 1910-1911
+  s_e0ffb8a06b8555::t_ae20f2f8a4802c 2491,3583,3587,3603-3620,3636
+  s_e0ffb8a06b8555::t_764a43e6805fef 3598
+  s_e0ffb8a06b8555::t_86d958d7a27fb2 4113,4116-4117
+  s_e0ffb8a06b8555::t_1afaa79942d8dd 3638
+  s_e0ffb8a06b8555::t_2e1d7f932b9d6e 4610-4621
+web/templates/account/_shell_chrome.html.twig
+  s_e0ffb8a06b8555::t_60b1eed438b24d 23-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "d7d9b686301628ad489fd68312fb3ff047819ef2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e0ffb8a06b8555": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4fe85470-dd9e-4fe5-8777-dfb41a0c5082",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+web/assets/js/a11y.js
+  s_df9a7eaed39865::t_af58c87c77c768 26-34,38-40
+web/tests/js/skip-link-target.test.cjs
+  s_df9a7eaed39865::t_daad134811c912 1-71
+web/tests/js/media-pending.test.cjs
+  s_df9a7eaed39865::t_5538e80873f145 1-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b8d968ab4cb42727861cd8d75e6bed90ac9e7f9b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_df9a7eaed39865": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22e36216-d269-4ffd-b95a-9b6bbdf16f97",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

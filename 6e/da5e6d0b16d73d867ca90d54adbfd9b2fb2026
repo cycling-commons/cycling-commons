@@ -1,0 +1,19 @@
+web/src/Catalog/CatalogFormRegistry.php
+  s_5d3029d326707c::t_4dd0596473d3d4 78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6eda5e6d0b16d73d867ca90d54adbfd9b2fb2026",
+  "prompts": {},
+  "sessions": {
+    "s_5d3029d326707c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "795f70b7-c0e1-4883-a4e6-53909db571af",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

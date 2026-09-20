@@ -1,0 +1,45 @@
+web/assets/map/ride-scope.js
+  s_9a6b8d8611c934::t_d14d88ded2dc3a 1-27
+web/src/Controller/MapController.php
+  s_9a6b8d8611c934::t_65f1b3cbfec815 380
+web/translations/messages.es.yaml
+  s_9a6b8d8611c934::t_65f1b3cbfec815 2244
+web/translations/messages.nl.yaml
+  s_9a6b8d8611c934::t_65f1b3cbfec815 1899
+docs/specs/map-and-search.md
+  s_9a6b8d8611c934::t_58ec6aaf6a791a 1659-1682
+web/src/Catalog/RideCheckService.php
+  s_9a6b8d8611c934::t_b28c49b21e7a7e 53-54,88,245-280
+  s_9a6b8d8611c934::t_0cb961cb41f74c 281
+web/tests/Catalog/RideCheckServiceTest.php
+  s_9a6b8d8611c934::t_cda96146521a81 340-390
+web/assets/map/ride-check.js
+  s_9a6b8d8611c934::t_d14d88ded2dc3a 16,53-54
+  s_9a6b8d8611c934::t_17090d847a0f9b 27,43-52,55-76,106,123-125
+web/translations/messages.fr.yaml
+  s_9a6b8d8611c934::t_65f1b3cbfec815 1899
+web/assets/map/scope.js
+  s_9a6b8d8611c934::t_b6326d064cf738 438-445
+web/tests/js/ride-scope.test.mjs
+  s_9a6b8d8611c934::t_a491c75a74f43c 1-42
+web/translations/messages.de.yaml
+  s_9a6b8d8611c934::t_65f1b3cbfec815 1902
+web/translations/messages.en.yaml
+  s_9a6b8d8611c934::t_65f1b3cbfec815 2235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "2ae74f8d2e4dc140d051c8e6da529799800bc2bc",
+  "prompts": {},
+  "sessions": {
+    "s_9a6b8d8611c934": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5ab7bb79-587a-4b27-803b-dbb4f99c167a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

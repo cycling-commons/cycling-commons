@@ -1,0 +1,31 @@
+web/tests/Moderation/ShapeIsNeverTextTest.php
+  s_bd35b13142b2fa::t_8918a71c6e9be2 1-81
+web/src/Contribution/ChangeValue.php
+  s_bd35b13142b2fa::t_ac3f293701fe21 31-36,71-92
+  s_bd35b13142b2fa::t_a3fa22fee1bf76 93-96
+web/tests/Contribution/ChangeValueTest.php
+  s_bd35b13142b2fa::t_8a2272d491cb2a 83-104,113-114
+web/src/Moderation/SubmissionQueue.php
+  s_bd35b13142b2fa::t_ac3f293701fe21 157-168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "d9bad17fde8127fb20c826e5bcce7a4823674978",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bd35b13142b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c348108d-a15c-4a6f-a1f0-9ab7e633bdf4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

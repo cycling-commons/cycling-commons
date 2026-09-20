@@ -1,0 +1,29 @@
+web/src/Support/Command/SeedKnownIssuesCommand.php
+  s_e9b7d39367a2ea::t_7cd81a946e13bf 18,57,71,74,76-77,81-87,98-100,134,136
+  s_e9b7d39367a2ea::t_6cf4adbf6b180b 35-40
+web/config/known_issues.yaml
+  s_e9b7d39367a2ea::t_035d3a50ee7747 71,74-78,81-82
+  s_e9b7d39367a2ea::t_7ad8e059a3635a 79,83
+  s_e9b7d39367a2ea::t_c08ecc381cec77 15,17-18,25,59,63,65-67,73,87,89-91,95,97-98
+  s_e9b7d39367a2ea::t_159809e01ec45e 72
+web/tests/Support/SeedKnownIssuesCommandTest.php
+  s_e9b7d39367a2ea::t_e37cf45fff6f54 9,45-73
+  s_e9b7d39367a2ea::t_1ca52b9e59e4dc 74-75
+  s_e9b7d39367a2ea::t_5b7bdfadaf2d79 35-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f280389ca861c9caf40e49819f4b33c233620b31",
+  "prompts": {},
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

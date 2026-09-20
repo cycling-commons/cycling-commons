@@ -1,0 +1,3128 @@
+brand-src/gen_square_logo.py
+  s_7409b4074de513::t_66dbd6330c14cc 2
+web/tests/Support/ContactFormTest.php
+  s_7409b4074de513::t_65d0c2156b6efd 3
+web/src/Media/Command/MediaRepairGalleriesCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/contribute/vote.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/EventSubscriber/MessageMailSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Service/BaseAreaResolver.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/contribute/propose_route.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/ChangeHistoryView.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/tests/test_run_surface.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/MediaDisposalTest.php
+  s_7409b4074de513::t_903f59b591cd2c 3
+tools/wikimedia/climb_foot.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/tests/Translation/RecordingLogger.php
+  s_7409b4074de513::t_1f6278614d6baf 3
+web/src/Controller/ModerateTownController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/PhotoAttribution.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/PhotoAltTextTest.php
+  s_7409b4074de513::t_6b99d2f65ddb4f 3
+web/tests/js/coverage-keys.test.cjs
+  s_7409b4074de513::t_555a5dc03dd70f 1
+atlas/demo/nav.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260715120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/icons.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Smoke/MapToolsLockedTest.php
+  s_7409b4074de513::t_9296c9483fce55 3
+web/tests/Translation/TranslationDeletionHookTest.php
+  s_7409b4074de513::t_aca3c2a3bcc5ab 3
+web/src/Form/ProposeRouteType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/map_key.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/js/auth-validate.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/Import/AttributeVocabularyTest.php
+  s_7409b4074de513::t_de54102e68b76c 3
+web/migrations/Version20260905030000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Town/TownSourceUnavailable.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Auth/RegistrationTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Smoke/SecurityTxtTest.php
+  s_7409b4074de513::t_a0698e628a0234 3
+web/public/index.php
+  s_7409b4074de513::t_830d65a0cea89c 2
+docs/specs/moderation-and-contribution.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260731150000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260712120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Contribution/ClimbGeometry.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Town/ResolveTownSummaryHandlerTest.php
+  s_7409b4074de513::t_b0bda8c165b38a 3
+web/src/Catalog/Entity/Item.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Support/InboxDeskOffTest.php
+  s_7409b4074de513::t_5f3e1335923e9a 3
+web/src/Controller/TownController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/providers/normalise.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/2026-08-30-one-report-route-design.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/RouteQueuePagingTest.php
+  s_7409b4074de513::t_44cf70f5c596ab 3
+web/tests/Messaging/CuratorMessageTest.php
+  s_7409b4074de513::t_51c1c1982d053c 3
+web/templates/emails/support_contact_ack.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Form/RegistrationFormType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/pages/coverage-globe.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Exception/ProtectedKeyException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/scope-chips.test.cjs
+  s_7409b4074de513::t_41847eadad0a98 1
+docs/specs/dev-environment.md
+  s_7409b4074de513::t_830d65a0cea89c 1,251
+  s_7409b4074de513::t_3b6fb6387db84f 293-303
+  s_7409b4074de513::t_1f4f6a76d680e2 256-262
+  s_7409b4074de513::t_53863f2d15be28 40,51-52,56,69,90-91,96-98,121,129,136,142,155,160,169,177,186,190,195,197,199,224,233,273,280,282,284,286,304,344,347,401,412,426,475,486,501,525
+web/tests/Contribution/AddClimbFromMapTest.php
+  s_7409b4074de513::t_faa8ba497096ca 3
+web/tests/Moderation/CuratedDefaultGateTest.php
+  s_7409b4074de513::t_1c380bb21d16d7 3
+web/src/Controller/FormChallengeController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/CatalogueSyncTest.php
+  s_7409b4074de513::t_f62f1bfd86eaf0 3
+web/src/Catalog/RideCheckService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/PhotoProcessor.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Import/DuplicateGuard.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260828130000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/ShardUnavailable.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Community/OsmUserVerifier.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/ModerateMessageController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/ride-scope.test.mjs
+  s_7409b4074de513::t_181d95adb79837 1
+web/templates/emails/_base.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/routes-selection.test.cjs
+  s_7409b4074de513::t_11fcaf21941685 1
+pipeline/tests/test_tiles.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/styles/pins.css
+  s_7409b4074de513::t_830d65a0cea89c 1
+atlas/demo/add-climb.html
+  s_7409b4074de513::t_f8c32966971207 7,17,25,179,194,200,203,207,215,218-219,235,248,257,265,269,286,290,300-301,354,377,399,439,490,504,507,514,545
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,175,250
+  s_7409b4074de513::t_d1d2d38dc12f9d 461,498
+  s_7409b4074de513::t_87ff004fff67a6 306
+web/templates/moderate_regions/about.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/MediaMessageTest.php
+  s_7409b4074de513::t_2014f3e672eeda 3
+web/tests/Controller/MapThemeTest.php
+  s_7409b4074de513::t_b309d996308f14 3
+web/src/Security/FormGuard.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/translate/mine_key.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/FetchCommonsPhotoHandlerTest.php
+  s_7409b4074de513::t_42fe67d366ee57 3
+web/src/Media/UrgentWithholdAlert.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/FindingKind.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/Gpx/GpxParserTest.php
+  s_7409b4074de513::t_047f60dcf3ee96 3
+web/assets/styles/fonts.css
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/account/_shell_chrome.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Account/UnitFormatter.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/BugMarkdown.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/ItemType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/MapController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Support/ProofOfWorkSpentTest.php
+  s_7409b4074de513::t_2f1476cc662565 3
+web/src/Doctrine/EncryptedStringType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Form/TranslationProposalType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/browser/contrast-sweep.js
+  s_7409b4074de513::t_98aeb2beebd5e5 1
+tools/wallonia/route_images.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/tests/Provider/CustodyReclaimTest.php
+  s_7409b4074de513::t_2bd1d5c82ac334 3
+web/src/World/Command/ImportWorldDataCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Entity/TranslationEntry.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/map/_locked_tool.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Entity/RouteSuggestion.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate_routes/_correction_item.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260831130000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/tests/test_routes.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+atlas/demo/pages.html
+  s_7409b4074de513::t_48e972c51d71b8 7,17,25,51,61,66-67
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,45
+  s_7409b4074de513::t_87ff004fff67a6 74
+web/src/Controller/ScoutIntakeController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/translations/messages.de.yaml
+  s_7409b4074de513::t_c073df7498cdc2 1
+  s_7409b4074de513::t_9c550545616237 388,400,410,420
+  s_7409b4074de513::t_fedfd014e001d5 1713,2684
+  s_7409b4074de513::t_8f1ad15988dc5a 62-65,264,307-309,314,316,320-324,382,408-409,413-416,418-419,421-424,426-439,448,453,460,613,2644-2645,3623
+web/src/Translation/Exception/NotDevEnvironmentException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/admin/playbook_email_change.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Twig/VersionExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Security/ProofOfWork.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/PhotoRejected.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/RouteDecisionMessagesTest.php
+  s_7409b4074de513::t_1e0a70a25a3e05 3
+web/templates/partials/_social_icon.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/FieldKind.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/ride-scope.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Community/CountryInterestService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Twig/TranslateModeExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/MyAreaControllerTest.php
+  s_7409b4074de513::t_2cdb9c5f1e10e2 3
+web/assets/map/render.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260816020000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/valhalla/fetch-global-dem.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+tools/wikimedia/README.md
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+brand-src/gen_scout_logo.py
+  s_7409b4074de513::t_66dbd6330c14cc 2
+web/src/Security/TwoFactorPolicy.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/DecisionService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/ClosureExpiryServiceTest.php
+  s_7409b4074de513::t_f7f5141dd27307 3
+web/src/Twig/RowsPerPageExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/edit-items/README.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tools/check-raw-translations.sh
+  s_7409b4074de513::t_1d58545f082ce5 2
+web/templates/pages/roles.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+licenses/COMMONS-TRANSLATIONS-LICENSE.md
+  s_7409b4074de513::t_20efedaa7b5b93 12
+  s_7409b4074de513::t_8a83a644052d97 1,3-4,7-11,13-15,18-22,26-28,32-55,58-64,67-68,70-75,78-81,83-84
+  s_7409b4074de513::t_1fcd499d396778 16-17,23-25,29-31
+overrides/partials/copyright.html
+  s_7409b4074de513::t_830d65a0cea89c 1
+wiki/building.md
+  s_7409b4074de513::t_cf29d21054ce22 247
+  s_7409b4074de513::t_3a429dfd1c27ff 78-79,81,139-149,157-159,162,169,173-190,198-205,207
+  s_7409b4074de513::t_5e5f84fa61973b 154-156,167-168,170-172
+  s_7409b4074de513::t_ee7ef2d3cbd2c4 5,33-34,51-52,64,71,74-75,77,86,91,94,96,135,211,230,256
+  s_7409b4074de513::t_51897f1c23d0e2 150-153
+  s_7409b4074de513::t_56b584598f333b 80
+web/templates/translate/_mine_item.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/mapillary.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/edit-items/B-water-food.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/LocaliseCommonsPhotosCommandTest.php
+  s_7409b4074de513::t_336e29feb22837 3
+web/tests/Auth/ResetPasswordTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Blog/BlogRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/contribute/media-upload.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Support/BugMarkdownTest.php
+  s_7409b4074de513::t_1e6d5a807d089e 3
+web/migrations/Version20260721120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Form/ResetPasswordRequestFormType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/report_guide.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/ReportGuideController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/OverlayCatalogueTest.php
+  s_7409b4074de513::t_5ab96db3489464 3
+web/migrations/Version20260905010000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/bench/README.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Security/TwoFactorUnavailableTest.php
+  s_7409b4074de513::t_bd51840f45d419 3
+web/templates/map/_scout_review.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/ProtectedKeys.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+CONTRIBUTING.md
+  s_7409b4074de513::t_98a891d7849340 188
+  s_7409b4074de513::t_49a1b5917e2d75 22-53,65-70,73-155
+  s_7409b4074de513::t_6aec7a1f1cdda4 4,8,166,169,175,181,192,202,232,238,244-245
+  s_7409b4074de513::t_a49ab77a3d0d5e 13-14
+  s_7409b4074de513::t_29dc33d4c67b90 71-72
+  s_7409b4074de513::t_531e14903596a4 54-64,185-187
+web/src/EventSubscriber/PublicPageCacheSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/MediaTakedownController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260721160000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Support/BugChallengeEndpointTest.php
+  s_7409b4074de513::t_69ebed821e7f5f 3
+docs/specs/edit-items/C-public-toilets.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Messaging/MessageServiceTest.php
+  s_7409b4074de513::t_03ea0825e2d5ff 3
+web/src/Controller/DataExportController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/wikimedia/climb_line.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/src/Catalog/ConfirmationSource.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/support/form-challenge.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Twig/RichTranslationExtensionTest.php
+  s_7409b4074de513::t_2f1673c2c8c980 3
+web/migrations/Version20260828210000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Account/DataExportService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/RideCheckController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Form/Extension/CsrfMessageExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Season.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Messaging/UserMessageKind.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260801090000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Command/ExpireClosuresCommandTest.php
+  s_7409b4074de513::t_29d457abb535c3 3
+web/src/Api/V1/CategoryTable.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/scope.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Community/OsmVerification.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Community/PublicNoteFilter.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Form/TwoFactorSetupType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/admin/moderator_areas_overview.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/translations/messages.nl.yaml
+  s_7409b4074de513::t_fedfd014e001d5 1713,2683
+  s_7409b4074de513::t_c2cb92d028abb3 1,62-65,264,307-309,314,316,320-324,382,408-409,413-416,418,422-424,426-439,448,453,460,613,2641-2644,3622
+  s_7409b4074de513::t_abb88dbc3ed246 419,421
+  s_7409b4074de513::t_9c550545616237 388,400,410,420
+web/templates/pages/join.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+.github/workflows/deploy-staging.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/data/races.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Contribution/ChangeValue.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Command/SeedWikidataPlacesCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Api/V1/PublicItemsProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/contribute/climb-elevation.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/OsmIdentityTest.php
+  s_7409b4074de513::t_b6dbb8e6147498 3
+tools/bench/api-staging.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/src/Translation/Command/ExportEnglishOverlaysCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Command/ModerationGcCommandTest.php
+  s_7409b4074de513::t_4701974389a765 3
+web/migrations/Version20260708120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Links/SafeBrowsing.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/ServiceKindTest.php
+  s_7409b4074de513::t_f25d0692c390fd 3
+web/src/Support/BugStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/DeepL/DeepLClient.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/config/packages/flysystem.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/map-and-search.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Command/LinkRecheckCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/osm-pools.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/MarkedTranslator.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Twig/ProviderCreditsExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/ReportStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/credits-page.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Community/ItemPersonalNoteTest.php
+  s_7409b4074de513::t_bd09da647e0041 3
+web/src/Controller/SecurityController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/TrashBlockedException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/wallonia/route_surfaces.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/tests/Contribution/ImproveTest.php
+  s_7409b4074de513::t_c569edcd1b8308 3
+web/config/packages/dama_doctrine_test_bundle.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Coverage/CoverageSchema.php
+  s_7409b4074de513::t_479239f4dde3f7 3
+web/src/Catalog/CoverageStatsProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Contribution/Gpx/TrackProcessor.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/SitemapControllerTest.php
+  s_7409b4074de513::t_49ccd3cddd1d1a 3
+web/tests/Auth/AccountDeletionTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/World/Resources/country_continents.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/contribute/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/security/_auth_shell_panel.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/ModerateReportsController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+.pre-commit-config.yaml
+  s_7409b4074de513::t_4cc7962a5f73c5 6,12-14,25,35-49
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/FindingStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/Command/MediaBackfillKeysCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/tests/test_load.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/Commons/CommonsPhotoAdmission.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Support/BugFormKeepsInputTest.php
+  s_7409b4074de513::t_4351d02a0c8d45 3
+web/tests/Controller/MapScopeRegistryTest.php
+  s_7409b4074de513::t_bb5375863ce116 3
+web/templates/moderate/translations_history.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/translations/messages.fr.yaml
+  s_7409b4074de513::t_9c550545616237 386,398
+  s_7409b4074de513::t_636d167c35b1f2 62-63,262,305-307,312,314,318-322,380,406-408,411,413-414,416-421,424-429,431-434,443,448,455,608,2636-2637,3615
+  s_7409b4074de513::t_6378328a99e438 1
+  s_7409b4074de513::t_67b9a9e944b899 412,422,430
+  s_7409b4074de513::t_fedfd014e001d5 1708,2676
+web/migrations/Version20260904190000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/scout-fit.test.mjs
+  s_7409b4074de513::t_5ce91326bba4eb 1
+web/tests/Contribution/RouteGpxDownloadTest.php
+  s_7409b4074de513::t_5072ff4d7d074b 3
+web/src/Blog/BlogStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+.github/workflows/ci-app.yml
+  s_7409b4074de513::t_e01084d6d9eb77 6,44,67,74
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/coverage-provider.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Provider/ProviderCitationsTest.php
+  s_7409b4074de513::t_a2d1df9ff9214b 3
+web/migrations/Version20260824230000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/RouteModerationService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/base.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/sheet.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/bundles/TwigBundle/Exception/error404.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/ModerationScopeTest.php
+  s_7409b4074de513::t_05be3687ae03a8 3
+web/tests/Moderation/CuratorRoomTest.php
+  s_7409b4074de513::t_fc1f20a1577058 3
+web/src/Controller/SitemapController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Security/NoInlineEventHandlersTest.php
+  s_7409b4074de513::t_98753b8ea1522b 3
+tools/divisions/export_divisions.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/src/Elevation/ElevationEndpoints.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260730203000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/InvalidLocaleException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/Import/OutboundLinksTest.php
+  s_7409b4074de513::t_ec41a75ea9b9f2 3
+tools/wallonia/build_all.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+GOVERNANCE.md
+  s_7409b4074de513::t_38923512b59e07 5,8-11,16,18,24,30-41,43-47,51,62-64
+web/tests/Media/MediaUploadEndpointTest.php
+  s_7409b4074de513::t_f048c76d124211 3
+web/migrations/Version20260904110000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/ReportGround.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/config/packages/support.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Auth/SpyDeletionHook.php
+  s_7409b4074de513::t_8f4f5da638f825 3
+web/tests/Auth/SecurityTest.php
+  s_7409b4074de513::t_9b0bba2df663a7 3
+web/tests/js/view-mode-hint.test.cjs
+  s_7409b4074de513::t_9a15f3375e5b73 1
+web/tests/Contribution/VoteTest.php
+  s_7409b4074de513::t_a5c44a3da7c6b7 3
+web/src/Account/ElevationUnit.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/coverage/routes.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/Message/ResolveWikidataImage.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/tests/test_providers_normalise.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/Commons/CommonsPhotoRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/divisions/tests/test_export_divisions.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/migrations/Version20260731140000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/RetireBakedLengthTest.php
+  s_7409b4074de513::t_a4a0ac21ea1b86 3
+web/tests/Coverage/CoverageManifestTest.php
+  s_7409b4074de513::t_455eb0229e04a2 3
+tools/elevation/fetch-glo30.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/tests/Security/CspMediaHostTest.php
+  s_7409b4074de513::t_377cfa4d8d57b6 3
+web/public/api/openapi.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/CommonsPhotoRepositoryTest.php
+  s_7409b4074de513::t_15454ccfbd916d 3
+web/tests/Translation/DecisionServiceTest.php
+  s_7409b4074de513::t_cedfb5bdea17e1 3
+web/tests/Controller/ScopeBoundaryTest.php
+  s_7409b4074de513::t_3b573c05424e1c 3
+web/src/Media/MediaEventLog.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/coverage/parse.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Account/DormancySweep.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/styles/atlas.css
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_777ac7fdea9bf8 365-366
+web/tests/Auth/UnitPreferencesTest.php
+  s_7409b4074de513::t_df898e7fa8c16d 3
+web/templates/emails/reset_password.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/EventSubscriber/CspSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Security/PublicPageCacheTest.php
+  s_7409b4074de513::t_dd30dc83099c86 3
+web/src/Catalog/RouteSuggestionStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Community/CuratorApplicationTest.php
+  s_7409b4074de513::t_f0bb3c7e7b9346 3
+web/src/Controller/Admin/DashboardController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260824120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Elevation/ElevationEndpointsTest.php
+  s_7409b4074de513::t_7305e04cdb8e65 3
+web/src/Controller/ThirdPartyBudget.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/js/nav.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Admin/ModerationActivityPageTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/legal-sources.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_752c3387b1ff21 28,30,36-52
+  s_7409b4074de513::t_9d7028d4e23b7c 53
+web/tests/Auth/LockoutTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/Gpx/TrackProcessorTest.php
+  s_7409b4074de513::t_62ead7dcb4783a 3
+web/tests/Catalog/RouteChangeHistoryTest.php
+  s_7409b4074de513::t_2be99a6e1ce76b 3
+pipeline/coverage/contract.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/MediaController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/Commons/CommonsApi.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260820002000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Account/DormancyLadderTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Service/UserAdminService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/DifficultyVocabularyTest.php
+  s_7409b4074de513::t_8a7fa853157b95 3
+web/migrations/Version20260830020000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Entity/ItemConfirmation.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Entity/User.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/translate/embed.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/PurgeItemsCommandTest.php
+  s_7409b4074de513::t_c13d726f5d7e43 3
+pipeline/tests/test_run.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/PhotoPageController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Service/UserDeletionHookInterface.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/MediaGalleryIdentityTest.php
+  s_7409b4074de513::t_dc8ec5d4c64d58 3
+web/tests/Contribution/ProposeRouteFlowTest.php
+  s_7409b4074de513::t_311b07b23364a4 3
+web/tests/Support/FormGuardTest.php
+  s_7409b4074de513::t_82f3c04ef26f53 3
+web/src/DataFixtures/AppFixtures.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/divisions/tests/test_probe_areas.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/migrations/Version20260628225933.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/README.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/config/packages/test/framework.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Moderation/RegionFullException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/OperationalRegions.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Smoke/MapFieldSchemaTest.php
+  s_7409b4074de513::t_c85d97ff9a1a19 3
+web/src/Controller/ModerateTranslationsController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Contribution/SpatialResolver.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Auth/TwoFactorInterstitialLockdownTest.php
+  s_7409b4074de513::t_c8bf0a33062e12 3
+web/tests/bootstrap.php
+  s_7409b4074de513::t_910e5a3b172824 3
+web/src/Media/Scan/ScannerUnavailable.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/support/bug-fab.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Exception/TranslationConflictException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/emails/support_bug_outcome.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/config/packages/coverage.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/ItemConfirmationController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Messaging/MessageOutbox.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260828140000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Community/ItemConfirmationServiceTest.php
+  s_7409b4074de513::t_a247425d3bcaba 3
+pipeline/coverage/publish.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/RegionAboutTextTest.php
+  s_7409b4074de513::t_054aa34dac003b 3
+web/src/World/Entity/Continent.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/profile/show.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_form_errors.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Support/SupportRecipients.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/partials/_vclip.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Twig/CspExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/DeletedRecipientTest.php
+  s_7409b4074de513::t_0b7d5c4c938b85 3
+tools/divisions/config.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/tests/Controller/ContributorsPageTest.php
+  s_7409b4074de513::t_e3242f30bb4455 3
+web/src/Translation/CatalogueCommit.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Smoke/FormErrorsVisibleTest.php
+  s_7409b4074de513::t_01483b6ab3320c 3
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Twig/SocialLinksExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/credits.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Exception/TranslationTooLongException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/RideCheckControllerTest.php
+  s_7409b4074de513::t_80835142bb381d 3
+web/src/Controller/ContactController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/TranslationProposalStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/tests/test_publish_surface.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/RegionDirectoryProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/profiles-data.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Elevation/RouteSnapperTest.php
+  s_7409b4074de513::t_51e9e4916213fc 3
+web/assets/map/drawer.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260827030000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Import/OsmCandidates.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/MediaStorage.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/admin/system_config.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/CatalogFindingRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260628221139.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/lightbox.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Form/TranslationDecisionType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260731120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/emails/report_statement_of_reasons.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/pages/roadmap.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wikimedia/climb_sides.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/tests/Contribution/SubmissionChangeSummaryTest.php
+  s_7409b4074de513::t_5bca4403671c5f 3
+atlas/demo/settings.html
+  s_7409b4074de513::t_87ff004fff67a6 176
+  s_7409b4074de513::t_11e359ec025473 166,171,181
+  s_7409b4074de513::t_b077c2423d2e55 6-7,91,226
+  s_7409b4074de513::t_347efdbe18471f 222
+web/src/EventSubscriber/MarkStripMailSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/room.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+licenses/COMMONS-TERMS-CLAUSE.md
+  s_7409b4074de513::t_a70f0d233de476 1,5-6,17-18,22-23,27-30,34-36,39-40,42-43,46,54-56,61-63,65-66,72-73
+  s_7409b4074de513::t_186c7c4bac221f 47-50,67-68
+  s_7409b4074de513::t_1fcd499d396778 31-33,37
+web/templates/pages/accessibility.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/media-photos.test.cjs
+  s_7409b4074de513::t_d258cb659aad22 1
+web/templates/translate/_worddiff.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/pages/coverage.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/contribute/improve.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wiki-numbers.py
+  s_7409b4074de513::t_830d65a0cea89c 2
+tools/wallonia/enrich.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/tests/Auth/TwoFactorBruteForceTest.php
+  s_7409b4074de513::t_3b38a74a2fbcd4 3
+web/tests/Auth/UserEntityTest.php
+  s_7409b4074de513::t_3cb87798947cc3 3
+web/tests/js/map-theme.test.cjs
+  s_7409b4074de513::t_3166447a6f95d7 1
+web/src/Support/Entity/ContentReport.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/share-links.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Command/PurgeItemsCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/osm-tags.test.mjs
+  s_7409b4074de513::t_49d1d0de929520 1
+web/migrations/Version20260708130000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/elevation/README.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+pipeline/coverage/load.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wallonia/regions.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+tools/wallonia/tests/test_export.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/assets/support/report-challenge.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Auth/AdminAccessTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/OutboundLinksEditorTest.php
+  s_7409b4074de513::t_def660c6a5d454 3
+web/tests/Media/RiderCreditSyncTest.php
+  s_7409b4074de513::t_ba60bd751ecca8 3
+web/src/Media/Command/MediaGcCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/app-gate-prepush.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/templates/partials/_translate_bar.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260825090000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/climb-profile.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/BootScriptController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/TranslationConsentService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/improve-review.test.cjs
+  s_7409b4074de513::t_5f43f694cd04d1 1
+web/templates/admin/user_support_action.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/surface-zooms.test.cjs
+  s_7409b4074de513::t_b37df5e1a632ab 1
+web/src/Controller/BugReportController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+NOTICE
+  s_7409b4074de513::t_8b350981eaa844 2,4-6,8-15,20-22
+  s_7409b4074de513::t_ef930c7dff2246 16-19
+web/assets/map/scope-ui.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wikimedia/country_places.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/src/Controller/RegistrationController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Settings/SystemSettingsTest.php
+  s_7409b4074de513::t_509326dcfc8c77 3
+web/src/Controller/ResetPasswordController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/wikimedia/tests/test_geometry.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/migrations/Version20260825231000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/terms.html
+  s_7409b4074de513::t_87ff004fff67a6 125
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,53,64
+  s_7409b4074de513::t_48e972c51d71b8 7,17,84,94,97-98,101
+web/tests/Community/RouteCorrectionsTest.php
+  s_7409b4074de513::t_cfccaae25300cb 3
+web/src/Catalog/BikeTypeVocabulary.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/SubmissionEntitiesTest.php
+  s_7409b4074de513::t_49e3db3c909092 3
+web/migrations/Version20260724120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/Admin/ReleaseTagCrudController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/config.example.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260820001000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/Scan/ClamAvScanner.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/emails/support_bug_notify.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/contribute/climb-editor.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/ModerateProvidersController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Elevation/ClimbProfilerTest.php
+  s_7409b4074de513::t_6939728d8cd274 3
+web/assets/js/cc-units.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+atlas/demo/developers.html
+  s_7409b4074de513::t_d1d2d38dc12f9d 7,17,25
+  s_7409b4074de513::t_87ff004fff67a6 89
+  s_7409b4074de513::t_48e972c51d71b8 49,54,84
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,46
+web/src/Elevation/ClimbProfiler.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/MediaStorageTest.php
+  s_7409b4074de513::t_eba9fba37a605d 3
+tools/bench/pages-staging.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/tests/Contribution/OsmConfirmTest.php
+  s_7409b4074de513::t_e533ecb036d369 3
+web/tests/Controller/MarkerGrammarPageTest.php
+  s_7409b4074de513::t_398e9ea9c8a7db 3
+web/assets/styles/scout-devices.css
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wallonia/export.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/tests/Command/DedupePlacesCommandTest.php
+  s_7409b4074de513::t_958f2fa0393e71 3
+web/src/Account/Command/DormancySweepCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260802200000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/js/nav-menus.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/browser/check-module-refs.py
+  s_7409b4074de513::t_5652c0b94c3329 2
+web/config/packages/test/mailer.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+.github/workflows/ci-credits.yml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/RidingStyleTest.php
+  s_7409b4074de513::t_8dd8ecd900f6dc 3
+web/templates/moderate/inbox_detail.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260905020000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/CatalogProviderTest.php
+  s_7409b4074de513::t_3d20776f41193e 3
+.gitleaks.toml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/emails/account_deletion.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/XmpRightsTest.php
+  s_7409b4074de513::t_fe940a2fc24827 3
+web/src/Catalog/Doctrine/GeometryType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/translation_detail.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/TrashTest.php
+  s_7409b4074de513::t_902fb365b666c6 3
+web/tests/Contribution/SpatialResolverTest.php
+  s_7409b4074de513::t_84c4d8efcd5c9c 3
+web/tests/Security/CspCoverageHostTest.php
+  s_7409b4074de513::t_f768d77ec1591f 3
+web/src/Catalog/RidingStyle.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/MediaEscalationTest.php
+  s_7409b4074de513::t_a69b83ffea9875 3
+web/src/Coverage/BucketManifest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/RiderCreditSync.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/ModerateTest.php
+  s_7409b4074de513::t_602b3f44b8d4e5 3
+web/src/Controller/ModerateDataController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/_card_script.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260813210000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/MediaReportController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/photon-lang.test.mjs
+  s_7409b4074de513::t_3d3cd5282b7853 1
+web/src/Media/MediaClaimService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Account/DormancyLadder.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/translations_stale.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Routing/LocalizedPath.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/NotTheSubmitterException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/map-init.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/pending-shape.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/stub.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/RouteModerateShellTest.php
+  s_7409b4074de513::t_12d3242dd30e11 3
+web/README.md
+  s_7409b4074de513::t_777ac7fdea9bf8 41-44
+web/migrations/Version20260716120000.php
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/src/Controller/RouteCommunityController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/partials/_nav.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_scout_devices.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/UnsubscribeController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260714150000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/Import/MeasuredKeysTest.php
+  s_7409b4074de513::t_2ddaa9738d17e3 3
+web/src/Community/RouteCommunityService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/EventSubscriber/PublicApiCorsSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/SubmissionEscalationTest.php
+  s_7409b4074de513::t_8b9f35a43d1852 3
+web/templates/support/report.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Profile/MyContributionsTest.php
+  s_7409b4074de513::t_0ee741cb63582f 3
+web/tests/Catalog/CatalogEntitiesTest.php
+  s_7409b4074de513::t_475b3077aae5b7 3
+pipeline/coverage/tiles.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/fixtures/messages.nl.yaml
+  s_7409b4074de513::t_334be7f34eda7a 1
+web/tests/Catalog/CatalogFormRegistryServiceKindTest.php
+  s_7409b4074de513::t_0aac4f07cbafa5 3
+web/src/Controller/MyAreaController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/BikeType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/CatalogueWriter.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260829090000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/translate/_form.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_777ac7fdea9bf8 147-149
+docs/specs/edit-items/Q-history-culture.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+atlas/demo/privacy.html
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,53,64
+  s_7409b4074de513::t_e0f119b5b3a11b 7,17,25,59,75-77,82,87,93-96,100,105,110,114-116,125,136
+  s_7409b4074de513::t_87ff004fff67a6 142
+web/tests/Moderation/MapCuratorInjectionTest.php
+  s_7409b4074de513::t_b5fbb56b31f919 3
+web/src/Media/ConsentMissing.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Support/BugDeskNotesTest.php
+  s_7409b4074de513::t_39c6e43223f782 3
+web/src/Media/MediaAction.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Pagination/Pager.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Entity/RouteChangeHistory.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/TranslationMarkupTest.php
+  s_7409b4074de513::t_9e300178a60ae2 3
+web/tests/Routing/InactiveLocaleTest.php
+  s_7409b4074de513::t_3ac8daea602c91 3
+web/src/Town/Message/ResolveTownSummary.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Security/SecurityHeadersTest.php
+  s_7409b4074de513::t_372d31aac65447 3
+atlas/demo/a11y.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/home/hero.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Exception/DeepLRateLimitedException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Service/ModeratorAreaNoticeTest.php
+  s_7409b4074de513::t_971059c01a3651 3
+web/src/Security/RememberedLoginListener.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Support/SeedKnownIssuesCommandTest.php
+  s_7409b4074de513::t_2e3baff999e9ca 3
+docs/specs/edit-items/P-scenic-views.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Elevation/RouteSnapper.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/registration/confirmation_email.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/MarkedTranslatorTest.php
+  s_7409b4074de513::t_62e825d83d8db9 3
+web/src/Media/XmpRights.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/divisions/probe_areas.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/tests/Support/GitHubIssuesTest.php
+  s_7409b4074de513::t_7c1fae9eb50391 3
+web/tests/Messaging/MessageMailTest.php
+  s_7409b4074de513::t_3b820595b13b43 3
+web/migrations/Version20260819220000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260710120100.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/wikimedia/tests/test_harvest_shaping.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/tests/Controller/MapPrefsTest.php
+  s_7409b4074de513::t_6da1c3854b2086 3
+web/migrations/Version20260826150000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/js/analytics.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/spotlight.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/Command/RestampCommonsRightsCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/fixtures/messages.fr.yaml
+  s_7409b4074de513::t_f0f2f4a0272f65 1
+web/tests/Command/CreateUserCommandTest.php
+  s_7409b4074de513::t_61aa5dedcff00e 3
+web/tests/Catalog/ItemEvidenceResolverTest.php
+  s_7409b4074de513::t_661b37d22c1e2c 3
+tools/wikimedia/tests/test_name_key_contract.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/src/Controller/CoverageController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/MediaClaimTest.php
+  s_7409b4074de513::t_d56f1bd6563837 3
+web/tests/Service/BaseAreaResolverTest.php
+  s_7409b4074de513::t_f4616225f6d57d 3
+web/assets/map/scope-header.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/RouteSurfacesCommandTest.php
+  s_7409b4074de513::t_cd30a2c3d5ec19 3
+web/migrations/Version20260729212853.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/vote.html
+  s_7409b4074de513::t_11e359ec025473 62,78
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,59
+  s_7409b4074de513::t_87ff004fff67a6 85
+web/src/EventSubscriber/LocaleSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/RoadTypeContractTest.php
+  s_7409b4074de513::t_65b7de8ac2af10 3
+web/tests/Community/ItemConfirmationControllerTest.php
+  s_7409b4074de513::t_75e3f2fe54b207 3
+pipeline/tests/test_publish_routes.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/RouteController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/emails/support_bug_ack.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Command/RecomputeClimbProfilesCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260825120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/account/reports.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+CITATION.cff
+  s_7409b4074de513::t_a4331e67935c5b 10,12-13,15,21
+  s_7409b4074de513::t_ef930c7dff2246 18-20
+docs/specs/edit-items/E-hazards.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/commons-photo.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Command/Coverage/RetireLegacyOsmCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/ModerationScope.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/Api/V1/PublicApiController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260909210000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/security/login.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/moderate_routes/detail.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Support/OrganisationIdentity.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Import/ProvinceMap.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Elevation/ElevationClientTest.php
+  s_7409b4074de513::t_55c7c7b355577f 3
+web/tests/World/ScaffoldRegionsCommandTest.php
+  s_7409b4074de513::t_b483b7e01d5ee7 3
+web/src/Catalog/ItemEvidenceResolver.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/MediaStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/VotePageTest.php
+  s_7409b4074de513::t_fb74482b0a475b 3
+web/templates/security/_check_inbox_icon.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260710120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/bundles/TwigBundle/Exception/error.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/emails/support_contact_notify.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Smoke/RolesPageTest.php
+  s_7409b4074de513::t_97746197c68556 3
+web/src/Translation/TranslationDeletionHook.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/Admin/AdminActionLogCrudController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+.gitattributes
+  s_7409b4074de513::t_2980beb4a39dcc 4,16-19,21
+web/templates/admin/escalated.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Controller/RiderProfileTest.php
+  s_7409b4074de513::t_32c69f7ed7f35a 3
+web/src/Media/Commons/CommonsFile.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/wikimedia/region_context.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/tests/Catalog/NameKeyContractTest.php
+  s_7409b4074de513::t_0047c9ed7a35ac 3
+web/tests/Auth/TwoFactorTest.php
+  s_7409b4074de513::t_2a165e9101fbae 3
+web/templates/security/reset_password_request.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/SeasonTest.php
+  s_7409b4074de513::t_13cbc7f5d66348 3
+web/tests/Catalog/SafeBrowsingTest.php
+  s_7409b4074de513::t_480de1a68528b3 3
+web/migrations/Version20260727120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260816220000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/RouteSuggestionTest.php
+  s_7409b4074de513::t_658ceb1639772c 3
+web/src/Controller/ApiReferenceController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/CatalogScanner.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/PhotoPageTest.php
+  s_7409b4074de513::t_8d245bf03f92ce 3
+web/tests/Smoke/MapKeyTest.php
+  s_7409b4074de513::t_c180052f02a8ea 3
+web/src/Entity/ResetPasswordRequest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/MyReportsController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Routing/ActiveLocales.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Smoke/ContentPagesTest.php
+  s_7409b4074de513::t_c9636538618091 3
+  s_7409b4074de513::t_777ac7fdea9bf8 52-53
+web/templates/pages/contributors.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Auth/SettingsTabsTest.php
+  s_7409b4074de513::t_6b8e7e9824c6ab 3
+web/templates/pages/_home_principle.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/privacy-notice.md
+  s_7409b4074de513::t_1f4f6a76d680e2 171-172
+  s_7409b4074de513::t_4bd7303ae0cade 173-175
+docs/specs/route-domain.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+.github/actions/require-green-ci/action.yml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/messages/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/ContinentResolver.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/BugSeverity.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/blog/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Provider/DataProviderRegistryTest.php
+  s_7409b4074de513::t_10fe9868c191af 3
+atlas/demo/index.html
+  s_7409b4074de513::t_d1d2d38dc12f9d 300
+  s_7409b4074de513::t_dd54a16c72d06a 196
+  s_7409b4074de513::t_11e359ec025473 7,17,25,65,250,261,264,278-279,299,303-304,316,325,338-339,341-342,344,354,365-366,405,414
+  s_7409b4074de513::t_87ff004fff67a6 390-391
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,242,336,347,367
+  s_7409b4074de513::t_48e972c51d71b8 243
+web/src/Town/OsmElementApi.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/admin/moderator_areas.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/CatalogueBrowser.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/legend-collapse.test.cjs
+  s_7409b4074de513::t_75c8e137dd58a0 1
+web/tests/Translation/MarkStripTest.php
+  s_7409b4074de513::t_c7c08da4827d45 3
+docs/specs/public-api-personal-data-boundary.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Community/CuratorApplicationReviewTest.php
+  s_7409b4074de513::t_72290ff9e86cbe 3
+tools/wikimedia/climb_audit.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/migrations/Version20260729120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/PhotoProcessorTest.php
+  s_7409b4074de513::t_1241cc74270d91 3
+web/tests/Translation/DeepLAvailabilityTest.php
+  s_7409b4074de513::t_c445877cb62cde 3
+web/src/Service/BuildVersion.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/FreeLicenceLinkabilityTest.php
+  s_7409b4074de513::t_8de93ac1ba3564 3
+pipeline/tests/test_publish.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/MarkerIndex.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/DeleteTranslationOverlayCommandTest.php
+  s_7409b4074de513::t_84be4a63db4dce 3
+web/migrations/Version20260713120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Messaging/MessageFilterTest.php
+  s_7409b4074de513::t_ab02bff0766ef2 3
+web/src/Account/DistanceUnit.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Community/Entity/CuratorApplication.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/RetentionService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/SupportIntake.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/ItemState.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/ItemSource.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/RegionSilhouette.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/account/_density.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Contribution/SubmissionChangeSummary.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Security/LoginSuccessHandler.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Auth/LogoutTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Auth/ProfileSettingsTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/RouteModerateController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/CatalogueWriteVerificationException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/js/translate-mode.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_footer.html.twig
+  s_7409b4074de513::t_f6a41219ad625e 76-82
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Community/CuratorConfirmationTest.php
+  s_7409b4074de513::t_12fc65c0f6967b 3
+web/rector.php
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/templates/blog/post.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Exception/DeepLRequestException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/Entity/MediaUpload.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/RestampCommonsRightsCommandTest.php
+  s_7409b4074de513::t_824df75c30689c 3
+web/src/Media/PhotoAltSuggestion.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Entity/RouteRide.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/MapTheme.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Provider/ProviderRegistry.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate_regions/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/edit-items/A-road-surface.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Entity/AdminActionLog.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/ModerateOverviewTest.php
+  s_7409b4074de513::t_0619cec630f32e 3
+REUSE.toml
+  s_45ec9b3f519700::t_1ad28dbd0edd28 192
+  s_7409b4074de513::t_1b9773a92ea820 2-4,6,8-15,21-25,30,32-35,32-49,37-40,42-44,46-49,51-56,58-59,63-72,74-78,87-89,93-101,103-106,108,127-128,135-184,135-191,186-191,193-206,211-214,216-229,231-248,250
+web/tests/js/routes-zooms.test.cjs
+  s_7409b4074de513::t_fc9ec617755aee 1
+web/src/Support/GitHubIssues.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/LicenceUrls.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Coverage/BucketManifestPrefetchTest.php
+  s_7409b4074de513::t_60175312e29d58 3
+tools/elevation/compare-sources.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/TranslationMarkup.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/ItemFieldSet.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/CatalogueBlockScalarException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Twig/BugFabExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Twig/DeepLExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/CuratorMarkersController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/blog/feed.atom.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Links/LinkVerdictStore.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Account/DormancySweepTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/coverage/surface.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/fixtures/messages.en.updated.yaml
+  s_7409b4074de513::t_29430d03dd242b 1
+web/src/Controller/LocaleController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/Command/SeedKnownIssuesCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/RetentionTest.php
+  s_7409b4074de513::t_7ed5bf0480e5e1 3
+web/tests/Media/ClamAvScannerTest.php
+  s_7409b4074de513::t_b6940baf4ea3cf 3
+web/tests/js/translate-marks.test.cjs
+  s_7409b4074de513::t_f0e2b903082260 1
+web/src/Catalog/Command/RetireBakedLengthCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/CatalogueWriteNotOptedInException.php
+  s_7409b4074de513::t_777ac7fdea9bf8 20-22
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/config/packages/media.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Messaging/MessagesPageTest.php
+  s_7409b4074de513::t_918792e25196ea 3
+web/src/Elevation/CoveredSpans.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/edit-items/G-shelter.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_7409b4074de513::t_4e1a5d6e93de55 3
+web/tests/Media/ProofOfWorkTest.php
+  s_7409b4074de513::t_5e1c766a78106e 3
+web/templates/pages/developers.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Moderation/RouteQueue.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/contribute/links-editor.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+atlas/demo/about.html
+  s_7409b4074de513::t_87ff004fff67a6 89
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,43
+  s_7409b4074de513::t_48e972c51d71b8 50,56-57,63-64,68,74,80-82
+web/assets/map/scout-segments.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/TranslationCaches.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Elevation/CoveredSpansTest.php
+  s_7409b4074de513::t_1cd48ca275edbe 3
+web/src/Controller/PageController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/AlreadyDecidedException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/join.html
+  s_7409b4074de513::t_87ff004fff67a6 118
+  s_7409b4074de513::t_d1d2d38dc12f9d 69,71
+  s_7409b4074de513::t_dd54a16c72d06a 90,96,102
+  s_7409b4074de513::t_48e972c51d71b8 83,101
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,53
+  s_7409b4074de513::t_11e359ec025473 7,17,25,59,66-67,70,95,111
+web/src/Form/SettingsType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/EventSubscriber/ServerErrorAlertSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/filters.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/routes-legend.test.cjs
+  s_7409b4074de513::t_a3e1fcd341b2b7 1
+web/src/Catalog/Command/RefreshFindingsCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260825220000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260729203612.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/fonts.css
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Settings/FakeSettings.php
+  s_7409b4074de513::t_aaaa8d593cb3ae 3
+web/assets/scout/android-screen.svg
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/MediaTakedownService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+.github/workflows/deploy-production.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/phpstan.dist.neon
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/CatalogSchemaProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Security/TwoFactorSetupEnforcer.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate_routes/_queue_item.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/admin/playbook_photo_flood.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/MessagesController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/api-strategy.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_3edb81d37930cf 146-147,166-167
+  s_7409b4074de513::t_3779ccc3d36709 3,13,16,35-79,91,104,109,113,118,126,129-130,149,157,173-177,179,189,193,199-202,205-208,210-216,219-222,235-236
+  s_7409b4074de513::t_4bcb3639a7c493 87-88
+web/assets/map/links.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260801170000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/MessageHandler/FetchCommonsPhotoHandler.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/RegionResolverTest.php
+  s_7409b4074de513::t_37acae8087e45f 3
+web/tests/Translation/TranslateModeTest.php
+  s_7409b4074de513::t_e457e5e608c0be 3
+web/src/Service/ContributionReceipt.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/ConsentRequiredException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260731130000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/scope.test.cjs
+  s_7409b4074de513::t_0774cbb2080ab2 1
+web/src/Moderation/SubmissionQueue.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Command/LinkRecheckCommandTest.php
+  s_7409b4074de513::t_1bd3b603e23b5f 3
+web/tests/Translation/TranslatePageTest.php
+  s_7409b4074de513::t_ccad1a72d21d7c 3
+web/src/Form/VoteType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/MediaTakedownSource.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260828120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/CoveragePhotoControllerTest.php
+  s_7409b4074de513::t_aea421755ee6c4 3
+tools/wikimedia/item_links.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/assets/map/search-ui.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/BikeTypeVocabularyTest.php
+  s_7409b4074de513::t_50ee5f53941d94 3
+web/tests/Api/PublicApiV1Test.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+licenses/COMMONS-MEDIA-LICENSE.md
+  s_7409b4074de513::t_1fcd499d396778 27,36-37
+  s_7409b4074de513::t_5acd5c45af8656 1,7-8,13,16,22,33-35
+  s_7409b4074de513::t_bb6a7577060d5c 28-29
+web/src/Settings/SettingDefinition.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/RegionRegistryProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/RouteSuggestionSegmentsTest.php
+  s_7409b4074de513::t_21075de8b6eee3 3
+web/tests/js/basemap-icons.test.cjs
+  s_7409b4074de513::t_bdd2c822b3b424 1
+web/src/Town/MessageHandler/ResolveTownSummaryHandler.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/_card_styles.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/media-pending.test.cjs
+  s_7409b4074de513::t_82461f567394b2 1
+web/tests/Media/FakeScanner.php
+  s_7409b4074de513::t_20f2dda68bfb6c 3
+web/src/Validator/PlainDisplayName.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/StaleIndexTest.php
+  s_7409b4074de513::t_ff1b058f4061c4 3
+web/config/packages/test/security.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/config/packages/cache.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Service/AdminDashboardStats.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/CatalogueCommitTest.php
+  s_7409b4074de513::t_bc3456f19a2480 3
+web/src/Community/Entity/CountryInterest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/boot.js.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260910150000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260910170000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/BlogController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/map.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Support/ContentReportService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/tests/test_contract.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Account/UnitFormatterTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+Makefile
+  s_7409b4074de513::t_e90eb989704055 1,28,48,67,77,106,118-120,136,152,176,186,202,212,224,226-231,233,243,258,265,309,354,361,380
+  s_7409b4074de513::t_26c7bb568633d1 196-200,298-305
+  s_7409b4074de513::t_91fdaaed6c13d3 308
+  s_7409b4074de513::t_545a7b45ebdb1b 23,296-297,306-307
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_7409b4074de513::t_973cfa6b2292c4 3
+web/src/Twig/RichTranslationExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260708140000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/signoff-prepare-commit-msg.sh
+  s_7409b4074de513::t_e1109bc54acf7f 1-48
+web/tests/Command/SeedWikidataPlacesCommandTest.php
+  s_7409b4074de513::t_05487504b351a3 3
+web/src/Translation/Exception/PlaceholderMismatchException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/OsmCandidatesTest.php
+  s_7409b4074de513::t_a316e7be3e6b09 3
+web/assets/map/util.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/CatalogueWriterTest.php
+  s_7409b4074de513::t_c31fa177ce016e 3,86
+web/src/Media/Message/ScanAndReleaseUpload.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Validator/PlainDisplayNameValidator.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Entity/ChangeHistory.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260828220000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Security/LoginPageTest.php
+  s_7409b4074de513::t_04c24fec83a39e 3
+tools/wallonia/climbs.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/assets/support/bug-context.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/valhalla/fetch-geofabrik-pbf.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/src/Kernel.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260904180000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/WithdrawSubmissionTest.php
+  s_7409b4074de513::t_50456d163a994b 3
+web/src/Moderation/ModerationService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Entity/RouteVote.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/TranslationConsent.php
+  s_7409b4074de513::t_d72a228e0fbd8b 10,19-35
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Security/PseudonymousKey.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260712150000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Provider/ModerateProvidersTest.php
+  s_7409b4074de513::t_37a77271b27512 3
+web/templates/account/_shell_styles.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Form/ImproveType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Command/DeleteTranslationOverlayCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/photo-uploads.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Messaging/UserMessageTest.php
+  s_7409b4074de513::t_057583a5f918b2 3
+web/src/Blog/BlogLocales.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/InvalidMarkupException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/ModerateInboxController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Command/ImportItemLinksCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Provider/LicenceObligation.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/ConfirmationFreshnessTest.php
+  s_7409b4074de513::t_941a1261dd0c83 3
+docs/specs/edit-items/F-getting-there.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/config/packages/twig.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/valhalla/build-continent-tiles.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+tools/gitleaks-prepush.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/src/Media/MediaConsent.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/DifficultyVocabulary.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/translations/messages.en.yaml
+  s_7409b4074de513::t_fedfd014e001d5 1713,2196
+  s_7409b4074de513::t_5617217fb79d86 382,408-410,413-416,418-424,426-439,448,453,460,613,2154-2155,3641
+  s_7409b4074de513::t_9f12f956e65482 1
+  s_7409b4074de513::t_88997c842de121 62-65,264,307-309,314,316,320-324
+web/tests/Media/MediaTakedownTest.php
+  s_7409b4074de513::t_f261401c9b94d5 3
+web/src/Twig/ModerationChromeExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Contribution/CatalogContributionService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/ContactStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/version.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+brand-src/boilerplate.md
+  s_7409b4074de513::t_9f02fbbf52a299 52-53,62-67,72-81,86
+  s_7409b4074de513::t_6bcfe7840da20f 68-71
+web/templates/pages/contact.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/moderate/history.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/ItemSourceRankTest.php
+  s_7409b4074de513::t_eff32e57c69945 3
+web/templates/admin/withheld_photos.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Form/CatalogFieldConstraints.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/wallonia/tests/test_build_all.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+tools/credits/tests/test_check_credits.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+pipeline/tests/test_extract_cache.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/moderate/report_detail.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/translate/edit.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/RiderProfileController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260714190000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/RouteControllerTest.php
+  s_7409b4074de513::t_0469b966342531 3
+web/tests/Media/AsyncTierTest.php
+  s_7409b4074de513::t_f0ba5f243e2c8d 3
+web/src/Coverage/CoverageManifest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260812010000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260809120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Provider/ProviderHarvestImportedAtTest.php
+  s_7409b4074de513::t_169a80cd008fee 3
+tools/wikimedia/climb_profile_probe.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/tests/Contribution/CuratorWizardCopyTest.php
+  s_7409b4074de513::t_681e5227d0f64d 3
+web/assets/pages/directory-view.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Entity/HeatPoint.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/MovedPinTest.php
+  s_7409b4074de513::t_5d42a9316bdc39 3
+licenses/COMMONS-DATA-LICENSE.md
+  s_7409b4074de513::t_1fcd499d396778 31-34,37-40,43-45
+  s_7409b4074de513::t_5acd5c45af8656 1,4,7,9,14,17-18,25,28,35,41
+  s_7409b4074de513::t_37b71c2e66994d 42
+web/src/Contribution/RouteProposalService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+overrides/partials/logo.html
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/TranslationDiff.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_pager.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/surface-quality.test.cjs
+  s_7409b4074de513::t_68645ea9ffeee7 1
+atlas/demo/licenses.html
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,51,61
+  s_7409b4074de513::t_a4df28585ebece 7,17,25,57,66,69,75-77,84,87,93-94,100,104-106,110-128,136,139,143
+  s_7409b4074de513::t_87ff004fff67a6 147
+  s_7409b4074de513::t_406bcf79325085 101
+web/tests/Media/ThirdPartyReportTest.php
+  s_7409b4074de513::t_d7bca25776f754 3
+web/tests/Translation/OverlayTranslatorTest.php
+  s_7409b4074de513::t_b3707c50b4fc6d 3
+web/tests/Coverage/SurfaceManifestTest.php
+  s_7409b4074de513::t_b834a9c6bb3c28 3
+web/tests/Support/BugDeskSearchTest.php
+  s_7409b4074de513::t_8bf8005a19dcd0 3
+web/tools/check-licenses.sh
+  s_7409b4074de513::t_c3c7070537343d 2-5,10-11,17-24,27-36,38,40-41,44-45
+  s_7409b4074de513::t_f3e8a5e8a3400c 12-16,37
+  s_7409b4074de513::t_777ac7fdea9bf8 6-9
+web/assets/contribute/review-card.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Service/BaseLocationService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/SubmissionStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/CatalogSchemaProviderTest.php
+  s_7409b4074de513::t_8e248182c1eda5 3
+web/assets/support/shot-picker.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Coverage/CoverageRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/commons-photo.test.mjs
+  s_7409b4074de513::t_cafdbf50e55d37 1
+web/tests/js/shell-list-system.test.cjs
+  s_7409b4074de513::t_7a803be3d0e31e 1
+docs/specs/page-caching.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Provider/Command/HarvestProviderCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/SupportRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/Scan/ScanVerdict.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Content/ReleaseNotes.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/report_bug.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/ContentReportController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/emails/report_decided.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Pagination/RowsPerPageTest.php
+  s_7409b4074de513::t_9b3cde9e98273a 3
+web/tests/js/source-labels.test.cjs
+  s_7409b4074de513::t_f01c7a788b99df 1
+web/src/Repository/ResetPasswordRequestRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/World/Entity/Country.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Command/Coverage/RetireLegacyOsmCommandTest.php
+  s_7409b4074de513::t_bc8e4019b9f4ba 3
+web/tests/Profile/ContributionsRetentionTest.php
+  s_7409b4074de513::t_eeede2af641ef4 3
+web/src/Translation/Exception/EnglishNotTranslatableException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/NoLocaleTickedException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260727140000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260719140000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/marker-grammar.test.cjs
+  s_7409b4074de513::t_528bfc95ea9c99 1
+web/src/Translation/StaleIndex.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/ReportResolver.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/KindIcons.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/config/packages/mailer.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/translate/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/moderate/inbox.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/SurfaceVocabularyTest.php
+  s_7409b4074de513::t_e3d8b1c264ff11 3
+web/migrations/Version20260905000000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/FindsOrCreatesTranslationEntry.php
+  s_7409b4074de513::t_748248a2c77f94 3
+web/tests/Catalog/ItemTimestampTest.php
+  s_7409b4074de513::t_626034b5f33fdb 3
+web/src/Catalog/Import/OutboundLinks.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/item-index.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/config/packages/scheb_2fa.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/OperationalRegionsTest.php
+  s_7409b4074de513::t_e89f6994df201a 3
+web/tests/Smoke/ValidationMessagesTranslatedTest.php
+  s_7409b4074de513::t_8613e596d79a71 3
+pipeline/tests/conftest.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/contribute/improve.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Moderation/TrashActions.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/region.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_legal_identity.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/BasemapIconsTest.php
+  s_7409b4074de513::t_232225362ddd01 3
+wiki/governance.md
+  s_7409b4074de513::t_c00d7ac2272b91 85,108,125,143,146,148,150,154,157,163
+  s_7409b4074de513::t_e08dd6e8214796 47
+  s_7409b4074de513::t_90704d772edd22 12,15-28,31-34,40-45,48-49,89-90,94-97,120
+  s_7409b4074de513::t_cdbddb6c42e065 91-93
+  s_0f0d3ca1895aee::t_0aecf2b470ce8e 8-10
+web/assets/contribute/coords.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260907210000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Community/RouteCommunityReadTest.php
+  s_7409b4074de513::t_8b17fa90a64c7a 3
+web/tests/Translation/StaleSourceWarningTest.php
+  s_7409b4074de513::t_d468d6af422be8 3
+web/tests/Messaging/NeedsInfoReplyTest.php
+  s_7409b4074de513::t_138acb797f497a 3
+web/tests/Catalog/RouteVoteTest.php
+  s_7409b4074de513::t_e0fdbabdc616bc 3
+docs/specs/edit-items/N-climbs.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260828010000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Form/ModerationDecisionType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/DeepLClientTest.php
+  s_7409b4074de513::t_d90c229ee5f924 3
+web/tests/Smoke/MapPageTest.php
+  s_7409b4074de513::t_88d951f888938d 3
+web/src/Media/Commons/WikidataImageRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Messaging/Entity/CuratorPost.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/join_country.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/RouteModerateTest.php
+  s_7409b4074de513::t_8a697a89b8b8d9 3
+README.md
+  s_7409b4074de513::t_b84e36480aa5f8 10,43,207-210
+  s_7409b4074de513::t_3d3d36b2893f0a 200-205
+  s_7409b4074de513::t_5a81bcf33e69ed 7,9,13-15,19-22,26,28,30-31,39-42,44,46,50,58,62,109,112,132,141,143,153-154,161,166-167,176-181
+  s_7409b4074de513::t_d3f63d6fc19635 185-199,214-217,219-238
+  s_7409b4074de513::t_ef930c7dff2246 206,211-213
+web/src/Translation/OverlayCatalogueLoader.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/MessageHandler/ResolveWikidataImageHandler.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/MapCoverageUrlTest.php
+  s_7409b4074de513::t_4a8c2d80f694f8 3
+web/templates/pages/pages.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Messaging/MessageService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260904160000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/MapViewModeController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Scout/ScoutTag.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/atlas.css
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/security/_auth_shell_styles.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Twig/BugMarkdownExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Account/UpdatesSubscription.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/DeepLNetworkException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Provider/Entity/DataProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/psalm.xml
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/migrations/Version20260802100000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/elevation/dem-install.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+tools/wallonia/overpass.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/templates/moderate_data/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+brand-src/description-long.md
+  s_7409b4074de513::t_9f02fbbf52a299 20-26,50-51
+  s_7409b4074de513::t_6bcfe7840da20f 4
+web/src/Service/ContributionStubInterface.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/UnknownProposalException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+brand-src/gen_logo.py
+  s_7409b4074de513::t_66dbd6330c14cc 2
+atlas/demo/improve.html
+  s_7409b4074de513::t_9241e2a2db6806 7,17,25,176,215,233,270,298,306,324,340,354,359,363-365,400,405,414,418,426,454,479,494,498,507,510,512,545-546,575,599-600,609,611
+  s_7409b4074de513::t_1f8aeadbee4cce 518
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,172,225,322
+  s_7409b4074de513::t_d1d2d38dc12f9d 223,231,417,441,472,586
+  s_7409b4074de513::t_87ff004fff67a6 618
+web/src/Settings/SystemSettingsWriter.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Service/BuildVersionTest.php
+  s_7409b4074de513::t_1e9c525a473bf9 3
+web/src/Form/SettingsPasswordType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/CatalogField.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/ImportRegionContextCommandTest.php
+  s_7409b4074de513::t_e402d26f980dd6 3
+web/src/Contribution/SubmissionDraft.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/catalog-data-model.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Community/CuratorApplicationStatus.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Messaging/MessageMailer.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/SeedClimbsCommandTest.php
+  s_7409b4074de513::t_fe8536c8349201 3
+web/src/Community/CuratorApplicationService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/MapBestOfTest.php
+  s_7409b4074de513::t_2f7b00455c6c73 3
+web/templates/pages/scout.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/emails/message.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+pipeline/coverage/extract.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Blog/BlogTest.php
+  s_7409b4074de513::t_ec168015862822 3
+web/tests/Catalog/RegionDirectoryProviderTest.php
+  s_7409b4074de513::t_5f7a414d57dea3 3
+web/src/Provider/ProviderHarvest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Town/TownSummaryRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/licenses.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_29426f2f0f9642 104-124,133,138-139
+pipeline/coverage/__init__.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/panels.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/places.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/emails/report_acknowledged.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+.github/workflows/ci-pipeline.yml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Messaging/CuratorRoomCategory.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Security/LoginThrottleListener.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/rulebook.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+atlas/demo/region.html
+  s_7409b4074de513::t_87ff004fff67a6 104
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,50
+  s_7409b4074de513::t_11e359ec025473 7,17,25,53,58
+web/src/Catalog/SubmissionType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/changelog.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/ChangeHistoryViewTest.php
+  s_7409b4074de513::t_cea7af125f0720 3
+web/src/Media/MediaDecisionService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/MaterializeFlowTest.php
+  s_7409b4074de513::t_206e1d241cbf91 3
+.github/workflows/dco.yml
+  s_7409b4074de513::t_40e5831308f34b 1-142
+web/src/Command/EncryptionAuditCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Support/ReportGuideTest.php
+  s_7409b4074de513::t_784bdfbb5bcc6c 3
+web/translations/messages.es.yaml
+  s_7409b4074de513::t_fedfd014e001d5 1720,2203
+  s_7409b4074de513::t_f649be4f416e7b 1,62,64-66,265,308-310,315,317,321-322,324-325,383,409-410,414-417,419-420,422-424,427-428,430-440,449,454,461,615,2160-2164,3650
+  s_7409b4074de513::t_ea40933ba14bf5 63,323,425,429
+  s_7409b4074de513::t_9c550545616237 389,401,411,421
+web/migrations/Version20260802230000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/community.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Admin/AdminActionLoggerTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/ClosureExpiryService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Import/ItemUpsert.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/MapViewMode.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/edit-items/R-quality-rides.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Controller/RegionOutlinesTest.php
+  s_7409b4074de513::t_6b7698587edce3 3
+pipeline/providers/run.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Contribution/WizardMediaTest.php
+  s_7409b4074de513::t_0cea4536109a59 3
+tools/valhalla/README.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Routing/LocalePrefix.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/shell.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/fixtures/messages.en.yaml
+  s_7409b4074de513::t_6b8cd3d0c3f738 1
+web/src/Controller/SettingsController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/wizard-locate.test.cjs
+  s_7409b4074de513::t_e63ffd3c6413f5 1
+web/src/Media/Entity/MediaModerationEvent.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Community/CountryInterestTest.php
+  s_7409b4074de513::t_c82d8c1be883bd 3
+web/src/Catalog/ConfirmationStance.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260802220000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/_room_post.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Command/ImportRegionContextCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/EventSubscriber/SecurityHeadersSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Admin/UserAdminActionsTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/RouteRideTest.php
+  s_7409b4074de513::t_4dd637d1f5b0b0 3
+web/tests/Security/AnalyticsNonceTest.php
+  s_7409b4074de513::t_02cb3cdf1a821b 3
+web/tests/Catalog/BikeTypeTest.php
+  s_7409b4074de513::t_30415e4e6fc077 3
+web/templates/contribute/vote.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/TranslationDiffTest.php
+  s_7409b4074de513::t_5d6cbe137a81c5 3
+web/tests/Media/WikidataImageTest.php
+  s_7409b4074de513::t_07e18b5defa835 3
+web/src/Provider/ProviderCitations.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/MediaModerationTest.php
+  s_7409b4074de513::t_f75fcaacfcbd1c 3
+web/src/Catalog/BasemapIcons.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/ride-check.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260830010000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/osm-tags.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/config/packages/security.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/Entity/ConsentRecord.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/GoneRows.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/js/cc-dates.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Exception/EmptyTranslationException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Contribution/ValidAttributesValidator.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Security/CspTest.php
+  s_7409b4074de513::t_a7d15b037e8e59 3
+pipeline/tests/test_parse.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/DecisionServiceInvalidateOrderTest.php
+  s_7409b4074de513::t_ccfa21566a8fed 3
+web/src/Catalog/RiderPseudonym.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/js/a11y.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/DeepL/DeepLAvailability.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/JoinCountryController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/i18n.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+atlas/demo/regions.html
+  s_7409b4074de513::t_11e359ec025473 7,89,95,102-103
+  s_7409b4074de513::t_b077c2423d2e55 6,14,85
+  s_7409b4074de513::t_87ff004fff67a6 108
+web/src/Catalog/Entity/Region.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/security/check_email.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/RouteModerationServiceTest.php
+  s_7409b4074de513::t_2aebae93aef6e3 3
+web/tests/Moderation/ShapeIsNeverTextTest.php
+  s_7409b4074de513::t_7ce6f13b51e829 3
+atlas/demo/contributors.html
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,53
+  s_7409b4074de513::t_87ff004fff67a6 80
+  s_7409b4074de513::t_f8c32966971207 7,17,25,59,65,82
+web/migrations/Version20260906180000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Repository/AdminActionLogRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/admin/_pager.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/pages/known_issues.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Doctrine/EncryptedStringTypeTest.php
+  s_7409b4074de513::t_8efd01f437224a 3
+web/migrations/Version20260719120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Service/ResetPasswordCleanupHook.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/edit-items/O-where-to-sleep.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/ItemEvidence.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/units.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/moderate/bugs.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/config/packages/test/services.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/EventSubscriber/MarkStripResponseSubscriber.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/ProposalServiceTest.php
+  s_7409b4074de513::t_a801c6a30c9145 3
+web/tests/Catalog/BackfillAttributesCommandTest.php
+  s_7409b4074de513::t_186d429072de54 3
+web/src/Command/ExpireClosuresCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260910180000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/profile.html
+  s_7409b4074de513::t_87ff004fff67a6 141
+  s_7409b4074de513::t_b077c2423d2e55 6-7,16-17,22,24,111,159
+  s_7409b4074de513::t_11e359ec025473 115,135
+web/tests/Catalog/LinkVerdictStoreTest.php
+  s_7409b4074de513::t_e52ef7577a78fa 3
+web/assets/map/scout-review.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/moderate_routes/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wikimedia/prescreen_seeded.py
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/tests/Coverage/CoverageCountTest.php
+  s_7409b4074de513::t_dba0ed06425e94 3
+pipeline/tests/test_surface.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Support/ScreenshotRejected.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/translations.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/security-architecture.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/translations.md
+  s_7409b4074de513::t_bc5e3b99f99ddc 802-820,829-837,880-881
+  s_7409b4074de513::t_da0bf0dc7600de 667,669-675,679-682,685-690,700-707,727-800
+  s_7409b4074de513::t_26ddf55b05f762 699,726,801
+  s_7409b4074de513::t_93f694c3eb1e3d 8
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_3a745ce3916cbe 71-75,143,291-294,371-372,719-725,913,1048-1049,1056,1084-1086,1174-1175,1207-1209
+  s_7409b4074de513::t_96b10bf9fafb7a 3,79,112,132,139,141,150,171,184,320,336,356-357,366,378-379,626,1187,1190-1192,1199
+  s_7409b4074de513::t_01e614b2f01c83 249,256-260,263,273-276
+  s_7409b4074de513::t_4bd7303ae0cade 373-374,916-917,1051-1053
+  s_7409b4074de513::t_6decae10c07dca 691-698
+  s_7409b4074de513::t_3edb81d37930cf 914-915,1050
+web/src/Pagination/PageSize.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/climb-elevation.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Auth/NavAuthTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/MediaDisposalService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Security/AccessControlBackstopTest.php
+  s_7409b4074de513::t_81c5bb2b6b4727 3
+web/src/Coverage/RoutesManifest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Command/DedupePlacesCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Blog/Entity/BlogPost.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Security/EmailVerifier.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/map/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Coverage/CoverageQueryTest.php
+  s_7409b4074de513::t_3b68f2ffe7cac3 3
+web/tests/Form/CatalogFieldConstraintsTest.php
+  s_7409b4074de513::t_108a7ebe2dc66e 3
+web/tests/Controller/ScoutPageTest.php
+  s_7409b4074de513::t_cf34e378a44f87 3
+web/src/Catalog/CustodyTier.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Admin/DashboardStatsTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/partials/_kind_icon.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Admin/UserAdminServiceTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+.github/workflows/reuse.yml
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_07b224efb8a509 11-13,15
+  s_7409b4074de513::t_26c7bb568633d1 14
+web/tests/Catalog/RegionRegistryProviderTest.php
+  s_7409b4074de513::t_c4272520fd0fb3 3
+web/tests/Catalog/CatalogFormRegistryTest.php
+  s_7409b4074de513::t_2b09b6b8dda212 3
+web/templates/security/reset_password.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Community/RouteRideItTest.php
+  s_7409b4074de513::t_5371a45388a308 3
+web/tests/Media/CommonsFileTest.php
+  s_7409b4074de513::t_6d35b3c76e95f1 3
+web/src/Support/BugSort.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/quicknav.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Exception/KeyNotFoundException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/RouteSuggestionReason.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/TranslateController.php
+  s_7409b4074de513::t_777ac7fdea9bf8 638-639
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Command/LinkOsmCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Command/ModerationGcCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/ModerateRegionsController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Service/AdminActionLogger.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/js/form-autosubmit.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/MediaTakedownEndpointTest.php
+  s_7409b4074de513::t_f4038a7a5e266f 3
+web/templates/admin/curator_applications.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Form/ChangePasswordFormType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/MediaEscalationService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/TownControllerTest.php
+  s_7409b4074de513::t_ff351fd1aa50a1 3
+web/tests/Auth/DisplayNameValidationTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/security/2fa_unavailable.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Twig/TypeIconExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Messaging/BulbTest.php
+  s_7409b4074de513::t_2d66a9335771cf 3
+web/tests/Controller/RegionsPagesTest.php
+  s_7409b4074de513::t_d16270c70e92bc 3
+web/src/Catalog/CuratedReadiness.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/Entity/BugScreenshot.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/ItemTypeTest.php
+  s_7409b4074de513::t_768013d79fc739 3
+docs/specs/public-api.md
+  s_7409b4074de513::t_f9bde51f7d1a33 3,30,35,37,41,51,65-66,95,106-107,135-136,149,154,188,199,203,213,221,257,263,286,294,307,310-311,315,322,350,364
+  s_7409b4074de513::t_1f4f6a76d680e2 19
+  s_7409b4074de513::t_3edb81d37930cf 38-39,99-100
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Community/RouteSuggestFlowTest.php
+  s_7409b4074de513::t_dbdefc7fd74ee3 3
+web/src/Catalog/SurfaceProfiler.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260816210000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/MarkerCodec.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/World/SubdivisionParentDataTest.php
+  s_7409b4074de513::t_4fd8a655c9e43e 3
+web/assets/map/routes-tiles.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/KindIconsTest.php
+  s_7409b4074de513::t_b92819393a8ae8 3
+web/migrations/Version20260714210000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/MapThemeController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Api/PublicItemsTrustEnvelopeTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Contribution/ValidAttributes.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/privacy.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_40ae3a0dbf6849 319
+web/src/Media/Scan/VirusScannerInterface.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260908160000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/ExportEnglishOverlaysCommandTest.php
+  s_7409b4074de513::t_ea509257c246a1 3
+web/src/World/Entity/Subdivision.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Auth/LocalePreferenceTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/ModerateTownControllerTest.php
+  s_7409b4074de513::t_9c7cb151bc239e 3
+web/src/Settings/SettingsProviderInterface.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/ElevationController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/ImproveBindingTest.php
+  s_7409b4074de513::t_b6a48f85b50fc2 3
+web/templates/partials/_lang_menu.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/scope-chips.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Entity/RecommendedRoute.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/DeepLQuotaExceededException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/RegionAdjacencyTest.php
+  s_7409b4074de513::t_1404a829c829c8 3
+atlas/demo/edit-items.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/MarkerCodecTest.php
+  s_7409b4074de513::t_fde558d13337a8 3
+web/tests/Service/BaseLocationServiceTest.php
+  s_7409b4074de513::t_07c7df57e7b34d 3
+web/assets/pages/desktop-default-view.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/media/photo.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/system-configuration.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_account_chip.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/EvidenceRung.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+wiki/contributing.md
+  s_7409b4074de513::t_8033356c10653c 52-66,94-100
+web/tests/Catalog/SurfaceProfilerTest.php
+  s_7409b4074de513::t_2fff499bd71d8e 3
+web/src/Community/ItemConfirmationService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Entity/Submission.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/support/report_answer.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wallonia/harvest_poi.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/templates/contribute/_receipt_mark.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/RouteQueueTest.php
+  s_7409b4074de513::t_89ea0a63b72a4b 3
+web/src/Catalog/ClosureLifetime.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/AddPlaceFlowTest.php
+  s_7409b4074de513::t_705f0b79609a30 3
+web/src/Controller/ModerateController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/contribute.html
+  s_7409b4074de513::t_f8c32966971207 17,66,96,100-101,122
+  s_7409b4074de513::t_b077c2423d2e55 6-7,16,22,24,92,103,113
+  s_7409b4074de513::t_87ff004fff67a6 133
+web/templates/partials/_scout_logo.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/mkdocs_github_links.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+pipeline/tests/test_extract.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_type_icon.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/MediaReportEndpointTest.php
+  s_7409b4074de513::t_2179d8409b8703 3
+web/src/Catalog/ConfirmationFreshness.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tools/check-translations.sh
+  s_7409b4074de513::t_cf503eee09378c 2
+web/tests/js/skip-link-target.test.cjs
+  s_7409b4074de513::t_de0b0cb4ff84ff 1
+web/src/Catalog/RouteRankingService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/NewItemShowsItsValuesTest.php
+  s_7409b4074de513::t_5a823160c79e55 3
+web/tests/js/surface-quality-unrecorded.test.cjs
+  s_7409b4074de513::t_1bb801f5ea2b10 1
+web/src/Media/MediaTakedownCategory.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/MediaDeletionHook.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/OsmUnansweredException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+.github/workflows/secret-scan.yml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Coverage/RoutesManifestTest.php
+  s_7409b4074de513::t_741f06be686672 3
+web/src/Media/AlertRecipients.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Twig/MessageBadgeExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/Admin/ResetPasswordRequestCrudController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/ModerationScopeProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/browser/map-smoke.js
+  s_7409b4074de513::t_09c4e8a9183fb9 1
+web/assets/js/deepl-draft.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Translation/ModerateTranslationsTest.php
+  s_7409b4074de513::t_5303b79b47ab06 3
+tools/check-course-data.py
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/src/Twig/UnitDisplayExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/EscalationAlert.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Validator/PlainDisplayNameValidatorTest.php
+  s_7409b4074de513::t_746b1726423b3d 3
+web/templates/pages/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/Command/MediaResyncCreditsCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Provider/ProviderCreditsTest.php
+  s_7409b4074de513::t_baeb57b095daa1 3
+web/tests/Community/RouteVoteItTest.php
+  s_7409b4074de513::t_f2555b09d0a430 3
+web/tests/Community/RiderVerificationThresholdTest.php
+  s_7409b4074de513::t_34d03f8ca2bdc2 3
+web/tests/js/kind-icons.test.cjs
+  s_7409b4074de513::t_ecef9bf2babef6 1
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_7409b4074de513::t_862dbb9cb08043 3
+web/migrations/Version20260802110000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/app/main.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Elevation/ElevationClient.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/Commons/CommonsUnavailable.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+.github/workflows/ci-wiki.yml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/CoverageRetirement.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Auth/AnonymousMailFloodTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/scout/garmin-screen.svg
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Support/Entity/BugReport.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Smoke/ImportMapOrderTest.php
+  s_7409b4074de513::t_6e319efc5ae47a 3
+web/src/Moderation/OutOfScopeException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/TranslateMineTest.php
+  s_7409b4074de513::t_b548dae3432592 3
+web/templates/pages/about.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260802010000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/security/2fa_setup.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/js/catalogue-form.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Command/RouteSurfacesCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/ConsentService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/Command/MediaBackfillStorageBucketCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/pages/country-globe.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/ProfileController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/water-drawer-provider.test.cjs
+  s_7409b4074de513::t_37dcdb0d94b4ed 1
+web/tests/js/fixtures/region-outlines.cjs
+  s_7409b4074de513::t_4c4f7d8dc0970e 1
+web/templates/partials/_bug_fab.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/support/markdown-toolbar.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+atlas/demo/races.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Moderation/MovedPinLinksOsmTest.php
+  s_7409b4074de513::t_95473c5aa5cb98 3
+web/src/Settings/SystemSettings.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Entity/CatalogFinding.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Command/SyncTranslationsCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/Admin/UserCrudController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/reports.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wallonia/tests/test_surface_contract.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/tests/Moderation/ModerationScopeProviderTest.php
+  s_7409b4074de513::t_9a21ea1c0277c5 3
+web/assets/contribute/editor-base.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_7409b4074de513::t_8d3da188626e1a 3
+pipeline/providers/__init__.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/ClosureLifetimeTest.php
+  s_7409b4074de513::t_8b0f70eb455839 3
+web/tests/js/emoji-font-stack.test.cjs
+  s_7409b4074de513::t_851eee0f645dd5 1
+web/assets/js/register-validate.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/CoverageDensityClassesTest.php
+  s_7409b4074de513::t_38e8b261e9b897 3
+web/tests/Smoke/ApiReferenceTest.php
+  s_7409b4074de513::t_60ae12179b1d99 3
+web/tests/Controller/CoveragePageTest.php
+  s_7409b4074de513::t_ade470d76a7f9d 3
+web/assets/admin_confirm.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/EvidenceRungTest.php
+  s_7409b4074de513::t_158a1986b8c81e 3
+web/tests/Moderation/ModerationServiceTest.php
+  s_7409b4074de513::t_477ebcf42c5871 3
+web/src/Translation/TranslateMode.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/wikimedia/commons_photo.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/templates/moderate/_queue_item.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/pages/developers_api.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Api/CategoryTableSyncTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/ProposeRouteController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/security/2fa_login.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/rail-shell.test.cjs
+  s_7409b4074de513::t_cecd4e23d4f2ca 1
+web/src/Moderation/Entity/ModeratorArea.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260907233000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Admin/AdminReadOnlyCrudsTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/credits/check_credits.py
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/tests/Moderation/DecisionMessagesTest.php
+  s_7409b4074de513::t_f95137c1c49543 3
+web/src/Media/Command/LocaliseCommonsPhotosCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/bug_detail.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_7409b4074de513::t_4c8b4ccb985f40 3
+web/src/Account/DateFormat.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/wallonia/pivot.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/src/Translation/Exception/CatalogueKeyNotFoundException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Messaging/CuratorRoomPin.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/Gpx/GpxWriterTest.php
+  s_7409b4074de513::t_8f32686a41a1d9 3
+web/src/Media/Commons/CommonsPhotoState.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/data-source-register.md
+  s_7409b4074de513::t_d179d2943bb166 48
+  s_7409b4074de513::t_15ac5d7eff1e46 16,20-21,29-30,51-53,56,61,63,66,69,79,88,91,108,131,141,158,160,162,172,174,186-188,190,194,201,208-209,217,225,234,254-257,259,263,269,273,286
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_1f4f6a76d680e2 40-42,45-47
+atlas/demo/analytics.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Account/TimeFormat.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260825110000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+wiki/data-catalog.md
+  s_7409b4074de513::t_9d61ff0b8ed15e 3,5,7,10,13,17-24,36,40,68,70,74,92,95,120,139,146,149,153,171,178,181,192,194,204,206,233,425,428,432,442-457,460,475,479,481,486,489
+web/tools/check-spdx.sh
+  s_7409b4074de513::t_26c7bb568633d1 88
+  s_7409b4074de513::t_d0bacfb77a0131 2
+  s_7409b4074de513::t_78d6eb16c967a9 38-49
+  s_7409b4074de513::t_c319678cb3b6d0 3-17,20-24,26-37,50-63,65-87,89-99
+  s_7409b4074de513::t_3d3d36b2893f0a 25
+web/migrations/Version20260816120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260910120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/RoadType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/ReportLinkResolver.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/js/account.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Controller/ElevationControllerTest.php
+  s_7409b4074de513::t_8a8a2c9270ec7d 3
+web/templates/admin/moderation_activity.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/config/packages/messenger.yaml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/share-links.test.mjs
+  s_7409b4074de513::t_cb568537e3659d 1
+web/src/Messaging/Entity/CuratorRoomVisit.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/SegmentShapeReviewTest.php
+  s_7409b4074de513::t_16a4d712534e0e 3
+web/tests/Account/UpdatesSubscriptionTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/_home_scout.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Twig/DateDisplayExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/MissingQuestionException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Service/UserDeletionService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/translate/mine.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Catalog/GeometryTypeRegionTest.php
+  s_7409b4074de513::t_b71708b35744b3 3
+web/src/Catalog/CatalogProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Provider/Exception/ProviderRuleException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/unsubscribed.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Support/ContentReportTest.php
+  s_7409b4074de513::t_6d5c56ec6fd9d0 3
+web/tests/Twig/DateDisplayExtensionTest.php
+  s_7409b4074de513::t_7ab759c6924044 3
+web/tests/Translation/SyncTranslationsCommandTest.php
+  s_7409b4074de513::t_92347bad2d78d7 3
+web/src/Catalog/LocationMode.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260801160000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Smoke/ChangeHistoryEndpointTest.php
+  s_7409b4074de513::t_bbdb174ff6c22c 3
+web/src/Support/ReportTarget.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260908163000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Community/InvalidNoteException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Command/Coverage/RecountCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/links.test.mjs
+  s_7409b4074de513::t_c4346229ceb612 1
+web/src/Coverage/SurfaceManifest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/Exception/SelfReviewException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/RouteProposalServiceTest.php
+  s_7409b4074de513::t_f811a82c6a1f2d 3
+web/assets/settings/base-location.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Scout/ScoutIntakeTest.php
+  s_7409b4074de513::t_f1234c511a5f28 3
+web/src/Contribution/Gpx/GpxWriter.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/RegionLead.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/check-wiki-code-drift.py
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/src/Translation/TranslationLimits.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/ContributeController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/SupportMailer.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/ModerateScopeGuardTest.php
+  s_7409b4074de513::t_e59d9928309833 3
+docs/specs/osm-data-architecture.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_a5e925dc3042f7 18,23,30,32-33,45,61,186,188,217,222,228,242,260,264,267-268,272,275-277,293,360,387-388,411-412,418,424,430-431,438-439
+  s_7409b4074de513::t_9fc5a344d2c40c 79
+  s_7409b4074de513::t_3d7b8fd2a6ee6d 96-101
+  s_7409b4074de513::t_151ad5c70836e3 76-78,85-95,85-93,94-95,102-106,110-115,118-149,152,158-165
+  s_7409b4074de513::t_6693d5075565df 80,82-84
+  s_7409b4074de513::t_981ab2338f8920 81,116-117
+  s_7409b4074de513::t_703d6e4f1927ce 107-109,193-194,377-379
+  s_7409b4074de513::t_30a79ad137036d 380-382
+web/tests/Media/ConsentEndpointTest.php
+  s_7409b4074de513::t_8085f68f0a3cc4 3
+web/templates/pages/changelog.atom.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260801120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Messaging/Entity/UserMessage.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Command/LinkOsmAnswersTest.php
+  s_7409b4074de513::t_e6897e63152ba8 3
+web/assets/map/duplicate-resolve.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+.github/PULL_REQUEST_TEMPLATE.md
+  s_7409b4074de513::t_593a83f3b8142d 13-16,24
+  s_7409b4074de513::t_a49ab77a3d0d5e 25-29
+tools/wallonia/tests/test_route_surfaces.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/src/Controller/ModerateBugsController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/ChangeValueTest.php
+  s_7409b4074de513::t_072bfde4a3367e 3
+web/assets/map/theme.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Catalog/Command/SeedClimbsCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/styles/map.css
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/pages/regions-map.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Routing/ActiveLocalesTest.php
+  s_7409b4074de513::t_7a7791d71837cb 3
+web/src/Service/GuardrailViolationException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Support/ContactTopic.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260828200000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/ContributorWallProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Smoke/RoadmapChangelogTest.php
+  s_7409b4074de513::t_e5da1a4471a901 3
+web/assets/pages/regions-typeahead.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/profile/public.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Provider/ProviderHarvestTest.php
+  s_7409b4074de513::t_e462421e134726 3
+web/.env
+  s_7409b4074de513::t_777ac7fdea9bf8 170-173
+web/migrations/Version20260808090000.php
+  s_7409b4074de513::t_830d65a0cea89c 5
+web/tests/Moderation/OsmGateTest.php
+  s_7409b4074de513::t_6501fde2bb3546 3
+web/assets/map/picking.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/moderate_providers/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/security/reset_password_check_email.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Security/TwoFactorPolicyTest.php
+  s_7409b4074de513::t_f6f37424b8e1b3 3
+web/src/Messaging/MessageCategory.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/MapRegionBoundaryTest.php
+  s_7409b4074de513::t_36c0d45e145e32 3
+web/src/Catalog/Import/OsmLinker.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/OsmConfirmController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/SubmissionDraftValidationTest.php
+  s_7409b4074de513::t_209c02e8c08de9 3
+tools/wallonia/routes.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/src/Catalog/RegionBoundaryProvider.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/UrgentWithholdBreaker.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/SurfaceVocabulary.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/Admin/BlogPostCrudController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/elevation/to-hgt.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/tests/js/scout-segments.test.mjs
+  s_7409b4074de513::t_3547644812301e 1
+tools/valhalla/run-continents.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/templates/partials/_earth_globe.svg.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Api/V1/Dto/ItemFeature.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/corrections.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/pages/terms.html.twig
+  s_7409b4074de513::t_093dedd214d4ab 70,77
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/migrations/Version20260629001745.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/Message/FetchCommonsPhoto.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/view-mode.test.cjs
+  s_7409b4074de513::t_3d936e5d69cf4e 1
+web/tests/Account/DataExportTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Controller/TwoFactorController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/moderate/town.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+docs/specs/media-storage-architecture.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/.php-cs-fixer.dist.php
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/templates/partials/_head.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_auth_i18n.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/ApiController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Moderation/RelativeTime.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Smoke/LocalizedRoutingTest.php
+  s_7409b4074de513::t_a7aa04b9dc032e 3
+web/tests/Community/OsmUserVerifierTest.php
+  s_7409b4074de513::t_00b0dcf28bef38 3
+web/src/Translation/OverlayTranslator.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/CatalogueSync.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/check-translations-precommit.sh
+  s_7409b4074de513::t_830d65a0cea89c 2
+web/src/Support/Entity/ContactMessage.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/World/Command/ScaffoldRegionsCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/account-and-auth.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+  s_7409b4074de513::t_97b536962d1b4b 1196
+  s_7409b4074de513::t_12a833d4b97387 1193-1195
+web/src/Security/Csp/CspNonce.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+.github/workflows/ci-tools.yml
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/support/pow.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/js/filter-tally.test.cjs
+  s_7409b4074de513::t_f899f40212185a 1
+web/src/Account/UpdatesConsent.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Translation/DeepLDevToolTest.php
+  s_7409b4074de513::t_2f729b26387da6 3
+  s_7409b4074de513::t_5c81d2051a7033 109-112,715-718,996-999
+web/tests/Catalog/CuratedReadinessTest.php
+  s_7409b4074de513::t_7257c1bbcf2d6b 3
+web/tests/Moderation/SubmissionQueueTest.php
+  s_7409b4074de513::t_5aa7f388d92fbb 3
+web/src/Support/BugArea.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Form/RouteDecisionType.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+pipeline/coverage/run.py
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/partials/_basemap_icon.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Exception/CatalogueProtectedKeyException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+wiki/manifesto.md
+  s_7409b4074de513::t_95a74a88903d42 50-54
+web/templates/security/register.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Twig/LocaleExtension.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/RideCheckServiceTest.php
+  s_7409b4074de513::t_578837cd6932f9 3
+web/tests/Catalog/CoverageContractTest.php
+  s_7409b4074de513::t_ab5011e16f89e5 3
+web/tests/Community/PublicNoteFilterTest.php
+  s_7409b4074de513::t_f486ff2024eedd 3
+web/tests/Catalog/SurfaceConfirmClassContractTest.php
+  s_7409b4074de513::t_8808616b165b6a 3
+web/tests/Media/MediaDeskPagingTest.php
+  s_7409b4074de513::t_7331df0e652398 3
+web/tests/Catalog/DuplicateGuardTest.php
+  s_7409b4074de513::t_f23f2312ce1459 3
+web/tests/Support/BugReportTest.php
+  s_7409b4074de513::t_4f5fa54fb72d5e 3
+web/tests/Support/OrganisationIdentityTest.php
+  s_7409b4074de513::t_d56960083c611f 3
+web/tests/Auth/RiderPreferencesTest.php
+  s_7409b4074de513::t_5dbbd4195ed609 3
+web/migrations/Version20260904140000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/MediaPersistenceTest.php
+  s_7409b4074de513::t_a8831353e0e61a 3
+TRADEMARK.md
+  s_7409b4074de513::t_b064af4950b6ed 1-131
+web/tests/Translation/TranslationPersistenceTest.php
+  s_7409b4074de513::t_74551650d4792e 3
+web/templates/moderate/takedowns.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Contribution/Gpx/GpxParser.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/regions.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/docker/imagemagick-policy.xml
+  s_7409b4074de513::t_830d65a0cea89c 15
+web/templates/admin/dashboard.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Media/PhotoAltGallerySyncTest.php
+  s_7409b4074de513::t_b9eb66729e3e17 3
+web/tests/Catalog/ManualSourceTest.php
+  s_7409b4074de513::t_5a3b7fd5f2d9f2 3
+web/tests/Contribution/ClimbGeometryTest.php
+  s_7409b4074de513::t_4b08c48d355395 3
+web/tests/Contribution/RouteProposalPersistenceTest.php
+  s_7409b4074de513::t_cf6378c64130da 3
+web/src/Translation/Exception/DeepLAuthenticationException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Command/BackfillAttributesCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/RouteScopeGuardTest.php
+  s_7409b4074de513::t_ed00230cce9f57 3
+tools/wallonia/tests/test_climbs.py
+  s_7409b4074de513::t_234a7b9f77f6ec 1
+web/tests/Admin/SystemConfigPageTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/catalog.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/pages/_home_how.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Community/CuratorApplicationException.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260802190000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Controller/MapWitnessCutoffTest.php
+  s_7409b4074de513::t_ed61ce3018f140 3
+web/tests/js/surface-is-an-overlay.test.cjs
+  s_7409b4074de513::t_3272de36cfff8d 1
+web/tests/Pagination/PagerTest.php
+  s_7409b4074de513::t_c6d634b60d8c17 3
+web/src/Support/ScreenshotStore.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Moderation/RulebookPdfTest.php
+  s_7409b4074de513::t_bfa17832c66809 3
+web/migrations/Version20260826120000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Auth/DisplayNameSharingTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/surface-classes.test.cjs
+  s_7409b4074de513::t_43f982c453770f 1
+web/src/Controller/ModerateRoomController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/composer.json
+  s_7409b4074de513::t_6fd4c7eaab5f5b 5
+web/tests/Moderation/ModerateDataDeskTest.php
+  s_7409b4074de513::t_fa1048c2b4169c 3
+web/src/Settings/SettingsRegistry.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/RouteRankingServiceTest.php
+  s_7409b4074de513::t_5a6d5ba8c4bc5a 3
+wiki/stylesheets/extra.css
+  s_7409b4074de513::t_b174623108c4c0 1
+web/src/Contribution/RegionResolver.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/Import/NameKey.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Auth/ProfileDashboardTest.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/.env.test
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Support/Entity/ReleaseTag.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/js/wizard-addpoint.test.cjs
+  s_7409b4074de513::t_a6d3e9750182e1 1
+web/assets/js/version.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Command/CreateUserCommand.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260708131000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/ImportRoutesHeatTest.php
+  s_7409b4074de513::t_6533921bd52580 3
+web/tests/js/personal-note.test.cjs
+  s_7409b4074de513::t_8a45d4b8ef43af 1
+web/tests/Media/UrgentWithholdAlertTest.php
+  s_7409b4074de513::t_efd0908e8e5b0e 3
+web/src/Account/RowsPerPage.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Repository/UserRepository.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260812200000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Catalog/ImportItemLinksCommandTest.php
+  s_7409b4074de513::t_d01f68d3f4330a 3
+web/templates/settings/index.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+tools/wikimedia/climb_candidates.py
+  s_7409b4074de513::t_234a7b9f77f6ec 2
+web/tests/Smoke/CatalogEndpointTest.php
+  s_7409b4074de513::t_21a122c0ec71e9 3
+web/src/Contribution/Gpx/GpxTrack.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Contribution/ContributeHubTest.php
+  s_7409b4074de513::t_70aa8ae80ee897 3
+web/src/Catalog/ServiceKind.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Translation/ProposalService.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/templates/pages/_home_curation.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Controller/RouteGpxController.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/coverage.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/templates/emails/dormancy_notice.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/tests/Service/ServerErrorAlertSubscriberTest.php
+  s_7409b4074de513::t_0ca71204bfdc72 3
+web/src/Translation/OverlayCatalogue.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+docs/specs/edit-items/D-bike-services.md
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Messaging/CuratorRoom.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+atlas/demo/coverage.html
+  s_7409b4074de513::t_b077c2423d2e55 6,16,22,24,46
+  s_7409b4074de513::t_f8c32966971207 7,17,25,49,54,76,78-79,82
+  s_7409b4074de513::t_87ff004fff67a6 85
+web/templates/moderate/markers.html.twig
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/support/report-grounds.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Entity/TranslationProposal.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+tools/check-wiki-spdx.sh
+  s_7409b4074de513::t_26c7bb568633d1 5-10
+  s_7409b4074de513::t_830d65a0cea89c 2
+  s_7409b4074de513::t_933b36312783ab 15,19
+web/assets/js/password-toggle.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/assets/map/surface-tiles.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Translation/Entity/TranslationOverlay.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/migrations/Version20260802235000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Catalog/CatalogFormRegistry.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/assets/map/catalog-load.js
+  s_7409b4074de513::t_830d65a0cea89c 1
+web/src/Media/GpsDistance.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/src/Media/ProcessedPhoto.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+web/tests/Media/PhotoAltSuggestionTest.php
+  s_7409b4074de513::t_1b11b3ec14f777 3
+web/migrations/Version20260808220000.php
+  s_7409b4074de513::t_830d65a0cea89c 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "139b4a6ef94d5284a6af060a20db853e42a11f8c",
+  "prompts": {},
+  "sessions": {
+    "s_0f0d3ca1895aee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4dcab164-5d71-4c41-b932-ab0d05c4e71e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_45ec9b3f519700": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42c83203-4754-4e8f-b14b-28903077507b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_7409b4074de513": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "69ae370b-4fbc-4724-aa07-aa4102183b4d",
+        "model": "claude-opus-5"
+      },
+      "human_author": null
+    }
+  }
+}

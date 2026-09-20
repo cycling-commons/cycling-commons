@@ -1,0 +1,22 @@
+web/src/Media/Scan/ClamAvScanner.php
+  s_dd35dcc1b6eafa::t_325a68f64541b0 104
+  s_dd35dcc1b6eafa::t_375da4820c6b5e 99-102,106-110
+web/src/Catalog/Command/ImportItemLinksCommand.php
+  s_dd35dcc1b6eafa::t_375da4820c6b5e 85-90,92-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "906edca63f0152be4c1b5b983f83e11c64380326",
+  "prompts": {},
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

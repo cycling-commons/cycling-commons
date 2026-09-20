@@ -1,0 +1,48 @@
+web/src/Catalog/CatalogProvider.php
+  s_4e536eec984e8d::t_ea066c8aef62e2 9
+  s_4e536eec984e8d::t_1b81ca6538bf34 109-113,130
+  s_4e536eec984e8d::t_f422b29f0b165f 90-108,114-129,131-134
+  s_4e536eec984e8d::t_196cbbfbb20100 390-402
+  s_4e536eec984e8d::t_bad3fe0633aee4 30-33
+  s_4e536eec984e8d::t_7eed19eb820425 89
+web/tests/Catalog/CatalogProviderTest.php
+  s_4e536eec984e8d::t_d89e3edebda4eb 481-482,512-542,544,547-554
+  s_4e536eec984e8d::t_bd43a01b74ea2c 483-511
+  s_4e536eec984e8d::t_34e9140da3fc31 543,545-546
+web/templates/map/index.html.twig
+  s_4e536eec984e8d::t_e0128e50e36897 422-426
+web/src/Catalog/SurfaceVocabulary.php
+  s_4e536eec984e8d::t_c42e4e08c54dfc 106-133
+docs/specs/map-and-search.md
+  s_4e536eec984e8d::t_6467138133dc5f 118
+  s_4e536eec984e8d::t_72ba4a2e39b8cd 126-137
+docs/specs/edit-items/A-road-surface.md
+  s_4e536eec984e8d::t_c7913faa0e4d71 368-378
+web/src/Controller/MapController.php
+  s_4e536eec984e8d::t_45cad878168c8c 60,62
+  s_4e536eec984e8d::t_1f036d6d8095c8 66
+  s_4e536eec984e8d::t_d56b7f354492a3 154-158
+web/tests/Smoke/MapPageTest.php
+  s_4e536eec984e8d::t_0b98ea6917e760 92-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c65961f47aa368a67437c1f902471f22e8f20a57",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e536eec984e8d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef3615e2-4e64-4afe-8b18-be74e8cc28ce",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

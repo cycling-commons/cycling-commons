@@ -1,0 +1,19 @@
+web/tests/Translation/OverlayTranslatorTest.php
+  s_993d1e83b70cce::t_3bc0e8ec2db562 29-30,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b0fa417ba6997d430f1cd1c705f0a96abb91a6fd",
+  "prompts": {},
+  "sessions": {
+    "s_993d1e83b70cce": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "23ec2706-9d89-4ee6-bb5e-de47f7de66c1",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

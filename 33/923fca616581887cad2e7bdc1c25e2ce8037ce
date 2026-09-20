@@ -1,0 +1,47 @@
+wiki/developers/gis-beyond/reprojection.md
+  s_edba5d11ab4970::t_46722cc13acfa2 92-93
+wiki/developers/gis-beyond/geocoding.md
+  s_edba5d11ab4970::t_46722cc13acfa2 77-78
+wiki/developers/gis/on-screen.md
+  s_edba5d11ab4970::t_46722cc13acfa2 58-59,191-192
+wiki/developers/gis/making-it-fast.md
+  s_edba5d11ab4970::t_46722cc13acfa2 170
+wiki/developers/data-ops/elevation-tiles.md
+  s_edba5d11ab4970::t_46722cc13acfa2 7-8,77-78,458-459
+wiki/developers/gis/spatial-questions.md
+  s_edba5d11ab4970::t_46722cc13acfa2 78,254-256,316-317
+wiki/contributing.md
+  s_edba5d11ab4970::t_46722cc13acfa2 53-54
+wiki/developers/gis/metres-vs-degrees.md
+  s_edba5d11ab4970::t_46722cc13acfa2 18,20-21,149
+wiki/developers/gis-beyond/elevation.md
+  s_edba5d11ab4970::t_46722cc13acfa2 52-54,143,156
+wiki/developers/data-ops/onboarding-a-country.md
+  s_edba5d11ab4970::t_46722cc13acfa2 292
+wiki/developers/gis-beyond/routing.md
+  s_edba5d11ab4970::t_46722cc13acfa2 13-14
+wiki/developers/gis/coordinates.md
+  s_edba5d11ab4970::t_46722cc13acfa2 15,36-37,75
+wiki/developers/gis/osm-to-database.md
+  s_edba5d11ab4970::t_46722cc13acfa2 320,329-330
+wiki/data-priority.md
+  s_edba5d11ab4970::t_46722cc13acfa2 6-7
+wiki/developers/gis-beyond/edge-cases.md
+  s_edba5d11ab4970::t_46722cc13acfa2 15,17-19,170,216-218,254-255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "33923fca616581887cad2e7bdc1c25e2ce8037ce",
+  "prompts": {},
+  "sessions": {
+    "s_edba5d11ab4970": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "35efbaa2-913e-4688-9847-3f17b8efbc3a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

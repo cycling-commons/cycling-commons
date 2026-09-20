@@ -1,0 +1,16 @@
+web/.env.staging
+  h_fb5318cde6cf17 14
+web/.env.prod
+  h_fb5318cde6cf17 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "1cbaf598675937f4ea754c525b6a3991ade3b0aa",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,56 @@
+web/translations/messages.en.yaml
+  s_4e536eec984e8d::t_551d29276c268c 1535,1906-1907
+docs/specs/edit-items/A-road-surface.md
+  s_4e536eec984e8d::t_def13172d6287b 139-144,155-156
+web/translations/messages.nl.yaml
+  s_4e536eec984e8d::t_551d29276c268c 1579-1580,1945
+web/assets/contribute/improve.js
+  s_4e536eec984e8d::t_7be5d2731013cc 890-893
+  s_4e536eec984e8d::t_d88cdea4ebc94a 478,782,854
+web/translations/messages.es.yaml
+  s_4e536eec984e8d::t_551d29276c268c 1545,1919-1920
+web/assets/map/icons.js
+  s_4e536eec984e8d::t_9866c5192b5c3b 60-64
+web/templates/contribute/improve.html.twig
+  s_4e536eec984e8d::t_209a74f4349ef0 43-46
+  s_4e536eec984e8d::t_61e0f8ee89fef1 500-503,505,511
+web/assets/map/panels.js
+  s_4e536eec984e8d::t_af396fa355c9bf 36-37
+  s_4e536eec984e8d::t_dbb78d1b168b9c 66-70
+  s_4e536eec984e8d::t_8b4a3ae632149d 32
+  s_4e536eec984e8d::t_d9545d4ebe5261 116,118-127,129-135
+web/assets/map/surface-tiles.js
+  s_4e536eec984e8d::t_211710cb4da0d1 657-660,662
+  s_4e536eec984e8d::t_18a786903e5c39 264-276
+web/translations/messages.de.yaml
+  s_4e536eec984e8d::t_551d29276c268c 1582-1583,1948
+web/translations/messages.fr.yaml
+  s_4e536eec984e8d::t_551d29276c268c 1579-1580,1945
+web/templates/map/index.html.twig
+  s_4e536eec984e8d::t_bfef76e413cb42 290-296
+docs/specs/map-and-search.md
+  s_4e536eec984e8d::t_def13172d6287b 735,737-745
+web/src/Catalog/CatalogFormRegistry.php
+  s_4e536eec984e8d::t_c1fc7ac1216071 99-105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "0856223311bd004dffe0fd7dd6b7a8a2ee82f818",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e536eec984e8d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef3615e2-4e64-4afe-8b18-be74e8cc28ce",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

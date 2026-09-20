@@ -1,0 +1,98 @@
+web/.env
+  s_cfe1af103ed2ab::t_231040d4e48855 8-16
+.github/workflows/deploy-staging.yaml
+  s_cfe1af103ed2ab::t_4fe68647c3eb65 147
+  s_cfe1af103ed2ab::t_616834017ffcf8 97,106-122,124-127
+web/src/Controller/RideCheckController.php
+  s_cfe1af103ed2ab::t_de48a3957337de 12
+  s_cfe1af103ed2ab::t_d89e50a4e1bde1 44
+tools/divisions/probe_areas.py
+  s_cfe1af103ed2ab::t_bbe820ef2b7804 86
+developers/docker/compose.yaml
+  s_cfe1af103ed2ab::t_231040d4e48855 59,150
+  s_cfe1af103ed2ab::t_5794d07e0a9a2c 137-144
+docs/specs/moderation-and-contribution.md
+  s_cfe1af103ed2ab::t_f154204578462c 1364-1371
+web/tests/Auth/TwoFactorInterstitialLockdownTest.php
+  s_cfe1af103ed2ab::t_03449441765266 1-116
+tools/wikimedia/prescreen_seeded.py
+  s_cfe1af103ed2ab::t_7ccf9623691002 124-146,148,209,216-217,219,231-237,239-246,259
+web/tests/Moderation/SubmissionEscalationTest.php
+  s_cfe1af103ed2ab::t_be3d85c892250e 9,19
+tools/divisions/export_divisions.py
+  s_cfe1af103ed2ab::t_bbe820ef2b7804 123
+docs/specs/dev-environment.md
+  s_cfe1af103ed2ab::t_4f5511cc456215 95,430-458
+  s_cfe1af103ed2ab::t_1b12caf014d5b3 459
+tools/divisions/config.py
+  s_cfe1af103ed2ab::t_bbe820ef2b7804 23-43
+  s_cfe1af103ed2ab::t_05ad9f17c46908 10
+  s_cfe1af103ed2ab::t_6a42a009e5608c 11,44
+docs/specs/security-architecture.md
+  s_cfe1af103ed2ab::t_b9e3eb10640994 103
+  s_cfe1af103ed2ab::t_f154204578462c 400,450-472
+  s_d6eab02dcad899::t_a1c788f4829824 473
+web/src/Controller/RegistrationController.php
+  s_d6eab02dcad899::t_7e37577cedcb14 133
+  s_cfe1af103ed2ab::t_d89e50a4e1bde1 131,137
+  s_cfe1af103ed2ab::t_de48a3957337de 13,18
+web/config/packages/security.yaml
+  s_cfe1af103ed2ab::t_43d3465c23726f 10-16
+web/src/Doctrine/EncryptedStringType.php
+  s_cfe1af103ed2ab::t_50e4256b802421 13-29,88-124,127-129,134-139
+  s_cfe1af103ed2ab::t_a841e60e469257 140
+web/src/Security/PseudonymousKey.php
+  s_cfe1af103ed2ab::t_e2fa075efdceb9 1-54
+web/src/Controller/ResetPasswordController.php
+  s_cfe1af103ed2ab::t_de48a3957337de 12,16
+  s_cfe1af103ed2ab::t_d89e50a4e1bde1 82,88
+  s_d6eab02dcad899::t_7e37577cedcb14 84
+web/src/Command/CreateUserCommand.php
+  s_cfe1af103ed2ab::t_2bc1893c1c9af8 40,62-73
+pipeline/app/main.py
+  s_cfe1af103ed2ab::t_8699d5012a5305 37-46
+  s_cfe1af103ed2ab::t_80c0023446d7c5 9,16,36,47-51
+tools/wikimedia/climb_audit.py
+  s_cfe1af103ed2ab::t_bbe820ef2b7804 183-188,191-195,197-200
+docs/specs/account-and-auth.md
+  s_cfe1af103ed2ab::t_f154204578462c 322-341
+  s_cfe1af103ed2ab::t_b9e3eb10640994 287-290,294-315
+web/src/Media/MediaTakedownService.php
+  s_cfe1af103ed2ab::t_de48a3957337de 14
+  s_cfe1af103ed2ab::t_d89e50a4e1bde1 128,131
+.github/workflows/deploy-production.yaml
+  s_cfe1af103ed2ab::t_a435f8a68e4595 61,70-83,85
+web/src/Command/EncryptionAuditCommand.php
+  s_cfe1af103ed2ab::t_bdb3c8c61002bc 1-99
+developers/docker/.env.example
+  s_cfe1af103ed2ab::t_231040d4e48855 42-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "c1ba97f078e314654f57d35dcea1ef1cdb51eb42",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_cfe1af103ed2ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5045d54-e534-4106-88fe-6c8265de0229",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d6eab02dcad899": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5577347-6bee-425e-a6b0-d01f31e69be7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

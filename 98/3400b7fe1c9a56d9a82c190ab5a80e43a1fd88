@@ -1,0 +1,78 @@
+web/.env.prod
+  s_7e0805b9b01558::t_ef60b32dbb648b 9
+  s_7e0805b9b01558::t_6349e944f4621b 7-8,10-24
+web/.env.staging
+  s_7e0805b9b01558::t_ef60b32dbb648b 154
+  s_7e0805b9b01558::t_6349e944f4621b 152-153,155-169
+web/tests/Translation/StaleSourceWarningTest.php
+  s_7e0805b9b01558::t_3dbcb9c5a13830 12,114
+web/tests/Routing/ActiveLocalesTest.php
+  s_7e0805b9b01558::t_91ac36f9e7490e 1-13,15-58
+  s_7e0805b9b01558::t_ef60b32dbb648b 14
+web/.env
+  s_7e0805b9b01558::t_ef60b32dbb648b 301
+  s_7e0805b9b01558::t_6349e944f4621b 300,302-316
+web/tests/Routing/InactiveLocaleTest.php
+  s_7e0805b9b01558::t_8696c61352f136 1-8,10,12,14-16,18-90,130-140
+  s_7e0805b9b01558::t_ef60b32dbb648b 17
+  s_7e0805b9b01558::t_612a076f3d1217 9,11,13,91-129
+web/tests/Translation/DeepLDevToolTest.php
+  s_7e0805b9b01558::t_3dbcb9c5a13830 12,179,670,866
+web/src/Controller/TranslateController.php
+  s_7e0805b9b01558::t_1f1826b00c26ce 215,253
+  s_7e0805b9b01558::t_a315e5b43854a4 13,76-79,136,142,257,453,501,529-533,535-550,571,621,673
+  s_7e0805b9b01558::t_ef60b32dbb648b 75,534
+web/src/Form/SettingsType.php
+  s_7e0805b9b01558::t_6b16ceab34603a 42-66,131-134
+  s_7e0805b9b01558::t_dd19c5f4f06e34 37-38
+  s_7e0805b9b01558::t_46fb150981ca6e 17
+  s_7e0805b9b01558::t_ef60b32dbb648b 130
+web/templates/partials/_lang_menu.html.twig
+  s_7e0805b9b01558::t_99407f277240ff 8,10-13
+  s_7e0805b9b01558::t_ef60b32dbb648b 9
+web/src/Controller/SitemapController.php
+  s_7e0805b9b01558::t_f29b9aa0b967db 10,67
+  s_7e0805b9b01558::t_99407f277240ff 149-150,152
+  s_7e0805b9b01558::t_ef60b32dbb648b 151
+web/config/services.yaml
+  s_7e0805b9b01558::t_ef60b32dbb648b 185
+  s_7e0805b9b01558::t_fcdcf83602ef8b 184,186-189
+web/src/Twig/LocaleExtension.php
+  s_7e0805b9b01558::t_99407f277240ff 9,25-26,28,37,74
+  s_7e0805b9b01558::t_ef60b32dbb648b 27
+web/.env.test
+  s_7e0805b9b01558::t_6349e944f4621b 32,34-48
+  s_7e0805b9b01558::t_ef60b32dbb648b 33
+web/src/EventSubscriber/LocaleSubscriber.php
+  s_7e0805b9b01558::t_ef60b32dbb648b 27
+  s_7e0805b9b01558::t_99407f277240ff 9,13,25-26,28,37-45,67,74
+web/src/Controller/LocaleController.php
+  s_7e0805b9b01558::t_ef60b32dbb648b 30
+  s_7e0805b9b01558::t_99407f277240ff 9,25,27-29,31-34
+docs/specs/dev-environment.md
+  s_7e0805b9b01558::t_ef60b32dbb648b 295-318
+web/src/Routing/ActiveLocales.php
+  s_7e0805b9b01558::t_90fc281cdcdb7c 1-33,35-88
+  s_7e0805b9b01558::t_ef60b32dbb648b 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "983400b7fe1c9a56d9a82c190ab5a80e43a1fd88",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7e0805b9b01558": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33a81c58-e18b-4166-9873-c160cdde84a9",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

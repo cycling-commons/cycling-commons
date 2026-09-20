@@ -1,0 +1,44 @@
+web/tests/Town/ResolveTownSummaryHandlerTest.php
+  s_985a6f4653b290::t_a00c7535cd6afc 65,189
+web/assets/map/drawer.js
+  s_985a6f4653b290::t_4f15f6a4dc0697 116-117
+  s_985a6f4653b290::t_5941b742ce6fb1 122-128
+  s_985a6f4653b290::t_1f05480a346200 719
+  s_985a6f4653b290::t_822ebf8b25478e 538
+web/assets/map/map.js
+  s_985a6f4653b290::t_b55c082a7118f4 14-15,103-106,111,207-208,307-309
+web/src/Controller/MapController.php
+  s_985a6f4653b290::t_4f15f6a4dc0697 273
+web/assets/styles/map.css
+  s_985a6f4653b290::t_4f15f6a4dc0697 504-506
+  s_985a6f4653b290::t_1f05480a346200 1216-1219
+  s_985a6f4653b290::t_935766df8158e9 470-471
+web/assets/map/lightbox.js
+  s_985a6f4653b290::t_1f05480a346200 14
+web/src/Media/Commons/CommonsApi.php
+  s_985a6f4653b290::t_a00c7535cd6afc 306-308,313-315,346-350
+web/assets/map/places.js
+  s_985a6f4653b290::t_1f05480a346200 159
+  s_985a6f4653b290::t_1d9fc67a068cc3 158
+web/assets/map/osm-pools.js
+  s_985a6f4653b290::t_abd53d8b528a04 84-120
+docs/specs/map-and-search.md
+  s_985a6f4653b290::t_a00c7535cd6afc 1669-1674
+  s_985a6f4653b290::t_3aa6fa4eb45b04 145-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "7fbde74f01bfcb3fc44fb73b415901170a51ab67",
+  "prompts": {},
+  "sessions": {
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,111 @@
+web/templates/pages/regions.html.twig
+  s_985a6f4653b290::t_38104b605d921d 39,43,53,69
+  s_985a6f4653b290::t_51149db0ffcee9 106-108
+  s_985a6f4653b290::t_d64a2cd2637501 32,167,171
+  s_985a6f4653b290::t_afe71e1416cb9b 87-97
+  s_985a6f4653b290::t_f806da459fa612 54-59,188-197
+  s_985a6f4653b290::t_1f47422ce45684 231-248
+  s_5d3029d326707c::t_e12fc50b6c29bd 67-68,284
+  s_985a6f4653b290::t_4c2f49840ef49a 109
+  s_985a6f4653b290::t_059900b8820b6e 249-262
+  s_985a6f4653b290::t_9662460c012b5b 207,216,263
+docs/specs/coverage-provider.md
+  s_5d3029d326707c::t_8d58db0f57d05e 974-998
+  s_985a6f4653b290::t_0d04f9b479a932 1117,1126-1131,1134-1136
+  s_985a6f4653b290::t_f13df34c583602 1119-1120,1125
+  s_985a6f4653b290::t_7eed9b22a86b2d 1118,1121-1124
+  s_5d3029d326707c::t_93f96397eb8262 939-941
+  s_985a6f4653b290::t_7e3e4e6c398a20 1132-1133
+web/assets/pages/regions-map.js
+  s_5d3029d326707c::t_cfd9e81b313ae4 9-10,69,78-87,102
+  s_985a6f4653b290::t_0d04f9b479a932 90-94
+web/tests/Smoke/ContentPagesTest.php
+  s_985a6f4653b290::t_db076c8eabb474 94-96,98,100
+  s_5d3029d326707c::t_23f6268788db85 97,99,101,103,105-114,117-135,255
+  s_5d3029d326707c::t_fcac547e3d8a48 102,115-116
+  s_985a6f4653b290::t_66bc2192db5095 104
+web/assets/pages/desktop-default-view.js
+  s_985a6f4653b290::t_0d04f9b479a932 1-19
+docs/specs/map-and-search.md
+  s_5d3029d326707c::t_d67ddf011ef439 490-491
+  s_985a6f4653b290::t_4dbd10255989b9 1038-1042,1049
+  s_5d3029d326707c::t_e7b3a4e90417ce 488-489
+  s_985a6f4653b290::t_d64a2cd2637501 523-526
+  s_985a6f4653b290::t_f13df34c583602 497-499
+  s_985a6f4653b290::t_0d04f9b479a932 483-485
+  s_985a6f4653b290::t_eafc9f84614127 1043-1048
+  s_985a6f4653b290::t_f806da459fa612 527-529
+  s_985a6f4653b290::t_afe71e1416cb9b 517-519
+  s_985a6f4653b290::t_7eed9b22a86b2d 500-504
+web/assets/styles/atlas.css
+  s_5d3029d326707c::t_e12fc50b6c29bd 225-229
+docs/specs/page-caching.md
+  s_5d3029d326707c::t_8d58db0f57d05e 273-277
+  s_5d3029d326707c::t_e7b3a4e90417ce 124-125
+web/tests/Catalog/CoverageDensityClassesTest.php
+  s_5d3029d326707c::t_7a7167c2233f3e 1-81
+web/assets/pages/coverage-globe.js
+  s_5d3029d326707c::t_36aa03ae4f53ab 1-45
+web/src/Catalog/CoverageStatsProvider.php
+  s_5d3029d326707c::t_fcac547e3d8a48 170
+  s_5d3029d326707c::t_5a7fa508664ef9 151-169,171-199
+web/src/Controller/PageController.php
+  s_5d3029d326707c::t_c052efa7a1e5d1 345-349,356,360-361
+web/assets/pages/country-globe.js
+  s_5d3029d326707c::t_8871de464bc063 37-40,44-45
+  s_5d3029d326707c::t_0ec4538fea3e66 6-7
+  s_985a6f4653b290::t_f13df34c583602 56-80,83,107,117,122
+  s_985a6f4653b290::t_7eed9b22a86b2d 100-102
+  s_5d3029d326707c::t_36aa03ae4f53ab 1-5,8-36,41-43,46-55,81-82,84-99,103-106,108-116,118-121,123-140
+web/templates/pages/coverage.html.twig
+  s_5d3029d326707c::t_819a0133c4b7d5 81-85,88-92,94,98-105,107-145
+  s_985a6f4653b290::t_7e3e4e6c398a20 95-97
+  s_985a6f4653b290::t_46d37732ef4c6c 93
+  s_5d3029d326707c::t_21e122d0529d4f 230-231,233-237
+  s_985a6f4653b290::t_87e679dd23b6f9 63
+  s_985a6f4653b290::t_f13df34c583602 106
+  s_985a6f4653b290::t_0d04f9b479a932 224-229,232
+  s_5d3029d326707c::t_a503407cdfb721 211
+  s_5d3029d326707c::t_9e4a979bfcde0b 175-177,179-181
+  s_5d3029d326707c::t_660f128603e379 16-17,19-22
+  s_5d3029d326707c::t_a0d0dd83359ed3 31-62
+web/translations/messages.de.yaml
+  s_985a6f4653b290::t_52a73e64efe72c 466-475
+web/translations/messages.en.yaml
+  s_985a6f4653b290::t_a3e76d817c9f52 466-475
+web/translations/messages.es.yaml
+  s_985a6f4653b290::t_ff101a453df85f 466-475
+web/translations/messages.fr.yaml
+  s_985a6f4653b290::t_99cdf9b3892712 466-475
+web/translations/messages.nl.yaml
+  s_985a6f4653b290::t_0580a40e90ae8a 466-475
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "3626d800b2a99d52de8bf6206e9b6f4f731489d1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_5d3029d326707c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "795f70b7-c0e1-4883-a4e6-53909db571af",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

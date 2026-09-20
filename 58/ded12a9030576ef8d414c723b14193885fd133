@@ -1,0 +1,25 @@
+web/assets/map/origin.js
+  s_d34f17e49b47aa::t_2059d738c44505 1-17
+web/assets/map/drawer.js
+  s_d34f17e49b47aa::t_719178d1ac6306 5,228,232,255
+web/tests/js/drawer-origin.test.mjs
+  s_d34f17e49b47aa::t_0a56ded6027c74 1-35
+wiki/developers/numbers.md
+  s_d34f17e49b47aa::t_0739276353867b 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "58ded12a9030576ef8d414c723b14193885fd133",
+  "prompts": {},
+  "sessions": {
+    "s_d34f17e49b47aa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef901574-ddee-4be4-aa4c-45b023adb0b8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

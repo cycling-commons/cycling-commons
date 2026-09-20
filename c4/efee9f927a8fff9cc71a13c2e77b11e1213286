@@ -1,0 +1,45 @@
+web/translations/messages.fr.yaml
+  s_1c0464d81ce126::t_3a9ea802a35182 603
+  s_1c0464d81ce126::t_a7b34f8706e746 1730
+web/translations/messages.nl.yaml
+  s_1c0464d81ce126::t_a7b34f8706e746 1730
+  s_1c0464d81ce126::t_4a0753d0bcffa3 603
+web/assets/map/render.js
+  s_1c0464d81ce126::t_039892bdeeb433 813-824
+web/translations/messages.en.yaml
+  s_1c0464d81ce126::t_4a0753d0bcffa3 603
+  s_1c0464d81ce126::t_a7b34f8706e746 2054
+web/translations/messages.de.yaml
+  s_1c0464d81ce126::t_a7b34f8706e746 1733
+  s_1c0464d81ce126::t_3a9ea802a35182 603
+web/templates/admin/curator_applications.html.twig
+  s_1c0464d81ce126::t_56290f35d5409b 182
+web/src/Controller/MapController.php
+  s_1c0464d81ce126::t_a7b34f8706e746 476-478
+web/translations/messages.es.yaml
+  s_1c0464d81ce126::t_3a9ea802a35182 604
+  s_1c0464d81ce126::t_a7b34f8706e746 2066
+docs/specs/map-and-search.md
+  s_1c0464d81ce126::t_8cda109a994b92 862-874
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c4efee9f927a8fff9cc71a13c2e77b11e1213286",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

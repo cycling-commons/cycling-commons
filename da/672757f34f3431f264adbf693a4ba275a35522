@@ -1,0 +1,44 @@
+web/tests/Catalog/ItemEvidenceResolverTest.php
+  s_3b3b121fcbab96::t_fc1cfae5722208 1-169
+docs/specs/data-provider-hierarchy.md
+  s_3b3b121fcbab96::t_99437d3c09dbc7 649-653,663,670-680,683-684,687-700,703-705
+web/tests/Catalog/CatalogProviderTest.php
+  s_3b3b121fcbab96::t_705c6da861e9c7 201-247
+web/src/Catalog/CatalogProvider.php
+  s_3b3b121fcbab96::t_203155d2463a1c 38-40,164,174-175,215,292,326-332,337,374,393-395
+web/tests/Catalog/EvidenceRungTest.php
+  s_3b3b121fcbab96::t_f3c121b7edde6f 14-17,28-37,40-45,50,55,60,65-69,74-75,88-89,98,100,104,106,109,111,114,116-120,123,125-128,130-162,167
+web/src/Catalog/EvidenceRung.php
+  s_3b3b121fcbab96::t_2fd37d40a1ec3d 10,18,28-35,46,49-51,60-61,66-72
+web/src/Catalog/ConfirmationStance.php
+  s_3b3b121fcbab96::t_30119eaec0a5f2 23-35
+web/src/Catalog/ItemEvidenceResolver.php
+  s_3b3b121fcbab96::t_bf20a6432b4938 25-26
+  s_3b3b121fcbab96::t_715275eb72d2c0 1-24,27-124
+web/src/Community/ItemConfirmationService.php
+  s_3b3b121fcbab96::t_30119eaec0a5f2 128,161
+web/src/Catalog/ItemEvidence.php
+  s_3b3b121fcbab96::t_bf20a6432b4938 17-18,24
+  s_3b3b121fcbab96::t_9703304b5cbba3 1-16,19-23,25-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "da672757f34f3431f264adbf693a4ba275a35522",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_3b3b121fcbab96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef68f16-50de-4bc2-b718-847e4744d25a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

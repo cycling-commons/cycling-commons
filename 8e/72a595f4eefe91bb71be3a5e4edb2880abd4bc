@@ -1,0 +1,40 @@
+web/templates/pages/roles.html.twig
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 28-34,82-100
+  s_e9b7d39367a2ea::t_a3054a18ef2467 101
+web/translations/messages.nl.yaml
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 3564-3570
+web/translations/messages.de.yaml
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 3565-3571
+web/.env
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 112-117
+web/translations/messages.fr.yaml
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 3557-3563
+wiki/governance.md
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 83
+web/.env.prod
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 25-31
+web/.env.staging
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 170-176
+web/translations/messages.en.yaml
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 3583-3589
+web/src/Controller/PageController.php
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 11,239,245
+web/translations/messages.es.yaml
+  s_e9b7d39367a2ea::t_46e7a1eb92713d 3592-3598
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8e72a595f4eefe91bb71be3a5e4edb2880abd4bc",
+  "prompts": {},
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

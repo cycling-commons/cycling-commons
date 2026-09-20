@@ -1,0 +1,25 @@
+web/tests/js/scout-segments.test.mjs
+  s_dd35dcc1b6eafa::t_ba4c7f7701c50b 6-7,72-90
+docs/specs/moderation-and-contribution.md
+  s_dd35dcc1b6eafa::t_3b5313b2b6ada7 1925-1931
+web/assets/map/scout-review.js
+  s_dd35dcc1b6eafa::t_3b5313b2b6ada7 30,597-599,698-704,709,711-720,773-789
+web/assets/map/scout-segments.js
+  s_dd35dcc1b6eafa::t_ba4c7f7701c50b 97-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c5293ef0af6180f2abe7bf74e2315db3d2848578",
+  "prompts": {},
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

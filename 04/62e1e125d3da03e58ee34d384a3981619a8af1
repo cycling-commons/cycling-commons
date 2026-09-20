@@ -1,0 +1,35 @@
+web/config/services.yaml
+  s_45ec9b3f519700::t_c8b9b82b68c7fa 55-62
+web/assets/contribute/climb-editor.js
+  s_45ec9b3f519700::t_c8b9b82b68c7fa 256-268
+web/src/Elevation/RouteSnapper.php
+  s_45ec9b3f519700::t_31e84db130de0e 137
+  s_45ec9b3f519700::t_d3199e5cab16da 1-46,50-136,138-142
+  s_45ec9b3f519700::t_5a51cd673e5261 47-49
+web/src/Controller/RouteController.php
+  s_45ec9b3f519700::t_145b38557bc253 33-34
+  s_45ec9b3f519700::t_b08a95e8057820 1-32,35-74
+web/tests/Elevation/RouteSnapperTest.php
+  s_45ec9b3f519700::t_3344c7ccdb188f 1-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "0462e1e125d3da03e58ee34d384a3981619a8af1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_45ec9b3f519700": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42c83203-4754-4e8f-b14b-28903077507b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

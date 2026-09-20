@@ -1,0 +1,26 @@
+web/config/packages/scheb_2fa.yaml
+  s_bbe01d4f023787::t_242a2406d4d2d7 15-33
+web/templates/moderate_regions/index.html.twig
+  s_bbe01d4f023787::t_acaeea4d250a53 43-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c3b42d56a30358b9c386c4a93f1edfc858cf6198",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

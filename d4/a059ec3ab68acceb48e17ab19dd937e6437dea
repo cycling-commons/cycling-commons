@@ -1,0 +1,52 @@
+web/templates/moderate/_room_post.html.twig
+  s_f47a817d6ad683::t_58fd93707b1bd5 9-11,64
+web/assets/js/room.js
+  s_f47a817d6ad683::t_58fd93707b1bd5 114
+web/templates/moderate/_room_form.html.twig
+  s_f47a817d6ad683::t_58fd93707b1bd5 1-87
+web/translations/messages.de.yaml
+  s_f47a817d6ad683::t_58fd93707b1bd5 4809-4812,4832,4850-4853,4856
+web/translations/messages.fr.yaml
+  s_f47a817d6ad683::t_58fd93707b1bd5 4801-4804,4824,4842-4845,4848
+web/tests/Moderation/CuratorRoomTest.php
+  s_f47a817d6ad683::t_58fd93707b1bd5 522-599
+web/src/Messaging/CuratorRoom.php
+  s_f47a817d6ad683::t_58fd93707b1bd5 132,135,137-201,210-214,216-223,559-565
+  s_f47a817d6ad683::t_895e6b61ab97c8 566
+web/src/Controller/ModerateRoomController.php
+  s_f47a817d6ad683::t_58fd93707b1bd5 144,155,166-233,236
+  s_f47a817d6ad683::t_d47a726dfce514 234-235,237
+web/src/Messaging/Entity/CuratorPost.php
+  s_f47a817d6ad683::t_58fd93707b1bd5 145-150,152-155,157-173
+web/templates/moderate/room_edit.html.twig
+  s_f47a817d6ad683::t_58fd93707b1bd5 1-26
+web/translations/messages.nl.yaml
+  s_f47a817d6ad683::t_58fd93707b1bd5 4808-4811,4831,4849-4852,4855
+web/templates/moderate/_room_styles.html.twig
+  s_f47a817d6ad683::t_58fd93707b1bd5 1-94
+web/translations/messages.es.yaml
+  s_f47a817d6ad683::t_58fd93707b1bd5 4841-4844,4864,4882-4885,4888
+docs/specs/moderation-and-contribution.md
+  s_f47a817d6ad683::t_28a29dfc0b9cd6 3150,3196-3197,3232-3240
+  s_f47a817d6ad683::t_b3755e30f6012e 3241
+web/translations/messages.en.yaml
+  s_f47a817d6ad683::t_58fd93707b1bd5 4830-4833,4853,4871-4874,4877
+web/templates/moderate/room.html.twig
+  s_f47a817d6ad683::t_58fd93707b1bd5 17,71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d4a059ec3ab68acceb48e17ab19dd937e6437dea",
+  "prompts": {},
+  "sessions": {
+    "s_f47a817d6ad683": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "610ca1d1-6828-4822-a153-1be243f02d0a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

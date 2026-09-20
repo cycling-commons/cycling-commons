@@ -1,0 +1,35 @@
+wiki/stylesheets/extra.css
+  s_2ae0cec09489d2::t_ad86bdc7b4ea9e 653,695
+  s_2ae0cec09489d2::t_756641d561d0d9 575-588,594-600,602-643,645-652,658-661
+  s_2ae0cec09489d2::t_8cc48cc6857c59 654-657,696-699
+  s_2ae0cec09489d2::t_e0aecf3302f70a 662-694,700-737
+  s_2ae0cec09489d2::t_0c90e5028e8bca 589-593,601,644
+  s_2ae0cec09489d2::t_a2b06212f2c38d 738-791
+mkdocs.yml
+  s_2ae0cec09489d2::t_a2b06212f2c38d 76
+wiki/landscape.md
+  s_2ae0cec09489d2::t_74efd45f6c6d25 8-9,11
+  s_2ae0cec09489d2::t_c6bb2e42f73259 12,128-130,132-133,135-139,141
+  s_2ae0cec09489d2::t_07cb498aed8aa6 13-17,124,126-127,142-143
+  s_2ae0cec09489d2::t_eb26ffef853eae 150-160,168-179,186-197,205-208,210-214,221-232,239-247
+  s_2ae0cec09489d2::t_ad86bdc7b4ea9e 22-123,125
+  s_2ae0cec09489d2::t_77aa448d4a7c61 18-21,131,134,140
+  s_2ae0cec09489d2::t_1b2b8e36e8e92c 161,198,209,248
+  s_2ae0cec09489d2::t_47f4f10b4b5773 256-261
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "eaab42c0a5f361f721f336215f96b44a43067afe",
+  "prompts": {},
+  "sessions": {
+    "s_2ae0cec09489d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d28798e2-6187-4719-977b-d9d5b373db87",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

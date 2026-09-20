@@ -1,0 +1,61 @@
+web/translations/messages.es.yaml
+  s_6df2cc515a46f1::t_ff6904cf120e11 341,1297-1298
+web/translations/messages.de.yaml
+  s_6df2cc515a46f1::t_ff6904cf120e11 340,1292-1293
+docs/specs/map-and-search.md
+  s_6df2cc515a46f1::t_fb161914e1b245 367-386
+web/migrations/Version20260816020000.php
+  s_6df2cc515a46f1::t_cb16b752d3dd6a 1-46
+web/templates/pages/credits.html.twig
+  s_6df2cc515a46f1::t_b81ad316bdc224 63-69
+tools/wikimedia/out/region-context.json
+  s_6df2cc515a46f1::t_3a30f77eb5577b 1-6006,6010-6011,6015-6016,6020-6021,6025-6734
+  s_6df2cc515a46f1::t_ed8f55643ff59f 6007-6009
+  s_6df2cc515a46f1::t_f447c323fe15f1 6012-6014
+  s_6df2cc515a46f1::t_c24b32948f648f 6017-6019
+  s_6df2cc515a46f1::t_338dbdec3c0dcc 6022-6024
+web/translations/messages.en.yaml
+  s_6df2cc515a46f1::t_ff6904cf120e11 340,1296-1297
+web/src/Catalog/RegionDirectoryProvider.php
+  s_6df2cc515a46f1::t_5b6c74421296ef 268-289,291
+web/templates/pages/region.html.twig
+  s_6df2cc515a46f1::t_fabf1db3303aeb 65-68
+  s_6df2cc515a46f1::t_f5c38a64c1de5d 160-174
+web/tests/Controller/RegionsPagesTest.php
+  s_6df2cc515a46f1::t_2f2ead340ff65f 115-116
+  s_6df2cc515a46f1::t_397a268385238a 72-114,117-118
+web/translations/messages.fr.yaml
+  s_6df2cc515a46f1::t_ff6904cf120e11 340,1292-1293
+web/src/Catalog/Command/ImportRegionContextCommand.php
+  s_6df2cc515a46f1::t_f2ff56e0dd4ef9 1-123,133-142
+  s_6df2cc515a46f1::t_a9a40d04532a05 124-132
+tools/wikimedia/region_context.py
+  s_6df2cc515a46f1::t_893af2cb2e2426 1-131,136-167
+  s_6df2cc515a46f1::t_943c99936a7744 132-135
+web/tests/Catalog/ImportRegionContextCommandTest.php
+  s_6df2cc515a46f1::t_c0438cfa7c0b87 64-65
+  s_6df2cc515a46f1::t_09453bfa77c5fb 1-63,66-96
+web/translations/messages.nl.yaml
+  s_6df2cc515a46f1::t_ff6904cf120e11 340,1292-1293
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "995c7b3e3b20b87b1b959a19b2e44b846dea700e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

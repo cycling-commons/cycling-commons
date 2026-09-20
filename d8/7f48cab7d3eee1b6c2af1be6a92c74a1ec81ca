@@ -1,0 +1,34 @@
+web/config/packages/flysystem.yaml
+  s_c6f332c201127d::t_e16384bf8c3c66 30-35,53-54
+docs/specs/photo-uploads.md
+  s_c6f332c201127d::t_9e83c12096ac5c 94-96
+web/.env.staging
+  s_c6f332c201127d::t_79f10d641c5c78 120-122,126-127
+web/.env
+  s_c6f332c201127d::t_c521dc78115042 116-120
+developers/docker/compose.yaml
+  s_c6f332c201127d::t_135fc307454c52 95,141
+docs/specs/media-storage-architecture.md
+  s_c6f332c201127d::t_9e83c12096ac5c 75-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "d87f48cab7d3eee1b6c2af1be6a92c74a1ec81ca",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

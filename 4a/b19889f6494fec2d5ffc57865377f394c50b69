@@ -1,0 +1,35 @@
+tools/wikimedia/climb_audit.py
+  s_631e076c2244f0::t_4086eafeaab52a 1-266
+web/src/Controller/ModerateRegionsController.php
+  s_631e076c2244f0::t_2462ccf941160e 379,383-386,388-393,407-408
+  s_631e076c2244f0::t_1c03aab99d869e 303-313
+web/templates/moderate_regions/about.html.twig
+  s_631e076c2244f0::t_e846f318c6a238 12-21
+  s_631e076c2244f0::t_c82a07ca214e12 53-57,59-65
+tools/wikimedia/climb_sides.py
+  s_631e076c2244f0::t_1d8810afd1ca71 107
+  s_631e076c2244f0::t_5446275b0de9aa 36-45,48,52-53,88-102
+tools/wikimedia/out/climb-review.json
+  s_631e076c2244f0::t_f0e8de8a6b853d 1-329932
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "4ab19889f6494fec2d5ffc57865377f394c50b69",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_631e076c2244f0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33015a85-b6d4-4b35-a02a-ce97c6036810",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
