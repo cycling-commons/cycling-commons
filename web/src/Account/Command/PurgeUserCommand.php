@@ -31,6 +31,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *
  * Dry run by default. Refuses to remove the last ROLE_ADMIN, because that
  * locks every desk.
+ *
+ * @api
  */
 #[AsCommand(name: 'app:user:purge', description: 'Remove accounts by email through the shared deletion seam (dry run unless --force)')]
 final class PurgeUserCommand extends Command
