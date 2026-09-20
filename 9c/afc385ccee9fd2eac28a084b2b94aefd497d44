@@ -1,0 +1,34 @@
+web/docker/verify-imagemagick-policy.php
+  s_f48622e4fbf056::t_dab7e78b9e41e6 178-184
+  s_f48622e4fbf056::t_d4bf18f051b1c5 51-53,152-153
+  s_f48622e4fbf056::t_e09826c7ec4faa 39,185-194
+  s_f48622e4fbf056::t_44c0bc98e73191 154-159,195-196
+docs/specs/photo-uploads.md
+  s_f48622e4fbf056::t_d4bf18f051b1c5 1723-1735,1737-1743,1745
+  s_f48622e4fbf056::t_596ae12ab51988 1722
+  s_f48622e4fbf056::t_e09826c7ec4faa 1746-1752
+web/docker/imagemagick-policy.xml
+  s_f48622e4fbf056::t_d4bf18f051b1c5 74-81,83
+  s_f48622e4fbf056::t_e09826c7ec4faa 101-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9cafc385ccee9fd2eac28a084b2b94aefd497d44",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f48622e4fbf056": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "614ff379-a7a8-4868-884e-c904dc525de4",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
