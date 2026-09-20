@@ -1,0 +1,28 @@
+docs/specs/2026-07-16-coverage-provider-design.md
+  s_58bfb339467e97::t_a8ea840c6609c2 1-33,35-40,42-43,45-113,115-162,168-185,187-208,212-268,270-272
+  s_58bfb339467e97::t_2886b63f0e0014 186
+  s_58bfb339467e97::t_02f38146d5f32a 163-167
+  s_58bfb339467e97::t_ae0281bf501bd1 114
+  s_58bfb339467e97::t_67bc80afbdd3cc 209-211
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "8321d34414b9839b9d80a59d579844a6f37b3463",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_58bfb339467e97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9429297-08ac-4b41-b3f6-76a0097d2e4f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

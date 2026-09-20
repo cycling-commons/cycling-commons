@@ -1,0 +1,44 @@
+web/src/Content/ReleaseNotes.php
+  s_ec895423d98b88::t_59fe9028614772 45-63
+web/translations/messages.es.yaml
+  s_ec895423d98b88::t_59fe9028614772 4512-4528
+docs/specs/contact-and-support.md
+  s_ec895423d98b88::t_a0c6cf73bdd51b 654-664
+web/translations/messages.nl.yaml
+  s_ec895423d98b88::t_59fe9028614772 4481-4497
+docs/specs/roadmap-and-changelog.md
+  s_ec895423d98b88::t_59fe9028614772 121-130
+web/translations/messages.en.yaml
+  s_ec895423d98b88::t_59fe9028614772 4505-4521
+web/translations/messages.de.yaml
+  s_ec895423d98b88::t_59fe9028614772 4484-4500
+web/translations/messages.fr.yaml
+  s_ec895423d98b88::t_59fe9028614772 4481-4497
+web/src/Support/Command/SeedKnownIssuesCommand.php
+  s_ec895423d98b88::t_64a6fcbf290af9 1-119
+web/tests/Support/SeedKnownIssuesCommandTest.php
+  s_ec895423d98b88::t_64a6fcbf290af9 1-59
+web/config/known_issues.yaml
+  s_ec895423d98b88::t_64a6fcbf290af9 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ece9fee246c6232be32a07da5c6df332fb45826e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ec895423d98b88": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0de6d79-989a-45d6-9f80-10287ec2dd13",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

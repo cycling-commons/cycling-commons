@@ -1,0 +1,80 @@
+web/src/Catalog/Entity/Region.php
+  s_06ae2c46b4ac0a::t_84911a4462db8f 145-192
+  s_06ae2c46b4ac0a::t_3bda164f4ad4ef 47-66
+web/src/Catalog/RouteRankingService.php
+  s_06ae2c46b4ac0a::t_76d1b36befcc5b 22-31
+  s_06ae2c46b4ac0a::t_55f702fde0344a 68-69
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_06ae2c46b4ac0a::t_12b66ffe245218 111,113-122,124-125,127-130,137-140,147-154,158-170,172-187,193-199,202,204-205,207-208
+  s_06ae2c46b4ac0a::t_d3b674e04cc823 171
+  s_06ae2c46b4ac0a::t_683689fa44a237 48-56
+  s_06ae2c46b4ac0a::t_2e38209a828b44 428-432,435-439,444-448
+  s_06ae2c46b4ac0a::t_adc80914e16c9f 188-192,200-201,203,206
+  s_06ae2c46b4ac0a::t_36b0739cf9a4fe 209
+tools/wallonia/export.py
+  s_06ae2c46b4ac0a::t_0cdb71088564c9 28-35
+web/tests/fixtures/catalog/region-square.geojson
+  s_06ae2c46b4ac0a::t_a091cc6364175b 1
+pipeline/tests/conftest.py
+  s_06ae2c46b4ac0a::t_162354985790cd 47-48,50-51
+web/src/Controller/MapController.php
+  s_06ae2c46b4ac0a::t_26dc91a9d89d90 11
+  s_06ae2c46b4ac0a::t_2f718cdb9185c9 269-295
+web/migrations/Version20260719140000.php
+  s_06ae2c46b4ac0a::t_315f0004ef5d83 1-48
+pipeline/tests/test_load.py
+  s_06ae2c46b4ac0a::t_679ba389aaafe1 36-37
+  s_06ae2c46b4ac0a::t_5f246ca7b8d53e 63-85
+docs/specs/2026-07-19-region-scoping-design.md
+  s_06ae2c46b4ac0a::t_bd2df578891f2b 3-6
+  s_06ae2c46b4ac0a::t_177bf0ec407e14 390-393,398-400
+  s_06ae2c46b4ac0a::t_f3d63f16dc4e65 394-397
+web/config/packages/security.yaml
+  s_06ae2c46b4ac0a::t_b833e4038711f8 50-53
+web/tests/Controller/MapRegionBoundaryTest.php
+  s_06ae2c46b4ac0a::t_1773198e661373 1-54
+docs/specs/catalog-data-model.md
+  s_06ae2c46b4ac0a::t_2da5c87061b227 254-259
+  s_06ae2c46b4ac0a::t_4771456ca4266b 115-124,129-154
+  s_06ae2c46b4ac0a::t_6fee457b8aa348 241-244,247-251,260-265
+  s_06ae2c46b4ac0a::t_14ca6049b2882a 155
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_06ae2c46b4ac0a::t_6c85489f53d4b7 246-283
+  s_06ae2c46b4ac0a::t_8c32ff13090b0d 66-73
+  s_06ae2c46b4ac0a::t_f663fe61d803d0 202-245
+pipeline/coverage/load.py
+  s_06ae2c46b4ac0a::t_1f9e2a26b07dda 47-49
+  s_06ae2c46b4ac0a::t_2c15859716e7f7 138-144,147-155
+web/src/Catalog/RegionBoundaryProvider.php
+  s_06ae2c46b4ac0a::t_754a8640fc8335 1-56
+web/tests/Catalog/RouteRankingServiceTest.php
+  s_06ae2c46b4ac0a::t_194641278b7940 109-138
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_06ae2c46b4ac0a::t_eea801974ca64f 405-411,413-418
+web/src/Contribution/RegionResolver.php
+  s_06ae2c46b4ac0a::t_e4f4df04869b93 15-19
+  s_06ae2c46b4ac0a::t_49bb9c74549397 41
+web/tests/Contribution/RegionResolverTest.php
+  s_06ae2c46b4ac0a::t_c797373085730e 47-73
+web/assets/map/map.js
+  s_06ae2c46b4ac0a::t_c48151e7f6737e 712
+  s_06ae2c46b4ac0a::t_b04e7e5d922b92 49-56
+docs/specs/route-domain.md
+  s_06ae2c46b4ac0a::t_238c1b8938f94c 492-497
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "bd1354134c74baf53c99f6c3d2cd6672d86aa0ac",
+  "prompts": {},
+  "sessions": {
+    "s_06ae2c46b4ac0a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "70d3eebb-551f-4d1c-ad0a-6d7fc8d3f347",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

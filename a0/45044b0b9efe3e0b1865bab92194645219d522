@@ -1,0 +1,35 @@
+web/tests/Command/CreateUserCommandTest.php
+  s_c68dfc59dc9546::t_21d5b91f5740d0 27-28,31-35
+  s_c68dfc59dc9546::t_05c53b9a5d46ec 1-26,29-30,36-88
+web/src/Entity/User.php
+  s_c68dfc59dc9546::t_33c030735631d8 312-318
+  s_c68dfc59dc9546::t_6d57dcd36d9ae4 335-341
+web/tests/Auth/RiderPreferencesTest.php
+  s_c68dfc59dc9546::t_6c04b287ffba32 141,146,155,161
+web/src/Command/CreateUserCommand.php
+  s_c68dfc59dc9546::t_f04552170ee49d 87-100
+  s_c68dfc59dc9546::t_2fb41d642c1ac5 8
+web/src/Form/SettingsType.php
+  s_c68dfc59dc9546::t_9f992f55e27fc0 43,45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "a045044b0b9efe3e0b1865bab92194645219d522",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+web/config/known_issues.yaml
+  s_985a6f4653b290::t_723620783a2659 49-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "c67394fd6d12044f398dc7a3e7db5e08645e12ab",
+  "prompts": {},
+  "sessions": {
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,50 @@
+docs/specs/legal-sources.md
+  s_e382572451f2d6::t_ec3f42d502ee22 1-61
+docs/specs/privacy-notice.md
+  s_e382572451f2d6::t_67bdbd55a6702f 3-5
+docs/specs/moderation-and-contribution.md
+  s_e382572451f2d6::t_67bdbd55a6702f 5-7
+docs/specs/account-and-auth.md
+  s_e382572451f2d6::t_67bdbd55a6702f 5-7
+docs/specs/security-architecture.md
+  s_e382572451f2d6::t_67bdbd55a6702f 5-7
+web/templates/pages/privacy.html.twig
+  s_e382572451f2d6::t_15377e2b9aab47 296
+docs/specs/contact-and-support.md
+  s_e382572451f2d6::t_67bdbd55a6702f 3-5
+docs/specs/operations.md
+  s_e382572451f2d6::t_67bdbd55a6702f 4-6
+docs/specs/translations.md
+  s_e382572451f2d6::t_67bdbd55a6702f 5-7
+web/translations/messages.de.yaml
+  s_e382572451f2d6::t_3a9715573783b6 152-153,157-159,235
+web/translations/messages.en.yaml
+  s_e382572451f2d6::t_531e921eab2874 152-153,157-159,235
+web/translations/messages.es.yaml
+  s_e382572451f2d6::t_d3e1c287f6b72f 152-153,157-159,235
+web/translations/messages.fr.yaml
+  s_e382572451f2d6::t_b597c260b85c50 152-153,157-159,235
+web/translations/messages.nl.yaml
+  s_e382572451f2d6::t_6a0fc77701188e 152-153,157-159,235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "3d9250b82878a887a6747ce2a33ac85d3e69f2c2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e382572451f2d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d86ff86-2562-4654-bb50-b5129c283f3f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

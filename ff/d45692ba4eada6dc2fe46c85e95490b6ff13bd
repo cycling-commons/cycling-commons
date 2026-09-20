@@ -1,0 +1,67 @@
+web/src/Form/ImproveType.php
+  s_ba6cf53b5a7360::t_72e3134b82a8b8 166-168
+web/templates/contribute/improve.html.twig
+  s_ba6cf53b5a7360::t_72e3134b82a8b8 412
+  s_ba6cf53b5a7360::t_978d083d5ac016 292
+web/src/Form/AddClimbType.php
+  s_ba6cf53b5a7360::t_72e3134b82a8b8 152-154
+web/translations/messages.nl.yaml
+  s_ba6cf53b5a7360::t_29cf3b7fa4bff7 1398-1399
+web/assets/styles/map.css
+  s_ba6cf53b5a7360::t_9f561e154187fd 627-634
+web/templates/contribute/add_climb.html.twig
+  s_ba6cf53b5a7360::t_72e3134b82a8b8 203
+web/translations/messages.de.yaml
+  s_ba6cf53b5a7360::t_29cf3b7fa4bff7 1401-1402
+web/assets/map/render.js
+  s_ba6cf53b5a7360::t_e7e26fb564bc9b 479-496
+docs/specs/edit-items/B-climbs.md
+  s_ba6cf53b5a7360::t_299af1c0788aaa 26-28,56-65
+  s_ba6cf53b5a7360::t_b4670d6b7f714b 66
+web/assets/contribute/add-climb.js
+  s_ba6cf53b5a7360::t_29e23c363073b5 116
+web/translations/messages.fr.yaml
+  s_ba6cf53b5a7360::t_29cf3b7fa4bff7 1398-1399
+web/assets/contribute/improve.js
+  s_ba6cf53b5a7360::t_29e23c363073b5 337
+  s_ba6cf53b5a7360::t_34a5d37ba66701 324-329
+web/src/Contribution/ClimbGeometry.php
+  s_ba6cf53b5a7360::t_beb942c459bee2 177-224
+  s_ba6cf53b5a7360::t_a27827ba138b58 45-57
+  s_ba6cf53b5a7360::t_1425c01404be19 176
+web/assets/contribute/climb-editor.js
+  s_ba6cf53b5a7360::t_8eaba6e6045c78 624-633
+  s_ba6cf53b5a7360::t_f26c8cb1ff70ae 25-31,147,177-178,200-201,400-440,510-513,523
+  s_ba6cf53b5a7360::t_8f8c2de0be8d0b 97-102,162,578-581,584-586
+web/translations/messages.en.yaml
+  s_ba6cf53b5a7360::t_29cf3b7fa4bff7 1714-1715
+docs/specs/climb-elevation.md
+  s_ba6cf53b5a7360::t_a631c984aa48b0 822-842
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_ba6cf53b5a7360::t_21b3e501534f47 36-42
+web/src/Controller/MapController.php
+  s_ba6cf53b5a7360::t_0f3ffc19213a57 226
+web/tests/Contribution/ClimbGeometryTest.php
+  s_ba6cf53b5a7360::t_c84df861e861f9 133-203
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "ffd45692ba4eada6dc2fe46c85e95490b6ff13bd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+web/translations/messages.en.yaml
+  s_41dce4bb9e0e72::t_0a13ea2184487a 289,295
+  s_41dce4bb9e0e72::t_675076b030f450 291
+web/translations/messages.fr.yaml
+  s_41dce4bb9e0e72::t_675076b030f450 291
+  s_41dce4bb9e0e72::t_c147785c7cc5df 289,295
+web/translations/messages.de.yaml
+  s_41dce4bb9e0e72::t_c147785c7cc5df 289,295
+  s_41dce4bb9e0e72::t_675076b030f450 291
+web/templates/pages/coverage.html.twig
+  s_41dce4bb9e0e72::t_8a08d08c594b31 13
+  s_41dce4bb9e0e72::t_a55fecc6b645cf 15
+  s_41dce4bb9e0e72::t_2497c01470b6de 53
+  s_41dce4bb9e0e72::t_ebfe9b448b9255 48-49
+  s_41dce4bb9e0e72::t_50573a7b20a959 62-69
+web/src/Catalog/CoverageStatsProvider.php
+  s_41dce4bb9e0e72::t_621755f2f1b4ec 119,121
+  s_41dce4bb9e0e72::t_6bd0c65f9134a9 168-174
+  s_41dce4bb9e0e72::t_77e1fd789a4eb3 69,71
+  s_41dce4bb9e0e72::t_6fd3cacded0d03 66-68,72
+web/translations/messages.nl.yaml
+  s_41dce4bb9e0e72::t_c147785c7cc5df 289,295
+  s_41dce4bb9e0e72::t_675076b030f450 291
+docs/specs/coverage-provider.md
+  s_41dce4bb9e0e72::t_ca4cab7231061a 752-766
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "681e8187ca6a399ea1da9351aea62fdb11482c38",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_41dce4bb9e0e72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875a3a0-dbdb-41af-af97-755463d87f2d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

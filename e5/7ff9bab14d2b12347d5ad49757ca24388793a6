@@ -1,0 +1,29 @@
+web/translations/messages.nl.yaml
+  s_b9f6c785e9346d::t_bd8611ddd59013 714
+web/templates/settings/index.html.twig
+  s_b9f6c785e9346d::t_c4a78891f3b395 173
+web/translations/messages.fr.yaml
+  s_b9f6c785e9346d::t_bd8611ddd59013 714
+docs/specs/2026-07-19-region-scoping-design.md
+  s_b9f6c785e9346d::t_c4a78891f3b395 236
+web/translations/messages.de.yaml
+  s_b9f6c785e9346d::t_bd8611ddd59013 714
+web/translations/messages.en.yaml
+  s_b9f6c785e9346d::t_bd8611ddd59013 718
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "e57ff9bab14d2b12347d5ad49757ca24388793a6",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

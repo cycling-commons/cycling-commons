@@ -1,0 +1,24 @@
+docs/specs/operations.md
+  s_dd35dcc1b6eafa::t_376f1bc53b06eb 193-196
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "8bfb5537db71c2bf76a14e93d497f9cdd7cbc8da",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

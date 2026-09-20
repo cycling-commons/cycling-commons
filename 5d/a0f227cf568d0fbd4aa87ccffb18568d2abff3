@@ -1,0 +1,86 @@
+docs/specs/2026-07-13-locate-confirm-and-drawer-a11y-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-08-route-domain-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/README.md
+  s_58bfb339467e97::t_cbe93ddf0e2232 49-53
+docs/specs/2026-06-17-edit-item-and-profile.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-12-moderation-feedback-and-messages-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-12-frontend-review-criticals-fixes.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-13-registry-driven-drawer-fields-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-14-town-search-and-ride-check-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-02-map-based-moderation-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-06-climb-three-point-definition-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-06-26-map-enhancements-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-04-submissions-and-moderation-on-real-data-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-05-contribution-frontend-reconciliation-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-03-catalog-data-model-and-import-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-14-moderator-areas-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 2
+docs/specs/2026-06-17-map-showcase-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-06-24-wallonia-data-fill-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-14-map-preferences-prefilter-and-mobile-drawer-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 2
+docs/specs/2026-06-20-editable-profile-demo-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-06-19-mapillary-street-level-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-06-17-add-climb-flow.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-13-utility-confirmations-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 2
+docs/specs/2026-07-14-public-rider-profile-and-settings-chips-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 2
+docs/specs/2026-07-14-unique-display-name-and-rider-preferences-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 2
+docs/specs/2026-06-17-ride-heatmap-planner-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-15-full-commons-search-and-community-tier-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 2
+docs/specs/2026-07-01-admin-panel-account-support-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-07-16-coverage-provider-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 2
+docs/specs/2026-06-19-dev-docker-stack-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-06-18-catalog-v2-and-per-type-forms.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-06-21-improve-add-location-wizard-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+docs/specs/2026-06-26-html-to-symfony-migration-design.md
+  s_58bfb339467e97::t_84b03ea96f812a 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "5da0f227cf568d0fbd4aa87ccffb18568d2abff3",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_58bfb339467e97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9429297-08ac-4b41-b3f6-76a0097d2e4f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

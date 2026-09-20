@@ -1,0 +1,24 @@
+web/migrations/Version20260716120000.php
+  s_e6d6993eda7318::t_8756e0e59b9601 1-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "8d46840545857bede5de17dd5a1b482acdaf1fe3",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e6d6993eda7318": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "081baf86-6152-46e3-a19d-aa12c114220a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

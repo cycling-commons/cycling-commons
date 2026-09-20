@@ -1,0 +1,35 @@
+web/src/Controller/ProfileController.php
+  s_51df195d1c7750::t_310607967b180b 43
+web/tests/Moderation/DeletedRecipientTest.php
+  s_51df195d1c7750::t_e41dbc9977b7f0 1-218
+web/src/Controller/ModerateMessageController.php
+  s_51df195d1c7750::t_d0d9cb787f4b58 77-87
+web/src/Controller/MessagesController.php
+  s_51df195d1c7750::t_77f1a373d54d58 105-116
+  s_51df195d1c7750::t_f309f0394ce1dd 81
+web/src/Messaging/MessageService.php
+  s_51df195d1c7750::t_a7dd16e8dc46b5 45-54,68-72
+  s_51df195d1c7750::t_78b820af131579 96-102,105,109-112,125-133,136,140-142
+  s_51df195d1c7750::t_0f7b869958b4bc 180-184,186-187
+  s_51df195d1c7750::t_12e574ab84886f 185
+  s_51df195d1c7750::t_82477aaea90345 143
+  s_51df195d1c7750::t_edf5993e177c33 179
+web/tests/Profile/ContributionsRetentionTest.php
+  s_51df195d1c7750::t_2027ced000f1b3 31-32,34,47-53,56,67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "a4318a7bb63bcd2ffaf358667f1442d7f89582f9",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

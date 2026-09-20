@@ -1,0 +1,69 @@
+web/src/Provider/Command/HarvestProviderCommand.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 121-122
+docs/specs/catalog-data-model.md
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 93
+web/translations/messages.de.yaml
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 4752,4768-4770,4781
+web/translations/messages.en.yaml
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 4773,4789-4791,4802
+web/tests/Catalog/ItemEvidenceResolverTest.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 52,56-83
+  s_3b3b121fcbab96::t_c7585b21e46f45 84
+web/src/Catalog/CatalogProvider.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 164,215,292,374
+web/src/Provider/ProviderHarvest.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 9,12,85,89,129-131,445-505
+  s_3b3b121fcbab96::t_9501f72ef0dc9c 506
+web/src/Catalog/Entity/Item.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 166-176,387-389
+  s_3b3b121fcbab96::t_6ab066afef203e 390-391
+web/translations/messages.es.yaml
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 4780,4796-4798,4809
+web/src/Provider/Entity/DataProvider.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 230-256,528-556
+  s_3b3b121fcbab96::t_c4c2e29ce245bf 557
+web/src/Controller/ModerateProvidersController.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 74-76,137-139
+web/migrations/Version20260910120000.php
+  s_3b3b121fcbab96::t_ea88f9e8a76c62 1-46
+web/src/Api/V1/PublicItemsProvider.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 81
+web/templates/moderate_providers/index.html.twig
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 115-127
+web/tests/Provider/CustodyReclaimTest.php
+  s_3b3b121fcbab96::t_5368e4a2816d63 13
+  s_3b3b121fcbab96::t_4183c4b2b4adf3 1-12,14-246
+docs/specs/data-provider-hierarchy.md
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 548-560,565,773-777
+  s_3b3b121fcbab96::t_6d27b58ac1265f 561-564
+  s_3b3b121fcbab96::t_363fa922f78f5f 778
+web/translations/messages.nl.yaml
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 4749,4765-4767,4778
+web/translations/messages.fr.yaml
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 4749,4765-4767,4778
+web/src/Catalog/ItemEvidenceResolver.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 60-63,67,78-83,86
+web/src/Provider/ProviderRegistry.php
+  s_3b3b121fcbab96::t_6ea173c8d65c9d 105-114,252-265,284-286
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "259c3d4233bfdad5b09e605a777b99d2174dd79f",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_3b3b121fcbab96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef68f16-50de-4bc2-b718-847e4744d25a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

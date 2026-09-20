@@ -1,0 +1,14 @@
+web/assets/styles/atlas.css
+  h_fb5318cde6cf17 434-455
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "987f3794f8ed4c3a8e62de4da572281ebfc586ab",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

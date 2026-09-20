@@ -1,0 +1,24 @@
+SECURITY.md
+  s_f74925d0c0d81f::t_b7a9c9d1fef6d8 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "ff800d51297c4b23a182d085f647024fa12b743c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f74925d0c0d81f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a0a3f4c-ce8a-4939-99a0-a9f893c95039",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

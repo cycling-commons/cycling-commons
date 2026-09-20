@@ -1,0 +1,60 @@
+web/tests/Translation/ModerateTranslationsTest.php
+  s_5442f64eb36c11::t_0afe2968207f86 1-155
+web/src/Translation/Exception/SelfReviewException.php
+  s_5442f64eb36c11::t_ce1099288665c2 1-18
+web/src/Translation/Entity/TranslationOverlay.php
+  s_5442f64eb36c11::t_f24e8c27fd6ce3 67-78
+web/tests/Translation/DecisionServiceTest.php
+  s_5442f64eb36c11::t_3d63c1ea4e2fce 1-204
+web/templates/account/_shell_chrome.html.twig
+  s_5442f64eb36c11::t_0c25524fcfd3bf 37-38
+  s_5442f64eb36c11::t_941e5205f9f849 14-15
+web/src/Translation/Entity/TranslationProposal.php
+  s_5442f64eb36c11::t_908f890eaf8491 103-117
+web/translations/messages.en.yaml
+  s_5442f64eb36c11::t_9a6a2b3d18ad61 3037-3038
+  s_5442f64eb36c11::t_5cedbd77c9499a 24
+  s_5442f64eb36c11::t_6bb411f0433f9b 2832
+  s_5442f64eb36c11::t_44df935c7b2e0b 2949-2951,2969-2971
+  s_5442f64eb36c11::t_d121f033076d1e 2644-2663
+web/src/Controller/ModerateTranslationsController.php
+  s_5442f64eb36c11::t_47b3463553760a 1-58,60-95
+  s_5442f64eb36c11::t_c271781b9955b8 59
+web/src/Translation/DecisionService.php
+  s_5442f64eb36c11::t_e4b6ebbf7ad561 1-194
+web/src/Twig/ModerationChromeExtension.php
+  s_5442f64eb36c11::t_f4f81e36e68df2 1-45
+web/src/Messaging/MessageCategory.php
+  s_5442f64eb36c11::t_470e09573edbcc 43-45
+web/templates/moderate/translations.html.twig
+  s_5442f64eb36c11::t_43d06b4f5dc387 1-79,83-89
+  s_5442f64eb36c11::t_20be836e10df0a 80-82
+web/src/Messaging/UserMessageKind.php
+  s_5442f64eb36c11::t_89db9fb32c00b7 41-44
+web/src/Form/TranslationDecisionType.php
+  s_5442f64eb36c11::t_8d96bfc3eaa2a0 1-65
+web/translations/messages.de.yaml
+  s_5442f64eb36c11::t_d8b33ccf08841d 24,2618-2637,2806,2923-2925,2943-2945,3011-3012
+web/translations/messages.es.yaml
+  s_5442f64eb36c11::t_7e394e351d7d03 24,2651-2670,2840,2957-2959,2977-2979,3045-3046
+web/translations/messages.fr.yaml
+  s_5442f64eb36c11::t_c9e225196844ea 24,2615-2634,2803,2920-2922,2940-2942,3008-3009
+web/translations/messages.nl.yaml
+  s_5442f64eb36c11::t_3e5d5d41fec9f1 24,2615-2634,2803,2920-2922,2940-2942,3008-3009
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "518a8ee82b6d584683a8fcc70a331d0fa974e690",
+  "prompts": {},
+  "sessions": {
+    "s_5442f64eb36c11": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "3712a67e-f588-40b8-adc6-30a0ff64a387",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

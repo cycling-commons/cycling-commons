@@ -1,0 +1,38 @@
+web/translations/messages.de.yaml
+  s_c68dfc59dc9546::t_35b0cf52720df0 656
+  s_c68dfc59dc9546::t_70bb979409962e 657
+web/templates/security/2fa_setup.html.twig
+  s_c68dfc59dc9546::t_7306e2decf7f58 39
+  s_c68dfc59dc9546::t_8d216160fb4b2e 27-29
+  s_c68dfc59dc9546::t_b5728fd646cd13 56,59
+web/translations/messages.en.yaml
+  s_c68dfc59dc9546::t_70bb979409962e 657
+docs/specs/2026-07-14-public-rider-profile-and-settings-chips-design.md
+  s_c68dfc59dc9546::t_8308745fb973b9 113-119
+web/translations/messages.nl.yaml
+  s_c68dfc59dc9546::t_70bb979409962e 657
+  s_c68dfc59dc9546::t_35b0cf52720df0 656
+web/translations/messages.fr.yaml
+  s_c68dfc59dc9546::t_70bb979409962e 657
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "7bb2a89eb9bb0c0b545adbd2373935aa4a47d1e2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

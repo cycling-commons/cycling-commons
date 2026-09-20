@@ -1,0 +1,19 @@
+LICENSES/CC0-1.0.txt
+  s_0f0d3ca1895aee::t_5f129ba282a0c2 1-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "38c037264b1fc3b8403704ccf5882a5c24725a24",
+  "prompts": {},
+  "sessions": {
+    "s_0f0d3ca1895aee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4dcab164-5d71-4c41-b932-ab0d05c4e71e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

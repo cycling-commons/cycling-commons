@@ -1,0 +1,427 @@
+docs/specs/system-configuration.md
+  s_8f9941cdcf9eca::t_d12706b77962d4 20-21
+web/tests/Catalog/RegionRegistryProviderTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 15
+  s_8f9941cdcf9eca::t_f063a315c859fd 43-44,79-80
+web/assets/map/sheet.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 3
+pipeline/tests/test_run.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 201
+web/src/Community/Entity/CuratorApplication.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 14
+web/src/Catalog/RegionBoundaryProvider.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 18
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 61
+web/src/Community/PublicNoteFilter.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 10
+web/templates/account/_shell_chrome.html.twig
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 32
+web/tests/World/ScaffoldRegionsCommandTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 19
+web/migrations/Version20260719140000.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 15,19,21
+tools/divisions/tests/test_probe_areas.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 2,42
+web/src/Catalog/RegionDirectoryProvider.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 13-14
+wiki/developers/gis-beyond/edge-cases.md
+  s_8f9941cdcf9eca::t_4255b8f9bee7fa 271
+  s_8f9941cdcf9eca::t_b1525e81e4b249 49
+  s_8f9941cdcf9eca::t_35dcf58457ec34 310-311
+tools/divisions/config.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 5,7,39
+  s_8f9941cdcf9eca::t_8e12715e3d6a6a 50,114
+web/migrations/Version20260727120000.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 17
+web/tests/Community/CuratorApplicationTest.php
+  s_8f9941cdcf9eca::t_df83466f79612a 24
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 109
+web/src/Catalog/MapViewMode.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 11
+web/assets/map/lightbox.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 4
+wiki/developers/gis/tiles.md
+  s_8f9941cdcf9eca::t_1e586875cfe054 5,231,249,256,265,283
+  s_8f9941cdcf9eca::t_9bfa7dcdd0c00d 296
+web/src/Controller/CoverageController.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 39,129
+web/tests/Catalog/CuratedReadinessTest.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 16-17
+wiki/developers/gis/on-screen.md
+  s_8f9941cdcf9eca::t_9bfa7dcdd0c00d 213
+  s_8f9941cdcf9eca::t_f52cc6da80445c 35-36
+web/tests/js/scope-chips.test.cjs
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 16
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 125,302
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 85
+  s_8f9941cdcf9eca::t_7fe4c4f262eee6 474
+web/translations/messages.en.yaml
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 659
+web/src/Catalog/RouteRankingService.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 29,42
+pipeline/tests/test_tiles.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 62,83,108
+  s_8f9941cdcf9eca::t_f063a315c859fd 275-276,299-300
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 248
+web/src/Controller/Admin/DashboardController.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 204
+web/templates/settings/index.html.twig
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 35,210,266
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 304
+web/migrations/Version20260727140000.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 16
+developers/coverage-batch.md
+  s_8f9941cdcf9eca::t_aa792bb3ee94a5 66
+web/src/Controller/SettingsController.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 58,137,143
+web/src/Coverage/CoverageRepository.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 73,174,255,344
+web/migrations/Version20260724120000.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 16
+web/assets/map/community.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 13
+web/src/Controller/JoinCountryController.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 25
+web/src/Controller/MapController.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 52,85,237,252,258,342,354,395
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 57,104,208,212,422
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 71,204
+web/translations/messages.nl.yaml
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 659
+pipeline/coverage/load.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 28,157,444,465,493
+  s_8f9941cdcf9eca::t_f063a315c859fd 41-42,48-49,280-281,419-420
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 34,258
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 91,107,369
+web/assets/map/catalog-load.js
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 15
+web/assets/map/scope-ui.js
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 33,41,210,251,272
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 125,359
+  s_8f9941cdcf9eca::t_f063a315c859fd 144
+  s_8f9941cdcf9eca::t_a20911aa3131e2 6
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 109,255,321
+web/tests/Community/CuratorApplicationReviewTest.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 330
+  s_8f9941cdcf9eca::t_df83466f79612a 18
+web/tests/Controller/MyAreaControllerTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 16
+web/migrations/Version20260729212853.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 14
+docs/specs/catalog-data-model.md
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 110,132,143,149,247,262,270,277
+pipeline/tests/conftest.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 48
+web/assets/map/item-index.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 5
+web/tests/Controller/RideCheckControllerTest.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 158
+web/assets/map/map-init.js
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 5
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 23
+web/tests/Auth/UserEntityTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 93
+  s_8f9941cdcf9eca::t_fda190e174938b 13-14
+web/assets/map/panels.js
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 165,215,269
+  s_8f9941cdcf9eca::t_f063a315c859fd 177-178,194-195,342-343
+  s_8f9941cdcf9eca::t_a20911aa3131e2 7
+web/tests/Coverage/CoverageSchema.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 55
+tools/divisions/tests/test_export_divisions.py
+  s_8f9941cdcf9eca::t_8e12715e3d6a6a 176
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 162
+wiki/developers/gis/making-it-fast.md
+  s_8f9941cdcf9eca::t_aa88cc5e572f8d 23
+web/assets/map/picking.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 6
+web/tests/js/fixtures/region-outlines.cjs
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 4
+web/config/packages/security.yaml
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 50
+pipeline/coverage/tiles.py
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 91,121,152
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 56,62
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 7,156
+  s_8f9941cdcf9eca::t_f063a315c859fd 162
+web/tests/browser/map-smoke.js
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 3
+tools/wallonia/export.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 30
+web/tests/Contribution/SpatialResolverTest.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 15
+web/config/packages/rate_limiter.yaml
+  s_8f9941cdcf9eca::t_f063a315c859fd 55-56
+wiki/developers/gis-beyond/reprojection.md
+  s_8f9941cdcf9eca::t_b6ae96597c0fad 32
+web/src/Service/BaseAreaResolver.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 16-17
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 15
+web/assets/map/scope.js
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 12,100,373,596,836
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 3,27,38,40,251,260,383,506,539,614,644,732,766
+  s_8f9941cdcf9eca::t_b0a650eb264d42 680-681
+  s_8f9941cdcf9eca::t_f063a315c859fd 34,339
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 672,755
+web/assets/map/search-ui.js
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 84,214
+  s_8f9941cdcf9eca::t_a20911aa3131e2 4
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 66,156,184,205,248
+web/assets/map/i18n.js
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 3
+web/tests/Community/OsmUserVerifierTest.php
+  s_8f9941cdcf9eca::t_df83466f79612a 15
+web/assets/map/mapillary.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 4
+web/assets/map/map.js
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 79,213
+  s_8f9941cdcf9eca::t_b0a650eb264d42 36-37
+  s_8f9941cdcf9eca::t_a20911aa3131e2 3
+web/tests/Community/CountryInterestTest.php
+  s_8f9941cdcf9eca::t_df83466f79612a 15
+web/assets/map/drawer.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 6
+web/tests/Controller/MapPrefsTest.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 75-76
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 82
+web/src/Controller/ProfileController.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 79
+web/assets/styles/map.css
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 116,141,240,246
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 84,144,153
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 458
+web/templates/map/index.html.twig
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 85,93,104,346,380
+  s_8f9941cdcf9eca::t_59afd672236905 389
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 132,357,401,417
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 99,117
+web/src/Catalog/Entity/Region.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 55,62
+web/src/Catalog/CuratedReadiness.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 17
+web/assets/map/catalog.js
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 123
+  s_8f9941cdcf9eca::t_f063a315c859fd 105-106
+  s_8f9941cdcf9eca::t_a20911aa3131e2 5
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 32
+web/src/Community/CountryInterestService.php
+  s_8f9941cdcf9eca::t_df83466f79612a 15
+web/tests/Moderation/ModerationScopeProviderTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 17
+web/src/Community/OsmUserVerifier.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 14
+docs/specs/account-and-auth.md
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 61,456
+web/src/Catalog/CoverageStatsProvider.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 24
+web/src/Entity/User.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 130
+  s_8f9941cdcf9eca::t_f063a315c859fd 160-161
+web/translations/messages.de.yaml
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 659
+web/src/Form/SettingsType.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 65
+web/tests/Service/BaseAreaResolverTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 15,191
+wiki/developers/data-ops/harvesting.md
+  s_8f9941cdcf9eca::t_a0177c5e171c37 102-103
+web/src/Catalog/OperationalRegions.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 10
+web/tests/Controller/ScopeBoundaryTest.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 14
+web/templates/profile/show.html.twig
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 100
+web/assets/map/ride-check.js
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 3,60
+  s_8f9941cdcf9eca::t_a20911aa3131e2 5
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 156
+web/tests/Catalog/CatalogProviderTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 114,425
+web/assets/map/places.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 5
+web/src/Catalog/RegionRegistryProvider.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 12
+  s_8f9941cdcf9eca::t_f063a315c859fd 32-33
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 39
+web/src/Controller/ModerateRegionsController.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 25
+web/assets/map/corrections.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 5
+docs/specs/coverage-provider.md
+  s_8f9941cdcf9eca::t_aa359d9be0b50a 323-326
+  s_8f9941cdcf9eca::t_6ad2cb4335f188 400-401
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 434-435,460,526,550,807
+  s_8f9941cdcf9eca::t_91f40955702f16 545
+  s_8f9941cdcf9eca::t_e0889b003147c3 58,128,296,309,404,445,456,484,798
+  s_8f9941cdcf9eca::t_f809ed1a498bf4 420
+  s_8f9941cdcf9eca::t_6d7d3f3fa674e2 346,349-351
+web/assets/map/icons.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 6
+web/tests/Controller/RiderProfileTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 171
+web/assets/map/scope-chips.js
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 88,153
+  s_8f9941cdcf9eca::t_a20911aa3131e2 3
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 105
+web/migrations/Version20260721120000.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 17
+web/assets/map/util.js
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 3
+web/tests/Service/BaseLocationServiceTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 16,68
+web/src/Community/Entity/CountryInterest.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 14
+web/assets/map/coverage.js
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 205
+  s_8f9941cdcf9eca::t_a20911aa3131e2 6
+  s_8f9941cdcf9eca::t_f063a315c859fd 105-106
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 68,144,421,456
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 42,98,248
+  s_8f9941cdcf9eca::t_b0a650eb264d42 71-72
+wiki/developers/gis-beyond/geocoding.md
+  s_8f9941cdcf9eca::t_ddf17f190c874c 104
+  s_8f9941cdcf9eca::t_b01b7b30dc624f 146
+web/src/World/Command/ScaffoldRegionsCommand.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 22,26,177,187,262,282
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 223,419
+web/translations/messages.fr.yaml
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 659
+web/migrations/Version20260721160000.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 16
+tools/divisions/export_divisions.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 6,14,167
+  s_8f9941cdcf9eca::t_8e12715e3d6a6a 149,173
+web/src/Community/CuratorApplicationService.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 327
+  s_8f9941cdcf9eca::t_df83466f79612a 22
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 203
+web/tests/Moderation/CuratedDefaultGateTest.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 68
+  s_8f9941cdcf9eca::t_f063a315c859fd 19-20
+web/tests/browser/check-module-refs.py
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 11
+web/config/packages/map_view_mode.yaml
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 1
+wiki/developers/gis/spatial-questions.md
+  s_8f9941cdcf9eca::t_9bfa7dcdd0c00d 343
+wiki/data-priority.md
+  s_8f9941cdcf9eca::t_d525f0c21467bf 258
+web/tests/Controller/MapScopeRegistryTest.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 14
+web/src/Controller/MyAreaController.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 20,60
+web/assets/map/render.js
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 240,331
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 307
+  s_8f9941cdcf9eca::t_a20911aa3131e2 6
+pipeline/tests/test_contract.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 56
+docs/specs/map-and-search.md
+  s_8f9941cdcf9eca::t_3073a956e5ac50 720
+  s_8f9941cdcf9eca::t_fc301df0cbbd09 317
+  s_8f9941cdcf9eca::t_a251c72ca8ac8c 346
+  s_8f9941cdcf9eca::t_fbce506e795092 326-327
+  s_8f9941cdcf9eca::t_c8c027d5566f93 447-448
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 95,229-230,268,296
+tools/divisions/README.md
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 28,111
+  s_8f9941cdcf9eca::t_8e12715e3d6a6a 5,9,48,58,87
+  s_8f9941cdcf9eca::t_aa792bb3ee94a5 24
+web/assets/settings/base-location.js
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 2
+web/src/Contribution/RegionResolver.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 18
+web/assets/map/planner.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 5
+web/tests/Catalog/CoverageContractTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 107
+web/src/Service/BaseLocationService.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 14,36,52
+web/src/Coverage/CoverageManifest.php
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 27,68
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 486
+  s_8f9941cdcf9eca::t_f063a315c859fd 531
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 68,208,227,255,280,311,438
+docs/specs/route-domain.md
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 498
+web/src/Catalog/RideCheckService.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 39-40,141-142
+web/assets/map/scope-header.js
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 38,72
+web/tests/Coverage/CoverageQueryTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 322,352,448,482
+web/src/Catalog/CatalogProvider.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 49,175,281,343
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 97,127,131,163,182,228,453
+  s_8f9941cdcf9eca::t_f063a315c859fd 204-205,491-492,513-514
+web/templates/admin/curator_applications.html.twig
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 3
+web/tests/Auth/ProfileSettingsTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 347
+web/tests/js/scope.test.cjs
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 1077,1155,1177
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 264
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 423,497,555,695,758
+  s_8f9941cdcf9eca::t_59afd672236905 906
+web/assets/map/osm-pools.js
+  s_8f9941cdcf9eca::t_a20911aa3131e2 9
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 65
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 79
+tools/divisions/probe_areas.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 4,6,27,58,75
+web/src/Contribution/SpatialResolver.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 27-28
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 53
+wiki/location-privacy.md
+  s_8f9941cdcf9eca::t_d10c040dd840c4 76-77
+pipeline/tests/test_load.py
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 366,525
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 131,136,207
+wiki/developers/data-ops/onboarding-a-country.md
+  s_8f9941cdcf9eca::t_fe6ad1f9b1bd2d 7-10
+  s_8f9941cdcf9eca::t_d0a59956a41d4d 33
+  s_8f9941cdcf9eca::t_7c73af437bd2a4 144-145
+web/importmap.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 23
+web/src/Controller/MapViewModeController.php
+  s_8f9941cdcf9eca::t_53fef5b58da1a3 19
+pipeline/coverage/contract.py
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 50
+web/assets/map/spotlight.js
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 3,27,104,159,172
+  s_8f9941cdcf9eca::t_a20911aa3131e2 5
+  s_8f9941cdcf9eca::t_78bfd6a105adb9 4,41,107,143
+web/tests/Community/PublicNoteFilterTest.php
+  s_8f9941cdcf9eca::t_f063a315c859fd 14
+wiki/developers/gis/pitfalls.md
+  s_8f9941cdcf9eca::t_9bfa7dcdd0c00d 27
+web/tests/Contribution/RegionResolverTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 56
+web/tests/Controller/MapRegionBoundaryTest.php
+  s_8f9941cdcf9eca::t_0949e9e6c75f03 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "2aecfb446b5cd929be0c60d4f7fa02be6c3ea2fa",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_8f9941cdcf9eca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "be8228a9-eb05-456e-bed2-ccf9fe1d7437",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

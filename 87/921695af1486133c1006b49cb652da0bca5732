@@ -1,0 +1,27 @@
+web/assets/map/map.js
+  s_e6d6993eda7318::t_4361d22e3197f9 331-333,335
+  s_e6d6993eda7318::t_8292f1d0cb48e2 272,276
+docs/specs/osm-data-architecture.md
+  s_e6d6993eda7318::t_b466828372bfb4 128-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "87921695af1486133c1006b49cb652da0bca5732",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e6d6993eda7318": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "081baf86-6152-46e3-a19d-aa12c114220a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

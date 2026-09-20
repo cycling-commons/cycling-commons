@@ -1,0 +1,14 @@
+wiki/governance.md
+  h_fb5318cde6cf17 6-8,10,12-13,21-23,42-46,118,172-176,187-189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d7357f27133af991cbc937bf26eae46c3e07205c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

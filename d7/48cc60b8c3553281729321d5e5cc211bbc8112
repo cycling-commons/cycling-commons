@@ -1,0 +1,47 @@
+web/src/Contribution/CatalogContributionService.php
+  s_190feadae0fef2::t_60c34cbe3c0269 360-363,371-372
+  s_190feadae0fef2::t_5c76756ba33160 179-198,205
+docs/specs/moderation-and-contribution.md
+  s_190feadae0fef2::t_8cea4a139acb5c 68-77
+docs/specs/osm-data-architecture.md
+  s_190feadae0fef2::t_e02ca5984197b2 316-323
+web/tests/Contribution/MaterializeFlowTest.php
+  s_190feadae0fef2::t_e77860b19733cd 1-180
+web/src/Contribution/SubmissionDraft.php
+  s_190feadae0fef2::t_317621e6d4b6b3 56-62
+web/src/Controller/ContributeController.php
+  s_190feadae0fef2::t_b8759dc0318a88 135-208
+  s_190feadae0fef2::t_9af5bbf07eae62 13
+  s_190feadae0fef2::t_55c6cf4bc02aed 258
+  s_190feadae0fef2::t_f7744ade963d5e 316-326,328
+  s_190feadae0fef2::t_eff413027922eb 21
+web/src/Form/ImproveType.php
+  s_190feadae0fef2::t_70687f51ee154d 84-86
+web/assets/map/drawer.js
+  s_190feadae0fef2::t_ac87aa5cfbab62 127
+  s_190feadae0fef2::t_19e3b9c147286f 176
+  s_190feadae0fef2::t_2ca12ecc93bbd5 275-282
+web/assets/map/coverage.js
+  s_190feadae0fef2::t_cebb0704ec100a 298-300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "d748cc60b8c3553281729321d5e5cc211bbc8112",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_190feadae0fef2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed6e4b7c-6e75-4531-a2b6-ac04eb20119f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

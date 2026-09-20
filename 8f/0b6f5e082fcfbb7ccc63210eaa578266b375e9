@@ -1,0 +1,35 @@
+web/templates/settings/index.html.twig
+  s_c68dfc59dc9546::t_53d06ad22c67a4 63
+web/assets/styles/map.css
+  s_c68dfc59dc9546::t_fa846f4898b941 488,490
+web/templates/account/_shell_styles.html.twig
+  s_c68dfc59dc9546::t_f6a062be7fc0a1 10-19,22-28
+web/templates/account/_shell_chrome.html.twig
+  s_c68dfc59dc9546::t_e33d326e0d3fa3 6-9,11,17-20,27-29
+web/templates/profile/show.html.twig
+  s_c68dfc59dc9546::t_e1c64086bf8548 52-60
+  s_c68dfc59dc9546::t_bb4a54a18d28f2 38-39
+docs/specs/2026-07-14-public-rider-profile-and-settings-chips-design.md
+  s_c68dfc59dc9546::t_6709437a60206b 188-202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "8f0b6f5e082fcfbb7ccc63210eaa578266b375e9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

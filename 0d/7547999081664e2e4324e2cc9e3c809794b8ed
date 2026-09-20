@@ -1,0 +1,35 @@
+web/translations/messages.nl.yaml
+  s_0f648c977bdc75::t_b476b8a0778572 940
+web/tests/Contribution/RouteProposalServiceTest.php
+  s_0f648c977bdc75::t_68c38c79e66906 149-177
+web/tests/Contribution/Gpx/TrackProcessorTest.php
+  s_0f648c977bdc75::t_1a68d5429de094 134-146,148-161
+  s_0f648c977bdc75::t_174ef163badf02 118-123,131-133
+web/src/Contribution/Gpx/TrackProcessor.php
+  s_0f648c977bdc75::t_f84b82c54859fe 108
+  s_0f648c977bdc75::t_60e54ef1b4ddc8 191-193,195,202,210-216
+  s_0f648c977bdc75::t_7e564dafb061f9 22-25
+  s_0f648c977bdc75::t_75eb2841a4c20d 217-218
+web/translations/messages.de.yaml
+  s_0f648c977bdc75::t_011945dd578597 940
+web/translations/messages.en.yaml
+  s_0f648c977bdc75::t_19536eb386a0a8 940
+web/translations/messages.fr.yaml
+  s_0f648c977bdc75::t_37a418d50ba15e 940
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0d7547999081664e2e4324e2cc9e3c809794b8ed",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

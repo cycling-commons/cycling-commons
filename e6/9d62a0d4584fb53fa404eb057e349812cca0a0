@@ -1,0 +1,28 @@
+web/templates/account/_shell_chrome.html.twig
+  s_c68dfc59dc9546::t_aa9edd941320c7 22-30,38
+web/templates/account/_shell_styles.html.twig
+  s_c68dfc59dc9546::t_6e8e7b20e43d46 20-21,23-29
+docs/specs/2026-07-14-public-rider-profile-and-settings-chips-design.md
+  s_c68dfc59dc9546::t_9cee7ac88ebef2 193-198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "e69d62a0d4584fb53fa404eb057e349812cca0a0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

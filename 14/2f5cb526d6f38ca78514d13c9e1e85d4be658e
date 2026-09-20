@@ -1,0 +1,40 @@
+web/translations/messages.fr.yaml
+  s_3bd3f8ccb3a560::t_77801d62a40867 1041
+docs/specs/2026-07-22-scope-selector-scale-design.md
+  s_3bd3f8ccb3a560::t_3a65a7da087fa5 12-42
+web/src/Controller/MapController.php
+  s_3bd3f8ccb3a560::t_0721521417ff96 190-193
+web/translations/messages.en.yaml
+  s_3bd3f8ccb3a560::t_1791c706b14086 1211
+web/translations/messages.nl.yaml
+  s_3bd3f8ccb3a560::t_47bad8d7d54d55 1041
+web/translations/messages.de.yaml
+  s_3bd3f8ccb3a560::t_6e46847e7125ee 1041
+web/tests/js/scope.test.cjs
+  s_3bd3f8ccb3a560::t_d81f4a281d8c87 584-636
+  s_3bd3f8ccb3a560::t_a6b8fd9777ba47 637-671
+web/assets/map/scope.js
+  s_3bd3f8ccb3a560::t_9dee97c6c558a4 279-283,288
+  s_3bd3f8ccb3a560::t_d667c2abe07ba7 271-278
+  s_3bd3f8ccb3a560::t_1129afb6bd4ac3 489-522
+  s_3bd3f8ccb3a560::t_6d89ee1a824be7 260,263
+  s_3bd3f8ccb3a560::t_43d5f7ea878afe 51-59
+web/assets/map/map.js
+  s_3bd3f8ccb3a560::t_a75ba9ea34dcf9 190-201,213-224,227-236,239-245,261,266,270
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "142f5cb526d6f38ca78514d13c9e1e85d4be658e",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

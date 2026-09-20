@@ -1,0 +1,39 @@
+web/migrations/Version20260713120000.php
+  s_50ae7f4c1fd9e4::t_ebb7882283c6ce 1-40
+web/src/Controller/ItemConfirmationController.php
+  s_50ae7f4c1fd9e4::t_1cd7dbba97aec2 53
+  s_50ae7f4c1fd9e4::t_68ab6805c98c58 1-52,54-82,98-124
+  s_50ae7f4c1fd9e4::t_4cf39f46ccb86d 83-97
+web/src/Catalog/ItemType.php
+  s_50ae7f4c1fd9e4::t_2b923f97eec19b 190-213
+web/src/Security/TwoFactorSetupEnforcer.php
+  s_50ae7f4c1fd9e4::t_362e40610381d2 58
+web/tests/Community/ItemConfirmationServiceTest.php
+  s_50ae7f4c1fd9e4::t_951dd88e38147f 1-114
+web/src/Catalog/ConfirmationStance.php
+  s_50ae7f4c1fd9e4::t_28536d2b9acb11 1-23
+web/config/packages/security.yaml
+  s_50ae7f4c1fd9e4::t_6dfa43fffbe57d 51-55
+web/tests/Community/ItemConfirmationControllerTest.php
+  s_50ae7f4c1fd9e4::t_5b5077883a72c4 1-166
+web/src/Catalog/Entity/ItemConfirmation.php
+  s_50ae7f4c1fd9e4::t_c406a4e06f1df0 1-93
+web/src/Community/ItemConfirmationService.php
+  s_50ae7f4c1fd9e4::t_217d99635f286c 1-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "a317859344d6a461635cd54276efbb7b6f43bdeb",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

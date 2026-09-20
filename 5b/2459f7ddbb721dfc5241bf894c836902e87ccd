@@ -1,0 +1,27 @@
+docs/specs/coverage-provider.md
+  s_3bd3f8ccb3a560::t_0160fdf29e02fa 137-158,162-210
+  s_3bd3f8ccb3a560::t_0749811fce63e5 109-112
+  s_3bd3f8ccb3a560::t_d988464c7630a5 220-223
+  s_3bd3f8ccb3a560::t_7874560a3c1d94 159-161
+docs/specs/account-and-auth.md
+  s_3bd3f8ccb3a560::t_7bdd97cbc6a1cb 74-81
+docs/specs/osm-data-architecture.md
+  s_3bd3f8ccb3a560::t_b505853af9fceb 30-37
+  s_3bd3f8ccb3a560::t_b06bf7ff75ec25 165-189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "5b2459f7ddbb721dfc5241bf894c836902e87ccd",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

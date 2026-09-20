@@ -1,0 +1,41 @@
+web/assets/map/panels.js
+  s_573608e5fb8d70::t_079d3b03d5df6c 319-322
+web/tests/js/rail-shell.test.cjs
+  s_573608e5fb8d70::t_1d97566ba23692 285-316
+web/assets/styles/map.css
+  s_573608e5fb8d70::t_97a928ea9c8a7c 1311-1317
+  s_573608e5fb8d70::t_d15158dddca2d4 156-157,397
+  s_573608e5fb8d70::t_ab7062a1881fb6 410-413
+  s_573608e5fb8d70::t_c165bea12a888a 119-121,123-135,184-186,222,228-232,582-583,1272-1278,1280-1286
+  s_573608e5fb8d70::t_fe5f2add4ac9b9 187-190,402
+web/assets/map/scope-ui.js
+  s_573608e5fb8d70::t_6821822671b923 102-105
+web/templates/map/index.html.twig
+  s_573608e5fb8d70::t_cb930c0542ad1d 81-82,84,87-95
+  s_573608e5fb8d70::t_3901ba077f801d 379-385
+web/assets/map/mapillary.js
+  s_573608e5fb8d70::t_079d3b03d5df6c 52,125
+web/assets/js/version.js
+  s_573608e5fb8d70::t_d15158dddca2d4 25-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "6ee361fe7f056a23b03f00e4c748557ec20ba081",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_573608e5fb8d70": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "434ec033-3fb6-4aba-b649-e625d8799f68",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

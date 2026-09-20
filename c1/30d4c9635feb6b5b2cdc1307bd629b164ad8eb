@@ -1,0 +1,21 @@
+CONTRIBUTING.md
+  s_13ad1b1238a7e6::t_65b3d514b81d3d 41-54
+.pre-commit-config.yaml
+  s_13ad1b1238a7e6::t_fb119fdf7d63c6 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "c130d4c9635feb6b5b2cdc1307bd629b164ad8eb",
+  "prompts": {},
+  "sessions": {
+    "s_13ad1b1238a7e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed2e8d61-4e83-4569-b8f3-a2ac8bdc16c8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

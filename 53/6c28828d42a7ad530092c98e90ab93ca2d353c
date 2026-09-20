@@ -1,0 +1,41 @@
+web/tests/Moderation/RouteModerationServiceTest.php
+  s_51df195d1c7750::t_e468b8139dafa4 149-152
+web/translations/messages.fr.yaml
+  s_51df195d1c7750::t_52f5b4713d64ea 1284-1286
+web/translations/messages.en.yaml
+  s_51df195d1c7750::t_d28ca11b159219 1284-1286
+web/src/Controller/RouteCommunityController.php
+  s_51df195d1c7750::t_59ebb15730d1c3 143-145
+web/src/Community/RouteCommunityService.php
+  s_51df195d1c7750::t_d03b96f71a8922 152,161-163
+  s_51df195d1c7750::t_53a2d3f7dc04f6 34-35
+web/tests/Moderation/RouteModerateTest.php
+  s_51df195d1c7750::t_0fc0d7d7e23408 35-47,53
+  s_51df195d1c7750::t_667942bead6d11 101
+web/tests/Moderation/RouteDecisionMessagesTest.php
+  s_51df195d1c7750::t_6a7264666e80c0 1-225
+web/translations/messages.de.yaml
+  s_51df195d1c7750::t_52ecdb1994312c 1284-1286
+web/src/Moderation/RouteModerationService.php
+  s_51df195d1c7750::t_8c25d6c23ae481 15-16,23-24,33,52,66,84
+  s_51df195d1c7750::t_c32d03cefc51bc 134-141
+  s_51df195d1c7750::t_fdb669a6a7e82a 178-194
+web/translations/messages.nl.yaml
+  s_51df195d1c7750::t_b6215a147a9c13 1284-1286
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "536c28828d42a7ad530092c98e90ab93ca2d353c",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

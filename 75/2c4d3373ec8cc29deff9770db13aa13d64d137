@@ -1,0 +1,22 @@
+tools/wallonia/tests/test_route_surfaces.py
+  s_0f648c977bdc75::t_2458ad81ebfc8f 1-36
+tools/wallonia/route_surfaces.py
+  s_0f648c977bdc75::t_de70e365dfe41d 44-45,47,59
+  s_0f648c977bdc75::t_208cb012c422e9 25-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "752c4d3373ec8cc29deff9770db13aa13d64d137",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

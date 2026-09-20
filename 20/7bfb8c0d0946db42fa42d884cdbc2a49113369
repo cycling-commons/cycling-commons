@@ -1,0 +1,30 @@
+.github/workflows/ci-tools.yml
+  s_1cc0641c44ce5a::t_5df6abb6aeac30 7-9
+tools/analysis-prepush.sh
+  s_1cc0641c44ce5a::t_a1820e8f3b8ff5 1-32
+.github/workflows/ci-app.yml
+  s_1cc0641c44ce5a::t_8cd43873cdda16 11-13
+.pre-commit-config.yaml
+  s_1cc0641c44ce5a::t_1429c3d48a6923 37-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "207bfb8c0d0946db42fa42d884cdbc2a49113369",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1cc0641c44ce5a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a97433f-3f94-4f05-ac5b-c757059d3493",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

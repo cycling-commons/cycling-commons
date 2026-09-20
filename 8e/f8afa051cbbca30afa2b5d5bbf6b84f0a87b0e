@@ -1,0 +1,29 @@
+web/templates/map/index.html.twig
+  s_c68dfc59dc9546::t_cbcef33dcd777b 282
+web/tests/Controller/MapPrefsTest.php
+  s_c68dfc59dc9546::t_6aabeae0f4af6f 1-90
+web/src/Controller/MapController.php
+  s_c68dfc59dc9546::t_e516eeea86fb30 11,14
+  s_c68dfc59dc9546::t_70085828dc46c7 34,38-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "8ef8afa051cbbca30afa2b5d5bbf6b84f0a87b0e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

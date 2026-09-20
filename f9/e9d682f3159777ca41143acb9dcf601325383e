@@ -1,0 +1,21 @@
+wiki/developers/gis/index.md
+  s_f3f9c3dc9409c4::t_479cd8376fc1b7 1-129
+mkdocs.yml
+  s_f3f9c3dc9409c4::t_008cfcd60617c8 58-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f9e9d682f3159777ca41143acb9dcf601325383e",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

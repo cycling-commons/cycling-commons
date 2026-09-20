@@ -1,0 +1,40 @@
+web/config/packages/doctrine.yaml
+  s_c6f332c201127d::t_8be044eca303c7 72-93
+web/.env.test
+  s_c6f332c201127d::t_5c7a339e10439d 26-31
+web/config/packages/asset_mapper.yaml
+  s_c6f332c201127d::t_8be044eca303c7 12-19
+web/config/packages/routing.yaml
+  s_c6f332c201127d::t_8be044eca303c7 11-17
+docs/specs/photo-uploads.md
+  s_9a6b8d8611c934::t_cdf10e664ad470 103-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "f62bc649de09b04e9ad20b2647392d7e46c5153a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_9a6b8d8611c934": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5ab7bb79-587a-4b27-803b-dbb4f99c167a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

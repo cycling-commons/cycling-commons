@@ -1,0 +1,31 @@
+web/src/EventSubscriber/SecurityHeadersSubscriber.php
+  s_dd35dcc1b6eafa::t_5eaac4f8367f18 1-55
+docs/specs/security-architecture.md
+  s_dd35dcc1b6eafa::t_17a4ff94270992 63-71
+web/tests/Security/SecurityHeadersTest.php
+  s_dd35dcc1b6eafa::t_a0639a6a290301 1-52
+docs/specs/operations.md
+  s_dd35dcc1b6eafa::t_4b6aa48c1292f8 217-223
+  s_dd35dcc1b6eafa::t_fe77d40ca2fe82 232,235-238,244,246-252
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "437bb82c6120828773fa43fd5a69803f79491c67",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

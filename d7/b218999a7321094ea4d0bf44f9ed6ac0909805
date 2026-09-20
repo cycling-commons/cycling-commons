@@ -1,0 +1,22 @@
+web/src/Contribution/RouteProposalService.php
+  s_162e830c17ed4c::t_b4fef4a15f3a47 93
+  s_162e830c17ed4c::t_ffc6151051404d 57-62
+web/tests/Contribution/RouteProposalServiceTest.php
+  s_162e830c17ed4c::t_44d3ec2c045129 97-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d7b218999a7321094ea4d0bf44f9ed6ac0909805",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

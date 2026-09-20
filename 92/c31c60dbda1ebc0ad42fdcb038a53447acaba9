@@ -1,0 +1,102 @@
+web/tests/Support/ContactFormTest.php
+  s_35311736dd2add::t_b699ffdcab1d70 138-151
+  s_35311736dd2add::t_5c5d4ab0b7b17a 18-20,279-286,303-335
+docs/specs/contact-and-support.md
+  s_35311736dd2add::t_406e602613103e 111-121
+web/templates/support/report.html.twig
+  s_35311736dd2add::t_464d449c4e2701 77-83,106-114,117-118,173,224-227
+  s_35311736dd2add::t_d9aa8c7fd3eee9 228
+web/tests/Support/BugReportTest.php
+  s_35311736dd2add::t_41e0283f1336c4 21-23,360-383
+  s_35311736dd2add::t_ee47624728d451 384-386
+web/src/Controller/BugReportController.php
+  s_35311736dd2add::t_5c5d4ab0b7b17a 199,248-256
+  s_35311736dd2add::t_98f1536f007785 257-258
+web/translations/messages.fr.yaml
+  s_35311736dd2add::t_7afc74ed3d755a 2599
+  s_35311736dd2add::t_464d449c4e2701 4386-4388,4401
+web/src/Security/RememberedLoginListener.php
+  s_35311736dd2add::t_4475c9a88af104 1-66
+web/src/Translation/ProposalService.php
+  s_35311736dd2add::t_7afc74ed3d755a 20,81-85
+  s_35311736dd2add::t_d1c680f5ff4e8b 86-87
+web/tests/Translation/OverlayCatalogueTest.php
+  s_35311736dd2add::t_7afc74ed3d755a 12,53-68
+  s_35311736dd2add::t_36c4f222493fd3 69-70
+web/translations/messages.de.yaml
+  s_35311736dd2add::t_464d449c4e2701 4389-4391,4404
+  s_35311736dd2add::t_7afc74ed3d755a 2602
+docs/specs/translations.md
+  s_35311736dd2add::t_406e602613103e 249-261
+web/config/packages/csrf.yaml
+  s_35311736dd2add::t_7bafd4d7e4a14b 29-35
+web/src/Controller/ContentReportController.php
+  s_35311736dd2add::t_464d449c4e2701 10,12,66-67,212-233,316-321
+  s_35311736dd2add::t_b0d4c4ad1c873a 322
+web/translations/messages.es.yaml
+  s_35311736dd2add::t_464d449c4e2701 4417-4419,4432
+  s_35311736dd2add::t_7afc74ed3d755a 2142
+web/assets/support/report-challenge.js
+  s_35311736dd2add::t_464d449c4e2701 1-74
+web/tests/Auth/SecurityTest.php
+  s_35311736dd2add::t_4475c9a88af104 91-135
+docs/specs/account-and-auth.md
+  s_35311736dd2add::t_406e602613103e 632-650
+docs/specs/photo-uploads.md
+  s_35311736dd2add::t_406e602613103e 749-755
+web/src/Translation/ProtectedKeys.php
+  s_35311736dd2add::t_7afc74ed3d755a 1-42
+web/src/Controller/TranslateController.php
+  s_35311736dd2add::t_7afc74ed3d755a 23,387-388
+web/src/Account/DormancySweep.php
+  s_35311736dd2add::t_4475c9a88af104 102-103,113-122
+web/tests/Account/DormancySweepTest.php
+  s_35311736dd2add::t_4475c9a88af104 7,122-143
+web/translations/messages.en.yaml
+  s_35311736dd2add::t_7afc74ed3d755a 2137
+  s_35311736dd2add::t_464d449c4e2701 4408-4410,4423
+web/src/Translation/OverlayCatalogueLoader.php
+  s_35311736dd2add::t_7afc74ed3d755a 9,33-35,43,45-46
+web/tests/Translation/ProposalServiceTest.php
+  s_35311736dd2add::t_7afc74ed3d755a 18,99-119
+  s_35311736dd2add::t_f2523fc332f1bd 120-122
+web/translations/messages.nl.yaml
+  s_35311736dd2add::t_464d449c4e2701 4386-4388,4401
+  s_35311736dd2add::t_7afc74ed3d755a 2599
+web/src/Controller/ContactController.php
+  s_35311736dd2add::t_5c5d4ab0b7b17a 131-143
+  s_35311736dd2add::t_2a96cecaf90474 144-145
+web/src/Translation/CatalogueBrowser.php
+  s_35311736dd2add::t_7afc74ed3d755a 13,48-51,64,77
+docs/specs/security-architecture.md
+  s_35311736dd2add::t_406e602613103e 305-306,368-379
+web/src/Translation/Exception/ProtectedKeyException.php
+  s_35311736dd2add::t_7afc74ed3d755a 1-18
+docs/specs/content-reports.md
+  s_35311736dd2add::t_406e602613103e 128-152
+web/tests/Support/ContentReportTest.php
+  s_35311736dd2add::t_464d449c4e2701 10-11,13,19,22,85,92-93,101-102,106-160,248-288
+  s_35311736dd2add::t_b699ffdcab1d70 189-203
+  s_35311736dd2add::t_7784820da20cdf 289
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "92c31c60dbda1ebc0ad42fdcb038a53447acaba9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_35311736dd2add": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6acaccdb-00d0-44b7-8f6d-74c4e6ba0363",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

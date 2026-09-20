@@ -1,0 +1,35 @@
+tools/mkdocs_github_links.py
+  s_f3f9c3dc9409c4::t_59aa90f7b6e536 1-97
+.github/workflows/ci-wiki.yml
+  s_f3f9c3dc9409c4::t_3de298dda39ab6 1-67
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_24795fad537aac 325-342,348
+  s_3c392b244b902c::t_1547485c0d0593 343-347
+  s_f3f9c3dc9409c4::t_931cadde8aa0e4 387-394
+mkdocs.yml
+  s_f3f9c3dc9409c4::t_e5f26bd5bd81fa 49,90-96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "6c7d64f1edac0a532ddd2120a69e8b2208441173",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

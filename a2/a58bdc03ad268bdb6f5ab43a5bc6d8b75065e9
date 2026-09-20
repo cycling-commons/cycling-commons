@@ -1,0 +1,41 @@
+web/src/Api/V1/PublicItemsProvider.php
+  s_985a6f4653b290::t_bc52c813f63a4f 11,67,69
+web/tests/Coverage/CoverageQueryTest.php
+  s_985a6f4653b290::t_dd511c44a6690b 68-77,252-281
+  s_985a6f4653b290::t_ac3114446020b1 282
+web/src/Catalog/GoneRows.php
+  s_985a6f4653b290::t_bc52c813f63a4f 1-9,11-25
+  s_985a6f4653b290::t_831dbb73d9e303 10
+docs/specs/catalog-data-model.md
+  s_985a6f4653b290::t_be15daf1c35342 887
+  s_985a6f4653b290::t_a701cfeef4a0c1 880-883
+web/src/Catalog/CatalogProvider.php
+  s_985a6f4653b290::t_4817cfe11e1429 92
+  s_985a6f4653b290::t_bc52c813f63a4f 201
+docs/specs/coverage-provider.md
+  s_985a6f4653b290::t_a701cfeef4a0c1 684-690
+web/src/Coverage/CoverageRepository.php
+  s_985a6f4653b290::t_a9a93cfdc6085f 11
+  s_985a6f4653b290::t_bc52c813f63a4f 224-225,292-293
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "a2a58bdc03ad268bdb6f5ab43a5bc6d8b75065e9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_985a6f4653b290": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5c75010-816e-4e18-8eae-3cd0c486f2cb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

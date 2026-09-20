@@ -1,0 +1,24 @@
+web/assets/map/drawer.js
+  s_6df2cc515a46f1::t_16bea1cca7cd3d 882-886
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "dc25b29aa6ef2959910ef642bfde74af6eb8a6c1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

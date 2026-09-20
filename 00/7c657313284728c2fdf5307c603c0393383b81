@@ -1,0 +1,29 @@
+Makefile
+  s_17396619d306c4::t_817794b0bf57c5 28-29,215-220
+  s_17396619d306c4::t_7d9ed7d249c679 221
+docs/specs/contact-and-support.md
+  s_17396619d306c4::t_aa52d25346049e 408-413
+docs/specs/operations.md
+  s_17396619d306c4::t_aa52d25346049e 262-273
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "007c657313284728c2fdf5307c603c0393383b81",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_17396619d306c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "de24113b-ff92-4db1-b177-1da3cfa74b70",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

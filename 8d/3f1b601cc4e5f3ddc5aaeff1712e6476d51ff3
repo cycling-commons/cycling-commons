@@ -1,0 +1,60 @@
+web/src/Form/SettingsType.php
+  s_ed348b2f9c4e8c::t_ddc14800ecd0a9 71
+  s_ed348b2f9c4e8c::t_e599819e6b23ca 80-82
+web/src/Form/CatalogFieldConstraints.php
+  s_ed348b2f9c4e8c::t_8eeedb62f08c50 75-76
+  s_ed348b2f9c4e8c::t_0a606f4965ffee 38-39,41
+  s_ed348b2f9c4e8c::t_781f556133b4fe 52-56
+  s_ed348b2f9c4e8c::t_841bd6b83aa184 19-20,23
+  s_ed348b2f9c4e8c::t_1b723c9d6418a4 48
+  s_ed348b2f9c4e8c::t_37dc5ff5af901a 24
+web/src/Form/ImproveType.php
+  s_ed348b2f9c4e8c::t_18366898d3c81c 84
+  s_ed348b2f9c4e8c::t_30d5c7005b7fb8 124-129
+  s_ed348b2f9c4e8c::t_43066e5501f96e 40-43,45-47
+  s_ed348b2f9c4e8c::t_692527864ddbcb 92,94
+  s_ed348b2f9c4e8c::t_becdceaada2abd 110-114
+  s_ed348b2f9c4e8c::t_2537df2e7aca7f 153
+  s_ed348b2f9c4e8c::t_54dd26370d6ba1 212-214
+  s_ed348b2f9c4e8c::t_16d36fd100ca4d 179
+web/src/Form/AddClimbType.php
+  s_ed348b2f9c4e8c::t_0480df5d8a31de 94-96
+  s_ed348b2f9c4e8c::t_9102f3fd0e97ab 32-34
+  s_ed348b2f9c4e8c::t_c187073fabb96a 46
+  s_ed348b2f9c4e8c::t_4fa9d862257e80 118,120
+web/src/Twig/MessageBadgeExtension.php
+  s_ed348b2f9c4e8c::t_218ca91e3a970b 16-22
+web/src/Twig/CspExtension.php
+  s_ed348b2f9c4e8c::t_b66b723ea2dffc 14-18
+web/src/Twig/RichTranslationExtension.php
+  s_ed348b2f9c4e8c::t_e3a26193317d0f 15-22
+web/src/Twig/LocaleExtension.php
+  s_ed348b2f9c4e8c::t_0344bf2ce9a6a2 85
+  s_ed348b2f9c4e8c::t_d0c9f7c1a94ec5 16
+  s_ed348b2f9c4e8c::t_d4d860d67b8194 70
+web/src/Form/ProposeRouteType.php
+  s_ed348b2f9c4e8c::t_ca9d1f7bd1e41f 25-27
+  s_ed348b2f9c4e8c::t_d46154c00fa2ed 62-65
+  s_ed348b2f9c4e8c::t_3782c82e190180 73-75
+  s_ed348b2f9c4e8c::t_64647d9cb338e0 99-102
+web/src/Form/TwoFactorSetupType.php
+  s_ed348b2f9c4e8c::t_e8be3696a3fe98 17
+web/src/Form/RouteDecisionType.php
+  s_ed348b2f9c4e8c::t_8f1a98ebb856eb 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "8d3f1b601cc4e5f3ddc5aaeff1712e6476d51ff3",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

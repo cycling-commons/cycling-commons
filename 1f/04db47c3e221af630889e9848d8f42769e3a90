@@ -1,0 +1,126 @@
+docs/specs/2026-07-03-catalog-data-model-and-import-design.md
+  s_162e830c17ed4c::t_6ac3dd1bb53b63 76-77
+  s_162e830c17ed4c::t_2734c2dada6d3c 118
+  s_162e830c17ed4c::t_ee9d93aa2b91dd 166-168
+  s_162e830c17ed4c::t_41a7aca7ac4a96 95-96
+  s_162e830c17ed4c::t_55abb73a1c5faf 177-179
+  s_162e830c17ed4c::t_f9c428f187cfd5 142-143
+  s_162e830c17ed4c::t_191628703a2a67 13-14
+  s_162e830c17ed4c::t_a231aa52571c7a 21
+  s_8fd503fc2c4cbf::t_1ab55bedda7159 22,119
+docs/specs/edit-items/K-quality-rides.md
+  s_162e830c17ed4c::t_28f0bee4f3d511 1,4-6,9-35,38-41,44-49,52-65,67-70,72,74-89,92-101
+docs/specs/2026-06-17-edit-item-and-profile.md
+  s_162e830c17ed4c::t_352974565cdf5d 146-149
+  s_162e830c17ed4c::t_ba0166bfcc25e1 42-44
+  s_162e830c17ed4c::t_bbb2e62937cde0 162-164
+  s_162e830c17ed4c::t_dc8ca84166a62b 131-133
+  s_162e830c17ed4c::t_a7351597b797d0 109-113
+  s_162e830c17ed4c::t_97ae63a40c1a7b 30-32
+  s_162e830c17ed4c::t_8f8be5ab2e70ed 10-16
+docs/specs/2026-06-26-map-enhancements-design.md
+  s_162e830c17ed4c::t_824e203d8aa4fe 40-42
+  s_162e830c17ed4c::t_62fe7550664f2e 177-179
+  s_162e830c17ed4c::t_fdca54e56d3a00 55-59
+  s_162e830c17ed4c::t_01ba1399c9a5e1 125-130
+  s_162e830c17ed4c::t_b47d9a7677e7a0 207-210
+  s_162e830c17ed4c::t_a780398967d597 14-20
+  s_162e830c17ed4c::t_bb947adadde003 60
+docs/specs/2026-07-05-contribution-frontend-reconciliation-design.md
+  s_162e830c17ed4c::t_95fca7a2689a0a 8-9
+  s_162e830c17ed4c::t_62b11e7d852cc5 73
+  s_162e830c17ed4c::t_77f7b1f82053b6 43
+  s_162e830c17ed4c::t_40e8e691deb069 91
+  s_162e830c17ed4c::t_d006c9a586d665 53-54
+  s_162e830c17ed4c::t_d081836efef84a 97
+  s_162e830c17ed4c::t_889966cdda8735 84
+  s_162e830c17ed4c::t_6bfe32e23f6c9f 44
+  s_162e830c17ed4c::t_e1654bdd53d042 85
+docs/specs/2026-06-26-html-to-symfony-migration-design.md
+  s_162e830c17ed4c::t_9c3a7dfe03e367 186
+  s_162e830c17ed4c::t_4c6e652395548b 7-8
+  s_162e830c17ed4c::t_ac5eb4844a6e09 24
+  s_162e830c17ed4c::t_f6840fcef584a0 219
+  s_162e830c17ed4c::t_60fae53d927b9c 154
+  s_162e830c17ed4c::t_89445d5bd14cb2 106-107
+  s_162e830c17ed4c::t_64dda8926ed5f9 25
+  s_162e830c17ed4c::t_3900eeb542dbe0 155
+docs/specs/2026-07-02-map-based-moderation-design.md
+  s_162e830c17ed4c::t_7a6de33383aba6 68
+  s_162e830c17ed4c::t_d892c920563899 91-92,95
+  s_162e830c17ed4c::t_73b961f0737252 106
+  s_162e830c17ed4c::t_f13afd09b694be 39-40
+  s_162e830c17ed4c::t_cf4d67a2a565fe 13-14
+  s_162e830c17ed4c::t_f783d1b0d83b75 69
+  s_162e830c17ed4c::t_eb33885e12fbf6 96
+  s_162e830c17ed4c::t_d5845fc81c89f0 107
+docs/specs/2026-06-17-map-showcase-design.md
+  s_162e830c17ed4c::t_9ee262da589377 214-218
+  s_162e830c17ed4c::t_d848a6ea05f1a7 11-17
+  s_162e830c17ed4c::t_af5435c6a58b44 198-202
+  s_162e830c17ed4c::t_95511f894ac4d5 56-58
+  s_162e830c17ed4c::t_fdb22cc51e4c78 86-89,95-98
+  s_162e830c17ed4c::t_4005f7529225b2 142-147
+  s_162e830c17ed4c::t_fb036444b5234a 158-164
+  s_162e830c17ed4c::t_9eb082b417daf1 126-129
+  s_162e830c17ed4c::t_607deccce1d271 59
+  s_162e830c17ed4c::t_fddb62786e9d58 99
+  s_162e830c17ed4c::t_48e17cacfac79f 130
+docs/specs/2026-07-08-route-domain-design.md
+  s_162e830c17ed4c::t_3a5ea287df16f6 166-168
+  s_162e830c17ed4c::t_2b33624d81cc0d 1-165,169-286
+docs/specs/edit-items/README.md
+  s_162e830c17ed4c::t_c097fedc3b4658 8-13
+  s_162e830c17ed4c::t_f625bcf50c1a39 93-96
+  s_162e830c17ed4c::t_78d26aa879756f 165-166
+  s_162e830c17ed4c::t_9de862b1e92d1a 32-33,35-38
+  s_162e830c17ed4c::t_9a32458170b323 26-27
+  s_162e830c17ed4c::t_49bdb1c2e0b977 48-50
+  s_162e830c17ed4c::t_dd6f1b89f62af9 193
+  s_162e830c17ed4c::t_fd163dc81f2d20 145-153
+  s_162e830c17ed4c::t_1923a4129ac682 154
+docs/specs/2026-06-18-catalog-v2-and-per-type-forms.md
+  s_162e830c17ed4c::t_93350aabc91866 76-81
+  s_162e830c17ed4c::t_7e6b55b9437b35 95-98
+  s_162e830c17ed4c::t_64b6c6d81cd24a 157-161
+  s_162e830c17ed4c::t_43f7465ece9f80 13-20
+  s_162e830c17ed4c::t_73a2aa3fd4281b 130-134
+  s_162e830c17ed4c::t_48f9669643c498 99
+docs/specs/2026-07-04-submissions-and-moderation-on-real-data-design.md
+  s_162e830c17ed4c::t_75f7942329c244 29
+  s_162e830c17ed4c::t_c16f74e7c0dd3e 135
+  s_162e830c17ed4c::t_0e293f7d1a1c51 106
+  s_162e830c17ed4c::t_4b0649d8b2950f 43-44
+  s_162e830c17ed4c::t_4c850d88372373 101
+  s_162e830c17ed4c::t_1b4ca215f74102 98
+  s_162e830c17ed4c::t_5bc484fbb0f005 113
+  s_162e830c17ed4c::t_dd6769912f6643 118
+  s_162e830c17ed4c::t_dd2290d26933bc 51
+  s_162e830c17ed4c::t_72510a85f1410c 19
+  s_162e830c17ed4c::t_346bee47906ae3 7-8
+  s_162e830c17ed4c::t_0010b21fe4ede0 52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1f04db47c3e221af630889e9848d8f42769e3a90",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_8fd503fc2c4cbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4b3c596a-0aaf-47d9-9fc0-226f64988e2b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

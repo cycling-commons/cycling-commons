@@ -1,0 +1,21 @@
+docs/specs/2026-07-08-route-domain-design.md
+  s_51df195d1c7750::t_983a31f045f80f 349-421
+docs/specs/edit-items/K-quality-rides.md
+  s_51df195d1c7750::t_d58cc5d2fc9ca8 30-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8aac856e922a46ee21e127686ac41c4778071d11",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

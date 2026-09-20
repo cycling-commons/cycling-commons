@@ -1,0 +1,46 @@
+web/src/Catalog/CatalogProvider.php
+  s_0f648c977bdc75::t_427e6c8bb635b3 231-241
+web/src/Catalog/CatalogFormRegistry.php
+  s_0f648c977bdc75::t_57a6f9417c36e5 206-210
+web/tests/Catalog/BikeTypeVocabularyTest.php
+  s_0f648c977bdc75::t_83b2b3e505871d 1-33
+web/src/Catalog/CatalogField.php
+  s_0f648c977bdc75::t_ca30ef684cc49d 56-67
+web/src/Catalog/Command/BackfillAttributesCommand.php
+  s_0f648c977bdc75::t_08435b8c9dc2d4 267
+web/src/Catalog/FieldKind.php
+  s_0f648c977bdc75::t_d83927cfcb4cec 20-21
+web/src/Contribution/RouteProposalService.php
+  s_0f648c977bdc75::t_0eda678b27793f 106-114
+  s_0f648c977bdc75::t_68f7eff259eee3 9
+web/assets/map/map.js
+  s_0f648c977bdc75::t_a30d0176a56dcf 635-640
+web/src/Catalog/BikeTypeVocabulary.php
+  s_0f648c977bdc75::t_3c849f52a7d0b0 1-41
+web/tests/Catalog/CatalogFormRegistryTest.php
+  s_0f648c977bdc75::t_c58fb492735dcb 176-192
+  s_0f648c977bdc75::t_cd0170484d00f8 63
+web/migrations/Version20260708141000.php
+  s_0f648c977bdc75::t_0e2058009bab39 1-26,30,32-60
+  s_0f648c977bdc75::t_2c94cd849532f2 27-29,31
+web/src/Form/ImproveType.php
+  s_0f648c977bdc75::t_e648016960709a 131-140
+web/src/Form/CatalogFieldConstraints.php
+  s_0f648c977bdc75::t_281d9725cdaeb5 36-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "dd21039197b27ac6510a3e2e4a440d3d85c23b87",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

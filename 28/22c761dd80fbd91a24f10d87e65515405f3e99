@@ -1,0 +1,22 @@
+web/tests/Controller/MapScopeRegistryTest.php
+  s_3bd3f8ccb3a560::t_b957a9d13412f7 1-27,29-40
+  s_3bd3f8ccb3a560::t_e30c9458896fa2 28
+web/src/Controller/MapController.php
+  s_3bd3f8ccb3a560::t_34acf1aa43f9aa 41-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2822c761dd80fbd91a24f10d87e65515405f3e99",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+docs/specs/account-and-auth.md
+  s_e0bebdd9c445ca::t_2e3c7c137b0c66 1003-1016
+web/templates/media/photo.html.twig
+  s_e0bebdd9c445ca::t_b9f103a93be0e5 73
+web/tests/js/rider-date-format.test.cjs
+  s_e0bebdd9c445ca::t_195cc7e8f957ce 1-53
+web/src/Controller/Admin/ResetPasswordRequestCrudController.php
+  s_e0bebdd9c445ca::t_9af64da3c296ec 31-32,62-63
+web/src/Account/DatePreference.php
+  s_e0bebdd9c445ca::t_534d4b698b3506 1-71
+web/templates/pages/changelog.html.twig
+  s_e0bebdd9c445ca::t_b9f103a93be0e5 45
+web/src/Controller/Admin/AdminActionLogCrudController.php
+  s_e0bebdd9c445ca::t_9af64da3c296ec 35-36,62
+web/src/Controller/Admin/UserCrudController.php
+  s_e0bebdd9c445ca::t_9af64da3c296ec 52-53,111,113
+web/src/Controller/Admin/BlogPostCrudController.php
+  s_e0bebdd9c445ca::t_9af64da3c296ec 47-48,108-109
+web/templates/moderate_routes/_photos.html.twig
+  s_e0bebdd9c445ca::t_b9f103a93be0e5 22
+web/templates/moderate/rulebook.html.twig
+  s_e0bebdd9c445ca::t_b9f103a93be0e5 100
+web/assets/js/version.js
+  s_e0bebdd9c445ca::t_b9f103a93be0e5 7-11,30
+web/templates/moderate/_queue_item.html.twig
+  s_e0bebdd9c445ca::t_b9f103a93be0e5 164,299
+web/templates/map/index.html.twig
+  s_e0bebdd9c445ca::t_b9f103a93be0e5 1071-1081
+web/src/Controller/Admin/RiderDatedFields.php
+  s_e0bebdd9c445ca::t_9af64da3c296ec 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4b427f525b0a3e679984d68f5117579c6ddca722",
+  "prompts": {},
+  "sessions": {
+    "s_e0bebdd9c445ca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa62971e-74d9-467c-a29e-fc341985db53",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

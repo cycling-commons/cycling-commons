@@ -1,0 +1,26 @@
+wiki/developers/gis-beyond/elevation.md
+  s_14d343aaa1f816::t_069d1e2cd68751 123,130-150
+wiki/developers/data-ops/elevation-tiles.md
+  s_14d343aaa1f816::t_3a6ab30ab3c642 421-568
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "21f037365cf21ebca08350ae8b87b5ee35fd9996",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_14d343aaa1f816": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "95808232-1ca6-4e95-ae43-a4126c68a402",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+pipeline/coverage/run.py
+  s_16e7d98f40a315::t_f6a2edd7993962 112-113
+pipeline/coverage/tiles.py
+  s_16e7d98f40a315::t_afeecdc552785c 2-11,83,101-102,107-111,117-118,120-133,138-140,182-183
+pipeline/tests/test_run.py
+  s_16e7d98f40a315::t_54cd65a8637336 115
+pipeline/tests/test_tiles.py
+  s_16e7d98f40a315::t_b4bab9890409ad 53-60,67,72,89-90,114,117,122-148,161,165,179,185,189-192,195,201,214,224,274,307,310,332,335,360,362,378,380,396,399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "df62e75ea70b69400ce5395d7555167b1a67fe94",
+  "prompts": {},
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

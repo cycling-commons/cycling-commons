@@ -1,0 +1,35 @@
+web/tests/Coverage/CoverageQueryTest.php
+  s_51ed87ec737f32::t_700450ad111f7c 320-430
+web/src/Controller/CoverageController.php
+  s_51ed87ec737f32::t_bbac928774718b 95-96,99
+  s_51ed87ec737f32::t_eb3c9ebb1eb199 58-59
+  s_51ed87ec737f32::t_e5846a9ba3959f 82,84
+  s_51ed87ec737f32::t_a6bcf50d733602 36-44
+  s_51ed87ec737f32::t_013c01dc5a13b8 123-149
+  s_51ed87ec737f32::t_b295af9e144ecd 150-151
+  s_51ed87ec737f32::t_f6eda885ae1530 35,122
+web/tests/Coverage/CoverageSchema.php
+  s_51ed87ec737f32::t_d420ecd0e13304 53-54,56,68-69,72-73,78
+web/src/Coverage/CoverageRepository.php
+  s_51ed87ec737f32::t_1f138a18964b4c 12
+  s_51ed87ec737f32::t_2eb939fcc4f7ee 246-248,251-252,255,258-259,271-272,275,287-288,293
+  s_51ed87ec737f32::t_de0755d0f44c3d 331-334,337-338,341,343-345,350-351,353-354
+  s_51ed87ec737f32::t_222db91905bfeb 173-176,180-181,184,187-189,199-200,203-204,214-216,222-223,226-227
+  s_51ed87ec737f32::t_d94caa272644a8 72-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "61e069907bbc0d13db35e5a1e6defba68ea25d0f",
+  "prompts": {},
+  "sessions": {
+    "s_51ed87ec737f32": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cfcc005-7ab4-4c37-848d-fb8a89f6021f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

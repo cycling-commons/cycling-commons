@@ -1,0 +1,26 @@
+web/config/packages/cache.yaml
+  s_e382572451f2d6::t_596dcba2b60aa5 4-16
+  s_e382572451f2d6::t_a769f132d73d61 18
+  s_e382572451f2d6::t_d3aa3956bc5209 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "720c9a4dccf0d59f609d72ab449ae5ab496858ab",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e382572451f2d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d86ff86-2562-4654-bb50-b5129c283f3f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

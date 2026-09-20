@@ -1,0 +1,25 @@
+docs/specs/2026-07-27-scope-change-freeze-diagnosis.md
+  s_99879bf8d59ea6::t_43ef077e6f9838 107-118,123-126
+  s_99879bf8d59ea6::t_e0764e9aa927da 127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "dbf593c10494fb8cc49d5b2ee49d46b516a44f17",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_99879bf8d59ea6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76665ccb-0391-4d5f-8dd8-8d4442f2c396",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

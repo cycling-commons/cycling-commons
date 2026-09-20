@@ -1,0 +1,23 @@
+web/src/Contribution/Gpx/TrackProcessor.php
+  s_162e830c17ed4c::t_c5739a3b9e6f4d 93-96
+  s_162e830c17ed4c::t_a6b56c4cbce6e4 1-68,70-92,97-182
+  s_162e830c17ed4c::t_bff8db29b55e86 69
+web/tests/Contribution/Gpx/TrackProcessorTest.php
+  s_162e830c17ed4c::t_04ad36ebc1927c 1-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7a7cb1732f42202c1901917841144eca799017f5",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

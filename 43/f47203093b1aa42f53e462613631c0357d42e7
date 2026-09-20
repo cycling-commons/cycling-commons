@@ -1,0 +1,126 @@
+web/templates/security/_auth_shell_panel.html.twig
+  s_e4da53db38e0bd::t_c06659df30d076 1-18
+web/translations/messages.de.yaml
+  s_e4da53db38e0bd::t_82a8a6a17408a1 506-507,518,554-558,681-682,1022,1228-1229,1261
+  s_e4da53db38e0bd::t_8a0b6bc832ea9c 1057-1058
+  s_e4da53db38e0bd::t_a6f2f0a21e6f24 112
+web/templates/security/check_email.html.twig
+  s_e4da53db38e0bd::t_d689093b42e473 6,12
+  s_e4da53db38e0bd::t_e8f1dd49e03da8 22
+web/templates/partials/_auth_i18n.html.twig
+  s_e4da53db38e0bd::t_85fcb39ec83629 1-6,8-12
+  s_e4da53db38e0bd::t_4afb49c40d26df 7,13
+web/assets/js/version.js
+  s_e4da53db38e0bd::t_b9c9297b0e35a2 34
+  s_e4da53db38e0bd::t_7c863f3e471d84 15,17
+web/templates/admin/user_support_action.html.twig
+  s_e4da53db38e0bd::t_bdf312a291cdff 12
+web/src/Controller/RouteModerateController.php
+  s_e4da53db38e0bd::t_d7108f3f428774 186-191
+web/translations/messages.nl.yaml
+  s_e4da53db38e0bd::t_8a0b6bc832ea9c 1057-1058
+  s_e4da53db38e0bd::t_82a8a6a17408a1 506-507,518,554-558,681-682,1022,1228-1229,1261
+  s_e4da53db38e0bd::t_a6f2f0a21e6f24 112
+web/translations/messages.fr.yaml
+  s_e4da53db38e0bd::t_8a0b6bc832ea9c 1057-1058
+  s_e4da53db38e0bd::t_a6f2f0a21e6f24 112
+  s_e4da53db38e0bd::t_82a8a6a17408a1 506-507,518,554-558,681-682,1022,1228-1229,1261
+web/templates/security/reset_password_check_email.html.twig
+  s_e4da53db38e0bd::t_52453be37dd5bc 6,12
+  s_e4da53db38e0bd::t_e8f1dd49e03da8 24
+web/templates/security/2fa_login.html.twig
+  s_e4da53db38e0bd::t_06bf8bc2b74f47 8,10-11,18
+  s_e4da53db38e0bd::t_7bd17a09475782 57
+web/templates/security/reset_password_request.html.twig
+  s_e4da53db38e0bd::t_24caced1f1647f 6,12,50
+web/templates/pages/licenses.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 25
+web/templates/partials/_nav.html.twig
+  s_e4da53db38e0bd::t_9254130b6fe04d 27-28,30
+  s_e4da53db38e0bd::t_3f0e60cfefaf2e 35,37
+web/templates/pages/index.html.twig
+  s_e4da53db38e0bd::t_f717f9416f0ac7 317
+  s_e4da53db38e0bd::t_c292d388c8b35a 322-323,325-339
+  s_e4da53db38e0bd::t_7bd17a09475782 177,207,211-212,264,267,269,271,275,280-281
+web/templates/pages/join.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 33,35,38,51,69,73
+web/templates/security/login.html.twig
+  s_e4da53db38e0bd::t_0a60fa6a05ff5b 6,16,39,73-74
+web/assets/js/nav.js
+  s_e4da53db38e0bd::t_eae95b07c4afdd 209-210,214-215
+  s_e4da53db38e0bd::t_6389f2008d9e59 39-44
+web/templates/security/reset_password.html.twig
+  s_e4da53db38e0bd::t_d978a98396df57 6,12,52-53
+web/translations/messages.en.yaml
+  s_e4da53db38e0bd::t_82a8a6a17408a1 506-507,518,554-558,681-682,1022,1228-1229,1261
+  s_e4da53db38e0bd::t_a6f2f0a21e6f24 112
+  s_e4da53db38e0bd::t_8a0b6bc832ea9c 1057-1058
+web/templates/base.html.twig
+  s_e4da53db38e0bd::t_4e874d9d5a5208 12,20
+  s_e4da53db38e0bd::t_f4902910ff24f9 13-15,17,19,23-26
+web/templates/moderate_routes/index.html.twig
+  s_e4da53db38e0bd::t_2091a1e461039b 99
+  s_e4da53db38e0bd::t_a98a104fd8a8d0 65-66,68,73
+web/templates/pages/regions.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 41,46
+  s_e4da53db38e0bd::t_351035aa29886e 59
+  s_e4da53db38e0bd::t_7f1d829e4cc6d2 58,62-72,78,85,90,95,98
+web/templates/partials/_account_chip.html.twig
+  s_e4da53db38e0bd::t_15d50181d12409 7-8,10,15,19-21,24-26,28-29,31
+docs/specs/2026-07-08-route-domain-design.md
+  s_e4da53db38e0bd::t_a5d4662c89ee24 809-826
+web/templates/settings/index.html.twig
+  s_e4da53db38e0bd::t_b72614a85a1891 98-99
+  s_e4da53db38e0bd::t_d61b99d4d018b3 113-114
+  s_e4da53db38e0bd::t_7bd17a09475782 115,186
+  s_e4da53db38e0bd::t_c3786311d27317 222-223
+web/assets/admin_confirm.js
+  s_e4da53db38e0bd::t_cd51c41a0e5a21 3-26
+web/templates/pages/terms.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 39,52,58,65,68,71,81
+web/templates/pages/region.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 48
+web/templates/pages/contributors.html.twig
+  s_e4da53db38e0bd::t_ac1cbbcb222b62 51
+  s_e4da53db38e0bd::t_ef3ad4c4e2903d 66-70,76
+  s_e4da53db38e0bd::t_bc55a3a948bc41 25
+  s_e4da53db38e0bd::t_7bd17a09475782 24,29
+web/assets/js/a11y.js
+  s_e4da53db38e0bd::t_e9f3c7fd3cf041 22-26
+  s_e4da53db38e0bd::t_05553762e07a7b 9
+  s_e4da53db38e0bd::t_3996197fd69a3a 38
+web/templates/security/_auth_shell_styles.html.twig
+  s_e4da53db38e0bd::t_85d115d9219dd0 1-45
+web/templates/security/register.html.twig
+  s_e4da53db38e0bd::t_2ab2669fc80ae8 6,16,76-77,79-80,82
+  s_e4da53db38e0bd::t_a5f0395d2b3cde 78,81
+  s_e4da53db38e0bd::t_e8f1dd49e03da8 56
+web/templates/pages/privacy.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 27,36,43-46,50-51,57,59,63,65-67,71,75,77,85-87,93-98,103
+web/templates/profile/show.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 111
+  s_e4da53db38e0bd::t_7941bccd4cd988 49,107,115
+web/templates/registration/confirmation_email.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 40
+web/templates/moderate_routes/detail.html.twig
+  s_e4da53db38e0bd::t_d83b5ed4804203 53
+  s_e4da53db38e0bd::t_6bf0ff1a78ff09 42
+web/templates/pages/developers.html.twig
+  s_e4da53db38e0bd::t_7bd17a09475782 17,27,52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "43f47203093b1aa42f53e462613631c0357d42e7",
+  "prompts": {},
+  "sessions": {
+    "s_e4da53db38e0bd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1aa91764-9ba6-4f8b-9c7c-9027d41580c4",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

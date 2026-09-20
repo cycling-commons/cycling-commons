@@ -1,0 +1,31 @@
+web/src/Controller/RiderProfileController.php
+  s_c68dfc59dc9546::t_046c7c56732cdc 45-50,55-60
+docs/specs/2026-07-14-public-rider-profile-and-settings-chips-design.md
+  s_c68dfc59dc9546::t_f602f2c1750b1a 58-62
+  s_c68dfc59dc9546::t_888591b22aa4c9 63
+web/tests/Controller/RiderProfileTest.php
+  s_c68dfc59dc9546::t_051f5acfc6a397 8-10
+  s_c68dfc59dc9546::t_eeb46167c62c2e 50-65
+  s_c68dfc59dc9546::t_0f5297540ce9a7 107-130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "17e29eb598ec02f8a9651e362302b506bf2ccb83",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

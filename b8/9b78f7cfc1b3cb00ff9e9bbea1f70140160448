@@ -1,0 +1,29 @@
+pipeline/coverage/tiles.py
+  s_f6d45d977e7468::t_cbcecdc4ff1770 99-122,124-128
+  s_f6d45d977e7468::t_29b4a975462bd9 184,187-190
+  s_f6d45d977e7468::t_e83592e92ab896 161
+  s_f6d45d977e7468::t_c53e77fa77b32c 145
+pipeline/tests/test_tiles.py
+  s_f6d45d977e7468::t_5ca43440297897 4-7,10,19,44-71,102-103,113-121,126-159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "b89b78f7cfc1b3cb00ff9e9bbea1f70140160448",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

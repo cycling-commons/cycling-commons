@@ -1,0 +1,32 @@
+web/src/EventSubscriber/PublicPageCacheSubscriber.php
+  s_bd35b13142b2fa::t_fbec89c5aa6afa 54-55,107
+  s_bd35b13142b2fa::t_5c1efa2155254a 1-53,56-106,108-143,156-158,164-165,176-177,182-195
+  s_bd35b13142b2fa::t_b409299a3226f6 159-163,166,170-175,179-180
+  s_bd35b13142b2fa::t_b839f8bc065fe2 144-155,167-169,178,181
+web/tests/Security/PublicPageCacheTest.php
+  s_bd35b13142b2fa::t_d54726b96c5f0f 1-173
+docs/specs/page-caching.md
+  s_bd35b13142b2fa::t_47f6688cea54ed 5,185-197,203-214
+  s_bd35b13142b2fa::t_e68fb67a5f698e 215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "b0a93dc226ce3d5fe359aa5f5ef3efcee94bad6d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bd35b13142b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c348108d-a15c-4a6f-a1f0-9ab7e633bdf4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

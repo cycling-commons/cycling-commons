@@ -1,0 +1,28 @@
+web/src/Catalog/CatalogFormRegistry.php
+  s_c68dfc59dc9546::t_00efbd4870279e 86-88
+web/assets/map/map.js
+  s_c68dfc59dc9546::t_b51f0a6aa5442f 1307-1314
+docs/specs/edit-items/D-bike-services.md
+  s_c68dfc59dc9546::t_860615cb2995fc 23,46-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "dc1e6d591e3f2a7e54a446c110f46af7156d8f5e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

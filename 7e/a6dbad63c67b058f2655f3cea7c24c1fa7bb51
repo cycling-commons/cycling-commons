@@ -1,0 +1,28 @@
+web/tests/Catalog/CoverageContractTest.php
+  s_f6d45d977e7468::t_1911e9e517f68f 2,34
+web/src/Catalog/ServiceKind.php
+  s_f6d45d977e7468::t_1911e9e517f68f 2
+  s_f6d45d977e7468::t_317fb105a069bc 19-27
+web/tests/Catalog/ServiceKindTest.php
+  s_f6d45d977e7468::t_1911e9e517f68f 2
+web/tests/Smoke/CatalogEndpointTest.php
+  s_f6d45d977e7468::t_b4fcb8ebb22546 30-37
+web/tests/Catalog/ManualSourceTest.php
+  s_f6d45d977e7468::t_1b080682ecc1c8 62-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7ea6dbad63c67b058f2655f3cea7c24c1fa7bb51",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

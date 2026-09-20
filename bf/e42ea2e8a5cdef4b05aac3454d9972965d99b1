@@ -1,0 +1,40 @@
+web/src/Catalog/Import/ItemUpsert.php
+  s_40a002d02fdfd2::t_d659233e7bc1d0 43-78
+docs/specs/catalog-data-model.md
+  s_40a002d02fdfd2::t_ae3700de079298 188-203
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_40a002d02fdfd2::t_9b1664ab8bcab6 485
+  s_40a002d02fdfd2::t_bbb93f57bc2bb4 32-34
+  s_40a002d02fdfd2::t_d4e7ad5db2438f 17
+  s_40a002d02fdfd2::t_6d85d4a1ad104c 437-446,452-469
+  s_f4f6a57ae087b5::t_e885bdf97cbd5e 470
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "bfe42ea2e8a5cdef4b05aac3454d9972965d99b1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_40a002d02fdfd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f434c5a5-23e5-4d99-bf56-2c92d9db49b0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f4f6a57ae087b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3cc1dc99-8bd8-4895-bd29-e3731c4b2852",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

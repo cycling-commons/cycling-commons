@@ -1,0 +1,208 @@
+web/.env
+  s_df9a7eaed39865::t_ea679d45004031 109-114
+web/config/packages/flysystem.yaml
+  s_6a35334de7115d::t_6af0a83800109f 12-17
+  s_df9a7eaed39865::t_02d9e5f6515b85 34
+  s_df9a7eaed39865::t_3852728442593c 31-33,35-47,53
+  s_df9a7eaed39865::t_9d087dfdd773b2 54
+docs/specs/media-storage-architecture.md
+  s_df9a7eaed39865::t_1fd75582ec9562 17-31,99-116,211,213-230,246,248,252,255,257-263
+web/src/Controller/PhotoPageController.php
+  s_df9a7eaed39865::t_4a0311e6748b7e 97,108-110
+  s_df9a7eaed39865::t_ad9178ccf24a02 69-72
+web/src/Moderation/SubmissionQueue.php
+  s_df9a7eaed39865::t_02d9e5f6515b85 775
+  s_df9a7eaed39865::t_8d96bb041330dc 10-11,47,51,145,559,605-607,660-674,679-712
+  s_df9a7eaed39865::t_a9ac7d376b54a4 14,773-774,776-777,780,782,794,797-798
+  s_df9a7eaed39865::t_14b6f18fabc2a6 713-714
+web/src/Contribution/CatalogContributionService.php
+  s_df9a7eaed39865::t_fc80fb433f31c0 15-16
+  s_df9a7eaed39865::t_09aee7597535f0 71-72,787,792-822
+  s_df9a7eaed39865::t_cae2fe45d2e3c6 823-824
+web/tests/Catalog/LinkVerdictStoreTest.php
+  s_df9a7eaed39865::t_7b22ff81b3152e 1-146
+web/templates/contribute/improve.html.twig
+  s_df9a7eaed39865::t_94746c2f9d9244 290-291
+  s_df9a7eaed39865::t_7374b119085bf1 286-289
+  s_df9a7eaed39865::t_392ec2172f24d7 208-219
+  s_df9a7eaed39865::t_ae2dd109e2bfd9 348,368-369,378
+web/src/Messaging/UserMessageKind.php
+  s_df9a7eaed39865::t_2fc0d3c51aeb02 60-63,65-71,73-75
+  s_df9a7eaed39865::t_02d9e5f6515b85 64,72
+web/src/Media/MediaAction.php
+  s_df9a7eaed39865::t_02d9e5f6515b85 24,35
+  s_df9a7eaed39865::t_f1679011924a08 21-23,25-34,36-40
+web/src/Messaging/MessageCategory.php
+  s_df9a7eaed39865::t_02d9e5f6515b85 60
+  s_df9a7eaed39865::t_6fe6d586761b37 58-59,61-63
+web/src/Catalog/Links/LinkVerdictStore.php
+  s_df9a7eaed39865::t_7aba4813ee07c6 43-47,158,162
+  s_df9a7eaed39865::t_0f28296b747ec8 1-42,48-157,159-161,163-234
+web/src/Media/Entity/MediaUpload.php
+  s_df9a7eaed39865::t_44fe43650e202f 54,58-73,75-79,81-85
+  s_df9a7eaed39865::t_02d9e5f6515b85 74,80,259,287,329,343,367,417
+  s_df9a7eaed39865::t_0124bd9e472c0e 303-313
+  s_df9a7eaed39865::t_2fa10c203b07ec 325-328,330-342
+  s_df9a7eaed39865::t_46693fda2d082b 415-416,418-433
+  s_df9a7eaed39865::t_97bb89e1dc77a3 245-246,256-258,260-286,288-302,314-324,344-356,359-366,368-394
+web/src/Controller/MessagesController.php
+  s_df9a7eaed39865::t_bda7543fac6783 333-337,339
+web/tests/Media/MediaUploadEndpointTest.php
+  s_df9a7eaed39865::t_524368e8592a74 17-18,28-35,38-39,113-156,165-170,190,198,201,210,213-216,221,224,226-232,234,236-256,258-268,271,273-276,278,281,285,289-308,310-341,343-351,355-379,381-393,513-520,532-533,535-541,543-547
+  s_df9a7eaed39865::t_00fdaaeecd3ccb 157-164,171-189,233,235,257,309,342,352,380,394,542
+  s_df9a7eaed39865::t_b32f19081c2ca8 191,353
+docs/specs/photo-uploads.md
+  s_df9a7eaed39865::t_341296a08d2aae 119-138,167-225,227-228,230-233,238-250,252-258
+  s_df9a7eaed39865::t_7162aadd989cb9 287,289-309
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_df9a7eaed39865::t_3af06cf3721783 9-15,17-24,27,30-31,33-37,39-40,42,44-45,47-53,55-57,62-63,65-83,88-108,110-130,132-141,143-145,147-184,186-249,251-272
+  s_df9a7eaed39865::t_02d9e5f6515b85 41,43,46,54,64,109,131,146,185
+  s_df9a7eaed39865::t_ca3471ea88fc07 142
+web/tests/Media/AsyncTierTest.php
+  s_df9a7eaed39865::t_00fdaaeecd3ccb 12-13,16-24,28,34-35,37-46
+web/src/Account/DataExportService.php
+  s_df9a7eaed39865::t_a9ac7d376b54a4 10,262-263,283-286,288-292
+  s_df9a7eaed39865::t_02d9e5f6515b85 282
+web/assets/styles/map.css
+  s_df9a7eaed39865::t_567ba570f71a3f 353-358
+  s_df9a7eaed39865::t_196395c6530b97 600-609
+web/translations/messages.de.yaml
+  s_df9a7eaed39865::t_6cc5b8e7c5b014 2409,2412-2414
+  s_df9a7eaed39865::t_94ab74414a87e2 2627-2629
+  s_df9a7eaed39865::t_17f0355ad4abb2 2826-2827,2843
+  s_df9a7eaed39865::t_12aa2b5e9992a1 1943-1944
+  s_df9a7eaed39865::t_02cb084c7f57da 2844
+web/src/Controller/MapController.php
+  s_df9a7eaed39865::t_111d67a4174377 266-269
+web/src/Media/Command/MediaBackfillKeysCommand.php
+  s_df9a7eaed39865::t_064f651d550c55 1-9,11-24,26-34,36-77,79-107,109-125
+  s_df9a7eaed39865::t_68bc675a849efe 10,78,108
+  s_df9a7eaed39865::t_02d9e5f6515b85 25,35
+web/translations/messages.en.yaml
+  s_df9a7eaed39865::t_17f0355ad4abb2 2850-2851,2867
+  s_df9a7eaed39865::t_94ab74414a87e2 2651-2653
+  s_df9a7eaed39865::t_02cb084c7f57da 2868
+  s_df9a7eaed39865::t_6cc5b8e7c5b014 1985,1988-1994
+  s_df9a7eaed39865::t_12aa2b5e9992a1 2286-2287
+web/src/Media/GpsDistance.php
+  s_df9a7eaed39865::t_02d9e5f6515b85 10
+  s_df9a7eaed39865::t_9ce63a26b3bda0 1-9,11-41
+web/translations/messages.es.yaml
+  s_df9a7eaed39865::t_94ab74414a87e2 2660-2662
+  s_df9a7eaed39865::t_6cc5b8e7c5b014 1997,2000-2002
+  s_df9a7eaed39865::t_12aa2b5e9992a1 2295-2296
+  s_df9a7eaed39865::t_17f0355ad4abb2 2860-2861,2877-2878
+web/src/Catalog/Command/LinkRecheckCommand.php
+  s_df9a7eaed39865::t_c07a05308fb79d 1-106
+web/tests/Media/MediaPersistenceTest.php
+  s_df9a7eaed39865::t_ee57582af80609 75-79
+web/config/services.yaml
+  s_df9a7eaed39865::t_5d9a4df6acab17 146-153
+  s_df9a7eaed39865::t_cfea6bd6a10015 125,170
+  s_df9a7eaed39865::t_63cc3a1832f091 141-145
+docs/specs/operations.md
+  s_df9a7eaed39865::t_26020b13217dbb 42,202-206
+  s_df9a7eaed39865::t_f8cf8daf18769e 18-30,187-201,207-209
+web/assets/contribute/media-upload.js
+  s_df9a7eaed39865::t_1ba73525fa423e 19-21,28
+  s_df9a7eaed39865::t_c54f97c6e38c32 16-18
+  s_df9a7eaed39865::t_411264c7746ac4 3-15,38-42,253-258,260,292-293,311-314,316,318-343,345-348,352-365,369-411,414-417,419,421-422,469
+docs/specs/catalog-data-model.md
+  s_df9a7eaed39865::t_f175b11d018b92 433-467,541-545
+  s_df9a7eaed39865::t_97064e5465c440 406-432
+web/src/Media/MediaDecisionService.php
+  s_df9a7eaed39865::t_ad9178ccf24a02 70-77
+  s_df9a7eaed39865::t_bda7543fac6783 130,133-134
+web/src/Media/MediaStatus.php
+  s_df9a7eaed39865::t_0a2fef5a612d95 17-26,30-35
+web/translations/messages.fr.yaml
+  s_df9a7eaed39865::t_12aa2b5e9992a1 1940-1941
+  s_df9a7eaed39865::t_17f0355ad4abb2 2823-2824,2840-2841
+  s_df9a7eaed39865::t_6cc5b8e7c5b014 2406,2409-2411
+  s_df9a7eaed39865::t_94ab74414a87e2 2624-2626
+web/translations/messages.nl.yaml
+  s_df9a7eaed39865::t_12aa2b5e9992a1 1940-1941
+  s_df9a7eaed39865::t_17f0355ad4abb2 2823-2824,2840
+  s_df9a7eaed39865::t_02cb084c7f57da 2841
+  s_df9a7eaed39865::t_94ab74414a87e2 2624-2626
+  s_df9a7eaed39865::t_6cc5b8e7c5b014 2406,2409-2411
+web/src/Controller/MediaController.php
+  s_df9a7eaed39865::t_fef2e216c29fd9 116-121,123-126
+  s_df9a7eaed39865::t_965094e9d298b2 164-168,171-172,175-176,178-181,184,186,191-192,195-199,204-212,214-220,222-245,247-259
+  s_df9a7eaed39865::t_b37b0f7aa90556 17,19,28
+  s_df9a7eaed39865::t_6f0fc5094ba6de 221
+  s_df9a7eaed39865::t_7c636390f4eee2 52-56,59-63,70
+  s_df9a7eaed39865::t_02d9e5f6515b85 57-58,122,127-128,177,213
+web/config/packages/test/services.yaml
+  s_df9a7eaed39865::t_fd304dc0b70e05 5-12
+  s_df9a7eaed39865::t_197ee790f59753 13
+web/assets/styles/atlas.css
+  s_df9a7eaed39865::t_a395c3f24876a0 36-41
+  s_df9a7eaed39865::t_bbc317b59eb7b8 46,48-49
+  s_df9a7eaed39865::t_2827b0045e5ae2 42-45,47,50
+web/assets/map/drawer.js
+  s_df9a7eaed39865::t_a5623f722cd3b8 694-703
+  s_df9a7eaed39865::t_54c9b74737fe95 762
+web/config/packages/messenger.yaml
+  s_df9a7eaed39865::t_fd304dc0b70e05 30-35,40
+  s_6a35334de7115d::t_284fba44abbf60 6-7
+web/src/Media/MediaClaimService.php
+  s_df9a7eaed39865::t_41bb5efd19361e 63-68
+  s_df9a7eaed39865::t_84a65a29ce81a7 79
+web/src/Media/MediaStorage.php
+  s_df9a7eaed39865::t_02d9e5f6515b85 19,22,30,162
+  s_df9a7eaed39865::t_d71b27e24beb6a 157-161,163-183
+  s_df9a7eaed39865::t_8e25549ba4ccb8 13-15,17-18,20-21,23-29,31-37,39-40,54-55,61-63,65-66,71,77-85,87-150,156,189,192,212,214,217,223,225,227,234,236-243,247
+web/tests/Media/FakeScanner.php
+  s_df9a7eaed39865::t_692972227a7666 1-55
+web/migrations/Version20260816220000.php
+  s_df9a7eaed39865::t_2bccadad98eec4 1-60
+web/templates/map/index.html.twig
+  s_df9a7eaed39865::t_ae2dd109e2bfd9 547,567-568,577
+web/src/Catalog/CatalogProvider.php
+  s_df9a7eaed39865::t_c2de8725260479 9,36
+  s_df9a7eaed39865::t_175f544c155475 689-705,708-717
+web/templates/moderate/_queue_item.html.twig
+  s_df9a7eaed39865::t_a5623f722cd3b8 193-202
+  s_df9a7eaed39865::t_f2ae1d5abe3e92 192
+docs/specs/dev-environment.md
+  s_df9a7eaed39865::t_f8cf8daf18769e 80
+  s_df9a7eaed39865::t_74f350045dddc0 84
+web/src/Media/MediaDisposalService.php
+  s_df9a7eaed39865::t_0ed14cb5844910 73,88,123,125,234
+  s_df9a7eaed39865::t_ff5b35f94870d1 93-98,100-115
+  s_df9a7eaed39865::t_02d9e5f6515b85 99
+web/templates/moderate/_card_styles.html.twig
+  s_df9a7eaed39865::t_567ba570f71a3f 55-61
+web/migrations/Version20260816210000.php
+  s_df9a7eaed39865::t_6ac58a0e3578c0 1-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c7b87de6258a2240ccfd49a4dd145ace73fa86ed",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6a35334de7115d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e85b8cb0-6b90-45ad-ba1b-b1aa3a56e346",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_df9a7eaed39865": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22e36216-d269-4ffd-b95a-9b6bbdf16f97",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

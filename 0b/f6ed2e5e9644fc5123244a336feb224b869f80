@@ -1,0 +1,20 @@
+docs/specs/2026-07-05-contribution-frontend-reconciliation-design.md
+  s_38d02ca6d8ff2e::t_a818553693ead3 85,87-90
+  s_38d02ca6d8ff2e::t_43b4e30e4d09f5 55-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0bf6ed2e5e9644fc5123244a336feb224b869f80",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

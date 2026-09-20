@@ -1,0 +1,24 @@
+web/src/Controller/MapController.php
+  s_51df195d1c7750::t_f052d270283b3f 78-106
+  s_51df195d1c7750::t_6b1b0ec9b14892 7,10-11
+web/tests/Controller/MapBestOfTest.php
+  s_51df195d1c7750::t_f50f6cd68d5cba 1-72
+web/config/packages/security.yaml
+  s_51df195d1c7750::t_3e4559a1174600 45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "f3b5dcbdfc1268ef813ece80ed0227e6e34f071e",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

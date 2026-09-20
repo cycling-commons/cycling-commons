@@ -1,0 +1,23 @@
+web/src/Catalog/CatalogProvider.php
+  s_0f648c977bdc75::t_38c70e01374957 179,181,190-192
+web/assets/map/map.js
+  s_0f648c977bdc75::t_eaea6e71773b8f 609-611
+web/tests/Catalog/CatalogProviderTest.php
+  s_0f648c977bdc75::t_60c4ae258f6f68 194-216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "55d421ed0943825ea5fdbed03a5aa79f2501132e",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

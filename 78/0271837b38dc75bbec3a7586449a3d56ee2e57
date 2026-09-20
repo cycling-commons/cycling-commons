@@ -1,0 +1,80 @@
+web/assets/contribute/media-upload.js
+  s_e382572451f2d6::t_a769f132d73d61 530-531
+  s_e382572451f2d6::t_2a37923529e975 92-98,102-107
+  s_e382572451f2d6::t_28bea860744577 208-212,229,234-237
+  s_e382572451f2d6::t_fccde4dba7604b 491-504,512-513,520-523,525-529
+  s_e382572451f2d6::t_8371d5058a3261 505-511,516-519,524
+  s_e382572451f2d6::t_97dd3829c922f3 478-490,514-515
+web/templates/contribute/improve.html.twig
+  s_e382572451f2d6::t_eefc756d06aa70 419
+  s_e382572451f2d6::t_83bd2228417639 283-286,296,299-300,305,309-310
+  s_e382572451f2d6::t_8371d5058a3261 276-278,712-723,727
+  s_e382572451f2d6::t_55f2d6cdfb179c 306-308,797-800,802-806
+  s_e382572451f2d6::t_38851ed3adf9e1 168-177
+  s_e382572451f2d6::t_42411ce4d5a169 267-275,279,724-726,728
+  s_e382572451f2d6::t_bf5c6a8bce56b3 301-304
+  s_e382572451f2d6::t_5ccfc8d48bcc26 292,294-295
+  s_e382572451f2d6::t_5baa3c1e46a477 287-291,293,297
+  s_e382572451f2d6::t_682af20826500d 729
+web/templates/map/index.html.twig
+  s_e382572451f2d6::t_eefc756d06aa70 799
+web/tests/Media/PhotoAltGallerySyncTest.php
+  s_e382572451f2d6::t_4f81388af25ca1 1-17,19-38,57-88,90-146,148-157
+  s_e382572451f2d6::t_7b588d87f6f502 18,39-56,89,147
+web/src/Controller/MediaController.php
+  s_e382572451f2d6::t_855b52f0ccf5ce 9,18,63
+  s_e382572451f2d6::t_affdb31592b1ff 10,64,253-295
+  s_e382572451f2d6::t_a769f132d73d61 343-344
+  s_e382572451f2d6::t_255b62150fd27b 239-247,296-342
+docs/specs/photo-uploads.md
+  s_e382572451f2d6::t_67bdbd55a6702f 5-7
+  s_e382572451f2d6::t_991cc3fb1a3791 895-924
+web/src/Contribution/CatalogContributionService.php
+  s_e382572451f2d6::t_7b14b2604e0604 23,25,399-473
+  s_e382572451f2d6::t_b895ab022ba6d1 474
+web/src/Controller/ContributeController.php
+  s_e382572451f2d6::t_c38423f016a9a6 21,36,53
+  s_e382572451f2d6::t_e3b684376b2707 410,414-456
+  s_e382572451f2d6::t_a769f132d73d61 457
+web/tests/Media/PhotoAltSuggestionTest.php
+  s_e382572451f2d6::t_7a881419c0b792 1-138
+web/assets/contribute/review-card.js
+  s_e382572451f2d6::t_bf5c6a8bce56b3 44-50,53,57-59,64
+web/src/Moderation/ModerationService.php
+  s_e382572451f2d6::t_12fae7a5ae5cf5 23,29
+  s_e382572451f2d6::t_34ef7fddb71ff6 294-304,326-360
+  s_e382572451f2d6::t_5933ec950ed639 361-362
+web/src/Media/PhotoAltSuggestion.php
+  s_e382572451f2d6::t_3977d76a8f844b 1-54
+web/translations/messages.de.yaml
+  s_e382572451f2d6::t_ab5d508f893032 2490-2491,2497-2498
+web/translations/messages.en.yaml
+  s_e382572451f2d6::t_bc80b3ad5d10e0 2015-2016,2024-2025
+web/translations/messages.es.yaml
+  s_e382572451f2d6::t_7e77fdabda6f2f 2025-2026,2035-2036
+web/translations/messages.fr.yaml
+  s_e382572451f2d6::t_f85250ba8e64b9 2487-2488,2494-2495
+web/translations/messages.nl.yaml
+  s_e382572451f2d6::t_f561038496a16f 2487-2488,2494-2495
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "780271837b38dc75bbec3a7586449a3d56ee2e57",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e382572451f2d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d86ff86-2562-4654-bb50-b5129c283f3f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

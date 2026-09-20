@@ -1,0 +1,25 @@
+wiki/moderator-rulebook.md
+  s_41dce4bb9e0e72::t_ca78880a206e8f 103-107
+  s_41dce4bb9e0e72::t_7215c59042dec2 25-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "14c58bfbd86cd8de52b154f435e2e1c973b49519",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_41dce4bb9e0e72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875a3a0-dbdb-41af-af97-755463d87f2d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

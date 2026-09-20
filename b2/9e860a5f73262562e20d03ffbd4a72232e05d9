@@ -1,0 +1,48 @@
+web/tests/Translation/TranslationDeletionHookTest.php
+  s_2265bda5e9f894::t_462c11ee99c46b 1-64,67-75,77-79,81-125
+  s_2265bda5e9f894::t_1745ada429c51d 65-66,76,80
+web/translations/messages.es.yaml
+  s_2265bda5e9f894::t_c10d72f32f31e2 1515-1517
+web/translations/messages.nl.yaml
+  s_2265bda5e9f894::t_500fb1970056fb 1509-1511
+web/src/Account/DataExportService.php
+  s_2265bda5e9f894::t_7f07d278f0e71a 62
+  s_2265bda5e9f894::t_cfac681d5c289f 209-221
+  s_120fbf384ba028::t_faef5f127dbc5e 208
+web/translations/messages.fr.yaml
+  s_2265bda5e9f894::t_2b99013317b692 1509-1511
+web/translations/messages.de.yaml
+  s_2265bda5e9f894::t_5285c43d51ee6a 1509-1511
+docs/specs/account-and-auth.md
+  s_2265bda5e9f894::t_9434241fdce93f 1099-1101
+web/translations/messages.en.yaml
+  s_2265bda5e9f894::t_2fda0dbe4b8740 1510-1511
+web/src/Translation/TranslationDeletionHook.php
+  s_2265bda5e9f894::t_50d4694ec79d30 1-44
+web/tests/Account/DataExportTest.php
+  s_2265bda5e9f894::t_6d78cdd42d8a69 251-253
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b29e860a5f73262562e20d03ffbd4a72232e05d9",
+  "prompts": {},
+  "sessions": {
+    "s_120fbf384ba028": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b573d159-0010-49b2-b84d-c718dac19069",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_2265bda5e9f894": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "edb269f4-7a5b-4db8-9b30-18917bf4e07d",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

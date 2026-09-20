@@ -1,0 +1,54 @@
+web/tests/Moderation/RouteModerateTest.php
+  s_0f648c977bdc75::t_f794d4516a1c51 82-116
+web/templates/moderate_routes/_queue_item.html.twig
+  s_0f648c977bdc75::t_ed4063080b2a29 1-39
+web/translations/messages.de.yaml
+  s_0f648c977bdc75::t_9eff8432879f64 17
+  s_0f648c977bdc75::t_7ccf2139122c69 1080
+  s_0f648c977bdc75::t_7cb490afdd303d 1003,1006-1021,1024-1039,1046
+web/templates/moderate_routes/index.html.twig
+  s_0f648c977bdc75::t_c47fa5fcece92d 3-52,54-120
+web/tests/Moderation/RouteModerateShellTest.php
+  s_0f648c977bdc75::t_e9c6d2edd85e21 1-33
+web/translations/messages.fr.yaml
+  s_0f648c977bdc75::t_20e06d9b33c713 1003,1006-1021,1024-1039,1046
+  s_0f648c977bdc75::t_83a71dc2a62d66 17
+  s_0f648c977bdc75::t_55b3583a512fd3 1080
+web/templates/account/_shell_chrome.html.twig
+  s_0f648c977bdc75::t_e49d4a6a587807 22
+  s_0f648c977bdc75::t_57f2b87a2ea088 6
+web/translations/messages.nl.yaml
+  s_0f648c977bdc75::t_c81c46c7af89ec 17
+  s_0f648c977bdc75::t_0c6c5e073cd4ea 1080
+  s_0f648c977bdc75::t_1d5b9ecf382341 1003,1006-1021,1024-1039,1046
+web/templates/moderate_routes/detail.html.twig
+  s_0f648c977bdc75::t_715e64bac5d543 1-101
+web/translations/messages.en.yaml
+  s_0f648c977bdc75::t_76246f185012ec 17
+  s_0f648c977bdc75::t_fd93b870c43337 1003,1006-1021,1024-1039,1046
+  s_0f648c977bdc75::t_13ef340738bd95 1080
+web/templates/partials/_account_chip.html.twig
+  s_0f648c977bdc75::t_635f139cb863cb 17
+web/templates/profile/show.html.twig
+  s_0f648c977bdc75::t_7e0e9bc3b211f0 101
+web/src/Controller/RouteModerateController.php
+  s_0f648c977bdc75::t_108a92577db138 137-140
+  s_0f648c977bdc75::t_9a3488e3380054 9
+  s_0f648c977bdc75::t_4a2e7110416a3d 122-136,141-179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a848466be268a5fe3ec972e54a5a21ab48567af1",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

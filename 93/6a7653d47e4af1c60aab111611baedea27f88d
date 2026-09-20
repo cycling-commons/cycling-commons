@@ -1,0 +1,28 @@
+web/templates/contribute/_receipt_mark.html.twig
+  s_51f279dd04af7d::t_27b4c75a309c88 1
+docs/specs/moderation-and-contribution.md
+  s_51f279dd04af7d::t_b94c14841d64e5 1021-1084
+web/tests/Media/ThirdPartyReportTest.php
+  s_51f279dd04af7d::t_34939fefa5dccc 114-125,128-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "936a7653d47e4af1c60aab111611baedea27f88d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_51f279dd04af7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ffbf0480-8c49-47aa-8570-af5cdd0802af",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

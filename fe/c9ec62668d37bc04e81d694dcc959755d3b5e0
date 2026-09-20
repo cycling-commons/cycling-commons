@@ -1,0 +1,103 @@
+web/migrations/Version20260828120000.php
+  s_7ca916eeb157fa::t_4d007719201d12 1-41
+web/src/Entity/User.php
+  s_7ca916eeb157fa::t_05d87044402420 205-214,221,756-769,773-776,800-801
+  s_7ca916eeb157fa::t_1929219aaf2dad 215-220,222-227,770-772,777-799,802
+  s_7ca916eeb157fa::t_23270481d8b505 803
+web/templates/contribute/improve.html.twig
+  s_7ca916eeb157fa::t_b0f96f94bc156c 377-378
+  s_7ca916eeb157fa::t_368ceff1e75bdf 164-170
+docs/specs/account-and-auth.md
+  s_7ca916eeb157fa::t_0e0cdbef2dd442 591
+  s_7ca916eeb157fa::t_9b8406985ffd42 592-632
+web/src/Media/MediaDecisionService.php
+  s_7ca916eeb157fa::t_1942f1de4355a2 123-129
+web/templates/emails/dormancy_notice.html.twig
+  s_7ca916eeb157fa::t_24c1fe332d7578 18
+  s_7ca916eeb157fa::t_98b18e3f90d8d2 1-17,19-50
+web/src/Controller/PhotoPageController.php
+  s_7ca916eeb157fa::t_6c83e52e6438c1 88-91
+web/src/Controller/MediaController.php
+  s_7ca916eeb157fa::t_e204f7e3ef06a1 48-50,201-236
+  s_7ca916eeb157fa::t_d9c8f0a74a2eff 237-238
+web/translations/messages.nl.yaml
+  s_7ca916eeb157fa::t_c82ee2649eab65 3090
+  s_7ca916eeb157fa::t_b0f96f94bc156c 2454-2456
+web/translations/messages.en.yaml
+  s_7ca916eeb157fa::t_b0f96f94bc156c 1980-1982
+  s_7ca916eeb157fa::t_c82ee2649eab65 3109
+web/src/Account/Command/DormancySweepCommand.php
+  s_7ca916eeb157fa::t_24c1fe332d7578 31
+  s_7ca916eeb157fa::t_3b56bbdbe340dc 1-30,32-47,49-54,56-67,69-75
+  s_7ca916eeb157fa::t_8791e287b4d890 48,55,68
+web/translations/messages.es.yaml
+  s_7ca916eeb157fa::t_b0f96f94bc156c 1990-1992
+  s_7ca916eeb157fa::t_c82ee2649eab65 3116
+web/translations/messages.de.yaml
+  s_7ca916eeb157fa::t_c82ee2649eab65 3093
+  s_7ca916eeb157fa::t_b0f96f94bc156c 2457-2459
+web/templates/map/index.html.twig
+  s_7ca916eeb157fa::t_b0f96f94bc156c 807-808
+web/tests/Account/DormancyLadderTest.php
+  s_7ca916eeb157fa::t_cafa2472498abd 13-16,22-24,28,34-36,43-46,53-55,59-64,66-71,77,82-83,85-91,95,97-98
+  s_7ca916eeb157fa::t_c6c0c571fbf9d3 1-12,17,19-21,25-27,29-33,37-42,47-52,56-58,65,72-76,78-81,84,92-94,96,99-112
+  s_7ca916eeb157fa::t_24c1fe332d7578 18
+web/tests/Media/PhotoAltTextTest.php
+  s_7ca916eeb157fa::t_a96b7de0f42790 1-94
+web/tests/Account/DormancySweepTest.php
+  s_7ca916eeb157fa::t_24c1fe332d7578 20
+  s_7ca916eeb157fa::t_33b609b8186d50 1-19,21-43,45-49,51-54,56-57,64-69,72-74,76-77,81-94,98-110,113-115,117-142
+  s_7ca916eeb157fa::t_6bcfad74036b54 44,50,55,58-63,70-71,75,78-80,95-97,111-112,116
+web/translations/messages.fr.yaml
+  s_7ca916eeb157fa::t_c82ee2649eab65 3090
+  s_7ca916eeb157fa::t_b0f96f94bc156c 2454-2456
+web/src/Media/Entity/MediaUpload.php
+  s_7ca916eeb157fa::t_ab76cbac78e21d 161-171,445-455
+  s_7ca916eeb157fa::t_a519d38f93160b 456
+web/src/Security/LoginSuccessHandler.php
+  s_7ca916eeb157fa::t_069d7cf3190e3a 39-40,53-60
+  s_7ca916eeb157fa::t_b6de509de58334 61
+docs/specs/photo-uploads.md
+  s_7ca916eeb157fa::t_4be7fc8e5753ce 875-909
+web/templates/media/photo.html.twig
+  s_7ca916eeb157fa::t_6c83e52e6438c1 51-54
+web/src/Account/DormancySweep.php
+  s_7ca916eeb157fa::t_1d44538cff82e2 1-25,31-35,37-60,62-77,79-153
+  s_7ca916eeb157fa::t_8791e287b4d890 26-30,61,78
+  s_7ca916eeb157fa::t_24c1fe332d7578 36
+web/assets/map/drawer.js
+  s_7ca916eeb157fa::t_1942f1de4355a2 306,322,325,443
+web/src/Account/DormancyLadder.php
+  s_7ca916eeb157fa::t_fa093ae50d4a06 1-11,15-17,19-22,29,33,38-42,44-48,58-62,68,70,72-73,77-79,81-85,91,93,97,105-106
+  s_7ca916eeb157fa::t_559b4aa5dc3abb 12-14,18,23-28,30-32,34-36,43,49-57,63-67,69,71,74-76,80,86-90,92,94-96,98-104
+  s_7ca916eeb157fa::t_24c1fe332d7578 37
+web/migrations/Version20260828130000.php
+  s_7ca916eeb157fa::t_1929219aaf2dad 23-26,35,42-44,55-57
+  s_7ca916eeb157fa::t_24c1fe332d7578 28
+  s_7ca916eeb157fa::t_fa14ba9c1635db 1-22,27,29-34,36-41,45-54,58-60
+web/assets/contribute/media-upload.js
+  s_7ca916eeb157fa::t_520618e9523c6e 259-261
+  s_7ca916eeb157fa::t_824b28f1bb4501 206-211,215-223,225-231
+  s_7ca916eeb157fa::t_489bbb11d281c6 224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "fec9ec62668d37bc04e81d694dcc959755d3b5e0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7ca916eeb157fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e8be2531-9ac2-4db0-b37d-277f0b28cb93",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

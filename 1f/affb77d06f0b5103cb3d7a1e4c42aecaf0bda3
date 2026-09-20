@@ -1,0 +1,24 @@
+web/src/Controller/MapController.php
+  s_13ad1b1238a7e6::t_bdf872fdbd871a 29,31
+  s_13ad1b1238a7e6::t_f8460bfb7fe258 9
+web/tests/Smoke/MapFieldSchemaTest.php
+  s_13ad1b1238a7e6::t_f63d9da577f25e 1-24
+web/templates/map/index.html.twig
+  s_13ad1b1238a7e6::t_66c63e00ed2fed 241
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "1faffb77d06f0b5103cb3d7a1e4c42aecaf0bda3",
+  "prompts": {},
+  "sessions": {
+    "s_13ad1b1238a7e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed2e8d61-4e83-4569-b8f3-a2ac8bdc16c8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

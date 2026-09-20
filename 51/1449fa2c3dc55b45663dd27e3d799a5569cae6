@@ -1,0 +1,21 @@
+docs/specs/account-and-auth.md
+  s_b9f6c785e9346d::t_e50d0b926279be 475-503,505-510
+  s_b9f6c785e9346d::t_b1548b205a439e 450-454
+  s_b9f6c785e9346d::t_b669dd21c3a715 504
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "511449fa2c3dc55b45663dd27e3d799a5569cae6",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

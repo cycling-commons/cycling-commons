@@ -1,0 +1,61 @@
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_50ae7f4c1fd9e4::t_563ba5f2ded177 127-188,194,196-231
+  s_50ae7f4c1fd9e4::t_7536537c5446c4 189-193,195
+  s_50ae7f4c1fd9e4::t_40c97200f05bf6 12,20
+web/src/Contribution/CatalogContributionService.php
+  s_50ae7f4c1fd9e4::t_8bc61d3c6a6a76 206,208-214,277
+  s_50ae7f4c1fd9e4::t_7ba73870f810ab 22-23
+  s_50ae7f4c1fd9e4::t_552b04739665e6 244
+  s_50ae7f4c1fd9e4::t_72dcabb78ca59b 141-144
+  s_50ae7f4c1fd9e4::t_df38b38ab2211f 116-118
+  s_50ae7f4c1fd9e4::t_51213389f651ed 231
+  s_50ae7f4c1fd9e4::t_04326f88ede649 157,163-168,174,177-179,182-185,196-198
+  s_50ae7f4c1fd9e4::t_0c76b3bbdcd3c1 90-96,105-106,110
+  s_50ae7f4c1fd9e4::t_856a9782c451d0 269-276,278-312
+  s_50ae7f4c1fd9e4::t_939391bca27334 205,207,215-216
+web/translations/messages.nl.yaml
+  s_50ae7f4c1fd9e4::t_b3f104a6818730 952-953
+  s_50ae7f4c1fd9e4::t_d58d6ae78a921c 822
+web/src/Form/AddClimbType.php
+  s_50ae7f4c1fd9e4::t_8b1bf7a31fc283 74-84
+web/translations/messages.de.yaml
+  s_50ae7f4c1fd9e4::t_b3f104a6818730 952-953
+  s_50ae7f4c1fd9e4::t_d58d6ae78a921c 822
+web/tests/Contribution/ClimbGeometryTest.php
+  s_50ae7f4c1fd9e4::t_f9ab421737aa10 67-111
+web/src/Moderation/ModerationService.php
+  s_50ae7f4c1fd9e4::t_4c855199d385f2 137-140
+web/src/Contribution/ClimbGeometry.php
+  s_50ae7f4c1fd9e4::t_ab2c3a61699369 124-126
+  s_50ae7f4c1fd9e4::t_13969c88ac1bb6 21-27
+  s_50ae7f4c1fd9e4::t_5e46531ed4359b 127-136,139
+  s_50ae7f4c1fd9e4::t_b76287478e8074 96-98
+  s_50ae7f4c1fd9e4::t_5d01bcab9a9013 69-71,80-82
+  s_50ae7f4c1fd9e4::t_881c02a9a099b8 20
+  s_50ae7f4c1fd9e4::t_f7fab26fc4f5b7 83
+web/translations/messages.en.yaml
+  s_50ae7f4c1fd9e4::t_b3f104a6818730 952-953
+  s_50ae7f4c1fd9e4::t_d58d6ae78a921c 822
+web/translations/messages.fr.yaml
+  s_50ae7f4c1fd9e4::t_b3f104a6818730 952-953
+  s_50ae7f4c1fd9e4::t_d58d6ae78a921c 822
+web/tests/Contribution/AddClimbTest.php
+  s_50ae7f4c1fd9e4::t_cdac4986f192a9 141-166,170-180
+  s_50ae7f4c1fd9e4::t_e95873b0c2b05c 167-169
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "d23121fdbc446c6f7e93c6f9d8f323b78e3e04dd",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

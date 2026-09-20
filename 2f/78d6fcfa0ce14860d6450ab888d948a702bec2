@@ -1,0 +1,84 @@
+web/templates/moderate/translations_stale.html.twig
+  s_c9732475dad57d::t_8d99ec5468b94c 47
+  s_c9732475dad57d::t_f01fd8dc2f9707 1-10,15-46,48-59
+  s_c9732475dad57d::t_d470fbdcb7d79d 11-14
+web/templates/moderate/translations.html.twig
+  s_c9732475dad57d::t_a4ead500c04926 22
+web/templates/moderate/translations_history.html.twig
+  s_c9732475dad57d::t_6c3063517c34f1 28
+web/tests/Translation/TranslatePageTest.php
+  s_c9732475dad57d::t_1067090e491cbd 514
+  s_c9732475dad57d::t_cd1ea148d65cbd 402-403,419-424
+  s_c9732475dad57d::t_948edbe17ca10c 17,480-513
+  s_c9732475dad57d::t_102eee1931a61c 13
+  s_c9732475dad57d::t_9de4edf9c56a22 394-401,404-418,425-479
+  s_c9732475dad57d::t_3d4256acffb32a 36-37,54-62
+  s_c9732475dad57d::t_d0960d7539f8b0 63
+web/tests/Translation/ModerateTranslationsTest.php
+  s_c9732475dad57d::t_ecf88fc23df80c 22
+  s_c9732475dad57d::t_d9ec90bc908af7 598-617,639-653
+  s_c9732475dad57d::t_1067090e491cbd 654-655
+  s_c9732475dad57d::t_5a6379fab484f2 618-638
+  s_c9732475dad57d::t_e20cc9266405dc 268
+web/templates/translate/embed.html.twig
+  s_c9732475dad57d::t_53d5d45b8a0f92 1-24
+web/templates/translate/_form.html.twig
+  s_c9732475dad57d::t_ece67e8a9e3f3d 23-39
+  s_c9732475dad57d::t_45c23e11792b60 1-22,40-110
+web/src/Controller/TranslateController.php
+  s_c9732475dad57d::t_6698953f3ab536 469,471,487-493
+  s_c9732475dad57d::t_e4dd7b1ef62354 27,378
+  s_c9732475dad57d::t_9910d5402216c1 66-71,73,84,90,101-102,105
+  s_c9732475dad57d::t_a538e91a77a592 355-361,365-368,376-377,379-388,393-396,405,409,414,418,426,429-430,436
+  s_c9732475dad57d::t_2e328898897c6e 427,431-435
+  s_c9732475dad57d::t_7f529dd672b59f 362-364
+  s_c9732475dad57d::t_1067090e491cbd 470
+  s_c9732475dad57d::t_9de3ad279db065 369-375
+web/templates/moderate/translation_detail.html.twig
+  s_c9732475dad57d::t_3e86dd8ff76f04 124-126
+  s_c9732475dad57d::t_6ab38fe61d6095 30
+  s_c9732475dad57d::t_e8020fe096f5bf 29
+  s_c9732475dad57d::t_613d36cf11882f 54
+web/src/Controller/ModerateTranslationsController.php
+  s_c9732475dad57d::t_76bf094a2a16df 54
+  s_c9732475dad57d::t_918180c1e7e0e1 399-401
+  s_c9732475dad57d::t_2f524e1b16c60f 110-140
+  s_c9732475dad57d::t_5b300732a219df 268-270
+  s_c9732475dad57d::t_b00fae7fcf53ac 20,26
+web/templates/translate/index.html.twig
+  s_c9732475dad57d::t_1067090e491cbd 105
+  s_c9732475dad57d::t_73be1ea7f2d4a6 33-38,48-49
+  s_c9732475dad57d::t_0535d3386f34eb 74-78
+  s_c9732475dad57d::t_dbe5279eaca662 47
+  s_c9732475dad57d::t_f665fa3459b0b9 70-72
+  s_c9732475dad57d::t_7c384859c01ccc 93-99,103-104
+  s_c9732475dad57d::t_f4a0d17acc07af 69,73,79-82
+  s_c9732475dad57d::t_0d6ed0ef450181 22-24
+web/src/Form/TranslationProposalType.php
+  s_c9732475dad57d::t_fee3f5a654a910 63-66,69
+  s_c9732475dad57d::t_515c4c2cce05ae 44
+web/templates/translate/edit.html.twig
+  s_c9732475dad57d::t_da8e6371dffe90 61
+  s_c9732475dad57d::t_9d225fc33f001a 34-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "2f78d6fcfa0ce14860d6450ab888d948a702bec2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c9732475dad57d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "46c5725f-c3f2-432b-800a-d5b4d3807b37",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

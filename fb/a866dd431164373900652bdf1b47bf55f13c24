@@ -1,0 +1,21 @@
+web/src/Moderation/RouteModerationService.php
+  s_0f648c977bdc75::t_643c69fefaed1c 76-103
+web/tests/Moderation/RouteModerationServiceTest.php
+  s_0f648c977bdc75::t_0e988694e8438d 100-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "fba866dd431164373900652bdf1b47bf55f13c24",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

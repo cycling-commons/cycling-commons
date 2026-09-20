@@ -1,0 +1,32 @@
+web/tests/Contribution/ProposeRouteFlowTest.php
+  s_162e830c17ed4c::t_1bf74791332da7 136-162
+web/src/Controller/ProfileController.php
+  s_162e830c17ed4c::t_61c15c9d067531 7
+  s_162e830c17ed4c::t_be1f272843958e 43-47
+web/templates/profile/show.html.twig
+  s_162e830c17ed4c::t_89622c1c9da57d 81-96
+web/translations/messages.en.yaml
+  s_162e830c17ed4c::t_c4c2226fab943a 1049-1054
+web/translations/messages.de.yaml
+  s_162e830c17ed4c::t_145154b0aea7cd 1049-1054
+web/translations/messages.fr.yaml
+  s_162e830c17ed4c::t_4a5803ae8533b0 1049-1054
+web/translations/messages.nl.yaml
+  s_162e830c17ed4c::t_ef93f8ef5f9b2c 1049-1054
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3e84abdbda01bc6959d602870983cc2f3c1eb87c",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

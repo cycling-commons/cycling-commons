@@ -1,0 +1,107 @@
+tools/credits/check_credits.py
+  s_5ddb20b83427c8::t_cdc1300a159b62 66
+  s_5ddb20b83427c8::t_5ae6d97b3e71e1 54-58,188-210,212-218
+tools/credits/tests/test_check_credits.py
+  s_5ddb20b83427c8::t_cdc1300a159b62 171,174
+  s_5ddb20b83427c8::t_92d49526d99087 183-236,294
+docs/specs/operations.md
+  s_5ddb20b83427c8::t_7d77e422243849 355
+  s_5ddb20b83427c8::t_319d2347f0e678 356
+  s_5ddb20b83427c8::t_c9bcd038d96f47 357
+docs/specs/coverage-provider.md
+  s_5ddb20b83427c8::t_f87e6da338710f 670-673
+web/templates/map/index.html.twig
+  s_5ddb20b83427c8::t_5d80341ad0becd 47-55
+  s_5ddb20b83427c8::t_42c7c29e37896c 995-1026
+  s_5ddb20b83427c8::t_25743cb3318572 2-5,794,976-981
+  s_5ddb20b83427c8::t_2996abedee9cfd 46,1041
+web/assets/pages/country-globe.js
+  s_5ddb20b83427c8::t_97968fca14a734 25-30,33-35
+web/public/lib/maplibre-gl/6.8.0/maplibre-gl-worker.mjs
+  s_5ddb20b83427c8::t_ab1e21e01dd513 1-6
+docs/specs/map-and-search.md
+  s_5ddb20b83427c8::t_b269d896da1e4c 117-122
+  s_5ddb20b83427c8::t_f551bc3c784ed7 67-72,81-88,101-107
+  s_5ddb20b83427c8::t_9ae9a5bf79c061 89-100
+  s_5ddb20b83427c8::t_f87e6da338710f 2124,2127-2129
+wiki/building.md
+  s_5ddb20b83427c8::t_1e1d2c68320332 144-148
+web/translations/messages.de.yaml
+  s_5ddb20b83427c8::t_ffea74c49a805f 1964
+REUSE.toml
+  s_5ddb20b83427c8::t_3eaeacdf2d2a0a 53-55,57
+web/public/lib/maplibre-gl/6.8.0/maplibre-gl-shared.mjs
+  s_5ddb20b83427c8::t_ab1e21e01dd513 1-6
+web/translations/messages.nl.yaml
+  s_5ddb20b83427c8::t_ffea74c49a805f 1961
+web/tests/Security/CspTest.php
+  s_5ddb20b83427c8::t_b5b6514e1e65c0 45-63
+  s_5d3029d326707c::t_04856939aa6da8 44
+web/tests/browser/map-smoke.js
+  s_5ddb20b83427c8::t_1f165e3bc2484a 284-289,343-353,355
+web/translations/messages.fr.yaml
+  s_5ddb20b83427c8::t_ffea74c49a805f 1961
+web/translations/messages.en.yaml
+  s_5ddb20b83427c8::t_560bbb84bb46ad 2437
+web/assets/styles/map.css
+  s_5ddb20b83427c8::t_fba079d2714585 440-445
+web/templates/contribute/improve.html.twig
+  s_5ddb20b83427c8::t_e2e7e7b2bcb023 475-476
+  s_5ddb20b83427c8::t_514def789c9496 102-105,478
+  s_5ddb20b83427c8::t_2c52ee35a921c3 6,899-906,938-941
+web/assets/contribute/improve.js
+  s_5ddb20b83427c8::t_678111c95c4a60 191-218,220-223
+web/templates/pages/regions.html.twig
+  s_5ddb20b83427c8::t_7c8fc0ce570c9f 169-170
+web/tests/Smoke/ImportMapOrderTest.php
+  s_5ddb20b83427c8::t_c01c7b2c628ad7 1-80
+web/assets/map/catalog-load.js
+  s_5ddb20b83427c8::t_9b894298bf3f32 7-23,39-48,52-54
+  s_5ddb20b83427c8::t_76411a49840891 24-27
+web/tests/Smoke/MapPageTest.php
+  s_5ddb20b83427c8::t_f4773bf34e1498 99-112
+web/public/lib/maplibre-gl/6.8.0/maplibre-gl.css
+  s_5ddb20b83427c8::t_ab1e21e01dd513 1
+web/translations/messages.es.yaml
+  s_5ddb20b83427c8::t_ffea74c49a805f 2441
+developers/docker/nginx/app.conf
+  s_5ddb20b83427c8::t_0c04b7df96d696 13-17,23-44
+  s_5d3029d326707c::t_626e8a9ea84987 45
+web/templates/pages/coverage.html.twig
+  s_5ddb20b83427c8::t_7c8fc0ce570c9f 104-105
+docs/specs/credits-page.md
+  s_5ddb20b83427c8::t_f551bc3c784ed7 127-128
+web/public/lib/maplibre-gl/6.8.0/maplibre-gl.mjs
+  s_5ddb20b83427c8::t_ab1e21e01dd513 1-819
+web/src/EventSubscriber/CspSubscriber.php
+  s_5ddb20b83427c8::t_1f5b53b457d3f7 95-100
+docs/specs/security-architecture.md
+  s_5ddb20b83427c8::t_4927dcf58911e5 168-169
+  s_5ddb20b83427c8::t_c0005d5d84290d 165,170-193,203
+web/src/Controller/MapController.php
+  s_5ddb20b83427c8::t_402579aafad108 353-358
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "0465e465dc93a7aefe7627d817cf4e4a1de1985f",
+  "prompts": {},
+  "sessions": {
+    "s_5d3029d326707c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "795f70b7-c0e1-4883-a4e6-53909db571af",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_5ddb20b83427c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b4cdc923-f65e-4720-a542-1d8c7e643cdd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

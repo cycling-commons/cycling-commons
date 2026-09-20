@@ -1,0 +1,38 @@
+docs/specs/edit-items/B-climbs.md
+  s_ba6cf53b5a7360::t_ea3c992539ac27 103-135
+  s_ba6cf53b5a7360::t_eb4f2a349232ea 84
+  s_ba6cf53b5a7360::t_c2f1c780cf851a 86
+  s_ba6cf53b5a7360::t_f2efc2d2c97ba2 136
+docs/specs/map-and-search.md
+  s_ba6cf53b5a7360::t_f6e284473968b5 306-333
+docs/specs/moderation-and-contribution.md
+  s_ba6cf53b5a7360::t_f720cc818c7ee1 895,897-924
+  s_ba6cf53b5a7360::t_15f71e8fbf27fd 798,801-848
+  s_ba6cf53b5a7360::t_84a10efd8dbbb7 637-667
+  s_ba6cf53b5a7360::t_567601228640ff 849
+docs/specs/photo-uploads.md
+  s_ba6cf53b5a7360::t_1b93bf0eca8181 767-779
+  s_ba6cf53b5a7360::t_3e97162d965a48 749,753-766,780-807
+  s_ba6cf53b5a7360::t_e265335feeb781 808
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "88d4358e33d6d1aa211de8b6ca10678009a470e9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

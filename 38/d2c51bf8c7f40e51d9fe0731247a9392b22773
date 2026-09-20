@@ -1,0 +1,69 @@
+web/src/Media/Scan/VirusScannerInterface.php
+  s_6df2cc515a46f1::t_c74620f1cd18c6 1-30
+web/.env
+  s_6df2cc515a46f1::t_97e059b9824c4b 163-174
+  s_6df2cc515a46f1::t_45a288f5af8f63 154-155,162
+  s_6df2cc515a46f1::t_249ea44d1fcbb9 156-161
+web/config/packages/messenger.yaml
+  s_6df2cc515a46f1::t_93610ec96a70e7 1-13,16,19-25,28,30-36
+  s_6df2cc515a46f1::t_45a288f5af8f63 14-15,17-18,26-27,29
+web/src/Media/Scan/ScanVerdict.php
+  s_6df2cc515a46f1::t_b07699f162038a 1-40
+web/src/Media/Scan/ClamAvScanner.php
+  s_6df2cc515a46f1::t_5ecb2302bd5982 120
+  s_6df2cc515a46f1::t_54f2889eed78f2 1-119,121-150
+web/config/packages/mailer.yaml
+  s_6df2cc515a46f1::t_e032be3ae17ee7 1,5-11
+web/config/services.yaml
+  s_6df2cc515a46f1::t_3f77ad84f91167 120-129
+web/tests/Media/ClamAvScannerTest.php
+  s_6df2cc515a46f1::t_5ecb2302bd5982 25
+  s_6df2cc515a46f1::t_b3199d37acfad6 1-24,26-116
+developers/docker/compose.yaml
+  s_6df2cc515a46f1::t_bcdd0cd2413e62 328-329
+  s_6df2cc515a46f1::t_af333f49d1b3b5 94,98
+  s_6df2cc515a46f1::t_63b49bc24c9b31 112-167
+  s_6df2cc515a46f1::t_169e59e704695f 310-314
+web/src/Media/Scan/ScannerUnavailable.php
+  s_6df2cc515a46f1::t_61f6d0a3c358cc 1-21
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_6df2cc515a46f1::t_823429f367d1e4 1-42
+web/tests/Media/AsyncTierTest.php
+  s_6df2cc515a46f1::t_d34882b43c8c52 1-33
+docs/specs/dev-environment.md
+  s_6df2cc515a46f1::t_94a2f39be42ae8 80-81
+web/composer.json
+  s_6df2cc515a46f1::t_cea4968cc6f14f 31
+  s_6df2cc515a46f1::t_45a288f5af8f63 39,41
+docs/specs/operations.md
+  s_6df2cc515a46f1::t_ac4f4da95d5a50 14-26
+web/src/Media/Message/ScanAndReleaseUpload.php
+  s_6df2cc515a46f1::t_37d1ae532703d4 1-34
+docs/specs/media-storage-architecture.md
+  s_6df2cc515a46f1::t_3bb2334e2156ea 17-31
+web/composer.lock
+  s_6df2cc515a46f1::t_730886ef10bf84 7,3890-3965,5395-5488,6803-6877
+web/symfony.lock
+  s_6df2cc515a46f1::t_32023fe2da2071 223-234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "38d2c51bf8c7f40e51d9fe0731247a9392b22773",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+web/migrations/Version20260715120000.php
+  s_e6d6993eda7318::t_42cb16fcd9b1ac 1-24,27-30,32-39
+  s_e6d6993eda7318::t_42bc1d603f3387 25-26,31
+web/src/Catalog/CatalogFormRegistry.php
+  s_e6d6993eda7318::t_a6b54af4e1b406 28-34
+  s_e6d6993eda7318::t_b7720d0d7b6f39 97
+  s_e6d6993eda7318::t_7e9ae668affebe 193
+docs/specs/edit-items/J-history-culture.md
+  s_e6d6993eda7318::t_583444516ae289 27
+docs/specs/edit-items/D-bike-services.md
+  s_e6d6993eda7318::t_d9d8a49188a3e6 25
+  s_e6d6993eda7318::t_eb6e3a86886d69 29-34
+  s_e6d6993eda7318::t_4aaa92dfb5b86a 35
+web/tests/Contribution/ImproveBindingTest.php
+  s_e6d6993eda7318::t_d8458f7d40d773 34-35
+  s_e6d6993eda7318::t_5310f80698263b 502,510
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "4f30b684d7d0e82b2b6882b4cab09f9b4bb453e7",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e6d6993eda7318": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "081baf86-6152-46e3-a19d-aa12c114220a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

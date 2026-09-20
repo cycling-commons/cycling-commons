@@ -1,0 +1,38 @@
+web/src/Command/ModerationGcCommand.php
+  s_51df195d1c7750::t_e55e42ac073338 1-47
+web/config/services.yaml
+  s_51df195d1c7750::t_b2f389dc0ea8a5 33-36
+web/config/packages/moderation.yaml
+  s_51df195d1c7750::t_4b9df9163bfc33 1-4
+web/tests/Moderation/RetentionTest.php
+  s_51df195d1c7750::t_fb996527c39d26 1-138
+web/src/Moderation/RetentionService.php
+  s_51df195d1c7750::t_b23b706f962c06 1-92
+web/src/Controller/RouteModerateController.php
+  s_51df195d1c7750::t_92e69c4f263188 40,47-50
+  s_51df195d1c7750::t_5f40ce6526dc09 15
+web/src/Controller/ProfileController.php
+  s_51df195d1c7750::t_5b36fdf781a644 30,35-52,58
+  s_51df195d1c7750::t_1cca7b11e9f810 9,11
+web/tests/Profile/ContributionsRetentionTest.php
+  s_51df195d1c7750::t_8b0c9de36206b6 1-57
+web/src/Controller/ModerateController.php
+  s_51df195d1c7750::t_4ed8a991a13063 14
+  s_51df195d1c7750::t_c8b0456b29e77d 42,49-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "2766fbf6233ec3dbaff96cc0c7dfb3234661a3c9",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

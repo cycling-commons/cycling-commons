@@ -1,0 +1,26 @@
+.gitleaks.toml
+  s_13ad1b1238a7e6::t_bf7f8cbf975ea8 1-11
+.github/workflows/secret-scan.yml
+  s_13ad1b1238a7e6::t_eb0f0111297ead 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "a67b1f183fd2d759d44b6d1191bdb7a21af63f64",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_13ad1b1238a7e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed2e8d61-4e83-4569-b8f3-a2ac8bdc16c8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

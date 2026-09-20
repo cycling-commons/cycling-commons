@@ -1,0 +1,63 @@
+web/translations/messages.fr.yaml
+  s_c05586667a10a2::t_b4cbc57d23ebc0 2421-2423
+web/templates/translate/edit.html.twig
+  s_c05586667a10a2::t_188a50aceedacb 113-122,128
+  s_c05586667a10a2::t_952dd69b122dcc 28,30
+  s_c05586667a10a2::t_b713c08e325ce2 26-27,29
+web/translations/messages.de.yaml
+  s_c05586667a10a2::t_8822a3bb4a417d 2424-2426
+web/src/Controller/TranslateController.php
+  s_504d29ab0e31e9::t_955b155fda8023 242-244
+  s_c05586667a10a2::t_60771367fab345 369
+  s_c05586667a10a2::t_2f3bffab6646d9 406
+  s_c05586667a10a2::t_d6bcadbe26c7bc 355,358-359,366
+  s_c05586667a10a2::t_9644c5f3bd67a6 25
+  s_c05586667a10a2::t_6f950c558ef124 49
+web/translations/messages.nl.yaml
+  s_c05586667a10a2::t_64fcebe920971f 2421-2423
+web/tests/Translation/TranslatePageTest.php
+  s_c05586667a10a2::t_9b0647e03dd688 202-235
+web/src/Form/TranslationProposalType.php
+  s_c05586667a10a2::t_538ae14e73f1bd 43-45,54,62,64
+  s_c05586667a10a2::t_718ff17f17b0ae 31-42
+web/src/Translation/ProposalService.php
+  s_c05586667a10a2::t_ab87891d12d238 104
+  s_c05586667a10a2::t_aa9ec6de0e6002 48
+  s_c05586667a10a2::t_110151e1f445d7 63-64
+web/translations/messages.es.yaml
+  s_c05586667a10a2::t_d03b7a1378d6b5 1962-1964
+web/src/Translation/TranslationConsentService.php
+  s_c05586667a10a2::t_5068ed9001f74e 51-63
+docs/specs/translations.md
+  s_c05586667a10a2::t_0473bbebd62403 235-244
+web/translations/messages.en.yaml
+  s_c05586667a10a2::t_f75f500fffd16e 1957-1959
+web/tests/Translation/ProposalServiceTest.php
+  s_c05586667a10a2::t_e5e2123f8bd2c6 248-265
+web/src/Translation/Exception/ConsentRequiredException.php
+  s_c05586667a10a2::t_2f4022bdd91b4b 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "072d576fcdd88b01e6e1f9c29175ce984b5da00f",
+  "prompts": {},
+  "sessions": {
+    "s_504d29ab0e31e9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5b5cea66-640f-406d-9d78-5154b9257410",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_c05586667a10a2": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7b9fd57a-1b4e-4f86-a9c1-9724be316cdf",
+        "model": "grok-4.6"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

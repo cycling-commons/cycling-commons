@@ -1,0 +1,28 @@
+web/src/Controller/MapController.php
+  s_38d02ca6d8ff2e::t_d19db1602d3a5c 71-74
+  s_38d02ca6d8ff2e::t_3ac8e6932401a5 8,56-70
+web/tests/Smoke/ChangeHistoryEndpointTest.php
+  s_38d02ca6d8ff2e::t_88a6b5c38b5db0 1-61
+web/src/Catalog/ChangeHistoryView.php
+  s_38d02ca6d8ff2e::t_77e3d5c9da7bf0 1-68
+web/config/packages/security.yaml
+  s_38d02ca6d8ff2e::t_3ac8e6932401a5 45
+web/tests/Catalog/ChangeHistoryViewTest.php
+  s_38d02ca6d8ff2e::t_1d209141496618 1-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "00a04a7ab224653542631fe26da002f2dd9e0f01",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

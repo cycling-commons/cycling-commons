@@ -1,0 +1,14 @@
+docs/specs/2026-07-23-map-js-phase0-extraction-design.md
+  h_fb5318cde6cf17 1-175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "3aa49647b9d7b5589fe2fca6f348a421e95679a7",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

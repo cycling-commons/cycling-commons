@@ -1,0 +1,90 @@
+web/.env
+  s_c6f332c201127d::t_de6123258ff50d 109-121,123-131
+web/config/packages/flysystem.yaml
+  s_c6f332c201127d::t_94eea10a8936de 2,4-8,10-12,14
+web/src/Media/MediaStorage.php
+  s_c6f332c201127d::t_94eea10a8936de 9-11,29-38,40-42,66-68,70-73,76,78-79,81,83,87-93,95,97,100,102-106,109,118,120,132,150,160,168,170,185,187,209,212,232,237,247-249,259,261-272,274
+web/tests/Media/MediaModerationTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 93
+web/tests/Media/MediaStorageTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 43,49,57,65,69,75,78-80,91,93-94,96,99,102-108
+docs/specs/operations.md
+  s_c6f332c201127d::t_a1f1039f3d8ed2 197-200
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_c6f332c201127d::t_94eea10a8936de 160-161,164-165,172
+web/src/Media/Entity/MediaUpload.php
+  s_c6f332c201127d::t_94eea10a8936de 75-83,257,264,291,296,355,362,408-410
+  s_c6f332c201127d::t_74c620b1f77c41 74,411-412
+web/tests/Media/MediaEscalationTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 85,90
+web/tests/Media/PhotoPageTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 44
+docs/specs/photo-uploads.md
+  s_c6f332c201127d::t_300bb13dad13c6 127
+  s_c6f332c201127d::t_a1f1039f3d8ed2 92-98
+web/tests/Media/MediaDisposalTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 69,74
+web/tests/Media/MediaTakedownTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 79,85
+web/tests/Media/MediaUploadEndpointTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 249
+docs/specs/media-storage-architecture.md
+  s_c6f332c201127d::t_a1f1039f3d8ed2 117-135
+web/src/Account/DataExportService.php
+  s_c6f332c201127d::t_94eea10a8936de 262,289
+web/config/services.yaml
+  s_c6f332c201127d::t_94eea10a8936de 111-117,120,122-123,125-135,171-175,178-184
+web/tests/Account/DataExportTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 106,123
+web/tests/Media/MediaDeskPagingTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 78,84
+web/src/Media/MediaDisposalService.php
+  s_c6f332c201127d::t_94eea10a8936de 112
+web/migrations/Version20260820001000.php
+  s_c6f332c201127d::t_94eea10a8936de 1-30
+web/tests/Media/MediaMessageTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 77
+web/tests/Media/MediaReportEndpointTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 55
+web/src/Controller/MediaController.php
+  s_c6f332c201127d::t_94eea10a8936de 200,215
+web/src/Media/Command/MediaBackfillKeysCommand.php
+  s_c6f332c201127d::t_94eea10a8936de 101,112
+developers/docker/compose.yaml
+  s_c6f332c201127d::t_94eea10a8936de 80,93-97,99-105,149-153,155-161,347-359
+web/.env.staging
+  s_c6f332c201127d::t_40855233c68a19 111-124,126-137
+web/tests/Media/MediaPersistenceTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 65,110,130,153
+web/tests/Media/ThirdPartyReportTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 82,88,228
+web/tests/Moderation/SubmissionEscalationTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 126
+web/tests/Controller/RiderProfileTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 188,191,195
+web/tests/Media/MediaClaimTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 59
+web/tests/Media/MediaTakedownEndpointTest.php
+  s_c6f332c201127d::t_a54b1ed216a0f8 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "83de58f7c2505a6e0a3e28931491658b905ad0bf",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

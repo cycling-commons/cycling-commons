@@ -1,0 +1,85 @@
+wiki/developers/gis/osm-to-database.md
+  s_f3f9c3dc9409c4::t_785c09b7960273 329-355,360-362,366,368-370,374-385
+wiki/building.md
+  s_f3f9c3dc9409c4::t_dc1835eba3976b 32-37
+wiki/developers/gis-beyond/routing.md
+  s_f3f9c3dc9409c4::t_9699890c135776 228,232,235,238-239
+  s_f3f9c3dc9409c4::t_1bb698c4f35cfc 177-220,227,229-231,233-234,236-237,240-249
+  s_f3f9c3dc9409c4::t_e2bbe2aef08795 221-226
+wiki/developers/gis/spatial-questions.md
+  s_f3f9c3dc9409c4::t_609a24e92671a0 380-383,391,394
+  s_f3f9c3dc9409c4::t_f377c388c37ded 408-441
+wiki/developers/gis-beyond/index.md
+  s_f3f9c3dc9409c4::t_96acbdb7dec7c9 52-59
+  s_f3f9c3dc9409c4::t_2e6ab7d37125e0 98
+  s_f3f9c3dc9409c4::t_b5f40ff399a226 49-51,60-97,99-118
+wiki/developers/gis/metres-vs-degrees.md
+  s_f3f9c3dc9409c4::t_2be7b5deb6cf56 278-281,283,286-289,292,300-301,306-309,312,316,319-331
+wiki/developers/gis/shapes.md
+  s_f3f9c3dc9409c4::t_f02085962b9d0b 195-197,202,205,208-209
+  s_f3f9c3dc9409c4::t_41880c318d0f03 220,227,231
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_c207e1ff464845 422,426,430-431
+  s_3c392b244b902c::t_7790410a97c610 432
+wiki/developers/gis/tiles.md
+  s_f3f9c3dc9409c4::t_c5267fcad563f9 362,365,375,378-386,389-442
+wiki/developers/gis/on-screen.md
+  s_f3f9c3dc9409c4::t_b76c1b52eb9955 287-290,296-297,301,303-313,318-331
+wiki/developers/gis-beyond/edge-cases.md
+  s_f3f9c3dc9409c4::t_40bd4b2eafd8e7 266-314
+wiki/developers/gis/index.md
+  s_f3f9c3dc9409c4::t_cc118c931074ca 128-147,159,163,168,172-178,180-184
+wiki/developers/gis-beyond/geocoding.md
+  s_f3f9c3dc9409c4::t_0e3eca4452f672 156-162
+  s_f3f9c3dc9409c4::t_6af58d1c45c44a 149-155,163-193
+wiki/developers/gis/routes.md
+  s_f3f9c3dc9409c4::t_e9460002c04c85 273,275,279,281-283,287-288
+  s_f3f9c3dc9409c4::t_5a8efe9dd331ad 295-297
+  s_f3f9c3dc9409c4::t_3bf4f62073139c 289
+wiki/developers/gis-beyond/relations.md
+  s_f3f9c3dc9409c4::t_1b2326dc75b438 227
+  s_f3f9c3dc9409c4::t_1902294c2f3e71 188-189,191-192,195-205,207-208,212-214,221-226,228-243,245-251,253-256
+  s_f3f9c3dc9409c4::t_17930499631803 190,193-194,206,209-211,215-220
+  s_f3f9c3dc9409c4::t_1ab261553ef84d 244,252
+Makefile
+  s_f3f9c3dc9409c4::t_6335482cbd1224 12
+  s_f3f9c3dc9409c4::t_509523a6db4ac8 40-80
+  s_3c392b244b902c::t_67dc1780f18aef 81
+wiki/developers/gis/making-it-fast.md
+  s_f3f9c3dc9409c4::t_e86f8dacf3325d 423,426-429,437,440,442-446,449,457,464,466,469,472,475-520
+wiki/developers/gis/pitfalls.md
+  s_f3f9c3dc9409c4::t_e7df694340216b 328-330,336,340,348,350-352,359,363,367,371-377
+wiki/developers/gis-beyond/reprojection.md
+  s_f3f9c3dc9409c4::t_669e7aa8358253 166-170,174-181,183-184,186-188,190-204
+  s_f3f9c3dc9409c4::t_af01001aea1b36 171-173,182,185,189
+wiki/developers/gis-beyond/elevation.md
+  s_f3f9c3dc9409c4::t_531d56c2355d47 268
+  s_f3f9c3dc9409c4::t_532d5a729087f2 252
+  s_f3f9c3dc9409c4::t_43ec0977fa9b82 246
+  s_f3f9c3dc9409c4::t_0d27d93e27dfa8 211-213,215-216,219-222,224-225,227-245,247-251,253-267,269-295
+  s_f3f9c3dc9409c4::t_8ab2b83e4acc24 214,217-218,223,226
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "10d10c2508083023004709289d9c62234538b4f9",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

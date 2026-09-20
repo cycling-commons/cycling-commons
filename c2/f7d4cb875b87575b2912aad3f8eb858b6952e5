@@ -1,0 +1,35 @@
+web/config/packages/security.yaml
+  s_f6d45d977e7468::t_280fba9e089909 59-63
+web/tests/Coverage/CoverageSchema.php
+  s_f6d45d977e7468::t_fb5005ed019b46 1-78
+web/src/Coverage/CoverageRepository.php
+  s_f6d45d977e7468::t_a333f38aa6c044 1-40,48-131
+  s_f6d45d977e7468::t_62a94a5dd41862 41-47
+web/src/Controller/CoverageController.php
+  s_f6d45d977e7468::t_38f3c7f5873596 1-59
+web/config/packages/doctrine.yaml
+  s_f6d45d977e7468::t_280fba9e089909 4-7
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_f6d45d977e7468::t_8ab5574accd57f 1-194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c2f7d4cb875b87575b2912aad3f8eb858b6952e5",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

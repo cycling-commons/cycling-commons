@@ -1,0 +1,32 @@
+web/translations/messages.de.yaml
+  s_ec895423d98b88::t_9fd22ef8b693b1 799,801
+web/translations/messages.en.yaml
+  s_ec895423d98b88::t_9fd22ef8b693b1 799,801
+web/translations/messages.nl.yaml
+  s_ec895423d98b88::t_9fd22ef8b693b1 799,801
+web/translations/messages.es.yaml
+  s_ec895423d98b88::t_9fd22ef8b693b1 800,802
+web/translations/messages.fr.yaml
+  s_ec895423d98b88::t_9fd22ef8b693b1 799,801
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "0bbdee7a2c3bdb020020cbe4225b4ade94582ad2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ec895423d98b88": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0de6d79-989a-45d6-9f80-10287ec2dd13",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

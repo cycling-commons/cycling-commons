@@ -1,0 +1,48 @@
+web/config/services.yaml
+  s_7e0805b9b01558::t_9bb8b6a540e630 193-197
+web/src/Provider/Command/HarvestProviderCommand.php
+  s_7e0805b9b01558::t_9f22855fe98c46 1-219
+pipeline/providers/run.py
+  s_7e0805b9b01558::t_6e4d34ba6619bc 1-168
+docs/specs/data-provider-hierarchy.md
+  s_7e0805b9b01558::t_51c52c41cac72c 3-4,155-186,651-655
+pipeline/tests/test_providers_normalise.py
+  s_7e0805b9b01558::t_2bf5d1d9ad4d57 1-99
+Makefile
+  s_7e0805b9b01558::t_b260f34c0dd3f0 23,294-298
+  s_7e0805b9b01558::t_09b0f1827e4d2b 299
+pipeline/providers/__init__.py
+  s_7e0805b9b01558::t_2e2cf1097c427a 1-9
+pipeline/providers/normalise.py
+  s_7e0805b9b01558::t_ca8c04819b9266 1-123
+web/src/Provider/ProviderHarvest.php
+  s_7e0805b9b01558::t_4ecc30b5ab7766 1-104,106-133,135-199,201-258
+  s_7e0805b9b01558::t_1b522c04c2eab6 105,134,200
+web/tests/Provider/ProviderHarvestTest.php
+  s_7e0805b9b01558::t_c98ec2d7cdf5c0 11,24-27,34
+  s_7e0805b9b01558::t_bd019284d204b7 1-10,12-15,17-23,28-33,35-161,163-177,179,181-194,196,198-206,208,210-220,222,224-262,264-294,297-315
+  s_7e0805b9b01558::t_9199a98db5604f 16,180,197,209,223
+  s_7e0805b9b01558::t_4151b79040e308 295-296
+  s_7e0805b9b01558::t_04a578b3719cdc 162,178,195,207,221,263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "e79c46dbadf3857ce36f253e9afac96c7141639a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7e0805b9b01558": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33a81c58-e18b-4166-9873-c160cdde84a9",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+web/src/Controller/RouteCommunityController.php
+  s_51df195d1c7750::t_3192f5ea027281 1-78
+web/tests/Community/RouteCommunityReadTest.php
+  s_51df195d1c7750::t_9e53a389d2bae2 1-111
+web/src/Community/RouteCommunityService.php
+  s_51df195d1c7750::t_3d013db65844e7 1-68
+web/config/packages/csrf.yaml
+  s_51df195d1c7750::t_2b87dee64e6708 12
+web/config/services.yaml
+  s_51df195d1c7750::t_9f8140daa5c926 29-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5276a4573fd95378a09ff458b807523dad2d6fe7",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

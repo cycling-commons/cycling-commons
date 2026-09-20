@@ -1,0 +1,23 @@
+web/src/Community/CommunityProgress.php
+  s_e9b7d39367a2ea::t_91a7f28c104090 37-38
+web/src/Community/GitHubContributors.php
+  s_e9b7d39367a2ea::t_91a7f28c104090 34-35
+web/src/Command/CommunitySyncContributorsCommand.php
+  s_e9b7d39367a2ea::t_2185f8dec13f91 26-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c66ea3f57a9835e04b367184bfbfc24cc13a9883",
+  "prompts": {},
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

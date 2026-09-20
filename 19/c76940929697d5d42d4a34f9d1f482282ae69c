@@ -1,0 +1,43 @@
+web/templates/moderate/_queue_item.html.twig
+  s_c68dfc59dc9546::t_88ac8a6b16dd74 52-63,65-75
+web/translations/messages.fr.yaml
+  s_c68dfc59dc9546::t_8df0563a1eb69d 1294-1295
+web/templates/moderate_routes/index.html.twig
+  s_c68dfc59dc9546::t_ff351c726c617d 146
+  s_c68dfc59dc9546::t_3828f3866a02e3 47-51
+web/templates/moderate/index.html.twig
+  s_c68dfc59dc9546::t_3828f3866a02e3 48-52
+web/templates/moderate_routes/detail.html.twig
+  s_c68dfc59dc9546::t_ff351c726c617d 166
+  s_c68dfc59dc9546::t_3828f3866a02e3 29-33
+  s_c68dfc59dc9546::t_1780673908d7c9 108-119,121-133
+web/translations/messages.de.yaml
+  s_c68dfc59dc9546::t_8df0563a1eb69d 1294-1295
+web/translations/messages.nl.yaml
+  s_c68dfc59dc9546::t_8df0563a1eb69d 1294-1295
+web/translations/messages.en.yaml
+  s_c68dfc59dc9546::t_8df0563a1eb69d 1294-1295
+docs/specs/2026-07-12-moderation-feedback-and-messages-design.md
+  s_c68dfc59dc9546::t_c196557a3dcedd 186-195
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "19c76940929697d5d42d4a34f9d1f482282ae69c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

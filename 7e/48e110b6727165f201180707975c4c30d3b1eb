@@ -1,0 +1,36 @@
+web/tests/Catalog/CoverageContractTest.php
+  s_f6d45d977e7468::t_de0bf97dc2e1fb 1-100
+pipeline/contract/coverage-contract.json
+  s_f6d45d977e7468::t_2fbf85da16b1a6 1-74
+Makefile
+  s_f6d45d977e7468::t_f11dcdeb7d9d11 152-154
+  s_f6d45d977e7468::t_c4d0190e550fd9 12
+pipeline/coverage/__init__.py
+  s_f6d45d977e7468::t_4ef6a6cff3a49b 1-2
+pipeline/coverage/contract.py
+  s_f6d45d977e7468::t_5c244d67136abf 1-56,58-104
+  s_f6d45d977e7468::t_4bebee06243bf5 57
+pipeline/tests/test_contract.py
+  s_f6d45d977e7468::t_f464bd9a8961ec 1-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7e48e110b6727165f201180707975c4c30d3b1eb",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

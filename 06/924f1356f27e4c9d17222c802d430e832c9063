@@ -1,0 +1,43 @@
+web/src/Controller/MapController.php
+  s_9599f84a595aa8::t_914cc4ae8ee487 188-189
+web/translations/messages.nl.yaml
+  s_9599f84a595aa8::t_914cc4ae8ee487 1191-1192
+web/assets/map/ride-check.js
+  s_9599f84a595aa8::t_b583d389eec498 53-54,57-90,125
+  s_9599f84a595aa8::t_2cd2a05fa9197c 33-36,145,170,177,195
+  s_9599f84a595aa8::t_d7d26dcd75ce65 1-26,32,37-52,55-56,91-124,126-144,146-152,169,171-176,178-179,191-194,196-202
+  s_9599f84a595aa8::t_dc17f3f8368d0e 27-31,153-168,180-190
+web/translations/messages.de.yaml
+  s_9599f84a595aa8::t_914cc4ae8ee487 1191-1192
+web/assets/styles/map.css
+  s_9599f84a595aa8::t_e82f17dfb8d5f8 450-453
+web/translations/messages.en.yaml
+  s_9599f84a595aa8::t_914cc4ae8ee487 1361-1362
+web/translations/messages.fr.yaml
+  s_9599f84a595aa8::t_914cc4ae8ee487 1191-1192
+web/assets/map/map.js
+  s_9599f84a595aa8::t_af2c65daf576c6 11,2942-2955
+web/tests/browser/map-smoke.js
+  s_9599f84a595aa8::t_7e3232381a9328 21-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "06924f1356f27e4c9d17222c802d430e832c9063",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_9599f84a595aa8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ec863f78-20d6-4299-a4d3-b8b757979843",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

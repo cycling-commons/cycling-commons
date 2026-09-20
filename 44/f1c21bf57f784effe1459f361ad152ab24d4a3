@@ -1,0 +1,28 @@
+wiki/location-privacy.md
+  s_bbe01d4f023787::t_89a7f3a0d9bb2b 101
+docs/specs/operations.md
+  s_bbe01d4f023787::t_d41d0ff1191162 108-148
+docs/specs/public-api-personal-data-boundary.md
+  s_bbe01d4f023787::t_89a7f3a0d9bb2b 112-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "44f1c21bf57f784effe1459f361ad152ab24d4a3",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

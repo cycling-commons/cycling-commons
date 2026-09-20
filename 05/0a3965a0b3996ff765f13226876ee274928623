@@ -1,0 +1,80 @@
+web/src/Controller/ModerateController.php
+  s_d30835e3caae18::t_e090cbbf2cf71c 56
+  s_d30835e3caae18::t_55f29c63674031 111-115
+  s_d30835e3caae18::t_848a54aad81e2b 15
+web/translations/messages.en.yaml
+  s_d30835e3caae18::t_35d49d7d334421 1705-1706
+web/src/Media/Entity/MediaUpload.php
+  s_d30835e3caae18::t_989de10ebb9dd1 453-457,461
+  s_d30835e3caae18::t_8b6cecfdc15dc0 352-353
+  s_d30835e3caae18::t_deaeb385ca133a 157-165
+  s_d30835e3caae18::t_ebe53776ab9190 395
+  s_d30835e3caae18::t_576f30608c925a 362,371
+  s_d30835e3caae18::t_58c3bc69764851 388
+  s_b2667a820417c3::t_f6617c0311a9d8 156
+docs/specs/photo-uploads.md
+  s_d30835e3caae18::t_0856503afa77a3 552-590
+web/translations/messages.fr.yaml
+  s_d30835e3caae18::t_35d49d7d334421 1702
+  s_d30835e3caae18::t_b59d8bdedc6be4 1703
+web/config/packages/rate_limiter.yaml
+  s_d30835e3caae18::t_fc9e1f917a5ff3 116-136
+  s_d30835e3caae18::t_68f554bc8623f1 28-29
+  s_d30835e3caae18::t_d943dc9255d0d5 162
+  s_b2667a820417c3::t_5850dc6ad78780 163
+web/translations/messages.de.yaml
+  s_d30835e3caae18::t_35d49d7d334421 1705-1706
+web/src/Media/MediaTakedownService.php
+  s_d30835e3caae18::t_eedaf1e4ef8685 61
+  s_d30835e3caae18::t_5e808eccb088c2 132-138,143-145,150-154
+  s_d30835e3caae18::t_136b3ffa9fa25d 105-109
+web/migrations/Version20260802190000.php
+  s_d30835e3caae18::t_c89ab716334839 1-47
+web/src/Media/UrgentWithholdBreaker.php
+  s_d30835e3caae18::t_296be1c4c1576a 84-90,94-95
+  s_d30835e3caae18::t_81bba9d9440843 1-83,91-93,96-97
+web/tests/Media/ThirdPartyReportTest.php
+  s_d30835e3caae18::t_e83e12b0ab7406 327
+  s_d30835e3caae18::t_ab2c8a0bd99ecf 297-303
+  s_d30835e3caae18::t_addaf1a9810536 23
+  s_b2667a820417c3::t_5850dc6ad78780 341-342
+  s_d30835e3caae18::t_ad12a796a6b363 306-309
+  s_d30835e3caae18::t_a4f8cd95b34cb3 286-296,304-305,310-326,328-340
+docs/specs/security-architecture.md
+  s_d30835e3caae18::t_fd26b2ad79c63f 370-377
+  s_d30835e3caae18::t_80fcafb9b3e890 390
+web/translations/messages.nl.yaml
+  s_d30835e3caae18::t_35d49d7d334421 1702
+  s_d30835e3caae18::t_b59d8bdedc6be4 1703
+web/templates/moderate/index.html.twig
+  s_d30835e3caae18::t_a46a19b4775d52 127,130-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "050a3965a0b3996ff765f13226876ee274928623",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b2667a820417c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77b22ba5-fbce-489c-a40c-b5007f506956",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d30835e3caae18": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2c176ff-abbd-40dd-b890-59ba0f5b9bd6",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

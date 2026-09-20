@@ -1,0 +1,33 @@
+web/src/Controller/RouteModerateController.php
+  s_0f648c977bdc75::t_968d79e50ba708 1-127
+web/templates/moderate_routes/index.html.twig
+  s_0f648c977bdc75::t_9afc7cbc7096b9 1-17
+web/translations/messages.fr.yaml
+  s_0f648c977bdc75::t_02f4bd9ee0bc1a 1000-1012
+web/translations/messages.de.yaml
+  s_0f648c977bdc75::t_6ef55fa13bef28 1000-1012
+web/tests/Moderation/RouteModerateTest.php
+  s_0f648c977bdc75::t_c9f41f1c26cd33 1-82
+web/translations/messages.nl.yaml
+  s_0f648c977bdc75::t_24a837a5a4ac79 1000-1012
+web/translations/messages.en.yaml
+  s_0f648c977bdc75::t_0024f7ee15b360 1000-1012
+web/src/Form/RouteDecisionType.php
+  s_0f648c977bdc75::t_0eebf70b820989 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "cd1427331352b9bba8d67ab35147d90603100913",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

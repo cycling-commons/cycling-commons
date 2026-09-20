@@ -1,0 +1,19 @@
+docs/specs/2026-07-26-ride-check-coverage-design.md
+  s_682a9751eecf44::t_0ccefc4e71cc01 1-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "0224e57ef9be57c5fb0dffdf1f36288986182b3f",
+  "prompts": {},
+  "sessions": {
+    "s_682a9751eecf44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ca5d106-ef5e-44e4-a6ed-d2c075fa66b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

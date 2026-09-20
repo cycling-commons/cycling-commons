@@ -1,0 +1,53 @@
+tools/wikimedia/out/places-fr.json
+  s_40a002d02fdfd2::t_701e9b7deb2758 1-19,22,27,32-34,37,42,47-49,52,57,61-127
+  s_40a002d02fdfd2::t_897303b56ed301 20-21,23-26,28-31,35-36,38-41,43-46,50-51,53-56,58-60
+tools/wikimedia/out/places-au.json
+  s_40a002d02fdfd2::t_d7be72779b412d 35-36,38-41,43-44,46
+  s_40a002d02fdfd2::t_9202026082f7a0 52-58,60-62,67-73,75-78,82-88,90-92,97-103,105-108
+tools/wikimedia/out/places-lu.json
+  s_40a002d02fdfd2::t_5683af8f16ab7c 3-34,36,44,47-51,59,63-66,74,76-81,89,93-95
+  s_40a002d02fdfd2::t_1fe8ee5deb4679 1-2,35,37-43,45-46,52-58,60-62,67-73,75,82-88,90-92,96-97
+tools/wikimedia/out/places-be.json
+  s_40a002d02fdfd2::t_9202026082f7a0 50-51,53-55,58-60
+web/src/Catalog/Command/SeedWikidataPlacesCommand.php
+  s_40a002d02fdfd2::t_d897d1cf5060f5 97-105,128-133,138,180-187
+  s_40a002d02fdfd2::t_8c3395f1ebd221 106-113,134-137,174-179,242-262
+  s_40a002d02fdfd2::t_95006583e10edc 263-264
+tools/wikimedia/country_places.py
+  s_40a002d02fdfd2::t_138511de62a7ff 57
+  s_40a002d02fdfd2::t_462231b2770e76 52-56,58,173
+  s_40a002d02fdfd2::t_e4ec2783313a1a 124-144,165-167,235-236
+  s_40a002d02fdfd2::t_00a546add13ce4 39,44,46-51,101-123,186-188,190-192,195
+tools/wikimedia/out/places-gb.json
+  s_40a002d02fdfd2::t_701e9b7deb2758 1-34,37,42,47-49,52,57,62-127
+  s_40a002d02fdfd2::t_660b7065cbbaa6 35-36,38-41,43-46,50-51,53-56,58-61
+tools/wikimedia/out/places-it.json
+  s_40a002d02fdfd2::t_2824cbb90311ed 1-127
+tools/wikimedia/out/places-jp.json
+  s_40a002d02fdfd2::t_18163934cd0c66 1-127
+tools/wikimedia/out/places-nl.json
+  s_40a002d02fdfd2::t_f530461b50baeb 1-127
+tools/wikimedia/out/places-us.json
+  s_40a002d02fdfd2::t_be6855e9df846b 1-112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "c883b944a30250b3acb18718657c69dd742bd709",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_40a002d02fdfd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f434c5a5-23e5-4d99-bf56-2c92d9db49b0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

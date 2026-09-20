@@ -1,0 +1,29 @@
+developers/coverage-batch.md
+  s_dd35dcc1b6eafa::t_814c1b033fb909 168
+docs/specs/security-architecture.md
+  s_dd35dcc1b6eafa::t_fc98a4261904b4 94-96,112,115,117-122,151,153-163,171
+  s_dd35dcc1b6eafa::t_814c1b033fb909 291,423,425-430
+  s_dd35dcc1b6eafa::t_7974287e554c93 330
+  s_dd35dcc1b6eafa::t_d7d802146a8f5f 334-337
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "f037ec47895ef7c8cbc9e902295edf80f049de54",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

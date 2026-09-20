@@ -1,0 +1,25 @@
+web/tests/Messaging/BulbTest.php
+  s_51df195d1c7750::t_86acd325cf9271 1-181
+web/src/Twig/MessageBadgeExtension.php
+  s_51df195d1c7750::t_cdf4aae45805c1 1-53
+web/templates/partials/_account_chip.html.twig
+  s_51df195d1c7750::t_478f679dbb0540 12-13
+web/assets/styles/atlas.css
+  s_51df195d1c7750::t_38483075435ef4 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "c0c92c2b6a57882dc8e9d7afbb7db18eab3187e9",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+pipeline/coverage/tiles.py
+  s_ce7d437afc19d9::t_788d43c5413ac4 144-146
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "f039fd42600927e51ecbda4b41e910388c923dce",
+  "prompts": {},
+  "sessions": {
+    "s_ce7d437afc19d9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f4f83357-aa74-4551-bd21-6f693445ca5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

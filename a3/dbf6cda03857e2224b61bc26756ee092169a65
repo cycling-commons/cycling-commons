@@ -1,0 +1,20 @@
+docs/specs/moderation-and-contribution.md
+  s_ed348b2f9c4e8c::t_5f6d04bce9c034 349-359,361-371
+  s_ed348b2f9c4e8c::t_29b55666f8b3ce 360
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a3dbf6cda03857e2224b61bc26756ee092169a65",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

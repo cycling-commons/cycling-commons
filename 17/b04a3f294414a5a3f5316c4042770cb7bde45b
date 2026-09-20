@@ -1,0 +1,137 @@
+web/assets/map/surface-tiles.js
+  s_4e536eec984e8d::t_5ec1a2f9704735 680-682,684
+  s_4e536eec984e8d::t_ffa202eeffb376 87-126
+  s_4e536eec984e8d::t_dbb63c7b124354 469-483
+  s_4e536eec984e8d::t_93d0b385e20e86 174-199,204-211
+  s_4e536eec984e8d::t_b1a19c9442af77 564-570
+  s_4e536eec984e8d::t_609a2a8c533993 212-213
+web/.env
+  s_4e536eec984e8d::t_e2d137cf9294b1 69-75
+pipeline/coverage/contract.py
+  s_4e536eec984e8d::t_a9c56b84f6aac6 198-217
+  s_4e536eec984e8d::t_e2dd0fcf4a0942 168-184
+  s_4e536eec984e8d::t_a7f670bd57f75a 60-65
+  s_4e536eec984e8d::t_eda35501939c8a 259
+pipeline/tests/test_routes.py
+  s_4e536eec984e8d::t_b0b2f5260f9f10 83-86,88,93,104
+  s_4e536eec984e8d::t_f6781f0003bf0f 1-82,87,89-92,94-103,105-193,195-219
+  s_4e536eec984e8d::t_0962ce68982e36 194
+pipeline/coverage/routes.py
+  s_4e536eec984e8d::t_21cea1ee5628a5 197-204
+  s_4e536eec984e8d::t_b36b3e91c1d36a 1-196,205-298
+pipeline/tests/test_surface.py
+  s_4e536eec984e8d::t_b1602990f949a3 181-189,195-197
+  s_4e536eec984e8d::t_0876698e936e67 127-169
+  s_4e536eec984e8d::t_dcf27cf7aaeab8 244-299
+docs/specs/map-and-search.md
+  s_4e536eec984e8d::t_7923fc0c3be8c8 589-618
+pipeline/tests/test_publish_routes.py
+  s_4e536eec984e8d::t_592f22c519bba6 1-77
+Makefile
+  s_4e536eec984e8d::t_5843c0d6fa7474 12
+  s_4e536eec984e8d::t_97e840881b9464 287-303
+web/assets/styles/map.css
+  s_4e536eec984e8d::t_14813611a76b46 416
+  s_4e536eec984e8d::t_3189a08cbdac47 120-127
+pipeline/tests/test_tiles.py
+  s_4e536eec984e8d::t_42c3abd508dec7 342-366
+web/translations/messages.de.yaml
+  s_4e536eec984e8d::t_83d17af809196a 1586-1587
+  s_4e536eec984e8d::t_de04f147542540 1698-1711
+docs/specs/edit-items/A-road-surface.md
+  s_4e536eec984e8d::t_b40ecfb9f09e12 130-160
+pipeline/tests/test_run_surface.py
+  s_4e536eec984e8d::t_f51c5a93401342 1-148
+web/assets/map/routes-tiles.js
+  s_4e536eec984e8d::t_ee008e8de0d95b 1-19,21-260
+  s_4e536eec984e8d::t_61e8a500e62b81 20
+web/translations/messages.es.yaml
+  s_4e536eec984e8d::t_eb5a6a420f9529 1918-1919
+  s_4e536eec984e8d::t_61565a9b828c8a 2030-2043
+pipeline/coverage/publish.py
+  s_4e536eec984e8d::t_fc7eb108c2d688 187-266
+  s_4e536eec984e8d::t_46a62a872d18bd 116,123-126,130-131
+wiki/developers/data-ops/surface-tiles.md
+  s_4e536eec984e8d::t_840ecaba135595 201-229
+pipeline/coverage/surface.py
+  s_4e536eec984e8d::t_b0257dea8bb9dc 207-213
+  s_4e536eec984e8d::t_16ed0acb687340 339-340,346-353,368-373
+  s_4e536eec984e8d::t_11e647f9cb0c53 49,59-62
+  s_4e536eec984e8d::t_a4602298c99a58 179-180
+  s_4e536eec984e8d::t_ec5c8301af14f2 139-142,158-163
+  s_4e536eec984e8d::t_b065042e0b4d4e 74-80
+  s_4e536eec984e8d::t_4da5071de23660 63
+web/translations/messages.en.yaml
+  s_4e536eec984e8d::t_aee693ade5fb53 2017-2030
+  s_4e536eec984e8d::t_5bb0328ad2c559 1905-1906
+web/src/Coverage/RoutesManifest.php
+  s_4e536eec984e8d::t_85bb0c683cfd86 1-132
+web/config/services.yaml
+  s_4e536eec984e8d::t_5989b7e61c92e2 46-50
+wiki/data-catalog.md
+  s_4e536eec984e8d::t_df6d5540a6640a 34-41
+web/src/Controller/MapController.php
+  s_4e536eec984e8d::t_cc2429c31ffe17 150-153
+  s_4e536eec984e8d::t_df640c1cb6b96b 254-263
+  s_4e536eec984e8d::t_288ce74d0c505f 19
+  s_4e536eec984e8d::t_3b0a237cabc618 60,62,66
+pipeline/coverage/run.py
+  s_4e536eec984e8d::t_13610820bf38c6 172-174,188-194,200,204-206
+  s_4e536eec984e8d::t_615da95e0495aa 492-498,500-503,505-506
+  s_4e536eec984e8d::t_aa74fb047f1288 28-33,36-37
+  s_4e536eec984e8d::t_d0f92a5cb36767 270-277,283-296,298-299,303-304
+  s_4e536eec984e8d::t_c7596b05178ef5 395-479
+  s_4e536eec984e8d::t_535807ba7309e5 520-522
+web/translations/messages.fr.yaml
+  s_4e536eec984e8d::t_1a150e35fc13b7 1695-1708
+  s_4e536eec984e8d::t_fb123fa287052a 1583-1584
+web/assets/map/panels.js
+  s_4e536eec984e8d::t_744147b81d14bd 36
+  s_4e536eec984e8d::t_8c1f06e8462509 122-131
+pipeline/contract/coverage-contract.json
+  s_4e536eec984e8d::t_bba06d9924fcae 350-352,354-368,370-371,373-384,386,389-398
+  s_4e536eec984e8d::t_781baa31675f7d 372
+  s_4e536eec984e8d::t_eec5579aa4553d 385,387-388
+web/templates/map/index.html.twig
+  s_4e536eec984e8d::t_a4da46bf70b039 464-469
+  s_4e536eec984e8d::t_6a20ecb1fe43ae 279-282
+  s_4e536eec984e8d::t_92adc3ed69d2dc 301-303
+pipeline/coverage/tiles.py
+  s_4e536eec984e8d::t_c74bd29cc635c7 332-370
+web/translations/messages.nl.yaml
+  s_4e536eec984e8d::t_8f0a6901e78c3b 1583-1584
+  s_4e536eec984e8d::t_3af775a5cd077f 1695-1708
+web/tests/js/routes-zooms.test.cjs
+  s_4e536eec984e8d::t_37f655f5bad7c8 1-25,28-59
+  s_4e536eec984e8d::t_f22e972d29216c 26-27
+web/tests/Coverage/RoutesManifestTest.php
+  s_4e536eec984e8d::t_90e4d98446537d 1-81
+docs/specs/coverage-provider.md
+  s_4e536eec984e8d::t_2cf36da3ddc4ea 487-516
+web/tests/js/surface-quality.test.cjs
+  s_4e536eec984e8d::t_8a5ab4db7bb06e 1-27,31-68
+  s_4e536eec984e8d::t_b58de0007e34a1 28-30
+web/config/packages/coverage.yaml
+  s_4e536eec984e8d::t_a6e23eddaa0d18 24-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "17b04a3f294414a5a3f5316c4042770cb7bde45b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e536eec984e8d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef3615e2-4e64-4afe-8b18-be74e8cc28ce",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

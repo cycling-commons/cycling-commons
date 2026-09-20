@@ -1,0 +1,29 @@
+docs/specs/public-api-personal-data-boundary.md
+  s_d30835e3caae18::t_cb22a9cb816569 89-95
+docs/specs/photo-uploads.md
+  s_d30835e3caae18::t_7223b90af15550 349-354
+  s_d30835e3caae18::t_cff1488d7dccf4 187-190
+docs/specs/public-api.md
+  s_d30835e3caae18::t_de3285ea8744cf 258-303
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "c7f1a1ae863d130edf4d6e9605fb1c5ca4e9a306",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_d30835e3caae18": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2c176ff-abbd-40dd-b890-59ba0f5b9bd6",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

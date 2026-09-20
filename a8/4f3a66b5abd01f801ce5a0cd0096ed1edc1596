@@ -1,0 +1,47 @@
+web/src/Command/RecomputeClimbProfilesCommand.php
+  s_ba6cf53b5a7360::t_57d0770c62acd4 1-8,11-147
+  s_ba6cf53b5a7360::t_80a0d8161ac3e9 9
+  s_ba6cf53b5a7360::t_60b3be159f17fc 10
+web/assets/contribute/climb-editor.js
+  s_ba6cf53b5a7360::t_e2e1a5b31a055b 196,278-279,308-311,338,403-409,470
+docs/specs/climb-elevation.md
+  s_ba6cf53b5a7360::t_0772d24cea7e19 7-14,676-685
+web/src/Elevation/ClimbProfiler.php
+  s_ba6cf53b5a7360::t_287b27b9559305 63-66,74,124-128,302-333
+  s_ba6cf53b5a7360::t_dd2537b53f99ea 227
+  s_ba6cf53b5a7360::t_5f31c0683529a6 1-62,67-73,75-123,129-226,228-301,334-340
+web/assets/contribute/climb-elevation.js
+  s_ba6cf53b5a7360::t_ca9ffd67e6eccd 9-12,28,32,36,45-53
+  s_ba6cf53b5a7360::t_dd4ea27c4c3608 6-8,13-27,30-31,39,43
+web/tests/Elevation/ClimbProfilerTest.php
+  s_ba6cf53b5a7360::t_bb1842a334853d 1-176
+web/src/Controller/ElevationController.php
+  s_ba6cf53b5a7360::t_90117fbc898f82 9,18,26-31,40,70,73-74,78
+  s_ba6cf53b5a7360::t_287b27b9559305 61-63,66-69
+  s_ba6cf53b5a7360::t_dd2537b53f99ea 65
+  s_ba6cf53b5a7360::t_6849f167f69594 64
+wiki/developers/gis-beyond/elevation.md
+  s_ba6cf53b5a7360::t_26b2636058d560 121-123,166-172
+  s_ba6cf53b5a7360::t_c0305448549db9 173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "a84f3a66b5abd01f801ce5a0cd0096ed1edc1596",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+mkdocs.yml
+  s_f3f9c3dc9409c4::t_93ba34cca42104 63,65,67-69
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_58e21bdf43d5f5 255-262
+  s_f3f9c3dc9409c4::t_93ba34cca42104 323-336
+tools/check-wiki-code-drift.py
+  s_f3f9c3dc9409c4::t_06eb04e14a47e7 171-185
+  s_f3f9c3dc9409c4::t_8180b56b9de0e0 131
+  s_f3f9c3dc9409c4::t_aae76f42cd658b 40-55
+.pre-commit-config.yaml
+  s_f3f9c3dc9409c4::t_31f064d983258c 55-68,73-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "c42768abeedbbf86ed0946513a6d0357e5f9c046",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

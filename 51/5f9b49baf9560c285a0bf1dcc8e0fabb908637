@@ -1,0 +1,32 @@
+web/translations/messages.en.yaml
+  s_946b9cd11c7809::t_b29622a73ed587 229
+  s_946b9cd11c7809::t_383eddbd51898e 200
+web/translations/messages.nl.yaml
+  s_946b9cd11c7809::t_7788509fc7d13e 200
+  s_946b9cd11c7809::t_09c40e2e7d3c80 229
+web/translations/messages.fr.yaml
+  s_946b9cd11c7809::t_14ce942a86746c 200
+  s_946b9cd11c7809::t_b5e0f9f3d0ae95 229
+web/translations/messages.es.yaml
+  s_946b9cd11c7809::t_7dc2d014a13eec 231
+  s_946b9cd11c7809::t_516163b50f9678 200
+web/translations/messages.de.yaml
+  s_946b9cd11c7809::t_4f054619b505f7 229
+  s_946b9cd11c7809::t_c6662b5aa612e2 200
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "515f9b49baf9560c285a0bf1dcc8e0fabb908637",
+  "prompts": {},
+  "sessions": {
+    "s_946b9cd11c7809": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "5c6227a9-ba64-48d2-abb8-8424d3f01e78",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

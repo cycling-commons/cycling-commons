@@ -1,0 +1,33 @@
+pipeline/coverage/tiles.py
+  s_51ed87ec737f32::t_6b7434e96784e6 122-126
+  s_51ed87ec737f32::t_3413d467ebfd9c 107,109-113
+  s_51ed87ec737f32::t_779b74924e07ba 114-121,127-128
+docs/specs/2026-07-19-region-scoping-design.md
+  s_51ed87ec737f32::t_b15519cd220223 612-621
+web/assets/map/map.js
+  s_51ed87ec737f32::t_bdf739e3ee8f86 708-711,716-732,736-741
+  s_51ed87ec737f32::t_70e073804cd0ce 1598
+  s_51ed87ec737f32::t_db760462b5b72a 798-799,801,811-830
+  s_51ed87ec737f32::t_d78217dcd1a03a 1591-1594
+  s_51ed87ec737f32::t_745f150353fddb 553-567
+  s_51ed87ec737f32::t_fdff18d5fcac62 767,769-776
+docs/specs/coverage-provider.md
+  s_51ed87ec737f32::t_59940dbb654cdc 136-147
+  s_51ed87ec737f32::t_765f77f2aaf557 196-201
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2c87cf01100d491d708a3df85521d0d712912de2",
+  "prompts": {},
+  "sessions": {
+    "s_51ed87ec737f32": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cfcc005-7ab4-4c37-848d-fb8a89f6021f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

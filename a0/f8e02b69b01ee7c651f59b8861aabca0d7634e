@@ -1,0 +1,41 @@
+web/tests/Community/CuratorApplicationReviewTest.php
+  s_7ed0626bd6d35d::t_3c365b8ef2fbf1 265
+  s_7ed0626bd6d35d::t_638118547c3507 127-254,260,262-264,266-272
+  s_7ed0626bd6d35d::t_e3eb40e9b18916 255-259,261
+web/translations/messages.de.yaml
+  s_7ed0626bd6d35d::t_1274f788e9aed7 1858
+web/translations/messages.nl.yaml
+  s_7ed0626bd6d35d::t_85536d389a1633 1858
+web/src/Controller/Admin/DashboardController.php
+  s_7ed0626bd6d35d::t_fed2518d69e534 27
+  s_7ed0626bd6d35d::t_5f135f7e922ed2 213,226-229,232-244
+  s_7ed0626bd6d35d::t_df859d44f38c3a 11
+web/translations/messages.en.yaml
+  s_7ed0626bd6d35d::t_ea2199b8a72261 1862
+web/translations/messages.fr.yaml
+  s_7ed0626bd6d35d::t_a125e9de4bd91b 1858
+web/src/Community/CuratorApplicationService.php
+  s_7ed0626bd6d35d::t_2c4cb7f291ddac 92-104,108-109,115-133,136,139-140,143-144,146-162
+  s_7ed0626bd6d35d::t_541eb9cb7f6bf6 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "a0f8e02b69b01ee7c651f59b8861aabca0d7634e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7ed0626bd6d35d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "391f6353-1129-40b7-8f31-751a1e45178a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

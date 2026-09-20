@@ -1,0 +1,55 @@
+web/src/Controller/ContributeController.php
+  s_38d02ca6d8ff2e::t_46a699ea0e938b 143,145-147,153,158-170,172-175,184-194,196-206,214
+  s_38d02ca6d8ff2e::t_92c97af1842628 148-152,154,157
+  s_38d02ca6d8ff2e::t_dbb7f0a71571fd 9,17
+  s_38d02ca6d8ff2e::t_1e26329e0d20fa 155-156
+web/src/Form/ImproveType.php
+  s_38d02ca6d8ff2e::t_86f2d43169c823 60-61,66,72
+  s_38d02ca6d8ff2e::t_77cbb0e9555d97 141,144
+  s_38d02ca6d8ff2e::t_5f061c9d9bdfbf 100-101,108-109,116,121,128
+  s_38d02ca6d8ff2e::t_82e11ae80c15d9 34-41
+web/tests/Contribution/ImproveBindingTest.php
+  s_38d02ca6d8ff2e::t_072998f30a8df0 1-106
+web/translations/messages.en.yaml
+  s_38d02ca6d8ff2e::t_1767870e83de1d 816-818
+web/src/Catalog/CatalogProvider.php
+  s_38d02ca6d8ff2e::t_bb0158a81eb11d 64,68,78,83-84,102
+  s_38d02ca6d8ff2e::t_459880215dac67 99-101,105
+web/tests/Catalog/CatalogProviderTest.php
+  s_38d02ca6d8ff2e::t_719723e11423fa 108-109
+  s_38d02ca6d8ff2e::t_a882587225e075 81-83,88
+web/assets/map/map.js
+  s_38d02ca6d8ff2e::t_f58621e9532b2f 223,235,239-240
+  s_38d02ca6d8ff2e::t_4c2e8de987dfa1 1083-1086,1089-1095
+web/translations/messages.fr.yaml
+  s_38d02ca6d8ff2e::t_f65a51b524c67e 816-818
+web/translations/messages.nl.yaml
+  s_38d02ca6d8ff2e::t_0eddde6614f38b 816-818
+web/src/Contribution/CatalogContributionService.php
+  s_38d02ca6d8ff2e::t_0cc24d2def254a 28-33
+  s_38d02ca6d8ff2e::t_b48591271fcf2c 157
+  s_38d02ca6d8ff2e::t_7962efcba7d821 111-156,158-160
+  s_38d02ca6d8ff2e::t_f6eaa3f59037aa 78
+web/translations/messages.de.yaml
+  s_38d02ca6d8ff2e::t_d0ff0377357412 816-818
+web/tests/Contribution/ImproveTest.php
+  s_38d02ca6d8ff2e::t_ae8d0d0f92fb02 9-11,19-21,25-30,86-107,118,124,126,131-132,137,139,143,145,157,159,171,173,187,189,201,203,210,216-217,223,230-232,238,240,244,246,259-260,263
+web/templates/contribute/improve.html.twig
+  s_38d02ca6d8ff2e::t_9885b01b2ebd72 130-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9964c1cafa5eb5e0fe76f4090eed0fe8420440b2",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

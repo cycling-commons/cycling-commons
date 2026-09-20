@@ -1,0 +1,27 @@
+tools/elevation/README.md
+  s_1c0464d81ce126::t_b6ed7ca3338d71 38,43-46,51-55
+  s_1c0464d81ce126::t_7ffa28ed525f2d 56
+.gitignore
+  s_1c0464d81ce126::t_b2232cf72ceaf7 100-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "bacdc9d7d0a6dfa89e773cec33a7991f1d91355a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

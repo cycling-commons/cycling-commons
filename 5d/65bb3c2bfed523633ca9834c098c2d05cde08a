@@ -1,0 +1,58 @@
+web/translations/messages.fr.yaml
+  s_eb16961f3ecd46::t_06b1a8745f3348 861
+web/translations/messages.de.yaml
+  s_eb16961f3ecd46::t_5888e1c9951ab9 861
+web/templates/map/index.html.twig
+  s_eb16961f3ecd46::t_c512af81b90f0c 85-91,93-95,97-101
+  s_eb16961f3ecd46::t_bcd12a798faaf1 96
+  s_eb16961f3ecd46::t_6e2b02cac1ca36 325-327
+  s_eb16961f3ecd46::t_f7f92662ebd312 342-343
+  s_eb16961f3ecd46::t_ac95c2d156e8f5 48
+  s_eb16961f3ecd46::t_85f4c6524848da 228
+  s_eb16961f3ecd46::t_f87fd8f1fbff9e 92
+web/assets/styles/map.css
+  s_eb16961f3ecd46::t_41e400c98c94e7 129-134
+web/src/Catalog/RegionRegistryProvider.php
+  s_eb16961f3ecd46::t_5ebc7913f06e67 28-31,47
+  s_eb16961f3ecd46::t_e0af88d5733ee0 1-27,32-46,48-51
+web/translations/messages.nl.yaml
+  s_eb16961f3ecd46::t_85d1b988e86266 861
+web/translations/messages.en.yaml
+  s_eb16961f3ecd46::t_8ac6c27d6acfab 1027
+web/src/Controller/MapController.php
+  s_eb16961f3ecd46::t_c008d21a0e83ba 12
+  s_eb16961f3ecd46::t_60cccaf99a017c 37,43-46
+web/assets/map/map.js
+  s_eb16961f3ecd46::t_3d7411a48a0ae9 57,60-64
+  s_eb16961f3ecd46::t_0b195e84c58946 2972-2983
+  s_eb16961f3ecd46::t_068ac02d80a347 1040
+  s_eb16961f3ecd46::t_98a463be041b53 69-83,87,98-117,122
+  s_eb16961f3ecd46::t_cd86c20a6cd4ec 1098
+  s_eb16961f3ecd46::t_80ca9fc4eabd7f 35-38
+  s_eb16961f3ecd46::t_8fb2659ec196a2 1317
+  s_eb16961f3ecd46::t_ec47fbf7dd32c5 123-128
+  s_eb16961f3ecd46::t_b556aef2bd3224 118-121
+  s_eb16961f3ecd46::t_e7926e26755066 22-30,32-34
+  s_eb16961f3ecd46::t_205b998a95a575 129,510,513-523
+  s_eb16961f3ecd46::t_7d0d5685593b7b 1401
+  s_eb16961f3ecd46::t_e4ea92900ef847 31
+  s_eb16961f3ecd46::t_fc0e29c61381d9 2913-2914
+  s_eb16961f3ecd46::t_fcddc1cbe3b04a 2945-2950
+  s_eb16961f3ecd46::t_1dd927829bf2cc 785
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "5d65bb3c2bfed523633ca9834c098c2d05cde08a",
+  "prompts": {},
+  "sessions": {
+    "s_eb16961f3ecd46": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32a5798c-4df2-4e41-b9bb-1c452e700604",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

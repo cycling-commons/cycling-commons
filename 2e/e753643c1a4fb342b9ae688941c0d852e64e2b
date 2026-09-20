@@ -1,0 +1,46 @@
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_14d343aaa1f816::t_e37fe0d21cd558 42-47
+web/translations/messages.en.yaml
+  s_14d343aaa1f816::t_2f9d5fdb01d9c4 1968
+web/translations/messages.nl.yaml
+  s_14d343aaa1f816::t_2f9d5fdb01d9c4 1652
+web/tests/Elevation/ClimbProfilerTest.php
+  s_14d343aaa1f816::t_df14f949392a7d 208
+  s_14d343aaa1f816::t_9a0b3c82f1b5ad 209-248
+web/translations/messages.de.yaml
+  s_14d343aaa1f816::t_2f9d5fdb01d9c4 1655
+web/translations/messages.fr.yaml
+  s_14d343aaa1f816::t_2f9d5fdb01d9c4 1652
+web/assets/map/drawer.js
+  s_14d343aaa1f816::t_a9fb96680c294c 769-774
+web/src/Command/RecomputeClimbProfilesCommand.php
+  s_14d343aaa1f816::t_c1596f93e8aab5 123-128
+web/src/Elevation/ClimbProfiler.php
+  s_14d343aaa1f816::t_173d945a45900c 120-121
+  s_14d343aaa1f816::t_9fbdd091c84a24 45,47-77,79
+  s_14d343aaa1f816::t_e245871d0e9c78 265-266,270-280
+  s_14d343aaa1f816::t_ab86c925101596 167-178
+docs/specs/climb-elevation.md
+  s_14d343aaa1f816::t_09d5fcfd9ecf50 242-284
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "2ee753643c1a4fb342b9ae688941c0d852e64e2b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_14d343aaa1f816": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "95808232-1ca6-4e95-ae43-a4126c68a402",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

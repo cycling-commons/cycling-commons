@@ -1,0 +1,26 @@
+docs/specs/osm-data-architecture.md
+  s_c6f332c201127d::t_71f67604ac521e 136
+docs/specs/public-api.md
+  s_c6f332c201127d::t_ab2689a0bc0577 92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "6a67dc4e47237b499d7aaf2e2c8e2c009e5a65e9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+tools/elevation/compare-sources.js
+  s_ba6cf53b5a7360::t_3292a635bec80e 1-151
+tools/elevation/fetch-glo30.sh
+  s_ba6cf53b5a7360::t_d9bdb93c0a7f05 1-63
+tools/elevation/README.md
+  s_ba6cf53b5a7360::t_72a2357a10e85f 1-134
+tools/elevation/to-hgt.sh
+  s_ba6cf53b5a7360::t_7077080331af8a 1-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "9422b32353a5334777632c4dfb82248dab057e74",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

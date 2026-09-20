@@ -1,0 +1,32 @@
+licenses/COMMONS-TERMS-CLAUSE.md
+  s_f74925d0c0d81f::t_c3891f2e2a9861 5-8
+  s_f74925d0c0d81f::t_bab263113fa361 39
+  s_f74925d0c0d81f::t_c7829b51b613db 34
+  s_f74925d0c0d81f::t_b53e688e001e13 20
+  s_f74925d0c0d81f::t_dbc65e4a3e4599 28
+  s_f74925d0c0d81f::t_4fa3a5c4ae742f 12,14
+  s_f74925d0c0d81f::t_550f7ec3575fca 44
+  s_f74925d0c0d81f::t_f5a8059572c46c 48
+  s_f74925d0c0d81f::t_b13d391d00df57 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "72258767156902ed34ee2a0924e8ed5b7e69f304",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f74925d0c0d81f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8a0a3f4c-ce8a-4939-99a0-a9f893c95039",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

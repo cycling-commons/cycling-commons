@@ -1,0 +1,83 @@
+web/templates/pages/pages.html.twig
+  s_bf75b29242f552::t_6c6fffd9daef5d 42
+web/translations/messages.en.yaml
+  s_bf75b29242f552::t_3169cf91b9a86d 2400-2401
+  s_bf75b29242f552::t_178a73f20a94a7 3560-3570,3572-3583,3585,3587-3642
+  s_bf75b29242f552::t_5e7e9ee5992b43 3584,3586
+  s_bf75b29242f552::t_adcd15bf5338a9 3571
+  s_bf75b29242f552::t_ff27acb5cf8271 566-567
+web/src/Controller/PageController.php
+  s_bf75b29242f552::t_bd2b6b4b5a79ae 129-147
+web/translations/messages.fr.yaml
+  s_bf75b29242f552::t_aef288f6bc8797 3563,3565
+  s_bf75b29242f552::t_84e35e94493869 566-567
+  s_bf75b29242f552::t_352915148d9330 3550
+  s_bf75b29242f552::t_f4231b301dd228 1934-1935
+  s_bf75b29242f552::t_d1bcc2958f7984 3539-3549,3551-3562,3564,3566-3621
+web/translations/messages.es.yaml
+  s_bf75b29242f552::t_795f91f266a89b 567-568
+  s_bf75b29242f552::t_91943ddb4dc47e 3589,3591
+  s_bf75b29242f552::t_bd6785eafe10c3 3565-3575,3577-3588,3590,3592-3647
+  s_bf75b29242f552::t_8ed2d922993e41 2404-2405
+  s_bf75b29242f552::t_629f3d3ef5792e 3576
+web/src/Controller/MapController.php
+  s_bf75b29242f552::t_bb4fafeb0af8cf 342
+web/assets/map/shell.js
+  s_bf75b29242f552::t_505af46b3d554b 15
+web/templates/map/index.html.twig
+  s_bf75b29242f552::t_6d15013ccdd9db 76-78
+  s_bf75b29242f552::t_d4ebc1f890568b 417-447
+web/templates/pages/map_key.html.twig
+  s_bf75b29242f552::t_34ed1a7dcf9b50 271
+  s_bf75b29242f552::t_e03d4627cbd996 259-264
+  s_bf75b29242f552::t_99a43b9da14747 74-77,80-81
+  s_bf75b29242f552::t_8f20c7d22f27fd 279-281
+  s_bf75b29242f552::t_2b746754173485 1-73,78-79,82-104,106-258,265-270,272-278,282-288
+  s_bf75b29242f552::t_550590d6e5271e 105
+web/src/Routing/LocalizedPath.php
+  s_bf75b29242f552::t_ec4ca734871bb2 134-142
+web/assets/styles/map.css
+  s_bf75b29242f552::t_7b36c89f9110ca 353-355,360-366
+  s_bf75b29242f552::t_4d608090a01830 356-359
+  s_bf75b29242f552::t_dcffffd18a1a39 461-466
+web/translations/messages.de.yaml
+  s_bf75b29242f552::t_4af2614551f79b 1937-1938
+  s_bf75b29242f552::t_4fabd288cf82d3 3542-3552,3554-3565,3567,3569-3624
+  s_bf75b29242f552::t_6393d4e129192b 3553
+  s_bf75b29242f552::t_f4bc5699c9fa5c 566-567
+  s_bf75b29242f552::t_281ab842c9e853 3566,3568
+web/translations/messages.nl.yaml
+  s_bf75b29242f552::t_fc5b8f4887a5cb 3550
+  s_bf75b29242f552::t_5d603a05b80d52 3539-3549,3551-3562,3564,3566-3621
+  s_bf75b29242f552::t_385ff957d4ebb5 3563,3565
+  s_bf75b29242f552::t_495321b4e8c773 566-567
+  s_bf75b29242f552::t_83a1b2fba8e1cb 1934-1935
+docs/specs/map-and-search.md
+  s_bf75b29242f552::t_c2f10620f46440 964-986,988-998,1006
+  s_bf75b29242f552::t_6a72c6693a9164 987
+  s_bf75b29242f552::t_38e268bd1c9de3 1005
+  s_bf75b29242f552::t_b2f8d5a9781da3 999-1004
+web/tests/Smoke/MapKeyTest.php
+  s_bf75b29242f552::t_4148d9a5405fc8 1-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "9fa73a09e9589660cddc53a6b0612d70d6fffd7a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bf75b29242f552": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e6bb59ae-5c56-478e-a4b7-b5698b6c0b90",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

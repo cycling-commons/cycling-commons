@@ -1,0 +1,21 @@
+web/translations/messages.de.yaml
+  s_51df195d1c7750::t_72d5177febed2e 1144,1155
+web/translations/messages.fr.yaml
+  s_51df195d1c7750::t_47f7e1df8a2240 1136,1139,1145,1150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "53d8bcdf2d72f685351c93ba208c37d65bef0511",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

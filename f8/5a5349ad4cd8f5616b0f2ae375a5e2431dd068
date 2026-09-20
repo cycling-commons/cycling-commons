@@ -1,0 +1,129 @@
+web/tests/Settings/FakeSettings.php
+  s_d30835e3caae18::t_267aeb519c2aee 21,29-31,34-42,46-50
+  s_d30835e3caae18::t_9c78e87bbce531 51
+web/tests/Settings/SystemSettingsTest.php
+  s_d30835e3caae18::t_2088b5605fef4d 122-156
+  s_d30835e3caae18::t_1f2dd68fcc1cb0 81-84
+  s_d30835e3caae18::t_37db5b378a1a45 72-74
+wiki/moderator-rulebook.md
+  s_d30835e3caae18::t_a5d1b5540931b5 15-16
+  s_d30835e3caae18::t_efc79d7392b306 20-30
+docs/specs/photo-uploads.md
+  s_d30835e3caae18::t_8f9495e2053e12 645-701
+web/migrations/Version20260802230000.php
+  s_d30835e3caae18::t_e0e6df797051bc 1-50
+web/translations/messages.de.yaml
+  s_b7eccf3abfe4d7::t_d3c440419c8806 1417,1419
+  s_d30835e3caae18::t_e52fa13e850b10 1696-1704,2130-2144,2308
+  s_d30835e3caae18::t_148d279bef319a 2167-2172
+  s_d30835e3caae18::t_e3aa95ecb8d3a4 2145,2173,2202,2276,2282,2309-2310
+web/migrations/Version20260802220000.php
+  s_d30835e3caae18::t_1e0d1ae3bddb22 1-48
+web/src/Media/AlertRecipients.php
+  s_d30835e3caae18::t_2fa2a14f3430d5 1-48
+web/src/Settings/SystemSettingsWriter.php
+  s_d30835e3caae18::t_1e0d1ae3bddb22 74-76
+  s_d30835e3caae18::t_1534d458d4c6ee 55,62,80-83
+  s_d30835e3caae18::t_a9adbb8303ee09 59
+web/tests/Media/MediaEscalationTest.php
+  s_d30835e3caae18::t_7f9cc7ef62138c 27
+  s_d30835e3caae18::t_fb34ab3eecd0cc 123-125,128-130
+  s_d30835e3caae18::t_6fe888a90be7d9 1-26,28-122,126-127,131-228
+web/src/Controller/ModerateController.php
+  s_d30835e3caae18::t_bd42ef6e9951e8 14,57,273-309
+web/src/Media/MediaTakedownService.php
+  s_d30835e3caae18::t_9bff635e7dfe72 185-187,221,266-269,302,359-362,365
+web/src/Settings/SettingDefinition.php
+  s_d30835e3caae18::t_8ef0ac918239a7 10-11,14-26,34-36,38-46,50-55,62,64-92
+web/translations/messages.en.yaml
+  s_b7eccf3abfe4d7::t_5b70ff176e1e0a 1097,1099
+  s_d30835e3caae18::t_148d279bef319a 2167-2171
+  s_d30835e3caae18::t_e52fa13e850b10 1696-1704,2130-2143
+  s_d30835e3caae18::t_30835c81499d43 2144-2145,2149,2172-2173,2202,2276,2282,2308-2310
+web/templates/admin/playbook_photo_flood.html.twig
+  s_d30835e3caae18::t_148d279bef319a 54-64
+web/config/packages/media.yaml
+  s_d30835e3caae18::t_baa08ab48fbd33 29-33
+web/src/Controller/Admin/DashboardController.php
+  s_d30835e3caae18::t_29b5c8352d3c46 212-216,219
+  s_d30835e3caae18::t_a9adbb8303ee09 438
+  s_d30835e3caae18::t_baa08ab48fbd33 185-193
+  s_d30835e3caae18::t_e769459bf64618 16,57,100,439-473
+  s_d30835e3caae18::t_0291e7b5c9d908 474-475
+web/tests/Admin/SystemConfigPageTest.php
+  s_d30835e3caae18::t_9ff561d15adc4d 118-125
+web/src/Controller/PhotoPageController.php
+  s_d30835e3caae18::t_9bff635e7dfe72 71-74
+web/src/Media/MediaEscalationService.php
+  s_d30835e3caae18::t_81909188eee9d0 1-238
+web/src/Media/MediaDecisionService.php
+  s_d30835e3caae18::t_577e0d35da270a 65-70
+web/translations/messages.nl.yaml
+  s_d30835e3caae18::t_148d279bef319a 2164-2169
+  s_b7eccf3abfe4d7::t_d03af23393e333 1414,1416
+  s_d30835e3caae18::t_e52fa13e850b10 1693-1701,2127-2141,2305
+  s_d30835e3caae18::t_44b009fde7ed81 2142,2170,2199,2273,2279,2306-2307
+web/src/Settings/SettingsProviderInterface.php
+  s_d30835e3caae18::t_1534d458d4c6ee 16-17,36-43
+web/src/Settings/SystemSettings.php
+  s_d30835e3caae18::t_34549e6b25f2e9 39,115,140
+  s_d30835e3caae18::t_157a5f82ff8fdb 51-70,73-77,85,91,155
+web/translations/messages.fr.yaml
+  s_b7eccf3abfe4d7::t_d4adb23969e6ad 1414,1416
+  s_d30835e3caae18::t_148d279bef319a 2164-2169
+  s_d30835e3caae18::t_e52fa13e850b10 1693-1701,2127-2141,2305
+  s_d30835e3caae18::t_8110ab67d6f2a4 2142,2170,2199,2273,2279,2306-2307
+web/src/Settings/SettingsRegistry.php
+  s_d30835e3caae18::t_157a5f82ff8fdb 36,38-44
+  s_d30835e3caae18::t_89f3d3d0cda2c0 60,66,112,114,121-178
+web/src/Media/MediaDisposalService.php
+  s_d30835e3caae18::t_fbb3520c3e166d 55-65,68-72,82-86
+  s_d30835e3caae18::t_28ddfb3867f753 15
+  s_d30835e3caae18::t_1d4789c259d66c 51
+web/src/Media/UrgentWithholdAlert.php
+  s_d30835e3caae18::t_5e167e73c00584 45,53-54
+  s_d30835e3caae18::t_3b664e65381803 63
+web/src/Media/Entity/MediaUpload.php
+  s_d30835e3caae18::t_69eee61951c3da 177-201
+  s_d30835e3caae18::t_47c0ad28967381 482-519
+web/src/Media/MediaAction.php
+  s_d30835e3caae18::t_d0b19abef58b24 46-54
+web/templates/moderate/index.html.twig
+  s_d30835e3caae18::t_5bef7c03c9ad5e 162-175
+web/templates/admin/escalated.html.twig
+  s_d30835e3caae18::t_7ee253aaac3420 1-62
+web/templates/admin/system_config.html.twig
+  s_d30835e3caae18::t_75cf4eb6ab543c 32-53
+  s_d30835e3caae18::t_e119e1af7fea6d 27
+web/tests/Contribution/ImproveTest.php
+  s_b7eccf3abfe4d7::t_9e795f34000e2d 256-282
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "f85a5349ad4cd8f5616b0f2ae375a5e2431dd068",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b7eccf3abfe4d7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c0eae58b-5ade-4e9b-826e-5f61f82c48cf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d30835e3caae18": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2c176ff-abbd-40dd-b890-59ba0f5b9bd6",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

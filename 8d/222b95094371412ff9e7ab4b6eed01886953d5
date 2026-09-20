@@ -1,0 +1,47 @@
+web/templates/contribute/improve.html.twig
+  s_6df2cc515a46f1::t_7eb9e7d75873e5 487-494
+  s_6df2cc515a46f1::t_3d77aeb76a2313 369-370
+web/assets/contribute/improve.js
+  s_6df2cc515a46f1::t_296a36d3e2bc3c 832-839
+  s_6df2cc515a46f1::t_97166d64888670 785-811,813-814
+  s_6df2cc515a46f1::t_d03869dbf7802c 953-955
+  s_6df2cc515a46f1::t_111cfdd0611954 545-548
+  s_6df2cc515a46f1::t_6f7c405638f9d9 935-938
+web/translations/messages.nl.yaml
+  s_6df2cc515a46f1::t_1e9fec667152a4 2194-2196
+web/assets/styles/atlas.css
+  s_6df2cc515a46f1::t_574cf0677392f7 215-223
+web/translations/messages.fr.yaml
+  s_6df2cc515a46f1::t_f58a4e1ca97300 2194-2196
+web/tests/js/wizard-addpoint.test.cjs
+  s_6df2cc515a46f1::t_20eb365190d493 1-62
+web/translations/messages.de.yaml
+  s_6df2cc515a46f1::t_0e38ace278c9f2 2197-2199
+docs/specs/edit-items/A-road-surface.md
+  s_6df2cc515a46f1::t_4d72cbbf148d9b 151-171
+web/translations/messages.en.yaml
+  s_6df2cc515a46f1::t_846f8e8061eb1d 1770-1772
+web/translations/messages.es.yaml
+  s_6df2cc515a46f1::t_811db611b275d6 1780-1782
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "8d222b95094371412ff9e7ab4b6eed01886953d5",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

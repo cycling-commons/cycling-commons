@@ -1,0 +1,23 @@
+web/tests/Catalog/BikeTypeVocabularyTest.php
+  s_0f648c977bdc75::t_7a8aaf0b8139ac 33-42
+web/src/Catalog/BikeType.php
+  s_0f648c977bdc75::t_8e4010a6b7ce94 12-15,26-28
+web/tests/Catalog/BikeTypeTest.php
+  s_0f648c977bdc75::t_429d8f21838942 1-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5546f2cee7c79fc51b58628d7b9f8e2b2a264d15",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

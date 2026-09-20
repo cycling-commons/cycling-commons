@@ -1,0 +1,40 @@
+web/translations/messages.fr.yaml
+  s_51df195d1c7750::t_0ec8b19344dc83 1002
+web/src/Form/ModerationDecisionType.php
+  s_51df195d1c7750::t_6dbc2edf84cc27 15
+  s_51df195d1c7750::t_6734f5c4303e2d 52-54
+web/tests/Moderation/DecisionMessagesTest.php
+  s_51df195d1c7750::t_a03d0a29453054 1-212
+web/tests/Moderation/ModerationServiceTest.php
+  s_51df195d1c7750::t_f9594a02d064bc 27,38-45,47
+  s_51df195d1c7750::t_d5c911b96dfa3d 59,78,136,203
+web/translations/messages.nl.yaml
+  s_51df195d1c7750::t_ecdce9343b4087 1002
+web/translations/messages.de.yaml
+  s_51df195d1c7750::t_2bcdc832a27153 1002
+web/translations/messages.en.yaml
+  s_51df195d1c7750::t_244380ff7d5076 1002
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_51df195d1c7750::t_2306aadfec935d 44-49,55-61,63
+web/tests/Moderation/ModerateTest.php
+  s_51df195d1c7750::t_14e437ee244382 68-73,79-85,87
+web/src/Moderation/ModerationService.php
+  s_51df195d1c7750::t_5b0f879c70d179 16-17,30-33
+  s_51df195d1c7750::t_82b74824af5584 79-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "4f6fb1724e840d6b5e8c6a14044b79b83a213b3a",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

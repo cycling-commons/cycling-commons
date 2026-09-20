@@ -1,0 +1,72 @@
+docs/specs/moderation-and-contribution.md
+  s_1c0464d81ce126::t_5ae520d8427064 1541-1571
+web/src/Messaging/MessageCategory.php
+  s_1c0464d81ce126::t_a97e74a52089c2 66
+web/tests/Media/ProofOfWorkTest.php
+  s_1c0464d81ce126::t_d7926d053dc514 27-40,43
+web/translations/messages.fr.yaml
+  s_1c0464d81ce126::t_6733cfe39d0f56 592-593
+  s_1c0464d81ce126::t_9a5cf365f6c68d 579-582
+  s_1c0464d81ce126::t_5a8413bff38fc5 595
+  s_1c0464d81ce126::t_061e81f8d9355e 2748
+  s_1c0464d81ce126::t_6a41917d0aa59e 606-608
+web/translations/messages.de.yaml
+  s_1c0464d81ce126::t_6733cfe39d0f56 592-593
+  s_1c0464d81ce126::t_6a41917d0aa59e 606-608
+  s_1c0464d81ce126::t_061e81f8d9355e 2751
+  s_1c0464d81ce126::t_9a5cf365f6c68d 579-582
+  s_1c0464d81ce126::t_5a8413bff38fc5 595
+web/src/Community/CuratorApplicationService.php
+  s_1c0464d81ce126::t_31346ac2bdcb45 143-148
+  s_1c0464d81ce126::t_9289a5ddc2184a 129-141,149
+  s_1c0464d81ce126::t_5ff54d2e96adfe 354,359-382
+  s_1c0464d81ce126::t_4141356c3fbeb8 383,406-426,429-438
+  s_1c0464d81ce126::t_061e81f8d9355e 142,343,347
+  s_1c0464d81ce126::t_0b093954325eb7 384
+web/translations/messages.es.yaml
+  s_1c0464d81ce126::t_061e81f8d9355e 2785
+  s_1c0464d81ce126::t_5a8413bff38fc5 596
+  s_1c0464d81ce126::t_9a5cf365f6c68d 580-583
+  s_1c0464d81ce126::t_6a41917d0aa59e 607-609
+  s_1c0464d81ce126::t_6733cfe39d0f56 593-594
+web/translations/messages.nl.yaml
+  s_1c0464d81ce126::t_9a5cf365f6c68d 579-582
+  s_1c0464d81ce126::t_6733cfe39d0f56 592-593
+  s_1c0464d81ce126::t_061e81f8d9355e 2748
+  s_1c0464d81ce126::t_6a41917d0aa59e 606-608
+  s_1c0464d81ce126::t_5a8413bff38fc5 595
+web/src/Messaging/UserMessageKind.php
+  s_1c0464d81ce126::t_a97e74a52089c2 28-33
+web/translations/messages.en.yaml
+  s_1c0464d81ce126::t_9a5cf365f6c68d 579-582
+  s_1c0464d81ce126::t_5a8413bff38fc5 595
+  s_1c0464d81ce126::t_061e81f8d9355e 2771
+  s_1c0464d81ce126::t_6a41917d0aa59e 606-608
+  s_1c0464d81ce126::t_6733cfe39d0f56 592-593
+web/src/Controller/JoinCountryController.php
+  s_1c0464d81ce126::t_2a19f798120d75 235-242
+web/templates/pages/join_country.html.twig
+  s_1c0464d81ce126::t_7058cd047060f9 29-39
+  s_1c0464d81ce126::t_d7c112deff7294 61-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "0bdb34ff10d203aeb07a46d25c89649762b6945c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

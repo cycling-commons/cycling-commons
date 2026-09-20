@@ -1,0 +1,27 @@
+docs/specs/2026-07-14-map-preferences-prefilter-and-mobile-drawer-design.md
+  s_c68dfc59dc9546::t_6882d3571ac186 1-130
+docs/specs/2026-07-14-public-rider-profile-and-settings-chips-design.md
+  s_c68dfc59dc9546::t_dac472b2a77797 1-90,92-124
+  s_c68dfc59dc9546::t_ba156ee610dc40 91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "b466cf53271d03ef3951289cb713ecf5447bd7af",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

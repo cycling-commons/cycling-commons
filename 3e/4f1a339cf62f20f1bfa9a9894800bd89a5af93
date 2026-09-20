@@ -1,0 +1,24 @@
+docs/specs/2026-07-29-country-requests-and-curator-signup-design.md
+  s_8f4040fdd8abb7::t_6e0382199cda78 282-326
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "3e4f1a339cf62f20f1bfa9a9894800bd89a5af93",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_8f4040fdd8abb7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ee75332-c226-49ea-ac4c-f862ecf3912e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

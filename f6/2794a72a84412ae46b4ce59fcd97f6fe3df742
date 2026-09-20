@@ -1,0 +1,55 @@
+web/translations/messages.fr.yaml
+  s_38d02ca6d8ff2e::t_acfac38b931a4f 929
+web/config/packages/rate_limiter.yaml
+  s_38d02ca6d8ff2e::t_2a75d8fa70ddb6 1-6
+web/src/Contribution/SpatialResolver.php
+  s_38d02ca6d8ff2e::t_c7103408112a09 1-38
+web/translations/messages.nl.yaml
+  s_38d02ca6d8ff2e::t_fa1236fc5110b9 929
+web/translations/messages.de.yaml
+  s_38d02ca6d8ff2e::t_7759efd348feba 929
+web/src/Form/ImproveType.php
+  s_38d02ca6d8ff2e::t_816f0a20cfd948 32-35
+web/src/Catalog/CatalogFormRegistry.php
+  s_38d02ca6d8ff2e::t_4080c97608eecf 18
+  s_38d02ca6d8ff2e::t_752f2bbedb678b 17,19-20
+web/tests/Moderation/ModerateTest.php
+  s_38d02ca6d8ff2e::t_07e0d92267bc01 230
+  s_38d02ca6d8ff2e::t_9c23636e613807 204-206
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_38d02ca6d8ff2e::t_7b6024252eb9c5 1-112
+web/src/Contribution/CatalogContributionService.php
+  s_38d02ca6d8ff2e::t_ff52c9ca51f819 26-27
+  s_38d02ca6d8ff2e::t_ffee354d348994 104
+  s_38d02ca6d8ff2e::t_9c85ce7efe663a 151
+  s_38d02ca6d8ff2e::t_458757ce5685d9 21
+  s_38d02ca6d8ff2e::t_caa6f9a5a96ec7 1-20,22-25,28-103,105-110,112-150,152-162
+  s_38d02ca6d8ff2e::t_96206d37cddeea 111
+web/translations/messages.en.yaml
+  s_38d02ca6d8ff2e::t_f3b21c39691027 929
+web/tests/Contribution/AddClimbTest.php
+  s_38d02ca6d8ff2e::t_8b3532a0239ba0 130-132,135
+web/src/Controller/ContributeController.php
+  s_38d02ca6d8ff2e::t_2f28d4d7385d4c 62-86
+  s_38d02ca6d8ff2e::t_397e9c23ca458b 17,20,23
+web/tests/Contribution/ImproveTest.php
+  s_38d02ca6d8ff2e::t_f1f65454623f3d 201-207
+web/src/Service/ContributionReceipt.php
+  s_38d02ca6d8ff2e::t_e1d90809480a1c 19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f62794a72a84412ae46b4ce59fcd97f6fe3df742",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

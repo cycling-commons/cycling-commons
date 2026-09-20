@@ -1,0 +1,29 @@
+web/src/World/Command/ScaffoldRegionsCommand.php
+  s_f68f52eab6f3c4::t_c4e9141766d83d 1-265
+web/tests/World/ScaffoldRegionsCommandTest.php
+  s_40a002d02fdfd2::t_0a241279348511 1-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "c8e3dd5c4a3f03fb13db5de315351f0034a3ba7e",
+  "prompts": {},
+  "sessions": {
+    "s_40a002d02fdfd2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f434c5a5-23e5-4d99-bf56-2c92d9db49b0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

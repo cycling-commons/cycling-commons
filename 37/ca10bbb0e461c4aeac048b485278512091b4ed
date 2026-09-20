@@ -1,0 +1,512 @@
+web/src/Media/MediaClaimService.php
+  s_be5f7ba46f0f72::t_3bc265af77cabe 16,18,20,56
+web/src/Media/MediaDeletionHook.php
+  s_be5f7ba46f0f72::t_832f336e0aff63 13,15,17
+web/src/Media/MediaTakedownCategory.php
+  s_be5f7ba46f0f72::t_c9dd1d0bbd7b67 10,12,14,22,28
+web/src/Media/Entity/MediaModerationEvent.php
+  s_be5f7ba46f0f72::t_d0e36aefdfeb62 14,16,18
+web/src/Media/Message/ScanAndReleaseUpload.php
+  s_be5f7ba46f0f72::t_286b98fea60ffa 10,12,14
+web/src/Media/ProofOfWork.php
+  s_be5f7ba46f0f72::t_3e2a86c57ef497 56
+  s_be5f7ba46f0f72::t_485d0a62b5371f 13,15,17,21,45-46
+web/src/Media/ConsentMissing.php
+  s_be5f7ba46f0f72::t_b5095ffdd8b2e3 10,12-14
+web/src/Media/ShardUnavailable.php
+  s_be5f7ba46f0f72::t_f7654d90fb2887 10-12
+web/src/Media/Scan/VirusScannerInterface.php
+  s_be5f7ba46f0f72::t_a948de0c4869f3 10,12,14,19,21
+web/src/Media/MediaAction.php
+  s_be5f7ba46f0f72::t_2f04c10eda2886 10,12-14,19,21,23,30,32,36,38
+web/src/Media/Scan/ScannerUnavailable.php
+  s_be5f7ba46f0f72::t_dd8170f4ad0505 10,12,14
+web/src/Media/MediaStorage.php
+  s_be5f7ba46f0f72::t_6f16b81b6a2777 16,18,20,26,48,50-51,53,76,86,96,102,115,117,139-142,144-152
+  s_f68f52eab6f3c4::t_fb82831e7f0baf 153-161,167,172,176,194,198
+web/src/Media/Command/MediaBackfillStorageBucketCommand.php
+  s_f68f52eab6f3c4::t_4699eea1f38411 1-162
+web/src/Media/MediaDisposalService.php
+  s_be5f7ba46f0f72::t_8d8df5fcdb5933 18,20,22,26,32,41,43,56,72,123,134,140,158
+  s_f68f52eab6f3c4::t_ea377a289182dc 178
+web/src/Media/MediaConsent.php
+  s_be5f7ba46f0f72::t_5d6a09fc8a3e75 10,12,14
+  s_be5f7ba46f0f72::t_3cc813dda375ea 19
+web/src/Media/Entity/ConsentRecord.php
+  s_be5f7ba46f0f72::t_68f3abd546692b 14,16,18,32,36
+web/src/Media/Scan/ClamAvScanner.php
+  s_be5f7ba46f0f72::t_77fc6701d3e998 12,14,16,109
+web/src/Media/MediaTakedownService.php
+  s_be5f7ba46f0f72::t_75a93c5f031a5a 434
+  s_be5f7ba46f0f72::t_06acacd22f13b2 21,23,25,34,38,57-59,80,82,106,127,134,136,140,160-162,184,186,211,257-259,281,297,317,323,386,396,414,442,457,473
+  s_c2b3d3b1e5aa0b::t_ae81739657b233 430
+web/src/Media/PhotoProcessor.php
+  s_be5f7ba46f0f72::t_80d6d4e917b06d 10,12,14,18,26,30,32,49,61,91,155-157,171,174-175,193,221
+  s_be5f7ba46f0f72::t_31daf82983e2a6 95
+  s_be5f7ba46f0f72::t_38d9129ab107f3 209
+web/src/Media/AlertRecipients.php
+  s_be5f7ba46f0f72::t_673e3954c9e23c 32
+  s_be5f7ba46f0f72::t_ddfca0a4ffb96b 14,16,18
+web/src/Media/MediaDecisionService.php
+  s_be5f7ba46f0f72::t_b91f4db7981769 88
+  s_be5f7ba46f0f72::t_a453ff6a256cd4 16,18,20,34,36,54,97,101-103,111-117,123,132-159
+web/src/Media/GpsDistance.php
+  s_be5f7ba46f0f72::t_762f3404252495 10,12,14,20
+web/src/Media/Command/MediaGcCommand.php
+  s_be5f7ba46f0f72::t_41cb165d5df828 18,20,22
+web/src/Media/MediaEscalationService.php
+  s_be5f7ba46f0f72::t_ea9704352ce88f 16,18,20,59,119
+  s_f68f52eab6f3c4::t_caf6649cbc7b63 138
+web/src/Media/UrgentWithholdAlert.php
+  s_be5f7ba46f0f72::t_341c7ae69b34fe 18,20,22,77
+web/src/Media/XmpRights.php
+  s_be5f7ba46f0f72::t_813fdb64cf760d 13,15,17
+web/src/Media/ContinentResolver.php
+  s_be5f7ba46f0f72::t_5b0399084c4887 12,14,16
+web/src/Media/ProcessedPhoto.php
+  s_be5f7ba46f0f72::t_bd7579a2638e4d 10,12-14
+web/src/Media/Scan/ScanVerdict.php
+  s_be5f7ba46f0f72::t_38b82268fe7922 10,12-14
+web/src/Media/UrgentWithholdBreaker.php
+  s_be5f7ba46f0f72::t_88e7934e1ce3dd 91
+  s_be5f7ba46f0f72::t_61109c65874927 19,21,23,27,43,46-47,68-69
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_be5f7ba46f0f72::t_b4312962525ae5 31,33,35,40,66,76,82,95,105,109,115,145,160
+web/src/Media/MediaTakedownSource.php
+  s_be5f7ba46f0f72::t_df0b29522a7cd0 10,12,14
+web/src/Media/Command/MediaBackfillKeysCommand.php
+  s_be5f7ba46f0f72::t_9ee3d1bda9f88c 21,23,25
+  s_be5f7ba46f0f72::t_8d7742c476a602 49
+web/src/Media/PhotoAttribution.php
+  s_be5f7ba46f0f72::t_084172043a5d93 10,12,14
+web/src/Media/MediaStatus.php
+  s_be5f7ba46f0f72::t_50e190339cca52 10,12-14,18
+web/src/Media/ConsentService.php
+  s_be5f7ba46f0f72::t_db4c6974febc7b 16,18,20,63
+web/src/Media/PhotoRejected.php
+  s_be5f7ba46f0f72::t_a1a55a822057b8 10,12-14
+web/src/Media/MediaEventLog.php
+  s_be5f7ba46f0f72::t_3fa86bc63481ec 14,16-18
+web/src/Media/Entity/MediaUpload.php
+  s_be5f7ba46f0f72::t_05360966c294aa 16,18,20,41,46,48,54,56,74,78,85,92,99,103,107,111,115,119,123,127,131,135,139,144,147-148,153,157,161,176,195,197,216,218,230,236,244,254-274,281,283,294,315,326,334,362,465,469
+  s_7ca916eeb157fa::t_21795c237858b5 482,493,501,513,561,567,588,594
+developers/docker/compose.yaml
+  s_7ca916eeb157fa::t_da8768caaf7e5b 100-101,150-151,350-388
+developers/docker/media-proxy.conf.template
+  s_f68f52eab6f3c4::t_0423efdca8d1c6 1-39
+developers/docker/tiles-proxy.conf.template
+  s_f68f52eab6f3c4::t_25189fc625ae8d 1-35
+docs/specs/photo-uploads.md
+  s_35311736dd2add::t_da2c405cf1414e 399-407
+docs/specs/public-api-personal-data-boundary.md
+  s_f68f52eab6f3c4::t_d991731c8da1e7 81-83
+web/assets/contribute/climb-editor.js
+  s_16e7d98f40a315::t_3e74ff9ad6c1c2 9-11,22,68,137,243,265,270-272,283,287,316,376,397,449,458,468
+web/assets/contribute/improve.js
+  s_16e7d98f40a315::t_c84f043df139ce 2-5,12,19,49-50,54,110,126,147-148,195,204,222,250,259,296,306,309,318,337,373,382,430,473,509,517,528,555,560,570,584,620,637,679,718-719,736,759,766,769,787,804,850,886,890,916,937,964,993,1000,1043,1052,1062,1066
+web/assets/contribute/media-upload.js
+  s_e382572451f2d6::t_991be006b02e93 2-5,14,27,29-30,40,43,55,69,89,116,172,185,195,216,219,234,247,287,298,326,349,368,382,398
+web/assets/contribute/review-card.js
+  s_e382572451f2d6::t_85fdbfb506a8b8 2-5,17,59,80
+web/assets/data/races.js
+  s_c2b3d3b1e5aa0b::t_5c4b6da0ed3c02 2-4
+web/assets/js/analytics.js
+  s_bd35b13142b2fa::t_1f0735e3128b78 2,8-9
+web/assets/js/version.js
+  s_e382572451f2d6::t_6a0ecbef1e3eae 2,5-6,22
+web/assets/map/catalog-load.js
+  s_16e7d98f40a315::t_38bb54dbe81cbb 2-5,7-8,12,16,29,32,45,48,50,76
+web/assets/map/catalog.js
+  s_16e7d98f40a315::t_4cde5f6f36012b 2-3,7-8,24,63,66,74,79,82,88
+web/assets/map/coverage.js
+  s_16e7d98f40a315::t_c02d8943674ae3 2-4,15-16,18,32,34-37,44-45,49,59,67,72,80-81,87,106,120,128,136,147,150,154,158,168,172,183,195,212,232,238,240,246,252,267,272,280,282
+web/assets/map/drawer.js
+  s_e382572451f2d6::t_5ef787c4a31497 2-3,26,29,33-34,45,57,69-70,78,82,85,92,98,110,116,134,138,150,154-155,172,176,179,182,190,192,195,201,207,216,221,223,226,233,239,244,251,257,264,275,280,299-300,303,308,312-313,317,320,325,331,334,339,343,347,354,356,361-362,373,385,405,410,415,421,430,436,454,456,460-461,471-472,475,482,490,496,498,503,506,508,518,525,533,542,567,570,577,580,601,610,619-620,642,664,674,681,689,691,696,698,703,708,710,724,729,735,744,770-771,778,780-782,790,793-795,813,823,825,840,843,845
+web/assets/map/filters.js
+  s_16e7d98f40a315::t_92fbdf9c20b0d6 2-3,5-7,11,21
+web/assets/map/icons.js
+  s_16e7d98f40a315::t_2877b946e3e61a 2,7,26,28,33,37,43,83,86,92
+web/assets/map/item-index.js
+  s_16e7d98f40a315::t_c3aa943024518f 2-4,9,18,28,46-47,49,51,58-60,63,77,83-84
+web/assets/map/map-init.js
+  s_7ca916eeb157fa::t_2ce643b78aab9e 2-4,11,14-16,58-59,65-66,81
+web/assets/map/map.js
+  s_bd35b13142b2fa::t_acbf7a4c3baf4d 2-3,37,41-42,46,49,53-54,57-59,68-69,78,81,97,99-100,102,111,118-119,123,134,139,158,176-177,179-180,191,209,232-233,235,237,239-240,243,245,247,249-250,253,255,257,259,261,265,267-268,271
+web/assets/map/panels.js
+  s_16e7d98f40a315::t_232e18ea760663 2-6,26,38-39,75-76,82,86,93,100,108,132,142-143,154-155,165,169,183,194-195,212,218,225,234,240,258,265-266,295,305,315-316,326-327,338-339,352-354,358-359,361,364,369-370,387,389,400-401,417,428,438,452,464,469,473,485-486
+web/assets/map/pending-shape.js
+  s_16e7d98f40a315::t_77f4487f2164c1 2-5,14-15,25,32,50,62,84
+web/assets/map/places.js
+  s_16e7d98f40a315::t_d0e849b708aa81 2-3,20-21,27,32,50,72,83,101-102,112,116,124,196,221
+web/assets/map/render.js
+  s_e382572451f2d6::t_9f3239bd2d6e02 2-3,20,28,36,54,56,70,72,85,97,101-102,120,131,142,145,150,162,173,192,210,247,253-254,264,267,273,297,300,321,328,331,334,338,345,347,349,352,359,367,378,384,386,388,392,395,403,405,415,419,423,439-441,443,447,456,468,474,494,511,523-524,528,530,534,540,549,558
+web/assets/map/ride-check.js
+  s_16e7d98f40a315::t_b2546c3bc65f61 2-4,17-18,42-45,53,64,97,106,130-131,143,147,160
+web/assets/map/scope-ui.js
+  s_bd35b13142b2fa::t_ed91b01f58346d 2-5,20-21,26-27,34-36,42,47-48,52,56,61-62,67,79,82,99,105,122,126-127,130,134-139,142,144,146,155,160,165,172-173,198,207-209,230,241,246-248,255-257,261-262,266,269
+web/assets/map/scope.js
+  s_9a6b8d8611c934::t_ec3a130415a213 3-5,14-16,26-27,37,46,52,54,56,70-73,106-107,116-118,222-223,260-261,274,314,360-361,364,366-367,382-383,386-387,405-407,433-434,465-466,482-483,491,508-509,535,553,559-561,569-570,574,577,588,593-595,602,626-627,673-674,686-687,693-695,728,738-740
+web/assets/map/scout-review.js
+  s_16e7d98f40a315::t_bf5331fe6ea026 2-4,24,33,35,41-42,61,74-75,78,81-82,86,93,102,104,120-121,155,192,201,212,220,257,266,301,313-314,363,446,464,471,503,505,516,518,529,556,572,603,637-638,647,654,698-699,711,760,788,816
+web/assets/map/search-ui.js
+  s_16e7d98f40a315::t_90b21ddce2833e 2-3,22,24,26-27,37,41,44,46,61,64,71,73,75,81,95,101,103,108,110,115,117,122,144,158
+web/src/Api/V1/CategoryTable.php
+  s_16e7d98f40a315::t_9400c6bc0edc4a 10-11,15,19,50,53
+web/src/Catalog/CatalogFormRegistry.php
+  s_16e7d98f40a315::t_915e9402c968fe 10,12,14,21,23,27,30,39,59,62,111,128,139,146,148,203,230
+web/src/Catalog/CatalogProvider.php
+  s_16e7d98f40a315::t_d9b7b26bbe4c5a 15,17-19,24,48,59,61,73,75,114,116,134,136,142,146,169,174,178,186-189,198,223,225,267,276,280,289,291,319,328,336,357,364,376,405,412,433,453,455,461,493
+web/src/Catalog/ClosureExpiryService.php
+  s_16e7d98f40a315::t_04a72b52383d65 18,20,22,48,106,120,132
+web/src/Catalog/ClosureLifetime.php
+  s_16e7d98f40a315::t_31644f32dab881 10,12,14,18,21,25,48
+web/src/Catalog/Command/BackfillAttributesCommand.php
+  s_16e7d98f40a315::t_e9b5e2763a917a 23,25,27,36,38,102,188,203
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_16e7d98f40a315::t_3c1b96d6befaa3 27,31,46,84,87,112,137,169,211,227,256,384,403,416,429,436
+web/src/Catalog/Command/SeedClimbsCommand.php
+  s_16e7d98f40a315::t_13a5a78649e9cf 23,27,35,97,113,126,143,177,227,244,253,261,264,278,308
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_16e7d98f40a315::t_5f2e2f30995d48 22,26,32,34,123,127,272,457,460,474,502,514
+web/src/Catalog/Command/SeedWikidataPlacesCommand.php
+  s_16e7d98f40a315::t_c2427bd8fa296d 23,27,75,78,194,203,220
+web/src/Catalog/CoverageRetirement.php
+  s_16e7d98f40a315::t_31172837c70148 10,12,17-19,30
+web/src/Catalog/CoverageStatsProvider.php
+  s_bd35b13142b2fa::t_052cdd64341964 13,15,17,49,118-120,146,187,189,195
+web/src/Catalog/CuratedReadiness.php
+  s_16e7d98f40a315::t_50dd0e55c54948 15,17,19,24,76,121,138,153,169
+web/src/Catalog/Entity/HeatPoint.php
+  s_16e7d98f40a315::t_44cb1ccf85de66 13,17
+web/src/Catalog/Entity/Item.php
+  s_16e7d98f40a315::t_f61effaaecc0db 14,18,28,31,39,85
+web/src/Catalog/Entity/RecommendedRoute.php
+  s_16e7d98f40a315::t_0e5a5ed050f802 14,18,67-69
+web/src/Catalog/Entity/Submission.php
+  s_16e7d98f40a315::t_b4aa65d22da5ee 14,18,92,94
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_16e7d98f40a315::t_5432bab6eb852a 13,17,21,25,27,32
+web/src/Catalog/Import/ItemUpsert.php
+  s_16e7d98f40a315::t_7a1c0f2158aefe 10,14,19,21,53,57
+web/src/Catalog/ItemSource.php
+  s_16e7d98f40a315::t_0be8b44d694e38 10,12-14,22
+web/src/Catalog/ItemType.php
+  s_16e7d98f40a315::t_d1edcdb1cc3da0 10,12,14,31,58,70,171,191-193,204,217,219,233,235
+web/src/Catalog/RegionRegistryProvider.php
+  s_9a6b8d8611c934::t_9b242a21700e90 12,14-16,25,44,52,57,64,68
+web/src/Catalog/RideCheckService.php
+  s_16e7d98f40a315::t_25c687cb0bf192 14,16,18,25,28-31,34,95,115,145,190,221
+web/src/Command/Coverage/RetireLegacyOsmCommand.php
+  s_16e7d98f40a315::t_a7efe48a80192d 20,24,29
+web/src/Command/CreateUserCommand.php
+  s_cfe1af103ed2ab::t_f441b94984f8c6 20
+web/src/Command/RecomputeClimbProfilesCommand.php
+  s_16e7d98f40a315::t_0b2c7ee8dc1430 20,24,69,110
+web/src/Contribution/CatalogContributionService.php
+  s_e382572451f2d6::t_62f455af65dd48 34,38,43,48,67,77,96,109,133,143,162,166,180,186,199,213,217,237,240,244,286,323,326,335,340,342,349,351,367,370,376,390,394,401,404,409,428,430,434,452,468,496,504,522,535,544,558,569-570,582,591,598,612,625,640,656,683,692,705,713,730
+web/src/Contribution/Gpx/GpxParser.php
+  s_16e7d98f40a315::t_9710b57b67ee7a 10-11,13,59,66
+web/src/Contribution/Gpx/TrackProcessor.php
+  s_16e7d98f40a315::t_cd5f7bf783fe2b 10-11,13,20,35,41,60,77,89,103,169,177,181,192
+web/src/Contribution/RouteProposalService.php
+  s_16e7d98f40a315::t_bdd47f07d1b9ff 23-25,27,31,94,101,109,123
+web/src/Controller/Admin/DashboardController.php
+  s_e382572451f2d6::t_6e445a4109735d 43,45,47,108-110,119,121,134,136,186,192,235,297,348,350,403,405,433-435,456-460
+web/src/Controller/Api/V1/PublicApiController.php
+  s_bd35b13142b2fa::t_13683861f1a7bb 22,24,26,30,37,72,143,149,165-167
+web/src/Controller/ApiReferenceController.php
+  s_17396619d306c4::t_c58b177a7d33fa 12,14,16
+web/src/Controller/ContributeController.php
+  s_e382572451f2d6::t_4924a3fb3a17c4 38,40-42,99,101,185-187,199,265,316,322,324,343,350,365
+web/src/Controller/CoverageController.php
+  s_f945338197163d::t_7e1bcebe9a552e 21,23-26,30,33-35,43,59,80-83,96,113-115,132,149-151,176
+web/src/Controller/JoinCountryController.php
+  s_17396619d306c4::t_45402a3ce4c203 26,28,30,70,78
+web/src/Controller/LocaleController.php
+  s_cfe1af103ed2ab::t_bfdab1f8349eb4 15,17,19,28,34,44,46
+web/src/Controller/MapController.php
+  s_bd35b13142b2fa::t_00c582cd38b91d 42,44-46,51,53,78,89,103,106,115,120,124,129,144-146,387-389,400,409,411,428-430,439,448-450,472,497,506-508,521,530-532,558
+web/src/Controller/MediaController.php
+  s_e382572451f2d6::t_f049cb27185e19 36,38-39,41,47,68,82-85,101,103,114,139,142,150,156,169,175,182,184,199,227
+web/src/Controller/MediaReportController.php
+  s_c2b3d3b1e5aa0b::t_1b4c4666f10c8c 23,25,27,42-44,72,106,117
+web/src/Controller/OsmConfirmController.php
+  s_f68f52eab6f3c4::t_faa8de009e928e 27,29,31,35,54,56
+web/src/Controller/PageController.php
+  s_bd35b13142b2fa::t_4c9fc3ce1ae732 22,24,61
+web/src/Controller/PhotoPageController.php
+  s_7ca916eeb157fa::t_d248ec59113bb7 24,26,28,48,97,99,105,117-119
+web/src/Controller/ProfileController.php
+  s_16e7d98f40a315::t_a06a6db7180ea6 32,34-36,45-47,95,188,212,254,256,264,304,306
+web/src/Controller/RegistrationController.php
+  s_7ca916eeb157fa::t_ac271b1ef87c13 26-28,73
+web/src/Controller/ResetPasswordController.php
+  s_d6eab02dcad899::t_54c7511c27a0c7 27-29,65,84,119
+web/src/Controller/RideCheckController.php
+  s_cfe1af103ed2ab::t_53d5cdebffae7e 23,25-28,52,72
+web/src/Controller/RiderProfileController.php
+  s_e382572451f2d6::t_80a7411a9b086a 18,20-22,35,48,60
+web/src/Controller/RouteCommunityController.php
+  s_f68f52eab6f3c4::t_03625062e7d521 28,30-32,56,83,176,185,213
+web/src/Controller/RouteController.php
+  s_16e7d98f40a315::t_3f85f7b2e67524 17,19,21,46
+web/src/Controller/ScoutIntakeController.php
+  s_16e7d98f40a315::t_71cdcc35c77fe1 24,26,28,32,34,47,84
+web/src/Controller/SettingsController.php
+  s_7ca916eeb157fa::t_aba8ae8d698014 25,29,144,146,167,174,188,203,219,236
+web/src/Controller/SitemapController.php
+  s_7ca916eeb157fa::t_5ebc59b9cfb045 18,20,25,56,88,120
+web/src/Controller/TwoFactorController.php
+  s_7ca916eeb157fa::t_3e0acbabd0740c 24,26,28,46,59,66,81,110,130
+web/src/Coverage/CoverageManifest.php
+  s_bd35b13142b2fa::t_05e58a341b1317 15-16,18,20,45,52,68,84,108,118
+web/src/Coverage/CoverageRepository.php
+  s_16e7d98f40a315::t_7bc1c50ea4453f 17-18,23,27,31,57,75,93,136-137,148,151,201,211,281,338
+web/src/Coverage/RoutesManifest.php
+  s_bd35b13142b2fa::t_6c686084232073 15-17,21,75,98,108
+web/src/Coverage/SurfaceManifest.php
+  s_bd35b13142b2fa::t_a76d0df399123b 15-17,21,66,82,98,124,134
+web/src/Doctrine/EncryptedStringType.php
+  s_cfe1af103ed2ab::t_593e3d4f4202a0 13,15,57
+web/src/Elevation/ClimbProfiler.php
+  s_f68f52eab6f3c4::t_851df58f8e36a8 10,14,18,21,24,27,30,33,36,41,48,65,73,87,92,102,106,108,111,115,120,128,155,164,179,183,189,199,212,221,260,352,375
+web/src/Entity/User.php
+  s_7ca916eeb157fa::t_f88c2ea99ffe56 34,38,56,70-71,83,85,90,108,112,119,123,127,161,182,184,189,279,281,523
+web/src/EventSubscriber/CspSubscriber.php
+  s_bd35b13142b2fa::t_c3b39500952e23 15,19,25,27,38,46,56,64,78
+web/src/EventSubscriber/LocaleSubscriber.php
+  s_7ca916eeb157fa::t_fc5bdcefc620c8 15,17,38
+web/src/Form/CatalogFieldConstraints.php
+  s_f68f52eab6f3c4::t_28723735a11281 19,23,39,43,57,59
+web/src/Form/ChangePasswordFormType.php
+  s_7ca916eeb157fa::t_c957f8eec43e97 34
+web/src/Form/ImproveType.php
+  s_7ca916eeb157fa::t_b53429a38a0cdb 29,33,56,70,73,90
+web/src/Form/ProposeRouteType.php
+  s_16e7d98f40a315::t_43187a30dbd783 25-27,92
+web/src/Form/RegistrationFormType.php
+  s_7ca916eeb157fa::t_1289b814c7b290 49,59
+web/src/Form/SettingsPasswordType.php
+  s_7ca916eeb157fa::t_9e285df285116a 17,19,51
+web/src/Form/SettingsType.php
+  s_7ca916eeb157fa::t_06af968590b234 33-35,67
+web/src/Form/TwoFactorSetupType.php
+  s_7ca916eeb157fa::t_625068e7afe957 15-17
+web/src/Media/Command/MediaRepairGalleriesCommand.php
+  s_f68f52eab6f3c4::t_45dbaa14d06529 1-215
+web/src/Messaging/Entity/UserMessage.php
+  s_f68f52eab6f3c4::t_51f928f676f589 15,19,69
+web/src/Messaging/MessageCategory.php
+  s_e382572451f2d6::t_8edf8a8d23326d 10,12,14
+web/src/Messaging/MessageMailer.php
+  s_f68f52eab6f3c4::t_3831265aa27bd7 21,23,25,29,50-51,59,101
+web/src/Messaging/MessageOutbox.php
+  s_f68f52eab6f3c4::t_a74c4fa0986d7a 12,14,16
+web/src/Messaging/UserMessageKind.php
+  s_e382572451f2d6::t_b0e7026ed0b058 10,14,30,33,35,38,42-45
+web/src/Moderation/ModerationService.php
+  s_e382572451f2d6::t_06046defb40a8b 29,33,37,41,66,72,88,112,127,140,175,189,195,202,212,224-225,237,266,281,285,307,312,340
+web/src/Moderation/SubmissionQueue.php
+  s_16e7d98f40a315::t_019028836e6c39 22,26,33,36,72,78,94-95,99,114,132,146,157,168,202,209,217,227,235,241,273,290,295,301,316,374,384,409,505,509,512,514,516,523,556,571,584,615,640,666,675,687,696,703,713,725,762,772,776
+web/src/Pagination/PageSize.php
+  s_f68f52eab6f3c4::t_2973ee27aef9f6 13,17
+web/src/Repository/AdminActionLogRepository.php
+  s_f68f52eab6f3c4::t_fe178a0ff208d8 15
+web/src/Repository/ResetPasswordRequestRepository.php
+  s_f68f52eab6f3c4::t_6beb04f3c7986e 17
+web/src/Repository/UserRepository.php
+  s_f68f52eab6f3c4::t_253d4a87480a55 17,43
+web/src/Scout/ScoutTag.php
+  s_16e7d98f40a315::t_1deb3e4987cb00 12-13,15,38,57,66,76,84,90,94,100,108,111
+web/src/Security/Csp/CspNonce.php
+  s_f68f52eab6f3c4::t_ea5b4a3e58c06d 10,14
+web/src/Security/EmailVerifier.php
+  s_f68f52eab6f3c4::t_ab3c415d328fd9 16
+web/src/Security/LoginSuccessHandler.php
+  s_7ca916eeb157fa::t_fe6cf8d790755a 21,25,67
+web/src/Security/LoginThrottleListener.php
+  s_cfe1af103ed2ab::t_13907c6ff1ecd1 20,24,68,80
+web/src/Security/TwoFactorPolicy.php
+  s_f68f52eab6f3c4::t_838c0de0f5b3f5 14,18,23
+web/src/Security/TwoFactorSetupEnforcer.php
+  s_f68f52eab6f3c4::t_70af5515de421a 19,23,28,30,34-37,69
+web/src/Service/AdminActionLogger.php
+  s_f68f52eab6f3c4::t_767adb0fa9d32b 18
+web/src/Service/AdminDashboardStats.php
+  s_f68f52eab6f3c4::t_db75762a26a3dc 14,16
+web/src/Service/BaseAreaResolver.php
+  s_f68f52eab6f3c4::t_534d6c6f2b68ed 13,15-17
+web/src/Service/BaseLocationService.php
+  s_f68f52eab6f3c4::t_b294e400e1e36e 13,15-17,49
+web/src/Service/ContributionReceipt.php
+  s_f68f52eab6f3c4::t_4495daf3b9352e 10
+web/src/Service/ContributionStubInterface.php
+  s_f68f52eab6f3c4::t_caf8f3c9f74d69 12
+web/src/Service/ResetPasswordCleanupHook.php
+  s_f68f52eab6f3c4::t_2aaa083a14ae1e 11,15
+web/src/Service/UserAdminService.php
+  s_f68f52eab6f3c4::t_307befcd5087c8 19,23,115,130,188,204,212
+web/src/Service/UserDeletionService.php
+  s_f68f52eab6f3c4::t_381ee73d7fd17d 14,18,71,73
+web/src/Settings/SettingDefinition.php
+  s_17396619d306c4::t_29f689816f28a5 10,14,22-30
+web/src/Settings/SettingsProviderInterface.php
+  s_f68f52eab6f3c4::t_a2db6dc95faa24 10,14,19,21,26,28
+web/src/Settings/SettingsRegistry.php
+  s_17396619d306c4::t_763835eec60d44 13-14,18,47,57,85
+web/src/Settings/SystemSettings.php
+  s_f68f52eab6f3c4::t_d95620c6cb5b70 15,19,80,101
+web/src/Settings/SystemSettingsWriter.php
+  s_f68f52eab6f3c4::t_7ffad9eb4c878c 20,38,40,42,73,75,77
+web/src/Twig/CspExtension.php
+  s_f68f52eab6f3c4::t_478e8c4b3b51ec 14,18
+web/src/Twig/DateDisplayExtension.php
+  s_f68f52eab6f3c4::t_8c16988d3a15d6 19,21,91,125
+web/src/Twig/LocaleExtension.php
+  s_f68f52eab6f3c4::t_a68c4fdff04dc8 16,18,39,61
+web/src/Twig/MessageBadgeExtension.php
+  s_f68f52eab6f3c4::t_862583a97aa4b5 16,20
+web/src/Twig/RichTranslationExtension.php
+  s_f68f52eab6f3c4::t_9b1363bd334117 15,19
+web/src/Twig/RowsPerPageExtension.php
+  s_f68f52eab6f3c4::t_d382e4f5794c9b 14,18
+web/src/Twig/UnitDisplayExtension.php
+  s_f68f52eab6f3c4::t_0e3dbb193007b7 15,17,19
+web/src/Twig/VersionExtension.php
+  s_f68f52eab6f3c4::t_823bb951dfa2ff 14,16
+web/src/Validator/PlainDisplayName.php
+  s_f68f52eab6f3c4::t_391fd8bf17e119 12,14,16
+web/src/Validator/PlainDisplayNameValidator.php
+  s_f68f52eab6f3c4::t_0b139944f7b4a5 14,18,45
+web/src/World/Command/ImportWorldDataCommand.php
+  s_f68f52eab6f3c4::t_a12af585a605e8 22,24,44,55,75,87
+web/src/World/Command/ScaffoldRegionsCommand.php
+  s_f68f52eab6f3c4::t_15134abe5e4c29 22,24,178
+web/src/World/Entity/Continent.php
+  s_f68f52eab6f3c4::t_58107f3f9c4a88 12,14
+web/src/World/Entity/Country.php
+  s_f68f52eab6f3c4::t_a6ac327457832d 12,14
+web/src/World/Entity/Subdivision.php
+  s_f68f52eab6f3c4::t_03c2ea279f4325 12,14
+web/templates/map/index.html.twig
+  s_bd35b13142b2fa::t_6357f9fa2f8e35 692
+web/tests/Media/MediaGalleryIdentityTest.php
+  s_f68f52eab6f3c4::t_cf25abbbe3839c 1-186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "37ca10bbb0e461c4aeac048b485278512091b4ed",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_17396619d306c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "de24113b-ff92-4db1-b177-1da3cfa74b70",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_35311736dd2add": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6acaccdb-00d0-44b7-8f6d-74c4e6ba0363",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_7ca916eeb157fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e8be2531-9ac2-4db0-b37d-277f0b28cb93",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_9a6b8d8611c934": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5ab7bb79-587a-4b27-803b-dbb4f99c167a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_bd35b13142b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c348108d-a15c-4a6f-a1f0-9ab7e633bdf4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_be5f7ba46f0f72": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "79e0e9d1-9bcd-420f-840b-436fbb9ade95",
+        "model": "cursor-grok-4.6-xhigh"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_c2b3d3b1e5aa0b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5114fafd-15ff-4217-9290-b7aeef55ebb0",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_cfe1af103ed2ab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d5045d54-e534-4106-88fe-6c8265de0229",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d6eab02dcad899": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b5577347-6bee-425e-a6b0-d01f31e69be7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_e382572451f2d6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6d86ff86-2562-4654-bb50-b5129c283f3f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f945338197163d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3e27fcd-7437-4dc7-bcd8-4f46fc8d24ef",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

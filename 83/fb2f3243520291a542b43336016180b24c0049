@@ -1,0 +1,28 @@
+web/config/packages/route_domain.yaml
+  s_0f648c977bdc75::t_86a0db629edd07 1-5
+web/tests/Moderation/RouteModerationServiceTest.php
+  s_0f648c977bdc75::t_9d4860a0824f7f 1-100
+web/src/Moderation/RegionFullException.php
+  s_0f648c977bdc75::t_34717ec3d5b8be 1-12
+web/config/services.yaml
+  s_0f648c977bdc75::t_94ca7a3bf409d4 22-25,27
+  s_0f648c977bdc75::t_5a8360dd2a7f24 21,26,28-29
+web/src/Moderation/RouteModerationService.php
+  s_0f648c977bdc75::t_24a161d2e5cbab 1-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "83fb2f3243520291a542b43336016180b24c0049",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

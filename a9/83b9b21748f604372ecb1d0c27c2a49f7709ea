@@ -1,0 +1,19 @@
+docs/specs/2026-07-04-submissions-and-moderation-on-real-data-design.md
+  s_4f9c43d42748bd::t_85e1ff39f635e5 114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "a983b9b21748f604372ecb1d0c27c2a49f7709ea",
+  "prompts": {},
+  "sessions": {
+    "s_4f9c43d42748bd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5b3d1482-7852-4c04-ab2e-2b55230e5d60",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

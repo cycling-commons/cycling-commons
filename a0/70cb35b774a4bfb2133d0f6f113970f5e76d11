@@ -1,0 +1,30 @@
+web/src/Controller/MapController.php
+  s_085edbe215fabf::t_94b3fc55d7cdf7 40,47-53
+web/translations/messages.de.yaml
+  s_085edbe215fabf::t_944586354d0037 564
+web/translations/messages.en.yaml
+  s_085edbe215fabf::t_807e2b62dca0ae 558-561
+  s_085edbe215fabf::t_944586354d0037 568
+web/translations/messages.nl.yaml
+  s_085edbe215fabf::t_944586354d0037 564
+web/templates/map/index.html.twig
+  s_085edbe215fabf::t_14b00968741c45 96-102
+web/translations/messages.fr.yaml
+  s_085edbe215fabf::t_944586354d0037 564
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a070cb35b774a4bfb2133d0f6f113970f5e76d11",
+  "prompts": {},
+  "sessions": {
+    "s_085edbe215fabf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23bf1945-17b0-4677-b9ed-806199440d71",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

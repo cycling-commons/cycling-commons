@@ -1,0 +1,19 @@
+web/src/Moderation/RouteModerationService.php
+  s_51df195d1c7750::t_1d24eae59c7d0c 182-185
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "a46c1369a6e70e65a231b84a0a2eb24e7b8dcac5",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

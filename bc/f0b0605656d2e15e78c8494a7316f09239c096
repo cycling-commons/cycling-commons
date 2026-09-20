@@ -1,0 +1,42 @@
+web/tests/Translation/FindsOrCreatesTranslationEntry.php
+  s_d5bf2764e2bbb9::t_cf1b39e9b3b27a 1-31
+web/tests/Translation/TranslationPersistenceTest.php
+  s_d5bf2764e2bbb9::t_f176eb3fb0a540 16-17,21,26-32,38
+web/tests/Translation/OverlayCatalogueTest.php
+  s_d5bf2764e2bbb9::t_826d409f93f9fb 20-21,33,55
+web/tests/Translation/DeleteTranslationOverlayCommandTest.php
+  s_d5bf2764e2bbb9::t_161d6c84d2a0b4 23-24,34,84
+web/tests/Translation/DecisionServiceTest.php
+  s_d5bf2764e2bbb9::t_21825fa8cca21c 27-28,57
+web/tests/Translation/ModerateTranslationsTest.php
+  s_d5bf2764e2bbb9::t_03565fc10b0368 25-26
+  s_d5bf2764e2bbb9::t_199191767ae5c0 67
+web/tests/Translation/OverlayTranslatorTest.php
+  s_d5bf2764e2bbb9::t_b4d528e8871c6a 26-27,40,54,70,102
+web/tests/Translation/ProposalServiceTest.php
+  s_d5bf2764e2bbb9::t_f0bcd2a1fe59a4 26-27,50
+web/tests/Translation/TranslationDeletionHookTest.php
+  s_d5bf2764e2bbb9::t_902bd9d489c58f 29-30,54
+web/tests/Translation/TranslatePageTest.php
+  s_d5bf2764e2bbb9::t_84d285f79ef9be 108-109
+  s_d5bf2764e2bbb9::t_45245f51b3663b 209
+  s_d5bf2764e2bbb9::t_fbebc5b7e81668 130-137
+  s_d5bf2764e2bbb9::t_b626a8a4854f1e 25-26
+  s_d5bf2764e2bbb9::t_49ed740e86fd96 61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "bcf0b0605656d2e15e78c8494a7316f09239c096",
+  "prompts": {},
+  "sessions": {
+    "s_d5bf2764e2bbb9": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "cfc9a4ca-2282-497c-a95d-4d651c993515",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

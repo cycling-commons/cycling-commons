@@ -1,0 +1,24 @@
+wiki/building.md
+  s_45ec9b3f519700::t_635c1d4862874a 170-199
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "dcd7ecb4002388bceb738fd5807609f1642593e6",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_45ec9b3f519700": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42c83203-4754-4e8f-b14b-28903077507b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

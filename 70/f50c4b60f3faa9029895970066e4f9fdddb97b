@@ -1,0 +1,41 @@
+docs/specs/coverage-provider.md
+  s_41dce4bb9e0e72::t_eab25c0d646c57 759-774
+web/translations/messages.de.yaml
+  s_41dce4bb9e0e72::t_d7008af2947f4d 290,295-298
+web/translations/messages.fr.yaml
+  s_41dce4bb9e0e72::t_596a7575a09faf 289-290,295-298
+web/templates/pages/coverage.html.twig
+  s_41dce4bb9e0e72::t_a09d0f6a1dab2d 55-68
+web/src/Catalog/CoverageStatsProvider.php
+  s_41dce4bb9e0e72::t_81ec5fc33e05cc 133
+  s_41dce4bb9e0e72::t_26ef1a56e14172 231-232,234-236
+  s_41dce4bb9e0e72::t_c031fbe42296a3 70-76,79-80
+  s_41dce4bb9e0e72::t_915fc69ae95b8a 173-224
+  s_41dce4bb9e0e72::t_6189022b820bf0 107
+  s_41dce4bb9e0e72::t_992ecc5fc440b7 172
+web/translations/messages.nl.yaml
+  s_41dce4bb9e0e72::t_596a7575a09faf 289-290,295-298
+web/translations/messages.en.yaml
+  s_41dce4bb9e0e72::t_596a7575a09faf 289-290,295-298
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "70f50c4b60f3faa9029895970066e4f9fdddb97b",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_41dce4bb9e0e72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875a3a0-dbdb-41af-af97-755463d87f2d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

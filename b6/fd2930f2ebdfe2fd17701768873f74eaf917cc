@@ -1,0 +1,26 @@
+docs/specs/2026-07-30-dynamic-region-pages-design.md
+  s_bda768b13cee07::t_75c5b189f8c185 109-110
+  s_bda768b13cee07::t_614de0b39264c8 1-108,111-147,150-232
+  s_bda768b13cee07::t_be74e9b105ba3f 148-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "b6fd2930f2ebdfe2fd17701768873f74eaf917cc",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bda768b13cee07": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc3484d5-25c1-442a-9655-b30ae7c5ba22",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

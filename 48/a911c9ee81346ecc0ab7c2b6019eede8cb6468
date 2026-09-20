@@ -1,0 +1,36 @@
+web/translations/messages.fr.yaml
+  s_51df195d1c7750::t_8590b8d49f5348 945,962
+web/translations/messages.nl.yaml
+  s_51df195d1c7750::t_8590b8d49f5348 945,962
+web/src/Form/ProposeRouteType.php
+  s_51df195d1c7750::t_3c960777b3de85 42
+docs/specs/2026-07-08-route-domain-design.md
+  s_51df195d1c7750::t_b1a439140dd7db 170
+  s_51df195d1c7750::t_8fe666a2b8117d 609-617
+web/tests/Contribution/Gpx/GpxParserTest.php
+  s_51df195d1c7750::t_c9402c56911066 108
+web/translations/messages.de.yaml
+  s_51df195d1c7750::t_8590b8d49f5348 945,962
+web/Dockerfile
+  s_51df195d1c7750::t_ee8ee29bbd3630 13-20
+web/translations/messages.en.yaml
+  s_51df195d1c7750::t_8590b8d49f5348 945,962
+web/src/Contribution/Gpx/GpxParser.php
+  s_51df195d1c7750::t_7ce9188dc45c80 25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "48a911c9ee81346ecc0ab7c2b6019eede8cb6468",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

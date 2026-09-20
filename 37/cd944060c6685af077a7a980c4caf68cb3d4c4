@@ -1,0 +1,31 @@
+pipeline/coverage/load.py
+  s_16e7d98f40a315::t_3fcc8554ae69ec 117-121
+pipeline/coverage/run.py
+  s_16e7d98f40a315::t_c4f05cbdb2276d 77,79-80,82,98
+web/src/World/Command/ScaffoldRegionsCommand.php
+  s_f68f52eab6f3c4::t_7fd37049cacf61 135-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "37cd944060c6685af077a7a980c4caf68cb3d4c4",
+  "prompts": {},
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

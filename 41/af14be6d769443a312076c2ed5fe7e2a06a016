@@ -1,0 +1,20 @@
+docs/specs/coverage-provider.md
+  s_682a9751eecf44::t_1b541e9fdc65de 129-138
+  s_682a9751eecf44::t_6a3a8d459e647c 310-320
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "41af14be6d769443a312076c2ed5fe7e2a06a016",
+  "prompts": {},
+  "sessions": {
+    "s_682a9751eecf44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ca5d106-ef5e-44e4-a6ed-d2c075fa66b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

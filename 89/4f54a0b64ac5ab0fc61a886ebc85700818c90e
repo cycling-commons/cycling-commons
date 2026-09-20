@@ -1,0 +1,21 @@
+docs/specs/2026-07-19-region-scoping-design.md
+  s_3bd3f8ccb3a560::t_e2389048518564 535-540
+docs/specs/2026-07-22-scope-selector-scale-design.md
+  s_3bd3f8ccb3a560::t_2642f66dc33e32 135-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "894f54a0b64ac5ab0fc61a886ebc85700818c90e",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

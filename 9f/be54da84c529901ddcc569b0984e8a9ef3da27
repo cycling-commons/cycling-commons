@@ -1,0 +1,39 @@
+web/src/Elevation/CoveredSpans.php
+  s_14d343aaa1f816::t_dd925ddcaaaf2b 156-159
+  s_14d343aaa1f816::t_dfac63969db1d0 1-155,160-209
+web/src/Elevation/ClimbProfiler.php
+  s_14d343aaa1f816::t_ec114b7298b37a 285-289,293-297
+  s_14d343aaa1f816::t_2e3a902cf058f7 260-262,266
+  s_14d343aaa1f816::t_f86534666ea0bb 106-114
+  s_14d343aaa1f816::t_8272c3c4ab99f1 168-174
+  s_14d343aaa1f816::t_624ee9702712f8 298
+web/tests/Elevation/CoveredSpansTest.php
+  s_14d343aaa1f816::t_62b34b23aacc6f 1-113
+web/tests/Elevation/ClimbProfilerTest.php
+  s_14d343aaa1f816::t_2a15847cdff337 12,251
+  s_14d343aaa1f816::t_8c2cc00b457d79 258-260,263
+  s_14d343aaa1f816::t_a4043acfacad86 10,252-257,261-262,264-302
+docs/specs/climb-elevation.md
+  s_14d343aaa1f816::t_322640e68802d1 280-317
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "9fbe54da84c529901ddcc569b0984e8a9ef3da27",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_14d343aaa1f816": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "95808232-1ca6-4e95-ae43-a4126c68a402",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

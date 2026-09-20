@@ -1,0 +1,29 @@
+Makefile
+  s_f6d45d977e7468::t_afbc1674a33804 12
+  s_f6d45d977e7468::t_ecae7a01c75598 155-170
+developers/coverage-batch.md
+  s_f6d45d977e7468::t_698f80fe15e920 1-122
+developers/docker/README.md
+  s_f6d45d977e7468::t_d3c3dfc00c7a53 143-145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "4035690d07dfa5e50d953fdf4e465369d6867bc2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

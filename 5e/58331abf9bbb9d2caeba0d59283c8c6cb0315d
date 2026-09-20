@@ -1,0 +1,35 @@
+web/tests/Doctrine/TableCommentsTest.php
+  s_e9b7d39367a2ea::t_409d2c1238ee72 1-95
+web/src/Community/Entity/CountryInterest.php
+  s_e9b7d39367a2ea::t_6665ad9c72e791 13
+docs/specs/operations.md
+  s_e9b7d39367a2ea::t_6155cce3d6375b 356
+web/src/Doctrine/TableComments.php
+  s_e9b7d39367a2ea::t_49a5281ba6db48 69,142,158,167,171-172,182
+  s_e9b7d39367a2ea::t_f5b26bf5f35784 1-68,70-141,143-157,159-166,168-170,173-181,183-192
+Makefile
+  s_e9b7d39367a2ea::t_affe9f320ad6b7 245-251
+web/src/Command/SchemaCommentTablesCommand.php
+  s_e9b7d39367a2ea::t_49a5281ba6db48 51,69,73
+  s_e9b7d39367a2ea::t_b621d90eeb8ce7 1-50,52-68,70-72,74-79
+web/config/table_comments.yaml
+  s_e9b7d39367a2ea::t_267e0d5d5d6d27 1-70
+docs/specs/dev-environment.md
+  s_e9b7d39367a2ea::t_6c14c60811f028 510-541
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "5e58331abf9bbb9d2caeba0d59283c8c6cb0315d",
+  "prompts": {},
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

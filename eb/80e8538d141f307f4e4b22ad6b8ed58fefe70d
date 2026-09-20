@@ -1,0 +1,56 @@
+web/assets/styles/map.css
+  s_f6d45d977e7468::t_f3286203e9b664 388-389
+  s_f6d45d977e7468::t_29bc0069b51908 158-161
+  s_f6d45d977e7468::t_fec9b55df833b5 108
+web/translations/messages.fr.yaml
+  s_f6d45d977e7468::t_3d5626e4c27af9 1088-1089
+web/assets/map/map.js
+  s_f6d45d977e7468::t_6769aed7f5d9e8 2150,2153-2163
+  s_f6d45d977e7468::t_11ab1a9a0a55f9 2694-2698
+  s_f6d45d977e7468::t_cf297e756c93c1 1396-1398
+  s_f6d45d977e7468::t_66cb6639ed7426 331
+  s_f6d45d977e7468::t_befd8a8d99883e 2179-2183
+  s_f6d45d977e7468::t_ab36281028ddc7 2753-2756
+  s_f6d45d977e7468::t_24d58eaebe9400 2887
+  s_f6d45d977e7468::t_81cccf66c0af0f 1294
+  s_f6d45d977e7468::t_5ba6c16a46d5d4 347
+  s_f6d45d977e7468::t_19a484dce68c9f 2453
+  s_f6d45d977e7468::t_03ff11e693a2f1 914-915
+  s_f6d45d977e7468::t_b55262a003338f 2670-2673
+  s_f6d45d977e7468::t_60c2475c6a5d4d 455
+  s_f6d45d977e7468::t_33f2327d6f7807 668-673
+  s_f6d45d977e7468::t_2f03467086090a 375
+  s_f6d45d977e7468::t_a7c1b6522c1937 2063
+  s_f6d45d977e7468::t_91263e44ce961d 2426-2438
+  s_f6d45d977e7468::t_851ce456d50c3a 365-366
+  s_f6d45d977e7468::t_ded9d88a28c240 1370
+  s_f6d45d977e7468::t_521b89811ccf98 257
+  s_f6d45d977e7468::t_c14fc1491a2b28 2209-2211,2218
+  s_f6d45d977e7468::t_07d02196a17852 552-568
+  s_f6d45d977e7468::t_684fbdaf95ebb2 882-884,894-895
+  s_f6d45d977e7468::t_3531bfffb076e2 428
+web/translations/messages.en.yaml
+  s_f6d45d977e7468::t_d179b8b5aba981 1254-1255
+web/translations/messages.nl.yaml
+  s_f6d45d977e7468::t_45c99b93d2346c 1088-1089
+web/translations/messages.de.yaml
+  s_f6d45d977e7468::t_a6846815618030 1088-1089
+web/src/Controller/MapController.php
+  s_f6d45d977e7468::t_daa5bb64c3eabb 152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "eb80e8538d141f307f4e4b22ad6b8ed58fefe70d",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

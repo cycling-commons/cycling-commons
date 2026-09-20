@@ -1,0 +1,19 @@
+web/tests/Catalog/SurfaceProfilerTest.php
+  s_162e830c17ed4c::t_c55e246dd2ba79 98-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1a820332fe3de9de7d98e944c6ec69b7d225851c",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

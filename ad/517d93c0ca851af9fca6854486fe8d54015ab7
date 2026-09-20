@@ -1,0 +1,27 @@
+docs/specs/account-and-auth.md
+  s_41dce4bb9e0e72::t_c86248910fd755 96-118
+  s_41dce4bb9e0e72::t_9b9298a8c4ae3c 60-62
+docs/specs/edit-items/README.md
+  s_41dce4bb9e0e72::t_4f0e665ebf2146 34-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "ad517d93c0ca851af9fca6854486fe8d54015ab7",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_41dce4bb9e0e72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875a3a0-dbdb-41af-af97-755463d87f2d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

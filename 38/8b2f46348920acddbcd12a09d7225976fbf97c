@@ -1,0 +1,45 @@
+web/assets/map/map-init.js
+  s_51f279dd04af7d::t_f16f38abd9bad4 105-124,126,128
+web/assets/map/panels.js
+  s_51f279dd04af7d::t_4571664caeb432 86-94
+web/.env
+  s_51f279dd04af7d::t_bb6f211bcc3aea 50-54
+web/templates/contribute/add_climb.html.twig
+  s_51f279dd04af7d::t_c33598a6c7b2b3 400-403
+web/config/packages/twig.yaml
+  s_51f279dd04af7d::t_bb6f211bcc3aea 8-10
+docs/specs/dev-environment.md
+  s_51f279dd04af7d::t_af226c729b3f8c 24-41
+web/assets/contribute/editor-base.js
+  s_51f279dd04af7d::t_4571664caeb432 126-131,133
+  s_51f279dd04af7d::t_f16f38abd9bad4 47-52,55-56
+web/src/EventSubscriber/CspSubscriber.php
+  s_51f279dd04af7d::t_c33598a6c7b2b3 73-76
+wiki/building.md
+  s_51f279dd04af7d::t_fd8d5fc056ea78 192
+web/templates/map/index.html.twig
+  s_51f279dd04af7d::t_c33598a6c7b2b3 334-337
+wiki/developers/gis/on-screen.md
+  s_51f279dd04af7d::t_e29425c0caf737 188-189,192-197
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "388b2f46348920acddbcd12a09d7225976fbf97c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_51f279dd04af7d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ffbf0480-8c49-47aa-8570-af5cdd0802af",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

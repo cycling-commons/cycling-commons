@@ -1,0 +1,37 @@
+docs/specs/2026-07-19-region-scoping-design.md
+  s_51ed87ec737f32::t_508d72aeff2b64 561-610
+  s_51ed87ec737f32::t_9a3f125ccec63d 3-8
+  s_51ed87ec737f32::t_29f062654d15c6 611
+web/assets/map/map.js
+  s_51ed87ec737f32::t_f8ad29dece370c 1520-1521,1523-1525
+  s_51ed87ec737f32::t_9ced440246bcf4 657-707
+  s_51ed87ec737f32::t_47c0124d70090d 917-925,932
+  s_51ed87ec737f32::t_bd20a6a29c1ec4 137,139-144
+  s_51ed87ec737f32::t_a1e3cfba80b6e8 1565-1567,1569,1572-1573,1576-1578
+  s_51ed87ec737f32::t_5a4c7b99d56da7 2981-2985
+  s_51ed87ec737f32::t_eb5f87adeb07f5 3026-3030
+  s_51ed87ec737f32::t_4a83952289b62c 2915-2921
+  s_51ed87ec737f32::t_78b3902bc86fd4 861-870,875-876,886-890
+  s_51ed87ec737f32::t_ef4f79a6f0192b 36-39
+  s_51ed87ec737f32::t_76adb23a05ca8d 745
+web/tests/js/scope.test.cjs
+  s_51ed87ec737f32::t_f26129a03b8491 153-166
+web/assets/map/scope.js
+  s_51ed87ec737f32::t_4f83fe0258c5e6 185-195
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "ceb0dd95441769bfe153fec38bd76cdb75d7fa69",
+  "prompts": {},
+  "sessions": {
+    "s_51ed87ec737f32": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cfcc005-7ab4-4c37-848d-fb8a89f6021f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+web/tests/Catalog/RouteSurfacesCommandTest.php
+  s_162e830c17ed4c::t_95ed4a274056dc 1-54
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_162e830c17ed4c::t_fb88d7722e8d2a 13
+  s_162e830c17ed4c::t_3f1bff24ef4280 47
+  s_162e830c17ed4c::t_658cf365e16a27 76-78
+  s_162e830c17ed4c::t_d240075e41fc97 89
+web/src/Catalog/CatalogProvider.php
+  s_162e830c17ed4c::t_3273ce30b2ad1f 212
+docs/specs/2026-07-08-route-domain-design.md
+  s_162e830c17ed4c::t_8dcc5b474c463e 314-319
+web/assets/map/map.js
+  s_162e830c17ed4c::t_374c352bc1f432 610-620
+docs/specs/edit-items/K-quality-rides.md
+  s_162e830c17ed4c::t_31b6c29f4bf8bb 57-58
+web/src/Catalog/Command/RouteSurfacesCommand.php
+  s_162e830c17ed4c::t_8d2cb546139ae8 1-41
+web/tests/Catalog/SurfaceProfilerTest.php
+  s_162e830c17ed4c::t_be09900127e73b 1-160
+web/src/Catalog/SurfaceProfiler.php
+  s_162e830c17ed4c::t_ae5999114288e6 115
+  s_162e830c17ed4c::t_e63e5d3ba50f3a 145,147-151,154-156,158-159
+  s_162e830c17ed4c::t_dc2e1780e27dbb 1-39,42-82,84-114,116-144,146,152-153,157,160-193
+  s_162e830c17ed4c::t_7eb3de84ed05c0 40-41
+  s_162e830c17ed4c::t_a88978416c2db0 83
+web/tests/Contribution/RouteProposalServiceTest.php
+  s_162e830c17ed4c::t_cce439d9910106 9
+  s_162e830c17ed4c::t_e10cdb1b6b97fc 83-122
+web/src/Contribution/RouteProposalService.php
+  s_162e830c17ed4c::t_f578877f598d28 97-104
+  s_162e830c17ed4c::t_212c7e765be728 45
+  s_162e830c17ed4c::t_07d6badb41c365 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "de77adc719495fa814513e3abae03e7278f8f82d",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

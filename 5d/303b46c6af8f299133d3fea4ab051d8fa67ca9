@@ -1,0 +1,22 @@
+web/src/Command/Coverage/RetireLegacyOsmCommand.php
+  s_f6d45d977e7468::t_56b70e3e54a155 1-109
+web/tests/Command/Coverage/RetireLegacyOsmCommandTest.php
+  s_f6d45d977e7468::t_0918c2cf1d9b0e 66,77,106,117-118
+  s_f6d45d977e7468::t_8005a11bb31919 1-65,67-76,78-105,107-116,119-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "5d303b46c6af8f299133d3fea4ab051d8fa67ca9",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

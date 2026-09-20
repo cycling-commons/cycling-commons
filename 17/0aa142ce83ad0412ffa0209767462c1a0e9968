@@ -1,0 +1,36 @@
+web/translations/messages.nl.yaml
+  s_4e536eec984e8d::t_45ce8212e59fa3 1943
+web/translations/messages.de.yaml
+  s_4e536eec984e8d::t_45ce8212e59fa3 1946
+docs/specs/edit-items/A-road-surface.md
+  s_4e536eec984e8d::t_05d82b3b5ee096 149-154
+web/translations/messages.es.yaml
+  s_4e536eec984e8d::t_45ce8212e59fa3 1545
+web/templates/contribute/improve.html.twig
+  s_4e536eec984e8d::t_5c32bd4a568791 473-479
+web/translations/messages.en.yaml
+  s_4e536eec984e8d::t_45ce8212e59fa3 1535
+web/translations/messages.fr.yaml
+  s_4e536eec984e8d::t_45ce8212e59fa3 1943
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "170aa142ce83ad0412ffa0209767462c1a0e9968",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e536eec984e8d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef3615e2-4e64-4afe-8b18-be74e8cc28ce",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

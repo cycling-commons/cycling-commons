@@ -1,0 +1,25 @@
+pipeline/coverage/load.py
+  s_16e7d98f40a315::t_0b9eb8c8510378 29-34,43-76,204-209,228-240,244-259,262,267-280,284-290,292,297-299
+pipeline/coverage/run.py
+  s_16e7d98f40a315::t_0c762d681d04a8 25,119-123,127-128
+pipeline/tests/test_load.py
+  s_16e7d98f40a315::t_ca2efd23a251c8 342-446
+pipeline/tests/test_run.py
+  s_16e7d98f40a315::t_03be29471d1c56 148-153,188-192
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "9a4fabc367d650b67f34de259ee6bfe40d4f628f",
+  "prompts": {},
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

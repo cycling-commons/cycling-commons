@@ -1,0 +1,19 @@
+docs/specs/2026-07-24-coverage-harvest-prod-safety-design.md
+  s_682a9751eecf44::t_e7846f7e4aea06 80-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "17e258aae38e8c22f75811c4130fe14867ef9d5e",
+  "prompts": {},
+  "sessions": {
+    "s_682a9751eecf44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ca5d106-ef5e-44e4-a6ed-d2c075fa66b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

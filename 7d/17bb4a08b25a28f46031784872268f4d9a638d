@@ -1,0 +1,34 @@
+docs/specs/media-storage-architecture.md
+  s_c6f332c201127d::t_81c2b74d20034e 57-73,75-76
+docs/specs/public-api.md
+  s_c6f332c201127d::t_81c2b74d20034e 92
+docs/specs/osm-data-architecture.md
+  s_c6f332c201127d::t_81c2b74d20034e 135-136
+docs/specs/coverage-provider.md
+  s_c6f332c201127d::t_81c2b74d20034e 81-86,385
+developers/coverage-batch.md
+  s_c6f332c201127d::t_81c2b74d20034e 136,148
+web/.env.staging
+  s_c6f332c201127d::t_5e3e4a57e735f1 103-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "7d17bb4a08b25a28f46031784872268f4d9a638d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+docs/specs/map-and-search.md
+  s_b2667a820417c3::t_c03c1572812f8c 854-866
+web/assets/map/places.js
+  s_b2667a820417c3::t_c4b9599cd048fe 182-196
+  s_b2667a820417c3::t_04fef7f93f749b 212-232
+  s_b2667a820417c3::t_6ec5956897d3e6 26
+  s_b2667a820417c3::t_109ffb1268f16e 209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "95000b11f479314672b785eb8d4086b9dda54726",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b2667a820417c3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77b22ba5-fbce-489c-a40c-b5007f506956",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

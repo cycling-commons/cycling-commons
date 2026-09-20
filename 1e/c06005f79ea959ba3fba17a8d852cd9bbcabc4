@@ -1,0 +1,38 @@
+web/assets/map/map.js
+  s_c68dfc59dc9546::t_053fa3cfa2acbb 513-518,523-536
+  s_c68dfc59dc9546::t_79316856314274 1761-1763,1765
+  s_c68dfc59dc9546::t_d1c5146247cff7 1764
+web/translations/messages.nl.yaml
+  s_c68dfc59dc9546::t_b885d1000de733 1005
+web/translations/messages.en.yaml
+  s_c68dfc59dc9546::t_b885d1000de733 1170
+web/assets/styles/map.css
+  s_c68dfc59dc9546::t_b885d1000de733 158,167-178,180
+web/translations/messages.de.yaml
+  s_c68dfc59dc9546::t_b885d1000de733 1005
+web/translations/messages.fr.yaml
+  s_c68dfc59dc9546::t_b885d1000de733 1005
+docs/specs/2026-07-02-map-based-moderation-design.md
+  s_c68dfc59dc9546::t_ad14a745abdcb5 138-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "1ec06005f79ea959ba3fba17a8d852cd9bbcabc4",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

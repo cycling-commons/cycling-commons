@@ -1,0 +1,52 @@
+docs/specs/account-and-auth.md
+  s_b9f6c785e9346d::t_58201505704b3b 411-414
+  s_b9f6c785e9346d::t_5c2129d13bd957 61
+web/tests/Controller/RiderProfileTest.php
+  s_b9f6c785e9346d::t_eb518f21e86c00 170-201
+web/src/Entity/User.php
+  s_b9f6c785e9346d::t_ddf8d2262e4f4d 119-122,127
+  s_b9f6c785e9346d::t_2ad548b80a09d0 526,531
+  s_b9f6c785e9346d::t_7d824253caba1d 123,128
+web/translations/messages.de.yaml
+  s_b9f6c785e9346d::t_55dcec3ef5b193 97
+web/src/Service/BaseAreaResolver.php
+  s_b9f6c785e9346d::t_34caa7319ae68f 41
+  s_b9f6c785e9346d::t_5c2e8c9d9470e5 17-19
+web/translations/messages.nl.yaml
+  s_b9f6c785e9346d::t_f843dd457e2698 97
+web/translations/messages.en.yaml
+  s_b9f6c785e9346d::t_aa0cd08f1caf69 97
+web/translations/messages.fr.yaml
+  s_b9f6c785e9346d::t_b132d0fb03b559 97
+docs/specs/2026-07-19-region-scoping-design.md
+  s_b9f6c785e9346d::t_2612f552b1ca83 731-732
+  s_b9f6c785e9346d::t_70a084d0cac76b 714-730,733-787
+docs/specs/catalog-data-model.md
+  s_b9f6c785e9346d::t_6212fbc87b7be3 276-286
+web/templates/pages/privacy.html.twig
+  s_b9f6c785e9346d::t_c20025faab948d 47
+web/src/Service/BaseLocationService.php
+  s_b9f6c785e9346d::t_8a39b8e4065e65 18-20
+docs/specs/map-and-search.md
+  s_b9f6c785e9346d::t_03841164b9e77a 95
+  s_b9f6c785e9346d::t_fe90b9fd93f747 188-190
+  s_b9f6c785e9346d::t_40101313827b8d 184-187,191-204,206-235,237-240
+  s_b9f6c785e9346d::t_d8faf04e13b36f 205
+  s_b9f6c785e9346d::t_11ed403f2e9fe8 236
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "bb1f46519cc39d6a46f79cd199bee8e584ffbe77",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

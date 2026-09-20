@@ -1,0 +1,71 @@
+web/translations/messages.de.yaml
+  s_7e0805b9b01558::t_879e16cc4082e5 2013
+web/translations/messages.fr.yaml
+  s_7e0805b9b01558::t_879e16cc4082e5 2010
+web/assets/map/i18n.js
+  s_7e0805b9b01558::t_f27c81493f5dcb 19
+web/translations/messages.nl.yaml
+  s_7e0805b9b01558::t_879e16cc4082e5 2010
+web/tests/Provider/ProviderCitationsTest.php
+  s_7e0805b9b01558::t_78b59f618e0136 1-33,36-40,42-51
+  s_7e0805b9b01558::t_527ac5aa058725 34-35,41
+web/assets/map/drawer.js
+  s_7e0805b9b01558::t_be0165fb95d9f6 188-198,239
+  s_7e0805b9b01558::t_879e16cc4082e5 226-229
+  s_7e0805b9b01558::t_f27c81493f5dcb 183-187,199-204,208-211,213,217
+web/src/Catalog/CatalogProvider.php
+  s_7e0805b9b01558::t_e4ca26062f16c3 11,34-37
+  s_7e0805b9b01558::t_21782c7504d45f 70-73
+  s_7e0805b9b01558::t_57f1d9951a0156 162-164
+  s_7e0805b9b01558::t_e03ccf7992c449 271,289-290
+  s_7e0805b9b01558::t_c2137c569539b9 145,149,154,165,285-288,291
+web/src/Provider/ProviderCitations.php
+  s_7e0805b9b01558::t_c5762c773915ee 1-36,46-55,57-58,60-63,65,67-75,77-93
+  s_7e0805b9b01558::t_cf57a3fc61d94c 37-45
+  s_7e0805b9b01558::t_be0165fb95d9f6 59,64,66,76
+  s_7e0805b9b01558::t_b173286fe7c2be 56
+web/assets/map/catalog-load.js
+  s_7e0805b9b01558::t_f27c81493f5dcb 50-53
+web/config/services.yaml
+  s_7e0805b9b01558::t_bda86321ef9e30 184-188
+web/translations/messages.es.yaml
+  s_7e0805b9b01558::t_879e16cc4082e5 2482
+web/translations/messages.en.yaml
+  s_7e0805b9b01558::t_879e16cc4082e5 2478
+web/src/Catalog/Entity/Item.php
+  s_7e0805b9b01558::t_e03ccf7992c449 11
+web/src/Catalog/ItemSource.php
+  s_7e0805b9b01558::t_188c4e86d705cc 27
+web/tests/Provider/DataProviderRegistryTest.php
+  s_7e0805b9b01558::t_188c4e86d705cc 1-9,11-98
+  s_7e0805b9b01558::t_e03ccf7992c449 10
+web/src/Provider/Entity/DataProvider.php
+  s_7e0805b9b01558::t_016307eeffcfb8 1-414
+web/tests/js/source-labels.test.cjs
+  s_7e0805b9b01558::t_be0165fb95d9f6 37-49,51
+docs/specs/data-provider-hierarchy.md
+  s_7e0805b9b01558::t_35da6178deb22c 567-580
+web/config/packages/doctrine.yaml
+  s_7e0805b9b01558::t_e4a798d3058807 33-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "0b7406ece8379f66c877871b1bd02ace609dd913",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7e0805b9b01558": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33a81c58-e18b-4166-9873-c160cdde84a9",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

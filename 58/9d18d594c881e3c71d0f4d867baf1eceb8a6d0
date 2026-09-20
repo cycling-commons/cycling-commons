@@ -1,0 +1,55 @@
+web/tests/Scout/ScoutIntakeTest.php
+  s_dd35dcc1b6eafa::t_0691c6d2fcc648 47-66
+docs/specs/account-and-auth.md
+  s_dd35dcc1b6eafa::t_d7d802146a8f5f 96-100
+web/src/Controller/MapController.php
+  s_dd35dcc1b6eafa::t_6b6ffa96f21ceb 5-6
+web/src/Controller/MessagesController.php
+  s_dd35dcc1b6eafa::t_6b6ffa96f21ceb 5-6
+web/src/Form/ChangePasswordFormType.php
+  s_dd35dcc1b6eafa::t_84cdb0a9bffd74 34-39
+  s_dd35dcc1b6eafa::t_3d58c58f060791 14
+web/assets/map/scout-review.js
+  s_dd35dcc1b6eafa::t_e801770231aa47 376-378
+web/src/Form/RegistrationFormType.php
+  s_dd35dcc1b6eafa::t_3d58c58f060791 19,54-59
+web/src/Form/SettingsPasswordType.php
+  s_dd35dcc1b6eafa::t_3d58c58f060791 14,54-59
+web/src/Controller/RegistrationController.php
+  s_dd35dcc1b6eafa::t_6b6ffa96f21ceb 5-6
+web/config/packages/csrf.yaml
+  s_dd35dcc1b6eafa::t_04cca80fb984cf 15
+web/templates/map/index.html.twig
+  s_dd35dcc1b6eafa::t_9eeb35cb5598a8 577-579
+web/composer.json
+  s_dd35dcc1b6eafa::t_6b6ffa96f21ceb 2
+web/src/Entity/User.php
+  s_dd35dcc1b6eafa::t_6b6ffa96f21ceb 5-6
+web/src/Controller/ApiController.php
+  s_dd35dcc1b6eafa::t_6b6ffa96f21ceb 5-6
+web/src/Controller/ScoutIntakeController.php
+  s_dd35dcc1b6eafa::t_1da1b9f4ed43f1 62-70
+web/composer.lock
+  s_dd35dcc1b6eafa::t_9b35483b7a0b20 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "589d18d594c881e3c71d0f4d867baf1eceb8a6d0",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

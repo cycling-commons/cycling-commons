@@ -1,0 +1,21 @@
+wiki/developers/api/index.md
+  s_c6f332c201127d::t_f15e788c6974dd 12-17
+wiki/developers/api/serving-map-data.md
+  s_c6f332c201127d::t_fe29186d921b53 7,35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ceec068c2e3d20762a8bb5cac7549fcf5554ad06",
+  "prompts": {},
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

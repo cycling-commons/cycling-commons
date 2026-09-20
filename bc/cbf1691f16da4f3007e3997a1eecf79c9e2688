@@ -1,0 +1,30 @@
+web/src/Catalog/RideCheckService.php
+  s_682a9751eecf44::t_f8e7af498b086e 38-45
+  s_682a9751eecf44::t_4745035782fc16 106
+  s_682a9751eecf44::t_aa707c6caef010 73
+  s_682a9751eecf44::t_273ba54c173f9a 137-192,210
+docs/specs/map-and-search.md
+  s_682a9751eecf44::t_84b05a3a46bf9e 680-691
+web/tests/Catalog/RideCheckServiceTest.php
+  s_682a9751eecf44::t_3ef79842a3be4b 14-15
+  s_682a9751eecf44::t_299cbadaf5506b 225-303
+  s_682a9751eecf44::t_944056def979c0 31-32,42-46
+  s_682a9751eecf44::t_f6ce37bab53b30 33
+  s_682a9751eecf44::t_3e815340e9556f 34-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "bccbf1691f16da4f3007e3997a1eecf79c9e2688",
+  "prompts": {},
+  "sessions": {
+    "s_682a9751eecf44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ca5d106-ef5e-44e4-a6ed-d2c075fa66b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

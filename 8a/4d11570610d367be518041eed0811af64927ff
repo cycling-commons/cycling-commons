@@ -1,0 +1,80 @@
+web/src/Messaging/Entity/CuratorPost.php
+  s_f47a817d6ad683::t_c02ee158061126 11-12,37-39,69-73,87-102
+web/templates/moderate/_room_post.html.twig
+  s_f47a817d6ad683::t_60c8bf0e85a065 28-37,41-43
+web/src/Support/ScreenshotStore.php
+  s_f47a817d6ad683::t_4334591cd32c4c 142-144,147-148
+  s_f47a817d6ad683::t_5a43f7b273ee1c 97,103,172-173,188
+  s_f47a817d6ad683::t_c02ee158061126 35-38,88-96,98-102,184
+web/translations/messages.en.yaml
+  s_f47a817d6ad683::t_60c8bf0e85a065 4834-4835,4853-4857,4870-4871
+  s_f47a817d6ad683::t_613a9ed5913c0e 4858-4860,4872-4873
+web/translations/messages.nl.yaml
+  s_f47a817d6ad683::t_613a9ed5913c0e 4836-4838,4850-4851
+  s_f47a817d6ad683::t_60c8bf0e85a065 4812-4813,4831-4835,4848-4849
+web/migrations/Version20260919010000.php
+  s_f47a817d6ad683::t_bf6cd703d78e50 1-51
+web/templates/moderate/room.html.twig
+  s_f47a817d6ad683::t_613a9ed5913c0e 63-68,163-175
+  s_f47a817d6ad683::t_07953ea289abb6 69-77
+  s_f47a817d6ad683::t_60c8bf0e85a065 6-9,51-62,78-80,83,126,131,151-160
+  s_f47a817d6ad683::t_9b38d86e890a07 176
+web/translations/messages.fr.yaml
+  s_f47a817d6ad683::t_60c8bf0e85a065 4805-4806,4824-4828,4841-4842
+  s_f47a817d6ad683::t_613a9ed5913c0e 4829-4831,4843-4844
+web/src/Messaging/Entity/CuratorPostImage.php
+  s_f47a817d6ad683::t_954259841a2dda 1-20,24-43,45-46,50-70,72,74-89,100-152
+  s_f47a817d6ad683::t_613a9ed5913c0e 21-23,44,47-49,71,73,90-99
+web/src/Controller/ModerateRoomController.php
+  s_f47a817d6ad683::t_60c8bf0e85a065 13-14,17-19,21-22,48,77-79,85-119,134-141,150,152,156,158,247-274
+  s_f47a817d6ad683::t_dab42fad542a29 25,80,143,212,275-312
+  s_f47a817d6ad683::t_07d59b539395f5 28,49
+  s_f47a817d6ad683::t_613a9ed5913c0e 153,164-172,174-178,180-182,184-187,189-205,207-211
+  s_f47a817d6ad683::t_316744199464a3 173,179,183,188,206
+  s_f47a817d6ad683::t_32bc30b94d01ef 142,213,313
+web/assets/js/room.js
+  s_f47a817d6ad683::t_b1c1650071ebd4 4-6,9-10,63,120-146,148-224,226-262
+  s_f47a817d6ad683::t_07953ea289abb6 147
+  s_f47a817d6ad683::t_d8ffeddb079a79 225
+  s_f47a817d6ad683::t_2bcdead9673ede 1-3,7-8,11-62,64-119,263
+web/src/Messaging/CuratorRoom.php
+  s_f47a817d6ad683::t_613a9ed5913c0e 79-82,114-117,119,131,145-153,155,163-200,214,216
+  s_f47a817d6ad683::t_c02ee158061126 10,13,37-38,55-56,74-78,118,120-121,130,138-142,154,156,201-213,215,217-264,411,415,432-450,476-477,485-488
+  s_f47a817d6ad683::t_75570b65418a23 489
+web/translations/messages.de.yaml
+  s_f47a817d6ad683::t_613a9ed5913c0e 4837-4839,4851-4852
+  s_f47a817d6ad683::t_60c8bf0e85a065 4813-4814,4832-4836,4849-4850
+web/tests/Moderation/CuratorRoomTest.php
+  s_f47a817d6ad683::t_ae7bc0e1281fd2 9-10,19,301-389,392-412,417-419,421-431,434,440-441,443-458,467-468,470,473-474,477-514
+  s_f47a817d6ad683::t_6ea42ca91d0de6 390-391,413-416,420,432-433,438-439,442,459-466,469,471-472,475-476
+  s_f47a817d6ad683::t_65d75b50fc5c12 435-437
+  s_f47a817d6ad683::t_3179f12ae73386 515
+web/migrations/Version20260919020000.php
+  s_f47a817d6ad683::t_3161f8b244725d 1-46
+web/src/Support/StoredImage.php
+  s_f47a817d6ad683::t_dd99090b83d3a1 1-27
+web/translations/messages.es.yaml
+  s_f47a817d6ad683::t_60c8bf0e85a065 4845-4846,4864-4868,4881-4882
+  s_f47a817d6ad683::t_613a9ed5913c0e 4869-4871,4883-4884
+web/src/Media/Command/MediaGcCommand.php
+  s_f47a817d6ad683::t_d8ffeddb079a79 11
+  s_f47a817d6ad683::t_415088e29253bf 31,44-45,48,52
+docs/specs/moderation-and-contribution.md
+  s_f47a817d6ad683::t_6ec83297934538 3036-3037,3056-3067,3097-3121,3196-3199,3211-3234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8a4d11570610d367be518041eed0811af64927ff",
+  "prompts": {},
+  "sessions": {
+    "s_f47a817d6ad683": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "610ca1d1-6828-4822-a153-1be243f02d0a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+web/assets/map/scope.js
+  s_1c0464d81ce126::t_78e49cabb28194 66-80
+developers/docker/compose.yaml
+  s_1c0464d81ce126::t_f0201f51c0f996 141-147
+  s_1c0464d81ce126::t_5e4d3bcfa66044 148
+web/translations/messages.de.yaml
+  s_1c0464d81ce126::t_1702752044e4c4 1061-1255
+web/translations/messages.es.yaml
+  s_1c0464d81ce126::t_1702752044e4c4 1066-1260
+web/translations/messages.nl.yaml
+  s_1c0464d81ce126::t_1702752044e4c4 1061-1255
+pipeline/coverage/load.py
+  s_1c0464d81ce126::t_03b49951533678 65-82
+tools/divisions/config.py
+  s_1c0464d81ce126::t_9106756b3773bb 514-523
+  s_1c0464d81ce126::t_279b01e0b81f03 351-366,368-410,414-455,457-513,524-537,541-542
+  s_1c0464d81ce126::t_a49bf5ff754a92 568-580
+  s_1c0464d81ce126::t_fbb12604d6fb9a 367,411-413,456,538-540
+web/translations/messages.en.yaml
+  s_1c0464d81ce126::t_1702752044e4c4 1065-1259
+web/translations/messages.fr.yaml
+  s_1c0464d81ce126::t_1702752044e4c4 1061-1255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "62d575efb2c6ca5747e3eb90b20e89417746eca8",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1c0464d81ce126": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04feb771-c203-4977-b898-3414026fd58f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+docs/specs/2026-07-22-scope-selector-scale-design.md
+  s_3bd3f8ccb3a560::t_ca5ccfa1f3bf78 27-37
+  s_3bd3f8ccb3a560::t_975c837704cfa6 46-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "8b1ba56e7257dd1b2bd00e3a8b2274010ec232e5",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,81 @@
+tools/wikimedia/out/places-au.json
+  s_45ec9b3f519700::t_77a7a847a95500 48-122,185-243,245-264
+  s_45ec9b3f519700::t_b58fd0e6f3360f 244
+tools/wikimedia/out/places-de.json
+  s_45ec9b3f519700::t_b58fd0e6f3360f 198-201,239
+  s_45ec9b3f519700::t_77a7a847a95500 63-122,172-197,202-238,240-242
+tools/wikimedia/out/places-nl.json
+  s_45ec9b3f519700::t_77a7a847a95500 19-48,93-122,185-198,200-309
+  s_45ec9b3f519700::t_b58fd0e6f3360f 199
+tools/wikimedia/out/places-gb.json
+  s_45ec9b3f519700::t_77a7a847a95500 50-51,53-71,73-90,93-122,185-243,245-291
+  s_45ec9b3f519700::t_b58fd0e6f3360f 244
+web/translations/messages.en.yaml
+  s_45ec9b3f519700::t_a78fd5d91ba51c 1200,2051,2253
+  s_45ec9b3f519700::t_563987f794aca8 338-342,2822
+web/translations/messages.nl.yaml
+  s_45ec9b3f519700::t_a78fd5d91ba51c 1196,1735,2230
+  s_45ec9b3f519700::t_b9e6b24b182ae5 338-342,2796
+web/src/Catalog/CatalogFormRegistry.php
+  s_45ec9b3f519700::t_62dd4a14d06bc9 70-77
+web/translations/messages.de.yaml
+  s_45ec9b3f519700::t_a78fd5d91ba51c 1196,1738,2233
+  s_45ec9b3f519700::t_acd8845c2f9a6f 338-342,2799
+web/templates/settings/index.html.twig
+  s_45ec9b3f519700::t_c420fe2cec8a00 33-35
+tools/wikimedia/out/places-fr.json
+  s_45ec9b3f519700::t_b58fd0e6f3360f 212,228,244
+  s_45ec9b3f519700::t_77a7a847a95500 19-78,185-211,213-227,229-243,245-300
+tools/wikimedia/out/places-us.json
+  s_45ec9b3f519700::t_77a7a847a95500 4-48,79-93,156-170,242-313,386-412,458-500,584-635,692-752,826-896
+  s_45ec9b3f519700::t_b58fd0e6f3360f 501-502,636-637,753-754,897
+tools/wikimedia/out/places-it.json
+  s_45ec9b3f519700::t_77a7a847a95500 63-122,185-242
+  s_45ec9b3f519700::t_b58fd0e6f3360f 243-244
+web/assets/map/search-ui.js
+  s_45ec9b3f519700::t_62dd4a14d06bc9 264
+tools/wikimedia/out/places-be.json
+  s_45ec9b3f519700::t_77a7a847a95500 49-63,78-122,185-243
+  s_45ec9b3f519700::t_b58fd0e6f3360f 244
+tools/wikimedia/out/places-lu.json
+  s_45ec9b3f519700::t_77a7a847a95500 95-154
+tools/wikimedia/country_places.py
+  s_45ec9b3f519700::t_1d0adc033d9939 35,239-242
+tools/wikimedia/out/places-ch.json
+  s_45ec9b3f519700::t_77a7a847a95500 63-122,185-242
+  s_45ec9b3f519700::t_b58fd0e6f3360f 243-244
+tools/wikimedia/out/places-es.json
+  s_45ec9b3f519700::t_77a7a847a95500 63-122,185-243
+  s_45ec9b3f519700::t_b58fd0e6f3360f 244
+web/translations/messages.es.yaml
+  s_45ec9b3f519700::t_a78fd5d91ba51c 1202,2064,2266
+  s_45ec9b3f519700::t_ef59028d848fa9 2837
+  s_45ec9b3f519700::t_43a4cfe267d5f3 339-343
+tools/wikimedia/out/places-jp.json
+  s_45ec9b3f519700::t_77a7a847a95500 34-93,171-183,200-243
+  s_45ec9b3f519700::t_b58fd0e6f3360f 184-185,244
+web/translations/messages.fr.yaml
+  s_45ec9b3f519700::t_a78fd5d91ba51c 1196,1735,2230
+  s_45ec9b3f519700::t_e6d5f9b421810b 338-342,2796
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "b5312248df3ee3bfa1032eab44734298a03840ee",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_45ec9b3f519700": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42c83203-4754-4e8f-b14b-28903077507b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

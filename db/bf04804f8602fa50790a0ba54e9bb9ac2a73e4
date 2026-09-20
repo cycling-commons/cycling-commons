@@ -1,0 +1,25 @@
+wiki/developers/data-ops/harvesting.md
+  s_3c392b244b902c::t_57ccbdcfddffa4 102-103,153,155,157
+  s_3c392b244b902c::t_7a016513f78fb2 1-101,104-152,154,156,158
+mkdocs.yml
+  s_3c392b244b902c::t_b1ce39818e2eef 83-85
+wiki/developers/data-ops/onboarding-a-country.md
+  s_3c392b244b902c::t_d955acea614d0a 1-7,10-31,33-141,143,145
+  s_3c392b244b902c::t_57ccbdcfddffa4 8-9,32,142,144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "dbbf04804f8602fa50790a0ba54e9bb9ac2a73e4",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

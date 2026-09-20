@@ -1,0 +1,46 @@
+tools/wikimedia/climb_candidates.py
+  s_ec895423d98b88::t_43196c32b9dc00 105
+  s_ec895423d98b88::t_d87c5a2833ae97 91-97
+  s_ec895423d98b88::t_eba933bdd6cd21 70-83,133-183,254-255,280
+  s_ec895423d98b88::t_f737f1fcdd3b97 85-90,100,187-189,191,252-253
+web/src/Catalog/Command/SeedClimbsCommand.php
+  s_ec895423d98b88::t_eba933bdd6cd21 184,200,241-246,256-261
+web/tests/Catalog/SeedClimbsCommandTest.php
+  s_ec895423d98b88::t_30b38f711b4eff 139-140
+  s_ec895423d98b88::t_eba933bdd6cd21 125-138,141-142
+tools/wikimedia/out/2026-09-06-r2/climb-review.json
+  s_ec895423d98b88::t_e0350516d643bd 1,21,1241,1353,1935,3179,3571,4443,4697,6327,6865,8343,10205,11523,12457,13279,13541,14407,14997,15363,16405,17099,17201,17527,17785,18203,19553,20247,21850
+  s_ec895423d98b88::t_735111be15eaae 2-20,22-1240,1242-1352,1354-1934,1936-3178,3180-3570,3572-4442,4444-4696,4698-6326,6328-6864,6866-8342,8344-10204,10206-11522,11524-12456,12458-13278,13280-13540,13542-14406,14408-14996,14998-15362,15364-16404,16406-17098,17100-17200,17202-17526,17528-17784,17786-18202,18204-19552,19554-20246,20248-21849
+tools/wikimedia/README.md
+  s_ec895423d98b88::t_021fd97bd02fdb 60-68
+docs/specs/climb-elevation.md
+  s_ec895423d98b88::t_021fd97bd02fdb 1424-1471
+tools/wikimedia/climb_sides.py
+  s_ec895423d98b88::t_03e590e8b46245 247-251,258-259,278
+  s_ec895423d98b88::t_eba933bdd6cd21 240-241,271
+  s_ec895423d98b88::t_d87c5a2833ae97 238
+  s_ec895423d98b88::t_f737f1fcdd3b97 239
+tools/wikimedia/out/2026-09-06-final/climb-review.json
+  s_ec895423d98b88::t_2188a649238417 1-446070
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "76e05a1239fa160fb8b3c48b3fbe743b3969dc64",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ec895423d98b88": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0de6d79-989a-45d6-9f80-10287ec2dd13",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

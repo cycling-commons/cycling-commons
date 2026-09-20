@@ -1,0 +1,21 @@
+web/tests/Community/RouteRideItTest.php
+  s_51df195d1c7750::t_280e89cda92fbf 71
+web/tests/Catalog/SeasonTest.php
+  s_51df195d1c7750::t_280e89cda92fbf 17-20,24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "39e46d64e19c9359c5b7f376dd0fccae35652214",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

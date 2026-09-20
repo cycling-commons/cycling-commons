@@ -1,0 +1,31 @@
+web/src/Catalog/Command/ImportCatalogCommand.php
+  s_e6d6993eda7318::t_ee0a7adbd6f181 14
+  s_e6d6993eda7318::t_259d1d40153edf 147-156
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_e6d6993eda7318::t_99347cbc39c809 81-94
+web/src/Catalog/Import/AttributeVocabulary.php
+  s_e6d6993eda7318::t_15d1695d01d2ce 34-38
+web/tests/Catalog/Import/AttributeVocabularyTest.php
+  s_e6d6993eda7318::t_0e9f3bb7e8d909 103-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "02fe2d25e1ca6d2e6e7010f1d490f60b4126c9b2",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e6d6993eda7318": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "081baf86-6152-46e3-a19d-aa12c114220a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

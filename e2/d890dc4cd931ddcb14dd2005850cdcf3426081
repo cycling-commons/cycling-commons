@@ -1,0 +1,39 @@
+docs/specs/account-and-auth.md
+  s_35311736dd2add::t_15c33ae5efe9d5 318-327
+web/src/Service/ResetPasswordCleanupHook.php
+  s_f68f52eab6f3c4::t_f9ea5564a858df 1-33
+web/tests/Auth/AccountDeletionTest.php
+  s_4e536eec984e8d::t_e63653eb08bf82 137-182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "e2d890dc4cd931ddcb14dd2005850cdcf3426081",
+  "prompts": {},
+  "sessions": {
+    "s_35311736dd2add": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6acaccdb-00d0-44b7-8f6d-74c4e6ba0363",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_4e536eec984e8d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef3615e2-4e64-4afe-8b18-be74e8cc28ce",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

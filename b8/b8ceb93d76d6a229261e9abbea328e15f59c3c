@@ -1,0 +1,34 @@
+pipeline/contract/coverage-contract.json
+  s_df9a7eaed39865::t_aa6ccc652f44e1 381-388
+docs/specs/coverage-provider.md
+  s_df9a7eaed39865::t_ea44a3e8e66271 521-537
+pipeline/coverage/routes.py
+  s_df9a7eaed39865::t_47ffe08b866995 281
+  s_df9a7eaed39865::t_4e3c9715d5514c 193-213,231
+pipeline/tests/test_routes.py
+  s_df9a7eaed39865::t_fa533c86b5aec6 108-158
+  s_df9a7eaed39865::t_47ffe08b866995 80,102
+web/tests/js/routes-zooms.test.cjs
+  s_df9a7eaed39865::t_0a86d10b8848cd 31-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b8b8ceb93d76d6a229261e9abbea328e15f59c3c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_df9a7eaed39865": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "22e36216-d269-4ffd-b95a-9b6bbdf16f97",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

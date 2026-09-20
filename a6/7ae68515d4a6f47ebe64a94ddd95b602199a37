@@ -1,0 +1,143 @@
+web/translations/messages.fr.yaml
+  s_f945338197163d::t_46705a37414c37 1860
+web/src/Media/Message/ResolveWikidataImage.php
+  s_f945338197163d::t_70ac068a39fe09 1-26
+web/src/Media/MessageHandler/ResolveWikidataImageHandler.php
+  s_f945338197163d::t_da7bac56aae384 1-73
+web/src/Coverage/CoverageRepository.php
+  s_f945338197163d::t_eb8c081294344f 12,58-61,153-158
+  s_f945338197163d::t_c55232b53cb24f 19-33,131,239,299,352
+  s_f945338197163d::t_914daebf5ee25c 159,167-186
+  s_f945338197163d::t_d204dae72db033 187-188
+web/translations/messages.nl.yaml
+  s_f945338197163d::t_46705a37414c37 1860
+web/src/Controller/ModerateDataController.php
+  s_f945338197163d::t_ddadc507aae758 13,191,193-214
+web/src/Media/MessageHandler/FetchCommonsPhotoHandler.php
+  s_f945338197163d::t_50c58eb4f67dad 73
+  s_f945338197163d::t_e0f34633206d83 1-59,61-72,74,81-126
+  s_f945338197163d::t_e4d5df87522e8b 60,75-80
+web/tests/Media/CommonsFileTest.php
+  s_16e7d98f40a315::t_c15b0909a392e9 1-83
+web/assets/map/commons-photo.js
+  s_f945338197163d::t_21585b59ba328e 1-52
+web/assets/map/coverage.js
+  s_f945338197163d::t_d0d6514883b73c 184-187
+web/translations/messages.de.yaml
+  s_f945338197163d::t_46705a37414c37 1863
+web/src/Media/Commons/CommonsFile.php
+  s_f945338197163d::t_a837402c73309a 1-88
+web/assets/styles/map.css
+  s_f945338197163d::t_ca555dfba82e48 903,918-924
+  s_f945338197163d::t_1dc9df00aef01c 906
+  s_f945338197163d::t_fd2f2246ad9978 996-999,1003
+  s_f945338197163d::t_9876b300d08ff3 913-917
+  s_f945338197163d::t_e88694561089ed 1355-1362
+  s_f945338197163d::t_872bde6cd48a84 907-908,929-937
+  s_f945338197163d::t_8ebc65ddc2b47f 988-992,1001
+  s_f945338197163d::t_5721f0367688f8 611-619,898-902,904-905,909-912,925-926,1395-1399
+web/tests/js/commons-photo.test.mjs
+  s_f945338197163d::t_21585b59ba328e 1-90
+web/src/Media/Message/FetchCommonsPhoto.php
+  s_f945338197163d::t_e0f34633206d83 1-28
+web/tests/Controller/CoveragePhotoControllerTest.php
+  s_f945338197163d::t_72908b14631a9c 1-8,10-20,23-24,26-36,38-45,56-59,61-66,68-71,73-75,77,93-110,114,124,127-132
+  s_f945338197163d::t_65b308853a9fed 115-123
+  s_f945338197163d::t_c90f06d40ed8a1 9,21-22,125-126
+  s_f945338197163d::t_8631db7a6a2663 84-87
+  s_f945338197163d::t_d63bcbee0e080b 25,37,60,67,78-83,88-92
+  s_f945338197163d::t_749e3c8a7a9844 46-55,72,76
+  s_f945338197163d::t_6bee2982fda648 111-113
+web/tests/Media/WikidataImageTest.php
+  s_f945338197163d::t_d4aead08e1c609 1-143
+web/tests/Media/CommonsPhotoRepositoryTest.php
+  s_f945338197163d::t_0b1f0b2d772668 1-105,120-124
+  s_f945338197163d::t_ed2f45b8cd9eb5 106-119
+docs/specs/catalog-data-model.md
+  s_f945338197163d::t_d1751557b68b54 397,399,401,450,452-453,455
+  s_f945338197163d::t_f9ca0e64897c7a 435-449,451,454,456-484,487-492
+  s_f945338197163d::t_c1593cd9ee0dfa 365-396,398,400,402-434,485-486,493-497
+web/.env
+  s_f945338197163d::t_0efafba8425576 197-204
+web/translations/messages.es.yaml
+  s_f945338197163d::t_46705a37414c37 2205
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_f945338197163d::t_7eaaa6780721e6 100-103,105-106,109
+web/src/Media/Commons/CommonsUnavailable.php
+  s_f945338197163d::t_1eb8623b48ef3f 1-21
+web/src/Media/Commons/CommonsPhotoState.php
+  s_f945338197163d::t_b0ec5dbe847b70 1-27
+web/src/Controller/CoverageController.php
+  s_f945338197163d::t_ae313e5736d137 42-48
+  s_f945338197163d::t_8d27860432e150 152-153,195-199,212-226,307-320,322-329
+  s_16e7d98f40a315::t_8e21fda487e881 264-265,321
+  s_f945338197163d::t_0f56ed9cb28ae4 168-180,210-211
+  s_f945338197163d::t_0fe73e7fdb88c6 10-12,14-16,25,128-148,150-151,154-167,227-263
+  s_f945338197163d::t_b48bb3e049012f 13
+  s_f945338197163d::t_4ab8b0142fed41 17,149,181-194,200-209
+web/src/Media/Commons/CommonsApi.php
+  s_f945338197163d::t_50c58eb4f67dad 111-147
+  s_f945338197163d::t_1eb8623b48ef3f 1-110,148-194
+web/src/Media/Commons/CommonsPhotoRepository.php
+  s_f945338197163d::t_ae313e5736d137 83,104,106-107,114,116-118
+  s_f945338197163d::t_ed2f45b8cd9eb5 84-103,105,108-113,115
+  s_f945338197163d::t_b0ec5dbe847b70 1-55,70-82,119-138
+  s_f945338197163d::t_d13c85df0fb149 56-69
+web/tests/Media/FetchCommonsPhotoHandlerTest.php
+  s_f945338197163d::t_0d8df02b561dbb 1-49,51-58,60-67,69-83,85-92,94-102,104-105,107-109,111-188
+  s_f945338197163d::t_54936f3d6dae1f 50,59,68,84,93,103,106,110
+web/migrations/Version20260825090000.php
+  s_f945338197163d::t_f2f07154304b2a 1-73
+web/src/Media/Commons/WikidataImageRepository.php
+  s_f945338197163d::t_70ac068a39fe09 1-74
+web/config/services.yaml
+  s_f945338197163d::t_7989f7fb9bdca3 181-185,189
+  s_f945338197163d::t_4ab8b0142fed41 186-188
+web/config/packages/messenger.yaml
+  s_f945338197163d::t_eff9fddf800d0c 29
+  s_f945338197163d::t_4ab8b0142fed41 30
+web/templates/map/index.html.twig
+  s_f945338197163d::t_5721f0367688f8 540-550
+web/assets/map/drawer.js
+  s_f945338197163d::t_02e478fc5d4cf0 42-48
+  s_f945338197163d::t_b9879e63fa259b 785-795
+  s_f945338197163d::t_d0d6514883b73c 219,252
+  s_f945338197163d::t_6684a9d126e353 19,287-304,321,776-784,796-798,801
+  s_f945338197163d::t_8ea3e465f03aa8 875-876
+  s_f945338197163d::t_5c1356da07e86c 898-923,929-931,947-948
+web/translations/messages.en.yaml
+  s_f945338197163d::t_46705a37414c37 2196
+web/config/packages/rate_limiter.yaml
+  s_f945338197163d::t_8d27860432e150 26-29,125-149,254-258
+  s_f945338197163d::t_19180dd43e823a 24-25,116-124
+  s_f945338197163d::t_4c1a5cc98f73a6 253
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a67ae68515d4a6f47ebe64a94ddd95b602199a37",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f945338197163d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3e27fcd-7437-4dc7-bcd8-4f46fc8d24ef",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

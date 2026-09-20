@@ -1,0 +1,27 @@
+web/templates/map/index.html.twig
+  s_0f648c977bdc75::t_c170c35a54617b 167-168
+web/tests/Catalog/SurfaceVocabularyTest.php
+  s_0f648c977bdc75::t_76f48b473718ea 40-51
+web/src/Catalog/SurfaceVocabulary.php
+  s_0f648c977bdc75::t_dfa8a70f93ce8b 19-26,28-30
+web/assets/map/map.js
+  s_0f648c977bdc75::t_ff4b6b5fc4b46d 825-826
+tools/wallonia/tests/test_surface_contract.py
+  s_0f648c977bdc75::t_bdce27724bdfe6 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b5f5bd69c6e2534c37b85d10fbad7f8508f61136",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

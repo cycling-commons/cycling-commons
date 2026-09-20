@@ -1,0 +1,51 @@
+wiki/developers/gis/metres-vs-degrees.md
+  s_f3f9c3dc9409c4::t_acbf2b8df1c4e8 157
+  s_f3f9c3dc9409c4::t_4910c32fb03a0a 191
+  s_f3f9c3dc9409c4::t_3650de9e13a17a 69-75
+  s_f3f9c3dc9409c4::t_f15c271d3f2b10 7-11
+  s_f3f9c3dc9409c4::t_dc3a3b545c2f07 13,22,40,47,53,56,60,66,77,79,82-83,95,104,106,110-111,118,199-200,206,208,210-211,213,217,222,233,239
+  s_f3f9c3dc9409c4::t_f297584abe8d6a 179-185
+  s_f3f9c3dc9409c4::t_26fe87a36267f7 127-156,158-178,186-190,192-198
+  s_f3f9c3dc9409c4::t_f79dea19231dc6 228-231
+  s_f3f9c3dc9409c4::t_13849f6731bca2 30-34
+  s_f3f9c3dc9409c4::t_a04d83f16b2082 76
+wiki/developers/gis/routes.md
+  s_f3f9c3dc9409c4::t_b0f9503c2c8b3a 123-124
+  s_f3f9c3dc9409c4::t_3429b5a00a9337 6
+  s_f3f9c3dc9409c4::t_de9d9512ef8e60 54-63,66-71
+  s_f3f9c3dc9409c4::t_814122d4a0d094 73
+  s_f3f9c3dc9409c4::t_8e50ba1143138d 72
+  s_f3f9c3dc9409c4::t_8c2be83272be07 40-41
+  s_f3f9c3dc9409c4::t_e9a2578317c805 181
+  s_f3f9c3dc9409c4::t_bcd1abb7fcd53c 135-137
+  s_f3f9c3dc9409c4::t_9b00134da2bbd1 74-75
+  s_f3f9c3dc9409c4::t_b16c278773f230 97-98
+  s_f3f9c3dc9409c4::t_b7131b21c2d6ae 93-95
+  s_f3f9c3dc9409c4::t_f1c80b3ed81333 96
+  s_f3f9c3dc9409c4::t_26606579989464 125
+  s_f3f9c3dc9409c4::t_9613fd3a0859fc 42-43
+  s_f3f9c3dc9409c4::t_ac4a0961b6302e 7
+wiki/developers/gis/making-it-fast.md
+  s_f3f9c3dc9409c4::t_3fd7b835e8e5c4 149-153
+  s_f3f9c3dc9409c4::t_d9e7b8718adec1 218-221
+  s_f3f9c3dc9409c4::t_5a4568dad55c20 302-305
+  s_f3f9c3dc9409c4::t_035bc1c7d39e3e 82-88
+  s_f3f9c3dc9409c4::t_a964368994726f 356-369
+  s_f3f9c3dc9409c4::t_d16214fd26a7a6 24-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "61eec98ca585eefd1781154e720e6cd5a60f89a4",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

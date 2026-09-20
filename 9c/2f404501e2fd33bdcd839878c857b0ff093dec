@@ -1,0 +1,50 @@
+web/src/Contribution/RegionResolver.php
+  s_162e830c17ed4c::t_ebb0dc9c70688c 17-19
+web/src/Contribution/RouteProposalService.php
+  s_162e830c17ed4c::t_b56e9f8a22f438 27-29
+web/tests/Contribution/ProposeRouteFlowTest.php
+  s_162e830c17ed4c::t_f71564561701e6 75-81
+  s_162e830c17ed4c::t_26fa2694f5082f 1-74,82-107,112,119-131
+  s_162e830c17ed4c::t_43c58f6a204d91 113-118
+  s_162e830c17ed4c::t_e67061c3cbeddc 108-111
+web/translations/messages.nl.yaml
+  s_162e830c17ed4c::t_093c3c5715a6b3 935-963
+  s_162e830c17ed4c::t_912f292581da00 1105-1106
+web/src/Catalog/BikeType.php
+  s_162e830c17ed4c::t_62e4951b1edd17 1-30
+web/src/Form/ProposeRouteType.php
+  s_162e830c17ed4c::t_b2132666fa01a7 1-99
+web/translations/messages.fr.yaml
+  s_162e830c17ed4c::t_4236a278995d7b 935-963
+  s_162e830c17ed4c::t_01eda46eb484b4 1105-1106
+web/templates/contribute/index.html.twig
+  s_162e830c17ed4c::t_875177408c0ffc 114
+web/translations/messages.de.yaml
+  s_162e830c17ed4c::t_50aa0ff750bba3 935-963
+  s_162e830c17ed4c::t_00802d351e7c78 1105-1106
+web/src/Controller/ProposeRouteController.php
+  s_162e830c17ed4c::t_b93e5626706049 1-77
+web/tests/Contribution/ContributeHubTest.php
+  s_162e830c17ed4c::t_574282bda92305 68-71
+web/translations/messages.en.yaml
+  s_162e830c17ed4c::t_72a1fef3b0bbdf 1105-1106
+  s_162e830c17ed4c::t_1394a239b09813 935-963
+web/templates/contribute/propose_route.html.twig
+  s_162e830c17ed4c::t_1409f1ccc5d7f1 1-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9c2f404501e2fd33bdcd839878c857b0ff093dec",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

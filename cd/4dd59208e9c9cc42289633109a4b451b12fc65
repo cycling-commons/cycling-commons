@@ -1,0 +1,25 @@
+wiki/developers/data-ops/elevation-tiles.md
+  s_ba6cf53b5a7360::t_b123084a392fa1 73-74,96-108,141-154
+  s_ba6cf53b5a7360::t_61397f61e8e2d8 155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "cd4dd59208e9c9cc42289633109a4b451b12fc65",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ba6cf53b5a7360": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae81165c-556a-4e56-9750-e0ddd9fcf0da",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+web/src/Elevation/ElevationClient.php
+  s_14d343aaa1f816::t_044a65c07c8f19 56-61
+  s_14d343aaa1f816::t_ab64f8d417398a 82
+  s_14d343aaa1f816::t_a86b13a3d31160 90
+  s_14d343aaa1f816::t_4592fdb7eec789 74-76,81
+  s_14d343aaa1f816::t_4e8bb84e350eb9 83
+tools/elevation/README.md
+  s_14d343aaa1f816::t_1d05ac806994ec 26-43
+  s_14d343aaa1f816::t_9371e8a3d74067 56-58
+web/.env
+  s_14d343aaa1f816::t_9c5b1ef17de711 84-90
+docs/specs/climb-elevation.md
+  s_14d343aaa1f816::t_649211987899df 438-473
+tools/elevation/fetch-glo30.sh
+  s_14d343aaa1f816::t_83dfb54642dcda 37-45
+web/config/services.yaml
+  s_14d343aaa1f816::t_5599137ca60f8e 53-62
+web/.env.test
+  s_14d343aaa1f816::t_7c067b84f2b5c6 25
+web/src/Elevation/ElevationEndpoints.php
+  s_14d343aaa1f816::t_5de93dff411d0f 1-108,115-120
+  s_14d343aaa1f816::t_4f3da500eeda26 109-114
+web/tests/Elevation/ElevationEndpointsTest.php
+  s_14d343aaa1f816::t_daab75181617d4 1-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "f9eb18b267bf8b3208461cb0fa9bb7a6cb7ab9bd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_14d343aaa1f816": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "95808232-1ca6-4e95-ae43-a4126c68a402",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+wiki/scout.md
+  s_edba5d11ab4970::t_ee39e175e5f08d 49
+  s_edba5d11ab4970::t_712493734da5a0 50-64,66-68
+  s_edba5d11ab4970::t_b3482b70db5f74 88
+  s_edba5d11ab4970::t_a866e1aea42ba1 41-48
+wiki/data-priority.md
+  s_edba5d11ab4970::t_a596db136dafca 337
+wiki/developers/gis-beyond/relations.md
+  s_edba5d11ab4970::t_a596db136dafca 126
+web/src/Content/ReleaseNotes.php
+  s_edba5d11ab4970::t_440ec33f809ef4 59
+wiki/developers/gis/osm-to-database.md
+  s_edba5d11ab4970::t_a596db136dafca 188
+wiki/developers/gis-beyond/elevation.md
+  s_edba5d11ab4970::t_a596db136dafca 52
+wiki/developers/gis-beyond/edge-cases.md
+  s_edba5d11ab4970::t_a596db136dafca 174-175,202-203
+web/translations/messages.de.yaml
+  s_edba5d11ab4970::t_1ed9d33d2959d3 4665
+web/translations/messages.en.yaml
+  s_edba5d11ab4970::t_53715dc3a67935 4686
+web/translations/messages.es.yaml
+  s_edba5d11ab4970::t_7822e58d0b5681 4697
+web/translations/messages.fr.yaml
+  s_edba5d11ab4970::t_3c0631d0f219b0 4657
+web/translations/messages.nl.yaml
+  s_edba5d11ab4970::t_684df8fb048b94 4664
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0364e6ecc31a7b31ca424c755adef3aa3960db27",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_edba5d11ab4970": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "35efbaa2-913e-4688-9847-3f17b8efbc3a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

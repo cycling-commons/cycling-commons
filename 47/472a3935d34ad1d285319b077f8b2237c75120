@@ -1,0 +1,27 @@
+docs/specs/2026-07-14-unique-display-name-and-rider-preferences-design.md
+  s_c68dfc59dc9546::t_c42b90ee4afc80 138-140
+  s_c68dfc59dc9546::t_a0e23fefcc484b 116-119
+docs/specs/2026-07-14-map-preferences-prefilter-and-mobile-drawer-design.md
+  s_c68dfc59dc9546::t_718112cdf50a83 131-156
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "47472a3935d34ad1d285319b077f8b2237c75120",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

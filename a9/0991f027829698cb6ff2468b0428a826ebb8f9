@@ -1,0 +1,39 @@
+pipeline/tests/test_contract.py
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 98-163
+web/tests/Catalog/CoverageContractTest.php
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 9,112-147
+  s_3bd3f8ccb3a560::t_aa2e945907f1bd 26,35
+pipeline/coverage/load.py
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 60
+pipeline/coverage/parse.py
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 30,45-47,80-93
+pipeline/contract/coverage-contract.json
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 82-90
+pipeline/tests/fixtures/mini.osm
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 22-27,31-39
+pipeline/tests/test_parse.py
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 54-76
+pipeline/tests/test_tiles.py
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 412-430
+pipeline/coverage/contract.py
+  s_3bd3f8ccb3a560::t_c763ebdce61b6c 22-27,54-62,139-163
+docs/specs/coverage-provider.md
+  s_3bd3f8ccb3a560::t_abb3a8fc0205d2 500-502,507-511,518-527
+  s_3bd3f8ccb3a560::t_d75db286fc046f 120-156
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a90991f027829698cb6ff2468b0428a826ebb8f9",
+  "prompts": {},
+  "sessions": {
+    "s_3bd3f8ccb3a560": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc0e6029-6135-4734-8f72-0e33f35cdfad",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+web/src/Command/SchemaCommentTablesCommand.php
+  s_e9b7d39367a2ea::t_34edf3b8c4c273 29-30
+web/src/Catalog/BestOfPreview.php
+  s_e9b7d39367a2ea::t_34edf3b8c4c273 345,406
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "5a211fecb9806f633d71ab3ccf41aff0562d674d",
+  "prompts": {},
+  "sessions": {
+    "s_e9b7d39367a2ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "768f0270-53eb-479e-8318-433176b4f785",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

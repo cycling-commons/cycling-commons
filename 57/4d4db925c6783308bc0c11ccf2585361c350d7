@@ -1,0 +1,26 @@
+web/src/Controller/ModerateMessageController.php
+  s_dd35dcc1b6eafa::t_472a148aee9c17 166-170
+web/tests/Messaging/CuratorMessageTest.php
+  s_dd35dcc1b6eafa::t_d2cc9f895e4950 164-198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "574d4db925c6783308bc0c11ccf2585361c350d7",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

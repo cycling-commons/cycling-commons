@@ -1,0 +1,35 @@
+web/src/Media/ContinentResolver.php
+  s_41dce4bb9e0e72::t_807636993d0322 1-56
+developers/docker/compose.yaml
+  s_41dce4bb9e0e72::t_5cbd4c1a8ddd18 189,202-228
+web/src/Media/MediaStorage.php
+  s_41dce4bb9e0e72::t_ce13f95152e8e8 1-99,101-102
+  s_41dce4bb9e0e72::t_f9ca9a3aa2776a 100
+web/config/services.yaml
+  s_41dce4bb9e0e72::t_87aca2cd397ab0 58-74,77-93
+web/.env.test
+  s_41dce4bb9e0e72::t_1951d8af8a4122 10-17
+web/tests/Media/MediaStorageTest.php
+  s_41dce4bb9e0e72::t_9fa391b60b9978 1-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "562f9fcd8bbddfc507842d5b0c9a09adad27c028",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_41dce4bb9e0e72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b875a3a0-dbdb-41af-af97-755463d87f2d",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

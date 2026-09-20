@@ -1,0 +1,55 @@
+web/templates/moderate/index.html.twig
+  s_51df195d1c7750::t_3640461c8843d5 35
+  s_51df195d1c7750::t_ddea11d6c4a706 34
+web/translations/messages.de.yaml
+  s_51df195d1c7750::t_bd851dd25a7974 1167
+  s_51df195d1c7750::t_5eb9c0eac0efb7 1022
+web/tests/Messaging/NeedsInfoReplyTest.php
+  s_51df195d1c7750::t_4a8f66cf9cda76 1-129,131-147,156,158,163-175,177-215,218-247,252-254,257-274,277-298,301-334
+  s_51df195d1c7750::t_4a0d7d0d56e2b4 299-300
+  s_51df195d1c7750::t_4dee6a2e41262e 148-155,157,159-162
+  s_51df195d1c7750::t_d9b761d3a4bd5f 130
+  s_51df195d1c7750::t_cfe0c53609007c 275-276
+  s_51df195d1c7750::t_4ad223298f1959 216-217
+  s_51df195d1c7750::t_a7a36fb79f89b1 176
+  s_51df195d1c7750::t_5030a4fa888647 248-251,255-256
+web/templates/moderate/_queue_item.html.twig
+  s_51df195d1c7750::t_1c9765dc3fe666 31-33
+web/src/Controller/MessagesController.php
+  s_51df195d1c7750::t_65df2f13950b73 7-8,10,12,14-16,18,26-27,37,46-61,70,73-128
+  s_51df195d1c7750::t_0d6d7014daa59d 129
+web/translations/messages.nl.yaml
+  s_51df195d1c7750::t_39f41634e60f28 1022
+  s_51df195d1c7750::t_a476d55ef6141c 1167
+web/translations/messages.en.yaml
+  s_51df195d1c7750::t_d971bc0305ccf2 1022
+  s_51df195d1c7750::t_ed32753ff6ab91 1167
+web/translations/messages.fr.yaml
+  s_51df195d1c7750::t_cc9d92463516e9 1167
+  s_51df195d1c7750::t_ca420d18d7c51c 1022
+web/templates/messages/index.html.twig
+  s_51df195d1c7750::t_13dd8cdc65b275 25-29
+  s_51df195d1c7750::t_baffc050cffd03 40-42
+  s_51df195d1c7750::t_8ce8ab7c5eb319 61-68
+web/src/Moderation/SubmissionQueue.php
+  s_51df195d1c7750::t_0b666de9692659 29
+  s_51df195d1c7750::t_261caf01fd2bc9 80,87-88,90-96
+  s_51df195d1c7750::t_7e8919bb9f7b7e 53
+  s_51df195d1c7750::t_e7ce5993ec3779 130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "38aaddeba754054d46e32ac17d2d9d2e29666f82",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

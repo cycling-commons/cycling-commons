@@ -1,0 +1,44 @@
+web/translations/messages.de.yaml
+  s_3b3b121fcbab96::t_30abdb5ff1b482 3679,3683,3685,3688-3692,3694-3696
+web/translations/messages.es.yaml
+  s_3b3b121fcbab96::t_30abdb5ff1b482 3702,3706,3708,3711-3715,3717-3719
+web/translations/messages.nl.yaml
+  s_3b3b121fcbab96::t_30abdb5ff1b482 3676,3680,3682,3685-3689,3691-3693
+docs/specs/map-and-search.md
+  s_3b3b121fcbab96::t_92edcf3adcd7d0 1163-1166,1180-1187,1205,1210-1219
+  s_3b3b121fcbab96::t_48d930ba0ecb42 2263-2264
+web/templates/pages/map_key.html.twig
+  s_3b3b121fcbab96::t_30abdb5ff1b482 48,69-72,74-77,150-151,155-156,160,165-166,190,195,210,220,225
+web/translations/messages.en.yaml
+  s_3b3b121fcbab96::t_30abdb5ff1b482 3697,3701,3703,3706-3710,3712-3714
+web/translations/messages.fr.yaml
+  s_3b3b121fcbab96::t_30abdb5ff1b482 3676,3680,3682,3685-3689,3691-3693
+docs/specs/data-provider-hierarchy.md
+  s_3b3b121fcbab96::t_5b42aa3e328d02 590-602
+web/templates/map/index.html.twig
+  s_3b3b121fcbab96::t_30abdb5ff1b482 441-442,444
+web/tests/Smoke/MapKeyTest.php
+  s_3b3b121fcbab96::t_30abdb5ff1b482 59-62,64,69-70,78-99
+  s_3b3b121fcbab96::t_56b8aef0528807 100-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "218c1822cc35721d50b2e786e1385293140bd637",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_3b3b121fcbab96": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aef68f16-50de-4bc2-b718-847e4744d25a",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

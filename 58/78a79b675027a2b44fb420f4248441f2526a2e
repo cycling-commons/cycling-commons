@@ -1,0 +1,29 @@
+web/tests/Catalog/DifficultyVocabularyTest.php
+  s_e6d6993eda7318::t_a52798e70db882 19,21
+  s_e6d6993eda7318::t_0980133e3616d1 33-34
+web/src/Catalog/DifficultyVocabulary.php
+  s_e6d6993eda7318::t_e0ccea6ad8c20f 11-12
+docs/specs/2026-07-08-route-domain-design.md
+  s_e6d6993eda7318::t_9408686ff9de22 359-368
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "5878a79b675027a2b44fb420f4248441f2526a2e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e6d6993eda7318": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "081baf86-6152-46e3-a19d-aa12c114220a",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

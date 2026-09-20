@@ -1,0 +1,98 @@
+web/translations/messages.es.yaml
+  s_95d7b0a0bf3400::t_d824fe1c4f3b7a 2183-2184,3033-3036
+web/translations/messages.nl.yaml
+  s_95d7b0a0bf3400::t_d824fe1c4f3b7a 1838-1839,2996-2999
+web/tests/Auth/ProfileSettingsTest.php
+  s_95d7b0a0bf3400::t_c96166a66ee345 8
+  s_95d7b0a0bf3400::t_fef802ff658158 177-203
+  s_c6f332c201127d::t_a239e6eebdc34d 204-205
+web/translations/messages.fr.yaml
+  s_95d7b0a0bf3400::t_d824fe1c4f3b7a 1838-1839,2996-2999
+web/assets/brand/logo-nav-light.svg
+  s_95d7b0a0bf3400::t_a830c1b82e7c71 1-34
+web/src/Form/SettingsType.php
+  s_95d7b0a0bf3400::t_e6e10b03fce35f 13
+  s_95d7b0a0bf3400::t_29d9413afcc16e 215-222
+  s_c6f332c201127d::t_fd06eb52040e5d 223-224
+web/assets/styles/map.css
+  s_95d7b0a0bf3400::t_18b5d53b70d509 506-514
+  s_95d7b0a0bf3400::t_253a0699f61250 144,165,177,184,190,203,222,229,248,266-267,277,279,472,492-496,505,519,531,537-539,544,589,599,608,647,649,651,659-662,673,691-692,754-755,759,768,770,772,781-782,784,798,805,867,1181,1186,1206,1208,1270,1288
+  s_95d7b0a0bf3400::t_574d91601a1cd2 14-18,20-60
+  s_95d7b0a0bf3400::t_116857d4f0f57a 69-74
+  s_95d7b0a0bf3400::t_760e90b3aeb9a3 77,91,94,119,151,159,240,331,374,388,390-391,398,403,427,437,439-440,456-457,497,528,638,642,767,774,810,812,816,819,828,832,880,917,921-922,925-927,950,952,971-973,979,997,1000-1002,1009,1061-1062,1082,1084-1085,1188-1189,1211,1272,1284,1302
+  s_95d7b0a0bf3400::t_e2f869bf82527d 81,83,145,148,223,234-236,244,255,263,309,314,379,461,623,704,721,733,801,823-824,829,833,885,895,933-934,993,996,1006,1013-1014,1018,1020-1021,1023-1024,1050,1060,1064,1071,1076,1078,1252,1271,1277,1287,1291,1304
+  s_95d7b0a0bf3400::t_9e376102daccbf 435,846
+  s_95d7b0a0bf3400::t_9b713fc1b8218a 19,78,98,101,111-112,149,156,168,189,202,227,239,247,265,278,316-317,345,355,370,378,381,399,401-402,415-416,426,442-443,455,490,500,532,535-536,559,590,610,619,633,641,644,646,681-683,697-698,705,710,722,746,763,766,788,800,802,844-845,873,884,892,901,929,938,954,961,970,988,990,1003,1005,1032,1053,1063,1072,1074,1081,1119-1120,1130-1131,1135,1209,1231,1253,1260,1273,1301
+  s_95d7b0a0bf3400::t_2a13dab2cefd35 75
+web/translations/messages.en.yaml
+  s_95d7b0a0bf3400::t_d824fe1c4f3b7a 2174-2175,3023-3026
+web/translations/messages.de.yaml
+  s_95d7b0a0bf3400::t_d824fe1c4f3b7a 1841-1842,2999-3002
+web/tests/Controller/MapThemeTest.php
+  s_95d7b0a0bf3400::t_ad4fbd946f1888 1-134
+web/templates/settings/index.html.twig
+  s_95d7b0a0bf3400::t_60494f776948ff 330-338
+web/assets/map/theme.js
+  s_95d7b0a0bf3400::t_43116f2507ee3d 1-62
+web/src/Entity/User.php
+  s_95d7b0a0bf3400::t_2fad3775e48a81 664-671,674
+  s_95d7b0a0bf3400::t_34277615e4b92c 177-182
+  s_95d7b0a0bf3400::t_be142b13940c87 15
+  s_c6f332c201127d::t_26540802994a44 672-673,675
+web/src/Catalog/MapTheme.php
+  s_95d7b0a0bf3400::t_299a98a8e176da 1-35
+web/assets/map/map.js
+  s_95d7b0a0bf3400::t_cd323d67ee7b8f 36
+  s_95d7b0a0bf3400::t_9bb2492750502c 49
+web/tests/js/map-theme.test.cjs
+  s_95d7b0a0bf3400::t_c814201fc9f378 1
+  s_95d7b0a0bf3400::t_a056c0d0d56141 82-83
+  s_95d7b0a0bf3400::t_70d3c719619ab6 2-63,79-81,84-86
+  s_95d7b0a0bf3400::t_aee4c190b152a4 64-78
+web/migrations/Version20260819220000.php
+  s_95d7b0a0bf3400::t_062a6c33406de3 1-30
+web/templates/map/index.html.twig
+  s_95d7b0a0bf3400::t_46a3c4adb87171 520-525
+  s_95d7b0a0bf3400::t_d2be46b9d417df 3-7
+  s_95d7b0a0bf3400::t_f6f2c327229ac8 33-41
+  s_c6f332c201127d::t_ada7dcf84426f1 519
+docs/specs/map-and-search.md
+  s_95d7b0a0bf3400::t_dbfcad55270a90 754-759
+  s_95d7b0a0bf3400::t_c5021cc7d592b7 730-746,751-753,760-775
+  s_95d7b0a0bf3400::t_6d5e07150ee0c3 747-750
+web/src/Controller/MapController.php
+  s_95d7b0a0bf3400::t_e768da57ecfe93 123-131
+  s_95d7b0a0bf3400::t_643bf8e0e93e02 496-499
+  s_95d7b0a0bf3400::t_16d606187a6ed9 14
+web/src/Controller/MapThemeController.php
+  s_95d7b0a0bf3400::t_a0428aa3526cbc 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "a3ce00ba73ffd9d70d847ebff33d94d815a0070f",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_95d7b0a0bf3400": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f8f6519c-4afb-4e75-9f42-5fc320e70703",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

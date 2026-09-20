@@ -1,0 +1,31 @@
+web/src/Catalog/CatalogProvider.php
+  s_ed348b2f9c4e8c::t_16fe16a8f29eb3 299-302
+  s_ed348b2f9c4e8c::t_7004fb290dfec9 284
+web/src/Catalog/BikeTypeVocabulary.php
+  s_ed348b2f9c4e8c::t_387ddb79e3489a 10-12,20-23,25-27,29,31
+web/src/Contribution/RouteProposalService.php
+  s_ed348b2f9c4e8c::t_404c1959991345 106-108
+web/src/Catalog/CatalogFormRegistry.php
+  s_ed348b2f9c4e8c::t_178124dbff3d12 226-228
+docs/specs/route-domain.md
+  s_ed348b2f9c4e8c::t_3f5d9516b3884b 440
+  s_ed348b2f9c4e8c::t_f8e64e043c4ff1 421-423
+web/tests/Catalog/BikeTypeVocabularyTest.php
+  s_ed348b2f9c4e8c::t_dce588d8ef4ac9 14,16-19,22,24-27,30,32-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "bd59adc13755656796a13f320f252e8d8fcb2ea2",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

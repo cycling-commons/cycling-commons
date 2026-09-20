@@ -1,0 +1,28 @@
+web/tests/Coverage/CoverageQueryTest.php
+  s_f6d45d977e7468::t_53d312e9b5faec 108-122
+  s_f6d45d977e7468::t_291300129c468c 210-212
+  s_f6d45d977e7468::t_95331b0f19e65c 161-190
+web/src/Coverage/CoverageRepository.php
+  s_f6d45d977e7468::t_7b55d9799400f8 108
+  s_f6d45d977e7468::t_4b25cfd9ba9bd4 50-52
+  s_f6d45d977e7468::t_8cdaf35a838f2b 221-223,230-234
+web/src/Controller/CoverageController.php
+  s_f6d45d977e7468::t_6615b8d4c35011 30-34,47
+  s_f6d45d977e7468::t_55b3b4f6d339f3 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "bfbd97c97d7728cc102a8f4e70d9114fc81e94d2",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

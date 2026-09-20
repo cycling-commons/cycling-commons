@@ -1,0 +1,31 @@
+wiki/data-priority.md
+  s_ed83b79ca2cf56::t_d50cbe255a0df8 37,74,94-98
+wiki/data-catalog.md
+  s_ed83b79ca2cf56::t_d50cbe255a0df8 27-28,49-54,58-60,62,75,84,135-145,148-152,159,174-175,191-200,202-203,210-213,215,235,238-239,243,282-284
+  s_ed83b79ca2cf56::t_d56fa6c5370ab3 204
+  s_ed83b79ca2cf56::t_edcd5f8a5ca9fc 281
+wiki/building.md
+  s_ed83b79ca2cf56::t_d56fa6c5370ab3 101-102
+  s_ed83b79ca2cf56::t_d50cbe255a0df8 10-14,18-20,41-46,72,76,86-87,95-97,105-108,110-123,125,145-146,161-163,173,180-187,192,196,203-206,215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "278714996daa8f2ba89d74e77588ef7bb2af026d",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_ed83b79ca2cf56": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab4abb1f-aae3-4b43-a7ef-310a5610a4d6",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+web/src/Controller/ContributeController.php
+  s_162e830c17ed4c::t_9639c480aef132 155-169,171,173-179
+web/tests/Contribution/ImproveBindingTest.php
+  s_162e830c17ed4c::t_015c6199960a96 387-483
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c5d64b0c0d83a5f44017a5e99608e5f8a0edbdca",
+  "prompts": {},
+  "sessions": {
+    "s_162e830c17ed4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "32ba7b1c-d5dd-4b4c-b17e-f15b0840d10f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

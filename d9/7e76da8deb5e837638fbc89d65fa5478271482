@@ -1,0 +1,30 @@
+docs/specs/security-architecture.md
+  s_f6d45d977e7468::t_fe49a1f6ab9ebf 306-309
+docs/specs/coverage-provider.md
+  s_f6d45d977e7468::t_a42bc7a736f3b4 374
+  s_f6d45d977e7468::t_b598d5cf9d7fd5 7-11
+  s_f6d45d977e7468::t_889dc05cde0b7b 324-326
+  s_f6d45d977e7468::t_88f32a64374c01 313-323
+  s_f6d45d977e7468::t_4279e60e928e77 364
+web/src/Coverage/CoverageRepository.php
+  s_f6d45d977e7468::t_c0cea73e3102d7 32-36
+docs/specs/map-and-search.md
+  s_f6d45d977e7468::t_59334c7df31e1f 44
+  s_f6d45d977e7468::t_fe2c93bfc2c53a 447,449-451
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d97e76da8deb5e837638fbc89d65fa5478271482",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

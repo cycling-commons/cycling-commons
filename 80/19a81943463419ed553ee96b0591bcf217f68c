@@ -1,0 +1,41 @@
+docs/specs/dev-environment.md
+  s_58bfb339467e97::t_21664b0c4903ea 178-179
+  s_58bfb339467e97::t_b1e994f70f92eb 234-235
+  s_58bfb339467e97::t_dbb70fcf878546 37
+  s_58bfb339467e97::t_c74e1ecc71d9cc 85-86
+  s_58bfb339467e97::t_74637ec7c576d0 56
+  s_58bfb339467e97::t_49bef2fad1b662 1-17,20-36,38,40-54,57-72,74,76-84,87-135,137-163,165-177,180-182,185-233,236-272,275-286,289-322,324-335
+  s_58bfb339467e97::t_7875402854b477 287-288
+  s_58bfb339467e97::t_c60f9852870b83 39
+  s_58bfb339467e97::t_845beefcc70622 136
+  s_58bfb339467e97::t_5e952061f4b292 183-184
+  s_58bfb339467e97::t_f270371dc4bb9c 18-19
+  s_58bfb339467e97::t_d9478c9beaf4ab 273-274
+  s_58bfb339467e97::t_5ded45449b03ed 55
+  s_58bfb339467e97::t_84b0322cb2d104 323
+  s_58bfb339467e97::t_b5558d94a308f1 73,75
+  s_58bfb339467e97::t_64687354a8696e 164
+developers/docker/README.md
+  s_58bfb339467e97::t_ed8e497a168342 35-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "8019a81943463419ed553ee96b0591bcf217f68c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_58bfb339467e97": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9429297-08ac-4b41-b3f6-76a0097d2e4f",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+wiki/developers/gis/spatial-questions.md
+  s_99879bf8d59ea6::t_796d6f3e77251a 331
+wiki/developers/gis-beyond/edge-cases.md
+  s_99879bf8d59ea6::t_796d6f3e77251a 246
+wiki/developers/gis-beyond/geocoding.md
+  s_99879bf8d59ea6::t_796d6f3e77251a 163
+wiki/developers/gis/on-screen.md
+  s_99879bf8d59ea6::t_796d6f3e77251a 42,45-46,55,61-62,71,74,152,159,247,306,316,379
+  s_99879bf8d59ea6::t_621ffe70d990be 15-37
+wiki/developers/gis/tiles.md
+  s_99879bf8d59ea6::t_796d6f3e77251a 155-156
+wiki/developers/gis/pitfalls.md
+  s_99879bf8d59ea6::t_796d6f3e77251a 18,74,80
+wiki/developers/gis/coordinates.md
+  s_99879bf8d59ea6::t_796d6f3e77251a 115,200
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "cd0419d6d7be430f32c966ff44d871f2a9667feb",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_99879bf8d59ea6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76665ccb-0391-4d5f-8dd8-8d4442f2c396",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

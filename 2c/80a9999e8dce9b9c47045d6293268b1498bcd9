@@ -1,0 +1,24 @@
+web/config/packages/rate_limiter.yaml
+  s_9370d457c45348::t_fc7dd1a901c4ee 318-386
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "2c80a9999e8dce9b9c47045d6293268b1498bcd9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_9370d457c45348": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f4baf8a-ab30-48ae-8c34-99589e81b5c8",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

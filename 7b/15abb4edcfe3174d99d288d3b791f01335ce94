@@ -1,0 +1,36 @@
+docs/specs/2026-07-19-region-scoping-design.md
+  s_4dd92051ee11b1::t_5cc0f39a856743 75
+  s_4dd92051ee11b1::t_e4483555f1bc21 281
+  s_4dd92051ee11b1::t_ec03170c9a3ac0 66
+web/src/World/Command/ImportWorldDataCommand.php
+  s_4dd92051ee11b1::t_54d0acb245646c 23
+web/src/World/Resources/country_continents.php
+  s_4dd92051ee11b1::t_8d44996b510d4c 5-6
+docs/specs/README.md
+  s_4dd92051ee11b1::t_81d3c6a6999d8d 28
+docs/specs/api-strategy.md
+  s_4dd92051ee11b1::t_997835117111f5 90
+docs/specs/public-api.md
+  s_4dd92051ee11b1::t_c438aadcdb5a81 208-210,215,218-220
+  s_4dd92051ee11b1::t_72eede7e56d0d2 223-224
+  s_4dd92051ee11b1::t_ec0b34a0e39214 12
+  s_4dd92051ee11b1::t_29918091402775 30-31
+  s_4dd92051ee11b1::t_1bd52b834bb79e 85
+  s_4dd92051ee11b1::t_f9426a67792c85 190,192-194,197
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "7b15abb4edcfe3174d99d288d3b791f01335ce94",
+  "prompts": {},
+  "sessions": {
+    "s_4dd92051ee11b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d671ceb0-6b8b-4047-8353-d7c7491e8783",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

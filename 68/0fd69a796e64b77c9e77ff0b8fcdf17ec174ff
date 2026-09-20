@@ -1,0 +1,23 @@
+web/src/Translation/CatalogueSync.php
+  s_7586e38ac4bc9c::t_55aebd83dc5188 42,45,51
+web/tests/Translation/CatalogueSyncTest.php
+  s_7586e38ac4bc9c::t_da8d156a2bb909 89-116
+web/src/Translation/Entity/TranslationEntry.php
+  s_7586e38ac4bc9c::t_f3c5238ec486e1 43,47,50,52-53,56,60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "680fd69a796e64b77c9e77ff0b8fcdf17ec174ff",
+  "prompts": {},
+  "sessions": {
+    "s_7586e38ac4bc9c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8ce55049-8b4d-4846-a10b-563171c10e4e",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

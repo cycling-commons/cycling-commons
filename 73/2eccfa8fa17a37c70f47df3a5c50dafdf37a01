@@ -1,0 +1,20 @@
+wiki/developers/gis/tiles.md
+  s_682a9751eecf44::t_1411a53a792cf6 164-166,170,176-177,180-188
+  s_682a9751eecf44::t_ca29499fc3fb8a 397-401
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "732eccfa8fa17a37c70f47df3a5c50dafdf37a01",
+  "prompts": {},
+  "sessions": {
+    "s_682a9751eecf44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ca5d106-ef5e-44e4-a6ed-d2c075fa66b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

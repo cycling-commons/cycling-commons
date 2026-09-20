@@ -1,0 +1,23 @@
+web/assets/contribute/improve.js
+  s_13ad1b1238a7e6::t_4fc6e5f757f56b 78
+  s_13ad1b1238a7e6::t_f4a2f85d24716e 108
+  s_13ad1b1238a7e6::t_bf96f5d887311e 297
+  s_13ad1b1238a7e6::t_c334f1926f34fc 184
+  s_13ad1b1238a7e6::t_ee64fbd131b673 204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "0f250216ef264de1c21cb95fd921602e71887904",
+  "prompts": {},
+  "sessions": {
+    "s_13ad1b1238a7e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed2e8d61-4e83-4569-b8f3-a2ac8bdc16c8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_945f781fb1b66d 234-302
+mkdocs.yml
+  s_f3f9c3dc9409c4::t_ce645c35c06ee4 59-69
+wiki/developers/gis/index.md
+  s_f3f9c3dc9409c4::t_c8e6d36388b6ac 32-38,79-80,85,88,92,96,100,103,106,109,113,117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "bb0821d80c44866f776da12b05cd66770481d17e",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

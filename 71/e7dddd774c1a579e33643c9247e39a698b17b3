@@ -1,0 +1,21 @@
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_f6d45d977e7468::t_e3401c7921e323 178-216
+web/src/Coverage/CoverageRepository.php
+  s_f6d45d977e7468::t_4393bcde6a74cb 69-73,87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "71e7dddd774c1a579e33643c9247e39a698b17b3",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

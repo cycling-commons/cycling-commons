@@ -1,0 +1,23 @@
+.pre-commit-config.yaml
+  s_6873a55317fe40::t_f4babceb3d3c64 36-45
+CONTRIBUTING.md
+  s_6873a55317fe40::t_9dbb443b71244f 58-62
+tools/check-translations-precommit.sh
+  s_6873a55317fe40::t_86ca0ac4ad0854 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "6c2a2c91d929d4d8e089c5d4d2e571d684226a7f",
+  "prompts": {},
+  "sessions": {
+    "s_6873a55317fe40": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f3856f5f-1f1d-4747-9831-307d21ed3dcd",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

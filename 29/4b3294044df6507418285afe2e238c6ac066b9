@@ -1,0 +1,33 @@
+web/assets/map/scope-chips.js
+  s_3c392b244b902c::t_5e3a8456cf80b8 86-96
+  s_3c392b244b902c::t_0e0e1e0d1a7ff8 104-105,115,119,124-125,137-144
+  s_3c392b244b902c::t_ea16b16467028b 29
+web/tests/js/scope-chips.test.cjs
+  s_3c392b244b902c::t_60d74cd21a12b1 220-230,232-236,239-243,246-247,249
+  s_3c392b244b902c::t_cb94887eb75d1b 74,76
+  s_3c392b244b902c::t_b104343c07fd63 114-116
+  s_3c392b244b902c::t_a941eb33da41da 356-358,367-371
+  s_3c392b244b902c::t_f5563c13ff73fd 380
+  s_3c392b244b902c::t_b5e6c105b72e1c 316,319-326,332-335
+  s_3c392b244b902c::t_793fb3c15e5a1e 6,13-18
+  s_3c392b244b902c::t_5a3d5849f5c3fc 149-153,155,157,160-163,166-170,172,174
+  s_3c392b244b902c::t_d6f8f89f9766be 39
+  s_3c392b244b902c::t_2a4e5fd6294ef7 262-272,274-295,336
+  s_3c392b244b902c::t_c0b2255c24855f 337
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "294b3294044df6507418285afe2e238c6ac066b9",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

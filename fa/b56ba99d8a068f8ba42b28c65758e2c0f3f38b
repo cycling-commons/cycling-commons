@@ -1,0 +1,73 @@
+web/templates/moderate/_queue_item.html.twig
+  s_38d02ca6d8ff2e::t_b35b2de9b1e525 33-36
+  s_38d02ca6d8ff2e::t_b01abfcd348160 6
+web/src/Moderation/SubmissionQueue.php
+  s_38d02ca6d8ff2e::t_5393c4d9ea7c8e 13-15
+  s_4fb0f5f60481ac::t_4ff219c7de440e 9-11,17,19,21-30,32-47,51-52,55,57-58,60-62,66,68,72-125,127,131,133-135,137
+web/tests/Moderation/SubmissionQueueTest.php
+  s_38d02ca6d8ff2e::t_50c01946d5258a 102
+  s_38d02ca6d8ff2e::t_85581d9812a197 99-101
+  s_38d02ca6d8ff2e::t_a7c0b93b985757 103
+  s_4fb0f5f60481ac::t_d6433a645b95c3 9-15,17,19-87,89-91,94-98,106-107,116-119,124,129-132,141-145,152-158,160
+web/tests/Moderation/ModerateTest.php
+  s_38d02ca6d8ff2e::t_824d394d74e39e 9-10,68-86,115-116,121,136,139-140,155,169,171,173,175,182-186,188,191,206,208,213,215-220,224-226,228,231,234,242,246,251
+web/tests/Moderation/ModerateOverviewTest.php
+  s_38d02ca6d8ff2e::t_6fd82d9a6a8377 9-10,42-59,64-65,79
+web/tests/Moderation/MapCuratorInjectionTest.php
+  s_38d02ca6d8ff2e::t_dc2acfd8ea24e2 9-11,45-63,68,76-90
+web/src/Controller/MapController.php
+  s_38d02ca6d8ff2e::t_d39e6bb1a982b5 8,24,32
+web/tests/Moderation/ModerateDecideAjaxTest.php
+  s_38d02ca6d8ff2e::t_27a72eb42d6984 103
+  s_38d02ca6d8ff2e::t_ba1ea210d7b45c 65
+  s_38d02ca6d8ff2e::t_da618ea55ec024 9-10,44-58
+  s_be8b8b5a2d242e::t_4294e90c333157 59-60
+web/assets/map/map.js
+  s_38d02ca6d8ff2e::t_64e0720deb97a6 2-4
+  s_38d02ca6d8ff2e::t_bb1d7ec4034081 1105-1108,1111-1112,1114-1115
+  s_38d02ca6d8ff2e::t_7d0f44a9e51799 1157-1160,1162
+web/src/Controller/ModerateController.php
+  s_38d02ca6d8ff2e::t_a1a28f2602ff5c 9,12,25-26,37,48-57,62,74,76-78,110-116,119-120,125,141,143-145
+web/src/Moderation/RelativeTime.php
+  s_c39c7d05cdcbb3::t_3250424dc29d8e 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "fab56ba99d8a068f8ba42b28c65758e2c0f3f38b",
+  "prompts": {},
+  "sessions": {
+    "s_38d02ca6d8ff2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6606599-316d-41aa-9f1e-75303a39cc12",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_4fb0f5f60481ac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a1cae43b2199fb392",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_be8b8b5a2d242e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2062591-ef0b-46e9-ae30-2ad928823d38",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_c39c7d05cdcbb3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9d554a22-858d-4ff9-9772-8495e9ff7748",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

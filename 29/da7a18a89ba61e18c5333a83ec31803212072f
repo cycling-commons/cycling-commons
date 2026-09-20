@@ -1,0 +1,31 @@
+docs/specs/2026-07-24-coverage-no-cluster-design.md
+  s_ce7d437afc19d9::t_8daa15422add08 152-174
+  s_ce7d437afc19d9::t_4682238e2729cc 3
+docs/specs/coverage-provider.md
+  s_ce7d437afc19d9::t_dfc5448d36e98e 384-389,391-395
+  s_ce7d437afc19d9::t_1db08b5ae7ecdc 466-478
+  s_ce7d437afc19d9::t_82c7b61a7d7104 523-524,526-530
+  s_ce7d437afc19d9::t_42fe9f4a0c896f 760,765-775
+  s_ce7d437afc19d9::t_441dd3f10881bf 427-435,439-450
+  s_ce7d437afc19d9::t_40111bfd2d798f 318-339
+  s_ce7d437afc19d9::t_e3abbc3e42bccd 397-411
+  s_ce7d437afc19d9::t_7f5b7aca0d5d4c 396
+docs/specs/map-and-search.md
+  s_ce7d437afc19d9::t_9589615200485d 378-390,392-399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "29da7a18a89ba61e18c5333a83ec31803212072f",
+  "prompts": {},
+  "sessions": {
+    "s_ce7d437afc19d9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f4f83357-aa74-4551-bd21-6f693445ca5e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

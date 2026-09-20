@@ -1,0 +1,34 @@
+docs/specs/credits-page.md
+  s_eeef2f2e784b1a::t_66ee929b3a3692 418-420,465-503
+  s_eeef2f2e784b1a::t_55eaa047656647 192-205
+  s_eeef2f2e784b1a::t_8b600abb9c36e4 236,238-240,244,248,251-255,271-274,448,454,456-458
+  s_eeef2f2e784b1a::t_6d9e9421de4a1e 311,314,316-317,319,322,324,334-335,337-343,398-417,421-424,443-446
+  s_eeef2f2e784b1a::t_6fe7a8af9c6ca0 237,241-243,245-247,249-250,256-270,275-309,312-313,315,318,320-321,425-442,449-453,455,459-464
+  s_eeef2f2e784b1a::t_03c2806c3ee5bf 34,36-38,63-67,111-114
+  s_eeef2f2e784b1a::t_ba98d8e6f305b5 310,329-333,336,447
+  s_eeef2f2e784b1a::t_5aa2e32ac201cf 35,39
+  s_eeef2f2e784b1a::t_b7badc029d5a61 323,325-328,344-397
+  s_eeef2f2e784b1a::t_0dfbe76b8b6f36 115
+.github/workflows/ci-credits.yml
+  s_eeef2f2e784b1a::t_8d12ddd1396e43 26-32
+web/templates/pages/credits.html.twig
+  s_eeef2f2e784b1a::t_301b0e1579ab2e 61-66
+  s_eeef2f2e784b1a::t_abbd30a10b7534 48-52,59-60
+  s_eeef2f2e784b1a::t_a2f79125c42421 53-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e6a8ec30f74088a7dc730f4ea39b19d3f66fb744",
+  "prompts": {},
+  "sessions": {
+    "s_eeef2f2e784b1a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d8417b74-eceb-454f-89a7-1f8d471f09ad",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

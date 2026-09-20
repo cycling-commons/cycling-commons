@@ -1,0 +1,21 @@
+web/tests/Catalog/CatalogFormRegistryTest.php
+  s_0f648c977bdc75::t_042c7786aa8845 84-86
+web/src/Catalog/CatalogFormRegistry.php
+  s_0f648c977bdc75::t_56bf6181a69ebe 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b2f19f1f5951870fd1cf03154b70ddea1a6917bc",
+  "prompts": {},
+  "sessions": {
+    "s_0f648c977bdc75": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab0ec36-aa8a-4ae6-a2c1-d596cbb471e4",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

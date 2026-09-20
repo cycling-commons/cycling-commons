@@ -1,0 +1,26 @@
+web/tests/Service/BaseAreaResolverTest.php
+  s_b9f6c785e9346d::t_807ab8315f838b 1-17,24,38-51,53-72,76-77,79-96,100-101,104-125,127-128,130-137,139-153,155-156,158,160-161,201-205
+  s_b9f6c785e9346d::t_480bbd250bc47a 18-23,25-37,52,73-75,78,97-99,102-103,126,129,138,154,157,159,162-200
+web/config/services.yaml
+  s_b9f6c785e9346d::t_5f73e942836351 48-50
+  s_b9f6c785e9346d::t_599d800e1ee740 46-47,51-52
+web/src/Service/BaseAreaResolver.php
+  s_b9f6c785e9346d::t_34ca371108034e 17-19
+  s_b9f6c785e9346d::t_c2167c961d5b58 1-16,20-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "66c9b347e7183208db5fc0c336b2d65ea172d10a",
+  "prompts": {},
+  "sessions": {
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    }
+  }
+}

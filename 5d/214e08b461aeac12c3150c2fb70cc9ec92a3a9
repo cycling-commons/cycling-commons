@@ -1,0 +1,46 @@
+web/migrations/Version20260904190000.php
+  s_7e0805b9b01558::t_8bde805de90d6c 1-56
+web/src/Provider/Entity/DataProvider.php
+  s_7e0805b9b01558::t_75b065e7fc8495 197-216,450-460
+  s_7e0805b9b01558::t_535320766dcd4b 461
+docs/specs/data-provider-hierarchy.md
+  s_7e0805b9b01558::t_915a134088903f 3-4,589-647,715-718
+web/src/Provider/Command/HarvestProviderCommand.php
+  s_7e0805b9b01558::t_7d7ff1fc5e8fdc 42-44,198-204,214
+  s_7e0805b9b01558::t_baa6dcc3747b1b 205
+  s_7e0805b9b01558::t_759e6280ffeef8 121-122
+  s_7e0805b9b01558::t_988208b436781c 206-207
+web/src/Provider/ProviderHarvest.php
+  s_7e0805b9b01558::t_75b065e7fc8495 23-27,157-158,171,180,186-243
+  s_7e0805b9b01558::t_759e6280ffeef8 36-44,73,77,95-96,164-170,179
+  s_7e0805b9b01558::t_99abb28eca45cd 90-94,244
+web/migrations/Version20260904180000.php
+  s_7e0805b9b01558::t_0be88529eb82c8 1-37,52-78,80-91
+  s_7e0805b9b01558::t_7d7ff1fc5e8fdc 38-51,79
+web/tests/Provider/ProviderHarvestTest.php
+  s_7e0805b9b01558::t_4976034f86e109 36,183-216,354-355,359-360
+  s_7e0805b9b01558::t_759e6280ffeef8 155-182
+web/tests/Provider/DataProviderRegistryTest.php
+  s_7e0805b9b01558::t_579751c1f2ee64 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "5d214e08b461aeac12c3150c2fb70cc9ec92a3a9",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_7e0805b9b01558": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33a81c58-e18b-4166-9873-c160cdde84a9",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

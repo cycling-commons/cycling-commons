@@ -1,0 +1,52 @@
+web/src/Controller/Api/V1/PublicApiController.php
+  s_c6f332c201127d::t_5022a8b66384b1 107-110,112-118
+  s_c6f332c201127d::t_093e9376e4b373 93-96
+  s_c6f332c201127d::t_0da4222fee465c 74-84
+  s_c6f332c201127d::t_7b4951800a37b9 137
+web/public/api/openapi.yaml
+  s_c6f332c201127d::t_7b333d79ca0846 124-129,151-154,568-589,601-603
+web/tests/Api/PublicApiV1Test.php
+  s_c6f332c201127d::t_8e9b9d799a50b0 133,141
+  s_c6f332c201127d::t_19b007cbac4509 107-125
+  s_c6f332c201127d::t_2490fd7f140f0f 39,43-46
+web/src/Api/V1/PublicItemsProvider.php
+  s_c6f332c201127d::t_568e2c0d0bb46a 41,45-49,51,53-75,81
+  s_dd35dcc1b6eafa::t_78d69029af6c76 35-37
+wiki/developers/api/serving-map-data.md
+  s_c6f332c201127d::t_7b333d79ca0846 58-64,66-68,91-95,97-99,103,113-114,138-139,152-153,156-165
+  s_c6f332c201127d::t_cc637a9f4e1540 166
+docs/specs/public-api.md
+  s_c6f332c201127d::t_718c95a48720c4 137-143
+web/tests/Api/CategoryTableSyncTest.php
+  s_c6f332c201127d::t_8e054ae75abae1 72-81
+  s_c6f332c201127d::t_025c24c2ab8ec5 27,40-42
+web/src/Api/V1/Dto/ItemFeature.php
+  s_dd35dcc1b6eafa::t_78d69029af6c76 19
+web/src/Api/V1/CategoryTable.php
+  s_c6f332c201127d::t_f3f7f7ef5228b1 68-85
+  s_c6f332c201127d::t_f86705ef83afff 38-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "48fa56be7262dfdbabb9d8651e15a2fcebf9ef32",
+  "prompts": {},
+  "sessions": {
+    "s_c6f332c201127d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "374bfb7f-30b7-4d17-9aa0-1346f5c8f29d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_dd35dcc1b6eafa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "958971ba-400e-4707-b3a9-3af88bc7731b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

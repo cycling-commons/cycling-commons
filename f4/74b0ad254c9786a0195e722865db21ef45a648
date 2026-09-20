@@ -1,0 +1,127 @@
+web/assets/js/cc-units.js
+  s_45ec9b3f519700::t_43182817caca32 84-87,93-97,104
+  s_45ec9b3f519700::t_1616f07bf8abc2 1-83,88-92,98-103,105-107
+web/templates/moderate_routes/detail.html.twig
+  s_45ec9b3f519700::t_94f6df67679b64 54-55,72-73
+web/migrations/Version20260808220000.php
+  s_45ec9b3f519700::t_4979c0369be350 1-48
+web/assets/map/drawer.js
+  s_45ec9b3f519700::t_76ecd1eee734da 83,94-107
+  s_45ec9b3f519700::t_5ace85d2d4bc33 22,369-371,385,511,768-771,779-782,784,788-789,791,802
+web/assets/map/map.js
+  s_45ec9b3f519700::t_6dba23c94ad616 10,153,171
+web/assets/map/units.js
+  s_45ec9b3f519700::t_9e2bcaeda9c45d 1-49
+web/src/Controller/MapController.php
+  s_45ec9b3f519700::t_d0d7fa6400d72d 224-227
+web/templates/moderate/_queue_item.html.twig
+  s_45ec9b3f519700::t_94f6df67679b64 158
+web/src/Form/AddClimbType.php
+  s_45ec9b3f519700::t_4a3136da7489d4 9,13,39-42,160-183
+web/templates/pages/coverage.html.twig
+  s_45ec9b3f519700::t_82c6947f0f2513 53,80
+web/src/Controller/ProposeRouteController.php
+  s_45ec9b3f519700::t_aafa62dcbd1261 69-77
+  s_45ec9b3f519700::t_2ada6f1ab59873 9,38
+web/assets/map/places.js
+  s_45ec9b3f519700::t_e4eaf18bb02649 20,137,152
+  s_45ec9b3f519700::t_8d8534c16e16c5 52-56,76,99
+web/templates/pages/region.html.twig
+  s_45ec9b3f519700::t_82c6947f0f2513 28
+web/templates/settings/index.html.twig
+  s_45ec9b3f519700::t_3edfa4fc46c56c 98-102
+  s_45ec9b3f519700::t_e6a30c27248af0 335-349
+  s_45ec9b3f519700::t_21f3056fd6236a 250-253
+  s_45ec9b3f519700::t_8410aad2793603 370
+web/src/Form/SettingsType.php
+  s_45ec9b3f519700::t_983dd00c115c56 8-9
+  s_45ec9b3f519700::t_23a70e0628d7ac 135-152
+web/assets/map/climb-profile.js
+  s_45ec9b3f519700::t_22b32b241a4223 26
+  s_45ec9b3f519700::t_57705cd90b3438 92-94,107,110-113,115-116,119-120,125-128,137-138,144,147
+web/templates/map/index.html.twig
+  s_45ec9b3f519700::t_090d3e7365e703 424-436
+  s_45ec9b3f519700::t_21f3056fd6236a 72-74,76-79
+web/assets/map/util.js
+  s_45ec9b3f519700::t_741cf0fc34f524 6-11
+  s_45ec9b3f519700::t_6dba23c94ad616 123
+web/assets/contribute/add-climb.js
+  s_45ec9b3f519700::t_ba6e3aaf8c60fa 27-32,330-331,342,349,363,410,435
+  s_45ec9b3f519700::t_7ab92868c02d02 21-26,33
+  s_45ec9b3f519700::t_41d4a01635d2d9 180,436
+web/src/Entity/User.php
+  s_45ec9b3f519700::t_c498f0e31ea3b3 188-200
+  s_45ec9b3f519700::t_3fa359922e7f9e 670-693
+  s_45ec9b3f519700::t_c10f28461ece2b 8-9
+web/src/Twig/UnitDisplayExtension.php
+  s_45ec9b3f519700::t_22d8267c4f7cb8 1-8,10-14,17,21,24-29,31-38,40,42,44,49-58,61-62,66,71-73
+  s_45ec9b3f519700::t_7930442d51fc3c 46-48
+  s_45ec9b3f519700::t_c69751d335e8ea 9,15-16,18-20,22-23,30,39,41,43,45,59-60,63-64,67-70
+  s_45ec9b3f519700::t_652f735034115f 65
+web/src/Account/DistanceUnit.php
+  s_45ec9b3f519700::t_8185533ac965dc 1-30,34-59,61-62,75-107
+  s_45ec9b3f519700::t_824a4e8ff605a3 31-33,60,72
+  s_45ec9b3f519700::t_a4f9972ec291b4 63-71,73-74
+web/src/Controller/RideCheckController.php
+  s_45ec9b3f519700::t_aafa62dcbd1261 78-85
+  s_45ec9b3f519700::t_e2b1c39744ff9d 40
+  s_45ec9b3f519700::t_2ada6f1ab59873 9
+web/src/Catalog/RideCheckService.php
+  s_45ec9b3f519700::t_e6c246c61a6f4a 46-50
+web/assets/map/ride-check.js
+  s_45ec9b3f519700::t_b8393398a08e96 18,48,132-135,139,143,152,170
+web/src/Contribution/RouteProposalService.php
+  s_45ec9b3f519700::t_e6c246c61a6f4a 36-40
+web/assets/settings/base-location.js
+  s_45ec9b3f519700::t_21f3056fd6236a 27-30
+web/src/Account/UnitFormatter.php
+  s_45ec9b3f519700::t_6489bb6b5b6990 122-124,152,156
+  s_45ec9b3f519700::t_51547dcfb99739 1-80,82-110,133-151,153-155,157-160
+  s_45ec9b3f519700::t_3ba31b1ed6f5ca 111-121,125-132
+  s_45ec9b3f519700::t_824a4e8ff605a3 81
+web/tests/Account/UnitFormatterTest.php
+  s_45ec9b3f519700::t_6562aa2a59536b 1-142
+web/templates/base.html.twig
+  s_45ec9b3f519700::t_d7dd5aa2adc8a5 40-48
+  s_45ec9b3f519700::t_dafcc7b9ba07ec 54-55,57
+web/assets/map/scope-header.js
+  s_45ec9b3f519700::t_73bf80ba6670af 37-39,55-56
+web/tests/Auth/UnitPreferencesTest.php
+  s_45ec9b3f519700::t_71ee94bf91e714 1-193
+web/assets/contribute/improve.js
+  s_45ec9b3f519700::t_41d4a01635d2d9 360,715
+  s_45ec9b3f519700::t_7ab92868c02d02 30-35
+web/src/Account/ElevationUnit.php
+  s_45ec9b3f519700::t_a6a2ea858a2ffe 1-55
+web/templates/moderate_routes/_queue_item.html.twig
+  s_45ec9b3f519700::t_94f6df67679b64 23
+web/templates/pages/regions.html.twig
+  s_45ec9b3f519700::t_82c6947f0f2513 129
+web/templates/contribute/add_climb.html.twig
+  s_45ec9b3f519700::t_eba374f2509785 258,262-265
+web/assets/map/planner.js
+  s_45ec9b3f519700::t_6dba23c94ad616 12,43
+web/assets/contribute/vote.js
+  s_45ec9b3f519700::t_7f8c82f3d616f6 5-11,14-18,26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "f474b0ad254c9786a0195e722865db21ef45a648",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_45ec9b3f519700": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "42c83203-4754-4e8f-b14b-28903077507b",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

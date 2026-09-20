@@ -1,0 +1,28 @@
+wiki/developers/gis/metres-vs-degrees.md
+  s_f3f9c3dc9409c4::t_d931d80cd705ff 275-276,278-324
+  s_f3f9c3dc9409c4::t_4d0b9202b4e329 277
+wiki/developers/gis/shapes.md
+  s_f3f9c3dc9409c4::t_443247a9b347ad 190-240
+wiki/developers/gis/spatial-questions.md
+  s_f3f9c3dc9409c4::t_add866b670e8b7 376-408
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_4a8d490d41eff8 404-453
+wiki/developers/gis/making-it-fast.md
+  s_f3f9c3dc9409c4::t_4c9bb7860e0882 421-484
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "29398dd5472600d3564413f03250376df6d63e7e",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

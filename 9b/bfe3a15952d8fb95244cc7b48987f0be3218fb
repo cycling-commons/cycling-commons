@@ -1,0 +1,21 @@
+docs/specs/2026-06-21-improve-add-location-wizard-design.md
+  s_e4da53db38e0bd::t_02b611ff8c9043 160-169
+docs/specs/2026-07-12-frontend-review-criticals-fixes.md
+  s_e4da53db38e0bd::t_6d5794d27755e4 1-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "9bbfe3a15952d8fb95244cc7b48987f0be3218fb",
+  "prompts": {},
+  "sessions": {
+    "s_e4da53db38e0bd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1aa91764-9ba6-4f8b-9c7c-9027d41580c4",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

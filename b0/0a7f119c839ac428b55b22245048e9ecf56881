@@ -1,0 +1,48 @@
+.github/workflows/ci-app.yml
+  s_9a6b8d8611c934::t_a63928813f2765 38-42
+.pre-commit-config.yaml
+  s_f68f52eab6f3c4::t_667be1d7b9f361 29-45
+web/composer.json
+  s_9a6b8d8611c934::t_f6620e2f4d35f6 12,16
+docs/specs/operations.md
+  s_9a6b8d8611c934::t_7ca80346f1b089 184-189
+web/composer.lock
+  s_66e2aa8d87f345::t_ee8eb513c53b09 7,2194,2198,2202-2203,2208,2211,2255,2257,10594,10598,10602-10603,10686,10694,11454,11458,11462-11463,11482,11520,11540,12454,12458,12462-12463,12502,12510,14617,14621
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b00a7f119c839ac428b55b22245048e9ecf56881",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_66e2aa8d87f345": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "122b8f41-3c25-4f80-815b-8a5852017970",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_9a6b8d8611c934": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5ab7bb79-587a-4b27-803b-dbb4f99c167a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_f68f52eab6f3c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7a55b70-80fe-4d7b-a5a8-04f70def4f1e",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

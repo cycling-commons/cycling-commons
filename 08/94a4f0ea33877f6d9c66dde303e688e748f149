@@ -1,0 +1,39 @@
+web/migrations/Version20260824230000.php
+  s_16e7d98f40a315::t_e8baa397ba95a0 1-103
+web/src/Catalog/Entity/Item.php
+  s_16e7d98f40a315::t_5b2f2c50417822 72-88
+  s_16e7d98f40a315::t_47949874f2a4cf 230-237,240
+  s_16e7d98f40a315::t_5b9606b6dcf1fc 71,238-239,241
+web/src/Catalog/FindingStatus.php
+  s_16e7d98f40a315::t_867340fba17dc1 1-48
+web/src/Catalog/Command/LinkOsmCommand.php
+  s_16e7d98f40a315::t_3d3efad2197abe 1-183
+web/src/Catalog/FindingKind.php
+  s_16e7d98f40a315::t_88dbea2b87d54f 1-55
+web/src/Catalog/Entity/CatalogFinding.php
+  s_16e7d98f40a315::t_de8116021bc46d 1-221
+web/src/Catalog/Import/OsmLinker.php
+  s_16e7d98f40a315::t_6bc46c2d718e92 1-8,10-116,118-123
+  s_16e7d98f40a315::t_3ca7b66e7e3461 9,117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0894a4f0ea33877f6d9c66dde303e688e748f149",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_16e7d98f40a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9fcd11a-43a8-477a-bd05-612aaa422d99",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

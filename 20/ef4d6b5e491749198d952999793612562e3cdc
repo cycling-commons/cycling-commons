@@ -1,0 +1,19 @@
+docs/specs/2026-07-14-town-search-and-ride-check-design.md
+  s_ad851fa169158d::t_e0ebfc95dcd010 166-174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "20ef4d6b5e491749198d952999793612562e3cdc",
+  "prompts": {},
+  "sessions": {
+    "s_ad851fa169158d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "54c5098b-21ec-4511-b02f-ca59be46a759",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

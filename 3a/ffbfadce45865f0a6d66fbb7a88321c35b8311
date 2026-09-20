@@ -1,0 +1,43 @@
+docs/specs/2026-07-19-region-scoping-design.md
+  s_b9f6c785e9346d::t_770d6f0b33c78c 714-733
+web/assets/map/scope.js
+  s_b9f6c785e9346d::t_3358c0c8e94988 31-33
+  s_b9f6c785e9346d::t_342eedbf8d8bd5 303-305,310-344
+  s_b9f6c785e9346d::t_875dd68173d403 194-196
+  s_b9f6c785e9346d::t_7f1c7d6931ed21 12-15
+  s_b9f6c785e9346d::t_068d132ab6b427 261-262,266-269,278-281
+  s_b9f6c785e9346d::t_8312a169430243 157-158
+  s_b9f6c785e9346d::t_efffcea2be25f1 229-237
+  s_b9f6c785e9346d::t_a607b659565b9e 167-169
+  s_b9f6c785e9346d::t_c5f705c06f2ea0 52-64,70-152
+  s_b9f6c785e9346d::t_063ee5f45bfef6 20
+  s_b9f6c785e9346d::t_38913faff57593 288-289,291
+  s_97c23f44139734::t_b702388557400a 153,345
+web/tests/js/scope.test.cjs
+  s_b9f6c785e9346d::t_dfa00c7112443e 44-49,51-53,57-58,61
+  s_b9f6c785e9346d::t_f78f846bb13c49 255-392
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3affbfadce45865f0a6d66fbb7a88321c35b8311",
+  "prompts": {},
+  "sessions": {
+    "s_97c23f44139734": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88a7c67b-c88d-4b02-ab0c-598fa8d59a2d",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_b9f6c785e9346d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cc71d4e-a52c-4d1f-ab8c-c2f89235d53b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+web/src/Moderation/ModerationService.php
+  s_50ae7f4c1fd9e4::t_e9685ada3d37eb 143,147
+web/src/Catalog/Entity/Item.php
+  s_50ae7f4c1fd9e4::t_52947460c304c5 28-35
+web/src/Controller/ResetPasswordController.php
+  s_50ae7f4c1fd9e4::t_2be2d7311d6f92 40
+  s_50ae7f4c1fd9e4::t_a592f228b932b5 60
+  s_50ae7f4c1fd9e4::t_eefc1ecd26976b 76
+  s_50ae7f4c1fd9e4::t_667848a5523cca 29
+  s_50ae7f4c1fd9e4::t_d075c77e7f94c3 11
+web/src/Catalog/RiderPseudonym.php
+  s_50ae7f4c1fd9e4::t_cbcc421aa02334 1-23
+web/src/Moderation/SubmissionQueue.php
+  s_50ae7f4c1fd9e4::t_18da4caab9fdf9 9
+  s_50ae7f4c1fd9e4::t_d7bd7c78330500 142
+web/src/Controller/ContributeController.php
+  s_50ae7f4c1fd9e4::t_31524d585bb078 72,78,81,84-88,93
+  s_50ae7f4c1fd9e4::t_e1d5081abbffad 17,22
+web/src/Catalog/ChangeHistoryView.php
+  s_50ae7f4c1fd9e4::t_f5c7370c10034a 52
+web/src/Contribution/CatalogContributionService.php
+  s_50ae7f4c1fd9e4::t_c54d83be46c9e3 169-172
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "cd7aa552d3828bd1e4742cbdc62bf3fd6e498bbe",
+  "prompts": {},
+  "sessions": {
+    "s_50ae7f4c1fd9e4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "beed5d7b-33dc-4906-b921-a5df008a31fc",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+tools/app-gate-prepush.sh
+  s_44e524b97d649c::t_1db9de3e07fb8b 30,33,36,39,42,45-49,52,55
+docs/specs/dev-environment.md
+  s_44e524b97d649c::t_1db9de3e07fb8b 401-402
+CONTRIBUTING.md
+  s_44e524b97d649c::t_1db9de3e07fb8b 65-66
+web/tests/js/rail-shell.test.cjs
+  s_44e524b97d649c::t_1db9de3e07fb8b 10,35,38,50,53-54,138
+web/assets/styles/map.css
+  s_44e524b97d649c::t_1db9de3e07fb8b 27,365
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "c5df81c3d9ccaf3f1680d6e2136bdfad6d00c684",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_44e524b97d649c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "36300f48-cb72-4d2d-a7ba-063d0a7bd733",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

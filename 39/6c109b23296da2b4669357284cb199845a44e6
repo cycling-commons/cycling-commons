@@ -1,0 +1,53 @@
+web/src/Catalog/RegionRegistryProvider.php
+  s_5ddb20b83427c8::t_aa5065ea90d671 27-33,41-46,62-65,67-70
+  s_5ddb20b83427c8::t_6e5df4d9acb446 47-61,66
+web/assets/map/scope-ui.js
+  s_5ddb20b83427c8::t_89fc31c0b7a7b9 226,228-232
+web/tests/js/scope.test.cjs
+  s_5ddb20b83427c8::t_f3c3d31053a2e7 1266-1352
+web/assets/map/scope.js
+  s_5ddb20b83427c8::t_9f9ccf72a86a92 160-172
+  s_5ddb20b83427c8::t_520e466a82f2dd 544,548,550,562-567,645-655
+  s_5ddb20b83427c8::t_89fc31c0b7a7b9 551,553-561
+  s_5ddb20b83427c8::t_0849dc01bc2ae7 121-159,173-179,219-220,357,533,575,699-700,730,740
+  s_5ddb20b83427c8::t_90f075506bee12 530,535
+  s_5d3029d326707c::t_5f8ace66e6b68a 552
+web/tests/Catalog/RegionRegistryProviderTest.php
+  s_5ddb20b83427c8::t_255efe247b5736 126,156
+  s_5d3029d326707c::t_f15e5f6e6e5f0f 133-155,157-162
+  s_5d3029d326707c::t_8514711336e6d9 190-191
+  s_5ddb20b83427c8::t_2b48bc12ed5ab8 10,58-125,127-132,163-189
+web/assets/map/places.js
+  s_5ddb20b83427c8::t_520e466a82f2dd 32-35
+docs/specs/map-and-search.md
+  s_5ddb20b83427c8::t_b2ec787b482e87 938-939,1032-1082
+  s_5ddb20b83427c8::t_fb4e6b010250e8 1083
+wiki/developers/gis-beyond/edge-cases.md
+  s_5ddb20b83427c8::t_12650900dc721d 15,49-69,72-89,91
+wiki/developers/gis/pitfalls.md
+  s_5ddb20b83427c8::t_255efe247b5736 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "396c109b23296da2b4669357284cb199845a44e6",
+  "prompts": {},
+  "sessions": {
+    "s_5d3029d326707c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "795f70b7-c0e1-4883-a4e6-53909db571af",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_5ddb20b83427c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b4cdc923-f65e-4720-a542-1d8c7e643cdd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

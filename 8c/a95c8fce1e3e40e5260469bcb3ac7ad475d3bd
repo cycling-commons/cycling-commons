@@ -1,0 +1,32 @@
+pipeline/tests/test_extract_cache.py
+  s_bbe01d4f023787::t_9ba03d53a6eda0 1-77
+docs/specs/edit-items/A-road-surface.md
+  s_bbe01d4f023787::t_18bf6cf16829b2 113-125
+web/templates/partials/_account_chip.html.twig
+  s_bbe01d4f023787::t_b3a29dfe27b664 29,35
+pipeline/coverage/run.py
+  s_bbe01d4f023787::t_a8426b84d45adb 119-143,159-176
+web/assets/styles/map.css
+  s_bbe01d4f023787::t_a983ea41d6f4a3 434-445,458-459,478-481
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "8ca95c8fce1e3e40e5260469bcb3ac7ad475d3bd",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_bbe01d4f023787": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f33f7278-f7f4-4cb2-9afc-feac3942b2cd",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

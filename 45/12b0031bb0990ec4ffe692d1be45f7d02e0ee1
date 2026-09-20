@@ -1,0 +1,35 @@
+pipeline/contract/coverage-contract.json
+  s_f6d45d977e7468::t_623b9940debc21 41
+web/translations/messages.fr.yaml
+  s_f6d45d977e7468::t_623b9940debc21 419-420,1185-1186,1662
+docs/specs/osm-data-architecture.md
+  s_f6d45d977e7468::t_63f302c504fa9b 127
+docs/specs/edit-items/README.md
+  s_f6d45d977e7468::t_63f302c504fa9b 251
+docs/specs/edit-items/H-shelter.md
+  s_f6d45d977e7468::t_63f302c504fa9b 3,7
+web/assets/map/map.js
+  s_f6d45d977e7468::t_63f302c504fa9b 511,531,805
+web/translations/messages.en.yaml
+  s_f6d45d977e7468::t_623b9940debc21 419-420,924-925,1662
+web/translations/messages.nl.yaml
+  s_f6d45d977e7468::t_623b9940debc21 419-420,1185-1186,1662
+web/translations/messages.de.yaml
+  s_f6d45d977e7468::t_623b9940debc21 419-420,1185-1186,1662
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "4512b0031bb0990ec4ffe692d1be45f7d02e0ee1",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+web/src/Catalog/Import/OutboundLinks.php
+  s_6df2cc515a46f1::t_e69541c206b3a0 59-65
+tools/wikimedia/item_links.py
+  s_6df2cc515a46f1::t_8b47101af62013 68-76,81,91-92
+  s_6df2cc515a46f1::t_5d15e51107abcf 113
+web/assets/map/drawer.js
+  s_6df2cc515a46f1::t_ab81cc7db713cb 103-106
+docs/specs/catalog-data-model.md
+  s_6df2cc515a46f1::t_039a5d27f0f803 360-366,368-374
+web/tests/Catalog/Import/OutboundLinksTest.php
+  s_6df2cc515a46f1::t_d76556e84b2a9d 47-50
+  s_6df2cc515a46f1::t_6e5b801e6f6e0b 22-23,29
+web/src/Controller/MapController.php
+  s_6df2cc515a46f1::t_47677d1c3f6513 254
+web/tests/Catalog/ImportItemLinksCommandTest.php
+  s_6df2cc515a46f1::t_de542db593f5b3 57,59,63,68-95,106,118
+web/src/Catalog/Command/ImportItemLinksCommand.php
+  s_6df2cc515a46f1::t_b875ed1f308055 78,80-81,85-100,102-103,115-130
+  s_6df2cc515a46f1::t_0ac1bd68262a99 19-25,27-31,33-34
+tools/wikimedia/out/item-links.json
+  s_6df2cc515a46f1::t_e85c2ea2c4291f 2-5002
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "0c825328f972cacdf9a74dde1ddb8469e1cbf19c",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6df2cc515a46f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "907293b2-2684-4cac-bda9-fddc2074641e",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

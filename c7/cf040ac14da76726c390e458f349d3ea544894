@@ -1,0 +1,48 @@
+web/translations/messages.nl.yaml
+  s_cf90f130741cee::t_c714b2c1af1324 1716-1717
+  s_cf90f130741cee::t_c446c9d8c5ca89 1755-1758
+  s_cf90f130741cee::t_324460e630f119 1781-1813
+web/translations/messages.de.yaml
+  s_cf90f130741cee::t_6f35a91e4da93c 1755-1758
+  s_cf90f130741cee::t_f84673c8c6cc4b 1781-1813
+  s_cf90f130741cee::t_0960e7a5f3a1ca 1716-1717
+web/templates/admin/system_config.html.twig
+  s_cf90f130741cee::t_7e24164fd33c21 1-69
+web/translations/messages.en.yaml
+  s_cf90f130741cee::t_9c57755a570b88 1720-1721
+  s_cf90f130741cee::t_4abcfdffeb0b90 1785-1817
+  s_cf90f130741cee::t_9df07c52cfaa6f 1759-1762
+web/translations/messages.fr.yaml
+  s_cf90f130741cee::t_16aaa0b1345368 1781-1813
+  s_cf90f130741cee::t_d471aaa75e186c 1755-1758
+  s_cf90f130741cee::t_4ad6d64a7c22a5 1716-1717
+web/tests/Admin/SystemConfigPageTest.php
+  s_cf90f130741cee::t_ccac7181288cf8 1-248
+web/src/Controller/Admin/DashboardController.php
+  s_cf90f130741cee::t_0d49fa40e58e2b 93-188
+  s_cf90f130741cee::t_afe8fd8cbf0116 77-78
+  s_cf90f130741cee::t_76ae7e456dfbe7 9,11-13,20,24
+  s_cf90f130741cee::t_04c136d790fdc7 189
+  s_cf90f130741cee::t_8e6ce5d5ddee42 38-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "c7cf040ac14da76726c390e458f349d3ea544894",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_cf90f130741cee": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e7a2345-d231-4b9a-b374-c0d2010e5c2a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

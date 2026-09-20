@@ -1,0 +1,30 @@
+developers/coverage-batch.md
+  s_3c392b244b902c::t_6ca3b6a0c64b51 45
+  s_3c392b244b902c::t_1a80878649d0e4 169-173
+docs/specs/2026-07-23-border-overlap-ownership-design.md
+  s_3c392b244b902c::t_de8e2dbe25ab2b 67-69,73-101
+  s_3c392b244b902c::t_feeccc9819fc4f 102
+developers/docker/.env.example
+  s_3c392b244b902c::t_6ca3b6a0c64b51 43
+pipeline/coverage/load.py
+  s_3c392b244b902c::t_06eaa56be68943 294-302
+  s_3c392b244b902c::t_75a920489045e2 281-286
+docs/specs/coverage-provider.md
+  s_3c392b244b902c::t_b895d488d473c3 60-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "07a8ecc8ccc740bd44d438a07ae3daf85a2d4d1e",
+  "prompts": {},
+  "sessions": {
+    "s_3c392b244b902c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "950237fb-f9e4-4e5b-ab5a-56a70b4212a3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

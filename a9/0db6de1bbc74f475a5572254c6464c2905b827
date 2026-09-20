@@ -1,0 +1,132 @@
+web/tests/Media/ThirdPartyReportTest.php
+  s_d30835e3caae18::t_093774c60c7bea 24
+  s_d30835e3caae18::t_d96393f31f893a 297,299-301,303-304
+  s_d30835e3caae18::t_5beff37193ea00 309
+  s_d30835e3caae18::t_dc7b09f9cd454a 344-415
+web/config/packages/rate_limiter.yaml
+  s_d30835e3caae18::t_4a69b58eb4e0c6 164-165,167
+  s_d30835e3caae18::t_9fa26b06e91496 32,106-109,166
+  s_d30835e3caae18::t_b88dc18bd3ec12 129-132,134,136
+  s_d30835e3caae18::t_fe26a763d4f2ec 30-31,33
+  s_d30835e3caae18::t_4940a507dbd716 122-128
+wiki/moderator-rulebook.md
+  s_d30835e3caae18::t_5ac930f1b23768 55-71
+web/templates/admin/playbook_photo_flood.html.twig
+  s_d30835e3caae18::t_5f85e8278048bd 1-55
+web/migrations/Version20260802200000.php
+  s_d30835e3caae18::t_13617aa61aa1f3 1-39
+web/src/Controller/Admin/DashboardController.php
+  s_d30835e3caae18::t_b45c923467fdeb 113,363-422
+  s_d30835e3caae18::t_ef1788a9c3da05 35
+  s_d30835e3caae18::t_ea550a1a599ec1 15-17
+  s_d30835e3caae18::t_14067fa1fc794d 93,114-133
+  s_d30835e3caae18::t_12d8f6583f2312 55
+  s_d30835e3caae18::t_d23f9c4a254d72 97
+  s_d30835e3caae18::t_093774c60c7bea 362
+web/.env
+  s_d30835e3caae18::t_9358598c5e0df7 34-37
+web/src/Media/MediaTakedownService.php
+  s_d30835e3caae18::t_c6f13038ad4e5e 227-300
+web/src/Media/Entity/MediaUpload.php
+  s_d30835e3caae18::t_ba11437d6c9c27 391-403
+web/src/Media/UrgentWithholdAlert.php
+  s_d30835e3caae18::t_4d4af9cfeaf8c1 1-44,46,48-98
+  s_d30835e3caae18::t_f2bbb9df3aa5c5 45,47
+web/src/Media/Entity/MediaModerationEvent.php
+  s_d30835e3caae18::t_ba38d3bd0ae181 45
+web/templates/media/report.html.twig
+  s_d30835e3caae18::t_2ea64131504753 54-63,65-66
+  s_d30835e3caae18::t_041754367464d4 96-100
+  s_d30835e3caae18::t_8400129698ac8c 29,33-34
+  s_d30835e3caae18::t_8fa45ac9bccc03 35-36
+web/translations/messages.de.yaml
+  s_d30835e3caae18::t_cfd5bac821ba3b 2117-2135
+  s_d30835e3caae18::t_9d3a68eb1524dd 2136-2151
+  s_d30835e3caae18::t_f6a6de1d00f253 1652
+  s_d30835e3caae18::t_18863da0bfa25e 2263-2266
+  s_d30835e3caae18::t_83bccacf5d37f1 1653-1654,1662,2152-2153,2161,2165,2243,2267-2268
+web/src/Controller/MediaReportController.php
+  s_d30835e3caae18::t_54a2aac107a8dd 12-13
+  s_d30835e3caae18::t_731492c24ad8d8 126-141
+  s_d30835e3caae18::t_61a65709d78bd4 52-53,57-80
+  s_d30835e3caae18::t_d3c52660749a72 93,162,167
+  s_d30835e3caae18::t_f38eec3f4a517d 81-82
+web/translations/messages.en.yaml
+  s_d30835e3caae18::t_18863da0bfa25e 2263-2265
+  s_d30835e3caae18::t_cfd5bac821ba3b 2117-2134
+  s_d30835e3caae18::t_f6a6de1d00f253 1336
+  s_d30835e3caae18::t_9d3a68eb1524dd 2135-2150
+  s_d30835e3caae18::t_f4c3b4b2ef85f1 1337-1338,1346,2151-2153,2161,2165,2243,2266-2268
+web/translations/messages.fr.yaml
+  s_d30835e3caae18::t_cfd5bac821ba3b 2114-2132
+  s_d30835e3caae18::t_f6a6de1d00f253 1649
+  s_d30835e3caae18::t_18863da0bfa25e 2260-2263
+  s_d30835e3caae18::t_9d3a68eb1524dd 2133-2148
+  s_d30835e3caae18::t_a71e24601662b1 1650-1651,1659,2149-2150,2158,2162,2240,2264-2265
+web/tests/Media/UrgentWithholdAlertTest.php
+  s_d30835e3caae18::t_9e40721d8c9261 50,56-57,59-67
+  s_d30835e3caae18::t_bf0b003138054a 26-37
+  s_d30835e3caae18::t_8b985529f5a3df 1-10,14-25,38-49,51-55,58,68-69
+  s_d30835e3caae18::t_0b9032deebba35 11-13
+web/src/Media/MediaAction.php
+  s_d30835e3caae18::t_9e6a5ba02d03ed 37-45
+web/config/packages/media.yaml
+  s_d30835e3caae18::t_99e9bf5984b586 15-22,27-28
+web/tests/Media/ProofOfWorkTest.php
+  s_d30835e3caae18::t_028608753ac385 1-113
+web/assets/media/report-challenge.js
+  s_d30835e3caae18::t_2711c1f41ecc47 1-86
+web/templates/admin/withheld_photos.html.twig
+  s_d30835e3caae18::t_c0630cb0f0074d 1-18,20-28,30-51,53-57,59-76
+  s_d30835e3caae18::t_647d132ddeb828 19,29,52,58
+web/src/Settings/SettingsRegistry.php
+  s_d30835e3caae18::t_9926c2fb00501c 56-57,62
+  s_d30835e3caae18::t_4d6acc97d15cef 89-97
+web/src/Media/ProofOfWork.php
+  s_d30835e3caae18::t_e6f73b3cd4bec8 1-53,55-118,122,124,126-130,134-140
+  s_d30835e3caae18::t_198755ead92b7e 54
+  s_d30835e3caae18::t_c571e27a5a91f4 119-121,123,125,131-133
+web/translations/messages.nl.yaml
+  s_d30835e3caae18::t_9d3a68eb1524dd 2133-2148
+  s_d30835e3caae18::t_f6a6de1d00f253 1649
+  s_d30835e3caae18::t_18863da0bfa25e 2260-2263
+  s_d30835e3caae18::t_cfd5bac821ba3b 2114-2132
+  s_d30835e3caae18::t_c38c1c0d3bb6e1 1650-1651,1659,2149-2150,2158,2162,2240,2264-2265
+web/src/Media/UrgentWithholdBreaker.php
+  s_b7eccf3abfe4d7::t_53048e6a3d0142 9-11,13-14,16,54
+  s_d30835e3caae18::t_aa20fad3a81ac8 103-105
+  s_d30835e3caae18::t_de206173d09e79 61
+  s_d30835e3caae18::t_aad5076a9053fb 57-59,63-90
+  s_d30835e3caae18::t_8bc9ac8fa675f8 118-121
+  s_d30835e3caae18::t_50fbb74af10849 137-140
+  s_b7eccf3abfe4d7::t_00e54614725ed4 55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "a90db6de1bbc74f475a5572254c6464c2905b827",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_b7eccf3abfe4d7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c0eae58b-5ade-4e9b-826e-5f61f82c48cf",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_d30835e3caae18": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f2c176ff-abbd-40dd-b890-59ba0f5b9bd6",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

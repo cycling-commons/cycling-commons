@@ -1,0 +1,33 @@
+CONTRIBUTING.md
+  s_c9732475dad57d::t_a409024f6a1d6c 60,63-68
+  s_c9732475dad57d::t_365278e324b73a 69
+tools/app-gate-prepush.sh
+  s_c9732475dad57d::t_05fb5657a41fa5 1-61
+.pre-commit-config.yaml
+  s_c9732475dad57d::t_d21574f9bbc843 40-50,53
+  s_c9732475dad57d::t_e409f1c1d0a0e8 15-16
+  s_c9732475dad57d::t_08d2849181daa7 17-19
+docs/specs/dev-environment.md
+  s_c9732475dad57d::t_a3485319202c86 404-417
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "875f9292f14bd603be62ca43a5def9e3933fc3d1",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c9732475dad57d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "46c5725f-c3f2-432b-800a-d5b4d3807b37",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

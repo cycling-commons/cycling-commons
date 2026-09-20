@@ -1,0 +1,33 @@
+mkdocs.yml
+  s_f3f9c3dc9409c4::t_b58e59e76c2080 60
+wiki/stylesheets/extra.css
+  s_f3f9c3dc9409c4::t_5f4522652e0ff4 57-92,104-109
+  s_f3f9c3dc9409c4::t_8d81f36c3b5c37 93-103
+wiki/developers/gis/coordinates.md
+  s_f3f9c3dc9409c4::t_ed81a1f438241c 66-72
+  s_f3f9c3dc9409c4::t_5de5231db6f903 211
+  s_f3f9c3dc9409c4::t_c028352740b6c3 86
+  s_f3f9c3dc9409c4::t_060db0deef7bc5 77,84-85,90
+  s_f3f9c3dc9409c4::t_ce5c50250bb465 87-89,95-99
+  s_f3f9c3dc9409c4::t_b9cd7fbf17f192 1-65,73-76,78-83,91-94,100-131,137-154,166-210,212-265,267,271-275,277-316
+  s_f3f9c3dc9409c4::t_ab4c4e1637d87c 155-165
+  s_f3f9c3dc9409c4::t_6ba95f55815339 276
+  s_f3f9c3dc9409c4::t_bb653b2d091f90 132-136
+  s_f3f9c3dc9409c4::t_1f7bdb649513ff 266,268-270
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "494b43bd29918dbb727fba0a47856cbf2b52a26c",
+  "prompts": {},
+  "sessions": {
+    "s_f3f9c3dc9409c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cd63df9-2d7a-4d1e-9c16-710e0af8d50b",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

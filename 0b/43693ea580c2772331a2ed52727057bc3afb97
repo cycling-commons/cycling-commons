@@ -1,0 +1,55 @@
+web/src/EventSubscriber/CspSubscriber.php
+  s_ed348b2f9c4e8c::t_36303b2b0011cb 45
+  s_ed348b2f9c4e8c::t_e0c21351ab1ba0 80
+  s_ed348b2f9c4e8c::t_c90b9d06df495b 30-34
+  s_ed348b2f9c4e8c::t_1b5f0b425214d7 55-59
+  s_ed348b2f9c4e8c::t_65c6f15e18ed4b 15-19,21
+web/src/EventSubscriber/LocaleSubscriber.php
+  s_ed348b2f9c4e8c::t_ec0cada8659506 16,25-26
+  s_ed348b2f9c4e8c::t_696e457f55aafc 43
+web/src/Controller/Admin/ResetPasswordRequestCrudController.php
+  s_ed348b2f9c4e8c::t_3c093b50e9d042 23-26
+  s_ed348b2f9c4e8c::t_add307889b36d7 53-54
+web/src/Controller/Admin/UserCrudController.php
+  s_ed348b2f9c4e8c::t_5aff7b3c52bef0 250-254
+  s_ed348b2f9c4e8c::t_8337b0a1def804 140-142
+  s_ed348b2f9c4e8c::t_4e05aabd9f6462 121,123-128
+  s_ed348b2f9c4e8c::t_30090cfd3e3ddb 106-110
+web/src/Security/TwoFactorPolicy.php
+  s_ed348b2f9c4e8c::t_d59595f127cbe5 13-14,17-21
+web/src/Security/TwoFactorSetupEnforcer.php
+  s_ed348b2f9c4e8c::t_65059ba2c74c55 102-103
+  s_ed348b2f9c4e8c::t_29e84d844cd87c 35,39-42
+  s_ed348b2f9c4e8c::t_ea4a9a36025934 19-24,26
+  s_ed348b2f9c4e8c::t_89a4a15a3f70f8 71-72
+  s_ed348b2f9c4e8c::t_31e5d5f4e2fe50 82
+  s_ed348b2f9c4e8c::t_bd813df15912d2 63
+web/src/Security/Csp/CspNonce.php
+  s_ed348b2f9c4e8c::t_4a814b876323a1 12-14
+web/src/Security/LoginSuccessHandler.php
+  s_ed348b2f9c4e8c::t_d819fb98249ee0 62
+  s_ed348b2f9c4e8c::t_461d8de9b01b13 89-90
+  s_ed348b2f9c4e8c::t_9d758aaef0501c 25-28,30-35
+web/src/Security/LoginThrottleListener.php
+  s_ed348b2f9c4e8c::t_87d5a881587f7a 182
+  s_ed348b2f9c4e8c::t_c265fa7219c652 35-46,49-50
+  s_ed348b2f9c4e8c::t_7133dec2b4eea1 118,120
+  s_ed348b2f9c4e8c::t_4563bbd68fb2eb 69
+  s_ed348b2f9c4e8c::t_584bb09cccdcba 155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0b43693ea580c2772331a2ed52727057bc3afb97",
+  "prompts": {},
+  "sessions": {
+    "s_ed348b2f9c4e8c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bfe5a02f-dbdb-484b-a861-128f2bc27fd1",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

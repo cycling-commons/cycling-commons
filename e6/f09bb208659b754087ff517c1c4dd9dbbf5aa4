@@ -1,0 +1,26 @@
+web/tests/Moderation/ModerateScopeGuardTest.php
+  s_c68dfc59dc9546::t_d8209500844566 271-279
+  s_c68dfc59dc9546::t_629a84caa8d9ab 208-243
+  s_c68dfc59dc9546::t_51c20a583e1d14 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "e6f09bb208659b754087ff517c1c4dd9dbbf5aa4",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_c68dfc59dc9546": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d2db134-2e71-4817-8d9d-faba9dc9d7b2",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

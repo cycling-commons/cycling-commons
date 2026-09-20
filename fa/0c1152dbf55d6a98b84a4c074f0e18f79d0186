@@ -1,0 +1,52 @@
+pipeline/contract/coverage-contract.json
+  s_4e536eec984e8d::t_46546933c24614 391-392
+web/templates/moderate/index.html.twig
+  s_4e536eec984e8d::t_204b7aa0272660 114
+web/assets/map/map.js
+  s_4e536eec984e8d::t_9d15c4936c3976 361-373
+  s_4e536eec984e8d::t_0804de29623c97 26
+  s_4e536eec984e8d::t_9b2e5430dab017 208-214,231
+web/templates/moderate/history.html.twig
+  s_4e536eec984e8d::t_da7af4c8958b0a 165-168
+  s_4e536eec984e8d::t_06599d9dc67466 202
+web/templates/settings/index.html.twig
+  s_4e536eec984e8d::t_f53fcf7ed52cc3 23-28
+  s_4e536eec984e8d::t_a6e4a0e0c6c798 431-443
+web/templates/profile/show.html.twig
+  s_4e536eec984e8d::t_abf6c832063dfb 256
+  s_4e536eec984e8d::t_68e5b07ff3a9d8 111-114
+web/templates/moderate/_queue_item.html.twig
+  s_4e536eec984e8d::t_b4160560b51302 189-190
+  s_4e536eec984e8d::t_9817b1411d8e15 193-194
+web/assets/map/routes-tiles.js
+  s_4e536eec984e8d::t_e169c5d843bc77 151-153
+  s_4e536eec984e8d::t_b1447b250330ca 60-69
+  s_4e536eec984e8d::t_0c8f25741fba8a 170
+web/templates/partials/_vclip.html.twig
+  s_4e536eec984e8d::t_4411d637303451 1-25
+web/assets/map/catalog-load.js
+  s_4e536eec984e8d::t_4819eccdf1eab2 68-105,109,112,117-150
+docs/specs/map-and-search.md
+  s_4e536eec984e8d::t_cd76748144eb61 138-148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "fa0c1152dbf55d6a98b84a4c074f0e18f79d0186",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_4e536eec984e8d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ef3615e2-4e64-4afe-8b18-be74e8cc28ce",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

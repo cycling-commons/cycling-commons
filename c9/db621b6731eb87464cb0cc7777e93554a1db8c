@@ -1,0 +1,22 @@
+pipeline/tests/test_parse.py
+  s_df3998a6d85dff::t_925a5b66978046 71-72
+  s_df3998a6d85dff::t_8c014c26a7dd8c 39-42,44,46
+pipeline/coverage/parse.py
+  s_df3998a6d85dff::t_4a47feecafd4be 77-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "c9db621b6731eb87464cb0cc7777e93554a1db8c",
+  "prompts": {},
+  "sessions": {
+    "s_df3998a6d85dff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b62ab3d-4369-4c6c-b455-8e080dcc93fb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

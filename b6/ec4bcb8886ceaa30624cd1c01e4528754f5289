@@ -1,0 +1,22 @@
+web/tests/Catalog/CatalogSchemaProviderTest.php
+  s_13ad1b1238a7e6::t_299754e5fd4cdb 1-60
+web/src/Catalog/CatalogSchemaProvider.php
+  s_13ad1b1238a7e6::t_30a9e7e450d213 64
+  s_13ad1b1238a7e6::t_946ab9204cf27b 1-63,65-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "b6ec4bcb8886ceaa30624cd1c01e4528754f5289",
+  "prompts": {},
+  "sessions": {
+    "s_13ad1b1238a7e6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ed2e8d61-4e83-4569-b8f3-a2ac8bdc16c8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+web/src/Catalog/Entity/RouteRide.php
+  s_51df195d1c7750::t_2c4e955e69840a 1-74
+web/migrations/Version20260710120000.php
+  s_51df195d1c7750::t_c9833bdef27431 1-38
+web/tests/Catalog/RouteRideTest.php
+  s_51df195d1c7750::t_1af87f0621c0ea 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ec7224cf75ca8b2a0679675c2ee46922289e85d6",
+  "prompts": {},
+  "sessions": {
+    "s_51df195d1c7750": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "632ef408-13d0-4c53-a9af-2cb0481235ab",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

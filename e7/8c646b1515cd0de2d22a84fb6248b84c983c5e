@@ -1,0 +1,22 @@
+web/src/Translation/TranslationDiff.php
+  s_504d29ab0e31e9::t_a12e41f05caf80 41-44,48-49,55,60-67
+  s_504d29ab0e31e9::t_955b155fda8023 68-69,82
+web/src/Controller/ModerateTranslationsController.php
+  s_504d29ab0e31e9::t_955b155fda8023 293-295
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e78c646b1515cd0de2d22a84fb6248b84c983c5e",
+  "prompts": {},
+  "sessions": {
+    "s_504d29ab0e31e9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5b5cea66-640f-406d-9d78-5154b9257410",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}

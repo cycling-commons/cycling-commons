@@ -1,0 +1,36 @@
+web/config/services.yaml
+  s_f6d45d977e7468::t_c63a158ff8eb98 37-41
+developers/docker/compose.yaml
+  s_f6d45d977e7468::t_578adcae998bf2 46-50
+web/config/packages/coverage.yaml
+  s_f6d45d977e7468::t_0a9779ee84a317 1-13
+web/composer.json
+  s_f6d45d977e7468::t_41c604151abb12 33
+web/src/Coverage/CoverageManifest.php
+  s_f6d45d977e7468::t_d552cc5216c37c 1-81
+web/.env
+  s_f6d45d977e7468::t_3a81a07f37f8ec 40-50
+  s_f6d45d977e7468::t_b9790ae8123a8f 51
+web/tests/Coverage/CoverageManifestTest.php
+  s_f6d45d977e7468::t_39a816eceb0cbf 1-92
+developers/docker/.env.example
+  s_f6d45d977e7468::t_62ed6edfad73e6 55-62
+web/composer.lock
+  s_f6d45d977e7468::t_866556d6c4adaa 7,4306,4310,4314-4315,4383,4403
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f0b61a7f1baadd3f4b440af497b2abcf897514b0",
+  "prompts": {},
+  "sessions": {
+    "s_f6d45d977e7468": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1b429dc-a6b3-4331-8dca-cd4003da7bea",
+        "model": "claude-fable-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
