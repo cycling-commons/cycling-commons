@@ -195,7 +195,7 @@ pull requests, and the Monday run is the one that matters.
 
 **The weekly run is dormant until go-live, and this is not a bug to fix.**
 GitHub runs `schedule:` triggers from the **default branch only**. The public
-repository's default branch is `main`; this workflow lives on `symfony-base`,
+repository's default branch is `main`; this workflow lives on `symfony-base-clean`,
 which becomes `main` at go-live
 ([go-live plan](../TODO.md)). Until that swap the `pull_request` and `push`
 triggers work normally and the cron simply never fires. Nothing needs

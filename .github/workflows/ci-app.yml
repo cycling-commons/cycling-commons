@@ -9,7 +9,7 @@ on:
     paths: ['web/**', 'pipeline/contract/**', 'tools/wikimedia/name_key_cases.json', 'Makefile', '.github/workflows/ci-app.yml']
   push:
     # staging is a deploy source (deploy-staging.yaml); without it here, a
-    # push could deploy code that never passed CI. symfony-base is the working
+    # push could deploy code that never passed CI. symfony-base-clean is the working
     # branch and does not deploy, so it runs no CI: staging gates it.
     # `production` is a deploy source too (deploy-production.yaml). It was
     # missing here, so a push straight to production ran no CI at all and the

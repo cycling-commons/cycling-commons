@@ -8,11 +8,11 @@ name: REUSE compliance
 on:
   push:
     # staging and production are deploy sources; a licence regression must
-    # fail before a release, not after it. symfony-base is where the work
+    # fail before a release, not after it. symfony-base-clean is where the work
     # itself happens, and licence headers get written there one file at a
     # time, so a half-finished sweep has to fail on the branch that made it
     # rather than weeks later at the merge.
-    branches: [main, staging, production, symfony-base]
+    branches: [main, staging, production, symfony-base-clean]
   pull_request:
 
 jobs:

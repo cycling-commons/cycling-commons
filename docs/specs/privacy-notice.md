@@ -195,7 +195,7 @@ is worth more than a vague implication.
   the address that handles requests instead, removes the question. If one is
   ever appointed, the page names them.
 - **Previous versions.** The page links its own file history in the public
-  repository. The URL pins branch `main`, which is what `symfony-base` becomes
+  repository. The URL pins branch `main`, which is what `symfony-base-clean` becomes
   at go-live; it 404s until then, and so does the route it sits on. A dated
   change list on the page itself is the better answer and belongs with the
   changelog work (`docs/TODO.md` item 9).

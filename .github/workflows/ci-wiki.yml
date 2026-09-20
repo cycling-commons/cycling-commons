@@ -37,7 +37,7 @@ on:
       - 'pipeline/**/*.py'
   push:
     # staging is a deploy source (deploy-staging.yaml); without it here, a
-    # push could deploy code that never passed CI. symfony-base does not
+    # push could deploy code that never passed CI. symfony-base-clean does not
     # deploy and runs no CI.
     # production included: deploy-production.yaml ships from that branch.
     branches: [main, staging, production]
