@@ -73,9 +73,9 @@ open sources (OpenStreetMap and the other open datasets the site lists) plus wha
 design adds aggregate activity from the apps built on it as a further seed. But incubation is not
 ownership. The commitment, public from the start:
 
-1. **Open licences from day one**: ODbL for the data, AGPL-3.0 for the code. In force. The code
-   was source-available (PolyForm Shield) until September 2026, and the public history says so
-   plainly.
+1. **Open licences from day one**: ODbL for the data, AGPL-3.0-only for the code. In force. The
+   code was source-available (PolyForm Shield) until September 2026, and the public history says
+   so plainly.
 2. **Architectural separation from day one**: independent data, accounts and API. Bulk exports are
    part of the same design.
 3. **Spin out into an independent foundation** (following established open-data foundation
