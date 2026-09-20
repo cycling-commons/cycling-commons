@@ -9,6 +9,11 @@ namespace App\Service;
 /**
  * Footer build stamp: REVISION, then git, then env, then `dev`.
  *
+ * A deployed release has no .git, only REVISION. Its `number` is then the
+ * VERSION file the deploy wrote beside it, else `APP_BUILD_VERSION`, else the
+ * first twelve characters of the commit; `commit` is always REVISION's sha, so
+ * the label can never move the source link off the running build.
+ *
  * `commit` is the bare object name, empty when the running code cannot name
  * one, and `url` is the offer built from it: the repository root with
  * `/commit/<sha>` appended, or the bare root when there is no commit. AGPL
@@ -86,8 +91,16 @@ final class BuildVersion
             }
             $mtime = @filemtime($revision);
 
+            // The release name, when the deploy recorded one beside the commit
+            // (VERSION, the `git describe` output taken before .git is stripped),
+            // else the label the environment carries, else the commit itself.
+            $version = @file_get_contents($root.'/VERSION');
+            $number = \is_string($version) && '' !== trim($version)
+                ? trim($version)
+                : (null !== $this->envFallback && '' !== $this->envFallback ? $this->envFallback : substr(trim($sha), 0, 12));
+
             return [
-                'number' => substr(trim($sha), 0, 12),
+                'number' => $number,
                 'date' => false !== $mtime ? date('Y-m-d', $mtime) : '',
                 'commit' => trim($sha),
             ];

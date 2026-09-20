@@ -29,6 +29,7 @@ final class BuildVersionTest extends TestCase
 
         foreach ($this->cleanup as $dir) {
             @unlink($dir.'/REVISION');
+            @unlink($dir.'/VERSION');
             @rmdir($dir.'/web');
             @rmdir($dir);
         }
@@ -53,6 +54,38 @@ final class BuildVersionTest extends TestCase
         // The FULL sha, not the twelve shown: the footer's source link resolves
         // it, and a forge is free to refuse an abbreviation.
         self::assertSame('abc1234567890abcdef', $v->stamp()['commit']);
+    }
+
+    /**
+     * The deploy script can record `git describe` in VERSION before it strips
+     * .git. That name is the release the footer shows; the commit stays
+     * REVISION's, so the source link still names the running build.
+     */
+    public function testAVersionFileBesideRevisionNamesTheRelease(): void
+    {
+        $dir = $this->tempRelease("abc1234567890abcdef\n");
+        file_put_contents($dir.'/VERSION', "v0.8.0-beta\n");
+
+        $v = new BuildVersion($dir, 'v0.0.0-from-env', static fn (string $cmd): ?string => null);
+
+        self::assertSame('v0.8.0-beta', $v->stamp()['number']);
+        self::assertSame('abc1234567890abcdef', $v->stamp()['commit']);
+    }
+
+    /**
+     * No VERSION file: the environment's label names the release (the owner
+     * bumps APP_BUILD_VERSION with the tag, 2026-09-20). Still REVISION's sha
+     * underneath, and never the label as the link.
+     */
+    public function testTheEnvLabelNamesARevisionReleaseWithoutAVersionFile(): void
+    {
+        $dir = $this->tempRelease("abc1234567890abcdef\n");
+
+        $v = new BuildVersion($dir, 'v0.8.0-beta', static fn (string $cmd): ?string => null, 'https://forge.test/r');
+
+        self::assertSame('v0.8.0-beta', $v->stamp()['number']);
+        self::assertSame('abc1234567890abcdef', $v->stamp()['commit']);
+        self::assertSame('https://forge.test/r/commit/abc1234567890abcdef', $v->stamp()['url']);
     }
 
     /**

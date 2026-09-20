@@ -149,6 +149,17 @@ rule between the three.
   offer still stands with JavaScript off; `assets/js/version.js` only repaints
   it in the rider's own date format.
 
+  **Where the number comes from on a deployed host (2026-09-20).** A release
+  carries no `.git`, only the `REVISION` file the deploy writes, so
+  `git describe` cannot name the tag there. `BuildVersion` then shows, in
+  order: a `VERSION` file beside `REVISION` (the deploy's `git describe`,
+  taken before `.git` is stripped), else `APP_BUILD_VERSION` from the
+  environment file (`.env.staging`, `.env.prod`; bumped in the commit that
+  gets the tag), else the first twelve characters of the commit. The commit
+  behind the link is always `REVISION`'s, so the label can be stale but the
+  offer cannot point at the wrong code. `tests/Service/BuildVersionTest.php`
+  pins each rung.
+
   Two rules, because each half is useless alone. A link that names no build
   points at whatever `HEAD` is, which stops being the served code the moment a
   box is hotfixed. A build name that is not a link offers nothing to fetch. The
