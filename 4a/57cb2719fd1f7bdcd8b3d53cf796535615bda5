@@ -1,0 +1,34 @@
+.github/workflows/ci-credits.yml
+  s_c6cd3322f35403::t_f2115db2259411 29
+.github/workflows/reuse.yml
+  s_c6cd3322f35403::t_f2115db2259411 11
+  s_c6cd3322f35403::t_da6bc0a5d211f3 15
+.github/workflows/ci-app.yml
+  s_c6cd3322f35403::t_f2115db2259411 12
+docs/specs/credits-page.md
+  s_c6cd3322f35403::t_f2115db2259411 198
+.github/workflows/ci-tools.yml
+  s_c6cd3322f35403::t_f2115db2259411 8
+docs/specs/privacy-notice.md
+  s_c6cd3322f35403::t_f2115db2259411 198
+.github/workflows/ci-wiki.yml
+  s_c6cd3322f35403::t_f2115db2259411 40
+web/templates/pages/privacy.html.twig
+  s_c6cd3322f35403::t_0bd958eb249b7c 321
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4a57cb2719fd1f7bdcd8b3d53cf796535615bda5",
+  "prompts": {},
+  "sessions": {
+    "s_c6cd3322f35403": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03caed64-5d94-4429-94bd-cccc8c2759e4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
