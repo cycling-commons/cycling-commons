@@ -1,4 +1,24 @@
-# site/ — the public landing page
+# atlas/demo — RETIRED PROTOTYPE
+
+> **This is a retired prototype. Nothing here is served, and nothing here is current.**
+>
+> The public site is the Symfony application in `web/`. These pages were the
+> hand-written HTML/JS prototype that came before it, and their copy was never
+> updated afterwards: the privacy, licensing and "what we collect" statements on
+> these pages are **superseded** by `/privacy` and `/licenses` on the live site,
+> which are the authoritative versions. Read nothing here as a current claim
+> about the service.
+>
+> The folder stays because it is still a **build input**, not because the pages
+> are live: `make catalog-export` reads its fixtures, and `make wallonia-data`
+> and `make pivot-data` write `atlas/demo/*-osm.js`. `REUSE.toml` carries the
+> licensing for its media and fonts. Deleting it breaks those.
+>
+> The prototype as it stood is preserved in its own right on the `main` branch.
+
+The original scope note follows, kept as it was written.
+
+---
 
 This folder becomes **[cyclingcommons.org](https://cyclingcommons.org)**: the focused public face of
 the Commons. Keep it deliberately minimal — its job is to land the idea and point people deeper, not
