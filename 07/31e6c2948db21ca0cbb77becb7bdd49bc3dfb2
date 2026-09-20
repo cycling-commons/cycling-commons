@@ -1,0 +1,25 @@
+web/src/Account/Command/PurgeUserCommand.php
+  s_f48622e4fbf056::t_7a2f38314da02c 75-76
+  s_f48622e4fbf056::t_4505ba736f0dd4 1-33,36-74,77-119
+  s_f48622e4fbf056::t_99acabcb6ceead 34-35
+docs/specs/account-and-auth.md
+  s_f48622e4fbf056::t_cf08b5414a32ac 538-542,545
+web/tests/Account/PurgeUserCommandTest.php
+  s_f48622e4fbf056::t_ab38d2b3e573dd 1-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0731e6c2948db21ca0cbb77becb7bdd49bc3dfb2",
+  "prompts": {},
+  "sessions": {
+    "s_f48622e4fbf056": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "614ff379-a7a8-4868-884e-c904dc525de4",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": null
+    }
+  }
+}
