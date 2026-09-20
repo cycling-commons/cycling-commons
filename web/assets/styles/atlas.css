@@ -393,11 +393,18 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 .foot a.footver:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
 /* Normal case here too, which is also what lets ODbL, CC BY-SA and AGPL keep
    the capitalisation their licences are actually named with. */
-.foot .colophon{margin-top:1.344rem;text-transform:none;letter-spacing:.02em}  /* 2 × the 0.672rem line-height step */
+/* Centred, and the icon row under it centred to match (owner, 2026-09-20):
+   the columns above are a grid the eye reads left to right, and these last two
+   lines are not part of it. Centring is what separates them from it. */
+.foot .colophon{margin-top:1.344rem;text-transform:none;letter-spacing:.02em;text-align:center}  /* 2 × the 0.672rem line-height step */
 /* Where to find us, under the licences. Icons rather than words: a row of
    logos reads faster than any label and stays one line in five languages.
-   Each is a 40px target, which is the floor for a thumb. */
-.foot-social{display:flex;gap:.35rem;margin-top:1.344rem}
+   Each is a 40px target, which is the floor for a thumb.
+
+   ONE step from the colophon, not two: the licences and the places we are
+   belong together under the columns, so the double step sits above the pair
+   rather than inside it. */
+.foot-social{display:flex;justify-content:center;gap:.35rem;margin-top:.672rem}
 .foot-social a{display:inline-flex;align-items:center;justify-content:center;
   width:40px;height:40px;border-radius:6px;color:rgba(239,230,212,.72);
   transition:color .15s,background .15s}
