@@ -34,23 +34,16 @@ RUN apt-get -o Acquire::Retries=15 update \
 # gets its own ceiling independent of the application's.
 #
 # The verification is not ceremony. ImageMagick parses this file with its OWN
-# XML parser, which silently drops everything after certain characters — a
+# XML parser, which silently drops everything after certain characters - a
 # malformed policy is not an error, it is a policy that quietly does nothing.
-# So the build decodes a GIF (a denied coder) and a PNG (an allowed one) and
-# fails unless it gets exactly one refusal and one success. A build that ships
-# a policy nobody checked is how you end up believing in a guard you do not
-# have.
+# So the build asks the library itself what it allows and fails on any answer
+# other than the one docker/imagemagick-policy.xml gives: every rule as
+# written, no second policy file, and exactly five readable formats. An
+# enabled coder, an enabled delegate or a raised ceiling stops the build here,
+# where somebody is looking, rather than in a log after an incident.
 COPY docker/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
-RUN php -r '\
-    $gif = base64_decode("R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs="); \
-    $png = base64_decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="); \
-    $reads = static function (string $bytes): bool { \
-        try { (new Imagick())->readImageBlob($bytes); return true; } catch (Throwable) { return false; } \
-    }; \
-    if ($reads($gif)) { fwrite(STDERR, "ImageMagick policy is NOT in effect: the denied GIF coder still decodes.\n"); exit(1); } \
-    if (!$reads($png)) { fwrite(STDERR, "ImageMagick policy is too strict: PNG, which we accept, does not decode.\n"); exit(1); } \
-    echo "ImageMagick policy verified: denied coders refused, accepted coders intact.\n"; \
-    '
+COPY docker/verify-imagemagick-policy.php /usr/local/bin/verify-imagemagick-policy
+RUN php /usr/local/bin/verify-imagemagick-policy
 
 # Route GPX proposals can be up to 15 MB (spec §5.3/§15) — the php defaults
 # (upload_max_filesize=2M, post_max_size=8M) would reject them before Symfony's

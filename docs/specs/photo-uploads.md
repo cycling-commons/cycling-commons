@@ -1733,12 +1733,30 @@ Two layers now, because either alone is a single point of failure:
   backticks for code spans in two comments and the entire coder allowlist below
   them was ignored, with GIF still decoding, no error and no log line. The file
   says NO BACKTICKS at the top for that reason.
-- **So the build asserts the policy rather than trusting it.** `web/Dockerfile`
-  decodes a GIF (denied) and a PNG (allowed) after the COPY and fails the build
-  unless it gets exactly one refusal and one success. Verified in both
-  directions: the build passes on the real policy and fails on a
-  known-fail-open one. A policy that silently does nothing is worse than no
-  policy, because you stop looking.
+- **So the build asserts the policy rather than trusting it.** A policy that
+  silently does nothing is worse than no policy, because you stop looking.
+
+**The assertion, widened 2026-09-20 (owner: tell me if anything other than
+what we have gets enabled).** `web/docker/verify-imagemagick-policy.php` runs
+in the image build (`web/Dockerfile`, straight after the COPY) and again in
+the suite (`tests/Media/ImageMagickPolicyTest`, skipped where there is no
+ext-imagick and no policy file). It asks three questions and fails on any
+disagreement, naming it:
+
+| Question | How | Catches |
+|---|---|---|
+| Is the file the file we wrote? | Every rule is listed in the script as `domain:name=value`; the parsed file must match that list exactly | A coder, delegate, filter or module opened; a resource ceiling raised; a rule deleted; a backtick anywhere |
+| Is it the only policy? | Six directories ImageMagick also reads, plus `MAGICK_CONFIGURE_PATH` | A base image or a deploy shipping a second `policy.xml` that wins |
+| Does the library agree? | Every format `Imagick::queryFormats()` knows is probed with a junk file carrying that extension; exactly HEIC, HEIF, JPEG, PNG and WEBP may be readable, and a real PNG must still decode | The parser failing open, a rebuilt ImageMagick with different coders, a policy too strict to accept a photo |
+
+The probe works because ImageMagick resolves the coder from the extension and
+applies the policy **before** it parses: a denied format answers "not
+authorized", an allowed one complains about the bytes, and a format with no
+reader answers "no decode delegate", which is not a read path. Measured in the
+dev container: 204 formats refused, 41 with no reader, 5 readable. Verified in
+both directions, by allowing GIF in a running container (the check named the
+changed rule and the newly readable format, and exited 1) and by putting a
+backtick in a comment (named, exit 1).
 
 One consequence worth stating: under the shipped policy the application's own
 format allowlist becomes unreachable for a real file — anything it would reject
