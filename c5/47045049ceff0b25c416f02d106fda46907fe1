@@ -1,7 +1,7 @@
 docs/specs/account-and-auth.md
   s_f48622e4fbf056::t_cf08b5414a32ac 538-542,545
 web/src/Account/Command/PurgeUserCommand.php
-  s_f48622e4fbf056::t_4505ba736f0dd4 1-72,75-117
+  s_f48622e4fbf056::t_4505ba736f0dd4 1-72,1-33,34-72,75-117
   s_f48622e4fbf056::t_7a2f38314da02c 73-74
 web/tests/Account/PurgeUserCommandTest.php
   s_f48622e4fbf056::t_ab38d2b3e573dd 1-123
