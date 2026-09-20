@@ -77,7 +77,7 @@ final class BuildVersionTest extends TestCase
 
         $v = new BuildVersion($dir, 'v1.2-env', static fn (string $cmd): ?string => null);
 
-        self::assertSame(['number' => 'v1.2-env', 'date' => '', 'commit' => ''], $v->stamp());
+        self::assertSame(['number' => 'v1.2-env', 'date' => '', 'commit' => '', 'url' => ''], $v->stamp());
     }
 
     /**
@@ -89,7 +89,7 @@ final class BuildVersionTest extends TestCase
     {
         $v = new BuildVersion('/nonexistent', '', static fn (string $cmd): ?string => null);
 
-        self::assertSame(['number' => 'dev', 'date' => '', 'commit' => ''], $v->stamp());
+        self::assertSame(['number' => 'dev', 'date' => '', 'commit' => '', 'url' => ''], $v->stamp());
     }
 
     private function tempRelease(string $revision): string
@@ -110,7 +110,7 @@ final class BuildVersionTest extends TestCase
         $v = new BuildVersion('/repo/web', '', self::git('v0.2.0', '2026-08-09'));
 
         self::assertSame(
-            ['number' => 'v0.2.0', 'date' => '2026-08-09', 'commit' => '1111111111111111111111111111111111111111'],
+            ['number' => 'v0.2.0', 'date' => '2026-08-09', 'commit' => '1111111111111111111111111111111111111111', 'url' => '/commit/1111111111111111111111111111111111111111'],
             $v->stamp(),
         );
     }
@@ -126,7 +126,7 @@ final class BuildVersionTest extends TestCase
         $v = new BuildVersion('/repo/web', '', self::git('v0.8.0-beta', '2026-09-01'));
 
         self::assertSame(
-            ['number' => 'v0.8.0-beta', 'date' => '2026-09-01', 'commit' => '1111111111111111111111111111111111111111'],
+            ['number' => 'v0.8.0-beta', 'date' => '2026-09-01', 'commit' => '1111111111111111111111111111111111111111', 'url' => '/commit/1111111111111111111111111111111111111111'],
             $v->stamp(),
         );
     }
@@ -163,10 +163,10 @@ final class BuildVersionTest extends TestCase
         $none = static fn (string $cmd): ?string => null;
 
         BuildVersion::reset();
-        self::assertSame(['number' => 'v9.9-manual', 'date' => '', 'commit' => ''], (new BuildVersion('/x', 'v9.9-manual', $none))->stamp());
+        self::assertSame(['number' => 'v9.9-manual', 'date' => '', 'commit' => '', 'url' => ''], (new BuildVersion('/x', 'v9.9-manual', $none))->stamp());
 
         BuildVersion::reset();
-        self::assertSame(['number' => 'dev', 'date' => '', 'commit' => ''], (new BuildVersion('/x', '', $none))->stamp());
+        self::assertSame(['number' => 'dev', 'date' => '', 'commit' => '', 'url' => ''], (new BuildVersion('/x', '', $none))->stamp());
     }
 
     /** Once per worker: the second call must not exec again. */
@@ -199,7 +199,27 @@ final class BuildVersionTest extends TestCase
             default => '2026-08-09',
         });
 
-        self::assertSame(['number' => 'v1.0.0', 'date' => '2026-08-09', 'commit' => ''], $v->stamp());
+        self::assertSame(['number' => 'v1.0.0', 'date' => '2026-08-09', 'commit' => '', 'url' => ''], $v->stamp());
+    }
+
+    /**
+     * The source offer is built from the commit, and falls back to the
+     * repository root when there is none. Both halves matter: a link that names
+     * no build points at whatever HEAD is, which stops being the served code
+     * the moment a box is hotfixed, and a build with no link offers nothing to
+     * fetch (AGPL section 13). The footer and /humans.txt both read this, so
+     * deriving it in either of them would let the two disagree.
+     */
+    public function testTheSourceUrlPinsTheRunningCommit(): void
+    {
+        $repo = 'https://example.org/org/repo/';   // trailing slash on purpose
+
+        $v = new BuildVersion('/repo', '', self::git('v1.0.0', '2026-08-09'), $repo);
+        self::assertSame('https://example.org/org/repo/commit/'.str_repeat('1', 40), $v->stamp()['url']);
+
+        BuildVersion::reset();
+        $noCommit = new BuildVersion('/x', 'v9.9-manual', static fn (string $cmd): ?string => null, $repo);
+        self::assertSame('https://example.org/org/repo', $noCommit->stamp()['url'], 'no commit falls back to the root');
     }
 
     /**

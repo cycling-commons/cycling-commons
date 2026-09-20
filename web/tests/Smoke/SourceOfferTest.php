@@ -45,6 +45,36 @@ final class SourceOfferTest extends WebTestCase
         self::assertStringContainsString($build['number'], $stamp->text(), 'the stamp must name the build');
     }
 
+    /**
+     * `/humans.txt` dates itself from the build, so the line cannot go stale.
+     *
+     * The static file this replaced said `Last update: 2026/06/17` for months.
+     * A hand-kept date does not say when the site last changed, it says when
+     * somebody last thought about the file, and a reader cannot tell which. The
+     * date and the source link both come from the same stamp the footer prints.
+     */
+    public function testHumansTxtDatesItselfFromTheBuild(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/humans.txt');
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'text/plain; charset=utf-8');
+
+        $body = (string) $client->getResponse()->getContent();
+        $build = static::getContainer()->get('App\Service\BuildVersion')->stamp();
+
+        self::assertStringContainsString('Build: '.$build['number'], $body);
+        self::assertStringContainsString('Source: '.$build['url'], $body);
+        if ('' !== $build['date']) {
+            self::assertStringContainsString('Last update: '.$build['date'], $body);
+        }
+
+        // The stale hand-written date must never come back in any form.
+        self::assertDoesNotMatchRegularExpression('#Last update: 20\d\d/#', $body, 'the date is derived, never written by hand');
+        // It states the dataset claim correctly, not a platform-wide absolute.
+        self::assertStringContainsString('Commons dataset', $body);
+    }
+
     /** One offer, not two: the old colophon "Source code" link is gone. */
     public function testTheColophonNoLongerCarriesASecondSourceLink(): void
     {

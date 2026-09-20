@@ -63,6 +63,9 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
             $envFallback: '%env(default::APP_BUILD_VERSION)%'
+            # The AGPL section 13 source offer travels with the stamp, so the
+            # footer and /humans.txt cannot name different code (support.yaml).
+            $repoUrl: '%cc.source.repo_url%'
 
     # English catalogue projection for /translate search (translations.md §3.1).
     App\Translation\CatalogueSync:

@@ -10,6 +10,7 @@ use App\Blog\BlogLocales;
 use App\Blog\BlogRepository;
 use App\Catalog\RegionRegistryProvider;
 use App\Routing\ActiveLocales;
+use App\Service\BuildVersion;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -17,12 +18,16 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
- * `robots.txt`, `sitemap.xml` and `security.txt` from the live router.
+ * `robots.txt`, `sitemap.xml`, `security.txt` and `humans.txt` from the live
+ * router.
  *
- * The three machine-readable files at the root of the site. They share a
+ * The four machine-readable files at the root of the site. They share a
  * controller because they share a property: none of them is a page, all of them
  * must agree with what the router actually serves, and each one rots quietly if
- * it is a static file somebody has to remember to edit.
+ * it is a static file somebody has to remember to edit. Two of them carry a
+ * date, and neither date is written by hand: `security.txt` computes an
+ * `Expires` that is always valid, and `humans.txt` takes its "last update" from
+ * the build.
  *
  * @api
  */
@@ -84,6 +89,7 @@ final class SitemapController extends AbstractController
         private readonly RegionRegistryProvider $regions,
         private readonly ActiveLocales $activeLocales,
         private readonly BlogRepository $blog,
+        private readonly BuildVersion $build,
     ) {
     }
 
@@ -129,6 +135,74 @@ final class SitemapController extends AbstractController
         $response->headers->set('Content-Type', 'text/plain; charset=utf-8');
         // A day is plenty: the body only changes once a month, and a researcher
         // reading a cached copy still gets a valid, unexpired file.
+        $response->setPublic();
+        $response->setMaxAge(86400);
+
+        return $response;
+    }
+
+    /**
+     * The credits file, with a date that cannot go stale.
+     *
+     * The old static `atlas/demo/humans.txt` carried `Last update: 2026/06/17`,
+     * a line somebody had to remember to edit and nobody did, on a file the
+     * application never served anyway. A hand-kept date is worse than no date:
+     * it does not say when the site last changed, it says when a person last
+     * thought about this file, and a reader cannot tell the two apart.
+     *
+     * So it comes from the build instead. `BuildVersion` reads the `REVISION`
+     * the deploy writes, or git in a working copy, which means the line moves
+     * on every deploy on its own and is never a promise anyone has to keep by
+     * hand. When the build cannot name a date the line is left out rather than
+     * guessed, because an absent date is honest and a made-up one is not.
+     */
+    #[Route('/humans.txt', name: 'humans_txt', methods: ['GET'])]
+    public function humansTxt(): Response
+    {
+        $url = fn (string $route): string => $this->generateUrl($route, [], UrlGeneratorInterface::ABSOLUTE_URL);
+        $build = $this->build->stamp();
+
+        $lines = [
+            '/* TEAM */',
+            '  Maintained by: BikeCoders - https://bikecoders.life',
+            '  Contact: development [at] cyclingcommons.org',
+            '  The Commons is stewarded openly, on a path to an independent foundation.',
+            '  See: https://wiki.cyclingcommons.org/governance/',
+            '',
+            '/* THANKS */',
+            '  OpenStreetMap and its contributors - the ground we build on',
+            '  Every rider who maps a climb, water point, viewpoint, stay or hazard',
+            '  The open-data and open-hospitality communities we link and interoperate with',
+            '',
+            '/* DATA & LICENCE */',
+            '  Data:  Open Database License (ODbL 1.0)',
+            '  Media: Commons Media License (CC BY-SA 4.0)',
+            '  The map belongs to everyone - places, never people: the Commons dataset',
+            '  holds no personal data. An account, and our analytics and server logs,',
+            '  are a separate matter: '.$url('privacy'),
+            '  Licences: '.$url('licenses'),
+            '',
+            '/* SITE */',
+        ];
+
+        if ('' !== $build['date']) {
+            $lines[] = '  Last update: '.$build['date'];
+        }
+        $lines[] = '  Build: '.$build['number'];
+
+        $lines = [...$lines,
+            '  Components: MapLibre GL, PMTiles, OpenFreeMap',
+            '  Wiki: MkDocs Material - https://wiki.cyclingcommons.org',
+            '  Source: '.$build['url'],
+            '',
+            '                  .',
+            '                 /|\\',
+            '                / | \\      one open atlas',
+            '               /__|__\\     for every kind of cycling',
+        ];
+
+        $response = new Response(implode("\n", $lines)."\n");
+        $response->headers->set('Content-Type', 'text/plain; charset=utf-8');
         $response->setPublic();
         $response->setMaxAge(86400);
 

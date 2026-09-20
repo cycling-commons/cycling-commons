@@ -10,15 +10,20 @@ namespace App\Service;
  * Footer build stamp: REVISION, then git, then env, then `dev`.
  *
  * `commit` is the bare object name, empty when the running code cannot name
- * one. The footer needs it because AGPL section 13 obliges us to offer THIS
- * build's Corresponding Source, and only a commit link says which build that
- * is; `number` may be a `git describe` string, which no forge resolves.
+ * one, and `url` is the offer built from it: the repository root with
+ * `/commit/<sha>` appended, or the bare root when there is no commit. AGPL
+ * section 13 obliges us to offer THIS build's Corresponding Source, and only a
+ * commit link says which build that is; `number` may be a `git describe`
+ * string, which no forge resolves.
+ *
+ * The url is derived HERE rather than by each caller, because the footer and
+ * `/humans.txt` must not be able to disagree about which code is running.
  *
  * @api
  */
 final class BuildVersion
 {
-    /** @var array{number: string, date: string, commit: string}|null */
+    /** @var array{number: string, date: string, commit: string, url: string}|null */
     private static ?array $cached = null;
 
     /** @var callable(string): ?string */
@@ -32,6 +37,7 @@ final class BuildVersion
         // ?string: env(default::VAR) is NULL when unset; the footer must not 500.
         private readonly ?string $envFallback = '',
         ?callable $run = null,
+        private readonly string $repoUrl = '',
     ) {
         $this->run = $run ?? static function (string $cmd): ?string {
             // disable_functions lists shell_exec as undefined; calling it 500s the footer.
@@ -46,10 +52,18 @@ final class BuildVersion
         };
     }
 
-    /** @return array{number: string, date: string, commit: string} */
+    /** @return array{number: string, date: string, commit: string, url: string} */
     public function stamp(): array
     {
-        return self::$cached ??= $this->derive();
+        if (null === self::$cached) {
+            $found = $this->derive();
+            $root = rtrim($this->repoUrl, '/');
+            self::$cached = $found + [
+                'url' => '' !== $found['commit'] ? $root.'/commit/'.$found['commit'] : $root,
+            ];
+        }
+
+        return self::$cached;
     }
 
     /** Test seam: per-worker cache must not leak between tests. */
