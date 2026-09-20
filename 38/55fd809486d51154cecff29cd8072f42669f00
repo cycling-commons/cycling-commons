@@ -1,0 +1,27 @@
+developers/docker/nginx/app.conf
+  s_c6cd3322f35403::t_f591b19484a752 8-15
+atlas/demo/README.md
+  s_c6cd3322f35403::t_0610421bec4fd1 1-21
+atlas/demo/humans.txt
+  s_c6cd3322f35403::t_f591b19484a752 2,8,15,27
+  s_c6cd3322f35403::t_e9c31d168ceaa5 16-17
+  s_c6cd3322f35403::t_a109b4932e2491 21-24
+developers/docker/nginx/atlas.conf
+  s_c6cd3322f35403::t_f591b19484a752 8-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3855fd809486d51154cecff29cd8072f42669f00",
+  "prompts": {},
+  "sessions": {
+    "s_c6cd3322f35403": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03caed64-5d94-4429-94bd-cccc8c2759e4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
