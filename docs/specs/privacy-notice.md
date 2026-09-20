@@ -37,7 +37,8 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | Cookie names and lifetimes | `config/packages/framework.yaml` (session), `config/packages/security.yaml` `remember_me.lifetime` | either is configured differently |
 | Account deletion is immediate | `App\Service\UserDeletionService::confirmDeletion()` | a real grace period is ever built |
 | Backups roll off in at most 90 days | infra (restic to Scaleway), owner-confirmed 2026-08-27 | the restic retention policy changes |
-| Server logs kept 30 days | infra, `operations.md` | logrotate changes |
+| Server logs kept at most 90 days | infra, `operations.md` 2a | any log path is ever allowed to outlive 90 days |
+| Full IP addresses are held "only briefly" | infra, owner-confirmed 2026-09-20 | the short full-address window changes |
 | TOTP secret AES-256-GCM, key outside the DB | `App\Doctrine\EncryptedStringType`, `ENCRYPTION_SECRET` | see `account-and-auth.md` 4 |
 | Backup codes are keyed hashes | `User::hashBackupCode()` | |
 | HSTS | nginx, `operations.md` 4 ownership table | |
