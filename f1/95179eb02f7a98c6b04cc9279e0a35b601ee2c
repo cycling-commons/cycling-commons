@@ -1,0 +1,24 @@
+web/assets/styles/atlas.css
+  s_f48622e4fbf056::t_a6e3668f9e5762 385-386
+web/docker/imagemagick-policy.xml
+  s_f48622e4fbf056::t_a678b4ee5adf86 73-83
+docs/specs/photo-uploads.md
+  s_f48622e4fbf056::t_0493a301f83d83 1716
+  s_f48622e4fbf056::t_a678b4ee5adf86 1718-1731
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f195179eb02f7a98c6b04cc9279e0a35b601ee2c",
+  "prompts": {},
+  "sessions": {
+    "s_f48622e4fbf056": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "614ff379-a7a8-4868-884e-c904dc525de4",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
