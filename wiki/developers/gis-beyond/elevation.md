@@ -179,8 +179,9 @@ instance for the continent the shape lies in (`ElevationEndpoints`): `ELEVATION_
 and the master switch, `ELEVATION_URLS` lists the other continents. Each instance reads Copernicus
 GLO-30 tiles that `tools/elevation/` fetched, converted and installed, and the dataset name recorded
 on the item and shown beside a profile is the deployment's `ELEVATION_DEM_SOURCE`, an attribution
-rather than a guess. In the dev environment those URLs point at host-run instances reached through
-`host.docker.internal` (`web/.env`), not at the Compose `routing` profile.
+rather than a guess. The URLs name `valhalla.internal` on every environment (`web/.env`): on the
+cluster that name is the worker host, in the dev environment the Compose file maps it to the
+developer machine, where the instances sit behind an SSH tunnel, not in the Compose `routing` profile.
 
 Owning the path settles three things a third-party API decides for you. **Which dataset**: a
 deployment setting, not somebody else's default. **How densely to sample**: a fixed 200 points, so

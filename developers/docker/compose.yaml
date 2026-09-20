@@ -130,6 +130,10 @@ services:
       - ../../SECURITY.md:/SECURITY.md:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"   # so the container can reach the host's Mailpit
+      # The same name the cluster uses for Valhalla (web/.env, climb elevation):
+      # on a developer machine it is the SSH tunnel on the host, on the cluster
+      # it is the worker. One name in .env, no per-host override.
+      - "valhalla.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy
@@ -167,6 +171,9 @@ services:
     # dirs are redirected under /tmp and /app/vendor is only ever read.
     user: www-data
     stop_grace_period: 90s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "valhalla.internal:host-gateway"   # same name as the app service, for console runs in here
     environment:
       APP_ENV: dev
       APP_DEBUG: "1"
