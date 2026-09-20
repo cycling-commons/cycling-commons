@@ -1,0 +1,30 @@
+developers/docker/compose.yaml
+  s_f48622e4fbf056::t_387c0973c70be5 133-136
+  s_f48622e4fbf056::t_d2619c7c571b6b 174-176
+web/.env
+  s_f48622e4fbf056::t_387c0973c70be5 257-263
+  s_f48622e4fbf056::t_9d8fd5303103d5 246-253,255-256,265
+wiki/developers/gis-beyond/elevation.md
+  s_f48622e4fbf056::t_d2619c7c571b6b 182-184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7c3207c905ab8dd09683223987501434d972da10",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_f48622e4fbf056": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "614ff379-a7a8-4868-884e-c904dc525de4",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
