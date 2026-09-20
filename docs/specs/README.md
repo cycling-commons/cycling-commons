@@ -17,6 +17,26 @@ committed — working docs stay local.
 
 **Nothing binding may live only in a dated file once its design has shipped.**
 
+## One canonical spec is deliberately not published
+
+`operations.md` is canonical, and it is **gitignored** (owner, 2026-09-20), so
+other specs and a few source comments reference a file that is not in this
+repository. That is intentional, not rot.
+
+It is the one spec that is mostly about the *hosts* rather than the software:
+production topology, which tenant shares the database, how a deploy reaches each
+frontend, the timer schedule, the log windows. No hostname and no credential is
+in it, and nothing in it is a secret on its own, but together it is a shape, and
+it is of no use to somebody reading the code.
+
+**Nothing a reader is owed went with it.** What the service retains, for how
+long, and what it holds about a person is in `/privacy` on the live site and in
+[`privacy-notice.md`](privacy-notice.md), which both ship and which are the
+authoritative versions. `dev-environment.md` still describes the stack a
+contributor actually runs.
+
+Revisit when there is a separate infrastructure repository to hold it.
+
 ## The canonical set
 
 - `osm-data-architecture.md` — the OSM relationship: data categories, tag

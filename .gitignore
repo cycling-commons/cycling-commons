@@ -83,6 +83,16 @@ docs/superpowers/
 # reference. Only the date-less canonical specs ship (docs/specs/README.md).
 docs/specs/Dated/
 
+# The operations spec — local only (owner, 2026-09-20). It is the one spec that
+# is mostly about the hosts rather than the software: the production topology,
+# which tenant shares the database, how deploys reach each frontend, the timer
+# schedule, the log windows. None of that is a secret on its own and none of it
+# carries a hostname or a credential, but together it is a shape, and it is of
+# no use to somebody reading the code. What a reader is owed about retention and
+# personal data is in `/privacy` and in privacy-notice.md, both of which ship.
+# Revisit when there is a separate infrastructure repository to hold it.
+docs/specs/operations.md
+
 # Agent scratch (worktrees, SDD ledger) — local only, never committed.
 .claude/
 .superpowers/
