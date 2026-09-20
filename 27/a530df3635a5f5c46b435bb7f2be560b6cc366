@@ -1,0 +1,19 @@
+web/src/Account/Command/PurgeUserCommand.php
+  s_f48622e4fbf056::t_fa76306747005e 34-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "27a530df3635a5f5c46b435bb7f2be560b6cc366",
+  "prompts": {},
+  "sessions": {
+    "s_f48622e4fbf056": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "614ff379-a7a8-4868-884e-c904dc525de4",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
