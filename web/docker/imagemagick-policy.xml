@@ -71,16 +71,16 @@
   <policy domain="resource" name="width" value="30KP"/>
   <policy domain="resource" name="height" value="30KP"/>
   <!--
-    No time ceiling, on purpose. ImageMagick charges the time resource to the
-    PROCESS, cumulatively over every operation it has run, not to one image:
-    measured on web-1 on 2026-09-20, one CLI run localising Commons photos died
-    with "time limit exceeded" after 58 photos under Debian's stock 120 s,
-    while a process that slept 125 s and then decoded was fine. A messenger
-    worker or a php-fpm worker lives for hours, so any finite value here is a
-    fuse that blows after enough photos, with no sign of why. The area, memory,
-    width and height ceilings above bound a single hostile image; the workers'
-    own time limits bound the process.
+    Per IMAGE on ImageMagick 7, which this image runs: the work done on one
+    image is summed across its operations, checked when the next operation
+    starts, and a fresh image starts at zero (measured 2026-09-20 under a 3 s
+    cap: 40 fresh images fine; one image blurred 30 times refused at the 21st;
+    a single 7.1 s operation under a 5 s cap completed). So 60 s bounds what
+    one hostile file can cost. The hosts run ImageMagick 6 (Ubuntu 24.04,
+    6.9.12), which charges the same rule to the whole PROCESS: there this line
+    is DROPPED when the file is installed (docs/specs/operations.md 3).
   -->
+  <policy domain="resource" name="time" value="60"/>
   <policy domain="resource" name="thread" value="2"/>
   <!-- We process one still image at a time; a "sequence" of thousands of
        frames is not something a rider photo has any reason to be. -->
@@ -98,5 +98,13 @@
   <!-- The allowlist that matters. Same five formats PhotoProcessor accepts
        after decoding, refused here before one is attempted. -->
   <policy domain="coder" rights="none" pattern="*"/>
-  <policy domain="coder" rights="read|write" pattern="{JPEG,PNG,WEBP,HEIC,HEIF}"/>
+  <!--
+    Both cases, because ImageMagick 6 matches this pattern case-sensitively
+    and asks with different names on different paths: a file read is checked
+    as PNG, a blob write (getImageBlob, the only encode the app does) as the
+    name the app passed to setImageFormat, which is png. With the upper-case
+    names alone every encode failed with "empty or invalid image" and no
+    policy message (measured 2026-09-20 on 6.9.11).
+  -->
+  <policy domain="coder" rights="read|write" pattern="{JPEG,PNG,WEBP,HEIC,HEIF,jpeg,png,webp,heic,heif}"/>
 </policymap>

@@ -36,7 +36,7 @@ declare(strict_types=1);
 /** The rules, exactly as intended. domain:name-or-pattern=rights-or-value. */
 const EXPECTED_RULES = [
     'coder:*=none',
-    'coder:{JPEG,PNG,WEBP,HEIC,HEIF}=read|write',
+    'coder:{JPEG,PNG,WEBP,HEIC,HEIF,jpeg,png,webp,heic,heif}=read|write',
     'delegate:*=none',
     'filter:*=none',
     'module:{MSL,MVG,PS,EPS,PDF,SVG,URL,XPS,EPHEMERAL,TEXT,SHOW,WIN,PLT}=none',
@@ -48,6 +48,9 @@ const EXPECTED_RULES = [
     'resource:map=1GiB',
     'resource:memory=512MiB',
     'resource:thread=2',
+    // Per image on ImageMagick 7, which this image runs. The hosts run 6, where
+    // the same rule is charged to the process and is dropped at install
+    // (operations.md 3).
     'resource:time=60',
     'resource:width=30KP',
     'undefined:*=none',
@@ -146,6 +149,14 @@ foreach (Imagick::queryFormats('*') as $format) {
 }
 sort($readable);
 $allowed = READABLE;
+// HEIF is the one name the library may not register at all: ImageMagick
+// 6.9.11 (bookworm) knows HEIC only, 6.9.12 (the hosts) and 7 (this image) both. The
+// policy opens both, the app needs HEIC (PhotoProcessor::heicSupported), and a
+// .heif on 6.9.11 is a clear photo_format refusal, not a hole. So HEIF is
+// required only where it exists; HEIC is required everywhere.
+if ([] === Imagick::queryFormats('HEIF')) {
+    $allowed = array_values(array_diff($allowed, ['HEIF']));
+}
 sort($allowed);
 
 foreach (array_diff($readable, $allowed) as $format) {
@@ -162,6 +173,25 @@ try {
     (new Imagick())->readImageBlob((string) $png);
 } catch (Throwable $e) {
     $problems[] = 'a valid PNG does not decode: '.$e->getMessage();
+}
+
+// And what the app WRITES must encode to a blob, spelled the way the app
+// spells it (PhotoProcessor: setImageFormat('webp'); ScreenshotStore: 'png').
+// ImageMagick 6 checks the blob write under that lower-case name, so an allow
+// list in upper case only passes every read probe above and still fails every
+// upload, with "empty or invalid image" and no policy message (2026-09-20).
+// HEIC and HEIF are read only: libheif decodes them, nothing here encodes them.
+foreach (['PNG', 'WEBP'] as $format) {
+    try {
+        $image = new Imagick();
+        $image->readImageBlob((string) $png);
+        $image->setImageFormat(strtolower($format));
+        if ('' === $image->getImageBlob()) {
+            $problems[] = "encoding to {$format} gives an empty blob.";
+        }
+    } catch (Throwable $e) {
+        $problems[] = "cannot encode to {$format} as a blob, which PhotoProcessor needs: ".$e->getMessage();
+    }
 }
 
 // ── The verdict ─────────────────────────────────────────────────────────────

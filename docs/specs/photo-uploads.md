@@ -1719,18 +1719,37 @@ Two layers now, because either alone is a single point of failure:
    area, width and height budgets live in policy.xml instead, where
    ImageMagick applies them per operation.
 
-   **`time` is the exception: policy.xml does not make it per operation
-   either.** Measured on web-1 on 2026-09-20: `app:media:localise-commons`
-   died with `time limit exceeded` after 58 photos under Debian's stock
-   `time=120`, while a process that slept 125 s and then decoded an image was
-   fine. So the counter is ImageMagick's own working time, summed over the
-   life of the process. That is the messenger worker's life (an hour) and a
-   php-fpm worker's (days), and the failure is every decode refusing until the
-   process restarts. The shipped policy therefore carries **no `time` rule**,
-   and a deployed host must drop the one in its distribution's policy.xml
+   **`time` depends on the ImageMagick major version, and the two differ.**
+   Measured on 2026-09-20. ImageMagick 7 (the dev image, trixie base)
+   charges it per image: summed across one image's operations, checked when
+   the next starts, a fresh image at zero, a single long operation never
+   interrupted (40 fresh images of 0.14 s under a 3 s cap, none refused; one
+   image blurred 30 times, refused at the 21st; a 7.1 s operation under a
+   5 s cap, completed). So the shipped policy keeps `time=60` as a per-image
+   safety. ImageMagick 6 (the hosts: Ubuntu 24.04, 6.9.12) charges it to the
+   whole process: on web-1 `app:media:localise-commons` died with
+   `time limit exceeded` after 58 photos under the stock `time=120`, while a
+   process that slept 125 s and then decoded was fine. That counter is the
+   messenger worker's hour and a php-fpm worker's days, and the failure is
+   every decode refusing until the process restarts. So on the hosts the
+   policy is installed **without its `time` line**
    ([operations.md](operations.md) 3).
+
+   **Why the dev image is not on the hosts' major (2026-09-20).** No Debian
+   base image carries the hosts' 6.9.12: bookworm stops at 6.9.11, which
+   drops the XMP licence packet from WebP output (measured: the packet
+   survives on 6.9.12 and on 7, not on 6.9.11), and trixie ships no
+   ImageMagick 6 headers at all. Exact parity would mean an Ubuntu 24.04
+   base with PHP from a PPA, which is an open item in `docs/TODO.md`.
 2. **The image ships its own `policy.xml`** (`web/docker/imagemagick-policy.xml`,
-   copied to `/etc/ImageMagick-7/policy.xml`). Debian's stock policy carries
+   copied to `/etc/ImageMagick-7/policy.xml`). The allow pattern names each
+   format in both cases, because ImageMagick 6 matches it case-sensitively
+   and checks a blob write under the name the app passed to `setImageFormat`
+   (`webp`, lower case) while it checks a file read under the coder's own
+   name (`WEBP`); upper case alone passed every read and failed every encode
+   with "empty or invalid image" and no policy message (2026-09-20). The
+   build's verifier now encodes each allowed format to a blob for that
+   reason. Debian's stock policy carries
    resource limits and denies the URL/HTTP coders, but leaves every other coder
    readable and every delegate executable. Ours is deny-all-then-allow over the
    same five formats the application accepts, denies delegates and the
