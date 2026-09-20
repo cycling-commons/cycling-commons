@@ -1713,10 +1713,22 @@ Two layers now, because either alone is a single point of failure:
    first version set the pixel-cache budgets there too (memory / map / disk)
    plus time and threads. Those are consumed *cumulatively by the process*, not
    per image: the test suite went red partway through with "unable to create
-   new image", having used its allowance up — and a PHP-FPM worker has exactly
+   new image", having used its allowance up, and a PHP-FPM worker has exactly
    that same long life, so in production it would have been every upload
-   failing after some hours, with no obvious cause. The budgets live in
-   policy.xml instead, where ImageMagick applies them per operation.
+   failing after some hours, with no obvious cause. The memory, map, disk,
+   area, width and height budgets live in policy.xml instead, where
+   ImageMagick applies them per operation.
+
+   **`time` is the exception: policy.xml does not make it per operation
+   either.** Measured on web-1 on 2026-09-20: `app:media:localise-commons`
+   died with `time limit exceeded` after 58 photos under Debian's stock
+   `time=120`, while a process that slept 125 s and then decoded an image was
+   fine. So the counter is ImageMagick's own working time, summed over the
+   life of the process. That is the messenger worker's life (an hour) and a
+   php-fpm worker's (days), and the failure is every decode refusing until the
+   process restarts. The shipped policy therefore carries **no `time` rule**,
+   and a deployed host must drop the one in its distribution's policy.xml
+   ([operations.md](operations.md) 3).
 2. **The image ships its own `policy.xml`** (`web/docker/imagemagick-policy.xml`,
    copied to `/etc/ImageMagick-7/policy.xml`). Debian's stock policy carries
    resource limits and denies the URL/HTTP coders, but leaves every other coder

@@ -382,7 +382,8 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 /* The build marker sits under the steward line, in the same column and the
    same quiet grey. Empty until version.js fills it, and :empty keeps it from
    taking a line of its own before that. */
-.foot .footver{color:rgba(239,230,212,.6);text-transform:none;letter-spacing:.01em}
+/* One line: a date such as 20-09-2026 would otherwise break at its hyphens. */
+.foot .footver{color:rgba(239,230,212,.6);text-transform:none;letter-spacing:.01em;white-space:nowrap}
 .foot .footver:empty{display:none}
 /* The stamp is a link now: it carries the AGPL section 13 source offer
    (_footer.html.twig). Muted like the text it replaced, because it is still a

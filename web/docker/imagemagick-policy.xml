@@ -70,7 +70,17 @@
   <policy domain="resource" name="disk" value="1GiB"/>
   <policy domain="resource" name="width" value="30KP"/>
   <policy domain="resource" name="height" value="30KP"/>
-  <policy domain="resource" name="time" value="60"/>
+  <!--
+    No time ceiling, on purpose. ImageMagick charges the time resource to the
+    PROCESS, cumulatively over every operation it has run, not to one image:
+    measured on web-1 on 2026-09-20, one CLI run localising Commons photos died
+    with "time limit exceeded" after 58 photos under Debian's stock 120 s,
+    while a process that slept 125 s and then decoded was fine. A messenger
+    worker or a php-fpm worker lives for hours, so any finite value here is a
+    fuse that blows after enough photos, with no sign of why. The area, memory,
+    width and height ceilings above bound a single hostile image; the workers'
+    own time limits bound the process.
+  -->
   <policy domain="resource" name="thread" value="2"/>
   <!-- We process one still image at a time; a "sequence" of thousands of
        frames is not something a rider photo has any reason to be. -->
