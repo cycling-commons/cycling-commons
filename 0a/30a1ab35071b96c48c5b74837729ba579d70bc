@@ -1,0 +1,37 @@
+web/tests/Service/BuildVersionTest.php
+  s_c6cd3322f35403::t_4b63d4475387ae 206-222
+  s_c6cd3322f35403::t_766b08b6504edd 80,92,113,129,166,169,202
+  s_c6cd3322f35403::t_a7ceced488a425 203-205
+web/src/Service/BuildVersion.php
+  s_c6cd3322f35403::t_3a8a132e36d29c 61-63
+  s_c6cd3322f35403::t_6b6de7a88ed817 13-20,26,40,55,58-60,64-66
+web/tests/Smoke/SourceOfferTest.php
+  s_c6cd3322f35403::t_df9624116656b6 48-77
+web/src/Twig/VersionExtension.php
+  s_c6cd3322f35403::t_a7b426b8cafce5 14,16-17,32
+web/src/Controller/SitemapController.php
+  s_c6cd3322f35403::t_2f02aa52ff7a76 13
+  s_c6cd3322f35403::t_370cb39b9eb0c5 144-195,197-205
+  s_c6cd3322f35403::t_ac47453583ad87 196
+  s_c6cd3322f35403::t_b8adb8144baef4 92
+  s_c6cd3322f35403::t_a109b4932e2491 21-22,24,27-30
+  s_c6cd3322f35403::t_64f8dbe4108592 206-211
+web/config/services.yaml
+  s_c6cd3322f35403::t_a7b426b8cafce5 66-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0a30a1ab35071b96c48c5b74837729ba579d70bc",
+  "prompts": {},
+  "sessions": {
+    "s_c6cd3322f35403": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03caed64-5d94-4429-94bd-cccc8c2759e4",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
