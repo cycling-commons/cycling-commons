@@ -139,6 +139,27 @@ rule between the three.
   full coverage" and "Experience: curated & voted by riders", a colon, never
   a dash. The closing band keeps its map button and the account offer.
 - **Footer colophon**: "stewarded by BikeCoders" is one link, the whole line.
+- **Footer build stamp, and the AGPL section 13 source offer** (2026-09-20):
+  the stamp beside the steward line is a **link**, and it is the only place on
+  the page that discharges section 13. `cc_build()` (`VersionExtension`) returns
+  the `BuildVersion` stamp plus a `url`: the repository root from
+  `cc.source.repo_url` with `/commit/<sha>` appended whenever the build can name
+  its commit, and the bare root when it cannot. The visible label is rendered
+  server-side (`Build <number> · <date>`, the date through `cc_date`), so the
+  offer still stands with JavaScript off; `assets/js/version.js` only repaints
+  it in the rider's own date format.
+
+  Two rules, because each half is useless alone. A link that names no build
+  points at whatever `HEAD` is, which stops being the served code the moment a
+  box is hotfixed. A build name that is not a link offers nothing to fetch. The
+  colophon underneath states licences only and carries no link; the earlier
+  "Source code" text there was removed (owner, 2026-09-20) because the stamp now
+  says which code AND where to get it in one place.
+
+  The GitHub glyph in the social row does **not** count as the offer. It comes
+  from `CC_SOCIAL_GITHUB` and renders nothing when that is unset, so a licence
+  duty cannot rest on it, and it points at the repository rather than at the
+  running build. `tests/Smoke/SourceOfferTest.php` pins both rules.
 - **About page** (`pages/about.html.twig`, 2026-09-09): every block is
   left-aligned inside the full wrap, the reading column (`.col`) capping
   paragraphs and lists at 760px and never a heading. The beliefs run in the

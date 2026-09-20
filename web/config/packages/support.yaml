@@ -75,6 +75,15 @@ parameters:
     cc.social.mastodon: '%env(default:cc.blank:CC_SOCIAL_MASTODON)%'
     cc.organisation.phone: '%env(default:cc.blank:CC_ORG_PHONE)%'
 
+    # Where this build's Corresponding Source lives. NOT the same thing as
+    # cc.social.github above: that one is a place we are, it is env-configured
+    # and it renders nothing when unset, so it cannot carry a licence duty.
+    # AGPL section 13 obliges us to offer the source to anyone who uses this
+    # over a network, so this one always has a value and the footer always
+    # links it, pinned to the running commit.
+    cc.source.repo_url: '%env(default:cc.source.repo_url_fallback:CC_SOURCE_REPO_URL)%'
+    cc.source.repo_url_fallback: 'https://github.com/cycling-commons/cycling-commons'
+
     # The envelope sender for acknowledgements and desk notifications. Must be a
     # domain this deployment is allowed to send as, or SPF marks every
     # acknowledgement as spam and the contact form silently stops working from

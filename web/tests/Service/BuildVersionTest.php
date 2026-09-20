@@ -50,6 +50,9 @@ final class BuildVersionTest extends TestCase
 
         self::assertSame('abc123456789', $v->stamp()['number'], 'twelve chars of the recorded sha');
         self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $v->stamp()['date']);
+        // The FULL sha, not the twelve shown: the footer's source link resolves
+        // it, and a forge is free to refuse an abbreviation.
+        self::assertSame('abc1234567890abcdef', $v->stamp()['commit']);
     }
 
     /**
@@ -74,7 +77,7 @@ final class BuildVersionTest extends TestCase
 
         $v = new BuildVersion($dir, 'v1.2-env', static fn (string $cmd): ?string => null);
 
-        self::assertSame(['number' => 'v1.2-env', 'date' => ''], $v->stamp());
+        self::assertSame(['number' => 'v1.2-env', 'date' => '', 'commit' => ''], $v->stamp());
     }
 
     /**
@@ -86,7 +89,7 @@ final class BuildVersionTest extends TestCase
     {
         $v = new BuildVersion('/nonexistent', '', static fn (string $cmd): ?string => null);
 
-        self::assertSame(['number' => 'dev', 'date' => ''], $v->stamp());
+        self::assertSame(['number' => 'dev', 'date' => '', 'commit' => ''], $v->stamp());
     }
 
     private function tempRelease(string $revision): string
@@ -104,9 +107,12 @@ final class BuildVersionTest extends TestCase
 
     public function testAReleaseTagBecomesTheStamp(): void
     {
-        $v = new BuildVersion('/repo/web', '', static fn (string $cmd): ?string => str_contains($cmd, 'describe') ? 'v0.2.0' : '2026-08-09');
+        $v = new BuildVersion('/repo/web', '', self::git('v0.2.0', '2026-08-09'));
 
-        self::assertSame(['number' => 'v0.2.0', 'date' => '2026-08-09'], $v->stamp());
+        self::assertSame(
+            ['number' => 'v0.2.0', 'date' => '2026-08-09', 'commit' => '1111111111111111111111111111111111111111'],
+            $v->stamp(),
+        );
     }
 
     /**
@@ -117,9 +123,12 @@ final class BuildVersionTest extends TestCase
      */
     public function testAPreReleaseTagPassesThroughUntouched(): void
     {
-        $v = new BuildVersion('/repo/web', '', static fn (string $cmd): ?string => str_contains($cmd, 'describe') ? 'v0.8.0-beta' : '2026-09-01');
+        $v = new BuildVersion('/repo/web', '', self::git('v0.8.0-beta', '2026-09-01'));
 
-        self::assertSame(['number' => 'v0.8.0-beta', 'date' => '2026-09-01'], $v->stamp());
+        self::assertSame(
+            ['number' => 'v0.8.0-beta', 'date' => '2026-09-01', 'commit' => '1111111111111111111111111111111111111111'],
+            $v->stamp(),
+        );
     }
 
     public function testTheCommandAsksOnlyForReleaseShapedTags(): void
@@ -128,7 +137,7 @@ final class BuildVersionTest extends TestCase
         $v = new BuildVersion('/repo/web', '', static function (string $cmd) use (&$seen): ?string {
             $seen[] = $cmd;
 
-            return str_contains($cmd, 'describe') ? 'v0.2.0-14-gabc1234' : '2026-08-09';
+            return (self::git('v0.2.0-14-gabc1234', '2026-08-09'))($cmd);
         });
 
         self::assertSame('v0.2.0-14-gabc1234', $v->stamp()['number']);
@@ -143,7 +152,7 @@ final class BuildVersionTest extends TestCase
                 return null;   // no .git here
             }
 
-            return str_contains($cmd, 'describe') ? 'abc1234' : '2026-08-09';
+            return (self::git('abc1234', '2026-08-09'))($cmd);
         });
 
         self::assertSame('abc1234', $v->stamp()['number']);
@@ -154,10 +163,10 @@ final class BuildVersionTest extends TestCase
         $none = static fn (string $cmd): ?string => null;
 
         BuildVersion::reset();
-        self::assertSame(['number' => 'v9.9-manual', 'date' => ''], (new BuildVersion('/x', 'v9.9-manual', $none))->stamp());
+        self::assertSame(['number' => 'v9.9-manual', 'date' => '', 'commit' => ''], (new BuildVersion('/x', 'v9.9-manual', $none))->stamp());
 
         BuildVersion::reset();
-        self::assertSame(['number' => 'dev', 'date' => ''], (new BuildVersion('/x', '', $none))->stamp());
+        self::assertSame(['number' => 'dev', 'date' => '', 'commit' => ''], (new BuildVersion('/x', '', $none))->stamp());
     }
 
     /** Once per worker: the second call must not exec again. */
@@ -167,12 +176,43 @@ final class BuildVersionTest extends TestCase
         $v = new BuildVersion('/repo', '', static function (string $cmd) use (&$calls): ?string {
             ++$calls;
 
-            return str_contains($cmd, 'describe') ? 'v1.0.0' : '2026-08-09';
+            return (self::git('v1.0.0', '2026-08-09'))($cmd);
         });
 
         $v->stamp();
         $v->stamp();
 
-        self::assertSame(2, $calls);   // describe + date, exactly once each
+        self::assertSame(3, $calls);   // describe + date + rev-parse, exactly once each
+    }
+
+    /**
+     * A working copy that cannot name its HEAD still stamps: the number and the
+     * date are what the footer prints, and the missing commit only costs the
+     * source link its precision (it falls back to the repository root rather
+     * than disappearing). A footer must never 500 over a git call.
+     */
+    public function testAMissingRevParseLeavesTheCommitEmpty(): void
+    {
+        $v = new BuildVersion('/repo', '', static fn (string $cmd): ?string => match (true) {
+            str_contains($cmd, 'rev-parse') => null,
+            str_contains($cmd, 'describe') => 'v1.0.0',
+            default => '2026-08-09',
+        });
+
+        self::assertSame(['number' => 'v1.0.0', 'date' => '2026-08-09', 'commit' => ''], $v->stamp());
+    }
+
+    /**
+     * A git working copy, answering all three questions BuildVersion asks.
+     *
+     * @return callable(string): ?string
+     */
+    private static function git(string $describe, string $date): callable
+    {
+        return static fn (string $cmd): ?string => match (true) {
+            str_contains($cmd, 'rev-parse') => str_repeat('1', 40),
+            str_contains($cmd, 'describe') => $describe,
+            default => $date,
+        };
     }
 }

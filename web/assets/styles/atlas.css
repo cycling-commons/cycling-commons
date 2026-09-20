@@ -384,6 +384,13 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
    taking a line of its own before that. */
 .foot .footver{color:rgba(239,230,212,.6);text-transform:none;letter-spacing:.01em}
 .foot .footver:empty{display:none}
+/* The stamp is a link now: it carries the AGPL section 13 source offer
+   (_footer.html.twig). Muted like the text it replaced, because it is still a
+   colophon line rather than a place to click, but underlined on hover and
+   focusable so it is discoverable as a link at all. */
+.foot a.footver{text-decoration:none}
+.foot a.footver:hover{color:var(--trail);text-decoration:underline}
+.foot a.footver:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
 /* Normal case here too, which is also what lets ODbL, CC BY-SA and AGPL keep
    the capitalisation their licences are actually named with. */
 .foot .colophon{margin-top:1.344rem;text-transform:none;letter-spacing:.02em}  /* 2 × the 0.672rem line-height step */

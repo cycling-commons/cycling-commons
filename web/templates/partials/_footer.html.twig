@@ -65,21 +65,36 @@
          first. Without a slot it appended itself to .footcols, which is the
          grid, so it opened a column of its own beside the real ones
          (owner, 2026-08-29). It belongs with the steward line: both say
-         who and what made this, not where to click. #}
-      <span class="footver" data-cc-version></span>
+         who and what made this, not where to click.
+
+         It is a LINK, and that is the AGPL section 13 offer (owner,
+         2026-09-20). Section 13 obliges us to offer the Corresponding Source
+         to anyone using this over a network, and naming the build without a
+         way to fetch it discharges nothing, while linking the repository root
+         without naming the build points at whatever HEAD happens to be rather
+         than at the code actually serving the page. The stamp says both at
+         once, and stays true on a hotfixed box because `cc_build().url` is
+         derived from the same commit it prints. The GitHub glyph further down
+         cannot do this job: it comes from CC_SOCIAL_GITHUB and renders nothing
+         when that is unset.
+
+         The label is rendered server-side so the link is never empty without
+         JavaScript; version.js overwrites it with the same text carrying the
+         rider's own date format. #}
+      {% set build = cc_build() %}
+      <a class="footver" data-cc-version href="{{ build.url }}"
+         title="{{ 'footer.source'|trans }}">{{ 'js.build'|trans }} {{ build.number }}{% if build.date %} · {{ build.date|cc_date }}{% endif %}</a>
     </nav>
   </div>
 
   {# The colophon LAST: licences and ownership are what this is, not what
      somebody came to the footer to click. Its own class, because it sits
      further down than the gap between the link rows. #}
-  {# AGPL section 13: anyone who interacts with this software over a network
-     must be offered its Corresponding Source. The GitHub glyph further down is
-     a place we are, not an offer, and a reader looking for the source should
-     not have to decode an icon to find it. So the offer is here, in words,
-     beside the licence line it belongs to. #}
-  <span class="mono colophon">{{ 'footer.rights'|trans }} ·
-    <a href="https://github.com/cycling-commons/cycling-commons">{{ 'footer.source'|trans }}</a></span>
+  {# The AGPL section 13 offer used to live here as a second "Source code"
+     link. It moved onto the build stamp above (owner, 2026-09-20): one link
+     that says which code is running AND where to get it beats two that each
+     say half. #}
+  <span class="mono colophon">{{ 'footer.rights'|trans }}</span>
 
   {#
     Where to find us, below the licences.

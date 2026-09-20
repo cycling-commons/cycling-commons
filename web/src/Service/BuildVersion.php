@@ -9,11 +9,16 @@ namespace App\Service;
 /**
  * Footer build stamp: REVISION, then git, then env, then `dev`.
  *
+ * `commit` is the bare object name, empty when the running code cannot name
+ * one. The footer needs it because AGPL section 13 obliges us to offer THIS
+ * build's Corresponding Source, and only a commit link says which build that
+ * is; `number` may be a `git describe` string, which no forge resolves.
+ *
  * @api
  */
 final class BuildVersion
 {
-    /** @var array{number: string, date: string}|null */
+    /** @var array{number: string, date: string, commit: string}|null */
     private static ?array $cached = null;
 
     /** @var callable(string): ?string */
@@ -41,7 +46,7 @@ final class BuildVersion
         };
     }
 
-    /** @return array{number: string, date: string} */
+    /** @return array{number: string, date: string, commit: string} */
     public function stamp(): array
     {
         return self::$cached ??= $this->derive();
@@ -53,7 +58,7 @@ final class BuildVersion
         self::$cached = null;
     }
 
-    /** @return array{number: string, date: string} */
+    /** @return array{number: string, date: string, commit: string} */
     private function derive(): array
     {
         foreach ([$this->projectDir, \dirname($this->projectDir)] as $root) {
@@ -70,6 +75,7 @@ final class BuildVersion
             return [
                 'number' => substr(trim($sha), 0, 12),
                 'date' => false !== $mtime ? date('Y-m-d', $mtime) : '',
+                'commit' => trim($sha),
             ];
         }
 
@@ -82,13 +88,13 @@ final class BuildVersion
             }
             $date = ($this->run)($git.' log -1 --format=%cs') ?? '';
 
-            return ['number' => $number, 'date' => $date];
+            return ['number' => $number, 'date' => $date, 'commit' => ($this->run)($git.' rev-parse HEAD') ?? ''];
         }
 
         if (null !== $this->envFallback && '' !== $this->envFallback) {
-            return ['number' => $this->envFallback, 'date' => ''];
+            return ['number' => $this->envFallback, 'date' => '', 'commit' => ''];
         }
 
-        return ['number' => 'dev', 'date' => ''];
+        return ['number' => 'dev', 'date' => '', 'commit' => ''];
     }
 }
