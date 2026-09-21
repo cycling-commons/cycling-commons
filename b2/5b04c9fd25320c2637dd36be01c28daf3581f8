@@ -1,0 +1,36 @@
+web/assets/map/map-init.js
+  s_edfcbfea4e1963::t_44f0af51e7f082 188-194
+docs/specs/map-and-search.md
+  s_edfcbfea4e1963::t_2771a263b25a0f 2185-2200
+wiki/developers/numbers.md
+  s_edfcbfea4e1963::t_45b2d2326afb4a 28
+web/assets/styles/map.css
+  s_edfcbfea4e1963::t_2771a263b25a0f 495-500
+web/assets/map/town-pin.js
+  s_edfcbfea4e1963::t_44f0af51e7f082 1-25
+web/assets/map/drawer.js
+  s_edfcbfea4e1963::t_44f0af51e7f082 26,1229,1309-1317
+  s_edfcbfea4e1963::t_2283120547ebea 1318
+  s_edfcbfea4e1963::t_1358710c57d715 1356
+web/tests/js/town-pin.test.mjs
+  s_edfcbfea4e1963::t_2771a263b25a0f 1-29
+web/assets/map/places.js
+  s_edfcbfea4e1963::t_44f0af51e7f082 13-14,44-48
+  s_edfcbfea4e1963::t_2771a263b25a0f 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b25b04c9fd25320c2637dd36be01c28daf3581f8",
+  "prompts": {},
+  "sessions": {
+    "s_edfcbfea4e1963": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b8587c54-892f-4417-81fc-134cd5c26313",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
