@@ -1,0 +1,19 @@
+web/src/Security/TwoFactorSetupEnforcer.php
+  s_2223644545cfd3::t_4be20c3a58f8ca 53-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "fda813750bed0fd77e530ef9c4f7f6943277efb8",
+  "prompts": {},
+  "sessions": {
+    "s_2223644545cfd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab476736-afdd-44c1-9674-b82276ce00eb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
