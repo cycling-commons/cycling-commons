@@ -50,6 +50,16 @@ final class TwoFactorSetupEnforcer
             return;
         }
 
+        // No session cookie, nobody signed in, nothing to enforce: do not ask
+        // for a token. Since the Symfony 7.4 patch releases of September 2026
+        // the first token read on the lazy firewall counts as session use, so
+        // that one call turned every anonymous page private and uncacheable
+        // (RoadmapChangelogTest, 2026-09-21). A signed-in user always carries
+        // the cookie, so the check below still reaches everyone it is for.
+        if (!$event->getRequest()->hasPreviousSession()) {
+            return;
+        }
+
         $path = $event->getRequest()->getPathInfo();
         foreach (self::BYPASS_PREFIXES as $prefix) {
             if (str_starts_with($path, $prefix)) {
