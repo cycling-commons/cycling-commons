@@ -1,0 +1,26 @@
+web/templates/partials/_bug_fab.html.twig
+  s_e7c276cae60c92::t_d1cceba5247b70 18-20,179-180
+docs/specs/contact-and-support.md
+  s_e7c276cae60c92::t_d1cceba5247b70 242-245
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6fc0f7d9f384d042368bd7fb5be1dc26df76bd2a",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e7c276cae60c92": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82dd8c32-c03c-4bf2-9c3c-179ac681f0a9",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
