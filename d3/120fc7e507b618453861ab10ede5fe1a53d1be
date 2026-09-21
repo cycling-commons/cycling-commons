@@ -1,0 +1,24 @@
+developers/docker/nginx/app.conf
+  s_e35e79445755d1::t_965c0342ccd6b0 60-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d3120fc7e507b618453861ab10ede5fe1a53d1be",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_e35e79445755d1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "33f2a5cd-c03e-419d-bc77-77ae4d63af6d",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
