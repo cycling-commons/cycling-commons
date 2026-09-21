@@ -1,0 +1,19 @@
+docs/specs/coverage-runs-admin.md
+  s_2223644545cfd3::t_e4c8bdf0c82311 11-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7ba0574d734f26f2e46729d51b5237c3e5cbc54a",
+  "prompts": {},
+  "sessions": {
+    "s_2223644545cfd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab476736-afdd-44c1-9674-b82276ce00eb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
