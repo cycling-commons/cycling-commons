@@ -1,0 +1,28 @@
+web/config/packages/messenger.yaml
+  s_2223644545cfd3::t_ea90a3f2f6f8c0 4-17,23-24
+web/src/Command/SchemaCommentTablesCommand.php
+  s_2223644545cfd3::t_f7b884e7212929 20-24
+web/.env
+  s_2223644545cfd3::t_a1afaa37a55444 278-284,287-291
+  s_2223644545cfd3::t_d9734af2912a44 292
+docs/specs/dev-environment.md
+  s_2223644545cfd3::t_301bac5ceea130 95
+developers/docker/compose.yaml
+  s_2223644545cfd3::t_144e701e9b1954 113,186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4b6cee6e356b8ee62a5586664f2ebf5b81462055",
+  "prompts": {},
+  "sessions": {
+    "s_2223644545cfd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab476736-afdd-44c1-9674-b82276ce00eb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
