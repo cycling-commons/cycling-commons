@@ -29,6 +29,15 @@ tables:
     coverage_source: >-
         One harvested extract (a country or region file), named by slug. Every coverage_poi
         row points at the source it came from, so a re-import can replace exactly its own rows.
+    coverage_run: >-
+        One run of the coverage pipeline (pipeline/coverage/tracker.py): who started it, when,
+        how many regions it asked for and loaded, and the archive it published. The nightly
+        dispatcher owns one row per night.
+    coverage_run_step: >-
+        One timed step of a coverage run (download, filter, parse, near_way, load per region;
+        export, tippecanoe, upload per run) with seconds, bytes and rows. The view
+        coverage_source_freshness reads the load steps to say when each region was last
+        refreshed, which is the order the dispatcher harvests in.
     coverage_count: >-
         Kept counts of visible coverage rows per bucket, maintained by database triggers on
         `item` and `coverage_poi`. It exists so the map's counts endpoint sums a few thousand
