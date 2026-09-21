@@ -1,0 +1,25 @@
+docs/specs/moderation-and-contribution.md
+  s_edfcbfea4e1963::t_ef4358b2fcdd38 543-547
+web/tests/Contribution/CuratorWizardCopyTest.php
+  s_edfcbfea4e1963::t_ef4358b2fcdd38 301-320,323-334
+  s_edfcbfea4e1963::t_8281e53c21ae1d 12,321-322
+  s_edfcbfea4e1963::t_d0bd6d8a51f804 335
+web/src/Controller/ContributeController.php
+  s_edfcbfea4e1963::t_d653efc2ec1910 383-393
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e3d654860074609498800e20b46c586204f09162",
+  "prompts": {},
+  "sessions": {
+    "s_edfcbfea4e1963": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b8587c54-892f-4417-81fc-134cd5c26313",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
