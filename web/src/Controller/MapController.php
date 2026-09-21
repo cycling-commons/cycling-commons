@@ -547,7 +547,6 @@ final class MapController extends AbstractController
             'scopeMissGo' => $t->trans('map.scope_miss_go'),
             'areaDismiss' => $t->trans('map.area_dismiss'),
             'zoomForCoverage' => $t->trans('map.zoom_for_coverage'),
-            'zoomForPlaces' => $t->trans('map.zoom_for_places'),
             'pendingFollowsAreas' => $t->trans('map.pending_follows_areas'),
             'pendingYoursAnywhere' => $t->trans('map.pending_yours_anywhere'),
             'seasons' => [

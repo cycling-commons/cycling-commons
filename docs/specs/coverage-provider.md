@@ -520,10 +520,11 @@ Africa", then the same for Northern Cape at z5.5) that each ran all the way
 through the pipeline, the tiles and the scope filter before landing on the
 zoom. The rail foot now carries a one-line hint under the count
 (`render.js updateZoomHint`, fired on `zoomend`): below z6 "zoom in to see the
-full-coverage layers", between z6 and z9 "shown as density here, zoom in for
-individual places", and nothing from z9 up where the icons themselves are the
-answer. It is suppressed when the rider has turned every coverage layer off,
-so it never nags about layers nobody asked for.
+full-coverage layers", and nothing from z6 up, where the density heatmap and
+then the icons themselves are the answer. It is suppressed when the rider has
+turned every coverage layer off, so it never nags about layers nobody asked
+for. The hint box sits beside the zoom column and above the attribution strip
+(`.zoom-hint`, map.css), so it never prints across the credits.
 
 **Layers stay per (letter, country)** (`<letter>_<cc>`, unstamped rows bucket
 under `<letter>_zz`) — this split is now unrelated to clustering (there is

@@ -167,6 +167,9 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 
 ## 3. Cacheable read endpoints
 
+For every request the map page makes, in boot order and with who serves it,
+see the wiki page `wiki/developers/map-page.md`, "The map page, request by request".
+
 | Endpoint | Purpose | Caching |
 |---|---|---|
 | `GET /map/catalog.json` | whole served catalog, letters keyed (transitional, §7.1) | public, ETag, max-age 3600, **URL-versioned** |
@@ -329,7 +332,10 @@ map module opens `#drawer` behind its back.
   in that list the number is what says a row is alive.
 - **Filter transparency, always on the map.** When a chip filter narrows the
   catalog, a pill at the bottom of the map says so and offers a one-tap **Show
-  all**, and the Layers icon wears an orange dot. Both are visible whether or
+  all**, and the Layers icon wears an orange dot. The pill, the zoom hint and
+  the curator picking bar all sit 4.2rem up from the map's bottom edge
+  (map.css), above the attribution strip, so no message prints across the
+  credits. Both are visible whether or
   not the drawer is open, which is the point: a rider notices data is missing
   while looking at the MAP. The count is a real tally from the render pass
   (`render.js` `hiddenByFilters()`), incremented at the moment the chips - and
@@ -342,10 +348,14 @@ map module opens `#drawer` behind its back.
   later resets without anybody editing the reset.
 - **The bottom-left corner is the map's own controls** (`initMapControls`,
   map-init.js), bottom to top: zoom in and out, **Locate me**, and the live zoom
-  badge. The same controls at every screen width. The corner sits above the
-  attribution (`.maplibregl-ctrl-bottom-left{z-index:3}`, map.css): on a narrow
-  map the open attribution spans the whole bottom edge and used to cover the
-  buttons until the rider folded it.
+  badge. The same controls at every screen width. The attribution box at
+  bottom-right is capped at the map width minus 4.5rem
+  (`.maplibregl-ctrl-bottom-right{max-width}`, map.css), so the long notice
+  (OSM, DEM, imagery provider) wraps inside its own box and its last line, the
+  one with the credits link, stops right of the zoom column instead of running
+  under it. The corner also sits above the attribution
+  (`.maplibregl-ctrl-bottom-left{z-index:3}`): on a narrow map the folded-open
+  attribution can still meet the buttons, and the buttons win the tap.
 - **Locate me** (owner decision 2026-09-15) is MapLibre's `GeolocateControl`
   with `trackUserLocation:false`. One tap asks the browser for permission the
   first time, reads the position once, flies there (zoom capped at 15) and

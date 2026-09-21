@@ -1879,7 +1879,6 @@ map:
   add_climb_here: 'Ajouter un col ici'
   add_climb_note: 'Vous connaissez une montée absente ? Tracez-la du pied au sommet.'
   zoom_for_coverage: 'Zoomez pour voir les couches de couverture complète'
-  zoom_for_places: 'Affiché en densité ici, zoomez pour voir chaque lieu'
   pending_follows_areas: 'Les épingles en attente de validation ignorent le filtre de région : elles suivent les zones que vous modérez.'
   pending_yours_anywhere: 'Vos épingles en attente de validation apparaissent là où vous les avez ajoutées, même hors de cette région.'
   area_dismiss: 'Fermer'

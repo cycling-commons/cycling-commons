@@ -591,7 +591,6 @@ export function updateZoomHint(){
   const msg = pendingOn ? pendingMsg
     : !anyCoverage ? ''
     : z < 6 ? (I18N.zoomForCoverage || 'Zoom in to see the full-coverage layers')
-    : z < 9 ? (I18N.zoomForPlaces || 'Shown as density here, zoom in for individual places')
     : '';
   el.textContent = msg;
   el.hidden = !msg;

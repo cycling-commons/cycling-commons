@@ -2448,7 +2448,6 @@ map:
   add_climb_here: 'Add a climb here'
   add_climb_note: 'Know a climb that is missing? Mark it from its foot to its top.'
   zoom_for_coverage: 'Zoom in to see the full-coverage layers'
-  zoom_for_places: 'Shown as density here, zoom in for individual places'
   pending_follows_areas: 'Pins waiting for review ignore the region filter: they follow the areas you moderate.'
   pending_yours_anywhere: 'Your pins waiting for review show wherever you added them, even outside this region.'
   area_dismiss: 'Dismiss'

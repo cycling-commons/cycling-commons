@@ -483,9 +483,16 @@
   .maplibregl-canvas{filter:none}
   .maplibregl-map{font-family:var(--sans)}
   .maplibregl-ctrl-attrib{font-family:var(--mono);font-size:.7rem}
-  /* On a narrow map the open attribution runs the full width of the bottom
-     edge, over the zoom and Locate me buttons. The buttons stay on top so they
-     can always be tapped; the attribution folds away on its own "i". */
+  /* The attribution is long (OSM, the DEM notice, the imagery provider) and
+     wraps at the width of its box. The box stops 4.5rem short of the left
+     edge: the zoom column (10px margin + 29px buttons, the z-level badge
+     above it) keeps its own strip, so the last line and its "credits" link
+     are never underneath the buttons. The wrap is real text wrapping, the
+     rider reads every line. */
+  .maplibregl-ctrl-bottom-right{max-width:calc(100% - 4.5rem)}
+  /* On a narrow map the open attribution still meets the zoom and Locate me
+     buttons. The buttons stay on top so they can always be tapped; the
+     attribution folds away on its own "i". */
   .maplibregl-ctrl-bottom-left{z-index:3}
 
   /* The pin itself (.cc-pin, its borders, badges and state marks) lives in
@@ -640,7 +647,8 @@
      sentence and it was setting the panel's width, so a key of six short rows
      took a third of a laptop's map. Capped, and the note wraps to two lines -
      the sentence is a footnote, not a column guide. */
-  .legend{position:absolute;bottom:1.2rem;right:1.2rem;background:rgb(var(--chrome-glass) / .95);color:var(--chrome-fg-solid);border-radius:8px;padding:.9rem 1.1rem;z-index:1000;
+  /* bottom clears the attribution strip, the same 4.2rem as .fpill and .zoom-hint. */
+  .legend{position:absolute;bottom:4.2rem;right:1.2rem;background:rgb(var(--chrome-glass) / .95);color:var(--chrome-fg-solid);border-radius:8px;padding:.9rem 1.1rem;z-index:1000;
     max-width:min(17.5rem,44vw)}
   /* The collapse control, on every screen rather than only on phones. Its own
      row, right-aligned, so it reads as this panel's control and needs no
@@ -697,8 +705,10 @@
 
   /* The filter pill: bottom-centre, over the map, with its own reset. Constant
      colours on purpose - it sits on the basemap, not on the chrome, the same
-     rule the toast and the tooltip follow. */
-  .fpill{position:absolute;left:50%;bottom:1.4rem;transform:translateX(-50%);z-index:1200;
+     rule the toast and the tooltip follow. bottom clears the attribution strip
+     (10px gutter plus up to three wrapped lines of .7rem mono), the same
+     clearance as .zoom-hint, so the pill reads above the credits. */
+  .fpill{position:absolute;left:50%;bottom:4.2rem;transform:translateX(-50%);z-index:1200;
     display:flex;align-items:center;gap:.6rem;background:var(--ink);color:var(--paper);
     padding:.4rem .5rem .4rem .9rem;border-radius:30px;box-shadow:0 10px 28px -10px rgba(0,0,0,.55);
     font-size:.78rem;max-width:min(92vw,26rem)}
@@ -711,8 +721,10 @@
   /* The zoom hint, BESIDE the zoom controls rather than above them: stacked, it
      landed on top of the z-level badge that shares MapLibre's bottom-left
      corner (owner-reported 2026-08-20). left clears the ~29px control column
-     plus its 10px gutter; the bottom edge lines up with the +/- buttons. */
-  .zoom-hint{position:absolute;left:3.5rem;bottom:1.1rem;z-index:1000;max-width:min(22rem,52vw);
+     plus its 10px gutter. bottom clears the attribution strip along the bottom
+     edge (10px gutter plus up to three wrapped lines of .7rem mono), so the
+     hint reads above the credits instead of across them. */
+  .zoom-hint{position:absolute;left:3.5rem;bottom:4.2rem;z-index:1000;max-width:min(22rem,52vw);
     background:rgb(var(--chrome-glass) / .92);color:var(--chrome-fg-solid);font-family:var(--mono);
     font-size:.72rem;line-height:1.4;letter-spacing:.04em;padding:.4rem .6rem;border-radius:6px;
     pointer-events:none;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
@@ -1602,7 +1614,7 @@
   .cc-rc-mark:hover{background:var(--trail);color:var(--ink)}
   .cc-rc-marks{display:block;font-size:.78rem;color:rgb(var(--chrome-fg) / .7);margin:.15rem 0 .3rem}
   .cc-pick-pin{width:22px;height:22px;border-radius:50%;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.72rem;display:flex;align-items:center;justify-content:center;border:2px solid #FBF4E4;box-shadow:0 1px 4px rgba(0,0,0,.4)}
-  .cc-pickbar{position:absolute;left:50%;bottom:1.4rem;transform:translateX(-50%);z-index:1300;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:.6rem;padding:.55rem .8rem;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.4);font-size:.82rem}
+  .cc-pickbar{position:absolute;left:50%;bottom:4.2rem;transform:translateX(-50%);z-index:1300;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:.6rem;padding:.55rem .8rem;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.4);font-size:.82rem}
   .cc-pickbar[hidden]{display:none}
   .cc-pickbar button{font-family:var(--sans);font-weight:700;font-size:.78rem;padding:.35rem .7rem;border-radius:5px;border:1px solid var(--trail);background:transparent;color:var(--trail);cursor:pointer}
   .cc-pickbar button.on{background:var(--trail);color:var(--ink)}

@@ -1884,7 +1884,6 @@ map:
   add_climb_here: 'Voeg hier een klim toe'
   add_climb_note: 'Ken je een klim die ontbreekt? Teken hem van voet tot top.'
   zoom_for_coverage: 'Zoom in om de volledige-dekkingslagen te zien'
-  zoom_for_places: 'Hier als dichtheid getoond, zoom in voor afzonderlijke plekken'
   pending_follows_areas: 'Pins die op beoordeling wachten negeren het regiofilter: ze volgen de gebieden die jij modereert.'
   pending_yours_anywhere: 'Jouw pins die op beoordeling wachten verschijnen waar je ze hebt toegevoegd, ook buiten deze regio.'
   area_dismiss: 'Sluiten'

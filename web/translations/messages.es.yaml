@@ -2455,7 +2455,6 @@ map:
   add_climb_here: 'Añadir un puerto aquí'
   add_climb_note: '¿Conoces una subida que falta? Márcala desde el pie hasta la cima.'
   zoom_for_coverage: 'Acerca el zoom para ver las capas de cobertura completa'
-  zoom_for_places: 'Aquí se muestra como densidad, acerca el zoom para ver cada lugar'
   pending_follows_areas: 'Los pines pendientes de revisión ignoran el filtro de región: siguen las zonas que moderas.'
   pending_yours_anywhere: 'Tus pines pendientes de revisión aparecen donde los añadiste, incluso fuera de esta región.'
   area_dismiss: 'Descartar'
