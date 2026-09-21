@@ -11,6 +11,7 @@ Entrypoint: python -m coverage.run  (dev: `make coverage-refresh`).
 """
 import argparse
 import hashlib
+import json
 import resource
 import os
 import pathlib
@@ -623,7 +624,10 @@ def main(argv=None) -> int:
                                          name_or_tags=name_or_tags or None,
                                          exclude_tag_values=exclude_tag_values or None)
                     st.rows = result.inserted
-                    st.detail = f"previous {result.previous}"
+                    # JSON so the admin page can read the rule counts back;
+                    # older plain-text rows stay readable as text (§3).
+                    st.detail = json.dumps({"previous": result.previous,
+                                            "dropped": result.dropped})
                 tracker.record(region, "parse", parse_seconds[0])
                 elapsed = time.monotonic() - region_started
                 timings.append((region, elapsed, True))

@@ -854,6 +854,36 @@ def test_exclude_tag_values_drops_a_point_only_when_every_value_is_excluded(db):
     assert refs == {"node/war", "node/statue", "node/plain", "node/empty", "node/castle", "node/tap"}
 
 
+# --- what each rule dropped, per rule (docs/specs/coverage-runs-admin.md §3) ---
+
+def test_load_region_reports_what_each_rule_dropped(db):
+    """The counts used to live only in the log, so the morning after told you
+    nothing. LoadResult carries them, keyed by a short rule label."""
+    ensure_schema(db)
+    lines = [[(4.85, 50.46), (4.87, 50.46)]]     # a cycleway along latitude 50.46
+    rows = [
+        _row("node/bare", "P", name=None, tags={"tourism": "viewpoint"}),
+        _row("node/nameless", "Q", name=None, tags={"historic": "memorial"}),
+        _row("node/plaque", "Q", tags={"historic": "memorial", "memorial": "plaque"}),
+        _row("node/far", "P", lat=50.4630, tags={"tourism": "viewpoint", "image": "x"}),
+        _row("node/tap", "B"),
+    ]
+    res = load_region(db, rows, "europe/belgium",
+                      near_ways=({"P": 100.0}, lines),
+                      name_or_tags={"P": ["image"], "Q": ["image"]},
+                      exclude_tag_values={"Q": {"memorial": ["plaque"]}})
+    assert res.dropped == {"name:P": 1, "name:Q": 1, "exclude:Q:memorial": 1, "near_way": 1}
+    assert res.inserted == 1
+
+
+def test_a_rule_that_drops_nothing_is_absent_from_the_dict(db):
+    """Only what a rule actually took is reported, so the page never prints
+    a column of zeroes."""
+    ensure_schema(db)
+    rows = [_row("node/named", "P", tags={"tourism": "viewpoint"}), _row("node/tap", "B")]
+    res = load_region(db, rows, "europe/belgium", name_or_tags={"P": ["image"]})
+    assert res.dropped == {}
+
 # --- the drift guard watches the letters no rule filters -----------------------
 
 def test_a_rule_may_empty_a_letter_without_tripping_the_drift_guard(db):

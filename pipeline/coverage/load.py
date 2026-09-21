@@ -13,7 +13,7 @@ import json
 import os
 import sys
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import psycopg
 from psycopg import sql
@@ -245,6 +245,9 @@ class DriftAbort(RuntimeError):
 class LoadResult:
     inserted: int
     previous: int
+    # Per-rule drop counts, non-zero ones only, keyed by a short rule label
+    # (`name:P`, `exclude:Q:memorial`, `near_way`): coverage-runs-admin.md §3.
+    dropped: dict[str, int] = field(default_factory=dict)
 
 
 def ensure_schema(conn: psycopg.Connection) -> None:
@@ -417,6 +420,7 @@ def load_region(
     step 4). A DriftAbort (or any error) rolls the whole merge back, keeping the
     last good slice.
     """
+    dropped_by_rule: dict[str, int] = {}
     with conn.transaction():
         with conn.cursor() as cur:
             # Resolve the extract slug to its coverage_source id, self-filling the
@@ -544,6 +548,7 @@ def load_region(
                     (letter, keys),
                 ).rowcount
                 if bare:
+                    dropped_by_rule[f"name:{letter}"] = bare
                     print(f"[coverage] {src_region}: {letter} needs a name or one of {keys}: dropped "
                           f"{bare} staged point(s) with neither", file=sys.stderr)
             for letter, rules in (exclude_tag_values or {}).items():
@@ -559,11 +564,13 @@ def load_region(
                         (letter, key, key, values),
                     ).rowcount
                     if small:
+                        dropped_by_rule[f"exclude:{letter}:{key}"] = small
                         print(f"[coverage] {src_region}: {letter} leaves out {key}={values}: dropped "
                               f"{small} staged point(s)", file=sys.stderr)
             if near_ways is not None:
                 dropped = _apply_near_ways(cur, *near_ways)
                 if dropped:
+                    dropped_by_rule["near_way"] = dropped
                     print(f"[coverage] {src_region}: near-way rule dropped {dropped} staged "
                           "point(s) with no bike way in range", file=sys.stderr)
             inserted = cur.execute("SELECT count(*) FROM coverage_poi_staging").fetchone()[0]
@@ -784,4 +791,4 @@ def load_region(
                 """,
                 (src_id,),
             )
-    return LoadResult(inserted=inserted, previous=previous)
+    return LoadResult(inserted=inserted, previous=previous, dropped=dropped_by_rule)

@@ -425,7 +425,7 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
         list(rows)   # consume the parse stream, as the COPY does
         if region == "dev/bad":
             raise DriftAbort("shrank")
-        return LoadResult(inserted=7, previous=5)
+        return LoadResult(inserted=7, previous=5, dropped={"name:P": 3, "near_way": 1})
 
     pbf = tmp_path / "in.pbf"
     pbf.write_bytes(b"x" * 10)
@@ -462,7 +462,10 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
     by_key = {(p[1], p[2]): p for p in steps}
     assert by_key[("dev/bad", "download")][5] == 10 and by_key[("dev/bad", "download")][8] == "cached"
     assert by_key[("dev/bad", "load")][8] == "DriftAbort: shrank"
-    assert by_key[("dev/ok", "load")][6:] == (7, "ok", "previous 5")
+    # The load step carries its numbers as JSON so /admin/coverage-runs can read
+    # them back per rule (coverage-runs-admin.md §3).
+    assert by_key[("dev/ok", "load")][6:] == (
+        7, "ok", '{"previous": 5, "dropped": {"name:P": 3, "near_way": 1}}')
     assert by_key[(None, "tippecanoe")][5] == 8
     assert by_key[(None, "upload")][8] == "http://bucket/c.pmtiles"
     finish = [p for (sql, p) in writes if "UPDATE coverage_run" in sql]
