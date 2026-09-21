@@ -17,9 +17,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Writes each table's purpose into the database, where a schema browser shows it.
  *
- * Run it after a migration and after any harvest that recreates a coverage
- * table: the pipeline's DDL drops the comment along with the table. It is
- * idempotent, so a needless run costs one statement per table.
+ * Run it after a migration, and once after the first coverage harvest on a
+ * fresh database: the pipeline creates its tables with IF NOT EXISTS, so a
+ * comment survives every later harvest and only the very first creation
+ * finds nothing to keep. It is idempotent, so a needless run costs one
+ * statement per table.
  *
  * `--check` writes nothing and fails if a table in this database has no
  * comment on record. That is what the test calls, so a new table arrives with

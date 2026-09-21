@@ -1,16 +1,27 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #
 # The async tier (media-storage-architecture.md; plan task 1). One bus, one
-# Redis-stream transport, a failure transport - and NO when@prod gating: the
-# same env-driven single-path rule the storage layer follows, for the same
-# reason (a prod block would need a duplicate staging twin to stay honest). The
-# DSN is the difference between environments, not the wiring.
+# transport on the app's own Postgres, a failure transport - and NO when@prod
+# gating: the same env-driven single-path rule the storage layer follows, for
+# the same reason (a prod block would need a duplicate staging twin to stay
+# honest). The DSN is the difference between environments, not the wiring.
+#
+# Postgres, not a Redis stream (decided 2026-09-21). The message row commits
+# in the same transaction as the upload row, so a rolled-back upload sends
+# nothing and a queued message survives any restart; the Redis instances the
+# deployment runs keep no append log, so a crash there lost every message
+# since the last snapshot. Each worker takes a row with
+# `SELECT ... FOR UPDATE SKIP LOCKED`, so two workers never receive the same
+# message and there is no consumer name to configure. `redeliver_timeout` in
+# the DSN must stay above the slowest handler, or a second worker takes a
+# message the first is still on; 900 s is far above a photo scan.
 #
 # The retry strategy is for the SCANNER's failure mode: a clamd blip should
 # not reject a rider's photo, so a handler error retries with a growing delay
 # and only then lands on the failure transport, where messenger:failed:*
 # commands can inspect and re-dispatch it. An infected verdict is NOT an
-# error - the handler settles it in one pass.
+# error - the handler settles it in one pass. A message whose retries are
+# exhausted is also reported to GlitchTip (config/packages/sentry.yaml).
 framework:
     messenger:
         failure_transport: failed
@@ -18,26 +29,6 @@ framework:
         transports:
             async:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
-                options:
-                    # A Redis consumer group identifies each reader by name, and
-                    # Symfony's default name is the literal "consumer" for every
-                    # process. Two workers are then ONE consumer: the same entry
-                    # reaches both, both handle it, and the second to finish
-                    # fails with `Could not acknowledge redis message`, because
-                    # the first already took it out of the pending list.
-                    #
-                    # The lost ack is the visible half. The handled-twice is the
-                    # expensive half: two Commons downloads and two bucket
-                    # writes for one photo, and the claim rows only keep that
-                    # from becoming two database rows.
-                    #
-                    # Reproduced 2026-09-13 with three workers against one
-                    # queue: two reported the same failed id. With a name each,
-                    # the same three ran clean. Every launcher therefore sets
-                    # this to something unique per PROCESS, not per host: the
-                    # dev stack's worker and a hand-run `messenger:consume` in
-                    # the app container are two processes and must not share it.
-                    consumer: '%env(consumer_name:MESSENGER_CONSUMER)%'
                 retry_strategy:
                     max_retries: 3
                     delay: 5000

@@ -110,7 +110,7 @@ services:
       MEDIA_S3_PRIVATE_BUCKET: "${MEDIA_S3_PRIVATE_BUCKET:-cc-media-private}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9102/img}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9102}"
-      MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
+      MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-doctrine://default?queue_name=async&redeliver_timeout=900}"
       # Consumed by php-fpm-dev-user.conf (mounted below): the pool workers
       # drop to this uid/gid instead of www-data. Override in
       # developers/docker/.env if your host user isn't 1000; the Makefile's
@@ -183,7 +183,7 @@ services:
       APP_LOG_DIR: /tmp/cc-log
       DATABASE_URL: "postgresql://${POSTGRES_USER:-cc}:${POSTGRES_PASSWORD:-cc}@db:5432/${POSTGRES_DB:-cyclingcommons}?serverVersion=18&charset=utf8"
       REDIS_URL: "${REDIS_URL:-redis://redis:6379}"
-      MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-redis://redis:6379/cc_messages}"
+      MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-doctrine://default?queue_name=async&redeliver_timeout=900}"
       MAILER_DSN: "${MAILER_DSN:-smtp://mailpit:1025}"
       CLAMAV_TCP_ADDR: "${CLAMAV_TCP_ADDR:-clamav:3310}"
       CLAMAV_REQUIRED: "${CLAMAV_REQUIRED:-1}"
