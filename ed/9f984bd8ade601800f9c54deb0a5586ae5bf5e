@@ -1,0 +1,28 @@
+web/src/Kernel.php
+  s_2223644545cfd3::t_09fd52a3a8052d 7,9,16-20
+  s_2223644545cfd3::t_7a334a4456beff 21
+web/config/packages/sentry.yaml
+  s_2223644545cfd3::t_806d9d469afe47 1-13
+  s_2223644545cfd3::t_2a220e211b60a8 14-17
+web/config/bundles.php
+  s_2223644545cfd3::t_4cb4edea558da2 20-22
+web/src/Support/DependencyInjection/RemoveSentryLoginListenerPass.php
+  s_2223644545cfd3::t_a1b51fa7a5656b 1-13,19-27
+  s_2223644545cfd3::t_dec44c63eadb97 14-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ed9f984bd8ade601800f9c54deb0a5586ae5bf5e",
+  "prompts": {},
+  "sessions": {
+    "s_2223644545cfd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab476736-afdd-44c1-9674-b82276ce00eb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
