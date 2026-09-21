@@ -380,7 +380,17 @@ final class ContributeController extends AbstractController
             $user = $this->getUser();
 
             try {
-                $receipt = $this->contributionStub->submit('add', ['type' => $type->value] + $data, $user);
+                $receipt = $this->contributionStub->submit('add', [
+                    'type' => $type->value,
+                    // The curator's OSM answer from the locate step, under the
+                    // service's own key (catalog-data-model.md §5b). This is the
+                    // arm that asks the question: a place from an OSM node is
+                    // answered by construction and never shows it. Without the
+                    // mapping the answer rode along as `osmAnswer`, nothing read
+                    // it, and a curator's own place queued unanswered behind
+                    // them (owner-reported 2026-09-21).
+                    '_osm_answer' => $data['osmAnswer'] ?? null,
+                ] + $data, $user);
 
                 return $this->renderAddPlace($type, receipt: $receipt);
             } catch (TooManyRequestsHttpException) {

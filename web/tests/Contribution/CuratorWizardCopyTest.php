@@ -9,6 +9,7 @@ namespace App\Tests\Contribution;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\ItemConfirmation;
 use App\Catalog\Entity\Region;
+use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
@@ -296,5 +297,40 @@ final class CuratorWizardCopyTest extends WebTestCase
         self::assertNotNull($fresh);
         self::assertSame(ItemState::Verified, $fresh->getState());
         self::assertSame(1, $em->getRepository(ItemConfirmation::class)->count(['itemId' => (int) $item->getId()]));
+    }
+
+    /**
+     * The answer the locate step records reaches the service. It rode in the
+     * `osmAnswer` field but the plain add arm never mapped it to the
+     * service's `_osm_answer` key, so a curator's own place queued
+     * unanswered behind them (owner-reported 2026-09-21).
+     */
+    public function testACuratorsOwnAnswerOnAPlainAddIsRecordedAndThePlaceIsApplied(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'wizard-curator-answer@example.com', ['ROLE_CURATOR']);
+
+        $crawler = $client->request('GET', '/improve?type=scenic-views&mode=add');
+        $form = $crawler->selectButton('Next →')->form([
+            'improve[details][name]' => 'Uitkijkpunt Answered',
+            'improve[details][type]' => 'Viewpoint / high point',
+            'improve[lat]' => '50.4712',
+            'improve[lng]' => '5.8601',
+            'improve[mode]' => 'add',
+            'improve[osmAnswer]' => 'none',
+            // The test catalogue holds no bike way near the pin: overrule the check.
+            'improve[bikewayOverride]' => '1',
+        ]);
+        $client->submit($form);
+        self::assertResponseIsSuccessful();
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Uitkijkpunt Answered']);
+        self::assertNotNull($submission);
+        $item = $em->find(Item::class, (int) $submission->getItemId());
+        self::assertNotNull($item);
+        self::assertTrue($item->osmAnswered(), 'the locate step\'s "not in OSM" is recorded on the row');
+        self::assertNull($item->getOsmRef());
+        self::assertNotSame(ItemState::Submitted, $item->getState(), 'answered, a curator\'s own place is applied at once');
     }
 }

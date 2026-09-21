@@ -540,7 +540,11 @@ The known-places note from §1.2b is suppressed wherever this question is
 asked. That note counts whatever is in the map view; this counts a fixed
 250 m around the pin. Two different numbers about the same worry, on one
 screen, is one too many. The answer rides in the `osmAnswer` form
-field, and `CatalogContributionService::answerOsmIfCurator()` records it
+field, `ContributeController::addPlace()` hands it to the service as
+`_osm_answer` (the plain add arm, the one that asks; until 2026-09-21 only
+the from-OSM arm mapped it, and that arm never asks, so a curator's own
+place queued unanswered), and
+`CatalogContributionService::answerOsmIfCurator()` records it
 before `applyIfCurator()` runs, with the desk's own exclusivity guard: a
 taken ref is not recorded and the place queues, where a human sees the clash.
 Unanswered, it queues exactly as before, so the question is an opening and
