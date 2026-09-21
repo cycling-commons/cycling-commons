@@ -4,12 +4,20 @@
 
 namespace App;
 
+use App\Support\DependencyInjection\RemoveSentryLoginListenerPass;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 
 class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
+
+    #[\Override]
+    protected function build(ContainerBuilder $container): void
+    {
+        $container->addCompilerPass(new RemoveSentryLoginListenerPass());
+    }
 
     // Cache/log dirs may live outside the bind-mount (APP_CACHE_DIR / APP_LOG_DIR).
     public function getCacheDir(): string

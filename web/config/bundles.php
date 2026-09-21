@@ -17,4 +17,7 @@ return [
     Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle::class => ['dev' => true, 'test' => true],
     League\FlysystemBundle\FlysystemBundle::class => ['all' => true],
     Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true, 'test' => true],
+    // Every env, not prod only: staging runs APP_ENV=staging and is where the
+    // failed-message reports matter first. Empty SENTRY_DSN makes it a no-op.
+    Sentry\SentryBundle\SentryBundle::class => ['all' => true],
 ];

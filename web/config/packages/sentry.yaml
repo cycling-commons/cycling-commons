@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# GlitchTip speaks the Sentry protocol. An empty SENTRY_DSN (dev, tests) makes
+# the bundle a no-op. `capture_soft_fails: false` reports a Messenger message
+# once its retries are exhausted, not on every retry.
+sentry:
+    dsn: '%env(SENTRY_DSN)%'
+    messenger:
+        enabled: true
+        capture_soft_fails: false
+    options:
+        environment: '%env(APP_ENV)%'
+        send_default_pii: false
+    # Errors only. The default wraps every DBAL query in a span; traces are
+    # not collected today, so that is cost without a reader.
+    tracing:
+        enabled: false
