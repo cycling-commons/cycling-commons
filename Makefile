@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -197,6 +197,17 @@ app-test: ## run the app test suite + static analysis + gates
 	@# whole-tree pass is a separate target because it needs the network on
 	@# first run, the same split credits-check makes.
 	@echo "licences: run 'make licenses-check' for the whole-tree reuse lint pass"
+
+preflight: ## Every gate CI runs, locally, before a push: app, pipeline, tools, credits, wiki, licences
+	@# One command so nothing is forgotten. 2026-09-21: three pushes in a row
+	@# bounced on checks that run in seconds here (full Psalm, a JS test, the
+	@# credits marker), each one costing a CI run and a deploy attempt.
+	$(MAKE) app-test
+	$(MAKE) pipeline-test
+	$(MAKE) tools-test
+	$(MAKE) credits-check
+	$(MAKE) wiki-check
+	$(MAKE) licenses-check
 
 scope-test: ## run the map scope-model + vendored-parser Node tests (no deps: node:test ships with Node ≥18)
 	node --test web/tests/js/*.test.cjs
