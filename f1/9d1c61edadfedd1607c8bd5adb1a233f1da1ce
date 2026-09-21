@@ -1,0 +1,19 @@
+web/src/Support/DependencyInjection/RemoveSentryLoginListenerPass.php
+  s_2223644545cfd3::t_d457d7d8d9d120 19-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f19d1c61edadfedd1607c8bd5adb1a233f1da1ce",
+  "prompts": {},
+  "sessions": {
+    "s_2223644545cfd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab476736-afdd-44c1-9674-b82276ce00eb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
