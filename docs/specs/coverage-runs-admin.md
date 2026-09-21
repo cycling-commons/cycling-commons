@@ -8,7 +8,8 @@ detail, chosen by the owner.
 ## 1. Why
 
 The coverage batch runs unattended on the worker host every night. Its output
-goes to the journal and to a healthchecks.io ping. Neither answers, from the
+goes to the journal and, once the checks are registered, to a healthchecks.io
+ping. Neither answers, from the
 admin backend, the questions an operator asks the morning after: did it run,
 what took how long, which regions changed, and why did a region lose points.
 The answers already exist in two tables the pipeline writes
