@@ -1,0 +1,26 @@
+web/tests/Auth/ResetPasswordTest.php
+  s_edfcbfea4e1963::t_bf83cf4ad13f7e 153
+  s_edfcbfea4e1963::t_1023710b279681 12-14,125-152,154
+  s_edfcbfea4e1963::t_b74720eb1ecbab 124
+  s_edfcbfea4e1963::t_d19a0683f693e5 155
+web/templates/security/reset_password_check_email.html.twig
+  s_edfcbfea4e1963::t_105ff24cab235f 21
+docs/specs/account-and-auth.md
+  s_edfcbfea4e1963::t_b74720eb1ecbab 158-161
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2019ab87f35b631576f1e22e96e454ce676ac6f8",
+  "prompts": {},
+  "sessions": {
+    "s_edfcbfea4e1963": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b8587c54-892f-4417-81fc-134cd5c26313",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
