@@ -223,6 +223,60 @@ final class SubmissionQueueTest extends KernelTestCase
         self::assertCount(1, $this->queue->pendingForMap(ModerationScope::global()));
     }
 
+    private function item(): Item
+    {
+        $item = (new Item())
+            ->setLetter('D')
+            ->setName('Queue osm '.uniqid('', true))
+            ->setGeom('{"type":"Point","coordinates":[5.5,50.5]}')
+            ->setCountryCode('BE')
+            ->setSource(ItemSource::User)
+            ->setSourceRef('test:queue-osm:'.uniqid('', true))
+            ->setState(ItemState::Submitted)
+            ->setAttributes([]);
+        $this->em->persist($item);
+        $this->em->flush();
+
+        return $item;
+    }
+
+    /**
+     * The OSM question rides the row (catalog-data-model.md §5b): open with
+     * its stored candidates, or answered either way. An edit has no question.
+     */
+    public function testRowsCarryTheOsmQuestionOfANewPlace(): void
+    {
+        $open = $this->item();
+        $none = $this->item()->answerOsm(null);
+        $linked = $this->item()->answerOsm('node/930340800');
+        $this->em->flush();
+        $this->seed('new', 'BE', SubmissionStatus::Pending, 'Open')->setItemId((int) $open->getId());
+        $this->seed('new', 'BE', SubmissionStatus::Pending, 'None')->setItemId((int) $none->getId());
+        $this->seed('new', 'BE', SubmissionStatus::Pending, 'Linked')->setItemId((int) $linked->getId());
+        $this->seed('edit', 'BE', SubmissionStatus::Pending, 'Edit')->setItemId((int) $linked->getId());
+        $this->em->flush();
+
+        $rows = array_column($this->queue->pendingForMap(ModerationScope::global()), 'osm', 'title');
+        self::assertSame(['state' => 'open', 'ref' => null, 'candidates' => []], $rows['Open']);
+        self::assertSame(['state' => 'none', 'ref' => null, 'candidates' => []], $rows['None']);
+        self::assertSame(['state' => 'linked', 'ref' => 'node/930340800', 'candidates' => []], $rows['Linked']);
+        self::assertNull($rows['Edit']);
+        // And the queue list reads the same rows.
+        $listed = array_column($this->queue->filtered(ModerationScope::global(), null, null, null), 'osm', 'title');
+        self::assertSame('open', $listed['Open']['state']);
+    }
+
+    /** The candidate list is a curator's (ContributeController::osmNearby): a rider's own pin carries none. */
+    public function testARidersOwnPinsCarryNoOsmQuestion(): void
+    {
+        $this->seed('new', 'BE', SubmissionStatus::Pending, 'Mine')->setItemId((int) $this->item()->getId());
+        $this->em->flush();
+
+        $rows = array_column($this->queue->ownPendingForMap(7), 'osm', 'title');
+        self::assertArrayHasKey('Mine', $rows);
+        self::assertNull($rows['Mine']);
+    }
+
     public function testRelativeTime(): void
     {
         $now = new \DateTimeImmutable('2026-07-04 12:00');

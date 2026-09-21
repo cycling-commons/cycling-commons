@@ -490,6 +490,11 @@ re-harvested, so it is computed once and stored on the row:
 | `item.osm_candidates` (jsonb) | the list `{ref, name, distanceM}[]` the chip shows |
 | `item.osm_candidates_at` | when it was computed; NULL with a NULL list = compute on next read |
 
+Two surfaces read it, through one builder (`SubmissionQueue::osmQuestion()`):
+the queue card's chip and the map drawer's question block
+([moderation-and-contribution.md §5.4](moderation-and-contribution.md)), which
+is where a new place is approved. Both post to `/moderate/osm-answer`.
+
 `App\Catalog\Import\OsmCandidates` owns it: intake computes it when the row
 is created (`refresh()`), an approved pin move recomputes it at the new point
 (`refreshAt()`, ModerationService, answered or not: the old answer was about

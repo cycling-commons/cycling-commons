@@ -568,6 +568,26 @@
   .cc-mod-photo-zoom:hover::after,.cc-mod-photo-zoom:focus-visible::after{opacity:1}
   .cc-mod-photo-meta{color:var(--chrome-mut);line-height:1.3}
   .cc-mod-photo-keep{display:flex;align-items:center;gap:.25rem}
+  /* The OSM question on a new place (catalog-data-model.md §5b), asked here
+     because this is where the place is approved. Options are buttons in the
+     drawer's secondary style; the answered chip is one small mono tag. */
+  .cc-mod-osm{margin:.65rem 0 .6rem}
+  .cc-mod-osm-scope{font-size:.76rem;color:var(--chrome-mut);margin:0 0 .4rem;line-height:1.4}
+  .cc-mod-osm-opts{display:flex;flex-direction:column;gap:.35rem}
+  .cc-mod-osm-opt{display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;text-align:left;width:100%;
+    font-family:var(--sans);font-size:.8rem;line-height:1.3;padding:.45rem .65rem;border-radius:5px;cursor:pointer;
+    background:transparent;color:rgb(var(--chrome-fg) / .9);border:1.5px solid rgb(var(--chrome-fg) / .45);transition:background .15s,border-color .15s}
+  .cc-mod-osm-opt b{font-weight:700}
+  .cc-mod-osm-opt span{font-family:var(--mono);font-size:.68rem;color:var(--chrome-mut)}
+  .cc-mod-osm-opt:hover,.cc-mod-osm-opt:focus-visible{border-color:var(--trail);background:rgb(var(--chrome-fg) / .06)}
+  .cc-mod-osm-opt:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  .cc-mod-osm-opt:disabled{opacity:.55;cursor:default}
+  .cc-mod-osm-opt.none{border-style:dashed}
+  .cc-mod-osm-chip{display:inline-block;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;padding:.2rem .5rem;
+    border-radius:999px;border:1px solid rgb(var(--chrome-fg) / .35);color:rgb(var(--chrome-fg) / .85);text-decoration:none}
+  a.cc-mod-osm-chip:hover{border-color:var(--trail);color:var(--trail)}
+  /* Approve clicked before the question was answered: the refusal points here. */
+  .cc-mod-osm.cc-mod-invalid{border-left:3px solid var(--clay);padding-left:.6rem;border-radius:0 6px 6px 0;background:rgba(181,83,46,.12)}
   .cc-mod-diff-h{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--chrome-mut);margin-bottom:.3rem}
   .cc-mod-was{color:var(--chrome-mut);text-decoration:line-through}
   .cc-mod-now{color:var(--trail)}

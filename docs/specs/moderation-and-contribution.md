@@ -1215,6 +1215,26 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
   escape; needs-info leaves them pending, because the rider is still being
   asked. The `/moderate/submissions` list shows the same thumbs as review context, and
   keeps routing the decision to the map.
+- **The OSM question is asked here too** (2026-09-21, owner-reported: a
+  scenic view of their own refused with `osm_unanswered`, and nowhere in the
+  drawer to answer). A new place is not admitted until somebody has said
+  which OSM object it is, or that there is none
+  ([catalog-data-model.md §5b](catalog-data-model.md)). The queue card has
+  carried that chip since 2026-08-25, but the decision is made in the drawer,
+  so a curator who clicked Approve there met a generic "could not record"
+  toast with no way forward. Now `SubmissionQueue::rows()` puts the question
+  on every pending row (`osm: {state, ref, candidates}`, `null` when there is
+  none: edits, and every rider-facing payload from `ownPendingForMap()`), and
+  the drawer draws it above the note for a `new` submission
+  (`assets/map/osm-question.js`): the stored candidates, then "Not in OSM"
+  last. One click posts to the same `/moderate/osm-answer` the card uses,
+  XHR, with `window.CC_OSM_TOKEN` (`csrf_token('moderate-osm-answer')`,
+  emitted in the curator block beside `CC_MOD_TOKEN`); the endpoint answers
+  JSON (`{state, ref}`, or a 422 with `bad_ref` / `ref_taken`), the answered
+  chip replaces the question in place, and Approve goes through. The decide
+  POST's own 422 codes (`osm_unanswered`, `needs_info_note_required`) now
+  reach the toast as their message instead of "please try again", and
+  `osm_unanswered` highlights the question block.
 
 **Approving keeps the curator on the item** (2026-08-03, owner-reported). The
 decision used to close the drawer on a toast, so a curator had to reload to see

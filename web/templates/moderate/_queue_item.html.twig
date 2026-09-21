@@ -79,7 +79,7 @@
                 : ('contribute.pin_photos.queue_many'|trans({'%n%': item.photosHiddenByMove})) -}}
           </span>
         {% endif %}
-        {% if item.osm is defined %}
+        {% if item.osm|default(null) %}
           {% if item.osm.state == 'open' %}
           <details class="q-act q-osm-chip">
             <summary class="osm-chip osm-chip--open" title="{{ 'moderate.osm.tip_open'|trans }}"

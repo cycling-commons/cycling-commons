@@ -10,6 +10,7 @@ import { dropPendingFromSearch } from './search-ui.js';
 import { addCuratedFeature } from './osm-pools.js';
 import { showPendingShape } from './pending-shape.js';
 import { escPend, curatorMayEdit } from './util.js';
+import { osmAnsweredHtml } from './osm-question.js';
 
 const CC_BIKES=['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
 const CC_SEASONS=['spring','summer','autumn','winter'];
@@ -326,7 +327,11 @@ export function submitModeration(btn){
       headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'},
       body:body.toString() });
   })
-    .then(r=>{ if(!r.ok) throw new Error('decide'); return r.json(); })
+    .then(r=>{
+      if(r.ok) return r.json();
+      // A 422 names why (ModerateController::decide): show that, not "try again".
+      return r.json().catch(()=>({})).then(j=>{ throw Object.assign(new Error('decide'), {code: j && j.error}); });
+    })
     .then(res=>{
       hidePendingPin(id); closeDrawer();
       try {
@@ -358,7 +363,59 @@ export function submitModeration(btn){
         : tpl(D.decisionRecorded||'Decision recorded ({d}) · {ref}', {d:decision.replace('_',' '), ref:res.reference}),
         {center:true});
     })
-    .catch(()=>{ _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false); mapToast(D.decisionErr||'Could not record the decision — please try again.', {center:true}); });
+    .catch(err=>{
+      _modToken=undefined; box.querySelectorAll('.cc-mod-btn').forEach(b=>b.disabled=false);
+      const code = err && err.code;
+      if('osm_unanswered'===code){
+        // catalog-data-model.md §5b — the question is right here; point at it.
+        const q=box.querySelector('.cc-mod-osm[data-osm-state="open"]');
+        if(q){ q.classList.add('cc-mod-invalid'); const first=q.querySelector('.cc-mod-osm-opt'); if(first) first.focus(); }
+        mapToast(D.osmUnanswered||'Link this place to OSM, or record that it has no OSM counterpart, before approving it.', {center:true});
+        return;
+      }
+      if('needs_info_note_required'===code){
+        mapToast(D.needsInfoNote||'Ask the rider what you need to know — a needs-info with no question tells them nothing.', {center:true});
+        return;
+      }
+      mapToast(D.decisionErr||'Could not record the decision — please try again.', {center:true});
+    });
+}
+
+/* The OSM question on a new place, answered where the place is approved
+   (catalog-data-model.md §5b). Same endpoint as the queue card's chip; the
+   answered chip replaces the question in place, and the pending feature is
+   updated so reopening the drawer shows the answer, not the question again. */
+export function answerOsm(btn){
+  const box=btn.closest('.cc-mod'); if(!box) return;
+  const q=btn.closest('.cc-mod-osm'); if(!q) return;
+  const id=box.dataset.id, ref=btn.getAttribute('data-osm-answer')||'';
+  const token=window.CC_OSM_TOKEN;
+  if(!token){ mapToast(D.decisionErr||'Could not record the decision — please try again.', {center:true}); return; }
+  q.querySelectorAll('.cc-mod-osm-opt').forEach(b=>b.disabled=true);
+  const body=new URLSearchParams();
+  body.set('submission_id', id); body.set('ref', ref); body.set('_token', token);
+  fetch('/moderate/osm-answer', { method:'POST', credentials:'same-origin',
+    headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'},
+    body:body.toString() })
+    .then(r=>{
+      if(r.ok) return r.json();
+      return r.json().catch(()=>({})).then(j=>{ throw Object.assign(new Error('osm'), {code: j && j.error}); });
+    })
+    .then(res=>{
+      const state = res && res.state, answered = res && res.ref ? res.ref : null;
+      q.outerHTML = osmAnsweredHtml(state, answered, D);
+      const layer=layerByKey.pending;
+      const f=layer && (layer.features||[]).find(x=>x.pending && String(x.pending.id)===String(id));
+      if(f) f.pending.osm = {state, ref: answered, candidates: []};
+      mapToast('linked'===state ? (D.osmAnsweredLinked||'Linked. The place now names its OSM object.') : (D.osmAnsweredNone||'Recorded: this place has no OSM counterpart.'), {center:true});
+    })
+    .catch(err=>{
+      q.querySelectorAll('.cc-mod-osm-opt').forEach(b=>b.disabled=false);
+      const code = err && err.code;
+      mapToast('ref_taken'===code ? (D.osmRefTaken||'Another served place already claims that OSM object. Resolve the duplicate first.')
+        : 'bad_ref'===code ? (D.osmBadRef||'That is not an OSM object we can link.')
+        : (D.decisionErr||'Could not record the decision — please try again.'), {center:true});
+    });
 }
 let _pendingShape = null;
 export function setPendingShape(shape){ _pendingShape = shape || null; }
@@ -431,6 +488,10 @@ export function initCommunity(){
       const btn=e.target.closest('.cc-mod-btn'); if(!btn) return;
       if(btn.disabled) return;
       submitModeration(btn);
+    });
+    document.addEventListener('click', e=>{
+      const btn=e.target.closest('[data-osm-answer]'); if(!btn || btn.disabled) return;
+      answerOsm(btn);
     });
     document.addEventListener('click', e=>{
       const btn=e.target.closest('.cc-shape-btn'); if(!btn || btn.disabled) return;

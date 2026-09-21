@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Moderation;
 
 use App\Catalog\Entity\Item;
+use App\Catalog\Import\OsmCandidates;
 use App\Catalog\ItemType;
 use App\Catalog\Links\LinkVerdictStore;
 use App\Catalog\Links\SafeBrowsing;
@@ -43,10 +44,11 @@ final class SubmissionQueue
         private readonly ClockInterface $clock,
         private readonly MediaStorage $mediaStorage,
         private readonly LinkVerdictStore $linkVerdicts,
+        private readonly OsmCandidates $osmCandidates,
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>}}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser);
@@ -116,7 +118,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: pending only, plus optional `$focusId` for a needs-info pin.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>}}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -138,11 +140,18 @@ final class SubmissionQueue
      */
     public function ownPendingForMap(int $userId): array
     {
-        return $this->rows(
+        $rows = $this->rows(
             ModerationScope::global(),
             "s.user_id = :own AND s.status IN ('pending', 'needs_info') AND s.escalated_at IS NULL",
             ['own' => $userId],
         );
+        // The OSM question is a curator's, and so is its candidate list
+        // (ContributeController::osmNearby()): a rider's own pin carries none.
+        foreach ($rows as &$row) {
+            $row['osm'] = null;
+        }
+
+        return $rows;
     }
 
     /**
@@ -460,7 +469,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>}}>
      */
     private function rows(ModerationScope $scope, string $where, array $params, ?int $limit = null, int $offset = 0): array
     {
@@ -474,7 +483,7 @@ final class SubmissionQueue
                     ST_Y(s.geom) AS lat, ST_X(s.geom) AS lng, s.user_id, s.created_at, s.changes,
                     COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
                     s.payload->\'_bikeway\' AS bikeway,
-                    it.attributes AS item_attributes, it.letter AS item_letter,
+                    it.attributes AS item_attributes, it.letter AS item_letter, it.osm_ref, it.osm_checked_at,
                     ST_Y(ST_PointOnSurface(it.geom)) AS item_lat, ST_X(ST_PointOnSurface(it.geom)) AS item_lng,
                     rr.body_text AS rider_reply,
                     u.public_profile, u.display_name, u.uuid AS user_uuid
@@ -505,8 +514,9 @@ final class SubmissionQueue
         )))));
 
         $linkFlags = $this->linkFlags($rows);
+        $osmBySubmission = $this->osmQuestion($rows);
 
-        return array_map(function (array $r) use ($now, $photosBySubmission, $rejectedByItem, $linkFlags): array {
+        return array_map(function (array $r) use ($now, $photosBySubmission, $rejectedByItem, $linkFlags, $osmBySubmission): array {
             [$was, $new] = $this->diffStrings((string) $r['changes']);
 
             return [
@@ -546,8 +556,52 @@ final class SubmissionQueue
                 'bikeway' => self::overruledBikeWay($r['bikeway'] ?? null),
                 /* Rider photos the proposed pin would hide until a curator confirms them (scenic-views.md §8). */
                 'photosHiddenByMove' => self::photosHiddenByMove($r),
+                /* The OSM identity of a new place, open or answered (catalog-data-model.md §5b). */
+                'osm' => $osmBySubmission[(int) $r['id']] ?? null,
             ];
         }, $rows);
+    }
+
+    /**
+     * The OSM identity of every open new place, keyed by submission id
+     * (catalog-data-model.md §5b): `open` carries the stored candidate list
+     * and waits for an answer, `linked` names the object, `none` records that
+     * there is none. Pending and needs-info new places only: a settled row is
+     * never asked, so nothing is computed or stored for it, and an edit of
+     * the same item carries no question. The drawer, where the decision is
+     * made, and the queue card both read this one shape.
+     *
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return array<int, array{state: string, ref: ?string, candidates: list<array{ref: string, name: ?string, distanceM: float}>}>
+     */
+    private function osmQuestion(array $rows): array
+    {
+        $openItems = [];
+        $out = [];
+        foreach ($rows as $r) {
+            if (SubmissionType::NewItem->value !== (string) $r['type']
+                || null === $r['item_id']
+                || !\in_array((string) $r['status'], ['pending', 'needs_info'], true)) {
+                continue;
+            }
+            $sid = (int) $r['id'];
+            if (null === $r['osm_checked_at']) {
+                $openItems[$sid] = (int) $r['item_id'];
+                $out[$sid] = ['state' => 'open', 'ref' => null, 'candidates' => []];
+            } elseif (\is_string($r['osm_ref']) && '' !== $r['osm_ref']) {
+                $out[$sid] = ['state' => 'linked', 'ref' => $r['osm_ref'], 'candidates' => []];
+            } else {
+                $out[$sid] = ['state' => 'none', 'ref' => null, 'candidates' => []];
+            }
+        }
+        // Stored once per row, never asked of the coverage table per view.
+        $lists = $this->osmCandidates->forItems(array_values(array_unique($openItems)));
+        foreach ($openItems as $sid => $itemId) {
+            $out[$sid]['candidates'] = $lists[$itemId] ?? [];
+        }
+
+        return $out;
     }
 
     /**

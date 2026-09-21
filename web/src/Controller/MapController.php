@@ -14,6 +14,7 @@ use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
 use App\Catalog\ConfirmationFreshness;
 use App\Catalog\Entity\Item;
+use App\Catalog\Import\OsmLinker;
 use App\Catalog\ItemType;
 use App\Catalog\KindIcons;
 use App\Catalog\MapTheme;
@@ -599,6 +600,21 @@ final class MapController extends AbstractController
                 // Bikes on board row and a stored value share one label and
                 // the drawer shows one row, not two.
                 'bikesOnBoard' => $t->trans('Bikes on board'),
+                // The OSM question on a new place, asked in the drawer where
+                // the place is approved (catalog-data-model.md §5b). The
+                // desk's own strings, so the two surfaces cannot drift.
+                'osmQuestion' => $t->trans('moderate.osm.question'),
+                'osmScope' => $t->trans('improve.osm.scope', ['%m%' => OsmLinker::LOOSE_M]),
+                'osmNone' => $t->trans('moderate.osm.none'),
+                'osmUnnamed' => $t->trans('moderate.osm.unnamed'),
+                'osmTipLinked' => $t->trans('moderate.osm.tip_linked'),
+                'osmChipNone' => $t->trans('moderate.osm.chip_none'),
+                'osmTipNone' => $t->trans('moderate.osm.tip_none'),
+                'osmAnsweredLinked' => $t->trans('moderate.osm.answered_linked'),
+                'osmAnsweredNone' => $t->trans('moderate.osm.answered_none'),
+                'osmRefTaken' => $t->trans('moderate.osm.ref_taken'),
+                'osmBadRef' => $t->trans('moderate.osm.bad_ref'),
+                'osmUnanswered' => $t->trans('moderate.error.osm_unanswered'),
             ],
         ];
     }

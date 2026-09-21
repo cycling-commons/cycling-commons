@@ -757,6 +757,10 @@ window.CC_VENDOR = {{ {
      Forms use the global stateless token id 'submit' (config/packages/csrf.yaml
      → framework.form.csrf_protection.token_id), so that is the id to mint. #}
   window.CC_MOD_TOKEN = {{ csrf_token('submit')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# The OSM question on a new place, answered in the drawer where the place
+     is approved (catalog-data-model.md §5b). Its own token id, the one the
+     queue card's form family already uses; curators only, like the question. #}
+  {% if pending_is_curator|default(false) %}window.CC_OSM_TOKEN = {{ csrf_token('moderate-osm-answer')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};{% endif %}
   {# The drawer's "Taken here" button on a scenic view's hidden rider photo
      (photo-uploads.md §5g). Curator block: only a curator may confirm. #}
   window.CC_PHOTO_TAKEN_HERE_TOKEN = {{ csrf_token('photo-taken-here')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
