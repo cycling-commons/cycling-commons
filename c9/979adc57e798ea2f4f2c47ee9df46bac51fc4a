@@ -1,0 +1,41 @@
+web/src/Controller/Admin/CoverageRunController.php
+  s_fd301e3dd248f5::t_992e2daf695acf 1-165
+web/src/Controller/Admin/DashboardController.php
+  s_fd301e3dd248f5::t_96586e830f45bf 109
+web/templates/admin/coverage_runs/_format.html.twig
+  s_fd301e3dd248f5::t_28335d56940653 1-24
+web/templates/admin/coverage_runs/index.html.twig
+  s_fd301e3dd248f5::t_595e6072230b52 1-61
+web/templates/admin/coverage_runs/show.html.twig
+  s_fd301e3dd248f5::t_9c42639929edc3 1-79
+web/tests/Admin/CoverageRunsTest.php
+  s_fd301e3dd248f5::t_87b9224af0bd2a 1-199
+web/tests/Coverage/CoverageRunSchema.php
+  s_fd301e3dd248f5::t_cd312180f0d17f 1-101
+web/translations/messages.de.yaml
+  s_fd301e3dd248f5::t_46cc853ecc0dbd 4264-4291,4310
+web/translations/messages.en.yaml
+  s_fd301e3dd248f5::t_692b79424eeefe 4285-4312,4331
+web/translations/messages.es.yaml
+  s_fd301e3dd248f5::t_7102dd2f4e91a7 4295-4322,4341
+web/translations/messages.fr.yaml
+  s_fd301e3dd248f5::t_c44e2be5fd41d4 4256-4283,4302
+web/translations/messages.nl.yaml
+  s_fd301e3dd248f5::t_c985a4b25653ef 4263-4290,4309
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c9979adc57e798ea2f4f2c47ee9df46bac51fc4a",
+  "prompts": {},
+  "sessions": {
+    "s_fd301e3dd248f5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "71930ecb-456d-4e6f-a5a2-91561c020b1c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
