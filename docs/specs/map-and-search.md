@@ -335,7 +335,10 @@ map module opens `#drawer` behind its back.
   all**, and the Layers icon wears an orange dot. The pill, the zoom hint and
   the curator picking bar all sit 4.2rem up from the map's bottom edge
   (map.css), above the attribution strip, so no message prints across the
-  credits. Both are visible whether or
+  credits. The bottom-right corner is a stack of two, bottom to top: the
+  bug circle at 3.4rem ([contact-and-support.md](contact-and-support.md), the
+  floating button) and the overlay key box at 6.65rem (`.legend`), shown
+  only while the Road surface or Routes overlay is on, clear of the circle. Both are visible whether or
   not the drawer is open, which is the point: a rider notices data is missing
   while looking at the MAP. The count is a real tally from the render pass
   (`render.js` `hiddenByFilters()`), incremented at the moment the chips - and
@@ -1357,10 +1360,14 @@ The marks stack four independent signals on one shape, and the key says so in
 two places, sized to their audience:
 
 - **The Key rail panel** (`data-panel="key"`, `#p-key`, title
-  `map.rail_key`). It opens from the rail and from a **corner Key button**
-  (`#cc-keyfab`, owner 2026-09-18) stacked on the bug button at the bottom
-  right, same size and right edge, lifted with it by the translate bar; both
-  buttons show the panel's open state (`aria-expanded`). It ends with a **Road
+  `map.rail_key`). It is an explainer and nothing in it is interactive: a
+  row is read, never tapped. Anything that switches the map (the surface
+  class rows, Study mode, the Gaps grid) lives in the overlay key box at the
+  bottom-right corner, not here (owner 2026-09-21). The panel opens from the
+  rail's Key button only; the corner button that also opened it read as that
+  box's toggle and is gone, so the corner holds the bug circle and the box
+  and nothing else. The rail button shows the panel's open state
+  (`aria-expanded`). It ends with a **Road
   surface** group: the five class lines plus "not recorded", drawn on the
   map's cream casing from the one palette, `SurfaceVocabulary::LINE_COLOUR`. The quick reference while riding: the four grammar rows
   (data-provider-hierarchy.md §6.7: small disc for a gross provider, dashed

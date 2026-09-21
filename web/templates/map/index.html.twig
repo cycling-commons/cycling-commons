@@ -1138,14 +1138,6 @@ window.CC_VENDOR = {{ {
    base.html.twig, so it has to include the partial itself; that is why the
    button was missing here rather than any deliberate exclusion. The map is the
    page a rider is most likely to be on when something breaks. #}
-{# The map key, one tap away in the corner the rider already knows, above the
-   bug button (owner 2026-09-18). It opens the same Key panel as the rail
-   button (shell.js). Before the bug button in the page, so an open bug panel
-   covers it rather than the other way round. #}
-<button type="button" id="cc-keyfab" class="keyfab" aria-controls="dwr" aria-expanded="false"
-        aria-label="{{ 'map.rail_key'|trans }}" title="{{ 'map.rail_key'|trans }}">
-  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="6" cy="6" r="2"/><path d="M11.5 6H20"/><circle cx="6" cy="12" r="2"/><path d="M11.5 12H20"/><circle cx="6" cy="18" r="2"/><path d="M11.5 18H20"/></svg>
-</button>
 {% include 'partials/_bug_fab.html.twig' with {bug_fab: bug_fab_context(), on_map: true} only %}
 <script src="{{ asset('support/pow.js') }}"></script>
 <script src="{{ asset('support/bug-fab.js') }}" defer></script>

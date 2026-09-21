@@ -240,8 +240,8 @@ pill covered controls in the same corner, the translate bar's "Stop
 translating" among them. "Report a bug" stays in the button as
 visually hidden text, so the button keeps its accessible name, and `title`
 shows it on hover. The map's bottom edge holds the attribution strip, up to three
-wrapped lines, so there the circle sits 4.2rem up (`is-mini`), the same
-clearance every bottom-edge message on the map keeps
+wrapped lines, so there the circle sits 3.4rem up (`is-mini`). The overlay
+key box sits above it
 ([map-and-search.md](map-and-search.md), the bottom-left corner). With translate mode on, the
 circle and its panel sit above the translate bar (`body:has(#tr-bar)`). The map is the page a
 rider is most likely to be on when something breaks, which made it the worst one

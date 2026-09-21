@@ -92,18 +92,6 @@
      for a rider who cannot separate the orange glyph from its neighbours. */
   .ib.on::before{content:"";position:absolute;left:-4px;top:8px;bottom:8px;width:3px;border-radius:0 2px 2px 0;background:var(--trail)}
   .ib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-  /* Map key in the bottom-right corner, stacked on the bug button (same size,
-     same right edge; the bug circle is 2.65rem at bottom 2.4rem, lifted to
-     3.6rem by the translate bar). Same z-index as the bug button: below the
-     drawer (1100), so an open panel covers it. */
-  .keyfab{position:fixed;right:1.1rem;bottom:5.65rem;z-index:1050;width:2.65rem;height:2.65rem;padding:0;
-    display:inline-flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;
-    background:var(--chrome-bg);color:var(--chrome-fg-solid);border:1px solid rgb(var(--chrome-fg) / .18);
-    box-shadow:0 4px 16px rgb(var(--chrome-glass) / .28)}
-  .keyfab svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .keyfab:hover,.keyfab[aria-expanded="true"]{color:var(--trail);border-color:var(--trail)}
-  .keyfab:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
-  body:has(#tr-bar) .keyfab{bottom:6.85rem}
   .irail .spring{flex:1}
   .irail hr{width:26px;flex:none;border:none;border-top:1px solid rgb(var(--chrome-fg) / .16);margin:.35rem 0}
   /* Tooltip: mono uppercase, right of the button, instant. Constant colours on
@@ -647,8 +635,10 @@
      sentence and it was setting the panel's width, so a key of six short rows
      took a third of a laptop's map. Capped, and the note wraps to two lines -
      the sentence is a footnote, not a column guide. */
-  /* bottom clears the attribution strip, the same 4.2rem as .fpill and .zoom-hint. */
-  .legend{position:absolute;bottom:4.2rem;right:1.2rem;background:rgb(var(--chrome-glass) / .95);color:var(--chrome-fg-solid);border-radius:8px;padding:.9rem 1.1rem;z-index:1000;
+  /* bottom clears the attribution strip and the bug circle that shares this
+     corner on the map (_bug_fab.html.twig, is-mini: 3.4rem up, 2.65rem tall)
+     plus a .6rem gap. */
+  .legend{position:absolute;bottom:6.65rem;right:1.2rem;background:rgb(var(--chrome-glass) / .95);color:var(--chrome-fg-solid);border-radius:8px;padding:.9rem 1.1rem;z-index:1000;
     max-width:min(17.5rem,44vw)}
   /* The collapse control, on every screen rather than only on phones. Its own
      row, right-aligned, so it reads as this panel's control and needs no

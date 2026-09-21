@@ -48,7 +48,6 @@ export function initShell(){
   const title = document.getElementById('dwr-title');
   const closeBtn = document.getElementById('dwr-x');
   const buttons = [...document.querySelectorAll('.ib[data-panel]')];
-  const keyFab = document.getElementById('cc-keyfab');
   if(!dwr || !title || !buttons.length) return;
 
   function paintButtons(key){
@@ -57,7 +56,6 @@ export function initShell(){
       b.classList.toggle('on', on);
       b.setAttribute('aria-expanded', on ? 'true' : 'false');
     });
-    if(keyFab) keyFab.setAttribute('aria-expanded', key === 'key' ? 'true' : 'false');
   }
 
   function openPanel(key){
@@ -77,9 +75,6 @@ export function initShell(){
     active = null;
     resizeWhenSettled(dwr);
   }
-
-  /* The corner Key button: the same panel as the rail's Key button. */
-  if(keyFab) keyFab.onclick = () => (active === 'key' ? closePanel() : openPanel('key'));
 
   buttons.forEach(b => {
     b.onclick = () => (active === b.dataset.panel ? closePanel() : openPanel(b.dataset.panel));
