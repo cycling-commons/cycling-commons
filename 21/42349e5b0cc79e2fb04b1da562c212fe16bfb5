@@ -1,0 +1,71 @@
+wiki/developers/numbers.md
+  s_edfcbfea4e1963::t_45b2d2326afb4a 28
+web/src/Controller/MapController.php
+  s_edfcbfea4e1963::t_bc61b386442251 17
+  s_edfcbfea4e1963::t_485ed962fa4185 603-617
+web/tests/Contribution/CuratorWizardCopyTest.php
+  s_edfcbfea4e1963::t_8281e53c21ae1d 12,321-322
+  s_edfcbfea4e1963::t_ef4358b2fcdd38 301-320,323-335
+web/src/Controller/ModerateController.php
+  s_edfcbfea4e1963::t_485ed962fa4185 286-290,298-307,317,322,331,337,342-345
+web/templates/map/index.html.twig
+  s_edfcbfea4e1963::t_485ed962fa4185 760-761
+  s_edfcbfea4e1963::t_281c5e65f5d86d 762-763
+web/src/Moderation/SubmissionQueue.php
+  s_edfcbfea4e1963::t_dcbd34b9e8d31e 10,47,51,121,143,148-154,472,486,559,565,567-569,573-579,581-587,589,592,594,596-598,602-604
+  s_edfcbfea4e1963::t_7c1ce7853698a9 517,519,560,566,570-572,580,588,590-591,593,595,599-601
+  s_edfcbfea4e1963::t_0f41efcf85b54e 605-606
+web/assets/map/drawer.js
+  s_edfcbfea4e1963::t_44f0af51e7f082 27,1232,1312-1321,1359
+  s_edfcbfea4e1963::t_bc61b386442251 26,692-693,706
+web/tests/Moderation/OsmAnswerFromTheDrawerTest.php
+  s_edfcbfea4e1963::t_02b9242a273493 1-203
+web/src/Controller/ContributeController.php
+  s_edfcbfea4e1963::t_d653efc2ec1910 383-393
+web/assets/map/map-init.js
+  s_edfcbfea4e1963::t_44f0af51e7f082 188-194
+web/assets/map/places.js
+  s_edfcbfea4e1963::t_44f0af51e7f082 13-14,44-48
+  s_edfcbfea4e1963::t_2771a263b25a0f 8
+web/assets/map/osm-question.js
+  s_edfcbfea4e1963::t_bc61b386442251 1-38
+docs/specs/moderation-and-contribution.md
+  s_edfcbfea4e1963::t_02b9242a273493 1218-1237
+  s_edfcbfea4e1963::t_ef4358b2fcdd38 543-547
+web/assets/map/community.js
+  s_edfcbfea4e1963::t_bc61b386442251 330-334,366-418,492-495
+  s_edfcbfea4e1963::t_7c9851fd82baae 13
+web/tests/js/osm-question.test.mjs
+  s_edfcbfea4e1963::t_7c9851fd82baae 1-60
+docs/specs/map-and-search.md
+  s_edfcbfea4e1963::t_2771a263b25a0f 2185-2200
+web/tests/Moderation/SubmissionQueueTest.php
+  s_edfcbfea4e1963::t_02b9242a273493 226-279
+web/templates/moderate/_queue_item.html.twig
+  s_edfcbfea4e1963::t_485ed962fa4185 82
+web/tests/js/town-pin.test.mjs
+  s_edfcbfea4e1963::t_2771a263b25a0f 1-29
+web/assets/styles/map.css
+  s_edfcbfea4e1963::t_2771a263b25a0f 495-500
+  s_edfcbfea4e1963::t_7c9851fd82baae 571-590
+docs/specs/catalog-data-model.md
+  s_edfcbfea4e1963::t_02b9242a273493 493-497
+web/assets/map/town-pin.js
+  s_edfcbfea4e1963::t_44f0af51e7f082 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2142349e5b0cc79e2fb04b1da562c212fe16bfb5",
+  "prompts": {},
+  "sessions": {
+    "s_edfcbfea4e1963": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b8587c54-892f-4417-81fc-134cd5c26313",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
