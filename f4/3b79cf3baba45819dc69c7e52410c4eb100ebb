@@ -1,0 +1,20 @@
+Makefile
+  s_2223644545cfd3::t_70eb48b91fdb57 23
+  s_2223644545cfd3::t_b5cf4c048656af 201-211
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f43b79cf3baba45819dc69c7e52410c4eb100ebb",
+  "prompts": {},
+  "sessions": {
+    "s_2223644545cfd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab476736-afdd-44c1-9674-b82276ce00eb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
