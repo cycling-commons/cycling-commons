@@ -359,7 +359,9 @@ test('the zoom hint sits beside the zoom controls, not on top of them', () => {
   const rule = css.match(/\.zoom-hint\{([^}]*)\}/);
   assert.ok(rule, 'no .zoom-hint rule');
   assert.ok(/left:3\.5rem/.test(rule[1]), 'the hint does not clear the zoom control column');
-  assert.ok(/bottom:1\.1rem/.test(rule[1]), 'the hint is not aligned with the bottom edge');
+  // 4.2rem, not the bottom edge: the attribution strip wraps to three lines,
+  // and every bottom-edge box shares that clearance above it (2026-09-21).
+  assert.ok(/bottom:4\.2rem/.test(rule[1]), 'the hint does not share the bottom-edge clearance above the credits');
 });
 
 test('curator mode is a curator thing, and each audience gets its own sentence', () => {
