@@ -15,7 +15,9 @@
   current path is shown inside the panel, under "what gets sent with this".
 
   On the map (`is-mini`) the circle is lifted clear of the attribution strip
-  along the bottom edge. With translate mode on it is lifted clear of the
+  along the bottom edge: 4.2rem up, the same clearance as the filter pill,
+  the zoom hint and the key box in map.css, because the strip wraps to as
+  many as three lines. With translate mode on it is lifted clear of the
   translate bar.
 
   Everything here is markup and a style block; behaviour is in
@@ -174,8 +176,8 @@
      runs along the bottom edge. z-index sits above the map canvas and its
      controls but BELOW the drawer (1100) and the mobile scrim (1540), so an
      open drawer covers it rather than the other way round. #}
-  #cc-bugfab.is-mini{bottom:2.4rem;z-index:1050}
-  #cc-bugfab.is-mini .bugfab-panel{bottom:5.9rem}
+  #cc-bugfab.is-mini{bottom:4.2rem;z-index:1050}
+  #cc-bugfab.is-mini .bugfab-panel{bottom:7.7rem}
 
   .bugfab-panel{position:fixed;right:1.1rem;bottom:4.6rem;width:min(24rem,calc(100vw - 2.2rem));
     max-height:min(38rem,calc(100vh - 6rem));display:flex;flex-direction:column;
