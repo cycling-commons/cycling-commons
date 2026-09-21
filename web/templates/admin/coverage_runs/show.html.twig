@@ -1,0 +1,79 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   One run, step by step, grouped by region. The load step carries what each
+   contract rule dropped, which used to live only in the container log
+   (coverage-runs-admin.md §2-§3). A failed step shows its exception in place
+   of the numbers.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+{% import 'admin/coverage_runs/_format.html.twig' as fmt %}
+
+{% block content_title %}{{ 'admin.coverage_runs.one_title'|trans({'%started%': run.started_at|date('Y-m-d H:i')}) }}{% endblock %}
+
+{% block main %}
+  {% set statuses = ['running', 'ok', 'partial', 'failed', 'abandoned'] %}
+  <div class="col-lg-10">
+    <p class="text-muted">
+      {{ run.trigger }}
+      · {{ run.status in statuses ? ('admin.coverage_runs.status.' ~ run.status)|trans : run.status }}
+      · {{ fmt.duration(run.seconds) }}
+      {% if run.regions_loaded is not null %}
+        · {{ 'admin.coverage_runs.regions_of'|trans({'%loaded%': run.regions_loaded, '%requested%': run.regions_requested}) }}
+      {% endif %}
+      {% if run.published_url %}
+        · <a href="{{ run.published_url }}" rel="noopener noreferrer">{{ run.published_url|split('/')|last }}</a>
+      {% endif %}
+    </p>
+
+    {% if groups is empty %}
+      <p class="text-muted">{{ 'admin.coverage_runs.no_steps'|trans }}</p>
+    {% else %}
+      <table class="table table-sm">
+        <tbody>
+          {% for group in groups %}
+            <tr>
+              <th colspan="4" class="pt-4">
+                {{ group.region ?? ('admin.coverage_runs.whole_run'|trans) }}
+              </th>
+            </tr>
+            {% for step in group.steps %}
+              <tr{% if step.status == 'failed' %} class="table-danger"{% endif %}>
+                <td style="width: 12rem">{{ step.step }}</td>
+                <td class="text-end" style="width: 6rem">{{ fmt.duration(step.seconds) }}</td>
+                <td class="text-end" style="width: 7rem">{{ fmt.bytes(step.bytes) }}</td>
+                <td>
+                  {% if step.status == 'failed' %}
+                    {{ step.detail }}
+                  {% else %}
+                    {% if step.rows is not null %}
+                      {{ 'admin.coverage_runs.rows'|trans({'%rows%': step.rows|number_format}) }}
+                    {% endif %}
+                    {% if step.load is not null %}
+                      {% if step.load.previous is not null %}
+                        {{ 'admin.coverage_runs.previous'|trans({'%previous%': step.load.previous|number_format}) }}
+                      {% elseif step.load.text %}
+                        {{ step.load.text }}
+                      {% endif %}
+                      {% if step.load.dropped is not empty %}
+                        <div class="text-muted small">
+                          {{ 'admin.coverage_runs.dropped_by_rule'|trans }}
+                          {% for drop in step.load.dropped %}
+                            {{- ' ' }}{{ drop.label|trans }} {{ drop.count|number_format }}{% if not loop.last %} ·{% endif %}
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    {% elseif step.detail %}
+                      {{ step.detail }}
+                    {% endif %}
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    <a href="{{ path('admin_coverage_runs') }}">{{ 'admin.coverage_runs.back'|trans }}</a>
+  </div>
+{% endblock %}

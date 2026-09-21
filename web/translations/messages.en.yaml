@@ -4282,6 +4282,34 @@ admin:
     restore: 'Restore selected photos'
     restore_help: 'Restored photos go straight back on the map and their contributors are told. The reporter is not told anything, and neither side ever learns who the other is.'
     restored: 'Restored %count% photo(s).'
+  coverage_runs:
+    lead: "Every coverage harvest, newest first. Read from the tracker tables the pipeline writes as it runs, so nothing here is measured twice."
+    empty: "No coverage run has been recorded yet."
+    col_started: "Started"
+    col_trigger: "Trigger"
+    col_status: "Status"
+    col_regions: "Regions"
+    col_took: "Took"
+    col_published: "Published"
+    regions_of: "%loaded% of %requested%"
+    one_title: "Coverage run of %started%"
+    no_steps: "This run recorded no steps."
+    whole_run: "Whole run"
+    rows: "%rows% rows"
+    previous: "previous %previous%"
+    dropped_by_rule: "dropped by rule:"
+    back: "Back to all runs"
+    status:
+      running: "running"
+      ok: "ok"
+      partial: "partial"
+      failed: "failed"
+      abandoned: "abandoned"
+    rule:
+      name: "%letter% needs a name"
+      exclude: "%letter% excludes %tag%"
+      near_way: "near-way"
+      other: "%rule%"
   menu:
     blog: 'Blog'
     releases: 'Releases'
@@ -4300,6 +4328,7 @@ admin:
     escalated: 'Escalated (held)'
     moderator_areas: 'Moderator areas'
     moderation_activity: 'Moderation activity'
+    coverage_runs: "Coverage runs"
   action:
     unlock: 'Unlock account'
     disarm_2fa: 'Disarm 2FA'

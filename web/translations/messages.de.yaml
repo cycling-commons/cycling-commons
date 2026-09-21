@@ -4261,6 +4261,34 @@ admin:
     restore: 'Ausgewählte Fotos wiederherstellen'
     restore_help: 'Wiederhergestellte Fotos sind sofort wieder auf der Karte, und ihre Beitragenden werden informiert. Die meldende Person erfährt nichts, und keine Seite erfährt je, wer die andere ist.'
     restored: '%count% Foto(s) wiederhergestellt.'
+  coverage_runs:
+    lead: "Jede Coverage-Ernte, neueste zuerst. Gelesen aus den Tracker-Tabellen, die die Pipeline im Lauf schreibt, sodass hier nichts erneut gemessen wird."
+    empty: "Es wurde noch keine Coverage-Ernte aufgezeichnet."
+    col_started: "Gestartet"
+    col_trigger: "Auslöser"
+    col_status: "Status"
+    col_regions: "Regionen"
+    col_took: "Dauer"
+    col_published: "Veröffentlicht"
+    regions_of: "%loaded% von %requested%"
+    one_title: "Coverage-Ernte vom %started%"
+    no_steps: "Diese Ernte hat keine Schritte aufgezeichnet."
+    whole_run: "Ganze Ernte"
+    rows: "%rows% Zeilen"
+    previous: "vorher %previous%"
+    dropped_by_rule: "nach Regel verworfen:"
+    back: "Zurück zu allen Läufen"
+    status:
+      running: "läuft"
+      ok: "ok"
+      partial: "teilweise"
+      failed: "fehlgeschlagen"
+      abandoned: "abgebrochen"
+    rule:
+      name: "%letter% braucht einen Namen"
+      exclude: "%letter% schließt %tag% aus"
+      near_way: "nicht an einem Radweg"
+      other: "%rule%"
   menu:
     blog: 'Blog'
     releases: 'Releases'
@@ -4279,6 +4307,7 @@ admin:
     escalated: 'Eskaliert (gesperrt)'
     moderator_areas: 'Moderationsgebiete'
     moderation_activity: 'Moderationsaktivität'
+    coverage_runs: "Coverage-Läufe"
   action:
     unlock: 'Konto entsperren'
     disarm_2fa: '2FA deaktivieren'

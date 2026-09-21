@@ -1,0 +1,24 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   Reading helpers for the coverage-run pages: seconds as 12m03s, bytes as
+   MB/GB. Presentation only — the controller hands over raw numbers
+   (coverage-runs-admin.md §4).
+#}
+{% macro duration(seconds) %}
+  {%- if seconds is null -%}
+    —
+  {%- else -%}
+    {%- set s = seconds|round -%}
+    {%- if s < 60 -%}{{ s }} s{%- else -%}{{ (s // 60) }}m{{ '%02d'|format(s % 60) }}s{%- endif -%}
+  {%- endif -%}
+{% endmacro %}
+
+{% macro bytes(value) %}
+  {%- if value is null -%}
+    {#- nothing to say: the step reports no size -#}
+  {%- elseif value >= 1073741824 -%}
+    {{ (value / 1073741824)|number_format(1) }} GB
+  {%- else -%}
+    {{ (value / 1048576)|number_format(0) }} MB
+  {%- endif -%}
+{% endmacro %}

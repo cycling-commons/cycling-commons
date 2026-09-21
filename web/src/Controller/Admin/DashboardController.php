@@ -106,6 +106,7 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.withheld_photos'), 'fa fa-image-slash', 'admin_withheld_photos');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderator_areas'), 'fa fa-map-location-dot', 'admin_moderator_areas_overview');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderation_activity'), 'fa fa-chart-column', 'admin_moderation_activity');
+        yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.coverage_runs'), 'fa fa-list-check', 'admin_coverage_runs');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.escalated'), 'fa fa-shield-halved', 'admin_escalated');
     }
 

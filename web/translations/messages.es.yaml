@@ -4292,6 +4292,34 @@ admin:
     restore: 'Restaurar las fotos seleccionadas'
     restore_help: 'Las fotos restauradas vuelven directamente al mapa y se avisa a quienes las aportaron. A quien informó no se le dice nada, y ninguna de las dos partes llega a saber quién es la otra.'
     restored: '%count% foto(s) restaurada(s).'
+  coverage_runs:
+    lead: "Cada recolección de cobertura, la más reciente primero. Leída de las tablas de seguimiento que el pipeline escribe mientras corre, así que aquí no se mide nada de nuevo."
+    empty: "Todavía no se ha registrado ninguna recolección de cobertura."
+    col_started: "Inicio"
+    col_trigger: "Disparador"
+    col_status: "Estado"
+    col_regions: "Regiones"
+    col_took: "Duración"
+    col_published: "Publicado"
+    regions_of: "%loaded% de %requested%"
+    one_title: "Recolección de cobertura del %started%"
+    no_steps: "Esta recolección no registró ningún paso."
+    whole_run: "Recolección completa"
+    rows: "%rows% filas"
+    previous: "anterior %previous%"
+    dropped_by_rule: "descartados por regla:"
+    back: "Volver a todas las recolecciones"
+    status:
+      running: "en curso"
+      ok: "ok"
+      partial: "parcial"
+      failed: "fallida"
+      abandoned: "abandonada"
+    rule:
+      name: "%letter% necesita un nombre"
+      exclude: "%letter% excluye %tag%"
+      near_way: "sin vía ciclista cerca"
+      other: "%rule%"
   menu:
     blog: 'Blog'
     releases: 'Versiones'
@@ -4310,6 +4338,7 @@ admin:
     escalated: 'Escaladas (retenidas)'
     moderator_areas: 'Áreas de moderación'
     moderation_activity: 'Actividad de moderación'
+    coverage_runs: "Recolecciones de cobertura"
   action:
     unlock: 'Desbloquear la cuenta'
     disarm_2fa: 'Desarmar la 2FA'

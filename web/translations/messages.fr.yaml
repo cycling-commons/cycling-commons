@@ -4253,6 +4253,34 @@ admin:
     restore: 'Restaurer les photos sélectionnées'
     restore_help: 'Les photos restaurées reviennent directement sur la carte et leurs contributeurs sont prévenus. Le signalant n''est informé de rien, et aucune des deux parties n''apprend jamais qui est l''autre.'
     restored: '%count% photo(s) restaurée(s).'
+  coverage_runs:
+    lead: "Chaque récolte de couverture, la plus récente en premier. Lue dans les tables de suivi que le pipeline écrit au fur et à mesure : rien n'est mesuré une seconde fois."
+    empty: "Aucune récolte de couverture n'a encore été enregistrée."
+    col_started: "Début"
+    col_trigger: "Déclencheur"
+    col_status: "État"
+    col_regions: "Régions"
+    col_took: "Durée"
+    col_published: "Publié"
+    regions_of: "%loaded% sur %requested%"
+    one_title: "Récolte de couverture du %started%"
+    no_steps: "Cette récolte n'a enregistré aucune étape."
+    whole_run: "Récolte entière"
+    rows: "%rows% lignes"
+    previous: "précédent %previous%"
+    dropped_by_rule: "écartés par règle :"
+    back: "Retour à toutes les récoltes"
+    status:
+      running: "en cours"
+      ok: "ok"
+      partial: "partielle"
+      failed: "échec"
+      abandoned: "abandonnée"
+    rule:
+      name: "%letter% exige un nom"
+      exclude: "%letter% exclut %tag%"
+      near_way: "hors piste cyclable"
+      other: "%rule%"
   menu:
     blog: 'Blog'
     releases: 'Versions'
@@ -4271,6 +4299,7 @@ admin:
     escalated: 'Escaladés (bloqués)'
     moderator_areas: 'Zones de modération'
     moderation_activity: 'Activité de modération'
+    coverage_runs: "Récoltes de couverture"
   action:
     unlock: 'Déverrouiller le compte'
     disarm_2fa: 'Désactiver la 2FA'

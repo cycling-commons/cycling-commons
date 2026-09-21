@@ -4260,6 +4260,34 @@ admin:
     restore: 'Geselecteerde foto''s herstellen'
     restore_help: 'Herstelde foto''s staan meteen weer op de kaart en hun bijdragers worden ingelicht. De melder hoort niets, en geen van beide partijen komt ooit te weten wie de ander is.'
     restored: '%count% foto(''s) hersteld.'
+  coverage_runs:
+    lead: "Elke coverage-oogst, nieuwste eerst. Gelezen uit de tracker-tabellen die de pipeline tijdens het draaien schrijft, zodat hier niets opnieuw wordt gemeten."
+    empty: "Er is nog geen coverage-oogst vastgelegd."
+    col_started: "Gestart"
+    col_trigger: "Aanleiding"
+    col_status: "Status"
+    col_regions: "Regio's"
+    col_took: "Duur"
+    col_published: "Gepubliceerd"
+    regions_of: "%loaded% van %requested%"
+    one_title: "Coverage-oogst van %started%"
+    no_steps: "Deze oogst heeft geen stappen vastgelegd."
+    whole_run: "Hele oogst"
+    rows: "%rows% rijen"
+    previous: "vorige %previous%"
+    dropped_by_rule: "weggelaten per regel:"
+    back: "Terug naar alle oogsten"
+    status:
+      running: "bezig"
+      ok: "ok"
+      partial: "gedeeltelijk"
+      failed: "mislukt"
+      abandoned: "afgebroken"
+    rule:
+      name: "%letter% heeft een naam nodig"
+      exclude: "%letter% sluit %tag% uit"
+      near_way: "niet langs een fietsroute"
+      other: "%rule%"
   menu:
     blog: 'Blog'
     releases: 'Releases'
@@ -4278,6 +4306,7 @@ admin:
     escalated: 'Geëscaleerd (vast)'
     moderator_areas: 'Moderatiegebieden'
     moderation_activity: 'Moderatieactiviteit'
+    coverage_runs: "Coverage-oogsten"
   action:
     unlock: 'Account ontgrendelen'
     disarm_2fa: '2FA uitschakelen'
