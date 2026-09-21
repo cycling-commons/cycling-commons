@@ -9,6 +9,9 @@ use App\Repository\ResetPasswordRequestRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Clock\Clock;
+use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Clock\NativeClock;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
@@ -116,6 +119,38 @@ final class ResetPasswordTest extends WebTestCase
         $repo = static::getContainer()->get(ResetPasswordRequestRepository::class);
         $requests = $repo->findAll();
         self::assertNotEmpty($requests, 'A reset password request row must exist in the DB.');
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        Clock::set(new NativeClock());
+        parent::tearDown();
+    }
+
+    /**
+     * The check-email page states the token lifetime, not the seconds left on
+     * the wall clock. The token is minted on the POST and the page renders on
+     * the GET that follows; the bundle clock is pinned five seconds behind so
+     * that gap is deterministic instead of depending on a second boundary.
+     */
+    public function testCheckEmailPageStatesWholeHourLifetime(): void
+    {
+        $client = static::createClient();
+        $this->createVerifiedUser('lifetime@example.com', 'Lifetime Tester', 'initialpass12345!');
+
+        Clock::set(new MockClock((new \DateTimeImmutable())->modify('-5 seconds')));
+
+        $crawler = $client->request('GET', '/reset-password');
+        $form = $crawler->selectButton('Send reset link')->form([
+            'reset_password_request_form[email]' => 'lifetime@example.com',
+        ]);
+        $client->submit($form);
+        self::assertResponseRedirects('/reset-password/check-email');
+        $client->followRedirect();
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'The link expires in 1 hour');
     }
 
     public function testFollowResetLinkAndSetNewPassword(): void

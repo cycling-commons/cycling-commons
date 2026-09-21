@@ -155,6 +155,10 @@ bundle with its own `ResetPasswordRequest` entity):
 - No account enumeration: an unknown email redirects to the same check-email
   page, and a direct visit to check-email renders a **fake token object** so
   timing/content cannot reveal existence.
+- The check-email copy states the token lifetime in whole hours, read from the
+  token's own generated-at/expires-at interval (bundle default 3600 s = 1 hour),
+  never from the wall clock at render time: the token is minted on the POST and
+  the page renders on the following GET, so a wall-clock remainder floors to 0.
 - The token is moved from the URL into the session on arrival (prevents
   Referer leakage), consumed before the new password is persisted.
 - **Completing a reset clears any brute-force lock** (`lockedUntil = null`,
