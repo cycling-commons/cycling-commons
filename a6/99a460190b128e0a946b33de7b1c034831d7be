@@ -1,0 +1,27 @@
+Dockerfile.worker
+  s_2223644545cfd3::t_04ba842d63d8c8 1-94
+.dockerignore
+  s_2223644545cfd3::t_eaef3823207553 1-30
+web/docker/worker-entrypoint.sh
+  s_2223644545cfd3::t_0178c613f8d517 1-14
+.github/workflows/deploy-staging-worker.yml
+  s_2223644545cfd3::t_49158369ce078f 1-117
+.github/workflows/deploy-production-worker.yml
+  s_2223644545cfd3::t_c047f7c8e56791 1-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a699a460190b128e0a946b33de7b1c034831d7be",
+  "prompts": {},
+  "sessions": {
+    "s_2223644545cfd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ab476736-afdd-44c1-9674-b82276ce00eb",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
