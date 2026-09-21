@@ -19,6 +19,7 @@ import psycopg
 from psycopg import sql
 
 from coverage.parse import PoiRow
+from coverage.tracker import ensure_tracker_schema
 
 # Abort the swap when the new row count drops more than 40 % below the previous
 # run for the same region — a truncated download/filter must not wipe a region.
@@ -268,6 +269,7 @@ def ensure_schema(conn: psycopg.Connection) -> None:
             ) from exc
     conn.execute(_SOURCE_DDL)
     conn.execute(_TABLE_DDL)
+    ensure_tracker_schema(conn)
     # The app keeps per (country, region, letter) counts of this table by
     # trigger (web/migrations/Version20260906180000.php, coverage-provider.md
     # §11). The function lives on the app side and is a no-op until that

@@ -390,3 +390,80 @@ def test_main_load_only_loads_and_builds_no_tiles(monkeypatch, tmp_path):
 
     assert rc == 0
     assert calls == ["schema", "load"]
+
+
+def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
+    """The timing tracker (worker build plan §2.11): every stage of a region
+    lands as one coverage_run_step row, a failing stage as status 'failed' with
+    no later rows for that region, and the run row closes as 'partial'."""
+    writes = []
+
+    class FakeResult:
+        def fetchall(self):
+            return [("B", 3)]
+
+        def fetchone(self):
+            return (True,)
+
+    class FakeConn:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def execute(self, sql, params=None):
+            if isinstance(sql, str) and "coverage_run" in sql:
+                writes.append((sql, params))
+            return FakeResult()
+
+        def commit(self):
+            pass
+
+    def fake_load_region(conn, rows, region, cc, near_ways=None, name_or_tags=None,
+                         exclude_tag_values=None):
+        list(rows)   # consume the parse stream, as the COPY does
+        if region == "dev/bad":
+            raise DriftAbort("shrank")
+        return LoadResult(inserted=7, previous=5)
+
+    pbf = tmp_path / "in.pbf"
+    pbf.write_bytes(b"x" * 10)
+    monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
+    monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
+    monkeypatch.setattr(run, "ensure_schema", lambda conn: None)
+    monkeypatch.setattr(run, "resolve_country", lambda region: None)
+    monkeypatch.setattr(run, "fetch_pbf", lambda region, workdir: pbf)
+    monkeypatch.setattr(run, "run_extract", lambda pbf, out, contract: out)
+    monkeypatch.setattr(run, "parse_pois", lambda pbf, contract, region, cc: iter(()))
+    monkeypatch.setattr(run, "run_way_filter", lambda pbf, out, rule: out)
+    monkeypatch.setattr(run, "export_lines", lambda path: iter(()))
+    monkeypatch.setattr(run, "load_region", fake_load_region)
+    monkeypatch.setattr(run, "export_geojsonl", lambda conn, wd: {("B", "BE"): tmp_path / "b.geojsonl"})
+    monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: out.write_bytes(b"pm" * 4))
+    monkeypatch.setattr(run, "verify_pmtiles", lambda path, expected_layers=None: None)
+    monkeypatch.setattr(run, "ensure_bucket", lambda: None)
+    monkeypatch.setattr(run, "upload", lambda artifact, manifest: "http://bucket/c.pmtiles")
+    monkeypatch.setattr(run, "prune", lambda keep=4: [])
+
+    assert run.main(["--regions", "dev/bad,dev/ok", "--trigger", "bootstrap"]) == 1
+
+    start = [p for (sql, p) in writes if "INSERT INTO coverage_run " in sql]
+    assert start == [("bootstrap", 2)]
+    steps = [p for (sql, p) in writes if "coverage_run_step" in sql]
+    # (run_id, region, step, seconds, seconds, bytes, rows, status, detail)
+    assert [(p[1], p[2], p[7]) for p in steps] == [
+        ("dev/bad", "download", "ok"), ("dev/bad", "filter", "ok"),
+        ("dev/bad", "near_way", "ok"), ("dev/bad", "load", "failed"),
+        ("dev/ok", "download", "ok"), ("dev/ok", "filter", "ok"),
+        ("dev/ok", "near_way", "ok"), ("dev/ok", "load", "ok"), ("dev/ok", "parse", "ok"),
+        (None, "export", "ok"), (None, "tippecanoe", "ok"), (None, "upload", "ok"),
+    ]
+    by_key = {(p[1], p[2]): p for p in steps}
+    assert by_key[("dev/bad", "download")][5] == 10 and by_key[("dev/bad", "download")][8] == "cached"
+    assert by_key[("dev/bad", "load")][8] == "DriftAbort: shrank"
+    assert by_key[("dev/ok", "load")][6:] == (7, "ok", "previous 5")
+    assert by_key[(None, "tippecanoe")][5] == 8
+    assert by_key[(None, "upload")][8] == "http://bucket/c.pmtiles"
+    finish = [p for (sql, p) in writes if "UPDATE coverage_run" in sql]
+    assert finish == [("partial", 1, "http://bucket/c.pmtiles", True)]

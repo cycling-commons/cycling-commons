@@ -28,6 +28,7 @@ from .parse import parse_pois
 from .publish import (ROUTES_MANIFEST_KEY, ensure_bucket, prune, prune_routes,
                       prune_surface, published_countries, upload, upload_routes,
                       upload_surface)
+from .regions import ONBOARDED_REGIONS, default_regions
 from .routes import extract_region as routes_extract_region
 from .routes import load_way_ids
 from .routes import selector_expressions as routes_selectors
@@ -35,6 +36,7 @@ from .surface import extract_region
 from .surface import selector_expressions as surface_selectors
 from .tiles import (build_gaps_pmtiles, build_pmtiles, build_routes_pmtiles,
                     build_surface_pmtiles, export_geojsonl, verify_pmtiles)
+from .tracker import RunTracker
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 
@@ -533,13 +535,17 @@ def main(argv=None) -> int:
                          "machine short of memory; a single --tiles-only run then builds "
                          "and publishes the artifact from the whole index.")
     ap.add_argument("--regions",
-                    help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,australia-oceania/australia,asia/japan,north-america/us/california,north-america/us/colorado,europe/spain)")
+                    help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or every "
+                         f"onboarded region: {','.join(ONBOARDED_REGIONS)})")
+    ap.add_argument("--trigger", default="manual",
+                    help="what started this run, recorded in coverage_run "
+                         "(dispatcher | bootstrap | manual)")
+    ap.add_argument("--run-id", type=int,
+                    help="append this run's steps to an existing coverage_run row "
+                         "(the dispatcher's) instead of opening a new one")
     args = ap.parse_args(argv)
-    # Code-level fallback mirrors the shipped .env.example / compose default so
-    # an env-less invocation still covers every onboarded region, not just BE.
-    regions = [r.strip() for r in
-               (args.regions or os.environ.get("COVERAGE_REGIONS", "europe/belgium,europe/netherlands,europe/germany,europe/luxembourg,europe/france,europe/switzerland,europe/great-britain,europe/ireland-and-northern-ireland,europe/italy,australia-oceania/australia,asia/japan,north-america/us/california,north-america/us/colorado,europe/spain")).split(",")
-               if r.strip()]
+    regions = ([r.strip() for r in args.regions.split(",") if r.strip()]
+               if args.regions else default_regions())
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
     contract = load_contract()
@@ -565,6 +571,11 @@ def main(argv=None) -> int:
                   "exiting", file=sys.stderr)
             return 2
         ensure_schema(conn)
+        tracker = RunTracker(conn)
+        if args.run_id is not None:
+            tracker.attach(args.run_id)
+        else:
+            tracker.start(args.trigger, len(regions))
         # Letters whose points must sit along a bike way (docs/specs/scenic-views.md).
         near_rules = {letter: spec.near_way for letter, spec in contract.letters.items() if spec.near_way}
         if len({(r.within_m, tuple(r.highways), tuple(r.bicycle_tags)) for r in near_rules.values()}) > 1:
@@ -584,20 +595,36 @@ def main(argv=None) -> int:
                 # try/except like any other per-region failure, rather than the two
                 # call sites independently `.get()`-missing into a silent None.
                 country_code = resolve_country(region)
-                pbf = fetch_pbf(region, workdir)
+                with tracker.step(region, "download") as st:
+                    download_started = time.time()
+                    pbf = fetch_pbf(region, workdir)
+                    if isinstance(pbf, pathlib.Path) and pbf.exists():
+                        st.bytes = pbf.stat().st_size
+                        # Nothing written since the step began: md5 skip, offline or override.
+                        if pbf.stat().st_mtime < download_started:
+                            st.detail = "cached"
                 filtered = workdir / (region.replace("/", "-") + "-filtered.osm.pbf")
-                run_extract(pbf, filtered, contract)
-                rows = parse_pois(filtered, contract, region, country_code)
+                with tracker.step(region, "filter"):
+                    run_extract(pbf, filtered, contract)
+                # parse_pois is a generator consumed by load_region's COPY; timing
+                # it lazily keeps the rows streaming instead of held in memory.
+                parse_seconds = [0.0]
+                rows = _timed(parse_pois(filtered, contract, region, country_code), parse_seconds)
                 near_ways = None
                 if near_rules:
                     rule = next(iter(near_rules.values()))
                     ways = workdir / (region.replace("/", "-") + "-bikeways.osm.pbf")
-                    run_way_filter(pbf, ways, rule)
+                    with tracker.step(region, "near_way"):
+                        run_way_filter(pbf, ways, rule)
                     near_ways = ({letter: r.within_m for letter, r in near_rules.items()},
                                  rideable_lines(export_lines(ways), rule))
-                result = load_region(conn, rows, region, country_code, near_ways=near_ways,
-                                     name_or_tags=name_or_tags or None,
-                                     exclude_tag_values=exclude_tag_values or None)
+                with tracker.step(region, "load") as st:
+                    result = load_region(conn, rows, region, country_code, near_ways=near_ways,
+                                         name_or_tags=name_or_tags or None,
+                                         exclude_tag_values=exclude_tag_values or None)
+                    st.rows = result.inserted
+                    st.detail = f"previous {result.previous}"
+                tracker.record(region, "parse", parse_seconds[0])
                 elapsed = time.monotonic() - region_started
                 timings.append((region, elapsed, True))
                 print(f"[coverage] {region}: loaded/updated {result.inserted} rows "
@@ -611,25 +638,33 @@ def main(argv=None) -> int:
                 # that dies in two seconds.
                 print(f"[coverage] {region}: FAILED after {_dur(elapsed)} — {exc}", file=sys.stderr)
 
+        loaded = sum(1 for (_r, _e, good) in timings if good)
+        run_status = "ok" if not failed else "partial" if loaded else "failed"
         if args.load_only:
             _print_timings(timings, time.monotonic() - run_started)
+            tracker.finish(run_status, loaded)
             return 1 if failed else 0
 
         tiles_started = time.monotonic()
-        layer_files = export_geojsonl(conn, workdir)
+        with tracker.step(None, "export"):
+            layer_files = export_geojsonl(conn, workdir)
         if not layer_files:
             print("[coverage] index empty — nothing to publish", file=sys.stderr)
             # Still report what the attempt cost: a run that harvested for an
             # hour and then found nothing to publish is a different problem
             # from one that fell over immediately.
             _print_timings(timings, time.monotonic() - run_started)
+            tracker.finish("failed", loaded)
             return 1
         artifact = workdir / "coverage.pmtiles"
-        build_pmtiles(layer_files, artifact)
-        # expect exactly the (letter, cc) layer pairs we exported; pairs absent
-        # from the index (possible on partial fixtures) don't fail the gate
-        verify_pmtiles(artifact, expected_layers={
-            f"{letter.lower()}_{cc.lower()}" for (letter, cc) in layer_files})
+        with tracker.step(None, "tippecanoe") as st:
+            build_pmtiles(layer_files, artifact)
+            # expect exactly the (letter, cc) layer pairs we exported; pairs absent
+            # from the index (possible on partial fixtures) don't fail the gate
+            verify_pmtiles(artifact, expected_layers={
+                f"{letter.lower()}_{cc.lower()}" for (letter, cc) in layer_files})
+            if artifact.exists():
+                st.bytes = artifact.stat().st_size
         # Manifest semantics (shape locked, coverage-provider.md §4): `counts`
         # spans the WHOLE coverage_poi table — every region's current slice,
         # matching the artifact, which is always built from the full index —
@@ -639,13 +674,30 @@ def main(argv=None) -> int:
             "SELECT letter, count(*) FROM coverage_poi GROUP BY letter").fetchall())
         ensure_bucket()
         country_codes = sorted({cc for (_letter, cc) in layer_files if cc != "ZZ"})
-        url = upload(artifact, {"counts": counts, "regions": regions,
-                                "country_codes": country_codes})
+        with tracker.step(None, "upload") as st:
+            url = upload(artifact, {"counts": counts, "regions": regions,
+                                    "country_codes": country_codes})
+            st.detail = url
         stale = prune(keep=4)
         print(f"[coverage] published {url} (pruned {len(stale)}) — "
               f"tiles {_dur(time.monotonic() - tiles_started)}")
         _print_timings(timings, time.monotonic() - run_started)
+        tracker.finish(run_status, loaded, url)
     return 1 if failed else 0
+
+
+def _timed(items, acc: list[float]):
+    """Yield from `items`, adding the seconds spent inside each next() to acc[0]."""
+    it = iter(items)
+    while True:
+        started = time.monotonic()
+        try:
+            item = next(it)
+        except StopIteration:
+            acc[0] += time.monotonic() - started
+            return
+        acc[0] += time.monotonic() - started
+        yield item
 
 
 def _print_timings(timings, total: float) -> None:
