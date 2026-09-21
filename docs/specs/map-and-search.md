@@ -2182,12 +2182,22 @@ chip (City ◉ / Town ◎), optional blurb + Wikipedia link (hand-authored for t
 `CITIES` constants; Photon hits pass just coordinates), and **"In the Commons
 nearby · ≤ 5 km"** — every indexed item within 5 km, grouped by letter,
 nearest-first within each group. **A · road-surface segments are excluded**
-(corridor data would flood the card). Rather than zooming to the place, the
-card **fits bounds over the place + all nearby items** (drawer-aware padding,
-`maxZoom 13.5`) so hover-pulsed items are actually on screen; hovering a row
-pulses an anchor-aware halo (`hlOff`, §6.1). A pulse over empty map in Curated
-mode is intentional — it locates items whose dots the mode filter hides. Route
-drawers link their towns (`Starts at` / `Towns on route`) to the same card.
+(corridor data would flood the card). **The card lands on the town itself**
+(2026-09-21, owner: a town found by search sat at z11.7 with nothing on the map
+to say where it was): `flyToPlace()` centres the town in the part of the map
+the drawer leaves free (`pinOffset`, the same framing `flyToPin` gives a
+catalogue pin) at `TOWN_ZOOM` = 14, fixed rather than "at least", and
+**the site's own pin stands on the point**: `showTownPin()` drops the mark
+from `assets/brand/logo-mark.svg` (the ink pin with the spoked wheel,
+`assets/map/town-pin.js`, `.cc-town-pin`, the reveal pin's pulse under it) as
+a bottom-anchored marker, cleared with the reveal pin when the drawer closes
+or another one opens. Until then the card fitted bounds over the place and all
+nearby items (`maxZoom 13.5`) so hover-pulsed rows were always on screen; that
+framing is gone, and a nearby row's halo may now sit a drag away. Hovering a
+row still pulses an anchor-aware halo (`hlOff`, §6.1). A pulse over empty map
+in Curated mode is intentional — it locates items whose dots the mode filter
+hides. Route drawers link their towns (`Starts at` / `Towns on route`) to the
+same card.
 
 **What Wikipedia and Wikidata know, fetched on first open (2026-09-07).**
 Owner: "the first time a town is shown in the drawer we see a spinner and it

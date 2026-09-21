@@ -492,6 +492,12 @@
   .cc-g{font-family:var(--emoji);font-style:normal}
   .cc-g svg,.cc-near-k svg,.search-res .sw svg,.cc-d-rec .v svg{vertical-align:-2px}
   /* one-off reveal pin (decision C): the "?" pin plus the selection pulse */
+  /* The town pointer (map-and-search.md §6.5): the site's own mark, ink pin
+     with the wheel, standing on the town point; the reveal pin's pulse under it. */
+  .cc-town-pin{position:relative;width:26px;height:43px;color:var(--ink,#101E16);--wheel:var(--paper,#EFE6D4);--spoke:var(--clay,#C2551F);pointer-events:none;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+  .cc-town-pin svg{display:block}
+  .cc-town-pin::before{content:"";position:absolute;left:50%;bottom:-2px;width:26px;height:26px;margin-left:-13px;border-radius:50%;border:2px solid rgba(255,90,31,.6);animation:cc-pulse 1.25s infinite;z-index:-1}
   .cc-pin.reveal::before{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(255,90,31,.6);animation:cc-pulse 1.25s infinite}
   .cc-mod{margin-top:1rem;border:1px solid rgba(217,45,32,.4);border-left:3px solid #D92D20;border-radius:0 8px 8px 0;padding:.9rem 1rem;background:rgba(217,45,32,.05)}
   .cc-mod-badge{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--chrome-red);margin-bottom:.5rem}   /* readable red on the dark drawer (was #D92D20) */

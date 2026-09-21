@@ -185,6 +185,13 @@ export function flyToPin(lngLat){   // centre + slow zoom-in on click, in the pa
   const offset = pinOffset(window.innerWidth, window.innerHeight, box.top, box.height);
   return moveCamera({center:lngLat, zoom:Math.max(map.getZoom(),14), offset}, {duration:1700});
 }
+/* The same framing at one exact zoom: a town card lands on the town itself
+   (map-and-search.md §6.5), not on whatever zoom the rider searched from. */
+export function flyToPlace(lngLat, zoom){
+  const box = map.getContainer().getBoundingClientRect();
+  const offset = pinOffset(window.innerWidth, window.innerHeight, box.top, box.height);
+  return moveCamera({center:lngLat, zoom, offset}, {duration:900});
+}
 
 /* Style-load race: sources cannot be added, and render() must not paint, until MapLibre has the style. */
 let _styleReady=false;

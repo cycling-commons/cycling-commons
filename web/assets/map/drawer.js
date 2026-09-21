@@ -23,6 +23,7 @@ import { shareQuery } from './share-links.js';
 import { addPhotoHref } from './add-photo.js';
 import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
+import { townPinSvg } from './town-pin.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, openRouteById, bumpPlaceReq } from './places.js';
@@ -1225,6 +1226,7 @@ export function openDrawer(layer, f){
   // docs/specs/route-domain.md §7 — while picking corrections, do not also open the drawer.
   if(isPicking()) return;
   clearRevealPin();
+  clearTownPin();
   clearSelectedCoverageIcon();
   releaseShownAnyway(layer.letter, f.id);   // a place shown anyway stays only while its own drawer is up (map-and-search.md §9)
   invalidateCoverageDrawer(); bumpPlaceReq();   // Invalidate in-flight coverage POI detail and town-card nearby; this render supersedes them.
@@ -1304,6 +1306,16 @@ export function revealPinAt(layer, ll){
   el.classList.add('reveal');
   _revealMarker=new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([ll[1],ll[0]]).addTo(map);
 }
+// map-and-search.md §6.5 — the site's own pin on a town while its card is open. ll is [lat, lng].
+let _townMarker=null;
+export function clearTownPin(){ if(_townMarker){ _townMarker.remove(); _townMarker=null; } }
+export function showTownPin(ll){
+  clearTownPin();
+  const el=document.createElement('div');
+  el.className='cc-town-pin';
+  el.innerHTML=townPinSvg();
+  _townMarker=new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([ll[1],ll[0]]).addTo(map);
+}
 /* The map wrapper mirrors the drawer's state, because the top-right toolbar
    lives in the map and has to know to step aside. A class rather than :has(),
    so the rule is one selector a person can find and a test can assert. */
@@ -1341,6 +1353,7 @@ export function closeDrawer(){
   clearHighlight();
   clearSelectedCoverageIcon();                        // remove the selected coverage POI's persistent icon overlay
   clearRevealPin();
+  clearTownPin();
   releaseShownAnyway(null, null);                     // the place shown anyway leaves with its drawer
   letRouteGo();                                       // the route held behind the drawer, and its listed places
   clearRouteHighlight();

@@ -5,12 +5,13 @@ import { modeShows } from './filters.js';
 import { D, tpl } from './i18n.js';
 import { escPend, safeHref, txtOn, haversine, featurePoint, COORD_COLOR, drawerFitPadding, pathBounds } from './util.js';
 import { uKm, uM } from './units.js';
-import { map, flyToPin, fitMapTo, moveCamera } from './map-init.js';
+import { map, flyToPin, fitMapTo, flyToPlace } from './map-init.js';
 import { CATALOG, CITIES, active, layerByKey, LETTER_KEY, mode } from './catalog.js';
 import { osmLayers } from './osm-pools.js';
 import { nearbyItems, idxIds } from './item-index.js';
 import { render } from './render.js';
-import { openDrawer, showDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, revealPinAt, commonsPhotoHtml } from './drawer.js';
+import { openDrawer, showDrawer, osmDrawer, waterDrawer, highlightAt, clearHighlight, revealPinAt, commonsPhotoHtml, showTownPin } from './drawer.js';
+import { TOWN_ZOOM } from './town-pin.js';
 import { openLightbox } from './lightbox.js';
 import { COVERAGE_ON, openCoverageByRef, invalidateCoverageDrawer } from './coverage.js';
 import { liftScopeForHit } from './scope-ui.js';
@@ -40,15 +41,11 @@ export function openPlace(name, meta){
   // A · segments are corridor data, not places — they would flood the card.
   const near = nearbyItems(meta.ll, NEARBY_KM).filter(n=>n.e.letter!=='A');
   renderPlaceCard(name, meta, near);
-  if(near.length){
-    let minLat=meta.ll[0],maxLat=meta.ll[0],minLng=meta.ll[1],maxLng=meta.ll[1];
-    near.forEach(n=>{ if(!n.e.ll) return; const [la,ln]=n.e.ll;
-      if(la<minLat)minLat=la; if(la>maxLat)maxLat=la; if(ln<minLng)minLng=ln; if(ln>maxLng)maxLng=ln; });
-    fitMapTo([[minLng,minLat],[maxLng,maxLat]],
-      {padding:drawerFitPadding(window.innerWidth, window.innerHeight), maxZoom:13.5, duration:900});
-  } else {
-    moveCamera({center:[meta.ll[1],meta.ll[0]], zoom:12.5, offset:[window.innerWidth<=820?0:-150,0]}, {duration:900});
-  }
+  // docs/specs/map-and-search.md §6.5 — land on the town itself, with the
+  // site's own pin on it (owner 2026-09-21). The card's nearby rows still
+  // pulse their halo on hover; at this zoom one may sit a drag away.
+  showTownPin(meta.ll);
+  flyToPlace([meta.ll[1],meta.ll[0]], TOWN_ZOOM);
   if(!COVERAGE_ON) return;
   const myReq=++_placeReq;
   fetch(`/map/coverage/nearby?lat=${meta.ll[0]}&lng=${meta.ll[1]}&km=${NEARBY_KM}`, {headers:{'Accept':'application/json'}})
