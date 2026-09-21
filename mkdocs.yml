@@ -64,14 +64,14 @@ extra:
 
 extra_javascript:
   # Bump ?v= when diagrams.js changes — MkDocs does not fingerprint extra_*.
-  - javascripts/diagrams.js?v=4
+  - javascripts/diagrams.js?v=5
 
 extra_css:
   # ?v= is a cache-buster. MkDocs fingerprints the theme's own assets but NOT
   # extra_css, so a browser holds the previous copy after an edit and shows a
   # stale sidebar or stale code styling — which reads as "the fix didn't work"
   # rather than "you have an old file". Bump this when extra.css changes.
-  - stylesheets/extra.css?v=23
+  - stylesheets/extra.css?v=24
 
 # Ordered to match the "Start here" list on the wiki home page.
 nav:
@@ -89,6 +89,7 @@ nav:
   - Building the Commons: building.md
   - For developers:
       - Start here: developers/index.md
+      - The map page, request by request: developers/map-page.md
       - GIS in CC:
           - Start here: developers/gis/index.md
           - 1 · The Earth is awkward: developers/gis/coordinates.md

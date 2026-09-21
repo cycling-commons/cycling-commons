@@ -100,6 +100,9 @@
           var fig = document.createElement('div');
           fig.className = 'cc-diagram-out';
           fig.setAttribute('data-src', src);
+          fig.setAttribute('tabindex', '0');
+          fig.setAttribute('role', 'button');
+          fig.setAttribute('aria-label', 'Show this diagram larger');
           fig.innerHTML = res.svg;
           pre.replaceWith(fig);
         }).catch(function (e) {
@@ -138,4 +141,39 @@
       render();
     }).observe(document.body, { attributes: true, attributeFilter: ['data-md-color-scheme'] });
   }
+
+  /* A drawn diagram is sized to the text column, which is too small to read a
+     system map. Click (or Enter) opens the same SVG in a native <dialog> at
+     the viewport width. Delegated, because render() replaces the nodes. */
+  function zoom(out) {
+    var svg = out.querySelector('svg');
+    if (!svg || typeof HTMLDialogElement === 'undefined') return;
+    var dlg = document.createElement('dialog');
+    dlg.className = 'cc-diagram-zoom';
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'cc-diagram-zoom-close';
+    close.setAttribute('aria-label', 'Close');
+    close.textContent = '×';
+    var box = document.createElement('div');
+    box.className = 'cc-diagram-zoom-box';
+    box.appendChild(svg.cloneNode(true));
+    dlg.appendChild(close);
+    dlg.appendChild(box);
+    dlg.addEventListener('click', function (e) {
+      if (e.target === dlg || e.target === close) dlg.close();
+    });
+    dlg.addEventListener('close', function () { dlg.remove(); });
+    document.body.appendChild(dlg);
+    dlg.showModal();
+  }
+  document.addEventListener('click', function (e) {
+    var out = e.target && e.target.closest ? e.target.closest('.cc-diagram-out') : null;
+    if (out) zoom(out);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var out = e.target && e.target.classList && e.target.classList.contains('cc-diagram-out') ? e.target : null;
+    if (out) { e.preventDefault(); zoom(out); }
+  });
 })();
