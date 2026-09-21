@@ -16,6 +16,10 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * signed in or not, and its only purpose is to put the signed-in user's name
  * on each event: data we do not want in GlitchTip. The bundle offers no
  * switch for it.
+ *
+ * Registered in Kernel::build(), which Psalm does not scan.
+ *
+ * @api
  */
 final class RemoveSentryLoginListenerPass implements CompilerPassInterface
 {
