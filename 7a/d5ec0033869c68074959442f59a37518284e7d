@@ -1,0 +1,19 @@
+.gitignore
+  s_714a528af34e83::t_3d0a1ebc8a6f7d 97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7ad5ec0033869c68074959442f59a37518284e7d",
+  "prompts": {},
+  "sessions": {
+    "s_714a528af34e83": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "258cb210-33cd-45c8-a944-148648265ae2",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
