@@ -1,0 +1,110 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: Deploy — production worker
+
+# The production peer of deploy-staging-worker.yml: same host, same script,
+# the `production` branch, the cyclingcommons-production app. The app entry on
+# the host is held back until production cuts over to this cluster; until then
+# this workflow fails at the deploy step with "App directory does not exist".
+#
+# Required secrets: DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS, DEPLOY_PORT, WORKER_HOST
+# (see the staging workflow). No GitHub token: the repository is public.
+
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'production'
+      skip_ci_gate:
+        description: 'Deploy without waiting for CI (incident use only)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-production-worker
+  cancel-in-progress: false
+
+env:
+  GATING_WORKFLOWS: >-
+    .github/workflows/ci-app.yml
+    .github/workflows/ci-pipeline.yml
+    .github/workflows/ci-tools.yml
+    .github/workflows/ci-wiki.yml
+    .github/workflows/reuse.yml
+    .github/workflows/secret-scan.yml
+
+jobs:
+  gate:
+    name: CI must be green
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/require-green-ci
+        if: >-
+          github.event_name != 'workflow_dispatch'
+          || inputs.skip_ci_gate != true
+        with:
+          workflows: ${{ env.GATING_WORKFLOWS }}
+          sha: ${{ github.sha }}
+          repository: ${{ github.repository }}
+          token: ${{ github.token }}
+
+  deploy:
+    needs: gate
+    name: worker → cyclingcommons-production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Set up SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          if [ -z "${DEPLOY_KNOWN_HOSTS:-}" ]; then
+            echo "::error::DEPLOY_KNOWN_HOSTS secret is not set."
+            exit 1
+          fi
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -F "[$HOST]:$PORT" -f ~/.ssh/known_hosts >/dev/null || {
+            echo "::error::The worker host is not in DEPLOY_KNOWN_HOSTS."
+            exit 1
+          }
+
+      - name: Deploy the worker
+        env:
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          HOST: ${{ secrets.WORKER_HOST }}
+          BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "deploy@$HOST" \
+            "deploy-worker.sh cyclingcommons-production '$BRANCH'"
+
+      - name: Verify the consumer is running
+        env:
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "deploy@$HOST" '
+            if docker ps --filter "name=cyclingcommons-production-worker" --format "{{.Status}}" | grep -q "Up"; then
+              docker ps --filter "name=cyclingcommons-production-worker" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+            else
+              echo "cyclingcommons-production-worker is NOT running"
+              docker compose -f /opt/workers/cyclingcommons-production/compose.compute.yaml logs --tail 50 worker
+              exit 1
+            fi'

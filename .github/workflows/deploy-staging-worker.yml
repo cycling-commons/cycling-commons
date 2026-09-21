@@ -1,0 +1,117 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: Deploy — staging worker
+
+# The background tier: the Messenger consumer, the scheduled console commands
+# and the coverage pipeline image, all on the dedicated worker host, deployed
+# by that host's deploy-worker.sh from the same branch the web tier runs.
+#
+# Required secrets (shared with deploy-staging.yaml unless noted):
+#   DEPLOY_SSH_KEY      private key of the deploy user, same key as the web hosts
+#   DEPLOY_KNOWN_HOSTS  pinned host keys; must ALSO carry the worker host
+#   DEPLOY_PORT         SSH port (the same on every host)
+#   WORKER_HOST         the worker host's address (new)
+#
+# Deliberately NOT required: a GitHub token. This repository is public, so the
+# host clones it anonymously and Composer pulls nothing private.
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'staging'
+      skip_ci_gate:
+        description: 'Deploy without waiting for CI (incident use only)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-staging-worker
+  cancel-in-progress: false
+
+env:
+  GATING_WORKFLOWS: >-
+    .github/workflows/ci-app.yml
+    .github/workflows/ci-pipeline.yml
+    .github/workflows/ci-tools.yml
+    .github/workflows/ci-wiki.yml
+    .github/workflows/reuse.yml
+    .github/workflows/secret-scan.yml
+
+jobs:
+  gate:
+    name: CI must be green
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/require-green-ci
+        if: >-
+          github.event_name != 'workflow_dispatch'
+          || inputs.skip_ci_gate != true
+        with:
+          workflows: ${{ env.GATING_WORKFLOWS }}
+          sha: ${{ github.sha }}
+          repository: ${{ github.repository }}
+          token: ${{ github.token }}
+
+  deploy:
+    needs: gate
+    name: worker → cyclingcommons-staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Set up SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pinned host keys, never a keyscan (see deploy-staging.yaml).
+          if [ -z "${DEPLOY_KNOWN_HOSTS:-}" ]; then
+            echo "::error::DEPLOY_KNOWN_HOSTS secret is not set."
+            exit 1
+          fi
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -F "[$HOST]:$PORT" -f ~/.ssh/known_hosts >/dev/null || {
+            echo "::error::The worker host is not in DEPLOY_KNOWN_HOSTS. Add it:"
+            echo "::error::  ssh-keyscan -t ed25519 -p $PORT <worker host>   (verify the fingerprint on the host, then append)"
+            exit 1
+          }
+
+      - name: Deploy the worker
+        env:
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          HOST: ${{ secrets.WORKER_HOST }}
+          BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "deploy@$HOST" \
+            "deploy-worker.sh cyclingcommons-staging '$BRANCH'"
+
+      - name: Verify the consumer is running
+        env:
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "deploy@$HOST" '
+            if docker ps --filter "name=cyclingcommons-staging-worker" --format "{{.Status}}" | grep -q "Up"; then
+              docker ps --filter "name=cyclingcommons-staging-worker" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+            else
+              echo "cyclingcommons-staging-worker is NOT running"
+              docker compose -f /opt/workers/cyclingcommons-staging/compose.compute.yaml logs --tail 50 worker
+              exit 1
+            fi'

@@ -1,0 +1,94 @@
+# syntax=docker/dockerfile:1
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# The worker image: the Messenger consumer and the scheduled console commands
+# (docs/specs/operations.md section 1). Built on the worker host by
+# deploy-worker.sh from the REPOSITORY ROOT, never from web/:
+#
+#   docker build -f Dockerfile.worker --target worker --build-arg APP_ENV=staging -t cc-worker-staging .
+#
+# Same PHP, extensions and ImageMagick policy as web/Dockerfile, minus FPM,
+# plus the application baked in: nothing is bind-mounted at runtime and /app/var
+# is an ephemeral tmpfs (the compose file on the host), so each container start
+# gets a fresh compiled container and a deploy can never run stale code.
+
+FROM php:8.4-cli AS worker
+
+# The extension list mirrors web/Dockerfile: the worker decodes rider photos
+# (imagick + webp + heif), talks to Postgres and Redis, and builds the GDPR
+# export (zip). opcache also for the CLI: the consumer lives for an hour.
+RUN apt-get -o Acquire::Retries=15 update \
+    && apt-get install -y --no-install-recommends \
+        libpq-dev libicu-dev git unzip \
+        libmagickwand-dev libwebp-dev libheif-dev libzip-dev \
+    && docker-php-ext-install pdo_pgsql gettext intl zip opcache \
+    && pecl install imagick redis \
+    && docker-php-ext-enable imagick redis \
+    && rm -rf /var/lib/apt/lists/*
+
+# ImageMagick's security policy, proven at build time by the same probe the
+# web image runs (docs/specs/photo-uploads.md section 7). A malformed policy is
+# not an error to ImageMagick, it is a policy that quietly allows everything.
+COPY web/docker/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
+COPY web/docker/verify-imagemagick-policy.php /usr/local/bin/verify-imagemagick-policy
+RUN php /usr/local/bin/verify-imagemagick-policy
+
+ENV TZ=Europe/Amsterdam
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && { \
+        echo 'opcache.enable_cli=1'; \
+        echo 'opcache.memory_consumption=128'; \
+        echo 'opcache.validate_timestamps=0'; \
+        echo 'memory_limit=1G'; \
+    } > "$PHP_INI_DIR/conf.d/cc-worker.ini"
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+ARG APP_ENV=prod
+ENV APP_ENV=${APP_ENV}
+ENV COMPOSER_ALLOW_SUPERUSER=1
+# Accepted for parity with the deploy script; a public repo needs none.
+ARG COMPOSER_AUTH
+
+# Dependencies first, for layer caching. --no-dev only for prod: staging runs
+# with APP_ENV=staging and keeps the dev tooling, as the web deploy does.
+COPY web/composer.json web/composer.lock web/symfony.lock ./
+RUN set -eux; \
+    dev=""; [ "${APP_ENV}" = "prod" ] && dev="--no-dev"; \
+    composer install --no-interaction --no-progress --prefer-dist --no-scripts --no-autoloader ${dev}; \
+    composer audit --locked --abandoned=ignore ${dev}
+
+COPY web/ ./
+
+RUN set -eux; \
+    dev=""; [ "${APP_ENV}" = "prod" ] && dev="--no-dev"; \
+    composer dump-autoload --classmap-authoritative ${dev}; \
+    composer dump-env "${APP_ENV}"; \
+    mkdir -p var/cache var/log; \
+    chmod +x bin/console
+
+# Warm the compiled container at build time and stash it OUTSIDE var/: at
+# runtime var/ is a tmpfs, and the entrypoint seeds it from this stash so the
+# hourly consumer restarts do not each cold-compile. Best effort: a warmup
+# failure only costs the cold compile at runtime.
+RUN set -ux; \
+    if php bin/console cache:warmup --no-interaction; then \
+        cp -a var/cache /app/.warm-cache; \
+    else \
+        echo ">>> WARN: build-time cache warmup failed; the worker compiles at runtime"; \
+    fi
+
+COPY --chmod=755 web/docker/worker-entrypoint.sh /usr/local/bin/worker-entrypoint
+
+# Non-root: this container unpacks stranger-supplied image bytes.
+USER www-data
+
+ENTRYPOINT ["worker-entrypoint"]
+
+HEALTHCHECK --start-period=30s --interval=60s CMD php bin/console messenger:stats || exit 1
+
+# The compose file on the host overrides this with its own limits.
+CMD ["php", "bin/console", "messenger:consume", "async", "--sleep=5", "--time-limit=3600", "--memory-limit=768M", "-vv"]

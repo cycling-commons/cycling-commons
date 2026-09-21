@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Build context for Dockerfile.worker (repository root). The image copies
+# web/ only, but the whole context is sent to the daemon, so everything large
+# or local-only is kept out. Patterns are Go filepath.Match, relative to this
+# directory; a bare name matches only at the top level.
+#
+# Local env files: the developer's own credentials must never be baked in.
+web/.env.local
+web/.env.*.local
+web/.env.local.php
+# Rebuilt inside the image.
+web/vendor/
+web/var/
+web/node_modules/
+web/.phpunit.cache/
+web/.php-cs-fixer.cache
+# Not part of the worker at all.
+.git/
+.github/
+data/
+docs/
+wiki/
+wiki-dist/
+atlas/
+brand-src/
+developers/
+pipeline/
+tools/
+*.png
