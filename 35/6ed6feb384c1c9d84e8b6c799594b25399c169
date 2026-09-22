@@ -1,0 +1,19 @@
+web/tests/Content/ReleaseVersionDriftTest.php
+  s_fd301e3dd248f5::t_676b48733282de 1-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "356ed6feb384c1c9d84e8b6c799594b25399c169",
+  "prompts": {},
+  "sessions": {
+    "s_fd301e3dd248f5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "71930ecb-456d-4e6f-a5a2-91561c020b1c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
