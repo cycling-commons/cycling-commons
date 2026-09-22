@@ -4961,6 +4961,11 @@ changelog:
   feed_mid: '. Was als Nächstes kommt, steht im'
   feed_roadmap: 'Fahrplan'
   feed_post: '.'
+  v090_towns: "<b>Orte auf der Karte.</b> Ein Ort öffnet jetzt eine eigene Karte, markiert mit der eigenen Nadel der Website."
+  v090_fresh: "<b>Die Kartendaten aktualisieren sich selbst.</b> Jede Nacht liest die Website OpenStreetMap für die abgedeckten Regionen neu ein, sodass das Gezeigte höchstens Tage alt ist, nicht Monate."
+  v090_surface: "<b>Belag und Routen, wöchentlich neu gebaut.</b> Die Belags- und Routenebenen werden planmäßig neu erzeugt statt von Hand."
+  v090_photos: "<b>Jedes Foto wird geprüft, bevor es erscheint.</b> Ein Upload wird im Hintergrund kontrolliert und erst veröffentlicht, wenn er bestanden hat."
+  v090_accounts: "<b>Nie bestätigte Konten werden entfernt.</b> Wird eine Anmeldung nicht abgeschlossen, bleibt der Eintrag nicht bestehen."
   v080_map: '<b>Die Karte.</b> Orte, Anstiege und Routen in neunzehn Ländern, mit einer Oberflächenebene, Satelliten- und Straßenbildern und einem hellen wie einem dunklen Thema.'
   v080_photos: '<b>Fotos.</b> Steuere zu jedem Ort ein Foto bei, unter CC BY-SA 4.0. Standortdaten werden vor der Veröffentlichung entfernt, und jedes Foto hat eine eigene Seite.'
   v080_routes: '<b>Routen.</b> Schlage eine Route aus einer GPX-Datei vor, stimme über die ab, die du gefahren bist, und sieh das Beste einer Region.'

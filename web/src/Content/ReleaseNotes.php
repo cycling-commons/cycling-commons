@@ -85,6 +85,17 @@ final class ReleaseNotes
      */
     public const array RELEASES = [
         [
+            'version' => '0.9.0-beta',
+            'date' => '2026-09-22',
+            'keys' => [
+                'changelog.v090_towns',
+                'changelog.v090_fresh',
+                'changelog.v090_surface',
+                'changelog.v090_photos',
+                'changelog.v090_accounts',
+            ],
+        ],
+        [
             'version' => '0.8.0-beta',
             'date' => '2026-08-28',
             'keys' => [

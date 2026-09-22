@@ -4960,6 +4960,11 @@ changelog:
   feed_mid: '. Wat er hierna komt staat op de'
   feed_roadmap: 'routekaart'
   feed_post: '.'
+  v090_towns: "<b>Plaatsen op de kaart.</b> Een plaats opent nu een eigen kaartje, gemarkeerd met de eigen speld van de site."
+  v090_fresh: "<b>De kaartgegevens verversen zichzelf.</b> Elke nacht leest de site OpenStreetMap opnieuw voor de regio's die hij dekt, dus wat je ziet is hooguit dagen oud, geen maanden."
+  v090_surface: "<b>Wegdek en routes, wekelijks opnieuw opgebouwd.</b> De wegdek- en routelagen worden volgens schema opnieuw gegenereerd in plaats van met de hand."
+  v090_photos: "<b>Elke foto wordt gescand voordat hij verschijnt.</b> Een upload wordt op de achtergrond gecontroleerd en pas gepubliceerd als hij is goedgekeurd."
+  v090_accounts: "<b>Nooit bevestigde accounts worden verwijderd.</b> Wordt een aanmelding niet afgerond, dan blijft het record niet staan."
   v080_map: '<b>De kaart.</b> Plekken, beklimmingen en routes in negentien landen, met een ondergrondlaag, satelliet- en straatbeelden, en een licht en een donker thema.'
   v080_photos: '<b>Foto''s.</b> Draag een foto bij aan elke plek, onder CC BY-SA 4.0. Locatiegegevens gaan eruit vóór publicatie, en elke foto heeft een eigen pagina.'
   v080_routes: '<b>Routes.</b> Stel een route voor vanuit een GPX-bestand, stem op wat je gereden hebt, en zie het beste van een regio.'

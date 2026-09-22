@@ -4982,6 +4982,11 @@ changelog:
   feed_mid: '. What is coming next is on the'
   feed_roadmap: 'roadmap'
   feed_post: '.'
+  v090_towns: "<b>Towns on the map.</b> A town now opens a card of its own, marked with the site's own pin."
+  v090_fresh: "<b>The map's data refreshes itself.</b> Every night the site re-reads OpenStreetMap for the regions it covers, so what you see is days old at most, not months."
+  v090_surface: "<b>Road surface and routes, rebuilt weekly.</b> The surface and route layers are regenerated on a schedule instead of by hand."
+  v090_photos: "<b>Every photo is scanned before it appears.</b> An upload is checked in the background, and published only once it has passed."
+  v090_accounts: "<b>Accounts that were never confirmed are removed.</b> If a sign-up is never completed, the record does not linger."
   v080_map: '<b>The map.</b> Places, climbs and routes across nineteen countries, with a surface layer, satellite and street-level imagery, and a light and a dark theme.'
   v080_photos: '<b>Photos.</b> Contribute a photo to any place, licensed CC BY-SA 4.0. Location data is stripped before publication, and every photo has a page of its own.'
   v080_routes: '<b>Routes.</b> Propose a route from a GPX file, vote on the ones you have ridden, and see the best of a region.'

@@ -4993,6 +4993,11 @@ changelog:
   feed_mid: '. Lo que viene después está en la'
   feed_roadmap: 'hoja de ruta'
   feed_post: '.'
+  v090_towns: "<b>Los pueblos en el mapa.</b> Un pueblo abre ahora su propia ficha, señalada con el marcador propio del sitio."
+  v090_fresh: "<b>Los datos del mapa se actualizan solos.</b> Cada noche el sitio vuelve a leer OpenStreetMap para las regiones que cubre, así que lo que ves tiene días, no meses."
+  v090_surface: "<b>Firme y rutas, reconstruidos cada semana.</b> Las capas de firme y de rutas se regeneran de forma programada en lugar de a mano."
+  v090_photos: "<b>Cada foto se analiza antes de aparecer.</b> Una subida se comprueba en segundo plano y solo se publica cuando la ha superado."
+  v090_accounts: "<b>Las cuentas nunca confirmadas se eliminan.</b> Si un registro no se completa, no queda almacenado."
   v080_map: '<b>El mapa.</b> Lugares, puertos y rutas en diecinueve países, con capa de firme, imágenes por satélite y a pie de calle, y tema claro y oscuro.'
   v080_photos: '<b>Fotos.</b> Aporta una foto a cualquier lugar, con licencia CC BY-SA 4.0. Los datos de ubicación se retiran antes de publicarla, y cada foto tiene su propia página.'
   v080_routes: '<b>Rutas.</b> Propón una ruta desde un archivo GPX, vota las que has rodado y mira lo mejor de una región.'

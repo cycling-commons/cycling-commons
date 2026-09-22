@@ -4953,6 +4953,11 @@ changelog:
   feed_mid: '. Ce qui vient ensuite est sur la'
   feed_roadmap: 'feuille de route'
   feed_post: '.'
+  v090_towns: "<b>Les villes sur la carte.</b> Une ville ouvre désormais sa propre fiche, signalée par le repère du site."
+  v090_fresh: "<b>Les données de la carte se rafraîchissent seules.</b> Chaque nuit, le site relit OpenStreetMap pour les régions qu'il couvre : ce que vous voyez a quelques jours, pas quelques mois."
+  v090_surface: "<b>Revêtement et itinéraires, reconstruits chaque semaine.</b> Les couches de revêtement et d'itinéraires sont régénérées automatiquement, et non plus à la main."
+  v090_photos: "<b>Chaque photo est analysée avant d'apparaître.</b> Un envoi est vérifié en arrière-plan et n'est publié qu'une fois validé."
+  v090_accounts: "<b>Les comptes jamais confirmés sont supprimés.</b> Si une inscription n'est pas menée à son terme, l'enregistrement ne subsiste pas."
   v080_map: '<b>La carte.</b> Lieux, ascensions et itinéraires dans dix-neuf pays, avec une couche de revêtement, l''imagerie satellite et de rue, et un thème clair comme un thème sombre.'
   v080_photos: '<b>Photos.</b> Ajoutez une photo à n''importe quel lieu, sous licence CC BY-SA 4.0. Les données de localisation sont retirées avant publication, et chaque photo a sa page.'
   v080_routes: '<b>Itinéraires.</b> Proposez un itinéraire depuis un fichier GPX, votez sur ceux que vous avez roulés, et voyez le meilleur d''une région.'
