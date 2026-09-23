@@ -1,0 +1,22 @@
+web/tests/Routing/LegacyDemoRedirectTest.php
+  s_556b16a1e62aab::t_65ebe0988b0dfd 1-18,26-33,42-70
+  s_556b16a1e62aab::t_bc378712c5c76b 19-25,34-41
+web/src/Controller/LegacyDemoRedirectController.php
+  s_556b16a1e62aab::t_268abf4bb81a61 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0a98f1fa1e40d24c88f13974f7323eb40fc18f97",
+  "prompts": {},
+  "sessions": {
+    "s_556b16a1e62aab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4dae7371-1d22-4a26-b66d-5f242a142324",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
