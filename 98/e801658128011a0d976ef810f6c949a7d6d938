@@ -1,0 +1,24 @@
+web/src/EventSubscriber/MailRehearsalRedirectSubscriber.php
+  s_556b16a1e62aab::t_203ef6a584ad2f 17-18
+  s_556b16a1e62aab::t_ea85d67068ea8c 1-16,19-49
+web/.env
+  s_556b16a1e62aab::t_698eba87b44194 47-48
+web/tests/Mail/MailRehearsalRedirectSubscriberTest.php
+  s_556b16a1e62aab::t_d41d747b31dcd8 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "98e801658128011a0d976ef810f6c949a7d6d938",
+  "prompts": {},
+  "sessions": {
+    "s_556b16a1e62aab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4dae7371-1d22-4a26-b66d-5f242a142324",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
