@@ -30,6 +30,16 @@ test('a pending state is declared and set true only while the outlines are unres
   assert.match(src, /_covPending\s*=\s*true/, 'the outlines-not-yet-loaded branch marks the decision pending');
 });
 
+test('the pending/fetch branch is entered only at PAN_MIN_ZOOM or above', () => {
+  // Below PAN_MIN_ZOOM the pure module hides regardless of `near`, so that
+  // tick needs no outlines and must not wait on them - a rider zooming out
+  // while the fetch is in flight must not keep the nudge suppressed for it.
+  assert.match(src, /import\s*\{[^}]*\bPAN_MIN_ZOOM\b[^}]*\}\s*from\s*['"]\.\/coverage-notice\.js['"]/,
+    'PAN_MIN_ZOOM must be imported from the pure module, not a second magic number');
+  assert.match(src, /if\s*\(\s*!hit\s*&&\s*!cc\s*&&\s*zoom\s*>=\s*PAN_MIN_ZOOM\s*\)\s*\{/,
+    'the outlines/pending branch must be gated on zoom >= PAN_MIN_ZOOM, not entered for every non-onboarded, no-hit tick');
+});
+
 test('the nudge exposes its own evaluate() so the outlines fetch can re-run it on settle', () => {
   assert.match(src, /_nudgeEvaluate\s*=\s*evaluate\s*;/, 'initAreaNudge must publish its evaluate() to the module scope');
 });

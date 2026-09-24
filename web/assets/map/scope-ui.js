@@ -17,7 +17,7 @@ import { isPicking } from './picking.js';
 import { corrLayerIds } from './corrections.js';
 import { hitScopeFor } from './hit-scope.js';
 import { parkTiledOverlays, unparkTiledOverlays } from './tile-park.js';
-import { initNoticeState, evaluateNotice, dismissNotice, isNearOutlines } from './coverage-notice.js';
+import { initNoticeState, evaluateNotice, dismissNotice, isNearOutlines, PAN_MIN_ZOOM } from './coverage-notice.js';
 
 
 // Region scope (docs/specs/map-and-search.md §4.5): area the map + search
@@ -403,7 +403,11 @@ function evaluateCoverageNotice(){
   const cc=window.CCScope.countryAt(c.lat, c.lng);
   const hit=_covPendingHit; _covPendingHit=null;
   let near=false;
-  if(!hit && !cc){
+  // Below PAN_MIN_ZOOM the pure module hides regardless of `near` (too
+  // zoomed out to be "at" anywhere), so a tick at that zoom needs no
+  // outlines and must never wait on them: a rider who zooms out while the
+  // fetch is still in flight must not keep the nudge suppressed for it.
+  if(!hit && !cc && zoom>=PAN_MIN_ZOOM){
     // The pan branch needs the coastal tolerance: kick off the lazy fetch
     // the first time it is asked for, and say nothing (not even a hidden
     // dismissal-clearing tick) until it settles. The nudge stands down for
