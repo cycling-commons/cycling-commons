@@ -288,12 +288,15 @@ def test_the_grid_counts_route_homework_too(tmp_path, contract, monkeypatch):
                         lambda pbf, contract, emit: emit(
                             _way("way/41", "unverified", "tertiary",
                                  [(5.10, 52.62), (5.20, 52.62)])))
+    gaps_out = tmp_path / "g.tsv"
     counts = mod.extract_region(
         tmp_path / "ignored.pbf", contract,
         classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
-        gaps_out=tmp_path / "g.geojsonl", route_way_ids=frozenset({41}))
+        gaps_out=gaps_out, route_way_ids=frozenset({41}))
     assert counts.cells == 1
-    props = json.loads((tmp_path / "g.geojsonl").read_text().strip())["properties"]
+    feats = [json.loads(l) for l in mod.merge_gap_cells(
+        {"NL": [gaps_out]}, contract.surface["gaps"]["cellZoom"])]
+    props = feats[0]["properties"]
     assert props["n"] == 1 and props["pct"] == 100
 
 
@@ -310,12 +313,14 @@ def test_the_grid_counts_kilometres_of_todo_network_only(tmp_path, contract, mon
     ]
     monkeypatch.setattr(mod, "stream_surface_ways",
                         lambda pbf, contract, emit: [emit(w) for w in ways])
+    gaps_out = tmp_path / "g.tsv"
     counts = mod.extract_region(
         tmp_path / "ignored.pbf", contract,
         classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
-        gaps_out=tmp_path / "g.geojsonl", cctok="|BE|")
+        gaps_out=gaps_out, cctok="|BE|")
 
-    cells = [json.loads(l) for l in (tmp_path / "g.geojsonl").read_text().splitlines()]
+    cells = [json.loads(l) for l in mod.merge_gap_cells(
+        {"BE": [gaps_out]}, contract.surface["gaps"]["cellZoom"])]
     assert counts.cells == len(cells) == 1
     props = cells[0]["properties"]
     # ~7.1 km per way at this latitude, so two unrecorded of three tracks.
@@ -333,24 +338,32 @@ def test_a_fully_recorded_cell_is_not_shipped(tmp_path, contract, monkeypatch):
 
     monkeypatch.setattr(mod, "stream_surface_ways",
                         lambda pbf, contract, emit: emit(_way("way/1", "gravel", "track")))
+    gaps_out = tmp_path / "g.tsv"
     counts = mod.extract_region(
         tmp_path / "ignored.pbf", contract,
         classified_out=tmp_path / "c.geojsonl", todo_out=tmp_path / "t.geojsonl",
-        gaps_out=tmp_path / "g.geojsonl")
-    assert counts.cells == 0
-    assert (tmp_path / "g.geojsonl").read_text() == ""
+        gaps_out=gaps_out)
+    # write_cells still writes this cell's RAW sums (a border cell needs every
+    # region's raw numbers to be merged correctly): it is the merge that
+    # drops a cell with no unrecorded km, not the per-region write.
+    assert counts.cells == 1
+    assert list(mod.merge_gap_cells(
+        {"XX": [gaps_out]}, contract.surface["gaps"]["cellZoom"])) == []
 
 
-def test_the_grid_charges_a_way_to_the_cell_holding_its_midpoint(contract):
+def test_the_grid_charges_a_way_to_the_cell_holding_its_midpoint(tmp_path, contract):
     # Documented behaviour, not an accident: at ~6 km cells, splitting a way
     # across the cells it crosses would cost a clipping pass per way to move a
     # rounding error between neighbouring squares.
-    from coverage.surface import GapGrid
+    from coverage.surface import GapGrid, merge_gap_cells
 
     grid = GapGrid(contract.surface["gaps"]["cellZoom"])
     grid.add(_way("way/1", "unverified", "track", [(4.10, 50.70), (4.11, 50.70)]), recorded=False)
     grid.add(_way("way/2", "unverified", "track", [(9.10, 45.70), (9.11, 45.70)]), recorded=False)
-    assert len(list(grid.features())) == 2, "far-apart ways land in different cells"
+    path = tmp_path / "c.tsv"
+    grid.write_cells(path)
+    feats = list(merge_gap_cells({"XX": [path]}, contract.surface["gaps"]["cellZoom"]))
+    assert len(feats) == 2, "far-apart ways land in different cells"
 
 
 def test_extract_drops_ways_another_country_owns(tmp_path, contract, monkeypatch):
@@ -364,3 +377,35 @@ def test_extract_drops_ways_another_country_owns(tmp_path, contract, monkeypatch
     kept = mod.extract_region(tmp_path / "ignored.pbf", contract, classified_out=tmp_path / "c2",
                               todo_out=tmp_path / "t2", gaps_out=tmp_path / "g2", keep=lambda coords: True)
     assert (kept.classified, kept.todo, kept.foreign) == (1, 1, 0)
+
+
+# ── The world file: one merge over every region's cell sums ───────────────
+
+def test_border_cell_sums_both_countries_into_one_square(tmp_path):
+    from coverage.surface import merge_gap_cells
+    be = tmp_path / "be.tsv"
+    nl = tmp_path / "nl.tsv"
+    be.write_text("2100\t1360\t3.0\t1.0\t2\n2101\t1360\t1.0\t0.0\t1\n")
+    nl.write_text("2100\t1360\t1.0\t3.0\t1\n")
+    feats = [json.loads(line) for line in merge_gap_cells({"BE": [be], "NL": [nl]}, 12)]
+    assert len(feats) == 2
+    border = next(f for f in feats if f["properties"]["n"] == 3)
+    assert border["properties"]["km"] == 4.0
+    assert border["properties"]["pct"] == 50           # 4 unrecorded of 8 km
+    assert border["properties"]["cctok"] == "|BE|NL|"   # matches ['in','|BE|',...] and ['in','|NL|',...]
+
+
+def test_a_fully_recorded_cell_is_not_a_gap(tmp_path):
+    from coverage.surface import merge_gap_cells
+    p = tmp_path / "x.tsv"
+    p.write_text("5\t5\t0.0\t9.0\t0\n")
+    assert list(merge_gap_cells({"BE": [p]}, 12)) == []
+
+
+def test_write_cells_round_trips(tmp_path):
+    from coverage.surface import GapGrid, SurfaceWay, merge_gap_cells
+    grid = GapGrid(12)
+    grid.add(SurfaceWay("way/1", "unverified", "track", "", [(4.0, 50.0), (4.001, 50.0)]), recorded=False)
+    path = tmp_path / "c.tsv"
+    assert grid.write_cells(path) == 1
+    assert len(list(merge_gap_cells({"BE": [path]}, 12))) == 1

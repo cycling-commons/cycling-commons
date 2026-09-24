@@ -42,7 +42,7 @@ def test_run_surface_fresh_extract_counts_and_succeeds(offline, contract, monkey
                      ridtok="", cctok="", route_way_ids=frozenset(), keep=None):
         classified_out.write_text('{"f":1}\n{"f":2}\n')
         todo_out.write_text('{"f":3}\n')
-        gaps_out.write_text('{"f":4}\n')
+        gaps_out.write_text("2100\t1360\t1.0\t0.0\t1\n")
         return SurfaceCounts(classified=2, todo=1, cells=1)
 
     monkeypatch.setattr(run, "extract_region", fake_extract)

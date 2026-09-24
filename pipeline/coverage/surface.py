@@ -248,6 +248,19 @@ def _length_km(coords: list[tuple[float, float]]) -> float:
     return total
 
 
+def _cell_bounds(x: int, y: int, z: int) -> tuple[float, float, float, float]:
+    """Lon/lat bounds of one gap-grid cell at zoom `z`, as a module function so
+    `merge_gap_cells` can turn a merged cell into a square without a `GapGrid`."""
+    n = 2 ** z
+    def ll(xi: int, yi: int) -> tuple[float, float]:
+        lon = xi / n * 360.0 - 180.0
+        lat = math.degrees(math.atan(math.sinh(math.pi * (1.0 - 2.0 * yi / n))))
+        return lon, lat
+    lon0, lat0 = ll(x, y)
+    lon1, lat1 = ll(x + 1, y + 1)
+    return lon0, lat0, lon1, lat1
+
+
 class GapGrid:
     """Where the unrecorded network is, aggregated to one square per cell.
 
@@ -279,16 +292,6 @@ class GapGrid:
         y = int((1.0 - math.log(math.tan(rad) + 1.0 / math.cos(rad)) / math.pi) / 2.0 * n)
         return max(0, min(n - 1, x)), max(0, min(n - 1, y))
 
-    def _bounds(self, x: int, y: int) -> tuple[float, float, float, float]:
-        n = 2 ** self._z
-        def ll(xi: int, yi: int) -> tuple[float, float]:
-            lon = xi / n * 360.0 - 180.0
-            lat = math.degrees(math.atan(math.sinh(math.pi * (1.0 - 2.0 * yi / n))))
-            return lon, lat
-        lon0, lat0 = ll(x, y)
-        lon1, lat1 = ll(x + 1, y + 1)
-        return lon0, lat0, lon1, lat1
-
     def add(self, way: SurfaceWay, *, recorded: bool) -> None:
         """Charge a to-do-class way's length to its cell."""
         mid = anchor_point(way.coords)
@@ -300,30 +303,52 @@ class GapGrid:
             bucket[0] += km
             bucket[2] += 1
 
-    def features(self, *, ridtok: str = "", cctok: str = "") -> Iterator[str]:
-        """One GeoJSON square per non-empty cell, as GeoJSONL lines."""
-        for (x, y), (todo_km, known_km, count) in sorted(self._cells.items()):
-            if todo_km <= 0:
-                # A cell where everything is already recorded is not a gap, and
-                # shipping it would draw a square over finished work.
-                continue
-            lon0, lat0, lon1, lat1 = self._bounds(x, y)
-            total = todo_km + known_km
-            yield json.dumps({
-                "type": "Feature",
-                "properties": {
-                    "km": round(todo_km, 1),
-                    "pct": round(100.0 * todo_km / total) if total else 100,
-                    "n": count,
-                    "ridtok": ridtok,
-                    "cctok": cctok,
-                },
-                "geometry": {"type": "Polygon", "coordinates": [[
-                    [round(lon0, 5), round(lat0, 5)], [round(lon1, 5), round(lat0, 5)],
-                    [round(lon1, 5), round(lat1, 5)], [round(lon0, 5), round(lat1, 5)],
-                    [round(lon0, 5), round(lat0, 5)],
-                ]]},
-            }, separators=(",", ":"))
+    def write_cells(self, path: Path) -> int:
+        """This region's raw cell sums as TSV: x, y, unrecorded km, recorded km, way count.
+
+        Raw sums, not features: a border cell collects km from two countries, and
+        only the merge, which sees every region, can add them into one square.
+        """
+        n = 0
+        with path.open("w", encoding="utf-8") as fh:
+            for (x, y), (todo_km, known_km, count) in sorted(self._cells.items()):
+                fh.write(f"{x}\t{y}\t{todo_km!r}\t{known_km!r}\t{int(count)}\n")
+                n += 1
+        return n
+
+
+def merge_gap_cells(partials: dict[str, list[Path]], cell_zoom: int) -> Iterator[str]:
+    """One GeoJSON square per cell over every region's partial sums, as GeoJSONL lines.
+
+    `cctok` names every country that put km into the cell ("|BE|NL|" on the
+    border), so a country scope filter of ['in', '|BE|', cctok] still matches it.
+    A cell with no unrecorded km is finished work and is not drawn.
+    """
+    cells: dict[tuple[int, int], list] = {}
+    for cc, paths in partials.items():
+        for path in paths:
+            with path.open(encoding="utf-8") as fh:
+                for line in fh:
+                    x, y, todo_km, known_km, count = line.rstrip("\n").split("\t")
+                    c = cells.setdefault((int(x), int(y)), [0.0, 0.0, 0, set()])
+                    c[0] += float(todo_km)
+                    c[1] += float(known_km)
+                    c[2] += int(count)
+                    c[3].add(cc)
+    for (x, y), (todo_km, known_km, count, ccs) in sorted(cells.items()):
+        if todo_km <= 0:
+            continue
+        lon0, lat0, lon1, lat1 = _cell_bounds(x, y, cell_zoom)
+        total = todo_km + known_km
+        yield json.dumps({
+            "type": "Feature",
+            "properties": {"km": round(todo_km, 1), "pct": round(100.0 * todo_km / total) if total else 100,
+                           "n": count, "ridtok": "", "cctok": "|" + "|".join(sorted(ccs)) + "|"},
+            "geometry": {"type": "Polygon", "coordinates": [[
+                [round(lon0, 5), round(lat0, 5)], [round(lon1, 5), round(lat0, 5)],
+                [round(lon1, 5), round(lat1, 5)], [round(lon0, 5), round(lat1, 5)],
+                [round(lon0, 5), round(lat0, 5)]]]},
+        }, separators=(",", ":"))
 
 
 @dataclass(frozen=True)
@@ -391,11 +416,7 @@ def extract_region(pbf_path: Path, contract: Contract, *,
 
         stream_surface_ways(pbf_path, contract, emit)
 
-    cells = 0
-    with gaps_out.open("w", encoding="utf-8") as gf:
-        for line in grid.features(ridtok=ridtok, cctok=cctok):
-            gf.write(line + "\n")
-            cells += 1
+    cells = grid.write_cells(gaps_out)
     return SurfaceCounts(classified=counts["classified"], todo=counts["todo"], cells=cells,
                          foreign=counts["foreign"])
 

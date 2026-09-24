@@ -34,7 +34,7 @@ from .regions import ONBOARDED_REGIONS, default_regions
 from .routes import extract_region as routes_extract_region
 from .routes import load_way_ids
 from .routes import selector_expressions as routes_selectors
-from .surface import extract_region
+from .surface import extract_region, merge_gap_cells
 from .surface import selector_expressions as surface_selectors
 from .tiles import (build_gaps_pmtiles, build_pmtiles, build_routes_pmtiles,
                     build_surface_pmtiles, export_geojsonl, verify_pmtiles)
@@ -253,7 +253,7 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
     """
     classified: dict[str, list[pathlib.Path]] = {}
     todo: dict[str, list[pathlib.Path]] = {}
-    gaps: list[pathlib.Path] = []
+    gaps: dict[str, list[pathlib.Path]] = {}
     # Feature counts for the manifest, filled as regions are processed — so it
     # has to exist BEFORE the loop that increments it. It did not, and every
     # region raised UnboundLocalError into the per-region handler and reported
@@ -277,7 +277,7 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
             slug = region.replace("/", "-")
             out = workdir / f"surface_{slug}_classified.geojsonl"
             todo_out = workdir / f"surface_{slug}_todo.geojsonl"
-            gaps_out = workdir / f"surface_{slug}_gaps.geojsonl"
+            gaps_out = workdir / f"surface_{slug}_gapcells.tsv"
 
             # A PMTiles archive cannot be appended to — adding a country means
             # tiling the whole set again — so the per-country EXTRACT is the
@@ -331,12 +331,12 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                 print(f"[surface] {region}: {fresh.classified} classified, "
                       f"{fresh.todo} to record, {fresh.cells} gap cells, "
                       f"{fresh.foreign} owned by a neighbour")
-            for key, path in (("classified", out), ("todo", todo_out), ("cells", gaps_out)):
+            for key, path in (("classified", out), ("todo", todo_out)):
                 with path.open("rb") as fh:
                     counts[key] += sum(1 for _ in fh)
             classified.setdefault(country_code, []).append(out)
             todo.setdefault(country_code, []).append(todo_out)
-            gaps.append(gaps_out)
+            gaps.setdefault(country_code, []).append(gaps_out)
         except Exception as exc:  # noqa: BLE001 — one region must not stop the rest
             print(f"[surface] {region} FAILED: {exc}", file=sys.stderr)
             failed.append(region)
@@ -364,6 +364,11 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
         print(f"[surface] extract-only: {len(classified)} country layer(s) ready, not tiling")
         print(f"[surface] {_peak()}")
         return 1 if failed else 0
+    world_gaps = workdir / "surface-gaps.geojsonl"
+    with world_gaps.open("w", encoding="utf-8") as fh:
+        for line in merge_gap_cells(gaps, contract.surface["gaps"]["cellZoom"]):
+            fh.write(line + "\n")
+            counts["cells"] += 1
     if classified:
         artifact = workdir / "surface.pmtiles"
         build_surface_pmtiles(classified, artifact, contract)
@@ -375,7 +380,7 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
         print(f"[surface] {artifact.name}: {artifact.stat().st_size / 1e6:.1f} MB")
     if gaps:
         artifact = workdir / "surface-gaps.pmtiles"
-        build_gaps_pmtiles(gaps, artifact, contract)
+        build_gaps_pmtiles([world_gaps], artifact, contract)
         print(f"[surface] {artifact.name}: {artifact.stat().st_size / 1e6:.1f} MB")
     if classified and publish:
         # Publishing is part of the run, exactly as it is for coverage. It used
