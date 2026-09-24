@@ -148,16 +148,20 @@ request**, a request that asks a server for bytes 4,102,558 through 4,109,884 of
 whole thing (the `Range:` HTTP header, which any ordinary static file host understands). One PMTiles
 archive, many range reads, no tile-serving process at all.
 
-This project's coverage layer is exactly that: `build_pmtiles()` in `pipeline/coverage/tiles.py`
-writes one `.pmtiles` file, `pipeline/coverage/publish.py` uploads it to the `cc-maps` object storage
-bucket under a versioned key (`coverage/<YYYYMMDD-HHMM>.pmtiles`, coverage-provider.md §3 step 8), and
-the browser talks to it through the `pmtiles://` protocol handler registered in
-`web/assets/map/coverage.js`: `maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile)`, followed a
-couple of lines later (`mintKindIcons()`, which lives in `icons.js`, runs in between) by
-`map.addSource('coverage', {type: 'vector', url: 'pmtiles://' + window.CC_COVERAGE_URL})`.
-Nothing in that request path is a tile server: it is a `GET` against a static file, with `Range:`
-headers doing the work a tile server would otherwise do, served straight off the bucket (or through
-an nginx range proxy).
+This project's coverage layer is exactly that, **once per country**:
+`build_pmtiles()` in `pipeline/coverage/tiles.py` writes one `.pmtiles` file per
+country, `pipeline/coverage/publish.py` uploads each one to the `cc-maps`
+object storage bucket under its own versioned key
+(`coverage/<cc>/<YYYYMMDD-HHMM>/points.pmtiles`, coverage-provider.md §3 step 8),
+and the browser talks to whichever ones it needs through the `pmtiles://`
+protocol handler registered once by `web/assets/map/tile-sources.js`
+(`ensureProtocol()`: `maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile)`).
+`tile-sources.js`'s `mountInView()` adds one vector source per country whose
+bounds meet the viewport, `map.addSource('coverage-points-be', {type: 'vector',
+url: 'pmtiles://' + url})`, reading the URL out of `window.CC_TILES.coverage.be`.
+Nothing in that request path is a tile server: it is a `GET` against a static
+file, with `Range:` headers doing the work a tile server would otherwise do,
+served straight off the bucket (or through an nginx range proxy).
 
 Before any of that upload happens, `build_pmtiles()` never reads `coverage_poi` directly, tippecanoe
 takes files, not a database connection. `export_geojsonl()` bridges the two, running one `COPY`
@@ -209,13 +213,15 @@ inside the header's bounds, so "the index says tiles exist" and "a tile actually
 are both checked, not just the first one.
 
 That buys something concrete: **the whole coverage layer, for the whole world eventually, is one
-artifact you can host anywhere a static file can be hosted**, no database, no application server, no
-process to keep alive, on the read path. A new build is one new file at a new versioned key; readers
-mid-pan keep reading the bytes they already started reading, because nothing at the old key ever
-changes (coverage-provider.md §3 step 8). The manifest (`coverage/manifest.json`, `max-age=300`) is
-the one small, frequently-refetched pointer that says which versioned key is current; the tiles
-themselves are cached forever (`max-age=31536000, immutable`), because a versioned key's bytes are
-defined never to change.
+small artifact per country, each one hostable anywhere a static file can be hosted**, no database,
+no application server, no process to keep alive, on the read path. A country's rebuild is one new
+file at a new versioned key for that country only; readers mid-pan keep reading the bytes they
+already started reading, because nothing at the old key ever changes (coverage-provider.md §3 step 8).
+The manifest (`coverage/manifest.json`, `max-age=300`) is the one small, frequently-refetched pointer
+that says, per country, which versioned key is current; the tiles themselves are cached forever
+(`max-age=31536000, immutable`), because a versioned key's bytes are defined never to change. A
+country whose extract has not changed since the live manifest is skipped rather than rebuilt, so a
+weekly run typically writes a handful of new keys, not nineteen.
 
 ## No clustering: individual points and a heatmap
 
@@ -463,10 +469,12 @@ chapter 8 covers in full, decodes the MVT bytes into geometry it can paint, filt
   number in the picture.
 - The **per-country layer split** (`<letter>_<cc>`) exists to keep the heatmap single-country and
   the tiles themselves single-country by construction; the scope filter itself is exact per point
-  and needs no help from the layer boundary.
-- Build time and request time are cleanly separated by the moment `coverage.pmtiles` is written:
-  everything before that line runs once a week; everything after it runs per rider, per pan, with no
-  server process in the path at all.
+  and needs no help from the layer boundary. **Each country is also its own file** now
+  (`coverage/<cc>/<stamp>/points.pmtiles`), so a rider's browser only ever fetches the countries
+  whose tile bounds meet the viewport.
+- Build time and request time are cleanly separated by the moment a country's own `points.pmtiles`
+  is written: everything before that line runs once a week, per country whose extract changed;
+  everything after it runs per rider, per pan, with no server process in the path at all.
 
 The fountain is now sitting inside a tile, addressed, waiting to be fetched, as its own point at every
 zoom from z11 up, and as one contributor to the density heatmap wherever its tile got thinned below
@@ -513,16 +521,17 @@ from.
     Then ask the finished archive what it actually contains, rather than trusting this chapter for
     it. `pmtiles show` reads the header and metadata over HTTP, so it needs no download:
 
-    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's tile archive; the URL comes from the manifest -->
+    <!-- CODE-ILLUSTRATIVE shell command against the dev stack's tile archive; the URL comes from one country's manifest entry -->
     ```sh
     docker compose -f developers/docker/compose.yaml exec pipeline \
-      pmtiles show http://minio:9000/cc-maps/coverage/<stamp>.pmtiles
+      pmtiles show http://minio:9000/cc-maps/coverage/lu/<stamp>/points.pmtiles
     ```
 
     That prints the zoom range and the exact `tippecanoe` invocation, both of which this chapter
     quotes, so the flags above are checkable rather than asserted. To see the properties every
-    feature carries, add `--metadata` and read `vector_layers`. On the author's full nineteen-country
-    index that is 152 layers and nine distinct property names: `acc`, `cctok`, `food`, `kind`, `n`,
+    feature carries, add `--metadata` and read `vector_layers`. On a single country's own archive
+    that is one layer per letter the country's index holds (Luxembourg: 8), and every layer shares
+    the same nine distinct property names: `acc`, `cctok`, `food`, `kind`, `n`,
     `potable`, `ref`, `ridtok`, `t`. **`point_count` is not one of them**, which is the no-clustering
     decision above, visible in the artifact rather than promised in prose.
 

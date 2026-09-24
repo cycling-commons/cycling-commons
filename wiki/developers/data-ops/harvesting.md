@@ -3,8 +3,8 @@
 # Harvesting OSM coverage
 
 This is the runbook for the weekly job that turns raw OpenStreetMap into the two things the map
-serves: the `coverage_poi` query index (PostGIS) and the `coverage/<stamp>.pmtiles` vector tiles
-(object storage). If you want the *concepts* behind it, read
+serves: the `coverage_poi` query index (PostGIS) and one `coverage/<cc>/<stamp>/points.pmtiles`
+vector-tile file per country (object storage). If you want the *concepts* behind it, read
 [From OpenStreetMap to our database](../gis/osm-to-database.md); this page is how to actually run it.
 
 ## What we download, and what we deliberately do not
@@ -92,15 +92,16 @@ One invocation runs the whole chain, per region then once at the end:
 1. `fetch_pbf`: download (or skip, cached) the `-latest.osm.pbf`, md5-verified
 2. `osmium tags-filter`: reduce to the contract's selectors
 3. pyosmium parse → **atomic per-region merge** into `coverage_poi`
-4. per-letter GeoJSONL export → `tippecanoe` → `go-pmtiles` verify → **upload** a versioned
-   `coverage/<stamp>.pmtiles` (the stamp is `YYYYMMDD-HHMM`) + `manifest.json` → prune (keep the
-   newest 4)
+4. per-letter GeoJSONL export → `tippecanoe`, per country → `go-pmtiles` verify → **upload + publish,
+   per country**: `coverage/<cc>/<stamp>/points.pmtiles` (the stamp is `YYYYMMDD-HHMM`), merged into
+   the stable `coverage/manifest.json`, keeping the newest 4 builds per country. A country whose
+   export has not changed since the live manifest is skipped rather than rebuilt.
 
 A failed region keeps last week's slice serving and exits non-zero; it never leaves a half-written
 slice. The tile rebuild is part of the same command, there is no separate publish step, so a
 successful run means the live map is already updated. `make coverage-tiles` runs step 4 on its own
-(`--tiles-only`): it rebuilds and publishes the archive from the rows already in PostGIS, without
-touching Geofabrik or the database contents.
+(`--tiles-only`): it rebuilds and publishes the archive from the rows already in PostGIS, per
+country, without touching Geofabrik or the database contents.
 
 ## Road surface is a separate build
 
@@ -243,21 +244,41 @@ soon as both are.
 
     <!-- CODE-ILLUSTRATIVE read the published manifest -->
     ```bash
-    curl -s http://localhost:9100/cc-maps/coverage/manifest.json | jq '{regions, country_codes, url}'
+    curl -s http://localhost:9100/cc-maps/coverage/manifest.json | jq '{version, countries: (.countries|keys)}'
     ```
 
-    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output, abbreviated: the real lists run to 22 regions and 19 country codes -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output, abbreviated: the real list runs to 19 country codes -->
     ```json
     {
-      "regions": ["europe/belgium", "europe/netherlands", "..."],
-      "country_codes": ["be", "nl", "..."],
-      "url": "http://localhost:9100/cc-maps/coverage/20260910-1013.pmtiles"
+      "version": 2,
+      "countries": ["be", "lu", "nl", "..."]
     }
     ```
 
-    `regions` is what the harvest ran; `country_codes` is what the map will draw. If a country you
-    just harvested is missing from the second list, the rows landed but the tiles were not rebuilt,
-    and the map will not show them until they are.
+    `countries` is the sorted list of countries the artifact was built for, one file per country. If
+    a country you just harvested is missing from that list, the rows landed but its tiles were not
+    rebuilt, and the map will not show them until they are. Read one country's own entry to see what
+    it published:
+
+    <!-- CODE-ILLUSTRATIVE read one country's manifest entry -->
+    ```bash
+    curl -s http://localhost:9100/cc-maps/coverage/manifest.json | jq '.countries.lu'
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; real output, a `--tiles-only` republish -->
+    ```json
+    {
+      "stamp": "20260924-1021",
+      "built_at": "2026-09-24T10:21:24+00:00",
+      "inputs": "d5744ffc321f9426",
+      "bounds": [5.744702, 49.456939, 6.507648, 50.180646],
+      "counts": {"B": 450, "C": 347, "D": 124, "F": 83, "G": 138, "O": 512, "P": 78, "Q": 1141},
+      "tiles": {"points": "http://localhost:9100/cc-maps/coverage/lu/20260924-1021/points.pmtiles"}
+    }
+    ```
+
+    `inputs` is the fingerprint a rebuild compares against; unchanged inputs mean the next run skips
+    this country rather than rebuilding it.
 
 ## Where to go deeper
 

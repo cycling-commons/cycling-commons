@@ -376,7 +376,7 @@ way to answer "what's here?" except by asking somewhere else.
 
     <!-- CODE-ILLUSTRATIVE shell command against the dev stack's web app and Postgres -->
     ```sh
-    curl -s http://localhost:8001/map | grep -o 'CC_COVERAGE_URL[^;]*;'
+    curl -s http://localhost:8001/map | grep -o 'CC_TILES *= *{[^;]*};' | head -c 400
     docker compose -f developers/docker/compose.yaml exec db psql -U cc -d cyclingcommons -c "
     SELECT lower(letter) || '_' || lower(coalesce(country_code,'ZZ')) AS source_layer, count(*)
     FROM coverage_poi GROUP BY 1 ORDER BY 1;
@@ -385,7 +385,7 @@ way to answer "what's here?" except by asking somewhere else.
 
     <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output on a stack seeded by `make course-data`; the versioned tile key differs on every machine -->
     ```text
-    CC_COVERAGE_URL = "http:\/\/localhost:9100\/cc-maps\/coverage\/20260723-1429.pmtiles";
+    window.CC_TILES = {"coverage":{"zz":{"tiles":{"points":"http:\/\/localhost:9100\/cc-maps\/coverage\/zz\/20260723-1429\/points.pmtiles"}
      source_layer | count
     --------------+-------
      b_zz         |     1
@@ -398,42 +398,46 @@ way to answer "what's here?" except by asking somewhere else.
     (7 rows)
     ```
 
-    The first line is the exact `pmtiles://` URL `coverage.js` hands to `maplibregl.addProtocol` for the
-    `coverage` source, the versioned key will differ on your machine and change every time the
-    pipeline republishes, which is expected (`tiles.md` covers why). The second is chapter 7's
-    `(letter, country_code)` table with the two columns pasted together in exactly the order
-    `export_geojsonl()` pastes them, which is what makes it a `source-layer` name: the string
-    `b_zz` in that output is the same string a MapLibre
-    `addLayer({source:'coverage', 'source-layer':'b_zz', ...})` call would read, and the count beside
-    it is how many rows that layer holds.
+    `window.CC_TILES.coverage` has one key per country the manifest holds tiles for, each with its own
+    `pmtiles://` URL; `coverage.js`'s `mountInView()` hands each one to `maplibregl.addSource` only
+    once that country's bounds meet the viewport. The versioned key in each URL will differ on your
+    machine and change every time that country republishes, which is expected (`tiles.md` covers why).
+    The SQL query is chapter 7's `(letter, country_code)` table with the two columns pasted together
+    in exactly the order `export_geojsonl()` pastes them, which is what makes it a `source-layer`
+    name: the string `b_zz` in that output is the same string a MapLibre
+    `addLayer({source:'coverage-points-zz', 'source-layer':'b_zz', ...})` call would read, and the
+    count beside it is how many rows that layer holds.
 
     On a machine that has run the full `make coverage-refresh` the same query names `b_be`, `b_de`,
     `b_nl` and one row per (letter, country) pair the harvest has stamped, because `country_code` is
     stamped for real there; on the offline seed
     every layer ends `_zz`, for the reason chapter 7 spells out. Either way the derivation is the
     same, and that is the point, the layer name is not a label someone typed, it is two columns
-    joined by an underscore. If `CC_COVERAGE_URL` prints empty on your machine, no coverage archive
-    has been published yet, the row count still works regardless, because it never depended on the
-    tile archive existing.
+    joined by an underscore. If `CC_TILES.coverage` is empty on your machine, no coverage archive has
+    been published for any country yet, the row count still works regardless, because it never
+    depended on the tile archive existing.
 
     One step further, and it closes the loop the other way. The query above *predicts* the layer
-    names from the rows. Ask the archive what it actually contains, and the two lists should agree:
+    names from the rows. Ask one country's own archive what it actually contains, and the two lists
+    should agree:
 
-    <!-- CODE-ILLUSTRATIVE ask the published archive for its own layer list; needs a published archive -->
+    <!-- CODE-ILLUSTRATIVE ask one country's published archive for its own layer list; needs a published archive -->
     ```sh
     docker compose -f developers/docker/compose.yaml exec pipeline \
-      pmtiles show --metadata http://minio:9000/cc-maps/coverage/<stamp>.pmtiles \
+      pmtiles show --metadata http://minio:9000/cc-maps/coverage/lu/<stamp>/points.pmtiles \
       | python3 -c "import json,sys; m=json.load(sys.stdin); \
         vl=m.get('vector_layers') or json.loads(m.get('json','{}')).get('vector_layers',[]); \
-        print(len(vl),'layers'); print(sorted(l['id'] for l in vl)[:6])"
+        print(len(vl),'layers'); print(sorted(l['id'] for l in vl))"
     ```
 
-    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output on a machine holding all nineteen countries, 2026-09-10 -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; real output, Luxembourg's own archive, 2026-09-24 -->
     ```text
-    152 layers
-    ['b_au', 'b_be', 'b_ca', 'b_ch', 'b_cl', 'b_co']
+    8 layers
+    ['b_lu', 'c_lu', 'd_lu', 'f_lu', 'g_lu', 'o_lu', 'p_lu', 'q_lu']
     ```
 
-    That is the same naming scheme, read out of the finished file rather than derived from the
-    database, which is the strongest form the claim comes in: a `source-layer` string in your
-    MapLibre call is not a convention this chapter is asking you to trust, it is a key you can list.
+    One country, one file, one layer per letter that country's index holds: no other country's rows
+    are in this archive at all, by construction, not by a filter applied on read. That is the same
+    naming scheme, read out of the finished file rather than derived from the database, which is the
+    strongest form the claim comes in: a `source-layer` string in your MapLibre call is not a
+    convention this chapter is asking you to trust, it is a key you can list.

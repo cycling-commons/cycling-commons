@@ -128,22 +128,24 @@ Each run reports its own peak memory. That matters here: ways stream to disk rat
 accumulating, and measuring from outside the container (`/usr/bin/time docker compose run`) measures
 the docker client, which is how a continental build can appear to use 12 MB.
 
-## Publishing: the manifest, not an edited config file
+## Publishing: one file per country, one manifest
 
-A finished build is uploaded by the same run that made it, under **one versioned
-prefix per build**:
+A finished build is uploaded by the same run that made it, **one file per
+country**, under a versioned prefix that carries the country code:
 
-<!-- CODE-ILLUSTRATIVE the bucket layout of one published build -->
+<!-- CODE-ILLUSTRATIVE the bucket layout after publishing Belgium and Luxembourg -->
 ```
-surface/20260812-2015/classified.pmtiles
-surface/20260812-2015/todo.pmtiles
-surface/20260812-2015/gaps.pmtiles
-surface/manifest.json          <- stable key, repointed last
+surface/be/20260924-1013/classified.pmtiles
+surface/be/20260924-1013/todo.pmtiles
+surface/lu/20260924-1013/classified.pmtiles
+surface/lu/20260924-1013/todo.pmtiles
+surface/gaps/20260924-1013/gaps.pmtiles   <- one world file, no country split
+surface/manifest.json                     <- stable key, repointed last
 ```
 
 Symfony reads that manifest server-side (`App\Coverage\SurfaceManifest`, cached
-one hour, 30-second negative TTL, 5-second timeout) and injects the three URLs
-into the map page. **So a rebuild goes live within the hour with no config
+one hour, 30-second negative TTL, 5-second timeout) and injects the per-country
+URLs into the map page. **So a rebuild goes live within the hour with no config
 change, no cache clear and no deploy**, the same contract as the coverage
 artifact.
 
@@ -154,48 +156,53 @@ Three properties are load-bearing:
   rebuild must never overwrite a live artifact, a rider mid-session holds an
   offset into the PMTiles directory, and changing the bytes underneath them
   reads as corruption, not as an update.
-- **The three arms move together.** One stamp, one manifest, one publish. They
-  are three readings of a single walk over the same ways, and serving one
-  build's classified skin beside another's to-do arm would tell riders that
-  roads they have just recorded still need recording.
+- **A country's own two arms move together.** One stamp, one manifest entry,
+  one publish, for that country. They are two readings of a single walk over
+  the same ways, and serving one build's classified skin beside another's
+  to-do arm would tell riders that roads they have just recorded still need
+  recording. A publish only ever replaces the countries it built: another
+  country's entry, and the world gap grid, are left exactly as they were.
 - **The env vars pin, they do not configure.** `ROAD_SURFACE_TILES_URL`,
   `ROAD_SURFACE_TODO_URL` and `ROAD_SURFACE_GAPS_URL` override the manifest
-  when set: the hatch for bisecting a rendering problem or serving an artifact
-  that was never published. Empty (the default) means "follow the manifest",
-  and `ROAD_SURFACE_MANIFEST_URL` names the manifest itself. Leaving a pin set
-  by accident is how a map ends up serving last month's tiles.
+  when set, serving one world archive to every country: the hatch for
+  bisecting a rendering problem or serving an artifact that was never
+  published. Empty (the default) means "follow the manifest", and
+  `ROAD_SURFACE_MANIFEST_URL` names the manifest itself. Leaving a pin set by
+  accident is how a map ends up serving last month's tiles.
 
-Old builds are pruned to the newest three, **whole prefixes at a time**, never
-one arm of a build, which would leave a manifest pointing at a layer that is no
-longer there. Three rather than coverage's four because a surface build runs
-to several gigabytes against coverage's well under one, and the reason to keep
-any is a fast rollback, not history.
+Old builds are pruned to the newest three **per country**, whole prefixes at a
+time, never one arm of a build, which would leave a manifest pointing at a
+layer that is no longer there. Three rather than coverage's four because a
+surface build runs to several gigabytes per country against coverage's well
+under one, and the reason to keep any is a fast rollback, not history.
 
-### The narrow-run trap, and the guard for it
+### A half country is never published, and dropping one is explicit
 
-A PMTiles archive cannot be appended to, so the tiling step builds from exactly
-the regions it was given. That makes this dangerous:
+A PMTiles archive cannot be appended to, so a country's tiling step builds
+from exactly the regions it was given. Three onboarded countries span more
+than one Geofabrik extract (US = california + colorado, CA = british-columbia
++ quebec, GB = great-britain + ireland-and-northern-ireland). When a run does
+not include every one of a country's onboarded regions, that country is
+skipped with a log line rather than published from a partial extract:
 
-<!-- CODE-ILLUSTRATIVE the narrow run the guard exists for -->
+<!-- CODE-ILLUSTRATIVE a run missing one of a multi-region country's regions -->
 ```bash
-make surface-tiles regions=europe/luxembourg   # builds a LUXEMBOURG-ONLY archive
+make surface-tiles regions=north-america/us/california   # Colorado not included
 ```
 
-Published, that would replace the live build of every onboarded country with a
-one-country build, with a zero exit code and nothing in the log. So the run
-**refuses to publish a country set that is a strict subset of the live one**:
+There is no shrink guard to reason about, because a run can only ever add or
+refresh the countries it was given; it can never take another country's live
+entry off the manifest. The only way to drop a country on purpose is naming
+it:
 
-<!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output, what the guard prints when it refuses (the live set on 2026-09-10) -->
-```
-refusing to publish 1 countries over the live 19: AU, BE, CA, CH, CL, CO, DE,
-ES, FR, GB, IT, JP, NL, NZ, RW, SI, US, ZA would vanish from the map. Pass
-every onboarded region, or set COVERAGE_ALLOW_SHRINK=1 if the removal is
-intended.
+<!-- CODE-ILLUSTRATIVE offboarding a country -->
+```bash
+make surface-tiles regions=$(make -s coverage-regions) ARGS="--retire lu"
 ```
 
-Use `ARGS=--no-publish` for size experiments on one country, and
-`COVERAGE_ALLOW_SHRINK=1` only when dropping a country is what you actually
-mean.
+`--retire <cc>` is the only thing that ever removes a country's entry from a
+manifest. Use `ARGS=--no-publish` for size experiments on one country without
+touching the live manifest at all.
 
 ## The routes build, and why it runs first
 
@@ -211,10 +218,11 @@ make routes-tiles regions=$(make -s coverage-regions)   # the same full list as 
 It differs from the surface build in one structural way: routes are OSM
 **relations**, and a way cannot know its relations, so the extractor walks the
 filtered PBF twice, relations first for membership, then ways with locations
-(`pipeline/coverage/routes.py`). It publishes
-`routes/<stamp>/routes.pmtiles` + `routes/manifest.json` (read by
-`App\Coverage\RoutesManifest`; pin: `ROUTES_TILES_URL`), with the same
-immutable-artifact, shrink-guard and whole-prefix-prune rules as above.
+(`pipeline/coverage/routes.py`). It publishes, per country,
+`routes/<cc>/<stamp>/routes.pmtiles` + a stable `routes/manifest.json` (read
+by `App\Coverage\RoutesManifest`; pin: `ROUTES_TILES_URL`), with the same
+immutable-artifact, complete-region-set and whole-prefix-prune rules as
+above.
 
 **Order matters when rebuilding both.** The routes run drops a
 `routes_<region>_wayids.txt` per region into the workdir, the set of ways
@@ -228,43 +236,72 @@ so in the log, and the to-do arm is class-gated only.
 
 ## Try it
 
-!!! tip "Hands-on: read the manifest before you rebuild anything, and know what the guard protects"
+!!! tip "Hands-on: read the manifest before you rebuild anything"
     Every claim on this page is visible in one file. Read it first, because it is also the file a
-    careless publish overwrites.
+    publish repoints.
 
     <!-- CODE-ILLUSTRATIVE read the published surface manifest -->
     ```bash
     curl -s http://localhost:9100/cc-maps/surface/manifest.json \
-      | jq '{stamp, tiles: (.tiles | keys), counts, countries: (.country_codes | length)}'
+      | jq '{version, countries: (.countries | keys), gaps: .gaps.url}'
     ```
 
-    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; sample output on a machine holding all nineteen countries, 2026-09-10 -->
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; real output, a run over Belgium, the Netherlands and Luxembourg -->
     ```json
     {
-      "stamp": "20260814-1512",
-      "tiles": ["classified", "gaps", "todo"],
-      "counts": { "classified": 16470329, "todo": 13924252, "cells": 150767 },
-      "countries": 19
+      "version": 2,
+      "countries": ["be", "lu", "nl"],
+      "gaps": "http://localhost:9100/cc-maps/surface/gaps/20260924-1013/gaps.pmtiles"
     }
     ```
 
-    Three artifacts under `tiles`, which is the design this page opens with: one for the roads whose
-    surface is recorded, one for the roads worth recording, one grid for the emptiness between them.
-    The `counts` are kilometres and cells, not way counts, for the reason the page gives.
+    One key per country that has ever been published, plus the one world `gaps` file. Read one
+    country's own entry to see what it built:
 
-    Now look at `countries`. That number is what the shrink guard defends. Build one country and
-    publish it over this, and nineteen become one:
-
-    <!-- CODE-ILLUSTRATIVE build one country without publishing, to see the cost before paying it -->
+    <!-- CODE-ILLUSTRATIVE read one country's manifest entry -->
     ```bash
-    make surface-tiles regions=europe/luxembourg ARGS=--no-publish
+    curl -s http://localhost:9100/cc-maps/surface/manifest.json | jq '.countries.lu'
     ```
 
-    `--no-publish` is honoured on this arm, unlike the coverage point arm, so the build runs to
-    completion and the manifest is untouched. Read the peak-memory line it prints against the
-    numbers in the running section above, then compare the country list it *would* have published
-    with the one you just read. If they differ, publishing is the narrow-run trap, and the guard
-    will say so by name rather than letting the map quietly empty.
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; real output -->
+    ```json
+    {
+      "stamp": "20260924-1013",
+      "built_at": "2026-09-24T10:13:49+00:00",
+      "inputs": "52b31fe009cc87d4",
+      "bounds": [5.731844, 49.448692, 6.529054, 50.182749],
+      "counts": { "classified": 49737, "todo": 19514 },
+      "tiles": {
+        "classified": "http://localhost:9100/cc-maps/surface/lu/20260924-1013/classified.pmtiles",
+        "todo": "http://localhost:9100/cc-maps/surface/lu/20260924-1013/todo.pmtiles"
+      }
+    }
+    ```
+
+    Two arms under `tiles`, which is the design this page opens with: one for the roads whose
+    surface is recorded, one for the roads worth recording. The world `gaps` grid answers the same
+    question below the classified floor. `counts` are kilometres, not way counts, for the reason the
+    page gives.
+
+    Run the same build again with nothing changed, and `inputs` is why it costs almost nothing the
+    second time:
+
+    <!-- CODE-ILLUSTRATIVE re-run the same build, nothing changed -->
+    ```bash
+    make surface-tiles regions=europe/belgium,europe/netherlands,europe/luxembourg
+    ```
+
+    <!-- CODE-ILLUSTRATIVE SAMPLE-FROM author-install; real output, second run right after the first -->
+    ```
+    [surface] BE: unchanged, not rebuilt
+    [surface] LU: unchanged, not rebuilt
+    [surface] NL: unchanged, not rebuilt
+    ```
+
+    Each country's own fingerprint (`inputs` above) decided that on its own; no `.pmtiles` is
+    uploaded and the manifest is not rewritten for any of the three. A country whose `inputs` would
+    differ (its extract changed, or the contract or the border outlines did) is the only one that
+    rebuilds and re-publishes.
 
 ## Where to go deeper
 

@@ -33,9 +33,11 @@ from the tile host, with no application server in that path.
 1. **`GET /map`.** `web/src/Controller/MapController.php` reads the coverage,
    surface and routes manifests through `web/src/Coverage/CoverageManifest.php`,
    `web/src/Coverage/SurfaceManifest.php` and `web/src/Coverage/RoutesManifest.php`,
-   each cached for an hour, and embeds the archive URLs in the page as
-   `window.CC_COVERAGE_URL`, `CC_SURFACE_URL`, `CC_SURFACE_TODO_URL`,
-   `CC_SURFACE_GAPS_URL` and `CC_ROUTES_URL`. The page also carries the
+   each cached for an hour, and embeds the result in the page as
+   `window.CC_TILES`: one archive URL per country per family
+   (`{coverage: {"be": {...}, "nl": {...}}, surface: {...}, routes: {...}}`),
+   or one entry under the key `"*"` when the artifact serves every country
+   from a single archive (a v1 manifest, or a pin). The page also carries the
    catalog version tag, the basemap icon registry, the viewer's home area and
    the UI strings.
 2. **Scripts.** MapLibre GL and the pmtiles library from our own origin, then
@@ -51,10 +53,15 @@ from the tile host, with no application server in that path.
    spliced over the cached document.
 5. **Icons.** `web/assets/map/icons.js` draws each pin on a canvas and hands
    the pixels to MapLibre with `map.addImage`. No image file is requested.
-6. **Archives.** `web/assets/map/coverage.js`, `web/assets/map/surface-tiles.js`
-   and `web/assets/map/routes-tiles.js` register `pmtiles://` sources for the
-   URLs from step 1. The pmtiles protocol reads each archive's header once,
-   then fetches only the tiles in view, each as an HTTP range request.
+6. **Archives.** `web/assets/map/tile-sources.js` owns the pmtiles protocol
+   registration and `mountInView()`, called by `coverage.js`, `surface-tiles.js`
+   and `routes-tiles.js`: it adds a `pmtiles://` source, one per country, for
+   every country whose bounds meet the current viewport, from the URLs in
+   `window.CC_TILES` (step 1). A country's source is added once, on the first
+   view that reaches it, and never removed as the rider pans elsewhere. The
+   pmtiles protocol reads each mounted archive's header once, then fetches
+   only the tiles in view, each as an HTTP range request. Surface and routes
+   sources mount only once their panel is first toggled on, not at boot.
 7. **Scope.** When a region is chosen, `web/assets/map/spotlight.js` fetches
    `/map/region/{slug}/boundary` for the region and `/map/scope/boundary?rids=`
    for its neighbours, and `web/assets/map/coverage.js` fetches
@@ -89,15 +96,17 @@ the host is in the heading.
 | `/items/{id}/…`, `/routes/{id}/…` | community actions, confirmations, decisions | private, POST |
 
 **Read from the tile host by HTTP range**, a few kilobytes per tile. Every
-key is immutable: a new build is a new key.
+key is immutable: a new build is a new key. Each family publishes one file
+per country (`<cc>` lowercase); only a country whose bounds meet the viewport
+is ever requested.
 
 | Archive | What it carries |
 |---|---|
-| `coverage/<stamp>.pmtiles` | the coverage points, one layer per country code, named `<letter>_<cc>` |
-| `surface/<stamp>/classified.pmtiles` | roads whose `surface` tag is known, canonicalised |
-| `surface/<stamp>/todo.pmtiles` | roads whose surface nobody has recorded |
-| `surface/<stamp>/gaps.pmtiles` | the same question as a grid, for planning zoom |
-| `routes/<stamp>.pmtiles` | cycle-route network lines and knooppunt numbers |
+| `coverage/<cc>/<stamp>/points.pmtiles` | one country's coverage points, layer `<letter>_<cc>` |
+| `surface/<cc>/<stamp>/classified.pmtiles` | one country's roads whose `surface` tag is known, canonicalised |
+| `surface/<cc>/<stamp>/todo.pmtiles` | one country's roads whose surface nobody has recorded |
+| `surface/gaps/<stamp>/gaps.pmtiles` | the same question as a world grid, for planning zoom |
+| `routes/<cc>/<stamp>/routes.pmtiles` | one country's cycle-route network lines and knooppunt numbers |
 
 **External hosts**, each tied to one feature:
 
@@ -138,18 +147,21 @@ visitor in that region fetches that slice and nothing else.
 ```mermaid
 flowchart LR
   G[Geofabrik extract] --> H[harvest: filter, parse,<br/>diff-merge into coverage_poi]
-  H --> E[export one GeoJSONL<br/>per country]
-  E --> K[tippecanoe]
-  K --> AR[coverage/&lt;stamp&gt;.pmtiles]
-  K --> M[coverage/manifest.json<br/>url, built_at, counts, regions]
-  M -->|read on the server,<br/>once an hour| APP[app] --> PAGE[window.CC_COVERAGE_URL]
+  H --> E[export one GeoJSONL<br/>per letter per country]
+  E --> K[tippecanoe, per country]
+  K --> AR[coverage/&lt;cc&gt;/&lt;stamp&gt;/points.pmtiles<br/>one file per country]
+  K --> M[coverage/manifest.json<br/>one entry per country:<br/>stamp, built_at, inputs, bounds, counts, tiles]
+  M -->|read on the server,<br/>once an hour| APP[app] --> PAGE[window.CC_TILES.coverage]
 ```
 
 The surface and routes archives take the same path without the database: the
-extract is their input, an archive plus their own manifest is their output.
-The stamp in the key is the build time, so every build is a new immutable URL
-and the manifest is the only thing that moves. The runbooks in
-[Data operations](data-ops/index.md) cover how the archives are built.
+extract is their input, one archive per country plus their own manifest is
+their output. A country rebuilds only when its own extract's fingerprint has
+changed since the live manifest, so most nights most countries are skipped.
+The stamp in a country's key is that country's own build time, so every
+rebuild is a new immutable URL for that country and the manifest is the only
+thing that moves. The runbooks in [Data operations](data-ops/index.md) cover
+how the archives are built.
 
 ## Development against production
 

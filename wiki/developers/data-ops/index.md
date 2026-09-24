@@ -108,13 +108,15 @@ investigate.
 error; it answers `0`. A climb measured against missing tiles comes back flat, and flat is a number,
 so nothing downstream notices. Every elevation check in these pages is really a check against this.
 
-**Narrow-run trap.** Building one country's artifact and publishing it over an archive that held
-nineteen. The shrink guard refuses a publish that would drop live countries off the map, and the
-refusal names them.
+**Per-country publish, never a narrow-run trap.** Each family publishes one archive per country under
+its own key, merged into the family's manifest by replacing only the countries that run just built.
+A run over one country can never drop the other eighteen off the map by omission: the only way a
+country leaves the manifest is the explicit `--retire <cc>` flag, and the log names whatever it
+retires.
 
-**Manifest pinning.** The published manifest is what every client reads to find the current archive.
-Moving it is the publish. Rebuilding tiles without moving it changes nothing a rider sees, and
-moving it to a small build is how a full map becomes an empty one.
+**Manifest pinning.** The published manifest is what every client reads to find the current
+per-country archives. Moving it is the publish. Rebuilding a country's tiles without moving the
+manifest changes nothing a rider sees.
 
 **Prune keep.** How many old builds survive a publish: four for coverage, three for surface and for
 routes, whole prefixes at a time. Never one arm of a build, which would leave a manifest pointing at
