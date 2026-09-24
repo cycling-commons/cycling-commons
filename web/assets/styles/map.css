@@ -640,8 +640,8 @@
   .cc-nudge-x{background:transparent;border:none;color:var(--paper);opacity:.55;cursor:pointer;font-size:.8rem;line-height:1;padding:.1rem .25rem;transition:opacity .15s}
   .cc-nudge-x:hover{opacity:1}
   /* "Not covered yet" banner (map-and-search.md §4.5b): same pill, its
-     go-action is a real link (the vote route) rather than a JS action, so it
-     needs the anchor defaults a button never had. */
+     go-action is a real link (the join / join_country route) rather than a
+     JS action, so it needs the anchor defaults a button never had. */
   a.cc-nudge-go{display:inline-block;text-decoration:none}
   .cc-cluster{display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 7px;border-radius:15px;background:var(--c);color:#fff;font:600 13px/1 'Spline Sans Mono',ui-monospace,monospace;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(16,30,22,.45);cursor:pointer}
 

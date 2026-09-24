@@ -1319,11 +1319,23 @@ not. It shares the pan-away nudge's pill and slot, and the two never show
 together: this banner is evaluated first on every `moveend`, and the nudge
 stands down for that tick when it is showing (`scope-ui.js`, `_covShown`).
 
-The decision is a pure function, `coverage-notice.js` `noticeFor({zoom,
-centre, onboardedAt, nearOnboarded, searchHit, dismissedKey})`, unit-tested
-under `node:test` with no import of the map or `CCScope`; `scope-ui.js`
-resolves the onboarded-ness questions and renders the answer.
+The decision is a pure state machine, `coverage-notice.js` `evaluateNotice(state,
+{zoom, onboardedAt, nearOnboarded, searchHit}) -> {decision, state}`,
+unit-tested under `node:test` with no import of the map or `CCScope`;
+`scope-ui.js` resolves the onboarded-ness questions, holds `state` between
+ticks, and renders the answer. State, not a one-shot decision, because
+panning carries no geocoder: once an explicit hit has named a country,
+further panning that never re-enters onboarded territory has to keep naming
+that same country (and keep a dismissal), rather than losing the identity on
+the very next `moveend` (owner-reported 2026-09-24 review: a dismissed
+Poland banner came back labelled "this area" on the first drag inside
+Poland, because the pan branch handed every tick the same bare key and that
+key never matched the dismissed one).
 
+- **State.** `{country: {code, name} | null, dismissed: boolean}`.
+  `initNoticeState()` is the blank excursion a fresh page starts with.
+  `evaluateNotice` returns the next state alongside the decision;
+  `dismissNotice(state)` is the close button's own transition.
 - **Explicit selection.** Picking a search result names its own country
   (Photon's `properties.countrycode` / `properties.country`, already in the
   rider's language). `search-ui.js` hands that to
@@ -1332,26 +1344,46 @@ resolves the onboarded-ness questions and renders the answer.
   an onboarded region or carries no country to check. The pending hit is
   consumed once, on the `moveend` the resulting fly lands on, and checked
   directly against `CC_COVERAGE_COUNTRIES` (upper-case): a country code is
-  exact, so this needs no spatial guess.
+  exact, so this needs no spatial guess. A valid hit in a non-onboarded
+  country always shows, replacing `state.country` and clearing any prior
+  dismissal - a fresh explicit pick is a deliberate action, never read as
+  "the same place I already closed this for", whether it repeats the last
+  country or names a different one.
 - **Panning.** On `moveend`, at zoom ≥ 7, when the point under the map centre
-  resolves to no onboarded country (`CCScope.countryAt`), the banner shows
-  the generic "this area" text - a pan carries no geocoder, so it never
-  names a country. Below zoom 7 the banner is hidden, not dismissed: it is
-  not that a rider closed it, it is that "at zoom 3" is not "at" anywhere
-  yet.
-- **Coastal tolerance.** A centre within 0.1° of an onboarded region counts as
-  covered, so water off an onboarded coastline never flashes the banner.
-  `nearOnboarded()` checks eight points 0.1° out from the centre (the
-  cardinal and diagonal directions) through `CCScope.countryAt`, which
-  already carries the antimeridian-safe region lookup (§4.5a) - cheaper and
-  safer than a second bbox implementation.
-- **Dismissal.** The close button remembers a key: `'area'` for a pan, or
-  `'country:XX'` for an explicit hit. The banner stays hidden while the
-  computed key still matches the dismissed one. Panning carries no country,
-  so a dismissed pan-banner stays dismissed for any non-onboarded country
-  panned to next - only an explicit hit for a *different* country, or the
-  centre landing back in an onboarded region (which clears the remembered
-  key outright), re-arms it.
+  resolves to no onboarded country (`CCScope.countryAt`) and is not near one
+  (below), the banner shows - naming `state.country` when an explicit hit
+  set one earlier in this same excursion, the generic "this area" text
+  otherwise (a pan carries no geocoder, so it never *originates* a country
+  name). Below zoom 7, or within the coastal tolerance, the banner is
+  hidden for that tick only: `state` is left exactly as it was, because
+  neither is "covered" - zooming back in, or panning back off the coast,
+  resumes the same excursion rather than starting one over.
+- **Coastal tolerance.** A centre within 0.1° (plain planar degrees, the
+  pipeline's `BOUNDARY_SNAP_DEG` convention) of an onboarded country's
+  outline counts as covered, so water off an onboarded coastline never
+  flashes the banner. `isNearOutlines(lng, lat, features)`
+  (`coverage-notice.js`) is a real point-to-polygon distance test - point-in-
+  ring plus point-to-segment distance over every ring, `Polygon` and
+  `MultiPolygon` both, minimum across every onboarded country - against
+  `GET /regions/outlines.json` (`PageController::regionOutlines`: one Feature
+  per onboarded country, the union of its operational regions' outlines).
+  Tested at the centre's own longitude and at ±360° from it, so a centre
+  near the antimeridian is measured against outline coordinates on whichever
+  side of the seam they were stored on. `scope-ui.js` fetches the endpoint
+  once, lazily, the first time the pan branch needs it (only when the centre
+  resolves to no onboarded country at all - an explicit hit never needs it),
+  and caches the parsed features for the page; until that fetch resolves,
+  the pan branch shows nothing rather than guess, never a flash the fetch
+  then contradicts.
+- **Dismissal.** `dismissNotice()` sets `state.dismissed`, which survives
+  every pan tick unchanged for as long as the excursion continues (the
+  centre stays outside onboarded territory, whatever it is near or how far
+  zoomed out) - "however long the pan stays outside coverage" is exactly the
+  same excursion, and a dismissal is a decision about *that* excursion, not
+  about one tick of it. It clears only when the centre resolves to an
+  onboarded country again (a fresh `initNoticeState()`, so the *next*
+  excursion starts un-dismissed and unnamed) or when a fresh explicit
+  selection of a non-onboarded country arrives (above).
 - **Text.** `map.coverage_notice_country` / `map.coverage_notice_area`, the
   button `map.coverage_notice_go_country` / `map.coverage_notice_go_area`.
   Reached through `MapController::mapI18n`, all five locales.

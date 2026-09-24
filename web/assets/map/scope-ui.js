@@ -17,7 +17,7 @@ import { isPicking } from './picking.js';
 import { corrLayerIds } from './corrections.js';
 import { hitScopeFor } from './hit-scope.js';
 import { parkTiledOverlays, unparkTiledOverlays } from './tile-park.js';
-import { noticeFor, PAN_MIN_ZOOM } from './coverage-notice.js';
+import { initNoticeState, evaluateNotice, dismissNotice, isNearOutlines } from './coverage-notice.js';
 
 
 // Region scope (docs/specs/map-and-search.md §4.5): area the map + search
@@ -308,34 +308,35 @@ export function restoreHitScope(){
 
 /* "Not covered yet" banner (docs/specs/map-and-search.md §4.5b): the rider
    panned or searched somewhere Cycling Commons has nothing for. Pure decision
-   in coverage-notice.js; this is the DOM wiring + the onboarded-ness lookups
-   the pure module has no way to make itself.
+   + state machine in coverage-notice.js; this is the DOM wiring + the
+   onboarded-ness lookups the pure module has no way to make itself.
 
    Shares its top-centre pill with the pan-away nudge below and the two must
    never show together: this banner is evaluated first on every moveend, and
    `_covShown` makes the nudge's own evaluate() stand down for that tick
    (initCoverageNotice() is wired before initAreaNudge() in map.js so this
    runs first within the same event). */
-let _covDismissedKey = null, _covPendingHit = null, _covShown = false, _covLastKey = null;
+let _covState = initNoticeState(), _covPendingHit = null, _covShown = false;
 
 /** Whether the explicit search hit's own country is onboarded - a direct
  *  lookup against CC_COVERAGE_COUNTRIES, since the hit already names its
  *  country and needs no spatial guess. */
 function hitCountryOnboarded(cc){ return !!cc && COVERAGE_COUNTRIES.has(String(cc).toUpperCase()); }
 
-/** Coastal tolerance for a pan centre (docs/specs/map-and-search.md §4.5b):
- *  within 0.1 degree of an onboarded region counts as covered, so water off
- *  an onboarded coastline never flashes the banner. Delegates every point
- *  test to CCScope.countryAt, which already carries the antimeridian-safe
- *  region lookup - this only supplies the offsets. */
-function nearOnboarded(lat, lng){
-  const TOL=0.1;
-  const offs=[[TOL,0],[-TOL,0],[0,TOL],[0,-TOL],[TOL,TOL],[TOL,-TOL],[-TOL,TOL],[-TOL,-TOL]];
-  return offs.some(([dLat,dLng])=>{
-    let lng2=lng+dLng;
-    if(lng2>180) lng2-=360; else if(lng2<-180) lng2+=360;
-    return !!window.CCScope.countryAt(lat+dLat, lng2);
-  });
+/* Onboarded-country outlines (docs/specs/map-and-search.md §4.5b), fetched
+   once and lazily - only the pan branch, when the centre resolves to no
+   onboarded country, ever needs the coastal-tolerance test that consults
+   them. `null` = not yet requested; an array (possibly empty on a fetch
+   failure) = loaded. Until loaded, the pan branch shows nothing rather than
+   guess - never a flash the fetch then contradicts. */
+let _outlines = null, _outlinesReq = null;
+function ensureOutlines(){
+  if(_outlinesReq) return _outlinesReq;
+  _outlinesReq = fetch('/regions/outlines.json', {headers:{'Accept':'application/json'}})
+    .then(r=>r.ok ? r.json() : {features:[]})
+    .then(d=>{ _outlines = Array.isArray(d.features) ? d.features : []; })
+    .catch(()=>{ _outlines = []; });
+  return _outlinesReq;
 }
 
 /** Called once, right after a search pick, so the next moveend (the fly
@@ -352,7 +353,6 @@ function renderCoverageNotice(d){
   const el=document.getElementById('coverageNotice');
   if(!el) return;
   if(!d.show){ el.hidden=true; return; }
-  _covLastKey = d.key;
   const msg = d.countryName
     ? tpl(I18N.coverageNoticeCountry||'We have no Cycling Commons data for {country} yet. You see the base map only, without our water taps, road surfaces or routes.', {country:d.countryName})
     : (I18N.coverageNoticeArea||'We have no Cycling Commons data for this area yet. You see the base map only, without our water taps, road surfaces or routes.');
@@ -378,17 +378,26 @@ function evaluateCoverageNotice(){
   const c=map.getCenter(), zoom=map.getZoom();
   const cc=window.CCScope.countryAt(c.lat, c.lng);
   const hit=_covPendingHit; _covPendingHit=null;
-  const decision=noticeFor({
-    zoom, centre:{lat:c.lat, lng:c.lng},
+  let near=false;
+  if(!hit && !cc){
+    // The pan branch needs the coastal tolerance: kick off the lazy fetch
+    // the first time it is asked for, and say nothing (not even a hidden
+    // dismissal-clearing tick) until it resolves.
+    if(_outlines===null){
+      ensureOutlines().then(evaluateCoverageNotice);
+      renderCoverageNotice({show:false});
+      _covShown=false;
+      return;
+    }
+    near = isNearOutlines(c.lng, c.lat, _outlines);
+  }
+  const {decision, state} = evaluateNotice(_covState, {
+    zoom,
     onboardedAt: hit ? hitCountryOnboarded(hit.countryCode) : !!cc,
-    nearOnboarded: !cc && nearOnboarded(c.lat, c.lng),
+    nearOnboarded: near,
     searchHit: hit,
-    dismissedKey: _covDismissedKey,
   });
-  // Covered again (an onboarded country under the centre, or too zoomed out
-  // to be "at" anywhere): the old dismissal no longer applies to whatever
-  // non-onboarded place is panned to next.
-  if(cc || zoom < PAN_MIN_ZOOM) _covDismissedKey = null;
+  _covState = state;
   renderCoverageNotice(decision);
   _covShown = decision.show;
 }
@@ -398,7 +407,7 @@ export function initCoverageNotice(){
   const el=document.getElementById('coverageNotice');
   if(!el) return;
   const x=el.querySelector('.cc-nudge-x');
-  if(x) x.onclick=()=>{ _covDismissedKey=_covLastKey; el.hidden=true; _covShown=false; };
+  if(x) x.onclick=()=>{ _covState=dismissNotice(_covState); el.hidden=true; _covShown=false; };
   map.on('moveend', evaluateCoverageNotice);
   map.once('idle', evaluateCoverageNotice);   // deep link can land outside coverage with no move
 }
