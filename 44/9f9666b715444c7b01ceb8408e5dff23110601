@@ -1,0 +1,42 @@
+web/assets/map/panels.js
+  s_1d05a0405c3516::t_c84952eab2173d 25
+  s_1d05a0405c3516::t_fc26511078cb95 251,259-261
+web/assets/map/routes-tiles.js
+  s_1d05a0405c3516::t_c9694ce497cff5 49-52,56-57,68,73-75,83,104,123,131,145,161-164,166-172
+  s_1d05a0405c3516::t_2d4bee42fee1d3 10-11,14,18-19
+  s_1d05a0405c3516::t_f9830efaac48d9 289
+  s_1d05a0405c3516::t_d5f33c96398e79 178-189,196
+web/assets/map/tile-park.js
+  s_1d05a0405c3516::t_8d7547a6f4f326 23,25-29,41
+web/tests/js/routes-zooms.test.cjs
+  s_1d05a0405c3516::t_5a928d87a76fd7 76-82
+web/tests/js/surface-sources.test.mjs
+  s_1d05a0405c3516::t_1ed6eddcd8c955 1-27
+web/assets/map/map.js
+  s_1d05a0405c3516::t_afb6b663f064b6 21
+  s_1d05a0405c3516::t_800331ae43a432 50
+web/assets/map/surface-tiles.js
+  s_1d05a0405c3516::t_372f6f38fffe20 11
+  s_1d05a0405c3516::t_ce542d6383668e 252,254
+  s_1d05a0405c3516::t_31d92e08501a1a 407
+  s_1d05a0405c3516::t_e7300e55bbce5f 74-78,80-107,109-154,156-161
+  s_1d05a0405c3516::t_551447ee52aabb 20-24
+  s_1d05a0405c3516::t_6a2e782430b4df 180,184
+  s_1d05a0405c3516::t_bf5817c6d3f549 207-233,238-244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "449f9666b715444c7b01ceb8408e5dff23110601",
+  "prompts": {},
+  "sessions": {
+    "s_1d05a0405c3516": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "31d19031-2e0a-4b62-beac-5203a713fc44",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
