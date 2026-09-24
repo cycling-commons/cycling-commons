@@ -532,7 +532,17 @@
        default; scope-ui.js fills the text and shows it. #}
     <div class="cc-area-nudge cc-coverage-notice" id="coverageNotice" aria-live="polite" hidden>
       <span class="cc-nudge-msg"></span>
-      <a class="cc-nudge-go" id="coverageNoticeGo" href="{{ path('vote') }}"></a>
+      {# Two possible targets (map-and-search.md §4.5b): the plain `join`
+         page when no country is named, or `join_country` for one that is.
+         The latter needs a country code this template does not have yet, so
+         it is generated as a URL template with the placeholder "CC" (a
+         valid two-letter value for the route's own regex,
+         `requirements: ['cc' => '[A-Za-z]{2}']`) and scope-ui.js swaps in
+         the real code before showing the banner. Both stay localized paths,
+         generated server-side, never built from a JS-side slug table. #}
+      <a class="cc-nudge-go" id="coverageNoticeGo" href="{{ path('join') }}"
+         data-join-area="{{ path('join') }}"
+         data-join-country="{{ path('join_country', {cc: 'CC'}) }}"></a>
       <button type="button" class="cc-nudge-x" aria-label="{{ 'map.area_dismiss'|trans }}">✕</button>
     </div>
     <div class="map-top">

@@ -360,7 +360,16 @@ function renderCoverageNotice(d){
     ? tpl(I18N.coverageNoticeGoCountry||'Ask us to cover {country}', {country:d.countryName})
     : (I18N.coverageNoticeGoArea||'Ask us to cover this area');
   const msgEl=el.querySelector('.cc-nudge-msg'); if(msgEl) msgEl.textContent=msg;
-  const goEl=el.querySelector('.cc-nudge-go'); if(goEl) goEl.textContent=goLabel;
+  const goEl=el.querySelector('.cc-nudge-go');
+  if(goEl){
+    goEl.textContent=goLabel;
+    // join_country (a named country) vs the plain join page ("this area") -
+    // both localized paths generated server-side; the template's own
+    // placeholder ("CC") is the only part filled in here.
+    const countryTpl=goEl.dataset.joinCountry, areaHref=goEl.dataset.joinArea;
+    if(d.countryCode && countryTpl) goEl.href=countryTpl.replace('CC', d.countryCode);
+    else if(areaHref) goEl.href=areaHref;
+  }
   el.hidden=false;
 }
 

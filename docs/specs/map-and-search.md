@@ -1353,11 +1353,22 @@ resolves the onboarded-ness questions and renders the answer.
   centre landing back in an onboarded region (which clears the remembered
   key outright), re-arms it.
 - **Text.** `map.coverage_notice_country` / `map.coverage_notice_area`, the
-  button `map.coverage_notice_go_country` / `map.coverage_notice_go_area`
-  linking to the localized `vote` route plainly - `VoteType` carries no
-  country field, so a preselect is not possible; the vote page ranks
-  candidate climbs/stays/views/heritage within onboarded countries, not new
-  ones. Reached through `MapController::mapI18n`, all five locales.
+  button `map.coverage_notice_go_country` / `map.coverage_notice_go_area`.
+  Reached through `MapController::mapI18n`, all five locales.
+- **Button target.** `JoinCountryController::index` (`join_country`, `CountryInterestService`) is where a
+  rider records "we want the Commons here" and can offer to curate it - the
+  right target, unlike `vote` (`VoteType` carries no country field; that
+  page ranks candidate climbs/stays/views/heritage within already-onboarded
+  countries, not new ones). A named country links to `join_country` with
+  its code; no country ("this area") links to the plain `join` page
+  (`PageController::join`), which asks for no country at all. Both are
+  localized paths (`LocalizedPath::JOIN` / `JOIN_COUNTRY`), generated
+  server-side in the template: `join_country`'s needs a `cc` the template
+  does not have yet, so it is generated with the placeholder `"CC"` (valid
+  against the route's own `[A-Za-z]{2}` requirement) and `scope-ui.js`
+  swaps in the real code (`goEl.dataset.joinCountry.replace('CC', cc)`)
+  before showing the banner - never a JS-side slug table reconstructing the
+  localized path by hand.
 
 ### 4.6 Chrome theme: dark and light
 
