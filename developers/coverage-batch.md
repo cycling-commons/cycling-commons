@@ -5,26 +5,43 @@ extracts into the two coverage artifacts
 (`docs/specs/coverage-provider.md` §3):
 
 1. **`coverage_poi`** (PostGIS) — the query index behind `/map/coverage/*`.
-2. **`coverage/<stamp>.pmtiles`** (CC bucket) — the vector tiles the map draws.
+2. **`coverage/<cc>/<stamp>/points.pmtiles`** (CC bucket, one file per country)
+   - the vector tiles the map draws.
 
 Per region (`COVERAGE_REGIONS`, csv, each swapped independently): download
-(md5-checked, skipped when unchanged) → `osmium tags-filter` on the
-`pipeline/contract/coverage-contract.json` selectors → pyosmium parse → atomic
+(md5-checked, skipped when unchanged) -> `osmium tags-filter` on the
+`pipeline/contract/coverage-contract.json` selectors -> pyosmium parse -> atomic
 per-region swap into `coverage_poi`. Then once per run: per-letter GeoJSONL
-export → tippecanoe → go-pmtiles verify → upload a versioned artifact +
-`coverage/manifest.json` → prune (keep the last 4). A failed region keeps last
-week's slice serving and exits non-zero. In the manifest, `counts` spans the
-whole `coverage_poi` table (every region's current slice — matching the
-artifact, which is always built from the full index), while `regions` lists
-only that run's regions; with staggered per-region prod timers the two
-legitimately diverge.
+export -> tippecanoe, per country -> go-pmtiles verify -> upload + publish,
+per country, keeping the last 4 builds per country
+(`docs/specs/coverage-provider.md` §3/§4). A country whose export fingerprint
+has not changed since the live `coverage/manifest.json` (manifest v2, one
+entry per country) is skipped rather than rebuilt. A failed region keeps last
+week's slice serving and exits non-zero.
 
 The nightly dispatcher (`python -m coverage.dispatch`) orders the onboarded
 regions by staleness and loads the stalest ones inside a time budget and a
-region cap, publishing the coverage tiles once if anything loaded. Each
-loaded region also refreshes its routes and surface line extracts, and one
-offline pass per family (`--routes`, `--surface`) then republishes only the
-countries whose inputs changed.
+region cap, publishing the coverage tiles once (`--tiles-only`, one build per
+country whose export changed) if anything loaded. Each loaded region also
+refreshes its routes and surface line extracts, and one offline pass per
+family (`--routes`, `--surface`) then republishes only the countries whose
+inputs changed; an unchanged country costs a fingerprint comparison and
+nothing else.
+
+**One-time cleanup: the v1 keys.** Nothing in the batch prunes the old
+single-archive keys any more: `coverage/<stamp>.pmtiles`, `surface/<stamp>/...`
+and `routes/<stamp>/...`. Once the v2 manifests are serving in an environment,
+list and delete them by hand:
+
+    mc ls --recursive <alias>/<bucket>/coverage/ | grep -v '^coverage/manifest.json'
+    mc ls --recursive <alias>/<bucket>/surface/ | grep -vE '^surface/(manifest\.json|[a-z]{2}/|gaps/)'
+    mc ls --recursive <alias>/<bucket>/routes/ | grep -v '^routes/manifest.json'
+
+Then, once the listed keys are confirmed to be the old unstamped-country ones:
+
+    mc rm --recursive --force <alias>/<bucket>/coverage/<stamp>.pmtiles
+    mc rm --recursive --force <alias>/<bucket>/surface/<stamp>/
+    mc rm --recursive --force <alias>/<bucket>/routes/<stamp>/
 
 ## Dev run
 

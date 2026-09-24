@@ -1244,6 +1244,17 @@ the newest rung of that same ladder.
   (tile fetch, re-rasterisation) is MapLibre's; the dev browser rasterises on
   the CPU (SwiftShader, no GPU), so those numbers are a floor, not a rider's.
 
+  **This measurement predates per-country tile mounting**
+  (coverage-provider.md §4, "Client: one source per country in view"):
+  `addCoverage()` built all 20 countries' layers unconditionally at boot, so
+  the whole style held all 320 coverage layers (and the 663 total) from the
+  first frame. `mountInView()` now builds a country's coverage layers only
+  once its tile source has come into view, so the boot-time layer count is
+  smaller and grows with panning; a country panned into view later still
+  pays this same per-`setFilter` validation cost when its layers land. The
+  fix (`NO_VALIDATE`, one filter object for the whole grid) is unaffected:
+  it does not depend on how many countries have mounted.
+
 #### 4.5a Boxes that cross the antimeridian
 
 A scope box whose **west value is greater than its east value** crosses ±180°

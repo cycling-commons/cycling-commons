@@ -446,6 +446,44 @@ step; last good data keeps serving; a non-zero exit surfaces through the
 scheduler's mail. **v1 extracts nodes + ways-as-centroid**; multipolygon
 relations (~1–3 % of objects) are a fast-follow (see Open questions).
 
+**Lines (surface, routes) own a border the same way points do.** The surface
+and routes builds (§4) never touch PostGIS, but a border way still needs
+exactly one owner so it is drawn once. A line feature's anchor is its
+midpoint vertex (`coords[len(coords) // 2]`, the same vertex `GapGrid.add`
+bins on); a knooppunt's anchor is its own point. The owner is the
+`country_code` of the nearest **operational region** (the rows
+`_materialize_operational_regions` selects: one row per country at that
+country's deepest onboarded `admin_level`) within `BOUNDARY_SNAP_DEG`
+(0.01 degrees) of the anchor - ties broken by distance, then smaller
+`area_km2` (NULL last), then lower `id`: `load_region`'s point rule, restated
+in Python (`pipeline/coverage/ownership.py::Owners`). No operational region
+within the snap distance means the feature is foreign to every onboarded
+country, and it is dropped rather than assigned. A `dev/`-prefixed region
+(country `None`) skips the rule, as it does for points. Both line builds
+snapshot the operational regions once per run to
+`<workdir>/ownership-regions.json` (`ownership.snapshot_outlines`); the file
+is rewritten only when its bytes change, and its sha256
+(`ownership.outlines_fingerprint`) rides in every line extract's cache stamp,
+so a boundary edit invalidates every country's extract without anyone having
+to remember to force one.
+
+**A country rebuilds only when its own inputs changed.** For every family
+(coverage points, surface classified/todo, routes), a country's build is
+compared by `publish.inputs_fingerprint(its input files, the contract
+fingerprint, the outlines fingerprint, that family's tile profile)` against
+`inputs` in the live manifest (§4); equal means skipped, not rebuilt. The
+fingerprint hashes file **content**, sorted by path, never file names or
+mtimes - a nightly-rewritten export and a workdir wiped clean both hash
+correctly, and a file renamed with identical bytes is not new data.
+
+**A country builds only from a complete region set.** Three onboarded
+countries span more than one Geofabrik extract (US = california + colorado,
+CA = british-columbia + quebec, GB = great-britain + ireland-and-northern-ireland).
+When a run's `--regions` does not include every one of a country's onboarded
+regions, that country is skipped with a log line rather than published from a
+partial extract - a run over `north-america/us/california` alone must not
+take Colorado off the map.
+
 **Entry points:** CLI `python -m coverage.run` in the pipeline container;
 `make coverage-refresh` runs the whole chain against the dev DB + MinIO;
 prod runs it as a scheduled job on the worker server (topology owned by
@@ -476,13 +514,102 @@ orders the onboarded regions by staleness and loads the stalest ones inside a
 time budget and a region cap, then runs `--tiles-only` once if anything
 loaded. Each loaded region also refreshes its routes and surface line
 extracts, and one offline pass per family (`--routes`, `--surface`) then
-republishes only the countries whose inputs changed.
+republishes only the countries whose inputs changed - an unchanged country
+costs a fingerprint comparison and nothing else.
 
 ## 4. Tile artifact contract
 
 Thin tiles: enough to draw markers and run map-side filters; everything else
 comes from the detail endpoint on click. Flat scalars only (MVT rule).
 Feature id = numeric OSM id.
+
+**Per-country keys, one manifest per family.** Every artifact family
+(coverage points, surface classified/todo, cycle routes) publishes one file
+per country under a versioned key `<family>/<cc>/<stamp>/<arm>.pmtiles`
+(`cc` lowercase, `stamp` `YYYYMMDD-HHMM`) - `coverage/be/20260924-0312/points.pmtiles`,
+`surface/be/.../classified.pmtiles`, `surface/be/.../todo.pmtiles`,
+`routes/be/.../routes.pmtiles`. The surface build additionally publishes one
+world file with no country split, `surface/gaps/<stamp>/gaps.pmtiles` (the
+grid is a merge of every region's cell sums, §3). Unstamped coverage rows
+(no owning region) live under the fixed `zz` bucket, never a real country
+code. Layer names inside a file are unaffected by any of this (`b_be`,
+`surface_be`, `routes_be`, `knoop_be`, `gaps`).
+
+Each family's stable key (`coverage/manifest.json`, `surface/manifest.json`,
+`routes/manifest.json`) is a **manifest v2**:
+```json
+{"version": 2, "updated_at": "2026-09-24T03:12:00+00:00",
+ "countries": {"be": {"stamp": "20260924-0312", "built_at": "2026-09-24T03:12:00+00:00",
+                      "inputs": "3f9a0c1d2e4b5a69", "bounds": [2.54, 49.49, 6.41, 51.51],
+                      "counts": {"classified": 391245, "todo": 204113},
+                      "tiles": {"classified": "https://.../surface/be/20260924-0312/classified.pmtiles",
+                                "todo": "https://.../surface/be/20260924-0312/todo.pmtiles"}}},
+ "gaps": {"stamp": "20260924-0312", "built_at": "...", "inputs": "...", "url": "https://.../surface/gaps/20260924-0312/gaps.pmtiles"}}
+```
+`gaps` exists only in `surface/manifest.json`; `coverage/manifest.json` and
+`routes/manifest.json` carry one tile arm each (`points`, `routes`). A publish
+(`pipeline/coverage/publish.py::publish_countries`) reads the live manifest,
+replaces the entries it built, and writes it back under a Postgres advisory
+lock per family (`publish.manifest_lock`); it never drops a country except
+when told to with `--retire <cc>`. There is no shrink guard any more
+(`COVERAGE_ALLOW_SHRINK` is gone): publishing only ever replaces the
+countries it built, so a narrow run (a subset of regions) can no longer take
+a wide manifest's other countries off the map.
+
+**Server: one entry per country, or one `*` world entry.**
+`App\Coverage\CoverageManifest`, `SurfaceManifest` and `RoutesManifest`
+(all `App\Coverage\BucketManifest`, below) expose
+`countryTiles(): array<cc, {tiles, bounds, stamp}>`. A v2 manifest yields one
+entry per country (`BucketManifest::countryEntries()`). A v1 manifest, a
+manifest with no `countries`, or an env pin (`ROAD_SURFACE_TILES_URL`,
+`ROUTES_TILES_URL`) yields exactly one entry under the key `*` with world
+bounds (`BucketManifest::worldEntry()`, `WORLD_BOUNDS`) - so a rollback to a
+v1 artifact, or a pin, still serves every country from one archive. When a
+surface pin is set the surface family serves only that pinned `*` entry; the
+per-country manifest is not read.
+
+**Client: one source per country in view, mounted once, never removed.**
+`web/assets/map/tile-sources.js` owns the pmtiles protocol registration
+(`ensureProtocol()`, added once for the page), the source id convention
+(`<family>-<arm>-<cc>`, or `<family>-<arm>-all` for the `*` entry), and
+`mountInView(map, family, arm, minzoom, onAdd)`: below `minzoom - 1` it does
+nothing; at or above it, it adds a `pmtiles://` vector source for every
+country entry whose bounds meet the current viewport padded 25%
+(`keysInView`), calling `onAdd(key, sourceId)` for each newly-added one.
+Sources are never removed once added - panning back out keeps them mounted,
+panning to a fresh region adds more. `window.CC_TILES` (`MapController`,
+`web/templates/map/index.html.twig`) is the nonce'd JSON of the three
+families' `countryTiles()`, prefetched together (`BucketManifest::prefetch()`,
+§4 below) so the page pays one `FETCH_TIMEOUT` rather than one per manifest.
+Only the tile *source* a layer reads from is per-country now; layer ids keep
+whatever per-`(letter, country)` or per-country convention their family
+already used (below). The surface skin (classified/todo/gaps) and the routes
+layer mount on first toggle, never at boot (`map.js`), so a rider who never
+opens that panel never triggers a bucket fetch for it.
+
+**Tuning note: border sharing and rebuild cost, measured on real Belgium /
+Netherlands / Luxembourg extracts.** Belgium and the Netherlands share a
+3,301-way surface border (germany/france: 5,700; netherlands/germany: 4,180;
+germany/switzerland: 5,088) before the owner rule, and the belgium/netherlands
+route-way overlap is 1,745 (germany/france: 1,631; netherlands/germany:
+2,207); every one of those ways used to be drawn twice, once per country's
+archive. After the owner rule, a full extract-and-tile run over the three
+countries counts **zero** shared refs for every pair, on every arm measured:
+surface classified (be 388,631 / nl 703,734 / lu 49,737), surface to-do
+(be 225,795 / nl 235,986 / lu 19,514) and routes ways (be 164,463 /
+nl 199,485 / lu 10,464) - belgium/netherlands, belgium/luxembourg and
+netherlands/luxembourg all shared 0. Tiling Belgium and Luxembourg together
+took 16 s; tiling them apart took 14 s + 2 s; `tile-join` of the two combined
+files gave the same 44.3 MB and 5,076 tiles in 4 s - per-country builds lose
+nothing to the split. On a real dev publish: `--routes --regions
+europe/belgium,europe/netherlands,europe/luxembourg` took 5m23s and rebuilt
+all three; `--surface` over the same three regions took 11m41s and rebuilt
+all three; a `--tiles-only` coverage republish over all 19 onboarded
+countries (from `coverage_poi` already in PostGIS, no harvest) took 7m30s and
+rebuilt all 19; a second `--surface` run over the same three regions,
+immediately after the first with no data changed, took 13s and printed
+`unchanged, not rebuilt` for all three, with no `.pmtiles` uploaded - the
+rebuild rule's fingerprint comparison costs a hash, not a tile build.
 
 **Source-layers are per-country: `<letter>_<cc>`** (lowercase; `cc` is the
 country code lowercased), one tippecanoe layer per `(letter, country_code)`
@@ -669,29 +796,36 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   `--surface` when rebuilding both (the way-id file is named as an extract
   input, so a fresh routes run invalidates the surface extracts it would
   change).
-- **Manifest** (stable key `coverage/manifest.json`):
-  `{"version":1, "url":"<COVERAGE_PUBLIC_BASE_URL>/coverage/<YYYYMMDD-HHMM>.pmtiles",
-  "built_at":"<ISO>", "counts":{"B":n,…}, "regions":[…], "country_codes":[…]}`.
-  `country_codes` is the sorted list of real onboarded countries resolved via
-  `COUNTRY_BY_REGION` (`["BE","NL"]`; the `zz` bucket is excluded — it is a
-  fixed client-side fallback, not a real country) — it tells the client which
-  per-country layers to wire without probing the tile itself.
-- **Client per-country layer wiring** (`web/assets/map/map.js` `addCoverage`):
-  iterates every coverage letter × the manifest's `country_codes` plus a fixed
-  `zz` bucket, building one icon layer `<key>-<cc>-cov` (`minzoom: 9`, so the
-  spots show from the region-fit landing zoom; the tiles themselves build from
-  `--minimum-zoom 6`) plus a `<key>-<cc>-heat` heatmap layer (`maxzoom: 9`) on
-  the same `<letter>_<cc>` source-layer — there is no `-cov-cl` cluster-bubble
-  sublayer to wire.
-  `updateCoverageScopeFilter` iterates the same product so the `ridtok`/`cctok`
-  scope filter (this section, above) applies to every per-country layer.
-  **`[null]` fallback:** a manifest with no `country_codes` (a pre-split
-  artifact, published before this change) falls back to iterating `[null]`
-  instead — one unsplit `<letter>-cov` layer per letter against the plain
-  `<letter>` source-layer, exactly the pre-split shape — so an old artifact
-  still renders (degrade, don't blank), matching this document's
-  manifest-failure convention (coverage-provider.md §4 below:
-  `CoverageManifest` degrades to an empty family on every failure path).
+- **Manifest** (stable key `coverage/manifest.json`, manifest v2 - the shape
+  every family shares, above):
+  `{"version":2, "updated_at":"<ISO>",
+  "countries":{"<cc>":{"stamp","built_at","inputs","bounds",
+  "counts":{"<letter>":n,…}, "tiles":{"points":url}}}}`. `App\Coverage\CoverageManifest`
+  reads it (§4 "Server-side manifest read", below) and exposes `countryCodes()`:
+  the sorted list of real onboarded countries the artifact was built for
+  (`["BE","NL"]`; `zz`, the unstamped bucket, is never in it, because it is a
+  fixed client-side fallback, not a country a rider can scope to) - it tells
+  the client which per-`(letter, country)` **layers** to build, one time, at
+  boot, before any tile source for that country exists.
+- **Client per-country layer wiring** (`web/assets/map/coverage.js`
+  `addCoverage`/`addCoverageLayers`): `window.CC_COVERAGE_COUNTRIES`
+  (`MapController` injects `CoverageManifest::countryCodes()`) plus the fixed
+  `zz` bucket is the list of source-layers a coverage letter can have
+  (`COVERAGE_CCS`); a manifest with none (unset, or a v1/pinned archive) falls
+  back to `[null]`, the single unsplit `<letter>-cov` layer against the plain
+  `<letter>` source-layer, so an old or pinned artifact still renders (degrade,
+  don't blank). Building the actual layers is lazy and viewport-driven, same
+  as every family (§4 "Client: one source per country in view", above):
+  `addCoverage()` calls `tile-sources.js`'s `mountInView(map, 'coverage',
+  'points', COVERAGE_MIN_ZOOM, ...)`, and only when a country's (or the `*`
+  world entry's) tile source is newly mounted does `addCoverageLayers(cc, src)`
+  build that country's icon (`<key>-<cc>-cov`, `minzoom: 9`) and heatmap
+  (`<key>-<cc>-heat`, `maxzoom: 9`) layer pair against it - there is no
+  `-cov-cl` cluster-bubble sublayer to wire. `updateCoverageScopeFilter`
+  guards every `map.setFilter` call on `map.getLayer(id)`, so it is safe to
+  call before every country's layers exist yet: the `ridtok`/`cctok` scope
+  filter (this section, above) applies to whichever per-country layers are
+  mounted so far, and to the rest as `mountInView` adds them.
 - **The per-country POI counts are cached for ten minutes.**
   `CoverageStatsProvider::poisByCountry()` was called twice per render, once for
   the headline total and once for the table, and each pass was an index-only
