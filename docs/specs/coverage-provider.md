@@ -788,7 +788,8 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   Twelve countries, ~15.0M classified ways / ~12.2M to record / ~102k grid
   cells. The build and its editorial decisions live in
   [Dated/2026-08-09-surface-line-tiles-design.md](Dated/2026-08-09-surface-line-tiles-design.md)
-  §10 and in the wiki's *Building road-surface tiles* chapter. A country whose
+  and in coverage-provider.md §10 and in the wiki's *Building road-surface
+  tiles* chapter. A country whose
   onboarded regions are not all present in the run is skipped rather than
   half-published, and `--retire <cc>` is the only way to drop a country from
   the manifest.

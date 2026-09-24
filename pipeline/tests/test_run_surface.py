@@ -94,6 +94,91 @@ def test_run_surface_says_so_when_route_awareness_is_missing(offline, contract,
     assert "no routes extract in the workdir" in capsys.readouterr().out
 
 
+def test_a_failed_reextract_leaves_no_stale_surface_stamp(offline, contract, monkeypatch, capsys):
+    """extract_region truncates its outputs first; a re-extract that raises
+    mid-way must not leave the OLD stamp beside the now-truncated files, or
+    the next run's _extract_is_current would call them current."""
+    calls = []
+
+    def good_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ridtok="",
+                     cctok="", route_way_ids=frozenset(), keep=None):
+        calls.append("good")
+        classified_out.write_text('{"f":1}\n')
+        todo_out.write_text('{"f":2}\n')
+        gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        return SurfaceCounts(classified=1, todo=1, cells=1)
+
+    monkeypatch.setattr(run, "extract_region", good_extract)
+    assert _run_surface(["europe/netherlands"], offline, contract,
+                        extract_only=True, publish=False) == 0
+    stamp = offline / "surface_europe-netherlands.stamp"
+    assert stamp.exists()
+
+    def raising_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ridtok="",
+                        cctok="", route_way_ids=frozenset(), keep=None):
+        calls.append("raise")
+        # A killed osmium/tippecanoe leaves the outputs it had already
+        # truncated and started rewriting, not untouched originals.
+        classified_out.write_text('{"partial":1}\n')
+        todo_out.write_text('{"partial":1}\n')
+        gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        raise RuntimeError("osmium killed")
+
+    monkeypatch.setattr(run, "extract_region", raising_extract)
+    monkeypatch.setenv("COVERAGE_FORCE_EXTRACT", "1")
+    rc = _run_surface(["europe/netherlands"], offline, contract,
+                      extract_only=True, publish=False)
+    assert rc == 1
+    assert not stamp.exists(), "a raise mid-extract must not leave the old stamp"
+    assert "europe/netherlands FAILED" in capsys.readouterr().err
+
+    monkeypatch.delenv("COVERAGE_FORCE_EXTRACT", raising=False)
+    monkeypatch.setattr(run, "extract_region", good_extract)
+    assert _run_surface(["europe/netherlands"], offline, contract,
+                        extract_only=True, publish=False) == 0
+    assert calls == ["good", "raise", "good"], "the next run must re-extract, not reuse the truncated files"
+
+
+def test_a_failed_reextract_leaves_no_stale_routes_stamp(offline, contract, monkeypatch, capsys):
+    from coverage.routes import RouteCounts
+    calls = []
+
+    def good_extract(filtered, contract, *, ways_out, nodes_out, wayids_out, ridtok="", cctok="",
+                     keep=None):
+        calls.append("good")
+        ways_out.write_text('{"f":1}\n')
+        nodes_out.write_text("")
+        wayids_out.write_text("41\n")
+        return RouteCounts(ways=1, nodes=0, relations=1)
+
+    monkeypatch.setattr(run, "routes_extract_region", good_extract)
+    assert _run_routes(["europe/netherlands"], offline, contract,
+                       extract_only=True, publish=False) == 0
+    stamp = offline / "routes_europe-netherlands.stamp"
+    assert stamp.exists()
+
+    def raising_extract(filtered, contract, *, ways_out, nodes_out, wayids_out, ridtok="", cctok="",
+                        keep=None):
+        calls.append("raise")
+        ways_out.write_text('{"partial":1}\n')
+        nodes_out.write_text("")
+        wayids_out.write_text("41\n")
+        raise RuntimeError("osmium killed")
+
+    monkeypatch.setattr(run, "routes_extract_region", raising_extract)
+    monkeypatch.setenv("COVERAGE_FORCE_EXTRACT", "1")
+    rc = _run_routes(["europe/netherlands"], offline, contract,
+                     extract_only=True, publish=False)
+    assert rc == 1
+    assert not stamp.exists(), "a raise mid-extract must not leave the old stamp"
+
+    monkeypatch.delenv("COVERAGE_FORCE_EXTRACT", raising=False)
+    monkeypatch.setattr(run, "routes_extract_region", good_extract)
+    assert _run_routes(["europe/netherlands"], offline, contract,
+                       extract_only=True, publish=False) == 0
+    assert calls == ["good", "raise", "good"], "the next run must re-extract, not reuse the truncated files"
+
+
 def test_run_routes_extract_only_writes_the_three_outputs(offline, contract,
                                                           monkeypatch, capsys):
     from coverage.routes import RouteCounts
@@ -331,6 +416,49 @@ def test_first_v2_publish_with_retire_is_allowed(tiled, offline, contract):
     assert tiled["published"] == ("surface", ["NL"], False, ["xx"])
 
 
+def test_first_v2_publish_refuses_when_a_countrys_build_failed(tiled, offline, contract,
+                                                                monkeypatch, capsys):
+    """A country present in this run but whose TILING failed must block a
+    first v2 publish exactly like one missing from the run: publishing around
+    it would still take that country's v1 archive off the map."""
+    tiled["live_v2"] = False
+    (offline / "europe-belgium-latest.osm.pbf").write_bytes(b"pbf")
+    monkeypatch.setattr(run, "ONBOARDED_REGIONS", ("europe/belgium", "europe/netherlands"))
+    monkeypatch.setattr(run, "COUNTRY_BY_REGION",
+                        {"europe/belgium": "BE", "europe/netherlands": "NL"})
+
+    def flaky_build(layer_files, out, contract, **kw):
+        if out.name == "surface-be.pmtiles":
+            raise RuntimeError("tippecanoe died")
+        out.write_bytes(b"pm")
+    monkeypatch.setattr(run, "build_surface_pmtiles", flaky_build)
+
+    assert _run_surface(["europe/belgium", "europe/netherlands"], offline, contract) == 1
+    assert tiled["published"] is None
+    err = capsys.readouterr().err
+    assert "[surface] BE: build FAILED: tippecanoe died" in err
+    assert "first per-country publish refused" in err and "lacks BE" in err
+
+
+def test_first_v2_publish_with_retire_is_allowed_despite_a_failed_build(tiled, offline, contract,
+                                                                        monkeypatch):
+    tiled["live_v2"] = False
+    (offline / "europe-belgium-latest.osm.pbf").write_bytes(b"pbf")
+    monkeypatch.setattr(run, "ONBOARDED_REGIONS", ("europe/belgium", "europe/netherlands"))
+    monkeypatch.setattr(run, "COUNTRY_BY_REGION",
+                        {"europe/belgium": "BE", "europe/netherlands": "NL"})
+
+    def flaky_build(layer_files, out, contract, **kw):
+        if out.name == "surface-be.pmtiles":
+            raise RuntimeError("tippecanoe died")
+        out.write_bytes(b"pm")
+    monkeypatch.setattr(run, "build_surface_pmtiles", flaky_build)
+
+    assert _run_surface(["europe/belgium", "europe/netherlands"], offline, contract,
+                        retire=("xx",)) == 1
+    assert tiled["published"] == ("surface", ["NL"], True, ["xx"])
+
+
 def test_a_surface_run_already_running_exits_2(offline, contract, monkeypatch, capsys):
     monkeypatch.setattr(run, "_line_run_lock", lambda family: contextlib.nullcontext(False))
     monkeypatch.setattr(run, "extract_region", lambda *a, **k: pytest.fail("extracted under a held lock"))
@@ -458,6 +586,28 @@ def test_first_v2_routes_publish_must_cover_every_onboarded_country(routed, offl
     assert _run_routes(["europe/netherlands"], offline, contract) == 1
     assert routed["published"] is None
     assert "first per-country publish" in capsys.readouterr().err
+
+
+def test_first_v2_routes_publish_refuses_when_a_countrys_build_failed(routed, offline, contract,
+                                                                      monkeypatch, capsys):
+    """A country present this run but whose TILING failed must block a first
+    v2 routes publish, the same as one missing from the run."""
+    monkeypatch.setattr(run, "read_live_manifest", lambda family: ({"version": 2, "countries": {}}, False))
+    monkeypatch.setattr(run, "ONBOARDED_REGIONS", ("europe/belgium", "europe/netherlands"))
+    monkeypatch.setattr(run, "COUNTRY_BY_REGION",
+                        {"europe/belgium": "BE", "europe/netherlands": "NL"})
+
+    def flaky(ways, knoop, out, contract):
+        if out.name == "routes-be.pmtiles":
+            raise RuntimeError("tippecanoe died")
+        out.write_bytes(b"pm")
+    monkeypatch.setattr(run, "build_routes_pmtiles", flaky)
+
+    assert _run_routes(["europe/belgium", "europe/netherlands"], offline, contract) == 1
+    assert routed["published"] is None
+    err = capsys.readouterr().err
+    assert "[routes] BE: build FAILED: tippecanoe died" in err
+    assert "first per-country publish refused" in err and "lacks BE" in err
 
 
 def test_a_routes_run_already_running_exits_2(offline, contract, monkeypatch, capsys):

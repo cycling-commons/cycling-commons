@@ -1249,10 +1249,12 @@ the newest rung of that same ladder.
   mounting (coverage-provider.md §4, "Client: one source per country in
   view") `mountInView()` builds a country's coverage layers once its tile
   source comes into view, so the layer count starts smaller and grows with
-  panning, and a country panned into view later pays the same per-`setFilter`
-  validation cost when its layers land. `NO_VALIDATE` (`tile-sources.js`,
-  shared by the coverage, surface and routes filters) and one filter object
-  for the whole grid hold whatever the number of mounted countries.
+  panning, and a country panned into view later pays the same `addLayer`
+  validation cost when its layers land (the cost this section could not skip,
+  above), not a per-`setFilter` one: `NO_VALIDATE` (`tile-sources.js`, shared
+  by the coverage, surface and routes filters) and one filter object for the
+  whole grid keep the `setFilter` cost flat whatever the number of mounted
+  countries.
 
 #### 4.5a Boxes that cross the antimeridian
 

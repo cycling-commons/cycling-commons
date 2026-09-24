@@ -22,6 +22,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Iterable
 
 import psycopg
 
@@ -266,18 +267,22 @@ def _complete_countries(regions: list[str]) -> dict[str, list[str]]:
 
 
 def _first_publish_refused(family: str, complete: dict[str, list[str]], live_v2: bool,
-                           retire: tuple[str, ...]) -> bool:
+                           retire: tuple[str, ...], failed: Iterable[str] = ()) -> bool:
     """Is this the first v2 publish of `family` and does it lack a country?
 
     Until a v2 manifest is live, the app serves the v1 world archive; the first
     v2 manifest replaces it, so a first publish of fewer than every onboarded
-    country takes the rest off the map. `--retire` or
-    COVERAGE_FIRST_PUBLISH_PARTIAL=1 says the operator means it.
+    country takes the rest off the map. A country whose build FAILED this run
+    counts as missing too, not just one absent from `complete`: publishing
+    around it would still take that country's v1 archive off the map on its
+    first appearance in v2. `failed` is the run's list of failed regions or
+    country codes; a check made before any country has been built passes none.
+    `--retire` or COVERAGE_FIRST_PUBLISH_PARTIAL=1 says the operator means it.
     """
     if live_v2 or retire or os.environ.get("COVERAGE_FIRST_PUBLISH_PARTIAL") == "1":
         return False
     onboarded = {COUNTRY_BY_REGION[r] for r in ONBOARDED_REGIONS if r in COUNTRY_BY_REGION}
-    missing = sorted(onboarded - set(complete))
+    missing = sorted((onboarded - set(complete)) | (onboarded & set(failed)))
     if not missing:
         return False
     print(f"[{family}] first per-country publish refused: no v2 manifest is live yet and this run "
@@ -458,6 +463,12 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
                    for f in (out, todo_out, gaps_out)):
                 print(f"[surface] {region}: extract unchanged, reusing {out.name}")
             else:
+                # Removed before the extract starts, not only written after:
+                # extract_region truncates its outputs first, so a run killed
+                # or raising mid-extract must not leave the OLD stamp beside
+                # the now-truncated files, or the next run's
+                # _extract_is_current would call them current.
+                stamp.unlink(missing_ok=True)
                 filtered = workdir / (slug + "-surface.osm.pbf")
                 run_filter(pbf, filtered, surface_selectors(contract))
                 route_way_ids = load_way_ids(wayids_path)
@@ -473,8 +484,8 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
                     gaps_out=gaps_out, cctok=f"|{country_code}|",
                     route_way_ids=route_way_ids,
                     keep=owners.keeper(country_code) if owners else None)
-                # Written only after all three files are complete, so a run
-                # killed mid-extract leaves no stamp and the next one redoes it.
+                # Written only once all three files are complete: a run killed
+                # mid-extract leaves no stamp, so the next run re-extracts.
                 stamp.write_text(want, encoding="utf-8")
                 print(f"[surface] {region}: {fresh.classified} classified, "
                       f"{fresh.todo} to record, {fresh.cells} grid cells, "
@@ -531,6 +542,8 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
         except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
             print(f"[surface] {cc}: build FAILED: {exc}", file=sys.stderr)
             failed.append(cc)
+    if publish and _first_publish_refused("surface", complete, live_v2, retire, failed=failed):
+        return 1
     gaps_build = None
     cells, missing = _world_gap_cells(workdir, wants)
     if missing:
@@ -626,12 +639,18 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
                    for f in (ways_out, nodes_out, wayids_out)):
                 print(f"[routes] {region}: extract unchanged, reusing {ways_out.name}")
             else:
+                # Removed before the extract starts (surface pass, same
+                # reason): a run killed or raising mid-extract must not leave
+                # the OLD stamp beside the now-truncated files.
+                stamp.unlink(missing_ok=True)
                 filtered = workdir / (slug + "-routes.osm.pbf")
                 run_filter(pbf, filtered, routes_selectors())
                 fresh = routes_extract_region(
                     filtered, contract, ways_out=ways_out, nodes_out=nodes_out,
                     wayids_out=wayids_out, cctok=f"|{country_code}|",
                     keep=owners.keeper(country_code) if owners else None)
+                # Written only once all three files are complete: a run killed
+                # mid-extract leaves no stamp, so the next run re-extracts.
                 stamp.write_text(want, encoding="utf-8")
                 print(f"[routes] {region}: {fresh.ways} member ways on "
                       f"{fresh.relations} routes, {fresh.nodes} knooppunten, "
@@ -678,6 +697,8 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
         except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
             print(f"[routes] {cc}: build FAILED: {exc}", file=sys.stderr)
             failed.append(cc)
+    if publish and _first_publish_refused("routes", complete, live_v2, retire, failed=failed):
+        return 1
     if publish and (built or retire):
         try:
             ensure_bucket()
