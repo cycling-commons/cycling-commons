@@ -655,7 +655,9 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   (`{"version":2, "countries":{"<cc>":{"stamp","built_at","inputs","bounds",
   "counts","tiles":{"routes":url}}}}`), read server-side by
   `App\Coverage\RoutesManifest` (env pin `ROUTES_TILES_URL` wins; manifest
-  `ROUTES_MANIFEST_URL`) and emitted as `window.CC_ROUTES_URL`. Its **own**
+  `ROUTES_MANIFEST_URL`) and emitted as the `routes` family of `window.CC_TILES`
+  (`cc`, or `*` for one archive serving every country, to
+  `{tiles:{routes:url}, bounds, stamp}`). Its **own**
   manifest rather than a fourth surface arm: the two builds are separate
   invocations, and a shared manifest would let whichever ran last publish
   half-updated URLs for the other's arms. `--retire <cc>` is the only way to
@@ -689,7 +691,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   `<letter>` source-layer, exactly the pre-split shape — so an old artifact
   still renders (degrade, don't blank), matching this document's
   manifest-failure convention (coverage-provider.md §4 below:
-  `CoverageManifest` returns `null` on every failure path).
+  `CoverageManifest` degrades to an empty family on every failure path).
 - **The per-country POI counts are cached for ten minutes.**
   `CoverageStatsProvider::poisByCountry()` was called twice per render, once for
   the headline total and once for the table, and each pass was an index-only
@@ -701,13 +703,15 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   cannot answer falls through to the query rather than to a wrong page.
 - **Server-side manifest read.** `App\Coverage\CoverageManifest`
   (`web/src/Coverage/CoverageManifest.php`) fetches the manifest server-side,
-  caches the versioned URL for `CoverageManifest::CACHE_TTL` (value `3600` s,
-  `cache.app`), and returns `null` on *every* failure path (flag off, empty
-  URL, HTTP/transport error, malformed shape — logged, never thrown).
-  `MapController` injects the URL as the
-  nonce'd global `window.CC_COVERAGE_URL`, emitted only when non-null. Result:
-  a new artifact goes live within an hour of upload with no deploy and no
-  client manifest fetch on boot, and the map always renders, tiles or not.
+  caches the per-country tiles for `CoverageManifest::CACHE_TTL` (value `3600` s,
+  `cache.app`), and degrades to an empty array on *every* failure path (flag
+  off, empty URL, HTTP/transport error, malformed shape — logged, never
+  thrown). `MapController` injects the result as the `coverage` family of the
+  nonce'd global `window.CC_TILES` (`cc`, or `*` for one archive serving every
+  country, to `{tiles:{points:url}, bounds, stamp}`), an empty object when no
+  entry resolved. Result: a new artifact goes live within an hour of upload
+  with no deploy and no client manifest fetch on boot, and the map always
+  renders, tiles or not.
 - **The three readers share one base, and one page starts them together.**
   `CoverageManifest`, `SurfaceManifest` and `RoutesManifest` all extend
   `App\Coverage\BucketManifest` (`web/src/Coverage/BucketManifest.php`), which
@@ -903,8 +907,9 @@ Rules:
 The full presentation contract lives in [map-and-search.md](map-and-search.md);
 the data-plane facts it consumes:
 
-- One `pmtiles://` vector source (from `window.CC_COVERAGE_URL`) with
-  per-letter `<key>-cov` symbol layers replaces the seven per-letter `*-osm`
+- One `pmtiles://` vector source per published country (or `*`, from
+  `window.CC_TILES.coverage`) with per-letter `<key>-cov` symbol layers
+  replaces the seven per-letter `*-osm`
   GeoJSON pools that `catalog.json` currently ships
   (`web/assets/map/catalog-load.js` `CC_WATER_OSM` … `CC_HISTORY_OSM`).
   Curated pins, climbs, routes, surface, and heat keep serving from the
@@ -1067,8 +1072,8 @@ source of truth for the mapping both languages need:
 - Env flag `COVERAGE_TILES` (0|1, container param `coverage.tiles_enabled`,
   wired in `web/config/packages/coverage.yaml`; **defaults `1`** since the
   default-on flip). Off disables the tile *display* plane: no manifest
-  fetch, no `CC_COVERAGE_URL`, no coverage CSP host — the map degrades to
-  basemap + curated data.
+  fetch, no `coverage` entries in `CC_TILES`, no coverage CSP host — the map
+  degrades to basemap + curated data.
 - The rollout sequence this section originally planned has been **executed**:
   dev flipped first, the flag defaulted on after end-to-end verification, and
   the legacy `*-osm` display path was deleted in the same plan — no

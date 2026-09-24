@@ -712,8 +712,8 @@
 {# pmtiles protocol adapter for the coverage vector source
    (coverage-provider.md §4/§6) — vendored same-origin (self-hosted 2026-08-09)
    exactly like maplibre-gl above. map.js only registers the protocol when
-   window.CC_COVERAGE_URL is set (the COVERAGE_TILES manifest injection), so
-   with the flag off this script is inert. #}
+   window.CC_TILES has a coverage entry (the COVERAGE_TILES manifest injection),
+   so with the flag off this script is inert. #}
 <script src="{{ asset('lib/pmtiles-4.4.1.js') }}"></script>
 {# Our own dropdown, before the map's modules run (map-and-search.md §4.0). #}
 <script src="{{ asset('js/select-box.js') }}"></script>
