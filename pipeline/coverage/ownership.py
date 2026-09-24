@@ -24,8 +24,10 @@ from shapely import STRtree
 
 from coverage.load import BOUNDARY_SNAP_DEG
 
-# The same set load._materialize_operational_regions builds. The two are one
-# rule in two places and change together.
+# The operational regions load._materialize_operational_regions selects,
+# restricted to those that can own a row (country_code <> ''), exactly the
+# candidate set load_region's nearest-region query reads. The rules change
+# together.
 OUTLINES_SQL = """
 SELECT r.id, r.country_code, r.area_km2, encode(ST_AsBinary(r.geom), 'hex')
 FROM region r
