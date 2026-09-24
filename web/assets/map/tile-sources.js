@@ -6,6 +6,16 @@
    pin), so its source feeds every country's layers. */
 
 const WORLD = [-180, -85.0511, 180, 85.0511];
+
+/* Filters and layout on tile layers go in unvalidated. MapLibre validates a
+   filter against a serialisation of the WHOLE style (Style._validate calls
+   this.serialize(), 663 layers here), so every setFilter call costs about
+   8.5 ms no matter how small the filter is, and a per-country grid multiplies
+   the calls: 8 coverage keys x 20 countries = 160 icon layers + 160 heat
+   layers. The filters are built from fixed shapes, and every layer they land
+   on was validated when it was added, so there is nothing for the validator
+   to find. */
+export const NO_VALIDATE = { validate: false };
 let protocolAdded = false;
 
 /** Register the pmtiles protocol once for the page. */

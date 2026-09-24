@@ -59,6 +59,24 @@ test('newest stamp across a family', () => {
   assert.equal(ts.newestStamp('coverage'), '');
 });
 
+test('second-resolution stamps sort among minute stamps by time', () => {
+  const saved = window.CC_TILES.routes;
+  window.CC_TILES.routes = {
+    be: { stamp: '20260924-031205' }, nl: { stamp: '20260924-0312' }, fr: { stamp: '20260924-031159' },
+  };
+  try {
+    assert.equal(ts.newestStamp('routes'), '20260924-031205');
+    window.CC_TILES.routes.lu = { stamp: '20260924-0313' };
+    assert.equal(ts.newestStamp('routes'), '20260924-0313');
+  } finally {
+    window.CC_TILES.routes = saved;
+  }
+});
+
+test('filters that skip style validation are one shared option', () => {
+  assert.deepEqual(ts.NO_VALIDATE, { validate: false });
+});
+
 test('mountInView adds each source once and hands it over', () => {
   const sources = {};
   const map = {

@@ -11,8 +11,9 @@ import { inScope, curScope } from './scope-ui.js';
 import { pinEl, miniIcon } from './icons.js';
 import { updateConfMarkers, confShownCount, confTotalCount } from './osm-pools.js';
 import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
-         COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS, NO_VALIDATE } from './coverage.js';
+         COVERAGE_CCS, COVERAGE_ON, COVERAGE_KEYS } from './coverage.js';
 import { openDrawer } from './drawer.js';
+import { NO_VALIDATE } from './tile-sources.js';
 import { attrMatch, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
@@ -363,7 +364,7 @@ export function applyStaysAccessFilter(){
   const extra = (!activeAccess || activeAccess.size===ALL_ACCESS.size) ? null
     : ['any', ['!', ['has', 'acc']], ['in', ['get','acc'], ['literal', Array.from(activeAccess)]]];
   // Stays split per country: narrow every stays-<cc>-cov icon layer. One
-  // filter object for all of them, unvalidated: see coverage.js NO_VALIDATE.
+  // filter object for all of them, unvalidated: see tile-sources.js NO_VALIDATE.
   const f = covIconFilter(extra);
   COVERAGE_CCS.forEach(cc=>{
     const id = cc ? 'stays-'+cc+'-cov' : 'stays-cov';

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Uncurated OSM coverage from PMTiles (docs/specs/coverage-provider.md §4–§6).
-   Gated on COVERAGE_ON — a coverage entry in CC_TILES plus a loaded pmtiles lib.
+   Gated on COVERAGE_ON: a coverage entry in CC_TILES plus a loaded pmtiles lib.
    Absent either, every export is a no-op. */
 import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
@@ -12,7 +12,7 @@ import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } fro
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
 import { viewDirection, OSM_REF, bikeAccess, ferryFacts, tileTypeLabel, coverageSourceLayers } from './osm-tags.js';
-import { familyConfigured, mountInView, sourceIdFor, ccOfSourceLayer } from './tile-sources.js';
+import { familyConfigured, mountInView, sourceIdFor, ccOfSourceLayer, NO_VALIDATE } from './tile-sources.js';
 
 // Coverage tiles (docs/specs/coverage-provider.md §6). [rail key, lowercase letter]
 // must stay in step with catalog.js LETTER_KEY (covKeysTest.cjs).
@@ -54,27 +54,19 @@ export function covIconFilter(extra){
 export function covHeatFilter(){
   return covScopeFilter() || null;
 }
-/* Coverage filters go in unvalidated. MapLibre validates a filter against a
-   serialisation of the WHOLE style (Style._validate calls this.serialize(),
-   663 layers here), so every setFilter call costs about 8.5 ms no matter how
-   small the filter is, and the coverage grid is 8 keys x 20 countries = 160
-   icon layers + 160 heat layers. These filters are built a few lines up from
-   fixed shapes, and every layer they land on was validated when addCoverage()
-   added it, so there is nothing here for the validator to find. */
-export const NO_VALIDATE = {validate: false};
 export function updateCoverageScopeFilter(){
   if(!COVERAGE_ON) return;
   /* One icon filter and one heat filter for the whole grid: both read the
      active scope and the curated-ref list, never the layer they land on.
-     MapLibre clones what it is given, so one object can serve every layer. */
+     MapLibre clones what it is given, so one object can serve every layer.
+     Filters go in unvalidated (tile-sources.js NO_VALIDATE). Stays icons add
+     the access facet: applyStaysAccessFilter sets every mounted stays layer. */
   const icon = covIconFilter(), heat = covHeatFilter();
+  applyStaysAccessFilter();
   COVERAGE_KEYS.forEach(([key])=>{
     COVERAGE_CCS.forEach(cc=>{
       const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
-      if(map.getLayer(id)){
-        if(key==='stays'){ if(cc===COVERAGE_CCS[0]) applyStaysAccessFilter(); }  // once per key; it loops CCS itself
-        else map.setFilter(id, icon, NO_VALIDATE);
-      }
+      if(key!=='stays' && map.getLayer(id)) map.setFilter(id, icon, NO_VALIDATE);
       const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
       if(map.getLayer(heatId)) map.setFilter(heatId, heat, NO_VALIDATE);
     });
@@ -96,12 +88,17 @@ export function covScopeQuery(){
 // Community tier (docs/specs/map-and-search.md §12): C/D/G/H/M in both modes
 // (dimmed in Curated); E/I/J stay Everything-only.
 export const COV_UTILITY=new Set(['B','C','D','F','G']);
+/* Whether a key's coverage layers draw in the current mode. Coverage stays
+   out of Confirmed: that mode means someone checked this. */
+function covKeyShown(key){
+  const utility=COV_UTILITY.has(KEY_LETTER[key]);
+  return active.has(key) && (mode()==='all' || (utility && mode()==='curated'));
+}
 export function syncCoverageLayers(){
   if(!COVERAGE_ON) return;
   COVERAGE_KEYS.forEach(([key])=>{
     const utility=COV_UTILITY.has(KEY_LETTER[key]);
-    /* Coverage stays out of Confirmed: that mode means someone checked this. */
-    const show=active.has(key) && (mode()==='all' || (utility && mode()==='curated'));
+    const show=covKeyShown(key);
     const dim=(mode()==='curated' && utility)?0.55:1;
     COVERAGE_CCS.forEach(cc=>{
       const id = cc ? key+'-'+cc+'-cov' : key+'-cov'; if(!map.getLayer(id)) return;
@@ -113,18 +110,33 @@ export function syncCoverageLayers(){
   });
 }
 const iconLayerKey=new Map();
-/* One handler set over all icon layers — MapLibre hit-tests each mousemove listener. */
-function bindCoverageHandlers(ids){
-  const keyOf = e => iconLayerKey.get(e.features[0].layer.id);
-  map.on('click', ids, e=>{ const f0=e.features[0], tp=f0.properties, c=f0.geometry.coordinates;
-    openCoverageDrawer(keyOf(e), tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });
-  map.on('mouseenter', ids, ()=>map.getCanvas().style.cursor='pointer');
-  map.on('mousemove', ids, e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[keyOf(e)]||{}).label||'Item', e.lngLat); });
-  map.on('mouseleave', ids, ()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+/* The selected-POI overlay. Every coverage layer goes under it, whenever its
+   country mounts, so they all sit where addCoverage() ran. */
+const COV_SEL_LAYER='cov-sel-icon';
+/* The coverage icon under the pointer: the top-most hit across every mounted
+   icon layer, or null. */
+function covHit(e){
+  const layers=[...iconLayerKey.keys()].filter(id=>map.getLayer(id));
+  if(!layers.length) return null;
+  const hits=map.queryRenderedFeatures(e.point, {layers});
+  return hits.length ? hits[0] : null;
+}
+/* One handler set for every icon layer of every country, bound once. It acts
+   on the first hit only, so overlapping icons from two countries open one
+   drawer, and one hit-test serves each mousemove. */
+let covHovered=false;
+function bindCoverageHandlers(){
+  const leave=()=>{ if(!covHovered) return; covHovered=false; map.getCanvas().style.cursor=''; hideTip(); };
+  map.on('click', e=>{ const f0=covHit(e); if(!f0) return;
+    const tp=f0.properties, c=f0.geometry.coordinates;
+    openCoverageDrawer(iconLayerKey.get(f0.layer.id), tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });
+  map.on('mousemove', e=>{ const f0=covHit(e); if(!f0){ leave(); return; }
+    if(!covHovered){ covHovered=true; map.getCanvas().style.cursor='pointer'; }
+    const p=f0.properties; showTip(p.n||p.t||(layerByKey[iconLayerKey.get(f0.layer.id)]||{}).label||'Item', e.lngLat); });
+  map.on('mouseout', leave);
 }
 // One icon+heat layer pair per (letter, country) against the source that serves cc. cc===null is the pre-split `<letter>` fallback.
 function addCoverageLayers(cc, src){
-  const ids=[];
   COVERAGE_KEYS.forEach(([key, letter])=>{
     const srcLayer = cc ? letter+'_'+cc : letter;
     const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
@@ -173,7 +185,7 @@ function addCoverageLayers(cc, src){
           0.6,'rgba(112,72,158,0.58)',
           1,'#5B2A86']}};
     { const hf=covHeatFilter(); if(hf) heatSpec.filter=hf; }
-    map.addLayer(heatSpec);
+    map.addLayer(heatSpec, COV_SEL_LAYER);
     // Icons from z9 (docs/specs/coverage-provider.md §4); z6–8 tiles are thinned.
     map.addLayer({id, type:'symbol', source:src, 'source-layer':srcLayer,
       minzoom: 9,
@@ -185,31 +197,31 @@ function addCoverageLayers(cc, src){
               8,['case',isFood,DISC_SIZES[0],DROP_SIZES[0]],
               13,['case',isFood,DISC_SIZES[1],DROP_SIZES[1]],
               18,['case',isFood,DISC_SIZES[2],DROP_SIZES[2]]]
-          : ['interpolate',['linear'],['zoom'],8,DISC_SIZES[0],13,DISC_SIZES[1],18,DISC_SIZES[2]]}});
-    ids.push(id); iconLayerKey.set(id, key);
+          : ['interpolate',['linear'],['zoom'],8,DISC_SIZES[0],13,DISC_SIZES[1],18,DISC_SIZES[2]]}}, COV_SEL_LAYER);
+    iconLayerKey.set(id, key);
   });
-  bindCoverageHandlers(ids);
 }
 let covMounted = false;
 export function addCoverage(){
   if(!COVERAGE_ON || covMounted) return;
   covMounted = true;
   mintKindIcons();
+  // Selected-POI overlay: tile minzoom hides the icon on zoom-out; the pulse would ring empty.
+  if(!map.getSource('cov-sel')){
+    map.addSource('cov-sel',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+    map.addLayer({id:COV_SEL_LAYER,type:'symbol',source:'cov-sel',
+      // One zoom interpolate (MapLibre forbids two); per-feature stops keep water vs rest ramps.
+      layout:{'icon-image':['get','_icon'],'icon-allow-overlap':true,
+        'icon-size':['interpolate',['linear'],['zoom'],
+          8,['get','_s8'],13,['get','_s13'],18,['get','_s18']]}});
+  }
+  bindCoverageHandlers();
   const mount = () => mountInView(map, 'coverage', 'points', COVERAGE_MIN_ZOOM, (key, src) => {
     (key === '*' ? COVERAGE_CCS : [key]).forEach(cc => addCoverageLayers(cc, src));
     updateCoverageScopeFilter(); syncCoverageLayers();
   });
   mount();
   map.on('moveend', mount);
-  // Selected-POI overlay: tile minzoom hides the icon on zoom-out; the pulse would ring empty.
-  if(!map.getSource('cov-sel')){
-    map.addSource('cov-sel',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-    map.addLayer({id:'cov-sel-icon',type:'symbol',source:'cov-sel',
-      // One zoom interpolate (MapLibre forbids two); per-feature stops keep water vs rest ramps.
-      layout:{'icon-image':['get','_icon'],'icon-allow-overlap':true,
-        'icon-size':['interpolate',['linear'],['zoom'],
-          8,['get','_s8'],13,['get','_s13'],18,['get','_s18']]}});
-  }
 }
 export function covProps(key, tp, d){
   const p={ srcType:'osm' };
@@ -465,13 +477,15 @@ export function fetchCoverageCounts(){
     .catch(()=>null)
     .then(d=>{ if(myReq===_covCountReq){ _covCounts=(d && d.counts) || null; updateCounts(); } });  // null on fail: blank beats a wrong-scope total
 }
-// "Shown" = in-scope /counts, not viewport tiles (docs/specs/coverage-provider.md §5).
+/* "Shown" = in-scope /counts, not viewport tiles (docs/specs/coverage-provider.md §5).
+   Countries mount as the view reaches them, so while none of a key's layers
+   exists (a world view) the count follows the mode rule the layers will get. */
 export function covShownCount(key){
   if(!COVERAGE_ON) return 0;
-  const drawn = COVERAGE_CCS.some(cc=>{
-    const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
-    return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
-  });
+  const ids = COVERAGE_CCS.map(cc=>cc ? key+'-'+cc+'-cov' : key+'-cov').filter(id=>map.getLayer(id));
+  const mounted = ids.length > 0;
+  if(!mounted) return covKeyShown(key) ? coverageTotal(KEY_LETTER[key]) : 0;
+  const drawn = ids.some(id=>map.getLayoutProperty(id,'visibility')==='visible');
   if(!drawn) return 0;
   return coverageTotal(KEY_LETTER[key]);
 }

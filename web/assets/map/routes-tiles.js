@@ -8,7 +8,7 @@ import { D } from './i18n.js';
 import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
 import { fullWayEnds, isSurfaceSource } from './surface-tiles.js';
-import { familyConfigured, mountInView, sourceIdFor, ccOfSourceLayer } from './tile-sources.js';
+import { familyConfigured, mountInView, sourceIdFor, ccOfSourceLayer, NO_VALIDATE } from './tile-sources.js';
 
 /* Same two-gate as the surface skin: configured = artifact exists; available = pmtiles loaded. */
 export const routesTilesConfigured = () => familyConfigured('routes', 'routes');
@@ -216,7 +216,7 @@ export function selectRoute(net, rr) {
     ['in', '|' + key + '|', ['concat', '|', ['coalesce', ['get', 'refs'], ''], '|']],
   ];
   eachRouteLayer((id, kind) => {
-    if (kind === 'sel') { map.setFilter(id, filter); return; }
+    if (kind === 'sel') { map.setFilter(id, filter, NO_VALIDATE); return; }
     if (kind === 'line') { map.setPaintProperty(id, 'line-opacity', DIM_OPACITY); return; }
     if (kind === 'disc') {
       map.setPaintProperty(id, 'circle-opacity', DIM_BADGE);
@@ -233,7 +233,7 @@ export function clearRouteSelection() {
   if (!added || selectedRoute === null) return;
   selectedRoute = null;
   eachRouteLayer((id, kind) => {
-    if (kind === 'sel') { map.setFilter(id, MATCH_NOTHING); return; }
+    if (kind === 'sel') { map.setFilter(id, MATCH_NOTHING, NO_VALIDATE); return; }
     if (kind === 'line') { map.setPaintProperty(id, 'line-opacity', LINE_OPACITY); return; }
     if (kind === 'disc') {
       map.setPaintProperty(id, 'circle-opacity', 1);

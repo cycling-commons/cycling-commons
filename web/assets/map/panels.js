@@ -247,8 +247,8 @@ export function initRailChrome(){
   // Data-version readout: catalog ?v= plus artifact build stamps.
   const dv=document.getElementById('dataVersions');
   if(dv){
-    const stamp=(u,re)=>{ const m=String(u||'').match(re); return m?m[1]:'—'; };
     const NO_STAMP='—';
+    const stamp=(u,re)=>{ const m=String(u||'').match(re); return m?m[1]:NO_STAMP; };
     const state=window.CC_CATALOG_STATE||'…';
     const cat=state==='ok' ? stamp(window.CC_CATALOG_URL,/v=([0-9a-f]+)/) : state;
     // Re-rendered on scope/mode changes — client state is as load-bearing as versions.

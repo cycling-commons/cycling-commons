@@ -18,16 +18,16 @@
    (plain GeoJSON, already in memory) to carry the animation, and the overlays
    come back when the camera lands. Visibility is the whole mechanism: 472
    `setLayoutProperty` calls measured under 1 ms, unlike `setFilter`, which
-   revalidates the whole style each time (coverage.js NO_VALIDATE). */
+   revalidates the whole style each time (tile-sources.js NO_VALIDATE). */
 import { map } from './map-init.js';
 import { isSurfaceSource } from './surface-tiles.js';
+import { NO_VALIDATE } from './tile-sources.js';
 
 // The two PMTiles archive families, matched by the id prefix tile-sources.js
 // mints (`<family>-<arm>-<cc>`, one source per mounted country). A source is
 // matched here, never a layer: the coverage grid adds a layer per letter per
 // country and the list would rot.
 function isParkedSource(src){ return isSurfaceSource(src) || String(src||'').startsWith('coverage-'); }
-const NO_VALIDATE = {validate: false};
 
 let _parked = null;
 

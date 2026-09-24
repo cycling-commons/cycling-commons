@@ -8,7 +8,7 @@ import { SURFACE_CLS, surfaceStyle } from './render.js';
 import { D, trVal } from './i18n.js';
 import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
-import { familyConfigured, mountInView, ensureProtocol } from './tile-sources.js';
+import { familyConfigured, mountInView, ensureProtocol, NO_VALIDATE } from './tile-sources.js';
 
 // Function not constant: classic <script> pmtiles vs ES module eval order.
 export const surfaceTilesAvailable = () =>
@@ -78,7 +78,9 @@ function sourceLayersFor(key) {
 }
 
 // One layer per class: a dash pattern cannot vary per feature inside one layer.
-function addClassifiedLayers(srcLayer, src) {
+// `under` is the beforeId every layer of this country goes under, in order,
+// so its quality ticks sit above its own class lines.
+function addClassifiedLayers(srcLayer, src, under) {
   SURFACE_CLS.filter(c => c !== 'other').forEach(cls => {
     const st = surfaceStyle(cls);
     const id = 'surftile-' + cls + (srcLayer === 'surface' ? '' : '-' + srcLayer.slice(8));
@@ -100,7 +102,7 @@ function addClassifiedLayers(srcLayer, src) {
       filter: ['==', ['get', 'cls'], cls],
       layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
       paint,
-    });
+    }, under);
     map.on('click', id, e => openSurfaceDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry,
       { source: src, sourceLayer: srcLayer }));
     map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -127,7 +129,7 @@ function addClassifiedLayers(srcLayer, src) {
         'line-dasharray': [0.6 * 3.5 / 5.5, 2.8 * 3.5 / 5.5],
         'line-opacity': 0.9,
       },
-    });
+    }, under);
   }
   if (!map.getLayer(qid)) {
     map.addLayer({
@@ -146,7 +148,7 @@ function addClassifiedLayers(srcLayer, src) {
         'line-dasharray': [0.6, 2.8],
         'line-opacity': 0.9,
       },
-    });
+    }, under);
   }
 }
 
@@ -154,7 +156,8 @@ export function addSurfaceTiles() {
   if (!surfaceTilesAvailable() || added) return;
   added = true;
   const mount = () => mountInView(map, 'surface', 'classified', CLASSIFIED_MIN_ZOOM, (key, src) => {
-    sourceLayersFor(key).forEach(sl => addClassifiedLayers(sl, src));
+    const under = belowOurLayers({ skin: true });
+    sourceLayersFor(key).forEach(sl => addClassifiedLayers(sl, src, under));
     applyClassVisibility();
   });
   mount();
@@ -194,13 +197,16 @@ export function setGapsGrid(on) {
   return gapsOn;
 }
 
-/* Lazy-mounted to-do/grid layers go under curated catalog (skin if present,
-   else first non-basemap). */
-function belowOurLayers() {
+/* Lazy-mounted surface layers go under the curated catalog: under the skin if
+   one is mounted, else under our first non-basemap layer. The to-do lines and
+   the grid sit under the skin, so a skin mount (`skin: true`) looks past them
+   for that first layer. */
+function belowOurLayers({ skin = false } = {}) {
   const layers = map.getStyle()?.layers || [];
-  const skin = layers.find(l => l.id.startsWith('surftile-'));
-  if (skin) return skin.id;
-  const ours = layers.find(l => l.type !== 'background' && !BASEMAP_SOURCES.has(l.source));
+  const first = layers.find(l => l.id.startsWith('surftile-'));
+  if (first) return first.id;
+  const ours = layers.find(l => l.type !== 'background' && !BASEMAP_SOURCES.has(l.source)
+    && !(skin && (l.id.startsWith(TODO_PREFIX) || l.id === GAPS_FILL || l.id === GAPS_LINE)));
   return ours ? ours.id : undefined;
 }
 
@@ -310,7 +316,7 @@ export const surfaceTilesVisible = () => visible;
 /** Turn the whole skin on or off. Adds the source lazily on first use. */
 export function setSurfaceTiles(on) {
   if (!surfaceTilesAvailable()) return false;
-  if (!added) addSurfaceTiles();
+  if (on && !added) addSurfaceTiles();   // off only sets what is already mounted
   if (on && surfaceClassEnabled('unverified')) addUntaggedTiles();   // second artifact: mount lazily
   visible = !!on;
   applyClassVisibility();   // per-class filters compose with the layer switch
@@ -463,11 +469,11 @@ function applyClassVisibility() {
       map.setLayoutProperty(l.id, 'visibility',
         visible && surfaceClassEnabled(cls) ? 'visible' : 'none');
       // Class filter + curated dedupe, refreshed together (see surfDedupeFilter).
-      map.setFilter(l.id, ['all', ['==', ['get', 'cls'], cls], surfDedupeFilter()]);
+      map.setFilter(l.id, ['all', ['==', ['get', 'cls'], cls], surfDedupeFilter()], NO_VALIDATE);
     } else if (l.id.startsWith(QUALITY_PREFIX)) {
       /* Ticks ride the skin as a whole; per-class hiding is in the filter. */
       map.setLayoutProperty(l.id, 'visibility', visible ? 'visible' : 'none');
-      map.setFilter(l.id, qualityFilter());
+      map.setFilter(l.id, qualityFilter(), NO_VALIDATE);
     } else if (l.id === GAPS_FILL || l.id === GAPS_LINE) {
       /* Grid is the to-do arm at planning zoom, behind its own toggle (gapsOn). */
       map.setLayoutProperty(l.id, 'visibility',
@@ -476,7 +482,7 @@ function applyClassVisibility() {
       /* "Surface not recorded" is a legend class; it just lives in a second artifact. */
       map.setLayoutProperty(l.id, 'visibility',
         visible && surfaceClassEnabled('unverified') ? 'visible' : 'none');
-      map.setFilter(l.id, surfDedupeFilter());
+      map.setFilter(l.id, surfDedupeFilter(), NO_VALIDATE);
     } else if (l.id.startsWith('surface-cls-')) {
       // Curated A: hidden per class, never gated on the tile toggle.
       const cls = l.id.slice('surface-cls-'.length);
