@@ -1,0 +1,49 @@
+pipeline/tests/fakes.py
+  s_1d05a0405c3516::t_d74e83798599d4 8-9,27-28
+pipeline/tests/test_regions.py
+  s_1d05a0405c3516::t_ddf326701fa550 41
+pipeline/coverage/publish.py
+  s_1d05a0405c3516::t_3ebe60269211e5 6,10,89-91,133-145,148-166,186-188,192
+pipeline/coverage/dispatch.py
+  s_1d05a0405c3516::t_92969f480eeeda 54-66,113-114,122,141,147-152
+pipeline/coverage/run.py
+  s_1d05a0405c3516::t_150575981cea49 190-202,209,212-233,241-242,245-251,268-298,302-303,311,316-343,393-403,405,409-421,424-425,430,433-434,440-441,443-448,468,482-483,490-495,498-506,509-533,535-551,565-579,582-592,596-603,606-607,612,622,639-640,645-648,650-658,661-680,687
+  s_1d05a0405c3516::t_5334eb96a2a7a4 15,31,34,52-58
+  s_1d05a0405c3516::t_3d6486e318bce0 888-894
+  s_1d05a0405c3516::t_fbaa3d6c0078eb 735
+pipeline/coverage/ownership.py
+  s_1d05a0405c3516::t_a96547641cc90d 22,68-75,80-84,89-90,102-119,121-122
+  s_1d05a0405c3516::t_705ab69665a57a 76-79,85-88,91-101,120
+  s_1d05a0405c3516::t_233891f9c241a9 123-124
+pipeline/tests/test_run.py
+  s_1d05a0405c3516::t_b570ab363fab0a 252,378,515-556
+pipeline/tests/test_ownership.py
+  s_1d05a0405c3516::t_8ec66a8832aedc 10-11,74-126
+pipeline/tests/test_run_surface.py
+  s_1d05a0405c3516::t_77fcf0557d2d9c 360-363
+  s_1d05a0405c3516::t_feb2280b99a412 356
+  s_1d05a0405c3516::t_ce9b869986ba2d 2,11,16,20-21,39-41,174-175,182,186,207,216-244,246,250-355,357-359,364-466
+  s_1d05a0405c3516::t_f2c2079e4c245d 245,247-249
+pipeline/tests/test_publish_countries.py
+  s_1d05a0405c3516::t_d74e83798599d4 12-13,15,18,51,55-96,107-108,110-112,117,120-121,136,149-160
+pipeline/tests/test_dispatch.py
+  s_1d05a0405c3516::t_157c4970151521 247-283
+pipeline/tests/test_publish.py
+  s_1d05a0405c3516::t_fbaa3d6c0078eb 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2c0898f345d82ec3e96635421141362c7d5b65a4",
+  "prompts": {},
+  "sessions": {
+    "s_1d05a0405c3516": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "31d19031-2e0a-4b62-beac-5203a713fc44",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
