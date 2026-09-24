@@ -51,7 +51,7 @@ def test_run_surface_fresh_extract_counts_and_succeeds(offline, contract, monkey
     out = capsys.readouterr()
     assert "FAILED" not in out.err
     assert rc == 0
-    assert "2 classified, 1 to record, 1 gap cells" in out.out
+    assert "2 classified, 1 to record, 1 grid cells" in out.out
 
 
 def test_run_surface_feeds_the_routes_way_ids_to_the_extract(offline, contract, monkeypatch):

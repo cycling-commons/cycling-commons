@@ -329,7 +329,7 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                 # killed mid-extract leaves no stamp and the next one redoes it.
                 stamp.write_text(want, encoding="utf-8")
                 print(f"[surface] {region}: {fresh.classified} classified, "
-                      f"{fresh.todo} to record, {fresh.cells} gap cells, "
+                      f"{fresh.todo} to record, {fresh.cells} grid cells, "
                       f"{fresh.foreign} owned by a neighbour")
             for key, path in (("classified", out), ("todo", todo_out)):
                 with path.open("rb") as fh:
