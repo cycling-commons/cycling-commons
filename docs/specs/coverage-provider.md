@@ -587,29 +587,32 @@ already used (below). The surface skin (classified/todo/gaps) and the routes
 layer mount on first toggle, never at boot (`map.js`), so a rider who never
 opens that panel never triggers a bucket fetch for it.
 
-**Tuning note: border sharing and rebuild cost, measured on real Belgium /
-Netherlands / Luxembourg extracts.** Belgium and the Netherlands share a
-3,301-way surface border (germany/france: 5,700; netherlands/germany: 4,180;
-germany/switzerland: 5,088) before the owner rule, and the belgium/netherlands
-route-way overlap is 1,745 (germany/france: 1,631; netherlands/germany:
-2,207); every one of those ways used to be drawn twice, once per country's
-archive. After the owner rule, a full extract-and-tile run over the three
-countries counts **zero** shared refs for every pair, on every arm measured:
+**Tuning note: border sharing and rebuild cost.** Border overlap before the
+owner rule, measured over the dev workdir's same-day extracts: Belgium and
+the Netherlands share a 3,301-way surface border (germany/france: 5,700;
+netherlands/germany: 4,180; germany/switzerland: 5,088); the
+belgium/netherlands route-way overlap is 1,745 (germany/france: 1,631;
+netherlands/germany: 2,207). Without the owner rule, each of those ways is
+drawn twice, once per country's archive. Tiling Belgium and Luxembourg
+together took 16 s; tiling them apart took 14 s + 2 s; `tile-join` of the two
+combined files gave the same 44.3 MB and 5,076 tiles in 4 s - per-country
+builds lose nothing to the split.
+
+After the owner rule, on real Belgium/Netherlands/Luxembourg extract-and-tile
+runs (Task 11): **zero** shared refs for every pair, on every arm measured:
 surface classified (be 388,631 / nl 703,734 / lu 49,737), surface to-do
 (be 225,795 / nl 235,986 / lu 19,514) and routes ways (be 164,463 /
 nl 199,485 / lu 10,464) - belgium/netherlands, belgium/luxembourg and
-netherlands/luxembourg all shared 0. Tiling Belgium and Luxembourg together
-took 16 s; tiling them apart took 14 s + 2 s; `tile-join` of the two combined
-files gave the same 44.3 MB and 5,076 tiles in 4 s - per-country builds lose
-nothing to the split. On a real dev publish: `--routes --regions
-europe/belgium,europe/netherlands,europe/luxembourg` took 5m23s and rebuilt
-all three; `--surface` over the same three regions took 11m41s and rebuilt
-all three; a `--tiles-only` coverage republish over all 19 onboarded
-countries (from `coverage_poi` already in PostGIS, no harvest) took 7m30s and
-rebuilt all 19; a second `--surface` run over the same three regions,
-immediately after the first with no data changed, took 13s and printed
-`unchanged, not rebuilt` for all three, with no `.pmtiles` uploaded - the
-rebuild rule's fingerprint comparison costs a hash, not a tile build.
+netherlands/luxembourg all shared 0. On the same real dev publish:
+`--routes --regions europe/belgium,europe/netherlands,europe/luxembourg`
+took 5m23s and rebuilt all three; `--surface` over the same three regions
+took 11m41s and rebuilt all three; a `--tiles-only` coverage republish over
+all 19 onboarded countries (from `coverage_poi` already in PostGIS, no
+harvest) took 7m30s and rebuilt all 19; a second `--surface` run over the
+same three regions, immediately after the first with no data changed, took
+13s and printed `unchanged, not rebuilt` for all three, with no `.pmtiles`
+uploaded - the rebuild rule's fingerprint comparison costs a hash, not a
+tile build.
 
 **Source-layers are per-country: `<letter>_<cc>`** (lowercase; `cc` is the
 country code lowercased), one tippecanoe layer per `(letter, country_code)`
