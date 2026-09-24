@@ -212,6 +212,14 @@ def test_a_failed_line_extract_is_recorded_but_does_not_stop_the_night(db, night
     assert _loads(calls) == ["a", "b"]
     assert len(_tiles(calls)) == 1
     assert _run_status(db)[0] == "partial"
+    steps = dict(db.execute(
+        "SELECT step, status FROM coverage_run_step WHERE region = 'a' "
+        "AND step IN ('routes_extract', 'surface_extract')").fetchall())
+    assert steps == {"routes_extract": "failed", "surface_extract": "ok"}
+    detail = db.execute(
+        "SELECT detail FROM coverage_run_step WHERE region = 'a' "
+        "AND step = 'routes_extract'").fetchone()[0]
+    assert detail == "rc 1"
 
 
 def test_nothing_loaded_means_no_line_extracts_and_no_publish_pass(db, night, monkeypatch):

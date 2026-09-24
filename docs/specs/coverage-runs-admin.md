@@ -84,6 +84,9 @@ on the load step and the drop counts are lost with the log.
 
 ## 5. Out of scope
 
-Retention (a night writes about 120 rows; years fit), editing, re-running a
-region from the page, and the routes/surface builds, which do not write the
-tracker today. Each is a separate decision.
+Retention (a night writes about 120 rows; years fit), editing, and
+re-running a region from the page. The dispatcher records each loaded
+region's routes and surface extract as steps of its run (`routes_extract`,
+`surface_extract`); the manual `--routes`/`--surface` runs and the two
+post-loop publish passes do not write the tracker. Each is a separate
+decision.

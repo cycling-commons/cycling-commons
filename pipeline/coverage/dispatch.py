@@ -107,9 +107,13 @@ def main(argv=None) -> int:
                     t0 = time.monotonic()
                     with _offline():
                         erc = run_main([family, "--extract-only", "--regions", region])
-                    tracker.record(region, family.lstrip("-") + "_extract", time.monotonic() - t0)
-                    if erc != 0:
-                        failed.append(f"{region} {family}")
+                    if erc == 0:
+                        tracker.record(region, family.lstrip("-") + "_extract", time.monotonic() - t0)
+                    else:
+                        tracker.record(region, family.lstrip("-") + "_extract", time.monotonic() - t0,
+                                        status="failed", detail=f"rc {erc}")
+                        if region not in failed:
+                            failed.append(region)
             elif rc == 2:
                 print(f"[dispatch] {region}: another coverage run holds the lock, "
                       "aborting tonight", file=sys.stderr)
