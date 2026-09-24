@@ -8,6 +8,7 @@ import { SURFACE_CLS, surfaceStyle } from './render.js';
 import { D, trVal } from './i18n.js';
 import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
+import { familyConfigured, mountInView, ensureProtocol } from './tile-sources.js';
 
 // Function not constant: classic <script> pmtiles vs ES module eval order.
 export const surfaceTilesAvailable = () =>
@@ -16,14 +17,11 @@ export const surfaceTilesAvailable = () =>
 /* Whether an artifact exists — the rail toggle's question. Not the same as
    surfaceTilesAvailable(): the control is wired at init, which can precede
    the pmtiles global. */
-export const surfaceTilesConfigured = () =>
-  typeof window.CC_SURFACE_URL === 'string' && !!window.CC_SURFACE_URL;
+export const surfaceTilesConfigured = () => familyConfigured('surface', 'classified');
 
-export const SURFACE_TILE_SOURCE = 'surface-tiles';
-/* To-do arm in its own artifact (docs/specs/coverage-provider.md §4): folding
-   it into classified tiles would cost those bytes on every fetch. Highways
-   come from contract surface.todo. */
-export const SURFACE_TODO_SOURCE = 'surface-todo';
+/* Per-country sources are `surface-classified-<cc>` and `surface-todo-<cc>` (tile-sources.js). */
+export const isSurfaceSource = id => /^surface-(classified|todo|gaps)(-|$)/.test(String(id || ''));
+export const isTodoSource = id => String(id || '').startsWith('surface-todo-');
 const TODO_PREFIX = 'surftodo-';
 /* To-do lines start here; the gaps grid stops. Pinned to contract
    surface.todo.minZoom / surface.gaps.maxZoom by surface-zooms.test.cjs. */
@@ -73,84 +71,94 @@ function sourceLayers() {
   return ccs.length ? ccs.map(cc => 'surface_' + String(cc).toLowerCase()) : ['surface'];
 }
 
-export function addSurfaceTiles() {
-  if (!surfaceTilesAvailable() || added || map.getSource(SURFACE_TILE_SOURCE)) return;
-  maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
-  map.addSource(SURFACE_TILE_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_SURFACE_URL });
+/* One mounted source can serve one country's own source-layer, or (the shared
+   '*' archive) every country's — same split coverage.js already made. */
+function sourceLayersFor(key) {
+  return key === '*' ? sourceLayers() : ['surface_' + key];
+}
 
-  // One layer per class: a dash pattern cannot vary per feature inside one layer.
-  sourceLayers().forEach(srcLayer => {
-    SURFACE_CLS.filter(c => c !== 'other').forEach(cls => {
-      const st = surfaceStyle(cls);
-      const id = 'surftile-' + cls + (srcLayer === 'surface' ? '' : '-' + srcLayer.slice(8));
-      if (map.getLayer(id)) return;
-      const paint = {
-        'line-color': st.color,
-        // Thinner than curated A: this is background; full weight at country zoom is a smear.
-        'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 11, 1.4, 14, 3],
-        'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 12, 0.85],
-      };
-      if (st.dash) paint['line-dasharray'] = st.dash;
-      map.addLayer({
-        id,
-        type: 'line',
-        source: SURFACE_TILE_SOURCE,
-        'source-layer': srcLayer,
-        // Floor stops MapLibre requesting z8/z9 tiles (source zoom range comes from layers).
-        minzoom: CLASSIFIED_MIN_ZOOM,
-        filter: ['==', ['get', 'cls'], cls],
-        layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
-        paint,
-      });
-      map.on('click', id, e => openSurfaceDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry,
-        { source: SURFACE_TILE_SOURCE, sourceLayer: srcLayer }));
-      map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
+// One layer per class: a dash pattern cannot vary per feature inside one layer.
+function addClassifiedLayers(srcLayer, src) {
+  SURFACE_CLS.filter(c => c !== 'other').forEach(cls => {
+    const st = surfaceStyle(cls);
+    const id = 'surftile-' + cls + (srcLayer === 'surface' ? '' : '-' + srcLayer.slice(8));
+    if (map.getLayer(id)) return;
+    const paint = {
+      'line-color': st.color,
+      // Thinner than curated A: this is background; full weight at country zoom is a smear.
+      'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 11, 1.4, 14, 3],
+      'line-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 12, 0.85],
+    };
+    if (st.dash) paint['line-dasharray'] = st.dash;
+    map.addLayer({
+      id,
+      type: 'line',
+      source: src,
+      'source-layer': srcLayer,
+      // Floor stops MapLibre requesting z8/z9 tiles (source zoom range comes from layers).
+      minzoom: CLASSIFIED_MIN_ZOOM,
+      filter: ['==', ['get', 'cls'], cls],
+      layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
+      paint,
     });
-
-    // Quality ticks above the class lines of the same country.
-    const qid = QUALITY_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
-    // Cream casing under each colour tick so amber-on-ochre stays visible.
-    // Dash scaled by width ratio so casing and tick share one period.
-    const qcase = QUALITY_PREFIX + 'case-' + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
-    if (!map.getLayer(qcase)) {
-      map.addLayer({
-        id: qcase,
-        type: 'line',
-        source: SURFACE_TILE_SOURCE,
-        'source-layer': srcLayer,
-        minzoom: SM_MIN_ZOOM,
-        filter: qualityFilter(),
-        layout: { 'line-cap': 'butt', visibility: 'none' },
-        paint: {
-          'line-color': '#FBF4E4',
-          'line-width': 5.5,
-          'line-dasharray': [0.6 * 3.5 / 5.5, 2.8 * 3.5 / 5.5],
-          'line-opacity': 0.9,
-        },
-      });
-    }
-    if (!map.getLayer(qid)) {
-      map.addLayer({
-        id: qid,
-        type: 'line',
-        source: SURFACE_TILE_SOURCE,
-        'source-layer': srcLayer,
-        minzoom: SM_MIN_ZOOM,
-        filter: qualityFilter(),
-        layout: { 'line-cap': 'butt', visibility: 'none' },
-        paint: {
-          'line-color': ['match', ['get', 'sm'],
-            ...Object.entries(SM_TONE).flat(), 'rgba(0,0,0,0)'],
-          'line-width': 3.5,
-          // dash 0.6 + gap 2.8 line-widths ≈ a 2 px tick every 12 px at this width.
-          'line-dasharray': [0.6, 2.8],
-          'line-opacity': 0.9,
-        },
-      });
-    }
+    map.on('click', id, e => openSurfaceDrawer(e.features[0].properties, e.lngLat, e.features[0].geometry,
+      { source: src, sourceLayer: srcLayer }));
+    map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
   });
+
+  // Quality ticks above the class lines of the same country.
+  const qid = QUALITY_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
+  // Cream casing under each colour tick so amber-on-ochre stays visible.
+  // Dash scaled by width ratio so casing and tick share one period.
+  const qcase = QUALITY_PREFIX + 'case-' + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
+  if (!map.getLayer(qcase)) {
+    map.addLayer({
+      id: qcase,
+      type: 'line',
+      source: src,
+      'source-layer': srcLayer,
+      minzoom: SM_MIN_ZOOM,
+      filter: qualityFilter(),
+      layout: { 'line-cap': 'butt', visibility: 'none' },
+      paint: {
+        'line-color': '#FBF4E4',
+        'line-width': 5.5,
+        'line-dasharray': [0.6 * 3.5 / 5.5, 2.8 * 3.5 / 5.5],
+        'line-opacity': 0.9,
+      },
+    });
+  }
+  if (!map.getLayer(qid)) {
+    map.addLayer({
+      id: qid,
+      type: 'line',
+      source: src,
+      'source-layer': srcLayer,
+      minzoom: SM_MIN_ZOOM,
+      filter: qualityFilter(),
+      layout: { 'line-cap': 'butt', visibility: 'none' },
+      paint: {
+        'line-color': ['match', ['get', 'sm'],
+          ...Object.entries(SM_TONE).flat(), 'rgba(0,0,0,0)'],
+        'line-width': 3.5,
+        // dash 0.6 + gap 2.8 line-widths ≈ a 2 px tick every 12 px at this width.
+        'line-dasharray': [0.6, 2.8],
+        'line-opacity': 0.9,
+      },
+    });
+  }
+}
+
+export function addSurfaceTiles() {
+  if (!surfaceTilesAvailable() || added) return;
   added = true;
+  const mount = () => mountInView(map, 'surface', 'classified', CLASSIFIED_MIN_ZOOM, (key, src) => {
+    sourceLayersFor(key).forEach(sl => addClassifiedLayers(sl, src));
+    applyClassVisibility();
+  });
+  mount();
+  map.on('moveend', mount);
 }
 
 /* Curated-ref dedupe (docs/specs/coverage-provider.md §6): a way already served
@@ -169,12 +177,11 @@ function qualityFilter() {
 }
 
 /** Is the to-do artifact configured (an URL, not necessarily loaded)? */
-export const todoConfigured = () =>
-  typeof window.CC_SURFACE_TODO_URL === 'string' && !!window.CC_SURFACE_TODO_URL;
+export const todoConfigured = () => familyConfigured('surface', 'todo');
 
 /** Gap grid configured? Independent of the to-do arm. */
 export const gapsConfigured = () =>
-  typeof window.CC_SURFACE_GAPS_URL === 'string' && !!window.CC_SURFACE_GAPS_URL;
+  !!(window.CC_TILES && window.CC_TILES.gaps && window.CC_TILES.gaps.url);
 
 let untaggedAdded = false;
 let gapsAdded = false;
@@ -197,42 +204,44 @@ function belowOurLayers() {
   return ours ? ours.id : undefined;
 }
 
+function addTodoLayer(srcLayer, src, under) {
+  const st = surfaceStyle('unverified');
+  const id = TODO_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
+  if (map.getLayer(id)) return;
+  map.addLayer({
+    id,
+    type: 'line',
+    source: src,
+    'source-layer': srcLayer,
+    // Artifact has no tiles below this; declaring minzoom stops unbuilt fetches.
+    minzoom: TODO_MIN_ZOOM,
+    layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
+    paint: {
+      'line-color': st.color,
+      'line-dasharray': st.dash || [2, 2],
+      // Thinner/fainter than classified: a to-do list must not out-shout a recorded road.
+      'line-width': ['interpolate', ['linear'], ['zoom'], 11, 0.9, 15, 2.2],
+      'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 13, 0.7],
+    },
+  }, under);
+  map.on('click', id, e => openSurfaceDrawer(
+    { ...e.features[0].properties, cls: 'unverified' }, e.lngLat, e.features[0].geometry,
+    { source: src, sourceLayer: srcLayer }));
+  map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
+}
+
 export function addUntaggedTiles() {
   addGapsGrid();
   if (!todoConfigured() || untaggedAdded || typeof pmtiles === 'undefined') return;
-  maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
-  if (!map.getSource(SURFACE_TODO_SOURCE)) {
-    map.addSource(SURFACE_TODO_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_SURFACE_TODO_URL });
-  }
-  // One layer per country, no per-class split: every feature is the same class.
-  const st = surfaceStyle('unverified');
-  const under = belowOurLayers();
-  sourceLayers().forEach(srcLayer => {
-    const id = TODO_PREFIX + (srcLayer === 'surface' ? 'all' : srcLayer.slice(8));
-    if (map.getLayer(id)) return;
-    map.addLayer({
-      id,
-      type: 'line',
-      source: SURFACE_TODO_SOURCE,
-      'source-layer': srcLayer,
-      // Artifact has no tiles below this; declaring minzoom stops unbuilt fetches.
-      minzoom: TODO_MIN_ZOOM,
-      layout: { 'line-cap': st.cap || 'round', 'line-join': 'round', visibility: 'none' },
-      paint: {
-        'line-color': st.color,
-        'line-dasharray': st.dash || [2, 2],
-        // Thinner/fainter than classified: a to-do list must not out-shout a recorded road.
-        'line-width': ['interpolate', ['linear'], ['zoom'], 11, 0.9, 15, 2.2],
-        'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 13, 0.7],
-      },
-    }, under);
-    map.on('click', id, e => openSurfaceDrawer(
-      { ...e.features[0].properties, cls: 'unverified' }, e.lngLat, e.features[0].geometry,
-      { source: SURFACE_TODO_SOURCE, sourceLayer: srcLayer }));
-    map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
-  });
   untaggedAdded = true;
+  const mount = () => mountInView(map, 'surface', 'todo', TODO_MIN_ZOOM, (key, src) => {
+    const under = belowOurLayers();
+    sourceLayersFor(key).forEach(sl => addTodoLayer(sl, src, under));
+    applyClassVisibility();
+  });
+  mount();
+  map.on('moveend', mount);
 }
 
 /* Gap grid: same legend row as to-do lines, at zooms where individual roads
@@ -240,9 +249,9 @@ export function addUntaggedTiles() {
    unrecorded, not absolute kilometres. */
 export function addGapsGrid() {
   if (!gapsConfigured() || gapsAdded || typeof pmtiles === 'undefined') return;
-  maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+  ensureProtocol();
   if (!map.getSource(SURFACE_GAPS_SOURCE)) {
-    map.addSource(SURFACE_GAPS_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_SURFACE_GAPS_URL });
+    map.addSource(SURFACE_GAPS_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_TILES.gaps.url });
   }
   const under = belowOurLayers();
   const shade = ['interpolate', ['linear'], ['coalesce', ['get', 'pct'], 0],
@@ -395,7 +404,7 @@ export function openSurfaceDrawer(p, lngLat, geometry, tileCtx) {
   }
 
   let ends, spannedRefs, seedLine = null;
-  if (tileCtx && tileCtx.source === SURFACE_TODO_SOURCE) {
+  if (tileCtx && isTodoSource(tileCtx.source)) {
     const run = unrecordedRunEnds(tileCtx.source, tileCtx.sourceLayer, p, geometry);
     ends = run.ends; spannedRefs = run.refs; seedLine = run.line || null;
   } else if (tileCtx) {

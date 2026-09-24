@@ -20,10 +20,13 @@
    `setLayoutProperty` calls measured under 1 ms, unlike `setFilter`, which
    revalidates the whole style each time (coverage.js NO_VALIDATE). */
 import { map } from './map-init.js';
+import { isSurfaceSource } from './surface-tiles.js';
 
-// The two PMTiles archives. A source is named here, never a layer: the
-// coverage grid adds a layer per letter per country and the list would rot.
-const PARKED_SOURCES = ['coverage', 'surface-tiles'];
+// The two PMTiles archive families, matched by the id prefix tile-sources.js
+// mints (`<family>-<arm>-<cc>`, one source per mounted country). A source is
+// matched here, never a layer: the coverage grid adds a layer per letter per
+// country and the list would rot.
+function isParkedSource(src){ return isSurfaceSource(src) || String(src||'').startsWith('coverage-'); }
 const NO_VALIDATE = {validate: false};
 
 let _parked = null;
@@ -35,7 +38,7 @@ export function parkTiledOverlays(){
   if(_parked || !map.getStyle()) return;
   _parked = [];
   map.getStyle().layers.forEach(l => {
-    if(PARKED_SOURCES.indexOf(l.source) === -1) return;
+    if(!isParkedSource(l.source)) return;
     // Already off (layer switched off, mode hides it): not ours to turn back on.
     if(map.getLayoutProperty(l.id, 'visibility') === 'none') return;
     _parked.push(l.id);

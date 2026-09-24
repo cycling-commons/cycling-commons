@@ -18,7 +18,7 @@ import { initLightbox } from './lightbox.js';
 import { render, updateZoomHint } from './render.js';
 import { COVERAGE_ON, addCoverage, openCoverageFeatureByName,
          openCoverageByOsmRef, fetchCoverageCounts, covShownCount } from './coverage.js';
-import { addSurfaceTiles, setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
+import { setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
 import { schemaRows, initDrawerChrome, mapToast } from './drawer.js';
 import { refFromShare, idFromShare } from './share-links.js';
 import { initPicking } from './picking.js';
@@ -47,7 +47,7 @@ import { layerGlyph } from './icons.js';
 
 
 
-  const bootMap=()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage(); addSurfaceTiles();
+  const bootMap=()=>{ markStyleReady(); localiseBasemapLabels(); addSatellite(); addMapillary(); addWaterOsm(); addCoverage();
     OSM_BULK.forEach(([key, data, src])=>addOsmDots(key, data, src));
     renderScopeChips(); applyScope(curScope(), {fit:false}); setupConfClusters();
     // Cluster markers on settle (moveend/idle), never per render frame during a fly.

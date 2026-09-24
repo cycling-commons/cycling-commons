@@ -7,15 +7,16 @@ import { map, flyToPin } from './map-init.js';
 import { D } from './i18n.js';
 import { layerByKey } from './catalog.js';
 import { openDrawer } from './drawer.js';
-import { fullWayEnds } from './surface-tiles.js';
+import { fullWayEnds, isSurfaceSource } from './surface-tiles.js';
+import { familyConfigured, mountInView, sourceIdFor, ccOfSourceLayer } from './tile-sources.js';
 
 /* Same two-gate as the surface skin: configured = artifact exists; available = pmtiles loaded. */
-export const routesTilesConfigured = () =>
-  typeof window.CC_ROUTES_URL === 'string' && !!window.CC_ROUTES_URL;
+export const routesTilesConfigured = () => familyConfigured('routes', 'routes');
 export const routesTilesAvailable = () =>
   routesTilesConfigured() && typeof pmtiles !== 'undefined';
 
-export const ROUTES_TILE_SOURCE = 'routes-tiles';
+/* The archive floor: contract routes.minZoom, pinned by routes-zooms.test.cjs. */
+const ROUTES_MIN_ZOOM = 5;
 
 /* Three visual families (icn/ncn, rcn/lcn/other, mtb). Keys are contract
    routes.networks, pinned by routes-zooms.test.cjs. */
@@ -45,12 +46,15 @@ const DIM_BADGE = 0.3;
 let added = false;
 let visible = false;
 
-/* Source-layers per country, same derivation as the surface skin. */
-function lineLayers() {
+/* Source-layers per country, same derivation as the surface skin. `'*'`
+   (the shared archive) gives today's full list; a specific cc gives its own. */
+function lineLayers(key) {
+  if (key !== '*') return ['routes_' + key];
   const ccs = Array.isArray(window.CC_COVERAGE_COUNTRIES) ? window.CC_COVERAGE_COUNTRIES : [];
   return ccs.length ? ccs.map(cc => 'routes_' + String(cc).toLowerCase()) : ['routes'];
 }
-function knoopLayers() {
+function knoopLayers(key) {
+  if (key !== '*') return ['knoop_' + key];
   const ccs = Array.isArray(window.CC_COVERAGE_COUNTRIES) ? window.CC_COVERAGE_COUNTRIES : [];
   return ccs.length ? ccs.map(cc => 'knoop_' + String(cc).toLowerCase()) : ['knoop'];
 }
@@ -61,18 +65,14 @@ function belowOurLayers() {
   const layers = map.getStyle()?.layers || [];
   const ours = layers.find(l => l.type !== 'background'
     && !BASEMAP_SOURCES.has(l.source)
-    && l.source !== 'surface-tiles' && l.source !== 'surface-todo' && l.source !== 'surface-gaps'
+    && !isSurfaceSource(l.source)
     && !l.id.startsWith(LINE_PREFIX) && !l.id.startsWith(KNOOP_PREFIX));
   return ours ? ours.id : undefined;
 }
 
-export function addRoutesTiles() {
-  if (!routesTilesAvailable() || added || map.getSource(ROUTES_TILE_SOURCE)) return;
-  maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
-  map.addSource(ROUTES_TILE_SOURCE, { type: 'vector', url: 'pmtiles://' + window.CC_ROUTES_URL });
-  const under = belowOurLayers();
-
-  lineLayers().forEach(srcLayer => {
+/* One mount's layers: corridors + knooppunt badges for the source-layers `key` covers. */
+function addRouteLayers(key, src, under) {
+  lineLayers(key).forEach(srcLayer => {
     const cc = srcLayer === 'routes' ? 'all' : srcLayer.slice(7);
     GROUPS.forEach(g => {
       const id = LINE_PREFIX + g.key + '-' + cc;
@@ -80,7 +80,7 @@ export function addRoutesTiles() {
       map.addLayer({
         id,
         type: 'line',
-        source: ROUTES_TILE_SOURCE,
+        source: src,
         'source-layer': srcLayer,
         filter: ['in', ['get', 'net'], ['literal', g.nets]],
         layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
@@ -101,7 +101,7 @@ export function addRoutesTiles() {
       map.addLayer({
         id: selId,
         type: 'line',
-        source: ROUTES_TILE_SOURCE,
+        source: src,
         'source-layer': srcLayer,
         filter: MATCH_NOTHING,
         layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
@@ -120,7 +120,7 @@ export function addRoutesTiles() {
   });
 
   // Knooppunt badges: circle + symbol (MapLibre text cannot ride a circle layer).
-  knoopLayers().forEach(srcLayer => {
+  knoopLayers(key).forEach(srcLayer => {
     const cc = srcLayer === 'knoop' ? 'all' : srcLayer.slice(6);
     const discId = KNOOP_PREFIX + 'disc-' + cc;
     const nrId = KNOOP_PREFIX + 'nr-' + cc;
@@ -128,7 +128,7 @@ export function addRoutesTiles() {
     map.addLayer({
       id: discId,
       type: 'circle',
-      source: ROUTES_TILE_SOURCE,
+      source: src,
       'source-layer': srcLayer,
       minzoom: BADGE_MIN_ZOOM,
       layout: { visibility: 'none' },
@@ -142,7 +142,7 @@ export function addRoutesTiles() {
     map.addLayer({
       id: nrId,
       type: 'symbol',
-      source: ROUTES_TILE_SOURCE,
+      source: src,
       'source-layer': srcLayer,
       minzoom: BADGE_MIN_ZOOM,
       layout: {
@@ -158,11 +158,34 @@ export function addRoutesTiles() {
     map.on('mouseenter', discId, () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', discId, () => { map.getCanvas().style.cursor = ''; });
   });
+}
+
+export function addRoutesTiles() {
+  if (!routesTilesAvailable() || added) return;
   added = true;
+  const mount = () => mountInView(map, 'routes', 'routes', ROUTES_MIN_ZOOM, (key, src) => {
+    addRouteLayers(key, src, belowOurLayers());
+    applyRoutesVisibility();
+    if (selectedRoute) selectRoute(selectedRoute.net, selectedRoute.rr);
+  });
+  mount();
+  map.on('moveend', mount);
 }
 
 /** Is the layer currently drawn? */
 export const routesTilesVisible = () => visible;
+
+/* Style loop shared by setRoutesTiles and every mount (a new country arriving
+   while the layer is already on must draw in the right state, not off). */
+function applyRoutesVisibility() {
+  const style = map.getStyle();
+  if (!style) return;
+  style.layers.forEach(l => {
+    if (l.id.startsWith(LINE_PREFIX) || l.id.startsWith(KNOOP_PREFIX)) {
+      map.setLayoutProperty(l.id, 'visibility', visible ? 'visible' : 'none');
+    }
+  });
+}
 
 /** Turn the route network on or off. Adds the source lazily on first use. */
 export function setRoutesTiles(on) {
@@ -170,14 +193,7 @@ export function setRoutesTiles(on) {
   if (!added) addRoutesTiles();
   if (!on) clearRouteSelection();   // coming back to a dimmed leftover selection reads as broken
   visible = !!on;
-  const style = map.getStyle();
-  if (style) {
-    style.layers.forEach(l => {
-      if (l.id.startsWith(LINE_PREFIX) || l.id.startsWith(KNOOP_PREFIX)) {
-        map.setLayoutProperty(l.id, 'visibility', visible ? 'visible' : 'none');
-      }
-    });
-  }
+  applyRoutesVisibility();
   return visible;
 }
 
@@ -270,7 +286,7 @@ export function openRouteDrawer(p, lngLat, geometry, sourceLayer) {
     headline: p.rr && p.name ? p.name + ' · ' + p.rr : name,
     osmName: p.name || '',
     geom: { ll: [lngLat.lat, lngLat.lng] },
-    segmentEnds: fullWayEnds(ROUTES_TILE_SOURCE, sourceLayer, p.ref, geometry),
+    segmentEnds: fullWayEnds(sourceIdFor('routes', 'routes', ccOfSourceLayer(sourceLayer)), sourceLayer, p.ref, geometry),
     record: rec,
     desc: D.routeSurfaceHint || 'A signed route — help record what is under the tyres. '
       + 'Improve this stretch to add its surface.',

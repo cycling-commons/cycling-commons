@@ -22,6 +22,7 @@ import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
          setGapsGrid, gapsGridOn, CLASSIFIED_MIN_ZOOM, GAPS_MAX_ZOOM } from './surface-tiles.js';
 import { routesTilesConfigured, setRoutesTiles, routesTilesVisible } from './routes-tiles.js';
 import { setFilterDot } from './shell.js';
+import { newestStamp } from './tile-sources.js';
 
 // `app` is assigned by initRailChrome(), so it cannot stay a const inside it.
 // Best-of facets are multi-select chip rows read from the DOM. Empty = wide.
@@ -247,6 +248,7 @@ export function initRailChrome(){
   const dv=document.getElementById('dataVersions');
   if(dv){
     const stamp=(u,re)=>{ const m=String(u||'').match(re); return m?m[1]:'—'; };
+    const NO_STAMP='—';
     const state=window.CC_CATALOG_STATE||'…';
     const cat=state==='ok' ? stamp(window.CC_CATALOG_URL,/v=([0-9a-f]+)/) : state;
     // Re-rendered on scope/mode changes — client state is as load-bearing as versions.
@@ -254,9 +256,9 @@ export function initRailChrome(){
       dv.innerHTML='';
       const sc=curScope();
       [['catalog',cat,state!=='ok'],
-       ['surface',stamp(window.CC_SURFACE_URL,/\/(\d{8}-\d{4})\//),false],
-       ['routes',stamp(window.CC_ROUTES_URL,/\/(\d{8}-\d{4})\//),false],
-       ['coverage',stamp(window.CC_COVERAGE_URL,/\/(\d{8}-\d{4})\.pmtiles/),false],
+       ['surface',newestStamp('surface')||NO_STAMP,false],
+       ['routes',newestStamp('routes')||NO_STAMP,false],
+       ['coverage',newestStamp('coverage')||NO_STAMP,false],
        ['scope',(sc&&sc.kind)?(sc.slug||sc.countryCode||sc.kind):'everywhere',false],
        ['mode',mode()||'—',false],
       ].forEach(([k,v,bad],i)=>{

@@ -73,6 +73,13 @@ test('the badge floor sits at or above the artifact node floor', () => {
     'badges would never appear inside the artifact zoom span');
 });
 
+test('the client mounts no lower than the archive floor', () => {
+  const m = source.match(/^const ROUTES_MIN_ZOOM = (\d+);/m);
+  assert.ok(m, 'ROUTES_MIN_ZOOM not found in routes-tiles.js');
+  assert.equal(Number(m[1]), contract.routes.minZoom,
+    'mountInView would be asked to mount at a zoom the archive floor does not promise tiles for');
+});
+
 test('the client reads only promised route props', () => {
   // p.net / p.rr / p.refs / p.ref on ways, p.nr on knooppunten. A prop the
   // build stops emitting turns into a drawer row that silently vanishes.
