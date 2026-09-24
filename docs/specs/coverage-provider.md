@@ -578,20 +578,23 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   **It has its own artifacts and its own manifest since 2026-08-12** — three of
   them (classified skin, "still to record" arm, gap grid), built by the same
   `coverage.run --surface` command from the same Geofabrik extracts but never
-  touching PostGIS, and published under `surface/<stamp>/<arm>.pmtiles` with a
-  stable `surface/manifest.json`. Read server-side by
-  `App\Coverage\SurfaceManifest`, which mirrors `CoverageManifest`'s TTLs and
-  its tolerate-everything failure policy. Twelve countries, ~15.0M classified
-  ways / ~12.2M to record / ~102k grid cells. The build and its editorial
-  decisions live in
+  touching PostGIS. **Publishing is per country:** each onboarded country's
+  classified and to-do arms are built and published under
+  `surface/<cc>/<stamp>/classified.pmtiles` and `surface/<cc>/<stamp>/todo.pmtiles`
+  only when the fingerprint of its own extracts has changed, alongside one
+  world `surface/gaps/<stamp>/gaps.pmtiles`, all pointed at by the stable
+  `surface/manifest.json`
+  (`{"version":2, "countries":{"<cc>":{"stamp","built_at","inputs","bounds",
+  "counts","tiles":{"classified":url,"todo":url}}}, "gaps":{"stamp","built_at",
+  "inputs","url"}}`). Read server-side by `App\Coverage\SurfaceManifest`, which
+  mirrors `CoverageManifest`'s TTLs and its tolerate-everything failure policy.
+  Twelve countries, ~15.0M classified ways / ~12.2M to record / ~102k grid
+  cells. The build and its editorial decisions live in
   [Dated/2026-08-09-surface-line-tiles-design.md](Dated/2026-08-09-surface-line-tiles-design.md)
-  §10 and in the wiki's *Building road-surface tiles* chapter. **Publishing is
-  per country:** each onboarded country's classified and to-do arms are built
-  and published under `surface/<cc>/<stamp>/<arm>.pmtiles`
-  only when the fingerprint of its own extracts has changed, with one world
-  `surface/gaps/<stamp>/gaps.pmtiles`; a country whose onboarded regions are not
-  all present in the run is skipped rather than half-published, and `--retire
-  <cc>` is the only way to drop a country from the manifest.
+  §10 and in the wiki's *Building road-surface tiles* chapter. A country whose
+  onboarded regions are not all present in the run is skipped rather than
+  half-published, and `--retire <cc>` is the only way to drop a country from
+  the manifest.
   The classified arm additionally carries the **quality channel** since
   2026-08-13: `sm` (raw OSM `smoothness`, gated on the contract's
   `surface.quality.values` list — an unlisted value is dropped at extract
@@ -635,18 +638,18 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   village loop stays part of EuroVelo 12 at planning zoom. Cost, measured: a z5
   tile is ~1.0 MB and a z6 tile ~0.6 MB (`--no-tile-size-limit` is deliberate
   here — a dropped line is a route that vanishes), which is why the layer stays
-  opt-in and off by default. Published as
-  `routes/<stamp>/routes.pmtiles` with a stable `routes/manifest.json`
-  (`{"tiles":{"routes":url}, "counts":{"ways":n,"nodes":n},
-  "country_codes":[…]}`), read server-side by `App\Coverage\RoutesManifest`
-  (env pin `ROUTES_TILES_URL` wins; manifest `ROUTES_MANIFEST_URL`) and
-  emitted as `window.CC_ROUTES_URL`. Its **own** manifest rather than a fourth
-  surface arm: the two builds are separate invocations, and a shared manifest
-  would let whichever ran last publish half-updated URLs for the other's arms.
-  **Publishing is per country**, same as the surface build: a country's
-  `routes/<cc>/<stamp>/routes.pmtiles` rebuilds only when its own extracts'
-  fingerprint changes, and `--retire <cc>` is the only way to drop one. The
-  routes run also
+  opt-in and off by default. **Publishing is per country**, same as the
+  surface build: each onboarded country's `routes/<cc>/<stamp>/routes.pmtiles`
+  rebuilds only when the fingerprint of its own extracts changes, pointed at
+  by a stable `routes/manifest.json`
+  (`{"version":2, "countries":{"<cc>":{"stamp","built_at","inputs","bounds",
+  "counts","tiles":{"routes":url}}}}`), read server-side by
+  `App\Coverage\RoutesManifest` (env pin `ROUTES_TILES_URL` wins; manifest
+  `ROUTES_MANIFEST_URL`) and emitted as `window.CC_ROUTES_URL`. Its **own**
+  manifest rather than a fourth surface arm: the two builds are separate
+  invocations, and a shared manifest would let whichever ran last publish
+  half-updated URLs for the other's arms. `--retire <cc>` is the only way to
+  drop a country from it. The routes run also
   drops per-region `routes_<slug>_wayids.txt` **way-id sets** into the
   workdir: the surface pass reads them (`surface.extract_region
   route_way_ids`) so an untagged way carrying a signed route is to-do-arm
