@@ -72,7 +72,7 @@ function sourceLayers() {
 }
 
 /* One mounted source can serve one country's own source-layer, or (the shared
-   '*' archive) every country's — same split coverage.js already made. */
+   '*' archive) every country's; the same split coverage.js already made. */
 function sourceLayersFor(key) {
   return key === '*' ? sourceLayers() : ['surface_' + key];
 }
