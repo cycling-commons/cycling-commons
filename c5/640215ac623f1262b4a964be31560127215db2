@@ -1,0 +1,41 @@
+wiki/developers/data-ops/surface-tiles.md
+  s_1d05a0405c3516::t_fa929c8ce5524d 221-225
+  s_1d05a0405c3516::t_9e9aba15959550 131,133-134,136,138-143,147-148,159-164,167-188,190,193-196,198-199
+  s_1d05a0405c3516::t_dd1525ede411c2 203-205
+  s_1d05a0405c3516::t_a764d459d6611f 239,241,246-255,258-266,269-277,281-284,286-287,289,291-298,301-304
+  s_1d05a0405c3516::t_9a6798481a77a3 200
+wiki/developers/gis/tiles.md
+  s_1d05a0405c3516::t_237377ebc3dd6d 151-164
+  s_1d05a0405c3516::t_23cc8d0e8b73bb 216-224
+  s_1d05a0405c3516::t_cbf5e3556e03a9 472-477
+  s_1d05a0405c3516::t_a98d78f6386a6c 524,527,532-534
+wiki/developers/map-page.md
+  s_1d05a0405c3516::t_932c7c3472323e 99-101,105-109
+  s_1d05a0405c3516::t_5ef48133aed915 150-154,158-164
+  s_1d05a0405c3516::t_0298ad26802721 36-40
+  s_1d05a0405c3516::t_b359bfbd0b8e3e 56-64
+wiki/developers/gis/on-screen.md
+  s_1d05a0405c3516::t_7ab6d7d572908f 379,388,401-409,416-418,421-422,424,427,430,433,435-436,439-443
+wiki/developers/data-ops/harvesting.md
+  s_1d05a0405c3516::t_727b97d37f2129 247,250,253-254,258-281
+  s_1d05a0405c3516::t_82ee27b93e0883 95-98,103-104
+  s_1d05a0405c3516::t_ab669d8d9ca456 6-7
+wiki/developers/data-ops/index.md
+  s_1d05a0405c3516::t_2bf9b40fc74c75 111-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c5640215ac623f1262b4a964be31560127215db2",
+  "prompts": {},
+  "sessions": {
+    "s_1d05a0405c3516": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "31d19031-2e0a-4b62-beac-5203a713fc44",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
