@@ -1317,7 +1317,11 @@ the OpenFreeMap basemap still draws, but every layer this project adds -
 catalog items, OSM coverage points, road surfaces, cycle routes, climbs - does
 not. It shares the pan-away nudge's pill and slot, and the two never show
 together: this banner is evaluated first on every `moveend`, and the nudge
-stands down for that tick when it is showing (`scope-ui.js`, `_covShown`).
+stands down for that tick when it is showing (`scope-ui.js`, `_covShown`) -
+and equally while it cannot yet say whether it should show, waiting on the
+outlines fetch below (`_covPending`). When that fetch settles, both
+evaluations are re-run (the banner first, then the nudge), so the fetch
+resolving never leaves the two visible together until the next `moveend`.
 
 The decision is a pure state machine, `coverage-notice.js` `evaluateNotice(state,
 {zoom, onboardedAt, nearOnboarded, searchHit}) -> {decision, state}`,
@@ -1325,12 +1329,9 @@ unit-tested under `node:test` with no import of the map or `CCScope`;
 `scope-ui.js` resolves the onboarded-ness questions, holds `state` between
 ticks, and renders the answer. State, not a one-shot decision, because
 panning carries no geocoder: once an explicit hit has named a country,
-further panning that never re-enters onboarded territory has to keep naming
-that same country (and keep a dismissal), rather than losing the identity on
-the very next `moveend` (owner-reported 2026-09-24 review: a dismissed
-Poland banner came back labelled "this area" on the first drag inside
-Poland, because the pan branch handed every tick the same bare key and that
-key never matched the dismissed one).
+further panning that never re-enters onboarded territory keeps naming that
+same country (and keeps a dismissal), rather than losing the identity on the
+very next `moveend`.
 
 - **State.** `{country: {code, name} | null, dismissed: boolean}`.
   `initNoticeState()` is the blank excursion a fresh page starts with.
@@ -1374,7 +1375,14 @@ key never matched the dismissed one).
   resolves to no onboarded country at all - an explicit hit never needs it),
   and caches the parsed features for the page; until that fetch resolves,
   the pan branch shows nothing rather than guess, never a flash the fetch
-  then contradicts.
+  then contradicts, and the nudge stands down too (`_covPending`, above) so
+  it cannot show in the gap either. A failed fetch fails closed: the pan
+  branch never shows again for the rest of the page load (it is treated as
+  "always near", the same hidden-and-state-untouched path zoom or a real
+  coastal reading takes) rather than the opposite reading, "nothing is
+  near", which would let the banner flash over an onboarded coastline on a
+  network hiccup. It is not retried; an explicit hit never depended on it
+  in the first place.
 - **Dismissal.** `dismissNotice()` sets `state.dismissed`, which survives
   every pan tick unchanged for as long as the excursion continues (the
   centre stays outside onboarded territory, whatever it is near or how far

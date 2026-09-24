@@ -315,8 +315,16 @@ export function restoreHitScope(){
    never show together: this banner is evaluated first on every moveend, and
    `_covShown` makes the nudge's own evaluate() stand down for that tick
    (initCoverageNotice() is wired before initAreaNudge() in map.js so this
-   runs first within the same event). */
-let _covState = initNoticeState(), _covPendingHit = null, _covShown = false;
+   runs first within the same event). `_covPending` covers the gap where
+   neither is decided yet (the outlines fetch below is in flight): the nudge
+   stands down for that tick too, and `_nudgeEvaluate` lets the fetch settling
+   re-run the nudge right after it re-runs the coverage decision, so the two
+   are never both left showing until the next moveend happens to arrive. */
+let _covState = initNoticeState(), _covPendingHit = null, _covShown = false, _covPending = false;
+/** The nudge's own evaluate(), published by initAreaNudge() so the outlines
+ *  fetch settling (below) can re-run it once the coverage decision it was
+ *  waiting on is no longer pending. */
+let _nudgeEvaluate = null;
 
 /** Whether the explicit search hit's own country is onboarded - a direct
  *  lookup against CC_COVERAGE_COUNTRIES, since the hit already names its
@@ -326,16 +334,32 @@ function hitCountryOnboarded(cc){ return !!cc && COVERAGE_COUNTRIES.has(String(c
 /* Onboarded-country outlines (docs/specs/map-and-search.md §4.5b), fetched
    once and lazily - only the pan branch, when the centre resolves to no
    onboarded country, ever needs the coastal-tolerance test that consults
-   them. `null` = not yet requested; an array (possibly empty on a fetch
-   failure) = loaded. Until loaded, the pan branch shows nothing rather than
-   guess - never a flash the fetch then contradicts. */
-let _outlines = null, _outlinesReq = null;
+   them. `null` = not yet requested; an array (possibly empty, including on a
+   fetch failure) = settled. Until settled, the pan branch shows nothing
+   rather than guess - never a flash the fetch then contradicts - and the
+   nudge stands down with it (_covPending, above).
+
+   A failed fetch still settles to an array (so this never retries), but
+   `_outlinesFailed` marks the pan branch fail-closed for the rest of this
+   page load: reading a broken fetch as "nothing is near" would let the
+   banner flash over an onboarded coastline, so a failure reads as "always
+   near" instead - the same hidden-and-state-untouched path a real coastal
+   reading takes. An explicit hit never consults this at all. */
+let _outlines = null, _outlinesReq = null, _outlinesFailed = false;
 function ensureOutlines(){
   if(_outlinesReq) return _outlinesReq;
   _outlinesReq = fetch('/regions/outlines.json', {headers:{'Accept':'application/json'}})
-    .then(r=>r.ok ? r.json() : {features:[]})
+    .then(r=>r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
     .then(d=>{ _outlines = Array.isArray(d.features) ? d.features : []; })
-    .catch(()=>{ _outlines = []; });
+    .catch(()=>{ _outlines = []; _outlinesFailed = true; })
+    .then(()=>{
+      // The decision this tick's evaluate() could not make now can be made:
+      // re-run it, then the nudge, in that order - the banner still wins the
+      // shared pill (map-and-search.md §4.5b).
+      _covPending = false;
+      evaluateCoverageNotice();
+      if(_nudgeEvaluate) _nudgeEvaluate();
+    });
   return _outlinesReq;
 }
 
@@ -382,15 +406,18 @@ function evaluateCoverageNotice(){
   if(!hit && !cc){
     // The pan branch needs the coastal tolerance: kick off the lazy fetch
     // the first time it is asked for, and say nothing (not even a hidden
-    // dismissal-clearing tick) until it resolves.
+    // dismissal-clearing tick) until it settles. The nudge stands down for
+    // the same tick (_covPending, checked in its own evaluate() below).
     if(_outlines===null){
-      ensureOutlines().then(evaluateCoverageNotice);
+      _covPending=true;
+      ensureOutlines();
       renderCoverageNotice({show:false});
       _covShown=false;
       return;
     }
-    near = isNearOutlines(c.lng, c.lat, _outlines);
+    near = _outlinesFailed ? true : isNearOutlines(c.lng, c.lat, _outlines);
   }
+  _covPending=false;
   const {decision, state} = evaluateNotice(_covState, {
     zoom,
     onboardedAt: hit ? hitCountryOnboarded(hit.countryCode) : !!cc,
@@ -478,8 +505,12 @@ export function initAreaNudge(){
     // The coverage-notice banner wins the shared pill (map-and-search.md
     // §4.5b): it is evaluated first on this same moveend/idle tick, and a
     // myArea widen offer would otherwise show for a hop into a non-onboarded
-    // country the coverage banner is already naming.
-    if(_covShown){ hide(); return; }
+    // country the coverage banner is already naming. Equally while that
+    // banner cannot yet say whether it should show (_covPending, waiting on
+    // the outlines fetch): standing down for "maybe" as well as "yes" is what
+    // keeps the two from both being visible in the gap before the fetch
+    // settles and re-runs this same evaluate().
+    if(_covShown || _covPending){ hide(); return; }
     const s=curScope();
     if(s && s.kind==='myArea' && s.myArea){
       const c=map.getCenter(), ctr=s.myArea.center;   // ctr = [lat, lng]
@@ -496,6 +527,7 @@ export function initAreaNudge(){
     }
     hide();
   };
+  _nudgeEvaluate = evaluate;   // so the outlines fetch settling (above) can re-run this
   map.on('moveend', evaluate);
   map.once('idle', evaluate);   // deep link can land outside the saved scope with no move
   window.addEventListener('cc:scopechange', ()=>{ dismissed=false; hide(); });

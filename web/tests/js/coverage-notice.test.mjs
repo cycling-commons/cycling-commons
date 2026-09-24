@@ -175,6 +175,43 @@ test('an empty or missing feature list is simply never near', () => {
   assert.equal(isNearOutlines(0.5, 0.5, undefined), false);
 });
 
+// --- rings with holes: an enclave is outside, and measures to the hole ----
+
+// A 4x4 square with a 1x1 square hole cut from its middle.
+const OUTER = [[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]];
+const HOLE = [[1, 1], [2, 1], [2, 2], [1, 2], [1, 1]];
+const SQUARE_WITH_HOLE = { type: 'Feature', properties: { cc: 'BE' }, geometry: {
+  type: 'Polygon', coordinates: [OUTER, HOLE],
+} };
+
+test('a point in the solid part of a Polygon with a hole is inside (distance 0)', () => {
+  assert.equal(distanceToOutlinesDeg(0.5, 0.5, [SQUARE_WITH_HOLE]), 0);
+  assert.equal(isNearOutlines(0.5, 0.5, [SQUARE_WITH_HOLE]), true);
+});
+
+test('a point in the hole (an enclave) is outside, and its distance is to the hole ring', () => {
+  // Centre of the 1x1 hole: 0.5 from each of its four edges, and much
+  // farther (1.5+) from the outer ring - the hole ring must be the one
+  // that wins, not the outer boundary.
+  const d = distanceToOutlinesDeg(1.5, 1.5, [SQUARE_WITH_HOLE]);
+  assert.ok(Math.abs(d - 0.5) < 1e-9, `expected the hole ring at ~0.5, got ${d}`);
+  assert.equal(isNearOutlines(1.5, 1.5, [SQUARE_WITH_HOLE]), false);   // tolerance is 0.1
+});
+
+test('a MultiPolygon whose part has a hole: the enclave is outside that part too', () => {
+  const outerA = [[10, 10], [14, 10], [14, 14], [10, 14], [10, 10]];
+  const holeA = [[11, 11], [12, 11], [12, 12], [11, 12], [11, 11]];
+  const outerB = [[20, 20], [21, 20], [21, 21], [20, 21], [20, 20]];   // a plain second part, far away
+  const multi = { type: 'Feature', properties: { cc: 'NL' }, geometry: {
+    type: 'MultiPolygon', coordinates: [[outerA, holeA], [outerB]],
+  } };
+  const d = distanceToOutlinesDeg(11.5, 11.5, [multi]);
+  assert.ok(Math.abs(d - 0.5) < 1e-9, `expected part A's hole ring at ~0.5, got ${d}`);
+  assert.equal(isNearOutlines(11.5, 11.5, [multi]), false);
+  // The solid part of the SAME part still reads inside.
+  assert.equal(distanceToOutlinesDeg(10.5, 10.5, [multi]), 0);
+});
+
 test('PAN_MIN_ZOOM is exported for callers that reset state at the same threshold', () => {
   assert.equal(typeof PAN_MIN_ZOOM, 'number');
 });
