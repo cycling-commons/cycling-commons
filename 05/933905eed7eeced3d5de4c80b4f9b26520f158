@@ -1,0 +1,30 @@
+developers/coverage-batch.md
+  s_1d05a0405c3516::t_c4c521dc722481 22-28
+docs/specs/coverage-provider.md
+  s_1d05a0405c3516::t_76cd5bda50bb5d 474-480
+pipeline/coverage/dispatch.py
+  s_1d05a0405c3516::t_17d16b494f5828 104-112
+  s_1d05a0405c3516::t_a87657c99b793c 54-67
+  s_1d05a0405c3516::t_652166d7427b7d 128-133
+  s_1d05a0405c3516::t_002a1423a38211 7-9,13
+pipeline/tests/test_dispatch.py
+  s_1d05a0405c3516::t_da47e7f998c8b3 6
+  s_1d05a0405c3516::t_5082cd41570113 126,129
+  s_1d05a0405c3516::t_67937797669dc2 183-238
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "05933905eed7eeced3d5de4c80b4f9b26520f158",
+  "prompts": {},
+  "sessions": {
+    "s_1d05a0405c3516": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "31d19031-2e0a-4b62-beac-5203a713fc44",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
