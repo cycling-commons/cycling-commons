@@ -10,7 +10,7 @@ import { initRideCheck } from './ride-check.js';
 import { CATALOG, active, layerByKey, cityLink, mode } from './catalog.js';
 import { addMapillary, initMapillaryDock, initStreetToggle } from './mapillary.js';
 import { curScope, scopeLabel, renderScopeChips, applyScope, initScope, initScopeRail,
-         initAreaNudge, initClickToScope, liftScopeForHit } from './scope-ui.js';
+         initAreaNudge, initCoverageNotice, initClickToScope, liftScopeForHit } from './scope-ui.js';
 import { OSM_BULK, addWaterOsm, addOsmDots, setupConfClusters, updateConfMarkers, refreshPools } from './osm-pools.js';
 import { trimEnds, rebuildItemIndex } from './item-index.js';
 import { sheet, initSheet } from './sheet.js';
@@ -318,6 +318,10 @@ import { layerGlyph } from './icons.js';
 
   initScopeRail();
 
+  // Registered before initAreaNudge(): both answer the same moveend/idle,
+  // and the coverage banner must decide first so the nudge can stand down
+  // for it on the same tick (docs/specs/map-and-search.md §4.5b).
+  initCoverageNotice();
   initAreaNudge();
 
   initAddClimbHere();

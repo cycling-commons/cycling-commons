@@ -548,6 +548,11 @@ final class MapController extends AbstractController
             'scopeMiss' => $t->trans('map.scope_miss'),
             'scopeMissGo' => $t->trans('map.scope_miss_go'),
             'areaDismiss' => $t->trans('map.area_dismiss'),
+            // docs/specs/map-and-search.md §4.5b - "not covered yet" banner.
+            'coverageNoticeCountry' => $t->trans('map.coverage_notice_country'),
+            'coverageNoticeArea' => $t->trans('map.coverage_notice_area'),
+            'coverageNoticeGoCountry' => $t->trans('map.coverage_notice_go_country'),
+            'coverageNoticeGoArea' => $t->trans('map.coverage_notice_go_area'),
             'zoomForCoverage' => $t->trans('map.zoom_for_coverage'),
             'pendingFollowsAreas' => $t->trans('map.pending_follows_areas'),
             'pendingYoursAnywhere' => $t->trans('map.pending_yours_anywhere'),

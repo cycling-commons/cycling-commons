@@ -17,12 +17,17 @@ import { isPicking } from './picking.js';
 import { corrLayerIds } from './corrections.js';
 import { hitScopeFor } from './hit-scope.js';
 import { parkTiledOverlays, unparkTiledOverlays } from './tile-park.js';
+import { noticeFor, PAN_MIN_ZOOM } from './coverage-notice.js';
 
 
 // Region scope (docs/specs/map-and-search.md §4.5): area the map + search
 // filter to, owned by window.CCScope. Registry from window.CC_REGIONS.
 const CC_REGIONS = window.CC_REGIONS || [];
 const _regionById = new Map(CC_REGIONS.map(r => [r.id, r]));
+// Onboarded country codes, upper-case (docs/specs/map-and-search.md §4.5b):
+// what a search hit's Photon countrycode is checked against, directly - no
+// spatial lookup needed when the hit already names its own country.
+const COVERAGE_COUNTRIES = new Set((window.CC_COVERAGE_COUNTRIES || []).map(cc => String(cc).toUpperCase()));
 const slugOfRegion = id => { const r = _regionById.get(id); return r ? r.slug : null; };
 const _defaultScope = (() => {
   // My area wins when a base location is set (docs/specs/map-and-search.md §4.5);
@@ -301,6 +306,94 @@ export function restoreHitScope(){
   if(prev && window.CCScope) setTransientScope(prev);
 }
 
+/* "Not covered yet" banner (docs/specs/map-and-search.md §4.5b): the rider
+   panned or searched somewhere Cycling Commons has nothing for. Pure decision
+   in coverage-notice.js; this is the DOM wiring + the onboarded-ness lookups
+   the pure module has no way to make itself.
+
+   Shares its top-centre pill with the pan-away nudge below and the two must
+   never show together: this banner is evaluated first on every moveend, and
+   `_covShown` makes the nudge's own evaluate() stand down for that tick
+   (initCoverageNotice() is wired before initAreaNudge() in map.js so this
+   runs first within the same event). */
+let _covDismissedKey = null, _covPendingHit = null, _covShown = false, _covLastKey = null;
+
+/** Whether the explicit search hit's own country is onboarded - a direct
+ *  lookup against CC_COVERAGE_COUNTRIES, since the hit already names its
+ *  country and needs no spatial guess. */
+function hitCountryOnboarded(cc){ return !!cc && COVERAGE_COUNTRIES.has(String(cc).toUpperCase()); }
+
+/** Coastal tolerance for a pan centre (docs/specs/map-and-search.md §4.5b):
+ *  within 0.1 degree of an onboarded region counts as covered, so water off
+ *  an onboarded coastline never flashes the banner. Delegates every point
+ *  test to CCScope.countryAt, which already carries the antimeridian-safe
+ *  region lookup - this only supplies the offsets. */
+function nearOnboarded(lat, lng){
+  const TOL=0.1;
+  const offs=[[TOL,0],[-TOL,0],[0,TOL],[0,-TOL],[TOL,TOL],[TOL,-TOL],[-TOL,TOL],[-TOL,-TOL]];
+  return offs.some(([dLat,dLng])=>{
+    let lng2=lng+dLng;
+    if(lng2>180) lng2-=360; else if(lng2<-180) lng2+=360;
+    return !!window.CCScope.countryAt(lat+dLat, lng2);
+  });
+}
+
+/** Called once, right after a search pick, so the next moveend (the fly
+ *  landing) evaluates the banner against that hit's own country rather than
+ *  the point under the map centre (map-and-search.md §4.5b, point 1). Only
+ *  Photon town hits carry a country; a catalogue row, a coordinate paste or a
+ *  scope pick are always already inside an onboarded region. */
+export function noteCoverageSearchHit(countryCode, countryName){
+  if(!countryCode) return;
+  _covPendingHit = {countryCode, countryName: countryName || null};
+}
+
+function renderCoverageNotice(d){
+  const el=document.getElementById('coverageNotice');
+  if(!el) return;
+  if(!d.show){ el.hidden=true; return; }
+  _covLastKey = d.key;
+  const msg = d.countryName
+    ? tpl(I18N.coverageNoticeCountry||'We have no Cycling Commons data for {country} yet. You see the base map only, without our water taps, road surfaces or routes.', {country:d.countryName})
+    : (I18N.coverageNoticeArea||'We have no Cycling Commons data for this area yet. You see the base map only, without our water taps, road surfaces or routes.');
+  const goLabel = d.countryName
+    ? tpl(I18N.coverageNoticeGoCountry||'Ask us to cover {country}', {country:d.countryName})
+    : (I18N.coverageNoticeGoArea||'Ask us to cover this area');
+  const msgEl=el.querySelector('.cc-nudge-msg'); if(msgEl) msgEl.textContent=msg;
+  const goEl=el.querySelector('.cc-nudge-go'); if(goEl) goEl.textContent=goLabel;
+  el.hidden=false;
+}
+
+function evaluateCoverageNotice(){
+  if(!window.CCScope) return;
+  const c=map.getCenter(), zoom=map.getZoom();
+  const cc=window.CCScope.countryAt(c.lat, c.lng);
+  const hit=_covPendingHit; _covPendingHit=null;
+  const decision=noticeFor({
+    zoom, centre:{lat:c.lat, lng:c.lng},
+    onboardedAt: hit ? hitCountryOnboarded(hit.countryCode) : !!cc,
+    nearOnboarded: !cc && nearOnboarded(c.lat, c.lng),
+    searchHit: hit,
+    dismissedKey: _covDismissedKey,
+  });
+  // Covered again (an onboarded country under the centre, or too zoomed out
+  // to be "at" anywhere): the old dismissal no longer applies to whatever
+  // non-onboarded place is panned to next.
+  if(cc || zoom < PAN_MIN_ZOOM) _covDismissedKey = null;
+  renderCoverageNotice(decision);
+  _covShown = decision.show;
+}
+
+export function initCoverageNotice(){
+  if(!window.CCScope) return;
+  const el=document.getElementById('coverageNotice');
+  if(!el) return;
+  const x=el.querySelector('.cc-nudge-x');
+  if(x) x.onclick=()=>{ _covDismissedKey=_covLastKey; el.hidden=true; _covShown=false; };
+  map.on('moveend', evaluateCoverageNotice);
+  map.once('idle', evaluateCoverageNotice);   // deep link can land outside coverage with no move
+}
+
 // Pan-away nudge (docs/specs/map-and-search.md §4.5). One chip, two arms;
 // never auto-widens. Dismissal lasts until the scope changes.
 export function initAreaNudge(){
@@ -364,6 +457,11 @@ export function initAreaNudge(){
     return !window.CCScope.bboxOverlaps([v.getWest(), v.getSouth(), v.getEast(), v.getNorth()]);
   };
   const evaluate=()=>{
+    // The coverage-notice banner wins the shared pill (map-and-search.md
+    // §4.5b): it is evaluated first on this same moveend/idle tick, and a
+    // myArea widen offer would otherwise show for a hop into a non-onboarded
+    // country the coverage banner is already naming.
+    if(_covShown){ hide(); return; }
     const s=curScope();
     if(s && s.kind==='myArea' && s.myArea){
       const c=map.getCenter(), ctr=s.myArea.center;   // ctr = [lat, lng]

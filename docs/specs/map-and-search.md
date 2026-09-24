@@ -1308,6 +1308,57 @@ back to the same numbers for them, so that answer was right by luck rather than
 by reasoning. Only a box reaching from one edge of the seam to the other is
 wider than 180°.
 
+#### 4.5b Coverage notice: outside every onboarded country
+
+A small bar at the top-centre of the map canvas (`.cc-area-nudge
+.cc-coverage-notice`, `#coverageNotice` in `templates/map/index.html.twig`),
+telling the rider that Cycling Commons has nothing for where they are looking:
+the OpenFreeMap basemap still draws, but every layer this project adds -
+catalog items, OSM coverage points, road surfaces, cycle routes, climbs - does
+not. It shares the pan-away nudge's pill and slot, and the two never show
+together: this banner is evaluated first on every `moveend`, and the nudge
+stands down for that tick when it is showing (`scope-ui.js`, `_covShown`).
+
+The decision is a pure function, `coverage-notice.js` `noticeFor({zoom,
+centre, onboardedAt, nearOnboarded, searchHit, dismissedKey})`, unit-tested
+under `node:test` with no import of the map or `CCScope`; `scope-ui.js`
+resolves the onboarded-ness questions and renders the answer.
+
+- **Explicit selection.** Picking a search result names its own country
+  (Photon's `properties.countrycode` / `properties.country`, already in the
+  rider's language). `search-ui.js` hands that to
+  `noteCoverageSearchHit(countrycode, country)` for a Photon town hit only - a
+  catalogue row, a coverage hit or a pasted coordinate is either always inside
+  an onboarded region or carries no country to check. The pending hit is
+  consumed once, on the `moveend` the resulting fly lands on, and checked
+  directly against `CC_COVERAGE_COUNTRIES` (upper-case): a country code is
+  exact, so this needs no spatial guess.
+- **Panning.** On `moveend`, at zoom ≥ 7, when the point under the map centre
+  resolves to no onboarded country (`CCScope.countryAt`), the banner shows
+  the generic "this area" text - a pan carries no geocoder, so it never
+  names a country. Below zoom 7 the banner is hidden, not dismissed: it is
+  not that a rider closed it, it is that "at zoom 3" is not "at" anywhere
+  yet.
+- **Coastal tolerance.** A centre within 0.1° of an onboarded region counts as
+  covered, so water off an onboarded coastline never flashes the banner.
+  `nearOnboarded()` checks eight points 0.1° out from the centre (the
+  cardinal and diagonal directions) through `CCScope.countryAt`, which
+  already carries the antimeridian-safe region lookup (§4.5a) - cheaper and
+  safer than a second bbox implementation.
+- **Dismissal.** The close button remembers a key: `'area'` for a pan, or
+  `'country:XX'` for an explicit hit. The banner stays hidden while the
+  computed key still matches the dismissed one. Panning carries no country,
+  so a dismissed pan-banner stays dismissed for any non-onboarded country
+  panned to next - only an explicit hit for a *different* country, or the
+  centre landing back in an onboarded region (which clears the remembered
+  key outright), re-arms it.
+- **Text.** `map.coverage_notice_country` / `map.coverage_notice_area`, the
+  button `map.coverage_notice_go_country` / `map.coverage_notice_go_area`
+  linking to the localized `vote` route plainly - `VoteType` carries no
+  country field, so a preselect is not possible; the vote page ranks
+  candidate climbs/stays/views/heritage within onboarded countries, not new
+  ones. Reached through `MapController::mapI18n`, all five locales.
+
 ### 4.6 Chrome theme: dark and light
 
 The map page's chrome (icon rail, drawer, legend, panels, popups) ships in two

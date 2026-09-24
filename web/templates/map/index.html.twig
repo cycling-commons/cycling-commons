@@ -525,6 +525,16 @@
        gradients are derived from the DEM, so the short form belongs in the
        attribution with the full notice one click away. #}
     <div id="map" data-credits="{{ path('credits') }}"></div>
+    {# "Not covered yet" banner (map-and-search.md §4.5b): the rider panned or
+       searched to a place outside every onboarded country. Same pill as the
+       pan-away nudge (.cc-area-nudge), same top-centre slot - the two never
+       show together, and scope-ui.js is the one writer of both. Hidden by
+       default; scope-ui.js fills the text and shows it. #}
+    <div class="cc-area-nudge cc-coverage-notice" id="coverageNotice" aria-live="polite" hidden>
+      <span class="cc-nudge-msg"></span>
+      <a class="cc-nudge-go" id="coverageNoticeGo" href="{{ path('vote') }}"></a>
+      <button type="button" class="cc-nudge-x" aria-label="{{ 'map.area_dismiss'|trans }}">✕</button>
+    </div>
     <div class="map-top">
       <div class="rg" id="regionLine">{{ 'map.region_line'|trans }}</div>
       {# The subtitle row doubles as the scope-change busy line
@@ -995,6 +1005,7 @@ window.CC_VENDOR = {{ {
 <link rel="modulepreload" href="{{ asset('map/climb-profile.js') }}">
 <link rel="modulepreload" href="{{ asset('map/community.js') }}">
 <link rel="modulepreload" href="{{ asset('map/corrections.js') }}">
+<link rel="modulepreload" href="{{ asset('map/coverage-notice.js') }}">
 <link rel="modulepreload" href="{{ asset('map/coverage.js') }}">
 <link rel="modulepreload" href="{{ asset('map/drawer.js') }}">
 <link rel="modulepreload" href="{{ asset('map/filters.js') }}">

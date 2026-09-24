@@ -4,7 +4,7 @@
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, slug, txtOn, photonLang, COORD_COLOR } from './util.js';
 import { CITIES, layerByKey, LETTER_KEY } from './catalog.js';
-import { inScope, scopeLabel, liftScopeForHit } from './scope-ui.js';
+import { inScope, scopeLabel, liftScopeForHit, noteCoverageSearchHit } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
 import { openPlace, openCity } from './places.js';
 import { COVERAGE_ON, covScopeIsZero, covScopeQuery, openCoverageByRef } from './coverage.js';
@@ -82,6 +82,10 @@ export function initSearchUi(){
       if(m.widen){ m.go(); return; }
       if(m.scope){ m.go(); closeS(); sBox.blur(); return; }
       followHit(m);
+      // Explicit selection (map-and-search.md §4.5b): only a Photon town hit
+      // carries a country to check - a catalogue/coverage row is already
+      // inside an onboarded region, and a pasted coordinate names no country.
+      if(m.ph) noteCoverageSearchHit(m.countrycode, m.country);
       sBox.value=m.name; closeS();
       m.go(); }
     // docs/specs/map-and-search.md §12 — community sub-tag; towns and pending never.
@@ -147,7 +151,11 @@ export function initSearchUi(){
               // docs/specs/map-and-search.md §6.5: the element ref is what the town card's Wikipedia lookup is keyed by.
               const osmType={N:'node', W:'way', R:'relation'}[p.osm_type];
               const osm=(osmType && /^\d+$/.test(String(p.osm_id||''))) ? osmType+'/'+p.osm_id : null;
+              // country/countrycode carried through for the "not covered yet"
+              // banner (map-and-search.md §4.5b): Photon already answers in the
+              // rider's own language, so the country name needs no lookup here.
               return {name, key:slug(name), kind:'Town', badge:'◎', color:'#3E7D8C', town:true, ph:1,
+                country:p.country||null, countrycode:p.countrycode||null,
                 go:()=>openPlace(name, {ll:[+c[1],+c[0]], osm})}; });
           _phQ=slug(q);
           if(!sRes.hidden) runS();

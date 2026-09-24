@@ -1882,6 +1882,10 @@ map:
   pending_follows_areas: 'Les épingles en attente de validation ignorent le filtre de région : elles suivent les zones que vous modérez.'
   pending_yours_anywhere: 'Vos épingles en attente de validation apparaissent là où vous les avez ajoutées, même hors de cette région.'
   area_dismiss: 'Fermer'
+  coverage_notice_country: "Nous n'avons pas encore de données Cycling Commons pour {country}. Vous ne voyez que le fond de carte, sans nos points d'eau, revêtements ou itinéraires."
+  coverage_notice_area: "Nous n'avons pas encore de données Cycling Commons pour cette zone. Vous ne voyez que le fond de carte, sans nos points d'eau, revêtements ou itinéraires."
+  coverage_notice_go_country: 'Demandez-nous de couvrir {country}'
+  coverage_notice_go_area: 'Demandez-nous de couvrir cette zone'
   empty_scope_invite: 'Rien n''est encore répertorié ici — aidez à démarrer.'
   search_placeholder: 'Une côte, une ville, un point de vue…'
   search_aria: 'Rechercher dans les Commons'
