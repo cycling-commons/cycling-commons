@@ -37,8 +37,10 @@ final class PublicApiV1Test extends WebTestCase
         $config = json_decode((string) $response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertCount(12, $config['categories']);
         self::assertArrayHasKey('bestOf', $config['categories'][0]);
+        self::assertSame('0.2', $config['version']);
+        self::assertArrayHasKey('tiles', $config['routes']);     // [] here: no manifest in test env
+        self::assertArrayHasKey('tiles', $config['coverage']);
         self::assertSame('routes_{cc}', $config['routes']['sourceLayers']['lines']);
-        self::assertArrayHasKey('tilesUrl', $config['routes']);   // null here: no manifest in test env
         self::assertCount(3, $config['routes']['style']['groups']);
         self::assertSame('{letter}_{cc}', $config['coverage']['sourceLayers']['points']);
         self::assertSame(['b', 'c', 'd', 'f', 'g', 'o', 'p', 'q'], $config['coverage']['letters']);

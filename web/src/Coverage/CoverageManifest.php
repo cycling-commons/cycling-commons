@@ -12,7 +12,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Coverage tile manifest reader (docs/specs/coverage-provider.md §4).
- * Failure returns null and never throws.
+ * Failure returns an empty array and never throws.
  *
  * @see docs/specs/coverage-provider.md §4
  *
@@ -30,14 +30,25 @@ final class CoverageManifest extends BucketManifest
         parent::__construct($http, $cache, $logger, $manifestUrl);
     }
 
-    /** The current versioned .pmtiles URL, or null when coverage is off/unavailable. */
-    public function currentTileUrl(): ?string
+    /**
+     * Coverage-point tile entries, per country (docs/specs/coverage-provider.md §4).
+     * `zz`, the unstamped bucket, is a valid entry here even though it is not
+     * a country code countryCodes() will ever return.
+     *
+     * @return array<string, array{tiles: array<string, string>, bounds: list<float>, stamp: string}>
+     */
+    public function countryTiles(): array
     {
         $manifest = $this->manifest();
-        // Cached manifest is only non-null once 'url' has been validated.
+        if (null === $manifest) {
+            return [];
+        }
+        if (2 === ($manifest['version'] ?? null)) {
+            return self::countryEntries($manifest, ['points']);
+        }
         $url = $manifest['url'] ?? null;
 
-        return \is_string($url) ? $url : null;
+        return self::worldEntry(['points' => \is_string($url) ? $url : ''], self::stampOf(\is_string($url) ? $url : ''));
     }
 
     /**
@@ -48,6 +59,12 @@ final class CoverageManifest extends BucketManifest
     public function countryCodes(): array
     {
         $manifest = $this->manifest();
+        if (null !== $manifest && 2 === ($manifest['version'] ?? null)) {
+            return array_values(array_map(
+                strtoupper(...),
+                array_filter(array_keys($this->countryTiles()), static fn (string $k): bool => '*' !== $k && 'zz' !== $k),
+            ));
+        }
         $codes = $manifest['country_codes'] ?? null;
         if (!\is_array($codes)) {
             return [];
@@ -65,17 +82,21 @@ final class CoverageManifest extends BucketManifest
     #[\Override]
     protected function validate(array $manifest): void
     {
+        $countries = $manifest['countries'] ?? null;
+        if (\is_array($countries) && [] !== $countries) {
+            return;
+        }
         $url = $manifest['url'] ?? null;
         if (!\is_string($url) || '' === $url) {
             throw new \RuntimeException('coverage manifest carries no "url" key');
         }
     }
 
-    /** Cache key from the manifest URL. `.v2` retires old-shaped entries. */
+    /** Cache key from the manifest URL. `.v3` retires old-shaped entries. */
     #[\Override]
     protected function cacheKey(): string
     {
-        return 'coverage.manifest.v2.'.hash('xxh128', $this->manifestUrl);
+        return 'coverage.manifest.v3.'.hash('xxh128', $this->manifestUrl);
     }
 
     #[\Override]

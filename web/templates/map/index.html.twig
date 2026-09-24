@@ -869,42 +869,14 @@ window.CC_VENDOR = {{ {
   {# Region registry (map-and-search.md §4.5 Phase 2): id/slug/cc/bbox
      per region, consumed by window.CCScope for the scope selector + viewport. #}
   window.CC_REGIONS = {{ regions|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {% if coverage_url %}
-  {# Coverage tiles (coverage-provider.md §4): the versioned
-     PMTiles artifact URL — emitted only when COVERAGE_TILES is on AND the
-     manifest resolved; map.js keys the whole coverage source on its presence.
-     HEX-escaped like MAPILLARY_TOKEN: the value originates outside the app. #}
-  window.CC_COVERAGE_URL = {{ coverage_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {# Country codes the tile artifact was built for: map.js turns each into a per-(letter, country)
-     coverage layer; an empty/absent array falls back to one unsplit layer per
-     letter, so an old manifest still renders. #}
+  {# Tile archives per family and country (coverage-provider.md §4): cc, or '*'
+     for one archive that serves every country, to {tiles: {arm: url}, bounds, stamp}.
+     tile-sources.js mounts a country's source when its bounds meet the view.
+     A family with no entries renders no control. HEX-escaped: the URLs come from the bucket. #}
+  window.CC_TILES = {{ tiles|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Country codes with coverage: each becomes a per-(letter, country) layer; empty
+     falls back to one unsplit layer per letter. #}
   window.CC_COVERAGE_COUNTRIES = {{ coverage_countries|default([])|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {% endif %}
-  {# Road-surface LINE tiles: a SEPARATE artifact from the coverage points
-     (docs/specs/coverage-provider.md §4), so it has its own URL and
-     its own gate. Absent/empty means the Surfaces toggle never renders — a
-     control for a layer whose tiles do not exist is worse than no control,
-     which is the toilets lesson (a rail row for a layer that was never built).
-     HEX-escaped like the others: the value originates outside the app. #}
-  {% if surface_tiles_url %}
-  window.CC_SURFACE_URL = {{ surface_tiles_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {% endif %}
-  {# Each arm gates on ITSELF. They are separate artifacts and a build can
-     legitimately publish one without the others (a pinned classified URL for a
-     bisect, a gaps-only experiment), so nesting them under the classified gate
-     would hide a layer that exists. #}
-  {% if surface_todo_url %}
-  window.CC_SURFACE_TODO_URL = {{ surface_todo_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {% endif %}
-  {% if surface_gaps_url %}
-  window.CC_SURFACE_GAPS_URL = {{ surface_gaps_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {% endif %}
-  {# Cycle-route network tiles (routes-tiles.js): corridors + knooppunt
-     numbers, one artifact. Absent/empty means the Routes toggle never renders
-     — the same no-control-for-missing-tiles rule as the surface skin. #}
-  {% if routes_tiles_url %}
-  window.CC_ROUTES_URL = {{ routes_tiles_url|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {% endif %}
   {# Scout review: the tag vocabulary with the letters each tag may resolve to,
      from ScoutTag::LETTERS — the same list the intake endpoint validates
      against, so the panel can never offer a choice the server refuses.

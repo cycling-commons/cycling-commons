@@ -49,10 +49,10 @@ final class PublicApiController extends AbstractController
         $coverageManifest->prefetch();
 
         $payload = [
-            'version' => '0.1',
+            'version' => '0.2',
             'attribution' => CategoryTable::ATTRIBUTION,
             'routes' => [
-                'tilesUrl' => $routesManifest->tilesUrl(),
+                'tiles' => $routesManifest->countryTiles(),
                 'countries' => array_map(strtolower(...), $coverageManifest->countryCodes()),
                 'sourceLayers' => ['lines' => 'routes_{cc}', 'nodes' => 'knoop_{cc}'],
                 'style' => [
@@ -61,7 +61,7 @@ final class PublicApiController extends AbstractController
                 ],
             ],
             'coverage' => [
-                'tilesUrl' => $coverageManifest->currentTileUrl(),
+                'tiles' => $coverageManifest->countryTiles(),
                 'countries' => [...array_map(strtolower(...), $coverageManifest->countryCodes()), CategoryTable::COVERAGE_UNSTAMPED_BUCKET],
                 'sourceLayers' => ['points' => '{letter}_{cc}'],
                 'letters' => CategoryTable::COVERAGE_LETTERS,

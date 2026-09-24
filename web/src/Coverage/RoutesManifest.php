@@ -13,7 +13,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * Cycle-route tile manifest (docs/specs/coverage-provider.md §4).
  * Own manifest, not a surface arm: separate builds must not share URLs.
- * Failure returns null and never throws.
+ * Failure returns an empty array and never throws.
  *
  * @see docs/specs/coverage-provider.md §4
  *
@@ -31,19 +31,22 @@ final class RoutesManifest extends BucketManifest
         parent::__construct($http, $cache, $logger, $manifestUrl);
     }
 
-    /** The routes artifact's URL, corridors plus knooppunten, or null. */
-    public function tilesUrl(): ?string
+    /** @return array<string, array{tiles: array<string, string>, bounds: list<float>, stamp: string}> */
+    public function countryTiles(): array
     {
         if ('' !== $this->pinnedTilesUrl) {
-            return $this->pinnedTilesUrl;
+            return self::worldEntry(['routes' => $this->pinnedTilesUrl], '');
         }
-        $tiles = $this->manifest()['tiles'] ?? null;
-        if (!\is_array($tiles)) {
-            return null;
+        $manifest = $this->manifest();
+        if (null === $manifest) {
+            return [];
         }
-        $url = $tiles['routes'] ?? null;
+        if (2 === ($manifest['version'] ?? null)) {
+            return self::countryEntries($manifest, ['routes']);
+        }
+        $url = $manifest['tiles']['routes'] ?? null;
 
-        return \is_string($url) && '' !== $url ? $url : null;
+        return self::worldEntry(['routes' => \is_string($url) ? $url : ''], \is_string($manifest['stamp'] ?? null) ? $manifest['stamp'] : '');
     }
 
     #[\Override]
@@ -55,17 +58,21 @@ final class RoutesManifest extends BucketManifest
     #[\Override]
     protected function validate(array $manifest): void
     {
+        $countries = $manifest['countries'] ?? null;
+        if (\is_array($countries) && [] !== $countries) {
+            return;
+        }
         $tiles = $manifest['tiles'] ?? null;
         if (!\is_array($tiles) || !\is_string($tiles['routes'] ?? null)) {
             throw new \RuntimeException('routes manifest names no tile URL');
         }
     }
 
-    /** Cache key from the manifest URL. `.v1` retires old-shaped entries. */
+    /** Cache key from the manifest URL. `.v2` retires old-shaped entries. */
     #[\Override]
     protected function cacheKey(): string
     {
-        return 'routes.manifest.v1.'.hash('xxh128', $this->manifestUrl);
+        return 'routes.manifest.v2.'.hash('xxh128', $this->manifestUrl);
     }
 
     #[\Override]

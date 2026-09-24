@@ -33,6 +33,37 @@ final class RoutesManifestTest extends TestCase
             ['response_headers' => ['content-type' => 'application/json']]);
     }
 
+    private static function v2(array $countries): MockResponse
+    {
+        return new MockResponse(json_encode(['version' => 2, 'countries' => $countries]),
+            ['response_headers' => ['content-type' => 'application/json']]);
+    }
+
+    public function testAV2ManifestServesOneEntryPerCountry(): void
+    {
+        $http = new MockHttpClient([self::v2([
+            'be' => ['stamp' => '20260924-0312', 'bounds' => [2.5, 49.4, 6.4, 51.5],
+                'tiles' => ['routes' => 'https://t/routes/be/20260924-0312/routes.pmtiles']],
+            'nl' => ['stamp' => '20260923-0301', 'bounds' => [3.3, 50.7, 7.2, 53.6],
+                'tiles' => ['routes' => 'https://t/routes/nl/20260923-0301/routes.pmtiles']],
+        ])]);
+        $tiles = $this->manifest($http)->countryTiles();
+
+        self::assertSame(['be', 'nl'], array_keys($tiles));
+        self::assertSame('https://t/routes/be/20260924-0312/routes.pmtiles', $tiles['be']['tiles']['routes']);
+    }
+
+    public function testAV1ManifestServesOneWorldEntry(): void
+    {
+        $http = new MockHttpClient([self::body([
+            'routes' => 'https://tiles.example/r/20260813-0130/routes.pmtiles',
+        ])]);
+        $tiles = $this->manifest($http)->countryTiles();
+
+        self::assertSame(['*' => ['tiles' => ['routes' => 'https://tiles.example/r/20260813-0130/routes.pmtiles'],
+            'bounds' => [-180.0, -85.0511, 180.0, 85.0511], 'stamp' => '20260813-0130']], $tiles);
+    }
+
     public function testItServesThePublishedBuild(): void
     {
         $http = new MockHttpClient([self::body([
@@ -41,7 +72,7 @@ final class RoutesManifestTest extends TestCase
 
         self::assertSame(
             'https://tiles.example/r/20260813-0130/routes.pmtiles',
-            $this->manifest($http)->tilesUrl(),
+            $this->manifest($http)->countryTiles()['*']['tiles']['routes'],
         );
     }
 
@@ -53,21 +84,22 @@ final class RoutesManifestTest extends TestCase
             self::fail('the manifest was fetched although the URL was pinned');
         });
 
-        self::assertSame('https://pinned/routes.pmtiles',
-            $this->manifest($http, 'https://pinned/routes.pmtiles')->tilesUrl());
+        self::assertSame(['*' => ['tiles' => ['routes' => 'https://pinned/routes.pmtiles'],
+            'bounds' => [-180.0, -85.0511, 180.0, 85.0511], 'stamp' => '']],
+            $this->manifest($http, 'https://pinned/routes.pmtiles')->countryTiles());
     }
 
     public function testAnUnreachableManifestDegradesToNoLayerRatherThanAnError(): void
     {
         // A missing route layer is a smaller harm than a 500 on /map.
         $http = new MockHttpClient([new MockResponse('', ['http_code' => 503])]);
-        self::assertNull($this->manifest($http)->tilesUrl());
+        self::assertSame([], $this->manifest($http)->countryTiles());
     }
 
     public function testAManifestNamingNoTilesIsTreatedAsUnavailable(): void
     {
         $http = new MockHttpClient([self::body([])]);
-        self::assertNull($this->manifest($http)->tilesUrl());
+        self::assertSame([], $this->manifest($http)->countryTiles());
     }
 
     public function testAnUnsetManifestUrlIsSilentlyNoLayer(): void
@@ -76,6 +108,6 @@ final class RoutesManifestTest extends TestCase
             self::fail('an empty manifest URL must not be fetched');
         });
         $m = new RoutesManifest($http, new ArrayAdapter(), new NullLogger(), '');
-        self::assertNull($m->tilesUrl());
+        self::assertSame([], $m->countryTiles());
     }
 }

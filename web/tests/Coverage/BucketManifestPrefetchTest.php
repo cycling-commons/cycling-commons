@@ -62,7 +62,7 @@ final class BucketManifestPrefetchTest extends TestCase
         $routes->prefetch();
         self::assertSame([self::ROUTES], $this->fetched, 'prefetch must start the request');
 
-        self::assertSame('https://tiles.example/r/20260830-1200/routes.pmtiles', $routes->tilesUrl());
+        self::assertSame('https://tiles.example/r/20260830-1200/routes.pmtiles', $routes->countryTiles()['*']['tiles']['routes']);
         self::assertSame([self::ROUTES], $this->fetched, 'the read must reuse the prefetched request');
     }
 
@@ -85,9 +85,9 @@ final class BucketManifestPrefetchTest extends TestCase
 
         self::assertSame([self::COVERAGE, self::SURFACE, self::ROUTES], $this->fetched);
 
-        self::assertSame('https://tiles.example/c/20260830.pmtiles', $coverage->currentTileUrl());
-        self::assertSame('https://tiles.example/s/classified.pmtiles', $surface->classifiedUrl());
-        self::assertSame('https://tiles.example/r/routes.pmtiles', $routes->tilesUrl());
+        self::assertSame('https://tiles.example/c/20260830.pmtiles', $coverage->countryTiles()['*']['tiles']['points']);
+        self::assertSame('https://tiles.example/s/classified.pmtiles', $surface->countryTiles()['*']['tiles']['classified']);
+        self::assertSame('https://tiles.example/r/routes.pmtiles', $routes->countryTiles()['*']['tiles']['routes']);
 
         self::assertCount(3, $this->fetched, 'no manifest may be fetched twice');
     }
@@ -101,7 +101,7 @@ final class BucketManifestPrefetchTest extends TestCase
         $routes = new RoutesManifest($http, $cache, new NullLogger(), self::ROUTES);
 
         // First page view fills the cache.
-        self::assertSame('https://tiles.example/r/routes.pmtiles', $routes->tilesUrl());
+        self::assertSame('https://tiles.example/r/routes.pmtiles', $routes->countryTiles()['*']['tiles']['routes']);
         self::assertCount(1, $this->fetched);
 
         // Second page view must cost nothing, prefetch included. A fresh
@@ -111,7 +111,7 @@ final class BucketManifestPrefetchTest extends TestCase
         $warm->prefetch();
 
         self::assertCount(1, $this->fetched, 'a cached manifest must not be re-fetched');
-        self::assertSame('https://tiles.example/r/routes.pmtiles', $warm->tilesUrl());
+        self::assertSame('https://tiles.example/r/routes.pmtiles', $warm->countryTiles()['*']['tiles']['routes']);
         self::assertCount(1, $this->fetched);
     }
 
@@ -145,9 +145,9 @@ final class BucketManifestPrefetchTest extends TestCase
         $routes = new RoutesManifest($http, new ArrayAdapter(), new NullLogger(), self::ROUTES);
 
         $routes->prefetch();
-        self::assertNull($routes->tilesUrl());
+        self::assertSame([], $routes->countryTiles());
         // Negative-cached, so the second read neither throws nor re-fetches.
-        self::assertNull($routes->tilesUrl());
+        self::assertSame([], $routes->countryTiles());
         self::assertCount(1, $this->fetched);
     }
 }

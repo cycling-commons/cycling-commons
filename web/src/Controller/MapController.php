@@ -127,18 +127,19 @@ final class MapController extends AbstractController
                 'regionIds' => $user->getBaseRegionIds(),
                 'countryCodes' => $user->getBaseCountryCodes(),
             ] : null,
-            // docs/specs/coverage-provider.md §4 — null omits the layer.
-            'coverage_url' => $coverage->currentTileUrl(),
+            // docs/specs/coverage-provider.md §4: per-country archives, mounted by
+            // the client when a country meets the viewport. An empty family omits its control.
+            'tiles' => [
+                'coverage' => $coverage->countryTiles() ?: new \stdClass(),
+                'surface' => $surface->countryTiles() ?: new \stdClass(),
+                'gaps' => $surface->gaps(),
+                'routes' => $routes->countryTiles() ?: new \stdClass(),
+            ],
             'coverage_countries' => $coverage->countryCodes(),
             // data-provider-hierarchy.md §6.7.7 rung 8: a tile point whose
             // check_date is on or after this day has a witness inside the
             // window and drops its "?". One clock for tiles and pins.
             'witness_cutoff' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d'),
-            // docs/specs/coverage-provider.md §4 — surface PMTiles; null omits the control.
-            'surface_tiles_url' => $surface->classifiedUrl(),
-            'surface_todo_url' => $surface->todoUrl(),
-            'surface_gaps_url' => $surface->gapsUrl(),
-            'routes_tiles_url' => $routes->tilesUrl(),
             'voting_live' => 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE),
             'catalog_version' => $catalogProvider->versionTag(),
         ];

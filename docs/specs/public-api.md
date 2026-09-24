@@ -145,7 +145,7 @@ contract.
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/v1/map-config` | **implemented (PoC)**, the consumer bootstrap: routes-tiles URL + source-layer contract, route style groups, category table (letters A–M practical, N–Z experiential), attribution string |
+| GET | `/v1/map-config` | **implemented (PoC)**, the consumer bootstrap: per-country tile archives for routes and coverage (`tiles: {cc\|'*': {tiles, bounds, stamp}}`) + source-layer contract, route style groups, category table (letters A–M practical, N–Z experiential), attribution string. Add a country's source when its `bounds` meet your viewport; `*` is one archive for every country |
 | GET | `/v1/catalog` | item-type catalogue (letters A–M practical, N–Z experiential; `serviceKind`, vocabularies, tiers): the labels and rendering metadata a consumer needs |
 | GET | `/v1/search?bbox=&q=&letter=&tier=&limit=&cursor=` | search / browse coverage → GeoJSON `FeatureCollection` (reference-only) |
 | GET | `/v1/items/{id}` (`?hydrate=osm`) | single-item detail: our enrichment, provenance, verification state |

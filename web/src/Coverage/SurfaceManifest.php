@@ -12,8 +12,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * Road-surface tile manifest (docs/specs/coverage-provider.md §4).
- * All three arms come from one manifest so they move together.
- * Env pins win when set. Failure returns null and never throws.
+ * Per-country classified and to-do archives plus one world gap grid. A v1
+ * manifest or a pin is served as one world entry. Env pins win when set.
+ * Failure returns an empty array/null and never throws.
  *
  * @see docs/specs/coverage-provider.md §4
  *
@@ -36,37 +37,46 @@ final class SurfaceManifest extends BucketManifest
         parent::__construct($http, $cache, $logger, $manifestUrl);
     }
 
-    /** The classified skin's URL, what is under your tyres, or null. */
-    public function classifiedUrl(): ?string
+    /** @return array<string, array{tiles: array<string, string>, bounds: list<float>, stamp: string}> */
+    public function countryTiles(): array
     {
-        return $this->url('classified', $this->pinnedClassifiedUrl);
-    }
-
-    /** The "still to record" arm's URL, or null. */
-    public function todoUrl(): ?string
-    {
-        return $this->url('todo', $this->pinnedTodoUrl);
-    }
-
-    /** The gap grid's URL, or null. */
-    public function gapsUrl(): ?string
-    {
-        return $this->url('gaps', $this->pinnedGapsUrl);
-    }
-
-    /** One arm's URL: operator pin if set, else the manifest. A pin skips the bucket. */
-    private function url(string $arm, string $pinned): ?string
-    {
-        if ('' !== $pinned) {
-            return $pinned;
+        if ($this->pinned()) {
+            return self::worldEntry(['classified' => $this->pinnedClassifiedUrl, 'todo' => $this->pinnedTodoUrl], '');
         }
-        $tiles = $this->manifest()['tiles'] ?? null;
-        if (!\is_array($tiles)) {
+        $manifest = $this->manifest();
+        if (null === $manifest) {
+            return [];
+        }
+        if (2 === ($manifest['version'] ?? null)) {
+            return self::countryEntries($manifest, ['classified', 'todo']);
+        }
+        $tiles = $manifest['tiles'] ?? [];
+
+        return self::worldEntry(array_filter([
+            'classified' => \is_string($tiles['classified'] ?? null) ? $tiles['classified'] : '',
+            'todo' => \is_string($tiles['todo'] ?? null) ? $tiles['todo'] : '',
+        ]), \is_string($manifest['stamp'] ?? null) ? $manifest['stamp'] : '');
+    }
+
+    /** @return array{url: string, stamp: string}|null */
+    public function gaps(): ?array
+    {
+        if ($this->pinned()) {
+            return '' === $this->pinnedGapsUrl ? null : ['url' => $this->pinnedGapsUrl, 'stamp' => ''];
+        }
+        $manifest = $this->manifest();
+        $url = 2 === ($manifest['version'] ?? null) ? ($manifest['gaps']['url'] ?? null) : ($manifest['tiles']['gaps'] ?? null);
+        if (!\is_string($url) || '' === $url) {
             return null;
         }
-        $url = $tiles[$arm] ?? null;
 
-        return \is_string($url) && '' !== $url ? $url : null;
+        return ['url' => $url, 'stamp' => self::stampOf($url)];
+    }
+
+    /** Any pin puts the whole family on pins: a bisect names every arm it wants. */
+    private function pinned(): bool
+    {
+        return '' !== $this->pinnedClassifiedUrl || '' !== $this->pinnedTodoUrl || '' !== $this->pinnedGapsUrl;
     }
 
     /**
@@ -77,18 +87,16 @@ final class SurfaceManifest extends BucketManifest
     #[\Override]
     protected function needsManifest(): bool
     {
-        if ('' === $this->manifestUrl) {
-            return false;
-        }
-
-        return '' === $this->pinnedClassifiedUrl
-            || '' === $this->pinnedTodoUrl
-            || '' === $this->pinnedGapsUrl;
+        return '' !== $this->manifestUrl && !$this->pinned();
     }
 
     #[\Override]
     protected function validate(array $manifest): void
     {
+        $countries = $manifest['countries'] ?? null;
+        if (\is_array($countries) && [] !== $countries) {
+            return;
+        }
         $tiles = $manifest['tiles'] ?? null;
         if (!\is_array($tiles) || !array_filter(
             array_map(static fn (string $arm): mixed => $tiles[$arm] ?? null, self::ARMS),
@@ -98,11 +106,11 @@ final class SurfaceManifest extends BucketManifest
         }
     }
 
-    /** Cache key from the manifest URL. `.v1` retires old-shaped entries. */
+    /** Cache key from the manifest URL. `.v2` retires old-shaped entries. */
     #[\Override]
     protected function cacheKey(): string
     {
-        return 'surface.manifest.v1.'.hash('xxh128', $this->manifestUrl);
+        return 'surface.manifest.v2.'.hash('xxh128', $this->manifestUrl);
     }
 
     #[\Override]

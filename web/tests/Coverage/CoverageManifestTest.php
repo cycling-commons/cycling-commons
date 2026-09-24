@@ -18,9 +18,9 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * coverage-provider.md §4: the versioned tile URL is read
+ * coverage-provider.md §4: the per-country tile entries are read
  * server-side from the stable manifest key, cached 3600 s, and EVERY failure
- * path degrades to null — the map must always render, tiles or not. Failures
+ * path degrades to [] — the map must always render, tiles or not. Failures
  * are negative-cached briefly (hardening, spec-neutral) so a degraded bucket
  * does not cost a fetch timeout on every /map render under load.
  */
@@ -33,17 +33,51 @@ final class CoverageManifestTest extends TestCase
         return new CoverageManifest($http, new ArrayAdapter(), new NullLogger(), $enabled, $url);
     }
 
-    public function testFlagOffReturnsNullWithoutFetching(): void
+    public function testAV2ManifestServesOneEntryPerCountry(): void
+    {
+        $http = new MockHttpClient(new JsonMockResponse([
+            'version' => 2,
+            'countries' => [
+                'be' => ['stamp' => '20260924-0312', 'bounds' => [2.5, 49.4, 6.4, 51.5],
+                    'tiles' => ['points' => 'https://t/coverage/be/20260924-0312/points.pmtiles']],
+                'zz' => ['stamp' => '20260924-0312', 'bounds' => [-180.0, -85.0511, 180.0, 85.0511],
+                    'tiles' => ['points' => 'https://t/coverage/zz/20260924-0312/points.pmtiles']],
+            ],
+        ]));
+        $m = $this->manifest($http);
+
+        $tiles = $m->countryTiles();
+        self::assertSame(['be', 'zz'], array_keys($tiles));
+        self::assertSame('https://t/coverage/be/20260924-0312/points.pmtiles', $tiles['be']['tiles']['points']);
+        // 'zz' is the unstamped bucket, not a country: it stays out of countryCodes().
+        self::assertSame(['BE'], $m->countryCodes());
+    }
+
+    public function testAV1ManifestServesOneWorldEntry(): void
+    {
+        $http = new MockHttpClient(new JsonMockResponse([
+            'version' => 1,
+            'url' => 'https://maps.test/coverage/20260716-0400.pmtiles',
+            'country_codes' => ['BE', 'NL'],
+        ]));
+        $m = $this->manifest($http);
+
+        self::assertSame(['*' => ['tiles' => ['points' => 'https://maps.test/coverage/20260716-0400.pmtiles'],
+            'bounds' => [-180.0, -85.0511, 180.0, 85.0511], 'stamp' => '20260716-0400']], $m->countryTiles());
+        self::assertSame(['BE', 'NL'], $m->countryCodes());
+    }
+
+    public function testFlagOffReturnsNoTilesWithoutFetching(): void
     {
         $http = new MockHttpClient();
-        self::assertNull($this->manifest($http, enabled: false)->currentTileUrl());
+        self::assertSame([], $this->manifest($http, enabled: false)->countryTiles());
         self::assertSame(0, $http->getRequestsCount());
     }
 
-    public function testEmptyManifestUrlReturnsNull(): void
+    public function testEmptyManifestUrlReturnsNoTiles(): void
     {
         $http = new MockHttpClient();
-        self::assertNull($this->manifest($http, url: '')->currentTileUrl());
+        self::assertSame([], $this->manifest($http, url: '')->countryTiles());
         self::assertSame(0, $http->getRequestsCount());
     }
 
@@ -58,29 +92,29 @@ final class CoverageManifestTest extends TestCase
         ]));
         $manifest = $this->manifest($http);
 
-        self::assertSame('https://maps.test/coverage/20260716-0400.pmtiles', $manifest->currentTileUrl());
-        self::assertSame('https://maps.test/coverage/20260716-0400.pmtiles', $manifest->currentTileUrl());
+        self::assertSame('https://maps.test/coverage/20260716-0400.pmtiles', $manifest->countryTiles()['*']['tiles']['points']);
+        self::assertSame('https://maps.test/coverage/20260716-0400.pmtiles', $manifest->countryTiles()['*']['tiles']['points']);
         self::assertSame(1, $http->getRequestsCount());   // second read served from cache
     }
 
-    public function testHttpErrorReturnsNull(): void
+    public function testHttpErrorReturnsNoTiles(): void
     {
         $http = new MockHttpClient(new MockResponse('gone', ['http_code' => 500]));
-        self::assertNull($this->manifest($http)->currentTileUrl());
+        self::assertSame([], $this->manifest($http)->countryTiles());
     }
 
-    public function testTransportErrorReturnsNull(): void
+    public function testTransportErrorReturnsNoTiles(): void
     {
         $http = new MockHttpClient(static function (): never {
             throw new TransportException('connection refused');
         });
-        self::assertNull($this->manifest($http)->currentTileUrl());
+        self::assertSame([], $this->manifest($http)->countryTiles());
     }
 
-    public function testManifestWithoutUrlKeyReturnsNull(): void
+    public function testManifestWithoutUrlKeyReturnsNoTiles(): void
     {
         $http = new MockHttpClient(new JsonMockResponse(['version' => 1]));
-        self::assertNull($this->manifest($http)->currentTileUrl());
+        self::assertSame([], $this->manifest($http)->countryTiles());
     }
 
     public function testFailureIsNegativeCachedWithinTheHoldoffWindow(): void
@@ -91,10 +125,10 @@ final class CoverageManifestTest extends TestCase
         ]);
         $manifest = $this->manifest($http);
 
-        self::assertNull($manifest->currentTileUrl());
-        // Second render inside the negative-TTL window: null again, but served
+        self::assertSame([], $manifest->countryTiles());
+        // Second render inside the negative-TTL window: [] again, but served
         // from cache — a degraded bucket must not cost a fetch per request.
-        self::assertNull($manifest->currentTileUrl());
+        self::assertSame([], $manifest->countryTiles());
         self::assertSame(1, $http->getRequestsCount());
     }
 
@@ -107,9 +141,9 @@ final class CoverageManifestTest extends TestCase
         ]);
         $manifest = new CoverageManifest($http, new ArrayAdapter(clock: $clock), new NullLogger(), true, self::MANIFEST_URL);
 
-        self::assertNull($manifest->currentTileUrl());
+        self::assertSame([], $manifest->countryTiles());
         $clock->modify('+31 seconds');   // past NEGATIVE_TTL (30 s)
-        self::assertSame('https://maps.test/coverage/20260716-0500.pmtiles', $manifest->currentTileUrl());
+        self::assertSame('https://maps.test/coverage/20260716-0500.pmtiles', $manifest->countryTiles()['*']['tiles']['points']);
         self::assertSame(2, $http->getRequestsCount());
     }
 
@@ -122,13 +156,13 @@ final class CoverageManifestTest extends TestCase
             new MockHttpClient(new JsonMockResponse(['version' => 1, 'url' => 'https://maps.test/coverage/old.pmtiles'])),
             $cache, new NullLogger(), true, 'https://maps.test/old/manifest.json',
         );
-        self::assertSame('https://maps.test/coverage/old.pmtiles', $first->currentTileUrl());
+        self::assertSame('https://maps.test/coverage/old.pmtiles', $first->countryTiles()['*']['tiles']['points']);
 
         $second = new CoverageManifest(
             new MockHttpClient(new JsonMockResponse(['version' => 1, 'url' => 'https://maps.test/coverage/new.pmtiles'])),
             $cache, new NullLogger(), true, 'https://maps.test/new/manifest.json',
         );
-        self::assertSame('https://maps.test/coverage/new.pmtiles', $second->currentTileUrl());
+        self::assertSame('https://maps.test/coverage/new.pmtiles', $second->countryTiles()['*']['tiles']['points']);
     }
 
     public function testCountryCodesReturnsManifestArrayWhenPresent(): void
@@ -141,8 +175,8 @@ final class CoverageManifestTest extends TestCase
         $manifest = $this->manifest($http);
 
         self::assertSame(['BE', 'NL'], $manifest->countryCodes());
-        // Same cached decoded manifest serves url() + countryCodes(): one fetch.
-        self::assertSame('https://maps.test/coverage/20260716-0400.pmtiles', $manifest->currentTileUrl());
+        // Same cached decoded manifest serves countryTiles() + countryCodes(): one fetch.
+        self::assertSame('https://maps.test/coverage/20260716-0400.pmtiles', $manifest->countryTiles()['*']['tiles']['points']);
         self::assertSame(1, $http->getRequestsCount());
     }
 
@@ -183,7 +217,7 @@ final class CoverageManifestTest extends TestCase
 
     public function testCountryCodesIsEmptyWhenTilesOffWithoutFetching(): void
     {
-        // Same degradation contract as currentTileUrl(): flag off → [] and no fetch.
+        // Same degradation contract as countryTiles(): flag off → [] and no fetch.
         $http = new MockHttpClient();
         self::assertSame([], $this->manifest($http, enabled: false)->countryCodes());
         self::assertSame(0, $http->getRequestsCount());
@@ -198,7 +232,7 @@ final class CoverageManifestTest extends TestCase
             return new JsonMockResponse(['version' => 1, 'url' => 'https://maps.test/coverage/20260716-0400.pmtiles']);
         });
 
-        self::assertNotNull($this->manifest($http)->currentTileUrl());
+        self::assertNotSame([], $this->manifest($http)->countryTiles());
         self::assertIsArray($captured);
         self::assertEquals(5, $captured['timeout'] ?? null, 'idle timeout must bound the fetch');
         self::assertEquals(5, $captured['max_duration'] ?? null, 'max_duration must bound total request time (slow-drip host)');

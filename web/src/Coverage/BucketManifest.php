@@ -41,6 +41,9 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  */
 abstract class BucketManifest
 {
+    /** The world, as the bounds of an entry that serves every country (a v1 manifest or a pin). */
+    public const array WORLD_BOUNDS = [-180.0, -85.0511, 180.0, 85.0511];
+
     /** How long, in seconds, a manifest stays cached before being re-read. */
     protected const int CACHE_TTL = 3600;
 
@@ -165,6 +168,69 @@ abstract class BucketManifest
         $this->discardPending();
 
         return $manifest;
+    }
+
+    /**
+     * Per-country tile entries from a v2 manifest (docs/specs/coverage-provider.md §4).
+     * An entry needs four numeric bounds and at least one of `$arms` as a URL;
+     * anything else is left out rather than handed to the map.
+     *
+     * @param array<string, mixed> $manifest
+     * @param list<string>         $arms
+     *
+     * @return array<string, array{tiles: array<string, string>, bounds: list<float>, stamp: string}>
+     */
+    final protected static function countryEntries(array $manifest, array $arms): array
+    {
+        $out = [];
+        $countries = $manifest['countries'] ?? null;
+        if (!\is_array($countries)) {
+            return [];
+        }
+        foreach ($countries as $cc => $entry) {
+            if (!\is_string($cc) || 1 !== preg_match('/^[a-z]{2}$/', $cc) || !\is_array($entry)) {
+                continue;
+            }
+            $bounds = $entry['bounds'] ?? null;
+            if (!\is_array($bounds) || 4 !== \count($bounds) || \count(array_filter($bounds, is_numeric(...))) !== 4) {
+                continue;
+            }
+            $tiles = [];
+            foreach ($arms as $arm) {
+                $url = $entry['tiles'][$arm] ?? null;
+                if (\is_string($url) && '' !== $url) {
+                    $tiles[$arm] = $url;
+                }
+            }
+            if ([] === $tiles) {
+                continue;
+            }
+            $out[$cc] = ['tiles' => $tiles, 'bounds' => array_map(floatval(...), array_values($bounds)),
+                'stamp' => \is_string($entry['stamp'] ?? null) ? $entry['stamp'] : ''];
+        }
+        ksort($out);
+
+        return $out;
+    }
+
+    /**
+     * One entry for every country, from a v1 manifest or a pin.
+     *
+     * @param array<string, string> $tiles
+     *
+     * @return array<string, array{tiles: array<string, string>, bounds: list<float>, stamp: string}>
+     */
+    final protected static function worldEntry(array $tiles, string $stamp): array
+    {
+        $tiles = array_filter($tiles, static fn (string $u): bool => '' !== $u);
+
+        return [] === $tiles ? [] : ['*' => ['tiles' => $tiles, 'bounds' => self::WORLD_BOUNDS, 'stamp' => $stamp]];
+    }
+
+    /** The build stamp inside a versioned URL, '' when it has none. */
+    final protected static function stampOf(string $url): string
+    {
+        return 1 === preg_match('/(\d{8}-\d{4})/', $url, $m) ? $m[1] : '';
     }
 
     /** A started, unconsumed request, bounded in both idle and total time. */

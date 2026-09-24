@@ -43,10 +43,15 @@ catalogue letter, not the three of each shown here. Read it for shape, not for c
 <!-- CODE-ILLUSTRATIVE example response, abridged; the country lists run through every onboarded country and the category list through all letters -->
 ```json
 {
-  "version": "0.1",
+  "version": "0.2",
   "attribution": "© Cycling Commons contributors (ODbL) · © OpenStreetMap contributors",
   "routes": {
-    "tilesUrl": "https://tiles.cyclingcommons.org/routes/20260816-2223/routes.pmtiles",
+    "tiles": {
+      "be": { "tiles": { "routes": "https://tiles.cyclingcommons.org/routes/be/20260816-2223/routes.pmtiles" },
+              "bounds": [2.5, 49.4, 6.4, 51.5], "stamp": "20260816-2223" },
+      "nl": { "tiles": { "routes": "https://tiles.cyclingcommons.org/routes/nl/20260815-1901/routes.pmtiles" },
+              "bounds": [3.3, 50.7, 7.2, 53.6], "stamp": "20260815-1901" }
+    },
     "countries": ["be", "nl", "de"],
     "sourceLayers": { "lines": "routes_{cc}", "nodes": "knoop_{cc}" },
     "style": {
@@ -59,7 +64,12 @@ catalogue letter, not the three of each shown here. Read it for shape, not for c
     }
   },
   "coverage": {
-    "tilesUrl": "https://tiles.cyclingcommons.org/coverage/20260904-2154.pmtiles",
+    "tiles": {
+      "be": { "tiles": { "points": "https://tiles.cyclingcommons.org/coverage/be/20260904-2154/points.pmtiles" },
+              "bounds": [2.5, 49.4, 6.4, 51.5], "stamp": "20260904-2154" },
+      "zz": { "tiles": { "points": "https://tiles.cyclingcommons.org/coverage/zz/20260904-2154/points.pmtiles" },
+              "bounds": [-180.0, -85.0511, 180.0, 85.0511], "stamp": "20260904-2154" }
+    },
     "countries": ["be", "nl", "de", "zz"],
     "sourceLayers": { "points": "{letter}_{cc}" },
     "letters": ["b", "c", "d", "f", "g", "o", "p", "q"],
@@ -77,11 +87,17 @@ Field by field:
 
 - **`attribution`**: the string your map must display while Commons overlays are visible. Pass it
   to your map library's attribution control and you are done.
-- **`routes.tilesUrl`**: the current PMTiles archive for the route network. Each build lives under
-  its own stamped prefix (`routes/<YYYYMMDD-HHMM>/routes.pmtiles`), so this URL changes when a new
-  build is published, which is exactly why you read it from the config instead of hardcoding it.
-  It **can be `null`**: when no tileset is currently published, skip the routes overlay and carry
-  on; the REST endpoint still works.
+- **`routes.tiles`**: one PMTiles archive per country, keyed by lowercase country code, each an
+  object with its own `tiles` (arm name to URL, here just `routes`), `bounds`
+  (`[west, south, east, north]`, WGS84), and `stamp` (the build that published it, `YYYYMMDD-HHMM`).
+  Add a country's source when its `bounds` meet your viewport, the way a tile source normally
+  gates on zoom; a country absent from `tiles` has nothing published yet, so skip it and carry on.
+  A key of `*` instead of a country code means one archive serves every country: some installs
+  never split by country, and this is how that state looks in the config, not a special case your
+  code needs to branch on beyond "iterate the map's keys". Each build lives under its own stamped
+  prefix (`routes/<cc>/<YYYYMMDD-HHMM>/routes.pmtiles`), so a country's URL changes when a new build
+  for that country is published, which is exactly why you read it from the config instead of
+  hardcoding it.
 - **`routes.countries`** and **`routes.sourceLayers`**: the archive holds one source-layer per
   country, named by the pattern in `sourceLayers` with `{cc}` replaced by each lowercase country
   code. The country list is the set of onboarded countries as published by the coverage build's
@@ -94,14 +110,16 @@ Field by field:
   the Commons map without copying constants by hand. Using it is optional; the tiles do not care
   how you paint them. `badgeMinZoom` is the zoom from which the tiles carry junction-node points
   (the numbered "knooppunt" badges); below it they simply are not in the tiles.
-- **`coverage`**: the dense "everything" layer, raw OpenStreetMap coverage as a second PMTiles
-  archive, versioned as `coverage/<YYYYMMDD-HHMM>.pmtiles`. Source-layers are named per letter and
-  country (`b_be`, `d_nl`, ...); the `zz` bucket holds rows not stamped with a country, so append it
-  as the country list already does. The archive carries tiles from zoom 6 to 14: z6-10 tiles are
-  thinned to a density sample (the Commons draws them as a heatmap), z11-14 tiles carry every point.
-  `minZoom` (9) is the zoom from which the Commons map draws individual icons; treat it as the floor
-  for point markers and use the lower zooms, if at all, for a density overview. Colour the points by
-  letter from the category table. Like the routes URL, `tilesUrl` can be null; skip the layer then.
+- **`coverage`**: the dense "everything" layer, raw OpenStreetMap coverage as a second per-country
+  set of PMTiles archives under `coverage.tiles`, same shape as `routes.tiles` (country code or `*`
+  to `{tiles: {points: url}, bounds, stamp}`). Source-layers are named per letter and country
+  (`b_be`, `d_nl`, ...); the `zz` entry holds rows not stamped with a country, world-bounded so it
+  always meets the viewport, and its code is appended to `countries` the same way. The archive
+  carries tiles from zoom 6 to 14: z6-10 tiles are thinned to a density sample (the Commons draws
+  them as a heatmap), z11-14 tiles carry every point. `minZoom` (9) is the zoom from which the
+  Commons map draws individual icons; treat it as the floor for point markers and use the lower
+  zooms, if at all, for a density overview. Colour the points by letter from the category table.
+  Like the routes tiles, a country absent from `coverage.tiles` has nothing published; skip it.
 - **`categories`**: the full category table (letters A-M are the practical categories, N-Z the experiential ones): machine key, English label,
   colour, glyph, kind (`point`, `line`, or `surface`), and `bestOf` (whether the Commons map's
   Best of view shows this category). Use it to colour markers, build a legend, and reproduce the

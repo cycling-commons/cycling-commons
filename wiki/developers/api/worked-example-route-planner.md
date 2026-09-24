@@ -51,24 +51,29 @@ import { Protocol } from 'pmtiles';
 maplibregl.addProtocol('pmtiles', new Protocol().tile);   // once per app, before addSource
 
 function addCcRoutes(map, cc) {
-  if (!cc.routes.tilesUrl) return;                        // no tileset published: skip quietly
-  if (!map.getSource('cc-routes')) {
-    map.addSource('cc-routes', {
-      type: 'vector',
-      url: 'pmtiles://' + cc.routes.tilesUrl,
-    });
+  for (const [key, entry] of Object.entries(cc.routes.tiles)) {  // 'be', 'nl', ... or '*'
+    const sourceId = `cc-routes-${key}`;
+    if (!map.getSource(sourceId)) {
+      map.addSource(sourceId, {
+        type: 'vector',
+        url: 'pmtiles://' + entry.tiles.routes,
+        bounds: entry.bounds,                             // [west, south, east, north]: gate this source on your viewport
+      });
+    }
   }
-  for (const country of cc.routes.countries) {            // e.g. ['be', 'nl', 'de']
+  for (const country of cc.routes.countries) {             // e.g. ['be', 'nl', 'de']
+    const key = cc.routes.tiles[country] ? country : '*';   // a split archive if published, else the shared one
+    if (!cc.routes.tiles[key]) continue;                    // nothing published for this country yet
     const sourceLayer = cc.routes.sourceLayers.lines.replace('{cc}', country);
-    for (const group of cc.routes.style.groups) {         // national / regional / mtb
+    for (const group of cc.routes.style.groups) {           // national / regional / mtb
       const id = `cc-routes-${country}-${group.key}`;
       if (map.getLayer(id)) continue;
       map.addLayer({
         id,
         type: 'line',
-        source: 'cc-routes',
-        'source-layer': sourceLayer,                      // routes_be, routes_nl, ...
-        minzoom: 6,                                       // see the note below on the two floors
+        source: `cc-routes-${key}`,
+        'source-layer': sourceLayer,                        // routes_be, routes_nl, ...
+        minzoom: 6,                                         // see the note below on the two floors
         filter: ['in', ['get', 'net'], ['literal', group.nets]],
         paint: { 'line-color': group.color, 'line-width': 2, 'line-opacity': 0.55 },
       });
@@ -79,6 +84,12 @@ function addCcRoutes(map, cc) {
 
 Three things worth noticing:
 
+- **`cc.routes.tiles`** is a map from country code (or `*`, one archive that serves every country)
+  to `{ tiles, bounds, stamp }`. A source's `bounds` is what you gate `addSource` on once you pan
+  across more than a handful of countries; the snippet above adds every published source at start-up
+  for brevity. `cc.routes.countries` is the separate list of onboarded countries, which the loop
+  above uses to pick each country's source-layer (`routes_be`, ...) and its source: the country's
+  own archive when one is published, the shared `*` archive otherwise.
 - The `filter` splits one source-layer into three styled layers by the `net` property: the config
   says `['icn', 'ncn']` paint rose (`#C84E64`), `['rcn', 'lcn', 'other']` paint purple
   (`#7A4FCF`), `['mtb']` paints brown. That reproduces the Commons look; you are free to paint
@@ -248,9 +259,9 @@ that it is visible, not which widget shows it.
       `localhost:9100/cc-maps/routes/...`. Not one download of the archive: a handful of byte ranges,
       which is the whole argument for tiles over a bulk file.
 
-    If the routes layer draws nothing, check `map-config`'s `routes.tilesUrl` first. It is allowed
-    to be `null` on a stack that has never published a routes tileset, and the code above skips the
-    layer quietly when it is, which is correct behaviour and looks exactly like a bug.
+    If the routes layer draws nothing, check `map-config`'s `routes.tiles` first. It is allowed to
+    be `{}` on a stack that has never published a routes tileset, and the code above adds no source
+    and no layer when it is, which is correct behaviour and looks exactly like a bug.
 
 ## The whole flow, summarised
 
