@@ -227,10 +227,10 @@ abstract class BucketManifest
         return [] === $tiles ? [] : ['*' => ['tiles' => $tiles, 'bounds' => self::WORLD_BOUNDS, 'stamp' => $stamp]];
     }
 
-    /** The build stamp inside a versioned URL, '' when it has none. */
+    /** The build stamp (YYYYMMDD-HHMMSS, or YYYYMMDD-HHMM) inside a versioned URL, '' when it has none. */
     final protected static function stampOf(string $url): string
     {
-        return 1 === preg_match('/(\d{8}-\d{4})/', $url, $m) ? $m[1] : '';
+        return 1 === preg_match('/(\d{8}-\d{4}(?:\d{2})?)(?!\d)/', $url, $m) ? $m[1] : '';
     }
 
     /** A started, unconsumed request, bounded in both idle and total time. */

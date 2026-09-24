@@ -65,7 +65,7 @@ trait CoverageRunSchema
             'finished' => '1 hour',
             'requested' => 2,
             'loaded' => 2,
-            'url' => 'https://bucket.test/coverage-2026-09-21.pmtiles',
+            'url' => 'be,nl',
         ];
 
         return (int) $db->fetchOne(

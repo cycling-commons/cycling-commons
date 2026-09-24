@@ -83,7 +83,7 @@ final class CoverageRunsTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
-    public function testTheListNamesTheTriggerAndThePublishedArchive(): void
+    public function testTheListNamesTheTriggerAndTheRebuiltCountries(): void
     {
         $client = static::createClient();
         $db = $this->db();
@@ -95,7 +95,7 @@ final class CoverageRunsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('dispatcher', $html);
-        self::assertStringContainsString('coverage-2026-09-21.pmtiles', $html);
+        self::assertStringContainsString('be,nl', $html);
         self::assertStringContainsString('2 of 2', $html, 'regions loaded of requested');
     }
 

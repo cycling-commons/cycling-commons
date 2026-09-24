@@ -20,7 +20,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * coverage-provider.md §4: the per-country tile entries are read
  * server-side from the stable manifest key, cached 3600 s, and EVERY failure
- * path degrades to [] — the map must always render, tiles or not. Failures
+ * path degrades to []: the map must always render, tiles or not. Failures
  * are negative-cached briefly (hardening, spec-neutral) so a degraded bucket
  * does not cost a fetch timeout on every /map render under load.
  */
@@ -65,6 +65,34 @@ final class CoverageManifestTest extends TestCase
         self::assertSame(['*' => ['tiles' => ['points' => 'https://maps.test/coverage/20260716-0400.pmtiles'],
             'bounds' => [-180.0, -85.0511, 180.0, 85.0511], 'stamp' => '20260716-0400']], $m->countryTiles());
         self::assertSame(['BE', 'NL'], $m->countryCodes());
+    }
+
+    public function testAStampWithSecondsIsReadWhole(): void
+    {
+        $http = new MockHttpClient(new JsonMockResponse([
+            'version' => 1,
+            'url' => 'https://maps.test/coverage/20260924-031205.pmtiles',
+        ]));
+
+        self::assertSame('20260924-031205', $this->manifest($http)->countryTiles()['*']['stamp']);
+    }
+
+    public function testCountryCodesAndTilesShareOneManifestRead(): void
+    {
+        $reads = 0;
+        $http = new MockHttpClient(function () use (&$reads): JsonMockResponse {
+            ++$reads;
+
+            return new JsonMockResponse(['version' => 2, 'countries' => [
+                'nl' => ['stamp' => '20260924-031205', 'bounds' => [3.3, 50.7, 7.2, 53.6],
+                    'tiles' => ['points' => 'https://t/coverage/nl/20260924-031205/points.pmtiles']],
+            ]]);
+        });
+        // No cache between the two reads: a second manifest() call would fetch again.
+        $m = new CoverageManifest($http, new \Symfony\Component\Cache\Adapter\NullAdapter(), new NullLogger(), true, self::MANIFEST_URL);
+
+        self::assertSame(['NL'], $m->countryCodes());
+        self::assertSame(1, $reads);
     }
 
     public function testFlagOffReturnsNoTilesWithoutFetching(): void

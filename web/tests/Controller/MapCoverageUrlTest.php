@@ -15,7 +15,7 @@ use Symfony\Component\HttpClient\Response\JsonMockResponse;
 
 /**
  * coverage-provider.md §4: the map shell injects the coverage family into
- * window.CC_TILES only when the flag is on AND the manifest resolved — an
+ * window.CC_TILES only when the flag is on AND the manifest resolved, and an
  * empty object otherwise, so map.js renders no coverage control.
  */
 final class MapCoverageUrlTest extends WebTestCase

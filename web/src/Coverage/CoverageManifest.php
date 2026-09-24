@@ -40,15 +40,8 @@ final class CoverageManifest extends BucketManifest
     public function countryTiles(): array
     {
         $manifest = $this->manifest();
-        if (null === $manifest) {
-            return [];
-        }
-        if (2 === ($manifest['version'] ?? null)) {
-            return self::countryEntries($manifest, ['points']);
-        }
-        $url = $manifest['url'] ?? null;
 
-        return self::worldEntry(['points' => \is_string($url) ? $url : ''], self::stampOf(\is_string($url) ? $url : ''));
+        return null === $manifest ? [] : self::entriesOf($manifest);
     }
 
     /**
@@ -59,10 +52,13 @@ final class CoverageManifest extends BucketManifest
     public function countryCodes(): array
     {
         $manifest = $this->manifest();
-        if (null !== $manifest && 2 === ($manifest['version'] ?? null)) {
+        if (null === $manifest) {
+            return [];
+        }
+        if (2 === ($manifest['version'] ?? null)) {
             return array_values(array_map(
                 strtoupper(...),
-                array_filter(array_keys($this->countryTiles()), static fn (string $k): bool => '*' !== $k && 'zz' !== $k),
+                array_filter(array_keys(self::entriesOf($manifest)), static fn (string $k): bool => '*' !== $k && 'zz' !== $k),
             ));
         }
         $codes = $manifest['country_codes'] ?? null;
@@ -71,6 +67,21 @@ final class CoverageManifest extends BucketManifest
         }
 
         return array_values(array_filter($codes, 'is_string'));
+    }
+
+    /**
+     * @param array<string, mixed> $manifest
+     *
+     * @return array<string, array{tiles: array<string, string>, bounds: list<float>, stamp: string}>
+     */
+    private static function entriesOf(array $manifest): array
+    {
+        if (2 === ($manifest['version'] ?? null)) {
+            return self::countryEntries($manifest, ['points']);
+        }
+        $url = $manifest['url'] ?? null;
+
+        return self::worldEntry(['points' => \is_string($url) ? $url : ''], self::stampOf(\is_string($url) ? $url : ''));
     }
 
     #[\Override]
