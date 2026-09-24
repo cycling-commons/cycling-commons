@@ -7,12 +7,18 @@ the stable manifest key points Symfony's CoverageManifest at the current
 artifact. Dev talks to the compose MinIO, prod to the CC Hetzner bucket —
 same code, COVERAGE_S3_* env only.
 """
+import contextlib
 import datetime
+import hashlib
 import json
 import os
 import re
+from collections.abc import Iterable
+from dataclasses import dataclass
+from pathlib import Path
 
 import boto3
+import psycopg
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
@@ -74,6 +80,152 @@ def ensure_bucket(client=None):
             "Resource": [f"arn:aws:s3:::{bucket}/*"],
         }],
     }))
+
+
+FAMILIES = {"coverage": MANIFEST_KEY, "surface": "surface/manifest.json", "routes": "routes/manifest.json"}
+# <family>/<cc or gaps>/<stamp>/<arm>.pmtiles: one folder per country build,
+# so pruning is per country and never touches a neighbour's files.
+_COUNTRY_KEY = re.compile(r"^(coverage|surface|routes)/([a-z]{2}|gaps)/(\d{8}-\d{4})/[a-z]+\.pmtiles$")
+# One advisory-lock key per manifest, distinct from the run lock
+# (run.COVERAGE_ADVISORY_LOCK_KEY), which the coverage run holds on its own
+# connection while it publishes.
+_MANIFEST_LOCK_KEYS = {"coverage": 0xC07E7A70, "surface": 0xC07E7A71, "routes": 0xC07E7A72}
+
+
+@dataclass(frozen=True)
+class CountryBuild:
+    """One country's freshly built archives and what they were built from."""
+
+    paths: dict[str, Path]      # arm -> local .pmtiles
+    inputs: str                 # inputs_fingerprint of everything the build read
+    bounds: list[float]
+    counts: dict
+
+
+@dataclass(frozen=True)
+class GapsBuild:
+    path: Path
+    inputs: str
+
+
+def inputs_fingerprint(files: Iterable[Path], *extra: str) -> str:
+    """Content hash of a build's inputs plus any extra strings (contract, profile).
+
+    Content, not names or mtime: files are sorted by path only so the hash is
+    order-independent, but a workdir file's name never enters the digest - the
+    coverage export rewrites every file every night under fresh names, and a
+    wiped workdir must not look like new data.
+    """
+    h = hashlib.sha256()
+    for path in sorted(Path(p) for p in files):
+        with open(path, "rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+        h.update(b"\0")
+    for e in extra:
+        h.update(e.encode() + b"\0")
+    return h.hexdigest()[:16]
+
+
+def read_manifest(family: str, client=None) -> dict:
+    """The live v2 manifest. Missing, unreadable or v1 reads as empty, so the
+    first v2 publish rebuilds every country it is given."""
+    client = client or _client()
+    try:
+        doc = json.loads(client.get_object(Bucket=_bucket(), Key=FAMILIES[family])["Body"].read())
+    except Exception:  # noqa: BLE001 - absent, unreadable, malformed: all "nothing published yet"
+        return {"version": 2, "countries": {}}
+    if doc.get("version") != 2 or not isinstance(doc.get("countries"), dict):
+        return {"version": 2, "countries": {}}
+    return doc
+
+
+@contextlib.contextmanager
+def manifest_lock(family: str):
+    """Serialise read-modify-write of one manifest across processes."""
+    dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        conn.execute("SET lock_timeout = '120s'")
+        conn.execute("SELECT pg_advisory_lock(%s)", (_MANIFEST_LOCK_KEYS[family],))
+        try:
+            yield
+        finally:
+            conn.execute("SELECT pg_advisory_unlock(%s)", (_MANIFEST_LOCK_KEYS[family],))
+
+
+def publish_countries(family, built, *, gaps=None, retire=(), client=None, now=None, lock=None) -> dict:
+    """Upload each built country under its own versioned prefix, then merge the
+    entries into the live manifest. Countries not in `built` keep their entry;
+    only `retire` removes one. Returns the manifest as written."""
+    client = client or _client()
+    bucket = _bucket()
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    stamp = now.strftime("%Y%m%d-%H%M")
+    built_at = now.isoformat(timespec="seconds")
+    base = os.environ["COVERAGE_PUBLIC_BASE_URL"].rstrip("/")
+
+    def put(key, path):
+        with open(path, "rb") as fh:
+            client.put_object(Bucket=bucket, Key=key, Body=fh, ContentType="application/octet-stream",
+                              # versioned key: a rider mid-session holds offsets into these bytes
+                              CacheControl="public, max-age=31536000, immutable")
+        return f"{base}/{key}"
+
+    entries = {}
+    for cc, b in built.items():
+        cc = cc.lower()
+        tiles = {arm: put(f"{family}/{cc}/{stamp}/{arm}.pmtiles", path) for arm, path in sorted(b.paths.items())}
+        entries[cc] = {"stamp": stamp, "built_at": built_at, "inputs": b.inputs,
+                       "bounds": b.bounds, "counts": b.counts, "tiles": tiles}
+    gaps_entry = None
+    if gaps is not None:
+        gaps_entry = {"stamp": stamp, "built_at": built_at, "inputs": gaps.inputs,
+                      "url": put(f"{family}/gaps/{stamp}/gaps.pmtiles", gaps.path)}
+
+    with (lock or manifest_lock)(family):
+        doc = read_manifest(family, client)
+        doc["countries"].update(entries)
+        for cc in retire:
+            doc["countries"].pop(cc.lower(), None)
+        if gaps_entry is not None:
+            doc["gaps"] = gaps_entry
+        doc["updated_at"] = built_at
+        client.put_object(Bucket=bucket, Key=FAMILIES[family],
+                          Body=json.dumps(doc, separators=(",", ":")).encode(),
+                          ContentType="application/json",
+                          # short TTL: a rebuild goes live within the hour, no deploy
+                          CacheControl="public, max-age=300")
+    return doc
+
+
+def prune_family(family: str, manifest: dict, keep: int = 3, client=None) -> list[str]:
+    """Delete builds beyond the newest `keep` per country, never a live stamp."""
+    client = client or _client()
+    bucket = _bucket()
+    by_cc: dict[str, dict[str, list[str]]] = {}
+    token = None
+    while True:
+        kw = {"Bucket": bucket, "Prefix": f"{family}/"}
+        if token:
+            kw["ContinuationToken"] = token
+        resp = client.list_objects_v2(**kw)
+        for o in resp.get("Contents", []):
+            m = _COUNTRY_KEY.match(o["Key"])
+            if m:
+                by_cc.setdefault(m.group(2), {}).setdefault(m.group(3), []).append(o["Key"])
+        if not resp.get("IsTruncated"):
+            break
+        token = resp.get("NextContinuationToken")
+    live = {cc: e.get("stamp") for cc, e in manifest.get("countries", {}).items()}
+    if manifest.get("gaps"):
+        live["gaps"] = manifest["gaps"].get("stamp")
+    stale = []
+    for cc, stamps in by_cc.items():
+        keepers = set(sorted(stamps, reverse=True)[:keep]) | {live.get(cc)}
+        stale += [k for s, ks in stamps.items() if s not in keepers for k in ks]
+    for key in sorted(stale, reverse=True):
+        client.delete_object(Bucket=bucket, Key=key)
+    return stale
 
 
 def upload(pmtiles_path, manifest, client=None, now=None):

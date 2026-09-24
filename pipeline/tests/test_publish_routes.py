@@ -15,7 +15,7 @@ import pytest
 
 from coverage.publish import (ROUTES_MANIFEST_KEY, SURFACE_MANIFEST_KEY,
                               prune_routes, published_countries, upload_routes)
-from tests.test_publish_surface import FakeS3
+from fakes import FakeS3
 
 NOW = datetime.datetime(2026, 8, 13, 1, 30, tzinfo=datetime.timezone.utc)
 

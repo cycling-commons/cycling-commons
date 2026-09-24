@@ -389,6 +389,19 @@ def build_routes_pmtiles(way_files: dict[str, list[Path]], node_files: dict[str,
     _run(cmd)
 
 
+# Bumped whenever a builder's tippecanoe flags change: the rebuild rule
+# (coverage-provider.md §3) cannot see a flag change in the input files.
+TILE_PROFILE = {"coverage": "1", "surface": "1", "routes": "1", "gaps": "1"}
+
+
+def artifact_bounds(path) -> list[float]:
+    """min_lon, min_lat, max_lon, max_lat from a built archive's header."""
+    bounds = _header_bounds(_show(path))
+    if len(bounds) != 4:
+        raise RuntimeError(f"no bounds in the header of {path}")
+    return bounds
+
+
 def build_gaps_pmtiles(files: list[Path], out_path: Path, contract) -> None:
     """tippecanoe -> the gap grid: one square per cell, every country in one layer.
 
