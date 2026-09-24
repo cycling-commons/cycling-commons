@@ -259,29 +259,39 @@ class RouteCounts:
     ways: int
     nodes: int
     relations: int
+    foreign: int = 0
 
 
 def extract_region(pbf_path: Path, contract: Contract, *,
                    ways_out: Path, nodes_out: Path, wayids_out: Path,
-                   ridtok: str = "", cctok: str = "") -> RouteCounts:
+                   ridtok: str = "", cctok: str = "",
+                   keep: Callable[[list[tuple[float, float]]], bool] | None = None) -> RouteCounts:
     """Two passes over a filtered PBF -> way lines, node points, and the way-id set.
 
     `wayids_out` is the surface pass's route-awareness input: every member way
     id, one per line, sorted — INCLUDING ways whose geometry could not be
     emitted here, because the surface pass walks its own (complete) extract and
-    a way this file is missing would silently stay class-gated homework.
+    a way this file is missing would silently stay class-gated homework. The
+    set stays whole whatever `keep` says: it is written from `relations.by_way`
+    unfiltered, because the owning country's surface pass needs every member id.
     """
     relations = _RelationPass()
     relations.apply_file(str(pbf_path))
 
-    counts = {"ways": 0, "nodes": 0}
+    counts = {"ways": 0, "nodes": 0, "foreign": 0}
     with ways_out.open("w", encoding="utf-8") as wf, \
             nodes_out.open("w", encoding="utf-8") as nf:
         def emit_way(way: RouteWay) -> None:
+            if keep is not None and not keep(way.coords):
+                counts["foreign"] += 1
+                return
             wf.write(feature_json_way(way, contract, ridtok=ridtok, cctok=cctok) + "\n")
             counts["ways"] += 1
 
         def emit_node(node: RouteNode) -> None:
+            if keep is not None and not keep([(node.lon, node.lat)]):
+                counts["foreign"] += 1
+                return
             nf.write(feature_json_node(node, contract, ridtok=ridtok, cctok=cctok) + "\n")
             counts["nodes"] += 1
 
@@ -294,7 +304,8 @@ def extract_region(pbf_path: Path, contract: Contract, *,
     # Distinct memberships, not relations parsed: two relations with identical
     # tags collapse in by_way, and the count is a progress line, not a ledger.
     rels = {m for members in relations.by_way.values() for m in members}
-    return RouteCounts(ways=counts["ways"], nodes=counts["nodes"], relations=len(rels))
+    return RouteCounts(ways=counts["ways"], nodes=counts["nodes"], relations=len(rels),
+                       foreign=counts["foreign"])
 
 
 def load_way_ids(path: Path) -> frozenset[int]:

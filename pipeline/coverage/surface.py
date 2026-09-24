@@ -333,12 +333,14 @@ class SurfaceCounts:
     classified: int
     todo: int
     cells: int
+    foreign: int = 0
 
 
 def extract_region(pbf_path: Path, contract: Contract, *,
                    classified_out: Path, todo_out: Path, gaps_out: Path,
                    ridtok: str = "", cctok: str = "",
-                   route_way_ids: frozenset[int] | set[int] = frozenset()) -> SurfaceCounts:
+                   route_way_ids: frozenset[int] | set[int] = frozenset(),
+                   keep: Callable[[list[tuple[float, float]]], bool] | None = None) -> SurfaceCounts:
     """One pass over a filtered PBF -> all three artifacts' GeoJSONL.
 
     Written straight through to disk: a country's ways never accumulate in
@@ -352,16 +354,23 @@ def extract_region(pbf_path: Path, contract: Contract, *,
     on LF-ZZ are the worked example. The set comes from the routes extractor's
     way-id file (routes.load_way_ids); empty means the class gate stands alone,
     which is what the blanket tertiary+cycleway stopgap was withdrawn for.
+
+    `keep` is the border owner rule (coverage.ownership): a way another country
+    owns is dropped before it reaches any arm or the grid. None keeps every way,
+    which is what a dev/ region gets.
     """
     spec = contract.surface
     untagged_class = spec["untaggedClass"]
     todo_highways = set(spec["todo"]["highways"])
     grid = GapGrid(spec["gaps"]["cellZoom"])
-    counts = {"classified": 0, "todo": 0}
+    counts = {"classified": 0, "todo": 0, "foreign": 0}
 
     with classified_out.open("w", encoding="utf-8") as cf, \
             todo_out.open("w", encoding="utf-8") as tf:
         def emit(way: SurfaceWay) -> None:
+            if keep is not None and not keep(way.coords):
+                counts["foreign"] += 1
+                return
             unrecorded = way.cls == untagged_class
             if not unrecorded:
                 cf.write(feature_json(way, ridtok=ridtok, cctok=cctok) + "\n")
@@ -387,7 +396,8 @@ def extract_region(pbf_path: Path, contract: Contract, *,
         for line in grid.features(ridtok=ridtok, cctok=cctok):
             gf.write(line + "\n")
             cells += 1
-    return SurfaceCounts(classified=counts["classified"], todo=counts["todo"], cells=cells)
+    return SurfaceCounts(classified=counts["classified"], todo=counts["todo"], cells=cells,
+                         foreign=counts["foreign"])
 
 
 def selector_expressions(contract: Contract) -> list[str]:

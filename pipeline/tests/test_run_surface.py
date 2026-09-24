@@ -32,13 +32,14 @@ def offline(monkeypatch, tmp_path):
     monkeypatch.setenv("COVERAGE_PBF_OFFLINE", "1")
     (tmp_path / "europe-netherlands-latest.osm.pbf").write_bytes(b"pbf")
     monkeypatch.setattr(run, "run_filter", lambda pbf, out, exprs: out)
+    monkeypatch.setattr(run, "_ownership", lambda workdir: (None, "test"))
     return tmp_path
 
 
 def test_run_surface_fresh_extract_counts_and_succeeds(offline, contract, monkeypatch, capsys):
     """The rebind fix: a FRESH extract must reach the tally, not the except."""
     def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out,
-                     ridtok="", cctok="", route_way_ids=frozenset()):
+                     ridtok="", cctok="", route_way_ids=frozenset(), keep=None):
         classified_out.write_text('{"f":1}\n{"f":2}\n')
         todo_out.write_text('{"f":3}\n')
         gaps_out.write_text('{"f":4}\n')
@@ -58,7 +59,7 @@ def test_run_surface_feeds_the_routes_way_ids_to_the_extract(offline, contract, 
     seen = {}
 
     def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out,
-                     ridtok="", cctok="", route_way_ids=frozenset()):
+                     ridtok="", cctok="", route_way_ids=frozenset(), keep=None):
         seen["way_ids"] = route_way_ids
         for p in (classified_out, todo_out, gaps_out):
             p.write_text("")
@@ -76,7 +77,7 @@ def test_run_surface_says_so_when_route_awareness_is_missing(offline, contract,
                                                              monkeypatch, capsys):
     # The arm still builds, but the log must say why the Zuiderdijk would show
     # class-gated homework only.
-    def fake_extract(filtered, contract, **kw):
+    def fake_extract(filtered, contract, *, keep=None, **kw):
         for key in ("classified_out", "todo_out", "gaps_out"):
             kw[key].write_text("")
         return SurfaceCounts(0, 0, 0)
@@ -91,7 +92,8 @@ def test_run_routes_extract_only_writes_the_three_outputs(offline, contract,
                                                           monkeypatch, capsys):
     from coverage.routes import RouteCounts
 
-    def fake_extract(filtered, contract, *, ways_out, nodes_out, wayids_out, ridtok="", cctok=""):
+    def fake_extract(filtered, contract, *, ways_out, nodes_out, wayids_out, ridtok="", cctok="",
+                     keep=None):
         assert cctok == "|NL|"
         ways_out.write_text('{"f":1}\n')
         nodes_out.write_text("")            # a country with no knooppunten
@@ -115,7 +117,8 @@ def test_run_routes_reuses_an_extract_even_when_a_country_has_no_knooppunten(
 
     calls = []
 
-    def fake_extract(filtered, contract, *, ways_out, nodes_out, wayids_out, ridtok="", cctok=""):
+    def fake_extract(filtered, contract, *, ways_out, nodes_out, wayids_out, ridtok="", cctok="",
+                     keep=None):
         calls.append(1)
         ways_out.write_text('{"f":1}\n')
         nodes_out.write_text("")
@@ -146,3 +149,14 @@ def test_extract_is_stale_when_an_extra_input_is_newer(tmp_path):
     os.utime(wayids, (time.time() + 5, time.time() + 5))
     assert not _extract_is_current(extract, tmp_path / "no.pbf", contract_file,
                                    extra_inputs=(wayids,))
+
+
+def test_a_changed_outline_snapshot_invalidates_the_extract(tmp_path):
+    from coverage.run import _extract_is_current, extract_stamp
+    extract = tmp_path / "x.geojsonl"
+    extract.write_text("{}\n")
+    stamp = tmp_path / "x.stamp"
+    stamp.write_text(extract_stamp("aaaa"))
+    pbf = tmp_path / "p.pbf"
+    assert _extract_is_current(extract, pbf, tmp_path / "none.json", stamp, expected=extract_stamp("aaaa"))
+    assert not _extract_is_current(extract, pbf, tmp_path / "none.json", stamp, expected=extract_stamp("bbbb"))

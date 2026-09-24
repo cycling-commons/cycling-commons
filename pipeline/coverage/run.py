@@ -25,6 +25,7 @@ import psycopg
 from .contract import load_contract
 from .extract import export_lines, rideable_lines, run_extract, run_filter, run_way_filter
 from .load import apply_session_budget, ensure_schema, load_region, resolve_country
+from .ownership import Owners, snapshot_outlines
 from .parse import parse_pois
 from .publish import (ROUTES_MANIFEST_KEY, ensure_bucket, prune, prune_routes,
                       prune_surface, published_countries, upload, upload_routes,
@@ -171,10 +172,30 @@ def contract_fingerprint(contract_file: pathlib.Path | None = None) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
+def extract_stamp(outlines_fp: str) -> str:
+    """What a line extract was shaped by: the contract and the border outlines."""
+    return f"{contract_fingerprint()}:{outlines_fp}"
+
+
+def _ownership(workdir: pathlib.Path) -> tuple[Owners, str]:
+    """Snapshot the operational region outlines once per run (coverage.ownership).
+
+    Needs the database even for an offline tiling pass. A run that cannot read
+    the outlines fails: a line extract without the owner rule would put every
+    border road back into two files.
+    """
+    path = workdir / "ownership-regions.json"
+    dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
+    with psycopg.connect(dsn) as conn:
+        fp = snapshot_outlines(conn, path)
+    return Owners.load(path), fp
+
+
 def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file: pathlib.Path,
                         stamp: pathlib.Path | None = None, *,
                         extra_inputs: tuple[pathlib.Path, ...] = (),
-                        allow_empty: bool = False) -> bool:
+                        allow_empty: bool = False,
+                        expected: str | None = None) -> bool:
     """Is a cached per-country GeoJSONL still good?
 
     Only when it exists, is not empty, is newer than the PBF it came from, and
@@ -211,7 +232,8 @@ def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file:
         # Back-compat for callers that have no stamp to offer (the tests' own
         # temp contracts): fall back to the timestamp rule this replaced.
         return not contract_file.exists() or extract.stat().st_mtime >= contract_file.stat().st_mtime
-    return stamp.exists() and stamp.read_text().strip() == contract_fingerprint(contract_file)
+    want = contract_fingerprint(contract_file) if expected is None else expected
+    return stamp.exists() and stamp.read_text().strip() == want
 
 
 def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
@@ -240,6 +262,8 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
     counts = {"classified": 0, "todo": 0, "cells": 0}
     allow_shrink = os.environ.get("COVERAGE_ALLOW_SHRINK") == "1"
     failed = []
+    owners, outlines_fp = _ownership(workdir)
+    want = extract_stamp(outlines_fp)
     for region in regions:
         try:
             country_code = resolve_country(region)
@@ -277,7 +301,7 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
             # invalidates the surface extracts it would change.
             wayids_path = workdir / f"routes_{slug}_wayids.txt"
             if all(_extract_is_current(f, pbf, contract_path(), stamp,
-                                       extra_inputs=(wayids_path,))
+                                       extra_inputs=(wayids_path,), expected=want)
                    for f in (out, todo_out, gaps_out)):
                 print(f"[surface] {region}: extract unchanged, reusing {out.name}")
             else:
@@ -299,12 +323,14 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                 fresh = extract_region(
                     filtered, contract, classified_out=out, todo_out=todo_out,
                     gaps_out=gaps_out, cctok=f"|{country_code}|",
-                    route_way_ids=route_way_ids)
+                    route_way_ids=route_way_ids,
+                    keep=owners.keeper(country_code) if owners else None)
                 # Written only after all three files are complete, so a run
                 # killed mid-extract leaves no stamp and the next one redoes it.
-                stamp.write_text(contract_fingerprint(), encoding="utf-8")
+                stamp.write_text(want, encoding="utf-8")
                 print(f"[surface] {region}: {fresh.classified} classified, "
-                      f"{fresh.todo} to record, {fresh.cells} gap cells")
+                      f"{fresh.todo} to record, {fresh.cells} gap cells, "
+                      f"{fresh.foreign} owned by a neighbour")
             for key, path in (("classified", out), ("todo", todo_out), ("cells", gaps_out)):
                 with path.open("rb") as fh:
                     counts[key] += sum(1 for _ in fh)
@@ -411,6 +437,8 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
     counts = {"ways": 0, "nodes": 0}
     allow_shrink = os.environ.get("COVERAGE_ALLOW_SHRINK") == "1"
     failed = []
+    owners, outlines_fp = _ownership(workdir)
+    want = extract_stamp(outlines_fp)
     for region in regions:
         try:
             country_code = resolve_country(region)
@@ -426,7 +454,8 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
             # file, and a country with no signed routes at all (rare, but a
             # partial extract like a single US state can be) has empty ways —
             # both are answers, not failures to cache.
-            if all(_extract_is_current(f, pbf, contract_path(), stamp, allow_empty=True)
+            if all(_extract_is_current(f, pbf, contract_path(), stamp, allow_empty=True,
+                                       expected=want)
                    for f in (ways_out, nodes_out, wayids_out)):
                 print(f"[routes] {region}: extract unchanged, reusing {ways_out.name}")
             else:
@@ -434,10 +463,12 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
                 run_filter(pbf, filtered, routes_selectors())
                 fresh = routes_extract_region(
                     filtered, contract, ways_out=ways_out, nodes_out=nodes_out,
-                    wayids_out=wayids_out, cctok=f"|{country_code}|")
-                stamp.write_text(contract_fingerprint(), encoding="utf-8")
+                    wayids_out=wayids_out, cctok=f"|{country_code}|",
+                    keep=owners.keeper(country_code) if owners else None)
+                stamp.write_text(want, encoding="utf-8")
                 print(f"[routes] {region}: {fresh.ways} member ways on "
-                      f"{fresh.relations} routes, {fresh.nodes} knooppunten")
+                      f"{fresh.relations} routes, {fresh.nodes} knooppunten, "
+                      f"{fresh.foreign} owned by a neighbour")
             for key, path in (("ways", ways_out), ("nodes", nodes_out)):
                 with path.open("rb") as fh:
                     counts[key] += sum(1 for _ in fh)

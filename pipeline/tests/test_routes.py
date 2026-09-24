@@ -268,3 +268,14 @@ def test_load_way_ids_missing_file_is_empty_not_fatal(tmp_path):
     # A region whose routes were never extracted still gets its surface build —
     # just without route-awareness. The caller prints the fact.
     assert load_way_ids(tmp_path / "absent.txt") == frozenset()
+
+
+def test_extract_drops_route_ways_and_knooppunten_another_country_owns(tmp_path, contract):
+    pbf = tmp_path / "zuiderdijk.osm.pbf"
+    _write_fixture_pbf(pbf)
+    out = extract_region(pbf, contract, ways_out=tmp_path / "w", nodes_out=tmp_path / "n",
+                         wayids_out=tmp_path / "ids", keep=lambda coords: False)
+    assert (out.ways, out.nodes) == (0, 0)
+    assert out.foreign == 4            # three member ways and one knooppunt
+    # The way-id set stays whole: the owning country's surface pass needs every member id.
+    assert (tmp_path / "ids").read_text().split() == ["101", "102", "103"]

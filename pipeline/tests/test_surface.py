@@ -351,3 +351,16 @@ def test_the_grid_charges_a_way_to_the_cell_holding_its_midpoint(contract):
     grid.add(_way("way/1", "unverified", "track", [(4.10, 50.70), (4.11, 50.70)]), recorded=False)
     grid.add(_way("way/2", "unverified", "track", [(9.10, 45.70), (9.11, 45.70)]), recorded=False)
     assert len(list(grid.features())) == 2, "far-apart ways land in different cells"
+
+
+def test_extract_drops_ways_another_country_owns(tmp_path, contract, monkeypatch):
+    """keep() decides per way: a dropped way reaches no arm and no grid cell."""
+    from coverage import surface as mod
+    ways = [_way("way/1", "gravel", "track"), _way("way/2", "unverified", "track")]
+    monkeypatch.setattr(mod, "stream_surface_ways", lambda pbf, contract, emit: [emit(w) for w in ways])
+    none = mod.extract_region(tmp_path / "ignored.pbf", contract, classified_out=tmp_path / "c",
+                              todo_out=tmp_path / "t", gaps_out=tmp_path / "g", keep=lambda coords: False)
+    assert (none.classified, none.todo, none.cells, none.foreign) == (0, 0, 0, 2)
+    kept = mod.extract_region(tmp_path / "ignored.pbf", contract, classified_out=tmp_path / "c2",
+                              todo_out=tmp_path / "t2", gaps_out=tmp_path / "g2", keep=lambda coords: True)
+    assert (kept.classified, kept.todo, kept.foreign) == (1, 1, 0)
