@@ -1,0 +1,38 @@
+wiki/developers/data-ops/harvesting.md
+  s_1d05a0405c3516::t_b3086f143f9787 96
+wiki/developers/data-ops/surface-tiles.md
+  s_1d05a0405c3516::t_c65ea45f14035a 164-166,305
+docs/specs/coverage-provider.md
+  s_1d05a0405c3516::t_4c895e0e4fe5e0 535-538
+  s_1d05a0405c3516::t_700d591947ccfb 639
+  s_1d05a0405c3516::t_db09740db32aa3 435,450,465-472,477-479,490-502,549-551,554-559,567-568,571-573,580-613,640-641,864,878,888-896,910,982-983,1278
+docs/specs/coverage-runs-admin.md
+  s_1d05a0405c3516::t_d1f3846ebb16c2 32
+developers/coverage-batch.md
+  s_1d05a0405c3516::t_a9d1cd20c24f5f 33-63,89-93,113,126-134
+  s_1d05a0405c3516::t_4c895e0e4fe5e0 29-31
+  s_1d05a0405c3516::t_b44e6236bf18b8 32
+docs/specs/map-and-search.md
+  s_1d05a0405c3516::t_d1f3846ebb16c2 1247-1255
+wiki/developers/gis/tiles.md
+  s_1d05a0405c3516::t_b3086f143f9787 155
+  s_1d05a0405c3516::t_d1f3846ebb16c2 472
+wiki/developers/api/serving-map-data.md
+  s_1d05a0405c3516::t_b3086f143f9787 92,98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c894ce6ee4cf0a66ec139881aca7dfcc38593560",
+  "prompts": {},
+  "sessions": {
+    "s_1d05a0405c3516": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "31d19031-2e0a-4b62-beac-5203a713fc44",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
