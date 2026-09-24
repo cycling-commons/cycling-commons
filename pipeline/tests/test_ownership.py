@@ -7,7 +7,8 @@ import json
 
 import shapely
 
-from coverage.ownership import Owners, anchor_point, outlines_fingerprint, snapshot_outlines
+from coverage.ownership import (Owners, anchor_point, outlines_fingerprint, pbf_header_box,
+                                region_fingerprint, snapshot_outlines)
 
 
 def _row(id_, cc, area, box):
@@ -70,3 +71,56 @@ def test_snapshot_reads_operational_regions_and_is_stable(db, tmp_path):
     mtime = path.stat().st_mtime_ns
     assert snapshot_outlines(db, path) == fp == outlines_fingerprint(path)
     assert path.stat().st_mtime_ns == mtime   # unchanged content is not rewritten
+
+
+def _outlines(tmp_path, rows):
+    path = tmp_path / "ownership-regions.json"
+    path.write_text(json.dumps(rows, separators=(",", ":"), sort_keys=True))
+    return path
+
+
+# A region extract over (0.2..0.8, 0.2..0.8): BE's outline meets it, NL's does
+# not, and JP is on the other side of the world.
+REGION_BOX = (0.2, 0.2, 0.8, 0.8)
+FAR = _row(7, "JP", 5.0, (139.0, 35.0, 140.0, 36.0))
+
+
+def test_a_change_to_a_far_outline_leaves_the_region_fingerprint_alone(tmp_path):
+    before = region_fingerprint(_outlines(tmp_path, [ROWS[0], FAR]), REGION_BOX)
+    moved = _row(7, "JP", 5.0, (139.5, 35.0, 140.5, 36.0))
+    assert region_fingerprint(_outlines(tmp_path, [ROWS[0], moved]), REGION_BOX) == before
+
+
+def test_a_change_to_a_neighbouring_outline_changes_the_region_fingerprint(tmp_path):
+    # NL's edge moves to within the snap distance of the region's box: it can
+    # now own an anchor there, so the region's extract must be redone.
+    far_nl = _row(2, "NL", 10.0, (1.0, 0.0, 2.0, 1.0))
+    near_nl = _row(2, "NL", 10.0, (0.805, 0.0, 2.0, 1.0))
+    before = region_fingerprint(_outlines(tmp_path, [ROWS[0], far_nl]), REGION_BOX)
+    assert region_fingerprint(_outlines(tmp_path, [ROWS[0], near_nl]), REGION_BOX) != before
+
+
+def test_no_header_box_falls_back_to_the_global_fingerprint(tmp_path):
+    path = _outlines(tmp_path, [ROWS[0], FAR])
+    assert region_fingerprint(path, None) == outlines_fingerprint(path)
+    assert region_fingerprint(tmp_path / "absent.json", REGION_BOX) == ""
+
+
+def test_pbf_header_box_reads_the_header_or_says_none(tmp_path):
+    import pathlib
+
+    import osmium
+
+    header = osmium.io.Header()
+    header.add_box(osmium.osm.Box(osmium.osm.Location(4.0, 50.0), osmium.osm.Location(6.0, 52.0)))
+    boxed = tmp_path / "boxed.osm.pbf"
+    writer = osmium.SimpleWriter(str(boxed), 4096, header)
+    writer.add_node(osmium.osm.mutable.Node(id=1, location=(5.0, 51.0)))
+    writer.close()
+    assert pbf_header_box(boxed) == (4.0, 50.0, 6.0, 52.0)
+    # The fixture PBF carries no header box; a file that is no PBF has none either.
+    assert pbf_header_box(pathlib.Path(__file__).parent / "fixtures" / "mini.osm.pbf") is None
+    junk = tmp_path / "junk.osm.pbf"
+    junk.write_bytes(b"pbf")
+    assert pbf_header_box(junk) is None
+    assert pbf_header_box(tmp_path / "absent.osm.pbf") is None

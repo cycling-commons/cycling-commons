@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""publish.py — dev bucket bootstrap (upload/manifest/prune are covered by
+"""publish.py: dev bucket bootstrap (upload/manifest/prune are covered by
 test_publish_countries.py, the per-country v2 API)."""
 import boto3
 import pytest

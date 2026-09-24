@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import io
 
+from botocore.exceptions import ClientError
+
 
 class FakeS3:
     """Enough of boto3's S3 client to assert what a publish actually does."""
@@ -22,7 +24,8 @@ class FakeS3:
     def get_object(self, **kw):
         key = kw["Key"]
         if key not in self.objects:
-            raise KeyError(key)          # boto raises NoSuchKey; any raise is "absent"
+            raise ClientError({"Error": {"Code": "NoSuchKey", "Message": "The specified key does not exist."},
+                               "ResponseMetadata": {"HTTPStatusCode": 404}}, "GetObject")
         return {"Body": io.BytesIO(self.objects[key])}
 
     def list_objects_v2(self, **kw):

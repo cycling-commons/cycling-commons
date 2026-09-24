@@ -3,11 +3,11 @@
 family (coverage points, road surface, cycle routes) at a time.
 
 Each built country uploads under its own versioned prefix
-(<family>/<cc>/<YYYYMMDD-HHMM>/<arm>.pmtiles) so an open reader mid-pan never
+(<family>/<cc>/<YYYYMMDD-HHMMSS>/<arm>.pmtiles) so an open reader mid-pan never
 has bytes change underneath it (coverage-provider.md §3 step 8); the stable
 per-family manifest key (FAMILIES) points the Symfony *Manifest readers at
 each country's current tiles. Dev talks to the compose MinIO, prod to the CC
-Hetzner bucket — same code, COVERAGE_S3_* env only.
+Hetzner bucket: same code, COVERAGE_S3_* env only.
 """
 import contextlib
 import datetime
@@ -86,7 +86,9 @@ def ensure_bucket(client=None):
 FAMILIES = {"coverage": MANIFEST_KEY, "surface": "surface/manifest.json", "routes": "routes/manifest.json"}
 # <family>/<cc or gaps>/<stamp>/<arm>.pmtiles: one folder per country build,
 # so pruning is per country and never touches a neighbour's files.
-_COUNTRY_KEY = re.compile(r"^(coverage|surface|routes)/([a-z]{2}|gaps)/(\d{8}-\d{4})/[a-z]+\.pmtiles$")
+# A stamp is YYYYMMDD-HHMMSS; builds published with minute stamps (YYYYMMDD-HHMM)
+# still match, and the two forms sort together by time.
+_COUNTRY_KEY = re.compile(r"^(coverage|surface|routes)/([a-z]{2}|gaps)/(\d{8}-\d{4}(?:\d{2})?)/[a-z]+\.pmtiles$")
 # One advisory-lock key per manifest, distinct from the run lock
 # (run.COVERAGE_ADVISORY_LOCK_KEY), which the coverage run holds on its own
 # connection while it publishes.
@@ -128,17 +130,40 @@ def inputs_fingerprint(files: Iterable[Path], *extra: str) -> str:
     return h.hexdigest()[:16]
 
 
-def read_manifest(family: str, client=None) -> dict:
-    """The live v2 manifest. Missing, unreadable or v1 reads as empty, so the
-    first v2 publish rebuilds every country it is given."""
+def _empty_manifest() -> dict:
+    return {"version": 2, "countries": {}}
+
+
+def read_live_manifest(family: str, client=None) -> tuple[dict, bool]:
+    """The live manifest as (v2 document, whether a v2 document is live).
+
+    Only "no manifest yet" (NoSuchKey / 404) and a v1 or version-less
+    document read as the empty v2 skeleton, with False: the first v2 publish
+    then rebuilds every country it is given. Every other failure raises, so a
+    transient S3 error or a malformed body can never make a merge drop the
+    countries it did not rebuild; callers keep the last manifest serving.
+    """
     client = client or _client()
     try:
-        doc = json.loads(client.get_object(Bucket=_bucket(), Key=FAMILIES[family])["Body"].read())
-    except Exception:  # noqa: BLE001 - absent, unreadable, malformed: all "nothing published yet"
-        return {"version": 2, "countries": {}}
-    if doc.get("version") != 2 or not isinstance(doc.get("countries"), dict):
-        return {"version": 2, "countries": {}}
-    return doc
+        body = client.get_object(Bucket=_bucket(), Key=FAMILIES[family])["Body"].read()
+    except ClientError as e:
+        code = e.response.get("Error", {}).get("Code", "")
+        if code in ("NoSuchKey", "404"):
+            return _empty_manifest(), False
+        raise
+    doc = json.loads(body)          # json.JSONDecodeError is a ValueError
+    if not isinstance(doc, dict):
+        raise ValueError(f"{FAMILIES[family]}: not a JSON object")
+    if doc.get("version") != 2:
+        return _empty_manifest(), False
+    if not isinstance(doc.get("countries"), dict):
+        raise ValueError(f"{FAMILIES[family]}: v2 manifest without a countries object")
+    return doc, True
+
+
+def read_manifest(family: str, client=None) -> dict:
+    """The live v2 manifest (see read_live_manifest)."""
+    return read_live_manifest(family, client)[0]
 
 
 @contextlib.contextmanager
@@ -158,10 +183,13 @@ def publish_countries(family, built, *, gaps=None, retire=(), client=None, now=N
     """Upload each built country under its own versioned prefix, then merge the
     entries into the live manifest. Countries not in `built` keep their entry;
     only `retire` removes one. Returns the manifest as written."""
+    both = {cc.lower() for cc in built} & {cc.lower() for cc in retire}
+    if both:
+        raise ValueError(f"{family}: {', '.join(sorted(both))} both built and retired")
     client = client or _client()
     bucket = _bucket()
     now = now or datetime.datetime.now(datetime.timezone.utc)
-    stamp = now.strftime("%Y%m%d-%H%M")
+    stamp = now.strftime("%Y%m%d-%H%M%S")
     built_at = now.isoformat(timespec="seconds")
     base = os.environ["COVERAGE_PUBLIC_BASE_URL"].rstrip("/")
 

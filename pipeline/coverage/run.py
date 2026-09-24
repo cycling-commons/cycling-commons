@@ -12,6 +12,7 @@ failure mail.
 Entrypoint: python -m coverage.run  (dev: `make coverage-refresh`).
 """
 import argparse
+import contextlib
 import hashlib
 import json
 import resource
@@ -27,10 +28,10 @@ import psycopg
 from .contract import load_contract
 from .extract import export_lines, rideable_lines, run_extract, run_filter, run_way_filter
 from .load import COUNTRY_BY_REGION, apply_session_budget, ensure_schema, load_region, resolve_country
-from .ownership import Owners, outlines_fingerprint, snapshot_outlines
+from .ownership import Owners, pbf_header_box, region_fingerprint, snapshot_outlines
 from .parse import parse_pois
 from .publish import (CountryBuild, GapsBuild, ensure_bucket, inputs_fingerprint,
-                      prune_family, publish_countries, read_manifest)
+                      prune_family, publish_countries, read_live_manifest, read_manifest)
 from .regions import ONBOARDED_REGIONS, default_regions
 from .routes import extract_region as routes_extract_region
 from .routes import load_way_ids
@@ -48,6 +49,13 @@ GEOFABRIK_BASE = "https://download.geofabrik.de"
 # non-zero bigint that no other advisory-lock user on the CC cluster shares; CC
 # is the only advisory-lock user there today. 0xC07E7A6E = "coverage" mnemonic.
 COVERAGE_ADVISORY_LOCK_KEY = 0xC07E7A6E
+# One run lock per line family (surface, routes), distinct from the coverage
+# run lock above and from the manifest locks (publish._MANIFEST_LOCK_KEYS,
+# 0xC07E7A70-72).
+LINE_RUN_LOCK_KEYS = {"surface": 0xC07E7A73, "routes": 0xC07E7A74}
+
+# The operational region outlines the owner rule reads, snapshotted per run.
+OUTLINES_FILE = "ownership-regions.json"
 
 
 def _acquire_run_lock(conn) -> bool:
@@ -179,18 +187,50 @@ def extract_stamp(outlines_fp: str) -> str:
     return f"{contract_fingerprint()}:{outlines_fp}"
 
 
-def _ownership(workdir: pathlib.Path) -> tuple[Owners, str]:
+def _region_stamp(workdir: pathlib.Path, pbf: pathlib.Path) -> str:
+    """A region's extract stamp: the contract and the outlines that can own a
+    feature inside its PBF's header box (coverage.ownership.region_fingerprint).
+    Onboarding or reseeding a country elsewhere leaves it unchanged."""
+    return extract_stamp(region_fingerprint(workdir / OUTLINES_FILE, pbf_header_box(pbf)))
+
+
+def _default_pbf(workdir: pathlib.Path, region: str) -> pathlib.Path:
+    """Where fetch_pbf keeps a region's PBF in the workdir."""
+    return workdir / (region.replace("/", "-") + "-latest.osm.pbf")
+
+
+def _ownership(workdir: pathlib.Path) -> Owners:
     """Snapshot the operational region outlines once per run (coverage.ownership).
 
     Needs the database even for an offline tiling pass. A run that cannot read
     the outlines fails: a line extract without the owner rule would put every
     border road back into two files.
     """
-    path = workdir / "ownership-regions.json"
+    path = workdir / OUTLINES_FILE
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with psycopg.connect(dsn) as conn:
-        fp = snapshot_outlines(conn, path)
-    return Owners.load(path), fp
+        snapshot_outlines(conn, path)
+    return Owners.load(path)
+
+
+@contextlib.contextmanager
+def _line_run_lock(family: str):
+    """Session pg_try_advisory_lock for one whole surface or routes run.
+
+    Yields False when another run of the same family holds it: both write the
+    same per-region scratch files in the workdir, and one would tile what the
+    other is rewriting. Distinct from the coverage run lock and the manifest
+    locks, so a surface run never waits on a coverage run.
+    """
+    dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
+    key = LINE_RUN_LOCK_KEYS[family]
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        got = conn.execute("SELECT pg_try_advisory_lock(%s)", (key,)).fetchone()[0]
+        try:
+            yield got
+        finally:
+            if got:
+                conn.execute("SELECT pg_advisory_unlock(%s)", (key,))
 
 
 def _complete_countries(regions: list[str]) -> dict[str, list[str]]:
@@ -198,9 +238,17 @@ def _complete_countries(regions: list[str]) -> dict[str, list[str]]:
 
     A country built from part of its regions would publish over the whole one:
     `--regions north-america/us/california` must not take Colorado off the map.
-    dev/ regions have no country and are never tiled per country.
+    A region outside ONBOARDED_REGIONS (a dev/ region, a sub-country extract
+    such as europe/germany/bayern) is extracted but never tiled per country.
     """
     wanted = set(regions)
+    for region in regions:
+        if region in ONBOARDED_REGIONS:
+            continue
+        if region.startswith("dev/"):
+            print(f"[tiles] {region}: a dev/ region, extracted but not tiled per country")
+        else:
+            print(f"[tiles] {region}: not an onboarded region, not tiled per country")
     by_cc: dict[str, list[str]] = {}
     for region in ONBOARDED_REGIONS:
         cc = COUNTRY_BY_REGION.get(region)
@@ -217,12 +265,42 @@ def _complete_countries(regions: list[str]) -> dict[str, list[str]]:
     return out
 
 
-def _surface_inputs(workdir: pathlib.Path, cc: str, regions: list[str]) -> str:
-    """Fingerprint of a country's surface build inputs, for the rebuild rule."""
+def _first_publish_refused(family: str, complete: dict[str, list[str]], live_v2: bool,
+                           retire: tuple[str, ...]) -> bool:
+    """Is this the first v2 publish of `family` and does it lack a country?
+
+    Until a v2 manifest is live, the app serves the v1 world archive; the first
+    v2 manifest replaces it, so a first publish of fewer than every onboarded
+    country takes the rest off the map. `--retire` or
+    COVERAGE_FIRST_PUBLISH_PARTIAL=1 says the operator means it.
+    """
+    if live_v2 or retire or os.environ.get("COVERAGE_FIRST_PUBLISH_PARTIAL") == "1":
+        return False
+    onboarded = {COUNTRY_BY_REGION[r] for r in ONBOARDED_REGIONS if r in COUNTRY_BY_REGION}
+    missing = sorted(onboarded - set(complete))
+    if not missing:
+        return False
+    print(f"[{family}] first per-country publish refused: no v2 manifest is live yet and this run "
+          f"lacks {', '.join(missing)}. Run every onboarded region, or set "
+          "COVERAGE_FIRST_PUBLISH_PARTIAL=1 to publish this subset alone.", file=sys.stderr)
+    return True
+
+
+def _stamp_text(workdir: pathlib.Path, prefix: str, region: str) -> str:
+    stamp = workdir / f"{prefix}_{region.replace('/', '-')}.stamp"
+    return stamp.read_text(encoding="utf-8").strip() if stamp.exists() else ""
+
+
+def _surface_inputs(workdir: pathlib.Path, regions: list[str]) -> str:
+    """Fingerprint of a country's surface build inputs, for the rebuild rule.
+
+    Each region's stamp names the contract and the outlines near that region
+    its extract was shaped by."""
     slugs = [r.replace("/", "-") for r in regions]
     files = [workdir / f"surface_{s}_{arm}.geojsonl" for s in slugs for arm in ("classified", "todo")]
     return inputs_fingerprint(files, contract_fingerprint(),
-                              outlines_fingerprint(workdir / "ownership-regions.json"), TILE_PROFILE["surface"])
+                              *(_stamp_text(workdir, "surface", r) for r in sorted(regions)),
+                              TILE_PROFILE["surface"])
 
 
 def _gaps_inputs(workdir: pathlib.Path) -> str:
@@ -230,12 +308,39 @@ def _gaps_inputs(workdir: pathlib.Path) -> str:
     return inputs_fingerprint([workdir / "surface-gaps.geojsonl"], contract_fingerprint(), TILE_PROFILE["gaps"])
 
 
-def _routes_inputs(workdir: pathlib.Path, cc: str, regions: list[str]) -> str:
+def _routes_inputs(workdir: pathlib.Path, regions: list[str]) -> str:
     """Fingerprint of a country's routes build inputs, for the rebuild rule."""
     slugs = [r.replace("/", "-") for r in regions]
     files = [workdir / f"routes_{s}_{arm}.geojsonl" for s in slugs for arm in ("ways", "knoop")]
     return inputs_fingerprint(files, contract_fingerprint(),
-                              outlines_fingerprint(workdir / "ownership-regions.json"), TILE_PROFILE["routes"])
+                              *(_stamp_text(workdir, "routes", r) for r in sorted(regions)),
+                              TILE_PROFILE["routes"])
+
+
+def _world_gap_cells(workdir: pathlib.Path, wants: dict[str, str]) -> tuple[dict[str, list[pathlib.Path]], list[str]]:
+    """Every onboarded region's current gap-cell file, keyed by its country, and
+    the onboarded regions that have none.
+
+    Current means the region's surface stamp equals the stamp this run wants
+    for it: `wants` for the regions this run extracted, the stamp of the PBF in
+    the workdir for the rest. dev/ regions never feed the world grid.
+    """
+    cells: dict[str, list[pathlib.Path]] = {}
+    missing = []
+    for region in ONBOARDED_REGIONS:
+        slug = region.replace("/", "-")
+        path = workdir / f"surface_{slug}_gapcells.tsv"
+        want = wants.get(region) or _region_stamp(workdir, _default_pbf(workdir, region))
+        if path.exists() and _stamp_text(workdir, "surface", region) == want:
+            cells.setdefault(COUNTRY_BY_REGION[region], []).append(path)
+        else:
+            missing.append(region)
+    return cells, missing
+
+
+def _union_bounds(boxes: list[list[float]]) -> list[float]:
+    return [min(b[0] for b in boxes), min(b[1] for b in boxes),
+            max(b[2] for b in boxes), max(b[3] for b in boxes)]
 
 
 def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file: pathlib.Path,
@@ -285,60 +390,62 @@ def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file:
 
 def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                  publish: bool = True, retire: tuple[str, ...] = ()) -> int:
+    """The line path, under the surface run lock; 2 when another surface run holds it."""
+    with _line_run_lock("surface") as got:
+        if not got:
+            print("[surface] another surface run holds the run lock, exiting", file=sys.stderr)
+            return 2
+        return _surface_pass(regions, workdir, contract, extract_only=extract_only,
+                             publish=publish, retire=retire)
+
+
+def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
+                  publish: bool = True, retire: tuple[str, ...] = ()) -> int:
     """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe, per country. No
-    database at all.
+    database beyond the outline snapshot and the run lock.
 
     Deliberately not folded into the per-region loop above: that loop exists to
     keep coverage_poi in step, and lines never touch it. Sharing it would mean
-    holding the advisory lock and a Postgres session through a build that needs
-    neither (Dated/2026-08-09-surface-line-tiles-design.md §4).
+    holding the coverage advisory lock and a Postgres session through a build
+    that needs neither (Dated/2026-08-09-surface-line-tiles-design.md §4).
 
-    One pass per region produces all three arms' extracts — the classified
-    skin, the to-do arm and the gap grid — because they are three readings of
-    the same walk over the same ways. The previous shape ran the whole
-    filter-and-parse twice, once per arm, which on a continental build is
-    hours spent deriving data the first pass had already seen.
+    One pass per region produces all three arms' extracts (the classified
+    skin, the to-do arm and the gap cells) because they are three readings of
+    the same walk over the same ways.
 
-    Tiling is per country, not per run: a PMTiles archive cannot be appended
-    to, so adding a country used to mean re-tiling every other one too. Now
-    each complete country is tiled and published on its own, and skipped when
-    its extract fingerprint matches what is already live.
+    Tiling is per country: a PMTiles archive cannot be appended to, so each
+    complete country is tiled and published on its own, and skipped when its
+    extract fingerprint matches what is already live. One country failing to
+    build costs that country only. The world gap grid is merged from every
+    onboarded region's current cell file, and is not rebuilt while any
+    onboarded region has none.
     """
-    classified: dict[str, list[pathlib.Path]] = {}
-    todo: dict[str, list[pathlib.Path]] = {}
-    gaps: dict[str, list[pathlib.Path]] = {}
     failed = []
-    owners, outlines_fp = _ownership(workdir)
-    want = extract_stamp(outlines_fp)
+    wants: dict[str, str] = {}
+    owners = _ownership(workdir)
     for region in regions:
         try:
             country_code = resolve_country(region)
             pbf = fetch_pbf(region, workdir)
+            want = _region_stamp(workdir, pbf)
             # Keyed by REGION, not by country: the US is onboarded as two
             # Geofabrik extracts (california + colorado) and Great Britain can
-            # be joined by the all-Ireland one. A per-country filename made the
-            # second region overwrite the first, and the cache check then
-            # declared the survivor current — one state silently standing in
-            # for a country, with nothing in the log to say so.
+            # be joined by the all-Ireland one; a per-country filename would
+            # let the second region overwrite the first.
             slug = region.replace("/", "-")
             out = workdir / f"surface_{slug}_classified.geojsonl"
             todo_out = workdir / f"surface_{slug}_todo.geojsonl"
             gaps_out = workdir / f"surface_{slug}_gapcells.tsv"
 
-            # A PMTiles archive cannot be appended to — adding a country means
-            # tiling the whole set again — so the per-country EXTRACT is the
-            # only part worth caching, and it is by far the expensive one:
-            # osmium plus a full node-location pass over a national PBF, versus
-            # a tiling run that reads GeoJSONL already on disk.
+            # The per-region EXTRACT is the expensive step (osmium plus a full
+            # node-location pass over a national PBF), so it is cached.
             #
-            # Reused only when the extract is newer than both the PBF it came
-            # from AND the contract that shaped it. The contract matters as much
-            # as the data: adding a highway type or a surface class changes what
-            # SHOULD be in the file while leaving the PBF untouched, and a stale
-            # extract would then be silently tiled as if it were current.
-            # All three outputs are checked, not just the classified one: a run
-            # that added the to-do arm to a workdir holding last week's extracts
-            # would otherwise reuse them and tile an arm that does not exist.
+            # Reused only when the extract is newer than the PBF it came from
+            # and its stamp names the contract that shaped it and the outlines
+            # near the region. The contract matters as much as the data: adding
+            # a highway type or a surface class changes what SHOULD be in the
+            # file while leaving the PBF untouched. All three outputs are
+            # checked, not just the classified one.
             stamp = workdir / f"surface_{slug}.stamp"
             # The routes extract's way-id set, when a `--routes` run has left
             # one in the workdir: it is what makes the to-do arm route-aware
@@ -358,7 +465,7 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                     # Loudly, not silently: the arm still builds, but a rider
                     # zooming the Zuiderdijk would see class-gated homework
                     # only, and nothing else in the log would say why.
-                    print(f"[surface] {region}: no routes extract in the workdir — "
+                    print(f"[surface] {region}: no routes extract in the workdir; "
                           "the to-do arm is class-gated only (run --routes first "
                           "for route-awareness)")
                 fresh = extract_region(
@@ -372,71 +479,76 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                 print(f"[surface] {region}: {fresh.classified} classified, "
                       f"{fresh.todo} to record, {fresh.cells} grid cells, "
                       f"{fresh.foreign} owned by a neighbour")
-            classified.setdefault(country_code, []).append(out)
-            todo.setdefault(country_code, []).append(todo_out)
-            gaps.setdefault(country_code, []).append(gaps_out)
-        except Exception as exc:  # noqa: BLE001 — one region must not stop the rest
+            wants[region] = want
+        except Exception as exc:  # noqa: BLE001 - one region must not stop the rest
             print(f"[surface] {region} FAILED: {exc}", file=sys.stderr)
             failed.append(region)
-    def _peak() -> str:
-        """Peak RSS of this process and of the tools it waited on, in MB.
-
-        Reported because this job's whole design rests on a memory claim — ways
-        stream to disk instead of accumulating, and tippecanoe sorts on disk —
-        and a claim that is never printed is a claim nobody can check. Measuring
-        it OUTSIDE the container (`/usr/bin/time docker compose run`) measures
-        the docker client, which is how a build can look like it used 12 MB.
-        ru_maxrss is kilobytes on Linux; CHILDREN covers osmium and tippecanoe.
-        """
-        me = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
-        kids = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024
-        return f"peak RSS {me:.0f} MB (this process), {kids:.0f} MB (largest tool)"
 
     spec = contract.surface
     if extract_only:
         # Continental runs go region-by-region so a failure costs one country
-        # rather than the queue — and every one of those passes would otherwise
-        # end in a full tippecanoe build of the countries done so far, tiling
-        # Germany a dozen times to throw each result away. Extract now, tile
-        # once at the end.
-        print(f"[surface] extract-only: {len(classified)} country layer(s) ready, not tiling")
+        # rather than the queue. Extract now, tile once at the end.
+        print(f"[surface] extract-only: {len(wants)} region extract(s) ready, not tiling")
         print(f"[surface] {_peak()}")
         return 1 if failed else 0
-    world_gaps = workdir / "surface-gaps.geojsonl"
-    with world_gaps.open("w", encoding="utf-8") as fh:
-        for line in merge_gap_cells(gaps, contract.surface["gaps"]["cellZoom"]):
-            fh.write(line + "\n")
-    complete = _complete_countries([r for r in regions if r not in failed])
-    live = read_manifest("surface") if publish else {"version": 2, "countries": {}}
+    complete = _complete_countries(list(wants))
+    if all(r.startswith("dev/") for r in regions) and not retire:
+        print(f"[surface] {_peak()}")
+        return 1 if failed else 0
+    live = {"version": 2, "countries": {}}
+    if publish:
+        try:
+            live, live_v2 = read_live_manifest("surface")
+        except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
+            print(f"[surface] manifest read FAILED: {exc}", file=sys.stderr)
+            return 1
+        if _first_publish_refused("surface", complete, live_v2, retire):
+            return 1
     built: dict[str, CountryBuild] = {}
     for cc, members in complete.items():
-        inputs = _surface_inputs(workdir, cc, members)
-        if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
-            print(f"[surface] {cc}: unchanged, not rebuilt")
-            continue
-        slugs = [r.replace("/", "-") for r in members]
-        paths, counts_cc = {}, {}
-        for arm, lo, hi in (("classified", None, None),
-                            ("todo", spec["todo"]["minZoom"], spec["todo"]["maxZoom"])):
-            files = [workdir / f"surface_{s}_{arm}.geojsonl" for s in slugs]
-            n = sum(sum(1 for _ in f.open("rb")) for f in files)
-            counts_cc[arm] = n
-            if n == 0:
-                continue      # a country with nothing in this arm publishes the other arm only
-            out = workdir / f"surface-{'' if arm == 'classified' else 'todo-'}{cc.lower()}.pmtiles"
-            build_surface_pmtiles({cc: files}, out, contract, min_zoom=lo, max_zoom=hi)
-            paths[arm] = out
-        if not paths:
-            continue
-        bounds = artifact_bounds(paths.get("classified") or paths["todo"])
-        built[cc] = CountryBuild(paths=paths, inputs=inputs, bounds=bounds, counts=counts_cc)
-        print(f"[surface] {cc}: rebuilt ({', '.join(f'{a} {counts_cc[a]}' for a in counts_cc)})")
+        try:
+            inputs = _surface_inputs(workdir, members)
+            if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
+                print(f"[surface] {cc}: unchanged, not rebuilt")
+                continue
+            slugs = [r.replace("/", "-") for r in members]
+            paths, counts_cc = {}, {}
+            for arm, lo, hi in (("classified", None, None),
+                                ("todo", spec["todo"]["minZoom"], spec["todo"]["maxZoom"])):
+                files = [workdir / f"surface_{s}_{arm}.geojsonl" for s in slugs]
+                n = sum(sum(1 for _ in f.open("rb")) for f in files)
+                counts_cc[arm] = n
+                if n == 0:
+                    continue      # a country with nothing in this arm publishes the other arm only
+                out = workdir / f"surface-{'' if arm == 'classified' else 'todo-'}{cc.lower()}.pmtiles"
+                build_surface_pmtiles({cc: files}, out, contract, min_zoom=lo, max_zoom=hi)
+                paths[arm] = out
+            if not paths:
+                continue
+            bounds = _union_bounds([artifact_bounds(p) for p in paths.values()])
+            built[cc] = CountryBuild(paths=paths, inputs=inputs, bounds=bounds, counts=counts_cc)
+            print(f"[surface] {cc}: rebuilt ({', '.join(f'{a} {counts_cc[a]}' for a in counts_cc)})")
+        except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
+            print(f"[surface] {cc}: build FAILED: {exc}", file=sys.stderr)
+            failed.append(cc)
     gaps_build = None
-    g_inputs = _gaps_inputs(workdir)
-    if world_gaps.stat().st_size and live.get("gaps", {}).get("inputs") != g_inputs:
-        out = workdir / "surface-gaps.pmtiles"
-        build_gaps_pmtiles([world_gaps], out, contract)
-        gaps_build = GapsBuild(path=out, inputs=g_inputs)
+    cells, missing = _world_gap_cells(workdir, wants)
+    if missing:
+        print(f"[surface] gaps: not rebuilt, no current cells for {', '.join(missing)}")
+    else:
+        try:
+            world_gaps = workdir / "surface-gaps.geojsonl"
+            with world_gaps.open("w", encoding="utf-8") as fh:
+                for line in merge_gap_cells(cells, spec["gaps"]["cellZoom"]):
+                    fh.write(line + "\n")
+            g_inputs = _gaps_inputs(workdir)
+            if world_gaps.stat().st_size and live.get("gaps", {}).get("inputs") != g_inputs:
+                out = workdir / "surface-gaps.pmtiles"
+                build_gaps_pmtiles([world_gaps], out, contract)
+                gaps_build = GapsBuild(path=out, inputs=g_inputs)
+        except Exception as exc:  # noqa: BLE001 - the live gap grid keeps serving
+            print(f"[surface] gaps: build FAILED: {exc}", file=sys.stderr)
+            failed.append("gaps")
     if publish and (built or gaps_build or retire):
         try:
             ensure_bucket()
@@ -450,27 +562,54 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
     return 1 if failed else 0
 
 
+def _peak() -> str:
+    """Peak RSS of this process and of the tools it waited on, in MB.
+
+    Reported because the line builds rest on a memory claim (ways stream to
+    disk instead of accumulating, and tippecanoe sorts on disk), and a claim
+    that is never printed is a claim nobody can check. Measuring it OUTSIDE the
+    container (`/usr/bin/time docker compose run`) measures the docker client,
+    which is how a build can look like it used 12 MB. ru_maxrss is kilobytes on
+    Linux; CHILDREN covers osmium and tippecanoe.
+    """
+    me = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+    kids = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024
+    return f"peak RSS {me:.0f} MB (this process), {kids:.0f} MB (largest tool)"
+
+
 def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
                 publish: bool = True, retire: tuple[str, ...] = ()) -> int:
+    """The route-network path, under the routes run lock; 2 when another routes run holds it."""
+    with _line_run_lock("routes") as got:
+        if not got:
+            print("[routes] another routes run holds the run lock, exiting", file=sys.stderr)
+            return 2
+        return _routes_pass(regions, workdir, contract, extract_only=extract_only,
+                            publish=publish, retire=retire)
+
+
+def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
+                 publish: bool = True, retire: tuple[str, ...] = ()) -> int:
     """The route-network path: PBF -> osmium -> two-pass extract -> tippecanoe,
     per country.
 
-    No database, same as the surface path and for the same reason. One run
-    produces the per-country routes artifacts AND the per-region way-id sets
-    the surface pass reads for route-awareness — which is why `--routes` is
-    the pass to run FIRST when both are being rebuilt: the way-id files it
-    drops in the workdir are newer than the surface extracts, so the surface
-    run re-extracts with them (see _extract_is_current's extra_inputs).
+    No database beyond the outline snapshot and the run lock, same as the
+    surface path and for the same reason. One run produces the per-country
+    routes artifacts AND the per-region way-id sets the surface pass reads for
+    route-awareness, which is why `--routes` is the pass to run FIRST when both
+    are being rebuilt: the way-id files it drops in the workdir are newer than
+    the surface extracts, so the surface run re-extracts with them (see
+    _extract_is_current's extra_inputs). One country failing to build costs
+    that country only.
     """
-    way_files: dict[str, list[pathlib.Path]] = {}
-    node_files: dict[str, list[pathlib.Path]] = {}
     failed = []
-    owners, outlines_fp = _ownership(workdir)
-    want = extract_stamp(outlines_fp)
+    extracted: list[str] = []
+    owners = _ownership(workdir)
     for region in regions:
         try:
             country_code = resolve_country(region)
             pbf = fetch_pbf(region, workdir)
+            want = _region_stamp(workdir, pbf)
             # Keyed by REGION for the same multi-extract-country reason the
             # surface files are (california + colorado).
             slug = region.replace("/", "-")
@@ -480,7 +619,7 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
             stamp = workdir / f"routes_{slug}.stamp"
             # allow_empty: a country with no node network has an empty knoop
             # file, and a country with no signed routes at all (rare, but a
-            # partial extract like a single US state can be) has empty ways —
+            # partial extract like a single US state can be) has empty ways;
             # both are answers, not failures to cache.
             if all(_extract_is_current(f, pbf, contract_path(), stamp, allow_empty=True,
                                        expected=want)
@@ -497,42 +636,55 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
                 print(f"[routes] {region}: {fresh.ways} member ways on "
                       f"{fresh.relations} routes, {fresh.nodes} knooppunten, "
                       f"{fresh.foreign} owned by a neighbour")
-            way_files.setdefault(country_code, []).append(ways_out)
-            node_files.setdefault(country_code, []).append(nodes_out)
-        except Exception as exc:  # noqa: BLE001 — one region must not stop the rest
+            extracted.append(region)
+        except Exception as exc:  # noqa: BLE001 - one region must not stop the rest
             print(f"[routes] {region} FAILED: {exc}", file=sys.stderr)
             failed.append(region)
 
     if extract_only:
-        print(f"[routes] extract-only: {len(way_files)} country layer(s) ready, not tiling")
+        print(f"[routes] extract-only: {len(extracted)} region extract(s) ready, not tiling")
         return 1 if failed else 0
-    complete = _complete_countries([r for r in regions if r not in failed])
-    live = read_manifest("routes") if publish else {"version": 2, "countries": {}}
+    complete = _complete_countries(extracted)
+    if all(r.startswith("dev/") for r in regions) and not retire:
+        return 1 if failed else 0
+    live = {"version": 2, "countries": {}}
+    if publish:
+        try:
+            live, live_v2 = read_live_manifest("routes")
+        except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
+            print(f"[routes] manifest read FAILED: {exc}", file=sys.stderr)
+            return 1
+        if _first_publish_refused("routes", complete, live_v2, retire):
+            return 1
     built: dict[str, CountryBuild] = {}
     for cc, members in complete.items():
-        inputs = _routes_inputs(workdir, cc, members)
-        if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
-            print(f"[routes] {cc}: unchanged, not rebuilt")
-            continue
-        slugs = [r.replace("/", "-") for r in members]
-        ways = [workdir / f"routes_{s}_ways.geojsonl" for s in slugs]
-        knoop = [workdir / f"routes_{s}_knoop.geojsonl" for s in slugs]
-        n_ways = sum(sum(1 for _ in f.open("rb")) for f in ways)
-        n_nodes = sum(sum(1 for _ in f.open("rb")) for f in knoop)
-        if n_ways + n_nodes == 0:
-            continue
-        out = workdir / f"routes-{cc.lower()}.pmtiles"
-        build_routes_pmtiles({cc: ways}, {cc: knoop}, out, contract)
-        built[cc] = CountryBuild(paths={"routes": out}, inputs=inputs, bounds=artifact_bounds(out),
-                                 counts={"ways": n_ways, "nodes": n_nodes})
-        print(f"[routes] {cc}: rebuilt ({n_ways} ways, {n_nodes} knooppunten)")
+        try:
+            inputs = _routes_inputs(workdir, members)
+            if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
+                print(f"[routes] {cc}: unchanged, not rebuilt")
+                continue
+            slugs = [r.replace("/", "-") for r in members]
+            ways = [workdir / f"routes_{s}_ways.geojsonl" for s in slugs]
+            knoop = [workdir / f"routes_{s}_knoop.geojsonl" for s in slugs]
+            n_ways = sum(sum(1 for _ in f.open("rb")) for f in ways)
+            n_nodes = sum(sum(1 for _ in f.open("rb")) for f in knoop)
+            if n_ways + n_nodes == 0:
+                continue
+            out = workdir / f"routes-{cc.lower()}.pmtiles"
+            build_routes_pmtiles({cc: ways}, {cc: knoop}, out, contract)
+            built[cc] = CountryBuild(paths={"routes": out}, inputs=inputs, bounds=artifact_bounds(out),
+                                     counts={"ways": n_ways, "nodes": n_nodes})
+            print(f"[routes] {cc}: rebuilt ({n_ways} ways, {n_nodes} knooppunten)")
+        except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
+            print(f"[routes] {cc}: build FAILED: {exc}", file=sys.stderr)
+            failed.append(cc)
     if publish and (built or retire):
         try:
             ensure_bucket()
             doc = publish_countries("routes", built, retire=retire)
             for key in prune_family("routes", doc):
                 print(f"[routes] pruned {key}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
             print(f"[routes] publish FAILED: {exc}", file=sys.stderr)
             failed.append("publish")
     return 1 if failed else 0
@@ -580,7 +732,7 @@ def main(argv=None) -> int:
                          "as points; zero DB rows), tiled and published PER COUNTRY "
                          "under routes/<cc>/<stamp>/routes.pmtiles. Also drops the "
                          "per-region member way-id sets the --surface pass reads to "
-                         "make its to-do arm route-aware — run --routes BEFORE "
+                         "make its to-do arm route-aware: run --routes BEFORE "
                          "--surface when rebuilding both.")
     ap.add_argument("--no-publish", action="store_true",
                     help="with --surface/--routes: build the artifacts but do not upload "
@@ -733,7 +885,13 @@ def main(argv=None) -> int:
             _print_timings(timings, time.monotonic() - run_started)
             tracker.finish("failed", loaded)
             return 1
-        live = read_manifest("coverage")
+        try:
+            live = read_manifest("coverage")
+        except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
+            print(f"[coverage] manifest read FAILED: {exc}", file=sys.stderr)
+            _print_timings(timings, time.monotonic() - run_started)
+            tracker.finish("partial" if loaded else "failed", loaded)
+            return 1
         built: dict[str, CountryBuild] = {}
         with tracker.step(None, "tippecanoe") as st:
             for cc, files in sorted(_coverage_countries(layer_files).items()):

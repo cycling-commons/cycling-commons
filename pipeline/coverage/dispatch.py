@@ -51,6 +51,19 @@ def estimate_seconds(conn, region: str) -> float:
     return 1.5 * float(row[0]) if row and row[0] is not None else 0.0
 
 
+def _call(label: str, argv: list[str]) -> int:
+    """run_main(argv), with an exception logged and counted as rc 1.
+
+    run.main runs in this process, so an exception it lets escape would
+    otherwise skip every later pass and leave the run row unfinished.
+    """
+    try:
+        return run_main(argv)
+    except Exception as exc:  # noqa: BLE001 - one pass must not end the night
+        print(f"[dispatch] {label} FAILED: {exc}", file=sys.stderr)
+        return 1
+
+
 @contextlib.contextmanager
 def _offline():
     """COVERAGE_PBF_OFFLINE=1 for one call: the PBFs on disk are tonight's."""
@@ -97,8 +110,8 @@ def main(argv=None) -> int:
             attempts += 1
             print(f"[dispatch] {region}: loading (estimate "
                   f"{_dur(estimate) if estimate else 'unknown'}, elapsed {_dur(elapsed)})")
-            rc = run_main(["--load-only", "--regions", region,
-                           "--run-id", str(run_id), "--trigger", "dispatcher"])
+            rc = _call(region, ["--load-only", "--regions", region,
+                                "--run-id", str(run_id), "--trigger", "dispatcher"])
             if rc == 0:
                 loaded.append(region)
                 # The PBF this load just fetched feeds the line extracts too, so the
@@ -106,7 +119,7 @@ def main(argv=None) -> int:
                 for family in ("--routes", "--surface"):
                     t0 = time.monotonic()
                     with _offline():
-                        erc = run_main([family, "--extract-only", "--regions", region])
+                        erc = _call(f"{region} {family} extract", [family, "--extract-only", "--regions", region])
                     if erc == 0:
                         tracker.record(region, family.lstrip("-") + "_extract", time.monotonic() - t0)
                     else:
@@ -125,16 +138,20 @@ def main(argv=None) -> int:
         publish_failed = False
         if loaded:
             print(f"[dispatch] {len(loaded)} region(s) loaded, publishing the tiles")
-            rc = run_main(["--tiles-only", "--regions", ",".join(universe), "--run-id", str(run_id)])
+            rc = _call("--tiles-only", ["--tiles-only", "--regions", ",".join(universe), "--run-id", str(run_id)])
             publish_failed = rc != 0
             if publish_failed:
                 print(f"[dispatch] publish FAILED (rc {rc})", file=sys.stderr)
             with _offline():
                 for family in ("--routes", "--surface"):
-                    rc = run_main([family, "--regions", ",".join(universe)])
+                    rc = _call(family, [family, "--regions", ",".join(universe)])
+                    if rc == 2:
+                        print(f"[dispatch] {family}: another {family} run holds its run lock, "
+                              "not published tonight", file=sys.stderr)
+                    elif rc != 0:
+                        print(f"[dispatch] {family} publish FAILED (rc {rc})", file=sys.stderr)
                     if rc != 0:
                         publish_failed = True
-                        print(f"[dispatch] {family} publish FAILED (rc {rc})", file=sys.stderr)
         else:
             print("[dispatch] nothing loaded, not publishing")
         # What run.main's upload step left in its detail: the countries it

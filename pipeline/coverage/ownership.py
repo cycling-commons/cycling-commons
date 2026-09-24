@@ -19,6 +19,7 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
+import osmium
 import shapely
 from shapely import STRtree
 
@@ -62,6 +63,63 @@ def snapshot_outlines(conn, path: Path) -> str:
 def outlines_fingerprint(path: Path) -> str:
     """The fingerprint snapshot_outlines returned for this file, '' when absent."""
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16] if path.exists() else ""
+
+
+def pbf_header_box(pbf: Path) -> tuple[float, float, float, float] | None:
+    """min_lon, min_lat, max_lon, max_lat from a PBF's header, None when it has none.
+
+    Geofabrik extracts declare their box in the header, so reading it costs one
+    block, not a pass over the file. A missing or unreadable file has no box.
+    """
+    try:
+        reader = osmium.io.Reader(str(pbf), osmium.osm.osm_entity_bits.NOTHING)
+        try:
+            box = reader.header().box()
+        finally:
+            reader.close()
+    except RuntimeError:
+        return None
+    if not box.valid():
+        return None
+    return (box.bottom_left.lon, box.bottom_left.lat, box.top_right.lon, box.top_right.lat)
+
+
+# One outline file per run: its rows' bounding boxes, keyed by the file's content hash.
+_OUTLINE_BOXES: dict[str, list[tuple[tuple[float, ...], str]]] = {}
+
+
+def _outline_boxes(path: Path) -> list[tuple[tuple[float, ...], str]]:
+    """Each outline row's bounding box with its canonical JSON."""
+    body = path.read_bytes()
+    key = hashlib.sha256(body).hexdigest()
+    if key not in _OUTLINE_BOXES:
+        rows = json.loads(body)
+        boxes = shapely.bounds(shapely.from_wkb([bytes.fromhex(r["wkb"]) for r in rows])) if rows else []
+        _OUTLINE_BOXES.clear()
+        _OUTLINE_BOXES[key] = [(tuple(float(v) for v in b), json.dumps(r, separators=(",", ":"), sort_keys=True))
+                               for b, r in zip(boxes, rows)]
+    return _OUTLINE_BOXES[key]
+
+
+def region_fingerprint(path: Path, box: tuple[float, float, float, float] | None) -> str:
+    """Fingerprint of the outlines that can own a feature inside `box`.
+
+    A feature's owner is the nearest region within BOUNDARY_SNAP_DEG of its
+    anchor, so only the outlines whose bounding box meets `box` grown by that
+    distance can change what a region's extract keeps. Onboarding a country on
+    another continent leaves the fingerprint, and so the extract, unchanged.
+    No box (a PBF without a header box) falls back to the fingerprint of every
+    outline; an absent file reads as ''.
+    """
+    if not path.exists():
+        return ""
+    if box is None:
+        return outlines_fingerprint(path)
+    s = BOUNDARY_SNAP_DEG
+    x0, y0, x1, y1 = box[0] - s, box[1] - s, box[2] + s, box[3] + s
+    near = sorted(row for (bx0, by0, bx1, by1), row in _outline_boxes(path)
+                  if bx0 <= x1 and bx1 >= x0 and by0 <= y1 and by1 >= y0)
+    return hashlib.sha256("\n".join(near).encode()).hexdigest()[:16]
 
 
 class Owners:

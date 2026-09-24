@@ -249,7 +249,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     assert doc["version"] == 2
     be = doc["countries"]["be"]
     assert be["counts"] == {"B": 3}
-    assert re.search(r"/coverage/be/\d{8}-\d{4}/points\.pmtiles$", be["tiles"]["points"])
+    assert re.search(r"/coverage/be/\d{8}-\d{6}/points\.pmtiles$", be["tiles"]["points"])
     err = capsys.readouterr().err
     assert "dev/bad: FAILED" in err and "simulated drift" in err
 
@@ -375,7 +375,7 @@ def test_main_tiles_only_skips_the_harvest_and_still_publishes(monkeypatch, tmp_
     assert doc["version"] == 2
     be = doc["countries"]["be"]
     assert be["counts"] == {"B": 3}
-    assert re.search(r"/coverage/be/\d{8}-\d{4}/points\.pmtiles$", be["tiles"]["points"])
+    assert re.search(r"/coverage/be/\d{8}-\d{6}/points\.pmtiles$", be["tiles"]["points"])
 
     # A second --tiles-only run over the same export uploads no .pmtiles: the
     # country's inputs fingerprint already matches what the first run published.
@@ -512,3 +512,45 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
     assert by_key[(None, "upload")][8] == "be"
     finish = [p for (sql, p) in writes if "UPDATE coverage_run" in sql]
     assert finish == [("partial", 1, "be", True)]
+
+
+def test_main_keeps_the_live_manifest_when_it_cannot_be_read(monkeypatch, tmp_path, capsys):
+    """A manifest read that fails (S3 500, malformed body) builds and publishes
+    nothing and closes the run row as failed: reading it as empty would drop
+    every country this run did not rebuild."""
+    writes = []
+
+    class FakeResult:
+        def fetchone(self):
+            return (True,)
+
+    class FakeConn:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def execute(self, sql, params=None):
+            if isinstance(sql, str) and "UPDATE coverage_run SET finished_at" in sql:
+                writes.append(params)
+            return FakeResult()
+
+        def commit(self):
+            pass
+
+    def unreadable(family):
+        raise RuntimeError("S3 500")
+
+    monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
+    monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
+    monkeypatch.setattr(run, "ensure_schema", lambda conn: None)
+    (tmp_path / "b.geojsonl").write_text('{"a":1}\n')
+    monkeypatch.setattr(run, "export_geojsonl", lambda conn, wd: {("B", "BE"): tmp_path / "b.geojsonl"})
+    monkeypatch.setattr(run, "read_manifest", unreadable)
+    monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: pytest.fail("built without a manifest"))
+    monkeypatch.setattr(run, "publish_countries", lambda *a, **k: pytest.fail("published without a manifest"))
+
+    assert run.main(["--tiles-only", "--regions", "europe/belgium"]) == 1
+    assert "[coverage] manifest read FAILED: S3 500" in capsys.readouterr().err
+    assert [w[0] for w in writes] == ["failed"]

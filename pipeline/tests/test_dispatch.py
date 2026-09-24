@@ -244,3 +244,40 @@ def test_offline_restores_previous_env_value_including_on_exception(monkeypatch)
     with dispatch._offline():
         assert os.environ["COVERAGE_PBF_OFFLINE"] == "1"
     assert "COVERAGE_PBF_OFFLINE" not in os.environ
+
+
+def test_a_raising_line_pass_is_a_failed_publish_and_the_night_goes_on(db, night, monkeypatch, capsys):
+    calls, _ = night
+    monkeypatch.setenv("COVERAGE_REGIONS", "a")
+    real = dispatch.run_main
+
+    def raising_routes(argv):
+        if argv[0] == "--routes" and "--extract-only" not in argv:
+            calls.append(argv)
+            raise RuntimeError("tippecanoe died")
+        return real(argv)
+
+    monkeypatch.setattr(dispatch, "run_main", raising_routes)
+    assert dispatch.main() == 1
+    flags = [c[0] for c in calls if "--extract-only" not in c and "--load-only" not in c]
+    assert flags == ["--tiles-only", "--routes", "--surface"]
+    assert _run_status(db)[:2] == ("partial", 1)
+    err = capsys.readouterr().err
+    assert "[dispatch] --routes FAILED: tippecanoe died" in err
+
+
+def test_a_line_pass_that_finds_its_lock_held_is_a_failed_publish(db, night, monkeypatch, capsys):
+    calls, _ = night
+    monkeypatch.setenv("COVERAGE_REGIONS", "a")
+    real = dispatch.run_main
+
+    def locked_surface(argv):
+        if argv[0] == "--surface" and "--extract-only" not in argv:
+            calls.append(argv)
+            return 2
+        return real(argv)
+
+    monkeypatch.setattr(dispatch, "run_main", locked_surface)
+    assert dispatch.main() == 1
+    assert _run_status(db)[:2] == ("partial", 1)
+    assert "[dispatch] --surface: another --surface run holds its run lock" in capsys.readouterr().err

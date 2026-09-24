@@ -38,8 +38,7 @@ def test_default_regions_prefers_the_env(monkeypatch):
 
 def test_main_without_regions_or_env_publishes_every_onboarded_region(monkeypatch, tmp_path):
     """An env-less --tiles-only run's coverage_run row requests all 22 onboarded
-    regions — the 14-region fallback this replaced silently dropped eight
-    countries. --tiles-only builds from the database, not from this list, but
+    regions. --tiles-only builds from the database, not from this list, but
     `regions_requested` is what an operator reads back to know what was asked for."""
     writes = []
 
