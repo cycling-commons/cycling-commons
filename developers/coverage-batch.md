@@ -19,6 +19,13 @@ artifact, which is always built from the full index), while `regions` lists
 only that run's regions; with staggered per-region prod timers the two
 legitimately diverge.
 
+The nightly dispatcher (`python -m coverage.dispatch`) orders the onboarded
+regions by staleness and loads the stalest ones inside a time budget and a
+region cap, publishing the coverage tiles once if anything loaded. Each
+loaded region also refreshes its routes and surface line extracts, and one
+offline pass per family (`--routes`, `--surface`) then republishes only the
+countries whose inputs changed.
+
 ## Dev run
 
     make coverage-refresh

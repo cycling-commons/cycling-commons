@@ -3,6 +3,7 @@
 codes. The freshness view and the estimates are real (db fixture); run.main is
 a recorded seam returning the exit code each test scripts."""
 import contextlib
+import os
 
 import pytest
 
@@ -122,10 +123,10 @@ def test_tiles_only_runs_once_after_the_loads_with_the_whole_universe(db, night,
     monkeypatch.setenv("COVERAGE_REGIONS", "a,b")
     assert dispatch.main() == 0
     tiles = _tiles(calls)
-    assert len(tiles) == 1 and calls[-1] is tiles[0]
+    assert len(tiles) == 1
     assert tiles[0][tiles[0].index("--regions") + 1] == "a,b"
     run_id = str(db.execute("SELECT max(id) FROM coverage_run").fetchone()[0])
-    assert all(c[c.index("--run-id") + 1] == run_id for c in calls)
+    assert all(c[c.index("--run-id") + 1] == run_id for c in calls if "--run-id" in c)
     assert all("dispatcher" in c for c in calls if "--load-only" in c)
     assert _run_status(db) == ("ok", 2, None)
 
@@ -179,3 +180,59 @@ def test_a_failed_publish_exits_1(db, night, monkeypatch):
     rcs["tiles"] = 1
     assert dispatch.main() == 1
     assert _run_status(db) == ("partial", 1, None)
+
+
+def test_each_loaded_region_gets_its_line_extracts_then_one_publish_pass_per_family(
+        db, night, monkeypatch):
+    calls, _ = night
+    monkeypatch.setenv("COVERAGE_REGIONS", "europe/belgium,europe/netherlands")
+    assert dispatch.main() == 0
+    flags = [tuple(a for a in c if a.startswith("--")) for c in calls]
+    assert flags[:3] == [("--load-only", "--regions", "--run-id", "--trigger"),
+                         ("--routes", "--extract-only", "--regions"),
+                         ("--surface", "--extract-only", "--regions")]
+    assert flags[-3:] == [("--tiles-only", "--regions", "--run-id"),
+                          ("--routes", "--regions"),
+                          ("--surface", "--regions")]
+
+
+def test_a_failed_line_extract_is_recorded_but_does_not_stop_the_night(db, night, monkeypatch):
+    calls, rcs = night
+    monkeypatch.setenv("COVERAGE_REGIONS", "a,b")
+    real = dispatch.run_main
+
+    def flaky_run_main(argv):
+        if "--routes" in argv and "--extract-only" in argv and argv[argv.index("--regions") + 1] == "a":
+            calls.append(argv)
+            return 1
+        return real(argv)
+
+    monkeypatch.setattr(dispatch, "run_main", flaky_run_main)
+    assert dispatch.main() == 1
+    assert _loads(calls) == ["a", "b"]
+    assert len(_tiles(calls)) == 1
+    assert _run_status(db)[0] == "partial"
+
+
+def test_nothing_loaded_means_no_line_extracts_and_no_publish_pass(db, night, monkeypatch):
+    calls, rcs = night
+    monkeypatch.setenv("COVERAGE_REGIONS", "a,b")
+    rcs.update(a=1, b=1)
+    assert dispatch.main() == 1
+    assert not any("--extract-only" in c for c in calls)
+    assert not any(("--routes" in c or "--surface" in c) and "--tiles-only" not in c
+                   and "--extract-only" not in c for c in calls)
+
+
+def test_offline_restores_previous_env_value_including_on_exception(monkeypatch):
+    monkeypatch.setenv("COVERAGE_PBF_OFFLINE", "0")
+    with pytest.raises(ValueError):
+        with dispatch._offline():
+            assert os.environ["COVERAGE_PBF_OFFLINE"] == "1"
+            raise ValueError("boom")
+    assert os.environ["COVERAGE_PBF_OFFLINE"] == "0"
+
+    monkeypatch.delenv("COVERAGE_PBF_OFFLINE", raising=False)
+    with dispatch._offline():
+        assert os.environ["COVERAGE_PBF_OFFLINE"] == "1"
+    assert "COVERAGE_PBF_OFFLINE" not in os.environ

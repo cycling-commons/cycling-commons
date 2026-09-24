@@ -4,9 +4,13 @@ stalest onboarded regions, `--load-only` each in series inside a time budget,
 then `--tiles-only` once if anything loaded. One timer per environment; adding
 a region is a list entry; a failed region is first in line tomorrow, not next
 week. Budget and cap come from COVERAGE_BUDGET_MIN / COVERAGE_MAX_REGIONS.
+Each loaded region also refreshes its routes and surface extracts, and one
+offline pass per family then republishes only the countries whose inputs
+changed.
 
 Entrypoint: python -m coverage.dispatch
 """
+import contextlib
 import os
 import sys
 import time
@@ -47,6 +51,20 @@ def estimate_seconds(conn, region: str) -> float:
     return 1.5 * float(row[0]) if row and row[0] is not None else 0.0
 
 
+@contextlib.contextmanager
+def _offline():
+    """COVERAGE_PBF_OFFLINE=1 for one call: the PBFs on disk are tonight's."""
+    old = os.environ.get("COVERAGE_PBF_OFFLINE")
+    os.environ["COVERAGE_PBF_OFFLINE"] = "1"
+    try:
+        yield
+    finally:
+        if old is None:
+            os.environ.pop("COVERAGE_PBF_OFFLINE", None)
+        else:
+            os.environ["COVERAGE_PBF_OFFLINE"] = old
+
+
 def main(argv=None) -> int:
     budget_s = 60 * float(os.environ.get("COVERAGE_BUDGET_MIN", "240"))
     max_regions = int(os.environ.get("COVERAGE_MAX_REGIONS", "6"))
@@ -83,6 +101,15 @@ def main(argv=None) -> int:
                            "--run-id", str(run_id), "--trigger", "dispatcher"])
             if rc == 0:
                 loaded.append(region)
+                # The PBF this load just fetched feeds the line extracts too, so the
+                # expensive pass runs once per region per night, and offline.
+                for family in ("--routes", "--surface"):
+                    t0 = time.monotonic()
+                    with _offline():
+                        erc = run_main([family, "--extract-only", "--regions", region])
+                    tracker.record(region, family.lstrip("-") + "_extract", time.monotonic() - t0)
+                    if erc != 0:
+                        failed.append(f"{region} {family}")
             elif rc == 2:
                 print(f"[dispatch] {region}: another coverage run holds the lock, "
                       "aborting tonight", file=sys.stderr)
@@ -98,6 +125,12 @@ def main(argv=None) -> int:
             publish_failed = rc != 0
             if publish_failed:
                 print(f"[dispatch] publish FAILED (rc {rc})", file=sys.stderr)
+            with _offline():
+                for family in ("--routes", "--surface"):
+                    rc = run_main([family, "--regions", ",".join(universe)])
+                    if rc != 0:
+                        publish_failed = True
+                        print(f"[dispatch] {family} publish FAILED (rc {rc})", file=sys.stderr)
         else:
             print("[dispatch] nothing loaded, not publishing")
         # What run.main's upload step left in its detail: the countries it

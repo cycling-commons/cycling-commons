@@ -471,6 +471,13 @@ since source-layers are named `<letter>_<cc>` (§4) the tile artifact had to be
 rebuilt from the rewritten rows. `make coverage-tiles` brings up MinIO and
 publishes there, no Geofabrik involved.
 
+**Nightly dispatch: `python -m coverage.dispatch`** (`pipeline/coverage/dispatch.py`)
+orders the onboarded regions by staleness and loads the stalest ones inside a
+time budget and a region cap, then runs `--tiles-only` once if anything
+loaded. Each loaded region also refreshes its routes and surface line
+extracts, and one offline pass per family (`--routes`, `--surface`) then
+republishes only the countries whose inputs changed.
+
 ## 4. Tile artifact contract
 
 Thin tiles: enough to draw markers and run map-side filters; everything else
