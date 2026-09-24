@@ -4269,7 +4269,7 @@ admin:
     col_status: "Status"
     col_regions: "Regionen"
     col_took: "Dauer"
-    col_published: "Veröffentlicht"
+    col_rebuilt: "Neu gebaut"
     regions_of: "%loaded% von %requested%"
     one_title: "Coverage-Ernte vom %started%"
     no_steps: "Diese Ernte hat keine Schritte aufgezeichnet."

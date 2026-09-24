@@ -21,7 +21,7 @@
         · {{ 'admin.coverage_runs.regions_of'|trans({'%loaded%': run.regions_loaded, '%requested%': run.regions_requested}) }}
       {% endif %}
       {% if run.published_url %}
-        · <a href="{{ run.published_url }}" rel="noopener noreferrer">{{ run.published_url|split('/')|last }}</a>
+        · {{ run.published_url }}
       {% endif %}
     </p>
 

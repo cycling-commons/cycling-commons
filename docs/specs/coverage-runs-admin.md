@@ -29,7 +29,7 @@ this page reads them. Nothing new is measured.
 | status | `status`; a `running` row older than twelve hours reads **abandoned** (a killed run never finishes its row) |
 | regions | `regions_loaded` of `regions_requested` |
 | took | `finished_at - started_at` |
-| published | the archive filename from `published_url`, linked |
+| rebuilt | the countries rebuilt this run, from `published_url` (comma-separated; empty when nothing changed) |
 
 **One run**, `/admin/coverage-runs/{id}`: the same header, then a table of its
 steps grouped by region, in `started_at` order:

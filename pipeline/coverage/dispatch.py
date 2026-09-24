@@ -100,7 +100,9 @@ def main(argv=None) -> int:
                 print(f"[dispatch] publish FAILED (rc {rc})", file=sys.stderr)
         else:
             print("[dispatch] nothing loaded, not publishing")
-        url = conn.execute(
+        # What run.main's upload step left in its detail: the countries it
+        # rebuilt this run (comma-separated), or none when nothing changed.
+        rebuilt = conn.execute(
             "SELECT detail FROM coverage_run_step WHERE run_id = %s AND step = 'upload' "
             "AND status = 'ok' ORDER BY started_at DESC LIMIT 1",
             (run_id,),
@@ -109,7 +111,7 @@ def main(argv=None) -> int:
             status = "partial" if loaded else "failed"
         else:
             status = "ok"
-        tracker.finish(status, len(loaded), url[0] if url else None)
+        tracker.finish(status, len(loaded), rebuilt[0] if rebuilt else None)
         print(f"[dispatch] {status}: {len(loaded)} loaded, {len(failed)} failed, "
               f"total {_dur(time.monotonic() - started)}")
     return 1 if failed or publish_failed else 0

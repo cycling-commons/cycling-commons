@@ -25,7 +25,7 @@
             <th>{{ 'admin.coverage_runs.col_status'|trans }}</th>
             <th>{{ 'admin.coverage_runs.col_regions'|trans }}</th>
             <th class="text-end">{{ 'admin.coverage_runs.col_took'|trans }}</th>
-            <th>{{ 'admin.coverage_runs.col_published'|trans }}</th>
+            <th>{{ 'admin.coverage_runs.col_rebuilt'|trans }}</th>
           </tr>
         </thead>
         <tbody>
@@ -47,11 +47,7 @@
                 {%- endif -%}
               </td>
               <td class="text-end">{{ fmt.duration(run.seconds) }}</td>
-              <td>
-                {% if run.published_url %}
-                  <a href="{{ run.published_url }}" rel="noopener noreferrer">{{ run.published_url|split('/')|last }}</a>
-                {% endif %}
-              </td>
+              <td>{{ run.published_url }}</td>
             </tr>
           {% endfor %}
         </tbody>

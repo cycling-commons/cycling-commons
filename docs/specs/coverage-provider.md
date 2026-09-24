@@ -430,13 +430,16 @@ After all regions, once per run:
 7. **Verify** with go-pmtiles (`verify_pmtiles`): header bounds, addressed tile
    count, expected layers, and a sample tile decode — a broken build never
    ships.
-8. **Publish** (`pipeline/coverage/publish.py`): upload the artifact under a
-   **versioned key** `coverage/<YYYYMMDD-HHMM>.pmtiles`
-   (`Cache-Control: public, max-age=31536000, immutable`), then repoint the
-   manifest at the **stable key** `coverage/manifest.json`
-   (`publish.MANIFEST_KEY`, `max-age=300`), then prune old artifacts keeping
-   the last 4 (`publish.prune(keep=4)`). Versioned keys mean an open reader
-   mid-pan never has bytes change underneath it.
+8. **Publish, per country** (`pipeline/coverage/publish.py`): each country
+   whose export fingerprint has changed uploads its points archive under a
+   **versioned key** `coverage/<cc>/<YYYYMMDD-HHMM>/points.pmtiles`
+   (`Cache-Control: public, max-age=31536000, immutable`, `publish.publish_countries`),
+   merged into the **stable key** `coverage/manifest.json`
+   (`publish.MANIFEST_KEY`, `max-age=300`) alongside every country left
+   unchanged, then old builds are pruned per country keeping the last 4
+   (`publish.prune_family("coverage", ..., keep=4)`). Versioned keys mean an
+   open reader mid-pan never has bytes change underneath it; a country whose
+   fingerprint matches the live manifest is skipped rather than rebuilt.
 
 **Failure mode:** any step aborts that region's transaction or the artifact
 step; last good data keeps serving; a non-zero exit surfaces through the
@@ -459,9 +462,9 @@ volume), `COVERAGE_PBF_PATH` (optional local override), `COVERAGE_S3_ENDPOINT`,
 **Republish without a harvest: `python -m coverage.run --tiles-only`**
 (dev: `make coverage-tiles`). The flag skips the per-region Geofabrik harvest
 and runs only the tail of the chain - export, build, verify and publish the
-coverage PMTiles from the `coverage_poi` rows already in PostGIS; the
-manifest's `regions` is the region list given (`COVERAGE_REGIONS` /
-`regions=`). This is the way to republish after a change that rewrote the
+coverage PMTiles from the `coverage_poi` rows already in PostGIS, per country,
+each one skipped when its export fingerprint already matches the live
+manifest. This is the way to republish after a change that rewrote the
 index without new OSM data - the 2026-08-25 letter renumbering is the
 exemplar: migration `Version20260825120000` rewrote `coverage_poi.letter`, and
 since source-layers are named `<letter>_<cc>` (§4) the tile artifact had to be

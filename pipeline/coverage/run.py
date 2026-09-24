@@ -3,9 +3,11 @@
 
 Per region: download (md5-checked, skipped when unchanged) → osmium tags-filter
 → pyosmium parse → atomic per-region swap into coverage_poi. Then once per run:
-per-letter GeoJSONL export → tippecanoe PMTiles → go-pmtiles verify → upload
-versioned artifact + manifest → prune. A region failure keeps last week's
-slice serving and turns into a non-zero exit for the timer's failure mail.
+per-letter GeoJSONL export → tippecanoe PMTiles, per country → go-pmtiles
+verify → publish + prune, per country (a country whose export fingerprint
+matches the live manifest is skipped rather than rebuilt). A region failure
+keeps last week's slice serving and turns into a non-zero exit for the timer's
+failure mail.
 
 Entrypoint: python -m coverage.run  (dev: `make coverage-refresh`).
 """
@@ -28,7 +30,7 @@ from .load import COUNTRY_BY_REGION, apply_session_budget, ensure_schema, load_r
 from .ownership import Owners, outlines_fingerprint, snapshot_outlines
 from .parse import parse_pois
 from .publish import (CountryBuild, GapsBuild, ensure_bucket, inputs_fingerprint,
-                      prune, prune_family, publish_countries, read_manifest, upload)
+                      prune_family, publish_countries, read_manifest)
 from .regions import ONBOARDED_REGIONS, default_regions
 from .routes import extract_region as routes_extract_region
 from .routes import load_way_ids
@@ -536,6 +538,16 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
     return 1 if failed else 0
 
 
+def _coverage_countries(layer_files: dict[tuple[str, str], pathlib.Path]) -> dict[str, dict]:
+    """export_geojsonl's {(LETTER, CC): path} regrouped as {cc: {(LETTER, CC): path}},
+    one entry per PMTiles archive the coverage points build must produce
+    (lowercase cc, including the 'zz' bucket for unstamped rows)."""
+    out: dict[str, dict] = {}
+    for (letter, cc), path in layer_files.items():
+        out.setdefault(cc.lower(), {})[(letter, cc)] = path
+    return out
+
+
 def _dur(seconds: float) -> str:
     """A duration read at a glance: "41.2s", "2m17s", "1h04m".
 
@@ -721,33 +733,36 @@ def main(argv=None) -> int:
             _print_timings(timings, time.monotonic() - run_started)
             tracker.finish("failed", loaded)
             return 1
-        artifact = workdir / "coverage.pmtiles"
+        live = read_manifest("coverage")
+        built: dict[str, CountryBuild] = {}
         with tracker.step(None, "tippecanoe") as st:
-            build_pmtiles(layer_files, artifact)
-            # expect exactly the (letter, cc) layer pairs we exported; pairs absent
-            # from the index (possible on partial fixtures) don't fail the gate
-            verify_pmtiles(artifact, expected_layers={
-                f"{letter.lower()}_{cc.lower()}" for (letter, cc) in layer_files})
-            if artifact.exists():
-                st.bytes = artifact.stat().st_size
-        # Manifest semantics (shape locked, coverage-provider.md §4): `counts`
-        # spans the WHOLE coverage_poi table — every region's current slice,
-        # matching the artifact, which is always built from the full index —
-        # while `regions` lists only THIS run's regions. Staggered per-region
-        # prod timers make the two legitimately diverge.
-        counts = dict(conn.execute(
-            "SELECT letter, count(*) FROM coverage_poi GROUP BY letter").fetchall())
-        ensure_bucket()
-        country_codes = sorted({cc for (_letter, cc) in layer_files if cc != "ZZ"})
-        with tracker.step(None, "upload") as st:
-            url = upload(artifact, {"counts": counts, "regions": regions,
-                                    "country_codes": country_codes})
-            st.detail = url
-        stale = prune(keep=4)
-        print(f"[coverage] published {url} (pruned {len(stale)}) — "
-              f"tiles {_dur(time.monotonic() - tiles_started)}")
+            for cc, files in sorted(_coverage_countries(layer_files).items()):
+                inputs = inputs_fingerprint(files.values(), contract_fingerprint(), TILE_PROFILE["coverage"])
+                if live["countries"].get(cc, {}).get("inputs") == inputs:
+                    continue
+                out = workdir / f"coverage-{cc}.pmtiles"
+                build_pmtiles(files, out)
+                # expect exactly the (letter, cc) layer pairs this country exported;
+                # pairs absent from the index (possible on partial fixtures) don't
+                # fail the gate
+                verify_pmtiles(out, expected_layers={f"{l.lower()}_{c.lower()}" for (l, c) in files})
+                counts_cc = {l: sum(1 for _ in p.open("rb")) for (l, _c), p in files.items()}
+                built[cc] = CountryBuild(paths={"points": out}, inputs=inputs,
+                                         bounds=artifact_bounds(out), counts=counts_cc)
+            st.bytes = sum(b.paths["points"].stat().st_size for b in built.values())
+            st.detail = ",".join(sorted(built)) or "none changed"
+        rebuilt = ",".join(sorted(built)) or None
+        if built or retire:
+            ensure_bucket()
+            with tracker.step(None, "upload") as st:
+                doc = publish_countries("coverage", built, retire=retire)
+                st.detail = rebuilt
+            for key in prune_family("coverage", doc, keep=4):
+                print(f"[coverage] pruned {key}")
+        print(f"[coverage] {len(built)} countr{'y' if len(built) == 1 else 'ies'} rebuilt: "
+              f"{rebuilt or 'none'} - tiles {_dur(time.monotonic() - tiles_started)}")
         _print_timings(timings, time.monotonic() - run_started)
-        tracker.finish(run_status, loaded, url)
+        tracker.finish(run_status, loaded, rebuilt)
     return 1 if failed else 0
 
 

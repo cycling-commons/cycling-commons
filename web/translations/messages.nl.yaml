@@ -4268,7 +4268,7 @@ admin:
     col_status: "Status"
     col_regions: "Regio's"
     col_took: "Duur"
-    col_published: "Gepubliceerd"
+    col_rebuilt: "Herbouwd"
     regions_of: "%loaded% van %requested%"
     one_title: "Coverage-oogst van %started%"
     no_steps: "Deze oogst heeft geen stappen vastgelegd."

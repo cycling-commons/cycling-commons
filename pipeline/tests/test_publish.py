@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""publish.py — versioned artifact upload, manifest repoint, prune, dev bucket bootstrap."""
-import datetime
-import json
-
+"""publish.py — dev bucket bootstrap (upload/manifest/prune are covered by
+test_publish_countries.py, the per-country v2 API)."""
 import boto3
 import pytest
 from botocore.stub import ANY, Stubber
@@ -24,78 +22,6 @@ def _stubbed_client():
                           aws_access_key_id="k", aws_secret_access_key="s",
                           region_name="us-east-1")
     return client, Stubber(client)
-
-
-class _JsonBodyContains:
-    """Equality matcher (same trick as botocore.stub.ANY): decodes a put_object
-    Body and checks it carries the given key/value pairs, so a Stubber
-    expected_params dict can assert on manifest JSON content instead of
-    matching Body byte-for-byte."""
-
-    def __init__(self, **expected):
-        self.expected = expected
-
-    def __eq__(self, other):
-        doc = json.loads(other)
-        return all(doc.get(k) == v for k, v in self.expected.items())
-
-
-def test_upload_versioned_artifact_and_manifest(env, tmp_path):
-    art = tmp_path / "coverage.pmtiles"
-    art.write_bytes(b"PMTiles-bytes")
-    client, stub = _stubbed_client()
-    now = datetime.datetime(2026, 7, 16, 4, 30, tzinfo=datetime.timezone.utc)
-    stub.add_response("put_object", {}, {
-        "Bucket": "cc-maps", "Key": "coverage/20260716-0430.pmtiles", "Body": ANY,
-        "ContentType": "application/octet-stream",
-        "CacheControl": "public, max-age=31536000, immutable"})
-    stub.add_response("put_object", {}, {
-        "Bucket": "cc-maps", "Key": "coverage/manifest.json", "Body": ANY,
-        "ContentType": "application/json",
-        "CacheControl": "public, max-age=300"})
-    with stub:
-        url = publish.upload(art, {"counts": {"B": 2, "D": 1}, "regions": ["europe/belgium"]},
-                             client=client, now=now)
-    assert url == "http://localhost:9100/cc-maps/coverage/20260716-0430.pmtiles"
-    stub.assert_no_pending_responses()
-
-
-def test_manifest_carries_country_codes(env, tmp_path):
-    art = tmp_path / "coverage.pmtiles"
-    art.write_bytes(b"PMTiles-bytes")
-    client, stub = _stubbed_client()
-    now = datetime.datetime(2026, 7, 22, 10, 40, tzinfo=datetime.timezone.utc)
-    stub.add_response("put_object", {}, {
-        "Bucket": "cc-maps", "Key": "coverage/20260722-1040.pmtiles", "Body": ANY,
-        "ContentType": "application/octet-stream",
-        "CacheControl": "public, max-age=31536000, immutable"})
-    stub.add_response("put_object", {}, {
-        "Bucket": "cc-maps", "Key": "coverage/manifest.json",
-        "Body": _JsonBodyContains(country_codes=["BE", "NL"]),
-        "ContentType": "application/json",
-        "CacheControl": "public, max-age=300"})
-    with stub:
-        publish.upload(art, {"counts": {"B": 1}, "regions": ["europe/belgium"],
-                            "country_codes": ["BE", "NL"]},
-                       client=client, now=now)
-    stub.assert_no_pending_responses()
-
-
-def test_prune_keeps_newest_four_and_manifest(env):
-    client, stub = _stubbed_client()
-    contents = [{"Key": k} for k in (
-        "coverage/manifest.json",
-        "coverage/20260601-0400.pmtiles", "coverage/20260608-0400.pmtiles",
-        "coverage/20260615-0400.pmtiles", "coverage/20260622-0400.pmtiles",
-        "coverage/20260629-0400.pmtiles", "coverage/20260706-0400.pmtiles")]
-    stub.add_response("list_objects_v2", {"Contents": contents, "KeyCount": 7, "IsTruncated": False},
-                      {"Bucket": "cc-maps", "Prefix": "coverage/"})
-    stub.add_response("delete_object", {}, {"Bucket": "cc-maps", "Key": "coverage/20260608-0400.pmtiles"})
-    stub.add_response("delete_object", {}, {"Bucket": "cc-maps", "Key": "coverage/20260601-0400.pmtiles"})
-    with stub:
-        stale = publish.prune(keep=4, client=client)
-    assert stale == ["coverage/20260608-0400.pmtiles", "coverage/20260601-0400.pmtiles"]
-    stub.assert_no_pending_responses()
 
 
 def test_ensure_bucket_bootstraps_missing_bucket(env):

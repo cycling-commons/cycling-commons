@@ -4300,7 +4300,7 @@ admin:
     col_status: "Estado"
     col_regions: "Regiones"
     col_took: "Duración"
-    col_published: "Publicado"
+    col_rebuilt: "Reconstruido"
     regions_of: "%loaded% de %requested%"
     one_title: "Recolección de cobertura del %started%"
     no_steps: "Esta recolección no registró ningún paso."

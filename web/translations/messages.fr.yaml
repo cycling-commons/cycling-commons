@@ -4261,7 +4261,7 @@ admin:
     col_status: "État"
     col_regions: "Régions"
     col_took: "Durée"
-    col_published: "Publié"
+    col_rebuilt: "Reconstruit"
     regions_of: "%loaded% sur %requested%"
     one_title: "Récolte de couverture du %started%"
     no_steps: "Cette récolte n'a enregistré aucune étape."

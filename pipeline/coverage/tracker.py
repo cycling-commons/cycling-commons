@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS coverage_run (
     status            text NOT NULL,          -- running | ok | partial | failed
     regions_requested int,
     regions_loaded    int,
-    published_url     text
+    published_url     text          -- countries rebuilt this run, comma-separated
 )
 """,
     """

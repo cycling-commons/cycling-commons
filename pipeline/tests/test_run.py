@@ -1,16 +1,20 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """run.py — Geofabrik download step (override, md5 skip, mismatch abort) and
 main() orchestration (stage order, per-region failure isolation, exit code)."""
+import contextlib
+import functools
 import hashlib
 import io
 import os
+import re
 
 import psycopg
 import pytest
 
-from coverage import run
+from coverage import publish, run
 from coverage.load import DriftAbort, LoadResult
-from coverage.run import COVERAGE_ADVISORY_LOCK_KEY, _acquire_run_lock, _dur, _print_timings
+from coverage.run import COVERAGE_ADVISORY_LOCK_KEY, _acquire_run_lock, _coverage_countries, _dur, _print_timings
+from fakes import FakeS3
 
 
 class _Resp(io.BytesIO):
@@ -139,18 +143,23 @@ def test_fetch_pbf_recovers_when_md5_mirror_lags(monkeypatch, tmp_path):
     assert not (tmp_path / "europe-germany-latest.osm.part").exists()
 
 
+def test_coverage_groups_layer_files_by_country(tmp_path):
+    files = {("B", "BE"): tmp_path / "b_be", ("C", "BE"): tmp_path / "c_be", ("B", "ZZ"): tmp_path / "b_zz"}
+    assert _coverage_countries(files) == {
+        "be": {("B", "BE"): tmp_path / "b_be", ("C", "BE"): tmp_path / "c_be"},
+        "zz": {("B", "ZZ"): tmp_path / "b_zz"},
+    }
+
+
 def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, capsys):
     """Two regions, the first drift-aborts: the loop continues, the artifact
     still ships (verify BEFORE upload, prune AFTER), and main() exits non-zero
     — coverage-provider.md §3 failure mode. Pure python: every stage seam and
-    the DB connection are monkeypatched."""
+    the DB connection are monkeypatched; the publish itself runs for real
+    against a FakeS3 client so the manifest it writes is asserted, not stubbed."""
     calls = []
-    manifests = []
 
     class FakeResult:
-        def fetchall(self):
-            return [("B", 3), ("D", 2)]
-
         def fetchone(self):
             return (True,)   # pg_try_advisory_lock → acquired (design §3.2)
 
@@ -162,11 +171,6 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
             return False
 
         def execute(self, sql, params=None):
-            # Only the real GROUP BY counts query is recorded; the session-budget
-            # SET statements (sql.Composed) and the advisory-lock SELECT are the
-            # new run.main() preamble (design §3.1/§3.2) and are no-ops here.
-            if isinstance(sql, str) and "count(*)" in sql:
-                calls.append("counts-query")
             return FakeResult()
 
         def commit(self):
@@ -187,12 +191,8 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
             raise DriftAbort("simulated drift: 1 row vs 100 previously")
         return LoadResult(inserted=7, previous=5)
 
-    def fake_upload(artifact, manifest):
-        calls.append("upload")
-        manifests.append(manifest)
-        return "http://bucket/coverage/20260716-0400.pmtiles"
-
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
+    monkeypatch.setenv("COVERAGE_PUBLIC_BASE_URL", "https://tiles.example/cc-maps")
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
     monkeypatch.setattr(run, "ensure_schema", lambda conn: calls.append("schema"))
     # dev/bad and dev/ok are placeholder slugs for this orchestration test, not
@@ -209,16 +209,31 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     monkeypatch.setattr(run, "run_way_filter", lambda pbf, out, rule: calls.append("ways") or out)
     monkeypatch.setattr(run, "export_lines", lambda path: iter(()))
     monkeypatch.setattr(run, "load_region", fake_load_region)
+    (tmp_path / "b.geojsonl").write_text('{"a":1}\n{"a":2}\n{"a":3}\n')
     monkeypatch.setattr(
         run, "export_geojsonl",
         lambda conn, wd: calls.append("export") or {("B", "BE"): tmp_path / "b.geojsonl"})
-    monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: calls.append("build"))
+    monkeypatch.setattr(
+        run, "build_pmtiles",
+        lambda lf, out: calls.append("build") or out.write_bytes(b"pm"))
     monkeypatch.setattr(
         run, "verify_pmtiles",
         lambda path, expected_layers=None: calls.append("verify"))
+    monkeypatch.setattr(run, "artifact_bounds", lambda p: [0.0, 0.0, 1.0, 1.0])
     monkeypatch.setattr(run, "ensure_bucket", lambda: calls.append("bucket"))
-    monkeypatch.setattr(run, "upload", fake_upload)
-    monkeypatch.setattr(run, "prune", lambda keep=4: calls.append("prune") or [])
+    fake = FakeS3()
+    monkeypatch.setattr(run, "read_manifest", functools.partial(publish.read_manifest, client=fake))
+
+    def fake_publish_countries(family, built, *, gaps=None, retire=()):
+        calls.append("upload")
+        return publish.publish_countries(family, built, gaps=gaps, retire=retire,
+                                         lock=lambda f: contextlib.nullcontext(), client=fake)
+    monkeypatch.setattr(run, "publish_countries", fake_publish_countries)
+
+    def fake_prune_family(family, manifest, keep=4):
+        calls.append("prune")
+        return publish.prune_family(family, manifest, keep=keep, client=fake)
+    monkeypatch.setattr(run, "prune_family", fake_prune_family)
 
     rc = run.main(["--regions", "dev/bad,dev/ok"])
 
@@ -228,9 +243,13 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
     # The artifact still ships, gated in order: verify → upload → prune.
     assert calls.index("verify") < calls.index("upload") < calls.index("prune")
     assert calls.index("build") < calls.index("verify")
-    # Manifest: table-wide counts, this run's regions (shape locked).
-    assert manifests == [{"counts": {"B": 3, "D": 2}, "regions": ["dev/bad", "dev/ok"],
-                         "country_codes": ["BE"]}]
+    # The manifest actually written: v2, one country, its points tile under
+    # this run's versioned prefix.
+    doc = publish.read_manifest("coverage", client=fake)
+    assert doc["version"] == 2
+    be = doc["countries"]["be"]
+    assert be["counts"] == {"B": 3}
+    assert re.search(r"/coverage/be/\d{8}-\d{4}/points\.pmtiles$", be["tiles"]["points"])
     err = capsys.readouterr().err
     assert "dev/bad: FAILED" in err and "simulated drift" in err
 
@@ -295,16 +314,15 @@ def test_timings_stay_quiet_when_no_region_ran(capsys):
 
 def test_main_tiles_only_skips_the_harvest_and_still_publishes(monkeypatch, tmp_path):
     """--tiles-only: no fetch/extract/load for any region, but the artifact is
-    still exported, built, verified, uploaded and pruned in that order, with
-    the manifest carrying the region list given. Added for the 2026-08-25
-    letter renumbering: the rows changed, the OSM data did not."""
+    still exported, built, verified and published per country: the manifest
+    (v2) carries the fixture country under `countries` with a `tiles.points`
+    URL under this run's versioned prefix. A second --tiles-only run against
+    the same export is a no-op: the country's inputs fingerprint already
+    matches the live manifest, so nothing new is built or uploaded. Added for
+    the 2026-08-25 letter renumbering: the rows changed, the OSM data did not."""
     calls = []
-    manifests = []
 
     class FakeResult:
-        def fetchall(self):
-            return [("B", 3)]
-
         def fetchone(self):
             return (True,)
 
@@ -322,6 +340,7 @@ def test_main_tiles_only_skips_the_harvest_and_still_publishes(monkeypatch, tmp_
             pass
 
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
+    monkeypatch.setenv("COVERAGE_PUBLIC_BASE_URL", "https://tiles.example/cc-maps")
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
     monkeypatch.setattr(run, "ensure_schema", lambda conn: calls.append("schema"))
     monkeypatch.setattr(run, "resolve_country", lambda region: calls.append("resolve"))
@@ -329,21 +348,43 @@ def test_main_tiles_only_skips_the_harvest_and_still_publishes(monkeypatch, tmp_
     monkeypatch.setattr(run, "run_extract", lambda pbf, out, contract: calls.append("extract"))
     monkeypatch.setattr(run, "parse_pois", lambda pbf, contract, region, cc: calls.append("parse"))
     monkeypatch.setattr(run, "load_region", lambda conn, rows, region, cc: calls.append("load"))
+    (tmp_path / "b.geojsonl").write_text('{"a":1}\n{"a":2}\n{"a":3}\n')
     monkeypatch.setattr(
         run, "export_geojsonl",
         lambda conn, wd: calls.append("export") or {("B", "BE"): tmp_path / "b.geojsonl"})
-    monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: calls.append("build"))
+    monkeypatch.setattr(
+        run, "build_pmtiles",
+        lambda lf, out: calls.append("build") or out.write_bytes(b"pm"))
     monkeypatch.setattr(run, "verify_pmtiles", lambda path, expected_layers=None: calls.append("verify"))
+    monkeypatch.setattr(run, "artifact_bounds", lambda p: [0.0, 0.0, 1.0, 1.0])
     monkeypatch.setattr(run, "ensure_bucket", lambda: calls.append("bucket"))
-    monkeypatch.setattr(run, "upload", lambda artifact, manifest: manifests.append(manifest) or calls.append("upload") or "u")
-    monkeypatch.setattr(run, "prune", lambda keep=4: calls.append("prune") or [])
+    fake = FakeS3()
+    monkeypatch.setattr(run, "read_manifest", functools.partial(publish.read_manifest, client=fake))
+    monkeypatch.setattr(
+        run, "publish_countries",
+        functools.partial(publish.publish_countries,
+                          lock=lambda family: contextlib.nullcontext(), client=fake))
+    monkeypatch.setattr(run, "prune_family", functools.partial(publish.prune_family, client=fake))
 
     rc = run.main(["--tiles-only", "--regions", "europe/belgium"])
 
     assert rc == 0
     assert not {"resolve", "fetch", "extract", "parse", "load"} & set(calls)
-    assert calls == ["schema", "export", "build", "verify", "bucket", "upload", "prune"]
-    assert manifests == [{"counts": {"B": 3}, "regions": ["europe/belgium"], "country_codes": ["BE"]}]
+    assert calls == ["schema", "export", "build", "verify", "bucket"]
+    doc = publish.read_manifest("coverage", client=fake)
+    assert doc["version"] == 2
+    be = doc["countries"]["be"]
+    assert be["counts"] == {"B": 3}
+    assert re.search(r"/coverage/be/\d{8}-\d{4}/points\.pmtiles$", be["tiles"]["points"])
+
+    # A second --tiles-only run over the same export uploads no .pmtiles: the
+    # country's inputs fingerprint already matches what the first run published.
+    puts_before = len(fake.puts)
+    calls.clear()
+    rc2 = run.main(["--tiles-only", "--regions", "europe/belgium"])
+    assert rc2 == 0
+    assert calls == ["schema", "export"]
+    assert not [p for p in fake.puts[puts_before:] if p["Key"].endswith(".pmtiles")]
 
 
 def test_main_load_only_loads_and_builds_no_tiles(monkeypatch, tmp_path):
@@ -383,7 +424,8 @@ def test_main_load_only_loads_and_builds_no_tiles(monkeypatch, tmp_path):
     monkeypatch.setattr(run, "export_lines", lambda path: iter(()))
     monkeypatch.setattr(run, "load_region",
                         lambda conn, rows, region, cc, near_ways=None, name_or_tags=None, exclude_tag_values=None: calls.append("load") or LoadResult(1, 1))
-    for name in ("export_geojsonl", "build_pmtiles", "verify_pmtiles", "ensure_bucket", "upload", "prune"):
+    for name in ("export_geojsonl", "build_pmtiles", "verify_pmtiles", "ensure_bucket",
+                "read_manifest", "publish_countries", "prune_family"):
         monkeypatch.setattr(run, name, lambda *a, _n=name, **k: calls.append(_n))
 
     rc = run.main(["--load-only", "--regions", "europe/belgium"])
@@ -399,9 +441,6 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
     writes = []
 
     class FakeResult:
-        def fetchall(self):
-            return [("B", 3)]
-
         def fetchone(self):
             return (True,)
 
@@ -439,12 +478,15 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
     monkeypatch.setattr(run, "run_way_filter", lambda pbf, out, rule: out)
     monkeypatch.setattr(run, "export_lines", lambda path: iter(()))
     monkeypatch.setattr(run, "load_region", fake_load_region)
+    (tmp_path / "b.geojsonl").write_text('{"a":1}\n')
     monkeypatch.setattr(run, "export_geojsonl", lambda conn, wd: {("B", "BE"): tmp_path / "b.geojsonl"})
     monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: out.write_bytes(b"pm" * 4))
     monkeypatch.setattr(run, "verify_pmtiles", lambda path, expected_layers=None: None)
+    monkeypatch.setattr(run, "artifact_bounds", lambda p: [0.0, 0.0, 1.0, 1.0])
     monkeypatch.setattr(run, "ensure_bucket", lambda: None)
-    monkeypatch.setattr(run, "upload", lambda artifact, manifest: "http://bucket/c.pmtiles")
-    monkeypatch.setattr(run, "prune", lambda keep=4: [])
+    monkeypatch.setattr(run, "read_manifest", lambda family: {"version": 2, "countries": {}})
+    monkeypatch.setattr(run, "publish_countries", lambda family, built, *, gaps=None, retire=(): {"countries": {}})
+    monkeypatch.setattr(run, "prune_family", lambda family, manifest, keep=4: [])
 
     assert run.main(["--regions", "dev/bad,dev/ok", "--trigger", "bootstrap"]) == 1
 
@@ -467,6 +509,6 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
     assert by_key[("dev/ok", "load")][6:] == (
         7, "ok", '{"previous": 5, "dropped": {"name:P": 3, "near_way": 1}}')
     assert by_key[(None, "tippecanoe")][5] == 8
-    assert by_key[(None, "upload")][8] == "http://bucket/c.pmtiles"
+    assert by_key[(None, "upload")][8] == "be"
     finish = [p for (sql, p) in writes if "UPDATE coverage_run" in sql]
-    assert finish == [("partial", 1, "http://bucket/c.pmtiles", True)]
+    assert finish == [("partial", 1, "be", True)]

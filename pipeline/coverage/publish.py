@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Publish the coverage PMTiles artifact + manifest to the CC bucket.
+"""Publish per-country PMTiles artifacts + manifest to the CC bucket, one
+family (coverage points, road surface, cycle routes) at a time.
 
-Versioned keys (coverage/<YYYYMMDD-HHMM>.pmtiles) so an open reader mid-pan
-never has bytes change underneath it (coverage-provider.md §3 step 8);
-the stable manifest key points Symfony's CoverageManifest at the current
-artifact. Dev talks to the compose MinIO, prod to the CC Hetzner bucket —
-same code, COVERAGE_S3_* env only.
+Each built country uploads under its own versioned prefix
+(<family>/<cc>/<YYYYMMDD-HHMM>/<arm>.pmtiles) so an open reader mid-pan never
+has bytes change underneath it (coverage-provider.md §3 step 8); the stable
+per-family manifest key (FAMILIES) points the Symfony *Manifest readers at
+each country's current tiles. Dev talks to the compose MinIO, prod to the CC
+Hetzner bucket — same code, COVERAGE_S3_* env only.
 """
 import contextlib
 import datetime
@@ -23,7 +25,6 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 
 MANIFEST_KEY = "coverage/manifest.json"
-_VERSIONED_KEY = re.compile(r"^coverage/\d{8}-\d{4}\.pmtiles$")
 
 # Prod-sized artifact uploads over object storage: retry transient S3/network
 # errors instead of failing the whole weekly batch, and never hang a timer run
@@ -224,52 +225,5 @@ def prune_family(family: str, manifest: dict, keep: int = 3, client=None) -> lis
         keepers = set(sorted(stamps, reverse=True)[:keep]) | {live.get(cc)}
         stale += [k for s, ks in stamps.items() if s not in keepers for k in ks]
     for key in sorted(stale, reverse=True):
-        client.delete_object(Bucket=bucket, Key=key)
-    return stale
-
-
-def upload(pmtiles_path, manifest, client=None, now=None):
-    """Put the artifact under a versioned key, then repoint the stable manifest.
-
-    `manifest` carries counts + regions; version/url/built_at are stamped here.
-    Returns the public artifact URL (what CoverageManifest::currentTileUrl serves)."""
-    client = client or _client()
-    bucket = _bucket()
-    now = now or datetime.datetime.now(datetime.timezone.utc)
-    key = f"coverage/{now.strftime('%Y%m%d-%H%M')}.pmtiles"
-    with open(pmtiles_path, "rb") as fh:
-        client.put_object(
-            Bucket=bucket, Key=key, Body=fh,
-            ContentType="application/octet-stream",
-            # versioned key → immutable forever; open readers keep valid bytes
-            CacheControl="public, max-age=31536000, immutable")
-    url = f"{os.environ['COVERAGE_PUBLIC_BASE_URL'].rstrip('/')}/{key}"
-    doc = {"version": 1, "url": url,
-           "built_at": now.isoformat(timespec="seconds"),
-           "counts": manifest["counts"], "regions": manifest["regions"],
-           "country_codes": manifest.get("country_codes", [])}
-    client.put_object(
-        Bucket=bucket, Key=MANIFEST_KEY,
-        Body=json.dumps(doc, separators=(",", ":")).encode(),
-        ContentType="application/json",
-        # short TTL so a new artifact goes live within the hour without a
-        # deploy — coverage-provider.md §4 documents Symfony's own
-        # CoverageManifest::CACHE_TTL (3600 s) layered on top of this
-        CacheControl="public, max-age=300")
-    return url
-
-
-def prune(keep=4, client=None):
-    """Delete versioned artifacts beyond the newest `keep` (coverage-provider.md §3 step 8).
-
-    The manifest and any non-versioned keys are never touched. Returns the
-    deleted keys, oldest last."""
-    client = client or _client()
-    bucket = _bucket()
-    resp = client.list_objects_v2(Bucket=bucket, Prefix="coverage/")
-    keys = sorted((o["Key"] for o in resp.get("Contents", [])
-                   if _VERSIONED_KEY.match(o["Key"])), reverse=True)
-    stale = keys[keep:]
-    for key in stale:
         client.delete_object(Bucket=bucket, Key=key)
     return stale

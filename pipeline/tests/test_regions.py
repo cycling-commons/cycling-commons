@@ -37,14 +37,13 @@ def test_default_regions_prefers_the_env(monkeypatch):
 
 
 def test_main_without_regions_or_env_publishes_every_onboarded_region(monkeypatch, tmp_path):
-    """The manifest of an env-less --tiles-only run lists all 22 regions — the
-    14-region fallback this replaced silently dropped eight countries."""
-    manifests = []
+    """An env-less --tiles-only run's coverage_run row requests all 22 onboarded
+    regions — the 14-region fallback this replaced silently dropped eight
+    countries. --tiles-only builds from the database, not from this list, but
+    `regions_requested` is what an operator reads back to know what was asked for."""
+    writes = []
 
     class FakeResult:
-        def fetchall(self):
-            return [("B", 3)]
-
         def fetchone(self):
             return (True,)
 
@@ -56,6 +55,8 @@ def test_main_without_regions_or_env_publishes_every_onboarded_region(monkeypatc
             return False
 
         def execute(self, sql, params=None):
+            if isinstance(sql, str) and "INSERT INTO coverage_run " in sql:
+                writes.append(params)
             return FakeResult()
 
         def commit(self):
@@ -65,14 +66,15 @@ def test_main_without_regions_or_env_publishes_every_onboarded_region(monkeypatc
     monkeypatch.setenv("COVERAGE_WORKDIR", str(tmp_path))
     monkeypatch.setattr(run.psycopg, "connect", lambda dsn: FakeConn())
     monkeypatch.setattr(run, "ensure_schema", lambda conn: None)
+    (tmp_path / "b.geojsonl").write_text('{"a":1}\n')
     monkeypatch.setattr(run, "export_geojsonl", lambda conn, wd: {("B", "BE"): tmp_path / "b.geojsonl"})
-    monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: None)
+    monkeypatch.setattr(run, "build_pmtiles", lambda lf, out: out.write_bytes(b"pm"))
     monkeypatch.setattr(run, "verify_pmtiles", lambda path, expected_layers=None: None)
+    monkeypatch.setattr(run, "artifact_bounds", lambda p: [0.0, 0.0, 1.0, 1.0])
     monkeypatch.setattr(run, "ensure_bucket", lambda: None)
-    monkeypatch.setattr(run, "upload", lambda artifact, manifest: manifests.append(manifest) or "u")
-    monkeypatch.setattr(run, "prune", lambda keep=4: [])
+    monkeypatch.setattr(run, "read_manifest", lambda family: {"version": 2, "countries": {}})
+    monkeypatch.setattr(run, "publish_countries", lambda family, built, *, gaps=None, retire=(): {"countries": {}})
+    monkeypatch.setattr(run, "prune_family", lambda family, manifest, keep=4: [])
 
     assert run.main(["--tiles-only"]) == 0
-    assert len(manifests) == 1
-    assert manifests[0]["regions"] == list(ONBOARDED_REGIONS)
-    assert len(manifests[0]["regions"]) == 22
+    assert writes == [("manual", 22)]

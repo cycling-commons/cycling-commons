@@ -4290,7 +4290,7 @@ admin:
     col_status: "Status"
     col_regions: "Regions"
     col_took: "Took"
-    col_published: "Published"
+    col_rebuilt: "Rebuilt"
     regions_of: "%loaded% of %requested%"
     one_title: "Coverage run of %started%"
     no_steps: "This run recorded no steps."
