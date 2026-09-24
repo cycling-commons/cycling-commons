@@ -24,20 +24,20 @@ import psycopg
 
 from .contract import load_contract
 from .extract import export_lines, rideable_lines, run_extract, run_filter, run_way_filter
-from .load import apply_session_budget, ensure_schema, load_region, resolve_country
-from .ownership import Owners, snapshot_outlines
+from .load import COUNTRY_BY_REGION, apply_session_budget, ensure_schema, load_region, resolve_country
+from .ownership import Owners, outlines_fingerprint, snapshot_outlines
 from .parse import parse_pois
-from .publish import (ROUTES_MANIFEST_KEY, ensure_bucket, prune, prune_routes,
-                      prune_surface, published_countries, upload, upload_routes,
-                      upload_surface)
+from .publish import (CountryBuild, GapsBuild, ensure_bucket, inputs_fingerprint,
+                      prune, prune_family, publish_countries, read_manifest, upload)
 from .regions import ONBOARDED_REGIONS, default_regions
 from .routes import extract_region as routes_extract_region
 from .routes import load_way_ids
 from .routes import selector_expressions as routes_selectors
 from .surface import extract_region, merge_gap_cells
 from .surface import selector_expressions as surface_selectors
-from .tiles import (build_gaps_pmtiles, build_pmtiles, build_routes_pmtiles,
-                    build_surface_pmtiles, export_geojsonl, verify_pmtiles)
+from .tiles import (TILE_PROFILE, artifact_bounds, build_gaps_pmtiles, build_pmtiles,
+                    build_routes_pmtiles, build_surface_pmtiles, export_geojsonl,
+                    verify_pmtiles)
 from .tracker import RunTracker
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
@@ -191,6 +191,51 @@ def _ownership(workdir: pathlib.Path) -> tuple[Owners, str]:
     return Owners.load(path), fp
 
 
+def _complete_countries(regions: list[str]) -> dict[str, list[str]]:
+    """Countries whose every onboarded region is in this run, with those regions.
+
+    A country built from part of its regions would publish over the whole one:
+    `--regions north-america/us/california` must not take Colorado off the map.
+    dev/ regions have no country and are never tiled per country.
+    """
+    wanted = set(regions)
+    by_cc: dict[str, list[str]] = {}
+    for region in ONBOARDED_REGIONS:
+        cc = COUNTRY_BY_REGION.get(region)
+        if cc:
+            by_cc.setdefault(cc, []).append(region)
+    out = {}
+    for cc, members in sorted(by_cc.items()):
+        present = [r for r in members if r in wanted]
+        if present and len(present) == len(members):
+            out[cc] = present
+        elif present:
+            missing = ", ".join(r for r in members if r not in wanted)
+            print(f"[tiles] {cc}: not tiled, this run lacks {missing}")
+    return out
+
+
+def _surface_inputs(workdir: pathlib.Path, cc: str, regions: list[str]) -> str:
+    """Fingerprint of a country's surface build inputs, for the rebuild rule."""
+    slugs = [r.replace("/", "-") for r in regions]
+    files = [workdir / f"surface_{s}_{arm}.geojsonl" for s in slugs for arm in ("classified", "todo")]
+    return inputs_fingerprint(files, contract_fingerprint(),
+                              outlines_fingerprint(workdir / "ownership-regions.json"), TILE_PROFILE["surface"])
+
+
+def _gaps_inputs(workdir: pathlib.Path) -> str:
+    """Fingerprint of the world gap-grid build inputs, for the rebuild rule."""
+    return inputs_fingerprint([workdir / "surface-gaps.geojsonl"], contract_fingerprint(), TILE_PROFILE["gaps"])
+
+
+def _routes_inputs(workdir: pathlib.Path, cc: str, regions: list[str]) -> str:
+    """Fingerprint of a country's routes build inputs, for the rebuild rule."""
+    slugs = [r.replace("/", "-") for r in regions]
+    files = [workdir / f"routes_{s}_{arm}.geojsonl" for s in slugs for arm in ("ways", "knoop")]
+    return inputs_fingerprint(files, contract_fingerprint(),
+                              outlines_fingerprint(workdir / "ownership-regions.json"), TILE_PROFILE["routes"])
+
+
 def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file: pathlib.Path,
                         stamp: pathlib.Path | None = None, *,
                         extra_inputs: tuple[pathlib.Path, ...] = (),
@@ -237,30 +282,29 @@ def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file:
 
 
 def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
-                 publish: bool = True) -> int:
-    """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe. No database at all.
+                 publish: bool = True, retire: tuple[str, ...] = ()) -> int:
+    """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe, per country. No
+    database at all.
 
     Deliberately not folded into the per-region loop above: that loop exists to
     keep coverage_poi in step, and lines never touch it. Sharing it would mean
     holding the advisory lock and a Postgres session through a build that needs
     neither (Dated/2026-08-09-surface-line-tiles-design.md §4).
 
-    One pass per region produces all three artifacts — the classified skin, the
-    to-do arm and the gap grid — because they are three readings of the same
-    walk over the same ways. The previous shape ran the whole filter-and-parse
-    twice, once per arm, which on a continental build is hours spent deriving
-    data the first pass had already seen.
+    One pass per region produces all three arms' extracts — the classified
+    skin, the to-do arm and the gap grid — because they are three readings of
+    the same walk over the same ways. The previous shape ran the whole
+    filter-and-parse twice, once per arm, which on a continental build is
+    hours spent deriving data the first pass had already seen.
+
+    Tiling is per country, not per run: a PMTiles archive cannot be appended
+    to, so adding a country used to mean re-tiling every other one too. Now
+    each complete country is tiled and published on its own, and skipped when
+    its extract fingerprint matches what is already live.
     """
     classified: dict[str, list[pathlib.Path]] = {}
     todo: dict[str, list[pathlib.Path]] = {}
     gaps: dict[str, list[pathlib.Path]] = {}
-    # Feature counts for the manifest, filled as regions are processed — so it
-    # has to exist BEFORE the loop that increments it. It did not, and every
-    # region raised UnboundLocalError into the per-region handler and reported
-    # itself as failed; the unit tests never walked that path, and a real
-    # publish found it in one run.
-    counts = {"classified": 0, "todo": 0, "cells": 0}
-    allow_shrink = os.environ.get("COVERAGE_ALLOW_SHRINK") == "1"
     failed = []
     owners, outlines_fp = _ownership(workdir)
     want = extract_stamp(outlines_fp)
@@ -315,11 +359,6 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                     print(f"[surface] {region}: no routes extract in the workdir — "
                           "the to-do arm is class-gated only (run --routes first "
                           "for route-awareness)")
-                # NOT the manifest `counts` dict: rebinding that name here made
-                # every fresh extract fail at the line-count loop below
-                # ("'SurfaceCounts' object is not subscriptable") while cached
-                # regions sailed through — the first cold build after a cache
-                # wipe would have reported every region failed.
                 fresh = extract_region(
                     filtered, contract, classified_out=out, todo_out=todo_out,
                     gaps_out=gaps_out, cctok=f"|{country_code}|",
@@ -331,9 +370,6 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                 print(f"[surface] {region}: {fresh.classified} classified, "
                       f"{fresh.todo} to record, {fresh.cells} grid cells, "
                       f"{fresh.foreign} owned by a neighbour")
-            for key, path in (("classified", out), ("todo", todo_out)):
-                with path.open("rb") as fh:
-                    counts[key] += sum(1 for _ in fh)
             classified.setdefault(country_code, []).append(out)
             todo.setdefault(country_code, []).append(todo_out)
             gaps.setdefault(country_code, []).append(gaps_out)
@@ -368,58 +404,44 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
     with world_gaps.open("w", encoding="utf-8") as fh:
         for line in merge_gap_cells(gaps, contract.surface["gaps"]["cellZoom"]):
             fh.write(line + "\n")
-            counts["cells"] += 1
-    if classified:
-        artifact = workdir / "surface.pmtiles"
-        build_surface_pmtiles(classified, artifact, contract)
-        print(f"[surface] {artifact.name}: {artifact.stat().st_size / 1e6:.1f} MB")
-    if todo:
-        artifact = workdir / "surface-todo.pmtiles"
-        build_surface_pmtiles(todo, artifact, contract,
-                              min_zoom=spec["todo"]["minZoom"], max_zoom=spec["todo"]["maxZoom"])
-        print(f"[surface] {artifact.name}: {artifact.stat().st_size / 1e6:.1f} MB")
-    if gaps:
-        artifact = workdir / "surface-gaps.pmtiles"
-        build_gaps_pmtiles([world_gaps], artifact, contract)
-        print(f"[surface] {artifact.name}: {artifact.stat().st_size / 1e6:.1f} MB")
-    if classified and publish:
-        # Publishing is part of the run, exactly as it is for coverage. It used
-        # to be a hand-run `mc cp` plus an edited env var plus a cache clear —
-        # three manual steps between "the data is built" and "riders can see
-        # it", each of which can be forgotten, and one of which (a pinned URL
-        # left pointing at a pruned artifact) yields a map with no surfaces and
-        # no error anywhere.
+    complete = _complete_countries([r for r in regions if r not in failed])
+    live = read_manifest("surface") if publish else {"version": 2, "countries": {}}
+    built: dict[str, CountryBuild] = {}
+    for cc, members in complete.items():
+        inputs = _surface_inputs(workdir, cc, members)
+        if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
+            print(f"[surface] {cc}: unchanged, not rebuilt")
+            continue
+        slugs = [r.replace("/", "-") for r in members]
+        paths, counts_cc = {}, {}
+        for arm, lo, hi in (("classified", None, None),
+                            ("todo", spec["todo"]["minZoom"], spec["todo"]["maxZoom"])):
+            files = [workdir / f"surface_{s}_{arm}.geojsonl" for s in slugs]
+            n = sum(sum(1 for _ in f.open("rb")) for f in files)
+            counts_cc[arm] = n
+            if n == 0:
+                continue      # a country with nothing in this arm publishes the other arm only
+            out = workdir / f"surface-{'' if arm == 'classified' else 'todo-'}{cc.lower()}.pmtiles"
+            build_surface_pmtiles({cc: files}, out, contract, min_zoom=lo, max_zoom=hi)
+            paths[arm] = out
+        if not paths:
+            continue
+        bounds = artifact_bounds(paths.get("classified") or paths["todo"])
+        built[cc] = CountryBuild(paths=paths, inputs=inputs, bounds=bounds, counts=counts_cc)
+        print(f"[surface] {cc}: rebuilt ({', '.join(f'{a} {counts_cc[a]}' for a in counts_cc)})")
+    gaps_build = None
+    g_inputs = _gaps_inputs(workdir)
+    if world_gaps.stat().st_size and live.get("gaps", {}).get("inputs") != g_inputs:
+        out = workdir / "surface-gaps.pmtiles"
+        build_gaps_pmtiles([world_gaps], out, contract)
+        gaps_build = GapsBuild(path=out, inputs=g_inputs)
+    if publish and (built or gaps_build or retire):
         try:
             ensure_bucket()
-            # Never let a narrow run silently replace a wide one.
-            #
-            # A PMTiles archive cannot be appended to, so the tiling step builds
-            # from exactly the regions it was given — and `make surface-tiles
-            # regions=europe/luxembourg` therefore produces a Luxembourg-only
-            # build. Publishing it would take eleven countries off the map with
-            # a zero exit code and nothing in the log. (Observed, 2026-08-12,
-            # on the first end-to-end publish.) The point job documents the same
-            # hazard as a warning in the runbook; this enforces it.
-            live = published_countries()
-            built = set(classified)
-            if live is not None and built < live and not allow_shrink:
-                raise RuntimeError(
-                    f"refusing to publish {len(built)} countries over the live "
-                    f"{len(live)}: {', '.join(sorted(live - built))} would vanish "
-                    "from the map. Pass every onboarded region, or set "
-                    "COVERAGE_ALLOW_SHRINK=1 if the removal is intended.")
-            urls = upload_surface(
-                {"classified": workdir / "surface.pmtiles",
-                 "todo": workdir / "surface-todo.pmtiles",
-                 "gaps": workdir / "surface-gaps.pmtiles"},
-                {"counts": counts, "country_codes": sorted(classified)})
-            for arm, url in urls.items():
-                print(f"[surface] published {arm}: {url}")
-            for key in prune_surface():
+            doc = publish_countries("surface", built, gaps=gaps_build, retire=retire)
+            for key in prune_family("surface", doc):
                 print(f"[surface] pruned {key}")
-        except Exception as exc:  # noqa: BLE001
-            # A build that cannot publish is still a build worth keeping: the
-            # artifacts are on disk and the last manifest keeps serving.
+        except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
             print(f"[surface] publish FAILED: {exc}", file=sys.stderr)
             failed.append("publish")
     print(f"[surface] {_peak()}")
@@ -427,20 +449,19 @@ def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
 
 
 def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
-                publish: bool = True) -> int:
-    """The route-network path: PBF -> osmium -> two-pass extract -> tippecanoe.
+                publish: bool = True, retire: tuple[str, ...] = ()) -> int:
+    """The route-network path: PBF -> osmium -> two-pass extract -> tippecanoe,
+    per country.
 
     No database, same as the surface path and for the same reason. One run
-    produces the routes artifact AND the per-region way-id sets the surface
-    pass reads for route-awareness — which is why `--routes` is the pass to run
-    FIRST when both are being rebuilt: the way-id files it drops in the workdir
-    are newer than the surface extracts, so the surface run re-extracts with
-    them (see _extract_is_current's extra_inputs).
+    produces the per-country routes artifacts AND the per-region way-id sets
+    the surface pass reads for route-awareness — which is why `--routes` is
+    the pass to run FIRST when both are being rebuilt: the way-id files it
+    drops in the workdir are newer than the surface extracts, so the surface
+    run re-extracts with them (see _extract_is_current's extra_inputs).
     """
     way_files: dict[str, list[pathlib.Path]] = {}
     node_files: dict[str, list[pathlib.Path]] = {}
-    counts = {"ways": 0, "nodes": 0}
-    allow_shrink = os.environ.get("COVERAGE_ALLOW_SHRINK") == "1"
     failed = []
     owners, outlines_fp = _ownership(workdir)
     want = extract_stamp(outlines_fp)
@@ -474,9 +495,6 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
                 print(f"[routes] {region}: {fresh.ways} member ways on "
                       f"{fresh.relations} routes, {fresh.nodes} knooppunten, "
                       f"{fresh.foreign} owned by a neighbour")
-            for key, path in (("ways", ways_out), ("nodes", nodes_out)):
-                with path.open("rb") as fh:
-                    counts[key] += sum(1 for _ in fh)
             way_files.setdefault(country_code, []).append(ways_out)
             node_files.setdefault(country_code, []).append(nodes_out)
         except Exception as exc:  # noqa: BLE001 — one region must not stop the rest
@@ -486,33 +504,35 @@ def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
     if extract_only:
         print(f"[routes] extract-only: {len(way_files)} country layer(s) ready, not tiling")
         return 1 if failed else 0
-    if way_files:
-        artifact = workdir / "routes.pmtiles"
-        build_routes_pmtiles(way_files, node_files, artifact, contract)
-        print(f"[routes] {artifact.name}: {artifact.stat().st_size / 1e6:.1f} MB")
-        if publish:
-            try:
-                ensure_bucket()
-                # Same shrink guard as the surface publish, against its own
-                # manifest: `make routes-tiles regions=europe/luxembourg` must
-                # not take eleven countries' corridors off the map silently.
-                live = published_countries(manifest_key=ROUTES_MANIFEST_KEY)
-                built = set(way_files)
-                if live is not None and built < live and not allow_shrink:
-                    raise RuntimeError(
-                        f"refusing to publish {len(built)} countries over the live "
-                        f"{len(live)}: {', '.join(sorted(live - built))} would vanish "
-                        "from the map. Pass every onboarded region, or set "
-                        "COVERAGE_ALLOW_SHRINK=1 if the removal is intended.")
-                url = upload_routes(artifact, {"counts": counts,
-                                               "country_codes": sorted(way_files)})
-                print(f"[routes] published {url}")
-                for key in prune_routes():
-                    print(f"[routes] pruned {key}")
-            except Exception as exc:  # noqa: BLE001
-                # A build that cannot publish is still a build worth keeping.
-                print(f"[routes] publish FAILED: {exc}", file=sys.stderr)
-                failed.append("publish")
+    complete = _complete_countries([r for r in regions if r not in failed])
+    live = read_manifest("routes") if publish else {"version": 2, "countries": {}}
+    built: dict[str, CountryBuild] = {}
+    for cc, members in complete.items():
+        inputs = _routes_inputs(workdir, cc, members)
+        if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
+            print(f"[routes] {cc}: unchanged, not rebuilt")
+            continue
+        slugs = [r.replace("/", "-") for r in members]
+        ways = [workdir / f"routes_{s}_ways.geojsonl" for s in slugs]
+        knoop = [workdir / f"routes_{s}_knoop.geojsonl" for s in slugs]
+        n_ways = sum(sum(1 for _ in f.open("rb")) for f in ways)
+        n_nodes = sum(sum(1 for _ in f.open("rb")) for f in knoop)
+        if n_ways + n_nodes == 0:
+            continue
+        out = workdir / f"routes-{cc.lower()}.pmtiles"
+        build_routes_pmtiles({cc: ways}, {cc: knoop}, out, contract)
+        built[cc] = CountryBuild(paths={"routes": out}, inputs=inputs, bounds=artifact_bounds(out),
+                                 counts={"ways": n_ways, "nodes": n_nodes})
+        print(f"[routes] {cc}: rebuilt ({n_ways} ways, {n_nodes} knooppunten)")
+    if publish and (built or retire):
+        try:
+            ensure_bucket()
+            doc = publish_countries("routes", built, retire=retire)
+            for key in prune_family("routes", doc):
+                print(f"[routes] pruned {key}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"[routes] publish FAILED: {exc}", file=sys.stderr)
+            failed.append("publish")
     return 1 if failed else 0
 
 
@@ -534,21 +554,22 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Weekly coverage batch (PostGIS index + PMTiles)")
     ap.add_argument("--surface", action="store_true",
                     help="build the road-surface LINE artifacts for the given regions "
-                         "instead of the point index (zero DB rows; their own pmtiles). "
-                         "One pass produces all three: surface.pmtiles (the classified "
-                         "skin), surface-todo.pmtiles (roads whose surface nobody has "
-                         "recorded, in the classes where the answer is genuinely "
-                         "unknown) and surface-gaps.pmtiles (the same question as a "
-                         "grid, for planning zoom). Three artifacts because a vector "
-                         "tile is fetched whole, so a layer that is off by default must "
-                         "not cost its bytes to every rider.")
+                         "instead of the point index (zero DB rows; their own pmtiles), "
+                         "tiled and published PER COUNTRY: a classified skin and a "
+                         "to-do arm (roads whose surface nobody has recorded, in the "
+                         "classes where the answer is genuinely unknown) under "
+                         "surface/<cc>/<stamp>/<arm>.pmtiles, plus one world gap grid "
+                         "under surface/gaps/<stamp>/gaps.pmtiles. A country rebuilds "
+                         "only when its own extracts have changed, and only when every "
+                         "one of its onboarded regions is in this run.")
     ap.add_argument("--routes", action="store_true",
                     help="build the cycle-route NETWORK artifact for the given regions "
                          "(route=bicycle/mtb relations as corridors, knooppunt numbers "
-                         "as points; zero DB rows, its own pmtiles + manifest). Also "
-                         "drops the per-region member way-id sets the --surface pass "
-                         "reads to make its to-do arm route-aware — run --routes "
-                         "BEFORE --surface when rebuilding both.")
+                         "as points; zero DB rows), tiled and published PER COUNTRY "
+                         "under routes/<cc>/<stamp>/routes.pmtiles. Also drops the "
+                         "per-region member way-id sets the --surface pass reads to "
+                         "make its to-do arm route-aware — run --routes BEFORE "
+                         "--surface when rebuilding both.")
     ap.add_argument("--no-publish", action="store_true",
                     help="with --surface/--routes: build the artifacts but do not upload "
                          "them or move the manifest. For experiments and size "
@@ -580,18 +601,22 @@ def main(argv=None) -> int:
     ap.add_argument("--run-id", type=int,
                     help="append this run's steps to an existing coverage_run row "
                          "(the dispatcher's) instead of opening a new one")
+    ap.add_argument("--retire",
+                    help="csv of country codes to remove from the published manifest of the family "
+                         "this run builds (offboarding). Nothing else ever removes a country.")
     args = ap.parse_args(argv)
     regions = ([r.strip() for r in args.regions.split(",") if r.strip()]
                if args.regions else default_regions())
+    retire = tuple(c.strip().lower() for c in (args.retire or "").split(",") if c.strip())
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
     contract = load_contract()
     if args.routes:
         return _run_routes(regions, workdir, contract, extract_only=args.extract_only,
-                           publish=not args.no_publish)
+                           publish=not args.no_publish, retire=retire)
     if args.surface:
         return _run_surface(regions, workdir, contract, extract_only=args.extract_only,
-                            publish=not args.no_publish)
+                            publish=not args.no_publish, retire=retire)
     failed = []
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with psycopg.connect(dsn) as conn:

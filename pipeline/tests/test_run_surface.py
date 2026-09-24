@@ -160,3 +160,70 @@ def test_a_changed_outline_snapshot_invalidates_the_extract(tmp_path):
     pbf = tmp_path / "p.pbf"
     assert _extract_is_current(extract, pbf, tmp_path / "none.json", stamp, expected=extract_stamp("aaaa"))
     assert not _extract_is_current(extract, pbf, tmp_path / "none.json", stamp, expected=extract_stamp("bbbb"))
+
+
+@pytest.fixture()
+def tiled(offline, contract, monkeypatch):
+    """Stubs for everything after the extract: tippecanoe, bounds, manifest, publish."""
+    calls = {"built": [], "published": None, "live": {"version": 2, "countries": {}}}
+    def fake_build(layer_files, out, contract, **kw):
+        calls["built"].append(out.name)
+        out.write_bytes(b"pm")
+    monkeypatch.setattr(run, "build_surface_pmtiles", fake_build)
+    monkeypatch.setattr(run, "build_gaps_pmtiles", lambda files, out, c: out.write_bytes(b"pm"))
+    monkeypatch.setattr(run, "artifact_bounds", lambda p: [0.0, 0.0, 1.0, 1.0])
+    monkeypatch.setattr(run, "read_manifest", lambda family: calls["live"])
+    monkeypatch.setattr(run, "ensure_bucket", lambda: None)
+    def fake_publish(family, built, *, gaps=None, retire=()):
+        calls["published"] = (family, sorted(built), gaps is not None, list(retire))
+        return {"countries": {}}
+    monkeypatch.setattr(run, "publish_countries", fake_publish)
+    monkeypatch.setattr(run, "prune_family", lambda family, manifest: [])
+    def fake_extract(filtered, contract, *, classified_out, todo_out, gaps_out, ridtok="", cctok="",
+                     route_way_ids=frozenset(), keep=None):
+        classified_out.write_text('{"f":1}\n')
+        todo_out.write_text('{"f":2}\n')
+        gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        return SurfaceCounts(classified=1, todo=1, cells=1)
+    monkeypatch.setattr(run, "extract_region", fake_extract)
+    return calls
+
+
+def test_only_changed_countries_are_rebuilt(tiled, offline, contract):
+    assert _run_surface(["europe/netherlands"], offline, contract) == 0
+    assert tiled["published"][1] == ["NL"]
+    # The live manifest now names exactly these inputs: the same run again builds nothing.
+    tiled["built"].clear()
+    tiled["published"] = None
+    tiled["live"] = {"version": 2,
+                     "countries": {"nl": {"inputs": run._surface_inputs(offline, "NL", ["europe/netherlands"])}},
+                     "gaps": {"inputs": run._gaps_inputs(offline)}}
+    assert _run_surface(["europe/netherlands"], offline, contract) == 0
+    assert tiled["built"] == []
+    assert tiled["published"] is None
+
+
+def test_country_with_a_missing_region_is_not_built(tiled, offline, contract, capsys):
+    (offline / "north-america-us-california-latest.osm.pbf").write_bytes(b"pbf")
+    assert _run_surface(["north-america/us/california"], offline, contract) == 0
+    assert tiled["published"] is None or "US" not in tiled["published"][1]
+    assert "north-america/us/colorado" in capsys.readouterr().out
+
+
+def test_complete_countries_groups_regions_by_country():
+    got = run._complete_countries(["europe/belgium", "north-america/us/california", "north-america/us/colorado"])
+    assert got == {"BE": ["europe/belgium"],
+                   "US": ["north-america/us/california", "north-america/us/colorado"]}
+    assert run._complete_countries(["north-america/us/california"]) == {}
+    assert run._complete_countries(["dev/fixture"]) == {}
+
+
+def test_an_empty_todo_arm_is_published_without_that_arm(tiled, offline, contract, monkeypatch):
+    def only_classified(filtered, contract, *, classified_out, todo_out, gaps_out, **kw):
+        classified_out.write_text('{"f":1}\n')
+        todo_out.write_text("")
+        gaps_out.write_text("")
+        return SurfaceCounts(classified=1, todo=0, cells=0)
+    monkeypatch.setattr(run, "extract_region", only_classified)
+    assert _run_surface(["europe/netherlands"], offline, contract) == 0
+    assert "surface-todo-nl.pmtiles" not in tiled["built"]

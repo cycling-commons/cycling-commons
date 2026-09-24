@@ -368,17 +368,20 @@ coverage-tiles: ## Rebuild + publish the coverage PMTiles from the rows already 
 		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
 		pipeline python -m coverage.run --tiles-only
 
-# The road-surface LINE layer: three artifacts from one pass over each region's
-# PBF, and NO database at all (Dated/2026-08-09-surface-line-tiles-design.md):
-#   surface.pmtiles        the classified skin (what is under your tyres), z8-13
-#   surface-todo.pmtiles   roads nobody has recorded, in the classes where the
-#                          answer is genuinely unknown (tracks, paths, lanes), z11+
-#   surface-gaps.pmtiles   the same question per ~6 km square, for planning zoom
-# The run PUBLISHES them: three artifacts under one versioned prefix plus a
-# manifest at a stable key, which SurfaceManifest reads server-side, so a
+# The road-surface LINE layer: one pass over each region's PBF, NO database at
+# all (Dated/2026-08-09-surface-line-tiles-design.md), tiled and published PER
+# COUNTRY:
+#   classified.pmtiles   the classified skin (what is under your tyres), z8-13
+#   todo.pmtiles         roads nobody has recorded, in the classes where the
+#                        answer is genuinely unknown (tracks, paths, lanes), z11+
+#   gaps.pmtiles          the same question per ~6 km square, one WORLD file
+# A country rebuilds only when its own extracts' fingerprint has changed, under
+# surface/<cc>/<stamp>/<arm>.pmtiles plus surface/gaps/<stamp>/gaps.pmtiles, and
+# a stable surface/manifest.json which SurfaceManifest reads server-side, so a
 # rebuild goes live within the hour with no config change and no cache clear.
 # `ARGS=--no-publish` builds without uploading (size experiments); `offline=1`
-# uses the PBFs already in the workdir instead of asking Geofabrik.
+# uses the PBFs already in the workdir instead of asking Geofabrik;
+# `ARGS=--retire <cc>` is the only way to drop a country from the manifest.
 surface-tiles: ## Build + publish the road-surface line, to-do and gap-grid PMTiles (regions=csv)
 	@$(DOCKER_COMP) up --detach --wait minio
 	@$(DOCKER_COMP) run --rm \
@@ -391,8 +394,10 @@ surface-tiles: ## Build + publish the road-surface line, to-do and gap-grid PMTi
 		pipeline python -m coverage.run --surface $(ARGS)
 
 # Cycle-route network layer: route=bicycle/mtb relations as corridors plus
-# knooppunt numbers, one routes.pmtiles under its own versioned prefix +
-# manifest (RoutesManifest reads it server-side, same contract as the others).
+# knooppunt numbers, tiled and published PER COUNTRY under
+# routes/<cc>/<stamp>/routes.pmtiles plus a stable routes/manifest.json
+# (RoutesManifest reads it server-side, same contract as the others). A
+# country rebuilds only when its own extracts' fingerprint has changed.
 # ALSO drops the per-region member way-id sets the surface build reads to make
 # its to-do arm route-aware. When rebuilding both, run routes-tiles FIRST and
 # surface-tiles second, so the surface extracts see fresh way-id files.

@@ -585,12 +585,13 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   ways / ~12.2M to record / ~102k grid cells. The build and its editorial
   decisions live in
   [Dated/2026-08-09-surface-line-tiles-design.md](Dated/2026-08-09-surface-line-tiles-design.md)
-  §10 and in the wiki's *Building road-surface tiles* chapter. Two rails the
-  point job does not have, both from the first real publish: a publish is
-  **refused** when its country set is a strict subset of the live manifest's
-  (a one-region rebuild would otherwise take eleven countries off the map with
-  a zero exit), and pruning removes whole build prefixes rather than individual
-  arms.
+  §10 and in the wiki's *Building road-surface tiles* chapter. **Publishing is
+  per country:** each onboarded country's classified and to-do arms are built
+  and published under `surface/<cc>/<stamp>/<arm>.pmtiles`
+  only when the fingerprint of its own extracts has changed, with one world
+  `surface/gaps/<stamp>/gaps.pmtiles`; a country whose onboarded regions are not
+  all present in the run is skipped rather than half-published, and `--retire
+  <cc>` is the only way to drop a country from the manifest.
   The classified arm additionally carries the **quality channel** since
   2026-08-13: `sm` (raw OSM `smoothness`, gated on the contract's
   `surface.quality.values` list — an unlisted value is dropped at extract
@@ -642,7 +643,10 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   emitted as `window.CC_ROUTES_URL`. Its **own** manifest rather than a fourth
   surface arm: the two builds are separate invocations, and a shared manifest
   would let whichever ran last publish half-updated URLs for the other's arms.
-  Same shrink guard, same whole-prefix pruning (`keep=3`). The routes run also
+  **Publishing is per country**, same as the surface build: a country's
+  `routes/<cc>/<stamp>/routes.pmtiles` rebuilds only when its own extracts'
+  fingerprint changes, and `--retire <cc>` is the only way to drop one. The
+  routes run also
   drops per-region `routes_<slug>_wayids.txt` **way-id sets** into the
   workdir: the surface pass reads them (`surface.extract_region
   route_way_ids`) so an untagged way carrying a signed route is to-do-arm

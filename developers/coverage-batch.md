@@ -52,18 +52,19 @@ Check the result:
 | `COVERAGE_PUBLIC_BASE_URL` | – | public base of the bucket (dev: `http://localhost:9100/cc-maps`) |
 | `COVERAGE_PBF_OFFLINE` | – | `1` = use the PBFs already in the workdir, never contact Geofabrik. For the surface tiling pass, which walks the whole region list to rebuild artifacts from cached extracts and would otherwise re-verify ~20 GB. |
 | `COVERAGE_FORCE_EXTRACT` | – | `1` = ignore the extract cache. The hatch for a pipeline change no timestamp or hash can show. |
-| `COVERAGE_ALLOW_SHRINK` | – | `1` = permit a surface publish whose country set is a strict subset of the live manifest's. Without it such a publish is refused, because a one-region rebuild would otherwise take every other country off the map with a zero exit code. |
 
 `make coverage-refresh` injects the MinIO values; prod values live in
 `/etc/cycling-commons/coverage.env` on the worker server.
 
 ### The surface build (`make surface-tiles`)
 
-Same command family, same bucket env, different output: three LINE artifacts
-and no database at all. `python -m coverage.run --surface` builds
-`surface.pmtiles` (classified), `surface-todo.pmtiles` (still to record) and
-`surface-gaps.pmtiles` (the planning grid), then publishes all three under one
-versioned prefix plus `surface/manifest.json`.
+Same command family, same bucket env, different output: per country, a
+`surface/<cc>/<stamp>/classified.pmtiles` and `todo.pmtiles`, plus one world
+`surface/gaps/<stamp>/gaps.pmtiles`. A country is rebuilt only when the
+fingerprint of its extracts differs from the one in `surface/manifest.json`,
+so a run over every region rebuilds only what changed. A country whose
+onboarded regions are not all in the run is skipped, never half-published.
+`--retire <cc>` is the only way to remove a country from the manifest.
 
 | Flag | Meaning |
 |---|---|
@@ -71,6 +72,7 @@ versioned prefix plus `surface/manifest.json`.
 | `--extract-only` | stop after the per-region GeoJSONL. For continental runs done one region at a time, so a failure costs one country instead of the queue. |
 | `--no-publish` | build without uploading or moving the manifest (size experiments) |
 | `--tiles-only` | skip the harvest; export, build, verify and publish the coverage PMTiles from the `coverage_poi` rows already in PostGIS. For a change that rewrote the index without new OSM data (the 2026-08-25 letter renumbering, when the `<letter>_<cc>` layer names had to follow the rows). Dev shortcut: `make coverage-tiles`. |
+| `--retire` | csv of country codes to remove from the family's manifest (offboarding). Nothing else ever removes a country. |
 
 The app reads the manifest through `App\Coverage\SurfaceManifest`, so a rebuild
 needs no config change. `ROAD_SURFACE_MANIFEST_URL` points at it server-side;
