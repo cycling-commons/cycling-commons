@@ -1,0 +1,30 @@
+docs/specs/map-and-search.md
+  s_1d05a0405c3516::t_08eae904550304 1332-1334
+  s_1d05a0405c3516::t_81b1e8c3a595e9 1320-1324
+  s_1d05a0405c3516::t_b7d54106bee659 1378-1385
+web/tests/js/coverage-notice-wiring.test.mjs
+  s_1d05a0405c3516::t_04649309f26b75 1-60
+web/assets/map/scope-ui.js
+  s_1d05a0405c3516::t_dc9e1a240edd6f 530
+  s_1d05a0405c3516::t_e8e54f50077ee7 409-410,412-413,418,420
+  s_1d05a0405c3516::t_fb15c37eb4848f 318-327,337-348,352,354-362
+  s_1d05a0405c3516::t_2e2b9638b09d71 508-513
+web/tests/js/coverage-notice.test.mjs
+  s_1d05a0405c3516::t_19d759dfb2ebe4 178-214
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c2da33d2766ab372546f672bd6f36bd2ea310e76",
+  "prompts": {},
+  "sessions": {
+    "s_1d05a0405c3516": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "31d19031-2e0a-4b62-beac-5203a713fc44",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
