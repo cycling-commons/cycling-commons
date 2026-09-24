@@ -138,7 +138,7 @@ globalThis.runMapSmoke = async function runMapSmoke(opts) {
       name: 'coverage layers registered and valid',
       async run() {
         if (!M()) return 'skip: no __ccMap handle (CC_DEBUG off)';
-        if (!window.CC_COVERAGE_URL) return 'skip: coverage tiles off on this instance';
+        if (!window.CC_TILES || !Object.keys(window.CC_TILES.coverage || {}).length) return 'skip: coverage tiles off on this instance';
         // One other layer ends in -cov and is NOT a coverage tile: mly-cov is
         // the Mapillary sequence line.
         const NOT_COVERAGE = ['mly-cov'];
