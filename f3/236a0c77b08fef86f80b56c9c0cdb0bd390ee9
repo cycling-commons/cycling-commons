@@ -1,0 +1,22 @@
+web/tests/js/coverage-notice-wiring.test.mjs
+  s_1d05a0405c3516::t_013805135f03d8 33-42
+web/assets/map/scope-ui.js
+  s_1d05a0405c3516::t_f000de450e2ed3 20
+  s_1d05a0405c3516::t_35110838ef0b9d 406-410
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f3236a0c77b08fef86f80b56c9c0cdb0bd390ee9",
+  "prompts": {},
+  "sessions": {
+    "s_1d05a0405c3516": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "31d19031-2e0a-4b62-beac-5203a713fc44",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
