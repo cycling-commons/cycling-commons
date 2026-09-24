@@ -192,7 +192,7 @@ abstract class BucketManifest
                 continue;
             }
             $bounds = $entry['bounds'] ?? null;
-            if (!\is_array($bounds) || 4 !== \count($bounds) || \count(array_filter($bounds, is_numeric(...))) !== 4) {
+            if (!\is_array($bounds) || 4 !== \count($bounds) || 4 !== \count(array_filter($bounds, is_numeric(...)))) {
                 continue;
             }
             $tiles = [];
