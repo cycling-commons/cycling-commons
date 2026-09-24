@@ -1,0 +1,61 @@
+web/tests/Api/PublicApiV1Test.php
+  s_1d05a0405c3516::t_34ba66897500d4 40-42
+web/src/Coverage/RoutesManifest.php
+  s_1d05a0405c3516::t_852f7fcf7b52e3 34-35,38,40-42,44-47,49
+  s_1d05a0405c3516::t_598f88e840ded5 16
+  s_1d05a0405c3516::t_c45bebc030504f 61-64,71,75
+web/src/Coverage/CoverageManifest.php
+  s_1d05a0405c3516::t_705662da075cf2 15
+  s_1d05a0405c3516::t_36ff261a5d4394 33-40,43-48,51,62-67
+  s_1d05a0405c3516::t_b9d4e323f0cdf6 85-88,95,99
+web/tests/Coverage/RoutesManifestTest.php
+  s_1d05a0405c3516::t_8ebb8e9784bf8b 36-66,75,87-89,96,102,111
+web/tests/Coverage/BucketManifestPrefetchTest.php
+  s_1d05a0405c3516::t_4e9768a6b59142 104,114
+  s_1d05a0405c3516::t_299750df60aac0 88-90
+  s_1d05a0405c3516::t_46b81d3d638ea1 148,150
+  s_1d05a0405c3516::t_1bc1870c842fb9 65
+wiki/developers/api/serving-map-data.md
+  s_1d05a0405c3516::t_a9d58fb816ea80 46,49-54,67-72,90-100,113-122
+web/templates/map/index.html.twig
+  s_1d05a0405c3516::t_ed3d8c97ab92fc 872-878
+web/src/Coverage/SurfaceManifest.php
+  s_1d05a0405c3516::t_10475abb47b8a5 15-17
+  s_1d05a0405c3516::t_9d967c13d68aa9 40-41,43-53,55-58,61-62,64-65,67-69,73-79
+  s_1d05a0405c3516::t_35377b6e438ebf 90,96-99,109,113
+web/src/Controller/MapController.php
+  s_1d05a0405c3516::t_1bc59095c94499 130-137
+web/src/Controller/Api/V1/PublicApiController.php
+  s_1d05a0405c3516::t_a59ed35d1f1424 52,55,64
+web/tests/Controller/MapCoverageUrlTest.php
+  s_1d05a0405c3516::t_1f5cbea3266c58 17-19,23,33,45-48,51,71-73
+wiki/developers/api/worked-example-route-planner.md
+  s_1d05a0405c3516::t_72a017bba8572c 56-59,61-62
+  s_1d05a0405c3516::t_bbc3905554b7be 54-55,60,64-66,68,74-76,87-92
+  s_1d05a0405c3516::t_7e923ecf03e0a6 262-264
+web/src/Coverage/BucketManifest.php
+  s_1d05a0405c3516::t_ca4ff2079ce080 44-46
+  s_1d05a0405c3516::t_da4c9723e11342 173-235
+web/tests/Coverage/SurfaceManifestTest.php
+  s_1d05a0405c3516::t_cd98e68a9693eb 38-88,98-105,121-123,132-133,139,148,161-163
+docs/specs/public-api.md
+  s_1d05a0405c3516::t_7116c9d964bdb3 148
+web/tests/Coverage/CoverageManifestTest.php
+  s_1d05a0405c3516::t_cad9560a7f75f3 21,23,36-70,73,77,80,95-96,100,103,106,111,114,117,128-129,131,144,146,159,165,178-179,220,235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e88b7e1240ed8d9d91249b979eb98edfe55ebcc0",
+  "prompts": {},
+  "sessions": {
+    "s_1d05a0405c3516": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "31d19031-2e0a-4b62-beac-5203a713fc44",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
