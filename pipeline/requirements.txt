@@ -4,5 +4,6 @@ starlette==1.0.1  # security floor: 3 CVEs fixed; keep >= 1.0.1
 uvicorn[standard]==0.34.0
 psycopg[binary]==3.2.3
 osmium==4.3.1  # pyosmium — coverage PBF parsing (coverage-provider.md §3)
+shapely==2.1.2  # border ownership for line features (coverage-provider.md §3), point-in-region on the anchor vertex
 boto3==1.43.49  # S3 client — PMTiles upload (MinIO in dev, Hetzner Object Storage in prod)
 pytest==8.4.1  # in-container test runner — `make pipeline-test` over pipeline/tests

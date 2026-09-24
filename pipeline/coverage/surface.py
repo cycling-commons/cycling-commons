@@ -55,6 +55,7 @@ from pathlib import Path
 import osmium
 
 from coverage.contract import Contract
+from coverage.ownership import anchor_point
 
 # mtb:scale as OSM actually tags it: a 0-6 difficulty with an optional +/-
 # refinement. Anything else ("yes", "hard", a stray unit) is dropped rather
@@ -290,7 +291,7 @@ class GapGrid:
 
     def add(self, way: SurfaceWay, *, recorded: bool) -> None:
         """Charge a to-do-class way's length to its cell."""
-        mid = way.coords[len(way.coords) // 2]
+        mid = anchor_point(way.coords)
         bucket = self._cells[self._cell(*mid)]
         km = _length_km(way.coords)
         if recorded:
