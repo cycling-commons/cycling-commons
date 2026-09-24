@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Uncurated OSM coverage from PMTiles (docs/specs/coverage-provider.md §4–§6).
-   Gated on COVERAGE_ON — a real CC_COVERAGE_URL plus a loaded pmtiles lib.
+   Gated on COVERAGE_ON — a coverage entry in CC_TILES plus a loaded pmtiles lib.
    Absent either, every export is a no-op. */
 import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
@@ -12,6 +12,7 @@ import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } fro
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
 import { viewDirection, OSM_REF, bikeAccess, ferryFacts, tileTypeLabel, coverageSourceLayers } from './osm-tags.js';
+import { familyConfigured, mountInView, sourceIdFor, ccOfSourceLayer } from './tile-sources.js';
 
 // Coverage tiles (docs/specs/coverage-provider.md §6). [rail key, lowercase letter]
 // must stay in step with catalog.js LETTER_KEY (covKeysTest.cjs).
@@ -20,7 +21,9 @@ export const COVERAGE_KEYS=[['water','b'],['toilets','c'],['services','d'],['tra
 export const COVERAGE_CCS = (Array.isArray(window.CC_COVERAGE_COUNTRIES) && window.CC_COVERAGE_COUNTRIES.length)
   ? window.CC_COVERAGE_COUNTRIES.map(c=>c.toLowerCase()).concat(['zz'])
   : [null];   // [null] = single unsplit '<letter>' layer (tiles predate the per-country split)
-export const COVERAGE_ON = typeof window.CC_COVERAGE_URL==='string' && !!window.CC_COVERAGE_URL && typeof pmtiles!=='undefined';
+export const COVERAGE_ON = familyConfigured('coverage', 'points') && typeof pmtiles!=='undefined';
+/* The archive floor: build_pmtiles --minimum-zoom 6 (pipeline/coverage/tiles.py). */
+export const COVERAGE_MIN_ZOOM = 6;
 export const COV_SRC={
   services:'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)',
   scenic:'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)',
@@ -109,85 +112,95 @@ export function syncCoverageLayers(){
     });
   });
 }
-export function addCoverage(){
-  if(!COVERAGE_ON || map.getSource('coverage')) return;
-  maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
-  mintKindIcons();
-  map.addSource('coverage',{type:'vector', url:'pmtiles://'+window.CC_COVERAGE_URL});
-  const iconLayerIds=[]; const iconLayerKey=new Map();
-  COVERAGE_KEYS.forEach(([key, letter])=>{
-    // One icon layer per (letter, country). cc===null is the pre-split `<letter>` fallback.
-    COVERAGE_CCS.forEach(cc=>{
-      const srcLayer = cc ? letter+'_'+cc : letter;
-      const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
-      // Letter B: kind in the glyph (data-provider-hierarchy.md §6.3). The
-      // tile says `food` for the shop/eatery half and `potable` as yes / no /
-      // absent (tiles before 2026-09-04 said true / false; false reads as
-      // unknown, since it covered both). The ids are minted by mintKindIcons.
-      const isFood = ['match',['to-string',['get','food']],['true','1','yes'],true,false];
-      const isPotable = ['match',['to-string',['get','potable']],['yes','true','1'],true,false];
-      const isNotPotable = ['==',['to-string',['get','potable']],'no'];
-      /* Axis 2 on the tile layer (data-provider-hierarchy.md §6.7): a point
-         whose `cd` (OSM check_date) is on or after the shell's cutoff has a
-         witness inside the window and draws the plain icon; every other
-         point draws the "?" twin. The cutoff is a YYYY-MM-DD string and so
-         is `cd`, so a string compare is a date compare. No cutoff from the
-         shell keeps the badge on everything: fail closed. */
-      const cutoff = witnessCutoff();
-      const witnessed = cutoff ? ['>=',['to-string',['coalesce',['get','cd'],'']], cutoff] : false;
-      const pick = (plain, badged) => ['case', witnessed, plain, badged];
-      const kindPair = kind => pick(kindImageId('B',kind,false), kindImageId('B',kind,true));
-      const miniPair = (glyph, suffix) => pick(miniIcon(key, glyph, suffix, false), miniIcon(key, glyph, suffix, true));
-      const icon = key==='water'
-        ? ['case', isFood,
-            ['case', isPotable, kindPair('food_water'), kindPair('food')],
-            ['case', isPotable, kindPair('tap'), isNotPotable, kindPair('no'), kindPair('unk')]]
-        : key==='services'
-          ? ['match',['get','kind'],
-              'shop', miniPair(),
-              'station', miniPair(SERVICE_GLYPH.station, 'station'),
-              'pump', miniPair(SERVICE_GLYPH.pump, 'pump'),
-              miniPair()]
-          : miniPair();
-      const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
-      // addLayer rejects `filter: null`; omit the key (default = unfiltered).
-      const heatSpec={id:heatId, type:'heatmap', source:'coverage', 'source-layer':srcLayer,
-        maxzoom: 9,
-        layout:{visibility:'none'},
-        paint:{
-          'heatmap-weight':0.6,
-          'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.9,9,1.3],
-          'heatmap-radius':['interpolate',['linear'],['zoom'],6,16,9,28],
-          'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.6,8,0.6,9,0],   // crossfade into icons at z9
-          'heatmap-color':['interpolate',['linear'],['heatmap-density'],
-            0,'rgba(0,0,0,0)',
-            0.25,'rgba(150,110,190,0.32)',
-            0.6,'rgba(112,72,158,0.58)',
-            1,'#5B2A86']}};
-      { const hf=covHeatFilter(); if(hf) heatSpec.filter=hf; }
-      map.addLayer(heatSpec);
-      // Icons from z9 (docs/specs/coverage-provider.md §4); z6–8 tiles are thinned.
-      map.addLayer({id, type:'symbol', source:'coverage', 'source-layer':srcLayer,
-        minzoom: 9,
-        filter:covIconFilter(),   // dedupe + scope
-        layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
-          // One ramp per shape: the food discs size like every other disc.
-          'icon-size': key==='water'
-            ? ['interpolate',['linear'],['zoom'],
-                8,['case',isFood,DISC_SIZES[0],DROP_SIZES[0]],
-                13,['case',isFood,DISC_SIZES[1],DROP_SIZES[1]],
-                18,['case',isFood,DISC_SIZES[2],DROP_SIZES[2]]]
-            : ['interpolate',['linear'],['zoom'],8,DISC_SIZES[0],13,DISC_SIZES[1],18,DISC_SIZES[2]]}});
-      iconLayerIds.push(id); iconLayerKey.set(id, key);
-    });
-  });
-  /* One handler set over all icon layers — MapLibre hit-tests each mousemove listener. */
+const iconLayerKey=new Map();
+/* One handler set over all icon layers — MapLibre hit-tests each mousemove listener. */
+function bindCoverageHandlers(ids){
   const keyOf = e => iconLayerKey.get(e.features[0].layer.id);
-  map.on('click', iconLayerIds, e=>{ const f0=e.features[0], tp=f0.properties, c=f0.geometry.coordinates;
+  map.on('click', ids, e=>{ const f0=e.features[0], tp=f0.properties, c=f0.geometry.coordinates;
     openCoverageDrawer(keyOf(e), tp, {lng:c[0], lat:c[1]}); flyToPin([c[0],c[1]]); });
-  map.on('mouseenter', iconLayerIds, ()=>map.getCanvas().style.cursor='pointer');
-  map.on('mousemove', iconLayerIds, e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[keyOf(e)]||{}).label||'Item', e.lngLat); });
-  map.on('mouseleave', iconLayerIds, ()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+  map.on('mouseenter', ids, ()=>map.getCanvas().style.cursor='pointer');
+  map.on('mousemove', ids, e=>{ const p=e.features[0].properties; showTip(p.n||p.t||(layerByKey[keyOf(e)]||{}).label||'Item', e.lngLat); });
+  map.on('mouseleave', ids, ()=>{ map.getCanvas().style.cursor=''; hideTip(); });
+}
+// One icon+heat layer pair per (letter, country) against the source that serves cc. cc===null is the pre-split `<letter>` fallback.
+function addCoverageLayers(cc, src){
+  const ids=[];
+  COVERAGE_KEYS.forEach(([key, letter])=>{
+    const srcLayer = cc ? letter+'_'+cc : letter;
+    const id = cc ? key+'-'+cc+'-cov' : key+'-cov';
+    // Letter B: kind in the glyph (data-provider-hierarchy.md §6.3). The
+    // tile says `food` for the shop/eatery half and `potable` as yes / no /
+    // absent (tiles before 2026-09-04 said true / false; false reads as
+    // unknown, since it covered both). The ids are minted by mintKindIcons.
+    const isFood = ['match',['to-string',['get','food']],['true','1','yes'],true,false];
+    const isPotable = ['match',['to-string',['get','potable']],['yes','true','1'],true,false];
+    const isNotPotable = ['==',['to-string',['get','potable']],'no'];
+    /* Axis 2 on the tile layer (data-provider-hierarchy.md §6.7): a point
+       whose `cd` (OSM check_date) is on or after the shell's cutoff has a
+       witness inside the window and draws the plain icon; every other
+       point draws the "?" twin. The cutoff is a YYYY-MM-DD string and so
+       is `cd`, so a string compare is a date compare. No cutoff from the
+       shell keeps the badge on everything: fail closed. */
+    const cutoff = witnessCutoff();
+    const witnessed = cutoff ? ['>=',['to-string',['coalesce',['get','cd'],'']], cutoff] : false;
+    const pick = (plain, badged) => ['case', witnessed, plain, badged];
+    const kindPair = kind => pick(kindImageId('B',kind,false), kindImageId('B',kind,true));
+    const miniPair = (glyph, suffix) => pick(miniIcon(key, glyph, suffix, false), miniIcon(key, glyph, suffix, true));
+    const icon = key==='water'
+      ? ['case', isFood,
+          ['case', isPotable, kindPair('food_water'), kindPair('food')],
+          ['case', isPotable, kindPair('tap'), isNotPotable, kindPair('no'), kindPair('unk')]]
+      : key==='services'
+        ? ['match',['get','kind'],
+            'shop', miniPair(),
+            'station', miniPair(SERVICE_GLYPH.station, 'station'),
+            'pump', miniPair(SERVICE_GLYPH.pump, 'pump'),
+            miniPair()]
+        : miniPair();
+    const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
+    // addLayer rejects `filter: null`; omit the key (default = unfiltered).
+    const heatSpec={id:heatId, type:'heatmap', source:src, 'source-layer':srcLayer,
+      maxzoom: 9,
+      layout:{visibility:'none'},
+      paint:{
+        'heatmap-weight':0.6,
+        'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.9,9,1.3],
+        'heatmap-radius':['interpolate',['linear'],['zoom'],6,16,9,28],
+        'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.6,8,0.6,9,0],   // crossfade into icons at z9
+        'heatmap-color':['interpolate',['linear'],['heatmap-density'],
+          0,'rgba(0,0,0,0)',
+          0.25,'rgba(150,110,190,0.32)',
+          0.6,'rgba(112,72,158,0.58)',
+          1,'#5B2A86']}};
+    { const hf=covHeatFilter(); if(hf) heatSpec.filter=hf; }
+    map.addLayer(heatSpec);
+    // Icons from z9 (docs/specs/coverage-provider.md §4); z6–8 tiles are thinned.
+    map.addLayer({id, type:'symbol', source:src, 'source-layer':srcLayer,
+      minzoom: 9,
+      filter:covIconFilter(),   // dedupe + scope
+      layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
+        // One ramp per shape: the food discs size like every other disc.
+        'icon-size': key==='water'
+          ? ['interpolate',['linear'],['zoom'],
+              8,['case',isFood,DISC_SIZES[0],DROP_SIZES[0]],
+              13,['case',isFood,DISC_SIZES[1],DROP_SIZES[1]],
+              18,['case',isFood,DISC_SIZES[2],DROP_SIZES[2]]]
+          : ['interpolate',['linear'],['zoom'],8,DISC_SIZES[0],13,DISC_SIZES[1],18,DISC_SIZES[2]]}});
+    ids.push(id); iconLayerKey.set(id, key);
+  });
+  bindCoverageHandlers(ids);
+}
+let covMounted = false;
+export function addCoverage(){
+  if(!COVERAGE_ON || covMounted) return;
+  covMounted = true;
+  mintKindIcons();
+  const mount = () => mountInView(map, 'coverage', 'points', COVERAGE_MIN_ZOOM, (key, src) => {
+    (key === '*' ? COVERAGE_CCS : [key]).forEach(cc => addCoverageLayers(cc, src));
+    updateCoverageScopeFilter(); syncCoverageLayers();
+  });
+  mount();
+  map.on('moveend', mount);
   // Selected-POI overlay: tile minzoom hides the icon on zoom-out; the pulse would ring empty.
   if(!map.getSource('cov-sel')){
     map.addSource('cov-sel',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
@@ -366,19 +379,23 @@ function paintCoverageDetail(key, ref, ll, name, d){
    data events, never a timer, and ends on a hit, when a newer drawer render
    supersedes request `req`, or when the map settles with no hit. */
 function readTileType(key, ref, ll, req, onLabel){
-  if(!COVERAGE_ON || !map.getSource('coverage') || !OSM_REF.test(String(ref ?? ''))) return;
+  if(!COVERAGE_ON || !OSM_REF.test(String(ref ?? ''))) return;
   const letter=(COVERAGE_KEYS.find(([k])=>k===key)||[])[1]; if(!letter) return;
   const cc=window.CCScope && window.CCScope.countryAt ? window.CCScope.countryAt(+ll[0], +ll[1]) : null;
   const sourceLayers=coverageSourceLayers(letter, COVERAGE_CCS, cc);
+  // Each source-layer's own archive (a country's, or the shared '*' one); only mounted sources can be queried.
+  const srcOf = sl => sourceIdFor('coverage', 'points', ccOfSourceLayer(sl));
+  const pairs = sourceLayers.map(sl => [sl, srcOf(sl)]).filter(([, s]) => s && map.getSource(s));
+  if(!pairs.length) return;
   const refFilter=['==',['get','ref'],ref];
   const look=()=>{
-    for(const sourceLayer of sourceLayers){
-      const t=tileTypeLabel(map.querySourceFeatures('coverage', {sourceLayer, filter:refFilter}), ref);
+    for(const [sourceLayer, src] of pairs){
+      const t=tileTypeLabel(map.querySourceFeatures(src, {sourceLayer, filter:refFilter}), ref);
       if(t) return t;
     }
     return null;
   };
-  const probeIds=sourceLayers.map(sl=>'cov-ref-probe-'+sl);
+  const probeIds=pairs.map(([sl])=>'cov-ref-probe-'+sl);
   const end=()=>{
     map.off('sourcedata', onData); map.off('idle', onIdle);
     probeIds.forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); });
@@ -388,11 +405,11 @@ function readTileType(key, ref, ll, req, onLabel){
     const t=look(); if(!t) return false;
     end(); onLabel(t); return true;
   };
-  const onData=e=>{ if(e.sourceId==='coverage') attempt(); };
+  const onData=e=>{ if(pairs.some(([, s]) => s === e.sourceId)) attempt(); };
   const onIdle=()=>{ if(!attempt()) end(); };
   if(attempt()) return;
   probeIds.forEach((id,i)=>{
-    if(!map.getLayer(id)) map.addLayer({id, type:'circle', source:'coverage', 'source-layer':sourceLayers[i],
+    if(!map.getLayer(id)) map.addLayer({id, type:'circle', source:pairs[i][1], 'source-layer':pairs[i][0],
       filter:refFilter, paint:{'circle-radius':0, 'circle-opacity':0}});
   });
   map.on('sourcedata', onData);
