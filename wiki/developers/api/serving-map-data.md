@@ -89,13 +89,13 @@ Field by field:
   to your map library's attribution control and you are done.
 - **`routes.tiles`**: one PMTiles archive per country, keyed by lowercase country code, each an
   object with its own `tiles` (arm name to URL, here just `routes`), `bounds`
-  (`[west, south, east, north]`, WGS84), and `stamp` (the build that published it, `YYYYMMDD-HHMM`).
+  (`[west, south, east, north]`, WGS84), and `stamp` (the build that published it, `YYYYMMDD-HHMMSS`; older builds carry the minute form `YYYYMMDD-HHMM`).
   Add a country's source when its `bounds` meet your viewport, the way a tile source normally
   gates on zoom; a country absent from `tiles` has nothing published yet, so skip it and carry on.
   A key of `*` instead of a country code means one archive serves every country: some installs
   never split by country, and this is how that state looks in the config, not a special case your
   code needs to branch on beyond "iterate the map's keys". Each build lives under its own stamped
-  prefix (`routes/<cc>/<YYYYMMDD-HHMM>/routes.pmtiles`), so a country's URL changes when a new build
+  prefix (`routes/<cc>/<YYYYMMDD-HHMMSS>/routes.pmtiles`), so a country's URL changes when a new build
   for that country is published, which is exactly why you read it from the config instead of
   hardcoding it.
 - **`routes.countries`** and **`routes.sourceLayers`**: the archive holds one source-layer per

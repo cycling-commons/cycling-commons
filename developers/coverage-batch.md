@@ -26,12 +26,41 @@ country whose export changed) if anything loaded. Each loaded region also
 refreshes its routes and surface line extracts, and one offline pass per
 family (`--routes`, `--surface`) then republishes only the countries whose
 inputs changed; an unchanged country costs a fingerprint comparison and
-nothing else.
+nothing else. A pass that raises or exits non-zero (2: another run of that
+family holds its lock) is logged as a failed publish; the next pass still
+runs and the run row is always finished.
 
-**One-time cleanup: the v1 keys.** Nothing in the batch prunes the old
-single-archive keys any more: `coverage/<stamp>.pmtiles`, `surface/<stamp>/...`
-and `routes/<stamp>/...`. Once the v2 manifests are serving in an environment,
-list and delete them by hand:
+### Rollout of the per-country manifests
+
+In order, per environment:
+
+1. **Deploy the web tier first.** An app that reads only v1 manifests shows
+   nothing for a family once its manifest is v2; the reader of both shapes
+   must be live before any v2 publish.
+2. **Pre-warm the line extracts** before enabling the nightly timer on a
+   workdir whose extracts predate the per-region stamps, so the first night
+   does not re-extract every region inside the dispatcher's budget. Per
+   region, routes before surface:
+
+       python -m coverage.run --routes --extract-only --regions <region>
+       python -m coverage.run --surface --extract-only --regions <region>
+
+3. **The first v2 publish of each family is a full-universe run**: every
+   onboarded region (`--routes` and `--surface` with no `--regions`, and
+   `--tiles-only` for the coverage points). Until then the app serves the v1
+   world archive, and the first v2 manifest replaces it, so a subset would
+   take every other country off the map. The surface and routes runs refuse a
+   first publish that lacks an onboarded country unless `--retire` is given
+   or `COVERAGE_FIRST_PUBLISH_PARTIAL=1` is set.
+4. **An app rollback after that** needs a v1 republish from the previous
+   release, or the env pins (`ROAD_SURFACE_TILES_URL`, `ROUTES_TILES_URL`)
+   pointed at v1 archives: the previous app cannot read v2.
+5. **Delete the v1 keys only after the app-rollback window has closed** (below).
+
+**One-time cleanup: the v1 keys.** The batch never prunes the v1
+single-archive keys: `coverage/<stamp>.pmtiles`, `surface/<stamp>/...` and
+`routes/<stamp>/...`. Once the app-rollback window has closed, list and
+delete them by hand:
 
     mc ls --recursive <alias>/<bucket>/coverage/ | grep -v '^coverage/manifest.json'
     mc ls --recursive <alias>/<bucket>/surface/ | grep -vE '^surface/(manifest\.json|[a-z]{2}/|gaps/)'
@@ -57,6 +86,11 @@ fixture; path as seen inside the container):
 
     make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
 
+`dev/` regions have no country: their line extracts (`--surface`, `--routes`)
+are produced but never tiled or published per country, and they never feed
+the world gap grid. A region outside the onboarded list (for example
+`europe/germany/bayern`) is treated the same way, with a log line saying so.
+
 Check the result:
 
 - manifest: <http://localhost:9100/cc-maps/coverage/manifest.json>
@@ -76,6 +110,7 @@ Check the result:
 | `COVERAGE_PUBLIC_BASE_URL` | – | public base of the bucket (dev: `http://localhost:9100/cc-maps`) |
 | `COVERAGE_PBF_OFFLINE` | – | `1` = use the PBFs already in the workdir, never contact Geofabrik. For the surface tiling pass, which walks the whole region list to rebuild artifacts from cached extracts and would otherwise re-verify ~20 GB. |
 | `COVERAGE_FORCE_EXTRACT` | – | `1` = ignore the extract cache. The hatch for a pipeline change no timestamp or hash can show. |
+| `COVERAGE_FIRST_PUBLISH_PARTIAL` | – | `1` = let a `--surface` or `--routes` run publish a subset of countries while that family's live manifest is still v1 or absent (see *Rollout*). |
 
 `make coverage-refresh` injects the MinIO values; prod values live in
 `/etc/cycling-commons/coverage.env` on the worker server.
@@ -88,7 +123,15 @@ Same command family, same bucket env, different output: per country, a
 fingerprint of its extracts differs from the one in `surface/manifest.json`,
 so a run over every region rebuilds only what changed. A country whose
 onboarded regions are not all in the run is skipped, never half-published.
-`--retire <cc>` is the only way to remove a country from the manifest.
+`--retire <cc>` is the only way to remove a country from the manifest. The
+gap grid merges the cell file of every onboarded region whose extract is
+current, whether or not the region is in this run; while any onboarded region
+has none, the log says `[surface] gaps: not rebuilt, no current cells for
+<regions>` and the live grid keeps serving. A country that fails to build is
+logged and skipped, the others still publish, and the run exits 1. A surface
+or routes run holds its own advisory lock for the whole run; a second one of
+the same family exits 2 without touching the workdir. A failed manifest read
+publishes nothing and exits 1.
 
 | Flag | Meaning |
 |---|---|

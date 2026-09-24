@@ -161,7 +161,9 @@ Three properties are load-bearing:
   the same ways, and serving one build's classified skin beside another's
   to-do arm would tell riders that roads they have just recorded still need
   recording. A publish only ever replaces the countries it built: another
-  country's entry, and the world gap grid, are left exactly as they were.
+  country's entry is left exactly as it was. The world gap grid is merged
+  from the current cell counts of every onboarded region, in the run or not,
+  and is left as it was while any onboarded region has none.
 - **The env vars pin, they do not configure.** `ROAD_SURFACE_TILES_URL`,
   `ROAD_SURFACE_TODO_URL` and `ROAD_SURFACE_GAPS_URL` override the manifest
   when set, serving one world archive to every country: the hatch for
@@ -300,7 +302,7 @@ so in the log, and the to-do arm is class-gated only.
 
     Each country's own fingerprint (`inputs` above) decided that on its own; no `.pmtiles` is
     uploaded and the manifest is not rewritten for any of the three. A country whose `inputs` would
-    differ (its extract changed, or the contract or the border outlines did) is the only one that
+    differ (its extract changed, or the contract or the border outlines near it did) is the only one that
     rebuilds and re-publishes.
 
 ## Where to go deeper

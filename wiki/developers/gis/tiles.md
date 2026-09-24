@@ -152,7 +152,7 @@ This project's coverage layer is exactly that, **once per country**:
 `build_pmtiles()` in `pipeline/coverage/tiles.py` writes one `.pmtiles` file per
 country, `pipeline/coverage/publish.py` uploads each one to the `cc-maps`
 object storage bucket under its own versioned key
-(`coverage/<cc>/<YYYYMMDD-HHMM>/points.pmtiles`, coverage-provider.md §3 step 8),
+(`coverage/<cc>/<YYYYMMDD-HHMMSS>/points.pmtiles`, coverage-provider.md §3 step 8),
 and the browser talks to whichever ones it needs through the `pmtiles://`
 protocol handler registered once by `web/assets/map/tile-sources.js`
 (`ensureProtocol()`: `maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile)`).
@@ -469,7 +469,7 @@ chapter 8 covers in full, decodes the MVT bytes into geometry it can paint, filt
   number in the picture.
 - The **per-country layer split** (`<letter>_<cc>`) exists to keep the heatmap single-country and
   the tiles themselves single-country by construction; the scope filter itself is exact per point
-  and needs no help from the layer boundary. **Each country is also its own file** now
+  and needs no help from the layer boundary. **Each country is also its own file**
   (`coverage/<cc>/<stamp>/points.pmtiles`), so a rider's browser only ever fetches the countries
   whose tile bounds meet the viewport.
 - Build time and request time are cleanly separated by the moment a country's own `points.pmtiles`

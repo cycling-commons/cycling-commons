@@ -93,7 +93,7 @@ One invocation runs the whole chain, per region then once at the end:
 2. `osmium tags-filter`: reduce to the contract's selectors
 3. pyosmium parse → **atomic per-region merge** into `coverage_poi`
 4. per-letter GeoJSONL export → `tippecanoe`, per country → `go-pmtiles` verify → **upload + publish,
-   per country**: `coverage/<cc>/<stamp>/points.pmtiles` (the stamp is `YYYYMMDD-HHMM`), merged into
+   per country**: `coverage/<cc>/<stamp>/points.pmtiles` (the stamp is `YYYYMMDD-HHMMSS`), merged into
    the stable `coverage/manifest.json`, keeping the newest 4 builds per country. A country whose
    export has not changed since the live manifest is skipped rather than rebuilt.
 

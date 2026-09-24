@@ -432,7 +432,7 @@ After all regions, once per run:
    ships.
 8. **Publish, per country** (`pipeline/coverage/publish.py`): each country
    whose export fingerprint has changed uploads its points archive under a
-   **versioned key** `coverage/<cc>/<YYYYMMDD-HHMM>/points.pmtiles`
+   **versioned key** `coverage/<cc>/<YYYYMMDD-HHMMSS>/points.pmtiles`
    (`Cache-Control: public, max-age=31536000, immutable`, `publish.publish_countries`),
    merged into the **stable key** `coverage/manifest.json`
    (`publish.MANIFEST_KEY`, `max-age=300`) alongside every country left
@@ -447,7 +447,7 @@ scheduler's mail. **v1 extracts nodes + ways-as-centroid**; multipolygon
 relations (~1–3 % of objects) are a fast-follow (see Open questions).
 
 **Lines (surface, routes) own a border the same way points do.** The surface
-and routes builds (§4) never touch PostGIS, but a border way still needs
+and routes builds (coverage-provider.md §4) never touch PostGIS, but a border way still needs
 exactly one owner so it is drawn once. A line feature's anchor is its
 midpoint vertex (`coords[len(coords) // 2]`, the same vertex `GapGrid.add`
 bins on); a knooppunt's anchor is its own point. The owner is the
@@ -462,16 +462,21 @@ country, and it is dropped rather than assigned. A `dev/`-prefixed region
 (country `None`) skips the rule, as it does for points. Both line builds
 snapshot the operational regions once per run to
 `<workdir>/ownership-regions.json` (`ownership.snapshot_outlines`); the file
-is rewritten only when its bytes change, and its sha256
-(`ownership.outlines_fingerprint`) rides in every line extract's cache stamp,
-so a boundary edit invalidates every country's extract without anyone having
-to remember to force one.
+is rewritten only when its bytes change. Each region's extract stamp carries
+the fingerprint of the outlines that can own a feature inside that region
+(`ownership.region_fingerprint`): the outlines whose bounding box meets the
+region PBF's header box (`ownership.pbf_header_box`) grown by
+`BOUNDARY_SNAP_DEG`. A boundary edit re-extracts the regions it can affect
+without anyone having to remember to force one, and onboarding a country
+elsewhere re-extracts nothing. A PBF without a header box falls back to the
+fingerprint of every outline (`ownership.outlines_fingerprint`).
 
 **A country rebuilds only when its own inputs changed.** For every family
 (coverage points, surface classified/todo, routes), a country's build is
 compared by `publish.inputs_fingerprint(its input files, the contract
-fingerprint, the outlines fingerprint, that family's tile profile)` against
-`inputs` in the live manifest (§4); equal means skipped, not rebuilt. The
+fingerprint, for the line families each member region's extract stamp, that
+family's tile profile)` against `inputs` in the live manifest
+(coverage-provider.md §4); equal means skipped, not rebuilt. The
 fingerprint hashes file **content**, sorted by path, never file names or
 mtimes - a nightly-rewritten export and a workdir wiped clean both hash
 correctly, and a file renamed with identical bytes is not new data.
@@ -482,7 +487,19 @@ CA = british-columbia + quebec, GB = great-britain + ireland-and-northern-irelan
 When a run's `--regions` does not include every one of a country's onboarded
 regions, that country is skipped with a log line rather than published from a
 partial extract - a run over `north-america/us/california` alone must not
-take Colorado off the map.
+take Colorado off the map. A region outside the onboarded list (a `dev/`
+region, or a sub-country extract such as `europe/germany/bayern`) is
+extracted but never tiled or published per country, and the run log says so.
+
+**One country failing costs that country only.** A surface or routes
+country whose tiling or bounds read fails is logged
+(`[surface] <CC>: build FAILED: ...`), leaves its live entry serving, and
+makes the run exit 1; every country that built is still published. A gap-grid
+build failure is handled the same way. A surface run and a routes run each
+hold their own session advisory lock for the whole run
+(`run.LINE_RUN_LOCK_KEYS`, distinct from the coverage run lock and the
+manifest locks), because both write per-region scratch files in the workdir;
+a second run of the same family exits 2 without touching them.
 
 **Entry points:** CLI `python -m coverage.run` in the pipeline container;
 `make coverage-refresh` runs the whole chain against the dev DB + MinIO;
@@ -515,7 +532,10 @@ time budget and a region cap, then runs `--tiles-only` once if anything
 loaded. Each loaded region also refreshes its routes and surface line
 extracts, and one offline pass per family (`--routes`, `--surface`) then
 republishes only the countries whose inputs changed - an unchanged country
-costs a fingerprint comparison and nothing else.
+costs a fingerprint comparison and nothing else. A pass that raises, or exits
+non-zero (2 when another run of its family holds the run lock), is logged and
+marks the night's publish failed; the remaining passes still run and the
+dispatcher's run row is always finished.
 
 ## 4. Tile artifact contract
 
@@ -526,11 +546,17 @@ Feature id = numeric OSM id.
 **Per-country keys, one manifest per family.** Every artifact family
 (coverage points, surface classified/todo, cycle routes) publishes one file
 per country under a versioned key `<family>/<cc>/<stamp>/<arm>.pmtiles`
-(`cc` lowercase, `stamp` `YYYYMMDD-HHMM`) - `coverage/be/20260924-0312/points.pmtiles`,
+(`cc` lowercase, `stamp` `YYYYMMDD-HHMMSS`; builds published with the older
+minute form `YYYYMMDD-HHMM` still parse and sort by time) -
+`coverage/be/20260924-031205/points.pmtiles`,
 `surface/be/.../classified.pmtiles`, `surface/be/.../todo.pmtiles`,
 `routes/be/.../routes.pmtiles`. The surface build additionally publishes one
-world file with no country split, `surface/gaps/<stamp>/gaps.pmtiles` (the
-grid is a merge of every region's cell sums, §3). Unstamped coverage rows
+world file with no country split, `surface/gaps/<stamp>/gaps.pmtiles`. The
+grid merges the per-region cell sums (`surface_<slug>_gapcells.tsv`) of every
+onboarded region whose cell file is current, that is whose surface extract
+stamp is the one this run wants for it, whether or not the region is in this
+run; while any onboarded region has no current cell file the grid is not
+rebuilt and the live one keeps serving. `dev/` regions never feed it. Unstamped coverage rows
 (no owning region) live under the fixed `zz` bucket, never a real country
 code. Layer names inside a file are unaffected by any of this (`b_be`,
 `surface_be`, `routes_be`, `knoop_be`, `gaps`).
@@ -538,23 +564,53 @@ code. Layer names inside a file are unaffected by any of this (`b_be`,
 Each family's stable key (`coverage/manifest.json`, `surface/manifest.json`,
 `routes/manifest.json`) is a **manifest v2**:
 ```json
-{"version": 2, "updated_at": "2026-09-24T03:12:00+00:00",
- "countries": {"be": {"stamp": "20260924-0312", "built_at": "2026-09-24T03:12:00+00:00",
+{"version": 2, "updated_at": "2026-09-24T03:12:05+00:00",
+ "countries": {"be": {"stamp": "20260924-031205", "built_at": "2026-09-24T03:12:05+00:00",
                       "inputs": "3f9a0c1d2e4b5a69", "bounds": [2.54, 49.49, 6.41, 51.51],
                       "counts": {"classified": 391245, "todo": 204113},
-                      "tiles": {"classified": "https://.../surface/be/20260924-0312/classified.pmtiles",
-                                "todo": "https://.../surface/be/20260924-0312/todo.pmtiles"}}},
- "gaps": {"stamp": "20260924-0312", "built_at": "...", "inputs": "...", "url": "https://.../surface/gaps/20260924-0312/gaps.pmtiles"}}
+                      "tiles": {"classified": "https://.../surface/be/20260924-031205/classified.pmtiles",
+                                "todo": "https://.../surface/be/20260924-031205/todo.pmtiles"}}},
+ "gaps": {"stamp": "20260924-031205", "built_at": "...", "inputs": "...", "url": "https://.../surface/gaps/20260924-031205/gaps.pmtiles"}}
 ```
 `gaps` exists only in `surface/manifest.json`; `coverage/manifest.json` and
 `routes/manifest.json` carry one tile arm each (`points`, `routes`). A publish
 (`pipeline/coverage/publish.py::publish_countries`) reads the live manifest,
 replaces the entries it built, and writes it back under a Postgres advisory
 lock per family (`publish.manifest_lock`); it never drops a country except
-when told to with `--retire <cc>`. There is no shrink guard any more
-(`COVERAGE_ALLOW_SHRINK` is gone): publishing only ever replaces the
-countries it built, so a narrow run (a subset of regions) can no longer take
-a wide manifest's other countries off the map.
+when told to with `--retire <cc>`, and a country cannot be both built and
+retired in one publish. Publishing only ever replaces the countries it built,
+so a narrow run (a subset of regions) leaves a wide manifest's other countries
+serving. The read (`publish.read_live_manifest`) takes only "no manifest yet"
+(`NoSuchKey`/404) and a v1 or version-less document as the empty v2
+skeleton; any other failure (an S3 error, a body that is not JSON, a v2
+document whose `countries` is not an object) raises, the run publishes
+nothing for that family, and the last manifest keeps serving. A country's
+`bounds` are the union of its archives' header bounds (both surface arms).
+
+**Rollout of the per-country manifests.** Four rules, in order:
+
+1. Deploy the web tier first. An app that reads only v1 shows nothing for a
+   family once its manifest is v2, so the reader of both shapes
+   (`BucketManifest`) must be live before any v2 publish.
+2. The first v2 publish of each family is a full-universe run: every
+   onboarded region. Until then the app serves the v1 world archive, and the
+   first v2 manifest replaces it, so a first publish of a subset would take
+   every other country off the map. The surface and routes runs enforce this:
+   while the live manifest is v1 or absent, a run whose complete countries
+   are fewer than every onboarded country refuses to publish, unless
+   `--retire` is given or `COVERAGE_FIRST_PUBLISH_PARTIAL=1` is set. The
+   coverage points build always exports the whole `coverage_poi` index, so
+   its first v2 publish covers every loaded country by construction.
+3. An app rollback after that first v2 publish needs a v1 republish from the
+   previous release, or env pins (`ROAD_SURFACE_TILES_URL`,
+   `ROUTES_TILES_URL`) to v1 archives: the previous app cannot read v2.
+4. Delete the v1 keys (`developers/coverage-batch.md`) only after the
+   app-rollback window has closed.
+
+Before the nightly timer is enabled on a workdir whose extracts predate the
+per-region stamps, pre-warm it: run `--routes --extract-only` and then
+`--surface --extract-only` for each region, so the first night does not
+re-extract every region inside the dispatcher's budget.
 
 **Server: one entry per country, or one `*` world entry.**
 `App\Coverage\CoverageManifest`, `SurfaceManifest` and `RoutesManifest`
@@ -580,8 +636,9 @@ Sources are never removed once added - panning back out keeps them mounted,
 panning to a fresh region adds more. `window.CC_TILES` (`MapController`,
 `web/templates/map/index.html.twig`) is the nonce'd JSON of the three
 families' `countryTiles()`, prefetched together (`BucketManifest::prefetch()`,
-§4 below) so the page pays one `FETCH_TIMEOUT` rather than one per manifest.
-Only the tile *source* a layer reads from is per-country now; layer ids keep
+coverage-provider.md §4 "The three readers share one base") so the page pays one
+`FETCH_TIMEOUT` rather than one per manifest.
+Only the tile *source* a layer reads from is per-country; layer ids keep
 whatever per-`(letter, country)` or per-country convention their family
 already used (below). The surface skin (classified/todo/gaps) and the routes
 layer mount on first toggle, never at boot (`map.js`), so a rider who never
@@ -804,7 +861,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   `{"version":2, "updated_at":"<ISO>",
   "countries":{"<cc>":{"stamp","built_at","inputs","bounds",
   "counts":{"<letter>":n,…}, "tiles":{"points":url}}}}`. `App\Coverage\CoverageManifest`
-  reads it (§4 "Server-side manifest read", below) and exposes `countryCodes()`:
+  reads it (coverage-provider.md §4 "Server-side manifest read", below) and exposes `countryCodes()`:
   the sorted list of real onboarded countries the artifact was built for
   (`["BE","NL"]`; `zz`, the unstamped bucket, is never in it, because it is a
   fixed client-side fallback, not a country a rider can scope to) - it tells
@@ -818,7 +875,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   back to `[null]`, the single unsplit `<letter>-cov` layer against the plain
   `<letter>` source-layer, so an old or pinned artifact still renders (degrade,
   don't blank). Building the actual layers is lazy and viewport-driven, same
-  as every family (§4 "Client: one source per country in view", above):
+  as every family (coverage-provider.md §4 "Client: one source per country in view", above):
   `addCoverage()` calls `tile-sources.js`'s `mountInView(map, 'coverage',
   'points', COVERAGE_MIN_ZOOM, ...)`, and only when a country's (or the `*`
   world entry's) tile source is newly mounted does `addCoverageLayers(cc, src)`
@@ -828,7 +885,15 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   guards every `map.setFilter` call on `map.getLayer(id)`, so it is safe to
   call before every country's layers exist yet: the `ridtok`/`cctok` scope
   filter (this section, above) applies to whichever per-country layers are
-  mounted so far, and to the rest as `mountInView` adds them.
+  mounted so far, and to the rest as `mountInView` adds them. Each call also
+  runs `applyStaysAccessFilter()` once, so the stays access facet reaches every
+  mounted country's stays layer, including one mounted after the facet was
+  set. Every coverage layer is added under the selected-POI overlay
+  (`cov-sel-icon`, created by `addCoverage()` before the first mount), so a
+  late-mounted country sits where the boot-time layers do. One
+  click/hover handler set, bound once, hit-tests every mounted icon layer
+  (`queryRenderedFeatures`) and acts on the top-most hit, so overlapping icons
+  from two countries open one drawer.
 - **The per-country POI counts are cached for ten minutes.**
   `CoverageStatsProvider::poisByCountry()` was called twice per render, once for
   the headline total and once for the table, and each pass was an index-only
@@ -842,7 +907,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   (`web/src/Coverage/CoverageManifest.php`) fetches the manifest server-side,
   caches the per-country tiles for `CoverageManifest::CACHE_TTL` (value `3600` s,
   `cache.app`), and degrades to an empty array on *every* failure path (flag
-  off, empty URL, HTTP/transport error, malformed shape — logged, never
+  off, empty URL, HTTP/transport error, malformed shape: logged, never
   thrown). `MapController` injects the result as the `coverage` family of the
   nonce'd global `window.CC_TILES` (`cc`, or `*` for one archive serving every
   country, to `{tiles:{points:url}, bounds, stamp}`), an empty object when no
@@ -914,7 +979,8 @@ itemId?}`.
   in-scope count is the `total`, and also the `shown` (every in-scope POI is on
   the map, revealed progressively as you zoom — the client does NOT count
   viewport-rendered tiles, which would read a confusing near-zero at overview
-  zooms; `map.js covShownCount`). So a coverage layer reads N/N when on,
+  zooms; `coverage.js covShownCount`, which follows the layer's mode rule
+  while none of its per-country layers is mounted yet). So a coverage layer reads N/N when on,
   0/N when toggled off or mode-hidden — matching the served layers. **At an
   overview zoom the layer reads its full N/N even though no individual icons
   render** — the icons appear from z9 (a large country fitted below that, e.g.
@@ -1209,7 +1275,7 @@ source of truth for the mapping both languages need:
 - Env flag `COVERAGE_TILES` (0|1, container param `coverage.tiles_enabled`,
   wired in `web/config/packages/coverage.yaml`; **defaults `1`** since the
   default-on flip). Off disables the tile *display* plane: no manifest
-  fetch, no `coverage` entries in `CC_TILES`, no coverage CSP host — the map
+  fetch, no `coverage` entries in `CC_TILES`, no coverage CSP host; the map
   degrades to basemap + curated data.
 - The rollout sequence this section originally planned has been **executed**:
   dev flipped first, the flag defaulted on after end-to-end verification, and
