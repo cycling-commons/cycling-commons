@@ -1,0 +1,24 @@
+web/tests/Controller/ElevationControllerTest.php
+  s_1976767384ed8e::t_8e50581c1f5bc6 106-128
+  s_1976767384ed8e::t_5afbb3f41fdbaf 9
+web/src/Contribution/ClimbGeometry.php
+  s_1976767384ed8e::t_725d7cad18f0c4 17
+web/src/Controller/ElevationController.php
+  s_1976767384ed8e::t_2a33002389ced9 9,47-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ad08591678ac227a7468e3db1543b394ac47966a",
+  "prompts": {},
+  "sessions": {
+    "s_1976767384ed8e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc2c9285-ba6b-4f91-b403-028f86746ae5",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
