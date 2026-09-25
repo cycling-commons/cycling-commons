@@ -120,13 +120,17 @@ catches the symptom whatever causes it next time.
 
 ## 6a. What goes on the roadmap
 
-Refreshed 2026-09-06 from `docs/TODO.md` (owner). The roadmap is for
-riders, so it carries **features only**: bugs, deploy prerequisites,
-operations chores and content review rows stay in the backlog and never
-appear here. An item that shipped is removed the day it ships, whether or
+Refreshed 2026-09-25 (owner): the roadmap carries **the big things only**,
+such as more data providers, the seasonal vote, more countries, Scout on more
+devices and giving data back. Bugs, deploy prerequisites, operations chores,
+content review rows and smaller features stay off it; the smaller features
+are private known issues on the curator desk (ten moved there on
+2026-09-26 by a one-off SQL script run on each server, not a migration;
+`is_public` false, status `planned`). The order
+inside a group is not a promise, and the page shows no numbers. An item that shipped is removed the day it ships, whether or
 not a release has been tagged yet; the changelog names it at the next tag
-(§6 step 4). Twenty items is the size it has now; it should not grow much
-past that, because a list nobody reads to the end is not a roadmap.
+(§6 step 4). Thirteen items is the size it has now; it should stay short,
+because a list nobody reads to the end is not a roadmap.
 
 ## 7. Deliberately not built
 

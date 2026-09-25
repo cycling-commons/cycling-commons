@@ -21,6 +21,11 @@
   .crel-v{font-family:var(--serif);font-weight:600;font-size:1.4rem;letter-spacing:-.01em}
   .crel-d{font-family:var(--mono);font-size:.68rem;letter-spacing:.11em;text-transform:uppercase;color:#595c4d}
   .cline{display:flex;gap:.7rem;align-items:flex-start;padding:.5rem 0;font-size:.98rem;color:#3a3d30;line-height:1.6}
+  /* One block beside the bullet: the title on its own line, the text under
+     it at the full width, instead of the flex row splitting them into two
+     columns. */
+  .cline p{margin:0;min-width:0}
+  .cline p > b:first-child{display:block;color:var(--ink)}
   .cline::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--clay);margin-top:.58rem}
   .cfeed{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;border-radius:0 8px 8px 0;font-size:.94rem;color:#4a4d40;line-height:1.6}
   .cfeed a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
@@ -45,7 +50,7 @@
           <span class="crel-d">{{ release.date|cc_date }}</span>
         </div>
         {% for key in release.keys %}
-          <div class="cline">{{ key|trans|rich }}</div>
+          <div class="cline"><p>{{ key|trans|rich }}</p></div>
         {% endfor %}
       </div>
     {% endfor %}

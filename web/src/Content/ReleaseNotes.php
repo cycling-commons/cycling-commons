@@ -42,32 +42,23 @@ final class ReleaseNotes
      * @var list<array{key: string, status: string, issue?: int}>
      */
     public const array ROADMAP = [
-        // Refreshed 2026-09-06 from docs/TODO.md: features only, no bugs, no
-        // deploy chores; anything that shipped left for the changelog.
-        ['key' => 'roadmap.item_curator_direct', 'status' => 'now'],
-        ['key' => 'roadmap.item_pending_notice', 'status' => 'next'],
-        ['key' => 'roadmap.item_provider_refresh', 'status' => 'next'],
-        ['key' => 'roadmap.item_release_mail', 'status' => 'next'],
-        ['key' => 'roadmap.item_support_thread', 'status' => 'next'],
-        ['key' => 'roadmap.item_surface_loop', 'status' => 'next'],
-        ['key' => 'roadmap.item_photo_link', 'status' => 'next'],
-        ['key' => 'roadmap.item_phone_map', 'status' => 'next'],
-        ['key' => 'roadmap.item_region_vote', 'status' => 'later'],
-        ['key' => 'roadmap.item_heatmap', 'status' => 'later'],
-        ['key' => 'roadmap.item_saved_regions', 'status' => 'later'],
-        ['key' => 'roadmap.item_observations', 'status' => 'later'],
-        ['key' => 'roadmap.item_overtakes', 'status' => 'later'],
-        ['key' => 'roadmap.item_item_links', 'status' => 'later'],
-        ['key' => 'roadmap.item_standing', 'status' => 'later'],
-        ['key' => 'roadmap.item_curator_room', 'status' => 'later'],
-        ['key' => 'roadmap.item_beta', 'status' => 'later'],
+        // Refreshed 2026-09-25 (owner): the big things only. Smaller pieces of
+        // work are private known issues on the curator desk; the order within
+        // a group is not a promise.
+        ['key' => 'roadmap.item_going_live', 'status' => 'now'],
+        ['key' => 'roadmap.item_provider_refresh', 'status' => 'now'],
+        ['key' => 'roadmap.item_roadmap_votes', 'status' => 'next'],
+        ['key' => 'roadmap.item_region_vote', 'status' => 'next'],
+        ['key' => 'roadmap.item_more_countries', 'status' => 'next'],
+        ['key' => 'roadmap.item_scout_devices', 'status' => 'next'],
+        ['key' => 'roadmap.item_route_export', 'status' => 'next'],
+        ['key' => 'roadmap.item_open_api', 'status' => 'next'],
         ['key' => 'roadmap.item_osm_giveback', 'status' => 'later'],
-        ['key' => 'roadmap.item_map_a11y', 'status' => 'later'],
-        ['key' => 'roadmap.item_route_export', 'status' => 'later'],
-        ['key' => 'roadmap.item_contraflow', 'status' => 'later'],
         ['key' => 'roadmap.item_region_portrait', 'status' => 'later'],
         ['key' => 'roadmap.item_reviews', 'status' => 'later'],
-        ['key' => 'roadmap.item_roadmap_votes', 'status' => 'later'],
+        ['key' => 'roadmap.item_heatmap', 'status' => 'later'],
+        ['key' => 'roadmap.item_standing', 'status' => 'later'],
+        ['key' => 'roadmap.item_map_a11y', 'status' => 'later'],
     ];
 
     /** The three groups, in display order. */
