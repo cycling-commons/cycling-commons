@@ -14,7 +14,7 @@ namespace App\Contribution;
 final class ClimbGeometry
 {
     /** Upper bound on route/grad list lengths. */
-    private const int MAX_POINTS = 8000;
+    public const int MAX_POINTS = 8000;
 
     /**
      * @param array<string, mixed> $payload

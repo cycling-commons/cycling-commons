@@ -6,8 +6,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Contribution\ClimbGeometry;
 use App\Elevation\ClimbProfiler;
-use App\Elevation\ElevationClient;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -44,7 +44,8 @@ final class ElevationController extends AbstractController
 
         $payload = json_decode($request->getContent(), true);
         $raw = \is_array($payload) ? ($payload['coords'] ?? null) : null;
-        if (!\is_array($raw) || [] === $raw || \count($raw) > ElevationClient::MAX_POINTS) {
+        // The profiler samples the line down before Valhalla; cap at what a saved climb may hold.
+        if (!\is_array($raw) || [] === $raw || \count($raw) > ClimbGeometry::MAX_POINTS) {
             return new JsonResponse(['error' => 'bad_request'], 400);
         }
 

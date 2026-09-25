@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Contribution\ClimbGeometry;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -100,6 +101,29 @@ final class ElevationControllerTest extends WebTestCase
         /** @var array{error: string} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true);
         self::assertSame('elevation_unavailable', $body['error']);
+    }
+
+    public function testLongSnappedRoadReachesTheProfiler(): void
+    {
+        // A 13 km hairpin road snaps to well over 600 vertices; the profiler
+        // samples it down, so the controller must not refuse it.
+        $coords = [];
+        for ($i = 0; $i < 700; ++$i) {
+            $coords[] = [35.30 + $i * 0.0001, 138.75];
+        }
+        $client = static::createClient();
+        $client->loginUser(self::user('elev-long@test.test'));
+        self::post($client, (string) json_encode(['coords' => $coords]), ['HTTP_X_CC_TOKEN' => self::token(), 'HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(503);
+    }
+
+    public function testLineLongerThanASavedClimbIs400(): void
+    {
+        $coords = array_fill(0, ClimbGeometry::MAX_POINTS + 1, [50.4, 5.8]);
+        $client = static::createClient();
+        $client->loginUser(self::user('elev-toolong@test.test'));
+        self::post($client, (string) json_encode(['coords' => $coords]), ['HTTP_X_CC_TOKEN' => self::token(), 'HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseStatusCodeSame(400);
     }
 
     public function testOverPerMinuteLimitIs429(): void
