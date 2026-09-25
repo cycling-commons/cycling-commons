@@ -2,7 +2,9 @@
 """coverage.scenic_review: how far each catalog scenic item is from a bike way."""
 
 import json
+import subprocess
 
+from coverage import scenic_review
 from coverage.scenic_review import measure, nearest_m, search_box
 
 
@@ -31,3 +33,32 @@ def test_measure_reports_distance_and_whether_any_extract_covers_the_item():
     assert got[1]["covered"] is True and 50 < got[1]["nearest_bikeway_m"] < 62
     assert got[2] == {"id": 2, "covered": False, "nearest_bikeway_m": None}
     json.dumps(list(got.values()))
+
+
+def test_main_reads_pbfs_from_the_shared_dir(monkeypatch, tmp_path):
+    work, shared = tmp_path / "work", tmp_path / "pbf"
+    work.mkdir()
+    shared.mkdir()
+    (shared / "europe-belgium-latest.osm.pbf").write_bytes(b"pbf")
+    monkeypatch.setenv("COVERAGE_WORKDIR", str(work))
+    monkeypatch.setenv("COVERAGE_PBF_DIR", str(shared))
+    items = tmp_path / "items.json"
+    items.write_text(json.dumps([{"id": 1, "lat": 50.46, "lng": 4.86}]))
+    filtered = []
+
+    def fake_filter(src, dst, rule):
+        filtered.append(src)
+        dst.write_bytes(b"")
+
+    def fake_run(cmd, **kw):
+        out = "(2.3,49.4,6.5,51.6)" if cmd[1] == "fileinfo" else ""
+        return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
+
+    monkeypatch.setattr(scenic_review, "run_way_filter", fake_filter)
+    monkeypatch.setattr(scenic_review.subprocess, "run", fake_run)
+    out = tmp_path / "out.json"
+    assert scenic_review.main(["--items", str(items), "--out", str(out)]) == 0
+    assert filtered == [shared / "europe-belgium-latest.osm.pbf"]
+    assert json.loads(out.read_text())["items"][0]["covered"] is True
+    # Derived file stays per environment.
+    assert (work / "europe-belgium-bikeways.osm.pbf").exists()

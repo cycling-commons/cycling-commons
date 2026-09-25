@@ -11,9 +11,9 @@ retire, because what an item is and who touched it are catalog facts.
     python -m coverage.scenic_review --items /tmp/scenic-items.json --out /tmp/scenic-review.json
     php bin/console app:scenic:bikeway-review --apply /tmp/scenic-review.json
 
-Reads the `<region>-latest.osm.pbf` extracts in the work directory and builds
-each region's `<region>-bikeways.osm.pbf` with the coverage run's own filter when
-it is missing.
+Reads the `<region>-latest.osm.pbf` extracts in `COVERAGE_PBF_DIR` (the work
+directory unless set) and builds each region's `<region>-bikeways.osm.pbf`
+with the coverage run's own filter when it is missing.
 """
 
 from __future__ import annotations
@@ -30,6 +30,7 @@ from collections.abc import Callable, Iterable
 
 from .contract import load_contract
 from .extract import rideable_lines, run_way_filter
+from .pbfs import pbf_dir
 
 EARTH_R = 6371000.0
 
@@ -100,13 +101,14 @@ def main(argv=None) -> int:
         print("[scenic-review] the contract's P letter carries no nearWay rule", file=sys.stderr)
         return 2
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
+    pbfs = pbf_dir(workdir)
     items = json.loads(pathlib.Path(args.items).read_text(encoding="utf-8"))
 
     def lines_for(name: str, box: tuple) -> list[list[tuple[float, float]]]:
         ways = workdir / f"{name}-bikeways.osm.pbf"
         if not ways.exists():
             print(f"[scenic-review] building {ways.name}", file=sys.stderr, flush=True)
-            run_way_filter(workdir / f"{name}-latest.osm.pbf", ways, rule)
+            run_way_filter(pbfs / f"{name}-latest.osm.pbf", ways, rule)
         with tempfile.NamedTemporaryFile(suffix=".osm.pbf") as cut:
             subprocess.run(["osmium", "extract", "--overwrite", "-s", "smart", "-b",
                             ",".join(f"{v:.6f}" for v in box), str(ways), "-o", cut.name],
@@ -116,7 +118,7 @@ def main(argv=None) -> int:
                                   check=True, capture_output=True, text=True).stdout
         return list(rideable_lines(text.splitlines(), rule))
 
-    rows = measure(items, local_extracts(workdir), lines_for, rule.within_m)
+    rows = measure(items, local_extracts(pbfs), lines_for, rule.within_m)
     pathlib.Path(args.out).write_text(json.dumps({"withinM": rule.within_m, "items": rows}, indent=1) + "\n",
                                       encoding="utf-8")
     near = sum(1 for r in rows if r["nearest_bikeway_m"] is not None and r["nearest_bikeway_m"] <= rule.within_m)
