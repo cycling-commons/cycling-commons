@@ -102,13 +102,14 @@ Check the result:
 |---|---|---|
 | `COVERAGE_REGIONS` | `europe/belgium,europe/netherlands,europe/germany` | csv of Geofabrik regions, each swapped independently. **Keep every onboarded country here.** Since ownership is decided by geometry, a region omitted from this list stops refreshing the border rows it owns, and no neighbour re-creates them — the disappearance this design removed, reintroduced by configuration. |
 | `COVERAGE_WORKDIR` | `/data/work` | scratch dir (PBFs, GeoJSONL, pmtiles) |
+| `COVERAGE_PBF_DIR` | `COVERAGE_WORKDIR` | where the raw `<region>-latest.osm.pbf` downloads live. On the valhalla host both CC environments set `/data/pbf`, one shared volume, so each region is kept once. Derived files stay in the workdir. |
 | `COVERAGE_PBF_PATH` | – | local PBF override; skips the Geofabrik download (dev/fixture runs) |
 | `COVERAGE_S3_ENDPOINT` | – | S3 endpoint (dev: `http://minio:9000`) |
 | `COVERAGE_S3_BUCKET` | `cc-maps` | bucket name |
 | `COVERAGE_S3_KEY` / `COVERAGE_S3_SECRET` | – | bucket credentials |
 | `COVERAGE_S3_REGION` | `us-east-1` | signing region only (MinIO ignores it) |
 | `COVERAGE_PUBLIC_BASE_URL` | – | public base of the bucket (dev: `http://localhost:9100/cc-maps`) |
-| `COVERAGE_PBF_OFFLINE` | – | `1` = use the PBFs already in the workdir, never contact Geofabrik. For the surface tiling pass, which walks the whole region list to rebuild artifacts from cached extracts and would otherwise re-verify ~20 GB. |
+| `COVERAGE_PBF_OFFLINE` | – | `1` = use the PBFs already in `COVERAGE_PBF_DIR`, never contact Geofabrik. For the surface tiling pass, which walks the whole region list to rebuild artifacts from cached extracts and would otherwise re-verify ~20 GB. |
 | `COVERAGE_FORCE_EXTRACT` | – | `1` = ignore the extract cache. The hatch for a pipeline change no timestamp or hash can show. |
 | `COVERAGE_FIRST_PUBLISH_PARTIAL` | – | `1` = let a `--surface` or `--routes` run publish a subset of countries while that family's live manifest is still v1 or absent (see *Rollout*). |
 

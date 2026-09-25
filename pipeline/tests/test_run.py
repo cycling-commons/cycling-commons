@@ -103,6 +103,7 @@ def test_fetch_pbf_skips_unchanged_download(monkeypatch, tmp_path):
 def test_fetch_pbf_md5_mismatch_aborts(monkeypatch, tmp_path):
     """A genuinely corrupt download: NO mirror .md5 ever matches, so after the
     retry set the swap aborts and the .part is cleaned up."""
+    monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
     monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
     monkeypatch.setattr(run.time, "sleep", lambda *a, **k: None)  # no backoff in tests
 
@@ -115,13 +116,14 @@ def test_fetch_pbf_md5_mismatch_aborts(monkeypatch, tmp_path):
     with pytest.raises(RuntimeError, match="md5 mismatch"):
         run.fetch_pbf("europe/belgium", tmp_path)
     assert not (tmp_path / "europe-belgium-latest.osm.pbf").exists()
-    assert not (tmp_path / "europe-belgium-latest.osm.part").exists()
+    assert not list(tmp_path.glob("*.part*"))
 
 
 def test_fetch_pbf_recovers_when_md5_mirror_lags(monkeypatch, tmp_path):
     """The download is VALID but the first .md5 reads (a lagging Geofabrik
     mirror) disagree; a later retry (another mirror) matches the bytes we got —
     the load must succeed, not crash. This is the europe/germany failure mode."""
+    monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
     monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
     monkeypatch.setattr(run.time, "sleep", lambda *a, **k: None)
     pbf = b"valid germany extract bytes"
@@ -140,7 +142,7 @@ def test_fetch_pbf_recovers_when_md5_mirror_lags(monkeypatch, tmp_path):
     monkeypatch.setattr(run.urllib.request, "urlopen", fake_urlopen)
     dest = run.fetch_pbf("europe/germany", tmp_path)
     assert dest.read_bytes() == pbf
-    assert not (tmp_path / "europe-germany-latest.osm.part").exists()
+    assert not list(tmp_path.glob("*.part*"))
 
 
 def test_coverage_groups_layer_files_by_country(tmp_path):
@@ -554,3 +556,98 @@ def test_main_keeps_the_live_manifest_when_it_cannot_be_read(monkeypatch, tmp_pa
     assert run.main(["--tiles-only", "--regions", "europe/belgium"]) == 1
     assert "[coverage] manifest read FAILED: S3 500" in capsys.readouterr().err
     assert [w[0] for w in writes] == ["failed"]
+
+
+def _pbf_response(data: bytes, seen: list | None = None, dirpath=None, fail_after_first=False):
+    """A download double; `seen` records the files present while it streams."""
+    class R(_Resp):
+        def read(self, n=-1):
+            if seen is not None and dirpath is not None and not seen:
+                seen.extend(sorted(p.name for p in dirpath.iterdir()))
+            if fail_after_first and self.tell() > 0:
+                raise OSError("connection reset mid-download")
+            return super().read(n)
+    return R(data, "https://download.geofabrik.de/europe/belgium-latest.osm.pbf")
+
+
+def _fake_geofabrik(data: bytes, **kw):
+    good = hashlib.md5(data).hexdigest()
+
+    def fake_urlopen(url, timeout=None):
+        if url.endswith(".md5"):
+            return io.BytesIO(f"{good}  europe-belgium-latest.osm.pbf\n".encode())
+        return _pbf_response(data, **kw)
+    return fake_urlopen
+
+
+def test_fetch_pbf_downloads_into_the_shared_dir_when_set(monkeypatch, tmp_path):
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_OFFLINE", raising=False)
+    shared = tmp_path / "pbf" / "not-yet-created"
+    monkeypatch.setenv("COVERAGE_PBF_DIR", str(shared))
+    monkeypatch.setattr(run.urllib.request, "urlopen", _fake_geofabrik(b"belgium bytes"))
+    work = tmp_path / "work"
+    work.mkdir()
+    dest = run.fetch_pbf("europe/belgium", work)
+    assert dest == shared / "europe-belgium-latest.osm.pbf"
+    assert dest.read_bytes() == b"belgium bytes"
+    assert list(work.iterdir()) == []
+
+
+@pytest.mark.parametrize("value", [None, "", "  "])
+def test_fetch_pbf_uses_the_workdir_when_the_shared_dir_is_unset_or_empty(monkeypatch, tmp_path, value):
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_OFFLINE", raising=False)
+    if value is None:
+        monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
+    else:
+        monkeypatch.setenv("COVERAGE_PBF_DIR", value)
+    monkeypatch.setattr(run.urllib.request, "urlopen", _fake_geofabrik(b"belgium bytes"))
+    assert run.fetch_pbf("europe/belgium", tmp_path) == tmp_path / "europe-belgium-latest.osm.pbf"
+
+
+def test_fetch_pbf_offline_reads_the_shared_dir_and_names_it(monkeypatch, tmp_path):
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.setenv("COVERAGE_PBF_OFFLINE", "1")
+    shared = tmp_path / "pbf"
+    shared.mkdir()
+    monkeypatch.setenv("COVERAGE_PBF_DIR", str(shared))
+    # Still in the old workdir only: must not be picked up silently.
+    (tmp_path / "europe-belgium-latest.osm.pbf").write_bytes(b"old place")
+    monkeypatch.setattr(run.urllib.request, "urlopen",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("network touched")))
+    with pytest.raises(RuntimeError, match=re.escape(str(shared))):
+        run.fetch_pbf("europe/belgium", tmp_path)
+    (shared / "europe-belgium-latest.osm.pbf").write_bytes(b"shared")
+    assert run.fetch_pbf("europe/belgium", tmp_path) == shared / "europe-belgium-latest.osm.pbf"
+
+
+def test_fetch_pbf_temp_file_is_per_process(monkeypatch, tmp_path):
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_OFFLINE", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
+    monkeypatch.setattr(run.os, "getpid", lambda: 4242)
+    seen: list = []
+    monkeypatch.setattr(run.urllib.request, "urlopen",
+                        _fake_geofabrik(b"belgium bytes", seen=seen, dirpath=tmp_path))
+    run.fetch_pbf("europe/belgium", tmp_path)
+    assert "europe-belgium-latest.osm.pbf.part.4242" in seen
+    assert [p.name for p in tmp_path.iterdir()] == ["europe-belgium-latest.osm.pbf"]
+
+
+def test_fetch_pbf_network_error_mid_download_leaves_no_temp_file(monkeypatch, tmp_path):
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_OFFLINE", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
+    monkeypatch.setattr(run.urllib.request, "urlopen",
+                        _fake_geofabrik(b"x" * (3 << 20), fail_after_first=True))
+    with pytest.raises(OSError, match="mid-download"):
+        run.fetch_pbf("europe/belgium", tmp_path)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_default_pbf_follows_the_shared_dir(monkeypatch, tmp_path):
+    monkeypatch.setenv("COVERAGE_PBF_DIR", str(tmp_path / "pbf"))
+    assert run._default_pbf(tmp_path, "europe/belgium") == tmp_path / "pbf" / "europe-belgium-latest.osm.pbf"
+    monkeypatch.delenv("COVERAGE_PBF_DIR")
+    assert run._default_pbf(tmp_path, "europe/belgium") == tmp_path / "europe-belgium-latest.osm.pbf"

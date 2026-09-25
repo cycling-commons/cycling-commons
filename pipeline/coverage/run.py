@@ -30,6 +30,7 @@ from .contract import load_contract
 from .extract import export_lines, rideable_lines, run_extract, run_filter, run_way_filter
 from .load import COUNTRY_BY_REGION, apply_session_budget, ensure_schema, load_region, resolve_country
 from .ownership import Owners, pbf_header_box, region_fingerprint, snapshot_outlines
+from .pbfs import pbf_path
 from .parse import parse_pois
 from .publish import (CountryBuild, GapsBuild, ensure_bucket, inputs_fingerprint,
                       prune_family, publish_countries, read_live_manifest, read_manifest)
@@ -93,7 +94,7 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
             raise RuntimeError(f"override PBF not found: {path}")
         return path
     url = f"{GEOFABRIK_BASE}/{region}-latest.osm.pbf"
-    dest = workdir / (region.replace("/", "-") + "-latest.osm.pbf")
+    dest = pbf_path(workdir, region)
     # Offline: use what is on disk and do not ask Geofabrik anything.
     #
     # For the surface build the expensive step is the per-region EXTRACT, which
@@ -107,8 +108,8 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
     if os.environ.get("COVERAGE_PBF_OFFLINE") == "1":
         if not dest.is_file():
             raise RuntimeError(
-                f"{region}: COVERAGE_PBF_OFFLINE=1 but {dest.name} is not in the "
-                "workdir — run the region once online first")
+                f"{region}: COVERAGE_PBF_OFFLINE=1 but {dest.name} is not in "
+                f"{dest.parent} — run the region once online first")
         print(f"[coverage] {region}: offline, using {dest.name} as it stands")
         return dest
     # Race-tolerant skip: a stale mirror .md5 here at worst forces a needless
@@ -129,26 +130,30 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
     # is consistent by construction. The retry then re-reads -latest.md5
     # (round-robin) as a fallback so a mirror missing its sibling .md5 still
     # converges on the current hash rather than crashing a good download.
-    tmp = dest.with_suffix(".part")
-    with urllib.request.urlopen(url, timeout=600) as r, open(tmp, "wb") as out:
-        resolved = r.geturl()
-        while chunk := r.read(1 << 20):
-            out.write(chunk)
-    got = _md5(tmp)
-    md5_sources = [resolved + ".md5", *([url + ".md5"] * 4)]
-    want = None
-    for i, src in enumerate(md5_sources):
-        try:
-            with urllib.request.urlopen(src, timeout=60) as r:
-                want = r.read().decode().split()[0]
-        except urllib.error.URLError:
-            want = None
-        if want == got:
-            tmp.replace(dest)
-            return dest
-        if i < len(md5_sources) - 1:
-            time.sleep(3)
-    tmp.unlink()
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    # Per process: staging and production may fetch the same region at once.
+    tmp = dest.with_name(f"{dest.name}.part.{os.getpid()}")
+    try:
+        with urllib.request.urlopen(url, timeout=600) as r, open(tmp, "wb") as out:
+            resolved = r.geturl()
+            while chunk := r.read(1 << 20):
+                out.write(chunk)
+        got = _md5(tmp)
+        md5_sources = [resolved + ".md5", *([url + ".md5"] * 4)]
+        want = None
+        for i, src in enumerate(md5_sources):
+            try:
+                with urllib.request.urlopen(src, timeout=60) as r:
+                    want = r.read().decode().split()[0]
+            except urllib.error.URLError:
+                want = None
+            if want == got:
+                tmp.replace(dest)
+                return dest
+            if i < len(md5_sources) - 1:
+                time.sleep(3)
+    finally:
+        tmp.unlink(missing_ok=True)
     raise RuntimeError(
         f"{region}: md5 mismatch after download (got {got}; last want {want}) — "
         "no mirror .md5 matched across retries, the download may be corrupt"
@@ -196,8 +201,8 @@ def _region_stamp(workdir: pathlib.Path, pbf: pathlib.Path) -> str:
 
 
 def _default_pbf(workdir: pathlib.Path, region: str) -> pathlib.Path:
-    """Where fetch_pbf keeps a region's PBF in the workdir."""
-    return workdir / (region.replace("/", "-") + "-latest.osm.pbf")
+    """Where fetch_pbf keeps a region's PBF."""
+    return pbf_path(workdir, region)
 
 
 def _ownership(workdir: pathlib.Path) -> Owners:
