@@ -656,3 +656,23 @@ def test_default_pbf_follows_the_shared_dir(monkeypatch, tmp_path):
     assert run._default_pbf(tmp_path, "europe/belgium") == tmp_path / "pbf" / "europe-belgium-latest.osm.pbf"
     monkeypatch.delenv("COVERAGE_PBF_DIR")
     assert run._default_pbf(tmp_path, "europe/belgium") == tmp_path / "europe-belgium-latest.osm.pbf"
+
+
+def test_fetch_pbf_sweeps_temp_files_a_killed_run_left(monkeypatch, tmp_path):
+    # SIGKILL skips `finally`; in the shared folder nobody else would remove them.
+    monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_OFFLINE", raising=False)
+    monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
+    old = run.time.time() - 7 * 3600
+    stale = tmp_path / "europe-belgium-latest.osm.pbf.part.killed"
+    stale.write_bytes(b"half a download")
+    os.utime(stale, (old, old))
+    live = tmp_path / "europe-belgium-latest.osm.pbf.part.running"
+    live.write_bytes(b"the other environment, right now")
+    neighbour = tmp_path / "europe-germany-latest.osm.pbf.part.killed"
+    neighbour.write_bytes(b"swept by its own region's fetch")
+    os.utime(neighbour, (old, old))
+    monkeypatch.setattr(run.urllib.request, "urlopen", _fake_geofabrik(b"belgium bytes"))
+    run.fetch_pbf("europe/belgium", tmp_path)
+    assert not stale.exists()
+    assert live.exists() and neighbour.exists()

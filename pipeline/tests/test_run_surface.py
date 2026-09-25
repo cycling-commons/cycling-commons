@@ -9,6 +9,7 @@ failed while 140 tests stayed green and a warm-cache publish worked."""
 from __future__ import annotations
 
 import contextlib
+import os
 import json
 import pathlib
 
@@ -679,3 +680,56 @@ def test_a_failed_routes_publish_reports_nothing_rebuilt(routed, offline, contra
     rebuilt: list[str] = []
     assert _run_routes(["europe/netherlands"], offline, contract, rebuilt=rebuilt) == 1
     assert rebuilt == []
+
+
+def _swap_pbf_under(offline):
+    """What the other environment does: rename a fresh PBF onto the shared path
+    while this run is still extracting. Its mtime is not newer than the extract."""
+    pbf = offline / "europe-netherlands-latest.osm.pbf"
+    fresh = offline / "incoming.pbf"
+    fresh.write_bytes(b"a newer geofabrik build")
+    old = pbf.stat().st_mtime
+    os.utime(fresh, (old, old))
+    fresh.replace(pbf)
+
+
+def test_a_pbf_replaced_mid_surface_extract_is_re_extracted(offline, contract, monkeypatch):
+    calls = []
+
+    def extract(filtered, contract, *, classified_out, todo_out, gaps_out, ridtok="",
+                cctok="", route_way_ids=frozenset(), keep=None):
+        calls.append("extract")
+        if len(calls) == 1:
+            _swap_pbf_under(offline)
+        classified_out.write_text('{"f":1}\n')
+        todo_out.write_text('{"f":2}\n')
+        gaps_out.write_text("1\t1\t1.0\t0.0\t1\n")
+        return SurfaceCounts(classified=1, todo=1, cells=1)
+
+    monkeypatch.setattr(run, "extract_region", extract)
+    for _ in range(3):
+        assert _run_surface(["europe/netherlands"], offline, contract,
+                            extract_only=True, publish=False) == 0
+    # Stale once (built from the replaced file), then current again.
+    assert calls == ["extract", "extract"]
+
+
+def test_a_pbf_replaced_mid_routes_extract_is_re_extracted(offline, contract, monkeypatch):
+    from coverage.routes import RouteCounts
+    calls = []
+
+    def extract(filtered, contract, *, ways_out, nodes_out, wayids_out, ridtok="", cctok="",
+                keep=None):
+        calls.append("extract")
+        if len(calls) == 1:
+            _swap_pbf_under(offline)
+        ways_out.write_text('{"f":1}\n')
+        nodes_out.write_text("")
+        wayids_out.write_text("41\n")
+        return RouteCounts(ways=1, nodes=0, relations=1)
+
+    monkeypatch.setattr(run, "routes_extract_region", extract)
+    for _ in range(3):
+        assert _run_routes(["europe/netherlands"], offline, contract,
+                           extract_only=True, publish=False) == 0
+    assert calls == ["extract", "extract"]

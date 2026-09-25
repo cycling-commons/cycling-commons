@@ -31,7 +31,7 @@ from .contract import load_contract
 from .extract import export_lines, rideable_lines, run_extract, run_filter, run_way_filter
 from .load import COUNTRY_BY_REGION, apply_session_budget, ensure_schema, load_region, resolve_country
 from .ownership import Owners, pbf_header_box, region_fingerprint, snapshot_outlines
-from .pbfs import pbf_path
+from .pbfs import pbf_identity, pbf_path
 from .parse import parse_pois
 from .publish import (CountryBuild, GapsBuild, ensure_bucket, inputs_fingerprint,
                       prune_family, publish_countries, read_live_manifest, read_manifest)
@@ -79,6 +79,10 @@ def _md5(path: pathlib.Path) -> str:
         for chunk in iter(lambda: fh.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+# Longer than the coverage job's 5 h timeout: an older temp file has no writer.
+STALE_PART_S = 6 * 3600
 
 
 def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
@@ -132,6 +136,14 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
     # (round-robin) as a fallback so a mirror missing its sibling .md5 still
     # converges on the current hash rather than crashing a good download.
     dest.parent.mkdir(parents=True, exist_ok=True)
+    # A run SIGKILLed at its job timeout skips `finally`; in the shared folder
+    # nobody else would ever remove what it left.
+    for left in dest.parent.glob(dest.name + ".part.*"):
+        try:
+            if time.time() - left.stat().st_mtime > STALE_PART_S:
+                left.unlink(missing_ok=True)
+        except FileNotFoundError:
+            pass
     # Unique per download, not per pid: in a container python is PID 1, so
     # staging and production fetching one region at once would share a name.
     fd, name = tempfile.mkstemp(dir=dest.parent, prefix=dest.name + ".part.")
@@ -391,6 +403,11 @@ def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file:
         return False
     if pbf.exists() and extract.stat().st_mtime < pbf.stat().st_mtime:
         return False
+    if stamp is not None and pbf.exists():
+        # Built from a file that has since been replaced, whatever its mtime.
+        source = stamp.with_suffix(".src")
+        if source.exists() and source.read_text().strip() != pbf_identity(pbf):
+            return False
     for extra in extra_inputs:
         if extra.exists() and extract.stat().st_mtime < extra.stat().st_mtime:
             return False
@@ -480,6 +497,8 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
                 # the now-truncated files, or the next run's
                 # _extract_is_current would call them current.
                 stamp.unlink(missing_ok=True)
+                stamp.with_suffix(".src").unlink(missing_ok=True)
+                source = pbf_identity(pbf)
                 filtered = workdir / (slug + "-surface.osm.pbf")
                 run_filter(pbf, filtered, surface_selectors(contract))
                 route_way_ids = load_way_ids(wayids_path)
@@ -498,6 +517,7 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
                 # Written only once all three files are complete: a run killed
                 # mid-extract leaves no stamp, so the next run re-extracts.
                 stamp.write_text(want, encoding="utf-8")
+                stamp.with_suffix(".src").write_text(source, encoding="utf-8")
                 print(f"[surface] {region}: {fresh.classified} classified, "
                       f"{fresh.todo} to record, {fresh.cells} grid cells, "
                       f"{fresh.foreign} owned by a neighbour")
@@ -658,6 +678,8 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
                 # reason): a run killed or raising mid-extract must not leave
                 # the OLD stamp beside the now-truncated files.
                 stamp.unlink(missing_ok=True)
+                stamp.with_suffix(".src").unlink(missing_ok=True)
+                source = pbf_identity(pbf)
                 filtered = workdir / (slug + "-routes.osm.pbf")
                 run_filter(pbf, filtered, routes_selectors())
                 fresh = routes_extract_region(
@@ -667,6 +689,7 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
                 # Written only once all three files are complete: a run killed
                 # mid-extract leaves no stamp, so the next run re-extracts.
                 stamp.write_text(want, encoding="utf-8")
+                stamp.with_suffix(".src").write_text(source, encoding="utf-8")
                 print(f"[routes] {region}: {fresh.ways} member ways on "
                       f"{fresh.relations} routes, {fresh.nodes} knooppunten, "
                       f"{fresh.foreign} owned by a neighbour")

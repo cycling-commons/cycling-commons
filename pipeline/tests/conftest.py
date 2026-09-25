@@ -19,6 +19,12 @@ from coverage.contract import load_contract
 FIXTURES = pathlib.Path(__file__).resolve().parent / "fixtures"
 
 
+@pytest.fixture(autouse=True)
+def _no_shared_pbf_dir(monkeypatch):
+    """A COVERAGE_PBF_DIR in the container must not move every test's PBFs."""
+    monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
+
+
 @pytest.fixture(scope="session")
 def contract():
     return load_contract()

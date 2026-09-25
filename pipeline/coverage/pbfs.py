@@ -16,3 +16,10 @@ def pbf_dir(workdir: pathlib.Path) -> pathlib.Path:
 def pbf_path(workdir: pathlib.Path, region: str) -> pathlib.Path:
     """Accepts "europe/belgium" or "europe-belgium"."""
     return pbf_dir(workdir) / (region.replace("/", "-") + "-latest.osm.pbf")
+
+
+def pbf_identity(path: pathlib.Path) -> str:
+    """Which file this is, not only when it changed: another environment can
+    rename a fresh download onto the shared path mid-extract."""
+    st = path.stat()
+    return f"{st.st_ino}:{st.st_size}:{st.st_mtime_ns}"
