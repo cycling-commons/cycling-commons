@@ -1,0 +1,28 @@
+web/src/Content/ReleaseNotes.php
+  s_55919bbd97e54d::t_6def70c0c1b14b 46-47
+  s_55919bbd97e54d::t_08c62181a27f7e 50
+  s_55919bbd97e54d::t_55ee7b153a7145 55
+  s_55919bbd97e54d::t_2200149d38c415 45,49,51-54,59-61
+  s_55919bbd97e54d::t_c1baeacf59eac1 48
+web/templates/pages/changelog.html.twig
+  s_55919bbd97e54d::t_6b15e55217900c 24-28,53
+docs/specs/roadmap-and-changelog.md
+  s_55919bbd97e54d::t_e23f8a8e8ee04f 123-126,130,132-133
+  s_55919bbd97e54d::t_6def70c0c1b14b 127-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a4c7263d5c39e152f4d5565f26691d9bc3e28355",
+  "prompts": {},
+  "sessions": {
+    "s_55919bbd97e54d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4e8d5729-0cb3-44e8-a46a-3372d02254f6",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
