@@ -1,0 +1,34 @@
+pipeline/coverage/scenic_review.py
+  s_8dc028eb0ce2d4::t_141f6f214dfbc3 14-16,33,104,111,121
+pipeline/tests/test_scenic_review.py
+  s_1976767384ed8e::t_e293a7dc14ea27 5,7,36-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b0ce09fac6b493aec7b92418f83aa7cd26797ebf",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_1976767384ed8e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc2c9285-ba6b-4f91-b403-028f86746ae5",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_8dc028eb0ce2d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b840768a-81a1-4edb-885c-c2d2f3bc9acc",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
