@@ -622,17 +622,22 @@ def test_fetch_pbf_offline_reads_the_shared_dir_and_names_it(monkeypatch, tmp_pa
     assert run.fetch_pbf("europe/belgium", tmp_path) == shared / "europe-belgium-latest.osm.pbf"
 
 
-def test_fetch_pbf_temp_file_is_per_process(monkeypatch, tmp_path):
+def test_fetch_pbf_temp_names_differ_even_with_the_same_pid(monkeypatch, tmp_path):
+    # In a container python is PID 1, so staging and production share a pid.
     monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
     monkeypatch.delenv("COVERAGE_PBF_OFFLINE", raising=False)
     monkeypatch.delenv("COVERAGE_PBF_DIR", raising=False)
-    monkeypatch.setattr(run.os, "getpid", lambda: 4242)
-    seen: list = []
-    monkeypatch.setattr(run.urllib.request, "urlopen",
-                        _fake_geofabrik(b"belgium bytes", seen=seen, dirpath=tmp_path))
-    run.fetch_pbf("europe/belgium", tmp_path)
-    assert "europe-belgium-latest.osm.pbf.part.4242" in seen
+    monkeypatch.setattr(run.os, "getpid", lambda: 1)
+    names = []
+    for data in (b"first build", b"second build"):
+        seen: list = []
+        monkeypatch.setattr(run.urllib.request, "urlopen", _fake_geofabrik(data, seen=seen, dirpath=tmp_path))
+        run.fetch_pbf("europe/belgium", tmp_path)
+        names += [n for n in seen if ".part." in n]
+    assert len(names) == 2 and names[0] != names[1]
+    assert all(n.startswith("europe-belgium-latest.osm.pbf.part.") for n in names)
     assert [p.name for p in tmp_path.iterdir()] == ["europe-belgium-latest.osm.pbf"]
+    assert (tmp_path / "europe-belgium-latest.osm.pbf").stat().st_mode & 0o777 == 0o644
 
 
 def test_fetch_pbf_network_error_mid_download_leaves_no_temp_file(monkeypatch, tmp_path):

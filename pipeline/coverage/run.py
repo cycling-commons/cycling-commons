@@ -19,6 +19,7 @@ import resource
 import os
 import pathlib
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -131,10 +132,13 @@ def fetch_pbf(region: str, workdir: pathlib.Path) -> pathlib.Path:
     # (round-robin) as a fallback so a mirror missing its sibling .md5 still
     # converges on the current hash rather than crashing a good download.
     dest.parent.mkdir(parents=True, exist_ok=True)
-    # Per process: staging and production may fetch the same region at once.
-    tmp = dest.with_name(f"{dest.name}.part.{os.getpid()}")
+    # Unique per download, not per pid: in a container python is PID 1, so
+    # staging and production fetching one region at once would share a name.
+    fd, name = tempfile.mkstemp(dir=dest.parent, prefix=dest.name + ".part.")
+    tmp = pathlib.Path(name)
+    os.fchmod(fd, 0o644)  # mkstemp creates 0600; the other environment reads the result
     try:
-        with urllib.request.urlopen(url, timeout=600) as r, open(tmp, "wb") as out:
+        with os.fdopen(fd, "wb") as out, urllib.request.urlopen(url, timeout=600) as r:
             resolved = r.geturl()
             while chunk := r.read(1 << 20):
                 out.write(chunk)
