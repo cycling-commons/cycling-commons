@@ -109,3 +109,20 @@ test('reset leaves placing mode too', () => {
   m.editor.reset();
   assert.equal(m.last().placingRider, false);
 });
+
+test('reset removes the rider point, and undo brings it back', () => {
+  const m = mount();
+  m.editor.markSteepestPoint();
+  m.click(5.8255, 50.8365);
+  m.editor.setSteepestPoint(m.last().steepPoint.at, '21%', '');
+  const live = () => m.markers.filter((k) => k.el.dataset.mkType === 'rider' && !k.removed);
+
+  m.editor.reset();
+  assert.equal(m.hidden.steepPoint.value, '');
+  assert.equal(m.last().steepPoint, null);
+  assert.equal(live().length, 0);
+
+  m.editor.undo();
+  assert.equal(JSON.parse(m.hidden.steepPoint.value).pct, '21%');
+  assert.equal(live().length, 1);
+});

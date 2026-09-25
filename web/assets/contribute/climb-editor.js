@@ -433,11 +433,12 @@
       abortProfile();
       routeError = false; profileError = false;
       placingRider = false;
-      state.start = null; state.summit = null; state.steep = null;
+      state.start = null; state.summit = null; state.steep = null; state.steepPoint = null;
       state.route = []; state.grad = []; state.gain = ''; state.lengthKm = 0;
       if (footM) { footM.remove(); footM = null; }
       if (summitM) { summitM.remove(); summitM = null; }
       if (steepM) { steepM.remove(); steepM = null; }
+      placeRiderMarker();
       drawLine();
       writeHidden();
     }
