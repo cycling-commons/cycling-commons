@@ -1,0 +1,41 @@
+web/assets/contribute/rider-steep.js
+  s_1976767384ed8e::t_700eb15d1d3d64 1-72
+web/tests/js/rider-steep.test.cjs
+  s_1976767384ed8e::t_533a1488c7c975 1-121
+docs/specs/climb-elevation.md
+  s_1976767384ed8e::t_26cb096ff2aaea 1097-1102
+web/tests/js/climb-editor-rider.test.cjs
+  s_1976767384ed8e::t_9a53c64ca8e2bd 1-111
+web/assets/contribute/climb-editor.js
+  s_1976767384ed8e::t_9437b091ec13e9 346-350,435,515
+web/assets/contribute/improve.js
+  s_1976767384ed8e::t_bd5a6b3c9b6820 415-428,441-445
+web/templates/contribute/improve.html.twig
+  s_1976767384ed8e::t_bd91f44b30331a 172-181,449,493,616-627,952
+web/translations/messages.de.yaml
+  s_1976767384ed8e::t_590a34b6978b52 2513-2521,2525,4059,4210-4211
+web/translations/messages.en.yaml
+  s_1976767384ed8e::t_d2d64908413fa0 1927-1935,1939,4077,4228-4229
+web/translations/messages.es.yaml
+  s_1976767384ed8e::t_17b212de095736 1937-1945,1949,4086,4237-4238
+web/translations/messages.fr.yaml
+  s_1976767384ed8e::t_febc55228011c7 2505-2513,2517,4051,4202-4203
+web/translations/messages.nl.yaml
+  s_1976767384ed8e::t_f260e8d8ed0db5 2510-2518,2522,4058,4209-4210
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4b8c9be17c9c08ebec8b45c86e785eed619c7214",
+  "prompts": {},
+  "sessions": {
+    "s_1976767384ed8e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc2c9285-ba6b-4f91-b403-028f86746ae5",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
