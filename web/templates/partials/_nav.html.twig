@@ -13,7 +13,7 @@
     <a href="{{ path('regions') }}"{% if a == 'regions' %} class="on"{% endif %}>{{ 'nav.regions'|trans }}</a>
     <a href="{{ path('coverage') }}"{% if a == 'coverage' %} class="on"{% endif %}>{{ 'nav.coverage'|trans }}</a>
     <a href="{{ path('best_of') }}"{% if a == 'best_of' %} class="on"{% endif %}>{{ 'nav.best_of'|trans }}</a>
-    <a href="{{ path('blog') }}"{% if a == 'blog' %} class="on"{% endif %}>{{ 'nav.blog'|trans }}</a>
+    {% if blog_has_posts() %}<a href="{{ path('blog') }}"{% if a == 'blog' %} class="on"{% endif %}>{{ 'nav.blog'|trans }}</a>{% endif %}
     <a href="{{ path('about') }}"{% if a == 'about' %} class="on"{% endif %}>{{ 'nav.about'|trans }}</a>
     <a class="acct fill" href="{{ path('map') }}">{{ 'nav.explore_map'|trans }}</a>
     <a class="acct join" href="{{ path('contribute') }}">{{ 'nav.contribute'|trans }}</a>

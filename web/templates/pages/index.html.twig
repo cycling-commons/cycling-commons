@@ -141,9 +141,16 @@
        relative box does NOT, so without this each card slides across by its
        own lap coordinate. */
     .loop .stop{position:relative;inset:auto}
+    /* Slimmer on a phone: the five read as steps, not as five big buttons (owner 2026-09-25). */
+    .loop{gap:1.1rem;max-width:19rem;margin-left:0}
+    .loop .stop,.loop .stop.big{padding:.4rem .7rem .45rem}
+    .loop .stop .k{font-size:.56rem;margin-bottom:.1rem}
+    .loop .stop b{font-size:.88rem}
+    .loop .stop.big b{font-size:.98rem}
     .loop .stop:not(:last-of-type)::after{content:"";position:absolute;left:50%;top:100%;width:9px;height:9px;
       margin-top:.42rem;transform:translateX(-50%) rotate(45deg);
       border-right:1.6px solid rgba(239,230,212,.38);border-bottom:1.6px solid rgba(239,230,212,.38)}
+    .loop .stop:not(:last-of-type)::after{margin-top:.3rem;width:7px;height:7px}
   }
   .hero-inner{position:relative;z-index:10;padding-bottom:clamp(2.5rem,6vw,5rem);padding-top:clamp(2.5rem,5vw,4rem);width:100%}
   /* flex-start, not center: the pin marks the START of the line, so on a narrow
@@ -158,13 +165,14 @@
   h1 .endp{margin-left:.07em}  /* kerning: upright period after the italic 'atlas' */
   .hero p.lede{font-size:clamp(1.05rem,1.7vw,1.3rem);max-width:46ch;margin:1.6rem 0 2.2rem;color:rgba(239,230,212,.88)}
   .cta-row{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
-  .btn{font-family:var(--sans);font-weight:700;font-size:1rem;padding:.95rem 1.6rem;border-radius:4px;cursor:pointer;border:1.5px solid transparent;display:inline-flex;align-items:center;gap:.6rem;transition:all .25s}
+  .btn{font-family:var(--sans);font-weight:700;font-size:.92rem;padding:.62rem 1.15rem;border-radius:4px;cursor:pointer;border:1.5px solid transparent;display:inline-flex;align-items:center;gap:.6rem;transition:all .25s}
   .btn .arw{display:inline-block;font-weight:800;font-size:1.15em;transition:transform .25s}
   .btn:hover .arw{transform:translateX(5px)}
   /* Secondary CTA: same colours, tighter padding. Explore / Contribute stay .btn. */
-  .btn-sm{padding:.7rem 1.2rem;font-size:.92rem}
+  .btn-sm{padding:.5rem .95rem;font-size:.86rem}
   .btn-primary{background:var(--trail);color:var(--ink)}
   .btn-primary:hover{background:#ff703d}
+  .hero-gpx{margin-top:1.6rem}
   .btn-ghost{background:var(--ink);border-color:rgba(239,230,212,.45);color:var(--paper)}
   .btn-ghost:hover{background:var(--spruce);border-color:var(--paper)}
 
@@ -219,6 +227,9 @@
     .disc{padding:clamp(.6rem,1.3svh,1.2rem) 0}
     .disc .chips{gap:.3rem}
   }
+  /* Air between the last step card and the chips on a phone (owner
+     2026-09-25). Last .disc rule in the file, so no earlier one undoes it. */
+  @media(max-width:520px){.disc{padding-top:2.6rem}}
 
   /* ---------- SECTIONS ---------- */
   section.pad{padding:clamp(4rem,9vw,8rem) 0;position:relative}
@@ -237,6 +248,8 @@
   .open-item .t{font-family:var(--mono);font-size:.7rem;padding:.3rem .55rem;border-radius:4px;white-space:nowrap;margin-top:.2rem}
   .t.open{background:var(--spruce);color:var(--paper)} .t.priv{background:var(--clay);color:var(--paper)}
   .open-item h4{font-size:1.05rem;font-weight:700} .open-item p{font-size:.95rem;color:#4a4d40}
+  .open-item p a{color:inherit;font-weight:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;text-decoration-color:rgba(20,22,14,.3)}
+  .open-item p a:hover{text-decoration-color:currentColor}
 
   .votable{margin-top:1.6rem}
   .votable .vk{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
@@ -273,8 +286,9 @@
   /* v3: the same screen on the shared phone. Nothing here restyles the frame;
      it only lays out what is on the glass. */
   .cur-v3 .cur-screen{padding:.35rem .15rem 0}
-  .cur-v3 .cur-screen .pin{display:block;margin:1.3rem 0 1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;
+  .cur-v3 .cur-screen .pin{display:block;margin:.5rem 0 1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;
     line-height:1.5;color:rgba(239,230,212,.8)}
+  .cur-v3 .cur-screen .pin b{font-size:1.15em;font-weight:700;color:#efe6d4}
   .cur-v3 .cur-hero{position:relative;margin:0 0 .9rem}
   .cur-v3 .cur-big{display:block;width:100%;height:96px}
   .cur-v3 .cur-summit{position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;
@@ -337,16 +351,15 @@
      The order matters and is not slack: the last app lands at about 5.7s, and
      the dock may not start climbing before then. Overlap them and the apps are
      visibly chasing a target that has already left. */
-  /* THE phone caption, above the device and centred over it, in both sections. */
-  .silo-v3 h3,.cur-v3 > h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin-bottom:1.1rem;
-    color:var(--ink);text-align:center}
   /* THE phone frame. The fragmentation box and the best-of card are the same
      device seen twice, so the frame is defined once and neither section owns
      it (owner 2026-09-10: the two were drifting into different styles). */
   .phone{width:min(100%,360px);margin:0 auto;padding:1rem 1rem 1.3rem;border-radius:32px;position:relative;overflow:hidden;
     background:var(--ink);border:1px solid rgba(239,230,212,.28);box-shadow:0 0 0 5px rgba(16,30,22,.55),0 30px 50px -28px rgba(0,0,0,.8)}
+  /* Phone screens: both phones 15% smaller, content and all (owner 2026-09-25). */
+  @media(max-width:560px){.phone{zoom:.85}}
   .ph-notch{width:84px;height:18px;margin:0 auto;border-radius:12px;background:#000;border:1px solid rgba(239,230,212,.18)}
-  .silo .ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem .35rem;list-style:none;margin:1.4rem 0 1.6rem;padding:0}
+  .silo .ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem .35rem;list-style:none;margin:1rem 0 1rem;padding:0}
   .silo .ph-app{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.35rem;opacity:0;will-change:transform,opacity}
   .silo.in .ph-app{animation:phPop .45s cubic-bezier(.3,1.4,.5,1) forwards,phFly .75s cubic-bezier(.55,0,.85,.35) forwards;
     animation-delay:calc(.15s + var(--i) * .08s),calc(var(--fly,4.6s) + var(--i) * .07s)}
@@ -372,7 +385,7 @@
   .silo .ph-tag{font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ochre)}
   .silo .ph-app.scat .ph-tag{color:var(--glacier)}
   /* the one app: the brand mark as an app icon, its name under it */
-  .silo .ph-dock{display:flex;flex-direction:column;align-items:center;gap:.6rem;opacity:0;will-change:transform,opacity}
+  .silo .ph-dock{position:relative;display:flex;flex-direction:column;align-items:center;gap:.6rem;opacity:0;will-change:transform,opacity}
   .silo .ph-cc{display:grid;place-items:center;overflow:hidden;width:80px;height:80px;border-radius:19px;
     border:1px solid rgba(239,230,212,.25);
     box-shadow:0 0 0 0 rgba(255,90,31,0),0 10px 20px -10px rgba(0,0,0,.9);transform-origin:50% 100%}
@@ -397,8 +410,10 @@
   @keyframes phNm{from{transform:translateY(-.4rem)}to{transform:translateY(0)}}
   /* Replay, on the glass. The sequence tells the whole argument in one go and
      is easy to miss, so it can be asked for again. Hidden until it has run
-     once: a replay button before the first play has nothing to replay. */
-  .silo .ph-replay{display:flex;align-items:center;gap:.4rem;width:fit-content;margin:1.3rem auto .1rem;
+     once: a replay button before the first play has nothing to replay.
+     It hangs under the dock and rises with it, taking no room of its own, so
+     the phone is only as tall as the grid and the dock need. */
+  .silo .ph-replay{position:absolute;top:100%;left:50%;translate:-50% 0;display:flex;align-items:center;gap:.4rem;width:max-content;margin:.6rem 0 0;
     opacity:0;pointer-events:none;padding:.3rem .7rem;border-radius:40px;cursor:pointer;
     background:transparent;border:1px solid rgba(239,230,212,.28);color:rgba(239,230,212,.72);
     font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;transition:color .2s,border-color .2s}
@@ -409,14 +424,32 @@
 
   /* catalog grid */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:2.6rem}
-  .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.3rem;position:relative;transition:all .25s;overflow:hidden}
+  .card{background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:6px;padding:1.1rem 1.3rem;position:relative;transition:all .25s;overflow:hidden;
+    display:grid;grid-template-columns:auto 1fr;column-gap:.7rem;align-items:start;align-content:start}
+  /* Icon and title share the first row; everything else spans the card under them. */
+  .card > *{grid-column:1 / -1}
+  .card > .q-icon,.card > .ic{grid-column:1}
+  .card > .q-icon + h4,.card > .ic + h4{grid-column:2}
+  a.card{color:inherit;text-decoration:none}
+  a.card:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+  /* Freshness dots: this kind of place is confirmed by riders and ages. */
+  .card{grid-template-columns:auto 1fr auto}
+  .card > h4 + .fr{grid-column:3;display:flex;gap:4px;margin-top:.6rem}
+  .fr i,.fresh-key .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .fr .g,.dot.g{background:#3e7d4f} .fr .o,.dot.o{background:var(--ochre)} .fr .r,.dot.r{background:var(--clay)}
+  .fresh-key{margin-top:1rem;font-size:.92rem;color:#5a5d4d}
+  .fresh-key .dot{width:14px;height:14px;vertical-align:-2px;margin:0 .35rem 0 .2rem}
   .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}
   /* The icon alone, big and in the deep ochre the letter used to wear
      (owner 2026-09-09: "drop the letters, only the icons bigger in that
      brownish colour"). */
-  .card .q-icon{display:flex;align-items:center;height:2rem;margin-bottom:.7rem;color:#8A6425}
-  .card .q-icon svg{width:2rem;height:2rem}
-  .scout-cta{display:flex;gap:1.6rem;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+  .card .q-icon{display:flex;align-items:center;height:1.7rem;color:#8A6425}
+  .card .q-icon svg{width:1.7rem;height:1.7rem}
+  /* Text left, the four devices right; under ~1000px the devices drop below
+     the text and line up with it (the 64px logo plus its gap). */
+  .scout-cta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1.6rem 2.4rem;align-items:center}
+  @media(max-width:1000px){.scout-cta{grid-template-columns:1fr}.scout-cta .scout-devices{padding-left:calc(64px + 1.1rem)}}
+  @media(max-width:560px){.scout-cta .scout-devices{padding-left:0}}
   .scout-cta h3{font-family:var(--serif);font-size:1.5rem;line-height:1.2}
   .scout-cta-lead{display:flex;gap:1.1rem;align-items:flex-start;flex:1 1 300px;min-width:0}
   .scout-cta .scout-logo{flex:none}
@@ -429,24 +462,21 @@
   /* Narrow screens: the label on its own line, the subtitle on one line under it,
      instead of the subtitle wrapping beside the label (owner 2026-08-25). */
   @media(max-width:820px){.cat-h{flex-wrap:wrap;gap:.25rem .8rem}.cat-h span{flex-basis:100%}}
-  .card .ic{font-size:1.5rem;height:2rem;margin-bottom:.7rem;display:flex;align-items:center;line-height:1;filter:brightness(0)}  /* flatten colour-emoji to a black silhouette */
-  .card h4{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:.3rem}
-  .card p{font-size:.90rem;color:#4a4d40}
-  .card.suggest{background:transparent;border:1px dashed rgba(20,22,14,.32);display:flex;flex-direction:column;justify-content:center}
+  .card .ic{font-size:1.3rem;height:1.7rem;display:flex;align-items:center;line-height:1;filter:brightness(0)}  /* flatten colour-emoji to a black silhouette */
+  .card h4{font-family:var(--serif);font-weight:600;font-size:1.2rem;line-height:1.2;margin-top:.12rem}
+  .card p{font-size:.90rem;color:#4a4d40;margin-top:.45rem}
+  .card.suggest{background:transparent;border:1px dashed rgba(20,22,14,.32);align-content:center}
   .card.suggest:hover{border-color:var(--clay);transform:translateY(-3px);box-shadow:none}
-  .card.suggest .co{color:var(--clay);opacity:.5}
   .card.suggest h4{color:var(--clay)}
   .card.suggest p{margin-bottom:.7rem}
   .card.suggest a{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);text-decoration:none;font-weight:600}
   .card.suggest a:hover{text-decoration:underline}
-  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:.3rem}
-  .dot.g{background:#3e7d4f}.dot.o{background:var(--ochre)}
 
   /* steps */
   .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;margin-top:3rem}
   @media(max-width:760px){.steps{grid-template-columns:1fr}}
   .step{position:relative}
-  .step .no{display:block;padding-bottom:.8rem;margin-bottom:.9rem;border-bottom:2px solid var(--ink);font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--clay)}
+  .step .no{display:block;padding-bottom:.4rem;margin-bottom:.5rem;border-bottom:2px solid var(--ink);font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--clay)}
   .step h4{font-family:var(--serif);font-weight:600;font-size:1.35rem;margin-bottom:.5rem}
   .step p{font-size:.95rem;color:#4a4d40}
 
@@ -499,6 +529,8 @@
       <div class="eyebrow mono rv in">{{ 'home.eyebrow'|trans }}</div>
       <h1 class="rv in" data-d="1">{{ 'home.h1'|trans|rich }}</h1>
       <p class="lede rv in" data-d="2">{{ 'home.lede'|trans }}</p>
+      {# The one thing most riders come for, one tap from the front door. #}
+      <a class="btn btn-primary hero-gpx rv in" data-d="3" href="{{ path('map', {panel: 'tools'}) }}">{{ 'home.cta_gpx'|trans }} <span class="arw">→</span></a>
     </div>
     {# THE LOOP: five stops, arrows between them. Ride and Add are the big
        ones. Each stop is a kind of person and one verb phrase, nothing more
@@ -574,7 +606,7 @@
     <div class="wrap">
       <span class="label">{{ 'home.disc_label'|trans }}</span>
       <div class="chips">
-        <span class="chip">Road</span><span class="chip">Gravel</span><span class="chip">MTB</span><span class="chip">Touring</span><span class="chip">Bikepacking</span><span class="chip">E-bike</span><span class="chip">Urban</span><span class="chip">Recumbent</span><span class="chip">Trike</span><span class="chip">Handbike</span><span class="chip">Tandem</span>
+        <span class="chip">Road</span><span class="chip">Gravel</span><span class="chip">MTB</span><span class="chip">Handbike</span><span class="chip">Touring</span><span class="chip">Bikepacking</span><span class="chip">Tandem</span><span class="chip">E-bike</span><span class="chip">Urban</span><span class="chip">Recumbent</span><span class="chip">Trike</span>
       </div>
     </div>
   </div>
@@ -595,7 +627,6 @@
          ones never really installed. Then they all fly into the one app that
          holds them, and that app grows. hero.js measures the flight paths. #}
       <div class="silo-v3">
-      <h3>{{ 'home.frag_panel_h'|trans }}</h3>
       <div class="phone">
         <div class="ph-notch"></div>
         <ul class="ph-grid">
@@ -613,8 +644,8 @@
              bigger. The asset itself is nobody's to edit from here. #}
           <span class="ph-cc"><img src="{{ asset('brand/logo-square-mark.svg') }}" alt="" width="80" height="80"></span>
           <span class="ph-cc-nm">{{ 'home.frag_atlas'|trans|rich }}</span>
+          <button type="button" class="ph-replay" data-silo-replay>{{ 'home.frag_replay'|trans }}</button>
         </div>
-        <button type="button" class="ph-replay" data-silo-replay>{{ 'home.frag_replay'|trans }}</button>
       </div>
       </div>
     </div>
@@ -631,25 +662,28 @@
     <div class="kicker rv">{{ 'home.cat_kicker'|trans }}</div>
     <h2 class="rv" data-d="1" style="max-width:none">{{ 'home.cat_h2'|trans }}</h2>
 
+    {# The dots on a card: riders confirm that kind of place, and the map shows how recently. #}
+    <p class="fresh-key rv" data-d="1">{{ 'home.cat_fresh_key'|trans|rich }}</p>
+
     <h3 class="cat-h rv" data-d="1"><b>{{ 'home.cat_practical_h'|trans }}:</b> <span>{{ 'home.cat_practical_sub'|trans|rich }}</span></h3>
     <div class="grid">
-      <div class="card rv" data-d="1">{% include 'partials/_type_icon.html.twig' with {letter: 'A'} only %}<h4>{{ 'home.cat_card_surface_h'|trans }}</h4><p>{{ 'home.cat_card_surface_p'|trans }}</p></div>
-      <div class="card rv" data-d="1">{% include 'partials/_type_icon.html.twig' with {letter: 'B'} only %}<h4>{{ 'home.cat_card_water_h'|trans }}</h4><p>{{ 'home.cat_card_water_p'|trans|rich }}</p></div>
-      <div class="card rv" data-d="2">{% include 'partials/_type_icon.html.twig' with {letter: 'D'} only %}<h4>{{ 'home.cat_card_services_h'|trans }}</h4><p>{{ 'home.cat_card_services_p'|trans }}</p></div>
-      <div class="card rv" data-d="2">{% include 'partials/_type_icon.html.twig' with {letter: 'E'} only %}<h4>{{ 'home.cat_card_hazards_h'|trans }}</h4><p>{{ 'home.cat_card_hazards_p'|trans|rich }}</p></div>
-      <div class="card rv" data-d="3">{% include 'partials/_type_icon.html.twig' with {letter: 'F'} only %}<h4>{{ 'home.cat_card_getting_h'|trans }}</h4><p>{{ 'home.cat_card_getting_p'|trans }}</p></div>
-      <div class="card rv" data-d="3">{% include 'partials/_type_icon.html.twig' with {letter: 'G'} only %}<h4>{{ 'home.cat_card_shelter_h'|trans|rich }}</h4><p>{{ 'home.cat_card_shelter_p'|trans|rich }}</p></div>
+      <a class="card rv" data-d="1" href="{{ path('contribute') }}#type-road-surface">{% include 'partials/_type_icon.html.twig' with {letter: 'A'} only %}<h4>{{ 'home.cat_card_surface_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_surface_p'|trans }}</p></a>
+      <a class="card rv" data-d="1" href="{{ path('contribute') }}#type-water-food">{% include 'partials/_type_icon.html.twig' with {letter: 'B'} only %}<h4>{{ 'home.cat_card_water_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_water_p'|trans|rich }}</p></a>
+      <a class="card rv" data-d="2" href="{{ path('contribute') }}#type-bike-services">{% include 'partials/_type_icon.html.twig' with {letter: 'D'} only %}<h4>{{ 'home.cat_card_services_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_services_p'|trans }}</p></a>
+      <a class="card rv" data-d="2" href="{{ path('contribute') }}#type-hazards">{% include 'partials/_type_icon.html.twig' with {letter: 'E'} only %}<h4>{{ 'home.cat_card_hazards_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_hazards_p'|trans|rich }}</p></a>
+      <a class="card rv" data-d="3" href="{{ path('contribute') }}#type-getting-there">{% include 'partials/_type_icon.html.twig' with {letter: 'F'} only %}<h4>{{ 'home.cat_card_getting_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_getting_p'|trans }}</p></a>
+      <a class="card rv" data-d="3" href="{{ path('contribute') }}#type-shelter">{% include 'partials/_type_icon.html.twig' with {letter: 'G'} only %}<h4>{{ 'home.cat_card_shelter_h'|trans|rich }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_shelter_p'|trans|rich }}</p></a>
       <div class="card suggest rv" data-d="3"><span class="ic">✎</span><h4>{{ 'home.cat_suggest_h'|trans }}</h4><p>{{ 'home.cat_suggest_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
     </div>
 
     <h3 class="cat-h rv" data-d="1"><b>{{ 'home.cat_emotional_h'|trans }}:</b> <span>{{ 'home.cat_emotional_sub'|trans|rich }}</span></h3>
     <div class="grid">
-      <div class="card rv" data-d="1">{% include 'partials/_type_icon.html.twig' with {letter: 'N'} only %}<h4>{{ 'home.cat_card_climbs_h'|trans }}</h4><p>{{ 'home.cat_card_climbs_p'|trans }}</p></div>
-      <div class="card rv" data-d="1">{% include 'partials/_type_icon.html.twig' with {letter: 'O'} only %}<h4>{{ 'home.cat_card_sleep_h'|trans }}</h4><p>{{ 'home.cat_card_sleep_p'|trans }}</p></div>
-      <div class="card rv" data-d="2">{% include 'partials/_type_icon.html.twig' with {letter: 'P'} only %}<h4>{{ 'home.cat_card_scenic_h'|trans }}</h4><p>{{ 'home.cat_card_scenic_p'|trans }}</p></div>
-      <div class="card rv" data-d="2">{% include 'partials/_type_icon.html.twig' with {letter: 'Q'} only %}<h4>{{ 'home.cat_card_history_h'|trans|rich }}</h4><p>{{ 'home.cat_card_history_p'|trans|rich }}</p></div>
-      <div class="card rv" data-d="3">{% include 'partials/_type_icon.html.twig' with {letter: 'R'} only %}<h4>{{ 'home.cat_card_quality_h'|trans }}</h4><p>{{ 'home.cat_card_quality_p'|trans|rich }}</p></div>
-      <div class="card suggest rv" data-d="3"><span class="co">+</span><span class="ic">✎</span><h4>{{ 'home.cat_suggest2_h'|trans }}</h4><p>{{ 'home.cat_suggest2_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
+      <a class="card rv" data-d="1" href="{{ path('contribute') }}#type-climbs">{% include 'partials/_type_icon.html.twig' with {letter: 'N'} only %}<h4>{{ 'home.cat_card_climbs_h'|trans }}</h4><p>{{ 'home.cat_card_climbs_p'|trans }}</p></a>
+      <a class="card rv" data-d="1" href="{{ path('contribute') }}#type-where-to-sleep">{% include 'partials/_type_icon.html.twig' with {letter: 'O'} only %}<h4>{{ 'home.cat_card_sleep_h'|trans }}</h4><span class="fr" aria-hidden="true"><i class="g"></i><i class="o"></i><i class="r"></i></span><p>{{ 'home.cat_card_sleep_p'|trans }}</p></a>
+      <a class="card rv" data-d="2" href="{{ path('contribute') }}#type-scenic-views">{% include 'partials/_type_icon.html.twig' with {letter: 'P'} only %}<h4>{{ 'home.cat_card_scenic_h'|trans }}</h4><p>{{ 'home.cat_card_scenic_p'|trans }}</p></a>
+      <a class="card rv" data-d="2" href="{{ path('contribute') }}#type-history-culture">{% include 'partials/_type_icon.html.twig' with {letter: 'Q'} only %}<h4>{{ 'home.cat_card_history_h'|trans|rich }}</h4><p>{{ 'home.cat_card_history_p'|trans|rich }}</p></a>
+      <a class="card rv" data-d="3" href="{{ path('contribute') }}#type-quality-rides">{% include 'partials/_type_icon.html.twig' with {letter: 'R'} only %}<h4>{{ 'home.cat_card_quality_h'|trans }}</h4><p>{{ 'home.cat_card_quality_p'|trans|rich }}</p></a>
+      <div class="card suggest rv" data-d="3"><span class="ic">✎</span><h4>{{ 'home.cat_suggest2_h'|trans }}</h4><p>{{ 'home.cat_suggest2_p'|trans }}</p><a href="https://github.com/cycling-commons/cycling-commons/issues/new/choose">{{ 'home.cat_suggest_link'|trans }}</a></div>
     </div>
   </div>
 </section>
@@ -669,6 +703,7 @@
     <h2>{{ 'home.cta_band_h2'|trans }}</h2>
     <div class="btn-row">
       <a class="btn btn-primary" href="{{ path('map') }}">{{ 'home.cta_band_map'|trans }} <span class="arw">→</span></a>
+      <a class="btn btn-ghost" href="{{ path('map', {panel: 'tools'}) }}">{{ 'home.cta_gpx'|trans }}</a>
       {% if not app.user %}
         <a class="btn btn-ghost" href="{{ path('register') }}">{{ 'home.cta_band_account'|trans }}</a>
       {% endif %}

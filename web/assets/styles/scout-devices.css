@@ -31,3 +31,31 @@
    reads as an asset dropped on the page; a small radius makes it look placed.
    Size comes from the partial, so a future SVG/WebP swap needs no CSS change. */
 .scout-logo{border-radius:7px;display:block}
+
+/* Platform badges (partials/_scout_platforms.html.twig), on the dark /scout page. */
+.plats{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.8rem}
+.plat{display:inline-flex;align-items:center;gap:.55rem;border:1.5px solid rgba(239,230,212,.28);border-radius:8px;padding:.7rem 1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;min-height:44px}
+a.plat:hover{border-color:var(--trail);background:rgba(200,146,58,.12)}
+.plat-badge{display:inline-flex;align-items:center;border-radius:8px}
+.plat-badge img{display:block;height:48px;width:auto}
+.plat-badge:focus-visible{outline:2px solid var(--trail);outline-offset:3px}
+.plat-logo{display:block;height:1.15rem;width:auto;flex:none}
+.plat .st{font-size:.7rem;letter-spacing:.1em;color:rgba(239,230,212,.55)}
+.plat.soon,.plat.planned{opacity:.72}
+.plat.live .st{color:var(--trail)}
+/* Badge under each device (chips: true, the home page), on paper. A grid so
+   the four columns share one badge baseline; two per row on a phone. */
+.scout-devices.with-badges{display:grid;grid-template-columns:repeat(4,auto);justify-content:start;align-items:end;gap:1.2rem 1.3rem}
+.scout-devices.with-badges .dev{min-width:0}
+.scout-devices .dev-badge{display:flex;justify-content:center;min-height:36px;align-items:center}
+.scout-devices .dev-badge .plat{border-color:rgba(20,22,14,.22);color:var(--ink);padding:.3rem .55rem;min-height:36px;font-size:.58rem;gap:.35rem}
+.scout-devices .dev-badge .nm{display:flex;flex-direction:column;line-height:1.3;text-align:left}
+.scout-devices .dev-badge .plat .st{font-size:.54rem;color:#6a6d5c}
+.scout-devices .dev-badge .plat-logo{height:.9rem}
+.scout-devices .dev-badge .plat-badge img{height:36px}
+@media(max-width:560px){
+  .scout-devices.with-badges{grid-template-columns:repeat(2,1fr);justify-items:center;gap:1.4rem .8rem}
+  .scout-devices.with-badges .dev-garmin svg{width:70px}
+  .scout-devices.with-badges .dev-karoo svg{width:74px}
+  .scout-devices.with-badges .dev-android svg,.scout-devices.with-badges .dev-iphone svg{width:66px}
+}

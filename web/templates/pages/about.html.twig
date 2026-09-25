@@ -52,10 +52,17 @@
   <p class="ostrom"><b><a href="https://en.wikipedia.org/wiki/Elinor_Ostrom" rel="noopener">Elinor Ostrom</a></b> {% trans %}about.believe_ostrom{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}about.believe_ostrom_link{% endtrans %}</a> {% trans %}about.believe_ostrom_suffix{% endtrans %}</p>
 </div></section>
 
+<section class="pad"><div class="wrap"><div class="col">
+  <div class="kicker">{% trans %}about.partners_kicker{% endtrans %}</div>
+  <h2 class="disp">{% trans %}about.partners_title{% endtrans %}</h2>
+  <p class="lead" style="margin-top:1rem">{% trans %}about.partners_lead1_pre{% endtrans %} <b>{% trans %}about.partners_lead1_osm{% endtrans %}</b> {% trans %}about.partners_lead1_mid{% endtrans %} <b>{% trans %}about.partners_lead1_partner{% endtrans %}</b>{% trans %}about.partners_lead1_post{% endtrans %}</p>
+  <p class="lead" style="margin-top:1rem">{% trans %}about.partners_lead2{% endtrans %}</p>
+</div></div></section>
+
 {# How the map gets made: the five kinds of people of the landing page's loop,
    one line each (owner 2026-09-09: the About page "never says how the map
    gets made"; the links under it went the same night, "no need"). #}
-<section class="pad"><div class="wrap"><div class="col">
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap"><div class="col">
   <div class="kicker">{% trans %}about.made_kicker{% endtrans %}</div>
   <h2 class="disp">{% trans %}about.made_title{% endtrans %}</h2>
   <ul class="made">
@@ -67,19 +74,13 @@
   </ul>
 </div></div></section>
 
-<section class="pad" style="background:var(--paper-deep)"><div class="wrap"><div class="col">
-  <div class="kicker">{% trans %}about.partners_kicker{% endtrans %}</div>
-  <h2 class="disp">{% trans %}about.partners_title{% endtrans %}</h2>
-  <p class="lead" style="margin-top:1rem">{% trans %}about.partners_lead1_pre{% endtrans %} <b>{% trans %}about.partners_lead1_osm{% endtrans %}</b> {% trans %}about.partners_lead1_mid{% endtrans %} <b>{% trans %}about.partners_lead1_partner{% endtrans %}</b>{% trans %}about.partners_lead1_post{% endtrans %}</p>
-  <p class="lead" style="margin-top:1rem">{% trans %}about.partners_lead2{% endtrans %}</p>
-</div></div></section>
-
 <section class="pad" style="background:var(--ink);color:var(--paper)"><div class="wrap"><div class="col">
   <div class="kicker" style="color:var(--trail)">{% trans %}about.steward_kicker{% endtrans %}</div>
   <h2 class="disp">{% trans %}about.steward_title{% endtrans %}</h2>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:1rem">{% trans %}about.steward_lead{% endtrans %}</p>
   <div style="display:flex;gap:.8rem;margin-top:1.8rem;flex-wrap:wrap">
     <a class="btn btn-p" href="{{ path('map') }}">{% trans %}about.steward_cta_map{% endtrans %}</a>
+    <a class="btn btn-g" style="background:var(--paper);border-color:transparent;color:var(--ink)" href="{{ path('map', {panel: 'tools'}) }}">{{ 'home.cta_gpx'|trans }}</a>
     {# Offered only to people who do not have one — see index.html.twig. #}
     {% if not app.user %}
       <a class="btn btn-g" style="border-color:rgba(239,230,212,.4);color:var(--paper)" href="{{ path('register') }}">{% trans %}about.steward_cta_account{% endtrans %}</a>

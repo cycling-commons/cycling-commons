@@ -4,16 +4,6 @@
 <link rel="stylesheet" href="{{ asset('styles/scout-devices.css') }}" />
 <style>
   .shero{background:var(--ink);color:var(--paper);padding:3rem 0 2.6rem}
-  .plats{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:1.8rem}
-  .plat{display:inline-flex;align-items:center;gap:.55rem;border:1.5px solid rgba(239,230,212,.28);border-radius:8px;padding:.7rem 1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;min-height:44px}
-  a.plat:hover{border-color:var(--trail);background:rgba(200,146,58,.12)}
-  .plat-badge{display:inline-flex;align-items:center;border-radius:8px}
-  .plat-badge img{display:block;height:48px;width:auto}
-  .plat-badge:focus-visible{outline:2px solid var(--trail);outline-offset:3px}
-  .plat-logo{display:block;height:1.15rem;width:auto;flex:none}
-  .plat .st{font-size:.7rem;letter-spacing:.1em;color:rgba(239,230,212,.55)}
-  .plat.soon,.plat.planned{opacity:.72}
-  .plat.live .st{color:var(--trail)}
   .tags-tbl{width:100%;border-collapse:collapse;margin-top:1.2rem}
   .tags-tbl th{text-align:left;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;padding:.6rem .8rem;border-bottom:1px solid rgba(20,22,14,.15)}
   .tags-tbl td{padding:.75rem .8rem;border-bottom:1px solid rgba(20,22,14,.08);font-size:.93rem;vertical-align:baseline}
@@ -62,19 +52,7 @@
   <h1 class="disp">{% trans %}scout.title{% endtrans %}</h1>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem;max-width:70ch">{{ 'scout.lead'|trans|rich }}</p>
 
-  <div class="plats">
-    {# Garmin is live and links to the real store listing. The other two say
-       what they are instead of pretending — an unlinked "download" would be the
-       fake-mechanism pattern the go-live gate exists to catch. #}
-    {# Garmin's own store badge, unaltered (Garmin Connect IQ brand guidelines:
-       it promotes apps available in the store, which Scout is). #}
-    <a class="plat-badge" href="https://apps.garmin.com/apps/7849af70-3769-4143-bea7-8c1ea5e5f847" rel="noopener">
-      <img src="{{ asset('scout/connect-iq-badge-black.png') }}" width="278" height="95" alt="{{ 'scout.plat_garmin_badge'|trans }}">
-    </a>
-    <span class="plat soon"><img class="plat-logo" src="{{ asset('scout/android-robot.svg') }}" alt="" width="17" height="20">{% trans %}scout.plat_android{% endtrans %} <span class="st">{% trans %}scout.plat_soon{% endtrans %}</span></span>
-    <span class="plat planned">{% trans %}scout.plat_karoo{% endtrans %} <span class="st">{% trans %}scout.plat_planned{% endtrans %}</span></span>
-    <span class="plat planned">{% trans %}scout.plat_iphone{% endtrans %} <span class="st">{% trans %}scout.plat_planned{% endtrans %}</span></span>
-  </div>
+  {{ include('partials/_scout_platforms.html.twig') }}
   </div>
   {# The review screen, where a ride's tags become submissions (owner
      2026-09-18). Four widths; the browser takes the one its layout needs.

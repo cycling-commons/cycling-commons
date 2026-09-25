@@ -65,8 +65,10 @@
         a.style.setProperty('--tx',(c.left+c.width/2-(r.left+r.width/2)).toFixed(1)+'px');
         a.style.setProperty('--ty',(c.top+c.height/2-(r.top+r.height/2)).toFixed(1)+'px');
       });
-      const g=grid.getBoundingClientRect(), d=dock.getBoundingClientRect();
-      dock.style.setProperty('--up',((g.top+g.height/2)-(d.top+d.height/2)).toFixed(1)+'px');
+      // Layout offsets, not rects: the dock's own rise is a transform, so a
+      // rect taken after it has risen would measure the climb as done.
+      const gy=grid.offsetTop+grid.offsetHeight/2, dy=dock.offsetTop+dock.offsetHeight/2;
+      dock.style.setProperty('--up',(gy-dy).toFixed(1)+'px');
     };
     aim();
     silo.querySelectorAll('.silo-pick').forEach(i=>i.addEventListener('change',()=>requestAnimationFrame(aim)));

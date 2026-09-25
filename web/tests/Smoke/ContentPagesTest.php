@@ -301,14 +301,14 @@ final class ContentPagesTest extends WebTestCase
 
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('community-built map of the world', $html);
-        self::assertStringContainsString('Each answer lives in its own app', $html);
+        self::assertStringContainsString('Every app offers different information', $html);
         self::assertStringNotContainsString('Today every layer lives in its own silo', $html);
 
         $frag = strpos($html, 'Cycling knowledge is scattered');
         $cur = strpos($html, 'The best of a region');
         $what = strpos($html, 'Open data about the world');
         $how = strpos($html, 'One tap at a time');
-        $scout = strpos($html, 'Scout — tag it while you ride');
+        $scout = strpos($html, 'Scout: tag it while you ride');
         self::assertNotFalse($frag);
         self::assertNotFalse($cur);
         self::assertNotFalse($what);

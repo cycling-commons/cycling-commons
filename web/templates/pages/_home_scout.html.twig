@@ -12,7 +12,7 @@
         <a class="btn btn-primary btn-sm" href="{{ path('scout') }}">{{ 'home.scout_cta'|trans }} <span class="arw">→</span></a>
       </div>
       </div>
-      {{ include('partials/_scout_devices.html.twig', {compact: true, devices: ['garmin', 'android'], uid: 'home'}) }}
+      {{ include('partials/_scout_devices.html.twig', {compact: true, chips: true, uid: 'home'}) }}
     </div>
   </div>
 </section>

@@ -1,0 +1,19 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   Where Scout runs, as badges: the store badge where it is live, a plain
+   status chip where it is not, as one row on /scout. The home page puts
+   the same badge under each device instead (_scout_devices.html.twig, chips).
+#}
+<div class="plats">
+  {# Garmin is live and links to the real store listing. The others say
+     what they are instead of pretending: an unlinked "download" would be the
+     fake-mechanism pattern the go-live gate exists to catch. #}
+  {# Garmin's own store badge, unaltered (Garmin Connect IQ brand guidelines:
+     it promotes apps available in the store, which Scout is). #}
+  <a class="plat-badge" href="https://apps.garmin.com/apps/7849af70-3769-4143-bea7-8c1ea5e5f847" rel="noopener">
+    <img src="{{ asset('scout/connect-iq-badge-black.png') }}" width="278" height="95" alt="{{ 'scout.plat_garmin_badge'|trans }}">
+  </a>
+  <span class="plat soon"><img class="plat-logo" src="{{ asset('scout/android-robot.svg') }}" alt="" width="17" height="20">{% trans %}scout.plat_android{% endtrans %} <span class="st">{% trans %}scout.plat_soon{% endtrans %}</span></span>
+  <span class="plat planned">{% trans %}scout.plat_karoo{% endtrans %} <span class="st">{% trans %}scout.plat_planned{% endtrans %}</span></span>
+  <span class="plat planned">{% trans %}scout.plat_iphone{% endtrans %} <span class="st">{% trans %}scout.plat_planned{% endtrans %}</span></span>
+</div>

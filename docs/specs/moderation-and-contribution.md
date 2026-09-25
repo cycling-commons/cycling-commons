@@ -38,6 +38,15 @@ documents own the surrounding contracts:
 
 ## 1. The `/improve` contribution wizard
 
+**Way in from the home page.** Every catalog card on the home page links to
+`/contribute#type-<item-type slug>` (`#type-quality-rides` for routes), and
+each card on the `/contribute` hub carries that id, so the rider lands on the
+card they clicked; `:target` marks it with an orange ring that pulses twice.
+The home cards for the types whose confirmations age
+(`ItemType::confirmationAges()`, §10.1a) show three dots, green, orange and
+red for fresh, ageing and stale, and one line above the cards explains them.
+Keep the dotted cards in step with `confirmationAges()`.
+
 `/improve` is a single-column 4-step wizard (`web/templates/contribute/improve.html.twig`,
 `web/assets/contribute/improve.js`) for adding and editing items: **1 Locate →
 2 Details → 3 Photos → 4 Review & submit**. Step 2 renders the type's

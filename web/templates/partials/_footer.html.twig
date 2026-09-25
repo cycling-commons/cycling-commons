@@ -39,7 +39,7 @@
       <a href="{{ path('developers_api') }}">{{ 'pages.card_api_h'|trans }}</a>
       <a href="{{ path('licenses') }}">{{ 'pages.card_licenses_h'|trans }}</a>
       <a href="{{ path('credits') }}">{{ 'footer.credits'|trans }}</a>
-      <a href="{{ path('blog') }}">{{ 'nav.blog'|trans }}</a>
+      {% if blog_has_posts() %}<a href="{{ path('blog') }}">{{ 'nav.blog'|trans }}</a>{% endif %}
       <a href="{{ path('changelog') }}">{{ 'footer.changelog'|trans }}</a>
       <a href="{{ path('roadmap') }}">{{ 'footer.roadmap'|trans }}</a>
       <a href="{{ path('pages') }}">{{ 'footer.all_pages'|trans }}</a>

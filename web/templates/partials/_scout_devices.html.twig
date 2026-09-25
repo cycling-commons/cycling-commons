@@ -17,14 +17,18 @@
      decorative : hidden from screen readers, no captions (default: compact)
      devices    : which to draw, in order (default: all four)
      uid        : suffix for the SVG clip ids when a page draws the set twice
+     chips      : the platform badge under each device instead of the plain
+                  caption: the store badge where Scout is live (default false)
 #}
 {% set compact = compact|default(false) %}
 {% set decorative = decorative ?? compact %}
 {% set devices = devices|default(['garmin', 'android', 'karoo', 'iphone']) %}
 {% set uid = uid|default('d') %}
+{% set chips = chips|default(false) %}
+{% set decorative = chips ? false : decorative %}
 {% set status = {garmin: 'scout.plat_available', android: 'scout.plat_soon', karoo: 'scout.plat_planned', iphone: 'scout.plat_planned'} %}
 {% set name = {garmin: 'scout.plat_garmin', android: 'scout.plat_android', karoo: 'scout.plat_karoo', iphone: 'scout.plat_iphone'} %}
-<div class="scout-devices{{ compact ? ' compact' : '' }}" aria-hidden="{{ decorative ? 'true' : 'false' }}">
+<div class="scout-devices{{ compact ? ' compact' : '' }}{{ chips ? ' with-badges' : '' }}" aria-hidden="{{ decorative ? 'true' : 'false' }}">
 {% for d in devices %}
   <figure class="dev dev-{{ d }}">
   {% if d == 'garmin' %}
@@ -76,7 +80,16 @@
       <rect x="57" y="19" width="46" height="14" rx="7" fill="#000"/>
     </svg>
   {% endif %}
-  {% if not decorative %}<figcaption>{{ name[d]|trans }} <span class="st">{{ status[d]|trans }}</span></figcaption>{% endif %}
+  {% if chips %}
+    <figcaption class="dev-badge">
+    {% if d == 'garmin' %}
+      {# Garmin's own store badge, unaltered (Connect IQ brand guidelines). #}
+      <a class="plat-badge" href="https://apps.garmin.com/apps/7849af70-3769-4143-bea7-8c1ea5e5f847" rel="noopener"><img src="{{ asset('scout/connect-iq-badge-black.png') }}" width="278" height="95" alt="{{ 'scout.plat_garmin_badge'|trans }}"></a>
+    {% else %}
+      <span class="plat {{ d == 'android' ? 'soon' : 'planned' }}">{% if d == 'android' %}<img class="plat-logo" src="{{ asset('scout/android-robot.svg') }}" alt="" width="17" height="20">{% endif %}<span class="nm">{{ name[d]|trans }} <span class="st">{{ status[d]|trans }}</span></span></span>
+    {% endif %}
+    </figcaption>
+  {% elseif not decorative %}<figcaption>{{ name[d]|trans }} <span class="st">{{ status[d]|trans }}</span></figcaption>{% endif %}
   </figure>
 {% endfor %}
 </div>

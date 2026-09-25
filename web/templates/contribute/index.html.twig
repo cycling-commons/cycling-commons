@@ -12,6 +12,11 @@
   .card{position:relative;display:flex;flex-direction:column;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.3rem;transition:all .22s;overflow:hidden}
   .card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5);border-color:var(--trail)}
   .card .ic{font-size:1.5rem;margin-bottom:.7rem;display:block;filter:brightness(0)}
+  /* Arriving from a home-page card (/contribute#type-…): that card is marked. */
+  .card{scroll-margin-top:6rem}
+  .card:target{border-color:var(--trail);box-shadow:0 0 0 3px rgba(255,90,31,.35);animation:cardHi 1.4s ease-out 2}
+  @keyframes cardHi{0%{box-shadow:0 0 0 0 rgba(255,90,31,.55)}100%{box-shadow:0 0 0 12px rgba(255,90,31,0)}}
+  @media (prefers-reduced-motion:reduce){.card:target{animation:none}}
   .card h4{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:.3rem}
   .card p{font-size:.90rem;color:#4a4d40;line-height:1.55;margin-bottom:1rem}
   .card .go{margin-top:auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
@@ -42,44 +47,44 @@
 <section class="pad"><div class="wrap">
   <h3 class="cat-h"><b>{{ 'contribute_hub.cat_practical_h'|trans }}</b> <span>{{ 'contribute_hub.cat_practical_sub'|trans }}</span></h3>
   <div class="grid">
-    <a class="card" href="{{ path('improve', {type: 'road-surface', mode: 'add'}) }}">
+    <a class="card" id="type-road-surface" href="{{ path('improve', {type: 'road-surface', mode: 'add'}) }}">
       <span class="ic">▰</span>
       <h4>{{ 'contribute_hub.card_surface_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_surface_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_surface_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('improve', {type: 'water-food', mode: 'add'}) }}">
+    <a class="card" id="type-water-food" href="{{ path('improve', {type: 'water-food', mode: 'add'}) }}">
       <span class="ic">💧</span>
       <h4>{{ 'contribute_hub.card_water_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_water_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_water_go'|trans }}</span>
     </a>
     {# Toilets (C) sit next to water, in catalogue order. #}
-    <a class="card" href="{{ path('improve', {type: 'public-toilets', mode: 'add'}) }}">
+    <a class="card" id="type-public-toilets" href="{{ path('improve', {type: 'public-toilets', mode: 'add'}) }}">
       <span class="ic">🚻</span>
       <h4>{{ 'contribute_hub.card_toilets_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_toilets_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_toilets_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('improve', {type: 'bike-services', mode: 'add'}) }}">
+    <a class="card" id="type-bike-services" href="{{ path('improve', {type: 'bike-services', mode: 'add'}) }}">
       <span class="ic">⚙</span>
       <h4>{{ 'contribute_hub.card_services_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_services_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_services_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('improve', {type: 'hazards', mode: 'add'}) }}">
+    <a class="card" id="type-hazards" href="{{ path('improve', {type: 'hazards', mode: 'add'}) }}">
       <span class="ic">⚠</span>
       <h4>{{ 'contribute_hub.card_hazards_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_hazards_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_hazards_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('improve', {type: 'getting-there', mode: 'add'}) }}">
+    <a class="card" id="type-getting-there" href="{{ path('improve', {type: 'getting-there', mode: 'add'}) }}">
       <span class="ic">🚆</span>
       <h4>{{ 'contribute_hub.card_transit_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_transit_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_transit_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('improve', {type: 'shelter', mode: 'add'}) }}">
+    <a class="card" id="type-shelter" href="{{ path('improve', {type: 'shelter', mode: 'add'}) }}">
       <span class="ic">⛑</span>
       <h4>{{ 'contribute_hub.card_shelter_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_shelter_p'|trans }}</p>
@@ -89,31 +94,31 @@
 
   <h3 class="cat-h"><b>{{ 'contribute_hub.cat_emotional_h'|trans }}</b> <span>{{ 'contribute_hub.cat_emotional_sub'|trans }}</span></h3>
   <div class="grid">
-    <a class="card" href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">
+    <a class="card" id="type-climbs" href="{{ path('improve', {type: 'climbs', mode: 'add'}) }}">
       <span class="ic"><svg class="ic-mtn" viewBox="0 0 24 18" width="26" height="20" aria-hidden="true" focusable="false"><path d="M0 18 L7.5 4 L11 10 L14.5 5.5 L24 18 Z" fill="currentColor"/></svg></span>
       <h4>{{ 'contribute_hub.card_climbs_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_climbs_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_climbs_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('improve', {type: 'where-to-sleep', mode: 'add'}) }}">
+    <a class="card" id="type-where-to-sleep" href="{{ path('improve', {type: 'where-to-sleep', mode: 'add'}) }}">
       <span class="ic">⛺</span>
       <h4>{{ 'contribute_hub.card_sleep_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_sleep_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_sleep_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('improve', {type: 'scenic-views', mode: 'add'}) }}">
+    <a class="card" id="type-scenic-views" href="{{ path('improve', {type: 'scenic-views', mode: 'add'}) }}">
       <span class="ic">📷</span>
       <h4>{{ 'contribute_hub.card_views_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_views_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_views_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('improve', {type: 'history-culture', mode: 'add'}) }}">
+    <a class="card" id="type-history-culture" href="{{ path('improve', {type: 'history-culture', mode: 'add'}) }}">
       <span class="ic">🏛</span>
       <h4>{{ 'contribute_hub.card_history_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_history_p'|trans }}</p>
       <span class="go">{{ 'contribute_hub.card_history_go'|trans }}</span>
     </a>
-    <a class="card" href="{{ path('propose_route') }}">
+    <a class="card" id="type-quality-rides" href="{{ path('propose_route') }}">
       <span class="ic">★</span>
       <h4>{{ 'contribute_hub.card_rides_h'|trans }}</h4>
       <p>{{ 'contribute_hub.card_rides_p'|trans }}</p>

@@ -353,6 +353,8 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
    window with no breakpoint to keep in sync. */
 .foot .footcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));
   gap:1.6rem 2.5rem;margin-bottom:.6rem}
+/* A phone takes two columns, not one long list (owner 2026-09-25). */
+@media(max-width:560px){.foot .footcols{grid-template-columns:repeat(2,minmax(0,1fr));gap:1.4rem 1.2rem}}
 .foot .footcol{display:flex;flex-direction:column;gap:.35rem;min-width:0}
 /* `line-height` and `max-width` are pinned as well as the type: the landing
    page styles a bare `h2` for its section headings, and anything it declares
