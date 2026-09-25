@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS coverage_run_step (
     detail     text
 )
 """,
+    # points | routes | surface; added after the table shipped, hence ALTER.
+    "ALTER TABLE coverage_run ADD COLUMN IF NOT EXISTS family text NOT NULL DEFAULT 'points'",
     "CREATE INDEX IF NOT EXISTS coverage_run_step_region_step_idx "
     "ON coverage_run_step (region, step, started_at)",
     # One source of truth for "when was this slug last loaded": a never-loaded
@@ -87,11 +89,11 @@ class RunTracker:
         self.run_id = None
         self._attached = False
 
-    def start(self, trigger: str, regions_requested: int) -> int:
+    def start(self, trigger: str, regions_requested: int, *, family: str = "points") -> int:
         self.run_id = self.conn.execute(
-            "INSERT INTO coverage_run (started_at, trigger, status, regions_requested) "
-            "VALUES (now(), %s, 'running', %s) RETURNING id",
-            (trigger, regions_requested),
+            "INSERT INTO coverage_run (started_at, trigger, status, regions_requested, family) "
+            "VALUES (now(), %s, 'running', %s, %s) RETURNING id",
+            (trigger, regions_requested, family),
         ).fetchone()[0]
         self._attached = False
         return self.run_id
@@ -100,6 +102,11 @@ class RunTracker:
         """Append steps to a run somebody else (the dispatcher) owns and will finish."""
         self.run_id = run_id
         self._attached = True
+
+    def reopen(self, run_id: int) -> None:
+        """Take over a run this process started on an earlier connection, to finish it."""
+        self.run_id = run_id
+        self._attached = False
 
     @contextlib.contextmanager
     def step(self, region: str | None, name: str) -> Iterator[StepStats]:
@@ -122,7 +129,7 @@ class RunTracker:
         self.conn.execute(_STEP_INSERT, (self.run_id, region, name, seconds, seconds,
                                          bytes, rows, status, detail))
 
-    def finish(self, status: str, regions_loaded: int, published_url: str | None = None) -> None:
+    def finish(self, status: str, regions_loaded: int | None, published_url: str | None = None) -> None:
         if self._attached or self.run_id is None:
             return
         self.conn.execute(

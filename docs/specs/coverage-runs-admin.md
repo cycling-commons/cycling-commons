@@ -25,11 +25,20 @@ this page reads them. Nothing new is measured.
 | Column | Source |
 |---|---|
 | started | `coverage_run.started_at`, local time |
+| tiles | `family` (`points`, `routes`, `surface`): which tile family the run built |
 | trigger | `trigger` (`dispatcher`, `bootstrap`, `manual`) |
 | status | `status`; a `running` row older than twelve hours reads **abandoned** (a killed run never finishes its row) |
-| regions | `regions_loaded` of `regions_requested` |
+| regions | `regions_loaded` of `regions_requested`; routes and surface runs load nothing, so only `regions_requested` |
 | took | `finished_at - started_at` |
-| rebuilt | the coverage-point countries rebuilt this run, from `published_url` (comma-separated; empty when nothing changed). Surface and routes rebuilds are not recorded here |
+| rebuilt | the countries this run published, from `published_url` (comma-separated; empty when nothing changed). A surface run adds `gaps` when it republished the world gap grid |
+
+A `--routes` / `--surface` run opens its own row with one step,
+`<family>_extract` (with `--extract-only`) or `<family>_publish`, whose
+`detail` repeats the rebuilt countries. Inside the dispatcher those publish
+passes get the night's `--run-id`, so their steps land under the night's run
+and open no row. The pipeline writes these rows over two short connections, one
+before and one after the build; a database that is down costs the history, not
+the tiles.
 
 **One run**, `/admin/coverage-runs/{id}`: the same header, then a table of its
 steps grouped by region, in `started_at` order:

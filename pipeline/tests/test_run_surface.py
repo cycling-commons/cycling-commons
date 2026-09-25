@@ -633,3 +633,49 @@ def test_an_empty_todo_arm_is_published_without_that_arm(tiled, offline, contrac
     monkeypatch.setattr(run, "extract_region", only_classified)
     assert _run_surface(["europe/netherlands"], offline, contract) == 0
     assert "surface-todo-nl.pmtiles" not in tiled["built"]
+
+
+def test_a_published_surface_run_reports_the_countries_it_rebuilt(tiled, offline, contract):
+    rebuilt: list[str] = []
+    assert _run_surface(["europe/netherlands"], offline, contract, rebuilt=rebuilt) == 0
+    assert rebuilt == ["nl"]
+
+
+def test_a_published_world_gap_grid_is_reported_as_gaps(tiled, offline, contract):
+    (offline / "north-america-us-california-latest.osm.pbf").write_bytes(b"pbf")
+    _current_cells(offline, skip=("north-america/us/california",))
+    rebuilt: list[str] = []
+    assert _run_surface(["north-america/us/california"], offline, contract, rebuilt=rebuilt) == 0
+    assert rebuilt == ["gaps"]
+
+
+def test_a_failed_surface_publish_reports_nothing_rebuilt(tiled, offline, contract, monkeypatch):
+    def refused(family, built, *, gaps=None, retire=()):
+        raise RuntimeError("S3 503")
+    monkeypatch.setattr(run, "publish_countries", refused)
+    rebuilt: list[str] = []
+    assert _run_surface(["europe/netherlands"], offline, contract, rebuilt=rebuilt) == 1
+    assert rebuilt == []
+
+
+def test_an_extract_only_surface_run_reports_nothing_rebuilt(tiled, offline, contract):
+    rebuilt: list[str] = []
+    assert _run_surface(["europe/netherlands"], offline, contract, extract_only=True,
+                        rebuilt=rebuilt) == 0
+    assert rebuilt == []
+
+
+def test_a_published_routes_run_reports_the_countries_it_rebuilt(routed, offline, contract):
+    rebuilt: list[str] = []
+    assert _run_routes(["europe/belgium", "europe/netherlands"], offline, contract,
+                       rebuilt=rebuilt) == 0
+    assert rebuilt == ["be", "nl"]
+
+
+def test_a_failed_routes_publish_reports_nothing_rebuilt(routed, offline, contract, monkeypatch):
+    def refused(family, built, *, gaps=None, retire=()):
+        raise RuntimeError("S3 503")
+    monkeypatch.setattr(run, "publish_countries", refused)
+    rebuilt: list[str] = []
+    assert _run_routes(["europe/netherlands"], offline, contract, rebuilt=rebuilt) == 1
+    assert rebuilt == []

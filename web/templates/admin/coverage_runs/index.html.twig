@@ -11,6 +11,7 @@
 
 {% block main %}
   {% set statuses = ['running', 'ok', 'partial', 'failed', 'abandoned'] %}
+  {% set families = ['points', 'routes', 'surface'] %}
   <div class="col-lg-10">
     <p class="text-muted">{{ 'admin.coverage_runs.lead'|trans }}</p>
 
@@ -21,6 +22,7 @@
         <thead>
           <tr>
             <th>{{ 'admin.coverage_runs.col_started'|trans }}</th>
+            <th>{{ 'admin.coverage_runs.col_family'|trans }}</th>
             <th>{{ 'admin.coverage_runs.col_trigger'|trans }}</th>
             <th>{{ 'admin.coverage_runs.col_status'|trans }}</th>
             <th>{{ 'admin.coverage_runs.col_regions'|trans }}</th>
@@ -36,6 +38,7 @@
                   {{ run.started_at|date('Y-m-d H:i') }}
                 </a>
               </td>
+              <td data-family="{{ run.family }}">{{ run.family in families ? ('admin.coverage_runs.family.' ~ run.family)|trans : run.family }}</td>
               <td>{{ run.trigger }}</td>
               {# an unknown status (a pipeline the app has not caught up with) still reads #}
               <td>{{ run.status in statuses ? ('admin.coverage_runs.status.' ~ run.status)|trans : run.status }}</td>

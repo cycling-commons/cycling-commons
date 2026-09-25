@@ -44,7 +44,7 @@ final class CoverageRunController extends AbstractController
     {
         $runs = $this->db->fetchAllAssociative(
             \sprintf(<<<'SQL'
-                SELECT r.id, r.started_at, r.finished_at, r.trigger,
+                SELECT r.id, r.started_at, r.finished_at, r.trigger, r.family,
                        CASE WHEN r.status = 'running' AND r.started_at < now() - INTERVAL '%s'
                             THEN 'abandoned' ELSE r.status END AS status,
                        r.regions_requested, r.regions_loaded, r.published_url,

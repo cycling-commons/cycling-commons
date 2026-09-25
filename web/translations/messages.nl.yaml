@@ -4273,6 +4273,7 @@ admin:
     col_regions: "Regio's"
     col_took: "Duur"
     col_rebuilt: "Herbouwd"
+    col_family: "Tegels"
     regions_of: "%loaded% van %requested%"
     one_title: "Coverage-oogst van %started%"
     no_steps: "Deze oogst heeft geen stappen vastgelegd."
@@ -4281,6 +4282,10 @@ admin:
     previous: "vorige %previous%"
     dropped_by_rule: "weggelaten per regel:"
     back: "Terug naar alle oogsten"
+    family:
+      points: "punten"
+      routes: "routes"
+      surface: "ondergrond"
     status:
       running: "bezig"
       ok: "ok"

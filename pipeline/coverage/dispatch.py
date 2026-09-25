@@ -144,7 +144,7 @@ def main(argv=None) -> int:
                 print(f"[dispatch] publish FAILED (rc {rc})", file=sys.stderr)
             with _offline():
                 for family in ("--routes", "--surface"):
-                    rc = _call(family, [family, "--regions", ",".join(universe)])
+                    rc = _call(family, [family, "--regions", ",".join(universe), "--run-id", str(run_id)])
                     if rc == 2:
                         print(f"[dispatch] {family}: another {family} run holds its run lock, "
                               "not published tonight", file=sys.stderr)

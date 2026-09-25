@@ -491,7 +491,7 @@ def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
     assert run.main(["--regions", "dev/bad,dev/ok", "--trigger", "bootstrap"]) == 1
 
     start = [p for (sql, p) in writes if "INSERT INTO coverage_run " in sql]
-    assert start == [("bootstrap", 2)]
+    assert start == [("bootstrap", 2, "points")]
     steps = [p for (sql, p) in writes if "coverage_run_step" in sql]
     # (run_id, region, step, seconds, seconds, bytes, rows, status, detail)
     assert [(p[1], p[2], p[7]) for p in steps] == [

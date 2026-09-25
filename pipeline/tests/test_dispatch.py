@@ -192,8 +192,10 @@ def test_each_loaded_region_gets_its_line_extracts_then_one_publish_pass_per_fam
                          ("--routes", "--extract-only", "--regions"),
                          ("--surface", "--extract-only", "--regions")]
     assert flags[-3:] == [("--tiles-only", "--regions", "--run-id"),
-                          ("--routes", "--regions"),
-                          ("--surface", "--regions")]
+                          ("--routes", "--regions", "--run-id"),
+                          ("--surface", "--regions", "--run-id")]
+    night = calls[-1][calls[-1].index("--run-id") + 1]
+    assert calls[-2][calls[-2].index("--run-id") + 1] == night
 
 
 def test_a_failed_line_extract_is_recorded_but_does_not_stop_the_night(db, night, monkeypatch):

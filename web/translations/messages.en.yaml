@@ -4295,6 +4295,7 @@ admin:
     col_regions: "Regions"
     col_took: "Took"
     col_rebuilt: "Rebuilt"
+    col_family: "Tiles"
     regions_of: "%loaded% of %requested%"
     one_title: "Coverage run of %started%"
     no_steps: "This run recorded no steps."
@@ -4303,6 +4304,10 @@ admin:
     previous: "previous %previous%"
     dropped_by_rule: "dropped by rule:"
     back: "Back to all runs"
+    family:
+      points: "points"
+      routes: "routes"
+      surface: "surface"
     status:
       running: "running"
       ok: "ok"

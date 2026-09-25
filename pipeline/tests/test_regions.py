@@ -76,4 +76,4 @@ def test_main_without_regions_or_env_publishes_every_onboarded_region(monkeypatc
     monkeypatch.setattr(run, "prune_family", lambda family, manifest, keep=4: [])
 
     assert run.main(["--tiles-only"]) == 0
-    assert writes == [("manual", 22)]
+    assert writes == [("manual", 22, "points")]

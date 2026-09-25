@@ -42,7 +42,7 @@ from .surface import selector_expressions as surface_selectors
 from .tiles import (TILE_PROFILE, artifact_bounds, build_gaps_pmtiles, build_pmtiles,
                     build_routes_pmtiles, build_surface_pmtiles, export_geojsonl,
                     verify_pmtiles)
-from .tracker import RunTracker
+from .tracker import RunTracker, ensure_tracker_schema
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 
@@ -394,18 +394,20 @@ def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file:
 
 
 def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
-                 publish: bool = True, retire: tuple[str, ...] = ()) -> int:
+                 publish: bool = True, retire: tuple[str, ...] = (),
+                 rebuilt: list[str] | None = None) -> int:
     """The line path, under the surface run lock; 2 when another surface run holds it."""
     with _line_run_lock("surface") as got:
         if not got:
             print("[surface] another surface run holds the run lock, exiting", file=sys.stderr)
             return 2
         return _surface_pass(regions, workdir, contract, extract_only=extract_only,
-                             publish=publish, retire=retire)
+                             publish=publish, retire=retire, rebuilt=rebuilt)
 
 
 def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
-                  publish: bool = True, retire: tuple[str, ...] = ()) -> int:
+                  publish: bool = True, retire: tuple[str, ...] = (),
+                  rebuilt: list[str] | None = None) -> int:
     """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe, per country. No
     database beyond the outline snapshot and the run lock.
 
@@ -566,6 +568,8 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
         try:
             ensure_bucket()
             doc = publish_countries("surface", built, gaps=gaps_build, retire=retire)
+            if rebuilt is not None:
+                rebuilt.extend(sorted(cc.lower() for cc in built) + (["gaps"] if gaps_build else []))
             for key in prune_family("surface", doc):
                 print(f"[surface] pruned {key}")
         except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
@@ -591,18 +595,20 @@ def _peak() -> str:
 
 
 def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
-                publish: bool = True, retire: tuple[str, ...] = ()) -> int:
+                publish: bool = True, retire: tuple[str, ...] = (),
+                rebuilt: list[str] | None = None) -> int:
     """The route-network path, under the routes run lock; 2 when another routes run holds it."""
     with _line_run_lock("routes") as got:
         if not got:
             print("[routes] another routes run holds the run lock, exiting", file=sys.stderr)
             return 2
         return _routes_pass(regions, workdir, contract, extract_only=extract_only,
-                            publish=publish, retire=retire)
+                            publish=publish, retire=retire, rebuilt=rebuilt)
 
 
 def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
-                 publish: bool = True, retire: tuple[str, ...] = ()) -> int:
+                 publish: bool = True, retire: tuple[str, ...] = (),
+                 rebuilt: list[str] | None = None) -> int:
     """The route-network path: PBF -> osmium -> two-pass extract -> tippecanoe,
     per country.
 
@@ -703,6 +709,8 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
         try:
             ensure_bucket()
             doc = publish_countries("routes", built, retire=retire)
+            if rebuilt is not None:
+                rebuilt.extend(sorted(cc.lower() for cc in built))
             for key in prune_family("routes", doc):
                 print(f"[routes] pruned {key}")
         except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
@@ -733,6 +741,65 @@ def _dur(seconds: float) -> str:
     if total < 3600:
         return f"{total // 60}m{total % 60:02d}s"
     return f"{total // 3600}h{(total % 3600) // 60:02d}m"
+
+
+def _tracked_line_run(family: str, args, regions: list[str], build) -> int:
+    """Run a --routes / --surface pass and record it in coverage_run.
+
+    Its own row, or with --run-id one step on the dispatcher's run. Two short
+    connections, one before and one after: the line builds deliberately hold
+    no Postgres session through hours of osmium and tippecanoe. A database that
+    is down costs the history, never the tiles.
+    """
+    run_id, own = args.run_id, args.run_id is None
+    if own:
+        run_id = _line_run_open(family, args.trigger, len(regions))
+    step = f"{family}_{'extract' if args.extract_only else 'publish'}"
+    region = regions[0] if len(regions) == 1 else None
+    rebuilt: list[str] = []
+    started = time.monotonic()
+    status, detail = "failed", None
+    try:
+        rc = build(rebuilt)
+        status = "ok" if rc == 0 else "failed"
+        detail = (",".join(rebuilt) or None) if rc == 0 else f"rc {rc}"
+        return rc
+    except Exception as exc:
+        detail = f"{type(exc).__name__}: {exc}"[:500]
+        raise
+    finally:
+        if run_id is not None:
+            _line_run_close(family, run_id, own, region, step, time.monotonic() - started,
+                            status, detail, rebuilt)
+
+
+def _line_run_open(family: str, trigger: str, regions: int) -> int | None:
+    dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
+    try:
+        with psycopg.connect(dsn) as conn:
+            conn.autocommit = True
+            ensure_tracker_schema(conn)
+            return RunTracker(conn).start(trigger, regions, family=family)
+    except psycopg.Error as exc:
+        print(f"[{family}] run not tracked, database unreachable: {exc}", file=sys.stderr)
+        return None
+
+
+def _line_run_close(family: str, run_id: int, own: bool, region: str | None, step: str,
+                    seconds: float, status: str, detail: str | None, rebuilt: list[str]) -> None:
+    dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
+    try:
+        with psycopg.connect(dsn) as conn:
+            conn.autocommit = True
+            tracker = RunTracker(conn)
+            if own:
+                tracker.reopen(run_id)
+            else:
+                tracker.attach(run_id)
+            tracker.record(region, step, seconds, status=status, detail=detail)
+            tracker.finish(status, None, ",".join(rebuilt) or None)
+    except psycopg.Error as exc:
+        print(f"[{family}] run {run_id} not closed, database unreachable: {exc}", file=sys.stderr)
 
 
 def main(argv=None) -> int:
@@ -796,12 +863,12 @@ def main(argv=None) -> int:
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
     contract = load_contract()
-    if args.routes:
-        return _run_routes(regions, workdir, contract, extract_only=args.extract_only,
-                           publish=not args.no_publish, retire=retire)
-    if args.surface:
-        return _run_surface(regions, workdir, contract, extract_only=args.extract_only,
-                            publish=not args.no_publish, retire=retire)
+    if args.routes or args.surface:
+        family, runner = ("routes", _run_routes) if args.routes else ("surface", _run_surface)
+        return _tracked_line_run(
+            family, args, regions,
+            lambda rebuilt: runner(regions, workdir, contract, extract_only=args.extract_only,
+                                   publish=not args.no_publish, retire=retire, rebuilt=rebuilt))
     failed = []
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with psycopg.connect(dsn) as conn:

@@ -4266,6 +4266,7 @@ admin:
     col_regions: "Régions"
     col_took: "Durée"
     col_rebuilt: "Reconstruit"
+    col_family: "Tuiles"
     regions_of: "%loaded% sur %requested%"
     one_title: "Récolte de couverture du %started%"
     no_steps: "Cette récolte n'a enregistré aucune étape."
@@ -4274,6 +4275,10 @@ admin:
     previous: "précédent %previous%"
     dropped_by_rule: "écartés par règle :"
     back: "Retour à toutes les récoltes"
+    family:
+      points: "points"
+      routes: "itinéraires"
+      surface: "revêtement"
     status:
       running: "en cours"
       ok: "ok"

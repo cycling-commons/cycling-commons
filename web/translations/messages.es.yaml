@@ -4305,6 +4305,7 @@ admin:
     col_regions: "Regiones"
     col_took: "Duración"
     col_rebuilt: "Reconstruido"
+    col_family: "Teselas"
     regions_of: "%loaded% de %requested%"
     one_title: "Recolección de cobertura del %started%"
     no_steps: "Esta recolección no registró ningún paso."
@@ -4313,6 +4314,10 @@ admin:
     previous: "anterior %previous%"
     dropped_by_rule: "descartados por regla:"
     back: "Volver a todas las recolecciones"
+    family:
+      points: "puntos"
+      routes: "rutas"
+      surface: "firme"
     status:
       running: "en curso"
       ok: "ok"

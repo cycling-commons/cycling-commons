@@ -30,7 +30,8 @@ trait CoverageRunSchema
                 status            text NOT NULL,
                 regions_requested int,
                 regions_loaded    int,
-                published_url     text
+                published_url     text,
+                family            text NOT NULL DEFAULT \'points\'
             )'
         );
         $db->executeStatement(
@@ -54,7 +55,7 @@ trait CoverageRunSchema
      * Seed one run row and return its id. `started`/`finished` are SQL
      * interval expressions relative to now(), as the pipeline writes them.
      *
-     * @param array<string, mixed> $overrides trigger|status|started|finished|requested|loaded|url
+     * @param array<string, mixed> $overrides trigger|status|started|finished|requested|loaded|url|family
      */
     private static function insertCoverageRun(Connection $db, array $overrides = []): int
     {
@@ -66,14 +67,15 @@ trait CoverageRunSchema
             'requested' => 2,
             'loaded' => 2,
             'url' => 'be,nl',
+            'family' => 'points',
         ];
 
         return (int) $db->fetchOne(
             'INSERT INTO coverage_run (started_at, finished_at, trigger, status,
-                                       regions_requested, regions_loaded, published_url)
+                                       regions_requested, regions_loaded, published_url, family)
              VALUES (now() - :started::interval,
                      CASE WHEN :finished::text IS NULL THEN NULL ELSE now() - :finished::interval END,
-                     :trigger, :status, :requested, :loaded, :url)
+                     :trigger, :status, :requested, :loaded, :url, :family)
              RETURNING id',
             $row,
         );

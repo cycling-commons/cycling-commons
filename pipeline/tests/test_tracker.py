@@ -116,3 +116,37 @@ def test_freshness_view_reports_loaded_failed_latest_and_never_loaded(db):
         "failed-latest": ("2026-09-18T01:00:00+00:00", "failed"),
         "never": (None, None),
     }
+
+
+def _family(db, run_id):
+    return db.execute("SELECT family FROM coverage_run WHERE id = %s", (run_id,)).fetchone()[0]
+
+
+def test_a_run_is_a_points_run_unless_told_otherwise(db):
+    ensure_schema(db)
+    assert _family(db, RunTracker(db).start("manual", 1)) == "points"
+
+
+def test_start_records_the_tile_family(db):
+    ensure_schema(db)
+    assert _family(db, RunTracker(db).start("manual", 22, family="routes")) == "routes"
+
+
+def test_the_family_column_is_added_to_a_table_that_predates_it(db):
+    db.execute("CREATE TABLE coverage_run (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, "
+               "started_at timestamptz NOT NULL DEFAULT now(), finished_at timestamptz, "
+               "trigger text NOT NULL, status text NOT NULL, regions_requested int, "
+               "regions_loaded int, published_url text)")
+    db.execute("INSERT INTO coverage_run (trigger, status) VALUES ('bootstrap', 'ok')")
+    ensure_schema(db)
+    assert db.execute("SELECT family FROM coverage_run").fetchone()[0] == "points"
+
+
+def test_reopen_lets_a_later_connection_finish_the_run(db):
+    ensure_schema(db)
+    run_id = RunTracker(db).start("manual", 1, family="surface")
+    later = RunTracker(db)
+    later.reopen(run_id)
+    later.finish("ok", None, "be,nl")
+    assert _run_row(db, run_id)[0] == "ok"
+    assert _run_row(db, run_id)[4] == "be,nl"

@@ -99,6 +99,22 @@ final class CoverageRunsTest extends WebTestCase
         self::assertStringContainsString('2 of 2', $html, 'regions loaded of requested');
     }
 
+    public function testTheListNamesEachRunsTileFamily(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::insertCoverageRun($db, ['family' => 'routes', 'url' => 'be']);
+        self::insertCoverageRun($db, ['family' => 'points', 'url' => 'nl']);
+
+        $client->loginUser($this->createUser('runs-family@example.com', ['ROLE_ADMIN'], admin2fa: true));
+        $crawler = $client->request('GET', $this->listUrl());
+
+        self::assertResponseIsSuccessful();
+        $cells = $crawler->filter('td[data-family]')->each(static fn ($td) => $td->attr('data-family').'='.trim($td->text()));
+        sort($cells);
+        self::assertSame(['points=points', 'routes=routes'], $cells);
+    }
+
     public function testARunLeftRunningForHalfADayReadsAbandoned(): void
     {
         $client = static::createClient();
