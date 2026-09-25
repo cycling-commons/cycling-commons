@@ -343,6 +343,11 @@
       if (onChange) onChange(publicState());
     }
 
+    function cancelRiderPoint() {
+      placingRider = false;
+      if (onChange) onChange(publicState());
+    }
+
     function placeRiderMarker() {
       if (riderM) { riderM.remove(); riderM = null; }
       if (!state.steepPoint) return;
@@ -427,6 +432,7 @@
       abortRoute();
       abortProfile();
       routeError = false; profileError = false;
+      placingRider = false;
       state.start = null; state.summit = null; state.steep = null;
       state.route = []; state.grad = []; state.gain = ''; state.lengthKm = 0;
       if (footM) { footM.remove(); footM = null; }
@@ -506,6 +512,7 @@
       destroy: destroy, reset: reset, undo: undo,
       canUndo: function () { return history.length > 0; },
       markSteepestPoint: armRiderPoint,
+      cancelSteepestPoint: cancelRiderPoint,
       clearSteepestPoint: clearRiderPoint,
       setSteepestPoint: setRiderPoint
     };

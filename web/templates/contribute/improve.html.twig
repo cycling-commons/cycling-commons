@@ -169,6 +169,16 @@
   .pin-photos-why{margin:.45rem 0 0;font-size:.82rem;line-height:1.6;color:rgba(255,255,255,.92)}
   .pin-photos-why:empty{display:none}
   .wz-measured{display:flex;flex-wrap:wrap;gap:.6rem 2rem;margin:.8rem 0 0}
+  .wz-rider{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.6rem 1.2rem;margin:.6rem 0 0;font-family:var(--mono);font-size:.72rem}
+  .wz-rider [role=button]{color:var(--clay);cursor:pointer;text-transform:uppercase;letter-spacing:.1em}
+  .wz-rider [role=button]:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:4px}
+  .wz-rider-fields{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.6rem 1.2rem}
+  .wz-rider label{display:flex;flex-direction:column;gap:.2rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d}
+  .wz-rider input{font:inherit;font-size:.9rem;letter-spacing:0;text-transform:none;padding:.35rem .5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper,#fff);color:var(--ink)}
+  .wz-rider input#wzRiderPct{width:6.5rem}
+  .wz-rider input#wzRiderNote{width:min(22rem,100%)}
+  .wz-rider input:invalid{border-color:var(--clay)}
+  .wz-rider[hidden],.wz-rider-fields[hidden],.wz-rider [hidden]{display:none}
   .wz-measured div{display:flex;flex-direction:column;gap:.15rem}
   .wz-measured dt{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d}
   .wz-measured dd{margin:0;font-size:1.05rem;color:var(--ink)}
@@ -436,6 +446,7 @@
     climb_route_error: 'improve.step1.climb_route_error'|trans,
     climb_profile_error: 'improve.step1.climb_profile_error'|trans,
     climb_drag_hint: 'improve.step1.climb_drag_hint'|trans,
+    rider_tap: 'improve.step1.rider_tap'|trans,
     toast_pin_moved: 'improve.step1.toast_pin_moved'|trans,
     toast_segment_moved: 'improve.step1.toast_segment_moved'|trans,
     toast_segment_straight: 'improve.step1.toast_segment_straight'|trans,
@@ -479,7 +490,7 @@
     }
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# Translated marker labels for the shared climb editor (foot/summit/steepest) — read as a fallback by climb-editor.js when a mount call doesn't pass opts.labels explicitly. #}
-  <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_EDITOR_LABELS = {{ {foot: 'js.climb_marker_foot'|trans, summit: 'js.climb_marker_summit'|trans, steepest: 'js.climb_marker_steepest'|trans, riderSteep: 'js.climb_marker_rider'|trans}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# The stateless 'elevation' CSRF token climb-elevation.js sends as
      X-CC-Token (config/packages/csrf.yaml stateless_token_ids). #}
   <script nonce="{{ csp_nonce() }}">window.CC_ELEV_TOKEN = {{ csrf_token('elevation')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
@@ -602,6 +613,18 @@
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
     {% if item_type.letter == 'N' %}
+      {# Optional rider steepest point, beside the measured one (docs/specs/climb-elevation.md); rider-steep.js. #}
+      <div class="wz-rider" id="wz-rider" hidden>
+        <span id="wzRiderMark" role="button" tabindex="0">{{ 'improve.step1.rider_mark'|trans }}</span>
+        <span id="wzRiderCancel" role="button" tabindex="0" hidden>{{ 'improve.step1.rider_cancel'|trans }}</span>
+        <div class="wz-rider-fields" id="wzRiderFields" hidden>
+          <label>{{ 'improve.step1.rider_pct'|trans }}
+            <input type="text" id="wzRiderPct" inputmode="decimal" maxlength="7" autocomplete="off" placeholder="{{ 'improve.step1.rider_pct_ph'|trans }}" data-invalid="{{ 'improve.step1.rider_pct_invalid'|trans }}"></label>
+          <label>{{ 'improve.step1.rider_note'|trans }}
+            <input type="text" id="wzRiderNote" maxlength="120" autocomplete="off" placeholder="{{ 'improve.step1.rider_note_ph'|trans }}"></label>
+          <span id="wzRiderRemove" role="button" tabindex="0">{{ 'improve.step1.rider_remove'|trans }}</span>
+        </div>
+      </div>
       {# What the elevation model measured along the line: shown, never typed
          (docs/specs/climb-elevation.md §4). Filled by improve.js. #}
       <dl class="wz-measured" id="wz-measured" hidden>
@@ -926,6 +949,7 @@
 <script src="{{ asset('contribute/editor-base.js') }}"></script>
 <script src="{{ asset('contribute/climb-elevation.js') }}"></script>
 <script src="{{ asset('contribute/climb-editor.js') }}"></script>
+<script src="{{ asset('contribute/rider-steep.js') }}"></script>
 {# coords.js registers window.Cc.parseLatLng — the place-search box reads it at
    mount time so a coordinate copied off the map can be pasted straight in. #}
 <script src="{{ asset('contribute/coords.js') }}"></script>

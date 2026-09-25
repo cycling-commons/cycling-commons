@@ -1094,6 +1094,12 @@ honest definitions beat one field with a negotiable one.
 - **It travels as geometry**, through the same submission and moderation path as
   the line itself — no new review mechanic
   ([moderation-and-contribution.md](moderation-and-contribution.md)).
+- **The editor control, 2026-09-25** (`rider-steep.js`). Under the map, once
+  foot and summit are set: **+ Steepest point** arms a mode, the next tap places
+  the marker, **Cancel** or Escape leaves the mode without one. A placed point
+  shows two optional fields, gradient (`20` becomes `20%`; anything the server
+  would refuse is not stored) and note, plus **Remove**. The measured marker
+  reads "steepest 250 m" beside it, so the two numbers say what they measure.
 
 **Still open:** whether a climb may carry more than one, and whether the rider's
 figure should ever appear in listings or sorting. It does not today, and that is

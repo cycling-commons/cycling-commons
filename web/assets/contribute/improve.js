@@ -412,6 +412,20 @@
         set('wzm-avg', st.avg ? st.avg + ' %' : '');
         set('wzm-max', (st.steep && st.steep.pct) ? String(st.steep.pct).replace(/\s*%$/, '') + ' %' : '');
       };
+      var riderCtl = null;
+      if (window.Cc.riderSteep && document.getElementById('wz-rider')) {
+        var rEl = function (id) { return document.getElementById(id); };
+        // Mounted before the editor so its first onChange already renders these.
+        riderCtl = window.Cc.riderSteep.mount({
+          markSteepestPoint: function () { climbEditor.markSteepestPoint(); },
+          cancelSteepestPoint: function () { climbEditor.cancelSteepestPoint(); },
+          clearSteepestPoint: function () { climbEditor.clearSteepestPoint(); },
+          setSteepestPoint: function (at, pct, note) { climbEditor.setSteepestPoint(at, pct, note); }
+        }, {
+          box: rEl('wz-rider'), mark: rEl('wzRiderMark'), cancel: rEl('wzRiderCancel'), fields: rEl('wzRiderFields'),
+          pct: rEl('wzRiderPct'), note: rEl('wzRiderNote'), remove: rEl('wzRiderRemove')
+        }, document);
+      }
       climbEditor = window.Cc.mountClimbEditor({
         map: wmap,
         hidden: { route: fld('route'), grad: fld('grad'), steep: fld('steep'), avg: fld('avg'), steepPoint: fld('steepPoint') },
@@ -424,7 +438,11 @@
           if (fLatC) fLatC.value = st.start ? st.start[1] : '';
           if (fLngC) fLngC.value = st.start ? st.start[0] : '';
           WZ.locPending = !!(st.routing || st.profiling);
-          if (st.start && st.summit) {
+          if (riderCtl) riderCtl.render(st);
+          if (st.placingRider) {
+            if (ro) ro.textContent = t('rider_tap');
+            setMapHint(t('rider_tap'));
+          } else if (st.start && st.summit) {
             WZ.loc = { type: 'climb', start: st.start, summit: st.summit, lengthKm: st.lengthKm,
                        gain: st.gain || '', avg: st.avg || '', max: (st.steep && st.steep.pct) || '' };
             if (ro) {
