@@ -25,6 +25,8 @@ enum BugStatus: string
 {
     /** Filed, nobody has looked yet. */
     case New = 'new';
+    /** Read, but nobody has confirmed it is real yet: check the data or the site first. */
+    case NeedsValidation = 'needs_validation';
     /** Read, confirmed, and queued to fix. */
     case Planned = 'planned';
     /** Somebody is on it now. */
@@ -39,13 +41,13 @@ enum BugStatus: string
     /** @return list<self> desk filter order */
     public static function all(): array
     {
-        return [self::New, self::Planned, self::InProgress, self::NeedsTesting, self::Resolved, self::Declined];
+        return [self::New, self::NeedsValidation, self::Planned, self::InProgress, self::NeedsTesting, self::Resolved, self::Declined];
     }
 
     /** @return list<self> still costing somebody something */
     public static function open(): array
     {
-        return [self::New, self::Planned, self::InProgress, self::NeedsTesting];
+        return [self::New, self::NeedsValidation, self::Planned, self::InProgress, self::NeedsTesting];
     }
 
     public function isOpen(): bool

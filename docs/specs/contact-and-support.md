@@ -276,8 +276,10 @@ not a curator-managed table, because a list curators can grow ends up holding
 "Map", "map" and "Maps" within a month). The area is guessed from the path, locale
 prefix stripped, and the reporter can change it.
 
-**Status** ({@see App\Support\BugStatus}): new, planned, in progress, needs
-checking, resolved, declined. The reporter is mailed **once**, and only on
+**Status** ({@see App\Support\BugStatus}): new, to be confirmed, planned, in
+progress, needs checking, resolved, declined. "To be confirmed"
+(`needs_validation`) is a report a curator has read but nobody has shown to be
+real yet: check the data or the site before planning work on it. The reporter is mailed **once**, and only on
 resolved or declined: being told a report moved between two internal states is
 noise, and noise teaches people to ignore the next mail. `notifiedAt` is what
 stops a curator flipping a status twice from mailing twice.
@@ -756,17 +758,13 @@ tab nobody opens. `SupportRepository::narrow()` applies the condition for the
 list and the count in one place, because two copies of it is how a page ends up
 paginating twelve issues over a list of nine.
 
-**Seeded known issues** (2026-09-06, owner: "update the buglist with things
-from the todo"). Bugs found in the backlog before anybody filed them belong on
-the public list too, and in every environment alike. They live in
-`web/config/known_issues.yaml` (public title, body, severity, area, status, and
-optional `steps`: how to test it, shown to curators on the bug page) and
-`app:bugs:seed-known` files them through the same `BugReport` entity the desk
-uses, public from the start, with an internal note saying where they came
-from. A public title already present is skipped, so a re-run never overwrites
-what a curator changed on the desk, and a resolved one stays resolved.
-Deploying a new entry is: add it to the file, deploy, run the command once.
-Pinned by `SeedKnownIssuesCommandTest`.
+**Known issues are data, never code** (owner 2026-09-26: "bugs can never be
+part of the code"). The list at `/known-issues` is the `bug_report` rows a
+curator marked public, nothing else. There is no seed file and no seed
+command. An entry is added or changed on the desk, or, for a
+one-off reset of a whole environment, by a SQL script kept outside the
+repository. How curators add public entries directly on production, and how
+the list relates to GitHub issues, is still open (docs/TODO.md, 2026-09-26).
 
 **My bugs** (`/account/reports`, tab and heading "My bugs") shows a rider
 their own bug reports and only their own. It is not called "reports": the
