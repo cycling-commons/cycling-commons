@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Configuration reference: https://symfony.com/bundles/SchebTwoFactorBundle/index.html
+parameters:
+    # A host without the variable keeps working under the production name.
+    env(TOTP_ISSUER): 'Cycling Commons'
+
 scheb_two_factor:
     security_tokens:
         - Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken
@@ -7,7 +11,7 @@ scheb_two_factor:
 
     totp:
         enabled: true
-        issuer: 'Cycling Commons'
+        issuer: '%env(TOTP_ISSUER)%'
         template: security/2fa_login.html.twig
         # One window either side, so a phone clock that drifts by a few seconds
         # is not a lockout (owner, 2026-08-30). At the bundle default of 0, a
