@@ -42,7 +42,7 @@ from .surface import selector_expressions as surface_selectors
 from .tiles import (TILE_PROFILE, artifact_bounds, build_gaps_pmtiles, build_pmtiles,
                     build_routes_pmtiles, build_surface_pmtiles, export_geojsonl,
                     verify_pmtiles)
-from .tracker import RunTracker, ensure_tracker_schema
+from .tracker import RunTracker
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 
@@ -778,10 +778,12 @@ def _line_run_open(family: str, trigger: str, regions: int) -> int | None:
     try:
         with psycopg.connect(dsn) as conn:
             conn.autocommit = True
-            ensure_tracker_schema(conn)
+            # The full bootstrap, not only the tracker tables: the freshness view
+            # reads coverage_source, which a fresh database does not have yet.
+            ensure_schema(conn)
             return RunTracker(conn).start(trigger, regions, family=family)
-    except psycopg.Error as exc:
-        print(f"[{family}] run not tracked, database unreachable: {exc}", file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001 - the history must never stop the tiles
+        print(f"[{family}] run not tracked: {exc}", file=sys.stderr)
         return None
 
 
@@ -798,8 +800,8 @@ def _line_run_close(family: str, run_id: int, own: bool, region: str | None, ste
                 tracker.attach(run_id)
             tracker.record(region, step, seconds, status=status, detail=detail)
             tracker.finish(status, None, ",".join(rebuilt) or None)
-    except psycopg.Error as exc:
-        print(f"[{family}] run {run_id} not closed, database unreachable: {exc}", file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001 - the history must never stop the tiles
+        print(f"[{family}] run {run_id} not closed: {exc}", file=sys.stderr)
 
 
 def main(argv=None) -> int:
