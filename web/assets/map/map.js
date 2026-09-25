@@ -91,12 +91,15 @@ import { layerGlyph } from './icons.js';
     }
     // ?feature=<name> drawer + zoom; coverage POIs via search when local index misses.
     // ?item=<id> — moderation "what did I approve", by id not name.
-    if(ip) openFeatureById(ip);
+    // A link whose target is gone says so, instead of silently showing the
+    // rider's own area (docs/TODO.md 2026-09-25, a link must work years later).
+    const gone = () => mapToast(D.linkGone || 'This place is no longer on the map.');
+    if(ip && !openFeatureById(ip)) gone();
     if(fp && !openFeatureByName(fp)) openCoverageFeatureByName(fp);
     // ?ref= widens on its own hit, like ?feature=: it cannot be resolved locally.
     if(xp) openCoverageByOsmRef(xp);
-    if(pp) openPendingById(pp);
-    if(rp) openRouteById(rp);
+    if(pp && !openPendingById(pp)) gone();
+    if(rp && !openRouteById(rp)) gone();
     // ?finding=<id> — curator duplicate resolve. Last, so it owns the drawer
     // if a link ever carries both params.
     initDuplicateResolve();

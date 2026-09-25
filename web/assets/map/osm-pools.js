@@ -6,7 +6,7 @@ import { showTip, hideTip } from './sheet.js';
 import { D } from './i18n.js';
 import { layerByKey, active, mode } from './catalog.js';
 import { inScope } from './scope-ui.js';
-import { mintKindIcons, pinEl, clusterEl } from './icons.js';
+import { mintKindIcons, pinEl, clusterEl, stateOf } from './icons.js';
 import { staysAccessible, shownAnyway } from './render.js';
 import { modeShows } from './filters.js';
 import { splitPool, mergeListed, listedLettersChanged } from './ride-places.js';
@@ -181,10 +181,15 @@ export function confLeafPin(st, p, co){
   const verified = !!p.v;
   const el=pinEl(st.layer, p);
   el.style.cursor='pointer'; el.tabIndex=0; el.setAttribute('role','button');
-  const tip = drawerF.name+' · '+drawerF.headline
-    + (verified ? '' : ' · '+(D.needsCheck||'not confirmed yet — check it if you ride past'));
-  el.setAttribute('aria-label', drawerF.name+' — '+drawerF.headline
-    + (verified ? '' : ' — '+(D.needsCheck||'not confirmed yet')));
+  // The red "!" outranks the "?": a place reported out of order or closed
+  // asks the rider to check whether it still is, confirmed or not (§6.4).
+  const out = stateOf(p)==='warn'
+    ? (p.condition==='Closed' ? (D.tipClosed||'still closed? Check it if you ride past')
+                              : (D.tipOutOfOrder||'still out of order? Check it if you ride past'))
+    : null;
+  const note = out || (verified ? '' : (D.needsCheck||'not confirmed yet, check it if you ride past'));
+  const tip = drawerF.name+' · '+drawerF.headline + (note ? ' · '+note : '');
+  el.setAttribute('aria-label', drawerF.name+', '+drawerF.headline + (note ? ', '+note : ''));
   // stopPropagation: no rendered layer under this DOM pin — without it the map would re-scope (docs/specs/map-and-search.md §4.5).
   el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(st.layer, drawerF); flyToPin(lngLat); });
   el.addEventListener('mouseenter', ()=>showTip(tip, lngLat));

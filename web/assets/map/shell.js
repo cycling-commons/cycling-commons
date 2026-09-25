@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Map shell: icon rail and drawer (docs/specs/map-and-search.md §4).
-   One section at a time; the same icon, ✕, or Escape closes it. Ships closed.
-   Nothing else opens it. The drawer is a flex sibling of #map, so MapLibre
+   One section at a time; the same icon, ✕, or Escape closes it. Ships closed,
+   unless the URL names a section: /map?panel=tools is the home page's
+   "check your route" link. The drawer is a flex sibling of #map, so MapLibre
    must be told to resize after the width transition. */
 
 import { map } from './map-init.js';
@@ -92,6 +93,51 @@ export function initShell(){
   });
 
   closePanel();   // closed on load: the map is the hero
+
+  // ?panel=<key> opens one rail section; an unknown key leaves the map closed.
+  const wanted = new URLSearchParams(location.search).get('panel');
+  if(wanted && buttons.some(b => b.dataset.panel === wanted)){
+    openPanel(wanted);
+    if(wanted === 'tools') cueGpx(dwr);
+  }
+}
+
+/* Point a rider who came for the GPX check at the one button that starts it.
+   The arrow sits on the map just right of the drawer, level with Choose GPX,
+   and goes away with the first pick, file or close. */
+function cueGpx(dwr){
+  const pick = document.getElementById('rcPick');
+  if(!pick) return;
+  pick.classList.add('cue');
+  const arrow = document.createElement('div');
+  arrow.className = 'gpx-cue';
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.innerHTML = '<svg viewBox="0 0 64 32" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M60 16H8M20 4 6 16l14 12"/></svg>';
+
+  const place = () => {
+    const d = dwr.getBoundingClientRect(), b = pick.getBoundingClientRect();
+    const fits = dwr.classList.contains('open') && b.height > 0 && d.right + 90 < window.innerWidth;
+    arrow.hidden = !fits;
+    arrow.style.left = (d.right + 14) + 'px';
+    arrow.style.top = (b.top + b.height / 2 - 16) + 'px';
+  };
+  document.body.appendChild(arrow);
+  place();
+  setTimeout(place, 260);   // after the drawer's width transition
+  window.addEventListener('resize', place);
+  // Capture: whichever box scrolls the panel, the arrow follows the button.
+  document.addEventListener('scroll', place, {capture: true, passive: true});
+
+  const done = () => {
+    pick.classList.remove('cue');
+    arrow.remove();
+    window.removeEventListener('resize', place);
+    document.removeEventListener('scroll', place, {capture: true});
+    watch.disconnect();
+  };
+  const watch = new MutationObserver(() => { if(!dwr.classList.contains('open')) done(); });
+  watch.observe(dwr, {attributes: true, attributeFilter: ['class']});
+  pick.addEventListener('click', done, {once: true});
 }
 
 /* Dot on the Layers icon when a chip filter is narrowing the map.

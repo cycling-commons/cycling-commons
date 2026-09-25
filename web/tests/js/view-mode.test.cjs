@@ -64,6 +64,6 @@ test('render.js, the route reveal pin and the deep-link lift read the one rule',
   // map.js lifts before it opens, for every local-feature deep link.
   const mapJs = read('assets/map/map.js');
   assert.match(mapJs, /liftModeFor\(/);
-  assert.ok(mapJs.indexOf('liftModeFor(') < mapJs.indexOf('if(ip) openFeatureById(ip);'),
+  assert.ok(mapJs.indexOf('liftModeFor(') < mapJs.indexOf('if(ip && !openFeatureById(ip))'),
     'the lift must run before the drawer opens, or the halo lands on an empty map');
 });

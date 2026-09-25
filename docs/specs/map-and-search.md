@@ -242,6 +242,17 @@ by default and a rider asks for one section at a time.
 
 ### 4.0 Rail, drawer, corner
 
+**The rail panel ships closed, unless the URL names one.** `/map?panel=<key>`
+(`search`, `layers`, `tools` or `key`) opens that section on load; an unknown
+key leaves the map closed. The home page hero's "Check your route (GPX)"
+button links to `/map?panel=tools`, so the GPX ride check is one tap from the
+front door instead of behind an unlabelled rail icon (owner 2026-09-25).
+Arriving on `panel=tools` also cues the GPX button (`cueGpx()` in
+`shell.js`): an orange arrow on the map just right of the drawer, level with
+Choose GPX, and a pulse on the button itself. Both go away on the first click
+of the button or when the panel closes. Where the drawer leaves no room beside
+it (a phone), the pulse shows alone.
+
 **Opening a place closes the rail panel** (`closeRailPanel()` in `shell.js`,
 called by `showDrawer()` in `drawer.js`; owner 2026-09-16). The rider has
 chosen: the panel would otherwise keep a third of the map, and a route framed
@@ -2604,6 +2615,13 @@ Pinned by `tests/js/coord-search.test.cjs`.
 
 Handled in the map `load` handler; all query-param based (no hash state — §13.1
 is the pending permalink contract).
+
+**A link whose target is gone says so.** When `?item=`, `?pending=` or
+`?route=` resolves to nothing on this map (the row was retired, merged, or the
+link came from another environment where ids differ), the map shows the toast
+"This place is no longer on the map." (`d_link_gone`) instead of silently
+opening the rider's own area. Keeping ids stable across a provider refresh and
+a fallback point in the link are open work (docs/TODO.md, 2026-09-25).
 
 **The target's own framing is the last word, and the scope lifts to its region,
 not to its country.** Every link below resolves its target first, then lifts the
