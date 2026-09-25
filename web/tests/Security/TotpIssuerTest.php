@@ -19,12 +19,17 @@ final class TotpIssuerTest extends KernelTestCase
 {
     private const string PROBE = 'Cycling Commons (probe)';
 
-    /** @var array{env: mixed, server: mixed} */
-    private array $saved = ['env' => null, 'server' => null];
+    /** @var array{env: mixed, server: mixed}|null null when this test left the variable alone */
+    private ?array $saved = null;
 
     #[\Override]
     protected function tearDown(): void
     {
+        if (null === $this->saved) {
+            parent::tearDown();
+
+            return;
+        }
         // Put back what dotenv loaded; later tests boot kernels that need it.
         foreach (['env' => '_ENV', 'server' => '_SERVER'] as $key => $global) {
             if (null === $this->saved[$key]) {

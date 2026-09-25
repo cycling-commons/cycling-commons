@@ -1,9 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Configuration reference: https://symfony.com/bundles/SchebTwoFactorBundle/index.html
-parameters:
-    # A host without the variable keeps working under the production name.
-    env(TOTP_ISSUER): 'Cycling Commons'
-
 scheb_two_factor:
     security_tokens:
         - Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken
@@ -46,5 +42,7 @@ when@dev:
     scheb_two_factor:
         totp:
             enabled: false
+            # A disabled provider drops its config, and Symfony rejects an env var nobody reads.
+            issuer: 'Cycling Commons (dev)'
         backup_codes:
             enabled: false
