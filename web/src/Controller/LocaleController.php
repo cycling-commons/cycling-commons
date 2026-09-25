@@ -26,10 +26,10 @@ final class LocaleController extends AbstractController
     {
         // The route requirement lists every BUILT language, because it is
         // compiled in; whether this deployment serves one is a runtime
-        // question, and the answer for a language it does not serve is the
-        // same 404 its prefixed paths give (dev-environment.md §7 i18n).
+        // question. A language it does not serve switches to the default
+        // locale, as its prefixed paths do (dev-environment.md §7 i18n).
         if (!$activeLocales->isActive($_locale)) {
-            throw $this->createNotFoundException(sprintf('Locale "%s" is not served here.', $_locale));
+            $_locale = $activeLocales->defaultLocale();
         }
 
         $request->getSession()->set('_locale', $_locale);

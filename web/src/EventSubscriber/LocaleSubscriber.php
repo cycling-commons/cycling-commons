@@ -9,9 +9,12 @@ namespace App\EventSubscriber;
 use App\Routing\ActiveLocales;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Routing\Exception\ExceptionInterface as RoutingException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Request locale: routed `_locale`, then session, then Accept-Language, then default.
@@ -26,6 +29,7 @@ final class LocaleSubscriber implements EventSubscriberInterface
         // build carries is not automatically one this deployment serves
         // (dev-environment.md §7 i18n).
         private readonly ActiveLocales $activeLocales,
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
@@ -37,10 +41,12 @@ final class LocaleSubscriber implements EventSubscriberInterface
         if (\is_string($routed) && !$this->activeLocales->isActive($routed)) {
             // The route exists, because the prefix is compiled in for every
             // built catalogue, but this deployment does not serve that
-            // language. Answer exactly as a URL that was never a route: a
-            // reader typing /fr/ or following an old link learns nothing
-            // about a translation that is not ready to be read.
-            throw new NotFoundHttpException(sprintf('Locale "%s" is not served here.', $routed));
+            // language. A reader following an old link or a search result
+            // lands on the same page in the default locale. 302, not 301:
+            // the language comes back once its catalogue is finished.
+            $event->setResponse(new RedirectResponse($this->defaultLocaleUrl($request), 302));
+
+            return;
         }
         if (\is_string($routed)) {
             // `hasPreviousSession()`, NOT `hasSession()`. `hasSession()` is true
@@ -72,6 +78,29 @@ final class LocaleSubscriber implements EventSubscriberInterface
         }
 
         $request->setLocale($request->getPreferredLanguage($this->activeLocales->all()) ?: $this->defaultLocale);
+    }
+
+    /**
+     * The same route and parameters in the default locale, query string kept; the home page when the route cannot be rebuilt.
+     */
+    private function defaultLocaleUrl(Request $request): string
+    {
+        $route = $request->attributes->get('_canonical_route') ?? $request->attributes->get('_route');
+        $params = $request->attributes->get('_route_params');
+        if (!\is_string($route) || !\is_array($params)) {
+            return '/';
+        }
+        $params['_locale'] = $this->defaultLocale;
+
+        try {
+            $url = $this->urlGenerator->generate($route, $params);
+        } catch (RoutingException) {
+            return '/';
+        }
+
+        $query = $request->getQueryString();
+
+        return null === $query ? $url : $url.'?'.$query;
     }
 
     #[\Override]

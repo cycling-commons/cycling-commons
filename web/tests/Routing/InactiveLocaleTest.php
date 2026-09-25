@@ -24,13 +24,22 @@ final class InactiveLocaleTest extends WebTestCase
 {
     private const array ENABLED = ['en', 'fr', 'nl', 'de', 'es'];
 
-    public function testAPrefixedPathInAnInactiveLanguageIsNotFound(): void
+    public function testAPrefixedPathInAnInactiveLanguageRedirectsToTheSamePageInEnglish(): void
+    {
+        $client = static::createClient();
+        $this->serve(['en', 'nl']);
+
+        $client->request('GET', '/de/ueber-uns?ref=old');
+        self::assertResponseRedirects('/about?ref=old', 302);
+    }
+
+    public function testTheInactiveHomePageRedirectsToTheEnglishHomePage(): void
     {
         $client = static::createClient();
         $this->serve(['en', 'nl']);
 
         $client->request('GET', '/fr/');
-        self::assertResponseStatusCodeSame(404);
+        self::assertResponseRedirects('/', 302);
     }
 
     public function testAnActiveLanguageStillServesItsPrefixedPath(): void
@@ -65,13 +74,18 @@ final class InactiveLocaleTest extends WebTestCase
         );
     }
 
-    public function testSwitchingToAnInactiveLanguageIsNotFound(): void
+    public function testSwitchingToAnInactiveLanguageSwitchesToEnglish(): void
     {
         $client = static::createClient();
         $this->serve(['en', 'nl']);
 
-        $client->request('GET', '/i18n/fr');
-        self::assertResponseStatusCodeSame(404);
+        $client->disableReboot();
+        $client->request('GET', '/i18n/fr?to=/about');
+        self::assertResponseRedirects('/i18n/en?to=%2Fabout', 302);
+
+        $client->followRedirect();
+        self::assertResponseRedirects('/about');
+        self::assertSame('en', $client->getRequest()->getSession()->get('_locale'));
     }
 
     public function testTheHreflangBlockNamesOnlyTheServedLanguages(): void

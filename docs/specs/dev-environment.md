@@ -315,14 +315,19 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
   and can be translated. It is compile-time and cannot vary per environment.
   Which of them a reader may actually reach is a separate, runtime question,
   answered by `CC_ACTIVE_LOCALES` (a comma-separated list, committed in
-  `web/.env`, `.env.staging`, `.env.prod` and `.env.test` as all five) and
-  read by the single service `App\Routing\ActiveLocales`.
+  `web/.env`, `.env.staging` and `.env.prod` as `en,nl`, and in `.env.test`
+  as all five) and read by the single service `App\Routing\ActiveLocales`.
+  French, German and Spanish are switched off until their catalogues are
+  finished.
 
   A language left out of it is invisible and unreachable: no language-menu
   entry, no `hreflang` line, no sitemap URL, not offered on `/translate` or in
-  the account language setting, its `GET /i18n/{locale}` answers 404, and
-  `App\EventSubscriber\LocaleSubscriber` answers 404 for every one of its
-  prefixed paths. That is how a half-drafted catalogue stays translatable on
+  the account language setting. Its `GET /i18n/{locale}` switches to the
+  default locale instead, and `App\EventSubscriber\LocaleSubscriber` answers
+  every one of its prefixed paths with a 302 to the same route in the default
+  locale, query string kept (`/fr/a-propos?x=1` goes to `/about?x=1`), so an
+  old link or a search result still lands on the page it named. The redirect
+  is 302, not 301, because the language comes back. That is how a half-drafted catalogue stays translatable on
   dev while production serves only what is finished.
 
   Two rules hold whatever the variable says. **The default locale is always

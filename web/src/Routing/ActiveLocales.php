@@ -20,8 +20,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * built and translatable on dev while staying invisible in production, and
  * `CC_ACTIVE_LOCALES` is the one switch that decides it. Everything a reader
  * can see or reach reads this list: the language menu, the hreflang block,
- * the sitemap, the locale switcher, /translate, and the guard that answers
- * 404 for a prefixed path in a language this deployment does not serve.
+ * the sitemap, the locale switcher, /translate, and the guard that sends a
+ * prefixed path in a language this deployment does not serve to the default locale.
  *
  * **The default locale is always served.** It is every unprefixed route and
  * the source every translation is made from, so a deployment cannot switch
