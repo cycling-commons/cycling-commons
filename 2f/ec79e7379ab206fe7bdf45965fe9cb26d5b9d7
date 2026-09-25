@@ -1,0 +1,26 @@
+web/tests/Security/TotpIssuerTest.php
+  s_1976767384ed8e::t_ef0277662d7c49 1-21,25-27,36-40,42-69
+  s_1976767384ed8e::t_f1f7d2c933264f 22-24,28-35,41
+web/.env
+  s_1976767384ed8e::t_1519eb4082c737 278-282
+web/.env.staging
+  s_1976767384ed8e::t_8c20d73e88d6a0 155-158
+web/config/packages/scheb_2fa.yaml
+  s_1976767384ed8e::t_3bc2e5d709ccbc 3-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2fec79e7379ab206fe7bdf45965fe9cb26d5b9d7",
+  "prompts": {},
+  "sessions": {
+    "s_1976767384ed8e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bc2c9285-ba6b-4f91-b403-028f86746ae5",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
