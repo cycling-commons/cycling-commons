@@ -2010,7 +2010,7 @@ improve:
     confirm_now: 'Sé que este lugar existe ahora. Marcarlo como confirmado.'
     confirm_now_help: 'Déjalo sin marcar si no lo has visto hace poco. Los ciclistas lo confirman en el mapa.'
     measured_avg: 'media %pct% %'
-    measured_max: 'máx %pct%'
+    measured_max: 'máx %pct% %'
   locate:
     change: 'Cambiar la ubicación'
     confirm:

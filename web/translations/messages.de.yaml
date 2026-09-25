@@ -2581,7 +2581,7 @@ improve:
     confirm_now: 'Ich weiß, dass dieser Ort jetzt da ist. Als bestätigt markieren.'
     confirm_now_help: 'Lass es aus, wenn du den Ort nicht kürzlich gesehen hast. Radfahrer bestätigen ihn auf der Karte.'
     measured_avg: 'Ø %pct% %'
-    measured_max: 'max %pct%'
+    measured_max: 'max %pct% %'
   locate:
     change: 'Standort ändern'
     confirm:

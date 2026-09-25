@@ -79,6 +79,9 @@
     return s;
   }
 
+  // The profiler sends "5.4%"; the copy adds its own " %".
+  function pctNum(v) { return String(v).replace(/\s*%$/, ''); }
+
   var RC = (window.Cc && window.Cc.reviewCard) || null;
 
   function step(n) {
@@ -409,8 +412,8 @@
         box.hidden = !any;
         set('wzm-len', st.lengthKm ? uKm(st.lengthKm) : '');
         set('wzm-gain', st.gain ? '△ ' + uElevM(st.gain) : '');
-        set('wzm-avg', st.avg ? st.avg + ' %' : '');
-        set('wzm-max', (st.steep && st.steep.pct) ? String(st.steep.pct).replace(/\s*%$/, '') + ' %' : '');
+        set('wzm-avg', st.avg ? pctNum(st.avg) + ' %' : '');
+        set('wzm-max', (st.steep && st.steep.pct) ? pctNum(st.steep.pct) + ' %' : '');
       };
       var riderCtl = null;
       if (window.Cc.riderSteep && document.getElementById('wz-rider')) {
@@ -1255,8 +1258,8 @@
       }
       // The measured numbers, so the review echoes what step 1 showed.
       if (WZ.loc.gain) locTxt += ' · △ ' + (window.ccElev ? window.ccElev(WZ.loc.gain) : Math.round(Number(WZ.loc.gain)) + ' m');
-      if (WZ.loc.avg) locTxt += ' · ' + t('measured_avg', { '%pct%': WZ.loc.avg });
-      if (WZ.loc.max) locTxt += ' · ' + t('measured_max', { '%pct%': String(WZ.loc.max).replace(/\s*%$/, '') });
+      if (WZ.loc.avg) locTxt += ' · ' + t('measured_avg', { '%pct%': pctNum(WZ.loc.avg) });
+      if (WZ.loc.max) locTxt += ' · ' + t('measured_max', { '%pct%': pctNum(WZ.loc.max) });
     }
 
     var fieldRows = [];

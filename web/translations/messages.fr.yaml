@@ -2573,7 +2573,7 @@ improve:
     confirm_now: 'Je sais que ce lieu existe aujourd''hui. Le marquer comme confirmé.'
     confirm_now_help: 'Laissez la case vide si vous ne l''avez pas vu récemment. Les cyclistes le confirmeront sur la carte.'
     measured_avg: 'moy. %pct% %'
-    measured_max: 'max %pct%'
+    measured_max: 'max %pct% %'
   locate:
     change: 'Modifier l''emplacement'
     confirm:

@@ -2578,7 +2578,7 @@ improve:
     confirm_now: 'Ik weet dat deze plek er nu is. Markeer als bevestigd.'
     confirm_now_help: 'Laat het uit als je de plek niet recent hebt gezien. Fietsers bevestigen haar op de kaart.'
     measured_avg: 'gem. %pct% %'
-    measured_max: 'max %pct%'
+    measured_max: 'max %pct% %'
   locate:
     change: 'Locatie wijzigen'
     confirm:

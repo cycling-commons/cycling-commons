@@ -1999,7 +1999,7 @@ improve:
     confirm_now: 'I know this place is there now. Mark it confirmed.'
     confirm_now_help: 'Leave it off if you have not seen it lately. Riders confirm it on the map.'
     measured_avg: 'avg %pct% %'
-    measured_max: 'max %pct%'
+    measured_max: 'max %pct% %'
   locate:
     change: 'Change location'
     confirm:
