@@ -1,0 +1,38 @@
+web/src/EventSubscriber/LocaleSubscriber.php
+  s_55919bbd97e54d::t_d0955d7ed476c3 104-105
+  s_55919bbd97e54d::t_470fd149029a62 12-13,16-17,32,44-49,83-103
+web/.env.staging
+  s_55919bbd97e54d::t_878acae265e9b3 173
+  s_55919bbd97e54d::t_0db50ddfd7743d 166
+web/src/Controller/LocaleController.php
+  s_55919bbd97e54d::t_5442322fe65c02 29-30,32
+web/src/Routing/ActiveLocales.php
+  s_55919bbd97e54d::t_0db50ddfd7743d 23-24
+web/.env
+  s_55919bbd97e54d::t_878acae265e9b3 334
+  s_55919bbd97e54d::t_6a5c602407b6ae 327
+docs/specs/dev-environment.md
+  s_55919bbd97e54d::t_6a5c602407b6ae 318-321,325-330
+web/tests/Routing/InactiveLocaleTest.php
+  s_55919bbd97e54d::t_f31801dcdbfb24 34-36,42,82,84-86
+  s_55919bbd97e54d::t_0db50ddfd7743d 27-33,77,83,87-88
+web/.env.prod
+  s_55919bbd97e54d::t_0db50ddfd7743d 16
+  s_55919bbd97e54d::t_878acae265e9b3 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b500c805cf20461801d481e40044b2c50aa8f08c",
+  "prompts": {},
+  "sessions": {
+    "s_55919bbd97e54d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4e8d5729-0cb3-44e8-a46a-3372d02254f6",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
