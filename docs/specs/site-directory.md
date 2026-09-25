@@ -138,6 +138,29 @@ rule between the three.
   in that ochre, no letter; the two group headings read "Utility: aiming for
   full coverage" and "Experience: curated & voted by riders", a colon, never
   a dash. The closing band keeps its map button and the account offer.
+- **Landing page, the best-climbs phone** (2026-09-26): before the ranking
+  shows, the phone plays a map tour of about 12 seconds in plain SVG and CSS,
+  no map library. Wallonia (the `world_division` polygon BE-WAL in Lambert 72,
+  simplified at 500 m, inlined as `pages/_home_wallonia.svg.twig`) with the
+  Meuse, the Ourthe and five towns (`home.cur_town_*`, local exonyms per
+  locale), and the five climbs as climb pins at their real positions. The
+  view zooms in seven times and glides Huy, La Redoute, Thier Antoine,
+  Stockeu, then south to the Côte de Saint-Roch at Houffalize; at each,
+  stars pop and a count rises (317, 486, 402, 221, 268: illustrative, since
+  the seasonal vote is not built, but in the order of the ranking). It zooms
+  back out, the drawing shrinks away and each pin flies onto the climb icon
+  before its rank number and becomes it (`assets/home/hero.js` measures the
+  flights from layout offsets, rescaled by the notch for the narrow-screen
+  `zoom`), then the rows appear, the winner's profile draws itself and a
+  Replay button (`home.frag_replay`) appears under the list. The two home
+  phones are one height: hero.js gives the shorter the taller one's height
+  as min-height, and the best-climbs phone opens that room above the VOTED
+  line. The profiles are the measured ones (each item's 25 m `lineGrad`,
+  Copernicus GLO-30) and each row reads "average · 250 m max"; Saint-Roch
+  has no item yet and was measured the same way (1.23 km, 125 m, 10.1%, 16%
+  max). Icons, pins and profiles wear the map's climb purple `#6A2C8F`, the
+  steep stretch lit in `#B784DB`; the rank numbers stay trail orange. With
+  reduced motion the map is not shown and the ranking stands as it ends.
 - **Footer colophon**: "stewarded by BikeCoders" is one link, the whole line.
 - **Footer build stamp, and the AGPL section 13 source offer** (2026-09-20):
   the stamp beside the steward line is a **link**, and it is the only place on

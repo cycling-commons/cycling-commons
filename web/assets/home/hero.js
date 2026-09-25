@@ -86,3 +86,63 @@
       silo.classList.add('in');
     });
   })();
+
+  /* The best-climbs phone: each map pin flies onto the climb icon of its rank.
+     --tx/--ty per pin, from layout offsets summed up to the board, not from
+     rects: the camera over the map is a transform, and offsets ignore it, so
+     the measure is the same whether the view is zoomed in or not. The pins
+     fly after the view is back at the whole region, where that transform is
+     the identity, so the offsets are also where the pins really are.
+
+     The phone is 15% smaller on narrow screens (`zoom`), and browsers differ
+     on whether offsets inside a zoomed box come back zoomed. The translate is
+     in the box's own pixels either way, so the offsets are rescaled by the
+     notch, whose width the stylesheet fixes at 84px. */
+  (function(){
+    const cur=document.querySelector('.cur');
+    const board=cur&&cur.querySelector('.cur-board');
+    if(!board) return;
+    const notch=cur.querySelector('.ph-notch');
+    const at=(el)=>{
+      let x=el.offsetWidth/2, y=el.offsetHeight/2;
+      for(;el&&el!==board;el=el.offsetParent){ x+=el.offsetLeft; y+=el.offsetTop; }
+      return {x,y};
+    };
+    /* Both phones one height: the shorter gets the taller one's height as
+       its min-height. Natural heights first (min-height cleared), then the
+       rescale by the notch, as below. */
+    const phones=[cur.querySelector('.phone'),document.querySelector('.silo .phone')].filter(Boolean);
+    const level=()=>{
+      if(phones.length<2||!notch.offsetWidth) return;
+      const k=84/notch.offsetWidth;
+      phones.forEach(ph=>{ ph.style.minHeight=''; });
+      const h=Math.max(...phones.map(ph=>ph.offsetHeight))*k;
+      phones.forEach(ph=>{ ph.style.minHeight=h.toFixed(1)+'px'; });
+    };
+    const aim=()=>{
+      if(!board.offsetParent||!notch.offsetWidth) return;
+      level();
+      const k=84/notch.offsetWidth;
+      board.querySelectorAll('.cp[data-to]').forEach(p=>{
+        const n=board.querySelector('.ci[data-rank="'+p.dataset.to+'"]');
+        if(!n) return;
+        const a=at(p), b=at(n);
+        // Land the pin's head, not its tip, on the icon: the head sits
+        // 16px above the tip, 12.8px once the flight has shrunk it to .8.
+        p.style.setProperty('--tx',((b.x-a.x)*k).toFixed(1)+'px');
+        p.style.setProperty('--ty',((b.y-a.y)*k+12.8).toFixed(1)+'px');
+      });
+    };
+    aim();
+    window.addEventListener('resize',aim);
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(aim);
+
+    // Replay, as the silo does it: every step hangs off `.cur.in`.
+    const replay=cur.querySelector('[data-cur-replay]');
+    if(replay) replay.addEventListener('click',()=>{
+      cur.classList.remove('in');
+      void cur.offsetWidth;
+      aim();
+      cur.classList.add('in');
+    });
+  })();

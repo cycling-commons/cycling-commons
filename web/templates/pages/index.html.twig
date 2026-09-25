@@ -270,17 +270,20 @@
      is deliberate: the box stretches with the card, and because every profile
      stretches by the same factor the comparison survives. */
 
-  /* the drawn parts, shared by both graphical drafts */
-  .cur .fil{fill:rgba(239,230,212,.09)}
+  /* the drawn parts. The climbs wear the map's climb purple (owner
+     2026-09-26: the icons are purple, so the profiles are too): the hill a
+     faint purple, the ridge paper so it reads, the steep stretch lit in a
+     light purple, since #6A2C8F itself is too dark to see on the ink. */
+  .cur{--climb:#6A2C8F;--climb-lit:#B784DB}
+  .cur .fil{fill:rgba(106,44,143,.32)}
   .cur .rdg{fill:none;stroke:rgba(239,230,212,.62);stroke-width:1.5;stroke-linejoin:round;vector-effect:non-scaling-stroke}
   /* the steepest ramp of that climb, the one thing lit on the whole shape */
-  .cur .stp{fill:none;stroke:var(--trail);stroke-width:2.4;stroke-linecap:round;vector-effect:non-scaling-stroke}
+  .cur .stp{fill:none;stroke:var(--climb-lit);stroke-width:2.4;stroke-linecap:round;vector-effect:non-scaling-stroke}
   .cur .base{stroke:rgba(239,230,212,.2);stroke-width:1;vector-effect:non-scaling-stroke}
   /* the steepest ramp as a band under the line: the wall has width, and a 2 px
-     stroke on a 40 px shape is not something a reader finds. A lighter step of
-     the SAME hill rather than an orange wash, which went brown on the spruce
-     and read as a different material; the lit ridge above carries the colour. */
-  .cur .ramp{fill:rgba(239,230,212,.13)}
+     stroke on a 40 px shape is not something a reader finds. A lighter step
+     of the same purple hill; the lit ridge above carries the colour. */
+  .cur .ramp{fill:rgba(183,132,219,.3)}
 
 
   /* v3: the same screen on the shared phone. Nothing here restyles the frame;
@@ -291,48 +294,143 @@
   .cur-v3 .cur-screen .pin b{font-size:1.15em;font-weight:700;color:#efe6d4}
   .cur-v3 .cur-hero{position:relative;margin:0 0 .9rem}
   .cur-v3 .cur-big{display:block;width:100%;height:96px}
-  .cur-v3 .cur-summit{position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;
-    background:var(--trail);box-shadow:0 0 0 3px rgba(255,90,31,.22);transform:translate(30%,-30%)}
+  .cur-v3 .cur-summit{position:absolute;top:0;right:0;width:9px;height:9px;border-radius:50%;
+    background:var(--climb);border:1.5px solid var(--paper);box-shadow:0 0 0 3px rgba(183,132,219,.25);transform:translate(30%,-30%)}
   .cur-v3 .cur-hero-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:.2rem .6rem;margin-top:.6rem}
+  .cur-v3 .cur-hero-t .ci{align-self:center}
   .cur-v3 .cur-hero-t .n{font-family:var(--mono);color:var(--trail);font-size:.78rem}
   .cur-v3 .cur-hero-t strong{font-family:var(--serif);font-weight:500;font-size:1.15rem;line-height:1.1;color:var(--paper)}
   .cur-v3 .cur-hero-t .co{flex-basis:100%;font-family:var(--mono);font-size:.64rem;color:rgba(239,230,212,.75)}
   .cur-v3 .cur-rest{list-style:none;margin:0;padding:0;border-top:1px solid rgba(239,230,212,.14)}
   /* Areas, not bare columns, so the narrow layout only has to re-flow them. */
-  .cur-v3 .cur-rest li{display:grid;grid-template-columns:1.4rem minmax(7.4rem,auto) minmax(40px,1fr) auto;
-    grid-template-areas:"n nm sil co";align-items:center;gap:.5rem;
+  .cur-v3 .cur-rest li{display:grid;grid-template-columns:16px 1.4rem minmax(7.4rem,auto) minmax(40px,1fr) auto;
+    grid-template-areas:"ic n nm sil co";align-items:center;gap:.5rem;
     padding:.55rem 0;border-bottom:1px solid rgba(239,230,212,.14)}
   .cur-v3 .cur-rest li:last-child{border-bottom:none}
   .cur-v3 .cur-rest .n{grid-area:n;font-family:var(--mono);color:var(--trail);font-size:.78rem}
   .cur-v3 .cur-rest .nm{grid-area:nm;font-weight:500;font-size:.9rem;white-space:nowrap;color:var(--paper)}
   .cur-v3 .cur-spark{grid-area:sil;display:block;width:100%;height:18px}
   .cur-v3 .cur-rest .co{grid-area:co;font-family:var(--mono);font-size:.62rem;color:rgba(239,230,212,.72);white-space:nowrap}
-  .cur-v3 .vs{margin:1rem 0 .2rem}
+  /* The climb icon before each rank: the map pin's head, tail off, at the
+     size the flying pin shrinks to (20px at .8), so the pin lands on it and
+     becomes it. */
+  .cur-v3 .ci{grid-area:ic;align-self:center;display:grid;place-items:center;width:16px;height:16px;border-radius:50%;
+    background:var(--climb);border:1.2px solid var(--paper);color:#fff}
+  .cur-v3 .ci .q-icon{display:flex}
+  .cur-v3 .ci svg{width:10px;height:10px}
+  /* One height for both phones (hero.js sets min-height on the shorter):
+     the room the best-climbs phone gains opens above the VOTED line, and
+     the map under it simply has more ground. */
+  .cur-v3 .phone{display:flex;flex-direction:column}
+  .cur-v3 .cur-screen,.cur-v3 .cur-board{flex:1;display:flex;flex-direction:column}
+  .cur-v3 .vs{margin:auto 0 .2rem;padding-top:1rem}
 
-  /* One orchestrated moment: each profile rises into place, the lit ramp and
-     its band a beat later. Keyframes, not transitions, so flipping the toggle
-     replays them the way the phone draft replays.
+  /* The map tour, then the ranking (owner 2026-09-26). One timeline on
+     `.cur.in`, so taking `in` away and putting it back replays it all:
+       0-2 s     the drawing fades in, the five pins drop
+       3-8.7 s   the view glides pin to pin; at each, stars pop and count up
+       8.7-9.6 s back out to the whole region
+       9.65 s+   the drawing shrinks away, each pin flies into its rank
+       10.35 s+  the rows appear as their pins land, the winner draws itself
+       11.8 s    Replay
+     --tx/--ty come from hero.js.
 
-     NOT a stroke-dasharray draw-on. These ridges carry
-     `vector-effect:non-scaling-stroke`, and a dash pattern is then measured in
-     DEVICE space while `pathLength` normalises USER space: a dasharray of 1
-     becomes a 1 px dash and a 1 px gap on a 280 px line, which renders as a
-     broken line rather than a drawn one. */
-  .cur .cur-sil,.cur .cur-big,.cur .cur-spark{opacity:0;transform:translateY(6px)}
-  .cur.in .cur-sil,.cur.in .cur-big,.cur.in .cur-spark{
-    animation:curRise .55s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:calc(.15s + var(--i,0) * .1s)}
+     The camera is three registered numbers (--z, --cx, --cy: zoom and the
+     centre as a fraction of the drawing) so keyframes can tween them, and
+     the pins and town names divide by --z to stay one size while the ground
+     under them grows. Where @property is missing the view jumps from pin to
+     pin instead of gliding; nothing breaks. */
+  @property --z{syntax:'<number>';inherits:true;initial-value:1}
+  @property --cx{syntax:'<number>';inherits:true;initial-value:.5}
+  @property --cy{syntax:'<number>';inherits:true;initial-value:.5}
+  @property --n{syntax:'<integer>';inherits:false;initial-value:0}
+  .cur-v3 .cur-board{position:relative}
+  /* over the ranking, which keeps its place (and so the phone its height) */
+  .cur-v3 .cur-map{position:absolute;inset:0;z-index:1;display:flex;align-items:center;overflow:hidden;pointer-events:none}
+  .cur-v3 .cur-cam{position:relative;width:100%;aspect-ratio:253/147;transform-origin:0 0;
+    transform:translate(50%,50%) scale(var(--z)) translate(calc(var(--cx) * -100%),calc(var(--cy) * -100%))}
+  .cur-v3 .cur-draw{position:absolute;inset:0;opacity:0}
+  .cur-v3 .cur-wal{display:block;width:100%;height:100%;overflow:visible}
+  .cur-v3 .cur-wal .land{fill:rgba(239,230,212,.05);stroke:rgba(239,230,212,.45);stroke-width:1;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  .cur-v3 .cur-wal .river{fill:none;stroke:var(--glacier);stroke-opacity:.75;stroke-width:1.3;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+  /* a town: a dot, its name to the right. Zero-size anchors so the counter-
+     scale pivots on the point itself. */
+  .cur-v3 .ct,.cur-v3 .cp{position:absolute;width:0;height:0;scale:calc(1 / var(--z))}
+  .cur-v3 .ct i{position:absolute;left:-2px;top:-2px;width:4px;height:4px;border-radius:50%;background:rgba(239,230,212,.55)}
+  .cur-v3 .ct span{position:absolute;left:5px;top:-.4rem;font-family:var(--mono);font-size:.5rem;line-height:.8rem;letter-spacing:.08em;
+    text-transform:uppercase;white-space:nowrap;color:rgba(239,230,212,.6)}
+  /* a climb: the map's climb pin (its purple, the mountain glyph), tip on the point */
+  .cur-v3 .cp-m{position:absolute;left:-10px;bottom:6px;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;
+    background:var(--climb);border:1.5px solid var(--paper);color:#fff;transform-origin:50% calc(100% + 6px)}
+  .cur-v3 .cp-m::after{content:"";position:absolute;left:50%;top:100%;translate:-50% 0;border:5px solid transparent;border-top:7px solid var(--paper);border-bottom:0}
+  .cur-v3 .cp-m .q-icon{display:flex}
+  .cur-v3 .cp-m svg{width:12px;height:12px}
+  .cur-v3 .cp-st i{position:absolute;left:-.3rem;bottom:1.1rem;font-style:normal;font-size:.8rem;line-height:1;color:var(--ochre);opacity:0}
+  .cur-v3 .cp-ct{position:absolute;left:0;bottom:2.1rem;translate:-50% 0;padding:.1rem .5rem;border-radius:12px;white-space:nowrap;
+    font-family:var(--mono);font-size:.82rem;font-weight:600;line-height:1.3;color:var(--paper);background:var(--ink);border:1px solid rgba(200,146,58,.6);
+    opacity:0;counter-reset:n var(--n)}
+  .cur-v3 .cp-ct::before{content:"★ ";color:var(--ochre)}
+  .cur-v3 .cp-ct::after{content:counter(n)}
+  .cur-v3 .cp.l .cp-ct{left:auto;right:.8rem;bottom:.8rem;translate:none}
+  .cur-v3 .cp.r .cp-ct{left:.8rem;bottom:.8rem;translate:none}
+  .cur.in .cur-draw{animation:curFade .6s ease-out .1s forwards,curShrink .8s ease-in 9.65s forwards}
+  .cur.in .cur-cam{animation:curTour 9.6s ease-in-out both}
+  .cur.in .cp-m{animation:cpDrop .45s cubic-bezier(.3,1.5,.5,1) calc(1s + var(--k) * .18s) backwards}
+  .cur.in .cp-st i{animation:cpStar .9s ease-out calc(var(--s) + var(--j) * .14s)}
+  .cur.in .cp-ct{animation:curFade .3s ease-out var(--s) forwards,cpCount .8s ease-out var(--s) forwards,curGone .3s ease-in 9.4s forwards}
+  /* the pin flies, its tail goes, and on landing it hands over to the icon */
+  .cur.in .cp{animation:cpFly .75s cubic-bezier(.5,0,.3,1) calc(9.75s + var(--r) * .12s) forwards,curGone .01s linear calc(10.5s + var(--r) * .12s) forwards}
+  .cur.in .cp-m::after{animation:curGone .3s ease-in calc(9.75s + var(--r) * .12s) forwards}
+  .cur-v3 .ci{opacity:0}
+  .cur.in .cur-hero .ci{animation:curFade .01s linear 10.5s forwards}
+  .cur.in .cur-rest .ci{animation:curFade .01s linear calc(10.62s + var(--i) * .12s) forwards}
+  /* keyframe stops are seconds over 9.6: 3.0 3.8 4.4 5.0 5.7 6.1 6.6 6.9 7.4 8.1 8.7 */
+  @keyframes curTour{
+    0%,31.25%{--z:1;--cx:.5;--cy:.5}
+    39.58%,45.83%{--z:7;--cx:.6727;--cy:.2286}
+    52.08%,59.38%{--z:7;--cx:.7992;--cy:.2422}
+    63.54%,68.75%{--z:7;--cx:.8514;--cy:.3170}
+    71.88%,77.08%{--z:7;--cx:.8656;--cy:.3163}
+    84.38%,90.63%{--z:7;--cx:.8278;--cy:.5143}
+    100%{--z:1;--cx:.5;--cy:.5}}
+  @keyframes cpDrop{from{opacity:0;transform:translateY(-14px) scale(.6)}}
+  @keyframes cpStar{0%{opacity:0;translate:0 0;scale:.3}25%{opacity:1}100%{opacity:0;translate:var(--sx) -1.6rem;scale:1.15}}
+  @keyframes cpCount{from{--n:0}to{--n:var(--v)}}
+  @keyframes cpFly{from{translate:0 0;scale:1}to{translate:var(--tx,0) var(--ty,0);scale:.8}}
+  @keyframes curShrink{to{opacity:0;transform:scale(.8)}}
+  @keyframes curGone{to{opacity:0}}
+
+  /* The ranking comes in as the pins land. The winner's profile draws
+     itself left to right: a clip that opens, NOT a stroke-dasharray
+     draw-on. These ridges carry `vector-effect:non-scaling-stroke`, and a
+     dash pattern is then measured in DEVICE space while `pathLength`
+     normalises USER space: a dasharray of 1 becomes a 1 px dash and a 1 px
+     gap on a 280 px line, which renders as a broken line rather than a
+     drawn one. */
+  .cur-v3 .cur-hero-t,.cur-v3 .cur-rest,.cur-v3 .cur-rest li,.cur-v3 .vs{opacity:0}
+  .cur.in .cur-rest{animation:curFade .4s ease-out 10.1s forwards}
+  .cur.in .cur-hero-t{animation:curFade .45s ease-out 10.35s forwards}
+  .cur.in .cur-rest li{animation:curFade .45s ease-out calc(10.47s + var(--i) * .12s) forwards}
+  .cur.in .vs{animation:curFade .5s ease-out 11.1s forwards}
+  .cur .cur-big{clip-path:inset(0 100% 0 0)}
+  .cur.in .cur-big{animation:curDraw 1.1s cubic-bezier(.4,0,.2,1) 10.4s forwards}
+  .cur .cur-spark{opacity:0;transform:translateY(6px)}
+  .cur.in .cur-spark{animation:curRise .55s cubic-bezier(.2,.7,.3,1) calc(10.6s + var(--i) * .12s) forwards}
   .cur .ramp,.cur .stp{opacity:0}
-  .cur.in .ramp,.cur.in .stp{animation:curFade .45s ease-out forwards;animation-delay:calc(.55s + var(--i,0) * .1s)}
-  .cur.in .cur-summit{animation:curPop .4s cubic-bezier(.3,1.5,.5,1) .95s backwards}
+  .cur.in .ramp,.cur.in .stp{animation:curFade .45s ease-out 11.3s forwards}
+  .cur.in .cur-summit{animation:curPop .4s cubic-bezier(.3,1.5,.5,1) 11.4s backwards}
+  .cur-v3 .ph-replay{margin:.5rem auto .1rem}
+  .cur.in .ph-replay{animation:phFade .4s ease-out 11.8s forwards}
+  @keyframes curDraw{to{clip-path:inset(0 0 0 0)}}
   @keyframes curRise{to{opacity:1;transform:none}}
   @keyframes curFade{to{opacity:1}}
   @keyframes curPop{from{opacity:0;transform:translate(40%,-40%) scale(.2)}}
   /* the numbers stay put when the rows get narrow; the profile keeps the room */
   @media(max-width:560px){
-    /* three columns, because the area map above has three. A two-column grid
+    /* four columns, because the area map below has four. A narrower grid
        makes the whole grid-template-areas declaration invalid and every child
        falls back to auto-placement. */
-    .cur-v3 .cur-rest li{grid-template-columns:1.4rem 1fr auto;grid-template-areas:"n nm co" ". sil sil";
+    .cur-v3 .cur-rest li{grid-template-columns:16px 1.4rem 1fr auto;grid-template-areas:"ic n nm co" ". . sil sil";
       align-items:baseline;gap:.15rem .5rem}
     .cur-v3 .cur-rest .co{white-space:nowrap;justify-self:end}
   }
@@ -413,12 +511,13 @@
      once: a replay button before the first play has nothing to replay.
      It hangs under the dock and rises with it, taking no room of its own, so
      the phone is only as tall as the grid and the dock need. */
-  .silo .ph-replay{position:absolute;top:100%;left:50%;translate:-50% 0;display:flex;align-items:center;gap:.4rem;width:max-content;margin:.6rem 0 0;
+  .silo .ph-replay{position:absolute;top:100%;left:50%;translate:-50% 0;margin:.6rem 0 0}
+  .ph-replay{display:flex;align-items:center;gap:.4rem;width:max-content;
     opacity:0;pointer-events:none;padding:.3rem .7rem;border-radius:40px;cursor:pointer;
     background:transparent;border:1px solid rgba(239,230,212,.28);color:rgba(239,230,212,.72);
     font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;transition:color .2s,border-color .2s}
-  .silo .ph-replay::before{content:"↺";font-size:.85rem;line-height:1}
-  .silo .ph-replay:hover{color:var(--trail);border-color:var(--trail)}
+  .ph-replay::before{content:"↺";font-size:.85rem;line-height:1}
+  .ph-replay:hover{color:var(--trail);border-color:var(--trail)}
   .silo.in .ph-replay{animation:phFade .4s ease-out 6.9s forwards}
   @keyframes phFade{to{opacity:1;pointer-events:auto}}
 
@@ -497,10 +596,11 @@
     .silo .ph-app,.silo .ph-dock{opacity:1;animation:none}
     .silo .ph-app.shut .ph-ic,.silo .ph-cc,.silo .ph-cc-nm{animation:none}
     /* nothing plays, so there is nothing to replay */
-    .silo .ph-replay{display:none}
-    /* the profiles are the content, so they stay drawn; only the drawing moves */
-    .cur .cur-sil,.cur .cur-big,.cur .cur-spark{opacity:1;transform:none;animation:none}
-    .cur .ramp,.cur .stp{opacity:1;animation:none}
+    .ph-replay{display:none}
+    /* the best-climbs phone: no tour, the ranking as it ends, fully drawn */
+    .cur-v3 .cur-map{display:none}
+    .cur .cur-big{clip-path:none;animation:none}
+    .cur .cur-spark,.cur .ramp,.cur .stp,.cur-v3 .ci,.cur-v3 .cur-hero-t,.cur-v3 .cur-rest,.cur-v3 .cur-rest li,.cur-v3 .vs{opacity:1;transform:none;animation:none}
     .cur .cur-summit{animation:none}}
 </style>
 {% endblock %}
