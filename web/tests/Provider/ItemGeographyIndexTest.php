@@ -27,8 +27,8 @@ final class ItemGeographyIndexTest extends KernelTestCase
         try {
             $db->executeStatement('SET LOCAL enable_seqscan = off');
             $plan = implode("\n", $db->fetchFirstColumn(
-                "EXPLAIN SELECT i.id FROM item i
-                  WHERE ST_DWithin(i.geom::geography, ST_SetSRID(ST_MakePoint(5.1084, 52.7702), 4326)::geography, 50)",
+                'EXPLAIN SELECT i.id FROM item i
+                  WHERE ST_DWithin(i.geom::geography, ST_SetSRID(ST_MakePoint(5.1084, 52.7702), 4326)::geography, 50)',
             ));
         } finally {
             $db->rollBack();
