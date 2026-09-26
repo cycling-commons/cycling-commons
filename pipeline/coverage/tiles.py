@@ -126,7 +126,9 @@ def _letter_sql(letter: str, spec, universal: list[str]) -> str:
         f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
         f")::text FROM coverage_poi "
         f"WHERE letter = {_lit(letter)} "
-        f"ORDER BY COALESCE(country_code, 'ZZ')) TO STDOUT"
+        # ref too: (ref, letter) is unique, so unchanged data gives the same
+        # bytes, and the per-country fingerprint can say "unchanged".
+        f"ORDER BY COALESCE(country_code, 'ZZ'), ref) TO STDOUT"
     )
 
 

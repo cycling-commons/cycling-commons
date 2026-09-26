@@ -372,3 +372,20 @@ def test_routes_build_command_layers_lines_and_knooppunten(tmp_path, monkeypatch
     assert "--no-feature-limit" in cmd and "--no-tile-size-limit" in cmd
     assert "-r1" in cmd
     assert "--drop-densest-as-needed" not in cmd
+
+
+def test_export_order_within_a_country_is_fixed(db, tmp_path):
+    # The fingerprint that decides "unchanged, not rebuilt" hashes these bytes.
+    # Ordered by country alone, two exports of unchanged data came out in a
+    # different order on the real table, and every country rebuilt every night.
+    ensure_schema(db)
+    sid = _src_id(db)
+    for ref in ("node/9", "node/10", "node/2"):
+        db.execute(
+            "INSERT INTO coverage_poi (ref, letter, geom, tags, src_region_id, country_code)"
+            " VALUES (%s, 'B', ST_SetSRID(ST_MakePoint(4.35, 50.85), 4326), %s, %s, 'BE')",
+            (ref, Json({"amenity": "drinking_water"}), sid))
+    files = tiles.export_geojsonl(db, tmp_path)
+    lines = files[("B", "BE")].read_text(encoding="utf-8").splitlines()
+    refs = [json.loads(line)["properties"]["ref"] for line in lines]
+    assert refs == sorted(refs)
