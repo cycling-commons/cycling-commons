@@ -117,16 +117,19 @@ def main(argv=None) -> int:
                 # The PBF this load just fetched feeds the line extracts too, so the
                 # expensive pass runs once per region per night, and offline.
                 for family in ("--routes", "--surface"):
+                    step = family.lstrip("-") + "_extract"
                     t0 = time.monotonic()
                     with _offline():
-                        erc = _call(f"{region} {family} extract", [family, "--extract-only", "--regions", region])
-                    if erc == 0:
-                        tracker.record(region, family.lstrip("-") + "_extract", time.monotonic() - t0)
-                    else:
-                        tracker.record(region, family.lstrip("-") + "_extract", time.monotonic() - t0,
-                                        status="failed", detail=f"rc {erc}")
-                        if region not in failed:
-                            failed.append(region)
+                        erc = _call(f"{region} {family} extract",
+                                    [family, "--extract-only", "--regions", region, "--run-id", str(run_id)])
+                    # The line run records its own step on this run; only one that
+                    # died before it could is recorded here, so none goes missing.
+                    if not tracker.has_step(region, step):
+                        tracker.record(region, step, time.monotonic() - t0,
+                                       status="ok" if erc == 0 else "failed",
+                                       detail=None if erc == 0 else f"rc {erc}")
+                    if erc != 0 and region not in failed:
+                        failed.append(region)
             elif rc == 2:
                 print(f"[dispatch] {region}: another coverage run holds the lock, "
                       "aborting tonight", file=sys.stderr)

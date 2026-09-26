@@ -189,8 +189,10 @@ def test_each_loaded_region_gets_its_line_extracts_then_one_publish_pass_per_fam
     assert dispatch.main() == 0
     flags = [tuple(a for a in c if a.startswith("--")) for c in calls]
     assert flags[:3] == [("--load-only", "--regions", "--run-id", "--trigger"),
-                         ("--routes", "--extract-only", "--regions"),
-                         ("--surface", "--extract-only", "--regions")]
+                         ("--routes", "--extract-only", "--regions", "--run-id"),
+                         ("--surface", "--extract-only", "--regions", "--run-id")]
+    # One night, one row: the extracts join the dispatcher's run, not their own.
+    assert calls[1][calls[1].index("--run-id") + 1] == calls[0][calls[0].index("--run-id") + 1]
     assert flags[-3:] == [("--tiles-only", "--regions", "--run-id"),
                           ("--routes", "--regions", "--run-id"),
                           ("--surface", "--regions", "--run-id")]
@@ -283,3 +285,26 @@ def test_a_line_pass_that_finds_its_lock_held_is_a_failed_publish(db, night, mon
     assert dispatch.main() == 1
     assert _run_status(db)[:2] == ("partial", 1)
     assert "[dispatch] --surface: another --surface run holds its run lock" in capsys.readouterr().err
+
+
+def test_a_line_extract_that_records_its_own_step_is_not_recorded_twice(db, night, monkeypatch):
+    calls, _ = night
+    monkeypatch.setenv("COVERAGE_REGIONS", "a")
+    real = dispatch.run_main
+
+    def recording_run_main(argv):
+        # What the real line run does with --run-id: one step on the dispatcher's row.
+        if "--extract-only" in argv:
+            calls.append(argv)
+            t = RunTracker(db)
+            t.attach(int(argv[argv.index("--run-id") + 1]))
+            t.record("a", argv[0].lstrip("-") + "_extract", 5.0, detail="from the line run")
+            return 0
+        return real(argv)
+
+    monkeypatch.setattr(dispatch, "run_main", recording_run_main)
+    assert dispatch.main() == 0
+    rows = db.execute(
+        "SELECT step, count(*), min(detail) FROM coverage_run_step WHERE region = 'a' "
+        "AND step IN ('routes_extract', 'surface_extract') GROUP BY step ORDER BY step").fetchall()
+    assert rows == [("routes_extract", 1, "from the line run"), ("surface_extract", 1, "from the line run")]

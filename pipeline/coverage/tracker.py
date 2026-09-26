@@ -129,6 +129,13 @@ class RunTracker:
         self.conn.execute(_STEP_INSERT, (self.run_id, region, name, seconds, seconds,
                                          bytes, rows, status, detail))
 
+    def has_step(self, region: str | None, name: str) -> bool:
+        return self.conn.execute(
+            "SELECT 1 FROM coverage_run_step WHERE run_id = %s AND region IS NOT DISTINCT FROM %s "
+            "AND step = %s LIMIT 1",
+            (self.run_id, region, name),
+        ).fetchone() is not None
+
     def finish(self, status: str, regions_loaded: int | None, published_url: str | None = None) -> None:
         if self._attached or self.run_id is None:
             return
