@@ -125,8 +125,12 @@ rule between the three.
   alt `home.ecosystem_alt`) is kept as a test state: a CSS-only switch
   under the drawing, two hidden radio boxes and the labels "1 / 3"
   (`home.loop_toggle`), the drawn loop checked by default; the switch and
-  the image go when the choice is final. Below 1000px the lap goes and the
-  stops stack in two columns. The lap stands still: a moving dash forced a
+  the image go when the choice is final. Below 1000px the lap moves under
+  the text and keeps its drawing down to 400px wide, big phones included
+  (2026-09-27): the box is sized so the whole drawing, app nodes and "Open
+  data" included, fits between the gutters, and the cards shrink with it.
+  Below 400px the lap goes and the stops stack in one column. The lap
+  stands still: a moving dash forced a
   repaint of the whole hero on every frame, about a third of a laptop GPU. A faint 56px grid lies over the hero and the
   closing band, fading to the foot; the five thin trail contours sit in the
   lower third, clear of the drawing; the discipline label sits on its own

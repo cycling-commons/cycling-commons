@@ -73,7 +73,8 @@
      riders use the map, riders fill it, curators keep it true, builders
      grow the platform, and offspring, the apps built on the data, carry it
      back to the ride: three fading lines leave that stop for nodes outside
-     the ring. Ride and Add are the two big stops. Below 1000px the ring goes and the stops stack. */
+     the ring. Ride and Add are the two big stops. Below 1000px the lap moves
+     under the text; below 400px the ring goes and the stops stack. */
   .hero-inner .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(1.5rem,4vw,4rem);align-items:center}
   .loop-col{position:relative}
   .loop{position:relative;aspect-ratio:1;max-width:476px;width:85%;margin-left:auto}
@@ -109,8 +110,23 @@
   .stop.s3{width:29%;left:69.0%;top:81.0%;transform:translate(-50%,-50%)}
   .stop.s4{left:24.0%;top:78.5%;transform:translate(-50%,-50%)}
   .stop.s5{width:28%;left:15.5%;top:32.0%;transform:translate(-50%,-50%)}
-  @media(max-width:999px){
-    .hero-inner .wrap{grid-template-columns:1fr}
+  @media(max-width:999px){.hero-inner .wrap{grid-template-columns:1fr}}
+  /* 400px and up keeps the drawn lap under the text, big phones included
+     (owner 2026-09-27: "the image instead of the normal boring buttons").
+     The drawing reaches past its 100-unit box, the three app nodes to -13
+     on the left and "Open data" to about 119 on the right, 132 units in
+     all, so the box is sized to fit those 132 units between the gutters
+     and slid 3% left so the overhang is even. The cards scale with it. */
+  @media(min-width:400px) and (max-width:999px){
+    .loop{width:min(476px,calc((100vw - 2.5rem) * 100 / 132));margin:1.6rem auto 1rem;translate:-3% 0}
+  }
+  @media(min-width:400px) and (max-width:620px){
+    .loop .stop,.loop .stop.big{padding:.35rem .4rem .4rem;border-radius:6px}
+    .loop .stop .k{font-size:.5rem;letter-spacing:.1em;margin-bottom:.1rem}
+    .loop .stop b{font-size:.8rem;line-height:1.15}
+    .loop .stop.big b{font-size:.9rem}
+  }
+  @media(max-width:399px){
     /* Stacked, the lap needs its own measure: full width made the cards long
        and thin, and the lap's own 85%-with-an-auto-left-margin left them
        short of the right gutter (owner 2026-09-10). A capped width, centred,
@@ -128,13 +144,7 @@
 
      `:last-of-type` reaches the fifth stop because the stops are the only <a>
      children; the lap's <svg> is a different type and is display:none here. */
-  /* Five cards in two columns leaves the fifth alone on its row, stuck against
-     the left edge (owner 2026-09-10). It takes the whole row and centres, at
-     exactly one column's width, so the block reads as a block. */
-  @media(min-width:521px) and (max-width:999px){
-    .loop .stop:last-of-type{grid-column:1 / -1;justify-self:center;width:calc(50% - .3rem)}
-  }
-  @media(max-width:520px){
+  @media(max-width:399px){
     .loop{max-width:none;grid-template-columns:1fr;gap:1.5rem}
     /* relative for the chevron to hang off, and `inset:auto` with it: the lap
        rules place s1..s5 with left/top, which a static box ignores and a
