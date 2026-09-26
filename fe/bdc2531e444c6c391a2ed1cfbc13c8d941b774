@@ -1,0 +1,42 @@
+web/src/Controller/RegistrationController.php
+  s_463e1fc8972353::t_8abb6f169c913a 39
+  s_463e1fc8972353::t_004a8568282593 26,36-38,119
+web/translations/messages.nl.yaml
+  s_463e1fc8972353::t_92de766a997dcf 1575-1582
+web/tests/Auth/ResetPasswordTest.php
+  s_463e1fc8972353::t_c3e10853409bc6 112-113
+  s_463e1fc8972353::t_a6cd7c08338a66 126-150
+web/translations/messages.es.yaml
+  s_463e1fc8972353::t_92de766a997dcf 1582-1589
+web/translations/messages.en.yaml
+  s_463e1fc8972353::t_92de766a997dcf 1579-1586
+web/translations/messages.fr.yaml
+  s_463e1fc8972353::t_92de766a997dcf 1570-1577
+web/templates/emails/reset_password.html.twig
+  s_463e1fc8972353::t_b1f53b67dddab2 11,21,29-31,33-34
+  s_463e1fc8972353::t_18075440d80471 2
+  s_463e1fc8972353::t_938b4807213824 3-5,8,13,16,23,32,37
+  s_463e1fc8972353::t_3baad966e1607f 35
+web/translations/messages.de.yaml
+  s_463e1fc8972353::t_92de766a997dcf 1575-1582
+web/src/Controller/ResetPasswordController.php
+  s_463e1fc8972353::t_18075440d80471 25,43,189
+docs/specs/account-and-auth.md
+  s_463e1fc8972353::t_3d9d6d2677ffc2 201-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "febdc2531e444c6c391a2ed1cfbc13c8d941b774",
+  "prompts": {},
+  "sessions": {
+    "s_463e1fc8972353": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1eab01fa-21a8-40f7-90af-ba889ec1d9c8",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
