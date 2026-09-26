@@ -178,8 +178,14 @@ streams:
 f"'properties', jsonb_strip_nulls(jsonb_build_object({', '.join(props)}))"
 f")::text FROM coverage_poi "
 f"WHERE letter = {_lit(letter)} "
-f"ORDER BY COALESCE(country_code, 'ZZ')) TO STDOUT"
+f"ORDER BY COALESCE(country_code, 'ZZ'), ref) TO STDOUT"
 ```
+
+The second sort key, `ref`, fixes the order inside a country. `(ref, letter)` is unique, so the same
+rows always export as the same bytes, and the per-country fingerprint that decides whether a country
+is rebuilt (`inputs_fingerprint()` in `pipeline/coverage/publish.py`) stays the same when nothing
+changed. Ordered by country alone, the order inside a country varies from one export to the next on a
+large table, and every country would look changed every night.
 
 One `COPY` per letter, not one per `letter × country`: scanning the whole table once for *every*
 (letter, country) pair would be well over a hundred passes at nineteen countries, and on the shared
