@@ -4442,6 +4442,9 @@ admin:
       community_voting_live:
         label: 'Seizoensstemmen is live'
         help: 'Zet op 1 wanneer de stemrondes open zijn. Op 0 blijft elke stem-knop op de kaart verborgen — een knop voor een ronde die niet bestaat lijkt kapot.'
+      map_confirmed_default_threshold:
+        label: 'Klaar voor Bevestigd: gecontroleerde plekken'
+        help: 'Hoeveel plekken die iemand heeft gecontroleerd een regio nodig heeft voordat een regiobeheerder hem standaard in Bevestigd-modus mag openen. Er is geen spreiding over soorten nodig, alleen genoeg om de modus niet leeg te laten lijken.'
       map_curated_default_threshold:
         label: 'Klaar voor Best-of: totaal aantal items'
         help: 'Hoeveel geselecteerde items een regio in totaal nodig heeft voordat een regiobeheerder hem standaard in Selectie-modus mag openen. Verlaag het om jonge regio’s eerder vrij te geven, verhoog het om de lat hoog te houden.'

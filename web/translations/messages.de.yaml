@@ -4443,6 +4443,9 @@ admin:
       community_voting_live:
         label: 'Saisonales Voting ist live'
         help: 'Auf 1 setzen, wenn die Abstimmungsrunden offen sind. Bei 0 bleibt jeder Vote-Aufruf auf der Karte verborgen — ein Knopf für eine Runde, die es nicht gibt, wirkt kaputt.'
+      map_confirmed_default_threshold:
+        label: 'Reife für Bestätigt: geprüfte Orte'
+        help: 'Wie viele von jemandem geprüfte Orte eine Region braucht, bevor ein Kurator sie standardmäßig im Modus Bestätigt öffnen darf. Eine Verteilung über Arten ist nicht nötig, nur genug, damit der Modus nicht leer wirkt.'
       map_curated_default_threshold:
         label: 'Reife für Best-of: Gesamtzahl'
         help: 'Wie viele kuratierte Einträge eine Region insgesamt braucht, bevor ein Kurator sie standardmäßig im Auswahlmodus öffnen darf. Niedriger, um junge Regionen früher freizugeben; höher, um den Qualitätsanspruch zu halten.'

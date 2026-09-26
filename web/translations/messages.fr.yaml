@@ -4435,6 +4435,9 @@ admin:
       community_voting_live:
         label: 'Le vote saisonnier est actif'
         help: 'Mettez 1 quand les tours de vote sont ouverts. À 0, chaque appel au vote sur la carte reste masqué — un bouton pour un tour qui n''existe pas semble cassé.'
+      map_confirmed_default_threshold:
+        label: 'Éligibilité à Confirmé : lieux vérifiés'
+        help: 'Nombre de lieux vérifiés par quelqu’un qu’une région doit atteindre avant qu’un curateur puisse l’ouvrir en mode Confirmé par défaut. Aucune répartition par type n’est exigée, seulement assez pour que le mode ne paraisse pas vide.'
       map_curated_default_threshold:
         label: 'Éligibilité au Best-of : total d’éléments'
         help: 'Nombre total d’éléments sélectionnés qu’une région doit atteindre avant qu’un curateur puisse l’ouvrir en mode Sélection par défaut. Abaissez-le pour débloquer plus tôt les jeunes régions, augmentez-le pour maintenir le niveau d’exigence.'

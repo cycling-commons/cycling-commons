@@ -4474,6 +4474,9 @@ admin:
       community_voting_live:
         label: 'La votación de temporada está activa'
         help: 'Ponlo a 1 cuando las rondas de votación estén abiertas. A 0, toda llamada a votar en el mapa queda oculta — un botón para una ronda que no existe parece roto.'
+      map_confirmed_default_threshold:
+        label: 'Preparación de Confirmado: sitios comprobados'
+        help: 'Cuántos sitios comprobados por alguien necesita una región antes de que un curador pueda abrirla en modo Confirmado por defecto. No hace falta repartirlos por tipos, solo que haya suficientes para que el modo no parezca vacío.'
       map_curated_default_threshold:
         label: 'Preparación de Lo mejor: elementos totales'
         help: 'Cuántos elementos curados necesita una región en total antes de que un curador pueda abrirla en modo Curado por defecto. Bájalo para desbloquear antes las regiones jóvenes; súbelo para mantener el listón de calidad.'

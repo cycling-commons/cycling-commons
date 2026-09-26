@@ -4464,6 +4464,9 @@ admin:
       community_voting_live:
         label: 'Seasonal voting is live'
         help: 'Set to 1 when the voting rounds are open. At 0 every vote call-to-action on the map stays hidden — a button for a round that does not exist reads as broken.'
+      map_confirmed_default_threshold:
+        label: 'Confirmed readiness: checked places'
+        help: 'How many places somebody has checked a region needs before a curator may open it in Confirmed mode by default. It needs no spread over kinds of thing, only enough that the mode does not look empty.'
       map_curated_default_threshold:
         label: 'Best of readiness: total items'
         help: 'How many curated items a region needs in total before a curator may open it in Curated mode by default. Lower it to unlock young regions sooner; raise it to hold the line on quality.'
