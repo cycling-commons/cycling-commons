@@ -64,17 +64,18 @@
                   {% endfor %}
                 </div>
                 {# In tour order: west to east, then south to Houffalize. `to` is the rank the pin flies
-                   to, `s` the second the view arrives, `v` its stars. Thier
+                   to, `s` the second the view arrives, `v` its stars (the counter ticks up the
+                   last 36 of them, from `--b`). Thier
                    Antoine and Stockeu are 3.6 km apart, so their counts sit
                    on the outer sides. #}
                 {% for c in [
                   {to: 3, x: 67.27, y: 22.86, s: '3.8s', v: 317, side: ''},
-                  {to: 1, x: 79.92, y: 24.22, s: '5.0s', v: 486, side: ''},
-                  {to: 2, x: 85.14, y: 31.70, s: '6.1s', v: 402, side: ' l'},
-                  {to: 5, x: 86.56, y: 31.63, s: '6.9s', v: 221, side: ' r'},
-                  {to: 4, x: 82.78, y: 51.43, s: '8.1s', v: 268, side: ''}
+                  {to: 1, x: 79.92, y: 24.22, s: '5.59s', v: 486, side: ''},
+                  {to: 2, x: 85.14, y: 31.70, s: '7.08s', v: 402, side: ' l'},
+                  {to: 5, x: 86.56, y: 31.63, s: '8.47s', v: 221, side: ' r'},
+                  {to: 4, x: 82.78, y: 51.43, s: '10.26s', v: 268, side: ''}
                 ] %}
-                <span class="cp{{ c.side }}" data-to="{{ c.to }}" style="left:{{ c.x }}%;top:{{ c.y }}%;--k:{{ loop.index0 }};--r:{{ c.to - 1 }};--s:{{ c.s }};--v:{{ c.v }}">
+                <span class="cp{{ c.side }}" data-to="{{ c.to }}" style="left:{{ c.x }}%;top:{{ c.y }}%;--k:{{ loop.index0 }};--r:{{ c.to - 1 }};--s:{{ c.s }};--b:{{ c.v - 36 }}">
                   <span class="cp-m">{% include 'partials/_type_icon.html.twig' with {letter: 'N'} only %}</span>
                   <span class="cp-st"><i style="--j:0;--sx:-11px">★</i><i style="--j:1;--sx:1px">★</i><i style="--j:2;--sx:12px">★</i></span>
                   <span class="cp-ct"></span>

@@ -143,20 +143,28 @@ rule between the three.
   full coverage" and "Experience: curated & voted by riders", a colon, never
   a dash. The closing band keeps its map button and the account offer.
 - **Landing page, the best-climbs phone** (2026-09-26): before the ranking
-  shows, the phone plays a map tour of about 12 seconds in plain SVG and CSS,
+  shows, the phone plays a map tour of about 15 seconds in plain SVG and CSS,
   no map library. Wallonia (the `world_division` polygon BE-WAL in Lambert 72,
   simplified at 500 m, inlined as `pages/_home_wallonia.svg.twig`) with the
   Meuse, the Ourthe and five towns (`home.cur_town_*`, local exonyms per
-  locale), and the five climbs as climb pins at their real positions. The
-  view zooms in seven times and glides Huy, La Redoute, Thier Antoine,
-  Stockeu, then south to the Côte de Saint-Roch at Houffalize; at each,
-  stars pop and a count rises (317, 486, 402, 221, 268: illustrative, since
-  the seasonal vote is not built, but in the order of the ranking). It zooms
-  back out, the drawing shrinks away and each pin flies onto the climb icon
-  before its rank number and becomes it (`assets/home/hero.js` measures the
-  flights from layout offsets, rescaled by the notch for the narrow-screen
-  `zoom`), then the rows appear, the winner's profile draws itself and a
-  Replay button (`home.frag_replay`) appears under the list. The two home
+  locale), and the five climbs as climb pins at their real positions. Once
+  the view zooms in, the main roads between the villages near each climb
+  (routed, merged, simplified at 80 m) fade in, with each climb's own road
+  in light purple; map lines keep one on-screen width at every zoom. The
+  view zooms in fourteen times, about the pin so no pin swings off the
+  glass, and glides Huy, La Redoute, Thier Antoine, Stockeu, then south to
+  the Côte de Saint-Roch at Houffalize. At each, stars pop and a count ticks
+  up one vote at a time over 0.74 s, the last 36 votes of its total (317,
+  486, 402, 221, 268: illustrative, since the seasonal vote is not built,
+  but in the order of the ranking), and 0.25 s later the view moves on. It
+  zooms back out, the drawing shrinks away, the list comes up with an empty
+  purple ring before each rank number, and each pin flies into its ring and
+  fills it; then the winner's profile draws itself and a Replay button
+  (`home.frag_replay`) appears under the list. `assets/home/hero.js` aims
+  the flights from screen rects divided by the phone's scale, which it
+  measures by moving a probe 100px, so the narrow-screen `zoom` cannot throw
+  them, and aims again when the map starts to shrink, just before the
+  flights: Firefox fixes a flight's end point when it starts. The two home
   phones are one height: hero.js gives the shorter the taller one's height
   as min-height, and the best-climbs phone opens that room above the VOTED
   line. The profiles are the measured ones (each item's 25 m `lineGrad`,

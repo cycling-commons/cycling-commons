@@ -88,54 +88,81 @@
   })();
 
   /* The best-climbs phone: each map pin flies onto the climb icon of its rank.
-     --tx/--ty per pin, from layout offsets summed up to the board, not from
-     rects: the camera over the map is a transform, and offsets ignore it, so
-     the measure is the same whether the view is zoomed in or not. The pins
-     fly after the view is back at the whole region, where that transform is
-     the identity, so the offsets are also where the pins really are.
+     --tx/--ty per pin, in the phone's own pixels.
 
-     The phone is 15% smaller on narrow screens (`zoom`), and browsers differ
-     on whether offsets inside a zoomed box come back zoomed. The translate is
-     in the box's own pixels either way, so the offsets are rescaled by the
-     notch, whose width the stylesheet fixes at 84px. */
+     Rects, read so that no transform can bend them. The pins live under the
+     camera, a transform that is only the identity once the tour is over, so
+     a pin's rect is never read: its spot comes from its own left/top
+     percentages laid over the untransformed map box, where the camera box
+     sits full width and centred at 253:147. The icons carry no transform.
+     The card's scroll reveal is a translate on everything alike, so it
+     cancels out of the differences.
+
+     The phone is 15% smaller on narrow screens (`zoom`). Rects are in screen
+     pixels and the translate is in the phone's own, and browsers do not
+     agree on how `zoom` maps one onto the other (reading it off the notch,
+     or off layout offsets, sent the pins past the edge of the glass on a
+     phone). So it is measured, not assumed: a probe in the board is moved
+     100px and the distance it really went on screen is the scale. */
   (function(){
     const cur=document.querySelector('.cur');
     const board=cur&&cur.querySelector('.cur-board');
     if(!board) return;
-    const notch=cur.querySelector('.ph-notch');
-    const at=(el)=>{
-      let x=el.offsetWidth/2, y=el.offsetHeight/2;
-      for(;el&&el!==board;el=el.offsetParent){ x+=el.offsetLeft; y+=el.offsetTop; }
-      return {x,y};
+    const notch=cur.querySelector('.ph-notch'), map=board.querySelector('.cur-map');
+    const scaleOf=()=>{
+      const d=document.createElement('i');
+      d.style.cssText='position:absolute;left:0;top:0;width:0;height:0;visibility:hidden';
+      board.appendChild(d);
+      const x0=d.getBoundingClientRect().left;
+      d.style.translate='100px 0';
+      const x1=d.getBoundingClientRect().left;
+      d.remove();
+      return (x1-x0)/100;
     };
     /* Both phones one height: the shorter gets the taller one's height as
-       its min-height. Natural heights first (min-height cleared), then the
-       rescale by the notch, as below. */
+       its min-height. Natural heights first (min-height cleared). */
     const phones=[cur.querySelector('.phone'),document.querySelector('.silo .phone')].filter(Boolean);
     const level=()=>{
-      if(phones.length<2||!notch.offsetWidth) return;
-      const k=84/notch.offsetWidth;
+      if(phones.length<2) return;
       phones.forEach(ph=>{ ph.style.minHeight=''; });
-      const h=Math.max(...phones.map(ph=>ph.offsetHeight))*k;
+      const s=scaleOf();
+      if(!s) return;
+      const hs=phones.map(ph=>ph.getBoundingClientRect().height/s);
+      const h=Math.max(...hs);
       phones.forEach(ph=>{ ph.style.minHeight=h.toFixed(1)+'px'; });
     };
     const aim=()=>{
       if(!board.offsetParent||!notch.offsetWidth) return;
       level();
-      const k=84/notch.offsetWidth;
+      const s=scaleOf();
+      if(!s) return;
+      const m=map.getBoundingClientRect();
+      const camH=m.width*147/253, camTop=m.top+(m.height-camH)/2;
       board.querySelectorAll('.cp[data-to]').forEach(p=>{
         const n=board.querySelector('.ci[data-rank="'+p.dataset.to+'"]');
         if(!n) return;
-        const a=at(p), b=at(n);
+        const ax=m.left+parseFloat(p.style.left)/100*m.width, ay=camTop+parseFloat(p.style.top)/100*camH;
+        const r=n.getBoundingClientRect();
         // Land the pin's head, not its tip, on the icon: the head sits
         // 16px above the tip, 12.8px once the flight has shrunk it to .8.
-        p.style.setProperty('--tx',((b.x-a.x)*k).toFixed(1)+'px');
-        p.style.setProperty('--ty',((b.y-a.y)*k+12.8).toFixed(1)+'px');
+        p.style.setProperty('--tx',((r.left+r.width/2-ax)/s).toFixed(1)+'px');
+        p.style.setProperty('--ty',((r.top+r.height/2-ay)/s+12.8).toFixed(1)+'px');
       });
     };
     aim();
     window.addEventListener('resize',aim);
     if(document.fonts&&document.fonts.ready) document.fonts.ready.then(aim);
+
+    /* ...and again just before the flight, when the map starts to shrink,
+       0.4 s ahead of the first take-off. The measure at load is a forecast,
+       and one browser (Firefox's phone simulation) got it wrong at load while
+       the same measure taken on Replay landed every pin: re-measuring here
+       gives every play the Replay measure. It must land BEFORE the flights
+       start: Firefox fixes a flight's end point when it starts, so a value
+       set at take-off comes a frame too late. */
+    cur.addEventListener('animationstart',e=>{
+      if(e.animationName==='curShrink') aim();
+    });
 
     // Replay, as the silo does it: every step hangs off `.cur.in`.
     const replay=cur.querySelector('[data-cur-replay]');
