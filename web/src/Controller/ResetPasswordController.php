@@ -22,6 +22,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\ResetPassword\Controller\ResetPasswordControllerTrait;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
 use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
@@ -39,6 +40,7 @@ final class ResetPasswordController extends AbstractController
     public function __construct(
         private readonly ResetPasswordHelperInterface $resetPasswordHelper,
         private readonly EntityManagerInterface $entityManager,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -184,7 +186,7 @@ final class ResetPasswordController extends AbstractController
         $email = (new TemplatedEmail())
             ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
             ->to(new Address($user->getEmail(), $user->getDisplayName()))
-            ->subject('Your Cycling Commons password reset link')
+            ->subject($this->translator->trans('security.reset_email.subject'))
             ->htmlTemplate('emails/reset_password.html.twig')
             ->context(['resetToken' => $resetToken]);
 

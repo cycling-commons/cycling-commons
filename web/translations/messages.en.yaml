@@ -1576,6 +1576,14 @@ security:
     submit: 'Set new password'
     remember_password: 'Remember your password?'
     sign_in_link: 'Sign in'
+  # The password reset email (emails/reset_password.html.twig).
+  reset_email:
+    subject: 'Your Cycling Commons password reset link'
+    heading: 'Reset your password'
+    body: 'You asked to reset the password of your Cycling Commons account. Click the button below to set a new one.'
+    button: 'Reset my password'
+    link_fallback: 'Button not working? Paste this link into your browser:'
+    expiry: 'This link expires in %duration%. If you did not ask for a password reset, you can safely ignore this email.'
   check_email_reset:
     panel_h1: 'Check your email.'
     panel_p: 'A reset link is on its way if an account exists for that address.'

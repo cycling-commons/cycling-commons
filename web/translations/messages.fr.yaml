@@ -1567,6 +1567,14 @@ security:
     submit: 'Définir le nouveau mot de passe'
     remember_password: 'Vous vous souvenez de votre mot de passe ?'
     sign_in_link: 'Se connecter'
+  # The password reset email (emails/reset_password.html.twig).
+  reset_email:
+    subject: 'Votre lien de réinitialisation du mot de passe Cycling Commons'
+    heading: 'Réinitialisez votre mot de passe'
+    body: 'Vous avez demandé à réinitialiser le mot de passe de votre compte Cycling Commons. Cliquez sur le bouton ci-dessous pour en choisir un nouveau.'
+    button: 'Réinitialiser mon mot de passe'
+    link_fallback: 'Le bouton ne fonctionne pas ? Collez ce lien dans votre navigateur :'
+    expiry: 'Ce lien expire dans %duration%. Si vous n''avez pas demandé de réinitialisation, vous pouvez ignorer cet email en toute sécurité.'
   check_email_reset:
     panel_h1: 'Vérifiez votre email.'
     panel_p: 'Un lien de réinitialisation est en route si un compte existe pour cette adresse.'

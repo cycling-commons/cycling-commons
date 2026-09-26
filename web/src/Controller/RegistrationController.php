@@ -23,6 +23,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 /**
@@ -32,8 +33,10 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
  */
 final class RegistrationController extends AbstractController
 {
-    public function __construct(private readonly EmailVerifier $emailVerifier)
-    {
+    public function __construct(
+        private readonly EmailVerifier $emailVerifier,
+        private readonly TranslatorInterface $translator,
+    ) {
     }
 
     #[Route([
@@ -113,7 +116,7 @@ final class RegistrationController extends AbstractController
                 (new TemplatedEmail())
                     ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
                     ->to(new Address($user->getEmail(), $user->getDisplayName()))
-                    ->subject('Confirm your Cycling Commons account')
+                    ->subject($this->translator->trans('registration.email.title'))
                     ->htmlTemplate('registration/confirmation_email.html.twig')
                     ->context(['displayName' => $user->getDisplayName()])
             );

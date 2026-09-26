@@ -1572,6 +1572,14 @@ security:
     submit: 'Nieuw wachtwoord instellen'
     remember_password: 'Wachtwoord toch nog?'
     sign_in_link: 'Inloggen'
+  # The password reset email (emails/reset_password.html.twig).
+  reset_email:
+    subject: 'Je link om je Cycling Commons-wachtwoord opnieuw in te stellen'
+    heading: 'Stel je wachtwoord opnieuw in'
+    body: 'Je hebt gevraagd om het wachtwoord van je Cycling Commons-account opnieuw in te stellen. Klik op de knop hieronder om een nieuw wachtwoord te kiezen.'
+    button: 'Nieuw wachtwoord instellen'
+    link_fallback: 'Werkt de knop niet? Plak deze link in je browser:'
+    expiry: 'Deze link verloopt over %duration%. Heb je geen nieuw wachtwoord aangevraagd? Dan kun je deze e-mail gewoon negeren.'
   check_email_reset:
     panel_h1: 'Controleer je e-mail.'
     panel_p: 'Er is een resetlink onderweg als er een account bestaat voor dat adres.'

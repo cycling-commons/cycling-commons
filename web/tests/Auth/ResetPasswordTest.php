@@ -109,6 +109,8 @@ final class ResetPasswordTest extends WebTestCase
         $htmlBody = $email->getHtmlBody();
         self::assertIsString($htmlBody);
         self::assertStringContainsString('/reset-password/reset/', $htmlBody);
+        // The link is also printed as text, for clients that drop the button.
+        self::assertMatchesRegularExpression('#>\s*https?://[^<\s]+/reset-password/reset/[^<\s]+\s*</a>#', $htmlBody);
 
         // Should redirect to check-email
         self::assertResponseRedirects('/reset-password/check-email');
@@ -119,6 +121,31 @@ final class ResetPasswordTest extends WebTestCase
         $repo = static::getContainer()->get(ResetPasswordRequestRepository::class);
         $requests = $repo->findAll();
         self::assertNotEmpty($requests, 'A reset password request row must exist in the DB.');
+    }
+
+    /** Asked from the Dutch site, the whole email is Dutch: subject, text and expiry. */
+    public function testResetEmailIsInThePageLanguage(): void
+    {
+        $client = static::createClient();
+
+        $this->createVerifiedUser('reset-nl@example.com', 'Reset NL', 'initialpass12345!');
+
+        $crawler = $client->request('GET', '/nl/reset-password');
+        self::assertResponseIsSuccessful();
+
+        $client->submit($crawler->filter('form')->form([
+            'reset_password_request_form[email]' => 'reset-nl@example.com',
+        ]));
+
+        $email = $this->getMailerMessage();
+        self::assertNotNull($email);
+        self::assertEmailSubjectContains($email, 'Je link om je Cycling Commons-wachtwoord opnieuw in te stellen');
+        $htmlBody = $email->getHtmlBody();
+        self::assertIsString($htmlBody);
+        self::assertStringContainsString('Nieuw wachtwoord instellen', $htmlBody);
+        self::assertStringContainsString('Plak deze link in je browser', $htmlBody);
+        self::assertStringContainsString('Deze link verloopt over 1 uur.', $htmlBody);
+        self::assertStringNotContainsString('Reset my password', $htmlBody);
     }
 
     #[\Override]

@@ -198,6 +198,15 @@ styles, paper backdrop, ink header band carrying the wide wordmark
 clients strip SVG), orange action button. Copy lives in the extending
 templates; the shell owns layout and the footer.
 
+Under the action button, the verification and password reset emails print the
+same link as text ("Button not working? Paste this link into your
+browser:"), for mail clients that drop or block the button. Both are
+translated in all five catalogues (`registration.email.*`,
+`security.reset_email.*`, subject included) and go out in the language of the
+page the rider asked from: the routes are locale-prefixed and the mail is sent
+inside that request. The reset email's expiry is the token's own lifetime,
+worded by the reset bundle's translations ("1 hour", "1 uur").
+
 ## 3. Login throttling and account lockout
 
 Two complementary layers:

@@ -1579,6 +1579,14 @@ security:
     submit: 'Guardar la contraseña'
     remember_password: '¿Ya te acuerdas de tu contraseña?'
     sign_in_link: 'Iniciar sesión'
+  # The password reset email (emails/reset_password.html.twig).
+  reset_email:
+    subject: 'Tu enlace para restablecer la contraseña de Cycling Commons'
+    heading: 'Restablece tu contraseña'
+    body: 'Has pedido restablecer la contraseña de tu cuenta de Cycling Commons. Pulsa el botón de abajo para elegir una nueva.'
+    button: 'Restablecer mi contraseña'
+    link_fallback: '¿El botón no funciona? Pega este enlace en tu navegador:'
+    expiry: 'Este enlace caduca en %duration%. Si no has pedido restablecer la contraseña, puedes ignorar este mensaje sin problema.'
   check_email_reset:
     panel_h1: 'Revisa tu correo.'
     panel_p: 'El enlace de restablecimiento va de camino si existe una cuenta para esa dirección.'

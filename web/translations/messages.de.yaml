@@ -1572,6 +1572,14 @@ security:
     submit: 'Neues Passwort setzen'
     remember_password: 'Passwort wieder eingefallen?'
     sign_in_link: 'Anmelden'
+  # The password reset email (emails/reset_password.html.twig).
+  reset_email:
+    subject: 'Dein Link zum Zurücksetzen deines Cycling-Commons-Passworts'
+    heading: 'Setze dein Passwort zurück'
+    body: 'Du hast darum gebeten, das Passwort deines Cycling-Commons-Kontos zurückzusetzen. Klicke auf den Button unten, um ein neues festzulegen.'
+    button: 'Mein Passwort zurücksetzen'
+    link_fallback: 'Button funktioniert nicht? Füge diesen Link in deinen Browser ein:'
+    expiry: 'Dieser Link läuft in %duration% ab. Wenn du kein neues Passwort angefordert hast, kannst du diese E-Mail ignorieren.'
   check_email_reset:
     panel_h1: 'E-Mail prüfen.'
     panel_p: 'Ein Reset-Link ist unterwegs, wenn ein Konto für diese Adresse existiert.'
