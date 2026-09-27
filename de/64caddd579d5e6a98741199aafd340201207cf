@@ -1,0 +1,30 @@
+web/tests/Provider/ProviderHarvestTest.php
+  s_6e1d7c95fbc8b5::t_9b7019e383f16d 292-303,305-316
+  s_6e1d7c95fbc8b5::t_dec751b6702b08 35,304
+  s_6e1d7c95fbc8b5::t_b3bd353b761333 291
+docs/specs/data-provider-hierarchy.md
+  s_6e1d7c95fbc8b5::t_af24b00676e785 148-156
+web/src/Provider/ProviderHarvest.php
+  s_6e1d7c95fbc8b5::t_5791b8da44a10b 219-223,227
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "de64caddd579d5e6a98741199aafd340201207cf",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
