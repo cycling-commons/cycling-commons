@@ -111,15 +111,16 @@ rule between the three.
   is a kicker (the kind of person) and one verb phrase, nothing under it,
   nothing in the middle but the brand globe: the owner's earthGlobe.svg,
   inlined as `partials/_earth_globe.svg.twig` so CSS colours it, a green a
-  shade darker than the hero, tilted 23.4 degrees, 54 units wide. One arrow
+  shade darker than the hero, tilted 23.4 degrees, 46 units wide. One arrow
   halfway along each stretch; three dotted lines with arrowheads leave the
   Reusing stop to three small nodes at different distances, tinted trail,
   ochre and glacier; from the lowest node one dotted way back swings wide
   under both lower cards and arrives under Adding. Open data comes in the
   other way: three faint paper nodes above and right of the lap, where the
-  outside providers sit, send dotted lines that meet in the gap between
-  Riding and Adding and run on as one line into the globe, labelled
-  `home.way_sources` ("Open data"): many sources, one commons. Each card
+  outside providers sit, send dotted lines that each end with an arrowhead
+  on the stretch of the lap from Riding to Adding, labelled
+  `home.way_sources` ("Open data"): open data joins the loop where riders
+  put in their finds. Each card
   carries a soft drop shadow. The owner's rendered
   image (`assets/brand/cc-ecosystem-mainpage.webp`, English text baked in,
   alt `home.ecosystem_alt`) is kept as a test state: a CSS-only switch
@@ -128,8 +129,13 @@ rule between the three.
   the image go when the choice is final. Below 1000px the lap moves under
   the text and keeps its drawing down to 400px wide, big phones included
   (2026-09-27): the box is sized so the whole drawing, app nodes and "Open
-  data" included, fits between the gutters, and the cards shrink with it.
-  Below 400px the lap goes and the stops stack in one column. The lap
+  data" included, takes about 75% of the width between the gutters, capped at
+  a 300px box, and the cards shrink with it. There the lap sits in the dark
+  end of the hero's gradient, so the earth is drawn a shade lighter than the
+  ground (`#2C5440`) instead of darker (`#15301F`) as on a wide screen.
+  Below 400px the lap goes and the stops stack in one column, 14rem wide
+  and one line each (the kicker is kept for screen readers only), with a
+  chevron between them. The lap
   stands still: a moving dash forced a
   repaint of the whole hero on every frame, about a third of a laptop GPU. A faint 56px grid lies over the hero and the
   closing band, fading to the foot; the five thin trail contours sit in the

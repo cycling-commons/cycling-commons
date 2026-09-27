@@ -655,7 +655,7 @@ error404:
   cta_home: 'Terug naar de atlas'
 home:
   eyebrow: 'OPEN FIETSDATA'
-  h1: 'Alles wat fietsers weten.<br/>In één <em>open atlas</em><span class="endp">.</span>'
+  h1: 'Alles wat fietsers&nbsp;weten.<br/>In één <em>open atlas</em><span class="endp">.</span>'
   lede: 'Een door de gemeenschap samengestelde kaart met ''s werelds beste fietsbelevingen: beklimmingen, waterpunten, uitzichten, fietsvriendelijke overnachtingsmogelijkheden, die iedereen gratis kan gebruiken, uitbreiden en verbeteren.'
   cta_gpx: 'Check je route (GPX)'
   cta_map: 'Verken de kaart'
