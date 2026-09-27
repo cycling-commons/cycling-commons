@@ -4992,6 +4992,12 @@ changelog:
   feed_mid: '. Was als Nächstes kommt, steht im'
   feed_roadmap: 'Fahrplan'
   feed_post: '.'
+  v091_banner: "<b>Die Karte zeigt, wohin sie noch nicht reicht.</b> Außerhalb der abgedeckten Länder sagt ein Hinweis das und zeigt, wie Sie helfen können, eines hinzuzufügen."
+  v091_climbs: "<b>Den steilsten Punkt eines Anstiegs markieren.</b> Im Anstiegseditor lässt sich markieren, wo ein Anstieg am steilsten ist, und auch lange Anstiege bekommen jetzt ihr Steigungsprofil."
+  v091_languages: "<b>Englisch und Niederländisch.</b> Die Website gibt es auf Englisch und Niederländisch; eine Adresse in einer anderen Sprache führt zu einer der beiden."
+  v091_reset: "<b>Passwort zurücksetzen in Ihrer Sprache.</b> Die E-Mail kommt in der Sprache, in der Sie die Website nutzen, mit dem Link auch als ausgeschriebenem Text."
+  v091_bugs: "<b>Einen Fehler zu melden ist einfacher.</b> Der Fehler-Knopf kann ein Bildschirmfoto der Seite für Sie aufnehmen, das Fenster lässt sich vergrößern, und es antwortet in Ihrer Sprache."
+  v091_safety: "<b>Jedes Bild wird geprüft, bevor es jemand sieht.</b> Bildschirmfotos in Fehlermeldungen werden im Hintergrund auf Viren geprüft und neu gezeichnet, und Fotos von Wikimedia Commons zeigen wir immer aus unserer eigenen Kopie."
   v090_towns: "<b>Orte auf der Karte.</b> Ein Ort öffnet jetzt eine eigene Karte, markiert mit der eigenen Nadel der Website."
   v090_fresh: "<b>Die Kartendaten aktualisieren sich selbst.</b> Jede Nacht liest die Website OpenStreetMap für die abgedeckten Regionen neu ein, sodass das Gezeigte höchstens Tage alt ist, nicht Monate."
   v090_surface: "<b>Belag und Routen, wöchentlich neu gebaut.</b> Die Belags- und Routenebenen werden planmäßig neu erzeugt statt von Hand."

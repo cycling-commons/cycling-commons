@@ -5024,6 +5024,12 @@ changelog:
   feed_mid: '. Lo que viene después está en la'
   feed_roadmap: 'hoja de ruta'
   feed_post: '.'
+  v091_banner: "<b>El mapa dice adónde aún no llega.</b> Fuera de los países que cubre, un aviso lo indica y muestra cómo ayudar a sumar uno."
+  v091_climbs: "<b>Marca el punto más empinado de una subida.</b> El editor de subidas permite indicar dónde es más empinada, y las subidas largas ya tienen también su perfil de pendiente."
+  v091_languages: "<b>Inglés y neerlandés.</b> El sitio se ofrece en inglés y neerlandés; una dirección en otro idioma lleva a uno de los dos."
+  v091_reset: "<b>Restablecer la contraseña en tu idioma.</b> El correo llega en el idioma en que usas el sitio, con el enlace también escrito como texto."
+  v091_bugs: "<b>Informar de un error es más fácil.</b> El botón puede hacer una captura de la página por ti, el panel se puede ampliar y responde en tu idioma."
+  v091_safety: "<b>Cada imagen se revisa antes de que nadie la vea.</b> Las capturas de los informes de error se analizan contra virus y se redibujan en segundo plano, y las fotos de Wikimedia Commons se muestran siempre desde nuestra propia copia."
   v090_towns: "<b>Los pueblos en el mapa.</b> Un pueblo abre ahora su propia ficha, señalada con el marcador propio del sitio."
   v090_fresh: "<b>Los datos del mapa se actualizan solos.</b> Cada noche el sitio vuelve a leer OpenStreetMap para las regiones que cubre, así que lo que ves tiene días, no meses."
   v090_surface: "<b>Firme y rutas, reconstruidos cada semana.</b> Las capas de firme y de rutas se regeneran de forma programada en lugar de a mano."

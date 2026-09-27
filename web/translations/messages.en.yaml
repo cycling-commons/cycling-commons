@@ -5013,6 +5013,12 @@ changelog:
   feed_mid: '. What is coming next is on the'
   feed_roadmap: 'roadmap'
   feed_post: '.'
+  v091_banner: "<b>The map says where it does not reach yet.</b> Outside the countries it covers, a banner says so and shows how to help bring one in."
+  v091_climbs: "<b>Mark a climb's steepest point.</b> The climb editor lets you mark where a climb is steepest, and long climbs now get their gradient profile too."
+  v091_languages: "<b>English and Dutch.</b> The site is served in English and Dutch; an address in another language leads to one of the two."
+  v091_reset: "<b>Password reset in your language.</b> The reset email comes in the language you use the site in, with the link also written out as text."
+  v091_bugs: "<b>Reporting a bug is easier.</b> The bug button can take a screenshot of the page for you, the panel can be made bigger, and it answers in your language."
+  v091_safety: "<b>Every picture is checked before anyone sees it.</b> Screenshots in bug reports are virus-scanned and redrawn in the background, and photos from Wikimedia Commons are always shown from our own copy."
   v090_towns: "<b>Towns on the map.</b> A town now opens a card of its own, marked with the site's own pin."
   v090_fresh: "<b>The map's data refreshes itself.</b> Every night the site re-reads OpenStreetMap for the regions it covers, so what you see is days old at most, not months."
   v090_surface: "<b>Road surface and routes, rebuilt weekly.</b> The surface and route layers are regenerated on a schedule instead of by hand."

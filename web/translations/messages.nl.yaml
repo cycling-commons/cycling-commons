@@ -4991,6 +4991,12 @@ changelog:
   feed_mid: '. Wat er hierna komt staat op de'
   feed_roadmap: 'routekaart'
   feed_post: '.'
+  v091_banner: "<b>De kaart zegt waar hij nog niet komt.</b> Buiten de landen die hij dekt, zegt een balk dat, en toont hoe je kunt helpen er een bij te halen."
+  v091_climbs: "<b>Markeer het steilste punt van een klim.</b> In de klimeditor kun je aangeven waar een klim het steilst is, en ook lange klimmen krijgen nu hun hellingsprofiel."
+  v091_languages: "<b>Engels en Nederlands.</b> De site is er in het Engels en het Nederlands; een adres in een andere taal leidt naar een van die twee."
+  v091_reset: "<b>Wachtwoord herstellen in je eigen taal.</b> De herstelmail komt in de taal waarin je de site gebruikt, met de link ook als tekst uitgeschreven."
+  v091_bugs: "<b>Een bug melden gaat makkelijker.</b> De bugknop kan een schermafbeelding van de pagina voor je maken, het venster kan groter, en het antwoordt in je eigen taal."
+  v091_safety: "<b>Elke afbeelding wordt gecontroleerd voordat iemand hem ziet.</b> Schermafbeeldingen in bugmeldingen worden op de achtergrond op virussen gecontroleerd en opnieuw getekend, en foto's van Wikimedia Commons tonen we altijd vanuit onze eigen kopie."
   v090_towns: "<b>Plaatsen op de kaart.</b> Een plaats opent nu een eigen kaartje, gemarkeerd met de eigen speld van de site."
   v090_fresh: "<b>De kaartgegevens verversen zichzelf.</b> Elke nacht leest de site OpenStreetMap opnieuw voor de regio's die hij dekt, dus wat je ziet is hooguit dagen oud, geen maanden."
   v090_surface: "<b>Wegdek en routes, wekelijks opnieuw opgebouwd.</b> De wegdek- en routelagen worden volgens schema opnieuw gegenereerd in plaats van met de hand."

@@ -4984,6 +4984,12 @@ changelog:
   feed_mid: '. Ce qui vient ensuite est sur la'
   feed_roadmap: 'feuille de route'
   feed_post: '.'
+  v091_banner: "<b>La carte dit où elle ne va pas encore.</b> En dehors des pays couverts, un bandeau le signale et montre comment aider à en ajouter un."
+  v091_climbs: "<b>Marquez le point le plus raide d'une montée.</b> L'éditeur de montées permet d'indiquer où une montée est la plus raide, et les longues montées ont désormais aussi leur profil de pente."
+  v091_languages: "<b>Anglais et néerlandais.</b> Le site est proposé en anglais et en néerlandais ; une adresse dans une autre langue mène à l'une des deux."
+  v091_reset: "<b>Réinitialisation du mot de passe dans votre langue.</b> Le courriel arrive dans la langue dans laquelle vous utilisez le site, avec le lien aussi écrit en toutes lettres."
+  v091_bugs: "<b>Signaler un bogue est plus simple.</b> Le bouton peut faire une capture d'écran de la page pour vous, le panneau peut être agrandi, et il répond dans votre langue."
+  v091_safety: "<b>Chaque image est vérifiée avant que quiconque la voie.</b> Les captures jointes aux signalements sont analysées contre les virus et redessinées en arrière-plan, et les photos de Wikimedia Commons sont toujours affichées depuis notre propre copie."
   v090_towns: "<b>Les villes sur la carte.</b> Une ville ouvre désormais sa propre fiche, signalée par le repère du site."
   v090_fresh: "<b>Les données de la carte se rafraîchissent seules.</b> Chaque nuit, le site relit OpenStreetMap pour les régions qu'il couvre : ce que vous voyez a quelques jours, pas quelques mois."
   v090_surface: "<b>Revêtement et itinéraires, reconstruits chaque semaine.</b> Les couches de revêtement et d'itinéraires sont régénérées automatiquement, et non plus à la main."
