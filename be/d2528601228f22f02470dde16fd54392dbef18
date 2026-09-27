@@ -1,0 +1,88 @@
+web/src/Contribution/SimilarPlaces.php
+  s_6e1d7c95fbc8b5::t_8d60b65d63563c 35-36
+  s_6e1d7c95fbc8b5::t_a9bfeb58c20a43 68
+  s_6e1d7c95fbc8b5::t_2a15429fc07af8 67
+  s_6e1d7c95fbc8b5::t_740fe349793a13 43-48
+  s_6e1d7c95fbc8b5::t_210b736017a862 1-34,37-42,49-66,69-114
+web/src/Moderation/ModerationService.php
+  s_6e1d7c95fbc8b5::t_545e4c571d1b48 241
+  s_6e1d7c95fbc8b5::t_2bc6d3dbe46231 59,235-240,242-243
+web/translations/messages.fr.yaml
+  s_6e1d7c95fbc8b5::t_c58c142a4fe46a 3171-3172
+  s_6e1d7c95fbc8b5::t_7c3a6ced355755 2611-2619
+web/translations/messages.de.yaml
+  s_6e1d7c95fbc8b5::t_7c3a6ced355755 2619-2627
+  s_6e1d7c95fbc8b5::t_c58c142a4fe46a 3179-3180
+web/translations/messages.nl.yaml
+  s_6e1d7c95fbc8b5::t_c58c142a4fe46a 3178-3179
+  s_6e1d7c95fbc8b5::t_7c3a6ced355755 2616-2624
+web/translations/messages.en.yaml
+  s_6e1d7c95fbc8b5::t_c58c142a4fe46a 3197-3198
+  s_6e1d7c95fbc8b5::t_7c3a6ced355755 2034-2042
+web/templates/moderate/_card_styles.html.twig
+  s_6e1d7c95fbc8b5::t_667a5b8a9d2cc7 203-206
+web/assets/contribute/similar.js
+  s_6e1d7c95fbc8b5::t_3bc07b79fdaab1 1-102
+web/src/Moderation/SubmissionQueue.php
+  s_6e1d7c95fbc8b5::t_8d60b65d63563c 122,473
+  s_6e1d7c95fbc8b5::t_ae4edae8bfdda1 487,563-564,569-585,587-588
+  s_6e1d7c95fbc8b5::t_90b3287ca83baf 48,52,586
+  s_6e1d7c95fbc8b5::t_21b70d83f860f3 589-590
+web/src/Controller/MapController.php
+  s_6e1d7c95fbc8b5::t_6c6c09e5e422eb 623-626
+web/translations/messages.es.yaml
+  s_6e1d7c95fbc8b5::t_7c3a6ced355755 2045-2053
+  s_6e1d7c95fbc8b5::t_c58c142a4fe46a 3205-3206
+web/templates/moderate/_queue_item.html.twig
+  s_6e1d7c95fbc8b5::t_5266c5c8ab71fa 117-128
+web/src/Controller/ContributeController.php
+  s_6e1d7c95fbc8b5::t_896a1da80e59c9 23
+  s_6e1d7c95fbc8b5::t_8ecd12a860497c 152-175
+  s_6e1d7c95fbc8b5::t_b14e22927fdfda 31,378,394-405,434
+  s_6e1d7c95fbc8b5::t_f5b1bceddc1994 176-177
+web/assets/map/osm-question.js
+  s_6e1d7c95fbc8b5::t_6c6c09e5e422eb 39-52
+web/assets/map/drawer.js
+  s_6e1d7c95fbc8b5::t_6c6c09e5e422eb 26,693
+web/tests/Moderation/ReplacedPlacesTest.php
+  s_6e1d7c95fbc8b5::t_b612d87ef13b9b 1-176
+web/src/Form/ImproveType.php
+  s_6e1d7c95fbc8b5::t_b14e22927fdfda 106-110
+docs/specs/catalog-data-model.md
+  s_6e1d7c95fbc8b5::t_af24b00676e785 385-416
+web/templates/contribute/improve.html.twig
+  s_6e1d7c95fbc8b5::t_5a2f3f298bff52 78-82,1019-1020
+  s_6e1d7c95fbc8b5::t_9a870637e50edd 1022
+  s_6e1d7c95fbc8b5::t_ef849a41310ea6 620-638,1021
+web/assets/styles/map.css
+  s_6e1d7c95fbc8b5::t_0527113d36b81a 575-577
+web/src/Moderation/ReplacedPlaces.php
+  s_6e1d7c95fbc8b5::t_8d60b65d63563c 40-41,86,102
+  s_6e1d7c95fbc8b5::t_ae4edae8bfdda1 131,133,152,165-200
+  s_6e1d7c95fbc8b5::t_4963077c87cbce 1-10,12-39,42-85,87-101,103-130,132,134-146,148-151,153-155,157-164,201-223
+  s_6e1d7c95fbc8b5::t_0495a1ac90c20c 11,147,156
+web/tests/Contribution/SimilarPlacesFlowTest.php
+  s_6e1d7c95fbc8b5::t_ce8beb47c3ddfa 100
+  s_6e1d7c95fbc8b5::t_696ca58a7001ea 1-99,101-132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bed2528601228f22f02470dde16fd54392dbef18",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
