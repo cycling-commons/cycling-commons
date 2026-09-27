@@ -620,6 +620,10 @@ final class MapController extends AbstractController
                 'osmAnsweredNone' => $t->trans('moderate.osm.answered_none'),
                 'osmRefTaken' => $t->trans('moderate.osm.ref_taken'),
                 'osmBadRef' => $t->trans('moderate.osm.bad_ref'),
+                // What approving a new place retires (catalog-data-model.md §5a).
+                'replacesHead' => $t->trans('moderate.replaces.heading'),
+                'replacesOurs' => $t->trans('improve.similar.from_ours'),
+                'replacesMetres' => $t->trans('improve.similar.metres', ['%m%' => '%m%']),
                 'osmUnanswered' => $t->trans('moderate.error.osm_unanswered'),
             ],
         ];

@@ -103,6 +103,11 @@ final class ImproveType extends AbstractType
             // A rider is never asked (catalog-data-model.md §5b), and a value
             // from one is ignored by the service.
             ->add('osmAnswer', HiddenType::class, ['required' => false])
+            // The similar places near the pin that this one replaces, as the
+            // rider left them ticked: `item:<id>` and OSM refs, comma-separated
+            // (assets/contribute/similar.js). Read only when a curator
+            // approves (ReplacedPlaces), and checked again there.
+            ->add('replaces', HiddenType::class, ['required' => false])
             ->add('mode', HiddenType::class, ['required' => false])
             // A curator's optional "Mark it confirmed" on their own applied edit (moderation-and-contribution.md §1.6).
             ->add('confirmNow', CheckboxType::class, ['required' => false, 'label' => false])

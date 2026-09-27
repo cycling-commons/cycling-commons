@@ -2616,6 +2616,15 @@ improve:
     use_existing: 'Vorhandenen Eintrag verwenden'
     none: 'Nicht in OpenStreetMap'
     none_hint: 'Nichts passt dazu: das ist ein neuer Eintrag'
+  similar:
+    heading_one: '1 ähnlicher Ort im Umkreis von %m% m'
+    heading_many: '%n% ähnliche Orte im Umkreis von %m% m'
+    intro: 'Ist Ihrer derselbe Ort? Lassen Sie ihn angehakt: Sobald Ihrer freigegeben ist, ersetzt er diesen.'
+    from_osm: 'OpenStreetMap'
+    from_ours: 'Cycling Commons'
+    unnamed: 'Ohne Namen'
+    metres: '%m% m'
+    same: 'derselbe Ort wie meiner'
   waiting:
     mine: 'Du hast schon eine Änderung an diesem Ort in der Warteschlange. Was du jetzt sendest, kommt dazu, so bleibt es eine Sache zum Lesen.'
     other: 'Jemand hat am %date% eine Änderung an diesem Ort vorgeschlagen, und noch niemand hat sie gelesen. Sende deine trotzdem, wenn sie etwas anderes sagt.'
@@ -3167,6 +3176,8 @@ moderate:
     ref_taken: 'Ein anderer angezeigter Ort beansprucht dieses OSM-Objekt bereits. Löse zuerst das Duplikat.'
     answered_linked: 'Verknüpft. Der Ort benennt jetzt sein OSM-Objekt.'
     answered_none: 'Festgehalten: dieser Ort hat kein OSM-Gegenstück.'
+  replaces:
+    heading: 'Die Freigabe ersetzt diese Orte'
   empty:
     heading: 'Warteschlange leer'
     body: 'Nichts mehr zu prüfen. Super.'

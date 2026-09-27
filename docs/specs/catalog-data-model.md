@@ -382,6 +382,38 @@ only refuse to add and never remove. The §4 rule guards against inferring
 deletion from *absence* in a capped harvest; a positively identified duplicate
 is a different question, and it is still a human who answers it.
 
+**When a rider adds or corrects a place (2026-09-27).** The same rule reaches
+the wizard, without the name key: a rider's new place usually has no name, and
+the rider is the one who knows whether two things are one. Under the pin,
+everyone adding a place or correcting an OSM point sees "N similar places
+within 250 m" (`App\Contribution\SimilarPlaces`, `GET /contribute/similar`):
+served items of the same letter, ours and providers' alike, and OSM points of
+the same letter no served item holds yet, nearest first, at most eight. A
+letter is not always a kind: for B the OSM food points (a `shop` tag, or a
+cafe, fast-food, restaurant, bar or pub) are left out, the rule the pipeline
+marks `food` with (pipeline/coverage/tiles.py), so a bakery is never "similar"
+to a tap. Each has a tick, "same place as mine"; within 50 m it starts ticked
+(a provider's own match radius), farther it starts unticked, because a second
+tap across a square is a real second tap. The ticks ride in the submission
+payload as `_replaces` (`item:<id>` and OSM refs, cleaned on the way in).
+
+Nothing changes until a curator approves (`ModerationService::approveNew`,
+`App\Moderation\ReplacedPlaces`). Approval then retires, never deletes:
+
+- every served row of the same letter holding the **same OSM point** as the
+  new place (`osm_ref`, or an OSM row's own `source_ref`): one node is one
+  thing, so this needs no tick;
+- every ticked row, checked again: same letter, served, within 250 m.
+
+The new place takes over the OSM point of a row it retires when it has none,
+or a ticked OSM point no served row holds, so the raw pin does not come back.
+`change_history` records `state` → `retired` and `replaced_by` on each retired
+row, credited to the submitter. The curator sees the list before deciding, on
+the queue card and in the drawer ("Approving replaces these places"),
+computed by the same rule (`ReplacedPlaces::preview`). A rejection retires
+nothing. The case it was built for: a rider corrected an OSM tap in Medemblik
+while RIVM's record of the same tap stood 7 m away (production, 2026-09-27).
+
 ### 5b. OSM is the identity spine (2026-08-25)
 
 Three columns in this codebase look like they answer "which real object is

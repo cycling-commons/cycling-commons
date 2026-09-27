@@ -23,7 +23,7 @@ import { shareQuery } from './share-links.js';
 import { addPhotoHref } from './add-photo.js';
 import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
-import { osmQuestionHtml } from './osm-question.js';
+import { osmQuestionHtml, replacesHtml } from './osm-question.js';
 import { townPinSvg } from './town-pin.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
@@ -690,7 +690,7 @@ function buildRecord(layer, f){
       }
     }
     // catalog-data-model.md §5b — a new place's OSM question, asked where it is approved.
-    const osmQ = 'new' === s.type ? osmQuestionHtml(s.osm, D) : '';
+    const osmQ = 'new' === s.type ? osmQuestionHtml(s.osm, D) + replacesHtml(s.replaces, D) : '';
     const badge = 'needs_info' === s.status
       ? `<div class="cc-mod-badge waiting">? ${D.waitingOnRider||'Waiting on the rider'}</div>`
       : `<div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>`;

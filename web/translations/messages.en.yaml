@@ -2031,6 +2031,15 @@ improve:
     use_existing: 'Use the existing entry'
     none: 'Not in OpenStreetMap'
     none_hint: 'Nothing here matches: this is a new record'
+  similar:
+    heading_one: '1 similar place within %m% m'
+    heading_many: '%n% similar places within %m% m'
+    intro: 'Is yours the same place? Leave it ticked: once yours is approved, it replaces this one.'
+    from_osm: 'OpenStreetMap'
+    from_ours: 'Cycling Commons'
+    unnamed: 'No name'
+    metres: '%m% m'
+    same: 'same place as mine'
   waiting:
     mine: 'You already have a change waiting on this place. Anything you send now is added to it, so it stays one thing for a curator to read.'
     other: 'Somebody proposed a change to this place on %date%, and a curator has not read it yet. Send yours anyway if it says something different.'
@@ -3185,6 +3194,8 @@ moderate:
     ref_taken: 'Another served place already claims that OSM object. Resolve the duplicate first.'
     answered_linked: 'Linked. The place now names its OSM object.'
     answered_none: 'Recorded: this place has no OSM counterpart.'
+  replaces:
+    heading: 'Approving replaces these places'
   empty:
     heading: 'Queue clear'
     body: 'Nothing left to review. Nice.'

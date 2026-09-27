@@ -56,6 +56,7 @@ final class ModerationService
         private readonly EscalationAlert $escalationAlert,
         private readonly OsmCandidates $osmCandidates,
         private readonly OsmLinker $osmLinker,
+        private readonly ReplacedPlaces $replacedPlaces,
     ) {
     }
 
@@ -231,6 +232,15 @@ final class ModerationService
         $item->setState(ItemState::Unverified);
         $this->history($item, $submission, $curator, 'state', ItemState::Submitted->value, ItemState::Unverified->value);
         $this->carryOwnAnswer($item, $submission);
+
+        // One place, one row: what this place replaces (the same OSM point
+        // held by another row, and the similar places the rider left ticked)
+        // is retired now, and not before (catalog-data-model.md §5a).
+        $this->replacedPlaces->apply(
+            $item,
+            ReplacedPlaces::ticks($submission->getPayload()['_replaces'] ?? null),
+            fn (Item $changed, string $field, mixed $old, mixed $new) => $this->history($changed, $submission, $curator, $field, $old, $new),
+        );
     }
 
     /**

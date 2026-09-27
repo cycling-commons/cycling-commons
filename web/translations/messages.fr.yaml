@@ -2608,6 +2608,15 @@ improve:
     use_existing: 'Utiliser l''entrée existante'
     none: 'Pas dans OpenStreetMap'
     none_hint: 'Rien ne correspond ici : c''est un nouvel enregistrement'
+  similar:
+    heading_one: '1 lieu similaire à moins de %m% m'
+    heading_many: '%n% lieux similaires à moins de %m% m'
+    intro: 'Le vôtre est-il le même lieu ? Laissez-le coché : une fois le vôtre approuvé, il remplace celui-ci.'
+    from_osm: 'OpenStreetMap'
+    from_ours: 'Cycling Commons'
+    unnamed: 'Sans nom'
+    metres: '%m% m'
+    same: 'même lieu que le mien'
   waiting:
     mine: 'Vous avez déjà une modification en attente sur ce lieu. Ce que vous envoyez maintenant y est ajouté, cela reste une seule chose à lire pour un curateur.'
     other: 'Quelqu''un a proposé une modification de ce lieu le %date%, et aucun curateur ne l''a encore lue. Envoyez la vôtre si elle dit autre chose.'
@@ -3159,6 +3168,8 @@ moderate:
     ref_taken: 'Un autre lieu servi revendique déjà cet objet OSM. Résolvez d''abord le doublon.'
     answered_linked: 'Lié. Le lieu nomme désormais son objet OSM.'
     answered_none: 'Enregistré : ce lieu n''a pas d''équivalent OSM.'
+  replaces:
+    heading: 'L''approbation remplace ces lieux'
   empty:
     heading: 'File vide'
     body: 'Plus rien à examiner. Parfait.'

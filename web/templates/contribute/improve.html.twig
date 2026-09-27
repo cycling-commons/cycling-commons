@@ -75,6 +75,11 @@
   .bwq-ok{display:flex;gap:.5rem;align-items:flex-start;font-size:.9rem;line-height:1.45;color:#14160E}
   .bwq-ok input{margin-top:.2rem}
   .osmq-scope{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:#6d7060;margin:0 0 .8rem}
+  /* The similar places under the pin: one line each, the tick first. */
+  .simq-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.35rem}
+  .simq-list label{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;cursor:pointer;font-size:.92rem;color:#2a2d22}
+  .simq-list input{accent-color:var(--trail,#E4502A)}
+  .simq-same{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#6d7060}
   /* Side by side, and never the width of the page: these are a handful of
      short choices, and a full-bleed row makes each one look like a section.
      The basis wraps them one per line on a phone without a media query. */
@@ -612,6 +617,25 @@
       <span id="wzUndo" role="button" tabindex="0" hidden>{{ 'js.climb_undo'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
+    {% if add_mode|default(false) %}
+      {# Places near the pin that may be the same place, for everyone adding
+         or correcting one (catalog-data-model.md §5a). similar.js fills and
+         shows it once the pin is placed; what stays ticked is replaced when a
+         curator approves. #}
+      <div class="osmq simq" id="wz-similar" hidden
+           data-url="{{ path('contribute_similar') }}" data-type="{{ item_type.value }}" data-radius="250"
+           data-t-one="{{ 'improve.similar.heading_one'|trans({'%m%': '%m%'}) }}"
+           data-t-many="{{ 'improve.similar.heading_many'|trans({'%n%': '%n%', '%m%': '%m%'}) }}"
+           data-t-osm="{{ 'improve.similar.from_osm'|trans }}"
+           data-t-ours="{{ 'improve.similar.from_ours'|trans }}"
+           data-t-unnamed="{{ 'improve.similar.unnamed'|trans }}"
+           data-t-metres="{{ 'improve.similar.metres'|trans({'%m%': '%m%'}) }}"
+           data-t-same="{{ 'improve.similar.same'|trans }}">
+        <h3 id="wz-similar-head"></h3>
+        <p class="osmq-scope">{{ 'improve.similar.intro'|trans }}</p>
+        <ul id="wz-similar-list" class="simq-list"></ul>
+      </div>
+    {% endif %}
     {% if item_type.letter == 'N' %}
       {# Optional rider steepest point, beside the measured one (docs/specs/climb-elevation.md); rider-steep.js. #}
       <div class="wz-rider" id="wz-rider" hidden>
@@ -991,6 +1015,10 @@
   none_hint: 'improve.osm.none_hint'|trans,
 }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('contribute/osm-answer.js') }}" defer></script>
+{% endif %}
+{% if add_mode|default(false) %}
+{# Riders too: the similar places are for everyone who adds or corrects one. #}
+<script src="{{ asset('contribute/similar.js') }}" defer></script>
 {% endif %}
 {# type="module" so this runs after the MapLibre boot module above: improve.js
    creates its wizard map at evaluation time, and v6 has no global until that

@@ -2042,6 +2042,15 @@ improve:
     use_existing: 'Usar la entrada existente'
     none: 'No está en OpenStreetMap'
     none_hint: 'Nada coincide aquí: es un registro nuevo'
+  similar:
+    heading_one: '1 lugar similar a menos de %m% m'
+    heading_many: '%n% lugares similares a menos de %m% m'
+    intro: '¿Es el tuyo el mismo lugar? Déjalo marcado: cuando se apruebe el tuyo, sustituirá a este.'
+    from_osm: 'OpenStreetMap'
+    from_ours: 'Cycling Commons'
+    unnamed: 'Sin nombre'
+    metres: '%m% m'
+    same: 'mismo lugar que el mío'
   waiting:
     mine: 'Ya tienes un cambio pendiente en este lugar. Lo que envíes ahora se añade a él, así sigue siendo una sola cosa que leer.'
     other: 'Alguien propuso un cambio en este lugar el %date%, y ninguna curadora lo ha leído todavía. Envía el tuyo si dice algo distinto.'
@@ -3193,6 +3202,8 @@ moderate:
     ref_taken: 'Otro lugar publicado ya reclama ese objeto de OSM. Resuelve primero el duplicado.'
     answered_linked: 'Vinculado. El lugar ya nombra su objeto de OSM.'
     answered_none: 'Registrado: este lugar no tiene equivalente en OSM.'
+  replaces:
+    heading: 'Aprobar sustituye estos lugares'
   empty:
     heading: 'Cola vacía'
     body: 'No queda nada por revisar. Bien.'

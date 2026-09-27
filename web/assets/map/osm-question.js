@@ -36,3 +36,17 @@ export function osmQuestionHtml(osm, D) {
       <div class="cc-mod-osm-opts">${opts}<button type="button" class="cc-mod-osm-opt none" data-osm-answer=""><b>${escPend(D.osmNone||'Not in OSM')}</b></button></div>
     </div>`;
 }
+
+/* What approving a new place retires (catalog-data-model.md §5a): the rows
+   holding the same OSM point, and the similar places the rider left ticked.
+   Read-only: it is the approval that retires them, and this says so first. */
+export function replacesHtml(replaces, D) {
+  const list = Array.isArray(replaces) ? replaces : [];
+  if (!list.length) return '';
+  const fill = (s, v) => String(s).replace(/%(\w+)%/g, (m, k) => (k in v ? String(v[k]) : m));
+  const rows = list.map(r => {
+    const from = r.provider || ('osm' === r.from ? 'OpenStreetMap' : (D.replacesOurs || 'Cycling Commons'));
+    return `<li>${escPend(r.name || (D.osmUnnamed || 'Unnamed'))} · ${escPend(from)} · ${escPend(fill(D.replacesMetres || '%m% m', { m: r.metres }))} · #${Number(r.id)}</li>`;
+  }).join('');
+  return `<div class="cc-mod-replaces"><div class="cc-mod-ctx-h">${escPend(D.replacesHead || 'Approving retires')}</div><ul>${rows}</ul></div>`;
+}

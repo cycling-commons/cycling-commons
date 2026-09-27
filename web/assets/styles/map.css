@@ -572,6 +572,9 @@
      because this is where the place is approved. Options are buttons in the
      drawer's secondary style; the answered chip is one small mono tag. */
   .cc-mod-osm{margin:.65rem 0 .6rem}
+  /* What approving a new place retires (catalog-data-model.md §5a). */
+  .cc-mod-replaces{margin:.4rem 0 .6rem}
+  .cc-mod-replaces ul{margin:.2rem 0 0;padding-left:1.1rem;font-size:.82rem;line-height:1.45}
   .cc-mod-osm-scope{font-size:.76rem;color:var(--chrome-mut);margin:0 0 .4rem;line-height:1.4}
   .cc-mod-osm-opts{display:flex;flex-direction:column;gap:.35rem}
   .cc-mod-osm-opt{display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;text-align:left;width:100%;

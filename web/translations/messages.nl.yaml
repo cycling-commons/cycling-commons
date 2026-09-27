@@ -2613,6 +2613,15 @@ improve:
     use_existing: 'Gebruik de bestaande vermelding'
     none: 'Niet in OpenStreetMap'
     none_hint: 'Niets past hierbij: dit is een nieuwe vermelding'
+  similar:
+    heading_one: '1 vergelijkbare plek binnen %m% m'
+    heading_many: '%n% vergelijkbare plekken binnen %m% m'
+    intro: 'Is de jouwe dezelfde plek? Laat hem aangevinkt: zodra de jouwe is goedgekeurd, vervangt die deze.'
+    from_osm: 'OpenStreetMap'
+    from_ours: 'Cycling Commons'
+    unnamed: 'Geen naam'
+    metres: '%m% m'
+    same: 'zelfde plek als de mijne'
   waiting:
     mine: 'Je hebt al een wijziging in behandeling op deze plek. Wat je nu stuurt wordt eraan toegevoegd, zo blijft het één ding om te lezen voor een regiobeheerder.'
     other: 'Iemand stelde op %date% een wijziging voor op deze plek, en een regiobeheerder heeft die nog niet gelezen. Stuur die van jou toch als hij iets anders zegt.'
@@ -3166,6 +3175,8 @@ moderate:
     ref_taken: 'Een andere getoonde plek claimt dat OSM-object al. Los eerst het duplicaat op.'
     answered_linked: 'Gekoppeld. De plek benoemt nu zijn OSM-object.'
     answered_none: 'Vastgelegd: deze plek heeft geen OSM-tegenhanger.'
+  replaces:
+    heading: 'Goedkeuren vervangt deze plekken'
   empty:
     heading: 'Wachtrij leeg'
     body: 'Niets meer te beoordelen. Goed gedaan.'

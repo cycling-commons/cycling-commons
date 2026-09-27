@@ -20,6 +20,7 @@ use App\Community\ItemConfirmationService;
 use App\Contribution\BikeWayLocator;
 use App\Contribution\BikeWayReading;
 use App\Contribution\CatalogContributionService;
+use App\Contribution\SimilarPlaces;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
 use App\Form\ImproveType;
@@ -27,6 +28,7 @@ use App\Form\VoteType;
 use App\Media\Entity\MediaUpload;
 use App\Media\PhotoLocationConfirmation;
 use App\Media\PhotoValidator;
+use App\Moderation\ReplacedPlaces;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
 use App\Service\ContributionReceipt;
@@ -145,6 +147,32 @@ final class ContributeController extends AbstractController
         );
 
         return $this->json(['candidates' => $candidates]);
+    }
+
+    /**
+     * Places near the wizard's pin that may be the same place, for everyone
+     * adding or correcting one (catalog-data-model.md §5a). `item` is the
+     * place being corrected and `ref` the OSM point being taken over; neither
+     * is listed as similar to itself.
+     */
+    #[Route('/contribute/similar', name: 'contribute_similar', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function similar(Request $request, SimilarPlaces $similar): Response
+    {
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+        if (!is_numeric($lat) || !is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180) {
+            return $this->json(['places' => []]);
+        }
+        $ref = (string) $request->query->get('ref', '');
+
+        return $this->json(['places' => $similar->near(
+            ItemType::fromParam((string) $request->query->get('type', '')),
+            (float) $lat,
+            (float) $lng,
+            $request->query->getInt('item') ?: null,
+            1 === preg_match('~^(node|way|relation)/\d{1,19}$~', $ref) ? $ref : null,
+        )]);
     }
 
     #[Route('/contribute', name: 'contribute')]
@@ -347,6 +375,7 @@ final class ContributeController extends AbstractController
                     // it cannot be confused with `_osm_ref`, which says this
                     // place IS that object and carries the dedupe rules.
                     '_osm_answer' => $data['osmAnswer'] ?? null,
+                    '_replaces' => self::replaces($data['replaces'] ?? null),
                 ] + $data, $user);
 
                 return $this->renderAddPlace($type, receipt: $receipt, fromOsm: true);
@@ -360,6 +389,18 @@ final class ContributeController extends AbstractController
         }
 
         return $this->renderAddPlace($type, form: $form, fromOsm: true);
+    }
+
+    /**
+     * The wizard's ticked similar places, cleaned: `item:<id>` and OSM refs.
+     *
+     * @return list<string>
+     */
+    private static function replaces(mixed $field): array
+    {
+        $ticks = ReplacedPlaces::ticks(explode(',', \is_string($field) ? $field : ''));
+
+        return array_merge(array_map(static fn (int $id): string => 'item:'.$id, $ticks['items']), $ticks['osm']);
     }
 
     /** mode=add arm of /improve. */
@@ -390,6 +431,7 @@ final class ContributeController extends AbstractController
                     // it, and a curator's own place queued unanswered behind
                     // them (owner-reported 2026-09-21).
                     '_osm_answer' => $data['osmAnswer'] ?? null,
+                    '_replaces' => self::replaces($data['replaces'] ?? null),
                 ] + $data, $user);
 
                 return $this->renderAddPlace($type, receipt: $receipt);
