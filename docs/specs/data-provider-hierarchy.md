@@ -145,6 +145,15 @@ come back beside the kept row.
 So the ingest's job is not to invent suppression. It is to **set `osm_ref`
 correctly** (§5), and the existing join does the rest.
 
+**Only a served row holds a node** (2026-09-27), in the ingest as on the map.
+The ingest skips a node another row already holds; it used to count any row,
+a submission still waiting for a curator included, while the map hides an OSM
+pin only for a served one. A rider's pending correction of an OSM tap then
+kept RIVM's record of the same tap from its node, and the map showed three
+pins for one tap (production, `node/7803241408`). The provider's row now takes
+the node; approving the rider's place retires that row
+(catalog-data-model.md §5a).
+
 ## 5. Ingest: match, then attach or insert
 
 One generic harvester, configured per registry row, replacing the

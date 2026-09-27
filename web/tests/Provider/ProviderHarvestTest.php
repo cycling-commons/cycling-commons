@@ -32,7 +32,7 @@ final class ProviderHarvestTest extends KernelTestCase
     {
         self::bootKernel();
         self::ensureCoverageSchema($this->db());
-        $this->db()->executeStatement("DELETE FROM item WHERE source_ref LIKE 'harvest-test:%'");
+        $this->db()->executeStatement("DELETE FROM item WHERE source_ref LIKE 'harvest-test:%' OR source_ref LIKE 'node/999%'");
         $this->db()->executeStatement("DELETE FROM coverage_poi WHERE ref LIKE 'node/999%'");
         $this->db()->executeStatement("DELETE FROM region WHERE slug LIKE 'harvest-test-%'");
         $this->db()->executeStatement('DELETE FROM change_history WHERE item_id NOT IN (SELECT id FROM item)');
@@ -285,6 +285,32 @@ final class ProviderHarvestTest extends KernelTestCase
         ));
         self::assertNull($this->db()->fetchOne(
             "SELECT osm_ref FROM item WHERE source_ref = 'harvest-test:alsonear'",
+        ));
+    }
+
+    /**
+     * Only a served row holds a node, the rule the map hides OSM pins by
+     * (ClaimedOsmRefs). A submission still waiting for a curator that holds
+     * the node used to block the provider's row from it while the map, which
+     * ignores an unserved claim, kept showing the OSM pin: three pins for one
+     * tap (production, node/7803241408, 2026-09-27).
+     */
+    public function testANodeHeldOnlyByAPendingSubmissionIsStillMatched(): void
+    {
+        $provider = $this->provider(50);
+        $this->coveragePoi('node/99909', self::LAT, self::LNG);
+        $this->db()->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, osm_ref, attributes, created_at, updated_at)
+             VALUES ('B', 'Kraan', ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), 'BE', 'submitted', 'osm', 'node/99909', 'node/99909', '{}', NOW(), NOW())",
+            ['lat' => self::LAT, 'lng' => self::LNG],
+        );
+
+        $counts = $this->harvest()->apply($provider, [$this->feature('harvest-test:beside-pending', self::LAT, self::LNG)]);
+
+        self::assertSame(1, $counts['attached']);
+        self::assertSame(0, $counts['contested']);
+        self::assertSame('node/99909', $this->db()->fetchOne(
+            "SELECT osm_ref FROM item WHERE source_ref = 'harvest-test:beside-pending'",
         ));
     }
 

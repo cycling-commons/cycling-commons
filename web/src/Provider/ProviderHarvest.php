@@ -216,10 +216,15 @@ final class ProviderHarvest
                 AND ST_DWithin(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)
                 -- Not a node some other row already IS. `osm_ref` is the
                 -- identity spine, and two items claiming one node is two rows
-                -- claiming to be the same thing.
+                -- claiming to be the same thing. Only a SERVED row holds it,
+                -- the rule the map hides OSM pins by (ClaimedOsmRefs): a
+                -- submission still waiting for a curator blocked this row
+                -- while the map kept the OSM pin, three pins for one tap.
+                -- Its approval retires this row (ModerationService).
                 AND NOT EXISTS (
                     SELECT 1 FROM item held
                      WHERE held.osm_ref = cp.ref AND held.source_ref <> :self
+                       AND held.state IN '.ItemState::servedSqlTuple().'
                 )
                 '.$tagSql.'
               ORDER BY ST_Distance(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography)
