@@ -18,7 +18,7 @@ interface VirusScannerInterface
     /**
      * @param resource|string $bytes
      *
-     * @throws ScannerUnavailable when no verdict could be obtained and CLAMAV_REQUIRED
+     * @throws ScannerUnavailable when no verdict could be obtained
      */
     public function scan(mixed $bytes): ScanVerdict;
 }

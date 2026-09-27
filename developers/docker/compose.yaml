@@ -186,7 +186,6 @@ services:
       MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-doctrine://default?queue_name=async&redeliver_timeout=900}"
       MAILER_DSN: "${MAILER_DSN:-smtp://mailpit:1025}"
       CLAMAV_TCP_ADDR: "${CLAMAV_TCP_ADDR:-clamav:3310}"
-      CLAMAV_REQUIRED: "${CLAMAV_REQUIRED:-1}"
       MEDIA_S3_ENDPOINT: "${MEDIA_S3_ENDPOINT:-http://minio:9000}"
       MEDIA_S3_REGION: "${MEDIA_S3_REGION:-us-east-1}"
       MEDIA_S3_KEY: "${MEDIA_S3_KEY:-${MINIO_ROOT_USER:-ccadmin}}"

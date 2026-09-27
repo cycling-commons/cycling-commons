@@ -58,6 +58,13 @@ final class CspMediaHostTest extends TestCase
         self::assertStringContainsString("img-src 'self' data: blob:", $policy);
     }
 
+    public function testNoWikimediaHostMayServeAPicture(): void
+    {
+        // Commons photos are scanned and served from our own storage; a
+        // browser must never load one from a host anyone can upload to.
+        self::assertStringNotContainsString('wikimedia', $this->policyFor(''));
+    }
+
     public function testTheMediaHostNeverLeaksIntoAnotherDirective(): void
     {
         $policy = $this->policyFor('https://media.example');

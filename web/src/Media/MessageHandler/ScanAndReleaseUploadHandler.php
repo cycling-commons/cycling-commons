@@ -81,7 +81,7 @@ final readonly class ScanAndReleaseUploadHandler
             return;
         }
 
-        // Fail-closed: CLAMAV_REQUIRED miss throws so Messenger retries. @see docs/specs/media-storage-architecture.md §3.1
+        // Fail-closed: no scanner throws, in every environment, so Messenger retries and the bytes stay in quarantine. @see docs/specs/media-storage-architecture.md §3.1
         $verdict = $this->scanner->scan($bytes);
 
         if ($verdict->infected) {
@@ -101,11 +101,11 @@ final readonly class ScanAndReleaseUploadHandler
             return;
         }
 
-        $this->release($upload, $processed, $message, $verdict->skipped);
+        $this->release($upload, $processed, $message);
     }
 
     /** Objects first, then row, then quarantine delete. @see docs/specs/media-storage-architecture.md §3 */
-    private function release(MediaUpload $upload, ProcessedPhoto $processed, ScanAndReleaseUpload $message, bool $unscanned): void
+    private function release(MediaUpload $upload, ProcessedPhoto $processed, ScanAndReleaseUpload $message): void
     {
         if (null === $message->pinLat || null === $message->pinLng) {
             // Legacy messages: pin is required at intake now.
@@ -138,7 +138,7 @@ final readonly class ScanAndReleaseUploadHandler
             $upload->getId(),
             null,
             MediaAction::Released,
-            $unscanned ? 'released WITHOUT a real verdict (no scanner)' : 'clean',
+            'clean',
         );
         $this->tellRiderIfTheyStoppedWaiting($upload);
         $this->em->flush();

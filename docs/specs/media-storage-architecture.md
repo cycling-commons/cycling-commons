@@ -19,7 +19,7 @@ exists (Messenger, a Redis-stream `async` transport, a `doctrine://` failure
 transport, in-memory in test); the dev stack runs `worker` + `clamav`
 containers and bootstraps the private bucket (`cc-media-private`, NO anonymous
 policy); the scanner is built and pinned both ways (`App\Media\Scan\ClamAvScanner`,
-`CLAMAV_REQUIRED` fail-closed semantics, EICAR proven live against the
+fail-closed semantics, EICAR proven live against the
 sidecar). And as of this round the flow itself moved: `POST /media/photos`
 writes the RAW bytes to the private bucket and dispatches,
 `ScanAndReleaseUploadHandler` scans, decodes and physically releases the
@@ -206,16 +206,18 @@ column is the only thing standing between an unscanned file and a reader.
 
 ### 3.1 Fail-closed
 
-`CLAMAV_REQUIRED=true` on the worker. A scanner error, a missing binary or an
-unreachable daemon makes the scan **throw**, the handler throws, and Messenger
-retries — the object stays in quarantine. Only a definitive *infected* verdict
-is terminal, and that path deletes the object and tells the rider.
+In every environment. A scanner error, a missing binary or an unreachable
+daemon makes the scan **throw**, the handler throws, and Messenger retries;
+the object stays in quarantine. Only a definitive *infected* verdict is
+terminal, and that path deletes the object and tells the rider.
 
-Soft-fail exists for development only, where a contributor has no ClamAV. It is
-selected by the same env var being absent, and it must never be absent in
-staging or production. **`CLAMAV_REQUIRED` unset on a real environment is the
-whole architecture quietly turning itself off**, so it belongs in the deploy
-checklist next to the other env with no safe default.
+There is no soft-fail switch (owner 2026-09-27: "do not accept files when
+clamav is down"), so no setting can turn the scanning off; a contributor stack
+needs the `clamav` sidecar (dev-environment.md) or a
+`clamscan` binary to accept an upload. The same rule holds for every other
+door a file comes in by: Wikimedia Commons photos (`FetchCommonsPhotoHandler`
+marks the file failed, `scanner_unavailable`) and bug-report and curator-room
+pictures (`ScreenshotStore`, contact-and-support.md).
 
 ### 3.2 Decoding belongs on the worker too
 

@@ -6,10 +6,10 @@ declare(strict_types=1);
 
 namespace App\Media\Scan;
 
-use Psr\Log\LoggerInterface;
-
 /**
- * ClamAV via clamd INSTREAM, else clamscan. CLAMAV_REQUIRED: miss throws, never clean.
+ * ClamAV via clamd INSTREAM, else clamscan. No scanner reachable throws, in
+ * every environment: there is no switch that turns a miss into a pass, so no
+ * setting can quietly stop the scanning (owner 2026-09-27).
  *
  * @see docs/specs/media-storage-architecture.md §3.1
  *
@@ -22,28 +22,17 @@ final class ClamAvScanner implements VirusScannerInterface
 
     public function __construct(
         private readonly string $tcpAddr,
-        private readonly bool $required,
-        private readonly LoggerInterface $logger,
     ) {
     }
 
     #[\Override]
     public function scan(mixed $bytes): ScanVerdict
     {
-        try {
-            if ('' !== $this->tcpAddr) {
-                return $this->scanInstream($bytes);
-            }
-
-            return $this->scanBinary($bytes);
-        } catch (ScannerUnavailable $e) {
-            if ($this->required) {
-                throw $e;
-            }
-            $this->logger->warning('Virus scan SKIPPED ({reason}) - CLAMAV_REQUIRED is off, so this environment accepts unscanned media.', ['reason' => $e->getMessage()]);
-
-            return ScanVerdict::skipped();
+        if ('' !== $this->tcpAddr) {
+            return $this->scanInstream($bytes);
         }
+
+        return $this->scanBinary($bytes);
     }
 
     /** @param resource|string $bytes */

@@ -27,7 +27,6 @@ final class FakeScanner implements VirusScannerInterface
 {
     public ?string $infectedWith = null;
     public bool $unavailable = false;
-    public bool $skipped = false;
     public int $calls = 0;
 
     #[\Override]
@@ -42,14 +41,13 @@ final class FakeScanner implements VirusScannerInterface
             return ScanVerdict::infected($this->infectedWith);
         }
 
-        return $this->skipped ? ScanVerdict::skipped() : ScanVerdict::clean();
+        return ScanVerdict::clean();
     }
 
     public function reset(): void
     {
         $this->infectedWith = null;
         $this->unavailable = false;
-        $this->skipped = false;
         $this->calls = 0;
     }
 }

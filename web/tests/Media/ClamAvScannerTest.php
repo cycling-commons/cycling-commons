@@ -9,11 +9,10 @@ namespace App\Tests\Media;
 use App\Media\Scan\ClamAvScanner;
 use App\Media\Scan\ScannerUnavailable;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 /**
  * The scanner's three outcomes, with the fail-closed one first: an
- * unreachable daemon under CLAMAV_REQUIRED must THROW, never answer clean -
+ * unreachable daemon must THROW, in every environment, never answer clean -
  * a fail-open scanner is indistinguishable from a working one until the day
  * it matters. Protocol verdicts are tested against a fake clamd speaking
  * real INSTREAM framing in a child process, so no test needs ClamAV
@@ -68,37 +67,26 @@ final class ClamAvScannerTest extends TestCase
         return '127.0.0.1:'.$port;
     }
 
-    public function testRequiredAndUnreachableThrowsRatherThanPassing(): void
+    public function testUnreachableThrowsRatherThanPassing(): void
     {
-        $scanner = new ClamAvScanner('127.0.0.1:1', true, new NullLogger());
+        $scanner = new ClamAvScanner('127.0.0.1:1');
 
         $this->expectException(ScannerUnavailable::class);
         $scanner->scan('bytes');
     }
 
-    public function testNotRequiredAndUnreachableIsASkippedVerdictNotAClean(): void
-    {
-        $scanner = new ClamAvScanner('127.0.0.1:1', false, new NullLogger());
-
-        $verdict = $scanner->scan('bytes');
-
-        self::assertFalse($verdict->infected);
-        self::assertTrue($verdict->skipped, 'a no-scanner pass must be marked skipped, never a real clean');
-    }
-
     public function testACleanStreamIsClean(): void
     {
-        $scanner = new ClamAvScanner($this->fakeClamd('stream: OK'), true, new NullLogger());
+        $scanner = new ClamAvScanner($this->fakeClamd('stream: OK'));
 
         $verdict = $scanner->scan('just a photo');
 
         self::assertFalse($verdict->infected);
-        self::assertFalse($verdict->skipped);
     }
 
     public function testAFoundReplyIsInfectedWithItsSignature(): void
     {
-        $scanner = new ClamAvScanner($this->fakeClamd('stream: Eicar-Signature FOUND'), true, new NullLogger());
+        $scanner = new ClamAvScanner($this->fakeClamd('stream: Eicar-Signature FOUND'));
 
         $verdict = $scanner->scan('X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR');
 
@@ -108,7 +96,7 @@ final class ClamAvScannerTest extends TestCase
 
     public function testANonVerdictReplyIsUnavailableNotClean(): void
     {
-        $scanner = new ClamAvScanner($this->fakeClamd('INSTREAM size limit exceeded. ERROR'), true, new NullLogger());
+        $scanner = new ClamAvScanner($this->fakeClamd('INSTREAM size limit exceeded. ERROR'));
 
         $this->expectException(ScannerUnavailable::class);
         $scanner->scan('bytes');

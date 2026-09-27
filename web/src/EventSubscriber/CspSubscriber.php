@@ -75,8 +75,10 @@ final class CspSubscriber implements EventSubscriberInterface
             "'self'",
             'data:',
             'blob:',
-            'https://commons.wikimedia.org',
-            'https://upload.wikimedia.org',
+            // No Wikimedia host: every Commons photo is downloaded on the
+            // worker, virus-scanned, drawn again and served from our own
+            // storage, so a browser never loads a picture from a file anyone
+            // can upload (owner 2026-09-27).
             'https://*.mapillary.com',
             'https://*.fbcdn.net',
         ];
