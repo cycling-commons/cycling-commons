@@ -1,0 +1,34 @@
+web/translations/messages.nl.yaml
+  s_6e1d7c95fbc8b5::t_0982d3bc290915 4994-4999
+web/translations/messages.es.yaml
+  s_6e1d7c95fbc8b5::t_0982d3bc290915 5027-5032
+web/src/Content/ReleaseNotes.php
+  s_6e1d7c95fbc8b5::t_0982d3bc290915 79-89
+  s_6e1d7c95fbc8b5::t_c23210e9254419 78
+web/.env.prod
+  s_6e1d7c95fbc8b5::t_0982d3bc290915 36
+web/translations/messages.fr.yaml
+  s_6e1d7c95fbc8b5::t_0982d3bc290915 4987-4992
+web/translations/messages.en.yaml
+  s_6e1d7c95fbc8b5::t_0982d3bc290915 5016-5021
+web/translations/messages.de.yaml
+  s_6e1d7c95fbc8b5::t_0982d3bc290915 4995-5000
+web/.env.staging
+  s_6e1d7c95fbc8b5::t_0982d3bc290915 152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "19668729a2fe5f93de0607ec07215e4657a7f4f1",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
