@@ -73,6 +73,7 @@ parameters:
     cc.social.facebook: '%env(default:cc.blank:CC_SOCIAL_FACEBOOK)%'
     cc.social.bluesky: '%env(default:cc.blank:CC_SOCIAL_BLUESKY)%'
     cc.social.mastodon: '%env(default:cc.blank:CC_SOCIAL_MASTODON)%'
+    cc.social.strava: '%env(default:cc.blank:CC_SOCIAL_STRAVA)%'
     cc.organisation.phone: '%env(default:cc.blank:CC_ORG_PHONE)%'
 
     # Where this build's Corresponding Source lives. NOT the same thing as

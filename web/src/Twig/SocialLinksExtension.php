@@ -52,6 +52,8 @@ final class SocialLinksExtension extends AbstractExtension implements GlobalsInt
         ['facebook', 'Facebook', 'https://www.facebook.com/%s'],
         ['bluesky', 'Bluesky', 'https://bsky.app/profile/%s'],
         ['mastodon', 'Mastodon', '%s'],
+        // A club, not a person: the handle is the club's number.
+        ['strava', 'Strava', 'https://www.strava.com/clubs/%s'],
     ];
 
     public function __construct(
@@ -61,6 +63,7 @@ final class SocialLinksExtension extends AbstractExtension implements GlobalsInt
         #[Autowire('%cc.social.facebook%')] private readonly string $facebook,
         #[Autowire('%cc.social.bluesky%')] private readonly string $bluesky,
         #[Autowire('%cc.social.mastodon%')] private readonly string $mastodon,
+        #[Autowire('%cc.social.strava%')] private readonly string $strava,
     ) {
     }
 
@@ -77,6 +80,7 @@ final class SocialLinksExtension extends AbstractExtension implements GlobalsInt
             'facebook' => $this->facebook,
             'bluesky' => $this->bluesky,
             'mastodon' => $this->mastodon,
+            'strava' => $this->strava,
         ];
 
         $out = [];
