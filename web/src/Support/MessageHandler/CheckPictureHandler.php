@@ -33,6 +33,8 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  * `failed` transport and the picture stays pending until it is retried.
  *
  * @see docs/specs/contact-and-support.md §6
+ *
+ * @api
  */
 #[AsMessageHandler]
 final readonly class CheckPictureHandler
