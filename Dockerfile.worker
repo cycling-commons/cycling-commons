@@ -17,11 +17,13 @@ FROM php:8.4-cli AS worker
 # The extension list mirrors web/Dockerfile: the worker decodes rider photos
 # (imagick + webp + heif), talks to Postgres and Redis, and builds the GDPR
 # export (zip). opcache also for the CLI: the consumer lives for an hour.
+# pcntl: the consumer runs as PID 1, which ignores SIGTERM without a handler;
+# with it messenger:consume finishes the current message and exits on stop.
 RUN apt-get -o Acquire::Retries=15 update \
     && apt-get install -y --no-install-recommends \
         libpq-dev libicu-dev git unzip \
         libmagickwand-dev libwebp-dev libheif-dev libzip-dev \
-    && docker-php-ext-install pdo_pgsql gettext intl zip opcache \
+    && docker-php-ext-install pdo_pgsql gettext intl zip opcache pcntl \
     && pecl install imagick redis \
     && docker-php-ext-enable imagick redis \
     && rm -rf /var/lib/apt/lists/*

@@ -24,7 +24,7 @@ RUN apt-get -o Acquire::Retries=15 update \
     && apt-get install -y --no-install-recommends \
         libpq-dev libicu-dev git unzip \
         libmagickwand-dev libwebp-dev libheif-dev libzip-dev \
-    && docker-php-ext-install pdo_pgsql gettext intl zip \
+    && docker-php-ext-install pdo_pgsql gettext intl zip pcntl \
     && pecl install imagick redis \
     && docker-php-ext-enable imagick redis \
     && rm -rf /var/lib/apt/lists/*
