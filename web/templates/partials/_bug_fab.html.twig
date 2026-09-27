@@ -36,6 +36,18 @@
      data-signed-in="{{ app.user ? '1' : '0' }}"
      data-max-shots="{{ bug_fab.max_screenshots }}"
      data-area="{{ bug_fab.guessed_area }}"
+     {# The script's own sentences, in the page's language. Here rather than in
+        window.CC_I18N because the map page does not load boot.js and sets
+        its own CC_I18N; the panel carries its words on every page alike. #}
+     data-i18n="{{ {
+       bug_need_title: 'support.bug.error.title'|trans,
+       bug_need_body: 'support.bug.error.body_required'|trans,
+       bug_need_email: 'support.bug.error.email_required'|trans,
+       bug_shot_max: 'support.fab.shot_max'|trans,
+       bug_shot_remove: 'support.fab.shot_remove'|trans,
+       bug_no_pow: 'support.fab.no_pow'|trans,
+       bug_send_failed: 'support.fab.send_failed'|trans
+     }|json_encode }}"
      hidden>
 
   <button type="button" class="bugfab-open" aria-expanded="false" aria-controls="cc-bugpanel"
@@ -58,6 +70,15 @@
       </span>
       <h2 id="cc-bugpanel-title">{{ 'support.fab.title'|trans }}</h2>
       <button type="button" class="bugfab-min" aria-label="{{ 'support.fab.minimise'|trans }}">&minus;</button>
+      {# One button, two faces: a square to make the panel bigger, two
+         stacked squares to bring it back. bug-fab.js swaps the label. #}
+      <button type="button" class="bugfab-max" aria-pressed="false"
+              aria-label="{{ 'support.fab.maximise'|trans }}"
+              data-label-max="{{ 'support.fab.maximise'|trans }}"
+              data-label-restore="{{ 'support.fab.restore'|trans }}">
+        <svg class="bf-ic-max" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="1"/></svg>
+        <svg class="bf-ic-restore" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="5" width="9" height="9" rx="1"/><path d="M5 5V3a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-2"/></svg>
+      </button>
       <button type="button" class="bugfab-close" aria-label="{{ 'support.fab.close'|trans }}">&times;</button>
     </header>
 
@@ -111,6 +132,15 @@
       {% endif %}
 
       <div class="bugfab-shots">
+        {# Hidden until bug-fab.js finds screen capture in this browser (desktop
+           Chrome, Edge, Firefox, Safari; no phone browser has it). Pasting
+           stays the way in everywhere else. #}
+        <div class="bugfab-shoot" hidden>
+          <button type="button" class="btn btn-g bugfab-shoot-btn" data-failed="{{ 'support.fab.shoot_failed'|trans }}">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            {{ 'support.fab.shoot'|trans }}
+          </button>
+        </div>
         <p class="bugfab-hint">{{ 'support.bug.paste_hint'|trans({'%max%': bug_fab.max_screenshots}) }}</p>
         <div class="bugfab-thumbs"></div>
       </div>
@@ -158,10 +188,10 @@
   #cc-bugfab{position:fixed;right:1.1rem;bottom:1.1rem;left:auto;width:auto;max-width:calc(100vw - 2.2rem);
     z-index:900;font-family:var(--sans,system-ui,sans-serif)}
   #cc-bugfab[hidden]{display:none}
-  .bugfab-open{display:inline-flex;align-items:center;justify-content:center;background:var(--clay);color:var(--paper);
+  .bugfab-open{display:inline-flex;align-items:center;justify-content:center;background:var(--trail);color:var(--ink);
     border:0;border-radius:50%;padding:.7rem;cursor:pointer;line-height:1;
     box-shadow:0 4px 16px rgba(20,22,14,.28)}
-  .bugfab-open:hover{background:var(--trail)}
+  .bugfab-open:hover{background:#ff703d}
   .bugfab-open:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   {# Visually hidden, never display:none: it is the button's accessible name. #}
   .bugfab-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
@@ -184,12 +214,30 @@
     background:var(--paper);border-radius:10px;overflow:hidden;box-shadow:0 12px 40px rgba(20,22,14,.34)}
   .bugfab-panel[hidden]{display:none}
   .bugfab-panel.is-min .bugfab-body,.bugfab-panel.is-min .bugfab-done{display:none}
-  .bugfab-head{display:flex;align-items:center;gap:.5rem;background:var(--clay);color:var(--paper);padding:.6rem .7rem}
-  .bugfab-head h2{flex:1;margin:0;font-family:var(--serif);font-size:.98rem;font-weight:600}
+  {# The site orange, with ink on it: paper on --trail is 2.5:1, ink is 5.4:1.
+     `margin-left:auto` on the first button, not only `flex:1` on the title,
+     puts the three buttons against the right edge whatever width a page's
+     own h2 rules leave the title. #}
+  .bugfab-head{display:flex;align-items:center;gap:.25rem;background:var(--trail);color:var(--ink);padding:.55rem .45rem .55rem .7rem}
+  .bugfab-head h2{flex:1;min-width:0;margin:0 0 0 .25rem;font-family:var(--serif);font-size:.98rem;font-weight:600;color:var(--ink)}
   .bugfab-grip{cursor:grab;opacity:.7;display:flex}
-  .bugfab-head button{background:none;border:0;color:var(--paper);font-size:1.15rem;line-height:1;
-    cursor:pointer;padding:.15rem .4rem;border-radius:4px}
-  .bugfab-head button:hover{background:rgba(255,255,255,.16)}
+  .bugfab-head button{display:inline-flex;align-items:center;justify-content:center;min-width:28px;min-height:28px;
+    background:none;border:0;color:var(--ink);font-size:1.15rem;line-height:1;
+    cursor:pointer;padding:.15rem .35rem;border-radius:4px}
+  .bugfab-head .bugfab-min{margin-left:auto}
+  .bugfab-head button:hover{background:rgba(16,30,22,.14)}
+  .bugfab-head button:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+  .bugfab-max .bf-ic-restore,.bugfab-panel.is-max .bugfab-max .bf-ic-max{display:none}
+  .bugfab-panel.is-max .bugfab-max .bf-ic-restore{display:block}
+  {# Bigger: most of the window, pinned top right, whatever a drag left behind
+     (bug-fab.js clears the drag's inline position when it toggles this). #}
+  .bugfab-panel.is-max{top:1.1rem;right:1.1rem;bottom:auto;left:auto;
+    width:min(48rem,calc(100vw - 2.2rem));height:calc(100vh - 2.2rem);max-height:none}
+  .bugfab-panel.is-max .bugfab-body{flex:1}
+  .bugfab-panel.is-max .bugfab-field textarea{min-height:10rem}
+  .bugfab-shoot{margin:0 0 .6rem}
+  .bugfab-shoot[hidden]{display:none}
+  .bugfab-shoot-btn{padding:.5rem .9rem;font-size:.85rem;gap:.45rem}
   .bugfab-body,.bugfab-done{overflow-y:auto;padding:.9rem 1rem 1.1rem}
   .bugfab-field{margin:.8rem 0}
   .bugfab-field label,.bugfab-legend{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
@@ -197,18 +245,6 @@
   .bugfab-field input,.bugfab-field select,.bugfab-field .cc-sel-btn,.bugfab-field textarea{width:100%;font-family:inherit;font-size:.88rem;
     padding:.5rem .55rem;color:var(--ink);border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
   .bugfab-field textarea{min-height:6rem;line-height:1.55;resize:vertical}
-  /* Formatting toolbar (docs/specs/contact-and-support.md §15). Styled here
-     because the fab renders on every page, so these rules reach the panel and
-     /report-bug from one place. Built by JS, so nothing below ever applies to
-     a page with scripting off. */
-  .md-bar{display:flex;gap:.25rem;margin:0 0 .35rem;flex-wrap:wrap}
-  .md-btn{font-family:var(--mono);font-size:.72rem;line-height:1;min-width:30px;min-height:30px;
-    padding:.35rem .5rem;border:1px solid rgba(20,22,14,.2);border-radius:4px;
-    background:var(--paper);color:#4a4d40;cursor:pointer}
-  .md-btn:hover{background:var(--paper-deep);color:var(--ink)}
-  .md-btn:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
-  .md-b{font-weight:800}.md-i{font-style:italic}
-  .md-hint{margin:.3rem 0 0;font-size:.90rem;color:#6d7060;line-height:1.5}
   .bugfab-sev{display:flex;gap:.3rem}
   .bugfab-sev button{flex:1;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
     padding:.45rem .2rem;border:1px solid rgba(20,22,14,.2);border-radius:5px;background:var(--paper);

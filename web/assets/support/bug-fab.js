@@ -220,8 +220,14 @@
     msg.hidden = !text;
   }
 
+  /* The panel's sentences come in the page's language on data-i18n (see the
+     partial). The English fallbacks below only show if that attribute is
+     missing or broken. */
+  var I18N = {};
+  try { I18N = JSON.parse(root.dataset.i18n || '{}') || {}; } catch (e) { I18N = {}; }
+
   function t(key, fallback) {
-    return (window.ccT ? window.ccT(key, fallback) : fallback);
+    return I18N[key] || fallback;
   }
 
   function setSeverity(value) {
@@ -310,6 +316,18 @@
     panel.classList.toggle('is-min');
   });
 
+  /* Bigger and back. A drag leaves inline left/top on the panel, which would
+     beat the class; bigger always means top right, so both ways clear it. */
+  var maxBtn = root.querySelector('.bugfab-max');
+  maxBtn.addEventListener('click', function () {
+    var on = !panel.classList.contains('is-max');
+    panel.classList.toggle('is-max', on);
+    panel.classList.remove('is-min');
+    panel.style.left = panel.style.top = panel.style.right = panel.style.bottom = '';
+    maxBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    maxBtn.setAttribute('aria-label', on ? maxBtn.dataset.labelRestore : maxBtn.dataset.labelMax);
+  });
+
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !panel.hidden) close();
   });
@@ -394,6 +412,111 @@
     }
   });
 
+  /* The screenshot button. The browser's own screen capture: it asks the
+     rider what to share (the current tab is offered first), so nothing is
+     taken without a click in the browser's own dialog. One frame is kept and
+     the stream stopped at once. The panel and the bug button are hidden while
+     the frame is taken, so the picture shows the page, not the form. Real
+     pixels, map canvas included, which a DOM-to-image library cannot promise
+     for WebGL. No phone browser has getDisplayMedia, so there the button
+     stays hidden and pasting is the way in. */
+  var SHOT_LONG_SIDE = 2000;   // ScreenshotStore::MAX_LONG_SIDE; larger is scaled down there anyway
+  var SHOT_MIN_SIDE = 1000;    // ScreenshotStore::MIN_LONG_SIDE; text still readable
+  /* The server stores PNG and refuses one over 2 MB (BugScreenshot::MAX_BYTES),
+     so the frame is shrunk here until its own PNG is under 1.8 MB: a smaller,
+     faster upload, and the server's re-encode lands under the cap too. The
+     server shrinks anything that still comes out over it. */
+  var SHOT_MAX_BYTES = 1.8 * 1024 * 1024;
+  var shootWrap = root.querySelector('.bugfab-shoot');
+  var shootBtn = root.querySelector('.bugfab-shoot-btn');
+
+  function nextFrames(n) {
+    return new Promise(function (resolve) {
+      (function step(left) {
+        if (left <= 0) { resolve(); return; }
+        requestAnimationFrame(function () { step(left - 1); });
+      })(n);
+    });
+  }
+
+  function grabFrame(stream) {
+    var video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = stream;
+    return video.play().then(function () {
+      var w = video.videoWidth, h = video.videoHeight;
+      var long = Math.max(w, h);
+      var scale = Math.min(1, SHOT_LONG_SIDE / long);
+      var canvas = document.createElement('canvas');
+      var png;
+      /* Bytes go roughly with area, so each try scales the side by the square
+         root of how far over it is, with a margin. Three tries at most. */
+      for (var i = 0; i < 3; i++) {
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        png = canvas.toDataURL('image/png');
+        var bytes = (png.length - png.indexOf(',') - 1) * 3 / 4;
+        if (bytes <= SHOT_MAX_BYTES || long * scale <= SHOT_MIN_SIDE) break;
+        scale = Math.max(SHOT_MIN_SIDE / long, scale * Math.sqrt(SHOT_MAX_BYTES / bytes) * 0.9);
+      }
+      video.srcObject = null;
+      return png;
+    });
+  }
+
+  /* What the picture must not show: this panel and its button, and in dev
+     the Symfony debug toolbar along the bottom edge. */
+  function hideForCapture(on) {
+    var els = [root].concat(Array.prototype.slice.call(document.querySelectorAll('.sf-toolbar')));
+    els.forEach(function (el) { el.style.visibility = on ? 'hidden' : ''; });
+  }
+
+  function takeScreenshot() {
+    warn('');
+    if (shots.length >= MAX_SHOTS) {
+      warn(t('bug_shot_max', 'That is as many pictures as one report takes.'));
+      return;
+    }
+    var stream = null;
+    shootBtn.disabled = true;
+    /* Hidden BEFORE the browser's dialog, still inside the click, so its live
+       preview already shows the page alone. */
+    hideForCapture(true);
+    navigator.mediaDevices.getDisplayMedia({
+      video: { displaySurface: 'browser' },
+      audio: false,
+      preferCurrentTab: true,
+      selfBrowserSurface: 'include',
+      surfaceSwitching: 'exclude'
+    }).then(function (s) {
+      stream = s;
+      /* A few frames, then a pause, so the browser's share prompt is gone
+         from what the capture sees. */
+      return nextFrames(2).then(function () {
+        return new Promise(function (r) { setTimeout(r, 250); });
+      });
+    }).then(function () {
+      return grabFrame(stream);
+    }).then(function (dataUrl) {
+      addShot(dataUrl);
+    }).catch(function () {
+      /* Refused in the browser's dialog, or the capture failed. Either way
+         nothing was taken, and saying so is all there is to do. */
+      warn(shootBtn.dataset.failed);
+    }).then(function () {
+      if (stream) stream.getTracks().forEach(function (tr) { tr.stop(); });
+      hideForCapture(false);
+      shootBtn.disabled = false;
+    });
+  }
+
+  if (shootWrap && shootBtn && navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function') {
+    shootWrap.hidden = false;
+    shootBtn.addEventListener('click', takeScreenshot);
+  }
+
   /* --- send ------------------------------------------------------------- */
 
   function reset() {
@@ -474,10 +597,10 @@
       }).then(function (out) {
         sendBtn.disabled = false;
         if (!out || !out.ok) {
-          /* The server sends a translation key. It is not in the site-wide
-             CC_I18N set, so the generic sentence is the honest fallback and
-             the key is never shown raw to a rider. */
-          warn(t('bug_send_failed', 'That did not send. Try again, or use the contact page.'));
+          /* The server sends the refusal already translated as `message`
+             (a missing title, a picture too big). Without one, the generic
+             sentence; the raw `error` key is never shown to a rider. */
+          warn((out && out.message) || t('bug_send_failed', 'That did not send. Try again, or use the contact page.'));
           /* The challenge is spent either way; a retry needs a fresh one. */
           resetProof();
           return;

@@ -251,6 +251,39 @@ panel never navigates: a rider who has just hit a bug is halfway
 through something, and taking them to another page loses the state that caused
 it. Screenshots by Ctrl+V.
 
+**The bug button and the panel header** are the site orange (`--trail`) with
+ink marks, text and buttons: paper on `--trail` is 2.5:1, ink is 5.4:1. Its three buttons sit
+against the right edge (`margin-left:auto` on the first): fold (−), bigger,
+close (×). **Bigger** (`is-max`) pins the panel top right at
+`min(48rem, 100vw - 2.2rem)` wide and the full window height less 2.2rem, with
+taller text boxes; the same button, now showing two stacked squares, brings it
+back. Both ways clear any position a drag left behind.
+
+**The screenshot button** ("Take a screenshot") uses the browser's own screen
+capture (`getDisplayMedia`, current tab offered first). The browser asks the
+reporter what to share in its own dialog, so nothing is taken without a
+click there; the panel adds no hint of its own about that dialog. The panel, the bug button and (in dev) the Symfony debug toolbar are
+hidden from the click on, so the dialog's live preview already shows the page
+alone; one frame is taken, the stream stops at once, and the frame joins the pasted pictures (same limit of
+three, same draft). The frame is scaled to 2000px on its long side
+(`ScreenshotStore::MAX_LONG_SIDE`) and sent as PNG, shrunk further (not below
+1000px) until that PNG is 1.8 MB or less, so the server's own PNG lands under
+`BugScreenshot::MAX_BYTES` (2 MB). The server shrinks anything that still comes
+out over it, pasted pictures included, down to `MIN_LONG_SIDE` (1000px), and
+only then refuses with `shot_too_detailed`; `shot_too_large` is the 8 MB
+upload cap, its figure filled in by the translator global `%shot_max_mb%`. Real pixels, map canvas included, which a
+DOM-to-image library cannot promise for WebGL. No phone browser has
+`getDisplayMedia`, so there the button stays hidden and pasting is the way in.
+`Permissions-Policy` leaves `display-capture` at its default (`self`).
+
+**The panel speaks the page's language.** The sentences its script writes
+(missing title, missing description, missing address, picture limit, spam check
+failed, send failed) ride on `#cc-bugfab` as `data-i18n`, one JSON object
+translated at render. Not in `window.CC_I18N`: the map page does not load
+`boot.js` and sets its own. A refused send returns `message`, the error key
+already translated for the request's locale (`%size%` filled in), and the
+panel shows that; the raw key never reaches the rider.
+
 `width:auto` on the container is load-bearing. `atlas.css` carries a site-wide
 `body > * { width: 100% }`, and the button is a direct child of `body`, so
 without it the container stretches and pushes the button off the left edge. Anything else added
@@ -1046,26 +1079,15 @@ what makes the `|bug_markdown` filter safe to mark `is_safe` in Twig.
 cannot survive, a URL that never becomes a link, and markdown inside a fence
 staying literal.
 
-### The toolbar
+### No toolbar for reporters
 
-`assets/support/markdown-toolbar.js`, built at runtime for `b-body`, `b-steps`,
-`bf-body` and `bf-steps`, loaded site-wide next to `bug-fab.js` because the
-floating panel renders everywhere.
-
-It writes markdown into the textarea and nothing more. The field still holds
-plain text, so with scripting off the form behaves exactly as it did before and
-somebody typing markdown by hand gets the same result. That is why the buttons
-are created in JavaScript rather than shipped in the template: a row of buttons
-that does nothing is worse than no row.
-
-It uses `setRangeText` where it exists, so the browser's own undo stack still
-works and ctrl+Z undoes one button press rather than the whole field. An empty
-selection gets a placeholder that is left selected, so the next keystroke
-replaces it instead of leaving `** **` behind.
-
-Labels come from `partials/_bug_markdown_i18n.html.twig` in all five locales,
-and the hint under the field says what is understood, so somebody who never
-touches the buttons still knows.
+The two public forms (the floating panel and `/report-bug`) are plain text
+boxes with no formatting buttons and no markdown hint. The people filing a
+bug are riders, not developers, and a row of `B I <> { }` buttons that writes
+asterisks into their sentence reads as broken (owner 2026-09-27). Plain text
+already comes out right on the curator desk: a single newline is a line
+break, a blank line a paragraph, and "1." or "-" at a line start a list. A
+reporter who does know markdown can still type it and it renders the same.
 
 ### Where it renders
 
