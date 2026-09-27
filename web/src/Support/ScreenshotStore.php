@@ -18,8 +18,14 @@ use Psr\Log\LoggerInterface;
  * upload carries, met the same way {@see \App\Media\PhotoProcessor} meets it:
  * **decode it and draw it again**. Whatever the original file was (a polyglot,
  * an SVG with script in it, a JPEG with a payload after the end marker), what
- * ends up in the database is a fresh PNG that this server's Imagick wrote from
+ * ends up in the database is a fresh PNG that the worker's Imagick wrote from
  * a pixel buffer. Nothing survives that round trip except the picture.
+ *
+ * Two halves on two machines. {@see hold()} and {@see rawFromDataUrl()} run on
+ * the web host and only read bytes (size, the file's signature, the data-URL
+ * shape). {@see render()} runs on the worker only, from
+ * {@see MessageHandler\CheckPictureHandler}: the scan, the decode and the new
+ * drawing. ImageMagick never runs on a web host (owner 2026-09-20).
  *
  * Three limits, in this order, because each one only makes sense once the
  * previous has passed:
@@ -30,7 +36,8 @@ use Psr\Log\LoggerInterface;
  *    does not bound the decoded size, so this is a separate check.
  * 3. **Bytes out.** {@see BugScreenshot::MAX_BYTES}, after
  *    re-encoding, because a screenshot of a photograph re-encodes larger than
- *    a screenshot of a form.
+ *    a screenshot of a form. Over it, the picture is shrunk and encoded again
+ *    (down to {@see MIN_LONG_SIDE}) before it is refused.
  *
  * Output is PNG for a screenshot: flat colour, sharp text and straight edges,
  * which is exactly what PNG is good at and exactly what JPEG smears. The
@@ -45,7 +52,9 @@ use Psr\Log\LoggerInterface;
  * The two defences catch different things and neither replaces the other: the
  * scanner knows named malware and the re-encode destroys anything the scanner
  * has never heard of. Order matters. Scan first, so ClamAV sees the file the
- * reporter actually sent rather than the PNG we drew from it.
+ * reporter actually sent rather than the PNG we drew from it. No verdict, no
+ * file: an unreachable scanner refuses the picture
+ * ({@see ScreenshotUnscanned}), so Imagick only ever decodes scanned bytes.
  *
  * There is NO quarantine, unlike the media pipeline. Quarantine exists there
  * because a rider photograph gets a public URL and must not be reachable until
@@ -64,14 +73,30 @@ final class ScreenshotStore
     ) {
     }
 
-    /** Before decoding. Generous: a full-page 4K screenshot is legitimately large. */
-    public const int MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+    /**
+     * Before decoding. Generous: a full-page 4K screenshot is legitimately large.
+     * The MB figure is also the translator global `%shot_max_mb%`
+     * (config/packages/translation.yaml), so every "over N MB" message names it.
+     */
+    public const int MAX_UPLOAD_MB = 8;
+    public const int MAX_UPLOAD_BYTES = self::MAX_UPLOAD_MB * 1024 * 1024;
 
     /** Against decompression bombs. Same reasoning as PhotoProcessor::MAX_PIXELS. */
     private const int MAX_PIXELS = 40_000_000;
 
     /** Wide enough that text stays readable, small enough to store. */
     private const int MAX_LONG_SIDE = 2000;
+
+    /**
+     * How far {@see render()} shrinks a picture whose encoding is over the
+     * byte cap before it gives up. A busy 2000px screenshot is about 2.6 MB
+     * as PNG against a 2 MB cap; at 1000px the text is still readable, and a
+     * PNG that size fits whatever is on it.
+     */
+    private const int MIN_LONG_SIDE = 1000;
+
+    /** Encode attempts, the first included, before a picture is refused as too large. */
+    private const int FIT_ATTEMPTS = 4;
 
     private const array ALLOWED_FORMATS = ['PNG', 'JPEG', 'GIF', 'WEBP'];
 
@@ -81,14 +106,35 @@ final class ScreenshotStore
     ];
 
     /**
-     * @throws ScreenshotRejected with a translation key, for anything a person
-     *                            can act on: too big, not an image, unreadable
+     * The web host's whole part: cheap checks on the raw bytes, then hand them
+     * back to be held `pending` for the worker. Never decodes: no ImageMagick
+     * on a web host. Size and the file's own signature are read as bytes, so a
+     * person who attached a PDF or a 20 MB file hears it while still there.
+     *
+     * @throws ScreenshotRejected with a translation key: empty, too big, not an image
      */
-    public function accept(string $bytes): BugScreenshot
+    public function hold(string $bytes): string
     {
-        $image = $this->render($bytes);
+        if ('' === $bytes) {
+            throw new ScreenshotRejected('support.bug.error.shot_empty');
+        }
+        if (\strlen($bytes) > self::MAX_UPLOAD_BYTES) {
+            throw new ScreenshotRejected('support.bug.error.shot_too_large');
+        }
+        if (!self::looksLikeAnImage($bytes)) {
+            throw new ScreenshotRejected('support.bug.error.shot_format');
+        }
 
-        return new BugScreenshot($image->mimeType, $image->bytes, $image->width, $image->height);
+        return $bytes;
+    }
+
+    /** PNG, JPEG, GIF or WebP by their first bytes. The worker's decode is the real check. */
+    private static function looksLikeAnImage(string $bytes): bool
+    {
+        return str_starts_with($bytes, "\x89PNG\r\n\x1a\n")
+            || str_starts_with($bytes, "\xFF\xD8\xFF")
+            || str_starts_with($bytes, 'GIF87a') || str_starts_with($bytes, 'GIF89a')
+            || (str_starts_with($bytes, 'RIFF') && 'WEBP' === substr($bytes, 8, 4));
     }
 
     /**
@@ -173,6 +219,27 @@ final class ScreenshotStore
             $image->setImageCompressionQuality('webp' === $as ? 82 : 90);
 
             $out = $image->getImageBlob();
+
+            // Over the cap: shrink and encode again rather than refuse. Bytes
+            // go roughly with area, so the side scales by the square root of
+            // how far over it is, with a margin, until it fits or reaches
+            // MIN_LONG_SIDE. A reporter's screenshot is worth more smaller
+            // than refused.
+            for ($attempt = 1; \strlen($out) > $maxBytes && $attempt < self::FIT_ATTEMPTS; ++$attempt) {
+                $long = max($image->getImageWidth(), $image->getImageHeight());
+                if ($long <= self::MIN_LONG_SIDE) {
+                    break;
+                }
+                $scale = max(self::MIN_LONG_SIDE / $long, sqrt($maxBytes / \strlen($out)) * 0.9);
+                $image->resizeImage(
+                    max(1, (int) round($image->getImageWidth() * $scale)),
+                    max(1, (int) round($image->getImageHeight() * $scale)),
+                    \Imagick::FILTER_LANCZOS,
+                    1,
+                );
+                $out = $image->getImageBlob();
+            }
+
             $outWidth = $image->getImageWidth();
             $outHeight = $image->getImageHeight();
         } catch (\ImagickException) {
@@ -181,35 +248,40 @@ final class ScreenshotStore
             $image->clear();
         }
 
+        // Its own message: shot_too_large names the upload cap in MB, and this
+        // picture was under that and failed the smaller stored-size cap.
         if (\strlen($out) > $maxBytes) {
-            throw new ScreenshotRejected('support.bug.error.shot_too_large');
+            throw new ScreenshotRejected('support.bug.error.shot_too_detailed');
         }
 
         return new StoredImage('webp' === $as ? 'image/webp' : 'image/png', $out, $outWidth, $outHeight);
     }
 
     /**
-     * Refuse a file the scanner names, and carry on if the scanner is down.
+     * Refuse a file the scanner names, and refuse it too when nothing scanned it.
      *
-     * Fail-open is deliberate and is the same call the media pipeline makes
-     * without `CLAMAV_REQUIRED`: a scanner outage must not silently close the
-     * one door somebody uses to tell us the site is broken. The re-encode still
-     * runs, and it is the defence that does not depend on a running daemon.
+     * Fail-closed (owner 2026-09-27: "do not accept files when clamav is
+     * down"): an unreachable scanner means no decode, so nothing unscanned
+     * ever reaches Imagick. The worker's handler lets {@see ScreenshotUnscanned}
+     * through, so Messenger retries and the picture stays held and unserved.
+     *
+     * @throws ScreenshotUnscanned when nothing scanned the file
+     * @throws ScreenshotRejected  when the scanner named it
      */
     private function refuseIfInfected(string $bytes): void
     {
         try {
             $verdict = $this->scanner->scan($bytes);
         } catch (ScannerUnavailable $e) {
-            $this->logger->warning('A bug screenshot was stored unscanned: the virus scanner is unavailable.', [
+            $this->logger->warning('A picture was refused unscanned: the virus scanner is unavailable.', [
                 'error' => $e->getMessage(),
             ]);
 
-            return;
+            throw new ScreenshotUnscanned();
         }
 
         if ($verdict->infected) {
-            $this->logger->warning('A bug screenshot was refused by the virus scanner.', [
+            $this->logger->warning('A picture was refused by the virus scanner.', [
                 'signature' => $verdict->signature,
             ]);
 
@@ -218,14 +290,16 @@ final class ScreenshotStore
     }
 
     /**
-     * Accept a `data:` URL, which is how a pasted screenshot arrives.
+     * The raw bytes of a `data:` URL, which is how a pasted screenshot arrives.
      *
      * Ctrl+V in the bug panel gives the page a Blob, and the simplest thing the
      * page can do with it is read it as a data URL and post it as a string.
      * Only base64 image payloads are read; anything else is refused before it
-     * is decoded.
+     * is decoded. Then {@see hold()}: what comes back is held for the worker.
+     *
+     * @throws ScreenshotRejected with a translation key
      */
-    public function acceptDataUrl(string $dataUrl): BugScreenshot
+    public function rawFromDataUrl(string $dataUrl): string
     {
         if (!preg_match('~^data:image/(png|jpeg|jpg|gif|webp);base64,~i', $dataUrl, $m)) {
             throw new ScreenshotRejected('support.bug.error.shot_format');
@@ -244,6 +318,6 @@ final class ScreenshotStore
             throw new ScreenshotRejected('support.bug.error.shot_unreadable');
         }
 
-        return $this->accept($bytes);
+        return $this->hold($bytes);
     }
 }

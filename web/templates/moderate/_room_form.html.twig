@@ -74,7 +74,7 @@
         {# Pictures already on the post: untick one to take it off. #}
         <div class="rm-have">
           {% for image in post.images %}
-            <label class="rm-have-one"><img src="{{ path('moderate_room_image', {id: image.id}) }}" alt="{{ 'room.image_alt'|trans({'%n%': loop.index}) }}"><span><input type="checkbox" name="drop[]" value="{{ image.id }}"> {{ 'room.compose.drop_image'|trans }}</span></label>
+            <label class="rm-have-one">{% if image.isReady() %}<img src="{{ path('moderate_room_image', {id: image.id}) }}" alt="{{ 'room.image_alt'|trans({'%n%': loop.index}) }}">{% else %}<span class="rm-image-wait">{{ (image.isPending() ? 'room.image_pending' : 'room.image_refused')|trans({'%reason%': (image.refusal ?? 'support.bug.error.shot_unreadable')|trans}) }}</span>{% endif %}<span><input type="checkbox" name="drop[]" value="{{ image.id }}"> {{ 'room.compose.drop_image'|trans }}</span></label>
           {% endfor %}
         </div>
       {% endif %}

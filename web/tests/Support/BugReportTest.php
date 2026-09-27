@@ -7,12 +7,17 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Entity\User;
+use App\Media\Scan\VirusScannerInterface;
 use App\Security\FormGuard;
 use App\Support\BugArea;
 use App\Support\BugSeverity;
 use App\Support\BugStatus;
 use App\Support\Entity\BugReport;
+use App\Support\Entity\BugScreenshot;
+use App\Support\PictureState;
+use App\Support\ScreenshotUnscanned;
 use App\Support\SupportIntake;
+use App\Tests\Media\FakeScanner;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -39,6 +44,8 @@ use Symfony\Component\RateLimiter\Storage\InMemoryStorage;
  */
 final class BugReportTest extends WebTestCase
 {
+    use RunsPictureChecks;
+
     private function client(): KernelBrowser
     {
         $client = static::createClient();
@@ -417,6 +424,118 @@ final class BugReportTest extends WebTestCase
         $out = json_decode($client->getResponse()->getContent() ?: '', true);
         self::assertFalse($out['ok']);
         self::assertSame('support.bug.error.title', $out['error']);
+    }
+
+    // -- pictures and the virus scanner ----------------------------------
+
+    /** A 1x1 PNG, as a paste or the screenshot button sends it. */
+    private const string TINY_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+    private function scanner(): FakeScanner
+    {
+        return static::getContainer()->get(VirusScannerInterface::class);
+    }
+
+    public function testAPictureIsHeldOnTheWebAndCheckedOnTheWorker(): void
+    {
+        $client = $this->client();
+        $this->file($client, ['screenshots' => [self::TINY_PNG]], ['HTTP_ACCEPT' => 'application/json']);
+
+        self::assertSame(['ok' => true], json_decode($client->getResponse()->getContent() ?: '', true));
+        $shot = $this->reports()[0]->getScreenshots()->first();
+        self::assertInstanceOf(BugScreenshot::class, $shot);
+        self::assertTrue($shot->isPending(), 'held, not drawn, on the web host');
+        self::assertSame(0, $this->scanner()->calls, 'no scan and no decode on the web host');
+
+        $this->drainPictureChecks();
+
+        $shot = $this->reports()[0]->getScreenshots()->first();
+        self::assertInstanceOf(BugScreenshot::class, $shot);
+        self::assertTrue($shot->isReady());
+        self::assertSame('image/png', $shot->getMimeType());
+        self::assertSame(1, $this->scanner()->calls);
+    }
+
+    public function testAHeldPictureIsNeverServed(): void
+    {
+        $client = $this->client();
+        $this->file($client, ['screenshots' => [self::TINY_PNG]], ['HTTP_ACCEPT' => 'application/json']);
+        $checks = $this->takePictureChecks();
+        $report = $this->reports()[0];
+        $shot = $report->getScreenshots()->first();
+        self::assertInstanceOf(BugScreenshot::class, $shot);
+
+        $client->loginUser($this->curator());
+        $client->request('GET', \sprintf('/moderate/bugs/%d/shot/%d', $report->getId(), $shot->getId()));
+        self::assertResponseStatusCodeSame(404);
+
+        $this->runPictureChecks($checks);
+        $client->request('GET', \sprintf('/moderate/bugs/%d/shot/%d', $report->getId(), $shot->getId()));
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testWithTheScannerDownThePictureStaysHeldForARetry(): void
+    {
+        $client = $this->client();
+        $this->file($client, ['screenshots' => [self::TINY_PNG]], ['HTTP_ACCEPT' => 'application/json']);
+        $this->scanner()->unavailable = true;
+
+        try {
+            $this->drainPictureChecks();
+            self::fail('an outage must throw, so Messenger retries');
+        } catch (ScreenshotUnscanned) {
+        }
+
+        $this->em()->clear();
+        $shot = $this->reports()[0]->getScreenshots()->first();
+        self::assertInstanceOf(BugScreenshot::class, $shot);
+        self::assertTrue($shot->isPending(), 'not refused and not drawn: held until the scanner is back');
+    }
+
+    public function testAnInfectedPictureIsRefusedOnTheWorkerAndItsBytesDropped(): void
+    {
+        $client = $this->client();
+        $this->file($client, ['screenshots' => [self::TINY_PNG]], ['HTTP_ACCEPT' => 'application/json']);
+        $this->scanner()->infectedWith = 'Eicar-Test-Signature';
+
+        $this->drainPictureChecks();
+
+        $reports = $this->reports();
+        self::assertCount(1, $reports, 'the report stands; the reporter has already gone');
+        $shot = $reports[0]->getScreenshots()->first();
+        self::assertInstanceOf(BugScreenshot::class, $shot);
+        self::assertSame(PictureState::Refused, $shot->getState());
+        self::assertSame('support.bug.error.shot_infected', $shot->getRefusal());
+        self::assertSame('', $shot->getBytes());
+    }
+
+    public function testTheDeskSaysWhichPicturesAreStillBeingChecked(): void
+    {
+        $client = $this->client();
+        $this->file($client, ['screenshots' => [self::TINY_PNG, self::TINY_PNG]], ['HTTP_ACCEPT' => 'application/json']);
+        $checks = $this->takePictureChecks();
+        $this->scanner()->infectedWith = 'Eicar-Test-Signature';
+        $this->runPictureChecks([$checks[0]]);
+        $report = $this->reports()[0];
+
+        $client->loginUser($this->curator());
+        $page = $client->request('GET', \sprintf('/moderate/bugs/%d', $report->getId()));
+
+        self::assertResponseIsSuccessful();
+        $shots = $page->filter('.shots')->text();
+        self::assertStringContainsString('not kept: Our virus scanner refused that picture.', $shots);
+        self::assertStringContainsString('being checked', $shots);
+        self::assertCount(0, $page->filter('.shots a'), 'neither is linked: one refused, one not checked yet');
+    }
+
+    public function testANonImageIsRefusedWhileTheReporterIsStillThere(): void
+    {
+        $client = $this->client();
+        $this->file($client, ['screenshots' => ['data:image/png;base64,'.base64_encode('not a picture')]], ['HTTP_ACCEPT' => 'application/json']);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('support.bug.error.shot_format', json_decode($client->getResponse()->getContent() ?: '', true)['error']);
+        self::assertCount(0, $this->reports());
     }
 
     // -- the public list -------------------------------------------------

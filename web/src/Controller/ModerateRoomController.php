@@ -15,7 +15,6 @@ use App\Messaging\Entity\CuratorPostImage;
 use App\Routing\LocalePrefix;
 use App\Support\ScreenshotRejected;
 use App\Support\ScreenshotStore;
-use App\Support\StoredImage;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -83,7 +82,8 @@ final class ModerateRoomController extends AbstractController
         /** @var User $curator */
         $curator = $this->getUser();
         $image = $this->room->image($id, (int) $curator->getId());
-        if (!$image instanceof CuratorPostImage) {
+        // Held bytes are a stranger's file nobody has scanned yet: never served.
+        if (!$image instanceof CuratorPostImage || !$image->isReady()) {
             throw $this->createNotFoundException();
         }
 
@@ -260,8 +260,9 @@ final class ModerateRoomController extends AbstractController
 
     /**
      * One picture from the composer's uploader, sent as soon as it is chosen so
-     * the bar can show real progress. Rendered by the server the way a bug
-     * screenshot is; held until the post claims it. JSON in return.
+     * the bar can show real progress. Only the cheap checks here; the raw bytes
+     * are held and the worker scans and draws them, the way a bug screenshot
+     * is. Held until the post claims it. JSON in return.
      */
     #[Route('/moderate/room/upload', name: 'moderate_room_upload', methods: ['POST'])]
     public function upload(Request $request): JsonResponse
@@ -280,11 +281,11 @@ final class ModerateRoomController extends AbstractController
             return new JsonResponse(['error' => $this->translator->trans('support.bug.error.shot_too_large')], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         try {
-            $image = $this->images->render((string) file_get_contents($path), 'webp', CuratorPostImage::MAX_BYTES);
+            $raw = $this->images->hold((string) file_get_contents($path));
         } catch (ScreenshotRejected $e) {
             return new JsonResponse(['error' => $this->translator->trans($e->translationKey())], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        $upload = $this->room->upload((int) $curator->getId(), $image);
+        $upload = $this->room->upload((int) $curator->getId(), $raw);
 
         return new JsonResponse([
             'id' => $upload->getId(),
@@ -342,11 +343,12 @@ final class ModerateRoomController extends AbstractController
     }
 
     /**
-     * Every picture the composer sent, drawn again by the server. Refuses the
-     * post rather than dropping a picture quietly: a curator who attached a
+     * Every picture the composer sent, as raw bytes past the cheap checks; the
+     * worker scans and draws them once the post is saved. Refuses the post
+     * rather than dropping a picture quietly: a curator who attached a
      * screenshot of the problem wants to know it did not arrive.
      *
-     * @return list<StoredImage>
+     * @return list<string>
      *
      * @throws ScreenshotRejected with a translation key
      */
@@ -365,7 +367,7 @@ final class ModerateRoomController extends AbstractController
             if (filesize($path) > ScreenshotStore::MAX_UPLOAD_BYTES) {
                 throw new ScreenshotRejected('support.bug.error.shot_too_large');
             }
-            $out[] = $this->images->render((string) file_get_contents($path), 'webp', CuratorPostImage::MAX_BYTES);
+            $out[] = $this->images->hold((string) file_get_contents($path));
         }
 
         return $out;

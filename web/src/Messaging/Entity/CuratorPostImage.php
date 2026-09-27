@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Messaging\Entity;
 
+use App\Support\CheckedPicture;
 use App\Support\StoredImage;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -15,8 +16,10 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * Stored in the database and served to curators only, the way a bug report's
  * screenshot is: the rulebook says pending content never leaves the desk, and
- * a picture in a public bucket has left it. The bytes are what
- * {@see \App\Support\ScreenshotStore} drew, never the uploaded file.
+ * a picture in a public bucket has left it. The upload is held `pending` and
+ * the worker scans and draws it again
+ * ({@see \App\Support\MessageHandler\CheckPictureHandler}); only a `ready`
+ * picture, the worker's drawing, is ever served.
  *
  * A picture uploads before its post exists, so the composer can show real
  * progress; it waits with `post_id` NULL until the post claims it, and only
@@ -32,6 +35,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_curator_post_image_post', columns: ['post_id', 'position'])]
 class CuratorPostImage
 {
+    use CheckedPicture;
+
     /** After re-encoding. A photograph as WebP at 2000 px sits well under this. */
     public const int MAX_BYTES = 3 * 1024 * 1024;
 
@@ -67,6 +72,15 @@ class CuratorPostImage
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
+
+    /** The raw bytes as uploaded, held for the worker and never served. */
+    public static function pending(string $raw, ?int $uploaderId): self
+    {
+        $image = new self(new StoredImage('application/octet-stream', '', 0, 0), $uploaderId);
+        $image->holdRaw($raw);
+
+        return $image;
+    }
 
     public function __construct(StoredImage $image, ?int $uploaderId)
     {

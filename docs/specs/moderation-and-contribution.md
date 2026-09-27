@@ -3185,9 +3185,12 @@ created_at DESC)` for the Direct view and the badge.
 
 `curator_post_image` (2026-09-19): a picture on a post, kept **in the
 database** and served to curators only, the way a bug report's screenshot is
-(contact-and-support.md §6). The bytes are what `ScreenshotStore::render()`
-drew after the virus scan, as WebP at most 2000 px on the long side and
-`CuratorPostImage::MAX_BYTES` (3 MB); never the uploaded file.
+(contact-and-support.md §6). The web host holds the upload's raw bytes as
+`pending` and queues `CheckPicture`; the worker scans them and draws them
+again (`ScreenshotStore::render()`, WebP at most 2000 px on the long side and
+`CuratorPostImage::MAX_BYTES`, 3 MB), and only that drawing, `ready`, is ever
+served. A pending picture shows on the board as "Picture being checked", a
+refused one as "Picture not kept" with the reason.
 
 | column | type | meaning |
 | --- | --- | --- |
@@ -3196,13 +3199,14 @@ drew after the virus scan, as WebP at most 2000 px on the long side and
 | `uploader_id` | bigint, null | who uploaded it; only they may attach it to a post. `ON DELETE SET NULL`. |
 | `position` | smallint | order on the post, at most `CuratorPost::MAX_IMAGES` (4). |
 | `mime_type`, `bytes`, `byte_size`, `width`, `height`, `created_at` | | as `bug_screenshot`. |
+| `state`, `refusal` | varchar | `pending`, `ready` or `refused`, and the refusal's translation key; as `bug_screenshot` (contact-and-support.md §6). |
 
 A picture uploads **before** its post exists, so the composer can show the
 bytes' own progress; the post claims it by id. A picture uploaded and never
 posted is swept by `app:media:gc` after a day
 (`CuratorRoom::collectUnclaimedImages()`). Without the script, the composer's
-file input posts with the form and the server renders the files at post time;
-both paths end in the same rows.
+file input posts with the form and the files are held at post time and
+checked on the worker; both paths end in the same rows.
 
 `about_submission_id` is checked against `submission` before the write: the
 column is a foreign key, and an id nobody typed correctly must come back as a

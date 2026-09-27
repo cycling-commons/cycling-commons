@@ -388,19 +388,51 @@ the footer links the privacy notice from every page anyway.
 
 {@see App\Support\ScreenshotStore}, {@see App\Support\Entity\BugScreenshot}.
 
-**Two defences, in this order: scan, then re-encode.**
+**Two machines, two defences: hold on the web host, scan and re-encode on the worker.**
 
-The virus scanner runs on the bytes as uploaded, before Imagick sees them. Rider
-photographs are scanned, and a screenshot is a file from a stranger in exactly
-the same way, so it would be odd for one door to be guarded and the other not.
-Scanning first matters: ClamAV should see the file the reporter actually sent,
-not the PNG we drew from it. A scanner outage fails **open**, with a warning
-logged, the same call the media pipeline makes without `CLAMAV_REQUIRED`: an
-outage must not close the one door somebody uses to say the site is broken.
+The web host only reads bytes. `ScreenshotStore::hold()` (and
+`rawFromDataUrl()` for a paste or the screenshot button) checks the size (8 MB),
+that the file starts with a PNG, JPEG, GIF or WebP signature, and the data-URL
+shape; a person who attached a PDF or a 20 MB file hears it while still on the
+form. The raw bytes are then stored in the picture's own row as `pending`
+(`App\Support\CheckedPicture`, `PictureState`) and a `CheckPicture` message is
+queued once the report is saved. ImageMagick never runs on a web host (owner
+2026-09-20: they are too light for it, and decoding a stranger's file is the
+riskiest code the site runs).
+
+The worker (`CheckPictureHandler`) runs `ScreenshotStore::render()`: the
+virus scanner first, on the bytes as sent, then the decode. Scanning first
+matters: ClamAV should see the file the reporter actually sent, not the PNG we
+drew from it. Three outcomes:
+
+- **ready**: the stored bytes become the worker's drawing, and only now is the
+  picture served (`/moderate/bugs/{id}/shot/{shotId}` answers 404 for anything
+  else).
+- **refused** (infected, unreadable, too detailed): the bytes are dropped and
+  the reason kept; the desk shows "not kept: <reason>". The report stands:
+  the reporter has already gone, and needs no word about it.
+- **no verdict, no file** (owner 2026-09-27): an unreachable scanner throws
+  `ScreenshotUnscanned`, so Messenger retries (async transport: 3 retries,
+  about 105 s) and the picture stays pending and unserved; after the last
+  retry the message waits in the `failed` transport until
+  `messenger:failed:retry`.
+
+The desk shows a pending picture as "being checked", and the curator mail,
+sent the moment the report is stored, says the count and that the pictures
+are still being checked (`support.bug.shots_checking`). The reporter's own
+thumbnails in the panel are drawn by their browser from the pasted file and
+never involve the server. Proven end to end on the dev stack 2026-09-27: a
+real report filed through `/nl/bug-melden` with ClamAV stopped stayed pending
+with "retry #1", and was drawn (`ready`, 1741x1190 PNG) on the retry after
+ClamAV came back.
+
+Curator-room pictures (`curator_post_image`, moderation-and-contribution.md
+§13.3) take the same path, drawn as WebP; the board shows a pending one as
+"Picture being checked" and never serves it before it is ready.
 
 Then **decode it and draw it again**. Whatever the original file was (a
 polyglot, an SVG with script in it, a JPEG with a payload after the end marker),
-what is stored is a fresh PNG this server's Imagick wrote from a pixel buffer.
+what is stored is a fresh PNG the worker's Imagick wrote from a pixel buffer.
 Metadata is stripped, which for a screenshot means the window title and file
 path some tools embed.
 
@@ -788,7 +820,7 @@ button and the footer), so the page does not repeat them.
 |---|---|
 | `contact_message` | topic, status, name, email, body, user id, page path, locale, ip hash, `due_at`, handling note, timestamps |
 | `bug_report` | title, body, steps, severity, area, status, user id, reporter email, page path, browser, viewport, build, locale, ip hash, `is_public`, public title, outcome note, `notified_at`, timestamps |
-| `bug_screenshot` | report id, position, mime, `bytea`, size, dimensions |
+| `bug_screenshot` | report id, position, mime, `bytea`, size, dimensions, `state` (pending, ready, refused) and `refusal` (§6) |
 
 `bug_report.user_id` is nullable with **no foreign key** to `users`: anybody may
 file without an account, and a deleted account leaves the report standing

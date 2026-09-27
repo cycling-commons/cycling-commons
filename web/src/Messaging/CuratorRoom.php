@@ -10,9 +10,10 @@ use App\Messaging\Entity\CuratorPost;
 use App\Messaging\Entity\CuratorPostImage;
 use App\Messaging\Entity\CuratorRoomVisit;
 use App\Moderation\DeskRider;
-use App\Support\StoredImage;
+use App\Support\Message\CheckPicture;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * The curator room: reads for the board, writes for the composer.
@@ -92,6 +93,7 @@ final class CuratorRoom
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
+        private readonly MessageBusInterface $bus,
     ) {
     }
 
@@ -122,11 +124,12 @@ final class CuratorRoom
      *
      * Pictures arrive two ways: `$imageIds` name uploads this author made
      * through {@see upload()} and not yet posted (the composer with its
-     * script); `$images` are files rendered at post time (the composer
-     * without it). Both end up as the post's images, uploads first.
+     * script); `$images` are the raw bytes of files sent with the post (the
+     * composer without it), held here and checked on the worker. Both end up
+     * as the post's images, uploads first.
      *
-     * @param list<int>         $imageIds
-     * @param list<StoredImage> $images
+     * @param list<int>    $imageIds
+     * @param list<string> $images   raw bytes, already through ScreenshotStore::hold()
      *
      * @throws \InvalidArgumentException with a translation key, for the flash
      */
@@ -147,9 +150,10 @@ final class CuratorRoom
 
         $post = new CuratorPost($authorId, $category, $recipientId, $body, $aboutSubmissionId, $title);
         $post->setPin($pin);
-        $this->attachImages($post, $authorId, $imageIds, $images);
+        $held = $this->attachImages($post, $authorId, $imageIds, $images);
         $this->em->persist($post);
         $this->em->flush();
+        $this->queueChecks($held);
 
         return $post;
     }
@@ -158,9 +162,9 @@ final class CuratorRoom
      * The author changes any field of their own post. `$dropImageIds` names
      * pictures to take off it; `$imageIds` and `$images` add, as on post().
      *
-     * @param list<int>         $imageIds
-     * @param list<StoredImage> $images
-     * @param list<int>         $dropImageIds
+     * @param list<int>    $imageIds
+     * @param list<string> $images       raw bytes, as on post()
+     * @param list<int>    $dropImageIds
      *
      * @throws \InvalidArgumentException with a translation key, for the flash
      */
@@ -192,8 +196,9 @@ final class CuratorRoom
             }
         }
         $post->update($category, $recipientId, $body, $aboutSubmissionId, $pin, $title);
-        $this->attachImages($post, $authorId, $imageIds, $images);
+        $held = $this->attachImages($post, $authorId, $imageIds, $images);
         $this->em->flush();
+        $this->queueChecks($held);
 
         return $post;
     }
@@ -232,12 +237,14 @@ final class CuratorRoom
     }
 
     /**
-     * @param list<int>         $imageIds
-     * @param list<StoredImage> $images
+     * @param list<int>    $imageIds
+     * @param list<string> $images   raw bytes
+     *
+     * @return list<CuratorPostImage> the pictures held here, to queue once flushed
      *
      * @throws \InvalidArgumentException with a translation key
      */
-    private function attachImages(CuratorPost $post, int $authorId, array $imageIds, array $images): void
+    private function attachImages(CuratorPost $post, int $authorId, array $imageIds, array $images): array
     {
         foreach (array_values(array_unique($imageIds)) as $id) {
             $upload = $this->em->getRepository(CuratorPostImage::class)->find($id);
@@ -248,21 +255,40 @@ final class CuratorRoom
             }
             $post->addImage($upload);
         }
-        foreach ($images as $image) {
-            $post->addImage(new CuratorPostImage($image, $authorId));
+        $held = [];
+        foreach ($images as $raw) {
+            $held[] = $image = CuratorPostImage::pending($raw, $authorId);
+            $post->addImage($image);
         }
+
+        return $held;
     }
 
     /**
-     * Hold a rendered picture for a post this curator has not written yet.
+     * Hold a picture's raw bytes for a post this curator has not written yet,
+     * and queue the worker's scan and redraw.
      */
-    public function upload(int $uploaderId, StoredImage $image): CuratorPostImage
+    public function upload(int $uploaderId, string $raw): CuratorPostImage
     {
-        $upload = new CuratorPostImage($image, $uploaderId);
+        $upload = CuratorPostImage::pending($raw, $uploaderId);
         $this->em->persist($upload);
         $this->em->flush();
+        $this->queueChecks([$upload]);
 
         return $upload;
+    }
+
+    /**
+     * The worker scans and draws each held picture; until then it is pending
+     * and never served. After a flush, so each has an id.
+     *
+     * @param list<CuratorPostImage> $images
+     */
+    private function queueChecks(array $images): void
+    {
+        foreach ($images as $image) {
+            $this->bus->dispatch(new CheckPicture(CheckPicture::ROOM, (int) $image->getId()));
+        }
     }
 
     /**
@@ -530,13 +556,20 @@ final class CuratorRoom
         // stay in the database until an <img> asks for them.
         $ids = array_map(static fn (array $c): int => $c['id'], $cards);
         $images = $this->db->fetchAllAssociative(
-            'SELECT id, post_id, width, height FROM curator_post_image WHERE post_id IN (:ids) ORDER BY post_id, position',
+            'SELECT id, post_id, width, height, state, refusal FROM curator_post_image WHERE post_id IN (:ids) ORDER BY post_id, position',
             ['ids' => $ids],
             ['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER],
         );
         $byPost = [];
         foreach ($images as $i) {
-            $byPost[(int) $i['post_id']][] = ['id' => (int) $i['id'], 'width' => (int) $i['width'], 'height' => (int) $i['height']];
+            $byPost[(int) $i['post_id']][] = [
+                'id' => (int) $i['id'],
+                'width' => (int) $i['width'],
+                'height' => (int) $i['height'],
+                // pending: the worker has not checked it yet; refused: it never will be shown.
+                'state' => (string) $i['state'],
+                'refusal' => null !== $i['refusal'] ? (string) $i['refusal'] : null,
+            ];
         }
         foreach ($cards as $k => $card) {
             $cards[$k]['images'] = $byPost[$card['id']] ?? [];

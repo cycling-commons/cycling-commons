@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Support\Entity;
 
+use App\Support\CheckedPicture;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -26,10 +27,12 @@ use Doctrine\ORM\Mapping as ORM;
  *
  * So: bytes in a column. The volume makes it reasonable. A re-encoded
  * screenshot is a couple of hundred kilobytes, at most three per report, and
- * bug reports arrive at human speed. They are re-encoded through Imagick on the
- * way in ({@see \App\Support\ScreenshotStore}), which is what makes them safe:
- * whatever was in the original file, what is stored is pixels this server drew.
- * They are served only to curators, only through a controller, and only with
+ * bug reports arrive at human speed. The web host holds the raw bytes as
+ * `pending` and the worker scans and re-encodes them through Imagick
+ * ({@see \App\Support\MessageHandler\CheckPictureHandler}), which is what
+ * makes them safe: whatever was in the original file, what is stored once
+ * `ready` is pixels the worker drew. They are served only when ready, only to
+ * curators, only through a controller, and only with
  * `Content-Disposition: attachment`.
  *
  * @see docs/specs/contact-and-support.md §6
@@ -40,6 +43,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'bug_screenshot')]
 class BugScreenshot
 {
+    use CheckedPicture;
+
     /** After re-encoding, not before. The upload cap is checked separately. */
     public const int MAX_BYTES = 2 * 1024 * 1024;
 
@@ -73,6 +78,15 @@ class BugScreenshot
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
+
+    /** The raw bytes as sent, held for the worker and never served. */
+    public static function pending(string $raw): self
+    {
+        $shot = new self('application/octet-stream', '', 0, 0);
+        $shot->holdRaw($raw);
+
+        return $shot;
+    }
 
     public function __construct(string $mimeType, string $bytes, int $width, int $height)
     {

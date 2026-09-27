@@ -16,7 +16,7 @@ namespace App\Support;
  *
  * @api
  */
-final class ScreenshotRejected extends \RuntimeException
+class ScreenshotRejected extends \RuntimeException
 {
     public function __construct(private readonly string $translationKey)
     {

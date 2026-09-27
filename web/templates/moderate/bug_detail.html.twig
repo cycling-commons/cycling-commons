@@ -165,9 +165,16 @@
       <p class="bsec">{{ 'support.bug.field_screenshot'|trans }}</p>
       <p class="shots">
         {% for shot in report.screenshots %}
-          <a href="{{ path('moderate_bugs_screenshot', {id: report.id, shotId: shot.id}) }}">
-            {{ loop.index }} · {{ shot.width }}×{{ shot.height }} · {{ (shot.byteSize / 1024)|round }} kB
-          </a>
+          {% if shot.isReady() %}
+            <a href="{{ path('moderate_bugs_screenshot', {id: report.id, shotId: shot.id}) }}">
+              {{ loop.index }} · {{ shot.width }}×{{ shot.height }} · {{ (shot.byteSize / 1024)|round }} kB
+            </a>
+          {% elseif shot.isPending() %}
+            {# Held for the worker's scan and redraw; never served until it is done. #}
+            <span>{{ loop.index }} · {{ 'support.bugs.shot_pending'|trans }}</span>
+          {% else %}
+            <span>{{ loop.index }} · {{ 'support.bugs.shot_refused'|trans({'%reason%': (shot.refusal ?? 'support.bug.error.shot_unreadable')|trans}) }}</span>
+          {% endif %}
         {% endfor %}
       </p>
     {% endif %}

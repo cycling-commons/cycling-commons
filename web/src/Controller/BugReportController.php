@@ -15,7 +15,9 @@ use App\Security\ProofOfWork;
 use App\Support\BugArea;
 use App\Support\BugSeverity;
 use App\Support\Entity\BugReport;
+use App\Support\Entity\BugScreenshot;
 use App\Support\GitHubIssues;
+use App\Support\Message\CheckPicture;
 use App\Support\ScreenshotRejected;
 use App\Support\ScreenshotStore;
 use App\Support\SupportIntake;
@@ -24,8 +26,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * "Something is broken", from anybody, from any page.
@@ -77,6 +81,8 @@ final class BugReportController extends AbstractController
         private readonly RateLimiterFactory $bugReportLimiter,
         private readonly RateLimiterFactory $bugReportNoJsLimiter,
         private readonly GitHubIssues $github,
+        private readonly TranslatorInterface $translator,
+        private readonly MessageBusInterface $bus,
     ) {
     }
 
@@ -102,7 +108,10 @@ final class BugReportController extends AbstractController
         $error = $this->validateAndStore($request);
         if (null !== $error) {
             return $wantsJson
-                ? $this->json(['ok' => false, 'error' => $error[0]], $error[1])
+                // `message` is the key already translated for the request's
+                // locale: the panel shows it as is, so a Dutch page gets a
+                // Dutch refusal.
+                ? $this->json(['ok' => false, 'error' => $error[0], 'message' => $this->translator->trans($error[0])], $error[1])
                 : $this->render(
                     'pages/report_bug.html.twig',
                     $this->context($request, error: $error[0]),
@@ -295,6 +304,11 @@ final class BugReportController extends AbstractController
 
         $this->intake->receiveBug($report);
 
+        // Stored, so each picture has an id: the worker scans and draws them.
+        foreach ($report->getScreenshots() as $shot) {
+            $this->bus->dispatch(new CheckPicture(CheckPicture::BUG, (int) $shot->getId()));
+        }
+
         return null;
     }
 
@@ -305,6 +319,11 @@ final class BugReportController extends AbstractController
      * A reporter who pasted a screenshot and had it silently discarded believes
      * they sent one, and the curator reading the report cannot tell that
      * anything is missing.
+     *
+     * Only the cheap checks happen here (size, the file's own signature, the
+     * data-URL shape); each picture is held `pending` and the worker scans and
+     * draws it after the report is stored. A picture the worker refuses is
+     * shown to the curator with its reason; the reporter has already gone.
      */
     private function attachScreenshots(Request $request, BugReport $report): ?string
     {
@@ -318,7 +337,7 @@ final class BugReportController extends AbstractController
                 continue;
             }
             try {
-                $report->addScreenshot($this->screenshots->acceptDataUrl($dataUrl));
+                $report->addScreenshot(BugScreenshot::pending($this->screenshots->rawFromDataUrl($dataUrl)));
             } catch (ScreenshotRejected $e) {
                 return $e->translationKey();
             }
@@ -337,7 +356,7 @@ final class BugReportController extends AbstractController
                 return 'support.bug.error.shot_too_large';
             }
             try {
-                $report->addScreenshot($this->screenshots->accept((string) file_get_contents($path)));
+                $report->addScreenshot(BugScreenshot::pending($this->screenshots->hold((string) file_get_contents($path))));
             } catch (ScreenshotRejected $e) {
                 return $e->translationKey();
             }

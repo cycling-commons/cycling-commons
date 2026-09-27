@@ -3,4 +3,8 @@ framework:
     enabled_locales: [en, fr, nl, de, es]
     translator:
         default_path: '%kernel.project_dir%/translations'
+        # Filled into every message that names it, on every page and flash,
+        # so "over N MB" never reaches a reader as a raw placeholder.
+        globals:
+            '%%shot_max_mb%%': { value: !php/const App\Support\ScreenshotStore::MAX_UPLOAD_MB }
         providers:

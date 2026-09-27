@@ -302,7 +302,8 @@ final class ModerateBugsController extends AbstractController
     public function screenshot(int $id, int $shotId): Response
     {
         $shot = $this->em->find(BugScreenshot::class, $shotId);
-        if (!$shot instanceof BugScreenshot || $shot->getReport()?->getId() !== $id) {
+        // Held bytes are a stranger's file nobody has scanned yet: never served.
+        if (!$shot instanceof BugScreenshot || $shot->getReport()?->getId() !== $id || !$shot->isReady()) {
             throw $this->createNotFoundException();
         }
 

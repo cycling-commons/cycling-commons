@@ -12,6 +12,7 @@ use App\Entity\User;
 use App\Messaging\CuratorRoom;
 use App\Messaging\CuratorRoomCategory;
 use App\Messaging\CuratorRoomPin;
+use App\Tests\Support\RunsPictureChecks;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -26,6 +27,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  */
 final class CuratorRoomTest extends WebTestCase
 {
+    use RunsPictureChecks;
+
     private int $seq = 0;
 
     /**
@@ -445,6 +448,13 @@ final class CuratorRoomTest extends WebTestCase
         self::assertResponseStatusCodeSame(201);
         /** @var array{id: int, url: string} $up */
         $up = json_decode((string) $client->getResponse()->getContent(), true);
+        $checks = $this->takePictureChecks();
+        self::assertCount(1, $checks, 'the worker scans and draws it, not the web host');
+
+        // Held and not yet checked: served to nobody, its uploader included.
+        $client->request('GET', $up['url']);
+        self::assertResponseStatusCodeSame(404);
+        $this->runPictureChecks($checks);
 
         // Its uploader sees it before it is posted; another curator does not.
         $client->request('GET', $up['url']);
@@ -506,6 +516,7 @@ final class CuratorRoomTest extends WebTestCase
             'category' => '',
             'c' => 'all',
         ], ['image' => [new UploadedFile($this->pngFile('blue'), 'gate.png', 'image/png', null, true)]]);
+        $this->drainPictureChecks();
         $crawler = $client->followRedirect();
         $src = (string) $crawler->filter('.rm-post .rm-images img')->attr('src');
         self::assertStringContainsString('/moderate/room/image/', $src);
@@ -517,6 +528,25 @@ final class CuratorRoomTest extends WebTestCase
         $this->loginAs($client, 'dm-pic-third', ['ROLE_CURATOR']);
         $client->request('GET', $src);
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testAPictureNotYetCheckedShowsAsWordsOnTheBoard(): void
+    {
+        $client = static::createClient();
+        $this->loginAs($client, 'pic-wait', ['ROLE_CURATOR']);
+        $crawler = $client->request('GET', '/moderate/room/new');
+        $client->request('POST', '/moderate/room/post', [
+            '_token' => $this->tokenOn($crawler, 'rm-compose'),
+            'title' => 'Still being checked',
+            'body' => 'The picture has not been through the worker yet.',
+            'to' => '',
+            'category' => '',
+            'c' => 'all',
+        ], ['image' => [new UploadedFile($this->pngFile(), 'wait.png', 'image/png', null, true)]]);
+        $crawler = $client->followRedirect();
+
+        self::assertCount(0, $crawler->filter('.rm-post .rm-images img'));
+        self::assertStringContainsString('Picture being checked', $crawler->filter('.rm-post .rm-images')->text());
     }
 
     public function testAnUnpostedPictureCanBeTakenBackAndOldOnesAreSwept(): void
@@ -542,6 +572,7 @@ final class CuratorRoomTest extends WebTestCase
         ]);
         /** @var array{id: int} $fresh */
         $fresh = json_decode((string) $client->getResponse()->getContent(), true);
+        $this->drainPictureChecks();
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $em->getConnection()->executeStatement(

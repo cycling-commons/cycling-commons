@@ -49,7 +49,9 @@
     {% if report.screenshots|length %}
       <tr>
         <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.bug.field_screenshot'|trans([], null, locale) }}</td>
-        <td style="padding:4px 0;font-size:14px">{{ report.screenshots|length }}</td>
+        {# Sent the moment the report is stored, before the worker has checked
+           the pictures: the count, and that they are still being checked. #}
+        <td style="padding:4px 0;font-size:14px">{{ 'support.bug.shots_checking'|trans({'%count%': report.screenshots|length}, null, locale) }}</td>
       </tr>
     {% endif %}
   </table>
