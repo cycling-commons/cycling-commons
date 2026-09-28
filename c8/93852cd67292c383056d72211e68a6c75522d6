@@ -1,0 +1,24 @@
+web/src/Asset/CssCommentStripper.php
+  s_6e1d7c95fbc8b5::t_191e5b9452ab07 1-24,27-76,80-92
+  s_6e1d7c95fbc8b5::t_ffb5fcd553578f 25-26,77-79
+web/tests/Asset/CssCommentStripperTest.php
+  s_6e1d7c95fbc8b5::t_6e52b9fe280cdf 1-18,20-21,30-46
+  s_6e1d7c95fbc8b5::t_ee6e118530de37 19
+  s_6e1d7c95fbc8b5::t_ffb5fcd553578f 22-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c893852cd67292c383056d72211e68a6c75522d6",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
