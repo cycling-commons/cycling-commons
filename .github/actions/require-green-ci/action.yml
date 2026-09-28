@@ -71,9 +71,21 @@ runs:
           # Newest run first, so the first row seen for a workflow path is the
           # current one. A re-run of a red job must be able to unblock a deploy;
           # judging on the oldest row would keep the original failure forever.
-          rows=$(gh api --paginate \
+          # A GitHub API answer can come back empty or cut off: `gh` then
+          # fails with "unexpected end of JSON input" (staging deploy #38,
+          # 2026-09-28). That says nothing about CI, so it is retried like a
+          # run that is still going, until the same timeout.
+          if ! rows=$(gh api --paginate \
             "repos/${REPO}/actions/runs?head_sha=${SHA}&per_page=100" \
-            --jq '.workflow_runs[] | [.path, .status, (.conclusion // "pending"), .html_url] | @tsv')
+            --jq '.workflow_runs[] | [.path, .status, (.conclusion // "pending"), .html_url] | @tsv'); then
+            if [ "$elapsed" -ge "$TIMEOUT" ]; then
+              echo "::error::timed out after ${elapsed}s: the GitHub API did not answer"
+              exit 1
+            fi
+            echo "waiting (${elapsed}s): the GitHub API did not answer; asking again"
+            sleep 15
+            continue
+          fi
 
           declare -A seen=()
           pending=""
