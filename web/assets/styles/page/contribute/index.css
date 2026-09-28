@@ -1,0 +1,34 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.ahero .lead{color:rgba(239,230,212,.85)}
+
+.cat-h{font-family:var(--mono);font-size:.92rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin-top:2.6rem;display:flex;align-items:baseline;gap:.8rem}
+.cat-h b{color:var(--clay)}
+.cat-h span{font-family:var(--sans);font-weight:400;font-size:1rem;letter-spacing:0;text-transform:none;color:#5a5d4d}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:1rem}
+.card{position:relative;display:flex;flex-direction:column;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:1.3rem;transition:all .22s;overflow:hidden}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 30px -16px rgba(20,22,14,.5);border-color:var(--trail)}
+.card .ic{font-size:1.5rem;margin-bottom:.7rem;display:block;filter:brightness(0)}
+/* Arriving from a home-page card (/contribute#type-…): that card is marked. */
+.card{scroll-margin-top:6rem}
+.card:target{border-color:var(--trail);box-shadow:0 0 0 3px rgba(255,90,31,.35);animation:cardHi 1.4s ease-out 2}
+@keyframes cardHi{0%{box-shadow:0 0 0 0 rgba(255,90,31,.55)}100%{box-shadow:0 0 0 12px rgba(255,90,31,0)}}
+@media (prefers-reduced-motion:reduce){.card:target{animation:none}}
+.card h4{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:.3rem}
+.card p{font-size:.90rem;color:#4a4d40;line-height:1.55;margin-bottom:1rem}
+.card .go{margin-top:auto;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
+.card.off{opacity:.55;cursor:default}
+.card.off:hover{transform:none;box-shadow:none;border-color:rgba(20,22,14,.14)}
+.card.off .go{color:#7a7d6d}
+@media(max-width:560px){
+  .grid{grid-template-columns:repeat(2,1fr);gap:.7rem}
+  .card{padding:.85rem}
+  .card .ic{font-size:1.25rem;margin-bottom:.35rem}
+  .card h4{font-size:1rem;margin-bottom:.25rem}
+  .card p{font-size:.90rem;line-height:1.45;margin-bottom:.7rem}
+  .card .go{font-size:.68rem}
+}
+@media(max-width:380px){ .grid{grid-template-columns:1fr} }
+
+.notice{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.84rem;
+  color:#4a4d40;border-radius:0 6px 6px 0;margin-top:2.2rem;line-height:1.55}

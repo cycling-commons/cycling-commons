@@ -15,26 +15,7 @@
 {% include 'account/_shell_styles.html.twig' %}
 {# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
-<style>
-  .mdet{max-width:720px}
-  .mdet dl{display:grid;grid-template-columns:auto 1fr;gap:.3rem .9rem;margin:1rem 0 1.4rem}
-  .mdet dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay)}
-  .mdet dd{margin:0;font-size:.9rem;color:#3a3d30}
-  .mbody{background:var(--paper-deep);border-radius:6px;padding:1rem 1.2rem;font-family:inherit;
-    font-size:.95rem;line-height:1.65;color:#3a3d30;white-space:pre-wrap;word-wrap:break-word;margin:0 0 1.4rem}
-  .late{background:#fff1ec;border-left:2px solid var(--trail);padding:.85rem 1.05rem;border-radius:0 6px 6px 0;
-    font-size:.88rem;color:#5a2716;margin:0 0 1.2rem}
-  .handle{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid rgba(20,22,14,.12)}
-  .handle label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
-  .handle select,.handle textarea{width:100%;font-family:inherit;font-size:.9rem;padding:.5rem .6rem;
-    border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
-  .handle textarea{min-height:7rem;line-height:1.55;resize:vertical}
-  /* Same place as every other desk's save. */
-  .dact{display:flex;justify-content:flex-end;margin-top:1.2rem}
-  .reply-cta{font-size:.88rem;color:#4a4d40;margin:.8rem 0}
-  .reply-cta a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/inbox_detail.css') }}">
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_inbox'} %}{% endblock %}

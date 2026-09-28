@@ -11,10 +11,7 @@
    must not pick up atlas.css's ".acct-dropdown form"/"form button" rules
    (the top border and the clay logout colour). Both overrides need the extra
    ".acct-inline-form" class in their selector to outrank those by specificity. #}
-<style>
-  .acct-dropdown .acct-inline-form{margin:0;padding-top:0;border-top:0}
-  .acct-dropdown .acct-inline-form button{color:var(--ink)!important}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/partials/_account_chip.css') }}">
 <div class="acct-menu" data-nav-menu>
   {# One set of reads: the chip bulb is the total of open work (unread
      messages + open submissions + open translations). Each contributing

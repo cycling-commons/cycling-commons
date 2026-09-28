@@ -206,9 +206,9 @@ input[type="checkbox"]:disabled,input[type="radio"]:disabled{cursor:not-allowed;
   .pager-size{order:3;justify-content:space-between}
 }
 
-/* The dark page header. It lived in seven page-level <style> blocks, all
-   saying the same thing, which meant a new page could use the class and get
-   nothing (owner, 2026-08-28: the curator page and the report page both). */
+/* The dark page header, once, for every page: a copy per page meant a new
+   page could use the class and get nothing (owner, 2026-08-28: the curator
+   page and the report page both). */
 /* Top padding 2.4rem and not 3rem: the kicker that opens each hero had to sit
    about ten pixels higher (owner, 2026-08-29). The bottom keeps its 3rem. */
 .lhero,.rhero,.chero,.ahero{background:var(--ink);color:var(--paper);padding:2.4rem 0 3rem}
@@ -288,7 +288,7 @@ a .card:hover,.card.rv:hover,.card.is-link:hover{transform:translateY(-3px);box-
    attached to the form itself rather than to a field: a rejected CSRF token, a
    rate limit, a cross-field rule. Every form page needs the same look, and most
    of them style only the field-level <ul>, so this one lives in the global
-   sheet rather than being copied into each page's <style> block. Loud on
+   sheet rather than being copied into each page's own stylesheet. Loud on
    purpose: unlike .cc-notice this IS an alert, and it says why the thing the
    rider just pressed did not happen. */
 /* Not `var(--clay)`. Measured on the auth card: clay on its own 10% tint lands
@@ -418,7 +418,7 @@ section.pad+section.pad{padding-top:clamp(2rem,4vw,3rem)}
 
 /* ── Submission receipts ──────────────────────────────────────────────────
    Shared by contribute/_receipt_mark.html.twig, which every receipt includes.
-   Lives here rather than in each page's inline <style> block because five
+   Lives here rather than in each page's own stylesheet because five
    templates render the same mark and they were already drifting: four carried
    a ◬ glyph and propose_route had no mark at all. */
 .receipt-mark{display:flex;flex-direction:column;align-items:center;gap:.35rem;color:var(--ink,#20241c)}

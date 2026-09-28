@@ -1,0 +1,48 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.phero{background:var(--ink);color:var(--paper);padding:3rem 0}
+/* The toggle: two links that read as one control. */
+.dirbar{display:flex;justify-content:flex-end;margin-bottom:1.4rem}
+.dirnote{font-size:.85rem;color:#4a4d40;margin-top:1.2rem}
+/* The toggle: two chips (atlas.css), the current view in ink. */
+.dirtoggle{margin:0}
+/* The map. Pans sideways on a narrow screen rather than shrinking to a smudge. */
+.pmap-wrap{overflow-x:auto;border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper)}
+.pmap{display:block;min-width:820px;width:100%;height:auto;font-family:var(--sans)}
+/* Roads and borders: one set of rules for the map and for the key's samples. */
+.pmap .land,.pkey .land{fill:var(--paper-deep);fill-opacity:.55;stroke:var(--ink);stroke-width:1;stroke-dasharray:7 4 1.5 4;stroke-opacity:.7}
+.pmap .land-name{font-family:var(--serif);font-weight:600;font-size:17px;fill:var(--ink)}
+.pmap .road,.pkey .road{fill:none;stroke:var(--ink);stroke-linecap:round}
+.pmap .road-main,.pkey .road-main{stroke-width:3.5}
+.pmap .road-trail,.pkey .road-trail{stroke-width:2;stroke-dasharray:8 6;stroke:var(--clay)}
+.pmap .road-track,.pkey .road-track{stroke-width:2;stroke-dasharray:9 5 2 5;stroke:var(--spruce)}
+.pmap .road-path,.pkey .road-path{stroke-width:2;stroke-dasharray:1.5 5;stroke:var(--ink);stroke-opacity:.75}
+.pmap .hub circle{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+.pmap .hub.capital circle{fill:var(--clay);stroke:var(--ink);stroke-width:2.5}
+/* The one touch of trail orange on the map: a capital's centre, like a city dot. */
+.pmap .hub.capital .cap{fill:var(--trail);stroke:none}
+.pmap .hub text{font-size:13px;fill:var(--ink);paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+.pmap .hub.capital text{font-weight:600}
+.pmap a.hub{cursor:pointer}
+.pmap a.hub:hover text{text-decoration:underline;text-underline-offset:3px}
+.pmap a.hub:hover circle{stroke:var(--clay)}
+.pmap a.hub:focus{outline:none}
+.pmap a.hub:focus-visible circle{stroke:var(--trail);stroke-width:4}
+/* The key: line samples drawn with the same classes as the roads. */
+.pkey{display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;margin-top:.9rem;font-size:.85rem;color:#4a4d40}
+.pkey span{display:inline-flex;align-items:center;gap:.5rem}
+.pkey svg{width:44px;height:12px;flex:none;overflow:visible}
+.pkey .land{stroke-width:1.5}
+/* The list: one section per country, same border as on the map. */
+.pgc{margin-top:1.6rem;padding-top:1.2rem;border-top:1px dashed rgba(20,22,14,.35)}
+.pgc:first-child{margin-top:0;padding-top:0;border-top:0}
+.pgc h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;margin:0 0 .9rem;display:flex;align-items:center;gap:.6rem}
+/* The same touch of trail orange on the list: a short dash before each country. */
+.pgc h2::before{content:"";width:1.1rem;height:3px;border-radius:2px;background:var(--trail);flex:none}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
+@media(max-width:600px){.pg{grid-template-columns:repeat(2,1fr);gap:.7rem}}
+.pg a{display:flex;min-width:0}
+.pg .card{flex:1;min-width:0}
+/* Headings wrap between words only, never inside one, and sit tight. */
+.pg .card h4{font-family:var(--serif);font-weight:600;font-size:1.25rem;line-height:1.15;margin-bottom:.3rem;overflow-wrap:normal;word-break:normal;hyphens:manual}
+.pg .card p{font-size:.90rem;color:#4a4d40;margin-top:.4rem;overflow-wrap:break-word}
+@media(max-width:600px){.pg .card h4{font-size:1.05rem}}

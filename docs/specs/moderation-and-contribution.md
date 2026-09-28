@@ -298,8 +298,8 @@ and a **title search**.
   the same view.
 - **Both desks carry the same filter row** — country, region, type, search —
   built from the same markup, with the search field and pager styled once in
-  `account/_shell_styles.html.twig`. They began in one page's `<style>` block,
-  so the other desk rendered an unstyled browser default beside a designed one.
+  the shell's stylesheet (`assets/styles/page/account/_shell_styles.css`), so
+  neither desk renders an unstyled browser default beside a designed one.
 - The history's country/region option lists describe the **settled** set, not
   the open queue (`statusTuple()`): a country with no open work can still have
   a record worth reading.
@@ -940,11 +940,12 @@ status pill (`.q-pill--ok|pend|conf|rej|ret|danger`), the quoted note
 (`.q-note`, `--answer`, `--prior`), the was → now diff (`.q-diff`, as two lines
 on the desk or as a `<dl>` on the rider pages, foldable as `details.q-diff`),
 the density switch (`account/_density.html.twig`) and the pager are defined
-**once**, in `account/_shell_styles.html.twig`, which includes
-`moderate/_card_styles.html.twig`. Every list page draws from there: the
+**once**, in `account/_shell_styles.html.twig`, which links
+`assets/styles/page/moderate/_card_styles.css` and the shell's own
+stylesheet. Every list page draws from there: the
 submissions desk, History, Routes, Takedowns, Translations, Data, Regions, and on the rider
 side `/account/contributions` (contributions, route proposals, curator applications, votes)
-and `/account/messages`. A page's own `<style>` block keeps only what is truly its own
+and `/account/messages`. A page's own stylesheet keeps only what is truly its own
 (the data desk's side-by-side pair, the takedown photo size). A rider reading
 their own contribution and a curator deciding it are looking at one card; the
 desks that had grown their own row shapes (History's one-liners, Takedowns'
@@ -1151,10 +1152,10 @@ the older `.msg-rider` stacked layout. A curator moves between `/moderate/submis
 not change shape under them — and one desk learning something the others do not
 is exactly how the routes desk ended up months behind.
 
-- **The card system is now a partial, not a copy.** `moderate/_card_styles.html.twig`
-  holds the `.q-*` CSS and `moderate/_card_script.html.twig` the two progressive
-  enhancements; every desk includes both. It began as the submissions queue's
-  own `<style>` block, which is why it never reached the others.
+- **The card system is one file, not a copy.**
+  `assets/styles/page/moderate/_card_styles.css` holds the `.q-*` CSS and
+  `moderate/_card_script.html.twig` the two progressive enhancements; every
+  desk gets both, so no desk falls behind the others.
 - **The disclosure script is driven off `.q-acts`, not off the card.** A desk
   may put an action row somewhere that is not a queue row — a route proposal's
   DETAIL page has exactly one, belonging to the page — so the script finds every
@@ -2966,7 +2967,7 @@ matters. Public change history is unchanged.
 One class decides it for every desk (`App\Moderation\DeskRider`), and one
 partial writes it (`templates/moderate/_rider_name.html.twig`): a public name is
 a link to `/riders/{uuid}` in the desks' link style (`.desk-rider`, clay,
-underlined, in `moderate/_card_styles.html.twig`); a pseudonym is plain text. A
+underlined, in `assets/styles/page/moderate/_card_styles.css`); a pseudonym is plain text. A
 name inside a translated sentence ("by %who%") goes through
 `moderate/_rider_in_text.html.twig`, which splits the sentence at a marker so the
 name can still be a link and the rest stays escaped. Where it applies (owner

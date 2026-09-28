@@ -1,17 +1,7 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
-<style>
-  .lost{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
-    background:radial-gradient(125% 105% at 50% 0%,#27513a,var(--spruce) 48%,#0c1810 92%);color:var(--paper);padding:3rem 1.4rem}
-  .lost svg{width:84px;height:auto;color:var(--paper);opacity:.92;margin-bottom:1.4rem}
-  .lost .code{font-family:var(--mono);font-size:.74rem;letter-spacing:.28em;text-transform:uppercase;color:var(--trail)}
-  .lost h1{font-family:var(--serif);font-weight:800;font-size:clamp(2.2rem,6vw,3.6rem);line-height:1.04;letter-spacing:-1px;margin:.7rem 0 .5rem}
-  .lost h1 em{font-style:italic;color:var(--glacier)}
-  .lost p{max-width:30rem;color:rgba(239,230,212,.82);font-size:1.02rem}
-  .lost .row{display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center;margin-top:1.8rem}
-  .lost .btn-g{border-color:rgba(239,230,212,.4);color:var(--paper)}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/bundles/TwigBundle/Exception/error404.css') }}">
 {% endblock %}
 {% block body %}
 <section class="lost">

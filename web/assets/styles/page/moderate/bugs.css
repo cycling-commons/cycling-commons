@@ -1,0 +1,60 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.bugfind-hint + .chiprow{margin-top:1rem}
+.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:0}
+.bugrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.85rem 0}
+.bugrow:last-child{border-bottom:0}
+.bugtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
+.bugtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}
+.bugtop a:hover{color:var(--clay);text-decoration:underline}
+.ref{font-family:var(--mono);font-size:.7rem;color:#6d7060}
+/* The reference reads as an identifier, not as the title: same mono face the
+   detail page uses, and quiet enough that the title still leads the row. */
+.bugref{font-family:var(--mono);font-size:.74rem;color:#6d7060;letter-spacing:.04em;
+  text-decoration:none;flex:none}
+.bugref:hover{color:var(--clay);text-decoration:underline}
+.bugfind{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:1.1rem 0 .3rem}
+.bugfind label{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+/* Capped: a reference is four characters and the longest useful query is an
+   email address. A box the width of the page suggested neither, and made the
+   desk look like a search engine rather than a queue. */
+.bugfind input[type=search]{flex:0 1 26rem;min-width:0;font-family:inherit;font-size:.9rem;
+  padding:.45rem .6rem;border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+.bugfind input[type=search]:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+/* Orange, like every other submit on the site: a submit is the primary
+   action of its form, and the ink-coloured one read as a cancel. */
+.bugfind button{font-family:inherit;font-weight:700;font-size:.85rem;padding:.45rem .9rem;border:0;
+  border-radius:5px;background:var(--trail);color:var(--ink);cursor:pointer}
+.bugfind button:hover{background:#ff703d}
+.bugfind button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.bugclear{font-size:.8rem;color:#6d7060}
+.bugfind-hint{margin:0 0 .5rem;font-size:.90rem;color:#6d7060}
+.bugfound{margin:.2rem 0 .6rem;font-size:.85rem;color:#4a4d40}
+.listhead .bugsort label{color:#6d7060}
+/* Count on the left, order on the right, sharing one baseline. */
+.listhead{display:flex;justify-content:space-between;align-items:center;gap:.6rem 1rem;
+  flex-wrap:wrap;margin:1.1rem 0 .3rem;padding-bottom:.5rem;
+  border-bottom:1px solid rgba(20,22,14,.12)}
+.listhead .bugfound{margin:0}
+.bugsort{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:0}
+.bugsort label{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
+.bugsort select{font-family:inherit;font-size:.85rem;padding:.4rem .5rem;
+  border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+.bugsort select:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+.bugsort-go{font-family:inherit;font-weight:700;font-size:.82rem;padding:.4rem .8rem;border:0;
+  border-radius:5px;background:var(--trail);color:var(--ink);cursor:pointer}
+.bugsort-go:hover{background:#ff703d}
+.bugsort-go:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* Hidden only once the script that replaces it has run, so it is a real
+   control with scripting off rather than a dead one. */
+.bugsort.auto .bugsort-go{display:none}
+/* The release tag reads as a fact about the fix, not as a status. */
+.tag.rel{background:var(--spruce);color:var(--paper);letter-spacing:.06em}
+.tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
+.tag.sev-critical{background:#5a2716;color:#FFD9C8}
+.tag.sev-major{background:#FFE0D2;color:#5a2716}
+.tag.pub{background:var(--spruce);color:var(--paper)}
+.bugmeta{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
+.bugexcerpt{font-size:.87rem;color:#4a4d40;line-height:1.55;margin:.3rem 0 0}
+.empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
+  border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40}

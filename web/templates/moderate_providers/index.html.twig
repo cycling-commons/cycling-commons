@@ -10,50 +10,7 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  .pv-list{margin:.9rem 0 3rem;display:flex;flex-direction:column;gap:.35rem}
-  .pv-row{border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper-deep)}
-  .pv-row > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;
-    min-height:44px;padding:.6rem .85rem;font-family:var(--serif);font-weight:600;color:var(--ink)}
-  .pv-row > summary::-webkit-details-marker{display:none}
-  .pv-row > summary::marker{content:''}
-  .pv-row > summary:hover{background:rgba(20,22,14,.05);border-radius:8px}
-  .pv-row > summary:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
-  .pv-row > summary::before{content:'\25B8';font-size:.7rem;color:#8a8d7d;transition:transform .12s ease;flex:0 0 auto}
-  .pv-row[open] > summary::before{transform:rotate(90deg)}
-  .pv-key{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#8a8d7d;
-    border:1px solid rgba(20,22,14,.2);border-radius:3px;padding:.05rem .3rem}
-  /* Three facts a curator scans for, in the order they matter: is it on, does
-     it owe a notice, and can anyone touch it. */
-  .pv-tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
-    border-radius:3px;padding:.1rem .35rem;border:1px solid rgba(20,22,14,.2);color:#595c4d}
-  .pv-tag.on{border-color:var(--trail);color:var(--trail)}
-  .pv-tag.off{border-color:rgba(20,22,14,.2);color:#8a8d7d}
-  .pv-tag.req{border-color:var(--clay);color:var(--clay)}
-  .pv-form{padding:.2rem .95rem 1.1rem;display:grid;gap:.9rem}
-  .pv-form label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;
-    text-transform:uppercase;color:#595c4d;margin-bottom:.3rem}
-  .pv-form input[type=text],.pv-form input[type=url],.pv-form input[type=number],.pv-form textarea{
-    width:100%;padding:.55rem .7rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;
-    background:var(--paper);font:inherit}
-  .pv-form textarea{min-height:4.5rem;line-height:1.5}
-  .pv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem}
-  .pv-check{display:flex;align-items:center;gap:.45rem}
-  /* The shell's own button (.btn-act, _shell_styles), not the browser default. */
-  .pv-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.2rem}
-  .pv-check label{margin:0;text-transform:none;letter-spacing:0;font-family:inherit;font-size:.9rem;color:var(--ink)}
-  .pv-note{font-size:.82rem;color:#595c4d;line-height:1.5;margin:0}
-  .pv-src{border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:.7rem .9rem;background:rgba(20,22,14,.03);display:grid;gap:.45rem}
-  .pv-src h4{margin:0 0 .2rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d}
-  .pv-src dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:.25rem .9rem;font-size:.86rem}
-  .pv-src dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d;align-self:baseline}
-  .pv-src dd{margin:0;word-break:break-all}
-  .pv-src pre{margin:0;padding:.55rem .7rem;border-radius:6px;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.74rem;line-height:1.6;overflow-x:auto;white-space:pre}
-  .pv-hist{margin:.4rem 0 0;font-size:.82rem;color:#595c4d;line-height:1.7}
-  .pv-hist li{list-style:none}
-  .pv-hist .f{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d}
-  @media(max-width:640px){.pv-grid{grid-template-columns:1fr}}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/moderate_providers/index.css') }}">
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_providers'} %}{% endblock %}

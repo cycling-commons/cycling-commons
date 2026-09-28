@@ -3,13 +3,13 @@
 // One list system for every shell page (account-and-auth.md §8,
 // moderation-and-contribution.md §5.2; owner 2026-08-25).
 //
-// A rider's contributions, their messages and a curator's queue had each grown
-// their own <style> block: three page heads, two row shapes, four chip
-// families, a green button on one desk. This pins the cure: the head, the
-// container, the filter bar, the card, the pill and the density switch are
-// defined once in account/_shell_styles.html.twig, and every list page draws
-// from there. A page may still style what is truly its own; it may not carry
-// a copy of a shared rule, because a copy is how the pages drift apart again.
+// The head, the container, the filter bar, the card, the pill and the density
+// switch are defined once, in the shell's stylesheet
+// (assets/styles/page/account/_shell_styles.css, linked by
+// account/_shell_styles.html.twig together with the card system), and every
+// list page draws from there. A page may still style what is truly its own in
+// its own stylesheet; it may not carry a copy of a shared rule, because a copy
+// is how the pages drift apart again.
 'use strict';
 
 const test = require('node:test');
@@ -21,6 +21,15 @@ const ROOT = path.join(__dirname, '..', '..');
 const read = p => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 const SHELL = 'templates/account/_shell_styles.html.twig';
+const SHELL_CSS = 'assets/styles/page/account/_shell_styles.css';
+const CARD_LINK = "asset('styles/page/moderate/_card_styles.css')";
+
+// A template's own stylesheet(s): templates/x/y.html.twig -> assets/styles/page/x/y(-N).css.
+const pageCss = page => {
+  const base = page.replace(/^templates\//, 'assets/styles/page/').replace(/\.html\.twig$/, '');
+  return [base + '.css'].concat([2, 3, 4].map(n => `${base}-${n}.css`))
+    .filter(p => fs.existsSync(path.join(ROOT, p))).map(read).join('\n');
+};
 
 // Every page that lists records, rider side and curator side.
 const LIST_PAGES = [
@@ -61,7 +70,7 @@ const SHARED_RULES = [
 test('the pager is defined once, in the global stylesheet', () => {
   const atlas = read('assets/styles/atlas.css');
   assert.ok(atlas.includes('.pager{'), '.pager{ must be defined in atlas.css');
-  assert.ok(!read(SHELL).includes('.pager{'), 'the shell defines .pager a second time');
+  assert.ok(!read(SHELL_CSS).includes('.pager{'), 'the shell defines .pager a second time');
 });
 
 // `.lchip{` is deliberately NOT in the list below either, and for the pager's
@@ -71,7 +80,7 @@ test('the pager is defined once, in the global stylesheet', () => {
 test('the chip is defined once, in the global stylesheet', () => {
   const atlas = read('assets/styles/atlas.css');
   assert.match(atlas, /\.chip,\.lchip,\.chip-check span\{/, 'the chip must be defined in atlas.css');
-  assert.ok(!read(SHELL).includes('.lchip{'), 'the shell defines the chip a second time');
+  assert.ok(!read(SHELL_CSS).includes('.lchip{'), 'the shell defines the chip a second time');
 });
 
 test('no page carries its own copy of the chip', () => {
@@ -92,13 +101,13 @@ test('no page carries its own copy of the chip', () => {
 });
 
 test('the shell defines the system once', () => {
-  const shell = read(SHELL);
+  const shell = read(SHELL_CSS);
   for (const rule of ['.dbody{', '.mh{', '.mh .kicker{', '.mh h1{', '.mod-bar{', '.mod-filters{',
                       '.q-pill{', '.q-note{', '.q-diff dl{', '.sec-band{', '.empty-state{',
                       '.btn-act{']) {
     assert.ok(shell.includes(rule), `${rule} must be defined in the shell`);
   }
-  assert.ok(shell.includes("{% include 'moderate/_card_styles.html.twig' %}"),
+  assert.ok(read(SHELL).includes(CARD_LINK),
     'the record card is part of the shell, so a rider page gets it without asking');
   // The empty state is left-aligned prose, not a centred block (owner 2026-08-25).
   assert.match(shell, /\.empty-state\{text-align:left/);
@@ -108,10 +117,11 @@ test('no shell page carries its own copy of a shared rule', () => {
   for (const page of SHELL_PAGES) {
     const src = read(page);
     assert.ok(src.includes("{% include 'account/_shell_styles.html.twig' %}"), `${page} must include the shell styles`);
-    assert.ok(!src.includes("{% include 'moderate/_card_styles.html.twig' %}"),
-      `${page} includes the card styles itself; the shell already does, so this is a second copy`);
+    assert.ok(!src.includes(CARD_LINK),
+      `${page} links the card styles itself; the shell already does, so this is a second copy`);
+    const css = pageCss(page);
     for (const rule of SHARED_RULES) {
-      assert.ok(!src.includes(rule), `${page} defines ${rule} locally; that rule lives in the shell`);
+      assert.ok(!css.includes(rule), `${page} defines ${rule} in its own stylesheet; that rule lives in the shell`);
     }
   }
 });
@@ -160,7 +170,7 @@ test('the messages page keeps its state hooks on top of the shared card', () => 
   // The tests and the unread styling read these; they name message states, not looks.
   assert.match(src, /class="q-item msg-row \{\{ mine \? 'q-item--mine msg-mine' : \(m\.isRead \? '' : 'q-item--new msg-new'\) \}\}"/);
   assert.match(src, /<ul class="[^"]*\bq-list\b[^"]*\bmsg-list\b/);
-  const shell = read(SHELL);
+  const shell = read(SHELL_CSS);
   assert.match(shell, /ul\.q-list,ol\.q-list\{list-style:none/, 'a ul-based card list must not grow bullets');
 });
 

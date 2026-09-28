@@ -4,23 +4,7 @@
 {% block head_styles %}
 {# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
-<style>
-  .rp-wrap{max-width:44rem;margin:0 auto;padding:3rem 1.2rem 4rem}
-  .rp-head{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
-  .rp-head h1{font-family:var(--serif);font-weight:600;font-size:2rem;margin:0}
-  .rp-head img{border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
-  .rp-since{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin:.4rem 0 2rem}
-  .rp-sec{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--trail);margin:2.2rem 0 .8rem}
-  .rp-chips{display:flex;flex-wrap:wrap;gap:.5rem}
-  .rp-routes li{margin:.35rem 0}
-  .rp-empty{font-size:.9rem;color:#595c4d}
-  .rp-report{margin:2rem 0 0;padding-top:1rem;border-top:1px solid rgba(20,22,14,.12);font-size:.82rem}
-  .rp-report a{color:#595c4d}
-  .rp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.6rem}
-  .rp-stat{border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:.7rem .8rem}
-  .rp-stat-n{display:block;font-family:var(--serif);font-size:1.6rem;font-weight:600;line-height:1.1}
-  .rp-stat-l{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/profile/public.css') }}">
 {% endblock %}
 
 {% block body %}

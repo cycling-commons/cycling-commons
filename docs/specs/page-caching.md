@@ -139,6 +139,24 @@ The nonce itself stays, for `/map` and every page outside §6.
 `CspTest::testCacheablePagesCarryNoNonceAtAll` is the guard: it fails if an
 inline block reappears on any page in scope. It found the `<style>` blocks.
 
+**No `<style>` block at all (2026-09-28).** Every template's CSS is a file
+under `assets/styles/page/`, mirroring the template's path
+(`templates/pages/index.html.twig` → `assets/styles/page/pages/index.css`),
+linked with a `<link rel="stylesheet">` where the block stood, so its order in
+the cascade and any `{% if %}` around it are unchanged. A page's own rules stay
+its own, loaded on that page only, and a browser caches them instead of
+receiving them again inside every page (owner 2026-09-28: "I really hate
+inline css and even more if it has all these comments on a production site").
+Two shared CSS-only partials became files of their own: the moderation card
+(`page/moderate/_card_styles.css`) and the photo uploader
+(`page/contribute/_media_styles.css`). The comments stay in the source, as
+documentation; `App\Asset\CssCommentStripper` removes them when the production
+assets are compiled (debug off), keeping only the SPDX licence line and `/*!`
+notices. The `style="…"` attributes in the markup are the remaining inline
+CSS, and the one thing still standing between `style-src` and dropping
+`'unsafe-inline'`; e-mail templates keep theirs, because mail clients read
+nothing else.
+
 ### 3.3 The account chip (correctness, and it fails safe)
 
 `partials/_nav.html.twig` renders `partials/_account_chip.html.twig` when

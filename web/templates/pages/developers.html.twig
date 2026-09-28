@@ -1,26 +1,7 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
-<style>
-  .dhero{background:var(--ink);color:var(--paper);padding:3rem 0}
-  .dhero .lead{color:rgba(239,230,212,.85)}
-  .ep{display:flex;align-items:center;gap:.8rem;padding:.9rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-family:var(--mono);font-size:.85rem;flex-wrap:wrap}
-  .ep .verb{background:var(--spruce);color:var(--paper);font-size:.72rem;letter-spacing:.08em;padding:.2rem .5rem;border-radius:3px}
-  .ep .path{color:var(--ink)}.ep .desc{margin-left:auto;font-family:var(--sans);font-size:.90rem;color:#595c4d;text-transform:none;letter-spacing:0}
-  .code{background:var(--ink);color:var(--paper);border-radius:10px;padding:1.3rem 1.5rem;font-family:var(--mono);font-size:.82rem;line-height:1.7;overflow-x:auto;margin-top:1rem}
-  .code .k{color:var(--glacier)}.code .s{color:var(--trail)}.code .c{color:#8f9281}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:2rem}@media(max-width:760px){.two{grid-template-columns:1fr}}
-  /* The rules are the part of this page somebody has to have read, so they
-     are set at full body size and not as fine print (owner, 2026-08-29:
-     "the rules on the developer page are important make them bigger").
-     NO top padding. This box's background is the same --paper-deep as the
-     section it sits in, so its padding is invisible dead space, while the
-     .code box beside it has a real dark edge. Matching the two paddings put
-     the text level with the OTHER box's text and left the rules looking a
-     line low against the box edge the eye actually reads. The first line
-     starts at the top instead, level with that edge. */
-  .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:0 1.2rem .2rem;border-radius:0 8px 8px 0;font-size:1rem;line-height:1.6;color:#4a4d40}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/pages/developers.css') }}">
 {% endblock %}
 {% block body %}
 

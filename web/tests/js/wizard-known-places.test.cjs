@@ -56,7 +56,7 @@ test('our own rows are drawn differently from OpenStreetMap records', () => {
   // is a duplicate, adding beside an OSM record often is not.
   assert.match(improve, /p\.curated \? 'cc-cov-dot cc-cov-dot--ours' : 'cc-cov-dot'/);
   assert.match(
-    fs.readFileSync(path.join(ROOT, 'templates', 'contribute', 'improve.html.twig'), 'utf8'),
+    fs.readFileSync(path.join(ROOT, 'assets', 'styles', 'page', 'contribute', 'improve.css'), 'utf8'),
     /\.cc-cov-dot--ours\{/,
     'the ours modifier has no style, so both kinds look identical',
   );

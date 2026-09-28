@@ -51,7 +51,7 @@ asserts it found at least ten forms, so it cannot pass by finding nothing.
 ## 3. Markup and styling
 
 `.form-errors` lives in `assets/styles/atlas.css`, the global sheet, not in a
-page's `<style>` block. Most of these pages style only their field-level `<ul>`,
+page's own stylesheet. Most of these pages style only their field-level `<ul>`,
 so a page-local rule would have to be copied ten times and would be missing on
 the eleventh.
 

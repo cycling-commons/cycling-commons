@@ -26,27 +26,7 @@
 {% block head_styles %}
 {# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
-<style>
-  .reppage{max-width:640px}
-  .reppage h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:1.8rem 0 .5rem}
-  .reppage p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
-  .reppage a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
-  .cfield{margin:1.15rem 0}
-  .cfield label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
-  .cfield textarea{width:100%;font-family:inherit;font-size:.95rem;padding:.6rem .7rem;color:var(--ink);
-    border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper);min-height:9rem}
-  .cfield textarea:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
-  .chint{font-size:.90rem;color:#595c4d;line-height:1.5;margin:.4rem 0 0}
-  .claim{background:var(--paper-deep);border-left:2px solid var(--glacier);
-    padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.90rem;line-height:1.6;margin:1.4rem 0}
-  .claim dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--clay);margin-top:.7rem}
-  .claim dt:first-child{margin-top:0}
-  .claim dd{margin:.15rem 0 0}
-  .cerr{background:rgba(150,69,38,.1);border-left:2px solid var(--clay);padding:.8rem 1rem;
-    border-radius:0 6px 6px 0;font-size:.90rem;color:#7a3a1e;margin:1.2rem 0}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/support/report_answer.css') }}">
 {% endblock %}
 
 {% block body %}

@@ -1,0 +1,23 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.legal{max-width:760px}
+.legal h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;letter-spacing:-.01em;margin:2.4rem 0 .5rem}
+.legal h2:first-of-type{margin-top:0}
+.legal h3{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.2rem 0 .2rem}
+.legal p{font-size:1rem;color:#3a3d30;margin:.55rem 0;line-height:1.65}
+.legal ul{list-style:none;margin:.5rem 0}
+.legal li{font-size:.96rem;color:#3a3d30;line-height:1.6;padding:.28rem 0 .28rem 1.4rem;position:relative}
+.legal li::before{content:"–";position:absolute;left:0;color:var(--clay);font-weight:700}
+.legal b{color:var(--ink)}
+.legal a{color:var(--clay);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
+.legal a:hover{color:var(--trail)}
+.banner{background:var(--spruce);color:var(--paper);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;font-size:.96rem;line-height:1.6}
+/* `.banner` sets a light colour, but `.legal p` is MORE SPECIFIC (0,0,1,1
+   against 0,0,1,0), so any paragraph inside a banner is repainted the page's
+   dark ink and lands at 1.12:1 on the spruce: invisible. It happened first on
+   the accessibility statement, of all pages. These two lines make the banner
+   own its own text whatever is nested inside it. */
+.banner p,.banner li,.banner b{color:inherit}
+.banner p{margin:0}
+.banner a{color:#FFC9A8}
+.disc{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;border-radius:0 8px 8px 0;font-size:.86rem;color:#4a4d40;margin:0 0 1.4rem;line-height:1.6}
+.upd{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d;margin:0 0 2rem}

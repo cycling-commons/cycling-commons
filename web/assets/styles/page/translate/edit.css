@@ -1,0 +1,60 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.tr-panel{margin-top:1.4rem;padding:1.1rem 1.2rem;background:var(--paper-deep);border:1px solid rgba(20,22,14,.14);border-radius:8px}
+.tr-panel + .tr-panel{margin-top:.9rem}
+.tr-lab{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.35rem}
+.tr-val{font-size:.95rem;line-height:1.55;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.tr-note{margin-top:1rem;padding:.75rem .9rem;background:var(--paper);border-left:2px solid var(--glacier);border-radius:0 6px 6px 0;font-size:.90rem;line-height:1.55;color:#4a4d40}
+.preview{margin-top:.8rem;padding:.7rem .85rem;background:var(--paper);border-radius:6px;font-size:.9rem;line-height:1.5}
+.tr-status{display:inline-block;margin-left:.45rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--clay);padding:.12rem .4rem;border-radius:30px;font-weight:400}
+.tr-warn{font-size:.90rem;line-height:1.45;color:#7d2018;background:rgba(163,52,43,.09);border-left:2px solid #a3342b;padding:.45rem .8rem;border-radius:0 5px 5px 0;margin:.5rem 0 .7rem}
+.tr-diff{padding:.9rem 1.05rem;margin-top:1.4rem}
+.tr-diff dl{row-gap:1.15rem}
+.tr-change{margin:.9rem 0 0}
+.tr-change-k{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:#8a8d7d;margin-bottom:.35rem}
+.tr-form{margin-top:1.4rem}
+.tr-diff .tr-form{margin-top:1rem}
+/* Dev-only DeepL controls (translations.md §7.2). Copied verbatim into
+   partials/_translate_bar.html.twig, same convention as every other
+   .tr-* rule above: see that file's own header for why. */
+.tr-deepl{margin:0 0 1.1rem;padding:.85rem .95rem;background:var(--paper);border:1px dashed rgba(20,22,14,.3);border-radius:6px}
+.tr-deepl-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.tr-deepl button{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .8rem;border:1px solid var(--clay);background:transparent;color:var(--clay);border-radius:6px;cursor:pointer}
+.tr-deepl button:disabled{opacity:.5;cursor:default}
+.tr-deepl-status{margin:.6rem 0 0;font-size:.82rem;line-height:1.5;color:#4a4d40}
+.tr-deepl-status.is-error{color:#7d2018}
+/* Two tick-box groups, one per question: which languages to draft (top
+   of the DeepL panel) and which to write (directly above the write
+   button). Both are rows of small inline controls, so they opt out of
+   .tr-form .field's block, uppercase label. */
+.tr-deepl-pick,.tr-save-pick{margin:0;padding:0;border:0;display:flex;gap:1.1rem;flex-wrap:wrap;align-items:center}
+.tr-deepl-pick{margin:0 0 .9rem}
+.tr-save-pick{margin:1.8rem 0 .2rem;padding:.9rem 1rem;background:var(--paper);border:1px dashed rgba(20,22,14,.3);border-radius:6px}
+.tr-deepl-pick legend,.tr-save-pick legend{float:left;width:100%;padding:0;margin:0 0 .6rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d}
+.tr-deepl-pick label,.tr-save-pick label{display:inline-flex;gap:.4rem;align-items:center;font-size:.9rem;line-height:1.4}
+/* Room to read four blocks of prose at once. */
+.tr-form .tr-locale{margin-bottom:1.9rem}
+.tr-form .tr-locale textarea{min-height:6.5rem}
+/* A field whose text no longer matches what the server sent, so an
+   unticked edit is visible before it is dropped (catalogue-form.js). */
+.tr-form .tr-locale textarea.is-changed{background:#fdf1e3;border-color:rgba(193,106,44,.55)}
+.tr-deepl-note{margin:.8rem 0 0;font-size:.84rem;line-height:1.5;color:#595c4d}
+.tr-form .field{margin-bottom:1.1rem}
+.tr-form .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
+.tr-form .field textarea{width:100%;min-height:8rem;padding:.7rem .85rem;border:1px solid rgba(20,22,14,.22);border-radius:6px;background:var(--paper);font:inherit;line-height:1.5}
+.consent{display:flex;gap:.7rem;align-items:flex-start;margin:1.2rem 0}
+.consent input{margin-top:.25rem}
+.consent label{font-size:.9rem;line-height:1.5}
+.consent-ok{font-size:.86rem;line-height:1.5;color:#3f6b3f;margin:1.2rem 0}
+.consent-when{font-family:var(--mono);font-size:.68rem;color:#595c4d}
+.consent-more{display:block;margin:.4rem 0 0}
+.consent-more summary{cursor:pointer;font-size:.78rem;color:var(--clay)}
+.consent-ok > a{display:block;margin-top:.25rem;color:var(--clay);text-decoration:underline}
+.tr-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.2rem}
+.tr-actions button{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;cursor:pointer}
+.tr-actions a{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;padding:.75rem 1.1rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;color:var(--ink);text-decoration:none}
+/* Symfony's form_errors() renders a bare <ul><li>, never an element with
+   a class: the ".err" rule that stood here matched no live markup, so a
+   validation error rendered unstyled. Direct children only, so a list
+   inside the sanitized preview keeps its own look. */
+.tr-form > ul,.tr-form .field > ul{list-style:none;margin:0;padding:0}
+.tr-form > ul > li,.tr-form .field > ul > li{color:#8b2e2e;font-size:.84rem;margin-top:.35rem}

@@ -15,41 +15,7 @@
 {% block head_styles %}
 {# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
-<style>
-  .issues{max-width:820px}
-  .issue{border-bottom:1px solid rgba(20,22,14,.12);padding:1rem 0}
-  .issue:last-child{border-bottom:0}
-  .issue{scroll-margin-top:5rem}
-  .issue summary{cursor:pointer;list-style:none;position:relative;padding-right:1.6rem}
-  .issue summary::-webkit-details-marker{display:none}
-  .issue summary::after{content:'▾';position:absolute;right:.2rem;top:0;color:var(--clay);font-size:.9rem}
-  .issue[open] summary::after{content:'▴'}
-  .issue h2{font-family:var(--serif);font-size:1.02rem;font-weight:600;margin:0 0 .35rem;color:var(--ink)}
-  .issue summary:hover h2{color:var(--clay)}
-  .issue .body{margin-top:.5rem}
-  .issue .body .tagrow:empty{display:none}
-  .issue:target{background:rgba(200,146,58,.12);margin:0 -.8rem;padding-left:.8rem;padding-right:.8rem;border-radius:6px}
-  .issue p{font-size:.9rem;color:#4a4d40;line-height:1.6;margin:.3rem 0}
-  .tagrow{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-top:.4rem}
-  .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
-    padding:.2rem .45rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
-  .tag.sev-critical{background:#5a2716;color:#FFD9C8}
-  .tag.sev-major{background:#FFE0D2;color:#5a2716}
-  .tag.st-resolved{background:var(--spruce);color:var(--paper)}
-  /* The release a fix shipped in: a link to it on the changelog, and the git
-     tag kept as written (`v0.9.0`, not `V0.9.0`). */
-  a.tag.tag-rel{text-transform:none;color:var(--ink);text-decoration:none}
-  a.tag.tag-rel:hover{text-decoration:underline}
-  .tag.st-in_progress,.tag.st-needs_testing,.tag.st-needs_validation{background:var(--ochre);color:var(--ink)}
-  .when{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060}
-  {# The two tabs are atlas.css chips, the count inside each. #}
-  .tabs{margin:0 0 1.4rem}
-  .tabnote{font-size:.9rem;color:#6d7060;margin:0 0 1.1rem;line-height:1.6}
-  .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
-    border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40;line-height:1.6}
-  .cta{margin-top:2rem;font-size:.94rem}
-  .cta a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/pages/known_issues.css') }}">
 {% endblock %}
 
 {% block body %}

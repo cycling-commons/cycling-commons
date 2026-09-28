@@ -1107,7 +1107,7 @@ routes (route-domain.md §4.5):
   waiting for review has no photo form of its own.
 
 Both mount `contribute/media-upload.js` with the wizard's ids and bag
-(`contribute/_media_config.html.twig`, `_media_styles.html.twig`): consent is
+(`contribute/_media_config.html.twig`, `assets/styles/page/contribute/_media_styles.css`): consent is
 fail-closed and stored before the first upload (§4), the cap is 6, the
 endpoint is `POST /media/photos` with its limiter and type sniff (§3). Only
 the pin differs. A live route sends `ST_PointOnSurface(geom)`. A new proposal

@@ -24,7 +24,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..', '..');
 const js = fs.readFileSync(path.join(ROOT, 'assets', 'contribute', 'improve.js'), 'utf8');
-const twig = fs.readFileSync(path.join(ROOT, 'templates', 'contribute', 'improve.html.twig'), 'utf8');
+const css = fs.readFileSync(path.join(ROOT, 'assets', 'styles', 'page', 'contribute', 'improve.css'), 'utf8');
 
 /** The body of `row.addEventListener('click', ...)` inside renderResults(). */
 function resultClickBody() {
@@ -103,8 +103,8 @@ test('only a gesture that started on the map is forwarded', () => {
 test('the sticky nav bar that causes it is still sticky', () => {
   // If this ever stops being sticky the net is still right (a release outside
   // the window has the same shape), but the comment above would be stale.
-  assert.match(twig, /\.navrow\{position:sticky;bottom:0/,
-    'improve.html.twig .navrow');
+  assert.match(css, /\.navrow\{position:sticky;bottom:0/,
+    'the wizard stylesheet, .navrow');
 });
 
 /* The threshold that swallowed the real report. A rider zoomed in and nudged

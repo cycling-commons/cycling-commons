@@ -16,27 +16,7 @@
 {% include 'account/_shell_styles.html.twig' %}
 {# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
-<style>
-  .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:1rem 0 .6rem}
-  .mh + .chiprow{margin-top:1rem}
-  .rrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.85rem 0}
-  .rrow:last-child{border-bottom:0}
-  .rtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
-  .rtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}
-  .rtop a:hover{color:var(--clay);text-decoration:underline}
-  .cats{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-left:.5rem}
-  .cats .legal{color:#5a2716;font-weight:700}
-  .cats .gone{color:#6d7060}
-  .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
-    padding:.18rem .42rem;border-radius:3px;background:var(--paper-deep);color:#4a4d40}
-  {# Legal claims read differently at a glance, and only those. #}
-  .tag.legal{background:#5a2716;color:#FFD9C8}
-  .tag.gone{background:#e4ded0;color:#6d7060}
-  .rmeta{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:#6d7060;margin-top:.35rem}
-  .rex{font-size:.87rem;color:#4a4d40;line-height:1.55;margin:.3rem 0 0}
-  .empty{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;
-    border-radius:0 8px 8px 0;font-size:.92rem;color:#4a4d40}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/reports.css') }}">
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_reports'} %}{% endblock %}

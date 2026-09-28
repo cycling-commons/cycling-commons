@@ -1,0 +1,12 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.ahero .lead{color:rgba(239,230,212,.85)}
+.hnote{margin-top:1.4rem;padding:1rem 1.2rem;border-left:3px solid var(--trail);
+  background:var(--paper-deep);border-radius:0 6px 6px 0;font-size:.95rem;color:#3b3d31}
+.roles{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem;margin-top:1.6rem}
+@media(max-width:680px){.roles{grid-template-columns:1fr}}
+.roles .card .rk{font-family:var(--mono);font-size:.7rem;color:var(--clay)}
+.roles .card h3{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:.3rem 0 .55rem}
+.roles .card p{font-size:.92rem;color:#4a4d40;margin-bottom:.95rem;line-height:1.5}
+.roles .card .rl{font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--clay);text-decoration:none;font-weight:600}
+.roles .card .rl:hover{color:var(--trail)}

@@ -2,58 +2,7 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  .mh{padding:2rem 0 1.4rem}
-  /* The last section keeps its distance from the footer, list or no list. */
-  #main{padding-bottom:3rem}
-  .mh .kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
-  .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,4vw,2.2rem);line-height:1.1;margin-bottom:.4rem;color:var(--ink)}
-  .mh .stat-line{font-family:var(--mono);font-size:.72rem;color:#595c4d}
-
-  .rd-maplink{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35);white-space:nowrap}
-  .rd-maplink:hover{color:var(--ink);border-bottom-color:var(--ink)}
-
-  .rd-meta{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.2rem 1.4rem;margin:1.4rem 0;background:var(--paper)}
-  .rd-meta table{width:100%;border-collapse:collapse;font-size:.90rem}
-  .rd-meta td{padding:.4rem 0;border-bottom:1px solid rgba(20,22,14,.08)}
-  .rd-meta td:last-child{white-space:pre-line}
-  .rd-meta td:first-child{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;width:35%}
-
-  .rd-edit{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1.2rem 1.4rem;margin:1.4rem 0;background:var(--paper)}
-  /* the decision is the primary action on a submitted proposal — a clay accent
-     sets it apart from the plain edit/retire boxes. */
-  .rd-decide{border-left:3px solid var(--clay)}
-  .rd-decide h2{font-family:var(--serif);font-size:1.2rem;margin:0 0 .8rem}
-  .rd-decide-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
-  .rd-decide-row label{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:0}
-  .rd-decide-row select{max-width:240px}
-  .rd-edit label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;margin-bottom:.4rem}
-  .rd-edit textarea{width:100%;min-height:110px;font-family:var(--sans);font-size:.9rem;padding:.6rem;border:1px solid rgba(20,22,14,.25);border-radius:6px}
-  .rd-field{margin-bottom:1rem}
-  .rd-edit input[type=text],.rd-edit select{width:100%;font-family:var(--sans);font-size:.9rem;padding:.55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
-  /* Two to a row on a desk, one to a row on a phone. */
-  .rd-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 1rem}
-  .rd-chips{display:flex;flex-wrap:wrap;gap:.45rem}
-  .rd-chip{display:inline-flex;align-items:center;gap:.4rem;margin:0;padding:.35rem .7rem;border:1px solid rgba(20,22,14,.25);border-radius:999px;cursor:pointer;
-           font-family:var(--sans);font-size:.85rem;letter-spacing:0;text-transform:none;color:var(--ink)}
-  .rd-chip:has(input:checked){border-color:var(--clay);background:rgba(184,89,58,.08)}
-  .rd-chip input{margin:0}
-  .rd-hint{font-family:var(--sans);font-size:.82rem;color:#6b6e5c;margin:.35rem 0 0;line-height:1.4}
-  /* .btn-act + variants come from account/_shell_styles.html.twig (one orange system);
-     only the layout margin is detail-specific here. */
-  .btn-act{margin-top:.8rem}
-
-
-  /* The proposal's own action row is the page's, not a queue row's, so it
-     needs the card's frame around it — on the overview the row inherits one
-     from the .q-item it sits in. */
-  .rd-acts{border:1px solid rgba(20,22,14,.12);border-radius:8px;padding:1rem 1.2rem;margin:1.4rem 0;background:var(--paper)}
-  .q-item--corr .q-head{align-items:center}
-  .q-acts > form{display:contents}
-
-  .rd-suggestions{margin:1.4rem 0 2.4rem}
-  .rd-photos-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin:.4rem 0 0}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/moderate_routes/detail.css') }}">
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_routes', mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null} %}{% endblock %}

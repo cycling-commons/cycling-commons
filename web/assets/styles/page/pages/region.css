@@ -1,0 +1,81 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.rhero .co{display:flex;align-items:center;gap:.5rem;color:var(--glacier);margin-bottom:1rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}
+.rstats{display:flex;gap:2.4rem;flex-wrap:wrap;margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid rgba(239,230,212,.18)}
+.rstats .s b{font-family:var(--serif);font-size:1.8rem;display:block}
+.rstats .s span{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+/* Label on its own line, figures under it. The two-number version outgrew a
+   single row: "1 checked · 1483 on the map" beside a label in a 220px column
+   wrapped "Water &/food" and ran the count into the next column. Stacking
+   removes the collision for any string length, which matters across five
+   locales where "on the map" is "sur la carte" and "auf der Karte". */
+/* -.65rem: each row wears .65rem top padding (the row separators need it),
+   so the first row's TEXT sat 9px lower under its header than the About
+   paragraph does under its own. A negative margin collapses additively
+   with the kicker's 1rem (1rem - .65rem), cancelling exactly the first
+   row's padding - the ink-to-ink gap under both headers measures equal. */
+.kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 2rem;margin-top:-.65rem}
+.kinds .k{display:flex;flex-direction:column;gap:.15rem;padding:.65rem 0;
+  border-bottom:1px solid rgba(20,22,14,.1);font-size:.95rem}
+.kinds .k .c{font-family:var(--mono);font-size:.72rem;color:#8a8d7d;letter-spacing:.02em}
+/* Checked reads as the achievement, coverage as the backdrop it sits on. */
+.kinds .k .c b{color:var(--trail);font-weight:700}
+.kinds .k .c i{font-style:normal}
+.kinds-note{font-size:.90rem;color:#595c4d;margin:.9rem 0 0;line-height:1.6;max-width:64ch}
+.region-report{margin:1.4rem 0 0;padding-top:1rem;border-top:1px solid rgba(20,22,14,.12);font-size:.82rem}
+.region-report a{color:#595c4d}
+/* The two terms this sentence defines, set apart from the sentence that
+   defines them. Padding rather than bare <code>: the mono glyphs sit tight
+   against the surrounding prose and the word boundary disappears. */
+.kinds-note code{font-family:var(--mono);font-size:.78rem;padding:.08em .34em;border-radius:4px;
+  background:rgba(89,92,77,.11);color:#3f4236;white-space:nowrap}
+/* The country in outline with this region filled. Inline SVG, no request and
+   no JavaScript: a region page is read once, often on a phone, and the
+   button beside it opens the real map for anyone who wants to pan. */
+.rshape{flex:0 0 auto;margin-left:auto}
+.rshape svg{display:block;width:132px;height:99px;overflow:visible}
+.rshape .co-out{fill:rgba(239,230,212,.10);stroke:rgba(239,230,212,.38);stroke-width:.8;
+  stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.rshape .rg-in{fill:var(--clay);fill-opacity:.9;stroke:var(--paper);stroke-width:.8;
+  stroke-linejoin:round;vector-effect:non-scaling-stroke}
+/* Who looks after this region. A quiet line, but a full sentence: the
+   question it answers is one a rider asks before trusting anything else here. */
+.rsteward{margin-top:1.5rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;
+  font-size:.88rem;color:rgba(239,230,212,.75);line-height:1.5}
+/* The heading owns its line; the chip and its sentence share the next one. */
+.rsteward-h{flex:0 0 100%;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;
+  text-transform:uppercase;color:rgba(239,230,212,.5)}
+.rsteward b{color:var(--paper);font-weight:600}
+.rsteward-chip{display:inline-block;margin-right:.45rem;padding:.16rem .5rem;border-radius:999px;
+  border:1px solid rgba(239,230,212,.28);background:rgba(239,230,212,.07);
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--paper);white-space:nowrap;vertical-align:.06em}
+.rsteward-d{color:rgba(239,230,212,.62)}
+.rsteward-sep{color:rgba(239,230,212,.35);padding:0 .1rem}
+/* One person = one pair of chips, kept together on a line break. The name
+   chip carries the emphasis; the reach chip is the quiet qualifier beside
+   it, joined to it rather than spaced away. */
+.rsteward-people{display:inline-flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-right:.15rem}
+.rsteward-person{display:inline-flex;align-items:center;white-space:nowrap}
+.rsteward-name{border-radius:999px 0 0 999px;border-right:none;color:var(--paper);
+  text-decoration:none;font-weight:600;letter-spacing:.06em}
+a.rsteward-name:hover{background:rgba(239,230,212,.16);border-color:rgba(239,230,212,.5)}
+.rsteward-name.is-anon{color:rgba(239,230,212,.72);font-weight:400}
+.rsteward-reach{border-radius:0 999px 999px 0;background:transparent;
+  color:rgba(239,230,212,.6);letter-spacing:.08em}
+.rhero-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
+.rhero-top > .rhero-head{flex:1 1 260px;min-width:0}
+@media(max-width:640px){.rshape{margin-left:0}.rshape svg{width:104px;height:78px}}
+/* The about block and the section under it are one reading flow, not two
+   chapters (owner 2026-08-16: the gap read as dead space). Selector
+   shapes are deliberate: atlas.css sets section.pad:has(+ section.pad)
+   padding-bottom at (0,2,2) specificity, which silently beat both a lone
+   class and section.rg-about when this was first written - the zero has
+   to ride the same :has() shape to win the tie as the later sheet. */
+section.rg-about{padding-bottom:0}
+section.rg-about:has(+ section.pad){padding-bottom:0}
+/* The same clamp as .rhero+section.pad, so hero->About and About->next
+   header breathe identically at every width (owner 2026-08-16). */
+section.rg-about+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
+.rg-about-text{max-width:46rem;font-size:1.02rem;line-height:1.65;margin:.4rem 0 .5rem}
+.rg-about-attrib{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:#5a5d4d}
+.rg-about-attrib a{color:inherit}

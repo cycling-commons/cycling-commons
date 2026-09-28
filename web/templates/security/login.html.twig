@@ -4,10 +4,7 @@
 
 {% block head_styles %}
 {% include 'security/_auth_shell_styles.html.twig' %}
-<style>
-  .row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;font-size:.85rem}
-  .row-between a{color:var(--clay)}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/security/login.css') }}">
 {% endblock %}
 
 {% block body %}

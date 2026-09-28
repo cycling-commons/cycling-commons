@@ -1,10 +1,11 @@
-{# SPDX-License-Identifier: AGPL-3.0-only #}
-{#
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/*
   The rider photo uploader's look: drop zone, upload queue rows, consent
   notice and consent modal (docs/specs/photo-uploads.md §4). Shared by every
   page that mounts contribute/media-upload.js, so the uploader looks the same
-  wherever a photo is added. Include it inside a <style> block.
-#}
+  wherever a photo is added. Linked by each page that mounts the uploader,
+  before the page's own stylesheet.
+*/
   /* upload queue + consent */
   .ulq{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
   /* The description field. Full width on its own line: a queue row is a name

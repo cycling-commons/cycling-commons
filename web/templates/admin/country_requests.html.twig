@@ -22,27 +22,7 @@
 {% block main %}
 {# No nonce: style-src is 'self' + 'unsafe-inline', so one does nothing here
    except tie the page to a per-request value (docs/specs/page-caching.md §3.2). #}
-<style>
-  .creq{border:1px solid rgba(0,0,0,.125);border-radius:.375rem;margin-bottom:.5rem;background:var(--bs-body-bg,#fff)}
-  .creq > summary{cursor:pointer;padding:.7rem .9rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.6rem;list-style:none}
-  .creq > summary::-webkit-details-marker{display:none}
-  .creq > summary::before{content:'▸';display:inline-block;width:1em;opacity:.55}
-  .creq[open] > summary::before{content:'▾'}
-  .creq .cname{font-weight:600}
-  .creq .cc{font-family:monospace;opacity:.6;font-size:.85em}
-  .creq .num{margin-left:auto;display:flex;gap:.9rem;font-size:.9em}
-  .creq .num b{font-weight:600}
-  .creq .body{padding:0 .9rem .9rem}
-  .creq table{width:100%;font-size:.9em;border-collapse:collapse}
-  .creq th{text-align:left;font-weight:600;padding:.35rem .5rem;border-bottom:1px solid rgba(0,0,0,.12)}
-  .creq td{padding:.35rem .5rem;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:top}
-  .creq .areas{margin-bottom:1.1rem}
-  .creq .whole{opacity:.6;font-style:italic}
-  .creq .yes{color:#1a7f37;font-weight:600}
-  .creq .note{white-space:pre-wrap;overflow-wrap:anywhere}
-  .creq .when{white-space:nowrap;opacity:.7;font-size:.92em}
-  .creq-none{padding:1.1rem 1.3rem;background:var(--bs-body-bg,#fff);border:1px solid rgba(0,0,0,.125);border-radius:.375rem}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/admin/country_requests.css') }}">
 
 <p class="text-muted">{{ 'admin.country_requests.intro'|trans }}</p>
 

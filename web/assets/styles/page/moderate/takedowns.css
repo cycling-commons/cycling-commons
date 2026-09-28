@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* The picture is the evidence: "is anyone recognisable" needs more than a
+   44px crop, so this card's thumbnail is the wizard's own 110×82. */
+.td-img{width:110px;height:82px;object-fit:cover;border-radius:5px;flex:0 0 auto;border:1px solid rgba(20,22,14,.18)}
+.td-reason{white-space:pre-wrap}
+/* The decision row: a note field beside the two verbs. */
+.td-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.7rem}
+.td-actions input[type=text]{flex:1 1 16rem;font-family:var(--sans);font-size:.9rem;padding:.45rem .55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper)}
+/* The handling record on an answered request: when it came in, when it was
+   answered, how long that took, by whom. A rights request runs against a
+   legal clock, so the wait is the number this desk is judged on. */
+.td-track{white-space:nowrap}
+@media(max-width:700px){.td-track{white-space:normal}}
+.td-gone{font-family:var(--mono);font-size:.7rem;color:#8a8d7d;margin-left:.4rem;font-weight:400}

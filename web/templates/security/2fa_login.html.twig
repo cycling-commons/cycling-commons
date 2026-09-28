@@ -6,10 +6,7 @@
 
 {% block head_styles %}
 {% include 'security/_auth_shell_styles.html.twig' %}
-<style>
-  /* the code input reads as a code: mono, large, spaced digits */
-  .field input[type=text]{font-family:var(--mono);font-size:1.3rem;letter-spacing:.3em}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/security/2fa_login.css') }}">
 {% endblock %}
 
 {% block body %}

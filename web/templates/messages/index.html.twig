@@ -18,20 +18,7 @@
 
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  .msg-state{display:inline-flex;align-items:center;margin-right:.4rem;vertical-align:-2px}
-  .msg-state.is-unread{color:var(--trail)}
-  .msg-state.is-read{color:#8c8f7d}
-  .msg-state svg{display:block}
-  {# The state name, for a screen reader; sighted readers get the icon and the row styling. #}
-  .msg-state .vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  .msg-subject{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
-  .msg-subject:hover{color:var(--trail)}
-  .msg-from-curator{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-top:.5rem}
-  .msg-report{margin:.7rem 0 0;font-size:.90rem}
-  .msg-report a{color:#6d7060}
-  .msg-from-you{color:#595c4d}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/messages/index.css') }}">
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'messages'} %}{% endblock %}

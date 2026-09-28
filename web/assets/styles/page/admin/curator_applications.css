@@ -1,0 +1,19 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.cur-row{border:1px solid rgba(0,0,0,.125);border-radius:.375rem;margin-bottom:.5rem;background:var(--bs-body-bg,#fff)}
+.cur-row > summary{cursor:pointer;padding:.7rem .9rem;display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;list-style:none}
+.cur-row > summary::-webkit-details-marker{display:none}
+/* The twisty, drawn rather than left to the platform so it can sit where
+   the row reads from and turn on open. */
+.cur-row > summary::before{content:"▸";display:inline-block;transition:transform .12s;opacity:.55}
+.cur-row[open] > summary::before{transform:rotate(90deg)}
+.cur-row > summary:hover{background:rgba(0,0,0,.03)}
+.cur-name{font-weight:600;font-size:1.02rem}
+.cur-meta{opacity:.7;font-size:.90rem}
+.cur-body{padding:0 .9rem .9rem;border-top:1px solid rgba(0,0,0,.08)}
+.cur-tpl{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0 .4rem}
+/* Open is the one that wants the eye; the settled two are quiet. */
+.cur-st-pending{background:#0d6efd}
+.cur-st-approved{background:#198754}
+.cur-st-declined{background:#6c757d}
+.cur-st-withdrawn{background:#adb5bd;color:#212529}
+.cur-decided{border-left:3px solid rgba(0,0,0,.15);padding-left:.7rem;margin-top:.4rem}

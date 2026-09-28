@@ -1,0 +1,17 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.rwrap{max-width:760px}
+.rgroup{margin:0 0 2.6rem}
+.rgroup h2{font-family:var(--serif);font-weight:600;font-size:1.35rem;letter-spacing:-.01em;margin:0 0 .3rem}
+.rgroup .gsub{font-size:.92rem;color:#595c4d;margin:0 0 1rem;line-height:1.55}
+.ritem{display:flex;gap:.8rem;align-items:flex-start;padding:.85rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+.ritem:last-child{border-bottom:0}
+.ritem p{margin:0;font-size:.98rem;color:#3a3d30;line-height:1.6}
+/* The status dot repeats the group heading, so it is decoration and hidden
+   from a screen reader rather than read out eight times. */
+.rdot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:.5rem}
+.rdot--now{background:var(--trail)}
+.rdot--next{background:var(--ochre)}
+.rdot--later{background:var(--glacier)}
+.rissue{font-family:var(--mono);font-size:.7rem;color:var(--clay);white-space:nowrap;margin-left:.4rem}
+.rfoot{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.1rem 1.3rem;border-radius:0 8px 8px 0;font-size:.94rem;color:#4a4d40;line-height:1.6}
+.rfoot a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}

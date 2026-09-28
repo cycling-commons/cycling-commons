@@ -9,12 +9,7 @@
 {% extends 'base.html.twig' %}
 
 {% block head_styles %}
-<style>
-  .uhero{background:var(--ink);color:var(--paper);padding:3rem 0}
-  .uwrap{max-width:620px}
-  .uwrap p{font-size:1rem;color:#3a3d30;line-height:1.65;margin:.6rem 0}
-  .uwrap a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/pages/unsubscribed.css') }}">
 {% endblock %}
 
 {% block body %}

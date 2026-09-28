@@ -9,10 +9,7 @@
    always in the DOM, so copy/search/screen readers see everything.
 
    Include ONCE per page that uses the class. #}
-<style>
-  .vclip{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
-  .vclip.open{white-space:pre-wrap;overflow:visible;word-break:break-word}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/partials/_vclip.css') }}">
 <script nonce="{{ csp_nonce() }}">
   document.addEventListener('click', function (e) {
     var v = e.target.closest('.vclip');

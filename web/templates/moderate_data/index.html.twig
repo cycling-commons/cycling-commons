@@ -6,25 +6,7 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  /* The two rows being compared sit side by side and are read against each
-     other, so they share one grid: a curator is answering "are these the same
-     thing", and that question is easier when the differences line up. */
-  .fd-pair{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:.6rem 0 .8rem}
-  @media (max-width:640px){.fd-pair{grid-template-columns:1fr}}
-  .fd-side{border:1px solid rgba(20,22,14,.1);border-radius:6px;padding:.6rem .75rem;background:rgba(20,22,14,.02)}
-  .fd-side h4{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d;margin:0 0 .25rem}
-  .fd-side .nm{font-weight:600;color:var(--ink);word-break:break-word}
-  .fd-side .meta{font-family:var(--mono);font-size:.74rem;color:#5c5f50;margin-top:.2rem}
-  /* The row that would go away is the consequence of Yes, so it is the one
-     that has to be unmissable before the click, not after. */
-  .fd-side.loses{border-color:rgba(150,60,40,.35);background:rgba(150,60,40,.05)}
-  .fd-facts{font-family:var(--mono);font-size:.7rem;color:#5c5f50;margin-bottom:.8rem}
-  /* The answer row: a note field beside the two verbs. */
-  .fd-actions{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
-  .fd-actions input[type=text]{flex:1 1 220px;min-width:0;font-family:var(--sans);font-size:.85rem;
-    padding:.45rem .6rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper)}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/moderate_data/index.css') }}">
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_data'} %}{% endblock %}

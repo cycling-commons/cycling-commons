@@ -1,0 +1,127 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.rhero .ey{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--glacier);margin-bottom:1.3rem}
+.rhero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.03;letter-spacing:-.025em;margin-bottom:.9rem}
+.rhero p{max-width:62ch;color:rgba(239,230,212,.85);line-height:1.6;font-size:1.15rem}
+.rhero p b{color:var(--paper)}
+/* Two columns: the page on the left, the country CTA on the right. minmax(0,…)
+   so the title column can shrink instead of forcing overflow; stacked below
+   780px, where a side card would be two words wide. */
+.rhero-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(16rem,1fr);gap:2.5rem;align-items:center}
+.rhero-cta{border:1px solid rgba(239,230,212,.22);border-radius:10px;padding:1.4rem 1.5rem;
+  background:rgba(239,230,212,.05)}
+.rhero-cta h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin-bottom:.5rem}
+.rhero-cta p{font-size:.92rem;line-height:1.55;color:rgba(239,230,212,.8);margin-bottom:1rem}
+.rhero-cta-go{display:inline-block;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;
+  text-transform:uppercase;font-weight:700;background:var(--trail);color:var(--ink);
+  padding:.55rem .9rem;border-radius:6px}
+.rhero-cta-go:hover{background:#ff703d}
+.country{scroll-margin-top:5rem}
+.cc-here{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;
+  color:#2f6b52;background:rgba(143,182,168,.28);border-radius:3px;padding:.1rem .35rem;margin-left:.4rem}
+@media(max-width:780px){.rhero-grid{grid-template-columns:1fr;gap:1.6rem}}
+
+.rwrap{max-width:1120px;margin:0 auto;padding:2.2rem clamp(1.25rem,4vw,2.5rem) 3rem}
+
+.legend-lead{font-size:.90rem;color:#4a4d40;margin:0 0 .7rem;max-width:64ch;line-height:1.5}
+/* Two columns because they are two questions: what the region holds, and who
+   looks after it. Stacked below 640px, where side-by-side would leave each
+   description two words wide. */
+.legend-block{margin-top:2.6rem;padding-top:1.6rem;border-top:1px solid rgba(20,22,14,.12)}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:1.1rem 2.4rem;
+  margin-bottom:1.6rem;font-size:.82rem;color:#4a4d40}
+.lcol{display:flex;flex-direction:column;gap:.45rem}
+.lcol .lh{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay)}
+.legend b{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}
+
+h2.cont{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:1.3rem 0 .7rem;padding-bottom:.4rem;
+  border-bottom:1px solid rgba(20,22,14,.16);display:flex;align-items:baseline;gap:.7rem}
+h2.cont span{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#7a7d6c}
+
+.country{margin:0 0 .5rem}
+/* A tab strip per continent (owner 2026-09-08: "regions must open full
+   width as some sort of tab"): countries are the cells, three across from
+   900px, and the open country's regions are one panel across the whole
+   row, placed by the script on the row under that country. */
+.cgrid{display:grid;grid-template-columns:minmax(0,1fr);column-gap:2rem;align-items:start}
+@media(min-width:900px){.cgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* flex-wrap: on a phone the name + count + Apply button overflowed the
+   viewport by ~25px (found 2026-08-15 while checking the hero split); the
+   button drops to its own line instead of pushing the page wider. */
+.country .ch{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-bottom:.3rem}
+/* A quiet icon, not a button and not words (owner 2026-09-08: "a bit too
+   much", then "the text getting too much attention"): nineteen of them on
+   one page, so each is a small grey mark at the row's end. */
+.country .ch .join-cta{display:inline-flex;align-items:center;justify-content:center;width:1.7rem;height:1.7rem;border-radius:50%;
+  color:#8a8d7c;flex:none;margin-left:auto}
+.country .ch .join-cta:hover,.country .ch .join-cta:focus-visible{color:var(--trail);background:rgba(20,22,14,.06)}
+.country .ch h3{font-family:var(--sans);font-weight:700;font-size:1.05rem}
+.country .ch .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
+.country .ch .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#7a7d6c;margin-left:auto}
+.viewrow{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 1rem}
+.viewrow .vhint{font-size:.85rem;color:#6d7060;margin-left:.4rem}
+/* The globe's own rules (.globe) are in atlas.css, shared with /coverage. */
+#regions-map{margin:0 0 1.4rem}
+/* A chip (atlas.css) that opens the country's region list. */
+.regtab{margin:0 0 .2rem}
+.regtab::after{content:'▾'}
+.regtab[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.regtab[aria-expanded=true]::after{content:'▴'}
+
+/* The panel says whose it is twice (owner 2026-09-08: "make more clear
+   the region showing belong to which of the 3 items per row"): a notch
+   on its top edge under the open chip (--tab-x, set by the script), and
+   the country's flag and name as its first line. A short fade and slide
+   on open and close; none for readers who asked for less motion. */
+.regions{display:none;flex-wrap:wrap;gap:.5rem;grid-column:1/-1;position:relative;margin:.2rem 0 1.6rem;padding:1rem;
+  background:rgba(20,22,14,.06);border-radius:8px}
+.regions::before{content:'';position:absolute;top:-9px;left:var(--tab-x,2rem);border:9px solid transparent;border-top:0;border-bottom-color:rgba(20,22,14,.06)}
+.regions.open{display:grid;animation:regs-in .18s ease-out}
+.regions.closing{animation:regs-in .15s ease-in reverse}
+@keyframes regs-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.regions.open,.regions.closing{animation:none}}
+.rhead{grid-column:1/-1;display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d;margin-bottom:.15rem}
+/* Equal cards, two lines each (owner 2026-09-08: "a bit messy with all
+   different sizes and alignments", then the name squeezed out by a tag
+   column): the name and the numbers on the first line, the two tags on
+   the second. Nothing to line up across cards but the lines themselves. */
+.regions{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+.reg{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name stats" "tags tags";align-items:center;column-gap:.7rem;row-gap:.4rem;
+  background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:8px;padding:.55rem .75rem .6rem;font-size:.9rem}
+.reg>span:first-child{grid-area:name;font-weight:600}
+.reg .tags{grid-area:tags;display:flex;flex-wrap:wrap;gap:.35rem}
+.reg .tag{white-space:nowrap}
+.reg .stats{grid-area:stats;display:flex;gap:.7rem;justify-self:end;white-space:nowrap}
+.reg .km{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;color:#7a7d6c;white-space:nowrap}
+a.reg{text-decoration:none;color:inherit}
+a.reg:hover{border-color:var(--spruce-lift)}
+.reg .tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .3rem;border-radius:3px;background:rgba(20,22,14,.08)}
+/* Two independent facts, two chips: how much the region holds, and who looks
+   after it. A region can have either, both or neither. */
+.reg.has-curator{background:var(--spruce-lift);color:var(--paper);border-color:var(--spruce-lift)}
+.reg.has-curator .km{color:rgba(239,230,212,.7)}
+/* On the dark curated card the plain tier tag read as grey on grey
+   (owner 2026-09-08: "onboarded hardly readable"): full paper text and a
+   hairline outline, the same treatment as the "no curator" tag. */
+.reg.has-curator .tag{background:rgba(239,230,212,.08);color:var(--paper);box-shadow:inset 0 0 0 1px rgba(239,230,212,.5)}
+/* Solid, not a 22%-paper wash on spruce: the badge naming the thing the card
+   is coloured for must not be the least readable thing on it. */
+.reg.has-curator .tag-curated{background:var(--paper);color:var(--spruce)}
+.reg.tier-growing .tag-tier{background:var(--trail);color:var(--ink)}
+.reg.tier-established .tag-tier{background:var(--ochre);color:#14160E}
+.reg .tag-countrywide{background:rgba(122,155,168,.28)}
+/* "No curator yet" is an opening, not an alarm: outlined rather than filled,
+   so it reads as an empty slot beside the two filled badges that mean
+   somebody is already there. It must be VISIBLE though, which is the whole
+   point of drawing it at all. */
+.reg .tag-none{background:transparent;box-shadow:inset 0 0 0 1px rgba(184,89,58,.45);color:var(--clay)}
+.reg.has-curator .tag-none{box-shadow:inset 0 0 0 1px rgba(239,230,212,.4);color:rgba(239,230,212,.8)}
+
+.empty{color:#7a7d6c;font-size:.9rem;padding:2rem 0}
+
+.yourc{margin-top:2.6rem;padding:1.6rem clamp(1.1rem,3vw,1.8rem);border:1px solid rgba(20,22,14,.14);border-radius:12px;background:var(--paper-deep)}
+.yourc h2{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin-bottom:.5rem}
+.yourc p{color:#4a4d40;font-size:.92rem;line-height:1.55;margin-bottom:1rem;max-width:60ch}
+#cc-country-q{width:100%;box-sizing:border-box;padding:.6rem .8rem;font-size:1rem;border:1px solid rgba(20,22,14,.18);border-radius:8px;background:var(--paper);color:inherit}
+#cc-country-hits a{display:flex;justify-content:space-between;padding:.45rem .7rem;border:1px solid rgba(20,22,14,.1);border-radius:8px;margin-top:.4rem;text-decoration:none;color:inherit}
+#cc-country-hits a:hover{border-color:var(--spruce-lift)}
+#cc-country-hits .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}

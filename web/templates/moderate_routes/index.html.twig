@@ -4,35 +4,7 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  /* Route cards carry no lat/lng line, so the correction card's heading block
-     can sit on the action row's baseline instead of above it. */
-  .q-item--corr .q-head{align-items:center}
-  .q-item--corr .q-title{font-size:.95rem}
-  a.sugg-route{color:inherit;text-decoration:none}
-  a.sugg-route:hover,a.sugg-route:focus-visible{color:var(--trail);text-decoration:underline;text-underline-offset:3px}
-  /* Done/Dismiss are POSTs, so each is its own <form> inside the action row —
-     without this they would each claim a block-level line of their own. */
-  .q-acts > form{display:contents}
-
-  /* Active routes (route-domain.md §5.2): a reach list, not a queue, so the
-     rows carry no action row and the whole title is the way in. */
-  .q-item--active .q-head{align-items:center}
-  .q-item--active .q-title{font-size:.95rem}
-  .q-item--active .q-title a{color:inherit;text-decoration:none}
-  .q-item--active .q-title a:hover,
-  .q-item--active .q-title a:focus-visible{color:var(--trail);text-decoration:underline;text-underline-offset:3px}
-  .q-tag--state{background:rgba(20,22,14,.07);color:#4a4d40}
-  .active-head{font-size:.88rem;color:#595c4d;margin:.2rem 0 .8rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
-  .q-active-gaps{font-size:.86rem;color:#595c4d;margin:.5rem 0 0;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
-  .q-active-full{font-size:.86rem;color:#6b6e5c;margin:.5rem 0 0}
-  .q-active-gaps .cc-chip{display:inline-block;padding:.15rem .5rem;border-radius:999px;
-    border:1px solid rgba(20,22,14,.2);background:var(--paper);font-size:.78rem;color:#4a4d40}
-  .active-regions{list-style:none;padding:0;margin:.2rem 0 0;display:flex;flex-wrap:wrap;gap:.5rem .9rem}
-  .active-regions a{color:var(--clay);text-decoration:none;border-bottom:1px solid rgba(184,89,58,.35)}
-  .active-regions a:hover{color:var(--ink);border-bottom-color:var(--ink)}
-  .active-regions-n{font-family:var(--mono);font-size:.72rem;color:#8a8674}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/moderate_routes/index.css') }}">
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_routes', mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null} %}{% endblock %}

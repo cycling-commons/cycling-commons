@@ -1,0 +1,5 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.uhero{background:var(--ink);color:var(--paper);padding:3rem 0}
+.uwrap{max-width:620px}
+.uwrap p{font-size:1rem;color:#3a3d30;line-height:1.65;margin:.6rem 0}
+.uwrap a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}

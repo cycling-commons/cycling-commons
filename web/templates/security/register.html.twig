@@ -4,10 +4,7 @@
 
 {% block head_styles %}
 {% include 'security/_auth_shell_styles.html.twig' %}
-<style>
-  .field-check{display:flex;gap:.6rem;align-items:flex-start;margin-bottom:1.4rem;font-size:.85rem}
-  .field-check input{width:auto;margin-top:.2rem;flex-shrink:0}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/security/register.css') }}">
 {% endblock %}
 
 {% block body %}

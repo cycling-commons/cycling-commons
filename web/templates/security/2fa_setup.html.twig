@@ -4,32 +4,7 @@
 
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  .setup-wrap{max-width:560px;margin:0 auto;padding:2.4rem 1.4rem 4rem}
-  .setup-wrap h1{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.6rem);line-height:1.06;letter-spacing:-.02em;color:var(--ink)}
-  .setup-wrap .lead{margin-top:.8rem;color:#5a5d4d;line-height:1.55}
-  .step{margin-top:2rem;padding-top:1.6rem;border-top:1px solid rgba(20,22,14,.12)}
-  .step-no{font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay)}
-  .step h2{font-family:var(--sans);font-weight:700;font-size:1.05rem;margin:.3rem 0 .8rem;color:var(--ink)}
-  .qr{display:block;width:220px;height:220px;border:1px solid rgba(20,22,14,.12);border-radius:8px;background:#fff;padding:8px}
-  .secret{display:inline-block;margin-top:.8rem;font-family:var(--mono);font-size:1.05rem;letter-spacing:.18em;background:rgba(20,22,14,.05);padding:.5rem .8rem;border-radius:5px;word-break:break-all}
-  .field{margin-top:.8rem}
-  .field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
-  .field input[type=text]{width:100%;max-width:240px;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--mono);font-size:1.3rem;letter-spacing:.3em;padding:.45rem 0;outline:none}
-  .field input:focus{border-color:var(--trail)}
-  .btn-submit{margin-top:1.4rem;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.88rem;padding:.55rem 1.15rem;border:none;border-radius:5px;cursor:pointer;transition:background .2s}
-  .btn-submit:hover{background:#ff703d}
-  {# Base style in atlas.css; here the alert sits under the field rather than
-     above the form, so only the margin flips. #}
-  .alert-error{margin:.6rem 0 0}
-  .codes{list-style:none;padding:0;margin:1rem 0;display:grid;grid-template-columns:1fr 1fr;gap:.6rem;max-width:360px}
-  .codes li{font-family:var(--mono);font-size:1.1rem;letter-spacing:.12em;background:rgba(20,22,14,.05);padding:.55rem .7rem;border-radius:5px;text-align:center}
-  .warn{margin-top:1.4rem;font-size:.90rem;color:var(--clay);line-height:1.5;border-left:3px solid var(--clay);padding-left:.8rem}
-  .done-link{display:inline-block;margin-top:1.6rem;background:var(--trail);color:var(--ink);font-family:var(--sans);font-weight:700;font-size:.88rem;text-decoration:none;padding:.55rem 1.15rem;border-radius:5px}
-  /* breadcrumb back-link: says where you are (Settings · Security) AND is the way back */
-  .crumb{display:inline-block;margin-bottom:1rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);text-decoration:none}
-  .crumb:hover,.crumb:focus-visible{color:var(--trail)}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/security/2fa_setup.css') }}">
 {% endblock %}
 
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'settings'} %}{% endblock %}

@@ -1,0 +1,36 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.pr-lead{margin-bottom:2rem}
+
+fieldset{border:none;padding:0;margin:0 0 2rem}
+fieldset legend{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:.3rem;padding:0}
+.help{color:#595c4d;font-size:.9rem;margin-bottom:1.1rem}
+
+.field{margin-bottom:1.3rem}
+.field label{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d;margin-bottom:.4rem}
+.field input[type=text],.field textarea{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none;color:var(--ink)}
+.field select{width:100%;max-width:22rem}
+.field .hint{font-family:var(--sans);font-size:.90rem;color:#6b6e5c;margin-top:.35rem;line-height:1.4;text-transform:none;letter-spacing:0}
+.chip-list + .hint{font-family:var(--sans);font-size:.8rem;color:#6b6e5c;margin-top:.5rem;line-height:1.4}
+.field textarea{border:1.5px solid rgba(20,22,14,.25);border-radius:6px;padding:.7rem;min-height:90px;resize:vertical}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--trail)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:520px){.two{grid-template-columns:1fr}}
+
+/* GPX file drop */
+.gpx-drop{border:1.5px dashed rgba(20,22,14,.3);border-radius:10px;padding:1.6rem;text-align:center}
+.gpx-drop input[type=file]{display:block;margin:0 auto;font-family:var(--sans);font-size:.9rem}
+
+
+.flash{border-radius:6px;padding:.8rem 1rem;margin-bottom:1.4rem;font-size:.9rem}
+.flash-error{background:rgba(179,38,30,.1);border:1px solid rgba(179,38,30,.45);color:var(--danger-ink)}
+
+/* receipt */
+.receipt{text-align:center;padding:3.5rem 1rem}
+.receipt h2{font-family:var(--serif);font-weight:600;font-size:1.8rem;margin:.5rem 0}
+.receipt p{color:#4a4d40;max-width:46ch;margin:0 auto}
+.receipt .ref-box{display:inline-flex;flex-direction:column;align-items:center;gap:.35rem;margin:1.5rem 0}
+.receipt .ref-label{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#8a8674}
+/* photos (docs/specs/photo-uploads.md §5i): the uploader's own look, shared with /improve */
+.rp-existing{display:flex;flex-wrap:wrap;gap:.6rem;margin:.2rem 0 1.4rem}
+.rp-existing img{width:160px;height:120px;object-fit:cover;border-radius:6px;border:1px solid rgba(20,22,14,.18);display:block;background:var(--paper-deep)}
+.receipt .ref-code{font-family:var(--mono);font-size:1.05rem;letter-spacing:.14em;color:var(--ink);background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);border-radius:8px;padding:.5rem 1.1rem}

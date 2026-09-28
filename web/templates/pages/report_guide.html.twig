@@ -10,21 +10,7 @@
 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
-<style>
-  .rg-find{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
-  .rg-find input{flex:1;min-width:240px;font-family:var(--mono);font-size:.9rem;padding:.55rem .8rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
-  .rg-find input:focus{outline:none;border-color:var(--trail)}
-  .rg-find button{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem 1rem;min-height:34px;border:1px solid var(--clay);border-radius:30px;background:var(--paper);color:var(--clay);cursor:pointer}
-  .rg-find button:hover{background:var(--clay);color:var(--paper)}
-  .rg-miss{margin-top:.9rem;padding:.8rem 1rem;border-left:3px solid var(--clay);background:var(--paper-deep);font-size:.95rem;max-width:62ch}
-  .rg-where{list-style:none;padding:0;margin:1rem 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
-  .rg-where li{background:var(--paper-deep);border:1px solid rgba(20,22,14,.1);border-radius:8px;padding:1rem 1.1rem}
-  .rg-where b{font-family:var(--serif);font-size:1.1rem;display:block;margin-bottom:.3rem}
-  .rg-where p{font-size:.92rem;color:#4a4d40;margin:0}
-  .rg-p{max-width:62ch;margin-top:.8rem}
-  .rg-p a{color:var(--clay)}
-  .rg-sec{margin-top:2.4rem}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/pages/report_guide.css') }}">
 {% endblock %}
 {% block body %}
 <div class="lhero"><div class="wrap">

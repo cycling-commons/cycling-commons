@@ -1,0 +1,77 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.bugpage{max-width:640px}
+.bugpage h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin:1.8rem 0 .5rem}
+.bugpage p{font-size:.95rem;color:#3a3d30;line-height:1.65;margin:.55rem 0}
+.bugpage a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+.cfield{margin:1.15rem 0}
+.cfield label,.cfield .leg{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
+.cfield input[type="text"],.cfield input[type="email"],.cfield input[type="file"],.cfield select,.cfield textarea{
+  width:100%;font-family:inherit;font-size:.95rem;padding:.6rem .7rem;color:var(--ink);
+  border:1px solid rgba(20,22,14,.24);border-radius:5px;background:var(--paper)}
+.cfield textarea{min-height:8rem;line-height:1.6;resize:vertical}
+.req{color:var(--clay);font-weight:700}
+.reqlegend{font-size:.82rem;color:#595c4d;margin:0 0 1rem}
+#b-shot-hint{margin:0 0 .45rem}
+.reattach{color:var(--clay);font-weight:600}
+/* What has been picked so far, which the native control cannot show and
+   which is the whole reason a second selection used to lose the first. */
+.shotlist{list-style:none;margin:.5rem 0 0;padding:0;display:flex;flex-direction:column;gap:.3rem}
+.shotlist li{display:flex;align-items:center;gap:.5rem;background:var(--paper-deep);
+  border-radius:5px;padding:.35rem .5rem .35rem .7rem;font-size:.90rem;color:#3a3d30}
+.shotname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shotdrop{flex:none;width:26px;height:26px;line-height:1;font-size:1rem;cursor:pointer;
+  border:1px solid rgba(20,22,14,.2);border-radius:4px;background:var(--paper);color:#595c4d}
+.shotdrop:hover{border-color:var(--clay);color:var(--clay)}
+.shotdrop:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+.shotnote{color:var(--clay)}
+/* Context values: the mono FACE at the size of the surrounding text. The
+   site-wide `.mono` utility uppercases, and `/regions` shown as `/REGIONS`
+   is a different path. */
+.ctxval{font-family:var(--mono);font-size:.86rem;letter-spacing:0;text-transform:none;
+  word-break:break-word}
+.chint{font-size:.90rem;color:#595c4d;margin:.35rem 0 0;line-height:1.55}
+.opt{color:#8c8f7d;letter-spacing:.09em}
+.ctxblock{margin:1.4rem 0;font-size:.88rem;color:#4a4d40}
+.ctxblock summary{cursor:pointer;color:var(--clay)}
+.ctxblock dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--clay);margin-top:.6rem}
+.ctxblock dd{margin:.1rem 0 0;font-size:.8rem;word-break:break-all}
+.hp-field{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+.cnote{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1rem 1.2rem;
+  border-radius:0 8px 8px 0;font-size:.90rem;color:#4a4d40;line-height:1.6;margin:1.4rem 0}
+.cerr{background:#fff1ec;border-left:2px solid var(--trail);padding:1rem 1.2rem;
+  border-radius:0 8px 8px 0;font-size:.9rem;color:#5a2716;line-height:1.6;margin:0 0 1.4rem}
+/* Same ochre note as the contact page, for the same readability reason. */
+.csent{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:1.2rem 1.4rem;
+  border-radius:0 8px 8px 0;line-height:1.65}
+.csent h2{margin-top:0}
+.pow-status{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#595c4d;margin:.6rem 0 0}
+/* Segmented chips, not bare radios. The input stays a real radio (keyboard,
+   no JavaScript, screen readers); only its box is hidden, and the label text
+   next to it carries the look. Never `display:none` on the input: that takes
+   it out of the tab order. */
+.sevrow{display:flex;gap:.4rem;flex-wrap:wrap;margin:0}
+.sevrow label{margin:0}
+.sevrow input{position:absolute;opacity:0;width:1px;height:1px}
+.sevrow span{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;
+  text-transform:uppercase;padding:.5rem .8rem;border:1px solid rgba(20,22,14,.2);border-radius:5px;
+  background:var(--paper);color:#4a4d40;cursor:pointer;transition:all .15s}
+.sevrow label:hover span{border-color:var(--clay);color:var(--ink)}
+.sevrow input:checked + span{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sevrow input:focus-visible + span{outline:2px solid var(--clay);outline-offset:2px}
+/* The form and, beside it from 1000px, the newest known issues. Narrower,
+   the list follows the form. */
+.buglayout{display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem}
+@media (min-width:1000px){.buglayout{grid-template-columns:minmax(0,640px) minmax(0,340px);gap:4rem;align-items:start}}
+.bugrecent{border-top:2px solid var(--clay);padding-top:1rem}
+@media (min-width:1000px){.bugrecent{position:sticky;top:1.5rem}}
+.bugrecent h2{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:0 0 .35rem}
+.bugrecent .sub{font-size:.85rem;color:#595c4d;margin:0 0 .8rem;line-height:1.5}
+.bugrecent ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem}
+.bugrecent li a{display:block;padding:.55rem .7rem;border:1px solid rgba(20,22,14,.12);border-radius:6px;background:var(--paper-deep);color:var(--ink);text-decoration:none}
+.bugrecent li a:hover{border-color:var(--clay)}
+.bugrecent li a:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+.bugrecent .rt{display:block;font-weight:600;font-size:.9rem;line-height:1.35;overflow-wrap:anywhere}
+.bugrecent .rm{display:block;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;margin-top:.25rem}
+.bugrecent .all{display:inline-block;margin-top:.8rem;font-size:.88rem;color:var(--clay);text-decoration:underline;text-underline-offset:3px}

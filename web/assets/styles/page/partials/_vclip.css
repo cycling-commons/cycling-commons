@@ -1,0 +1,3 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+.vclip{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.vclip.open{white-space:pre-wrap;overflow:visible;word-break:break-word}
