@@ -4052,7 +4052,7 @@ legend:
   kind_b_tap_h: 'Drinking tap'
   kind_b_tap_t: 'A blue drop. OSM maps it as drinking water and nothing says otherwise. Confirm on the spot.'
   kind_b_no_h: 'Not for drinking'
-  kind_b_no_t: 'A drop with a bar across it. Tagged not drinkable, or a rider said so.'
+  kind_b_no_t: 'A drop with a red bar across it. Tagged not drinkable, or a rider said so.'
   kind_b_unk_h: 'Potability not known'
   kind_b_unk_t: 'An unfilled drop. Either nobody has said whether you can drink here, or somebody looked and could not tell. Treat it as unknown.'
   kind_b_food_h: 'Food stop'

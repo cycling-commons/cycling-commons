@@ -38,6 +38,8 @@ final class KindIcons
     public const string WATER_BLUE = '#3E8FB0';
     public const string WATER_INK = '#0d2b3a';
     public const string PAPER = '#F3EBD8';
+    /** The "not usable" red: the "!" state badge and a waiting pin's border (pins.css). */
+    public const string NOT_USABLE_RED = '#D92D20';
 
     /** The drop, in the 24-box; the same curve the tiles drew in a 14×18 box. */
     private const string DROP = 'M12 1.3C20 11.1 17.6 22.7 12 22.7C6.4 22.7 4 11.1 12 1.3Z';
@@ -65,11 +67,13 @@ final class KindIcons
                 // Drinkable as far as anyone knows: OSM says so, or maps it as
                 // a drinking-water tap with nothing said against it.
                 'tap' => ['paths' => [$drop]],
-                // Not for drinking. A bar across the drop, not a grey fill:
-                // colour is never the only signal, and grey is not a kind.
+                // Not for drinking. A red bar across the drop, not a grey
+                // fill: the bar is the signal and reads without colour; the
+                // red is the site's "not usable" red, the one on the "!"
+                // badge (owner 2026-09-28). Grey is not a kind.
                 'no' => ['paths' => [
                     $drop,
-                    ['d' => 'M4.2 5.6 6.3 3.5 20 17.2 17.9 19.3Z', 'fill' => self::WATER_INK, 'stroke' => self::PAPER, 'width' => 1.2],
+                    ['d' => 'M4.2 5.6 6.3 3.5 20 17.2 17.9 19.3Z', 'fill' => self::NOT_USABLE_RED, 'stroke' => self::PAPER, 'width' => 1.2],
                 ]],
                 // A tap nobody has said anything about: the drop, unfilled.
                 // Pure white, not paper: on the basemap paper read as grey

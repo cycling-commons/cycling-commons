@@ -4034,7 +4034,7 @@ legend:
   kind_b_tap_h: 'Trinkwasserhahn'
   kind_b_tap_t: 'Ein blauer Tropfen. OSM erfasst es als Trinkwasser und nichts sagt das Gegenteil. Vor Ort prüfen.'
   kind_b_no_h: 'Kein Trinkwasser'
-  kind_b_no_t: 'Ein durchgestrichener Tropfen. Als nicht trinkbar getaggt, oder jemand hat es gemeldet.'
+  kind_b_no_t: 'Ein rot durchgestrichener Tropfen. Als nicht trinkbar getaggt, oder jemand hat es gemeldet.'
   kind_b_unk_h: 'Trinkbarkeit unbekannt'
   kind_b_unk_t: 'Ein leerer Tropfen. Entweder hat niemand gesagt, ob man hier trinken kann, oder jemand hat nachgesehen und konnte es nicht sagen. Als unbekannt behandeln.'
   kind_b_food_h: 'Verpflegungsstopp'

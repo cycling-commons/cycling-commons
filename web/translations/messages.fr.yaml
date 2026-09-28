@@ -4026,7 +4026,7 @@ legend:
   kind_b_tap_h: 'Robinet d''eau potable'
   kind_b_tap_t: 'Une goutte bleue. OSM la cartographie comme eau potable et rien n''indique le contraire. À confirmer sur place.'
   kind_b_no_h: 'Non potable'
-  kind_b_no_t: 'Une goutte barrée. Étiquetée non potable, ou un cycliste l''a dit.'
+  kind_b_no_t: 'Une goutte barrée de rouge. Étiquetée non potable, ou un cycliste l''a dit.'
   kind_b_unk_h: 'Potabilité inconnue'
   kind_b_unk_t: 'Une goutte vide. Soit personne n''a dit si l''eau est potable, soit quelqu''un a regardé sans pouvoir trancher. À considérer comme inconnu.'
   kind_b_food_h: 'Halte ravitaillement'

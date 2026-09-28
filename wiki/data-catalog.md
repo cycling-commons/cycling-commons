@@ -61,7 +61,7 @@ on this page, where they name a section.
     | State | Map symbol | Source of truth |
     |---|---|---|
     | **Drinking tap** | a blue drop | mapped as drinking water and nothing says otherwise; confirm on the spot |
-    | **Not for drinking** | a drop with a bar across it | tagged not drinkable, or a rider said so |
+    | **Not for drinking** | a drop with a red bar across it | tagged not drinkable, or a rider said so |
     | **Tap, nothing said** | an unfilled drop | a water point nobody has said anything about; treat it as unknown |
 
     Every icon is drawn SVG (`ItemType::svgPath()` and the `KindIcons` registry), never an emoji, so it renders the same in every browser and can carry the badges. The shape says which store the record lives in: a small disc or drop is imported baseline data, a teardrop pin is a record this community keeps. A "?" badge at the top right means no rider has confirmed it yet. Natural mineral springs (the Spa *pouhons*, for one) are labelled as such: potable, but not utility tap water.

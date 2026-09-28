@@ -307,6 +307,13 @@ readable. There are ten:
 Two channels are left, saturation and size. That is the entire budget for
 every dataset we add after this one, so it is not spent on a first-come basis.
 
+**The badges' look (2026-09-28).** The "?" (top right) is 19px, the red "!"
+and the clock (top left) 17px, with the clock's drawing at 11px (`pins.css`);
+at 13-14px the "?" and the clock were hard to read on a pin. The "?" is ochre
+on an ink disc inside a thin paper ring, 8.5:1, centred by flex; ochre on the
+disc's own fill vanished on a pale pin and on the light basemap. The key
+page's `.cc-q` row uses the same colours.
+
 ### 6.3a The pin grammar (owner, 2026-09-04)
 
 The owner, on being shown the water/food split: "water has potable yes/no,
@@ -320,8 +327,8 @@ night:
 > drawer content.**
 
 - **Kind** is per category and never compared across categories. Water &
-  food: drinking tap (blue drop), tap not for drinking (the drop with a bar
-  across it), tap nobody has said anything about (the drop unfilled), food
+  food: drinking tap (blue drop), tap not for drinking (the drop with a red
+  bar across it, the red of the "!" badge), tap nobody has said anything about (the drop unfilled), food
   stop (fork and knife on the category disc), food stop that also gives water
   (the same with a small blue drop). Bike services: shop, repair stand, pump.
   A non-potable tap is a different KIND of thing, not a broken one, which is

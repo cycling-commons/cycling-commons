@@ -4033,7 +4033,7 @@ legend:
   kind_b_tap_h: 'Drinkwaterkraan'
   kind_b_tap_t: 'Een blauwe druppel. OSM karteert het als drinkwater en niets zegt het tegendeel. Bevestig ter plekke.'
   kind_b_no_h: 'Geen drinkwater'
-  kind_b_no_t: 'Een druppel met een streep erdoor. Getagd als niet drinkbaar, of een fietser zei het.'
+  kind_b_no_t: 'Een druppel met een rode streep erdoor. Getagd als niet drinkbaar, of een fietser zei het.'
   kind_b_unk_h: 'Drinkbaarheid onbekend'
   kind_b_unk_t: 'Een lege druppel. Of niemand heeft gezegd of je hier kunt drinken, of iemand heeft gekeken en kon het niet zeggen. Beschouw het als onbekend.'
   kind_b_food_h: 'Eetstop'
