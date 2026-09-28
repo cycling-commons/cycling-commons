@@ -112,12 +112,14 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   `map.js`; the contribution wizard does the same in its own box and carries on
   without a map, so a browser with no GPU costs a rider the pin, not the
   contribution.
-- **Boot sequence** (`catalog-load.js`): fetch `window.CC_CATALOG_URL`
-  (`GET /map/catalog.json`, `MapController::catalog()`, public, ETag,
-  `max-age 3600`) alongside `GET /map/catalog/stamps.json` → splice in every
-  region of the active scope whose stamp moved since the payload in hand was
-  built (catalog-data-model.md §9.1) → expose the layers as the `window.CC_*`
-  globals → apply the
+- **Boot sequence** (`catalog-load.js`): read `GET /map/catalog/stamps.json`
+  (preloaded by the page) → fetch `GET /map/catalog/region/{rid}.json?v=<stamp>`
+  for every region of the active scope, plus the region of an `?item=` or
+  `?route=` link (`window.CC_CATALOG_BOOT`), and splice each into an empty
+  payload; the worldwide `window.CC_CATALOG_URL` (`GET /map/catalog.json`) is
+  fetched instead only for the Everywhere scope or a link by name or to a place
+  no region holds (catalog-data-model.md §9.1) → expose the layers as the
+  `window.CC_*` globals → apply the
   stays merge (PIVOT features tagged `src='pivot'` and appended once to the OSM
   stays pool — a deliberate merge driving the Tourisme-Wallonie attribution
   branch and a single dot-render path) → inject `map.js`
@@ -172,9 +174,9 @@ see the wiki page `wiki/developers/map-page.md`, "The map page, request by reque
 
 | Endpoint | Purpose | Caching |
 |---|---|---|
-| `GET /map/catalog.json` | whole served catalog, letters keyed (transitional, §7.1) | public, ETag, max-age 3600, **URL-versioned** |
+| `GET /map/catalog.json` | whole served catalog, letters keyed (transitional, §7.1); loaded on demand only | public, ETag, max-age 3600, **URL-versioned** |
 | `GET /map/catalog/stamps.json` | one freshness stamp per region, so a browser knows which regions moved (catalog-data-model.md §9.1) | public, ETag, **no-cache** (always revalidated) |
-| `GET /map/catalog/region/{rid}.json` | one region's rows in the payload's shapes, spliced over a cached catalog | public, ETag, max-age 3600, **URL-versioned by the stamp** |
+| `GET /map/catalog/region/{rid}.json` | one region's rows in the payload's shapes; the map is built from these | public, ETag, max-age 86400, **URL-versioned by the stamp** |
 | `GET /map/item/{id}/history` | per-item change log for the drawer's "Recent changes"; empty list (200) for never-edited items, never 404 | public, ETag, max-age 60 |
 | `GET /map/best-of?season=&bike=` | ranked verified-route ids for the Curated facet (§4.2) | public, ETag, max-age 300 |
 
@@ -197,27 +199,26 @@ being cacheable and the split buys nothing, which is the "Security touches
 session" blocker recorded against the page-caching work. It degrades too: if the
 fragment fails the drawer is still correct, only shorter.
 
-**catalog.json is fetched through a versioned URL** (2026-08-13): /map embeds
-`CC_CATALOG_URL = /map/catalog.json?v=<tag>` where the tag
-(`CatalogProvider::versionTag()`) hashes the build version and the rows that
-belong to no region. The hour-long max-age is the deliberate critical-path
-optimisation; the tag answers for the two things that change the whole
-document for everybody: a deploy serializing the same rows differently, and a
-row no scope draws. It deliberately ignores what happens *inside* a region:
-this is a cache key on ~1 MB gzipped, so a tag that moved on every curator
-decision made one approval in Wallonia a fresh megabyte for a rider in Japan
-(owner 2026-09-16: "the token must be region bound").
+**The map holds only the regions it shows** (2026-09-28, catalog-data-model.md
+§9.1). `GET /map/catalog/stamps.json` is revalidated on every boot, and each
+region of the active scope is fetched from
+`GET /map/catalog/region/{rid}.json?v=<stamp>` and spliced into the payload in
+hand: the region's rows out, the slice's rows in. A new scope fetches its own
+regions; a moved stamp refetches that region only. The twelve Dutch provinces
+are 154 kB gzipped against the worldwide 945 kB on production. A rider whose
+submission is approved reloads into it, rather than watching their
+contribution "disappear" until a cache expires (owner-reported, the Zuiderdijk
+approval).
 
-**A region reaches its riders on its own** (2026-09-16, catalog-data-model.md
-§9.1): `GET /map/catalog/stamps.json` is revalidated on every boot, and any
-region of the active scope whose stamp moved is refetched from
-`GET /map/catalog/region/{rid}.json?v=<stamp>` and spliced over the payload in
-hand: the region's rows out, the slice's rows in. Wallonia's slice is 93 kB
-gzipped against the worldwide 1,015 kB on the dev catalog. This is what keeps
-the hour honest: a rider whose submission is approved reloads into it, rather
-than watching their contribution "disappear" until the cache expires
-(owner-reported, the Zuiderdijk approval). A rider scoped to another region
-downloads nothing but the stamps.
+**The worldwide document is fetched on demand, through a versioned URL**:
+`CC_CATALOG_URL = /map/catalog.json?v=<tag>`, loaded once per page for "Search
+everywhere" (§7.3), the Everywhere scope, or a link by name or to a place no
+region holds. The tag (`CatalogStamps::versionTag()`) follows the build, the
+day and the rows that belong to no region, and deliberately ignores what
+happens *inside* a region: a tag that moved on every curator decision made one
+approval in Wallonia a fresh megabyte for a rider in Japan (owner 2026-09-16:
+"the token must be region bound"). The regions the map already holds go back
+over it.
 
 An **already-open map tab hot-refreshes on tab return** (2026-08-13): a
 moderator's loop is approve-in-the-desk-tab → switch back to the open map, and
@@ -2528,6 +2529,13 @@ fallback label).
 Entries carry `hlOff` (halo anchor offset, §6.1) and a `go()` opener; pending
 entries carry the submission id so a moderation decision drops them from both
 the index and the dropdown.
+
+The index covers the regions the map holds (catalog-data-model.md §9.1), and it
+is rebuilt each time a region lands (`__ccApplyCatalog`). The dropdown takes its
+list from the current index on every search (`searchIdx()` in `search-ui.js`),
+so a region loaded by a new scope is searchable at once. Switching the reach to
+Everywhere loads the worldwide document (`window.CCCatalog.ensureWorldwide()`);
+the list shows what is held at once and fills in when it lands.
 
 > **Transitional scope:** this whole-catalog-to-client model is superseded
 > going forward by [coverage-provider.md](coverage-provider.md) — the local

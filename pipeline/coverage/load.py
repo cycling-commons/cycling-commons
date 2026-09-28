@@ -283,6 +283,14 @@ def ensure_schema(conn: psycopg.Connection) -> None:
         "DO $$ BEGIN IF to_regproc('coverage_count_install') IS NOT NULL THEN "
         "PERFORM coverage_count_install(); END IF; END $$"
     )
+    # Same arrangement for the catalog's change count
+    # (web/migrations/Version20260928150000.php, catalog-data-model.md §9.1):
+    # an OSM point's photo tags reach the map's catalog, so a change here must
+    # move every region's stamp.
+    conn.execute(
+        "DO $$ BEGIN IF to_regproc('catalog_change_install') IS NOT NULL THEN "
+        "PERFORM catalog_change_install(); END IF; END $$"
+    )
     conn.commit()
     # CREATE INDEX CONCURRENTLY cannot run inside a transaction block, so run the
     # index loop in autocommit (each stmt its own txn) and restore after.

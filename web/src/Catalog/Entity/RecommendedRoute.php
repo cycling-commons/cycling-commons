@@ -165,13 +165,10 @@ class RecommendedRoute
 
     /**
      * A state change is a change to what the catalog serves, so it moves
-     * `updatedAt`, exactly as {@see Item::setState()} does. Catalog freshness
-     * reads that column ({@see \App\Catalog\CatalogProvider::regionStamps()}),
-     * and an approve, reject, retire or trash changes no other column: the row
-     * already exists as `submitted`, so the row count does not move either. A
-     * silent setter here is a rider watching their approved route stay
-     * invisible for an hour (owner-reported 2026-09-16, route 111
-     * "Liege Bastogne Liege", approved 19:52 and still absent on reload).
+     * `updatedAt`, exactly as {@see Item::setState()} does: an approve,
+     * reject, retire or trash is the row's latest change. The map's region
+     * stamp does not read the column; the database counts the write itself
+     * ({@see \App\Catalog\CatalogStamps}).
      */
     public function setState(ItemState $state): static
     {

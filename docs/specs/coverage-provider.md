@@ -89,9 +89,9 @@ Invariants:
 
 **Pipeline-owned DDL, not a Doctrine migration.** The pipeline creates the
 table idempotently at run start (`pipeline/coverage/load.py::ensure_schema`).
-Doctrine's `schema_filter` (`web/config/packages/doctrine.yaml`, currently
-`~^(?!topology\.)~`) gains a `coverage_` exclusion on the same pattern, so
-migrations and `schema:validate` never touch it. The table is a **disposable
+Doctrine's `schema_filter` (`web/config/packages/doctrine.yaml`) excludes
+`coverage_` on the same pattern as `topology.`, so migrations and
+`schema:validate` never touch it. The table is a **disposable
 cache** — never edited by the app or by hand.
 
 ```sql
@@ -1458,6 +1458,9 @@ pipeline and the claims by PHP, and neither side can see the other's writes.
   creating the table (guarded on the function existing, so pipeline and app
   can deploy in either order); the test trait `CoverageSchema` calls it after
   its own CREATE. Nothing else may create `coverage_poi` without calling it.
+  `catalog_change_install()` follows the same three call sites: it creates
+  the `coverage_poi` trigger that moves every catalog region's stamp when a
+  point's photo tags may have changed (catalog-data-model.md §9.1).
 - `app:coverage:recount` runs install and rebuild by hand, for the day rows
   were loaded with triggers off, or for proof.
 

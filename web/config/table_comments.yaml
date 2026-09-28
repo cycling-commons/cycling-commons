@@ -16,6 +16,11 @@
 # database. It is idempotent, so run it after every migration and after every
 # pipeline harvest that recreates a coverage table.
 tables:
+    # Hand-written migration (Version20260928150000). Written by triggers only.
+    catalog_change: >-
+        Append-only count of catalog changes, one row per changing statement and region
+        (-1 = every region, 0 = no region), written by triggers. A region's stamp on the
+        map is the sum of its rows; CatalogStamps folds them hourly.
     # Hand-written migration (Version20260914010000). Loaded by app:divisions:import.
     world_division: >-
         Division boundaries we hold but have not necessarily onboarded, one row per

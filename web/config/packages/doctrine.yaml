@@ -3,8 +3,10 @@ doctrine:
         url: '%env(resolve:DATABASE_URL)%'
         # Exclude PostGIS extension schemas AND the pipeline-owned coverage_*
         # cache tables (coverage-provider.md §2: pipeline
-        # DDL, never a Doctrine migration) from Doctrine's schema diff tool
-        schema_filter: '~^(?!topology\.|coverage_)~'
+        # DDL, never a Doctrine migration) from Doctrine's schema diff tool.
+        # catalog_change is written by triggers only and has no entity
+        # (catalog-data-model.md §9.1), so the diff must not drop it either.
+        schema_filter: '~^(?!topology\.|coverage_|catalog_change$)~'
         types:
             # AES-256-GCM at-rest encryption (key derived from APP_SECRET) for the TOTP secret
             encrypted_string: App\Doctrine\EncryptedStringType

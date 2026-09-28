@@ -1,8 +1,4 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
-{# The catalog URL is used twice, far apart: the preamble preload and
-   window.CC_CATALOG_URL. A preload only counts when the two URLs match
-   exactly, so this is one value rather than two expressions that drifted. #}
-{% set catalog_url = path('map_catalog') ~ '?v=' ~ catalog_version %}
 <!DOCTYPE html>
 {# data-map-theme keys the light chrome palette in map.css. The server renders
    the logged-in rider's stored choice, so the first paint is already right.
@@ -909,11 +905,15 @@ window.CC_VENDOR = {{ {
      smoke sweep (web/tests/browser/map-smoke.js) needs to assert on layers and
      sources. Production ships neither the flag nor the handle. #}
   {% if app.environment != 'prod' %}window.CC_DEBUG = true;{% endif %}
-  {# ?v= busts the browser's hour-long catalog cache the moment the catalog
-     changes (CatalogProvider::versionTag) — without it, a rider whose
-     submission was just approved reloads into the pre-approval payload and
-     watches their contribution "disappear" until the max-age runs out. #}
-  window.CC_CATALOG_URL = {{ catalog_url|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  {# The worldwide catalog, which the map loads only when it needs every
+     region: a worldwide search, an Everywhere scope, a link to a place no
+     region holds (catalog-data-model.md §9.1). ?v= follows the rows no region
+     holds (CatalogStamps::versionTag); the regions the map holds are patched
+     from their own stamps. #}
+  window.CC_CATALOG_URL = {{ (path('map_catalog') ~ '?v=' ~ catalog_version)|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
+  {# What the first paint needs beyond the rider's own regions: the region of
+     an ?item= or ?route= link, or the worldwide catalog (MapController::catalogBoot). #}
+  window.CC_CATALOG_BOOT = {{ catalog_boot|json_encode|raw }};
   {# The heat points live off the critical payload; fetched on the first heatmap-On only. #}
   window.CC_HEAT_URL = {{ path('map_heat')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
   {# The witness window for coverage tiles (data-provider-hierarchy.md §6.7.7). #}
@@ -1021,10 +1021,9 @@ window.CC_VENDOR = {{ {
   <script src="{{ asset('contribute/media-upload.js') }}"></script>
 {% endif %}
 {# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
-   globals (catalog-load.js injects it after the fetch resolves), but its
-   DOWNLOAD must not sit serialized behind the ~1 MB catalog transfer — the
-   preload puts both requests in flight together, so boot() executes map.js
-   straight from cache.
+   globals (catalog-load.js injects it after the region fetches resolve), but
+   its DOWNLOAD must not sit serialized behind them: the preload puts both in
+   flight together, so boot() executes map.js straight from cache.
    importmap() replaces the hand-written preload since map.js became the entry
    of an ES-module graph. It emits
    both halves of what that graph needs:
@@ -1092,18 +1091,15 @@ window.CC_VENDOR = {{ {
 <link rel="modulepreload" href="{{ asset('map/tile-sources.js') }}">
 <link rel="modulepreload" href="{{ asset('map/units.js') }}">
 <link rel="modulepreload" href="{{ asset('map/util.js') }}">
-{# And the catalog itself: catalog-load.js starts this ~1 MB fetch only after
-   the vendor scripts execute; the preload puts it in flight from the preamble,
-   overlapping the maplibre/pmtiles downloads. crossorigin IS required even
-   same-origin: fetch() runs mode=cors + credentials=same-origin, and a bare
-   preload runs credentials=include — Chrome reports the mismatch and refetches
-   (verified in the console, 2026-08-09). crossorigin(=anonymous) makes the
-   preload's credentials mode match fetch()'s.
-   `catalog_url` and NOT path('map_catalog'): a preload is matched on the exact
-   URL, and the fetch carries the ?v= cache-buster. Without the tag this
-   preloaded the wrong URL, so the browser downloaded the catalog TWICE (1 MB
-   gzipped each time) and then warned that the preload went unused. #}
-<link rel="preload" as="fetch" href="{{ catalog_url }}" crossorigin>
+{# And the catalog's first read: catalog-load.js asks for the region stamps
+   before it knows which region URLs to fetch, and starts only after the
+   vendor scripts execute; the preload puts the stamps in flight from the
+   preamble, overlapping the maplibre/pmtiles downloads. crossorigin IS
+   required even same-origin: fetch() runs mode=cors + credentials=same-origin,
+   and a bare preload runs credentials=include, which Chrome reports as a
+   mismatch and refetches. crossorigin(=anonymous) makes the preload's
+   credentials mode match fetch()'s. #}
+<link rel="preload" as="fetch" href="{{ path('map_catalog_stamps') }}" crossorigin>
 {# The rider's units (account-and-auth.md §9). This page does NOT extend
    base.html.twig, so it carries its own copy of the bridge — without it every
    distance the map draws would stay metric while the same rider's moderation

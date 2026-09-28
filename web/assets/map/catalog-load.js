@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/* Boots the map from the catalog endpoint (docs/specs/map-and-search.md §2):
-   fetch CC_CATALOG_URL, expose window.CC_* globals, stays merge, inject map.js.
-   The MapLibre instance is built here before that fetch so the basemap does
-   not queue behind the catalog. */
+/* Boots the map from the catalog endpoints (docs/specs/map-and-search.md §2):
+   fetch the regions the rider's scope shows, expose window.CC_* globals,
+   stays merge, inject map.js. The MapLibre instance is built here before
+   those fetches so the basemap does not queue behind the catalog. */
 (function () {
   /* Said in place of the map when the browser has no WebGL2 context. v6 removed
      WebGL1 and throws GPUInitializationError from the constructor instead of
@@ -129,20 +129,67 @@
     }
   }
 
-  /* Region-bound freshness (docs/specs/catalog-data-model.md §9.1).
+  /* Area-first catalog (docs/specs/catalog-data-model.md §9.1).
 
-     The worldwide document is cached for an hour and its ?v= tag ignores what
-     happens inside a region, so a curator's decision costs no rider on another
-     continent anything. What reaches a rider at once is their OWN region:
-     /map/catalog/stamps.json is revalidated on every boot, and any region in
-     the active scope whose stamp differs from the one baked into the cached
-     payload is refetched on its own small URL and spliced in. A rider scoped
-     somewhere else asks for nothing but the stamps. */
+     The map holds only the regions it shows. Each region is its own small
+     document, /map/catalog/region/<rid>.json?v=<stamp>, and the stamps
+     document (/map/catalog/stamps.json, revalidated on every read) says which
+     of them moved. The first paint waits for the regions of the rider's scope,
+     plus the region an ?item= or ?route= link points into (CC_CATALOG_BOOT).
+     A new scope fetches its own regions; a tab that comes back refetches the
+     ones whose stamp moved. A rider in the Netherlands downloads the
+     Netherlands, not the world.
+
+     The worldwide document (CC_CATALOG_URL) loads only when the map needs
+     every region: a worldwide search, the Everywhere scope, a link by name or
+     to a place no region holds. The regions already held are laid back over
+     it, so nothing the rider has seen goes back in time. */
+  var BOOT = window.CC_CATALOG_BOOT || { regions: [], worldwide: false };
   var rawCatalog = null;
+  var slices = {};          // rid -> the slice last spliced in
+  var worldRefs = [];       // the worldwide document's tile-dedupe refs, once loaded
+  var worldwide = null;     // the worldwide load, once asked for
+  var worldHeld = false;    // the payload in hand is the worldwide document
+  var inflight = {};        // 'rid@stamp' -> the fetch of that slice
+  var booted = false;
 
-  function activeRegionIds() {
-    var s = window.CCScope && window.CCScope.get ? window.CCScope.get() : null;
-    return (s && s.regionIds) ? s.regionIds : [];
+  function emptyLayer() { return { type: 'FeatureCollection', features: [] }; }
+  // The worldwide document's shape with no rows, so every consumer of the
+  // payload reads the same keys whether one region or all of them are held.
+  function emptyCatalog() {
+    var d = { A: [], N: [], R: [], O: { osm: emptyLayer(), authority: emptyLayer() }, refs: [], providers: {}, stamps: {} };
+    ['B', 'C', 'D', 'E', 'F', 'G', 'P', 'Q'].forEach(function (L) { d[L] = emptyLayer(); });
+    return d;
+  }
+
+  function currentScope() {
+    return window.CCScope && window.CCScope.get ? window.CCScope.get() : null;
+  }
+  function scopeIsEverywhere() {
+    var s = currentScope();
+    return !!s && s.kind === 'everywhere';
+  }
+  // The regions the map keeps current: the scope's, and the one a boot link
+  // opened (its drawer lifts the scope there for a while).
+  function wantedRegionIds() {
+    var s = currentScope();
+    var ids = (s && s.regionIds) ? s.regionIds.slice() : [];
+    (BOOT.regions || []).forEach(function (rid) { if (ids.indexOf(rid) < 0) { ids.push(rid); } });
+    return ids;
+  }
+
+  // Tile dedupe (coverage-provider.md §6): every ref a held region claims,
+  // plus the worldwide document's once it is loaded. A ref a region stopped
+  // claiming leaves with that region's next slice; one still in the worldwide
+  // list stays until the next page load. One pin missing from the tiles is
+  // the harmless direction, a doubled pin is not.
+  function collectRefs(d) {
+    var seen = {};
+    var refs = [];
+    var add = function (r) { if (!seen[r]) { seen[r] = true; refs.push(r); } };
+    worldRefs.forEach(add);
+    Object.keys(slices).forEach(function (k) { (slices[k].refs || []).forEach(add); });
+    d.refs = refs;
   }
 
   // Replace every row of one region, in each shape the payload uses. Removal
@@ -164,33 +211,26 @@
       if (!d.O || !d.O[k] || !slice.O || !slice.O[k]) { return; }
       d.O[k] = { type: 'FeatureCollection', features: keepF(d.O[k]).concat(slice.O[k].features || []) };
     });
-    // Tile dedupe: a ref this region now claims must hide its coverage twin at
-    // once. A ref the region STOPPED claiming stays in the list until the hour
-    // brings a whole document. One pin missing from the tiles is the harmless
-    // direction, a doubled pin is not.
-    var refs = d.refs || [];
-    (slice.refs || []).forEach(function (r) { if (refs.indexOf(r) < 0) { refs.push(r); } });
-    d.refs = refs;
     d.providers = slice.providers || d.providers;
-    // A region emptied by a takedown serves no stamp at all, and neither does
-    // the stamps document; recording that as "" instead of absent would make
-    // the pair disagree forever and refetch the empty slice on every boot.
-    var stamps = d.stamps || (d.stamps = {});
-    if (slice.stamp) { stamps[String(rid)] = slice.stamp; } else { delete stamps[String(rid)]; }
+    slices[String(rid)] = slice;
+    collectRefs(d);
+    (d.stamps || (d.stamps = {}))[String(rid)] = slice.stamp;
   }
 
   function fetchStamps() {
-    return fetch('/map/catalog/stamps.json', { headers: { Accept: 'application/json' } })
+    // No Accept header: the page preloads this URL, and a preload is only
+    // reused by a request that asks for it the same way.
+    return fetch('/map/catalog/stamps.json')
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });
   }
 
-  /* One stamps answer for every caller for STAMPS_REUSE_MS: the boot check,
-     the area the map restores at start (a cc:scopechange) and the window's
-     first focus all asked within a second of each other, three fetches of the
-     same 2 kB on one page load (owner-reported 2026-09-28). The stamps cover
-     every region, so a new area within the window needs no fresh read. A
-     failed read is not kept: the next caller tries again. */
+  /* One stamps answer for every caller for STAMPS_REUSE_MS: the boot, the
+     area the map restores at start (a cc:scopechange) and the window's first
+     focus all asked within a second of each other, three fetches of the same
+     2 kB on one page load (owner-reported 2026-09-28). The stamps cover every
+     region, so a new area within the window needs no fresh read. A failed
+     read is not kept: the next caller tries again. */
   var STAMPS_REUSE_MS = 15000;
   var stampsPromise = null;
   var stampsAt = 0;
@@ -205,72 +245,147 @@
     return stampsPromise;
   }
 
-  // Started alongside the catalog, not after it: on a cold load the stamps are
-  // already in hand when the big document lands, so checking them costs the
-  // first paint nothing.
-  var bootStamps = currentStamps();
-
-  /* Patch every region of the active scope whose stamp moved. Resolves to true
-     when the payload in hand changed. `stamps` is the boot pair on the first
-     call and a fresh read afterwards. */
+  /* Fetch every wanted region whose stamp the payload in hand does not hold:
+     a region never loaded, or one that moved. Resolves to true when the
+     payload changed. */
   function refreshRegions(stamps) {
     if (!rawCatalog) { return Promise.resolve(false); }
     return stamps.then(function (live) {
       if (!live) { return false; }
-      // What the payload in hand holds for a region: the stamp it was built
-      // with, or the one the last splice left there.
       var held = rawCatalog.stamps || {};
-      var stale = activeRegionIds().filter(function (rid) { return live[String(rid)] !== held[String(rid)]; });
-      if (!stale.length) { return false; }
-      return Promise.all(stale.map(function (rid) {
+      // A region with no stamp never held a row: there is nothing to fetch.
+      var stale = wantedRegionIds().filter(function (rid) {
         var k = String(rid);
-        return fetch('/map/catalog/region/' + rid + '.json?v=' + encodeURIComponent(live[k] || '0'),
-          { headers: { Accept: 'application/json' } })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (slice) { if (slice) { spliceRegion(rawCatalog, rid, slice); } });
-      })).then(function () { return true; });
+        return live[k] !== undefined && live[k] !== held[k];
+      });
+      if (!stale.length) { return false; }
+      return Promise.all(stale.map(function (rid) { return fetchRegion(rid, live[String(rid)]); }))
+        .then(function (got) { return got.indexOf(true) !== -1; });
     }).catch(function () { return false; });
   }
 
-  // A region that moved is patched in before the first paint, so an approval in
-  // the rider's own region is simply there on a plain reload.
+  // One request per slice however many callers want it at once: the boot and
+  // the area the map restores at start ask for the same regions together.
+  function fetchRegion(rid, stamp) {
+    var key = rid + '@' + stamp;
+    if (inflight[key]) { return inflight[key]; }
+    inflight[key] = fetch('/map/catalog/region/' + rid + '.json?v=' + encodeURIComponent(stamp),
+      { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (slice) {
+        if (!slice || !rawCatalog) { return false; }
+        spliceRegion(rawCatalog, rid, slice);
+        return true;
+      })
+      .catch(function () { return false; })
+      .then(function (spliced) {
+        delete inflight[key];
+        return spliced;
+      });
+    return inflight[key];
+  }
+
+  function repaint() {
+    applyCatalog(rawCatalog);
+    if (window.__ccApplyCatalog) { window.__ccApplyCatalog(); }
+  }
+
   function repaintAfter(stamps) {
     return refreshRegions(stamps).then(function (moved) {
-      if (!moved) { return false; }
-      applyCatalog(rawCatalog);
-      if (window.__ccApplyCatalog) { window.__ccApplyCatalog(); }
-      return true;
+      if (moved && booted) { repaint(); }
+      return moved;
     });
   }
 
-  fetch(window.CC_CATALOG_URL)
-    .then(function (r) {
+  /* The worldwide document, once per page. A held slice goes back over it
+     when it is the live one, or when the live stamps cannot be read; the
+     wanted regions are then refreshed like any other time. Resolves to
+     whether the document is in hand; a failed load may be asked for again. */
+  function loadWorldwide() {
+    if (worldwide) { return worldwide; }
+    var doc = fetch(window.CC_CATALOG_URL).then(function (r) {
       if (!r.ok) { throw new Error('catalog.json HTTP ' + r.status); }
       return r.json();
-    })
-    .then(function (d) {
-      rawCatalog = d;
-      return refreshRegions(bootStamps).then(function () {
-        applyCatalog(rawCatalog);
-        window.CC_CATALOG_STATE = 'ok';
+    });
+    worldwide = Promise.all([doc, currentStamps()]).then(function (got) {
+      var d = got[0], live = got[1];
+      var inDoc = d.stamps || (d.stamps = {});
+      worldRefs = d.refs || [];
+      Object.keys(slices).forEach(function (k) {
+        var slice = slices[k];
+        if (inDoc[k] !== slice.stamp && (!live || live[k] === slice.stamp)) { spliceRegion(d, Number(k), slice); }
       });
-    })
-    .catch(function (e) {
-      window.CC_CATALOG_STATE = 'FAILED: ' + (e && e.message ? e.message : e);
-      console.error('Catalog load failed — map layers unavailable.', e);
-    })
-    .then(boot);
+      collectRefs(d);
+      rawCatalog = d;
+      worldHeld = true;
+      return refreshRegions(Promise.resolve(live));
+    }).then(function () {
+      if (booted) { repaint(); }
+      return true;
+    }).catch(function (e) {
+      worldwide = null;
+      console.error('The worldwide catalog did not load.', e);
+      return false;
+    });
+    return worldwide;
+  }
 
-  // A new scope draws regions this tab may never have checked.
-  window.addEventListener('cc:scopechange', function () { repaintAfter(currentStamps()); });
+  // For the worldwide search (search-ui.js), which cannot import this file.
+  window.CCCatalog = {
+    ensureWorldwide: loadWorldwide,
+    // The data-version readout (panels.js): which catalog the map holds.
+    readout: function () {
+      if (!rawCatalog) { return null; }
+      var m = worldHeld && String(window.CC_CATALOG_URL || '').match(/v=([0-9a-f]+)/);
+      return m ? 'world ' + m[1] : 'area ' + Object.keys(slices).length;
+    }
+  };
+
+  function bootCatalog() {
+    if (BOOT.worldwide || scopeIsEverywhere()) {
+      return loadWorldwide().then(function (ok) {
+        if (ok) { return; }
+        // Without it the map still holds whatever regions a later scope asks for.
+        rawCatalog = emptyCatalog();
+        throw new Error('catalog.json unavailable');
+      });
+    }
+    rawCatalog = emptyCatalog();
+    return currentStamps().then(function (live) {
+      if (!live) { throw new Error('stamps.json unavailable'); }
+      return refreshRegions(Promise.resolve(live));
+    });
+  }
+
+  bootCatalog()
+    .then(function () {
+      window.CC_CATALOG_STATE = 'ok';
+    }, function (e) {
+      window.CC_CATALOG_STATE = 'FAILED: ' + (e && e.message ? e.message : e);
+      console.error('Catalog load failed: map layers unavailable.', e);
+    })
+    .then(function () {
+      // Applied and marked booted in one step, so a slice that lands after
+      // this repaints and one that landed before is in what this applies.
+      if (rawCatalog) { applyCatalog(rawCatalog); }
+      booted = true;
+      boot();
+    });
+
+  // A new scope draws regions this tab may never have held. Everywhere draws
+  // them all.
+  window.addEventListener('cc:scopechange', function () {
+    if (scopeIsEverywhere()) { loadWorldwide(); return; }
+    repaintAfter(currentStamps());
+  });
 
   /* Tab-return: a moderator's loop is approve-in-the-desk-tab, switch back to
      the open map, and that tab asks for nothing on its own. It reads the
      stamps document, two kilobytes, and pulls only the regions on screen
      whose stamp moved, so watching one approval never costs a continent. */
   function recheckCatalog() {
-    if (document.visibilityState !== 'visible' || !rawCatalog) { return; }
-    // At most one read per STAMPS_REUSE_MS, shared with the boot check.
+    if (document.visibilityState !== 'visible' || !booted) { return; }
+    // At most one read per STAMPS_REUSE_MS, shared with the boot.
     repaintAfter(currentStamps());
   }
   document.addEventListener('visibilitychange', recheckCatalog);

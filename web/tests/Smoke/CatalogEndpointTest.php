@@ -97,8 +97,9 @@ final class CatalogEndpointTest extends WebTestCase
         $client->request('GET', '/map/catalog/region/'.$rid.'.json');
         self::assertResponseIsSuccessful();
         $sliceResponse = $client->getResponse();
-        // The URL carries the stamp, so an hour is safe: a decision mints a new one.
-        self::assertStringContainsString('max-age=3600', (string) $sliceResponse->headers->get('Cache-Control'));
+        // The URL carries the stamp, and the stamp carries the day, so a day is
+        // safe: a decision or a new day mints a new one.
+        self::assertStringContainsString('max-age=86400', (string) $sliceResponse->headers->get('Cache-Control'));
         self::assertStringContainsString('public', (string) $sliceResponse->headers->get('Cache-Control'));
         self::assertNotEmpty($sliceResponse->getEtag());
 
@@ -115,6 +116,37 @@ final class CatalogEndpointTest extends WebTestCase
 
         $client->request('GET', '/map/catalog/region/'.$rid.'.json', [], [], ['HTTP_IF_NONE_MATCH' => $sliceResponse->getEtag()]);
         self::assertResponseStatusCodeSame(304);
+    }
+
+    /**
+     * The map loads only the rider's own regions (catalog-data-model.md §9.1),
+     * so a link to a place elsewhere tells the loader which region to bring
+     * along. A link by name, or to a place no region holds, needs the
+     * worldwide document; a link to nothing on the map needs nothing.
+     */
+    public function testALinkBringsItsRegionIntoTheFirstPaint(): void
+    {
+        $client = static::createClient();
+        $this->seed();
+        $db = static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class)->getConnection();
+        /** @var array{id: int|string, region_id: int|string} $row */
+        $row = $db->fetchAssociative("SELECT id, region_id FROM item WHERE region_id IS NOT NULL AND letter = 'D' ORDER BY id LIMIT 1");
+
+        $boot = static function (string $query) use ($client): array {
+            $client->request('GET', '/map'.$query);
+            self::assertResponseIsSuccessful();
+            self::assertSame(1, preg_match('~window\.CC_CATALOG_BOOT = (\{[^;]*\});~', (string) $client->getResponse()->getContent(), $m));
+
+            return json_decode($m[1], true, 512, \JSON_THROW_ON_ERROR);
+        };
+
+        // share-links.js writes `?item=<id>/<slug>`; the id decides.
+        self::assertSame(['regions' => [(int) $row['region_id']], 'worldwide' => false], $boot('?item='.$row['id'].'/some-name'));
+        self::assertSame(['regions' => [], 'worldwide' => true], $boot('?feature=Somewhere'), 'a name can be anywhere');
+        self::assertSame(['regions' => [], 'worldwide' => false], $boot('?item=999999999'), 'nothing to load for a place that is gone');
+
+        $db->executeStatement('UPDATE item SET region_id = NULL WHERE id = :id', ['id' => $row['id']]);
+        self::assertSame(['regions' => [], 'worldwide' => true], $boot('?item='.$row['id']), 'only the worldwide document holds a row no region holds');
     }
 
     /** The fixture catalog, on the same kernel (DAMA rolls it back). */

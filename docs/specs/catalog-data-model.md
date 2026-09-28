@@ -988,17 +988,19 @@ Harvest-side rules that shape what arrives (toolchain:
   third-party ride platforms — and every UI surface labels it so
   (`d_faked_src` / `heatmap_hint` keys in `web/translations/messages.en.yaml`).
 
-## 9. Serving: `GET /map/catalog.json`
+## 9. Serving: `GET /map/catalog.json` and its region slices
 
-`MapController::catalog()` (`web/src/Controller/MapController.php`) +
-`App\Catalog\CatalogProvider`. The contract:
+`MapController::catalog()` / `catalogRegion()` (`web/src/Controller/MapController.php`)
++ `App\Catalog\CatalogProvider` (the rows) + `App\Catalog\CatalogDocuments`
+(the server cache) + `App\Catalog\CatalogStamps` (the versions). The map
+downloads the slices of the regions it shows and the worldwide document only on
+demand (§9.1). The contract:
 
-- **Public and cacheable**: `ETag` (md5 of the exact encoded bytes — the
-  provider encodes once), `Cache-Control: public, max-age=3600`
-  (`setMaxAge(3600)` in `MapController::catalog()`), conditional-request 304s.
-  The hour is safe because freshness is region-bound, not document-bound
-  (§9.1): a rider's own region reaches them through a stamp and a small
-  per-region slice.
+- **Public and cacheable**: `ETag` (md5 of the exact encoded bytes, computed
+  once per build), conditional-request 304s. The worldwide document is
+  `max-age=3600` behind a `?v=` tag; a region slice is `max-age=86400`, safe
+  because its URL carries the region's stamp and the stamp carries the day
+  (§9.1).
 - **States served: `unverified` + `verified` only** (via
   `ItemState::servedSqlTuple()`), for items and routes alike. Heat serves
   `source='auto'` rows only. Items carrying `condition = 'Not there anymore'`
@@ -1045,101 +1047,109 @@ something most of them never turn on (frontend review 2026-08-09).
 - Explicitly the **named interim until vector tiles** (catalog-data-model.md
   §11).
 
-### 9.1 Region-bound freshness (2026-09-16)
+### 9.1 Area-first loading and region stamps
 
-`catalog.json` is **one worldwide document**: every layer holds every region's
-rows, because the client search index reaches the whole world ("Search
-everywhere", map-and-search.md §7.3) even though a scope never draws past a
-country. A cache key on that document can only ever be all-or-nothing, so the
-promptness a curator's decision needs and the bytes a rider pays are split
-across three resources:
+The map holds **only the regions it shows** (owner 2026-09-28: a rider who only
+looks at the Netherlands was downloading the world). Measured on production:
+the worldwide document is 945 kB gzipped, the twelve Dutch provinces together
+154 kB. Three resources carry the catalog:
 
 | Resource | Cache-Control | Carries | Moves when |
 |---|---|---|---|
-| `GET /map/catalog.json?v=<tag>` | `public, max-age=3600` + ETag | every region's rows, plus `stamps` | the build version, or a row belonging to no region (`CatalogProvider::versionTag()`) |
-| `GET /map/catalog/stamps.json` | `public, no-cache` + ETag | `{ "<region id>": "<stamp>" }`, `"0"` = the region-less rows | any served row of that region (`CatalogProvider::regionStamps()`) |
-| `GET /map/catalog/region/{rid}.json?v=<stamp>` | `public, max-age=3600` + ETag | one region's rows in the worldwide document's shapes, plus `rid` and `stamp` | the URL carries the stamp, so a decision mints a new URL |
+| `GET /map/catalog/stamps.json` | `public, no-cache` + ETag | `{ "<region id>": "<stamp>" }`, `"0"` = the region-less rows | any change to what that region's rows print, and every day (below) |
+| `GET /map/catalog/region/{rid}.json?v=<stamp>` | `public, max-age=86400` + ETag | one region's rows in the worldwide document's shapes, plus `rid` and `stamp` | the URL carries the stamp, so a change mints a new URL |
+| `GET /map/catalog.json?v=<tag>` | `public, max-age=3600` + ETag | every region's rows, plus `stamps` | the build, the day, or a row belonging to no region (`CatalogStamps::versionTag()`) |
 
-**The worldwide tag deliberately ignores what happens inside a region.** A tag
-that hashes the feeding tables' counts and latest change mints a new URL for
-every rider on every continent the moment a curator decides anything: ~1 MB
-gzipped (4.5 MB raw) redownloaded for a change in one region. The owner's
-instruction on 2026-09-16: "for every approval the currators make the token
-changes, then the token must be region bound".
+**How the map loads** (`web/assets/map/catalog-load.js`). The page preloads
+`stamps.json`. The loader starts from an empty payload in the worldwide shapes,
+reads the stamps, and fetches the slice of every region of the active scope,
+plus the region of an `?item=` or `?route=` link (`window.CC_CATALOG_BOOT`,
+`MapController::catalogBoot()`), then injects `map.js`. A region with no stamp
+never held a row and is not fetched. Each slice is **spliced** in: the region's
+rows are dropped from each layer and the slice's rows take their place, which is
+why a retired place needs no tombstone. The same check runs on `cc:scopechange`
+(a new scope fetches its own regions) and on tab return (a moved stamp is
+refetched). All of them share one stamps read for 15 seconds
+(`currentStamps()`), and one request per slice however many callers want it
+(`fetchRegion()`).
 
-**How a rider stays current** (`web/assets/map/catalog-load.js`): the stamps
-document is fetched in parallel with the catalog on boot, so checking it costs
-the first paint nothing. Every region in the active scope whose live stamp
-differs from the one baked into the payload in hand is refetched on its own
-URL and **spliced** in, so the region's rows are dropped from each layer and the
-slice's rows take their place, which is why a retired place needs no tombstone.
-The same check runs on `cc:scopechange` and on tab return, and all of them
-share one stamps read for 15 seconds (`currentStamps()`): the boot check, the
-area restored at start and the window's first focus used to fetch the same
-document three times on one page load (owner-reported 2026-09-28). The stamps
-cover every region, so a new area inside those 15 seconds needs no fresh read;
-a failed read is not kept. Measured on the dev
-catalog: worldwide 1,015 kB gzipped, Wallonia's slice 93 kB, the stamps
-document 2.8 kB across 107 regions.
+**The worldwide document loads only when the map needs every region**:
+"Search everywhere" (`search-ui.js` `setReach(true)` calls
+`window.CCCatalog.ensureWorldwide()`), the Everywhere scope, a link by name
+(`?feature=`) or to a place no region holds. It loads once per page. A slice
+already held goes back over it when the slice is the live one, so nothing the
+rider has seen goes back in time. The search list is rebuilt from the item
+index each time the payload changes, so a region loaded later is searchable at
+once.
 
-**What a region stamp does not cover**, and rides the hour-long `max-age` + ETag
-instead: another region's rows (a scope never draws them; only a widened search
-reaches them), and the rows belonging to no region, which the worldwide tag
-carries because no scope draws those either.
+**Tile dedupe** (`refs`) is the union of every held slice's refs and, once
+loaded, the worldwide document's. A ref a region stops claiming leaves with
+that region's next slice; one in the worldwide list stays until the next page
+load. A pin missing from the coverage tiles is the harmless direction; a
+doubled pin is not.
 
-**Splice caveat, deliberate**: `refs` (tile dedupe) is a union, so a ref a region
-*stops* claiming stays listed until a whole document arrives. A pin missing from
-the coverage tiles is the harmless direction; a doubled pin is not.
+#### The stamp: a change count the database keeps
 
-**Scale, measured and pending.** `regionStamps()` aggregates every served row,
-so it is a sequential scan of `item` that grows with the catalog: 2.5 ms over
-4,767 dev rows, and it runs twice per map load (the page's `?v=` tag, then
-`stamps.json`, which is uncached by design). Two remedies, neither built,
-**in this order**: a partial covering index
-`(region_id, updated_at) WHERE state IN ('unverified','verified')` turns the
-scan into an index-only GroupAggregate and needs nothing else; failing that,
-`proxy_cache` on the frontends for a few seconds of `stamps.json`. The
-counter-kept-by-triggers answer below is the last resort here, not the first:
-every write to `item` already pays a statement-level trigger for the coverage
-counts, and that is the meter that ran a curator's one-tap confirm to 5.5 s.
+`catalog_change` (migration `Version20260928150000`) is an append-only table
+written by triggers. Every statement that changes what a region's rows print
+appends one row per region it touched; a region's **change count** is the sum
+of `n` over its rows. `region_id` is the item's region, `0` for the rows no
+region holds, and `-1` for a change every region prints.
 
-**A decision must move the row's timestamp.** `regionStamps()` reads
-`count(*)` + `max(updated_at)` per region, so a moderation decision that changes
-only `state` is invisible unless the entity stamps itself: `Item::setState()`
-and `RecommendedRoute::setState()` both call `touch()`. The row count cannot
-stand in for it, because an approved route already exists as `submitted`. This
-is the 2026-09-16 route-111 report: approved at 19:52, absent from the rider's
-map until the hour ran out. The second-precision limit recorded below applies to
-a stamp as much as to the tag.
+| Table | Trigger | Counts for |
+|---|---|---|
+| `item`, `recommended_route` | statement, transition tables | the old and the new region of every row written |
+| `item_confirmation`, `submission`, `change_history` | statement, transition tables | the region of each row's item (freshness and evidence, the contributor line, whether an OSM row is untouched) |
+| `users` | row, only when `display_name`, `public_profile` or `uuid` changes; delete | every region |
+| `data_provider` | row, only when a printed column changes; insert, delete | every region |
+| `world_subdivision` | row, only when `name` changes | every region |
+| `link_verdict` | row, only when a URL enters or leaves `unsafe` | every region |
+| `coverage_poi` | statement, only when it touched a row; installed by `catalog_change_install()`, which the pipeline calls after it creates the table | every region |
 
-### No server-side memo, and why (decided 2026-08-09)
+`CatalogChangeCoverageTest` reads the payload's SQL from the source and fails
+for any table it reads that has no trigger. A region's **stamp**
+(`CatalogStamps::stamp()`) hashes its count, the every-region count, the day,
+the build number and the staleness window:
 
-`CatalogProvider::json()` rebuilds the payload on every request. The body is
-user-independent, so it is the same answer every time and an obvious memo
-candidate. It was attempted and reverted, and the decision is **not to memoise
-it yet**. Measured on the dev catalog (1,768 items): **58 ms median** — 34 ms
-building, 25 ms encoding, 1.3 ms hashing — for 958 kB raw / 223 kB transferred.
-With `max-age=3600` and a content ETag in front of it, that is once per visitor
-per hour.
+- The count moves on every committed change, even two in the same second. The
+  stamp it replaced (row count + latest `updated_at`) missed those, because
+  Doctrine writes second-precision timestamps.
+- The day moves the pins that turned orange or red overnight: freshness is
+  computed against the document's day (`CatalogStamps::day()`, midnight), so a
+  document is rebuilt at most once a day when nothing else changes, and two web
+  hosts building the same stamp write the same bytes.
+- The build moves a deploy that serializes the same rows differently.
 
-Two things a future attempt must know, because both cost a session to find:
+Rules the design depends on:
 
-- **A `MAX(updated_at)` content stamp does not work, and raising the column to
-  `timestamp(6)` does not fix it.** Doctrine writes `'Y-m-d H:i:s'` whatever the
-  column can hold (`AbstractPlatform::getDateTimeFormatString()`, not overridden
-  by PostgreSQL), so two edits in the same second share a stamp and the memo
-  serves the older payload — silently. No row in the three tables carries a
-  sub-second component today.
-- **The mechanism that works is a counter the database bumps itself**: a
-  one-row `catalog_stamp` table with `AFTER INSERT OR UPDATE OR DELETE … FOR
-  EACH STATEMENT` triggers on every table `payload()` reads. Collision-proof,
-  fires for raw SQL as well as the ORM, one primary-key read. Read the stamp
-  *before* building the payload, and keep a source-reading guard test asserting
-  each table `payload()` queries carries a trigger.
+- **Append-only, never a counter updated in place.** An updated row is locked
+  by its writer until commit, so a long harvest would hold every rider's
+  confirmation in that region behind it. Inserts never wait for each other.
+  `CatalogStamps::compact()` folds the rows into one per region (the sums do
+  not change, so neither does any stamp); `stamps.json` runs it at most once an
+  hour (`compactOpportunistically()`), next to the closure-expiry sweep.
+- **No serial id on `catalog_change`.** The trigger inserts inside the statement
+  that wrote an item, and a sequence used there becomes the session's
+  `lastval()`, which is what Doctrine reads back as the new item's id.
+- **The worldwide tag stays region-bound.** Its `?v=` follows the region-less
+  rows, the every-region count, the day and the build, and nothing that happens
+  inside a region: a curator's decision in Wallonia is no reason for a browser
+  in Japan to download every continent (owner 2026-09-16, "the token must be
+  region bound"). The map patches the regions it holds from their own stamps.
 
-Revisit when `/map/catalog.json` is a measurable share of request time under
-real traffic, or the payload grows well past ~1 MB. Try `proxy_cache` on the
-frontends before application code.
+#### Server cache (`CatalogDocuments`)
+
+Each document is built once per version and kept in the app cache (Redis,
+shared by both web hosts): one entry per document (`catalog.doc.region.<rid>`,
+`catalog.doc.world`) holding the version it was built for, its JSON and its
+ETag. A request whose current version matches is served from the entry; any
+other version rebuilds and overwrites it, so a busy region leaves no trail of
+dead copies. The worldwide entry's version (`CatalogStamps::worldKey()`)
+follows every region, because its bytes do. A build reads its change count and
+its rows in one `REPEATABLE READ, READ ONLY` snapshot, so the version stored is
+the one the bytes were built from. Measured on dev: a region slice 0.25 s built,
+0.05 s from the cache; the worldwide document 0.76 s built, 0.08 s from the
+cache.
 
 The per-item public change log (`GET /map/item/{id}/history`, max-age 60) is
 served read-only from `change_history` via `ChangeHistoryView`; its content

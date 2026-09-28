@@ -38,19 +38,22 @@ from the tile host, with no application server in that path.
    (`{coverage: {"be": {...}, "nl": {...}}, surface: {...}, routes: {...}}`),
    or one entry under the key `"*"` when the artifact serves every country
    from a single archive (a v1 manifest, or a pin). The page also carries the
-   catalog version tag, the basemap icon registry, the viewer's home area and
-   the UI strings.
+   catalog version tag, which catalog regions a link needs
+   (`window.CC_CATALOG_BOOT`), the basemap icon registry, the viewer's home
+   area and the UI strings.
 2. **Scripts.** MapLibre GL and the pmtiles library from our own origin, then
    `web/assets/map/map.js` and its modules through the importmap.
 3. **MapLibre boots** with the style `https://tiles.openfreemap.org/styles/liberty`.
    That one request returns the style document; the base map tiles follow
    as the view needs them.
-4. **Catalog and stamps, in parallel.** `web/assets/map/catalog-load.js` fetches
-   `/map/catalog.json?v=<tag>` and `/map/catalog/stamps.json` at the same
-   time. The stamps document is small and always revalidated. Every region in
-   the active scope whose live stamp differs from the one baked into the
-   catalog is refetched as `/map/catalog/region/{rid}.json?v=<stamp>` and
-   spliced over the cached document.
+4. **Stamps, then the regions on screen.** The page preloads
+   `/map/catalog/stamps.json`, which is small and always revalidated.
+   `web/assets/map/catalog-load.js` reads it and fetches
+   `/map/catalog/region/{rid}.json?v=<stamp>` for every region of the active
+   scope, plus the region an `?item=` or `?route=` link points into. The
+   worldwide `/map/catalog.json?v=<tag>` is fetched only when the map needs
+   every region: "Search everywhere", the Everywhere scope, or a link to a
+   place no region holds.
 5. **Icons.** `web/assets/map/icons.js` draws each pin on a canvas and hands
    the pixels to MapLibre with `map.addImage`. No image file is requested.
 6. **Archives.** `web/assets/map/tile-sources.js` owns the pmtiles protocol
@@ -79,9 +82,9 @@ the host is in the heading.
 | Request | What it carries | Cached |
 |---|---|---|
 | `GET /map` | the page, with the `window.CC_*` values embedded | private |
-| `/map/catalog.json?v=` | the whole served catalog, every region, letters keyed, plus the region stamps | one hour, ETag, URL-versioned |
-| `/map/catalog/stamps.json` | `{ "<region id>": "<stamp>" }`; key `"0"` is the rows that belong to no region | no-cache, ETag |
-| `/map/catalog/region/{rid}.json?v=` | one region's rows, in the catalog's shapes | one hour, ETag, URL-versioned |
+| `/map/catalog/stamps.json` | `{ "<region id>": "<stamp>" }`; key `"0"` is the rows that belong to no region | no-cache, ETag, preloaded |
+| `/map/catalog/region/{rid}.json?v=` | one region's rows, in the catalog's shapes | one day, ETag, URL-versioned |
+| `/map/catalog.json?v=` | the whole served catalog, every region, letters keyed, plus the region stamps; on demand only | one hour, ETag, URL-versioned |
 | `/map/region/{slug}/boundary` | one region's border as GeoJSON | public |
 | `/map/scope/boundary?rids=` | several borders in one call | public |
 | `/map/coverage/counts?rids=` | how many coverage points of each letter fall in the scope | one hour |
@@ -125,8 +128,12 @@ Every host the page may talk to is listed in the Content Security Policy, in
 The stamps document is what keeps the catalog fresh without redownloading
 it. The worldwide catalog is about a megabyte gzipped (the
 [numbers page](numbers.md) keeps the current figure); a region's slice is a
-few tens of kilobytes. A curator's decision moves one region's stamp, and a
-visitor in that region fetches that slice and nothing else.
+few tens of kilobytes. A visitor downloads the slices of their own area. A
+curator's decision moves one region's stamp, and a visitor in that region
+fetches that slice and nothing else. A stamp also moves once a day, because a
+pin's freshness colour depends on the day. The database counts the changes
+itself, by trigger, and the server keeps each built slice in Redis until its
+stamp moves (`docs/specs/catalog-data-model.md` §9.1).
 
 ## What you will not see, and why
 

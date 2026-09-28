@@ -248,12 +248,12 @@ export function initRailChrome(){
   const dv=document.getElementById('dataVersions');
   if(dv){
     const NO_STAMP='—';
-    const stamp=(u,re)=>{ const m=String(u||'').match(re); return m?m[1]:NO_STAMP; };
     const state=window.CC_CATALOG_STATE||'…';
-    const cat=state==='ok' ? stamp(window.CC_CATALOG_URL,/v=([0-9a-f]+)/) : state;
     // Re-rendered on scope/mode changes — client state is as load-bearing as versions.
     const renderVersions=()=>{
       dv.innerHTML='';
+      // Which catalog is held (catalog-load.js): the regions of the area, or the worldwide document.
+      const cat=state==='ok' ? ((window.CCCatalog && window.CCCatalog.readout()) || NO_STAMP) : state;
       const sc=curScope();
       [['catalog',cat,state!=='ok'],
        ['surface',newestStamp('surface')||NO_STAMP,false],
@@ -270,7 +270,8 @@ export function initRailChrome(){
     };
     renderVersions();
     setTimeout(renderVersions,0);   // after initViewMode resolves the opening mode
-    document.addEventListener('cc:scopechange',renderVersions);
+    // CCScope announces a new scope on window (scope.js emit()).
+    window.addEventListener('cc:scopechange',renderVersions);
     document.querySelectorAll('#mode button').forEach(b=>b.addEventListener('click',()=>setTimeout(renderVersions,0)));
   }
 

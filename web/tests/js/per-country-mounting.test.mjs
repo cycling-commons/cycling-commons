@@ -85,5 +85,7 @@ test('filters on per-country surface and routes layers go in unvalidated', () =>
 test('the data-version readout names its placeholder once', () => {
   const f = body(panels, 'export function initRailChrome(){');
   assert.match(f, /const NO_STAMP='\u2014';/);
-  assert.match(f, /return m\?m\[1\]:NO_STAMP;/);
+  // The catalog cell (catalog-load.js readout()) and every artifact cell fall back to it.
+  assert.match(f, /window\.CCCatalog\.readout\(\)\) \|\| NO_STAMP/);
+  assert.match(f, /newestStamp\('surface'\)\|\|NO_STAMP/);
 });

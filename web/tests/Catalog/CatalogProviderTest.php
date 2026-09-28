@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Catalog;
 
 use App\Catalog\CatalogProvider;
+use App\Catalog\CatalogStamps;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemState;
 use App\Entity\User;
@@ -837,11 +838,12 @@ final class CatalogProviderTest extends KernelTestCase
     public function testARegionStampFollowsEveryCatalogMutationPath(): void
     {
         $provider = static::getContainer()->get(CatalogProvider::class);
+        $stamps = static::getContainer()->get(CatalogStamps::class);
         $db = $this->em->getConnection();
         $rid = (string) $db->fetchOne('SELECT region_id FROM item WHERE region_id IS NOT NULL ORDER BY id LIMIT 1');
         self::assertNotSame('', $rid, 'the fixture import region-stamps its rows');
 
-        $stamp = static fn (): string => $provider->regionStamps()[$rid] ?? '';
+        $stamp = static fn (): string => $stamps->regionStamps()[(int) $rid] ?? '';
         $s0 = $stamp();
         self::assertMatchesRegularExpression('/^[0-9a-f]{8,}$/', $s0, 'a compact hex stamp, URL-safe');
         self::assertSame($s0, $stamp(), 'stable while nothing changes');
@@ -879,12 +881,12 @@ final class CatalogProviderTest extends KernelTestCase
 
         // R rides the same payload, under whichever region holds the route.
         $routeRid = (string) $db->fetchOne('SELECT coalesce(region_id, 0) FROM recommended_route ORDER BY id LIMIT 1');
-        $before = $provider->regionStamps()[$routeRid] ?? '';
+        $before = $stamps->regionStamps()[(int) $routeRid] ?? '';
         // A day, not a second: a real UPDATE writes now() and becomes the
         // region's latest change, which a one-second nudge on the oldest row
         // would not.
         $db->executeStatement("UPDATE recommended_route SET updated_at = updated_at + interval '1 day' WHERE id = (SELECT min(id) FROM recommended_route)");
-        self::assertNotSame($before, $provider->regionStamps()[$routeRid] ?? '', 'a route update must move its region stamp');
+        self::assertNotSame($before, $stamps->regionStamps()[(int) $routeRid] ?? '', 'a route update must move its region stamp');
     }
 
     /**
@@ -897,6 +899,7 @@ final class CatalogProviderTest extends KernelTestCase
     public function testApprovingARouteMovesItsRegionStamp(): void
     {
         $provider = static::getContainer()->get(CatalogProvider::class);
+        $stamps = static::getContainer()->get(CatalogStamps::class);
         $db = $this->em->getConnection();
         // Dated back so the assertion reads the decision, not the import: both
         // land in the same second otherwise, and second precision is all the
@@ -910,14 +913,14 @@ final class CatalogProviderTest extends KernelTestCase
         $route = $this->em->find(RecommendedRoute::class, (int) $db->fetchOne("SELECT min(id) FROM recommended_route WHERE state = 'submitted'"));
         self::assertInstanceOf(RecommendedRoute::class, $route);
         $rid = (string) ($route->getRegionId() ?? 0);
-        $before = $provider->regionStamps()[$rid] ?? '';
+        $before = $stamps->regionStamps()[(int) $rid] ?? '';
         $stampedAt = $route->getUpdatedAt();
 
         $route->setState(ItemState::Unverified);
         $this->em->flush();
 
         self::assertGreaterThan($stampedAt, $route->getUpdatedAt(), 'the decision stamps the row');
-        self::assertNotSame($before, $provider->regionStamps()[$rid] ?? '', 'an approved route must move its region stamp');
+        self::assertNotSame($before, $stamps->regionStamps()[(int) $rid] ?? '', 'an approved route must move its region stamp');
     }
 
     /**
@@ -931,22 +934,23 @@ final class CatalogProviderTest extends KernelTestCase
     public function testTheWorldwideTagIgnoresARegionAndFollowsTheRegionlessRows(): void
     {
         $provider = static::getContainer()->get(CatalogProvider::class);
+        $stamps = static::getContainer()->get(CatalogStamps::class);
         $db = $this->em->getConnection();
         $rid = (string) $db->fetchOne('SELECT region_id FROM item WHERE region_id IS NOT NULL ORDER BY id LIMIT 1');
 
-        $v0 = $provider->versionTag();
+        $v0 = $stamps->versionTag();
         self::assertMatchesRegularExpression('/^[0-9a-f]{8,}$/', $v0, 'a compact hex tag, URL-safe');
-        self::assertSame($v0, $provider->versionTag(), 'stable while nothing changes');
+        self::assertSame($v0, $stamps->versionTag(), 'stable while nothing changes');
 
-        $before = $provider->regionStamps();
+        $before = $stamps->regionStamps();
         $db->executeStatement(
             "UPDATE item SET updated_at = updated_at + interval '1 second'
               WHERE id = (SELECT min(id) FROM item WHERE region_id = :rid)",
             ['rid' => $rid],
         );
-        self::assertSame($v0, $provider->versionTag(), 'a change inside a region leaves the worldwide URL alone');
+        self::assertSame($v0, $stamps->versionTag(), 'a change inside a region leaves the worldwide URL alone');
 
-        $after = $provider->regionStamps();
+        $after = $stamps->regionStamps();
         self::assertNotSame($before[$rid], $after[$rid], 'the region that changed has a new stamp');
         unset($before[$rid], $after[$rid]);
         self::assertSame($before, $after, 'no other region is disturbed');
@@ -957,7 +961,7 @@ final class CatalogProviderTest extends KernelTestCase
              VALUES ('B', 'Regionless tap', ST_GeomFromText('POINT(4.5 50.4)', 4326), 'BE', 'verified', 'manual', 'manual:regionless-tap',
                      CAST('{\"t\":\"Drinking water\"}' AS jsonb), now(), now())",
         );
-        self::assertNotSame($v0, $provider->versionTag(), 'a row belonging to no region must mint a new worldwide URL');
+        self::assertNotSame($v0, $stamps->versionTag(), 'a row belonging to no region must mint a new worldwide URL');
     }
 
     /**
@@ -970,13 +974,14 @@ final class CatalogProviderTest extends KernelTestCase
     public function testARegionSliceCarriesThatRegionAndNothingElse(): void
     {
         $provider = static::getContainer()->get(CatalogProvider::class);
+        $stamps = static::getContainer()->get(CatalogStamps::class);
         $db = $this->em->getConnection();
         $rid = (int) $db->fetchOne('SELECT region_id FROM item WHERE region_id IS NOT NULL ORDER BY id LIMIT 1');
 
         $whole = $provider->payload();
         $slice = $provider->payload($rid);
         self::assertSame($rid, $slice['rid']);
-        self::assertSame($provider->regionStamps()[(string) $rid], $slice['stamp'], 'the slice names the stamp it answers for');
+        self::assertSame($stamps->regionStamps()[$rid], $slice['stamp'], 'the slice names the stamp it answers for');
         self::assertArrayNotHasKey('stamps', $slice, 'only the worldwide document carries the whole map of stamps');
 
         $ridsOf = static function (mixed $layer): array {

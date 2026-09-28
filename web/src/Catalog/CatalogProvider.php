@@ -12,7 +12,6 @@ use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
 use App\Moderation\ModerationScope;
 use App\Provider\ProviderCitations;
-use App\Service\BuildVersion;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -31,7 +30,6 @@ final class CatalogProvider
 
     public function __construct(
         private readonly Connection $db,
-        private readonly BuildVersion $buildVersion,
         private readonly ConfirmationFreshness $freshness,
         private readonly LinkVerdictStore $linkVerdicts,
         // Who published each authority row, sent with the payload so the map
@@ -41,6 +39,7 @@ final class CatalogProvider
         // Custody and rung for every served point (data-provider-hierarchy.md
         // §6.7.7), computed here so a pin and the API read one answer.
         private readonly ItemEvidenceResolver $evidence,
+        private readonly CatalogStamps $stamps,
     ) {
     }
 
@@ -49,13 +48,18 @@ final class CatalogProvider
      *
      * `$regionId` narrows every layer to one region, which is what
      * `GET /map/catalog/region/{rid}.json` serves: the same shapes, so the map
-     * splices a region's rows over the hour-cached worldwide document without
-     * downloading it again (catalog-data-model.md §9.1).
+     * builds its catalog from the regions it shows and splices one in when its
+     * stamp moves (catalog-data-model.md §9.1). `$counts` is the change count
+     * the stamps are minted from; CatalogDocuments reads it in the same
+     * snapshot as the rows.
+     *
+     * @param array<int, int>|null $counts
      *
      * @return array<string, mixed>
      */
-    public function payload(?int $regionId = null): array
+    public function payload(?int $regionId = null, ?array $counts = null): array
     {
+        $counts ??= $this->stamps->counts();
         $payload = [
             'A' => $this->surfaceSegments($regionId),
             'B' => $this->featureCollection('B', regionId: $regionId),
@@ -87,20 +91,24 @@ final class CatalogProvider
             // What each region looked like when these bytes were built. The map
             // compares them against the live stamps and patches only the
             // regions it is showing (catalog-data-model.md §9.1).
-            $payload['stamps'] = $this->regionStamps();
+            $payload['stamps'] = $this->stamps->regionStamps($counts);
 
             return $payload;
         }
         $payload['rid'] = $regionId;
-        $payload['stamp'] = $this->regionStamps()[$regionId] ?? '';
+        $payload['stamp'] = $this->stamps->stamp($regionId, $counts);
 
         return $payload;
     }
 
-    /** Encoded once so the controller can ETag the exact bytes. */
-    public function json(?int $regionId = null): string
+    /**
+     * Encoded once so the controller can ETag the exact bytes.
+     *
+     * @param array<int, int>|null $counts
+     */
+    public function json(?int $regionId = null, ?array $counts = null): string
     {
-        return json_encode($this->payload($regionId), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
+        return json_encode($this->payload($regionId, $counts), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
     }
 
     /**
@@ -142,88 +150,6 @@ final class CatalogProvider
             'lng' => (float) $r['lng'],
             'since' => (string) $r['since'],
         ], $rows);
-    }
-
-    /**
-     * The region-less rows' bucket in {@see regionStamps()}: no region carries id 0.
-     */
-    private const int NO_REGION = 0;
-
-    /**
-     * Cache-busting `?v=` tag for the worldwide document.
-     *
-     * It answers for what a region stamp cannot: the build stamp (the same
-     * rows serialize differently after a deploy) and the rows that belong to
-     * no region (`region_id IS NULL`, which no rider's scope draws). Anything
-     * that happens *inside* a region is deliberately NOT in here. This tag is
-     * a global cache key on a ~1 MB worldwide document, so every curator
-     * decision it notices is a fresh megabyte for every rider on every
-     * continent (owner 2026-09-16: "the token must be region bound"). What
-     * reaches a rider promptly is their own region's stamp: see
-     * {@see regionStamps()} and `GET /map/catalog/region/{rid}.json`. Other
-     * regions ride the hour-long max-age and the content ETag, which is what
-     * their pins are worth to this rider: a scope never draws them, only
-     * "Search everywhere" reaches them.
-     *
-     * @see docs/specs/catalog-data-model.md §9.1
-     */
-    public function versionTag(): string
-    {
-        $parts = [
-            $this->buildVersion->stamp()['number'],
-            $this->regionStamps()[self::NO_REGION] ?? '',
-        ];
-
-        return substr(hash('xxh128', implode('|', array_map(strval(...), $parts))), 0, 16);
-    }
-
-    /**
-     * One freshness stamp per region, keyed by `region_id` as a string, with
-     * `'0'` holding every served row that belongs to no region.
-     *
-     * A stamp covers everything that changes what the region's rows serialize
-     * to: its items, its routes (both count + latest change, because a
-     * takedown deletes without moving any timestamp) and the confirmations
-     * that flip a pin's freshness. The map fetches these on every boot and on
-     * every scope change, and patches only the regions whose stamp moved.
-     *
-     * Known limit: Doctrine writes second-precision timestamps
-     * (`AbstractPlatform::getDateTimeFormatString()`),
-     * so two edits to one region inside the same second that leave the row
-     * count alone share a stamp. The collision-proof answer is a counter the
-     * database bumps itself, recorded in catalog-data-model.md §9; it is not
-     * built here because every write to `item` already pays a statement-level
-     * trigger for the coverage counts.
-     *
-     * @see docs/specs/catalog-data-model.md §9.1
-     *
-     * @return array<int, string>
-     */
-    public function regionStamps(): array
-    {
-        $served = ItemState::servedSqlTuple();
-        /** @var list<array{rid: int|string, n: int|string, t: string}> $rows */
-        $rows = $this->db->fetchAllAssociative(
-            "SELECT rid, sum(n) AS n, max(t) AS t FROM (
-                 SELECT coalesce(i.region_id, 0) AS rid, count(*) AS n, coalesce(max(i.updated_at)::text, '') AS t
-                   FROM item i WHERE i.state IN {$served} GROUP BY 1
-                 UNION ALL
-                 SELECT coalesce(r.region_id, 0) AS rid, count(*) AS n, coalesce(max(r.updated_at)::text, '') AS t
-                   FROM recommended_route r WHERE r.state IN {$served} GROUP BY 1
-                 UNION ALL
-                 SELECT coalesce(i.region_id, 0) AS rid, count(*) AS n, coalesce(max(c.created_at)::text, '') AS t
-                   FROM item_confirmation c JOIN item i ON i.id = c.item_id
-                  WHERE i.state IN {$served} GROUP BY 1
-             ) AS per_table GROUP BY rid",
-        );
-
-        $stamps = [];
-        foreach ($rows as $row) {
-            $stamps[(int) $row['rid']] = substr(hash('xxh128', $row['rid'].'|'.$row['n'].'|'.$row['t']), 0, 16);
-        }
-        ksort($stamps);
-
-        return $stamps;
     }
 
     /**
@@ -329,7 +255,7 @@ final class CatalogProvider
     private function featureCollection(string $letter, ?string $source = null, ?string $excludeSource = null, ?int $regionId = null): array
     {
         $features = [];
-        $photoRefs = $this->osmPhotoRefs($letter);
+        $photoRefs = $this->osmPhotoRefs($letter, regionId: $regionId);
         foreach ($this->itemRows($letter, $source, $excludeSource, regionId: $regionId) as $row) {
             $features[] = $this->feature($row, $photoRefs[(int) $row['id']] ?? null);
         }
@@ -365,6 +291,24 @@ final class CatalogProvider
     }
 
     /**
+     * The catalog region a served item or route is in, so the map can load it
+     * for a link that points outside the rider's own area: its region id,
+     * {@see CatalogStamps::NO_REGION} for a row no region holds, null when
+     * nothing by that id is on the map.
+     *
+     * @param 'item'|'route' $kind
+     */
+    public function servedRegionOf(string $kind, int $id): ?int
+    {
+        $sql = 'item' === $kind
+            ? 'SELECT COALESCE(i.region_id, 0) FROM item i WHERE i.id = :id AND i.state IN '.ItemState::servedSqlTuple().' AND '.GoneRows::notGoneSql('i')
+            : 'SELECT COALESCE(region_id, 0) FROM recommended_route WHERE id = :id AND state IN '.ItemState::servedSqlTuple();
+        $rid = $this->db->fetchOne($sql, ['id' => $id]);
+
+        return false === $rid ? null : (int) $rid;
+    }
+
+    /**
      * The OSM point whose photo each item's drawer may borrow, keyed by item id.
      *
      * An item stands for an OSM point through `source_ref` (materialized from
@@ -382,7 +326,7 @@ final class CatalogProvider
      *
      * @return array<int, string>
      */
-    private function osmPhotoRefs(string $letter, ?int $onlyId = null): array
+    private function osmPhotoRefs(string $letter, ?int $onlyId = null, ?int $regionId = null): array
     {
         if (null === $this->db->fetchOne("SELECT to_regclass('public.coverage_poi')")) {
             return [];
@@ -404,6 +348,10 @@ final class CatalogProvider
         if (null !== $onlyId) {
             $sql .= ' AND i.id = :onlyId';
             $params['onlyId'] = $onlyId;
+        }
+        if (null !== $regionId) {
+            $sql .= ' AND i.region_id = :regionId';
+            $params['regionId'] = $regionId;
         }
 
         /** @var list<array{id: int|string, ref: string, tags: string}> $rows */
@@ -473,7 +421,9 @@ final class CatalogProvider
         if ($row['verified']) {
             $props['v'] = 1;
         }
-        $now = new \DateTimeImmutable();
+        // The document's day, not this second: the same stamp serializes to
+        // the same bytes on either web host (CatalogStamps::day()).
+        $now = CatalogStamps::day();
         // The two axes the pin draws (data-provider-hierarchy.md §6.7): the
         // border reads `custody`, the badge reads `rung`. Neither is derived
         // client-side.
@@ -546,7 +496,7 @@ final class CatalogProvider
         if ($row['verified']) {
             $climb['v'] = 1;
         }
-        $evidence = $this->evidence->fromRow($row, new \DateTimeImmutable());
+        $evidence = $this->evidence->fromRow($row, CatalogStamps::day());
         $climb['rung'] = $evidence->rung;
         $climb['custody'] = $evidence->custody->value;
         if (null !== $row['region_id']) {

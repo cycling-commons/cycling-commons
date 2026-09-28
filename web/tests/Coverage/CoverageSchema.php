@@ -51,6 +51,7 @@ trait CoverageSchema
         // same function after its own ensure_schema(); the triggers must exist
         // before the first row lands or the kept counts start out wrong.
         $db->executeStatement('SELECT coverage_count_install()');
+        $db->executeStatement('SELECT catalog_change_install()');
         $db->executeStatement('SELECT coverage_count_rebuild()');
     }
 

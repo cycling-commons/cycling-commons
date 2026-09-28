@@ -100,10 +100,9 @@ final class MapPageTest extends WebTestCase
         $html = (string) $client->getResponse()->getContent();
 
         self::assertStringContainsString('window.CC_CATALOG_URL', $html);
-        // Versioned, not bare: catalog.json is browser-cached for an hour, and
-        // the ?v= tag (CatalogProvider::versionTag) is what makes an approved
-        // submission appear on the next page load instead of "disappearing"
-        // into the stale cache until it expires (owner-reported 2026-08-13).
+        // Versioned, not bare: the worldwide document is browser-cached for an
+        // hour, and the ?v= tag (CatalogStamps::versionTag) moves with the rows
+        // no region holds, which no region slice can patch.
         self::assertMatchesRegularExpression(
             '~window\.CC_CATALOG_URL = "/map/catalog\.json\?v=[0-9a-f]{8,}"~',
             $html,
@@ -111,19 +110,12 @@ final class MapPageTest extends WebTestCase
         self::assertStringContainsString('window.CC_MAP_SRC', $html);
         self::assertStringContainsString('map/catalog-load', $html);
 
-        // The preload must name the SAME url the fetch will ask for, ?v= tag
-        // and all. A preload is matched on the exact URL, so a bare
-        // /map/catalog.json here preloads something nobody requests: the
-        // browser downloads the catalog twice (1 MB gzipped each time) and
-        // then warns that the preload went unused. That was live until
-        // 2026-09-09.
-        self::assertMatchesRegularExpression('~window\.CC_CATALOG_URL = "([^"]+)"~', $html);
-        preg_match('~window\.CC_CATALOG_URL = "([^"]+)"~', $html, $fetched);
-        self::assertStringContainsString(
-            'rel="preload" as="fetch" href="'.$fetched[1].'"',
-            $html,
-            'the catalog preload and the catalog fetch must be the same URL, or the preload is wasted',
-        );
+        // Area first (catalog-data-model.md §9.1): the page preloads the region
+        // stamps, the first thing the loader reads, and never the worldwide
+        // document, which a rider who only looks at their own area never needs.
+        self::assertStringContainsString('rel="preload" as="fetch" href="/map/catalog/stamps.json" crossorigin', $html);
+        self::assertDoesNotMatchRegularExpression('~rel="preload"[^>]*catalog\.json~', $html, 'the worldwide document is loaded on demand only');
+        self::assertStringContainsString('window.CC_CATALOG_BOOT = {"regions":[],"worldwide":false};', $html, 'a plain visit needs nothing beyond the rider\'s own regions');
         self::assertStringNotContainsString('src="/assets/data/', $html);
         self::assertStringNotContainsString('stays-merge', $html);
         self::assertSame(0, preg_match('#<script src="[^"]*\bmap/map\b[^"]*"#', $html), 'map.js must arrive via the loader, not a direct script tag');

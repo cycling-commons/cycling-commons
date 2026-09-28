@@ -21,13 +21,24 @@ export function initSearchUi(){
   if(sBox && sRes){
     const escH = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     // docs/specs/map-and-search.md §7.1 — towns first, then the unified item index.
-    const SEARCH_IDX=[];
-    Object.keys(CITIES).forEach(name=>{ const big=CITIES[name].t==='City';
-      SEARCH_IDX.push({name, key:slug(name), kind: big?(D.city||'City'):(D.town||'Town'), badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}); });
+    const TOWNS=Object.keys(CITIES).map(name=>{ const big=CITIES[name].t==='City';
+      return {name, key:slug(name), kind: big?(D.city||'City'):(D.town||'Town'), badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}; });
     rebuildItemIndex();
-    itemIndex().forEach(e=>{ if(!e.unnamed) SEARCH_IDX.push(e); });  // docs/specs/map-and-search.md §7.1 — unnamed POIs stay off text search
+    /* The item half follows the catalog: every region the map loads later (a
+       new scope, the worldwide document) rebuilds the item index
+       (__ccApplyCatalog), and the list is taken again from the new index. */
+    let _idxFrom=null, _searchIdx=[];
+    const searchIdx=()=>{
+      const idx=itemIndex();
+      if(idx!==_idxFrom){
+        _idxFrom=idx;
+        _searchIdx=TOWNS.concat(idx.filter(e=>!e.unnamed));  // docs/specs/map-and-search.md §7.1 — unnamed POIs stay off text search
+      }
+      return _searchIdx;
+    };
     _searchDropPending=id=>{
-      for(let i=SEARCH_IDX.length-1;i>=0;i--){ if(SEARCH_IDX[i].pend===String(id)) SEARCH_IDX.splice(i,1); }
+      const list=searchIdx();
+      for(let i=list.length-1;i>=0;i--){ if(list[i].pend===String(id)) list.splice(i,1); }
       dropPendingFromIndex(id);
     };
     let sMatches=[], sHL=-1;
@@ -43,6 +54,10 @@ export function initSearchUi(){
     const everywhereLabel = reachBtn ? reachBtn.textContent.trim() : (I18N.everywhereLabel||'Everywhere');
     const setReach=(on)=>{
       _worldwide=!!on;
+      /* The map holds only the rider's own regions (catalog-data-model.md
+         §9.1), so a worldwide reach loads the worldwide document first. The
+         list shows what is held at once and fills in when it lands. */
+      if(_worldwide && window.CCCatalog) window.CCCatalog.ensureWorldwide().then(ok=>{ if(ok && _worldwide && !sRes.hidden) runS(); });
       if(reachBtn){
         reachBtn.setAttribute('aria-pressed', _worldwide?'true':'false');
         // A true toggle: while the reach is on, the chip names the scope you
@@ -197,7 +212,7 @@ export function initSearchUi(){
       const q=slug(sBox.value.trim());
       if(!q){ closeS(); return; }
       const starts=[], has=[];
-      for(const it of SEARCH_IDX){
+      for(const it of searchIdx()){
         // docs/specs/map-and-search.md §4.5 — hidden pins must not resurface as
         // search rows, unless this search was widened to the whole world.
         if(!_worldwide && !it.town && !inScope(it.rid)) continue;

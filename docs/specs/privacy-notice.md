@@ -241,9 +241,12 @@ A rider who turned their profile off kept their name on the map for good. See
 
 Now: the store is rewritten the moment the profile or the display name changes,
 so our copy is correct at once. Two limits remain and the page states both.
-`/map/catalog.json` is `public, max-age=3600`, so a browser that already has it
-can show the old name for up to an hour. And a page somebody else saved, or a
-search engine cached, is beyond reach entirely.
+A name change moves every region's catalog stamp (catalog-data-model.md §9.1),
+so a map loaded after it shows the new name; a map already open in somebody's
+browser shows the old one until it next checks the stamps, on reload or when
+the tab comes back into view. The page's "up to an hour" stays a safe bound for
+a fresh load. And a page somebody else saved, or a search engine cached, is
+beyond reach entirely.
 
 There is nothing to purge in the image file itself: `XmpRights` never wrote a
 name into it.

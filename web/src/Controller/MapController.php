@@ -8,8 +8,10 @@ namespace App\Controller;
 
 use App\Catalog\BasemapIcons;
 use App\Catalog\BikeType;
+use App\Catalog\CatalogDocuments;
 use App\Catalog\CatalogProvider;
 use App\Catalog\CatalogSchemaProvider;
+use App\Catalog\CatalogStamps;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
 use App\Catalog\ConfirmationFreshness;
@@ -65,13 +67,13 @@ final class MapController extends AbstractController
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
-    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness): Response
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, CatalogStamps $catalogStamps): Response
     {
-        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, scoutReview: true);
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, $catalogStamps, scoutReview: true);
     }
 
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, bool $scoutReview = false): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, CatalogStamps $catalogStamps, bool $scoutReview = false): Response
     {
         // Three bucket round trips, started together instead of one after the
         // other. Read in sequence they add up, and each carries its own
@@ -141,7 +143,8 @@ final class MapController extends AbstractController
             // window and drops its "?". One clock for tiles and pins.
             'witness_cutoff' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d'),
             'voting_live' => 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE),
-            'catalog_version' => $catalogProvider->versionTag(),
+            'catalog_version' => $catalogStamps->versionTag(),
+            'catalog_boot' => $this->catalogBoot($request, $catalogProvider),
         ];
 
         // docs/specs/moderation-and-contribution.md §5.3 — ROLE_CURATOR and completed 2FA; /map is 2FA-bypass.
@@ -630,18 +633,45 @@ final class MapController extends AbstractController
     }
 
     /**
+     * Which catalog documents the map loads before its first paint, beyond the
+     * regions of the rider's own scope (catalog-data-model.md §9.1): a link to
+     * a place or a route elsewhere brings that one region along, so the link
+     * opens without the worldwide document. A link by name (`?feature=`), or
+     * to a row no region holds, needs the worldwide document.
+     *
+     * @return array{regions: list<int>, worldwide: bool}
+     */
+    private function catalogBoot(Request $request, CatalogProvider $catalogProvider): array
+    {
+        $boot = ['regions' => [], 'worldwide' => '' !== trim($request->query->getString('feature'))];
+        // share-links.js idFromShare(): the id, then an optional `/<slug>`.
+        $targets = [
+            'item' => (int) explode('/', $request->query->getString('item'))[0],
+            'route' => $request->query->getInt('route'),
+        ];
+        foreach ($targets as $kind => $id) {
+            $rid = $id > 0 ? $catalogProvider->servedRegionOf($kind, $id) : null;
+            if (CatalogStamps::NO_REGION === $rid) {
+                $boot['worldwide'] = true;
+            } elseif (null !== $rid) {
+                $boot['regions'][] = $rid;
+            }
+        }
+
+        return $boot;
+    }
+
+    /**
      * Cacheable catalog JSON.
      *
      * @see docs/specs/catalog-data-model.md §9
      */
     #[Route('/map/catalog.json', name: 'map_catalog', methods: ['GET'])]
-    public function catalog(Request $request, CatalogProvider $catalog, ClosureExpiryService $closures): Response
+    public function catalog(Request $request, CatalogDocuments $documents): Response
     {
-        $closures->sweepOpportunistically();
-
-        $json = $catalog->json();
-        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
-        $response->setEtag(md5($json));
+        $doc = $documents->worldwide();
+        $response = new JsonResponse($doc['json'], Response::HTTP_OK, [], true);
+        $response->setEtag($doc['etag']);
         $response->setPublic();
         // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
@@ -657,14 +687,22 @@ final class MapController extends AbstractController
      *
      * Always revalidated (`no-cache` + ETag): it is the one thing that has to
      * be current on a plain reload, and it is two kilobytes, so a 304 is the
-     * usual answer. Everything expensive stays behind the hour-long max-age.
+     * usual answer. Everything expensive stays behind the region URLs.
+     *
+     * Every map boot reads it, so the hourly chores that must run whether or
+     * not anyone opens the worldwide document ride on it: closures past their
+     * window retire (before the stamps are read, so the answer includes them),
+     * and the change rows fold.
      *
      * @see docs/specs/catalog-data-model.md §9.1
      */
     #[Route('/map/catalog/stamps.json', name: 'map_catalog_stamps', methods: ['GET'])]
-    public function catalogStamps(Request $request, CatalogProvider $catalog): Response
+    public function catalogStamps(Request $request, CatalogStamps $stamps, ClosureExpiryService $closures): Response
     {
-        $json = json_encode($catalog->regionStamps(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES);
+        $closures->sweepOpportunistically();
+        $stamps->compactOpportunistically();
+
+        $json = json_encode($stamps->regionStamps(), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES);
         $response = new JsonResponse($json, Response::HTTP_OK, [], true);
         $response->setEtag(md5($json));
         $response->setPublic();
@@ -679,24 +717,25 @@ final class MapController extends AbstractController
     /**
      * One region's slice of the catalog, in the worldwide document's shapes.
      *
-     * The map splices it over the copy it already holds, so a curator's
-     * approval reaches the riders of that region at once without anyone
-     * redownloading the whole document, and without touching the cache of a
-     * rider whose scope is somewhere else. Cacheable for an hour because the
-     * URL carries the region's stamp: a new decision mints a new URL.
+     * The map builds its catalog from the slices of the regions it shows, and
+     * splices a slice in again when its stamp moves, so a curator's approval
+     * reaches the riders of that region at once without touching anyone
+     * else's cache. Cacheable for a day because the URL carries the region's
+     * stamp, and the stamp carries the day: a new decision or a new day mints
+     * a new URL.
      *
      * @see docs/specs/catalog-data-model.md §9.1
      */
     #[Route('/map/catalog/region/{rid}.json', name: 'map_catalog_region', requirements: ['rid' => '\d+'], methods: ['GET'])]
-    public function catalogRegion(int $rid, Request $request, CatalogProvider $catalog): Response
+    public function catalogRegion(int $rid, Request $request, CatalogDocuments $documents): Response
     {
-        $json = $catalog->json($rid);
-        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
-        $response->setEtag(md5($json));
+        $doc = $documents->region($rid);
+        $response = new JsonResponse($doc['json'], Response::HTTP_OK, [], true);
+        $response->setEtag($doc['etag']);
         $response->setPublic();
         // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
-        $response->setMaxAge(3600);
+        $response->setMaxAge(86400);
         $response->isNotModified($request);
 
         return $response;
