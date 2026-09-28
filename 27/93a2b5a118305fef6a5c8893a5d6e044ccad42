@@ -1,0 +1,55 @@
+web/src/EventSubscriber/StatelessLoginRedirectSubscriber.php
+  s_6e1d7c95fbc8b5::t_36526b9034351e 1-93
+web/tests/Moderation/ModerateTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 109
+web/tests/Translation/TranslatePageTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 96
+web/src/Controller/SecurityController.php
+  s_6e1d7c95fbc8b5::t_36526b9034351e 7,9,28,39-41
+web/tests/Auth/AdminAccessTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 68
+web/tests/Messaging/MessagesPageTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 89
+web/tests/Translation/TranslateMineTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 56
+web/tests/Security/AnonymousSessionTest.php
+  s_6e1d7c95fbc8b5::t_22b06d7d17c8ab 42
+  s_6e1d7c95fbc8b5::t_1b7626c374744f 38,43-47
+  s_6e1d7c95fbc8b5::t_a146375244e2ea 1-37,39-41,48-58
+web/tests/Auth/LogoutTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 77
+web/src/Controller/LocaleController.php
+  s_6e1d7c95fbc8b5::t_921b22b2177820 16,35-41
+web/tests/Contribution/VoteTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 71
+web/tests/Routing/LegacyDemoRedirectTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 41
+web/tests/Routing/InactiveLocaleTest.php
+  s_6e1d7c95fbc8b5::t_48bac52e7b0e11 88-90
+web/tests/Contribution/ImproveTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 141
+web/tests/Contribution/AddPlaceFlowTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 65
+web/tests/Auth/ProfileSettingsTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 98,106
+web/templates/security/login.html.twig
+  s_6e1d7c95fbc8b5::t_36526b9034351e 30-32
+web/tests/Auth/SecurityTest.php
+  s_6e1d7c95fbc8b5::t_ff368be2d57a37 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2793a2b5a118305fef6a5c8893a5d6e044ccad42",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
