@@ -6,8 +6,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Routing\ActiveLocales;
 use App\Catalog\RegionRegistryProvider;
+use App\Routing\ActiveLocales;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
