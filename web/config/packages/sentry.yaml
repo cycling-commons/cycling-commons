@@ -11,6 +11,16 @@ sentry:
     options:
         environment: '%env(APP_ENV)%'
         send_default_pii: false
+        # Not errors: the site answering correctly. A 404 is mostly bots
+        # probing for WordPress files and leaked .env files; an
+        # AccessDeniedException is a visitor who is not signed in, sent to
+        # the login page. Both filled the tracker (owner 2026-09-28). Matched
+        # with is_a, so subclasses go too. A signed-in rider refused a page
+        # (AccessDeniedHttpException, a 403) is still reported: that can be
+        # a real permission mistake.
+        ignore_exceptions:
+            - 'Symfony\Component\HttpKernel\Exception\NotFoundHttpException'
+            - 'Symfony\Component\Security\Core\Exception\AccessDeniedException'
     # Errors only. The default wraps every DBAL query in a span; traces are
     # not collected today, so that is cost without a reader.
     tracing:
