@@ -1,0 +1,366 @@
+web/templates/pages/credits.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/assets/styles/page/admin/curator_applications.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-19
+web/templates/translate/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 5
+web/templates/pages/changelog.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 17
+web/assets/styles/page/moderate/inbox.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-22
+web/assets/styles/page/pages/known_issues.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-34
+web/templates/pages/developers_api.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 19
+web/assets/styles/page/security/2fa_unavailable.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-5
+web/templates/moderate/bug_detail.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 23
+docs/specs/photo-uploads.md
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 1110
+web/assets/styles/page/security/register.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-3
+web/templates/admin/country_requests.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 25
+web/templates/pages/join.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/media/photo.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 14
+web/templates/support/report_answer.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 29
+web/templates/moderate_data/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 9
+web/templates/admin/curator_applications.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 25
+web/assets/styles/page/pages/best_of.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-123
+web/assets/styles/page/pages/terms.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-27
+web/templates/pages/contact.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 25
+web/assets/styles/page/moderate/translations_stale.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-7
+web/assets/styles/page/media/photo.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-17
+web/templates/bundles/TwigBundle/Exception/error404.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/pages/report_guide.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 13
+web/assets/styles/page/pages/developers_api.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-22
+web/templates/security/2fa_login.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 9
+web/templates/security/2fa_unavailable.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 14
+web/templates/pages/accessibility.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 29
+web/templates/pages/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 5
+web/templates/moderate_providers/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 13
+web/templates/profile/show.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 15
+web/assets/styles/page/pages/roadmap.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-17
+web/templates/contribute/vote.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/support/report.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 26
+web/assets/styles/page/moderate/reports.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-20
+web/assets/styles/page/pages/report_guide.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-14
+web/assets/styles/page/contribute/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-34
+web/assets/styles/page/pages/pages.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-48
+web/assets/styles/page/translate/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-30
+web/templates/moderate/translation_detail.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 8
+web/templates/translate/edit.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 5
+web/assets/styles/page/settings/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-122
+web/templates/partials/_translate_bar.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 15
+web/assets/styles/page/pages/licenses.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-14
+web/templates/pages/privacy.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 19
+web/templates/account/_dashboard_styles.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 6
+web/templates/moderate/inbox_detail.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 18
+web/assets/styles/page/support/report.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-54
+web/assets/styles/page/bundles/TwigBundle/Exception/error404.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-10
+web/templates/moderate_routes/_queue_item.html.twig
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 8
+web/assets/styles/page/pages/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-669
+web/templates/moderate/reports.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 19
+web/assets/styles/page/pages/contact.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-42
+web/templates/messages/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 21
+web/templates/partials/_bug_fab.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 182
+web/assets/styles/page/security/2fa_login.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-3
+web/assets/styles/page/translate/mine_key.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-16
+web/assets/styles/page/pages/credits.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-32
+web/templates/pages/roles.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 14
+docs/specs/page-caching.md
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 142-159
+web/assets/styles/page/pages/region.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-81
+web/tests/js/shell-list-system.test.cjs
+  s_6e1d7c95fbc8b5::t_f2694f340d41f4 6-12,24-32,73,83,104,110,120-122,124,173
+web/templates/blog/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 14
+web/assets/styles/map.css
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 909-911
+web/assets/styles/page/pages/regions-2.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-2
+web/assets/styles/page/moderate/takedowns.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-14
+web/assets/styles/page/pages/roles.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-21
+web/assets/styles/page/contribute/propose_route.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-36
+web/assets/styles/page/pages/coverage.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-70
+web/assets/styles/page/account/_dashboard_styles.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-29
+web/assets/styles/page/contribute/vote.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-55
+web/assets/styles/page/pages/join_country.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-32
+web/templates/moderate_routes/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 7
+web/assets/styles/page/contribute/_media_styles.css
+  s_6e1d7c95fbc8b5::t_2e101891810c2f 6-7
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-5,8-85
+web/templates/partials/_vclip.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 12
+web/assets/styles/page/pages/accessibility.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-23
+web/templates/pages/licenses.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/assets/styles/page/pages/privacy.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-44
+web/assets/styles/page/blog/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-20
+web/templates/moderate/report_detail.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 28
+web/templates/pages/coverage.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/translate/mine_key.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 8
+web/assets/styles/page/partials/_translate_bar.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-103
+web/assets/styles/page/admin/country_requests.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-20
+web/assets/styles/page/pages/join.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-12
+web/assets/styles/page/pages/scout.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-36
+web/templates/pages/regions.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4-5
+web/assets/styles/page/moderate_regions/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-79
+web/assets/styles/page/moderate/_card_styles.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-4,8,10-216
+  s_6e1d7c95fbc8b5::t_291516ff2763fe 5-7,9
+web/templates/moderate_regions/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 5
+web/templates/pages/region.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/moderate/bugs.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 19
+web/assets/styles/page/security/2fa_setup.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-25
+web/assets/styles/page/pages/contributors.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-25
+web/templates/partials/_account_chip.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 14
+docs/specs/form-errors.md
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 54
+web/assets/styles/page/pages/regions.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-127
+web/templates/pages/report_bug.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 20
+web/templates/moderate/_room_styles.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 3
+web/assets/styles/page/pages/unsubscribed.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-5
+web/templates/pages/join_country.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/pages/roadmap.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 13
+web/assets/styles/page/moderate/bug_detail.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-69
+web/templates/pages/map_key.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 49
+web/assets/styles/page/moderate/markers.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-26
+web/templates/pages/about.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/moderate/takedowns.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 9
+web/templates/account/reports.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 22
+web/templates/blog/post.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 16
+web/assets/styles/page/security/_auth_shell_styles.css
+  s_6e1d7c95fbc8b5::t_f95ce15efe524a 2-51
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1
+web/assets/styles/page/partials/_account_chip.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-3
+web/templates/settings/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 8
+web/templates/moderate/translations_stale.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 10
+web/templates/pages/pages.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/pages/best_of.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/moderate_regions/about.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 5
+web/assets/styles/page/moderate/inbox_detail.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-19
+web/assets/styles/page/pages/map_key.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-80
+web/assets/styles/page/pages/developers.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-19
+web/templates/security/login.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 7
+web/templates/moderate/rulebook.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 23
+docs/specs/moderation-and-contribution.md
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 301-302,943-945,948,1155-1158,2970
+web/assets/styles/page/moderate/rulebook.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-67
+web/tests/js/wizard-locate.test.cjs
+  s_6e1d7c95fbc8b5::t_f2694f340d41f4 27,106-107
+web/assets/styles/page/pages/changelog.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-15
+web/templates/contribute/index.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/pages/unsubscribed.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 12
+web/assets/styles/page/profile/public.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-16
+web/templates/pages/contributors.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/assets/styles/page/moderate_providers/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-43
+web/templates/pages/scout.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 5
+web/templates/bundles/TwigBundle/Exception/error.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 28
+web/assets/styles/page/partials/_vclip.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-3
+web/templates/security/2fa_setup.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 7
+web/assets/styles/page/bundles/TwigBundle/Exception/error.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-19
+web/assets/styles/page/partials/_bug_fab.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-93
+web/assets/styles/page/profile/show.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-8
+web/templates/moderate_routes/detail.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 5
+web/assets/styles/page/account/_shell_styles.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-285
+web/assets/styles/page/account/reports.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-18
+web/assets/styles/page/moderate_routes/detail.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-51
+web/assets/styles/page/pages/about.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-17
+web/tests/js/wizard-known-places.test.cjs
+  s_6e1d7c95fbc8b5::t_f2694f340d41f4 59
+web/assets/styles/page/contribute/improve.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-338
+web/templates/security/_auth_shell_styles.html.twig
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 6-7
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 8
+web/assets/styles/page/moderate_data/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-18
+web/assets/styles/page/messages/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-13
+web/assets/styles/page/moderate/town.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-23
+web/templates/contribute/improve.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 16-17
+web/templates/contribute/propose_route.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4-5
+web/assets/styles/page/moderate/report_detail.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-30
+web/templates/security/register.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 7
+web/assets/styles/page/support/report_answer.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-20
+web/templates/pages/known_issues.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 18
+web/templates/moderate/_card_script.html.twig
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 4
+web/templates/account/_shell_styles.html.twig
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 8
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 10-11
+web/assets/styles/page/security/login.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-3
+web/templates/moderate/town.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 15
+web/assets/styles/atlas.css
+  s_6e1d7c95fbc8b5::t_5fc3ab34de5492 209-211,291,421
+web/templates/profile/public.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 7
+web/templates/pages/terms.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/assets/styles/page/blog/post.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-38
+web/assets/styles/page/translate/edit.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-60
+web/assets/styles/page/moderate_regions/about.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-34
+web/assets/styles/page/moderate/translation_detail.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-23
+web/assets/styles/page/moderate/_room_styles.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-95
+web/templates/pages/developers.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 4
+web/templates/moderate/markers.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 18
+web/assets/styles/page/moderate/bugs.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-60
+web/assets/styles/page/moderate_routes/index.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-28
+web/templates/moderate/inbox.html.twig
+  s_6e1d7c95fbc8b5::t_5951ea5dfb8a7b 19
+web/assets/styles/page/pages/report_bug.css
+  s_6e1d7c95fbc8b5::t_db7784798eaa2e 1-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3b6906189f22006198efde7a237489156a0a5a30",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
