@@ -1,0 +1,33 @@
+web/tests/Security/AnalyticsNonceTest.php
+  s_6e1d7c95fbc8b5::t_b97a2e60a9b951 44-60
+web/config/packages/twig.yaml
+  s_6e1d7c95fbc8b5::t_61fe1d5ba740b9 11-14
+web/templates/map/index.html.twig
+  s_6e1d7c95fbc8b5::t_61fe1d5ba740b9 55
+docs/specs/security-architecture.md
+  s_6e1d7c95fbc8b5::t_f194a9de40f8b8 98-106
+web/.env
+  s_6e1d7c95fbc8b5::t_b97a2e60a9b951 335-340
+web/.env.prod
+  s_6e1d7c95fbc8b5::t_b97a2e60a9b951 38-41
+web/.env.test
+  s_6e1d7c95fbc8b5::t_b97a2e60a9b951 49-53
+web/templates/partials/_head.html.twig
+  s_6e1d7c95fbc8b5::t_61fe1d5ba740b9 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c8870a2ce47cc238df552a37d901d62a280978fe",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
