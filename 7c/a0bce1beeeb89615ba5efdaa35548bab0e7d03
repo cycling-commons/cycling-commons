@@ -1,0 +1,97 @@
+web/src/Controller/MapController.php
+  s_6e1d7c95fbc8b5::t_2768eb74a24522 11,14,70,72,76,635-661
+  s_6e1d7c95fbc8b5::t_17bb620be041a5 146-147,670,672-674,690-695,700,702-705,720-725,730,732-734,738
+  s_6e1d7c95fbc8b5::t_b93aa20962af1b 662-663
+web/tests/Coverage/CoverageSchema.php
+  s_6e1d7c95fbc8b5::t_db7b3c13866f85 54
+web/config/table_comments.yaml
+  s_6e1d7c95fbc8b5::t_5d99f4bc977461 19-23
+web/assets/map/search-ui.js
+  s_6e1d7c95fbc8b5::t_f6b57e7258e0d1 24-25,27-38,40-41,57-60,215
+web/assets/map/panels.js
+  s_6e1d7c95fbc8b5::t_23766430d739e7 255-256
+  s_6e1d7c95fbc8b5::t_43dafc3ce31c4c 273-274
+web/tests/js/catalog-area-first.test.cjs
+  s_6e1d7c95fbc8b5::t_f596a1d81a9733 48-51,53,71,128
+  s_6e1d7c95fbc8b5::t_ade768901cf5d0 1-35,37-47,52,54-60,62-70,72-104,106,108-112,114-122,124-127,129,131-138
+  s_6e1d7c95fbc8b5::t_34b93762d17c4e 36,61,105,107,113,123,130
+pipeline/coverage/load.py
+  s_6e1d7c95fbc8b5::t_db7b3c13866f85 286-293
+docs/specs/coverage-provider.md
+  s_6e1d7c95fbc8b5::t_ba80c396836690 1461-1463
+  s_6e1d7c95fbc8b5::t_0d9f62003df113 92-94
+web/tests/js/per-country-mounting.test.mjs
+  s_6e1d7c95fbc8b5::t_cb825498d368e8 88-90
+docs/specs/privacy-notice.md
+  s_6e1d7c95fbc8b5::t_5c321b0543ac82 244-249
+docs/specs/catalog-data-model.md
+  s_6e1d7c95fbc8b5::t_4b9238a6284957 991-1003,1050,1052-1055,1059-1152
+web/config/packages/doctrine.yaml
+  s_6e1d7c95fbc8b5::t_ffef3827eb918c 6-8
+  s_6e1d7c95fbc8b5::t_a78ed1da6e70e0 9
+web/src/Catalog/CatalogDocuments.php
+  s_6e1d7c95fbc8b5::t_9a60fa06ff93f3 62-73,96-102
+  s_6e1d7c95fbc8b5::t_5fed0993111a0d 124-129
+  s_6e1d7c95fbc8b5::t_fdad6e7c041be0 1-61,74-95,103-123,130-148
+web/tests/Catalog/CatalogDocumentsTest.php
+  s_6e1d7c95fbc8b5::t_e4be87950f744d 1-85,96-98,100-112
+  s_6e1d7c95fbc8b5::t_9a60fa06ff93f3 86-95,99
+web/tests/Catalog/CatalogProviderTest.php
+  s_6e1d7c95fbc8b5::t_a080af41655123 884,889,916,923,984
+  s_6e1d7c95fbc8b5::t_92478a94637e05 10,841,846,902,937,941,943,945,951,953,964,977
+web/tests/Smoke/MapPageTest.php
+  s_6e1d7c95fbc8b5::t_6de51ccc22ec16 103-105,113-118
+web/src/Catalog/CatalogStamps.php
+  s_6e1d7c95fbc8b5::t_a22e358ac107c5 1-176
+web/tests/Smoke/CatalogEndpointTest.php
+  s_6e1d7c95fbc8b5::t_6de51ccc22ec16 100-102
+  s_6e1d7c95fbc8b5::t_5cf8dfb530b754 121-151
+web/tests/Catalog/CatalogStampsTest.php
+  s_6e1d7c95fbc8b5::t_546ae5b8df954f 69-89
+  s_6e1d7c95fbc8b5::t_641641cb420e56 1-9,11-68,90-109,116-180
+  s_6e1d7c95fbc8b5::t_d1b4956f5c755f 10,110-115
+web/src/Catalog/Entity/RecommendedRoute.php
+  s_6e1d7c95fbc8b5::t_d702018cb19cdf 168-171
+web/assets/map/catalog-load.js
+  s_6e1d7c95fbc8b5::t_23766430d739e7 347-350
+  s_6e1d7c95fbc8b5::t_97879229d0a546 2-5,132,134-147,149-151,154-163,165-192,215-217,221-223,228-233,248-250,256-257,259-260,288-292,295-296,300-306,309-318,321-338,340-346,352-362,367,371-373,375-380,387-388
+  s_6e1d7c95fbc8b5::t_f712bae8a0b692 152-153,262-263,267-287,320,339,363,365,368-370
+  s_6e1d7c95fbc8b5::t_ed7418ec58ae19 261
+docs/specs/map-and-search.md
+  s_6e1d7c95fbc8b5::t_0d9f62003df113 2533-2539
+  s_6e1d7c95fbc8b5::t_5c321b0543ac82 115-122,177,179,202-221
+web/tests/Catalog/CatalogChangeCoverageTest.php
+  s_6e1d7c95fbc8b5::t_c26fb665b97c78 47
+  s_6e1d7c95fbc8b5::t_2986096a4bab82 37,40,52-54,56
+  s_6e1d7c95fbc8b5::t_b93f3cb1a03f0f 1-36,38-39,41-46,48-51,55,57-67
+wiki/developers/map-page.md
+  s_6e1d7c95fbc8b5::t_8c7d11d7510661 41-43,49-56,85-87,131-136
+web/templates/map/index.html.twig
+  s_6e1d7c95fbc8b5::t_0193cab744c588 1024-1026
+  s_6e1d7c95fbc8b5::t_771ce44f9489f4 908-916,1094-1102
+web/migrations/Version20260928150000.php
+  s_6e1d7c95fbc8b5::t_546ae5b8df954f 49-53
+  s_6e1d7c95fbc8b5::t_3e6dc41d3d338e 96-97,106-119,128-149,167-172,186-188,193-197,203
+  s_6e1d7c95fbc8b5::t_e87a7f21db8393 1-48,54-78,80-95,98-105,120-127,150-166,173-185,189-192,198-202,204-219
+  s_6e1d7c95fbc8b5::t_96fc2f1eeda9a3 79
+web/src/Catalog/CatalogProvider.php
+  s_6e1d7c95fbc8b5::t_6e7edf92b22e50 294-310
+  s_6e1d7c95fbc8b5::t_bf6b75293b7847 258,329,352-355,424-426,499
+  s_6e1d7c95fbc8b5::t_0b6fa019bc8460 42,51-56,60,62,94,99,104-109,111,293
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7ca0bce1beeeb89615ba5efdaa35548bab0e7d03",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
