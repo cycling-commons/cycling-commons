@@ -50,7 +50,7 @@ final class ConfirmationFreshnessTest extends TestCase
         foreach ([ItemType::WaterFood, ItemType::BikeServices, ItemType::Hazards,
             ItemType::PublicToilets, ItemType::Shelter, ItemType::WhereToSleep,
             ItemType::GettingThere, ItemType::RoadSurface] as $ages) {
-            self::assertSame(ConfirmationFreshness::STALE, $f->state($ages, $long, $now),
+            self::assertSame(ConfirmationFreshness::VERY_STALE, $f->state($ages, $long, $now),
                 $ages->value.' is built or reported, and goes off');
         }
         foreach ([ItemType::Climbs, ItemType::ScenicViews, ItemType::HistoryCulture] as $never) {
@@ -93,6 +93,16 @@ final class ConfirmationFreshnessTest extends TestCase
      * setting must still produce three usable bands rather than collapsing
      * ageing to zero width - which is what an unguarded intdiv(1, 2) would do.
      */
+    /** Twice the window: the red border. With the 6-month default, over 12 months. */
+    public function testTwiceTheWindowIsVeryStale(): void
+    {
+        $f = $this->freshness(6);
+        $now = new \DateTimeImmutable('2026-08-16');
+
+        self::assertSame(ConfirmationFreshness::STALE, $f->state(ItemType::WaterFood, new \DateTimeImmutable('2025-08-17'), $now));
+        self::assertSame(ConfirmationFreshness::VERY_STALE, $f->state(ItemType::WaterFood, new \DateTimeImmutable('2025-08-16'), $now));
+    }
+
     public function testTheWindowIsASettingAndTheBandsFollowIt(): void
     {
         $now = new \DateTimeImmutable('2026-08-16');

@@ -41,7 +41,10 @@
    affordance on the site uses. The stale ring is the freshness signal; the
    "?" below is the witness signal, and the two never trade places. */
 .cc-pin.stale{border-color:var(--trail,#FF5A1F);box-shadow:0 3px 8px rgba(16,30,22,.4),0 0 0 1px rgba(255,90,31,.45)}
-.cc-pin.pending{border-color:#D92D20;border-width:3px}
+/* Not confirmed for twice the window (over 12 months by default): the red
+   of "not usable", as a thick border. The waiting-for-a-moderator pin is the
+   red hourglass pin, not a border (owner 2026-09-28). */
+.cc-pin.lapsed{border-color:#D92D20;border-width:3px}
 /* Axis 1, the border. Solid paper (the .cc-pin default) = ours. Dashed ink
    over a white halo = a specialty provider keeps the record: monochrome reads
    on any basemap, light or dark (owner 2026-09-01). Small disc with a thin

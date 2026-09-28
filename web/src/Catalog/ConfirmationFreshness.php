@@ -10,7 +10,10 @@ use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
 
 /**
- * Fresh / ageing / stale for a confirmation. Never-confirmed is unverified, not stale. Null means this item takes no freshness key (byte-stable).
+ * Fresh / ageing / stale / very stale for a confirmation: ageing from half
+ * the window, stale from the window (the orange ring), very stale from twice
+ * the window (the red border; owner 2026-09-28: 6 months orange, over 12
+ * red, with the default 6-month window). Never-confirmed is unverified, not stale. Null means this item takes no freshness key (byte-stable).
  *
  * @see docs/specs/moderation-and-contribution.md §10.1a
  *
@@ -21,6 +24,7 @@ final class ConfirmationFreshness
     public const string FRESH = 'fresh';
     public const string AGEING = 'ageing';
     public const string STALE = 'stale';
+    public const string VERY_STALE = 'very_stale';
 
     public function __construct(private readonly SettingsProviderInterface $settings)
     {
@@ -43,6 +47,9 @@ final class ConfirmationFreshness
             return null;
         }
         $full = $this->staleMonths();
+        if ($now >= $lastConfirmed->modify(sprintf('+%d months', 2 * $full))) {
+            return self::VERY_STALE;
+        }
         $stale = $lastConfirmed->modify(sprintf('+%d months', $full));
         if ($now >= $stale) {
             return self::STALE;

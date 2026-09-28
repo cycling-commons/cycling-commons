@@ -515,7 +515,7 @@ function buildRecord(layer, f){
     recs = recs.filter(r=>!attrLabels.has(r.label)).concat(attrRows);
   }
   const rows = recRowsHtml(recs);
-  const freshState = f.freshness ? ({fresh:D.freshFresh, ageing:D.freshAgeing, stale:D.freshStale}[f.freshness.state] || escPend(f.freshness.state)) : '';
+  const freshState = f.freshness ? ({fresh:D.freshFresh, ageing:D.freshAgeing, stale:D.freshStale, very_stale:D.freshVeryStale}[f.freshness.state] || escPend(f.freshness.state)) : '';
   const fresh = f.freshness
     ? `<div class="cc-d-fresh ${f.freshness.state}">${freshState} · ${D.lastConfirmed||'last confirmed'} ${f.freshness.lastConfirmed==='this season'?(D.thisSeason||'this season'):escPend(f.freshness.lastConfirmed)}</div>` : '';
   /* data-provider-hierarchy.md §6.7.3: the provider's survey date is public

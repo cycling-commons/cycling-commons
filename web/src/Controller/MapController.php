@@ -465,7 +465,7 @@ final class MapController extends AbstractController
             'sharedAnon' => 'd_shared_anon', 'steepest' => 'd_steepest',
             'riderSteepest' => 'd_rider_steepest', 'riderRamp' => 'd_rider_ramp',
             'climbFinish' => 'd_climb_finish', 'avgShort' => 'd_avg_short',
-            'freshFresh' => 'd_fresh_fresh', 'freshAgeing' => 'd_fresh_ageing', 'freshStale' => 'd_fresh_stale',
+            'freshFresh' => 'd_fresh_fresh', 'freshAgeing' => 'd_fresh_ageing', 'freshStale' => 'd_fresh_stale', 'freshVeryStale' => 'd_fresh_very_stale',
             'lastConfirmed' => 'd_last_confirmed', 'thisSeason' => 'd_this_season',
             'city' => 'd_city', 'nearbyH' => 'd_nearby_h',
             'townLoading' => 'd_town_loading', 'wikiText' => 'd_wiki_text', 'cyclingH' => 'd_cycling_h',

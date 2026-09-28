@@ -2176,10 +2176,15 @@ three live in `ConfirmationFreshness`:
 months is a guess about how fast the built world changes and a guess belongs
 where it can be revised rather than redeployed. The middle band is half the
 window - a six-month dial reads fresh for three months, ageing for three, then
-stale - so `ageing` needs no second dial to explain it. Only **stale** gets the
-ring: `ageing` is a state the drawer explains in words, and a second ring
-colour would be one more thing to learn from a map that has to be readable at a
-glance.
+stale - so `ageing` needs no second dial to explain it. **Stale** gets the
+orange ring; `ageing` is a state the drawer explains in words. A fourth band,
+**`very_stale`**, starts at twice the window (over 12 months with the default
+dial) and gets a thick red border in the ring's place, the red of "not
+usable" (owner 2026-09-28: "the red border should be for very stale items,
+longer than 12 months"). Still one dial: the red follows the orange. The
+waiting-for-a-moderator pin is the red hourglass pin the pending layer draws,
+never a border. The keys state the months from the dial itself
+(`cc_stale_months()`), so a changed dial changes the key.
 
 **The drawer's freshness line was dead code until now.** `drawer.js` has
 rendered `f.freshness` since it was written and nothing ever produced it - the
