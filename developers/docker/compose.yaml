@@ -230,6 +230,7 @@ services:
     volumes:
       - ../../web:/app:ro
       - ./nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/bot-probes.conf:/etc/nginx/snippets/bot-probes.conf:ro
     depends_on:
       - app
     healthcheck:
