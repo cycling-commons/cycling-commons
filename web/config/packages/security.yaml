@@ -47,7 +47,7 @@ security:
         - { path: '^(/[a-z]{2})?/(login|register|reset-password)', roles: PUBLIC_ACCESS }
         - { path: '^(/[a-z]{2})?/verify', roles: PUBLIC_ACCESS }
         # Crawler entry points. Explicit PUBLIC_ACCESS for the same scheb
-        # lazy-firewall reason as /map/catalog.json below — a session read here
+        # lazy-firewall reason as /map/catalog/stamps.json below — a session read here
         # would make both uncacheable, and these are fetched by every crawler.
         - { path: '^/(robots\.txt|sitemap\.xml)$', roles: PUBLIC_ACCESS }
         # The Atom feed, for the same reason and with the same shape: a feed
@@ -65,7 +65,7 @@ security:
         # public, and this is its generalisation.
         - { path: ^/report/, roles: PUBLIC_ACCESS }
         # Public rider profiles (spec 2026-07-14): explicit PUBLIC_ACCESS for the
-        # same scheb lazy-firewall reason as /map/catalog.json below.
+        # same scheb lazy-firewall reason as /map/catalog/stamps.json below.
         - { path: '^(/[a-z]{2})?/riders/', roles: PUBLIC_ACCESS }
         # Explicit PUBLIC_ACCESS (not just "no rule matches") so scheb's lazy-firewall
         # TwoFactorAccessListener treats the path as publicly accessible and skips
@@ -73,24 +73,22 @@ security:
         # request, which downgrades this cacheable endpoint's Cache-Control to
         # "private, must-revalidate" (AbstractSessionListener). See
         # TwoFactorAccessDecider::isPubliclyAccessible().
-        - { path: ^/map/catalog\.json$, roles: PUBLIC_ACCESS }
-        # The two halves of region-bound freshness (catalog-data-model.md §9.1):
-        # the stamps a browser checks on every boot, and the region slice it
-        # splices over its cached payload. Same lazy-firewall rationale.
+        # The map's catalog (catalog-data-model.md §9.1): the stamps a browser
+        # checks on every boot, and the region slices it builds the map from.
         - { path: ^/map/catalog/stamps\.json$, roles: PUBLIC_ACCESS }
         - { path: '^/map/catalog/region/\d+\.json$', roles: PUBLIC_ACCESS }
         - { path: ^/map/best-of$, roles: PUBLIC_ACCESS }
         - { path: '^/map/item/\d+/history$', roles: PUBLIC_ACCESS }
         # Region spotlight polygon (map-and-search.md §4.5): the cacheable
         # DB boundary that replaced the Nominatim fetch. Same lazy-firewall
-        # rationale as /map/catalog.json above.
+        # rationale as /map/catalog/stamps.json above.
         - { path: '^/map/region/[a-z0-9-]+/boundary$', roles: PUBLIC_ACCESS }
         # The My-area scope boundary (same response shape, same cacheability);
         # it was added after this list and missed the treatment — the one
         # cacheable /map endpoint scheb was still session-reading (frontend
         # review 2026-08-09 #2).
         - { path: '^/map/scope/boundary$', roles: PUBLIC_ACCESS }
-        # Same cacheability rationale as /map/catalog.json above: explicit
+        # Same cacheability rationale as /map/catalog/stamps.json above: explicit
         # PUBLIC_ACCESS so scheb's TwoFactorAccessListener skips the session
         # read that would downgrade Cache-Control to private.
         - { path: '^/routes/\d+\.gpx$', roles: PUBLIC_ACCESS }
@@ -101,7 +99,7 @@ security:
         - { path: '^/items/\d+/confirmations$', roles: PUBLIC_ACCESS }
         # The target of the attribution link embedded in every stored photo
         # (docs/specs/photo-uploads.md §5d). Explicit PUBLIC_ACCESS for the same
-        # scheb lazy-firewall cacheability reason as /map/catalog.json above —
+        # scheb lazy-firewall cacheability reason as /map/catalog/stamps.json above —
         # and because a reuser following a link out of an image file must never
         # be asked to sign in.
         - { path: '^/photo/[0-9a-fA-F-]{36}$', roles: PUBLIC_ACCESS }
@@ -112,12 +110,12 @@ security:
         # Coverage query plane (coverage-provider.md §5):
         # anonymous cacheable JSON over the coverage_poi cache — explicit
         # PUBLIC_ACCESS for the same scheb lazy-firewall cacheability reason
-        # as /map/catalog.json above.
+        # as /map/catalog/stamps.json above.
         - { path: '^/map/coverage/(search|nearby|counts)$', roles: PUBLIC_ACCESS }
         - { path: '^/map/coverage/poi/(node|way)/\d+$', roles: PUBLIC_ACCESS }
         # Public API v1 (public-api.md §2.2 PoC): anonymous, CORS-open,
         # cacheable JSON for external consumers. Explicit PUBLIC_ACCESS for the
-        # same scheb lazy-firewall cacheability reason as /map/catalog.json
+        # same scheb lazy-firewall cacheability reason as /map/catalog/stamps.json
         # above: a session read here would mark every /v1 response private.
         - { path: ^/v1/, roles: PUBLIC_ACCESS }
         # /2fa/setup is reached by a FULLY authenticated user (elevated role, no secret yet) → ROLE_USER.

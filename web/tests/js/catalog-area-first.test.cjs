@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 // The map holds only the regions it shows (docs/specs/catalog-data-model.md
-// §9.1): catalog-load.js reads the region stamps, fetches the slices of the
-// rider's scope, and asks for the worldwide document only when the map needs
-// every region. These run the real loader against a stubbed browser and
-// record what it fetches.
+// §9.1): catalog-load.js reads the region stamps and fetches the slices of
+// the rider's scope. Nothing ever downloads the whole world. These run the
+// real loader against a stubbed browser and record what it fetches.
 'use strict';
 
 const test = require('node:test');
@@ -33,8 +32,7 @@ function boot({ scope, stamps, docs, bootHint }) {
   const fetched = [];
   const listeners = {};
   const window = {
-    CC_CATALOG_URL: '/map/catalog.json?v=a1',
-    CC_CATALOG_BOOT: bootHint || { regions: [], worldwide: false },
+    CC_CATALOG_BOOT: bootHint || { regions: [] },
     CCScope: { get: () => scope },
     addEventListener: (type, fn) => { (listeners[type] = listeners[type] || []).push(fn); },
   };
@@ -58,9 +56,9 @@ const DOCS = {
   '/map/catalog/region/24.json?v=s24': doc([tap(24, 1, 'Tap 24')], { rid: 24, stamp: 's24', refs: ['node/24'] }),
   '/map/catalog/region/26.json?v=s26': doc([tap(26, 2, 'Tap 26')], { rid: 26, stamp: 's26', refs: ['node/26'] }),
   '/map/catalog/region/27.json?v=s27': doc([tap(27, 3, 'Tap 27')], { rid: 27, stamp: 's27' }),
-  '/map/catalog.json?v=a1': doc([tap(24, 1, 'Old tap 24'), tap(26, 2, 'Tap 26'), tap(27, 3, 'Tap 27'), tap(undefined, 4, 'Regionless tap')],
-    { stamps: { 0: 's0', 24: 'old24', 26: 's26', 27: 's27' }, refs: ['node/world'] }),
+  '/map/catalog/region/0.json?v=s0': doc([tap(undefined, 4, 'Regionless tap')], { rid: 0, stamp: 's0' }),
 };
+const noWorld = (m) => assert.ok(!m.fetched.some((u) => u.startsWith('/map/catalog.json')), 'never the whole world');
 
 test('a rider scoped to two regions downloads those two and never the world', async () => {
   const m = boot({ scope: { kind: 'country', regionIds: [24, 26] }, stamps: STAMPS, docs: DOCS });
@@ -84,7 +82,7 @@ test('a link into another region brings that region along at boot', async () => 
   const m = boot({ scope: { kind: 'region', regionIds: [24] }, stamps: STAMPS, docs: DOCS, bootHint: { regions: [27], worldwide: false } });
   await flush();
   assert.ok(m.fetched.includes('/map/catalog/region/27.json?v=s27'));
-  assert.ok(!m.fetched.some((u) => u.startsWith('/map/catalog.json')));
+  noWorld(m);
   assert.deepEqual(m.names(), ['Tap 24', 'Tap 27']);
 });
 
@@ -99,35 +97,30 @@ test('a new scope fetches its own regions once, and keeps the ones already held'
   assert.deepEqual(m.names(), ['Tap 24', 'Tap 26']);
 });
 
-test('the Everywhere scope boots from the worldwide document', async () => {
-  const m = boot({ scope: { kind: 'everywhere', regionIds: [] }, stamps: STAMPS, docs: DOCS });
-  await flush();
-  assert.ok(m.fetched.includes('/map/catalog.json?v=a1'));
-  assert.ok(m.names().includes('Regionless tap'));
-  assert.equal(m.window.CCCatalog.readout(), 'world a1');
-});
-
-test('a link by name, or to a place no region holds, boots from the worldwide document', async () => {
-  const m = boot({ scope: { kind: 'region', regionIds: [26] }, stamps: STAMPS, docs: DOCS, bootHint: { regions: [], worldwide: true } });
-  await flush();
-  assert.ok(m.fetched.includes('/map/catalog.json?v=a1'));
-  assert.ok(m.names().includes('Regionless tap'));
-});
-
-test('the worldwide document on demand keeps the newer slice the rider already holds', async () => {
+test('a picked search hit loads its one region, then resolves', async () => {
   const m = boot({ scope: { kind: 'region', regionIds: [24] }, stamps: STAMPS, docs: DOCS });
   await flush();
-  const ok = await m.window.CCCatalog.ensureWorldwide();
+  assert.equal(await m.window.CCCatalog.ensureRegion(27), true);
+  assert.deepEqual(m.names(), ['Tap 24', 'Tap 27'], 'the hit is on the map when the promise resolves');
+  assert.equal(await m.window.CCCatalog.ensureRegion(27), true, 'held already');
+  assert.equal(m.fetched.filter((u) => u.startsWith('/map/catalog/region/27.json')).length, 1);
+  assert.equal(await m.window.CCCatalog.ensureRegion(99), false, 'a region with no rows has nothing to load');
+  noWorld(m);
+});
+
+test('the places no region holds splice like any region, without doubling on a refresh', async () => {
+  const m = boot({ scope: { kind: 'region', regionIds: [24] }, stamps: STAMPS, docs: DOCS, bootHint: { regions: [0] } });
   await flush();
-  assert.equal(ok, true);
-  assert.equal(m.fetched.filter((u) => u === '/map/catalog.json?v=a1').length, 1);
-  const names = m.names();
-  assert.ok(names.includes('Tap 24'), 'the live slice stays');
-  assert.ok(!names.includes('Old tap 24'), 'the hour-cached copy of a held region does not come back');
-  assert.ok(names.includes('Regionless tap') && names.includes('Tap 27'), 'everything else arrives');
-  assert.deepEqual(m.refs(), ['node/24', 'node/world']);
-  await m.window.CCCatalog.ensureWorldwide();
-  assert.equal(m.fetched.filter((u) => u === '/map/catalog.json?v=a1').length, 1, 'once per page');
+  assert.deepEqual(m.names(), ['Regionless tap', 'Tap 24']);
+  // The same slice again, as a moved stamp would bring it.
+  STAMPS[0] = 's0b';
+  DOCS['/map/catalog/region/0.json?v=s0b'] = DOCS['/map/catalog/region/0.json?v=s0'];
+  try {
+    await m.window.CCCatalog.ensureRegion(0);
+    assert.deepEqual(m.names(), ['Regionless tap', 'Tap 24'], 'rows without a rid are region 0\'s, so they are replaced, not added');
+  } finally {
+    STAMPS[0] = 's0';
+  }
 });
 
 test('the page preloads what the loader reads first, and the loader asks for it the same way', () => {

@@ -369,7 +369,7 @@ final class MarkStripTest extends WebTestCase
     // ---- End to end: the JSON-escaped form on a real, non-map GET ------
 
     /**
-     * `/nl/map/catalog.json` would render with the mode OFF (`TranslateMode`
+     * `/nl/map/catalog/stamps.json` would render with the mode OFF (`TranslateMode`
      * excludes every route named `map*`) and prove nothing about this net.
      * `/nl/boot.js` (route `boot_script`) is a real GET, is not map-prefixed,
      * and pipes translated strings through `|json_encode` with the same four

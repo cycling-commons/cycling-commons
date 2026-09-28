@@ -28,7 +28,7 @@ use Symfony\Contracts\Cache\ItemInterface;
  */
 final class CatalogStamps
 {
-    /** The rows that belong to no region: only the worldwide document serves them. */
+    /** The rows that belong to no region: region slice 0 serves them (regionSql()). */
     public const int NO_REGION = 0;
 
     /** A change every region's rows serialize (a public name, a citation, an unsafe link). */
@@ -43,6 +43,19 @@ final class CatalogStamps
         private readonly ConfirmationFreshness $freshness,
         private readonly CacheInterface $cache,
     ) {
+    }
+
+    /**
+     * The SQL condition for one region's rows. Region {@see NO_REGION} is the
+     * rows no region holds, so the places outside every region have a slice
+     * of their own like any other. `$regionId` is an int, so it is written in
+     * place.
+     */
+    public static function regionSql(string $alias, int $regionId): string
+    {
+        $column = ('' === $alias ? '' : $alias.'.').'region_id';
+
+        return self::NO_REGION === $regionId ? $column.' IS NULL' : $column.' = '.$regionId;
     }
 
     /**
@@ -102,33 +115,6 @@ final class CatalogStamps
         $counts ??= $this->counts();
 
         return $this->hash([$regionId, $counts[$regionId] ?? 0, $counts[self::EVERY_REGION] ?? 0]);
-    }
-
-    /**
-     * The worldwide document's `?v=` tag. It follows the region-less rows and
-     * nothing inside a region: a curator's decision in Wallonia is no reason
-     * for a browser in Japan to download every continent again (owner
-     * 2026-09-16, "the token must be region bound"). The map patches the
-     * regions it holds from their own stamps.
-     *
-     * @param array<int, int>|null $counts
-     */
-    public function versionTag(?array $counts = null): string
-    {
-        return $this->stamp(self::NO_REGION, $counts);
-    }
-
-    /**
-     * The worldwide document's cache key on the server: unlike its URL, it
-     * moves with every region, because the bytes do.
-     *
-     * @param array<int, int>|null $counts
-     */
-    public function worldKey(?array $counts = null): string
-    {
-        $counts ??= $this->counts();
-
-        return $this->hash(array_merge(['world'], array_keys($counts), array_values($counts)));
     }
 
     /**

@@ -769,7 +769,7 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
 
 - **A · road surface stays out** of the coverage artifact: corridor line data,
   orders of magnitude larger, its own future decision. The existing curated
-  segments keep serving via `catalog.json`. N/E/R are category-3 (our own
+  segments keep serving via the catalog region slices. N/E/R are category-3 (our own
   data) and are never in the extract
   ([osm-data-architecture.md §5](osm-data-architecture.md)).
   **It has its own artifacts and its own manifest since 2026-08-12** — three of
@@ -1114,10 +1114,10 @@ the data-plane facts it consumes:
 - One `pmtiles://` vector source per published country (or `*`, from
   `window.CC_TILES.coverage`) with per-letter `<key>-cov` symbol layers
   replaces the seven per-letter `*-osm`
-  GeoJSON pools that `catalog.json` currently ships
+  GeoJSON pools that the catalog region slices ship
   (`web/assets/map/catalog-load.js` `CC_WATER_OSM` … `CC_HISTORY_OSM`).
   Curated pins, climbs, routes, surface, and heat keep serving from the
-  slimmed `catalog.json`.
+  slimmed region slices.
 - **Client dedupe + the refs-mirror rule.** `CatalogProvider::payload()`
   (`web/src/Catalog/CatalogProvider.php`) gains a top-level
   `refs: list<string>` — the DISTINCT `source_ref`s of the `source='osm'`
@@ -1140,7 +1140,7 @@ the data-plane facts it consumes:
 - **A catalog item borrows its OSM point's photo.** A served item with no
   `photo`/`photos` of its own (after `PhotoValidator::sift()`) that stands for
   an OSM point, through `source_ref` or `osm_ref`, carries
-  `photoRef: "<osm ref>"` in its `catalog.json` feature when that point's
+  `photoRef: "<osm ref>"` in its catalog feature when that point's
   `coverage_poi` row (lowest letter, the row `poi` reads) passes
   `CoverageRepository::photoPossible()`, the same test behind `poi`'s `photo`
   (`CatalogProvider::osmPhotoRefs()`). The key is absent everywhere else, so

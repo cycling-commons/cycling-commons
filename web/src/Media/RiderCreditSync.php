@@ -16,7 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
  * The credit on a map photo is a **stored string**, not a live lookup:
  * {@see MediaDecisionService::credit()} reads `publicProfile` once, when a
  * curator approves the upload, and writes the name into the item's `photos[]`
- * JSON. That is deliberate. The gallery rides along in `/map/catalog.json` and
+ * JSON. That is deliberate. The gallery rides along in the map's catalog slices and
  * in the coverage tiles, both cached and both public, and resolving a name per
  * photo per request would put a database query behind every pan of the map,
  * which the coverage architecture exists to prevent.

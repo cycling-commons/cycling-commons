@@ -161,20 +161,4 @@ final class CatalogStampsTest extends KernelTestCase
             'one row per region after a fold',
         );
     }
-
-    /**
-     * The worldwide URL follows the rows no region holds and nothing inside a
-     * region (owner 2026-09-16, "the token must be region bound"); its cache
-     * key on the server follows everything, because its bytes do.
-     */
-    public function testTheWorldwideTagIsRegionBoundAndItsServerKeyIsNot(): void
-    {
-        $tag = $this->stamps->versionTag();
-        $key = $this->stamps->worldKey();
-
-        $this->db->executeStatement("UPDATE item SET name = name || '.' WHERE id = (SELECT min(id) FROM item WHERE region_id = :rid)", ['rid' => $this->rid]);
-
-        self::assertSame($tag, $this->stamps->versionTag());
-        self::assertNotSame($key, $this->stamps->worldKey());
-    }
 }

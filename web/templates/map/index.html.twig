@@ -120,12 +120,19 @@
       <div class="grp">
         {# The whole world is a search reach the rider switches on, never a
            default (owner, 2026-09-06: "you do not always want to search
-           everywhere"). Off on every open; search-ui.js owns it. #}
+           everywhere"). Off on every open; search-ui.js owns it. Routes are
+           the rider's to add to the results (owner 2026-09-28): a checkbox,
+           because it adds to the list rather than moving the search; off
+           until ticked, and the choice is remembered in this browser. #}
         <div class="search-head">
           <h3 id="searchTitle">{{ 'map.search_title'|trans }}</h3>
-          <button type="button" class="chip search-reach" id="searchReach" aria-pressed="false" title="{{ 'map.search_everywhere'|trans }}">{{ 'region.everywhere.label'|trans }}</button>
+          {# Stacked, so the heading beside them keeps the width for the region name. #}
+          <div class="search-chips">
+            <label class="search-routes" title="{{ 'map.search_routes_title'|trans }}"><input type="checkbox" id="searchRoutes"> {{ 'map.search_routes'|trans }}</label>
+            <button type="button" class="chip search-reach" id="searchReach" aria-pressed="false" title="{{ 'map.search_everywhere'|trans }}">{{ 'region.everywhere.label'|trans }}</button>
+          </div>
         </div>
-        <input class="search" id="search" placeholder="{{ 'map.search_placeholder'|trans }}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="{{ 'map.search_aria'|trans }}" />
+        <input class="search" id="search" placeholder="{{ 'map.search_placeholder'|trans }}" data-placeholder="{{ 'map.search_placeholder'|trans }}" data-placeholder-routes="{{ 'map.search_placeholder_routes'|trans }}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchRes" aria-label="{{ 'map.search_aria'|trans }}" />
         <ul class="search-res" id="searchRes" role="listbox" hidden></ul>
         <div class="co" id="regionCoords">{{ 'map.coords'|trans }}</div>
       </div>
@@ -905,14 +912,9 @@ window.CC_VENDOR = {{ {
      smoke sweep (web/tests/browser/map-smoke.js) needs to assert on layers and
      sources. Production ships neither the flag nor the handle. #}
   {% if app.environment != 'prod' %}window.CC_DEBUG = true;{% endif %}
-  {# The worldwide catalog, which the map loads only when it needs every
-     region: a worldwide search, an Everywhere scope, a link to a place no
-     region holds (catalog-data-model.md §9.1). ?v= follows the rows no region
-     holds (CatalogStamps::versionTag); the regions the map holds are patched
-     from their own stamps. #}
-  window.CC_CATALOG_URL = {{ (path('map_catalog') ~ '?v=' ~ catalog_version)|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};
-  {# What the first paint needs beyond the rider's own regions: the region of
-     an ?item= or ?route= link, or the worldwide catalog (MapController::catalogBoot). #}
+  {# What the first paint needs beyond the rider's own regions: the regions
+     an ?item=, ?route= or ?feature= link points into (MapController::catalogBoot,
+     catalog-data-model.md §9.1). #}
   window.CC_CATALOG_BOOT = {{ catalog_boot|json_encode|raw }};
   {# The heat points live off the critical payload; fetched on the first heatmap-On only. #}
   window.CC_HEAT_URL = {{ path('map_heat')|json_encode(constant('JSON_UNESCAPED_SLASHES'))|raw }};

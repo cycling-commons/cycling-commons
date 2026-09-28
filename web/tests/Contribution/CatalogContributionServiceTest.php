@@ -921,7 +921,7 @@ final class CatalogContributionServiceTest extends KernelTestCase
 
     public function testSubmittedItemsAreNotServed(): void
     {
-        // Spec §8: state=submitted never reaches /map/catalog.json.
+        // Spec §8: state=submitted never reaches the catalog payload.
         $this->wallonia();
         $this->service->submit('add', [
             'type' => 'climbs', 'details' => ['name' => 'Côte invisible'], 'lat' => '50.47', 'lng' => '5.86',

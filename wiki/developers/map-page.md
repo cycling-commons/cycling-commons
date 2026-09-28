@@ -50,10 +50,9 @@ from the tile host, with no application server in that path.
    `/map/catalog/stamps.json`, which is small and always revalidated.
    `web/assets/map/catalog-load.js` reads it and fetches
    `/map/catalog/region/{rid}.json?v=<stamp>` for every region of the active
-   scope, plus the region an `?item=` or `?route=` link points into. The
-   worldwide `/map/catalog.json?v=<tag>` is fetched only when the map needs
-   every region: "Search everywhere", the Everywhere scope, or a link to a
-   place no region holds.
+   scope, plus the regions a link points into. Nothing downloads the whole
+   world: "Search everywhere" asks `/v1/search?q=` for our own items, and a
+   picked hit loads its one region.
 5. **Icons.** `web/assets/map/icons.js` draws each pin on a canvas and hands
    the pixels to MapLibre with `map.addImage`. No image file is requested.
 6. **Archives.** `web/assets/map/tile-sources.js` owns the pmtiles protocol
@@ -84,7 +83,7 @@ the host is in the heading.
 | `GET /map` | the page, with the `window.CC_*` values embedded | private |
 | `/map/catalog/stamps.json` | `{ "<region id>": "<stamp>" }`; key `"0"` is the rows that belong to no region | no-cache, ETag, preloaded |
 | `/map/catalog/region/{rid}.json?v=` | one region's rows, in the catalog's shapes | one day, ETag, URL-versioned |
-| `/map/catalog.json?v=` | the whole served catalog, every region, letters keyed, plus the region stamps; on demand only | one hour, ETag, URL-versioned |
+| `/v1/search?q=` | our items by name, anywhere, each with its region, plus routes when the "Routes" switch is on (`&routes=include`); the "Search everywhere" half the region files cannot answer | five minutes, ETag |
 | `/map/region/{slug}/boundary` | one region's border as GeoJSON | public |
 | `/map/scope/boundary?rids=` | several borders in one call | public |
 | `/map/coverage/counts?rids=` | how many coverage points of each letter fall in the scope | one hour |
@@ -126,9 +125,9 @@ Every host the page may talk to is listed in the Content Security Policy, in
 `web/src/EventSubscriber/CspSubscriber.php`. A new host is a CSP change first.
 
 The stamps document is what keeps the catalog fresh without redownloading
-it. The worldwide catalog is about a megabyte gzipped (the
-[numbers page](numbers.md) keeps the current figure); a region's slice is a
-few tens of kilobytes. A visitor downloads the slices of their own area. A
+it. A region's slice is a few tens of kilobytes; every region in one document
+would be about a megabyte gzipped. A visitor downloads the slices of their own
+area. A
 curator's decision moves one region's stamp, and a visitor in that region
 fetches that slice and nothing else. A stamp also moves once a day, because a
 pin's freshness colour depends on the day. The database counts the changes

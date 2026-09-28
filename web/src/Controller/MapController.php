@@ -67,13 +67,13 @@ final class MapController extends AbstractController
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
-    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, CatalogStamps $catalogStamps): Response
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness): Response
     {
-        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, $catalogStamps, scoutReview: true);
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, scoutReview: true);
     }
 
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, CatalogStamps $catalogStamps, bool $scoutReview = false): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, bool $scoutReview = false): Response
     {
         // Three bucket round trips, started together instead of one after the
         // other. Read in sequence they add up, and each carries its own
@@ -143,7 +143,6 @@ final class MapController extends AbstractController
             // window and drops its "?". One clock for tiles and pins.
             'witness_cutoff' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d'),
             'voting_live' => 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE),
-            'catalog_version' => $catalogStamps->versionTag(),
             'catalog_boot' => $this->catalogBoot($request, $catalogProvider),
         ];
 
@@ -633,17 +632,17 @@ final class MapController extends AbstractController
     }
 
     /**
-     * Which catalog documents the map loads before its first paint, beyond the
+     * Which catalog regions the map loads before its first paint, beyond the
      * regions of the rider's own scope (catalog-data-model.md §9.1): a link to
-     * a place or a route elsewhere brings that one region along, so the link
-     * opens without the worldwide document. A link by name (`?feature=`), or
-     * to a row no region holds, needs the worldwide document.
+     * a place or a route elsewhere brings its region along, so the link opens
+     * like one in the rider's own area. Region 0 is the places no region
+     * holds.
      *
-     * @return array{regions: list<int>, worldwide: bool}
+     * @return array{regions: list<int>}
      */
     private function catalogBoot(Request $request, CatalogProvider $catalogProvider): array
     {
-        $boot = ['regions' => [], 'worldwide' => '' !== trim($request->query->getString('feature'))];
+        $regions = [];
         // share-links.js idFromShare(): the id, then an optional `/<slug>`.
         $targets = [
             'item' => (int) explode('/', $request->query->getString('item'))[0],
@@ -651,34 +650,17 @@ final class MapController extends AbstractController
         ];
         foreach ($targets as $kind => $id) {
             $rid = $id > 0 ? $catalogProvider->servedRegionOf($kind, $id) : null;
-            if (CatalogStamps::NO_REGION === $rid) {
-                $boot['worldwide'] = true;
-            } elseif (null !== $rid) {
-                $boot['regions'][] = $rid;
+            if (null !== $rid) {
+                $regions[] = $rid;
             }
         }
+        // A link by name: every region that holds that name.
+        $name = trim($request->query->getString('feature'));
+        if ('' !== $name) {
+            $regions = array_merge($regions, $catalogProvider->servedRegionsNamed($name));
+        }
 
-        return $boot;
-    }
-
-    /**
-     * Cacheable catalog JSON.
-     *
-     * @see docs/specs/catalog-data-model.md §9
-     */
-    #[Route('/map/catalog.json', name: 'map_catalog', methods: ['GET'])]
-    public function catalog(Request $request, CatalogDocuments $documents): Response
-    {
-        $doc = $documents->worldwide();
-        $response = new JsonResponse($doc['json'], Response::HTTP_OK, [], true);
-        $response->setEtag($doc['etag']);
-        $response->setPublic();
-        // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
-        $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
-        $response->setMaxAge(3600);
-        $response->isNotModified($request);
-
-        return $response;
+        return ['regions' => array_values(array_unique($regions))];
     }
 
     /**

@@ -6,9 +6,10 @@ import { escPend, slug, txtOn, photonLang, COORD_COLOR } from './util.js';
 import { CITIES, layerByKey, LETTER_KEY } from './catalog.js';
 import { inScope, scopeLabel, liftScopeForHit, noteCoverageSearchHit } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
-import { openPlace, openCity } from './places.js';
+import { openPlace, openCity, openFeatureById, openRouteById } from './places.js';
 import { COVERAGE_ON, covScopeIsZero, covScopeQuery, openCoverageByRef } from './coverage.js';
 import { layerGlyph } from './icons.js';
+import { mapToast } from './drawer.js';
 
 let _searchDropPending=null;
 
@@ -54,10 +55,7 @@ export function initSearchUi(){
     const everywhereLabel = reachBtn ? reachBtn.textContent.trim() : (I18N.everywhereLabel||'Everywhere');
     const setReach=(on)=>{
       _worldwide=!!on;
-      /* The map holds only the rider's own regions (catalog-data-model.md
-         §9.1), so a worldwide reach loads the worldwide document first. The
-         list shows what is held at once and fills in when it lands. */
-      if(_worldwide && window.CCCatalog) window.CCCatalog.ensureWorldwide().then(ok=>{ if(ok && _worldwide && !sRes.hidden) runS(); });
+
       if(reachBtn){
         reachBtn.setAttribute('aria-pressed', _worldwide?'true':'false');
         // A true toggle: while the reach is on, the chip names the scope you
@@ -72,17 +70,64 @@ export function initSearchUi(){
       // writer of that heading, so it is asked to repaint with the reach.
       if(window.CCScopeHeader) window.CCScopeHeader.paint(I18N, {worldwide:_worldwide});
     };
+    /* Routes in the results are the rider's choice (owner 2026-09-28): a
+       checkbox, off until ticked, remembered in this browser. It adds route
+       rows to both halves of the list, the routes the map holds and the
+       server's worldwide hits; it never hides anything else. */
+    const ROUTES_KEY='cc-search-routes';
+    const routesBox=document.getElementById('searchRoutes');
+    let _routes=false;
+    try { _routes = localStorage.getItem(ROUTES_KEY)==='1'; } catch(e){ /* private mode: off */ }
+    // The example in the empty box names routes while they are in the list.
+    const paintRoutes=()=>{
+      const ph = _routes ? sBox.dataset.placeholderRoutes : sBox.dataset.placeholder;
+      if(ph) sBox.placeholder=ph;
+    };
+    if(routesBox) routesBox.checked=_routes;
+    paintRoutes();
+    if(routesBox) routesBox.addEventListener('change', ()=>{
+      _routes=routesBox.checked;
+      try { localStorage.setItem(ROUTES_KEY, _routes?'1':'0'); } catch(e){ /* not remembered */ }
+      paintRoutes();
+      sBox.focus();
+      if(sBox.value.trim()){ runItemSearch(sBox.value); runS(); }
+    });
     const closeS=()=>{ sRes.hidden=true; sRes.innerHTML=''; sMatches=[]; sHL=-1; setReach(false); if(sBox.getAttribute('aria-expanded')!=='false') sBox.setAttribute('aria-expanded','false'); };
     if(reachBtn) reachBtn.addEventListener('click', ()=>{
       setReach(!_worldwide);
       sBox.focus();
-      if(sBox.value.trim()){ runPhoton(sBox.value); runCoverageSearch(sBox.value); runS(); }
+      if(sBox.value.trim()){ runPhoton(sBox.value); runCoverageSearch(sBox.value); runItemSearch(sBox.value); runS(); }
     });
+    /* The list takes the panel's empty space and nothing more (owner
+       2026-09-28): 300 px (map.css), plus whatever the panel leaves unused
+       below its last section. A taller list would push the Region section
+       out of view. Measured each time the list opens or the window resizes. */
+    const scrollParent=el=>{ for(let p=el.parentElement; p; p=p.parentElement){ const o=getComputedStyle(p).overflowY; if(o==='auto'||o==='scroll') return p; } return null; };
+    const fitResults=()=>{
+      sRes.style.maxHeight='';
+      if(sRes.hidden) return;
+      const pane=scrollParent(sRes);
+      if(!pane) return;
+      // Where the content really ends: a scroll box never reports less
+      // height than it has, so its scrollHeight cannot say what is empty.
+      let bottom=-Infinity;
+      for(const c of pane.children){ if(c.offsetParent!==null) bottom=Math.max(bottom, c.getBoundingClientRect().bottom); }
+      const box=pane.getBoundingClientRect(), padBottom=parseFloat(getComputedStyle(pane).paddingBottom)||0;
+      const spare=Math.floor(box.top+pane.clientHeight-padBottom-bottom);
+      if(spare<=0) return;
+      const grown=parseFloat(getComputedStyle(sRes).maxHeight)+spare;
+      sRes.style.maxHeight=grown+'px';
+      // A margin that collapses through a section is in no box above, but the
+      // panel scrolls for it: take back exactly what now overflows.
+      const over=pane.scrollHeight-pane.clientHeight;
+      if(over>0) sRes.style.maxHeight=Math.max(0, grown-over)+'px';
+    };
+    window.addEventListener('resize', fitResults);
     const hlS=()=>sRes.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('hl',i===sHL));
     function widenSearch(){
       if(!window.CCScope) return;
       if(window.CCScope.canWiden()) window.CCScope.widen(); else setReach(true);
-      runPhoton(sBox.value); runCoverageSearch(sBox.value); runS();
+      runPhoton(sBox.value); runCoverageSearch(sBox.value); runItemSearch(sBox.value); runS();
     }
     /* A hit the rider's scope does not draw sits in some region: look there
        before opening it (docs/specs/map-and-search.md §4.5, §8). The hit's own
@@ -208,6 +253,50 @@ export function initSearchUi(){
         })
         .catch(()=>{});
     }
+    /* Our own items worldwide (docs/specs/map-and-search.md §7.1): the map
+       holds only the regions it shows, so a worldwide reach asks the public
+       search, the same answer a consumer of /v1/search gets. A hit's own
+       region loads when it is picked (CCCatalog.ensureRegion), then the place
+       opens from the rows that region brought. Local rows come first; a hit
+       the map already holds is not listed twice. */
+    let _apiAbort=null, _apiHits=[], _apiQ='';
+    const regionIdOf = slugKey => { const r=(window.CC_REGIONS||[]).find(x=>x.slug===slugKey); return r ? r.id : null; };
+    // A point to frame and to read the region off: the point itself, or the middle vertex of a line.
+    const geomLL = g => {
+      if(!g || !g.coordinates) return null;
+      let c=g.coordinates;
+      while(Array.isArray(c[0]) && Array.isArray(c[0][0])) c=c[0];
+      if(Array.isArray(c[0])) c=c[Math.floor(c.length/2)];
+      return (c && c.length>=2) ? [+c[1], +c[0]] : null;
+    };
+    const openApiHit = (letter, id, rid) => {
+      const open = () => letter==='R' ? openRouteById(id) : openFeatureById(id);
+      const done = () => { if(!open()) mapToast(D.linkGone || 'This place is no longer on the map.'); };
+      if(window.CCCatalog) window.CCCatalog.ensureRegion(rid==null ? 0 : rid).then(done); else done();
+    };
+    function runItemSearch(qRaw){
+      const q=qRaw.trim();
+      if(_apiAbort) _apiAbort.abort();
+      // Three letters: the server's name index starts there (/v1/search q).
+      if(!_worldwide || coordPoint(q) || q.length<3){ _apiHits=[]; _apiQ=''; return; }
+      const ctl=new AbortController(); _apiAbort=ctl;
+      fetch('/v1/search?limit=30'+(_routes?'&routes=include':'')+'&q='+encodeURIComponent(q), {signal:ctl.signal, headers:{'Accept':'application/geo+json'}})
+        .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
+        .then(d=>{
+          if(ctl.signal.aborted) return;
+          _apiHits=(d.features||[])
+            .filter(f=>f && f.properties && f.properties.name && LETTER_KEY[f.properties.letter])
+            .filter(f=>!idxIds().has(f.properties.letter+':'+f.properties.id))
+            .map(f=>{ const p=f.properties, layer=layerByKey[LETTER_KEY[p.letter]], rid=p.region_id ? regionIdOf(p.region_id) : null;
+              return {name:p.name, key:slug(p.name), kind:layer.label, badge:layerGlyph(layer), color:layer.color,
+                letter:p.letter, ll:geomLL(f.geometry), rid:rid==null ? undefined : rid, id:p.id, verified:p.tier==='curated',
+                go:()=>openApiHit(p.letter, p.id, rid)}; })
+            .filter(m=>m.ll);
+          _apiQ=slug(q);
+          if(!sRes.hidden) runS();
+        })
+        .catch(()=>{});
+    }
     function runS(){
       const q=slug(sBox.value.trim());
       if(!q){ closeS(); return; }
@@ -216,6 +305,7 @@ export function initSearchUi(){
         // docs/specs/map-and-search.md §4.5 — hidden pins must not resurface as
         // search rows, unless this search was widened to the whole world.
         if(!_worldwide && !it.town && !inScope(it.rid)) continue;
+        if(!_routes && it.letter==='R') continue;
         const i=it.key.indexOf(q); if(i===0) starts.push(it); else if(i>0) has.push(it);
       }
       const ranked=starts.concat(has);
@@ -225,6 +315,7 @@ export function initSearchUi(){
       const byLetter={};
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       if(_covSQ===q) _covHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
+      if(_worldwide && _apiQ===q) _apiHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(secondRow(a)?1:0)-(secondRow(b)?1:0)));
       // A · one row per route name (up to "·"); other letters keep same-named distinct places.
       if(byLetter.A){
@@ -274,6 +365,7 @@ export function initSearchUi(){
         sMatches.push({widen:true, go:widenSearch});
       }
       sRes.innerHTML = (realCount ? html : `<li class="search-empty">${D.noMatch||'No match in the Commons yet.'}</li>`) + widenHtml;
+      fitResults();
     }
     sRes.addEventListener('click', e=>{
       // stopPropagation: runS() rebuilds the dropdown; without it the document closer sees a detached target and closes.
@@ -283,7 +375,7 @@ export function initSearchUi(){
     let _sDeb=null, _phDeb=null, _covDeb=null;
     sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150);
       clearTimeout(_phDeb); _phDeb=setTimeout(()=>runPhoton(sBox.value),350);
-      clearTimeout(_covDeb); _covDeb=setTimeout(()=>runCoverageSearch(sBox.value),250); });
+      clearTimeout(_covDeb); _covDeb=setTimeout(()=>{ runCoverageSearch(sBox.value); runItemSearch(sBox.value); },250); });
     sBox.addEventListener('keydown', e=>{
       if(sRes.hidden){ if(e.key==='ArrowDown') runS(); return; }
       if(e.key==='ArrowDown'){ e.preventDefault(); sHL=Math.min(sHL+1, sMatches.length-1); hlS(); }
@@ -292,6 +384,6 @@ export function initSearchUi(){
       else if(e.key==='Escape'){ closeS(); }
     });
     // The reach switch is part of the search: its click must not count as "elsewhere".
-    document.addEventListener('click', e=>{ if(e.target!==sBox && !e.target.closest('#searchRes, #searchReach')) closeS(); });
+    document.addEventListener('click', e=>{ if(e.target!==sBox && !e.target.closest('#searchRes, #searchReach, .search-routes')) closeS(); });
   }
 }

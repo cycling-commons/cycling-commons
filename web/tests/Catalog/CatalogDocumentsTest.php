@@ -93,12 +93,13 @@ final class CatalogDocumentsTest extends KernelTestCase
         self::assertFalse($this->cache->getItem('catalog.doc.region.'.$unknown)->isHit(), 'counting upwards must not fill the cache');
     }
 
-    /** An edit in one region leaves another region's entry valid, and the worldwide one not. */
-    public function testAnEditRebuildsItsRegionAndTheWorldOnly(): void
+    /** An edit in one region leaves another region's entry valid. */
+    public function testAnEditRebuildsItsRegionOnly(): void
     {
+        // A place outside every region, so region 0 has rows of its own.
+        $this->db->executeStatement('UPDATE item SET region_id = NULL WHERE id = (SELECT max(id) FROM item)');
         $other = CatalogStamps::NO_REGION;
         $this->documents->region($other);
-        $world = $this->documents->worldwide();
         $otherItem = $this->cache->getItem('catalog.doc.region.'.$other);
         /** @var array{version: string, json: string, etag: string} $otherEntry */
         $otherEntry = $otherItem->get();
@@ -107,6 +108,6 @@ final class CatalogDocumentsTest extends KernelTestCase
         $this->db->executeStatement("UPDATE item SET name = name || '.' WHERE id = (SELECT min(id) FROM item WHERE region_id = :rid)", ['rid' => $this->rid]);
 
         self::assertSame('{"marker":1}', $this->documents->region($other)['json'], 'another region keeps its copy');
-        self::assertNotSame($world['etag'], $this->documents->worldwide()['etag'], 'the worldwide document holds the edit');
+        self::assertStringNotContainsString('marker', $this->documents->region($this->rid)['json']);
     }
 }

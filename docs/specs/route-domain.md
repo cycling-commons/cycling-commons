@@ -45,7 +45,7 @@ carve-out from the generic item funnel is described in
    (see route-domain.md §4.3); ride confirmations are a button press, never
    a stored track.
 5. **Cacheable bulk stays static.** The map's bulk payload
-   (`/map/catalog.json`) is never inflated with dynamic or per-user data;
+   (`/map/catalog/region/{rid}.json`) is never inflated with dynamic or per-user data;
    community numbers and best-of arrive from separate endpoints
    (route-domain.md §6, §8).
 
@@ -487,7 +487,7 @@ served, so the drawer can't open for them anyway).
 
 ### 6.3 The cacheable-bulk contract
 
-`/map/catalog.json` (`CatalogProvider::routes()`) serves every active route
+The catalog region slices (`CatalogProvider::routes()`) serve every active route
 with `id / name / state / srcType / km / gain / loop` plus the canonicalized
 attributes (route-domain.md §9) — and **nothing dynamic or per-user**.
 Ride/vote counts and per-user state come only from the authenticated,
@@ -529,7 +529,7 @@ with an ETag. A route waiting for review answers only whoever may preview it on
 the map (map-and-search.md §8: a curator who may moderate its region, with 2FA
 set up, or the rider who proposed it; `MapController::mayPreviewRoute`),
 `private, no-store`. Anything else is 404. The list is not in
-`/map/catalog.json` (route-domain.md §6.3): it is per route and only needed
+the catalog slices (route-domain.md §6.3): it is per route and only needed
 when a drawer opens.
 
 Known limit: a route that rides the same road up and down (out and back)
@@ -648,7 +648,7 @@ doorway. It is drawn for a curator whose **areas cover that route's region**
 (`ModerationScopeProvider::allowedRegionIds()`, the same rule
 `allowsRegion()` applies, answered once for the whole map). A curator of other
 areas sees no icon, and a rider never does. Like every per-viewer fact it
-rides the map page (`CC_MOD_REGIONS`), never `catalog.json`, which is publicly
+rides the map page (`CC_MOD_REGIONS`), never the catalog slices, which are publicly
 cached (catalog-data-model.md §9.1).
 
 ## 8. Rankings / best-of
@@ -656,7 +656,7 @@ cached (catalog-data-model.md §9.1).
 ### 8.1 Endpoint
 
 `GET /map/best-of?season=<s>[,<s>…]&bike=<b>[,<b>…][&region=<id>]`
-(`MapController::bestOf`) — public and cacheable like `catalog.json` (ETag +
+(`MapController::bestOf`) — public and cacheable like the catalog slices (ETag +
 `public, max-age=300`).
 
 **Both facets are multi-valued** (owner 2026-08-20): the rider profile already

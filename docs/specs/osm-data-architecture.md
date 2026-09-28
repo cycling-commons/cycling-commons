@@ -65,7 +65,7 @@ How the source families flow into the two data planes as built
  │ edited, never canonical  │§6 │ (category 2), created the moment a       │
  └──────────────────────────┘   │ human curates a coverage object          │
    │      materialize-on-edit   └──────────────────────────────────────────┘
-   │ PMTiles + /map/coverage/*     │ catalog.json + item endpoints
+   │ PMTiles + /map/coverage/*     │ region slices + item endpoints
    ▼                               ▼
  community tier on the map      curated/verified tiers on the map
  (map-and-search.md §12)        (PIVOT = verified by registry provenance)

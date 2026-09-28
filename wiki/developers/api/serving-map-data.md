@@ -130,19 +130,23 @@ Field by field:
   endpoint serves point items only, so a `line` or `surface` category is reachable through the tile
   archive and never through `search`.
 
-## `GET /v1/search`: items by viewport
+## `GET /v1/search`: items by viewport or by name
 
-Ask for one bounding box, and optionally a category letter and a tier; receive GeoJSON.
+Ask for one bounding box, a name, or both, and optionally a category letter and a tier; receive
+GeoJSON.
 
-<!-- CODE-ILLUSTRATIVE example request; bbox is Brussels and surroundings -->
+<!-- CODE-ILLUSTRATIVE example requests; bbox is Brussels and surroundings -->
 ```text
 GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=B&limit=100
+GET https://cyclingcommons.org/v1/search?q=spa&limit=30
 ```
 
 | Parameter | Required | Meaning |
 |-----------|----------|---------|
-| `bbox` | yes | `minLon,minLat,maxLon,maxLat`, WGS84 (EPSG:4326). Maximum span 10 by 10 degrees. |
-| `letter` | no | One catalogue letter (A-M practical, N-Z experiential; see `categories` in the map config). Absent = all letters in one response. |
+| `bbox` | yes, unless `q` is given | `minLon,minLat,maxLon,maxLat`, WGS84 (EPSG:4326). Maximum span 10 by 10 degrees. |
+| `q` | no | Words in the name, 3 to 100 characters, anywhere in the world. Case and accents do not matter (`cote` finds `Côte`). Names that start with the words come first, then the closest matches. With a `bbox` too, only matches inside the box. |
+| `letter` | no | One catalogue letter (A-M practical, N-Z experiential; see `categories` in the map config). Absent = all item letters in one response. `R` gives recommended routes alone. |
+| `routes` | no | `include` adds recommended routes (letter `R`) to the hits. Absent keeps them out, so a request that never asked for routes gets none. |
 | `tier` | no | `community` or `curated`. Absent = both. `curated` means a human vouched for the item: a curator verified it or a rider confirmed it on the spot. |
 | `limit` | no | Maximum features returned. Default 100, maximum 500. |
 
@@ -157,7 +161,8 @@ GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=B&lim
       "properties": {
         "id": 1042, "letter": "B", "name": "Fontaine du Parc", "tier": "curated",
         "grade": "minimum", "custody": "ours", "confirmations": 2,
-        "last_confirmed": "2026-08-22", "last_seen_upstream": null, "verified_by": "riders"
+        "last_confirmed": "2026-08-22", "last_seen_upstream": null, "verified_by": "riders",
+        "region_id": "brussels"
       }
     }
   ],
@@ -169,7 +174,16 @@ GET https://cyclingcommons.org/v1/search?bbox=4.30,50.70,4.50,50.90&letter=B&lim
 The response is a standard GeoJSON `FeatureCollection` with two foreign members, `licence` and
 `attribution`, following the drafted v1 convention. Feature properties are deliberately few:
 `id`, `letter`, `name`, `tier` (`community` or `curated`, so you can rank or style verified
-items differently), and the trust envelope below. The content type is `application/geo+json`.
+items differently), the trust envelope below, and `region_id`: the slug of the Commons region the
+item lies in, or `null` outside every region. The content type is `application/geo+json`.
+
+A route hit is smaller than an item: one point on the route, and `id`, `letter` (`R`), `name`,
+`tier`, `distance_m`, `ascent_m` and `region_id`. The line itself belongs to the route's own
+endpoint, so a list of hits stays small.
+
+The Commons map uses this same endpoint for its own "Search everywhere": it holds only the
+regions on screen, so a name elsewhere in the world is looked up here, and `region_id` tells it
+which region to load before it opens the place. Its "Routes" switch adds `routes=include`.
 
 **The trust envelope.** Six properties say how much to believe a point, the grade first and the
 receipt behind it, computed by the same code that draws the Commons map's own pins:
@@ -202,7 +216,9 @@ country through this endpoint; that is what the exports are for.
 
 | Status | `error` | When |
 |--------|---------|------|
-| 400 | `invalid_bbox` | Missing, malformed, or out-of-range `bbox`. |
+| 400 | `invalid_bbox` | Malformed or out-of-range `bbox`, or no `bbox` and no `q`. |
+| 400 | `invalid_q` | `q` shorter than 3 or longer than 100 characters. |
+| 400 | `invalid_routes` | `routes` given but not `include`. |
 | 400 | `bbox_too_large` | Span over 10 by 10 degrees. |
 | 400 | `invalid_letter` | `letter` given but not one of the catalogue letters in `categories`. |
 | 400 | `invalid_tier` | `tier` given but not `community` or `curated`. |
@@ -321,7 +337,7 @@ records, so nothing can leak by accident. The full enforcement stack is specifie
 
 ## What comes later
 
-The proof of concept is the thin end of a drafted v1 surface: free-text search, single-item detail
+The proof of concept is the thin end of a drafted v1 surface: single-item detail
 with OpenStreetMap hydration, per-letter counts, regions and best-of endpoints, route detail with
 GPS Exchange Format (GPX) downloads, and self-serve API keys with quotas. The drafted contract,
 including the parts not yet built, lives in the

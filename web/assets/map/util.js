@@ -8,8 +8,8 @@ export const escPend = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp
 /* Who may open a route's form on the Routes desk (docs/specs/route-domain.md
    §7.1): a curator whose areas cover that route's region. Both facts arrive
    per viewer on the map page (CC_IS_CURATOR, CC_MOD_REGIONS, the latter from
-   the server's own ModerationScopeProvider), never in catalog.json, which is
-   one publicly cached document every reader shares. The server re-checks scope
+   the server's own ModerationScopeProvider), never in the catalog slices,
+   which are publicly cached documents every reader shares. The server re-checks scope
    on the desk; this only decides whether to draw the shortcut. */
 export const curatorMayEdit = (regionId, scope) => {
   const w = scope || (typeof window !== 'undefined' ? window : {});

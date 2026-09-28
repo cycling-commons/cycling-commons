@@ -65,7 +65,7 @@ final class CatalogProviderTest extends KernelTestCase
         $tester->assertCommandIsSuccessful();
 
         // Coverage retirement (coverage-provider.md §9):
-        // untouched osm/unverified POIs no longer serve from catalog.json.
+        // untouched osm/unverified POIs no longer serve from the catalog payload.
         // These fixtures assert payload SHAPE, so promote them to verified
         // (still a served state) instead of re-plumbing every assertion.
         $this->em->getConnection()->executeStatement(
@@ -280,7 +280,7 @@ final class CatalogProviderTest extends KernelTestCase
     /**
      * Coverage retirement (coverage-provider.md §9): the
      * retirement predicate no longer sits behind COVERAGE_TILES — an untouched
-     * source=osm state=unverified POI never serves from catalog.json (it lives
+     * source=osm state=unverified POI never serves from the catalog payload (it lives
      * in coverage_poi now); the same row serves again as soon as any human
      * signal exists (here: an item_confirmation).
      */
@@ -924,44 +924,34 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
-     * The worldwide `?v=` tag is a cache key on a ~1 MB document, so it must
-     * ignore what happens inside a region: a curator's decision in Wallonia is
-     * not a reason for a rider in Japan to redownload every continent's rows
-     * (owner 2026-09-16, "the token must be region bound"). It still answers
-     * for the rows no region holds, which no scope draws and no region stamp
-     * covers.
+     * Region 0 is the places no region holds: a slice like any other, so the
+     * map reaches them without a worldwide document (catalog-data-model.md
+     * §9.1), and an edit to one of them moves region 0's stamp and no other.
      */
-    public function testTheWorldwideTagIgnoresARegionAndFollowsTheRegionlessRows(): void
+    public function testRegionZeroServesThePlacesNoRegionHolds(): void
     {
         $provider = static::getContainer()->get(CatalogProvider::class);
         $stamps = static::getContainer()->get(CatalogStamps::class);
         $db = $this->em->getConnection();
-        $rid = (string) $db->fetchOne('SELECT region_id FROM item WHERE region_id IS NOT NULL ORDER BY id LIMIT 1');
 
-        $v0 = $stamps->versionTag();
-        self::assertMatchesRegularExpression('/^[0-9a-f]{8,}$/', $v0, 'a compact hex tag, URL-safe');
-        self::assertSame($v0, $stamps->versionTag(), 'stable while nothing changes');
-
-        $before = $stamps->regionStamps();
-        $db->executeStatement(
-            "UPDATE item SET updated_at = updated_at + interval '1 second'
-              WHERE id = (SELECT min(id) FROM item WHERE region_id = :rid)",
-            ['rid' => $rid],
-        );
-        self::assertSame($v0, $stamps->versionTag(), 'a change inside a region leaves the worldwide URL alone');
-
-        $after = $stamps->regionStamps();
-        self::assertNotSame($before[$rid], $after[$rid], 'the region that changed has a new stamp');
-        unset($before[$rid], $after[$rid]);
-        self::assertSame($before, $after, 'no other region is disturbed');
-
-        // A row outside every region: no stamp covers it, so the tag does.
         $db->executeStatement(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
              VALUES ('B', 'Regionless tap', ST_GeomFromText('POINT(4.5 50.4)', 4326), 'BE', 'verified', 'manual', 'manual:regionless-tap',
                      CAST('{\"t\":\"Drinking water\"}' AS jsonb), now(), now())",
         );
-        self::assertNotSame($v0, $stamps->versionTag(), 'a row belonging to no region must mint a new worldwide URL');
+        $before = $stamps->regionStamps();
+
+        $slice = $provider->payload(CatalogStamps::NO_REGION);
+        self::assertSame(['Regionless tap'], array_map(static fn (array $f): mixed => $f['properties']['n'] ?? null, $slice['B']['features']));
+        foreach ($slice['B']['features'] as $feature) {
+            self::assertArrayNotHasKey('rid', $feature['properties'], 'a row outside every region carries no rid');
+        }
+
+        $db->executeStatement("UPDATE item SET name = 'Regionless tap, moved' WHERE source_ref = 'manual:regionless-tap'");
+        $after = $stamps->regionStamps();
+        self::assertNotSame($before[CatalogStamps::NO_REGION], $after[CatalogStamps::NO_REGION]);
+        unset($before[CatalogStamps::NO_REGION], $after[CatalogStamps::NO_REGION]);
+        self::assertSame($before, $after, 'no region is disturbed');
     }
 
     /**

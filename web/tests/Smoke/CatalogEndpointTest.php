@@ -12,42 +12,47 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 final class CatalogEndpointTest extends WebTestCase
 {
-    public function testCatalogJsonServesAllLettersWithCacheHeaders(): void
+    /**
+     * The map is built from region slices and nothing else
+     * (catalog-data-model.md §9.1): every region the stamps name, region 0
+     * included for the places no region holds, together serve every row.
+     */
+    public function testTheRegionSlicesTogetherServeEveryLetter(): void
     {
         $client = static::createClient();
 
         $this->seed();
 
-        $client->request('GET', '/map/catalog.json');
-        self::assertResponseIsSuccessful();
-        self::assertResponseHeaderSame('Content-Type', 'application/json');
-        $response = $client->getResponse();
-        self::assertNotEmpty($response->getEtag());
-        self::assertStringContainsString('public', (string) $response->headers->get('Cache-Control'));
-        self::assertStringContainsString('max-age=3600', (string) $response->headers->get('Cache-Control'));
-
-        /** @var array<string, mixed> $data */
-        $data = json_decode((string) $response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
-        // No heat key: the heat points are a derived layer without a
-        // catalogue letter, served from /map/heat.json since 2026-08-09 so
-        // they stop riding the critical payload for an Off-by-default layer.
-        foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'N', 'O', 'P', 'Q', 'R'] as $letter) {
-            self::assertArrayHasKey($letter, $data);
+        $client->request('GET', '/map/catalog/stamps.json');
+        /** @var array<string, string> $stamps */
+        $stamps = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        $refs = [];
+        $d = 0;
+        $r = 0;
+        foreach (array_keys($stamps) as $rid) {
+            $client->request('GET', '/map/catalog/region/'.$rid.'.json');
+            self::assertResponseIsSuccessful();
+            self::assertResponseHeaderSame('Content-Type', 'application/json');
+            /** @var array<string, mixed> $data */
+            $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+            // No heat key: the heat points are a derived layer without a
+            // catalogue letter, served from /map/heat.json so they stop riding
+            // the critical payload for an Off-by-default layer.
+            foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G', 'N', 'O', 'P', 'Q', 'R', 'refs'] as $key) {
+                self::assertArrayHasKey($key, $data);
+            }
+            self::assertArrayNotHasKey('heat', $data, 'the heat points are not on the critical payload');
+            $refs = array_merge($refs, $data['refs']);
+            $d += \count($data['D']['features']);
+            $r += \count($data['R']);
         }
-        self::assertArrayHasKey('refs', $data);            // Plan 2 Task 13: curated-OSM refs for tile dedupe
-        self::assertContains('node/1001', $data['refs']);
-        self::assertCount(3, $data['D']['features']);
-        self::assertCount(1, $data['R']);
-        self::assertArrayNotHasKey('heat', $data, 'the heat points are not on the critical payload');
-        // What each region looked like when these bytes were built, so a
-        // browser holding them can tell which regions moved since
-        // (catalog-data-model.md §9.1).
-        self::assertArrayHasKey('stamps', $data);
-        self::assertNotEmpty($data['stamps']);
+        self::assertContains('node/1001', $refs, 'curated-OSM refs for tile dedupe');
+        self::assertSame(3, $d);
+        self::assertSame(1, $r);
 
-        // Conditional revalidation: replaying the ETag yields 304 with no body.
-        $client->request('GET', '/map/catalog.json', [], [], ['HTTP_IF_NONE_MATCH' => $response->getEtag()]);
-        self::assertResponseStatusCodeSame(304);
+        // Nothing serves the whole world in one document any more.
+        $client->request('GET', '/map/catalog.json');
+        self::assertResponseStatusCodeSame(404);
 
         // …and the heat points, on their own endpoint, with the same
         // public-cacheable + ETag discipline.
@@ -121,16 +126,17 @@ final class CatalogEndpointTest extends WebTestCase
     /**
      * The map loads only the rider's own regions (catalog-data-model.md §9.1),
      * so a link to a place elsewhere tells the loader which region to bring
-     * along. A link by name, or to a place no region holds, needs the
-     * worldwide document; a link to nothing on the map needs nothing.
+     * along: by id, or every region that holds the name. Region 0 is the
+     * places no region holds; a link to nothing on the map needs nothing.
      */
     public function testALinkBringsItsRegionIntoTheFirstPaint(): void
     {
         $client = static::createClient();
         $this->seed();
         $db = static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class)->getConnection();
-        /** @var array{id: int|string, region_id: int|string} $row */
-        $row = $db->fetchAssociative("SELECT id, region_id FROM item WHERE region_id IS NOT NULL AND letter = 'D' ORDER BY id LIMIT 1");
+        /** @var array{id: int|string, name: string, region_id: int|string} $row */
+        $row = $db->fetchAssociative("SELECT id, name, region_id FROM item WHERE region_id IS NOT NULL AND letter = 'D' ORDER BY id LIMIT 1");
+        $rid = (int) $row['region_id'];
 
         $boot = static function (string $query) use ($client): array {
             $client->request('GET', '/map'.$query);
@@ -141,12 +147,13 @@ final class CatalogEndpointTest extends WebTestCase
         };
 
         // share-links.js writes `?item=<id>/<slug>`; the id decides.
-        self::assertSame(['regions' => [(int) $row['region_id']], 'worldwide' => false], $boot('?item='.$row['id'].'/some-name'));
-        self::assertSame(['regions' => [], 'worldwide' => true], $boot('?feature=Somewhere'), 'a name can be anywhere');
-        self::assertSame(['regions' => [], 'worldwide' => false], $boot('?item=999999999'), 'nothing to load for a place that is gone');
+        self::assertSame(['regions' => [$rid]], $boot('?item='.$row['id'].'/some-name'));
+        self::assertSame(['regions' => [$rid]], $boot('?feature='.rawurlencode(mb_strtoupper((string) $row['name']))), 'a name, case aside');
+        self::assertSame(['regions' => []], $boot('?feature=Nowhere%20by%20this%20name'));
+        self::assertSame(['regions' => []], $boot('?item=999999999'), 'nothing to load for a place that is gone');
 
         $db->executeStatement('UPDATE item SET region_id = NULL WHERE id = :id', ['id' => $row['id']]);
-        self::assertSame(['regions' => [], 'worldwide' => true], $boot('?item='.$row['id']), 'only the worldwide document holds a row no region holds');
+        self::assertSame(['regions' => [0]], $boot('?item='.$row['id']), 'region 0 holds the places no region holds');
     }
 
     /** The fixture catalog, on the same kernel (DAMA rolls it back). */

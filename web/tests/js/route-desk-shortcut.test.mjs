@@ -3,7 +3,7 @@
 // Who sees the route drawer's shortcut to the Routes desk
 // (docs/specs/route-domain.md §7.1): a curator of that route's own region, and
 // nobody else. Both facts arrive per viewer on the map page, never in
-// catalog.json, which is one publicly cached document every reader shares.
+// the catalog slices, publicly cached documents every reader shares.
 // The server re-checks region scope when the edit is saved; this only decides
 // whether to draw the icon.
 import test from 'node:test';

@@ -89,7 +89,7 @@ final class PublicApiV1Test extends WebTestCase
             self::assertSame('Point', $feature['geometry']['type']);
             // The personal-data boundary, as a closed property list: a new
             // SELECT column cannot reach the response without failing here.
-            self::assertSame(['id', 'letter', 'name', 'tier', 'grade', 'custody', 'confirmations', 'last_confirmed', 'last_seen_upstream', 'verified_by'], array_keys($feature['properties']));
+            self::assertSame(['id', 'letter', 'name', 'tier', 'grade', 'custody', 'confirmations', 'last_confirmed', 'last_seen_upstream', 'verified_by', 'region_id'], array_keys($feature['properties']));
             self::assertSame('D', $feature['properties']['letter']);
             self::assertContains($feature['properties']['tier'], ['community', 'curated']);
         }
@@ -127,6 +127,94 @@ final class PublicApiV1Test extends WebTestCase
         self::assertSame([], $community['features']);
     }
 
+    /**
+     * A name finds a place anywhere in the world, no box needed: the map's
+     * own worldwide search asks exactly this (map-and-search.md §7.1). Names
+     * that start with the words come first; accents do not matter; each hit
+     * names the region to load it from.
+     */
+    public function testSearchFindsANameAnywhere(): void
+    {
+        $client = static::createClient();
+        $this->seedCatalog($client);
+        $db = static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class)->getConnection();
+        foreach (['Rent a bike in Spa' => [5.86, 50.49], 'Spa bike shop' => [5.87, 50.5], 'Côte de Wanne pump' => [5.9, 50.35], '100% repair' => [5.8, 50.4]] as $name => [$lon, $lat]) {
+            $db->executeStatement(
+                "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+                 VALUES ('D', :name, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), 'BE', 'verified', 'manual', :ref, CAST('{}' AS jsonb), now(), now())",
+                ['name' => $name, 'lon' => $lon, 'lat' => $lat, 'ref' => 'manual:'.md5($name)],
+            );
+        }
+        $names = static function (string $url) use ($client): array {
+            $client->request('GET', $url);
+            self::assertResponseIsSuccessful($url);
+            /** @var array{features: list<array{properties: array{name: string, region_id: string|null}}>} $c */
+            $c = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+
+            return array_map(static fn (array $f): string => $f['properties']['name'], $c['features']);
+        };
+
+        self::assertSame(['Spa bike shop', 'Rent a bike in Spa'], $names('/v1/search?q=spa'), 'a name that starts with the words leads');
+        self::assertSame(['Côte de Wanne pump'], $names('/v1/search?q=COTE'), 'case and accents aside');
+        self::assertSame([], $names('/v1/search?q=%25%25%25'), 'a percent sign is a character, not a wildcard');
+        self::assertSame(['100% repair'], $names('/v1/search?q=00%25'));
+        self::assertSame([], $names('/v1/search?q=spa&bbox=4.0,50.0,5.0,51.0'), 'a box still narrows a name');
+
+        $client->request('GET', '/v1/search?q=cocyc');
+        /** @var array{features: list<array{properties: array{name: string, region_id: string|null}}>} $hit */
+        $hit = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame('Ecocyclo', $hit['features'][0]['properties']['name']);
+        self::assertSame('test-square', $hit['features'][0]['properties']['region_id'], 'the region to load it from, by its public slug');
+    }
+
+    /**
+     * Routes join a search only when asked for (owner 2026-09-28: the rider
+     * chooses whether routes are in the results): `routes=include` adds them,
+     * `letter=R` gives routes alone, and a consumer that asks for neither
+     * keeps the answer it had. A route hit is one point on the route.
+     */
+    public function testRoutesJoinASearchOnlyWhenAskedFor(): void
+    {
+        $client = static::createClient();
+        $this->seedCatalog($client);
+        $get = static function (string $url) use ($client): array {
+            $client->request('GET', $url);
+            self::assertResponseIsSuccessful($url);
+            /** @var array{features: list<array{geometry: array{type: string}, properties: array<string, mixed>}>} $c */
+            $c = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+
+            return $c['features'];
+        };
+
+        self::assertSame([], $get('/v1/search?q=test%20loop'), 'no routes unless asked for');
+        $hits = $get('/v1/search?q=test%20loop&routes=include');
+        self::assertCount(1, $hits);
+        self::assertSame('Point', $hits[0]['geometry']['type'], 'one point, not the whole line');
+        self::assertSame(['id', 'letter', 'name', 'tier', 'distance_m', 'ascent_m', 'region_id'], array_keys($hits[0]['properties']), 'no proposer, votes or moderation state');
+        self::assertSame('R', $hits[0]['properties']['letter']);
+        self::assertSame(12300, $hits[0]['properties']['distance_m']);
+        self::assertSame('Test loop', $get('/v1/search?letter=R&bbox=4.0,50.0,5.0,51.0')[0]['properties']['name'], 'letter=R is routes alone, by box too');
+        self::assertSame([], array_filter($get('/v1/search?bbox=4.0,50.0,5.0,51.0'), static fn (array $f): bool => 'R' === $f['properties']['letter']), 'a box search keeps its items-only answer');
+    }
+
+    /**
+     * The name index is built on the fold expression as it stood when it was
+     * made (Version20260928180000). A changed fold would leave every name
+     * search reading the whole table without anybody noticing.
+     */
+    public function testTheNameIndexMatchesTheFold(): void
+    {
+        self::bootKernel();
+        $db = static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class)->getConnection();
+        foreach (['item_name_fold_trgm_idx', 'recommended_route_name_fold_trgm_idx'] as $index) {
+            $def = (string) $db->fetchOne('SELECT indexdef FROM pg_indexes WHERE indexname = :i', ['i' => $index]);
+
+            self::assertStringContainsString('gin_trgm_ops', $def, $index);
+            self::assertStringContainsString(\App\Api\V1\PublicItemsProvider::FOLD_FROM, $def, $index);
+            self::assertStringContainsString(\App\Api\V1\PublicItemsProvider::FOLD_TO, $def, $index);
+        }
+    }
+
     public function testSearchRejectsBadParametersWithCorsOnTheError(): void
     {
         $client = static::createClient();
@@ -141,6 +229,9 @@ final class PublicApiV1Test extends WebTestCase
             ['/v1/search?letter=B&bbox=190,50.0,195,51.0', 'invalid_bbox'],     // off the planet
             ['/v1/search?letter=B&bbox=0,0,60,60', 'bbox_too_large'],           // continent-sized
             ['/v1/search?bbox=4.0,50.0,5.0,51.0&tier=gold', 'invalid_tier'],    // unknown tier
+            ['/v1/search?q=sp', 'invalid_q'],                                   // under three letters the name index cannot help
+            ['/v1/search?q=spa&bbox=1,2,3', 'invalid_bbox'],                    // a name does not excuse a broken box
+            ['/v1/search?q=spa&routes=yes', 'invalid_routes'],                  // include, or absent
         ];
 
         foreach ($cases as [$url, $error]) {
@@ -169,7 +260,7 @@ final class PublicApiV1Test extends WebTestCase
 
         // Untouched osm/unverified rows are coverage-retired from serving
         // (coverage-provider.md §9), for /v1/search exactly as for
-        // catalog.json, so promote the fixtures like CatalogEndpointTest does.
+        // the catalog payload, so promote the fixtures like CatalogEndpointTest does.
         static::getContainer()->get(\Doctrine\ORM\EntityManagerInterface::class)->getConnection()->executeStatement(
             "UPDATE item SET state = 'verified' WHERE letter IN ('B','D','F','G','O','P','Q')",
         );

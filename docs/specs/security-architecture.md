@@ -213,7 +213,7 @@ a dynamic `import()` instead, since it loads the library only when a page asks.
 | `testUnsafeEvalIsScopedToTheMapPage` | `'unsafe-eval'` present on `/map`, absent on `/` |
 | `testWorkerSrcAllowsSameOriginAndBlob` | `worker-src 'self' blob:` on `/map`. MapLibre v6's tile worker is a same-origin module URL; dropping `'self'` blocks every tile and says so only in the console |
 | `testEveryInlineScriptCarriesTheHeaderNonce` | On `/`, `/map`, `/regions`, `/contributors`: every `<script>` without `src` carries exactly the header's nonce |
-| `testNonHtmlResponsesSkipCsp` | `/map/catalog.json` has no CSP header |
+| `testNonHtmlResponsesSkipCsp` | `/map/catalog/stamps.json` has no CSP header |
 
 New pages with inline scripts should be added to `inlineScriptPages()`.
 

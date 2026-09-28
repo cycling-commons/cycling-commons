@@ -148,18 +148,33 @@ paths:
         features. At least one of `bbox` or `q` is required.
 
 
-        **Implemented (PoC subset):** `bbox` (required, capped at a
-        10x10-degree span, `bbox_too_large`), `letter` (optional; absent =
-        all letters), `tier` (optional) and `limit`. `q`, `hydrate` and
-        `cursor` are drafted but not yet implemented.
+        **Implemented (PoC subset):** `bbox` (required unless `q` is given,
+        capped at a 10x10-degree span, `bbox_too_large`), `q`, `letter`
+        (optional; absent = all item letters), `tier` (optional), `routes`
+        and `limit`. Recommended routes (letter R) come only when asked
+        for: `routes=include` adds them, `letter=R` gives routes alone. A
+        route hit is one point on the route, with its length and climb.
+        `hydrate` and `cursor` are drafted but not yet implemented. The
+        Commons map's own worldwide search asks this endpoint with `q`.
       parameters:
         - $ref: '#/components/parameters/bbox'
         - name: q
           in: query
-          description: Free-text search over names and labels.
-          schema: { type: string }
+          description: >
+            Words in the item's name, anywhere in the world (`invalid_q`
+            outside 3 to 100 characters). Case and accents do not matter.
+            Names that start with the words come first, then the closest
+            matches. With `bbox`, only matches inside the box.
+          schema: { type: string, minLength: 3, maxLength: 100 }
+          example: spa
         - $ref: '#/components/parameters/letter'
         - $ref: '#/components/parameters/tier'
+        - name: routes
+          in: query
+          description: >
+            `include` adds recommended routes (letter R) to the hits;
+            absent keeps them out (`invalid_routes` for anything else).
+          schema: { type: string, enum: [include] }
         - $ref: '#/components/parameters/hydrate'
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/cursor'
@@ -658,7 +673,7 @@ components:
         hydrate against OSM. Letter-specific fields (e.g. `potable` for
         water) appear as plain properties. With `?hydrate=osm` the cached
         OSM subset is merged in under `osm`.
-      required: [letter, tier, grade, custody, confirmations, last_confirmed, last_seen_upstream, verified_by]
+      required: [letter, tier, grade, custody, confirmations, last_confirmed, last_seen_upstream, verified_by, region_id]
       properties:
         osm_ref:
           type: string
@@ -698,6 +713,12 @@ components:
             The receipt behind a `curated` tier: `riders` when the verify
             threshold of independent riders stood here, `curator` when one
             accountable curator's word settled it, null while unverified.
+        region_id:
+          type: [string, 'null']
+          description: >
+            The slug of the Commons region the item lies in (the key of
+            `/v1/regions`), or null for a place outside every region.
+          example: brussels
         osm:
           type: object
           description: 'Only with `?hydrate=osm`: the cached OSM subset (name, tags).'
@@ -710,7 +731,29 @@ components:
         type: { type: string, const: Feature }
         id: { type: string }
         geometry: { $ref: '#/components/schemas/Point' }
-        properties: { $ref: '#/components/schemas/CoverageProperties' }
+        properties:
+          oneOf:
+            - $ref: '#/components/schemas/CoverageProperties'
+            - $ref: '#/components/schemas/RouteHitProperties'
+
+    RouteHitProperties:
+      type: object
+      description: >
+        A recommended route as a search hit (`letter` R): one point on the
+        route, its length and its climb. The line belongs to the route's own
+        endpoint. No proposer, votes or moderation state.
+      required: [id, letter, name, tier, distance_m, ascent_m, region_id]
+      properties:
+        id: { type: integer, example: 111 }
+        letter: { type: string, const: R }
+        name: { type: string, example: 'Liège Bastogne Liège' }
+        tier: { $ref: '#/components/schemas/Tier' }
+        distance_m: { type: integer, example: 12300 }
+        ascent_m: { type: integer, example: 210 }
+        region_id:
+          type: [string, 'null']
+          description: The slug of the Commons region the route lies in, or null.
+          example: wallonia
 
     CoverageFeatureCollection:
       type: object

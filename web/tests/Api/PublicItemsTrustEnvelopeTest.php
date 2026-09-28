@@ -97,7 +97,7 @@ final class PublicItemsTrustEnvelopeTest extends WebTestCase
         // The receipt is a count and a date, never a person: the closed
         // property list is the personal-data boundary.
         foreach ($byId as $props) {
-            self::assertSame(['id', 'letter', 'name', 'tier', ...self::ENVELOPE], array_keys($props));
+            self::assertSame(['id', 'letter', 'name', 'tier', ...self::ENVELOPE, 'region_id'], array_keys($props));
         }
     }
 

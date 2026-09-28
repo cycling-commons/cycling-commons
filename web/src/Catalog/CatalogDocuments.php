@@ -14,8 +14,8 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * The catalog documents the map downloads, built once per version and shared
  * by both web hosts through the app cache (Redis).
  *
- * One entry per document (`catalog.doc.region.<rid>`, `catalog.doc.world`)
- * holding the version it was built for. A request whose current version
+ * One entry per region (`catalog.doc.region.<rid>`) holding the version it
+ * was built for. A request whose current version
  * matches is served from the entry; any other version rebuilds it and
  * overwrites it, so a busy region never leaves a trail of dead copies behind.
  * The version is a {@see CatalogStamps} stamp, so a document is rebuilt the
@@ -65,25 +65,9 @@ final class CatalogDocuments
      *
      * @param array<int, int> $counts
      */
-    private static function isKnown(?int $regionId, array $counts): bool
+    private static function isKnown(int $regionId, array $counts): bool
     {
-        return null === $regionId || \array_key_exists($regionId, $counts);
-    }
-
-    /**
-     * Every region at once: `GET /map/catalog.json`, which the map loads only
-     * for a worldwide search, an Everywhere scope or a link to a place no
-     * region holds.
-     *
-     * @return array{json: string, etag: string}
-     */
-    public function worldwide(): array
-    {
-        return $this->document(
-            'catalog.doc.world',
-            fn (array $counts): string => $this->stamps->worldKey($counts),
-            null,
-        );
+        return \array_key_exists($regionId, $counts);
     }
 
     /**
@@ -91,7 +75,7 @@ final class CatalogDocuments
      *
      * @return array{json: string, etag: string}
      */
-    private function document(string $key, \Closure $versionOf, ?int $regionId): array
+    private function document(string $key, \Closure $versionOf, int $regionId): array
     {
         $counts = $this->stamps->counts();
         if (!self::isKnown($regionId, $counts)) {
@@ -119,7 +103,7 @@ final class CatalogDocuments
      *
      * @return array{0: string, 1: string} the document and the version it was built for
      */
-    private function build(?int $regionId, \Closure $versionOf): array
+    private function build(int $regionId, \Closure $versionOf): array
     {
         // Inside a transaction already open, the snapshot is that
         // transaction's. Asked of the driver, not of DBAL: the test suite's

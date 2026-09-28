@@ -61,7 +61,7 @@ final class ManualSourceTest extends KernelTestCase
 
         // Coverage retirement (coverage-provider.md §9): an
         // untouched source=osm/unverified row no longer serves from
-        // catalog.json (it lives in coverage_poi now) — a human touch (here: a
+        // the catalog payload (it lives in coverage_poi now) — a human touch (here: a
         // confirmation) keeps it canonical without changing its state, so this
         // test still compares manual vs. osm serving in the SAME state.
         $this->em->getConnection()->executeStatement(

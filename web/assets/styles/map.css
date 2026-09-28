@@ -245,9 +245,13 @@
   .rail-invite a{color:rgb(var(--chrome-fg) / .75);text-decoration:underline;text-underline-offset:2px;transition:color .2s}
   .rail-invite a:hover{color:var(--trail)}
   .grp h3.dl-head{display:flex;align-items:center;gap:.6rem}
-  .search-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.8rem}
+  .search-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem;margin-bottom:.8rem}
   .search-head h3{margin-bottom:0;flex:1;min-width:0}
-  .search-reach{flex:0 1 auto;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:.25rem .6rem;font-size:.66rem;background:transparent;color:rgb(var(--chrome-fg) / .85);border:1px solid rgb(var(--chrome-fg) / .4)}
+  .search-chips{flex:0 1 auto;max-width:50%;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:.35rem}
+  .search-routes{display:flex;align-items:center;justify-content:flex-end;gap:.4rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .85);cursor:pointer;user-select:none;white-space:nowrap}
+  .search-routes input{margin:0;width:14px;height:14px;accent-color:var(--trail);cursor:pointer}
+  .search-routes:hover{color:var(--trail)}
+  .search-reach{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:.25rem .6rem;font-size:.66rem;text-align:center;background:transparent;color:rgb(var(--chrome-fg) / .85);border:1px solid rgb(var(--chrome-fg) / .4)}
   .search-reach:hover{border-color:var(--trail);color:var(--trail)}
   .search-reach[aria-pressed="true"]{background:var(--trail);border-color:var(--trail);color:var(--ink)}
   .dl-all{margin-left:auto;background:transparent;border:1px solid rgb(var(--chrome-fg) / .25);color:var(--chrome-head);font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .45rem;border-radius:4px;cursor:pointer;transition:all .15s}
@@ -1536,6 +1540,12 @@
     box-shadow:0 2px 7px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
   .cc-summit::before{content:"⚑";font-size:.72rem;color:#FF5A1F}
   .cc-summit:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}
+  /* Where a search result is: above every pin (owner 2026-09-28). Pins stack
+     in the order they were added, with no z-index of their own, so without
+     this the town pin, the hover ring or a revealed hit could sit under the
+     pins around it. Popups stay above all three. */
+  .cc-town-pin,.cc-highlight,.cc-pin.reveal{z-index:3}
+  .maplibregl-popup{z-index:4}
   /* Pulse via a compositable pseudo-element transform/opacity, not a box-shadow
      spread repaint every frame over the map canvas (review W10). */
   /* Selection halo: a transparent-centre glowing ring + expanding pulse, so the

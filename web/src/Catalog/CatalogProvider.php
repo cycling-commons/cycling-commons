@@ -218,8 +218,7 @@ final class CatalogProvider
         // One region's slice, in the shapes the worldwide payload uses, so the
         // map can splice it over a cached document (catalog-data-model.md §9.1).
         if (null !== $regionId) {
-            $sql .= ' AND i.region_id = :regionId';
-            $params['regionId'] = $regionId;
+            $sql .= ' AND '.CatalogStamps::regionSql('i', $regionId);
         }
         // docs/specs/coverage-provider.md §9 — drop untouched OSM that coverage_poi now serves.
         if (\in_array($letter, CoverageRetirement::LETTERS, true)) {
@@ -309,6 +308,32 @@ final class CatalogProvider
     }
 
     /**
+     * The regions a `?feature=<name>` link may mean: every region holding a
+     * served item or route of exactly that name (case aside), so the map's
+     * own name lookup finds it among the rows it loaded.
+     *
+     * @return list<int>
+     */
+    public function servedRegionsNamed(string $name): array
+    {
+        $served = ItemState::servedSqlTuple();
+
+        /** @var list<int|string> $rids */
+        $rids = $this->db->fetchFirstColumn(
+            "SELECT DISTINCT rid FROM (
+                 SELECT COALESCE(i.region_id, 0) AS rid FROM item i
+                  WHERE lower(i.name) = lower(:name) AND i.state IN {$served} AND ".GoneRows::notGoneSql('i')."
+                 UNION
+                 SELECT COALESCE(r.region_id, 0) FROM recommended_route r
+                  WHERE lower(r.name) = lower(:name) AND r.state IN {$served}
+             ) AS named ORDER BY rid LIMIT 8",
+            ['name' => $name],
+        );
+
+        return array_map(intval(...), $rids);
+    }
+
+    /**
      * The OSM point whose photo each item's drawer may borrow, keyed by item id.
      *
      * An item stands for an OSM point through `source_ref` (materialized from
@@ -350,8 +375,7 @@ final class CatalogProvider
             $params['onlyId'] = $onlyId;
         }
         if (null !== $regionId) {
-            $sql .= ' AND i.region_id = :regionId';
-            $params['regionId'] = $regionId;
+            $sql .= ' AND '.CatalogStamps::regionSql('i', $regionId);
         }
 
         /** @var list<array{id: int|string, ref: string, tags: string}> $rows */
@@ -576,8 +600,7 @@ final class CatalogProvider
         $where = 'state IN '.ItemState::servedSqlTuple();
         $params = [];
         if (null !== $regionId) {
-            $where .= ' AND region_id = :regionId';
-            $params['regionId'] = $regionId;
+            $where .= ' AND '.CatalogStamps::regionSql('', $regionId);
         }
         /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, pin_lat: float|string|null, pin_lng: float|string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
@@ -682,7 +705,7 @@ final class CatalogProvider
     }
 
     /**
-     * Heat points for `/map/heat.json`, not catalog.json. Null `rid` renders only in Everywhere.
+     * Heat points for `/map/heat.json`, not the catalog slices. Null `rid` renders only in Everywhere.
      *
      * @see docs/specs/map-and-search.md §11
      *

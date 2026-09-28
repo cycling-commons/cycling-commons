@@ -261,7 +261,7 @@ final class CspTest extends WebTestCase
     public function testNonHtmlResponsesSkipCsp(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/map/catalog.json');
+        $client->request('GET', '/map/catalog/stamps.json');
 
         self::assertResponseIsSuccessful();
         self::assertNull($client->getResponse()->headers->get('Content-Security-Policy'));

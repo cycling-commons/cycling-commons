@@ -140,7 +140,7 @@ convenience; it is never part of the data contract.
 
 All REST lives under a `/v1` prefix. Spatial collections are GeoJSON
 `FeatureCollection`s; metadata is plain JSON. Endpoints re-expose existing
-internal behaviour (`/map/coverage/*`, `catalog.json`) behind the public
+internal behaviour (`/map/coverage/*`, the catalog region slices) behind the public
 contract.
 
 | Method | Endpoint | Purpose |
@@ -157,9 +157,19 @@ contract.
 
 **PoC status (2026-08-18).** Two endpoints are implemented and live in the
 app: `/v1/map-config` (routes tiles, coverage tiles, category table with the
-Best of flag, attribution) and the `/v1/search` subset `bbox` + optional
-`letter` + optional `tier` + `limit` (`q`/`hydrate`/`cursor` stay draft; `bbox`
-spans at most 10x10 degrees; `letter` accepts any catalogue letter (A–M practical, N–Z experiential; e.g. `letter=B` for water);
+Best of flag, attribution) and the `/v1/search` subset `bbox` and/or `q` +
+optional `letter` + optional `tier` + `limit` (`hydrate`/`cursor` stay draft;
+`bbox` spans at most 10x10 degrees and is required unless `q` is given; `q` is
+3 to 100 characters matched anywhere in the name, lower-cased and
+accent-folded (`PublicItemsProvider::foldSql()`, trigram indexes
+`item_name_fold_trgm_idx` and `recommended_route_name_fold_trgm_idx`; three
+letters because a trigram is three, and shorter words would read every row),
+names that start with it first; every feature
+carries `region_id`, the region's public slug or null; recommended routes
+(letter R) join only when asked for, `routes=include` beside the items or
+`letter=R` alone, each as one point on the route with `distance_m` and
+`ascent_m` (`RouteFeature`), so a consumer that never asked keeps the answer
+it had; `letter` accepts any catalogue letter (A–M practical, N–Z experiential; e.g. `letter=B` for water);
 absent letter = all letters in one response). The config carries enough for a
 consumer to reproduce the map's three view modes (Best of / Confirmed /
 Everything, §2.1 tiles + the tier filter + the `bestOf` category flag). Both are open read-only (no
@@ -171,6 +181,12 @@ security.yaml. Responses are built by `Api\V1\PublicItemsProvider` through the
 [personal-data boundary](public-api-personal-data-boundary.md) is enforced, the
 dedicated Postgres role half stays deferred. The consumer-facing explanation
 lives at `wiki/developers/api/`.
+
+**The map is a consumer of `/v1/search`.** The Commons map holds only the
+regions on screen (catalog-data-model.md §9.1), so its "Search everywhere"
+asks `/v1/search?q=` for our own items and loads the region a picked hit's
+`region_id` names. A consumer and the map find the same places for the same
+words.
 
 **Conventions.** `bbox=minLon,minLat,maxLon,maxLat`. Collections paginate by
 opaque `cursor` (not offset), capped by `limit`. Coordinates are WGS84

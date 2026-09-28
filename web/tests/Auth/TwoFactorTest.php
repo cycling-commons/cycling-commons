@@ -421,7 +421,7 @@ final class TwoFactorTest extends WebTestCase
     public function testPublicCatalogEndpointDoesNotStartASession(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/map/catalog.json');
+        $client->request('GET', '/map/catalog/stamps.json');
 
         self::assertResponseIsSuccessful();
         foreach ($client->getResponse()->headers->getCookies() as $cookie) {

@@ -7,7 +7,7 @@
 This document defines the running catalog data model: the four catalog tables
 and the one-generic-entity decision, row identity and the idempotent upsert,
 lifecycle states, provenance sources, region membership, the registry-validated
-`attributes` jsonb, the import pipeline, the `/map/catalog.json` serving
+`attributes` jsonb, the import pipeline, the `/map/catalog/region/{rid}.json` serving
 contract, per-source attribution rules, and the scale doctrine. It documents
 **what is built** — where a forward-looking architecture differs, the bridge
 section (catalog-data-model.md §12) says exactly which parts
@@ -988,19 +988,18 @@ Harvest-side rules that shape what arrives (toolchain:
   third-party ride platforms — and every UI surface labels it so
   (`d_faked_src` / `heatmap_hint` keys in `web/translations/messages.en.yaml`).
 
-## 9. Serving: `GET /map/catalog.json` and its region slices
+## 9. Serving: region slices, `GET /map/catalog/region/{rid}.json`
 
-`MapController::catalog()` / `catalogRegion()` (`web/src/Controller/MapController.php`)
-+ `App\Catalog\CatalogProvider` (the rows) + `App\Catalog\CatalogDocuments`
-(the server cache) + `App\Catalog\CatalogStamps` (the versions). The map
-downloads the slices of the regions it shows and the worldwide document only on
-demand (§9.1). The contract:
+`MapController::catalogRegion()` / `catalogStamps()`
+(`web/src/Controller/MapController.php`) + `App\Catalog\CatalogProvider` (the
+rows) + `App\Catalog\CatalogDocuments` (the server cache) +
+`App\Catalog\CatalogStamps` (the versions). The map downloads the slices of
+the regions it shows and nothing else; there is no worldwide document (§9.1).
+The contract:
 
 - **Public and cacheable**: `ETag` (md5 of the exact encoded bytes, computed
-  once per build), conditional-request 304s. The worldwide document is
-  `max-age=3600` behind a `?v=` tag; a region slice is `max-age=86400`, safe
-  because its URL carries the region's stamp and the stamp carries the day
-  (§9.1).
+  once per build), conditional-request 304s, `max-age=86400`, safe because the
+  URL carries the region's stamp and the stamp carries the day (§9.1).
 - **States served: `unverified` + `verified` only** (via
   `ItemState::servedSqlTuple()`), for items and routes alike. Heat serves
   `source='auto'` rows only. Items carrying `condition = 'Not there anymore'`
@@ -1050,21 +1049,25 @@ something most of them never turn on (frontend review 2026-08-09).
 ### 9.1 Area-first loading and region stamps
 
 The map holds **only the regions it shows** (owner 2026-09-28: a rider who only
-looks at the Netherlands was downloading the world). Measured on production:
-the worldwide document is 945 kB gzipped, the twelve Dutch provinces together
-154 kB. Three resources carry the catalog:
+looks at the Netherlands was downloading the world). Measured on production
+before the change: every region in one document was 945 kB gzipped, the twelve
+Dutch provinces together 154 kB. Nothing serves the whole world in one document
+any more (owner 2026-09-28: "why would we ever want to load the whole world?").
+Three resources carry the catalog:
 
 | Resource | Cache-Control | Carries | Moves when |
 |---|---|---|---|
 | `GET /map/catalog/stamps.json` | `public, no-cache` + ETag | `{ "<region id>": "<stamp>" }`, `"0"` = the region-less rows | any change to what that region's rows print, and every day (below) |
-| `GET /map/catalog/region/{rid}.json?v=<stamp>` | `public, max-age=86400` + ETag | one region's rows in the worldwide document's shapes, plus `rid` and `stamp` | the URL carries the stamp, so a change mints a new URL |
-| `GET /map/catalog.json?v=<tag>` | `public, max-age=3600` + ETag | every region's rows, plus `stamps` | the build, the day, or a row belonging to no region (`CatalogStamps::versionTag()`) |
+| `GET /map/catalog/region/{rid}.json?v=<stamp>` | `public, max-age=86400` + ETag | one region's rows, plus `rid` and `stamp`; region `0` is the places no region holds | the URL carries the stamp, so a change mints a new URL |
+| `GET /v1/search?q=` | `public, max-age=300` + ETag | our items whose name holds the words, anywhere, each with its region's slug (public-api.md §2.2) | per request |
 
 **How the map loads** (`web/assets/map/catalog-load.js`). The page preloads
-`stamps.json`. The loader starts from an empty payload in the worldwide shapes,
+`stamps.json`. The loader starts from an empty payload in the slices' shapes,
 reads the stamps, and fetches the slice of every region of the active scope,
-plus the region of an `?item=` or `?route=` link (`window.CC_CATALOG_BOOT`,
-`MapController::catalogBoot()`), then injects `map.js`. A region with no stamp
+plus the regions a link points into (`window.CC_CATALOG_BOOT`,
+`MapController::catalogBoot()`: the region of an `?item=` or `?route=`, every
+region holding a `?feature=` name, region `0` for a place no region holds),
+then injects `map.js`. A region with no stamp
 never held a row and is not fetched. Each slice is **spliced** in: the region's
 rows are dropped from each layer and the slice's rows take their place, which is
 why a retired place needs no tombstone. The same check runs on `cc:scopechange`
@@ -1073,20 +1076,21 @@ refetched). All of them share one stamps read for 15 seconds
 (`currentStamps()`), and one request per slice however many callers want it
 (`fetchRegion()`).
 
-**The worldwide document loads only when the map needs every region**:
-"Search everywhere" (`search-ui.js` `setReach(true)` calls
-`window.CCCatalog.ensureWorldwide()`), the Everywhere scope, a link by name
-(`?feature=`) or to a place no region holds. It loads once per page. A slice
-already held goes back over it when the slice is the live one, so nothing the
-rider has seen goes back in time. The search list is rebuilt from the item
-index each time the payload changes, so a region loaded later is searchable at
-once.
+**What needs more than the regions in hand**:
 
-**Tile dedupe** (`refs`) is the union of every held slice's refs and, once
-loaded, the worldwide document's. A ref a region stops claiming leaves with
-that region's next slice; one in the worldwide list stays until the next page
-load. A pin missing from the coverage tiles is the harmless direction; a
-doubled pin is not.
+- **"Search everywhere"** asks `/v1/search?q=` for our own items, the same
+  answer an API consumer gets (public-api.md §2.2), next to Photon for towns
+  and `/map/coverage/search` for OSM points. Picking a hit loads the one region
+  its `region_id` names (`window.CCCatalog.ensureRegion()`), then opens the
+  place from the rows that region brought. The search list is rebuilt from the
+  item index each time the payload changes, so a region loaded later is
+  searchable at once.
+- **A place no region holds** is region `0`'s (`CatalogStamps::regionSql()`),
+  a slice like any other. A row with no `rid` counts as region `0` when a slice
+  is spliced, so a refresh replaces those rows rather than adding them again.
+
+**Tile dedupe** (`refs`) is the union of every held slice's refs. A ref a
+region stops claiming leaves with that region's next slice.
 
 #### The stamp: a change count the database keeps
 
@@ -1131,24 +1135,21 @@ Rules the design depends on:
 - **No serial id on `catalog_change`.** The trigger inserts inside the statement
   that wrote an item, and a sequence used there becomes the session's
   `lastval()`, which is what Doctrine reads back as the new item's id.
-- **The worldwide tag stays region-bound.** Its `?v=` follows the region-less
-  rows, the every-region count, the day and the build, and nothing that happens
-  inside a region: a curator's decision in Wallonia is no reason for a browser
-  in Japan to download every continent (owner 2026-09-16, "the token must be
-  region bound"). The map patches the regions it holds from their own stamps.
+- **Freshness is region-bound.** A curator's decision in Wallonia moves
+  Wallonia's stamp and no other, so a browser in Japan fetches nothing for it
+  (owner 2026-09-16, "the token must be region bound").
 
 #### Server cache (`CatalogDocuments`)
 
-Each document is built once per version and kept in the app cache (Redis,
-shared by both web hosts): one entry per document (`catalog.doc.region.<rid>`,
-`catalog.doc.world`) holding the version it was built for, its JSON and its
-ETag. A request whose current version matches is served from the entry; any
-other version rebuilds and overwrites it, so a busy region leaves no trail of
-dead copies. The worldwide entry's version (`CatalogStamps::worldKey()`)
-follows every region, because its bytes do. A build reads its change count and
-its rows in one `REPEATABLE READ, READ ONLY` snapshot, so the version stored is
-the one the bytes were built from. Measured on dev: a region slice 0.25 s built,
-0.05 s from the cache; the worldwide document 0.76 s built, 0.08 s from the
+Each slice is built once per version and kept in the app cache (Redis, shared
+by both web hosts): one entry per region (`catalog.doc.region.<rid>`) holding
+the stamp it was built for, its JSON and its ETag. A request whose current
+stamp matches is served from the entry; any other stamp rebuilds and overwrites
+it, so a busy region leaves no trail of dead copies. A region id the change
+count does not know is answered (empty) and never kept, so nobody can fill the
+cache by counting upwards. A build reads its change count and its rows in one
+`REPEATABLE READ, READ ONLY` snapshot, so the stamp stored is the one the bytes
+were built from. Measured on dev: a region slice 0.25 s built, 0.04 s from the
 cache.
 
 The per-item public change log (`GET /map/item/{id}/history`, max-age 60) is
@@ -1197,7 +1198,7 @@ is dropped, never guessed.
    `letter` are the natural partition keys, activatable without redesign;
    `heat_point` and `change_history` are first in line. **Specified, pending
    implementation** (nothing is partitioned today).
-4. **`/map/catalog.json` is interim**: serving moves to vector tiles when
+4. **The region slices are interim**: serving moves to vector tiles when
    scale demands. **Specified, pending implementation.**
 5. **World-scale ingestion is a Python ETL with set-based SQL upserts** —
    never an ORM loop (see the Python-vs-PHP boundary in dev-environment.md).

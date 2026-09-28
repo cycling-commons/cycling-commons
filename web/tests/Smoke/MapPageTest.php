@@ -99,23 +99,15 @@ final class MapPageTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
 
-        self::assertStringContainsString('window.CC_CATALOG_URL', $html);
-        // Versioned, not bare: the worldwide document is browser-cached for an
-        // hour, and the ?v= tag (CatalogStamps::versionTag) moves with the rows
-        // no region holds, which no region slice can patch.
-        self::assertMatchesRegularExpression(
-            '~window\.CC_CATALOG_URL = "/map/catalog\.json\?v=[0-9a-f]{8,}"~',
-            $html,
-        );
+        // Nothing downloads the whole world (catalog-data-model.md §9.1).
+        self::assertStringNotContainsString('CC_CATALOG_URL', $html);
         self::assertStringContainsString('window.CC_MAP_SRC', $html);
         self::assertStringContainsString('map/catalog-load', $html);
 
-        // Area first (catalog-data-model.md §9.1): the page preloads the region
-        // stamps, the first thing the loader reads, and never the worldwide
-        // document, which a rider who only looks at their own area never needs.
+        // Area first: the page preloads the region stamps, the first thing the
+        // loader reads.
         self::assertStringContainsString('rel="preload" as="fetch" href="/map/catalog/stamps.json" crossorigin', $html);
-        self::assertDoesNotMatchRegularExpression('~rel="preload"[^>]*catalog\.json~', $html, 'the worldwide document is loaded on demand only');
-        self::assertStringContainsString('window.CC_CATALOG_BOOT = {"regions":[],"worldwide":false};', $html, 'a plain visit needs nothing beyond the rider\'s own regions');
+        self::assertStringContainsString('window.CC_CATALOG_BOOT = {"regions":[]};', $html, 'a plain visit needs nothing beyond the rider\'s own regions');
         self::assertStringNotContainsString('src="/assets/data/', $html);
         self::assertStringNotContainsString('stays-merge', $html);
         self::assertSame(0, preg_match('#<script src="[^"]*\bmap/map\b[^"]*"#', $html), 'map.js must arrive via the loader, not a direct script tag');

@@ -30,6 +30,8 @@ final readonly class ItemFeature
         public string $tier,
         public array $geometry,
         public ItemEvidence $evidence,
+        // The region's public slug (/v1/regions), null for a place outside every region.
+        public ?string $regionId = null,
     ) {
     }
 
@@ -50,6 +52,7 @@ final readonly class ItemFeature
                 'last_confirmed' => $this->evidence->lastConfirmed?->format('Y-m-d'),
                 'last_seen_upstream' => $this->evidence->lastSeenUpstream?->format('Y-m-d'),
                 'verified_by' => $this->evidence->verifiedBy,
+                'region_id' => $this->regionId,
             ],
         ];
     }

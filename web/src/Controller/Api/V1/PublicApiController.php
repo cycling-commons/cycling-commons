@@ -34,6 +34,14 @@ final class PublicApiController extends AbstractController
     private const int LIMIT_MAX = 500;
 
     /**
+     * Name search bounds. Three letters, because the name index is a trigram
+     * index (Version20260928180000): shorter words cannot use it and would
+     * read every row.
+     */
+    private const int Q_MIN = 3;
+    private const int Q_MAX = 100;
+
+    /**
      * @see docs/specs/public-api.md §2.2
      */
     #[Route('/v1/map-config', name: 'api_v1_map_config', methods: ['GET'])]
@@ -99,12 +107,33 @@ final class PublicApiController extends AbstractController
             return $this->badRequest('invalid_tier', 'tier must be community or curated, or absent for both');
         }
 
-        $bbox = $this->parseBbox(\is_string($query['bbox'] ?? null) ? $query['bbox'] : '');
-        if (null === $bbox) {
-            return $this->badRequest('invalid_bbox', 'bbox is required: minLon,minLat,maxLon,maxLat in WGS84, min < max');
+        // Routes join the answer only when asked for: a consumer that never
+        // asked keeps the answer it had.
+        $routes = $query['routes'] ?? null;
+        if (null !== $routes && 'include' !== $routes) {
+            return $this->badRequest('invalid_routes', 'routes must be include, or absent for items only (letter=R gives routes only)');
         }
-        if ($bbox[2] - $bbox[0] > self::BBOX_MAX_SPAN_DEG || $bbox[3] - $bbox[1] > self::BBOX_MAX_SPAN_DEG) {
-            return $this->badRequest('bbox_too_large', \sprintf('bbox may span at most %.0fx%.0f degrees', self::BBOX_MAX_SPAN_DEG, self::BBOX_MAX_SPAN_DEG));
+
+        $q = $query['q'] ?? null;
+        if (null !== $q) {
+            $q = \is_string($q) ? trim($q) : '';
+            $length = mb_strlen($q);
+            if ($length < self::Q_MIN || $length > self::Q_MAX) {
+                return $this->badRequest('invalid_q', \sprintf('q must be %d to %d characters of a name', self::Q_MIN, self::Q_MAX));
+            }
+        }
+
+        // A name narrows the search enough on its own; without one, the box
+        // is what keeps the answer small.
+        $bbox = null;
+        if (null === $q || isset($query['bbox'])) {
+            $bbox = $this->parseBbox(\is_string($query['bbox'] ?? null) ? $query['bbox'] : '');
+            if (null === $bbox) {
+                return $this->badRequest('invalid_bbox', 'bbox is required unless q is given: minLon,minLat,maxLon,maxLat in WGS84, min < max');
+            }
+            if ($bbox[2] - $bbox[0] > self::BBOX_MAX_SPAN_DEG || $bbox[3] - $bbox[1] > self::BBOX_MAX_SPAN_DEG) {
+                return $this->badRequest('bbox_too_large', \sprintf('bbox may span at most %.0fx%.0f degrees', self::BBOX_MAX_SPAN_DEG, self::BBOX_MAX_SPAN_DEG));
+            }
         }
 
         $limit = $query['limit'] ?? null;
@@ -113,7 +142,7 @@ final class PublicApiController extends AbstractController
 
         $payload = [
             'type' => 'FeatureCollection',
-            'features' => array_map(static fn ($f) => $f->toGeoJson(), $items->featuresInBbox($letter, $bbox, $limit, $tier)),
+            'features' => array_map(static fn ($f) => $f->toGeoJson(), $items->search($letter, $bbox, $q, $limit, $tier, null !== $routes)),
             'licence' => 'ODbL-1.0',
             'attribution' => CategoryTable::ATTRIBUTION,
         ];

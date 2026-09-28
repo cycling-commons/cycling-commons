@@ -37,7 +37,7 @@ final class MapBestOfTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $r = $this->verifiedVotedRoute($em, Season::Spring, BikeType::Gravel);
 
-        // No login — endpoint is public (like catalog.json).
+        // No login — endpoint is public (like the catalog region slices).
         $client->request('GET', '/map/best-of?season=spring&bike=Gravel');
         self::assertResponseIsSuccessful();
         self::assertResponseHasHeader('Cache-Control');

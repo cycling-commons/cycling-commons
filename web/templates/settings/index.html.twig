@@ -261,8 +261,9 @@
         {{ form_errors(profileForm.publicProfile) }}
         {# The name on a map photo is a stored string, re-stamped the moment this
            toggle is saved (App\Media\RiderCreditSync). Our copy is right at
-           once, but /map/catalog.json is `public, max-age=3600`, so a browser
-           that already has it keeps showing the old credit for up to an hour.
+           once, and every region's catalog stamp moves with it, but a map
+           already open in a browser keeps the old credit until it next checks
+           the stamps (on reload, or when the tab comes back into view).
            Said here rather than only on /privacy, because this is the screen
            where somebody flips the switch and then goes looking. #}
         <p class="hint" style="margin:.5rem 0 0">{{ 'settings.toggle_public_delay'|trans }}</p>

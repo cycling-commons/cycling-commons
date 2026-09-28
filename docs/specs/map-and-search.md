@@ -114,24 +114,20 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   contribution.
 - **Boot sequence** (`catalog-load.js`): read `GET /map/catalog/stamps.json`
   (preloaded by the page) → fetch `GET /map/catalog/region/{rid}.json?v=<stamp>`
-  for every region of the active scope, plus the region of an `?item=` or
-  `?route=` link (`window.CC_CATALOG_BOOT`), and splice each into an empty
-  payload; the worldwide `window.CC_CATALOG_URL` (`GET /map/catalog.json`) is
-  fetched instead only for the Everywhere scope or a link by name or to a place
-  no region holds (catalog-data-model.md §9.1) → expose the layers as the
-  `window.CC_*` globals → apply the
+  for every region of the active scope, plus the regions a link points into
+  (`window.CC_CATALOG_BOOT`), and splice each into an empty payload; nothing
+  downloads the whole world (catalog-data-model.md §9.1) → expose the layers
+  as the `window.CC_*` globals → apply the
   stays merge (PIVOT features tagged `src='pivot'` and appended once to the OSM
   stays pool — a deliberate merge driving the Tourisme-Wallonie attribution
   branch and a single dot-render path) → inject `map.js`
   (`window.CC_MAP_SRC`). `map.js` **execution** waits on the catalog; its
   **download** does not — the template preloads it so both requests are in
   flight together. Catalog-fetch failure still boots the map (empty pools).
-  The preload and `window.CC_CATALOG_URL` are **one Twig value**
-  (`catalog_url`), because a preload only counts when the URL matches the
-  request exactly: while the preload named the bare path and the fetch carried
-  the `?v=` tag, the browser downloaded the catalog twice (1 MB gzipped each
-  time) and then warned that the preload went unused. Fixed 2026-09-09 and
-  pinned by `tests/Smoke/MapPageTest.php::testMapBootsFromCatalogEndpoint`.
+  The page preloads `stamps.json`, and the loader asks for it with no extra
+  header, because a preload only counts when the request matches it exactly.
+  Pinned by `tests/Smoke/MapPageTest.php::testMapBootsFromCatalogEndpoint`
+  and `tests/js/catalog-area-first.test.cjs`.
 - **`_styleReady` rule:** `render()` no-ops until the map `load` event flips
   `_styleReady` — async responses (e.g. the initial best-of fetch) may resolve
   before the style loads, and `addSource`/`addLayer` throw on an unloaded
@@ -149,7 +145,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 
 | Global | Content | Audience |
 |---|---|---|
-| `CC_CATALOG_URL`, `CC_MAP_SRC` | catalog endpoint + digested map.js URL | all |
+| `CC_CATALOG_BOOT`, `CC_MAP_SRC` | the catalog regions a link needs beyond the scope + digested map.js URL | all |
 | `CC_FIELD_SCHEMA` | per-type display-field schema, localized per request (§6.2) | all |
 | `CC_I18N` | every string map.js renders itself (`MapController::mapI18n()`); English fallbacks stay inline in map.js so it works standalone | all |
 | `CC_PREFS` | `{bikes:[], styles:[]}` value-lists; `[]/[]` for anonymous (§4.4) | all |
@@ -174,7 +170,6 @@ see the wiki page `wiki/developers/map-page.md`, "The map page, request by reque
 
 | Endpoint | Purpose | Caching |
 |---|---|---|
-| `GET /map/catalog.json` | whole served catalog, letters keyed (transitional, §7.1); loaded on demand only | public, ETag, max-age 3600, **URL-versioned** |
 | `GET /map/catalog/stamps.json` | one freshness stamp per region, so a browser knows which regions moved (catalog-data-model.md §9.1) | public, ETag, **no-cache** (always revalidated) |
 | `GET /map/catalog/region/{rid}.json` | one region's rows in the payload's shapes; the map is built from these | public, ETag, max-age 86400, **URL-versioned by the stamp** |
 | `GET /map/item/{id}/history` | per-item change log for the drawer's "Recent changes"; empty list (200) for never-edited items, never 404 | public, ETag, max-age 60 |
@@ -205,20 +200,17 @@ region of the active scope is fetched from
 `GET /map/catalog/region/{rid}.json?v=<stamp>` and spliced into the payload in
 hand: the region's rows out, the slice's rows in. A new scope fetches its own
 regions; a moved stamp refetches that region only. The twelve Dutch provinces
-are 154 kB gzipped against the worldwide 945 kB on production. A rider whose
+are 154 kB gzipped; every region in one document was 945 kB on production. A rider whose
 submission is approved reloads into it, rather than watching their
 contribution "disappear" until a cache expires (owner-reported, the Zuiderdijk
 approval).
 
-**The worldwide document is fetched on demand, through a versioned URL**:
-`CC_CATALOG_URL = /map/catalog.json?v=<tag>`, loaded once per page for "Search
-everywhere" (§7.3), the Everywhere scope, or a link by name or to a place no
-region holds. The tag (`CatalogStamps::versionTag()`) follows the build, the
-day and the rows that belong to no region, and deliberately ignores what
-happens *inside* a region: a tag that moved on every curator decision made one
-approval in Wallonia a fresh megabyte for a rider in Japan (owner 2026-09-16:
-"the token must be region bound"). The regions the map already holds go back
-over it.
+**Nothing downloads the whole world.** "Search everywhere" asks
+`/v1/search?q=` for our own items (§7.1), and a link points the loader at the
+regions it needs (`CC_CATALOG_BOOT`): the region of an `?item=` or `?route=`,
+every region holding a `?feature=` name, region `0` for a place no region
+holds. Freshness is region-bound: a curator's decision in Wallonia moves only
+Wallonia's stamp (owner 2026-09-16: "the token must be region bound").
 
 An **already-open map tab hot-refreshes on tab return** (2026-08-13): a
 moderator's loop is approve-in-the-desk-tab → switch back to the open map, and
@@ -1972,7 +1964,7 @@ permanently retired.
   keeps `CatalogField::$display === true` fields in `fields`-then-`addFields`
   order, resolves labels through the translator once at serialize time, and is
   injected as `window.CC_FIELD_SCHEMA = {A: […], …, R: […]}` — **localized per
-  request, deliberately kept OUT of `catalog.json`** (that endpoint is
+  request, deliberately kept OUT of the catalog slices** (they are
   locale-agnostic and HTTP-cached; never inflate the cached bulk payload with
   locale-varying data).
 - **`display` flag semantics:** intake-only fields (the `name` title field,
@@ -2329,7 +2321,10 @@ catalogue pin) at `TOWN_ZOOM` = 14, fixed rather than "at least", and
 from `assets/brand/logo-mark.svg` (the ink pin with the spoked wheel,
 `assets/map/town-pin.js`, `.cc-town-pin`, the reveal pin's pulse under it) as
 a bottom-anchored marker, cleared with the reveal pin when the drawer closes
-or another one opens. Until then the card fitted bounds over the place and all
+or another one opens. It stands above every pin (owner 2026-09-28), as do the
+hover halo and the reveal pin: `.cc-town-pin,.cc-highlight,.cc-pin.reveal`
+carry `z-index:3` in map.css, where ordinary pins carry none and stack in the
+order they were added; map popups sit above at `z-index:4`. Until then the card fitted bounds over the place and all
 nearby items (`maxZoom 13.5`) so hover-pulsed rows were always on screen; that
 framing is gone, and a nearby row's halo may now sit a drag away. Hovering a
 row still pulses an anchor-aware halo (`hlOff`, §6.1). A pulse over empty map
@@ -2539,9 +2534,32 @@ the index and the dropdown.
 The index covers the regions the map holds (catalog-data-model.md §9.1), and it
 is rebuilt each time a region lands (`__ccApplyCatalog`). The dropdown takes its
 list from the current index on every search (`searchIdx()` in `search-ui.js`),
-so a region loaded by a new scope is searchable at once. Switching the reach to
-Everywhere loads the worldwide document (`window.CCCatalog.ensureWorldwide()`);
-the list shows what is held at once and fills in when it lands.
+so a region loaded by a new scope is searchable at once. With the reach on
+Everywhere, our items beyond the regions held come from `/v1/search?q=` (the
+public API, public-api.md §2.2): up to 30 hits, deduplicated against the index,
+each naming its region by slug. Picking one lifts the scope to that region,
+loads it (`window.CCCatalog.ensureRegion()`) and opens the place, or the route,
+from the rows it brought.
+
+**The result list takes the panel's empty space, and no more** (owner
+2026-09-28: "use the empty space", then "now it goes too far down"):
+`.search-res` is 300 px high at most (map.css), and `fitResults()` in
+`search-ui.js` adds whatever the drawer body leaves unused below its last
+section, measured each time the list opens and on resize. A long answer fills
+that space; the Region section below never leaves the screen for it; a short
+answer takes only its own height.
+
+**Routes are the rider's to add** (owner 2026-09-28). A "Routes" checkbox
+sits above the "Everywhere" chip in the search head (`#searchRoutes`,
+`map.search_routes`): a checkbox because it adds to the list, where the chip
+moves the search. The two stack in `.search-chips` and the heading aligns to
+the top beside them, so it keeps its width for the area name. Unticked until
+ticked, the choice remembered in this browser (`localStorage`
+`cc-search-routes`; blocked storage means unticked). Unticked, route rows leave
+the results the map holds; ticked, they stay, and the worldwide lookup asks
+`/v1/search?routes=include`. It never hides anything else. While it is ticked,
+the example in the empty search box names routes too
+(`map.search_placeholder_routes`: "A climb, town, viewpoint, route…").
 
 > **Transitional scope:** this whole-catalog-to-client model is superseded
 > going forward by [coverage-provider.md](coverage-provider.md) — the local

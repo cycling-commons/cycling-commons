@@ -325,8 +325,8 @@ final class MediaBackfillPhotoCameraCommand extends Command
             $attributes = "jsonb_set({$attributes}, '{photos}', CAST(:photos AS jsonb))";
             $params['photos'] = json_encode($photos, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE);
         }
-        // updated_at moves so the catalog payload's version tag moves with it,
-        // and a cached catalog.json does not keep serving the old entries.
+        // updated_at moves because the row changed; the map's region stamp
+        // moves by itself (catalog_change), so no cached slice keeps the old entries.
         $this->db->executeStatement('UPDATE item SET attributes = '.$attributes.', updated_at = NOW() WHERE id = :id', $params);
     }
 

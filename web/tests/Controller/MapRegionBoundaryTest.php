@@ -27,7 +27,7 @@ final class MapRegionBoundaryTest extends WebTestCase
         $em->persist($region);
         $em->flush();
 
-        // No login — public like catalog.json.
+        // No login — public like the catalog region slices.
         $client->request('GET', '/map/region/'.$slug.'/boundary');
         self::assertResponseIsSuccessful();
         self::assertResponseHasHeader('Cache-Control');
