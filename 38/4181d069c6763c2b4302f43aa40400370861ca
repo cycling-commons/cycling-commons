@@ -1,0 +1,26 @@
+developers/docker/nginx/app.conf
+  s_6e1d7c95fbc8b5::t_0cefe418b80d4f 54-56
+developers/docker/compose.yaml
+  s_6e1d7c95fbc8b5::t_0cefe418b80d4f 233
+docs/specs/dev-environment.md
+  s_6e1d7c95fbc8b5::t_f71d05ee66fb3b 90
+developers/docker/nginx/bot-probes.conf
+  s_6e1d7c95fbc8b5::t_0cefe418b80d4f 1-12,15-28
+  s_6e1d7c95fbc8b5::t_f71d05ee66fb3b 13-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "384181d069c6763c2b4302f43aa40400370861ca",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
