@@ -1,0 +1,185 @@
+web/tests/Controller/MapBestOfTest.php
+  s_6e1d7c95fbc8b5::t_f045ca274990d7 40
+web/templates/map/index.html.twig
+  s_6e1d7c95fbc8b5::t_04fbcb67a4c040 123
+  s_6e1d7c95fbc8b5::t_055f8b07c53700 124-126,131
+  s_6e1d7c95fbc8b5::t_ca766e237fa928 129-130,132-133
+  s_6e1d7c95fbc8b5::t_530db3b24d225a 135
+  s_6e1d7c95fbc8b5::t_cf0bab4119ab85 915-917
+web/translations/messages.de.yaml
+  s_6e1d7c95fbc8b5::t_04fbcb67a4c040 1889-1890
+  s_6e1d7c95fbc8b5::t_530db3b24d225a 1914
+web/translations/messages.nl.yaml
+  s_6e1d7c95fbc8b5::t_04fbcb67a4c040 1886-1887
+  s_6e1d7c95fbc8b5::t_530db3b24d225a 1911
+docs/specs/security-architecture.md
+  s_6e1d7c95fbc8b5::t_a59071a92dbf3f 216
+web/templates/settings/index.html.twig
+  s_6e1d7c95fbc8b5::t_98e49297a507fd 264-266
+web/config/packages/security.yaml
+  s_6e1d7c95fbc8b5::t_190b51a9be00e8 50,68,76-77,84,91,102,113,118
+web/src/Media/RiderCreditSync.php
+  s_6e1d7c95fbc8b5::t_98e49297a507fd 19
+web/tests/js/route-desk-shortcut.test.mjs
+  s_6e1d7c95fbc8b5::t_f045ca274990d7 6
+web/tests/Catalog/CatalogProviderTest.php
+  s_6e1d7c95fbc8b5::t_b87c2e88e48cd5 927-929,931,942-954
+  s_6e1d7c95fbc8b5::t_dda5c64321ead3 68,283
+web/migrations/Version20260928180000.php
+  s_6e1d7c95fbc8b5::t_26e0fb16422b72 13,16,18-19,34,41,47
+  s_6e1d7c95fbc8b5::t_3ba1eafbe6d22f 20-21,23-24
+  s_6e1d7c95fbc8b5::t_acaf3ea716ec45 1-12,14-15,17,22,25-33,35-40,42-46,48-50
+web/tests/Catalog/ManualSourceTest.php
+  s_6e1d7c95fbc8b5::t_dda5c64321ead3 64
+web/tests/Security/CspTest.php
+  s_6e1d7c95fbc8b5::t_87ff4f948a7c06 264
+web/tests/Auth/TwoFactorTest.php
+  s_6e1d7c95fbc8b5::t_87ff4f948a7c06 424
+web/tests/Api/PublicApiV1Test.php
+  s_6e1d7c95fbc8b5::t_8e78255fc8e729 92,130-158,161-170,201-208,216-217,233
+  s_6e1d7c95fbc8b5::t_dda5c64321ead3 263
+  s_6e1d7c95fbc8b5::t_26e0fb16422b72 159-160,209-215,232
+  s_6e1d7c95fbc8b5::t_b6a9bcd637dcb3 171-200,234
+web/tests/Catalog/CatalogDocumentsTest.php
+  s_6e1d7c95fbc8b5::t_e269db471b510f 99-100
+  s_6e1d7c95fbc8b5::t_b87c2e88e48cd5 96-97,111
+web/tests/Controller/MapRegionBoundaryTest.php
+  s_6e1d7c95fbc8b5::t_f045ca274990d7 30
+web/tests/js/catalog-area-first.test.cjs
+  s_6e1d7c95fbc8b5::t_bf447dd9b6e00d 4-6,35,59,61,85,100-101,103-108,111-112,114-123
+wiki/developers/map-page.md
+  s_6e1d7c95fbc8b5::t_339fcd226c53e2 53-55,128-130
+  s_6e1d7c95fbc8b5::t_a4d072dbf9970d 86
+web/src/Controller/MapController.php
+  s_6e1d7c95fbc8b5::t_cf0bab4119ab85 70,72,76,635,637-639,641,645,653-654,657-661,663
+docs/specs/osm-data-architecture.md
+  s_6e1d7c95fbc8b5::t_a59071a92dbf3f 68
+web/src/Api/V1/Dto/ItemFeature.php
+  s_6e1d7c95fbc8b5::t_79b9290d977c23 33-34,55
+web/tests/Api/PublicItemsTrustEnvelopeTest.php
+  s_6e1d7c95fbc8b5::t_b943eff925f9bb 100
+web/assets/styles/map.css
+  s_6e1d7c95fbc8b5::t_e4837fc53d28d7 1543-1548
+  s_6e1d7c95fbc8b5::t_055f8b07c53700 248,250-253
+  s_6e1d7c95fbc8b5::t_ca766e237fa928 254
+web/tests/Smoke/MapPageTest.php
+  s_6e1d7c95fbc8b5::t_f83de31f42d4a4 102-103,107-108,110
+web/src/Catalog/ClaimedOsmRefs.php
+  s_6e1d7c95fbc8b5::t_dbf36bc140a7bc 35
+web/src/Catalog/CatalogDocuments.php
+  s_6e1d7c95fbc8b5::t_e36d66b6a24cfc 17-18,68,70,78,106
+web/assets/map/catalog-load.js
+  s_6e1d7c95fbc8b5::t_b14a9e20390fd0 138-141,143-144,146,149,154-155,171,175-176,180-182,188-189,191-192,194,268,292-305,310,312-314,317-319,322,332,337-338
+  s_6e1d7c95fbc8b5::t_fbf8e710d91406 145,165-167
+web/tests/js/search-routes-chip.test.cjs
+  s_6e1d7c95fbc8b5::t_c3dd6d811e3f34 56-63
+  s_6e1d7c95fbc8b5::t_180ff35485b2e8 21,23-24
+  s_6e1d7c95fbc8b5::t_3866be39c7a7fe 1-3,5-17,20,26-42,46
+  s_6e1d7c95fbc8b5::t_60a343949d7458 64-71
+  s_6e1d7c95fbc8b5::t_055f8b07c53700 4,18-19,22,25,43-45
+  s_6e1d7c95fbc8b5::t_530db3b24d225a 47-55
+docs/specs/catalog-data-model.md
+  s_6e1d7c95fbc8b5::t_e51e3a0c46bf2e 1144-1152
+  s_6e1d7c95fbc8b5::t_6885cf3c84fbf3 10,991,993-998,1001-1002,1061-1062,1201
+  s_6e1d7c95fbc8b5::t_afabfecaaa06b4 1052-1056,1065,1067-1070,1079-1093,1138-1140
+web/src/Api/V1/PublicItemsProvider.php
+  s_6e1d7c95fbc8b5::t_1be4002e430d0d 36
+  s_6e1d7c95fbc8b5::t_9ba2cfd3dd8001 140-142,146
+  s_6e1d7c95fbc8b5::t_79b9290d977c23 143-145,147-150,154,163-164,166,168-183,201,204,222
+  s_6e1d7c95fbc8b5::t_b300098446bb60 10,59-139
+  s_6e1d7c95fbc8b5::t_77ee22b056a24e 22-25,30-35,37-49
+web/translations/messages.es.yaml
+  s_6e1d7c95fbc8b5::t_530db3b24d225a 2500
+  s_6e1d7c95fbc8b5::t_04fbcb67a4c040 2475-2476
+web/translations/messages.en.yaml
+  s_6e1d7c95fbc8b5::t_530db3b24d225a 2493
+  s_6e1d7c95fbc8b5::t_04fbcb67a4c040 2468-2469
+web/src/Catalog/CatalogStamps.php
+  s_6e1d7c95fbc8b5::t_dbf36bc140a7bc 49-60
+  s_6e1d7c95fbc8b5::t_a50b5493bd92b2 31
+  s_6e1d7c95fbc8b5::t_a84fb7e074b916 48
+web/translations/messages.fr.yaml
+  s_6e1d7c95fbc8b5::t_04fbcb67a4c040 1881-1882
+  s_6e1d7c95fbc8b5::t_530db3b24d225a 1906
+web/src/Media/Command/MediaBackfillPhotoCameraCommand.php
+  s_6e1d7c95fbc8b5::t_98e49297a507fd 328-329
+docs/specs/public-api.md
+  s_6e1d7c95fbc8b5::t_56946c2c9e163a 160-162,185-189
+  s_6e1d7c95fbc8b5::t_d0ee943dbcf2b2 163-167
+  s_6e1d7c95fbc8b5::t_a59071a92dbf3f 143
+  s_6e1d7c95fbc8b5::t_a4d072dbf9970d 168-172
+  s_6e1d7c95fbc8b5::t_94a08df93023f8 190
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_6e1d7c95fbc8b5::t_f045ca274990d7 924
+wiki/developers/api/serving-map-data.md
+  s_6e1d7c95fbc8b5::t_9ca97c000ab749 133,135-136,138,141,146,164-165,177-178,184-185,219,340
+  s_6e1d7c95fbc8b5::t_d0ee943dbcf2b2 147,220
+  s_6e1d7c95fbc8b5::t_a4d072dbf9970d 148-149,180-183,186,221
+  s_6e1d7c95fbc8b5::t_4365c19e30edea 179
+web/tests/Smoke/ChangeHistoryEndpointTest.php
+  s_6e1d7c95fbc8b5::t_f045ca274990d7 46
+docs/specs/route-domain.md
+  s_6e1d7c95fbc8b5::t_a59071a92dbf3f 48,490,532,651,659
+docs/specs/map-and-search.md
+  s_6e1d7c95fbc8b5::t_7c235c7025e1cd 2324-2327
+  s_6e1d7c95fbc8b5::t_c67e5237d47a04 2544-2550
+  s_6e1d7c95fbc8b5::t_339fcd226c53e2 117-120,203,208-213,1967,2537-2540
+  s_6e1d7c95fbc8b5::t_dce304c9b166f2 2551
+  s_6e1d7c95fbc8b5::t_517c63fe997142 2552-2559
+  s_6e1d7c95fbc8b5::t_a4d072dbf9970d 2541-2543
+  s_6e1d7c95fbc8b5::t_56476efc2a549c 2560-2562
+  s_6e1d7c95fbc8b5::t_f045ca274990d7 127-130,148
+web/tests/Smoke/CatalogEndpointTest.php
+  s_6e1d7c95fbc8b5::t_87ff4f948a7c06 15-20,26-47,49-55
+  s_6e1d7c95fbc8b5::t_f83de31f42d4a4 129-130,137-139,150-153,156
+web/tests/Translation/MarkStripTest.php
+  s_6e1d7c95fbc8b5::t_dda5c64321ead3 372
+web/public/api/openapi.yaml
+  s_6e1d7c95fbc8b5::t_7d4f242ec4b00c 153-156,172-177,734-756
+  s_6e1d7c95fbc8b5::t_d0ee943dbcf2b2 165,168
+  s_6e1d7c95fbc8b5::t_0f9f6e4756d41f 151-152,157-158,163-164,166-167,169,716-721
+  s_6e1d7c95fbc8b5::t_56946c2c9e163a 676
+web/assets/map/search-ui.js
+  s_6e1d7c95fbc8b5::t_055f8b07c53700 73-76,78,86,88-89,387
+  s_6e1d7c95fbc8b5::t_e45a59b176eb97 9,77,79-80,90,92-94,272-274,283,293,308
+  s_6e1d7c95fbc8b5::t_26e0fb16422b72 280-281
+  s_6e1d7c95fbc8b5::t_530db3b24d225a 81-85,87,91
+  s_6e1d7c95fbc8b5::t_cb86702e142899 12,58,99,130,256-271,275-279,282,284-292,294-295,318,378
+  s_6e1d7c95fbc8b5::t_dfa2daffc25dbe 101-110,124-125,368
+  s_6e1d7c95fbc8b5::t_c67e5237d47a04 111-113,115-116
+  s_6e1d7c95fbc8b5::t_9ba2cfd3dd8001 298-299
+  s_6e1d7c95fbc8b5::t_d7c152494993d8 114,117-123
+  s_6e1d7c95fbc8b5::t_89ca41554e9158 296-297
+web/src/Controller/Api/V1/PublicApiController.php
+  s_6e1d7c95fbc8b5::t_26e0fb16422b72 37-41
+  s_6e1d7c95fbc8b5::t_b300098446bb60 110-114,116,145
+  s_6e1d7c95fbc8b5::t_6d03d287ba0bfc 42-43,117-136
+  s_6e1d7c95fbc8b5::t_bd3d790a5bf503 36
+web/assets/map/util.js
+  s_6e1d7c95fbc8b5::t_98e49297a507fd 11-12
+web/src/Api/V1/Dto/RouteFeature.php
+  s_6e1d7c95fbc8b5::t_b300098446bb60 1-50
+docs/specs/coverage-provider.md
+  s_6e1d7c95fbc8b5::t_a59071a92dbf3f 772,1117,1120,1143
+web/src/Catalog/CatalogProvider.php
+  s_6e1d7c95fbc8b5::t_dbf36bc140a7bc 221,378,603
+  s_6e1d7c95fbc8b5::t_a50b5493bd92b2 311-335
+  s_6e1d7c95fbc8b5::t_98e49297a507fd 708
+  s_6e1d7c95fbc8b5::t_08f68eb527ae96 310
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0f480ca3eee015d9ccd15e45e63cfb318895d8af",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
