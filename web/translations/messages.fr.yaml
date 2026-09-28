@@ -2390,6 +2390,7 @@ map:
   d_race_start_finish: 'part et arrive ici'
   d_race_via: 'passe ici'
   d_race_editions: '{n} éditions · dernière {y}'
+  d_race_editions_undated: '{n} éditions'
   d_race_once: 'dernière {y}'
   d_routes_h: 'Itinéraires qui passent ici'
   d_route_km: '{km} km'

@@ -166,7 +166,10 @@ function townHtml(d, name, meta){
   const races = c.length ? `<h4 class="cc-near-h">${escPend(D.cyclingH||'Cycling here')}</h4>
     <ul class="cc-town-races">${c.map(r=>{
       const label = r.url ? `<a href="${safeHref(r.url)}" target="_blank" rel="noopener">${escPend(r.label)}</a>` : escPend(r.label);
-      const when = r.n>1 ? (D.raceEditions||'{n} editions · last {y}').replace('{n}', r.n).replace('{y}', r.last||'') : (r.last ? (D.raceOnce||'last {y}').replace('{y}', r.last) : '');
+      // No year on Wikidata: say the count and nothing about "last".
+      const when = r.n>1
+        ? (r.last ? (D.raceEditions||'{n} editions · last {y}').replace('{n}', r.n).replace('{y}', r.last) : (D.raceEditionsUndated||'{n} editions').replace('{n}', r.n))
+        : (r.last ? (D.raceOnce||'last {y}').replace('{y}', r.last) : '');
       return `<li class="cc-town-race">${label}<small>${escPend(relWords(r.rels||[]))}${when?' · '+escPend(when):''}</small></li>`; }).join('')}</ul>` : '';
   /* Routes that pass through here, from OUR layer rather than Wikidata: the
      races above say what happened here, these say what you can ride from here

@@ -2441,7 +2441,13 @@ The first reader claims a `town_summary` row for (ref, language) and queues
    cycling"). Signed cycling routes (Q102307360) and mountain biking routes
    (Q71716093) that name the place list as themselves, though few carry start
    or end points on Wikidata: the Great Divide has none, so Banff shows no
-   route yet. Labels and links come from one more `wbgetentities` batch. The
+   route yet. An edition's year is its point in time (P585), or its start
+   time (P580) when it has none, as a multi-day race often does; a race with
+   no year at all reads "2 editions" and says nothing about "last" (owner
+   2026-09-28, Den Helder). The card repeats what Wikidata says: its 2005
+   Eneco Tour names Den Helder as start, where that edition started in
+   Mechelen, so Den Helder reads 2 editions until Wikidata is corrected.
+   Labels and links come from one more `wbgetentities` batch. The
    card shows up to eight, newest last edition first, as "Tour of Flanders,
    starts here, 21 editions, last 2025". This arm failing costs the town its
    list, not its paragraph; the query service is the slowest of the four

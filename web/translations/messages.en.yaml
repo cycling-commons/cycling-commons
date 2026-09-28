@@ -2980,6 +2980,7 @@ map:
   d_race_start_finish: 'starts and finishes here'
   d_race_via: 'passes through'
   d_race_editions: '{n} editions · last {y}'
+  d_race_editions_undated: '{n} editions'
   d_race_once: 'last {y}'
   d_routes_h: 'Routes through here'
   d_route_km: '{km} km'

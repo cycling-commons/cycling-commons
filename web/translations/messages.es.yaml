@@ -2988,6 +2988,7 @@ map:
   d_race_start_finish: 'sale y llega aquí'
   d_race_via: 'pasa por aquí'
   d_race_editions: '{n} ediciones · última {y}'
+  d_race_editions_undated: '{n} ediciones'
   d_race_once: 'última {y}'
   d_routes_h: 'Rutas que pasan por aquí'
   d_route_km: '{km} km'

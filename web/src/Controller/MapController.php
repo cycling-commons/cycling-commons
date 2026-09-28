@@ -473,7 +473,7 @@ final class MapController extends AbstractController
             'city' => 'd_city', 'nearbyH' => 'd_nearby_h',
             'townLoading' => 'd_town_loading', 'wikiText' => 'd_wiki_text', 'cyclingH' => 'd_cycling_h',
             'raceStart' => 'd_race_start', 'raceFinish' => 'd_race_finish', 'raceStartFinish' => 'd_race_start_finish', 'raceVia' => 'd_race_via',
-            'raceEditions' => 'd_race_editions', 'raceOnce' => 'd_race_once',
+            'raceEditions' => 'd_race_editions', 'raceEditionsUndated' => 'd_race_editions_undated', 'raceOnce' => 'd_race_once',
             'routesH' => 'd_routes_h', 'routeKm' => 'd_route_km',
             // docs/specs/map-and-search.md §6.3: climbs on this route.
             'routeClimbsH' => 'd_route_climbs_h', 'routeClimbAt' => 'd_route_climb_at', 'routeClimbsWait' => 'd_route_climbs_wait',

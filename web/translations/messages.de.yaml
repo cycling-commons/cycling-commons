@@ -2398,6 +2398,7 @@ map:
   d_race_start_finish: 'startet und endet hier'
   d_race_via: 'führt hier durch'
   d_race_editions: '{n} Austragungen · zuletzt {y}'
+  d_race_editions_undated: '{n} Austragungen'
   d_race_once: 'zuletzt {y}'
   d_routes_h: 'Routen, die hier vorbeiführen'
   d_route_km: '{km} km'

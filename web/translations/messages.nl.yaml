@@ -2395,6 +2395,7 @@ map:
   d_race_start_finish: 'start en finisht hier'
   d_race_via: 'komt hier langs'
   d_race_editions: '{n} edities · laatste {y}'
+  d_race_editions_undated: '{n} edities'
   d_race_once: 'laatste {y}'
   d_routes_h: 'Routes die hier langskomen'
   d_route_km: '{km} km'

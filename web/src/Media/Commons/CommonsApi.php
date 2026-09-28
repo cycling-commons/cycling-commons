@@ -381,7 +381,10 @@ final readonly class CommonsApi
      * sport is any subclass of cycle sport (Q53121), so road, gravel, mountain
      * bike, cyclo-cross, track and BMX all qualify. A signed cycling route
      * (Q102307360) or mountain biking route (Q71716093) that names the place
-     * is listed as itself. Labels are not asked for here: the label service
+     * is listed as itself. An edition's year is its point in time (P585),
+     * or its start time (P580) when it has none: a multi-day race such as
+     * the 2006 Eneco Tour carries only start and end (owner 2026-09-28, a
+     * "last" with no year). Labels are not asked for here: the label service
      * doubles the query's cost, and entities() fetches them in one batch.
      *
      * @return list<array{qid: string, rels: list<string>, n: int, last: ?int}> newest last-edition first, at most 8; a rel is start|finish|via, prefixed stage- when the edition was a stage of the race
@@ -412,7 +415,9 @@ final readonly class CommonsApi
               { VALUES ?routeRoot { wd:Q102307360 wd:Q71716093 }
                 ?item wdt:P31 ?cls . ?cls wdt:P279* ?routeRoot .
                 BIND(?item AS ?grp) BIND(?item AS ?ed) BIND(false AS ?stage) }
-              OPTIONAL { ?item wdt:P585 ?when }
+              OPTIONAL { ?item wdt:P585 ?pointInTime }
+              OPTIONAL { ?item wdt:P580 ?startTime }
+              BIND(COALESCE(?pointInTime, ?startTime) AS ?when)
             } GROUP BY ?grp ?rel ?stage ORDER BY DESC(?last) DESC(?n) LIMIT 30
             SPARQL;
         // The query service is the slowest of the four sources: 7 to 23 s for
