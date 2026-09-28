@@ -95,13 +95,15 @@ shared between:
 is a broken page under enforcement, which is why the test suite walks pages
 and asserts nonce coverage (security-architecture.md §2.6).
 
-One cross-origin script rides the nonce instead of a host entry: the Umami
-loader (`web/assets/js/analytics.js`) hands its own nonce
-(`document.currentScript.nonce`, supplied by the nonced include tag) to the
-`analytics.bikecoders.life/script.js` element it injects — whitelisting
-exactly that element per response without widening `script-src`
-(review 2026-08-16 deferred item 1, pulled forward;
-`tests/Security/AnalyticsNonceTest.php`).
+One cross-origin script is allowed by host, not by nonce: `script-src` names
+`https://analytics.bikecoders.life`, and the Umami loader
+(`web/assets/js/analytics.js`) injects its `script.js` without one, so no page
+carrying analytics is tied to a per-request value (page-caching.md §3.2).
+The loader's tag is printed only when `CC_ANALYTICS` is on, which is
+`.env.prod` alone: dev and staging get no analytics tag at all (owner
+2026-09-28), and the loader checks the hostname as a second guard.
+`tests/Security/AnalyticsNonceTest.php` pins all three: the host entry, no
+nonce on the tag, and the switch being on in `.env.prod` only.
 
 ### 2.3 Directive table
 

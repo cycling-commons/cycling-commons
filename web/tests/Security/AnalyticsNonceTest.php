@@ -41,6 +41,23 @@ final class AnalyticsNonceTest extends WebTestCase
         );
     }
 
+    /**
+     * Production prints the tag; the base file, which dev inherits, does not.
+     * Read from the committed files, never a `.local` override.
+     */
+    public function testOnlyProductionSwitchesAnalyticsOn(): void
+    {
+        $value = static function (string $file): ?string {
+            $matched = preg_match('/^CC_ANALYTICS=(.*)$/m', (string) file_get_contents(\dirname(__DIR__, 2).'/'.$file), $m);
+
+            return 1 === $matched ? trim($m[1]) : null;
+        };
+
+        self::assertSame('0', $value('.env'), 'dev inherits .env and must print no analytics tag');
+        self::assertSame('1', $value('.env.prod'));
+        self::assertNull($value('.env.staging'), 'staging inherits the off switch from .env');
+    }
+
     public function testTheIncludeTagCarriesNoNonce(): void
     {
         $client = static::createClient();
