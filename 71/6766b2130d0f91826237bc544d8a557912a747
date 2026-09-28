@@ -1,0 +1,24 @@
+.pre-commit-config.yaml
+  s_6e1d7c95fbc8b5::t_89742763dbd086 50-60
+tools/release-tag-prepush.sh
+  s_6e1d7c95fbc8b5::t_89742763dbd086 1-50
+docs/specs/roadmap-and-changelog.md
+  s_6e1d7c95fbc8b5::t_55a3e8cf63d8d2 59-63
+  s_6e1d7c95fbc8b5::t_e2566c766e5cee 64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "716766b2130d0f91826237bc544d8a557912a747",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
