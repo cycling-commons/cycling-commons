@@ -324,7 +324,7 @@ Same for every logged-out visitor, cheap to prove, and the ones a flood would
 aim at:
 
 `/`, `/about`, `/developers`, `/licenses`, `/privacy`, `/terms`,
-`/accessibility`, `/roadmap`, `/changelog`, `/credits`, `/regions`,
+`/accessibility`, `/roadmap`, `/whats-new`, `/credits`, `/regions`,
 `/regions/{slug}`, `/blog`, `/known-issues`, and the three guarded forms
 `/contact`, `/report-bug`, `/report/{type}/{id}`
 

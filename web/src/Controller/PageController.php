@@ -27,6 +27,7 @@ use App\World\CuratorScopes;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Intl\Countries;
@@ -89,6 +90,22 @@ final class PageController extends AbstractController
             'nav_active' => '',
             'releases' => ReleaseNotes::RELEASES,
         ]);
+    }
+
+    /**
+     * The English address of "What's new" until 2026-09-29, when it took the
+     * name the page and the footer use (owner: "and what about the url
+     * changelog?"). It is in bug reports that link a fix to
+     * `/changelog#v0.9.0`, in search results and in bookmarks, so it answers
+     * for good, with a permanent redirect. The `#release` part is the browser's and survives
+     * it; a query string is carried along.
+     */
+    #[Route('/changelog', name: 'changelog_moved', methods: ['GET', 'HEAD'])]
+    public function changelogMoved(Request $request): RedirectResponse
+    {
+        $qs = $request->getQueryString();
+
+        return new RedirectResponse($this->generateUrl('changelog', ['_locale' => 'en']).(null !== $qs ? '?'.$qs : ''), Response::HTTP_MOVED_PERMANENTLY);
     }
 
     /**

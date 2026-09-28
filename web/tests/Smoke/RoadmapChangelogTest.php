@@ -122,4 +122,21 @@ final class RoadmapChangelogTest extends WebTestCase
             self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $release['date']);
         }
     }
+
+    /**
+     * The English page moved from /changelog to /whats-new on 2026-09-29. The
+     * old address is in bug reports, search results and bookmarks, so it
+     * answers for good, query string kept; the feed keeps its address.
+     */
+    public function testTheOldEnglishAddressMovesForGood(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/changelog?utm_source=mail');
+        self::assertResponseRedirects('/whats-new?utm_source=mail', 301);
+
+        $client->request('GET', '/whats-new');
+        self::assertResponseIsSuccessful();
+        $client->request('GET', '/changelog.atom');
+        self::assertResponseIsSuccessful('the feed keeps its address');
+    }
 }

@@ -650,7 +650,7 @@ final class BugReportTest extends WebTestCase
         $row = $page->filter('#issue-'.$report->getId().' summary')->text();
         self::assertStringContainsString('Fixed on', $row);
         self::assertStringNotContainsString('Updated', $row);
-        self::assertCount(1, $page->filter('#issue-'.$report->getId().' a.tag-rel[href$="/changelog#v0.9.0"]'));
+        self::assertCount(1, $page->filter('#issue-'.$report->getId().' a.tag-rel[href$="/whats-new#v0.9.0"]'));
 
         $report->setStatus(BugStatus::InProgress);
         self::assertNull($report->getResolvedAt(), 'reopening clears it');

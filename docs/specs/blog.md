@@ -9,7 +9,7 @@ Built 2026-08-29, MVP by request.
 
 Everything this project publishes today is either a page that describes what
 the site IS (`/about`, `/terms`) or a machine-generated list of what changed
-(`/changelog`, `/roadmap`). There was nowhere to say "here is what happened
+(`/whats-new`, `/roadmap`). There was nowhere to say "here is what happened
 this month and what we think about it", which is the only writing that turns a
 tool into a thing people follow.
 

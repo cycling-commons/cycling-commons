@@ -807,7 +807,7 @@ this" is a conversation with the reporter, not a public notice.
 **Dates and releases (2026-09-19).** A Fixed entry shows "Fixed on <date>"
 from `bug_report.resolved_at`, stamped when the status becomes Resolved and
 cleared when it leaves it (`BugReport::setStatus()`), and the bare git tag
-(`v0.9.0`) as a link to that release on `/changelog#<tag>` when `fix_release` is set. The
+(`v0.9.0`) as a link to that release on `/whats-new#<tag>` when `fix_release` is set. The
 Fixed tab sorts by that date, newest fix first. An Open entry's date is
 `updated_at` and reads "Updated <date>": it moves on every edit, so it never
 stands in for a fix date. `Version20260919200000` backfilled resolved rows

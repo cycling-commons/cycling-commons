@@ -78,8 +78,13 @@ final class LocalizedPath
     ];
 
     /** @var array<string, string> */
+    /**
+     * "What's new" in every language, as the page and the footer call it.
+     * English was `/changelog` until 2026-09-29; that address stays a
+     * permanent redirect (PageController::changelogMoved()).
+     */
     public const array CHANGELOG = [
-        'en' => '/changelog',
+        'en' => '/whats-new',
         'fr' => '/nouveautes',
         'nl' => '/wat-is-er-nieuw',
         'de' => '/neuerungen',

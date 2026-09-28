@@ -69,7 +69,7 @@ Revisit when there is a separate infrastructure repository to hold it.
 - `credits-page.md` (**implemented**): what `/credits` promises, its three
   tiers of credit, the `data-pkg` marker contract, and the gate that stops the
   page drifting away from the dependencies it names.
-- `roadmap-and-changelog.md` (**implemented**): /roadmap, /changelog and the
+- `roadmap-and-changelog.md` (**implemented**): /roadmap, /whats-new (formerly /changelog) and the
   Atom feed from one list, why the version needs a git tag and nothing else, and
   the release-notes opt-in with its signed one-click unsubscribe.
 - `form-errors.md` (**implemented**): how a form tells a rider the submission

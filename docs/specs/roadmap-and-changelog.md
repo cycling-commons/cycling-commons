@@ -19,7 +19,12 @@ are the destination, not the first version.
 ## 2. One source, three readers
 
 `App\Content\ReleaseNotes` holds both lists as constants. `/roadmap` reads the
-unfinished half, `/changelog` and the Atom feed read the released half.
+unfinished half, `/whats-new` and the Atom feed read the released half.
+The English page was `/changelog` until 2026-09-29, when it took the name the
+page and the footer use; `/changelog` answers with a permanent redirect
+(`PageController::changelogMoved()`), because bug reports, search results and
+bookmarks carry it. The feed keeps `/changelog.atom`: feed readers are
+subscribed to that exact address, and nobody reads a feed address.
 
 **Why a PHP file and not a table.** Editing the roadmap is a pull request, which
 is the same review every other piece of copy gets and leaves a history for free.

@@ -224,7 +224,7 @@ final class CspTest extends WebTestCase
             'terms' => '/terms',
             'accessibility' => '/accessibility',
             'roadmap' => '/roadmap',
-            'changelog' => '/changelog',
+            'changelog' => '/whats-new',
             'credits' => '/credits',
             'regions' => '/regions',
             'blog' => '/blog',
