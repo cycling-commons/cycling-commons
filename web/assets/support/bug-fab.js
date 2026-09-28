@@ -519,6 +519,30 @@
 
   /* --- send ------------------------------------------------------------- */
 
+  /* "Clear everything": every field, every picture, and the kept draft, so a
+     reload no longer reopens the panel. The spam check is left alone: it is
+     tied to this visit, not to what was typed. */
+  function clearAll(e) {
+    if (e) e.preventDefault();
+    fTitle.value = '';
+    fBody.value = '';
+    clearSteps();
+    if (fEmail) fEmail.value = '';
+    if (root.dataset.area) fArea.value = root.dataset.area;
+    shots = [];
+    renderShots();
+    setSeverity('minor');
+    warn('');
+    clearDraft();
+    if (kept) kept.hidden = true;
+    fTitle.focus();
+  }
+
+  var kept = root.querySelector('.bugfab-kept');
+  root.querySelectorAll('.bugfab-clear').forEach(function (b) {
+    b.addEventListener('click', clearAll);
+  });
+
   function reset() {
     fTitle.value = '';
     fBody.value = '';
@@ -621,6 +645,9 @@
   loadDraft().then(function (draft) {
     /* Opening on its own is the point: a draft that is kept but invisible is
        one the writer assumes they lost. */
-    if (applyDraft(draft)) open();
+    if (applyDraft(draft)) {
+      if (kept) kept.hidden = false;
+      open();
+    }
   });
 })();

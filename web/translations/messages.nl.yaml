@@ -3699,6 +3699,8 @@ support:
     shot_remove: 'Deze afbeelding verwijderen'
     no_pow: 'Deze browser kan de spamcontrole niet afronden. Gebruik in plaats daarvan de contactpagina.'
     send_failed: 'Dat is niet verstuurd. Probeer het opnieuw, of gebruik de contactpagina.'
+    draft_kept: 'Je niet-verstuurde melding is bewaard.'
+    clear: 'Alles wissen'
   known:
     fixed_on: 'Opgelost op %date%'
     updated_on: 'Bijgewerkt op %date%'

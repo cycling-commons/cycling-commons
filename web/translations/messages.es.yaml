@@ -3727,6 +3727,8 @@ support:
     shot_remove: 'Quitar esta imagen'
     no_pow: 'Este navegador no puede completar la comprobación antispam. Use la página de contacto.'
     send_failed: 'No se ha enviado. Inténtelo de nuevo o use la página de contacto.'
+    draft_kept: 'Se ha guardado tu informe sin enviar.'
+    clear: 'Borrar todo'
   known:
     fixed_on: 'Corregido el %date%'
     updated_on: 'Actualizado el %date%'

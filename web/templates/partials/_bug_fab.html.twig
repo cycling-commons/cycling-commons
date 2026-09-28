@@ -84,6 +84,13 @@
 
     <div class="bugfab-body">
       <p class="bugfab-msg" role="alert" hidden></p>
+      {# Shown when the panel opened by itself because it found a kept draft:
+         what is kept may sit below the fold (steps, pictures), so say it and
+         offer the way out in the same line. #}
+      <p class="bugfab-hint bugfab-kept" role="status" hidden>
+        {{ 'support.fab.draft_kept'|trans }}
+        <a href="#" role="button" class="bugfab-clear">{{ 'support.fab.clear'|trans }}</a>
+      </p>
 
       <div class="bugfab-field">
         <label for="bf-title">{{ 'support.bug.field_title'|trans }}</label>
@@ -161,6 +168,7 @@
          data-failed="{{ 'support.challenge_failed'|trans }}"></p>
 
       <button type="button" class="btn btn-p bugfab-send">{{ 'support.bug.submit'|trans }}</button>
+      <button type="button" class="btn btn-g bugfab-clear">{{ 'support.fab.clear'|trans }}</button>
 
       <p class="bugfab-hint">
         <a href="{{ path('known_issues') }}">{{ 'support.bug.known_link'|trans }}</a>

@@ -3700,6 +3700,8 @@ support:
     shot_remove: 'Dieses Bild entfernen'
     no_pow: 'Dieser Browser kann die Spam-Prüfung nicht abschließen. Nutzen Sie stattdessen die Kontaktseite.'
     send_failed: 'Das wurde nicht gesendet. Versuchen Sie es erneut, oder nutzen Sie die Kontaktseite.'
+    draft_kept: 'Ihre nicht gesendete Meldung wurde aufbewahrt.'
+    clear: 'Alles löschen'
   known:
     fixed_on: 'Behoben am %date%'
     updated_on: 'Aktualisiert am %date%'

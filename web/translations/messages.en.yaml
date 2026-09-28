@@ -3718,6 +3718,8 @@ support:
     shot_remove: 'Remove this picture'
     no_pow: 'This browser cannot finish the spam check. Use the contact page instead.'
     send_failed: 'That did not send. Try again, or use the contact page.'
+    draft_kept: 'Your unsent report was kept.'
+    clear: 'Clear everything'
   known:
     fixed_on: 'Fixed on %date%'
     updated_on: 'Updated %date%'

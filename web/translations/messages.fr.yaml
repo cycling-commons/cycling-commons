@@ -3692,6 +3692,8 @@ support:
     shot_remove: 'Retirer cette image'
     no_pow: 'Ce navigateur ne peut pas terminer le contrôle anti-spam. Utilisez plutôt la page de contact.'
     send_failed: 'L''envoi a échoué. Réessayez, ou utilisez la page de contact.'
+    draft_kept: 'Votre signalement non envoyé a été conservé.'
+    clear: 'Tout effacer'
   known:
     fixed_on: 'Corrigé le %date%'
     updated_on: 'Mis à jour le %date%'
