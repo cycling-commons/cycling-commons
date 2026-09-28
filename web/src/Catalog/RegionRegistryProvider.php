@@ -38,36 +38,12 @@ final class RegionRegistryProvider
         /** @var list<array{id: int, slug: string, cc: string, w: float, s: float, e: float, n: float, adj: string, outline: ?string, default_map_mode: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, slug, country_code AS cc,
-                    ST_YMin(geom) AS s, ST_YMax(geom) AS n,
-                    /* Longitude, the seam-aware way. ST_XMin/ST_XMax are a
-                       minimum and a maximum over numbers and know nothing about
-                       ±180, so a region straddling it reports -180 to 180: a box
-                       359 degrees wide that contains everywhere. ST_ShiftLongitude
-                       moves the geometry into a continuous 0..360 space where the
-                       seam is not a discontinuity; the shifted edges are then
-                       mapped back and come out west > east, which is how GeoJSON
-                       writes a crossing box (RFC 7946 §5.2).
-
-                       The test is the RAW span, not a comparison of the two
-                       spans. Shifting adds 360 to a negative longitude and the
-                       result cannot hold the original mantissa, so every region
-                       in the western hemisphere comes back about 1e-14 narrower
-                       and "is the shifted span smaller?" says yes for Madrid and
-                       Asturias too. It happens to map back to the same numbers
-                       for them, so the answer was right by luck; a span wider
-                       than 180 degrees says what is actually meant, since only a
-                       box reaching from one edge of the seam to the other has
-                       one. */
-                    CASE WHEN ST_XMax(geom) - ST_XMin(geom) > 180
-                         THEN CASE WHEN ST_XMin(ST_ShiftLongitude(geom)) > 180
-                                   THEN ST_XMin(ST_ShiftLongitude(geom)) - 360
-                                   ELSE ST_XMin(ST_ShiftLongitude(geom)) END
-                         ELSE ST_XMin(geom) END AS w,
-                    CASE WHEN ST_XMax(geom) - ST_XMin(geom) > 180
-                         THEN CASE WHEN ST_XMax(ST_ShiftLongitude(geom)) > 180
-                                   THEN ST_XMax(ST_ShiftLongitude(geom)) - 360
-                                   ELSE ST_XMax(ST_ShiftLongitude(geom)) END
-                         ELSE ST_XMax(geom) END AS e,
+                    /* The box, seam-aware: west > east for a region that
+                       crosses the antimeridian (RFC 7946 §5.2). Stored
+                       generated columns (Version20260928200000), computed when
+                       a shape is written: reading them costs nothing, where
+                       computing them read every full shape on each call. */
+                    bbox_w AS w, bbox_s AS s, bbox_e AS e, bbox_n AS n,
                     to_json(COALESCE(adj, ARRAY[]::int[])) AS adj,
                     outline, default_map_mode
              FROM region

@@ -1312,6 +1312,13 @@ back to the same numbers for them, so that answer was right by luck rather than
 by reasoning. Only a box reaching from one edge of the seam to the other is
 wider than 180°.
 
+That expression lives in the database, not in the query: `region.bbox_w`,
+`bbox_s`, `bbox_e` and `bbox_n` are stored generated columns
+(`Version20260928200000`), computed when a region's shape is written.
+`RegionRegistryProvider::all()` reads them. Computing the box on each call
+read all 109 MB of region shapes for 271 regions, 350 ms on every page that
+lists regions (owner 2026-09-28, the `/best` filters).
+
 #### 4.5b Coverage notice: outside every onboarded country
 
 A small bar at the top-centre of the map canvas (`.cc-area-nudge
