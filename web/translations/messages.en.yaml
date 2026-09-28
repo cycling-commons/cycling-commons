@@ -4016,7 +4016,8 @@ meta:
 legend:
   kicker: 'Map key'
   title: 'Every mark on the map'
-  lead: 'A pin stacks a few independent signals on one shape: where the record comes from, what kind of place it is, and what is happening to it. This page is the complete key.'
+  lead: 'A pin stacks a few independent signals on one shape: where the record comes from, what kind of place it is, and what is happening to it.'
+  axes_h: 'How to read a pin'
   axis_shape_h: 'Shape'
   axis_shape_t: 'A small disc or a teardrop. The disc is the baseline: a record a gross provider keeps, OpenStreetMap among them. The teardrop is a record a specialty provider or this community keeps.'
   axis_fill_h: 'Fill colour'
@@ -4024,7 +4025,7 @@ legend:
   axis_border_h: 'Border'
   axis_border_t: 'Who keeps the record. A small disc: a gross provider. Dashed ink: a specialist source for this kind of place and this region. Solid paper: this community. An orange ring means nobody has confirmed it in %months% months; a thick red border, in %months_red% months.'
   axis_badge_h: 'Badge'
-  axis_badge_t: 'A fact that must survive colour blindness. Top right: a "?" means nobody has stood here on record; no "?" means a dated witness is on record. Top left: a red "!" means not usable right now, a clock means there, but not always.'
+  axis_badge_t: 'Top right: a "?" means nobody has stood here on record; no "?" means a dated witness is on record. Top left: a red "!" means not usable right now, a clock means there, but not always.'
   tag_live: 'On the map'
   tiers_h: 'Where a record comes from'
   tiers_note: 'Who keeps the record you are reading. When two records describe one place, the map keeps the one nearest the bottom of this list. None of this says how good the place is; only the badge says whether anybody has stood there.'

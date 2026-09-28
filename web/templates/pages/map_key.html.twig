@@ -22,30 +22,22 @@
 #}
 {% extends 'base.html.twig' %}
 
-{# The one category-colour table on the website, mirroring catalog.js. #}
-{% set mkc = {
-  'A': '#4E8C84', 'B': '#8FB6A8', 'C': '#4E6E8C', 'D': '#6b6f5e',
-  'E': '#C8923A', 'F': '#3E7D8C', 'G': '#9A8FB6', 'N': '#6A2C8F',
-  'O': '#B5532E', 'P': '#2C5440', 'Q': '#6E5849', 'R': '#FF5A1F',
-} %}
+{# Category colours from the API's category table, the one server-side copy
+   of catalog.js's colours (cc_category_colours), shared with the map's Key
+   panel. #}
+{% set mkc = cc_category_colours() %}
 {# Light fills whose glyph flattens dark instead of white (txtOn in util.js). #}
 {% set mklt = ['B', 'E', 'G'] %}
 
-{% macro glyph(letter, size) %}
-{%- set ic = cc_type_icons()[letter] ?? null -%}
-{%- if ic and ic.svg -%}
-<span class="drawn"><svg viewBox="0 0 24 24" width="{{ size|default(15) }}" height="{{ size|default(15) }}" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="{{ ic.svg }}"/></svg></span>
-{%- elseif ic -%}
-<span class="g">{{ ic.glyph }}</span>
-{%- endif -%}
-{% endmacro %}
 
-{% import _self as mk %}
+
+{% import 'partials/_key_macros.html.twig' as mk %}
 {# A letter-B pin draws its kind glyph (KindIcons), as pinEl does on the map. #}
 {% set bTap %}<span class="drawn">{% include 'partials/_kind_icon.html.twig' with {letter: 'B', kind: 'tap', size: 16} %}</span>{% endset %}
 
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('styles/pins.css') }}">
+<link rel="stylesheet" href="{{ asset('styles/key-swatches.css') }}">
 <link rel="stylesheet" href="{{ asset('styles/page/pages/map_key.css') }}">
 {% endblock %}
 
@@ -59,11 +51,47 @@
 <section class="pad"><div class="wrap">
   <div class="mkwrap">
 
+  {# Each axis: its title, then its example in the order its text names
+     them (the same pins the map draws, pins.css, on the tile the rows below
+     use), then the text. #}
   <div class="mk-axes">
-    <div class="mk-axis"><b>{{ 'legend.axis_shape_h'|trans }}</b><span>{{ 'legend.axis_shape_t'|trans }}</span></div>
-    <div class="mk-axis"><b>{{ 'legend.axis_fill_h'|trans }}</b><span>{{ 'legend.axis_fill_t'|trans }}</span></div>
-    <div class="mk-axis"><b>{{ 'legend.axis_border_h'|trans }}</b><span>{{ 'legend.axis_border_t'|trans }}</span></div>
-    <div class="mk-axis"><b>{{ 'legend.axis_badge_h'|trans }}</b><span>{{ 'legend.axis_badge_t'|trans }}</span></div>
+    <div class="mk-axis">
+      <b>{{ 'legend.axis_shape_h'|trans }}</b>
+      <div class="mk-ex" aria-hidden="true">
+        <span class="cc-pin disc lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+        <span class="cc-pin lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+      </div>
+      <span>{{ 'legend.axis_shape_t'|trans }}</span>
+    </div>
+    <div class="mk-axis">
+      <b>{{ 'legend.axis_fill_h'|trans }}</b>
+      <div class="mk-ex" aria-hidden="true">
+        <span class="cc-pin lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+        {% for l in ['C', 'N', 'D'] %}<span class="cc-pin{{ l in mklt ? ' lt' }}" style="--c:{{ mkc[l] }}">{{ mk.glyph(l) }}</span>{% endfor %}
+      </div>
+      <span>{{ 'legend.axis_fill_t'|trans }}</span>
+    </div>
+    <div class="mk-axis">
+      <b>{{ 'legend.axis_border_h'|trans }}</b>
+      <div class="mk-ex" aria-hidden="true">
+        <span class="cc-pin disc lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+        <span class="cc-pin dashed lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+        <span class="cc-pin lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+        <span class="cc-pin stale lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+        <span class="cc-pin lapsed lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+      </div>
+      <span>{{ 'legend.axis_border_t'|trans({'%months%': cc_stale_months(), '%months_red%': 2 * cc_stale_months()}) }}</span>
+    </div>
+    <div class="mk-axis">
+      <b>{{ 'legend.axis_badge_h'|trans }}</b>
+      <div class="mk-ex" aria-hidden="true">
+        <span class="cc-pin q lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+        <span class="cc-pin lt" style="--c:{{ mkc.B }}">{{ bTap }}</span>
+        <span class="cc-pin lt" style="--c:{{ mkc.B }}"><b class="cc-st warn">!</b>{{ bTap }}</span>
+        <span class="cc-pin lt" style="--c:{{ mkc.B }}"><b class="cc-st hours"><svg viewBox="0 0 24 24" width="9" height="9" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 7v5.5l3.5 2.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></b>{{ bTap }}</span>
+      </div>
+      <span>{{ 'legend.axis_badge_t'|trans }}</span>
+    </div>
   </div>
 
   <h2>{{ 'legend.tiers_h'|trans }}</h2>
@@ -124,11 +152,16 @@
   <div class="mk-rows">
     <div class="mk-row">
       <div class="mk-sw"><span class="cc-pin stale lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
-      <div class="mk-t"><strong>{{ 'legend.state_stale_h'|trans }}</strong><span>{{ 'legend.state_stale_t'|trans }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.state_stale_h'|trans }}</strong><span>{{ 'legend.state_stale_t'|trans({'%months%': cc_stale_months(), '%months_red%': 2 * cc_stale_months()}) }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>
     <div class="mk-row">
-      <div class="mk-sw"><span class="cc-pin pending" style="--c:{{ mkc.C }}" aria-hidden="true">{{ mk.glyph('C') }}</span></div>
+      <div class="mk-sw"><span class="cc-pin lapsed lt" style="--c:{{ mkc.B }}" aria-hidden="true">{{ bTap }}</span></div>
+      <div class="mk-t"><strong>{{ 'legend.state_lapsed_h'|trans }}</strong><span>{{ 'legend.state_lapsed_t'|trans({'%months%': cc_stale_months(), '%months_red%': 2 * cc_stale_months()}) }}</span></div>
+      <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
+    </div>
+    <div class="mk-row">
+      <div class="mk-sw"><span class="cc-pin pending" style="--c:#D92D20" aria-hidden="true"><span style="filter:brightness(0) invert(1)">⏳</span></span></div>
       <div class="mk-t"><strong>{{ 'legend.state_pending_h'|trans }}</strong><span>{{ 'legend.state_pending_t'|trans }}</span></div>
       <span class="mk-tag">{{ 'legend.tag_live'|trans }}</span>
     </div>

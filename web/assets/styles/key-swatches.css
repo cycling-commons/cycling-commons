@@ -1,0 +1,29 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* The key's swatches that are not pins: map lines, the climb gradient, the
+   climb chips, a junction number and a category tile. One definition for both
+   keys, the /map-key page and the map's Key panel, the way pins.css is the one
+   definition of the pin: a copy per key is how the two drift apart. */
+.mk-line{width:46px;height:0;border-top-width:4px;border-top-style:solid;border-radius:2px;flex:none}
+.mk-line.dash{border-top-style:dashed}
+.mk-grad{width:52px;height:5px;border-radius:2px;flex:none;
+  background:linear-gradient(90deg,#D9A6F2 0 20%,#B25BE8 20% 40%,#8A2BD0 40% 60%,#5E18A0 60% 80%,#3A0A66 80% 100%)}
+.mk-grad.down{background:linear-gradient(90deg,#A6CFF2 0 20%,#5BA0E8 20% 40%,#2B76D0 40% 60%,#184F9F 60% 80%,#0A2A66 80% 100%)}
+.mk-ticks{width:46px;height:5px;border-radius:2px;flex:none;background:
+  linear-gradient(90deg,#1E8E4F 0 3px,transparent 3px 12px,#D9A62E 12px 15px,transparent 15px 23px,#C2402F 23px 26px,transparent 26px 46px)}
+.mk-chip{display:inline-flex;align-items:center;gap:.2rem;background:var(--ink);color:#F3EBD8;
+  font:700 .62rem/1 var(--mono);letter-spacing:.04em;padding:.16rem .44rem;border-radius:3px;
+  border:1.5px solid #F3EBD8;box-shadow:0 2px 7px rgba(0,0,0,.45);white-space:nowrap}
+.mk-chip.summit{text-transform:uppercase}
+.mk-chip.summit::before{content:"⚑";font-size:.68rem;color:var(--trail)}
+.mk-chip.steep{color:#C79BE8;border-color:#8B45C0;border-radius:10px}
+.mk-chip.steep::before{content:"▲";font-size:.62rem}
+.mk-chip.rider{color:#F2C46B;border-color:#C98A22;border-radius:10px}
+.mk-chip.rider::before{content:"⬗";font-size:.62rem}
+.mk-knoop{display:flex;align-items:center;justify-content:center;width:17px;height:17px;flex:none;
+  background:#fff;color:#5B3A9E;border:1.5px solid #7A4FCF;border-radius:50%;font:700 .62rem/1 var(--mono)}
+.mk-tile{width:26px;height:26px;border-radius:6px;background:var(--c);flex:none;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;line-height:1}
+.mk-tile .g{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;filter:brightness(0) invert(1)}
+.mk-tile.lt .g{filter:brightness(0)}
+.mk-tile.lt{color:#101E16}
+.mk-tile .drawn{display:flex}

@@ -5,7 +5,11 @@
 .mk-axes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;
   border:1px solid rgba(16,30,22,.14);border-radius:10px;overflow:hidden;background:rgba(16,30,22,.14);margin:1.3rem 0 0}
 .mk-axis{background:var(--paper);padding:.9rem 1rem}
-.mk-axis b{display:block;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin-bottom:.35rem}
+/* The axis's example, above its text: the map's own pins on the rows' tile.
+   Room above for the badges, which sit outside the pin's top corners. */
+.mk-axis .mk-ex{display:flex;flex-wrap:wrap;align-items:center;gap:.7rem;min-height:52px;padding:.55rem .75rem .4rem;
+  margin-bottom:.7rem;border-radius:8px;background:#DED2B8}
+.mk-axis b{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin-bottom:.55rem}
 .mk-axis span{font-size:.86rem;line-height:1.5;color:#4a4d40}
 .mk-rows{display:flex;flex-direction:column;border:1px solid rgba(16,30,22,.14);border-radius:10px;overflow:hidden;background:var(--paper)}
 .mk-row{display:grid;grid-template-columns:76px 1fr auto;gap:1rem;align-items:center;padding:.85rem 1rem}
@@ -40,30 +44,6 @@
   border-radius:15px;background:var(--c);color:#fff;font:700 13px/1 var(--mono);border:2px solid rgba(255,255,255,.85)}
 .mk-ring{position:relative;width:24px;height:24px;border-radius:50%;flex:none;
   box-shadow:0 0 10px 3px rgba(255,90,31,.5),inset 0 0 0 2px rgba(255,90,31,.55)}
-.mk-line{width:46px;height:0;border-top-width:4px;border-top-style:solid;border-radius:2px;flex:none}
-.mk-line.dash{border-top-style:dashed}
-.mk-grad{width:52px;height:5px;border-radius:2px;flex:none;
-  background:linear-gradient(90deg,#D9A6F2 0 20%,#B25BE8 20% 40%,#8A2BD0 40% 60%,#5E18A0 60% 80%,#3A0A66 80% 100%)}
-.mk-grad.down{background:linear-gradient(90deg,#A6CFF2 0 20%,#5BA0E8 20% 40%,#2B76D0 40% 60%,#184F9F 60% 80%,#0A2A66 80% 100%)}
-.mk-ticks{width:46px;height:5px;border-radius:2px;flex:none;background:
-  linear-gradient(90deg,#1E8E4F 0 3px,transparent 3px 12px,#D9A62E 12px 15px,transparent 15px 23px,#C2402F 23px 26px,transparent 26px 46px)}
-.mk-chip{display:inline-flex;align-items:center;gap:.2rem;background:var(--ink);color:#F3EBD8;
-  font:700 .62rem/1 var(--mono);letter-spacing:.04em;padding:.16rem .44rem;border-radius:3px;
-  border:1.5px solid #F3EBD8;box-shadow:0 2px 7px rgba(0,0,0,.45);white-space:nowrap}
-.mk-chip.summit{text-transform:uppercase}
-.mk-chip.summit::before{content:"⚑";font-size:.68rem;color:var(--trail)}
-.mk-chip.steep{color:#C79BE8;border-color:#8B45C0;border-radius:10px}
-.mk-chip.steep::before{content:"▲";font-size:.62rem}
-.mk-chip.rider{color:#F2C46B;border-color:#C98A22;border-radius:10px}
-.mk-chip.rider::before{content:"⬗";font-size:.62rem}
-.mk-knoop{display:flex;align-items:center;justify-content:center;width:17px;height:17px;flex:none;
-  background:#fff;color:#5B3A9E;border:1.5px solid #7A4FCF;border-radius:50%;font:700 .62rem/1 var(--mono)}
-.mk-tile{width:26px;height:26px;border-radius:6px;background:var(--c);flex:none;
-  display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;line-height:1}
-.mk-tile .g{font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif;filter:brightness(0) invert(1)}
-.mk-tile.lt .g{filter:brightness(0)}
-.mk-tile.lt{color:#101E16}
-.mk-tile .drawn{display:flex}
 /* Hairlines from each cell's own shadow, not from a painted grid gap: a
    painted gap showed as a grey block wherever a row had no cell to fill it
    (owner 2026-09-09: "those greyish blocks can go"). */

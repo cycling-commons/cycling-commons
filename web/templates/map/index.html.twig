@@ -47,6 +47,7 @@
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/map.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/pins.css') }}" />
+<link rel="stylesheet" href="{{ asset('styles/key-swatches.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/select-box.css') }}" />
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
@@ -441,13 +442,33 @@
 
       <section class="panel" id="p-key">
       {# The map key (map-and-search.md §4.7): live marks only. The panel is
-         the quick reference; the /map-key page is the full story, planned
-         marks included. Pins reuse the real .cc-pin classes, so this key can
+         the whole key, as the /map-key page tells it: how to read a pin,
+         where a record comes from, kinds, basemap marks, states, categories
+         and every line. Pins reuse the real .cc-pin classes, so this key can
          never drift from what the map draws. Colours mirror catalog.js; the
          glyphs are THE icon set (cc_type_icons). #}
       {% set keyIcons = cc_type_icons() %}
       {# A letter-B pin carries its kind glyph (KindIcons), never the 💧. #}
       {% set bTap %}<span class="kd">{% include 'partials/_kind_icon.html.twig' with {letter: 'B', kind: 'tap', size: 17} %}</span>{% endset %}
+      {% import 'partials/_key_macros.html.twig' as mk %}
+      {% set kc = cc_category_colours() %}
+      {# How to read a pin: the four axes, each as title, example and text,
+         as on the /map-key page (the owner asked for the panel to be complete). #}
+      <div class="grp">
+        <h3>{{ 'legend.axes_h'|trans }}</h3>
+        <div class="mkp-axis"><b>{{ 'legend.axis_shape_h'|trans }}</b>
+          <div class="mkp-ex" aria-hidden="true"><span class="cc-pin disc" style="--c:{{ kc.B }}">{{ bTap }}</span><span class="cc-pin" style="--c:{{ kc.B }}">{{ bTap }}</span></div>
+          <span>{{ 'legend.axis_shape_t'|trans }}</span></div>
+        <div class="mkp-axis"><b>{{ 'legend.axis_fill_h'|trans }}</b>
+          <div class="mkp-ex" aria-hidden="true"><span class="cc-pin" style="--c:{{ kc.B }}">{{ bTap }}</span>{% for l in ['C', 'N', 'D'] %}<span class="cc-pin" style="--c:{{ kc[l] }}">{{ mk.glyph(l) }}</span>{% endfor %}</div>
+          <span>{{ 'legend.axis_fill_t'|trans }}</span></div>
+        <div class="mkp-axis"><b>{{ 'legend.axis_border_h'|trans }}</b>
+          <div class="mkp-ex" aria-hidden="true"><span class="cc-pin disc" style="--c:{{ kc.B }}">{{ bTap }}</span><span class="cc-pin dashed" style="--c:{{ kc.B }}">{{ bTap }}</span><span class="cc-pin" style="--c:{{ kc.B }}">{{ bTap }}</span><span class="cc-pin stale" style="--c:{{ kc.B }}">{{ bTap }}</span><span class="cc-pin lapsed" style="--c:{{ kc.B }}">{{ bTap }}</span></div>
+          <span>{{ 'legend.axis_border_t'|trans({'%months%': cc_stale_months(), '%months_red%': 2 * cc_stale_months()}) }}</span></div>
+        <div class="mkp-axis"><b>{{ 'legend.axis_badge_h'|trans }}</b>
+          <div class="mkp-ex" aria-hidden="true"><span class="cc-pin q" style="--c:{{ kc.B }}">{{ bTap }}</span><span class="cc-pin" style="--c:{{ kc.B }}">{{ bTap }}</span><span class="cc-pin" style="--c:{{ kc.B }}"><b class="cc-st warn">!</b>{{ bTap }}</span><span class="cc-pin" style="--c:{{ kc.B }}"><b class="cc-st hours"><svg viewBox="0 0 24 24" width="9" height="9" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 7v5.5l3.5 2.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></b>{{ bTap }}</span></div>
+          <span>{{ 'legend.axis_badge_t'|trans }}</span></div>
+      </div>
       <div class="grp">
         <h3>{{ 'legend.tiers_h'|trans }}</h3>
         {# Each border with and without the badge: the whole grid is on the key. #}
@@ -480,7 +501,8 @@
       </div>
       <div class="grp">
         <h3>{{ 'legend.state_h'|trans }}</h3>
-        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin stale" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.state_stale_h'|trans }}</b><span>{{ 'legend.state_stale_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin stale" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.state_stale_h'|trans }}</b><span>{{ 'legend.state_stale_t'|trans({'%months%': cc_stale_months(), '%months_red%': 2 * cc_stale_months()}) }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="cc-pin lapsed" style="--c:#8FB6A8">{{ bTap }}</span></span><div class="mkp-t"><b>{{ 'legend.state_lapsed_h'|trans }}</b><span>{{ 'legend.state_lapsed_t'|trans({'%months%': cc_stale_months(), '%months_red%': 2 * cc_stale_months()}) }}</span></div></div>
         <div class="mkp-row mk-state-warn"><span class="mkp-sw"><span class="cc-pin" style="--c:#8FB6A8">{{ bTap }}<b class="cc-st warn">!</b></span></span><div class="mkp-t"><b>{{ 'legend.fact_broken_h'|trans }}</b><span>{{ 'legend.fact_broken_t'|trans }}</span></div></div>
         <div class="mkp-row mk-state-hours"><span class="mkp-sw"><span class="cc-pin" style="--c:#8FB6A8">{{ bTap }}<b class="cc-st hours"><svg viewBox="0 0 24 24" width="9" height="9" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 7v5.5l3.5 2.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></b></span></span><div class="mkp-t"><b>{{ 'legend.fact_hours_h'|trans }}</b><span>{{ 'legend.fact_hours_t'|trans }}</span></div></div>
         <div class="mkp-row"><span class="mkp-sw"><span class="cc-cluster" style="--c:#6A2C8F">24</span></span><div class="mkp-t"><b>{{ 'legend.state_cluster_h'|trans }}</b><span>{{ 'legend.state_cluster_t'|trans }}</span></div></div>
@@ -491,6 +513,16 @@
         <div class="mkp-row mk-curator"><span class="mkp-sw"><span class="cc-pin pending" style="--c:#D92D20"><span style="filter:brightness(0) invert(1)">⏳</span></span></span><div class="mkp-t"><b>{{ 'legend.state_pending_h'|trans }}</b><span>{{ 'legend.state_pending_t'|trans }}</span></div></div>
         {% endif %}
       </div>
+      {# Categories: the fill colour answers only "what kind of place". #}
+      <div class="grp">
+        <h3>{{ 'legend.cats_h'|trans }}</h3>
+        {% for grpKey, cats in {'legend.cats_practical': {'B':'water-food','C':'public-toilets','D':'bike-services','E':'hazards','F':'getting-there','G':'shelter'}, 'legend.cats_voted': {'N':'climbs','O':'where-to-sleep','P':'scenic-views','Q':'history-culture','R':'quality-rides'}} %}
+        <p class="mkp-grp">{{ grpKey|trans }}</p>
+        {% for letter, key in cats %}
+        <div class="mkp-row mk-cat" data-cat="{{ letter }}"><span class="mkp-sw"><span class="mk-tile{{ letter in ['B', 'E', 'G'] ? ' lt' }}" style="--c:{{ kc[letter] }}" aria-hidden="true">{{ mk.glyph(letter, 16) }}</span></span><div class="mkp-t"><b>{{ ('item_type.' ~ key ~ '.label')|trans }}</b></div></div>
+        {% endfor %}
+        {% endfor %}
+      </div>
       {# Road surface lines (owner 2026-09-18): the same six classes and
          colours as the map and the legend box, read from the one palette. #}
       <div class="grp">
@@ -499,6 +531,25 @@
         {% for cls, lbl in {'paved': 'map.legend_paved', 'pave': 'map.legend_cobbles', 'gravel': 'map.legend_gravel', 'dirt': 'map.legend_dirt', 'rock': 'map.legend_rock', 'unverified': 'map.legend_unverified'} %}
         <div class="mkp-row mk-surface" data-surf="{{ cls }}"><span class="mkp-sw"><span class="mkp-line{{ cls == 'unverified' ? ' dash' : '' }}" style="--sc:{{ ksc[cls] }}" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ lbl|trans }}</b></div></div>
         {% endfor %}
+      </div>
+      {# Climb and route lines, as the /map-key page shows them (the shared
+         swatches, key-swatches.css). #}
+      <div class="grp">
+        <h3>{{ 'legend.lines_climbs'|trans }}</h3>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-grad" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.line_climb_up_h'|trans }}</b><span>{{ 'legend.line_climb_up_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-grad down" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.line_climb_down_h'|trans }}</b><span>{{ 'legend.line_climb_down_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-chip summit" aria-hidden="true">{{ 'map.d_climb_finish'|trans }}</span></span><div class="mkp-t"><b>{{ 'legend.line_summit_h'|trans }}</b><span>{{ 'legend.line_summit_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-chip steep" aria-hidden="true">12%</span></span><div class="mkp-t"><b>{{ 'legend.line_steep_h'|trans }}</b><span>{{ 'legend.line_steep_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-chip rider" aria-hidden="true">14%</span></span><div class="mkp-t"><b>{{ 'legend.line_rider_h'|trans }}</b><span>{{ 'legend.line_rider_t'|trans }}</span></div></div>
+      </div>
+      <div class="grp">
+        <h3>{{ 'legend.lines_routes'|trans }}</h3>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#FD986E" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.line_route_rest_h'|trans }}</b><span>{{ 'legend.line_route_rest_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#FF5A1F;border-top-width:6px" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.line_route_sel_h'|trans }}</b><span>{{ 'legend.line_route_sel_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#C84E64" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_route_national'|trans }}</b></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#7A4FCF" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_route_regional'|trans }}</b></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#8A5A32" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_route_mtb'|trans }}</b></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-knoop" aria-hidden="true">42</span></span><div class="mkp-t"><b>{{ 'legend.line_knoop_h'|trans }}</b><span>{{ 'legend.line_knoop_t'|trans }}</span></div></div>
       </div>
       <div class="grp">
         <a class="cc-addclimb-go" href="{{ path('map_key') }}">{{ 'map.key_full'|trans }}</a>

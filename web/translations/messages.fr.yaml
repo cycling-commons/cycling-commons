@@ -3990,7 +3990,8 @@ meta:
 legend:
   kicker: 'Légende de la carte'
   title: 'Chaque marque sur la carte'
-  lead: 'Une épingle empile quelques signaux indépendants sur une même forme : d''où vient la fiche, quel type de lieu c''est, et ce qui lui arrive. Cette page est la légende complète.'
+  lead: 'Une épingle empile quelques signaux indépendants sur une même forme : d''où vient la fiche, quel type de lieu c''est, et ce qui lui arrive.'
+  axes_h: 'Lire une épingle'
   axis_shape_h: 'Forme'
   axis_shape_t: 'Un petit disque ou une goutte. Le disque est la base : une fiche tenue par un fournisseur générique, OpenStreetMap compris. La goutte est une fiche tenue par un fournisseur spécialisé ou par cette communauté.'
   axis_fill_h: 'Couleur de fond'
@@ -3998,7 +3999,7 @@ legend:
   axis_border_h: 'Bordure'
   axis_border_t: 'Qui tient la fiche. Petit disque : un fournisseur générique. Pointillés d''encre : une source spécialisée pour ce type de lieu et cette région. Papier plein : cette communauté. Un anneau orange signifie que personne ne l''a confirmée depuis %months% mois ; une bordure rouge épaisse, depuis %months_red% mois.'
   axis_badge_h: 'Badge'
-  axis_badge_t: 'Un fait qui doit survivre au daltonisme. En haut à droite : un « ? » signifie que personne ne s''est tenu ici, à notre connaissance ; pas de « ? », un témoin daté est enregistré. En haut à gauche : un « ! » rouge signifie inutilisable pour l''instant, une horloge signifie présent, mais pas toujours.'
+  axis_badge_t: 'En haut à droite : un « ? » signifie que personne ne s''est tenu ici, à notre connaissance ; pas de « ? », un témoin daté est enregistré. En haut à gauche : un « ! » rouge signifie inutilisable pour l''instant, une horloge signifie présent, mais pas toujours.'
   tag_live: 'Sur la carte'
   tiers_h: 'D''où vient une fiche'
   tiers_note: 'Qui tient la fiche que vous lisez. Quand deux fiches décrivent un même lieu, la carte garde celle la plus proche du bas de cette liste. Rien ici ne dit si le lieu est bien ; seul le badge dit si quelqu''un s''y est tenu.'

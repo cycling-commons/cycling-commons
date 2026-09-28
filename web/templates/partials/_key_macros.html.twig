@@ -1,0 +1,12 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# Macros both map keys share (the /map-key page and the map's Key panel).
+   glyph(letter, size): a category's glyph from THE icon set (cc_type_icons),
+   drawn where it has a path, typed where it only has a character. #}
+{% macro glyph(letter, size) %}
+{%- set ic = cc_type_icons()[letter] ?? null -%}
+{%- if ic and ic.svg -%}
+<span class="drawn"><svg viewBox="0 0 24 24" width="{{ size|default(15) }}" height="{{ size|default(15) }}" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="{{ ic.svg }}"/></svg></span>
+{%- elseif ic -%}
+<span class="g">{{ ic.glyph }}</span>
+{%- endif -%}
+{% endmacro %}

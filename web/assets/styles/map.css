@@ -379,6 +379,13 @@
   .mkp-row.mkp-pair .mkp-sw{gap:.55rem}
   .mkp-t b{display:block;font-size:.84rem;font-weight:600}
   .mkp-t span{display:block;font-size:.74rem;line-height:1.45;color:rgb(var(--chrome-fg) / .72)}
+  /* How to read a pin: each axis as title, example strip, text (as on /map-key). */
+  .mkp-axis{padding:.45rem 0 .55rem}
+  .mkp-axis > b{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .85);margin-bottom:.45rem}
+  .mkp-ex{display:flex;flex-wrap:wrap;align-items:center;gap:.65rem;min-height:44px;padding:.55rem .65rem .4rem;border-radius:7px;background:rgb(var(--chrome-fg) / .08);margin-bottom:.45rem}
+  .mkp-axis > span{display:block;font-size:.74rem;line-height:1.45;color:rgb(var(--chrome-fg) / .72)}
+  /* A sub-group's label inside a key group (categories: practical, voted). */
+  .mkp-grp{margin:.55rem 0 .15rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72)}
   .mk-disc{width:22px;height:22px;border-radius:50%;background:var(--c,#3E7D8C);flex:none;
     border:1.5px solid rgb(var(--mark-ink) / .85);display:flex;align-items:center;justify-content:center;font-size:.66rem}
   .mk-disc .ic{font-family:var(--emoji);filter:brightness(0) invert(1);line-height:1}

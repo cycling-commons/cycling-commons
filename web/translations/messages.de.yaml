@@ -3998,7 +3998,8 @@ meta:
 legend:
   kicker: 'Kartenlegende'
   title: 'Jede Markierung auf der Karte'
-  lead: 'Eine Nadel stapelt einige unabhängige Signale auf einer Form: woher der Eintrag kommt, was für ein Ort es ist und was mit ihm geschieht. Diese Seite ist die vollständige Legende.'
+  lead: 'Eine Nadel stapelt einige unabhängige Signale auf einer Form: woher der Eintrag kommt, was für ein Ort es ist und was mit ihm geschieht.'
+  axes_h: 'So liest man eine Nadel'
   axis_shape_h: 'Form'
   axis_shape_t: 'Eine kleine Scheibe oder ein Tropfen. Die Scheibe ist die Basis: ein Datensatz, den ein allgemeiner Anbieter führt, OpenStreetMap eingeschlossen. Der Tropfen ist ein Datensatz, den ein Fachanbieter oder diese Gemeinschaft führt.'
   axis_fill_h: 'Füllfarbe'
@@ -4006,7 +4007,7 @@ legend:
   axis_border_h: 'Rand'
   axis_border_t: 'Wer den Datensatz führt. Kleine Scheibe: ein allgemeiner Anbieter. Gestrichelte Tinte: eine Fachquelle für diese Art Ort und diese Region. Volles Papier: diese Gemeinschaft. Ein oranger Ring heißt, dass ihn seit %months% Monaten niemand bestätigt hat; ein dicker roter Rand, seit %months_red% Monaten.'
   axis_badge_h: 'Abzeichen'
-  axis_badge_t: 'Ein Fakt, der Farbenblindheit überleben muss. Oben rechts: ein „?“ heißt, niemand hat hier nachweislich gestanden; kein „?“ heißt, ein datierter Zeuge ist vermerkt. Oben links: ein rotes „!“ heißt gerade nicht nutzbar, eine Uhr heißt da, aber nicht immer.'
+  axis_badge_t: 'Oben rechts: ein „?“ heißt, niemand hat hier nachweislich gestanden; kein „?“ heißt, ein datierter Zeuge ist vermerkt. Oben links: ein rotes „!“ heißt gerade nicht nutzbar, eine Uhr heißt da, aber nicht immer.'
   tag_live: 'Auf der Karte'
   tiers_h: 'Woher ein Eintrag kommt'
   tiers_note: 'Wer den Datensatz führt, den du liest. Beschreiben zwei Datensätze einen Ort, behält die Karte den, der dem Ende dieser Liste am nächsten steht. Nichts davon sagt, wie gut der Ort ist; nur das Abzeichen sagt, ob jemand dort gestanden hat.'

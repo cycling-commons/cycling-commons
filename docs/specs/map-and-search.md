@@ -1492,28 +1492,40 @@ two places, sized to their audience:
   rail's Key button only; the corner button that also opened it read as that
   box's toggle and is gone, so the corner holds the bug circle and the box
   and nothing else. The rail button shows the panel's open state
-  (`aria-expanded`). It ends with a **Road
-  surface** group: the five class lines plus "not recorded", drawn on the
-  map's cream casing from the one palette, `SurfaceVocabulary::LINE_COLOUR`. The quick reference while riding: the four grammar rows
-  (data-provider-hierarchy.md §6.7: small disc for a gross provider, dashed
-  for a specialty provider, solid paper for ours, and the `?` badge for
-  nobody-has-stood-here, on any border)
-  and the state marks (stale ring, cluster bubble, look-here ring). LIVE
-  MARKS ONLY: the panel never shows a mark the map does not draw. The
-  pending-border row is moderation chrome, gated by `pending_is_curator`
-  from the controller (never `is_granted()`, per §"the 2FA policy applies in
-  exactly one place"). Swatches reuse the real `.cc-pin` / `.cc-cluster` /
-  `.cc-highlight` classes so the key cannot drift from the map. The panel
-  links to the full page. Since 2026-09-04 it also carries a **Kinds** group
-  generated from `cc_kind_icons()` (one row per registry kind, `.mk-kind`
-  with `data-kind="<letter>:<kind>"`) and the two live state badges (`!`
-  and the clock, `.mk-state-warn` / `.mk-state-hours`).
+  (`aria-expanded`). Since 2026-09-28 it carries the **whole key**, in the
+  /map-key page's order (owner: "the map key in the map's drawer is not
+  complete"): **How to read a pin** (the four axes, each as title, an example
+  strip of real pins and the text, `.mkp-axis` / `.mkp-ex`), where a record
+  comes from (the four grammar rows, data-provider-hierarchy.md §6.7), the
+  **Kinds** generated from `cc_kind_icons()` (`.mk-kind`,
+  `data-kind="<letter>:<kind>"`), the basemap marks, the **states** (the
+  orange ring after the confirmation window, the red border after twice it,
+  both stating their months from `cc_stale_months()`; the `!` and clock
+  badges, `.mk-state-warn` / `.mk-state-hours`; cluster bubble; look-here
+  ring), the **categories** (the fill colour per letter, practical and voted,
+  `.mk-cat`), and the lines: road surface (the five classes plus "not
+  recorded", on the map's cream casing from `SurfaceVocabulary::LINE_COLOUR`),
+  **climbs** (gradient up and down, summit, steepest, rider's steepest) and
+  **routes** (the rest, the selected one, national, regional, MTB, a junction
+  number). LIVE MARKS ONLY: the panel never shows a mark the map does not
+  draw. The waiting-for-a-moderator row (the red hourglass pin) is
+  moderation chrome, gated by `pending_is_curator` from the controller (never
+  `is_granted()`, per §"the 2FA policy applies in exactly one place").
+  Swatches reuse the real `.cc-pin` / `.cc-cluster` / `.cc-highlight`
+  classes, and the line, chip, junction and tile swatches come from
+  `styles/key-swatches.css`, which the /map-key page links too; category
+  colours and glyphs come from `cc_category_colours()` (the public API's
+  `CategoryTable`) and the shared `partials/_key_macros.html.twig`, so the
+  two keys cannot drift from the map or from each other. The panel still
+  links to the full page, which adds the notes between the groups.
 - **The `/map-key` page** (`PageController::mapKey`,
   `LocalizedPath::MAP_KEY`, `pages/map_key.html.twig`, `legend.*` strings,
   all five locales, slug localised per locale). The full story: the four
-  axes (shape = disc or teardrop, fill = category, border = who keeps the
-  record plus the moderation and stale states, badge = a fact that survives
-  colour blindness), the four grammar rows, the kinds per category
+  axes, each as its title, then an example strip of the map's own pins in
+  the order its text names them, then the text (shape = disc or teardrop;
+  fill = category, four categories; border = who keeps the record plus the
+  moderation and stale states, five pins; badge = "?", none, "!" and the
+  clock), the four grammar rows, the kinds per category
   (generated from the registry, see below), state marks, per-place fact
   badges, the category table and every line paint. Every mark on the page is
   drawn by the map; nothing on it is planned, and `MapKeyTest` fails the

@@ -3997,7 +3997,8 @@ meta:
 legend:
   kicker: 'Kaartlegenda'
   title: 'Elke markering op de kaart'
-  lead: 'Een speld stapelt een paar losse signalen op één vorm: waar het record vandaan komt, wat voor plek het is, en wat ermee gebeurt. Deze pagina is de volledige legenda.'
+  lead: 'Een speld stapelt een paar losse signalen op één vorm: waar het record vandaan komt, wat voor plek het is, en wat ermee gebeurt.'
+  axes_h: 'Zo lees je een speld'
   axis_shape_h: 'Vorm'
   axis_shape_t: 'Een kleine schijf of een druppel. De schijf is de basis: een record dat een algemene bron beheert, OpenStreetMap inbegrepen. De druppel is een record dat een gespecialiseerde bron of deze gemeenschap beheert.'
   axis_fill_h: 'Vulkleur'
@@ -4005,7 +4006,7 @@ legend:
   axis_border_h: 'Rand'
   axis_border_t: 'Wie het record beheert. Kleine schijf: een algemene bron. Inktstreepjes: een gespecialiseerde bron voor dit soort plek en deze regio. Vol papier: deze gemeenschap. Een oranje ring betekent dat niemand het in %months% maanden bevestigd heeft; een dikke rode rand, in %months_red% maanden.'
   axis_badge_h: 'Badge'
-  axis_badge_t: 'Een feit dat kleurenblindheid moet overleven. Rechtsboven: een "?" betekent dat niemand hier gestaan heeft, voor zover bekend; geen "?" betekent dat een gedateerde getuige vastligt. Linksboven: een rode "!" betekent nu niet bruikbaar, een klok betekent aanwezig, maar niet altijd.'
+  axis_badge_t: 'Rechtsboven: een "?" betekent dat niemand hier gestaan heeft, voor zover bekend; geen "?" betekent dat een gedateerde getuige vastligt. Linksboven: een rode "!" betekent nu niet bruikbaar, een klok betekent aanwezig, maar niet altijd.'
   tag_live: 'Op de kaart'
   tiers_h: 'Waar een record vandaan komt'
   tiers_note: 'Wie het record beheert dat je leest. Als twee records één plek beschrijven, houdt de kaart het record dat het dichtst bij de onderkant van deze lijst staat. Niets hiervan zegt hoe goed de plek is; alleen het badge zegt of iemand er gestaan heeft.'

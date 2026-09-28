@@ -4025,7 +4025,8 @@ meta:
 legend:
   kicker: 'Leyenda del mapa'
   title: 'Cada marca del mapa'
-  lead: 'Una chincheta apila varias señales independientes en una sola forma: de dónde viene la ficha, qué tipo de lugar es y qué le está pasando. Esta página es la leyenda completa.'
+  lead: 'Una chincheta apila varias señales independientes en una sola forma: de dónde viene la ficha, qué tipo de lugar es y qué le está pasando.'
+  axes_h: 'Cómo leer una chincheta'
   axis_shape_h: 'Forma'
   axis_shape_t: 'Un disco pequeño o una gota. El disco es la base: un registro que custodia un proveedor genérico, OpenStreetMap entre ellos. La gota es un registro que custodia un proveedor especializado o esta comunidad.'
   axis_fill_h: 'Color de relleno'
@@ -4033,7 +4034,7 @@ legend:
   axis_border_h: 'Borde'
   axis_border_t: 'Quién custodia el registro. Disco pequeño: un proveedor genérico. Tinta discontinua: una fuente especializada para este tipo de lugar y esta región. Papel sólido: esta comunidad. Un anillo naranja significa que nadie lo ha confirmado en %months% meses; un borde rojo grueso, en %months_red% meses.'
   axis_badge_h: 'Insignia'
-  axis_badge_t: 'Un hecho que debe sobrevivir al daltonismo. Arriba a la derecha: un «?» significa que nadie ha estado aquí, que conste; sin «?», consta un testigo con fecha. Arriba a la izquierda: un «!» rojo significa no utilizable ahora, un reloj significa que está, pero no siempre.'
+  axis_badge_t: 'Arriba a la derecha: un «?» significa que nadie ha estado aquí, que conste; sin «?», consta un testigo con fecha. Arriba a la izquierda: un «!» rojo significa no utilizable ahora, un reloj significa que está, pero no siempre.'
   tag_live: 'En el mapa'
   tiers_h: 'De dónde viene una ficha'
   tiers_note: 'Quién custodia el registro que lees. Cuando dos registros describen un mismo lugar, el mapa conserva el más cercano al final de esta lista. Nada de esto dice si el lugar es bueno; solo la insignia dice si alguien ha estado allí.'

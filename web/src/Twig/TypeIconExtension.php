@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
+use App\Api\V1\CategoryTable;
 use App\Catalog\BasemapIcons;
 use App\Catalog\ItemType;
 use App\Catalog\KindIcons;
@@ -34,6 +35,9 @@ final class TypeIconExtension extends AbstractExtension
             new TwigFunction('cc_kind_icons', static fn (): array => KindIcons::set()),
             new TwigFunction('cc_basemap_icons', static fn (): array => BasemapIcons::set()),
             new TwigFunction('cc_surface_colours', static fn (): array => SurfaceVocabulary::LINE_COLOUR),
+            // Letter => fill colour, from the public API's category table: the
+            // one server-side copy of catalog.js's colours, for both map keys.
+            new TwigFunction('cc_category_colours', static fn (): array => array_column(CategoryTable::CATEGORIES, 'color', 'letter')),
         ];
     }
 }
