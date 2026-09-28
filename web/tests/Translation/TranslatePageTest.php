@@ -93,7 +93,7 @@ final class TranslatePageTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/translate');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Ftranslate', 302);
     }
 
     public function testEnglishLocaleShowsChooserWithoutTextarea(): void

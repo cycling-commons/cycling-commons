@@ -62,7 +62,7 @@ final class AddPlaceFlowTest extends WebTestCase
     {
         $client = static::createClient();
         $client->request('GET', '/improve?type=water-food&mode=add');
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Fimprove%3Fmode%3Dadd%26type%3Dwater-food', 302);
     }
 
     public function testAddModeRendersTheWizardNotTheExplainer(): void

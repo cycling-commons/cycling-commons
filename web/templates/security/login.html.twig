@@ -27,6 +27,9 @@
 
       <form method="post" action="{{ path('login') }}" class="cc-validate" novalidate>
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}" />
+        {# Where to go after signing in, carried in the link instead of a
+           session so a visitor who never signs in keeps none. #}
+        {% if target_path %}<input type="hidden" name="_target_path" value="{{ target_path }}" />{% endif %}
 
         <div class="field">
           <label for="username">{{ 'security.login.label_email'|trans }}</label>

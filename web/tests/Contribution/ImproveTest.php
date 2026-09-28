@@ -138,7 +138,7 @@ final class ImproveTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/improve');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Fimprove', 302);
     }
 
     /**

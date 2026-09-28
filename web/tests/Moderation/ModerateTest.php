@@ -106,7 +106,7 @@ final class ModerateTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/moderate/submissions');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Fmoderate%2Fsubmissions', 302);
     }
 
     /** A plain ROLE_USER must receive a 403 when accessing /moderate. */

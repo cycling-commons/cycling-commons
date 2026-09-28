@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Session locale switcher (GET). Does not write User.locale — that is a CSRF-protected settings POST.
+ * Locale switcher (GET): redirects to the page in the chosen language, and remembers it in an existing session. Does not write User.locale; that is a CSRF-protected settings POST.
  *
  * @see docs/specs/dev-environment.md §7
  *
@@ -32,7 +32,13 @@ final class LocaleController extends AbstractController
             $_locale = $activeLocales->defaultLocale();
         }
 
-        $request->getSession()->set('_locale', $_locale);
+        // Remembered only in a session that already exists, the same rule as
+        // LocaleSubscriber: the language is in the address this redirects to,
+        // and a session started here took the page cache away from an
+        // anonymous visitor for the rest of the visit (devOps 2026-09-28).
+        if ($request->hasPreviousSession()) {
+            $request->getSession()->set('_locale', $_locale);
+        }
 
         // Relative `to` only; same allowlist as the pager (docs/specs/account-and-auth.md §9.4).
         $to = $request->query->get('to');

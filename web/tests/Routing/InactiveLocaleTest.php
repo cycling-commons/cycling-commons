@@ -85,7 +85,9 @@ final class InactiveLocaleTest extends WebTestCase
 
         $client->followRedirect();
         self::assertResponseRedirects('/about');
-        self::assertSame('en', $client->getRequest()->getSession()->get('_locale'));
+        // The language is in the address; an anonymous visitor gets no
+        // session for it, or the page cache would skip them from here on.
+        self::assertNull($client->getCookieJar()->get('PHPSESSID'), 'no session for switching language');
     }
 
     public function testTheHreflangBlockNamesOnlyTheServedLanguages(): void

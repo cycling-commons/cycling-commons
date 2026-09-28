@@ -86,7 +86,7 @@ final class MessagesPageTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/account/messages');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Faccount%2Fmessages', 302);
     }
 
     // ── Rows + unread styling + mark-all-read side effect ──────────────────

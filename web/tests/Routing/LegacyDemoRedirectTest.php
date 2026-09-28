@@ -38,7 +38,7 @@ final class LegacyDemoRedirectTest extends WebTestCase
     {
         $client = static::createClient();
         $client->request('GET', '/moderate.html');
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Fmoderate.html', 302);
     }
 
     public function testIndexGoesHome(): void

@@ -74,7 +74,7 @@ final class LogoutTest extends WebTestCase
 
         // After logout, accessing a protected page must redirect to /login
         $client->request('GET', '/account/contributions');
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Faccount%2Fcontributions', 302);
     }
 
     /**

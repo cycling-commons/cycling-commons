@@ -53,7 +53,7 @@ final class TranslateMineTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/translate/mine');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Ftranslate%2Fmine', 302);
     }
 
     public function testEmptyStatePointsAtTheCatalogue(): void

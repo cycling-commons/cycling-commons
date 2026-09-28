@@ -68,7 +68,7 @@ final class VoteTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/vote');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Fvote', 302);
     }
 
     // ── Authenticated GET ────────────────────────────────────────────────────

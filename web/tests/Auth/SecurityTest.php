@@ -62,7 +62,7 @@ final class SecurityTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/account/contributions');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Faccount%2Fcontributions', 302);
     }
 
     public function testValidLoginRedirectsToAccountDashboard(): void

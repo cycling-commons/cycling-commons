@@ -95,7 +95,7 @@ final class ProfileSettingsTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/account/contributions');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Faccount%2Fcontributions', 302);
     }
 
     public function testAnonIsRedirectedFromSettings(): void
@@ -103,7 +103,7 @@ final class ProfileSettingsTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/account/settings');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Faccount%2Fsettings', 302);
     }
 
     // ── Authenticated 200 tests ──────────────────────────────────────────────

@@ -4,7 +4,9 @@
 
 namespace App\Controller;
 
+use App\EventSubscriber\StatelessLoginRedirectSubscriber;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
@@ -23,7 +25,7 @@ final class SecurityController extends AbstractController
         'de' => '/de/login',
         'es' => '/es/login',
     ], name: 'login')]
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils, Request $request): Response
     {
         // FULLY, not getUser(): remember-me must still see the form to upgrade.
         if ($this->isGranted('IS_AUTHENTICATED_FULLY')) {
@@ -34,6 +36,9 @@ final class SecurityController extends AbstractController
 
         return $this->render('security/login.html.twig', [
             'last_username' => $authenticationUtils->getLastUsername(),
+            // The page to return to, carried in the link rather than a session
+            // (StatelessLoginRedirectSubscriber). A local path only.
+            'target_path' => StatelessLoginRedirectSubscriber::localPath($request->query->getString('_target_path')),
             'error' => $authenticationUtils->getLastAuthenticationError(),
             'page_title' => 'meta.login_title',
             'page_description' => 'meta.login_description',

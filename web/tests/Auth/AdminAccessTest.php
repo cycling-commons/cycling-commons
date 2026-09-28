@@ -65,7 +65,7 @@ final class AdminAccessTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/admin');
 
-        self::assertResponseRedirects('/login', 302);
+        self::assertResponseRedirects('/login?_target_path=%2Fadmin', 302);
     }
 
     /** A plain ROLE_USER must receive a 403 when accessing /admin. */
