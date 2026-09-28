@@ -1,0 +1,21 @@
+web/assets/map/catalog-load.js
+  s_6e1d7c95fbc8b5::t_8c709679dce2c4 188-207,211,265,273-274
+docs/specs/catalog-data-model.md
+  s_6e1d7c95fbc8b5::t_53746414e6cbcd 1076-1081
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a9bfab0cd83dac8487c5bbf79cd87bae3504acb2",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
