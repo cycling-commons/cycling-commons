@@ -47,6 +47,17 @@ repos:
         stages: [prepare-commit-msg]
         always_run: true
 
+      # A push to production is a release: the commit must carry a v* tag, or
+      # the footer's version stamp (git describe) and the changelog disagree.
+      # main and staging are not stopped. See the script for the bypass.
+      - id: release-tag
+        name: release tag on a production push
+        entry: tools/release-tag-prepush.sh
+        language: script
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+
       - id: gitleaks-prepush
         name: gitleaks (scan commits being pushed)
         entry: tools/gitleaks-prepush.sh

@@ -56,7 +56,12 @@ missing was the tag.
 
 `RoadmapChangelogTest::testReleaseVersionsLookLikeGitTags` asserts the shape, not
 that the tag exists: the tag lives in git, and a test cannot make somebody create
-it. `REVISION` and `APP_BUILD_VERSION` remain the deployment fallbacks in that
+it. The push can: the `release-tag` pre-push hook (`tools/release-tag-prepush.sh`)
+stops a push to `production` whose commit carries no `v*` tag, and prints the
+commands (owner 2026-09-29, after an untagged release). Pushes to `main` and
+`staging` pass untouched; `SKIP=release-tag` pushes once without a tag. A tag
+added after a deploy is still right, and the footer shows it from the next
+deploy on. `REVISION` and `APP_BUILD_VERSION` remain the deployment fallbacks in that
 order.
 
 ## 4. The release list
