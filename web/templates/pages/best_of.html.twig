@@ -3,6 +3,12 @@
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('styles/page/pages/best_of.css') }}">
 {% endblock %}
+{# A filtered view is the same page for a search engine: the shared head's
+   canonical already names the unfiltered page (pathInfo, no query), and this
+   keeps the view itself out of the index while its links still count. #}
+{% block head_extra %}
+{% if app.request.query.all is not empty %}<meta name="robots" content="noindex, follow">{% endif %}
+{% endblock %}
 {% block body %}
 {# One row, one way, wherever it appears. `podium` draws the top three with
    what the catalogue actually holds about them; the rest are one line each. #}
@@ -69,13 +75,13 @@
     <div class="frow">
       <b>{% trans %}best.f_category{% endtrans %}</b>
       {% for c in categories %}
-        <a class="{{ c == category ? 'on' }}" href="{{ path('best_of', q|merge({cat: c.value})) }}">{{ c.labelKey|trans }}</a>
+        <a class="{{ c == category ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: c.value})) }}">{{ c.labelKey|trans }}</a>
       {% endfor %}
     </div>
     <div class="frow">
       <b>{% trans %}best.f_season{% endtrans %}</b>
       {% for s in seasons %}
-        <a class="{{ s == season ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, season: s.value})) }}">{{ ('map.season_' ~ s.value)|trans }}</a>
+        <a class="{{ s == season ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, season: s.value})) }}">{{ ('map.season_' ~ s.value)|trans }}</a>
       {% endfor %}
     </div>
     {# A select, not chips. The country list is every onboarded country and
@@ -84,7 +90,9 @@
        A plain GET form, so the page still needs no script and every result is
        still its own URL. #}
     <form class="frow" method="get" action="{{ path('best_of') }}" data-scope>
-      <input type="hidden" name="cat" value="{{ category.value }}">
+      {# In the normal form's order (BestOfFilters), so a choice of country
+         lands on its one URL without a redirect. #}
+      {% if category != categories|first %}<input type="hidden" name="cat" value="{{ category.value }}">{% endif %}
       <input type="hidden" name="season" value="{{ season.value }}">
       {% if bike %}<input type="hidden" name="bike" value="{{ bike|join(',') }}">{% endif %}
       {% if difficulty %}<input type="hidden" name="diff" value="{{ difficulty|join(',') }}">{% endif %}
@@ -99,7 +107,7 @@
       <button type="submit" class="chip">{% trans %}best.show{% endtrans %}</button>
       {# Revealed by best-globe.js: without it the button would open nothing. #}
       <button type="button" class="chip" id="best-globe-toggle" aria-pressed="false" hidden>{% trans %}best.on_globe{% endtrans %}</button>
-      <span hidden>{% for cc, label in countries %}<a data-cc="{{ cc }}" href="{{ path('best_of', q|merge({cat: category.value, cc: cc})) }}">{{ label }}</a>{% endfor %}</span>
+      <span hidden>{% for cc, label in countries %}<a data-cc="{{ cc }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, cc: cc})) }}">{{ label }}</a>{% endfor %}</span>
     </form>
     {% if category.value == 'quality-rides' %}
       {# Bike type belongs to the VOTE, not the route (RouteVote::$bikeType):
@@ -107,23 +115,23 @@
          a handbike rider's best is worth asking about separately. #}
       <div class="frow">
         <b>{% trans %}best.f_bike{% endtrans %}</b>
-        <a class="{{ bike is empty ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, bike: null})) }}">{% trans %}best.any_bike{% endtrans %}</a>
+        <a class="{{ bike is empty ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, bike: null})) }}">{% trans %}best.any_bike{% endtrans %}</a>
         {% for b in bikes %}
-          <a class="{{ b in bike ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, bike: best.toggle(bike, b)|trim})) }}">{{ b }}</a>
+          <a class="{{ b in bike ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, bike: best.toggle(bike, b)|trim})) }}">{{ b }}</a>
         {% endfor %}
       </div>
       <div class="frow">
         <b>{% trans %}best.f_length{% endtrans %}</b>
-        <a class="{{ length is empty ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, len: null})) }}">{% trans %}best.any_length{% endtrans %}</a>
+        <a class="{{ length is empty ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, len: null})) }}">{% trans %}best.any_length{% endtrans %}</a>
         {% for l in lengths %}
-          <a class="{{ l in length ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, len: best.toggle(length, l)|trim})) }}">{{ ('best.len_' ~ l|lower)|trans }}</a>
+          <a class="{{ l in length ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, len: best.toggle(length, l)|trim})) }}">{{ ('best.len_' ~ l|lower)|trans }}</a>
         {% endfor %}
       </div>
       <div class="frow">
         <b>{% trans %}best.f_effort{% endtrans %}</b>
-        <a class="{{ difficulty is empty ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, diff: null})) }}">{% trans %}best.any_effort{% endtrans %}</a>
+        <a class="{{ difficulty is empty ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, diff: null})) }}">{% trans %}best.any_effort{% endtrans %}</a>
         {% for d in difficulties %}
-          <a class="{{ d in difficulty ? 'on' }}" href="{{ path('best_of', q|merge({cat: category.value, diff: best.toggle(difficulty, d)|trim})) }}">{{ d }}</a>
+          <a class="{{ d in difficulty ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, diff: best.toggle(difficulty, d)|trim})) }}">{{ d }}</a>
         {% endfor %}
       </div>
     {% endif %}

@@ -154,7 +154,63 @@ final class BestOfPreviewTest extends WebTestCase
         $client = static::createClient();
         $client->request('GET', '/best?cat=not-a-thing&season=harvest&cc=ZZ&bike=Unicycle&diff=Impossible');
 
+        // Nothing in that query names a real filter, so its one URL is the bare
+        // page (BestOfFilters): a 301 there, then the page itself.
+        self::assertResponseRedirects('/best', 301);
+        $client->followRedirect();
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.prev');
+    }
+
+    /**
+     * One URL per filter state (BestOfFilters). A crawler following every
+     * filter link found an endless set of spellings of the same pages, each a
+     * page-cache miss (devOps 2026-09-28).
+     *
+     * @return iterable<string, array{0: string, 1: string}>
+     */
+    public static function spellings(): iterable
+    {
+        yield 'empty parameters' => ['/best?season=autumn&bike=&diff=&len=&cc=', '/best?season=autumn'];
+        yield 'another order' => ['/best?season=autumn&cat=quality-rides', '/best?cat=quality-rides&season=autumn'];
+        yield 'a value twice, out of order' => ['/best?cat=quality-rides&bike=Gravel,Road,Gravel', '/best?cat=quality-rides&bike=Road,Gravel'];
+        yield 'a route filter on a category that has none' => ['/best?cat=climbs&bike=Road', '/best'];
+        yield 'the default category' => ['/best?cat=climbs&season=winter', '/best?season=winter'];
+        yield 'an unknown parameter' => ['/best?utm_source=x', '/best'];
+        yield 'in another language' => ['/nl/beste?season=summer&cc=', '/nl/beste?season=summer'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('spellings')]
+    public function testEverySpellingMovesToTheOneUrl(string $asked, string $normal): void
+    {
+        $client = static::createClient();
+        $client->request('GET', $asked);
+        self::assertResponseRedirects($normal, 301);
+
+        $client->request('GET', $normal);
+        self::assertResponseIsSuccessful('the normal form answers itself');
+    }
+
+    /** Filter links are built in the normal form, never followed by a crawler, and a filtered view stays out of the index. */
+    public function testFilterLinksAreNormalNofollowAndFilteredViewsAreNotIndexed(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/best?cat=quality-rides&season=autumn');
+        self::assertResponseIsSuccessful();
+
+        $links = $crawler->filter('.filters a[href^="/best"]');
+        self::assertGreaterThan(5, $links->count());
+        foreach ($links as $a) {
+            \assert($a instanceof \DOMElement);
+            self::assertSame('nofollow', $a->getAttribute('rel'), $a->getAttribute('href'));
+            $client->request('GET', $a->getAttribute('href'));
+            self::assertResponseIsSuccessful('a filter link needs no redirect: '.$a->getAttribute('href'));
+        }
+
+        self::assertSame('noindex, follow', $crawler->filter('meta[name="robots"]')->attr('content'));
+        self::assertStringEndsWith('/best', (string) $crawler->filter('link[rel="canonical"]')->attr('href'), 'the canonical names the unfiltered page');
+
+        $bare = $client->request('GET', '/best');
+        self::assertCount(0, $bare->filter('meta[name="robots"]'), 'the unfiltered page stays indexable');
     }
 }

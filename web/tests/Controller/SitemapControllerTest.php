@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Routing\ActiveLocales;
 use App\Catalog\RegionRegistryProvider;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\Connection;
@@ -55,6 +56,26 @@ final class SitemapControllerTest extends WebTestCase
         ] as $path) {
             self::assertStringContainsString("Disallow: {$path}\n", $body, "robots.txt no longer disallows {$path}");
         }
+    }
+
+    /**
+     * The filtered forms of /best, in every language this deployment serves
+     * and no other, and never the bare page (devOps 2026-09-28).
+     */
+    public function testRobotsDisallowsTheFilteredBestOfPageInTheServedLanguages(): void
+    {
+        $client = static::createClient();
+        static::getContainer()->set(ActiveLocales::class, new ActiveLocales('en', ['en', 'fr', 'nl', 'de', 'es'], ['en', 'nl']));
+        $client->request('GET', '/robots.txt');
+        $body = (string) $client->getResponse()->getContent();
+
+        foreach (['/best?', '/nl/beste?'] as $path) {
+            self::assertStringContainsString("Disallow: {$path}\n", $body);
+        }
+        foreach (['/fr/meilleurs?', '/de/beste?', '/es/mejores?'] as $path) {
+            self::assertStringNotContainsString($path, $body, 'a language this deployment does not serve');
+        }
+        self::assertStringNotContainsString("Disallow: /best\n", $body, 'the page itself stays crawlable');
     }
 
     public function testRobotsPointsAtTheAbsoluteSitemapUrl(): void

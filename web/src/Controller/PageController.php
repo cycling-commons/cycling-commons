@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Catalog\BestOfFilters;
 use App\Catalog\BestOfPreview;
 use App\Catalog\BikeType;
 use App\Catalog\ContributorWallProvider;
@@ -398,29 +399,31 @@ final class PageController extends AbstractController
      * shared cache can hold each combination (page-caching.md §3.2).
      */
     #[Route(LocalizedPath::BEST_OF, name: 'best_of')]
-    public function bestOf(Request $request, BestOfPreview $preview, RegionRegistryProvider $regions): Response
+    public function bestOf(Request $request, BestOfPreview $preview, BestOfFilters $filters, RegionRegistryProvider $regions): Response
     {
-        $categories = BestOfPreview::categories();
-        $wanted = (string) $request->query->get('cat', '');
-        $type = ItemType::fromParam('' === $wanted ? $categories[0]->value : $wanted);
-        if (!$type->isVotable()) {
-            $type = $categories[0];
+        // One URL per filter state (BestOfFilters): any other spelling of the
+        // same choice moves to it, so the page cache and a crawler see each
+        // state once (devOps 2026-09-28).
+        $normal = $filters->normalize($request->query->all());
+        if ($request->query->all() !== $normal) {
+            return $this->redirectToRoute('best_of', $normal, Response::HTTP_MOVED_PERMANENTLY);
         }
 
-        $season = Season::tryFrom((string) $request->query->get('season', '')) ?? Season::current(new \DateTimeImmutable());
-
+        $categories = BestOfPreview::categories();
+        $type = ItemType::fromParam($normal['cat'] ?? $categories[0]->value);
+        $season = Season::tryFrom($normal['season'] ?? '') ?? Season::current(new \DateTimeImmutable());
         // An unknown country is "everywhere" rather than a 404: this is a
         // browsing control, not an identifier.
-        $cc = strtoupper((string) $request->query->get('cc', ''));
+        $cc = $normal['cc'] ?? null;
         $countries = $this->bestOfCountries($regions, $request->getLocale());
-        $cc = \array_key_exists($cc, $countries) ? $cc : null;
 
         // Comma-separated, because these three are questions with more than
         // one honest answer: a rider who is happy on gravel or a mountain bike
         // is asking about both at once (owner 2026-09-12).
-        $bikes = self::pickMany($request, 'bike', BikeType::values());
-        $lengths = self::pickMany($request, 'len', array_keys(BestOfPreview::LENGTHS));
-        $difficulties = self::pickMany($request, 'diff', array_values(DifficultyVocabulary::LABELS));
+        $many = static fn (string $key): array => isset($normal[$key]) ? explode(',', $normal[$key]) : [];
+        $bikes = $many('bike');
+        $lengths = $many('len');
+        $difficulties = $many('diff');
 
         return $this->render('pages/best_of.html.twig', [
             'page_title' => 'meta.best_of_title',
@@ -444,23 +447,6 @@ final class PageController extends AbstractController
             // tells a rider near neither of them anything (owner 2026-09-12).
             'regions' => null === $cc ? null : $preview->byRegion($type, $season, $cc, $bikes, $difficulties, BestOfPreview::TOP_N, $lengths),
         ]);
-    }
-
-    /**
-     * The values a multi-choice filter was given, keeping only known ones.
-     *
-     * @param list<string> $allowed
-     *
-     * @return list<string>
-     */
-    private static function pickMany(Request $request, string $key, array $allowed): array
-    {
-        $raw = explode(',', (string) $request->query->get($key, ''));
-
-        return array_values(array_unique(array_filter(
-            array_map(trim(...), $raw),
-            static fn (string $v): bool => \in_array($v, $allowed, true),
-        )));
     }
 
     /**

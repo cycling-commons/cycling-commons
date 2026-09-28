@@ -222,6 +222,16 @@ final class SitemapController extends AbstractController
             '/map/', '/api/', '/photo/',
         ];
 
+        // The filtered forms of /best, in every language this deployment
+        // serves, the same list the sitemap names. Each filter
+        // combination is a URL, and a crawler following them all ran the
+        // production database at 8.7 connections a second (devOps
+        // 2026-09-28). The bare page stays crawlable; `?` ends the rule so
+        // only the query-string forms match.
+        foreach ($this->bestOfPaths() as $path) {
+            $disallow[] = $path.'?';
+        }
+
         $lines = ['User-agent: *'];
         foreach ($disallow as $path) {
             $lines[] = 'Disallow: '.$path;
@@ -234,6 +244,30 @@ final class SitemapController extends AbstractController
             Response::HTTP_OK,
             ['Content-Type' => 'text/plain; charset=UTF-8'],
         );
+    }
+
+    /**
+     * The best-of page's path in every language this deployment serves. A
+     * language that is switched off redirects to the default one, so a rule
+     * for it would name a path nobody is served.
+     *
+     * @return list<string>
+     */
+    private function bestOfPaths(): array
+    {
+        $context = $this->router->getContext();
+        $previous = $context->getParameter('_locale');
+        $paths = [];
+        try {
+            foreach ($this->activeLocales->all() as $locale) {
+                $context->setParameter('_locale', $locale);
+                $paths[] = $this->router->generate('best_of');
+            }
+        } finally {
+            $context->setParameter('_locale', $previous);
+        }
+
+        return array_values(array_unique($paths));
     }
 
     #[Route('/sitemap.xml', name: 'sitemap', methods: ['GET'])]

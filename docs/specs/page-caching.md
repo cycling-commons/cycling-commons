@@ -253,6 +253,56 @@ It predates this work, it is not caused by it, and the obvious fix
 `/changelog.atom` worse rather than better when tried, so it wants its own look
 rather than a quick patch on the way past.
 
+### 4b. The best-of filters and the anonymous session (2026-09-28)
+
+Found by devOps: the production database ran at 2.5 cores for a day, because
+ClaudeBot followed every filter link on `/best` (about 5,250 new database
+connections per 10 minutes, against a quiet 150). Each filter combination was
+its own URL, each a page-cache miss and a 430 ms render. nginx now brakes a
+crawler on any query string to 1 request a second; the app side is this:
+
+- **One URL per filter state.** `App\Catalog\BestOfFilters::normalize()` maps
+  any query to one form: `cat` (not the default first category), `season`,
+  then for quality rides `bike`, `diff`, `len` (known values, once each, in the
+  vocabulary's order), then `cc` (a country with a region). Nothing else, and
+  nothing empty. `PageController::bestOf()` answers every other spelling with
+  a 301 to it, and every filter link is built in it
+  (`best_of_path()`, `App\Twig\BestOfExtension`), so a link never needs the
+  redirect. The page cache holds one copy per real filter state.
+- **Crawlers are told.** `robots.txt` disallows the query-string form of the
+  page in every language the deployment serves (`/best?`, `/nl/beste?`; the
+  same `ActiveLocales` list the sitemap names, so a language that is switched
+  off appears in neither); the bare page stays crawlable. Every filter link
+  is `rel="nofollow"`; a filtered view carries
+  `<meta name="robots" content="noindex, follow">`, and the shared head's
+  canonical already names the unfiltered page.
+- **The render.** 350 ms of the 430 was the region registry computing every
+  region's box from 109 MB of shapes on each call, called again for each
+  filter link. The box is stored generated columns now (`region.bbox_*`,
+  map-and-search.md §4.5) and `BestOfFilters` reads the country list once per
+  request: a `/best` view takes about 0.1 s on dev.
+
+**What gave an anonymous visitor a session**, found with a cookie jar against
+every public page, and fixed:
+
+- **A page that needs a sign-in** (`/vote`, `/improve`, `/propose-route`,
+  `/account`, `/moderate`). Symfony remembered the wanted page in a new session
+  before redirecting to `/login`, so one click on "Vote" or "Contribute" took
+  the page cache away for the rest of the visit.
+  `App\EventSubscriber\StatelessLoginRedirectSubscriber` moves it into the
+  link instead, `/login?_target_path=/vote`; the session is empty again and no
+  cookie is sent. The sign-in form carries the value on, and only a path on
+  this site (`StatelessLoginRedirectSubscriber::localPath()`: a host is
+  dropped, `javascript:` and `/\host` are refused).
+- **The language switch** (`/i18n/{locale}`) wrote the chosen language into a
+  new session. It now writes only into a session that already exists, the rule
+  `LocaleSubscriber` already followed; the language is in the address it
+  redirects to.
+
+`tests/Security/AnonymousSessionTest.php` pins both. To test the cache by
+hand: GET, never `curl -I` (HEAD is never public), from a fresh incognito
+window or with no cookies.
+
 ## 5. What nginx has to do
 
 Host-side, so it lands as a handoff rather than a commit here, the same way
@@ -285,7 +335,7 @@ which is a private link for one reporter.
 
 The contribution forms need no rule: `/improve`, `/propose-route` and their
 siblings are behind `IsGranted('ROLE_USER')`, so a logged-out visitor gets a
-redirect rather than a render. They were never a flood target and are per-rider
+redirect rather than a render, and that redirect starts no session (§4b). They were never a flood target and are per-rider
 by definition.
 
 `/coverage` is in. Its density sort is two URLs with links between them, not a
