@@ -1073,7 +1073,12 @@ the first paint nothing. Every region in the active scope whose live stamp
 differs from the one baked into the payload in hand is refetched on its own
 URL and **spliced** in, so the region's rows are dropped from each layer and the
 slice's rows take their place, which is why a retired place needs no tombstone.
-The same check runs on `cc:scopechange` and on tab return. Measured on the dev
+The same check runs on `cc:scopechange` and on tab return, and all of them
+share one stamps read for 15 seconds (`currentStamps()`): the boot check, the
+area restored at start and the window's first focus used to fetch the same
+document three times on one page load (owner-reported 2026-09-28). The stamps
+cover every region, so a new area inside those 15 seconds needs no fresh read;
+a failed read is not kept. Measured on the dev
 catalog: worldwide 1,015 kB gzipped, Wallonia's slice 93 kB, the stamps
 document 2.8 kB across 107 regions.
 

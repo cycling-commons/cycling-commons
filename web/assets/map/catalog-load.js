@@ -185,10 +185,30 @@
       .catch(function () { return null; });
   }
 
+  /* One stamps answer for every caller for STAMPS_REUSE_MS: the boot check,
+     the area the map restores at start (a cc:scopechange) and the window's
+     first focus all asked within a second of each other, three fetches of the
+     same 2 kB on one page load (owner-reported 2026-09-28). The stamps cover
+     every region, so a new area within the window needs no fresh read. A
+     failed read is not kept: the next caller tries again. */
+  var STAMPS_REUSE_MS = 15000;
+  var stampsPromise = null;
+  var stampsAt = 0;
+  function currentStamps() {
+    var now = Date.now();
+    if (stampsPromise && now - stampsAt < STAMPS_REUSE_MS) { return stampsPromise; }
+    stampsAt = now;
+    stampsPromise = fetchStamps().then(function (s) {
+      if (!s) { stampsAt = 0; }
+      return s;
+    });
+    return stampsPromise;
+  }
+
   // Started alongside the catalog, not after it: on a cold load the stamps are
   // already in hand when the big document lands, so checking them costs the
   // first paint nothing.
-  var bootStamps = fetchStamps();
+  var bootStamps = currentStamps();
 
   /* Patch every region of the active scope whose stamp moved. Resolves to true
      when the payload in hand changed. `stamps` is the boot pair on the first
@@ -242,19 +262,16 @@
     .then(boot);
 
   // A new scope draws regions this tab may never have checked.
-  window.addEventListener('cc:scopechange', function () { repaintAfter(fetchStamps()); });
+  window.addEventListener('cc:scopechange', function () { repaintAfter(currentStamps()); });
 
   /* Tab-return: a moderator's loop is approve-in-the-desk-tab, switch back to
      the open map, and that tab asks for nothing on its own. It reads the
      stamps document, two kilobytes, and pulls only the regions on screen
      whose stamp moved, so watching one approval never costs a continent. */
-  var lastCheck = 0;
   function recheckCatalog() {
     if (document.visibilityState !== 'visible' || !rawCatalog) { return; }
-    var now = Date.now();
-    if (now - lastCheck < 15000) { return; }
-    lastCheck = now;
-    repaintAfter(fetchStamps());
+    // At most one read per STAMPS_REUSE_MS, shared with the boot check.
+    repaintAfter(currentStamps());
   }
   document.addEventListener('visibilitychange', recheckCatalog);
   window.addEventListener('focus', recheckCatalog);
