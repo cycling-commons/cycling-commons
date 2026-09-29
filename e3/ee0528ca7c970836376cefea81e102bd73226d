@@ -1,0 +1,51 @@
+web/translations/messages.nl.yaml
+  s_6e1d7c95fbc8b5::t_764481d1047890 4157
+web/src/Entity/User.php
+  s_6e1d7c95fbc8b5::t_764481d1047890 20,61
+web/translations/messages.en.yaml
+  s_6e1d7c95fbc8b5::t_764481d1047890 4176
+web/translations/messages.fr.yaml
+  s_6e1d7c95fbc8b5::t_764481d1047890 4150
+web/translations/messages.de.yaml
+  s_6e1d7c95fbc8b5::t_764481d1047890 4158
+web/translations/messages.es.yaml
+  s_6e1d7c95fbc8b5::t_764481d1047890 4185
+docs/specs/account-and-auth.md
+  s_6e1d7c95fbc8b5::t_764481d1047890 127-133
+web/src/Form/VerificationResendFormType.php
+  s_6e1d7c95fbc8b5::t_764481d1047890 7,30
+web/tests/Auth/RegistrationTest.php
+  s_6e1d7c95fbc8b5::t_764481d1047890 291-306
+web/tests/Validator/MailableEmailValidatorTest.php
+  s_dae7c72bd45627::t_8e5cbc944f4f4c 1-50
+web/src/Form/ResetPasswordRequestFormType.php
+  s_6e1d7c95fbc8b5::t_764481d1047890 7,30
+web/src/Validator/MailableEmail.php
+  s_dae7c72bd45627::t_ff7adae954f910 1-27
+web/src/Validator/MailableEmailValidator.php
+  s_dae7c72bd45627::t_6a8fd3d9409535 1-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e3ee0528ca7c970836376cefea81e102bd73226d",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_dae7c72bd45627": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "66eab292-db8a-4c03-a169-5e3947aa9f80",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
