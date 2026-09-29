@@ -4147,6 +4147,7 @@ form:
   error_totp_mismatch: 'Ce code ne correspond pas. Vérifiez votre application d''authentification et réessayez.'
   error_email_required: 'Saisissez votre adresse électronique.'
   error_email_invalid: 'Saisissez une adresse électronique valide.'
+  error_email_mailable: 'Nous ne pouvons pas envoyer d''email à cette adresse. Vérifiez qu''elle ne contient pas de faute, comme deux points à la suite.'
   error_email_taken: 'Cette adresse électronique est déjà enregistrée.'
   error_email_long: 'Une adresse électronique ne peut pas dépasser {{ limit }} caractères.'
   error_display_name_required: 'Saisissez un nom affiché.'

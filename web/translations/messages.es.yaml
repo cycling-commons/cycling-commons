@@ -4182,6 +4182,7 @@ form:
   error_totp_mismatch: 'Ese código no coincide. Comprueba tu aplicación de autenticación e inténtalo de nuevo.'
   error_email_required: 'Escribe tu dirección de correo.'
   error_email_invalid: 'Escribe una dirección de correo válida.'
+  error_email_mailable: 'No podemos enviar correo a esa dirección. Revisa si tiene alguna errata, como dos puntos seguidos.'
   error_email_taken: 'Esta dirección de correo ya está registrada.'
   error_email_long: 'Una dirección de correo no puede superar los {{ limit }} caracteres.'
   error_display_name_required: 'Escribe un nombre visible.'

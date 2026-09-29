@@ -4155,6 +4155,7 @@ form:
   error_totp_mismatch: 'Der Code stimmte nicht. Sieh in deiner Authenticator-App nach und versuche es erneut.'
   error_email_required: 'Gib deine E-Mail-Adresse ein.'
   error_email_invalid: 'Gib eine gültige E-Mail-Adresse ein.'
+  error_email_mailable: 'An diese Adresse können wir keine E-Mail schicken. Prüfe sie auf Tippfehler, etwa zwei Punkte hintereinander.'
   error_email_taken: 'Diese E-Mail-Adresse ist bereits registriert.'
   error_email_long: 'Eine E-Mail-Adresse darf nicht länger als {{ limit }} Zeichen sein.'
   error_display_name_required: 'Gib einen Anzeigenamen ein.'

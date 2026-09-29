@@ -4,6 +4,7 @@
 
 namespace App\Form;
 
+use App\Validator\MailableEmail;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -26,6 +27,7 @@ final class VerificationResendFormType extends AbstractType
             'constraints' => [
                 new NotBlank(message: 'form.error_email_required'),
                 new Email(message: 'form.error_email_invalid'),
+                new MailableEmail(),
             ],
         ]);
     }

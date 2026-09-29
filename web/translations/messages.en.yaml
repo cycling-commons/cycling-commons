@@ -4173,6 +4173,7 @@ form:
   error_totp_mismatch: 'That code did not match. Check your authenticator app and try again.'
   error_email_required: 'Please enter your email address.'
   error_email_invalid: 'Please enter a valid email address.'
+  error_email_mailable: 'We cannot send email to that address. Check it for typos, such as two dots in a row.'
   error_email_taken: 'This email address is already registered.'
   error_email_long: 'An email address may not be longer than {{ limit }} characters.'
   error_display_name_required: 'Please enter a display name.'

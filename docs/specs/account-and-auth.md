@@ -124,6 +124,13 @@ a 422 with the rest of the input preserved. **Existing accounts keep NULL**:
 they registered before the gate existed, and back-filling a declaration nobody
 made would be a record of something that never happened.
 - New accounts get `['ROLE_USER']` and `emailVerified = false`.
+- **An address the mailer refuses is a form error, not a 500** (2026-09-29).
+  `Assert\Email` in its default mode accepts `j..t@gmail.com`; `new Address()`
+  refuses it with an exception, and on sign-up that came after the row was
+  written, so the address was then "taken". `App\Validator\MailableEmail` on
+  `User::$email` (and on the reset and resend forms) builds the same `Address`
+  the mailer would and reports a refusal as `form.error_email_mailable`
+  ("Check it for typos, such as two dots in a row").
 - **One spelling per mailbox** (2026-09-29). `User::setEmail()` stores the
   address trimmed and in lower case (`User::normalizeEmail()`), and every
   lookup lower-cases what it is given: `UserRepository::findByEmail()`, and the

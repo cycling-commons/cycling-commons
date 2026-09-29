@@ -288,6 +288,22 @@ final class RegistrationTest extends WebTestCase
         self::assertNull($this->findUser('not-an-email'));
     }
 
+    /**
+     * The Email constraint's default mode accepts `j..t@gmail.com`; the mailer
+     * does not. It used to throw at `new Address()`: a 500, with the row
+     * already written, so the address was then "taken" (GlitchTip, 2026-09-29).
+     */
+    public function testAnAddressTheMailerRefusesIsAFormErrorNotAServerError(): void
+    {
+        $client = $this->client();
+        $this->signUp($client, 'j..t.omr.i.c.h@gmail.com');
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('form#cc-guarded-form', 'two dots in a row');
+        self::assertNull($this->findUser('j..t.omr.i.c.h@gmail.com'));
+        self::assertEmailCount(0);
+    }
+
     public function testOverlongEmailIsRejectedWithoutDatabaseError(): void
     {
         $client = $this->client();

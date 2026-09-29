@@ -17,6 +17,7 @@ use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
 use App\Form\CatalogFieldConstraints;
 use App\Repository\UserRepository;
+use App\Validator\MailableEmail;
 use App\Validator\PlainDisplayName;
 use App\World\Entity\Country;
 use Doctrine\ORM\Mapping as ORM;
@@ -57,6 +58,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     #[Assert\NotBlank(message: 'form.error_email_required')]
     #[Assert\Email(message: 'form.error_email_invalid')]
+    #[MailableEmail]
     #[Assert\Length(max: 180, maxMessage: 'form.error_email_long')]
     private string $email = '';
 

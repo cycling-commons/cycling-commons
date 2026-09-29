@@ -4154,6 +4154,7 @@ form:
   error_totp_mismatch: 'Die code klopte niet. Kijk in je authenticator-app en probeer het opnieuw.'
   error_email_required: 'Vul je e-mailadres in.'
   error_email_invalid: 'Vul een geldig e-mailadres in.'
+  error_email_mailable: 'We kunnen geen e-mail naar dat adres sturen. Controleer het op typfouten, zoals twee punten achter elkaar.'
   error_email_taken: 'Dit e-mailadres is al geregistreerd.'
   error_email_long: 'Een e-mailadres mag niet langer zijn dan {{ limit }} tekens.'
   error_display_name_required: 'Vul een weergavenaam in.'
