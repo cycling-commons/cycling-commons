@@ -1,0 +1,122 @@
+web/src/Security/LoginThrottleListener.php
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 13,90-96
+web/src/Account/UnverifiedSweep.php
+  s_6e1d7c95fbc8b5::t_001171f187169b 1-74
+web/tests/Auth/RegistrationTest.php
+  s_dae7c72bd45627::t_e2f8d2e4c1c444 7,9-10,13,19-21,27,30-41,44-45,52,54,57-64,68,72,77-78,83-84,89,94,96-106,108-111,114,116-131,134-135,137-143,145-147,149-152,154-157,159-165,167-170,172-175,177-179,182,184-185,187-190,192-196,198,204-213,216-220,223,239-241,246-247,249,251,256-257,259,270-272,274,282-283,288,293-294,298,303-304,307,312-313,319
+web/src/Controller/VerificationResendController.php
+  s_dae7c72bd45627::t_16b09830a1c3d5 1-133
+web/translations/messages.es.yaml
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 228,1555-1556,1602-1623,1629-1630,3396,3997-3998
+web/tests/Account/UnverifiedSweepTest.php
+  s_6e1d7c95fbc8b5::t_ad468bd89cb65c 44
+  s_dae7c72bd45627::t_fcef704362570f 1-43,45-137
+web/src/Account/Command/UnverifiedSweepCommand.php
+  s_6e1d7c95fbc8b5::t_001171f187169b 1-62
+web/migrations/Version20260929010000.php
+  s_dae7c72bd45627::t_825784a0a700a3 1-43
+web/translations/messages.en.yaml
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 227,1552-1553,1599-1620,1626-1627,3388,3988-3989
+web/templates/security/register.html.twig
+  s_6e1d7c95fbc8b5::t_bc1a12ec66758f 24-29,31,73-74,97,99
+web/src/Repository/UserRepository.php
+  s_6e1d7c95fbc8b5::t_6f46591595c985 20,40-47
+  s_6e1d7c95fbc8b5::t_8848aefb198920 10
+web/templates/security/login.html.twig
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 25-32
+web/src/Controller/ResetPasswordController.php
+  s_6e1d7c95fbc8b5::t_6f2bd099eb9060 153-157
+web/tests/Auth/VerificationResendTest.php
+  s_dae7c72bd45627::t_790c2234afb71a 1-230
+web/templates/security/verify_resend.html.twig
+  s_dae7c72bd45627::t_9ab9ee773cd542 1-72
+web/tests/Auth/ResetPasswordTest.php
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 295-330
+web/tests/Smoke/FormErrorsVisibleTest.php
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 7-8,25-26,96-99,176-179
+web/tests/Auth/AnonymousMailFloodTest.php
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 12-13,53-54,146-147,155-162
+web/config/packages/rate_limiter.yaml
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 40-41,213-230,382
+  s_6e1d7c95fbc8b5::t_5065a055ddc11f 383
+web/templates/registration/confirmation_email.html.twig
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 33
+  s_6e1d7c95fbc8b5::t_192c61d97d148e 9-11
+web/src/Security/EmailVerifier.php
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 12-13,26,30-47
+  s_6e1d7c95fbc8b5::t_9221f88b865b70 48-49
+web/translations/messages.nl.yaml
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 227,1548-1549,1595-1616,1622-1623,3369,3969-3970
+web/templates/security/check_email.html.twig
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 22
+web/src/Security/SignupGuard.php
+  s_dae7c72bd45627::t_61fe678a347e64 1-75
+web/assets/styles/page/security/_auth_shell_styles.css
+  s_6e1d7c95fbc8b5::t_bc1a12ec66758f 52-54
+web/config/packages/security.yaml
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 7-8,21
+web/tests/Auth/GuardedSignupTrait.php
+  s_dae7c72bd45627::t_061a4bcb578c2d 1-100
+web/assets/support/form-challenge.js
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 90-92
+web/src/Entity/User.php
+  s_6e1d7c95fbc8b5::t_6f46591595c985 347,352-355
+  s_6e1d7c95fbc8b5::t_443fe3bfe84141 356-357
+web/src/Account/Command/PurgeUserCommand.php
+  s_6e1d7c95fbc8b5::t_6f46591595c985 66
+docs/specs/security-architecture.md
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 535-538,559-560
+web/tests/js/form-challenge.test.cjs
+  s_dae7c72bd45627::t_1647fc55ca0a12 1-64
+web/templates/pages/privacy.html.twig
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 210
+web/src/Controller/RegistrationController.php
+  s_6e1d7c95fbc8b5::t_5322f3488e256a 14,20,37,66-67,70-131,136-147,198,201
+web/tests/Auth/UnverifiedLoginTest.php
+  s_dae7c72bd45627::t_432d5cc55b1f52 1-97
+web/translations/messages.fr.yaml
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 225,1543-1544,1590-1611,1617-1618,3362,3962-3963
+web/translations/messages.de.yaml
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 227,1548-1549,1595-1616,1622-1623,3370,3970-3971
+docs/specs/contact-and-support.md
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 84-87
+web/tests/Auth/DisplayNameSharingTest.php
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 31-32,101,105
+docs/specs/account-and-auth.md
+  s_6e1d7c95fbc8b5::t_d867c6c9c7b352 127-135,140-148,159-161,171-226,242-245,768-795
+  s_6e1d7c95fbc8b5::t_bd4c19f02ba92e 796
+web/config/packages/verify_email.yaml
+  s_dae7c72bd45627::t_eded5879b49a39 1-5
+web/src/Form/VerificationResendFormType.php
+  s_dae7c72bd45627::t_243a5c6fd9e414 1-38
+web/src/Security/VerifiedEmailChecker.php
+  s_dae7c72bd45627::t_810aa1a1f869f9 1-41
+web/templates/security/_guard_fields.html.twig
+  s_dae7c72bd45627::t_5634ecee7cd009 1-15
+web/templates/security/_guard_status.html.twig
+  s_dae7c72bd45627::t_39598678a96f44 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d0447cb981e68a2b55e9be2f3deeaef063db7c27",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_dae7c72bd45627": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "66eab292-db8a-4c03-a169-5e3947aa9f80",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
