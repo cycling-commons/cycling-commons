@@ -2612,8 +2612,8 @@ improve:
     heading: 'Was mit deinem Vorschlag geschieht'
     heading_curator: 'Was mit deiner Änderung geschieht'
     funnel_curator: 'Du bist Kurator, deshalb erscheint diese Änderung sofort auf der Karte, innerhalb der Gebiete, die du betreust. Außerhalb wartet sie wie jeder Vorschlag auf den Kurator dieses Gebiets. Jede Änderung wird in der Historie festgehalten.'
-    funnel_votable: 'Es erscheint nichts sofort auf der Karte — zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, und die erste fahrende Person, die bestätigt, dass es wirklich da ist, macht daraus eine vollständige Markierung. Über <b>%type%</b> kann außerdem abgestimmt werden, und die bestbewerteten landen auf der Best-of-Karte.'
-    funnel_utility: 'Es erscheint nichts sofort auf der Karte — zuerst liest ein Kurator es. Sobald es durch ist, taucht es als kleiner Punkt auf, und die erste fahrende Person, die bestätigt, dass es wirklich da ist, macht daraus eine vollständige Markierung. <b>%type%</b> ist ein praktischer Halt: Fahrende bestätigen diese, abgestimmt wird darüber nie.'
+    funnel_votable: 'Es erscheint nichts sofort auf der Karte: Zuerst liest ein Kurator es. Sobald es durch ist, steht es mit einem „?“ auf der Karte, das verschwindet, sobald eine fahrende Person bestätigt, dass es wirklich da ist. Wenn %n% Fahrende es bestätigt haben, oder ein Kurator, gilt es als verifiziert. <b>%type%</b> kann außerdem abgestimmt werden, und die bestbewerteten landen auf der Best-of-Karte.'
+    funnel_utility: 'Es erscheint nichts sofort auf der Karte: Zuerst liest ein Kurator es. Sobald es durch ist, steht es mit einem „?“ auf der Karte, das verschwindet, sobald eine fahrende Person bestätigt, dass es wirklich da ist. Wenn %n% Fahrende es bestätigt haben, oder ein Kurator, gilt es als verifiziert. <b>%type%</b> ist ein praktischer Halt: Fahrende bestätigen diese, abgestimmt wird darüber nie.'
   osm:
     heading: 'Steht das schon in OpenStreetMap?'
     scope: 'Gleiche Art Ort, in OpenStreetMap, im Umkreis von %m% m um deine Markierung.'

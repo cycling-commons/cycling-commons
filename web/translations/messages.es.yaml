@@ -2033,8 +2033,8 @@ improve:
     heading: 'Qué pasa con tu sugerencia'
     heading_curator: 'Qué pasa con tu cambio'
     funnel_curator: 'Eres curador, así que este cambio aparece en el mapa de inmediato, dentro de las zonas que moderas. Fuera de ellas espera al curador de esa zona, como cualquier sugerencia. Cada cambio queda registrado en el historial.'
-    funnel_votable: 'Nada aparece en el mapa de inmediato — antes lo lee un curador. Cuando pasa, sale como un punto pequeño, y el primer ciclista que confirma que de verdad está ahí lo convierte en una chincheta completa. <b>%type%</b> también se puede votar, y los que mejor valoran los ciclistas acaban en el mapa de lo mejor.'
-    funnel_utility: 'Nada aparece en el mapa de inmediato — antes lo lee un curador. Cuando pasa, sale como un punto pequeño, y el primer ciclista que confirma que de verdad está ahí lo convierte en una chincheta completa. <b>%type%</b> es una parada práctica: los ciclistas las confirman, nunca las votan.'
+    funnel_votable: 'Nada aparece en el mapa de inmediato: antes lo lee un curador. Cuando pasa, sale en el mapa con un «?», que desaparece en cuanto un ciclista confirma que de verdad está ahí. Cuando %n% ciclistas lo han confirmado, o un curador, cuenta como verificado. <b>%type%</b> también se puede votar, y los que mejor valoran los ciclistas acaban en el mapa de lo mejor.'
+    funnel_utility: 'Nada aparece en el mapa de inmediato: antes lo lee un curador. Cuando pasa, sale en el mapa con un «?», que desaparece en cuanto un ciclista confirma que de verdad está ahí. Cuando %n% ciclistas lo han confirmado, o un curador, cuenta como verificado. <b>%type%</b> es una parada práctica: los ciclistas las confirman, nunca las votan.'
   osm:
     heading: '¿Ya está esto en OpenStreetMap?'
     scope: 'El mismo tipo de lugar, en OpenStreetMap, a menos de %m% m de tu marcador.'

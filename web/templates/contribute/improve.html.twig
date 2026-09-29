@@ -566,7 +566,7 @@
       {# Both, and osm-answer.js shows whichever the answer makes true. #}
       <div id="lc-queued">
         <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
-        <p class="lc-funnel">{{ (item_type.isVotable ? 'improve.lifecycle.funnel_votable' : 'improve.lifecycle.funnel_utility')|trans({'%type%': item_type.labelKey|trans})|rich }}</p>
+        <p class="lc-funnel">{{ (item_type.isVotable ? 'improve.lifecycle.funnel_votable' : 'improve.lifecycle.funnel_utility')|trans({'%n%': cc_verify_threshold(), '%type%': item_type.labelKey|trans})|rich }}</p>
       </div>
       <div id="lc-curator" hidden>
         <h3 class="lc-h">{{ 'improve.lifecycle.heading_curator'|trans }}</h3>
@@ -579,7 +579,7 @@
       <p class="lc-funnel">{{ 'improve.lifecycle.funnel_curator'|trans }}</p>
       {% else %}
       <h3 class="lc-h">{{ 'improve.lifecycle.heading'|trans }}</h3>
-      <p class="lc-funnel">{{ (item_type.isVotable ? 'improve.lifecycle.funnel_votable' : 'improve.lifecycle.funnel_utility')|trans({'%type%': item_type.labelKey|trans})|rich }}</p>
+      <p class="lc-funnel">{{ (item_type.isVotable ? 'improve.lifecycle.funnel_votable' : 'improve.lifecycle.funnel_utility')|trans({'%n%': cc_verify_threshold(), '%type%': item_type.labelKey|trans})|rich }}</p>
       {% endif %}
     </div>
 

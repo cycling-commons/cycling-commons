@@ -2609,8 +2609,8 @@ improve:
     heading: 'Wat er met je suggestie gebeurt'
     heading_curator: 'Wat er met je wijziging gebeurt'
     funnel_curator: 'Je bent regiobeheerder, dus deze wijziging staat meteen op de kaart, binnen de gebieden die je beheert. Daarbuiten wacht ze op de regiobeheerder van dat gebied, zoals elke suggestie. Elke wijziging wordt in de geschiedenis vastgelegd.'
-    funnel_votable: 'Er verschijnt niets meteen op de kaart — een regiobeheerder leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje, en de eerste fietser die bevestigt dat het er echt is maakt er een volledige speld van. Op <b>%type%</b> kan ook gestemd worden, en de hoogst gewaardeerde komen op de best-of-kaart.'
-    funnel_utility: 'Er verschijnt niets meteen op de kaart — een regiobeheerder leest het eerst. Zodra het erdoor is, verschijnt het als een klein stipje, en de eerste fietser die bevestigt dat het er echt is maakt er een volledige speld van. <b>%type%</b> is een praktische stop: fietsers bevestigen deze, ze stemmen er nooit op.'
+    funnel_votable: 'Er verschijnt niets meteen op de kaart: een regiobeheerder leest het eerst. Zodra het erdoor is, staat het op de kaart met een "?", die verdwijnt zodra een fietser bevestigt dat het er echt is. Als %n% fietsers het hebben bevestigd, of één regiobeheerder, geldt het als geverifieerd. <b>%type%</b> kan ook gestemd worden, en de hoogst gewaardeerde komen op de best-of-kaart.'
+    funnel_utility: 'Er verschijnt niets meteen op de kaart: een regiobeheerder leest het eerst. Zodra het erdoor is, staat het op de kaart met een "?", die verdwijnt zodra een fietser bevestigt dat het er echt is. Als %n% fietsers het hebben bevestigd, of één regiobeheerder, geldt het als geverifieerd. <b>%type%</b> is een praktische stop: fietsers bevestigen deze, ze stemmen er nooit op.'
   osm:
     heading: 'Staat dit al in OpenStreetMap?'
     scope: 'Zelfde soort plek, in OpenStreetMap, binnen %m% m van je speld.'
