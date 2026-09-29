@@ -43,7 +43,7 @@ use Doctrine\Migrations\AbstractMigration;
  * manufacturing an open row for a closed matter would put work on a desk that
  * somebody already did.
  *
- * @see docs/specs/2026-08-30-one-report-route-design.md §5
+ * @see docs/specs/content-reports.md §10
  */
 final class Version20260830020000 extends AbstractMigration
 {

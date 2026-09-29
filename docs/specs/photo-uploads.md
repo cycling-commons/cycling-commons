@@ -1337,8 +1337,11 @@ immediately, its limiter is one pull per IP per day, and every use is logged
 in `media_moderation_event` (`third_party_reported`, note suffixed
 `(auto-withheld)`).
 
-**The form** (`GET|POST /photo/{uuid}/report`), linked from every published
-photo page **and from the map's full-screen photo viewer** — the viewer is
+**The form** is the shared report route, `/report/photo/{uuid}`
+([content-reports.md](content-reports.md) §2, §5), since 2026-08-30; the old
+`/photo/{uuid}/report` answers 301 to a GET and 308 to a POST. It is linked
+from every published photo page **and from the map's full-screen photo
+viewer** — the viewer is
 where somebody actually recognises themselves, so a link only on a page they
 would have to go find is a link nobody uses. The viewer reads the uuid back
 out of the stored image URL rather than from a new attribute, so galleries
@@ -1346,18 +1349,21 @@ approved before the link existed carry it too; a URL that does not match is a
 linked or imported photo and correctly gets no link, because we cannot take
 down somebody else's file.
 
-Fields: category (the five in `MediaTakedownCategory`) · what is wrong
-(free text, ≤2000) · an **optional** reply email. Nothing else — no name, no
-ID documents (Art. 5(1)(c); Art. 12(6) allows demanding more only where
-identity is genuinely in doubt, and for "that is me in the background" it is
-not). The page states the month to respond (Art. 12(3)), that the photo stays
+Fields: a ground (`ReportGround::forTarget(Photo)`, all nine; the photo
+form's old five categories folded into them, content-reports.md §4) · what is
+wrong (free text, ≤2000) · a reply email, **required except on
+`intimate_or_child`**, where the law forbids demanding one
+(content-reports.md §5). The copyright ground adds its own two fields. Nothing
+else: no ID documents (Art. 5(1)(c); Art. 12(6) allows demanding more only
+where identity is genuinely in doubt, and for "that is me in the background"
+it is not). The page states the month to respond (Art. 12(3)), that the photo stays
 up meanwhile except for the urgent category, and what happens to the address.
 
-**Not an existence oracle.** The form is uuid-blind (no thumbnail, no lookup
-on GET) and a POST acknowledges identically whether the uuid exists, is
-unpublished, is already reported, or was already decided —
-`MediaReportEndpointTest` asserts the responses are byte-identical after
-normalising uuid and CSRF token. Validation errors (bad category, empty
+**Not an existence oracle.** For a photo target the form is uuid-blind (no
+thumbnail, no lookup on GET; the one lookup the shared form makes is an
+item's public gallery, content-reports.md §5), and a POST acknowledges
+identically whether the uuid exists, is unpublished, is already reported, or
+was already decided (`ContentReportTest::testTheFormIsNotAnExistenceOracle`). Validation errors (bad category, empty
 reason, malformed email) do surface: they reveal nothing about any photo.
 
 **Storage** reuses §6b's columns on `media_upload` plus: `takedown_source`
@@ -1405,10 +1411,11 @@ down or a curator busy.
    `ContentReportController` since the photo form folded into `/report`
    ([content-reports.md §5](content-reports.md)). The standing decision holds:
    no CAPTCHA, no script from anybody else, and nothing asked in peacetime.
-4. Email verification of the reporter was considered and **rejected**: the
-   address is deliberately optional (Art. 12(2) says facilitate the exercise of
-   rights), disposable mailboxes make it a weak gate anyway, and requiring it
-   would exclude exactly the reporter with the most to lose.
+4. Email verification of the reporter was considered and **rejected**:
+   disposable mailboxes make it a weak gate, and the reporter with the most to
+   lose files on `intimate_or_child`, where no address is asked at all
+   (content-reports.md §5). The address is required on the other grounds, and
+   never verified.
 
 **Recovery.** `/admin/withheld-photos` lists every photo an anonymous report
 has hidden and restores them in one action, telling each contributor their

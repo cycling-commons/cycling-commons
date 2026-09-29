@@ -51,7 +51,7 @@ final class ContentReportService
         // service rather than reimplemented here: the circuit breaker, the
         // moderation event and the "your photo is hidden" message are all
         // already there and are the part that must not be got wrong
-        // (2026-08-30-one-report-route-design.md §3).
+        // (content-reports.md §9).
         private readonly MediaTakedownService $takedowns,
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,

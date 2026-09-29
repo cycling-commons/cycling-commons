@@ -46,7 +46,7 @@ final class MediaTakedownService
      * desk holds the button, because two desks that can both decide the same
      * row is exactly how a reporter ends up never hearing back.
      *
-     * @see docs/specs/2026-08-30-one-report-route-design.md §3
+     * @see docs/specs/content-reports.md §9
      */
     private const string PENDING_DQL = "m.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
                AND m.escalatedAt IS NULL AND m.takedownSource = 'uploader'";

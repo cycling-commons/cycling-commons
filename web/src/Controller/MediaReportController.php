@@ -21,7 +21,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * Two doors, built four months apart, and one open map drawer holds the entry
  * AND its photographs, so a rider who wanted the picture down had to leave the
  * page and find a second, differently worded link. From 2026-08-30 there is one
- * door: `/report/photo/{uuid}` (2026-08-30-one-report-route-design.md §2).
+ * door: `/report/photo/{uuid}` (content-reports.md §2).
  *
  * PERMANENT, and both methods. A 301 is honest here because the resource has
  * genuinely moved and is not coming back, and it lets a browser stop asking. A
@@ -29,7 +29,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * the change should not lose what somebody typed into a dead end, and 308
  * preserves the method so the new endpoint gets the body.
  *
- * @see docs/specs/2026-08-30-one-report-route-design.md §5
+ * @see docs/specs/content-reports.md §2
  *
  * @api
  */

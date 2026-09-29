@@ -2,8 +2,10 @@
 
 # Caching the public pages
 
-Status: **steps 1 to 3 built, step 4 written and waiting on devOps.** Measured 2026-08-30
-against staging.
+Status: **built, all four steps.** Steps 1 to 3 in the app; step 4, the nginx
+page cache, is live on both frontends (host-side): every deploy purges it and
+warms the main pages again, and responses carry `x-cache-status`. Measured
+2026-08-30 against staging; the crawler incident and its fixes are §4b.
 
 ## 1. Why
 
@@ -303,9 +305,10 @@ every public page, and fixed:
 hand: GET, never `curl -I` (HEAD is never public), from a fresh incognito
 window or with no cookies.
 
-## 5. What nginx has to do
+## 5. What nginx does
 
-Host-side, so it lands as a handoff rather than a commit here, the same way
+Live on both frontends. Host-side, so it landed as a handoff rather than a
+commit here, the same way
 [the 2026-08-17 header changes](../plans/handoffs/2026-08-17-nginx-headers-devops.md)
 did. Sketch, for the vhost's PHP location:
 

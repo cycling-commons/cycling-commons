@@ -25,7 +25,7 @@ use Symfony\Component\Uid\Uuid;
  * `/report/photo/{uuid}` with everything else, because one open map drawer
  * holds the entry AND its pictures and a rider should not have to leave the
  * page to report the one rather than the other
- * (docs/specs/2026-08-30-one-report-route-design.md §2).
+ * (docs/specs/content-reports.md §2).
  *
  * The response properties this file used to hold down are the shared route's
  * now and are tested in `App\Tests\Support\ContentReportTest`: a signed-out

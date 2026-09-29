@@ -92,6 +92,31 @@ Revisit when there is a separate infrastructure repository to hold it.
   turn mid-incident (the auto-withhold budgets, the alert recipients).
 - `translations.md` — **implemented** — catalogue overlays, in-site proposals,
   curator desk, and the ops `app:translations:overlay-delete` revert command.
+- `data-provider-hierarchy.md` — which source wins for a place: the provider
+  registry (`data_provider`), custody and the evidence ladder a pin draws, and
+  how an authority's harvest reaches the map.
+- `scenic-views.md` — what counts as a scenic view (letter P) and how coverage
+  points, catalog items, a rider's new place and a photo each meet the rules.
+- `photo-uploads.md` (**implemented**) — the product contract for rider photos:
+  consent, moderation, takedown, disposal.
+- `media-storage-architecture.md` — how those photos are stored, scanned,
+  addressed and served underneath `photo-uploads.md`.
+- `scout-bundle.md` — the ride bundle a Scout phone app exports and
+  `/scout/review` opens: a FIT file plus photos and notes.
+- `contact-and-support.md` (**implemented**) — `/contact`, `/report-bug`,
+  `/known-issues`, the bug button and the desks that read them.
+- `content-reports.md` (**implemented**) — `/report/{type}/{id}`, the curator
+  desk that answers it and the three report emails (DSA notice and action).
+- `legal-sources.md` — where every law this project cites actually is; specs,
+  wiki and site copy link here.
+- `blog.md` (**implemented**) — `/blog`, its posts, the Atom feed and the admin
+  screen behind them.
+- `page-caching.md` (**implemented**) — which public pages a shared cache may
+  hold, what kept them uncacheable and how that was removed, including the
+  2026-09-28 crawler incident on `/best`.
+- `coverage-runs-admin.md` — `/admin/coverage-runs`: what the nightly coverage
+  harvest did, run by run.
+- `operations.md` — canonical but not published (see above).
 
 ## Rules
 

@@ -52,7 +52,7 @@ final class MediaTakedownCategory
      * `intimate_or_child` is deliberately spelled the same in both, which is
      * why the urgent path needed no mapping at all.
      *
-     * @see docs/specs/2026-08-30-one-report-route-design.md §3
+     * @see docs/specs/content-reports.md §4
      */
     public static function isValid(string $category): bool
     {

@@ -557,7 +557,7 @@ final class ContentReportTest extends WebTestCase
      *
      * The case the whole merge exists for: one open drawer holds the entry AND
      * its photographs, so "Report this page" has to ask which
-     * (2026-08-30-one-report-route-design.md §2).
+     * (content-reports.md §5).
      */
     public function testAPictureOnThePageIsReportedAsItself(): void
     {

@@ -1,7 +1,8 @@
 # Data provider hierarchy and the provider registry
 
 **Status: specified 2026-08-27 (owner). Phases 1-5 built 2026-09-04; phase 6
-not built.** The Dutch public drinking-water taps are its first real-world
+built in steps: the pin grammar 2026-09-04, custody and evidence 2026-09-10,
+the complete key (/map-key and the map's Key panel) 2026-09-28.** The Dutch public drinking-water taps are its first real-world
 test, not a separate task.
 
 Phase 1 landed the registry table, the seeded rows, the `pivot` to `authority`
@@ -1196,7 +1197,10 @@ than discovered:
    (`CatalogProvider::curatedRefs()`) shipped only `source='osm'` refs, so
    every attached tap drew twice; it now ships the `osm_ref` twins too, the
    same key CoverageRepository joins on (§4.1).
-6. **The pin styling and the legend.** §6, last, because it touches every layer
+6. **The pin styling and the legend.** ✅ Built. The pin grammar (§6.3a)
+   2026-09-04, custody and evidence (§6.7) 2026-09-10, and the legend (§6.6):
+   `/map-key` and the map's Key panel, the whole key in both since
+   2026-09-28. §6, last, because it touches every layer
    and wants the other five settled first. §6.5 is a blocking decision inside
    this phase: the grey collision on water is resolved before a pixel changes.
    The generated legend panel (§6.6) ships with it, not after it, because a new

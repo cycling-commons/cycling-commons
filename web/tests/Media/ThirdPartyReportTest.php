@@ -320,7 +320,7 @@ final class ThirdPartyReportTest extends KernelTestCase
      * both decide the same row is how a reporter ends up never hearing back,
      * so this one keeps only what an UPLOADER asked us to remove.
      *
-     * @see docs/specs/2026-08-30-one-report-route-design.md §3
+     * @see docs/specs/content-reports.md §9
      */
     public function testAThirdPartyReportRaisesTheRequestButLeavesThisDesk(): void
     {

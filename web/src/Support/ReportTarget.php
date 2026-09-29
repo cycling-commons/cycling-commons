@@ -18,10 +18,9 @@ namespace App\Support;
  * report has to route to the right curator desk and name the right thing in the
  * statement of reasons. An unknown value is a 404, not a guess.
  *
- * **Photos are deliberately absent.** They keep their own route, which does
- * more than this one: an intimate-imagery report there hides the photo before
- * any person has seen it. Folding that into a generic form would either lose
- * the auto-withhold or apply it to things it makes no sense for.
+ * Photos are a target too (`Photo`). The auto-withhold an intimate-imagery
+ * report triggers belongs to the pair of ground and target
+ * (`canAutoWithhold()`), so it applies to a picture and to nothing else.
  *
  * @see docs/specs/content-reports.md §1
  *
@@ -38,7 +37,7 @@ enum ReportTarget: string
      * A picture. Added 2026-08-30 when the media report flow folded into this
      * one: a photo is a thing on a page, and the page it sits on has an entry
      * on it too, so both have to be reportable through the same door
-     * (2026-08-30-one-report-route-design.md §2).
+     * (content-reports.md §2).
      */
     case Photo = 'photo';
     /**

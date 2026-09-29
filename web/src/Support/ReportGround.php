@@ -143,15 +143,16 @@ enum ReportGround: string
     /**
      * The grounds a picture can be reported on, but nothing else can.
      *
-     * `Generated` is about an image presented as a real photograph (terms §7).
-     * None of the five things THIS form reports are images: a route, a place, a
-     * region description, a rider profile and a message are all text, and
-     * photos have their own desk at `/media/report`. Offering it here asked a
-     * reporter to consider a rule that cannot apply to what they are looking at
-     * (owner, 2026-08-29: "that last one is only of interest for images").
+     * `Generated` is about an image presented as a real photograph (terms §7);
+     * `IntimateOrChild` and `PrivateProperty` are about what a picture shows.
+     * A route, a place, a region description, a rider profile and a message
+     * are text, so forTarget() offers these three only for a photo. Offering
+     * them elsewhere asked a reporter to consider a rule that cannot apply to
+     * what they are looking at (owner, 2026-08-29: "that last one is only of
+     * interest for images").
      *
-     * The case stays in the enum. `/terms` §12 publishes it, the photo flow
-     * needs it, and a stored row has to keep resolving.
+     * The cases stay in the enum. `/terms` §12 publishes them, and a stored row
+     * has to keep resolving.
      */
     public function isImageOnly(): bool
     {

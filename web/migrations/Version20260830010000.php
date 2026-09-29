@@ -30,7 +30,7 @@ use Doctrine\Migrations\AbstractMigration;
  * the fortnight in US DMCA 512(g) is a safe-harbour mechanism we are not
  * obliged to run, so a person decides with both sides in front of them.
  *
- * @see docs/specs/2026-08-30-one-report-route-design.md §3
+ * @see docs/specs/content-reports.md §4, §7
  */
 final class Version20260830010000 extends AbstractMigration
 {
