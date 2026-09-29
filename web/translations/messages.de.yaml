@@ -1576,6 +1576,14 @@ security:
     remember_password: 'Passwort wieder eingefallen?'
     sign_in_link: 'Anmelden'
   # The password reset email (emails/reset_password.html.twig).
+  account_exists_email:
+    subject: 'Jemand wollte sich mit deiner Adresse registrieren'
+    heading: 'Du hast schon ein Konto'
+    body: 'Jemand hat gerade versucht, mit dieser E-Mail-Adresse ein Cycling-Commons-Konto anzulegen. Zu ihr gibt es schon ein Konto, also wurde kein neues angelegt.'
+    sign_in: 'Anmelden'
+    forgot: 'Passwort vergessen?'
+    reset: 'Wähle ein neues.'
+    ignore: 'Wenn du das nicht warst, kannst du diese E-Mail ignorieren. An deinem Konto hat sich nichts geändert.'
   reset_email:
     subject: 'Dein Link zum Zurücksetzen deines Cycling-Commons-Passworts'
     heading: 'Setze dein Passwort zurück'
@@ -4156,7 +4164,6 @@ form:
   error_email_required: 'Gib deine E-Mail-Adresse ein.'
   error_email_invalid: 'Gib eine gültige E-Mail-Adresse ein.'
   error_email_mailable: 'An diese Adresse können wir keine E-Mail schicken. Prüfe sie auf Tippfehler, etwa zwei Punkte hintereinander.'
-  error_email_taken: 'Diese E-Mail-Adresse ist bereits registriert.'
   error_email_long: 'Eine E-Mail-Adresse darf nicht länger als {{ limit }} Zeichen sein.'
   error_display_name_required: 'Gib einen Anzeigenamen ein.'
   error_display_name_short: 'Ein Anzeigename hat mindestens {{ limit }} Zeichen.'

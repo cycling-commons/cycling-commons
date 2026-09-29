@@ -140,9 +140,25 @@ made would be a record of something that never happened.
   and two confirmation mails. Migration `Version20260929010000` lower-cases the
   existing rows, except one whose lower-case form another account already
   holds: two accounts on one mailbox is for a person to merge.
-- Duplicate email is caught twice: `UniqueEntity` on the entity, and a
-  TOCTOU catch of `UniqueConstraintViolationException` at flush that re-renders
-  the same duplicate-email form error as a 422 instead of a 500.
+- **A taken address is answered like a new one** (owner, 2026-09-29). The
+  form never says which addresses have accounts: sign-up with an address that
+  already has one renders the same check-your-email page, and the inbox learns
+  the rest (`App\Security\ExistingAccountNotice`):
+  - an account that never confirmed gets a fresh confirmation link;
+  - a confirmed account gets a note (`emails/account_exists.html.twig`) saying
+    somebody tried to sign up with the address, with a sign-in button and the
+    password-reset link; nothing about the account changes.
+
+  Both mails spend the resend page's per-address budgets below (one per 15
+  minutes, three per day), so repeating the sign-up cannot flood the inbox, and
+  over budget the page is still the same. The password is hashed **before** the
+  lookup, so a taken address costs the same time as a new one. There is no
+  `UniqueEntity` on `User`: the lookup is in `RegistrationController`, and the
+  database's unique index is the last guard; losing that race at flush
+  (`UniqueConstraintViolationException`) answers like any taken address, never
+  a 500. Pinned by `RegistrationTest::testATakenAddressIsAnsweredLikeANewOne`,
+  `testATakenConfirmedAddressGetsTheWayToSignIn` and
+  `testATakenAddressIsMailedOncePerQuarterHour`.
 - A verification mail is sent (verify-email bundle, signed URLs — no stored
   token). **It greets nobody by name and is addressed to the bare address**
   (`EmailVerifier::sendConfirmation()`, 2026-09-29): the address may belong to
@@ -164,8 +180,7 @@ made would be a record of something that never happened.
   valid. Guarded by `LocalizedRoutingTest::testTheEmailVerifyLinkIsLocalized`.
   `/verify/email` validates the signature and flags
   `emailVerified`/`emailVerifiedAt`, then redirects to login. A link that is
-  expired or broken redirects to `/verify/resend` (below) with a notice, not
-  back to the sign-up form, where the taken address would only fail again.
+  expired or broken redirects to `/verify/resend` (below) with a notice.
 - **Journey continuity (verified end-to-end):** the firewall's
   saved target path survives the whole register → verify → login detour in
   one session, because registration and verification never touch it and
@@ -204,9 +219,8 @@ every case through the real guards (`GuardedSignupTrait`) so a validation
 test cannot pass only because a bot guard refused it first.
 
 **A new confirmation link** (`App\Controller\VerificationResendController`,
-`/verify/resend`, localized like `/verify/email`). Before it, a rider whose
-link expired was stuck: signing up again fails on the taken address. The page
-asks for the address and **always answers the same "check your email" card**,
+`/verify/resend`, localized like `/verify/email`): the way back for a rider
+whose link expired. The page asks for the address and **always answers the same "check your email" card**,
 so it says nothing about which addresses have accounts. A mail goes out only
 for an existing, unconfirmed account, and only within its budgets:
 
@@ -215,6 +229,9 @@ for an existing, unconfirmed account, and only within its budgets:
 | `verify_resend` | the connection | 5 per hour | a visible 429: it is about the sender |
 | `verify_resend_address` | the address | 1 per 15 minutes | the same card, no mail |
 | `verify_resend_address_daily` | the address | 3 per day | the same card, no mail |
+
+The two address budgets are shared with a sign-up on a taken address (above):
+both mail the same inbox, so they draw on one allowance.
 
 The address budgets are keyed on the lower-cased address (salted hash, like
 every limiter key) and spent only when a mail would go out. The page has the
@@ -267,9 +284,10 @@ The two differ in what over-budget looks like, and the difference is the point:
 - **Password reset** redirects to `/reset-password/check-email`, exactly the
   answer a real request gets. A `429` here would be the account-enumeration
   oracle this page is otherwise careful to avoid.
-- **Registration** answers `429` with a visible form error. This page already
-  tells you when an address is taken, so there is no existence secret left to
-  protect, and a silent no-op would just look broken to an honest visitor.
+- **Registration** answers `429` with a visible form error. The limit is keyed
+  on the sender's connection, not the address, so it says nothing about which
+  addresses have accounts, and a silent no-op would just look broken to an
+  honest visitor.
 
 The limiter is consumed **before** anything is written or sent, and the keys are
 salted hashes of the address rather than the address itself.

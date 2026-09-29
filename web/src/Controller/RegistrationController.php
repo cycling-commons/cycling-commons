@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Form\RegistrationFormType;
 use App\Repository\UserRepository;
 use App\Security\EmailVerifier;
+use App\Security\ExistingAccountNotice;
 use App\Security\PseudonymousKey;
 use App\Security\SignupGuard;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -35,6 +36,8 @@ final class RegistrationController extends AbstractController
     public function __construct(
         private readonly EmailVerifier $emailVerifier,
         private readonly SignupGuard $guard,
+        private readonly UserRepository $users,
+        private readonly ExistingAccountNotice $existingAccount,
     ) {
     }
 
@@ -87,8 +90,7 @@ final class RegistrationController extends AbstractController
         // Quota BEFORE anything is written or sent. One unauthenticated POST
         // creates a row and mails a confirmation link to whatever address was
         // typed (security scan 2026-08-25). A visible error, not a silent
-        // redirect: this page already tells you when an address is taken, so
-        // there is no existence secret to keep.
+        // redirect: it is about the sender's connection, never the address.
         if (!$registrationLimiter->create(self::anonKey($request->getClientIp() ?? 'unknown', $secret))->consume()->isAccepted()) {
             return $this->refuse($form, 'security.register.error_rate_limited', Response::HTTP_TOO_MANY_REQUESTS);
         }
@@ -102,9 +104,22 @@ final class RegistrationController extends AbstractController
         /** @var string $plainPassword */
         $plainPassword = $form->get('plainPassword')->getData();
 
+        // Hashed before the lookup, so a taken address costs the same time as
+        // a new one and the answer's timing says nothing either.
         $user->setPassword(
             $userPasswordHasher->hashPassword($user, $plainPassword)
         );
+
+        // A taken address gets the same page as a new one; the inbox learns
+        // the rest (ExistingAccountNotice). The form never says which
+        // addresses have accounts.
+        $existing = $this->users->findByEmail($user->getEmail());
+        if (null !== $existing) {
+            $this->existingAccount->send($existing);
+
+            return $this->checkEmail();
+        }
+
         $user->setRoles(['ROLE_USER']);
         $user->setEmailVerified(false);
         $user->confirmAge($now);
@@ -113,14 +128,18 @@ final class RegistrationController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
         } catch (UniqueConstraintViolationException) {
-            // TOCTOU: same duplicate-email form error, never a 500.
-            $form->get('email')->addError(new FormError('form.error_email_taken'));
-
-            return $this->page($form, Response::HTTP_UNPROCESSABLE_ENTITY);
+            // Two sign-ups for one address at once: the other one won, and
+            // this one answers like any taken address, never a 500.
+            return $this->checkEmail();
         }
 
         $this->emailVerifier->sendConfirmation($user);
 
+        return $this->checkEmail();
+    }
+
+    private function checkEmail(): Response
+    {
         return $this->render('security/check_email.html.twig', [
             'page_title' => 'meta.register_check_email_title',
             'page_description' => 'meta.register_check_email_description',

@@ -24,10 +24,11 @@ use Symfony\Component\Routing\Attribute\Route;
 /**
  * A new confirmation link for an account that never confirmed.
  *
- * Before this, a rider whose link expired had no way back: signing up again
- * fails on the taken address. Every outcome renders the same page, so the form
- * says nothing about which addresses have accounts; only the per-connection
- * limit is visible, and it is about the sender, not the address.
+ * The way back for a rider whose link expired. Every outcome renders the same
+ * page, so the form says nothing about which addresses have accounts; only the
+ * per-connection limit is visible, and it is about the sender, not the
+ * address. Signing up again with the address ends the same way, and spends the
+ * same per-address budget ({@see \App\Security\ExistingAccountNotice}).
  *
  * @see docs/specs/account-and-auth.md §2
  *

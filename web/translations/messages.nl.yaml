@@ -1576,6 +1576,14 @@ security:
     remember_password: 'Wachtwoord toch nog?'
     sign_in_link: 'Inloggen'
   # The password reset email (emails/reset_password.html.twig).
+  account_exists_email:
+    subject: 'Iemand probeerde zich aan te melden met je adres'
+    heading: 'Je hebt al een account'
+    body: 'Iemand probeerde net een Cycling Commons-account aan te maken met dit e-mailadres. Er hoort al een account bij, dus er is geen nieuw gemaakt.'
+    sign_in: 'Inloggen'
+    forgot: 'Wachtwoord vergeten?'
+    reset: 'Kies een nieuw.'
+    ignore: 'Was jij dit niet? Dan kun je deze e-mail negeren. Er is niets aan je account veranderd.'
   reset_email:
     subject: 'Je link om je Cycling Commons-wachtwoord opnieuw in te stellen'
     heading: 'Stel je wachtwoord opnieuw in'
@@ -4155,7 +4163,6 @@ form:
   error_email_required: 'Vul je e-mailadres in.'
   error_email_invalid: 'Vul een geldig e-mailadres in.'
   error_email_mailable: 'We kunnen geen e-mail naar dat adres sturen. Controleer het op typfouten, zoals twee punten achter elkaar.'
-  error_email_taken: 'Dit e-mailadres is al geregistreerd.'
   error_email_long: 'Een e-mailadres mag niet langer zijn dan {{ limit }} tekens.'
   error_display_name_required: 'Vul een weergavenaam in.'
   error_display_name_short: 'Een weergavenaam is minstens {{ limit }} tekens lang.'

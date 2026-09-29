@@ -6,6 +6,7 @@ namespace App\Tests\Auth;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Security\ExistingAccountNotice;
 use App\Security\FormGuard;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\MailerAssertionsTrait;
@@ -134,18 +135,6 @@ final class RegistrationTest extends WebTestCase
         self::assertNotNull($this->findUser('mixedcase@example.com'));
     }
 
-    public function testTheSameAddressInOtherCaseIsTaken(): void
-    {
-        $client = $this->client();
-        $this->signUp($client, 'twice@example.com');
-        self::assertResponseIsSuccessful();
-
-        $this->signUp($client, 'Twice@EXAMPLE.com', 'Second Rider');
-
-        self::assertResponseStatusCodeSame(422);
-        self::assertEmailCount(0, message: 'the second attempt must not mail the address again');
-    }
-
     public function testAFilledHoneypotCreatesNothing(): void
     {
         $client = $this->client();
@@ -265,16 +254,72 @@ final class RegistrationTest extends WebTestCase
         );
     }
 
-    public function testDuplicateEmailShowsError(): void
+    /**
+     * A taken address gets the page a new one gets: the form never says which
+     * addresses have accounts (account-and-auth.md §2). The inbox of an
+     * account that never confirmed gets a fresh confirmation link.
+     */
+    public function testATakenAddressIsAnsweredLikeANewOne(): void
     {
         $client = $this->client();
-        $this->signUp($client, 'duplicate@example.com', 'First Rider');
+        $first = $this->signUp($client, 'duplicate@example.com', 'First Rider');
         self::assertResponseIsSuccessful();
+        $firstAnswer = $first->filter('.auth-heading')->text();
 
-        $this->signUp($client, 'duplicate@example.com', 'Second Rider');
+        $second = $this->signUp($client, 'Duplicate@Example.com', 'Second Rider');
 
-        self::assertResponseStatusCodeSame(422);
-        self::assertSelectorExists('input[name="registration_form[email]"]');
+        self::assertResponseIsSuccessful();
+        self::assertSame($firstAnswer, $second->filter('.auth-heading')->text());
+        self::assertSelectorNotExists('input[name="registration_form[email]"]');
+
+        $user = $this->findUser('duplicate@example.com');
+        self::assertNotNull($user);
+        self::assertSame('First Rider', $user->getDisplayName(), 'the second sign-up changes nothing');
+
+        $mail = $this->onlyMail();
+        self::assertSame('duplicate@example.com', $mail->getTo()[0]->getAddress());
+        $this->extractVerifyPath((string) $mail->getHtmlBody());
+    }
+
+    /**
+     * A confirmed account gets a note with the way to sign in and to reset
+     * the password, and no confirmation link.
+     */
+    public function testATakenConfirmedAddressGetsTheWayToSignIn(): void
+    {
+        $client = $this->client();
+        $this->signUp($client, 'confirmed@example.com', 'First Rider');
+        $user = $this->findUser('confirmed@example.com');
+        self::assertNotNull($user);
+        $user->setEmailVerified(true);
+        static::getContainer()->get('doctrine')->getManager()->flush();
+
+        $this->signUp($client, 'confirmed@example.com', 'Second Rider');
+
+        self::assertResponseIsSuccessful();
+        $html = (string) $this->onlyMail()->getHtmlBody();
+        self::assertStringContainsString('/login', $html);
+        self::assertStringContainsString('/reset-password', $html);
+        self::assertStringNotContainsString('/verify/email', $html);
+    }
+
+    /**
+     * The mail spends the resend page's per-address budget, so it cannot
+     * flood an inbox. Called directly: the test's array limiter pools are
+     * reset at the start of every request.
+     */
+    public function testATakenAddressIsMailedOncePerQuarterHour(): void
+    {
+        $this->client();
+        $user = new User();
+        $user->setEmail('flood@example.com');
+        $user->setEmailVerified(true);
+
+        $notice = static::getContainer()->get(ExistingAccountNotice::class);
+        $notice->send($user);
+        $notice->send($user);
+
+        self::assertCount(1, static::getContainer()->get('mailer.message_logger_listener')->getEvents()->getEvents());
     }
 
     public function testMalformedEmailIsRejectedWithoutCreatingUser(): void

@@ -1,0 +1,38 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# Sent when somebody signs up with an address that already has a confirmed
+   account (App\Security\ExistingAccountNotice). The sign-up page answered as
+   it does for a new address; this mail is where the owner learns why. No
+   display name: whoever typed the address may not be its owner. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ 'security.account_exists_email.subject'|trans }}{% endblock %}
+
+{% block content %}
+  {% set loginUrl = url('login') %}
+  {% set resetUrl = url('reset_password_request') %}
+  <h1 style="font-size:24px;font-weight:600;margin:0 0 14px">
+    {{ 'security.account_exists_email.heading'|trans }}
+  </h1>
+
+  <p style="margin:0 0 8px">{{ 'security.account_exists_email.body'|trans }}</p>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0;border-collapse:collapse">
+    <tr>
+      <td align="center" style="background:#e85d26;border-radius:6px">
+        <a href="{{ loginUrl }}"
+           style="display:inline-block;color:#ffffff;font-weight:700;font-size:16px;padding:14px 28px;text-decoration:none">
+          {{ 'security.account_exists_email.sign_in'|trans }}
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin:0 0 14px">
+    {{ 'security.account_exists_email.forgot'|trans }}
+    <a href="{{ resetUrl }}" style="color:#c2551f">{{ 'security.account_exists_email.reset'|trans }}</a>
+  </p>
+
+  <p style="font-size:13px;color:#5a5d4d;margin:0">
+    {{ 'security.account_exists_email.ignore'|trans }}
+  </p>
+{% endblock %}
