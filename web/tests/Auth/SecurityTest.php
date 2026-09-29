@@ -177,4 +177,45 @@ final class SecurityTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.alert-error');
     }
+
+    /**
+     * Sent to sign in from a page, a visitor lands back on that page. The way
+     * back rides in the sign-in link, not a session
+     * (StatelessLoginRedirectSubscriber), and the form carries it on.
+     */
+    public function testSigningInReturnsToThePageThatAskedForIt(): void
+    {
+        $client = static::createClient();
+        $email = 'way-back@example.com';
+        $this->createVerifiedUser($email, 'correcthorse!');
+
+        $client->request('GET', '/vote');
+        self::assertResponseRedirects('/login?_target_path=%2Fvote', 302);
+        $crawler = $client->followRedirect();
+
+        $client->submit($crawler->selectButton('Sign in')->form([
+            '_username' => $email,
+            '_password' => 'correcthorse!',
+        ]));
+        self::assertResponseRedirects('/vote');
+    }
+
+    /** Only a path on this site: a posted target elsewhere lands on the usual page. */
+    public function testSigningInNeverFollowsATargetOffSite(): void
+    {
+        $client = static::createClient();
+        $email = 'off-site@example.com';
+        $this->createVerifiedUser($email, 'correcthorse!');
+
+        $crawler = $client->request('GET', '/login');
+        $client->request('POST', '/login', [
+            '_username' => $email,
+            '_password' => 'correcthorse!',
+            '_csrf_token' => $crawler->filter('input[name="_csrf_token"]')->attr('value'),
+            '_target_path' => '//evil.example/x',
+        ]);
+        $location = (string) $client->getResponse()->headers->get('Location');
+        self::assertContains(parse_url($location, \PHP_URL_HOST), [null, 'localhost'], 'the visitor stays on this site');
+        self::assertStringNotContainsString('evil.example', $location);
+    }
 }

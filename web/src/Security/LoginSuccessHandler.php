@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Security;
 
 use App\Entity\User;
+use App\EventSubscriber\StatelessLoginRedirectSubscriber;
 use Scheb\TwoFactorBundle\Security\Authentication\Token\TwoFactorTokenInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -76,7 +77,12 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
             return new RedirectResponse($this->localizedUrl('2fa_setup', $locale));
         }
 
-        $targetPath = $this->getTargetPath($request->getSession(), self::FIREWALL_NAME);
+        // The way back: the sign-in form's `_target_path`, which an anonymous
+        // visitor's link carries instead of a session
+        // (StatelessLoginRedirectSubscriber), and a local path only; else the
+        // one a session holds, for a visitor who already had a session.
+        $posted = StatelessLoginRedirectSubscriber::localPath($request->request->getString('_target_path'));
+        $targetPath = $posted ?? $this->getTargetPath($request->getSession(), self::FIREWALL_NAME);
         if (null !== $targetPath) {
             $this->removeTargetPath($request->getSession(), self::FIREWALL_NAME);
 
