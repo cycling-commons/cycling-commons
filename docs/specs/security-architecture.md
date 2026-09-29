@@ -424,7 +424,8 @@ docblock). Elements:
    `HttpException(401, 'authentication_required')` otherwise — a JSON client
    must never be 302-redirected to the login page. The `ROLE_USER` check also
    catches 2FA-in-progress tokens (they lack `ROLE_USER`).
-5. **Invalid token → 403** (`createAccessDeniedException`).
+5. **Invalid token → 403** (`createAccessDeniedException`). `item-confirm`
+   answers JSON `{"error": "invalid_token"}` with the 403 instead (below).
 6. **Domain errors as JSON** `{"error": "<machine_code>"}` with `422`
    (invalid input) or `429` (rate-limited); success payloads carry
    `ok: true`.
@@ -442,7 +443,20 @@ Instances:
 
 **As-built deviation:** `item-confirm` follows every element of the pattern
 *except* that it is not listed in `stateless_token_ids`, so its tokens are
-session-backed (see Open questions). `scout-tags` (added by the 2026-08-16
+session-backed (see Open questions).
+
+**That is why its token goes stale, and the drawer recovers once
+(2026-09-29).** A map tab opened before the session changed (signed out and
+back in elsewhere, or a new session) holds a token the session no longer has.
+The Confirm button used to answer every retry with "please try again" and
+resend the same dead token, so nothing worked until a reload (GlitchTip,
+2026-09-28, where the thrown exception also landed). Now the POST answers
+`403 {"error": "invalid_token"}` as JSON, and `assets/map/confirm-post.js`
+fetches a fresh token from the GET snapshot and resends once. No token in the
+snapshot, or a `401`, means the rider is signed out, and the toast says to
+sign in. Pinned by `tests/js/confirm-post.test.mjs` and
+`ItemConfirmationControllerTest::testBadCsrfIs403`. Other session-backed
+JSON callers may show the same symptom; only this one is handled. `scout-tags` (added by the 2026-08-16
 review's info batch) deviates on element 4 only: it keeps its `IsGranted`
 attribute plus the `access_control` backstop (anonymous = login redirect, not
 a clean 401) because its caller is page JS behind a logged-in map session.

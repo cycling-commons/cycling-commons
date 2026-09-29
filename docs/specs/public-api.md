@@ -215,6 +215,19 @@ pinned by `tests/Smoke/ApiSurfaceTest.php`). Shipping an endpoint updates the
 sentence; nobody has to remember. The same test refuses a live endpoint the
 contract does not describe.
 
+**A path nobody built answers in JSON, and says why** (2026-09-29).
+`App\Controller\Api\V1\PlannedApiController` catches every `/v1` path no
+endpoint claims (route `api_planned`, priority -100, deliberately not
+`api_v1_*` so the page's count stays honest). A method and path the OpenAPI
+document describes (`ApiSurface::describes()`, `{id}` matching one segment)
+answers **`501`** `{"error": "not_implemented"}`; anything else answers a JSON
+**`404`** `{"error": "not_found"}`. Both carry `live` (the paths that answer
+today, from the router), `reference` and `contract` (the `/developers/api`
+page and `openapi.yaml`, on the main site from `DEFAULT_URI`, because the api
+host serves `/v1` alone). Before this, `/v1/regions` from the contract was the
+site's HTML 404 page, and a consumer could not tell "planned" from "wrong URL"
+(GlitchTip, 2026-09-28). Pinned by `tests/Api/PlannedEndpointTest.php`.
+
 The reference is in `sitemap.xml` from 2026-09-12. Its content is English only
 and its paths are localised in all five, so it is one entry with alternates
 like any other page: the URL is per language even where the words are not.

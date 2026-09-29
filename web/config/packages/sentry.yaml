@@ -11,6 +11,8 @@ sentry:
     options:
         environment: '%env(APP_ENV)%'
         send_default_pii: false
+        # Names the build on every event: cyclingcommons@<tag>+<sha12>.
+        before_send: 'App\Support\SentryRelease'
         # Not errors: the site answering correctly. A 404 is mostly bots
         # probing for WordPress files and leaked .env files; an
         # AccessDeniedException is a visitor who is not signed in, sent to

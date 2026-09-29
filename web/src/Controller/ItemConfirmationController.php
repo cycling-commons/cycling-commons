@@ -93,8 +93,11 @@ final class ItemConfirmationController extends AbstractController
     public function confirm(int $id, Request $request): JsonResponse
     {
         $user = $this->requireUser();
+        // A tab opened before the session changed holds a dead token. JSON, so
+        // the drawer can fetch a fresh one and retry; not an exception, which
+        // rendered an HTML 403 and reached GlitchTip.
         if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Invalid CSRF token.');
+            return $this->json(['error' => 'invalid_token'], 403);
         }
 
         $item = $this->confirmableItem($id);

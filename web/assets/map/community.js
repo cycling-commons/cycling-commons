@@ -11,6 +11,7 @@ import { addCuratedFeature } from './osm-pools.js';
 import { showPendingShape } from './pending-shape.js';
 import { escPend, curatorMayEdit } from './util.js';
 import { osmAnsweredHtml } from './osm-question.js';
+import { postConfirm } from './confirm-post.js';
 
 const CC_BIKES=['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
 const CC_SEASONS=['spring','summer','autumn','winter'];
@@ -186,6 +187,14 @@ export function hydrateItemConfirm(id){
     .then(r=>{ if(!r.ok) throw new Error('confirm'); return r.json(); })
     .then(s=>paintItemConfirm(box, s))
     .catch(()=>{});
+}
+/* A fresh token from the GET snapshot, for postConfirm's one retry. Null when
+   the snapshot carries none: the rider is signed out. */
+function refreshConfirmToken(id){
+  return fetch(`/items/${id}/confirmations`, {credentials:'same-origin', headers:{'Accept':'application/json'}})
+    .then(r=>r.ok ? r.json() : {})
+    .then(s=>{ if(s && s.token){ _cfTokens[id]=s.token; return s.token; } delete _cfTokens[id]; return null; })
+    .catch(()=>null);
 }
 function paintItemConfirm(box, s){
   // Token lives on the GET snapshot, not the POST reply — cache it or a just-confirmed rider is told to log in.
@@ -432,17 +441,18 @@ export function initCommunity(){
       const box=btn.closest('.cc-cf'); if(!box) return;
       const id=box.getAttribute('data-item'), token=_cfTokens[id];
       if(!token){ mapToast(D.osmLogin||'Please log in to confirm.'); return; }
-      const body=new URLSearchParams(); body.set('_token', token); body.set('stance', btn.getAttribute('data-cf-act'));
       box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=true);
-      fetch(`/items/${id}/confirm`, {method:'POST', credentials:'same-origin',
-        headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:body.toString()})
-        .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
-        .then(s=>{
-          paintItemConfirm(box, s);
-          if(s && s.verified) markItemVerified(id);
-          mapToast(D.toastThanks||'Thanks — recorded.', {center:true});
-        })
-        .catch(()=>{ box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false); mapToast(D.toastErr||'Could not record that — please try again.'); });
+      postConfirm({id, stance:btn.getAttribute('data-cf-act'), token, fetch:(u,i)=>fetch(u,i), refreshToken:refreshConfirmToken})
+        .then(out=>{
+          if(out.ok){
+            paintItemConfirm(box, out.data);
+            if(out.data && out.data.verified) markItemVerified(id);
+            mapToast(D.toastThanks||'Thanks — recorded.', {center:true});
+            return;
+          }
+          box.querySelectorAll('.cc-cf-btn').forEach(b=>b.disabled=false);
+          mapToast(out.reason==='login' ? (D.osmLogin||'Please log in to confirm.') : (D.toastErr||'Could not record that — please try again.'));
+        });
     });
     document.addEventListener('click', e=>{
       const btn=e.target.closest('[data-osm-stance]'); if(!btn) return;

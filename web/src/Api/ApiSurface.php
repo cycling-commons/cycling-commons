@@ -52,12 +52,54 @@ final readonly class ApiSurface
     /** Endpoints the published contract describes. */
     public function promised(): int
     {
+        return \count($this->paths());
+    }
+
+    /**
+     * The paths that answer today, for an error body that says what to use.
+     *
+     * @return list<string>
+     */
+    public function livePaths(): array
+    {
+        $paths = [];
+        foreach ($this->router->getRouteCollection()->all() as $name => $route) {
+            if (str_starts_with($name, self::ROUTE_PREFIX)) {
+                $paths[] = $route->getPath();
+            }
+        }
+        sort($paths);
+
+        return array_values(array_unique($paths));
+    }
+
+    /**
+     * Does the contract describe this method and path? `{id}` matches one
+     * path segment, everything else literally (`/v1/routes/{id}.gpx`).
+     */
+    public function describes(string $method, string $path): bool
+    {
+        foreach ($this->paths() as $template => $operations) {
+            $pattern = '~^'.preg_replace('~\\\\\{[^/}]+\\\\\}~', '[^/]+', preg_quote($template, '~')).'$~';
+            if (1 === preg_match($pattern, $path)
+                && \is_array($operations)
+                && \array_key_exists(strtolower($method), $operations)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return array<string, mixed> */
+    private function paths(): array
+    {
         if (!is_file($this->contractPath)) {
-            return 0;
+            return [];
         }
         /** @var array{paths?: array<string, mixed>} $doc */
         $doc = Yaml::parseFile($this->contractPath) ?? [];
 
-        return \count($doc['paths'] ?? []);
+        return $doc['paths'] ?? [];
     }
 }

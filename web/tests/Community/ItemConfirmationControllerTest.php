@@ -151,6 +151,12 @@ final class ItemConfirmationControllerTest extends WebTestCase
 
         $client->request('POST', '/items/'.$water->getId().'/confirm', ['stance' => 'potable', '_token' => 'wrong']);
         self::assertResponseStatusCodeSame(403);
+        // JSON the drawer can act on (fetch a fresh token and retry), not the
+        // HTML error page an exception renders, and nothing for GlitchTip.
+        self::assertSame(
+            ['error' => 'invalid_token'],
+            json_decode((string) $client->getResponse()->getContent(), true),
+        );
     }
 
     public function testPotableOnANonWaterUtilityIs422(): void
