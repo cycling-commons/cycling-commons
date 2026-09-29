@@ -6,12 +6,18 @@ import { D } from './i18n.js';
 import { closeDrawer, photoCap } from './drawer.js';
 import { closeClimbProfile, isClimbProfileOpen } from './climb-profile.js';
 
-// docs/specs/photo-uploads.md §6c — uuid from the stored URL so older galleries still link.
-const MEDIA_UUID = /\/photos\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\//i;
+/* docs/specs/photo-uploads.md §6c: the upload's uuid, read from the stored
+   URL, so a gallery written before the link existed still links. A published
+   photo lives under `published/<uuid>/<rev>/` (MediaUpload, media-storage-
+   architecture.md §2); `/photos/<uuid>/` is the older form. A URL that
+   matches neither is a linked or
+   imported picture, and gets no link: we cannot take down somebody else's
+   file. The link goes straight to the shared route (content-reports.md §2). */
+const MEDIA_UUID = /\/(?:published|photos)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\//i;
 export function reportLink(p){
   const m = MEDIA_UUID.exec(String(p && (p.lg || p.sm) || ''));
   if(!m) return '';
-  return ` · <a class="cc-lb-report" href="/photo/${m[1]}/report"><span class="cc-bang" aria-hidden="true">!</span>${escPend(D.reportPhoto||'Report this photo')}</a>`;
+  return ` · <a class="cc-lb-report" href="/report/photo/${m[1]}"><span class="cc-bang" aria-hidden="true">!</span>${escPend(D.reportPhoto||'Report this photo')}</a>`;
 }
 
 export let _lb={photos:[],i:0,name:''};
