@@ -1,0 +1,35 @@
+docs/specs/coverage-runs-admin.md
+  s_dae7c72bd45627::t_d7819139360be2 28,33
+web/src/Controller/Admin/CoverageRunController.php
+  s_dae7c72bd45627::t_122735059660b4 9,59-101
+web/templates/admin/coverage_runs/index.html.twig
+  s_dae7c72bd45627::t_1d221dc981691c 35,41-45,57-73
+web/tests/Admin/CoverageRunsTest.php
+  s_dae7c72bd45627::t_a86ddbe6328e6e 118-154
+web/translations/messages.de.yaml
+  s_dae7c72bd45627::t_2f2fca41eb4146 4355
+web/translations/messages.en.yaml
+  s_dae7c72bd45627::t_fee0e2d0187547 4376
+web/translations/messages.es.yaml
+  s_dae7c72bd45627::t_3b582bb985fbee 4386
+web/translations/messages.fr.yaml
+  s_dae7c72bd45627::t_f209b0b03f841d 4347
+web/translations/messages.nl.yaml
+  s_dae7c72bd45627::t_60cc0c14d402a7 4354
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "25f5a4896ecd9696468354fe1a6edefacf9f055f",
+  "prompts": {},
+  "sessions": {
+    "s_dae7c72bd45627": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "66eab292-db8a-4c03-a169-5e3947aa9f80",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
