@@ -1,0 +1,164 @@
+docs/specs/data-source-register.md
+  s_6e1d7c95fbc8b5::t_f1620155db58e4 88
+  s_6e1d7c95fbc8b5::t_2f13f1aa721a4e 53
+  s_6e1d7c95fbc8b5::t_c3eebe407364d7 210
+  s_6e1d7c95fbc8b5::t_4309683926623a 186
+  s_6e1d7c95fbc8b5::t_a7c613f3fd8973 131
+  s_6e1d7c95fbc8b5::t_596fa446ea6254 242,245-248
+  s_6e1d7c95fbc8b5::t_e95b4fc2f8c7f0 271
+docs/specs/edit-items/N-climbs.md
+  s_6e1d7c95fbc8b5::t_fe9562a11d6a36 71-72
+  s_6e1d7c95fbc8b5::t_97b1220637f6c3 83
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 322
+  s_6e1d7c95fbc8b5::t_d085939c0dc909 109-115
+  s_6e1d7c95fbc8b5::t_e90dec6a24ca2a 39
+  s_6e1d7c95fbc8b5::t_e955e59326734a 135
+  s_6e1d7c95fbc8b5::t_31622f5483e23e 272-275
+  s_6e1d7c95fbc8b5::t_e236bbf6aec074 328-330,332-333,342-343,346
+docs/specs/edit-items/B-water-food.md
+  s_6e1d7c95fbc8b5::t_8696b6d81ad29b 24
+  s_6e1d7c95fbc8b5::t_254ac0c8a37ef5 46-48
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 20
+  s_6e1d7c95fbc8b5::t_194d90cefd00d6 36,39
+docs/specs/media-storage-architecture.md
+  s_6e1d7c95fbc8b5::t_8e49a7de4829e6 18-20
+  s_6e1d7c95fbc8b5::t_79508558bf55dc 76,190,199-201,221-234,244-246,250,252-258,269,325,335,338
+docs/specs/content-reports.md
+  s_6e1d7c95fbc8b5::t_198c8e4ab2a753 181-185
+  s_6e1d7c95fbc8b5::t_d8ad0eed2330d2 275,438,479-480
+docs/specs/credits-page.md
+  s_6e1d7c95fbc8b5::t_d43bd1c5edadca 37-38,63-66,113-117,122,199-204,236,238-242,248-249,255-259,282-289,296,304-308,372-377,393-394,422-433,491,498-500
+  s_6e1d7c95fbc8b5::t_00a653b07367c9 485-486
+  s_dae7c72bd45627::t_c4f89899087a0a 437-439
+docs/specs/edit-items/C-public-toilets.md
+  s_6e1d7c95fbc8b5::t_5891b635d11043 55
+docs/specs/edit-items/README.md
+  s_6e1d7c95fbc8b5::t_ed067aa6d95963 115
+  s_6e1d7c95fbc8b5::t_420c8f69544b5f 128-136,141-143,147-150
+  s_6e1d7c95fbc8b5::t_892bf1c5fc3876 335-336
+  s_6e1d7c95fbc8b5::t_df803067b52aa5 168-170
+  s_6e1d7c95fbc8b5::t_311d49dc3bd14a 18-22
+  s_6e1d7c95fbc8b5::t_522f0d2f2e8f55 144-146
+  s_6e1d7c95fbc8b5::t_eafa9968beb324 305-310
+  s_6e1d7c95fbc8b5::t_82491eae41284e 137-139
+  s_6e1d7c95fbc8b5::t_6476ff7284c1e7 74
+  s_6e1d7c95fbc8b5::t_596d270ba87028 345
+  s_6e1d7c95fbc8b5::t_9bd1b9220dd399 49
+  s_6e1d7c95fbc8b5::t_85b13d37e49273 30-35
+  s_6e1d7c95fbc8b5::t_89699271eca4d7 316-328
+  s_6e1d7c95fbc8b5::t_136c7ccb2f86c5 85-86
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 9,343
+  s_6e1d7c95fbc8b5::t_26e256704ec82a 48
+  s_6e1d7c95fbc8b5::t_5f2ae3003ba6fb 117-118,127,140
+  s_6e1d7c95fbc8b5::t_23721396605297 75
+  s_6e1d7c95fbc8b5::t_12e11584400f6b 64-65
+docs/specs/edit-items/F-getting-there.md
+  s_6e1d7c95fbc8b5::t_9860de0fc2c018 44,47
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 29
+docs/specs/api-strategy.md
+  s_6e1d7c95fbc8b5::t_3531a8387c72d9 23-24
+  s_6e1d7c95fbc8b5::t_2b80b958edc703 137-138
+  s_6e1d7c95fbc8b5::t_551b7122cef6ed 105-116
+  s_6e1d7c95fbc8b5::t_ea99f68ba5ce81 212-215
+  s_6e1d7c95fbc8b5::t_fb5af8ac6f8a54 167-168
+docs/specs/system-configuration.md
+  s_6e1d7c95fbc8b5::t_3b08fc9a2a506c 70-74
+  s_6e1d7c95fbc8b5::t_cef0b27fd787f3 194
+  s_6e1d7c95fbc8b5::t_143386101a0f84 226-229
+  s_6e1d7c95fbc8b5::t_701bd12c255910 246-249
+  s_6e1d7c95fbc8b5::t_2b5942231652ae 111-114
+  s_6e1d7c95fbc8b5::t_64567e4831c38b 61
+docs/specs/public-api-personal-data-boundary.md
+  s_6e1d7c95fbc8b5::t_71b03ca95cb960 333
+  s_6e1d7c95fbc8b5::t_64ffaedd130dad 131-132
+  s_6e1d7c95fbc8b5::t_9f278ca33474dc 304-306,308
+  s_6e1d7c95fbc8b5::t_3d22e8f1bf691e 73,76-77
+  s_6e1d7c95fbc8b5::t_7f93393f100380 74,78
+  s_6e1d7c95fbc8b5::t_b1e3d9ada97071 481-483
+  s_6e1d7c95fbc8b5::t_61d80b70457fcb 187-188,190,193-197
+  s_6e1d7c95fbc8b5::t_86392e67d5b79e 242-244
+  s_6e1d7c95fbc8b5::t_0b5b55b393c53f 486-488
+  s_6e1d7c95fbc8b5::t_8a1a3fb937cb0e 51,55-56
+  s_6e1d7c95fbc8b5::t_449e23b3dd8451 307
+  s_6e1d7c95fbc8b5::t_c70930ce7d0bca 427-453
+  s_6e1d7c95fbc8b5::t_a0a732959bb34e 52-54,57-63
+  s_6e1d7c95fbc8b5::t_8571285cfb7431 180-186,189,191-192,198-199
+  s_6e1d7c95fbc8b5::t_7332c2b58af6f2 98-130
+  s_6e1d7c95fbc8b5::t_ee7a8d7df23a4a 6-14
+  s_6e1d7c95fbc8b5::t_25a9e732f298fd 317,321-332,334
+  s_dae7c72bd45627::t_da10ea45e7b80d 75,200,335
+docs/specs/edit-items/D-bike-services.md
+  s_6e1d7c95fbc8b5::t_c546b3b80ff04b 71
+  s_6e1d7c95fbc8b5::t_f85600944609ed 51
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 66
+  s_6e1d7c95fbc8b5::t_4118653fa6440b 94
+docs/specs/edit-items/O-where-to-sleep.md
+  s_6e1d7c95fbc8b5::t_163be8c5a04aef 25-26,29
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 20
+  s_6e1d7c95fbc8b5::t_c0de4b453c17a8 38,41
+  s_6e1d7c95fbc8b5::t_889ec04990fd27 48-50
+docs/specs/edit-items/G-shelter.md
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 18
+  s_6e1d7c95fbc8b5::t_6496083adac4d5 33,36
+  s_6e1d7c95fbc8b5::t_b246d9adef382a 43-46
+docs/specs/site-directory.md
+  s_6e1d7c95fbc8b5::t_668690d12679c9 107-111,119
+  s_6e1d7c95fbc8b5::t_656551cb54e066 11-12,14-16
+  s_6e1d7c95fbc8b5::t_3f6302e5cb3fec 9,17-22,25-27,96-103,105-106,112-118,120-126
+docs/specs/edit-items/Q-history-culture.md
+  s_6e1d7c95fbc8b5::t_b73644267d72cc 26,34-35,38
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 18
+  s_6e1d7c95fbc8b5::t_51e529b7439714 45-50
+docs/specs/edit-items/P-scenic-views.md
+  s_6e1d7c95fbc8b5::t_e696a3779b84e2 8
+  s_6e1d7c95fbc8b5::t_334137d8125c3a 61-62
+  s_6e1d7c95fbc8b5::t_b3a83aa4f4f9b7 37,44-48,51
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 28
+docs/specs/edit-items/R-quality-rides.md
+  s_6e1d7c95fbc8b5::t_6f34fc83c869c7 157-161
+docs/specs/edit-items/E-hazards.md
+  s_6e1d7c95fbc8b5::t_fc5c8d90f0a128 38
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 20
+  s_6e1d7c95fbc8b5::t_735aa36c956506 24
+  s_6e1d7c95fbc8b5::t_e0680f1e70ce0a 75-77
+docs/specs/coverage-runs-admin.md
+  s_6e1d7c95fbc8b5::t_2a6d9207b867d0 87
+  s_6e1d7c95fbc8b5::t_888ef83e6ead0b 88-89
+  s_6e1d7c95fbc8b5::t_02f99a01f5145f 5-6,37-41,67-69,71-72,74-75,77-78,101
+docs/specs/climb-elevation.md
+  s_6e1d7c95fbc8b5::t_c9c4c6976c3344 905,1067,1121,1202-1203
+  s_6e1d7c95fbc8b5::t_c9bf0bde5c8d52 1045-1048,1117-1120,1122-1123,1160-1168,1195-1201,1204
+docs/specs/edit-items/A-road-surface.md
+  s_6e1d7c95fbc8b5::t_188276a31180e9 588-589
+  s_6e1d7c95fbc8b5::t_d67dbefa1ca37b 545
+  s_6e1d7c95fbc8b5::t_b2f90134189a12 583-587,590-592
+  s_6e1d7c95fbc8b5::t_7649da2ee11373 504
+  s_6e1d7c95fbc8b5::t_6422a0236ac223 560-561
+  s_6e1d7c95fbc8b5::t_1944ea8d69d0a2 519-520
+docs/specs/translations.md
+  s_dae7c72bd45627::t_a256e2379603a8 8,257-258,710,712-714,772-775,777-778,780-782,798-799,820-823,960-961,1180-1181,1198-1200
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8319566f608e59ef0b37a179c63246a3bd45a064",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_dae7c72bd45627": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "66eab292-db8a-4c03-a169-5e3947aa9f80",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
