@@ -22,7 +22,14 @@
       {% endfor %}
 
       {% if error %}
-        <div class="alert-error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% if error.messageKey == constant('App\\Security\\VerifiedEmailChecker::UNVERIFIED') %}
+          <div class="alert-error" role="alert">
+            {{ 'security.login.error_unverified'|trans }}
+            <a href="{{ path('verify_resend') }}">{{ 'security.login.resend_link'|trans }}</a>
+          </div>
+        {% else %}
+          <div class="alert-error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
       {% endif %}
 
       <form method="post" action="{{ path('login') }}" class="cc-validate" novalidate>

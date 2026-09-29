@@ -81,6 +81,10 @@ trade this project makes for a contact form.
 Four local layers instead. {@see App\Security\FormGuard} owns the first three,
 {@see App\Security\ProofOfWork} the fourth.
 
+Since 2026-09-29 the same layers also guard sign-up and the new-confirmation-link
+page, through `App\Security\SignupGuard` with its own `security.guard.*`
+messages ([account-and-auth.md](account-and-auth.md) §2).
+
 | Layer | What it costs a bot | What it costs a rider |
 |---|---|---|
 | Two honeypots (`company_url`, `website`) | every form-filler that fills by name | nothing; they are off-screen and unfocusable |

@@ -49,3 +49,6 @@
 input.is-invalid{border-bottom-color:var(--clay)}
 input[type=checkbox].is-invalid{outline:2px solid var(--clay);outline-offset:2px}
 @media(max-width:780px){.auth{grid-template-columns:1fr;min-height:auto}.panel{min-height:auto;padding:1.6rem}.formwrap{align-items:flex-start;padding:2rem 1.6rem}}
+/* Bot layers on sign-up and the resend page (security/_guard_fields.html.twig). */
+.hp-field{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+.pow-status{font-size:.8rem;color:#595c4d;margin:.6rem 0 0}

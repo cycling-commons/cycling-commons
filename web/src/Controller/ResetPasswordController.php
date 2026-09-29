@@ -150,6 +150,11 @@ final class ResetPasswordController extends AbstractController
             // docs/specs/account-and-auth.md §3 — reset clears lockout so the owner can sign in.
             $user->setLockedUntil(null);
             $user->setFailedLoginAttempts(0);
+            // The link came from the inbox, which proves the address (§2.4).
+            if (!$user->isEmailVerified()) {
+                $user->setEmailVerified(true);
+                $user->setEmailVerifiedAt(new \DateTimeImmutable());
+            }
             $this->entityManager->flush();
 
             $this->cleanSessionAfterReset();

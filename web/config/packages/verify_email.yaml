@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# A day, not the bundle's hour: a rider who signs up at night confirms in the
+# morning. Longer is not needed, a new link is one form away (/verify/resend).
+symfonycasts_verify_email:
+    lifetime: 86400

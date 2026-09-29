@@ -37,6 +37,8 @@ framework:
                 adapter: cache.app
             cache.registration_limiter:
                 adapter: cache.app
+            cache.verify_resend_limiter:
+                adapter: cache.app
             cache.media_upload_limiter:
                 adapter: cache.app
             cache.translation_propose_limiter:
@@ -208,6 +210,24 @@ framework:
             limit: 5
             interval: '1 hour'
             cache_pool: cache.registration_limiter
+        # A new confirmation link (account-and-auth.md §2). Per connection,
+        # then per address twice: a quarter hour between links, three a day, so
+        # nobody can turn the form on a stranger's inbox.
+        verify_resend:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+            cache_pool: cache.verify_resend_limiter
+        verify_resend_address:
+            policy: sliding_window
+            limit: 1
+            interval: '15 minutes'
+            cache_pool: cache.verify_resend_limiter
+        verify_resend_address_daily:
+            policy: sliding_window
+            limit: 3
+            interval: '1 day'
+            cache_pool: cache.verify_resend_limiter
         # Photo uploads (photo-uploads.md §7): generous for a real day of
         # contributing, bounded against bulk abuse. Each accepted upload costs
         # an Imagick decode plus three encodes, so this is a compute gate as
@@ -358,6 +378,8 @@ when@test:
                 cache.password_reset_limiter:
                     adapter: cache.adapter.array
                 cache.registration_limiter:
+                    adapter: cache.adapter.array
+                cache.verify_resend_limiter:
                     adapter: cache.adapter.array
                 cache.media_upload_limiter:
                     adapter: cache.adapter.array

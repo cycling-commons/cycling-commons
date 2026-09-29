@@ -4,7 +4,8 @@ security:
         App\Entity\User: 'auto'
 
     providers:
-        app_users: { entity: { class: App\Entity\User, property: email } }
+        # No `property`: UserRepository::loadUserByIdentifier() lower-cases the address first.
+        app_users: { entity: { class: App\Entity\User } }
 
     firewalls:
         # Symfony's skeleton pattern also carried `css|images|js`, which this
@@ -17,6 +18,7 @@ security:
         main:
             lazy: true
             provider: app_users
+            user_checker: App\Security\VerifiedEmailChecker  # no sign-in before the address is confirmed
             form_login:
                 login_path: login
                 check_path: login

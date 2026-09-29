@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Event\CheckPassportEvent;
@@ -86,6 +87,13 @@ final class LoginThrottleListener
     #[AsEventListener(event: LoginFailureEvent::class)]
     public function onLoginFailure(LoginFailureEvent $event): void
     {
+        // The right password on an unconfirmed account is not a guess.
+        $exception = $event->getException();
+        if ($exception instanceof CustomUserMessageAccountStatusException
+            && VerifiedEmailChecker::UNVERIFIED === $exception->getMessageKey()) {
+            return;
+        }
+
         $user = $this->resolveUserFromFailureEvent($event);
 
         if (null === $user) {

@@ -9,6 +9,8 @@ namespace App\Tests\Auth;
 use App\Controller\RegistrationController;
 use App\Controller\ResetPasswordController;
 use App\Entity\User;
+use App\Security\FormGuard;
+use App\Security\ProofOfWork;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -48,6 +50,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  */
 final class AnonymousMailFloodTest extends WebTestCase
 {
+    use GuardedSignupTrait;
+
     /** Any value of >= 24 chars works; it only has to match the cookie. */
     private const string CSRF = 'ccTestCsrfTokenValue0123456789';
 
@@ -139,6 +143,8 @@ final class AnonymousMailFloodTest extends WebTestCase
     /** @return array<string, mixed> */
     private function registrationPayload(string $email): array
     {
+        $challenge = $this->powChallenge();
+
         return ['registration_form' => [
             'email' => $email,
             'displayName' => 'Flood Rider',
@@ -146,7 +152,14 @@ final class AnonymousMailFloodTest extends WebTestCase
             'confirmAge' => '1',
             'agreeTerms' => '1',
             '_token' => self::CSRF,
-        ]];
+        ],
+            // Past the bot guards, so the limiter is what these tests reach.
+            'pow_challenge' => $challenge,
+            'pow_nonce' => $this->solvePow($challenge, ProofOfWork::DIFFICULTY),
+            FormGuard::HONEYPOT_A => '',
+            FormGuard::HONEYPOT_B => '',
+            FormGuard::STAMP => $this->agedStamp(),
+        ];
     }
 
     private function userCount(): int

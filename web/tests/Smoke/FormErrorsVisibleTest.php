@@ -4,6 +4,8 @@
 
 namespace App\Tests\Smoke;
 
+use App\Security\FormGuard;
+use App\Tests\Auth\GuardedSignupTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
@@ -20,6 +22,8 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 final class FormErrorsVisibleTest extends WebTestCase
 {
+    use GuardedSignupTrait;
+
     /**
      * Every `form_start($x)` in the templates must be matched by something that
      * renders `$x`'s own errors. Four spellings count, all of them in use:
@@ -89,6 +93,10 @@ final class FormErrorsVisibleTest extends WebTestCase
                 'agreeTerms' => '1',
                 '_token' => 'not-a-valid-token',
             ],
+            // Past the honeypots and timer, so the token is what gets refused.
+            FormGuard::HONEYPOT_A => '',
+            FormGuard::HONEYPOT_B => '',
+            FormGuard::STAMP => $this->agedStamp(),
         ]);
 
         self::assertResponseStatusCodeSame(422);
@@ -165,6 +173,10 @@ final class FormErrorsVisibleTest extends WebTestCase
                 'agreeTerms' => '1',
                 '_token' => 'not-a-valid-token',
             ],
+            // Past the honeypots and timer, so the token is what gets refused.
+            FormGuard::HONEYPOT_A => '',
+            FormGuard::HONEYPOT_B => '',
+            FormGuard::STAMP => $this->agedStamp(),
         ]);
 
         self::assertResponseStatusCodeSame(422);

@@ -292,6 +292,42 @@ final class ResetPasswordTest extends WebTestCase
         self::assertFalse($reloaded->isLocked());
     }
 
+    /**
+     * A reset link opened from the inbox proves the address as well as a
+     * confirmation link does. Without this, an unconfirmed rider who resets
+     * their password still cannot sign in (account-and-auth.md §2).
+     */
+    public function testPasswordResetConfirmsTheAddress(): void
+    {
+        $client = static::createClient();
+
+        $user = $this->createVerifiedUser('reset-unconfirmed@example.com', 'Unconfirmed Rider', 'initialpass12345!');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user->setEmailVerified(false);
+        $user->setEmailVerifiedAt(null);
+        $em->flush();
+
+        $crawler = $client->request('GET', '/reset-password');
+        $client->submit($crawler->selectButton('Send reset link')->form([
+            'reset_password_request_form[email]' => 'reset-unconfirmed@example.com',
+        ]));
+        $resetPath = $this->extractResetPath((string) $this->getMailerMessage()?->getHtmlBody());
+        $client->followRedirect();
+        $client->request('GET', $resetPath);
+        $client->followRedirect();
+        $client->submit($client->getCrawler()->selectButton('Set new password')->form([
+            'change_password_form[plainPassword][first]' => 'newSecurePass9999!',
+            'change_password_form[plainPassword][second]' => 'newSecurePass9999!',
+        ]));
+        self::assertResponseRedirects('/login');
+
+        $em->clear();
+        $reloaded = static::getContainer()->get(\App\Repository\UserRepository::class)->findByEmail('reset-unconfirmed@example.com');
+        self::assertNotNull($reloaded);
+        self::assertTrue($reloaded->isEmailVerified());
+        self::assertNotNull($reloaded->getEmailVerifiedAt());
+    }
+
     public function testRequestResetForNonExistentEmailShowsSameResponse(): void
     {
         $client = static::createClient();

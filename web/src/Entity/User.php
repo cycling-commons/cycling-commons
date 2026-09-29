@@ -344,9 +344,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     public function setEmail(string $email): static
     {
-        $this->email = $email;
+        $this->email = self::normalizeEmail($email);
 
         return $this;
+    }
+
+    /** One spelling per mailbox, so `Rider@` and `rider@` cannot be two accounts. */
+    public static function normalizeEmail(string $email): string
+    {
+        return mb_strtolower(trim($email));
     }
 
     public function setPassword(string $password): static

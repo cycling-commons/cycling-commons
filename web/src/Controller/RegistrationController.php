@@ -11,19 +11,18 @@ use App\Form\RegistrationFormType;
 use App\Repository\UserRepository;
 use App\Security\EmailVerifier;
 use App\Security\PseudonymousKey;
+use App\Security\SignupGuard;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 /**
@@ -35,7 +34,7 @@ final class RegistrationController extends AbstractController
 {
     public function __construct(
         private readonly EmailVerifier $emailVerifier,
-        private readonly TranslatorInterface $translator,
+        private readonly SignupGuard $guard,
     ) {
     }
 
@@ -64,74 +63,88 @@ final class RegistrationController extends AbstractController
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Quota BEFORE anything is written or sent. One unauthenticated
-            // POST creates a row and mails a confirmation link to whatever
-            // address was typed, so without this a loop both fills the user
-            // table and points our mail server at someone else's inbox
-            // (security scan 2026-08-25). A visible error, not a silent
-            // redirect: unlike the reset form this page already tells you when
-            // an address is taken, so there is no existence secret to keep.
-            if (!$registrationLimiter->create(self::anonKey($request->getClientIp() ?? 'unknown', $secret))->consume()->isAccepted()) {
-                // A catalogue key, not a sentence: this error is form-level, and
-                // form-level errors only became visible on 2026-08-27 (the page
-                // rendered field errors and dropped the rest). The moment it is
-                // shown it has to exist in five languages like any other copy.
-                $form->addError(new FormError('security.register.error_rate_limited'));
-
-                return $this->render('security/register.html.twig', [
-                    'registrationForm' => $form,
-                    'page_title' => 'meta.register_title',
-                    'page_description' => 'meta.register_description',
-                ], new Response('', Response::HTTP_TOO_MANY_REQUESTS));
-            }
-
-            /** @var string $plainPassword */
-            $plainPassword = $form->get('plainPassword')->getData();
-
-            $user->setPassword(
-                $userPasswordHasher->hashPassword($user, $plainPassword)
-            );
-            $user->setRoles(['ROLE_USER']);
-            $user->setEmailVerified(false);
-            $user->confirmAge(new \DateTimeImmutable());
-
-            try {
-                $entityManager->persist($user);
-                $entityManager->flush();
-            } catch (UniqueConstraintViolationException) {
-                // TOCTOU: same duplicate-email form error, never a 500.
-                $form->get('email')->addError(new FormError('form.error_email_taken'));
-
-                return $this->render('security/register.html.twig', [
-                    'registrationForm' => $form,
-                    'page_title' => 'meta.register_title',
-                    'page_description' => 'meta.register_description',
-                ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
-            }
-
-            $this->emailVerifier->sendEmailConfirmation(
-                'verify_email',
-                $user,
-                (new TemplatedEmail())
-                    ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
-                    ->to(new Address($user->getEmail(), $user->getDisplayName()))
-                    ->subject($this->translator->trans('registration.email.title'))
-                    ->htmlTemplate('registration/confirmation_email.html.twig')
-                    ->context(['displayName' => $user->getDisplayName()])
-            );
-
-            return $this->render('security/check_email.html.twig', [
-                'page_title' => 'meta.register_check_email_title',
-                'page_description' => 'meta.register_check_email_description',
-            ]);
+        if (!$form->isSubmitted()) {
+            return $this->page($form);
         }
 
+        // Bots signed strangers up to mail them (2026-09-28). The free checks
+        // run first, so a flood of them spends nobody's rate-limit budget.
+        $now = new \DateTimeImmutable();
+        $refusal = $this->guard->refusal($request, $now);
+        if (null !== $refusal) {
+            return $this->refuse($form, $refusal, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        if (!$form->isValid()) {
+            return $this->page($form);
+        }
+
+        $refusal = $this->guard->proofRefusal($request, $now);
+        if (null !== $refusal) {
+            return $this->refuse($form, $refusal, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Quota BEFORE anything is written or sent. One unauthenticated POST
+        // creates a row and mails a confirmation link to whatever address was
+        // typed (security scan 2026-08-25). A visible error, not a silent
+        // redirect: this page already tells you when an address is taken, so
+        // there is no existence secret to keep.
+        if (!$registrationLimiter->create(self::anonKey($request->getClientIp() ?? 'unknown', $secret))->consume()->isAccepted()) {
+            return $this->refuse($form, 'security.register.error_rate_limited', Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
+        if (!$this->guard->domainResolves($user->getEmail())) {
+            $form->get('email')->addError(new FormError('security.guard.email_domain'));
+
+            return $this->page($form, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        /** @var string $plainPassword */
+        $plainPassword = $form->get('plainPassword')->getData();
+
+        $user->setPassword(
+            $userPasswordHasher->hashPassword($user, $plainPassword)
+        );
+        $user->setRoles(['ROLE_USER']);
+        $user->setEmailVerified(false);
+        $user->confirmAge($now);
+
+        try {
+            $entityManager->persist($user);
+            $entityManager->flush();
+        } catch (UniqueConstraintViolationException) {
+            // TOCTOU: same duplicate-email form error, never a 500.
+            $form->get('email')->addError(new FormError('form.error_email_taken'));
+
+            return $this->page($form, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $this->emailVerifier->sendConfirmation($user);
+
+        return $this->render('security/check_email.html.twig', [
+            'page_title' => 'meta.register_check_email_title',
+            'page_description' => 'meta.register_check_email_description',
+        ]);
+    }
+
+    private function page(FormInterface $form, ?int $status = null): Response
+    {
         return $this->render('security/register.html.twig', [
             'registrationForm' => $form,
             'page_title' => 'meta.register_title',
             'page_description' => 'meta.register_description',
-        ]);
+        ] + $this->guard->context(new \DateTimeImmutable()), null === $status ? null : new Response('', $status));
+    }
+
+    /**
+     * A form-level error: these keys name no field, and the page shows
+     * form-level errors (partials/_form_errors.html.twig).
+     */
+    private function refuse(FormInterface $form, string $key, int $status): Response
+    {
+        $form->addError(new FormError($key));
+
+        return $this->page($form, $status);
     }
 
     /**
@@ -182,9 +195,10 @@ final class RegistrationController extends AbstractController
         try {
             $this->emailVerifier->handleEmailConfirmation($request, $user);
         } catch (VerifyEmailExceptionInterface $exception) {
+            // Most often an expired link: the resend page is the way out.
             $this->addFlash('verify_email_error', $exception->getReason());
 
-            return $this->redirectToRoute('register');
+            return $this->redirectToRoute('verify_resend');
         }
 
         $this->addFlash('success', 'flash.email_verified');

@@ -1,0 +1,72 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# A new confirmation link (VerificationResendController). Every outcome shows
+   the same "sent" card, so the page never says whether an address has an account. #}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+{% include 'security/_auth_shell_styles.html.twig' %}
+{% endblock %}
+
+{% block body %}
+<div class="auth">
+
+  {% include 'security/_auth_shell_panel.html.twig' with {prefix: 'security.resend'} %}
+
+  <div class="formwrap">
+    <div class="card">
+      {% if sent %}
+        <div class="resend-sent">
+          <p class="auth-heading">{{ 'security.resend.sent_heading'|trans }}</p>
+          {% include 'security/_check_inbox_icon.html.twig' %}
+          <p>{{ 'security.resend.sent_body'|trans }}</p>
+        </div>
+      {% else %}
+        <p class="auth-heading">{{ 'security.resend.heading'|trans }}</p>
+
+        {% for flash in app.flashes('verify_email_error') %}
+          <div class="alert-error" role="alert">{{ 'security.resend.link_failed'|trans }}</div>
+        {% endfor %}
+
+        <p>{{ 'security.resend.intro'|trans }}</p>
+
+        {{ form_start(resendForm, {attr: {
+          novalidate: 'novalidate',
+          class: 'cc-validate',
+          id: 'cc-guarded-form',
+          'data-challenge-url': path('form_challenge'),
+          'data-pow-difficulty': pow_difficulty,
+        }}) }}
+        {% include 'partials/_form_errors.html.twig' with {form: resendForm} %}
+        {% include 'security/_guard_fields.html.twig' %}
+
+          <div class="field">
+            {{ form_label(resendForm.email) }}
+            {{ form_widget(resendForm.email) }}
+            {{ form_errors(resendForm.email) }}
+          </div>
+
+          {% include 'security/_guard_status.html.twig' %}
+
+          <button type="submit" class="btn-submit">{{ 'security.resend.submit'|trans }}</button>
+
+        {{ form_end(resendForm) }}
+      {% endif %}
+
+      <p class="auth-alt-link">
+        {{ 'security.resend.already_verified'|trans }}
+        <a href="{{ path('login') }}">{{ 'security.resend.sign_in_link'|trans }}</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block body_scripts %}
+{% if not sent %}
+{% include 'partials/_auth_i18n.html.twig' %}
+{# Validation first: form-challenge.js leaves a submit alone once it is prevented. #}
+<script src="{{ asset('js/auth-validate.js') }}" defer></script>
+<script src="{{ asset('support/form-challenge.js') }}" defer></script>
+{% endif %}
+{% endblock %}

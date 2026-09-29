@@ -63,7 +63,7 @@ final class PurgeUserCommand extends Command
 
         $targets = [];
         foreach ($emails as $email) {
-            $user = $this->users->findOneBy(['email' => $email]);
+            $user = $this->users->findByEmail($email);
             if (!$user instanceof User) {
                 $io->error(\sprintf('No account with email %s. Nothing was removed.', $email));
 

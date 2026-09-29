@@ -6,7 +6,9 @@
 
 {% block content %}
   <h1 style="font-size:24px;font-weight:600;margin:0 0 14px">
-    {{ 'registration.email.welcome_pre'|trans }}{% if displayName is defined and displayName %}, {{ displayName }}{% endif %}!
+    {# No display name: the address may belong to someone who never signed up,
+       and the name is whatever the sender typed. #}
+    {{ 'registration.email.welcome_pre'|trans }}!
   </h1>
 
   <p style="margin:0 0 8px">{{ 'registration.email.body'|trans }}</p>
@@ -28,7 +30,7 @@
   </p>
 
   <p style="font-size:13px;color:#5a5d4d;margin:0">
-    This link expires {{ expiresAtMessageKey|trans(expiresAtMessageData, 'VerifyEmailBundle') }}.
+    {{ 'registration.email.expires'|trans }}
     {{ 'registration.email.ignore_notice'|trans }}
   </p>
 {% endblock %}

@@ -1,0 +1,15 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# Bot layers for an anonymous form that mails an address (SignupGuard). The
+   form needs id="cc-guarded-form" plus data-challenge-url and
+   data-pow-difficulty, which support/form-challenge.js reads. Honeypots hide
+   by CLASS, never by inline style (see FormGuard). #}
+<input type="hidden" name="{{ stamp_field }}" value="{{ form_stamp }}">
+{# Filled by form-challenge.js: a challenge is single use, so none is baked into the page. #}
+<input type="hidden" name="pow_challenge" id="pow_challenge" value="">
+<input type="hidden" name="pow_nonce" id="pow_nonce" value="">
+<div class="hp-field" aria-hidden="true">
+  <label for="{{ honeypot_a }}">{{ 'support.honeypot_label'|trans }}</label>
+  <input type="text" id="{{ honeypot_a }}" name="{{ honeypot_a }}" tabindex="-1" autocomplete="off">
+  <label for="{{ honeypot_b }}">{{ 'support.honeypot_label'|trans }}</label>
+  <input type="text" id="{{ honeypot_b }}" name="{{ honeypot_b }}" tabindex="-1" autocomplete="off">
+</div>

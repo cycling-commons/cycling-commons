@@ -28,6 +28,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  */
 final class DisplayNameSharingTest extends WebTestCase
 {
+    use GuardedSignupTrait;
+
     private const string PASSWORD = 'securepass12345!';
 
     private function createUser(string $email, string $displayName): User
@@ -96,21 +98,11 @@ final class DisplayNameSharingTest extends WebTestCase
         $client = static::createClient();
         $this->createUser('incumbent@example.test', 'John Doe');
 
-        $crawler = $client->request('GET', '/register');
-        self::assertResponseIsSuccessful();
-
-        $client->submit($crawler->selectButton('Create account')->form([
-            'registration_form[email]' => 'newcomer@example.test',
-            'registration_form[displayName]' => 'John Doe',
-            'registration_form[plainPassword][first]' => self::PASSWORD,
-            'registration_form[plainPassword][second]' => self::PASSWORD,
-            'registration_form[confirmAge]' => true,
-            'registration_form[agreeTerms]' => true,
-        ]));
+        $this->signUp($client, 'newcomer@example.com', 'John Doe');
 
         // Registration lands on the check-your-email page, not a redirect.
         self::assertResponseIsSuccessful();
-        self::assertSame('John Doe', $this->fetchUser('newcomer@example.test')->getDisplayName());
+        self::assertSame('John Doe', $this->fetchUser('newcomer@example.com')->getDisplayName());
     }
 
     public function testSettingsAcceptsRenamingToANameSomebodyElseUses(): void

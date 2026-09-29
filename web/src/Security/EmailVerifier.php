@@ -9,6 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 
@@ -21,7 +23,28 @@ final class EmailVerifier
         private readonly VerifyEmailHelperInterface $verifyEmailHelper,
         private readonly MailerInterface $mailer,
         private readonly EntityManagerInterface $entityManager,
+        private readonly TranslatorInterface $translator,
     ) {
+    }
+
+    /**
+     * The confirmation mail, from sign-up and from the resend page alike.
+     *
+     * Addressed without the display name and greeting nobody by name: the
+     * address may belong to a stranger a bot signed up, and the name is
+     * whatever that bot typed.
+     */
+    public function sendConfirmation(User $user): void
+    {
+        $this->sendEmailConfirmation(
+            'verify_email',
+            $user,
+            (new TemplatedEmail())
+                ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
+                ->to(new Address($user->getEmail()))
+                ->subject($this->translator->trans('registration.email.title'))
+                ->htmlTemplate('registration/confirmation_email.html.twig'),
+        );
     }
 
     /**

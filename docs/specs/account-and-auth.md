@@ -124,11 +124,28 @@ a 422 with the rest of the input preserved. **Existing accounts keep NULL**:
 they registered before the gate existed, and back-filling a declaration nobody
 made would be a record of something that never happened.
 - New accounts get `['ROLE_USER']` and `emailVerified = false`.
+- **One spelling per mailbox** (2026-09-29). `User::setEmail()` stores the
+  address trimmed and in lower case (`User::normalizeEmail()`), and every
+  lookup lower-cases what it is given: `UserRepository::findByEmail()`, and the
+  login provider through `UserRepository::loadUserByIdentifier()` (the provider
+  in `security.yaml` has no `property`, so Symfony asks the repository).
+  Before this, `Rider@example.com` and `rider@example.com` were two accounts
+  and two confirmation mails. Migration `Version20260929010000` lower-cases the
+  existing rows, except one whose lower-case form another account already
+  holds: two accounts on one mailbox is for a person to merge.
 - Duplicate email is caught twice: `UniqueEntity` on the entity, and a
   TOCTOU catch of `UniqueConstraintViolationException` at flush that re-renders
   the same duplicate-email form error as a 422 instead of a 500.
 - A verification mail is sent (verify-email bundle, signed URLs — no stored
-  token). **The link is localized** (owner, 2026-08-27): signing up on
+  token). **It greets nobody by name and is addressed to the bare address**
+  (`EmailVerifier::sendConfirmation()`, 2026-09-29): the address may belong to
+  a stranger a bot signed up, and the display name is whatever the bot typed,
+  so putting it in the mail let a stranger's text go out from our domain.
+  **The link works for 24 hours** (`config/packages/verify_email.yaml`,
+  `lifetime: 86400`; the bundle's default was one hour): a rider who signs up
+  at night confirms in the morning, and a new link is one form away. The mail
+  and the check-your-email page say "24 hours" in their own translated words,
+  not the bundle's untranslated duration. **The link is localized** (owner, 2026-08-27): signing up on
   `/nl/register` sends a `/nl/verify/email` link, not a bare `/verify/email`.
   This is the one page a rider arrives at from an email, with no referring page
   to inherit a language from, so the language is written into the link at signup
@@ -139,7 +156,9 @@ made would be a record of something that never happened.
   English keeps the bare `/verify/email`, so links already in inboxes stay
   valid. Guarded by `LocalizedRoutingTest::testTheEmailVerifyLinkIsLocalized`.
   `/verify/email` validates the signature and flags
-  `emailVerified`/`emailVerifiedAt`, then redirects to login.
+  `emailVerified`/`emailVerifiedAt`, then redirects to login. A link that is
+  expired or broken redirects to `/verify/resend` (below) with a notice, not
+  back to the sign-up form, where the taken address would only fail again.
 - **Journey continuity (verified end-to-end):** the firewall's
   saved target path survives the whole register → verify → login detour in
   one session, because registration and verification never touch it and
@@ -148,6 +167,62 @@ made would be a record of something that never happened.
   [moderation-and-contribution.md](moderation-and-contribution.md) §11)
   therefore lands back on that page after account creation — no re-navigation
   needed.
+
+**Bot layers on sign-up** (2026-09-29). On 2026-09-28 bots signed up
+strangers' addresses with random names (`TQzXxAvQrqrRKJjPh`), so our
+confirmation mail went to people who never visited. The per-connection limit
+below did not stop it: a bot that uses many addresses is under every one of
+them. Sign-up now carries the contact form's four local layers
+([contact-and-support.md](contact-and-support.md) §3), through
+`App\Security\SignupGuard`, and still no third-party CAPTCHA:
+
+1. **Honeypots and the signed timer** (`FormGuard::reject()`), before the form
+   is validated: free, and they catch the bulk.
+2. **Validation** (the form type and entity constraints above).
+3. **Proof of work** (`ProofOfWork`), after validation so a typo does not
+   spend the rider's solved challenge. `support/form-challenge.js` fetches and
+   solves it in the browser; with JavaScript off, sign-up does not work, the
+   same trade the contact form makes.
+4. **The per-connection limit** (below).
+5. **The address's domain must resolve** (`FormGuard::domainResolves()`), last,
+   because it is the one check that leaves the process.
+
+Refusals are form-level errors under `security.guard.*`, a 422, with the
+input kept (passwords excepted, as always). The page runs
+`register-validate.js` before `form-challenge.js`, and the challenge script
+leaves a submit alone once validation has prevented it
+(`tests/js/form-challenge.test.cjs`); before that it would have solved and
+posted the invalid form anyway. Pinned by `RegistrationTest`, which sends
+every case through the real guards (`GuardedSignupTrait`) so a validation
+test cannot pass only because a bot guard refused it first.
+
+**A new confirmation link** (`App\Controller\VerificationResendController`,
+`/verify/resend`, localized like `/verify/email`). Before it, a rider whose
+link expired was stuck: signing up again fails on the taken address. The page
+asks for the address and **always answers the same "check your email" card**,
+so it says nothing about which addresses have accounts. A mail goes out only
+for an existing, unconfirmed account, and only within its budgets:
+
+| limiter | key | budget | over budget |
+|---|---|---|---|
+| `verify_resend` | the connection | 5 per hour | a visible 429: it is about the sender |
+| `verify_resend_address` | the address | 1 per 15 minutes | the same card, no mail |
+| `verify_resend_address_daily` | the address | 3 per day | the same card, no mail |
+
+The address budgets are keyed on the lower-cased address (salted hash, like
+every limiter key) and spent only when a mail would go out. The page has the
+same bot layers as sign-up. Linked from the check-your-email page, the login
+error below, and the expired-link redirect. Pinned by
+`VerificationResendTest`.
+
+**No sign-in before confirmation** (`App\Security\VerifiedEmailChecker`, the
+firewall's `user_checker`). An unconfirmed account is refused with "Confirm
+your email address first" and a link to `/verify/resend`. The check is
+**post-auth**, after the password: refused earlier, it would tell anybody who
+types an address, with any password, that it is waiting for confirmation. A
+right password on an unconfirmed account is not a failed attempt and does not
+count toward the lockout (`LoginThrottleListener`, §3). Pinned by
+`UnverifiedLoginTest`.
 
 **Password reset** (`App\Controller\ResetPasswordController`, reset-password
 bundle with its own `ResetPasswordRequest` entity):
@@ -164,6 +239,10 @@ bundle with its own `ResetPasswordRequest` entity):
 - **Completing a reset clears any brute-force lock** (`lockedUntil = null`,
   counter reset) — the reset flow is the owner's recovery path out of a
   lockout DoS (§3).
+- **Completing a reset confirms the address.** The reset link was opened from
+  the inbox, which proves the address as well as a confirmation link does.
+  Without this, an unconfirmed rider who reset their password still could not
+  sign in. Pinned by `ResetPasswordTest::testPasswordResetConfirmsTheAddress`.
 - Repository throttling in the bundle prevents reset-request floods; stuck
   rows are visible/purgeable via the admin diagnostics CRUD (§6.5).
 
@@ -685,6 +764,35 @@ deleting somebody's account, the cron entry should have to opt in.
 Guarded by `DormancyLadderTest` (the arithmetic, including that an unwarned
 account is never deletable however old) and `DormancySweepTest` (the
 consequences, including that a dry run changes nothing).
+
+### 6.7 Unconfirmed accounts
+
+**An account not confirmed within 7 days is deleted** (owner, 2026-09-29).
+`App\Account\UnverifiedSweep` finds them, `app:accounts:purge-unverified`
+runs it, daily on the worker host (timer `purge-unverified`, NimbusLoomTeneo
+`extensions/valhalla/ansible/vars/valhalla.yml`). Dry by default, `--force`
+to act, like the dormancy sweep.
+
+An unconfirmed account is an address somebody typed, not yet a person who
+joined. Bots sign up strangers, and before this every such row kept a
+stranger's address on file for good. That is also why, unlike §6.5, **no
+warning mail goes out**: the only address to write to is the stranger's.
+`/privacy` states the rule (`privacy.retention_unconfirmed`), and the
+check-your-email page and the resend page both say it at the moment it
+applies.
+
+Deleted when all of these hold:
+
+- `emailVerified = false`;
+- `lastLoginAt` is null. An account that signed in did so before sign-in
+  needed a confirmed address (§2); it is a person, with a history, and is
+  left alone. It can still confirm through `/verify/resend`;
+- `createdAt` is at least 7 days old (`UnverifiedSweep::DAYS`);
+- it holds no role beyond `ROLE_USER`. Operators make elevated accounts by
+  hand (`app:user:create`), never through the sign-up form.
+
+Deletion is `UserDeletionService::purge()`, the same path as §6.5 and a
+rider's own request. Pinned by `UnverifiedSweepTest`.
 
 ## 7. Public rider profile
 

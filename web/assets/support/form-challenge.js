@@ -87,7 +87,9 @@
   form.addEventListener('change', start, { once: true });
 
   form.addEventListener('submit', function (e) {
-    if (solved) return;
+    /* Stopped by the page's own validator (sign-up): form.submit() would
+       post it anyway, past that validation. */
+    if (solved || e.defaultPrevented) return;
     e.preventDefault();
     var button = form.querySelector('button[type="submit"]');
     if (button) button.disabled = true;
