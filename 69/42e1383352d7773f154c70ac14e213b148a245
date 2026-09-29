@@ -1,0 +1,22 @@
+web/tests/Auth/SecurityTest.php
+  s_6e1d7c95fbc8b5::t_1ea1f85058999a 218
+  s_6e1d7c95fbc8b5::t_c3a9b7bed22ab4 180-217,219-220
+web/src/Security/LoginSuccessHandler.php
+  s_6e1d7c95fbc8b5::t_0c544e43e603b8 10,80-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6942e1383352d7773f154c70ac14e213b148a245",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
