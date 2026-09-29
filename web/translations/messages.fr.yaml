@@ -5047,6 +5047,7 @@ changelog:
   v092_similar: "<b>Les lieux semblables avant d'en ajouter un.</b> Quand vous ajoutez un lieu, le formulaire montre les lieux du même type à proximité. Marquez ceux qui sont le même lieu : le vôtre les remplace une fois approuvé."
   v092_bugs: "<b>Le panneau de bugs garde votre brouillon.</b> Il indique quand il a gardé un signalement non envoyé, et un bouton efface tout."
   v092_speed: "<b>Des pages plus rapides quand vous n'êtes pas connecté.</b> Le meilleur et les autres pages publiques se chargent plus vite, même après une page qui demande de se connecter. Une fois connecté, les pages sont faites pour vous et se chargent à la vitesse habituelle."
+  v092_confirm: "<b>Confirmez votre e-mail avant de vous connecter.</b> Un nouveau compte peut se connecter une fois son adresse e-mail confirmée. Le lien de l'e-mail fonctionne 24 heures ; s'il a expiré, la page qu'il ouvre vous permet d'en demander un nouveau."
   v092_strava: "<b>Roulez avec nous sur Strava.</b> Le pied de page mène au club Cycling Commons sur Strava."
   v090_towns: "<b>Les villes sur la carte.</b> Une ville ouvre désormais sa propre fiche, signalée par le repère du site."
   v090_fresh: "<b>Les données de la carte se rafraîchissent seules.</b> Chaque nuit, le site relit OpenStreetMap pour les régions qu'il couvre : ce que vous voyez a quelques jours, pas quelques mois."

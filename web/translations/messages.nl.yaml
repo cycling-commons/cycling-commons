@@ -5054,6 +5054,7 @@ changelog:
   v092_similar: "<b>Vergelijkbare plekken voordat je er een toevoegt.</b> Als je een plek toevoegt, toont het formulier plekken van dezelfde soort in de buurt. Markeer de plekken die dezelfde zijn, en die van jou vervangt ze zodra ze is goedgekeurd."
   v092_bugs: "<b>Het foutenpaneel bewaart je concept.</b> Het zegt wanneer het een niet-verzonden melding voor je heeft bewaard, en één knop wist alles."
   v092_speed: "<b>Snellere pagina's als je niet ingelogd bent.</b> Beste en de andere openbare pagina's laden sneller, ook nadat je een pagina opent die vraagt om in te loggen. Log je in, dan worden de pagina's voor jou gemaakt en laden ze op de gewone snelheid."
+  v092_confirm: "<b>Bevestig je e-mail voordat je inlogt.</b> Een nieuw account kan inloggen zodra het e-mailadres bevestigd is. De link in de mail werkt 24 uur; is hij verlopen, dan kun je op de pagina die hij opent een nieuwe vragen."
   v092_strava: "<b>Fiets met ons op Strava.</b> De voettekst linkt naar de club van Cycling Commons op Strava."
   v090_towns: "<b>Plaatsen op de kaart.</b> Een plaats opent nu een eigen kaartje, gemarkeerd met de eigen speld van de site."
   v090_fresh: "<b>De kaartgegevens verversen zichzelf.</b> Elke nacht leest de site OpenStreetMap opnieuw voor de regio's die hij dekt, dus wat je ziet is hooguit dagen oud, geen maanden."

@@ -86,6 +86,7 @@ final class ReleaseNotes
                 'changelog.v092_similar',
                 'changelog.v092_bugs',
                 'changelog.v092_speed',
+                'changelog.v092_confirm',
                 'changelog.v092_strava',
             ],
         ],
