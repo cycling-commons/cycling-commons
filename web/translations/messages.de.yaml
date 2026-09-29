@@ -5054,7 +5054,7 @@ changelog:
   v092_key: "<b>Die Legende ist vollständig.</b> Das Feld Legende erklärt jede Markierung auf der Karte mit einem Beispiel, und die Abzeichen an den Pins sind größer und besser lesbar."
   v092_similar: "<b>Ähnliche Orte, bevor du einen hinzufügst.</b> Wenn du einen Ort hinzufügst, zeigt das Formular Orte derselben Art in der Nähe. Markiere die, die derselbe Ort sind, und deiner ersetzt sie, sobald er freigegeben ist."
   v092_bugs: "<b>Das Fehlerfeld bewahrt deinen Entwurf.</b> Es sagt, wenn es eine nicht gesendete Meldung für dich aufbewahrt hat, und ein Knopf löscht alles."
-  v092_speed: "<b>Schnellere Seiten.</b> Die Bestenliste und die anderen öffentlichen Seiten laden schneller und bleiben schnell, auch nachdem du eine Seite geöffnet hast, die eine Anmeldung verlangt."
+  v092_speed: "<b>Schnellere Seiten, wenn du nicht angemeldet bist.</b> Die Bestenliste und die anderen öffentlichen Seiten laden schneller, auch nachdem du eine Seite geöffnet hast, die eine Anmeldung verlangt. Sobald du dich anmeldest, werden die Seiten für dich erstellt und laden in der üblichen Geschwindigkeit."
   v092_strava: "<b>Fahr mit uns auf Strava.</b> Die Fußzeile verlinkt den Cycling-Commons-Club auf Strava."
   v090_towns: "<b>Orte auf der Karte.</b> Ein Ort öffnet jetzt eine eigene Karte, markiert mit der eigenen Nadel der Website."
   v090_fresh: "<b>Die Kartendaten aktualisieren sich selbst.</b> Jede Nacht liest die Website OpenStreetMap für die abgedeckten Regionen neu ein, sodass das Gezeigte höchstens Tage alt ist, nicht Monate."

@@ -5086,7 +5086,7 @@ changelog:
   v092_key: "<b>La leyenda está completa.</b> El panel Leyenda explica cada marca del mapa con un ejemplo, y las insignias de los marcadores son más grandes y fáciles de leer."
   v092_similar: "<b>Lugares parecidos antes de añadir uno.</b> Al añadir un lugar, el formulario muestra lugares del mismo tipo cerca. Marca los que son el mismo lugar y el tuyo los sustituye cuando se aprueba."
   v092_bugs: "<b>El panel de errores guarda tu borrador.</b> Avisa cuando ha guardado un informe sin enviar, y un botón lo borra todo."
-  v092_speed: "<b>Páginas más rápidas.</b> Lo mejor y las demás páginas públicas cargan más rápido, y siguen rápidas después de abrir una página que pide iniciar sesión."
+  v092_speed: "<b>Páginas más rápidas cuando no has iniciado sesión.</b> Lo mejor y las demás páginas públicas cargan más rápido, también después de abrir una página que pide iniciar sesión. Cuando inicias sesión, las páginas se hacen para ti y cargan a la velocidad de siempre."
   v092_strava: "<b>Pedalea con nosotros en Strava.</b> El pie de página enlaza el club de Cycling Commons en Strava."
   v090_towns: "<b>Los pueblos en el mapa.</b> Un pueblo abre ahora su propia ficha, señalada con el marcador propio del sitio."
   v090_fresh: "<b>Los datos del mapa se actualizan solos.</b> Cada noche el sitio vuelve a leer OpenStreetMap para las regiones que cubre, así que lo que ves tiene días, no meses."

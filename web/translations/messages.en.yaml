@@ -5075,7 +5075,7 @@ changelog:
   v092_key: "<b>The map key is complete.</b> The Map key panel explains every mark on the map with an example of each, and the badges on the pins are bigger and easier to read."
   v092_similar: "<b>Similar places before you add one.</b> When you add a place, the form lists places of the same kind nearby. Mark the ones that are the same place, and yours replaces them once it is approved."
   v092_bugs: "<b>The bug panel keeps your draft.</b> It says when it kept an unsent report for you, and one button clears everything."
-  v092_speed: "<b>Faster pages.</b> Best of and the other public pages load faster, and stay fast after you open a page that asks you to sign in."
+  v092_speed: "<b>Faster pages when you are not signed in.</b> Best of and the other public pages load faster, also after you open a page that asks you to sign in. Once you sign in, pages are made for you and load at the usual speed."
   v092_strava: "<b>Ride with us on Strava.</b> The footer links the Cycling Commons club on Strava."
   v090_towns: "<b>Towns on the map.</b> A town now opens a card of its own, marked with the site's own pin."
   v090_fresh: "<b>The map's data refreshes itself.</b> Every night the site re-reads OpenStreetMap for the regions it covers, so what you see is days old at most, not months."
