@@ -1,0 +1,43 @@
+docs/specs/security-architecture.md
+  s_6e1d7c95fbc8b5::t_cc51f39d3f5317 551
+  s_6e1d7c95fbc8b5::t_70583c79de87c2 549
+web/translations/messages.de.yaml
+  s_6e1d7c95fbc8b5::t_86fb0acacb08ed 1579-1586
+web/templates/emails/account_exists.html.twig
+  s_6e1d7c95fbc8b5::t_98bcfcdc418564 1-38
+web/translations/messages.en.yaml
+  s_6e1d7c95fbc8b5::t_86fb0acacb08ed 1583-1590
+web/src/Controller/VerificationResendController.php
+  s_6e1d7c95fbc8b5::t_9cd4a67841b722 27-31
+web/translations/messages.nl.yaml
+  s_6e1d7c95fbc8b5::t_86fb0acacb08ed 1579-1586
+web/tests/Auth/RegistrationTest.php
+  s_6e1d7c95fbc8b5::t_0c3ae9da5dec1a 257-262,265,267,269,271-305,317,321
+  s_6e1d7c95fbc8b5::t_863e60b39bcb80 9,306-316,318-320,322
+web/translations/messages.es.yaml
+  s_6e1d7c95fbc8b5::t_86fb0acacb08ed 1586-1593
+docs/specs/account-and-auth.md
+  s_6e1d7c95fbc8b5::t_49acafd08560be 143-161,183,222-223,233-235,287-290
+web/translations/messages.fr.yaml
+  s_6e1d7c95fbc8b5::t_86fb0acacb08ed 1574-1581
+web/src/Security/ExistingAccountNotice.php
+  s_6e1d7c95fbc8b5::t_8dd2eebf1d07b1 1-69
+web/src/Controller/RegistrationController.php
+  s_6e1d7c95fbc8b5::t_256b84618f7352 13,39-40,93,107-108,112-122,131-133,138-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4f4f0eb931263f9bc62a2173337f58ca28c66fb3",
+  "prompts": {},
+  "sessions": {
+    "s_6e1d7c95fbc8b5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01b8cb51-8e93-4462-a416-87358f40e15b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
