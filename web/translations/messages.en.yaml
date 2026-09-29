@@ -4373,6 +4373,7 @@ admin:
   coverage_runs:
     lead: "Every coverage harvest, newest first. Read from the tracker tables the pipeline writes as it runs, so nothing here is measured twice."
     empty: "No coverage run has been recorded yet."
+    nothing_changed: "nothing changed"
     col_started: "Started"
     col_trigger: "Trigger"
     col_status: "Status"

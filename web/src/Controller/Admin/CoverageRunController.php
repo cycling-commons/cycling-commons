@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -55,7 +56,49 @@ final class CoverageRunController extends AbstractController
                 SQL, self::ABANDONED_AFTER, self::LIST_LIMIT),
         );
 
-        return $this->render('admin/coverage_runs/index.html.twig', ['runs' => $runs]);
+        return $this->render('admin/coverage_runs/index.html.twig', ['runs' => $this->withFamilies($runs)]);
+    }
+
+    /**
+     * Each run's tile families with what each rebuilt: its own family from
+     * published_url, then the routes and surface passes a nightly run holds as
+     * `<family>_publish` steps (coverage-runs-admin.md §2). Without them a
+     * night that rebuilt all three read "points" alone.
+     *
+     * @param list<array<string, mixed>> $runs
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function withFamilies(array $runs): array
+    {
+        $ids = array_map(static fn (array $r): int => (int) $r['id'], $runs);
+        $steps = [] === $ids ? [] : $this->db->fetchAllAssociative(
+            <<<'SQL'
+            SELECT DISTINCT ON (s.run_id, s.step) s.run_id, s.step, s.status, s.detail
+            FROM coverage_run_step s
+            WHERE s.run_id IN (:ids) AND s.step IN ('routes_publish', 'surface_publish')
+            ORDER BY s.run_id, s.step, s.started_at DESC, s.id DESC
+            SQL,
+            ['ids' => $ids],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+        $byRun = [];
+        foreach ($steps as $step) {
+            $byRun[(int) $step['run_id']][] = [
+                'family' => substr((string) $step['step'], 0, -\strlen('_publish')),
+                'status' => $step['status'],
+                'rebuilt' => 'ok' === $step['status'] ? $step['detail'] : null,
+            ];
+        }
+
+        foreach ($runs as &$run) {
+            $run['families'] = [
+                ['family' => $run['family'], 'status' => $run['status'], 'rebuilt' => $run['published_url']],
+                ...($byRun[(int) $run['id']] ?? []),
+            ];
+        }
+
+        return $runs;
     }
 
     #[AdminRoute('/coverage-runs/{id}', 'coverage_run', options: ['methods' => ['GET'], 'requirements' => ['id' => '\d+']])]

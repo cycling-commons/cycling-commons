@@ -4383,6 +4383,7 @@ admin:
   coverage_runs:
     lead: "Cada recolección de cobertura, la más reciente primero. Leída de las tablas de seguimiento que el pipeline escribe mientras corre, así que aquí no se mide nada de nuevo."
     empty: "Todavía no se ha registrado ninguna recolección de cobertura."
+    nothing_changed: "nada ha cambiado"
     col_started: "Inicio"
     col_trigger: "Disparador"
     col_status: "Estado"

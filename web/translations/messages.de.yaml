@@ -4352,6 +4352,7 @@ admin:
   coverage_runs:
     lead: "Jede Coverage-Ernte, neueste zuerst. Gelesen aus den Tracker-Tabellen, die die Pipeline im Lauf schreibt, sodass hier nichts erneut gemessen wird."
     empty: "Es wurde noch keine Coverage-Ernte aufgezeichnet."
+    nothing_changed: "nichts geändert"
     col_started: "Gestartet"
     col_trigger: "Auslöser"
     col_status: "Status"

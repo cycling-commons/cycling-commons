@@ -25,12 +25,12 @@ this page reads them. Nothing new is measured.
 | Column | Source |
 |---|---|
 | started | `coverage_run.started_at`, local time |
-| tiles | `family` (`points`, `routes`, `surface`): which tile family the run built |
+| tiles | `family` (`points`, `routes`, `surface`), then every family the run published inside itself: a nightly run reads `points · routes · surface` |
 | trigger | `trigger` (`dispatcher`, `bootstrap`, `manual`) |
 | status | `status`; a `running` row older than twelve hours reads **abandoned** (a killed run never finishes its row) |
 | regions | `regions_loaded` of `regions_requested`; routes and surface runs load nothing, so only `regions_requested` |
 | took | `finished_at - started_at` |
-| rebuilt | the countries this run published, from `published_url` (comma-separated; empty when nothing changed). A surface run adds `gaps` when it republished the world gap grid |
+| rebuilt | per family: the run's own from `published_url`, and routes and surface from the `detail` of the night's `routes_publish` / `surface_publish` steps (comma-separated). "nothing changed" when a family ran and rebuilt no country, "failed" when its publish failed. A surface pass adds `gaps` when it republished the world gap grid. Without the steps a night that rebuilt all three read "points" alone (owner, 2026-09-29) |
 
 A `--routes` / `--surface` run opens its own row with one step,
 `<family>_extract` (with `--extract-only`) or `<family>_publish`, whose

@@ -115,6 +115,43 @@ final class CoverageRunsTest extends WebTestCase
         self::assertSame(['points=points', 'routes=routes'], $cells);
     }
 
+    /**
+     * A night is one row, and its routes and surface passes are steps inside
+     * it. The list read only the row, so a night that rebuilt all three read
+     * "points" alone, and routes and surface looked skipped (owner, 2026-09-29).
+     */
+    public function testANightsRowNamesEveryFamilyAndWhatEachRebuilt(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        $run = self::insertCoverageRun($db, ['url' => 'be,nl']);
+        self::insertCoverageRunStep($db, $run, ['region' => null, 'step' => 'routes_publish', 'detail' => 'au,be']);
+        self::insertCoverageRunStep($db, $run, ['region' => null, 'step' => 'surface_publish', 'detail' => null]);
+
+        $client->loginUser($this->createUser('runs-night@example.com', ['ROLE_ADMIN'], admin2fa: true));
+        $crawler = $client->request('GET', $this->listUrl());
+
+        self::assertResponseIsSuccessful();
+        $row = $crawler->filter('tr[data-run="'.$run.'"]');
+        self::assertSame(['points', 'routes', 'surface'], $row->filter('[data-rebuilt-family]')->each(static fn ($el) => $el->attr('data-rebuilt-family')));
+        $rebuilt = $row->filter('[data-rebuilt-family]')->each(static fn ($el) => preg_replace('/\s+/', ' ', trim($el->text())));
+        self::assertSame(['points be,nl', 'routes au,be', 'surface nothing changed'], $rebuilt);
+    }
+
+    public function testAFailedPublishInsideANightSaysSo(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        $run = self::insertCoverageRun($db, ['status' => 'partial']);
+        self::insertCoverageRunStep($db, $run, ['region' => null, 'step' => 'routes_publish', 'status' => 'failed', 'detail' => 'rc 1']);
+
+        $client->loginUser($this->createUser('runs-night-failed@example.com', ['ROLE_ADMIN'], admin2fa: true));
+        $crawler = $client->request('GET', $this->listUrl());
+
+        $routes = $crawler->filter('tr[data-run="'.$run.'"] [data-rebuilt-family="routes"]');
+        self::assertSame('routes failed', preg_replace('/\s+/', ' ', trim($routes->text())));
+    }
+
     public function testARunLeftRunningForHalfADayReadsAbandoned(): void
     {
         $client = static::createClient();

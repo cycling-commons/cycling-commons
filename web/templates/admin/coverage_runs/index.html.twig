@@ -32,13 +32,17 @@
         </thead>
         <tbody>
           {% for run in runs %}
-            <tr>
+            <tr data-run="{{ run.id }}">
               <td>
                 <a href="{{ path('admin_coverage_run', {id: run.id}) }}">
                   {{ run.started_at|date('Y-m-d H:i') }}
                 </a>
               </td>
-              <td data-family="{{ run.family }}">{{ run.family in families ? ('admin.coverage_runs.family.' ~ run.family)|trans : run.family }}</td>
+              <td data-family="{{ run.family }}">
+                {%- for f in run.families -%}
+                  {{ loop.first ? '' : ' · ' }}{{ f.family in families ? ('admin.coverage_runs.family.' ~ f.family)|trans : f.family }}
+                {%- endfor -%}
+              </td>
               <td>{{ run.trigger }}</td>
               {# an unknown status (a pipeline the app has not caught up with) still reads #}
               <td>{{ run.status in statuses ? ('admin.coverage_runs.status.' ~ run.status)|trans : run.status }}</td>
@@ -50,7 +54,23 @@
                 {%- endif -%}
               </td>
               <td class="text-end">{{ fmt.duration(run.seconds) }}</td>
-              <td>{{ run.published_url }}</td>
+              <td>
+                {# A night holds points, routes and surface; a manual run one family. #}
+                {% for f in run.families %}
+                  <div data-rebuilt-family="{{ f.family }}">
+                    {%- if run.families|length > 1 -%}
+                      <span class="text-muted">{{ f.family in families ? ('admin.coverage_runs.family.' ~ f.family)|trans : f.family }}</span>
+                    {% endif -%}
+                    {%- if f.rebuilt -%}
+                      {{ f.rebuilt }}
+                    {%- elseif f.status == 'ok' -%}
+                      <span class="text-muted">{{ 'admin.coverage_runs.nothing_changed'|trans }}</span>
+                    {%- elseif f.status == 'failed' -%}
+                      {{ 'admin.coverage_runs.status.failed'|trans }}
+                    {%- endif -%}
+                  </div>
+                {% endfor %}
+              </td>
             </tr>
           {% endfor %}
         </tbody>

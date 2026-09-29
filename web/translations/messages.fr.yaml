@@ -4344,6 +4344,7 @@ admin:
   coverage_runs:
     lead: "Chaque récolte de couverture, la plus récente en premier. Lue dans les tables de suivi que le pipeline écrit au fur et à mesure : rien n'est mesuré une seconde fois."
     empty: "Aucune récolte de couverture n'a encore été enregistrée."
+    nothing_changed: "rien n’a changé"
     col_started: "Début"
     col_trigger: "Déclencheur"
     col_status: "État"

@@ -4351,6 +4351,7 @@ admin:
   coverage_runs:
     lead: "Elke coverage-oogst, nieuwste eerst. Gelezen uit de tracker-tabellen die de pipeline tijdens het draaien schrijft, zodat hier niets opnieuw wordt gemeten."
     empty: "Er is nog geen coverage-oogst vastgelegd."
+    nothing_changed: "niets veranderd"
     col_started: "Gestart"
     col_trigger: "Aanleiding"
     col_status: "Status"
