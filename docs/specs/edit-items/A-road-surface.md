@@ -7,7 +7,6 @@
 - **Catalog layer:** A · Road surface
 - **Map depiction:** line styled by surface class, icon ▰, colour #4E8C84. Rendered **above** ride/climb
   lines so the surface (e.g. a gravel sector along a ride) reads on top.
-- **Edit-item id:** `road-surface` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
@@ -502,23 +501,23 @@ flipped a status — so account names never leak from the drawer.
 - Width
 - Traffic
 
-## Edit form  (`improve.html?item=road-surface`)
+## Edit form
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
 | Surface | select(Asphalt / Concrete / Paving stones / Sett — pavé / Compacted / Fine gravel / Gravel / Dirt / Rock) | `[OSM]` |
 | Smoothness | select(Excellent / Good / Intermediate / Bad / Very bad) | `[OSM]` |
-| Width (m) | input | `[OSM]` |
 | Road type | select(Main road / Local road / Residential street / Farm or forest track / Path or trail / Cycleway) | `[OSM]` |
 | Traffic | select(Quiet / Moderate / Busy / Car-free) | `[edit]` |
 | Segregated from cars? | select(Unknown / Yes / No) | `[OSM]` |
-| Note | textarea | `[edit]` |
 
 ### Add missing  (type-specific)
 | Field | Control | Provenance |
 |---|---|---|
 | Lit at night? | select(Unknown / Yes / No) | `[edit]` |
 | Seasonal closure? | select(None / Winter / Forestry work) | `[edit]` |
+| Width (m) | input | `[OSM]` |
+| Note | textarea | `[edit]` |
 
 **Three vocabulary/layout corrections, 2026-08-12 (owner review):**
 
@@ -543,7 +542,7 @@ spellings into one is a one-way door, and a `down()` that renamed all 133 rows
 back would corrupt the 132 that never carried the parenthetical.
 
 ### Report a problem
-- Wrong surface · Surface changed (resurfaced) · Blocked / impassable · Wrong location
+Not built: per-type reasons are not offered. A rider reports a place through the content report ([../content-reports.md](../content-reports.md)).
 
 ### Add a photo
 Available on this type (CC BY-SA 4.0).
@@ -558,8 +557,8 @@ keying style on smoothness reproduces CyclOSM's known failure mode where a grave
 way tagged `smoothness=intermediate` renders as if paved — the surface disappears
 under the smoothness value. Verified in the harvest classifier
 (`tools/wallonia/route_surfaces.py`, `_cls()`: "the actual `surface=` tag wins")
-and the map styles (`web/assets/map/map.js`, `SURFACE_STYLE` keyed by surface
-class: cycleway teal · paved slate · gravel ochre · pavé slate-grey · dirt brown ·
+and the map styles (`SURFACE_STYLE` in `web/assets/map/render.js`, shared with the
+tile layer in `web/assets/map/surface-tiles.js`, keyed by surface class: cycleway teal · paved slate · gravel ochre · pavé slate-grey · dirt brown ·
 rock grey · unverified red dashes — "unverified" = OSM has no `surface=` tag,
 an invitation to tag it).
 
@@ -581,10 +580,13 @@ spellings); a stored `cls` is never second-guessed, and an unknown label
 still falls through to `other` rather than being guessed.
 
 ## Implementation
-- **Demo:** registry entry `road-surface` in `atlas/demo/edit-items.js` (hand-picked fixture data); segment geometry in `atlas/demo/surface-data.js`.
-- **Production:** sourced via the `tools/wallonia` harvest today; region-bbox bulk harvesting is
-  superseded going forward ([../catalog-data-model.md](../catalog-data-model.md) §12) and A is
-  deliberately excluded from the coverage artifact
-  ([../coverage-provider.md](../coverage-provider.md) §4 — corridor line data, its own future
-  decision). Rendering: one MapLibre line sub-layer per surface class (solid = paved,
-  dashed = gravel, dotted = rough), line width from `width=`.
+- **OSM surface skin:** built by `pipeline/coverage/surface.py` (`coverage.run --surface`) straight
+  from the Geofabrik extracts into per-country surface PMTiles (classified and to-do arms, plus the
+  world gaps grid), with zero database rows; it stays out of the points coverage artifact
+  ([../coverage-provider.md](../coverage-provider.md) §4).
+- **A items** are the curated corridors drawn on top of the skin, served through the catalog region
+  slices: rider materializations from the confirm/correct flow above, and the fixture segments
+  (`atlas/demo/surface-data.js`) that `tools/wallonia/export.py` exports for the catalog import. Region-bbox bulk harvesting
+  is superseded ([../catalog-data-model.md](../catalog-data-model.md) §12).
+- **Rendering:** one MapLibre line sub-layer per surface class (solid = paved, dashed = gravel,
+  dotted = rough), line width from `width=`.

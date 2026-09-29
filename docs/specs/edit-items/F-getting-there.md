@@ -6,7 +6,6 @@
 
 - **Catalog layer:** F · Getting there
 - **Map depiction:** 🚆 pin, colour #3E7D8C
-- **Edit-item id:** `aywaille-station` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
@@ -27,7 +26,7 @@ Multimodal access points — stations with bikes-on-train, the gateway to the cl
   lift or ramp and bike ticket have no OSM source in the harvest and stay
   community fields.
 
-## Edit form  (`improve.html?item=aywaille-station`)
+## Edit form
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
@@ -42,16 +41,16 @@ Multimodal access points — stations with bikes-on-train, the gateway to the cl
 |---|---|---|
 | Lift / ramp? | select(Unknown / Yes / No) | `[OSM]` |
 | Bike ticket needed? | select(Unknown / Yes / No) | `[edit]` |
+| Website | url (`web`) | `[edit]` |
 
 ### Report a problem
-- Wrong details · Closed · Duplicate
+Not built: per-type reasons are not offered. A rider reports a place through the content report ([../content-reports.md](../content-reports.md)).
 
 ### Add a photo
 Available on this type (CC BY-SA 4.0).
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
 ## Implementation
-- **Demo:** registry entry `aywaille-station` in `atlas/demo/edit-items.js` (hand-picked fixture data).
 - **Production:** OSM `railway=station`, `railway=halt`, `amenity=ferry_terminal`
   and `route=ferry` with their `bicycle` and `bicycle:fee` tags, plus community
   edits. Heritage railways (`usage=tourism` or `usage=leisure`, such as the

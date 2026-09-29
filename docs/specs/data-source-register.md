@@ -50,7 +50,7 @@ the software. A source's terms are judged here only against **ODbL**.
 |---|---|
 | ODbL 1.0 | **Yes.** Same licence on both sides, so share-alike costs us nothing |
 | CC0 / **P**ublic **D**omain **D**edication and **L**icense (PDDL) | **Yes.** No obligations at all, though we still credit as a courtesy |
-| CC BY 4.0, and attribution-only government licences (see §2) | **Yes, with attribution carried per row.** The precedent is Tourisme Wallonie PIVOT, already in `item.source` |
+| CC BY 4.0, and attribution-only government licences (see §2) | **Yes, with attribution carried per row.** The precedent is Tourisme Wallonie PIVOT: a `data_provider` row (`wallonie-pivot`), its items stored as `item.source = 'authority'` with `item.provider_id` pointing at it ([`data-provider-hierarchy.md`](data-provider-hierarchy.md)) |
 | CC BY-SA 4.0 | **Media only.** Fine for the photo pool (same licence); keep out of the *database*, where share-alike collides with ODbL |
 | CC BY-NC / -ND, "personal use only" | **No.** Our data is redistributed commercially by anyone under ODbL, which these forbid |
 | No licence stated | **No, until asked.** Silence is not permission, and the Esri episode ([`Dated/2026-08-09-esri-imagery-terms.md`](Dated/2026-08-09-esri-imagery-terms.md)) is what the absence of a 401 is worth |
@@ -85,7 +85,7 @@ than reading fifty dataset pages.
 | Country / body | Licence | Terms in one line | Verdict | Confidence |
 |---|---|---|---|---|
 | Flanders (Geopunt, Vlaamse overheid) | Modellicentie Gratis Hergebruik v1.0 | Free reuse, commercial and non-commercial, indefinite, **attribution the only obligation** | **Ingest** | verified |
-| Wallonia (Géoportail, PIVOT) | CC BY | Attribution | **Ingest**, already in use for E · stays | verified (in use) |
+| Wallonia (Géoportail, PIVOT) | CC BY | Attribution | **Ingest**, already in use for O · stays (`wallonie-pivot`) | verified (in use) |
 | France (data.gouv.fr, DATAtourisme) | Licence Ouverte / Open Licence 2.0 | Attribution; explicitly compatible with CC BY | **Ingest** | verified |
 | United Kingdom (data.gov.uk, Ordnance Survey OpenData) | **O**pen **G**overnment **L**icence v3.0 | Attribution, including the Ordnance Survey Crown-copyright line where OS data is underneath | **Ingest** | verified |
 | Netherlands (PDOK, Nationaal Georegister) | Mostly CC0, some CC BY | Per dataset; the licence field is populated and must be read | **Ingest**, per dataset | stated |
@@ -128,7 +128,7 @@ reference plane. Do not spend more research here.
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
 | OSM `amenity=drinking_water`, `toilets`, `shop=bakery` | Baseline, worldwide | ODbL | **Ingest** (baseline) | verified |
-| NL Nationaal Georegister tap-point dataset | Authoritative Dutch public tap points | PDOK, §2 | **Ingest**, already the intended NL pipeline source | stated |
+| NL public drinking-water taps (RIVM / Atlas Leefomgeving, `rivm-drinkwater`) | Authoritative Dutch public tap points | Public Domain Mark 1.0 | **Ingest**, in use for B: a `data_provider` authority row ([`data-provider-hierarchy.md`](data-provider-hierarchy.md)) | verified (in use) |
 | City fountain datasets (Vienna, Paris, Barcelona, Zürich, and dozens more) | Authoritative within one city, each its own schema | Municipal open data, generally attribution-only | **Ingest**, per city | stated |
 | Great British Public Toilet Map | ~10,000 UK toilets, council-sourced | Built on public-sector open data and OSM; **its own aggregate licence is not clearly published** | **Ask** | unverified |
 | drinkwaterkaart.nl | Dutch refill points | Not open; a partnership candidate | **Ask** | stated |
@@ -183,7 +183,7 @@ source.
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
-| Tourisme Wallonie PIVOT | Official Walloon accommodation | CC BY | **Ingest**, in use, with its own provenance bucket | verified (in use) |
+| Tourisme Wallonie PIVOT | Official Walloon accommodation | CC BY | **Ingest**, in use, as a `data_provider` authority row (`wallonie-pivot`, [`data-provider-hierarchy.md`](data-provider-hierarchy.md)) | verified (in use) |
 | **DATAtourisme** (ADN Tourisme, France) | **400,000+ French tourism points of interest**, daily-updated, national ontology, application programming interface plus bulk download | Licence Ouverte 2.0 | **Ingest.** The single largest actionable find in this register | verified |
 | Accueil Vélo datasets on data.gouv.fr | France's cyclist-welcome label, as data, the exact semantic O wants | Licence Ouverte 2.0 | **Ingest** | verified |
 | OSM `tourism=hotel/guest_house/camp_site` + `bicycle=*` amenities | Baseline, worldwide | ODbL | **Ingest** (baseline) | verified |
@@ -207,7 +207,7 @@ atlas want the same thing, and a licence grant costs them nothing.
 |---|---|---|---|---|
 | Wikidata | Named places with coordinates and typed classes, worldwide | CC0 | **Ingest**, in use, 194 P / 240 Q rows seeded | verified (in use) |
 | Wikimedia Commons | Photographs with machine-verifiable licences | Per file, mostly CC BY-SA / public domain | **Ingest as media**, in use, with the licence checked at harvest | verified (in use) |
-| OSM `tourism=viewpoint`, `historic=*` | Baseline, worldwide, 850k+ on our coverage plane | ODbL | **Ingest** (baseline) | verified |
+| OSM, as selected by `pipeline/contract/coverage-contract.json` | Baseline, worldwide. **P:** `tourism=viewpoint` and `waterway=waterfall` that carry a name or an `image`, `wikidata` or `wikimedia_commons` tag and lie within 250 m of a road or cycleway, or of a way tagged `bicycle=yes` or `designated`. **Q:** `historic=` `castle`, `fort`, `ruins`, `monument`, `memorial`, `archaeological_site`, `manor` or `monastery`, with the same name-or-tag rule, minus the `memorial=` types `bench`, `blue_plaque`, `ghost_bike`, `grave`, `plaque`, `stolperstein` and `tomb` | ODbL | **Ingest** (baseline) | verified |
 | Europeana | European cultural heritage aggregation | Metadata CC0; objects per item | **Ingest** metadata | stated |
 | National heritage registers (Historic England, Rijksmonumenten, Onroerend Erfgoed Vlaanderen, Mérimée) | Authoritative, complete, per country | National licences, §2 | **Ingest** | unverified |
 | DATAtourisme (again) | French heritage and viewpoint POIs | Licence Ouverte 2.0 | **Ingest** | verified |
@@ -239,12 +239,13 @@ is this.
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
-| Overture Maps `divisions` theme (`division_area`) | Every `region` polygon on the atlas, plus the ISO 3166-1/-2 codes the world directory is keyed on | ODbL (conflates OSM + geoBoundaries), attribution required (notice on `/credits`) | **Ingest** - in use (`tools/divisions/export_divisions.py` -> `app:catalog:import`) | verified (in use) |
+| Overture Maps `divisions` theme (`division_area`) | Every `region` polygon on the atlas, plus the ISO 3166-1/-2 codes the world directory is keyed on; and every candidate boundary in `world_division`, onboarded or not | ODbL (conflates OSM + geoBoundaries), attribution required (notice on `/credits`) | **Ingest** - in use (`tools/divisions/export_divisions.py` -> `app:catalog:import` for `region`; `tools/divisions/export_candidates.py` -> `app:divisions:import` for `world_division`) | verified (in use) |
 
 Provenance is recorded per row: `region.source` is `osm` or `overture`
-(`catalog-data-model.md` §4). Today every seeded row is `overture`. The release
-is pinned in `tools/divisions/config.py:OVERTURE_RELEASE`; bumping it is a
-versioned re-import, not a refresh, so the `/credits` notice moves with it.
+(`catalog-data-model.md` §4). Today every seeded row is `overture`. Both
+exporters read the release pinned in `tools/divisions/config.py:OVERTURE_RELEASE`
+(`2026-08-19.0` today); bumping it is a versioned re-import, not a refresh, so
+the `/credits` notice moves with it.
 The onboarding playbook is `tools/divisions/README.md`.
 
 ### Imagery and elevation (not a letter, but sourced the same way)
@@ -267,7 +268,7 @@ In order of value per unit of work:
 1. **EuroVelo, ODbL.** Licence-identical, pan-European, curated, yearly-updated
    route geometry. Nothing to negotiate. Decide how it relates to rider-proposed
    R routes (it is reference-grade, not community-proposed, so likely its own
-   provenance source, the way PIVOT is for O).
+   `data_provider` authority row, the way `wallonie-pivot` is for O).
 2. **DATAtourisme plus the Accueil Vélo sets, Licence Ouverte 2.0.** Turns
    France's stays layer from empty into populated, with a cyclist-welcome
    semantic already attached, which is exactly what O means and what OSM cannot

@@ -5,7 +5,7 @@
 > **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
 
 
-**Status:** canonical reference · **implemented**; §3.3, §4.1, §4.2 specified 2026-08-31 and planned in `docs/plans/2026-08-31-translate-mode-and-english-edits.md`; translations.md §3.4 (working protocol) and translations.md §6.1 added 2026-09-01 as an open question and **resolved 2026-09-10** by the relicensing of UI translations to AGPL-3.0-only (§6); translations.md §7 (DeepL) rewritten 2026-09-01, dev-only bring-your-own-key tool superseding the prior EasyAdmin operator design, built 2026-09-01 (`docs/plans/2026-09-01-deepl-dev-tool.md`) and hardened the same day after review (the `CC_CATALOGUE_WRITE` opt-in, protected keys and the acceptance check on both write paths) · **Audience:** contributors to Cycling Commons
+**Status:** canonical reference · **implemented**; §3.3, §4.1, §4.2 specified 2026-08-31 and planned in `docs/plans/2026-08-31-translate-mode-and-english-edits.md`; translations.md §3.4 (working protocol) and translations.md §6.1 added 2026-09-01 as an open question and **resolved 2026-09-10** by the relicensing of UI translations to AGPL-3.0-only (§6), with consent `v2` (AGPL-3.0-only, `TranslationConsent::VERSION`) shipped the same day; translations.md §7 (DeepL) rewritten 2026-09-01, dev-only bring-your-own-key tool superseding the prior EasyAdmin operator design, built 2026-09-01 (`docs/plans/2026-09-01-deepl-dev-tool.md`) and hardened the same day after review (the `CC_CATALOGUE_WRITE` opt-in, protected keys and the acceptance check on both write paths) · **Audience:** contributors to Cycling Commons
 
 This document owns how user-facing copy is stored, who may change a
 non-English string from the website, how a curator publishes it, and how
@@ -254,8 +254,8 @@ procedure.
    the same key set as English (translations.md §1), so a new key cannot go
    live without `fr`, `nl`, `de` and `es` rows already present in git. This
    is a genuine burden, and it is the burden translations.md §6.1 was opened
-   over. The licence half of it is settled: a translator's wording may live in
-   git once the v2 consent has shipped, so nothing about the licence keeps the
+   over. The licence half of it is settled: a translator's wording under the
+   v2 consent (shipped 2026-09-10) may live in git, so nothing about the licence keeps the
    four rows out of a pull request any more. The door is what is left: for
    anything beyond a small change it still means either the owner writes the
    four translations, or collects them from translators who must then work
@@ -707,10 +707,11 @@ rows were given under.
 translator who ticked the v1 consent granted CC BY-SA 4.0 and nothing else.
 Relicensing the project does not reach backwards into what they agreed to, so
 **rows carrying a v1 consent record still must not be merged into
-`messages.{fr,nl,de,es}.yaml`.** Once §6.1's re-consent has shipped, rows
+`messages.{fr,nl,de,es}.yaml`.** §6.1's re-consent shipped 2026-09-10, so rows
 carrying v2 are AGPL like the rest of the catalogue and may be absorbed into
-git the same way an English edit is. Until then, git YAML stays the developer
-default and overlays stay the live contributor catalogue.
+git the same way an English edit is, once the consent-checked absorption in
+§6.1 (item 2) exists. Until then, git YAML stays the developer default and
+overlays stay the live contributor catalogue.
 
 A DeepL draft is a developer's work product, not a rider's: it is produced on
 the dev environment against that developer's own key, read and reviewed by
@@ -768,16 +769,17 @@ matters for what is left to build.
   compatibility route names GPLv3, not AGPLv3, so there is no clean automatic
   upgrade to lean on either. **Existing v1 rows stay CC BY-SA and stay
   database-only.**
-- **It does not change what the live editor asks for today.** The form still
-  collects a CC BY-SA tick, because that is what the shipped
-  `App\Translation\TranslationConsent` says. Until the version bump below
-  ships, the code and this spec disagree, and the code is what a translator
-  actually agreed to.
+- **It did not change what the live editor asks for by itself.** The form
+  collected a CC BY-SA tick until the version bump below shipped, because
+  that is what `App\Translation\TranslationConsent` said, and the code is what
+  a translator actually agreed to.
 
-**The work this leaves.** Two items, in order, tracked in `docs/TODO.md`:
+**The work this leaves.** Two items, in order, tracked in `docs/TODO.md`. The
+first is done.
 
-1. **Bump `App\Translation\TranslationConsent::VERSION` to `v2`** with wording
-   that grants AGPL-3.0-only instead of CC BY-SA 4.0. The version bump is the
+1. **Done 2026-09-10: `App\Translation\TranslationConsent::VERSION` is `v2`**
+   (kind `translation-agpl`), with wording that grants AGPL-3.0-only instead of
+   CC BY-SA 4.0. The version bump is the
    single re-consent trigger (§4), so it brings the tick back for every
    translator, which is the intended and honest effect: this is a different
    deal and they should be asked again. The new wording is worth a lawyer's
@@ -793,9 +795,8 @@ matters for what is left to build.
 works on staging by working in git: the strings ride the release. The export
 and import pair sketched in §3.4 is no longer needed to carry a licence
 boundary across environments, and if it is built anyway it is a convenience,
-not a legal instrument. If it is built before the version bump, it must carry
-v1 rows as CC BY-SA with the licence stated in the file, exactly as the
-earlier Path A note described.
+not a legal instrument. It must still carry v1 rows as CC BY-SA with the
+licence stated in the file, exactly as the earlier Path A note described.
 
 **A note for whoever reads this next.** Some people give freely to a commons
 and would not give the same work to a project on other terms. That was the
@@ -816,11 +817,10 @@ description of how such a move should behave.
 
 Two things about it change under §6.1:
 
-- **It is a convenience, not a legal instrument.** Once the v2 consent has
-  shipped, the ordinary way a translation reaches another environment is git.
-- **If it is built before the v2 bump, every row it carries is a v1 CC BY-SA
-  row,** and the file has to say so. After the bump, the dump carries a mix and
-  must record each row's consent version, because that version is what decides
+- **It is a convenience, not a legal instrument.** The v2 consent has
+  shipped, so the ordinary way a translation reaches another environment is git.
+- **A dump carries a mix of v1 CC BY-SA rows and v2 AGPL rows,** and must
+  record each row's consent version, because that version is what decides
   whether the row may later be absorbed into git.
 
 **Sketch.** Not specified, not built. Enough to judge the shape, nothing more.
@@ -957,8 +957,8 @@ Two configuration gates that fail independently, honestly described as such.
   and `CatalogueWriter::isEnabled()` is the single reading both the buttons
   and the write consult so they can never disagree.
 - Without the opt-in, `/translate/{id}` behaves exactly as it does in
-  production: a submit creates a proposal row, asks for the CC BY-SA consent
-  tick and records it, and the draft-all endpoint answers 404. That is the
+  production: a submit creates a proposal row, asks for the translation-licence
+  consent tick and records it, and the draft-all endpoint answers 404. That is the
   correct default, and it is what a release gets.
 - Environment values are container-cached. A newly set `DEEPL_API_KEY` or
   `CC_CATALOGUE_WRITE` needs the app restarted before anything changes; a
@@ -1177,7 +1177,8 @@ refused as "that key does not exist".
 2. Rider `/translate` propose / update pending.
 3. Curator desk: approve applies overlay; reject / needs-info messages the
    rider.
-4. Consent tick + `consent_record` on submit (CC BY-SA 4.0 as shipped in v1);
+4. Consent tick + `consent_record` on submit (CC BY-SA 4.0 as shipped in v1;
+   AGPL-3.0-only from v2, 2026-09-10);
    overlays never written back into locale YAML.
 5. Translate mode on the page (§4.1), English edits by curators (§4.2), and
    English versions with stale flags (§3.3). Specified 2026-08-31; the plan is
@@ -1194,8 +1195,9 @@ refused as "that key does not exist".
   `--write` deletes the overlay and invalidates the cache).
 - A rider translation moving between environments (translations.md §6.1):
   answered 2026-09-10. The licence question that blocked it is settled, and the
-  ordinary answer is git. The remaining work is the consent version bump in
-  §6.1, not a script.
+  ordinary answer is git. The consent version bump in §6.1 shipped the same day
+  (`v2`); what remains is the consent-checked absorption of v2 overlays into
+  git (§6.1, item 2), not a script.
 
 **Out of scope until separately specified:** new locales.
 

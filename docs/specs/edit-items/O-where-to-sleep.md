@@ -6,7 +6,6 @@
 
 - **Catalog layer:** O · Where to sleep
 - **Map depiction:** ⛺ pin, colour #B5532E
-- **Edit-item id:** `cyclist-friendly-gite-ambleve-valley` in `atlas/demo/edit-items.js`
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
@@ -18,14 +17,16 @@ Bike-friendly stays riders actually used — gîtes and B&Bs with secure storage
 - Secure bike storage
 - Area
 
-## Edit form  (`improve.html?item=cyclist-friendly-gite-ambleve-valley`)
+## Edit form
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
 | Name | input | `[edit]` |
+| Town / commune | input (`town`) | `[edit]` |
+| Website | url (`web`) | `[edit]` |
 | Secure bike storage | select(Yes — locked room / Yes — garage/shed / On request / No) | `[edit]` |
 | Drying / washing for kit | select(Unknown / Yes / No) | `[edit]` |
-| Booking link | input | `[edit]` |
+| Booking link | url | `[edit]` |
 | Note for riders | textarea | `[edit]` |
 
 ### Add missing  (type-specific)
@@ -34,14 +35,16 @@ Bike-friendly stays riders actually used — gîtes and B&Bs with secure storage
 | Pets allowed? | select(Unknown / Yes / No) | `[edit]` |
 | Meals / breakfast? | select(Unknown / Yes / No) | `[edit]` |
 | Tools to borrow? | select(Unknown / Yes / No) | `[edit]` |
+| Accessibility | multiselect(Step-free access / Handbike-friendly / Wheelchair-accessible); nothing ticked means not stated | `[edit]` |
 
 ### Report a problem
-- Closed · Wrong location · Wrong details
+Not built: per-type reasons are not offered. A rider reports a place through the content report ([../content-reports.md](../content-reports.md)).
 
 ### Add a photo
 Available on this type (CC BY-SA 4.0).
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
 ## Implementation
-- **Demo:** registry entry `cyclist-friendly-gite-ambleve-valley` in `atlas/demo/edit-items.js` (hand-picked fixture data).
-- **Production:** community / partner-contributed; some tourism data; not core OSM.
+- **Production:** OSM `tourism=camp_site`, `hostel`, `guest_house`, `chalet`, `wilderness_hut`,
+  `alpine_hut`, `motel` and `hotel` harvested (`pipeline/contract/coverage-contract.json`, letter O),
+  plus community and partner contributions.

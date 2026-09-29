@@ -6,7 +6,6 @@
 
 - **Catalog layer:** D · Bike services
 - **Map depiction:** ⚙ pin, colour #6b6f5e
-- **Edit-item id:** `repair-station-malmedy` in `atlas/demo/edit-items.js`, also the default/fallback edit item when `improve.html` gets no `?item=`
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
@@ -49,7 +48,7 @@ see the rationale note under Fix details below) defaults per kind:
 | `shop` (and unknown/absent kind) | `Unknown` | staffed — hours are meaningful and unknown until told (`ServiceKind::hasOpeningHours()`) |
 | `station` / `pump` | `24/7` preselected, **overridable** | unmanned — 24/7 is the default assumption, but some stations follow a host building's hours (e.g. inside a library) |
 
-**Drawer presentation** (`web/assets/map/map.js`): when a station/pump has no
+**Drawer presentation** (`web/assets/map/drawer.js`, glyphs in `web/assets/map/icons.js`): when a station/pump has no
 stored `openingHours`, the drawer states the assumed default as a read-only
 "Opening hours · 24/7" value row instead of an "add" prompt (`schemaRows`'
 `fixed` option); a stored value always wins. The localized kind label takes
@@ -64,11 +63,12 @@ confirmed/curated DOM pins.
 - Tools
 - Hours
 
-## Edit form  (`improve.html?item=repair-station-malmedy`)
+## Edit form
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
 | Name | input | `[edit]` |
+| Type | select(Bike shop / Repair stand / Pump), stored `serviceKind` `shop` / `station` / `pump` | `[OSM]` |
 | Website | url | `[edit]` |
 | Pump valve | select(Presta + Schrader / Presta only / Schrader only / No pump) | `[OSM]` |
 | Opening hours | select(Unknown / 24/7 / See website) | `[edit]` |
@@ -91,14 +91,13 @@ confirmed/curated DOM pins.
 | E-bike charging? | select(Unknown / Yes / No) | `[edit]` |
 
 ### Report a problem
-- Gone / closed · Wrong location · Wrong details · Duplicate
+Not built: per-type reasons are not offered. A rider reports a place through the content report ([../content-reports.md](../content-reports.md)).
 
 ### Add a photo
 Available on this type (CC BY-SA 4.0).
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
 ## Implementation
-- **Demo:** registry entry `repair-station-malmedy` in `atlas/demo/edit-items.js` (hand-picked fixture data).
 - **Production:** OSM `amenity=bicycle_repair_station` / `shop=bicycle` /
   `amenity=compressed_air`, served as coverage-cached POIs
   ([../osm-data-architecture.md](../osm-data-architecture.md) §5) + materialize-on-edit

@@ -6,7 +6,7 @@
 
 Per the project rule that **every catalog item must have a designed edit flow** (not just the
 service station): each editable type gets its own spec here, documenting what a contributor can
-change, the field-level provenance, and how it's built in the demo vs. production. Having one per
+change, the field-level provenance, and how it's built. Having one per
 type is the guarantee that we've thought through the design and implementation options for each.
 
 **R is the deliberate exception** (since 2026-07-08): recommended routes are *curated
@@ -15,9 +15,11 @@ but never edit route data; curators own all edits. See
 [`../route-domain.md`](../route-domain.md) and the rewritten
 [R-quality-rides.md](R-quality-rides.md).
 
-These specs are the **design source of truth** for [`atlas/demo/edit-items.js`](../../../atlas/demo/edit-items.js)
-(the registry rendered by [`atlas/demo/improve.html`](../../../atlas/demo/improve.html)) and for the catalog
-[`../catalog-data-model.md`](../catalog-data-model.md).
+The **source of truth** for each type's fields is the Symfony registry,
+[`CatalogFormRegistry`](../../../web/src/Catalog/CatalogFormRegistry.php) (below); these specs document it,
+together with the catalog [`../catalog-data-model.md`](../catalog-data-model.md). The static HTML prototype
+(`atlas/demo/edit-items.js`, `atlas/demo/improve.html`) is retired: its page URLs answer 301 to the Symfony
+routes (`LegacyDemoRedirectController`).
 
 ## Production implementation (Symfony)
 
@@ -25,10 +27,12 @@ The real, server-rendered port of this registry lives in the Symfony app:
 
 - **Catalog source of truth** — [`web/src/Catalog/`](../../../web/src/Catalog/): `ItemType` (the enum of letters A–G and N–R: practical types A–M, experiential N–Z;
   each carries letter/label/icon/eyebrow, `locationMode` point/segment/none, and `isVotable()` per the funnel
-  table below) and `CatalogFormRegistry` (each type's *Fix-details* + *Add-missing* fields, lifted from
-  `edit-items.js` to per-type schemas). `LocationMode`, `FieldKind`, `CatalogField`, `ItemFieldSet` support them.
-  For **R** the registry field set backs the *propose-route* and *curator* forms, not a rider improve form —
-  `/improve` refuses `type=R` ([route-domain.md](../route-domain.md) §1).
+  table below) and `CatalogFormRegistry` (each type's *Fix-details* + *Add-missing* fields, as per-type
+  schemas). `LocationMode`, `FieldKind`, `CatalogField`, `ItemFieldSet` support them.
+  For **R** the registry field set backs no form: it feeds the map drawer's display rows
+  (`CatalogSchemaProvider::displayFields()`). The *propose-route* and *curator* forms are built from
+  [`RouteMetadata`](../../../web/src/Catalog/RouteMetadata.php) through `RouteMetadataFields`
+  (`ProposeRouteType`, `RouteEditType`), and `/improve` refuses `type=R` ([route-domain.md](../route-domain.md) §1).
 - **Type-aware form** — [`web/src/Form/ImproveType.php`](../../../web/src/Form/ImproveType.php) builds the
   Details step from the registry; [`web/templates/contribute/improve.html.twig`](../../../web/templates/contribute/improve.html.twig)
   renders it and surfaces this **votability/lifecycle context** in the review step —
@@ -41,7 +45,8 @@ The real, server-rendered port of this registry lives in the Symfony app:
   **When a term is added here, it does not follow that it appears on a rider's screen.**
 - **Reachability** — the contribute hub deep-links each card with `?type=<slug>`; the map drawer's Edit/Add-photo
   links use `?type=<letter>` (`ItemType::fromParam()` resolves either) — **except R**: the route drawer offers
-  vote / "I rode this" / GPX download / suggest-a-correction instead of an edit link.
+  vote / "I rode this" / GPX download / suggest-a-correction instead of an edit link. `/improve` with no
+  item to bind (and no `mode=add` or OSM `ref`) renders the pick-a-place page; no type is a default edit item.
 
 **Persistence** — item submissions persist for real since data-API phase B
 ([../moderation-and-contribution.md](../moderation-and-contribution.md));
@@ -56,8 +61,8 @@ every type here:
 - **P1 — one source of truth.** `CatalogFormRegistry` + `item.attributes` define an item
   type's editable shape. Forms (`App\Form\ImproveType`), map-drawer attribute rows
   (`CatalogSchemaProvider::displayFields()` served as `window.CC_FIELD_SCHEMA`, rendered
-  by `map.js`'s `schemaRows()`), and the wizard review step ALL derive from it. No field
-  is ever invented in a template or in `map.js`.
+  by `schemaRows()` in `web/assets/map/drawer.js`), and the wizard review step ALL derive
+  from it. No field is ever invented in a template or in the map's scripts.
 - **P2 — no hardcoded per-item display.** Every drawer row is either a stored attribute
   rendered with its provenance or a clearly-labelled derived value; decorative constants
   are banned.
@@ -66,8 +71,8 @@ every type here:
 - **P4 — everything on the curated map is a real DB item** (submittable, editable,
   moderatable). Hand-authored demo content is seed data with `source='manual'`
   (`App\Catalog\ItemSource::Manual`) — real items in the normal lifecycle, permanently
-  distinguishable from `osm`/`pivot`/`wikidata`/`user`/`auto` — never code. Standing documented
-  exception: the single hazard fixture pin (E), inlined in `map.js` with no serving path.
+  distinguishable from `osm`/`authority`/`wikidata`/`user`/`scout`/`auto` (`App\Catalog\ItemSource`),
+  never code. Hazards (E) arrive in the catalog payload like every other letter.
 - **W5 — change history is user-visible** — see
   [Change history & field-level diffs](#change-history--field-level-diffs) below.
 - **W6 — provenance renders uniformly** across ALL layers and item types; user/manual
@@ -77,8 +82,8 @@ every type here:
 live registry fields (never "who it's good for" framing): **effort** (`N`, with a map
 filter), road quality **`sq`** + traffic **`tr`** (`N`, with map filters), **famousFor**
 and **approach** (`N` add-missing free text), **accessibility** (`O`, with a map
-filter). The map filter chips' vocab lists mirror the registry's (`map.js`,
-`ALL_EFFORT`/`ALL_ACCESS`), with narrowing semantics: with every chip on, items
+filter). The map filter chips' vocab lists mirror the registry's
+(`ALL_EFFORT`/`ALL_ACCESS` in `web/assets/map/render.js`), with narrowing semantics: with every chip on, items
 with no value still show; deselect one and unvalued items hide too.
 
 ## Common to every type
@@ -107,10 +112,10 @@ never through the attribute vocabulary (`ImproveType`,
 
 **Setting the location (add mode, `?mode=add`).** The *first* action is always to set the location, and
 it varies by type:
-- **point** types (water, services, stays, hazards, getting-there, shelter, scenic, history) — tap the map
+- **point** types (water, toilets, services, stays, hazards, getting-there, shelter, scenic, history): tap the map
   to drop a single pin; the eyebrow coordinates update to the dropped point.
-- **segment** (road surface) — tap the **start**, then the **end**; the segment line is drawn between them.
-- **none** (quality rides) — no pin; the **GPX** track sets the whole route. Upload happens in the
+- **segment** (road surface): tap the **start**, then the **end**; the segment line is drawn between them.
+- **none** (quality rides): no pin; the **GPX** track sets the whole route. Upload happens in the
   dedicated rate-limited **propose-route flow** (not `/improve` add-mode), with server-side validation,
   privacy trim, and distance/ascent computation (route-domain.md §4).
 - **climbs** use the same add arm, `/improve?type=climbs&mode=add`, with the shared three-point
@@ -119,7 +124,30 @@ it varies by type:
   measured from the DEM, never typed (three-point definition: [N-climbs.md](N-climbs.md)). The
   dedicated `/add-climb` wizard was retired on 2026-08-25 and is now a 301 to this arm.
 
-**Report a problem** always includes an **Other** option (free-text) alongside the type-specific reasons.
+**Locate step.** The first step also carries (`web/templates/contribute/improve.html.twig`):
+- **Similar places** (add mode, every rider): once the pin is placed, the places of the same kind within
+  250 m, ours and providers' served items plus OSM points no served item holds yet, nearest first, at most
+  eight (`GET /contribute/similar`, `App\Contribution\SimilarPlaces`, `web/assets/contribute/similar.js`).
+  Each has a "same place as mine" tick; those within 50 m start ticked. The ticks travel with the
+  submission as `replaces`, and nothing changes until a curator approves: approval retires, never deletes,
+  the ticked places (`App\Moderation\ReplacedPlaces`). The rule is
+  [../catalog-data-model.md](../catalog-data-model.md) §5a.
+- **Is this already in OpenStreetMap?** (add mode, curators only, not when the place was taken from an OSM
+  node): the OSM candidates near the point plus "Not in OpenStreetMap", answered in the hidden `osmAnswer`
+  field of `ImproveType` (`web/assets/contribute/osm-answer.js`). Once the list shows, Next waits for an
+  answer; the answer is what lets a curator's own new place apply at once, and a submission that arrives
+  without one queues ([../moderation-and-contribution.md](../moderation-and-contribution.md) §1.6).
+- **A change is already waiting** (edit mode): a warning above the wizard, never a block, that the rider's
+  own change is still open (what they send now is added to it) or that somebody else's has not been read
+  yet, with its date ([../moderation-and-contribution.md](../moderation-and-contribution.md) §7.3c).
+
+On the review step, a curator correcting a place (or adding one taken from an OSM node), whose change
+applies at once, gets an optional **"Mark it confirmed"** tick (`confirmNow`), off by default, which
+records their own drawer confirmation; it is offered only where the place has the `exists` stance
+([../moderation-and-contribution.md](../moderation-and-contribution.md) §1.6).
+
+**Report a problem** with per-type reasons and an **Other** option is not built. A rider reports a place
+through the content report ([../content-reports.md](../content-reports.md)).
 
 **Media.** Uploads are real — the full contract is
 [photo-uploads.md](../photo-uploads.md); this is the rider-facing summary.
@@ -137,10 +165,9 @@ it varies by type:
   photos on the review step, rather than re-asking.
 - **Real per-file progress**, driven by actual uploaded bytes, becoming a thumbnail on success and a
   named error on failure ("that photo is over 15 MB", "that file type cannot be used", …).
-- **Link instead of upload:** paste a photo URL — **known sources** (Wikimedia, Flickr, Unsplash)
-  have their rights-holder & licence read and validated automatically; **unknown sources** require the
-  contributor to confirm rights-holder & licence manually. A link is reviewer context, never an
-  upload: it is marked distinctly (🔗) and is not gated by the upload consent.
+- **Link instead of upload** is not built: the wizard takes uploads only. A photo by Commons link
+  (allowlisted, licence-checked, fetched and re-hosted) is future work
+  ([docs/TODO.md](../../TODO.md), "Photo by Commons link").
 - Photo credits link the licence deed, and for imported photos the image source (the Wikimedia
   Commons file page) and the author's Wikimedia profile. A rider upload has neither: it is credited to
   the photographer's Commons profile when public, and to "an anonymous rider" otherwise.
@@ -275,42 +302,47 @@ seed as verified-by-source / community-unconfirmed); trusted contributor or cura
 or low-density region −1 (seed coverage early, tighten as the community grows).
 
 **Notes**
-- **A · road surface sits outside the `[tap]` machinery** — it is *measured*, carries no
-  confirmation stances ([../moderation-and-contribution.md](../moderation-and-contribution.md)
-  §10.1), and is excluded from `CC_CONFIRMABLE`
-  ([../map-and-search.md](../map-and-search.md) §6.3); its verification signal is data
-  provenance, not tap-confirmations.
+- **A · road surface is confirmable, in its own words.** Its stances are `exists`, asked as
+  "Is it as described?", and `not_as_described` (`ItemType::confirmationStances()`,
+  [../moderation-and-contribution.md](../moderation-and-contribution.md) §10.1), and `surface`
+  is in `CC_CONFIRMABLE` (`web/assets/map/community.js`,
+  [../map-and-search.md](../map-and-search.md) §6.3). Only `exists` counts toward verification;
+  see [A-road-surface.md](A-road-surface.md) (Confirmation: "as described").
 - **Config, not constants** — base X and modifiers are tunable per region / launch phase without a deploy.
 - **Risk can live at the field, not the item** — "this fountain exists" (low X) ≠ "this water is potable"
   (never fully verifiable → *labelled* "Unknown", not gated). See [B-water-food](B-water-food.md).
 - The numbers above are **starting points (TBD)** — the *structure* (tiers + modifiers + decay) is what's fixed.
 
-**As built today (2026-08-02): X = 1 for every item type.** `CatalogProvider`'s
-verified derivation is `EXISTS (a counted item_confirmation)`, so the first
-rider who confirms a place promotes it from a community dot to a full pin.
-None of the tiers, modifiers or decay above exist yet, and only routes have a
-real configurable threshold (`route.ride_verify_threshold`). Rider-facing copy
-follows the code, not this table: the contribute wizard says "the first rider
-who confirms it is really there turns it into a full pin". If the tiers land,
-that copy and [../map-and-search.md](../map-and-search.md) §12 move together
-with them.
+**As built: one threshold for every item type.** Verified is
+`item.state = 'verified'` and nothing else. An `unverified` item is promoted
+when `map.item_verify_threshold` independent riders vouch for it (default 2, a
+runtime setting changed without a deploy), or when one curator or admin
+confirms it from the drawer (`ItemConfirmationService::verifyIfEarned()`).
+Only the vouching stances count, `potable` and `exists`
+(`ConfirmationStance::vouching()`); `not_potable` and `not_as_described` never
+verify. None of the tiers, modifiers or decay above exist; routes have their
+own threshold (`route.ride_verify_threshold`). Rider-facing copy follows the
+code, not this table: the wizard's review step says a place counts as verified
+once that many riders, or one curator, have confirmed it
+(`improve.lifecycle.funnel_*`). If the tiers land, that copy and
+[../map-and-search.md](../map-and-search.md) §12 move together with them.
 
 **A submitter cannot confirm their own contribution.** Their answer on the
 improve form is kept so the map never asks them again, as an
 `item_confirmation` with `source = 'form'`, and form-sourced rows are excluded
 from both the tally and the verified derivation
 ([../moderation-and-contribution.md](../moderation-and-contribution.md) §6.3).
-With X = 1 this is what stops a place verifying itself the moment it is
-approved.
+This is what keeps a submitter's own answer out of the count toward the
+threshold.
 
 ## The items
 
 | Letter | Type | Spec | Map | Votable? | Editable |
 |---|---|---|---|---|---|
 | **A** | Road surface | [A-road-surface.md](A-road-surface.md) | line (by surface) | utility | yes |
-| **B** | Water & food | [B-water-food.md](B-water-food.md) | pin | utility | yes (2 fountains → 1 edit item) |
+| **B** | Water & food | [B-water-food.md](B-water-food.md) | pin | utility | yes |
 | **C** | Public toilets | [C-public-toilets.md](C-public-toilets.md) | pin | utility | yes |
-| **D** | Bike services | [D-bike-services.md](D-bike-services.md) | pin | utility | yes (default edit item) |
+| **D** | Bike services | [D-bike-services.md](D-bike-services.md) | pin | utility | yes |
 | **E** | Hazards & conditions | [E-hazards.md](E-hazards.md) | pin | utility | yes |
 | **F** | Getting there | [F-getting-there.md](F-getting-there.md) | pin | utility | yes |
 | **G** | Shelter | [G-shelter.md](G-shelter.md) | pin | utility | yes |

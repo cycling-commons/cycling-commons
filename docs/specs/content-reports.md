@@ -178,9 +178,11 @@ August and got them right:
   renders for any well-formed id, and the lookup happens at the desk, after the
   report exists.
 * **Rate limiting comes before the lookup**, so a 429 cannot be used as one
-  either. `content_report`, 15 a day per IP: more generous than the photo
-  budget of 5, because this one covers five content types and carries no
-  auto-withhold, so a flood wastes a curator's time rather than hiding work.
+  either. `content_report`, 15 a day per IP, covers every target kind (the
+  seven `ReportTarget` cases). No ordinary ground hides anything before
+  review, so a flood wastes a curator's time rather than hiding work; the one
+  ground that withholds a photo also spends the tighter `media_report_urgent`
+  budget described below.
 * **The answer is the same whether or not the target existed.** "Thank you, it
   is with a curator" is true either way: a report about something already gone
   is closed as `moot`, which is a real outcome.
@@ -270,6 +272,7 @@ it (review 2026-08-30). Pinned by `ContentReportTest`.
 | Region page | `templates/pages/region.html.twig` |
 | Messages | `templates/messages/index.html.twig`, on received messages only |
 | Photo page and lightbox | `templates/media/photo.html.twig`, `/report/photo/{uuid}` |
+| Map town card | `assets/map/places.js`, the `!` beside the Wikipedia text, `/report/town/{osm}?name=`, the OpenStreetMap element as `node-59518` |
 
 The drawer link renders for **real database ids only**. A coverage POI we do not
 store has nothing of ours to report, and its words belong to OpenStreetMap.
@@ -432,7 +435,7 @@ other.
 The reporter's IP is **never stored**. `reporter_key` holds
 `PseudonymousKey::of('content-report', $ip, $secret)`, a keyed sha256, 64 hex
 characters. That is what makes "one person filing a thousand reports" findable
-without keeping anybody's address. `report.privacy_note` on the form says so.
+without keeping anybody's address. The form itself does not say so.
 Note it is `of()` and not `limiter()`: the `anon-` prefix `limiter()` adds is for
 rate-limiter store keys that share a namespace with `user-<id>`, and would
 overflow the 64-character column.
@@ -473,8 +476,8 @@ it next to Report a bug.
   Only the region slug is looked up; ids are passed through as typed, so the
   box is not an oracle for which ids exist (same rule as
   `ReportTarget::acceptsId()`).
-- **Cards**, one per `ReportTarget`, saying where the Report link is on
-  that surface; the photo card says a photo reported for showing a person
+- **Cards**, one per `ReportTarget` except `town`, saying where the Report
+  link is on that surface; the photo card says a photo reported for showing a person
   is withheld at once (`canAutoWithhold()`).
 - **What happens next** repeats §6 and §7 in plain words, and claims no
   more: a confirmation with a reference, the decision with reasons, the

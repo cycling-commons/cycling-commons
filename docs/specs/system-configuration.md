@@ -58,6 +58,7 @@ rather than a second copy drifting in PHP.
 
 | key | default | range | group | read by |
 |---|---|---|---|---|
+| `map.confirmed_default_threshold` | 10 | 1–1000 | map | `CuratedReadiness` |
 | `map.curated_default_threshold` | 25 | 1–1000 | map | `CuratedReadiness` |
 | `map.curated_default_min_blocks` | 3 | 1–6 | map | `CuratedReadiness` |
 | `map.curated_default_min_per_block` | 5 | 1–100 | map | `CuratedReadiness` |
@@ -66,6 +67,11 @@ rather than a second copy drifting in PHP.
 | `route.region_active_cap` | 30 | 1–1000 | routes | `RouteModerationService`, `RouteQueue` |
 | `route.ride_verify_threshold` | 3 | 1–100 | routes | `RouteCommunityService` |
 | `moderation.retention_months` | 3 | 1–120 | moderation | `RetentionService` |
+| `media.urgent_breaker_hourly` | 10 | 0–500 (0 disables auto-withhold, photo-uploads.md §6c) | media | `UrgentWithholdBreaker` |
+| `media.urgent_breaker_daily` | 25 | 0–2000 (0 disables auto-withhold) | media | `UrgentWithholdBreaker` |
+| `community.voting_live` | 0 | 0–1 | community | `MapController` (0 hides every vote call to action) |
+| `app.alert_emails` | `SECURITY_ALERT_EMAIL` env | text, at most 500 characters: one or more comma-separated addresses | alerts | `AlertRecipients`; `SupportRecipients` as the fallback |
+| `app.support_emails` | `CC_SUPPORT_EMAILS` env (blank when unset) | text, at most 500 characters: comma-separated addresses, or empty | alerts | `SupportRecipients` |
 
 The defaults column is the YAML value, not a duplicate: the registry reads each
 one out of the parameter bag at construction, and a missing or non-numeric
@@ -102,7 +108,10 @@ prevent. A third type means doing this same exercise again, on purpose.
 
 **No setting may be saved empty**, whatever its type, and the page says so in
 its own message rather than answering an empty box with a complaint about a
-number nobody typed. The per-key **Reset** buttons carry `formnovalidate` so a
+number nobody typed. The one exception is `app.support_emails`, defined with
+`allowsEmpty: true`: empty means "use the alert list" (`SupportRecipients`
+falls back to `app.alert_emails`), so an unset value cannot leave the contact
+form announcing to nobody ([contact-and-support.md §7](contact-and-support.md)). The per-key **Reset** buttons carry `formnovalidate` so a
 row can always be put back to its default even while a sibling field is empty
 — the server's reset branch runs before validation, and without the attribute
 the browser's own `required` check would refuse to submit at all.
@@ -182,7 +191,7 @@ deletes. The precedent it follows is the email-change playbook
 
 The page contract:
 
-- **Grouped by area** (map / routes / moderation / photos / alerts), each field showing its key,
+- **Grouped by area** (map / routes / moderation / photos / alerts / community), each field showing its key,
   its help sentence, its default and its allowed range.
 - **Per-field validation against the registry.** The raw string is rejected
   before it is cast, because `(int) ''` and `(int) 'abc'` are both `0` and `0`
@@ -214,7 +223,10 @@ value the admin page would refuse.
    `web/config/packages/*.yaml`. This is the default, and it stays the
    fallback.
 2. Add a key constant and a `[key, min, max, group]` row to
-   `SettingsRegistry`. The key must equal the parameter name.
+   `SettingsRegistry`. The key must equal the parameter name. A text setting
+   has no row in that table: it gets its own `define()` call with
+   `type: SettingDefinition::TYPE_STRING`, a `maxLength`, a `validator`
+   closure, and `allowsEmpty: true` only when empty has a meaning of its own.
 3. Add `admin.settings.field.<key_with_underscores>.label` and `.help` to **every**
    catalog (en/fr/nl/de/es) — a pre-commit hook enforces parity. Write the
    help as *what moving this does to the site*, not as a restatement of the
@@ -231,8 +243,10 @@ until somebody changes it.
 ## 6. Operations
 
 - **Migration:** `Version20260729120000` creates `system_setting`
-  (`setting_key` PK, `setting_value` INT, `updated_at`, `updated_by_id` → users
-  `ON DELETE SET NULL`). Additive and empty; no backfill, no downtime. It rides
+  (`setting_key` PK, `setting_value`, `updated_at`, `updated_by_id` → users
+  `ON DELETE SET NULL`). Additive and empty; no backfill, no downtime.
+  `setting_value` was created `INT` and widened to `TEXT` by
+  `Version20260802220000` for the text settings (§2). It rides
   the normal `doctrine:migrations:migrate` chain — but until it has run, the
   admin page cannot save (§3 makes the *read* path degrade to defaults, not the
   write path).

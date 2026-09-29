@@ -6,18 +6,24 @@ surface of the Commons. Built 2026-09-06 (owner).
 
 ## 1. One directory, two drawings
 
-The template holds the directory once, as data: five groups, each with its
+The template holds the directory once, as data: six groups, each with its
 pages (route, heading, description, map position). Both drawings read from
-that one structure, so a page cannot be on one and off the other. Every
-public page without a parameter is on it, including the Blog and the API
+that one structure, so a page cannot be on one and off the other. The
+public pages without a parameter are on it, including the Blog and the API
 reference (added 2026-09-06 after the owner found Coverage under its old
-card name and the Blog missing); a page's heading is the word the nav uses
-for it where the nav has one, so Coverage reads "Coverage" here too. Six
-groups: The atlas, Take part, Open data and the project, Quality and reports
-(what is known to be wrong, how to report more, how usable the site is:
-Known issues, Report a bug, Report a page or a photo as its capital,
-Accessibility), Your account, About and the small print. Pinned by
+card name and the Blog missing). Two are not: Best of (`best_of`, `/best`)
+and the contributors-and-curators page (`roles`,
+`/contributors-and-curators`). A page's heading is
+the word the nav uses for it where the nav has one, so Coverage reads
+"Coverage" here too. The six groups, in the template's order: The atlas, Take
+part, Open data and the project, Your account, About and the small print
+(About, Privacy, Terms, Contact), Quality and reports (what is known to be
+wrong, how to report more, how usable the site is: Known issues, Report a
+bug, Report a page or a photo as its capital, Accessibility). Pinned by
 `ContentPagesTest::testTheDirectoryMapAndListLinkTheSamePages`.
+
+Open: whether `best_of` and `roles` belong in the directory; the header
+links the first and the footer the second (§5).
 
 - **Map** (default): the directory drawn as a touring map in one SVG.
 - **List**: one heading per country, in the map's order, with that
@@ -87,18 +93,37 @@ same list. Owner: the top row had "the most important items on top", the
 footer "multiple others, not all", and the directory everything, with no
 rule between the three.
 
-- **Header** (`partials/_nav.html.twig`): the three buttons (Explore the map,
-  Contribute, Get involved), then Regions, Coverage, Blog, About, then the
-  account chip or Log in, then the language pill. Vote, Developers and
-  Licence left the header for the footer; Vote comes back up when it ships.
-- **Footer** (`partials/_footer.html.twig`): five columns in the order of
-  this page's groups, The atlas, Take part, Open data and the project,
-  Quality and reports, About and the small print, every public page in its
-  group. The sixth group, Your account, stays behind the account chip and is
+- **Header** (`partials/_nav.html.twig`), in markup order: Regions, Coverage,
+  Best of (`best_of`), Blog (only when `blog_has_posts()`), About, then the
+  three buttons (Explore the map, Contribute, Get involved), then the account
+  chip or Log in, then the language pill. Vote, Developers and Licence left
+  the header for the footer; Vote comes back up when it ships.
+- **Footer** (`partials/_footer.html.twig`): five columns, The atlas, Take
+  part, Open data and the project, Quality and reports, About and the small
+  print. The sixth group, Your account, stays behind the account chip and is
   not in the footer, where a signed-out reader would only meet a login wall.
-  Headings and labels reuse the `pages.group_*` and `pages.card_*_h` keys
-  where a `footer.*` key did not already exist, so the two lists cannot
-  drift in wording.
+  The columns hold:
+  - *The atlas*: Map, Map key, Regions, Coverage, Scout.
+  - *Take part*: Contribute, Propose a route, Vote, Get involved,
+    Contributors and curators (`roles`), Contributors, Wiki and Governance
+    (both on the wiki).
+  - *Open data and the project*: Developers, API reference, Licensing,
+    Credits, Blog (only when `blog_has_posts()`), What's new, Roadmap, and
+    All pages (this directory).
+  - *Quality and reports*: Known issues, Report a bug, Report a page or a
+    photo, Contact.
+  - *About and the small print*: About, Accessibility, Privacy, Terms, then
+    the steward line.
+
+  Best of (`best_of`) is not in the footer, and neither are Landing, Improve
+  a place or Add a climb. Headings and labels reuse the `pages.group_*` and
+  `pages.card_*_h` keys where a `footer.*` key did not already exist, so the
+  two lists cannot drift in wording.
+
+  Open: the footer and the directory group some pages differently. Contact
+  sits under Quality and reports in the footer but under About and the small
+  print in the directory; Accessibility the other way round. `roles` and the
+  governance page are in the footer and not in the directory.
 - **Landing page, the hero** (settled the night of 2026-09-08/09): the right
   half is the drawn loop, `home.way_*` keys, five stops on a lopsided lap (a
   spline through eight hand-placed points, every stop nudged a hair, level,

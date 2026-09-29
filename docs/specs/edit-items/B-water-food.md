@@ -6,7 +6,6 @@
 
 - **Catalog layer:** B · Water & food
 - **Map depiction:** pin, icon 💧, colour #8FB6A8
-- **Edit-item id:** `water-fountain` in `atlas/demo/edit-items.js`, shared by both fountains (Stavelot + Coo) — editing either opens the same edit item
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
@@ -18,11 +17,11 @@ Ride-critical drinking water / refill points (fountains, taps, cemetery taps, ca
 - Potable
 - Seasonal
 
-## Edit form  (`improve.html?item=water-fountain`)
+## Edit form
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
-| Type | select(Public fountain / Drinking tap / Cemetery tap / Public toilet / Café — refill point) | `[OSM]`; Public toilet added 2026-09-05: a tap at a public toilet, the commonest Dutch register case after fountains |
+| Type | select(Public fountain / Drinking tap / Cemetery tap / Café — refill point) | `[OSM]` |
 | Potable? | select(Yes (public supply) / Unknown / No / non-potable) | `[tap]`; "Unknown" is a real answer, not a blank: somebody looked and nobody can say. It draws the unfilled drop, the same look a row nobody has spoken about gets. Renamed from "Unsigned — use judgement" 2026-09-10, which described a missing sign rather than the state of our knowledge. A spelling starting with "No" is forbidden here: `ModerationService::stanceFromAnswer()` and `icons.js waterKind()` both prefix-match "No" as non-potable. |
 | Seasonal availability | select(Year-round / Summer only / Frost-shut in winter / Unknown) | `[tap]` |
 | Availability | select(Unknown / Always / Daytime only / Ask or behind a gate) | `[tap]`, filled by the Dutch register's `type` where it has one; the clock badge reads it |
@@ -34,14 +33,16 @@ Ride-critical drinking water / refill points (fountains, taps, cemetery taps, ca
 |---|---|---|
 | Bottle-fill friendly? | select(Unknown / Yes / No) | `[edit]` |
 | Cost | select(Free / Customers only) | `[edit]` |
+| Website | url (`web`) | `[edit]` |
 
 ### Report a problem
-- Gone / dry · Wrong location · Not potable · Duplicate
+Not built: per-type reasons are not offered. A rider reports a place through the content report ([../content-reports.md](../content-reports.md)).
 
 ### Add a photo
 Available on this type (CC BY-SA 4.0).
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
 ## Implementation
-- **Demo:** shared registry entry `water-fountain` in `atlas/demo/edit-items.js`; any number of fountains can point at one edit item.
-- **Production:** OSM `amenity=drinking_water` mirrored, plus `[tap]` seasonal / potable confirmations.
+- **Production:** OSM `amenity=drinking_water`, `drinking_water=yes`, `amenity=water_point`,
+  `man_made=water_tap` and `shop=bakery` mirrored (`pipeline/contract/coverage-contract.json`, letter B),
+  plus `[tap]` seasonal / potable confirmations.

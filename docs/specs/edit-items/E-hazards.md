@@ -6,7 +6,6 @@
 
 - **Catalog layer:** E · Hazards & conditions
 - **Map depiction:** ⚠ pin, colour #C8923A
-- **Edit-item id:** `exposed-crosswind-hautes-fagnes` in `atlas/demo/edit-items.js`, dynamic — needs freshness
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
@@ -18,11 +17,11 @@ Persistent, real hazards — crosswind and fog exposure, ice, loose surface — 
 - Severity
 - Seasonal
 
-## Edit form  (`improve.html?item=exposed-crosswind-hautes-fagnes`)
+## Edit form
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
-| Hazard type | select(Crosswind / fog / Ice / frost / Loose surface / gravel / Flooding / Roadworks / **Road closed** / Other) | `[edit]` |
+| Hazard type | select(Crosswind / fog / Ice / frost / Loose surface / gravel / Potholes / Junction / crossing / Bad corner / Flooding / Roadworks / **Road closed** / Other) | `[edit]` |
 | If closed, for how long? | select(Unknown / Today / Days / Weeks / Months) | `[edit]` |
 | Severity | select(Low / Moderate / High) | `[edit]` |
 | When is it worst? | select(Autumn / winter / Year-round / After rain / Windy days) | `[edit]` |
@@ -36,7 +35,7 @@ Persistent, real hazards — crosswind and fog exposure, ice, loose surface — 
 | Time of day | select(Any / Morning / Afternoon / Evening) | `[edit]` |
 
 ### Report a problem
-- Resolved / gone · Wrong location · Duplicate
+Not built: per-type reasons are not offered. A rider reports a place through the content report ([../content-reports.md](../content-reports.md)).
 
 ### Add a photo
 Available on this type (CC BY-SA 4.0).
@@ -73,9 +72,9 @@ Months 180. Past it, the item is moved to `retired` and stops being served.
 
 **Something has to run it.** `app:catalog:expire-closures` (dry-run by default,
 `--write` to act) belongs on the worker host beside `app:moderation:gc` and
-`app:media:gc`. Until those timers exist, `/map/catalog.json` sweeps
-opportunistically at most once an hour — a safety net, not the mechanism.
+`app:media:gc`. Until those timers exist, `GET /map/catalog/stamps.json`
+(`MapController::catalogStamps()`, read on every map boot) sweeps
+opportunistically at most once an hour: a safety net, not the mechanism.
 
 ## Implementation
-- **Demo:** registry entry `exposed-crosswind-hautes-fagnes` in `atlas/demo/edit-items.js` (hand-picked fixture data).
 - **Production:** community report + freshness decay (confirmations age out); safety-tagged, never auto from OSM.

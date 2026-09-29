@@ -52,6 +52,7 @@ sourcing rule (Warmshowers/WTMG precedent).
 |---|---|---|
 | `changingTable` | select | Unknown · Yes · No |
 | `shower` | select | Unknown · Yes · No |
+| `web` | url | Website (the place's own site) |
 
 ## Wiring
 

@@ -6,7 +6,6 @@
 
 - **Catalog layer:** N · Climbs
 - **Map depiction:** gradient-coloured line + foot pin, icon: a drawn twin-peak mountain (`MOUNTAIN_PATH` in icons.js, like the camera and toilet glyphs; the ⛰ emoji flattened to one plain triangle), colour #6A2C8F
-- **Edit-item id:** `cote-de-la-redoute`, `mur-de-huy`, `cote-de-stockeu`, `cote-de-la-roche-aux-faucons` in `atlas/demo/edit-items.js` (one edit item per climb)
 - **Editable:** yes · Frontend demo · 2026-06-18
 - **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
@@ -37,7 +36,7 @@ submission boundary by `App\Contribution\ClimbGeometry::fromPayload()`):
 | `length` · `gain` · `binM` · `demSource` | numbers / string | derived and stored ([../climb-elevation.md §4](../climb-elevation.md)) |
 
 Validation invariants (`App\Contribution\ClimbGeometry`): `route`/`grad` are capped at
-`ClimbGeometry::MAX_POINTS` (currently 2000) entries; coordinates must be finite and in
+`ClimbGeometry::MAX_POINTS` (currently 8000) entries; coordinates must be finite and in
 range (lat −90..90, lng −180..180); `steep.pct` must match a gradient shape
 (`12`, `12.5%` — up to two digits, optional decimal, optional `%`). Malformed geometry
 surfaces as a form error on the `route` field, never a silent discard.
@@ -69,7 +68,8 @@ behind our own limit rather than theirs
 currently 10 s).
 
 **Two steepest markers, and they are not the same thing.** `steep` is ours: the
-steepest sustained 100 m the elevation model can see, derived on every redraw
+steepest sustained 250 m the elevation model can see (`ClimbProfiler::MAX_WINDOW_M`,
+the 95th percentile of sliding windows), derived on every redraw
 and never edited, which is what makes it comparable between climbs.
 `steepPoint` is the rider's — where the wall actually is, placed by hand with a
 distinct amber icon, optionally carrying a percentage and a short note. It
@@ -80,7 +80,7 @@ not a fourth tap, because it is optional and repeatable. See
 [../climb-elevation.md §5a](../climb-elevation.md).
 
 **Steepest: found, not placed.** The marker is derived from the steepest sustained
-~100 m window, and an automatic one is **re-derived on every route change** — the line is
+250 m window, and an automatic one is **re-derived on every route change**: the line is
 what determines where the steepest ramp is. Dragging or re-tapping it sets `manual: true`,
 which persists with the attribute: a hand-placed marker keeps its position through a
 redraw and only has its `pct` re-read, and is re-derived solely when the route no longer
@@ -106,13 +106,13 @@ moderation + per-field change-history pipeline
 is a box anyone types in: `CatalogField::derivedText` keeps them out of the edit form,
 and `CLIMB_FIELDS` carries no `fAvg`/`fMax`.
 
-- `avgGradient` — the editor's **ascent-only** average over ~100 m bins, posted in the
-  hidden `avg` field beside `route`/`grad`/`steep`, and moved onto the attribute by
-  `CatalogContributionService::applyDerivedAverage()`. Definition and the reasoning for
-  ascent-only: [../climb-elevation.md §4b](../climb-elevation.md).
-- `maxGradient` — read off the steepest-ramp marker (`deriveMaxGradient()`), which is the
-  steepest sustained ~100 m window - the distance climb databases report, so our
-  figure is comparable with theirs.
+- `avgGradient`: the **ascent-only** average over 100 m bins, measured on the server by
+  `App\Elevation\ClimbProfiler` inside `CatalogContributionService::deriveClimbProfile()`.
+  The editor's hidden `avg` field is a transport key and is never stored. Definition and
+  the reasoning for ascent-only: [../climb-elevation.md §4b](../climb-elevation.md).
+- `maxGradient`: the steepest sustained 250 m window (95th percentile), measured in the
+  same `ClimbProfiler` pass that places the `steep` marker; the width travels with the
+  figure as `steepWindowM` ([../climb-elevation.md §2a](../climb-elevation.md)).
 
 This replaces two earlier behaviours that produced stale numbers. The add flow used to
 compute the average as **gain ÷ length** from a *typed* gain — a different definition from
@@ -132,7 +132,7 @@ same page. Next is disabled until each step's minimum is met:
 
 | # | Step | Contents | Gate to advance |
 |---|---|---|---|
-| 1 | **Where** | map hosting the shared three-point editor (foot → summit → auto-routed track + steepest); an on-map **hint pill** at the top of the map (`#wz-mapHint`) that says the next tap (foot, then summit) and hides once both are set; the four-line how-to; keyless Photon place search with map-tap fallback; Undo + Reset; a read-only **measured** block under the map (`#wz-measured`: length, height gain, average gradient, steepest) filled live from the elevation profile as the line is drawn | foot + summit placed, and no routing or elevation-profile request in flight (`WZ.locPending`) |
+| 1 | **Where** | map hosting the shared three-point editor (foot → summit → auto-routed track + steepest); an on-map **hint pill** at the top of the map (`#wz-mapHint`) that says the next tap (foot, then summit) and hides once both are set; the four-line how-to; keyless Photon place search with map-tap fallback; Undo + Reset; the optional **+ Steepest point** control for the rider's own steepest point (`web/assets/contribute/rider-steep.js`); the similar-places list under the map ([README.md](README.md), Locate step); a read-only **measured** block under the map (`#wz-measured`: length, height gain, average gradient, steepest) filled live from the elevation profile as the line is drawn | foot + summit placed, and no routing or elevation-profile request in flight (`WZ.locPending`) |
 | 2 | **Details** | the registry fields for `ItemType::Climbs` (`CatalogFormRegistry`): **name** (required, injected by add mode), surface, road quality (`sq`), traffic (`tr`), effort, "anything to correct" (`correction`); and the add-missing extras water on climb, hairpins, shade / exposure, famous for, approach. Ascent, average gradient and steepest sustained are `CatalogField::derivedText`: displayed, never typed | name filled |
 | 3 | **Photos + links** | up to 6 photos through the shared uploader (consent modal on the first drop, quarantine scan, ids in the hidden `mediaIds` field, claimed by the submission at intake; [../photo-uploads.md](../photo-uploads.md) §4); links through the shared links editor | none (all optional); Next is held while a photo is uploading or checking (`cc:media-busy`) |
 | 4 | **Review** | echoes exactly the entered values ([README.md](README.md) P3); the foot/summit line is followed by the **measured** numbers (length, gain, average, steepest) so the review repeats what step 1 showed; the provenance line (curator queue; ODbL data / CC BY-SA media) | submit blocked while routing/profiling is pending |
@@ -269,10 +269,10 @@ gradient.** A rider marks the foot and the summit; everything else is derived.
 `maxGradient` is already `CatalogField::$derived` for that reason, and the rest
 follows when that spec is built.
 
-**Still latent:** the editor requests OSRM with `overview=full`, and
-`ClimbGeometry::MAX_POINTS` is 2000. A long enough climb could exceed it and be
-refused as `invalid_geometry` — now at least visibly. Not yet measured against a
-real long climb.
+**Point cap.** The editor routes through our own Valhalla behind
+`POST /contribute/route` and keeps the full road shape, and
+`ClimbGeometry::MAX_POINTS` is 8000. A climb whose shape exceeds it is refused
+as `invalid_geometry`, visibly.
 
 ### The wizard caught up with `/improve` (2026-08-03, history)
 
@@ -319,14 +319,18 @@ the `add_climb.*` keys are gone.
 - Surface
 - Traffic
 
-## Edit form  (`improve.html?item=cote-de-la-redoute`)
+## Edit form
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
 | Name | input | `[edit]` |
 | Surface | select(Smooth asphalt / Asphalt / Worn asphalt / Cobbles / Gravel) | `[OSM]` |
+| Road quality (`sq`) | select(Smooth / Good / Worn / Rough / Broken / loose) | `[edit]` |
+| Traffic (`tr`) | select(Traffic-free / Quiet / Moderate / Busy) | `[edit]` |
+| Ascent | read-only (measured from the DEM) | `[auto]` |
 | Average gradient (%) | read-only (measured from the DEM) | `[auto]` |
-| Max gradient (%) | read-only (off the steepest marker) | `[auto]` |
+| Steepest sustained (%) | read-only (the steepest 250 m window) | `[auto]` |
+| Effort | select(Steady / Challenging / Tough / Very steep) | `[edit]` |
 | Anything to correct? | textarea | `[edit]` |
 
 ### Add missing  (type-specific)
@@ -335,16 +339,17 @@ the `add_climb.*` keys are gone.
 | Water on climb? | select(Unknown / Yes / No) | `[tap]` |
 | Hairpins (count) | input | `[edit]` |
 | Shade / exposure | select(Unknown / Wooded / Partly shaded / Exposed) | `[edit]` |
+| Famous for | input | `[edit]` |
+| Approach | input | `[edit]` |
 
 ### Report a problem
-- Foot/top wrong · Gradient wrong · Surface changed · Duplicate
+Not built: per-type reasons are not offered. A rider reports a place through the content report ([../content-reports.md](../content-reports.md)).
 
 ### Add a photo
 Available on this type (CC BY-SA 4.0).
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
 ## Implementation
-- **Demo (`main` branch):** registry entry per climb in `atlas/demo/edit-items.js` (typed values).
 - **Production:** add on `/improve?type=climbs&mode=add`, edit on `/improve?item=<id>&type=N`,
   both `ImproveType` + `improve.js` mounting `climb-editor.js`; intake
   `CatalogContributionService::submitAdd()` (add) and the edit path, both validating the

@@ -3,8 +3,15 @@
 # Personal-data boundary — how the public API is kept away from account data
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
-· the enforcement stack is *designed, not yet built*; it ships with the first
-real data-API endpoint ([public-api.md §2](public-api.md)).
+· the data API is live: `/v1/map-config` and `/v1/search` answer today
+([public-api.md §2.2](public-api.md)). Of the enforcement stack, only the
+response half is built: closed-property DTOs pinned by exact-key tests (§5.2).
+The Postgres role and its grants (§2), the dedicated connection and its
+wrapper (§3), deptrac (§4) and the grant-drift test (§5.1) are deferred: there
+is no `cc_api_read` role, no `api_read` connection, no `PublicReadConnection`,
+no `deptrac.yaml`, no `developers/docker/db/init/03-api-role.sql` and no
+grant-drift test yet. Until they land, the live endpoints read through the
+default connection, and the known gaps are recorded in §1.4, §3.2 and §3.3.
 
 [public-api.md §1](public-api.md) states the policy: the API exposes the
 Commons layer only; the account layer — email, IP logs, password hashes,
@@ -41,7 +48,19 @@ The public data model of [public-api.md §1](public-api.md):
 
 `item`, `region`, `heat_point`, `coverage_poi`, `coverage_source`,
 `recommended_route`, `change_history`, `route_change_history`,
-`world_continent`, `world_country`, `world_subdivision`.
+`world_continent`, `world_country`, `world_subdivision`, `world_division`,
+`data_provider`, `coverage_count`, `commons_photo`, `wikidata_image`,
+`town_summary`, `link_verdict`, `catalog_change`, `translation_entry`,
+`release_tag`.
+
+The later rows are public by content: `world_division` holds Overture
+boundaries; `data_provider` is the provider registry the credits page and the
+map cite (names, licences, letters, rank; no person); `coverage_count` is kept
+counts of visible rows per bucket; `commons_photo`, `wikidata_image` and
+`town_summary` cache Wikimedia Commons, Wikidata and Wikipedia answers;
+`link_verdict` is a Safe Browsing verdict per URL; `catalog_change` is an
+append-only count per region, written by triggers; `translation_entry` is the
+English interface strings; `release_tag` is the list of release names.
 
 `change_history` / `route_change_history` are included **only if** audit review
 confirms they carry no free-text that could hold personal data beyond what the
@@ -51,7 +70,12 @@ class 1.2 and are served through a view.
 ### 1.2 Pseudonymous participation records — aggregate views only
 
 Tables whose rows link a user id to an opinion or action:
-`item_confirmation`, `route_vote`, `route_ride`, `route_suggestion`.
+`item_confirmation`, `route_vote`, `route_ride`, `route_suggestion`,
+`translation_overlay`.
+
+`translation_overlay` holds the live interface strings the site renders, but
+each row names the curator who approved it (`approved_by_id`), so a view
+without that column would serve the values.
 
 The API products need only the aggregates the site itself publishes
 (confirmation counts, vote totals, rode-it counts). The role gets **no grant on
@@ -71,10 +95,41 @@ public. **Not built until an endpoint needs it.**
 
 `users`, `user_message`, `reset_password_request`, `admin_action_log`,
 `curator_application`, `country_interest`, `submission`, `moderator_area`,
-`system_setting`, `doctrine_migration_versions`, `messenger_messages` (when
-present), `media_upload`, `consent_record`, `media_moderation_event`.
+`system_setting`, `doctrine_migration_versions`, `messenger_messages`,
+`media_upload`, `consent_record`, `media_moderation_event`,
+`contact_message`, `bug_report`, `bug_screenshot`, `content_report`,
+`curator_post`, `curator_post_image`, `curator_room_visit`,
+`catalog_finding`, `translation_proposal`, `data_provider_change`,
+`github_contributor`, `blog_post`, `coverage_run`, `coverage_run_step`.
 
-Notes on the less obvious rows:
+The class also holds site internals with no place in the dataset, whether
+or not they carry personal data: the default-deny grant (§2) means an
+unlisted table is simply out of reach. Notes on the less obvious rows:
+
+- **The support tables** (`contact_message`, `bug_report`, `bug_screenshot`,
+  `content_report`, [contact-and-support.md](contact-and-support.md),
+  [content-reports.md](content-reports.md)) hold sender addresses, free text,
+  salted IP hashes and screenshots served to curators only.
+- **The curator room and desks** (`curator_post`, `curator_post_image`,
+  `curator_room_visit`, `catalog_finding`) are moderation internals: authors,
+  decisions and notes.
+- **`translation_proposal`** is a rider's proposal with its submitter,
+  consent record and reviewer note, the translation counterpart of
+  `submission`. What is approved reaches `translation_overlay` (§1.2).
+- **`data_provider_change`** is the admin trail of provider edits with the
+  acting account (`changed_by`); the registry itself is `data_provider`
+  (§1.1).
+- **`github_contributor`** holds GitHub logins and, where GitHub shows one,
+  the profile email the contributor count merges with site accounts. The
+  site publishes only the count and the arrival graph.
+- **`blog_post`** is editorial content with drafts and an author link.
+  Published posts reach readers through the website, which is outside this
+  boundary (§6).
+- **`coverage_run`** and **`coverage_run_step`** are pipeline telemetry
+  (pipeline/coverage/tracker.py), not dataset.
+- **`messenger_messages`** is the Doctrine Messenger queue (the async
+  transport since 2026-09-21): serialized jobs such as uploads to scan and
+  pictures to check, not dataset.
 
 - **The three media tables** ([photo-uploads.md](photo-uploads.md)) are here,
   even though the photos themselves are public. What the API serves is the
@@ -122,6 +177,27 @@ API queries ([public-api.md §1](public-api.md)). Postgres row-level security
 remains available if an editorial state ever needs a hard guarantee, but it is
 not part of this design.
 
+### 1.4 What the live search reads today
+
+`/v1/search` (`App\Api\V1\PublicItemsProvider`) reads `item`, `region`,
+`recommended_route`, `change_history` and `data_provider`, all §1.1. It also
+reads two tables outside §1.1, which the grants of §2 must cover without a
+base-table grant when they land:
+
+- **`item_confirmation`** (§1.2), through the trust envelope
+  (`App\Catalog\ItemEvidenceResolver::selectSql()`): it counts the vouching
+  confirmations, asks whether a curator answered, and takes the latest
+  confirmation date. That fits an aggregate view such as
+  `api_item_confirmations(item_id, confirmed_count, by_curator,
+  last_confirmed_at)`.
+- **`item_confirmation`** and **`submission`** (§1.3) again, inside the
+  retirement filter (`App\Catalog\CoverageRetirement::untouchedOsmSql()`):
+  whether any confirmation, submission or `change_history` row touches the
+  item. That needs a retirement view or a stored "untouched OSM row" flag on
+  `item`, never a grant on either base table.
+
+Until then the endpoint reads them through the default connection (§3.2).
+
 ---
 
 ## 2. Layer 1 — the `cc_api_read` Postgres role
@@ -163,7 +239,9 @@ REVOKE ALL ON ALL TABLES IN SCHEMA public FROM cc_api_read;
 GRANT USAGE ON SCHEMA public TO cc_api_read;
 GRANT SELECT ON item, region, heat_point, coverage_poi, coverage_source,
   recommended_route, change_history, route_change_history,
-  world_continent, world_country, world_subdivision TO cc_api_read;
+  world_continent, world_country, world_subdivision, world_division,
+  data_provider, coverage_count, commons_photo, wikidata_image, town_summary,
+  link_verdict, catalog_change, translation_entry, release_tag TO cc_api_read;
 -- §1.2 aggregate views are granted here as they are created.
 ```
 
@@ -223,6 +301,11 @@ connection and exposes the few read methods the API queries need
 `iterateAssociative`). Every service in `App\Api\*` that reads data depends on
 this wrapper.
 
+**Known gap.** Neither the wrapper nor the `api_read` connection exists yet.
+`App\Api\V1\PublicItemsProvider`, the `/v1/search` read path, injects
+`Doctrine\DBAL\Connection` (the default, privileged connection) and runs its
+SQL there.
+
 The wrapper is deliberately boring — no query building, no caching, no
 cleverness. Its only job is to be **the one class in the codebase that holds
 the restricted connection**, so that layer 3 has a nameable thing to allow and
@@ -231,12 +314,24 @@ everything else to forbid.
 ### 3.3 Namespace rule
 
 All data-API serving code lives under **`App\Api\`** (controllers, DTOs,
-query services, the wrapper). The namespace starts empty: `ApiController` now
-holds only the `/health` probe, its `/api/db-check` sibling having been
-deleted as an unauthenticated information leak (2026-08-16 web review,
-finding 1). The namespace is the deptrac layer
+query services, the wrapper). The namespace is the deptrac layer
 boundary, so this is a structural rule, not a taste rule: API code outside
 `App\Api\` is invisible to layer 3.
+
+The namespace holds today:
+
+- `App\Api\ApiSurface` (web/src/Api/ApiSurface.php): counts the live and the
+  promised endpoints for the reference page;
+- `App\Api\V1\CategoryTable`: the rendering metadata `/v1/map-config` serves;
+- `App\Api\V1\PublicItemsProvider`: the `/v1/search` read path;
+- `App\Api\V1\Dto\ItemFeature` and `App\Api\V1\Dto\RouteFeature`: the
+  closed-property response DTOs (§5.2).
+
+**Known gap.** The controller that serves both endpoints,
+`App\Controller\Api\V1\PublicApiController`
+(web/src/Controller/Api/V1/PublicApiController.php), sits outside
+`App\Api\`, against this rule. `App\Controller\ApiController` holds only the `/health` probe, which is not
+data-API code.
 
 ---
 
@@ -329,14 +424,33 @@ a fixed list mirroring §1:
 
 ### 5.2 Response-contract test
 
-For every API endpoint (data-driven off the route collection under `/v1`):
-recursively walk the JSON response and fail on any key matching the denylist
-pattern (`email`, `password`, `totp`, `secret`, `token`, `ip`, `locale`,
-`base_point`, `base_place`, `deletion`, …). This is the only layer that can
-catch a **serialization** leak — e.g. a DTO accidentally embedding a full
-object — because layers 1–3 all sit below the serializer. The denylist lives
-in one test constant, extended whenever a new personal column is added to any
-entity.
+This is the only layer that can catch a **serialization** leak (a DTO
+accidentally embedding a full object, say), because layers 1 to 3 all sit
+below the serializer.
+
+**Built: exact keys per feature type.** Every `/v1/search` feature is built
+by a DTO with a closed property list, and the tests assert the exact,
+ordered list of `properties` keys, so any added key fails:
+
+- **Items** (`App\Api\V1\Dto\ItemFeature`): `id`, `letter`, `name`, `tier`,
+  `grade`, `custody`, `confirmations`, `last_confirmed`,
+  `last_seen_upstream`, `verified_by`, `region_id`. Asserted in
+  `tests/Api/PublicApiV1Test.php` and
+  `tests/Api/PublicItemsTrustEnvelopeTest.php`.
+- **Routes** (`App\Api\V1\Dto\RouteFeature`): `id`, `letter`, `name`,
+  `tier`, `distance_m`, `ascent_m`, `region_id`. Asserted in
+  `tests/Api/PublicApiV1Test.php`.
+
+An allowlist is stricter than a denylist: a key nobody thought to forbid
+still fails.
+
+**Not built: the denylist walk.** The design also calls for a data-driven
+test over every route under `/v1` that recursively walks each JSON response
+and fails on any key matching a denylist pattern (`email`, `password`,
+`totp`, `secret`, `token`, `ip`, `locale`, `base_point`, `base_place`,
+`deletion`, …), kept in one test constant and extended whenever a new
+personal column is added to any entity. No such test exists yet; it would
+also cover `/v1/map-config`, which has no DTO.
 
 ---
 
@@ -364,11 +478,14 @@ independently landable:
 1. Role + grants: init script, runbook note, grants migration, grant-drift
    test (§2, §5.1). *Landable before any API code exists.*
 2. `api_read` connection + `PublicReadConnection` + the `App\Api\` namespace
-   (§3). (The db-check controller this step was to move was deleted by the
-   2026-08-16 web review; the namespace starts empty.)
+   (§3). The namespace already holds the live endpoints' provider and DTOs;
+   this step moves `PublicItemsProvider` onto the wrapper and closes the
+   known gaps of §3.2 and §3.3.
 3. Deptrac dependency, `deptrac.yaml`, CI gate (§4).
 4. First real endpoint lands already inside the fence; response-contract test
-   comes with it (§5.2).
+   comes with it (§5.2). In practice `/v1/map-config` and `/v1/search`
+   shipped first, with the exact-key half of §5.2 only; steps 1 to 3 and the
+   denylist walk are still to do.
 
 ## 8. Open decisions (pending owner)
 

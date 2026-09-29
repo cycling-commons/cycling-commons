@@ -2,8 +2,8 @@
 
 # What the harvest did last night: /admin/coverage-runs
 
-Status: **agreed 2026-09-22, not built.** Option 1 of two, with the dropped-by-rule
-detail, chosen by the owner.
+Status: **built 2026-09-22** (`c9979adc5`). Option 1 of two, with the
+dropped-by-rule detail, chosen by the owner.
 
 ## 1. Why
 
@@ -34,9 +34,11 @@ this page reads them. Nothing new is measured.
 
 A `--routes` / `--surface` run opens its own row with one step,
 `<family>_extract` (with `--extract-only`) or `<family>_publish`, whose
-`detail` repeats the rebuilt countries. Inside the dispatcher those publish
-passes get the night's `--run-id`, so their steps land under the night's run
-and open no row. The pipeline writes these rows over two short connections, one
+`detail` repeats the rebuilt countries. Inside the dispatcher both the
+per-region `--extract-only` runs and the post-loop publish passes get the
+night's `--run-id`, so their steps land under the night's run and open no
+row; an extract that died before it could record its own step is recorded by
+the dispatcher instead (`tracker.has_step`), so none goes missing. The pipeline writes these rows over two short connections, one
 before and one after the build; a database that is down costs the history, not
 the tiles.
 
@@ -62,17 +64,18 @@ A failed step shows its `detail` (the exception text) in place of the numbers.
 
 ## 3. The one pipeline change: dropped points, per rule, per region
 
-Today `load_region` prints each rule's drop count and returns
-`LoadResult(inserted, previous)`. The tracker writes `detail = "previous N"`
-on the load step and the drop counts are lost with the log.
+Before this change `load_region` printed each rule's drop count and returned
+`LoadResult(inserted, previous)`; the tracker wrote `detail = "previous N"` on
+the load step and the drop counts were lost with the log.
 
-- `LoadResult` gains `dropped: dict[str, int]`, keyed by a short rule label:
+- `LoadResult` gained `dropped: dict[str, int]`
+  ([load.py](../../pipeline/coverage/load.py)), keyed by a short rule label:
   `name:P`, `name:Q`, `exclude:F:bicycle`, `exclude:Q:memorial`, `near_way`.
-  The print lines stay as they are.
-- The load step's `detail` becomes JSON:
+  The print lines stayed as they were.
+- The load step's `detail` is JSON:
   `{"previous": 1402118, "dropped": {"name:P": 1363, "near_way": 69}}`.
-  A `detail` that does not parse as JSON (rows from before this change) is
-  shown as the plain text it is.
+  `CoverageRunController::readLoadDetail()` parses it; a `detail` that does not
+  parse as JSON (rows from before this change) is shown as the plain text it is.
 - Tests: `test_load.py` asserts the dict for a fixture with known drops;
   `test_run.py` asserts the load step's detail is the JSON form.
 
@@ -81,8 +84,9 @@ on the load step and the drop counts are lost with the log.
 - `App\Controller\Admin\CoverageRunController`: two actions, both plain
   Doctrine DBAL queries (the tables have no entity and never will; the
   pipeline owns their shape). Registered in the EasyAdmin menu from
-  `DashboardController` under the existing operations group.
-- Two Twig templates under `templates/admin/coverage_runs/`.
+  `DashboardController` in the `admin.menu.system` section.
+- Two Twig templates under `templates/admin/coverage_runs/`, plus the shared
+  `_format.html.twig` partial.
 - Numbers are formatted in Twig (`number_format`, bytes to MB/GB, seconds to
   `12m03s`), nothing computed in the template beyond that.
 - Tests: `tests/Admin/CoverageRunsTest.php`: an admin sees a seeded run with its
@@ -94,8 +98,4 @@ on the load step and the drop counts are lost with the log.
 ## 5. Out of scope
 
 Retention (a night writes about 120 rows; years fit), editing, and
-re-running a region from the page. The dispatcher records each loaded
-region's routes and surface extract as steps of its run (`routes_extract`,
-`surface_extract`); the manual `--routes`/`--surface` runs and the two
-post-loop publish passes do not write the tracker. Each is a separate
-decision.
+re-running a region from the page. Each is a separate decision.

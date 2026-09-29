@@ -34,8 +34,8 @@ licence identifiers live in the template; only prose is translated
 The page has two halves and they are governed differently. Everything
 installable (packages, runtimes, images, fonts, vendored libraries) is covered
 by the marker contract and the gate in §3 to §7 of this document, and needs no
-further mechanism. The dataset half is hand-written today and becomes
-registry-generated when `App\Provider` lands. See §8.
+further mechanism. The dataset half is generated from the provider registry
+(`App\Provider`) since 2026-09-04. See §8.
 
 ## 2. The three tiers of credit
 
@@ -60,8 +60,10 @@ because a bare `*` tells them nothing.
 reworded only by going back to the upstream licence text. Removing the `*` is a
 licence decision, not a copy decision.
 
-The tier is placed by hand today. For generated dataset rows it will come from
-the registry's own required-or-courtesy flag, which is the right place for it:
+The tier is placed by hand on the hand-written rows. On the generated dataset
+rows it comes from the registry: the row's licence code
+(`LicenceObligation::requiresAttribution()`) or its `promoted` flag (§8.4.1),
+which is the right place for it:
 the person admitting the provider at `/moderate/providers` is the person
 reading its licence. The three tiers themselves do not change (§8).
 
@@ -108,15 +110,16 @@ A `manual:` marker is a human's word. It is never an orphan and never a
 missing entry, so it is also the way to defeat the gate. Reach for it only
 when there is genuinely no file to point at.
 
-Every dataset credit is `manual:` today, which is why the whole data section
-sits outside the gate's comparison. Those markers disappear with the rows they
-sit on when §8 lands; nothing else about the contract changes, because a
-generated row has no template to carry a marker in.
+Every dataset credit is a generated row (§8) and carries
+`data-pkg="manual:provider-<key>"`, `<key>` being the row's `provider_key`. In
+the template that marker is a Twig expression, which `check_credits.py`
+skips; on the rendered page it is a `manual:` marker. Either way the whole data
+section sits outside the gate's comparison.
 
 ## 4. The inventory: where "reality" is read from
 
 `tools/credits/check_credits.py` builds the set of things that must be credited
-from four places. All four are already sources of truth for something else, so
+from five places. All five are already sources of truth for something else, so
 none of them is a second list that can drift.
 
 | Source | Ids it yields | Notes |
@@ -193,17 +196,12 @@ changes when an upstream project moves its domain. `ci-credits.yml` therefore
 runs `--links` on a weekly schedule (`cron: '17 6 * * 1'`, UTC) as well as on
 pull requests, and the Monday run is the one that matters.
 
-**The weekly run is dormant until go-live, and this is not a bug to fix.**
-GitHub runs `schedule:` triggers from the **default branch only**. The public
-repository's default branch is `main`; this workflow lives on `symfony-base-clean`,
-which becomes `main` at go-live
-([go-live plan](../TODO.md)). Until that swap the `pull_request` and `push`
-triggers work normally and the cron simply never fires. Nothing needs
-installing on a host or in a developer's shell to make it work afterwards:
-GitHub schedules it, not us. Two GitHub behaviours worth knowing at that point:
-schedule times are UTC and are best-effort rather than exact, and GitHub
-disables scheduled workflows automatically in a repository with 60 days of no
-activity.
+GitHub runs `schedule:` triggers from the **default branch only**, which is
+`main`, and `ci-credits.yml` is on `main`. Nothing needs installing on a host or
+in a developer's shell: GitHub schedules it, not us. Two GitHub behaviours
+worth knowing: schedule times are UTC and are best-effort rather than exact,
+and GitHub disables scheduled workflows automatically in a repository with 60
+days of no activity.
 
 ## 6. Adding a dependency: the playbook
 
@@ -235,28 +233,30 @@ Stated so nobody reads a green run as a broader guarantee than it is.
 - **Prose accuracy.** Whether a row's sentence still describes what the
   dependency does is a review question, not a machine one.
 
-## 8. When the provider registry lands, datasets stop being hand-written
+## 8. Dataset rows are generated from the provider registry
 
-**Not built yet.** `App\Provider` does not exist at the time of writing. This
-section is the credits-page half of a contract owned by
-[data-provider-hierarchy.md](data-provider-hierarchy.md) §9 and §9.2, recorded
-here so the two documents cannot drift and so this page can be built against
-before the registry exists.
+**Built 2026-09-04** (`dc4d22355`): `App\Provider` (`web/src/Provider/`),
+`App\Twig\ProviderCreditsExtension`, and a loop over `credited_providers()` in
+`credits.html.twig`. This section is the credits-page half of a contract owned
+by [data-provider-hierarchy.md](data-provider-hierarchy.md) §9 and §9.2,
+recorded here so the two documents cannot drift.
 
 The page's software half is finished and needs nothing from this. Packages,
 runtimes, container images, fonts and vendored libraries are covered by the
 marker contract (§3) and the gate (§5). Nothing below changes any of it.
 
-The dataset half is what moves. Instead of a `.crow` per source written by hand
-in the template, the template calls one Twig function and loops:
+The dataset half is what moved. Instead of a `.crow` per source written by
+hand in the template, the template calls one Twig function and loops:
 
 ```
 credited_providers()      App\Twig\ProviderCreditsExtension
 ```
 
-It returns every enabled `data_provider` row that owes a credit, ordered for
-display, each carrying `name`, `full_name`, `homepage`, `licence`,
-`attribution`, and whether the credit is legally required or courtesy.
+It returns every enabled `data_provider` row, ordered by `name` and split into
+a `required` and a `courtesy` list (§8.4), each carrying `key`, `name`,
+`homepage`, `licence`, `attribution`, `creator` and the already-resolved
+sentence (§8.6). Every generated link carries
+`data-pkg="manual:provider-<key>"` (§3).
 
 **"Keep the old data as is" means no wording changes, not no migration.** This
 was misread once (2026-08-27) as "existing rows stay hand-written and the
@@ -279,21 +279,21 @@ which is the tell.
 
 Deleting a hand-written dataset row is not just deleting markup:
 
-- **Its `manual:` marker** goes with it. A generated row has no template to
-  carry a marker in, so the ids in §3 for datasets (`manual:openstreetmap-data`,
-  `manual:overture-divisions`, `manual:copernicus-dem` and the rest) simply
-  cease to exist. `manual:` never orphans, so the gate stays green either way,
-  which is exactly why this has to be done deliberately rather than left to a
-  failing check.
-- **Its required-notice `*`** stops being hand-placed and comes from the
-  registry's flag (§2). The wording of a required notice still may not be
+- **Its `manual:` marker** went with it. The hand-written dataset ids
+  (`manual:openstreetmap-data`, `manual:overture-divisions`,
+  `manual:copernicus-dem` and the rest) no longer exist; every generated row
+  carries `manual:provider-<key>` instead (§3). `manual:` never orphans, so the
+  gate stays green either way, which is exactly why this had to be done
+  deliberately rather than left to a failing check.
+- **Its required-notice `*`** is not hand-placed: it comes from the registry
+  (§2, §8.4.1). The wording of a required notice still may not be
   edited; it now lives in the registry's `attribution` field, and the same
   one-way-door rule applies to it there.
 - **Its licence chip changes language, deliberately.** The `lic_*` keys used
   only by data rows (`lic_open_data`, `lic_osm_extracts`, `lic_linked`,
   `lic_per_photo`) go orphan, because the registry supplies the licence label
   as an untranslated fact. A licence name is not prose. Accepted consequence,
-  not an oversight: the chip on `/fr/credits` will read "Open data" rather than
+  not an oversight: the chip on `/fr/credits` reads "Open data" rather than
   "Données ouvertes".
 - **Its translation key stays exactly where it is.** The one thing that does
   *not* move, stated because the obvious assumption is wrong: a generated row
@@ -301,11 +301,11 @@ Deleting a hand-written dataset row is not just deleting markup:
   rest alive and pointed at (§8.6). Deleting them would be a regression, not a
   cleanup, and [translations.md](translations.md) parity must still pass after
   the sweep.
-- **The parked rows go too.** Drinkwaterkaart.nl and Nationaal Georegister
-  currently sit inside Twig comments awaiting a decision. The owner's call
-  (2026-08-27) is that both are simply deleted by hand at the switchover: the
-  registry carries those sources afterwards, so there is nothing to unpark and
-  no decision left to make.
+- **The parked rows went too.** Drinkwaterkaart.nl and Nationaal Georegister
+  sat inside Twig comments awaiting a decision. The owner's call (2026-08-27)
+  was that both are deleted by hand at the switchover, and they were: the
+  registry carries those sources, so there is nothing to unpark and no
+  decision left to make.
 
 ### 8.3 The generated rows are their own group
 
@@ -369,6 +369,12 @@ this page therefore relies on:
 For the template this changes one line: a row is a `.crow` when the licence
 requires a notice **or** `promoted` is true, and a comma-run entry otherwise.
 
+As built, `ProviderCreditsExtension` puts a promoted row in the `required`
+list, and every row in that list renders with the `*` required-notice marker.
+A promoted public-domain row is therefore marked as carrying a required notice
+although its licence owes none.
+Open: whether a promoted row should get its `.crow` without the `*`.
+
 #### 8.4.2 Publisher and creator are different people
 
 `full_name` is who publishes. `creator` is who made the dataset, when that is
@@ -384,8 +390,8 @@ The Dutch taps are the case that proves it:
 | Registry it is served from | the Kadaster's Nationaal Georegister |
 
 A credit naming only the publisher credits the pipe rather than the person.
-That is exactly the mistake the current hand-written Nationaal Georegister row
-makes, and why that row is hidden right now rather than merely stale.
+That is exactly the mistake the hand-written Nationaal Georegister row made,
+and why that row was parked rather than shown.
 
 **Decided (owner, 2026-08-27): creator gets its own small line, in normal
 case.** Not the `.lic` chip. That chip is mono and uppercased, and pushing
@@ -413,14 +419,24 @@ Created by drinkwaterkaart.nl, published by RIVM
 PUBLIC DOMAIN MARK 1.0                         <- .lic chip
 ```
 
-That is the credit the current hand-written row fails to give, which is why it
-is hidden rather than merely stale.
+That is the credit the hand-written row failed to give, which is why it was
+parked rather than shown.
+
+**What is built** is smaller than the decided shape. The template appends
+`credits.made_by` (`'Dataset made by %creator%.'`) to the row's sentence,
+inside its `<p>`, whenever `creator` is set; it does not compare `creator`
+with `full_name` (the registry leaves `creator` NULL when the two are the same
+body), and it names no publisher, because `credited_providers()` does not pass
+`full_name` and the row's link text is `name`. Courtesy rows in the comma run
+show no creator.
+Open: whether to build the decided line (`credits.provider_by`, under the
+name, above the chip) or keep `credits.made_by` in the sentence.
 
 ### 8.5 Curator-entered text is the provider module's problem, not this page's
 
-Owner's call, 2026-08-27. Every string on `/credits` is developer-written
-today. `attribution` and `full_name` become curator-entered, which is a new
-escaping surface on a public page, and attribution strings frequently want a
+Owner's call, 2026-08-27. Every string on `/credits` was developer-written
+before the registry. Registry fields such as `attribution` are curator-entered,
+which is a new escaping surface on a public page, and attribution strings frequently want a
 link inside them.
 
 `App\Provider` owns validating and sanitising that on the way in. Entry is
@@ -466,21 +482,22 @@ already-resolved sentence. **The template renders and does not choose.**
 
 ### 8.7 The gate afterwards: one blind spot, one new check worth writing
 
-The gate reads the template. Generated rows are invisible to it, so on the day
-this lands the dataset half of the page leaves the gate's coverage entirely.
+The gate reads the template. Generated rows are invisible to it, so the
+dataset half of the page is outside the gate's coverage entirely.
 That is acceptable only because a different guarantee replaces it: the registry
 is the single source, so a dataset cannot be *uncredited* the way a package
 can.
 
-One new check becomes possible and is worth writing at that point:
+One new check becomes possible and is worth writing:
 
 > **DUPLICATE**: a hand-written `.crow` whose link host matches the `homepage`
 > of a provider returned by `credited_providers()`.
 
 That is §8.1's page-to-registry rule made mechanical. It guards the migration
 sweep, and then keeps guarding: any curator can later add a source the page
-still credits by hand, and the page then names it twice. It cannot be written
-before the registry exists, which is the only reason it is not in §5 already.
+still credits by hand, and the page then names it twice.
+Open: not written yet; `tools/credits/check_credits.py` has no DUPLICATE
+check, although the registry now exists.
 
 ### 8.8 The line: scheduled ingest is a provider, on demand is not
 

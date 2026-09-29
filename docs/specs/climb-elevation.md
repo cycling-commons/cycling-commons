@@ -902,7 +902,7 @@ is how the edit form is kept from offering a box for any of it.
 | `length` | great-circle length of the routed line |
 | `gain` | summit elevation − foot elevation |
 | `avgGradient` | **ascent only**: the sum of the climbing, over the length — see [§4b](#4b-average-gradient-counts-only-the-climbing) |
-| `maxGradient` | the **steepest 100 m** — see [§5](#5-the-steepest-ramp-is-found-not-placed) |
+| `maxGradient` | the **steepest 250 m** (the 95th-percentile window, `MAX_WINDOW_M`); see [§5](#5-the-steepest-ramp-is-found-not-placed) |
 | `grad` | per-bin gradients, bin width per [§3](#3-sampling-and-binning) |
 | `elev` | elevation at each bin edge, for the silhouette |
 | `binM` | the bin width in metres, so the chart can label itself |
@@ -1042,8 +1042,10 @@ charts cannot disagree about the same climb.
 
 ## 5. The steepest ramp is found, not placed
 
-`steepestWindow()` slides a **100 m** window along the profile and returns the
-maximum sustained gradient with its coordinate. **That is the default and only
+`steepestWindow()` slides a **250 m** window (`MAX_WINDOW_M`) along the profile
+at a fixed step, skips any window overlapping a tunnel or gallery, and returns
+the 95th-percentile window gradient (`STEEPEST_PERCENTILE`,
+[§2a](#2a-the-source)) with its coordinate. **That is the default and only
 behaviour**: the rider marks foot and summit, and the steepest ramp appears
 where the measurement puts it.
 
@@ -1062,7 +1064,7 @@ So there are two markers:
 
 | | placed by | means |
 |---|---|---|
-| **steepest 100 m** | us, automatically | the steepest sustained 100 m the DEM can see — comparable across every climb, and comparable with climb databases |
+| **steepest 250 m** | us, automatically | the steepest sustained 250 m the DEM can see, comparable across every climb |
 | **steepest point** | a rider, by hand | where the wall actually is, on a road they have ridden |
 
 Ours stays ours: derived on every redraw, never edited, and it is the figure the
@@ -1112,11 +1114,13 @@ position, with its percentage re-read from the profile at that point (already
 the behaviour in `climb-editor.js`). An automatic marker is re-derived whenever
 the line changes.
 
-**And it is labelled "steepest 100m", not "max gradient"** (owner, 2026-08-05).
-The name was doing damage the number could not fix: "max gradient" invites
-comparison with a **point** maximum, so Mur de Huy's famous ~26% — its steepest
-hairpin — read as a contradiction of our 19%, when the two simply measure
-different distances. Naming the window settles it, and it is why the figure
+**And it is labelled with its window ("steepest 250 m"), not "max gradient"**
+(owner, 2026-08-05, when the window was 100 m; the caption is built from
+`steepWindowM`, [§2a](#2a-the-source)). The name was doing damage the number
+could not fix: "max gradient" invites comparison with a **point** maximum, so
+Mur de Huy's famous ~26% (its steepest hairpin) read as a contradiction of
+our 19% (the 100 m figure then), when the two simply measure different
+distances. Naming the window settles it, and it is why the figure
 ships without a `~`: a tilde on a value whose measurement distance is stated is
 hedging about something that is not uncertain. The average ships plain for the
 same reason, which closes the accidental split
@@ -1153,9 +1157,15 @@ systematically gentler than every other source describing the same road, and a
 rider comparing us against climbfinder sees us understate a climb they know.
 Matching the convention is worth more than the marginal smoothing.
 
-It still is not the same number as the worst display bar. The bars are eleven
-equal slices of the *whole* climb, so on a 4 km climb each spans ~360 m and
-averages a short ramp flat; the marker is a fixed 100 m wherever it falls. Both
+**Superseded 2026-08-07: the window is 250 m** (`MAX_WINDOW_M`). 100 m is below
+GLO-30's four-cell floor, and on Alpine passes it published roof and gallery
+artifacts as ramps ([§2a](#2a-the-source)). The published figure can therefore
+read gentler than a database's steepest 100 m; the caption names the window,
+so a reader can see the two measure different distances.
+
+It still is not the same number as the worst display bar. The bars sit at fixed
+boundaries, their width from the [§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb)
+ladder; the marker is a fixed 250 m window wherever it falls. Both
 are true, they measure different distances, and the marker is the one that
 answers "how steep does this get".
 
@@ -1182,13 +1192,16 @@ sliding every ~25 m — and disagreed about the colour band on up to **11 of 21
 bars**, which is indefensible when they are two pictures of one profile.
 
 **A residual worth knowing about, not yet decided.** The steepest-ramp marker is
-still the true steepest 100 m at *any* offset, and a ramp that straddles a bin
-boundary is split between two bars. On Côte de Stockeu the marker reads 27% while
-sitting on a 14% bar, because its window spans two of them; the neighbouring bar
-reads 23%. Two ways out, and they trade against each other:
+a sliding window at *any* offset (250 m since 2026-08-07, [§5](#5-the-steepest-ramp-is-found-not-placed)),
+and a ramp that straddles a bin boundary is split between two bars. The worked
+example is historical, measured 2026-08-05 with the then 100 m window: on Côte
+de Stockeu the marker read 27% while sitting on a 14% bar, because its window
+spanned two of them; the neighbouring bar read 23%. Two ways out, and they
+trade against each other:
 
-- **Publish the sliding maximum** (today). Truer to the road — 27% really is
-  there over 100 m — but not verifiable from the chart a reader is looking at.
+- **Publish the sliding window** (today). Truer to the road (in the example,
+  27% really was there over 100 m), but not verifiable from the chart a reader
+  is looking at.
 - **Publish the steepest bar.** Verifiable by eye and always consistent with the
   marker's position, at the cost of understating a ramp that happens to straddle
   a boundary: Stockeu would read 23% rather than 27%.

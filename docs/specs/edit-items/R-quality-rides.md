@@ -154,6 +154,8 @@ re-propose.
   tabular math — no Python pipeline involvement). The item
   `Submission`/`ModerationService` pipeline is **not** used for routes.
 - **Demo-era artifacts** (shared `ride` registry entry in
-  `atlas/demo/edit-items.js`, the six fixture loops) are historical; the
-  Symfony `CatalogFormRegistry::for(QualityRides)` field set now backs the
-  proposal + curator forms, not a rider improve form.
+  `atlas/demo/edit-items.js`, the six fixture loops) are historical. The
+  Symfony `CatalogFormRegistry::for(QualityRides)` field set backs no form: it
+  feeds the drawer's display rows (`CatalogSchemaProvider::displayFields()`).
+  The proposal and curator forms are built from `RouteMetadata` through
+  `RouteMetadataFields` (`ProposeRouteType`, `RouteEditType`).

@@ -20,7 +20,8 @@ are owned elsewhere and cross-linked:
   [osm-data-architecture.md §7](osm-data-architecture.md).
 - **Account/Commons data boundary** (what the API may never expose):
   [security-architecture.md](security-architecture.md),
-  [account-and-auth.md](account-and-auth.md).
+  [account-and-auth.md](account-and-auth.md); its enforcement is owned by
+  [public-api-personal-data-boundary.md](public-api-personal-data-boundary.md).
 
 ---
 
@@ -101,6 +102,18 @@ There are exactly two sanctioned ways to obtain Commons data. Both are
 non-scraping; scraping the site/tiles/endpoints outside these remains prohibited
 (osm-data-architecture.md §7).
 
+**Status today.** Neither channel exists in the form below yet. What is live
+is a free, unkeyed, read-only proof of concept of the API
+([public-api.md §2.2](public-api.md)): `/v1/map-config` and `/v1/search`,
+declared `security: []` in `web/public/api/openapi.yaml`, open to anonymous
+callers (`^/v1/` is `PUBLIC_ACCESS` in `web/config/packages/security.yaml`)
+and throttled per IP address to 120 requests a minute (the `public_api_read`
+limiter in `web/config/packages/rate_limiter.yaml`). `/v1/search` already
+answers a worldwide name search (`q`), adds routes on request
+(`routes=include`) and gives each hit its region's public slug
+(`region_id`). The bulk export (§3.1), API keys and quota tiers (§3.2, §4)
+remain proposed.
+
 ### 3.1 Periodic bulk export: free, open, ODbL
 
 A published, downloadable snapshot of the non-personal Commons dataset (our
@@ -121,7 +134,8 @@ The live, always-fresh service. Response shape and access terms are owned by
 osm-data-architecture.md §7; this doc owns the **quota tiers and pricing**
 (§4). Freshness is backed by materialize-on-edit
 ([osm-data-architecture.md §6](osm-data-architecture.md)). Coverage tiles ride
-existing PMTiles/CDN infra.
+existing PMTiles/CDN infra. *Proposed*: the live API has no keys or quotas
+yet, only the per-IP limit of the proof of concept (§3).
 
 ## 4. Pricing model: metered quota tiers *(proposed)*
 
@@ -150,7 +164,8 @@ data itself (the periodic dump is always free and open, §3.1).
 
 We do **not** court big platforms. No outbound BD, no design-partner program, no
 sales team. Publish the free dump, ship a self-serve keyed API with quota tiers,
-and let consumers find it. This matches a small team and is the owner's stated
+and let consumers find it. (Today only the unkeyed proof of concept is live,
+§3.) This matches a small team and is the owner's stated
 intention. Inbound commercial use is welcome on the standard tiers; it is not
 solicited.
 
@@ -194,7 +209,10 @@ account layer: email, IP logs, password hashes, moderation internals. The
 Commons dataset is non-personal, but the platform holds personal data at the
 account level; the API boundary is where that separation is enforced. See
 [security-architecture.md](security-architecture.md) and
-[account-and-auth.md](account-and-auth.md).
+[account-and-auth.md](account-and-auth.md);
+[public-api-personal-data-boundary.md](public-api-personal-data-boundary.md)
+owns the enforcement (grants, connection, deptrac, tests) and records which
+parts are built.
 
 ## 9. Why a commercial consumer (e.g. RideWithGPS) is not a threat
 

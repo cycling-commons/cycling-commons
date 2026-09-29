@@ -15,8 +15,9 @@ Written 2026-08-11 from settled infrastructure decisions. The hosting shape
 below is given, not proposed.
 
 **Build state (2026-08-16): the whole quarantine is LIVE.** The async tier
-exists (Messenger, a Redis-stream `async` transport, a `doctrine://` failure
-transport, in-memory in test); the dev stack runs `worker` + `clamav`
+exists (Messenger, an `async` transport on the app's own Postgres,
+`doctrine://` since 2026-09-21, a `doctrine://` failure transport, in-memory in
+test); the dev stack runs `worker` + `clamav`
 containers and bootstraps the private bucket (`cc-media-private`, NO anonymous
 policy); the scanner is built and pinned both ways (`App\Media\Scan\ClamAvScanner`,
 fail-closed semantics, EICAR proven live against the
@@ -72,7 +73,7 @@ the provider's policy support for source conditions is verified).
 
 | Bucket (shape, not the deployed name) | Access | Holds |
 |---|---|---|
-| one private bucket per environment | private | quarantine (unscanned bytes) + clean originals |
+| one private bucket per environment | private | quarantine (unscanned bytes) only (§2.2) |
 | one public bucket per shard per environment, numbered | anonymous-read via proxy | published derivatives only |
 
 Each environment owns its own buckets (owner 2026-08-18, superseding the
@@ -186,7 +187,7 @@ as irreversible, which the disposal path in `photo-uploads.md` §6 already does.
 browser ──► web tier ──► private bucket            worker ──► public bucket
             (validate)   photos/quarantine/…       (scan, re-encode)  published/…
                  │                                   ▲
-                 └──────── message (Redis) ──────────┘
+                 └──────── message (Postgres) ───────┘
 ```
 
 1. **Web tier** does only what it can do safely: authenticate, check consent,
@@ -195,9 +196,9 @@ browser ──► web tier ──► private bucket            worker ──► 
    pending, and dispatch a message. It never decodes the image and never
    publishes anything.
 2. **Worker** consumes the message, streams the object to `clamd` (INSTREAM),
-   and only then decodes and re-encodes it into the derivative sizes, writes
-   those to the public bucket, stores the clean original in the private bucket,
-   and marks the photo ready.
+   and only then decodes and re-encodes it into the variants (`orig`, `lg`,
+   `sm`: `MediaStorage::VARIANTS`), writes all three to the public bucket,
+   deletes the quarantine object, and marks the photo ready.
 
 **The release gate is physical, not a flag.** A photo is published because its
 derivatives exist in the public bucket, and they exist because the worker put
@@ -217,7 +218,20 @@ needs the `clamav` sidecar (dev-environment.md) or a
 `clamscan` binary to accept an upload. The same rule holds for every other
 door a file comes in by: Wikimedia Commons photos (`FetchCommonsPhotoHandler`
 marks the file failed, `scanner_unavailable`) and bug-report and curator-room
-pictures (`ScreenshotStore`, contact-and-support.md).
+pictures, below.
+
+**Bug-report and curator-room pictures** take the same boundary on a smaller
+scale (since 2026-09-27, `Version20260927140000`). The web host keeps the raw
+bytes in the picture's own row (`bug_screenshot`, `curator_post_image`) as
+`pending`, never served, and dispatches `CheckPicture` to the `async`
+transport. On the worker `CheckPictureHandler` runs them through
+`ScreenshotStore::render()`: ClamAV first, then the decode and a fresh drawing.
+A drawing marks the picture `ready` and the raw bytes are gone; an infected,
+unreadable or oversized file is `refused`, its bytes dropped and only the
+reason kept for the curator. With the scanner down the handler throws, so
+Messenger retries; after the last retry the message waits in the `failed`
+transport and the picture stays pending until it is re-dispatched
+([contact-and-support.md §6](contact-and-support.md)).
 
 ### 3.2 Decoding belongs on the worker too
 
@@ -227,19 +241,21 @@ But the decoder is itself the attack surface — a decompression bomb is a few
 hundred kilobytes of valid PNG that expands to gigabytes
 (`PhotoProcessor`'s pixel cap exists for exactly this).
 
-Today that decode runs **in the web request**. Under this architecture it moves
-to the worker, which means a hostile image exhausts a worker that is designed to
-be restarted, rather than a web host that is serving pages. The existing
+That decode runs **on the worker** (`ScanAndReleaseUploadHandler`), never in
+the web request, so a hostile image exhausts a worker that is designed to be
+restarted, rather than a web host that is serving pages. The existing
 `ImageMagick` hardening stays as it is; note the policy gotchas already recorded
 in `dev-environment.md`.
 
-### 3.3 Consequence for the rider: upload becomes asynchronous
+### 3.3 Consequence for the rider: upload is asynchronous
 
-This is a real product change and not an implementation detail. Today the
-response to an upload carries the finished URLs. Afterwards it carries "we have
-it, it is being checked", and the wizard has to show a pending state and resolve
-it later. `photo-uploads.md` §4's wizard contract needs a matching revision when
-this is built — see the plan.
+This is a real product change and not an implementation detail. The response
+to an upload does not carry finished URLs: it says "we have it, it is being
+checked" (`202`, `pending_scan`), the finished URLs are built on the worker,
+and the wizard shows a pending state that it resolves by polling, with a
+30-second patience limit (`PATIENCE_MS` in `assets/contribute/media-upload.js`,
+mirrored by `ScanAndReleaseUploadHandler::PATIENCE_S`). The wizard contract is
+[photo-uploads.md §4](photo-uploads.md).
 
 ## 4. Keys are immutable
 
@@ -250,6 +266,7 @@ the bucket and wrong on every screen, for as long as the cache decides.
 So a published object's key never changes meaning:
 
 ```
+published/<uuid>/<rev>/orig.webp
 published/<uuid>/<rev>/lg.webp
 published/<uuid>/<rev>/sm.webp
 ```
@@ -305,7 +322,7 @@ Hetzner does not want high request rates hitting object storage directly.
 
 ## 6. Build ledger
 
-Recorded so the history is not lost. Verified 2026-08-11, updated 2026-08-16.
+Recorded so the history is not lost. Verified 2026-08-11, updated 2026-09-29.
 
 | | |
 |---|---|
@@ -315,9 +332,10 @@ Recorded so the history is not lost. Verified 2026-08-11, updated 2026-08-16.
 | Re-encode to WebP, EXIF stripped, pixel + dimension caps | **built** (`PhotoProcessor`, now on the worker) |
 | Consent, moderation, takedown, disposal, GC | **built** (`photo-uploads.md`) |
 | Virus scanning | **built** 2026-08-16 (`ClamAvScanner`, `clamav` sidecar) |
-| Async workers | **built** 2026-08-16 (Messenger + Redis stream + `worker` container) |
+| Async workers | **built** 2026-08-16 (Messenger + `worker` container); transport moved from a Redis stream to Postgres (`doctrine://`) 2026-09-21 |
 | Private bucket / quarantine | **built** 2026-08-16 (`media.storage.private`, `quarantine/<uuid>`) |
 | Release gate on the worker | **built** 2026-08-16 (`ScanAndReleaseUploadHandler`) |
+| Bug-report and curator-room pictures checked on the worker | **built** 2026-09-27 (`CheckPictureHandler`, `Version20260927140000`) |
 | Immutable keys | **built** 2026-08-16 (`published/<uuid>/<rev>/`, `app:media:backfill-keys`) |
 | Wizard pending state | **built** 2026-08-16 (optimistic preview, 30 s patience limit) |
 | Clean-original archive | **deliberately not built** - see §2.2 |
