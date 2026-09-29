@@ -57,15 +57,16 @@ is written with its **west value greater than its east value**, and is read the 
 everything else. Splitting into two boxes was the alternative; it keeps every comparison trivially
 simple, at the cost of changing the shape of the data every consumer reads.
 
-The server emits that shape:
+The database stores that shape beside each region's outline, as generated columns it computes
+whenever an outline is written, and `web/src/Catalog/RegionRegistryProvider.php` reads the four
+numbers back:
 
-<!-- CODE-FROM web/src/Catalog/RegionRegistryProvider.php -->
+<!-- CODE-FROM web/migrations/Version20260928200000.php -->
 ```php
-                    CASE WHEN ST_XMax(geom) - ST_XMin(geom) > 180
-                         THEN CASE WHEN ST_XMin(ST_ShiftLongitude(geom)) > 180
-                                   THEN ST_XMin(ST_ShiftLongitude(geom)) - 360
-                                   ELSE ST_XMin(ST_ShiftLongitude(geom)) END
-                         ELSE ST_XMin(geom) END AS w,
+        $shifted = static fn (string $fn): string => "CASE WHEN {$fn}(ST_ShiftLongitude(geom)) > 180 THEN {$fn}(ST_ShiftLongitude(geom)) - 360 ELSE {$fn}(ST_ShiftLongitude(geom)) END";
+        $seam = 'ST_XMax(geom) - ST_XMin(geom) > 180';
+        $this->addSql("ALTER TABLE region
+            ADD COLUMN bbox_w DOUBLE PRECISION GENERATED ALWAYS AS (CASE WHEN {$seam} THEN {$shifted('ST_XMin')} ELSE ST_XMin(geom) END) STORED,
 ```
 
 `ST_ShiftLongitude` is the normalisation described above, into a 0–360° range where the seam is not
