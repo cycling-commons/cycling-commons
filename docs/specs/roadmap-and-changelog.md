@@ -69,6 +69,14 @@ added after a deploy is still right, and the footer shows it from the next
 deploy on. `REVISION` and `APP_BUILD_VERSION` remain the deployment fallbacks in that
 order.
 
+**`APP_BUILD_VERSION` lives in `web/.env` alone.** Staging runs each release
+before production, on the same tagged commit, so the two environments never
+rightly name different versions, and one value means one edit per release.
+`ReleaseVersionDriftTest` asserts that `.env` names the version
+`ReleaseNotes::RELEASES[0]` announces, and that `.env.staging`, `.env.prod` and
+`.env.test` carry no copy of their own. A host's `.env.local` could still
+override it; nothing in the deploy needs to.
+
 ## 4. The release list
 
 A **release** list, not a marketing list, and the difference bounds what may

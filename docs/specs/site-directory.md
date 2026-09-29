@@ -219,9 +219,10 @@ rule between the three.
   carries no `.git`, only the `REVISION` file the deploy writes, so
   `git describe` cannot name the tag there. `BuildVersion` then shows, in
   order: a `VERSION` file beside `REVISION` (the deploy's `git describe`,
-  taken before `.git` is stripped), else `APP_BUILD_VERSION` from the
-  environment file (`.env.staging`, `.env.prod`; bumped in the commit that
-  gets the tag), else the first twelve characters of the commit. The commit
+  taken before `.git` is stripped), else `APP_BUILD_VERSION` from `.env`
+  (one value for every environment, bumped in the commit that gets the tag;
+  see `roadmap-and-changelog.md §3`), else the first twelve characters of
+  the commit. The commit
   behind the link is always `REVISION`'s, so the label can be stale but the
   offer cannot point at the wrong code. `tests/Service/BuildVersionTest.php`
   pins each rung.

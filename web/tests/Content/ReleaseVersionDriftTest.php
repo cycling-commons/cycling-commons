@@ -12,10 +12,10 @@ use PHPUnit\Framework\TestCase;
 /**
  * The version a release announces and the version it stamps must agree.
  *
- * A release is four edits in four places: the changelog entry, the git tag, and
- * APP_BUILD_VERSION in each committed per-environment file. On 2026-09-22 three
- * of the four were done - `.env.prod` kept the previous release's number - and
- * nothing noticed, because nothing compares them. That is what this is for.
+ * A release names its version in three places: the changelog entry, the git
+ * tag, and APP_BUILD_VERSION in `.env`. The stamp lives in `.env` alone because
+ * staging runs each release before production, on the same tagged commit, so
+ * the two never rightly differ. Nothing else compares these three.
  *
  * It reads the committed placeholder files only, never a `.local` override, and
  * asserts on one extracted line rather than on file contents.
@@ -24,8 +24,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class ReleaseVersionDriftTest extends TestCase
 {
-    /** The committed files that stamp the build. `.env` holds the empty default. */
-    private const array STAMPED_FILES = ['.env.prod', '.env.staging'];
+    /** Committed environment files that leave the stamp to `.env`. */
+    private const array UNSTAMPED_FILES = ['.env.prod', '.env.staging', '.env.test'];
 
     private static function webDir(): string
     {
@@ -47,34 +47,36 @@ final class ReleaseVersionDriftTest extends TestCase
         return 1 === $matched ? trim($m[1], " \t\"'") : null;
     }
 
-    public function testEveryEnvironmentStampsTheVersionTheChangelogAnnounces(): void
+    public function testTheStampNamesTheVersionTheChangelogAnnounces(): void
     {
         $announced = ReleaseNotes::RELEASES[0]['version'];
 
-        foreach (self::STAMPED_FILES as $file) {
-            self::assertSame(
-                'v'.$announced,
-                self::stampedVersion($file),
-                \sprintf(
-                    '%s stamps a different release than the changelog announces (%s). '
-                    .'Update APP_BUILD_VERSION there, or the footer and /humans.txt '
-                    .'will name a release these notes do not describe.',
-                    $file,
-                    $announced,
-                ),
-            );
-        }
+        self::assertSame(
+            'v'.$announced,
+            self::stampedVersion('.env'),
+            \sprintf(
+                '.env stamps a different release than the changelog announces (%s). '
+                .'Update APP_BUILD_VERSION there, or the footer and /humans.txt '
+                .'will name a release these notes do not describe.',
+                $announced,
+            ),
+        );
     }
 
     /**
-     * The base file must stay empty, so the per-environment files decide.
+     * No environment file carries its own copy.
      *
-     * A value here would be inherited by every environment that forgot to set
-     * its own, which is how a stale number spreads quietly.
+     * A second copy is a second place to forget at release time, which is how
+     * a stale number reaches one environment quietly.
      */
-    public function testTheBaseEnvFileLeavesTheStampToEachEnvironment(): void
+    public function testNoEnvironmentFileOverridesTheStamp(): void
     {
-        self::assertSame('', self::stampedVersion('.env'));
+        foreach (self::UNSTAMPED_FILES as $file) {
+            self::assertNull(
+                self::stampedVersion($file),
+                $file.' sets APP_BUILD_VERSION; the release name belongs in .env alone.',
+            );
+        }
     }
 
     /** A release is only announced once; two entries with one number is a copy-paste. */
