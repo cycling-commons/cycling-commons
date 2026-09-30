@@ -9,6 +9,7 @@ namespace App\Tests\Support;
 use App\Entity\User;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
+use App\Moderation\DeskSeen;
 use App\Support\ContentReportService;
 use App\Support\ReportGround;
 use App\Support\ReportStatus;
@@ -150,6 +151,7 @@ final class ReportMailReplyToTest extends WebTestCase
             $container->get(ClockInterface::class),
             $container->get(MediaTakedownService::class),
             $container->get(MediaEscalationService::class),
+            $container->get(DeskSeen::class),
             'test-secret',
             'noreply@example.test',
             '',

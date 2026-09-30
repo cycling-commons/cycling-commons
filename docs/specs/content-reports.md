@@ -328,6 +328,33 @@ curator may restore the content from there. Nothing is automated: the "put it
 back after 14 days unless sued" clock is a US DMCA mechanism we do not run
 (legal-sources.md). Template `support/report_answer.html.twig`.
 
+**The answer reopens the report** (2026-09-30). The page tells the author "we
+will tell you what was decided", so the answer is not only stored
+(`ContentReportService::answer()`):
+
+* The report goes back to `open`: on the desk's default Open view, on the desk
+  badge, and carrying the unseen bar for every curator, including whoever
+  decided it the first time (`DeskSeen::forget()`, moderation-and-contribution.md
+  §5.2f). The earlier note and decision time stay on the row until the next
+  decision replaces them; the reporter's address is kept, since the 90-day
+  purge (§10) counts only from a decision on a decided report.
+* The detail page shows the answer under "What the author answered" and says
+  that the decision is mailed to both sides.
+* **The next decision mails the claimant and the author.** The claimant gets
+  the §6 decision mail as for every decision, with a line saying the author
+  answered and, on Looked at, nothing wrong, that what was removed can come
+  back. The author gets `emails/report_answer_decided.html.twig`
+  (`ContentReportService::tellAuthorTheOutcome()`), for every decision recorded
+  after the answer; the statement of reasons is not sent a second time.
+* **Upheld again needs nothing left to remove.** Upheld on a photo already
+  removed is refused everywhere else (§9); on an answered report it is the
+  claim standing, since the first Upheld is what removed the photo. The photo
+  cannot be restored: its files were deleted, so Looked at, nothing wrong tells
+  the author to upload it again.
+* The answer page stays readable for its author once the report is open again.
+
+Pinned by `CounterNoticeTest`.
+
 ## 8. Resolving a target
 
 `App\Support\ReportResolver` turns a report into three things: a label, a link,
@@ -348,7 +375,8 @@ whichever curator is away.
 An open or in-progress report this curator has not opened carries the unseen
 bar ([moderation-and-contribution.md §5.2f](moderation-and-contribution.md))
 until its page loads for them. Another curator opening it leaves the bar on for
-everyone else; deciding it takes it off for all.
+everyone else; deciding it takes it off for all. An author's answer to an
+upheld copyright claim reopens it and puts the bar back on for everybody (§7).
 
 Unfiltered means **open**, the same default the bugs desk and the inbox use;
 open is the two waiting states together (`ReportStatus::open()`). Ordered
@@ -517,7 +545,9 @@ it on the same clock. Pinned by `ReportContactRetentionTest` and
 * **Appeals are by email**, not a form. Both decision emails say "reply to this
   email with the reference", and the reply goes to `cc.support.public_email`
   (content-reports.md §6). A structured appeal surface is worth building when
-  there is enough volume to need one, and not before.
+  there is enough volume to need one, and not before. The one form is the
+  author's answer to an upheld copyright claim (§7), which reopens the report on
+  the desk and gets both sides a mail when it is decided again.
 * **Escalate exists for photo reports only.** A report that a place, a route,
   a region or town text, a profile name or a message is illegal content has no
   legal hold to go under: the hold is built for `media_upload` and

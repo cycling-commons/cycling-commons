@@ -5263,6 +5263,7 @@ report:
     field_note: 'What you decided, and why'
     field_decided: 'Decided'
     field_counter: 'What the author answered'
+    counter_reopened: 'The author answered the claim, which put this report back on the desk. Your decision is mailed to the claimant and to the author.'
     field_author_told: 'Author told'
     told_yes: 'Yes, once'
     told_no: 'Not yet'

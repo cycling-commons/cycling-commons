@@ -5242,6 +5242,7 @@ report:
     field_note: 'Was Sie entschieden haben, und warum'
     field_decided: 'Entschieden'
     field_counter: 'Was die Person geantwortet hat'
+    counter_reopened: 'Die Person, die es hinzugefügt hat, hat auf den Anspruch geantwortet, und damit liegt diese Meldung wieder auf dem Desk. Ihre Entscheidung geht per E-Mail an die anspruchstellende Person und an die Person, die es hinzugefügt hat.'
     field_author_told: 'Autor informiert'
     told_yes: 'Ja, einmal'
     told_no: 'Noch nicht'

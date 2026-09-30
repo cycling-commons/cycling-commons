@@ -1698,6 +1698,12 @@ asks it the same way; no template decides.
 **Per reader, and only by opening.** Loading a list never marks anything, and
 one curator opening an item leaves it unopened for every other curator, until
 the item is dealt with.
+
+**Waiting again means unopened again.** An item that becomes waiting work after
+it was dealt with carries the bar for every curator once more, including those
+who opened it the first time: `DeskSeen::forget()` deletes its
+`moderation_seen` rows. One kind does this today: a content report whose author
+answers an upheld copyright claim (content-reports.md §7).
 Messages and room posts keep their own read state (`user_message.read_at`,
 `curator_post_read`). Every desk item is recorded in one table:
 

@@ -239,6 +239,10 @@ final class ModerateReportsController extends AbstractController
         if ($request->request->getBoolean('tell_author') && $author instanceof User) {
             $this->reports->tellAuthor($report, $author);
         }
+        // An author who answered the claim was promised the decision.
+        if ($report->hasCounterNotice() && $author instanceof User) {
+            $this->reports->tellAuthorTheOutcome($report, $author);
+        }
 
         $this->addFlash('notice', 'report.desk.flash_saved');
 

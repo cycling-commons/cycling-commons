@@ -16,7 +16,6 @@ use App\Support\ReportGround;
 use App\Support\ReportResolver;
 use App\Support\ReportTarget;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -62,7 +61,6 @@ final class ContentReportController extends AbstractController
         private readonly RateLimiterFactory $mediaReportUrgentLimiter,
         private readonly EntityManagerInterface $em,
         private readonly ReportResolver $resolver,
-        private readonly ClockInterface $clock,
         private readonly ProofOfWork $proofOfWork,
         private readonly UrgentWithholdBreaker $breaker,
     ) {
@@ -77,7 +75,10 @@ final class ContentReportController extends AbstractController
      * of who they are than any token in a mailed URL.
      *
      * Only for a copyright report, only when it was upheld, only for the person
-     * who wrote the thing, and only while no answer has been given yet.
+     * who wrote the thing, and only while no answer has been given yet. The
+     * answer puts the report back on the Reports desk
+     * ({@see ContentReportService::answer()}); the author can still read the
+     * page afterwards, whatever the report's status.
      */
     #[Route('/report/{id}/answer', name: 'content_report_answer', methods: ['GET', 'POST'], requirements: ['id' => '[0-9a-f-]{36}'])]
     #[IsGranted('ROLE_USER')]
@@ -92,7 +93,7 @@ final class ContentReportController extends AbstractController
         $resolved = $this->resolver->resolve($report);
         $author = $resolved['author'];
         if (!$report->getGround()->needsOwnershipProof()
-            || !$report->getStatus()->owesStatementOfReasons()
+            || (!$report->getStatus()->owesStatementOfReasons() && !$report->hasCounterNotice())
             || !$author instanceof User
             || $author->getId() !== $user->getId()
         ) {
@@ -116,8 +117,7 @@ final class ContentReportController extends AbstractController
                 ], new Response('', Response::HTTP_UNPROCESSABLE_ENTITY));
             }
 
-            $report->recordCounterNotice(mb_substr($text, 0, ContentReportService::REASON_MAX), $this->clock->now());
-            $this->em->flush();
+            $this->reports->answer($report, $text);
             $done = true;
         }
 

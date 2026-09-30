@@ -5233,6 +5233,7 @@ report:
     field_reason: 'Ce qu''a dit la personne'
     field_decided: 'Décidé le'
     field_counter: 'Ce que l''auteur a répondu'
+    counter_reopened: 'L''auteur a répondu à la réclamation, ce qui a remis ce signalement sur le bureau. Votre décision est envoyée par e-mail au réclamant et à l''auteur.'
     field_note: 'Ce que vous avez décidé, et pourquoi'
     field_author_told: 'Auteur prévenu'
     told_yes: 'Oui, une fois'

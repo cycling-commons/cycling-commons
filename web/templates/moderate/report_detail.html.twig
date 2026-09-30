@@ -124,6 +124,11 @@
       <input type="hidden" name="_token" value="{{ csrf_token('report-desk-decide') }}">
 
       <p class="warn">{{ 'report.desk.act_elsewhere'|trans }}</p>
+      {% if report.hasCounterNotice %}
+        {# The answer reopened the report, and the author was promised the
+           decision (content-reports.md §7). #}
+        <p class="warn">{{ 'report.desk.counter_reopened'|trans }}</p>
+      {% endif %}
 
       <label for="d-status">{{ 'support.inbox.set_status'|trans }}</label>
       <select id="d-status" name="status"{{ status_errors ? ' aria-describedby="d-status-error"' : '' }}>

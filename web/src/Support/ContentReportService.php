@@ -11,6 +11,8 @@ use App\Media\Entity\MediaUpload;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\MediaTakedownSource;
+use App\Moderation\DeskSeen;
+use App\Moderation\SeenSubject;
 use App\Security\PseudonymousKey;
 use App\Support\Entity\ContentReport;
 use Doctrine\ORM\EntityManagerInterface;
@@ -58,6 +60,8 @@ final class ContentReportService
         // Escalating from the reports desk is the same act as on every other
         // desk, so it is the same service (photo-uploads.md §6d).
         private readonly MediaEscalationService $escalations,
+        // An answered claim is waiting work again, for every curator.
+        private readonly DeskSeen $seen,
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
         // The no-reply sender every support mail uses (support.yaml).
@@ -205,16 +209,30 @@ final class ContentReportService
 
         $upload = $this->photoOf($report);
         if (null === $upload) {
-            // Already gone: Moot is what is left, and Upheld would remove nothing.
-            return ReportStatus::Upheld === $status ? 'report.desk.refused_nothing_to_remove' : null;
+            // Already gone: Moot is what is left, and Upheld would remove
+            // nothing, unless this report removed it (see keepsItsRemoval()).
+            return ReportStatus::Upheld === $status && !self::keepsItsRemoval($report) ? 'report.desk.refused_nothing_to_remove' : null;
         }
 
         return match (true) {
             $upload->isEscalated() => 'report.desk.refused_held',
             ReportStatus::Moot === $status && $upload->isTakedownPending() => 'report.desk.refused_moot_pending',
-            ReportStatus::Upheld === $status && null !== $upload->getObjectsDeletedAt() => 'report.desk.refused_nothing_to_remove',
+            ReportStatus::Upheld === $status && null !== $upload->getObjectsDeletedAt() && !self::keepsItsRemoval($report) => 'report.desk.refused_nothing_to_remove',
             default => null,
         };
+    }
+
+    /**
+     * Is an Upheld on this report a claim that stands, rather than a removal?
+     *
+     * Only an upheld copyright claim can be answered, and Upheld always removed
+     * the photo, so an answered report's photo came down on this report. The
+     * decision after the answer keeps the claim upheld without anything left
+     * to remove.
+     */
+    private static function keepsItsRemoval(ContentReport $report): bool
+    {
+        return $report->hasCounterNotice();
     }
 
     /**
@@ -237,7 +255,8 @@ final class ContentReportService
             return;
         }
 
-        if (ReportStatus::Upheld === $status && !$this->takedowns->removeOnReport($upload, $curator, $note)) {
+        $alreadyRemoved = null !== $upload->getObjectsDeletedAt() && self::keepsItsRemoval($report);
+        if (ReportStatus::Upheld === $status && !$alreadyRemoved && !$this->takedowns->removeOnReport($upload, $curator, $note)) {
             throw new ReportDecisionRefused('report.desk.refused_nothing_to_remove');
         }
         // Only a report's own takedown. An uploader's request about their own
@@ -334,6 +353,55 @@ final class ContentReportService
 
         $report->markAuthorTold($this->clock->now());
         $this->em->flush();
+    }
+
+    /**
+     * The author answers an upheld copyright claim, once, and the report is waiting work again.
+     *
+     * The answer page promises the author a decision, so the answer puts the
+     * report back on the Reports desk: open, on the default Open view, and
+     * unseen for every curator, including whoever decided it the first time.
+     * The earlier decision, its note and its time stay on the row; the next
+     * decision replaces them and mails the claimant and the author
+     * ({@see decide()}, {@see tellAuthorTheOutcome()}).
+     *
+     * @return bool true when this call recorded the answer, false when one was already there
+     */
+    public function answer(ContentReport $report, string $text): bool
+    {
+        if ($report->hasCounterNotice()) {
+            return false;
+        }
+
+        $report->recordCounterNotice(mb_substr($text, 0, self::REASON_MAX), $this->clock->now());
+        $report->takeUp(ReportStatus::Open);
+        $this->em->flush();
+        $this->seen->forget(SeenSubject::ContentReport, $report->getId()->toRfc4122());
+
+        return true;
+    }
+
+    /**
+     * The decision after the author's answer, to the author.
+     *
+     * The statement of reasons went out once, before the answer; this is the
+     * decision the answer page promised. Sent for every decision recorded
+     * after an answer, the way the claimant hears of every decision.
+     */
+    public function tellAuthorTheOutcome(ContentReport $report, User $author): void
+    {
+        $answeredAt = $report->getCounterNoticeAt();
+        $decidedAt = $report->getDecidedAt();
+        if (null === $answeredAt || null === $decidedAt || !$report->getStatus()->isDecided() || $decidedAt < $answeredAt) {
+            return;
+        }
+
+        $this->send(
+            $author->getEmail(),
+            'emails/report_answer_decided.html.twig',
+            'About your answer to a copyright claim',
+            ['report' => $report, 'author' => $author],
+        );
     }
 
     /**

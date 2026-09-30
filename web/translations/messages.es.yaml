@@ -5274,6 +5274,7 @@ report:
     field_note: 'Qué decidiste, y por qué'
     field_decided: 'Decidido'
     field_counter: 'Lo que respondió el autor'
+    counter_reopened: 'El autor respondió a la reclamación, y eso devolvió esta denuncia a la mesa. Tu decisión se envía por correo a quien reclama y al autor.'
     field_author_told: 'Autoría avisada'
     told_yes: 'Sí, una vez'
     told_no: 'Todavía no'

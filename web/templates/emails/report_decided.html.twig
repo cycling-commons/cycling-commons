@@ -16,6 +16,11 @@
 
 {% block content %}
   <p style="margin:0 0 8px">A curator has looked at the report you sent us.</p>
+  {% if report.hasCounterNotice %}
+    {# The author answered the claim, which put the report back on the desk
+       (content-reports.md §7): this is the decision after reading both. #}
+    <p style="margin:0 0 8px">The person who added it answered your claim, so a curator has looked again, at your claim and their answer together.</p>
+  {% endif %}
 
   <table role="presentation" style="margin:18px 0;border-collapse:collapse;font-size:14px">
     <tr>
@@ -39,6 +44,8 @@
 
   {% if report.status.value == 'upheld' %}
     <p style="margin:0 0 8px">We agreed with you. The content has been changed or taken down, and the person who added it has been told why.</p>
+  {% elseif report.status.value == 'rejected' and report.hasCounterNotice %}
+    <p style="margin:0 0 8px">After reading their answer we no longer agree with the claim, so what was changed or removed because of it can come back. That is a judgement call and you are allowed to disagree with it.</p>
   {% elseif report.status.value == 'rejected' %}
     <p style="margin:0 0 8px">We did not agree, so the content stays. That is a judgement call and you are allowed to disagree with it.</p>
   {% elseif report.status.value == 'moot' %}

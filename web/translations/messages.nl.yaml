@@ -5241,6 +5241,7 @@ report:
     field_note: 'Wat je besloot, en waarom'
     field_decided: 'Besloten'
     field_counter: 'Wat de auteur antwoordde'
+    counter_reopened: 'De auteur heeft op de claim geantwoord, waardoor deze melding terug op het bureau staat. Je besluit wordt gemaild naar de indiener van de claim en naar de auteur.'
     field_author_told: 'Auteur ingelicht'
     told_yes: 'Ja, eenmaal'
     told_no: 'Nog niet'

@@ -31,7 +31,8 @@ use Doctrine\DBAL\Connection;
  * gone live or retired) nobody sees the bar on it again, on any list.
  *
  * Per curator: one curator opening an item leaves it unseen for every other,
- * until the item is dealt with.
+ * until the item is dealt with. An item that is waiting again after it was
+ * dealt with is forgotten for everybody ({@see self::forget()}).
  *
  * @see docs/specs/moderation-and-contribution.md §5.2f
  *
@@ -75,6 +76,25 @@ final readonly class DeskSeen
              SELECT :user, :type, s.id, now() FROM unnest(CAST(:ids AS text[])) AS s(id)
              ON CONFLICT (user_id, subject_type, subject_id) DO NOTHING',
             ['user' => $userId, 'type' => $subject->value, 'ids' => '{'.implode(',', array_map(self::pgArrayItem(...), $list)).'}'],
+        );
+    }
+
+    /**
+     * Forget who opened an item, for every curator.
+     *
+     * For an item that becomes waiting work again after it was dealt with (a
+     * content report the author answered): it carries the bar for everybody
+     * once more, including the curators who opened it the first time.
+     */
+    public function forget(SeenSubject $subject, int|string $id): void
+    {
+        $id = (string) $id;
+        if ('' === $id) {
+            return;
+        }
+        $this->db->executeStatement(
+            'DELETE FROM moderation_seen WHERE subject_type = :type AND lower(subject_id) = lower(:id)',
+            ['type' => $subject->value, 'id' => $id],
         );
     }
 
