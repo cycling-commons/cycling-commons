@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Twig;
 
 use App\Provider\LicenceObligation;
+use App\Provider\ProviderCitations;
 use Doctrine\DBAL\Connection;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Extension\AbstractExtension;
@@ -54,7 +55,10 @@ final class ProviderCreditsExtension extends AbstractExtension
     }
 
     /**
-     * Every enabled provider, split by what its licence obliges.
+     * Every credited provider, split by what its licence obliges.
+     *
+     * Credited is {@see ProviderCitations::creditedSql()}: serving, or paused
+     * with rows still on the map, the same answer the map's citations give.
      *
      * `required` rows render one each, in registry order. `courtesy` rows
      * render as one comma-separated run of linked names.
@@ -65,10 +69,10 @@ final class ProviderCreditsExtension extends AbstractExtension
     {
         /** @var list<array{provider_key: string, name: string, homepage: string, licence: string, licence_code: string, attribution: ?string, creator: ?string, promoted: bool, blurb_key: ?string, blurb: ?string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            'SELECT provider_key, name, homepage, licence, licence_code, attribution, creator, promoted, blurb_key, blurb
-               FROM data_provider
-              WHERE enabled = TRUE
-              ORDER BY name',
+            'SELECT dp.provider_key, dp.name, dp.homepage, dp.licence, dp.licence_code, dp.attribution, dp.creator, dp.promoted, dp.blurb_key, dp.blurb
+               FROM data_provider dp
+              WHERE '.ProviderCitations::creditedSql('dp').'
+              ORDER BY dp.name',
         );
 
         $out = ['required' => [], 'courtesy' => []];

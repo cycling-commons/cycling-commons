@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Provider;
 
+use App\Catalog\ItemState;
 use Doctrine\DBAL\Connection;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -25,8 +26,8 @@ use Symfony\Contracts\Cache\ItemInterface;
  * reader cannot already see.
  *
  * Cached in `cache.app` next to the rest of the catalog, and invalidated by
- * the desk that edits the rows (data-provider-hierarchy.md §8). A miss is one
- * query over a table with a handful of rows.
+ * the desk that edits the rows (data-provider-hierarchy.md §8) and by every
+ * harvest. A miss is one query over a table with a handful of rows.
  *
  * @see docs/specs/data-provider-hierarchy.md §7, §9.1
  *
@@ -51,7 +52,28 @@ final class ProviderCitations
     }
 
     /**
-     * Every enabled provider, keyed by its slug.
+     * Which providers are credited, as a predicate on the `data_provider` alias.
+     *
+     * Every serving provider, and a paused one for as long as any row it
+     * supplied is still served. Paused means "keep the rows, stop refreshing"
+     * (data-provider-hierarchy.md §3): the switch controls the harvest, and a
+     * row a rider can still open still owes its publisher the credit. A row
+     * points at its provider through `item.provider_id`; OpenStreetMap and
+     * Wikidata rows carry no provider id and are theirs by `item.source`. The
+     * map's citations and `/credits` both read this, so the two cannot
+     * disagree about who is owed a credit.
+     */
+    public static function creditedSql(string $alias): string
+    {
+        $served = ItemState::servedSqlTuple();
+
+        return '('.$alias.'.enabled'
+            .' OR EXISTS (SELECT 1 FROM item cr WHERE cr.provider_id = '.$alias.'.id AND cr.state IN '.$served.')'
+            .' OR ('.$alias.'.system AND EXISTS (SELECT 1 FROM item cr WHERE cr.source = '.$alias.'.provider_key AND cr.state IN '.$served.')))';
+    }
+
+    /**
+     * Every credited provider ({@see self::creditedSql()}), keyed by its slug.
      *
      * The slug is what a feature carries as `pk`, so the drawer resolves a
      * citation with one lookup and no knowledge of who exists.
@@ -63,10 +85,10 @@ final class ProviderCitations
         $map = $this->cache->get(self::CACHE_KEY, function (ItemInterface $_item): array {
             /** @var list<array{provider_key: string, name: string, full_name: string, homepage: string, licence: string, attribution: ?string, creator: ?string}> $rows */
             $rows = $this->db->fetchAllAssociative(
-                'SELECT provider_key, name, full_name, homepage, licence, attribution, creator
-                   FROM data_provider
-                  WHERE enabled = TRUE
-                  ORDER BY rank DESC',
+                'SELECT dp.provider_key, dp.name, dp.full_name, dp.homepage, dp.licence, dp.attribution, dp.creator
+                   FROM data_provider dp
+                  WHERE '.self::creditedSql('dp').'
+                  ORDER BY dp.rank DESC',
             );
 
             $out = [];

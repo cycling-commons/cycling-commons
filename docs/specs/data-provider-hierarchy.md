@@ -87,7 +87,7 @@ A new table, `data_provider`, one row per dataset. Curator-maintained (§8).
 | `match_radius_m` | how close an upstream point must be to an OSM node to count as the same thing (§5). |
 | `refresh_cadence` | how often the harvest should re-read it. |
 | `last_run_at`, `last_count`, `last_error` | what the desk shows. |
-| `enabled` | off means "keep the rows, stop refreshing". |
+| `enabled` | off means "keep the rows, stop refreshing". It controls the harvest and nothing else: a paused provider stays credited while any of its rows is served (§9). |
 | `system` | true for seeded rows nobody may delete (§3.1). |
 
 **How a row points at its provider: `item.provider_id`.** A nullable foreign
@@ -832,6 +832,8 @@ This removes `pivot:'Tourisme Wallonie (CC-BY)'` from
 `web/assets/map/i18n.js`. The map receives the provider's citation with the
 feature, or resolves it from a small registry payload delivered with the
 catalog, rather than holding a table of providers in a front-end constant.
+That payload carries every credited provider, which includes a paused one
+whose rows are still served (§9).
 
 ## 8. The curator desk
 
@@ -912,10 +914,22 @@ before it exists:
 credited_providers()      Twig function, App\Twig\ProviderCreditsExtension
 ```
 
-It returns every enabled `data_provider` row that owes a credit, each carrying
+It returns every credited `data_provider` row, each carrying
 `name`, `full_name`, `homepage`, `licence`, `attribution` and whether the credit
 is legally required or courtesy, ordered for display. The template renders one
 `.crow` per entry. Nothing else on the page changes.
+
+**Credited means serving, or paused with rows still served** (2026-09-30).
+Pausing a provider stops its refreshes and keeps its rows on the map (§3), and
+a row a rider can still open still owes its publisher the credit its licence
+asks for. So the credit follows the served rows, not the switch: a provider is
+credited while it is enabled, and a paused one for as long as any row it
+supplied is `unverified` or `verified` (`item.provider_id`, or `item.source`
+for the system rows OpenStreetMap and Wikidata). A paused provider with
+nothing served is credited nowhere. One predicate says it,
+`ProviderCitations::creditedSql()`, read by both `credited_providers()` and
+the map's citation payload (§7), so the drawer and `/credits` cannot disagree.
+Pinned by `PausedProviderCreditTest`.
 
 **Built 2026-09-04.** The contract holds: a provider added to the registry
 appears on `/credits` with nobody editing a template, and the hand-written rows
@@ -1137,7 +1151,8 @@ counted against the 2744-node snapshot of 2026-08-26, and the dev coverage
 cache has been re-harvested since. Nothing in it is a matcher question.
 
 **The row is seeded PAUSED, and no rows have been written.** `/credits` lists
-every enabled provider, and until a harvest has run there is not one RIVM row
+every enabled provider (and a paused one only while its rows are served, §9),
+and until a harvest has run there is not one RIVM row
 on the map; naming them would be a claim about the future on a page whose job
 is to be true, which is why the Georegister row is commented out. Enabling it
 and running with `--write` is one deliberate operator act:
