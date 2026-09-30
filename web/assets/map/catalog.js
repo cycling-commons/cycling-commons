@@ -42,35 +42,42 @@ export function routePathById(id){
   return f && f.geom && f.geom.path ? f.geom.path : null;
 }
 
+/* The towns the demo routes name, and the instant quick-picks the town search
+   lists before Photon answers (docs/specs/map-and-search.md §7.2). Each
+   carries its OpenStreetMap element, the ref a Photon hit carries, so it
+   opens the one town card every town gets (docs/specs/map-and-search.md
+   §6.5): Wikipedia and Wikidata in the reader's language, the curators' own
+   text, and the "!" that reports it. `ll` is the point the card lands on and
+   measures "nearby" from. */
 export const CITIES = {
-  'Spa':{ll:[50.4920,5.8636], wiki:'https://en.wikipedia.org/wiki/Spa,_Belgium', info:'The thermal town that gave the word "spa" its name; start of these loops and gateway to Spa-Francorchamps.'},
-  'Stavelot':{ll:[50.3957,5.9300], wiki:'https://en.wikipedia.org/wiki/Stavelot', info:'Abbey town grown around its Benedictine abbey (651), at the foot of the Côte de Stockeu.'},
-  'Vielsalm':{ll:[50.2833,5.9167], wiki:'https://en.wikipedia.org/wiki/Vielsalm', info:'Ardennes town on the Salm river — gravel and cross-country country.'},
-  'Sankt Vith':{ll:[50.2811,6.1267], wiki:'https://en.wikipedia.org/wiki/Sankt_Vith', info:'Hub of the eastern Ardennes, in the German-speaking Community of Belgium.'},
-  'Francorchamps':{ll:[50.4350,5.9710], wiki:'https://en.wikipedia.org/wiki/Francorchamps', info:'Village beside the Spa-Francorchamps racing circuit, on the high road south of Spa.'},
-  'Coo':{ll:[50.3892,5.8847], wiki:'https://en.wikipedia.org/wiki/Coo,_Belgium', info:'Hamlet of Stavelot known for the Cascade de Coo waterfall and Plopsa Coo park.'},
-  'Sart':{ll:[50.5200,5.8800], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Sart-lez-Spa, a village of Jalhay on the plateau north of Spa.'},
-  'Jalhay':{ll:[50.5560,5.9700], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Municipality on the edge of the Hautes Fagnes, by the Gileppe dam.'},
-  'Stoumont':{ll:[50.4050,5.8000], wiki:'https://en.wikipedia.org/wiki/Stoumont', info:'Hilly Amblève-valley municipality of steep Ardennes lanes.'},
-  'Chevron':{ll:[50.4200,5.7600], wiki:'https://en.wikipedia.org/wiki/Stoumont', info:'Village of Stoumont in the Amblève valley.'},
-  'La Gleize':{ll:[50.4150,5.8500], wiki:'https://en.wikipedia.org/wiki/La_Gleize', info:'Amblève-valley village of Stoumont, known for its WWII history (a preserved King Tiger tank).'},
-  'Trois-Ponts':{ll:[50.3700,5.8730], wiki:'https://en.wikipedia.org/wiki/Trois-Ponts', info:'"Three bridges" — confluence of the Amblève and Salm, on the LBL roads.'},
-  'Tiège':{ll:[50.5300,5.8900], wiki:'https://en.wikipedia.org/wiki/Jalhay', info:'Hamlet of Sart/Jalhay on the plateau above Spa.'},
-  'Namur':{t:'City', ll:[50.4674,4.8720], wiki:'https://en.wikipedia.org/wiki/Namur', info:'Capital of Wallonia, where the Sambre meets the Meuse beneath its citadel.'},
-  'Liège':{t:'City', ll:[50.6451,5.5736], wiki:'https://en.wikipedia.org/wiki/Li%C3%A8ge', info:'Largest city of eastern Wallonia, on the Meuse — start of Liège–Bastogne–Liège.'},
-  'Charleroi':{t:'City', ll:[50.4109,4.4447], wiki:'https://en.wikipedia.org/wiki/Charleroi', info:'Former industrial hub on the Sambre, heart of the Pays Noir.'},
-  'Mons':{t:'City', ll:[50.4542,3.9563], wiki:'https://en.wikipedia.org/wiki/Mons', info:'Capital of Hainaut, a UNESCO-listed belfry town.'},
-  'Tournai':{t:'City', ll:[50.6071,3.3892], wiki:'https://en.wikipedia.org/wiki/Tournai', info:'Among the oldest cities in Belgium, on the Scheldt near the French border.'},
-  'Arlon':{t:'City', ll:[49.6839,5.8113], wiki:'https://en.wikipedia.org/wiki/Arlon', info:'Capital of Luxembourg province, in the far south-east.'},
-  'Bastogne':{t:'City', ll:[50.0028,5.7186], wiki:'https://en.wikipedia.org/wiki/Bastogne', info:'Ardennes town famed for the WWII Battle of the Bulge, on the LBL roads.'},
-  'Dinant':{t:'City', ll:[50.2605,4.9118], wiki:'https://en.wikipedia.org/wiki/Dinant', info:'Meuse-valley town under a clifftop citadel; birthplace of Adolphe Sax.'},
-  'Verviers':{t:'City', ll:[50.5911,5.8625], wiki:'https://en.wikipedia.org/wiki/Verviers', info:'Wool-trade town on the Vesdre, gateway to the Hautes Fagnes.'},
-  'Huy':{t:'City', ll:[50.5186,5.2393], wiki:'https://en.wikipedia.org/wiki/Huy', info:'Meuse town below the Mur de Huy, the Flèche Wallonne finish.'},
-  'Marche-en-Famenne':{t:'City', ll:[50.2275,5.3450], wiki:'https://en.wikipedia.org/wiki/Marche-en-Famenne', info:'Hub of the Famenne, between the Condroz and the Ardennes.'},
-  'La Roche-en-Ardenne':{t:'City', ll:[50.1827,5.5765], wiki:'https://en.wikipedia.org/wiki/La_Roche-en-Ardenne', info:'Castle town in a bend of the Ourthe, deep in the Ardennes.'},
-  'Wavre':{t:'City', ll:[50.7173,4.6122], wiki:'https://en.wikipedia.org/wiki/Wavre', info:'Capital of Walloon Brabant, on the Dyle.'},
-  'Nivelles':{t:'City', ll:[50.5977,4.3270], wiki:'https://en.wikipedia.org/wiki/Nivelles', info:'Brabant town around its Romanesque collegiate church.'},
-  'Malmedy':{t:'City', ll:[50.4259,6.0283], wiki:'https://en.wikipedia.org/wiki/Malmedy', info:'East-cantons town below the Hautes Fagnes, near the Stavelot roads.'}
+  'Spa':{ll:[50.4920,5.8636], osm:'relation/2422528'},
+  'Stavelot':{ll:[50.3957,5.9300], osm:'relation/2409290'},
+  'Vielsalm':{ll:[50.2833,5.9167], osm:'relation/2449235'},
+  'Sankt Vith':{ll:[50.2811,6.1267], osm:'relation/2433430'},
+  'Francorchamps':{ll:[50.4532,5.9528], osm:'relation/19071311'},
+  'Coo':{ll:[50.3892,5.8847], osm:'node/12804713960'},
+  'Sart':{ll:[50.5174,5.9335], osm:'relation/19255163'},
+  'Jalhay':{ll:[50.5560,5.9700], osm:'relation/2400889'},
+  'Stoumont':{ll:[50.4050,5.8000], osm:'relation/2422527'},
+  'Chevron':{ll:[50.3823,5.7315], osm:'node/737588485'},
+  'La Gleize':{ll:[50.4150,5.8500], osm:'relation/19160156'},
+  'Trois-Ponts':{ll:[50.3700,5.8730], osm:'relation/2436185'},
+  'Tiège':{ll:[50.5212,5.9097], osm:'node/860608364'},
+  'Namur':{t:'City', ll:[50.4674,4.8720], osm:'relation/1405439'},
+  'Liège':{t:'City', ll:[50.6451,5.5736], osm:'relation/1681788'},
+  'Charleroi':{t:'City', ll:[50.4109,4.4447], osm:'relation/2113725'},
+  'Mons':{t:'City', ll:[50.4542,3.9563], osm:'relation/1949374'},
+  'Tournai':{t:'City', ll:[50.6071,3.3892], osm:'relation/2162970'},
+  'Arlon':{t:'City', ll:[49.6839,5.8113], osm:'relation/2431399'},
+  'Bastogne':{t:'City', ll:[50.0028,5.7186], osm:'relation/2426390'},
+  'Dinant':{t:'City', ll:[50.2605,4.9118], osm:'relation/2268360'},
+  'Verviers':{t:'City', ll:[50.5911,5.8625], osm:'relation/2396836'},
+  'Huy':{t:'City', ll:[50.5186,5.2393], osm:'relation/2002638'},
+  'Marche-en-Famenne':{t:'City', ll:[50.2275,5.3450], osm:'relation/2437396'},
+  'La Roche-en-Ardenne':{t:'City', ll:[50.1827,5.5765], osm:'relation/2566321'},
+  'Wavre':{t:'City', ll:[50.7173,4.6122], osm:'relation/224757'},
+  'Nivelles':{t:'City', ll:[50.5977,4.3270], osm:'relation/1149724'},
+  'Malmedy':{t:'City', ll:[50.4259,6.0283], osm:'relation/2409000'}
 };
 // docs/specs/security-architecture.md §4.2 — fail-closed if a payload name ever reaches this.
 export const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;

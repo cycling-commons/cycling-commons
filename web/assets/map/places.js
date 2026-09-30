@@ -102,12 +102,10 @@ function renderPlaceCard(name, meta, near, covGroups){
   document.getElementById('drawerBody').innerHTML =
     `<span class="cc-d-type" style="--c:${typeC};color:#fff">${typeL}</span>
      <div class="cc-d-name">${escPend(name)}</div>
-     ${meta.info?`<div class="cc-city-info">${escPend(meta.info)}</div>`:''}
-     ${meta.wiki?`<div class="cc-city-links"><a href="${safeHref(meta.wiki)}" target="_blank" rel="noopener">Wikipedia ↗</a></div>`:''}
-     ${(!meta.info && meta.osm)?townWaiting(meta):''}
+     ${meta.osm?townWaiting(meta):''}
      <h4 class="cc-near-h">${(D.nearbyH||'In the Commons nearby · ≤ {d}').replace('{d}', uKm(NEARBY_KM, 0))}</h4>
      <ul class="cc-near-list">${list}</ul>`;
-  if(!meta.info && meta.osm) startTownWatch(name, meta);
+  if(meta.osm) startTownWatch(name, meta);
   document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
     const n=all[+b.dataset.i];
     b.onclick=()=>n.e.go();

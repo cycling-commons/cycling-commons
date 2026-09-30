@@ -2380,9 +2380,10 @@ became that", wherever a reader meets it.
 ### 6.5 Town / place card
 
 `openPlace(name, meta)` renders a place card in the same drawer: place type
-chip (City ◉ / Town ◎), optional blurb + Wikipedia link (hand-authored for the
-`CITIES` constants; Photon hits pass just coordinates), and **"In the Commons
-nearby · ≤ 5 km"** — every indexed item within 5 km, grouped by letter,
+chip (City ◉ / Town ◎), the town's own text (below: fetched per language by
+its OpenStreetMap element, which a Photon hit and every `CITIES` quick-pick
+carry as `meta.osm`; a pasted coordinate has none and shows no text), and
+**"In the Commons nearby · ≤ 5 km"**: every indexed item within 5 km, grouped by letter,
 nearest-first within each group. **A · road-surface segments are excluded**
 (corridor data would flood the card). **The card lands on the town itself**
 (2026-09-21, owner: a town found by search sat at z11.7 with nothing on the map
@@ -2543,8 +2544,17 @@ curators, after Wikipedia CC BY-SA 4.0" (a rewrite of CC BY-SA text keeps its
 attribution; the Wikipedia link stays). Riders do not edit directly: the "!"
 is their pen, and a curator writes. Pinned by `ModerateTownControllerTest`.
 
-The five hand-written
-`CITIES` blurbs keep precedence: a card with `meta.info` never polls. No page,
+Every town takes this one path, the `CITIES` quick-picks included
+(owner-reported 2026-09-30: Spa showed a fixed English sentence with no "!",
+so it could be neither reported nor rewritten). Each `CITIES` entry is
+`{t?, ll, osm}` and nothing else. `osm` is the place element a Photon search
+for the town returns, checked on the OpenStreetMap API for its name and a
+`wikidata` tag (the resolver's only way in). Where Photon's first hit has no
+`wikidata`, the entry takes the element that does: Sankt Vith is the town
+relation Photon returns for "Saint-Vith" (`relation/2433430`), Chevron its
+village `place` node (`node/737588485`, the relation's `admin_centre`). `ll`
+is the town's point. Pinned by
+`tests/js/town-quick-picks.test.mjs`. No page,
 no races, no photo are answers, recorded; only a source that did not reply
 releases the claim so a later reader asks again. Pinned by
 `ResolveTownSummaryHandlerTest`, `TownControllerTest`, and the `watchJson`
@@ -2666,7 +2676,8 @@ the example in the empty search box names routes too
   "Anvers" for a French one. The town card, its Wikipedia lookup and the
   drawer title all carry that name. Pinned by `tests/js/photon-lang.test.mjs`.
 - The hardcoded `CITIES` constants remain instant quick-picks (matched first,
-  no network).
+  no network). Each carries an OpenStreetMap ref, so a quick-pick opens the
+  same town card as the Photon hit it hides (map-and-search.md §6.5).
 - **Failure mode: silent degradation** to index + quick-picks — no toast, no
   error state. (The muted "place search unavailable" row from the design was
   not shipped; degradation is fully silent — see Open questions.)
@@ -3380,7 +3391,3 @@ The coverage tiles themselves are specified in
   `addRegionBoundary('Wallonia')`, the boot `bounds`, and the Photon bbox) —
   worldwide readiness for the map shell has no owner yet beyond the coverage
   plan's Belgium-first staging.
-- The **city blurbs in `CITIES`** are hand-authored English constants
-  (untranslated, unsourced) for five Wallonia towns. Every other town gets the
-  Wikipedia paragraph, photo and race list fetched on first open (§6.5,
-  2026-09-07); the five could be dropped in favour of the same path.
