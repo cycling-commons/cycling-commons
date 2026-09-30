@@ -3392,6 +3392,7 @@ moderate_routes:
   flash:
     decided: 'Entscheidung erfasst.'
     edited: 'Routendetails gespeichert.'
+    edited_changed_meanwhile: '%fields% wurde geändert, während du bearbeitet hast, darum wurde deine Änderung dort nicht gespeichert. Das Formular unten zeigt die aktuelle Fassung: prüfe sie und speichere erneut, wenn du deine Änderung trotzdem willst. Alles andere, was du geändert hast, ist gespeichert.'
     suggestion_resolved: 'Hinweis bearbeitet.'
 registration:
   email:

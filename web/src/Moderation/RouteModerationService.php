@@ -20,6 +20,7 @@ use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -163,6 +164,69 @@ final class RouteModerationService
             $route->setAttributes($attributes);
 
             return $route;
+        });
+    }
+
+    /**
+     * A curator's save of the desk form (route-domain.md §5). Only the fields
+     * the curator changed from what the form showed (`$shown`, the form's
+     * values when it was rendered) go to {@see editMetadata()}, so a save
+     * never writes back a value the curator left alone over a proposer's
+     * revision made while the form was open (route-domain.md §4.6). A field
+     * that changed on the route after the form was shown and that the curator
+     * also changed is not written: the route keeps the newer value and the
+     * field is returned, for the desk to name. A field missing from `$shown`
+     * has the route's value now as its baseline. The row is locked and read
+     * again for the comparison, so a proposer's revision either landed before
+     * it or waits for this save to commit.
+     *
+     * @param array<string, mixed> $posted the form's fields, keyed as it posts them
+     * @param array<string, mixed> $shown  the values the form showed, same keys
+     *
+     * @return list<string> the refused fields, keys from {@see RouteMetadata::EDITABLE_FIELDS}
+     *
+     * @throws OutOfScopeException       the route is outside the curator's areas
+     * @throws \InvalidArgumentException as {@see editMetadata()}
+     */
+    public function editFromDesk(int $routeId, array $posted, array $shown, User $curator): array
+    {
+        return $this->em->wrapInTransaction(function () use ($routeId, $posted, $shown, $curator): array {
+            $route = $this->em->find(RecommendedRoute::class, $routeId, LockMode::PESSIMISTIC_WRITE);
+            if (null === $route) {
+                throw new \InvalidArgumentException(sprintf('Route %d not found.', $routeId));
+            }
+            $this->em->refresh($route);
+            $attributes = $route->getAttributes();
+
+            $changes = [];
+            $refused = [];
+            foreach ($posted as $field => $raw) {
+                $field = (string) $field;
+                if (!\in_array($field, RouteMetadata::EDITABLE_FIELDS, true)) {
+                    $changes[$field] = $raw; // editMetadata() refuses it
+                    continue;
+                }
+                if (RouteMetadata::NAME_FIELD === $field) {
+                    $current = $route->getName();
+                    $mine = \is_string($raw) ? trim($raw) : '';
+                    $was = \is_string($shown[$field] ?? null) ? trim($shown[$field]) : $current;
+                } else {
+                    $current = RouteMetadata::canonical($field, $attributes[$field] ?? null);
+                    $mine = RouteMetadata::canonical($field, $raw);
+                    $was = \array_key_exists($field, $shown) ? RouteMetadata::canonical($field, $shown[$field]) : $current;
+                }
+                if (RouteMetadata::isSame($mine, $was) || RouteMetadata::isSame($mine, $current)) {
+                    continue;
+                }
+                if (!RouteMetadata::isSame($was, $current)) {
+                    $refused[] = $field;
+                    continue;
+                }
+                $changes[$field] = $raw;
+            }
+            $this->editMetadata($routeId, $changes, $curator);
+
+            return $refused;
         });
     }
 

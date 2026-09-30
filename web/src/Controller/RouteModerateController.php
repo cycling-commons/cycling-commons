@@ -31,6 +31,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Curator Routes desk.
@@ -221,11 +222,17 @@ final class RouteModerateController extends AbstractController
         $attrs = json_decode((string) $row['attributes'], true) ?: [];
 
         // Every registry field, prefilled from what the route actually holds; a
-        // field with no value is offered empty (R-quality-rides.md).
-        $editForm = $this->createForm(RouteEditType::class, [
-            'route_id' => (string) $id,
+        // field with no value is offered empty (R-quality-rides.md). What the
+        // form shows travels with it, so the save writes only what the curator
+        // changed.
+        $shown = [
             RouteMetadata::NAME_FIELD => (string) $row['name'],
             ...RouteMetadata::formValues($attrs),
+        ];
+        $editForm = $this->createForm(RouteEditType::class, [
+            'route_id' => (string) $id,
+            ...$shown,
+            'shown' => json_encode($shown, \JSON_THROW_ON_ERROR),
         ], [
             'action' => $this->generateUrl('moderate_routes_edit'),
             'method' => 'POST',
@@ -280,8 +287,14 @@ final class RouteModerateController extends AbstractController
         ]);
     }
 
+    /**
+     * The desk form's save. A field the curator changed that also changed on
+     * the route after the form was shown (a proposer's revision) is not
+     * saved; the notice names it and the reloaded page shows the newer value
+     * (route-domain.md §5).
+     */
     #[Route('/moderate/routes/edit', name: 'moderate_routes_edit', methods: ['POST'])]
-    public function edit(Request $request): Response
+    public function edit(Request $request, TranslatorInterface $translator): Response
     {
         $form = $this->createForm(RouteEditType::class);
         $form->handleRequest($request);
@@ -297,13 +310,20 @@ final class RouteModerateController extends AbstractController
         }
         /** @var array<string, mixed> $data */
         $data = $form->getData();
-        unset($data['route_id']);
+        $shown = RouteMetadata::shown($data['shown'] ?? null);
+        unset($data['route_id'], $data['shown']);
         /** @var User $curator */
         $curator = $this->getUser();
 
         try {
-            $this->moderation->editMetadata($id, $data, $curator);
-            $this->addFlash('success', 'moderate_routes.flash.edited');
+            $refused = $this->moderation->editFromDesk($id, $data, $shown, $curator);
+            if ([] === $refused) {
+                $this->addFlash('success', 'moderate_routes.flash.edited');
+            } else {
+                $this->addFlash('danger', $translator->trans('moderate_routes.flash.edited_changed_meanwhile', [
+                    '%fields%' => implode(', ', array_map(static fn (string $f): string => $translator->trans(RouteMetadata::LABELS[$f] ?? $f), $refused)),
+                ]));
+            }
         } catch (OutOfScopeException) {
             throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (\InvalidArgumentException|\LogicException) {

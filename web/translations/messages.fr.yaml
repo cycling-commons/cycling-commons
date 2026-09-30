@@ -3384,6 +3384,7 @@ moderate_routes:
   flash:
     decided: 'Décision enregistrée.'
     edited: 'Détails de l''itinéraire enregistrés.'
+    edited_changed_meanwhile: '%fields% a été modifié pendant que vous éditiez, votre modification n''y a donc pas été enregistrée. Le formulaire ci-dessous montre la version actuelle : vérifiez-la et enregistrez de nouveau si vous tenez à votre modification. Le reste de vos modifications est enregistré.'
     suggestion_resolved: 'Suggestion résolue.'
 registration:
   email:

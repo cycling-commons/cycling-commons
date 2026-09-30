@@ -3410,6 +3410,7 @@ moderate_routes:
   flash:
     decided: 'Decision recorded.'
     edited: 'Route details saved.'
+    edited_changed_meanwhile: '%fields% changed while you were editing, so your edit there was not saved. The form below shows the current version: check it and save again if you still want your change. Anything else you changed is saved.'
     suggestion_resolved: 'Suggestion resolved.'
 registration:
   email:

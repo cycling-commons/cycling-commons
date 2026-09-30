@@ -33,6 +33,9 @@ final class RouteEditType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('route_id', HiddenType::class);
+        // The values the form showed, as JSON, so the save writes only what
+        // the curator changed (RouteModerationService::editFromDesk()).
+        $builder->add('shown', HiddenType::class, ['required' => false]);
         RouteMetadataFields::add(
             $builder,
             [RouteMetadata::NAME_FIELD, ...RouteMetadata::ATTRIBUTE_FIELDS],

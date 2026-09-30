@@ -147,7 +147,7 @@ final class RouteProposalService
             }
 
             $held = $this->curatorHeld($route);
-            $shown = self::shownOf($meta);
+            $shown = RouteMetadata::shown($meta['shown'] ?? null);
             $kept = [];
             $changed = false;
 
@@ -230,33 +230,6 @@ final class RouteProposalService
         $fields = array_map(static fn (string $f): string => 'name' === $f ? RouteMetadata::NAME_FIELD : $f, $fields);
 
         return array_values(array_intersect(RouteMetadata::EDITABLE_FIELDS, $fields));
-    }
-
-    /**
-     * The values the proposer's form showed, keyed as the form posts them, from
-     * its `shown` field. Empty when the form carried none, which makes the
-     * route's values now the baseline.
-     *
-     * @param array<string, mixed> $meta
-     *
-     * @return array<string, mixed>
-     */
-    private static function shownOf(array $meta): array
-    {
-        $raw = $meta['shown'] ?? null;
-        if (!\is_string($raw) || '' === $raw) {
-            return [];
-        }
-        try {
-            $shown = json_decode($raw, true, 8, \JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
-            return [];
-        }
-        if (!\is_array($shown)) {
-            return [];
-        }
-
-        return array_intersect_key($shown, array_flip(RouteMetadata::EDITABLE_FIELDS));
     }
 
     /**

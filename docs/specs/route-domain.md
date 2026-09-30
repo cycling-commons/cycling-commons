@@ -412,6 +412,22 @@ directly (`App\Moderation\RouteQueue`).
   `name`; everything else lives in `attributes`, and a key outside the
   registry is refused. Track replacement is out of scope (workaround: retire +
   re-propose).
+  **A save writes only what the curator changed**, the mirror of the
+  proposer's edit (route-domain.md §4.6): the form carries the values it
+  showed (hidden `shown`, JSON; without it the row's values now are the
+  baseline), and `RouteModerationService::editFromDesk()` passes on to
+  `editMetadata()` only the fields whose posted value differs from the shown
+  one, so a desk form opened before a proposer's revision never writes the
+  proposer's newer fields back. A field the curator changed that also changed
+  on the route after the form was shown is not written: the route keeps the
+  newer value, no history row is filed for it, the other fields save, and the
+  curator lands back on the detail page under "%fields% changed while you
+  were editing, so your edit there was not saved. The form below shows the
+  current version: check it and save again if you still want your change.
+  Anything else you changed is saved." (`moderate_routes.flash.edited_changed_meanwhile`),
+  with the reloaded form showing the newer value. The row is locked
+  (`SELECT … FOR UPDATE`) and read again for the comparison, so a revision
+  either landed before it or waits for the save to commit.
 - **Corrections**: listed against their route with a located-stretch count
   (`jsonb_array_length(segments)`); curator marks done / dismissed (each
   messages the rider) or Trashes spam (hard delete, no message).

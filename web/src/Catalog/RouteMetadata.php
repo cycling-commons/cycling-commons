@@ -251,6 +251,32 @@ final class RouteMetadata
     }
 
     /**
+     * The values a form showed, from its hidden `shown` field (JSON), keyed as
+     * the forms post them and limited to EDITABLE_FIELDS. Empty when the form
+     * carried none or it does not parse, which makes the route's values now
+     * the baseline ({@see \App\Contribution\RouteProposalService::revise()},
+     * {@see \App\Moderation\RouteModerationService::editFromDesk()}).
+     *
+     * @return array<string, mixed>
+     */
+    public static function shown(mixed $raw): array
+    {
+        if (!\is_string($raw) || '' === $raw) {
+            return [];
+        }
+        try {
+            $shown = json_decode($raw, true, 8, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+        if (!\is_array($shown)) {
+            return [];
+        }
+
+        return array_intersect_key($shown, array_flip(self::EDITABLE_FIELDS));
+    }
+
+    /**
      * Whether two stored values say the same thing. Arrays compare by content:
      * `{label,score}` and `{score,label}` are one difficulty, and a field that
      * round-trips through the form unchanged writes no history row.

@@ -10,6 +10,7 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Region;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Contribution\RouteProposalService;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -313,6 +314,85 @@ final class RouteModerateTest extends WebTestCase
 
         $em->clear();
         self::assertSame('A quiet Condroz loop, resurfaced 2025.', $em->find(RecommendedRoute::class, $route->getId())->getAttributes()['note']);
+    }
+
+    /**
+     * route-domain.md §5: a desk form opened before the proposer revised the
+     * proposal writes only what the curator changed, so the proposer's newer
+     * field survives the curator's save of another one.
+     */
+    public function testAStaleDeskFormKeepsTheProposersNewerField(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $id = (int) $route->getId();
+
+        $client->loginUser($this->curator());
+        $form = $client->request('GET', '/moderate/routes/'.$id)->selectButton('Save changes')->form();
+
+        $this->proposerRevises($id, ['difficulty' => 'Easy']);
+
+        $form['route_edit[note]'] = 'Coffee at the church.';
+        $client->submit($form);
+        self::assertResponseRedirects('/moderate/routes/'.$id);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        $saved = $em->find(RecommendedRoute::class, $id);
+        self::assertNotNull($saved);
+        self::assertSame('Easy', $saved->getAttributes()['difficulty']['label'] ?? null, 'the proposer\'s newer difficulty stands');
+        self::assertSame('Coffee at the church.', $saved->getAttributes()['note'] ?? null, 'the curator\'s own change is saved');
+
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash-success', 'Route details saved.');
+    }
+
+    /**
+     * Both changed the same field: the curator's save of it is refused with a
+     * notice naming it, the proposer's value stays, and the rest saves.
+     */
+    public function testAStaleDeskFormChangingTheProposersNewerFieldIsRefusedForThatField(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $id = (int) $route->getId();
+
+        $client->loginUser($this->curator());
+        $form = $client->request('GET', '/moderate/routes/'.$id)->selectButton('Save changes')->form();
+
+        $this->proposerRevises($id, ['difficulty' => 'Easy']);
+
+        $form['route_edit[difficulty]'] = 'Hard';
+        $form['route_edit[note]'] = 'Coffee at the church.';
+        $client->submit($form);
+        self::assertResponseRedirects('/moderate/routes/'.$id);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        $saved = $em->find(RecommendedRoute::class, $id);
+        self::assertNotNull($saved);
+        self::assertSame('Easy', $saved->getAttributes()['difficulty']['label'] ?? null, 'the proposer\'s difficulty stands');
+        self::assertSame('Coffee at the church.', $saved->getAttributes()['note'] ?? null, 'the other field saves');
+        $curatorRows = (int) $em->getConnection()->fetchOne("SELECT COUNT(*) FROM route_change_history WHERE route_id = ? AND field = 'difficulty'", [$id]);
+        self::assertSame(0, $curatorRows, 'a refused field writes no history');
+
+        $crawler = $client->followRedirect();
+        self::assertSelectorTextContains('.flash-error', 'Difficulty changed while you were editing');
+        self::assertSame('Easy', $crawler->selectButton('Save changes')->form()['route_edit[difficulty]']->getValue(), 'the reloaded form shows the proposer\'s value');
+    }
+
+    /** @param array<string, mixed> $fields */
+    private function proposerRevises(int $routeId, array $fields): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $em->find(RecommendedRoute::class, $routeId);
+        self::assertNotNull($route);
+        $proposer = $em->find(User::class, $route->getProposedBy());
+        self::assertInstanceOf(User::class, $proposer);
+        static::getContainer()->get(RouteProposalService::class)->revise($routeId, null, ['rName' => $route->getName(), ...$fields], $proposer);
+        $em->clear();
     }
 
     /**

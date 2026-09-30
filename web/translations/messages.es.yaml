@@ -3418,6 +3418,7 @@ moderate_routes:
   flash:
     decided: 'Decisión registrada.'
     edited: 'Detalles de la ruta guardados.'
+    edited_changed_meanwhile: '%fields% cambió mientras editabas, así que tu cambio ahí no se guardó. El formulario de abajo muestra la versión actual: revísala y guarda de nuevo si aún quieres tu cambio. Todo lo demás que cambiaste está guardado.'
     suggestion_resolved: 'Sugerencia resuelta.'
 registration:
   email:

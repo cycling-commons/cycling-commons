@@ -3391,6 +3391,7 @@ moderate_routes:
   flash:
     decided: 'Beslissing geregistreerd.'
     edited: 'Routegegevens opgeslagen.'
+    edited_changed_meanwhile: '%fields% is gewijzigd terwijl je bewerkte, dus je wijziging daar is niet opgeslagen. Het formulier hieronder toont de huidige versie: bekijk die en sla opnieuw op als je je wijziging toch wilt. Al je andere wijzigingen zijn opgeslagen.'
     suggestion_resolved: 'Suggestie opgelost.'
 registration:
   email:
