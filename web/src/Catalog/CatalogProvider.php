@@ -10,6 +10,7 @@ use App\Catalog\Links\LinkVerdictStore;
 use App\Coverage\CoverageRepository;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
+use App\Media\PublicPhotos;
 use App\Moderation\ModerationScope;
 use App\Provider\ProviderCitations;
 use Doctrine\DBAL\Connection;
@@ -460,6 +461,8 @@ final class CatalogProvider
         // every photo got when it was linked, so a scenic pin never promises a
         // view that was photographed somewhere else.
         $props = PhotoValidator::sift($props, PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes'];
+        // Served without where the camera stood (PublicPhotos).
+        $props = PublicPhotos::of($props);
         // No photo of its own: the drawer asks /map/coverage/photo for the OSM
         // point's, judged against this item's pin (coverage-provider.md §7).
         // Absent otherwise, so every other row stays byte-stable.
@@ -588,7 +591,7 @@ final class CatalogProvider
         $segments = [];
         foreach ($this->itemRows('A', regionId: $regionId) as $row) {
             // Only the photos PhotoValidator shows on this segment, as feature() does.
-            $attrs = PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes'];
+            $attrs = PublicPhotos::of(PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::of($row['letter'], $row['pin_lat'], $row['pin_lng']))['attributes']);
             $seg = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']] + $attrs;
             // Derive `cls` at serve time; a stored cls is never second-guessed.
             if (!isset($seg['cls'])) {
@@ -705,7 +708,7 @@ final class CatalogProvider
         // Only the photos PhotoValidator shows on this route: letter R at a
         // point on its line (PhotoPlace::route()), the place its photos were
         // judged against when they were linked.
-        $attrs = PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::route($row['pin_lat'], $row['pin_lng']))['attributes'];
+        $attrs = PublicPhotos::of(PhotoValidator::sift($this->decode($row['attributes']), PhotoPlace::route($row['pin_lat'], $row['pin_lng']))['attributes']);
         $route = ['id' => (int) $row['id'], 'name' => $row['name'], 'srcType' => $row['source']];
         $route['state'] = (string) $row['state'];
         // docs/specs/map-and-search.md §4.5

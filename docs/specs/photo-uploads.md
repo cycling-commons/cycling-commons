@@ -794,6 +794,16 @@ photo entry therefore says where its camera was, when that is known:
   `CommonsApi::fileInfo()` asks for it (`prop=imageinfo|coordinates`,
   `coprimary=primary`, `coprop=type|globe`) and refuses an `object` coordinate
   and a round point.
+- **Where the camera stood is never public** (2026-09-30). `distanceM`,
+  `distancePin`, `locationConfirmed`, `confirmedPin` and `cameraAt` stay on the
+  stored entry, where `PhotoValidator` reads them, and `App\Media\PublicPhotos`
+  takes them out of every public payload after `PhotoValidator::sift()`: the
+  catalog region documents (`/map/catalog/region/{rid}.json`, places,
+  surface segments and routes alike, and a live-inserted feature) and
+  the coverage detail's curated overlay. With the pin, a distance says how far
+  from it the photographer stood, and the public map shows none of it. The
+  curator views keep their own endpoints: the pending card (`SubmissionQueue`,
+  `distanceM`) and the hidden photos (`/map/item/{id}/hidden-photos`).
 
 `commons_photo` holds the answer per file:
 

@@ -13,6 +13,7 @@ use App\Catalog\ItemState;
 use App\Media\Commons\CommonsFile;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
+use App\Media\PublicPhotos;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -562,7 +563,7 @@ final class CoverageRepository
     {
         /** @var array<string, mixed> $fields */
         $fields = json_decode($attributesJson, true, 512, \JSON_THROW_ON_ERROR);
-        $fields = PhotoValidator::sift($fields, new PhotoPlace($letter, $pinLat, $pinLng))['attributes'];
+        $fields = PublicPhotos::of(PhotoValidator::sift($fields, new PhotoPlace($letter, $pinLat, $pinLng))['attributes']);
         if ('' !== $name) {
             $fields[Item::NAME_FIELD] = $name;
         }
