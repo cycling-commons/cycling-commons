@@ -894,6 +894,22 @@ The page decides nothing and marks nothing read. It lists the newest room
 posts, and each one still counts on the Room badge (§13.7) until the curator
 opens it in the room.
 
+**The moderation bar's badges are the same on every desk** (2026-09-30,
+owner: "also the Data menu does that"). Every count comes from
+`App\Twig\ModerationChromeExtension`, never from the page's controller:
+`pending_submission_count()`, `pending_route_count()` (proposals plus open
+corrections) and `open_data_count()` count the curator's areas (§9);
+`pending_takedown_count()`, `open_report_count()`, `open_bug_count()` and
+`pending_translation_count()` count everything; `curator_room_unread()` is
+§13.7. Each is read once per request (the tab strip and the account chip ask
+for the same numbers) and forgotten between requests (`ResetInterface`). A
+badge passed by some controllers and not others vanished on the desks that did
+not pass it, which read as though visiting a desk had cleared it. These are
+open-work counts: they go down when the work is decided, never because a page
+was visited. The More menu's button carries the sum of the badges inside it
+(today only Data queues there), so waiting data findings show without opening
+the menu.
+
 ### 5.1 Decisions live off the queue lists
 
 A curator must see the item in place before deciding:

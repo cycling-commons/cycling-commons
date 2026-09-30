@@ -23,13 +23,11 @@ use App\Media\PhotoLocationConfirmation;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\MissingQuestionException;
-use App\Moderation\ModerationScope;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OsmUnansweredException;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RetentionService;
-use App\Moderation\RouteQueue;
 use App\Moderation\SubmissionQueue;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
@@ -62,7 +60,6 @@ final class ModerateController extends AbstractController
         private readonly SubmissionQueue $queue,
         private readonly RetentionService $retention,
         private readonly ModerationScopeProvider $scopeProvider,
-        private readonly RouteQueue $routeQueue,
         private readonly MediaTakedownService $takedowns,
         private readonly MediaEscalationService $escalations,
         private readonly UrgentWithholdBreaker $breaker,
@@ -128,7 +125,6 @@ final class ModerateController extends AbstractController
             'types' => SubmissionType::values(),
             'kinds' => ItemType::placeKinds(),
             'pager' => Pager::of($page, $total, $perPage),
-            ...$this->deskBadges($user, $scope),
         ]);
     }
 
@@ -140,10 +136,6 @@ final class ModerateController extends AbstractController
     #[Route('/moderate/takedowns', name: 'moderate_takedowns')]
     public function takedowns(Request $request): Response
     {
-        /** @var User $user */
-        $user = $this->getUser();
-        $scope = $this->scopeProvider->scopeFor($user);
-
         $pager = Pager::of(
             $request->query->getInt('page', 1),
             $this->takedowns->pendingCount(),
@@ -165,7 +157,6 @@ final class ModerateController extends AbstractController
             'pager' => $pager,
             'decided' => $this->takedowns->decidedCards($historyPager['page'], $historyPager['perPage']),
             'history_pager' => $historyPager,
-            ...$this->deskBadges($user, $scope),
         ]);
     }
 
@@ -175,16 +166,11 @@ final class ModerateController extends AbstractController
     #[Route('/moderate/rulebook', name: 'moderate_rulebook')]
     public function rulebook(): Response
     {
-        /** @var User $user */
-        $user = $this->getUser();
-        $scope = $this->scopeProvider->scopeFor($user);
-
         return $this->render('moderate/rulebook.html.twig', [
             'page_title' => 'meta.moderate_rulebook_title',
             'page_description' => 'meta.moderate_rulebook_description',
             'nav_active' => 'moderate_rulebook',
             'rulebook_pdf' => null !== $this->rulebookPdfFile(),
-            ...$this->deskBadges($user, $scope),
         ]);
     }
 
@@ -235,18 +221,6 @@ final class ModerateController extends AbstractController
         return is_file($path) && is_readable($path) ? $path : null;
     }
 
-    /**
-     * @return array{mod_submission_count: int, mod_route_count: int, mod_takedown_count: int}
-     */
-    private function deskBadges(User $user, ModerationScope $scope): array
-    {
-        return [
-            'mod_submission_count' => $this->queue->total($scope),
-            'mod_route_count' => $this->routeQueue->total($scope) + $this->routeQueue->pendingSuggestionCount($scope),
-            'mod_takedown_count' => $this->takedowns->pendingCount(),
-        ];
-    }
-
     private function renderQueue(
         string $country,
         string $region,
@@ -280,7 +254,6 @@ final class ModerateController extends AbstractController
             'types' => SubmissionType::values(),
             'kinds' => ItemType::placeKinds(),
             'receipt' => null,
-            ...$this->deskBadges($user, $scope),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
     }
 

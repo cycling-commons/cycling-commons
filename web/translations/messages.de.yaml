@@ -3422,6 +3422,7 @@ account:
   mod_takedowns_open: 'Offene Entfernungsanfragen'
   mod_translations_open: 'Offene Übersetzungsvorschläge'
   mod_open_in_area: 'Offen in deinem Gebiet'
+  mod_more_open: 'Offene Arbeit unter Mehr'
   mod_room_new: 'Beiträge im Raum, die du noch nicht geöffnet hast'
   tab_contributions: 'Beiträge'
   tab_votes: 'Stimmen'

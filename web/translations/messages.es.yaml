@@ -3449,6 +3449,7 @@ account:
   mod_takedowns_open: 'Solicitudes de retirada abiertas'
   mod_translations_open: 'Propuestas de traducción abiertas'
   mod_open_in_area: 'Abiertas en tu zona'
+  mod_more_open: 'Trabajo pendiente en Más'
   mod_room_new: 'Entradas de la sala que aún no has abierto'
   tab_contributions: 'Aportaciones'
   tab_votes: 'Votos'

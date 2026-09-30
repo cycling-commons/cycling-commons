@@ -9,7 +9,7 @@
 {% include 'account/_dashboard_styles.html.twig' %}
 {% endblock %}
 
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: nav_active, mod_submission_count: mod_submission_count, mod_route_count: mod_route_count, mod_takedown_count: mod_takedown_count} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: nav_active} %}{% endblock %}
 
 {% block body %}
 <div class="dbody" id="main">

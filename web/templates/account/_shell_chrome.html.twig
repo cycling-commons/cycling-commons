@@ -26,10 +26,20 @@
 {% if in_moderation and is_granted('ROLE_CURATOR') %}
 {# Moderator mode: the bar carries ONLY the moderation tabs, on its own darker
    colour — no user items. Back to the personal area via the account chip. #}
+{# Every badge from ModerationChromeExtension, the same on every desk: open
+   work that goes down when it is decided, never because a page was visited
+   (moderation-and-contribution.md §5.0). #}
+{% set mod_submission_count = pending_submission_count() %}
+{% set mod_route_count = pending_route_count() %}
+{% set mod_takedown_count = pending_takedown_count() %}
+{% set mod_data_count = open_data_count() %}
 {% set mod_translation_count = pending_translation_count() %}
 {% set mod_bug_count = open_bug_count() %}
 {% set mod_report_count = open_report_count() %}
 {% set mod_room_count = curator_room_unread() %}
+{# More's badge: the sum of the badges inside it, so waiting work under it
+   shows without opening the menu. Data is the only desk there that queues. #}
+{% set mod_more_count = mod_data_count %}
 {% set _scope_names = moderation_scope_names() %}
 {% set _scope_line = _scope_names is empty ? 'account.mod_scope_all'|trans : _scope_names|join(' · ') %}
 {# The desks that filter by the curator's areas. On every other desk the area
@@ -47,12 +57,12 @@
   {# The dashboard: every desk's open count on one page (§5.0). No badge:
      it holds no work of its own. #}
   <a href="{{ path('moderate_dashboard') }}" class="dtab-mod {{ active == 'moderate_dashboard' ? 'on' : '' }}">{{ 'nav.dashboard'|trans }}</a>
-  <a href="{{ path('moderate_submissions') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count is defined and mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
-  <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}{% if mod_route_count is defined and mod_route_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_route_count }}</span>{% endif %}</a>
+  <a href="{{ path('moderate_submissions') }}" class="dtab-mod {{ active == 'moderate' ? 'on' : '' }}">{{ 'nav.moderate'|trans }}{% if mod_submission_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_submission_count }}</span>{% endif %}</a>
+  <a href="{{ path('moderate_routes') }}" class="dtab-mod {{ active == 'moderate_routes' ? 'on' : '' }}">{{ 'nav.routes'|trans }}{% if mod_route_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_route_count }}</span>{% endif %}</a>
   {# Takedowns: their own desk since 2026-08-03. A rights request on a legal
      clock does not belong at the bottom of an editorial backlog. Badge counts
      every open request, unscoped — these are not shared out by jurisdiction. #}
-  <a href="{{ path('moderate_takedowns') }}" class="dtab-mod {{ active == 'moderate_takedowns' ? 'on' : '' }}">{{ 'nav.takedowns'|trans }}{% if mod_takedown_count is defined and mod_takedown_count %}<span class="dtab-count" title="{{ 'account.mod_takedowns_open'|trans }}">{{ mod_takedown_count }}</span>{% endif %}</a>
+  <a href="{{ path('moderate_takedowns') }}" class="dtab-mod {{ active == 'moderate_takedowns' ? 'on' : '' }}">{{ 'nav.takedowns'|trans }}{% if mod_takedown_count %}<span class="dtab-count" title="{{ 'account.mod_takedowns_open'|trans }}">{{ mod_takedown_count }}</span>{% endif %}</a>
   {# Reports: notice and action under DSA Article 16, for everything that is
      not a photo. Next to takedowns because both run on a legal clock, and
      unscoped for the same reason (content-reports.md §9). #}
@@ -76,11 +86,11 @@
   <a href="{{ path('moderate_room') }}" class="dtab-mod {{ active == 'moderate_room' ? 'on' : '' }}">{{ 'nav.room'|trans }}{% if mod_room_count %}<span class="dtab-count" data-count-of="room" title="{{ 'account.mod_room_new'|trans }}">{{ mod_room_count }}</span>{% endif %}</a>
   </div>
   <div class="dtabs-more" data-nav-menu>
-    <button type="button" class="dtab-mod dtabs-more-btn{{ active in _more ? ' on' }}" data-nav-toggle aria-expanded="false" aria-controls="cc-mod-more">{{ 'account.menu_more'|trans }}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
+    <button type="button" class="dtab-mod dtabs-more-btn{{ active in _more ? ' on' }}" data-nav-toggle aria-expanded="false" aria-controls="cc-mod-more">{{ 'account.menu_more'|trans }}{% if mod_more_count %}<span class="dtab-count" title="{{ 'account.mod_more_open'|trans }}">{{ mod_more_count }}</span>{% endif %}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
     <div class="dtabs-more-dd" id="cc-mod-more" data-nav-dd hidden>
     {# Data desk: machine-raised findings about catalog rows. First under
        More, and badged there, because unlike Regions this one does queue. #}
-    <a href="{{ path('moderate_data') }}" class="{{ active == 'moderate_data' ? 'on' : '' }}">{{ 'nav.data'|trans }}{% if mod_data_count is defined and mod_data_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_data_count }}</span>{% endif %}</a>
+    <a href="{{ path('moderate_data') }}" class="{{ active == 'moderate_data' ? 'on' : '' }}">{{ 'nav.data'|trans }}{% if mod_data_count %}<span class="dtab-count" title="{{ 'account.mod_open_in_area'|trans }}">{{ mod_data_count }}</span>{% endif %}</a>
     {# Regions desk: the gated
        curated-by-default flag. No badge: nothing queues here. #}
     <a href="{{ path('moderate_regions') }}" class="{{ active == 'moderate_regions' ? 'on' : '' }}">{{ 'nav.regions'|trans }}</a>

@@ -103,9 +103,6 @@ final class ModerateDashboardController extends AbstractController
             'desks' => $desks,
             'room_posts' => \array_slice($board['posts'], 0, self::ROOM_POSTS),
             'my_decisions' => $this->submissions->history($scope, $curatorId, perPage: self::MY_DECISIONS),
-            'mod_submission_count' => $submissionCount,
-            'mod_route_count' => $routeCount,
-            'mod_takedown_count' => $takedownCount,
         ]);
     }
 }

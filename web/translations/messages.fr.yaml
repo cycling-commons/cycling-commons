@@ -3414,6 +3414,7 @@ account:
   mod_takedowns_open: 'Demandes de retrait ouvertes'
   mod_translations_open: 'Propositions de traduction ouvertes'
   mod_open_in_area: 'Ouverts dans votre zone'
+  mod_more_open: 'Travail en attente sous Plus'
   mod_room_new: 'Messages de la salle que vous n''avez pas encore ouverts'
   tab_contributions: 'Contributions'
   tab_votes: 'Votes'

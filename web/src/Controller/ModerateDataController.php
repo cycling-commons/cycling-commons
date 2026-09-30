@@ -84,7 +84,6 @@ final class ModerateDataController extends AbstractController
             'filters' => ['country' => $country, 'region' => $region],
             'countries' => $this->findings->countries($scope),
             'regions' => $this->findings->regions($scope),
-            'mod_data_count' => $this->findings->openCount($scope),
         ]);
     }
 

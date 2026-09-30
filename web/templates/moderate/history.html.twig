@@ -15,7 +15,7 @@
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 {% endblock %}
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate', mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate'} %}{% endblock %}
 
 {% block body %}
 {# The filters this page pages through, so every link keeps them. #}

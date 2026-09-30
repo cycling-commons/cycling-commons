@@ -21,7 +21,6 @@ use App\Moderation\RetentionService;
 use App\Moderation\RouteModerationService;
 use App\Moderation\RouteProposalDetails;
 use App\Moderation\RouteQueue;
-use App\Moderation\SubmissionQueue;
 use App\Moderation\TrashBlockedException;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
@@ -49,7 +48,6 @@ final class RouteModerateController extends AbstractController
         private readonly RouteModerationService $moderation,
         private readonly RetentionService $retention,
         private readonly ModerationScopeProvider $scopeProvider,
-        private readonly SubmissionQueue $submissionQueue,
         private readonly PageSize $pageSize,
     ) {
     }
@@ -127,8 +125,6 @@ final class RouteModerateController extends AbstractController
             'pager_params' => null === $regionId ? [] : ['region' => $regionId],
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
-            'mod_submission_count' => $this->submissionQueue->total($scope),
-            'mod_route_count' => $this->queue->total($scope) + $this->queue->pendingSuggestionCount($scope),
         ]);
     }
 
@@ -282,8 +278,6 @@ final class RouteModerateController extends AbstractController
             'proposal_photos' => 'submitted' === $row['state'] ? $this->queue->proposalPhotos($id) : [],
             'page_title' => 'moderate_routes.meta_title',
             'page_description' => 'moderate_routes.meta_description',
-            'mod_submission_count' => $this->submissionQueue->total($scope),
-            'mod_route_count' => $this->queue->total($scope) + $this->queue->pendingSuggestionCount($scope),
         ]);
     }
 

@@ -7,7 +7,7 @@
 {% include 'account/_shell_styles.html.twig' %}
 <link rel="stylesheet" href="{{ asset('styles/page/moderate/translation_detail.css') }}">
 {% endblock %}
-{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations', mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_translations'} %}{% endblock %}
 
 {% macro who(w) %}{%- if w.anonymous -%}
     {{ 'moderate.translation.anonymous'|trans }}

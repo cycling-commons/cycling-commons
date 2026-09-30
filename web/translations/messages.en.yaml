@@ -3440,6 +3440,7 @@ account:
   mod_takedowns_open: 'Open removal requests'
   mod_translations_open: 'Open translation proposals'
   mod_open_in_area: 'Open in your area'
+  mod_more_open: 'Open work under More'
   mod_room_new: 'Room posts you have not opened yet'
   tab_contributions: 'Contributions'
   tab_votes: 'Votes'

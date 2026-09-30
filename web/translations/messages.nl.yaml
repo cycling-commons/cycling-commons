@@ -3421,6 +3421,7 @@ account:
   mod_takedowns_open: 'Openstaande verwijderverzoeken'
   mod_translations_open: 'Openstaande vertaalvoorstellen'
   mod_open_in_area: 'Open in jouw gebied'
+  mod_more_open: 'Openstaand werk onder Meer'
   mod_room_new: 'Berichten in de kamer die je nog niet hebt geopend'
   tab_contributions: 'Bijdragen'
   tab_votes: 'Stemmen'
