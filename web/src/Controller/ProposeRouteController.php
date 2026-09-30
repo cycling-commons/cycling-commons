@@ -119,7 +119,8 @@ final class ProposeRouteController extends AbstractController
      * The desk reads the row itself, so the curator sees this version. The
      * photos already sent are shown, and more can be added up to the cap of
      * 6 through the same uploader as a first proposal; they are decided with
-     * the proposal.
+     * the proposal. A field a curator has edited on the Routes desk shows
+     * locked, and a save that ran into one names it in the flash.
      *
      * @see docs/specs/route-domain.md §4.6
      */
@@ -144,10 +145,23 @@ final class ProposeRouteController extends AbstractController
         $photoRoom = max(0, MediaClaimService::MAX_PER_SUBMISSION - $this->claims->routePhotoCount($id, null));
         $sentPhotos = $this->routeQueue->proposalPhotos($id);
 
-        $form = $this->createForm(ProposeRouteType::class, [
+        // What the form shows travels with it, so the save writes only what
+        // the proposer changed; a field a curator has edited is locked.
+        $shown = [
             RouteMetadata::NAME_FIELD => $route->getName(),
             ...RouteMetadata::formValues($route->getAttributes()),
-        ], ['proposal_edit' => true]);
+        ];
+        $held = $this->proposals->curatorHeld($route);
+        // A save locks what the form locked when it was shown. A field a
+        // curator edited since then arrives with the proposer's value, and
+        // revise() keeps the curator's and names it, instead of the lock
+        // dropping what the proposer typed without a word.
+        $locked = $request->isMethod('POST') ? array_values(array_intersect($held, self::lockedOf($request))) : $held;
+        $form = $this->createForm(ProposeRouteType::class, [
+            ...$shown,
+            'shown' => json_encode($shown, \JSON_THROW_ON_ERROR),
+            'locked' => json_encode($held, \JSON_THROW_ON_ERROR),
+        ], ['proposal_edit' => true, 'curator_held' => $locked]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -156,8 +170,10 @@ final class ProposeRouteController extends AbstractController
             $gpx = $data['gpx'] ?? null;
 
             try {
-                $this->proposals->revise($id, $gpx instanceof UploadedFile ? $gpx->getContent() : null, $data, $user);
-                $this->addFlash('success', 'flash.route_proposal_saved');
+                $revision = $this->proposals->revise($id, $gpx instanceof UploadedFile ? $gpx->getContent() : null, $data, $user);
+                $this->addFlash('success', [] === $revision->curatorKept
+                    ? 'flash.route_proposal_saved'
+                    : $this->translator->trans('flash.route_proposal_saved_curator_kept', ['%fields%' => $this->fieldLabels($revision->curatorKept)]));
 
                 return $back;
             } catch (AlreadyDecidedException) {
@@ -190,8 +206,39 @@ final class ProposeRouteController extends AbstractController
                 'pin' => $this->pinOf($id),
                 'photos' => $sentPhotos,
                 'photo_room' => $photoRoom,
+                'curator_held' => [] === $held ? null : $this->fieldLabels($held),
             ],
         ]);
+    }
+
+    /**
+     * The fields the proposer's form showed locked, from its `locked` field.
+     *
+     * @return list<string>
+     */
+    private static function lockedOf(Request $request): array
+    {
+        $raw = $request->request->all('propose_route')['locked'] ?? null;
+        if (!\is_string($raw)) {
+            return [];
+        }
+        try {
+            $locked = json_decode($raw, true, 2, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+
+        return \is_array($locked) ? array_values(array_filter($locked, 'is_string')) : [];
+    }
+
+    /**
+     * Route fields by the labels the forms show them under, as one list.
+     *
+     * @param list<string> $fields keys from {@see RouteMetadata::EDITABLE_FIELDS}
+     */
+    private function fieldLabels(array $fields): string
+    {
+        return implode(', ', array_map(fn (string $f): string => $this->translator->trans(RouteMetadata::LABELS[$f] ?? $f), $fields));
     }
 
     /**

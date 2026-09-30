@@ -3035,6 +3035,7 @@ propose_route:
   receipt_ref_open: 'Votre référence %ref% : la voir dans vos propositions d''itinéraires'
   edit:
     title: 'Modifier %name%'
+    curator_held: 'Un curateur a modifié %fields% pendant l''examen. Sa version est conservée, ces champs sont donc verrouillés ici.'
     lead: 'Votre proposition attend son examen. Tant qu''un curateur n''a pas tranché, vous pouvez la modifier ici, et il examine la version que vous enregistrez.'
     gpx_label: 'Remplacer le GPX (facultatif)'
     gpx_help: 'Laissez ce champ vide pour garder la trace envoyée. Un nouveau fichier (.gpx, 15 Mo max.) la remplace, et ses premières et dernières centaines de mètres sont de nouveau retirées.'
@@ -3302,6 +3303,7 @@ moderate_routes:
     heading: 'Photos envoyées avec cette proposition'
     keep: 'Garder'
     distance: 'à environ %v% de l''itinéraire'
+  revised: 'Modifiée par l''auteur, %date%'
   title: 'File de modération des itinéraires'
   kicker: 'File des itinéraires'
   meta_title: 'Modérer les itinéraires'
@@ -4169,6 +4171,7 @@ flash:
   withdrawn: 'Contribution retirée.'
   withdraw_too_late: 'Un curateur a tranché avant votre retrait ; le résultat est affiché ci-dessous.'
   route_proposal_saved: 'Proposition d''itinéraire enregistrée. Le curateur examine cette version.'
+  route_proposal_saved_curator_kept: 'Proposition d''itinéraire enregistrée. Un curateur a modifié %fields% pendant que vous l''éditiez, sa version est donc conservée.'
   route_edit_too_late: 'Un curateur a déjà tranché cette proposition d''itinéraire, elle ne peut donc plus être modifiée. Pour un itinéraire sur la carte, demandez une modification depuis son panneau.'
   invalid_token: 'Jeton de sécurité invalide. Veuillez réessayer.'
   deletion_code_sent: 'Consultez votre e-mail pour obtenir le code de suppression. Il expire dans 1 heure.'

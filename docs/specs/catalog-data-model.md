@@ -103,7 +103,7 @@ the identity (catalog-data-model.md §3).
 columns, not jsonb) · `region_id` (as in `item`) · `state` / `source` /
 `source_ref` / `attributes` / timestamps as in `item` · unique
 `uniq_route_source_ref (source, source_ref)` (no letter — the table *is* the
-letter). Route-domain extensions (`proposed_by`, suitability vocabulary, the
+letter). Route-domain extensions (`proposed_by`, `revised_at`, suitability vocabulary, the
 `route_vote` / `route_ride` / `route_suggestion` / `route_change_history`
 tables) are owned by route-domain.md.
 

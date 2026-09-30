@@ -3042,6 +3042,7 @@ propose_route:
   receipt_ref_open: 'Je referentie %ref%: bekijk hem bij jouw routevoorstellen'
   edit:
     title: '%name% bewerken'
+    curator_held: 'Een regiobeheerder heeft %fields% aangepast tijdens de beoordeling. Die versie blijft staan, dus deze velden zijn hier vergrendeld.'
     lead: 'Je voorstel wacht op beoordeling. Zolang een regiobeheerder niet beslist heeft, kun je het hier aanpassen, en die beoordeelt de versie die je opslaat.'
     gpx_label: 'GPX vervangen (optioneel)'
     gpx_help: 'Laat dit leeg om het verstuurde spoor te houden. Een nieuw bestand (.gpx, max. 15 MB) vervangt het, en de eerste en laatste paar honderd meter worden opnieuw weggelaten.'
@@ -3309,6 +3310,7 @@ moderate_routes:
     heading: 'Foto''s bij dit voorstel'
     keep: 'Behouden'
     distance: 'ongeveer %v% van de route'
+  revised: 'Aangepast door de indiener, %date%'
   title: 'Routes moderatiewachtrij'
   kicker: 'Routeswachtrij'
   meta_title: 'Routes modereren'
@@ -4176,6 +4178,7 @@ flash:
   withdrawn: 'Inzending ingetrokken.'
   withdraw_too_late: 'Een regiobeheerder besliste al vóór je intrekking; de uitkomst staat hieronder.'
   route_proposal_saved: 'Routevoorstel opgeslagen. De regiobeheerder beoordeelt deze versie.'
+  route_proposal_saved_curator_kept: 'Routevoorstel opgeslagen. Een regiobeheerder heeft %fields% aangepast terwijl je bewerkte, dus die versie blijft staan.'
   route_edit_too_late: 'Een regiobeheerder heeft al over dit routevoorstel beslist, dus het kan niet meer bewerkt worden. Voor een route op de kaart vraag je een wijziging aan vanuit het paneel.'
   invalid_token: 'Ongeldig beveiligingstoken. Probeer het opnieuw.'
   deletion_code_sent: 'Controleer je e-mail voor de verwijdercode. Deze verloopt over 1 uur.'

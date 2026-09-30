@@ -27,6 +27,10 @@
         {% endif %}
         <h3 class="q-title">{{ item.name }}</h3>
         <span class="q-when">{{ item.when }}</span>
+        {# The proposer changed the proposal after sending it (route-domain.md §4.6). #}
+        {% if item.revisedAt %}
+          <time class="q-tag q-tag--edit" data-revised datetime="{{ item.revisedAt|date('c') }}">{{ 'moderate_routes.revised'|trans({'%date%': item.revisedAt|cc_datetime}) }}</time>
+        {% endif %}
       </div>
       {% set region_label = item.regionId is null ? '' : cc_region_label(item.regionSlug, item.region) %}
       <div class="q-submitter">

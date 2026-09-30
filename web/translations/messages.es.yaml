@@ -2466,6 +2466,7 @@ propose_route:
   receipt_ref_open: 'Tu referencia %ref%: verla en tus propuestas de rutas'
   edit:
     title: 'Editar %name%'
+    curator_held: 'Un curador cambió %fields% durante la revisión. Su versión se mantiene, así que esos campos están bloqueados aquí.'
     lead: 'Tu propuesta espera revisión. Hasta que un curador decida, puedes cambiarla aquí, y se revisa la versión que guardes.'
     gpx_label: 'Sustituir el GPX (opcional)'
     gpx_help: 'Déjalo vacío para conservar el track enviado. Un archivo nuevo (.gpx, máx. 15 MB) lo sustituye, y se vuelven a quitar los primeros y últimos cientos de metros.'
@@ -3336,6 +3337,7 @@ moderate_routes:
     heading: 'Fotos enviadas con esta propuesta'
     keep: 'Conservar'
     distance: 'a unos %v% de la ruta'
+  revised: 'Revisada por quien la propuso, %date%'
   title: 'Escritorio de moderación de rutas'
   kicker: 'Cola de rutas'
   meta_title: 'Moderar rutas'
@@ -4204,6 +4206,7 @@ flash:
   withdrawn: 'Contribución retirada.'
   withdraw_too_late: 'Un curador decidió antes de tu retirada; el resultado se muestra abajo.'
   route_proposal_saved: 'Propuesta de ruta guardada. El curador revisa esta versión.'
+  route_proposal_saved_curator_kept: 'Propuesta de ruta guardada. Un curador cambió %fields% mientras editabas, así que su versión se mantiene.'
   route_edit_too_late: 'Un curador ya decidió sobre esta propuesta de ruta, así que ya no se puede editar. Para una ruta en el mapa, pide un cambio desde su panel.'
   invalid_token: 'Token de seguridad no válido. Inténtalo otra vez.'
   deletion_code_sent: 'Busca en tu correo el código de eliminación. Caduca en 1 hora.'

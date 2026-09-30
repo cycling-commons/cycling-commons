@@ -21,7 +21,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
  * Default: a first proposal, GPX plus the eight R metadata fields plus rider
  * photos (file content is validated later). With `proposal_edit`: the
  * proposer's own edit while the proposal waits for review, the same fields
- * with the GPX optional (a new file replaces the track) and more photos. With
+ * with the GPX optional (a new file replaces the track) and more photos, the
+ * values it showed in `shown`, and the fields a curator has edited
+ * (`curator_held`) locked. With
  * `route_photos`: photos and a note for the curator, the mode anyone may use
  * on any live route.
  *
@@ -73,6 +75,20 @@ final class ProposeRouteType extends AbstractType
             [RouteMetadata::NAME_FIELD, 'difficulty', 'season', 'dominantSurface', 'bikeTypes', 'gradientLimited', 'bestDirection'],
             required: true,
         );
+        if (!$edit) {
+            return;
+        }
+        // The values the form showed, as JSON, so the save writes only what
+        // the proposer changed (RouteProposalService::revise()).
+        $builder->add('shown', HiddenType::class, ['required' => false]);
+        // The fields it showed locked, as JSON, so a save locks the same ones.
+        $builder->add('locked', HiddenType::class, ['required' => false]);
+        // A field a curator has edited stays theirs while the proposal waits.
+        foreach ($options['curator_held'] as $field) {
+            if ($builder->has($field)) {
+                $builder->get($field)->setDisabled(true);
+            }
+        }
     }
 
     #[\Override]
@@ -82,8 +98,10 @@ final class ProposeRouteType extends AbstractType
             'data_class' => null,
             'route_photos' => false,
             'proposal_edit' => false,
+            'curator_held' => [],
         ]);
         $resolver->setAllowedTypes('route_photos', 'bool');
         $resolver->setAllowedTypes('proposal_edit', 'bool');
+        $resolver->setAllowedTypes('curator_held', 'string[]');
     }
 }

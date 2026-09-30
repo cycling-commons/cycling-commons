@@ -92,6 +92,9 @@
        same uploader. The stored line gives the uploader its pin. #}
     {{ form_start(form, {attr: {'data-route-photos': '', 'data-route-pin': edit_route.pin|json_encode}}) }}
       {{ form_errors(form) }}
+      {% if edit_route.curator_held %}
+        <p class="help" role="status" data-curator-held>{{ 'propose_route.edit.curator_held'|trans({'%fields%': edit_route.curator_held}) }}</p>
+      {% endif %}
 
       <fieldset>
         <legend>{{ 'propose_route.edit.gpx_label'|trans }}</legend>

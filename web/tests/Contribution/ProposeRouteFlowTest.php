@@ -10,6 +10,7 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
+use App\Moderation\RouteModerationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DomCrawler\Crawler;
@@ -424,6 +425,115 @@ final class ProposeRouteFlowTest extends WebTestCase
 
         $em->clear();
         self::assertSame('Edit me · Condroz', $em->find(RecommendedRoute::class, $id)?->getName());
+    }
+
+    /**
+     * route-domain.md §4.6: a curator's desk edit made while the proposer's
+     * form is open survives the proposer's later save of other fields. The
+     * save writes only what the proposer changed from what the form showed.
+     */
+    public function testACuratorsDeskEditSurvivesTheProposersLaterSave(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->rider($em, 'route-edit-race@test.test');
+        $id = (int) $this->proposal($em, $user)->getId();
+
+        $client->loginUser($user);
+        $form = $client->request('GET', '/propose-route/'.$id.'/edit')->filter('form[name="propose_route"]')->form();
+
+        // The curator sets the difficulty on the Routes desk while the form is open.
+        $curator = $this->rider($em, 'route-edit-race-curator@test.test', ['ROLE_CURATOR']);
+        static::getContainer()->get(RouteModerationService::class)->editMetadata($id, ['difficulty' => 'Hard'], $curator);
+
+        $form['propose_route[note]'] = 'Coffee stop at the church.';
+        $client->submit($form);
+        self::assertResponseRedirects('/account/contributions?letter=R#route-'.$id, 303);
+
+        $em->clear();
+        $saved = $em->find(RecommendedRoute::class, $id);
+        self::assertNotNull($saved);
+        self::assertSame('Hard', $saved->getAttributes()['difficulty']['label'] ?? null, 'the curator\'s difficulty stands');
+        self::assertSame('Coffee stop at the church.', $saved->getAttributes()['note'] ?? null, 'the proposer\'s own change is saved');
+        self::assertSame('Edit me · Condroz', $saved->getName());
+    }
+
+    /**
+     * A field a curator has edited stays the curator's while the proposal
+     * waits, even when the proposer changes it too: the save keeps the
+     * curator's value and says so, and the reopened form shows it locked.
+     */
+    public function testAFieldTheCuratorEditedStaysTheirs(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->rider($em, 'route-edit-held@test.test');
+        $id = (int) $this->proposal($em, $user)->getId();
+
+        $client->loginUser($user);
+        $form = $client->request('GET', '/propose-route/'.$id.'/edit')->filter('form[name="propose_route"]')->form();
+
+        $curator = $this->rider($em, 'route-edit-held-curator@test.test', ['ROLE_CURATOR']);
+        static::getContainer()->get(RouteModerationService::class)->editMetadata($id, ['difficulty' => 'Hard'], $curator);
+
+        $form['propose_route[difficulty]'] = 'Easy';
+        $form['propose_route[note]'] = 'Coffee stop at the church.';
+        $client->submit($form);
+        self::assertResponseRedirects('/account/contributions?letter=R#route-'.$id, 303);
+
+        $em->clear();
+        $saved = $em->find(RecommendedRoute::class, $id);
+        self::assertNotNull($saved);
+        self::assertSame('Hard', $saved->getAttributes()['difficulty']['label'] ?? null);
+        self::assertSame('Coffee stop at the church.', $saved->getAttributes()['note'] ?? null);
+
+        $client->followRedirect();
+        self::assertSelectorTextContains('#p-contrib .flash-success', 'A curator changed Difficulty while you were editing');
+
+        $crawler = $client->request('GET', '/propose-route/'.$id.'/edit');
+        self::assertSame('disabled', $crawler->filter('select[name="propose_route[difficulty]"]')->attr('disabled'), 'the curator\'s field is locked');
+        self::assertNull($crawler->filter('select[name="propose_route[dominantSurface]"]')->attr('disabled'), 'the others stay open');
+        self::assertStringContainsString('A curator changed Difficulty while reviewing', $crawler->filter('[data-curator-held]')->text());
+
+        // A save from the locked form leaves the curator's field alone and has nothing to report.
+        $form = $crawler->filter('form[name="propose_route"]')->form();
+        $form['propose_route[note]'] = 'Second visit.';
+        $client->submit($form);
+        $client->followRedirect();
+        self::assertSelectorTextContains('#p-contrib .flash-success', 'Route proposal saved. The curator reviews this version.');
+        $em->clear();
+        $saved = $em->find(RecommendedRoute::class, $id);
+        self::assertNotNull($saved);
+        self::assertSame('Hard', $saved->getAttributes()['difficulty']['label'] ?? null);
+        self::assertSame('Second visit.', $saved->getAttributes()['note'] ?? null);
+    }
+
+    /** The Routes desk card says when the proposer changed the proposal after sending it. */
+    public function testTheDeskCardShowsTheProposerRevisedIt(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->rider($em, 'route-edit-marker@test.test');
+        $id = (int) $this->proposal($em, $user)->getId();
+        $curator = $this->rider($em, 'route-edit-marker-curator@test.test', ['ROLE_CURATOR']);
+
+        $client->loginUser($curator);
+        $crawler = $client->request('GET', '/moderate/routes');
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $crawler->filter('[data-item-id="'.$id.'"] [data-revised]')->count(), 'never revised: no marker');
+
+        $client->loginUser($user);
+        $form = $client->request('GET', '/propose-route/'.$id.'/edit')->filter('form[name="propose_route"]')->form();
+        $form['propose_route[note]'] = 'Coffee stop at the church.';
+        $client->submit($form);
+        self::assertResponseRedirects('/account/contributions?letter=R#route-'.$id, 303);
+
+        $client->loginUser($curator);
+        $crawler = $client->request('GET', '/moderate/routes');
+        $marker = $crawler->filter('[data-item-id="'.$id.'"] [data-revised]');
+        self::assertSame(1, $marker->count(), 'the card carries the revised marker');
+        self::assertStringContainsString('Revised by the proposer', $marker->text());
+        self::assertNotSame('', (string) $marker->attr('datetime'), 'with the time');
     }
 
     /** Once a curator has decided, the edit sends the proposer back with a notice. */

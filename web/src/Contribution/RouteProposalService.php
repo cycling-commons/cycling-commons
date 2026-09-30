@@ -109,7 +109,15 @@ final class RouteProposalService
      * `mediaIds` are claimed by the proposal in the same transaction, within
      * the same cap of 6, and decided with it (photo-uploads.md §5i).
      *
-     * @param array<string, mixed> $meta form data, as for {@see propose()}
+     * A field is written only when the proposer changed it from what their
+     * form showed (`$meta['shown']`, the form's values when it was rendered;
+     * without it, the route's values now), so a save never writes back a
+     * value the proposer merely left alone. A field a curator has edited on
+     * the Routes desk ({@see curatorHeld()}) is never written: the proposer's
+     * change to it is dropped and named in the result. Any change marks the
+     * route revised, which the desk card shows.
+     *
+     * @param array<string, mixed> $meta form data, as for {@see propose()}, plus `shown`
      *
      * @see docs/specs/route-domain.md §4.6
      *
@@ -118,7 +126,7 @@ final class RouteProposalService
      * @throws TooManyRequestsHttpException over the daily edit limit
      * @throws \InvalidArgumentException    validation failure (message = translation key)
      */
-    public function revise(int $routeId, ?string $gpxContent, array $meta, User $user): RecommendedRoute
+    public function revise(int $routeId, ?string $gpxContent, array $meta, User $user): RouteRevision
     {
         $name = self::nameOf($meta);
         if (!$this->routeReviseLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
@@ -126,7 +134,7 @@ final class RouteProposalService
         }
         $track = null === $gpxContent ? null : $this->track($gpxContent);
 
-        return $this->em->wrapInTransaction(function () use ($routeId, $name, $track, $meta, $user): RecommendedRoute {
+        return $this->em->wrapInTransaction(function () use ($routeId, $name, $track, $meta, $user): RouteRevision {
             $route = $this->em->find(RecommendedRoute::class, $routeId, LockMode::PESSIMISTIC_WRITE);
             if (null === $route || null === $route->getProposedBy() || $route->getProposedBy() !== $user->getId()) {
                 throw new NotTheSubmitterException('Not this rider\'s route proposal.');
@@ -138,7 +146,41 @@ final class RouteProposalService
                 throw new AlreadyDecidedException('The route proposal has been decided.');
             }
 
-            $attributes = self::withMetadata($route->getAttributes(), $meta);
+            $held = $this->curatorHeld($route);
+            $shown = self::shownOf($meta);
+            $kept = [];
+            $changed = false;
+
+            $shownName = \is_string($shown[RouteMetadata::NAME_FIELD] ?? null) ? trim($shown[RouteMetadata::NAME_FIELD]) : $route->getName();
+            if ($name !== $shownName && $name !== $route->getName()) {
+                if (\in_array(RouteMetadata::NAME_FIELD, $held, true)) {
+                    $kept[] = RouteMetadata::NAME_FIELD;
+                } else {
+                    $route->setName($name);
+                    $changed = true;
+                }
+            }
+
+            $attributes = $route->getAttributes();
+            foreach (RouteMetadata::ATTRIBUTE_FIELDS as $key) {
+                $current = RouteMetadata::canonical($key, $attributes[$key] ?? null);
+                $mine = RouteMetadata::canonical($key, $meta[$key] ?? null);
+                $was = \array_key_exists($key, $shown) ? RouteMetadata::canonical($key, $shown[$key]) : $current;
+                if (RouteMetadata::isSame($mine, $was) || RouteMetadata::isSame($mine, $current)) {
+                    continue;
+                }
+                if (\in_array($key, $held, true)) {
+                    $kept[] = $key;
+                    continue;
+                }
+                if (null === $mine) {
+                    unset($attributes[$key]);
+                } else {
+                    $attributes[$key] = $mine;
+                }
+                $changed = true;
+            }
+
             if (null !== $track) {
                 unset($attributes['surfaces']);
                 if (null !== $track['surfaces']) {
@@ -148,16 +190,73 @@ final class RouteProposalService
                     ->setDistanceM($track['distanceM'])
                     ->setAscentM($track['ascentM'])
                     ->setRegionId($track['regionId']);
+                $changed = true;
             }
-            $route->setName($name)->setAttributes($attributes);
+            $route->setAttributes($attributes);
+
+            $photosBefore = $this->claims->routePhotoCount($routeId, null);
             try {
                 $this->claims->claimForRoute($meta['mediaIds'] ?? null, $user, $route, null, $meta['mediaAlts'] ?? null);
             } catch (\InvalidArgumentException) {
                 throw new \InvalidArgumentException('contribute.error.media_invalid');
             }
+            $this->em->flush();
+            if ($changed || $this->claims->routePhotoCount($routeId, null) > $photosBefore) {
+                $route->markRevised();
+            }
 
-            return $route;
+            return new RouteRevision($route, $kept);
         });
+    }
+
+    /**
+     * The fields of a proposal a curator has edited on the Routes desk, in the
+     * forms' order: every field with a `route_change_history` row written by
+     * anyone but the proposer. While the proposal waits, a curator's edit of a
+     * field is the reviewer's word on it, so the proposer's form shows these
+     * locked and {@see revise()} never writes them.
+     *
+     * @return list<string> keys from {@see RouteMetadata::EDITABLE_FIELDS}
+     */
+    public function curatorHeld(RecommendedRoute $route): array
+    {
+        /** @var list<string> $fields */
+        $fields = $this->em->getConnection()->fetchFirstColumn(
+            'SELECT DISTINCT field FROM route_change_history
+              WHERE route_id = :route AND changed_by IS DISTINCT FROM :proposer',
+            ['route' => (int) $route->getId(), 'proposer' => $route->getProposedBy()],
+        );
+        // History files a rename under `name`; the forms post it as NAME_FIELD.
+        $fields = array_map(static fn (string $f): string => 'name' === $f ? RouteMetadata::NAME_FIELD : $f, $fields);
+
+        return array_values(array_intersect(RouteMetadata::EDITABLE_FIELDS, $fields));
+    }
+
+    /**
+     * The values the proposer's form showed, keyed as the form posts them, from
+     * its `shown` field. Empty when the form carried none, which makes the
+     * route's values now the baseline.
+     *
+     * @param array<string, mixed> $meta
+     *
+     * @return array<string, mixed>
+     */
+    private static function shownOf(array $meta): array
+    {
+        $raw = $meta['shown'] ?? null;
+        if (!\is_string($raw) || '' === $raw) {
+            return [];
+        }
+        try {
+            $shown = json_decode($raw, true, 8, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return [];
+        }
+        if (!\is_array($shown)) {
+            return [];
+        }
+
+        return array_intersect_key($shown, array_flip(RouteMetadata::EDITABLE_FIELDS));
     }
 
     /**

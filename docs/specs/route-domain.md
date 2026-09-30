@@ -68,6 +68,7 @@ All in `web/src/Catalog/Entity/` unless noted.
 | `source_ref` | string(160) | **UNIQUE with `source`** (`uniq_route_source_ref`) |
 | `attributes` | jsonb | registry-validated metadata (route-domain.md §9) |
 | `proposed_by` | int, nullable | proposing rider's user id; NULL for imports. **Plain column, no relation** — provenance only, confers no edit rights |
+| `revised_at` | timestamp, nullable | when the proposer last changed the proposal after sending it (route-domain.md §4.6); NULL when they never did. The Routes desk card shows it |
 | `created_at` / `updated_at` / `imported_at` | timestamps | `imported_at` NULL for proposals (harvest-staleness signal only) |
 
 **source_ref convention:** proposals persist
@@ -301,7 +302,25 @@ offers the **Edit** link only while the proposal is `submitted`
 - **Saving** goes through `RouteProposalService::revise()`: the name and every
   registry field pass the same intake gate as a proposal
   (`RouteMetadata::canonical()`, an empty field leaving no key), and keys
-  outside the registry (`surfaces`, `photos`) are kept. New photos are
+  outside the registry (`surfaces`, `photos`) are kept. **A save writes only
+  what the proposer changed.** The form carries the values it showed (hidden
+  `shown`, JSON; without it the row's values now are the baseline), and a
+  field whose posted value equals the shown one is not written, so a save
+  never writes back a value the proposer left alone over a curator's edit
+  made while the form was open.
+- **A field a curator has edited stays the curator's** while the proposal
+  waits: every field with a `route_change_history` row by anyone but the
+  proposer (`RouteProposalService::curatorHeld()`; a curator's desk edit
+  writes one per changed field, route-domain.md §5) is never written by `revise()`. History
+  is the rule, not the form, so it holds however stale or altered the posted
+  form is. The reopened form shows those fields disabled under "A curator
+  changed %fields% while reviewing. Their version stays, so those fields are
+  locked here.", and a save locks the fields the form locked when it was
+  shown (hidden `locked`). A field a curator edited after the form was shown
+  arrives with the proposer's value; `revise()` keeps the curator's and the
+  proposer lands under "Route proposal saved. A curator changed %fields%
+  while you were editing, so their version stays." instead of the plain
+  notice (`RouteRevision::$curatorKept`). New photos are
   claimed by the proposal (`route_suggestion_id` null) inside the same
   locked transaction, so they stay unpublished and are decided with it; a bad
   id or a seventh photo refuses the whole save
@@ -317,7 +336,11 @@ offers the **Edit** link only while the proposal is `submitted`
 - **What the curator sees** is the saved version: the Routes desk's queue and
   detail page read `recommended_route` directly, with no snapshot of the
   proposal. The edit writes no `route_change_history` row, the same as the
-  first proposal: until a decision the proposal is the proposer's own text.
+  first proposal, so every history row on a waiting proposal is a curator's.
+  A save that changes anything (a field, the track, a new photo) sets
+  `recommended_route.revised_at`, and the queue card shows "Revised by the
+  proposer, %date%" (route-domain.md §5) so a curator knows the proposal changed since it
+  arrived or since they last looked.
 - After saving, the rider lands on their Contributions (`?letter=R`, the
   route's card anchored) under "Route proposal saved. The curator reviews this
   version."
@@ -339,7 +362,10 @@ directly (`App\Moderation\RouteQueue`).
   A third section lists the chosen region's **active routes** (§5.2), which is
   reach rather than work: nothing there waits for a decision.
   Each proposal row names its proposer and its region and carries the region's
-  `activeInRegion` count vs the cap (§5.1).
+  `activeInRegion` count vs the cap (§5.1). A proposal its proposer changed
+  after sending it (route-domain.md §4.6) carries the tag "Revised by the proposer, %date%",
+  from `recommended_route.revised_at`, the date and time in the curator's own
+  format (`cc_datetime`).
   The shell's ROUTES tab badge counts proposals **plus** pending corrections,
   so a waiting correction is never invisible.
 - **Decisions happen only on the detail page** (the review surface: trimmed

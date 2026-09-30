@@ -3043,6 +3043,7 @@ propose_route:
   receipt_ref_open: 'Deine Referenz %ref%: in deinen Routenvorschlägen ansehen'
   edit:
     title: '%name% bearbeiten'
+    curator_held: 'Ein Kurator hat %fields% bei der Prüfung geändert. Seine Fassung bleibt, darum sind diese Felder hier gesperrt.'
     lead: 'Dein Vorschlag wartet auf Prüfung. Bis ein Kurator entschieden hat, kannst du ihn hier ändern, und geprüft wird die Version, die du speicherst.'
     gpx_label: 'GPX ersetzen (optional)'
     gpx_help: 'Lass das Feld leer, um den gesendeten Track zu behalten. Eine neue Datei (.gpx, max. 15 MB) ersetzt ihn, und die ersten und letzten paar hundert Meter werden wieder entfernt.'
@@ -3310,6 +3311,7 @@ moderate_routes:
     heading: 'Mit diesem Vorschlag gesendete Fotos'
     keep: 'Behalten'
     distance: 'etwa %v% von der Route'
+  revised: 'Überarbeitet von der einreichenden Person, %date%'
   title: 'Routen-Moderationswarteschlange'
   kicker: 'Routenwarteschlange'
   meta_title: 'Routen moderieren'
@@ -4177,6 +4179,7 @@ flash:
   withdrawn: 'Beitrag zurückgezogen.'
   withdraw_too_late: 'Ein Kurator hat vor deinem Rückzug entschieden; das Ergebnis steht unten.'
   route_proposal_saved: 'Routenvorschlag gespeichert. Der Kurator prüft diese Version.'
+  route_proposal_saved_curator_kept: 'Routenvorschlag gespeichert. Ein Kurator hat %fields% geändert, während du bearbeitet hast, darum bleibt seine Fassung.'
   route_edit_too_late: 'Ein Kurator hat über diesen Routenvorschlag schon entschieden, darum lässt er sich nicht mehr bearbeiten. Für eine Route auf der Karte bitte im Seitenfenster der Route um eine Änderung.'
   invalid_token: 'Ungültiges Sicherheits-Token. Bitte versuche es erneut.'
   deletion_code_sent: 'Schau in deine E-Mails für den Löschcode. Er läuft in 1 Stunde ab.'

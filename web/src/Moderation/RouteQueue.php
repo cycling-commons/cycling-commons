@@ -40,7 +40,7 @@ final class RouteQueue
         ['sql' => $where, 'params' => $params, 'types' => $types] = $this->pendingWhere($scope, $regionId);
 
         $sql = 'SELECT r.id, r.name, r.region_id, reg.name AS region_name, reg.slug AS region_slug, r.distance_m, r.ascent_m,
-                       r.proposed_by, r.created_at, u.display_name, u.public_profile, u.uuid AS user_uuid, u.pseudonym,
+                       r.proposed_by, r.created_at, r.revised_at, u.display_name, u.public_profile, u.uuid AS user_uuid, u.pseudonym,
                        (SELECT COUNT(*) FROM recommended_route a
                          WHERE a.state IN '.ItemState::servedSqlTuple()."
                            AND a.region_id IS NOT DISTINCT FROM r.region_id) AS active_in_region
@@ -66,6 +66,8 @@ final class RouteQueue
             'ascent' => null === $row['ascent_m'] ? null : (int) $row['ascent_m'],
             'proposer' => DeskRider::of((int) $row['proposed_by'], $row['pseudonym'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
+            // Set when the proposer changed the proposal after sending it (route-domain.md §4.6).
+            'revisedAt' => null === $row['revised_at'] ? null : new \DateTimeImmutable((string) $row['revised_at']),
             'activeInRegion' => (int) $row['active_in_region'],
             'cap' => $cap,
         ], $this->db->fetchAllAssociative($sql, $params, $types));

@@ -2459,6 +2459,7 @@ propose_route:
   receipt_ref_open: 'Your reference %ref%: see it in your route proposals'
   edit:
     title: 'Edit %name%'
+    curator_held: 'A curator changed %fields% while reviewing. Their version stays, so those fields are locked here.'
     lead: 'Your proposal waits for review. Until a curator decides, you can change it here, and the curator reviews the version you save.'
     gpx_label: 'Replace the GPX (optional)'
     gpx_help: 'Leave this empty to keep the track you sent. A new file (.gpx, max 15 MB) replaces it, with the first and last few hundred metres removed again.'
@@ -3328,6 +3329,7 @@ moderate_routes:
     heading: 'Photos sent with this proposal'
     keep: 'Keep'
     distance: 'about %v% from the route'
+  revised: 'Revised by the proposer, %date%'
   title: 'Routes moderation desk'
   kicker: 'Routes queue'
   meta_title: 'Moderate routes'
@@ -4195,6 +4197,7 @@ flash:
   withdrawn: 'Submission withdrawn.'
   withdraw_too_late: 'A curator decided this one before your withdrawal; the outcome is shown below.'
   route_proposal_saved: 'Route proposal saved. The curator reviews this version.'
+  route_proposal_saved_curator_kept: 'Route proposal saved. A curator changed %fields% while you were editing, so their version stays.'
   route_edit_too_late: 'A curator has already decided this route proposal, so it can no longer be edited. For a route on the map, ask for a change from its drawer.'
   invalid_token: 'Invalid security token. Please try again.'
   deletion_code_sent: 'Check your email for the deletion code. It expires in 1 hour.'

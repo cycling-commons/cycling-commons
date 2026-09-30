@@ -81,6 +81,15 @@ class RecommendedRoute
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $importedAt = null;
 
+    /**
+     * When the proposer last changed the proposal after sending it; null when
+     * they never did. The Routes desk card shows it.
+     *
+     * @see docs/specs/route-domain.md §4.6
+     */
+    #[ORM\Column(name: 'revised_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $revisedAt = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -237,6 +246,19 @@ class RecommendedRoute
     public function setImportedAt(?\DateTimeImmutable $importedAt): static
     {
         $this->importedAt = $importedAt;
+
+        return $this;
+    }
+
+    public function getRevisedAt(): ?\DateTimeImmutable
+    {
+        return $this->revisedAt;
+    }
+
+    public function markRevised(): static
+    {
+        $this->revisedAt = new \DateTimeImmutable();
+        $this->touch();
 
         return $this;
     }
