@@ -1940,7 +1940,8 @@ its channel and id (`submission` / `correction`), the same thread Trash
 deletes through `MessageService::deleteThread()`. One statement per kind
 deletes the rows and their threads together (a `DELETE … RETURNING id` feeding
 a `DELETE … USING`), so a rider's inbox never keeps a conversation about a row
-that no longer exists. Three runners, no scheduler yet:
+that no longer exists. `idx_user_message_thread` on `(channel, ref_id)`
+(`Version20260930180000`) serves these thread deletes and reads. Three runners, no scheduler yet:
 
 1. **Lazy point-of-use filtering** — reads exclude expired rows regardless of
    whether a sweep ever ran (e.g. `ProfileController`'s contributions list

@@ -345,4 +345,18 @@ final class MessageServiceTest extends KernelTestCase
         self::assertSame([], $svc->repliesBySender($curator->getId(), [42]), 'scoped to the sender');
         self::assertSame([], $svc->repliesBySender($rider->getId(), []));
     }
+
+    /**
+     * Trash and the retention sweep delete a whole thread by (channel, ref_id);
+     * without this index each of them scans the table (Version20260930180000).
+     */
+    public function testThreadsAreIndexedByChannelAndRef(): void
+    {
+        $def = $this->em()->getConnection()->fetchOne(
+            "SELECT indexdef FROM pg_indexes WHERE tablename = 'user_message' AND indexname = 'idx_user_message_thread'",
+        );
+
+        self::assertIsString($def, 'the thread index exists');
+        self::assertStringContainsString('(channel, ref_id)', $def);
+    }
 }
