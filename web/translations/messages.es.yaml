@@ -3307,8 +3307,8 @@ moderate:
     cards: 'Tarjetas'
     list: 'Lista'
   rulebook:
-    private: 'Solo para moderadores — no está en la wiki pública'
-    download: 'Download the rulebook (PDF)'
+    private: 'Solo para curadores. No está en la wiki pública.'
+    download: 'Descargar el manual (PDF)'
     kicker: 'Moderación'
     title: 'Manual del moderador'
   history:

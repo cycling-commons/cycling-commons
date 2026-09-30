@@ -3273,8 +3273,8 @@ moderate:
     cards: 'Fiches'
     list: 'Liste'
   rulebook:
-    private: 'Réservé aux modérateurs — pas sur le wiki public'
-    download: 'Download the rulebook (PDF)'
+    private: 'Réservé aux curateurs. Absent du wiki public.'
+    download: 'Télécharger le manuel (PDF)'
     kicker: 'Modération'
     title: 'Manuel du modérateur'
   history:

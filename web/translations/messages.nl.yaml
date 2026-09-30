@@ -3280,8 +3280,8 @@ moderate:
     cards: 'Kaarten'
     list: 'Lijst'
   rulebook:
-    private: 'Alleen voor moderatoren — niet op de publieke wiki'
-    download: 'Download the rulebook (PDF)'
+    private: 'Alleen voor regiobeheerders. Niet op de openbare wiki.'
+    download: 'Download het handboek (pdf)'
     kicker: 'Moderatie'
     title: 'Moderatorhandboek'
   history:

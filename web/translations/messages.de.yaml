@@ -3281,8 +3281,8 @@ moderate:
     cards: 'Karten'
     list: 'Liste'
   rulebook:
-    private: 'Nur für Moderatoren — nicht im öffentlichen Wiki'
-    download: 'Download the rulebook (PDF)'
+    private: 'Nur für Kuratoren. Nicht im öffentlichen Wiki.'
+    download: 'Regelwerk herunterladen (PDF)'
     kicker: 'Moderation'
     title: 'Moderatoren-Regelwerk'
   history:
