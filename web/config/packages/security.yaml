@@ -52,6 +52,10 @@ security:
         # lazy-firewall reason as /map/catalog/stamps.json below — a session read here
         # would make both uncacheable, and these are fetched by every crawler.
         - { path: '^/(robots\.txt|sitemap\.xml)$', roles: PUBLIC_ACCESS }
+        # The social profiles' short links (App\Controller\SocialLinkController),
+        # for the same reason: a public 302 that a session read would turn
+        # private, followed by people who mostly have no account.
+        - { path: '^/(m|bs|li|ig|yt|r)$', roles: PUBLIC_ACCESS }
         # The Atom feed, for the same reason and with the same shape: a feed
         # reader polls it, it holds nothing personal, and without an explicit
         # rule scheb reads the token, the session usage index moves, and
