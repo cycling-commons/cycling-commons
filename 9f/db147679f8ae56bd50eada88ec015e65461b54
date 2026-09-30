@@ -1,0 +1,39 @@
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_dbc429b99e7e49 283
+  s_49442ae34d3603::t_44f357da242260 299-302,3416-3419
+  s_49442ae34d3603::t_d49004af7b2324 3420-3421
+web/tests/Moderation/QueueSearchTest.php
+  s_49442ae34d3603::t_d529fe27ed99db 9,14-15,23-24,136-193,195,199-218,220-222,224-234
+  s_49442ae34d3603::t_885d0a8166b939 235
+  s_49442ae34d3603::t_94c6106924e26c 219,223
+  s_49442ae34d3603::t_71cdd11c849a20 194,196-198
+web/tests/Moderation/CuratorRoomTest.php
+  s_49442ae34d3603::t_3193e629e8831d 505
+  s_49442ae34d3603::t_91e6b359113742 485-488
+web/src/Messaging/CuratorRoom.php
+  s_49442ae34d3603::t_fc411b0b7ced65 47,67,542,616,626-639
+  s_49442ae34d3603::t_9ccdbafb784530 9
+  s_49442ae34d3603::t_23de318edc896a 640-641
+web/src/Moderation/SubmissionQueue.php
+  s_49442ae34d3603::t_a18936ea0c40d0 129,132-141
+  s_49442ae34d3603::t_f5e6b764b8b237 130-131
+  s_49442ae34d3603::t_06f08419307975 115-121
+web/templates/moderate/_room_post.html.twig
+  s_49442ae34d3603::t_d6b4c6cd071d76 53-58,60-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9fdb147679f8ae56bd50eada88ec015e65461b54",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
