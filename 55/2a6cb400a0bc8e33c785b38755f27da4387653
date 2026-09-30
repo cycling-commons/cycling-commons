@@ -1,0 +1,134 @@
+web/templates/moderate/rulebook.html.twig
+  s_49442ae34d3603::t_05cdd8804b3534 68
+web/tests/js/shell-list-system.test.cjs
+  s_49442ae34d3603::t_ee5448ba7e7010 170,172,176-177
+  s_49442ae34d3603::t_e44756d91f6e9e 171
+web/tests/Moderation/CuratorRoomTest.php
+  s_49442ae34d3603::t_cee8c740fd615b 339,341-343,382-383
+  s_49442ae34d3603::t_05c1d4f4510272 361
+  s_49442ae34d3603::t_4c5cdd9a667be5 307,313,315-318,320-321,323-331,333-338,340,344-360,362-371,373-381,384-453
+  s_49442ae34d3603::t_1bcad8570037c6 682,705
+web/tests/Messaging/MessageOpenedTest.php
+  s_49442ae34d3603::t_c716cf3c3229f1 190
+  s_49442ae34d3603::t_8e9959f9fb63db 1-102,106-141,143-189,191-257
+  s_49442ae34d3603::t_9d29d08eed8d88 103-105,142
+web/tests/Messaging/MessagesPageTest.php
+  s_49442ae34d3603::t_f7d8e1281405b6 20,93,95,134-135,137,141
+web/templates/moderate/room.html.twig
+  s_49442ae34d3603::t_a68c8bf942713a 23
+  s_49442ae34d3603::t_b286a5efc05e8c 19
+web/src/EventSubscriber/OpenedByLinkSubscriber.php
+  s_49442ae34d3603::t_3866d25b57fe0c 62-70,78-81
+  s_49442ae34d3603::t_1fa83fa95782e5 1-61,71-77,82-94
+web/src/Messaging/CuratorRoom.php
+  s_49442ae34d3603::t_00d510ab8da491 51-52,72-73,440-444,449-457,459-462,465,469-472,474,476-481,483-496,571-572,653-654
+web/assets/js/open-to-read.js
+  s_49442ae34d3603::t_46d053b40be328 1-17,26-102
+  s_49442ae34d3603::t_3ef894d582b250 18-19,21-25
+  s_49442ae34d3603::t_22a039ef8f9f1f 20
+web/tests/Messaging/BulbTest.php
+  s_49442ae34d3603::t_5de9e071c98eda 19
+  s_49442ae34d3603::t_7aaf22aa6648bc 139,147,157,165-171
+web/templates/moderate/_room_post.html.twig
+  s_49442ae34d3603::t_b286a5efc05e8c 5,9-10,37,69,71,76
+  s_49442ae34d3603::t_ae5f564d0f86e7 6-8,11-12,36
+web/templates/partials/_account_chip.html.twig
+  s_49442ae34d3603::t_a68c8bf942713a 36-37,66
+  s_49442ae34d3603::t_c2b269f15d8e40 88
+web/templates/partials/_unseen.html.twig
+  s_49442ae34d3603::t_c1ebdb52809649 2
+  s_49442ae34d3603::t_2e90b15fd10dbd 1,3-6
+web/src/Controller/ModerateRoomController.php
+  s_49442ae34d3603::t_ed170eaa5b81de 61-62,76-97
+  s_49442ae34d3603::t_ddae3008178110 98-99
+web/src/Messaging/Entity/CuratorPostRead.php
+  s_49442ae34d3603::t_200edfa2e9bef5 1-61
+web/tests/js/open-to-read.test.cjs
+  s_49442ae34d3603::t_b9179f6e1987a7 1-4,10-90,93-99,102-118,121-147,149-179,181-186
+  s_49442ae34d3603::t_8c321bd515e205 5-7,91-92,100-101,119-120,148,180
+  s_49442ae34d3603::t_22a039ef8f9f1f 8-9
+web/templates/account/_shell_chrome.html.twig
+  s_49442ae34d3603::t_92a5f37aeaa87e 73
+  s_49442ae34d3603::t_16470730961e92 74-76
+web/src/Messaging/MessageService.php
+  s_49442ae34d3603::t_6474b0f52071a1 277,295-312
+  s_49442ae34d3603::t_8fe2b6e138c008 313-315
+docs/specs/public-api-personal-data-boundary.md
+  s_49442ae34d3603::t_2018819a85abfc 101,114
+docs/specs/account-and-auth.md
+  s_49442ae34d3603::t_19c0b5c6c67414 1024
+web/src/Controller/ModerateDashboardController.php
+  s_49442ae34d3603::t_63cb2cae92a65b 29-30
+web/assets/styles/page/moderate/_room_styles.css
+  s_49442ae34d3603::t_cad65b55243605 21
+  s_49442ae34d3603::t_605225044ba777 22-23
+web/migrations/Version20260930200000.php
+  s_49442ae34d3603::t_bc07b4c3074665 1-82
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_b60aeefecd4a80 5365
+  s_49442ae34d3603::t_6d3ffd5f0ba6e8 3511-3512
+  s_49442ae34d3603::t_fa163d6ee3a6db 3417
+  s_49442ae34d3603::t_107b6164899b2d 4983-4984
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_89569246f80cea 3424
+  s_49442ae34d3603::t_7ecbf62496014b 5372
+  s_49442ae34d3603::t_8680c890ccb734 3518-3519
+  s_49442ae34d3603::t_f33ec96eaded91 4990-4991
+web/assets/styles/page/messages/index.css
+  s_49442ae34d3603::t_605225044ba777 15-18,24-28,30
+  s_49442ae34d3603::t_218b7e5b909b9f 13-14,19-23,29
+web/tests/Controller/ModerateDashboardControllerTest.php
+  s_49442ae34d3603::t_752b6c8bb2a16b 48,50,55
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_def165c9a6a112 3537-3538
+  s_49442ae34d3603::t_ad773a12dfdefe 3443
+  s_49442ae34d3603::t_e92c5d7280f5b5 5394
+  s_49442ae34d3603::t_d37fc7d1fea5f5 5012-5013
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_d9e665cf42a3ce 4991-4992
+  s_49442ae34d3603::t_334c75cdd22d96 3425
+  s_49442ae34d3603::t_84c6025339ecf1 5373
+  s_49442ae34d3603::t_5bcbf1515d3f7e 3519-3520
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_1fe571b5c0f296 3546-3547
+  s_49442ae34d3603::t_f9a5acb0b485dd 5405
+  s_49442ae34d3603::t_b02d1cbbff65cc 3452
+  s_49442ae34d3603::t_c86c5f030655d2 5023-5024
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_5e61c247a6761d 895
+  s_49442ae34d3603::t_cf0f2fec090c4c 3420-3424,3436,3445
+  s_49442ae34d3603::t_732fb7a29bf9d5 3407-3411
+  s_49442ae34d3603::t_19c0b5c6c67414 893-894,1715-1741,1746-1751,1859-1863,3297-3304,3402-3406,3412-3419
+  s_49442ae34d3603::t_c580edf1d9c66d 1743-1745
+  s_49442ae34d3603::t_dd4cf2aec756e8 1742
+web/templates/messages/index.html.twig
+  s_49442ae34d3603::t_a68c8bf942713a 65,86
+  s_49442ae34d3603::t_06ff320b563b0e 4,9-10,89-91,106,109,111,138-141,201,203,205-209,235,246-247
+  s_49442ae34d3603::t_e44756d91f6e9e 5
+  s_49442ae34d3603::t_4183f45b1e8ddf 92-93,99-104,115
+  s_49442ae34d3603::t_3490aede1bdb93 6-8
+web/src/Controller/MessagesController.php
+  s_49442ae34d3603::t_7790a733e76b07 26,67-68,121,137-188
+  s_49442ae34d3603::t_9ff31e5cdc4f23 189
+web/assets/styles/page/account/_shell_styles.css
+  s_49442ae34d3603::t_a8f22ac47c9454 227-236
+  s_49442ae34d3603::t_e44756d91f6e9e 226
+web/src/Twig/ModerationChromeExtension.php
+  s_49442ae34d3603::t_1dbf4e9f999e3a 137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "552a6cb400a0bc8e33c785b38755f27da4387653",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
