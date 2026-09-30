@@ -1842,6 +1842,11 @@ in the system that is *waiting* on somebody, the least likely to complete.
   keys the dashboard uses, in the **recipient's** locale — not the locale of the
   curator who made the decision. One wording, so an email cannot drift from the
   page describing the same decision.
+- The place or route name in a body line is italic between single quotes
+  (`'<em>%title%</em>'`, `'<em>%name%</em>'` in all five locales); every param
+  value is HTML-escaped before substitution (`UserMessage::getBodyParamsHtml()`)
+  and both the inbox and the email render the line through `|rich`, so a name
+  always shows as text and never as markup.
 - The mail is a **pointer, not a copy**: headline, body line, the curator's own
   note, and a link. Never the photo, and never anything the dashboard would not
   show that same person. The note travels because on a needs-info the note *is*

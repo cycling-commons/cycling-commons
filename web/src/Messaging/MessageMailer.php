@@ -69,7 +69,7 @@ final readonly class MessageMailer
         $bodyKey = $message->getBodyKey();
         $body = null === $bodyKey
             ? null
-            : $this->translator->trans($bodyKey, $message->getBodyParams() ?? [], null, $locale);
+            : $this->translator->trans($bodyKey, $message->getBodyParamsHtml(), null, $locale);
 
         try {
             $this->mailer->send(

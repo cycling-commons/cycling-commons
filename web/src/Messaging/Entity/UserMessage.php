@@ -167,6 +167,27 @@ class UserMessage
         return $this->bodyParams;
     }
 
+    /**
+     * The body params with every value HTML-escaped, for the translated body
+     * line that the inbox and the notification email render through |rich.
+     * A place or route name is user text: escaped here, before substitution,
+     * it shows as text, and only the catalog's own markup (the <em> around
+     * the name) reaches the sanitiser as markup.
+     *
+     * @see docs/specs/moderation-and-contribution.md §7.8
+     *
+     * @return array<string, string>
+     */
+    public function getBodyParamsHtml(): array
+    {
+        $escaped = [];
+        foreach ($this->bodyParams ?? [] as $key => $value) {
+            $escaped[$key] = htmlspecialchars(\is_scalar($value) ? (string) $value : '', \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+        }
+
+        return $escaped;
+    }
+
     public function getBodyText(): ?string
     {
         return $this->bodyText;

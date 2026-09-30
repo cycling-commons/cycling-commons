@@ -23,7 +23,9 @@
   </h1>
 
   {% if body %}
-    <p style="margin:0 0 14px;color:#3f4235">{{ body }}</p>
+    {# HTML with its params already escaped (UserMessage::getBodyParamsHtml),
+       so |rich keeps only the catalog's markup: the <em> around a name. #}
+    <p style="margin:0 0 14px;color:#3f4235">{{ body|rich }}</p>
   {% endif %}
 
   {% if note %}

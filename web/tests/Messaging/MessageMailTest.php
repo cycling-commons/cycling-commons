@@ -157,4 +157,58 @@ final class MessageMailTest extends KernelTestCase
 
         self::assertCount(0, self::getMailerMessages());
     }
+
+    private function mailApproval(string $email, string $title): Email
+    {
+        self::bootKernel();
+        $svc = self::getContainer()->get(MessageService::class);
+        $rider = $this->user($email);
+
+        $svc->sendSystem(
+            $rider->getId(),
+            UserMessageKind::SubmissionApproved,
+            'submission',
+            5,
+            'SUB-5',
+            'messages.body.submission_approved',
+            ['%title%' => $title],
+        );
+        $this->em()->flush();
+        $this->deliverQueued();
+
+        $mail = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $mail);
+
+        return $mail;
+    }
+
+    /** The body line of the email: the paragraph right after the headline. */
+    private function bodyLine(Email $mail): string
+    {
+        $html = (string) $mail->getHtmlBody();
+        self::assertSame(1, preg_match('{</h1>\s*(?:<!--.*?-->\s*)?<p[^>]*>(.*?)</p>}s', $html, $m), 'the body paragraph follows the headline');
+
+        return $m[1];
+    }
+
+    /** The name stands out: italic, between single quotes. */
+    public function testTheEmailBodyShowsTheNameItalicBetweenQuotes(): void
+    {
+        $mail = $this->mailApproval('mail-italic@test.test', 'Zuder weg');
+
+        $line = html_entity_decode($this->bodyLine($mail), \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
+        self::assertStringContainsString("Your contribution '<em>Zuder weg</em>' was approved", $line);
+    }
+
+    /** A name is user text: it is shown as text, never parsed as markup. */
+    public function testAHostileNameIsEscapedInTheEmailBody(): void
+    {
+        $mail = $this->mailApproval('mail-hostile@test.test', '<script>alert(1)</script><b>x</b>');
+
+        $line = $this->bodyLine($mail);
+        self::assertStringNotContainsString('<script', $line);
+        self::assertStringNotContainsString('<b>', $line);
+        self::assertStringContainsString('<em>&lt;script&gt;alert(1)&lt;/script&gt;&lt;b&gt;x&lt;/b&gt;</em>', $line);
+        self::assertStringNotContainsString('<script', (string) $mail->getHtmlBody());
+    }
 }

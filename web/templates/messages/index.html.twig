@@ -138,7 +138,9 @@
                says nothing the card does not, so it only stands in for a
                question that is missing (rows from before the note was
                required). #}
-            {% if m.bodyKey and not (is_question and m.bodyText) %}{{ m.bodyKey|trans(m.bodyParams ?? {}) }}{% endif %}
+            {# Params escaped before substitution (UserMessage::getBodyParamsHtml),
+               so |rich keeps only the catalog's markup: the <em> around a name. #}
+            {% if m.bodyKey and not (is_question and m.bodyText) %}{{ m.bodyKey|trans(m.bodyParamsHtml)|rich }}{% endif %}
             {% if m.bodyText %}<p class="q-note msg-note">{{ m.bodyText }}</p>{% endif %}
             {# WHAT the contribution was. "Your contribution X was approved"
                names a place and stops, and a rider with two edits to the same

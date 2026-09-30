@@ -12,6 +12,7 @@ use App\Messaging\UserMessageKind;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
@@ -138,6 +139,48 @@ final class MessagesPageTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(2, $crawler2->filter('.msg-row'));
         self::assertCount(0, $crawler2->filter('.msg-row.msg-new'));
+    }
+
+    /**
+     * The name in the body line is italic between single quotes, and it is
+     * user text: a name that looks like markup is shown as text.
+     */
+    public function testTheBodyLineShowsTheNameItalicAndEscaped(): void
+    {
+        $client = static::createClient();
+
+        $email = 'messages-italic@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Italic Rider');
+        $riderId = $this->userId($email);
+
+        $svc = $this->svc();
+        $svc->sendSystem($riderId, UserMessageKind::SubmissionApproved, 'submission', 111, 'SUB-111',
+            'messages.body.submission_approved', ['%title%' => 'Zuder weg']);
+        $svc->sendSystem($riderId, UserMessageKind::SubmissionRejected, 'submission', 112, 'SUB-112',
+            'messages.body.submission_rejected', ['%title%' => '<script>alert(1)</script><b>x</b>']);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $this->loginAs($client, $email, $plain);
+        $crawler = $client->request('GET', '/account/messages');
+        self::assertResponseIsSuccessful();
+
+        $approved = $crawler->filter('.msg-row')->reduce(
+            static fn (Crawler $row): bool => str_contains($row->text(), 'SUB-111'),
+        );
+        self::assertCount(1, $approved);
+        $body = $approved->filter('.msg-body');
+        self::assertStringContainsString("'<em>Zuder weg</em>'", html_entity_decode($body->html(), \ENT_QUOTES | \ENT_HTML5, 'UTF-8'));
+        self::assertStringContainsString("Your contribution 'Zuder weg' was approved", $body->text());
+
+        $hostile = $crawler->filter('.msg-row')->reduce(
+            static fn (Crawler $row): bool => str_contains($row->text(), 'SUB-112'),
+        );
+        self::assertCount(1, $hostile);
+        $hostileBody = $hostile->filter('.msg-body');
+        self::assertCount(0, $hostileBody->filter('script'), 'no script element from a name');
+        self::assertCount(0, $hostileBody->filter('b'), 'no bold element from a name');
+        self::assertSame('<script>alert(1)</script><b>x</b>', $hostileBody->filter('em')->text());
+        self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;&lt;b&gt;x&lt;/b&gt;', (string) $client->getResponse()->getContent());
     }
 
     public function testEmptyStateShownWhenNoMessages(): void
