@@ -258,7 +258,7 @@
       <ul>
         <li data-rule="RB-PROV-01"><strong>One row per data provider</strong>, with its rank, licence, attribution notice and whether it is <em>Serving</em> or <em>Paused</em>. Every field you change is recorded, with who and when.</li>
         <li data-rule="RB-PROV-02"><strong>Change a licence or a rank only with the provider's licence in hand.</strong> The licence decides whether the site owes an attribution notice, and a provider whose licence needs one cannot be set to Serving without it.</li>
-        <li data-rule="RB-PROV-03"><strong>Rank orders providers against each other</strong> and never outranks a rider's own contribution. The OpenStreetMap and Wikidata ranks cannot be changed. Today every provider sits on one step of the duplicate check, so a rank change does not yet change which record riders see.</li>
+        <li data-rule="RB-PROV-03"><strong>Rank decides which record riders keep</strong> when two sources hold the same place: the duplicate check and the Data desk keep the higher rank. A rider's own contribution wins whatever the rank. The OpenStreetMap (100) and Wikidata (200) ranks cannot be changed, so a provider ranked below 100 loses to OpenStreetMap.</li>
         <li data-rule="RB-PROV-04"><strong>Serving puts nothing on the map.</strong> Places arrive only when a harvest runs, and there is no button for it: the desk prints the one command an operator runs, a dry run first and then the write.</li>
         <li data-rule="RB-PROV-05">Paused stops refreshes. Places already harvested stay on the map.</li>
       </ul>

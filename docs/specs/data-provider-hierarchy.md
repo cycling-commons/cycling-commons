@@ -109,17 +109,32 @@ Their ranks are seeded to today's values and are not curator-editable.
 
 ## 4. Hierarchy, and what changes about it
 
-Today the keeper order is a hardcoded ladder in `ItemSource::dedupeRank()`:
+The keeper order was a hardcoded ladder in `ItemSource::dedupeRank()`:
 `manual` > `user` > `scout` > `pivot` > `wikidata` > `osm` > `auto`.
 
-It becomes:
+It is now:
 
 `manual` > `user` > `scout` > **the registry's `rank`** > `auto`
 
-`osm` (rank 100) and `wikidata` (rank 200) keep their present positions as
-seeded registry rows, so nothing about existing behaviour moves. A new authority
-is admitted somewhere above `osm`, and the desk shows a curator exactly which
-existing datasets it would outrank before they save.
+`osm` (rank 100) and `wikidata` (rank 200) keep their positions as seeded
+registry rows whose rank the desk refuses to move. An `authority` row takes
+its own provider's rank through `item.provider_id`, so two providers holding
+one place are ordered by the numbers on the Providers desk, and a provider
+ranked below 100 loses to OpenStreetMap. A new authority is admitted somewhere
+above `osm`, and the desk shows a curator exactly which existing datasets it
+would outrank before they save.
+
+**Built 2026-09-30.** `App\Provider\ProviderRank` is the one resolver:
+the rider sources sit past `ProviderRegistry::RANK_MAX`, so no typed rank
+reaches them; `osm`, `wikidata` and each provider read their registry row;
+an `authority` row with no provider keeps the rung the old ladder gave every
+authority (just above Wikidata); `auto` sits below 0. Both places that pick a
+keeper read it, fresh for each sweep: `app:catalog:dedupe`, and the scan
+behind the Data desk's duplicate findings (`CatalogScanner::duplicateGroups()`),
+whose Yes keeps the ranked row. A rank saved on the desk decides the next run.
+The import report's "outranks" hint (`DuplicateGuard::explain()`) still
+compares sources on the fixed ladder; it decides nothing. Pinned by
+`ProviderRankTest`.
 
 Three rules that do not change and must be restated here because a registry
 makes them easy to break:
@@ -1182,10 +1197,10 @@ than discovered:
 1. **Registry and rename.** ✅ Built 2026-09-04. Table, seeded rows, the
    migration of §10 plus the `item.provider_id` link of §3, the enum change,
    and the doc and wiki sweep of §12. No behaviour change a rider can see: the
-   seeded ranks reproduce the old ladder, and `dedupeRank()` still returns one
-   fixed step for every authority. Reading the rank from the registry (§4) is
-   deliberately NOT in this phase; it lands with the harvester, when there is
-   a second authority for it to order.
+   seeded ranks reproduce the old ladder. Reading the rank from the registry
+   (§4) was deliberately NOT in this phase; it landed on 2026-09-30
+   (`App\Provider\ProviderRank`), once a second authority existed for it to
+   order.
 2. **Citation from the registry.** Drawer and credits read the table. The
    hardcoded string goes.
    - **The drawer half is built (2026-09-04).** The catalog payload carries a

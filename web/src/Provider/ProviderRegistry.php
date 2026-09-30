@@ -33,11 +33,9 @@ final class ProviderRegistry
      * The registry band, which sits ENTIRELY below every rider source.
      *
      * `manual`, `user` and `scout` are not expressible as a registry rank at
-     * all: {@see \App\Catalog\ItemSource::dedupeRank()} puts every authority
-     * on one rung beneath them, whatever number is stored here. So this cap
-     * is not what keeps a curator under a rider; the ladder's shape is. It
-     * keeps the number readable, and it keeps a typed 999999999 from looking
-     * like a decision somebody made.
+     * all: {@see ProviderRank} puts them past this cap, so no number stored
+     * here reaches them. The cap keeps the number readable, and it keeps a
+     * typed 999999999 from looking like a decision somebody made.
      */
     public const int RANK_MAX = 9999;
 

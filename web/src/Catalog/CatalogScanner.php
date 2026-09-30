@@ -9,6 +9,7 @@ namespace App\Catalog;
 use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\NameKey;
 use App\Catalog\Import\OsmLinker;
+use App\Provider\ProviderRank;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
@@ -30,6 +31,7 @@ final readonly class CatalogScanner
     public function __construct(
         private Connection $db,
         private OsmLinker $linker,
+        private ProviderRank $ranks,
     ) {
     }
 
@@ -54,6 +56,7 @@ final readonly class CatalogScanner
             $byKey[$row['letter'].'|'.$key][] = $row;
         }
 
+        $rank = $this->ranks->resolver();
         $groups = [];
         foreach ($byKey as $label => $members) {
             if (\count($members) < 2) {
@@ -63,9 +66,10 @@ final readonly class CatalogScanner
                 if (\count($cluster) < 2) {
                     continue;
                 }
-                // Best rank wins; a tie goes to the oldest row, which is the
+                // Best rank wins (ProviderRank: a rider's row, then the
+                // registry's rank); a tie goes to the oldest row, which is the
                 // one other things are most likely to already point at.
-                usort($cluster, static fn (array $a, array $b): int => [self::rank($b), (int) $a['id']] <=> [self::rank($a), (int) $b['id']]);
+                usort($cluster, static fn (array $a, array $b): int => [$rank($b), (int) $a['id']] <=> [$rank($a), (int) $b['id']]);
                 $keeper = array_shift($cluster);
 
                 $groups[] = [
@@ -131,12 +135,6 @@ final readonly class CatalogScanner
         return $out;
     }
 
-    /** @param array<string, mixed> $row */
-    public static function rank(array $row): int
-    {
-        return ItemSource::tryFrom((string) $row['source'])?->dedupeRank() ?? 0;
-    }
-
     /**
      * Single-linkage clusters within `radius` metres, on true geometry distance
      * so a climb's LINE is measured as a line and not as its midpoint.
@@ -187,7 +185,7 @@ final readonly class CatalogScanner
     /** @return list<array<string, mixed>> */
     private function servedRows(?string $letter): array
     {
-        $sql = 'SELECT i.id, i.letter, i.name, i.source, i.state, i.country_code, i.region_id,
+        $sql = 'SELECT i.id, i.letter, i.name, i.source, i.provider_id, i.state, i.country_code, i.region_id,
                        EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = i.id) AS edited
                   FROM item i
                  WHERE i.state IN '.ItemState::servedSqlTuple()."

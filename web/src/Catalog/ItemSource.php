@@ -35,13 +35,19 @@ enum ItemSource: string
     case Auto = 'auto';
 
     /**
-     * Which row to keep when two describe the same place (higher wins).
+     * The fixed source ladder: which row to keep when two describe the same
+     * place (higher wins), before the registry is consulted.
      *
-     * Used ONLY by the duplicate guard (`App\Catalog\Import\DuplicateGuard`) to
-     * pick a keeper. It is not a quality score and says nothing about a row's
-     * lifecycle state: an `unverified` manual pin still outranks a `verified`
-     * OSM one for this one question, because the question is "which of these
-     * two records of one place is ours to keep", not "which is better".
+     * The keeper itself is picked by {@see \App\Provider\ProviderRank},
+     * which keeps this order for the rider sources and `auto` and reads the
+     * registry's `rank` for `osm`, `wikidata` and each `authority` provider
+     * (data-provider-hierarchy.md §4). This ladder still answers the import
+     * report's "outranks" hint ({@see Import\DuplicateGuard::explain()}) and
+     * places an `authority` row with no provider. It is not a quality score
+     * and says nothing about a row's lifecycle state: an `unverified` manual
+     * pin still outranks a `verified` OSM one for this one question, because
+     * the question is "which of these two records of one place is ours to
+     * keep", not "which is better".
      *
      * The order:
      *  - `manual` is hand-authored by us and never upserted by a harvest
@@ -51,10 +57,7 @@ enum ItemSource: string
      *  - `authority` is a publisher of record and carries its own licence
      *    and attribution (data-provider-hierarchy.md §2). Losing such a row
      *    to an OSM row that imported first is the exact bug this ordering
-     *    fixes. Its registry row also carries a `rank`, which will replace
-     *    the single step here once more than one authority exists
-     *    (data-provider-hierarchy.md §4); until then every authority sits on
-     *    the one rung `pivot` sat on, so nothing moves.
+     *    fixes.
      *  - `wikidata` is a reviewed harvest artifact; `osm` is the raw one.
      *  - `auto` is machine-generated and delete-and-replaced wholesale
      *    (catalog-data-model.md §4), so it never wins anything.

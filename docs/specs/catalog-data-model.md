@@ -267,21 +267,21 @@ diagrammed in [osm-data-architecture.md §2](osm-data-architecture.md).
 (`RIDER_SOURCES` in `web/assets/map/i18n.js`); the rest keep their upstream
 citation in the drawer.
 
-!!! note "`pivot` became `authority` on 2026-09-04; the registry rank is still to come"
+!!! note "`pivot` became `authority` on 2026-09-04; each provider has its own rank since 2026-09-30"
     The value was a bucket named after its first member. It is now
     `authority`, and every row in it points at a `data_provider` row
     ([data-provider-hierarchy.md](data-provider-hierarchy.md) §3, §10).
-    The ladder below is unchanged: every authority still sits on the one
-    rung `pivot` sat on. Ranking each provider from its own registry row
-    (that document's §4) is specified and not built, and lands with the
-    generic harvester.
+    Each provider's registry `rank` orders it against the other providers
+    and against Wikidata (200) and OpenStreetMap (100), that document's §4.
 
-**Keeper order**, used by the duplicate guard alone
+**Keeper order**, used by the duplicate check alone
 (catalog-data-model.md §5a) and by nothing else:
-`manual` > `user` > `scout` > `authority` > `wikidata` > `osm` > `auto`. The
-authority is `App\Catalog\ItemSource::dedupeRank()`, which carries the reason
-for each position; do not restate the numbers here, they would drift. It is not
-a quality score and says nothing about a row's lifecycle state.
+`manual` > `user` > `scout` > the registry's `rank` > `auto`, where `osm` and
+`wikidata` take their own registry rows' rank and each `authority` row its
+provider's. The authority is `App\Provider\ProviderRank`, with the reason
+for each rider position in `App\Catalog\ItemSource::dedupeRank()`; do not
+restate the numbers here, they would drift. It is not a quality score and says
+nothing about a row's lifecycle state.
 
 **Provenance is not media.** These values answer where a *place record* came
 from. A photograph of that place is not a place, and third-party media (a
@@ -347,8 +347,11 @@ same reason, as `coverage-contract.json`: two implementations of one rule drift,
 and drift here means the import guard and the pre-screen report disagree about
 what a duplicate is.
 
-**Which row wins.** `ItemSource::dedupeRank()`:
-`manual` > `user` > `scout` > `authority` > `wikidata` > `osm` > `auto`. It is not a
+**Which row wins.** `App\Provider\ProviderRank`:
+`manual` > `user` > `scout` > the registry's `rank` > `auto`; with the seeded
+ranks that reads `authority` > `wikidata` > `osm` in between, and two
+providers holding one place are ordered by their own ranks
+([data-provider-hierarchy.md](data-provider-hierarchy.md) §4). It is not a
 quality score and says nothing about lifecycle state; it answers one question,
 "which of these two records of one place is ours to keep". Without it the winner
 is whichever harvest happened to import first, which is how a canonical PIVOT
@@ -488,7 +491,7 @@ non-OSM source, since neither `fx:pivot:…` nor `wikidata:Q…` can equal
 and once from the coverage cache.
 
 **Resolving a duplicate transfers the identity.** The keeper is the highest
-`ItemSource::dedupeRank()`, so the row retired is the lowest order, the one
+`ProviderRank`, so the row retired is the lowest order, the one
 closest to the primary source. The survivor **inherits the retired row's
 `osm_ref`** (falling back to its `source_ref` when the retired row is
 OSM-sourced), unless it already has one of its own.

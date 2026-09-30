@@ -95,7 +95,10 @@ does not remove the OpenStreetMap credit: it adds ours beside it.
 
 !!! note "Which row wins is a separate question again"
     When two rows turn out to describe one real place, the duplicate guard keeps
-    one, in the order above, top to bottom. That is a *bookkeeping* rule, not a
+    one, in the order above, top to bottom. Between two publishers of record,
+    and between a publisher and Wikidata or OpenStreetMap, the rank each has in
+    the provider registry decides; a rider's own row always wins. That is a
+    *bookkeeping* rule, not a
     quality judgement: a brand-new `manual` pin outranks a long-verified `osm`
     row, because the question being asked is "which of these two records is ours
     to keep", never "which is better". Specified in

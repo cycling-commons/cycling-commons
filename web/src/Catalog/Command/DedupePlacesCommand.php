@@ -8,8 +8,8 @@ namespace App\Catalog\Command;
 
 use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\NameKey;
-use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Provider\ProviderRank;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -30,8 +30,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *
  * Two rows are the same place when they share a letter, reduce to the same
  * {@see NameKey}, and sit within {@see DuplicateGuard::RADIUS_M}. The keeper is
- * the highest {@see ItemSource::dedupeRank()}; the rest are retired, never
- * deleted, so their history and their ids survive.
+ * the highest {@see ProviderRank}: a rider's row first, then the registry's
+ * rank for OpenStreetMap, Wikidata and every provider. The rest are retired,
+ * never deleted, so their history and their ids survive.
  *
  * **A row a human has edited is never retired.** If curator edits land on a row
  * that would otherwise lose, the whole group is reported and left alone: the
@@ -49,8 +50,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 final class DedupePlacesCommand extends Command
 {
-    public function __construct(private readonly Connection $db)
-    {
+    public function __construct(
+        private readonly Connection $db,
+        private readonly ProviderRank $ranks,
+    ) {
         parent::__construct();
     }
 
@@ -85,6 +88,7 @@ final class DedupePlacesCommand extends Command
             $byKey[$row['letter'].'|'.$key][] = $row;
         }
 
+        $rank = $this->ranks->resolver();
         $retire = [];
         $blocked = [];
         $groups = 0;
@@ -98,9 +102,10 @@ final class DedupePlacesCommand extends Command
                 }
                 ++$groups;
 
-                // Best rank wins; a tie goes to the oldest row, which is the one
-                // other things are most likely to already point at.
-                usort($cluster, static fn (array $a, array $b): int => [self::rank($b), (int) $a['id']] <=> [self::rank($a), (int) $b['id']]);
+                // Best rank wins (ProviderRank: a rider's row, then the
+                // registry's rank); a tie goes to the oldest row, which is the
+                // one other things are most likely to already point at.
+                usort($cluster, static fn (array $a, array $b): int => [$rank($b), (int) $a['id']] <=> [$rank($a), (int) $b['id']]);
                 $keeper = array_shift($cluster);
 
                 $edited = array_filter($cluster, static fn (array $r): bool => (bool) $r['edited']);
@@ -173,12 +178,6 @@ final class DedupePlacesCommand extends Command
             (bool) $row['edited'] ? ' [curator-edited]' : '');
     }
 
-    /** @param array<string, mixed> $row */
-    private static function rank(array $row): int
-    {
-        return ItemSource::tryFrom((string) $row['source'])?->dedupeRank() ?? 0;
-    }
-
     /**
      * Single-linkage clusters within `radius` metres, on true geometry
      * distance so a climb's LINE is measured as a line, not as its midpoint.
@@ -229,7 +228,7 @@ final class DedupePlacesCommand extends Command
     /** @return list<array<string, mixed>> */
     private function servedRows(?string $letter): array
     {
-        $sql = 'SELECT i.id, i.letter, i.name, i.source, i.state,
+        $sql = 'SELECT i.id, i.letter, i.name, i.source, i.provider_id, i.state,
                        EXISTS (SELECT 1 FROM change_history ch WHERE ch.item_id = i.id) AS edited
                   FROM item i
                  WHERE i.state IN '.ItemState::servedSqlTuple().'

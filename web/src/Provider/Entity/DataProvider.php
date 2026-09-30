@@ -144,7 +144,7 @@ class DataProvider
     private array $letters = [];
 
     /**
-     * Where this dataset sits in the keeper hierarchy.
+     * Where this dataset sits in the keeper hierarchy ({@see \App\Provider\ProviderRank}).
      *
      * Rider rows (`manual`, `user`, `scout`) sit above every row here and are
      * not expressible as one: a curator cannot give a provider a rank that
