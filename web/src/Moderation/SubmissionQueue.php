@@ -98,10 +98,7 @@ final class SubmissionQueue
         }
         self::letterFilter($letter, $where, $params);
         if (null !== $q && '' !== trim($q)) {
-            // ILIKE wildcards escaped in the bound value, never concatenated into SQL.
-            /* Title OR submitter display name. */
-            $where[] = '(s.title ILIKE :q OR EXISTS (SELECT 1 FROM users qu WHERE qu.id = s.user_id AND qu.display_name ILIKE :q))';
-            $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
+            self::searchFilter($q, false, $where, $params);
         }
         /* One person's open work, by user id never display name. */
         if (null !== $byUser) {
@@ -110,6 +107,29 @@ final class SubmissionQueue
         }
 
         return [$where, $params];
+    }
+
+    /**
+     * The search box (docs/specs/moderation-and-contribution.md §5.2).
+     *
+     * Matches the title, or the submitter by what the card shows for them
+     * (DeskRider::of()): the display name only when their profile is public,
+     * the `rider#` pseudonym always. On History (`$settled`) it also matches
+     * the deciding curator by display name, as the card names them
+     * (DeskRider::colleague()).
+     *
+     * @param list<string>         $where
+     * @param array<string, mixed> $params
+     */
+    private static function searchFilter(string $q, bool $settled, array &$where, array &$params): void
+    {
+        $q = trim($q);
+        // ILIKE wildcards escaped in the bound value, never concatenated into SQL.
+        $submitter = "EXISTS (SELECT 1 FROM users qu WHERE qu.id = s.user_id
+                        AND ((qu.public_profile AND qu.display_name ILIKE :q) OR ('rider#' || qu.pseudonym) ILIKE :q))";
+        $decider = $settled ? ' OR EXISTS (SELECT 1 FROM users qd WHERE qd.id = s.decided_by AND qd.display_name ILIKE :q)' : '';
+        $where[] = '(s.title ILIKE :q OR '.$submitter.$decider.')';
+        $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $q).'%';
     }
 
     /**
@@ -343,9 +363,7 @@ final class SubmissionQueue
             $params['st'] = $status;
         }
         if (null !== $q && '' !== trim($q)) {
-            // Title OR submitter, same as the open queue.
-            $where[] = '(s.title ILIKE :q OR EXISTS (SELECT 1 FROM users qu WHERE qu.id = s.user_id AND qu.display_name ILIKE :q))';
-            $params['q'] = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($q)).'%';
+            self::searchFilter($q, true, $where, $params);
         }
         $frag = $scope->sqlFragment('s');
         if ('' !== $frag['sql']) {

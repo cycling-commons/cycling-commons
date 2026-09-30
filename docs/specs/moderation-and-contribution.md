@@ -288,6 +288,14 @@ and a **title search**.
 - Search is `ILIKE` with the wildcards **in the bound value**, and `%`, `_` and
   `\` in what the curator typed are escaped — a `%` in the box matches a literal
   percent rather than silently matching everything.
+- **The search finds a person only by what the card shows for them**
+  (`SubmissionQueue::searchFilter()`, 2026-09-30). A submitter is matched by
+  display name only when their profile is public, and by their `rider#`
+  pseudonym always ([account-and-auth.md](account-and-auth.md) §9 "The rider
+  pseudonym"): a private rider's card shows the pseudonym, so matching their
+  real name would tell a curator which pseudonym the name belongs to. On
+  History the deciding curator is matched by display name too, as the card
+  names them (`DeskRider::colleague()`).
 - Trash audit rows are merged into the history only on **page one of an
   unfiltered, unsearched** view. They come from a different table with no shared
   cursor, so interleaving them across pages would drop or repeat rows as the
