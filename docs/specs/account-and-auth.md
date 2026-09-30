@@ -1138,8 +1138,13 @@ identity, and always was.
   ([photo-uploads.md](photo-uploads.md) §1.3c, §5d); a curator desk names a
   rider by display name only when that rider's profile is public, and
   otherwise by their stored pseudonym (`DeskRider::of()`, "The rider
-  pseudonym" below), and never shows a curator's name at all. Admin lists
-  that show a name show the email beside it.
+  pseudonym" below). Curators are named to
+  each other by display name whatever their profile setting (History, content
+  reports, the takedown desk, the curator room: `DeskRider::colleague()`,
+  [moderation-and-contribution.md](moderation-and-contribution.md)
+  "Curator-facing naming"); the name links to the uuid-keyed profile only
+  when that profile is public. Admin
+  lists that show a name show the email beside it.
 - A name is **stored exactly as typed** — `setDisplayName()` does no
   normalization of any kind.
 

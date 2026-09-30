@@ -841,10 +841,10 @@ pass the moderator area guard (§9).
 |---|---|
 | `id` | bigint identity |
 | `item_id` | bigint |
-| `submission_id` | bigint NULL (NULL reserved for future curator direct-edits) |
+| `submission_id` | bigint NULL (NULL for a change no submission carried: a verification by confirmation, a closure expiry) |
 | `field` | varchar(80) — attribute key, `name`, or `state` |
 | `old_value` / `new_value` | jsonb NULL |
-| `changed_by` | bigint (the deciding curator) |
+| `changed_by` | bigint: the submitter whose edit was applied, credited instead of the approving curator (`ModerationService::history()`); the rider or curator whose confirmation verified the item; `0` (`ChangeHistory::SYSTEM_ACTOR`) for a change nobody made, such as a closure expiry |
 | `changed_at` | timestamp |
 
 **Append-only invariant:** no UPDATE or DELETE code path exists for this table
