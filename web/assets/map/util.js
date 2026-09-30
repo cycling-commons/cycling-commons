@@ -25,10 +25,14 @@ export const curatorMayEdit = (regionId, scope) => {
 export const safeHref = u => { const s = String(u ?? '').trim(); return (/^https?:\/\//i.test(s) || (s.startsWith('/') && !s.startsWith('//'))) ? escPend(s) : '#'; };
 /* A person named on the pending card as the curator desks name them
    (App\Moderation\DeskRider): the name linked to their profile when the
-   server sent a uuid (a public profile), plain text otherwise. */
-export const deskRiderHtml = (name, uuid) => uuid
-  ? `<a class="desk-rider" href="/riders/${encodeURIComponent(uuid)}">${escPend(name)}</a>`
-  : escPend(name);
+   server sent a uuid (a public profile), plain text otherwise. A null name is
+   a rider whose account no longer exists: `removed`, the translated label,
+   never linked. */
+export const deskRiderHtml = (name, uuid, removed) => name == null
+  ? escPend(removed)
+  : uuid
+    ? `<a class="desk-rider" href="/riders/${encodeURIComponent(uuid)}">${escPend(name)}</a>`
+    : escPend(name);
 // docs/specs/map-and-search.md §7.4: a pasted point. The search row's chip and
 // the place card's badge are the same thing and must not drift apart.
 export const COORD_COLOR='#556070';

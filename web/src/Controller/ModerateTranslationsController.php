@@ -342,7 +342,7 @@ final class ModerateTranslationsController extends AbstractController
     }
 
     /**
-     * @param array{diff: list<array{type: string, text: string}>, who: array{anonymous: bool, rider: array{name: string, uuid: ?string}|null}}|null $edit
+     * @param array{diff: list<array{type: string, text: string}>, who: array{anonymous: bool, rider: array{name: ?string, uuid: ?string}|null}}|null $edit
      *
      * @return array<string, mixed>
      */
@@ -370,7 +370,7 @@ final class ModerateTranslationsController extends AbstractController
     }
 
     /**
-     * @return array{anonymous: bool, rider: array{name: string, uuid: ?string}|null}
+     * @return array{anonymous: bool, rider: array{name: ?string, uuid: ?string}|null}
      */
     private function who(?int $userId): array
     {

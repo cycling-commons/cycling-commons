@@ -64,7 +64,7 @@ final class RouteQueue
             'regionSlug' => $row['region_slug'],
             'km' => round(((int) $row['distance_m']) / 1000, 1),
             'ascent' => null === $row['ascent_m'] ? null : (int) $row['ascent_m'],
-            'proposer' => DeskRider::of((int) $row['proposed_by'], $row['pseudonym'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
+            'proposer' => DeskRider::of($row['pseudonym'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             // Set when the proposer changed the proposal after sending it (route-domain.md §4.6).
             'revisedAt' => null === $row['revised_at'] ? null : new \DateTimeImmutable((string) $row['revised_at']),
@@ -232,7 +232,7 @@ final class RouteQueue
             'routeName' => (string) $row['route_name'],
             'reason' => (string) $row['reason'],
             'note' => $row['note'],
-            'rider' => DeskRider::of((int) $row['user_id'], $row['pseudonym'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
+            'rider' => DeskRider::of($row['pseudonym'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'segmentCount' => (int) $row['seg_count'],
             // What a `metadata` correction proposes, one row per field, so the

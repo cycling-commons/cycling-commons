@@ -107,7 +107,8 @@ final class SubmissionQueueTest extends KernelTestCase
         }
         self::assertSame('hours: 24/7', $item['was']);
         self::assertSame('hours: closed Sundays', $item['now']);
-        self::assertMatchesRegularExpression('/^rider#[0-9a-f]{4}$/', $item['who']);
+        // The seeded submitter id names no account: no handle, the view writes the removed label.
+        self::assertNull($item['who']);
         self::assertIsFloat($item['lat']);
     }
 

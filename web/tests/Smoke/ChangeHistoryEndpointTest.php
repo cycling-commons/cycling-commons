@@ -41,7 +41,7 @@ final class ChangeHistoryEndpointTest extends WebTestCase
         self::assertSame('hours', $data['history'][0]['field']);
         self::assertSame('24/7', $data['history'][0]['oldValue']);
         self::assertSame('closed Sundays', $data['history'][0]['newValue']);
-        self::assertMatchesRegularExpression('/^rider#[0-9a-f]{4}$/', $data['history'][0]['who']);
+        self::assertNull($data['history'][0]['who'], 'user 3 names no account: no handle, the drawer writes the removed label');
 
         // Conditional revalidation, same contract as the catalog region slices.
         $client->request('GET', \sprintf('/map/item/%d/history', $itemId), [], [], ['HTTP_IF_NONE_MATCH' => $response->getEtag()]);

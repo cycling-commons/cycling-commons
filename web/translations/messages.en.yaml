@@ -2797,6 +2797,7 @@ map:
   d_shape_after: 'After'
   d_history: 'History'
   d_history_auto: 'automatically'
+  d_rider_removed: 'a removed rider'
   d_surface: 'Surface'
   d_road_type: 'Road type'
   d_smoothness: 'Smoothness'
@@ -3100,6 +3101,7 @@ map:
   locate_denied: 'Location is blocked for this site. Allow it in your browser settings, then reload the page.'
   locate_failed: 'Your location could not be found. Try again in a moment.'
 moderate:
+  rider_removed: 'a removed rider'
   town:
     title: 'Town card text'
     lede: 'What the map shows about this town, in every language we speak. The text was fetched from Wikipedia the first time somebody opened the town. Write over it when you know better: that language is then ours, and no fetch touches it again.'

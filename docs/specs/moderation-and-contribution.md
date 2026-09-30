@@ -922,7 +922,8 @@ by both `moderate/index.html.twig` and `map.js` (as `CC_PENDING` JSON):
 body, was, now, riderReply, priorRejection}` — `who` is the stable pseudonym
 `RiderPseudonym::handle()` (`rider#` and the account's stored eight
 characters, [account-and-auth.md](account-and-auth.md) §9 "The rider
-pseudonym"), `was`/`now` are the server-joined
+pseudonym"), or null for an account that no longer exists, which the desk
+and `map.js` write as "a removed rider", `was`/`now` are the server-joined
 diff strings. Contributor identity is never exposed to curators beyond the
 pseudonym.
 
@@ -1142,7 +1143,9 @@ at a time, so the row is sized for that:
   rider through `App\Moderation\DeskRider`: a rider who has made their profile
   public and has a display name is shown by that name (with their
   `/riders/{uuid}` as the link target), and everyone else stays
-  `rider#<pseudonym>` with no link. Wherever a desk shows the name, a public one is
+  `rider#<pseudonym>` with no link. A rider whose account no longer exists is
+  "a removed rider", never linked
+  ([account-and-auth.md](account-and-auth.md) §9). Wherever a desk shows the name, a public one is
   a link to that profile (the list follows the naming rule below). Showing the
   pseudonym to a rider who had deliberately gone public read as the setting
   being broken (owner-reported 2026-08-12).

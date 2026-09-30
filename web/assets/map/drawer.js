@@ -834,9 +834,11 @@ function stateWord(v){
   return v;
 }
 
-// History endpoint is cached: resolve the literal token `system` here.
+// History endpoint is cached: resolve the literal token `system` here, and a
+// null name (an account that no longer exists) to the removed label.
 function whoLabel(who){
-  return who === 'system' ? (D.historyAuto || 'automatically') : who;
+  if(who === 'system') return D.historyAuto || 'automatically';
+  return who == null ? (D.riderRemoved || 'a removed rider') : who;
 }
 
 function historyRow(h){

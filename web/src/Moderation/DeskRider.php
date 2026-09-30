@@ -12,8 +12,10 @@ use App\Entity\User;
 /**
  * How a curator desk names a rider: by display name, linked to their rider
  * profile, when the rider made that profile public; otherwise by the stored
- * pseudonym with no link (RiderPseudonym::handle()). Every desk card and review page asks this one class,
- * and templates/moderate/_rider_name.html.twig writes the answer.
+ * pseudonym with no link (RiderPseudonym::handle()). A rider whose account no
+ * longer exists has no name here (null) and is never linked; the template
+ * writes the removed label. Every desk card and review page asks this one
+ * class, and templates/moderate/_rider_name.html.twig writes the answer.
  *
  * A fellow curator (who decided, who posted in the room) is named by display
  * name whatever their profile setting, because curators are named to each
@@ -28,12 +30,12 @@ final class DeskRider
 {
     /**
      * `$pseudonym` is the stored `users.pseudonym`, null when the account no
-     * longer exists.
+     * longer exists, which makes `name` null.
      *
-     * @return array{name:string, uuid:?string} `uuid` is set only when the
-     *                                          name may link to `rider_profile`
+     * @return array{name:?string, uuid:?string} `uuid` is set only when the
+     *                                           name may link to `rider_profile`
      */
-    public static function of(int|string $userId, mixed $pseudonym, mixed $displayName, mixed $publicProfile, mixed $uuid): array
+    public static function of(mixed $pseudonym, mixed $displayName, mixed $publicProfile, mixed $uuid): array
     {
         $name = \is_string($displayName) ? trim($displayName) : '';
         if (\in_array($publicProfile, [true, 1, '1', 't', 'true'], true) && '' !== $name) {
@@ -42,15 +44,15 @@ final class DeskRider
             return ['name' => $name, 'uuid' => '' !== $profile ? $profile : null];
         }
 
-        return ['name' => RiderPseudonym::handle($pseudonym, $userId), 'uuid' => null];
+        return ['name' => RiderPseudonym::handle($pseudonym), 'uuid' => null];
     }
 
     /**
-     * @return array{name:string, uuid:?string}
+     * @return array{name:?string, uuid:?string}
      */
     public static function ofUser(User $user): array
     {
-        return self::of((int) $user->getId(), $user->getPseudonym(), $user->getDisplayName(), $user->isPublicProfile(), $user->getUuid()?->toRfc4122());
+        return self::of($user->getPseudonym(), $user->getDisplayName(), $user->isPublicProfile(), $user->getUuid()?->toRfc4122());
     }
 
     /**

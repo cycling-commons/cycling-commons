@@ -35,7 +35,12 @@ final class ChangeHistoryView
     ) {
     }
 
-    /** @return list<array{field:string, oldValue:mixed, newValue:mixed, who:string, when:string, changedAt:string}> */
+    /**
+     * `who` is null when the account that made the change no longer exists:
+     * the drawer writes the removed label, as it writes SYSTEM_LABEL.
+     *
+     * @return list<array{field:string, oldValue:mixed, newValue:mixed, who:?string, when:string, changedAt:string}>
+     */
     public function forItem(int $itemId, int $limit = 50): array
     {
         $rows = $this->db->fetchAllAssociative(
@@ -65,7 +70,7 @@ final class ChangeHistoryView
                     ? self::SYSTEM_LABEL
                     : ($r['public_profile'] && \is_string($r['display_name']) && '' !== $r['display_name']
                         ? $r['display_name']
-                        : RiderPseudonym::handle($r['pseudonym'], (int) $r['changed_by'])),
+                        : RiderPseudonym::handle($r['pseudonym'])),
                 'when' => RelativeTime::ago($changedAt, $now),
                 'changedAt' => $changedAt->format(\DateTimeInterface::ATOM),
             ];

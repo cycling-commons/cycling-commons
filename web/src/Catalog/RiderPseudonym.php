@@ -16,10 +16,8 @@ namespace App\Catalog;
  * nothing to compute from an id. They never change, whatever the rider does
  * with their profile or display name.
  *
- * An account that no longer exists has no stored pseudonym. Its old work shows
- * the handle derived from its id: `rider#` and the first four hex characters of
- * crc32b('cc-sub-'.id), the handle every rider had before pseudonyms were
- * stored.
+ * An account that no longer exists has no stored pseudonym and no handle: its
+ * old work shows one fixed, translated label, which the view writes.
  *
  * @see docs/specs/account-and-auth.md §9
  *
@@ -50,15 +48,12 @@ final class RiderPseudonym
     }
 
     /**
-     * The handle a view shows: the stored pseudonym, or for an account that no
-     * longer exists (`$stored` null) the handle derived from its id.
+     * The handle a view shows for a stored pseudonym. Null when there is none
+     * (`$stored` null: the account no longer exists), for the view to write the
+     * removed label.
      */
-    public static function handle(mixed $stored, int|string $userId): string
+    public static function handle(mixed $stored): ?string
     {
-        if (\is_string($stored) && self::isValid($stored)) {
-            return self::PREFIX.$stored;
-        }
-
-        return self::PREFIX.substr(hash('crc32b', 'cc-sub-'.$userId), 0, 4);
+        return \is_string($stored) && self::isValid($stored) ? self::PREFIX.$stored : null;
     }
 }

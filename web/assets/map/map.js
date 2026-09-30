@@ -250,8 +250,9 @@ import { layerGlyph } from './icons.js';
       const target = lyr && (lyr.features||[]).find(x => x.id != null && String(x.id) === String(s.itemId));
       return (target && pinPoint(target)) || [s.lat, s.lng];
     };
+    const removedRider = D.riderRemoved || 'a removed rider';
     const pf = window.CC_PENDING.map(s=>({
-      name:s.title, headline:`${(I18N.pendingTypes||{})[s.type]||s.type} · ${s.who} · ${s.when}`,
+      name:s.title, headline:`${(I18N.pendingTypes||{})[s.type]||s.type} · ${s.who ?? removedRider} · ${s.when}`,
       geom:{ll:pendingPin(s)},
       record:[
         (()=>{
@@ -259,7 +260,7 @@ import { layerGlyph } from './icons.js';
           const name = LAYER_L10N[lyr.key] || lyr.label || s.letter;
           return {label:D.type||'Type', html:true, value:layerGlyph(lyr, 13)+' '+escPend(name)};
         })(),
-        {label:D.submittedBy||'Submitted by', html:true, value:deskRiderHtml(s.who, s.whoUuid)},
+        {label:D.submittedBy||'Submitted by', html:true, value:deskRiderHtml(s.who, s.whoUuid, removedRider)},
         {label:D.age||'Age', value:s.when},
         {label:D.where||'Where', value:`${s.region||''} · ${s.country||''}`}
       ],

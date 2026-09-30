@@ -15,29 +15,29 @@ final class DeskRiderTest extends TestCase
 {
     public function testAPublicProfileIsTheDisplayNameLinkedToTheProfile(): void
     {
-        self::assertSame(['name' => 'Route Rider', 'uuid' => 'abc'], DeskRider::of(18, 'k7m2x9qp', ' Route Rider ', true, 'abc'));
+        self::assertSame(['name' => 'Route Rider', 'uuid' => 'abc'], DeskRider::of('k7m2x9qp', ' Route Rider ', true, 'abc'));
     }
 
     public function testAPrivateProfileIsThePseudonymWithoutALink(): void
     {
-        self::assertSame(['name' => 'rider#k7m2x9qp', 'uuid' => null], DeskRider::of(18, 'k7m2x9qp', 'Route Rider', false, 'abc'));
+        self::assertSame(['name' => 'rider#k7m2x9qp', 'uuid' => null], DeskRider::of('k7m2x9qp', 'Route Rider', false, 'abc'));
     }
 
     public function testAPublicProfileWithoutADisplayNameIsThePseudonymWithoutALink(): void
     {
-        self::assertSame(['name' => 'rider#k7m2x9qp', 'uuid' => null], DeskRider::of(18, 'k7m2x9qp', '  ', true, 'abc'));
-        self::assertSame(['name' => 'rider#k7m2x9qp', 'uuid' => null], DeskRider::of(18, 'k7m2x9qp', null, true, 'abc'));
+        self::assertSame(['name' => 'rider#k7m2x9qp', 'uuid' => null], DeskRider::of('k7m2x9qp', '  ', true, 'abc'));
+        self::assertSame(['name' => 'rider#k7m2x9qp', 'uuid' => null], DeskRider::of('k7m2x9qp', null, true, 'abc'));
     }
 
-    public function testARemovedAccountIsTheHandleDerivedFromItsId(): void
+    public function testARemovedAccountHasNoNameAndNoLink(): void
     {
-        // No row, no stored pseudonym: the handle every rider had before pseudonyms were stored.
-        self::assertSame(['name' => 'rider#'.substr(hash('crc32b', 'cc-sub-18'), 0, 4), 'uuid' => null], DeskRider::of(18, null, null, null, null));
+        // No row, no stored pseudonym: the view writes the removed label, nothing is made from the id.
+        self::assertSame(['name' => null, 'uuid' => null], DeskRider::of(null, null, null, null));
     }
 
     public function testAPublicProfileWithoutAUuidIsNamedButNotLinked(): void
     {
-        self::assertSame(['name' => 'Route Rider', 'uuid' => null], DeskRider::of(18, 'k7m2x9qp', 'Route Rider', true, null));
+        self::assertSame(['name' => 'Route Rider', 'uuid' => null], DeskRider::of('k7m2x9qp', 'Route Rider', true, null));
     }
 
     public function testAColleagueIsAlwaysNamedAndLinkedOnlyWithAPublicProfile(): void

@@ -2196,6 +2196,7 @@ map:
   d_shape_after: 'Après'
   d_history: 'Historique'
   d_history_auto: 'automatiquement'
+  d_rider_removed: 'un cycliste au compte supprimé'
   d_surface: 'Revêtement'
   d_road_type: 'Type de voie'
   d_smoothness: 'État du revêtement'
@@ -3074,6 +3075,7 @@ propose_route:
       route_gone: 'Cet itinéraire n''est plus sur la carte.'
       gpx_first: 'Choisissez d''abord le fichier GPX : la photo est stockée pour la région du monde où se trouve votre itinéraire.'
 moderate:
+  rider_removed: 'un cycliste au compte supprimé'
   town:
     title: 'Texte de la fiche ville'
     lede: 'Ce que la carte montre de cette ville, dans chaque langue que nous parlons. Le texte a été pris sur Wikipédia la première fois que quelquun a ouvert la ville. Réécrivez-le si vous savez mieux : cette langue devient la nôtre, et aucune récupération ny touche plus.'

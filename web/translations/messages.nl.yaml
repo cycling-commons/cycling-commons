@@ -2201,6 +2201,7 @@ map:
   d_shape_after: 'Na'
   d_history: 'Geschiedenis'
   d_history_auto: 'automatisch'
+  d_rider_removed: 'een fietser met verwijderd account'
   d_surface: 'Ondergrond'
   d_road_type: 'Wegtype'
   d_smoothness: 'Wegdekkwaliteit'
@@ -3081,6 +3082,7 @@ propose_route:
       route_gone: 'Deze route staat niet meer op de kaart.'
       gpx_first: 'Kies eerst het GPX-bestand: de foto wordt opgeslagen voor het deel van de wereld waar je route ligt.'
 moderate:
+  rider_removed: 'een fietser met verwijderd account'
   town:
     title: 'Tekst van de stadskaart'
     lede: 'Wat de kaart over deze plaats toont, in elke taal die we spreken. De tekst is van Wikipedia gehaald toen iemand de plaats voor het eerst opende. Schrijf eroverheen als je het beter weet: die taal is dan van ons, en geen ophaling raakt hem nog aan.'

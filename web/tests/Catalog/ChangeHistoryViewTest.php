@@ -60,7 +60,7 @@ final class ChangeHistoryViewTest extends KernelTestCase
         self::assertSame('pump', $rows[0]['field'], 'newest first');
         self::assertNull($rows[0]['oldValue']);
         self::assertSame('yes', $rows[0]['newValue']);
-        self::assertMatchesRegularExpression('/^rider#[0-9a-f]{4}$/', $rows[0]['who']);
+        self::assertNull($rows[0]['who'], 'user 9 names no account: no handle');
         self::assertNotSame('', $rows[0]['when']);
         self::assertSame('2026-07-03T10:00:00+00:00', $rows[0]['changedAt']);
 

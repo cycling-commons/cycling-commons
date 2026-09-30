@@ -262,7 +262,7 @@ final class RouteModerateController extends AbstractController
                 'state' => $row['state'], 'attributes' => $attrs,
                 // Named by the same rule as the queue card (DeskRider).
                 'proposer' => null === $row['proposed_by'] ? null
-                    : DeskRider::of((int) $row['proposed_by'], $row['proposer_pseudonym'], $row['proposer_name'], $row['proposer_public'], $row['proposer_uuid']),
+                    : DeskRider::of($row['proposer_pseudonym'], $row['proposer_name'], $row['proposer_public'], $row['proposer_uuid']),
             ],
             'details' => RouteProposalDetails::rows($attrs),
             'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),

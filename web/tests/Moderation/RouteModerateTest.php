@@ -201,6 +201,25 @@ final class RouteModerateTest extends WebTestCase
         self::assertSelectorTextNotContains('.q-item[data-item-id="'.$route->getId().'"] .q-submitter', $pseudonym);
     }
 
+    /** A proposer whose account is gone is the removed label, never a handle and never a link. */
+    public function testARemovedProposerIsTheRemovedLabel(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = $this->submittedRoute($em);
+        $em->getConnection()->executeStatement('UPDATE recommended_route SET proposed_by = 987654 WHERE id = ?', [$route->getId()]);
+
+        $client->loginUser($this->curator());
+        $client->request('GET', '/moderate/routes/'.$route->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.rd-meta [data-meta="proposer"]', 'a removed rider');
+        self::assertSelectorTextNotContains('.rd-meta [data-meta="proposer"]', 'rider#');
+        self::assertSelectorNotExists('.rd-meta [data-meta="proposer"] a');
+        $client->request('GET', '/moderate/routes');
+        self::assertSelectorTextContains('.q-item[data-item-id="'.$route->getId().'"] .q-submitter', 'a removed rider');
+        self::assertSelectorNotExists('.q-item[data-item-id="'.$route->getId().'"] .q-submitter a');
+    }
+
     /** The Region row names the region in the page's language, never its id. */
     public function testDetailNamesTheRegionInThePageLanguage(): void
     {

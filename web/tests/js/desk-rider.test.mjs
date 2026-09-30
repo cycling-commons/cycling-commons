@@ -20,3 +20,8 @@ test('no uuid: the name (a pseudonym) is plain text', () => {
 test('the name and the uuid are escaped', () => {
   assert.equal(deskRiderHtml('<b>x</b>', 'a"b'), '<a class="desk-rider" href="/riders/a%22b">&lt;b&gt;x&lt;/b&gt;</a>');
 });
+
+test('a rider whose account is gone (null name) is the removed label, never a link', () => {
+  assert.equal(deskRiderHtml(null, '', 'a removed rider'), 'a removed rider');
+  assert.equal(deskRiderHtml(null, '0190-ab', '<i>gone</i>'), '&lt;i&gt;gone&lt;/i&gt;');
+});

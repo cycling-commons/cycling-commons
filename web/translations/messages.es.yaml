@@ -2805,6 +2805,7 @@ map:
   d_shape_after: 'Después'
   d_history: 'Historial'
   d_history_auto: 'automáticamente'
+  d_rider_removed: 'un ciclista con la cuenta eliminada'
   d_surface: 'Firme'
   d_road_type: 'Tipo de vía'
   d_smoothness: 'Estado del firme'
@@ -3108,6 +3109,7 @@ map:
   locate_denied: 'La ubicación está bloqueada para este sitio. Permítela en los ajustes del navegador y vuelve a cargar la página.'
   locate_failed: 'No se ha podido encontrar tu ubicación. Inténtalo de nuevo en un momento.'
 moderate:
+  rider_removed: 'un ciclista con la cuenta eliminada'
   town:
     title: 'Texto de la ficha de la localidad'
     lede: 'Lo que el mapa muestra de esta localidad, en cada idioma que hablamos. El texto se tomó de Wikipedia la primera vez que alguien abrió la localidad. Reescríbelo si sabes más: ese idioma pasa a ser nuestro y ninguna descarga vuelve a tocarlo.'

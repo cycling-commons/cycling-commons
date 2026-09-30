@@ -7,7 +7,7 @@
 
   Parameters:
     text   string                            the translated sentence
-    rider  array{name:string, uuid:?string}
+    rider  array{name:?string, uuid:?string}
 #}
 {%- set parts = text|split('@@rider@@', 2) -%}
 {{ parts[0] }}

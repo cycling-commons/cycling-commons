@@ -347,7 +347,7 @@ final class MapController extends AbstractController
             'source' => 'd_source', 'editItem' => 'd_edit_item', 'fixLocation' => 'd_fix_location',
             'voteRound' => 'd_vote_round', 'downloadGpx' => 'd_download_gpx',
             'proposedChange' => 'd_proposed_change', 'history' => 'd_history', 'initialEntry' => 'd_initial_entry',
-            'historyAuto' => 'd_history_auto',
+            'historyAuto' => 'd_history_auto', 'riderRemoved' => 'd_rider_removed',
             'surfCycleway' => 'legend_cycleway', 'surfPaved' => 'legend_paved',
             'surfGravel' => 'legend_gravel', 'surfCobbles' => 'legend_cobbles',
             'surfDirt' => 'legend_dirt', 'surfRock' => 'legend_rock',

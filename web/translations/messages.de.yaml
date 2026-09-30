@@ -2204,6 +2204,7 @@ map:
   d_shape_after: 'Nachher'
   d_history: 'Verlauf'
   d_history_auto: 'automatisch'
+  d_rider_removed: 'ein Fahrer mit gelöschtem Konto'
   d_surface: 'Belag'
   d_road_type: 'Wegtyp'
   d_smoothness: 'Belagsqualität'
@@ -3082,6 +3083,7 @@ propose_route:
       route_gone: 'Diese Route ist nicht mehr auf der Karte.'
       gpx_first: 'Wähle zuerst die GPX-Datei: Das Foto wird für den Teil der Welt gespeichert, in dem deine Route liegt.'
 moderate:
+  rider_removed: 'ein Fahrer mit gelöschtem Konto'
   town:
     title: 'Text der Ortskarte'
     lede: 'Was die Karte über diesen Ort zeigt, in jeder Sprache, die wir sprechen. Der Text wurde von Wikipedia geholt, als jemand den Ort zum ersten Mal öffnete. Überschreibe ihn, wenn du es besser weißt: diese Sprache ist dann unsere, und kein Abruf rührt sie mehr an.'

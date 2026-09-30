@@ -1166,14 +1166,18 @@ change history, in translate mode and in the rider's own data export
   Nothing computes it from the id or anything else.
 - **It never changes.** Not when the profile goes public or private, not when
   the display name changes. There is no setter.
-- **One class writes the handle**: `RiderPseudonym::handle($stored, $userId)`
-  returns `rider#` and the stored value.
-- **A removed account** has no row, so no stored pseudonym. Its work that
-  stays (submissions, change history, route proposals and suggestions keep the
-  plain user id, §6.3) shows the handle derived from that id: `rider#` and the
-  first four hex characters of crc32b(`cc-sub-<id>`), the handle every rider
-  had before pseudonyms were stored. Four hex characters never read as a
-  stored pseudonym.
+- **One class writes the handle**: `RiderPseudonym::handle($stored)`
+  returns `rider#` and the stored value, and null when there is none. It takes
+  no user id, and no code computes a handle from one.
+- **A removed account** has no row, so no stored pseudonym and no handle. Its
+  work that stays (submissions, change history, route proposals and
+  suggestions keep the plain user id, §6.3) shows one fixed, translated label,
+  never linked: "a removed rider" (`moderate.rider_removed` on the curator
+  desks through `moderate/_rider_name.html.twig`; `map.d_rider_removed` in the
+  map drawer's change history and pending card). The data layer carries the
+  name as null (`DeskRider::of()`, `SubmissionQueue` `who`,
+  `ChangeHistoryView` `who`) and the view writes the label, so the publicly
+  cached history body does not vary by locale.
 - `Version20260930163712` added the column and gave every existing account a
   random value; the handles shown before it were replaced once.
 

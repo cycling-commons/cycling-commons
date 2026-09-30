@@ -68,7 +68,9 @@ Months 180. Past it, the item is moved to `retired` and stops being served.
   with `changed_by = 0` (`ChangeHistory::SYSTEM_ACTOR`), so an item's public
   history explains the disappearance. The history endpoint emits the token
   `system` rather than a translated word, because it is publicly cached and its
-  body must not vary by locale; the client renders `d_history_auto`.
+  body must not vary by locale; the client renders `d_history_auto`. A change
+  by an account that no longer exists comes as a null `who`, rendered as
+  `d_rider_removed` ("a removed rider") the same way.
 
 **Something has to run it.** `app:catalog:expire-closures` (dry-run by default,
 `--write` to act) belongs on the worker host beside `app:moderation:gc` and

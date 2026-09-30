@@ -117,11 +117,12 @@
                      would print "Water & food WATER & FOOD". #}
                   {% if h.typeLabel is defined and h.typeLabel and (h.typeLabel|trans) != h.title %}<span class="q-kind">{{ h.typeLabel|trans }}</span>{% endif %}</h3>
               </div>
-              {# A trashed row carries no title and no rider: the audit is
-                 content-free by design, so all there is to show is who did it. #}
+              {# A trashed row carries no title and no rider (`who` ''): the
+                 audit is content-free by design, so all there is to show is
+                 who did it. A null `who` is a rider whose account is gone. #}
               <div class="q-submitter"><span class="q-who">
-                {%- if h.who %}{% include 'moderate/_rider_name.html.twig' with {rider: {name: h.who, uuid: h.whoUuid ?: null}} only %}{% endif -%}
-                {%- if h.decidedBy %}{% if h.who %} · {% endif %}{% include 'moderate/_rider_in_text.html.twig' with {text: 'moderate.history.by'|trans({'%who%': '@@rider@@'}), rider: {name: h.decidedBy, uuid: h.decidedByUuid}} only %}{% endif -%}
+                {%- if h.who is not same as('') %}{% include 'moderate/_rider_name.html.twig' with {rider: {name: h.who, uuid: h.whoUuid ?: null}} only %}{% endif -%}
+                {%- if h.decidedBy %}{% if h.who is not same as('') %} · {% endif %}{% include 'moderate/_rider_in_text.html.twig' with {text: 'moderate.history.by'|trans({'%who%': '@@rider@@'}), rider: {name: h.decidedBy, uuid: h.decidedByUuid}} only %}{% endif -%}
               </span></div>
             </div>
             <div class="q-acts">
