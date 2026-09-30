@@ -20,7 +20,8 @@
 {% block body %}
 {# The filters this page pages through, so every link keeps them. #}
 {% set hparams = {handled: history_filters.mine ? 'mine' : null, hstatus: history_filters.status, q: history_filters.q,
-                  country: history_filters.country, region: history_filters.region, type: history_filters.type} %}
+                  country: history_filters.country, region: history_filters.region, type: history_filters.type,
+                  letter: history_filters.letter} %}
 {% set verdict_pill = {'approved': 'ok', 'rejected': 'rej', 'trashed': 'danger'} %}
 <div class="dbody" id="main">
   <div class="mh">
@@ -33,7 +34,7 @@
     <a class="lchip on mod-desk-hist" href="{{ path('moderate_history') }}">{{ 'moderate.desk_history'|trans }}</a>
   </nav>
 
-  {# The same three selects the queue carries, plus the search — a curator who
+  {# The same four selects the queue carries, plus the search: a curator who
      narrows the desk to their country narrows the record the same way, with the
      same controls (owner, 2026-08-03). The everyone/mine and status chips below
      stay chips: they are two-and-three-way switches, not lists. #}
@@ -57,6 +58,12 @@
       <select name="type" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
         {% for t in types %}<option value="{{ t }}"{{ history_filters.type == t ? ' selected' }}>{{ ('moderate.type.' ~ t)|trans }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ 'moderate.filter.category'|trans }}
+      <select name="letter" data-autosubmit>
+        <option value="">{{ 'moderate.filter.all'|trans }}</option>
+        {% for k in kinds %}<option value="{{ k.letter }}"{{ history_filters.letter == k.letter ? ' selected' }}>{{ k.labelKey|trans }}</option>{% endfor %}
       </select>
     </label>
     <label class="mod-search">{{ 'moderate.filter.search'|trans }}

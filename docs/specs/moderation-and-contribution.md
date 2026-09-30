@@ -296,13 +296,24 @@ and a **title search**.
 - The pager is plain links carrying the active filters, so a filtered page can
   be bookmarked and sent to a colleague, and a decision redirect comes back to
   the same view.
-- **Both desks carry the same filter row** — country, region, type, search —
-  built from the same markup, with the search field and pager styled once in
+- **Both desks carry the same filter row** (country, region, type, category,
+  search), built from the same markup, with the search field and pager styled once in
   the shell's stylesheet (`assets/styles/page/account/_shell_styles.css`), so
   neither desk renders an unstyled browser default beside a designed one.
 - The history's country/region option lists describe the **settled** set, not
   the open queue (`statusTuple()`): a country with no open work can still have
   a record worth reading.
+- **Category** (`?letter=`, owner 2026-09-30) is the kind of place, the same
+  list the rider's `/account/contributions` chips offer: every
+  `ItemType::placeKinds()` entry (all catalog types except routes, which have
+  their own desk), in declaration order, labelled by `ItemType::labelKey()`.
+  It filters on `submission.letter` with a bound parameter. Unlike the rider's
+  chips, which show only kinds the rider has, the select lists **every** kind
+  whether or not the desk holds one, so the control reads the same on every
+  visit. A value that is not a place kind (`R`, an unknown letter, a slug) is
+  ignored and the list stays whole (`ItemType::placeKindFromLetter()`), the
+  same way an unknown `hstatus` is. The map's pending layer takes none of these
+  filters.
 
 **The regions desk filters by country** (2026-08-03, owner). Options come from
 the regions the curator can see, built **before** the filter narrows them — a
@@ -880,13 +891,14 @@ A curator must see the item in place before deciding:
   (`ModerateController::renderQueue()`); `POST /moderate/decide` remains the
   single decision endpoint, content-negotiated: JSON for the drawer's AJAX
   POST (`X-Requested-With` / `Accept: application/json`), redirect-after-POST
-  preserving the curator's active `country`/`region`/`type` filters for the
-  HTML path.
+  preserving the curator's active `country`/`region`/`type`/`letter` filters
+  for the HTML path.
 
 ### 5.2 `/moderate/submissions`: filterable world overview
 
 The queue (`App\Moderation\SubmissionQueue`) lists `pending` + `needs_info`
-submissions, filterable by country / region / type via query params. Filters
+submissions, filterable by country / region / type / category (`letter`) via
+query params. Filters
 are **presentational**; the authorization boundary is moderator-area scoping
 (§9), applied to rows, counts, and filter dropdown options alike. The row
 shape returned by `SubmissionQueue` is a deliberate shared view-model consumed

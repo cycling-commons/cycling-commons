@@ -55,6 +55,29 @@ enum ItemType: string
         return self::BikeServices;
     }
 
+    /**
+     * Every kind of place, in declaration order: all types except routes,
+     * which have their own chip and their own desk. The one list behind the
+     * rider's contributions chips and the curator queue's Category filter.
+     *
+     * @return list<self>
+     */
+    public static function placeKinds(): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            static fn (self $t): bool => self::QualityRides !== $t,
+        ));
+    }
+
+    /** The place kind behind a letter; null for routes, unknown or empty letters. */
+    public static function placeKindFromLetter(?string $letter): ?self
+    {
+        $type = null !== $letter ? self::fromLetter($letter) : null;
+
+        return null !== $type && self::QualityRides !== $type ? $type : null;
+    }
+
     /** Inverse of {@see letter()}; null if nothing uses that letter. */
     public static function fromLetter(string $letter): ?self
     {

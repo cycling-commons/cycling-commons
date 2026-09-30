@@ -7,6 +7,8 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Submission;
+use App\Catalog\ItemType;
+use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
@@ -41,13 +43,13 @@ final class ModerateOverviewTest extends WebTestCase
         $client->loginUser($user);
     }
 
-    private function seedSubmission(string $title, string $country): Submission
+    private function seedSubmission(string $title, string $country, string $letter = 'N', SubmissionStatus $status = SubmissionStatus::Pending): Submission
     {
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
         $sub = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('N')->setUserId(3)
+            ->setType(SubmissionType::NewItem)->setLetter($letter)->setUserId(3)->setStatus($status)
             ->setTitle($title)
             ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')
             ->setCountryCode($country)
@@ -149,5 +151,61 @@ final class ModerateOverviewTest extends WebTestCase
         $href = (string) $crawler->filter('.q-item a.q-review')->first()->attr('href');
         self::assertStringContainsString('/map?pending=', $href);
         self::assertStringNotContainsString('/improve', $href);
+    }
+
+    /**
+     * The Category select lists every kind of place in catalog order, routes
+     * excepted, whether or not the queue holds one, and narrows the queue.
+     */
+    public function testCategoryFilterNarrowsTheQueue(): void
+    {
+        $client = static::createClient();
+        $this->loginCurator($client);
+        $this->seedSubmission('Kind climb', 'BE', 'N');
+        $this->seedSubmission('Kind shop', 'BE', 'D');
+
+        $crawler = $client->request('GET', '/moderate/submissions?letter=N');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Kind climb', $crawler->filter('#qList')->text());
+        self::assertStringNotContainsString('Kind shop', $crawler->filter('#qList')->text());
+        $options = $crawler->filter('select[name="letter"] option')->each(static fn ($o): string => (string) $o->attr('value'));
+        self::assertSame(
+            array_merge([''], array_map(static fn (ItemType $t): string => $t->letter(), ItemType::placeKinds())),
+            $options,
+        );
+        self::assertNotContains('R', $options);
+        self::assertSame('N', $crawler->filter('select[name="letter"] option[selected]')->attr('value'));
+    }
+
+    /** A route letter or junk is not a kind: the queue stays whole, no error. */
+    public function testCategoryFilterIgnoresAnUnknownLetter(): void
+    {
+        $client = static::createClient();
+        $this->loginCurator($client);
+        $this->seedSubmission('Kind climb', 'BE', 'N');
+        $this->seedSubmission('Kind shop', 'BE', 'D');
+
+        foreach (['R', 'ZZ'] as $letter) {
+            $crawler = $client->request('GET', '/moderate/submissions?letter='.$letter);
+            self::assertResponseIsSuccessful();
+            self::assertStringContainsString('Kind climb', $crawler->filter('#qList')->text());
+            self::assertStringContainsString('Kind shop', $crawler->filter('#qList')->text());
+        }
+    }
+
+    public function testCategoryFilterNarrowsTheHistory(): void
+    {
+        $client = static::createClient();
+        $this->loginCurator($client);
+        $this->seedSubmission('Settled kind climb', 'BE', 'N', SubmissionStatus::Approved);
+        $this->seedSubmission('Settled kind shop', 'BE', 'D', SubmissionStatus::Approved);
+
+        $crawler = $client->request('GET', '/moderate/submissions/history?letter=N');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Settled kind climb', $crawler->text());
+        self::assertStringNotContainsString('Settled kind shop', $crawler->text());
+        self::assertSame('N', $crawler->filter('select[name="letter"] option[selected]')->attr('value'));
     }
 }

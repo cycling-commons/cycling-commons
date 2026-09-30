@@ -32,10 +32,10 @@ final class SubmissionQueueTest extends KernelTestCase
         $this->queue = static::getContainer()->get(SubmissionQueue::class);
     }
 
-    private function seed(string $type, string $country, SubmissionStatus $status = SubmissionStatus::Pending, string $title = 'Seeded', ?int $regionId = null): Submission
+    private function seed(string $type, string $country, SubmissionStatus $status = SubmissionStatus::Pending, string $title = 'Seeded', ?int $regionId = null, string $letter = 'D'): Submission
     {
         $sub = (new Submission())
-            ->setType(SubmissionType::from($type))->setLetter('D')->setUserId(7)
+            ->setType(SubmissionType::from($type))->setLetter($letter)->setUserId(7)
             ->setStatus($status)->setTitle($title)
             ->setGeom('{"type":"Point","coordinates":[5.5,50.5]}')
             ->setCountryCode($country)->setRegionId($regionId)
@@ -320,6 +320,68 @@ final class SubmissionQueueTest extends KernelTestCase
         foreach ($hazards as $item) {
             self::assertSame('hazard', $item['type']);
         }
+    }
+
+    /**
+     * The Category filter: one kind of place (catalog letter), composed with
+     * the type and region selects, and the pager counts the same set.
+     */
+    public function testFilterByCategoryComposesWithTypeAndRegion(): void
+    {
+        $a = $this->seedRegion('kind-a', 'Kind Region A', 'BE');
+        $b = $this->seedRegion('kind-b', 'Kind Region B', 'BE');
+        $this->seed('new', 'BE', title: 'Climb new in A', regionId: $a->getId(), letter: 'N');
+        $this->seed('edit', 'BE', title: 'Climb edit in A', regionId: $a->getId(), letter: 'N');
+        $this->seed('edit', 'BE', title: 'Climb edit in B', regionId: $b->getId(), letter: 'N');
+        $this->seed('edit', 'BE', title: 'Shop edit in A', regionId: $a->getId(), letter: 'D');
+        $scope = ModerationScope::global();
+        $titles = static fn (array $rows): array => array_column($rows, 'title');
+
+        $climbs = $this->queue->filtered($scope, null, null, null, letter: 'N');
+        self::assertEqualsCanonicalizing(['Climb new in A', 'Climb edit in A', 'Climb edit in B'], $titles($climbs));
+        self::assertSame(3, $this->queue->countFiltered($scope, null, null, null, letter: 'N'));
+
+        self::assertEqualsCanonicalizing(
+            ['Climb edit in A', 'Climb edit in B'],
+            $titles($this->queue->filtered($scope, null, null, 'edit', letter: 'N')),
+        );
+        self::assertSame(['Climb edit in A'], $titles($this->queue->filtered($scope, 'BE', 'Kind Region A', 'edit', letter: 'N')));
+        self::assertSame(1, $this->queue->countFiltered($scope, 'BE', 'Kind Region A', 'edit', letter: 'N'));
+
+        // Pages through the filtered set, not the whole queue.
+        $first = $this->queue->filtered($scope, null, null, null, null, 1, 2, letter: 'N');
+        $second = $this->queue->filtered($scope, null, null, null, null, 2, 2, letter: 'N');
+        self::assertCount(2, $first);
+        self::assertCount(1, $second);
+        self::assertCount(3, array_unique(array_merge(array_column($first, 'id'), array_column($second, 'id'))));
+    }
+
+    /** Routes, unknown letters and slugs are not a place kind: the list stays whole. */
+    public function testCategoryFilterIgnoresRoutesAndUnknownLetters(): void
+    {
+        $this->seed('new', 'BE', letter: 'N');
+        $this->seed('new', 'BE', letter: 'D');
+        $scope = ModerationScope::global();
+
+        foreach (['R', 'Z', 'n', 'climbs', "N' OR 1=1"] as $letter) {
+            self::assertCount(2, $this->queue->filtered($scope, null, null, null, letter: $letter), $letter);
+            self::assertSame(2, $this->queue->countFiltered($scope, null, null, null, letter: $letter), $letter);
+        }
+    }
+
+    public function testHistoryFiltersByCategory(): void
+    {
+        $this->seed('new', 'BE', SubmissionStatus::Approved, 'Settled climb', letter: 'N');
+        $this->seed('edit', 'BE', SubmissionStatus::Rejected, 'Settled climb edit', letter: 'N');
+        $this->seed('new', 'BE', SubmissionStatus::Approved, 'Settled shop', letter: 'D');
+        $this->seed('new', 'BE', SubmissionStatus::Pending, 'Open climb', letter: 'N');
+        $scope = ModerationScope::global();
+
+        $rows = $this->queue->history($scope, letter: 'N');
+        self::assertEqualsCanonicalizing(['Settled climb', 'Settled climb edit'], array_column($rows, 'title'));
+        self::assertSame(2, $this->queue->countHistory($scope, letter: 'N'));
+        self::assertSame(['Settled climb edit'], array_column($this->queue->history($scope, type: 'edit', letter: 'N'), 'title'));
+        self::assertSame(3, $this->queue->countHistory($scope, letter: 'R'));
     }
 
     public function testCountriesAndRegionsAreSortedDistinct(): void

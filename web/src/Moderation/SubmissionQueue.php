@@ -50,17 +50,17 @@ final class SubmissionQueue
     }
 
     /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string}> */
-    public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null): array
+    public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null, ?string $letter = null): array
     {
-        [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser);
+        [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser, $letter);
 
         return $this->rows($scope, implode(' AND ', $where), $params, $perPage, self::offset($page, $perPage));
     }
 
     /** How many open submissions match, for the pager. */
-    public function countFiltered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, ?int $byUser = null): int
+    public function countFiltered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, ?int $byUser = null, ?string $letter = null): int
     {
-        [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser);
+        [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser, $letter);
         $frag = $scope->sqlFragment('s');
         if ('' !== $frag['sql']) {
             $where[] = $frag['sql'];
@@ -79,7 +79,7 @@ final class SubmissionQueue
      *
      * @return array{0: list<string>, 1: array<string, mixed>}
      */
-    private function openFilters(?string $country, ?string $region, ?string $type, ?string $q, ?int $byUser = null): array
+    private function openFilters(?string $country, ?string $region, ?string $type, ?string $q, ?int $byUser = null, ?string $letter = null): array
     {
         // Legal hold leaves the desk (docs/specs/photo-uploads.md §6d).
         $where = ["s.status IN ('pending', 'needs_info')", 's.escalated_at IS NULL'];
@@ -96,6 +96,7 @@ final class SubmissionQueue
             $where[] = 's.type = :type';
             $params['type'] = $type;
         }
+        self::letterFilter($letter, $where, $params);
         if (null !== $q && '' !== trim($q)) {
             // ILIKE wildcards escaped in the bound value, never concatenated into SQL.
             /* Title OR submitter display name. */
@@ -109,6 +110,22 @@ final class SubmissionQueue
         }
 
         return [$where, $params];
+    }
+
+    /**
+     * The kind of place (catalog letter). Only a place kind filters; routes,
+     * unknown letters and an empty value leave the list unfiltered.
+     *
+     * @param list<string>         $where
+     * @param array<string, mixed> $params
+     */
+    private static function letterFilter(?string $letter, array &$where, array &$params): void
+    {
+        $kind = ItemType::placeKindFromLetter($letter);
+        if (null !== $kind) {
+            $where[] = 's.letter = :letter';
+            $params['letter'] = $kind->letter();
+        }
     }
 
     private static function offset(int $page, int $perPage): int
@@ -196,9 +213,9 @@ final class SubmissionQueue
      *
      * @return list<array{id:int,itemId:?int,title:string,type:string,was:string,now:string,who:string,whoUuid:string,when:string,status:string,decidedBy:?string,decidedByUuid:?string,note:?string,riderReply:?string,photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,thread:list<array{who:string,body:string,when:string}>,sortAt:int}>
      */
-    public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null): array
+    public function history(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null, ?string $letter = null): array
     {
-        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type, $byUser);
+        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type, $byUser, $letter);
         $params['lim'] = $perPage;
         $params['off'] = self::offset($page, $perPage);
 
@@ -276,9 +293,9 @@ final class SubmissionQueue
     }
 
     /** How many settled submissions match, for the pager. */
-    public function countHistory(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null): int
+    public function countHistory(ModerationScope $scope, ?int $decidedBy = null, ?string $status = null, ?string $q = null, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null, ?string $letter = null): int
     {
-        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type, $byUser);
+        [$where, $params, $types] = $this->settledFilters($scope, $decidedBy, $status, $q, $country, $region, $type, $byUser, $letter);
 
         return (int) $this->db->fetchOne(
             'SELECT COUNT(*) FROM submission s LEFT JOIN region r ON r.id = s.region_id WHERE '.implode(' AND ', $where),
@@ -292,12 +309,12 @@ final class SubmissionQueue
      *
      * @return array{0: list<string>, 1: array<string, mixed>, 2: array<string, mixed>}
      */
-    private function settledFilters(ModerationScope $scope, ?int $decidedBy, ?string $status, ?string $q, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null): array
+    private function settledFilters(ModerationScope $scope, ?int $decidedBy, ?string $status, ?string $q, ?string $country = null, ?string $region = null, ?string $type = null, ?int $byUser = null, ?string $letter = null): array
     {
         $where = ["s.status IN ('approved', 'rejected')", 's.escalated_at IS NULL'];
         $params = [];
         $types = [];
-        // Same country/region/type filters as the open queue.
+        // Same country/region/type/category filters as the open queue.
         if (null !== $country && '' !== $country) {
             $where[] = 's.country_code = :country';
             $params['country'] = $country;
@@ -310,6 +327,7 @@ final class SubmissionQueue
             $where[] = 's.type = :type';
             $params['type'] = $type;
         }
+        self::letterFilter($letter, $where, $params);
         if (null !== $decidedBy) {
             $where[] = 's.decided_by = :me';
             $params['me'] = $decidedBy;

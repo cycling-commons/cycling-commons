@@ -44,6 +44,14 @@
         {% for t in types %}<option value="{{ t }}"{{ filters.type == t ? ' selected' }}>{{ ('moderate.type.' ~ t)|trans }}</option>{% endfor %}
       </select>
     </label>
+    {# Every kind of place, whether or not the queue holds one right now, so
+       the control reads the same on every visit. Routes have their own desk. #}
+    <label>{{ 'moderate.filter.category'|trans }}
+      <select name="letter" data-autosubmit>
+        <option value="">{{ 'moderate.filter.all'|trans }}</option>
+        {% for k in kinds %}<option value="{{ k.letter }}"{{ filters.letter == k.letter ? ' selected' }}>{{ k.labelKey|trans }}</option>{% endfor %}
+      </select>
+    </label>
     <label class="mod-search">{{ 'moderate.filter.search'|trans }}
       <input type="search" name="q" value="{{ filters.q }}" placeholder="{{ 'moderate.filter.search_ph'|trans }}">
     </label>
@@ -69,8 +77,8 @@
   {% if filters.by %}
     <p class="mod-byuser" role="status">
       {{ 'moderate.filter.by_user'|trans }}
-      <a href="{{ path('moderate_submissions', filters.country or filters.region or filters.type or filters.q
-        ? {country: filters.country, region: filters.region, type: filters.type, q: filters.q}
+      <a href="{{ path('moderate_submissions', filters.country or filters.region or filters.type or filters.letter or filters.q
+        ? {country: filters.country, region: filters.region, type: filters.type, letter: filters.letter, q: filters.q}
         : {}) }}">{{ 'moderate.filter.by_user_clear'|trans }}</a>
     </p>
   {% endif %}

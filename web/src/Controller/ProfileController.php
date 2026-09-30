@@ -278,8 +278,8 @@ final class ProfileController extends AbstractController
         $chips = $hasRouteProposals || \in_array($routes, $letters, true)
             ? [['letter' => $routes, 'labelKey' => 'nav.routes']]
             : [];
-        foreach (ItemType::cases() as $t) {
-            if (ItemType::QualityRides !== $t && \in_array($t->letter(), $letters, true)) {
+        foreach (ItemType::placeKinds() as $t) {
+            if (\in_array($t->letter(), $letters, true)) {
                 $chips[] = ['letter' => $t->letter(), 'labelKey' => $t->labelKey()];
             }
         }

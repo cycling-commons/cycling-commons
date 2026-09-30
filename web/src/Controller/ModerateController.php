@@ -89,6 +89,7 @@ final class ModerateController extends AbstractController
             q: $request->query->getString('q'),
             page: $request->query->getInt('page', 1),
             byUser: $request->query->getInt('by') ?: null,
+            letter: $request->query->getString('letter'),
         );
     }
 
@@ -109,21 +110,23 @@ final class ModerateController extends AbstractController
         $country = $request->query->getString('country');
         $region = $request->query->getString('region');
         $type = $request->query->getString('type');
+        $letter = $request->query->getString('letter');
         $page = max(1, $request->query->getInt('page', 1));
         $byUser = $request->query->getInt('by') ?: null;
         $me = $mine ? $user->getId() : null;
         $perPage = $this->pageSize->resolve(SubmissionQueue::PER_PAGE);
-        $total = $this->queue->countHistory($scope, $me, $status ?: null, $q ?: null, $country ?: null, $region ?: null, $type ?: null, $byUser);
+        $total = $this->queue->countHistory($scope, $me, $status ?: null, $q ?: null, $country ?: null, $region ?: null, $type ?: null, $byUser, $letter ?: null);
 
         return $this->render('moderate/history.html.twig', [
             'page_title' => 'meta.moderate_history_title',
             'page_description' => 'meta.moderate_history_description',
             'nav_active' => 'moderate',
-            'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, $perPage, $country ?: null, $region ?: null, $type ?: null, $byUser),
-            'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type, 'by' => $byUser],
+            'history' => $this->queue->history($scope, $me, $status ?: null, $q ?: null, $page, $perPage, $country ?: null, $region ?: null, $type ?: null, $byUser, $letter ?: null),
+            'history_filters' => ['mine' => $mine, 'status' => $status, 'q' => $q, 'country' => $country, 'region' => $region, 'type' => $type, 'letter' => $letter, 'by' => $byUser],
             'countries' => $this->queue->countries($scope, settled: true),
             'regions' => $this->queue->regions($scope, settled: true),
             'types' => SubmissionType::values(),
+            'kinds' => ItemType::placeKinds(),
             'pager' => Pager::of($page, $total, $perPage),
             ...$this->deskBadges($user, $scope),
         ]);
@@ -252,14 +255,15 @@ final class ModerateController extends AbstractController
         string $q = '',
         int $page = 1,
         ?int $byUser = null,
+        string $letter = '',
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
         $scope = $this->scopeProvider->scopeFor($user);
         $page = max(1, $page);
         $perPage = $this->pageSize->resolve(SubmissionQueue::PER_PAGE);
-        $matching = $this->queue->countFiltered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $byUser);
-        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page, $perPage, $byUser);
+        $matching = $this->queue->countFiltered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $byUser, $letter ?: null);
+        $items = $this->queue->filtered($scope, $country ?: null, $region ?: null, $type ?: null, $q ?: null, $page, $perPage, $byUser, $letter ?: null);
 
         // docs/specs/moderation-and-contribution.md §5.4 — decide from the map drawer, not this list.
         return $this->render('moderate/index.html.twig', [
@@ -268,12 +272,13 @@ final class ModerateController extends AbstractController
             'nav_active' => 'moderate',
             'items' => $items,
             'total' => $this->queue->total($scope),
-            'filters' => ['country' => $country, 'region' => $region, 'type' => $type, 'q' => $q, 'by' => $byUser],
+            'filters' => ['country' => $country, 'region' => $region, 'type' => $type, 'letter' => $letter, 'q' => $q, 'by' => $byUser],
             'pager' => Pager::of($page, $matching, $perPage),
             'matching' => $matching,
             'countries' => $this->queue->countries($scope),
             'regions' => $this->queue->regions($scope),
             'types' => SubmissionType::values(),
+            'kinds' => ItemType::placeKinds(),
             'receipt' => null,
             ...$this->deskBadges($user, $scope),
         ], Response::HTTP_OK === $status ? null : new Response('', $status));
@@ -426,6 +431,7 @@ final class ModerateController extends AbstractController
                 'country' => $request->query->getString('country'),
                 'region' => $request->query->getString('region'),
                 'type' => $request->query->getString('type'),
+                'letter' => $request->query->getString('letter'),
             ], static fn (string $v): bool => '' !== $v));
         }
 
@@ -438,6 +444,7 @@ final class ModerateController extends AbstractController
             $request->query->getString('region'),
             $request->query->getString('type'),
             Response::HTTP_UNPROCESSABLE_ENTITY,
+            letter: $request->query->getString('letter'),
         );
     }
 
@@ -474,6 +481,7 @@ final class ModerateController extends AbstractController
             'country' => $request->query->getString('country'),
             'region' => $request->query->getString('region'),
             'type' => $request->query->getString('type'),
+            'letter' => $request->query->getString('letter'),
         ], static fn (string $v): bool => '' !== $v));
     }
 
