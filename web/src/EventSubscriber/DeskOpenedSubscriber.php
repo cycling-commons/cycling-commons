@@ -24,8 +24,9 @@ use Symfony\Component\HttpKernel\KernelEvents;
  *   - its own page loads: a report, a bug, a translation proposal, a route
  *     (whose page is also its edit form, and lists the route's open
  *     corrections in full, so those count as opened too);
- *   - its edit form loads: a stale translation's form in that locale, or the
- *     place form a queue card links to (`?sub=<submission id>`);
+ *   - its edit form loads: a stale translation's form in that locale, the
+ *     place form a queue card links to (`?sub=<submission id>`), or the
+ *     correction form of a Text card (`/moderate/text/<submission id>`);
  *   - it is decided: a submission, a route, a correction, a report, a bug, a
  *     proposal, a Data finding, a removal request.
  *
@@ -65,6 +66,7 @@ final readonly class DeskOpenedSubscriber implements EventSubscriberInterface
         'moderate_takedown' => [SeenSubject::Takedown, 'post:media'],
         'moderate_escalate' => [SeenSubject::Takedown, 'post:media'],
         'improve' => [SeenSubject::Submission, 'query:sub'],
+        'moderate_text' => [SeenSubject::Submission, 'attr:id'],
         'translate_edit' => [SeenSubject::TranslationStale, 'attr:id'],
     ];
 
@@ -112,7 +114,7 @@ final readonly class DeskOpenedSubscriber implements EventSubscriberInterface
         match ($route) {
             'moderate_routes_detail' => $this->openRoute($userId, (int) $id),
             'translate_edit' => $this->openStale($userId, (int) $id, $request->getLocale()),
-            'improve' => $this->openSubmission($userId, (int) $id),
+            'improve', 'moderate_text' => $this->openSubmission($userId, (int) $id),
             default => $this->seen->mark($userId, $subject, $id),
         };
     }

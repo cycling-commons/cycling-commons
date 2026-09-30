@@ -3125,6 +3125,16 @@ place_text:
   back_region: 'Zurück zur Region'
   follow: 'Auf deinem Profil verfolgen'
   change_label: 'Text (%lang%)'
+  correct:
+    lead: "Korrigiere Tippfehler und kleine Fehler in diesem Vorschlag, und gib ihn dann hier frei, oder speichere die Korrektur und entscheide später. Es bleibt der Text des Fahrers: Nach der Freigabe wird er dem Fahrer zugeschrieben, und der Vorschlag hält fest, dass du ihn korrigiert hast."
+    note_h: 'Notiz des Fahrers'
+    submit: 'Korrektur speichern'
+    saved: "Korrektur gespeichert. Der Vorschlag wartet weiter auf deine Entscheidung."
+    settled: 'Dieser Vorschlag wartet nicht mehr auf eine Entscheidung und kann daher nicht mehr korrigiert werden.'
+    approve: "Freigeben"
+    approved: "Freigegeben. Der Text ist online, und die schreibende Person erhält deine Freigabe in ihren Nachrichten."
+    reply_label: "Notiz an die schreibende Person (optional)"
+    reply_hint: "Geht mit der Freigabe in die Nachrichten der schreibenden Person. Korrektur speichern sendet sie nicht."
   error:
     lang: 'Wähle eine der Sprachen aus der Liste.'
     empty: 'Schreib zuerst den Text.'
@@ -3133,6 +3143,7 @@ place_text:
     unchanged: 'Der Text ist derselbe, den Leser jetzt sehen. Ändere etwas, bevor du ihn sendest.'
     no_location: 'Wir wissen noch nicht, wo dieser Ort liegt. Öffne ihn auf der Karte und nutze „Diesen Text bearbeiten“ auf seiner Karte.'
     unknown: 'Dieser Text kann hier nicht bearbeitet werden.'
+    correct_unchanged: 'Das ist der Text, wie der Fahrer ihn geschickt hat. Ändere etwas oder geh zurück zur Warteschlange.'
 
 moderate:
   rider_removed: 'ein Fahrer mit gelöschtem Konto'
@@ -3363,6 +3374,7 @@ moderate:
     rejected: 'Abgelehnt'
     trashed: 'Gelöscht'
   answered: 'Beantwortet'
+  corrected: 'Korrigiert'
   rider_reply: 'Der Fahrer hat geantwortet'
   prior_rejection: 'Zuvor abgelehnt'
   links:

@@ -163,6 +163,31 @@ final class DeskSeenTest extends WebTestCase
         self::assertTrue(static::getContainer()->get(DeskSeen::class)->isSeen((int) $curator->getId(), SeenSubject::Submission, (int) $sub->getId()));
     }
 
+    public function testTheTextCardsEditLinkOpensTheSubmission(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $curator = $this->curator('text-link');
+        $sub = (new Submission())->setType(SubmissionType::Text)->setLetter('')->setUserId((int) $this->rider()->getId())
+            ->setTitle('Seen town '.bin2hex(random_bytes(3)))->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setChanges(['text:en' => ['was' => null, 'now' => 'A town with a mill.']])
+            ->setPayload(['target' => 'town', 'ref' => 'node/999990401', 'lang' => 'en', 'text' => 'A town with a mill.', 'details' => ['note' => '']]);
+        $this->em()->persist($sub);
+        $this->em()->flush();
+        $client->loginUser($curator);
+
+        $crawler = $client->request('GET', '/moderate/submissions');
+        $row = '.q-item[data-item-id="'.$sub->getId().'"]';
+        self::assertTrue($this->rowIsUnseen($crawler, $row, $row));
+        $href = (string) $crawler->filter($row.' a.q-edit')->attr('href');
+        self::assertStringEndsWith('/moderate/text/'.$sub->getId(), $href, 'the edit link names the submission');
+
+        $client->request('GET', $href);
+        self::assertResponseIsSuccessful();
+        self::assertTrue(static::getContainer()->get(DeskSeen::class)->isSeen((int) $curator->getId(), SeenSubject::Submission, (int) $sub->getId()));
+        self::assertFalse($this->rowIsUnseen($client->request('GET', '/moderate/submissions'), $row, $row));
+    }
+
     public function testOpenWorkCarriesTheBarUntilOpenedAndSettledWorkNever(): void
     {
         $client = static::createClient();

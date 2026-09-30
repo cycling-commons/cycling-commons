@@ -21,10 +21,17 @@
   A submission this curator has not opened carries the unseen bar (moderation-and-contribution.md §5.2f):
   `unseen_ids` is the list's cc_unseen() set. Its three ways in (the title,
   ◎ and ✎) open it: the map drawer posts that it was opened, and the form
-  links carry `sub=<id>` so the form's load records it. Following one takes
+  links carry `sub=<id>` so the form's load records it (a Text card's form
+  is `/moderate/text/<id>`, recorded the same way). Following one takes
   the bar off this row at once (data-opens, assets/js/open-to-read.js).
 #}
 {% set row_unseen = unseen_ids[item.id] is defined %}
+{# The form a curator corrects the submission in: the place wizard for an
+   edit of an existing place, the text form for a town or region text
+   (moderation-and-contribution.md §3.1b). None for anything else. #}
+{% set edit_href = item.itemId
+    ? path('improve') ~ '?item=' ~ item.itemId ~ '&type=' ~ item.letter ~ '&sub=' ~ item.id
+    : (item.type == 'text' ? path('moderate_text', {id: item.id}) : null) %}
 <div class="q-item {{ row_unseen ? 'is-unseen' }}" data-item-id="{{ item.id }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
   <div class="q-top">
     {# The photo, in the row. A curator scanning a queue can tell a real place
@@ -51,9 +58,12 @@
            the desk, so the signal has to be here where it can be scanned
            (owner, 2026-08-03). The answer itself is further down the card. #}
         {% if item.riderReply %}<span class="q-tag q-tag--answered">{{ 'moderate.answered'|trans }}</span>{% endif %}
+        {# A text a curator already corrected: the words on the card are no
+           longer exactly the rider's (the submission keeps what they sent). #}
+        {% if item.corrected|default(false) %}<span class="q-tag q-tag--quiet q-tag--corrected">{{ 'moderate.corrected'|trans }}</span>{% endif %}
         {# The name opens the edit form, same target as ✎ (owner 2026-08-25): the
            biggest thing on the row should be the thing you click. #}
-        <h3 class="q-title">{% if item.itemId %}<a class="q-title-link" href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}&sub={{ item.id }}"
+        <h3 class="q-title">{% if edit_href %}<a class="q-title-link" href="{{ edit_href }}"
              target="_blank" rel="noopener" data-opens title="{{ 'moderate.action.edit_form'|trans }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}
           {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
         <span class="q-when">{{ item.when }}</span>
@@ -157,12 +167,13 @@
       {# Straight to the form. Review-on-the-map answers "is this right"; this
          answers "fix this typo", and routing a one-word correction through a
          map, a pin and a drawer is three steps too many (owner 2026-08-12).
-         Only for an EDIT of an existing item — a brand-new place has no item to
-         open, and a button that leads to "pick a place to improve" is a button
-         that lies. #}
-      {% if item.itemId %}
+         For an EDIT of an existing item, and for a town or region text, whose
+         form holds the rider's words for the curator to correct (owner
+         2026-10-01). A brand-new place has no item to open, and a button that
+         leads to "pick a place to improve" is a button that lies. #}
+      {% if edit_href %}
       <a class="btn-act btn-secondary btn-icon q-edit"
-         href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}&sub={{ item.id }}"
+         href="{{ edit_href }}"
          target="_blank" rel="noopener" data-opens
          title="{{ 'moderate.action.edit_form'|trans }}"
          aria-label="{{ 'moderate.action.edit_form'|trans }}">✎</a>

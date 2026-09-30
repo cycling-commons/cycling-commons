@@ -3151,6 +3151,16 @@ place_text:
   back_region: 'Volver a la región'
   follow: 'Síguelo en tu perfil'
   change_label: 'Texto (%lang%)'
+  correct:
+    lead: "Corrige erratas y pequeños errores de esta sugerencia, y apruébala aquí, o guarda la corrección y decide más tarde. Sigue siendo el texto del ciclista: una vez aprobado se atribuye al ciclista, y la sugerencia deja constancia de que lo corregiste."
+    note_h: 'Nota del ciclista'
+    submit: 'Guardar corrección'
+    saved: "Corrección guardada. La sugerencia sigue esperando tu decisión."
+    settled: 'Esta sugerencia ya no espera una decisión, así que ya no se puede corregir.'
+    approve: "Aprobar"
+    approved: "Aprobado. El texto ya está publicado, y quien lo escribió recibe tu aprobación en sus mensajes."
+    reply_label: "Nota para quien lo escribió (opcional)"
+    reply_hint: "Se envía con la aprobación, en los mensajes de quien lo escribió. Guardar corrección no la envía."
   error:
     lang: 'Elige uno de los idiomas de la lista.'
     empty: 'Escribe primero el texto.'
@@ -3159,6 +3169,7 @@ place_text:
     unchanged: 'El texto es el mismo que los lectores ven ahora. Cambia algo antes de enviarlo.'
     no_location: 'Aún no sabemos dónde está esta localidad. Ábrela en el mapa y usa «Editar este texto» en su ficha.'
     unknown: 'Este texto no se puede editar aquí.'
+    correct_unchanged: 'Es el texto tal como lo envió el ciclista. Cambia algo o vuelve a la cola.'
 
 moderate:
   rider_removed: 'un ciclista con la cuenta eliminada'
@@ -3389,6 +3400,7 @@ moderate:
     rejected: 'Rechazado'
     trashed: 'En la papelera'
   answered: 'Respondido'
+  corrected: 'Corregido'
   rider_reply: 'El ciclista respondió'
   prior_rejection: 'Rechazado anteriormente'
   links:

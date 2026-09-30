@@ -10,10 +10,13 @@ use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Contribution\PlaceTextProposals;
 use App\Entity\User;
+use App\Moderation\DeskSeen;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
+use App\Moderation\SeenSubject;
 use App\Moderation\SubmissionQueue;
 use App\Town\TownPlaceRepository;
 use App\Town\TownSummaryRepository;
@@ -340,13 +343,295 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertSame($a->getId(), $sub->getRegionId());
     }
 
+    public function testTheTextCardCarriesTheEditPenToItsCorrectionForm(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider20@example.com', []);
+        $curatorA = $this->user('ptext-cur-a20@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($rider);
+        $this->propose($client, 'Testdorp heeft een kerk en een molen.', 'nl');
+        $sub = $this->latestText((int) $rider->getId());
+
+        $client->loginUser($curatorA);
+        $crawler = $client->request('GET', '/moderate/submissions');
+        $card = $crawler->filter('.q-item[data-item-id="'.$sub->getId().'"]');
+        self::assertCount(1, $card);
+        $pen = $card->filter('a.q-edit');
+        self::assertCount(1, $pen, 'a Text card carries the pen, as a place edit does');
+        self::assertStringEndsWith('/moderate/text/'.$sub->getId(), (string) $pen->attr('href'));
+        self::assertSame('_blank', $pen->attr('target'));
+        self::assertNotNull($pen->attr('data-opens'), 'following it takes the unseen bar off');
+        self::assertSame($pen->attr('href'), $card->filter('a.q-title-link')->attr('href'), 'the title opens the same form');
+    }
+
+    public function testTheCorrectionFormHoldsTheRidersTextAndNoteInTheirLanguage(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider21@example.com', []);
+        $curatorA = $this->user('ptext-cur-a21@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($rider);
+        $this->propose($client, 'Testdorp heeft een kerk en een moolen.', 'nl', 'Ik woon er.');
+        $sub = $this->latestText((int) $rider->getId());
+
+        $client->loginUser($curatorA);
+        $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSame('Testdorp is een dorp.', $crawler->filter('figure#pt-current blockquote#pt-current-text')->text(), 'what readers see now, read-only');
+        self::assertSame('Testdorp heeft een kerk en een moolen.', $crawler->filter('textarea#pt-text')->text('', false), 'the box holds the rider\'s text');
+        self::assertSame('38 of 1200', $crawler->filter('#pt-text-count')->text());
+        $lang = $crawler->filter('select#pt-lang');
+        self::assertNotNull($lang->attr('disabled'), 'the language is the proposal\'s');
+        self::assertCount(1, $lang->filter('option'));
+        self::assertSame('Nederlands', $lang->filter('option')->text());
+        self::assertSame('Ik woon er.', $crawler->filter('#pt-rider-note blockquote')->text(), 'the rider\'s note, read-only');
+        self::assertCount(0, $crawler->filter('input#pt-note'), 'the note is the rider\'s, not a field');
+        self::assertSame('Save correction', $crawler->filter('#place-text-form button[value=save]')->text());
+        self::assertStringContainsString('credited to the rider', (string) $client->getResponse()->getContent());
+        self::assertTrue(static::getContainer()->get(DeskSeen::class)->isSeen((int) $curatorA->getId(), SeenSubject::Submission, (int) $sub->getId()), 'loading the form opens the submission');
+    }
+
+    public function testSavingACorrectionAmendsTheSuggestionAndLeavesItForTheDecision(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider22@example.com', []);
+        $curatorA = $this->user('ptext-cur-a22@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($rider);
+        $this->propose($client, 'Testdorp heeft een kerk en een moolen.', 'nl', 'Ik woon er.');
+        $sub = $this->latestText((int) $rider->getId());
+
+        $client->loginUser($curatorA);
+        $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
+
+        // A forged token changes nothing.
+        $client->request('POST', '/moderate/text/'.$sub->getId(), ['_token' => 'forged', 'text' => 'Testdorp heeft een kerk en een molen.']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('Testdorp heeft een kerk en een moolen.', $this->latestText((int) $rider->getId())->getPayload()['text']);
+
+        // Sending the rider's own words back is no correction.
+        $client->submit($crawler->filter('#place-text-form')->form(['text' => 'Testdorp heeft een kerk en een moolen.']));
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('the text as the rider sent it', (string) $client->getResponse()->getContent());
+
+        $client->submit($crawler->filter('#place-text-form')->form(['text' => 'Testdorp heeft een kerk en een molen.']));
+        self::assertResponseRedirects();
+        self::assertStringEndsWith('/moderate/submissions', (string) $client->getResponse()->headers->get('Location'));
+
+        $sub = $this->latestText((int) $rider->getId());
+        self::assertSame(SubmissionStatus::Pending, $sub->getStatus(), 'still waiting for the decision');
+        self::assertSame($rider->getId(), $sub->getUserId(), 'still the rider\'s suggestion');
+        self::assertEquals(['text:nl' => ['was' => 'Testdorp is een dorp.', 'now' => 'Testdorp heeft een kerk en een molen.']], $sub->getChanges());
+        $payload = $sub->getPayload();
+        self::assertSame('Testdorp heeft een kerk en een molen.', $payload['text']);
+        self::assertSame('nl', $payload['lang']);
+        self::assertSame('Ik woon er.', $payload['details']['note'] ?? null, 'the rider\'s note stays');
+        self::assertIsArray($payload['_corrected'] ?? null);
+        self::assertSame($curatorA->getId(), $payload['_corrected']['by'], 'who corrected it');
+        self::assertSame('Testdorp heeft een kerk en een moolen.', $payload['_corrected']['from'], 'what the rider sent, kept beside the correction');
+        self::assertSame('Testdorp is een dorp.', $this->towns()->find(self::TOWN, 'nl')['extract'] ?? null, 'nothing shows before the decision');
+
+        $crawler = $client->followRedirect();
+        self::assertStringContainsString('Correction saved', (string) $client->getResponse()->getContent());
+        $card = $crawler->filter('.q-item[data-item-id="'.$sub->getId().'"]');
+        self::assertStringContainsString('Testdorp heeft een kerk en een molen.', $card->filter('.q-now')->text());
+        self::assertSame('Corrected', $card->filter('.q-tag--corrected')->text());
+
+        // A second correction keeps the rider's first words as the source.
+        $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
+        self::assertSame('Testdorp heeft een kerk en een molen.', $crawler->filter('textarea#pt-text')->text('', false));
+        $client->submit($crawler->filter('#place-text-form')->form(['text' => 'Testdorp heeft een kerk en een windmolen.']));
+        self::assertSame('Testdorp heeft een kerk en een moolen.', $this->latestText((int) $rider->getId())->getPayload()['_corrected']['from']);
+    }
+
+    public function testApprovingACorrectedSuggestionShowsTheCorrectionCreditedToTheRider(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider23@example.com', [], null, 'Molenaar');
+        $curatorA = $this->user('ptext-cur-a23@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($rider);
+        $this->propose($client, 'Testdorp heeft een moolen.', 'nl');
+        $sub = $this->latestText((int) $rider->getId());
+
+        $client->loginUser($curatorA);
+        $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
+        $client->submit($crawler->filter('#place-text-form')->form(['text' => 'Testdorp heeft een molen.']));
+        $this->moderation()->decide((int) $sub->getId(), 'approve', $curatorA, null);
+
+        $row = $this->towns()->find(self::TOWN, 'nl');
+        self::assertNotNull($row);
+        self::assertSame('Testdorp heeft een molen.', $row['extract'], 'the corrected text goes live');
+        self::assertSame($rider->getId(), $row['editedBy'], 'written by the rider');
+        self::assertSame($curatorA->getId(), $row['approvedBy']);
+        $sub = $this->latestText((int) $rider->getId());
+        self::assertSame(SubmissionStatus::Approved, $sub->getStatus());
+        self::assertSame($curatorA->getId(), $sub->getPayload()['_corrected']['by'] ?? null, 'the proposal keeps the correction on record');
+    }
+
+    public function testTheCorrectionFormApprovesWithANoteToTheWriter(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider26@example.com', [], null, 'Schrijver');
+        $curatorA = $this->user('ptext-cur-a26@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($rider);
+        $this->propose($client, 'Testdorp heeft een moolen.', 'nl');
+        $sub = $this->latestText((int) $rider->getId());
+
+        $client->loginUser($curatorA);
+        $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
+        self::assertSame('Approve', $crawler->filter('#place-text-form button[value=approve]')->text());
+        self::assertCount(1, $crawler->filter('textarea#pt-reply'));
+
+        // A note over the limit is sent back, with nothing changed.
+        $client->submit($crawler->selectButton('Approve')->form(['text' => 'Testdorp heeft een molen.', 'reply' => str_repeat('x', PlaceTextProposals::REPLY_MAX + 1)]));
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame(SubmissionStatus::Pending, $this->latestText((int) $rider->getId())->getStatus());
+        self::assertSame('Testdorp heeft een moolen.', $this->latestText((int) $rider->getId())->getPayload()['text'], 'a refused approval keeps no correction');
+
+        $client->submit($crawler->selectButton('Approve')->form(['text' => 'Testdorp heeft een molen.', 'reply' => 'Dank je, mooi geschreven.']));
+        self::assertResponseRedirects();
+        self::assertStringEndsWith('/moderate/submissions', (string) $client->getResponse()->headers->get('Location'));
+        $client->followRedirect();
+        self::assertStringContainsString('Approved. The text is live', (string) $client->getResponse()->getContent());
+
+        $sub = $this->latestText((int) $rider->getId());
+        self::assertSame(SubmissionStatus::Approved, $sub->getStatus());
+        self::assertSame('Dank je, mooi geschreven.', $sub->getDecisionNote(), 'the note goes to the writer with the approval');
+        self::assertSame('Testdorp heeft een moolen.', $sub->getPayload()['_corrected']['from'] ?? null, 'the correction is on record');
+        $row = $this->towns()->find(self::TOWN, 'nl');
+        self::assertSame('Testdorp heeft een molen.', $row['extract'] ?? null, 'the corrected text goes live');
+        self::assertSame($rider->getId(), $row['editedBy'] ?? null, 'credited to the writer');
+    }
+
+    public function testTheCorrectionFormApprovesAnUnchangedTextWithoutANote(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider27@example.com', []);
+        $curatorA = $this->user('ptext-cur-a27@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($rider);
+        $this->propose($client, 'Testdorp heeft een molen.', 'nl');
+        $sub = $this->latestText((int) $rider->getId());
+
+        $client->loginUser($curatorA);
+        $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
+        $client->submit($crawler->selectButton('Approve')->form());
+        self::assertResponseRedirects();
+
+        $sub = $this->latestText((int) $rider->getId());
+        self::assertSame(SubmissionStatus::Approved, $sub->getStatus());
+        self::assertNull($sub->getDecisionNote());
+        self::assertArrayNotHasKey('_corrected', $sub->getPayload(), 'nothing was corrected');
+        self::assertSame('Testdorp heeft een molen.', $this->towns()->find(self::TOWN, 'nl')['extract'] ?? null);
+    }
+
+    public function testCorrectingARegionTextKeepsItInThatLocale(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $rider = $this->user('ptext-rider24@example.com', []);
+        $curatorA = $this->user('ptext-cur-a24@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($rider);
+        $crawler = $client->request('GET', '/regions/ptext-a/text?lang=en');
+        $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'en', 'text' => 'Ptext A is flat and windey.']));
+        $sub = $this->latestText((int) $rider->getId());
+
+        $client->loginUser($curatorA);
+        $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
+        self::assertResponseIsSuccessful();
+        self::assertSame('Wikipedia says Ptext.', $crawler->filter('blockquote#pt-current-text')->text());
+        self::assertNotNull($crawler->filter('input#pt-derived')->attr('checked'), 'the rider\'s adaptation claim, as sent');
+        $client->submit($crawler->filter('#place-text-form')->form(['text' => 'Ptext A is flat and windy.']));
+        self::assertResponseRedirects();
+        $this->moderation()->decide((int) $sub->getId(), 'approve', $curatorA, null);
+
+        /** @var Connection $db */
+        $db = self::getContainer()->get(Connection::class);
+        /** @var array<string, array<string, mixed>> $curated */
+        $curated = json_decode((string) $db->fetchOne('SELECT context_curated FROM region WHERE id = :id', ['id' => $a->getId()]), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame('Ptext A is flat and windy.', $curated['en']['text']);
+        self::assertTrue($curated['en']['derived']);
+        self::assertSame($rider->getId(), $curated['en']['userId']);
+    }
+
+    public function testOnlyACuratorOfTheAreaCorrectsAndOnlyWhileItWaits(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a, $b] = $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider25@example.com', []);
+        $curatorA = $this->user('ptext-cur-a25@example.com', ['ROLE_CURATOR'], $a);
+        $curatorB = $this->user('ptext-cur-b25@example.com', ['ROLE_CURATOR'], $b);
+
+        $client->loginUser($rider);
+        $this->propose($client, 'Testdorp heeft een moolen.', 'nl');
+        $sub = $this->latestText((int) $rider->getId());
+
+        // A rider has no desk.
+        $client->request('GET', '/moderate/text/'.$sub->getId());
+        self::assertResponseStatusCodeSame(403);
+
+        // A curator of another region is refused, reading and writing.
+        $client->loginUser($curatorB);
+        $client->request('GET', '/moderate/text/'.$sub->getId());
+        self::assertResponseStatusCodeSame(403);
+        $client->request('POST', '/moderate/text/'.$sub->getId(), ['_token' => 'x', 'text' => 'Van elders.']);
+        self::assertResponseStatusCodeSame(403);
+        $client->request('POST', '/moderate/text/'.$sub->getId(), ['_token' => 'x', 'text' => 'Van elders.', 'do' => 'approve']);
+        self::assertResponseStatusCodeSame(403);
+        self::assertSame(SubmissionStatus::Pending, $this->latestText((int) $rider->getId())->getStatus(), 'nor approved from elsewhere');
+        self::assertSame('Testdorp heeft een moolen.', $this->latestText((int) $rider->getId())->getPayload()['text']);
+        self::assertFalse(static::getContainer()->get(DeskSeen::class)->isSeen((int) $curatorB->getId(), SeenSubject::Submission, (int) $sub->getId()), 'a refused page opens nothing');
+
+        // No such submission, or one that is no text.
+        $client->loginUser($curatorA);
+        $client->request('GET', '/moderate/text/999999999');
+        self::assertResponseStatusCodeSame(404);
+
+        // Settled: the form is refused and the text stays as decided.
+        $crawler = $client->request('GET', '/moderate/text/'.$sub->getId());
+        $form = $crawler->filter('#place-text-form')->form(['text' => 'Testdorp heeft een molen.']);
+        $this->moderation()->decide((int) $sub->getId(), 'reject', $curatorA, 'Geen bron.');
+        $client->submit($form);
+        self::assertResponseRedirects();
+        $client->followRedirect();
+        self::assertStringContainsString('no longer waiting for a decision', (string) $client->getResponse()->getContent());
+        self::assertSame('Testdorp heeft een moolen.', $this->latestText((int) $rider->getId())->getPayload()['text']);
+        $client->request('GET', '/moderate/text/'.$sub->getId());
+        self::assertResponseRedirects();
+    }
+
     // ── Fixtures ─────────────────────────────────────────────────────────────
 
-    private function propose(KernelBrowser $client, string $text, string $lang): void
+    private function propose(KernelBrowser $client, string $text, string $lang, string $note = ''): void
     {
         $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang='.$lang.'&name=Testdorp&lat='.self::LAT.'&lng='.self::LNG);
         self::assertResponseIsSuccessful();
-        $client->submit($crawler->filter('#place-text-form')->form(['lang' => $lang, 'text' => $text]));
+        $client->submit($crawler->filter('#place-text-form')->form(['lang' => $lang, 'text' => $text, 'note' => $note]));
     }
 
     /** @return array{0: Region, 1: Region} */

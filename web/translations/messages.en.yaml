@@ -3143,6 +3143,16 @@ place_text:
   back_region: 'Back to the region'
   follow: 'Follow it on your profile'
   change_label: 'Text (%lang%)'
+  correct:
+    lead: "Fix typos and small mistakes in this suggestion, then approve it here, or save the correction and decide later. It stays the rider's text: once approved it is credited to the rider, and the suggestion records that you corrected it."
+    note_h: "The rider's note"
+    submit: 'Save correction'
+    saved: "Correction saved. The suggestion still waits for your decision."
+    settled: 'This suggestion is no longer waiting for a decision, so it cannot be corrected.'
+    approve: "Approve"
+    approved: "Approved. The text is live, and the writer gets your approval in their messages."
+    reply_label: "Note to the writer (optional)"
+    reply_hint: "Sent with the approval, in the writer's messages. Save correction does not send it."
   error:
     lang: 'Pick one of the languages in the list.'
     empty: 'Write the text first.'
@@ -3151,6 +3161,7 @@ place_text:
     unchanged: 'The text is the same as the one readers see now. Change something before you send it.'
     no_location: 'We do not know yet where this town lies. Open it on the map and use "Edit this text" on its card.'
     unknown: 'This text cannot be edited here.'
+    correct_unchanged: 'This is the text as the rider sent it. Change something, or go back to the queue.'
 
 moderate:
   rider_removed: 'a removed rider'
@@ -3381,6 +3392,7 @@ moderate:
     rejected: 'Rejected'
     trashed: 'Trashed'
   answered: 'Answered'
+  corrected: 'Corrected'
   rider_reply: 'Rider replied'
   prior_rejection: 'Previously rejected'
   links:

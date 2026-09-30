@@ -12,11 +12,14 @@ use App\Catalog\RegionLead;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Moderation\AlreadyDecidedException;
+use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OutOfScopeException;
 use App\Town\TownPlaceRepository;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
@@ -34,7 +37,9 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
  * (moderation-and-contribution.md §1.6); outside it, it queues like a rider's.
  *
  * A rider who proposes again for the same text and language while the first
- * is still open amends it rather than filing a second.
+ * is still open amends it rather than filing a second. A curator of the
+ * submission's area may correct a waiting proposal before deciding it; it
+ * stays the rider's proposal ({@see self::correct()}).
  *
  * @see docs/specs/moderation-and-contribution.md §3.1b
  *
@@ -42,6 +47,9 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
  */
 final readonly class PlaceTextProposals
 {
+    /** The note to the writer on approval: the limit of the map's decision form. */
+    public const int REPLY_MAX = 2000;
+
     public function __construct(
         private EntityManagerInterface $em,
         private Connection $db,
@@ -50,6 +58,7 @@ final readonly class PlaceTextProposals
         private RateLimiterFactoryInterface $contributionSubmitLimiter,
         private ModerationService $moderation,
         private RoleHierarchyInterface $roleHierarchy,
+        private ModerationScopeProvider $scopes,
     ) {
     }
 
@@ -86,23 +95,40 @@ final readonly class PlaceTextProposals
      */
     public function region(string $slug): ?array
     {
-        $row = $this->db->fetchAssociative(
-            'SELECT r.id, r.slug, r.name, r.country_code, r.context, r.context_curated FROM region r
-              WHERE r.slug = :slug AND r.geom IS NOT NULL AND r.country_code <> \'\' AND '.OperationalRegions::predicate('r'),
-            ['slug' => $slug],
-        );
-        if (false === $row) {
-            return null;
+        return $this->regionWhere('r.slug = :key', $slug);
+    }
+
+    /**
+     * An operational region by id, as a region text's payload names it.
+     *
+     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>}|null
+     */
+    public function regionById(int $id): ?array
+    {
+        return $this->regionWhere('r.id = :key', $id);
+    }
+
+    /**
+     * What readers see now for the text a proposal names, and whether that
+     * language has an article to adapt (only ever for a region).
+     *
+     * @param array{target: string, ref: string, lang: string, text: string, derived: bool} $proposal
+     *
+     * @return array{text: string, derived: bool, canDerive: bool}
+     *
+     * @throws PlaceTextRefused when the region it names is gone
+     */
+    public function liveText(array $proposal): array
+    {
+        if (PlaceText::TOWN === $proposal['target']) {
+            return ['text' => $this->currentTownText($proposal['ref'], $proposal['lang']), 'derived' => false, 'canDerive' => false];
+        }
+        $region = $this->regionById((int) $proposal['ref']);
+        if (null === $region) {
+            throw new PlaceTextRefused('place_text.error.unknown');
         }
 
-        return [
-            'id' => (int) $row['id'],
-            'slug' => (string) $row['slug'],
-            'name' => (string) $row['name'],
-            'countryCode' => (string) $row['country_code'],
-            'wiki' => PlaceText::decode($row['context']),
-            'curated' => PlaceText::decode($row['context_curated']),
-        ];
+        return $this->currentRegionText($region, $proposal['lang']) + ['canDerive' => RegionLead::hasSource($region['wiki'], $proposal['lang'])];
     }
 
     /**
@@ -198,6 +224,148 @@ final readonly class PlaceTextProposals
             'derived' => $derived,
             'details' => ['note' => $note],
         ], $current['text'], mb_substr($region['name'], 0, 200), $point, $region['countryCode'], $region['id']);
+    }
+
+    /**
+     * A curator of the submission's area corrects a waiting proposal (a typo,
+     * a wrong word) before deciding it (owner 2026-10-01).
+     *
+     * It stays the rider's proposal: same row, writer, status and thread.
+     * `payload.text` and the `now` side of `changes` carry the corrected words
+     * (`was` stays what readers saw when the rider sent it), and
+     * `payload._corrected` records who corrected it, when, and what the rider
+     * sent (their first words, however often it is corrected). A region's
+     * adaptation claim can be corrected too, where there is an article to
+     * adapt. The rider's own later revision replaces the payload, and with it
+     * this record: the words are theirs again.
+     *
+     * @throws PlaceTextRefused        on text the form must send back
+     * @throws OutOfScopeException     outside the curator's areas
+     * @throws AlreadyDecidedException once it is decided, withdrawn or held
+     */
+    public function correct(Submission $submission, User $curator, string $text, bool $derived): Submission
+    {
+        $this->assertCorrectable($submission, $curator);
+        $proposal = PlaceText::fromPayload($submission->getPayload());
+        if (null === $proposal) {
+            throw new PlaceTextRefused('place_text.error.unknown');
+        }
+        [, $text] = $this->checked($proposal['lang'], $text, '');
+        $live = $this->liveText($proposal);
+        $derived = PlaceText::REGION === $proposal['target'] && $derived && $live['canDerive'];
+        if ($text === $proposal['text'] && $derived === $proposal['derived']) {
+            throw new PlaceTextRefused('place_text.error.correct_unchanged');
+        }
+        if ($text === $live['text'] && (PlaceText::TOWN === $proposal['target'] || $derived === $live['derived'])) {
+            throw new PlaceTextRefused('place_text.error.unchanged');
+        }
+
+        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived): Submission {
+            $this->em->lock($submission, LockMode::PESSIMISTIC_WRITE);
+            $this->em->refresh($submission);
+            $this->assertCorrectable($submission, $curator);
+
+            $payload = $submission->getPayload();
+            $prior = \is_array($payload['_corrected'] ?? null) ? $payload['_corrected'] : [];
+            $payload['_corrected'] = [
+                'by' => (int) $curator->getId(),
+                'at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+                'from' => \is_string($prior['from'] ?? null) ? $prior['from'] : $proposal['text'],
+            ] + (PlaceText::REGION === $proposal['target'] ? ['fromDerived' => \is_bool($prior['fromDerived'] ?? null) ? $prior['fromDerived'] : $proposal['derived']] : []);
+            $payload['text'] = $text;
+            if (PlaceText::REGION === $proposal['target']) {
+                $payload['derived'] = $derived;
+            }
+            $changes = $submission->getChanges();
+            $key = PlaceText::changeKey($proposal['lang']);
+            $was = \is_array($changes[$key] ?? null) ? ($changes[$key]['was'] ?? null) : null;
+            $changes[$key] = ['was' => $was, 'now' => $text];
+
+            $submission->setPayload($payload)->setChanges($changes);
+            $this->em->flush();
+
+            return $submission;
+        });
+    }
+
+    /**
+     * A curator of the area approves a waiting proposal from its correction
+     * form (owner 2026-10-01): the text in the box, corrected or not, goes
+     * live, and the note reaches the writer with the approval, as a note on
+     * the map's Approve does.
+     *
+     * One transaction: a correction the approval refuses is not kept either.
+     * The text in the box is checked as a correction is, so a changed text is
+     * recorded in `_corrected` before it is applied.
+     *
+     * @throws PlaceTextRefused        on text or a note the form must send back
+     * @throws OutOfScopeException     outside the curator's areas
+     * @throws AlreadyDecidedException once it is decided, withdrawn or held
+     */
+    public function approve(Submission $submission, User $curator, string $text, bool $derived, string $note): Submission
+    {
+        $this->assertCorrectable($submission, $curator);
+        $proposal = PlaceText::fromPayload($submission->getPayload());
+        if (null === $proposal) {
+            throw new PlaceTextRefused('place_text.error.unknown');
+        }
+        [, $text] = $this->checked($proposal['lang'], $text, '');
+        $note = trim($note);
+        if (mb_strlen($note) > self::REPLY_MAX) {
+            throw new PlaceTextRefused('moderate.error.note_too_long');
+        }
+        $derived = PlaceText::REGION === $proposal['target'] && $derived && $this->liveText($proposal)['canDerive'];
+
+        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived, $note): Submission {
+            if ($text !== $proposal['text'] || $derived !== $proposal['derived']) {
+                $this->correct($submission, $curator, $text, $derived);
+            }
+
+            return $this->moderation->decide((int) $submission->getId(), 'approve', $curator, '' === $note ? null : $note);
+        });
+    }
+
+    /**
+     * Whether this curator may correct this submission now: inside their
+     * areas, a Text proposal, still waiting and not held.
+     *
+     * @throws OutOfScopeException
+     * @throws AlreadyDecidedException
+     */
+    public function assertCorrectable(Submission $submission, User $curator): void
+    {
+        if (!$this->scopes->allowsRegion($this->scopes->scopeFor($curator), $submission->getRegionId())) {
+            throw new OutOfScopeException('Submission outside the curator\'s assigned areas.');
+        }
+        if (SubmissionType::Text !== $submission->getType()
+            || !\in_array($submission->getStatus(), [SubmissionStatus::Pending, SubmissionStatus::NeedsInfo], true)
+            || null !== $submission->getEscalatedAt()) {
+            throw new AlreadyDecidedException(sprintf('Submission %d cannot be corrected now', (int) $submission->getId()));
+        }
+    }
+
+    /**
+     * @return array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>}|null
+     */
+    private function regionWhere(string $predicate, int|string $key): ?array
+    {
+        $row = $this->db->fetchAssociative(
+            'SELECT r.id, r.slug, r.name, r.country_code, r.context, r.context_curated FROM region r
+              WHERE '.$predicate.' AND r.geom IS NOT NULL AND r.country_code <> \'\' AND '.OperationalRegions::predicate('r'),
+            ['key' => $key],
+        );
+        if (false === $row) {
+            return null;
+        }
+
+        return [
+            'id' => (int) $row['id'],
+            'slug' => (string) $row['slug'],
+            'name' => (string) $row['name'],
+            'countryCode' => (string) $row['country_code'],
+            'wiki' => PlaceText::decode($row['context']),
+            'curated' => PlaceText::decode($row['context_curated']),
+        ];
     }
 
     /**

@@ -827,8 +827,68 @@ towns whose kept point lies inside the curator's areas. A curator outside the
 town's region, or a limited curator for a town with no kept point
 (fail-closed), is sent to the proposal form with a note saying why.
 
+**A curator corrects a waiting text before deciding it (owner 2026-10-01:
+"I should be able to edit it. Typos etc.").** The Text card carries the ✎
+(and its title links to the same place), as a place edit's does:
+`/moderate/text/{id}` (`moderate_text`, `PlaceTextController::correct()`),
+opened in a new tab like the place form. It is the proposal form in
+correction mode: the text readers see now in the proposal's language,
+read-only, as "Current text"; the box prefilled with the rider's proposed
+text, with the same "x of 1200" count; the language select fixed (disabled)
+to the proposal's language; the rider's note read-only as "The rider's note"
+in place of the note field (nothing when they left none); for a region, the
+adaptation tick as the rider sent it (it can be corrected where an article
+exists); an optional "Note to the writer" box (up to 2000 characters, the
+limit of the map's decision form); the buttons Approve, "Save correction"
+and Cancel (back to the queue); no licence line, since the lead says the
+text stays credited to the rider. Save correction
+(`PlaceTextProposals::correct()`, CSRF `moderate-text`) **amends the rider's
+submission in place and applies nothing**: `payload.text` and the `now` side
+of `changes` carry the corrected words, `was` stays what readers saw when the
+rider sent it, the writer (`user_id`), status (pending or needs-info), note
+and thread are unchanged, and `payload._corrected = {by: <curator id>, at,
+from: <the rider's words>}` (plus `fromDerived` for a region) records the
+correction; `from` keeps the rider's first words however often the text is
+corrected. The page then returns to the queue with "Correction saved. The
+suggestion still waits for your decision.", and the card shows the
+corrected text in its diff and a "Corrected" tag (`moderate.corrected`,
+`SubmissionQueue` row key `corrected`). The rider is told nothing at that
+point, and the note box is not sent. Approve (`PlaceTextProposals::approve()`,
+`do=approve`, owner 2026-10-01: "approve a region or town text inside the
+edit form, including the optional response to the writer") does both in one
+transaction: when the box or the tick differs from the proposal it first
+records the correction as Save correction does, then makes the ordinary
+approve decision (`ModerationService::decide()`), with the note as the
+decision note, so the writer gets the usual approval message with the note
+in it. A text left as the rider sent it is approved as it is, with no
+`_corrected`. A refused approval (for example a note over the limit, 422)
+keeps no correction either. The page returns to the queue with "Approved.
+The text is live, and the writer gets your approval in their messages."
+Approving, here or on the map, writes the text credited to the rider as
+writer and the curator as approver (`PlaceTextWriter`, unchanged),
+`submission_id` pointing at the row that keeps the correction record. A later revision by the rider (§7.3b) replaces
+the payload, and with it `_corrected`: the words are theirs again.
+Refusals: a curator whose areas do not cover the submission gets 403 on
+both the page and the save; a missing or non-text submission, or one on
+legal hold, is 404; a decided or withdrawn one sends the curator back to the
+queue with "This suggestion is no longer waiting for a decision, so it cannot
+be corrected." (checked again under a row lock on save); the rider's own text
+sent back unchanged is refused ("This is the text as the rider sent it...",
+422), and so is a correction that equals what readers see now.
+
+This differs from the place ✎ on purpose. There, the wizard shows the live
+place (plus the curator's own open change), and saving files the curator's
+OWN edit, applied at once inside their area (§1.6) and credited to the
+curator in `change_history`, while the rider's submission waits untouched
+for its decision. A text is one whole value: a curator's own text applied
+beside the rider's waiting one would be overwritten by the rider's typo the
+moment it was approved, and would take the credit from the rider for a
+one-letter fix. So a text correction amends the proposal, and the decision
+is its own step: Approve on the same form, or any decision on the map.
+
 Pinned by `PlaceTextProposalTest`, `TownControllerTest`,
-`RegionsPagesTest::testDetailPageWithoutContextInvitesAText` and
+`RegionsPagesTest::testDetailPageWithoutContextInvitesAText`,
+`DeskSeenTest::testTheTextCardsEditLinkOpensTheSubmission` and
 `tests/js/town-text.test.mjs`.
 
 ### 3.2 The `changes` contract
@@ -1126,7 +1186,8 @@ at a time, so the row is sized for that:
   link-ish `<summary>` text stacked in a two-column block below the primary
   action, which cost two horizontal rules and two extra rows for three
   controls. Since 2026-08-25 all five are icon-only (◎ review on the map,
-  ✎ edit the form, ✉ message, ⚑ escalate, the bin), the word kept as the
+  ✎ edit the form (a place edit's wizard, or a town or region text's
+  correction form, §3.1b), ✉ message, ⚑ escalate, the bin), the word kept as the
   tooltip and the accessible name: five worded buttons repeated per row read
   as a wall on the list view (owner). A new place also carries the OSM
   identity chip in its meta line (open / linked / not in OSM,
@@ -1726,7 +1787,7 @@ only `submission` and `catalog_finding`, the two kinds the drawer opens
 
 | Desk list | `subject_type` | Opened when |
 |---|---|---|
-| Submissions queue | `submission` | the map drawer opens the pending submission; the edit form loads from the card's title or ✎ link (`/improve?…&sub=<id>`); it is decided |
+| Submissions queue | `submission` | the map drawer opens the pending submission; the edit form loads from the card's title or ✎ link (`/improve?…&sub=<id>`, or a Text card's `/moderate/text/<id>`); it is decided |
 | Routes: proposals (a live route never carries the bar) | `route` | its desk page (`moderate_routes_detail`, also its edit form) loads; it is decided |
 | Routes: corrections | `route_suggestion` | its route's desk page loads (it lists the route's open corrections in full); it is resolved |
 | Reports | `content_report` | its page loads; it is decided |

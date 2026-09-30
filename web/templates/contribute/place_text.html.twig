@@ -15,6 +15,14 @@
   follows the typing (contribute/place-text.js, a file so the page needs no
   CSP nonce). Without script the select still decides which language the
   text is sent for, and the server enforces the length either way.
+
+  The same page is where a curator of the area corrects a waiting proposal
+  (`correcting` set, route moderate_text): the box holds the rider's text,
+  the language is the proposal's and cannot change, the rider's note shows
+  read-only instead of the note field, and the licence line (addressed to
+  the writer) gives way to the lead saying the rider stays credited. There
+  the curator either approves the text in the box, with an optional note
+  to the writer, or saves the correction and decides later.
 #}
 {% extends 'base.html.twig' %}
 
@@ -31,7 +39,7 @@
 <div class="lhero"><div class="wrap">
   <div class="kicker" style="color:var(--trail)">{{ ('place_text.kicker_' ~ target)|trans }}</div>
   <h1 class="disp">{{ title }}</h1>
-  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ ('place_text.lead_' ~ target)|trans }}</p>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ (correcting|default(null) ? 'place_text.correct.lead' : 'place_text.lead_' ~ target)|trans }}</p>
 </div></div>
 
 <section class="pad"><div class="wrap">
@@ -59,7 +67,7 @@
 
         <div class="cfield">
           <label for="pt-lang">{{ 'place_text.field_lang'|trans }}</label>
-          <select id="pt-lang" name="lang">
+          <select id="pt-lang" name="lang"{{ correcting ? ' disabled' }}>
             {% for code, label in langs %}
               <option value="{{ code }}"{{ code == lang ? ' selected' }}>{{ label }}</option>
             {% endfor %}
@@ -92,18 +100,37 @@
           </div>
         {% endif %}
 
-        <div class="cfield">
-          <label for="pt-note">{{ 'place_text.field_note'|trans }}</label>
-          <input type="text" id="pt-note" name="note" maxlength="{{ note_max }}" aria-describedby="pt-note-hint">
-          <p class="chint" id="pt-note-hint">{{ 'place_text.field_note_hint'|trans }}</p>
-        </div>
+        {% if correcting %}
+          {% if correcting.note %}
+            <figure class="pt-current" id="pt-rider-note">
+              <figcaption>{{ 'place_text.correct.note_h'|trans }}</figcaption>
+              <blockquote>{{ correcting.note }}</blockquote>
+            </figure>
+          {% endif %}
+          <div class="cfield">
+            <label for="pt-reply">{{ 'place_text.correct.reply_label'|trans }}</label>
+            <textarea id="pt-reply" name="reply" rows="3" maxlength="{{ reply_max }}" aria-describedby="pt-reply-hint">{{ reply }}</textarea>
+            <p class="chint" id="pt-reply-hint">{{ 'place_text.correct.reply_hint'|trans }}</p>
+          </div>
+        {% else %}
+          <div class="cfield">
+            <label for="pt-note">{{ 'place_text.field_note'|trans }}</label>
+            <input type="text" id="pt-note" name="note" maxlength="{{ note_max }}" aria-describedby="pt-note-hint">
+            <p class="chint" id="pt-note-hint">{{ 'place_text.field_note_hint'|trans }}</p>
+          </div>
+        {% endif %}
 
         <div class="pt-actions">
-          <button type="submit" class="btn btn-p">{{ 'place_text.submit'|trans }}</button>
+          {% if correcting %}
+            <button type="submit" name="do" value="approve" class="btn btn-p">{{ 'place_text.correct.approve'|trans }}</button>
+            <button type="submit" name="do" value="save" class="btn btn-g">{{ 'place_text.correct.submit'|trans }}</button>
+          {% else %}
+            <button type="submit" class="btn btn-p">{{ 'place_text.submit'|trans }}</button>
+          {% endif %}
           <a class="btn btn-g" href="{{ back }}">{{ 'place_text.cancel'|trans }}</a>
         </div>
         {# Small print under the buttons: the terms of sending, not a field. #}
-        <p class="pt-licence">{{ 'place_text.licence'|trans|rich }}</p>
+        {% if not correcting %}<p class="pt-licence">{{ 'place_text.licence'|trans|rich }}</p>{% endif %}
       </form>
     {% endif %}
   </div>

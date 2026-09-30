@@ -49,7 +49,7 @@ final class SubmissionQueue
     ) {
     }
 
-    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string}> */
+    /** @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool}> */
     public function filtered(ModerationScope $scope, ?string $country, ?string $region, ?string $type, ?string $q = null, int $page = 1, int $perPage = self::PER_PAGE, ?int $byUser = null, ?string $letter = null): array
     {
         [$where, $params] = $this->openFilters($country, $region, $type, $q, $byUser, $letter);
@@ -171,7 +171,7 @@ final class SubmissionQueue
     /**
      * Map pending layer: pending only, plus optional `$focusId` for a needs-info pin.
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool}>
      */
     public function pendingForMap(ModerationScope $scope, ?int $focusId = null): array
     {
@@ -521,7 +521,7 @@ final class SubmissionQueue
      *                                     via $params, never interpolated
      * @param array<string, mixed> $params bound query parameters
      *
-     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string}>
+     * @return list<array{id:int,itemId:?int,type:string,letter:string,country:string,region:string,title:string,lat:float,lng:float,who:?string,whoUuid:string,when:string,body:string,was:string,now:string,status:string,asked:?string,riderReply:?string,priorRejection:?array{when:string,note:?string},photos:list<array{id:string,sm:string,lg:string,takenAt:?string,distanceM:?int}>,shape:?array{before: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}, after: ?array{route: list<array{0:float,1:float}>, grad: list<int|float>, steep: ?array{at:array{0:float,1:float}, pct:string}, point?: array{0:float,1:float}, unrecorded?: true}},changes:list<array{key:string,was:?string,now:string}>,linkFlag:?string,bikeway:?array{nearestM:?int,withinM:int},photosHiddenByMove:int,osm:?array{state:string,ref:?string,candidates:list<array{ref:string,name:?string,distanceM:float}>},replaces:list<array{id:int,name:string,from:string,provider:?string,metres:int}>,replacesOsm:?string,corrected:bool}>
      */
     private function rows(ModerationScope $scope, string $where, array $params, ?int $limit = null, int $offset = 0): array
     {
@@ -536,6 +536,7 @@ final class SubmissionQueue
                     COALESCE(s.payload->\'details\'->>\'note\', \'\') AS body,
                     s.payload->\'_bikeway\' AS bikeway,
                     s.payload->\'_replaces\' AS replaces,
+                    CASE WHEN s.payload->\'_corrected\' IS NULL THEN 0 ELSE 1 END AS corrected,
                     it.attributes AS item_attributes, it.letter AS item_letter, it.osm_ref, it.osm_checked_at,
                     ST_Y(ST_PointOnSurface(it.geom)) AS item_lat, ST_X(ST_PointOnSurface(it.geom)) AS item_lng,
                     rr.body_text AS rider_reply,
@@ -615,6 +616,8 @@ final class SubmissionQueue
                 'replaces' => $this->replaces($r),
                 /* The OSM point it holds once approved: the free pin that goes (§5a). */
                 'replacesOsm' => $this->replacesOsm($r),
+                /* A Text proposal a curator corrected before deciding (moderation-and-contribution.md §3.1b). */
+                'corrected' => 1 === (int) $r['corrected'],
             ];
         }, $rows);
     }

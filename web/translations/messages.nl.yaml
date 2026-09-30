@@ -3124,6 +3124,16 @@ place_text:
   back_region: 'Terug naar de regio'
   follow: 'Volg het op je profiel'
   change_label: 'Tekst (%lang%)'
+  correct:
+    lead: "Verbeter tikfouten en kleine vergissingen in deze suggestie, en keur ze dan hier goed, of sla de verbetering op en beslis later. Het blijft de tekst van de fietser: na goedkeuring staat hij op naam van de fietser, en de suggestie houdt bij dat jij hem verbeterd hebt."
+    note_h: 'Notitie van de fietser'
+    submit: 'Verbetering opslaan'
+    saved: "Verbetering opgeslagen. De suggestie wacht nog op je beslissing."
+    settled: 'Deze suggestie wacht niet meer op een beslissing en kan dus niet meer verbeterd worden.'
+    approve: "Goedkeuren"
+    approved: "Goedgekeurd. De tekst staat online, en de schrijver krijgt je goedkeuring als bericht."
+    reply_label: "Notitie voor de schrijver (optioneel)"
+    reply_hint: "Gaat mee met de goedkeuring, in de berichten van de schrijver. Verbetering opslaan verstuurt ze niet."
   error:
     lang: 'Kies een van de talen uit de lijst.'
     empty: 'Schrijf eerst de tekst.'
@@ -3132,6 +3142,7 @@ place_text:
     unchanged: 'De tekst is dezelfde als die lezers nu zien. Verander iets voordat je hem verstuurt.'
     no_location: 'We weten nog niet waar deze plaats ligt. Open hem op de kaart en gebruik "Deze tekst bewerken" op zijn kaartje.'
     unknown: 'Deze tekst kan hier niet bewerkt worden.'
+    correct_unchanged: 'Dit is de tekst zoals de fietser hem stuurde. Verander iets, of ga terug naar de wachtrij.'
 
 moderate:
   rider_removed: 'een fietser met verwijderd account'
@@ -3362,6 +3373,7 @@ moderate:
     rejected: 'Afgewezen'
     trashed: 'Verwijderd'
   answered: 'Beantwoord'
+  corrected: 'Verbeterd'
   rider_reply: 'De fietser heeft geantwoord'
   prior_rejection: 'Eerder afgewezen'
   links:

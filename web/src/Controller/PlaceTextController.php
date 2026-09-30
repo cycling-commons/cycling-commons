@@ -8,12 +8,16 @@ namespace App\Controller;
 
 use App\Catalog\Entity\Submission;
 use App\Catalog\RegionLead;
+use App\Catalog\SubmissionType;
 use App\Contribution\PlaceText;
 use App\Contribution\PlaceTextProposals;
 use App\Contribution\PlaceTextRefused;
 use App\Entity\User;
 use App\EventSubscriber\StatelessLoginRedirectSubscriber;
+use App\Moderation\AlreadyDecidedException;
+use App\Moderation\OutOfScopeException;
 use App\Routing\LocalePrefix;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,6 +34,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * region approves it there, or it applies at once when a curator writes it
  * inside their own area (PlaceTextProposals).
  *
+ * The same form, prefilled with the rider's words, is where a curator of the
+ * area corrects a waiting proposal before deciding it: the queue card's ✎
+ * (`moderate_text`).
+ *
  * @see docs/specs/moderation-and-contribution.md §3.1b
  *
  * @api
@@ -39,6 +47,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class PlaceTextController extends AbstractController
 {
     private const string CSRF_ID = 'place-text';
+
+    private const string CORRECT_CSRF_ID = 'moderate-text';
 
     /** Endonyms, as the language menu spells them. */
     private const array LANG_NAMES = ['en' => 'English', 'fr' => 'Français', 'nl' => 'Nederlands', 'de' => 'Deutsch', 'es' => 'Español'];
@@ -113,6 +123,101 @@ final class PlaceTextController extends AbstractController
     }
 
     /**
+     * A curator corrects a rider's waiting text before deciding it (owner
+     * 2026-10-01: "Typos etc."). The box holds the rider's text, the language
+     * is theirs, their note shows read-only. Save correction amends the
+     * proposal and leaves the decision for later; Approve puts the text in
+     * the box live and sends the optional note to the writer with the
+     * approval. Both return to the queue.
+     *
+     * Only a curator whose areas cover the submission (403 otherwise), only
+     * while it waits: a decided, withdrawn or held one goes back to the queue
+     * with a note saying so.
+     */
+    #[Route('/moderate/text/{id}', name: 'moderate_text', requirements: ['id' => '\d{1,18}'], methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_CURATOR')]
+    public function correct(int $id, Request $request, PlaceTextProposals $proposals, EntityManagerInterface $em): Response
+    {
+        $submission = $em->find(Submission::class, $id);
+        $proposal = null !== $submission && SubmissionType::Text === $submission->getType() && null === $submission->getEscalatedAt()
+            ? PlaceText::fromPayload($submission->getPayload())
+            : null;
+        if (null === $submission || null === $proposal) {
+            throw $this->createNotFoundException(sprintf('No text submission %d.', $id));
+        }
+        /** @var User $curator */
+        $curator = $this->getUser();
+        try {
+            $context = $this->correctionContext($submission, $proposal, $proposals, $curator);
+            if ('POST' !== $request->getMethod()) {
+                return $this->form($context, $proposal['lang'], $proposal['text'], null);
+            }
+            $text = $request->request->getString('text');
+            if (!$this->isCsrfTokenValid(self::CORRECT_CSRF_ID, $request->request->getString('_token'))) {
+                return $this->form($context, $proposal['lang'], $text, 'flash.invalid_token', Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            $approve = 'approve' === $request->request->getString('do');
+            $reply = $request->request->getString('reply');
+            try {
+                if ($approve) {
+                    $proposals->approve($submission, $curator, $text, $request->request->has('derived'), $reply);
+                } else {
+                    $proposals->correct($submission, $curator, $text, $request->request->has('derived'));
+                }
+            } catch (PlaceTextRefused $e) {
+                return $this->form(['reply' => $reply] + $context, $proposal['lang'], $text, $e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        } catch (OutOfScopeException) {
+            throw $this->createAccessDeniedException('Out of moderation scope.');
+        } catch (AlreadyDecidedException) {
+            $this->addFlash('danger', 'place_text.correct.settled');
+
+            return $this->redirectToRoute('moderate_submissions');
+        } catch (PlaceTextRefused) {
+            throw $this->createNotFoundException(sprintf('Text submission %d names no text.', $id));
+        }
+        $this->addFlash('success', $approve ? 'place_text.correct.approved' : 'place_text.correct.saved');
+
+        return $this->redirectToRoute('moderate_submissions');
+    }
+
+    /**
+     * The correction page's context, after the checks the save makes, so the
+     * form is never shown for work the save would refuse.
+     *
+     * @param array{target: string, ref: string, lang: string, text: string, derived: bool} $proposal
+     *
+     * @return array<string, mixed>
+     *
+     * @throws OutOfScopeException
+     * @throws AlreadyDecidedException
+     * @throws PlaceTextRefused
+     */
+    private function correctionContext(Submission $submission, array $proposal, PlaceTextProposals $proposals, User $curator): array
+    {
+        $proposals->assertCorrectable($submission, $curator);
+        $live = $proposals->liveText($proposal);
+        $lang = $proposal['lang'];
+        $details = $submission->getPayload()['details'] ?? null;
+        $note = \is_array($details) && \is_string($details['note'] ?? null) ? trim($details['note']) : '';
+
+        return [
+            'target' => $proposal['target'],
+            'title' => $submission->getTitle(),
+            'action' => $this->generateUrl('moderate_text', ['id' => $submission->getId()]),
+            'hidden' => [],
+            'back' => $this->generateUrl('moderate_submissions'),
+            'texts' => [$lang => $live['text']],
+            'derived' => PlaceText::REGION === $proposal['target'] ? [$lang => $live['canDerive'] ? $proposal['derived'] : null] : null,
+            'langs' => [$lang => self::LANG_NAMES[$lang] ?? $lang],
+            'correcting' => ['note' => $note],
+            'reply' => '',
+            'reply_max' => PlaceTextProposals::REPLY_MAX,
+            'csrf_id' => self::CORRECT_CSRF_ID,
+        ];
+    }
+
+    /**
      * @param array<string, mixed>                                                         $context
      * @param callable(User, string, string): array{submission: Submission, applied: bool} $propose
      */
@@ -140,14 +245,17 @@ final class PlaceTextController extends AbstractController
 
     /**
      * The box holds only what the rider wrote: empty on a first visit, their
-     * own words when a send comes back refused. The current text is shown
-     * above it, read-only, from `texts`.
+     * own words when a send comes back refused, the proposal itself when a
+     * curator corrects it. The current text is shown above it, read-only,
+     * from `texts`. The context's own keys win (a correction names its
+     * single language and its own token).
      *
      * @param array<string, mixed> $context
      */
     private function form(array $context, string $lang, string $text, ?string $error, int $status = Response::HTTP_OK): Response
     {
         return $this->render('contribute/place_text.html.twig', $context + [
+            'correcting' => null,
             'sent' => null,
             'lang' => $lang,
             'text' => $text,
