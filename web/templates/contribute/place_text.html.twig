@@ -98,10 +98,12 @@
           <p class="chint" id="pt-note-hint">{{ 'place_text.field_note_hint'|trans }}</p>
         </div>
 
-        <p class="chint">{{ 'place_text.licence'|trans|rich }}</p>
-
-        <p><button type="submit" class="btn btn-p">{{ 'place_text.submit'|trans }}</button>
-           <a href="{{ back }}">{{ 'place_text.cancel'|trans }}</a></p>
+        <div class="pt-actions">
+          <button type="submit" class="btn btn-p">{{ 'place_text.submit'|trans }}</button>
+          <a class="btn btn-g" href="{{ back }}">{{ 'place_text.cancel'|trans }}</a>
+        </div>
+        {# Small print under the buttons: the terms of sending, not a field. #}
+        <p class="pt-licence">{{ 'place_text.licence'|trans|rich }}</p>
       </form>
     {% endif %}
   </div>

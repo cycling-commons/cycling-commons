@@ -774,9 +774,11 @@ enforces the limit either way); at most 1,200 characters folded to one
 paragraph; an optional
 note for the curator (the card body, `payload.details.note`), and for a
 region the "I adapted this from the Wikipedia article" tick where there is an
-article to adapt. The licence line says the text is published under CC BY-SA
-4.0 and credited to the writer by public name, else rider handle; no tick box,
-as for place edits (§1). The card and the page both carry one plain sentence:
+article to adapt. Send and Cancel sit side by side as a primary and a
+secondary button of one height (`.btn-p`, `.btn-g`); below them, in small
+print, the licence line says the text is published under CC BY-SA 4.0 and
+credited to the writer by public name, else rider handle; no tick box, as for
+place edits (moderation-and-contribution.md §1). The card and the page both carry one plain sentence:
 "Anyone signed in can suggest an edit to this text. A curator of this region
 approves it."
 

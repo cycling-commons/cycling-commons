@@ -237,6 +237,15 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertStringContainsString('Write the whole text as readers should see it', $crawler->filter('#pt-text-hint')->text());
         self::assertStringContainsString('Testdorp is een dorp.', (string) $crawler->filter('#place-text-form')->attr('data-texts'), 'the script swaps the quote per language');
 
+        // Send and Cancel as a primary and a secondary button, the licence in
+        // small print below them.
+        $actions = $crawler->filter('#place-text-form .pt-actions');
+        self::assertSame('btn btn-p', $actions->filter('button[type=submit]')->attr('class'));
+        self::assertSame('btn btn-g', $actions->filter('a')->attr('class'));
+        $after = $crawler->filter('#place-text-form .pt-actions ~ p.pt-licence');
+        self::assertCount(1, $after, 'the licence line follows the buttons');
+        self::assertStringContainsString('CC BY-SA 4.0', $after->text());
+
         // No text yet in this language: said plainly, nothing quoted.
         $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=en&name=Testdorp');
         self::assertNotNull($crawler->filter('#pt-current-text')->attr('hidden'));

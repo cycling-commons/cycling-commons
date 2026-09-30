@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
 /* "Edit this text" (contribute/place_text.html.twig): the current text of
-   the chosen language as a read-only quote above the box, and the box's
-   live character count. The fields themselves are report.css's. */
+   the chosen language as a read-only quote above the box, the box's live
+   character count, and the Send / Cancel row with the licence in small print
+   below it. The fields themselves are report.css's. */
 .pt-current{margin:1.15rem 0}
 .pt-current figcaption{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;
   text-transform:uppercase;color:var(--clay);margin-bottom:.4rem}
@@ -11,3 +12,9 @@
 .pt-current .chint{margin:0}
 .pt-count{font-family:var(--mono);font-size:.74rem;letter-spacing:.04em;text-align:right}
 .pt-count.is-over{color:var(--clay);font-weight:700}
+/* Send and Cancel side by side. The row stretches both to one height: a
+   <button> and an <a> do not share a line-height by default. */
+.pt-actions{display:flex;flex-wrap:wrap;gap:.7rem;margin:1.6rem 0 0}
+/* The size and colour of report.css's form notes (.reqlegend); `.reppage p`
+   would otherwise set it as body text. */
+.reppage .pt-licence{font-size:.85rem;color:#4f5344;line-height:1.55;margin:.9rem 0 0}
