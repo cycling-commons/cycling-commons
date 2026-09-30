@@ -3276,7 +3276,7 @@ moderate:
     public: 'Lista pública'
     apply: 'Aplicar'
     search: 'Buscar'
-    search_ph: 'Título o colaborador…'
+    search_ph: 'Título, colaborador o SUB-12…'
     by_user: 'Solo las propuestas de una persona.'
     by_user_clear: 'Mostrar a todos'
   msg:

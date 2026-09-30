@@ -280,7 +280,7 @@ carries the settled submissions; `/moderate/submissions` stays about what is sti
 do. Queue and History chips on both pages switch between them, the same
 pattern as the translations desk — History is not a top-level moderation
 tab. Both take **25 rows a page** (`SubmissionQueue::PER_PAGE`)
-and a **title search**.
+and a **search** by title, submitter or submission number.
 
 - The page query and its count share one WHERE builder per desk
   (`openFilters()`, `settledFilters()`), so a pager can never disagree with the
@@ -296,6 +296,10 @@ and a **title search**.
   real name would tell a curator which pseudonym the name belongs to. On
   History the deciding curator is matched by display name too, as the card
   names them (`DeskRider::colleague()`).
+- **`SUB-12`, `sub12` or `#12` is submission 12** and matches nothing else;
+  the desk's own scope and status still apply. An open one is on
+  `/moderate/submissions`, a decided one on History, and a held, withdrawn or
+  out-of-area one on neither. A bare number stays a title search ("Route 66").
 - Trash audit rows are merged into the history only on **page one of an
   unfiltered, unsearched** view. They come from a different table with no shared
   cursor, so interleaving them across pages would drop or repeat rows as the
@@ -3409,9 +3413,12 @@ picture large, prev/next and arrow keys when the post has more, Esc or the
 backdrop closes, focus returns to the thumbnail); without the script each
 thumbnail is a plain link to the picture. The search's number match is a
 prefix: "11" lists 11, 118 and 1103, the exact id first. The post shows
-`about_submission_id` as a link to the queue card reading `SUB-id · title`.
-The reader's own scope still decides whether that card opens, so a link to an
-item outside their area refuses at the target, as §9.3 requires. A post
+`about_submission_id` reading `SUB-id · title`, as a link to the desk that
+lists the card, searched by `SUB-id` (`CuratorRoom` `about_desk`): the open
+queue while it is pending or needs info, History once approved or rejected.
+A held, withdrawn or removed submission is on no desk, so its label is plain
+text. The reader's own scope still decides whether that card shows, so a link
+to an item outside their area finds nothing at the target, as §9.3 requires. A post
 refused for its picture or its submission number comes back with its words
 still in the box.
 

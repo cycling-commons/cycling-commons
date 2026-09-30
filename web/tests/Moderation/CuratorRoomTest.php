@@ -482,9 +482,10 @@ final class CuratorRoomTest extends WebTestCase
     }
 
     /**
-     * A post about a submission that goes under legal hold keeps its link but
-     * loses the title, on the board and on the edit page; a held number cannot
-     * be linked anew, and the post still saves with its old link.
+     * A post about a submission that goes under legal hold keeps its number
+     * but loses the title, on the board and on the edit page, and the link, as
+     * no desk lists a held card; a held number cannot be linked anew, and the
+     * post still saves with its old link.
      */
     public function testAHeldSubmissionShowsNoTitleInTheRoomAndCannotBeLinked(): void
     {
@@ -501,6 +502,7 @@ final class CuratorRoomTest extends WebTestCase
         $about = $crawler->filter('.rm-post .rm-about')->text();
         self::assertStringContainsString((string) $sub->getId(), $about);
         self::assertStringNotContainsString('Words under hold', $about);
+        self::assertCount(0, $crawler->filter('.rm-post .rm-about a'));
 
         $crawler = $client->request('GET', '/moderate/room/'.$post->getId().'/edit');
         self::assertResponseIsSuccessful();

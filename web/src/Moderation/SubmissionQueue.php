@@ -112,11 +112,13 @@ final class SubmissionQueue
     /**
      * The search box (docs/specs/moderation-and-contribution.md §5.2).
      *
-     * Matches the title, or the submitter by what the card shows for them
-     * (DeskRider::of()): the display name only when their profile is public,
-     * the `rider#` pseudonym always. On History (`$settled`) it also matches
-     * the deciding curator by display name, as the card names them
-     * (DeskRider::colleague()).
+     * `SUB-12`, `sub12` or `#12` is submission 12 and nothing else; the
+     * caller's scope and status filters still apply, so a number outside
+     * them finds nothing. Anything else matches the title, or the submitter
+     * by what the card shows for them (DeskRider::of()): the display name
+     * only when their profile is public, the `rider#` pseudonym always. On
+     * History (`$settled`) it also matches the deciding curator by display
+     * name, as the card names them (DeskRider::colleague()).
      *
      * @param list<string>         $where
      * @param array<string, mixed> $params
@@ -124,6 +126,19 @@ final class SubmissionQueue
     private static function searchFilter(string $q, bool $settled, array &$where, array &$params): void
     {
         $q = trim($q);
+        if (1 === preg_match('/^(?:SUB-?|#)\s*(\d+)$/i', $q, $m)) {
+            // Longer than any bigint id: no submission has the number.
+            if (\strlen(ltrim($m[1], '0')) > 18) {
+                $where[] = 'FALSE';
+
+                return;
+            }
+            $where[] = 's.id = :qid';
+            $params['qid'] = (int) $m[1];
+
+            return;
+        }
+
         // ILIKE wildcards escaped in the bound value, never concatenated into SQL.
         $submitter = "EXISTS (SELECT 1 FROM users qu WHERE qu.id = s.user_id
                         AND ((qu.public_profile AND qu.display_name ILIKE :q) OR ('rider#' || qu.pseudonym) ILIKE :q))";

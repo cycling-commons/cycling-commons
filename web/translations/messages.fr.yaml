@@ -3242,7 +3242,7 @@ moderate:
     public: 'Liste publique'
     apply: 'Appliquer'
     search: 'Rechercher'
-    search_ph: 'Titre ou contributeur…'
+    search_ph: 'Titre, contributeur ou SUB-12…'
     by_user: 'Contributions d''une seule personne.'
     by_user_clear: 'Afficher tout le monde'
   msg:

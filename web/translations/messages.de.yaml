@@ -3250,7 +3250,7 @@ moderate:
     public: 'Öffentliche Liste'
     apply: 'Anwenden'
     search: 'Suchen'
-    search_ph: 'Titel oder Beitragende…'
+    search_ph: 'Titel, Beitragende oder SUB-12…'
     by_user: 'Nur die Einreichungen einer Person.'
     by_user_clear: 'Alle anzeigen'
   msg:

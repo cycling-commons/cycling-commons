@@ -50,11 +50,21 @@
   {% endif %}
 
   {% if post.about_submission_id %}
-    {# The queue card. The reader's own area still decides whether it opens, so
-       a link out of scope refuses at the target rather than here (§9.3). #}
-    <p class="rm-about"><a href="{{ path('moderate_submissions', {q: 'SUB-' ~ post.about_submission_id}) }}">
+    {# The card where a desk lists it: the open queue while it waits, History
+       once decided, searched by its number. A held, withdrawn or removed
+       submission is on no desk, so its label is not a link. The reader's own
+       area still decides whether the card shows, so a link out of scope finds
+       nothing at the target rather than here (§9.3). #}
+    {%- set about_label -%}
       {%- if post.about_title -%}{{ 'room.about_submission_titled'|trans({'%id%': post.about_submission_id, '%title%': post.about_title}) }}{%- else -%}{{ 'room.about_submission'|trans({'%id%': post.about_submission_id}) }}{%- endif -%}
-    </a></p>
+    {%- endset -%}
+    {% if post.about_desk == 'queue' %}
+      <p class="rm-about"><a href="{{ path('moderate_submissions', {q: 'SUB-' ~ post.about_submission_id}) }}">{{ about_label }}</a></p>
+    {% elseif post.about_desk == 'history' %}
+      <p class="rm-about"><a href="{{ path('moderate_history', {q: 'SUB-' ~ post.about_submission_id}) }}">{{ about_label }}</a></p>
+    {% else %}
+      <p class="rm-about">{{ about_label }}</p>
+    {% endif %}
   {% endif %}
 
 </article>

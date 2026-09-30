@@ -3268,7 +3268,7 @@ moderate:
     public: 'Public list'
     apply: 'Apply'
     search: 'Search'
-    search_ph: 'Item title or contributor…'
+    search_ph: 'Title, contributor or SUB-12…'
     by_user: 'Showing one contributor''s submissions only.'
     by_user_clear: 'Show everyone'
   msg:

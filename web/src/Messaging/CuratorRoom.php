@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Messaging;
 
+use App\Catalog\SubmissionStatus;
 use App\Messaging\Entity\CuratorPost;
 use App\Messaging\Entity\CuratorPostImage;
 use App\Messaging\Entity\CuratorRoomVisit;
@@ -43,6 +44,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
  *     body: string,
  *     about_submission_id: int|null,
  *     about_title: string|null,
+ *     about_desk: 'queue'|'history'|null,
  *     images: list<array{id: int, width: int, height: int}>,
  *     created_at: \DateTimeImmutable,
  *     edited_at: \DateTimeImmutable|null,
@@ -62,6 +64,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
  *     body: string,
  *     about_submission_id: int|null,
  *     about_title: string|null,
+ *     about_desk: 'queue'|'history'|null,
  *     images: list<array{id: int, width: int, height: int}>,
  *     created_at: \DateTimeImmutable,
  *     edited_at: \DateTimeImmutable|null,
@@ -536,7 +539,7 @@ final class CuratorRoom
     {
         return 'SELECT p.id, p.author_id, a.display_name AS author_name, a.public_profile AS author_public, a.uuid AS author_uuid, p.category,
                        p.recipient_id, r.display_name AS recipient_name, r.public_profile AS recipient_public, r.uuid AS recipient_uuid, p.pin, p.title, p.body,
-                       p.about_submission_id, s.title AS about_title, p.created_at, p.edited_at
+                       p.about_submission_id, s.title AS about_title, s.status AS about_status, p.created_at, p.edited_at
                 FROM curator_post p
                 LEFT JOIN users a ON a.id = p.author_id
                 LEFT JOIN users r ON r.id = p.recipient_id
@@ -610,6 +613,7 @@ final class CuratorRoom
             'body' => (string) $row['body'],
             'about_submission_id' => null !== $row['about_submission_id'] ? (int) $row['about_submission_id'] : null,
             'about_title' => null !== $row['about_title'] ? (string) $row['about_title'] : null,
+            'about_desk' => self::aboutDesk($row['about_status'] ?? null),
             'images' => [],
             'created_at' => new \DateTimeImmutable((string) $row['created_at']),
             'edited_at' => null !== $row['edited_at'] ? new \DateTimeImmutable((string) $row['edited_at']) : null,
@@ -617,6 +621,22 @@ final class CuratorRoom
             'mine' => $this->readerIsAdmin || (null !== $authorId && $authorId === $readerId),
             'direct' => null !== $recipientId,
         ];
+    }
+
+    /**
+     * Where the linked submission is listed: the open queue while it waits,
+     * History once decided. Null while it is held (the join leaves it out),
+     * withdrawn or gone, as no desk lists it then.
+     *
+     * @return 'queue'|'history'|null
+     */
+    private static function aboutDesk(mixed $status): ?string
+    {
+        return match ($status) {
+            SubmissionStatus::Pending->value, SubmissionStatus::NeedsInfo->value => 'queue',
+            SubmissionStatus::Approved->value, SubmissionStatus::Rejected->value => 'history',
+            default => null,
+        };
     }
 
     /** The title the edit page shows in the about chip; none while the submission is held. */

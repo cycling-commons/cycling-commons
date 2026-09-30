@@ -3249,7 +3249,7 @@ moderate:
     public: 'Openbare lijst'
     apply: 'Toepassen'
     search: 'Zoeken'
-    search_ph: 'Titel of bijdrager…'
+    search_ph: 'Titel, bijdrager of SUB-12…'
     by_user: 'Alleen de inzendingen van één bijdrager.'
     by_user_clear: 'Toon iedereen'
   msg:
