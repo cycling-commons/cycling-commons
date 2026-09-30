@@ -236,6 +236,22 @@ final class PhotoReportDecisionTest extends WebTestCase
         self::assertNotNull($this->photo($upload)->getObjectsDeletedAt());
     }
 
+    public function testRejectingAReportLeavesTheUploadersOwnRequestAlone(): void
+    {
+        $client = $this->client();
+        $upload = $this->approved($this->rider('own-request-owner@example.org'));
+        static::getContainer()->get(MediaTakedownService::class)->request($upload, 'That is me, please take it down.');
+        $report = $this->report($upload->getId()->toRfc4122(), ReportGround::Advertising);
+
+        $client->loginUser($this->rider('own-request-curator@example.org', curator: true));
+        $this->decide($client, $report, 'rejected', 'Not advertising.');
+
+        self::assertSame(ReportStatus::Rejected, $this->fresh($report)->getStatus());
+        $photo = $this->photo($upload);
+        self::assertTrue($photo->isTakedownPending(), 'the uploader\'s request is decided on the takedowns desk, not here');
+        self::assertTrue($photo->isTakedownWithheld(), 'and the photo they asked to take down stays down meanwhile');
+    }
+
     public function testUpheldIsRefusedUnderLegalHoldAndTellsNobody(): void
     {
         $client = $this->client();

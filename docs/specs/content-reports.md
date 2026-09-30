@@ -378,7 +378,9 @@ to record what happened.
 **Photos are the one case the decision carries through.** A photo report
 raises a pending media takedown for every ground, not only the urgent one, so
 a curator always has something to grant or decline; rejected declines it and
-republishes anything withheld while it waited (`ContentReportService`, handing
+republishes anything withheld while it waited, but never an uploader's own
+request that happens to hold the slot, which stays for the takedowns desk
+(`ContentReportService`, handing
 to `MediaTakedownService`, so the breaker, the event and the message stay the
 proven ones). The takedowns desk keeps only an uploader's request about their
 own photo, which is not a report. Two rules keep the photo and the report

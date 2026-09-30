@@ -9,6 +9,7 @@ namespace App\Support;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaTakedownService;
+use App\Media\MediaTakedownSource;
 use App\Security\PseudonymousKey;
 use App\Support\Entity\ContentReport;
 use Doctrine\ORM\EntityManagerInterface;
@@ -199,7 +200,7 @@ final class ContentReportService
      * The desk records what a curator decided; for a picture that decision has
      * to move a file as well. Upheld removes the photo, whatever the takedown
      * slot holds ({@see MediaTakedownService::removeOnReport()}); rejected
-     * declines the waiting takedown, which puts back anything that
+     * declines a waiting third-party takedown, which puts back anything that
      * was withheld while it was waiting. `Moot` does neither: it is only offered
      * when nothing waits on the photo, which is the whole meaning of that
      * outcome.
@@ -216,7 +217,10 @@ final class ContentReportService
         if (ReportStatus::Upheld === $status && !$this->takedowns->removeOnReport($upload, $curator, $note)) {
             throw new ReportDecisionRefused('report.desk.refused_nothing_to_remove');
         }
-        if (ReportStatus::Rejected === $status) {
+        // Only a report's own takedown. An uploader's request about their own
+        // photo is decided on the takedowns desk, and rejecting somebody
+        // else's report must not republish what the uploader asked to remove.
+        if (ReportStatus::Rejected === $status && MediaTakedownSource::ThirdParty === $upload->getTakedownSource()) {
             $this->takedowns->decline($upload, $curator, $note);
         }
     }
