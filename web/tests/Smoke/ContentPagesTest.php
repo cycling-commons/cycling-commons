@@ -51,6 +51,17 @@ final class ContentPagesTest extends WebTestCase
         self::assertStringContainsString('deleted 24 months after we tell you the outcome', $retention);
     }
 
+    /** A content reporter's address goes 90 days after the decision (content-reports.md §10). */
+    public function testPrivacyStatesTheContentReportAddressPeriod(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/privacy');
+        self::assertResponseIsSuccessful();
+        $retention = $crawler->filter('h2:contains("How long we keep it") + ul')->text();
+        self::assertStringContainsString('Reports about content.', $retention);
+        self::assertStringContainsString('deleted 90 days after we decide', $retention);
+    }
+
     public function testTermsRenders(): void
     {
         $client = static::createClient();
