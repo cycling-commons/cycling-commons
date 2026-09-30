@@ -43,12 +43,7 @@
      rules, so it lives in the rulebook and this page links to it. Copy that
      explains a judgement call has exactly one home, or the two drift. #}
   <h2 class="sec-band">{{ 'moderate.takedown.heading'|trans }} <span class="sec-count">{{ pager.total }}</span></h2>
-  {% if urgent_breaker_open|default(false) %}
-    {# The site-wide auto-withhold budget is spent: urgent reports are
-       arriving far faster than any genuine rate, so they are queuing here
-       instead of taking photos down by themselves (§6c). #}
-    <p class="sec-lead" role="alert"><b>{{ 'moderate.takedown.breaker_open_b'|trans }}</b> {{ 'moderate.takedown.breaker_open'|trans }}</p>
-  {% endif %}
+  {% include 'moderate/_urgent_breaker_banner.html.twig' with {open: urgent_breaker_open|default(false)} only %}
   <p class="sec-lead">{{ 'moderate.takedown.lead_short'|trans }}
     <a href="{{ path('moderate_rulebook') }}#takedowns">{{ 'moderate.takedown.rulebook_link'|trans }}</a></p>
   <div class="q-list">

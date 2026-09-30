@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Media\UrgentWithholdBreaker;
 use App\Moderation\DeskRider;
 use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
@@ -74,6 +75,7 @@ final class ModerateReportsController extends AbstractController
         private readonly SupportRepository $repository,
         private readonly ContentReportService $reports,
         private readonly ReportResolver $resolver,
+        private readonly UrgentWithholdBreaker $breaker,
     ) {
     }
 
@@ -117,6 +119,9 @@ final class ModerateReportsController extends AbstractController
             'filter_status' => (null !== $showing ? $showing->value : self::ALL),
             'filter_target' => $target?->value,
             'pager' => $pager,
+            // Urgent photo reports are decided here, so the spent auto-withhold
+            // budget is announced here too (photo-uploads.md §6c).
+            'urgent_breaker_open' => $this->breaker->isOpen(),
         ]);
     }
 

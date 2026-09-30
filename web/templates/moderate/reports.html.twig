@@ -29,6 +29,8 @@
     <p class="lede">{{ 'report.desk.lede'|trans({'%takedowns%': path('moderate_takedowns')})|rich }}</p>
   </div>
 
+  {% include 'moderate/_urgent_breaker_banner.html.twig' with {open: urgent_breaker_open|default(false)} only %}
+
   {# Two labelled rows (moderate/_chip_row.html.twig), each keeping the
      other's choice. status=all is how the Open default is left on purpose. #}
   {% set status_chips = [] %}

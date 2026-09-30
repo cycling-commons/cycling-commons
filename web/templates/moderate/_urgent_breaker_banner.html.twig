@@ -1,0 +1,11 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The site-wide auto-withhold budget is spent (UrgentWithholdBreaker): urgent
+  photo reports are arriving far faster than any genuine rate, so they wait on
+  the Reports desk instead of taking photos down by themselves
+  (docs/specs/photo-uploads.md §6c). Shown on every desk a curator decides
+  them from. Pass `open`, the breaker's isOpen().
+#}
+{% if open|default(false) %}
+  <p class="flash-error" role="alert"><b>{{ 'moderate.takedown.breaker_open_b'|trans }}</b> {{ 'moderate.takedown.breaker_open'|trans }}</p>
+{% endif %}

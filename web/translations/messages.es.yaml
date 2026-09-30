@@ -3152,7 +3152,7 @@ moderate:
     submission: 'Envío %id%'
     asked: 'Solicitado %when%'
     breaker_open_b: 'Los informes llegan demasiado deprisa como para ser auténticos.'
-    breaker_open: 'El presupuesto de ocultación automática de todo el sitio está agotado, así que los informes urgentes ahora hacen cola aquí en lugar de retirar fotos por su cuenta. Decídelos tú y avisa al responsable del sitio — este patrón es o un ataque contra esta vía o algo que está ocurriendo a gran escala.'
+    breaker_open: 'El presupuesto de ocultación automática de todo el sitio está agotado, así que las denuncias urgentes de fotos ahora esperan en el escritorio de Denuncias en lugar de retirar fotos por su cuenta. Decídelas tú y avisa al responsable del sitio: este patrón es o un ataque contra el formulario de denuncia o algo que está ocurriendo a gran escala.'
     source_uploader: 'Solicitado por quien la subió'
     source_third_party: 'Informe de un tercero'
     state_withheld: 'foto oculta'

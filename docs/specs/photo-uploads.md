@@ -1416,7 +1416,10 @@ photo report as moot while its request is still pending.
    public image URL, so the target list is free. Without a global budget a
    botnet could withhold one photo per IP per day across the entire corpus.
    Over budget, urgent reports still file and still pin to the desk; they hide
-   nothing, the desk shows a banner, the trip is logged at CRITICAL, and the
+   nothing, a red banner (`moderate/_urgent_breaker_banner.html.twig`) shows on
+   the Reports desk where they are decided and on the Takedowns desk
+   (`ReportDeskBreakerBannerTest`), `/admin/withheld-photos` shows its own,
+   the trip is logged at CRITICAL, and the
    operator address is mailed once an hour (`UrgentWithholdAlert`).
    The degrade is safe because of what trips it: genuine reports of this kind
    are rare, so a burst big enough to exhaust the budget is itself the evidence
