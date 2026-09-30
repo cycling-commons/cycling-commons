@@ -58,6 +58,9 @@ tables:
     town_summary: >-
         Cached Wikipedia extract and Wikidata facts for a town, one row per (OpenStreetMap ref,
         language). `answered` true with no title means "this place has no Wikipedia page".
+    town_place: >-
+        Where a town lies, one row per OpenStreetMap ref: the point the first town card
+        reader's map named for it, kept once. It decides which region a town text belongs to.
     link_verdict: >-
         Google Safe Browsing verdict for one URL, keyed by a hash of it. A fact about a URL and
         not about an item, so every item pointing at the same page shares one row and the

@@ -18,6 +18,7 @@ import { liftScopeForHit } from './scope-ui.js';
 import { showRouteCorrections } from './corrections.js';
 import { layerGlyph } from './icons.js';
 import { watchJson } from './commons-photo.js';
+import { townCredit, townEditHtml, townPenHtml } from './town-text.js';
 
 export function bumpPlaceReq(){ _placeReq++; }
 
@@ -157,10 +158,15 @@ function townHtml(d, name, meta){
   // docs/specs/content-reports.md: the one report door, keyed by the element, never a page.
   const reportHref = '/report/town/'+encodeURIComponent(String(meta.osm||'').replace('/', '-'))+'?name='+encodeURIComponent(name||'')+'&from='+encodeURIComponent(location.pathname+location.search);
   const report = `<a class="cc-bang" href="${safeHref(reportHref)}" title="${escPend(D.reportText||'Report this text')}" aria-label="${escPend(D.reportText||'Report this text')}">!</a>`;
-  const credit = d.edited ? escPend(D.wikiEdited||'Edited by our curators, after Wikipedia CC BY-SA 4.0') : escPend(D.wikiText||'Text CC BY-SA 4.0');
+  const credit = escPend(townCredit(d, D));
+  const wiki = (t && t.url) ? `<a href="${safeHref(t.url)}" target="_blank" rel="noopener">Wikipedia ↗</a> · ` : '';
+  // Anyone signed in may suggest a change; a curator of the town's region approves it (moderation-and-contribution.md §3.1b).
+  const editOpts = { signedIn: !!window.CC_CONFIRM_TOKEN, lang: lang.slice(0,2), from: location.pathname+location.search };
+  const edit = townEditHtml(d, meta, name, editOpts, D);
+  const pen = townPenHtml(meta, name, editOpts, D);
   // Facts first, then the paragraph (owner 2026-09-08: "place these 2 info points above the text").
   const text = facts + (t ? `<div class="cc-city-info">${escPend(t.extract)}</div>` : '') + (t ? `
-    <div class="cc-city-links"><a href="${safeHref(t.url)}" target="_blank" rel="noopener">Wikipedia ↗</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">${credit}</a> ${report}</div>` : '');
+    <div class="cc-city-links">${wiki}<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">${credit}</a> ${report}${pen}</div>` : '') + edit;
   const races = c.length ? `<h4 class="cc-near-h">${escPend(D.cyclingH||'Cycling here')}</h4>
     <ul class="cc-town-races">${c.map(r=>{
       const label = r.url ? `<a href="${safeHref(r.url)}" target="_blank" rel="noopener">${escPend(r.label)}</a>` : escPend(r.label);

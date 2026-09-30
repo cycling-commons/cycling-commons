@@ -14,6 +14,7 @@ use App\Media\PhotoPlace;
 use App\Town\Message\ResolveTownSummary;
 use App\Town\MessageHandler\ResolveTownSummaryHandler;
 use App\Town\OsmElementApi;
+use App\Town\TownPlaceRepository;
 use App\Town\TownRoutes;
 use App\Town\TownSummaryRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -57,6 +58,7 @@ final class TownController extends AbstractController
         RateLimiterFactoryInterface $coveragePhotoFetchLimiter,
         RateLimiterFactoryInterface $coveragePhotoGlobalLimiter,
         TownRoutes $routes,
+        TownPlaceRepository $places,
     ): Response {
         if (null !== ($limited = $this->rateLimited($request, $coveragePhotoLimiter))) {
             return $limited;
@@ -69,7 +71,13 @@ final class TownController extends AbstractController
         $continent = $this->continent($request, $continents);
         $budget = fn (): bool => $this->fetchBudgetAllows($request, $coveragePhotoFetchLimiter, $coveragePhotoGlobalLimiter);
 
+        // Where the town lies decides whose region its text belongs to
+        // (moderation-and-contribution.md §3.1b). The first reader's point is
+        // kept; the poll that follows is not asked again.
         $row = $towns->find($ref, $lang);
+        if (null === $row || $row['answered']) {
+            $this->recordPlace($request, $ref, $places);
+        }
         if (null === $row) {
             // Three outbound requests follow, so this spends the same
             // admission budget a Commons fetch does.
@@ -86,13 +94,18 @@ final class TownController extends AbstractController
             return $this->noStore(['state' => 'pending']);
         }
 
-        $text = null === $row['title'] || null === $row['extract'] || null === $row['page_url'] ? null : [
+        // A local text stands without a Wikipedia page: a town Wikipedia has
+        // nothing on can still be written about. A fetched one needs its page.
+        $text = null === $row['extract'] || (!$row['edited'] && (null === $row['title'] || null === $row['page_url'])) ? null : [
             'title' => $row['title'],
             'extract' => $row['extract'],
             'url' => $row['page_url'],
             'lang' => $row['page_lang'] ?? 'en',
             'license' => 'CC BY-SA 4.0',
         ];
+        // Named when somebody other than the approving curator wrote it: a
+        // rider's approved proposal. A curator's own text is "our curators".
+        $byRider = $row['edited'] && null !== $row['approvedBy'] && $row['editedBy'] !== $row['approvedBy'];
 
         // Ours, read fresh: a route proposed today should show today, and the
         // cached half of this row is settled once and never revisited.
@@ -106,6 +119,7 @@ final class TownController extends AbstractController
             'routes' => is_numeric($lat) && is_numeric($lng) ? $routes->near((float) $lat, (float) $lng) : [],
             'facts' => (object) $row['facts'],
             'edited' => $row['edited'],
+            'editedBy' => $byRider ? ['name' => $row['editor']] : null,
             'photo' => $this->photo($row['qid'], $continent, $wikidata, $admission, $bus, $budget),
         ]);
     }
@@ -162,6 +176,15 @@ final class TownController extends AbstractController
         }
 
         return $continents->resolve((float) $lat, (float) $lng);
+    }
+
+    private function recordPlace(Request $request, string $ref, TownPlaceRepository $places): void
+    {
+        $lat = $request->query->get('lat');
+        $lng = $request->query->get('lng');
+        if (is_numeric($lat) && is_numeric($lng)) {
+            $places->record($ref, (float) $lat, (float) $lng);
+        }
     }
 
     /** @param array<string, mixed> $payload */

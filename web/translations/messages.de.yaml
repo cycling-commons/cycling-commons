@@ -1523,6 +1523,12 @@ region:
   about_source: 'Text aus Wikipedia:'
   about_source_adapted: "Von den Kuratoren dieser Region aus Wikipedia bearbeitet:"
   about_source_curator: "Von den Kuratoren dieser Region geschrieben."
+  about_source_adapted_by: "Von %name% aus Wikipedia bearbeitet, von den Kuratoren dieser Region freigegeben:"
+  about_source_rider: "Von %name% geschrieben, von den Kuratoren dieser Region freigegeben."
+  about_removed_rider: 'ein Fahrer mit gelöschtem Konto'
+  about_edit_note: 'Wer angemeldet ist, kann eine Änderung dieses Textes vorschlagen. Ein Kurator dieser Region gibt sie frei.'
+  about_edit: 'Diesen Text bearbeiten'
+  about_write: 'Einen Text für diese Region schreiben'
   cta_map: 'Diese Region auf der Karte öffnen'
   cta_apply: 'Ehrenamtlich Kurator werden'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -2460,6 +2466,14 @@ map:
   d_show_fewer: 'Weniger anzeigen'
   d_report_text: 'Diesen Text melden'
   d_wiki_edited: 'Von unseren Kuratoren bearbeitet, nach Wikipedia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Von {name} bearbeitet, von unseren Kuratoren freigegeben, nach Wikipedia CC BY-SA 4.0'
+  d_text_written: 'Von unseren Kuratoren geschrieben, CC BY-SA 4.0'
+  d_text_written_by: 'Von {name} geschrieben, von unseren Kuratoren freigegeben, CC BY-SA 4.0'
+  d_text_edit: 'Diesen Text bearbeiten'
+  d_text_add: 'Einen Text für diesen Ort schreiben'
+  d_text_edit_signin: 'Anmelden, um diesen Text zu bearbeiten'
+  d_text_edit_note: 'Wer angemeldet ist, kann eine Änderung dieses Textes vorschlagen. Ein Kurator dieser Region gibt sie frei.'
+  d_place_text_label: 'Text ({lang})'
   d_founded: 'Gegründet'
   d_inhabitants: 'Einwohner'
   d_circa: 'ca.'
@@ -3082,12 +3096,49 @@ propose_route:
       none: 'Füge mindestens ein Foto hinzu.'
       route_gone: 'Diese Route ist nicht mehr auf der Karte.'
       gpx_first: 'Wähle zuerst die GPX-Datei: Das Foto wird für den Teil der Welt gespeichert, in dem deine Route liegt.'
+# "Edit this text": a town card's text or a region's lead, proposed by anyone
+# signed in (PlaceTextController, moderation-and-contribution.md §3.1b).
+place_text:
+  kicker_town: 'Text eines Ortes'
+  kicker_region: 'Text einer Region'
+  lead_town: 'Wer angemeldet ist, kann eine Änderung des Textes auf der Karte dieses Ortes vorschlagen. Ein Kurator der Region, in der er liegt, gibt sie frei, bevor sie erscheint.'
+  lead_region: 'Wer angemeldet ist, kann eine Änderung des Einleitungstextes dieser Region vorschlagen. Ein Kurator dieser Region gibt sie frei, bevor sie erscheint.'
+  field_lang: 'Sprache'
+  field_text: 'Text'
+  field_text_hint: 'Ein Absatz, höchstens %max% Zeichen. Schreiben Sie den ganzen Text so, wie Leser ihn sehen sollen, nicht nur die Änderung.'
+  current_h: 'Aktueller Text'
+  current_none: 'In dieser Sprache gibt es noch keinen Text.'
+  count: '%count% von %max%'
+  field_derived: 'Ich habe dies aus dem Wikipedia-Artikel bearbeitet'
+  field_note: 'Notiz für den Kurator (optional)'
+  field_note_hint: 'Woher deine Angaben stammen, oder was du geändert hast und warum.'
+  licence: 'Dein Text wird unter <b>CC BY-SA 4.0</b> veröffentlicht. Nach der Freigabe wird er dir zugeschrieben: mit deinem Namen, wenn dein Profil öffentlich ist, sonst mit deinem Fahrernamen.'
+  submit: 'Senden'
+  cancel: 'Abbrechen'
+  sent_h_queued: 'Zur Prüfung gesendet'
+  sent_p_queued: 'Danke. Ein Kurator dieser Region prüft deinen Text; bis dahin sehen Leser den jetzigen. Du bekommst eine Nachricht, sobald entschieden ist.'
+  sent_h_applied: 'Text aktualisiert'
+  sent_p_applied: 'Das liegt in deinen Gebieten, also erscheint dein Text jetzt.'
+  sent_ref: 'Deine Referenz: %ref%'
+  back_town: 'Zurück zur Karte'
+  back_region: 'Zurück zur Region'
+  follow: 'Auf deinem Profil verfolgen'
+  change_label: 'Text (%lang%)'
+  error:
+    lang: 'Wähle eine der Sprachen aus der Liste.'
+    empty: 'Schreib zuerst den Text.'
+    too_long: 'Der Text ist länger als %max% Zeichen. Kürze ihn und sende ihn noch einmal.'
+    note_too_long: 'Die Notiz ist zu lang. Kürze sie und sende noch einmal.'
+    unchanged: 'Der Text ist derselbe, den Leser jetzt sehen. Ändere etwas, bevor du ihn sendest.'
+    no_location: 'Wir wissen noch nicht, wo dieser Ort liegt. Öffne ihn auf der Karte und nutze „Diesen Text bearbeiten“ auf seiner Karte.'
+    unknown: 'Dieser Text kann hier nicht bearbeitet werden.'
+
 moderate:
   rider_removed: 'ein Fahrer mit gelöschtem Konto'
   town:
     title: 'Text der Ortskarte'
     lede: 'Was die Karte über diesen Ort zeigt, in jeder Sprache, die wir sprechen. Der Text wurde von Wikipedia geholt, als jemand den Ort zum ersten Mal öffnete. Überschreibe ihn, wenn du es besser weißt: diese Sprache ist dann unsere, und kein Abruf rührt sie mehr an.'
-    local: 'Von einem Kurator geschrieben'
+    local: 'Hier geschrieben, wird nicht mehr abgerufen'
     fetched: 'Von der Wikipedia auf %lang% geholt'
     none: 'Noch nichts geholt'
     field_title: 'Ortsname'
@@ -3096,6 +3147,8 @@ moderate:
     save: 'Diese Sprache speichern'
     saved: 'Text gespeichert. Die Karte zeigt ihn jetzt.'
     refused: 'Nicht gespeichert: der Text ist leer, zu lang, oder die Sprache sprechen wir nicht.'
+    outside_area: 'Dieser Ort liegt außerhalb deiner Gebiete, also geht dein Text an einen Kurator seiner Region. Schick ihn hier ab.'
+    where_unknown: 'Wir wissen noch nicht, in welcher Region dieser Ort liegt. Öffne ihn auf der Karte und nutze „Diesen Text bearbeiten“ auf seiner Karte.'
   escalate:
     when: 'Nutze dies, wenn der Inhalt selbst gegen das Gesetz verstößt — nicht für Spam, nicht für eine schlechte Bearbeitung, nicht für Unhöflichkeit. Dafür gibt es Papierkorb und Nachricht an den Fahrer.'
     confirm_check: 'Ich habe das Obige gelesen und dies ist mutmaßlich illegales Material'
@@ -3209,6 +3262,7 @@ moderate:
     edit: 'Bearbeitung'
     hazard: 'Gefahr'
     photo: 'Foto'
+    text: 'Text'
   action:
     approve: 'Genehmigen'
     reject: 'Ablehnen'
@@ -3487,6 +3541,7 @@ account:
   sub_type_edit: 'Bearbeitung'
   sub_type_hazard: 'Gefahrenstelle'
   sub_type_photo: 'Foto'
+  sub_type_text: 'Text'
   sub_status_pending: 'Wartet auf Prüfung'
   sub_status_approved: 'Angenommen'
   sub_status_rejected: 'Abgelehnt'

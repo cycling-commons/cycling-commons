@@ -1,0 +1,109 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  "Edit this text": a town card's text or a region page's lead, proposed by
+  anyone signed in (owner 2026-09-30). What it sends is a Text submission in
+  the one queue; a curator of the region approves it, or it applies at once
+  when a curator writes it inside their own area
+  (docs/specs/moderation-and-contribution.md §3.1b).
+
+  The same page shape as /report: dark hero, then the form with the site's
+  `.cfield` conventions, from the same stylesheet.
+
+  The current text of the chosen language shows read-only above an empty
+  box, so the rider writes their version beside it rather than inside it.
+  The language select swaps that quote and the box's live character count
+  follows the typing (contribute/place-text.js, a file so the page needs no
+  CSP nonce). Without script the select still decides which language the
+  text is sent for, and the server enforces the length either way.
+#}
+{% extends 'base.html.twig' %}
+
+{% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/page/support/report.css') }}">
+<link rel="stylesheet" href="{{ asset('styles/page/contribute/place-text.css') }}">
+{% endblock %}
+
+{% block body_scripts %}
+<script src="{{ asset('contribute/place-text.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+<div class="lhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ ('place_text.kicker_' ~ target)|trans }}</div>
+  <h1 class="disp">{{ title }}</h1>
+  <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{{ ('place_text.lead_' ~ target)|trans }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="reppage">
+    {% if sent %}
+      <div class="csent" role="status">
+        <h2>{{ ('place_text.sent_h_' ~ sent)|trans }}</h2>
+        <p>{{ ('place_text.sent_p_' ~ sent)|trans }}</p>
+        <p>{{ 'place_text.sent_ref'|trans({'%ref%': reference}) }}</p>
+        <p><a href="{{ back }}">{{ ('place_text.back_' ~ target)|trans }}</a> &middot;
+           <a href="{{ path('profile') }}">{{ 'place_text.follow'|trans }}</a></p>
+      </div>
+    {% else %}
+      {# Why a curator's own pen sent them here: the town lies outside their areas. #}
+      {% for m in app.flashes('notice') %}<div class="cnote" role="status"><p>{{ m|trans }}</p></div>{% endfor %}
+      {% if error %}
+        <div class="cerr" role="alert">{{ error|trans({'%max%': max}) }}</div>
+      {% endif %}
+
+      <form method="post" action="{{ action }}" id="place-text-form"
+            data-texts="{{ texts|json_encode }}"
+            {% if derived is not null %}data-derived="{{ derived|json_encode }}"{% endif %}>
+        <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+        {% for k, v in hidden %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+
+        <div class="cfield">
+          <label for="pt-lang">{{ 'place_text.field_lang'|trans }}</label>
+          <select id="pt-lang" name="lang">
+            {% for code, label in langs %}
+              <option value="{{ code }}"{{ code == lang ? ' selected' }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% set current = texts[lang] ?? '' %}
+        <figure class="pt-current" id="pt-current">
+          <figcaption>{{ 'place_text.current_h'|trans }}</figcaption>
+          <blockquote id="pt-current-text"{{ current is empty ? ' hidden' }}>{{ current }}</blockquote>
+          <p class="chint" id="pt-current-none"{{ current is not empty ? ' hidden' }}>{{ 'place_text.current_none'|trans }}</p>
+        </figure>
+
+        <div class="cfield">
+          <label for="pt-text">{{ 'place_text.field_text'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <textarea id="pt-text" name="text" required maxlength="{{ max }}" aria-describedby="pt-text-hint pt-text-count">{{ text }}</textarea>
+          <p class="chint pt-count" id="pt-text-count" aria-live="polite" data-max="{{ max }}"
+             data-words="{{ 'place_text.count'|trans({'%count%': '%count%', '%max%': max}) }}">{{ 'place_text.count'|trans({'%count%': text|length, '%max%': max}) }}</p>
+          <p class="chint" id="pt-text-hint">{{ 'place_text.field_text_hint'|trans({'%max%': max}) }}</p>
+        </div>
+
+        {# The licence question, as on the Regions desk: offered only for a
+           language with an article to adapt, and checked again on the server. #}
+        {% if derived is not null %}
+          <div class="cfield" id="pt-derived-field"{{ derived[lang] is null ? ' hidden' }}>
+            <label class="cinline" for="pt-derived">
+              <input type="checkbox" id="pt-derived" name="derived" value="1"{{ derived[lang] ? ' checked' }}>
+              <span>{{ 'place_text.field_derived'|trans }}</span>
+            </label>
+          </div>
+        {% endif %}
+
+        <div class="cfield">
+          <label for="pt-note">{{ 'place_text.field_note'|trans }}</label>
+          <input type="text" id="pt-note" name="note" maxlength="{{ note_max }}" aria-describedby="pt-note-hint">
+          <p class="chint" id="pt-note-hint">{{ 'place_text.field_note_hint'|trans }}</p>
+        </div>
+
+        <p class="chint">{{ 'place_text.licence'|trans|rich }}</p>
+
+        <p><button type="submit" class="btn btn-p">{{ 'place_text.submit'|trans }}</button>
+           <a href="{{ back }}">{{ 'place_text.cancel'|trans }}</a></p>
+      </form>
+    {% endif %}
+  </div>
+</div></section>
+{% endblock %}

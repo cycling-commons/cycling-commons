@@ -1523,6 +1523,12 @@ region:
   about_source: 'Tekst van Wikipedia:'
   about_source_adapted: "Door de regiobeheerders van deze regio bewerkt uit Wikipedia:"
   about_source_curator: "Geschreven door de regiobeheerders van deze regio."
+  about_source_adapted_by: "Door %name% bewerkt uit Wikipedia, goedgekeurd door de regiobeheerders van deze regio:"
+  about_source_rider: "Geschreven door %name%, goedgekeurd door de regiobeheerders van deze regio."
+  about_removed_rider: 'een fietser met verwijderd account'
+  about_edit_note: 'Iedereen die is aangemeld kan een wijziging van deze tekst voorstellen. Een regiobeheerder van deze regio keurt hem goed.'
+  about_edit: 'Deze tekst bewerken'
+  about_write: 'Een tekst voor deze regio schrijven'
   cta_map: 'Open deze regio op de kaart'
   cta_apply: 'Word vrijwillig regiobeheerder'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -2457,6 +2463,14 @@ map:
   d_show_fewer: 'Minder tonen'
   d_report_text: 'Deze tekst melden'
   d_wiki_edited: 'Bewerkt door onze regiobeheerders, naar Wikipedia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Bewerkt door {name}, goedgekeurd door onze regiobeheerders, naar Wikipedia CC BY-SA 4.0'
+  d_text_written: 'Geschreven door onze regiobeheerders, CC BY-SA 4.0'
+  d_text_written_by: 'Geschreven door {name}, goedgekeurd door onze regiobeheerders, CC BY-SA 4.0'
+  d_text_edit: 'Deze tekst bewerken'
+  d_text_add: 'Een tekst voor deze plaats schrijven'
+  d_text_edit_signin: 'Log in om deze tekst te bewerken'
+  d_text_edit_note: 'Iedereen die is aangemeld kan een wijziging van deze tekst voorstellen. Een regiobeheerder van deze regio keurt hem goed.'
+  d_place_text_label: 'Tekst ({lang})'
   d_founded: 'Gesticht'
   d_inhabitants: 'Inwoners'
   d_circa: 'ca.'
@@ -3081,12 +3095,49 @@ propose_route:
       none: 'Voeg minstens één foto toe.'
       route_gone: 'Deze route staat niet meer op de kaart.'
       gpx_first: 'Kies eerst het GPX-bestand: de foto wordt opgeslagen voor het deel van de wereld waar je route ligt.'
+# "Edit this text": a town card's text or a region's lead, proposed by anyone
+# signed in (PlaceTextController, moderation-and-contribution.md §3.1b).
+place_text:
+  kicker_town: 'Tekst van een plaats'
+  kicker_region: 'Tekst van een regio'
+  lead_town: 'Iedereen die is aangemeld kan een wijziging voorstellen van de tekst op het kaartje van deze plaats. Een regiobeheerder van de regio waarin ze ligt keurt hem goed voordat hij verschijnt.'
+  lead_region: 'Iedereen die is aangemeld kan een wijziging voorstellen van de introductietekst van deze regio. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt.'
+  field_lang: 'Taal'
+  field_text: 'Tekst'
+  field_text_hint: 'Eén alinea, hoogstens %max% tekens. Schrijf de hele tekst zoals lezers hem moeten zien, niet alleen de wijziging.'
+  current_h: 'Huidige tekst'
+  current_none: 'Er is nog geen tekst in deze taal.'
+  count: '%count% van %max%'
+  field_derived: 'Ik heb dit bewerkt uit het Wikipedia-artikel'
+  field_note: 'Opmerking voor de regiobeheerder (optioneel)'
+  field_note_hint: 'Waar je informatie vandaan komt, of wat je veranderde en waarom.'
+  licence: 'Je tekst wordt gepubliceerd onder <b>CC BY-SA 4.0</b>. Na goedkeuring staat hij op jouw naam: je naam als je profiel openbaar is, anders je fietsersnaam.'
+  submit: 'Versturen'
+  cancel: 'Annuleren'
+  sent_h_queued: 'Verstuurd ter controle'
+  sent_p_queued: 'Bedankt. Een regiobeheerder van deze regio bekijkt je tekst; tot dan zien lezers de huidige. Je krijgt een bericht zodra er is beslist.'
+  sent_h_applied: 'Tekst bijgewerkt'
+  sent_p_applied: 'Dit ligt binnen jouw gebieden, dus je tekst staat er nu.'
+  sent_ref: 'Je referentie: %ref%'
+  back_town: 'Terug naar de kaart'
+  back_region: 'Terug naar de regio'
+  follow: 'Volg het op je profiel'
+  change_label: 'Tekst (%lang%)'
+  error:
+    lang: 'Kies een van de talen uit de lijst.'
+    empty: 'Schrijf eerst de tekst.'
+    too_long: 'De tekst is langer dan %max% tekens. Maak hem korter en verstuur hem opnieuw.'
+    note_too_long: 'De opmerking is te lang. Maak ze korter en verstuur opnieuw.'
+    unchanged: 'De tekst is dezelfde als die lezers nu zien. Verander iets voordat je hem verstuurt.'
+    no_location: 'We weten nog niet waar deze plaats ligt. Open hem op de kaart en gebruik "Deze tekst bewerken" op zijn kaartje.'
+    unknown: 'Deze tekst kan hier niet bewerkt worden.'
+
 moderate:
   rider_removed: 'een fietser met verwijderd account'
   town:
     title: 'Tekst van de stadskaart'
     lede: 'Wat de kaart over deze plaats toont, in elke taal die we spreken. De tekst is van Wikipedia gehaald toen iemand de plaats voor het eerst opende. Schrijf eroverheen als je het beter weet: die taal is dan van ons, en geen ophaling raakt hem nog aan.'
-    local: 'Geschreven door een regiobeheerder'
+    local: 'Hier geschreven, niet meer opgehaald'
     fetched: 'Gehaald van Wikipedia in het %lang%'
     none: 'Nog niets opgehaald'
     field_title: 'Plaatsnaam'
@@ -3095,6 +3146,8 @@ moderate:
     save: 'Deze taal opslaan'
     saved: 'Tekst opgeslagen. De kaart toont hem nu.'
     refused: 'Niet opgeslagen: de tekst is leeg, te lang, of de taal spreken we niet.'
+    outside_area: 'Deze plaats ligt buiten jouw gebieden, dus je tekst gaat naar een regiobeheerder van die regio. Stuur hem hier in.'
+    where_unknown: 'We weten nog niet in welke regio deze plaats ligt. Open hem op de kaart en gebruik "Deze tekst bewerken" op zijn kaartje.'
   escalate:
     when: 'Gebruik dit als de inhoud zelf in strijd is met de wet — niet voor spam, niet voor een slechte bewerking, niet voor onbeleefdheid. Dat zijn Prullenbak en Bericht aan de fietser.'
     confirm_check: 'Ik heb het bovenstaande gelezen en dit is vermoedelijk illegaal materiaal'
@@ -3208,6 +3261,7 @@ moderate:
     edit: 'Bewerking'
     hazard: 'Gevaar'
     photo: 'Foto'
+    text: 'Tekst'
   action:
     approve: 'Goedkeuren'
     reject: 'Afwijzen'
@@ -3486,6 +3540,7 @@ account:
   sub_type_edit: 'Bewerking'
   sub_type_hazard: 'Gevaar'
   sub_type_photo: 'Foto'
+  sub_type_text: 'Tekst'
   sub_status_pending: 'Wacht op beoordeling'
   sub_status_approved: 'Goedgekeurd'
   sub_status_rejected: 'Afgewezen'

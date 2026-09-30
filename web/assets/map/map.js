@@ -256,6 +256,8 @@ import { layerGlyph } from './icons.js';
       geom:{ll:pendingPin(s)},
       record:[
         (()=>{
+          // A town or region text has no catalog kind: its type is the row (moderation-and-contribution.md §3.1b).
+          if('text' === s.type) return {label:D.type||'Type', value:(I18N.pendingTypes||{}).text||'Text'};
           const lyr = CATALOG.find(l=>l.letter===s.letter) || {};
           const name = LAYER_L10N[lyr.key] || lyr.label || s.letter;
           return {label:D.type||'Type', html:true, value:layerGlyph(lyr, 13)+' '+escPend(name)};

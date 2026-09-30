@@ -719,9 +719,9 @@ LATERAL join the submissions desk uses (route-domain.md §7.1).
 | column | type | notes |
 |---|---|---|
 | `id` | bigint identity | receipt ref is `SUB-<id>` |
-| `type` | varchar(8), enum `SubmissionType` | `new` \| `edit` \| `hazard` \| `photo`; queue renders all four, intake produces `new`/`edit` only (§8) |
-| `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table: a rider asks for a route change through `route_suggestion`, route-domain.md §7.1) |
-| `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction |
+| `type` | varchar(8), enum `SubmissionType` | `new` \| `edit` \| `hazard` \| `photo` \| `text`; queue renders all five, intake produces `new`/`edit` and `text` (§3.1b) |
+| `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table: a rider asks for a route change through `route_suggestion`, route-domain.md §7.1); `''` for `text`, which has no catalog kind |
+| `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction; NULL for `text` |
 | `user_id` | bigint | submitter — deliberately **no FK** (survives account deletion as anonymous data; see §5.6) |
 | `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) |
 | `title` | varchar(200) | queue/drawer display |
@@ -734,6 +734,91 @@ LATERAL join the submissions desk uses (route-domain.md §7.1).
 
 Indexes on `status`, `country_code`, `region_id`, `item_id`, `user_id`, plus
 a GIST index on `geom` (`idx_submission_geom`).
+
+### 3.1b Town and region texts: anyone proposes, a curator of the region approves (2026-09-30)
+
+Owner 2026-09-30: "Town texts and region texts: everybody should be able to
+edit them, every signed-in user. The curator for that region gives the
+approval. We need to make clear to users they can edit those texts." Two
+texts are in scope: a town card's text in one language
+([map-and-search.md](map-and-search.md) §6.5) and a region page's about text
+(lead) in one locale.
+
+**One way to moderate.** A proposal is an ordinary submission of type `text`
+in the one queue: the same approve / reject / needs-info decision on the map
+drawer, the same message thread, the same withdraw (§3.4), the same History
+desk and the same retention. No second moderation surface exists.
+
+**The form.** "Edit this text" on the town card (`places.js`, the line is
+drawn by `assets/map/town-text.js`) and on the region page opens one small
+form per text (`PlaceTextController`, routes `town_text`
+`/town/{type}/{id}/text` and `region_text` `/regions/{slug}/text`, ROLE_USER;
+a visitor is sent to sign in and comes back to it). The town card's credit
+line and the region page's credit line also end in a ringed pencil (after the
+card's "!" report mark), labelled "Edit this text", to the same target as the
+link. A language select defaulting to the page language; above the box, the
+text readers see now in that language as a read-only quote labelled "Current
+text" ("There is no text in this language yet." where there is none;
+switching the language swaps it); the box itself starts empty and keeps what
+the rider typed, with a polite live count "x of 1200" under it (the server
+enforces the limit either way); at most 1,200 characters folded to one
+paragraph; an optional
+note for the curator (the card body, `payload.details.note`), and for a
+region the "I adapted this from the Wikipedia article" tick where there is an
+article to adapt. The licence line says the text is published under CC BY-SA
+4.0 and credited to the writer by public name, else rider handle; no tick box,
+as for place edits (§1). The card and the page both carry one plain sentence:
+"Anyone signed in can suggest an edit to this text. A curator of this region
+approves it."
+
+**The row.** `type = text`, `letter = ''`, `item_id` NULL, `title` = the
+town's or region's name, `changes = {"text:<lang>": {was, now}}` (`was` is
+the text readers saw at proposal time), `payload = {target: town|region, ref:
+"node/123" | "<region id>", lang, text, derived (region), details: {note}}`.
+An unchanged text is sent back; a second proposal for the same text and
+language while the first is open amends it (§7.3b). Proposals spend the
+`contribution_submit` limiter.
+
+**Which curators see it.** A region text is filed in that region. A town text
+is filed in the region the town lies in: `town_place` keeps one point per
+OpenStreetMap ref, recorded from the first town card reader's map (the
+Photon hit) and never moved by a later request; the form's own point only
+seeds it when none is kept. `SpatialResolver` puts that point in a region
+(smallest wins), and area scope (§9) does the rest. A town outside every
+region files with a NULL region, which every curator's scope covers (§9.2).
+The pending pin is the town's point or the region's point on surface.
+
+**Approve writes** through the same stores the curators' pens use
+(`PlaceTextWriter`): a town text becomes the card's local text for that
+language (`TownSummaryRepository::overrideText()`: row local from then on,
+`edited_by` = the writer, `approved_by` = the approving curator,
+`submission_id`); a region text becomes that locale's lead in
+`region.context_curated` (`{text, derived, userId, approvedBy, submissionId,
+at}`, the other locales untouched; the adaptation claim stands only where an
+article exists). Reject, needs-info and withdraw leave the text readers see
+as it was. The submission row keeps who proposed, who decided and was/now,
+as for every submission.
+
+**Credit.** A text written by someone other than the curator who approved it
+names the writer: "Edited by {name}, approved by our curators, after
+Wikipedia CC BY-SA 4.0" on the card (or "Written by ...", with no article),
+"Adapted from Wikipedia by {name}, approved by this region's curators:" or
+"Written by {name}, approved by this region's curators." on the region page.
+The name is the public display name, else the `rider#` handle
+(`DeskRider::of()`). A curator's own text keeps "our curators".
+
+**Curators.** A curator's own proposal inside their area applies at once
+(§1.6: the proposal is filed and approved in the same request); outside it,
+it queues like a rider's. The direct pens stay for a curator's own area: the
+Regions desk about page (unchanged language entries keep their writer's
+credit on save) and `/moderate/town/{type}/{id}`, which is now limited to
+towns whose kept point lies inside the curator's areas. A curator outside the
+town's region, or a limited curator for a town with no kept point
+(fail-closed), is sent to the proposal form with a note saying why.
+
+Pinned by `PlaceTextProposalTest`, `TownControllerTest`,
+`RegionsPagesTest::testDetailPageWithoutContextInvitesAText` and
+`tests/js/town-text.test.mjs`.
 
 ### 3.2 The `changes` contract
 

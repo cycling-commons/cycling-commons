@@ -96,10 +96,13 @@
    the reader's locale with an English fallback. Verbatim, with its
    attribution rendered from the SAME stored entry as the text: the extract
    is CC BY-SA 4.0 and the credit line must never drift from what it credits.
-   A region without an article simply has no section. #}
-{% if region.context %}
-  <section class="pad rg-about"><div class="wrap">
-    <div class="kicker">{% trans %}region.about_h{% endtrans %}</div>
+   The section is here text or not: anyone signed in can suggest one, and a
+   curator of this region approves it (moderation-and-contribution.md §3.1b).
+   The link is the same for everybody, so the page stays cacheable; a visitor
+   signs in on the way to the form. #}
+<section class="pad rg-about"><div class="wrap">
+  <div class="kicker">{% trans %}region.about_h{% endtrans %}</div>
+  {% if region.context %}
     <p class="rg-about-text">{{ region.context.text }}</p>
     {# Three credit lines, because three things can be true and only one of
        them at a time. A curator who ADAPTED the article keeps the CC BY-SA
@@ -107,17 +110,27 @@
        text was changed, or a reader credits our edit to Wikipedia. A curator
        who WROTE the lead gets no Wikipedia credit at all: claiming a source
        for text that did not come from it is the worse error of the two. #}
+    {# A rider's approved text names them (their public name, else their
+       rider# handle); a curator's own text says "this region's curators". #}
+    {% set rider = region.context.byRider|default(false) ? (region.context.author ?? 'region.about_removed_rider'|trans) : null %}
+    {# The ringed pencil ends the credit line and opens the same form as the
+       link below it; a visitor signs in on the way, as with the link. #}
+    {% set pen_label = 'region.about_edit'|trans %}
+    {% set pen %}<a class="rg-about-pen" href="{{ path('region_text', {slug: region.slug}) }}" title="{{ pen_label }}" aria-label="{{ pen_label }}">✎</a>{% endset %}
     {% if region.context.url %}
       <p class="rg-about-attrib">
-        {%- if region.context.adapted %}{% trans %}region.about_source_adapted{% endtrans %}
+        {%- if region.context.adapted and rider %}{{ 'region.about_source_adapted_by'|trans({'%name%': rider}) }}
+        {%- elseif region.context.adapted %}{% trans %}region.about_source_adapted{% endtrans %}
         {%- else %}{% trans %}region.about_source{% endtrans %}{% endif %}
         <a href="{{ region.context.url }}" rel="noopener noreferrer">{{ region.context.title }}</a>
-        · <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a></p>
+        · <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a> {{ pen }}</p>
     {% elseif region.context.curated %}
-      <p class="rg-about-attrib">{% trans %}region.about_source_curator{% endtrans %}</p>
+      <p class="rg-about-attrib">{% if rider %}{{ 'region.about_source_rider'|trans({'%name%': rider}) }}{% else %}{% trans %}region.about_source_curator{% endtrans %}{% endif %} {{ pen }}</p>
     {% endif %}
-  </div></section>
-{% endif %}
+  {% endif %}
+    <p class="rg-about-edit">{{ 'region.about_edit_note'|trans }}
+      <a href="{{ path('region_text', {slug: region.slug}) }}">{{ (region.context ? 'region.about_edit' : 'region.about_write')|trans }}</a></p>
+</div></section>
 
 <section class="pad"><div class="wrap">
   {% if region.byKind is not empty %}

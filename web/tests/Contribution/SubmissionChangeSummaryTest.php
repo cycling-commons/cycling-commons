@@ -10,6 +10,7 @@ use App\Catalog\CatalogFormRegistry;
 use App\Catalog\Entity\Submission;
 use App\Contribution\SubmissionChangeSummary;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Translation\IdentityTranslator;
 
 /**
  * What a rider is shown about their own contribution.
@@ -21,7 +22,7 @@ final class SubmissionChangeSummaryTest extends TestCase
 {
     private function summary(): SubmissionChangeSummary
     {
-        return new SubmissionChangeSummary(new CatalogFormRegistry());
+        return new SubmissionChangeSummary(new CatalogFormRegistry(), new IdentityTranslator());
     }
 
     /** @param array<string, mixed> $changes */
@@ -32,6 +33,16 @@ final class SubmissionChangeSummaryTest extends TestCase
         $sub->setChanges($changes);
 
         return $sub;
+    }
+
+    public function testATownOrRegionTextIsNamedWithItsLanguage(): void
+    {
+        $sub = $this->submission('', ['text:nl' => ['was' => 'Oud.', 'now' => 'Nieuw.']]);
+        $rows = $this->summary()->rows($sub);
+
+        self::assertSame('place_text.change_label', $rows[0]['label'], 'a label key, never the raw `text:nl`');
+        self::assertSame('Oud.', $rows[0]['was']);
+        self::assertSame('Nieuw.', $rows[0]['now']);
     }
 
     public function testAFieldIsNamedTheWayTheFormAskedForIt(): void

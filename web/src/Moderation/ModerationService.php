@@ -58,6 +58,7 @@ final class ModerationService
         private readonly OsmCandidates $osmCandidates,
         private readonly OsmLinker $osmLinker,
         private readonly ReplacedPlaces $replacedPlaces,
+        private readonly PlaceTextWriter $placeTexts,
     ) {
     }
 
@@ -109,8 +110,13 @@ final class ModerationService
                         match ($submission->getType()) {
                             SubmissionType::NewItem => $this->approveNew($item, $submission, $curator),
                             SubmissionType::Edit => $this->applyEdit($item, $submission, $curator),
-                            SubmissionType::Hazard, SubmissionType::Photo => throw new \LogicException(sprintf('Approval of %s submissions is not supported yet', $submission->getType()->value)),
+                            SubmissionType::Hazard, SubmissionType::Photo, SubmissionType::Text => throw new \LogicException(sprintf('Approval of %s submissions is not supported yet', $submission->getType()->value)),
                         };
+                    }
+                    // A town or region text has no item: it goes to the card or
+                    // the page it names (moderation-and-contribution.md §3.1b).
+                    if (SubmissionType::Text === $submission->getType()) {
+                        $this->placeTexts->apply($submission, (int) $curator->getId());
                     }
                     break;
                 case 'reject':

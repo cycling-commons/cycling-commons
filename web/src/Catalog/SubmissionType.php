@@ -7,7 +7,11 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * What a submission proposes. Intake produces NewItem/Edit today; Hazard/Photo are queue-renderable, not yet collectable.
+ * What a submission proposes. Intake produces NewItem/Edit and Text; Hazard/Photo are queue-renderable, not yet collectable.
+ *
+ * Text is a town card's or a region page's about text in one language
+ * (moderation-and-contribution.md §3.1b): no catalog item and no letter, the
+ * target named in the payload.
  *
  * @see docs/specs/moderation-and-contribution.md §3.1
  *
@@ -19,6 +23,7 @@ enum SubmissionType: string
     case Edit = 'edit';
     case Hazard = 'hazard';
     case Photo = 'photo';
+    case Text = 'text';
 
     /** @return list<string> */
     public static function values(): array

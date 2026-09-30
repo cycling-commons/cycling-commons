@@ -138,6 +138,9 @@ export function fieldLabelFor(letter, name){
   if(f && f.label) return f.label;
   // A description suggested for one photo: `photoAlt:<uuid>` (photo-uploads.md 5e). The uuid is not a label.
   if(String(name).startsWith('photoAlt:')) return D.photoDesc || 'Photo description';
+  // A town or region text in one language: `text:nl` (moderation-and-contribution.md §3.1b).
+  const textLang = /^text:([a-z]{2})$/.exec(String(name));
+  if(textLang) return (D.placeTextLabel || 'Text ({lang})').replace('{lang}', textLang[1].toUpperCase());
   const off = OFF_SCHEMA_LABELS[name];
   return off ? off() : name;
 }
@@ -698,7 +701,8 @@ function buildRecord(layer, f){
     /* Also-confirm on approve (not water, not K, not absence). Unticked by default. */
     const NEGATIVE_NOW = ['Out of order', 'Closed', 'Not there anymore', 'Gone — clear now', 'Reduced'];
     const assertsAbsence = chList.some(c => NEGATIVE_NOW.includes(c.now));
-    const alsoConfirm = ('B' !== s.letter && 'R' !== s.letter && !assertsAbsence)
+    // Not for a town or region text: there is no place to confirm.
+    const alsoConfirm = ('B' !== s.letter && 'R' !== s.letter && 'text' !== s.type && !assertsAbsence)
       ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
       : '';
     /* Curator-only decide chrome; a rider sees a preview of their own pending pin. */

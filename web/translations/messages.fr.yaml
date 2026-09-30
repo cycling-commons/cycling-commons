@@ -1518,6 +1518,12 @@ region:
   about_source: 'Texte de Wikipédia :'
   about_source_adapted: "Adapté de Wikipédia par les curateurs de cette région :"
   about_source_curator: "Écrit par les curateurs de cette région."
+  about_source_adapted_by: "Adapté de Wikipédia par %name%, approuvé par les curateurs de cette région :"
+  about_source_rider: "Écrit par %name%, approuvé par les curateurs de cette région."
+  about_removed_rider: 'un cycliste au compte supprimé'
+  about_edit_note: 'Toute personne connectée peut proposer une modification de ce texte. Un curateur de cette région l’approuve.'
+  about_edit: 'Modifier ce texte'
+  about_write: 'Écrire un texte pour cette région'
   cta_map: 'Ouvrir cette région sur la carte'
   cta_apply: 'Devenir curateur bénévole'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -2452,6 +2458,14 @@ map:
   d_show_fewer: 'Afficher moins'
   d_report_text: 'Signaler ce texte'
   d_wiki_edited: 'Modifié par nos curateurs, daprès Wikipédia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Modifié par {name}, approuvé par nos curateurs, d’après Wikipédia CC BY-SA 4.0'
+  d_text_written: 'Écrit par nos curateurs, CC BY-SA 4.0'
+  d_text_written_by: 'Écrit par {name}, approuvé par nos curateurs, CC BY-SA 4.0'
+  d_text_edit: 'Modifier ce texte'
+  d_text_add: 'Écrire un texte pour cette ville'
+  d_text_edit_signin: 'Connectez-vous pour modifier ce texte'
+  d_text_edit_note: 'Toute personne connectée peut proposer une modification de ce texte. Un curateur de cette région l’approuve.'
+  d_place_text_label: 'Texte ({lang})'
   d_founded: 'Fondée'
   d_inhabitants: 'Habitants'
   d_circa: 'v.'
@@ -3074,12 +3088,49 @@ propose_route:
       none: 'Ajoutez au moins une photo.'
       route_gone: 'Cet itinéraire n''est plus sur la carte.'
       gpx_first: 'Choisissez d''abord le fichier GPX : la photo est stockée pour la région du monde où se trouve votre itinéraire.'
+# "Edit this text": a town card's text or a region's lead, proposed by anyone
+# signed in (PlaceTextController, moderation-and-contribution.md §3.1b).
+place_text:
+  kicker_town: 'Texte de ville'
+  kicker_region: 'Texte de région'
+  lead_town: 'Toute personne connectée peut proposer une modification du texte de la fiche de cette ville. Un curateur de la région où elle se trouve l’approuve avant qu’il n’apparaisse.'
+  lead_region: 'Toute personne connectée peut proposer une modification du texte de présentation de cette région. Un curateur de cette région l’approuve avant qu’il n’apparaisse.'
+  field_lang: 'Langue'
+  field_text: 'Texte'
+  field_text_hint: 'Un paragraphe, au plus %max% caractères. Écrivez le texte entier tel que les lecteurs doivent le voir, pas seulement la modification.'
+  current_h: 'Texte actuel'
+  current_none: 'Il n’y a pas encore de texte dans cette langue.'
+  count: '%count% sur %max%'
+  field_derived: 'J’ai adapté ce texte de l’article Wikipédia'
+  field_note: 'Note pour le curateur (facultatif)'
+  field_note_hint: 'D’où viennent vos informations, ou ce que vous avez changé et pourquoi.'
+  licence: 'Votre texte est publié sous <b>CC BY-SA 4.0</b>. Une fois approuvé, il vous est crédité : par votre nom si votre profil est public, sinon par votre pseudonyme de cycliste.'
+  submit: 'Envoyer'
+  cancel: 'Annuler'
+  sent_h_queued: 'Envoyé pour vérification'
+  sent_p_queued: 'Merci. Un curateur de cette région vérifie votre texte ; d’ici là, les lecteurs voient le texte actuel. Vous recevez un message quand il est décidé.'
+  sent_h_applied: 'Texte mis à jour'
+  sent_p_applied: 'Ceci se trouve dans vos zones, votre texte s’affiche donc dès maintenant.'
+  sent_ref: 'Votre référence : %ref%'
+  back_town: 'Retour à la carte'
+  back_region: 'Retour à la région'
+  follow: 'Suivez-le sur votre profil'
+  change_label: 'Texte (%lang%)'
+  error:
+    lang: 'Choisissez une des langues de la liste.'
+    empty: 'Écrivez d’abord le texte.'
+    too_long: 'Le texte dépasse %max% caractères. Raccourcissez-le et renvoyez-le.'
+    note_too_long: 'La note est trop longue. Raccourcissez-la et renvoyez le texte.'
+    unchanged: 'Le texte est identique à celui que les lecteurs voient maintenant. Changez quelque chose avant de l’envoyer.'
+    no_location: 'Nous ne savons pas encore où se trouve cette ville. Ouvrez-la sur la carte et utilisez « Modifier ce texte » sur sa fiche.'
+    unknown: 'Ce texte ne peut pas être modifié ici.'
+
 moderate:
   rider_removed: 'un cycliste au compte supprimé'
   town:
     title: 'Texte de la fiche ville'
     lede: 'Ce que la carte montre de cette ville, dans chaque langue que nous parlons. Le texte a été pris sur Wikipédia la première fois que quelquun a ouvert la ville. Réécrivez-le si vous savez mieux : cette langue devient la nôtre, et aucune récupération ny touche plus.'
-    local: 'Écrit par un curateur'
+    local: 'Écrit ici, plus récupéré'
     fetched: 'Pris sur Wikipédia en %lang%'
     none: 'Rien de récupéré encore'
     field_title: 'Nom de la ville'
@@ -3088,6 +3139,8 @@ moderate:
     save: 'Enregistrer cette langue'
     saved: 'Texte enregistré. La carte le montre maintenant.'
     refused: 'Non enregistré : texte vide, trop long, ou langue que nous ne parlons pas.'
+    outside_area: 'Cette ville est hors de vos zones : votre texte va à un curateur de sa région. Envoyez-le ici.'
+    where_unknown: 'Nous ne savons pas encore dans quelle région se trouve cette ville. Ouvrez-la sur la carte et utilisez « Modifier ce texte » sur sa fiche.'
   escalate:
     when: 'À utiliser quand le contenu lui-même enfreint la loi — pas pour du spam, pas pour une mauvaise modification, pas pour de l’impolitesse. Ce sont Corbeille et Message au cycliste.'
     confirm_check: 'J’ai lu ce qui précède et il s’agit de contenu présumé illégal'
@@ -3201,6 +3254,7 @@ moderate:
     edit: 'Modification'
     hazard: 'Danger'
     photo: 'Photo'
+    text: 'Texte'
   action:
     approve: 'Approuver'
     reject: 'Rejeter'
@@ -3479,6 +3533,7 @@ account:
   sub_type_edit: 'Modification'
   sub_type_hazard: 'Danger'
   sub_type_photo: 'Photo'
+  sub_type_text: 'Texte'
   sub_status_pending: 'En attente de relecture'
   sub_status_approved: 'Approuvée'
   sub_status_rejected: 'Rejetée'

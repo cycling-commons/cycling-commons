@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Moderation\DeskRider;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\Intl\Countries;
 
@@ -178,6 +179,9 @@ final class RegionDirectoryProvider
             self::decodeJson(\is_array($ctx) ? $ctx['context_curated'] : null),
             $locale,
         );
+        if (null !== $context) {
+            $context += $this->leadAuthor($context['by'], $context['approvedBy']);
+        }
 
         return $this->shape($row) + [
             'context' => $context,
@@ -190,6 +194,30 @@ final class RegionDirectoryProvider
             'byKind' => $byKind,
             /* Hero coverage total, same three figures as /coverage. Zero when the pipeline table is absent. */
             'coveragePois' => array_sum(array_map('intval', $coverageRows)),
+        ];
+    }
+
+    /**
+     * Who wrote a local lead, when it was not the curator who approved it: a
+     * rider's approved proposal (moderation-and-contribution.md §3.1b). The
+     * name a public page may show: their display name when their profile is
+     * public, else their rider# handle; null for a removed account.
+     *
+     * @return array{byRider: bool, author: ?string}
+     */
+    private function leadAuthor(?int $by, ?int $approvedBy): array
+    {
+        if (null === $by || null === $approvedBy || $by === $approvedBy) {
+            return ['byRider' => false, 'author' => null];
+        }
+        $u = $this->db->fetchAssociative(
+            'SELECT display_name, public_profile, pseudonym, uuid FROM users WHERE id = :id',
+            ['id' => $by],
+        );
+
+        return [
+            'byRider' => true,
+            'author' => false === $u ? null : DeskRider::of($u['pseudonym'], $u['display_name'], $u['public_profile'], $u['uuid'])['name'],
         ];
     }
 

@@ -9,6 +9,7 @@ namespace App\Contribution;
 use App\Catalog\CatalogFormRegistry;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemType;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Rider-facing change summary: field labels from the form registry, values via ChangeValue.
@@ -17,7 +18,7 @@ use App\Catalog\ItemType;
  */
 final readonly class SubmissionChangeSummary
 {
-    public function __construct(private CatalogFormRegistry $registry)
+    public function __construct(private CatalogFormRegistry $registry, private TranslatorInterface $translator)
     {
     }
 
@@ -40,8 +41,11 @@ final readonly class SubmissionChangeSummary
             $was = $pair['was'] ?? null;
             $now = $pair['now'] ?? null;
 
+            $textLang = PlaceText::langOfKey((string) $field);
             $rows[] = [
-                'label' => $labels[$field] ?? $field,
+                'label' => $labels[$field] ?? (null !== $textLang
+                    ? $this->translator->trans('place_text.change_label', ['%lang%' => strtoupper($textLang)])
+                    : $field),
                 'was' => null === $was || '' === $was ? null : ChangeValue::format((string) $field, $was),
                 'now' => ChangeValue::format((string) $field, $now),
             ];

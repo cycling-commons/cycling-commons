@@ -80,6 +80,29 @@ final class TownControllerTest extends WebTestCase
         self::assertSame([], $data['facts'], 'an empty object in JSON');
     }
 
+    /** A town Wikipedia has nothing on can still carry a local text (moderation-and-contribution.md §3.1b). */
+    public function testALocalTextStandsWithoutAWikipediaPage(): void
+    {
+        $client = $this->browser();
+        $this->clear('node/999990105');
+        /** @var TownSummaryRepository $towns */
+        $towns = self::getContainer()->get(TownSummaryRepository::class);
+        $towns->claim('node/999990105', 'en');
+        $towns->record('node/999990105', 'en', null, null, []);
+        $towns->overrideText('node/999990105', 'en', 'A hamlet with a steep lane.', 1, 'Hamlet', 1);
+
+        $client->request('GET', '/map/town/node/999990105?lang=en&lat=50.1&lng=4.1');
+        $data = $this->payload($client);
+        self::assertSame('A hamlet with a steep lane.', $data['text']['extract']);
+        self::assertNull($data['text']['url'], 'no page to link, and none invented');
+        self::assertTrue($data['edited']);
+        self::assertNull($data['editedBy'], 'written and approved by the same curator: "our curators"');
+
+        /** @var Connection $db */
+        $db = self::getContainer()->get('doctrine.dbal.default_connection');
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM town_place WHERE osm_ref = 'node/999990105'"), 'the reader\'s point is kept for the town');
+    }
+
     public function testALanguageWeDoNotSpeakFallsBackToEnglish(): void
     {
         $client = $this->browser();
@@ -112,6 +135,7 @@ final class TownControllerTest extends WebTestCase
         /** @var Connection $db */
         $db = self::getContainer()->get('doctrine.dbal.default_connection');
         $db->executeStatement('DELETE FROM town_summary WHERE osm_ref = :r', ['r' => $ref]);
+        $db->executeStatement('DELETE FROM town_place WHERE osm_ref = :r', ['r' => $ref]);
     }
 
     /** @return array<string, mixed> */

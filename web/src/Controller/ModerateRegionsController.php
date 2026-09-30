@@ -24,6 +24,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * Curator Regions desk — the only writer of `region.default_map_mode`. Gated: cannot enable a mode the region cannot show.
  *
+ * Also the direct pen for a region's about text, inside the curator's areas.
+ * Anyone else suggests one from the region page (moderation-and-contribution.md §3.1b).
+ *
  * @see docs/specs/map-and-search.md §4.2
  *
  * @api
@@ -238,6 +241,7 @@ final class ModerateRegionsController extends AbstractController
         $region = $this->regionForCurator($slug, $user);
         $wiki = self::decodeJson($region['context']);
 
+        $stored = self::decodeJson($region['context_curated']);
         $curated = [];
         $now = new \DateTimeImmutable();
         foreach (RegionLead::LOCALES as $locale) {
@@ -252,12 +256,14 @@ final class ModerateRegionsController extends AbstractController
             }
             // Adaptation claim only if a source exists; otherwise original (fail-closed).
             $derived = $request->request->has('derived_'.$locale) && RegionLead::hasSource($wiki, $locale);
-            $curated[$locale] = [
-                'text' => $text,
-                'derived' => $derived,
-                'userId' => $user->getId(),
-                'at' => $now->format(\DateTimeInterface::ATOM),
-            ];
+            // A language the curator left as it was keeps its entry, and with
+            // it the credit of whoever wrote it (a rider's approved proposal).
+            $before = RegionLead::override($stored, $locale);
+            if (null !== $before && $before['text'] === $text && $before['derived'] === $derived && \is_array($stored[$locale] ?? null)) {
+                $curated[$locale] = $stored[$locale];
+                continue;
+            }
+            $curated = RegionLead::withEntry($curated, $locale, $text, $derived, (int) $user->getId(), (int) $user->getId(), null, $now);
         }
 
         $this->db->executeStatement(

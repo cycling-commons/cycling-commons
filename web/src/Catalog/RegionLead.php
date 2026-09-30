@@ -7,7 +7,10 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 /**
- * Region "About" lead. Harvest and curator override are separate stores so import cannot wipe an override. Adapted Wikipedia stays cited; original text must not.
+ * Region "About" lead. Harvest and local override are separate stores so import cannot wipe an override. Adapted Wikipedia stays cited; original text must not.
+ *
+ * A local lead is written on the Regions desk by a curator of the region, or
+ * proposed by anyone signed in and approved by one (moderation-and-contribution.md §3.1b).
  */
 final class RegionLead
 {
@@ -17,10 +20,14 @@ final class RegionLead
     /**
      * Reader-locale Wikipedia beats a curator lead in another language. English is last resort.
      *
+     * `by` is who wrote a local lead (null for the harvest) and `approvedBy`
+     * who let it onto the page (null for the harvest and for leads written
+     * before approval was recorded).
+     *
      * @param array<string, mixed>|null $wiki    decoded `region.context`
      * @param array<string, mixed>|null $curated decoded `region.context_curated`
      *
-     * @return array{text: string, url: ?string, title: ?string, curated: bool, adapted: bool}|null
+     * @return array{text: string, url: ?string, title: ?string, curated: bool, adapted: bool, by: ?int, approvedBy: ?int}|null
      */
     public static function resolve(?array $wiki, ?array $curated, string $locale): ?array
     {
@@ -38,6 +45,8 @@ final class RegionLead
                     'title' => $harvest['title'],
                     'curated' => false,
                     'adapted' => false,
+                    'by' => null,
+                    'approvedBy' => null,
                 ];
             }
         }
@@ -73,15 +82,52 @@ final class RegionLead
     }
 
     /**
+     * `$curated` with one locale's lead set, the other locales untouched.
+     *
+     * `$by` wrote it, `$approvedBy` let it onto the page (the same curator when
+     * they wrote it on the Regions desk or proposed it inside their area),
+     * `$submissionId` is the approved proposal, null for the desk.
+     *
+     * @param array<string, mixed>|null $curated decoded `region.context_curated`
+     *
+     * @return array<string, mixed>
+     */
+    public static function withEntry(?array $curated, string $locale, string $text, bool $derived, int $by, int $approvedBy, ?int $submissionId, \DateTimeImmutable $at): array
+    {
+        $curated ??= [];
+        $curated[$locale] = [
+            'text' => $text,
+            'derived' => $derived,
+            'userId' => $by,
+            'approvedBy' => $approvedBy,
+            'submissionId' => $submissionId,
+            'at' => $at->format(\DateTimeInterface::ATOM),
+        ];
+
+        return $curated;
+    }
+
+    /**
      * @param array<string, mixed>|null $curated
      *
-     * @return array{text: string, curated: true, adapted: bool}|null
+     * @return array{text: string, curated: true, adapted: bool, by: ?int, approvedBy: ?int}|null
      */
     private static function curatedEntry(?array $curated, string $locale): ?array
     {
         $own = self::override($curated, $locale);
+        if (null === $own) {
+            return null;
+        }
+        /** @var array<string, mixed> $entry */
+        $entry = $curated[$locale] ?? [];
 
-        return null === $own ? null : ['text' => $own['text'], 'curated' => true, 'adapted' => $own['derived']];
+        return [
+            'text' => $own['text'],
+            'curated' => true,
+            'adapted' => $own['derived'],
+            'by' => \is_int($entry['userId'] ?? null) ? $entry['userId'] : null,
+            'approvedBy' => \is_int($entry['approvedBy'] ?? null) ? $entry['approvedBy'] : null,
+        ];
     }
 
     /**

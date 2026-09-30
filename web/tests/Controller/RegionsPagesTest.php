@@ -105,15 +105,24 @@ final class RegionsPagesTest extends WebTestCase
         self::assertStringContainsString('Ctxland is a rolling test province.', (string) $client->getResponse()->getContent());
     }
 
-    public function testDetailPageWithoutContextOmitsTheSection(): void
+    /**
+     * A region without a lead still has the section: anyone signed in can
+     * write one, and a curator of the region approves it
+     * (moderation-and-contribution.md §3.1b). No text and no credit line.
+     */
+    public function testDetailPageWithoutContextInvitesAText(): void
     {
         $client = static::createClient();
         $this->seedRegion('ctx-less-region', 'BE', 4);
 
         $client->request('GET', '/regions/ctx-less-region');
         self::assertResponseIsSuccessful();
-        // The heading string, not the CSS class: the style block always ships.
-        self::assertStringNotContainsString('About this region', (string) $client->getResponse()->getContent());
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('Write a text for this region', $html);
+        self::assertStringContainsString('/regions/ctx-less-region/text', $html);
+        self::assertStringContainsString('A curator of this region approves it.', $html);
+        self::assertStringNotContainsString('class="rg-about-text"', $html);
+        self::assertStringNotContainsString('class="rg-about-attrib"', $html);
     }
 
     public function testDetailPage404sForInfrastructureAndUnknownSlugs(): void

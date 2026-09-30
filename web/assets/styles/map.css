@@ -1350,10 +1350,16 @@
   .cc-city-links{margin-top:.6rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
   .cc-city-links a{color:rgb(var(--chrome-fg) / .85);text-decoration:underline}
   .cc-town{margin-top:.2rem}
+  /* Who may change the town text and how: one plain sentence and the link (moderation-and-contribution.md §3.1b). */
+  .cc-town-edit{margin:.55rem 0 0;font-size:.82rem;line-height:1.5;color:rgb(var(--chrome-fg) / .75)}
+  .cc-town-edit-link{color:var(--chrome-link);text-decoration:underline;white-space:nowrap}
   .cc-town-wait{aspect-ratio:auto;min-height:3.2rem;margin-top:.8rem}
   /* The report badge: a ringed exclamation mark before every report link on the map (owner 2026-09-08). */
   .cc-bang{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;border-radius:50%;border:1px solid rgb(var(--chrome-fg) / .45);color:rgb(var(--chrome-fg) / .85);font-weight:700;font-size:.72rem;text-decoration:none;vertical-align:middle}
   .cc-bang:hover,a:hover>.cc-bang{border-color:var(--clay);color:var(--clay)}
+  /* The town text's edit badge: the same ring with a pencil, right after the credit line's "!" (moderation-and-contribution.md §3.1b). */
+  .cc-pen{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;border-radius:50%;border:1px solid rgb(var(--chrome-fg) / .45);color:rgb(var(--chrome-fg) / .85);font-size:.72rem;line-height:1;text-decoration:none;vertical-align:middle}
+  .cc-pen:hover{border-color:var(--clay);color:var(--clay)}
   .cc-d-report .cc-bang,.cc-lb-report .cc-bang{margin:0 .35rem 0 0}
   .cc-town-facts{list-style:none;margin:.75rem 0 .2rem;padding:0;display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;font-size:.9rem}
   .cc-town-facts li{display:contents}

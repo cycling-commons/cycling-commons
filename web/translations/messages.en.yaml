@@ -1527,6 +1527,12 @@ region:
   about_source: 'Text from Wikipedia:'
   about_source_adapted: "Adapted from Wikipedia by this region's curators:"
   about_source_curator: "Written by this region's curators."
+  about_source_adapted_by: "Adapted from Wikipedia by %name%, approved by this region's curators:"
+  about_source_rider: "Written by %name%, approved by this region's curators."
+  about_removed_rider: 'a removed rider'
+  about_edit_note: 'Anyone signed in can suggest an edit to this text. A curator of this region approves it.'
+  about_edit: 'Edit this text'
+  about_write: 'Write a text for this region'
   cta_map: 'Open this region on the map'
   cta_apply: 'Volunteer as curator'
   # Still used by contribute/index.html.twig's Vote card ("go" link text) —
@@ -3053,6 +3059,14 @@ map:
   d_show_fewer: 'Show fewer'
   d_report_text: 'Report this text'
   d_wiki_edited: 'Edited by our curators, after Wikipedia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Edited by {name}, approved by our curators, after Wikipedia CC BY-SA 4.0'
+  d_text_written: 'Written by our curators, CC BY-SA 4.0'
+  d_text_written_by: 'Written by {name}, approved by our curators, CC BY-SA 4.0'
+  d_text_edit: 'Edit this text'
+  d_text_add: 'Write a text for this town'
+  d_text_edit_signin: 'Sign in to edit this text'
+  d_text_edit_note: 'Anyone signed in can suggest an edit to this text. A curator of this region approves it.'
+  d_place_text_label: 'Text ({lang})'
   d_founded: 'Founded'
   d_inhabitants: 'Inhabitants'
   d_circa: 'c.'
@@ -3100,12 +3114,49 @@ map:
   locate_unavailable: 'Location not available'
   locate_denied: 'Location is blocked for this site. Allow it in your browser settings, then reload the page.'
   locate_failed: 'Your location could not be found. Try again in a moment.'
+# "Edit this text": a town card's text or a region's lead, proposed by anyone
+# signed in (PlaceTextController, moderation-and-contribution.md §3.1b).
+place_text:
+  kicker_town: 'Town text'
+  kicker_region: 'Region text'
+  lead_town: "Anyone signed in can suggest an edit to the text on this town's card. A curator of the region it lies in approves it before it shows."
+  lead_region: "Anyone signed in can suggest an edit to this region's about text. A curator of this region approves it before it shows."
+  field_lang: 'Language'
+  field_text: 'Text'
+  field_text_hint: 'One paragraph, at most %max% characters. Write the whole text as readers should see it, not only the change.'
+  current_h: 'Current text'
+  current_none: 'There is no text in this language yet.'
+  count: '%count% of %max%'
+  field_derived: 'I adapted this from the Wikipedia article'
+  field_note: 'Note for the curator (optional)'
+  field_note_hint: 'Where your information comes from, or what you changed and why.'
+  licence: 'Your text is published under <b>CC BY-SA 4.0</b>. Once approved it is credited to you: by your name if your profile is public, otherwise by your rider handle.'
+  submit: 'Send'
+  cancel: 'Cancel'
+  sent_h_queued: 'Sent for review'
+  sent_p_queued: 'Thanks. A curator of this region checks your text; until then readers see the current one. You get a message when it is decided.'
+  sent_h_applied: 'Text updated'
+  sent_p_applied: 'This lies inside your areas, so your text shows now.'
+  sent_ref: 'Your reference: %ref%'
+  back_town: 'Back to the map'
+  back_region: 'Back to the region'
+  follow: 'Follow it on your profile'
+  change_label: 'Text (%lang%)'
+  error:
+    lang: 'Pick one of the languages in the list.'
+    empty: 'Write the text first.'
+    too_long: 'The text is longer than %max% characters. Shorten it and send it again.'
+    note_too_long: 'The note is too long. Shorten it and send it again.'
+    unchanged: 'The text is the same as the one readers see now. Change something before you send it.'
+    no_location: 'We do not know yet where this town lies. Open it on the map and use "Edit this text" on its card.'
+    unknown: 'This text cannot be edited here.'
+
 moderate:
   rider_removed: 'a removed rider'
   town:
     title: 'Town card text'
     lede: 'What the map shows about this town, in every language we speak. The text was fetched from Wikipedia the first time somebody opened the town. Write over it when you know better: that language is then ours, and no fetch touches it again.'
-    local: 'Written by a curator'
+    local: 'Written here, no longer fetched'
     fetched: 'Fetched from %lang% Wikipedia'
     none: 'Nothing fetched yet'
     field_title: 'Town name'
@@ -3114,6 +3165,8 @@ moderate:
     save: 'Save this language'
     saved: 'Town text saved. The map shows it now.'
     refused: 'Not saved: the text is empty, too long, or the language is not one we speak.'
+    outside_area: 'This town lies outside your areas, so your text goes to a curator of its region. Send it here.'
+    where_unknown: 'We do not know yet which region this town lies in. Open it on the map and use "Edit this text" on its card.'
   escalate:
     when: 'Use this when the content itself is against the law — not for spam, not for a bad edit, not for someone being rude. Those are Trash and Message the rider.'
     confirm_check: 'I have read the above and this is suspected illegal material'
@@ -3227,6 +3280,7 @@ moderate:
     edit: 'Edit'
     hazard: 'Hazard'
     photo: 'Photo'
+    text: 'Text'
   action:
     approve: 'Approve'
     reject: 'Reject'
@@ -3505,6 +3559,7 @@ account:
   sub_type_edit: 'Edit'
   sub_type_hazard: 'Hazard'
   sub_type_photo: 'Photo'
+  sub_type_text: 'Text'
   sub_status_pending: 'Awaiting review'
   sub_status_approved: 'Approved'
   sub_status_rejected: 'Rejected'

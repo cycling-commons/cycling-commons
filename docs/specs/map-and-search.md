@@ -749,7 +749,8 @@ for one thing in five languages. Fixed across all five.
   and writes the reviewable `tools/wikimedia/out/region-context.json`;
   `app:regions:import-context` loads it into `region.context` (JSONB,
   `Version20260816020000`) and refuses any extract arriving without its
-  citation. Render falls back locale -> en -> section absent.
+  citation. Render falls back locale -> en -> no text (the section stays, with
+  its invitation to write one).
   `RegionDirectoryProvider::region()` reads the column outside `BASE_SELECT`
   so the directory list never pays for text blobs. Pinned by
   `ImportRegionContextCommandTest` and `RegionsPagesTest`.
@@ -766,7 +767,9 @@ for one thing in five languages. Fixed across all five.
   guard somebody has to remember (the `change_history` shield in `ItemUpsert`
   is the precedent it deliberately does not need).
 
-  Shape per locale: `{text, derived, userId, at}`. **`derived` is the licence
+  Shape per locale: `{text, derived, userId, approvedBy, submissionId, at}`:
+  `userId` wrote it, `approvedBy` let it onto the page, `submissionId` is the
+  approved proposal (NULL for the desk). **`derived` is the licence
   question and the reason this is not one text column.** A Wikipedia extract is
   CC BY-SA 4.0, so what the curator did to it decides what the page must say:
   an ADAPTED text keeps the citation (the licence follows a derivative) and
@@ -789,7 +792,28 @@ for one thing in five languages. Fixed across all five.
   re-checked on the POST like every other moderation write; the page quotes
   the harvested text per language so the curator judges against the real
   article. Leads are capped at 1,200 characters and an overlong one is
-  refused, not truncated. Pinned by `RegionAboutTextTest`.
+  refused, not truncated. A language the curator saves unchanged keeps its
+  entry, and with it the credit of whoever wrote it. Pinned by
+  `RegionAboutTextTest`.
+
+  **Anyone signed in can suggest the lead (owner 2026-09-30).** The About
+  section is on every region page, with a lead or without one: under the text
+  and its credit, one sentence, "Anyone signed in can suggest an edit to this
+  text. A curator of this region approves it.", and "Edit this text" ("Write a
+  text for this region" when there is none) to `/regions/{slug}/text`. When
+  there is a lead, its credit line ends in a ringed pencil (`.rg-about-pen`,
+  label "Edit this text") to the same form. The link and the pencil are the
+  same for every reader so the page stays cacheable; a visitor signs in on
+  the way. The proposal is a `text` submission filed in this
+  region, approved by one of its curators, and written into that locale's
+  entry of `context_curated` with the rider as `userId`
+  ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1b).
+  A lead written by someone other than the curator who approved it names them:
+  `region.about_source_adapted_by` ("Adapted from Wikipedia by {name},
+  approved by this region's curators:") or `region.about_source_rider`
+  ("Written by {name}, approved by this region's curators."), the name being
+  the public display name, else the `rider#` handle. Pinned by
+  `PlaceTextProposalTest` and `RegionsPagesTest`.
 
   **The hero opens with the same three figures as `/coverage`**, in the same
   order and under the same labels: reference items on file, verified items,
@@ -2541,8 +2565,33 @@ is LOCAL, "we can't connect to online anymore": the fetch never claims an
 answered row, and any future refresh sweep must skip `edited_at IS NOT NULL`.
 The endpoint carries `edited: true` and the card's credit reads "Edited by our
 curators, after Wikipedia CC BY-SA 4.0" (a rewrite of CC BY-SA text keeps its
-attribution; the Wikipedia link stays). Riders do not edit directly: the "!"
-is their pen, and a curator writes. Pinned by `ModerateTownControllerTest`.
+attribution; the Wikipedia link stays). The pen is limited to towns inside the
+curator's areas (where the town lies: `town_place`); a curator of another
+region gets the proposal form below. Pinned by `ModerateTownControllerTest`
+and `PlaceTextProposalTest`.
+
+**Anyone signed in can suggest the text (owner 2026-09-30).** Under the credit
+line the card says, in one sentence, "Anyone signed in can suggest an edit to
+this text. A curator of this region approves it.", followed by "Edit this
+text" (or "Write a text for this town" when the card has none) to the
+proposal form `/town/{type}/{id}/text?lang&name&lat&lng&from`. The credit
+line carries the same target as a ringed pencil (`.cc-pen`, the "!" badge's
+shape) right after its "!", labelled "Edit this text". A visitor, told apart
+by the riders' confirm token the page carries, gets "Sign in to edit this
+text" to `/login?_target_path=` that form, from the link and the pencil
+alike. The form quotes the current text read-only and starts with an empty
+box ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1b). The proposal is a `text`
+submission in the one queue, filed in the region the town lies in, approved by
+a curator of that region, and on approval it becomes the local text for that
+language exactly as the pen writes it
+([moderation-and-contribution.md](moderation-and-contribution.md) §3.1b). The
+endpoint then also carries `editedBy: {name}` when the writer is not the
+approving curator, and the credit reads "Edited by {name}, approved by our
+curators, after Wikipedia CC BY-SA 4.0". A local text stands without a
+Wikipedia page ("Written by ...", no Wikipedia link), so a town Wikipedia has
+nothing on can still be written about. The endpoint keeps the town's point in
+`town_place` (first reader's point, never moved): it decides the region.
+Pinned by `tests/js/town-text.test.mjs` and `TownControllerTest`.
 
 Every town takes this one path, the `CITIES` quick-picks included
 (owner-reported 2026-09-30: Spa showed a fixed English sentence with no "!",

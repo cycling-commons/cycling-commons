@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Town;
 
+use App\Moderation\DeskRider;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -19,7 +20,7 @@ use Doctrine\DBAL\Connection;
  *
  * @phpstan-type CyclingEvent array{qid: string, label: string, rels: list<string>, n: int, last: ?int, url: ?string}
  * @phpstan-type TownFacts array{founded?: array{year: int, precision: int}, population?: array{n: int, year: ?int}}
- * @phpstan-type TownRow array{answered: bool, qid: ?string, title: ?string, extract: ?string, page_url: ?string, page_lang: ?string, cycling: list<CyclingEvent>, facts: TownFacts, edited: bool}
+ * @phpstan-type TownRow array{answered: bool, qid: ?string, title: ?string, extract: ?string, page_url: ?string, page_lang: ?string, cycling: list<CyclingEvent>, facts: TownFacts, edited: bool, editedBy: ?int, approvedBy: ?int, editor: ?string}
  *
  * @api
  */
@@ -42,7 +43,10 @@ final readonly class TownSummaryRepository
     public function find(string $osmRef, string $lang): ?array
     {
         $row = $this->db->fetchAssociative(
-            'SELECT answered, qid, title, extract, page_url, page_lang, cycling, facts, edited_at FROM town_summary WHERE osm_ref = :r AND lang = :l',
+            'SELECT ts.answered, ts.qid, ts.title, ts.extract, ts.page_url, ts.page_lang, ts.cycling, ts.facts, ts.edited_at,
+                    ts.edited_by, ts.approved_by, u.display_name, u.public_profile, u.pseudonym, u.uuid
+               FROM town_summary ts LEFT JOIN users u ON u.id = ts.edited_by
+              WHERE ts.osm_ref = :r AND ts.lang = :l',
             ['r' => $osmRef, 'l' => $lang],
         );
         if (false === $row) {
@@ -63,6 +67,12 @@ final readonly class TownSummaryRepository
             'cycling' => $cycling,
             'facts' => $facts,
             'edited' => null !== $row['edited_at'],
+            'editedBy' => null === $row['edited_by'] ? null : (int) $row['edited_by'],
+            'approvedBy' => null === $row['approved_by'] ? null : (int) $row['approved_by'],
+            // What a public page may call the writer: their name when their
+            // profile is public, else their rider# handle (DeskRider::of()).
+            'editor' => null === $row['edited_by'] ? null
+                : DeskRider::of($row['pseudonym'], $row['display_name'], $row['public_profile'], $row['uuid'])['name'],
         ];
     }
 
@@ -93,19 +103,24 @@ final readonly class TownSummaryRepository
     }
 
     /**
-     * A curator's own words replace the fetched paragraph. From now on the row
-     * is local: answered, marked edited, and no fetch touches it again.
-     * Creates the row when no reader has opened that language yet.
+     * Local words replace the fetched paragraph. From now on the row is local:
+     * answered, marked edited, and no fetch touches it again. Creates the row
+     * when no reader has opened that language yet.
+     *
+     * `$userId` wrote the text; `$approvedBy` let it onto the card (the same
+     * curator when they wrote it on the town page or proposed it inside their
+     * area); `$submissionId` is the approved proposal, null for the town page.
      */
-    public function overrideText(string $osmRef, string $lang, string $extract, int $userId, ?string $title): void
+    public function overrideText(string $osmRef, string $lang, string $extract, int $userId, ?string $title, int $approvedBy, ?int $submissionId = null): void
     {
         $this->db->executeStatement(
-            'INSERT INTO town_summary (osm_ref, lang, answered, title, extract, cycling, facts, edited_by, edited_at, checked_at)
-             VALUES (:r, :l, TRUE, :t, :e, \'[]\', \'{}\', :u, NOW(), NOW())
+            'INSERT INTO town_summary (osm_ref, lang, answered, title, extract, cycling, facts, edited_by, approved_by, submission_id, edited_at, checked_at)
+             VALUES (:r, :l, TRUE, :t, :e, \'[]\', \'{}\', :u, :a, :s, NOW(), NOW())
              ON CONFLICT (osm_ref, lang) DO UPDATE
                 SET answered = TRUE, extract = EXCLUDED.extract, title = COALESCE(town_summary.title, EXCLUDED.title),
-                    edited_by = EXCLUDED.edited_by, edited_at = NOW(), checked_at = NOW()',
-            ['r' => $osmRef, 'l' => $lang, 't' => $title, 'e' => $extract, 'u' => $userId],
+                    edited_by = EXCLUDED.edited_by, approved_by = EXCLUDED.approved_by, submission_id = EXCLUDED.submission_id,
+                    edited_at = NOW(), checked_at = NOW()',
+            ['r' => $osmRef, 'l' => $lang, 't' => $title, 'e' => $extract, 'u' => $userId, 'a' => $approvedBy, 's' => $submissionId],
         );
     }
 
