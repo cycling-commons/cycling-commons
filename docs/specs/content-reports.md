@@ -383,10 +383,10 @@ request that happens to hold the slot, which stays for the takedowns desk
 (`ContentReportService`, handing
 to `MediaTakedownService`, so the breaker, the event and the message stay the
 proven ones). The takedowns desk keeps only an uploader's request about their
-own photo, which is not a report. Two rules keep the photo and the report
+own photo, which is not a report. Three rules keep the photo and the report
 telling the same story (`ContentReportService::refusal()`, checked before
 anything is saved or sent; a refusal shows under the status field and the
-report stays as it was; `PhotoReportDecisionTest` pins both):
+report stays as it was; `PhotoReportDecisionTest` pins all three):
 
 * **Upheld always removes the photo** (`MediaTakedownService::removeOnReport()`).
   A waiting takedown of either source is granted; with none waiting (the
@@ -404,6 +404,20 @@ report stays as it was; `PhotoReportDecisionTest` pins both):
   hidden, on no desk, and blocking every later report on it. The curator
   chooses Upheld (remove) or Rejected (keep, and republish). Closed stays for a
   photo with nothing pending, typically one that is already gone.
+* **A photo under legal hold cannot be decided here at all.** The page shows
+  "Legal hold" with the date and no decide form, the list row reads "under
+  legal hold", and any status posted is refused. The report stays open, nobody
+  is mailed, and when an administrator releases the hold at `/admin/escalated`
+  the report is decidable again with its takedown still waiting.
+
+**Escalate** (photo-uploads.md §6d) sits below the decide form on a photo
+report whose files still exist, folded away in its own form
+(`moderate_reports_escalate`, `ContentReportService::escalate()` handing to
+`MediaEscalationService`): a sentence in the curator's own words and a tick,
+both checked by the server. It is the same act as on the takedowns and
+submission desks: the photo is hidden, held against every deletion path, and
+the administrators are alerted. It is not region-scoped, like the rest of this
+desk. Only a photo report has it (a route answers 404); see §11 for the rest.
 
 **One stage, not two** (owner 2026-08-30). A curator decides a report outright;
 there is no region-scoped triage that then queues for an admin to confirm. That
@@ -470,6 +484,15 @@ the mail retention line in `/privacy`.
 * **Appeals are by email**, not a form. Both decision emails say "reply to this
   email with the reference". A structured appeal surface is worth building when
   there is enough volume to need one, and not before.
+* **Escalate exists for photo reports only.** A report that a place, a route,
+  a region or town text, a profile name or a message is illegal content has no
+  legal hold to go under: the hold is built for `media_upload` and
+  `submission` rows (photo-uploads.md §6d), and a report targets the live
+  thing, not the submission that once proposed it. Until each of those kinds
+  gets a hold of its own, such a report is decided here like any other, with
+  the change made where that thing is normally moderated, and a suspected
+  crime against a person goes to law enforcement by the administrator (DSA
+  Article 18) outside the app.
 * **No transparency report yet.** Articles 15 and 24 want published numbers.
   `SupportRepository::reportCountsByStatus()` already computes them for the
   desk chips; publishing them is a page, not a data problem.

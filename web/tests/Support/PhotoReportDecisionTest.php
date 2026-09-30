@@ -41,6 +41,8 @@ use Symfony\Component\Uid\Uuid;
  *   would leave the photo hidden, on no desk, and blocking every later report.
  * * **Upheld always removes the photo**, whatever the takedown slot holds,
  *   and is refused (with no mail) when nothing can be removed.
+ * * **Escalate** puts the photo under legal hold from the desk itself, and a
+ *   held report can no longer be decided by a curator.
  */
 final class PhotoReportDecisionTest extends WebTestCase
 {
@@ -290,5 +292,94 @@ final class PhotoReportDecisionTest extends WebTestCase
         self::assertSelectorExists('#d-status-error');
 
         self::assertSame(ReportStatus::Open, $this->fresh($report)->getStatus());
+    }
+
+    // -- Escalate (BUG-10) ---------------------------------------------------
+
+    public function testACuratorEscalatesAPhotoReportFromTheDesk(): void
+    {
+        $client = $this->client();
+        $upload = $this->approved($this->rider('esc-owner@example.org'));
+        $prefix = $upload->getPathPrefix();
+        $report = $this->report($upload->getId()->toRfc4122(), ReportGround::Unlawful);
+
+        $client->loginUser($this->rider('esc-curator@example.org', curator: true));
+        $page = $client->request('GET', '/moderate/reports/'.$report->getId());
+        $form = $page->filter('form.escalate');
+        self::assertSame(1, $form->count(), 'a photo report can be escalated where it is decided');
+
+        $client->request('POST', '/moderate/reports/'.$report->getId().'/escalate', [
+            '_token' => (string) $form->filter('input[name="_token"]')->attr('value'),
+            'reason' => 'Appears to show a crime being committed.',
+            'confirm' => '1',
+        ]);
+        self::assertEmailCount(1, null, 'the administrator alert, and nothing to the reporter or author');
+
+        $held = $this->photo($upload);
+        self::assertTrue($held->isEscalated());
+        self::assertTrue($this->filesystem()->fileExists($prefix.'/sm.webp'), 'held, never deleted');
+        $item = $this->em()->find(Item::class, (int) $held->getItemId());
+        self::assertInstanceOf(Item::class, $item);
+        self::assertArrayNotHasKey('photos', $item->getAttributes(), 'off the map at once');
+
+        // The report now says so, and has no way left to decide it.
+        $client->followRedirect();
+        self::assertSelectorExists('.held');
+        self::assertSelectorNotExists('form.decide');
+        self::assertSelectorNotExists('form.escalate');
+        self::assertSame(ReportStatus::Open, $this->fresh($report)->getStatus());
+
+        $client->request('GET', '/moderate/reports');
+        self::assertSelectorTextContains('.rrow .cats', 'under legal hold');
+    }
+
+    public function testEscalationNeedsAReasonAndTheTick(): void
+    {
+        $client = $this->client();
+        $upload = $this->approved($this->rider('esc-tick-owner@example.org'));
+        $report = $this->report($upload->getId()->toRfc4122(), ReportGround::Unlawful);
+
+        $client->loginUser($this->rider('esc-tick-curator@example.org', curator: true));
+        $page = $client->request('GET', '/moderate/reports/'.$report->getId());
+        $token = (string) $page->filter('form.escalate input[name="_token"]')->attr('value');
+
+        $client->request('POST', '/moderate/reports/'.$report->getId().'/escalate', [
+            '_token' => $token,
+            'reason' => 'Appears to show a crime.',
+        ]);
+        self::assertFalse($this->photo($upload)->isEscalated(), 'no tick, no hold');
+
+        $client->request('POST', '/moderate/reports/'.$report->getId().'/escalate', [
+            '_token' => $token,
+            'reason' => '   ',
+            'confirm' => '1',
+        ]);
+        self::assertFalse($this->photo($upload)->isEscalated(), 'no words, no hold');
+    }
+
+    public function testOnlyAPhotoReportCanBeEscalatedHere(): void
+    {
+        $client = $this->client();
+        $report = static::getContainer()->get(ContentReportService::class)->file(
+            ReportTarget::Route,
+            '1',
+            ReportGround::Abuse,
+            'Threatening words in the description.',
+            'reporter@example.org',
+            null,
+            '203.0.113.200',
+        );
+
+        $client->loginUser($this->rider('esc-route-curator@example.org', curator: true));
+        $client->request('GET', '/moderate/reports/'.$report->getId());
+        self::assertSelectorNotExists('form.escalate');
+
+        // Refused on what it is about, before any token is looked at.
+        $client->request('POST', '/moderate/reports/'.$report->getId().'/escalate', [
+            '_token' => 'irrelevant',
+            'reason' => 'Threats.',
+            'confirm' => '1',
+        ]);
+        self::assertResponseStatusCodeSame(404);
     }
 }

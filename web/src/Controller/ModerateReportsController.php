@@ -35,6 +35,12 @@ use Symfony\Component\Uid\Uuid;
  * grew its own delete button would be a second moderation path with its own
  * history, its own permissions and its own bugs.
  *
+ * **A photo is the exception, twice.** A decision on a photo report carries
+ * through to the file ({@see ContentReportService::decide()}), because the
+ * report raised the takedown only this desk decides. And a photo report can be
+ * escalated from here, the same verb the takedowns and submission desks have,
+ * because a report of illegal imagery has to be held where it is read.
+ *
  * **Three people can be owed an answer, and they are not the same person.**
  * The reporter is owed the outcome whatever it is (Article 16(5)). The author
  * is owed a statement of reasons only when the report was upheld, because only
@@ -54,8 +60,11 @@ use Symfony\Component\Uid\Uuid;
 final class ModerateReportsController extends AbstractController
 {
     private const string CSRF_TOKEN_ID = 'report-desk-decide';
+    private const string ESCALATE_TOKEN_ID = 'report-desk-escalate';
     /** Refusals shown next to the status field, not in the page banner. */
     private const string STATUS_FLASH = 'report_status';
+    /** Refusals shown inside the escalate panel. */
+    private const string ESCALATE_FLASH = 'report_escalate';
     private const int PER_PAGE = 25;
     /** The status chip that shows every status. */
     private const string ALL = 'all';
@@ -88,7 +97,11 @@ final class ModerateReportsController extends AbstractController
 
         $rows = [];
         foreach ($this->repository->reports($showing, $target, $pager['perPage'], $pager['offset']) as $report) {
-            $rows[] = ['report' => $report, 'resolved' => $this->resolver->resolve($report)];
+            $rows[] = [
+                'report' => $report,
+                'resolved' => $this->resolver->resolve($report),
+                'held' => $this->reports->isHeld($report),
+            ];
         }
 
         return $this->render('moderate/reports.html.twig', [
@@ -118,6 +131,8 @@ final class ModerateReportsController extends AbstractController
             $siblings[] = $other;
         }
 
+        $photo = $this->reports->photoOf($report);
+        $held = null !== $photo && $photo->isEscalated();
         // Moot is left out while a takedown waits on the photo (canBeMoot()).
         $statuses = array_values(array_filter(
             ReportStatus::all(),
@@ -133,6 +148,11 @@ final class ModerateReportsController extends AbstractController
             'resolved' => $resolved,
             'siblings' => $siblings,
             'statuses' => $statuses,
+            // Under legal hold: shown as such, with nothing left to decide.
+            'held' => $held,
+            'held_since' => $photo?->getEscalatedAt(),
+            // Escalate is offered for a photo that still has files to hold.
+            'can_escalate' => !$held && null !== $photo && null === $photo->getObjectsDeletedAt(),
             // Named the way every desk names people (DeskRider).
             'author_rider' => null !== $resolved['author'] ? DeskRider::ofUser($resolved['author']) : null,
             'decided_by' => null !== ($curator = $this->curator($report)) ? DeskRider::colleagueUser($curator) : null,
@@ -216,6 +236,54 @@ final class ModerateReportsController extends AbstractController
         }
 
         $this->addFlash('notice', 'report.desk.flash_saved');
+
+        return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
+    }
+
+    /**
+     * Escalate the photo a report is about as suspected illegal content.
+     *
+     * The same verb, hold and alert as on the takedowns and submission desks
+     * (photo-uploads.md §6d), placed where a third-party report is decided so
+     * a report of illegal imagery can be held there. Photos only: no other
+     * target has a legal hold to put it under (content-reports.md §11). Not
+     * region-scoped, like everything else on this desk (§9).
+     *
+     * Like the other desks it asks for a sentence in the curator's own words
+     * and a tick, and the tick is checked here too: a request without it
+     * holds nothing.
+     */
+    #[Route('/moderate/reports/{id}/escalate', name: 'moderate_reports_escalate', requirements: ['id' => '[0-9a-fA-F-]{36}'], methods: ['POST'])]
+    public function escalate(string $id, Request $request): Response
+    {
+        $report = $this->report($id);
+        if (!$report->getTargetType()->canAutoWithhold()) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->isCsrfTokenValid(self::ESCALATE_TOKEN_ID, (string) $request->request->get('_token'))) {
+            $this->addFlash('notice', 'flash.invalid_token');
+
+            return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
+        }
+
+        if (!$request->request->getBoolean('confirm')) {
+            $this->addFlash(self::ESCALATE_FLASH, 'report.desk.escalate_needs_tick');
+
+            return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
+        }
+
+        $curator = $this->getUser();
+        if (!$curator instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $this->reports->escalate($report, $curator, (string) $request->request->get('reason', ''));
+            $this->addFlash('notice', 'moderate.escalate.done');
+        } catch (ReportDecisionRefused|\InvalidArgumentException $e) {
+            $this->addFlash(self::ESCALATE_FLASH, $e->getMessage());
+        }
 
         return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
     }

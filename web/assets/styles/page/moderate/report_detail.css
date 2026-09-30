@@ -28,6 +28,20 @@
 .sib:first-of-type{border-top:0}
 .sib a{color:var(--clay)}
 .sibmeta{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:#6d7060}
-/* The reason a decision was refused, under the field it is about. */
+/* The reason a decision or an escalation was refused, under the field it is about. */
 .bdet .ferr{margin:.4rem 0 0;padding:.5rem .75rem;border-left:2px solid var(--danger);
   background:rgba(179,38,30,.1);border-radius:0 5px 5px 0;font-size:.88rem;color:var(--danger-ink)}
+/* A photo under legal hold: the one fact on the page that stops the decision. */
+.bdet dl.facts dd.held{color:var(--danger-ink);font-weight:600}
+/* Escalate: folded away below the decision, in the alarm colour the other desks use for it. */
+.escalate-panel{margin-top:1.6rem;padding-top:1rem;border-top:1px solid rgba(20,22,14,.12)}
+.escalate-panel summary{cursor:pointer;font-weight:700;font-size:.88rem;color:#6b21a8}
+.escalate-panel summary:focus-visible{outline:2px solid #6b21a8;outline-offset:2px}
+.escalate label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--clay);margin:.9rem 0 .3rem}
+.escalate input[type="text"]{width:100%;font-family:inherit;font-size:.9rem;
+  padding:.5rem .6rem;border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
+.escalate .check{display:flex;align-items:flex-start;gap:.5rem;margin:1rem 0}
+.escalate .check label{margin:0;font-family:inherit;font-size:.9rem;letter-spacing:0;text-transform:none;color:#3a3d30}
+.escalate .btn-alarm{background:#6b21a8;color:#fff}
+.escalate .btn-alarm:hover{background:#581c87}

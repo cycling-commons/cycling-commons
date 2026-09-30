@@ -9,6 +9,11 @@
   there, and comes back here to record what happened. A second delete path would
   be a second history and a second set of permissions.
 
+  A photo is the exception: the decision carries through to the file, and the
+  photo can be escalated here, the same verb as on the takedowns desk
+  (photo-uploads.md §6d). A photo under legal hold shows as held, and the page
+  then has no way left to decide the report.
+
   Three careful things:
 
   * The reason is escaped, in a pre-wrap block. A stranger typed it and it must
@@ -56,6 +61,10 @@
       <dd>{{ report.ground.label|trans }}{% if report.ground.isLegal %} · {{ 'report.desk.legal_claim'|trans }}{% endif %}</dd>
       <dt>{{ 'support.inbox.status_label'|trans }}</dt>
       <dd>{{ report.status.label|trans }}</dd>
+      {% if held %}
+        <dt>{{ 'report.desk.held_label'|trans }}</dt>
+        <dd class="held">{{ 'report.desk.held_since'|trans({'%when%': held_since ? held_since|cc_datetime : ''}) }}</dd>
+      {% endif %}
       <dt>{{ 'support.inbox.received'|trans }}</dt>
       <dd>{{ report.createdAt|cc_datetime }}</dd>
       {% if report.ground.needsOwnershipProof %}
@@ -104,6 +113,13 @@
     {% endif %}
 
     {% set status_errors = app.flashes('report_status') %}
+    {% if held %}
+      {# Held: an administrator decides (/admin/escalated). No form, so there
+         is nothing here a curator could press by mistake. #}
+      {% for msg in status_errors %}
+        <p class="ferr" id="d-status-error" role="alert">{{ msg|trans }}</p>
+      {% endfor %}
+    {% else %}
     <form class="decide" method="post" action="{{ path('moderate_reports_decide', {id: report.id}) }}">
       <input type="hidden" name="_token" value="{{ csrf_token('report-desk-decide') }}">
 
@@ -136,6 +152,31 @@
 
       <p class="dact"><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
     </form>
+    {% endif %}
+
+    {% if can_escalate %}
+      {# Its own form and folded away, so it can never be a mis-click on the
+         decision, as on the takedowns and submission desks
+         (photo-uploads.md §6d). The tick is checked by the server too. #}
+      {% set escalate_errors = app.flashes('report_escalate') %}
+      <details class="escalate-panel"{{ escalate_errors ? ' open' : '' }}>
+        <summary>{{ 'report.desk.escalate_summary'|trans }}</summary>
+        <form class="escalate" method="post" action="{{ path('moderate_reports_escalate', {id: report.id}) }}">
+          <input type="hidden" name="_token" value="{{ csrf_token('report-desk-escalate') }}">
+          <p class="warn">{{ 'report.desk.escalate_help'|trans }}</p>
+          {% for msg in escalate_errors %}
+            <p class="ferr" role="alert">{{ msg|trans }}</p>
+          {% endfor %}
+          <label for="e-reason">{{ 'moderate.escalate.reason_placeholder'|trans }} <span class="req" aria-hidden="true">*</span></label>
+          <input type="text" id="e-reason" name="reason" maxlength="2000" required>
+          <div class="check">
+            <input type="checkbox" id="e-confirm" name="confirm" value="1" required>
+            <label for="e-confirm">{{ 'moderate.escalate.confirm_check'|trans }}</label>
+          </div>
+          <p class="dact"><button type="submit" class="btn btn-alarm">{{ 'moderate.escalate.submit'|trans }}</button></p>
+        </form>
+      </details>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

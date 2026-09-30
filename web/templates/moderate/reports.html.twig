@@ -59,7 +59,7 @@
         <div class="rtop">
           <a href="{{ path('moderate_reports_detail', {id: r.id}) }}">{{ row.resolved.label ?? r.targetType.label|trans ~ ' #' ~ r.targetId }}</a>
           {# Plain orange text, not blocks (owner 2026-09-08). #}
-          <span class="cats"><span class="{{ r.ground.isUrgent ? 'legal' : '' }}">{{ r.ground.label|trans }}</span> · {{ r.status.label|trans }} · {{ r.targetType.label|trans }}{% if not row.resolved.exists %} · <span class="gone">{{ 'report.desk.target_gone'|trans }}</span>{% endif %}</span>
+          <span class="cats"><span class="{{ r.ground.isUrgent ? 'legal' : '' }}">{{ r.ground.label|trans }}</span> · {{ r.status.label|trans }} · {{ r.targetType.label|trans }}{% if not row.resolved.exists %} · <span class="gone">{{ 'report.desk.target_gone'|trans }}</span>{% endif %}{% if row.held %} · <span class="legal">{{ 'report.desk.held_row'|trans }}</span>{% endif %}</span>
         </div>
         <p class="rmeta">
           {{ r.createdAt|cc_datetime }}

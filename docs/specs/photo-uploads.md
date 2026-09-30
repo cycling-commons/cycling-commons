@@ -1511,6 +1511,13 @@ working understanding, not advice):
 - **Everything else** (copyright, defamation, ordinary illegality) — no
   proactive reporting duty; normal takedown and normal retention.
 
+**Where a curator escalates.** A photo from the takedowns desk; a submission
+(with its photos) from the submissions desk;
+and a reported photo from its report on the reports desk
+([content-reports.md](content-reports.md) §9), where a third-party report of
+illegal imagery is read. All three call the same services. A held photo's
+report shows as held there and cannot be decided until the hold is released.
+
 **What escalation does.** Hides the photo from the public *and* from the
 moderation desk; sets a **legal hold** on the row; alerts the configured
 recipients immediately and **unthrottled** (one mail per escalation, carrying

@@ -8,6 +8,7 @@ namespace App\Support;
 
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
+use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\MediaTakedownSource;
 use App\Security\PseudonymousKey;
@@ -54,6 +55,9 @@ final class ContentReportService
         // already there and are the part that must not be got wrong
         // (content-reports.md §9).
         private readonly MediaTakedownService $takedowns,
+        // Escalating from the reports desk is the same act as on every other
+        // desk, so it is the same service (photo-uploads.md §6d).
+        private readonly MediaEscalationService $escalations,
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
     ) {
@@ -156,6 +160,17 @@ final class ContentReportService
     }
 
     /**
+     * Is the photo this report is about under legal hold?
+     *
+     * Then only an administrator acts on it (photo-uploads.md §6d), and the
+     * report waits: no curator can decide it until the hold is lifted.
+     */
+    public function isHeld(ContentReport $report): bool
+    {
+        return true === $this->photoOf($report)?->isEscalated();
+    }
+
+    /**
      * Can this report be closed as `Moot`?
      *
      * Not while a takedown waits on its photo. Every photo report raises one,
@@ -223,6 +238,28 @@ final class ContentReportService
         if (ReportStatus::Rejected === $status && MediaTakedownSource::ThirdParty === $upload->getTakedownSource()) {
             $this->takedowns->decline($upload, $curator, $note);
         }
+    }
+
+    /**
+     * Escalate the photo a report is about as suspected illegal content.
+     *
+     * The same act as on the takedowns and submission desks
+     * ({@see MediaEscalationService::escalate()}): hidden from everybody,
+     * held against every deletion path, and an administrator alerted. The
+     * report itself stays undecided and waits: nobody is mailed, and
+     * {@see refusal()} keeps curators from deciding it while the hold lasts.
+     *
+     * @throws ReportDecisionRefused     when the report is not about a photo that can still be held
+     * @throws \InvalidArgumentException when the curator gave no reason, or too long a one
+     */
+    public function escalate(ContentReport $report, User $curator, string $reason): void
+    {
+        $upload = $this->photoOf($report);
+        if (null === $upload || null !== $upload->getObjectsDeletedAt()) {
+            throw new ReportDecisionRefused('report.desk.escalate_nothing_to_hold');
+        }
+
+        $this->escalations->escalate($upload, $curator, $reason);
     }
 
     /** Move a report between its waiting states. Nothing is sent: the reporter hears from us when it is decided. */
