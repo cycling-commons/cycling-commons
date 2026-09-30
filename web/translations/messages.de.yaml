@@ -4461,6 +4461,9 @@ admin:
     col_country: 'Land'
     col_registered: 'Registriert'
     no_recent: 'Noch keine Registrierungen.'
+    no_alert_recipients_b: 'Niemand erhält Sicherheitswarnungen.'
+    no_alert_recipients: 'Es ist keine Alarmadresse gesetzt, daher landet ein eskalierter Eintrag, ein ausgelöster Schutzschalter oder ein Serverfehler nur im Log und wird an niemanden gemailt.'
+    no_alert_recipients_link: 'Alarmadresse in der Systemkonfiguration setzen.'
   flash:
     unlocked: 'Konto entsperrt.'
     2fa_disarmed: 'Zwei-Faktor-Authentifizierung deaktiviert.'

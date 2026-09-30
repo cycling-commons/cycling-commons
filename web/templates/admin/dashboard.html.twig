@@ -4,6 +4,16 @@
 {% block content_title %}{{ 'admin.dashboard.title'|trans }}{% endblock %}
 
 {% block main %}
+    {% if alerts_unconfigured|default(false) %}
+        {# AlertRecipients is empty: escalations, an opened circuit breaker and
+           server errors are written to the log and mailed to nobody. #}
+        <div class="alert alert-danger" role="alert">
+            <strong>{{ 'admin.dashboard.no_alert_recipients_b'|trans }}</strong>
+            {{ 'admin.dashboard.no_alert_recipients'|trans }}
+            <a href="{{ path('admin_system_config') }}">{{ 'admin.dashboard.no_alert_recipients_link'|trans }}</a>
+        </div>
+    {% endif %}
+
     <div class="row">
         {% set cards = [
             { label: 'admin.dashboard.members', value: stats.members },

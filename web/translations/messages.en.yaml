@@ -4482,6 +4482,9 @@ admin:
     col_country: 'Country'
     col_registered: 'Registered'
     no_recent: 'No signups yet.'
+    no_alert_recipients_b: 'Nobody receives security alerts.'
+    no_alert_recipients: 'No alert address is set, so an escalated item, an opened circuit breaker or a server error is written to the log and mailed to nobody.'
+    no_alert_recipients_link: 'Set the alert address in System configuration.'
   flash:
     unlocked: 'Account unlocked.'
     2fa_disarmed: 'Two-factor authentication disarmed.'

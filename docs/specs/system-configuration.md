@@ -100,6 +100,14 @@ integers, `maxLength` plus a closure validator for text), `setting_value` is
 `TEXT` and each definition reads its own value back out of it
 (`fromStorage()`), and the form renders a spinner or a text box per type.
 
+The setting cannot be saved empty, but its default can be: `SECURITY_ALERT_EMAIL`
+is empty in the committed `.env`. Until an address is set, every alert is only
+a CRITICAL log line, so **the admin dashboard shows a red notice**
+(`AlertRecipients::isConfigured()`) linking to this page. A boot or deploy check
+on the env var would be the wrong gate: the value can be set here at runtime,
+and a missing one must not stop the site. Pinned by
+`AlertRecipientNoticeTest`.
+
 Reading is **two typed accessors**, never a polymorphic return:
 `SettingsProviderInterface::get()` for integers and `getString()` for text,
 each throwing on the wrong type. A threshold silently read as `0` because it

@@ -13,6 +13,7 @@ use App\Community\CuratorApplicationService;
 use App\Community\CuratorApplicationStatus;
 use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
+use App\Media\AlertRecipients;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
@@ -60,8 +61,10 @@ final class DashboardController extends AbstractDashboardController
     public const string WITHHELD_PHOTOS_CSRF_TOKEN_ID = 'withheld-photos';
     public const string ESCALATED_CSRF_TOKEN_ID = 'escalated-photos';
 
-    public function __construct(private readonly AdminDashboardStats $stats)
-    {
+    public function __construct(
+        private readonly AdminDashboardStats $stats,
+        private readonly AlertRecipients $alertRecipients,
+    ) {
     }
 
     #[\Override]
@@ -69,6 +72,8 @@ final class DashboardController extends AbstractDashboardController
     {
         return $this->render('admin/dashboard.html.twig', [
             'stats' => $this->stats->collect(),
+            // No recipient means every alert is only a log line.
+            'alerts_unconfigured' => !$this->alertRecipients->isConfigured(),
         ]);
     }
 

@@ -4492,6 +4492,9 @@ admin:
     col_country: 'País'
     col_registered: 'Registro'
     no_recent: 'Todavía no hay altas.'
+    no_alert_recipients_b: 'Nadie recibe las alertas de seguridad.'
+    no_alert_recipients: 'No hay ninguna dirección de alerta configurada, así que un elemento escalado, un disyuntor abierto o un error del servidor se escribe en el registro y no se envía a nadie.'
+    no_alert_recipients_link: 'Configura la dirección de alerta en la configuración del sistema.'
   flash:
     unlocked: 'Cuenta desbloqueada.'
     2fa_disarmed: 'Autenticación en dos factores desarmada.'

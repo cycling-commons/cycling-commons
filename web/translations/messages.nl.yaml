@@ -4460,6 +4460,9 @@ admin:
     col_country: 'Land'
     col_registered: 'Geregistreerd'
     no_recent: 'Nog geen aanmeldingen.'
+    no_alert_recipients_b: 'Niemand ontvangt beveiligingsmeldingen.'
+    no_alert_recipients: 'Er is geen alarmadres ingesteld, dus een geëscaleerd item, een geactiveerde stroomonderbreker of een serverfout komt alleen in het logboek en wordt naar niemand gemaild.'
+    no_alert_recipients_link: 'Stel het alarmadres in bij Systeemconfiguratie.'
   flash:
     unlocked: 'Account ontgrendeld.'
     2fa_disarmed: 'Tweefactorauthenticatie uitgeschakeld.'

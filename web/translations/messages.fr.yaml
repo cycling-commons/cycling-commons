@@ -4453,6 +4453,9 @@ admin:
     col_country: 'Pays'
     col_registered: 'Inscrit le'
     no_recent: 'Aucune inscription pour le moment.'
+    no_alert_recipients_b: 'Personne ne reçoit les alertes de sécurité.'
+    no_alert_recipients: 'Aucune adresse d''alerte n''est définie : un élément escaladé, un disjoncteur déclenché ou une erreur serveur est écrit dans le journal et envoyé à personne.'
+    no_alert_recipients_link: 'Définir l''adresse d''alerte dans la configuration du système.'
   flash:
     unlocked: 'Compte déverrouillé.'
     2fa_disarmed: 'Authentification à deux facteurs désactivée.'

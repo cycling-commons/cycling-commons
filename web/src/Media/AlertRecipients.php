@@ -37,4 +37,14 @@ final readonly class AlertRecipients
 
         return $out;
     }
+
+    /**
+     * Does an alert reach anybody? False means escalations, an opened breaker
+     * and server errors are only logged, which the admin dashboard shows in
+     * red until an address is set.
+     */
+    public function isConfigured(): bool
+    {
+        return [] !== $this->all();
+    }
 }
