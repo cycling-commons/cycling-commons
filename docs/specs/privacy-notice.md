@@ -33,6 +33,7 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | Turning a profile off takes the name down at once | same, resolved per render; no controller sets `Cache-Control` | a photo page is ever given a shared cache |
 | Dormant accounts are never deleted | nothing reads `lastLoginAt` on a schedule | `docs/TODO.md` 5g is built |
 | Mail kept 24 months after a thread ends | policy, owner 2026-08-27 | the mailbox policy changes |
+| Contact-form messages deleted 24 months after they were answered or closed (`privacy.retention_mail`) | `App\Support\ContactMessageRetention`, daily in `app:media:gc` (contact-and-support.md §4) | the sweep stops running, or its clock stops being `updated_at` on an answered or closed message |
 | Browser-contacted services | `security-architecture.md` 2.3, `connect-src` + `img-src` | a CSP host is added |
 | Cookie names and lifetimes | `config/packages/framework.yaml` (session), `config/packages/security.yaml` `remember_me.lifetime` | either is configured differently |
 | Account deletion is immediate | `App\Service\UserDeletionService::confirmDeletion()` | a real grace period is ever built |

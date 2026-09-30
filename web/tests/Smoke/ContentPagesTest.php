@@ -29,6 +29,17 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'What we collect');
     }
 
+    /** The contact form's 24 months (contact-and-support.md §4) is stated beside email's. */
+    public function testPrivacyGivesContactFormMessagesTheMailPeriod(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/privacy');
+        self::assertResponseIsSuccessful();
+        $retention = $crawler->filter('h2:contains("How long we keep it") + ul')->text();
+        self::assertStringContainsString('Email and contact-form messages you send us.', $retention);
+        self::assertStringContainsString('24 months', $retention);
+    }
+
     public function testTermsRenders(): void
     {
         $client = static::createClient();

@@ -177,6 +177,20 @@ dropped: our own URLs carry search terms and bounding boxes, and a support table
 is not the place for a second copy of somebody's search history. An off-site
 referrer is not kept at all.
 
+**How long it is kept** ({@see App\Support\ContactMessageRetention}). The
+whole row is deleted **24 months after the matter ended**, the period the
+privacy page gives mail (`privacy.retention_mail`: "delete it within 24 months
+of it ending"). The matter has ended once a curator answered or closed the
+message (status `answered` or `closed`), and the end is read from
+`updated_at`, which every status change and handling note stamps, so it is
+never earlier than the answer or the closing. A message that is `new` or
+`open` has not ended and is kept however old it is; one opened again after an
+answer is waiting once more. A contact message carries no legal hold: a
+copyright claim or takedown that starts here is handled on the photo request
+or content report, where the hold lives. The sweep runs daily in
+`app:media:gc`. Example: a question answered on 1 March 2026 and not touched
+since is deleted by the first run after 1 March 2028.
+
 ## 5. Bug reports
 
 {@see App\Controller\BugReportController}, {@see App\Support\Entity\BugReport}.
