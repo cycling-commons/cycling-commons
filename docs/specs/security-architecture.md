@@ -539,17 +539,25 @@ Not restated here.
 
 All limiters are defined in `web/config/packages/rate_limiter.yaml`
 (`framework.rate_limiter.<name>`); tests must assert against the config, not
-literal numbers. Most limiters are keyed **per user**
-(`'user-'.$user->getId()`) and consumed with `consume()->isAccepted()`. Three
-exceptions, each for a reason worth knowing: `coverage_read` and the two
-`media_report*` limiters are keyed **per IP**
-(`'ip-'.$request->getClientIp()`) because their callers are anonymous;
-`ride_check_anon`, `password_reset` and `registration` are also per address but
-key on a **keyed hash** of it rather than the address itself, so the limiter
-store never holds one in the clear; and the two `media_urgent_breaker_*`
-limiters are keyed on **one global key**, because a per-IP budget cannot bound
-a distributed attacker and the thing being budgeted there is a site-wide
-capability, not one caller's share of it.
+literal numbers. Every limiter there is injected by some service:
+`RateLimiterWiringTest` fails the build on one that nothing asks for, and on a
+limiter cache pool nothing uses. Most limiters are keyed **per user**
+(`'user-'.$user->getId()`) and consumed with `consume()->isAccepted()`. The
+exceptions, each for a reason worth knowing:
+
+* **Per IP** (`'ip-'.$request->getClientIp()`), because their callers are
+  anonymous: `coverage_read`, `coverage_photo`, `coverage_photo_fetch`,
+  `public_api_read`, `pow_challenge`, `content_report` and
+  `media_report_urgent`.
+* **A keyed hash of the address**, so the limiter store never holds one in the
+  clear: `ride_check_anon`, `password_reset`, `registration`, the three
+  `verify_resend*` and `display_name_check` (`PseudonymousKey`), and
+  `contact_form`, `bug_report` and `bug_report_no_js` (`FormGuard::key()`,
+  `'ip-'` plus the first 32 hex of an HMAC of the address).
+* **One global key**: `coverage_photo_global` and `media_urgent_alert`,
+  because a per-IP budget cannot bound a distributed caller and the thing
+  being budgeted there is a site-wide capability (what Wikimedia sees from us;
+  how often a human is paged), not one caller's share of it.
 
 | Limiter | Policy | Limit (current config) | Key | Guards | Over-limit behaviour |
 |---|---|---|---|---|---|
@@ -563,16 +571,27 @@ capability, not one caller's share of it.
 | `elevation` | sliding_window | 30 / 1 minute | `user-<id>` | Climb-editor elevation profiling — `App\Controller\ElevationController::elevation()`; every call is an upstream Valhalla request (shared infrastructure), so the budget is per minute: generous for a rider redrawing a climb, a wall for a loop (review 2026-08-16 finding 5) | `429 {"error":"rate_limited"}` |
 | `route_snap` | sliding_window | 90 / 1 minute | `user-<id>` | Climb-editor and route-editor road snap — `App\Controller\RouteController::route()`; the SAME upstream Valhalla as `elevation`, reached through `POST /contribute/route`. It shipped with `#[IsGranted]` and nothing else, so login was its only guard and login is not a quota (test-suite review 2026-08-24). Larger budget than `elevation` because one edit snaps per leg: dragging a route with a dozen control points is a dozen calls | `429 {"error":"rate_limited"}` |
 | `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints — the app's first anonymous-read limiter, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | `429 JSON {"error":"rate_limited"}` (`CoverageController::rateLimited()`) |
+| `coverage_photo` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Polling a Commons photo for a coverage POI or a town card, `CoverageController::photo()` and `TownController` ([coverage-provider.md](coverage-provider.md) §7). Spent per poll; `commons-photo.js` backs off and gives up inside 45 seconds | `429 JSON {"error":"rate_limited"}` with `Retry-After` (`ThirdPartyBudget::rateLimited()`) |
+| `coverage_photo_fetch` | sliding_window | 60 / 1 hour | per **IP** (anonymous) | Admitting a new outbound fetch (a Commons file, a Wikidata lookup) from the same two endpoints, `ThirdPartyBudget::fetchBudgetAllows()`. Stops one script walking the corpus through our address | No fetch: the endpoint answers `{"state":"none"}`, as if there were no photo. Both this and `coverage_photo_global` are consumed even when the first refuses |
+| `coverage_photo_global` | sliding_window | 600 / 1 hour | **one global key** (`all`) | The same admission, site-wide: the real defence, since a distributed script defeats any per-address limit. Bounds the request rate Wikimedia sees from us and our storage growth (about 180 MB an hour at worst) | Same as `coverage_photo_fetch` |
+| `public_api_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Public API v1, `App\Controller\Api\V1\PublicApiController` (`/api/v1/map-config`, `/api/v1/search`, [public-api.md](public-api.md) §2.2). Same shape as `coverage_read` but its own pool, so an integration throttles only itself | `429 JSON {"error":"rate_limited","message":...}` with `Retry-After` |
 | `country_interest` | sliding_window | 10 / 1 day | `user-<id>` | Country-interest submissions — `App\Controller\JoinCountryController::index()`, country not yet onboarded ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form (`JoinCountryController`) |
 | `curator_application` | sliding_window | 3 / 1 day | `user-<id>` | Curator-application submissions — same controller, country onboarded; the tighter of the two, since an application is a task for a human reviewer, not just a counter ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form |
-| `media_report` | sliding_window | 5 / 1 day | per **IP** (anonymous) | Third-party photo reports — `App\Controller\MediaReportController::submit()` ([photo-uploads.md](photo-uploads.md) §6c); anonymous by design (Art. 17 needs no account) and deliberately CAPTCHA-free, so this limiter and the queue-not-withhold design are the abuse story | `429`, form re-rendered with `media.report.error.rate_limited` |
-| `media_report_urgent` | sliding_window | 1 / 1 day | per **IP** (anonymous) | The intimate-imagery/child report category — the one lever an anonymous visitor has that changes anything (auto-withhold), so its budget is one pull per IP per day; consumed **in addition to** `media_report` | `429`, same re-render |
+| `curator_reauth` | sliding_window | 5 / 15 minutes | `user-<id>` | The password re-confirmation a curator application asks for from a remember-me session, same controller ([account-and-auth.md](account-and-auth.md)). Its own limiter so two typos never spend the application's 3-a-day budget; sized like the firewall's login throttling | Flash `join.error.too_many`, redirect back to the form |
+| `media_upload` | sliding_window | 30 / 1 day | `user-<id>` | Photo uploads, `App\Controller\MediaController::upload()` ([photo-uploads.md](photo-uploads.md) §7). Each accepted upload costs an Imagick decode and three encodes, so a compute gate as much as a storage one | `429 JSON {"error":"rate_limited"}` |
+| `data_export` | sliding_window | 3 / 1 day | `user-<id>` | The GDPR data export, `App\Controller\DataExportController::export()` ([account-and-auth.md](account-and-auth.md) §11), consumed before the password check so it is no unmetered oracle. Art. 12(5) allows refusing repetitive requests | Flash `flash.export_rate_limited`, redirect to the security settings |
+| `content_report` | sliding_window | 15 / 1 day | per **IP** (anonymous) | Every report from `/report/{type}/{id}`, photos included, `App\Controller\ContentReportController` ([content-reports.md](content-reports.md) §5); anonymous by design (Art. 16 needs no account) and CAPTCHA-free, so this limiter, the queue-not-withhold design and the breaker are the abuse story | `429`, form re-rendered with `report.error.rate_limited` |
+| `media_report_urgent` | sliding_window | 1 / 1 day | per **IP** (anonymous) | A report on the `intimate_or_child` ground, same controller ([photo-uploads.md](photo-uploads.md) §6c): the one lever an anonymous visitor has that changes anything (auto-withhold), so its budget is one pull per IP per day; consumed **in addition to** `content_report` | `429`, same re-render |
 | `password_reset` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|password-reset\|ip)>` | Password-reset requests, in `App\Controller\ResetPasswordController::request()`. One unauthenticated POST persists a token row and mails a link to an address the sender chose, so an unbudgeted loop is both an inbox flood aimed at a third party and a table flood aimed at us (security scan 2026-08-25). Salted-hash key, same construction and the same pseudonymisation caveat as `ride_check_anon` | Redirect to `/reset-password/check-email`, the **same** answer a real request gets. Never a `429`: this page refuses to reveal whether an address has an account, and a distinguishable over-limit response would be exactly that oracle |
 | `registration` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|registration\|ip)>` | Sign-ups, in `App\Controller\RegistrationController::register()`; same shape and same reasoning as `password_reset`, consumed **before** the user row is written or any mail is sent, and after the bot layers ([account-and-auth.md](account-and-auth.md) §2), so a flood of obvious bots spends nobody's budget | `429`, form re-rendered with a visible error. A `429` is fine here, unlike above: the key is the connection, not the address, so it says nothing about which addresses have accounts (a taken address gets the same page as a new one, [account-and-auth.md](account-and-auth.md) §2) |
 | `verify_resend` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|verify-resend\|ip)>` | A new confirmation link, `App\Controller\VerificationResendController::resend()` ([account-and-auth.md](account-and-auth.md) §2); consumed before the address is looked up | `429`, form re-rendered with a visible error. It is about the sender, so it reveals nothing about the address |
 | `verify_resend_address` | sliding_window | 1 / 15 minutes | `anon-<sha256(secret\|verify-resend-address\|lower(email))>` | Same endpoint, and a sign-up on a taken address (`ExistingAccountNotice`), per address, spent only when a mail would go out, so nobody can aim the form at a stranger's inbox | The same "check your email" card a send gets, no mail. Never a `429`: that would say the address has an unconfirmed account |
 | `verify_resend_address_daily` | sliding_window | 3 / 1 day | same key as above | Same endpoint, the daily ceiling behind the quarter-hour one | Same as above |
 | `display_name_check` | sliding_window | 30 / 1 hour | `anon-<sha256(secret\|display_name_check\|ip)>`, signed-in or not | The display-name hint, `App\Controller\DisplayNameCheckController` ([account-and-auth.md](account-and-auth.md) §9); consumed after the stamp and length checks | `429` with `{"inUse": null}`: the hint hides, the form is untouched |
+| `pow_challenge` | sliding_window | 60 / 1 hour | per **IP** (anonymous) | Minting a proof-of-work challenge, `App\Controller\FormChallengeController::challenge()` (`GET /form-challenge`, [page-caching.md](page-caching.md) §3.1). Public and unauthenticated, and it hands out signed tokens; loose enough that reopening the bug panel all afternoon never trips it | `429 JSON {"ok":false,"error":"rate_limited"}` |
+| `contact_form` | sliding_window | 3 / 1 day | `FormGuard::key()` | The contact form, `App\Controller\ContactController` ([contact-and-support.md](contact-and-support.md) §3). A front door, not a chat window. Consumed before the DNS check on the sender's domain, so a slow resolver costs a token | `429`, form re-rendered with `support.error.rate_limited` |
+| `bug_report` | sliding_window | 12 / 1 day | `FormGuard::key()` | Bug reports with a solved proof of work, `App\Controller\BugReportController` ([contact-and-support.md](contact-and-support.md) §5). Looser than contact: one broken thing is usually three. Before the DNS check, as above | `429`, `support.error.rate_limited` |
+| `bug_report_no_js` | sliding_window | 3 / 1 day | `FormGuard::key()` | The same form posted without a solved proof of work (the plain `/report-bug` page with JavaScript off, [contact-and-support.md](contact-and-support.md) §3). That door stays open, and narrow | `429`, `support.error.rate_limited` |
 | `media_urgent_alert` | sliding_window | 1 / 1 hour | **one global key** | How often the circuit breaker may mail a human ([photo-uploads.md](photo-uploads.md) §6c). The flood that opens the breaker keeps arriving, so a mail per report would be thousands of messages aimed at the one person who has to read them | Silently skips the mail; the CRITICAL log line is written either way |
 
 **Not in this file, and deliberately:** the auto-withhold **circuit breaker**
@@ -591,15 +610,16 @@ refuses**: over budget the report still files and still pins to the desk, it
 simply hides nothing.
 
 
-Storage note: `route_propose`, `route_revise`, `route_suggest`, `ride_check`, `elevation`,
-`route_snap`, `country_interest`, `curator_application`, `password_reset`,
-`registration`, `translation_propose`, `display_name_check` and the three `verify_resend*` limiters
-(which share `cache.verify_resend_limiter`) each use their own dedicated
-cache pool (`cache.<name>_limiter`, inheriting `cache.app` — Redis in
-dev/prod, and the array adapter in test via that inheritance) that `when@test`
-additionally overrides to the array adapter — a persistent pool would carry
-limiter counters across phpunit runs while DAMA reuses user ids, which flakes
-tests. A new per-user limiter should copy this pool-plus-test-override shape.
+Storage note: every limiter but `contribution_submit` uses its own dedicated
+cache pool, `cache.<name>_limiter` (the three `verify_resend*` limiters share
+`cache.verify_resend_limiter`; `bug_report_no_js` uses
+`cache.bug_report_nojs_limiter` and `public_api_read` uses
+`cache.public_api_limiter`). Each inherits `cache.app`, Redis in dev/prod and
+the array adapter in test via that inheritance, and all but `content_report`,
+`pow_challenge` and `ride_check_anon` are additionally overridden to the array
+adapter under `when@test`. A persistent pool would carry limiter counters
+across phpunit runs while DAMA reuses user ids, which flakes tests. A new
+limiter should copy this pool-plus-test-override shape.
 (`contribution_submit` predates the convention and uses the default pool.)
 
 ### One construction for every pseudonymous key
