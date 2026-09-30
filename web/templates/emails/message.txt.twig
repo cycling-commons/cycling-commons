@@ -1,0 +1,24 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The plain-text part of a dashboard message email (M7), with the same content
+  as message.html.twig. A .txt template is not autoescaped (Twig's `name`
+  strategy), so an apostrophe or & in a name comes out as itself. body_text is
+  already plain text (MessageMailer): the catalog's tags stripped, no entities.
+#}
+{{ headline }}
+
+{% if body_text %}
+{{ body_text }}
+
+{% endif %}
+{% if note %}
+{{ note }}
+
+{% endif %}
+{{ cta }}: {{ messages_url }}
+
+{{ why }}
+{{ reference }}
+
+--
+Cycling Commons · open cycling atlas · https://cyclingcommons.org

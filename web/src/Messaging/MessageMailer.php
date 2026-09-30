@@ -70,6 +70,13 @@ final readonly class MessageMailer
         $body = null === $bodyKey
             ? null
             : $this->translator->trans($bodyKey, $message->getBodyParamsHtml(), null, $locale);
+        // The text part's body: the same line with the catalog's tags stripped,
+        // then decoded. The params are still escaped while the tags go, so a
+        // name that looks like markup survives as text, and the decode turns
+        // every entity back into its character.
+        $bodyText = null === $body
+            ? null
+            : html_entity_decode(strip_tags($body), \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
 
         try {
             $this->mailer->send(
@@ -78,9 +85,11 @@ final readonly class MessageMailer
                     ->to(new Address($email, $user->getDisplayName()))
                     ->subject('[Cycling Commons] '.$headline)
                     ->htmlTemplate('emails/message.html.twig')
+                    ->textTemplate('emails/message.txt.twig')
                     ->context([
                         'headline' => $headline,
                         'body' => $body,
+                        'body_text' => $bodyText,
                         'note' => $message->getBodyText(),
                         'reference' => $message->getRefLabel(),
                         'messages_url' => rtrim($this->siteUrl, '/').$this->inboxPath($locale),

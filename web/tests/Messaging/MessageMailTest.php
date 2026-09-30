@@ -200,6 +200,34 @@ final class MessageMailTest extends KernelTestCase
         self::assertStringContainsString("Your contribution '<em>Zuder weg</em>' was approved", $line);
     }
 
+    /** The text part is plain text: literal quotes, no tags, no entities. */
+    public function testTheTextPartShowsTheNameInPlainQuotes(): void
+    {
+        $mail = $this->mailApproval('mail-text@test.test', 'Zuder weg');
+
+        $text = (string) $mail->getTextBody();
+        self::assertStringContainsString("Your contribution 'Zuder weg' was approved", $text);
+        self::assertStringNotContainsString('&#039;', $text);
+        self::assertStringNotContainsString('<em>', $text);
+        self::assertStringContainsString('Contribution approved', $text, 'the headline');
+        self::assertStringContainsString('/account/messages', $text, 'the inbox link');
+        self::assertStringContainsString('SUB-5', $text, 'the reference');
+    }
+
+    /** & and ' in a name: literal in the text part, escaped in the HTML part. */
+    public function testAnAmpersandAndApostropheAreLiteralInTextAndEscapedInHtml(): void
+    {
+        $mail = $this->mailApproval('mail-amp@test.test', "Café & Bar 't Hof");
+
+        $text = (string) $mail->getTextBody();
+        self::assertStringContainsString("Your contribution 'Café & Bar 't Hof' was approved", $text);
+        self::assertStringNotContainsString('&amp;', $text);
+        self::assertStringNotContainsString('&#039;', $text);
+
+        $line = $this->bodyLine($mail);
+        self::assertStringContainsString('<em>Café &amp; Bar &#039;t Hof</em>', $line);
+    }
+
     /** A name is user text: it is shown as text, never parsed as markup. */
     public function testAHostileNameIsEscapedInTheEmailBody(): void
     {
@@ -210,5 +238,7 @@ final class MessageMailTest extends KernelTestCase
         self::assertStringNotContainsString('<b>', $line);
         self::assertStringContainsString('<em>&lt;script&gt;alert(1)&lt;/script&gt;&lt;b&gt;x&lt;/b&gt;</em>', $line);
         self::assertStringNotContainsString('<script', (string) $mail->getHtmlBody());
+        self::assertStringContainsString("'<script>alert(1)</script><b>x</b>'", (string) $mail->getTextBody(),
+            'in the plain-text part the name is text, kept whole');
     }
 }
