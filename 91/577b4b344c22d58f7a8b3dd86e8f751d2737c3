@@ -1,0 +1,86 @@
+web/assets/map/util.js
+  s_49442ae34d3603::t_9d8e884b4c7dae 28-35
+web/templates/moderate/_rider_name.html.twig
+  s_49442ae34d3603::t_657597b5ce01c8 5-8,11,13-15
+web/templates/moderate/history.html.twig
+  s_49442ae34d3603::t_b072d8cf78cede 120-122,124-125
+web/tests/Auth/RiderPseudonymTest.php
+  s_49442ae34d3603::t_0c8c40cd462dbb 23,168-172
+  s_49442ae34d3603::t_8f18017ad21f76 181-182
+  s_49442ae34d3603::t_e6d94fccbdb837 9,11,138-140,142-167,173-176,179-180,183-217,220,223-225,229
+web/templates/moderate/_rider_in_text.html.twig
+  s_49442ae34d3603::t_b072d8cf78cede 10
+docs/specs/edit-items/E-hazards.md
+  s_49442ae34d3603::t_83046aa748e5ec 71-73
+docs/specs/account-and-auth.md
+  s_49442ae34d3603::t_83046aa748e5ec 1169-1180
+web/assets/map/map.js
+  s_49442ae34d3603::t_9d8e884b4c7dae 253,255,263
+web/src/Controller/TranslateController.php
+  s_49442ae34d3603::t_ee3378ba590d7e 412
+web/src/Catalog/RiderPseudonym.php
+  s_49442ae34d3603::t_52941e79a7cce8 19-20,51-53,55,57
+web/tests/Moderation/SubmissionQueueTest.php
+  s_49442ae34d3603::t_7b4b47b41eb680 110-111
+web/tests/Catalog/ChangeHistoryViewTest.php
+  s_49442ae34d3603::t_7b4b47b41eb680 63
+wiki/developers/numbers.md
+  s_49442ae34d3603::t_cac475ec491c96 29
+web/tests/Moderation/DeskRiderTest.php
+  s_49442ae34d3603::t_c511df234e5fc9 32,34
+  s_49442ae34d3603::t_ebdd4e875801e4 18,23,28-29,35,40
+web/tests/js/desk-rider.test.mjs
+  s_49442ae34d3603::t_5f6e5cc3515c2b 23-27
+web/tests/Smoke/ChangeHistoryEndpointTest.php
+  s_49442ae34d3603::t_7b4b47b41eb680 44
+web/src/Moderation/SubmissionQueue.php
+  s_49442ae34d3603::t_ee3378ba590d7e 791-793,797
+  s_49442ae34d3603::t_ebdd4e875801e4 799,809
+  s_49442ae34d3603::t_0001ae20e0c543 52,174,249,432,524
+web/src/Moderation/RouteQueue.php
+  s_49442ae34d3603::t_ebdd4e875801e4 67,235
+web/src/Controller/MapController.php
+  s_49442ae34d3603::t_9d8e884b4c7dae 350
+web/src/Catalog/ChangeHistoryView.php
+  s_49442ae34d3603::t_ee3378ba590d7e 38-43,73
+web/src/Moderation/DeskRider.php
+  s_49442ae34d3603::t_52941e79a7cce8 15-18,33,35-36,38,47,51,55
+web/src/Controller/ModerateTranslationsController.php
+  s_49442ae34d3603::t_0ab822a839f202 345,373
+web/tests/Moderation/RouteModerateTest.php
+  s_49442ae34d3603::t_c511df234e5fc9 204-222
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_83046aa748e5ec 925-926,1146-1148
+docs/specs/route-domain.md
+  s_49442ae34d3603::t_83046aa748e5ec 387-389
+web/assets/map/drawer.js
+  s_49442ae34d3603::t_9d8e884b4c7dae 837-838,840-841
+web/src/Controller/RouteModerateController.php
+  s_49442ae34d3603::t_2dcc25f9e1ceae 265
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_28a355c6ba098d 2207,3086
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_e7475757797b58 2800,3104
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_ee03ac7f78331d 2808,3112
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_83bef5242c2d20 2199,3078
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_0a09f7bb00b445 2204,3085
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "91577b4b344c22d58f7a8b3dd86e8f751d2737c3",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
