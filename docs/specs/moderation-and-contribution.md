@@ -1168,6 +1168,18 @@ at a time, so the row is sized for that:
   unscoped (the audit carries no region, and a content-free row leaks nothing)
   and it is hidden when an approved/rejected status filter is active, since a
   trashed row is neither.
+- **Trash takes the message thread with it** (2026-09-30). The rulebook says
+  Trash removes the content and its history at once, and a submission's
+  history includes what was said about it: every `user_message` row with
+  `channel = 'submission'` and `ref_id` = the submission id goes in the same
+  transaction (`MessageService::deleteThread()`), from both inboxes. That is
+  the needs-info question and the outcome note in the rider's inbox, the
+  rider's reply in the curator's, and any curator note. A thread on another
+  channel that carries the same number (a route, a correction) is a different
+  subject and stays. A submission under legal hold cannot be trashed at all,
+  so its thread is never touched. Example: SUB-12 asked for a photo, the rider
+  answered, the curator trashes it as spam; neither inbox shows SUB-12 again.
+  Pinned by `TrashTest::testTrashSubmissionDeletesItsMessageThreadForBothParties`.
 - **Density switch** (`cards` ↔ `list`, remembered in `localStorage` per
   browser, never in the URL — it is a view preference, not a filter). List
   folds every row to a single line and hides body, diff, photos and rider

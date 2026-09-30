@@ -292,6 +292,21 @@ final class MessageService
         );
     }
 
+    /**
+     * Delete one thread from every inbox: each message on this channel about
+     * this reference, whoever sent or received it. Runs inside the caller's
+     * transaction.
+     *
+     * @return int messages deleted
+     */
+    public function deleteThread(string $channel, int $refId): int
+    {
+        return (int) $this->db->executeStatement(
+            'DELETE FROM user_message WHERE channel = :channel AND ref_id = :ref',
+            ['channel' => $channel, 'ref' => $refId],
+        );
+    }
+
     /** Deleted-recipient guard for every send* path. */
     private function recipientExists(int $userId): bool
     {

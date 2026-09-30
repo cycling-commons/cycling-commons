@@ -18,6 +18,8 @@ use App\Catalog\SubmissionType;
 use App\Entity\AdminActionLog;
 use App\Entity\User;
 use App\Messaging\Entity\UserMessage;
+use App\Messaging\MessageService;
+use App\Messaging\UserMessageKind;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\RouteModerationService;
@@ -217,6 +219,49 @@ final class TrashTest extends WebTestCase
         self::assertStringNotContainsString(self::SPAM_BODY, (string) $log->getNote());
 
         self::assertCount(0, $this->messagesFor((int) $rider->getId()));
+    }
+
+    /**
+     * Trash removes the content and its history at once, and the submission's
+     * message thread is part of that history: the needs-info question, the
+     * rider's reply and a curator's note all go, from both inboxes. A thread
+     * about another submission, or another channel's thread that happens to
+     * carry the same number, stays.
+     */
+    public function testTrashSubmissionDeletesItsMessageThreadForBothParties(): void
+    {
+        $rider = $this->rider('sub-thread');
+        $curator = $this->curator();
+        $riderId = (int) $rider->getId();
+        $curatorId = (int) $curator->getId();
+        $sub = $this->seedSubmission($riderId, SubmissionStatus::NeedsInfo);
+        $other = $this->seedSubmission($riderId, SubmissionStatus::NeedsInfo);
+        $subId = (int) $sub->getId();
+        $otherId = (int) $other->getId();
+
+        $messages = static::getContainer()->get(MessageService::class);
+        $messages->sendSystem($riderId, UserMessageKind::SubmissionNeedsInfo, 'submission', $subId, 'SUB-'.$subId, 'messages.body.submission_needs_info', ['%title%' => 'Spam submission'], self::SPAM_BODY);
+        $this->em()->flush();
+        $messages->sendRiderReply($curatorId, $riderId, 'submission', $subId, 'SUB-'.$subId, self::SPAM_BODY);
+        $messages->sendCurator($riderId, $curatorId, 'submission', $subId, 'SUB-'.$subId, 'Please add a photo.');
+        $keptOther = $messages->sendCurator($riderId, $curatorId, 'submission', $otherId, 'SUB-'.$otherId, 'About the other one.');
+        $keptChannel = $messages->sendCurator($riderId, $curatorId, 'route', $subId, 'Route '.$subId, 'About a route with the same number.');
+        self::assertNotNull($keptOther);
+        self::assertNotNull($keptChannel);
+        $keptIds = [(int) $keptOther->getId(), (int) $keptChannel->getId()];
+
+        $this->moderation()->trashSubmission($subId, $curator);
+
+        $this->em()->clear();
+        $db = $this->em()->getConnection();
+        self::assertSame(0, (int) $db->fetchOne(
+            "SELECT COUNT(*) FROM user_message WHERE channel = 'submission' AND ref_id = ?",
+            [$subId],
+        ), 'no message about the trashed submission is left, in either inbox');
+        $left = array_map(static fn (UserMessage $m): int => (int) $m->getId(), [...$this->messagesFor($riderId), ...$this->messagesFor($curatorId)]);
+        sort($left);
+        sort($keptIds);
+        self::assertSame($keptIds, $left, 'only the other submission\'s thread and the route thread remain');
     }
 
     /**

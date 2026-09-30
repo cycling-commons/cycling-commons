@@ -192,7 +192,8 @@ final class ModerationService
     }
 
     /**
-     * Hard-delete a submission in any status. Audited content-free first.
+     * Hard-delete a submission in any status, with its photos, its unapproved
+     * new item and its message thread. Audited content-free first.
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
@@ -215,6 +216,9 @@ final class ModerationService
             // Photos go immediately, no retention window (docs/specs/photo-uploads.md §6).
             $this->mediaDisposal->purgeForSubmission($id);
             $this->removeUnapprovedNewItem($submission);
+            // Its history goes too: the needs-info question, the rider's reply
+            // and any curator note, from both inboxes.
+            $this->messages->deleteThread('submission', $id);
             $this->em->remove($submission);
         });
     }
