@@ -1450,7 +1450,11 @@ has hidden and restores them in one action, telling each contributor their
 photo is back. It **dismisses** (`takedown_dismissed_as_abuse`) rather than
 declines: a decline closes that category for that photo forever, so
 mass-declining a flood would immunise every attacked photo against the next
-genuine report. `/admin/playbook/photo-flood` is the incident playbook —
+genuine report. Each row names what was claimed with the label the Reports
+desk uses (`MediaTakedownCategory::label()`: a `ReportGround` value reads as
+`report.ground.*`; `identifiable_self`, `identifiable_other` and `other`, which
+only the old photo form stored, keep their `media.report.category.*` keys).
+`/admin/playbook/photo-flood` is the incident playbook,
 admin-only, deliberately not in the public wiki (§6c *What stays private*).
 
 **Residual risk, accepted and named.** A distributed attacker can still spend

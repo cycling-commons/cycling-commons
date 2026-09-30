@@ -263,7 +263,7 @@ final class MediaTakedownService
     /**
      * Recovery desk: withheld third-party reports, newest first.
      *
-     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, category: ?string, reporter: string}>
+     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, category: ?string, categoryLabel: ?string, reporter: string}>
      */
     public function withheldThirdPartyCards(int $page = 1, int $perPage = self::PER_PAGE): array
     {
@@ -291,6 +291,7 @@ final class MediaTakedownService
                 'requestedAt' => $requestedAt,
                 'itemName' => $this->item($upload)?->getName() ?? '',
                 'category' => $upload->getTakedownCategory(),
+                'categoryLabel' => self::categoryLabel($upload->getTakedownCategory()),
                 'reporter' => substr($upload->getTakedownReporterHash() ?? '', 0, 8),
             ];
         }
@@ -354,6 +355,12 @@ final class MediaTakedownService
         return (int) $this->em->createQuery(
             'SELECT COUNT(m.id) FROM '.MediaUpload::class.' m WHERE '.self::PENDING_DQL,
         )->getSingleScalarResult();
+    }
+
+    /** The desk label for a stored category (MediaTakedownCategory::label()). */
+    private static function categoryLabel(?string $category): ?string
+    {
+        return null !== $category ? MediaTakedownCategory::label($category) : null;
     }
 
     private static function offset(int $page, int $perPage): int
@@ -441,7 +448,7 @@ final class MediaTakedownService
     /**
      * Pending desk cards; not region-scoped.
      *
-     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, source: string, category: ?string, contact: ?string, withheld: bool}>
+     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, source: string, category: ?string, categoryLabel: ?string, contact: ?string, withheld: bool}>
      */
     public function pendingCards(int $page = 1, int $perPage = self::PER_PAGE): array
     {
@@ -459,6 +466,7 @@ final class MediaTakedownService
                 'itemName' => $this->item($upload)?->getName() ?? '',
                 'source' => $upload->getTakedownSource() ?? MediaTakedownSource::Uploader,
                 'category' => $upload->getTakedownCategory(),
+                'categoryLabel' => self::categoryLabel($upload->getTakedownCategory()),
                 'contact' => $upload->getTakedownContact(),
                 'withheld' => $upload->isTakedownWithheld(),
             ];

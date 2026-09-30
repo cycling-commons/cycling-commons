@@ -64,8 +64,7 @@
             </div>
             <div class="q-submitter">
               {% if t.source == 'third_party' %}
-                {{ ('media.report.category.' ~ t.category)|trans }}
-                · {{ (t.withheld ? 'moderate.takedown.state_withheld' : 'moderate.takedown.state_published')|trans }}
+                {% if t.categoryLabel %}{{ t.categoryLabel|trans }} · {% endif %}{{ (t.withheld ? 'moderate.takedown.state_withheld' : 'moderate.takedown.state_published')|trans }}
               {% endif %}
               {% if t.contact %}
                 {# Curator-only: the address to answer within the month

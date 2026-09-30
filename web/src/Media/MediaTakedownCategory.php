@@ -63,6 +63,20 @@ final class MediaTakedownCategory
         return null !== ReportGround::tryFrom($category);
     }
 
+    /**
+     * The catalogue key a desk shows for a stored category.
+     *
+     * A `ReportGround` value reads the way the Reports desk reads it, which
+     * covers `intimate_or_child` and `private_property` too, since both
+     * vocabularies spell them the same. The three values only the old photo
+     * form stored keep their `media.report.category.*` keys, so an old row
+     * still reads as what the reporter picked.
+     */
+    public static function label(string $category): string
+    {
+        return ReportGround::tryFrom($category)?->label() ?? 'media.report.category.'.$category;
+    }
+
     public static function autoWithholds(string $category): bool
     {
         return self::IntimateOrChild === $category;

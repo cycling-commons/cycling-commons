@@ -51,7 +51,7 @@
                                 <td>
                                     <div class="small">
                                         {{ card.itemName ?: ('admin.withheld.no_item'|trans) }}
-                                        {% if card.category %} &middot; {{ ('media.report.category.' ~ card.category)|trans }}{% endif %}
+                                        {% if card.categoryLabel %} &middot; {{ card.categoryLabel|trans }}{% endif %}
                                     </div>
                                     <div>{{ card.reason }}</div>
                                 </td>
