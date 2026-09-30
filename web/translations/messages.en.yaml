@@ -1557,6 +1557,7 @@ security:
     label_email: 'Email'
     label_password: 'Password'
     remember_me: 'Stay signed in'
+    remember_hint: 'Keeps you signed in for 7 days on this browser. Do not use it on a public or shared device.'
     forgot: 'Forgot?'
     submit: 'Sign in'
     no_account: 'No account yet?'

@@ -495,7 +495,7 @@ codes and disables the flag — audited, confirm-gated.
 | Hasher | `auto` (argon2id-class) |
 | `form_login` | CSRF on, `success_handler: App\Security\LoginSuccessHandler` |
 | `logout` | CSRF on, target `home` |
-| `remember_me` | lifetime `604800` (7 days), `samesite: lax`, `secure: auto` |
+| `remember_me` | lifetime `604800` (7 days), `samesite: lax`, `secure: auto`. The sign-in form's "Stay signed in" box carries a line under it (`security.login.remember_hint`): signed in for 7 days on this browser, not for a public or shared device |
 | `/login` shortcut | fires on **`IS_AUTHENTICATED_FULLY`**, never on `getUser()` (below) |
 | `/join/{cc}` | `ROLE_USER`; password re-confirmed **on submit** when the session is only remembered (below) |
 | `login_throttling` | `max_attempts: 5` (§3) |

@@ -55,6 +55,10 @@ final class SecurityTest extends WebTestCase
         self::assertSelectorExists('input[name="_username"]');
         self::assertSelectorExists('input[name="_password"]');
         self::assertSelectorExists('input[name="_csrf_token"]');
+        // Stay signed in says how long it lasts (security.yaml remember_me
+        // lifetime 604800 s) and where not to tick it.
+        self::assertSelectorExists('input[name="_remember_me"][aria-describedby="remember-hint"]');
+        self::assertSelectorTextContains('#remember-hint', 'Keeps you signed in for 7 days on this browser. Do not use it on a public or shared device.');
     }
 
     public function testAnonymousProfileRedirectsToLogin(): void

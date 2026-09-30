@@ -1548,6 +1548,7 @@ security:
     label_email: 'Email'
     label_password: 'Mot de passe'
     remember_me: 'Rester connecté'
+    remember_hint: 'Vous garde connecté pendant 7 jours sur ce navigateur. Ne l''utilisez pas sur un appareil public ou partagé.'
     forgot: 'Mot de passe oublié ?'
     submit: 'Se connecter'
     no_account: 'Pas encore de compte ?'

@@ -1553,6 +1553,7 @@ security:
     label_email: 'E-Mail'
     label_password: 'Passwort'
     remember_me: 'Angemeldet bleiben'
+    remember_hint: 'Hält dich 7 Tage lang in diesem Browser angemeldet. Nicht auf einem öffentlichen oder geteilten Gerät verwenden.'
     forgot: 'Vergessen?'
     submit: 'Anmelden'
     no_account: 'Noch kein Konto?'

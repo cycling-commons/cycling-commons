@@ -57,11 +57,12 @@
 
         <div class="row-between">
           <label style="display:flex;gap:.4rem;align-items:center;font-size:.90rem">
-            <input type="checkbox" name="_remember_me" style="width:auto" />
+            <input type="checkbox" name="_remember_me" style="width:auto" aria-describedby="remember-hint" />
             {{ 'security.login.remember_me'|trans }}
           </label>
           <a href="{{ path('reset_password_request') }}">{{ 'security.login.forgot'|trans }}</a>
         </div>
+        <p class="remember-hint" id="remember-hint">{{ 'security.login.remember_hint'|trans }}</p>
 
         <button type="submit" class="btn-submit">{{ 'security.login.submit'|trans }}</button>
       </form>

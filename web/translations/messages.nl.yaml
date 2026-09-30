@@ -1553,6 +1553,7 @@ security:
     label_email: 'E-mail'
     label_password: 'Wachtwoord'
     remember_me: 'Ingelogd blijven'
+    remember_hint: 'Houdt je 7 dagen ingelogd in deze browser. Gebruik dit niet op een openbaar of gedeeld apparaat.'
     forgot: 'Vergeten?'
     submit: 'Inloggen'
     no_account: 'Nog geen account?'

@@ -55,3 +55,5 @@ input[type=checkbox].is-invalid{outline:2px solid var(--clay);outline-offset:2px
 /* Bot layers on sign-up and the resend page (security/_guard_fields.html.twig). */
 .hp-field{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
 .pow-status{font-size:.8rem;color:#595c4d;margin:.6rem 0 0}
+/* Under Stay signed in: what the tick does, and where not to use it. */
+.remember-hint{font-size:.82rem;color:#5a5d4d;margin:.3rem 0 .9rem;line-height:1.45}

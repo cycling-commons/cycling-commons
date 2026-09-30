@@ -1560,6 +1560,7 @@ security:
     label_email: 'Correo electrónico'
     label_password: 'Contraseña'
     remember_me: 'Mantener la sesión iniciada'
+    remember_hint: 'Mantiene tu sesión iniciada 7 días en este navegador. No lo uses en un dispositivo público o compartido.'
     forgot: '¿La olvidaste?'
     submit: 'Iniciar sesión'
     no_account: '¿Todavía no tienes cuenta?'
