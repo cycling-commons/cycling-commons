@@ -46,21 +46,36 @@ final class RetentionService
     }
 
     /**
-     * Deletes decided rows past the cutoff. Idempotent.
+     * Deletes decided rows past the cutoff, each with its message thread
+     * (`user_message` on the row's channel and id, as Trash does through
+     * MessageService::deleteThread()). One statement per kind deletes the
+     * rows and their threads together. Idempotent.
      *
-     * @return array{corrections: int, submissions: int}
+     * @return array{corrections: int, submissions: int} rows deleted
      */
     public function sweep(): array
     {
         $cutoff = $this->cutoff()->format('Y-m-d H:i:s');
 
-        $corrections = (int) $this->db->executeStatement(
-            "DELETE FROM route_suggestion WHERE status = 'dismissed' AND resolved_at < :cutoff",
+        $corrections = (int) $this->db->fetchOne(
+            "WITH swept AS (
+                 DELETE FROM route_suggestion WHERE status = 'dismissed' AND resolved_at < :cutoff RETURNING id
+             ), threads AS (
+                 DELETE FROM user_message um USING swept WHERE um.channel = 'correction' AND um.ref_id = swept.id
+             )
+             SELECT COUNT(*) FROM swept",
             ['cutoff' => $cutoff],
         );
-        $submissions = (int) $this->db->executeStatement(
+        $submissions = (int) $this->db->fetchOne(
             // Legal hold outlives retention (docs/specs/photo-uploads.md §6d). Withdrawn rides the rejected clock.
-            "DELETE FROM submission WHERE status IN ('rejected', 'withdrawn') AND decided_at < :cutoff AND escalated_at IS NULL",
+            "WITH swept AS (
+                 DELETE FROM submission
+                  WHERE status IN ('rejected', 'withdrawn') AND decided_at < :cutoff AND escalated_at IS NULL
+                 RETURNING id
+             ), threads AS (
+                 DELETE FROM user_message um USING swept WHERE um.channel = 'submission' AND um.ref_id = swept.id
+             )
+             SELECT COUNT(*) FROM swept",
             ['cutoff' => $cutoff],
         );
 

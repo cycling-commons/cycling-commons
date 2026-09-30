@@ -1930,7 +1930,14 @@ inbox.
 
 `RetentionService` deletes rows past the cutoff for exactly two kinds:
 **rejected item submissions** (`decided_at < cutoff`) and **dismissed route
-corrections** (`resolved_at < cutoff`). Three runners, no scheduler yet:
+corrections** (`resolved_at < cutoff`). Withdrawn submissions ride the rejected
+clock, and a submission under legal hold (`escalated_at` set) is never swept.
+Each swept row takes its message thread with it: the `user_message` rows on
+its channel and id (`submission` / `correction`), the same thread Trash
+deletes through `MessageService::deleteThread()`. One statement per kind
+deletes the rows and their threads together (a `DELETE … RETURNING id` feeding
+a `DELETE … USING`), so a rider's inbox never keeps a conversation about a row
+that no longer exists. Three runners, no scheduler yet:
 
 1. **Lazy point-of-use filtering** — reads exclude expired rows regardless of
    whether a sweep ever ran (e.g. `ProfileController`'s contributions list
