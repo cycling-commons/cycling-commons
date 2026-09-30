@@ -381,7 +381,18 @@ a curator always has something to grant or decline; upheld grants it, and
 rejected declines it and republishes anything withheld while it waited
 (`ContentReportService`, handing to `MediaTakedownService`, so the breaker,
 the event and the message stay the proven ones). The takedowns desk keeps only
-an uploader's request about their own photo, which is not a report.
+an uploader's request about their own photo, which is not a report. One rule
+keeps the photo and the report telling the same story
+(`ContentReportService::refusal()`, checked before anything is saved or sent;
+a refusal shows under the status field and the report stays as it was;
+`PhotoReportDecisionTest` pins it):
+
+* **Closed (`moot`) is not offered while a takedown waits on the photo**, and
+  is refused if posted anyway. That takedown is decided nowhere else, and one
+  takedown at a time is the rule, so a moot close would leave a hidden photo
+  hidden, on no desk, and blocking every later report on it. The curator
+  chooses Upheld (remove) or Rejected (keep, and republish). Closed stays for a
+  photo with nothing pending, typically one that is already gone.
 
 **One stage, not two** (owner 2026-08-30). A curator decides a report outright;
 there is no region-scoped triage that then queues for an admin to confirm. That
@@ -400,7 +411,7 @@ a fresh report reads Open (owner 2026-09-08).
 | `in_progress` | Being looked at | a curator is on it (2026-09-08) | - | - |
 | `upheld` | Upheld, and acted on | we agreed, and acted | yes | yes, once, if there is one |
 | `rejected` | Looked at, nothing wrong | we looked, nothing wrong | yes | no |
-| `moot` | Closed | nothing left to act on: already gone, or never there | yes | no |
+| `moot` | Closed | nothing left to act on: already gone, or never there; not while a takedown waits on a photo | yes | no |
 
 `open` and `in_progress` are the waiting states (`ReportStatus::open()`,
 `isDecided()` false): a curator moves between them without a note

@@ -103,18 +103,24 @@
       {% endfor %}
     {% endif %}
 
+    {% set status_errors = app.flashes('report_status') %}
     <form class="decide" method="post" action="{{ path('moderate_reports_decide', {id: report.id}) }}">
       <input type="hidden" name="_token" value="{{ csrf_token('report-desk-decide') }}">
 
       <p class="warn">{{ 'report.desk.act_elsewhere'|trans }}</p>
 
       <label for="d-status">{{ 'support.inbox.set_status'|trans }}</label>
-      <select id="d-status" name="status">
-        {# Every state, the current one selected: a fresh report reads Open (owner 2026-09-08). #}
+      <select id="d-status" name="status"{{ status_errors ? ' aria-describedby="d-status-error"' : '' }}>
+        {# Every state, the current one selected: a fresh report reads Open
+           (owner 2026-09-08). Closed is left out while a takedown waits on
+           the photo (content-reports.md §9). #}
         {% for st in statuses %}
           <option value="{{ st.value }}"{{ st == report.status ? ' selected' : '' }}>{{ st.label|trans }}</option>
         {% endfor %}
       </select>
+      {% for msg in status_errors %}
+        <p class="ferr" id="d-status-error" role="alert">{{ msg|trans }}</p>
+      {% endfor %}
 
       <label for="d-note">{{ 'report.desk.field_note'|trans }} <span class="req" aria-hidden="true">*</span></label>
       <textarea id="d-note" name="note" maxlength="2000" rows="10"

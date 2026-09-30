@@ -141,22 +141,70 @@ final class ContentReportService
     }
 
     /**
+     * The photo a report is about, when it is about one that still has a row.
+     */
+    public function photoOf(ContentReport $report): ?MediaUpload
+    {
+        if (!$report->getTargetType()->canAutoWithhold() || !Uuid::isValid($report->getTargetId())) {
+            return null;
+        }
+
+        $upload = $this->em->find(MediaUpload::class, Uuid::fromString($report->getTargetId()));
+
+        return $upload instanceof MediaUpload ? $upload : null;
+    }
+
+    /**
+     * Can this report be closed as `Moot`?
+     *
+     * Not while a takedown waits on its photo. Every photo report raises one,
+     * the reports desk is the only place it is decided, and one takedown at a
+     * time is the rule: a moot close would leave a hidden photo hidden, on no
+     * desk, and blocking every later report. Upheld or Rejected answers it.
+     */
+    public function canBeMoot(ContentReport $report): bool
+    {
+        return true !== $this->photoOf($report)?->isTakedownPending();
+    }
+
+    /**
+     * Why this status cannot be recorded on this report, as a translation key, or null when it can.
+     *
+     * Only a photo report is ever refused, because only there does the
+     * decision carry through to the thing itself (content-reports.md §9).
+     */
+    public function refusal(ContentReport $report, ReportStatus $status): ?string
+    {
+        if (!$report->getTargetType()->canAutoWithhold()) {
+            return null;
+        }
+
+        $upload = $this->photoOf($report);
+        if (null === $upload) {
+            // Already gone: nothing waits on it, so Moot is what is left.
+            return null;
+        }
+
+        return match (true) {
+            ReportStatus::Moot === $status && $upload->isTakedownPending() => 'report.desk.refused_moot_pending',
+            default => null,
+        };
+    }
+
+    /**
      * Carry a decision about a photo through to the photo itself.
      *
      * The desk records what a curator decided; for a picture that decision has
      * to move a file as well. Upheld grants the pending takedown, which is what
      * takes it down for good; rejected declines it, which puts back anything
-     * that was withheld while it was waiting. `Moot` does neither: there is
-     * nothing left to act on, which is the whole meaning of that outcome.
+     * that was withheld while it was waiting. `Moot` does neither: it is only
+     * offered when nothing waits on the photo, which is the whole meaning of
+     * that outcome.
      */
     private function carryDecisionToPhoto(ContentReport $report, ReportStatus $status, string $note, User $curator): void
     {
-        if (!$report->getTargetType()->canAutoWithhold() || !Uuid::isValid($report->getTargetId())) {
-            return;
-        }
-
-        $upload = $this->em->find(MediaUpload::class, Uuid::fromString($report->getTargetId()));
-        if (!$upload instanceof MediaUpload) {
+        $upload = $this->photoOf($report);
+        if (null === $upload) {
             return;
         }
 
@@ -167,13 +215,6 @@ final class ContentReportService
         };
     }
 
-    /**
-     * Record what a curator decided, then tell everybody who is owed an answer.
-     *
-     * Order matters: the decision is persisted first, so a mail failure cannot
-     * lose it, and the author flag is set only after the message is queued, so
-     * a retry cannot tell them twice.
-     */
     /** Move a report between its waiting states. Nothing is sent: the reporter hears from us when it is decided. */
     public function takeUp(ContentReport $report, ReportStatus $status = ReportStatus::InProgress): void
     {
@@ -181,8 +222,22 @@ final class ContentReportService
         $this->em->flush();
     }
 
+    /**
+     * Record what a curator decided, then tell everybody who is owed an answer.
+     *
+     * Order matters: the decision is persisted first, so a mail failure cannot
+     * lose it, and the author flag is set only after the message is queued, so
+     * a retry cannot tell them twice.
+     *
+     * @throws ReportDecisionRefused when {@see refusal()} names a reason, before anything is saved or sent
+     */
     public function decide(ContentReport $report, ReportStatus $status, string $note, User $curator): void
     {
+        $refusal = $this->refusal($report, $status);
+        if (null !== $refusal) {
+            throw new ReportDecisionRefused($refusal);
+        }
+
         $now = $this->clock->now();
         $report->decide($status, trim($note), (int) $curator->getId(), $now);
         $this->em->flush();

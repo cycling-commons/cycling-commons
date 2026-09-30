@@ -12,6 +12,7 @@ use App\Pagination\Pager;
 use App\Routing\LocalePrefix;
 use App\Support\ContentReportService;
 use App\Support\Entity\ContentReport;
+use App\Support\ReportDecisionRefused;
 use App\Support\ReportResolver;
 use App\Support\ReportStatus;
 use App\Support\ReportTarget;
@@ -53,6 +54,8 @@ use Symfony\Component\Uid\Uuid;
 final class ModerateReportsController extends AbstractController
 {
     private const string CSRF_TOKEN_ID = 'report-desk-decide';
+    /** Refusals shown next to the status field, not in the page banner. */
+    private const string STATUS_FLASH = 'report_status';
     private const int PER_PAGE = 25;
     /** The status chip that shows every status. */
     private const string ALL = 'all';
@@ -115,6 +118,12 @@ final class ModerateReportsController extends AbstractController
             $siblings[] = $other;
         }
 
+        // Moot is left out while a takedown waits on the photo (canBeMoot()).
+        $statuses = array_values(array_filter(
+            ReportStatus::all(),
+            fn (ReportStatus $st): bool => ReportStatus::Moot !== $st || $st === $report->getStatus() || $this->reports->canBeMoot($report),
+        ));
+
         return $this->render('moderate/report_detail.html.twig', [
             'page_title' => 'report.desk.title',
             'page_description' => 'report.desk.title',
@@ -123,7 +132,7 @@ final class ModerateReportsController extends AbstractController
             'report' => $report,
             'resolved' => $resolved,
             'siblings' => $siblings,
-            'statuses' => ReportStatus::all(),
+            'statuses' => $statuses,
             // Named the way every desk names people (DeskRider).
             'author_rider' => null !== $resolved['author'] ? DeskRider::ofUser($resolved['author']) : null,
             'decided_by' => null !== ($curator = $this->curator($report)) ? DeskRider::colleagueUser($curator) : null,
@@ -162,6 +171,15 @@ final class ModerateReportsController extends AbstractController
             return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
         }
 
+        // Refused before anything else is looked at: Moot while a takedown
+        // waits on the photo.
+        $refusal = $this->reports->refusal($report, $status);
+        if (null !== $refusal) {
+            $this->addFlash(self::STATUS_FLASH, $refusal);
+
+            return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
+        }
+
         // Open and being-looked-at are the two waiting states: no note, no
         // mail, the clock runs on. Open again is how a curator hands it back.
         if (!$status->isDecided()) {
@@ -184,7 +202,13 @@ final class ModerateReportsController extends AbstractController
         }
 
         // Persists and mails the reporter, if they left an address.
-        $this->reports->decide($report, $status, $note, $curator);
+        try {
+            $this->reports->decide($report, $status, $note, $curator);
+        } catch (ReportDecisionRefused $e) {
+            $this->addFlash(self::STATUS_FLASH, $e->getMessage());
+
+            return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
+        }
 
         $author = $this->resolver->resolve($report)['author'];
         if ($request->request->getBoolean('tell_author') && $author instanceof User) {

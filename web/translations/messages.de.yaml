@@ -5180,6 +5180,7 @@ report:
     flash_bad_status: 'Wählen Sie ein Ergebnis.'
     flash_needs_note: 'Schreiben Sie, was Sie entschieden haben und warum. Alle, die dazu eine Mail bekommen, lesen es.'
     flash_taken_up: 'Als in Bearbeitung markiert. Noch wurde niemand benachrichtigt.'
+    refused_moot_pending: 'Auf diesem Foto wartet noch ein Entfernungsantrag, Geschlossen würde ihn unentschieden lassen. Wählen Sie „Bestätigt, und es wurde gehandelt“, um das Foto zu entfernen, oder „Geprüft, nichts zu beanstanden“, um es zu behalten.'
     flash_saved: 'Entscheidung festgehalten, und alle, denen eine Mail zustand, haben sie.'
   challenge_working: 'Sicherheitsprüfung läuft in deinem Browser…'
   challenge_ready: 'Sicherheitsprüfung abgeschlossen.'

@@ -5212,6 +5212,7 @@ report:
     flash_bad_status: 'Elige un resultado.'
     flash_needs_note: 'Escribe qué decidiste y por qué. Todo el que reciba un correo sobre esto lo lee.'
     flash_taken_up: 'Marcada como en revisión. Todavía no se ha avisado a nadie.'
+    refused_moot_pending: 'Todavía hay una solicitud de retirada pendiente sobre esta foto, así que Cerrada la dejaría sin decidir. Elige «Estimado, y se ha actuado» para quitar la foto, o «Revisado, nada que objetar» para mantenerla.'
     flash_saved: 'Decisión registrada, y todo el que merecía un correo lo tiene.'
   challenge_working: 'Ejecutando una comprobación de seguridad en tu navegador…'
   challenge_ready: 'Comprobación de seguridad terminada.'
