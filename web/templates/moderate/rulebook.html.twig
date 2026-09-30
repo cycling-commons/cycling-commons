@@ -8,7 +8,7 @@
   operational document for a small team, full of tables and conditional
   phrasing where a mistranslated clause changes what a curator does to
   somebody's photo. The page's chrome (title, kicker, the curators-only badge,
-  the PDF link) is translated because it is chrome. If the rulebook is ever
+  the tab labels) is translated because it is chrome. If the rulebook is ever
   translated, a person who curates translates it, not key by key.
 
   Every element that states a rule carries a data-rule attribute holding an
@@ -17,15 +17,28 @@
   test that keeps the rule true. Ids are unique on the page; a rule keeps its
   id when its wording changes.
 
-  The page prints as the PDF: the rb-sheet table repeats the paper margins on
-  every printed page, and every link is screen-only (rb-screen, with an
-  rb-print twin), because the PDF must carry no links at all.
+  The nineteen sections sit in six tab panels, grouped the way a curator
+  works: Start (the dashboard, the verbs, do and don't, where the deep rules
+  live), Places and data (the place desks), Routes, Photos and reports (the
+  two desks with a legal clock, and the privacy rules they lean on), Bugs and
+  translations, and Your account. Every section keeps its id, so
+  /moderate/rulebook#takedowns and every other #section link still land:
+  js/rulebook-tabs.js opens the panel holding the section the hash names and
+  scrolls to it, on load and on every hash change, and ?tab=<key> keeps the
+  chosen tab across a reload. Without that script the tab list stays hidden
+  and every panel shows, one after the other.
+
+  Printing shows every panel in order whichever tab is open. The rb-sheet
+  table repeats the paper margins on every printed page, and every link is
+  screen-only (rb-screen, with an rb-print twin), so a printed or
+  saved-as-PDF copy carries no links at all.
 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
 <link rel="stylesheet" href="{{ asset('styles/page/moderate/rulebook.css') }}">
 {% endblock %}
+{% block body_scripts %}<script src="{{ asset('js/rulebook-tabs.js') }}" defer></script>{% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_rulebook', mod_submission_count: mod_submission_count is defined ? mod_submission_count : null, mod_route_count: mod_route_count is defined ? mod_route_count : null, mod_takedown_count: mod_takedown_count is defined ? mod_takedown_count : null} %}{% endblock %}
 
 {% block body %}
@@ -44,23 +57,27 @@
 <div class="wrap" id="main">
   <div class="rb">
     <span class="private">&#9679; {{ 'moderate.rulebook.private'|trans }}</span>
-    {# THE PDF, when there is one. The page below is the source a curator reads
-       day to day; the download is the same rules in a file that lives on the
-       server rather than in this repository, because this template is readable
-       by anyone once the repository is public.
-
-       Streamed by ModerateController::rulebookPdf() behind the curator gate,
-       never served from public/. Rendered only when the file at
-       CC_RULEBOOK_PDF_PATH exists, so an unconfigured environment shows
-       nothing rather than a dead link. Owner-managed: nothing here writes,
-       uploads or validates it. #}
-    {% if rulebook_pdf %}
-      <p class="rb-pdf"><a href="{{ path('moderate_rulebook_pdf') }}">{{ 'moderate.rulebook.download'|trans }}</a></p>
-    {% endif %}
     <p class="lead" data-rule="RB-LEAD-01">The short, always-current rules for everyone holding a curator role, administrators included. If a situation is not covered here, ask in the {# The anchor is screen-only: Chrome turns every printed <a href>
       into a PDF link annotation, and a relative one makes Acrobat "connect to"
-      wherever the file is opened from. The PDF must carry no links at all. #}<a class="rb-screen" href="{{ path('moderate_room') }}">curator room</a><span class="rb-print">curator room</span> before acting. The room is part of the curator desks, so what you discuss there stays inside them. This page is the do's and don'ts, not a replacement for judgement.</p>
+      wherever the file is opened from. A printed copy carries no links at all. #}<a class="rb-screen" href="{{ path('moderate_room') }}">curator room</a><span class="rb-print">curator room</span> before acting. The room is part of the curator desks, so what you discuss there stays inside them. This page is the do's and don'ts, not a replacement for judgement.</p>
 
+    {# The tab list is hidden until js/rulebook-tabs.js wires it up, so a page
+       without the script reads as one long page. #}
+    <div class="tabs rb-tabs" role="tablist" aria-label="{{ 'moderate.rulebook.title'|trans }}" data-rb-tabs hidden>
+      {% for key, label in {
+        start: 'moderate.rulebook.tab_start'|trans,
+        places: 'moderate.rulebook.tab_places'|trans,
+        routes: 'moderate.rulebook.tab_routes'|trans,
+        photos: 'moderate.rulebook.tab_photos'|trans,
+        desks: 'moderate.rulebook.tab_desks'|trans,
+        account: 'moderate.rulebook.tab_account'|trans,
+      } %}
+        <button type="button" role="tab" id="rbt-{{ key }}" aria-controls="rbp-{{ key }}" data-tab="{{ key }}"
+                aria-selected="{{ loop.first ? 'true' : 'false' }}" tabindex="{{ loop.first ? '0' : '-1' }}">{{ label }}</button>
+      {% endfor %}
+    </div>
+
+    <div class="rb-panel" id="rbp-start" role="tabpanel" aria-labelledby="rbt-start">
     <section id="dashboard">
       <h2>Start at the dashboard</h2>
       <ul>
@@ -130,6 +147,49 @@
       <p data-rule="RB-VERB-18">Cancelling a message or an escalation leaves no trace at all; no record is written for an action you did not complete.</p>
     </section>
 
+    <section id="do">
+      <h2>Do</h2>
+      <ul>
+        <li data-rule="RB-DO-01"><strong>Do use Reject for disagreement, Trash only for bad faith.</strong> A wrong location or an unverifiable claim is a rejection with a friendly note, never a trash.</li>
+        <li data-rule="RB-DO-02"><strong>Do ask before deciding</strong> when a submission is unclear: use Needs info. Most "wrong" submissions are just missing context. <strong>Write the actual question in the note</strong>; the desk requires it, because a needs-info with no question tells the rider nothing while it takes their submission off the curators' map until they answer.</li>
+        <li data-rule="RB-DO-04">They see the question on their contributions list and answer it from their messages page; their reply puts the item straight back in the queue.</li>
+        <li data-rule="RB-DO-09">The rider's answer goes only to the curator who asked. If that curator's account is gone, the rider can no longer answer and the item stays waiting, so pick it up yourself.</li>
+        <li data-rule="RB-DO-06"><strong>Do write a decision note</strong> on rejections. The rider reads it, and it is the difference between a contributor who improves and one who leaves.</li>
+        <li data-rule="RB-DO-07"><strong>Do ask the room</strong> when you are unsure, and answer when somebody else asks. A question with a submission number on it is enough; the room links to the card, so nobody has to paste content anywhere.</li>
+        <li data-rule="RB-DO-08"><strong>Do report illegal content patterns</strong> to the site owner after escalating. Every escalation already alerts the administrators; repeated sources may need an account-level response, which is the admin desk's job, not yours.</li>
+      </ul>
+    </section>
+
+    <section id="dont">
+      <h2>Don't</h2>
+      <ul>
+        <li data-rule="RB-DONT-01"><strong>Don't share, download, or link pending content</strong> anywhere outside the curator desks. Pending photos sit at unlisted addresses that open for anyone who has the link, so sharing a link publishes them. The curator room is inside the desks; a chat app is not.</li>
+        <li data-rule="RB-DONT-02"><strong>Don't click a link the desk has marked unsafe.</strong> Links in a submission are checked against a known-unsafe list; a marked one stays marked for a reason. Links the check could not reach say so; open those with care, and never on a work account you use for anything else.</li>
+        <li data-rule="RB-DONT-03"><strong>Don't trash what you merely disagree with.</strong> Trash destroys the evidence of its own correctness; use it only where keeping the content would itself be the harm (spam, abuse), and never for illegal material, which goes to Escalate.</li>
+        <li data-rule="RB-DONT-08"><strong>Don't trash to avoid writing a note.</strong> Trash tells the rider nothing; Reject sends them your note.</li>
+        {# DECISION-01 open: should a curator be allowed to decide their own
+           submission? This rule states what the code does today: a curator's
+           own edits (and new places with the OSM question answered) inside
+           their area are approved at intake as that curator, what still queues
+           can be decided by anyone including its author (no guard in
+           ModerationService::decide), and only translations refuse
+           self-review. Owner to decide; see the rulebook ledger. #}
+        <li data-rule="RB-DONT-04"><strong>Your own work.</strong> Your own edits inside your area, and a new place of yours whose OSM question is answered, apply at once without a desk decision. Anything of yours that still queues (a new place with the OSM question open, or work outside your area) is for another curator: <strong>don't decide your own submissions</strong>, or those of people close to you. The Translations desk refuses your own proposals outright.</li>
+        <li data-rule="RB-DONT-05"><strong>Don't promise outcomes</strong> in rider messages ("this will be approved once you..."). You are describing the process, not pre-deciding it.</li>
+        <li data-rule="RB-DONT-06"><strong>Don't work around the tools</strong> (no manual database edits, no editing content on a rider's behalf beyond what the desk offers; the Routes desk's route editing is such an offer). If the tool cannot express the right decision, that is a bug to report, not a rule to bend.</li>
+        <li data-rule="RB-DONT-07"><strong>Don't reach outside your area.</strong> Items outside your area are left out of your queues, History and map, and acting on one directly by its number or link is refused, whichever verb you use. If an item you need is out of reach, ask the room; do not ask for the URL.</li>
+        <li data-rule="RB-DONT-09"><strong>Don't use the room to name items outside someone's area.</strong> A room post about a submission shows its number and title to every curator, whatever their area.</li>
+      </ul>
+    </section>
+
+    <section id="deep-rules">
+      <h2>Where the deep rules live</h2>
+      <p data-rule="RB-SPEC-02">This page is the operating summary. The binding contracts are in the project repository: the moderation and contribution specification (retention, Trash, messages, scoping), the route domain specification (Routes desk, caps, corrections), the catalog data model (the Data desk and the OSM question), the map and search specification (what a region opens in, town texts), the photo-uploads specification (media lifecycle, takedowns, legal hold), the content reports specification (Reports desk), the contact and support specification (Bugs desk), the translations specification (Translations desk), the data provider hierarchy (Providers desk and the marker ladder) and the account and auth specification (two-factor login, roles, pseudonyms).</p>
+      <p data-rule="RB-SPEC-03">When this page and a spec disagree, the spec wins and this page has a bug.</p>
+    </section>
+    </div>{# /#rbp-start #}
+
+    <div class="rb-panel" id="rbp-places" role="tabpanel" aria-labelledby="rbt-places">
     <section id="before-approve">
       <h2>Before you approve a place</h2>
       <ul>
@@ -146,36 +206,6 @@
         <li data-rule="RB-APPROVE-08"><strong>Open each photo full size in the drawer before you decide.</strong> The thumbnail is too small to tell whether somebody in it is identifiable, and that is the judgement a takedown request will later ask you about.</li>
         <li data-rule="RB-APPROVE-14"><strong>Read the warnings on the card</strong>: a link on a known-unsafe list or one that could not be checked, a scenic view far from any bike way that the rider says can be reached by bike, and a pin move that hides rider photos.</li>
         <li data-rule="RB-APPROVE-15"><strong>"Taken here" puts a hidden scenic-view photo back.</strong> It confirms that a rider photo was taken at the pin. It works only in your area and never on a photo under legal hold.</li>
-      </ul>
-    </section>
-
-    <section id="routes">
-      <h2>The Routes desk</h2>
-      <p>A proposed route gets three of the verbs, decided on the route's own page.</p>
-      <ul>
-        <li data-rule="RB-ROUTE-01"><strong>Approve</strong> publishes it as a proposed route.</li>
-        <li data-rule="RB-ROUTE-02"><strong>Reject</strong> turns the proposal down for good. The rider is told, with your note if you wrote one, and cannot edit that proposal again.</li>
-        <li data-rule="RB-ROUTE-03"><strong>Trash</strong> deletes it for good, for spam only, and sends no message. It works on a proposal only while it is pending or rejected, never on a live route; a correction can be trashed in any status.</li>
-        <li data-rule="RB-ROUTE-16"><strong>Photos sent with a proposal</strong> are kept or turned down with it; the ones you untick on the route's page are rejected when you approve.</li>
-        <li data-rule="RB-ROUTE-04"><strong>You may edit the route's details.</strong> The name and the route fields (difficulty, season, main surface, note, bike types, gradient limit, best direction) are yours to correct, before you publish and later on a live route.</li>
-        <li data-rule="RB-ROUTE-05"><strong>The track is not yours to change.</strong> Only the proposer can replace it, with a new GPX, and only until you decide.</li>
-        <li data-rule="RB-ROUTE-06">This is the one place where editing on a rider's behalf is the desk's own offer.</li>
-        <li data-rule="RB-ROUTE-17"><strong>A proposal can change under you.</strong> Until you decide, the proposer can edit it and its photos, including a new GPX that replaces the track, length and region; the card then says <em>Revised by the proposer</em>. A field you changed stays yours: the proposer's later edit to it is not saved. A field the proposer changed after you opened the form is not overwritten by your save: the desk names it and shows the newer value.</li>
-        <li data-rule="RB-ROUTE-07">The rider is told the route was approved and now shows as a proposed route. The message does not list your edits; the route's history keeps them.</li>
-        <li data-rule="RB-ROUTE-08"><strong>Every region has a cap</strong> on live routes (an administrator setting). Approving past it is refused and the desk asks you to <strong>Retire</strong> something first.</li>
-        <li data-rule="RB-ROUTE-18">The desk lists the live routes in each of your regions, so you can see what fills the cap. A curator with no area picks a region first.</li>
-        <li data-rule="RB-ROUTE-10"><strong>Retiring</strong> takes a live route off the map without deleting it. It needs a written note, and the author is told with it.</li>
-        <li data-rule="RB-ROUTE-11">Retire the weakest, not the oldest.</li>
-        <li data-rule="RB-ROUTE-19"><strong>You act only on routes in your own areas.</strong> A curator with no assigned area covers every region. Routes with no region are open to every curator and share one cap.</li>
-        <li data-rule="RB-ROUTE-21"><strong>A proposed route verifies itself.</strong> Once 3 riders other than the proposer (an administrator setting) say they rode it, it becomes verified. Only verified routes take votes, and only verified routes with votes count towards a region's Best of.</li>
-        <li data-rule="RB-ROUTE-12"><strong>Corrections</strong> are riders' requests on a live route: a problem with a stretch (broken track, trim for privacy, duplicate, not rideable, other), a change to one route field, or new photos. A stretch is marked only when the rider draws one.</li>
-        <li data-rule="RB-ROUTE-13"><strong>Done</strong> on a field change applies the rider's values for you, credited to the rider. Done on photos keeps the ones you left ticked. Done on a stretch problem records that it was fixed.</li>
-        <li data-rule="RB-ROUTE-14"><strong>Dismiss</strong> sends the rider a plain "dismissed" message with no reason. To say why, use Message on the same card.</li>
-        <li data-rule="RB-ROUTE-15">The rider who filed a correction is told either way, unless it was your own.</li>
-        <li data-rule="RB-ROUTE-20">Photos you add to a live route in your own area apply at once.</li>
-        <li data-rule="RB-ROUTE-22">Dismissed corrections are deleted after the retention window. Rejected routes are kept.</li>
-        <li data-rule="RB-ROUTE-23"><strong>The climbs listed on a route are worked out, not edited.</strong> A climb counts only when one continuous ascent on the route covers at least 30% of the climb and ends within 2 km of its summit.</li>
-        <li data-rule="RB-ROUTE-24">A climb's pin is its foot, and it takes the country of the region its foot is in, so the foot decides whose area it falls in.</li>
       </ul>
     </section>
 
@@ -228,6 +258,58 @@
       </ul>
     </section>
 
+    <section id="providers">
+      <h2>The Providers desk</h2>
+      <ul>
+        <li data-rule="RB-PROV-01"><strong>One row per data provider</strong>, with its rank, licence, attribution notice and whether it is <em>Serving</em> or <em>Paused</em>. Every field you change is recorded, with who and when.</li>
+        <li data-rule="RB-PROV-02"><strong>Change a licence or a rank only with the provider's licence in hand.</strong> The licence decides whether the site owes an attribution notice, and a provider whose licence needs one cannot be set to Serving without it.</li>
+        <li data-rule="RB-PROV-03"><strong>Rank orders providers against each other</strong> and never outranks a rider's own contribution. The OpenStreetMap and Wikidata ranks cannot be changed. Today every provider sits on one step of the duplicate check, so a rank change does not yet change which record riders see.</li>
+        <li data-rule="RB-PROV-04"><strong>Serving puts nothing on the map.</strong> Places arrive only when a harvest runs, and there is no button for it: the desk prints the one command an operator runs, a dry run first and then the write.</li>
+        <li data-rule="RB-PROV-05">Paused stops refreshes. Places already harvested stay on the map.</li>
+      </ul>
+    </section>
+
+    <section id="markers">
+      <h2>The Markers page</h2>
+      <ul>
+        <li data-rule="RB-MARK-01">The Markers page (under More) draws every rung of the evidence ladder with the map's own pin rules: the border, the badge and the grade. It changes nothing. Check it before you tell a rider what a pin's border or badge means.</li>
+      </ul>
+    </section>
+    </div>{# /#rbp-places #}
+
+    <div class="rb-panel" id="rbp-routes" role="tabpanel" aria-labelledby="rbt-routes">
+    <section id="routes">
+      <h2>The Routes desk</h2>
+      <p>A proposed route gets three of the verbs, decided on the route's own page.</p>
+      <ul>
+        <li data-rule="RB-ROUTE-01"><strong>Approve</strong> publishes it as a proposed route.</li>
+        <li data-rule="RB-ROUTE-02"><strong>Reject</strong> turns the proposal down for good. The rider is told, with your note if you wrote one, and cannot edit that proposal again.</li>
+        <li data-rule="RB-ROUTE-03"><strong>Trash</strong> deletes it for good, for spam only, and sends no message. It works on a proposal only while it is pending or rejected, never on a live route; a correction can be trashed in any status.</li>
+        <li data-rule="RB-ROUTE-16"><strong>Photos sent with a proposal</strong> are kept or turned down with it; the ones you untick on the route's page are rejected when you approve.</li>
+        <li data-rule="RB-ROUTE-04"><strong>You may edit the route's details.</strong> The name and the route fields (difficulty, season, main surface, note, bike types, gradient limit, best direction) are yours to correct, before you publish and later on a live route.</li>
+        <li data-rule="RB-ROUTE-05"><strong>The track is not yours to change.</strong> Only the proposer can replace it, with a new GPX, and only until you decide.</li>
+        <li data-rule="RB-ROUTE-06">This is the one place where editing on a rider's behalf is the desk's own offer.</li>
+        <li data-rule="RB-ROUTE-17"><strong>A proposal can change under you.</strong> Until you decide, the proposer can edit it and its photos, including a new GPX that replaces the track, length and region; the card then says <em>Revised by the proposer</em>. A field you changed stays yours: the proposer's later edit to it is not saved. A field the proposer changed after you opened the form is not overwritten by your save: the desk names it and shows the newer value.</li>
+        <li data-rule="RB-ROUTE-07">The rider is told the route was approved and now shows as a proposed route. The message does not list your edits; the route's history keeps them.</li>
+        <li data-rule="RB-ROUTE-08"><strong>Every region has a cap</strong> on live routes (an administrator setting). Approving past it is refused and the desk asks you to <strong>Retire</strong> something first.</li>
+        <li data-rule="RB-ROUTE-18">The desk lists the live routes in each of your regions, so you can see what fills the cap. A curator with no area picks a region first.</li>
+        <li data-rule="RB-ROUTE-10"><strong>Retiring</strong> takes a live route off the map without deleting it. It needs a written note, and the author is told with it.</li>
+        <li data-rule="RB-ROUTE-11">Retire the weakest, not the oldest.</li>
+        <li data-rule="RB-ROUTE-19"><strong>You act only on routes in your own areas.</strong> A curator with no assigned area covers every region. Routes with no region are open to every curator and share one cap.</li>
+        <li data-rule="RB-ROUTE-21"><strong>A proposed route verifies itself.</strong> Once 3 riders other than the proposer (an administrator setting) say they rode it, it becomes verified. Only verified routes take votes, and only verified routes with votes count towards a region's Best of.</li>
+        <li data-rule="RB-ROUTE-12"><strong>Corrections</strong> are riders' requests on a live route: a problem with a stretch (broken track, trim for privacy, duplicate, not rideable, other), a change to one route field, or new photos. A stretch is marked only when the rider draws one.</li>
+        <li data-rule="RB-ROUTE-13"><strong>Done</strong> on a field change applies the rider's values for you, credited to the rider. Done on photos keeps the ones you left ticked. Done on a stretch problem records that it was fixed.</li>
+        <li data-rule="RB-ROUTE-14"><strong>Dismiss</strong> sends the rider a plain "dismissed" message with no reason. To say why, use Message on the same card.</li>
+        <li data-rule="RB-ROUTE-15">The rider who filed a correction is told either way, unless it was your own.</li>
+        <li data-rule="RB-ROUTE-20">Photos you add to a live route in your own area apply at once.</li>
+        <li data-rule="RB-ROUTE-22">Dismissed corrections are deleted after the retention window. Rejected routes are kept.</li>
+        <li data-rule="RB-ROUTE-23"><strong>The climbs listed on a route are worked out, not edited.</strong> A climb counts only when one continuous ascent on the route covers at least 30% of the climb and ends within 2 km of its summit.</li>
+        <li data-rule="RB-ROUTE-24">A climb's pin is its foot, and it takes the country of the region its foot is in, so the foot decides whose area it falls in.</li>
+      </ul>
+    </section>
+    </div>{# /#rbp-routes #}
+
+    <div class="rb-panel" id="rbp-photos" role="tabpanel" aria-labelledby="rbt-photos">
     {# Linked from the takedowns desk as #takedowns. #}
     <section id="takedowns">
       <h2>Photo takedown requests</h2>
@@ -320,6 +402,25 @@
       </ul>
     </section>
 
+    <section id="privacy">
+      <h2>Privacy specifics</h2>
+      <ul>
+        <li data-rule="RB-PRIV-01">A photo's <strong>GPS position</strong> is read once and deleted as soon as the photo is tied to its submission. What stays, for good, is its distance to the pin: you see it on the card and on a place's hidden photos, it decides whether a scenic-view photo shows, and the public map never shows it.</li>
+        <li data-rule="RB-PRIV-02">Rider identity stays out of public surfaces unless the rider opted into a public profile. A photo's credit is the rider's display name only while their profile is public, and it follows a change of name or of the switch.</li>
+        <li data-rule="RB-PRIV-03">The desks name riders the way the public pages do: by display name only when their profile is public, otherwise by their pseudonym. The desks still show you what the public never sees (pending content, photo distances, report reasons), so treat everything on them as confidential.</li>
+        <li data-rule="RB-PRIV-07">A pseudonym is <code>rider#</code> and eight random characters, stored with the account and never changed. It says nothing about who the rider is. An account that no longer exists shows as "a removed rider".</li>
+        <li data-rule="RB-PRIV-08">Desk search finds a rider with a private profile only by their pseudonym, never by their real display name.</li>
+        <li data-rule="RB-PRIV-09">Private riders can share a display name, so a name proves nothing about who someone is.</li>
+        <li data-rule="RB-PRIV-10">No curator desk shows a rider's or a reporter's email address. A reporter's network address is kept only as a one-way hash.</li>
+        <li data-rule="RB-PRIV-04">Consent records (the CC BY-SA 4.0 donation a rider granted) are permanent and none of your concern to manage; the system enforces them. They are disclosed on the privacy notice, so a rider asking "what do you keep after I leave?" can be pointed at that page rather than answered from memory.</li>
+        <li data-rule="RB-PRIV-11">When a rider deletes their account, their photos still waiting for a decision go. Their approved photos stay, credited by name only if their profile was public and they chose to keep the credit, otherwise anonymously.</li>
+        <li data-rule="RB-PRIV-05"><strong>A report's reason is confidential.</strong> It often says something personal about somebody; that is the whole point of it. It stays on the desk.</li>
+        <li data-rule="RB-PRIV-06">A reporter's reply address is kept only to answer them and is deleted 90 days after the decision. The privacy notice says the same.</li>
+      </ul>
+    </section>
+    </div>{# /#rbp-photos #}
+
+    <div class="rb-panel" id="rbp-desks" role="tabpanel" aria-labelledby="rbt-desks">
     <section id="bugs">
       <h2>The Bugs desk</h2>
       <ul>
@@ -343,77 +444,9 @@
         <li data-rule="RB-TRANS-06">Approving an English edit changes the English text and marks the four translations of it stale. They stay live until somebody translates them again.</li>
       </ul>
     </section>
+    </div>{# /#rbp-desks #}
 
-    <section id="providers">
-      <h2>The Providers desk</h2>
-      <ul>
-        <li data-rule="RB-PROV-01"><strong>One row per data provider</strong>, with its rank, licence, attribution notice and whether it is <em>Serving</em> or <em>Paused</em>. Every field you change is recorded, with who and when.</li>
-        <li data-rule="RB-PROV-02"><strong>Change a licence or a rank only with the provider's licence in hand.</strong> The licence decides whether the site owes an attribution notice, and a provider whose licence needs one cannot be set to Serving without it.</li>
-        <li data-rule="RB-PROV-03"><strong>Rank orders providers against each other</strong> and never outranks a rider's own contribution. The OpenStreetMap and Wikidata ranks cannot be changed. Today every provider sits on one step of the duplicate check, so a rank change does not yet change which record riders see.</li>
-        <li data-rule="RB-PROV-04"><strong>Serving puts nothing on the map.</strong> Places arrive only when a harvest runs, and there is no button for it: the desk prints the one command an operator runs, a dry run first and then the write.</li>
-        <li data-rule="RB-PROV-05">Paused stops refreshes. Places already harvested stay on the map.</li>
-      </ul>
-    </section>
-
-    <section id="markers">
-      <h2>The Markers page</h2>
-      <ul>
-        <li data-rule="RB-MARK-01">The Markers page (under More) draws every rung of the evidence ladder with the map's own pin rules: the border, the badge and the grade. It changes nothing. Check it before you tell a rider what a pin's border or badge means.</li>
-      </ul>
-    </section>
-
-    <section id="do">
-      <h2>Do</h2>
-      <ul>
-        <li data-rule="RB-DO-01"><strong>Do use Reject for disagreement, Trash only for bad faith.</strong> A wrong location or an unverifiable claim is a rejection with a friendly note, never a trash.</li>
-        <li data-rule="RB-DO-02"><strong>Do ask before deciding</strong> when a submission is unclear: use Needs info. Most "wrong" submissions are just missing context. <strong>Write the actual question in the note</strong>; the desk requires it, because a needs-info with no question tells the rider nothing while it takes their submission off the curators' map until they answer.</li>
-        <li data-rule="RB-DO-04">They see the question on their contributions list and answer it from their messages page; their reply puts the item straight back in the queue.</li>
-        <li data-rule="RB-DO-09">The rider's answer goes only to the curator who asked. If that curator's account is gone, the rider can no longer answer and the item stays waiting, so pick it up yourself.</li>
-        <li data-rule="RB-DO-06"><strong>Do write a decision note</strong> on rejections. The rider reads it, and it is the difference between a contributor who improves and one who leaves.</li>
-        <li data-rule="RB-DO-07"><strong>Do ask the room</strong> when you are unsure, and answer when somebody else asks. A question with a submission number on it is enough; the room links to the card, so nobody has to paste content anywhere.</li>
-        <li data-rule="RB-DO-08"><strong>Do report illegal content patterns</strong> to the site owner after escalating. Every escalation already alerts the administrators; repeated sources may need an account-level response, which is the admin desk's job, not yours.</li>
-      </ul>
-    </section>
-
-    <section id="dont">
-      <h2>Don't</h2>
-      <ul>
-        <li data-rule="RB-DONT-01"><strong>Don't share, download, or link pending content</strong> anywhere outside the curator desks. Pending photos sit at unlisted addresses that open for anyone who has the link, so sharing a link publishes them. The curator room is inside the desks; a chat app is not.</li>
-        <li data-rule="RB-DONT-02"><strong>Don't click a link the desk has marked unsafe.</strong> Links in a submission are checked against a known-unsafe list; a marked one stays marked for a reason. Links the check could not reach say so; open those with care, and never on a work account you use for anything else.</li>
-        <li data-rule="RB-DONT-03"><strong>Don't trash what you merely disagree with.</strong> Trash destroys the evidence of its own correctness; use it only where keeping the content would itself be the harm (spam, abuse), and never for illegal material, which goes to Escalate.</li>
-        <li data-rule="RB-DONT-08"><strong>Don't trash to avoid writing a note.</strong> Trash tells the rider nothing; Reject sends them your note.</li>
-        {# DECISION-01 open: should a curator be allowed to decide their own
-           submission? This rule states what the code does today: a curator's
-           own edits (and new places with the OSM question answered) inside
-           their area are approved at intake as that curator, what still queues
-           can be decided by anyone including its author (no guard in
-           ModerationService::decide), and only translations refuse
-           self-review. Owner to decide; see the rulebook ledger. #}
-        <li data-rule="RB-DONT-04"><strong>Your own work.</strong> Your own edits inside your area, and a new place of yours whose OSM question is answered, apply at once without a desk decision. Anything of yours that still queues (a new place with the OSM question open, or work outside your area) is for another curator: <strong>don't decide your own submissions</strong>, or those of people close to you. The Translations desk refuses your own proposals outright.</li>
-        <li data-rule="RB-DONT-05"><strong>Don't promise outcomes</strong> in rider messages ("this will be approved once you..."). You are describing the process, not pre-deciding it.</li>
-        <li data-rule="RB-DONT-06"><strong>Don't work around the tools</strong> (no manual database edits, no editing content on a rider's behalf beyond what the desk offers; the Routes desk's route editing is such an offer). If the tool cannot express the right decision, that is a bug to report, not a rule to bend.</li>
-        <li data-rule="RB-DONT-07"><strong>Don't reach outside your area.</strong> Items outside your area are left out of your queues, History and map, and acting on one directly by its number or link is refused, whichever verb you use. If an item you need is out of reach, ask the room; do not ask for the URL.</li>
-        <li data-rule="RB-DONT-09"><strong>Don't use the room to name items outside someone's area.</strong> A room post about a submission shows its number and title to every curator, whatever their area.</li>
-      </ul>
-    </section>
-
-    <section id="privacy">
-      <h2>Privacy specifics</h2>
-      <ul>
-        <li data-rule="RB-PRIV-01">A photo's <strong>GPS position</strong> is read once and deleted as soon as the photo is tied to its submission. What stays, for good, is its distance to the pin: you see it on the card and on a place's hidden photos, it decides whether a scenic-view photo shows, and the public map never shows it.</li>
-        <li data-rule="RB-PRIV-02">Rider identity stays out of public surfaces unless the rider opted into a public profile. A photo's credit is the rider's display name only while their profile is public, and it follows a change of name or of the switch.</li>
-        <li data-rule="RB-PRIV-03">The desks name riders the way the public pages do: by display name only when their profile is public, otherwise by their pseudonym. The desks still show you what the public never sees (pending content, photo distances, report reasons), so treat everything on them as confidential.</li>
-        <li data-rule="RB-PRIV-07">A pseudonym is <code>rider#</code> and eight random characters, stored with the account and never changed. It says nothing about who the rider is. An account that no longer exists shows as "a removed rider".</li>
-        <li data-rule="RB-PRIV-08">Desk search finds a rider with a private profile only by their pseudonym, never by their real display name.</li>
-        <li data-rule="RB-PRIV-09">Private riders can share a display name, so a name proves nothing about who someone is.</li>
-        <li data-rule="RB-PRIV-10">No curator desk shows a rider's or a reporter's email address. A reporter's network address is kept only as a one-way hash.</li>
-        <li data-rule="RB-PRIV-04">Consent records (the CC BY-SA 4.0 donation a rider granted) are permanent and none of your concern to manage; the system enforces them. They are disclosed on the privacy notice, so a rider asking "what do you keep after I leave?" can be pointed at that page rather than answered from memory.</li>
-        <li data-rule="RB-PRIV-11">When a rider deletes their account, their photos still waiting for a decision go. Their approved photos stay, credited by name only if their profile was public and they chose to keep the credit, otherwise anonymously.</li>
-        <li data-rule="RB-PRIV-05"><strong>A report's reason is confidential.</strong> It often says something personal about somebody; that is the whole point of it. It stays on the desk.</li>
-        <li data-rule="RB-PRIV-06">A reporter's reply address is kept only to answer them and is deleted 90 days after the decision. The privacy notice says the same.</li>
-      </ul>
-    </section>
-
+    <div class="rb-panel" id="rbp-account" role="tabpanel" aria-labelledby="rbt-account">
     <section id="account">
       <h2>Your account</h2>
       <ul>
@@ -442,12 +475,7 @@
         <li data-rule="RB-SEE-08">If you are on the public contributor wall, your row carries a Curator chip.</li>
       </ul>
     </section>
-
-    <section id="deep-rules">
-      <h2>Where the deep rules live</h2>
-      <p data-rule="RB-SPEC-02">This page is the operating summary. The binding contracts are in the project repository: the moderation and contribution specification (retention, Trash, messages, scoping), the route domain specification (Routes desk, caps, corrections), the catalog data model (the Data desk and the OSM question), the map and search specification (what a region opens in, town texts), the photo-uploads specification (media lifecycle, takedowns, legal hold), the content reports specification (Reports desk), the contact and support specification (Bugs desk), the translations specification (Translations desk), the data provider hierarchy (Providers desk and the marker ladder) and the account and auth specification (two-factor login, roles, pseudonyms).</p>
-      <p data-rule="RB-SPEC-03">When this page and a spec disagree, the spec wins and this page has a bug.</p>
-    </section>
+    </div>{# /#rbp-account #}
   </div>
 </div>
 </td></tr></tbody></table>

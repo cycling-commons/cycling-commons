@@ -3276,9 +3276,14 @@ moderate:
     list: 'Liste'
   rulebook:
     private: 'Réservé aux curateurs. Absent du wiki public.'
-    download: 'Télécharger le manuel (PDF)'
     kicker: 'Modération'
     title: 'Manuel du modérateur'
+    tab_start: 'Pour commencer'
+    tab_places: 'Lieux et données'
+    tab_routes: 'Itinéraires'
+    tab_photos: 'Photos et signalements'
+    tab_desks: 'Bogues et traductions'
+    tab_account: 'Votre compte'
   history:
     kicker: 'Modération · registre'
     heading: 'Contributions déjà traitées'

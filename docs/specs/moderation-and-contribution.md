@@ -1060,60 +1060,73 @@ at a time, so the row is sized for that:
   from the moderation menu**; until that page exists these panels carry no link
   rather than a public one. The `moderate.trash.rulebook_link` string is kept
   for it.
-- **The rulebook PDF is streamed to curators, never served from public/**
-  (2026-08-25 link; 2026-08-26 owner: "the file should be streamed to the
-  client, not via a hidden public link accessible to everybody who knows it").
-  `CC_RULEBOOK_PDF_PATH` names the file on the server: a path, not a URL,
-  relative paths taken from the project root, committed default
-  `var/private/moderator-rulebook.pdf` (`var/` is git-ignored, so a fresh
-  checkout has no file and no link). `ModerateController::rulebookPdf()`
-  (`GET /moderate/rulebook.pdf`, `moderate_rulebook_pdf`) sits behind the
-  class-level `ROLE_CURATOR` gate and the `^/moderate` access rule, answers
-  with a `BinaryFileResponse` (inline, `Content-Type: application/pdf`,
-  `Cache-Control: private, no-store`, `X-Robots-Tag: noindex, nofollow`) and
-  404s when nothing is configured or the file is missing; the rulebook page
-  renders the "Download the rulebook (PDF)" link only when the file really
-  exists (`rulebook_pdf` is a boolean, not a URL). The file is owner-managed:
-  nothing in the app writes, uploads or validates it. Two homes were tried
-  and rejected the same day: `assets/` (AssetMapper would compile it into
-  the public build under a hashed name AND git would track it) and
-  `public/moderation/` (nginx serves it to anyone holding the URL, so the
-  page's gate would protect nothing). `RulebookPdfTest` pins anonymous →
-  login, `ROLE_USER` → 403, curator → PDF with those headers, link present
-  only with the file, 404 without it. **Deploy prerequisite:** copy the PDF
-  to the configured path on each frontend and set `CC_RULEBOOK_PDF_PATH`
-  (`.env.staging` carries `replace-me`).
-- **The rulebook prints as a document, and that is how the PDF is made**
-  (2026-08-25, owner). The template carries a `@media print` sheet so the file
-  is the page itself: the shell (brand bar, tabs, chip, footer, skip link) and
-  the download link are hidden, a print-only masthead shows
-  `brand/logo-nav-light.svg` (the dark-bar `logo-nav.svg` paints most of the
-  wordmark in paper colour, invisible on paper), the moderators-only badge
-  text and the print date. Colours are forced (`print-color-adjust: exact`)
-  so paper, clay and ink survive. The body's paper-grain overlay
-  (`body::after` in `atlas.css`) is hidden in print because a fixed noise
-  texture rasterises every page into a full-bleed bitmap (13 MB for four
-  pages; 230 KB without it). Three more print facts, each learned from a
-  wrong PDF (owner 2026-08-26):
+- **The rulebook is the page, and there is no PDF** (2026-09-30, owner). The
+  rules live in `templates/moderate/rulebook.html.twig` and in git, and nothing
+  else carries them: the page has no download link, there is no
+  `/moderate/rulebook.pdf` route (the path answers 404) and no
+  `CC_RULEBOOK_PDF_PATH` setting. A copy kept beside the page is a second
+  rulebook that drifts from the first. Anyone who wants paper prints the page
+  (below). `RulebookPageTest::testThereIsNoPdf` pins it: no `.pdf` link, no
+  `moderate_rulebook_pdf` route, 404 on the old path.
+- **The rulebook is in six tabs** (2026-09-30, owner), so a curator opens the
+  part they need instead of scrolling one long page. The lead stays above the
+  tabs; the nineteen sections sit in six panels grouped the way a curator
+  works:
+
+  | Tab (`data-tab`) | Sections |
+  |---|---|
+  | Start (`start`) | `dashboard`, `verbs`, `do`, `dont`, `deep-rules` |
+  | Places and data (`places`) | `before-approve`, `data`, `regions`, `town-text`, `providers`, `markers` |
+  | Routes (`routes`) | `routes` |
+  | Photos and reports (`photos`) | `takedowns`, `reports`, `privacy` |
+  | Bugs and translations (`desks`) | `bugs`, `translations` |
+  | Your account (`account`) | `account`, `workload-view` |
+
+  Start holds what every decision needs (the dashboard, the five verbs, do and
+  don't) and the note that the specs outrank the page. Photos and reports are
+  the two desks with a legal clock, next to the privacy rules they lean on.
+  The markup is the settings Profile/Security pattern: a `role="tablist"` of
+  `role="tab"` buttons (`rbt-<key>`, `aria-controls`, `aria-selected`, roving
+  `tabindex`) and `role="tabpanel"` panels (`rbp-<key>`, `aria-labelledby`).
+  Labels are translated (`moderate.rulebook.tab_*`); the rules are not.
+  The page uses the full desk width like the other desks, so the six tabs fit
+  on one line; only the lead keeps the desk lead's 88ch measure.
+  `js/rulebook-tabs.js` does the switching: ArrowLeft/ArrowRight/Home/End, a
+  click rewrites the address to `?tab=<key>` (the bare path for Start), and a
+  `#hash` naming a section or a panel opens the panel holding it and scrolls
+  to it, on load and on every `hashchange`. The hash wins over `?tab=`, so
+  `/moderate/rulebook#takedowns` (the takedowns desk's link) and the in-page
+  `#reports` link keep landing. Every section keeps its id and every rule its
+  `data-rule` id. **Without the script** the tab list stays `hidden` and every
+  panel shows, one after the other. **In print** the tab list goes and every
+  panel prints in page order, whichever tab is open. `RulebookPageTest` pins
+  the roles, the panel of every section, each `data-rule` id rendered exactly
+  once and every in-page link landing in a panel;
+  `tests/js/rulebook-tabs.test.cjs` pins the hash and `?tab=` choice.
+- **The rulebook prints as a document** (2026-08-25, owner). The template
+  carries a `@media print` sheet so paper (or "save as PDF") is the page
+  itself: the shell (brand bar, desk tabs, chip, footer, skip link) and the
+  rulebook's own tab list are hidden, every tab panel prints, a print-only
+  masthead shows `brand/logo-nav-light.svg` (the dark-bar `logo-nav.svg`
+  paints most of the wordmark in paper colour, invisible on paper), the
+  curators-only badge text and the print date. Colours are forced
+  (`print-color-adjust: exact`) so paper, clay and ink survive. The body's
+  paper-grain overlay (`body::after` in `atlas.css`) is hidden in print
+  because a fixed noise texture rasterises every page into a full-bleed
+  bitmap (13 MB for four pages; 230 KB without it). Two more print facts
+  (owner 2026-08-26):
   - **Paper to the edge of every sheet.** Chrome paints `@page` margins white
     whatever the canvas colour, so the page margin is 0 and the body is wrapped
     in `table.rb-sheet`, whose empty `thead`/`tfoot` rows repeat on every
     printed page and supply the 16 mm top and bottom gaps; the side gaps are
     cell padding. On screen the wrapper is plain blocks and the gap rows are
     hidden.
-  - **The file carries no links.** Chrome turns every printed `<a href>` into a
-    PDF link annotation, and a relative one makes Acrobat ask to "connect to"
-    whichever host the file was opened from (`wsl.localhost` for a WSL path).
-    The only in-body anchor (the curator room) is screen-only, with a plain
-    `span.rb-print` twin for print. The logo is embedded as an image; nothing
-    in the PDF references the site. Verified by decompressing the file: zero
-    `/Link`, `/URI`, `/Annots`, `http`.
-  - **Acrobat's "connect to wsl.localhost" on a clean file** is the file's
-    location, not its content: a UNC path counts as a network site. Copy the
-    PDF to a local Windows folder before judging it.
-  To produce the file: log in as a curator, open `/moderate/rulebook`, print to
-  PDF (A4, backgrounds on), copy it to the configured path. Nothing in the app
-  writes or validates the PDF.
+  - **A printed copy carries no links.** Chrome turns every printed `<a href>`
+    into a PDF link annotation, and a relative one makes Acrobat ask to
+    "connect to" whichever host the file was opened from. Every in-body anchor
+    (the curator room, the in-page `#reports` link) is screen-only
+    (`.rb-screen`), with a plain `span.rb-print` twin for print, and the logo
+    is embedded as an image, so a saved PDF references nothing on the site.
 - **The rulebook covers every desk, and quotes no number** (2026-08-25,
   owner). The 2026-08-03 text described only the submissions queue and the
   takedowns desk, and four of its claims had gone stale: the typed `DELETE`

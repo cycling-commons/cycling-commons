@@ -3283,9 +3283,14 @@ moderate:
     list: 'Lijst'
   rulebook:
     private: 'Alleen voor regiobeheerders. Niet op de openbare wiki.'
-    download: 'Download het handboek (pdf)'
     kicker: 'Moderatie'
     title: 'Moderatorhandboek'
+    tab_start: 'Beginnen'
+    tab_places: 'Plaatsen en data'
+    tab_routes: 'Routes'
+    tab_photos: 'Foto''s en meldingen'
+    tab_desks: 'Bugs en vertalingen'
+    tab_account: 'Je account'
   history:
     kicker: 'Moderatie · register'
     heading: 'Reeds afgehandelde inzendingen'

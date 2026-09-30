@@ -3302,9 +3302,14 @@ moderate:
     list: 'List'
   rulebook:
     private: 'Curators only. Not on the public wiki.'
-    download: 'Download the rulebook (PDF)'
     kicker: 'Moderation'
     title: 'Moderator rulebook'
+    tab_start: 'Start'
+    tab_places: 'Places and data'
+    tab_routes: 'Routes'
+    tab_photos: 'Photos and reports'
+    tab_desks: 'Bugs and translations'
+    tab_account: 'Your account'
   history:
     kicker: 'Moderation · record'
     heading: 'Already settled submissions'

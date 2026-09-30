@@ -3,10 +3,10 @@
 .mh .kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);margin-bottom:.6rem}
 .mh h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.08;margin-bottom:.4rem;color:var(--ink)}
 
-.rb{max-width:74ch;margin:0 0 3rem}
-.rb-pdf{margin:.2rem 0 1.2rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em}
-.rb-pdf a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
-.rb .lead{font-size:1rem;line-height:1.6;color:#4a4d40;margin-bottom:2rem}
+/* The rulebook uses the full desk width like the other desk pages (owner
+   2026-09-30), so all six tabs fit on one line; the lead keeps the desk lead's measure. */
+.rb{margin:0 0 3rem}
+.rb .lead{font-size:1rem;line-height:1.6;color:#4a4d40;margin-bottom:2rem;max-width:88ch}
 .rb section{margin-bottom:2.4rem;scroll-margin-top:5rem}
 .rb h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;margin-bottom:.5rem;color:var(--ink)}
 .rb h3{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay);margin:1.4rem 0 .5rem}
@@ -23,11 +23,25 @@
 .rb-note{border-left:2px solid var(--clay);padding:.1rem 0 .1rem .8rem;margin:1rem 0;font-size:.92rem;line-height:1.6;color:#4a4d40}
 .rb-scroll{overflow-x:auto}
 
-/* Print / PDF: the same page as a document. The shell (tabs, chip, language
-   menu, footer) is navigation and goes; the brand bar becomes a paper-toned
-   masthead with the logo and the date, so the file says where it came from.
-   Colours are forced to print so the paper, clay and ink survive "save as
-   PDF"; the PDF the owner deploys (CC_RULEBOOK_PDF_PATH) is made this way. */
+/* Tabs: the settings Profile/Security tab look. The list is [hidden] until
+   js/rulebook-tabs.js runs; it then marks .rb tabbed, and only the open
+   panel shows on screen. It scrolls sideways on a narrow screen rather
+   than wrapping. */
+.tabs{display:flex;gap:.4rem;margin:0 0 1.8rem;border-bottom:1px solid rgba(20,22,14,.14);overflow-x:auto;scrollbar-width:thin}
+.tabs[hidden]{display:none}
+.tabs [role=tab]{background:none;border:none;border-bottom:2px solid transparent;padding:.55rem 1rem;cursor:pointer;white-space:nowrap;flex:none;
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d}
+.tabs [role=tab][aria-selected="true"]{color:var(--trail);border-bottom-color:var(--trail)}
+.tabs [role=tab]:focus-visible{outline:2px solid var(--trail);outline-offset:-2px}
+.rb-tabbed .rb-panel{display:none}
+.rb-tabbed .rb-panel.on{display:block}
+
+/* Print: the same page as a document. The shell (desk tabs, chip, language
+   menu, footer) and the rulebook's own tab list are navigation and go; every
+   tab panel prints, in page order, whichever one is open on screen. The
+   brand bar becomes a paper-toned masthead with the logo and the date, so
+   the paper says where it came from. Colours are forced to print so the
+   paper, clay and ink survive "save as PDF". */
 .rb-print-head{display:none}
 .rb-print{display:none}
 /* On screen the sheet wrapper is inert: plain blocks, no gap rows. */
@@ -47,7 +61,8 @@
   .rb-sheet tr{display:table-row}
   .rb-sheet>thead>tr>td,.rb-sheet>tfoot>tr>td{display:table-cell;height:16mm;padding:0}
   .rb-sheet>tbody>tr>td{display:table-cell;padding:0 14mm;vertical-align:top}
-  .dtop,.dtabs,.foot,.cc-notice,.rb-pdf,.private,.skip-link{display:none !important}
+  .dtop,.dtabs,.foot,.cc-notice,.rb-tabs,.private,.skip-link{display:none !important}
+  .rb-tabbed .rb-panel{display:block !important}
   /* The paper-grain overlay (body::after) is a fixed noise texture; on print it
      rasterises every page into a full-bleed bitmap (13 MB for four pages). */
   body::after{display:none !important}

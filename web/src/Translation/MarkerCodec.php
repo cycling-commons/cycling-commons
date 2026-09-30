@@ -76,7 +76,7 @@ final class MarkerCodec
      * replace it with nothing: no error, no log, a corrupt download. The
      * response net (translations.md §4.1) strips everything that is not
      * `text/html`, and this site serves binary bodies (the GDPR export ZIP,
-     * the streamed rulebook PDF, the image proxies). A body that is not text
+     * the image proxies). A body that is not text
      * cannot contain a mark, so returning it untouched is both safe and right.
      */
     public static function strip(string $s): string

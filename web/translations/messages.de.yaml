@@ -3284,9 +3284,14 @@ moderate:
     list: 'Liste'
   rulebook:
     private: 'Nur für Kuratoren. Nicht im öffentlichen Wiki.'
-    download: 'Regelwerk herunterladen (PDF)'
     kicker: 'Moderation'
     title: 'Moderatoren-Regelwerk'
+    tab_start: 'Einstieg'
+    tab_places: 'Orte und Daten'
+    tab_routes: 'Routen'
+    tab_photos: 'Fotos und Meldungen'
+    tab_desks: 'Fehler und Übersetzungen'
+    tab_account: 'Dein Konto'
   history:
     kicker: 'Moderation · Register'
     heading: 'Bereits erledigte Einreichungen'

@@ -3310,9 +3310,14 @@ moderate:
     list: 'Lista'
   rulebook:
     private: 'Solo para curadores. No está en la wiki pública.'
-    download: 'Descargar el manual (PDF)'
     kicker: 'Moderación'
     title: 'Manual del moderador'
+    tab_start: 'Para empezar'
+    tab_places: 'Lugares y datos'
+    tab_routes: 'Rutas'
+    tab_photos: 'Fotos y denuncias'
+    tab_desks: 'Errores y traducciones'
+    tab_account: 'Tu cuenta'
   history:
     kicker: 'Moderación · registro'
     heading: 'Propuestas ya resueltas'
