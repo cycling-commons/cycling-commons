@@ -1,21 +1,25 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {#
-  The moderator rulebook: moderators only (2026-08-03, owner).
+  The curator rulebook, behind ROLE_CURATOR like every desk. It is not on the
+  public wiki: a published account of how removal decisions are made is also a
+  script for talking a curator into removing something.
 
-  This page WAS the public wiki's `moderator-rulebook`. All of it moved here and
-  the public page is gone: a published account of how removal decisions are
-  really made is also a script for talking a curator into removing something,
-  and the takedown section was the clearest example, a two-row table mapping
-  "their words say" to "decide". The old page even said as much about its own
-  missing half. Now the whole thing is behind ROLE_CURATOR.
+  The rules are written INLINE here, not through translation keys. This is one
+  operational document for a small team, full of tables and conditional
+  phrasing where a mistranslated clause changes what a curator does to
+  somebody's photo. The page's chrome (title, kicker, the curators-only badge,
+  the PDF link) is translated because it is chrome. If the rulebook is ever
+  translated, a person who curates translates it, not key by key.
 
-  The rules are written INLINE here rather than through translation keys, and
-  that is deliberate. This is one operational document for a small team, full of
-  tables and conditional phrasing where a mistranslated clause changes what a
-  curator does to somebody's photo. The page's chrome (title, kicker, the
-  moderators-only badge) stays translated because it is chrome. If the rulebook
-  is ever translated, it should be translated by a person who moderates, not
-  key-by-key; see the handoff note.
+  Every element that states a rule carries a data-rule attribute holding an
+  RB- id. The id is the rule's entry in the private rulebook ledger
+  (docs/plans/rulebook-ledger.yaml), which holds the code evidence and the
+  test that keeps the rule true. Ids are unique on the page; a rule keeps its
+  id when its wording changes.
+
+  The page prints as the PDF: the rb-sheet table repeats the paper margins on
+  every printed page, and every link is screen-only (rb-screen, with an
+  rb-print twin), because the PDF must carry no links at all.
 #}
 {% extends 'base.html.twig' %}
 {% block head_styles %}
@@ -40,209 +44,409 @@
 <div class="wrap" id="main">
   <div class="rb">
     <span class="private">&#9679; {{ 'moderate.rulebook.private'|trans }}</span>
-    {# THE PDF, when there is one. The page below stays the source a curator
-       reads day to day; the download is the same rules in a file that lives on
-       the server rather than in this repository, because this template is
-       readable by anyone once the repo is public and a rulebook is a script for
-       talking a curator into a removal (owner 2026-08-14).
+    {# THE PDF, when there is one. The page below is the source a curator reads
+       day to day; the download is the same rules in a file that lives on the
+       server rather than in this repository, because this template is readable
+       by anyone once the repository is public.
 
        Streamed by ModerateController::rulebookPdf() behind the curator gate,
-       never served from public/ (owner 2026-08-26). Rendered only when the
-       file at CC_RULEBOOK_PDF_PATH really exists, so an unconfigured
-       environment shows nothing rather than a dead link. Owner-managed:
-       nothing here writes, uploads or validates it. #}
+       never served from public/. Rendered only when the file at
+       CC_RULEBOOK_PDF_PATH exists, so an unconfigured environment shows
+       nothing rather than a dead link. Owner-managed: nothing here writes,
+       uploads or validates it. #}
     {% if rulebook_pdf %}
       <p class="rb-pdf"><a href="{{ path('moderate_rulebook_pdf') }}">{{ 'moderate.rulebook.download'|trans }}</a></p>
     {% endif %}
-    <p class="lead">The short, always-current rules for everyone holding a curator or moderator role. If a situation is not covered here, ask in the {# The anchor is screen-only: Chrome turns every printed <a href>
+    <p class="lead" data-rule="RB-LEAD-01">The short, always-current rules for everyone holding a curator role, administrators included. If a situation is not covered here, ask in the {# The anchor is screen-only: Chrome turns every printed <a href>
       into a PDF link annotation, and a relative one makes Acrobat "connect to"
-      wherever the file is opened from. The PDF must carry no links at all. #}<a class="rb-screen" href="{{ path('moderate_room') }}">curator room</a><span class="rb-print">curator room</span> before acting. The room is part of this desk, so what you discuss there stays inside it. This page is the do's and don'ts, not a replacement for judgement.</p>
+      wherever the file is opened from. The PDF must carry no links at all. #}<a class="rb-screen" href="{{ path('moderate_room') }}">curator room</a><span class="rb-print">curator room</span> before acting. The room is part of the curator desks, so what you discuss there stays inside them. This page is the do's and don'ts, not a replacement for judgement.</p>
+
+    <section id="dashboard">
+      <h2>Start at the dashboard</h2>
+      <ul>
+        <li data-rule="RB-DASH-01"><strong>The dashboard shows every desk's open work on one page.</strong> Takedowns and Reports come first, under <em>Legal deadlines</em>: answer those before the editorial queues. Then come Submissions, Routes, Data, Bugs, Translations and the unread posts in the room.</li>
+        <li data-rule="RB-DASH-02"><strong>It decides nothing and marks nothing as read.</strong> Room posts it shows stay unread in the room until you open the room.</li>
+        <li data-rule="RB-DASH-03"><strong>Some desks follow your area, some do not.</strong> Submissions, Routes, Data and Regions show only your area. Takedowns, Reports, Bugs, Translations, Providers and town texts are the same for every curator.</li>
+      </ul>
+    </section>
 
     <section id="verbs">
-      <h2>The four verbs, and what each one keeps</h2>
+      <h2>The five verbs, and what each one keeps</h2>
       <div class="rb-scroll">
         <table class="rb-table">
           <thead><tr><th>Verb</th><th>When</th><th>What happens</th><th>What is kept</th></tr></thead>
           <tbody>
-            <tr>
+            <tr data-rule="RB-VERB-02">
               <td><strong>Approve</strong></td>
               <td>The contribution is plausible and useful</td>
-              <td>It goes live; changes apply to the item</td>
-              <td>Everything, plus your decision in the item's visible history</td>
+              <td>It goes live; changes apply to the item. A new place goes live as Unverified</td>
+              <td>Everything. The item's history credits the rider for the change; your decision (who, when and your note) is kept on the submission and shown on the History desk</td>
             </tr>
-            <tr>
+            <tr data-rule="RB-VERB-01">
+              <td><strong>Needs info</strong></td>
+              <td>You cannot decide without an answer from the rider</td>
+              <td>The rider gets your question, which is required. The submission waits for their answer and leaves the curators' map until they reply</td>
+              <td>Everything; it is not a decision</td>
+            </tr>
+            <tr data-rule="RB-VERB-05">
               <td><strong>Reject</strong></td>
               <td>Honest contribution, but wrong / not verifiable / duplicate</td>
-              <td>Nothing goes live; the rider gets your note</td>
+              <td>Nothing goes live. The rider is told, with your note if you wrote one</td>
               <td>The submission and any photos, for the retention window (a system setting the administrators control, not a fixed number), then collected</td>
             </tr>
-            <tr>
+            <tr data-rule="RB-VERB-08">
               <td><strong>Trash</strong></td>
               <td>Spam and abuse. <strong>Not</strong> illegal content, see below</td>
-              <td>Immediate permanent deletion: content, photos and their history are gone at once, no retention window, and <strong>no message is sent</strong> to the submitter</td>
+              <td>Immediate permanent deletion of the submission, its photos, its message thread with the rider and, for a new place, its unapproved pin. No retention window, and <strong>no message is sent</strong> to the submitter</td>
               <td>Only a <strong>content-free record of the action</strong>: that <em>you</em> trashed submission N of type X at time T. The content itself is unrecoverable, deliberately</td>
             </tr>
-            <tr>
+            <tr data-rule="RB-VERB-11">
               <td><strong>Escalate</strong></td>
               <td>Anything you believe may be <strong>illegal</strong></td>
-              <td>It disappears from this desk and from the public site at once, an administrator is alerted immediately, and nothing in the app can delete it afterwards</td>
-              <td>Everything, under a hold. You are not asked to look at it again</td>
+              <td>It disappears from the desks and from the public site at once, the administrators are alerted by email, and nothing on the site can delete it afterwards</td>
+              <td>Everything, under a hold that only an administrator can lift. If they release it, it returns to the queue like any other submission</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <p><strong>Keep the record, never the content</strong> is the Trash principle: the Commons can always prove the moderation action happened, and can never reproduce the material, which is the point when the material is spam or abuse.</p>
+      <ul>
+        <li data-rule="RB-VERB-21"><strong>Where each verb lives.</strong> Approve, Needs info and Reject are made in the map drawer, so you see the place first. Trash and Escalate are on the queue card.</li>
+        <li data-rule="RB-VERB-22"><strong>Your note goes to the rider with every decision</strong>, approvals included. Write it for them.</li>
+        <li data-rule="RB-VERB-23"><strong>The retention window.</strong> Rejected and withdrawn submissions are deleted after it, 3 months unless an administrator changes it, together with their message threads. Approved submissions and those waiting on the rider are never swept.</li>
+      </ul>
 
-      <p><strong>Illegal material is the exception, and it goes to Escalate, not Trash.</strong> Trashing it destroys the evidence along with the content, and for some material the law expects that evidence to survive until it has been reported. Escalating takes it out of everyone's reach, yours included, freezes it against every deletion path, and puts it in front of an administrator the same minute. You are never expected to decide what it is, only to say what you saw: Escalate asks for a short reason and a tick that you mean it. Nobody is asked to view escalated material twice, and if something you saw here is sitting with you afterwards, say so in the curator room; that is a normal thing to need and not a failure.</p>
+      <p data-rule="RB-VERB-19"><strong>Keep the record, never the content</strong> is the Trash principle: the Commons can always prove the curator action happened, and can never reproduce the material, which is the point when the material is spam or abuse.</p>
 
-      <p><strong>Trash asks nothing twice.</strong> There is no confirmation box, so the moment to think is before the click. Cancelling a message or an escalation leaves no trace at all; no record is written for an action you did not complete.</p>
+      <ul>
+        <li data-rule="RB-VERB-15"><strong>Illegal material is the exception, and it goes to Escalate, not Trash.</strong> Trashing it destroys the evidence along with the content, and for some material the law expects that evidence to survive until it has been reported.</li>
+        <li data-rule="RB-HOLD-01"><strong>Escalating takes it out of everyone's reach, yours included.</strong> It leaves the queue, History, the curators' map and the room's submission search, and an administrator hears about it the same minute.</li>
+        <li data-rule="RB-HOLD-02"><strong>A hold freezes it against every deletion path.</strong> Trash, the retention sweep, the purge commands and the rider's own withdrawal all leave a held submission and its photos alone.</li>
+        <li data-rule="RB-VERB-16"><strong>You are never expected to decide what it is, only to say what you saw.</strong> Escalate asks for a short reason, and on the queue card and the Reports desk also a tick that you mean it.</li>
+        <li data-rule="RB-VERB-20">Nobody is asked to view escalated material twice. If something you saw here is sitting with you afterwards, say so in the curator room; that is a normal thing to need and not a failure.</li>
+      </ul>
+
+      <p data-rule="RB-VERB-17"><strong>Trash asks nothing twice.</strong> There is no confirmation box, so the moment to think is before the click.</p>
+      <p data-rule="RB-VERB-18">Cancelling a message or an escalation leaves no trace at all; no record is written for an action you did not complete.</p>
     </section>
 
     <section id="before-approve">
       <h2>Before you approve a place</h2>
       <ul>
-        <li><strong>Answer the OSM question first.</strong> A new place cannot be approved until you have linked it to its OpenStreetMap object or recorded <em>Not in OSM</em>. The desk refuses the approval until one of the two is on record. A wrong "not in OSM" is cheap to fix later; a place approved with no answer is a duplicate waiting to happen.</li>
-        <li><strong>"Approve and confirm" makes you a witness.</strong> The extra button also records that <em>you</em> know the place exists. Use it only when you do; approving on plausibility alone is the plain Approve.</li>
-        <li><strong>Read the "Previously rejected" flag.</strong> It means another curator already turned a version of this down. You may still approve, but read their note first, and say in yours why this time is different.</li>
-        <li><strong>Decide photos individually</strong> when a submission's facts are right but one photo is not. Approving the submission does not force approving every photo.</li>
-        <li><strong>Check a photo's context line</strong> (capture date, distance from the pin) before judging it; those facts are extracted for exactly this. <strong>Click the thumbnail</strong> to see the photo full size before you decide: the thumbnail is too small to tell whether somebody in it is identifiable, and that is the judgement a takedown request will later ask you about.</li>
+        <li data-rule="RB-APPROVE-01"><strong>Answer the OSM question first.</strong> A new place cannot be approved until you have linked it to its OpenStreetMap object or recorded <em>Not in OSM</em>, on the queue card or in the drawer. The desk refuses the approval until one of the two is on record. A wrong "not in OSM" is cheap to fix later, because the checks keep looking for a match; a place approved with no answer is a duplicate waiting to happen.</li>
+        <li data-rule="RB-APPROVE-09"><strong>Only an OSM node or way can be linked</strong>, and an object another place on the map already holds is refused: resolve that duplicate first. A place a rider started from an OSM object arrives with the question already answered.</li>
+        <li data-rule="RB-APPROVE-03"><strong>"Also confirm, I know this place" makes you a witness.</strong> Tick it before Approve only when you know the place exists: it records your confirmation and marks the place verified. It is not offered for water and food points, or when the change says the place is gone. Approving on plausibility alone is Approve with the box left empty.</li>
+        <li data-rule="RB-APPROVE-10"><strong>Approval makes a new place Unverified.</strong> It becomes verified when one curator confirms it, or when enough riders do (2 unless an administrator changes it). The submitter's own answer in the form never counts.</li>
+        <li data-rule="RB-APPROVE-05"><strong>Read the "Previously rejected" flag.</strong> It means a curator, possibly you, rejected an earlier submission about this same place; the flag shows the date and their note. You may still approve, but read their note first, and say in yours why this time is different.</li>
+        <li data-rule="RB-APPROVE-11"><strong>Rejecting a new place takes it off the map.</strong> If somebody proposes it again, the same place comes back to the desk carrying the "Previously rejected" flag.</li>
+        <li data-rule="RB-APPROVE-12"><strong>Read what an approval replaces.</strong> Approving a new place retires the places listed under <em>Approving replaces these places</em>: a place of the same kind that holds the same OSM object, and each similar place within 250 m that the rider left ticked. Nothing is retired on Reject.</li>
+        <li data-rule="RB-APPROVE-06"><strong>Decide photos individually</strong> when a submission's facts are right but one photo is not. Untick the photo's <em>Keep</em> box: approving the submission does not force approving every photo.</li>
+        <li data-rule="RB-APPROVE-13"><strong>Reject turns down every photo with the submission.</strong> On Approve, a photo under legal hold, or one the photo checks refuse for this place, stays pending instead of being attached.</li>
+        <li data-rule="RB-APPROVE-07"><strong>Check a photo's context line</strong> (capture month, distance from the pin, or that the file had no location) before judging it; those facts are extracted for exactly this.</li>
+        <li data-rule="RB-APPROVE-08"><strong>Open each photo full size in the drawer before you decide.</strong> The thumbnail is too small to tell whether somebody in it is identifiable, and that is the judgement a takedown request will later ask you about.</li>
+        <li data-rule="RB-APPROVE-14"><strong>Read the warnings on the card</strong>: a link on a known-unsafe list or one that could not be checked, a scenic view far from any bike way that the rider says can be reached by bike, and a pin move that hides rider photos.</li>
+        <li data-rule="RB-APPROVE-15"><strong>"Taken here" puts a hidden scenic-view photo back.</strong> It confirms that a rider photo was taken at the pin. It works only in your area and never on a photo under legal hold.</li>
       </ul>
     </section>
 
     <section id="routes">
       <h2>The Routes desk</h2>
-      <p>A proposed route gets the same first three verbs: <strong>Approve</strong> publishes it, <strong>Reject</strong> sends it back with your note, and <strong>Trash</strong> is the same irreversible bin as for places, for spam only. Two things are different here.</p>
+      <p>A proposed route gets three of the verbs, decided on the route's own page.</p>
       <ul>
-        <li><strong>You may edit before you publish.</strong> The title, the attributes and the surface are yours to correct on the way through; the track itself is not. This is the one place where "editing on a rider's behalf" is the desk's own offer, and the rider is told the route went live as you shaped it.</li>
-        <li><strong>Every region has a cap</strong> on live routes (an administrator setting). Approving past it is refused and the desk asks you to <strong>Retire</strong> something first. Retiring takes a route off the map without deleting it; the author is told. Retire the weakest, not the oldest.</li>
-        <li><strong>Located corrections</strong> are riders' notes pinned to a stretch of a live route: a broken track, a piece to trim for privacy, a duplicate, a part that is not rideable. You close each one as <strong>done</strong> (you changed the route) or <strong>dismissed</strong> (you did not, and your note says why). The rider who filed it is told either way.</li>
+        <li data-rule="RB-ROUTE-01"><strong>Approve</strong> publishes it as a proposed route.</li>
+        <li data-rule="RB-ROUTE-02"><strong>Reject</strong> turns the proposal down for good. The rider is told, with your note if you wrote one, and cannot edit that proposal again.</li>
+        <li data-rule="RB-ROUTE-03"><strong>Trash</strong> deletes it for good, for spam only, and sends no message. It works on a proposal only while it is pending or rejected, never on a live route; a correction can be trashed in any status.</li>
+        <li data-rule="RB-ROUTE-16"><strong>Photos sent with a proposal</strong> are kept or turned down with it; the ones you untick on the route's page are rejected when you approve.</li>
+        <li data-rule="RB-ROUTE-04"><strong>You may edit the route's details.</strong> The name and the route fields (difficulty, season, main surface, note, bike types, gradient limit, best direction) are yours to correct, before you publish and later on a live route.</li>
+        <li data-rule="RB-ROUTE-05"><strong>The track is not yours to change.</strong> Only the proposer can replace it, with a new GPX, and only until you decide.</li>
+        <li data-rule="RB-ROUTE-06">This is the one place where editing on a rider's behalf is the desk's own offer.</li>
+        <li data-rule="RB-ROUTE-17"><strong>A proposal can change under you.</strong> Until you decide, the proposer can edit it and its photos, including a new GPX that replaces the track, length and region; the card then says <em>Revised by the proposer</em>. A field you changed stays yours: the proposer's later edit to it is not saved. A field the proposer changed after you opened the form is not overwritten by your save: the desk names it and shows the newer value.</li>
+        <li data-rule="RB-ROUTE-07">The rider is told the route was approved and now shows as a proposed route. The message does not list your edits; the route's history keeps them.</li>
+        <li data-rule="RB-ROUTE-08"><strong>Every region has a cap</strong> on live routes (an administrator setting). Approving past it is refused and the desk asks you to <strong>Retire</strong> something first.</li>
+        <li data-rule="RB-ROUTE-18">The desk lists the live routes in each of your regions, so you can see what fills the cap. A curator with no area picks a region first.</li>
+        <li data-rule="RB-ROUTE-10"><strong>Retiring</strong> takes a live route off the map without deleting it. It needs a written note, and the author is told with it.</li>
+        <li data-rule="RB-ROUTE-11">Retire the weakest, not the oldest.</li>
+        <li data-rule="RB-ROUTE-19"><strong>You act only on routes in your own areas.</strong> A curator with no assigned area covers every region. Routes with no region are open to every curator and share one cap.</li>
+        <li data-rule="RB-ROUTE-21"><strong>A proposed route verifies itself.</strong> Once 3 riders other than the proposer (an administrator setting) say they rode it, it becomes verified. Only verified routes take votes, and only verified routes with votes count towards a region's Best of.</li>
+        <li data-rule="RB-ROUTE-12"><strong>Corrections</strong> are riders' requests on a live route: a problem with a stretch (broken track, trim for privacy, duplicate, not rideable, other), a change to one route field, or new photos. A stretch is marked only when the rider draws one.</li>
+        <li data-rule="RB-ROUTE-13"><strong>Done</strong> on a field change applies the rider's values for you, credited to the rider. Done on photos keeps the ones you left ticked. Done on a stretch problem records that it was fixed.</li>
+        <li data-rule="RB-ROUTE-14"><strong>Dismiss</strong> sends the rider a plain "dismissed" message with no reason. To say why, use Message on the same card.</li>
+        <li data-rule="RB-ROUTE-15">The rider who filed a correction is told either way, unless it was your own.</li>
+        <li data-rule="RB-ROUTE-20">Photos you add to a live route in your own area apply at once.</li>
+        <li data-rule="RB-ROUTE-22">Dismissed corrections are deleted after the retention window. Rejected routes are kept.</li>
+        <li data-rule="RB-ROUTE-23"><strong>The climbs listed on a route are worked out, not edited.</strong> A climb counts only when one continuous ascent on the route covers at least 30% of the climb and ends within 2 km of its summit.</li>
+        <li data-rule="RB-ROUTE-24">A climb's pin is its foot, and it takes the country of the region its foot is in, so the foot decides whose area it falls in.</li>
       </ul>
     </section>
 
     <section id="data">
       <h2>The Data desk</h2>
-      <p>Findings here were raised by the automatic checks, not by a rider, so nobody is waiting on a reply, but a machine can only ask; the answer is yours. There are two questions.</p>
+      <p data-rule="RB-DATA-01">Findings here were raised by the automatic checks, not by a rider, so nobody is waiting on a reply, but a machine can only ask; the answer is yours.</p>
+      <p data-rule="RB-DATA-02">There are two questions.</p>
       <ul>
-        <li><strong>Are these the same place?</strong> Two rows close together that look alike. See both on the map, then <strong>keep one</strong> (the other is retired, and its history points at the survivor) or <strong>keep both</strong>. If a row in the group has been edited by a curator, read it before you retire it; the edit is what would be lost.</li>
-        <li><strong>Is our row a record of this OSM object?</strong> Yes links them, and the map will follow OSM for that place from then on. No records that they are different, and the checks stop asking.</li>
+        <li data-rule="RB-DATA-03"><strong>Are these the same place?</strong> Two rows close together that look alike. See both on the map, then <strong>keep one</strong> or <strong>keep both</strong>.</li>
+        <li data-rule="RB-DATA-04">Keeping one retires the other row; it is not deleted. If the row you keep has no OSM link, it takes over the retired row's link. Only the finding remembers which row replaced which.</li>
+        <li data-rule="RB-DATA-11">The row the desk suggests keeping is the one from the stronger source (a hand-entered row, then a rider's, Scout, an authority, Wikidata, OSM, automatic); on a tie, the older row. You may keep the other one.</li>
+        <li data-rule="RB-DATA-05">If a row in the group has been edited by a curator, the desk says so. Read it before you retire it; the edit is what would be lost.</li>
+        <li data-rule="RB-DATA-06"><strong>Is our row a record of this OSM object?</strong> Yes links them. Our row stays as it is, and the separate OpenStreetMap pin for the same place stops showing beside it.</li>
+        <li data-rule="RB-DATA-07">No records that they are different, and the checks stop asking.</li>
+        <li data-rule="RB-DATA-12">Rows within 100 m of an OSM object with the same name are linked automatically. The desk asks only about matches between 100 and 250 m away.</li>
       </ul>
-      <p><strong>Dismiss is an answer, not a postponement.</strong> A dismissed finding is never raised again. If you are not sure, leave it open and ask in the room.</p>
+      <p data-rule="RB-DATA-08"><strong>Dismiss is an answer, not a postponement.</strong> A dismissed finding is never raised again.</p>
+      <p data-rule="RB-DATA-09">If you are not sure, leave it open and ask in the room.</p>
+      <ul>
+        <li data-rule="RB-DATA-10">You see and answer findings only in your own areas.</li>
+        <li data-rule="RB-DATA-13">A finding whose rows have changed since it was raised closes itself as resolved. That is not a dismissal.</li>
+      </ul>
     </section>
 
     <section id="regions">
       <h2>The Regions desk</h2>
-      <p>Nothing queues here, but two editorial powers live on this page.</p>
+      <p data-rule="RB-REGION-01">Nothing queues here, but two editorial powers live on this page.</p>
       <ul>
-        <li><strong>What the map opens in.</strong> Every region opens in <em>Everything</em> until you change it. <em>Confirmed</em> needs enough confirmed places; <em>Best of</em> needs enough curated picks spread over several map blocks, so no single layer can carry a region. The desk shows the readiness counts and refuses the switch below the threshold. Switching a region to Best of hides the unconfirmed map from every visitor by default; do it when the curated layer stands on its own, not to make the region look tidy.</li>
-        <li><strong>The region's about text.</strong> You can write the lead a reader meets on the region page, per language. Leave a language empty and the page keeps the Wikipedia text we harvested. If you edited the Wikipedia text instead of writing your own, <strong>tick the box that says so</strong>; the page then keeps the Wikipedia credit and says the text was changed. Unticked, you are claiming the words as your own.</li>
+        <li data-rule="RB-REGION-11">You can change only the regions in your own areas. The desk lists regions at the deepest level onboarded for their country.</li>
+        <li data-rule="RB-REGION-02"><strong>What the map opens in.</strong> Every region opens in <em>Everything</em> until you change it.</li>
+        <li data-rule="RB-REGION-03"><em>Confirmed</em> needs enough confirmed places.</li>
+        <li data-rule="RB-REGION-04"><em>Best of</em> needs enough curated picks spread over several map blocks, so no single layer can carry a region. Only picks that are on the map count, and a route counts only once it is verified and has votes.</li>
+        <li data-rule="RB-REGION-05">The desk shows the readiness counts and refuses the switch below the threshold (administrator settings).</li>
+        <li data-rule="RB-REGION-06">Switching a region to Best of changes what a visitor sees who has not picked a mode of their own: only the curated picks on the road surface, climbs, stays, views, history and route layers. Water and the other utilities still show. A rider's own saved choice always wins.</li>
+        <li data-rule="RB-REGION-07">Switch to Best of when the curated layer stands on its own, not to make the region look tidy.</li>
+        <li data-rule="RB-REGION-12">Switching back to Everything is always allowed. A region in Best of is never switched back by itself when its counts drop.</li>
+        <li data-rule="RB-REGION-08"><strong>The region's about text.</strong> You can write the lead a reader meets on the region page, per language, up to 1200 characters.</li>
+        <li data-rule="RB-REGION-09">Leave a language empty and the page keeps the Wikipedia text we harvested.</li>
+        <li data-rule="RB-REGION-10">If you edited the Wikipedia text instead of writing your own, <strong>tick the box that says so</strong>; the page then keeps the Wikipedia credit and says the text was changed. Unticked, you are claiming the words as your own.</li>
+      </ul>
+    </section>
+
+    <section id="town-text">
+      <h2>Town texts</h2>
+      <ul>
+        <li data-rule="RB-TOWN-01">A town card's text is fetched from Wikipedia, per language, the first time somebody opens the town. You can write over it on the town text page, which opens from <em>Open it</em> on a report about a town card.</li>
+        <li data-rule="RB-TOWN-02"><strong>Saving makes that language ours.</strong> No fetch touches it again, and the card credits our curators, after Wikipedia. There is no button that brings the fetched text back.</li>
+        <li data-rule="RB-TOWN-03">An empty text is refused, and a text is at most 1200 characters.</li>
+        <li data-rule="RB-TOWN-04">Any curator can edit any town; it is not limited to your area.</li>
       </ul>
     </section>
 
     {# Linked from the takedowns desk as #takedowns. #}
     <section id="takedowns">
       <h2>Photo takedown requests</h2>
-      <p>Somebody has asked for a photo to come down. <strong>Who asked decides what is already off the map:</strong></p>
+      <p>Somebody has asked for a photo to come down. <strong>Who asked decides what is already off the map, and where you decide it:</strong></p>
       <ul>
-        <li><strong>The uploader's own request</strong> takes the photo off the map the moment they ask, before you see it. You are only deciding what happens next.</li>
-        <li><strong>A third-party report stays up until you decide</strong>, with one exception: a report in the category <em>intimate imagery, or a child</em> hides the photo at once, before review. Hiding is not removal; only you can remove.</li>
+        <li data-rule="RB-TAKE-01"><strong>The uploader's own request</strong> takes the photo off the map the moment they ask, before you see it. It is on the Takedowns desk, and you are only deciding what happens next.</li>
+        <li data-rule="RB-TAKE-02"><strong>A report from anyone else stays up until you decide</strong>, on the <a class="rb-screen" href="#reports">Reports desk</a><span class="rb-print">Reports desk</span>.</li>
+        <li data-rule="RB-TAKE-03">The one exception: a report on the ground <em>intimate imagery, or a child</em> hides the photo at once, before review, while the site-wide budget allows (see the red banner below).</li>
+        <li data-rule="RB-TAKE-04">Hiding is not removal; only a curator can remove.</li>
       </ul>
-      <p>The card says which of these you are looking at, and which category the reporter picked: <em>I am identifiable</em>, <em>someone else is identifiable and has not agreed</em>, <em>intimate imagery or a child</em>, <em>private property or something that should not be public</em>, or <em>something else</em>.</p>
+      <p data-rule="RB-TAKE-05">The Reports desk shows the ground the reporter picked: <em>unlawful</em>, <em>personal information</em>, <em>not true</em>, <em>abuse</em>, <em>advertising</em>, <em>AI-generated</em>, <em>intimate imagery or a child</em>, <em>private property</em>, or <em>my work (copyright)</em>.</p>
 
+      <h3>The uploader's own request</h3>
       <p>You are answering one question: <strong>which kind of request is this?</strong></p>
-
       <div class="rb-scroll">
         <table class="rb-table">
           <thead><tr><th>Their words say</th><th>Decide</th></tr></thead>
           <tbody>
-            <tr>
+            <tr data-rule="RB-TAKE-06">
               <td>The photo shows them, or something personal they did not mean to publish</td>
               <td><strong>Remove the photo.</strong> That is their right, and the CC BY-SA 4.0 licence does not override it</td>
             </tr>
-            <tr>
+            <tr data-rule="RB-TAKE-07">
               <td>They have changed their mind about contributing</td>
               <td><strong>Decline and republish.</strong> The licence cannot be taken back; if it could, the Commons would only ever be on loan</td>
             </tr>
           </tbody>
         </table>
       </div>
-
-      <h3>The test for a third-party claim</h3>
-      <p>Does the photo, on its face, show an identifiable person, and is the claim plausible? If yes, remove; <strong>when unsure, remove</strong>. Decline only what is clearly not a rights claim: an uploader's change of mind about contributing, nobody visible at all, or a complaint about the place rather than a person.</p>
-
       <ul>
-        <li><strong>Do lean towards removing</strong> when you are unsure. Losing one photo of a fountain costs the Commons almost nothing; refusing a genuine claim about somebody's own image is a rights violation.</li>
-        <li><strong>Do write a note either way</strong>, on a decline especially. Say they can reply if you have misread them, because sometimes you will have.</li>
-        <li><strong>Do answer within a month.</strong> A reporter who left an address is answered from the project mailbox, and the desk shows the address next to the request. A month is the outer limit, not the target.</li>
-        <li><strong>Don't ask them to prove it.</strong> Demanding identity documents to settle "that's me in the reflection" collects more personal data than the complaint is about. If the photo plausibly shows them, that is enough.</li>
-        <li><strong>Don't treat a removal as a black mark.</strong> It is not a rejection and it is not misconduct; it is somebody exercising a right.</li>
-        <li><strong>Don't decline to clear a backlog.</strong> A decline is a judgement, and it <strong>closes that category for that photo for good</strong>: a later report of the same kind about the same photo is not heard. What is obviously abuse is for an administrator to dismiss as abuse, which leaves the door open; ask in the room rather than declining it yourself.</li>
+        <li data-rule="RB-TAKE-08">A declined photo goes back only if it still passes the photo checks. A scenic-view photo shows only when the camera stood within 250 m of the pin, so one taken further away stays off.</li>
+        <li data-rule="RB-TAKE-09"><strong>If a photo may be illegal content, press Escalate instead of deciding.</strong> It hides the photo, puts it under legal hold, and alerts an administrator; from then on only an administrator can act on it.</li>
       </ul>
 
-      <p>Removing deletes the image files. The record that a photo existed, that its subject asked, and that we did as asked is kept on purpose; it is how the Commons can show it honoured the request.</p>
+      <h3>The test for a third-party claim</h3>
+      <p data-rule="RB-THIRD-01">Does the photo, on its face, show an identifiable person, and is the claim plausible? If yes, uphold it; <strong>when unsure, remove</strong>. Reject only what is clearly not a rights claim: nobody visible at all, or a complaint about the place rather than a person.</p>
 
-      <p><strong>Someone who is in a photo they did not upload</strong> has their own route: the "this photo shows me" link on every photo page, open to people without accounts. Their report lands on this same desk, marked as coming from a third party, and a curator decides it; nothing is removed automatically on somebody's say-so.</p>
+      <ul>
+        <li data-rule="RB-THIRD-15"><strong>Do lean towards removing</strong> when you are unsure. Losing one photo of a fountain costs the Commons almost nothing; refusing a genuine claim about somebody's own image is a rights violation.</li>
+        <li data-rule="RB-THIRD-02"><strong>Do write a note either way</strong>, on a rejection especially; the Reports desk refuses a decision without one.</li>
+        <li data-rule="RB-THIRD-03">Except on Closed, the reporter's mail tells them they can reply if you have misread them, because sometimes you will have.</li>
+        <li data-rule="RB-THIRD-04"><strong>Do answer within a month.</strong> A month is the outer limit, not the target.</li>
+        <li data-rule="RB-THIRD-05">When you decide, the reporter, if they left an address, gets your note by email automatically. The desk never shows you that address.</li>
+        <li data-rule="RB-THIRD-06"><strong>Don't ask them to prove it.</strong> Demanding identity documents to settle "that's me in the reflection" collects more personal data than the complaint is about. If the photo plausibly shows them, that is enough.</li>
+        <li data-rule="RB-THIRD-07"><strong>Don't treat a removal as a black mark.</strong> It is not a rejection and it is not misconduct; it is somebody exercising a right.</li>
+        <li data-rule="RB-THIRD-08"><strong>Don't reject to clear a backlog.</strong> A rejection is a judgement, and it <strong>closes that ground for that photo</strong>: a later report on the same ground still reaches the Reports desk, but it no longer hides the photo on its own.</li>
+        <li data-rule="RB-THIRD-09">A report that hid a photo and is obviously abuse is for an administrator to dismiss as abuse on the restore page, which leaves the ground open. Ask in the room rather than rejecting it yourself.</li>
+        <li data-rule="RB-THIRD-14">While one takedown on a photo is waiting, further reports on it still reach the Reports desk but raise no second takedown.</li>
+      </ul>
+
+      <p data-rule="RB-THIRD-10">Removing deletes the image files. The record that a photo existed, that somebody asked, and that we did as asked is kept on purpose; it is how the Commons can show it honoured the request.</p>
+
+      <p data-rule="RB-THIRD-11"><strong>Someone who is in a photo they did not upload</strong> has their own route: the report link on every photo page, open to people without accounts.</p>
+      <p data-rule="RB-THIRD-12">Their report lands on the Reports desk, not the Takedowns desk, and a curator decides it there.</p>
+      <p data-rule="RB-THIRD-13">Nothing is removed automatically on somebody's say-so.</p>
 
       <h3>When the desk shows a red banner</h3>
-      <p>Anonymous reports may hide only so many photos on their own per hour and per day. Past that budget the desk shows a banner: urgent reports still arrive and still queue, but they hide nothing until you decide them. That pattern is either an attack on the report route or something happening at scale. <strong>Decide each one yourself, tell the site owner, and do not bulk-decline the noise</strong>; declining is final per category, and the owner has a restore page for obvious abuse that keeps a later genuine claim hearable.</p>
+      <ul>
+        <li data-rule="RB-BANNER-01">Reports of intimate imagery or a child may hide only so many photos on their own per hour and per day, site-wide, whoever files them.</li>
+        <li data-rule="RB-BANNER-02">Past that budget the Takedowns and Reports desks show a red banner.</li>
+        <li data-rule="RB-BANNER-03">Urgent reports still arrive and still queue, but they hide nothing until you decide them. That pattern is either an attack on the report form or something happening at scale.</li>
+        <li data-rule="RB-BANNER-04"><strong>Decide each one yourself, and tell the site owner.</strong></li>
+        <li data-rule="RB-BANNER-05"><strong>Do not bulk-reject the noise.</strong> A rejection closes that ground for that photo, while the owner's restore page puts an obviously abusive report's photo back and keeps a later genuine claim able to hide it.</li>
+        <li data-rule="RB-BANNER-09">One network address may file 15 reports a day, and only one of them on the intimate imagery or child ground.</li>
+        <li data-rule="RB-BANNER-10">While the budget is spent, a report on the intimate imagery or child ground must also pass a security check in the reporter's browser before it is filed.</li>
+      </ul>
 
-      <p class="rb-note">Two rules hold in both directions: <strong>nobody learns who anybody is</strong> (the reporter is never told who uploaded, the uploader is never told who reported, and neither sees the other's contact details), and <strong>we do not ask you to prove your identity</strong> to have a photo of you looked at. These two are promises rather than procedure, and they are the part of this page that is stated publicly, on the privacy notice, not here.</p>
+      <p class="rb-note" data-rule="RB-BANNER-06">Two rules hold in both directions: <strong>nobody is told who anybody is</strong> (the reporter is never told who uploaded, the uploader is never told who reported, and neither sees the other's contact details), with one exception: a copyright claim names the claimant to the author, because nobody can answer a claim without knowing who makes it. And <strong>we do not ask you to prove your identity</strong> to have a photo of you looked at.</p>
+      <p data-rule="RB-BANNER-08">The no-ID promise is stated publicly on the privacy notice. The promise that neither side learns who the other is is in the uploader's notifications, not on the privacy notice.</p>
+    </section>
+
+    <section id="reports">
+      <h2>The Reports desk</h2>
+      <p>Anyone can report something on the site, with or without an account. The Reports desk is where you record what was done about each report.</p>
+      <ul>
+        <li data-rule="RB-REPORT-01"><strong>What lands here:</strong> reports about routes, places, region texts, town cards, rider profiles, messages and photos. The desk is the same for every curator, whatever their area. Legal claims (unlawful, personal information, intimate imagery or a child, copyright) and abuse sort to the top.</li>
+        <li data-rule="RB-REPORT-02"><strong>The desk decides about the report, not about the content.</strong> For anything but a photo, change or remove the content at the desk that owns it (the report's <em>Open it</em> link takes you there), then come back and record the outcome here.</li>
+        <li data-rule="RB-REPORT-03"><strong>The outcomes.</strong> <em>Being looked at</em> tells the others you are on it: no note, no mail, and the report stays open. <em>Upheld, and acted on</em>, <em>Looked at, nothing wrong</em> and <em>Closed</em> are decisions.</li>
+        <li data-rule="RB-REPORT-04"><strong>A decision needs a note, and the note is mailed as you wrote it.</strong> The reporter gets it, if they left an address, whatever the outcome. It also goes to the author in the statement of reasons, if you send one, and to the uploader when a photo comes down. Never quote the reporter's words or name the reporter in it.</li>
+        <li data-rule="RB-REPORT-05">You can change a decision later. The reporter is mailed again each time.</li>
+        <li data-rule="RB-REPORT-06"><strong>The statement of reasons.</strong> Tick <em>Send the statement of reasons</em> to tell the author why their content was restricted. It is sent only on <em>Upheld</em>, at most once per report, and cannot be unsent. The box shows only when the content has an author with an account; places, region texts and town cards never have one.</li>
+        <li data-rule="RB-REPORT-07"><strong>Upheld on a photo removes it</strong>: its files are deleted and the uploader is told. This works even when no takedown is waiting on the photo. It is refused while the photo is under legal hold, and when the photo is already gone (choose <em>Closed</em> then).</li>
+        <li data-rule="RB-REPORT-08"><strong>Looked at, nothing wrong</strong> on a photo declines the report's takedown and puts back a photo that was hidden while it waited. An uploader's own request about the same photo is left for the Takedowns desk.</li>
+        <li data-rule="RB-REPORT-09"><strong>Closed only when nothing waits on the photo.</strong> While a takedown waits, Closed is refused: choose Upheld to remove the photo, or nothing wrong to keep it.</li>
+        <li data-rule="RB-REPORT-10"><strong>Escalate a photo you believe may be illegal</strong> instead of upholding: Upheld deletes the evidence along with the photo. Escalate needs a reason and the tick. The photo leaves the site at once, is held, and the administrators are alerted. The report stays open, marked as held, and nothing can be recorded on it until an administrator lifts the hold.</li>
+        <li data-rule="RB-REPORT-11"><strong>Copyright claims.</strong> The reporter must say where the original is and give the name they claim under. You see that name, and so does the author, in the statement of reasons. After an upheld copyright claim the author can answer once; the answer appears on the report under <em>What the author answered</em>. It does not reopen the report and tells nobody.</li>
+        <li data-rule="RB-REPORT-12">An email address is required on every ground except intimate imagery or a child. A signed-in reporter's account address is used.</li>
+        <li data-rule="RB-REPORT-13">The desk never shows the reporter's address. It is deleted 90 days after the decision; while the photo is under legal hold it is kept until the hold is lifted.</li>
+        <li data-rule="RB-REPORT-14">Your name is shown to the other curators on reports you decide. It is never in the mails.</li>
+      </ul>
+    </section>
+
+    <section id="bugs">
+      <h2>The Bugs desk</h2>
+      <ul>
+        <li data-rule="RB-BUG-01"><strong>The statuses.</strong> New, To be confirmed, Planned, Being fixed, Needs checking, Fixed and Not changing this. Only <em>Fixed</em> and <em>Not changing this</em> tell the reporter anything.</li>
+        <li data-rule="RB-BUG-02"><strong>Those two need a reply.</strong> The reporter gets it once, by email or in their messages if they have an account; a later change of status sends nothing again. For Fixed you may tick <em>Use the default message</em>. Not changing this always needs a reason you wrote.</li>
+        <li data-rule="RB-BUG-03"><strong>The internal note is for curators only.</strong> It is never sent to the reporter and never reaches the public list.</li>
+        <li data-rule="RB-BUG-04"><strong>Nothing on the desk is public until a curator publishes it.</strong> Publishing puts the public title and public text on the known-issues list, never the report as the reporter wrote it. An empty public title shows the reporter's own title, so read every word for names and anger before you publish. Unticking takes it off the list again.</li>
+        <li data-rule="RB-BUG-05">Opening a GitHub issue is for administrators only, and only for a published bug with a public title. It sends the public wording, nothing else.</li>
+        <li data-rule="RB-BUG-06">The desk never shows the reporter's address, only whether they can be answered. The address is deleted 24 months after the outcome.</li>
+      </ul>
+    </section>
+
+    <section id="translations">
+      <h2>The Translations desk</h2>
+      <ul>
+        <li data-rule="RB-TRANS-01"><strong>What is reviewed here:</strong> riders' translations of the site's own wording into French, Dutch, German and Spanish, and curators' edits to the English wording. The desk is the same for every curator, whatever their area.</li>
+        <li data-rule="RB-TRANS-02"><strong>You cannot review your own proposal.</strong> The desk refuses it; another curator decides.</li>
+        <li data-rule="RB-TRANS-03"><strong>Approve only in a language you read well enough to vouch for.</strong> Otherwise leave it for a curator who can. Nothing on the desk checks this for you.</li>
+        <li data-rule="RB-TRANS-04"><strong>Approving publishes at once</strong> over the site's text in that language. You may correct the wording before you approve; the rider's version is kept beside yours.</li>
+        <li data-rule="RB-TRANS-05">Needs info requires a question. The proposer gets a message on every decision, with your note.</li>
+        <li data-rule="RB-TRANS-06">Approving an English edit changes the English text and marks the four translations of it stale. They stay live until somebody translates them again.</li>
+      </ul>
+    </section>
+
+    <section id="providers">
+      <h2>The Providers desk</h2>
+      <ul>
+        <li data-rule="RB-PROV-01"><strong>One row per data provider</strong>, with its rank, licence, attribution notice and whether it is <em>Serving</em> or <em>Paused</em>. Every field you change is recorded, with who and when.</li>
+        <li data-rule="RB-PROV-02"><strong>Change a licence or a rank only with the provider's licence in hand.</strong> The licence decides whether the site owes an attribution notice, and a provider whose licence needs one cannot be set to Serving without it.</li>
+        <li data-rule="RB-PROV-03"><strong>Rank orders providers against each other</strong> and never outranks a rider's own contribution. The OpenStreetMap and Wikidata ranks cannot be changed. Today every provider sits on one step of the duplicate check, so a rank change does not yet change which record riders see.</li>
+        <li data-rule="RB-PROV-04"><strong>Serving puts nothing on the map.</strong> Places arrive only when a harvest runs, and there is no button for it: the desk prints the one command an operator runs, a dry run first and then the write.</li>
+        <li data-rule="RB-PROV-05">Paused stops refreshes. Places already harvested stay on the map.</li>
+      </ul>
+    </section>
+
+    <section id="markers">
+      <h2>The Markers page</h2>
+      <ul>
+        <li data-rule="RB-MARK-01">The Markers page (under More) draws every rung of the evidence ladder with the map's own pin rules: the border, the badge and the grade. It changes nothing. Check it before you tell a rider what a pin's border or badge means.</li>
+      </ul>
     </section>
 
     <section id="do">
       <h2>Do</h2>
       <ul>
-        <li><strong>Do use Reject for disagreement, Trash only for bad faith.</strong> A wrong location or an unverifiable claim is a rejection with a friendly note, never a trash.</li>
-        <li><strong>Do ask before deciding</strong> when a submission is unclear: send the rider a message (the needs-info flow). Most "wrong" submissions are just missing context. <strong>Write the actual question in the note</strong>; the desk requires it, because a needs-info with no question tells the rider nothing while taking their submission off the map until they answer. They see the question on their contributions list and answer it from their messages page; their reply puts the item straight back in the queue.</li>
-        <li><strong>Do write a decision note</strong> on rejections. The rider reads it, and it is the difference between a contributor who improves and one who leaves.</li>
-        <li><strong>Do ask the room</strong> when you are unsure, and answer when somebody else asks. A question with a submission number on it is enough; the room links to the card, so nobody has to paste content anywhere.</li>
-        <li><strong>Do report illegal content patterns</strong> to the site owner after escalating. Repeated sources may need an account-level response, which is the admin desk's job, not yours.</li>
+        <li data-rule="RB-DO-01"><strong>Do use Reject for disagreement, Trash only for bad faith.</strong> A wrong location or an unverifiable claim is a rejection with a friendly note, never a trash.</li>
+        <li data-rule="RB-DO-02"><strong>Do ask before deciding</strong> when a submission is unclear: use Needs info. Most "wrong" submissions are just missing context. <strong>Write the actual question in the note</strong>; the desk requires it, because a needs-info with no question tells the rider nothing while it takes their submission off the curators' map until they answer.</li>
+        <li data-rule="RB-DO-04">They see the question on their contributions list and answer it from their messages page; their reply puts the item straight back in the queue.</li>
+        <li data-rule="RB-DO-09">The rider's answer goes only to the curator who asked. If that curator's account is gone, the rider can no longer answer and the item stays waiting, so pick it up yourself.</li>
+        <li data-rule="RB-DO-06"><strong>Do write a decision note</strong> on rejections. The rider reads it, and it is the difference between a contributor who improves and one who leaves.</li>
+        <li data-rule="RB-DO-07"><strong>Do ask the room</strong> when you are unsure, and answer when somebody else asks. A question with a submission number on it is enough; the room links to the card, so nobody has to paste content anywhere.</li>
+        <li data-rule="RB-DO-08"><strong>Do report illegal content patterns</strong> to the site owner after escalating. Every escalation already alerts the administrators; repeated sources may need an account-level response, which is the admin desk's job, not yours.</li>
       </ul>
     </section>
 
     <section id="dont">
       <h2>Don't</h2>
       <ul>
-        <li><strong>Don't share, download, or link pending content</strong> anywhere outside the moderation desk. Unapproved material is unpublished by design; its URLs exist only in your queue. The curator room is inside the desk; a chat app is not.</li>
-        <li><strong>Don't click a link the desk has marked unsafe.</strong> Links in a submission are checked against a known-unsafe list; a marked one stays marked for a reason. Links the check could not reach say so; open those with care, and never on a work account you use for anything else.</li>
-        <li><strong>Don't trash what you merely disagree with.</strong> Trash destroys the evidence of its own correctness; use it only where keeping the content would itself be the harm (spam, abuse), and never for illegal material, which goes to Escalate.</li>
-        <li><strong>Don't decide your own submissions</strong> or those of people close to you; hand them to another curator.</li>
-        <li><strong>Don't promise outcomes</strong> in rider messages ("this will be approved once you…"). You are describing the process, not pre-deciding it.</li>
-        <li><strong>Don't work around the tools</strong> (no manual database edits, no editing content on a rider's behalf beyond what the desk offers; the Routes desk's edit-before-publish is such an offer). If the tool cannot express the right decision, that is a bug to report, not a rule to bend.</li>
-        <li><strong>Don't reach outside your area.</strong> Your moderation area decides what you see and can act on. An item outside it is refused, not hidden, and you are not told what exists elsewhere. If an item you need is out of reach, ask the room; do not ask for the URL.</li>
+        <li data-rule="RB-DONT-01"><strong>Don't share, download, or link pending content</strong> anywhere outside the curator desks. Pending photos sit at unlisted addresses that open for anyone who has the link, so sharing a link publishes them. The curator room is inside the desks; a chat app is not.</li>
+        <li data-rule="RB-DONT-02"><strong>Don't click a link the desk has marked unsafe.</strong> Links in a submission are checked against a known-unsafe list; a marked one stays marked for a reason. Links the check could not reach say so; open those with care, and never on a work account you use for anything else.</li>
+        <li data-rule="RB-DONT-03"><strong>Don't trash what you merely disagree with.</strong> Trash destroys the evidence of its own correctness; use it only where keeping the content would itself be the harm (spam, abuse), and never for illegal material, which goes to Escalate.</li>
+        <li data-rule="RB-DONT-08"><strong>Don't trash to avoid writing a note.</strong> Trash tells the rider nothing; Reject sends them your note.</li>
+        {# DECISION-01 open: should a curator be allowed to decide their own
+           submission? This rule states what the code does today: a curator's
+           own edits (and new places with the OSM question answered) inside
+           their area are approved at intake as that curator, what still queues
+           can be decided by anyone including its author (no guard in
+           ModerationService::decide), and only translations refuse
+           self-review. Owner to decide; see the rulebook ledger. #}
+        <li data-rule="RB-DONT-04"><strong>Your own work.</strong> Your own edits inside your area, and a new place of yours whose OSM question is answered, apply at once without a desk decision. Anything of yours that still queues (a new place with the OSM question open, or work outside your area) is for another curator: <strong>don't decide your own submissions</strong>, or those of people close to you. The Translations desk refuses your own proposals outright.</li>
+        <li data-rule="RB-DONT-05"><strong>Don't promise outcomes</strong> in rider messages ("this will be approved once you..."). You are describing the process, not pre-deciding it.</li>
+        <li data-rule="RB-DONT-06"><strong>Don't work around the tools</strong> (no manual database edits, no editing content on a rider's behalf beyond what the desk offers; the Routes desk's route editing is such an offer). If the tool cannot express the right decision, that is a bug to report, not a rule to bend.</li>
+        <li data-rule="RB-DONT-07"><strong>Don't reach outside your area.</strong> Items outside your area are left out of your queues, History and map, and acting on one directly by its number or link is refused, whichever verb you use. If an item you need is out of reach, ask the room; do not ask for the URL.</li>
+        <li data-rule="RB-DONT-09"><strong>Don't use the room to name items outside someone's area.</strong> A room post about a submission shows its number and title to every curator, whatever their area.</li>
       </ul>
     </section>
 
     <section id="privacy">
       <h2>Privacy specifics</h2>
       <ul>
-        <li>A photo's <strong>GPS coordinates are never stored</strong>; you see only the computed distance to the pin, and only until you decide.</li>
-        <li>Rider identity stays out of public surfaces unless the rider opted into a public profile; the desk may show you more than the public ever sees. Treat everything on the desk as confidential.</li>
-        <li>Consent records (the CC BY-SA 4.0 donation a rider granted) are permanent and none of your concern to manage; the system enforces them. They are disclosed on the privacy notice, so a rider asking "what do you keep after I leave?" can be pointed at that page rather than answered from memory.</li>
-        <li><strong>A takedown reason is confidential.</strong> It often says something personal about the rider; that is the whole point of it. It stays on the desk. A reporter's reply address is kept only to answer them and is deleted 90 days after the decision.</li>
+        <li data-rule="RB-PRIV-01">A photo's <strong>GPS position</strong> is read once and deleted as soon as the photo is tied to its submission. What stays, for good, is its distance to the pin: you see it on the card and on a place's hidden photos, it decides whether a scenic-view photo shows, and the public map never shows it.</li>
+        <li data-rule="RB-PRIV-02">Rider identity stays out of public surfaces unless the rider opted into a public profile. A photo's credit is the rider's display name only while their profile is public, and it follows a change of name or of the switch.</li>
+        <li data-rule="RB-PRIV-03">The desks name riders the way the public pages do: by display name only when their profile is public, otherwise by their pseudonym. The desks still show you what the public never sees (pending content, photo distances, report reasons), so treat everything on them as confidential.</li>
+        <li data-rule="RB-PRIV-07">A pseudonym is <code>rider#</code> and eight random characters, stored with the account and never changed. It says nothing about who the rider is. An account that no longer exists shows as "a removed rider".</li>
+        <li data-rule="RB-PRIV-08">Desk search finds a rider with a private profile only by their pseudonym, never by their real display name.</li>
+        <li data-rule="RB-PRIV-09">Private riders can share a display name, so a name proves nothing about who someone is.</li>
+        <li data-rule="RB-PRIV-10">No curator desk shows a rider's or a reporter's email address. A reporter's network address is kept only as a one-way hash.</li>
+        <li data-rule="RB-PRIV-04">Consent records (the CC BY-SA 4.0 donation a rider granted) are permanent and none of your concern to manage; the system enforces them. They are disclosed on the privacy notice, so a rider asking "what do you keep after I leave?" can be pointed at that page rather than answered from memory.</li>
+        <li data-rule="RB-PRIV-11">When a rider deletes their account, their photos still waiting for a decision go. Their approved photos stay, credited by name only if their profile was public and they chose to keep the credit, otherwise anonymously.</li>
+        <li data-rule="RB-PRIV-05"><strong>A report's reason is confidential.</strong> It often says something personal about somebody; that is the whole point of it. It stays on the desk.</li>
+        <li data-rule="RB-PRIV-06">A reporter's reply address is kept only to answer them and is deleted 90 days after the decision. The privacy notice says the same.</li>
       </ul>
     </section>
 
     <section id="account">
       <h2>Your account</h2>
       <ul>
-        <li><strong>Two-factor login is mandatory</strong> for every curator and moderator account. The desk will not open without it. Keep the recovery codes somewhere that is not this browser.</li>
-        <li><strong>Riders can only ask you so often.</strong> A rider may file a few route corrections a day and a curator application a few times a day; the limits exist because every row is a curator's task. If a desk fills faster than that, something is wrong; say so in the room.</li>
+        <li data-rule="RB-ACCT-01"><strong>Two-factor login is mandatory</strong> for every curator and administrator account.</li>
+        <li data-rule="RB-ACCT-02">The desks will not open without it.</li>
+        <li data-rule="RB-ACCT-03">Keep the recovery codes somewhere that is not this browser.</li>
+        <li data-rule="RB-ACCT-07">Five wrong passwords or five wrong two-factor codes lock your account for 15 minutes, and even a correct code is refused while it is locked. Wait it out.</li>
+        <li data-rule="RB-ACCT-08"><strong>Remember me keeps you signed in for seven days on that browser.</strong> Do not tick it on a shared or work machine: whoever opens that browser opens the desks.</li>
+        <li data-rule="RB-ACCT-09">A curator account is not exempt from the idle-account rule. After 12 months without signing in you get notices, and at 24 months the account is deleted like any rider's. Signing in resets it.</li>
+        <li data-rule="RB-ACCT-04"><strong>Riders can only ask you so often.</strong> A rider may file 5 route corrections a day.</li>
+        <li data-rule="RB-ACCT-05">A rider may send a curator application 3 times a day.</li>
+        <li data-rule="RB-ACCT-06">The limits exist because every row is a curator's task. If a desk fills faster than that, something is wrong; say so in the room.</li>
       </ul>
     </section>
 
     <section id="workload-view">
       <h2>Who can see your work, and you should know it</h2>
-      <p>Two views exist and are named here on purpose, because an openly-stated view is management and a quiet one would be surveillance.</p>
+      <p data-rule="RB-SEE-01">Several views show your work, and they are named here on purpose, because an openly-stated view is management and a quiet one would be surveillance.</p>
       <ul>
-        <li>Admins can see a <strong>moderation activity</strong> table: decided submissions per month, per <em>region</em>, never per moderator. It answers "how much work is being done, and where", so quiet regions get help and busy ones get more hands.</li>
-        <li>Every curator can see the <strong>History</strong> desk: what is already settled, with its message threads, and a <em>Handled by me</em> filter. Your name is on your decisions there, to the other curators in your area, and that is what lets a second curator pick up a thread you started.</li>
+        <li data-rule="RB-SEE-02">Administrators can see a <strong>Moderation activity</strong> table: decided submissions per month, per <em>region</em>, never per curator. It answers "how much work is being done, and where", so quiet regions get help and busy ones get more hands.</li>
+        <li data-rule="RB-SEE-06">Administrators also see an activity log that names the curator behind every Trash.</li>
+        <li data-rule="RB-SEE-03">Every curator can see the <strong>History</strong> desk: what is already settled, with its message threads, and a <em>Handled by me</em> filter.</li>
+        <li data-rule="RB-SEE-04">Your name is on your decisions there, to the other curators in your area, and that is what lets a second curator pick up a thread you started. A trash shows there, by number and type only, to every curator.</li>
+        <li data-rule="RB-SEE-07">Other curators also see your name on reports you decided and on your posts in the room.</li>
+        <li data-rule="RB-SEE-05">Fellow curators always see you by your display name, even when your profile is private; only the link to your profile follows the switch.</li>
+        <li data-rule="RB-SEE-08">If you are on the public contributor wall, your row carries a Curator chip.</li>
       </ul>
     </section>
 
     <section id="deep-rules">
       <h2>Where the deep rules live</h2>
-      <p>This page is the operating summary. The binding contracts are the moderation and contribution specification (retention, Trash, messages, scoping), the route domain specification (Routes desk, caps, corrections), the catalog data model (the Data desk and the OSM question), the map and search specification (what a region opens in) and the photo-uploads specification (media lifecycle) in the project repository. When this page and a spec disagree, the spec wins and this page has a bug.</p>
+      <p data-rule="RB-SPEC-02">This page is the operating summary. The binding contracts are in the project repository: the moderation and contribution specification (retention, Trash, messages, scoping), the route domain specification (Routes desk, caps, corrections), the catalog data model (the Data desk and the OSM question), the map and search specification (what a region opens in, town texts), the photo-uploads specification (media lifecycle, takedowns, legal hold), the content reports specification (Reports desk), the contact and support specification (Bugs desk), the translations specification (Translations desk), the data provider hierarchy (Providers desk and the marker ladder) and the account and auth specification (two-factor login, roles, pseudonyms).</p>
+      <p data-rule="RB-SPEC-03">When this page and a spec disagree, the spec wins and this page has a bug.</p>
     </section>
   </div>
 </div>
