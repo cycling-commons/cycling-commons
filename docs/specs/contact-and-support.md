@@ -252,6 +252,23 @@ An address is optional. A report we cannot answer is still worth having: the
 fix helps everybody, including its author. A *wrong* address is refused, because
 the reporter would otherwise wait for an answer that bounced.
 
+**The address is kept until 24 months after the outcome**
+({@see App\Support\BugReporterEmailRetention}). It exists to tell the reporter
+the outcome, which goes out when the report becomes Fixed or Not changing this
+(`resolved`, `declined`; `BugStatus::notifiesReporter()`). The privacy page
+names no separate period for bug reports, so the period is the one it gives
+mail (`privacy.retention_mail`, 24 months), and the privacy page says so in
+`privacy.retention_bugs`. Only `reporter_email` is cleared; the report, its
+account link and everything else stay, because a bug report is project data.
+The clock runs from `GREATEST(updated_at, notified_at)`: the status change
+stamps `updated_at` and the outcome mail stamps `notified_at`, so the later of
+the two is never earlier than the latest decision, and a report reopened and
+decided again starts a fresh 24 months. A report in any open status keeps its
+address however old it is. The sweep runs daily in `app:media:gc`. Example: a
+report marked Fixed on 10 April 2026, outcome mailed that day, loses its
+address on the first run after 10 April 2028, and stays on the desk and on
+`/known-issues` unchanged.
+
 **The floating button.** Bottom-right, on **every** page, the map included. It
 is a 42px circle with the bug mark and no visible text, everywhere: a labelled
 pill covered controls in the same corner, the translate bar's "Stop

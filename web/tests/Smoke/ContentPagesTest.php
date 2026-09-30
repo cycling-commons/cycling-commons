@@ -40,6 +40,17 @@ final class ContentPagesTest extends WebTestCase
         self::assertStringContainsString('24 months', $retention);
     }
 
+    /** A bug reporter's address goes 24 months after the outcome (contact-and-support.md §5). */
+    public function testPrivacyStatesTheBugReportAddressPeriod(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/privacy');
+        self::assertResponseIsSuccessful();
+        $retention = $crawler->filter('h2:contains("How long we keep it") + ul')->text();
+        self::assertStringContainsString('Bug reports.', $retention);
+        self::assertStringContainsString('deleted 24 months after we tell you the outcome', $retention);
+    }
+
     public function testTermsRenders(): void
     {
         $client = static::createClient();

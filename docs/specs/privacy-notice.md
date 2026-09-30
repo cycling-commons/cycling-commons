@@ -34,6 +34,7 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | Dormant accounts are never deleted | nothing reads `lastLoginAt` on a schedule | `docs/TODO.md` 5g is built |
 | Mail kept 24 months after a thread ends | policy, owner 2026-08-27 | the mailbox policy changes |
 | Contact-form messages deleted 24 months after they were answered or closed (`privacy.retention_mail`) | `App\Support\ContactMessageRetention`, daily in `app:media:gc` (contact-and-support.md §4) | the sweep stops running, or its clock stops being `updated_at` on an answered or closed message |
+| A bug reporter's address deleted 24 months after the outcome, kept while the bug is open (`privacy.retention_bugs`) | `App\Support\BugReporterEmailRetention`, daily in `app:media:gc` (contact-and-support.md §5) | the sweep stops running, or it touches an open report |
 | Browser-contacted services | `security-architecture.md` 2.3, `connect-src` + `img-src` | a CSP host is added |
 | Cookie names and lifetimes | `config/packages/framework.yaml` (session), `config/packages/security.yaml` `remember_me.lifetime` | either is configured differently |
 | Account deletion is immediate | `App\Service\UserDeletionService::confirmDeletion()` | a real grace period is ever built |
