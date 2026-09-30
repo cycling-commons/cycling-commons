@@ -59,15 +59,33 @@ final class CuratedReadinessTest extends KernelTestCase
         ]));
     }
 
-    private function addItem(string $letter, ?string $cur): void
+    private function addItem(string $letter, ?string $cur, string $state = 'verified'): void
     {
         $attrs = null === $cur ? '{}' : json_encode(['cur' => $cur], \JSON_THROW_ON_ERROR);
         $this->db->executeStatement(
             "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
-             VALUES (:l, 'x', 'manual', :ref, 'verified', 'BE', CAST(:a AS jsonb), :r,
+             VALUES (:l, 'x', 'manual', :ref, :s, 'BE', CAST(:a AS jsonb), :r,
                      ST_SetSRID(ST_MakePoint(4.5, 50.5), 4326), NOW(), NOW())",
-            ['l' => $letter, 'ref' => 'readiness:'.$letter.':'.++$this->seq, 'a' => $attrs, 'r' => $this->regionId],
+            ['l' => $letter, 'ref' => 'readiness:'.$letter.':'.++$this->seq, 's' => $state, 'a' => $attrs, 'r' => $this->regionId],
         );
+    }
+
+    /**
+     * Only a row the map serves can make Best of worth opening: a retired,
+     * rejected or still-submitted pick keeps its `cur` flag in `attributes`
+     * but shows nowhere, so it is no evidence the region has anything to show.
+     */
+    public function testOnlyServedCuratedItemsCount(): void
+    {
+        $this->addItem('N', 'true');                 // verified: counts
+        $this->addItem('O', 'true', 'unverified');   // served too: counts
+        $this->addItem('N', 'true', 'retired');
+        $this->addItem('P', 'true', 'rejected');
+        $this->addItem('Q', 'true', 'submitted');
+
+        $rep = $this->readiness(25)->reportFor($this->regionId);
+        self::assertSame(2, $rep['total']);
+        self::assertSame(['A' => 0, 'N' => 1, 'O' => 1, 'P' => 0, 'Q' => 0, 'R' => 0], $rep['blocks']);
     }
 
     public function testCountsOnlyCuratedItemsOnExperientialLetters(): void

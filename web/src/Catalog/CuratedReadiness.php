@@ -137,10 +137,13 @@ final class CuratedReadiness
         /** @var list<array{region_id: int|string, letter: string, n: int|string}> $items */
         $items = $this->db->fetchAllAssociative(
             // jsonb_exists(), not `?` — DBAL treats `?` as a placeholder.
-            "SELECT region_id, letter, COUNT(*) AS n
+            // Served rows only: a retired, rejected or still-submitted pick
+            // keeps its `cur` flag but is on no map, so it shows nothing.
+            'SELECT region_id, letter, COUNT(*) AS n
                FROM item
               WHERE region_id IN (:rids)
                 AND letter IN (:letters)
+                AND state IN '.ItemState::servedSqlTuple()."
                 AND jsonb_exists(attributes, 'cur')
                 AND attributes ->> 'cur' NOT IN ('false', '0', '')
               GROUP BY region_id, letter",

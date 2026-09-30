@@ -140,6 +140,33 @@ final class CuratedDefaultGateTest extends WebTestCase
     }
 
     /**
+     * A pick that left the map (retired, rejected) or never reached it
+     * (submitted) keeps its `cur` flag, and the desk must not count it: the
+     * count is what Best of would show.
+     */
+    public function testDeskCountsOnlyServedPicks(): void
+    {
+        $client = static::createClient();
+        $region = $this->seedRegion('gate-served');
+        $this->addCuratedItems((int) $region->getId(), 2);
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        foreach (['retired', 'rejected', 'submitted'] as $i => $state) {
+            $db->executeStatement(
+                "INSERT INTO item (letter, name, source, source_ref, state, country_code, attributes, region_id, geom, created_at, updated_at)
+                 VALUES ('N', 'gone', 'manual', :ref, :s, 'BE', '{\"cur\": true}'::jsonb, :r,
+                         ST_SetSRID(ST_MakePoint(5.0, 50.0), 4326), NOW(), NOW())",
+                ['ref' => 'unserved:'.$i, 's' => $state, 'r' => (int) $region->getId()],
+            );
+        }
+        $client->loginUser($this->curator('gate-served@example.com'), 'main');
+
+        $client->request('GET', '/moderate/regions');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('2 of 25 curated', (string) $client->getResponse()->getContent());
+    }
+
+    /**
      * The MIDDLE rung has its own bar (owner 2026-08-12). A region with a
      * handful of vouched-for places may open in Confirmed long before it has a
      * best-of — and one with none may not, because "opens in Confirmed" would

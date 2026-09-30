@@ -603,7 +603,9 @@ for one thing in five languages. Fixed across all five.
   hundreds of places (the owner's "1488 where to sleep, 0/1488"). A region opens
   in Curated only once a moderator has flipped `region.curated_default`, and that
   toggle is **gated** on a readiness count — curated items on the experiential
-  letters plus verified+voted best-of routes, against
+  letters in a served state (`ItemState::servedSqlTuple()`: a retired,
+  rejected or still-submitted row keeps its `cur` flag but is on no map, so it
+  does not count) plus verified+voted best-of routes, against
   `map.curated_default_threshold` — so it cannot be set prematurely. Utility
   letters do not count towards readiness: they render in both modes. The gate
   lives on the curator **Regions** desk (`/moderate/regions`), scoped like every
