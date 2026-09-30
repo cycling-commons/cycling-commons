@@ -60,6 +60,14 @@ final class ContentReportService
         private readonly MediaEscalationService $escalations,
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
+        // The no-reply sender every support mail uses (support.yaml).
+        #[Autowire('%cc.support.from_email%')]
+        private readonly string $fromEmail,
+        // Every report mail asks for a reply (a mistake, an appeal), and the
+        // sender cannot take one, so replies go to the address the contact
+        // page publishes. Empty means the mails do not ask for a reply.
+        #[Autowire('%cc.support.public_email%')]
+        private readonly string $replyTo,
     ) {
     }
 
@@ -333,13 +341,19 @@ final class ContentReportService
      */
     private function send(string $to, string $template, string $subject, array $context): void
     {
-        $this->mailer->send(
-            (new TemplatedEmail())
-                ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
-                ->to(new Address($to))
-                ->subject($subject)
-                ->htmlTemplate($template)
-                ->context($context)
-        );
+        $replyTo = trim($this->replyTo);
+        $email = (new TemplatedEmail())
+            ->from(new Address($this->fromEmail, 'Cycling Commons'))
+            ->to(new Address($to))
+            ->subject($subject)
+            ->htmlTemplate($template)
+            // The templates print the reply sentences only when there is
+            // somewhere for a reply to land.
+            ->context([...$context, 'reply_to' => '' !== $replyTo ? $replyTo : null]);
+        if ('' !== $replyTo) {
+            $email->replyTo(new Address($replyTo));
+        }
+
+        $this->mailer->send($email);
     }
 }

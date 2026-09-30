@@ -297,6 +297,13 @@ reporter who disagrees can only argue with a reason they can read. Every outcome
 but `moot` carries the redress line: reply to us, or go to an out-of-court
 dispute settlement body or a court where you live.
 
+**Replies reach a person.** All three report mails (these two and the
+statement of reasons, content-reports.md §7) are sent from `cc.support.from_email`, the no-reply
+sender, with `Reply-To` set to `cc.support.public_email`, the address the
+contact page publishes (contact-and-support.md §4). When that address is empty
+the mails carry no `Reply-To` and leave out the "reply to this email"
+sentences; the out-of-court route stays. Pinned by `ReportMailReplyToTest`.
+
 ## 7. What the author is told
 
 `emails/report_statement_of_reasons.html.twig`, Article 17. Sent **only for an
@@ -500,7 +507,8 @@ it on the same clock. Pinned by `ReportContactRetentionTest` and
 ## 11. Open
 
 * **Appeals are by email**, not a form. Both decision emails say "reply to this
-  email with the reference". A structured appeal surface is worth building when
+  email with the reference", and the reply goes to `cc.support.public_email`
+  (content-reports.md §6). A structured appeal surface is worth building when
   there is enough volume to need one, and not before.
 * **Escalate exists for photo reports only.** A report that a place, a route,
   a region or town text, a profile name or a message is illegal content has no

@@ -46,7 +46,11 @@
   {% endif %}
 
   {% if report.status.value != 'moot' %}
-    <p style="margin:0 0 8px">If you think this is wrong, reply to this email with the reference above and a person will read it again. You can also take the matter to an out-of-court dispute settlement body, or to a court, in the country where you live. Nothing here takes that right away.</p>
+    {% if reply_to|default(null) %}
+      <p style="margin:0 0 8px">If you think this is wrong, reply to this email with the reference above and a person will read it again. You can also take the matter to an out-of-court dispute settlement body, or to a court, in the country where you live. Nothing here takes that right away.</p>
+    {% else %}
+      <p style="margin:0 0 8px">If you think this is wrong, you can take the matter to an out-of-court dispute settlement body, or to a court, in the country where you live. Nothing here takes that right away.</p>
+    {% endif %}
   {% endif %}
 
   <p style="margin:0 0 14px">Thank you for taking the time. Reports are how the map stays honest.</p>

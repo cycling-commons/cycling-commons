@@ -63,7 +63,11 @@
     <p style="margin:0 0 14px"><strong>If the work is yours, say so.</strong> <a href="https://cyclingcommons.org/report/{{ report.id }}/answer" style="color:#c2551f">Answer the claim here</a>, signed in with this account. Your answer goes on the same record as the claim, so whoever looks next reads both. You can answer once, so say everything at once. Nothing goes back up on a timer: a person decides.</p>
   {% endif %}
 
-  <p style="margin:0 0 8px"><strong>If we got it wrong, tell us.</strong> Reply to this email with the reference above and a different curator will read it again. You can also take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
+  {% if reply_to|default(null) %}
+    <p style="margin:0 0 8px"><strong>If we got it wrong, tell us.</strong> Reply to this email with the reference above and a different curator will read it again. You can also take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
+  {% else %}
+    <p style="margin:0 0 8px"><strong>If we got it wrong</strong>, you can take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
+  {% endif %}
 
   <p style="margin:0 0 14px">You can read the full rules and how we apply them at <a href="https://cyclingcommons.org/terms" style="color:#c2551f">cyclingcommons.org/terms</a>.</p>
 
