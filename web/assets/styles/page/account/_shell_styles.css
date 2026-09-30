@@ -223,9 +223,9 @@
   .q-reply button{align-self:flex-start}
   /* Arriving from a link that names one row. */
   .q-item:target{border-color:var(--ochre);box-shadow:0 0 0 2px var(--ochre);scroll-margin-top:1.5rem}
-  /* The unseen bar (moderation-and-contribution.md §7.5a, §13.7): the mark
-     for a row its reader has not opened yet, on the rider's messages and the
-     curator room's posts. A bar in the brand orange at the row's left edge, and
+  /* The unseen bar (moderation-and-contribution.md §5.2f): the one mark for a
+     row its reader has not opened yet, on the rider's messages and on every
+     desk list alike. A bar in the brand orange at the row's left edge, and
      words for a screen reader in .unseen-note. It goes when the item is
      opened: open-to-read.js takes it off in place. */
   .is-unseen{position:relative}

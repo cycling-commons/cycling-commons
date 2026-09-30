@@ -39,12 +39,16 @@
   {% else %}
     <h2 class="sec-band">{{ 'moderate.translation.desk_history_heading'|trans }} <span class="sec-count">{{ pager.total }}</span></h2>
     <div class="q-list">
+      {# Asked like every list; settled work never carries the unseen bar (moderation-and-contribution.md §5.2f). #}
+      {% set unseen_ids = cc_unseen('translation_proposal', cards|map(c => c.id)) %}
       {% for card in cards %}
-        <article class="q-item">
+        {% set row_unseen = unseen_ids[card.id] is defined %}
+        <article class="q-item {{ row_unseen ? 'is-unseen' }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
-                <h3 class="q-title"><a class="q-title-link" href="{{ path('moderate_translations_detail', {id: card.id}) }}">{{ card.message_key }}</a></h3>
+                <h3 class="q-title"><a class="q-title-link" href="{{ path('moderate_translations_detail', {id: card.id}) }}" data-opens>{{ card.message_key }}</a>
+                  {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
                 <span class="q-pill q-pill--{{ pill[card.status] ?? 'ret' }}">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span>
               </div>
               <div class="q-submitter">{{ _self.who(card.who) }}
@@ -76,3 +80,5 @@
 </div>
 {% include 'moderate/_card_script.html.twig' %}
 {% endblock %}
+
+{% block body_scripts %}<script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}

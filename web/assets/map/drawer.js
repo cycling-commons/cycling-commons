@@ -32,6 +32,7 @@ import { CC_VOTABLE, CC_CONFIRMABLE, CC_BREAKABLE, routeCommunityPanel, hydrateR
          hydrateItemConfirm, setPendingShape, setRouteCurrent } from './community.js';
 import { showPendingShape, fitPendingShape, clearPendingShape } from './pending-shape.js';
 import { clearCorrections } from './corrections.js';
+import { markOpened } from './desk-seen.js';
 import { routeClimbsSlot } from './route-climbs.js';
 import { hydrateRouteClimbs, hydrateRouteAlong, releaseRouteList } from './listed-place.js';
 import { routeAlongSlot } from './along-list.js';
@@ -1280,6 +1281,12 @@ export function openDrawer(layer, f){
   }
   renderDrawerBody(layer, f);
   showDrawer({fresh:true});
+  /* A curator opening a pending submission here has opened it on the desk
+     too: its unseen bar goes from the lists (moderation-and-contribution.md §5.2f). */
+  if(layer.pendingLayer && f.pending && window.CC_IS_CURATOR){
+    f.pending.unseen = false;
+    markOpened('submission', f.pending.id);
+  }
 }
 
 /* Bring the feature drawer up. THE way it opens, for every path: a record

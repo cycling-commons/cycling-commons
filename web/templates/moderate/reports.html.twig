@@ -55,11 +55,16 @@
   {% if rows is empty %}
     <div class="empty">{{ 'report.desk.empty'|trans }}</div>
   {% else %}
+    {# A report this curator has not opened carries the unseen bar
+       (moderation-and-contribution.md §5.2f); its page opens it. #}
+    {% set unseen_ids = cc_unseen('content_report', rows|map(row => row.report.id)) %}
     {% for row in rows %}
       {% set r = row.report %}
-      <div class="rrow">
+      {% set row_unseen = unseen_ids[r.id|trim] is defined %}
+      <div class="rrow {{ row_unseen ? 'is-unseen' }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
         <div class="rtop">
-          <a href="{{ path('moderate_reports_detail', {id: r.id}) }}">{{ row.resolved.label ?? r.targetType.label|trans ~ ' #' ~ r.targetId }}</a>
+          <a href="{{ path('moderate_reports_detail', {id: r.id}) }}" data-opens>{{ row.resolved.label ?? r.targetType.label|trans ~ ' #' ~ r.targetId }}</a>
+          {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}
           {# Plain orange text, not blocks (owner 2026-09-08). #}
           <span class="cats"><span class="{{ r.ground.isUrgent ? 'legal' : '' }}">{{ r.ground.label|trans }}</span> · {{ r.status.label|trans }} · {{ r.targetType.label|trans }}{% if not row.resolved.exists %} · <span class="gone">{{ 'report.desk.target_gone'|trans }}</span>{% endif %}{% if row.held %} · <span class="legal">{{ 'report.desk.held_row'|trans }}</span>{% endif %}</span>
         </div>
@@ -77,3 +82,5 @@
   {% endif %}
 </div>
 {% endblock %}
+
+{% block body_scripts %}<script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}

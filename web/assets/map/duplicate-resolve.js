@@ -20,6 +20,7 @@ import { map, fitMapTo } from './map-init.js';
 import { D } from './i18n.js';
 import { liftScopeForHit } from './scope-ui.js';
 import { showDrawer } from './drawer.js';
+import { markOpened } from './desk-seen.js';
 
 const ENDPOINT = '/moderate/data/finding/';
 
@@ -30,7 +31,11 @@ export function initDuplicateResolve() {
   fetch(ENDPOINT + raw, { headers: { Accept: 'application/json' } })
     .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
     .then(d => {
-      if (d && Array.isArray(d.items) && d.items.length >= 2) showResolve(d);
+      if (d && Array.isArray(d.items) && d.items.length >= 2) {
+        showResolve(d);
+        // Opened here: the Data desk drops its unseen bar (moderation-and-contribution.md §5.2f).
+        markOpened('catalog_finding', d.id);
+      }
     })
     .catch(() => { /* not a curator, or already decided: leave the map alone */ });
 }

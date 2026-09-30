@@ -17,8 +17,15 @@
   than link-ish text stacked below it; an opened panel takes the full width of
   the action group (`.q-act[open]` in index.html.twig) so the button row never
   ends up half-height. Spec: moderation-and-contribution.md §5.2.
+
+  A submission this curator has not opened carries the unseen bar (moderation-and-contribution.md §5.2f):
+  `unseen_ids` is the list's cc_unseen() set. Its three ways in (the title,
+  ◎ and ✎) open it: the map drawer posts that it was opened, and the form
+  links carry `sub=<id>` so the form's load records it. Following one takes
+  the bar off this row at once (data-opens, assets/js/open-to-read.js).
 #}
-<div class="q-item" data-item-id="{{ item.id }}">
+{% set row_unseen = unseen_ids[item.id] is defined %}
+<div class="q-item {{ row_unseen ? 'is-unseen' }}" data-item-id="{{ item.id }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
   <div class="q-top">
     {# The photo, in the row. A curator scanning a queue can tell a real place
        from a mis-tap or a joke by looking, and a 44px crop answers that faster
@@ -46,8 +53,9 @@
         {% if item.riderReply %}<span class="q-tag q-tag--answered">{{ 'moderate.answered'|trans }}</span>{% endif %}
         {# The name opens the edit form, same target as ✎ (owner 2026-08-25): the
            biggest thing on the row should be the thing you click. #}
-        <h3 class="q-title">{% if item.itemId %}<a class="q-title-link" href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}"
-             target="_blank" rel="noopener" title="{{ 'moderate.action.edit_form'|trans }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}</h3>
+        <h3 class="q-title">{% if item.itemId %}<a class="q-title-link" href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}&sub={{ item.id }}"
+             target="_blank" rel="noopener" data-opens title="{{ 'moderate.action.edit_form'|trans }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}
+          {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
         <span class="q-when">{{ item.when }}</span>
       </div>
       {# WHERE, in words. Three decimal places of latitude tell a curator
@@ -143,7 +151,7 @@
          stays as the tooltip and the accessible name, like ⚑ and the bin. #}
       <a class="btn-act btn-secondary btn-icon q-review"
          href="{{ path('map') }}?pending={{ item.id }}"
-         target="_blank" rel="noopener"
+         target="_blank" rel="noopener" data-opens
          title="{{ 'moderate.action.review_on_map'|trans }}"
          aria-label="{{ 'moderate.action.review_on_map'|trans }}">◎</a>
       {# Straight to the form. Review-on-the-map answers "is this right"; this
@@ -154,8 +162,8 @@
          that lies. #}
       {% if item.itemId %}
       <a class="btn-act btn-secondary btn-icon q-edit"
-         href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}"
-         target="_blank" rel="noopener"
+         href="{{ path('improve') }}?item={{ item.itemId }}&type={{ item.letter }}&sub={{ item.id }}"
+         target="_blank" rel="noopener" data-opens
          title="{{ 'moderate.action.edit_form'|trans }}"
          aria-label="{{ 'moderate.action.edit_form'|trans }}">✎</a>
       {% endif %}

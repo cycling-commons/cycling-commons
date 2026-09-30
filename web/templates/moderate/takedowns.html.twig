@@ -47,14 +47,21 @@
   <p class="sec-lead">{{ 'moderate.takedown.lead_short'|trans }}
     <a href="{{ path('moderate_rulebook') }}#takedowns">{{ 'moderate.takedown.rulebook_link'|trans }}</a></p>
   <div class="q-list">
+    {# A waiting request carries the unseen bar
+       (moderation-and-contribution.md §5.2f): the whole request is on the
+       card, so it keeps the bar until it is answered or escalated, and then
+       loses it for every curator. #}
+    {% set unseen_ids = cc_unseen('takedown', takedowns|map(t => t.uuid)) %}
     {% for t in takedowns %}
-      <article class="q-item">
+      {% set row_unseen = unseen_ids[t.uuid] is defined %}
+      <article class="q-item {{ row_unseen ? 'is-unseen' }}" data-media="{{ t.uuid }}">
         <div class="q-top">
           <img class="td-img" src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}">
           <div class="q-headwrap">
             <div class="q-head">
               <span class="q-tag q-tag--photo">{{ (t.source == 'third_party' ? 'moderate.takedown.source_third_party' : 'moderate.takedown.source_uploader')|trans }}</span>
-              <h3 class="q-title">{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}</h3>
+              <h3 class="q-title">{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}
+                {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
               <span class="q-when">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|cc_datetime}) }}</span>
             </div>
             <div class="q-submitter">
@@ -114,8 +121,11 @@
     <h2 class="sec-band sec-band--quiet">{{ 'moderate.takedown.history_heading'|trans }} <span class="sec-count">{{ history_pager.total }}</span></h2>
     <p class="sec-lead">{{ 'moderate.takedown.history_lead'|trans }}</p>
     <div class="q-list">
+      {# Asked like every list; an answered request never carries the bar. #}
+      {% set unseen_ids = cc_unseen('takedown', decided|map(d => d.uuid)) %}
       {% for d in decided %}
-        <div class="q-item">
+        {% set row_unseen = unseen_ids[d.uuid] is defined %}
+        <div class="q-item {{ row_unseen ? 'is-unseen' }}" data-media="{{ d.uuid }}">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
@@ -124,7 +134,8 @@
                 <h3 class="q-title">{{ d.itemName ?: ('moderate.takedown.no_item'|trans) }}
                   {# A granted request destroys the photo, so there is nothing to
                      link to. Saying so beats a dead thumbnail. #}
-                  {% if d.gone %}<span class="td-gone">{{ 'moderate.takedown.photo_gone'|trans }}</span>{% endif %}</h3>
+                  {% if d.gone %}<span class="td-gone">{{ 'moderate.takedown.photo_gone'|trans }}</span>{% endif %}
+                  {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
                 {# The whole handling record on one line, in the order it happened
                    (owner 2026-08-14): when it arrived, when it was answered, how
                    long that took, and by whom. #}

@@ -621,6 +621,10 @@ Newest first and nothing clever. A desk that reorders by severity hides the
 report that arrived thirty seconds ago, which is the one most likely to be about
 something that just broke.
 
+An open bug this curator has not opened carries the unseen bar
+([moderation-and-contribution.md §5.2f](moderation-and-contribution.md)) until
+its page loads for them. A resolved or declined bug carries it for nobody.
+
 One form sets status, severity, area, the public flag and the outcome note,
 because a curator triaging twenty reports should not save four times per report. Reaching
 resolved or declined mails the reporter, so the note is required for those two:

@@ -17,8 +17,12 @@
 // Without this script the <details> still opens and nothing is marked.
 //
 // The same unread classes carry the unseen bar (`is-unseen`,
-// partials/_unseen.html.twig), the mark a row wears until its reader opens
-// it.
+// moderation-and-contribution.md §5.2f), the one mark a list row wears until
+// its reader opens it. A desk row opens on a page of its own instead: it has
+// no data-read-url, and following one of its [data-opens] links (a click or a
+// middle click) settles it here at once, so the list left behind in its tab,
+// or reached again by Back, shows it opened. The page it leads to records the
+// opening; nothing is posted from here.
 (function () {
   'use strict';
 
@@ -86,6 +90,14 @@
       })
       .catch(function () { /* offline: the item stays unread */ });
   }
+
+  function followed(e) {
+    var link = e.target && e.target.closest ? e.target.closest('a[data-opens]') : null;
+    var row = link ? link.closest('[data-unread-class]') : null;
+    if (row && !row.hasAttribute('data-read-url')) settle(row);
+  }
+  document.addEventListener('click', followed);
+  document.addEventListener('auxclick', followed);
 
   each(document.querySelectorAll('details[data-open-read]'), function (details) {
     details.addEventListener('toggle', function () {

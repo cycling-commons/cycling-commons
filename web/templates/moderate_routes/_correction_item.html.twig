@@ -15,13 +15,19 @@
   Parameters:
     s           array: correction row (id, routeId, routeName, reason, note, rider, segmentCount, photos, changes, riderReply)
     show_route  bool  — link the route's name (overview); false on a route's own page
+
+  A correction this curator has not opened carries the unseen bar (moderation-and-contribution.md §5.2f):
+  `unseen_ids` is the overview's cc_unseen() set. The route's own page opens
+  every correction it lists, so it passes none.
 #}
-<div class="q-item q-item--corr" data-item-id="c{{ s.id }}" data-suggestion-id="{{ s.id }}">
+{% set row_unseen = unseen_ids|default({})[s.id] is defined %}
+<div class="q-item q-item--corr {{ row_unseen ? 'is-unseen' }}" data-item-id="c{{ s.id }}" data-suggestion-id="{{ s.id }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
   <div class="q-top">
     <div class="q-headwrap">
       <div class="q-head">
         {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
         <span class="q-tag q-tag--edit">{{ ('moderate_routes.suggestions.reason_' ~ (s.reason|replace({'-': '_'})))|trans }}</span>
+        {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}
         {% if s.riderReply|default(null) %}<span class="q-tag q-tag--answered">{{ 'moderate.answered'|trans }}</span>{% endif %}
         {% if show_route|default(false) %}
           <h3 class="q-title"><a class="sugg-route" href="{{ path('map') }}?route={{ s.routeId }}" target="_blank" rel="noopener" title="{{ 'moderate_routes.suggestions.open_on_map'|trans }}">{{ s.routeName }}</a></h3>

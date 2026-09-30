@@ -15,8 +15,12 @@
 
   Parameters:
     item  array — queue item from RouteQueue::pending()
+
+  A proposal this curator has not opened carries the unseen bar (moderation-and-contribution.md §5.2f):
+  `unseen_ids` is the list's cc_unseen() set. Review opens it.
 #}
-<div class="q-item" data-item-id="{{ item.id }}">
+{% set row_unseen = unseen_ids|default({})[item.id] is defined %}
+<div class="q-item {{ row_unseen ? 'is-unseen' }}" data-item-id="{{ item.id }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
   <div class="q-top">
     <div class="q-headwrap">
       <div class="q-head">
@@ -25,7 +29,7 @@
         {% if item.activeInRegion >= item.cap %}
           <span class="q-tag q-tag--hazard">{{ 'moderate_routes.error.region_full'|trans }}</span>
         {% endif %}
-        <h3 class="q-title">{{ item.name }}</h3>
+        <h3 class="q-title">{{ item.name }}{% if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
         <span class="q-when">{{ item.when }}</span>
         {# The proposer changed the proposal after sending it (route-domain.md §4.6). #}
         {% if item.revisedAt %}
@@ -41,7 +45,7 @@
     </div>
 
     <div class="q-acts">
-      <a class="btn-act btn-secondary q-review" href="{{ path('moderate_routes_detail', {id: item.id}) }}">{{ 'moderate_routes.action.review'|trans }} &#8594;</a>
+      <a class="btn-act btn-secondary q-review" href="{{ path('moderate_routes_detail', {id: item.id}) }}" data-opens>{{ 'moderate_routes.action.review'|trans }} &#8594;</a>
     </div>
   </div>
 </div>

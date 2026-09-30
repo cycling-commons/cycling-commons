@@ -34,7 +34,9 @@ use App\Coverage\RoutesManifest;
 use App\Coverage\SurfaceManifest;
 use App\Entity\User;
 use App\Media\PhotoLocationConfirmation;
+use App\Moderation\DeskSeen;
 use App\Moderation\ModerationScopeProvider;
+use App\Moderation\SeenSubject;
 use App\Moderation\SubmissionQueue;
 use App\Scout\ScoutTag;
 use App\Security\TwoFactorPolicy;
@@ -60,6 +62,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class MapController extends AbstractController
 {
+    public function __construct(private readonly DeskSeen $deskSeen)
+    {
+    }
+
     /**
      * Scout review: the same `/map` plus a browser-only panel. Ride file never uploaded.
      *
@@ -155,10 +161,15 @@ final class MapController extends AbstractController
             // it with and dumped the raw proposed fields. Hand the curator its would-be
             // feature instead: final form, DEM numbers, same mapper as a live item
             // (owner 2026-08-25).
+            // Which of them this curator has not opened yet, so a list on the
+            // map can carry the unseen bar; the drawer posts the opening
+            // (moderation-and-contribution.md §5.2f).
+            $unseen = $this->deskSeen->unseenAmong((int) $user->getId(), SeenSubject::Submission, array_column($params['pending'], 'id'));
             foreach ($params['pending'] as $i => $p) {
                 if ('new' === $p['type'] && null !== $p['itemId']) {
                     $params['pending'][$i]['preview'] = $catalogProvider->featureForItem($p['itemId'], anyState: true);
                 }
+                $params['pending'][$i]['unseen'] = isset($unseen[$p['id']]);
             }
             // Do not re-derive with is_granted(): setup-pending curators hold the role without this payload.
             $params['pending_is_curator'] = true;
@@ -538,6 +549,7 @@ final class MapController extends AbstractController
             'zoomForSurfaces' => $t->trans('map.zoom_for_surfaces'),
             'overlayZoomIn' => $t->trans('map.overlay_zoom_in'),
             'pendingReview' => $t->trans('map.pending_review'),
+            'unseen' => $t->trans('room.unread'),
             'login' => $t->trans('nav.login'),
             'searchIn' => $t->trans('map.search_in'),
             'searchEverywhere' => $t->trans('map.search_everywhere'),

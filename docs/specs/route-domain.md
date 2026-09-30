@@ -352,6 +352,13 @@ a sibling of the item queue in the moderation shell — proposals have no
 `Submission` row, so the desk reads `recommended_route WHERE state='submitted'`
 directly (`App\Moderation\RouteQueue`).
 
+A waiting proposal or correction this curator has not opened carries the
+unseen bar ([moderation-and-contribution.md §5.2f](moderation-and-contribution.md));
+a live route never does. A proposal is opened when its desk page loads (it is
+also its edit form); that page lists the route's open corrections in full, so
+they count as opened with it. Once a proposal is decided or a correction
+resolved, the bar is gone for every curator.
+
 - **Queue list**: pending proposals and pending corrections, **oldest first**,
   optional per-region filter, restricted to the curator's moderation scope.
   The filter offers a curator with areas **every region those areas cover**,

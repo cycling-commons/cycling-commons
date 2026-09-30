@@ -168,7 +168,7 @@ test('the old row vocabularies are gone', () => {
 test('the messages page keeps its state hooks on top of the shared card', () => {
   const src = read('templates/messages/index.html.twig');
   // The tests read these; they name message states, not looks. An unread one
-  // wears the unseen bar (is-unseen, moderation-and-contribution.md §7.5a).
+  // wears the one unseen bar every list uses (is-unseen, moderation-and-contribution.md §5.2f).
   assert.match(src, /class="q-item msg-row \{\{ mine \? 'q-item--mine msg-mine' : \(unread \? 'msg-new is-unseen'\) \}\}"/);
   assert.match(src, /<ul class="[^"]*\bq-list\b[^"]*\bmsg-list\b/);
   const shell = read(SHELL_CSS);

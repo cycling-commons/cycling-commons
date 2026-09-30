@@ -110,14 +110,19 @@
   {% if reports is empty %}
     <div class="empty">{{ (query ? 'support.bugs.search_none' : 'support.bugs.empty')|trans({'%q%': query}) }}</div>
   {% else %}
+    {# A bug this curator has not opened carries the unseen bar
+       (moderation-and-contribution.md §5.2f); its page opens it. #}
+    {% set unseen_ids = cc_unseen('bug_report', reports|map(b => b.id)) %}
     {% for b in reports %}
-      <div class="bugrow">
+      {% set row_unseen = unseen_ids[b.id] is defined %}
+      <div class="bugrow {{ row_unseen ? 'is-unseen' }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
         <div class="bugtop">
           {# The reference FIRST, and always: it is what a reporter quotes back
              in a reply, so a curator scanning for one should not have to open
              a report to see it. #}
-          <a class="bugref" href="{{ path('moderate_bugs_detail', {id: b.id}) }}">{{ b.reference }}</a>
-          <a href="{{ path('moderate_bugs_detail', {id: b.id}) }}">{{ b.title }}</a>
+          <a class="bugref" href="{{ path('moderate_bugs_detail', {id: b.id}) }}" data-opens>{{ b.reference }}</a>
+          <a href="{{ path('moderate_bugs_detail', {id: b.id}) }}" data-opens>{{ b.title }}</a>
+          {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}
           <span class="tag sev-{{ b.severity.value }}">{{ ('support.bug.severity.' ~ b.severity.value)|trans }}</span>
           <span class="tag">{{ ('support.bug.status.' ~ b.status.value)|trans }}</span>
           <span class="tag">{{ ('support.bug.area.' ~ b.area.value)|trans }}</span>
@@ -157,3 +162,5 @@
   })();
 </script>
 {% endblock %}
+
+{% block body_scripts %}<script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}

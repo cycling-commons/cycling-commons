@@ -90,6 +90,7 @@
   </div>
   {% else %}
   <div class="q-list" id="qList">
+    {% set unseen_ids = cc_unseen('submission', items|map(i => i.id)) %}
     {% for item in items %}
       {% include 'moderate/_queue_item.html.twig' with {item: item} %}
     {% endfor %}
@@ -102,3 +103,5 @@
 {% include 'moderate/_card_script.html.twig' %}
 {% include 'partials/_vclip.html.twig' %}
 {% endblock %}
+
+{% block body_scripts %}<script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}

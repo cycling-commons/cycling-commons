@@ -2,7 +2,7 @@
 {# Messages dashboard (moderation-feedback spec M3) — decision outcomes,
    curator notes, and rider replies, newest first.
    Loading the page marks nothing read. A received message stays new
-   (`msg-new`), carries the unseen bar (`is-unseen`, partials/_unseen.html.twig) and stays
+   (`msg-new`), carries the unseen bar (`is-unseen`, moderation-and-contribution.md §5.2f) and stays
    closed until its reader opens it: the <details> around its content fires
    assets/js/open-to-read.js, which takes the bar off, posts to
    `messages_read` and lowers the counters by one. Following the message's own link (the map, or
@@ -97,8 +97,8 @@
                 <h3 class="q-title msg-kind">
                   {#- A message you sent was never unread to you, so it carries no
                      state marker at all: only received rows do. An unread row
-                     carries the unseen bar, the mark for an item its reader
-                     has not opened (the row's `is-unseen`,
+                     carries the unseen bar, the one mark every list uses for
+                     an item its reader has not opened (the row's `is-unseen`,
                      its words in partials/_unseen.html.twig); a read one the
                      double tick. An unread row carries the tick hidden, so
                      opening it swaps the two without new words. -#}

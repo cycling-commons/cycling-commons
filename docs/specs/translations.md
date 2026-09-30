@@ -607,6 +607,13 @@ English, and nothing new is added to moderation (one way to moderate).
 Content review stays in the branded `/moderate` shell, not EasyAdmin
 (account-and-auth.md §5 boundary rule).
 
+A waiting proposal in the queue that this curator has not opened carries the
+unseen bar ([moderation-and-contribution.md §5.2f](moderation-and-contribution.md))
+until its page loads for them; once decided it carries it for nobody, so the
+history never shows it. On the Stale list a row is one key gone stale in
+one locale against one English wording; it carries the bar until the curator
+opens the key's form in that locale, and a newer English wording brings it back.
+
 Translations are **site-wide**. They are not region-scoped. Any
 `ROLE_CURATOR` with completed 2FA may decide, same unscoped pattern as photo
 takedowns. A curator must not approve or reject **their own** proposal.

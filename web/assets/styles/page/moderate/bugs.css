@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
 .bugfind-hint + .chiprow{margin-top:1rem}
 .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:0}
-.bugrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.85rem 0}
+/* Room at the left for the unseen bar (.is-unseen, _shell_styles.css). */
+.bugrow{border-bottom:1px solid rgba(20,22,14,.12);padding:.85rem 0 .85rem .8rem}
 .bugrow:last-child{border-bottom:0}
 .bugtop{display:flex;gap:.55rem;align-items:baseline;flex-wrap:wrap}
 .bugtop a{font-family:var(--serif);font-size:1rem;color:var(--ink);text-decoration:none}

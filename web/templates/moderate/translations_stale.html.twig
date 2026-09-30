@@ -36,9 +36,15 @@
   {% else %}
     <h2 class="sec-band">{{ 'moderate.translation.stale_heading'|trans }} <span class="sec-count">{{ rows|length }}</span></h2>
     <ul class="q-list">
+      {# A stale key this curator has not opened in this locale, against this
+         English wording, carries the unseen bar (moderation-and-contribution.md
+         §5.2f); its form in the locale opens it. #}
+      {% set unseen_ids = cc_unseen('translation_stale', rows|map(r => locale ~ ':' ~ r.id ~ ':' ~ r.english_version)) %}
       {% for row in rows %}
-        <li class="q-item stale-item">
-          <h3 class="q-title"><a class="q-title-link" href="{{ path('translate_edit', {_locale: locale, id: row.id}) }}">{{ row.message_key }}</a></h3>
+        {% set row_unseen = unseen_ids[locale ~ ':' ~ row.id ~ ':' ~ row.english_version] is defined %}
+        <li class="q-item stale-item {{ row_unseen ? 'is-unseen' }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
+          <h3 class="q-title"><a class="q-title-link" href="{{ path('translate_edit', {_locale: locale, id: row.id}) }}" data-opens>{{ row.message_key }}</a>
+            {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
           <dl>
             <dt>{{ 'moderate.translation.english'|trans }} v{{ row.english_version }}</dt><dd>{{ row.english }}</dd>
             <dt>{{ 'moderate.translation.live'|trans }}</dt><dd>{{ row.live }}</dd>
@@ -50,3 +56,5 @@
   {% endif %}
 </div>
 {% endblock %}
+
+{% block body_scripts %}<script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}

@@ -892,7 +892,8 @@ sees "4" on the Submissions tile and a red "1" on the Reports tile.
 
 The page decides nothing and marks nothing read. It lists the newest room
 posts, and each one still counts on the Room badge (§13.7) until the curator
-opens it in the room.
+opens it in the room. A room post this curator has not opened carries the
+unseen bar (§5.2f); the decisions list is settled work and never does.
 
 **The moderation bar's badges are the same on every desk** (2026-09-30,
 owner: "also the Data menu does that"). Every count comes from
@@ -1554,6 +1555,93 @@ answer, which is why this is the rule and not a patch.
 Shape fields stay out either way. A stretch or a line is reviewed on the map
 (§5.2a, §5.2b) and never as text, whichever side the rows are built from.
 
+### 5.2f The unseen bar: one mark for a row not opened yet (2026-09-30)
+
+Owner, 2026-09-30: "An item now counts as seen. Please add a mark to every
+item in lists that a user has not seen: a vertical bar in front of the row."
+
+**One mark, everywhere.** A list row whose item its reader has not opened
+carries the class `is-unseen`: a 4px bar in the brand orange (`--trail`) at
+the row's left edge, defined once in `page/account/_shell_styles.css` (the
+stylesheet every account and desk page loads) and once in `map.css` for the
+map's own lists. Its words, "Not opened yet" (`room.unread`), sit in the row's
+heading as `.unseen-note`, visually hidden, from
+`templates/partials/_unseen.html.twig`, so a screen reader hears the state and
+nobody depends on the colour alone. It is the only unread treatment: the
+rider's messages (§7.5a) and the room's posts (§13.7) use it too, in place of
+the dot, the heavier edge and the bold title they carried before. Counters are
+untouched by it: desk badges count open work (§5.0), the messages and room
+counts what is unread.
+
+**Open work only** (owner, 2026-09-30: "If the item got processed it should
+be removed from everybody's still-to-view list"). The bar marks work that is
+still waiting and that the reader has not opened. Once the item is dealt with
+(decided, answered, closed, resolved, dismissed, withdrawn, a route gone live or
+retired) nobody sees the bar on it again, on any list: History, the answered
+takedowns, the translations history, a desk's "All" filter, the dashboard.
+Waiting work, per kind: a submission `pending` or `needs_info`; a route
+proposal in state `submitted`; a correction `pending`; a report `open` or
+`in_progress`; a bug in `BugStatus::open()`; a translation proposal `pending` or
+`needs_info`; a stale translation, for as long as it is stale; a Data finding
+`open`; a removal request still on the Takedowns desk. This rule lives in one
+place, `DeskSeen::unseenAmong()` (what `cc_unseen()` asks, one query per list):
+it returns only ids that are waiting AND not opened by the reader. Every list
+asks it the same way; no template decides.
+
+**Per reader, and only by opening.** Loading a list never marks anything, and
+one curator opening an item leaves it unopened for every other curator, until
+the item is dealt with.
+Messages and room posts keep their own read state (`user_message.read_at`,
+`curator_post_read`). Every desk item is recorded in one table:
+
+`moderation_seen(user_id, subject_type, subject_id, seen_at)`, primary key
+`(user_id, subject_type, subject_id)`, `user_id` a foreign key to `users` with
+`ON DELETE CASCADE`. `subject_id` is text, since reports and photos are named
+by a UUID (`App\Moderation\SeenSubject` says what each type's id holds).
+`App\Moderation\DeskSeen` is the one reader and writer.
+
+**What counts as opening, per desk.** `App\EventSubscriber\DeskOpenedSubscriber`
+holds the table below and records an opening after the page or the decision
+went through (a 2xx or a redirect); a refused, out-of-area or missing item stays
+unopened. The map drawer posts instead: `POST /moderate/seen` (`moderate_seen`,
+curators only, CSRF id `moderate-seen`, the token on the map as
+`window.CC_SEEN_TOKEN`), body `type` and `id`, answering JSON `{seen}`; it takes
+only `submission` and `catalog_finding`, the two kinds the drawer opens
+(`assets/map/desk-seen.js`, once per item per page).
+
+| Desk list | `subject_type` | Opened when |
+|---|---|---|
+| Submissions queue | `submission` | the map drawer opens the pending submission; the edit form loads from the card's title or ✎ link (`/improve?…&sub=<id>`); it is decided |
+| Routes: proposals (a live route never carries the bar) | `route` | its desk page (`moderate_routes_detail`, also its edit form) loads; it is decided |
+| Routes: corrections | `route_suggestion` | its route's desk page loads (it lists the route's open corrections in full); it is resolved |
+| Reports | `content_report` | its page loads; it is decided |
+| Bugs | `bug_report` | its page loads; it is decided |
+| Translations: queue | `translation_proposal` | its page loads (and its decision, posted there) |
+| Translations: stale | `translation_stale`, id `<locale>:<entry id>:<English version>` | the key's form loads in that locale while it is stale; a new English wording is a new stale row, unopened again |
+| Data | `catalog_finding` | it is opened on the map (`?finding=<id>`); it is answered on the desk |
+| Takedowns: open requests | `takedown`, id the photo's UUID | the whole request is on the card and there is no page to open, so it keeps the bar until it is answered or escalated, which takes it off for everyone |
+| Room, and the dashboard's room list | `curator_post_read` (§13.7) | the post is opened on the board, or through its submission link |
+| Messages (rider) | `user_message.read_at` (§7.5a) | the message is opened, or through its own link |
+
+The contact inbox is off (contact-and-support.md §8) and carries no bar.
+Curator applications are an admin page, not a desk list.
+
+**Live, without a reload.** A desk row's ways in carry `data-opens`; following
+one (a click or a middle click) makes `assets/js/open-to-read.js` take the row's
+bar off at once, so the tab left behind, or the list reached again with Back,
+shows it opened. The page it leads to records the opening; nothing is posted
+from the list. A message or a room post loses its bar when it is opened in
+place (§7.5a, §13.7).
+
+**On the map.** The curator's pending payload carries `unseen` per submission,
+and a search result for a pending submission not opened yet carries the same
+bar and words. Opening it in the drawer clears the flag for the page and posts
+the opening.
+
+**Deploy.** Migration `Version20260930210000` creates the table empty, with no
+backfill: every item still waiting arrives unopened for every curator, and
+settled work needs no rows, since it never carries the bar.
+
 ### 7.3a A rider can see WHAT they contributed (2026-08-03, owner)
 
 Both rider-facing surfaces named the place and stopped there. "Your
@@ -1757,10 +1845,8 @@ wrong:
    what they mean. There is no "mark all as read" button.
 
 Unread is also *visible*, not just counted: an unread row carries the unseen
-bar (`is-unseen`, a 4px bar in the brand orange at the row's left edge,
-defined in `page/account/_shell_styles.css`; the room's posts wear it too,
-§13.7), with "Not opened yet" for a screen reader
-(`templates/partials/_unseen.html.twig`), and stays closed until
+bar (§5.2f), the one mark every list uses for an item its reader has not
+opened, with "Not opened yet" for a screen reader, and stays closed until
 opened; opening it takes the bar off. A read received message carries a double
 tick in its header, with "Read" as its accessible name. A message the reader
 **sent** carries no marker at all; it was never unread to them. Without the
@@ -3424,7 +3510,7 @@ starts with those posts unread.
 
 Loading the room, any view of it, marks nothing. A post is read when the
 curator opens it:
-- **on the board**: an unread post carries the unseen bar (§7.5a), with "Not
+- **on the board**: an unread post carries the unseen bar (§5.2f), with "Not
   opened yet" in its heading for a screen reader, and its body, pictures and
   submission link sit closed in a `<details class="rm-open">` ("Open post").
   Opening it makes `assets/js/open-to-read.js` post once to

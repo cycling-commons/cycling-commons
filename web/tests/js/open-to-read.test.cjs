@@ -4,7 +4,9 @@
 // OPENS it (moderation-and-contribution.md §7.5a, §13.7). Loading the page
 // posts nothing; opening one item posts once, unwraps it, takes its unseen bar
 // off and takes exactly one off every counter of its kind. A refused post
-// leaves the bar and the counters alone.
+// leaves the bar and the counters alone. A desk row that opens on a page of
+// its own loses its bar when one of its [data-opens] links is followed
+// (moderation-and-contribution.md §5.2f).
 'use strict';
 
 const test = require('node:test');
@@ -91,11 +93,17 @@ function page({ hash = '', respond } = {}) {
   }, [unreadMark, readMark, details]);
   const read = new El('li', { id: 'msg-6', class: 'q-item msg-row' });
   const list = new El('ul', { 'data-read-token': 'tok', 'data-read-kind': 'messages' }, [unread, read]);
+  // A desk row: its own page opens it, so it has a link and no read url.
+  const deskNote = new El('span', { class: 'unseen-note', 'data-unread-only': '' });
+  const deskLink = new El('a', { href: '/moderate/bugs/4', 'data-opens': '' });
+  const deskOther = new El('a', { href: '/map?item=4' });
+  const desk = new El('div', { class: 'bugrow is-unseen', 'data-unread-class': 'is-unseen' }, [deskLink, deskNote, deskOther]);
   const bulb = count('messages', 3, { title: '3 open item(s)', 'aria-label': '3 open item(s)' });
   const row = count('messages', 1);
   const chip = count('messages', 1, { 'data-count-keep-zero': '' });
   const room = count('room', 4);
-  const root = new El('body', {}, [list, bulb, row, chip, room]);
+  const root = new El('body', {}, [list, desk, bulb, row, chip, room]);
+  const docListeners = {};
 
   const posts = [];
   const context = {
@@ -103,6 +111,7 @@ function page({ hash = '', respond } = {}) {
     document: {
       querySelectorAll: sel => root.querySelectorAll(sel),
       getElementById: id => root.descendants().find(e => e.getAttribute('id') === id) || null,
+      addEventListener: (t, fn) => { (docListeners[t] = docListeners[t] || []).push(fn); },
     },
     URLSearchParams,
     fetch: (url, opts) => {
@@ -113,7 +122,8 @@ function page({ hash = '', respond } = {}) {
     Promise,
   };
   vm.runInNewContext(SRC, context);
-  return { unread, details, body, unreadMark, readMark, bulb, row, chip, room, posts };
+  const click = (target, type = 'click') => (docListeners[type] || []).forEach(fn => fn({ target }));
+  return { unread, details, body, unreadMark, readMark, bulb, row, chip, room, posts, desk, deskNote, deskLink, deskOther, click };
 }
 
 const settle = () => new Promise(r => setTimeout(r, 10));
@@ -183,4 +193,22 @@ test('a link to the message opens it', async () => {
   p.details.fire('toggle');
   await settle();
   assert.equal(p.posts.length, 1);
+});
+
+test('following a desk row\'s link takes its bar off, and posts nothing', async () => {
+  const p = page();
+  p.click(p.deskOther);
+  assert.ok(p.desk.classList.contains('is-unseen'), 'a link that does not open the item leaves the bar');
+  p.click(p.deskLink);
+  assert.ok(!p.desk.classList.contains('is-unseen'));
+  assert.equal(p.deskNote.hidden, true, 'its words go with it');
+  await settle();
+  assert.equal(p.posts.length, 0, 'the page it leads to records the opening');
+  assert.equal(p.row.textContent, '1', 'no counter moves');
+});
+
+test('a middle click on a desk row\'s link counts too', () => {
+  const p = page();
+  p.click(p.deskLink, 'auxclick');
+  assert.ok(!p.desk.classList.contains('is-unseen'));
 });

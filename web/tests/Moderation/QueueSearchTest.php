@@ -84,11 +84,18 @@ final class QueueSearchTest extends WebTestCase
         $crawler = $client->request('GET', $path.'?q='.rawurlencode($q));
         self::assertResponseIsSuccessful();
 
-        // The title without the kind label History prints beside it.
+        // The title without the kind label History prints beside it, and
+        // without the unseen bar's words (moderation-and-contribution.md §5.2f).
         return $crawler->filter('.q-list .q-item .q-title')->each(static function ($n): string {
-            $kind = $n->filter('.q-kind');
+            $text = $n->text();
+            foreach (['.q-kind', '.unseen-note'] as $extra) {
+                $found = $n->filter($extra);
+                if ($found->count() > 0) {
+                    $text = str_replace($found->text(), '', $text);
+                }
+            }
 
-            return trim(str_replace($kind->count() > 0 ? $kind->text() : "\0", '', $n->text()));
+            return trim($text);
         });
     }
 

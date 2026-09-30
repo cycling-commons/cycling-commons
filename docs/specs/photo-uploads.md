@@ -1299,6 +1299,12 @@ rest of moderation uses — §5c holds. They are deliberately **not** region-sco
 like the submission queue: a rights request is on a legal clock, not editorial
 work to be shared out by jurisdiction.
 
+**The unseen bar.** A request still waiting carries the unseen bar
+(moderation-and-contribution.md §5.2f). The whole request is on its card and
+there is no page to open, so it keeps the bar until it is answered (grant or
+decline) or escalated, which takes it off for every curator. An answered
+request never carries it.
+
 **The desk keeps a history, and it is read from the event log
 (2026-08-14).** Until then the desk showed only OPEN requests, so an answered
 one vanished the moment it was answered — and this desk empties itself by

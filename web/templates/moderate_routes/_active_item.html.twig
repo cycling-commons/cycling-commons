@@ -8,8 +8,12 @@
 
   Parameters:
     a  array: active row (id, name, state, km, ascent, missing)
+
+  `unseen_ids` is the list's cc_unseen() set, which never holds a live route:
+  the unseen bar is for waiting work only (moderation-and-contribution.md §5.2f).
 #}
-<div class="q-item q-item--active" data-item-id="r{{ a.id }}">
+{% set row_unseen = unseen_ids|default({})[a.id] is defined %}
+<div class="q-item q-item--active {{ row_unseen ? 'is-unseen' }}" data-item-id="r{{ a.id }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
   <div class="q-top">
     <div class="q-headwrap">
       <div class="q-head">
@@ -17,7 +21,7 @@
         {# The state a rider sees on the map, in the desk's own tag shape. #}
         <span class="q-tag q-tag--state">{{ ('moderate_routes.active.state_' ~ a.state)|trans }}</span>
         <span class="q-tag q-tag--new">{{ a.km|cc_km }}</span>
-        <h3 class="q-title"><a href="{{ path('moderate_routes_detail', {id: a.id}) }}">{{ a.name }}</a></h3>
+        <h3 class="q-title"><a href="{{ path('moderate_routes_detail', {id: a.id}) }}" data-opens>{{ a.name }}</a>{% if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
       </div>
       {% if a.ascent is not null %}
         <div class="q-submitter">{{ 'moderate_routes.active.ascent'|trans({'%m%': a.ascent}) }}</div>

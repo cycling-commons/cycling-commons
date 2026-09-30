@@ -60,15 +60,21 @@
     <div class="empty-state"><p>{{ 'moderate_data.empty'|trans }}</p></div>
   {% else %}
   <div class="q-list" id="qList">
+    {# A finding this curator has not opened carries the unseen bar
+       (moderation-and-contribution.md §5.2f). Opening it on the map, or
+       answering it here, opens it. #}
+    {% set unseen_ids = cc_unseen('catalog_finding', findings|map(f => f.id)) %}
     {% for f in findings %}
       {% set d = f.detail %}
-      <div class="q-item">
+      {% set row_unseen = unseen_ids[f.id] is defined %}
+      <div class="q-item {{ row_unseen ? 'is-unseen' }}" data-finding-id="{{ f.id }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
         <div class="q-top">
           <div class="q-headwrap">
             <div class="q-head">
               <span class="q-tag q-tag--quiet">{{ ('finding.kind.' ~ f.kind)|trans }}</span>
               {# The question, as the title. The buttons below answer it. #}
-              <h3 class="q-title">{{ (f.kind == 'duplicate' ? 'moderate_data.q_duplicate' : 'moderate_data.q_osm_link')|trans }}</h3>
+              <h3 class="q-title">{{ (f.kind == 'duplicate' ? 'moderate_data.q_duplicate' : 'moderate_data.q_osm_link')|trans }}
+                {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
             </div>
             <div class="q-submitter">{{ f.letter }} &middot; {{ f.country_code }}</div>
           </div>
@@ -127,7 +133,7 @@
           {# Yes/No above answers with the ranked keeper. The map is where the
              curator can see both pins in place and choose a different one, or
              keep both. #}
-          <p class="q-map"><a href="{{ path('map') }}?finding={{ f.id }}">{{ 'moderate_data.on_map'|trans }}</a>
+          <p class="q-map"><a href="{{ path('map') }}?finding={{ f.id }}" data-opens>{{ 'moderate_data.on_map'|trans }}</a>
             <span>{{ 'moderate_data.resolve_hint'|trans }}</span></p>
         {% endif %}
       </div>
@@ -137,3 +143,5 @@
 </div>
 {% include 'moderate/_card_script.html.twig' %}
 {% endblock %}
+
+{% block body_scripts %}<script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}

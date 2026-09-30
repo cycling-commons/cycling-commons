@@ -586,6 +586,11 @@ data desk shows. The desk is the queue for everything the gate does not catch:
 rows that existed before the gate, rows whose OSM counterpart appeared later,
 and links that need a human because they fall in the 100 m to 250 m band.
 
+An open finding this curator has not opened carries the unseen bar
+(moderation-and-contribution.md §5.2f) until they open it on the map
+(`?finding=<id>`, the drawer posts the opening); answering it takes it off for
+every curator.
+
 The desk (`/moderate/data`) filters like the submissions queue
 (moderation-and-contribution.md §5.2): kind chips (Everything, Duplicates, OSM
 links), then a country and a region select. The selects list only places with

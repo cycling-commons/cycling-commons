@@ -50,6 +50,8 @@
   </div>
   {% else %}
   <div class="q-list" id="qList">
+    {# Rows this curator has not opened carry the unseen bar (moderation-and-contribution.md §5.2f). #}
+    {% set unseen_ids = cc_unseen('route', routes|map(r => r.id)) %}
     {% for item in routes %}
       {% include 'moderate_routes/_queue_item.html.twig' with {item: item} %}
     {% endfor %}
@@ -63,6 +65,7 @@
     <p class="sec-empty">{{ 'moderate_routes.suggestions.empty'|trans }}</p>
   {% else %}
   <div class="q-list sugg-list">
+    {% set unseen_ids = cc_unseen('route_suggestion', suggestions|map(s => s.id)) %}
     {% for s in suggestions %}
       {% include 'moderate_routes/_correction_item.html.twig' with {s: s, show_route: true} %}
     {% endfor %}
@@ -108,6 +111,7 @@
           } %}
         </p>
         <div class="q-list active-list">
+          {% set unseen_ids = cc_unseen('route', g.routes|map(a => a.id)) %}
           {% for a in g.routes %}
             {% include 'moderate_routes/_active_item.html.twig' with {a: a} %}
           {% endfor %}
@@ -124,3 +128,5 @@
 
 {% include 'moderate/_card_script.html.twig' %}
 {% endblock %}
+
+{% block body_scripts %}<script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}

@@ -345,6 +345,11 @@ region, like takedowns and the inbox: an Article 16 report has a clock on it and
 no geography, so a badge shared out by region would leave one waiting behind
 whichever curator is away.
 
+An open or in-progress report this curator has not opened carries the unseen
+bar ([moderation-and-contribution.md §5.2f](moderation-and-contribution.md))
+until its page loads for them. Another curator opening it leaves the bar on for
+everyone else; deciding it takes it off for all.
+
 Unfiltered means **open**, the same default the bugs desk and the inbox use;
 open is the two waiting states together (`ReportStatus::open()`). Ordered
 urgent-first, then newest: the legal claims and abuse (`ReportGround::urgent()`,

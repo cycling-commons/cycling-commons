@@ -93,8 +93,12 @@
     <div class="empty-state"><p>{{ 'moderate.history.empty'|trans }}</p></div>
   {% else %}
     <div class="q-list" id="qList">
+      {# Asked like every list; settled work never carries the unseen bar
+         (moderation-and-contribution.md §5.2f). #}
+      {% set unseen_ids = cc_unseen('submission', history|map(h => h.id)) %}
       {% for h in history %}
-        <div class="q-item">
+        {% set row_unseen = unseen_ids[h.id] is defined %}
+        <div class="q-item {{ row_unseen ? 'is-unseen' }}" data-submission-id="{{ h.id }}">
           <div class="q-top">
             {# The picture, as in the open queue. A trashed row has none by
                design — the audit is content-free — and a rejected one may have
@@ -115,7 +119,8 @@
                   {# The item's own kind. A custom title hides what a row is about;
                      an unnamed one already reads as its type, so repeating it there
                      would print "Water & food WATER & FOOD". #}
-                  {% if h.typeLabel is defined and h.typeLabel and (h.typeLabel|trans) != h.title %}<span class="q-kind">{{ h.typeLabel|trans }}</span>{% endif %}</h3>
+                  {% if h.typeLabel is defined and h.typeLabel and (h.typeLabel|trans) != h.title %}<span class="q-kind">{{ h.typeLabel|trans }}</span>{% endif %}
+                  {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
               </div>
               {# A trashed row carries no title and no rider (`who` ''): the
                  audit is content-free by design, so all there is to show is

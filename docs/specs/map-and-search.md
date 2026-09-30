@@ -153,6 +153,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 | `CC_RIDECHECK` | `{url, token}` — ride-check endpoint + stateless CSRF token | `ROLE_USER` block only |
 | `CC_MY_AREA` | `{lat, lng, place, radiusKm, regionIds, countryCodes}` (any field may be `null`/empty when no base location is set) plus `{url, token}` for `POST /map/my-area` — feeds `scope.js`'s `myArea` kind (§4.5, map-and-search.md §4.5 Phase 4) | `ROLE_USER` block only |
 | `CC_IS_CURATOR`, `CC_PENDING`, `CC_MOD_TOKEN` | pending-submission layer + decision CSRF token | curators with completed 2FA only (`MapController::map()` gates on `TwoFactorPolicy::requiresSetup()`) |
+| `CC_SEEN_TOKEN` | CSRF token for `POST /moderate/seen`: opening a pending submission in the drawer, or a Data finding with `?finding=`, records that this curator opened it, and each `CC_PENDING` row carries `unseen` so a search result for one not opened yet carries the unseen bar (moderation-and-contribution.md §5.2f, `assets/map/desk-seen.js`) | same curator block |
 
 - **No preferences endpoint:** rider preferences and i18n ride the page render;
   only the catalog, history, best-of, community, confirmation, and ride-check

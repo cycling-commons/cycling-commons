@@ -42,9 +42,11 @@
     <p class="sec-empty">{{ 'curator_dashboard.room.empty'|trans }}</p>
   {% else %}
     <ul class="db-list">
+      {# A post this curator has not opened carries the unseen bar
+         (moderation-and-contribution.md §5.2f); it is opened in the room. #}
       {% for post in room_posts %}
-        <li class="db-row">
-          <span class="db-row-title">{{ post.title }}</span>
+        <li class="db-row {{ post.unread ? 'is-unseen' }}">
+          <span class="db-row-title">{{ post.title }}{% if post.unread %}{% include 'partials/_unseen.html.twig' %}{% endif %}</span>
           {% if post.category %}<span class="q-pill q-pill--ret">{{ ('room.cat.' ~ post.category)|trans }}</span>{% endif %}
           {% if post.direct %}<span class="q-pill q-pill--conf">{{ post.mine ? 'curator_dashboard.room.direct_sent'|trans : 'room.to_you'|trans }}</span>{% endif %}
           <span class="db-row-meta">
@@ -63,10 +65,12 @@
     <p class="sec-empty">{{ 'curator_dashboard.mine.empty'|trans }}</p>
   {% else %}
     <ul class="db-list">
+      {% set unseen_ids = cc_unseen('submission', my_decisions|map(h => h.id)) %}
       {% for h in my_decisions %}
-        <li class="db-row">
+        {% set row_unseen = unseen_ids[h.id] is defined %}
+        <li class="db-row {{ row_unseen ? 'is-unseen' }}">
           <span class="q-pill q-pill--{{ verdict_pill[h.status] ?? 'ret' }}">{{ ('moderate.status.' ~ h.status)|trans }}</span>
-          <span class="db-row-title">{{ h.title }}</span>
+          <span class="db-row-title">{{ h.title }}{% if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</span>
           <span class="db-row-meta">{{ h.when }}</span>
         </li>
       {% endfor %}

@@ -834,7 +834,11 @@ window.CC_VENDOR = {{ {
   {# The OSM question on a new place, answered in the drawer where the place
      is approved (catalog-data-model.md §5b). Its own token id, the one the
      queue card's form family already uses; curators only, like the question. #}
-  {% if pending_is_curator|default(false) %}window.CC_OSM_TOKEN = {{ csrf_token('moderate-osm-answer')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};{% endif %}
+  {% if pending_is_curator|default(false) %}window.CC_OSM_TOKEN = {{ csrf_token('moderate-osm-answer')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# Opening a pending submission or a Data finding in the drawer takes its
+     unseen bar off the desk lists (moderation-and-contribution.md §5.2f,
+     assets/map/desk-seen.js). Curators only. #}
+  window.CC_SEEN_TOKEN = {{ csrf_token('moderate-seen')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};{% endif %}
   {# The drawer's "Taken here" button on a scenic view's hidden rider photo
      (photo-uploads.md §5g). Curator block: only a curator may confirm. #}
   window.CC_PHOTO_TAKEN_HERE_TOKEN = {{ csrf_token('photo-taken-here')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};

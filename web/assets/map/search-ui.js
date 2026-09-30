@@ -10,6 +10,7 @@ import { openPlace, openCity, openFeatureById, openRouteById } from './places.js
 import { COVERAGE_ON, covScopeIsZero, covScopeQuery, openCoverageByRef } from './coverage.js';
 import { layerGlyph } from './icons.js';
 import { mapToast } from './drawer.js';
+import { unseenMark } from './desk-seen.js';
 
 let _searchDropPending=null;
 
@@ -158,7 +159,9 @@ export function initSearchUi(){
     const tierTag=m=>confRow(m) ? `<span class="scomm">${escH(D.community||'community')}</span>`
       : unconfRow(m) ? `<span class="scomm">${escH(D.unconfirmed||'unconfirmed')}</span>`
       : (m.osm ? `<span class="scomm">${escH(D.osmTag||'OSM')}</span>` : '');
-    const sRow=(m,i)=>`<li role="option"><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${tierTag(m)}</span><span class="sub">${escH(m.kind)}</span></button></li>`;
+    // A pending submission this curator has not opened carries the unseen bar (moderation-and-contribution.md §5.2f).
+    const sRow=(m,i)=>{ const u=unseenMark(m, I18N.unseen||'Not opened yet');
+      return `<li role="option"${u.attr}><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${tierTag(m)}${u.note}</span><span class="sub">${escH(m.kind)}</span></button></li>`; };
     const SCOPE_COLOR='#B5532E';
     // A scope hit is a jump, and the registry is searched whole so "More
     // regions…" can reach any region by name. A region in another country
