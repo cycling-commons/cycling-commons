@@ -12,6 +12,7 @@ use App\Messaging\CuratorRoomCategory;
 use App\Messaging\CuratorRoomPin;
 use App\Messaging\Entity\CuratorPost;
 use App\Messaging\Entity\CuratorPostImage;
+use App\Moderation\ModerationScopeProvider;
 use App\Routing\LocalePrefix;
 use App\Support\ScreenshotRejected;
 use App\Support\ScreenshotStore;
@@ -28,9 +29,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * The curator room: the in-desk board the rulebook points at.
  *
- * Curators only, like every other desk. Unscoped on purpose: the rulebook's
- * "if an item is out of reach, ask the room" only works if the room reaches
- * past the asker's moderation area (§13.6).
+ * Curators only, like every other desk. Posts are unscoped on purpose: the
+ * rulebook's "if an item is out of reach, ask the room" only works if the
+ * room reaches past the asker's moderation area (§13.6). The submission
+ * search is scoped like the queue.
  *
  * @see docs/specs/moderation-and-contribution.md §13
  *
@@ -44,6 +46,7 @@ final class ModerateRoomController extends AbstractController
         private readonly CuratorRoom $room,
         private readonly ScreenshotStore $images,
         private readonly TranslatorInterface $translator,
+        private readonly ModerationScopeProvider $scopes,
     ) {
     }
 
@@ -99,13 +102,19 @@ final class ModerateRoomController extends AbstractController
 
     /**
      * The composer's "about submission" search: an id, a word of the title,
-     * or a region name. Curators only, like the room; nothing here that the
-     * queue does not already show them.
+     * or a region name. Curators only, like the room, and scoped like the
+     * queue: nothing here that the queue does not already show them.
      */
     #[Route('/moderate/room/submissions', name: 'moderate_room_submissions', methods: ['GET'])]
     public function submissions(Request $request): JsonResponse
     {
-        return new JsonResponse($this->room->searchSubmissions($request->query->getString('q')));
+        /** @var User $curator */
+        $curator = $this->getUser();
+
+        return new JsonResponse($this->room->searchSubmissions(
+            $request->query->getString('q'),
+            $this->scopes->scopeFor($curator),
+        ));
     }
 
     #[Route('/moderate/room/post', name: 'moderate_room_post', methods: ['POST'])]

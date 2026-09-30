@@ -10,6 +10,7 @@ use App\Messaging\Entity\CuratorPost;
 use App\Messaging\Entity\CuratorPostImage;
 use App\Messaging\Entity\CuratorRoomVisit;
 use App\Moderation\DeskRider;
+use App\Moderation\ModerationScope;
 use App\Support\Message\CheckPicture;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +23,11 @@ use Symfony\Component\Messenger\MessageBusInterface;
  * `ModerationScope`; this one must not, because "if an item is out of reach,
  * ask the room" only works if the room reaches past the asker's area. There is
  * no region column on `curator_post` for a later query to filter on.
+ *
+ * What the room reads of `submission` is another matter: the composer's
+ * search lists queue cards, so it narrows by the reader's `ModerationScope`
+ * like the queue (§9.2), and no read here returns a submission under legal
+ * hold (docs/specs/photo-uploads.md §6d).
  *
  * @see docs/specs/moderation-and-contribution.md §13
  *
@@ -188,7 +194,8 @@ final class CuratorRoom
         }
         $body = $this->normalizeBody($body);
         $title = $this->normalizeTitle($title ?? self::firstLine($body));
-        $this->checkAddressing($recipientId, $aboutSubmissionId, $pin);
+        // A link the post already has stays through a hold; only a new one is checked.
+        $this->checkAddressing($recipientId, $aboutSubmissionId !== $post->getAboutSubmissionId() ? $aboutSubmissionId : null, $pin);
 
         foreach ($post->getImages()->toArray() as $image) {
             if (\in_array($image->getId(), $dropImageIds, true)) {
@@ -226,7 +233,8 @@ final class CuratorRoom
             throw new \InvalidArgumentException(self::ERROR_UNKNOWN_RECIPIENT);
         }
         // The column is a foreign key: an id nobody typed correctly would
-        // otherwise fail at the database, as a 500 instead of a sentence.
+        // otherwise fail at the database, as a 500 instead of a sentence. A
+        // held submission answers as unknown.
         if (null !== $aboutSubmissionId && !$this->submissionExists($aboutSubmissionId)) {
             throw new \InvalidArgumentException(self::ERROR_UNKNOWN_SUBMISSION);
         }
@@ -343,12 +351,13 @@ final class CuratorRoom
 
     /**
      * Submissions matching what a curator typed into the composer: an id, a
-     * word of the title, or a region name. Unscoped, like the room: the card
-     * out of your reach is the one you came here to ask about.
+     * word of the title, or a region name. Narrowed by `$scope` like the
+     * queue, and never a submission under legal hold. A card outside the
+     * reader's areas can still be linked by typing its number.
      *
      * @return list<array{id: int, title: string, type: string, status: string, region: string|null, country: string}>
      */
-    public function searchSubmissions(string $q): array
+    public function searchSubmissions(string $q, ModerationScope $scope): array
     {
         $q = trim($q);
         if ('' === $q) {
@@ -356,18 +365,18 @@ final class CuratorRoom
         }
         // A number matches every id that starts with it: "11" lists 11, 118, 1103.
         $idPrefix = preg_match('/^(?:SUB-?)?(\d{1,12})$/i', $q, $m) ? $m[1] : null;
+        $frag = $scope->sqlFragment('s');
         $rows = $this->db->fetchAllAssociative(
-            <<<'SQL'
-                SELECT s.id, s.title, s.type, s.status, s.country_code, r.name AS region
-                FROM submission s
-                LEFT JOIN region r ON r.id = s.region_id
-                WHERE (:idp::text IS NOT NULL AND s.id::text LIKE :idp || '%')
-                   OR s.title ILIKE :like OR r.name ILIKE :like
-                ORDER BY (s.id::text = :idp) DESC, (s.status = 'pending') DESC, s.id DESC
-                LIMIT :lim
-                SQL,
-            ['idp' => $idPrefix, 'like' => '%'.addcslashes($q, '%_\\').'%', 'lim' => self::SEARCH_LIMIT],
-            ['lim' => \Doctrine\DBAL\ParameterType::INTEGER],
+            'SELECT s.id, s.title, s.type, s.status, s.country_code, r.name AS region
+               FROM submission s
+               LEFT JOIN region r ON r.id = s.region_id
+              WHERE s.escalated_at IS NULL'.('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '')."
+                AND ((:idp::text IS NOT NULL AND s.id::text LIKE :idp || '%')
+                     OR s.title ILIKE :like OR r.name ILIKE :like)
+              ORDER BY (s.id::text = :idp) DESC, (s.status = 'pending') DESC, s.id DESC
+              LIMIT :lim",
+            ['idp' => $idPrefix, 'like' => '%'.addcslashes($q, '%_\\').'%', 'lim' => self::SEARCH_LIMIT] + $frag['params'],
+            ['lim' => \Doctrine\DBAL\ParameterType::INTEGER] + $frag['types'],
         );
 
         return array_map(static fn (array $r): array => [
@@ -531,7 +540,7 @@ final class CuratorRoom
                 FROM curator_post p
                 LEFT JOIN users a ON a.id = p.author_id
                 LEFT JOIN users r ON r.id = p.recipient_id
-                LEFT JOIN submission s ON s.id = p.about_submission_id
+                LEFT JOIN submission s ON s.id = p.about_submission_id AND s.escalated_at IS NULL
                 WHERE '.implode(' AND ', $where).'
                 ORDER BY p.created_at DESC
                 LIMIT '.self::PER_PAGE;
@@ -610,17 +619,17 @@ final class CuratorRoom
         ];
     }
 
-    /** The title the edit page shows in the about chip. */
+    /** The title the edit page shows in the about chip; none while the submission is held. */
     public function submissionTitle(int $id): ?string
     {
-        $t = $this->db->fetchOne('SELECT title FROM submission WHERE id = :id', ['id' => $id]);
+        $t = $this->db->fetchOne('SELECT title FROM submission WHERE id = :id AND escalated_at IS NULL', ['id' => $id]);
 
         return false === $t ? null : (string) $t;
     }
 
     private function submissionExists(int $id): bool
     {
-        return false !== $this->db->fetchOne('SELECT 1 FROM submission WHERE id = :id', ['id' => $id]);
+        return false !== $this->db->fetchOne('SELECT 1 FROM submission WHERE id = :id AND escalated_at IS NULL', ['id' => $id]);
     }
 
     private function isCurator(int $userId): bool

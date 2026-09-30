@@ -1535,7 +1535,10 @@ sees the same "a curator decided this one" flash and nothing about a hold, and
 /account/contributions shows no Withdraw button on it. `app:items:purge` and
 `app:catalog:purge-items` leave an item with a held submission or photo
 standing, whole, and name it (`SUB-n`, `photo <uuid>`) in the dry run and the
-real run.
+real run. The curator room reads no held submission: its search, a post's
+`SUB-n · title` link and the edit page's chip all add `escalated_at IS NULL`,
+and a held number cannot be linked anew
+([moderation-and-contribution.md §13.8](moderation-and-contribution.md)).
 
 **Only an admin can reach it**, at `/admin/escalated` — one page listing both
 kinds — behind a details element so nobody is shown the material by scrolling

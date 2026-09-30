@@ -3253,7 +3253,9 @@ checked on the worker; both paths end in the same rows.
 
 `about_submission_id` is checked against `submission` before the write: the
 column is a foreign key, and an id nobody typed correctly must come back as a
-sentence, not as a 500.
+sentence, not as a 500. A submission under legal hold answers as unknown
+(photo-uploads.md §6d); a post that already links one keeps the link through
+an edit, and shows it without its title.
 
 ### 13.4 Categories, a fixed list in code
 
@@ -3310,6 +3312,13 @@ room per area would silence exactly the question it exists to answer.
 `curator_post` therefore holds no region column at all, so there is nothing a
 later query could accidentally filter on.
 
+**The submission search is scoped** (2026-09-30). It is not a post: it lists
+queue cards, their titles and statuses, so it follows the queue's rule and
+narrows by the reader's `ModerationScope` (§9.2), and it never lists a card
+under legal hold. The room still reaches past the asker's area: a card out of
+reach is linked by typing its number, and the post carrying it is read by
+every curator.
+
 ### 13.7 The badge
 
 The Room tab on the moderation bar carries the count of posts the reader has
@@ -3337,7 +3346,7 @@ other desks.
 | GET | `/moderate/room/image/{id}` | `moderate_room_image` | one picture, from the database, `private, no-store`, inline. §13.6 applies: a picture on a direct post answers 404 to anyone but its two people; an unposted picture answers only its uploader. |
 | POST | `/moderate/room/upload` | `moderate_room_upload` | one picture from the composer's uploader, JSON `{id, width, height, bytes, url}` (201) or `{error}` (422). CSRF-protected (`moderate-room-upload`). |
 | POST | `/moderate/room/upload/{id}/remove` | `moderate_room_upload_remove` | take back a picture uploaded and not yet posted. |
-| GET | `/moderate/room/submissions?q=` | `moderate_room_submissions` | the composer's search: up to 8 submissions whose id, title or region matches, pending first, as JSON `{id, title, type, status, region, country}`. Unscoped, like the room. |
+| GET | `/moderate/room/submissions?q=` | `moderate_room_submissions` | the composer's search: up to 8 submissions whose id, title or region matches, pending first, as JSON `{id, title, type, status, region, country}`. Scoped like the queue, never a held card (§13.6). |
 
 Every POST redirects back to the room with the active category preserved,
 matching `ModerateController`'s existing redirect discipline.

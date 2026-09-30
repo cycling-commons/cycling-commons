@@ -6,12 +6,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Moderation;
 
+use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Messaging\CuratorRoom;
 use App\Messaging\CuratorRoomCategory;
 use App\Messaging\CuratorRoomPin;
+use App\Moderation\Entity\ModeratorArea;
 use App\Tests\Support\RunsPictureChecks;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -432,6 +434,91 @@ final class CuratorRoomTest extends WebTestCase
         $this->loginAs($client, 'search-rider', ['ROLE_USER']);
         $client->request('GET', '/moderate/room/submissions?q=Malchamps');
         self::assertResponseStatusCodeSame(403);
+    }
+
+    /**
+     * The search reads the queue, so it follows the queue's rules: a curator
+     * limited to an area finds only that area's cards (§9.2), and nobody finds
+     * a card under legal hold (photo-uploads.md §6d). Posts stay unscoped.
+     */
+    public function testTheSearchIsScopedLikeTheQueueAndLeavesOutHeldSubmissions(): void
+    {
+        $client = static::createClient();
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $mineRegion = (new Region())->setSlug('room-scope-mine-'.uniqid())->setName('Zwinland')->setCountryCode('BE');
+        $otherRegion = (new Region())->setSlug('room-scope-other-'.uniqid())->setName('Elsewhere')->setCountryCode('NL');
+        $em->persist($mineRegion);
+        $em->persist($otherRegion);
+        $em->flush();
+
+        $scoped = $this->loginAs($client, 'search-scoped', ['ROLE_CURATOR']);
+        $em->persist(new ModeratorArea((int) $scoped->getId(), (int) $mineRegion->getId(), null));
+        $inArea = $this->seedSubmission((int) $scoped->getId(), 'Zwinbrunnen in my area');
+        $inArea->setRegionId((int) $mineRegion->getId());
+        $outside = $this->seedSubmission((int) $scoped->getId(), 'Zwinbrunnen elsewhere');
+        $outside->setRegionId((int) $otherRegion->getId());
+        $held = $this->seedSubmission((int) $scoped->getId(), 'Zwinbrunnen under hold');
+        $held->setRegionId((int) $mineRegion->getId());
+        $held->escalate((int) $scoped->getId(), 'Suspected illegal content.');
+        $em->flush();
+
+        $ids = function (string $q) use ($client): array {
+            $client->request('GET', '/moderate/room/submissions?q='.rawurlencode($q));
+            self::assertResponseIsSuccessful();
+
+            return array_column((array) json_decode((string) $client->getResponse()->getContent(), true), 'id');
+        };
+
+        self::assertSame([$inArea->getId()], $ids('Zwinbrunnen'), 'only the card in the curator\'s area');
+        self::assertSame([], $ids((string) $held->getId()), 'a held card is not found by its number');
+        self::assertSame([], $ids('under hold'), 'nor by its title');
+
+        $this->loginAs($client, 'search-everywhere', ['ROLE_CURATOR']);
+        $found = $ids('Zwinbrunnen');
+        self::assertContains($inArea->getId(), $found);
+        self::assertContains($outside->getId(), $found, 'a curator without areas searches everywhere');
+        self::assertNotContains($held->getId(), $found, 'and still never finds a held card');
+    }
+
+    /**
+     * A post about a submission that goes under legal hold keeps its link but
+     * loses the title, on the board and on the edit page; a held number cannot
+     * be linked anew, and the post still saves with its old link.
+     */
+    public function testAHeldSubmissionShowsNoTitleInTheRoomAndCannotBeLinked(): void
+    {
+        $client = static::createClient();
+        $author = $this->loginAs($client, 'about-held', ['ROLE_CURATOR']);
+        $sub = $this->seedSubmission((int) $author->getId(), 'Words under hold');
+        $post = $this->room()->post((int) $author->getId(), null, null, 'Asked before the hold.', (int) $sub->getId(), title: 'About a card');
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $sub->escalate((int) $author->getId(), 'Suspected illegal content.');
+        $em->flush();
+
+        $crawler = $client->request('GET', '/moderate/room');
+        $about = $crawler->filter('.rm-post .rm-about')->text();
+        self::assertStringContainsString((string) $sub->getId(), $about);
+        self::assertStringNotContainsString('Words under hold', $about);
+
+        $crawler = $client->request('GET', '/moderate/room/'.$post->getId().'/edit');
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('Words under hold', (string) $client->getResponse()->getContent());
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['body'] = 'Reworded while the card is held.';
+        $client->submit($form);
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash-success', 'Saved');
+
+        $crawler = $client->request('GET', '/moderate/room/new');
+        $form = $crawler->filter('form.rm-compose')->form();
+        $form['body'] = 'Linking a held card.';
+        $form['title'] = 'Test post';
+        $form['about_q'] = 'SUB-'.$sub->getId();
+        $client->submit($form);
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash-error', 'no submission with that number');
     }
 
     public function testAPictureUploadsFirstAndThePostClaimsIt(): void
