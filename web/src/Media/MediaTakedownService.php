@@ -307,7 +307,8 @@ final class MediaTakedownService
     }
 
     /**
-     * Drop reporter contacts 90 days after resolution.
+     * Drop reporter contacts 90 days after resolution, except on a photo under
+     * legal hold, whose surrounding data the hold preserves (§6d).
      *
      * @see docs/specs/photo-uploads.md §6c
      *
@@ -320,7 +321,7 @@ final class MediaTakedownService
         /** @var list<MediaUpload> $rows */
         $rows = $this->em->createQuery(
             'SELECT m FROM '.MediaUpload::class.' m
-             WHERE m.takedownContact IS NOT NULL AND m.takedownResolvedAt < :cutoff',
+             WHERE m.takedownContact IS NOT NULL AND m.takedownResolvedAt < :cutoff AND m.escalatedAt IS NULL',
         )->setParameter('cutoff', $cutoff)->getResult();
 
         foreach ($rows as $upload) {

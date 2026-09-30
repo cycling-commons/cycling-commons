@@ -1382,7 +1382,8 @@ reason, malformed email) do surface: they reveal nothing about any photo.
 **Storage** reuses §6b's columns on `media_upload` plus: `takedown_source`
 (`uploader` | `third_party`), `takedown_category`, `takedown_contact`
 (reply address, swept by `app:media:gc` **90 days after
-`takedown_resolved_at`** — Art. 5(1)(e)), `takedown_reporter_hash` (salted
+`takedown_resolved_at`** (Art. 5(1)(e)), except on a photo under legal hold,
+§6d), `takedown_reporter_hash` (salted
 IP hash — answers "is one person reporting forty photos" without keeping raw
 IPs), and `takedown_decided_categories`, the finality ledger. One live
 request per photo at a time, either source; an undecided report occupies the

@@ -476,8 +476,22 @@ Note it is `of()` and not `limiter()`: the `anon-` prefix `limiter()` adds is fo
 rate-limiter store keys that share a namespace with `user-<id>`, and would
 overflow the 64-character column.
 
-The reply address is stored, because we cannot answer without it, and falls under
-the mail retention line in `/privacy`.
+The reply address is stored, because we cannot answer without it, and is
+deleted **90 days after the decision** (Art. 5(1)(e)), the promise the curator
+rulebook makes. `ReportContactRetention::purgeExpiredContacts()`, run daily by
+`app:media:gc` next to the same sweep for a photo request's `takedown_contact`
+(photo-uploads.md §6c), sets `reporter_contact` to null on every report whose
+status is decided (`upheld`, `rejected`, `moot`) and whose `decided_at` is more
+than 90 days old, in batches of 500, and the command prints the count. It
+leaves two kinds alone: a report still waiting (`open`, `in_progress`,
+including one taken up again after a decision, whose old `decided_at` no
+longer counts), and a report on a photo under legal hold
+(`media_upload.escalated_at` set, photo-uploads.md §6d), because the hold
+preserves the data around the material too. Only the address goes: the report
+stays as the DSA record, and `claimant_name` stays with it, because it is part
+of the claim the uploader was shown and answers, not a way to reach anybody.
+`/privacy` has no line of its own for this address; the 90 days sit inside the
+24 months its mail line allows. Pinned by `ReportContactRetentionTest`.
 
 ## 11. Open
 
