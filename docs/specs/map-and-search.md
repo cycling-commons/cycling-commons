@@ -2337,7 +2337,7 @@ responses) and silent on fetch failure — enhancements never block the drawer.
 Empty history renders nothing ("no changes yet" is silence, not a section).
 
 **Closed by default** (owner 2026-09-30). The history shows as one "Show
-changelog" button (`d_show_changelog`, a bordered button, `data-hist-toggle`,
+changelog" link (`d_show_changelog`, a plain link in the drawer text colour, not a call to action, so no border; underlined on hover and focus; `data-hist-toggle`,
 `aria-expanded`); pressing it opens the clamped list in place and the button
 reads "Hide changelog" (`d_hide_changelog`). The full log opens from a "Full
 log ↗" button (`d_changelog_all`, `data-hist-all`) at the end of the open list.

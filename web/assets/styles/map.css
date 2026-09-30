@@ -1163,12 +1163,13 @@
   /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's
      loadItemHistory() into #cc-d-hist-slot; empty until the fetch resolves
      (and stays empty/no heading if the item has no history). */
-  /* "Show changelog": a closed-by-default button that opens the clamped list
-     in place (data-hist-toggle); the full log opens from inside the list. */
-  .cc-d-hist-h{display:inline-flex;align-items:center;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem;
-    background:none;border:1px solid currentColor;border-radius:4px;padding:.35rem .7rem;min-height:32px;cursor:pointer;text-align:left}
-  .cc-d-hist-h:hover{color:var(--trail)}
+  /* "Show changelog": a plain text link in the drawer's text colour (not a
+     call to action, so no border), opening the clamped list in place
+     (data-hist-toggle); the full log opens from inside the list. */
+  .cc-d-hist-h{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--chrome-fg-solid);margin:1.3rem 0 .5rem;
+    background:none;border:none;padding:.2rem 0;cursor:pointer;text-align:left;text-decoration:none}
+  .cc-d-hist-h:hover,.cc-d-hist-h:focus-visible{text-decoration:underline;text-underline-offset:3px}
   .cc-d-hist-all{display:inline-block;margin:.5rem 0 0;background:none;border:none;padding:.3rem 0;cursor:pointer;
     font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--trail)}
   .cc-d-hist-all:hover,.cc-d-hist-all:focus-visible{text-decoration:underline;text-underline-offset:2px}
