@@ -40,10 +40,11 @@ enum FindingKind: string
      *
      * Asked: is this the same object? Accept writes `item.osm_ref`, which makes
      * the coverage copy stop being served separately. Not automatic here
-     * because identity is harder to unpick than a duplicate pin: inside 50 m
-     * with an identical name key the linker writes it without asking, and this
-     * kind is only the 50-250 m middle where "Dom" could be a mountain or a
-     * cathedral.
+     * because identity is harder to unpick than a duplicate pin: inside
+     * {@see Import\OsmLinker::TIGHT_M} (100 m) with an identical
+     * name key the linker writes it without asking, and this kind is only the
+     * 100-250 m middle ({@see Import\OsmLinker::LOOSE_M}) where
+     * "Dom" could be a mountain or a cathedral.
      */
     case OsmLink = 'osm_link';
 
