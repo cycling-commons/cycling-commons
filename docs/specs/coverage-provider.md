@@ -421,7 +421,9 @@ After all regions, once per run:
    tokens as the icons, plus the rail's exact `/map/coverage/counts`
    alongside it as the precise "how much"; individual dots render from z9
    upward (the z9–10 dots are the thinned sample, complete by z11),
-   cross-fading with the heatmap at the ~z9 handoff. (The prior
+   cross-fading with the heatmap at the ~z9 handoff. The heatmap is a light
+   lavender ramp at 0.5 opacity, so the base map stays readable under it
+   (`coverage.js`, owner 2026-09-30). (The prior
    cluster-bubble design rendered a cluster at the *centroid* of its
    members, which could sit outside the scoped region — the phantom-bubble
    class that removing clustering eliminates. The heatmap carries the

@@ -178,12 +178,13 @@ function addCoverageLayers(cc, src){
         'heatmap-weight':0.6,
         'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.9,9,1.3],
         'heatmap-radius':['interpolate',['linear'],['zoom'],6,16,9,28],
-        'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.6,8,0.6,9,0],   // crossfade into icons at z9
+        'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.5,8,0.5,9,0],   // crossfade into icons at z9
+        // A light lavender ramp (owner 2026-09-30: the deep purple hid the base map).
         'heatmap-color':['interpolate',['linear'],['heatmap-density'],
           0,'rgba(0,0,0,0)',
-          0.25,'rgba(150,110,190,0.32)',
-          0.6,'rgba(112,72,158,0.58)',
-          1,'#5B2A86']}};
+          0.25,'rgba(196,176,226,0.30)',
+          0.6,'rgba(168,138,212,0.46)',
+          1,'rgba(140,104,196,0.62)']}};
     { const hf=covHeatFilter(); if(hf) heatSpec.filter=hf; }
     map.addLayer(heatSpec, COV_SEL_LAYER);
     // Icons from z9 (docs/specs/coverage-provider.md §4); z6–8 tiles are thinned.
