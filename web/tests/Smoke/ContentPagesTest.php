@@ -59,7 +59,8 @@ final class ContentPagesTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $retention = $crawler->filter('h2:contains("How long we keep it") + ul')->text();
         self::assertStringContainsString('Reports about content.', $retention);
-        self::assertStringContainsString('deleted 90 days after we decide', $retention);
+        self::assertStringContainsString('We delete the address 90 days after that decision', $retention);
+        self::assertStringContainsString('until that hold is lifted', $retention);
     }
 
     public function testTermsRenders(): void

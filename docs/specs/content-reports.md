@@ -497,9 +497,12 @@ longer counts), and a report on a photo under legal hold
 preserves the data around the material too. Only the address goes: the report
 stays as the DSA record, and `claimant_name` stays with it, because it is part
 of the claim the uploader was shown and answers, not a way to reach anybody.
-`/privacy` states it in its own line, `privacy.retention_reports` (EN: "When
-you report something on the site, including a photo that shows you, the
-address you leave for our answer is deleted 90 days after we decide."), which
+`/privacy` states it in its own line, `privacy.retention_reports` (EN: "we
+keep the address you leave for our answer until we have decided on your
+report: acted on it, found nothing wrong, or closed it because it no longer
+applies. We delete the address 90 days after that decision. [...] If the
+reported photo is held for a legal case, we keep the address until that hold
+is lifted."), which
 covers the photo request's `takedown_contact` too, since the same run clears
 it on the same clock. Pinned by `ReportContactRetentionTest` and
 `ContentPagesTest::testPrivacyStatesTheContentReportAddressPeriod`.
