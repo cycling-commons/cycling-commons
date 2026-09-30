@@ -634,6 +634,15 @@ still holds for riders: a submitter's own form answer never counts. Pinned by
 `testACuratorsNewPlaceCanAlsoBeMarkedConfirmed` and
 `testACuratorsNewPlaceWithoutAnOsmAnswerStillQueues`.
 
+**What still queues is for another curator (owner decision, 2026-09-30).**
+The owner kept this behaviour as policy: own edits inside the area, and own
+new places with the OSM question answered, apply at once; work outside the
+area and new places without an OSM answer queue. A curator does not decide
+their own queued submission, or one by somebody close to them. That is a
+rulebook rule (RB-DONT-04), not a code guard: `ModerationService::decide()`
+does not compare the curator with the submitter. Only the Translations desk
+refuses self-review in code (`App\Translation\Exception\SelfReviewException`).
+
 ## 2. Intake boundary: `SubmissionDraft`, validate twice
 
 One envelope DTO, not eleven: `App\Contribution\SubmissionDraft` carries
