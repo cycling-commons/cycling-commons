@@ -1,0 +1,62 @@
+web/templates/moderate_routes/detail.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 8
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_1407501029292c 3425
+web/templates/moderate/index.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 10
+web/templates/moderate/translations_stale.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 12
+web/templates/moderate/rulebook.html.twig
+  s_49442ae34d3603::t_36825ea6de722c 68
+web/tests/Moderation/DeskBadgesTest.php
+  s_49442ae34d3603::t_df9a97742c0c74 1-27,29-80,82-100,102-124,126-158,166-207
+  s_49442ae34d3603::t_5d52a296e919bd 28,81,101,125,159-165
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_19c0b5c6c67414 897-910
+  s_49442ae34d3603::t_2a3a290ee84173 911-912
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_8ad3ca96056561 3452
+web/templates/moderate/translations_history.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 8
+web/src/Twig/ModerationChromeExtension.php
+  s_49442ae34d3603::t_36825ea6de722c 155,194
+  s_49442ae34d3603::t_2c1d184f696ea3 9,11,13,15,20,27-33,35-38,44,46-50,58-60,64-70,77-79,114,120,132,137,140,143-150,152-154,156-160,162-168,175-185,192-193,195-197
+  s_49442ae34d3603::t_05cdd8804b3534 161
+  s_49442ae34d3603::t_357f8a76102124 105-111
+web/templates/moderate/history.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 18
+web/templates/account/_shell_chrome.html.twig
+  s_49442ae34d3603::t_d7eb0efb9caa0f 29-35,40-42,60-61,65,89,93
+web/templates/moderate/translation_detail.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 10
+web/templates/moderate/dashboard.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 12
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_1c439c700e70c9 3424
+web/templates/moderate/translations.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 8
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_61de5c42ee710d 3417
+web/templates/moderate_routes/index.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 10
+web/templates/moderate/takedowns.html.twig
+  s_49442ae34d3603::t_e67fd416e6a1a1 11
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_453cd448f0f590 3443
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bc9fae6cf5900174e64651121732cbda03691e59",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
