@@ -2,8 +2,8 @@
 {# The eight registry fields of a recommended route, in one place, so a first
    proposal and its creator's later edit offer exactly the same form
    (docs/specs/edit-items/R-quality-rides.md). `with_photos` slots the photo
-   field where a proposal carries it; an edit has none, because photos are
-   their own correction (route-domain.md §4.5). #}
+   field where a proposal carries it; on the proposer's edit `photos` passes
+   what the proposal already carries through to it (route-domain.md §4.6). #}
 <fieldset>
   <legend>{{ 'propose_route.details_label'|trans }}</legend>
   <div class="field">
@@ -43,7 +43,7 @@
 </fieldset>
 
 {% if with_photos|default(false) %}
-  {{ include('contribute/_route_photo_field.html.twig', {form: form, help: 'propose_route.photos_help'}) }}
+  {{ include('contribute/_route_photo_field.html.twig', {form: form, help: 'propose_route.photos_help'}|merge(photos|default({}))) }}
 {% endif %}
 
 <fieldset>

@@ -15,6 +15,7 @@ use App\Catalog\ItemType;
 use App\Catalog\LocationMode;
 use App\Catalog\RoadType;
 use App\Catalog\ServiceKind;
+use App\Catalog\SubmissionType;
 use App\Catalog\SurfaceVocabulary;
 use App\Community\ItemConfirmationService;
 use App\Contribution\BikeWayLocator;
@@ -550,6 +551,15 @@ final class ContributeController extends AbstractController
             ? ServiceKind::tryFrom((string) ($item->getAttributes()['serviceKind'] ?? ''))
             : null;
 
+        // The rider's own new place, still waiting: the item IS the proposal,
+        // so its similar places are asked again, with the ticks it was sent
+        // with (catalog-data-model.md §5a).
+        $openNew = null;
+        if (ItemState::Submitted === $item->getState() && $this->getUser() instanceof User) {
+            $open = $this->contributions->openSubmissionFor((int) $item->getId(), $this->getUser());
+            $openNew = null !== $open && SubmissionType::NewItem === $open->getType() ? $open : null;
+        }
+
         $form = $this->createForm(ImproveType::class, null, [
             'catalog_type' => $type,
             'current' => $current,
@@ -570,7 +580,7 @@ final class ContributeController extends AbstractController
                     'type' => $type->value,
                     '_item_id' => $item->getId(),
                     '_title_fallback' => $translator->trans('item_type.'.$type->value.'.label'),
-                ] + $data, $user);
+                ] + (null !== $openNew ? ['_replaces' => self::replaces($data['replaces'] ?? null)] : []) + $data, $user);
             } catch (TooManyRequestsHttpException) {
                 $this->addFlash('error', 'contribute.error.rate_limited');
                 $receipt = null;
@@ -648,6 +658,14 @@ final class ContributeController extends AbstractController
             'pending_submission_id' => $pendingSubmissionId,
             'own_pending' => $ownPending,
             'other_pending_since' => $otherPendingSince,
+            'similar_edit' => null !== $openNew,
+            // Absent is "never asked" (a place sent before the list existed),
+            // and the wizard's distance defaults apply; a list is the rider's.
+            'similar_ticks' => null !== $openNew && \array_key_exists('_replaces', $openNew->getPayload())
+                ? self::replaces(implode(',', array_filter((array) $openNew->getPayload()['_replaces'], \is_string(...))))
+                : null,
+            'similar_item' => $item->getId(),
+            'similar_ref' => $item->getOsmRef(),
         ]);
     }
 

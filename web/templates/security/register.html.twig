@@ -38,8 +38,9 @@
 
         <div class="field">
           {{ form_label(registrationForm.displayName) }}
-          {{ form_widget(registrationForm.displayName) }}
+          {{ form_widget(registrationForm.displayName, {attr: registrationForm.displayName.vars.attr|merge({'aria-describedby': registrationForm.displayName.vars.id ~ '_hint'})}) }}
           {{ form_errors(registrationForm.displayName) }}
+          {% include 'partials/_name_hint.html.twig' with {input_id: registrationForm.displayName.vars.id, class: 'name-hint', stamp: form_stamp} only %}
         </div>
 
         <div class="field">
@@ -97,4 +98,5 @@
 {# Validation first: form-challenge.js leaves a submit alone once it is prevented. #}
 <script src="{{ asset('js/register-validate.js') }}" defer></script>
 <script src="{{ asset('support/form-challenge.js') }}" defer></script>
+<script src="{{ asset('js/name-hint.js') }}" defer></script>
 {% endblock %}

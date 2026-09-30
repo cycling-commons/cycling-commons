@@ -53,6 +53,9 @@ jobs:
       # contributor without php on PATH that "CI will enforce parity". It does
       # now: that message was false for as long as it existed.
       - run: ./tools/check-translations.sh
+      # Parity cannot see a key that all five catalogues lack; this asks the
+      # extractor which keys the templates and PHP use.
+      - run: ./tools/check-used-translations.sh
       - run: vendor/bin/php-cs-fixer fix --dry-run --diff
       - run: vendor/bin/phpstan analyse --no-progress
       - run: vendor/bin/psalm --no-cache

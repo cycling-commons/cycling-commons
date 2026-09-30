@@ -1,8 +1,8 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {#
   The pager, shared by every paged list: both moderation desks, the Routes and
-  Regions desks, the account's contributions and route proposals, the messages
-  dashboard and the public contributors wall.
+  Regions desks, the account's contributions, the messages dashboard and the
+  public contributors wall.
 
   Params:
     pager  array  — {page, pages, total, prev, next} from App\Pagination\Pager::of()
@@ -11,9 +11,9 @@
     key    string — the query parameter this pager moves (default `page`)
 
   `key` exists because several pages carry TWO paged lists on one pane. With
-  both writing `?page=`, moving through route proposals would have moved the
-  contributions list underneath the reader. The second pager passes its own key
-  (`rpage`, `spage`), and each one puts the other's current page in `params` so
+  both writing `?page=`, moving through one list would move the other
+  underneath the reader. The second pager passes its own key (`spage`,
+  `hpage`), and each one puts the other's current page in `params` so
   neither resets the other.
 
   Plain links, no JS: a page a curator can bookmark, link to a colleague, and

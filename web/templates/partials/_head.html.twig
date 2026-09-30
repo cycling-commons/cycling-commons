@@ -31,4 +31,6 @@
 <link rel="stylesheet" href="{{ asset('styles/select-box.css') }}" />
 {# No nonce: script-src names the analytics host, so neither this file nor the
    cross-origin script it injects needs one (page-caching.md §3.2). #}
-{% if analytics_enabled %}<script defer src="{{ asset('js/analytics.js') }}"></script>{% endif %}
+{# Public pages only: analytics_on_page() (AnalyticsExtension) is false in the
+   signed-in areas and on the token-bearing auth steps. #}
+{% if analytics_on_page() %}<script defer src="{{ asset('js/analytics.js') }}"></script>{% endif %}

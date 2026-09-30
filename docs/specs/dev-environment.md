@@ -358,6 +358,11 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
 - **Parity gate:** `web/tools/check-translations.sh` fails if any non-default
   locale catalogue has missing or extra keys vs `messages.en.yaml`; runs in
   `make app-test` and as a pre-commit hook when translation files are staged.
+- **Used-key gate:** `web/tools/check-used-translations.sh` runs
+  `debug:translation en --only-missing --domain=messages` and fails on any key
+  a template or PHP file asks for that `messages.en.yaml` lacks. Parity cannot
+  see a key that all five catalogues lack; the page then prints the raw key.
+  Runs in `make app-test` and in `ci-app.yml`.
 - **Locale selection:** anonymous switching via
   `GET /i18n/{_locale}` (`App\Controller\LocaleController`, session-stored);
   authenticated users persist a `User.locale` preference which

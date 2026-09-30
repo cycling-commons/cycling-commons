@@ -145,25 +145,7 @@ final class ModerateBugsController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        return $this->render('moderate/bug_detail.html.twig', [
-            'github' => $this->github,
-            'releases' => $this->releaseTags(),
-            'page_title' => 'support.bugs.title',
-            'page_description' => 'support.bugs.title',
-            'nav_active' => '',
-            'active' => 'moderate_bugs',
-            'report' => $report,
-            'reference' => $this->mailer->bugReference($report),
-            'statuses' => BugStatus::all(),
-            'severities' => BugSeverity::all(),
-            'areas' => BugArea::all(),
-            // Which statuses actually mail the reporter, so the template does
-            // not have to keep its own copy of that list and drift from it.
-            'notifying_statuses' => array_map(
-                static fn (BugStatus $s): string => $s->value,
-                array_filter(BugStatus::all(), static fn (BugStatus $s): bool => $s->notifiesReporter()),
-            ),
-        ]);
+        return $this->renderDetail($report);
     }
 
     /**
@@ -231,10 +213,32 @@ final class ModerateBugsController extends AbstractController
         }
 
         $note = trim((string) $request->request->get('outcome_note', ''));
+        // "Use the default message" fills the field in the browser. Without
+        // scripting it cannot, so a ticked box over an empty field means the
+        // default here too. Fixed only: a decline always carries a reason
+        // somebody wrote.
+        $wantsDefault = $request->request->getBoolean('outcome_default');
+        if ('' === $note && $wantsDefault && BugStatus::Resolved === $status) {
+            $note = $this->mailer->bugOutcomeDefaultNote($report);
+        }
         if ($status->notifiesReporter() && '' === $note) {
-            $this->addFlash('notice', 'support.bugs.flash_outcome_needs_note');
-
-            return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id]);
+            // The page again, not a redirect: it opens on the reply field with
+            // the reason beside it, and everything else the curator typed is
+            // still in the form. The browser normally stops this submit first
+            // (the field is `required` for these statuses); this is the same
+            // rule for a browser without scripting.
+            return $this->renderDetail($report, [
+                'status' => $status->value,
+                'severity' => (string) $request->request->get('severity', $report->getSeverity()->value),
+                'area' => (string) $request->request->get('area', $report->getArea()->value),
+                'internal_note' => (string) $request->request->get('internal_note', ''),
+                'fix_release' => (string) $request->request->get('fix_release', ''),
+                'outcome_note' => (string) $request->request->get('outcome_note', ''),
+                'outcome_default' => $wantsDefault,
+                'is_public' => $request->request->getBoolean('is_public'),
+                'public_title' => (string) $request->request->get('public_title', ''),
+                'public_body' => (string) $request->request->get('public_body', ''),
+            ], 'support.bugs.outcome_missing', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $publicTitle = trim((string) $request->request->get('public_title', ''));
@@ -313,6 +317,47 @@ final class ModerateBugsController extends AbstractController
         $response->headers->set('Content-Disposition', \sprintf('attachment; filename="bug-%d-%d.png"', $id, $shot->getPosition() + 1));
         $response->headers->set('Cache-Control', 'private, no-store');
         $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+
+        return $response;
+    }
+
+    /**
+     * The detail page, from the row or from a refused save.
+     *
+     * `$draft` is what the curator submitted, shown in place of the row's own
+     * values so a refused save loses nothing they typed. `$noteError` is the
+     * translation key for the reason beside the reply field.
+     *
+     * @param array{status: string, severity: string, area: string, internal_note: string, fix_release: string, outcome_note: string, outcome_default: bool, is_public: bool, public_title: string, public_body: string}|null $draft
+     */
+    private function renderDetail(BugReport $report, ?array $draft = null, ?string $noteError = null, int $status = Response::HTTP_OK): Response
+    {
+        $response = $this->render('moderate/bug_detail.html.twig', [
+            'github' => $this->github,
+            'releases' => $this->releaseTags(),
+            'page_title' => 'support.bugs.title',
+            'page_description' => 'support.bugs.title',
+            'nav_active' => '',
+            'active' => 'moderate_bugs',
+            'report' => $report,
+            'draft' => $draft,
+            'note_error' => $noteError,
+            'reference' => $this->mailer->bugReference($report),
+            'statuses' => BugStatus::all(),
+            'severities' => BugSeverity::all(),
+            'areas' => BugArea::all(),
+            // Which statuses actually mail the reporter, so the template does
+            // not have to keep its own copy of that list and drift from it.
+            'notifying_statuses' => array_map(
+                static fn (BugStatus $s): string => $s->value,
+                array_filter(BugStatus::all(), static fn (BugStatus $s): bool => $s->notifiesReporter()),
+            ),
+            // The status the default reply is offered for, and the reply
+            // itself in the language the mail goes out in.
+            'default_note_status' => BugStatus::Resolved->value,
+            'default_note' => $this->mailer->bugOutcomeDefaultNote($report),
+        ]);
+        $response->setStatusCode($status);
 
         return $response;
     }

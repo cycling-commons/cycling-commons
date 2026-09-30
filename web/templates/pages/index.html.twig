@@ -112,7 +112,7 @@
 <section class="pad">
   <div class="wrap split">
     <div>
-      <div class="kicker rv">{{ 'home.frag_kicker'|trans }}</div>
+      <div class="kicker rv" data-track-seen="one place, not a handful of apps">{{ 'home.frag_kicker'|trans }}</div>
       <h2 class="rv" data-d="1">{{ 'home.frag_h2'|trans }}</h2>
       <p class="lead rv" data-d="2">{{ 'home.frag_lead1'|trans }}</p>
       <p class="lead rv" data-d="2" style="margin-top:1.1rem">{{ 'home.frag_lead2'|trans|rich }}</p>
@@ -155,7 +155,7 @@
 <!-- ===================== CATALOG ===================== -->
 <section class="pad">
   <div class="wrap">
-    <div class="kicker rv">{{ 'home.cat_kicker'|trans }}</div>
+    <div class="kicker rv" data-track-seen="what's in the atlas">{{ 'home.cat_kicker'|trans }}</div>
     <h2 class="rv" data-d="1" style="max-width:none">{{ 'home.cat_h2'|trans }}</h2>
 
     {# The dots on a card: riders confirm that kind of place, and the map shows how recently. #}
@@ -212,4 +212,7 @@
    (docs/specs/page-caching.md §3.2). Deferred: it reads window.CC from
    races.js and expects the document parsed. #}
 <script src="{{ asset('home/hero.js') }}" defer></script>
+{# How far down the landing page readers get: one Umami event per section,
+   the first time its kicker scrolls into view (owner 2026-09-30). #}
+<script src="{{ asset('js/track-seen.js') }}" defer></script>
 {% endblock %}

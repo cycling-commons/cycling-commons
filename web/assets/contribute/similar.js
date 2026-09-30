@@ -12,6 +12,12 @@
    radius treats as the same thing; farther ones start unticked, because a
    second tap across a square is a real second tap.
 
+   On the rider's own new place while it waits, the list is asked again:
+   `data-item` and `data-ref` keep the place and its OSM point off its own
+   list, and `data-ticks` brings back what the rider left ticked. Without
+   `data-ticks` (a place sent before the list existed) the distance rule
+   above applies.
+
    The list follows the pin: `cc:loc` rebuilds it, and a stale answer from a
    pin that has since moved is dropped. Nothing here blocks Next. */
 (function () {
@@ -24,7 +30,9 @@
   if (!box || !head || !list || !field) { return; }
 
   var d = box.dataset;
-  var ref = new URLSearchParams(location.search).get('ref') || '';
+  var ref = d.ref || new URLSearchParams(location.search).get('ref') || '';
+  var prior = null;
+  try { prior = d.ticks ? JSON.parse(d.ticks) : null; } catch (e) { prior = null; }
   var seq = 0;
   var last = '';
 
@@ -60,7 +68,7 @@
       var cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.value = place.tick;
-      cb.checked = !!place.ticked;
+      cb.checked = Array.isArray(prior) ? prior.indexOf(place.tick) >= 0 : !!place.ticked;
       cb.addEventListener('change', write);
       var what = document.createElement('span');
       what.className = 'simq-what';
@@ -91,6 +99,7 @@
     var mine = ++seq;
     var q = new URLSearchParams({ type: d.type, lat: String(loc.lat), lng: String(loc.lng) });
     if (ref) { q.set('ref', ref); }
+    if (d.item) { q.set('item', d.item); }
     fetch(d.url + '?' + q.toString(), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : { places: [] }; })
       .then(function (out) {

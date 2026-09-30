@@ -66,6 +66,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .topnav .links{display:flex;gap:1rem;align-items:center}
 .topnav .links a{font-family:var(--sans,"Spline Sans",sans-serif);font-size:.9rem;color:var(--paper);opacity:.85;transition:opacity .2s}
 .topnav .links a:hover{opacity:1}.topnav .links a.on{color:var(--trail);opacity:1}
+/* The display-name hint: a shared name is a notice in --clay, not an error
+   (sharing is allowed); a free name stays in the small-print colour. */
+[data-name-hint][data-state="shared"]{color:var(--clay);font-weight:600}
+/* Menu-only links live in the phone menu (nav.js copies them there), never in the bar. */
+.topnav .links a.menu-only{display:none}
 .topnav .acct,.dtop .acct{border:1.5px solid rgba(239,230,212,.4);padding:.5rem .85rem;border-radius:4px;color:var(--paper)!important;opacity:1}
 /* Header buttons read in paper on every state (owner 2026-09-05): the
    orange-on-green outline labels and the ink-on-orange fill were hard to read. */
@@ -154,6 +159,11 @@ h2.disp{font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.4vw,2.
 input[type="checkbox"],input[type="radio"]{accent-color:var(--trail);width:1.05rem;height:1.05rem;cursor:pointer}
 input[type="checkbox"]:focus-visible,input[type="radio"]:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
 input[type="checkbox"]:disabled,input[type="radio"]:disabled{cursor:not-allowed;opacity:.55}
+/* Text fields, selects and textareas, site-wide. /accessibility promises the
+   focus outline is never removed; page stylesheets set outline:none on their
+   fields and colour the border instead, so this ring carries !important to
+   stay on top of all of them. The map page does not load this file. */
+input:not([type="checkbox"]):not([type="radio"]):focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--trail)!important;outline-offset:2px}
 
 /* A tiny zebra on the row lists (owner, 2026-08-28).
    Roughly two percent of contrast: enough to carry the eye across a wide row

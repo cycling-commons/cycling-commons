@@ -534,6 +534,46 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertFalse($item->getAttributes()['steep']['manual']);
     }
 
+    /** A climb's point is the foot of its line (owner 2026-09-30), whatever pin the form sent. */
+    public function testANewClimbIsPinnedAtTheFootOfItsLine(): void
+    {
+        $this->wallonia();
+        $receipt = $this->service->submit('add', [
+            'type' => 'climbs', 'details' => ['name' => 'Summit-pinned climb'], 'lat' => 50.52, 'lng' => 5.25,
+            'route' => '[[50.51,5.24],[50.52,5.25]]', // [lat,lng], foot first
+        ], $this->user());
+
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        self::assertSame([5.24, 50.51], json_decode((string) $sub->getGeom(), true)['coordinates']);
+        $this->em->clear();
+        $item = $this->em->find(Item::class, $sub->getItemId());
+        self::assertNotNull($item);
+        self::assertSame([5.24, 50.51], json_decode((string) $item->getGeom(), true)['coordinates']);
+    }
+
+    /** A redrawn climb line takes the climb's point with it, to the new foot. */
+    public function testARedrawnClimbLineMovesTheClimbsPointToTheNewFoot(): void
+    {
+        $this->wallonia();
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.86,50.47]}', [
+            'route' => [[50.47, 5.86], [50.48, 5.87]],
+        ]);
+
+        $receipt = $this->service->submit('improve', [
+            '_item_id' => $item->getId(),
+            'lat' => 50.47, 'lng' => 5.86,
+            'route' => '[[50.46,5.85],[50.47,5.86],[50.48,5.87]]',
+        ], $this->curator());
+
+        self::assertTrue($receipt->applied);
+        $this->em->clear();
+        $item = $this->em->find(Item::class, $item->getId());
+        self::assertNotNull($item);
+        self::assertSame([[50.46, 5.85], [50.47, 5.86], [50.48, 5.87]], $item->getAttributes()['route']);
+        self::assertSame([5.85, 50.46], json_decode((string) $item->getGeom(), true)['coordinates']);
+    }
+
     public function testVoteStaysUnpersisted(): void
     {
         $receipt = $this->service->submit('vote', ['choice' => 'x'], $this->user());

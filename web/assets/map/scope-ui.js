@@ -15,7 +15,7 @@ import { refreshBestOf } from './panels.js';
 import { COVERAGE_KEYS, COVERAGE_CCS } from './coverage.js';
 import { isPicking } from './picking.js';
 import { corrLayerIds } from './corrections.js';
-import { hitScopeFor } from './hit-scope.js';
+import { hitScopeForAll } from './hit-scope.js';
 import { parkTiledOverlays, unparkTiledOverlays } from './tile-park.js';
 import { initNoticeState, evaluateNotice, dismissNotice, isNearOutlines, PAN_MIN_ZOOM } from './coverage-notice.js';
 
@@ -280,18 +280,23 @@ function setTransientScope(next){
  * Move the scope to the region of one target so the map draws it, remembering
  * the rider's own scope for restoreHitScope(). `ll` is [lat, lng]; `rid` is the
  * target's region id when the caller knows it (an item index entry, a served
- * feature), which beats reading the region off the point. Answers whether the
- * scope moved. The caller frames the target itself, right after: the camera is
- * held for this change (keepCameraForNextScope).
+ * feature), which beats reading the region off the point. `rid` may also be a
+ * list of region ids, for a target that spans several (a route's `rids`): the
+ * scope then takes all of them (hitScopeForAll). Answers whether the scope
+ * moved. The caller frames the target itself, right after: the camera is held
+ * for this change (keepCameraForNextScope).
  */
 export function liftScopeForHit(ll, rid){
   const S = window.CCScope;
   if(!S) return false;
-  const known = rid != null ? (_regionById.get(rid) || _regionById.get(+rid)) : null;
-  const region = known
-    || (Array.isArray(ll) && ll.length === 2 ? S.regionOfPoint(+ll[1], +ll[0]) : null);
-  if(!region) return false;
-  const next = hitScopeFor(S.get(), {id: region.id, countryCode: region.countryCode || null});
+  const ids = Array.isArray(rid) ? rid : (rid != null ? [rid] : []);
+  let regions = ids.map(id => _regionById.get(id) || _regionById.get(+id)).filter(Boolean);
+  if(!regions.length){
+    const at = Array.isArray(ll) && ll.length === 2 ? S.regionOfPoint(+ll[1], +ll[0]) : null;
+    regions = at ? [at] : [];
+  }
+  if(!regions.length) return false;
+  const next = hitScopeForAll(S.get(), regions.map(r => ({id: r.id, countryCode: r.countryCode || null})));
   if(!next) return false;
   if(_riderScope == null) _riderScope = S.get();
   keepCameraForNextScope();

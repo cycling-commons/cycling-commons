@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog\Command;
 
+use App\Catalog\ClimbFoot;
 use App\Catalog\Import\AttributeVocabulary;
 use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
@@ -262,6 +263,12 @@ final class ImportCatalogCommand extends Command
 
                 // OSM pools emit `n`; climbs/surface exporters emit `name`.
                 $name = (string) ($props['n'] ?? $props['name'] ?? '');
+
+                // A climb's point is the foot of its line (ClimbFoot), not the point the exporter carried.
+                $foot = 'N' === $letter ? ClimbFoot::of($attributes['route'] ?? null) : null;
+                if (null !== $foot) {
+                    $geometry = ['type' => 'Point', 'coordinates' => [$foot[1], $foot[0]]];
+                }
 
                 $pin = 'Point' === $geometry['type'] ? $geometry['coordinates'] : [];
                 $sifted = PhotoValidator::sift($attributes, PhotoPlace::of($letter, $pin[1] ?? null, $pin[0] ?? null));

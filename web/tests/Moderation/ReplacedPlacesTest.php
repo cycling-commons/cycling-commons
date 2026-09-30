@@ -117,6 +117,26 @@ final class ReplacedPlacesTest extends KernelTestCase
         self::assertSame(ItemState::Verified, $this->item($provider)->getState());
     }
 
+    /** The card names the OSM point whose free pin goes, by the rule approval uses. */
+    public function testTheCardNamesTheOsmPointTheNewPlaceTakesOver(): void
+    {
+        $replaced = static::getContainer()->get(ReplacedPlaces::class);
+
+        [$own] = $this->submitted('node/88811', ItemSource::Osm, 'node/88811', []);
+        self::assertSame('node/88811', $replaced->takesOsm((int) $own->getId(), 'node/88811', ReplacedPlaces::ticks([])), 'its own point');
+
+        $provider = $this->served('rivm-test:tap-card', 'node/88812', self::LAT + 0.00006, self::LNG);
+        [$ticked] = $this->submitted(null, ItemSource::User, 'sub:replaces-card', ['item:'.$provider->getId()]);
+        self::assertSame(
+            'node/88812',
+            $replaced->takesOsm((int) $ticked->getId(), null, ReplacedPlaces::ticks(['item:'.$provider->getId()])),
+            'the point of the row it retires',
+        );
+
+        [$none] = $this->submitted(null, ItemSource::User, 'sub:replaces-none', []);
+        self::assertNull($replaced->takesOsm((int) $none->getId(), null, ReplacedPlaces::ticks([])), 'no point, no line');
+    }
+
     public function testTicksAreCleanedBeforeUse(): void
     {
         self::assertSame(

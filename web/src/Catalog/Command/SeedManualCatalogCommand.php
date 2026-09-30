@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog\Command;
 
+use App\Catalog\ClimbFoot;
 use App\Catalog\Import\AttributeVocabulary;
 use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
@@ -410,6 +411,11 @@ final class SeedManualCatalogCommand extends Command
             $droppedPhotos = [];
             foreach (self::pins() as $pin) {
                 $type = ItemType::fromParam($pin['letter']);
+                // A climb's point is the foot of its line (ClimbFoot), wherever its listed pin sits.
+                $foot = 'N' === $pin['letter'] ? ClimbFoot::of($pin['attributes']['route'] ?? null) : null;
+                if (null !== $foot) {
+                    [$pin['lat'], $pin['lng']] = $foot;
+                }
                 $sifted = PhotoValidator::sift($pin['attributes'], new PhotoPlace($pin['letter'], $pin['lat'], $pin['lng']));
                 $pin['attributes'] = $sifted['attributes'];
                 foreach ($sifted['dropped'] as $dropped) {

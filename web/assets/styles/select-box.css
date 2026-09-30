@@ -12,6 +12,10 @@
   border:0!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important;clip:rect(0 0 0 0)}
 .cc-sel-btn{display:inline-flex;align-items:center;gap:.6rem;text-align:left;cursor:pointer;min-height:24px}
 .cc-sel-btn:disabled{opacity:.55;cursor:default}
+/* The page's own `select` rules can remove the outline (atlas.css draws the
+   field as an underline); the button keeps a ring for the keyboard, like
+   every other control on the site. */
+.cc-sel-btn:focus-visible{outline:2px solid var(--trail,#FF5A1F);outline-offset:2px}
 .cc-sel-btn::after{content:"";flex:none;width:.42rem;height:.42rem;margin:0 .15rem 0 0;
   border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-25%) rotate(45deg)}
 .cc-sel-btn[aria-expanded="true"]::after{transform:translateY(25%) rotate(-135deg)}
@@ -32,3 +36,7 @@
 .cc-sel-list li.active{background:color-mix(in srgb,currentColor 14%,transparent)}
 .cc-sel-list li[aria-selected="true"]{font-weight:700}
 .cc-sel-list li[aria-disabled="true"]{opacity:.5;cursor:default}
+/* An <optgroup>: its label as a small heading over its options. */
+.cc-sel-list li[role="group"]{display:block;padding:0;border-radius:0;cursor:default}
+.cc-sel-list li[role="group"] ul{list-style:none;margin:0;padding:0}
+.cc-sel-group{padding:.55rem .55rem .25rem;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.7}

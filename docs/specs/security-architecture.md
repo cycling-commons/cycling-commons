@@ -105,6 +105,27 @@ The loader's tag is printed only when `CC_ANALYTICS` is on, which is
 `tests/Security/AnalyticsNonceTest.php` pins all three: the host entry, no
 nonce on the tag, and the switch being on in `.env.prod` only.
 
+**Public pages only** (owner 2026-09-30). The tag is printed where
+`analytics_on_page()` (`App\Twig\AnalyticsExtension`) says so: the switch is
+on and the page's first path segment, after an optional locale prefix, is not
+private. Private: `account`, `admin`, `moderate`, `curator`, `translate` (the
+signed-in areas), `2fa`, `2fa_check`, `verify`, `reset-password`,
+`unsubscribe` (the steps whose address carries a one-time token, which must
+never reach a third system), and the former account paths `messages`,
+`profile`, `settings`. Everything else is counted, sign-in and sign-up
+included, and so is `/developers/api`, which has its own head. The rule reads
+the path alone, so a cached page and a fresh one agree.
+`tests/Twig/AnalyticsExtensionTest.php` pins the list.
+
+**Scroll depth on the landing page** (owner 2026-09-30). Each section kicker
+carries `data-track-seen="<name>"`, and `web/assets/js/track-seen.js` sends one
+Umami event with that name the first time the kicker is half in view: `one
+place, not a handful of apps`, `curation, not overload`, `the principle`,
+`what's in the atlas`, `how it grows`, `the official field recorder`. Names
+are lower-case English in every locale, so the counts add up. The event
+carries nothing but its name; where Umami never loads (dev, staging, a
+blocker) the script gives up after 15 s.
+
 ### 2.3 Directive table
 
 As emitted by `CspSubscriber` (the file is the contract; this table is its
@@ -535,6 +556,7 @@ capability, not one caller's share of it.
 | `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake — `App\Contribution\CatalogContributionService::submitDraft()` (every `/improve` arm: edit, `mode=add` for all catalog types including climbs since 2026-08-25) | `TooManyRequestsHttpException` → flash `contribute.error.rate_limited`, form re-rendered (`ContributeController`) |
 | `translation_propose` | sliding_window | 60 / 1 hour | `user-<id>` | In-site UI translation proposals — `App\Translation\ProposalService::submit()` ([translations.md](translations.md) §4); a human can translate a page, a loop cannot fill the curator desk | `TooManyRequestsHttpException` → flash `translate.error.rate_limited`, form re-rendered (`TranslateController`) |
 | `route_propose` | sliding_window | 3 / 1 day | `user-<id>` | Route proposal intake (GPX upload) — `App\Contribution\RouteProposalService::propose()`; proposals are heavier than pin edits, the supply gate starts at intake | `TooManyRequestsHttpException` → flash (`ProposeRouteController`) |
+| `route_revise` | sliding_window | 20 / 1 day | `user-<id>` | The proposer's own edit of a route proposal still waiting for review, `App\Contribution\RouteProposalService::revise()` ([route-domain.md](route-domain.md) §4.6); a new GPX is parsed and profiled again, so this bounds that compute | `TooManyRequestsHttpException` → flash, form re-rendered (`ProposeRouteController::edit`) |
 | `route_suggest` | sliding_window | 5 / 1 day | `user-<id>` | Route correction channel — `App\Community\RouteCommunityService::recordSuggestion()`; the suggest channel is the flood vector (each pending row is a curator task); vote/rode-it are self-bounded by UNIQUE constraints instead | `429 {"error":"rate_limited"}` (`RouteCommunityController::suggest`) |
 | `ride_check` | sliding_window | 20 / 1 day | `user-<id>` | GPX ride-check compute — `App\Controller\RideCheckController::check()`; read-only (parse + two PostGIS corridor queries, nothing persisted), hence more generous than intake | `429` JSON with translated `contribute.error.rate_limited` |
 | `ride_check_anon` | sliding_window | 5 / 1 day | `anon-<sha256(secret\|ride-check\|ip)>` | The same endpoint without an account. Its own limiter so the two cannot drain each other. The key is a salted one-way hash, never the address — pseudonymisation, not anonymisation: it stays personal data and is disclosed in the privacy notice | `429` JSON with translated `ride_check.error.anon_limit`, which names the limit and that an account raises it |
@@ -550,6 +572,7 @@ capability, not one caller's share of it.
 | `verify_resend` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|verify-resend\|ip)>` | A new confirmation link, `App\Controller\VerificationResendController::resend()` ([account-and-auth.md](account-and-auth.md) §2); consumed before the address is looked up | `429`, form re-rendered with a visible error. It is about the sender, so it reveals nothing about the address |
 | `verify_resend_address` | sliding_window | 1 / 15 minutes | `anon-<sha256(secret\|verify-resend-address\|lower(email))>` | Same endpoint, and a sign-up on a taken address (`ExistingAccountNotice`), per address, spent only when a mail would go out, so nobody can aim the form at a stranger's inbox | The same "check your email" card a send gets, no mail. Never a `429`: that would say the address has an unconfirmed account |
 | `verify_resend_address_daily` | sliding_window | 3 / 1 day | same key as above | Same endpoint, the daily ceiling behind the quarter-hour one | Same as above |
+| `display_name_check` | sliding_window | 30 / 1 hour | `anon-<sha256(secret\|display_name_check\|ip)>`, signed-in or not | The display-name hint, `App\Controller\DisplayNameCheckController` ([account-and-auth.md](account-and-auth.md) §9); consumed after the stamp and length checks | `429` with `{"inUse": null}`: the hint hides, the form is untouched |
 | `media_urgent_alert` | sliding_window | 1 / 1 hour | **one global key** | How often the circuit breaker may mail a human ([photo-uploads.md](photo-uploads.md) §6c). The flood that opens the breaker keeps arriving, so a mail per report would be thousands of messages aimed at the one person who has to read them | Silently skips the mail; the CRITICAL log line is written either way |
 
 **Not in this file, and deliberately:** the auto-withhold **circuit breaker**
@@ -568,9 +591,9 @@ refuses**: over budget the report still files and still pins to the desk, it
 simply hides nothing.
 
 
-Storage note: `route_propose`, `route_suggest`, `ride_check`, `elevation`,
+Storage note: `route_propose`, `route_revise`, `route_suggest`, `ride_check`, `elevation`,
 `route_snap`, `country_interest`, `curator_application`, `password_reset`,
-`registration`, `translation_propose` and the three `verify_resend*` limiters
+`registration`, `translation_propose`, `display_name_check` and the three `verify_resend*` limiters
 (which share `cache.verify_resend_limiter`) each use their own dedicated
 cache pool (`cache.<name>_limiter`, inheriting `cache.app` — Redis in
 dev/prod, and the array adapter in test via that inheritance) that `when@test`

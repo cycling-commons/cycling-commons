@@ -7,7 +7,11 @@
    list still ships with the page, in the #cc-countries JSON block; only the
    behaviour moved. */
   /* Country typeahead: filter the baked localized country list, link to /join/{cc}.
-     Keyboard: results are plain links — Tab/Enter work natively. */
+     Keyboard: the matches are plain links, so Tab and Enter reach and follow
+     them natively. Down arrow in the box moves to the first match, the arrows
+     move between matches (Up from the first goes back to the box), and Escape
+     returns to the box from a match, or clears the box when already there. A
+     status line tells a screen reader how many matches there are. */
   document.addEventListener('DOMContentLoaded', () => {
     /* The block carries the list as its text and the two server-side values as
        attributes. Those two are why this used to have to be inline: a file
@@ -21,6 +25,8 @@
     // targets only the final path segment.
     const joinHref = src.dataset.joinHref;
     const hereLabel = src.dataset.hereLabel;
+    const status = document.getElementById('cc-country-status');
+    const say = text => { if (status) status.textContent = text; };
     const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     /* The areas inside onboarded countries. Without them the box answered a
        rider's own region with silence: somebody types "Ohio", the list knows
@@ -32,7 +38,7 @@
 
     q.addEventListener('input', () => {
       const needle = q.value.trim().toLowerCase();
-      if (needle.length < 2) { hits.innerHTML = ''; return; }
+      if (needle.length < 2) { hits.innerHTML = ''; say(''); return; }
 
       /* Countries first: somebody typing "Ireland" means the country, and a
          subdivision that happens to share the name must not outrank it. */
@@ -45,15 +51,53 @@
          names the area nobody covers. */
       const countryRows = countries.map(c => {
         const mark = c.here ? ` <span class="cc-here">${esc(hereLabel)}</span>` : '';
-        return `<a role="option" href="${href(c.code)}">${esc(c.name)} <span class="cc">${esc(c.code)}</span>${mark}</a>`;
+        return `<a href="${href(c.code)}">${esc(c.name)} <span class="cc">${esc(c.code)}</span>${mark}</a>`;
       });
 
       /* The area travels in the URL so the form on the far side opens with it
          already filled in: a rider who has typed "Ohio" once should not be
          asked to type it again on the next screen. */
       const areaRows = matched.map(a =>
-        `<a role="option" href="${href(a.cc)}?area=${encodeURIComponent(a.name)}">${esc(a.name)} <span class="cc">${esc(a.country)}</span></a>`);
+        `<a href="${href(a.cc)}?area=${encodeURIComponent(a.name)}">${esc(a.name)} <span class="cc">${esc(a.country)}</span></a>`);
 
-      hits.innerHTML = countryRows.concat(areaRows).join('');
+      const rows = countryRows.concat(areaRows);
+      if (!rows.length) {
+        hits.innerHTML = `<p class="none">${esc(src.dataset.hitsNone)}</p>`;
+        say(src.dataset.hitsNone);
+        return;
+      }
+      hits.innerHTML = rows.join('');
+      say((rows.length === 1 ? src.dataset.hitsOne : src.dataset.hitsMany).replace('%n%', String(rows.length)));
+    });
+
+    const links = () => Array.from(hits.querySelectorAll('a'));
+    q.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') {
+        const first = links()[0];
+        if (first) { e.preventDefault(); first.focus(); }
+      } else if (e.key === 'Escape' && q.value !== '') {
+        e.preventDefault();
+        q.value = '';
+        hits.innerHTML = '';
+        say('');
+      }
+    });
+    hits.addEventListener('keydown', e => {
+      const all = links();
+      const i = all.indexOf(document.activeElement);
+      if (i === -1) { return; }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (all[i + 1]) { all[i + 1].focus(); }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        (all[i - 1] || q).focus();
+      } else if (e.key === 'Home' || e.key === 'End') {
+        e.preventDefault();
+        all[e.key === 'Home' ? 0 : all.length - 1].focus();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        q.focus();
+      }
     });
   });

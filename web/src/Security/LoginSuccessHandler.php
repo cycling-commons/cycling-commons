@@ -21,7 +21,8 @@ use Symfony\Component\Security\Http\Util\TargetPathTrait;
 /**
  * After full authentication: seed locale, then 2FA setup if still required,
  * then the page the rider was sent away from, else the landing: the
- * contributions page on the very first sign-in, the dashboard after that.
+ * profile page (settings) on the first sign-in since the address was confirmed,
+ * the dashboard after that.
  *
  * @see docs/specs/account-and-auth.md §4
  *
@@ -33,7 +34,7 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 
     private const string FIREWALL_NAME = 'main';
     private const string DEFAULT_TARGET_ROUTE = 'dashboard';
-    private const string FIRST_LOGIN_ROUTE = 'profile';
+    private const string FIRST_LOGIN_ROUTE = 'settings';
     private const string TWO_FACTOR_LOGIN_ROUTE = '2fa_login';
 
     public function __construct(
@@ -57,7 +58,7 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         // Read before the stamp below overwrites it. A new account has
         // nothing to count yet, so its first landing is the contributions
         // page with the curating invitation (account-and-auth.md §8).
-        $firstLogin = $user instanceof User && null === $user->getLastLoginAt();
+        $firstLogin = $user instanceof User && self::isFirstSinceConfirmation($user);
 
         // The dormancy clock, and only here: this runs after 2FA, so it means
         // "somebody actually got in", not "somebody typed a password".
@@ -91,6 +92,26 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
 
         // Default target in the user's locale so LocaleListener does not clobber session locale.
         return new RedirectResponse($this->localizedUrl($firstLogin ? self::FIRST_LOGIN_ROUTE : self::DEFAULT_TARGET_ROUTE, $locale));
+    }
+
+    /**
+     * No sign-in since the address was confirmed. `lastLoginAt` alone is not
+     * that: it is the dormancy clock, and on some accounts it holds a time
+     * from before the confirmation (Version20260828130000 starts it at
+     * `created_at`, and older accounts could sign in unconfirmed). A clock
+     * older than the confirmation counts as no sign-in yet.
+     *
+     * @see docs/specs/account-and-auth.md §8
+     */
+    private static function isFirstSinceConfirmation(User $user): bool
+    {
+        $last = $user->getLastLoginAt();
+        if (null === $last) {
+            return true;
+        }
+        $confirmed = $user->getEmailVerifiedAt();
+
+        return null !== $confirmed && $last < $confirmed;
     }
 
     private function localizedUrl(string $route, ?string $locale): string

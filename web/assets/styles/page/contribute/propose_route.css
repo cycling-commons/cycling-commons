@@ -28,9 +28,22 @@ fieldset legend{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin
 .receipt{text-align:center;padding:3.5rem 1rem}
 .receipt h2{font-family:var(--serif);font-weight:600;font-size:1.8rem;margin:.5rem 0}
 .receipt p{color:#4a4d40;max-width:46ch;margin:0 auto}
-.receipt .ref-box{display:inline-flex;flex-direction:column;align-items:center;gap:.35rem;margin:1.5rem 0}
-.receipt .ref-label{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#8a8674}
+/* The reference and the way on sit side by side on one centre line, the same
+   height, and stack full width on a phone. The label rides inside the
+   reference box so the two boxes share a top edge. */
+.receipt .receipt-acts{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:.75rem;margin:1.75rem auto 0}
+.receipt .receipt-acts>*{min-height:3.1rem;box-sizing:border-box}
+.receipt .receipt-acts .btn{justify-content:center}
+.receipt .ref-box{display:inline-flex;align-items:center;gap:.6rem;padding:.5rem 1.1rem;border:1.5px solid rgba(20,22,14,.18);border-radius:5px;background:var(--paper-deep);color:var(--ink)}
+.receipt .ref-label{font-family:var(--mono);font-size:.68rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#8a8674}
+.receipt .ref-link{border-color:rgba(20,22,14,.3)}
+.receipt .ref-link:hover{background:var(--ink);color:var(--paper)}
+.receipt .ref-link:hover .ref-label{color:inherit}
+@media(max-width:520px){
+  .receipt .receipt-acts{flex-direction:column;align-items:stretch;max-width:22rem}
+  .receipt .ref-box{justify-content:center}
+}
 /* photos (docs/specs/photo-uploads.md §5i): the uploader's own look, shared with /improve */
 .rp-existing{display:flex;flex-wrap:wrap;gap:.6rem;margin:.2rem 0 1.4rem}
 .rp-existing img{width:160px;height:120px;object-fit:cover;border-radius:6px;border:1px solid rgba(20,22,14,.18);display:block;background:var(--paper-deep)}
-.receipt .ref-code{font-family:var(--mono);font-size:1.05rem;letter-spacing:.14em;color:var(--ink);background:var(--paper-deep);border:1px solid rgba(20,22,14,.18);border-radius:8px;padding:.5rem 1.1rem}
+.receipt .ref-code{font-family:var(--mono);font-size:1rem;font-weight:600;letter-spacing:.14em;color:inherit}

@@ -136,17 +136,24 @@
   <div id="your-country" class="yourc">
     <h2>{% trans %}regions.your_country_h{% endtrans %}</h2>
     <p>{% trans %}regions.your_country_p{% endtrans %}</p>
+    {# The matches are plain links: Tab and Enter reach them natively, and the
+       script adds the arrow keys and Escape (docs/specs/moderation-and-contribution.md §11.1a).
+       The status line says how many there are, for a screen reader. #}
     <input type="text" id="cc-country-q" autocomplete="off"
            placeholder="{{ 'regions.your_country_placeholder'|trans|e('html_attr') }}"
            aria-label="{{ 'regions.your_country_h'|trans|e('html_attr') }}">
-    <div id="cc-country-hits" role="listbox"></div>
+    <p id="cc-country-status" class="cc-vh" role="status"></p>
+    <div id="cc-country-hits"></div>
     <noscript><p><a href="{{ path('join') }}">{% trans %}regions.your_country_noscript{% endtrans %}</a></p></noscript>
   </div>
   {# No nonce: a JSON data block is not executed, so script-src never gates it,
      and a nonce here would tie the page to a per-request value (page-caching.md §3.2). #}
   <script type="application/json" id="cc-countries"
           data-join-href="{{ path('join_country', {cc: 'ZZ'}) }}"
-          data-here-label="{{ 'regions.already_here'|trans }}">{{ all_countries|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+          data-here-label="{{ 'regions.already_here'|trans }}"
+          data-hits-one="{{ 'regions.hits_one'|trans }}"
+          data-hits-many="{{ 'regions.hits_many'|trans }}"
+          data-hits-none="{{ 'regions.hits_none'|trans }}">{{ all_countries|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
   {# The areas inside onboarded countries, so "Ohio" finds somewhere to go.
      A separate block from the countries: they are looked up the same way but
      they lead to a different form on the far side, and merging them would

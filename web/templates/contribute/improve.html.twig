@@ -10,6 +10,9 @@
    case where publishing now depends on something still to be filled in:
    the identity question (catalog-data-model.md §5b). They are asked it
    here, and the page's promise follows their answer. #}
+{# The similar places and the known-places dots: adding a place, and the
+   rider's own new place while it waits (catalog-data-model.md §5a). #}
+{% set similar_on = add_mode|default(false) or similar_edit|default(false) %}
 {% set osm_question = is_granted('ROLE_CURATOR') and add_mode|default(false) and not from_osm|default(false) %}
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}" />
@@ -78,7 +81,7 @@
      improve.js step 1: a climb (letter N) mounts the shared three-point
      editor instead of the single-pin Locate (Task 5). Only emitted here —
      the unbound branch above never reaches this template region. #}
-  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null), segment: current.segment|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, similar: similar_edit|default(false), lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null), segment: current.segment|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {% include 'contribute/_media_config.html.twig' with {max: 6} %}
   {# Every string improve.js renders itself (docs/plans/2026-08-01-improve-js-i18n.md).
      Serialised with all four JSON_HEX_* flags like the bags above — JSON_HEX_TAG
@@ -279,13 +282,14 @@
       <span id="wzUndo" role="button" tabindex="0" hidden>{{ 'js.climb_undo'|trans }}</span>
       <span id="wzReset" role="button" tabindex="0">{{ 'improve.step1.reset'|trans }}</span>
     </div>
-    {% if add_mode|default(false) %}
+    {% if similar_on %}
       {# Places near the pin that may be the same place, for everyone adding
-         or correcting one (catalog-data-model.md §5a). similar.js fills and
-         shows it once the pin is placed; what stays ticked is replaced when a
-         curator approves. #}
+         or correcting one, and again on the rider's own place while it waits
+         (catalog-data-model.md §5a). similar.js fills and shows it once the
+         pin is placed; what stays ticked is replaced when a curator approves. #}
       <div class="osmq simq" id="wz-similar" hidden
            data-url="{{ path('contribute_similar') }}" data-type="{{ item_type.value }}" data-radius="250"
+           {% if similar_edit|default(false) %}data-item="{{ similar_item }}" data-ref="{{ similar_ref }}"{% if similar_ticks is not null %} data-ticks="{{ similar_ticks|json_encode }}"{% endif %}{% endif %}"
            data-t-one="{{ 'improve.similar.heading_one'|trans({'%m%': '%m%'}) }}"
            data-t-many="{{ 'improve.similar.heading_many'|trans({'%n%': '%n%', '%m%': '%m%'}) }}"
            data-t-osm="{{ 'improve.similar.from_osm'|trans }}"
@@ -333,7 +337,7 @@
         <span id="wzCtrlHelp">{{ 'improve.step1.ctrl_point_help'|trans }}</span>
       </div>
     {% endif %}
-    {% if add_mode|default(false) %}
+    {% if similar_on %}
       {# Unhidden by improve.js when the known-places overlay has dots in view. #}
       <div class="covnote" id="wz-known" hidden>{{ 'contribute.add.known_note'|trans }}</div>
     {% endif %}
@@ -678,7 +682,7 @@
 }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 <script src="{{ asset('contribute/osm-answer.js') }}" defer></script>
 {% endif %}
-{% if add_mode|default(false) %}
+{% if similar_on %}
 {# Riders too: the similar places are for everyone who adds or corrects one. #}
 <script src="{{ asset('contribute/similar.js') }}" defer></script>
 {% endif %}

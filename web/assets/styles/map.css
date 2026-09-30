@@ -583,9 +583,12 @@
      because this is where the place is approved. Options are buttons in the
      drawer's secondary style; the answered chip is one small mono tag. */
   .cc-mod-osm{margin:.65rem 0 .6rem}
-  /* What approving a new place retires (catalog-data-model.md §5a). */
-  .cc-mod-replaces{margin:.4rem 0 .6rem}
-  .cc-mod-replaces ul{margin:.2rem 0 0;padding-left:1.1rem;font-size:.82rem;line-height:1.45}
+  /* What approving a new place retires (catalog-data-model.md §5a): a boxed
+     warning in the trail colour, because approving removes these pins. */
+  .cc-mod-replaces{margin:.5rem 0 .7rem;padding:.55rem .7rem;border:1px solid var(--trail);border-left-width:4px;border-radius:6px;
+    background:color-mix(in srgb,var(--trail) 12%,transparent)}
+  .cc-mod-replaces .cc-mod-ctx-h{color:var(--trail);font-weight:700;margin-bottom:.25rem}
+  .cc-mod-replaces ul{margin:0;padding-left:1.1rem;font-size:.9rem;line-height:1.5;font-weight:600}
   .cc-mod-osm-scope{font-size:.76rem;color:var(--chrome-mut);margin:0 0 .4rem;line-height:1.4}
   .cc-mod-osm-opts{display:flex;flex-direction:column;gap:.35rem}
   .cc-mod-osm-opt{display:flex;flex-direction:column;align-items:flex-start;gap:.1rem;text-align:left;width:100%;
@@ -1160,12 +1163,15 @@
   /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's
      loadItemHistory() into #cc-d-hist-slot; empty until the fetch resolves
      (and stays empty/no heading if the item has no history). */
-  /* A button now, not a heading: it opens the full log. Styled as the heading
-     always was, so the section still reads as a section. */
-  .cc-d-hist-h{display:block;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;
+  /* "Show changelog": a closed-by-default button that opens the clamped list
+     in place (data-hist-toggle); the full log opens from inside the list. */
+  .cc-d-hist-h{display:inline-flex;align-items:center;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;
     text-transform:uppercase;color:var(--clay);margin:1.3rem 0 .5rem;
-    background:none;border:none;padding:0;cursor:pointer;text-align:left}
+    background:none;border:1px solid currentColor;border-radius:4px;padding:.35rem .7rem;min-height:32px;cursor:pointer;text-align:left}
   .cc-d-hist-h:hover{color:var(--trail)}
+  .cc-d-hist-all{display:inline-block;margin:.5rem 0 0;background:none;border:none;padding:.3rem 0;cursor:pointer;
+    font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--trail)}
+  .cc-d-hist-all:hover,.cc-d-hist-all:focus-visible{text-decoration:underline;text-underline-offset:2px}
   .cc-d-hist-h:focus-visible{outline:2px solid var(--trail);outline-offset:2px;border-radius:3px}
   /* The full log. A native <dialog>, so Esc and the backdrop are the
      platform's; only the panel inside is ours. */
@@ -1365,7 +1371,10 @@
   /* per-layer group header in the place card's nearby list (spec 2026-07-14 §3.3) */
   .cc-near-grp{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding:.25rem 0;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72)}
   .cc-comm-tag{margin-left:.45rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);border:1px solid rgb(var(--chrome-fg) / .22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
-  .cc-near-more{background:none;border:none;padding:.45rem 0;color:var(--trail);font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+  .cc-near-more{background:none;border:none;padding:.45rem 0;color:var(--trail);font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+  .cc-near-more:hover,.cc-near-more:focus-visible{text-decoration:underline;text-underline-offset:2px}
+  /* A group's own toggle, at the right end of its header line. */
+  .cc-near-grp .cc-near-more{margin-left:auto;padding:.2rem 0;font-size:.68rem;white-space:nowrap}
   .cc-elev-cap{margin-top:.9rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;color:rgb(var(--chrome-fg) / .72)}
   .cc-elev-cap em{color:rgb(var(--chrome-fg) / .65);font-style:normal}
   .cc-elev{width:100%;height:64px;display:block;margin-top:.3rem}

@@ -5,9 +5,11 @@
 
    An upload needs a point it is for: the server stores the photo in that
    point's continent and the worker measures the camera's distance to it
-   (photo-uploads.md §3). A live route hands its point over in
-   `data-route-pin`. A new proposal has no point until its GPX is chosen, so the
-   middle track point of the chosen file is used: a point ON the route, never
+   (photo-uploads.md §3). A live route, and a proposal on its proposer's edit,
+   hand their stored point over in `data-route-pin`; on the edit a newly
+   chosen GPX takes over from it. A new proposal has no point until its GPX
+   is chosen, so the middle track point of the chosen file is used: a point
+   ON the route, never
    the start or the finish, which the privacy trim keeps off the server
    (route-domain.md §4.3). The server measures again against the stored line
    when the photo is claimed. */
@@ -45,22 +47,23 @@
   var form = document.querySelector('form[data-route-photos]');
   if (!form || !window.Cc || !window.Cc.mountMediaUploads) return;
 
-  var at = null;
+  var stored = null;
   var fixed = form.getAttribute('data-route-pin');
   if (fixed) {
     try {
       var p = JSON.parse(fixed);
-      if (Array.isArray(p) && 2 === p.length) at = { lat: p[0], lng: p[1] };
-    } catch (e) { at = null; }
+      if (Array.isArray(p) && 2 === p.length) stored = { lat: p[0], lng: p[1] };
+    } catch (e) { stored = null; }
   }
+  var at = stored;
 
   var gpx = form.querySelector('input[type="file"][name$="[gpx]"]');
   if (gpx) {
     gpx.addEventListener('change', function () {
       at = null;
       var file = gpx.files && gpx.files[0];
-      if (!file || !file.text) return;
-      file.text().then(function (text) { at = gpxMidpoint(text); }).catch(function () { at = null; });
+      if (!file || !file.text) { at = stored; return; }
+      file.text().then(function (text) { at = gpxMidpoint(text) || stored; }).catch(function () { at = stored; });
     });
   }
 

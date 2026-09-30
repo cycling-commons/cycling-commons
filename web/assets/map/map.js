@@ -85,8 +85,12 @@ import { layerGlyph } from './icons.js';
          the scope (docs/specs/map-and-search.md §8). The rider's scope goes
          back when the drawer closes. */
       // A catalog feature carries `rid`; a pool feature carries it in properties.
+      // A route whose line passes through more than one region carries them
+      // all as `rids`, and the scope takes every one, so the places along the
+      // whole route are drawn.
       if(hit && hit.f) liftScopeForHit(featureLL(hit.f),
-        hit.f.rid != null ? hit.f.rid : (hit.f.properties && hit.f.properties.rid));
+        Array.isArray(hit.f.rids) && hit.f.rids.length ? hit.f.rids
+          : hit.f.rid != null ? hit.f.rid : (hit.f.properties && hit.f.properties.rid));
       if(hit && hit.layer && hit.f) liftModeFor(hit.layer, hit.f);
     }
     // ?feature=<name> drawer + zoom; coverage POIs via search when local index misses.
@@ -149,7 +153,7 @@ import { layerGlyph } from './icons.js';
       const startM = 350 + (seed*137)%401, endM = 350 + (seed*211+90)%401;
       const diffLabel = r.difficulty?.label ?? (typeof r.difficulty === 'string' ? r.difficulty : undefined);
       return {
-      id:r.id, rid:r.rid, name:r.name, state:r.state, headline:`${uKm(r.km)}${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
+      id:r.id, rid:r.rid, rids:r.rids, name:r.name, state:r.state, headline:`${uKm(r.km)}${diffLabel ? ' · ' + trVal(diffLabel) : ''}`, cur:false, edit:'ride',
       geom:{path:trimEnds(r.loop, startM, endM)}, elev:r.elev, gain:r.gain, difficulty:r.difficulty, uploader:r.uploader,
       cities: cities || [],                                // searchable start/through towns (empty when unknown)
       bikeTypes: Array.isArray(r.bikeTypes) ? r.bikeTypes : [],   // declared suitability (may be empty = undeclared)

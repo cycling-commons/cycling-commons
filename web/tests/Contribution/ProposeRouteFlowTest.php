@@ -7,10 +7,13 @@ declare(strict_types=1);
 namespace App\Tests\Contribution;
 
 use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -116,6 +119,17 @@ final class ProposeRouteFlowTest extends WebTestCase
         self::assertNotNull($route);
         self::assertSame(ItemState::Submitted, $route->getState());
         self::assertSame($user->getId(), $route->getProposedBy());
+
+        // The reference is the link to this route's card under the Routes chip
+        // of the rider's Contributions, beside "Back to contributing" in one row.
+        $receipt = new Crawler((string) $client->getResponse()->getContent());
+        $ref = $receipt->filter('.receipt-acts a.ref-link');
+        self::assertSame(1, $ref->count(), 'reference renders as a link');
+        self::assertSame('/account/contributions?letter=R#route-'.$route->getId(), $ref->attr('href'));
+        self::assertStringContainsString(sprintf('CC-R%05d', (int) $route->getId()), $ref->text());
+        self::assertStringContainsString('Your reference', $ref->text(), 'the label stays with the code');
+        self::assertStringStartsWith('Your reference CC-R', (string) $ref->attr('aria-label'));
+        self::assertSame(1, $receipt->filter('.receipt-acts a[href$="/contribute"]')->count(), 'way on sits in the same row');
     }
 
     public function testInvalidGpxShowsFormErrorAndPersistsNothing(): void
@@ -260,5 +274,171 @@ final class ProposeRouteFlowTest extends WebTestCase
         // Route proposals render as shared record cards carrying the route tag
         // (profile rework 2026-07-14 replaced the old .acct-route-list markup).
         self::assertGreaterThan(0, $crawler->filter('.q-item .q-tag--route')->count());
+
+        // The receipt's link target: the Routes chip view, with the card anchored.
+        $route = $em->getRepository(RecommendedRoute::class)->findOneBy(['name' => 'Condroz · profile test']);
+        self::assertNotNull($route);
+        $crawler = $client->request('GET', '/account/contributions?letter=R');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('#route-'.$route->getId().'.q-item')->count(), 'route card carries the receipt anchor');
+        self::assertSame(0, $crawler->filter('#p-contrib .empty-state')->count(), 'a rider with only routes is not told they have no contributions');
+    }
+
+    /** @param list<string> $roles */
+    private function rider(EntityManagerInterface $em, string $email, array $roles = []): User
+    {
+        $u = (new User())->setEmail($email)->setDisplayName('Edit Rider');
+        $u->setEmailVerified(true)->setEmailVerifiedAt(new \DateTimeImmutable())->setRoles($roles);
+        $u->setPassword('x');
+        if ([] !== $roles) {
+            $u->setTotpSecret('JBSWY3DPEHPK3PXP');
+            $u->setTwoFaEnabled(true);
+        }
+        $em->persist($u);
+        $em->flush();
+
+        return $u;
+    }
+
+    private function proposal(EntityManagerInterface $em, User $by, ItemState $state = ItemState::Submitted): RecommendedRoute
+    {
+        $r = (new RecommendedRoute())->setName('Edit me · Condroz')
+            ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
+            ->setDistanceM(24000)->setState($state)
+            ->setSource(ItemSource::User)->setSourceRef('user:edit-'.bin2hex(random_bytes(6)))->setRegionId(1)
+            ->setAttributes(['difficulty' => ['score' => 2, 'label' => 'Moderate'], 'dominantSurface' => 'Asphalt', 'season' => ['Summer'], 'photos' => [['sm' => '/x.jpg']]])
+            ->setProposedBy((int) $by->getId());
+        $em->persist($r);
+        $em->flush();
+
+        return $r;
+    }
+
+    /**
+     * route-domain.md §4.6: the proposer reopens the proposal form, prefilled,
+     * while the route waits for review. Saving without a GPX keeps the track
+     * and its photos, and the curator's desk shows the saved version.
+     */
+    public function testProposerEditsTheirSubmittedProposal(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->rider($em, 'route-edit-own@test.test');
+        $route = $this->proposal($em, $user);
+        $id = (int) $route->getId();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/propose-route/'.$id.'/edit');
+        self::assertResponseIsSuccessful();
+        $form = $crawler->filter('form[name="propose_route"]')->form();
+        self::assertSame('Edit me · Condroz', $form['propose_route[rName]']->getValue(), 'name prefilled');
+        self::assertSame('Moderate', $form['propose_route[difficulty]']->getValue(), 'difficulty prefilled');
+        self::assertSame('Asphalt', $form['propose_route[dominantSurface]']->getValue(), 'surface prefilled');
+        self::assertSame(1, $crawler->filter('input[name="propose_route[mediaIds]"]')->count(), 'the edit carries the photo field');
+        self::assertNotNull($crawler->filter('input[type="file"][name="propose_route[gpx]"]')->attr('name'));
+        self::assertNull($crawler->filter('input[type="file"][name="propose_route[gpx]"]')->attr('required'), 'GPX optional');
+
+        $form['propose_route[rName]'] = 'Edited · Condroz';
+        $form['propose_route[note]'] = 'Coffee stop at the church.';
+        $bike = $form['propose_route[bikeTypes][0]'];
+        self::assertInstanceOf(ChoiceFormField::class, $bike);
+        $bike->tick();
+        $client->submit($form);
+        self::assertResponseRedirects('/account/contributions?letter=R#route-'.$id, 303);
+
+        $em->clear();
+        $saved = $em->find(RecommendedRoute::class, $id);
+        self::assertNotNull($saved);
+        self::assertSame('Edited · Condroz', $saved->getName());
+        self::assertSame(ItemState::Submitted, $saved->getState());
+        self::assertSame('Coffee stop at the church.', $saved->getAttributes()['note'] ?? null);
+        self::assertNotEmpty($saved->getAttributes()['bikeTypes'] ?? null);
+        self::assertSame([['sm' => '/x.jpg']], $saved->getAttributes()['photos'] ?? null, 'photos kept');
+        self::assertSame(24000, $saved->getDistanceM(), 'track kept without a new GPX');
+
+        $client->followRedirect();
+        self::assertSelectorTextContains('#p-contrib .flash-success', 'Route proposal saved');
+
+        // The desk reads the row itself: the curator sees the saved version.
+        $client->loginUser($this->rider($em, 'route-edit-curator@test.test', ['ROLE_CURATOR']));
+        $client->request('GET', '/moderate/routes/'.$id);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Edited · Condroz');
+    }
+
+    /** A new GPX replaces the track and what is derived from it. */
+    public function testProposerReplacesTheGpx(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->rider($em, 'route-edit-gpx@test.test');
+        $id = (int) $this->proposal($em, $user)->getId();
+
+        $client->loginUser($user);
+        $crawler = $client->request('GET', '/propose-route/'.$id.'/edit');
+        $form = $crawler->filter('form[name="propose_route"]')->form();
+        $client->request('POST', $form->getUri(), $form->getPhpValues(), [
+            'propose_route' => ['gpx' => new UploadedFile(self::gpxFixture(), 'new.gpx', 'application/gpx+xml', null, true)],
+        ]);
+        self::assertResponseRedirects('/account/contributions?letter=R#route-'.$id, 303);
+
+        $em->clear();
+        $saved = $em->find(RecommendedRoute::class, $id);
+        self::assertNotNull($saved);
+        self::assertNotSame(24000, $saved->getDistanceM(), 'distance recomputed from the new track');
+        self::assertStringContainsString('5.3', (string) $saved->getGeom());
+        self::assertSame('Edit me · Condroz', $saved->getName());
+    }
+
+    /** Another rider's proposal is not there for anyone else: 404 on GET and POST. */
+    public function testAnotherRiderCannotEditTheProposal(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = $this->rider($em, 'route-edit-owner@test.test');
+        $id = (int) $this->proposal($em, $owner)->getId();
+
+        $client->loginUser($this->rider($em, 'route-edit-other@test.test'));
+        $client->request('GET', '/propose-route/'.$id.'/edit');
+        self::assertResponseStatusCodeSame(404);
+        $client->request('POST', '/propose-route/'.$id.'/edit', ['propose_route' => ['rName' => 'Hijacked']]);
+        self::assertResponseStatusCodeSame(404);
+
+        $em->clear();
+        self::assertSame('Edit me · Condroz', $em->find(RecommendedRoute::class, $id)?->getName());
+    }
+
+    /** A POST without the form's CSRF token changes nothing. */
+    public function testEditWithoutCsrfTokenChangesNothing(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->rider($em, 'route-edit-csrf@test.test');
+        $id = (int) $this->proposal($em, $user)->getId();
+
+        $client->loginUser($user);
+        $client->request('POST', '/propose-route/'.$id.'/edit', ['propose_route' => [
+            'rName' => 'No token', 'difficulty' => 'Moderate', 'dominantSurface' => 'Asphalt',
+        ]]);
+        self::assertResponseStatusCodeSame(422);
+
+        $em->clear();
+        self::assertSame('Edit me · Condroz', $em->find(RecommendedRoute::class, $id)?->getName());
+    }
+
+    /** Once a curator has decided, the edit sends the proposer back with a notice. */
+    public function testDecidedProposalIsNoLongerEditable(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = $this->rider($em, 'route-edit-late@test.test');
+        $id = (int) $this->proposal($em, $user, ItemState::Unverified)->getId();
+
+        $client->loginUser($user);
+        $client->request('GET', '/propose-route/'.$id.'/edit');
+        self::assertResponseRedirects('/account/contributions?letter=R#route-'.$id, 303);
+        $crawler = $client->followRedirect();
+        self::assertStringContainsString('can no longer be edited', $crawler->filter('.cc-notice')->text());
+        self::assertSame(0, $crawler->filter('#route-'.$id.' a[href$="/edit"]')->count(), 'no Edit link on a decided proposal');
     }
 }

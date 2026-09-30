@@ -312,10 +312,18 @@ def main() -> int:
     # from an injection and it was flagged as such (security scan 2026-08-25).
     # `:'route'` makes psql produce the literal, and the id is an int by
     # argparse so it needs no quoting.
+    #
+    # The database moves the climb's point to the new foot (the
+    # item_climb_at_foot trigger); the second statement then files the climb
+    # in the region its foot is in, by the membership rule every writer uses
+    # (catalog-data-model.md §6: the smallest region containing the point).
     subprocess.run(
         PSQL_STDIN + ["-v", "route=" + json.dumps(line), "-f", "-"],
         input="UPDATE item SET attributes = jsonb_set(attributes, '{route}', :'route'::jsonb), "
-              f"updated_at = NOW() WHERE id = {int(args.id)};\n",
+              f"updated_at = NOW() WHERE id = {int(args.id)};\n"
+              "UPDATE item SET region_id = (SELECT r.id FROM region r WHERE ST_Contains(r.geom, item.geom) "
+              "ORDER BY r.area_km2 ASC NULLS LAST, r.id ASC LIMIT 1) "
+              f"WHERE id = {int(args.id)};\n",
         capture_output=True, text=True, check=True,
     )
     print(f"  written. Now: app:climbs:recompute --id {args.id} --write")

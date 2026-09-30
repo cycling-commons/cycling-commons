@@ -53,6 +53,19 @@
       if (tab.getAttribute('aria-expanded') === 'true') { closeAll(true); } else { openCountry(tab.getAttribute('data-country'), false); }
     });
   });
+  /* Escape on the open chip, or on a region inside its panel, closes the
+     panel and puts focus back on the chip that opened it. */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') { return; }
+    var tab = document.querySelector('.regtab[aria-expanded="true"]');
+    if (!tab) { return; }
+    var panel = document.getElementById('regions-' + tab.getAttribute('data-country'));
+    var at = document.activeElement;
+    if (at !== tab && !(panel && panel.contains(at))) { return; }
+    e.preventDefault();
+    closeAll(true);
+    tab.focus();
+  });
   window.addEventListener('resize', function () {
     var open = document.querySelector('.regtab[aria-expanded="true"]');
     if (open) { place(open.closest('.country'), document.getElementById('regions-' + open.getAttribute('data-country'))); }

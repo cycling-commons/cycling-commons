@@ -146,6 +146,24 @@ final class CatalogStampsTest extends KernelTestCase
         self::assertSame($unsafe, $this->stamps->regionStamps(), 'a recheck that finds it unsafe again changes nothing');
     }
 
+    /**
+     * A route row names every region its line passes through, read from the
+     * outlines (CatalogProvider::routeRegionsSql()). Only a moved outline
+     * counts; a rename, or a rewrite of the same outline, prints nothing new.
+     */
+    public function testOnlyAMovedRegionOutlineMovesTheStamps(): void
+    {
+        $before = $this->stamps->regionStamps();
+        $this->db->executeStatement("UPDATE region SET name = name || '.', geom = geom WHERE id = :rid", ['rid' => $this->rid]);
+        self::assertSame($before, $this->stamps->regionStamps(), 'no route crosses into anything new');
+
+        $this->db->executeStatement('UPDATE region SET geom = ST_Translate(geom, 0.01, 0) WHERE id = :rid', ['rid' => $this->rid]);
+        $after = $this->stamps->regionStamps();
+        foreach ($before as $rid => $stamp) {
+            self::assertNotSame($stamp, $after[$rid], 'region '.$rid.' may hold a route that crossed the moved line');
+        }
+    }
+
     /** Folding the change rows keeps every sum, so no rider refetches anything for it. */
     public function testCompactingKeepsEveryStamp(): void
     {

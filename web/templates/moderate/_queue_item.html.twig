@@ -116,13 +116,16 @@
       </div>
       {# What approving retires: the same OSM point held by another row, and the
          similar places the rider left ticked (catalog-data-model.md §5a). #}
-      {% if item.replaces|default([]) is not empty %}
+      {% if item.replaces|default([]) is not empty or item.replacesOsm|default(null) %}
         <div class="q-replaces">
           <span class="q-replaces-h">{{ 'moderate.replaces.heading'|trans }}</span>
           <ul>
             {% for r in item.replaces %}
               <li>{{ r.name ?: ('moderate.osm.unnamed'|trans) }} &middot; {{ r.provider ?? (r.from == 'osm' ? 'OpenStreetMap' : ('improve.similar.from_ours'|trans)) }} &middot; {{ 'improve.similar.metres'|trans({'%m%': r.metres}) }} &middot; #{{ r.id }}</li>
             {% endfor %}
+            {% if item.replacesOsm|default(null) %}
+              <li>OpenStreetMap &middot; {{ item.replacesOsm }} &middot; {{ 'moderate.replaces.osm_takes'|trans }}</li>
+            {% endif %}
           </ul>
         </div>
       {% endif %}

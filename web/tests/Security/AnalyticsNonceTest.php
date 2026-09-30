@@ -73,6 +73,44 @@ final class AnalyticsNonceTest extends WebTestCase
             'a nonce here would tie every page carrying analytics to a per-request value');
     }
 
+    /**
+     * Public pages carry the tag and a token-bearing step does not
+     * (AnalyticsExtension): the address of a reset link must never reach the
+     * analytics host.
+     */
+    public function testOnlyPublicPagesCarryTheTag(): void
+    {
+        $client = static::createClient();
+        $tag = '#<script[^>]*src="[^"]*analytics[^"]*"#';
+
+        $client->request('GET', '/login');
+        self::assertResponseIsSuccessful();
+        self::assertMatchesRegularExpression($tag, (string) $client->getResponse()->getContent(), 'sign-in is a public page');
+
+        $client->request('GET', '/reset-password');
+        self::assertResponseIsSuccessful();
+        self::assertDoesNotMatchRegularExpression($tag, (string) $client->getResponse()->getContent(), 'the reset steps carry tokens');
+    }
+
+    /**
+     * The landing page names each section for the scroll-depth events
+     * (js/track-seen.js), in lower-case English whatever the locale, so the
+     * counts from every language add up under one name.
+     */
+    public function testTheLandingPageNamesItsSectionsForScrollDepth(): void
+    {
+        $client = static::createClient();
+        foreach (['/', '/nl/'] as $path) {
+            $crawler = $client->request('GET', $path);
+            self::assertResponseIsSuccessful();
+            self::assertSame(
+                ['one place, not a handful of apps', 'curation, not overload', 'the principle', "what's in the atlas", 'how it grows', 'the official field recorder'],
+                $crawler->filter('[data-track-seen]')->each(static fn ($n): string => (string) $n->attr('data-track-seen')),
+            );
+        }
+        self::assertMatchesRegularExpression('#<script[^>]*src="[^"]*track-seen[^"]*"#', (string) $client->getResponse()->getContent());
+    }
+
     /** The map is not cacheable, but it must not need a different rule either. */
     public function testTheMapPageIsTheSame(): void
     {

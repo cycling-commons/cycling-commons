@@ -258,8 +258,8 @@ final class TwoFactorTest extends WebTestCase
 
         $this->submitLogin($client, $email, $data['plain']);
 
-        // No interstitial, no forced setup → default target (account dashboard, /account/contributions).
-        self::assertResponseRedirects('/account/contributions');
+        // No interstitial, no forced setup → the first-sign-in landing, the profile (/account/settings).
+        self::assertResponseRedirects('/account/settings');
         $location = (string) $client->getResponse()->headers->get('Location');
         self::assertStringNotContainsString('/2fa', $location);
     }

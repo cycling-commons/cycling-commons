@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Provider\Exception\ProviderRuleException;
 use App\Provider\LicenceObligation;
 use App\Provider\ProviderRegistry;
+use App\Provider\RefreshCommandLine;
 use App\Routing\LocalePrefix;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,9 +30,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * form may do. Nothing is validated twice: a rule enforced here and not there
  * is a rule the next caller does not have.
  *
- * **The refresh button is not here yet.** There is no harvester to run until
- * data-provider-hierarchy.md §5 is built (phase 4), and a button that cannot
- * do anything is worse than no button.
+ * **A refresh is not a button yet.** The web hosts cannot start the pipeline,
+ * so the desk prints the one command that runs a refresh on the environment
+ * it is served from ({@see RefreshCommandLine}); the queued job a button would
+ * start is an open item in docs/TODO.md.
  *
  * @see docs/specs/data-provider-hierarchy.md §8
  *
@@ -45,6 +47,7 @@ final class ModerateProvidersController extends AbstractController
 
     public function __construct(
         private readonly ProviderRegistry $registry,
+        private readonly RefreshCommandLine $refresh,
     ) {
     }
 
@@ -92,6 +95,8 @@ final class ModerateProvidersController extends AbstractController
                 'letters' => $p->getLetters(),
                 'countryCode' => $p->getCountryCode(),
                 'refreshCadence' => $p->getRefreshCadence(),
+                'runDry' => $this->refresh->dry($p->getKey()),
+                'runWrite' => $this->refresh->write($p->getKey()),
             ];
         }
 
@@ -103,6 +108,7 @@ final class ModerateProvidersController extends AbstractController
             'providers' => $rows,
             'open_id' => null !== $open ? $open->getId() : 0,
             'rank_max' => ProviderRegistry::RANK_MAX,
+            'run_on_worker_host' => $this->refresh->onWorkerHost(),
             'csrf' => $this->container->get('security.csrf.token_manager')->getToken(self::CSRF_TOKEN_ID)->getValue(),
         ]);
     }

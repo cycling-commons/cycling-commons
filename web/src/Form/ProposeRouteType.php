@@ -16,18 +16,22 @@ use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
- * The one contribution form for a recommended route, in two modes.
+ * The one contribution form for a recommended route, in three modes.
  *
  * Default: a first proposal, GPX plus the eight R metadata fields plus rider
- * photos (file content is validated later). With `route_photos`: photos and a
- * note for the curator, the mode anyone may use on any live route.
+ * photos (file content is validated later). With `proposal_edit`: the
+ * proposer's own edit while the proposal waits for review, the same fields
+ * with the GPX optional (a new file replaces the track) and more photos. With
+ * `route_photos`: photos and a note for the curator, the mode anyone may use
+ * on any live route.
  *
- * A route's data is never edited here after it is proposed: a rider asks for a
- * change through the drawer's correction box (route-domain.md §7.1) and a
- * curator makes it on the Routes desk. The metadata widgets come from
- * {@see RouteMetadataFields}, the same definitions the desk form builds from.
+ * Once a curator has decided a proposal its data is not edited here: a rider
+ * asks for a change through the drawer's correction box (route-domain.md
+ * §7.1) and a curator makes it on the Routes desk. The metadata widgets come
+ * from {@see RouteMetadataFields}, the same definitions the desk form builds
+ * from.
  *
- * @see docs/specs/route-domain.md §4.1, §4.5
+ * @see docs/specs/route-domain.md §4.1, §4.5, §4.6
  * @see docs/specs/photo-uploads.md §5i
  */
 final class ProposeRouteType extends AbstractType
@@ -36,6 +40,7 @@ final class ProposeRouteType extends AbstractType
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $edit = true === $options['proposal_edit'];
         // Upload ids from media-upload.js, claimed on submit (photo-uploads.md §4, §5i).
         $builder
             ->add('mediaIds', HiddenType::class, ['required' => false])
@@ -46,11 +51,13 @@ final class ProposeRouteType extends AbstractType
             return;
         }
 
+        // An edit keeps the stored track unless a new file is chosen.
         $builder->add('gpx', FileType::class, [
             'label' => false,
+            'required' => !$edit,
             'attr' => ['accept' => '.gpx'],
             'constraints' => [
-                new NotBlank(message: 'propose_route.error.gpx_required'),
+                ...($edit ? [] : [new NotBlank(message: 'propose_route.error.gpx_required')]),
                 new File(
                     maxSize: '15M',
                     maxSizeMessage: 'propose_route.error.gpx_too_large',
@@ -74,7 +81,9 @@ final class ProposeRouteType extends AbstractType
         $resolver->setDefaults([
             'data_class' => null,
             'route_photos' => false,
+            'proposal_edit' => false,
         ]);
         $resolver->setAllowedTypes('route_photos', 'bool');
+        $resolver->setAllowedTypes('proposal_edit', 'bool');
     }
 }

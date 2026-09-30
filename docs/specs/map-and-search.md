@@ -445,8 +445,15 @@ map module opens `#drawer` behind its back.
   opts one out, and `multiple` or `size` selects stay native. The list is
   `position: fixed` in the colours of the button it opened from, so no panel
   with overflow hidden cuts it off. Keyboard: arrows, Home/End, type-ahead,
-  Enter/Space, Esc, Tab. The Scout surface picker uses its `decorate` hook to
-  add each class's line.
+  Enter/Space, Esc, Tab. The button keeps a focus ring even where the page's
+  `select` rules remove the outline. Opening lands the button in view at once,
+  since the page scrolls smoothly and a button just reached with Tab may still
+  be moving. Moving through the options scrolls the list, never the page; a page
+  scroll moves the open list with its button and closes it only once the button
+  has left the window, and whenever the list closes, focus that was in it goes
+  back to the button. An `<optgroup>` is drawn as a `role="group"` labelled by
+  its heading. The Scout surface picker uses its `decorate` hook to add each
+  class's line.
 
 ### 4.1 Layer toggles
 
@@ -485,8 +492,9 @@ map module opens `#drawer` behind its back.
   the letters read as a broken sequence (at the time A, C, M, D…) — which is exactly what
   an identifier looks like when it is used as an ordinal.
 - **A pin's position is `pinPoint()` (util.js), not `featurePoint()`.** They
-  answer different questions and disagree on climbs: the stored anchor is the
-  summit, the pin is drawn at the foot (`route[0]`). The rule lived only inside
+  answer different questions: `featurePoint()` reads the stored anchor, the
+  pin is drawn at the foot (`route[0]`). For a climb with a line the two agree,
+  because its stored point is the foot (catalog-data-model.md §6a). The rule lived only inside
   render.js, so the curator's pending-review pin — built from the submission's
   copy of the item anchor — landed on Côte de la Redoute's summit, 9 m from an
   unrelated monument, and "Review on the map" highlighted the monument while
@@ -1067,6 +1075,21 @@ the newest rung of that same ladder.
     with; `CCScope.regionOfPoint()` off the point otherwise, since a coverage
     POI and a Photon town carry no `rid`. A target outside every onboarded
     region leaves the scope alone: there is nothing better to show it with.
+  - **A route that crosses a region or country border takes every region
+    its line passes through**, not only its own. A route row lives in one
+    region (its `rid`, the region holding a point on its line), and a route
+    whose line leaves that region also carries `rids`: every operational
+    region the line touches, its own first (`CatalogProvider`, PostGIS
+    `ST_Intersects` against the region outlines, catalog-data-model.md §9.1).
+    `liftScopeForHit(ll, rids)` then lifts to that region set
+    (`hitScopeForAll` in `hit-scope.js`), the same multi-region scope a loaded
+    ride sets (§9), with the country code kept only when every region shares
+    one. The header reads "Wallonia +2". Otherwise the places along the part
+    of the route outside its own region stayed hidden until the rider widened
+    the scope by hand (public known issue "A route that crosses a border
+    opens in one region only", fixed 2026-09-30). Nothing moves when the
+    rider's scope already holds every one of those regions. A route inside
+    one region carries no `rids` and lifts exactly like any other hit.
   - **Nothing moves when the scope already draws it**: Everywhere, or a scope
     (region, country or myArea) whose region set already holds the target's.
   - **Never persisted** (`persist:false`, like the ride check's): neither
@@ -2161,12 +2184,20 @@ Footer actions are per-type:
 
 **Climbs on this route** (route drawer, owner decision 2026-09-15). Under the
 route's attribute rows, a route with a DB id gets a section "Climbs on this
-route" (`d_route_climbs_h`): every climb (letter N) the route really rides, in
-order along the route, one row each reading `Name · km 112 · ▲ 8.7% avg`. The
-km is the distance along the route in the rider's unit, whole units
-(`d_route_climb_at`, `{u} {n}`); the gradient is the climb's average
-(`avgGradient`), its headline figure, the one the climb drawer and hover line
-lead with. The list is fetched when the drawer opens from
+route" (`d_route_climbs_h`): every climb (letter N) the route really rides
+(it climbs 30% of the line in one go and reaches its top part), in order along
+the route, one row each reading `Name · km 112 · ▲ 8.7% avg`, the km being
+where the ascent starts. The climbs near the route that it does not ride (it
+crosses them, passes their foot, rides them only downhill, or turns off well
+below the top) are not here: they are the climbs group of "Along this route"
+below (owner 2026-09-30). The rule is the ride check's
+(`RouteClimbService::climbsOn()`, route-domain.md §6.4), so dev route 24
+"Spa · Coo · Francorchamps" reads Col du Rosier and Thier Antoine here, and
+"Hockai · via RAVeL L44a" (left 2.4 km below its top) and Côte de la
+Haute-Levée in its along list. The km is the distance along
+the route in the rider's unit, whole units (`d_route_climb_at`, `{u} {n}`);
+the gradient is the climb's average (`avgGradient`), its headline figure, the
+one the climb drawer and hover line lead with. The list is fetched when the drawer opens from
 `GET /map/route/{id}/climbs` (the rule and access are in
 [route-domain.md](route-domain.md) §6.4), so the cached catalog payload does not
 grow. While it is on its way the section shows the drawer's waiting line (the
@@ -2181,7 +2212,9 @@ pin of its own. Click opens the climb through its item-index entry
 (§9, `openListedPlace()` in `listed-place.js`), after lifting the scope to the
 climb's own region when the scope hides it (`liftScopeForHit`, §4.5); hover
 rings the climb's pin at its foot with `highlightAt`. Code: `route-climbs.js` writes the
-rows, `hydrateRouteClimbs()` in `listed-place.js` fetches and wires them.
+rows, `bindRouteClimbs()` in `listed-place.js` wires them, and
+`hydrateRouteClimbs()` fetches and fills the slot. The ride check's "Climbs on
+your ride" (§9) is the same renderer and binder.
 
 **Along this route** (route drawer, owner decision 2026-09-15). Under the climbs,
 a route with a DB id shows what is along it, the same lists the ride check
@@ -2189,11 +2222,18 @@ summary shows for an uploaded GPX (map-and-search.md §9), run on the route's ow
 stored line: "In the Commons along the route" (`d_along_route_h`) with the
 corridor under it ("Within 250 m of the route", `d_along_route_within`), places
 grouped by layer with `km along · m off`, then "Open coverage along the route"
-(`d_along_route_cov_h`) with the open-data note. The corridor is the ride
+(`d_along_route_cov_h`) with the open-data note. km along is true metres
+along the route's line, the same figure "Climbs on this route" gives a climb
+foot at the same spot (route-domain.md §6.4). The corridor is the ride
 check's default, 250 m (`RideCheckService::DEFAULT_RADIUS`); the route drawer
-offers no radius choice. Climbs are left out of the commons list, because
-"Climbs on this route" decides which climbs the route rides (route-domain.md
-§6.4). No commons place: "Nothing in the Commons within 250 m of this route
+offers no radius choice. The commons list's climbs group (letter N, the climb
+glyph and colour like every other group, in km order, folding after 2 rows
+like the others) holds the climbs **near** the route that it does not ride:
+km along is where the route comes closest to the climb line, m off the
+distance between the two lines, and a row opens and rings the climb's pin at
+its foot like any climb row. A climb the route rides is in "Climbs on this
+route" above and never here, and a climb is listed by its line only, never
+by its stored point (route-domain.md §6.4). No commons place: "Nothing in the Commons within 250 m of this route
 yet." (`d_nothing_along_route`). The lists are fetched when the drawer opens
 from `GET /map/route/{id}/along` (`RideCheckService::alongRoute()`, access as
 for the climbs, route-domain.md §6.4). Until they arrive the section shows the
@@ -2204,6 +2244,22 @@ renderer and one binder serve both drawers: `along-list.js` writes the rows,
 check row (map-and-search.md §9), after lifting the scope to the place's own region
 when the scope hides it (`liftScopeForHit`, §4.5). `hydrateRouteAlong()` fetches
 and fills the slot.
+
+**Long groups fold** (owner 2026-09-30, both drawers: the route drawer's two
+lists and the ride check summary's). Each layer group, in the commons list and
+in open coverage alike, shows its first 2 rows (`ALONG_VISIBLE`); the rest sit
+folded behind a button, "Show 45 more" (`d_show_more`, `{n}` = the folded
+rows), that unfolds them in place and then reads "Show fewer"
+(`d_show_fewer`) to fold them again. A group folds only when at least 2 rows
+would hide, so a group of 3 shows all 3. The group header keeps the full count
+("Water & food · 47"). The button is a real `<button>` at the right end of the
+group's header line (owner 2026-09-30), so it stays in one place whether the
+group is open or folded, with `aria-expanded` and `aria-controls` naming the folded list; it keeps focus
+while it toggles, and folding scrolls it back into view. The folded rows are in
+the DOM from the start, so `bindAlongList()` gives them the same hover ring and
+click as the visible ones. Code: `alongListHtml()` writes the fold,
+`bindAlongMore()` in `along-list.js` wires the button, called from
+`bindAlongList()`.
 
 **A picked route stays picked until the rider drops it** (owner 2026-09-16:
 "A selected route or a loaded gpx should always stay active also when a user
@@ -2278,13 +2334,19 @@ fetched after, each race-guarded (a bumped request token drops stale
 responses) and silent on fetch failure — enhancements never block the drawer.
 Empty history renders nothing ("no changes yet" is silence, not a section).
 
-**The heading opens the full log.** In the drawer each change is clamped to two
+**Closed by default** (owner 2026-09-30). The history shows as one "Show
+changelog" button (`d_show_changelog`, a bordered button, `data-hist-toggle`,
+`aria-expanded`); pressing it opens the clamped list in place and the button
+reads "Hide changelog" (`d_hide_changelog`). The full log opens from a "Full
+log ↗" button (`d_changelog_all`, `data-hist-all`) at the end of the open list.
+`web/tests/js/drawer-changelog.test.mjs` pins both.
+
+**The full log.** In the drawer each change is clamped to two
 lines, which is right there - one long description edit would otherwise push
 everything below it off the screen - but clamped is not the same as
 unavailable: a rider reading *"View from 'Zuiderdijk' left The Markermeer
 and…"* cannot tell what was actually changed (owner-reported 2026-08-14). So
-"Recent changes" stops being a label and becomes the control it already looked
-like, opening a native `<dialog>` with every change in full and nothing
+"Full log" opens a native `<dialog>` titled "Recent changes" with every change in full and nothing
 clamped. Native, so Esc, focus trapping and the backdrop are the platform's
 rather than ours; rebuilt on each open from the rows last rendered, so it costs
 no second fetch and cannot show a stale log. It carries `margin:auto`
@@ -2753,7 +2815,7 @@ The ride check claims the camera the same way (§9).
 
 **Both id params may carry a readable tail:** `?item=482/cote-de-wanne`, `?ref=node/462149319/roche-aux-faucons`. The id is everything before the first `/` after it (`idFromShare` / `refFromShare` in `share-links.js`); the slug is discarded on read. A renamed place, a hand-trimmed link and every bare-id link already sent out all open the same point. Slashes stay unencoded in the query value, because a `%2F` in the middle defeats the reason the slug is there.
 | `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
-| `?route=<id>` | opens that R route **selected** (curator Routes desk link, a rider's proposals, the town card): lifts the scope to the region of the route's first point when it is outside the scope (`liftScopeForHit`, `featureLL` in util.js reads a line's first point), lifts the view mode like `?item=` (above), opens the drawer, and frames the **whole route** clear of the drawer (`fitBounds` with `drawerFitPadding` and `pathBounds`, util.js: 400 px on the right on a desktop, the half-screen sheet on a phone; max zoom 14), then highlights it and shows the curator corrections overlay. The scope holds the camera for its own change, so the route's framing has the last word. **A route waiting for review** is not in the catalog payload: when the link names one, `MapController` puts that one route in the page as `window.CC_ROUTE_PREVIEW` (`CatalogProvider::submittedRoute`), for a curator whose moderation scope covers its region (the same 2FA-complete gate as the pending payload) and for the rider who proposed it, and for nobody else. It joins the routes layer for that visit with a "Status: waiting for review" row and no ride, vote, correction, download or report controls, because none of those endpoints take a route that is not live. The reveal pin (§12) stays as the fallback when the target is still not drawn. Owner-reported 2026-09-15: the Routes desk's "Open this route on the map" for route 111 left the map on North Holland. |
+| `?route=<id>` | opens that R route **selected** (curator Routes desk link, a rider's proposals, the town card): lifts the scope to the route's own region (`rid`) when the scope does not draw it, and to **every region the route's line passes through** when it crosses a region or country border (`rids`, §4.5), so the places along the whole route are drawn (`liftScopeForHit`; `featureLL` in util.js reads a line's first point for a route with no region), lifts the view mode like `?item=` (above), opens the drawer, and frames the **whole route** clear of the drawer (`fitBounds` with `drawerFitPadding` and `pathBounds`, util.js: 400 px on the right on a desktop, the half-screen sheet on a phone; max zoom 14), then highlights it and shows the curator corrections overlay. The scope holds the camera for its own change, so the route's framing has the last word. **A route waiting for review** is not in the catalog payload: when the link names one, `MapController` puts that one route in the page as `window.CC_ROUTE_PREVIEW` (`CatalogProvider::submittedRoute`), for a curator whose moderation scope covers its region (the same 2FA-complete gate as the pending payload) and for the rider who proposed it, and for nobody else. It joins the routes layer for that visit with a "Status: waiting for review" row and no ride, vote, correction, download or report controls, because none of those endpoints take a route that is not live. The reveal pin (§12) stays as the fallback when the target is still not drawn. Owner-reported 2026-09-15: the Routes desk's "Open this route on the map" for route 111 left the map on North Holland. |
 
 The same lift applies to a ride-check row (§9), commons places and followed routes alike: opening a listed place the rider's mode hides lifts to the lowest rung that draws it, exactly as `?item=` does. Clear undoes a ride's lift (§4.2).
 
@@ -2844,12 +2906,53 @@ requirement).
   cannot use the GIST index, and an inlined track CTE re-parses the GeoJSON per
   row per `ST_*` call. The same corridor arms answer for a recommended route's
   own line in the route drawer (`RideCheckService::alongRoute()`, map-and-search.md
-  §6.3), which also leaves climbs (N) out. Letters **B–G and N–Q only** (the SQL excludes A; R is absent
+  §6.3). Letters **B–G and O–Q only** (the SQL excludes A and N; R is absent
   because routes live in `recommended_route` and get their own overlap query).
   States gated by `ItemState::servedSqlTuple()`. Per match:
   `ST_Distance` (metres off-track) and
-  `ST_LineLocatePoint(track, ST_ClosestPoint(…))` (fraction → km-along, the
-  ordering key). Cap `MAX_PER_LETTER = 200` per letter with a `truncated` flag.
+  `ST_LineLocatePoint(track, ST_ClosestPoint(…))`, a share of the track's
+  length **in degrees**, turned into **true metres** along the track before it
+  becomes km-along (`App\Catalog\LineMetres`: the track's segments with their
+  geodesic lengths, a `width_bucket` binary search for the segment that holds
+  the share, then that segment's start plus its share of the segment). `frac`
+  is those metres over the track's geodesic length, the ordering key, and
+  km-along is `frac` times the ride's own distance (`distanceKm`), so the last
+  place on the ride never reads past its end. A share in degrees times the
+  length in metres is kilometres out on a long route that turns: on
+  Liège-Bastogne-Liège (dev route 111) it puts places up to 3.9 km early. Cap
+  `MAX_PER_LETTER = 200` per letter with a `truncated` flag. A row's `ll` is
+  the geometry's own point or first vertex.
+- **Climbs (N) are listed by the route drawer's rule, not by the corridor**
+  (`RouteClimbService::climbsAlong()`, route-domain.md §6.4). The climbs the
+  ride **rides** are `climbs` in the answer, shown as their own section
+  "Climbs on your ride" (`d_ride_climbs_h`) above the along lists, with the
+  route drawer's "Climbs on this route" rows (`route-climbs.js`,
+  `Name · km 112 · ▲ 8.7% avg`, km where the ascent starts): the track climbs
+  at least 30% of the climb **line** within 40 m in one go, upward, from the
+  foot or from partway up, and reaches its top part (within 2 km of the
+  summit). The climbs **near** the ride that it does not ride (owner
+  2026-09-30) are the N group of `groups`, the commons list's climbs group
+  (`RideCheckService::withNearClimbs()`): any climb whose line comes within
+  the radius the rider picked, the same radius as the corridor groups, and is
+  not in the ridden set, so no climb is listed twice. A climb the ride passes
+  at its foot, crosses, rides only downhill or leaves well below its top is
+  near; so on dev route 23 "Spa · Sankt Vith" the ride reads Col du Rosier
+  under "Climbs on your ride", and Thier Antoine (foot passed at 28 m) and
+  "Hockai · via RAVeL L44a" (157 m of a 17 km line ridden) in the climbs
+  group. The corridor query leaves letter N out, so a climb's stored point
+  (the line's foot, catalog-data-model.md §6a) never lists it, and a climb
+  without a line (fewer than two `attributes.route` pairs) is not listed. A
+  climb row's `ll` is the climb's **foot** (the first `attributes.route`
+  pair, `util.js pinPoint()`) in both lists, so hover rings and click opens
+  the pin at the foot; `distM` is the metres between the climb line and the
+  track. Km along is, for a ridden climb, where the ascent starts; for a near
+  climb, the track's point closest to the climb line (the earliest pass, to
+  the metre, when the line touches the track more than once). Both are true
+  metres (LineMetres) on the same scale as every other row. The near climbs
+  are in km order; the N group joins the corridor groups in letter order,
+  with the same `MAX_PER_LETTER` cap, and folds after 2 rows like every
+  group. The route drawer splits its climbs the same way, in its 250 m
+  corridor (§6.3).
 - **Coverage arm (open POIs along the ride)** — a parallel `coverage` result
   (`RideCheckService::corridorCoverage()`) runs the *same* MATERIALIZED
   corridor over `coverage_poi`, limited to utility letters
@@ -2878,7 +2981,9 @@ requirement).
   click handlers.
   - **Commons rows.** A pool place is a leaf pin for as long as the ride is
     loaded (§5, `setListedPlaces()`), so none folds into a count bubble along
-    the track. Hover rings the place's own spot (`highlightAt`), on the pin body
+    the track. Hover rings the place's pin (`highlightAt` at the item-index
+    entry's `ll`, which `item-index.js` sets with `pinPoint()`, so a climb
+    rings at its foot), on the pin body
     (`[0,-16]`) only when a bottom-anchored pin is really drawn there
     (`listedPinDrawn()` in `listed-place.js`: `poolPinDrawn()` for pools,
     `featureVisible()` for other layers; `ringOffset()` in `ride-places.js`),
@@ -2903,11 +3008,17 @@ requirement).
     hides this place · your filter hides it too", `d_toast_filter_too`). The
     rule and its release are in §4.3 (`openListedPlace()` in listed-place.js,
     `showPlaceAnyway()` in render.js). Followed-route rows open the same way.
+  - **Climbs on your ride** rows are written by `routeClimbsHtml()` and wired
+    by `bindRouteClimbs()` in `listed-place.js`, the route drawer's "Climbs on
+    this route" code: click opens the climb through its item-index entry with
+    the mode lift and "shown anyway" rule of any row (each lift remembered for
+    Clear), hover rings its foot.
   - In the drawer, coverage is a separate section under its own heading with a
     provenance note, so uncurated OSM never reads as a verified Commons pick.
     The summary's two lists are written by `along-list.js` and wired by
     `bindAlongList()` in `listed-place.js`, the same code as the route drawer's
-    lists (map-and-search.md §6.3).
+    lists (map-and-search.md §6.3), so a long group folds after 2 rows behind
+    "Show N more" the same way.
   - A followed route opened from the summary holds its route like any route
     drawer (map-and-search.md §6.3); "‹ Ride summary" lets it go, so the summary
     never sits over a highlighted route.

@@ -42,7 +42,7 @@ final class MediaClaimService
             $pinLat = (float) $geom['coordinates'][1];
         }
 
-        $this->bind($rawMediaIds, $by, $rawAlts, static function (MediaUpload $upload) use ($submissionId, $pinLat, $pinLng): array {
+        $this->bind($rawMediaIds, $by, $rawAlts, 0, static function (MediaUpload $upload) use ($submissionId, $pinLat, $pinLng): array {
             $upload->claim($submissionId);
 
             return [$pinLat, $pinLng];
@@ -53,7 +53,9 @@ final class MediaClaimService
      * Bind uploads to a recommended route: its proposal (`$suggestion` null)
      * or a photo correction on it. Same checks, same cap, same GPS rule as a
      * submission, except that the distance is measured to the nearest point
-     * of the route's line, and that point is the pin it was measured to.
+     * of the route's line, and that point is the pin it was measured to. The
+     * cap counts the photos the proposal or correction already carries, so a
+     * proposer adding photos on their edit stays within the same 6.
      *
      * @see docs/specs/photo-uploads.md §5i
      */
@@ -62,8 +64,9 @@ final class MediaClaimService
         $routeId = (int) $route->getId();
         $suggestionId = $suggestion?->getId();
         $line = self::lineOf($route);
+        $already = $this->routePhotoCount($routeId, $suggestionId);
 
-        $this->bind($rawMediaIds, $by, $rawAlts, static function (MediaUpload $upload) use ($routeId, $suggestionId, $line): array {
+        $this->bind($rawMediaIds, $by, $rawAlts, $already, static function (MediaUpload $upload) use ($routeId, $suggestionId, $line): array {
             $upload->claimForRoute($routeId, $suggestionId);
             $lat = $upload->getGpsLat();
             $lng = $upload->getGpsLng();
@@ -71,6 +74,31 @@ final class MediaClaimService
 
             return null === $pin ? [null, null] : $pin;
         });
+    }
+
+    /**
+     * Photos still waiting on a route's proposal (`$suggestionId` null) or on
+     * one photo correction: pending, or pending_scan while the worker checks
+     * them. They count towards the cap of {@see MAX_PER_SUBMISSION}.
+     *
+     * @see docs/specs/photo-uploads.md §5i
+     */
+    public function routePhotoCount(int $routeId, ?int $suggestionId): int
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('COUNT(m.id)')
+            ->from(MediaUpload::class, 'm')
+            ->where('m.routeId = :route')
+            ->andWhere('m.status IN (:open)')
+            ->setParameter('route', $routeId)
+            ->setParameter('open', [MediaStatus::Pending->value, MediaStatus::PendingScan->value]);
+        if (null === $suggestionId) {
+            $qb->andWhere('m.routeSuggestionId IS NULL');
+        } else {
+            $qb->andWhere('m.routeSuggestionId = :suggestion')->setParameter('suggestion', $suggestionId);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -89,17 +117,18 @@ final class MediaClaimService
     }
 
     /**
-     * @param callable(MediaUpload): array{0: ?float, 1: ?float} $attach binds one upload and answers the pin to measure it to
+     * @param int                                                $already photos the target already carries, counted against the cap
+     * @param callable(MediaUpload): array{0: ?float, 1: ?float} $attach  binds one upload and answers the pin to measure it to
      */
-    private function bind(mixed $rawMediaIds, User $by, mixed $rawAlts, callable $attach): void
+    private function bind(mixed $rawMediaIds, User $by, mixed $rawAlts, int $already, callable $attach): void
     {
         $ids = self::parse($rawMediaIds);
         if ([] === $ids) {
             return;
         }
         $alts = self::parseAlts($rawAlts);
-        if (\count($ids) > self::MAX_PER_SUBMISSION) {
-            throw new \InvalidArgumentException(\sprintf('A submission carries at most %d photos, %d given.', self::MAX_PER_SUBMISSION, \count($ids)));
+        if ($already + \count($ids) > self::MAX_PER_SUBMISSION) {
+            throw new \InvalidArgumentException(\sprintf('A submission carries at most %d photos, %d given.', self::MAX_PER_SUBMISSION, $already + \count($ids)));
         }
 
         foreach ($ids as $id) {

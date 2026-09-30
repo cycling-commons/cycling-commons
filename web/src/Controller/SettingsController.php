@@ -4,6 +4,7 @@
 
 namespace App\Controller;
 
+use App\Account\DisplayNameCheck;
 use App\Account\RowsPerPage;
 use App\Account\UpdatesSubscription;
 use App\Entity\User;
@@ -42,6 +43,7 @@ final class SettingsController extends AbstractController
         private readonly Connection $db,
         private readonly RiderCreditSync $creditSync,
         private readonly UpdatesSubscription $updates,
+        private readonly DisplayNameCheck $nameCheck,
     ) {
     }
 
@@ -159,6 +161,11 @@ final class SettingsController extends AbstractController
             'active_tab' => $activeTab,
             'base_region_slugs' => $baseRegionSlugs,
             'has_approved_photos' => $user->isPublicProfile() && $this->hasApprovedPhotos($user),
+            // The display-name hint, answered here too so it shows without
+            // JavaScript, after a save as on any visit (account-and-auth.md §9).
+            'name_in_use' => DisplayNameCheck::askable($user->getDisplayName())
+                ? $this->nameCheck->inUse($user->getDisplayName(), $user->getId())
+                : null,
         ]);
     }
 

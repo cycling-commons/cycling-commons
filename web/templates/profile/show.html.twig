@@ -32,7 +32,9 @@
     <div class="mod-bar">
       {# Category filter (owner 2026-08-16): plain GET links so a filtered list
          can be bookmarked; chips render only for letters this rider has, and
-         only when there is more than one - a filter with one option is noise. #}
+         only when there is more than one - a filter with one option is noise.
+         The Routes chip (letter R) lists the rider's route proposals with any
+         route correction. #}
       {% if letter_chips|length > 1 or status_filter %}
         {# Category chips and the withdrawn toggle COMBINE: every chip's href
            carries the other filter along, so switching one never resets the
@@ -48,24 +50,63 @@
              href="{{ path('profile', status_filter ? lt : {status: 'withdrawn'}|merge(lt)) }}">{{ 'account.sub_status_withdrawn'|trans }}</a>
         </nav>
       {% endif %}
-      {% if contributions is not empty or route_proposals is not empty %}
+      {% if entries is not empty %}
         {% include 'account/_density.html.twig' %}
       {% endif %}
     </div>
-    {% if contributions is empty %}
+    {# One list of everything the rider contributed, places and route
+       proposals together, newest first, under one pager: the controller pages
+       the union of both in SQL (docs/specs/account-and-auth.md). #}
+    {% if entries is empty %}
       <div class="empty-state">
         <p>{{ 'account.contributions_empty'|trans }}</p>
         <a class="door" href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a>
       </div>
     {% else %}
+      {% set route_pill = {'verified': 'ok', 'unverified': 'conf', 'submitted': 'pend', 'rejected': 'rej', 'retired': 'ret'} %}
       <div class="q-list" id="qList">
-      {% for sub in contributions %}
+      {% for e in entries %}
+      {% if e.route %}
+        {% set p = e.route %}
+        {# A route proposal, in the same card shape as a place. Anchor for the
+           propose-route receipt, whose reference links here; the shared
+           :target outline marks the card it lands on. Map shows the route to
+           its proposer while it waits (map-and-search.md §8); Edit reopens
+           the proposal form until a curator decides (route-domain.md §4). #}
+        <div class="q-item" id="route-{{ p.id }}">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
+                <span class="q-tag q-tag--route">{{ 'account.route_tag'|trans }}</span>
+                <h3 class="q-title">{{ p.name }}</h3>
+              </div>
+              {% set rname = p.regionId ? region_names[p.regionId] ?? null : null %}
+              {% if rname %}<div class="q-submitter">{{ rname }}</div>{% endif %}
+            </div>
+            <div class="q-acts">
+              <time class="q-when" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_date }}</time>
+              {% if p.state.value in ['submitted', 'verified', 'unverified'] %}
+                <span class="q-links">
+                  <a class="q-link" href="{{ path('map') }}?route={{ p.id }}"
+                     target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
+                  {% if p.state.value == 'submitted' %}
+                    <a class="q-link" href="{{ path('propose_route_edit', {id: p.id}) }}">{{ 'account.link_edit'|trans }}</a>
+                  {% endif %}
+                </span>
+              {% endif %}
+              <span class="q-pill q-pill--{{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        {% set sub = e.sub %}
         {# Map + Edit render for every item-bound row, PENDING included (owner
            2026-08-16: "while an item is waiting for review I should be able
            to edit it"). A pending new item is not served by name, so its map
            link is the pending deep-link the desk uses; the edit wizard binds
-           the submitter's own Submitted item. Routes (letter R) have no
-           item-edit binding — handled in the route-proposals list. #}
+           the submitter's own Submitted item. A route correction (letter R)
+           has no item-edit binding. #}
         {% set sub_live = sub.itemId is not null and sub.letter != 'R' %}
         {% set sub_pending_new = sub.type.value == 'new' and sub.status.value in ['pending', 'needs_info'] %}
         {# Anchor for the messages page, whose cards link back to the
@@ -178,42 +219,10 @@
             </p>
           {% endif %}
         </div>
+      {% endif %}
       {% endfor %}
       </div>
-      {# Paging the contributions pane keeps `rpage` so moving through one list
-         never resets the other — they share a URL. #}
-      {% include 'partials/_pager.html.twig' with {pager: pager, route: 'profile', params: {rpage: route_pager.page}|merge(letter_filter ? {letter: letter_filter} : {})|merge(status_filter ? {status: status_filter} : {})} %}
-    {% endif %}
-
-    {% if route_proposals is not empty %}
-    {% set route_pill = {'verified': 'ok', 'unverified': 'conf', 'submitted': 'pend', 'rejected': 'rej', 'retired': 'ret'} %}
-    <h2 class="sec-band">{{ 'account.route_proposals_title'|trans }} <span class="sec-count">{{ route_pager.total }}</span></h2>
-    <div class="q-list">
-    {% for p in route_proposals %}
-      <div class="q-item">
-        <div class="q-top">
-          <div class="q-headwrap">
-            <div class="q-head">
-              {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
-              <span class="q-tag q-tag--route">{{ 'nav.routes'|trans }}</span>
-              <h3 class="q-title">{{ p.name }}</h3>
-            </div>
-          </div>
-          <div class="q-acts">
-                <time class="q-when" datetime="{{ p.createdAt|date('c') }}">{{ p.createdAt|cc_date }}</time>
-            {% if p.state.value in ['verified', 'unverified'] %}
-              <span class="q-links">
-                <a class="q-link" href="{{ path('map') }}?route={{ p.id }}"
-                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
-              </span>
-            {% endif %}
-            <span class="q-pill q-pill--{{ route_pill[p.state.value] ?? 'pend' }}">{{ ('account.route_state_' ~ p.state.value)|trans }}</span>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
-    </div>
-    {% include 'partials/_pager.html.twig' with {pager: route_pager, route: 'profile', params: {page: pager.page}|merge(letter_filter ? {letter: letter_filter} : {})|merge(status_filter ? {status: status_filter} : {}), key: 'rpage'} %}
+      {% include 'partials/_pager.html.twig' with {pager: pager, route: 'profile', params: (letter_filter ? {letter: letter_filter} : {})|merge(status_filter ? {status: status_filter} : {})} %}
     {% endif %}
 
     {# ── Curating.

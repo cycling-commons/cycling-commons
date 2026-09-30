@@ -1430,8 +1430,9 @@ have caught it.
 `app:catalog:seed-climbs` imports the reviewed artifact, KEEP-only by default,
 and **refuses DROP outright** rather than offering it behind a flag. It writes
 one item per side, identified `wikidata:<qid>:<side>` so a re-run upserts each
-side onto itself, geometry at the line's own summit rather than Wikidata's
-coordinate (the pin and the numbers then describe the same point), and
+side onto itself, geometry at the line's foot rather than Wikidata's
+coordinate (a climb's point is its foot, catalog-data-model.md §6a; the
+region and the duplicate check are asked there too), and
 `state = unverified` like every seeded row. It writes NO gradients: recompute
 remains the only writer, and the command says so on the way out. Naming is a
 rider question rather than a data one - "Stelvio Pass" names a col, "Stelvio

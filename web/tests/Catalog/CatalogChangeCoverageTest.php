@@ -50,8 +50,9 @@ final class CatalogChangeCoverageTest extends KernelTestCase
         $tables = [];
         foreach (self::SOURCES as $file) {
             // Upper-case keywords only: the SQL here is written that way, and
-            // the prose in the comments ("from the drawer") is not.
-            preg_match_all('/\b(?:FROM|JOIN)\s+([a-z_]+)\b/', (string) file_get_contents($root.'/'.$file), $m);
+            // the prose in the comments ("from the drawer") is not. A name
+            // followed by a dot is a column (`IS DISTINCT FROM rr.region_id`).
+            preg_match_all('/\b(?:FROM|JOIN)\s+([a-z_]+)\b(?!\.)/', (string) file_get_contents($root.'/'.$file), $m);
             foreach ($m[1] as $table) {
                 $tables[$table] = true;
             }

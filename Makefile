@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-fetch provider-harvest surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -190,7 +190,7 @@ app-serve: ## run the Symfony app locally at http://127.0.0.1:8010
 	cd web && php -S 127.0.0.1:8010 -t public
 
 app-test: ## run the app test suite + static analysis + gates
-	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh && ./tools/check-translations.sh && ./tools/check-raw-translations.sh
+	cd web && php bin/phpunit && vendor/bin/phpstan analyse --no-progress && vendor/bin/psalm --no-cache && vendor/bin/php-cs-fixer fix --dry-run --diff && ./tools/check-spdx.sh && ./tools/check-licenses.sh && ./tools/check-translations.sh && ./tools/check-used-translations.sh && ./tools/check-raw-translations.sh
 	$(MAKE) scope-test
 	@# The gates in the web/ chain above stop at web/: the SPDX headers of the
 	@# files there, and the licences of the Composer dependencies. The
@@ -352,11 +352,12 @@ coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → Po
 		$(if $(timeout),-e COVERAGE_STATEMENT_TIMEOUT=$(timeout)) \
 		pipeline python -m coverage.run
 
-provider-fetch: ## Fetch one provider's service into a normalised file: make provider-fetch key=rivm-drinkwater out=/tmp/rivm.json
-	@$(DOCKER_COMP) exec -T pipeline python -m providers.run --key $(key) --out $(out)
-
-provider-harvest: ## Ingest a fetched file (DRY by default; add write=1): make provider-harvest key=rivm-drinkwater file=/tmp/rivm.json
-	@$(DOCKER_COMP) exec -T app php bin/console app:providers:harvest $(key) $(file) $(if $(write),--write)
+# One provider refresh: fetch in the pipeline, hand over, ingest in the app.
+# tools/provider-run.sh does the work; staging and production run the same
+# script on the worker host with --worker-dir (data-provider-hierarchy.md §8).
+provider-run: ## Refresh one provider end to end, DRY unless WRITE=1: make provider-run KEY=rivm-drinkwater [WRITE=1]
+	@test -n "$(KEY)" || { echo "provider-run: pass KEY=<provider key>, e.g. make provider-run KEY=rivm-drinkwater" >&2; exit 1; }
+	@tools/provider-run.sh --app-user $(DEV_UID):$(DEV_GID) $(if $(WRITE),--write) '$(KEY)'
 
 coverage-tiles: ## Rebuild + publish the coverage PMTiles from the rows already in PostGIS (no harvest)
 	@$(DOCKER_COMP) up --detach --wait minio

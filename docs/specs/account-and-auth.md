@@ -385,9 +385,10 @@ Invariant for fixtures and seeded elevated accounts: set **both**
    mid-2FA (`TwoFactorTokenInterface`) are sent to the scheb interstitial.
    Also applies the user's saved locale to the session and localizes the
    default target so the path-prefix router cannot clobber it. The default
-   target is `/account/contributions` on the very first sign-in (`lastLoginAt` still null,
-   read before the handler stamps it) and `/account` on every sign-in after
-   that (§8). A saved target path wins over both.
+   target is `/account/settings` on the first sign-in since the address
+   was confirmed (`lastLoginAt` null or older than `emailVerifiedAt`, read
+   before the handler stamps it) and `/account` on every sign-in after that
+   (§8). A saved target path wins over both.
 2. `App\Security\TwoFactorSetupEnforcer` (`kernel.request` listener,
    priority 7): closes the remember-me / direct-navigation gap — a
    not-fully-enrolled elevated user is redirected to `/2fa/setup` on **every**
@@ -900,9 +901,14 @@ The same account chip (`partials/_account_chip.html.twig`) is used everywhere,
 including the public nav; the language switcher (`partials/_lang_menu.html.twig`)
 lives in the shell header.
 
-- **Personal mode** tabs: Dashboard · Contributions · Votes · Saved · Messages
-  · Settings, under a "Personal" label. The account chip lists Dashboard first
-  too.
+- **Personal mode** tabs: Dashboard · Contributions · Votes · Scout ·
+  Translate · Messages · My bugs · Settings, under a "Personal" label (Saved
+  stays hidden until it has a backend). The account chip lists Dashboard first
+  too. A rider's proposed routes have no tab of their own: they are
+  contributions, so the Contributions tab lists them, and its kind filter
+  carries a **Routes** chip (`?letter=R`, first after All) that shows only
+  them. Example: a rider with two climb edits and one proposed route sees
+  All · Routes · Climbs; Routes lists the route, Climbs hides it.
 - **Moderator mode** (`/moderate/submissions`, `/moderate/routes`): the bar carries **only**
   the moderation tabs (Submissions, Routes, with open counts) on its own darker
   colour under a **MODERATION** label — no user items. Curators cross between
@@ -923,14 +929,33 @@ lives in the shell header.
 - Dashboard **Contributions pane** renders the user's real submissions
   (retention-filtered — a rejected submission past the retention cutoff never
   renders, see [moderation-and-contribution.md](moderation-and-contribution.md))
-  and route proposals, 50 each (`ProfileController`), as the shared record
-  card (`.q-item`: type/route tag, title, region · country, date, Map/Edit
-  links, status pill, then the diff, the decision note and the conversation
-  under it), the same card the curator's desk renders, from the same
+  and route proposals as ONE list, newest first, under one `?page=` pager (20
+  per page, `ProfileController::contributionsPage()` pages the SQL union of
+  both, then loads that page's rows). Owner-reported 2026-09-30: with the
+  routes in a second list under the places' pager, a rider with a page of
+  place submissions never saw the route they had just proposed. Every row is
+  the shared record card (`.q-item`: type/route tag, title, region · country,
+  date, Map/Edit links, status pill, then the diff, the decision note and the
+  conversation under it), the same card the curator's desk renders, from the same
   stylesheet (moderation-and-contribution.md §5.2, owner 2026-08-25). Every
   pane opens with the shell's page head (eyebrow "Personal · <name>", a real
   title) and offers the cards/list density switch; empty
-  state is the `account.contributions_empty` key. The pane closes with a
+  state is the `account.contributions_empty` key, shown only when the rider
+  has neither submissions nor route proposals in the current filter. The kind
+  chips render only for kinds the rider has, and only when there are two or
+  more. Routes (letter R) is the rider's route proposals plus any route
+  submission; another kind's chip and the Withdrawn view hide route proposals,
+  which have no withdrawn state. A route card is the same card with the R
+  type icon, the tag "Route", the route's name, its region, the proposal date
+  and the route state pill. It carries the anchor `#route-<id>`, which the
+  propose-route receipt links to ([route-domain.md](route-domain.md)).
+  **Map ↗** opens `/map?route=<id>` in a new tab for a submitted, unverified
+  or verified route: the map shows a submitted route to its proposer and to a
+  curator who may moderate it, never to anyone else (map-and-search.md §8).
+  **Edit** opens `/propose-route/<id>/edit` while the route is `submitted`,
+  and is gone once a curator has decided (route-domain.md §4.6). A route card
+  has no **Withdraw**: a route proposal has no withdrawn state
+  (catalog-data-model.md §4). The pane closes with a
   **Curator applications** section: the user's own
   `curator_application` rows with status pills (pending/approved/declined/
   withdrawn), or — when none exist — a door to the regions directory, so
@@ -942,7 +967,9 @@ lives in the shell header.
   (potable / not potable / still there —
   [moderation-and-contribution.md](moderation-and-contribution.md) §1.6);
   the `/vote` category ballots are receipt-only by design and so never appear
-  here. The **Saved-regions** pane says plainly that saving is not built yet
+  here. The empty pane names the two acts that work on the map today (a vote
+  for a verified route, a place confirmation) and says the seasonal region
+  vote is not built yet (`community.voting_live` is off). The **Saved-regions** pane says plainly that saving is not built yet
   and links the regions directory. The former preview sample data is gone
   Every dashboard pane renders real rows only. Empty panes use
   the shared `.empty-state` block (`account/_shell_styles.html.twig`):
@@ -996,13 +1023,26 @@ Example: a rider with 2 pending submissions and 1 at `needs_info` sees a red
 The page marks nothing read: the Messages badge keeps counting until the
 rider opens `/account/messages`.
 
-**Where a sign-in lands.** The first sign-in of an account lands on
-`/account/contributions`: a new rider has nothing to count yet, and the contributions page
-carries the curating invitation. Every later sign-in lands on `/account`.
-A saved target path (a gated page the rider was sent away from) wins over
-both (§4, `LoginSuccessHandler`).
+**Where a sign-in lands.** The first sign-in after the address is confirmed
+lands on `/account/settings`, the rider's profile ("Your profile"): a new
+rider has nothing to count yet, and the first things worth doing are here (the
+display name, a public profile or not, a base location). The dashboard's tiles
+mean little on day one (owner 2026-09-30: "maybe a bit much info"). Every later sign-in
+lands on `/account`. A saved target path (a gated page the rider was sent away
+from) wins over both (§4, `LoginSuccessHandler`).
 
-Example: a rider signs up, verifies, and signs in: `/account/contributions`. They sign out
+"First" is `lastLoginAt` null **or older than `emailVerifiedAt`**, not
+`lastLoginAt` null alone. `lastLoginAt` is the dormancy clock (§6.5), and on
+some accounts it holds a time from before the confirmation: migration
+`Version20260828130000` starts it at `created_at` for every account that
+existed when it ran, and accounts created before §2's confirmation rule could
+sign in unconfirmed. With the null test alone those riders confirmed, signed
+in and landed on the dashboard (owner report 2026-09-30, a fresh account on
+the deployed site). The clean path (sign up, confirm, sign in, all on current
+code) was already right; `FirstSignInLandingTest` pins both, through the real
+sign-up form and the real confirmation mail.
+
+Example: a rider signs up, verifies, and signs in: `/account/settings`. They sign out
 and sign in the next day: `/account`.
 
 ### Settings (`App\Controller\SettingsController`, `/account/settings`)
@@ -1100,6 +1140,61 @@ identity, and always was.
   the email beside it.
 - A name is **stored exactly as typed** — `setDisplayName()` does no
   normalization of any kind.
+
+### The display-name hint (owner, 2026-09-30)
+
+Sharing stays allowed, and a rider who wants a name of their own can see
+whether it is free. Under the display-name field on the sign-up form and in
+settings, a moment after the rider stops typing (500 ms), one line says
+**"No other rider shows this name publicly yet."** or **"Another rider already uses this
+name. You can still use it."** It is information, never a block: nothing
+reserves a name, and the next rider may still choose it. A shared name reads
+as a notice, in `--clay` and semibold (`[data-name-hint][data-state=shared]`
+in `atlas.css`), never in the error colour.
+
+- **Comparison:** `App\Account\DisplayNameCheck::inUse()`, trimmed and case
+  insensitive (`LOWER(BTRIM(display_name)) = LOWER(:name)`), over every
+  public profile (`public_profile`) except the asking rider's own. Names shorter than 2 or longer than
+  100 characters (the forms' limits) get no answer. The query is a `COUNT(*)`
+  over the table, so it costs the same whichever way the answer goes.
+- **Endpoint:** `POST /register/name-check` (`display_name_check`,
+  `DisplayNameCheckController`). Every answer has one shape,
+  `{"inUse": true|false|null}`, with `Cache-Control: private, no-store`. No
+  name, id or count ever comes back. `null` means no answer: 403 for an
+  anonymous caller without a live sign-up stamp, 429 over the limit, 200 for a
+  name outside the length limits.
+- **Who may ask:** a signed-in rider, or an anonymous visitor on the sign-up
+  page, proved by the form's signed timer (`FormGuard::STAMP`, checked by
+  `FormGuard::stampIsLive()`: our signature, at most `MAX_SECONDS` old, no
+  minimum dwell because the hint runs while the visitor types). The path sits
+  under `/register` so the access rule that opens the sign-up pages opens it
+  too.
+- **Limit:** `display_name_check`, 30 per hour per connection
+  (`anon-<hmac(secret|display_name_check|ip)>`), for everybody. A rider typing
+  a name spends a few; a script asking about names in bulk runs out.
+- **Without JavaScript:** the "check your email" page after sign-up shows the
+  hint for the name just submitted, and the settings page renders it
+  server-side for the saved name on every visit, so it shows after a save.
+  The sign-up form re-rendered with errors shows none: it runs before the
+  proof of work and the registration limit, and would be a free way to ask.
+- **Script:** `assets/js/name-hint.js`, markup `partials/_name_hint.html.twig`
+  (`aria-live="polite"`, tied to the input by `aria-describedby`). A slower
+  answer for an older spelling never overwrites a newer one; no answer hides
+  the line.
+
+**Why a name check is safe where an address check is not.** The sign-up form
+never says whether an address has an account (§2, `ExistingAccountNotice`).
+The hint keeps that: it reads only `display_name`, so typing an address into
+the name field finds only a display name spelled like one, never the
+`email` column. On the "check your email" page the hint is worked out from
+the submitted name **before** the address is looked up, and the same value
+goes to both answers, so a taken address and a new one still get the same
+page. Only **public** profiles count (owner 2026-09-30): their names are
+already printed on the map, on photo credits and on the contributors wall, so
+the hint tells a visitor nothing the site does not show. A rider with a
+private profile is never counted, so nobody can learn that their spelling is
+in use. The stamp and the per-connection limit stop the endpoint being used as
+a bulk list of public names.
 
 ### What a display name may look like
 

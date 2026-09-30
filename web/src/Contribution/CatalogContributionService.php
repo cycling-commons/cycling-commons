@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Contribution;
 
+use App\Catalog\ClimbFoot;
 use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
@@ -120,13 +121,11 @@ final class CatalogContributionService implements ContributionStubInterface
         if (null === $type || ItemType::QualityRides === $type) {
             throw new \InvalidArgumentException('add requires a catalog item type; routes go through /propose-route');
         }
-        // A climb's pin is its foot: fall back to the drawn line when the wizard sent no pin.
-        if (ItemType::Climbs === $type && !is_numeric($payload['lat'] ?? null)) {
-            $rawRoute = $payload['route'] ?? null;
-            $route = \is_string($rawRoute) ? json_decode($rawRoute, true) : null;
-            if (\is_array($route) && isset($route[0][0], $route[0][1]) && is_numeric($route[0][0]) && is_numeric($route[0][1])) {
-                $payload['lat'] = $route[0][0];
-                $payload['lng'] = $route[0][1];
+        // A climb's pin is the foot of its drawn line (ClimbFoot), whatever pin the wizard sent.
+        if (ItemType::Climbs === $type) {
+            $foot = ClimbFoot::of(self::postedRoute($payload));
+            if (null !== $foot) {
+                [$payload['lat'], $payload['lng']] = $foot;
             }
         }
         // Segment-located types use the stretch start as the pin (docs/specs/moderation-and-contribution.md §1.3).
@@ -475,9 +474,17 @@ final class CatalogContributionService implements ContributionStubInterface
         // Representative point is the first vertex; never assume a Point.
         [$lng, $lat] = self::representativePoint((string) $item->getGeom());
 
+        /* A climb with a line has no pin of its own to move: its point is the
+           foot of the line (ClimbFoot), and it follows a redrawn line when the
+           edit is applied (ModerationService::applyEdit()). */
+        if (ItemType::Climbs->letter() === $item->getLetter()
+            && null !== ClimbFoot::of($proposed['route'] ?? $item->getAttributes()['route'] ?? null)) {
+            unset($payload['lat'], $payload['lng']);
+        }
+
         // No field/photo/pin change is not a contribution.
         $moved = self::pinMoved($payload, (float) $lat, (float) $lng);
-        if ([] === $changes && !self::hasMedia($payload) && !$moved) {
+        if ([] === $changes && !self::hasMedia($payload) && !$moved && !$this->ticksChanged($item, $payload, $by)) {
             $this->reject('contribute.error.nothing_changed', 'details');
         }
 
@@ -535,6 +542,14 @@ final class CatalogContributionService implements ContributionStubInterface
             $itemGeom = ($newItem && isset($attributes['segment']))
                 ? self::geomFor($attributes, (string) $item->getGeom())
                 : null;
+            /* What the first round stored beside the form (`_osm_ref`,
+               `_osm_was`, `_replaces`, ...) is read on approval, and the
+               revision's form does not carry it: kept, with this round's own
+               keys winning. Replacing the payload whole lost the rider's
+               similar-place ticks (production, 2026-09-29). */
+            if ($newItem) {
+                $payload += array_filter($open->getPayload(), static fn (string $k): bool => str_starts_with($k, '_'), \ARRAY_FILTER_USE_KEY);
+            }
             $this->em->wrapInTransaction(function () use ($open, $merged, $payload, $newItem, $item, $attributes, $itemGeom): void {
                 if ($newItem) {
                     $item->setAttributes($attributes);
@@ -573,6 +588,27 @@ final class CatalogContributionService implements ContributionStubInterface
             applied: $applied,
             confirmed: $applied && $confirmNow && $this->confirmNow($item, $by),
         );
+    }
+
+    /**
+     * True when a revision of the rider's own waiting new place changes only
+     * which similar places it replaces: that is a change to the proposal, and
+     * "nothing changed" would refuse it (catalog-data-model.md §5a).
+     *
+     * @param array<string, mixed> $payload
+     */
+    private function ticksChanged(Item $item, array $payload, User $by): bool
+    {
+        if (!\array_key_exists('_replaces', $payload) || ItemState::Submitted !== $item->getState()) {
+            return false;
+        }
+        $open = $this->openSubmissionFor((int) $item->getId(), $by);
+        if (null === $open || SubmissionType::NewItem !== $open->getType()) {
+            return false;
+        }
+        $stored = $open->getPayload();
+
+        return !\array_key_exists('_replaces', $stored) || $stored['_replaces'] !== $payload['_replaces'];
     }
 
     /**
@@ -1012,6 +1048,18 @@ final class CatalogContributionService implements ContributionStubInterface
 
         return abs((float) $payload['lat'] - $lat) > self::MOVED_EPS
             || abs((float) $payload['lng'] - $lng) > self::MOVED_EPS;
+    }
+
+    /**
+     * The climb line a form posted, decoded: `route` travels as a JSON string of [lat, lng] pairs.
+     *
+     * @param array<string, mixed> $payload
+     */
+    private static function postedRoute(array $payload): mixed
+    {
+        $raw = $payload['route'] ?? null;
+
+        return \is_string($raw) ? json_decode($raw, true) : null;
     }
 
     /** Text point for was/now, and the geometry an approval applies. */

@@ -20,6 +20,7 @@ use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -91,50 +92,37 @@ final class ProfileController extends AbstractController
         }
         $statusFilter = 'withdrawn' === $request->query->getString('status') ? 'withdrawn' : '';
 
-        // docs/specs/moderation-and-contribution.md §8 — hide swept rejected/withdrawn even if sweep has not run.
-        $contributionsQuery = static function (EntityManagerInterface $em) use ($userId, $retention, $letterFilter, $statusFilter) {
-            $qb = $em->createQueryBuilder()
-                ->from(Submission::class, 's')
-                ->where('s.userId = :uid')
-                ->andWhere('(s.status NOT IN (:swept) OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff)')
-                ->setParameter('uid', $userId)
-                ->setParameter('swept', [SubmissionStatus::Rejected, SubmissionStatus::Withdrawn])
-                ->setParameter('cutoff', $retention->cutoff());
-            if ('' !== $letterFilter) {
-                $qb->andWhere('s.letter = :letter')->setParameter('letter', $letterFilter);
-            }
-            if ('' !== $statusFilter) {
-                $qb->andWhere('s.status = :status')->setParameter('status', SubmissionStatus::Withdrawn);
-            }
-
-            return $qb;
-        };
-
         /** @var list<string> $letters */
         $letters = $db->fetchFirstColumn(
             'SELECT DISTINCT letter FROM submission WHERE user_id = :uid ORDER BY letter',
             ['uid' => $userId],
         );
 
-        $pager = Pager::of(
+        // Route proposals are contributions under their own chip, letter R:
+        // listed under All and under Routes, hidden by another kind's chip and
+        // by the withdrawn view (a proposal has no withdrawn state).
+        $routeCount = (int) $em->getRepository(RecommendedRoute::class)->count(['proposedBy' => $userId]);
+        $showRoutes = \in_array($letterFilter, ['', ItemType::QualityRides->letter()], true) && '' === $statusFilter;
+
+        [$pager, $entries] = $this->contributionsPage(
+            $em,
+            $db,
+            $userId,
+            $retention->cutoff(),
+            $letterFilter,
+            $statusFilter,
+            $showRoutes,
             $request->query->getInt('page', 1),
-            (int) $contributionsQuery($em)->select('COUNT(s.id)')->getQuery()->getSingleScalarResult(),
             $pageSize->resolve(self::PER_PAGE),
         );
-
-        /** @var list<Submission> $contributions */
-        $contributions = $contributionsQuery($em)
-            ->select('s')
-            ->orderBy('s.createdAt', 'DESC')
-            ->addOrderBy('s.id', 'DESC')
-            ->setFirstResult($pager['offset'])
-            ->setMaxResults($pager['perPage'])
-            ->getQuery()
-            ->getResult();
+        $contributions = array_values(array_filter(array_map(
+            static fn (array $e): ?Submission => $e['sub'] ?? null,
+            $entries,
+        )));
 
         $regionIds = array_values(array_unique(array_filter(array_map(
-            static fn (Submission $s): ?int => $s->getRegionId(),
-            $contributions,
+            static fn (array $e): ?int => ($e['sub'] ?? $e['route'])?->getRegionId(),
+            $entries,
         ))));
         $regionNames = [] === $regionIds ? [] : $db->fetchAllKeyValue(
             'SELECT id, name FROM region WHERE id IN (:ids)',
@@ -142,26 +130,14 @@ final class ProfileController extends AbstractController
             ['ids' => ArrayParameterType::INTEGER],
         );
 
-        $routePager = Pager::of(
-            $request->query->getInt('rpage', 1),
-            (int) $em->getRepository(RecommendedRoute::class)->count(['proposedBy' => $userId]),
-            $pageSize->resolve(self::PER_PAGE),
-        );
-
         return $this->render('profile/show.html.twig', [
             'page_title' => 'meta.profile_title',
             'page_description' => 'meta.profile_description',
             'nav_active' => '',
             'cc_user' => $user,
-            'contributions' => $contributions,
+            'entries' => $entries,
             'pager' => $pager,
-            'route_pager' => $routePager,
-            'letter_chips' => array_values(array_filter(array_map(
-                static fn (ItemType $t): ?array => \in_array($t->letter(), $letters, true)
-                    ? ['letter' => $t->letter(), 'labelKey' => $t->labelKey()]
-                    : null,
-                ItemType::cases(),
-            ))),
+            'letter_chips' => $this->letterChips($letters, $routeCount > 0),
             // Letter → label key for every type, so a card can name what kind
             // of place it is about, not only "New item" (owner 2026-08-25).
             'letter_labels' => array_combine(
@@ -184,12 +160,6 @@ final class ProfileController extends AbstractController
                 },
                 [],
             ),
-            'route_proposals' => $em->getRepository(RecommendedRoute::class)->findBy(
-                ['proposedBy' => $userId],
-                ['createdAt' => 'DESC', 'id' => 'DESC'],
-                $routePager['perPage'],
-                $routePager['offset'],
-            ),
             // docs/specs/route-domain.md §6 — ballots private to the voter.
             'votes' => $db->fetchAllAssociative(
                 'SELECT rv.season, rv.bike_type, rv.created_at, rr.id AS route_id, rr.name
@@ -211,6 +181,110 @@ final class ProfileController extends AbstractController
             ),
             'curating' => $this->curatingContext($db, $user),
         ]);
+    }
+
+    /**
+     * One page of the rider's contributions: place submissions and route
+     * proposals in one list, newest first, paged in SQL over the union of
+     * both so a route never sits behind a page of places.
+     *
+     * Submissions follow the retention rule (moderation-and-contribution.md
+     * §8): a rejected or withdrawn row past the cutoff is hidden even before
+     * the sweep deletes it. Route proposals join only when `$withRoutes`.
+     *
+     * @return array{0: array{page: int, pages: int, total: int, perPage: int, offset: int, prev: int|null, next: int|null}, 1: list<array{sub: Submission|null, route: RecommendedRoute|null}>}
+     *
+     * @see docs/specs/account-and-auth.md (Contributions pane)
+     */
+    private function contributionsPage(
+        EntityManagerInterface $em,
+        Connection $db,
+        int $userId,
+        \DateTimeImmutable $cutoff,
+        string $letterFilter,
+        string $statusFilter,
+        bool $withRoutes,
+        int $page,
+        int $perPage,
+    ): array {
+        $params = [
+            'uid' => $userId,
+            'swept' => [SubmissionStatus::Rejected->value, SubmissionStatus::Withdrawn->value],
+            'cutoff' => $cutoff->format('Y-m-d H:i:s'),
+        ];
+        $types = ['swept' => ArrayParameterType::STRING];
+        $where = 's.user_id = :uid AND (s.status NOT IN (:swept) OR s.decided_at IS NULL OR s.decided_at >= :cutoff)';
+        if ('' !== $letterFilter) {
+            $where .= ' AND s.letter = :letter';
+            $params['letter'] = $letterFilter;
+        }
+        if ('' !== $statusFilter) {
+            $where .= ' AND s.status = :status';
+            $params['status'] = SubmissionStatus::Withdrawn->value;
+        }
+        $union = "SELECT 'sub' AS kind, s.id, s.created_at FROM submission s WHERE ".$where;
+        if ($withRoutes) {
+            $union .= " UNION ALL SELECT 'route' AS kind, r.id, r.created_at FROM recommended_route r WHERE r.proposed_by = :uid";
+        }
+
+        $pager = Pager::of($page, (int) $db->fetchOne('SELECT COUNT(*) FROM ('.$union.') c', $params, $types), $perPage);
+
+        /** @var list<array{kind: string, id: int|string}> $rows */
+        $rows = $db->fetchAllAssociative(
+            'SELECT kind, id FROM ('.$union.') c ORDER BY created_at DESC, kind, id DESC LIMIT :limit OFFSET :offset',
+            [...$params, 'limit' => $pager['perPage'], 'offset' => $pager['offset']],
+            [...$types, 'limit' => ParameterType::INTEGER, 'offset' => ParameterType::INTEGER],
+        );
+
+        $ids = ['sub' => [], 'route' => []];
+        foreach ($rows as $row) {
+            $ids['sub' === $row['kind'] ? 'sub' : 'route'][] = (int) $row['id'];
+        }
+        $subs = [];
+        foreach ([] === $ids['sub'] ? [] : $em->getRepository(Submission::class)->findBy(['id' => $ids['sub']]) as $s) {
+            $subs[(int) $s->getId()] = $s;
+        }
+        $routes = [];
+        foreach ([] === $ids['route'] ? [] : $em->getRepository(RecommendedRoute::class)->findBy(['id' => $ids['route']]) as $r) {
+            $routes[(int) $r->getId()] = $r;
+        }
+
+        $entries = [];
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+            $entry = 'sub' === $row['kind']
+                ? ['sub' => $subs[$id] ?? null, 'route' => null]
+                : ['sub' => null, 'route' => $routes[$id] ?? null];
+            if (null !== $entry['sub'] || null !== $entry['route']) {
+                $entries[] = $entry;
+            }
+        }
+
+        return [$pager, $entries];
+    }
+
+    /**
+     * The kind chips over the Contributions list: Routes first (the rider's
+     * route proposals and any route submission share letter R), then one chip
+     * per catalog type the rider has a submission of.
+     *
+     * @param list<string> $letters letters of the rider's submissions
+     *
+     * @return list<array{letter: string, labelKey: string}>
+     */
+    private function letterChips(array $letters, bool $hasRouteProposals): array
+    {
+        $routes = ItemType::QualityRides->letter();
+        $chips = $hasRouteProposals || \in_array($routes, $letters, true)
+            ? [['letter' => $routes, 'labelKey' => 'nav.routes']]
+            : [];
+        foreach (ItemType::cases() as $t) {
+            if (ItemType::QualityRides !== $t && \in_array($t->letter(), $letters, true)) {
+                $chips[] = ['letter' => $t->letter(), 'labelKey' => $t->labelKey()];
+            }
+        }
+
+        return $chips;
     }
 
     /**

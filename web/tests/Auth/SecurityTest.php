@@ -82,9 +82,9 @@ final class SecurityTest extends WebTestCase
         $client->submit($form);
 
         // form_login posts to check_path (same /login); LoginSuccessHandler then
-        // sends a plain user on their first sign-in to their contributions
-        // (/account/contributions), not home.
-        self::assertResponseRedirects('/account/contributions');
+        // sends a plain user on their first sign-in to their profile
+        // (/account/settings), not home.
+        self::assertResponseRedirects('/account/settings');
         $client->followRedirect();
         self::assertResponseIsSuccessful();
     }
@@ -96,7 +96,7 @@ final class SecurityTest extends WebTestCase
         $email = 'rider-back@example.com';
         $plain = $this->createVerifiedUser($email, 'hunter2secure!');
 
-        foreach (['/account/contributions', '/account'] as $landing) {
+        foreach (['/account/settings', '/account'] as $landing) {
             $client->restart();
             $crawler = $client->request('GET', '/login');
             $client->submit($crawler->selectButton('Sign in')->form([
@@ -129,7 +129,7 @@ final class SecurityTest extends WebTestCase
         ]);
         $form['_remember_me']->tick();
         $client->submit($form);
-        self::assertResponseRedirects('/account/contributions');
+        self::assertResponseRedirects('/account/settings');
         self::assertNotNull($client->getCookieJar()->get('REMEMBERME'), 'the remember-me cookie was set');
 
         // Age the clock and leave a warning on file, then drop the session so

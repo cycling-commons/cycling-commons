@@ -3,7 +3,7 @@
    curated/DB-backed item once. ITEM_INDEX/IDX_IDS stay private behind readers
    because an ES import cannot reassign them. rebuildItemIndex() rebuilds both. */
 import { CATALOG, layerByKey } from './catalog.js';
-import { slug, haversine, featurePoint } from './util.js';
+import { slug, haversine, pinPoint } from './util.js';
 import { openLocalFeature, openStayAuthority, openPoolFeature } from './places.js';
 import { layerGlyph } from './icons.js';
 
@@ -46,9 +46,11 @@ export function buildItemIndex(){
   // OUR row, not its OpenStreetMap twin, or a registry tap lists at the
   // twin's position with no tier (owner, 2026-09-06: "highlight not on the
   // right spot", "why does this one have no tag").
+  // `ll` is where the map draws the pin (util.js pinPoint): a climb's foot,
+  // not its stored point, so every list that rings an entry rings the pin.
   CATALOG.forEach(layer=>(layer.features||[]).forEach(f=>{ if(!f.name && f.id==null) return;
     push({name:f.name||layer.label||'', unnamed:f.unnamed||!f.name, key:slug((f.name||'')+' '+(layer.label||'')), kind:layer.label||'', badge:layerGlyph(layer)||'•',
-      color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:featurePoint(f), id:f.id,
+      color:layer.color||'#6b6f5e', letter:layer.letter||'•', ll:pinPoint(f), id:f.id,
       rid:f.rid,
       // Real signal only (docs/specs/map-and-search.md §12) — never the demo 'c'.
       verified: f.state ? f.state==='verified' : !!(f.v || f.cur),

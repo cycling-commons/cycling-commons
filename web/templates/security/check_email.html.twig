@@ -18,6 +18,10 @@
       {% include 'security/_check_inbox_icon.html.twig' %}
 
       <p>{{ 'security.check_email.body'|trans }}</p>
+      {# The display-name hint for a visitor without JavaScript (account-and-auth.md §9). #}
+      {% if name_in_use is defined %}
+        <p class="name-hint" data-name-hint data-state="{{ name_in_use ? 'shared' : 'free' }}">{{ (name_in_use ? 'form.display_name_shared' : 'form.display_name_free')|trans }}</p>
+      {% endif %}
       <p style="margin-top:1rem;font-size:.9rem;color:#5a5d4d">
         {{ 'security.check_email.no_email'|trans({'%url%': path('verify_resend')})|rich }}
       </p>

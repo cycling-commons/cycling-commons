@@ -49,7 +49,7 @@
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
 {# No nonce: script-src names the analytics host directly, so neither this file
    nor the cross-origin script it injects needs one (page-caching.md §3.2). #}
-{% if analytics_enabled %}<script defer src="{{ asset('js/analytics.js') }}"></script>{% endif %}
+{% if analytics_on_page() %}<script defer src="{{ asset('js/analytics.js') }}"></script>{% endif %}
 <script defer src="{{ asset('js/nav-menus.js') }}"></script>
 </head>
 <body>

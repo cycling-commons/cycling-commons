@@ -122,6 +122,74 @@ final class SeedClimbsCommandTest extends KernelTestCase
         self::assertSame('From Testville', $item['attrs']['approach']);
     }
 
+    /**
+     * A climb's point is its foot (owner 2026-09-30), and so is its region: a
+     * side whose col is outside every region but whose foot is inside one is
+     * seeded, pinned and filed at the foot.
+     */
+    public function testASideIsPinnedAndFiledAtItsFoot(): void
+    {
+        $this->seedRegion();
+        $tester = $this->tester();
+        // Summit first, as the harvester writes it: the col at 6.60 is east of
+        // the region's edge (6.5), the foot at 6.45 inside it.
+        $tester->execute(['artifact' => $this->artifact([self::row([
+            'name' => 'Border Pass',
+            'line' => [[50.40, 6.60], [50.39, 6.55], [50.38, 6.50], [50.37, 6.45]],
+        ])])]);
+        $tester->assertCommandIsSuccessful();
+
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $row = $db->fetchAssociative(
+            "SELECT ST_Y(i.geom) AS lat, ST_X(i.geom) AS lng, r.slug
+               FROM item i LEFT JOIN region r ON r.id = i.region_id
+              WHERE i.letter = 'N' AND i.name = 'Border Pass from Testville'",
+        );
+        self::assertIsArray($row);
+        self::assertEqualsWithDelta([50.37, 6.45], [(float) $row['lat'], (float) $row['lng']], 1e-9);
+        self::assertSame('seed-climb-land', $row['slug']);
+    }
+
+    /**
+     * A second side of a climb another seed already holds is its own row.
+     *
+     * Côte de Mont-le-Soie: the Wallonia harvest holds the Grand-Halleux side
+     * under the bare Q-id, and the south side Liège-Bastogne-Liège rides comes
+     * from tools/wikimedia/out/2026-09-30-mont-le-soie/climb-review.json as
+     * side 1. The two refs differ, the names differ, the feet are 4 km apart,
+     * so the held row is neither overwritten nor mistaken for a duplicate.
+     */
+    public function testASecondSideBesideAHarvestedClimbIsItsOwnRow(): void
+    {
+        $this->seedRegion();
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('N', 'Côte de Mont-le-Soie', ST_SetSRID(ST_MakePoint(5.922111, 50.325189), 4326), 'BE',
+                     'unverified', 'wikidata', 'Q109019202', '{}', NOW(), NOW())",
+        );
+
+        $tester = $this->tester();
+        $tester->execute(['artifact' => $this->artifact([self::row([
+            'name' => 'Côte de Mont-le-Soie', 'qid' => 'Q109019202', 'side_index' => 1,
+            'foot_place' => 'Petit-Thier', 'length_m' => 4234,
+            'line' => [[50.323033, 5.9596], [50.312009, 5.962899], [50.302612, 5.965139], [50.296398, 5.958409]],
+        ])])]);
+        $tester->assertCommandIsSuccessful();
+
+        $item = $this->stored('Côte de Mont-le-Soie from Petit-Thier');
+        self::assertIsArray($item);
+        self::assertSame('wikidata:Q109019202:1', $item['ref']);
+        self::assertSame([50.296398, 5.958409], $item['attrs']['route'][0]);
+        self::assertSame('From Petit-Thier', $item['attrs']['approach']);
+        self::assertSame(
+            'Côte de Mont-le-Soie',
+            $db->fetchOne("SELECT name FROM item WHERE source = 'wikidata' AND source_ref = 'Q109019202'"),
+        );
+    }
+
     /** A col the harvester took from OpenStreetMap is filed under osm, ref and all. */
     public function testAnOpenStreetMapColKeepsItsOwnProvenance(): void
     {

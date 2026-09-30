@@ -13,9 +13,14 @@
 A linear feature (foot → summit) with a gradient profile; the layer that closed databases lock down.
 
 **Where a climb is listed besides its own pin.** A recommended route's drawer lists
-"Climbs on this route": every served climb the route rides for at least 30% of the
-climb's `route` line, foot to summit, in order along the route, with its average
-gradient. The rule (40 m tolerance, share, direction) is in
+"Climbs on this route": every served climb the route rides upward for at least 30% of
+the climb's `route` line, in order along the route, with its average gradient. The
+ridden part may start partway up: a route that joins the climb halfway and rides to
+the summit lists it, from where it joins; a route that rides the same part summit
+first, downhill, does not, and neither does one that leaves the climb more than
+2 km below its summit. A climb near the route that it does not ride is in the
+drawer's along list instead, in its climbs group. The rule (40 m tolerance,
+share, direction, top part) is in
 [route-domain.md](../route-domain.md) §6.4, the drawer rows in
 [map-and-search.md](../map-and-search.md) §6.3. Because the test reads `route` foot
 first, a climb whose line runs past its summit or starts below its foot changes
@@ -35,6 +40,14 @@ submission boundary by `App\Contribution\ClimbGeometry::fromPayload()`):
 | `lineGrad` | list of numbers | per-position gradients that colour the map line (the bars use `grad`) |
 | `length` · `gain` · `binM` · `demSource` | numbers / string | derived and stored ([../climb-elevation.md §4](../climb-elevation.md)) |
 
+**The climb's point is its foot.** `item.geom` is `route[0]` whenever the climb has a
+usable line (at least two pairs, the first numeric), kept by the database on every
+write ([../catalog-data-model.md §6a](../catalog-data-model.md)). The pin, the region
+the climb is filed in, and the duplicate check all sit at the foot; a climb with no
+line keeps the point it was given. The edit arm moves no pin of its own for a climb
+with a line: redrawing the line moves the point to the new foot when the edit is
+approved.
+
 Validation invariants (`App\Contribution\ClimbGeometry`): `route`/`grad` are capped at
 `ClimbGeometry::MAX_POINTS` (currently 8000) entries; coordinates must be finite and in
 range (lat −90..90, lng −180..180); `steep.pct` must match a gradient shape
@@ -51,7 +64,8 @@ wizard; see the dated note below.) Markers are labelled to make direction unambi
 (labels come from the `js.climb_marker_*` translation keys via `window.CC_EDITOR_LABELS`).
 The editor writes the attributes into hidden form fields on `App\Form\ImproveType`
 (`route`/`grad`/`steep`, plus `avg` and `steepPoint`; the add arm also fills `lat`/`lng`
-from the foot, because a climb's pin is its foot).
+from the foot, and the server pins the new climb at the foot of its `route` whatever
+`lat`/`lng` arrive).
 
 **Auto-routing.** Placing or moving foot + summit auto-routes the road between them via
 `POST /contribute/route` (`App\Elevation\RouteSnapper`, our own Valhalla, `bicycle`

@@ -308,6 +308,54 @@ final class CatalogProvider
     }
 
     /**
+     * Every region a served route's line passes through, its own region
+     * first, so a `?route=` link loads the places along the whole route before
+     * the first paint (catalog-data-model.md §9.1). A route inside one region
+     * answers that region, {@see CatalogStamps::NO_REGION} when no region holds
+     * it, and empty when nothing by that id is on the map.
+     *
+     * @return list<int>
+     */
+    public function servedRouteRegions(int $id): array
+    {
+        /** @var array{own: int|string, rids: string|null}|false $row */
+        $row = $this->db->fetchAssociative(
+            'SELECT COALESCE(rr.region_id, 0) AS own, '.self::routeRegionsSql().'
+               FROM recommended_route rr WHERE rr.id = :id AND rr.state IN '.ItemState::servedSqlTuple(),
+            ['id' => $id],
+        );
+        if (false === $row) {
+            return [];
+        }
+        /** @var list<int|string> $rids */
+        $rids = null === $row['rids'] ? [$row['own']] : json_decode($row['rids'], true, 512, \JSON_THROW_ON_ERROR);
+
+        return array_map(intval(...), $rids);
+    }
+
+    /**
+     * The operational regions a route's line passes through (alias `rr`), as a
+     * JSON array with the route's own region first and the rest by id. A
+     * route that leaves its own region needs all of them in the map's scope,
+     * or the places along the part outside it stay hidden
+     * (map-and-search.md §8).
+     *
+     * NULL for a route its own region covers, which is nearly every route.
+     * That test runs first because it is the cheap one: every route of a
+     * region slice shares the one region outline, which PostGIS prepares once
+     * for the whole slice. Testing each route against every region whose box
+     * it touches instead costs about 80 ms a route on a detailed outline
+     * (Wallonia is 47,000 points).
+     */
+    private static function routeRegionsSql(): string
+    {
+        return 'CASE WHEN (SELECT ST_Covers(o.geom, rr.geom) FROM region o WHERE o.id = rr.region_id) THEN NULL
+                ELSE (SELECT json_agg(g.id ORDER BY g.id IS DISTINCT FROM rr.region_id, g.id)
+                        FROM region g
+                       WHERE ST_Intersects(g.geom, rr.geom) AND '.OperationalRegions::predicate('g').') END AS rids';
+    }
+
+    /**
      * The regions a `?feature=<name>` link may mean: every region holding a
      * served item or route of exactly that name (case aside), so the map's
      * own name lookup finds it among the rows it loaded.
@@ -602,11 +650,12 @@ final class CatalogProvider
         if (null !== $regionId) {
             $where .= ' AND '.CatalogStamps::regionSql('', $regionId);
         }
-        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, pin_lat: float|string|null, pin_lng: float|string|null}> $rows */
+        /** @var list<array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, rids: string|null, pin_lat: float|string|null, pin_lng: float|string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state, region_id,
+                    '.self::routeRegionsSql().',
                     ST_Y(ST_PointOnSurface(geom)) AS pin_lat, ST_X(ST_PointOnSurface(geom)) AS pin_lng
-             FROM recommended_route WHERE '.$where.' ORDER BY id',
+             FROM recommended_route rr WHERE '.$where.' ORDER BY id',
             $params,
         );
 
@@ -624,11 +673,12 @@ final class CatalogProvider
      */
     public function submittedRoute(int $id): ?array
     {
-        /** @var array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, proposed_by: int|null, pin_lat: float|string|null, pin_lng: float|string|null}|false $row */
+        /** @var array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, rids: string|null, proposed_by: int|null, pin_lat: float|string|null, pin_lng: float|string|null}|false $row */
         $row = $this->db->fetchAssociative(
-            "SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state, region_id, proposed_by,
+            'SELECT id, name, ST_AsGeoJSON(geom) AS geom, distance_m, ascent_m, attributes, source, state, region_id, proposed_by,
+                    '.self::routeRegionsSql().",
                     ST_Y(ST_PointOnSurface(geom)) AS pin_lat, ST_X(ST_PointOnSurface(geom)) AS pin_lng
-             FROM recommended_route WHERE id = :id AND state = 'submitted'",
+             FROM recommended_route rr WHERE id = :id AND state = 'submitted'",
             ['id' => $id],
         );
         if (false === $row) {
@@ -646,7 +696,7 @@ final class CatalogProvider
     }
 
     /**
-     * @param array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, pin_lat: float|string|null, pin_lng: float|string|null} $row
+     * @param array{id: int, name: string, geom: string, distance_m: int, ascent_m: int, attributes: string, source: string, state: string, region_id: int|null, rids: string|null, pin_lat: float|string|null, pin_lng: float|string|null} $row
      *
      * @return array<string, mixed>
      */
@@ -661,6 +711,13 @@ final class CatalogProvider
         // docs/specs/map-and-search.md §4.5
         if (null !== $row['region_id']) {
             $route['rid'] = (int) $row['region_id'];
+        }
+        // A line that passes through more than one region names them all, so
+        // opening it can scope the map to the whole route (map-and-search.md §8).
+        /** @var list<int|string> $rids */
+        $rids = null === $row['rids'] ? [] : json_decode($row['rids'], true, 512, \JSON_THROW_ON_ERROR);
+        if (\count($rids) > 1) {
+            $route['rids'] = array_map(intval(...), $rids);
         }
         if (isset($attrs['season'])) {
             $route['season'] = $attrs['season'];

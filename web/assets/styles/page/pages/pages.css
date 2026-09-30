@@ -5,12 +5,19 @@
 .dirnote{font-size:.85rem;color:#4a4d40;margin-top:1.2rem}
 /* The toggle: two chips (atlas.css), the current view in ink. */
 .dirtoggle{margin:0}
-/* The map. Pans sideways on a narrow screen rather than shrinking to a smudge. */
+/* The map. The wide drawing needs 820px and never shrinks to a smudge; at 880px of window or
+   less (a phone, or a tablet held upright) the tall drawing (a strip map, 340 units wide) takes
+   its place and the page scrolls down only. The strip stops growing at 440px so a large screen
+   keeps small type. */
 .pmap-wrap{overflow-x:auto;border:1px solid rgba(20,22,14,.14);border-radius:8px;background:var(--paper)}
-.pmap{display:block;min-width:820px;width:100%;height:auto;font-family:var(--sans)}
+.pmap{display:block;width:100%;height:auto;font-family:var(--sans)}
+.pmap-wide{min-width:820px}
+.pmap-tall{display:none;max-width:440px;margin:0 auto}
+@media(max-width:880px){.pmap-wide{display:none}.pmap-tall{display:block}.pmap-wrap{overflow-x:visible}}
 /* Roads and borders: one set of rules for the map and for the key's samples. */
 .pmap .land,.pkey .land{fill:var(--paper-deep);fill-opacity:.55;stroke:var(--ink);stroke-width:1;stroke-dasharray:7 4 1.5 4;stroke-opacity:.7}
 .pmap .land-name{font-family:var(--serif);font-weight:600;font-size:17px;fill:var(--ink)}
+.pmap-tall .land-name{font-size:15px}
 .pmap .road,.pkey .road{fill:none;stroke:var(--ink);stroke-linecap:round}
 .pmap .road-main,.pkey .road-main{stroke-width:3.5}
 .pmap .road-trail,.pkey .road-trail{stroke-width:2;stroke-dasharray:8 6;stroke:var(--clay)}

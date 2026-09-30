@@ -299,12 +299,13 @@
       }
     });
 
-    /* Known-places overlay (ADD): nearby coverage so the pin is not a duplicate. */
+    /* Known-places overlay (ADD, and the rider's own new place while it
+       waits): nearby coverage so the pin is not a duplicate. */
     // Below this the dots would be a smear rather than an answer, and the
     // request would cover more ground than a rider is looking at.
     var COV_MIN_ZOOM = 11;
     var covLetter = window.CC_ITEM && window.CC_ITEM.letter;
-    if (ADD && covLetter && 'N' !== covLetter) {
+    if ((ADD || _itemPos.similar) && covLetter && 'N' !== covLetter) {
       var covMarkers = [];
       var covLast = null;
       var covNote = document.getElementById('wz-known');

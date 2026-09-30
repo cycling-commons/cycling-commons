@@ -197,9 +197,10 @@
   .osm-chip--linked:hover{background:rgba(47,107,63,.08)}
   .osm-chip--none{color:#595c4d;border-color:rgba(20,22,14,.3)}
   /* What approving retires (catalog-data-model.md §5a). */
-  .q-replaces{margin:.4rem 0 0;font-size:.82rem;color:#3a3d30}
-  .q-replaces-h{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:#A0472A}
-  .q-replaces ul{margin:.15rem 0 0;padding-left:1.1rem;line-height:1.45}
+  .q-replaces{margin:.5rem 0 0;padding:.5rem .7rem;font-size:.88rem;color:#14160E;font-weight:600;
+    border:1px solid #A0472A;border-left-width:4px;border-radius:6px;background:rgba(228,80,42,.08)}
+  .q-replaces-h{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#A0472A;font-weight:700}
+  .q-replaces ul{margin:.2rem 0 0;padding-left:1.1rem;line-height:1.5}
   /* The candidates open as a popover under the chip, not inside the meta line. */
   .q-osm-chip{display:inline-block;position:relative}
   .q-osm-chip > .q-act-panel{position:absolute;left:0;top:calc(100% + .3rem);z-index:20;width:max-content;min-width:12rem;max-width:min(28rem,90vw);padding-right:1.9rem;background:var(--paper);box-shadow:0 14px 30px -16px rgba(20,22,14,.5)}

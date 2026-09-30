@@ -92,6 +92,49 @@ final class SimilarPlacesFlowTest extends WebTestCase
         self::assertSame(ItemState::Unverified, $em->find(Item::class, $new->getId())?->getState());
     }
 
+    /**
+     * The rider opens their still-waiting new place again: the similar places
+     * are asked again with their own ticks, and sending the form keeps what
+     * the first round stored beside them (production, 2026-09-29).
+     */
+    public function testARevisionAsksAgainAndKeepsWhatTheFirstRoundStored(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'revise');
+        $provider = $this->seed();
+
+        $crawler = $client->request('GET', '/improve?ref='.self::TAP.'&type=water-food&lat='.self::LAT.'&lng='.self::LNG);
+        $client->submit($crawler->selectButton('Next →')->form([
+            'improve[details][potable]' => 'Yes (public supply)',
+            'improve[lat]' => (string) self::LAT,
+            'improve[lng]' => (string) self::LNG,
+            'improve[place]' => 'Medemblik',
+            'improve[replaces]' => 'item:'.$provider,
+        ]));
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $new = $em->getRepository(Item::class)->findOneBy(['sourceRef' => self::TAP]);
+        self::assertInstanceOf(Item::class, $new);
+
+        $crawler = $client->request('GET', '/improve?item='.$new->getId().'&type=water-food');
+        self::assertResponseIsSuccessful();
+        $box = $crawler->filter('#wz-similar');
+        self::assertCount(1, $box, 'the similar places are asked again on the waiting place');
+        self::assertSame(['item:'.$provider], json_decode((string) $box->attr('data-ticks'), true), "the rider's own ticks come back");
+        self::assertSame((string) $new->getId(), $box->attr('data-item'), 'the place is never similar to itself');
+        self::assertSame(self::TAP, $box->attr('data-ref'), 'nor the OSM point it is');
+
+        // Only the ticks change: that is a revision, not "nothing changed".
+        $client->submit($crawler->selectButton('Next →')->form(['improve[replaces]' => '']));
+        self::assertSelectorTextContains('.receipt .ref', 'SUB-');
+
+        $em->clear();
+        $submission = $em->getRepository(Submission::class)->findOneBy(['itemId' => $new->getId()]);
+        self::assertInstanceOf(Submission::class, $submission);
+        $payload = $submission->getPayload();
+        self::assertSame([], $payload['_replaces'], 'the revision says what is ticked now');
+        self::assertSame(self::TAP, $payload['_osm_ref'] ?? null, 'the first round stays beside it');
+    }
+
     /** The tap as OSM has it, a bakery, a second tap, and a provider's record. @return int the record's id */
     private function seed(): int
     {

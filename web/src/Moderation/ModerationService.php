@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Moderation;
 
+use App\Catalog\ClimbFoot;
 use App\Catalog\ConfirmationStance;
 use App\Catalog\Entity\ChangeHistory;
 use App\Catalog\Entity\Item;
@@ -341,6 +342,11 @@ final class ModerationService
         }
         if ($changed) {
             $item->setAttributes($attributes); // also bumps updated_at
+            // A climb's point is the foot of its line (ClimbFoot), after a redrawn line or a moved pin alike.
+            $foot = ItemType::Climbs->letter() === $item->getLetter() ? ClimbFoot::of($attributes['route'] ?? null) : null;
+            if (null !== $foot) {
+                $item->setGeom(json_encode(['type' => 'Point', 'coordinates' => [$foot[1], $foot[0]]], \JSON_THROW_ON_ERROR));
+            }
         }
     }
 

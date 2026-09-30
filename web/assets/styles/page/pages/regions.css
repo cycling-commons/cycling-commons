@@ -125,3 +125,7 @@ a.reg:hover{border-color:var(--spruce-lift)}
 #cc-country-hits a{display:flex;justify-content:space-between;padding:.45rem .7rem;border:1px solid rgba(20,22,14,.1);border-radius:8px;margin-top:.4rem;text-decoration:none;color:inherit}
 #cc-country-hits a:hover{border-color:var(--spruce-lift)}
 #cc-country-hits .cc{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:#7a7d6c;text-transform:uppercase}
+/* The typeahead's "nothing matches" line, and its match count for a screen
+   reader, which is kept out of sight. */
+#cc-country-hits .none{margin:.6rem 0 0;font-size:.9rem;color:#4a4d40}
+.yourc .cc-vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

@@ -8,7 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { alongListHtml, routeAlongSlot, listWaitHtml } from '../../assets/map/along-list.js';
 
-const metaFor = letter => ({ B: { color: '#1E88E5', label: 'Water', glyph: 'W' }, D: { color: '#6D4C41', label: 'Repair', glyph: 'R' } }[letter] || null);
+const metaFor = letter => ({ B: { color: '#1E88E5', label: 'Water', glyph: 'W' }, D: { color: '#6D4C41', label: 'Repair', glyph: 'R' }, N: { color: '#8E3B2E', label: 'Climbs', glyph: '▲' } }[letter] || null);
 const labels = {
   commonsH: 'In the commons along the route', coverageH: 'Open coverage along the route',
   empty: 'Nothing within 250 m yet.', capped: '(capped)', kmOff: '{a} along · {b} off', covNote: 'From open data.',
@@ -72,4 +72,30 @@ test('the route drawer slot shows that it is looking while the list is on its wa
 test('the waiting line is the drawer spinner with an escaped label', () => {
   assert.equal(listWaitHtml('<b>Wait</b>'),
     '<div class="cc-d-photo-wait cc-d-list-wait"><span class="cc-d-spin" aria-hidden="true"></span><span role="status">&lt;b&gt;Wait&lt;/b&gt;</span></div>');
+});
+
+test('the climbs group is a group like the others: the climb glyph and colour, km along and metres off, no tag', () => {
+  const near = { groups: [
+    { letter: 'B', truncated: false, items: [{ id: 43008, name: 'Source Barisart', alongKm: 3.4, distM: 34, ll: [50.5, 5.8] }] },
+    { letter: 'N', truncated: false, items: [
+      { id: 3125, name: 'Côte de la Haute-Levée', alongKm: 26.2, distM: 0, ll: [50.44, 5.93], avgGradient: '5.0%' },
+      { id: 24405, name: 'Thier Antoine', alongKm: 27.7, distM: 28, ll: [50.43, 5.9], avgGradient: '8.7%' },
+    ] },
+  ], coverage: [] };
+  const html = alongListHtml(near, { metaFor, labels });
+  assert.match(html, /<span class="cc-near-k" style="background:#8E3B2E;color:[^"]+">▲<\/span>Climbs · 2<\/li>/);
+  assert.match(html, /data-rc-g="N" data-rc-i="0"><span class="cc-near-nm">Côte de la Haute-Levée<\/span><em>26\.2 km along · 0 m off<\/em>/);
+  assert.match(html, /data-rc-g="N" data-rc-i="1"><span class="cc-near-nm">Thier Antoine<\/span><em>27\.7 km along · 28 m off<\/em>/);
+  assert.ok(html.indexOf('Water') < html.indexOf('Climbs'), 'groups keep the server\'s letter order');
+  assert.doesNotMatch(html, /cc-near-tag/);
+});
+
+test('a long climbs group folds after two rows like every other group', () => {
+  const items = [0, 1, 2, 3].map(i => ({ id: i + 1, name: `Climb ${i}`, alongKm: i, distM: 10 * i, ll: [50, 5] }));
+  const html = alongListHtml({ groups: [{ letter: 'N', truncated: false, items }], coverage: [] }, { metaFor, labels: { ...labels, more: 'Show {n} more' } });
+  const [shown, rest] = html.split('class="cc-near-rest"');
+  assert.equal([...shown.matchAll(/data-rc-g="N"/g)].length, 2, 'two rows before the fold');
+  assert.equal([...rest.matchAll(/data-rc-g="N"/g)].length, 2, 'two rows folded');
+  assert.match(html, />Show 2 more</);
+  assert.match(html, /Climbs · 4/);
 });

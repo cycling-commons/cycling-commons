@@ -120,9 +120,14 @@
       btn.setAttribute('aria-label', (label ? label + ': ' : '') + (o ? o.textContent : ''));
       items.forEach(function (li) { li.setAttribute('aria-selected', String(li._opt === o)); });
     }
+    /* An <optgroup> is drawn as a group with its label as a heading, so the
+       label is seen and read out with the options under it, and the options
+       keep their place in `items` by their index in `sel.options`. */
     function build() {
       list.textContent = '';
-      items = Array.prototype.map.call(sel.options, function (o, i) {
+      items = [];
+      function row(o, into) {
+        var i = items.length;
         var li = document.createElement('li');
         li.id = list.id + '-' + i;
         li.setAttribute('role', 'option');
@@ -131,8 +136,26 @@
         face(o).forEach(function (n) { li.appendChild(n); });
         li.addEventListener('mousemove', function () { setActive(i); });
         li.addEventListener('click', function () { choose(i); });
-        list.appendChild(li);
-        return li;
+        into.appendChild(li);
+        items.push(li);
+      }
+      Array.prototype.forEach.call(sel.children, function (child, g) {
+        if ('OPTION' === child.tagName) { row(child, list); return; }
+        if ('OPTGROUP' !== child.tagName) return;
+        var group = document.createElement('li');
+        group.setAttribute('role', 'group');
+        var head = document.createElement('div');
+        head.className = 'cc-sel-group';
+        head.id = list.id + '-g' + g;
+        head.setAttribute('aria-hidden', 'true');
+        head.textContent = child.label;
+        group.setAttribute('aria-labelledby', head.id);
+        var inner = document.createElement('ul');
+        inner.setAttribute('role', 'none');
+        group.appendChild(head);
+        group.appendChild(inner);
+        Array.prototype.forEach.call(child.children, function (o) { if ('OPTION' === o.tagName) row(o, inner); });
+        list.appendChild(group);
       });
       paint();
     }
@@ -142,7 +165,12 @@
       active = Math.max(0, Math.min(items.length - 1, i));
       items.forEach(function (li, j) { li.classList.toggle('active', j === active); });
       list.setAttribute('aria-activedescendant', items[active].id);
-      items[active].scrollIntoView({ block: 'nearest' });
+      /* The list scrolls, never the page: a page scroll would move the button
+         out from under a list that is fixed in place. The list is fixed, so
+         it is every row's offsetParent, grouped rows included. */
+      var li = items[active];
+      if (li.offsetTop < list.scrollTop) list.scrollTop = li.offsetTop;
+      else if (li.offsetTop + li.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = li.offsetTop + li.offsetHeight - list.clientHeight;
     }
     function step(dir) {
       for (var i = active + dir; i >= 0 && i < items.length; i += dir) {
@@ -182,6 +210,10 @@
       if (openBox && openBox !== api) openBox.close(false);
       build();
       theme();
+      /* The page scrolls smoothly, so a button just reached with Tab can
+         still be on its way into view when Enter opens it. Landing it now
+         places the list against where the button ends up. */
+      btn.scrollIntoView({ block: 'nearest', behavior: 'instant' });
       list.hidden = false;
       place();
       btn.setAttribute('aria-expanded', 'true');
@@ -189,12 +221,25 @@
       list.focus({ preventScroll: true });
       openBox = api;
     }
+    /* Focus that was in the list goes back to the button whenever the list
+       closes, so a keyboard is never left on a hidden element or the page
+       body. `refocus` only decides whether the page may scroll to it. */
     function close(refocus) {
       if (list.hidden) return;
+      var hadFocus = list.contains(document.activeElement);
       list.hidden = true;
       btn.setAttribute('aria-expanded', 'false');
       if (openBox === api) openBox = null;
       if (refocus) btn.focus();
+      else if (hadFocus) btn.focus({ preventScroll: true });
+    }
+    /* A scroll moves the list with its button, and closes it once the
+       button has left the window. */
+    function follow() {
+      if (list.hidden) return;
+      var r = btn.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) close(false);
+      else place();
     }
     function choose(i) {
       if (!usable(i)) return;
@@ -276,7 +321,7 @@
       if (kids) build(); else paint();
     }).observe(sel, { attributes: true, attributeFilter: ['class', 'disabled', 'required'], childList: true, subtree: true, characterData: true });
 
-    var api = { btn: btn, list: list, close: close, refresh: build };
+    var api = { btn: btn, list: list, close: close, follow: follow, refresh: build };
     boxes.set(sel, api);
     syncClass();
     build();
@@ -312,7 +357,7 @@
     }).observe(document.body, { childList: true, subtree: true });
     window.addEventListener('resize', closeOpen);
     document.addEventListener('scroll', function (e) {
-      if (openBox && !openBox.list.contains(e.target)) closeOpen();
+      if (openBox && !openBox.list.contains(e.target)) openBox.follow();
     }, true);
   }
 

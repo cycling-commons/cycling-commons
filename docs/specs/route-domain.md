@@ -7,7 +7,7 @@
 This document is the deep contract for item type **R · Quality rides**: how a
 route enters the system (GPX intake), who owns it (curators), how the
 community's voice works (typed votes, ride confirmations, located
-corrections — never edits), how volume stays bounded (the per-region cap),
+corrections, never edits once a curator has decided), how volume stays bounded (the per-region cap),
 and how best-of rankings are computed. The rider-facing digest lives in
 [edit-items/R-quality-rides.md](edit-items/R-quality-rides.md); the R
 carve-out from the generic item funnel is described in
@@ -20,10 +20,11 @@ carve-out from the generic item funnel is described in
 
 1. **A route is a curated composition, not an atomic map feature.** A ridden
    track plus editorial metadata. Riders *seed* supply (GPX proposal) but
-   curators *own* it: they approve, edit metadata, and retire. Riders never
-   edit route data: rider signal arrives as votes, ride confirmations,
-   moderated correction suggestions, and photos, which arrive as a photo
-   correction (route-domain.md §4.5). This also permanently retires the
+   curators *own* it: they approve, edit metadata, and retire. Until a
+   curator decides, the proposer may edit their own proposal (route-domain.md
+   §4.6); after that riders never edit route data: rider signal arrives as
+   votes, ride confirmations, moderated correction suggestions, and photos,
+   which arrive as a photo correction (route-domain.md §4.5). This also permanently retires the
    route-id/item-id collision bug class (`/improve` refuses `type=R`).
 2. **Purpose-built pipeline.** The route domain reuses nothing from the item
    `Submission`/`ModerationService` pipeline. Proposals are `RecommendedRoute`
@@ -221,7 +222,15 @@ the Python/PHP boundary rule). Order matters
 9. resolve `region_id`; persist `state = submitted`.
 
 The receipt is real and persisted (`CC-R%05d`), listed under "my
-contributions".
+contributions". On the thank-you state the reference and "Back to
+contributing" sit side by side, the same height, and stack on a phone. The
+reference is itself a link, labelled "Your reference CC-R00180: see it in your
+route proposals" for assistive technology, to
+`/account/contributions?letter=R#route-<id>`: the Routes chip of the rider's
+Contributions, scrolled to that route's card and outlined by the shared
+`:target` style ([account-and-auth.md](account-and-auth.md)). On the photos
+receipt for a live route the reference names the route, not a proposal of the
+rider's, so it stays a plain box beside "Back to the route".
 
 ### 4.3 Privacy trim (end-trim)
 
@@ -250,10 +259,11 @@ the contract is photo-uploads.md §5i):
 - **With a proposal.** A photo fieldset sits under the route details. The
   photos are claimed by the new route inside the proposal's transaction and
   decided with it: approving the proposal attaches the ticked photos to
-  `attributes.photos`, rejecting it rejects them.
+  `attributes.photos`, rejecting it rejects them. The proposer adds more on
+  their edit while it waits (§4.6), up to 6 in all.
 - **For a live route.** `/propose-route?route=<id>` (`ROLE_USER`, SERVED
   routes only, anything else is 404) renders the same form with photos and a
-  note only, because riders never edit a route's data (§1). Sending it creates
+  note only, because riders never edit a live route's data (§1). Sending it creates
   a `route_suggestion` with reason **`photo`** carrying the photos
   (`App\Contribution\RoutePhotoService`, consuming the `route_suggest`
   limiter, §10); it needs at least one photo. Marking the correction done on
@@ -263,6 +273,54 @@ the contract is photo-uploads.md §5i):
   photo links here (map-and-search.md §6). The drawer's JSON
   `POST /routes/{id}/suggest` refuses reason `photo` (422 `invalid_reason`):
   a photo correction carries photos, so it comes through this form.
+
+### 4.6 The proposer's edit while the proposal waits
+
+`/propose-route/{id}/edit` (`propose_route_edit`, `ROLE_USER`) reopens the
+proposal form for the rider who proposed route `{id}`, while its state is
+`submitted`. Anyone else's proposal, or an id that names none, is a 404; a
+proposal a curator has already decided redirects its proposer to
+`/account/contributions?letter=R#route-<id>` with the notice "A curator has
+already decided this route proposal, so it can no longer be edited. For a
+route on the map, ask for a change from its drawer." The Contributions card
+offers the **Edit** link only while the proposal is `submitted`
+([account-and-auth.md](account-and-auth.md)).
+
+- **The form** is `ProposeRouteType` with `proposal_edit`: the same registry
+  fields as the proposal (route-domain.md §9), prefilled from the row through
+  `RouteMetadata::formValues()`, and the GPX field optional. The photo
+  fieldset is the proposal's own (route-domain.md §4.5, photo-uploads.md
+  §5i): the photos already sent are shown above the uploader, and new ones
+  go through the same uploader, consent and validation, up to 6 photos on the
+  proposal in all ("This proposal already carries 6 photos, the most one
+  proposal can hold." replaces the uploader at 6). Sent photos cannot be
+  taken out one by one, the rule a place submission follows. The stored
+  line's `ST_PointOnSurface` is the uploader's pin until a new GPX is chosen.
+  The form carries the usual Symfony CSRF token; a POST without it
+  re-renders the form (422) and changes nothing.
+- **Saving** goes through `RouteProposalService::revise()`: the name and every
+  registry field pass the same intake gate as a proposal
+  (`RouteMetadata::canonical()`, an empty field leaving no key), and keys
+  outside the registry (`surfaces`, `photos`) are kept. New photos are
+  claimed by the proposal (`route_suggestion_id` null) inside the same
+  locked transaction, so they stay unpublished and are decided with it; a bad
+  id or a seventh photo refuses the whole save
+  (`contribute.error.media_invalid`). A new GPX runs the
+  whole pipeline again (route-domain.md §4.2, the privacy trim of
+  route-domain.md §4.3 included) and replaces `geom`, `distance_m`,
+  `ascent_m`, `region_id` and `attributes.surfaces`; without one the stored
+  track stays. The row is locked
+  (`SELECT … FOR UPDATE`) and its state read again inside the transaction,
+  so an edit racing a curator's decision ends in the same notice, never in a
+  change to a decided route. The `route_revise` limiter (route-domain.md §10)
+  bounds it.
+- **What the curator sees** is the saved version: the Routes desk's queue and
+  detail page read `recommended_route` directly, with no snapshot of the
+  proposal. The edit writes no `route_change_history` row, the same as the
+  first proposal: until a decision the proposal is the proposer's own text.
+- After saving, the rider lands on their Contributions (`?letter=R`, the
+  route's card anchored) under "Route proposal saved. The curator reviews this
+  version."
 
 ## 5. Desk moderation — `/moderate/routes`
 
@@ -500,10 +558,35 @@ the bulk payload.
 A climb (letter N) is a line from foot to summit (`attributes.route`, see
 [edit-items/N-climbs.md](edit-items/N-climbs.md)). It is listed on a route when
 the route really rides it, measured in PostGIS against the route's stored
-geometry (owner decision 2026-09-15):
+geometry (owner decision 2026-09-15). The ride check (map-and-search.md §9)
+lists the climbs a rider's GPX rides by the same rule, on the uploaded track,
+under "Climbs on your ride". The climbs whose line comes within the corridor
+of the line that it does not ride are **near**: they are the climbs group
+(letter N) of the along list, "In the commons along the route" for a route and
+"In the Commons along the track" for a ride, never in the ridden list (owner
+2026-09-30). One code path decides both: `RouteClimbService::climbsOn()` gives
+the route drawer's ridden climbs on the route's stored line, and
+`RouteClimbService::climbsAlong()` gives `{ridden, near}` on a GeoJSON line,
+the uploaded track for the ride check and the route's own line for its along
+list; both run the same ridden query, and the near query drops every climb the
+ridden one found, so no climb is listed twice. The corridor is the ride
+check's chosen radius for a GPX, and for the route drawer the corridor of its
+"Along this route" list below, 250 m (`RideCheckService::DEFAULT_RADIUS`). A
+near row's km is the line's point closest to the climb line (the earliest
+pass, to the metre, when the climb touches the line more than once), and its
+"off" is the metres between the two lines. On dev route 23 "Spa · Sankt Vith"
+the drawer's "Climbs on this route" reads Col du Rosier (km 3), and its along
+list's climbs group Thier Antoine (km 17.7, its foot passed at 28 m) and
+"Hockai · via RAVeL L44a" (km 115, 1% of its line within 40 m). The rules
+below decide what "ridden" means for both:
 
 - **Served climbs only**, by the catalog payload's rules: a served state
-  (`ItemState::servedSqlTuple()`) and not reported gone (`GoneRows`).
+  (`ItemState::servedSqlTuple()`) and not reported gone (`GoneRows`). A climb
+  whose `attributes.route` is not an array of at least two pairs has no line
+  to ride and is not listed.
+- **The line, not the stored point.** Only the climb line counts. The stored
+  point is the line's foot (catalog-data-model.md §6a) and plays no part in the
+  rule.
 - **Tolerance 40 m** (`RouteClimbService::TOLERANCE_M`): the climb line is cut
   with a 40 m geography buffer around the route, so a GPX recorded a few metres
   off the mapped road still matches. On the Belgian dev routes 30 m and 50 m
@@ -513,16 +596,83 @@ geometry (owner decision 2026-09-15):
   only part of a climb: Liège-Bastogne-Liège takes half of the Côte de Stockeu
   (owner 2026-09-15). A road the route only crosses shares a few dozen metres;
   passing near the foot is not riding it.
-- **Foot to summit only.** The shared part's points, read foot to summit, are
-  located on the route (`ST_LineLocatePoint`); the climb counts when they move
-  forward along the route (`ridesFootToSummit()`: each step votes with its
-  length, and a step of more than half the route is the seam of a loop, read the
-  short way round). A route that rides the climb downhill passes it but does not
-  climb it, and is not listed.
-- **km along** is where the route joins the shared part from the foot side
-  (its route fraction times the route's geodesic length), which is the foot
-  itself when the route rides the whole climb. Rows are ordered by it, one
-  decimal in the payload.
+- **Partway up counts.** The ridden part need not start at the foot. A route
+  that joins a climb partway up and rides it to the summit lists it when the
+  part it rides upward is at least 30% of the line, and its km along is where it
+  joins. For Côte de Mont-le-Soie (3548 m) that is 1064 m ridden upward; a
+  route that rides only the top quarter of a climb to its summit is not listed.
+  The 30% floor is the one rule for a whole climb and for part of one.
+- **Reaches the top part** (`RouteClimbService::TOP_M = 2000`, owner
+  2026-09-30): the ascent that covers the 30% must end no more than 2 km below
+  the summit, measured along the climb line in true metres (its climb
+  fraction times the line's geodesic length). A route that rides the lower or
+  middle part of a long climb and turns off well below the top passes it: the
+  climb is near. Measured on all 13 dev routes, the highest point an ascent
+  reaches on each climb it shares 30% of is the summit itself or close to it
+  for most (Redoute, Desnié, Roche-aux-Faucons, Haute-Levée on route 111,
+  Mont-le-Soie from Petit-Thier 59 m below), and the ones that stop short are
+  Côte de Wanne on route 111 (709 m below, fraction 0.67), Côte de Bohissau on
+  route 29 (747 m, 0.33), Côte de Stockeu on route 111 (1323 m, 0.43),
+  Thier Antoine on route 27 (1412 m, 0.47) and "Hockai · via RAVeL L44a" on
+  routes 24 and 25 (2355 m and 2347 m, 0.86). A fraction threshold (0.9)
+  would drop Wanne and Stockeu, which the race rides as its climbs; a
+  distance threshold between 1323 m and 2347 m keeps them and makes Hockai
+  near, and 2 km is the round value in that gap. A climb no longer than
+  about 2.9 km is never cut by this rule once 30% of it is ridden from the
+  foot.
+- **Foot to summit only, pass by pass.** Every segment of the route is cut
+  with a 40 m band around the climb line, and each piece inside the band is
+  read on its own segment, so two passes over the same road are never mixed up.
+  A piece rides foot to summit when its climb fraction (its ends located on the
+  climb line) rises in route order. Rising pieces that carry on from each
+  other (see km along below) make one ascent, and the climb counts when one
+  ascent covers at least 30% of the climb line, each part of the line counted
+  once, and reaches its top part (`RouteClimbService::ascent()`). An out-and-back route that rides the
+  same road up and down is listed for its way up, whichever way it rides first.
+  A route that rides the climb only downhill passes it but does not climb it,
+  and is not listed; riding the same stretch up twice does not add up to more
+  of the climb. Liège-Bastogne-Liège (dev route 111) is the case in point for
+  Côte de Mont-le-Soie, whose two sides are two climbs sharing one summit: the
+  race meets the Grand-Halleux line (item 3130) at its summit at km 150.3 and
+  rides 85% of it down to near Ennal (km 153.4), a descent, so that side is not
+  listed; it climbs the south side, "Côte de Mont-le-Soie from Petit-Thier",
+  from its foot, and that side is listed at km 146.3. A race that climbs one
+  side of a hill is listed for that side's item, so a second side is a data
+  addition (`app:catalog:seed-climbs`), not a rule change.
+- **On the line, not beside it.** Riding a climb means the route's own line
+  runs along the climb line; the 40 m band is there for GPS drift, and on the
+  dev data it is never what makes a climb count. Measured on all 13 dev routes
+  (2026-09-30), every climb within 250 m keeps the same share of its line near
+  the route whether the band is 40 m, 15 m or 8 m (at most 3 points of share
+  apart, Côte de Wanne on route 27: 4%, 1%, 1%), so no listed climb is a road
+  that runs beside the route. "Hockai · via RAVeL L44a" (item 11004, 17.2 km)
+  on route 24 "Spa · Coo · Francorchamps" is on the climb line, not beside
+  it: the route's stored vertices lie on the climb line's own OpenStreetMap
+  nodes (0.0 m) from Stavelot to below Hockai, 10.1 km inside the band,
+  8.5 km of it within 5 m, climbing fraction 0.31 to 0.86 in route order, and
+  the route's surface harvest (`tools/wallonia/route_surfaces.py`, BRouter way
+  tags) marks that stretch "Cycleway · RAVeL". It turns off 2.4 km below the
+  top, so the climb is near (the top-part rule above). Route 25 "Spa · Côte
+  des Hézalles" rides it from the foot at Trois-Ponts to the same point, and
+  it is near there too.
+- **km along** is where the route's ascent starts: the lowest rising piece of
+  the ascent that covers the most of the climb, of those that count (30% and
+  the top part), which is the foot itself when
+  the route rides the whole climb. Rising pieces make one ascent while each
+  carries on from the last: no lower on the climb (40 m of slack), and no
+  further along the route than along the climb (80 m of slack), so a route
+  that leaves the band briefly on the way up still makes one ascent, and a loop
+  that starts partway up the climb runs on through its seam. The distance is
+  true metres along the route (`LineMetres`): the route's segments each carry
+  their geodesic length and the geodesic length before them, and a point on a
+  segment is that segment's start plus its share of the segment. Never the
+  route fraction of `ST_LineLocatePoint` on the whole lng/lat line times the
+  route's length: that fraction is a share of the length in degrees, and on
+  Liège-Bastogne-Liège (dev route 111) it puts climbs up to about 3 km early
+  (Côte de la Redoute 204.9 against a true 207.4). "Along this route" below and
+  the ride check read the same metres, so a climb foot and a fountain at the
+  same spot show the same km. Rows are ordered by it, one decimal in the
+  payload.
 
 Access: a SERVED route answers anyone, `Cache-Control: public, max-age=600`
 with an ETag. A route waiting for review answers only whoever may preview it on
@@ -532,18 +682,18 @@ set up, or the rider who proposed it; `MapController::mayPreviewRoute`),
 the catalog slices (route-domain.md §6.3): it is per route and only needed
 when a drawer opens.
 
-Known limit: a route that rides the same road up and down (out and back)
-locates both passes to one of them, so the direction test can read the ascent
-as a descent.
-
 **Along a route.** `GET /map/route/{id}/along` answers the route drawer's
 places along the route (map-and-search.md §6.3) with the same access as the
 climbs above (both go through `MapController::routeListResponse`):
 `{radiusM, groups, coverage}` from `RideCheckService::alongRoute()`, the ride
 check's commons and open-coverage corridor arms (map-and-search.md §9) run on
-the route's stored geometry at `DEFAULT_RADIUS` (250 m), km along measured on
-that line. Climbs (N) are not in `groups`: the rule above decides which climbs a
-route rides.
+the route's stored geometry at `DEFAULT_RADIUS` (250 m), km along in true metres
+on that line (`LineMetres`, as for the climbs above). The climbs group (N) in
+`groups` holds the route's near climbs (`climbsAlong()['near']`, rows
+`{id, name, ll, distM, alongKm, avgGradient}`, `ll` the climb's foot), never a
+climb by its stored point and never one the route rides: those are in
+`GET /map/route/{id}/climbs`, which answers `{climbs}` with the ridden climbs
+only, rows `{id, name, alongKm, avgGradient, ll}`.
 
 ## 7. Located corrections (stretches on a suggestion)
 
@@ -578,9 +728,10 @@ curator sees them on the map. Data contract (presentation details belong to
 
 ## 7.1 Asking for a detail to be corrected
 
-A route's data is never edited by a rider. Once it is proposed, the only way a
-rider changes anything is the drawer's **correction box**, and a curator makes
-the change on the Routes desk.
+Once a curator has decided a proposal, its data is never edited by a rider:
+the only way a rider changes anything is the drawer's **correction box**, and
+a curator makes the change on the Routes desk. Before that decision the
+proposer edits their own proposal directly (route-domain.md §4.6).
 
 - **Where:** the `Suggest a correction` box already in the route drawer, under
   "I rode this". Picking **"A detail is wrong"** shows a **field picker** and
@@ -802,6 +953,9 @@ contract is the consumption semantics:
 - **`route_propose`** is consumed **before any validation**, bounding the
   GPX parse/simplify CPU cost per rider; over-limit renders as flash + 200
   on the form page (route-domain.md §4).
+- **`route_revise`** is consumed on every valid save of a proposer's edit
+  (route-domain.md §4.6), before a new GPX is parsed; over-limit renders as
+  flash on the edit form, like `route_propose`.
 - **`route_suggest`** is consumed **after** the cheap note-length check, so
   a 422 costs no quota. Suggestions are the flood vector — no UNIQUE bound,
   each pending row is a curator task; over-limit → 429 JSON

@@ -128,9 +128,10 @@ final class SeedClimbsCommand extends Command
 
             /* Harvester stores summit-first; reverse so ClimbProfiler measures from the foot. */
             $route = array_reverse($line);
-            [$sLat, $sLng] = $line[0];
+            /* A climb's point is its foot (ClimbFoot): region and duplicates are asked there. */
+            [$fLat, $fLng] = $route[0];
 
-            if (null === $this->regionFor((float) $sLat, (float) $sLng)) {
+            if (null === $this->regionFor((float) $fLat, (float) $fLng)) {
                 $skipped['regionless'][] = sprintf('%s (%s)', $row['name'], $cc);
                 continue;
             }
@@ -152,7 +153,7 @@ final class SeedClimbsCommand extends Command
 
             $accepted[] = [
                 'row' => $row, 'ref' => $ref, 'cc' => $cc, 'attrs' => $attributes,
-                'lat' => (float) $sLat, 'lng' => (float) $sLng,
+                'lat' => (float) $fLat, 'lng' => (float) $fLng,
                 'name' => $this->nameFor($row),
                 'road' => (string) ($row['trace']['road'] ?? ''),
                 'km' => (float) $row['length_m'] / 1000,
@@ -170,8 +171,8 @@ final class SeedClimbsCommand extends Command
                 $cc = $entry['cc'];
                 $name = $names[$i];
                 $attributes = $entry['attrs'];
-                $sLat = $entry['lat'];
-                $sLng = $entry['lng'];
+                $fLat = $entry['lat'];
+                $fLng = $entry['lng'];
                 $ref = $entry['ref'];
 
                 /* One place, one row (catalog-data-model.md §5). A climb the
@@ -179,7 +180,7 @@ final class SeedClimbsCommand extends Command
                    hill, and read-time dedupe matches by ref, so it cannot see
                    that. Checked in a dry run too, or the dry run would report a
                    number the real run will not produce. */
-                $held = $this->duplicates->existing('N', $name, $sLat, $sLng, 'wikidata:'.$ref);
+                $held = $this->duplicates->existing('N', $name, $fLat, $fLng, 'wikidata:'.$ref);
                 if (null !== $held) {
                     $skipped['duplicate-place'][] = DuplicateGuard::explain($name, ItemSource::from(self::sourceFor($entry['row'])), $held);
                     continue;
@@ -189,9 +190,9 @@ final class SeedClimbsCommand extends Command
                     $this->db->executeStatement(ItemUpsert::SQL, [
                         'letter' => 'N',
                         'name' => $name,
-                        // Summit = the line's own end, not Wikidata's coordinate.
+                        // The foot of the line, not Wikidata's coordinate.
                         'geom' => json_encode(
-                            ['type' => 'Point', 'coordinates' => [$sLng, $sLat]],
+                            ['type' => 'Point', 'coordinates' => [$fLng, $fLat]],
                             \JSON_THROW_ON_ERROR,
                         ),
                         'cc' => $cc,

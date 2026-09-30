@@ -236,6 +236,16 @@ final readonly class SupportMailer
         );
     }
 
+    /**
+     * The reply the desk offers for Fixed, in the language
+     * {@see notifyBugOutcome()} writes to this reporter in. It lives here so
+     * the desk and the mail cannot disagree about which language that is.
+     */
+    public function bugOutcomeDefaultNote(BugReport $report): string
+    {
+        return $this->trans('support.email.bug_outcome_default_note', [], $report->getLocale() ?? $this->defaultLocale);
+    }
+
     /** `CC-M-000123`, short enough to read down a phone. */
     public function contactReference(ContactMessage $message): string
     {

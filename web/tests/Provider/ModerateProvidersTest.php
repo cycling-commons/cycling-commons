@@ -45,14 +45,18 @@ final class ModerateProvidersTest extends WebTestCase
         // offering a control that would be refused.
         self::assertGreaterThan(0, $crawler->filter('input[name="rank"][readonly]')->count());
 
-        // The source shows, read-only, with the run commands (owner 2026-09-05:
-        // "show the source and the run command"); a built-in row has none.
+        // The source shows, read-only, with the one refresh command, dry and
+        // then written (owner 2026-09-05: "show the source and the run
+        // command"); a built-in row has none. The test kernel is not a
+        // worker-host environment, so it prints the dev stack's command.
         $src = $crawler->filter('[data-provider-source="rivm-drinkwater"]');
         self::assertSame(1, $src->count());
         self::assertStringContainsString('https://data.rivm.nl/geo/alo/wfs', $src->text());
         self::assertStringContainsString('alo:rivm_drinkwaterkranen_actueel', $src->text());
-        self::assertStringContainsString('providers.run --key rivm-drinkwater', $src->filter('pre')->text());
-        self::assertStringContainsString('app:providers:harvest rivm-drinkwater /tmp/rivm-drinkwater.json --write', $src->filter('pre')->text());
+        self::assertSame(
+            ['make provider-run KEY=rivm-drinkwater', 'make provider-run KEY=rivm-drinkwater WRITE=1'],
+            explode("\n", trim($src->filter('pre')->text(normalizeWhitespace: false))),
+        );
         self::assertSame(0, $crawler->filter('[data-provider-source="osm"]')->count(), 'a built-in row has no fetchable source');
     }
 

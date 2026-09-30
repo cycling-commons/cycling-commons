@@ -690,7 +690,7 @@ function buildRecord(layer, f){
       }
     }
     // catalog-data-model.md §5b — a new place's OSM question, asked where it is approved.
-    const osmQ = 'new' === s.type ? osmQuestionHtml(s.osm, D) + replacesHtml(s.replaces, D) : '';
+    const osmQ = 'new' === s.type ? osmQuestionHtml(s.osm, D) + replacesHtml(s.replaces, D, s.replacesOsm) : '';
     const badge = 'needs_info' === s.status
       ? `<div class="cc-mod-badge waiting">? ${D.waitingOnRider||'Waiting on the rider'}</div>`
       : `<div class="cc-mod-badge">⚑ ${I18N.pendingReview||'Pending review'}</div>`;
@@ -862,11 +862,14 @@ function historyRow(h){
 // Empty history is silence, not a section.
 function renderHistoryList(history){
   if(!Array.isArray(history) || !history.length) return '';
-  /* Heading opens the full log; the drawer list stays clamped. */
+  /* Closed by default (owner 2026-09-30): one "Show changelog" button that
+     opens the clamped list in place; the full log opens from inside it. */
   _histCache = history;
-  return `<button type="button" class="cc-d-hist-h" data-hist-all
-            aria-haspopup="dialog">${D.recentChanges||'Recent changes'} <span aria-hidden="true">↗</span></button>`
-    + `<ul class="cc-d-hist-list">${history.map(historyRow).join('')}</ul>`;
+  const show = D.showChangelog || 'Show changelog', hide = D.hideChangelog || 'Hide changelog';
+  return `<button type="button" class="cc-d-hist-h" data-hist-toggle aria-expanded="false" aria-controls="cc-d-hist-body"
+            data-show="${escPend(show)}" data-hide="${escPend(hide)}">${escPend(show)}</button>`
+    + `<div id="cc-d-hist-body" hidden><ul class="cc-d-hist-list">${history.map(historyRow).join('')}</ul>`
+    + `<button type="button" class="cc-d-hist-all" data-hist-all aria-haspopup="dialog">${escPend(D.changelogAll || 'Full log')} <span aria-hidden="true">↗</span></button></div>`;
 }
 
 /* Last-rendered rows; one item open at a time, so one cache slot. */
@@ -992,6 +995,16 @@ document.addEventListener('click', (e) => {
 document.addEventListener('click', (e) => {
   if (!e.target || !e.target.closest) return;
   if (e.target.closest('[data-hist-all]')) { e.preventDefault(); openHistoryDialog(); return; }
+  const t = e.target.closest('[data-hist-toggle]');
+  if (t) {
+    const body = document.getElementById(t.getAttribute('aria-controls'));
+    if (!body) return;
+    const open = t.getAttribute('aria-expanded') !== 'true';
+    body.hidden = !open;
+    t.setAttribute('aria-expanded', String(open));
+    t.textContent = open ? t.dataset.hide : t.dataset.show;
+    return;
+  }
   const x = e.target.closest('[data-hist-close]');
   if (x) { e.preventDefault(); const d = document.getElementById('cc-hist-dlg'); if (d) d.close(); }
 });

@@ -792,6 +792,36 @@ site-wide `.mono` utility, which uppercases and wide-tracks for chrome labels:
 `/regions` shown as `/REGIONS` is a different path, and a user-agent string in
 capitals is unreadable.
 
+### The reply to the reporter
+
+*(2026-09-30.)* The reply box ("What to tell the reporter", `#d-reply`) shows
+only while the chosen status mails the reporter (Fixed, Not changing this;
+`BugStatus::notifiesReporter()`), and while it shows it is **`required`**. The
+inline script at the foot of `moderate/bug_detail.html.twig` toggles
+`required` with the status and counts a reply of only spaces as empty (the
+server trims), so the browser stops the save at the field with the desk's own
+sentence (`support.bugs.outcome_missing`). The server keeps the same rule.
+
+**A refused save comes back at the field.** The server answers 422 with the
+page itself, not a redirect: the reply field autofocused, scrolled into view,
+`aria-invalid`, and the reason under it (`.ferr`, `#d-note-error`), with no
+banner at the top. Every other field shows what the curator submitted, status
+included, so the reply box stays open and nothing typed is lost.
+
+**"Use the default message"** (`support.bugs.outcome_default`) sits under the
+field, for Fixed only: the default says it is fixed, and a decline always
+carries a reason somebody wrote. Ticking it fills the field with
+`support.email.bug_outcome_default_note`, EN: "Thank you for reporting this.
+It is fixed now and will be live with the next update." Unticking puts back
+what was there before, as long as the field still holds the default; editing
+the default unticks the box. The text is in the reporter's language, the one
+the outcome mail goes out in: `SupportMailer::bugOutcomeDefaultNote()` takes
+the report's locale or the site default, like `notifyBugOutcome()`. Without
+scripting the box cannot fill the field, so a ticked box over an empty field
+makes the server send the default. `BugDeskReplyTest` pins all of it.
+
+The public flag carries no note under it: the checkbox label says what it does.
+
 ## 10. `/known-issues` and `/account/reports`
 
 **Known issues** is public and carries only what a curator has marked public.
@@ -969,6 +999,12 @@ action of its form; the ink-coloured one read as a cancel.
 blue appears nowhere else here. `accent-color` keeps the NATIVE control, so
 keyboard behaviour and assistive technology keep working; an `appearance:none`
 reimplementation buys the same look and gives all of that back.
+
+**Every text field, select and textarea keeps a focus ring** outside the map:
+a 2px `--trail` outline on `:focus-visible`, set once in `atlas.css` with
+`!important` so a page stylesheet's `outline:none` cannot remove it. The
+/accessibility page promises the focus outline is never removed. The map page
+does not load `atlas.css` and styles its own fields.
 
 **The flash is a thing that arrived.** Its own ground, a rule down the side, a
 tick, and a short slide, honoured against `prefers-reduced-motion`. It used to

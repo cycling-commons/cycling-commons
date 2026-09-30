@@ -13,6 +13,8 @@ use Doctrine\DBAL\Connection;
 /**
  * Given an uploaded GPX, list served items in a corridor of the track. The GPX is never persisted. No privacy trim, unlike route intake.
  * The same corridor arms answer for a recommended route's own line (alongRoute).
+ * Climbs are not corridor rows by their stored point: a ride lists the climbs it rides, by the route drawer's rule, in `climbs`, and its letter N group holds the climbs whose line comes within the radius that it does not ride (RouteClimbService::climbsAlong()). A route's along list holds its near climbs the same way.
+ * `alongKm` is true distance along the line (LineMetres), scaled so the line's end is the ride's own distance.
  *
  * @see docs/specs/map-and-search.md §9
  *
@@ -40,6 +42,7 @@ final class RideCheckService
         private readonly Connection $db,
         private readonly GpxParser $parser,
         private readonly TrackProcessor $processor,
+        private readonly RouteClimbService $climbs,
     ) {
     }
 
@@ -49,7 +52,8 @@ final class RideCheckService
      *     distanceKm: float,
      *     ascentM: int|null,
      *     radiusM: int,
-     *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>,
+     *     climbs: list<array{id: int, name: string, alongKm: float, avgGradient: string|null, ll: array{0: float, 1: float}, distM: int}>,
+     *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, avgGradient?: string|null}>, truncated: bool}>,
      *     coverage: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>,
      *     routes: list<array{id: int, name: string, sharedKm: float}>,
      *     regions: list<array{id: int, slug: string, name: string, countryCode: string|null}>
@@ -78,12 +82,15 @@ final class RideCheckService
             \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION,
         );
 
+        $climbs = $this->climbs->climbsAlong($geoJson, $rawM, $radiusM);
+
         return [
             'track' => array_map(static fn (array $p): array => [$p[0], $p[1]], $points),
             'distanceKm' => round($rawM / 1000.0, 1),
             'ascentM' => $this->processor->ascentM($track->points),
             'radiusM' => $radiusM,
-            'groups' => $this->corridorGroups($geoJson, $radiusM, $rawM),
+            'climbs' => $climbs['ridden'],
+            'groups' => $this->withNearClimbs($this->corridorGroups($geoJson, $radiusM, $rawM, ['A', 'N']), $climbs['near']),
             'coverage' => $this->corridorCoverage($geoJson, $radiusM, $rawM),
             'routes' => $this->followedRoutes($geoJson, $radiusM),
             'regions' => $this->crossedRegions($geoJson),
@@ -93,17 +100,19 @@ final class RideCheckService
     /**
      * What is along a recommended route: the ride check's two corridor arms, run on the route's own stored line at the ride check's default radius.
      *
-     * The route drawer lists climbs through RouteClimbService, which decides
-     * which climbs the route really rides, so the commons arm leaves letter N
-     * out. Null when there is no such route, or it is not served and
-     * $allowSubmitted does not let a waiting route through.
+     * Climbs come from RouteClimbService, which decides which climbs the route
+     * really rides (the drawer's "Climbs on this route") and which it only
+     * passes near in this same corridor: the near ones are the letter N group
+     * here, and a climb's stored point never lists it. Null when there is no
+     * such route, or it is not served and $allowSubmitted does not let a
+     * waiting route through.
      *
      * @see docs/specs/map-and-search.md §6.3
      * @see docs/specs/route-domain.md §6.4
      *
      * @return array{
      *     radiusM: int,
-     *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float}>, truncated: bool}>,
+     *     groups: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, avgGradient?: string|null}>, truncated: bool}>,
      *     coverage: list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref: string}>, truncated: bool}>
      * }|null
      */
@@ -121,9 +130,14 @@ final class RideCheckService
             return null;
         }
 
+        $lengthM = (float) $route['len_m'];
+
         return [
             'radiusM' => $radiusM,
-            'groups' => $this->corridorGroups($route['geom'], $radiusM, (float) $route['len_m'], ['A', 'N']),
+            'groups' => $this->withNearClimbs(
+                $this->corridorGroups($route['geom'], $radiusM, $lengthM, ['A', 'N']),
+                $this->climbs->climbsAlong($route['geom'], $lengthM, $radiusM)['near'],
+            ),
             'coverage' => $this->corridorCoverage($route['geom'], $radiusM, (float) $route['len_m']),
         ];
     }
@@ -141,20 +155,31 @@ final class RideCheckService
         // untouched OSM import is the coverage tiles' point, and a row reported
         // gone is served nowhere. The ride lists a place where the map draws it.
         // MATERIALIZED is load-bearing: an inlined track CTE re-parses GeoJSON per ST_*; ST_Intersects can use the GIST index.
+        // `frac` is the share of the track's geodesic length before the row's
+        // closest point (LineMetres), so frac * $rawM is true km along.
         /** @var list<array{id: int|string, letter: string, name: string, geom: string, dist_m: string|float, frac: string|float}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
-                  corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
-             SELECT i.id, i.letter, i.name, ST_AsGeoJSON(i.geom) AS geom,
-                    ST_Distance(i.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
-                    ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
-             FROM item i
-             WHERE i.letter NOT IN '.$excluded.'
-               AND i.state IN '.ItemState::servedSqlTuple().'
-               AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
-               AND '.GoneRows::notGoneSql('i').'
-               AND ST_Intersects(i.geom, (SELECT b FROM corridor))
-             ORDER BY frac, i.id',
+                  corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b),
+                  '.LineMetres::segmentsCte('track_seg', '(SELECT g FROM track)').',
+                  '.LineMetres::indexCte('track_idx', 'track_seg').',
+                  hit AS MATERIALIZED (
+                      SELECT i.id, i.letter, i.name, ST_AsGeoJSON(i.geom) AS geom,
+                             ST_Distance(i.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
+                             ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS flat_frac
+                      FROM item i
+                      WHERE i.letter NOT IN '.$excluded.'
+                        AND i.state IN '.ItemState::servedSqlTuple().'
+                        AND NOT (i.letter IN '.CoverageRetirement::lettersSqlTuple().' AND '.CoverageRetirement::untouchedOsmSql('i').')
+                        AND '.GoneRows::notGoneSql('i').'
+                        AND ST_Intersects(i.geom, (SELECT b FROM corridor))
+                  )
+             SELECT h.id, h.letter, h.name, h.geom, h.dist_m,
+                    COALESCE(along.m / NULLIF(x.len_m, 0), 0) AS frac
+             FROM hit h
+             CROSS JOIN track_idx x
+             '.LineMetres::metresJoin('h.flat_frac', 'x', 'along').'
+             ORDER BY frac, h.id',
             ['geom' => $geoJson, 'radius' => $radiusM],
         );
 
@@ -169,18 +194,28 @@ final class RideCheckService
     private function corridorCoverage(string $geoJson, int $radiusM, float $rawM): array
     {
         $letters = "'".implode("','", self::COVERAGE_LETTERS)."'";
+        // `frac` as in corridorGroups(): true share of the track (LineMetres).
         /** @var list<array{id: int|string, letter: string, name: string|null, ref: string, geom: string, dist_m: string|float, frac: string|float}> $rows */
         $rows = $this->db->fetchAllAssociative(
             'WITH track AS MATERIALIZED (SELECT ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326) AS g),
-                  corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b)
-             SELECT cp.id, cp.letter, cp.name, cp.ref, ST_AsGeoJSON(cp.geom) AS geom,
-                    ST_Distance(cp.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
-                    ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(cp.geom, (SELECT g FROM track))) AS frac
-             FROM coverage_poi cp
-             WHERE cp.letter IN ('.$letters.')
-               AND ST_Intersects(cp.geom, (SELECT b FROM corridor))
-               AND NOT '.ClaimedOsmRefs::claimedSql('cp.ref').'
-             ORDER BY frac, cp.id',
+                  corridor AS MATERIALIZED (SELECT ST_Buffer((SELECT g FROM track)::geography, :radius)::geometry AS b),
+                  '.LineMetres::segmentsCte('track_seg', '(SELECT g FROM track)').',
+                  '.LineMetres::indexCte('track_idx', 'track_seg').',
+                  hit AS MATERIALIZED (
+                      SELECT cp.id, cp.letter, cp.name, cp.ref, ST_AsGeoJSON(cp.geom) AS geom,
+                             ST_Distance(cp.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
+                             ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(cp.geom, (SELECT g FROM track))) AS flat_frac
+                      FROM coverage_poi cp
+                      WHERE cp.letter IN ('.$letters.')
+                        AND ST_Intersects(cp.geom, (SELECT b FROM corridor))
+                        AND NOT '.ClaimedOsmRefs::claimedSql('cp.ref').'
+                  )
+             SELECT h.id, h.letter, h.name, h.ref, h.geom, h.dist_m,
+                    COALESCE(along.m / NULLIF(x.len_m, 0), 0) AS frac
+             FROM hit h
+             CROSS JOIN track_idx x
+             '.LineMetres::metresJoin('h.flat_frac', 'x', 'along').'
+             ORDER BY frac, h.id',
             ['geom' => $geoJson, 'radius' => $radiusM],
         );
 
@@ -261,6 +296,33 @@ final class RideCheckService
         usort($routes, static fn (array $a, array $b): int => $b['sharedKm'] <=> $a['sharedKm']);
 
         return $routes;
+    }
+
+    /**
+     * The corridor groups plus letter N: the climbs whose line comes within the corridor that the line does not ride (RouteClimbService::climbsAlong()), in km order.
+     *
+     * A row's km is the line's point closest to the climb line, `distM` the
+     * metres between them; it stands at the climb's foot (`ll`), where the map
+     * pins it.
+     *
+     * @param list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref?: string}>, truncated: bool}> $groups
+     * @param list<array{id: int, name: string, alongKm: float, avgGradient: string|null, ll: array{0: float, 1: float}, distM: int}>                                          $near
+     *
+     * @return list<array{letter: string, items: list<array{id: int, name: string, ll: array{0: float, 1: float}, distM: int, alongKm: float, ref?: string, avgGradient?: string|null}>, truncated: bool}>
+     */
+    private function withNearClimbs(array $groups, array $near): array
+    {
+        if ([] === $near) {
+            return $groups;
+        }
+        $groups[] = [
+            'letter' => 'N',
+            'items' => \array_slice($near, 0, self::MAX_PER_LETTER),
+            'truncated' => \count($near) > self::MAX_PER_LETTER,
+        ];
+        usort($groups, static fn (array $a, array $b): int => strcmp($a['letter'], $b['letter']));
+
+        return $groups;
     }
 
     /**

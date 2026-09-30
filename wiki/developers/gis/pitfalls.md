@@ -314,7 +314,8 @@ every "near me" question. [`spatial-questions.md`](spatial-questions.md)
 a GiST index can serve most directly. [`spatial-questions.md`](spatial-questions.md)
 
 **`ST_LineLocatePoint`**: returns a 0–1 fraction for how far along a line a point sits, measured from
-its first vertex; the tool for ordering things by "how far along the ride". [`spatial-questions.md`](spatial-questions.md)
+its first vertex in the line's own units (degrees for lng/lat); the tool for ordering things by "how
+far along the ride". [`spatial-questions.md`](spatial-questions.md)
 
 **`ST_SetSRID`**: labels a geometry with a coordinate system without changing any of its numbers.
 [`coordinates.md`](coordinates.md)

@@ -91,7 +91,7 @@ final readonly class ReplacedPlaces
         // no served row holds it; a held one is replaced through its row below.
         if (null === $new->getOsmRef()) {
             foreach ($ticks['osm'] as $ref) {
-                if (!$this->isHeld($ref) && $this->osmPointNear($ref, $new)) {
+                if (!$this->isHeld($ref) && $this->osmPointNear($ref, $newId)) {
                     $new->answerOsm($ref);
                     $history($new, 'osm_ref', null, $ref);
                     break;
@@ -200,6 +200,38 @@ final readonly class ReplacedPlaces
         ], $rows);
     }
 
+    /**
+     * The OpenStreetMap point the new place holds once approved, for the
+     * curator's card: the same rule as {@see apply()}, and nothing changes.
+     * Its own point; else a ticked point nobody holds; else the point of the
+     * first row it retires. The map's free pin for that point is gone after
+     * approval, so the card names it beside the rows it retires.
+     *
+     * @param array{items: list<int>, osm: list<string>} $ticks
+     */
+    public function takesOsm(int $newItemId, ?string $newOsmRef, array $ticks): ?string
+    {
+        if (null !== $newOsmRef) {
+            return $newOsmRef;
+        }
+        foreach ($ticks['osm'] as $ref) {
+            if (!$this->isHeld($ref) && $this->osmPointNear($ref, $newItemId)) {
+                return $ref;
+            }
+        }
+        $ids = $this->replacedIds($newItemId, null, $ticks);
+        if ([] === $ids) {
+            return null;
+        }
+        $ref = $this->db->fetchOne(
+            'SELECT osm_ref FROM item WHERE id IN (:ids) AND osm_ref IS NOT NULL ORDER BY id LIMIT 1',
+            ['ids' => $ids],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
+        return false === $ref ? null : (string) $ref;
+    }
+
     /** True when a served row already holds this OSM point. */
     private function isHeld(string $ref): bool
     {
@@ -210,14 +242,14 @@ final readonly class ReplacedPlaces
     }
 
     /** The OSM point is one of the new place's letter and within the radius. */
-    private function osmPointNear(string $ref, Item $new): bool
+    private function osmPointNear(string $ref, int $newItemId): bool
     {
         return false !== $this->db->fetchOne(
             'SELECT 1 FROM coverage_poi cp, item n
               WHERE n.id = :new AND cp.ref = :ref AND cp.letter = n.letter
                 AND ST_DWithin(cp.geom::geography, n.geom::geography, :radius)
               LIMIT 1',
-            ['new' => $new->getId(), 'ref' => $ref, 'radius' => self::RADIUS_M],
+            ['new' => $newItemId, 'ref' => $ref, 'radius' => self::RADIUS_M],
         );
     }
 }

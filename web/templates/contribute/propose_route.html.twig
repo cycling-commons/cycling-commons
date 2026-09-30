@@ -11,6 +11,9 @@
   {% if photo_route %}
     <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem);margin-bottom:.5rem">{{ 'propose_route.photos.title'|trans({'%name%': photo_route.name}) }}</h1>
     <p class="lead pr-lead">{{ (is_granted('ROLE_CURATOR') ? 'propose_route.photos.lead_curator' : 'propose_route.photos.lead')|trans }}</p>
+  {% elseif edit_route %}
+    <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem);margin-bottom:.5rem">{{ 'propose_route.edit.title'|trans({'%name%': edit_route.name}) }}</h1>
+    <p class="lead pr-lead">{{ 'propose_route.edit.lead'|trans }}</p>
   {% else %}
     <h1 class="disp" style="font-size:clamp(1.9rem,4vw,2.6rem);margin-bottom:.5rem">{{ 'propose_route.title'|trans }}</h1>
     <p class="lead pr-lead">{{ 'propose_route.lead'|trans }}</p>
@@ -25,22 +28,33 @@
       {{ include('contribute/_receipt_mark.html.twig') }}
       <h2>{{ 'propose_route.photos.receipt_h'|trans }}</h2>
       <p>{{ (receipt.applied ? 'propose_route.photos.receipt_applied' : 'propose_route.photos.receipt_p')|trans }}</p>
-      <div class="ref-box">
-        <span class="ref-label">{{ 'propose_route.receipt_ref_label'|trans }}</span>
-        <span class="ref-code">{{ receipt.reference }}</span>
+      {# The reference names the route the photos went to, not a proposal of
+         the rider's own, so it stays a plain box beside the one way on. #}
+      <div class="receipt-acts">
+        <span class="ref-box">
+          <span class="ref-label">{{ 'propose_route.receipt_ref_label'|trans }}</span>
+          <span class="ref-code">{{ receipt.reference }}</span>
+        </span>
+        <a class="btn btn-g" href="{{ path('map') }}?route={{ photo_route.id }}">{{ 'propose_route.photos.receipt_back'|trans }} →</a>
       </div>
-      <a class="btn btn-g" href="{{ path('map') }}?route={{ photo_route.id }}">{{ 'propose_route.photos.receipt_back'|trans }} →</a>
     </section>
   {% elseif receipt is not null %}
     <section class="card receipt" data-receipt>
       {{ include('contribute/_receipt_mark.html.twig') }}
       <h2>{{ 'propose_route.receipt_h'|trans }}</h2>
       <p>{{ 'propose_route.receipt_p'|trans }}</p>
-      <div class="ref-box">
-        <span class="ref-label">{{ 'propose_route.receipt_ref_label'|trans }}</span>
-        <span class="ref-code">{{ receipt.reference }}</span>
+      {# The reference is the way to the proposal itself: the Routes chip of
+         the rider's Contributions, scrolled to and outlined on this route's
+         card (docs/specs/account-and-auth.md). #}
+      <div class="receipt-acts">
+        {% set ref_open = 'propose_route.receipt_ref_open'|trans({'%ref%': receipt.reference}) %}
+        <a class="btn btn-g ref-box ref-link" href="{{ path('profile', {letter: 'R'}) }}#route-{{ proposed_route_id }}"
+           aria-label="{{ ref_open }}" title="{{ ref_open }}">
+          <span class="ref-label">{{ 'propose_route.receipt_ref_label'|trans }}</span>
+          <span class="ref-code">{{ receipt.reference }}</span>
+        </a>
+        <a class="btn btn-g" href="{{ path('contribute') }}">{{ 'propose_route.receipt_back'|trans }} →</a>
       </div>
-      <a class="btn btn-g" href="{{ path('contribute') }}">{{ 'propose_route.receipt_back'|trans }} →</a>
     </section>
   {% elseif photo_route %}
     {# Photos for a live route: the same form, photos and a note only, because
@@ -71,6 +85,29 @@
 
       <button type="submit" class="btn btn-p">{{ 'propose_route.photos.submit'|trans }}</button>
     {{ form_end(form) }}
+  {% elseif edit_route %}
+    {# The proposer's edit while the proposal waits for review
+       (docs/specs/route-domain.md §4.6): the proposal's own fields, prefilled,
+       a GPX only when the track itself changes, and more photos through the
+       same uploader. The stored line gives the uploader its pin. #}
+    {{ form_start(form, {attr: {'data-route-photos': '', 'data-route-pin': edit_route.pin|json_encode}}) }}
+      {{ form_errors(form) }}
+
+      <fieldset>
+        <legend>{{ 'propose_route.edit.gpx_label'|trans }}</legend>
+        <p class="help">{{ 'propose_route.edit.gpx_help'|trans }}</p>
+        <div class="gpx-drop">
+          {{ form_widget(form.gpx) }}
+        </div>
+        {{ form_errors(form.gpx) }}
+      </fieldset>
+
+      {{ include('contribute/_route_metadata_fields.html.twig', {form: form, with_photos: true, photos: {
+        help: 'propose_route.edit.photos_help', sent: edit_route.photos, name: edit_route.name, room: edit_route.photo_room,
+      }}) }}
+
+      <button type="submit" class="btn btn-p">{{ 'propose_route.edit.submit'|trans }}</button>
+    {{ form_end(form) }}
   {% else %}
     {{ form_start(form, {attr: {'data-route-photos': ''}}) }}
       {{ form_errors(form) }}
@@ -98,10 +135,11 @@
 
 {% block body_scripts %}
 {% if form is not null %}
-{% include 'contribute/_media_config.html.twig' with {max: 6} %}
-{# A route proposal has no pin until its GPX is chosen, so the "no location"
-   refusal names the step that gives it one. #}
-{% if not photo_route %}
+{# The proposer's edit counts the photos the proposal already carries. #}
+{% include 'contribute/_media_config.html.twig' with {max: edit_route ? edit_route.photo_room : 6} %}
+{# A new route proposal has no pin until its GPX is chosen, so the "no
+   location" refusal names the step that gives it one. #}
+{% if not photo_route and not edit_route %}
 <script nonce="{{ csp_nonce() }}">window.CC_MEDIA.i18n.errors.missing_location = {{ 'propose_route.photos.error.gpx_first'|trans|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
 {% endif %}
 <script src="{{ asset('contribute/media-upload.js') }}"></script>

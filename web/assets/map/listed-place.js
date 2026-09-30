@@ -17,7 +17,7 @@ import { openCoverageByRef } from './coverage.js';
 import { inScope, liftScopeForHit } from './scope-ui.js';
 import { ringOffset, listedPlaceKeys } from './ride-places.js';
 import { routeClimbsHtml } from './route-climbs.js';
-import { alongListHtml } from './along-list.js';
+import { alongListHtml, bindAlongMore } from './along-list.js';
 import { layerGlyph } from './icons.js';
 import { uM } from './units.js';
 
@@ -63,7 +63,8 @@ function catalogMeta(letter){
  * one that draws coverage (a coverage point carries no confirmation, so
  * modeShows judges it as `{}`), and opens through openCoverageByRef, whose
  * `cov-sel` overlay keeps the icon drawn. A row with nothing to open flies to
- * the point. Hover rings the pin.
+ * the point. Hover rings the pin. A group's folded rows are bound with the
+ * rest, and its "Show {n} more" button unfolds them (bindAlongMore).
  *
  * `o.beforeOpen(key)` runs before a place opens, with the key its drawer will
  * answer to (`letter:id`, or `letter:ref` for coverage); `o.onLifted(from, to)`
@@ -103,6 +104,7 @@ export function bindAlongList(root, d, o = {}){
     b.onmouseenter = () => highlightAt(it.ll);
     b.onmouseleave = clearHighlight;
   });
+  bindAlongMore(root);
 }
 
 /* The one-step way back from a place to the route whose list opened it
@@ -137,32 +139,49 @@ function hydrateRouteSlot(routeId, slotId, path, fill){
     });
 }
 
-/* The route drawer's "Climbs on this route" (docs/specs/map-and-search.md §6.3).
-   A row opens the climb through its item-index entry, the same path search and
-   the ride check use, after moving the scope to the climb's own region when the
-   scope hides it (liftScopeForHit); hover rings the climb's foot. */
+/**
+ * Bind the rows routeClimbsHtml wrote under `root` for `climbs`, in the route
+ * drawer's "Climbs on this route" and the ride check's "Climbs on your ride".
+ * A row opens the climb through its item-index entry, the same path search and
+ * the along lists use (openListedPlace); hover rings the climb's foot.
+ *
+ * `o.beforeOpen(key)` runs before the climb opens, with the key its drawer will
+ * answer to (`N:id`); `o.onLifted(from, to)` hears a view-mode lift; `o.widen`
+ * moves the scope to the climb's own region when the scope hides it
+ * (liftScopeForHit), for a list that does not set the scope itself.
+ */
+export function bindRouteClimbs(root, climbs, o = {}){
+  const byId = new Map((climbs || []).map(c => [String(c.id), c]));
+  const idx = new Map(itemIndex().filter(e => e.letter === 'N' && e.id != null).map(e => [String(e.id), e]));
+  root.querySelectorAll('[data-route-climb]').forEach(b => {
+    const c = byId.get(b.dataset.routeClimb), entry = idx.get(b.dataset.routeClimb);
+    if(!c) return;
+    b.onclick = () => {
+      clearHighlight();
+      if(!entry){ flyToPin([c.ll[1], c.ll[0]]); highlightAt(c.ll); return; }
+      if(o.widen && !inScope(entry.rid)) liftScopeForHit(c.ll, entry.rid);
+      if(o.beforeOpen) o.beforeOpen('N:'+c.id);
+      const from = openListedPlace(entry.layer, entry.modeF, () => entry.go());
+      if(from != null && o.onLifted) o.onLifted(from, mode());
+    };
+    // The climb's pin stands at its foot (util.js pinPoint), which is `c.ll`.
+    b.onmouseenter = () => highlightAt(c.ll, ringOffset(listedPinDrawn(entry), entry && entry.hlOff));
+    b.onmouseleave = clearHighlight;
+  });
+}
+
+/* The route drawer's "Climbs on this route" (docs/specs/map-and-search.md §6.3):
+   the climbs the route rides. The ones it only passes near are in its along
+   list (hydrateRouteAlong). A row moves the scope to the climb's own region
+   when the scope hides it, and the climb drawer offers the way back to this
+   route. */
 export function hydrateRouteClimbs(routeId){
   hydrateRouteSlot(routeId, 'cc-d-climbs-slot', 'climbs', (slot, d) => {
     if(!Array.isArray(d.climbs)) return false;
     const html = routeClimbsHtml(d.climbs, {heading:D.routeClimbsH, at:D.routeClimbAt, avg:D.avgShort});
     if(!html) return false;
     slot.innerHTML = html;
-    const byId = new Map(d.climbs.map(c => [String(c.id), c]));
-    const idx = new Map(itemIndex().filter(e => e.letter === 'N' && e.id != null).map(e => [String(e.id), e]));
-    slot.querySelectorAll('[data-route-climb]').forEach(b => {
-      const c = byId.get(b.dataset.routeClimb), entry = idx.get(b.dataset.routeClimb);
-      if(!c) return;
-      b.onclick = () => {
-        clearHighlight();
-        if(!entry){ flyToPin([c.ll[1], c.ll[0]]); highlightAt(c.ll); return; }
-        if(!inScope(entry.rid)) liftScopeForHit(c.ll, entry.rid);
-        setDrawerHop(routeHop(routeId), 'N:'+c.id);   // the climb drawer offers the way back to this route
-        openListedPlace(entry.layer, entry.modeF, () => entry.go());
-      };
-      // The climb's pin stands at its foot (util.js pinPoint), which is `c.ll`.
-      b.onmouseenter = () => highlightAt(c.ll, ringOffset(listedPinDrawn(entry), entry && entry.hlOff));
-      b.onmouseleave = clearHighlight;
-    });
+    bindRouteClimbs(slot, d.climbs, {widen: true, beforeOpen: key => setDrawerHop(routeHop(routeId), key)});
     return true;
   });
 }
@@ -170,7 +189,8 @@ export function hydrateRouteClimbs(routeId){
 /* The route drawer's places along the route (docs/specs/map-and-search.md
    §6.3): the ride check's two lists (RideCheckService::alongRoute, the ride
    check's default corridor) written and bound by the same code as the ride
-   summary. The route drawer holds its route (drawer.js holdRoute): while it is
+   summary. Its climbs group holds the climbs near the route that it does not
+   ride. The route drawer holds its route (drawer.js holdRoute): while it is
    held, the listed pool places stay unclustered, and a place opened from a row
    keeps the route highlighted and offers "‹ route name" back. Letting the
    route go runs releaseRouteList. */
@@ -184,6 +204,7 @@ export function hydrateRouteAlong(routeId){
       coverageH: D.alongRouteCovH || 'Open coverage along the route',
       empty: tpl(D.nothingAlongRoute || 'Nothing in the Commons within {r} of this route yet.', {r: radius}),
       capped: D.capped, kmOff: D.kmOff, covNote: D.covArmNote,
+      more: D.showMore, fewer: D.showFewer,
     }});
     setListedPlaces(listedPlaceKeys(d.groups), 'route');
     bindAlongList(slot, d, {widen: true, beforeOpen: key => setDrawerHop(routeHop(routeId), key)});

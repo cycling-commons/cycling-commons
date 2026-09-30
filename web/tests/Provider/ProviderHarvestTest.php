@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Provider;
 
+use App\Catalog\CatalogStamps;
 use App\Provider\Entity\DataProvider;
 use App\Provider\ProviderHarvest;
 use App\Tests\Coverage\CoverageSchema;
@@ -420,6 +421,77 @@ final class ProviderHarvestTest extends KernelTestCase
         self::assertStringContainsString('paused', $tester->getDisplay());
     }
 
+    /** A paused provider is refused on standard input too, before anything is read. */
+    public function testAPausedProviderIsRefusedOnStandardInput(): void
+    {
+        $provider = $this->provider(50, 'harvest-paused-stdin');
+        $provider->setEnabled(false);
+        $this->em()->flush();
+
+        $tester = $this->harvestFromStdin(['provider' => 'harvest-paused-stdin', 'file' => '-', '--write' => true], $this->body([$this->geoFeature('harvest-test:paused-stdin', self::LAT, self::LNG)]));
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('paused', $tester->getDisplay());
+        self::assertFalse($this->db()->fetchOne("SELECT id FROM item WHERE source_ref = 'harvest-test:paused-stdin'"));
+    }
+
+    public function testAMissingFileIsRefused(): void
+    {
+        $this->provider(50, 'harvest-missing');
+
+        $tester = $this->harvestCommand(['provider' => 'harvest-missing', 'file' => sys_get_temp_dir().'/provider-harvest-does-not-exist.json']);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Cannot read', $tester->getDisplay());
+    }
+
+    /**
+     * `-` reads the records from standard input, which is how
+     * tools/provider-run.sh hands the pipeline's fetch to this container. A
+     * dry run prints the counts and leaves every catalog stamp where it was.
+     */
+    public function testStandardInputIsReadAndADryRunMovesNoStamp(): void
+    {
+        $this->provider(50, 'harvest-stdin');
+        $before = $this->stamps()->counts();
+
+        $tester = $this->harvestFromStdin(['provider' => 'harvest-stdin', 'file' => '-'], $this->body([$this->geoFeature('harvest-test:stdin-dry', self::LAT, self::LNG)]));
+        $tester->assertCommandIsSuccessful();
+
+        self::assertStringContainsString('Dry run', $tester->getDisplay());
+        self::assertMatchesRegularExpression('/\s1\s+1\s/', $tester->getDisplay(), 'the summary counts one read and one inserted');
+        self::assertFalse($this->db()->fetchOne("SELECT id FROM item WHERE source_ref = 'harvest-test:stdin-dry'"));
+        self::assertSame($before, $this->stamps()->counts());
+    }
+
+    /**
+     * A written harvest moves its region's stamp by trigger, so the map's
+     * documents rebuild on their next request with no cache clear
+     * (catalog-data-model.md §9.1).
+     */
+    public function testAWrittenHarvestMovesTheCatalogStampWithoutACacheClear(): void
+    {
+        $this->provider(50, 'harvest-stdin-write');
+        $before = $this->stamps()->counts();
+
+        $tester = $this->harvestFromStdin(['provider' => 'harvest-stdin-write', 'file' => '-', '--write' => true], $this->body([$this->geoFeature('harvest-test:stdin-write', self::LAT, self::LNG)]));
+        $tester->assertCommandIsSuccessful();
+
+        self::assertNotFalse($this->db()->fetchOne("SELECT id FROM item WHERE source_ref = 'harvest-test:stdin-write'"));
+        self::assertGreaterThan(array_sum($before), array_sum($this->stamps()->counts()));
+    }
+
+    /** An empty pipe is a fetch that handed nothing over, not an empty publisher. */
+    public function testNothingOnStandardInputIsRefused(): void
+    {
+        $this->provider(50, 'harvest-stdin-empty');
+
+        $tester = $this->harvestFromStdin(['provider' => 'harvest-stdin-empty', 'file' => '-', '--write' => true], '');
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('Nothing arrived on standard input', $tester->getDisplay());
+    }
+
     // --- helpers ----------------------------------------------------------
 
     /** @return array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code: string|null} */
@@ -450,9 +522,30 @@ final class ProviderHarvestTest extends KernelTestCase
     private function writeFile(array $features): string
     {
         $path = sys_get_temp_dir().'/provider-harvest-'.bin2hex(random_bytes(6)).'.json';
-        file_put_contents($path, json_encode(['type' => 'FeatureCollection', 'features' => $features], \JSON_THROW_ON_ERROR));
+        file_put_contents($path, $this->body($features));
 
         return $path;
+    }
+
+    /** @param list<array<string, mixed>> $features */
+    private function body(array $features): string
+    {
+        return json_encode(['type' => 'FeatureCollection', 'features' => $features], \JSON_THROW_ON_ERROR);
+    }
+
+    /** @param array<string, mixed> $args */
+    private function harvestFromStdin(array $args, string $body): CommandTester
+    {
+        $tester = new CommandTester((new Application(self::$kernel))->find('app:providers:harvest'));
+        $tester->setInputs([$body]);
+        $tester->execute($args, ['interactive' => false]);
+
+        return $tester;
+    }
+
+    private function stamps(): CatalogStamps
+    {
+        return static::getContainer()->get(CatalogStamps::class);
     }
 
     /** @param array<string, mixed> $args */

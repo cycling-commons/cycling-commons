@@ -154,6 +154,21 @@ final class CatalogEndpointTest extends WebTestCase
 
         $db->executeStatement('UPDATE item SET region_id = NULL WHERE id = :id', ['id' => $row['id']]);
         self::assertSame(['regions' => [0]], $boot('?item='.$row['id']), 'region 0 holds the places no region holds');
+
+        // A route brings its own region, and every other region its line
+        // passes through (map-and-search.md §8).
+        $routeId = (int) $db->fetchOne("SELECT id FROM recommended_route WHERE name = 'Test loop'");
+        self::assertSame(['regions' => [$rid]], $boot('?route='.$routeId), 'a route inside one region brings that region only');
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('test-east', 'Test East', ST_GeomFromText('MULTIPOLYGON(((5 50,6 50,6 51,5 51,5 50)))', 4326), 100, 'NL', 'NL-TST', 4, 'test', NOW(), NOW())",
+        );
+        $east = (int) $db->lastInsertId();
+        $db->executeStatement(
+            "UPDATE recommended_route SET geom = ST_GeomFromText('LINESTRING(4.4 50.6, 5.5 50.7, 4.4 50.6)', 4326) WHERE id = :id",
+            ['id' => $routeId],
+        );
+        self::assertSame(['regions' => [$rid, $east]], $boot('?route='.$routeId), 'a route across a border brings both sides');
     }
 
     /** The fixture catalog, on the same kernel (DAMA rolls it back). */

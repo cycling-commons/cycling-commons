@@ -1099,18 +1099,26 @@ judged, never how.
 **Where a photo can be attached.** On `/propose-route`, the one form for
 routes (route-domain.md §4.5):
 
-- with a **new proposal**: the photo fieldset under the route details; and
+- with a **new proposal**: the photo fieldset under the route details;
+- on the **proposer's edit** of a proposal still waiting for review
+  (`/propose-route/<id>/edit`, route-domain.md §4.6): the same fieldset, with
+  the photos already sent shown above the uploader as thumbnails. More can be
+  added; none can be taken out, the rule a place submission follows (a sent
+  submission's photos are decided by a curator, and the rider's way out is
+  withdrawing the whole submission). The uploader is offered only while the
+  proposal carries fewer than 6 photos; at 6 it says so instead; and
 - for a **live route** (`unverified` or `verified`), at
   `/propose-route?route=<id>`: photos and a note, nothing else, because
   riders never edit a route's data. The map drawer's add-photo prompt links
-  there for a route with no photo (map-and-search.md §6). A route still
-  waiting for review has no photo form of its own.
+  there for a route with no photo (map-and-search.md §6).
 
 Both mount `contribute/media-upload.js` with the wizard's ids and bag
 (`contribute/_media_config.html.twig`, `assets/styles/page/contribute/_media_styles.css`): consent is
 fail-closed and stored before the first upload (§4), the cap is 6, the
 endpoint is `POST /media/photos` with its limiter and type sniff (§3). Only
-the pin differs. A live route sends `ST_PointOnSurface(geom)`. A new proposal
+the pin differs. A live route, and a proposal on its proposer's edit, send
+`ST_PointOnSurface(geom)` of the stored line; on the edit a newly chosen GPX
+takes over with its middle track point. A new proposal
 has no stored line yet, so `contribute/route-photos.js` reads the middle track
 point of the GPX file the rider chose, a point on the route that is never its
 start or finish (route-domain.md §4.3); until a GPX is chosen the upload is
@@ -1118,7 +1126,9 @@ refused with "choose the GPX file first". Submit is held while a photo is
 uploading or checking.
 
 **Claim.** `MediaClaimService::claimForRoute()` runs the same checks as
-`claim()` (pending or pending_scan, unclaimed, the caller's own, at most 6)
+`claim()` (pending or pending_scan, unclaimed, the caller's own, at most 6,
+counting the pending and pending_scan photos the proposal or correction
+already carries, `routePhotoCount()`)
 and stamps `media_upload.route_id`, plus `route_suggestion_id` when the photos
 came as a photo correction. A route has no single pin, so the photo's GPS is
 measured to the **nearest point of the route's line**
@@ -1126,7 +1136,10 @@ measured to the **nearest point of the route's line**
 distance was measured to (§5g); the coordinates are then destroyed as usual.
 A photo still quarantined at claim time gets the same measurement from the
 worker (`ScanAndReleaseUploadHandler`). A proposal claims inside its intake
-transaction; a bad id refuses the whole proposal
+transaction, and the proposer's edit inside its own locked transaction
+(`RouteProposalService::revise()`) after the state is read again, so a
+proposal a curator has decided takes no photos through the edit. A bad id, or
+a seventh photo, refuses the whole proposal or edit
 (`contribute.error.media_invalid`). A route-claimed upload is never an orphan
 (§6).
 

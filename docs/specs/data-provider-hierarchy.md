@@ -170,6 +170,32 @@ of against a publisher having a good day. The ingest is DRY by default: it
 inserts into the catalogue riders read, so seeing the counts first is the
 normal way to run it and `--write` is the deliberate second step.
 
+**One command since 2026-09-30: `tools/provider-run.sh <key> [--write]`.**
+The two halves run in two containers that share no filesystem, so the file
+travels through the script: `providers.run --out -` writes the normalised
+GeoJSON to standard output (its summary goes to standard error), the script
+holds it in a private temporary directory, and `app:providers:harvest <key> -`
+reads it on standard input. Holding it rather than piping straight through is
+what keeps a failed fetch from reaching the ingest, where it would read as a
+malformed file and land in `last_error` as the wrong cause. The script exits
+non-zero with a message on any failure, and both halves refuse a paused
+provider. A service that is up is used with `exec`; one that is not (the
+pipeline on a worker host is a batch image with no resident process) runs the
+command once with `run --rm --no-deps`. Where each half runs is a flag:
+
+| Where | Command |
+|---|---|
+| Dev stack | `make provider-run KEY=rivm-drinkwater [WRITE=1]` (the script with `developers/docker/compose.yaml`, services `pipeline` and `app`, the ingest as `DEV_UID:DEV_GID`) |
+| Staging, production | on the worker host as `deploy`, from its copy of the release: `tools/provider-run.sh --worker-dir /opt/workers/cyclingcommons-<env> <key> [--write]`, which means `compose.pipeline.yaml` service `pipeline` and `compose.compute.yaml` service `worker` in that directory; `--pipeline-compose`, `--pipeline-service`, `--app-compose`, `--app-service` and `--app-user` override one part each |
+
+**No cache is cleared after a run, and none needs to be.** Every catalogue
+table the payload reads carries a `catalog_change` trigger, so a written
+harvest moves its regions' stamps at commit and the map's documents rebuild on
+their next request (catalog-data-model.md §9.1); a dry run rolls back and moves
+nothing. The one cache keyed on nothing the triggers see, the provider
+citations, is dropped by the ingest itself after a write. Both are pinned by
+`ProviderHarvestTest`.
+
 **Deviation, deliberate: we do not reproject.** We ask the service for
 `srsName=EPSG:4326` and refuse anything that comes back outside WGS84 bounds.
 The publisher's own transform is more authoritative than one applied to their
@@ -810,9 +836,12 @@ The last run's counts and errors already render, so the field is ready for it.
 first real harvest and asked where the source is set and how it runs. Every
 non-system row now shows what it fills (letters, country), the service and
 its kind, the WFS layer, the field map without its underscore keys, the
-cadence, and the exact commands of a refresh in order, dry then `--write`.
-Editing those fields, adding a row, and a Run button that crosses the two
-containers are filed in docs/TODO.md ("Opened 2026-09-05"). One row is one
+cadence, and the refresh command, dry then written. Since 2026-09-30 that is
+one command (§5), printed for the environment the desk is served from
+(`App\Provider\RefreshCommandLine`): the Make target on a developer machine,
+the script with the environment's `--worker-dir` on staging and production.
+Editing those fields, adding a row, and a Run button that queues the refresh
+where the pipeline lives are filed in docs/TODO.md ("Opened 2026-09-05"). One row is one
 provider in one country for one or more letters: another country's register
 for the same letter is another row with its own endpoint and field map, which
 is why `country_code` and `letters` live on the row and not on the letter.
@@ -902,6 +931,8 @@ Fixed here so four different pieces of work can target the same names.
 | Map citation payload | `App\Provider\ProviderCitations` |
 | Harvester (fetch and reproject) | `pipeline/providers/` |
 | Harvest entry point | `app:providers:harvest` |
+| One refresh, fetch to ingest | `tools/provider-run.sh`, `make provider-run` |
+| The refresh command the desk prints | `App\Provider\RefreshCommandLine` |
 
 `App\Provider` is a new top-level module beside `App\Catalog`,
 `App\Coverage` and `App\Messaging`, because it is owned by neither: the
@@ -1097,9 +1128,8 @@ is to be true, which is why the Georegister row is commented out. Enabling it
 and running with `--write` is one deliberate operator act:
 
 ```
-make provider-fetch   key=rivm-drinkwater out=/tmp/rivm.json
-make provider-harvest key=rivm-drinkwater file=/tmp/rivm.json          # dry
-make provider-harvest key=rivm-drinkwater file=/tmp/rivm.json write=1
+make provider-run KEY=rivm-drinkwater            # dry
+make provider-run KEY=rivm-drinkwater WRITE=1
 ```
 
 **Two mapping decisions worth knowing.** `beschrijvi` feeds the NOTE, not the
@@ -1184,7 +1214,8 @@ than discovered:
    keeps the rows and stops the refreshing).
 4. **The generic harvester.** ✅ Built 2026-09-04. §5, in two halves meeting at
    a normalised file: `pipeline/providers/` fetches, `app:providers:harvest`
-   matches and writes. `wallonie-pivot` was NOT moved onto it: its rows come
+   matches and writes. One command runs both since 2026-09-30
+   (`tools/provider-run.sh`, §5). `wallonie-pivot` was NOT moved onto it: its rows come
    from a committed fixture export rather than a live service, so pointing it
    at a WFS is a data-source decision for the register, not a refactor.
 5. **The Dutch taps.** ✅ Built 2026-09-04. §11, and it WAS the intended path:

@@ -721,6 +721,48 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
+     * A route whose line crosses a border names every region it passes
+     * through, its own first, so a `?route=` link scopes the map to the whole
+     * route (map-and-search.md §8). A route inside one region prints exactly
+     * as before: no `rids` key.
+     */
+    public function testARouteAcrossABorderNamesEveryRegionItPasses(): void
+    {
+        $db = $this->em->getConnection();
+        $provider = static::getContainer()->get(CatalogProvider::class);
+        $square = (int) $db->fetchOne("SELECT id FROM region WHERE slug = 'test-square'");
+        $routeId = (int) $db->fetchOne("SELECT id FROM recommended_route WHERE name = 'Test loop'");
+
+        self::assertArrayNotHasKey('rids', $provider->payload()['R'][0], 'a route inside one region carries its rid only');
+        self::assertSame([$square], $provider->servedRouteRegions($routeId));
+
+        // A neighbour across the border at 5°E, in another country.
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('test-east', 'Test East', ST_GeomFromText('MULTIPOLYGON(((5 50,6 50,6 51,5 51,5 50)))', 4326), 100, 'NL', 'NL-TST', 4, 'test', NOW(), NOW())",
+        );
+        $east = (int) $db->lastInsertId();
+        self::assertLessThan($east, $square, 'fixture: the neighbour has the higher id');
+
+        $db->executeStatement(
+            "UPDATE recommended_route SET geom = ST_GeomFromText('LINESTRING(4.4 50.6, 5.5 50.7, 4.4 50.6)', 4326) WHERE id = :id",
+            ['id' => $routeId],
+        );
+        $route = $provider->payload()['R'][0];
+        self::assertSame($square, $route['rid'], 'the row still lives in its own region');
+        self::assertSame([$square, $east], $route['rids']);
+        self::assertSame([$square, $east], $provider->payload($square)['R'][0]['rids'], 'the region slice carries the set too');
+        self::assertSame([$square, $east], $provider->servedRouteRegions($routeId));
+
+        // Own region first even when a crossed region has the lower id.
+        $db->executeStatement('UPDATE recommended_route SET region_id = :east WHERE id = :id', ['east' => $east, 'id' => $routeId]);
+        self::assertSame([$east, $square], $provider->payload()['R'][0]['rids']);
+
+        $db->executeStatement("UPDATE recommended_route SET state = 'retired' WHERE id = :id", ['id' => $routeId]);
+        self::assertSame([], $provider->servedRouteRegions($routeId), 'nothing to load for a route that is not on the map');
+    }
+
+    /**
      * A materialized A item (the confirm/correct flow) stores the FORM
      * vocabulary — surface: 'Asphalt' — and no `cls`, because `cls` was a
      * harvester attribute. The client keys the drawn class layer on `cls`, so

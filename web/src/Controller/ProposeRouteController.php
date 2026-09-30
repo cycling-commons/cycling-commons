@@ -9,12 +9,18 @@ namespace App\Controller;
 use App\Account\UnitFormatter;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemState;
+use App\Catalog\ItemType;
+use App\Catalog\RouteMetadata;
 use App\Contribution\RoutePhotoService;
 use App\Contribution\RouteProposalService;
 use App\Entity\User;
 use App\Form\ProposeRouteType;
+use App\Media\MediaClaimService;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
+use App\Moderation\AlreadyDecidedException;
+use App\Moderation\NotTheSubmitterException;
+use App\Moderation\RouteQueue;
 use App\Routing\LocalePrefix;
 use App\Service\ContributionReceipt;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,9 +35,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Route-proposal intake, and photos for a live route, never the item pipeline.
+ * Route-proposal intake, the proposer's edit while it waits, and photos for
+ * a live route, never the item pipeline.
  *
- * @see docs/specs/route-domain.md §4, §4.5
+ * @see docs/specs/route-domain.md §4, §4.5, §4.6
  *
  * @api
  */
@@ -44,6 +51,8 @@ final class ProposeRouteController extends AbstractController
         private readonly UnitFormatter $units,
         private readonly RoutePhotoService $photos,
         private readonly EntityManagerInterface $em,
+        private readonly MediaClaimService $claims,
+        private readonly RouteQueue $routeQueue,
     ) {
     }
 
@@ -61,6 +70,7 @@ final class ProposeRouteController extends AbstractController
         $form->handleRequest($request);
 
         $receipt = null;
+        $proposedRouteId = null;
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var array<string, mixed> $data */
             $data = $form->getData();
@@ -71,8 +81,9 @@ final class ProposeRouteController extends AbstractController
 
             try {
                 $route = $this->proposals->propose($gpx->getContent(), $data, $user);
+                $proposedRouteId = (int) $route->getId();
                 $receipt = new ContributionReceipt(
-                    reference: sprintf('CC-R%05d', (int) $route->getId()),
+                    reference: sprintf('CC-R%05d', $proposedRouteId),
                     kind: 'route',
                     persisted: true,
                     submittedAt: new \DateTimeImmutable(),
@@ -92,8 +103,94 @@ final class ProposeRouteController extends AbstractController
             'page_description' => 'meta.propose_route_description',
             'nav_active' => 'contribute',
             'receipt' => $receipt,
+            // The receipt's reference links to this route's card on the rider's Contributions.
+            'proposed_route_id' => $proposedRouteId,
             'form' => null !== $receipt ? null : $form,
             'photo_route' => null,
+            'edit_route' => null,
+        ]);
+    }
+
+    /**
+     * The proposer's own edit of a route proposal while it waits for review:
+     * the proposal form, prefilled, with the GPX optional. Anyone else's
+     * proposal, or an id that names none, is a 404. A proposal a curator has
+     * decided sends its proposer back to their Contributions with a notice.
+     * The desk reads the row itself, so the curator sees this version. The
+     * photos already sent are shown, and more can be added up to the cap of
+     * 6 through the same uploader as a first proposal; they are decided with
+     * the proposal.
+     *
+     * @see docs/specs/route-domain.md §4.6
+     */
+    #[Route('/propose-route/{id}/edit', name: 'propose_route_edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function edit(int $id, Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $route = $this->em->find(RecommendedRoute::class, $id);
+        if (null === $route || null === $route->getProposedBy() || $route->getProposedBy() !== $user->getId()) {
+            throw $this->createNotFoundException('No route proposal of yours.');
+        }
+        $back = $this->redirectToRoute('profile', ['letter' => ItemType::QualityRides->letter(), '_fragment' => 'route-'.$id], Response::HTTP_SEE_OTHER);
+        if (ItemState::Submitted !== $route->getState()) {
+            $this->addFlash('notice', 'flash.route_edit_too_late');
+
+            return $back;
+        }
+
+        // Read before the save: a refused save rolls back, so this stays true.
+        $photoRoom = max(0, MediaClaimService::MAX_PER_SUBMISSION - $this->claims->routePhotoCount($id, null));
+        $sentPhotos = $this->routeQueue->proposalPhotos($id);
+
+        $form = $this->createForm(ProposeRouteType::class, [
+            RouteMetadata::NAME_FIELD => $route->getName(),
+            ...RouteMetadata::formValues($route->getAttributes()),
+        ], ['proposal_edit' => true]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var array<string, mixed> $data */
+            $data = $form->getData();
+            $gpx = $data['gpx'] ?? null;
+
+            try {
+                $this->proposals->revise($id, $gpx instanceof UploadedFile ? $gpx->getContent() : null, $data, $user);
+                $this->addFlash('success', 'flash.route_proposal_saved');
+
+                return $back;
+            } catch (AlreadyDecidedException) {
+                $this->addFlash('notice', 'flash.route_edit_too_late');
+
+                return $back;
+            } catch (NotTheSubmitterException) {
+                throw $this->createNotFoundException('No route proposal of yours.');
+            } catch (TooManyRequestsHttpException) {
+                $this->addFlash('error', 'contribute.error.rate_limited');
+            } catch (\InvalidArgumentException $e) {
+                $form->addError(new FormError($this->translator->trans($e->getMessage(), [
+                    '%min%' => $this->units->distance(RouteProposalService::MIN_RAW_M / 1000, 0),
+                    '%max%' => $this->units->distance(RouteProposalService::MAX_RAW_M / 1000, 0),
+                ])));
+            }
+        }
+
+        return $this->render('contribute/propose_route.html.twig', [
+            'page_title' => 'meta.propose_route_edit_title',
+            'page_description' => 'meta.propose_route_edit_description',
+            'nav_active' => 'contribute',
+            'receipt' => null,
+            'form' => $form,
+            'photo_route' => null,
+            'edit_route' => [
+                'id' => $id,
+                'name' => $route->getName(),
+                // Where the uploader stores a photo until a new GPX is chosen (photo-uploads.md §5i).
+                'pin' => $this->pinOf($id),
+                'photos' => $sentPhotos,
+                'photo_room' => $photoRoom,
+            ],
         ]);
     }
 
@@ -154,6 +251,7 @@ final class ProposeRouteController extends AbstractController
                 'pin' => $pin,
                 'photos' => self::galleryOf($shown),
             ],
+            'edit_route' => null,
         ]);
     }
 

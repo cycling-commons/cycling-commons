@@ -12,13 +12,17 @@ use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionReason;
 use App\Catalog\RouteSuggestionStatus;
+use App\Contribution\RouteProposalService;
 use App\Entity\User;
 use App\Media\Entity\ConsentRecord;
 use App\Media\Entity\MediaUpload;
+use App\Media\MediaClaimService;
 use App\Media\MediaConsent;
 use App\Media\MediaStatus;
 use App\Media\MediaStorage;
 use App\Media\ProcessedPhoto;
+use App\Moderation\AlreadyDecidedException;
+use App\Moderation\NotTheSubmitterException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -27,9 +31,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Photos on /propose-route (docs/specs/route-domain.md §4.5,
- * photo-uploads.md §5i): with a new proposal, and for a live route through
- * `?route=<id>`; decided on the Routes desk with per-photo Keep boxes.
+ * Photos on /propose-route (docs/specs/route-domain.md §4.5, §4.6,
+ * photo-uploads.md §5i): with a new proposal, on the proposer's edit while it
+ * waits, and for a live route through `?route=<id>`; decided on the Routes
+ * desk with per-photo Keep boxes.
  */
 final class RoutePhotoFlowTest extends WebTestCase
 {
@@ -243,5 +248,202 @@ final class RoutePhotoFlowTest extends WebTestCase
         self::assertSame(RouteSuggestionStatus::Done, $this->em->find(RouteSuggestion::class, $suggestion->getId())?->getStatus());
         $photos = $this->em->find(RecommendedRoute::class, $route->getId())?->getAttributes()['photos'] ?? [];
         self::assertSame([$kept->getId()->toRfc4122()], array_column($photos, 'id'));
+    }
+
+    /** A proposal waiting for review, with the fields its edit form requires. */
+    private function proposal(User $by, ItemState $state = ItemState::Submitted): RecommendedRoute
+    {
+        $r = $this->route($state, $by);
+        $r->setAttributes(['difficulty' => ['score' => 2, 'label' => 'Moderate'], 'dominantSurface' => 'Asphalt']);
+        $this->em->flush();
+
+        return $r;
+    }
+
+    /** An upload already sent with `$route`'s proposal. */
+    private function sentWith(RecommendedRoute $route, User $owner): MediaUpload
+    {
+        $upload = $this->upload($owner);
+        $upload->claimForRoute((int) $route->getId(), null);
+        $this->em->flush();
+
+        return $upload;
+    }
+
+    private function claimedRoute(MediaUpload $upload): ?int
+    {
+        $this->em->clear();
+
+        return $this->em->find(MediaUpload::class, $upload->getId())?->getRouteId();
+    }
+
+    /** @return array<string, mixed> the edit form's values carrying `$uploads` */
+    private function editValues(RecommendedRoute $route, MediaUpload ...$uploads): array
+    {
+        $crawler = $this->client->request('GET', '/propose-route/'.$route->getId().'/edit');
+        self::assertResponseIsSuccessful();
+        $form = $crawler->filter('form[name="propose_route"]')->form();
+        $form['propose_route[mediaIds]'] = json_encode(array_map(static fn (MediaUpload $u): string => $u->getId()->toRfc4122(), $uploads), \JSON_THROW_ON_ERROR);
+
+        return ['uri' => $form->getUri(), 'values' => $form->getPhpValues()];
+    }
+
+    public function testAPhotoWithoutConsentIsRefusedAndTheProposalWithIt(): void
+    {
+        $rider = $this->rider();
+        $this->client->loginUser($rider);
+        $this->client->request('GET', '/media/token');
+        $token = (string) (json_decode((string) $this->client->getResponse()->getContent(), true)['token'] ?? '');
+
+        // The uploader's own endpoint, with the pin route-photos.js sends: no consent, no upload.
+        $image = new \Imagick();
+        $image->newImage(1200, 900, 'green');
+        $image->setImageFormat('jpeg');
+        $path = sys_get_temp_dir().'/cc-rpf-'.bin2hex(random_bytes(4)).'.jpeg';
+        $image->writeImage($path);
+        $image->clear();
+        $this->client->request('POST', '/media/photos', ['_token' => $token, 'lat' => '50.05', 'lng' => '5.3'], [
+            'photo' => new UploadedFile($path, 'ride.jpeg', 'image/jpeg', null, true),
+        ]);
+        @unlink($path);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('consent_required', json_decode((string) $this->client->getResponse()->getContent(), true)['error'] ?? null);
+        self::assertSame(0, $this->em->getRepository(MediaUpload::class)->count(['userId' => $rider->getId()]));
+
+        // A proposal naming a photo that was never stored is refused whole.
+        $crawler = $this->client->request('GET', '/propose-route');
+        $form = $crawler->filter('form[name="propose_route"]')->form();
+        $form['propose_route[rName]'] = 'No consent proposal';
+        $form['propose_route[difficulty]'] = 'Moderate';
+        $form['propose_route[dominantSurface]'] = 'Asphalt';
+        $form['propose_route[mediaIds]'] = json_encode([Uuid::v4()->toRfc4122()], \JSON_THROW_ON_ERROR);
+        $gpx = self::gpx();
+        $this->client->request('POST', $form->getUri(), $form->getPhpValues(), [
+            'propose_route' => ['gpx' => new UploadedFile($gpx, 'photo.gpx', 'application/gpx+xml', null, true)],
+        ]);
+        @unlink($gpx);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('could not be used', (string) $this->client->getResponse()->getContent());
+        self::assertNull($this->em->getRepository(RecommendedRoute::class)->findOneBy(['name' => 'No consent proposal']));
+    }
+
+    public function testTheProposerEditCarriesTheUploaderAndTheSentPhotos(): void
+    {
+        $rider = $this->rider();
+        $route = $this->proposal($rider);
+        $this->sentWith($route, $rider);
+        $this->client->loginUser($rider);
+
+        $crawler = $this->client->request('GET', '/propose-route/'.$route->getId().'/edit');
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $crawler->filter('form[data-route-photos][data-route-pin] #file-photo')->count());
+        self::assertSame(1, $crawler->filter('#media-consent')->count(), 'the same consent gate as a first proposal');
+        self::assertSame(1, $crawler->filter('.rp-existing img')->count(), 'the photo already sent is shown');
+        self::assertSame(1, $crawler->filter('script[src*="contribute/media-upload"]')->count());
+        self::assertSame(1, $crawler->filter('script[src*="contribute/route-photos"]')->count());
+        self::assertStringContainsString('"max":5', (string) $this->client->getResponse()->getContent(), 'the cap counts the photo already sent');
+    }
+
+    public function testTheProposerAddsAPhotoOnTheEdit(): void
+    {
+        $rider = $this->rider();
+        $route = $this->proposal($rider);
+        $sent = $this->sentWith($route, $rider);
+        $added = $this->upload($rider);
+        $this->client->loginUser($rider);
+
+        $edit = $this->editValues($route, $added);
+        $this->client->request('POST', $edit['uri'], $edit['values']);
+        self::assertResponseRedirects('/account/contributions?letter=R#route-'.$route->getId(), 303);
+
+        self::assertSame($route->getId(), $this->claimedRoute($added));
+        $row = $this->em->find(MediaUpload::class, $added->getId());
+        self::assertNull($row?->getRouteSuggestionId(), 'claimed by the proposal, decided with it');
+        self::assertSame(MediaStatus::Pending, $row?->getStatus(), 'unpublished until the route is approved');
+        self::assertSame($route->getId(), $this->claimedRoute($sent), 'the photo sent first stays');
+        self::assertSame(ItemState::Submitted, $this->em->find(RecommendedRoute::class, $route->getId())?->getState());
+    }
+
+    public function testTheEditKeepsAProposalWithinSixPhotos(): void
+    {
+        $rider = $this->rider();
+        $route = $this->proposal($rider);
+        $this->client->loginUser($rider);
+        for ($i = 0; $i < MediaClaimService::MAX_PER_SUBMISSION - 1; ++$i) {
+            $this->sentWith($route, $rider);
+        }
+        $sixth = $this->upload($rider);
+        $seventh = $this->upload($rider);
+
+        $edit = $this->editValues($route, $sixth, $seventh);
+        $this->client->request('POST', $edit['uri'], $edit['values']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertNull($this->claimedRoute($sixth), 'a refused save claims nothing');
+        self::assertNull($this->claimedRoute($seventh));
+
+        $edit = $this->editValues($route, $sixth);
+        $this->client->request('POST', $edit['uri'], $edit['values']);
+        self::assertResponseRedirects();
+        self::assertSame($route->getId(), $this->claimedRoute($sixth));
+
+        $crawler = $this->client->request('GET', '/propose-route/'.$route->getId().'/edit');
+        self::assertSame(0, $crawler->filter('#file-photo')->count(), 'a full proposal offers no uploader');
+        self::assertStringContainsString('already carries 6 photos', $crawler->filter('form[name="propose_route"]')->text());
+    }
+
+    public function testAnotherRiderCannotAddPhotosToSomeoneElsesProposal(): void
+    {
+        $owner = $this->rider();
+        $route = $this->proposal($owner);
+        $other = $this->rider();
+        $theirs = $this->upload($other);
+        $this->client->loginUser($other);
+
+        $this->client->request('POST', '/propose-route/'.$route->getId().'/edit', ['propose_route' => [
+            'rName' => 'Hijack', 'difficulty' => 'Moderate', 'dominantSurface' => 'Asphalt',
+            'mediaIds' => json_encode([$theirs->getId()->toRfc4122()], \JSON_THROW_ON_ERROR),
+        ]]);
+        self::assertResponseStatusCodeSame(404);
+        self::assertNull($this->claimedRoute($theirs));
+
+        // The service refuses it on its own, whatever the controller does.
+        $threw = false;
+        try {
+            static::getContainer()->get(RouteProposalService::class)->revise((int) $route->getId(), null, [
+                'rName' => 'Hijack', 'mediaIds' => json_encode([$theirs->getId()->toRfc4122()], \JSON_THROW_ON_ERROR),
+            ], $other);
+        } catch (NotTheSubmitterException) {
+            $threw = true;
+        }
+        self::assertTrue($threw);
+        self::assertNull($this->claimedRoute($theirs));
+    }
+
+    public function testADecidedRouteGetsNoPhotosThroughTheEditPath(): void
+    {
+        $rider = $this->rider();
+        $route = $this->proposal($rider, ItemState::Unverified);
+        $upload = $this->upload($rider);
+        $this->client->loginUser($rider);
+
+        $this->client->request('POST', '/propose-route/'.$route->getId().'/edit', ['propose_route' => [
+            'rName' => 'Late', 'difficulty' => 'Moderate', 'dominantSurface' => 'Asphalt',
+            'mediaIds' => json_encode([$upload->getId()->toRfc4122()], \JSON_THROW_ON_ERROR),
+        ]]);
+        self::assertResponseRedirects('/account/contributions?letter=R#route-'.$route->getId(), 303);
+        self::assertNull($this->claimedRoute($upload));
+
+        // An edit racing the decision: the locked re-read refuses it, photos included.
+        $threw = false;
+        try {
+            static::getContainer()->get(RouteProposalService::class)->revise((int) $route->getId(), null, [
+                'rName' => 'Late', 'mediaIds' => json_encode([$upload->getId()->toRfc4122()], \JSON_THROW_ON_ERROR),
+            ], $rider);
+        } catch (AlreadyDecidedException) {
+            $threw = true;
+        }
+        self::assertTrue($threw);
+        self::assertNull($this->claimedRoute($upload));
     }
 }

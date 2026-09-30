@@ -12,6 +12,7 @@ use App\Catalog\GoneRows;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\RideCheckService;
+use App\Catalog\RouteClimbService;
 use App\Tests\Coverage\CoverageSchema;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -79,14 +80,15 @@ final class RideCheckServiceTest extends KernelTestCase
     }
 
     /** An OSM-sourced item, Verified by default: an untouched unverified import is the coverage tiles' point, not a payload row (CoverageRetirement). */
-    private function seedItem(string $letter, string $name, string $geomJson, string $ref, ItemState $state = ItemState::Verified): int
+    /** @param array<string, mixed> $attributes */
+    private function seedItem(string $letter, string $name, string $geomJson, string $ref, ItemState $state = ItemState::Verified, array $attributes = []): int
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $item = (new Item())->setLetter($letter)->setName($name)
             ->setGeom($geomJson)->setCountryCode('BE')
             ->setState($state)->setSource(ItemSource::Osm)
             ->setSourceRef('node/'.$ref)
-            ->setAttributes([]);
+            ->setAttributes($attributes);
         $em->persist($item);
         $em->flush();
 
@@ -281,6 +283,122 @@ final class RideCheckServiceTest extends KernelTestCase
         // ref the frontend cannot open the POI at all — /map/coverage/poi/{ref}
         // is the only lookup, so a coverage row is useless to a rider without it.
         self::assertSame('node/cov-ref', $refs['OSM ref fountain'] ?? null);
+    }
+
+    public function testARideListsAClimbItRidesFootToSummitWhereverItsStoredPointIs(): void
+    {
+        // The stored point sits ~1.1 km north of the ride, outside even the
+        // widest corridor (Côte de Mont-le-Soie's stored point is ~1 km off its
+        // line). The climb line runs along the ride, foot (west) to summit
+        // (east). The ride counts a climb by its line, as "Climbs on this
+        // route" does (RouteClimbService), and places it at its foot, where the
+        // map pins it (util.js pinPoint).
+        $climb = $this->seedItem('N', 'Côte ridden', self::point(50.4100, 5.8100), 'rc-climb', ItemState::Verified,
+            ['route' => [[50.4000, 5.8050], [50.4000, 5.8075], [50.4000, 5.8100]]]);
+
+        $result = $this->service()->check(self::ride(), 100);
+
+        self::assertSame([$climb], array_column($result['climbs'], 'id'), 'the climb is listed by its line, not its stored point');
+        $item = $result['climbs'][0];
+        self::assertEqualsWithDelta(50.4000, $item['ll'][0], 0.00001, 'placed at its foot');
+        self::assertEqualsWithDelta(5.8050, $item['ll'][1], 0.00001);
+        self::assertSame(0, $item['distM'], 'the ride is on the climb line');
+        // The foot is 0.005° lng (≈ 355 m) from the ride's start.
+        self::assertEqualsWithDelta(0.4, $item['alongKm'], 0.05);
+        self::assertNotContains('N', array_column($result['groups'], 'letter'), 'a ridden climb is not in the along list too');
+    }
+
+    public function testAClimbTheRideOnlyPassesOrRidesDownhillIsInTheAlongListNotTheClimbs(): void
+    {
+        // Stored point on the track, climb line ~445 m north of it at its
+        // nearest (lat 50.4040).
+        $far = $this->seedItem('N', 'Côte far line', self::point(50.40045, 5.8150), 'rc-climb-far', ItemState::Verified,
+            ['route' => [[50.4100, 5.8100], [50.4070, 5.8120], [50.4040, 5.8140]]]);
+        // On the ride, but ridden summit to foot: the foot is at the east end.
+        $down = $this->seedItem('N', 'Côte downhill', self::point(50.4000, 5.8250), 'rc-climb-down', ItemState::Verified,
+            ['route' => [[50.4000, 5.8250], [50.4000, 5.8225], [50.4000, 5.8200]]]);
+        // No usable line to ride or pass.
+        $this->seedItem('N', 'Côte no line', self::point(50.40045, 5.8250), 'rc-climb-bare', ItemState::Verified,
+            ['route' => 'not a line']);
+
+        $result = $this->service()->check(self::ride(), 1000);
+
+        $groups = array_column($result['groups'], null, 'letter');
+        self::assertArrayHasKey('N', $groups);
+        $items = $groups['N']['items'];
+        self::assertSame([$far, $down], array_column($items, 'id'), 'in km order, the climb with no line left out');
+        self::assertSame([], $result['climbs'], 'the ride climbs none of them');
+        self::assertEqualsWithDelta(445, $items[0]['distM'], 5);
+        self::assertSame(0, $items[1]['distM']);
+        self::assertEqualsWithDelta(50.4000, $items[1]['ll'][0], 0.00001, 'placed at its foot');
+        self::assertEqualsWithDelta(5.8250, $items[1]['ll'][1], 0.00001);
+
+        $narrow = $this->service()->check(self::ride(), 250);
+        $narrowN = array_column($narrow['groups'], null, 'letter')['N']['items'] ?? [];
+        self::assertSame([$down], array_column($narrowN, 'id'), 'a line beyond the radius is not listed');
+    }
+
+    public function testTheRiddenClimbsAreTheirOwnListAndTheNearOnesTheAlongListsClimbsGroup(): void
+    {
+        // The ride passes this climb's foot early (km ~1.1) and turns away:
+        // the line climbs north from the track, so only its first metres are
+        // within 40 m of the ride.
+        $foot = $this->seedItem('N', 'Côte passed at foot', self::point(50.4000, 5.8150), 'rc-climb-foot', ItemState::Verified,
+            ['route' => [[50.4000, 5.8150], [50.4050, 5.8150], [50.4100, 5.8150]]]);
+        // Ridden foot to summit, later along the ride (km ~1.8).
+        $ridden = $this->seedItem('N', 'Côte ridden late', self::point(50.4000, 5.8250), 'rc-climb-late', ItemState::Verified,
+            ['route' => [[50.4000, 5.8250], [50.4000, 5.8275], [50.4000, 5.8300]], 'avgGradient' => '6.1%']);
+        // Its nearest point is ~560 m north of the ride: beyond a 250 m radius.
+        $this->seedItem('N', 'Côte out of reach', self::point(50.4100, 5.8050), 'rc-climb-out', ItemState::Verified,
+            ['route' => [[50.4050, 5.8050], [50.4100, 5.8050]]]);
+
+        $result = $this->service()->check(self::ride(), 250);
+
+        self::assertSame([$ridden], array_column($result['climbs'], 'id'), 'the ridden climb in its own list');
+        self::assertEqualsWithDelta(1.8, $result['climbs'][0]['alongKm'], 0.05, 'a ridden row is where the ascent starts');
+        self::assertSame('6.1%', $result['climbs'][0]['avgGradient'], 'with the headline gradient "Climbs on this route" shows');
+        $items = array_column($result['groups'], null, 'letter')['N']['items'];
+        self::assertSame([$foot], array_column($items, 'id'), 'the near one in the along list, the far one absent, no climb twice');
+        self::assertEqualsWithDelta(1.1, $items[0]['alongKm'], 0.05, 'a near row is where the track comes closest to the line');
+        self::assertSame(0, $items[0]['distM']);
+        self::assertEqualsWithDelta(50.4000, $items[0]['ll'][0], 0.00001, 'a near climb stands at its foot too');
+        self::assertEqualsWithDelta(5.8150, $items[0]['ll'][1], 0.00001);
+    }
+
+    public function testANearClimbTouchingTheTrackTwiceReadsItsFirstPass(): void
+    {
+        // An out-and-back ride along the same road; the climb climbs north
+        // from that road, so the ride passes its foot on the way out and on
+        // the way back. The row reads the first pass.
+        $climb = $this->seedItem('N', 'Côte twice', self::point(50.4000, 5.8100), 'rc-climb-twice', ItemState::Verified,
+            ['route' => [[50.4000, 5.8100], [50.4050, 5.8100], [50.4100, 5.8100]]]);
+
+        $result = $this->service()->check(self::gpx([[50.4000, 5.8000], [50.4000, 5.8300], [50.4000, 5.8000]]), 100);
+
+        $items = array_column($result['groups'], null, 'letter')['N']['items'];
+        self::assertSame([$climb], array_column($items, 'id'));
+        self::assertSame([], $result['climbs']);
+        self::assertEqualsWithDelta(0.7, $items[0]['alongKm'], 0.05, 'the way out, not the way back (~3.6 km)');
+    }
+
+    public function testKmAlongARideThatTurnsIsTrueDistanceForEveryRow(): void
+    {
+        // An L: ~3.34 km north, then ~4.26 km east. The fountain and the
+        // climb's foot sit 0.03° lng into the east leg: 5.47 km along in
+        // metres, where the line's fraction in degrees (0.06 of 0.09) would
+        // say 5.07 km.
+        $fountain = $this->seedItem('B', 'Corner fountain', self::point(50.4303, 5.8300), 'rc-l-fountain');
+        $climb = $this->seedItem('N', 'Corner climb', self::point(50.4303, 5.8300), 'rc-l-climb', ItemState::Verified,
+            ['route' => [[50.4300, 5.8300], [50.4300, 5.8325], [50.4300, 5.8350]]]);
+
+        $result = $this->service()->check(self::gpx([[50.4000, 5.8000], [50.4300, 5.8000], [50.4300, 5.8600]]), 100);
+
+        self::assertSame(['B'], array_column($result['groups'], 'letter'), 'the ridden climb is not an along row');
+        $fountainRow = $result['groups'][0]['items'][0];
+        $climbRow = $result['climbs'][0];
+        self::assertSame([$fountain, $climb], [$fountainRow['id'], $climbRow['id']]);
+        self::assertEqualsWithDelta(5.5, $fountainRow['alongKm'], 0.05);
+        self::assertSame($fountainRow['alongKm'], $climbRow['alongKm'], 'the climbs and the corridor rows read one scale');
     }
 
     public function testCuratedItemsCarryNoRef(): void
@@ -494,17 +612,61 @@ final class RideCheckServiceTest extends KernelTestCase
         self::assertContains('OSM route pump', self::coverageNames($result));
     }
 
-    public function testAlongARouteLeavesClimbsToTheirOwnList(): void
+    public function testAlongARouteListsTheClimbsNearItThatItDoesNotRide(): void
     {
-        // A climb beside the route is in the corridor, but "Climbs on this
-        // route" (RouteClimbService) decides which climbs the route rides.
+        // RouteClimbService decides which climbs the route rides ("Climbs on
+        // this route") and which it passes near: only the near ones are along
+        // rows, by their line. A climb's stored point never lists it.
         $route = $this->seedRouteInState(ItemState::Verified);
-        $this->seedItem('N', 'Corridor climb', self::point(50.40045, 5.8050), 'along-climb');
+        $this->seedItem('N', 'Corridor point, no line', self::point(50.40045, 5.8050), 'along-climb');
+        $ridden = $this->seedItem('N', 'Along ridden climb', self::point(50.4000, 5.8250), 'along-ridden', ItemState::Verified,
+            ['route' => [[50.4000, 5.8250], [50.4000, 5.8275], [50.4000, 5.8300]]]);
+        // Passed at its foot (km ~1.1), stored point ~1.1 km north: outside the corridor.
+        $near = $this->seedItem('N', 'Along passed climb', self::point(50.4100, 5.8150), 'along-near', ItemState::Verified,
+            ['route' => [[50.4000, 5.8150], [50.4050, 5.8150], [50.4100, 5.8150]]]);
+        // Crossed at right angles near the start (km ~0.4).
+        $crossed = $this->seedItem('N', 'Along crossed climb', self::point(50.3950, 5.8050), 'along-crossed', ItemState::Verified,
+            ['route' => [[50.3950, 5.8050], [50.4050, 5.8050]]]);
 
         $result = $this->service()->alongRoute($route, allowSubmitted: false);
+        $climbs = static::getContainer()->get(RouteClimbService::class)->climbsOn($route, false);
 
         self::assertNotNull($result);
-        self::assertNotContains('N', array_column($result['groups'], 'letter'));
+        $items = array_column($result['groups'], null, 'letter')['N']['items'] ?? [];
+        self::assertSame([$crossed, $near], array_column($items, 'id'), 'near climbs in km order; the ridden one and the lineless point are not along rows');
+        self::assertEqualsWithDelta(0.4, $items[0]['alongKm'], 0.05);
+        self::assertEqualsWithDelta(1.1, $items[1]['alongKm'], 0.05);
+        self::assertSame([$ridden], array_column($climbs ?? [], 'id'), 'the ridden one is in "Climbs on this route"');
+    }
+
+    public function testKmAlongARouteIsTrueDistanceAndMatchesItsClimbsList(): void
+    {
+        // The L route of testKmAlongARideThatTurnsIsTrueDistanceForEveryRow():
+        // "Along this route" and "Climbs on this route" put a fountain and a
+        // climb foot at the same spot at the same km, in true metres.
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $route = (new RecommendedRoute())->setName('L route')
+            ->setGeom(self::line([[5.8000, 50.4000], [5.8000, 50.4300], [5.8600, 50.4300]]))
+            ->setDistanceM(7_600)->setAscentM(0)
+            ->setState(ItemState::Verified)->setSource(ItemSource::Auto)
+            ->setSourceRef('fx:along-l-'.bin2hex(random_bytes(4)))
+            ->setAttributes([]);
+        $em->persist($route);
+        $em->flush();
+        $routeId = (int) $route->getId();
+        $this->seedItem('B', 'Corner fountain', self::point(50.4303, 5.8300), 'along-l-fountain');
+        $climb = $this->seedItem('N', 'Corner climb', self::point(50.4303, 5.8300), 'along-l-climb', ItemState::Verified,
+            ['route' => [[50.4300, 5.8300], [50.4300, 5.8325], [50.4300, 5.8350]]]);
+
+        $along = $this->service()->alongRoute($routeId, allowSubmitted: false);
+        $climbs = static::getContainer()->get(RouteClimbService::class)->climbsOn($routeId, false);
+
+        self::assertNotNull($along);
+        self::assertNotNull($climbs);
+        $fountainRow = array_column($along['groups'], null, 'letter')['B']['items'][0];
+        self::assertSame(5.5, $fountainRow['alongKm'], 'true metres along, not the fraction in degrees (5.1)');
+        self::assertSame([$climb], array_column($climbs, 'id'));
+        self::assertSame($fountainRow['alongKm'], $climbs[0]['alongKm']);
     }
 
     public function testAlongARouteWaitingForReviewNeedsThePreviewAllowance(): void

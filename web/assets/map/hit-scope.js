@@ -18,9 +18,24 @@
  * looking there, so both answer null.
  */
 export function hitScopeFor(current, target){
-  const id = target && target.id;
-  if(id == null) return null;                                    // outside every onboarded region: nothing better to show it
+  return hitScopeForAll(current, [target]);
+}
+
+/**
+ * The same answer for a target that spans several regions: a route whose line
+ * crosses a border (docs/specs/map-and-search.md §8). `targets` is every region
+ * the target touches ([{id, countryCode}], its own region first). The answer
+ * holds all of them, the way a loaded ride does (ride-scope.js), so no part of
+ * the route falls outside the scope; the country code is kept only when they
+ * share one. Null when the rider's scope already holds every one of them.
+ */
+export function hitScopeForAll(current, targets){
+  const list = (Array.isArray(targets) ? targets : []).filter(t => t && t.id != null);
+  if(!list.length) return null;                                   // outside every onboarded region: nothing better to show it
   if(current && current.kind === 'everywhere') return null;       // everything is drawn already
-  if(current && (current.regionIds || []).indexOf(id) !== -1) return null;
-  return { kind:'region', regionIds:[id], countryCode: (target && target.countryCode) || null };
+  const held = (current && current.regionIds) || [];
+  if(list.every(t => held.indexOf(t.id) !== -1)) return null;
+  const ids = [...new Set(list.map(t => t.id))];
+  const ccs = [...new Set(list.map(t => t.countryCode).filter(Boolean))];
+  return { kind:'region', regionIds:ids, countryCode: ccs.length === 1 ? ccs[0] : null };
 }

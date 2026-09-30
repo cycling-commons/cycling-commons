@@ -2,6 +2,11 @@
 """Fetch one provider's service and write the file the ingest reads.
 
     python -m providers.run --key rivm-drinkwater --out /tmp/rivm.json
+    python -m providers.run --key rivm-drinkwater --out -
+
+`--out -` writes the file to standard output and everything else to standard
+error, so the output can be handed to the ingest in another container without
+a shared path. `tools/provider-run.sh` runs a whole refresh that way.
 
 The provider's configuration is read from `data_provider`, not from a flag or
 a script: adding a dataset is a row on the curator desk, which is the whole
@@ -133,7 +138,8 @@ def convert(provider: dict, document: dict) -> tuple[list[dict], list[str]]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--key", required=True, help="provider_key in data_provider")
-    parser.add_argument("--out", required=True, help="where to write the normalised GeoJSON")
+    parser.add_argument("--out", required=True,
+                        help="where to write the normalised GeoJSON; - for standard output")
     parser.add_argument("--dsn", default=os.environ.get("DATABASE_DSN", ""))
     args = parser.parse_args(argv)
 
@@ -154,12 +160,18 @@ def main(argv: list[str] | None = None) -> int:
         # the ingest mark every existing row stale.
         raise SystemExit("No usable features. Refusing to write an empty harvest.")
 
-    path = pathlib.Path(args.out)
-    path.write_text(
-        json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False),
-        encoding="utf-8",
-    )
-    print(f"{provider['key']}: {len(features)} features, {len(refusals)} refused -> {path}")
+    body = json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False)
+    if args.out == "-":
+        # Standard output carries the file and nothing else: the ingest reads
+        # it as JSON, so the summary below goes to standard error.
+        sys.stdout.buffer.write(body.encode("utf-8"))
+        sys.stdout.buffer.flush()
+        target = "standard output"
+    else:
+        pathlib.Path(args.out).write_text(body, encoding="utf-8")
+        target = args.out
+    print(f"{provider['key']}: {len(features)} features, {len(refusals)} refused -> {target}",
+          file=sys.stderr)
 
     return 0
 

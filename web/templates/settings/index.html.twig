@@ -65,8 +65,9 @@
     <div class="grid-2">
       <div class="field">
         {{ form_label(profileForm.displayName) }}
-        {{ form_widget(profileForm.displayName) }}
+        {{ form_widget(profileForm.displayName, {attr: profileForm.displayName.vars.attr|merge({'aria-describedby': profileForm.displayName.vars.id ~ '_hint'})}) }}
         {{ form_errors(profileForm.displayName) }}
+        {% include 'partials/_name_hint.html.twig' with {input_id: profileForm.displayName.vars.id, class: 'hint', name_in_use: name_in_use} only %}
       </div>
       <div class="field">
         <label for="settings-email">{{ 'settings.label_email'|trans }}</label>
@@ -464,4 +465,5 @@
 <script src="{{ asset('js/password-toggle.js') }}" defer></script>
 <script src="{{ asset('js/auth-validate.js') }}" defer></script>
 <script src="{{ asset('settings/base-location.js') }}" defer></script>
+<script src="{{ asset('js/name-hint.js') }}" defer></script>
 {% endblock %}

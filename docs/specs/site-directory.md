@@ -25,7 +25,9 @@ bug, Report a page or a photo as its capital, Accessibility). Pinned by
 Open: whether `best_of` and `roles` belong in the directory; the header
 links the first and the footer the second (§5).
 
-- **Map** (default): the directory drawn as a touring map in one SVG.
+- **Map** (default): the directory drawn as a touring map, in two SVGs
+  from the same data: a wide map, and a tall strip map that a phone shows
+  in its place (site-directory.md §2, last two paragraphs).
 - **List**: one heading per country, in the map's order, with that
   country's cards under it; no per-card label, the heading says it. A short
   trail-orange dash before each heading is the list's one accent, matching
@@ -63,9 +65,37 @@ smoothly through the points. A road may carry `via` points to route
 around a label (Landing to About runs as a coast road down the western
 edge); a hub may put its label
 above, left or right when a road would otherwise run through the label
-below it. Coordinates are map units in a 1000 x 660 viewBox; on a narrow
-screen the map pans sideways (`min-width: 820px` inside `overflow-x: auto`)
-rather than shrinking.
+below it. Coordinates are map units in a 1000 x 660 viewBox; the wide map never
+shrinks below 820px (`min-width: 820px` inside `overflow-x: auto`).
+
+At 880px of window or less (a phone, or a tablet held upright) the page
+scrolls down and never sideways:
+the wide map gives way to a tall one, a strip map in a 340-unit wide viewBox
+(`svg.pmap-tall`; the wide one is `svg.pmap-wide`), swapped by a media query
+in `pages.css`, so a cached page needs no second copy. The strip map is the
+same map, not a summary of it: the same six countries with the same borders,
+every page as a hub with the same link and tooltip, every road with the same
+kind and the same bending rule, one key under both, and the same toggle to
+the list. Its countries stack top to bottom in the order The atlas, Take
+part, Your account, Open data and the project, Quality and reports, About
+and the small print, which makes every road but the Landing to About coast
+road run between neighbours; the coast road runs down the western edge as
+it does on the wide map. The strip stops growing at 440px wide, and its
+country names are set at 15 units instead of 17.
+
+Both drawings come from the one list of groups, pages and roads. Each group
+and page carries a `t` set beside its wide coordinates (`t.x`, `t.y`, `t.lp`
+for a page; `t.x`, `t.y`, `t.w`, `t.h` for a country), and a road may carry
+`t.via` and `t.bend` for the tall drawing only. A page without a `t` set
+fails to render, so a page cannot reach one drawing and miss the other. On
+the tall drawing a label longer than 14 characters wraps between words onto
+further lines, so every locale's labels fit the 340-unit width; the tall
+positions were checked in all five locales for labels that touch each
+other, labels that cross a road or leave their country, and roads that run
+through a hub. Pinned by
+`ContentPagesTest::testTheDirectoryMapAndListLinkTheSamePages` (both
+drawings link every page on the list, draw every road and all six
+countries).
 
 ## 3. The toggle needs no script
 
@@ -98,6 +128,13 @@ rule between the three.
   three buttons (Explore the map, Contribute, Get involved), then the account
   chip or Log in, then the language pill. Vote, Developers and Licence left
   the header for the footer; Vote comes back up when it ships.
+- **Phone menu** (`assets/js/nav.js` copies every header link into the
+  slide-in drawer). The drawer has room the bar has not, so six links carry
+  `class="menu-only"`, hidden in the bar (`atlas.css`) and shown in the drawer
+  after About (owner 2026-09-30): Scout, Map key, Propose a route, What's new,
+  Known issues, All pages. The pages a rider opens on or right after a ride,
+  and the directory as the way to everything else. The floating bug button
+  already covers Report a bug.
 - **Footer** (`partials/_footer.html.twig`): five columns, The atlas, Take
   part, Open data and the project, Quality and reports, About and the small
   print. The sixth group, Your account, stays behind the account chip and is

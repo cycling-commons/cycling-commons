@@ -131,6 +131,22 @@ final class FormGuard
     }
 
     /** Unix seconds from a stamp we signed, or null for anything else. */
+    /**
+     * A stamp we signed that is not older than MAX_SECONDS, with no minimum
+     * dwell: a page's own requests while the visitor types (the sign-up
+     * display-name hint) carry it to show they come from a rendered form.
+     */
+    public function stampIsLive(string $stamp, \DateTimeImmutable $now): bool
+    {
+        $issued = $this->issuedAt($stamp);
+        if (null === $issued) {
+            return false;
+        }
+        $elapsed = $now->getTimestamp() - $issued;
+
+        return $elapsed >= 0 && $elapsed <= self::MAX_SECONDS;
+    }
+
     private function issuedAt(string $stamp): ?int
     {
         $parts = explode('.', $stamp);

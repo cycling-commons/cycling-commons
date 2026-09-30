@@ -8,10 +8,6 @@ twig:
         # The satellite base layer's key. Empty disables satellite and the map
         # falls back to the standard base — the layer has always been optional.
         esri_api_key: '%env(ESRI_API_KEY)%'
-        # The analytics tag is printed on production only (CC_ANALYTICS=1 in
-        # .env.prod). Dev and staging get no tag at all; analytics.js keeps
-        # its own hostname check as a second guard.
-        analytics_enabled: '%env(bool:CC_ANALYTICS)%'
         # The road-surface tile URLs are NOT globals: they come from
         # MapController via App\Coverage\SurfaceManifest, which resolves the
         # published build (or an operator's pin). A global reading the env

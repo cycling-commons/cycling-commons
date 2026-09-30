@@ -98,6 +98,41 @@ final class RouteClimbsEndpointTest extends WebTestCase
         self::assertStringContainsString('public', $cache);
     }
 
+    /**
+     * "Climbs on this route" lists the climbs the route rides, and nothing
+     * else; a climb near the route that it does not ride is in the along
+     * list's climbs group (letter N), and no climb is in both.
+     */
+    public function testTheClimbsListHoldsTheRiddenClimbsAndTheAlongListTheNearOnes(): void
+    {
+        $client = static::createClient();
+        self::ensureCoverageSchema($this->db());
+        $ridden = $this->seedClimb();
+        // ≈ 1.1 km north to south, crossing the route at right angles: within the
+        // drawer's corridor, but the route only crosses it.
+        $this->db()->executeStatement(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('N', 'Endpoint crossing climb', ST_SetSRID(ST_MakePoint(5.815, 50.395), 4326), 'BE', 'verified', 'manual', :ref,
+                     '{\"route\": [[50.395, 5.815], [50.405, 5.815]], \"avgGradient\": \"4.0%\"}', NOW(), NOW())",
+            ['ref' => 'climb-endpoint-near-'.bin2hex(random_bytes(6))],
+        );
+        $near = (int) $this->db()->fetchOne('SELECT MAX(id) FROM item');
+        $route = $this->seedRoute('unverified');
+
+        $client->request('GET', '/map/route/'.$route.'/climbs');
+        self::assertResponseIsSuccessful();
+        self::assertSame([$ridden], array_column($this->body($client)['climbs'], 'id'), 'ridden only');
+
+        $client->request('GET', '/map/route/'.$route.'/along');
+        self::assertResponseIsSuccessful();
+        /** @var array{groups: list<array{letter: string, items: list<array<string, mixed>>}>} $along */
+        $along = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        $climbs = array_column($along['groups'], null, 'letter')['N']['items'] ?? [];
+        self::assertSame([$near], array_column($climbs, 'id'), 'the near climb, and not the ridden one');
+        self::assertEqualsWithDelta(1.1, $climbs[0]['alongKm'], 0.05, 'km where the route crosses the climb');
+        self::assertSame(0, $climbs[0]['distM']);
+    }
+
     public function testARouteWaitingForReviewAnswersOnlyTheRiderWhoProposedIt(): void
     {
         $client = static::createClient();

@@ -19,8 +19,9 @@ import { setListedPlaces } from './osm-pools.js';
 import { applyMode } from './panels.js';
 import { keepCameraForNextScope } from './scope-ui.js';
 import { releaseShownAnyway, clearRouteHighlight } from './render.js';
-import { openListedPlace, bindAlongList } from './listed-place.js';
+import { openListedPlace, bindAlongList, bindRouteClimbs } from './listed-place.js';
 import { alongListHtml } from './along-list.js';
+import { routeClimbsHtml } from './route-climbs.js';
 
 export function initRideCheck(){
     if(!window.CC_RIDECHECK) return;                       // anonymous: no control rendered
@@ -163,6 +164,10 @@ export function initRideCheck(){
           +d.routes.map(r=>`<li><button class="cc-near" data-rc-route="${r.id}"><span class="cc-near-k" style="background:${kColor};color:${txtOn(kColor)}">K</span><span class="cc-near-nm">${escPend(r.name)}</span><em>${tpl(D.kmShared||'{n} shared', {n:uKm(r.sharedKm)})}</em></button></li>`).join('')
           +`</ul>`;
       }
+      /* The climbs the ride rides, in the route drawer's "Climbs on this
+         route" rows (route-climbs.js); the ones it only passes near are the
+         climbs group of the commons arm below. */
+      html+=routeClimbsHtml(d.climbs, {heading:D.rideClimbsH||'Climbs on your ride', at:D.routeClimbAt, avg:D.avgShort});
       /* The commons arm, then open coverage under its own heading: uncurated
          OSM utilities, already deduped server-side against served items. The
          route drawer writes the same lists (along-list.js). */
@@ -171,7 +176,8 @@ export function initRideCheck(){
         coverageH:D.alongTrackCovH||'Open coverage along the track',
         empty:tpl(D.nothingWithin||'Nothing in the Commons within {r} of this ride yet.', {r:radius}),
         capped:D.capped||'(capped)', kmOff:D.kmOff||'{a} along · {b} off',
-        covNote:D.covArmNote||'From open data, not yet checked by a rider.'}});
+        covNote:D.covArmNote||'From open data, not yet checked by a rider.',
+        more:D.showMore, fewer:D.showFewer}});
       const body=document.getElementById('drawerBody');
       invalidateCoverageDrawer(); bumpPlaceReq();   // supersede in-flight coverage detail + town nearby
       releaseShownAnyway(null, null);               // back on the summary: the place shown anyway leaves the map
@@ -186,6 +192,7 @@ export function initRideCheck(){
       /* A place the view mode hides lifts the mode with the deep-link rule
          (docs/specs/map-and-search.md §8), to the lowest rung that draws it; one
          the chips hide is shown anyway. Each lift is remembered for Clear. */
+      bindRouteClimbs(body, d.climbs, {onLifted:(from, to)=>rideMode.lifted(from, to)});
       bindAlongList(body, d, {onLifted:(from, to)=>rideMode.lifted(from, to)});
       showDrawer();   // one way in: the rail panel closes here too (map-and-search.md §4.0)
     }

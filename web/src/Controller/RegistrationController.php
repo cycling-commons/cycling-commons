@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Account\DisplayNameCheck;
 use App\Entity\User;
 use App\Form\RegistrationFormType;
 use App\Repository\UserRepository;
@@ -38,6 +39,7 @@ final class RegistrationController extends AbstractController
         private readonly SignupGuard $guard,
         private readonly UserRepository $users,
         private readonly ExistingAccountNotice $existingAccount,
+        private readonly DisplayNameCheck $nameCheck,
     ) {
     }
 
@@ -110,6 +112,11 @@ final class RegistrationController extends AbstractController
             $userPasswordHasher->hashPassword($user, $plainPassword)
         );
 
+        // The display-name hint for a visitor without JavaScript, asked
+        // before the address is looked up and from the name alone, so a taken
+        // address and a new one get the same hint and the same page.
+        $nameInUse = $this->nameCheck->inUse($user->getDisplayName());
+
         // A taken address gets the same page as a new one; the inbox learns
         // the rest (ExistingAccountNotice). The form never says which
         // addresses have accounts.
@@ -117,7 +124,7 @@ final class RegistrationController extends AbstractController
         if (null !== $existing) {
             $this->existingAccount->send($existing);
 
-            return $this->checkEmail();
+            return $this->checkEmail($nameInUse);
         }
 
         $user->setRoles(['ROLE_USER']);
@@ -130,19 +137,20 @@ final class RegistrationController extends AbstractController
         } catch (UniqueConstraintViolationException) {
             // Two sign-ups for one address at once: the other one won, and
             // this one answers like any taken address, never a 500.
-            return $this->checkEmail();
+            return $this->checkEmail($nameInUse);
         }
 
         $this->emailVerifier->sendConfirmation($user);
 
-        return $this->checkEmail();
+        return $this->checkEmail($nameInUse);
     }
 
-    private function checkEmail(): Response
+    private function checkEmail(bool $nameInUse): Response
     {
         return $this->render('security/check_email.html.twig', [
             'page_title' => 'meta.register_check_email_title',
             'page_description' => 'meta.register_check_email_description',
+            'name_in_use' => $nameInUse,
         ]);
     }
 

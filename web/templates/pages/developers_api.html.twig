@@ -17,6 +17,8 @@
 <link rel="icon" type="image/svg+xml" href="{{ asset('brand/logo-favicon.svg') }}" />
 <link rel="stylesheet" href="{{ asset('styles/fonts.css') }}" />
 <link rel="stylesheet" href="{{ asset('styles/page/pages/developers_api.css') }}">
+{# A public page like any other, so it is counted (partials/_head.html.twig). #}
+{% if analytics_on_page() %}<script defer src="{{ asset('js/analytics.js') }}"></script>{% endif %}
 </head>
 <body>
 <div class="apibar">

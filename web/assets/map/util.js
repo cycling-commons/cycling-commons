@@ -62,7 +62,7 @@ export function featureLL(f){
   const p=featurePoint(f);
   return Array.isArray(p) && p.length>=2 ? [+p[0], +p[1]] : null;
 }
-// Pin at the foot (`route[0]`); featurePoint() prefers the stored summit. One helper, both readers.
+// Pin at the foot (`route[0]`), where a climb with a line also keeps its stored point (item_climb_at_foot). One helper, both readers.
 export function pinPoint(f){ return (f.route&&f.route[0]) || (f.geom&&f.geom.ll) || (f.geom&&f.geom.path&&f.geom.path[0]) || null; }
 export function currentSeason(){ const m=new Date().getMonth()+1; return m>=3&&m<=5?'spring':m>=6&&m<=8?'summer':m>=9&&m<=11?'autumn':'winter'; }
 export const ccUrl = lic => ({

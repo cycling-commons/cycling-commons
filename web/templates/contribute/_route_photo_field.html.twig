@@ -8,19 +8,35 @@
     form  FormView  ProposeRouteType, carrying mediaIds and mediaAlts
     help    string  optional translation key for the line under the legend
     legend  string  optional translation key for the legend (default: optional photos)
+    sent    list    optional photos a proposal already carries ({sm, lg}), shown above the uploader
+    name    string  optional route name, the sent photos' alt text
+    room    int     optional photos that may still be added (default 6); at 0 the uploader is not offered
 #}
+{% set room = room|default(6) %}
 <fieldset>
   <legend>{{ (legend|default('propose_route.photos_label'))|trans }}</legend>
   {% if help is defined and help %}<p class="help">{{ help|trans }}</p>{% endif %}
-  {# Consent gate, filled by media-upload.js: fail-closed until the server has
-     a consent record (docs/specs/photo-uploads.md §4). #}
-  <div class="consent-gate" id="media-consent"></div>
-  <input type="file" id="file-photo" accept="image/jpeg,image/png,image/webp,image/heic" multiple hidden>
-  <div class="drop" id="drop-photo" role="button" tabindex="0" aria-controls="file-photo">
-    <span class="ic">◳</span>{{ 'improve.step3.photo_drop'|trans }}<br/>
-    <small>{{ 'improve.step3.photo_types'|trans }}</small>
-  </div>
-  <div class="ulq" id="q-photo"></div>
+  {% if sent is defined and sent is not empty %}
+    <p class="help">{{ 'propose_route.edit.photos_sent'|trans }}</p>
+    <div class="rp-existing">
+      {% for p in sent %}
+        <img src="{{ p.sm }}" srcset="{{ p.sm }} 520w, {{ p.lg }} 1400w" sizes="160px" alt="{{ name|default('') }}" loading="lazy">
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if room > 0 %}
+    {# Consent gate, filled by media-upload.js: fail-closed until the server has
+       a consent record (docs/specs/photo-uploads.md §4). #}
+    <div class="consent-gate" id="media-consent"></div>
+    <input type="file" id="file-photo" accept="image/jpeg,image/png,image/webp,image/heic" multiple hidden>
+    <div class="drop" id="drop-photo" role="button" tabindex="0" aria-controls="file-photo">
+      <span class="ic">◳</span>{{ 'improve.step3.photo_drop'|trans }}<br/>
+      <small>{{ 'improve.step3.photo_types'|trans }}</small>
+    </div>
+    <div class="ulq" id="q-photo"></div>
+  {% else %}
+    <p class="help">{{ 'propose_route.edit.photos_full'|trans({'%max%': 6}) }}</p>
+  {% endif %}
   {{ form_widget(form.mediaIds) }}
   {{ form_widget(form.mediaAlts) }}
   {{ form_errors(form.mediaIds) }}

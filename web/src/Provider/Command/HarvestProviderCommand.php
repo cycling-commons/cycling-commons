@@ -16,6 +16,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\StreamableInputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -31,6 +32,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * Dry by default. A harvest inserts into the catalogue riders read, so seeing
  * the counts before anything is written is the normal way to run it, and
  * `--write` is the deliberate second step.
+ *
+ * The file argument `-` reads the records from standard input. That is how
+ * `tools/provider-run.sh` hands over the fetch from the pipeline container,
+ * which shares no filesystem with this one.
+ *
+ * Nothing needs clearing after a write. Every row this changes moves its
+ * region's catalog stamp by trigger (`catalog_change`), so the map's
+ * documents rebuild on their next request; the one cache keyed on nothing
+ * the triggers see, the provider citations, is dropped here.
  *
  * @see docs/specs/data-provider-hierarchy.md §5
  *
@@ -55,7 +65,7 @@ final class HarvestProviderCommand extends Command
     protected function configure(): void
     {
         $this->addArgument('provider', InputArgument::REQUIRED, 'Provider key, e.g. rivm-drinkwater');
-        $this->addArgument('file', InputArgument::REQUIRED, 'Normalised GeoJSON produced by pipeline/providers');
+        $this->addArgument('file', InputArgument::REQUIRED, 'Normalised GeoJSON produced by pipeline/providers, or - for standard input');
         $this->addOption('write', null, InputOption::VALUE_NONE, 'Actually write (default is a dry run)');
     }
 
@@ -80,7 +90,7 @@ final class HarvestProviderCommand extends Command
         }
 
         try {
-            $features = $this->readFeatures((string) $input->getArgument('file'), $provider);
+            $features = $this->readFeatures($this->readSource($input, (string) $input->getArgument('file')), $provider);
         } catch (\JsonException|\RuntimeException $e) {
             $io->error($e->getMessage());
             $this->recordFailure($provider, $e->getMessage());
@@ -145,7 +155,35 @@ final class HarvestProviderCommand extends Command
     }
 
     /**
-     * Reads the normalised file, refusing anything it cannot vouch for.
+     * The normalised document's bytes, from the named file or, for `-`, from
+     * standard input.
+     *
+     * @throws \RuntimeException
+     */
+    private function readSource(InputInterface $input, string $path): string
+    {
+        if ('-' !== $path) {
+            $raw = @file_get_contents($path);
+            if (false === $raw) {
+                throw new \RuntimeException(sprintf('Cannot read "%s".', $path));
+            }
+
+            return $raw;
+        }
+
+        $stream = $input instanceof StreamableInputInterface ? $input->getStream() : null;
+        $raw = stream_get_contents($stream ?? \STDIN);
+        if (false === $raw || '' === trim($raw)) {
+            // An empty pipe is a fetch that handed nothing over, which is not
+            // the same thing as a publisher with no records.
+            throw new \RuntimeException('Nothing arrived on standard input: the fetch handed nothing over.');
+        }
+
+        return $raw;
+    }
+
+    /**
+     * Reads the normalised document, refusing anything it cannot vouch for.
      *
      * Every refusal here is a fetch that went wrong upstream, and a harvest
      * that guessed past one would write the guess into the catalogue.
@@ -155,13 +193,8 @@ final class HarvestProviderCommand extends Command
      * @throws \JsonException
      * @throws \RuntimeException
      */
-    private function readFeatures(string $path, DataProvider $provider): array
+    private function readFeatures(string $raw, DataProvider $provider): array
     {
-        $raw = @file_get_contents($path);
-        if (false === $raw) {
-            throw new \RuntimeException(sprintf('Cannot read "%s".', $path));
-        }
-
         /** @var array{features?: list<array<string, mixed>>} $doc */
         $doc = json_decode($raw, true, flags: \JSON_THROW_ON_ERROR);
         $letters = $provider->getLetters();

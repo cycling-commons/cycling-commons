@@ -220,7 +220,9 @@ final class MapController extends AbstractController
     }
 
     /**
-     * The climbs a route rides, in order along it, for the route drawer.
+     * The climbs a route rides, for the route drawer's "Climbs on this route".
+     * The climbs near it that it does not ride are in its along list
+     * (routeAlong).
      *
      * @see docs/specs/route-domain.md §6.4
      * @see docs/specs/map-and-search.md §6.3
@@ -240,7 +242,8 @@ final class MapController extends AbstractController
 
     /**
      * What is along a route, for the route drawer: the ride check's commons and
-     * open-coverage arms on the route's own line (RideCheckService::alongRoute).
+     * open-coverage arms on the route's own line, the climbs near it that it
+     * does not ride among the commons (RideCheckService::alongRoute).
      *
      * @see docs/specs/route-domain.md §6.4
      * @see docs/specs/map-and-search.md §6.3
@@ -408,7 +411,7 @@ final class MapController extends AbstractController
             'itemProposed' => 'd_item_proposed',
             'fRoute' => 'd_f_route', 'fGrad' => 'd_f_grad', 'fSteep' => 'd_f_steep',
             'fCorrection' => 'd_f_correction',
-            'recentChanges' => 'd_recent_changes', 'modNotePh' => 'd_mod_note_ph', 'approve' => 'd_approve',
+            'recentChanges' => 'd_recent_changes', 'showChangelog' => 'd_show_changelog', 'hideChangelog' => 'd_hide_changelog', 'changelogAll' => 'd_changelog_all', 'modNotePh' => 'd_mod_note_ph', 'approve' => 'd_approve',
             'needsInfo' => 'd_needs_info', 'reject' => 'd_reject', 'modKeys' => 'd_mod_keys',
             'decisionErr' => 'd_decision_err', 'decisionRecorded' => 'd_decision_recorded',
             'decisionAsked' => 'd_decision_asked', 'needsInfoNote' => 'd_needs_info_note',
@@ -479,12 +482,13 @@ final class MapController extends AbstractController
             // docs/specs/map-and-search.md §6.3: places along this route.
             'alongRouteH' => 'd_along_route_h', 'alongRouteWithin' => 'd_along_route_within', 'alongRouteWait' => 'd_along_route_wait',
             'alongRouteCovH' => 'd_along_route_cov_h', 'nothingAlongRoute' => 'd_nothing_along_route',
+            'showMore' => 'd_show_more', 'showFewer' => 'd_show_fewer',
             'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',
             'rideCheck' => 'd_ride_check', 'rideSummary' => 'd_ride_summary',
             'alongRide' => 'd_along_ride', 'rideMeta' => 'd_ride_meta', 'clearRide' => 'd_clear_ride',
-            'rideFollows' => 'd_ride_follows', 'kmShared' => 'd_km_shared', 'alongTrackH' => 'd_along_track_h',
+            'rideFollows' => 'd_ride_follows', 'kmShared' => 'd_km_shared', 'rideClimbsH' => 'd_ride_climbs_h', 'alongTrackH' => 'd_along_track_h',
             'capped' => 'd_capped', 'kmOff' => 'd_km_off', 'nothingWithin' => 'd_nothing_within',
             'alongTrackCovH' => 'd_along_track_cov_h', 'covArmNote' => 'd_cov_arm_note',
             'noMatch' => 'd_no_match', 'places' => 'd_places',
@@ -625,6 +629,7 @@ final class MapController extends AbstractController
                 // What approving a new place retires (catalog-data-model.md §5a).
                 'replacesHead' => $t->trans('moderate.replaces.heading'),
                 'replacesOurs' => $t->trans('improve.similar.from_ours'),
+                'replacesOsm' => $t->trans('moderate.replaces.osm_takes'),
                 'replacesMetres' => $t->trans('improve.similar.metres', ['%m%' => '%m%']),
                 'osmUnanswered' => $t->trans('moderate.error.osm_unanswered'),
             ],
@@ -653,6 +658,11 @@ final class MapController extends AbstractController
             if (null !== $rid) {
                 $regions[] = $rid;
             }
+        }
+        // A route also brings every other region its line passes through: the
+        // link scopes the map to all of them (map-and-search.md §8).
+        if ($targets['route'] > 0) {
+            $regions = array_merge($regions, $catalogProvider->servedRouteRegions($targets['route']));
         }
         // A link by name: every region that holds that name.
         $name = trim($request->query->getString('feature'));

@@ -38,15 +38,18 @@ export function osmQuestionHtml(osm, D) {
 }
 
 /* What approving a new place retires (catalog-data-model.md §5a): the rows
-   holding the same OSM point, and the similar places the rider left ticked.
+   holding the same OSM point, the similar places the rider left ticked, and
+   the OSM point whose free pin goes because this place holds it.
    Read-only: it is the approval that retires them, and this says so first. */
-export function replacesHtml(replaces, D) {
+export function replacesHtml(replaces, D, osmRef) {
   const list = Array.isArray(replaces) ? replaces : [];
-  if (!list.length) return '';
+  if (!list.length && !osmRef) return '';
   const fill = (s, v) => String(s).replace(/%(\w+)%/g, (m, k) => (k in v ? String(v[k]) : m));
   const rows = list.map(r => {
     const from = r.provider || ('osm' === r.from ? 'OpenStreetMap' : (D.replacesOurs || 'Cycling Commons'));
     return `<li>${escPend(r.name || (D.osmUnnamed || 'Unnamed'))} · ${escPend(from)} · ${escPend(fill(D.replacesMetres || '%m% m', { m: r.metres }))} · #${Number(r.id)}</li>`;
-  }).join('');
+  }).join('') + (osmRef
+    ? `<li>OpenStreetMap · ${escPend(osmRef)} · ${escPend(D.replacesOsm || 'becomes this place')}</li>`
+    : '');
   return `<div class="cc-mod-replaces"><div class="cc-mod-ctx-h">${escPend(D.replacesHead || 'Approving retires')}</div><ul>${rows}</ul></div>`;
 }

@@ -49,8 +49,14 @@
 .decide textarea{min-height:9rem;line-height:1.55;resize:vertical}
 .decide .check{display:flex;align-items:flex-start;gap:.5rem;margin:1rem 0}
 .decide .check label{margin:0;font-family:inherit;font-size:.9rem;letter-spacing:0;text-transform:none;color:#3a3d30}
-.warn{background:var(--paper-deep);border-left:2px solid var(--ochre);padding:.85rem 1.05rem;
-  border-radius:0 6px 6px 0;font-size:.90rem;color:#4a4d40;line-height:1.55;margin:.9rem 0}
+/* `.check` sets display, which would beat the `hidden` attribute the script
+   sets on the default-reply row for any status but Fixed. */
+.decide .check[hidden]{display:none}
+.decide .d-default{margin:.5rem 0 0}
+/* The reason a save was refused, under the field it is about. */
+.decide .ferr{margin:.4rem 0 0;padding:.5rem .75rem;border-left:2px solid var(--danger);
+  background:rgba(179,38,30,.1);border-radius:0 5px 5px 0;font-size:.88rem;color:var(--danger-ink)}
+.decide textarea[aria-invalid="true"]{border-color:var(--danger)}
 .decide input[type="text"]{width:100%}
 /* The save sits where every form's primary action sits, at the end of the
    row, so the eye finds it in the same place on every desk. */

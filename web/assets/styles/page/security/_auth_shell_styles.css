@@ -20,6 +20,9 @@
 .field input[type=text],
 .field input[type=password]{width:100%;background:transparent;border:none;border-bottom:1.5px solid rgba(20,22,14,.25);font-family:var(--sans);font-size:1rem;padding:.45rem 0;outline:none}
 .field input:focus{border-color:var(--trail)}
+/* The display-name hint (account-and-auth.md §9): information, not an error,
+   so the quiet body grey of the page's other small print. */
+.name-hint{font-size:.88rem;color:#5a5d4d;margin-top:.35rem;line-height:1.45}
 /* The two consent rows. `.field-check` carried no styles at all, so the boxes
    rendered as the browser's default blue — the one blue on a page of ochre and
    spruce (owner-reported 2026-08-12). `accent-color` rather than a hand-built

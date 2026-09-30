@@ -80,7 +80,7 @@ raw SQL/DBAL. Timestamps are `TIMESTAMP(0) WITHOUT TIME ZONE`
 | `id` | bigint generated identity | partition-friendly; no random UUIDs |
 | `letter` | varchar(1) | catalog type A–G, N–Q (uppercased by the setter) |
 | `name` | varchar(200) | the one pseudo-field outside `attributes` — `Item::NAME_FIELD` keeps that rule in one place |
-| `geom` | geometry, GiST `idx_item_geom` | Point, or LineString for A |
+| `geom` | geometry, GiST `idx_item_geom` | Point, or LineString for A. A climb (N) with a line is pinned at its foot: `geom` is `attributes.route[0]`, kept by the database (§6a) |
 | `country_code` | varchar(2), btree `idx_item_country` | denormalized filter column |
 | `subdivision_id` | bigint nullable | plain column, **no FK constraint** → `world_subdivision.id` |
 | `region_id` | bigint nullable, btree `idx_item_region` | plain column, **no FK constraint**; recomputed every import (catalog-data-model.md §6) |
@@ -409,9 +409,22 @@ The new place takes over the OSM point of a row it retires when it has none,
 or a ticked OSM point no served row holds, so the raw pin does not come back.
 `change_history` records `state` → `retired` and `replaced_by` on each retired
 row, credited to the submitter. The curator sees the list before deciding, on
-the queue card and in the drawer ("Approving replaces these places"),
-computed by the same rule (`ReplacedPlaces::preview`). A rejection retires
-nothing. The case it was built for: a rider corrected an OSM tap in Medemblik
+the queue card and in the drawer ("Approving replaces these places"), in a
+box in the trail colour, computed by the same rule (`ReplacedPlaces::preview`).
+Its last line names the OSM point the new place holds once approved, whose
+free pin goes ("OpenStreetMap · node/… · becomes this place",
+`ReplacedPlaces::takesOsm`): its own point, else a ticked point nobody holds,
+else the point of the first row it retires. A rejection retires nothing.
+
+**While the new place waits (2026-09-30).** The rider's own new place, still
+`submitted`, opens in the wizard with the same list and the same known-places
+dots, the place itself and its OSM point left off it, and the ticks it was sent
+with (`data-ticks`; a place sent before the list existed has none, and the
+50 m rule applies). A revision writes this round's `_replaces`, and changing
+only the ticks is a revision, not "nothing changed". A revision keeps every
+`_` key the first round stored beside the form (`_osm_ref`, `_osm_was`,
+`_replaces`, ...), this round's winning: replacing the payload whole lost the
+rider's ticks (production, 2026-09-29). The case it was built for: a rider corrected an OSM tap in Medemblik
 while RIVM's record of the same tap stood 7 m away (production, 2026-09-27).
 
 ### 5b. OSM is the identity spine (2026-08-25)
@@ -632,6 +645,54 @@ the same `recomputeMembership` pass, `ST_Contains` on the point directly.
 
 Ad-hoc spatial queries ("all items in an arbitrary polygon") need no region
 row — GiST + `ST_Intersects` works day one.
+
+### 6a. A climb's point is its foot (2026-09-30)
+
+A climb (letter N) is a line from foot to summit in `attributes.route`
+([edit-items/N-climbs.md](edit-items/N-climbs.md)), and its point, `item.geom`,
+is the foot of that line: `route[0]` whenever `route` is an array of at least
+two entries whose first entry is a numeric pair (owner 2026-09-30: "All climb
+points must be the start point"). A climb with no usable line keeps the point
+it was given.
+
+- **The database keeps it.** A BEFORE trigger on `item`
+  (`item_climb_at_foot_ins` on insert, `item_climb_at_foot_upd` on an update
+  of `geom`, `attributes` or `letter`, both only for letter N) sets `geom` to
+  `climb_foot(attributes)`, the foot as a point, or leaves it when that is
+  NULL. Every writer stores the same point: the importers and seeds, the
+  contribution and moderation paths, `app:climbs:recompute`, and
+  `tools/wikimedia/climb_line.py`, which writes through psql.
+- **Writers that measure from the point ask the foot first**
+  (`App\Catalog\ClimbFoot::of()`, the same rule in PHP): `ImportCatalogCommand`,
+  `app:catalog:seed-climbs` and `SeedManualCatalogCommand` look for a duplicate
+  (§5a) and a region at the foot; the add wizard pins a new climb at the foot
+  of its drawn line whatever pin the form sent; an edit of a climb with a line
+  records no pin move of its own, and approving a redrawn line moves the point
+  to the new foot (`ModerationService::applyEdit()`).
+- **Region follows the foot.** Membership is read from `geom` like every
+  item's (above), so a climb is in the region its foot is in. A pass whose two
+  sides start in two regions, or two countries, has each side in its own
+  foot's region.
+- **Country follows the region** (owner 2026-09-30). The same trigger copies
+  the region's `country_code` onto a climb whenever the climb is written with
+  a region (`item_climb_at_foot_upd` also fires on `region_id`), so every
+  writer agrees. Little St Bernard Pass from Morgex, whose foot is in the
+  Aosta Valley, is IT, not FR. A climb with no region keeps the country it was
+  given. The migration fixed ten dev climbs this way.
+- **The migration** (`Version20260930095000`) creates the rule and moves every
+  climb whose point is not its foot there, filed in its foot's region by the
+  rule above. On the dev catalog on 2026-09-30, 278 of 283 climbs had a point
+  more than 25 m from the foot (271 of them at the summit; median 4.8 km away)
+  and 78 would change region. Four of those have a foot outside every region
+  (Mount Hehu from Malyaso, Uspallata Pass, Oberjoch Pass from Schattwald,
+  Radl Pass from Stammeregg), so their `region_id` becomes NULL and they leave
+  the region slices, as any item outside every region does.
+- **What moves with the point**: region slices and region counts (`rid`),
+  `catalog_change` stamps (the statement triggers see the moved rows), the map
+  camera's fly-to (`featurePoint()`, the map already pinned climbs at
+  `route[0]`), distance-ordered lookups such as similar places and duplicate
+  checks. Coverage counts are keyed by ref and do not change. The climbs a
+  route or a ride lists never read the point (route-domain.md §6.4).
 
 **Rider base-area re-derivation rides the same import transaction
 (map-and-search.md §4.5 Phase 4).** `ImportCatalogCommand` calls
@@ -1065,8 +1126,10 @@ Three resources carry the catalog:
 `stamps.json`. The loader starts from an empty payload in the slices' shapes,
 reads the stamps, and fetches the slice of every region of the active scope,
 plus the regions a link points into (`window.CC_CATALOG_BOOT`,
-`MapController::catalogBoot()`: the region of an `?item=` or `?route=`, every
-region holding a `?feature=` name, region `0` for a place no region holds),
+`MapController::catalogBoot()`: the region of an `?item=` or `?route=`, and
+for a route every other region its line passes through
+(`CatalogProvider::servedRouteRegions`), every region holding a `?feature=`
+name, region `0` for a place no region holds),
 then injects `map.js`. A region with no stamp
 never held a row and is not fetched. Each slice is **spliced** in: the region's
 rows are dropped from each layer and the slice's rows take their place, which is
@@ -1088,6 +1151,17 @@ refetched). All of them share one stamps read for 15 seconds
 - **A place no region holds** is region `0`'s (`CatalogStamps::regionSql()`),
   a slice like any other. A row with no `rid` counts as region `0` when a slice
   is spliced, so a refresh replaces those rows rather than adding them again.
+- **A route whose line crosses a region or country border** stays in its own
+  region's slice, and its row also carries `rids`: every operational region
+  the line touches, its own first. A `?route=` link scopes the map to all of
+  them, so the places along the whole route load and draw
+  (map-and-search.md §4.5). A route its own region covers carries no `rids`;
+  that `ST_Covers` test runs first because every route of a slice shares one
+  outline, which PostGIS prepares once, where testing each route against every
+  region whose box it touches costs about 80 ms a route. A region added,
+  removed or with a moved outline moves every stamp (`catalog_change_region_*`
+  triggers, migration `Version20260930010000`), so a route's `rids` follow it
+  on the next read. A rename, or a rewrite of the same outline, moves none.
 
 **Tile dedupe** (`refs`) is the union of every held slice's refs. A ref a
 region stops claiming leaves with that region's next slice.
@@ -1107,6 +1181,7 @@ region holds, and `-1` for a change every region prints.
 | `users` | row, only when `display_name`, `public_profile` or `uuid` changes; delete | every region |
 | `data_provider` | row, only when a printed column changes; insert, delete | every region |
 | `world_subdivision` | row, only when `name` changes | every region |
+| `region` | row, only when `geom` changes; statement insert, delete (a route's `rids`) | every region |
 | `link_verdict` | row, only when a URL enters or leaves `unsafe` | every region |
 | `coverage_poi` | statement, only when it touched a row; installed by `catalog_change_install()`, which the pipeline calls after it creates the table | every region |
 

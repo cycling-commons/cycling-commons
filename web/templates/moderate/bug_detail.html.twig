@@ -121,6 +121,10 @@
       <div class="btext md">{{ report.outcomeNote|bug_markdown }}</div>
     {% endif %}
 
+    {# After a refused save `draft` holds what the curator submitted, and every
+       field shows that instead of the row, so nothing they typed is lost. #}
+    {% set d = draft ?? {} %}
+    {% set cur_status = d.status ?? report.status.value %}
     <form class="decide" method="post" action="{{ path('moderate_bugs_decide', {id: report.id}) }}">
       <input type="hidden" name="_token" value="{{ csrf_token('bug-desk-decide') }}">
 
@@ -132,7 +136,7 @@
           <label for="d-status">{{ 'support.inbox.set_status'|trans }}</label>
           <select id="d-status" name="status">
             {% for st in statuses %}
-              <option value="{{ st.value }}"{{ st == report.status ? ' selected' : '' }}>{{ ('support.bug.status.' ~ st.value)|trans }}</option>
+              <option value="{{ st.value }}"{{ st.value == cur_status ? ' selected' : '' }}>{{ ('support.bug.status.' ~ st.value)|trans }}</option>
             {% endfor %}
           </select>
         </div>
@@ -140,7 +144,7 @@
           <label for="d-sev">{{ 'support.bug.field_severity'|trans }}</label>
           <select id="d-sev" name="severity">
             {% for sev in severities %}
-              <option value="{{ sev.value }}"{{ sev == report.severity ? ' selected' : '' }}>{{ ('support.bug.severity.' ~ sev.value)|trans }}</option>
+              <option value="{{ sev.value }}"{{ sev.value == (d.severity ?? report.severity.value) ? ' selected' : '' }}>{{ ('support.bug.severity.' ~ sev.value)|trans }}</option>
             {% endfor %}
           </select>
         </div>
@@ -148,7 +152,7 @@
           <label for="d-area">{{ 'support.bug.field_area'|trans }}</label>
           <select id="d-area" name="area">
             {% for ar in areas %}
-              <option value="{{ ar.value }}"{{ ar == report.area ? ' selected' : '' }}>{{ ('support.bug.area.' ~ ar.value)|trans }}</option>
+              <option value="{{ ar.value }}"{{ ar.value == (d.area ?? report.area.value) ? ' selected' : '' }}>{{ ('support.bug.area.' ~ ar.value)|trans }}</option>
             {% endfor %}
           </select>
         </div>
@@ -159,7 +163,7 @@
       <div class="drow">
         <div class="dcell">
           <label for="d-internal">{{ 'support.bugs.internal'|trans }}</label>
-          <textarea id="d-internal" name="internal_note" maxlength="4000" rows="10">{{ report.internalNote }}</textarea>
+          <textarea id="d-internal" name="internal_note" maxlength="4000" rows="10">{{ d.internal_note ?? report.internalNote }}</textarea>
         </div>
         <div class="dcell">
           <label for="d-release">{{ 'support.bugs.release'|trans }}
@@ -176,7 +180,7 @@
           <select id="d-release" name="fix_release">
             <option value="">{{ 'support.bugs.release_none'|trans }}</option>
             {% for tag in releases %}
-              <option value="{{ tag }}"{{ tag == report.fixRelease ? ' selected' : '' }}>{{ tag }}</option>
+              <option value="{{ tag }}"{{ tag == (d.fix_release ?? report.fixRelease) ? ' selected' : '' }}>{{ tag }}</option>
             {% endfor %}
           </select>
         </div>
@@ -186,15 +190,33 @@
          the two statuses that mail the reporter (BugStatus::notifiesReporter);
          on any other, this box would be a message written to nobody. Hidden by
          the script at the foot of the page, so with scripting off it is simply
-         always there and the server still requires it for those two. #}
-      <div class="d-reply" data-when="{{ notifying_statuses|join(' ') }}">
+         always there and the server still requires it for those two.
+
+         `required` while the chosen status sends it, so the browser stops the
+         save at this field. A save the server refuses anyway comes back here:
+         the field autofocused, the reason under it. #}
+      <div class="d-reply" id="d-reply" data-when="{{ notifying_statuses|join(' ') }}">
         <label for="d-note">{{ 'support.bugs.outcome'|trans }} <span class="req" aria-hidden="true">*</span></label>
-        <textarea id="d-note" name="outcome_note" maxlength="2000" rows="10" aria-required="true"
-                  placeholder="{{ 'support.bugs.outcome_placeholder'|trans }}">{{ report.outcomeNote }}</textarea>
+        <textarea id="d-note" name="outcome_note" maxlength="2000" rows="10"
+                  data-missing="{{ 'support.bugs.outcome_missing'|trans }}"
+                  {{- cur_status in notifying_statuses ? ' required' : '' }}
+                  {%- if note_error %} aria-invalid="true" aria-describedby="d-note-error" autofocus{% endif %}
+                  placeholder="{{ 'support.bugs.outcome_placeholder'|trans }}">{{ d.outcome_note ?? report.outcomeNote }}</textarea>
+        {% if note_error %}
+          <p class="ferr" id="d-note-error">{{ note_error|trans }}</p>
+        {% endif %}
+        {# Fixed only: the default says it is fixed. The text is in the
+           reporter's language, the one the mail goes out in. With scripting
+           off the box cannot fill the field, and the server sends the default
+           when it is ticked over an empty field. #}
+        <div class="check d-default" data-when="{{ default_note_status }}">
+          <input type="checkbox" id="d-default" name="outcome_default" value="1" data-text="{{ default_note }}"{{ (d.outcome_default ?? false) ? ' checked' : '' }}>
+          <label for="d-default">{{ 'support.bugs.outcome_default'|trans }}</label>
+        </div>
       </div>
 
       <div class="check">
-        <input type="checkbox" id="d-public" name="is_public" value="1"{{ report.isPublic ? ' checked' : '' }}>
+        <input type="checkbox" id="d-public" name="is_public" value="1"{{ (d.is_public ?? report.isPublic) ? ' checked' : '' }}>
         <label for="d-public">{{ 'support.bugs.publish'|trans }}</label>
       </div>
 
@@ -204,13 +226,12 @@
       <div class="d-public">
         <label for="d-ptitle">{{ 'support.bugs.public_title'|trans }}</label>
         <input type="text" id="d-ptitle" name="public_title" maxlength="160"
-               value="{{ report.publicTitle == report.title ? '' : report.publicTitle }}"
+               value="{{ draft ? d.public_title : (report.publicTitle == report.title ? '' : report.publicTitle) }}"
                placeholder="{{ 'support.bugs.public_title_placeholder'|trans }}">
 
         <label for="d-pbody">{{ 'support.bugs.public_body'|trans }}</label>
         <textarea id="d-pbody" name="public_body" maxlength="2000" rows="10"
-                  placeholder="{{ 'support.bugs.public_body_placeholder'|trans }}">{{ report.publicBody }}</textarea>
-        <p class="warn">{{ 'support.bugs.publish_note'|trans }}</p>
+                  placeholder="{{ 'support.bugs.public_body_placeholder'|trans }}">{{ d.public_body ?? report.publicBody }}</textarea>
       </div>
 
       <p class="dact"><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
@@ -222,19 +243,75 @@
      reporter. On any other status it is a message written to nobody, and a
      visible empty box invites somebody to write one.
 
+     While it shows it is required, and a reply of only spaces counts as empty
+     (the server trims), so the browser stops the save at the field with the
+     desk's own sentence.
+
+     "Use the default message" shows for Fixed only. Ticking it puts the
+     default in the field; unticking puts back what was there before, as long
+     as the field still holds the default. Editing the default unticks it,
+     because the field no longer holds the default.
+
      Progressive: with scripting off the box is simply always there, and the
      server still refuses those two statuses without a note. */
   (function () {
     var status = document.getElementById('d-status');
     var reply = document.querySelector('.d-reply');
-    if (!status || !reply) return;
+    var note = document.getElementById('d-note');
+    var useDefault = document.getElementById('d-default');
+    var defaultRow = document.querySelector('.d-default');
+    if (!status || !reply || !note) return;
 
     var sends = (reply.dataset.when || '').split(' ').filter(Boolean);
-    function sync() {
-      reply.hidden = sends.indexOf(status.value) === -1;
+    var defaultText = useDefault ? (useDefault.dataset.text || '') : '';
+    var before = note.value;
+
+    function validate() {
+      note.setCustomValidity(note.required && note.value.trim() === '' ? (note.dataset.missing || '') : '');
     }
+
+    function setDefault(on) {
+      if (on) {
+        before = note.value;
+        note.value = defaultText;
+      } else if (note.value === defaultText) {
+        note.value = before;
+      }
+      validate();
+    }
+
+    function sync() {
+      var sending = sends.indexOf(status.value) !== -1;
+      reply.hidden = !sending;
+      note.required = sending;
+      if (useDefault && defaultRow) {
+        var offered = status.value === defaultRow.dataset.when;
+        defaultRow.hidden = !offered;
+        if (!offered && useDefault.checked) {
+          useDefault.checked = false;
+          setDefault(false);
+        }
+      }
+      validate();
+    }
+
     status.addEventListener('change', sync);
+    note.addEventListener('input', function () {
+      if (useDefault && useDefault.checked && note.value !== defaultText) useDefault.checked = false;
+      validate();
+    });
+    if (useDefault) {
+      useDefault.addEventListener('change', function () { setDefault(useDefault.checked); });
+      // Ticked over an empty field after a refused save: fill it now.
+      if (useDefault.checked && note.value.trim() === '') setDefault(true);
+    }
     sync();
+
+    // A refused save: bring the field that needs writing into view.
+    if (note.getAttribute('aria-invalid') === 'true') {
+      note.scrollIntoView({ block: 'center' });
+      note.focus();
+    }
   })();
 </script>
 {% endblock %}

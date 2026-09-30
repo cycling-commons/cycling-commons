@@ -11,6 +11,8 @@ framework:
                 adapter: cache.app
             cache.route_suggest_limiter:
                 adapter: cache.app
+            cache.route_revise_limiter:
+                adapter: cache.app
             cache.ride_check_limiter:
                 adapter: cache.app
             cache.ride_check_anon_limiter:
@@ -38,6 +40,8 @@ framework:
             cache.registration_limiter:
                 adapter: cache.app
             cache.verify_resend_limiter:
+                adapter: cache.app
+            cache.display_name_check_limiter:
                 adapter: cache.app
             cache.media_upload_limiter:
                 adapter: cache.app
@@ -89,6 +93,14 @@ framework:
             limit: 5
             interval: '1 day'
             cache_pool: cache.route_suggest_limiter
+        # A proposer's own edits to a route still waiting for review
+        # (route-domain.md §4.6). A new GPX is parsed and profiled again, so
+        # this bounds that compute per rider per day.
+        route_revise:
+            policy: sliding_window
+            limit: 20
+            interval: '1 day'
+            cache_pool: cache.route_revise_limiter
         # Ride-check (spec 2026-07-14 §4.1): read-only compute (parse + two
         # PostGIS corridor queries, nothing persisted) — more generous than
         # intake, still bounded per rider per day.
@@ -228,6 +240,14 @@ framework:
             limit: 3
             interval: '1 day'
             cache_pool: cache.verify_resend_limiter
+        # The display-name hint (account-and-auth.md §9): a debounced check while
+        # a rider types, so several per name, and a ceiling on anybody asking
+        # about names in bulk.
+        display_name_check:
+            policy: sliding_window
+            limit: 30
+            interval: '1 hour'
+            cache_pool: cache.display_name_check_limiter
         # Photo uploads (photo-uploads.md §7): generous for a real day of
         # contributing, bounded against bulk abuse. Each accepted upload costs
         # an Imagick decode plus three encodes, so this is a compute gate as
@@ -355,6 +375,8 @@ when@test:
                     adapter: cache.adapter.array
                 cache.route_suggest_limiter:
                     adapter: cache.adapter.array
+                cache.route_revise_limiter:
+                    adapter: cache.adapter.array
                 cache.ride_check_limiter:
                     adapter: cache.adapter.array
                 cache.elevation_limiter:
@@ -380,6 +402,8 @@ when@test:
                 cache.registration_limiter:
                     adapter: cache.adapter.array
                 cache.verify_resend_limiter:
+                    adapter: cache.adapter.array
+                cache.display_name_check_limiter:
                     adapter: cache.adapter.array
                 cache.media_upload_limiter:
                     adapter: cache.adapter.array

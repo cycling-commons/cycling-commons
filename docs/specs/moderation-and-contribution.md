@@ -1652,10 +1652,11 @@ same partial and the same arithmetic the moderation desks use. It moved out of
 
 - **Messages** — 20 per page (`MessageService::PER_PAGE`). Before this the list
   stopped at a hard 100 with nothing saying so.
-- **Contributions and route proposals** — 20 each, on one pane, paging
-  independently through `?page=` and `?rpage=`. A shared parameter would have
-  moved both lists when the reader meant to move one, so the partial takes a
-  `key`.
+- **Contributions**: 20 per page, place submissions and route proposals in
+  one list, newest first, under one `?page=` pager. The controller pages the
+  union of both in SQL (`ProfileController::contributionsPage()`), so a route
+  proposed after a page of places is the first card, not a card under the
+  places' pager ([account-and-auth.md](account-and-auth.md)).
 
 Two consequences worth stating, because both are places a naive pager gets it
 wrong:
@@ -1690,7 +1691,7 @@ than on nothing.
 | Surface | Rows/page | Constant |
 |---|---|---|
 | Messages | 20 | `MessageService::PER_PAGE` |
-| Contributions · route proposals (`/account/contributions`) | 20 each | `ProfileController::PER_PAGE` |
+| Contributions, places and route proposals together (`/account/contributions`) | 20 | `ProfileController::PER_PAGE` |
 | Submission queue · decided history | 25 | `SubmissionQueue::PER_PAGE` |
 | Routes desk — proposals · corrections | 25 each | `RouteQueue::PER_PAGE` |
 | Takedown desk | 25 | `MediaTakedownService::PER_PAGE` |
@@ -2425,6 +2426,27 @@ An environment where the boundaries have not been loaded offers only countries,
 which is the safe way for the list to be empty. A rider who wants an area that is
 not offered is not blocked: the demand signal's area field is free text and
 reaches the desk as typed.
+
+**Both pickers work from the keyboard alone** (checked with Tab, Enter, the
+arrows and Escape in a real browser, 2026-09-30):
+
+- **`/regions`, the typeahead** (`assets/pages/regions-typeahead.js`). Its
+  matches are plain links with no listbox roles, so Tab and Enter reach and
+  follow them natively. Down arrow in the box moves to the first match, the
+  arrows and Home/End move between matches, Up from the first match returns to
+  the box, and Escape returns to the box from a match or clears the box when
+  already there. A `role="status"` line, out of sight, gives a screen reader the
+  count (`regions.hits_one`, `regions.hits_many`); no match shows
+  `regions.hits_none` on screen and reads it out.
+- **`/regions`, a country's region chip** (`assets/pages/regions-map.js`) is a
+  `<button>` with `aria-expanded` and `aria-controls`; its panel follows it in
+  the tab order. Escape on the chip or on a region inside the panel closes the
+  panel and puts focus back on the chip. The globe is a pointer shortcut to the
+  same chips and holds no tab stop of its own.
+- **`/join/{cc}`, the scope picker** is the site's dropdown
+  ([map-and-search.md §4.0](map-and-search.md#40-rail-drawer-corner)). The
+  "Not on the Commons yet" `<optgroup>` is drawn as a labelled group, so its label
+  is seen and read out with the areas under it.
 
 ### 11.2 `CuratorApplication` — the supply signal
 

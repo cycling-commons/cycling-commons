@@ -224,8 +224,23 @@ final class ContentPagesTest extends WebTestCase
         sort($list);
         self::assertNotEmpty($map);
         self::assertSame($list, $map);
-        self::assertGreaterThan(0, $crawler->filter('#dir-map svg.pmap .road')->count(), 'the map draws its roads');
-        self::assertSame(6, $crawler->filter('#dir-map svg.pmap .land')->count(), 'six countries');
+
+        // Two drawings of the map, wide and tall (the phone's strip map), from
+        // the same data: each carries every page, every road and all six countries.
+        foreach (['wide', 'tall'] as $layout) {
+            $svg = $crawler->filter('#dir-map svg.pmap-'.$layout);
+            self::assertSame(1, $svg->count(), 'the '.$layout.' map is drawn');
+            $hubs = array_values(array_unique($svg->filter('a.hub')->extract(['href'])));
+            sort($hubs);
+            self::assertSame($list, $hubs, 'the '.$layout.' map links every page');
+            self::assertSame(
+                $crawler->filter('#dir-map svg.pmap-wide .road')->count(),
+                $svg->filter('.road')->count(),
+                'the '.$layout.' map draws every road',
+            );
+            self::assertSame(6, $svg->filter('.land')->count(), 'six countries on the '.$layout.' map');
+        }
+        self::assertGreaterThan(0, $crawler->filter('#dir-map svg.pmap-wide .road')->count(), 'the map draws its roads');
     }
 
     /** The toggle is two links, so it works with no script and each view has its own URL. */

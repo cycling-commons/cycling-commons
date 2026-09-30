@@ -143,7 +143,7 @@ but not quite on the same footing:
 <!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```sql
 ST_Distance(i.geom::geography, (SELECT g FROM track)::geography) AS dist_m,
-ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
+ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS flat_frac
 ```
 
 `ST_Distance` is the straightforward one: how far, in real metres, does the fountain sit from the
@@ -234,7 +234,8 @@ different, chapter 2 already said its point order is part of what it means, not 
 `ST_LineLocatePoint(line, point)` is the function that turns that order into a single, usable number:
 given a point that sits *on* the line (or is snapped onto it), it returns a fraction between 0 and 1
 for how far along the line, measured from its very first vertex, that point sits. 0 means the line's
-start. 1 means its end. 0.5 means exactly halfway along by length. It does not answer "how far" in
+start. 1 means its end. 0.5 means halfway along by the line's length in its own units, which for a
+lng/lat line is degrees (more on that below). It does not answer "how far" in
 metres (that's `ST_Distance`) and it does not answer "which exact point" (that's `ST_ClosestPoint`);
 it answers "how far along," which is a completely different axis of information from either.
 
@@ -248,7 +249,7 @@ sections ago:
 
 <!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```sql
-ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS frac
+ST_LineLocatePoint((SELECT g FROM track), ST_ClosestPoint(i.geom, (SELECT g FROM track))) AS flat_frac
 ```
 
 Read inside-out, this looks like "first find the point on the track closest to this item, then ask
@@ -264,16 +265,26 @@ fountain's coordinates to `ST_LineLocatePoint`, and let it do its own internal c
 projection onto the track, in the same step as converting that projection into a 0–1 fraction. The
 `ST_ClosestPoint` call is only load-bearing here for a non-Point item, a mapped path or area, where
 it first collapses that shape down to the single point on it nearest the track, before
-`ST_LineLocatePoint` projects that point onto the track in turn. The result, `frac`, is what the query
-then sorts by, `ORDER BY frac, i.id`, and it is also what the PHP code turns into the kilometre
-figure a rider actually reads:
+`ST_LineLocatePoint` projects that point onto the track in turn.
+
+The result is called `flat_frac` because it is a share of the track's length in degrees, and a
+degree of longitude is shorter on the ground than a degree of latitude, by the cosine of the
+latitude (about 0.64 in Belgium). On a ride that heads north for a while and then east, the same
+fraction of degrees is a different fraction of metres, and on a 250 km route the two part by
+kilometres. So the query turns `flat_frac` into true metres before anyone reads it.
+`web/src/Catalog/LineMetres.php` cuts the track into its segments, each with its geodesic length and
+the geodesic length before it, and finds the segment that holds `flat_frac` with a binary search
+(`width_bucket`). Within one short, straight segment a share in degrees is the same share in metres,
+so the metres along are that segment's start plus its share of the segment. Divided by the track's
+geodesic length, that gives `frac`, a true share of the ride, which the query sorts by,
+`ORDER BY frac, h.id`, and which the PHP code turns into the kilometre figure a rider actually reads:
 
 <!-- CODE-FROM web/src/Catalog/RideCheckService.php -->
 ```php
 'alongKm' => round((float) $row['frac'] * $rawM / 1000.0, 1),
 ```
 
-`$rawM` is the ride's total length in metres, computed once up front. Multiply the 0–1 fraction by
+`$rawM` is the ride's total length in metres, computed once up front. Multiply the 0–1 share by
 that total and you get "you passed this at kilometre 23.4", a real distance along the ride, out of a
 number that started out as a plain fraction. Without `frac`, `ORDER BY i.id` would list fountains in
 whatever order they happened to be inserted into the `item` table, arbitrary, and almost certainly
