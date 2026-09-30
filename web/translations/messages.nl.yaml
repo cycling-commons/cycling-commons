@@ -3421,7 +3421,7 @@ account:
   mod_takedowns_open: 'Openstaande verwijderverzoeken'
   mod_translations_open: 'Openstaande vertaalvoorstellen'
   mod_open_in_area: 'Open in jouw gebied'
-  mod_room_new: 'Nieuw in de kamer sinds je laatste bezoek'
+  mod_room_new: 'Berichten in de kamer die je nog niet hebt geopend'
   tab_contributions: 'Bijdragen'
   tab_votes: 'Stemmen'
   tab_saved: 'Opgeslagen regio''s'
@@ -3514,8 +3514,9 @@ messages:
   from_curator: 'Van een regiobeheerder'
   email_cta: 'Openen in je berichten'
   email_why: 'Je krijgt dit omdat het over een bijdrage van jou gaat. Het volledige gesprek staat op je berichtenpagina.'
-  state_unread: 'Ongelezen'
   state_read: 'Gelezen'
+  open: 'Bericht openen'
+  open_in_form: 'Open het in het bewerkformulier'
   kind_you: 'Jouw antwoord'
   you_sent: 'Door jou verstuurd'
   kind_submission_approved: 'Bijdrage goedgekeurd — bedankt!'
@@ -4986,6 +4987,8 @@ room:
   empty_body: 'Schrijf het eerste bericht. Een vraag zonder antwoord is het stellen nog steeds waard: de volgende regiobeheerder leest hem.'
   former_curator: 'Voormalige regiobeheerder'
   new_post: 'Nieuw bericht'
+  open_post: 'Bericht openen'
+  unread: 'Nog niet geopend'
   edit: 'Bewerken'
   edit_heading: 'Een bericht bewerken'
   posted_on: 'Geplaatst %date%'
@@ -5366,7 +5369,7 @@ curator_dashboard:
   note:
     area: 'In je gebied'
     everywhere: 'Overal'
-    room: 'Nieuw sinds je laatste bezoek'
+    room: 'Berichten die je nog niet hebt geopend'
 
 # Shared by both dashboards (account/_dashboard_tile.html.twig).
 dashboard:

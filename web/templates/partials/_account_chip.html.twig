@@ -33,7 +33,8 @@
   {% set _can_translate_page = translate_can_page() %}
   <button type="button" class="acct-chip" data-nav-toggle aria-expanded="false" aria-controls="cc-acct-dd">
     <span class="av" aria-hidden="true">{{ _initials }}</span>
-    {% if _open > 0 %}<span class="acct-bulb" title="{{ 'account.open_items'|trans({'%count%': _open}) }}" aria-label="{{ 'account.open_items'|trans({'%count%': _open}) }}">{{ _open }}</span>{% endif %}
+    {# data-count-of: opening a message lowers these live (assets/js/open-to-read.js). #}
+    {% if _open > 0 %}<span class="acct-bulb"{% if _unread > 0 %} data-count-of="messages"{% endif %} title="{{ 'account.open_items'|trans({'%count%': _open}) }}" aria-label="{{ 'account.open_items'|trans({'%count%': _open}) }}">{{ _open }}</span>{% endif %}
     <span class="acct-name">{{ app.user.displayName }}</span>
     <svg class="acct-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
   </button>
@@ -62,7 +63,7 @@
             <button type="submit">{{ (translate_mode() ? 'translate.mode.off_short' : 'translate.mode.on_short')|trans }}</button>
           </form>
         {% endif %}
-        <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread }}</span>{% endif %}</a>
+        <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count" data-count-of="messages">{{ _unread }}</span>{% endif %}</a>
         <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
       </div>
     {% else %}
@@ -84,7 +85,7 @@
           <button type="submit">{{ (translate_mode() ? 'translate.mode.off_short' : 'translate.mode.on_short')|trans }}</button>
         </form>
       {% endif %}
-      <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count">{{ _unread }}</span>{% endif %}</a>
+      <a href="{{ path('messages') }}">{{ 'nav.messages'|trans }}{% if _unread > 0 %}<span class="acct-count" data-count-of="messages">{{ _unread }}</span>{% endif %}</a>
       <a href="{{ path('settings') }}">{{ 'nav.settings'|trans }}</a>
     {% endif %}
     {% if is_granted('ROLE_CURATOR') %}

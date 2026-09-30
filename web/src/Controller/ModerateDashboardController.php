@@ -26,8 +26,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * The curator dashboard: every desk's open count on one page, the two legal
  * clocks first, then the room and this curator's own last decisions.
  *
- * Read-only. It decides nothing and marks nothing seen: the room badge still
- * counts until the curator opens the room itself.
+ * Read-only. It decides nothing and marks nothing read: it lists the newest
+ * room posts, and each still counts until the curator opens it in the room.
  *
  * @see docs/specs/moderation-and-contribution.md §5.0
  *

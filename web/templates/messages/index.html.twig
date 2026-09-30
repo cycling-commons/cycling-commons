@@ -1,8 +1,13 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {# Messages dashboard (moderation-feedback spec M3) — decision outcomes,
    curator notes, and rider replies, newest first.
-   The controller marks everything read AFTER fetching the list, so this
-   render still sees which rows were new (`msg-new`) via `m.isRead`.
+   Loading the page marks nothing read. A received message stays new
+   (`msg-new`), carries the unseen bar (`is-unseen`, partials/_unseen.html.twig) and stays
+   closed until its reader opens it: the <details> around its content fires
+   assets/js/open-to-read.js, which takes the bar off, posts to
+   `messages_read` and lowers the counters by one. Following the message's own link (the map, or
+   the edit form for a question) marks it too: the link carries `msg=<id>`
+   (EventSubscriber/OpenedByLinkSubscriber). Spec §7.5a.
 
    The list is a THREAD, not an inbox: it carries what was sent to this
    account and what this account sent itself (MessageService::listFor). A
@@ -57,7 +62,7 @@
       <a class="lchip lchip--push {{ filter_unread ? 'on' }}"
          href="{{ path('messages', (filter_category ? {cat: filter_category} : {})|merge(filter_unread ? {} : {unread: 1})) }}"
          aria-pressed="{{ filter_unread ? 'true' : 'false' }}">
-        {{ 'messages.filter.unread'|trans }} <b>{{ counts.unread }}</b>
+        {{ 'messages.filter.unread'|trans }} <b data-count-of="messages" data-count-keep-zero>{{ counts.unread }}</b>
       </a>
     </nav>
   {% endif %}
@@ -78,31 +83,36 @@
       {% endif %}
     </div>
   {% else %}
-    <ul class="cc-zebra q-list msg-list" id="qList">
+    <ul class="cc-zebra q-list msg-list" id="qList" data-read-token="{{ csrf_token('message-read') }}" data-read-kind="messages">
       {% for m in messages %}
         {% set mine = m.senderId is not null and m.senderId == cc_user.id %}
-        <li class="q-item msg-row {{ mine ? 'q-item--mine msg-mine' : (m.isRead ? '' : 'q-item--new msg-new') }}" id="msg-{{ m.id }}">
+        {# Unread: addressed to the reader and not opened yet. Only such a row
+           is closed, and only it reports being opened. #}
+        {% set unread = not mine and not m.isRead %}
+        <li class="q-item msg-row {{ mine ? 'q-item--mine msg-mine' : (unread ? 'msg-new is-unseen') }}" id="msg-{{ m.id }}"
+            {%- if unread %} data-read-url="{{ path('messages_read', {id: m.id}) }}" data-unread-class="msg-new is-unseen"{% endif %}>
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
                 <h3 class="q-title msg-kind">
                   {#- A message you sent was never unread to you, so it carries no
-                     state marker at all — only received rows do. Unread is a filled
-                     dot with a single tick; read is the double tick. The state is
-                     also in the row's own styling, so the icon is a confirmation
-                     rather than the only signal, and the label is what a screen
-                     reader gets. -#}
+                     state marker at all: only received rows do. An unread row
+                     carries the unseen bar, the mark for an item its reader
+                     has not opened (the row's `is-unseen`,
+                     its words in partials/_unseen.html.twig); a read one the
+                     double tick. An unread row carries the tick hidden, so
+                     opening it swaps the two without new words. -#}
                   {%- if not mine %}
-                    {% set unread = not m.isRead %}
-                    <span class="msg-state {{ unread ? 'is-unread' : 'is-read' }}" title="{{ (unread ? 'messages.state_unread' : 'messages.state_read')|trans }}">
+                    <span class="msg-state is-read" title="{{ 'messages.state_read'|trans }}"{% if unread %} data-read-only hidden{% endif %}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <polyline points="3 12.5 8 17.5 16 6.5"/>
-                        {% if not unread %}<polyline points="12 17 13 18 21 7"/>{% endif %}
+                        <polyline points="12 17 13 18 21 7"/>
                       </svg>
-                      <span class="vh">{{ (unread ? 'messages.state_unread' : 'messages.state_read')|trans }}</span>
+                      <span class="vh">{{ 'messages.state_read'|trans }}</span>
                     </span>
                   {% endif -%}
                   {{ mine ? 'messages.kind_you'|trans : ('messages.kind_' ~ m.kind.value)|trans }}
+                  {%- if unread %}{% include 'partials/_unseen.html.twig' %}{% endif %}
                 </h3>
                 <time class="q-when" datetime="{{ m.createdAt|date('c') }}">{{ m.createdAt|cc_datetime }}</time>
               </div>
@@ -125,6 +135,10 @@
               </div>
             </div>
           </div>
+          {# Closed until opened: the summary is the way in, and opening it is
+             what marks the message read. Without the script it still opens;
+             the message then stays unread until its link is followed. #}
+          {% if unread %}<details class="msg-open" data-open-read><summary class="msg-open-btn">{{ 'messages.open'|trans }}</summary>{% endif %}
           <div class="q-body msg-body">
             {% if m.mediaId and message_photos[m.mediaId|trim] is defined %}
               {# The photo this message is about (docs/specs/photo-uploads.md §5b). #}
@@ -184,10 +198,15 @@
             {% endfor %}
             {# link to the item — only for kinds whose subject is publicly on the
                map (approved submission by name; live route by id) #}
+            {# `msg` names this message, so arriving there opens it (§7.5a). #}
             {% if m.kind.value == 'submission_approved' %}
-              <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?feature={{ m.refLabel|url_encode }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
+              <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?feature={{ m.refLabel|url_encode }}&amp;msg={{ m.id }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
             {% elseif m.kind.value in ['route_approved', 'correction_done'] %}
-              <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?route={{ m.refId }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
+              <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?route={{ m.refId }}&amp;msg={{ m.id }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
+            {% elseif not mine and m.kind.value == 'submission_needs_info' and edit_targets[m.refId] is defined %}
+              {# A question about a place opens on that place's edit form. #}
+              {% set target = edit_targets[m.refId] %}
+              <p class="q-map"><a class="q-link msg-edit-link" href="{{ path('improve') }}?item={{ target.item }}&amp;type={{ target.type }}&amp;msg={{ m.id }}">{{ 'messages.open_in_form'|trans }} →</a></p>
             {% endif %}
           </div>
           {% if m.sender == 'curator' and not mine %}
@@ -213,6 +232,7 @@
           {% if not mine and m.senderId %}
             <p class="msg-report"><a href="{{ path('content_report', {type: 'message', id: m.id, from: app.request.pathInfo}) }}"><span class="rep-bang" aria-hidden="true">!</span>{{ 'report.link_message'|trans }}</a></p>
           {% endif %}
+          {% if unread %}</details>{% endif %}
         </li>
       {% endfor %}
     </ul>
@@ -223,3 +243,5 @@
 {% include 'partials/_vclip.html.twig' %}
 {% include 'moderate/_card_script.html.twig' %}
 {% endblock %}
+
+{% block body_scripts %}<script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}

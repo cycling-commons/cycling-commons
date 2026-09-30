@@ -134,7 +134,7 @@ final class ModerationChromeExtension extends AbstractExtension
     }
 
     /**
-     * Room posts since this curator last had the room open (§13.7).
+     * Room posts this curator has not opened (§13.7).
      */
     public function curatorRoomUnread(): int
     {

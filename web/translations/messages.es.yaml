@@ -3449,7 +3449,7 @@ account:
   mod_takedowns_open: 'Solicitudes de retirada abiertas'
   mod_translations_open: 'Propuestas de traducción abiertas'
   mod_open_in_area: 'Abiertas en tu zona'
-  mod_room_new: 'Novedades en la sala desde tu última visita'
+  mod_room_new: 'Entradas de la sala que aún no has abierto'
   tab_contributions: 'Aportaciones'
   tab_votes: 'Votos'
   tab_saved: 'Regiones guardadas'
@@ -3542,8 +3542,9 @@ messages:
   from_curator: 'De un curador'
   email_cta: 'Abrirlo en tus mensajes'
   email_why: 'Recibes esto porque trata sobre una aportación tuya. El intercambio completo está en tu página de mensajes.'
-  state_unread: 'Sin leer'
   state_read: 'Leído'
+  open: 'Abrir mensaje'
+  open_in_form: 'Abrirlo en el formulario de edición'
   kind_you: 'Tu respuesta'
   you_sent: 'Enviado por ti'
   kind_submission_approved: 'Aportación aprobada — ¡gracias!'
@@ -5019,6 +5020,8 @@ room:
   empty_body: 'Escribe el primer mensaje. Una pregunta sin respuesta vale la pena igual: el siguiente curador la leerá.'
   former_curator: 'Curador anterior'
   new_post: 'Nueva entrada'
+  open_post: 'Abrir entrada'
+  unread: 'Aún sin abrir'
   edit: 'Editar'
   edit_heading: 'Editar una entrada'
   posted_on: 'Publicado %date%'
@@ -5399,7 +5402,7 @@ curator_dashboard:
   note:
     area: 'En tu zona'
     everywhere: 'En todas partes'
-    room: 'Nuevo desde tu última visita'
+    room: 'Entradas que aún no has abierto'
 
 # Shared by both dashboards (account/_dashboard_tile.html.twig).
 dashboard:

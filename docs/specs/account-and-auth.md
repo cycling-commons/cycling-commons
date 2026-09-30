@@ -1021,7 +1021,7 @@ Example: a rider with 2 pending submissions and 1 at `needs_info` sees a red
 "1" on the first Questions tile and "2" on the Contributions tile.
 
 The page marks nothing read: the Messages badge keeps counting until the
-rider opens `/account/messages`.
+rider opens each message (moderation-and-contribution.md §7.5a).
 
 **Where a sign-in lands.** The first sign-in after the address is confirmed
 lands on `/account/settings`, the rider's profile ("Your profile"): a new

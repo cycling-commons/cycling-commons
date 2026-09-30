@@ -23,6 +23,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -63,7 +64,8 @@ final class MessagesController extends AbstractController
             $this->pageSize->resolve(MessageService::PER_PAGE),
         );
 
-        // Fetch before markRead so this visit can still flag unread rows.
+        // Loading the page marks nothing read: a message is read once it is
+        // opened (docs/specs/moderation-and-contribution.md §7.5a).
         $heads = $messages->listFor($userId, $pager['offset'], $pager['perPage'], $category, $unreadOnly);
 
         // Heads only so a question and its answer never split across a page.
@@ -87,12 +89,6 @@ final class MessagesController extends AbstractController
                 ['ids' => ArrayParameterType::INTEGER],
             ))
             : [];
-
-        // docs/specs/moderation-and-contribution.md §7.5a — mark only this page read.
-        $messages->markRead($userId, array_map(
-            static fn (UserMessage $m): int => (int) $m->getId(),
-            $heads,
-        ));
 
         // docs/specs/route-domain.md §7.1: a correction's thread runs both ways,
         // the rider answers the curator who wrote to them, while it is pending.
@@ -122,6 +118,7 @@ final class MessagesController extends AbstractController
             )),
             'answers' => $answers['byQuestion'],
             'replyable_submission_ids' => $replyableSubmissionIds,
+            'edit_targets' => $this->editTargets($db, $needsInfoRefIds, $userId),
             'replyable_correction_ids' => $replyableCorrectionIds,
             'message_photos' => $this->messagePhotos($list),
             'submission_changes' => $this->submissionChanges($list, $userId, $changes),
@@ -135,6 +132,59 @@ final class MessagesController extends AbstractController
             'counts' => $messages->countsFor($userId),
             'categories' => MessageCategory::cases(),
         ]);
+    }
+
+    /**
+     * Where a needs-info question opens: the edit form of the place it asks
+     * about, keyed by submission id. Only the reader's own submissions with a
+     * catalog item behind them; a route (R) has no item form.
+     *
+     * @param list<int> $submissionIds
+     *
+     * @return array<int, array{item: int, type: string}>
+     */
+    private function editTargets(Connection $db, array $submissionIds, int $userId): array
+    {
+        if ([] === $submissionIds) {
+            return [];
+        }
+        $rows = $db->fetchAllAssociative(
+            "SELECT id, item_id, letter FROM submission
+              WHERE id IN (:ids) AND user_id = :uid AND item_id IS NOT NULL AND letter <> 'R'",
+            ['ids' => $submissionIds, 'uid' => $userId],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r['id']] = ['item' => (int) $r['item_id'], 'type' => (string) $r['letter']];
+        }
+
+        return $out;
+    }
+
+    /**
+     * The reader opened one message on the messages page. JSON `{read,
+     * unread}`: whether this took it off the count, and the count now. 404
+     * for a message not addressed to the reader.
+     *
+     * @see docs/specs/moderation-and-contribution.md §7.5a
+     */
+    #[Route('/account/messages/{id}/read', name: 'messages_read', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function read(int $id, Request $request, MessageService $messages): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('message-read', $request->request->getString('_token'))) {
+            return new JsonResponse(['error' => 'csrf'], Response::HTTP_FORBIDDEN);
+        }
+        /** @var User $user */
+        $user = $this->getUser();
+        $userId = (int) $user->getId();
+
+        $read = $messages->markOpened($userId, $id);
+        if (null === $read) {
+            throw $this->createNotFoundException();
+        }
+
+        return new JsonResponse(['read' => $read, 'unread' => $messages->unreadCount($userId)]);
     }
 
     /**

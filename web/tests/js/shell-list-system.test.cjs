@@ -167,11 +167,14 @@ test('the old row vocabularies are gone', () => {
 
 test('the messages page keeps its state hooks on top of the shared card', () => {
   const src = read('templates/messages/index.html.twig');
-  // The tests and the unread styling read these; they name message states, not looks.
-  assert.match(src, /class="q-item msg-row \{\{ mine \? 'q-item--mine msg-mine' : \(m\.isRead \? '' : 'q-item--new msg-new'\) \}\}"/);
+  // The tests read these; they name message states, not looks. An unread one
+  // wears the unseen bar (is-unseen, moderation-and-contribution.md §7.5a).
+  assert.match(src, /class="q-item msg-row \{\{ mine \? 'q-item--mine msg-mine' : \(unread \? 'msg-new is-unseen'\) \}\}"/);
   assert.match(src, /<ul class="[^"]*\bq-list\b[^"]*\bmsg-list\b/);
   const shell = read(SHELL_CSS);
   assert.match(shell, /ul\.q-list,ol\.q-list\{list-style:none/, 'a ul-based card list must not grow bullets');
+  assert.match(shell, /\.is-unseen::before\{/, 'the unseen bar is defined once, in the shell');
+  assert.doesNotMatch(shell, /\.q-item--new/, 'the old outline for a new row is gone');
 });
 
 test('category icons have exactly one home: ItemType', () => {

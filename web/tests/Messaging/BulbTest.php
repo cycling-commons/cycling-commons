@@ -16,7 +16,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
  * Unread bulb on the account chip (moderation-feedback spec M4, Task 6):
- * count rendering, the mark-all-read side effect clearing it,
+ * count rendering, opening a message clearing it (a visit does not),
  * and the anonymous no-DB-touch path.
  *
  * Test isolation: DAMA\DoctrineTestBundle wraps each test in a rolled-back transaction.
@@ -136,7 +136,7 @@ final class BulbTest extends WebTestCase
         self::assertSame('12', trim($crawler->filter('.acct-bulb')->text()));
     }
 
-    public function testVisitingMessagesClearsTheBulb(): void
+    public function testTheBulbStaysUntilTheMessageIsOpened(): void
     {
         $client = static::createClient();
 
@@ -144,7 +144,7 @@ final class BulbTest extends WebTestCase
         $plain = $this->createUser($email, 'securepass12345!', 'Bulb Clears');
         $userId = $this->userId($email);
 
-        $this->svc()->sendSystem(
+        $message = $this->svc()->sendSystem(
             $userId,
             UserMessageKind::SubmissionApproved,
             'submission',
@@ -154,6 +154,7 @@ final class BulbTest extends WebTestCase
             ['%title%' => 'Fountain'],
         );
         static::getContainer()->get(EntityManagerInterface::class)->flush();
+        self::assertNotNull($message);
 
         $this->loginAs($client, $email, $plain);
 
@@ -161,7 +162,13 @@ final class BulbTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.acct-bulb');
 
-        $client->request('GET', '/account/messages');
+        // Visiting the list is not reading: the bulb stays (§7.5a).
+        $list = $client->request('GET', '/account/messages');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.acct-bulb');
+
+        // Opening the message is.
+        $client->request('POST', '/account/messages/'.$message->getId().'/read', ['_token' => $list->filter('[data-read-token]')->attr('data-read-token')]);
         self::assertResponseIsSuccessful();
 
         $crawler2 = $client->request('GET', '/account/contributions');

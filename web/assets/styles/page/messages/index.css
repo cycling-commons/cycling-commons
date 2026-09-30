@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
 .msg-state{display:inline-flex;align-items:center;margin-right:.4rem;vertical-align:-2px}
-.msg-state.is-unread{color:var(--trail)}
 .msg-state.is-read{color:#8c8f7d}
 .msg-state svg{display:block}
 /* The state name, for a screen reader; sighted readers get the icon and the row styling. */
@@ -11,3 +10,21 @@
 .msg-report{margin:.7rem 0 0;font-size:.90rem}
 .msg-report a{color:#6d7060}
 .msg-from-you{color:#595c4d}
+/* A message not opened yet is closed: its summary is the way in (§7.5a).
+   open-to-read.js unwraps it once opened and marks the row `is-open`. */
+.msg-open>summary{cursor:pointer;font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin:.35rem 0 .2rem;width:max-content}
+.msg-open>summary:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+.msg-state[hidden]{display:none}
+/* List density folds a message's context away; one the reader just opened shows it. */
+.q-list.is-list .msg-row.is-open .q-body,
+.q-list.is-list .msg-row.is-open .q-note,
+.q-list.is-list .msg-row.is-open .q-map,
+.q-list.is-list .msg-row.is-open .q-photo-lg,
+.q-list.is-list .msg-row.is-open details.q-diff,
+.q-list.is-list .msg-open[open] .q-body,
+.q-list.is-list .msg-open[open] .q-note,
+.q-list.is-list .msg-open[open] .q-map,
+.q-list.is-list .msg-open[open] .q-photo-lg,
+.q-list.is-list .msg-open[open] details.q-diff{display:block}
+.q-list.is-list .msg-row.is-open .q-reply,
+.q-list.is-list .msg-open[open] .q-reply{display:flex}

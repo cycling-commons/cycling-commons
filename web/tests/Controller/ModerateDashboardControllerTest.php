@@ -45,20 +45,14 @@ final class ModerateDashboardControllerTest extends WebTestCase
 
         /** @var CuratorRoom $room */
         $room = self::getContainer()->get(CuratorRoom::class);
-        $room->markSeen((int) $reader->getId());
-        // Timestamps have one-second resolution: move the visit a minute back
-        // so the post below lands after it.
-        self::getContainer()->get(EntityManagerInterface::class)->getConnection()->executeStatement(
-            "UPDATE curator_room_visit SET last_seen_at = last_seen_at - interval '1 minute' WHERE user_id = :id",
-            ['id' => (int) $reader->getId()],
-        );
+        $before = $room->unreadCount((int) $reader->getId());
         $room->post((int) $author->getId(), null, null, 'Cobbles near Oudenaarde: keep or drop?', title: 'Dashboard test post');
-        self::assertSame(1, $room->unreadCount((int) $reader->getId()));
+        self::assertSame($before + 1, $room->unreadCount((int) $reader->getId()));
 
         $client->request('GET', '/moderate');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.db-list', 'Dashboard test post');
-        self::assertSame(1, $room->unreadCount((int) $reader->getId()), 'only the room itself marks posts seen');
+        self::assertSame($before + 1, $room->unreadCount((int) $reader->getId()), 'the dashboard marks nothing read');
     }
 
     public function testARiderIsKeptOut(): void

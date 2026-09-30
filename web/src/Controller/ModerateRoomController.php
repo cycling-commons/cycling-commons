@@ -58,11 +58,9 @@ final class ModerateRoomController extends AbstractController
         $curatorId = (int) $curator->getId();
         $view = $this->view($request);
 
+        // Loading the board marks nothing read: a post is read once it is
+        // opened (§13.7).
         $board = $this->room->board($curatorId, $view, $this->isGranted('ROLE_ADMIN'));
-
-        // Stamped before the response renders, so the tab this page owns does
-        // not badge the page you are looking at.
-        $this->room->markSeen($curatorId);
 
         return $this->render('moderate/room.html.twig', [
             'page_title' => 'meta.moderate_room_title',
@@ -73,6 +71,30 @@ final class ModerateRoomController extends AbstractController
             'pinned' => $board['pinned'],
             'posts' => $board['posts'],
         ]);
+    }
+
+    /**
+     * The curator opened a post on the board. JSON `{read, unread}`: whether
+     * this took it off the count, and the count now. 404 for a post that is
+     * gone or not theirs to see, so an id is no way to learn that a direct
+     * post between two others exists.
+     */
+    #[Route('/moderate/room/{id}/read', name: 'moderate_room_read', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function read(int $id, Request $request): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('moderate-room-read', $request->request->getString('_token'))) {
+            return new JsonResponse(['error' => 'csrf'], Response::HTTP_FORBIDDEN);
+        }
+        /** @var User $curator */
+        $curator = $this->getUser();
+        $curatorId = (int) $curator->getId();
+
+        $read = $this->room->markRead($curatorId, $id);
+        if (null === $read) {
+            throw $this->createNotFoundException();
+        }
+
+        return new JsonResponse(['read' => $read, 'unread' => $this->room->unreadCount($curatorId)]);
     }
 
     /**

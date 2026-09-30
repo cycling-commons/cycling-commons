@@ -223,10 +223,17 @@
   .q-reply button{align-self:flex-start}
   /* Arriving from a link that names one row. */
   .q-item:target{border-color:var(--ochre);box-shadow:0 0 0 2px var(--ochre);scroll-margin-top:1.5rem}
-  /* A row a reader has to act on, or has not seen: outlined in the brand
-     orange. Their own sent row: dashed, set back. */
-  .q-item--new{border-color:var(--trail);box-shadow:0 0 0 1px var(--trail)}
-  .q-item--new .q-title{font-weight:800}
+  /* The unseen bar (moderation-and-contribution.md §7.5a, §13.7): the mark
+     for a row its reader has not opened yet, on the rider's messages and the
+     curator room's posts. A bar in the brand orange at the row's left edge, and
+     words for a screen reader in .unseen-note. It goes when the item is
+     opened: open-to-read.js takes it off in place. */
+  .is-unseen{position:relative}
+  .is-unseen::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--trail);
+    border-radius:inherit;border-top-right-radius:0;border-bottom-right-radius:0;pointer-events:none}
+  .unseen-note{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .unseen-note[hidden]{display:none}
+  /* Their own sent row: dashed, set back. */
   .q-item--mine{border-style:dashed;background:var(--paper-deep)}
   .q-photo-lg{margin:.4rem 0}
   .q-photo-lg img{width:120px;height:90px;object-fit:cover;border-radius:5px;display:block}

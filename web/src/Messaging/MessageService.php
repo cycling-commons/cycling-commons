@@ -274,7 +274,7 @@ final class MessageService
     }
 
     /**
-     * Mark read only the rendered rows, and only those addressed to the reader.
+     * Mark these messages read, only those addressed to the reader.
      *
      * @param list<int> $ids
      */
@@ -289,6 +289,27 @@ final class MessageService
              WHERE user_id = :u AND read_at IS NULL AND id IN (:ids)',
             ['u' => $userId, 'ids' => $ids],
             ['ids' => ArrayParameterType::INTEGER],
+        );
+    }
+
+    /**
+     * The reader opened one message: expanded it on the messages page, or
+     * followed its own link to what it is about. Null when it is not addressed
+     * to them (their own sent message, somebody else's, or gone); false when
+     * it was already read; true when it came off the unread count.
+     *
+     * @see docs/specs/moderation-and-contribution.md §7.5a
+     */
+    public function markOpened(int $userId, int $id): ?bool
+    {
+        $recipient = $this->db->fetchOne('SELECT user_id FROM user_message WHERE id = :id', ['id' => $id]);
+        if (false === $recipient || (int) $recipient !== $userId) {
+            return null;
+        }
+
+        return 1 === (int) $this->db->executeStatement(
+            'UPDATE user_message SET read_at = now() WHERE id = :id AND user_id = :u AND read_at IS NULL',
+            ['id' => $id, 'u' => $userId],
         );
     }
 

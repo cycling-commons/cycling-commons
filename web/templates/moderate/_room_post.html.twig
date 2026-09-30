@@ -2,8 +2,14 @@
 {# One curator-room post (moderation-and-contribution.md §13).
    `post` is a RoomCard from CuratorRoom::board(). A post whose author account
    is gone keeps its text and loses its name: the room's record of a decision
-   outlives the account (§13.3). #}
-<article class="rm-post {{ pinned_block ? 'rm-pinned' : '' }} {{ post.direct ? 'rm-direct' : '' }}">
+   outlives the account (§13.3).
+   A post the reader has not opened (`post.unread`) carries the unseen bar
+   (partials/_unseen.html.twig) and is closed: opening its <details> is what
+   takes the bar off and marks it read, through
+   assets/js/open-to-read.js and `moderate_room_read` (§13.7). Its submission
+   link carries `post=<id>`, so following it opens the post too. #}
+<article class="rm-post {{ pinned_block ? 'rm-pinned' : '' }} {{ post.direct ? 'rm-direct' : '' }} {{ post.unread ? 'is-unseen' : '' }}" id="post-{{ post.id }}"
+  {%- if post.unread %} data-read-url="{{ path('moderate_room_read', {id: post.id}) }}" data-unread-class="is-unseen"{% endif %}>
   <div class="rm-meta">
     <span class="rm-who">{% if post.author %}{% include 'moderate/_rider_name.html.twig' with {rider: post.author} only %}{% else %}{{ 'room.former_curator'|trans }}{% endif %}</span>
     <span class="rm-dates">{{ 'room.posted_on'|trans({'%date%': post.created_at|cc_datetime}) }}</span>
@@ -27,7 +33,8 @@
     {% if post.pin != 'none' %}<span class="rm-tag">{{ ('room.pin.' ~ post.pin)|trans }}</span>{% endif %}
   </div>
 
-  <h3>{{ post.title }}</h3>
+  <h3>{{ post.title }}{% if post.unread %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
+  {% if post.unread %}<details class="rm-open" data-open-read><summary class="rm-open-btn">{{ 'room.open_post'|trans }}</summary>{% endif %}
   <p class="rm-body">{{ post.body }}</p>
 
   {% if post.images is not empty %}
@@ -59,12 +66,13 @@
       {%- if post.about_title -%}{{ 'room.about_submission_titled'|trans({'%id%': post.about_submission_id, '%title%': post.about_title}) }}{%- else -%}{{ 'room.about_submission'|trans({'%id%': post.about_submission_id}) }}{%- endif -%}
     {%- endset -%}
     {% if post.about_desk == 'queue' %}
-      <p class="rm-about"><a href="{{ path('moderate_submissions', {q: 'SUB-' ~ post.about_submission_id}) }}">{{ about_label }}</a></p>
+      <p class="rm-about"><a href="{{ path('moderate_submissions', {q: 'SUB-' ~ post.about_submission_id, post: post.id}) }}">{{ about_label }}</a></p>
     {% elseif post.about_desk == 'history' %}
-      <p class="rm-about"><a href="{{ path('moderate_history', {q: 'SUB-' ~ post.about_submission_id}) }}">{{ about_label }}</a></p>
+      <p class="rm-about"><a href="{{ path('moderate_history', {q: 'SUB-' ~ post.about_submission_id, post: post.id}) }}">{{ about_label }}</a></p>
     {% else %}
       <p class="rm-about">{{ about_label }}</p>
     {% endif %}
   {% endif %}
+  {% if post.unread %}</details>{% endif %}
 
 </article>

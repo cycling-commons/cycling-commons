@@ -17,7 +17,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
  * `/account/messages` account-shell page (moderation-feedback spec M3): row display,
- * unread styling, the mark-all-read-on-visit side effect, per-user isolation,
+ * unread styling, no read side effect on a visit, per-user isolation,
  * and the anon auth gate.
  *
  * Test isolation: DAMA\DoctrineTestBundle wraps each test in a rolled-back transaction.
@@ -90,9 +90,9 @@ final class MessagesPageTest extends WebTestCase
         self::assertResponseRedirects('/login?_target_path=%2Faccount%2Fmessages', 302);
     }
 
-    // ── Rows + unread styling + mark-all-read side effect ──────────────────
+    // ── Rows + unread styling, and a visit marks nothing ───────────────────
 
-    public function testRiderSeesUnreadRowsThenTheyAreMarkedRead(): void
+    public function testRiderSeesUnreadRowsAndTheyStayUnreadUntilOpened(): void
     {
         $client = static::createClient();
 
@@ -131,14 +131,14 @@ final class MessagesPageTest extends WebTestCase
         self::assertStringContainsString('Please clarify the gate location.', $listText);
         self::assertStringContainsString('From a curator', $listText);
 
-        // Visiting marks everything read.
-        self::assertSame(0, $svc->unreadCount($riderId));
+        // Visiting marks nothing: a message is read once it is opened (§7.5a).
+        self::assertSame(2, $svc->unreadCount($riderId));
 
-        // A second visit shows the same rows, but none flagged as new.
+        // A second visit shows the same rows, still flagged as new.
         $crawler2 = $client->request('GET', '/account/messages');
         self::assertResponseIsSuccessful();
         self::assertCount(2, $crawler2->filter('.msg-row'));
-        self::assertCount(0, $crawler2->filter('.msg-row.msg-new'));
+        self::assertCount(2, $crawler2->filter('.msg-row.msg-new'));
     }
 
     /**

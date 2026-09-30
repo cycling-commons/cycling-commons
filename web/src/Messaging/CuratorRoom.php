@@ -9,7 +9,6 @@ namespace App\Messaging;
 use App\Catalog\SubmissionStatus;
 use App\Messaging\Entity\CuratorPost;
 use App\Messaging\Entity\CuratorPostImage;
-use App\Messaging\Entity\CuratorRoomVisit;
 use App\Moderation\DeskRider;
 use App\Moderation\ModerationScope;
 use App\Support\Message\CheckPicture;
@@ -49,7 +48,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
  *     created_at: \DateTimeImmutable,
  *     edited_at: \DateTimeImmutable|null,
  *     mine: bool,
- *     direct: bool
+ *     direct: bool,
+ *     unread: bool
  * }
  *
  * @psalm-type RoomCard = array{
@@ -69,7 +69,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
  *     created_at: \DateTimeImmutable,
  *     edited_at: \DateTimeImmutable|null,
  *     mine: bool,
- *     direct: bool
+ *     direct: bool,
+ *     unread: bool
  * }
  *
  * @api
@@ -436,35 +437,63 @@ final class CuratorRoom
     }
 
     /**
-     * Posts this curator has not seen: not their own, addressed to them or to
-     * everybody, since their last visit. Zero until they have visited once.
+     * Posts this curator has not opened: not their own, addressed to them or
+     * to everybody, with no curator_post_read row. Counted among the posts
+     * the board's All view lists (every room pin, then the newest
+     * {@see self::PER_PAGE} others), so every post the count holds is one the
+     * curator can open and take off it.
      */
     public function unreadCount(int $readerId): int
     {
         $sql = <<<'SQL'
+            WITH visible AS (
+                SELECT p.id, p.pin, p.created_at
+                FROM curator_post p
+                WHERE p.recipient_id IS NULL OR p.recipient_id = :me OR p.author_id = :me
+            ), listed AS (
+                (SELECT id FROM visible WHERE pin = 'room' ORDER BY created_at DESC LIMIT :per)
+                UNION
+                (SELECT id FROM visible WHERE pin <> 'room' ORDER BY created_at DESC LIMIT :per)
+            )
             SELECT COUNT(*)
-            FROM curator_post p
-            JOIN curator_room_visit v ON v.user_id = :me
-            WHERE p.created_at > v.last_seen_at
-              AND (p.author_id IS NULL OR p.author_id <> :me)
-              AND (p.recipient_id IS NULL OR p.recipient_id = :me)
+            FROM listed l
+            JOIN curator_post p ON p.id = l.id
+            WHERE (p.author_id IS NULL OR p.author_id <> :me)
+              AND NOT EXISTS (SELECT 1 FROM curator_post_read r WHERE r.user_id = :me AND r.post_id = p.id)
             SQL;
 
-        return (int) $this->db->fetchOne($sql, ['me' => $readerId]);
+        return (int) $this->db->fetchOne($sql, ['me' => $readerId, 'per' => self::PER_PAGE], ['per' => \Doctrine\DBAL\ParameterType::INTEGER]);
     }
 
     /**
-     * Stamp this curator's visit. Called on every room load.
+     * The curator opened this post: on the board, or through its link to the
+     * submission it is about. Null when the post is gone or not theirs to see
+     * (a direct post between two other curators); false when nothing changed
+     * (their own post, or one already read); true when it came off the count.
      */
-    public function markSeen(int $readerId): void
+    public function markRead(int $readerId, int $postId): ?bool
     {
-        $visit = $this->em->getRepository(CuratorRoomVisit::class)->find($readerId);
-        if ($visit instanceof CuratorRoomVisit) {
-            $visit->touch();
-        } else {
-            $this->em->persist(new CuratorRoomVisit($readerId));
+        $post = $this->db->fetchAssociative(
+            'SELECT author_id, recipient_id FROM curator_post WHERE id = :id',
+            ['id' => $postId],
+        );
+        if (false === $post) {
+            return null;
         }
-        $this->em->flush();
+        $authorId = null !== $post['author_id'] ? (int) $post['author_id'] : null;
+        $recipientId = null !== $post['recipient_id'] ? (int) $post['recipient_id'] : null;
+        if ($authorId === $readerId) {
+            return false;
+        }
+        if (null !== $recipientId && $recipientId !== $readerId) {
+            return null;
+        }
+
+        return 1 === (int) $this->db->executeStatement(
+            'INSERT INTO curator_post_read (user_id, post_id, read_at) VALUES (:me, :post, now())
+             ON CONFLICT (user_id, post_id) DO NOTHING',
+            ['me' => $readerId, 'post' => $postId],
+        );
     }
 
     /**
@@ -539,7 +568,8 @@ final class CuratorRoom
     {
         return 'SELECT p.id, p.author_id, a.display_name AS author_name, a.public_profile AS author_public, a.uuid AS author_uuid, p.category,
                        p.recipient_id, r.display_name AS recipient_name, r.public_profile AS recipient_public, r.uuid AS recipient_uuid, p.pin, p.title, p.body,
-                       p.about_submission_id, s.title AS about_title, s.status AS about_status, p.created_at, p.edited_at
+                       p.about_submission_id, s.title AS about_title, s.status AS about_status, p.created_at, p.edited_at,
+                       EXISTS (SELECT 1 FROM curator_post_read pr WHERE pr.user_id = :me AND pr.post_id = p.id) AS read_by_me
                 FROM curator_post p
                 LEFT JOIN users a ON a.id = p.author_id
                 LEFT JOIN users r ON r.id = p.recipient_id
@@ -620,6 +650,8 @@ final class CuratorRoom
             // "mine" is "may change it": the author, or an administrator.
             'mine' => $this->readerIsAdmin || (null !== $authorId && $authorId === $readerId),
             'direct' => null !== $recipientId,
+            // Unread until this reader opens it; their own post never is.
+            'unread' => $authorId !== $readerId && !(bool) $row['read_by_me'],
         ];
     }
 

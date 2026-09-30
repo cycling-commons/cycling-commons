@@ -98,7 +98,7 @@ public. **Not built until an endpoint needs it.**
 `system_setting`, `doctrine_migration_versions`, `messenger_messages`,
 `media_upload`, `consent_record`, `media_moderation_event`,
 `contact_message`, `bug_report`, `bug_screenshot`, `content_report`,
-`curator_post`, `curator_post_image`, `curator_room_visit`,
+`curator_post`, `curator_post_image`, `curator_post_read`,
 `catalog_finding`, `translation_proposal`, `data_provider_change`,
 `github_contributor`, `blog_post`, `coverage_run`, `coverage_run_step`.
 
@@ -111,7 +111,7 @@ unlisted table is simply out of reach. Notes on the less obvious rows:
   [content-reports.md](content-reports.md)) hold sender addresses, free text,
   salted IP hashes and screenshots served to curators only.
 - **The curator room and desks** (`curator_post`, `curator_post_image`,
-  `curator_room_visit`, `catalog_finding`) are moderation internals: authors,
+  `curator_post_read`, `catalog_finding`) are moderation internals: authors,
   decisions and notes.
 - **`translation_proposal`** is a rider's proposal with its submitter,
   consent record and reviewer note, the translation counterpart of

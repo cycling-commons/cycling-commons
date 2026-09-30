@@ -890,8 +890,9 @@ partial and the page styles are shared with the rider dashboard
 Example: a curator for Flanders with 4 pending submissions and 1 open report
 sees "4" on the Submissions tile and a red "1" on the Reports tile.
 
-The page decides nothing. It does **not** stamp the room visit: the Room
-badge (§13.7) keeps counting until the curator opens `/moderate/room`.
+The page decides nothing and marks nothing read. It lists the newest room
+posts, and each one still counts on the Room badge (§13.7) until the curator
+opens it in the room.
 
 ### 5.1 Decisions live off the queue lists
 
@@ -1711,18 +1712,43 @@ wrong:
    replies for the questions on that page. Paging the flat list would sooner or
    later put a reply at the foot of one page and its question at the top of the
    next, where each reads as an orphan.
-2. **Only what was shown is marked read.** `markRead($userId, $ids)` replaces
-   the old `markAllRead()` on the dashboard. Marking everything read on a visit
-   would consume the unread state of messages sitting on page 3 that nobody
-   opened — the unread marker would be a lie and the §7.5 bulb would drop to
-   zero over unread mail. `markAllRead()` still exists for callers that really
-   do mean all of it.
+2. **Only what is opened is marked read** (2026-09-30, owner: "an item
+   should be opened, only then can we tag it as seen, and the counter goes
+   down by 1"). Loading `/account/messages`, any page of it, any shelf,
+   marks nothing. A message counts as read when its reader opens it:
+   - **on the messages page**: an unread received message renders closed,
+     its content inside a `<details class="msg-open">` whose summary reads
+     "Open message". Opening it makes `assets/js/open-to-read.js` post once
+     to `POST /account/messages/{id}/read` (`messages_read`, CSRF id
+     `message-read`, the token on the list as `data-read-token`), which
+     answers JSON `{read, unread}`: whether this took it off the count, and
+     the count now. The page then unwraps the message, swaps its marker to
+     read, and lowers every counter of its kind by one (the account chip's
+     bulb and Messages count, the Unread chip). A message not addressed to
+     the reader, or gone, answers 404; a bad token 403. A link to
+     `/account/messages#msg-<id>` (the contributions page's "answer the
+     curator") opens that message on arrival.
+   - **through its own link**: the message's links carry `msg=<id>`: the map
+     link of an approved place or route (`/map?feature=…&msg=<id>`,
+     `/map?route=…&msg=<id>`) and, for a needs-info question about a place,
+     its edit form (`/improve?item=…&type=…&msg=<id>`, "Open it in the edit
+     form"). Arriving at `map` or `improve` with `msg` marks that one
+     message read (`App\EventSubscriber\OpenedByLinkSubscriber`), and only
+     when it is addressed to the signed-in reader; any other id is ignored.
+   Each message opened lowers the unread count by exactly one; opening it
+   again changes nothing. `MessageService::markOpened()` is the one write;
+   `markRead($userId, $ids)` and `markAllRead()` remain for callers that name
+   what they mean. There is no "mark all as read" button.
 
-Unread is also *visible*, not just counted: a received message carries a state
-marker in its header — a single tick for unread, a double tick for read, with
-the state name in the accessible name — and an unread row keeps the heavier
-left border and bolder heading. A message the reader **sent** carries no marker
-at all; it was never unread to them.
+Unread is also *visible*, not just counted: an unread row carries the unseen
+bar (`is-unseen`, a 4px bar in the brand orange at the row's left edge,
+defined in `page/account/_shell_styles.css`; the room's posts wear it too,
+§13.7), with "Not opened yet" for a screen reader
+(`templates/partials/_unseen.html.twig`), and stays closed until
+opened; opening it takes the bar off. A read received message carries a double
+tick in its header, with "Read" as its accessible name. A message the reader
+**sent** carries no marker at all; it was never unread to them. Without the
+script the message still opens and stays unread until its link is followed.
 
 ### 7.5b The sweep — every unbounded list pages (2026-08-09)
 
@@ -1830,8 +1856,11 @@ writes a message.
 
 Messages link to their subject only when it is publicly on the map:
 `submission_approved` → `/map?feature=<refLabel>`; `route_approved` and
-`correction_done` → `/map?route=<refId>`. Rejected / retired / needs-info
-kinds carry no link (subject not publicly visible).
+`correction_done` → `/map?route=<refId>`. Rejected / retired kinds carry no
+map link (subject not publicly visible). A needs-info question about a place
+links to that place's edit form instead (`/improve?item=<itemId>&type=<letter>`,
+the reader's own submission with an item behind it, never a route). Every one
+of these links carries `&msg=<id>`, so following it opens the message (§7.5a).
 
 ### 7.8 Out of scope here
 
@@ -3265,8 +3294,14 @@ unread bulb. The room stores one row per post instead.
 Indexes: `(pin, created_at DESC)` for the board read, `(recipient_id,
 created_at DESC)` for the Direct view and the badge.
 
-`curator_room_visit`: `user_id` (primary key, `ON DELETE CASCADE`) and
-`last_seen_at`. One row per curator, written when the room is opened.
+`curator_post_read` (2026-09-30): `user_id` and `post_id` (together the
+primary key, both `ON DELETE CASCADE`), `read_at`. One row per curator per
+post they have opened (§13.7). It replaced `curator_room_visit`, one "last had
+the room open" stamp per curator, which counted every post as seen once the
+board loaded; migration `Version20260930200000` backfilled a read row for
+every post older than each curator's stamp, and for every existing post for a
+curator who had never opened the room (who counted nothing), so nobody's
+count rose, then dropped the old table.
 
 `curator_post_image` (2026-09-19): a picture on a post, kept **in the
 database** and served to curators only, the way a bug report's screenshot is
@@ -3364,13 +3399,29 @@ every curator.
 ### 13.7 The badge
 
 The Room tab on the moderation bar carries the count of posts the reader has
-not seen: `created_at > curator_room_visit.last_seen_at`, excluding the
-reader's own posts, and excluding directed posts not addressed to them. A
-curator with no visit row counts nothing on their first load, because the
-room's whole history is not unread, it is history. `last_seen_at` is stamped on
-every room load, whatever category is showing: the room is one room, so seeing
-it is seeing it. The dashboard's Room tile (§5.0) shows the same count and
-stamps nothing, even though it lists the newest posts.
+not **opened** (2026-09-30): no `curator_post_read` row for them, excluding the
+reader's own posts, and excluding directed posts not addressed to them. It
+counts among the posts the board's All view lists (every room pin, then the
+newest `CuratorRoom::PER_PAGE` others), so every post it holds is one the
+curator can open and take off it. A curator made a curator after the switch
+starts with those posts unread.
+
+Loading the room, any view of it, marks nothing. A post is read when the
+curator opens it:
+- **on the board**: an unread post carries the unseen bar (§7.5a), with "Not
+  opened yet" in its heading for a screen reader, and its body, pictures and
+  submission link sit closed in a `<details class="rm-open">` ("Open post").
+  Opening it makes `assets/js/open-to-read.js` post once to
+  `POST /moderate/room/{id}/read` (§13.8), then unwrap the post, take its bar
+  off and lower the Room tab by one.
+  A link to `/moderate/room#post-<id>` opens that post on arrival.
+- **through its submission link**: the link carries `post=<id>`
+  (`/moderate/submissions?q=SUB-…&post=<id>`, or History), and arriving there
+  marks that post read (`App\EventSubscriber\OpenedByLinkSubscriber`), only
+  when the curator may see it.
+Each post opened lowers the count by exactly one; opening it again, or opening
+your own post, changes nothing. The dashboard's Room tile (§5.0) shows the
+same count and marks nothing, even though it lists the newest posts.
 
 ### 13.8 Routes
 
@@ -3382,6 +3433,7 @@ other desks.
 | GET | `/moderate/room` | `moderate_room` | the board. `?c=<category>` filters, `?c=direct` shows the reader's direct messages. An unknown `c` falls back to All rather than 404ing. |
 | POST | `/moderate/room/post` | `moderate_room_post` | write a post: body, category, optional recipient, optional submission id. CSRF-protected. |
 | POST | `/moderate/room/pin` | `moderate_room_pin` | set a post's `pin`. CSRF-protected. |
+| POST | `/moderate/room/{id}/read` | `moderate_room_read` | the curator opened this post (§13.7). JSON `{read, unread}`: whether it came off the count, and the count now. 404 for a post that is gone or a direct post between two others; 403 for a bad token (`moderate-room-read`). |
 | GET | `/moderate/room/{id}/edit` | `moderate_room_edit` | the composer again, prefilled, for **your own** post, or any post as `ROLE_ADMIN`; 404 for anyone else's. |
 | POST | `/moderate/room/{id}/edit` | `moderate_room_edit_save` | save every field: body, category, recipient, submission, pin, pictures added or removed (`drop[]`). Stamps `edited_at` only when something differs. CSRF-protected. |
 | POST | `/moderate/room/delete` | `moderate_room_delete` | delete **your own** post, or any as `ROLE_ADMIN`; the form lives on the edit page. A hard delete with no tombstone: this is a staffroom note, not a moderation record, and §8's record-keeping principle covers decisions, not conversation. |
@@ -3390,7 +3442,7 @@ other desks.
 | POST | `/moderate/room/upload/{id}/remove` | `moderate_room_upload_remove` | take back a picture uploaded and not yet posted. |
 | GET | `/moderate/room/submissions?q=` | `moderate_room_submissions` | the composer's search: up to 8 submissions whose id, title or region matches, pending first, as JSON `{id, title, type, status, region, country}`. Scoped like the queue, never a held card (§13.6). |
 
-Every POST redirects back to the room with the active category preserved,
+Every form POST redirects back to the room with the active category preserved,
 matching `ModerateController`'s existing redirect discipline.
 
 ### 13.9 Surface

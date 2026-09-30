@@ -304,34 +304,153 @@ final class CuratorRoomTest extends WebTestCase
         self::assertStringContainsString('Reworded by an administrator.', $crawler->filter('.rm-post')->text());
     }
 
-    public function testTheBadgeCountsWhatArrivedSinceTheLastVisit(): void
+    public function testTheBadgeCountsEveryPostTheReaderHasNotOpened(): void
     {
         static::createClient();
         $reader = $this->makeUser('badge-reader', ['ROLE_CURATOR']);
         $author = $this->makeUser('badge-author', ['ROLE_CURATOR']);
         $readerId = (int) $reader->getId();
+        $before = $this->room()->unreadCount($readerId);
 
-        // Never visited: the room's history is history, not unread.
-        $this->room()->post((int) $author->getId(), null, null, 'Before the first visit.');
-        self::assertSame(0, $this->room()->unreadCount($readerId));
-
-        $this->room()->markSeen($readerId);
-        self::assertSame(0, $this->room()->unreadCount($readerId));
-
-        // Timestamps have one-second resolution, so age the past rather than
-        // race the clock: everything written so far moves an hour back, and the
-        // visit a minute back, which puts the visit after them and before what
-        // the rest of this test writes.
-        $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
-        $db->executeStatement("UPDATE curator_post SET created_at = created_at - interval '1 hour'");
-        $db->executeStatement("UPDATE curator_room_visit SET last_seen_at = last_seen_at - interval '1 minute' WHERE user_id = :id", ['id' => $readerId]);
-
-        $this->room()->post((int) $author->getId(), null, null, 'After the visit.');
-        $this->room()->post((int) $author->getId(), null, (int) $reader->getId(), 'Directly to you.');
+        $this->room()->post((int) $author->getId(), null, null, 'To everyone.');
+        $this->room()->post((int) $author->getId(), null, $readerId, 'Directly to you.');
         $this->room()->post($readerId, null, null, 'My own post does not badge me.');
         $this->room()->post((int) $author->getId(), null, (int) $author->getId(), 'A note to somebody else.');
 
-        self::assertSame(2, $this->room()->unreadCount($readerId));
+        self::assertSame($before + 2, $this->room()->unreadCount($readerId));
+    }
+
+    public function testLoadingTheRoomMarksNothing(): void
+    {
+        $client = static::createClient();
+        $author = $this->makeUser('load-author', ['ROLE_CURATOR']);
+        $reader = $this->loginAs($client, 'load-reader', ['ROLE_CURATOR']);
+        $readerId = (int) $reader->getId();
+        $a = $this->room()->post((int) $author->getId(), null, null, 'First unread.', title: 'Unread one');
+        $this->room()->post((int) $author->getId(), null, null, 'Second unread.', title: 'Unread two');
+        $before = $this->room()->unreadCount($readerId);
+
+        $crawler = $client->request('GET', '/moderate/room');
+        self::assertResponseIsSuccessful();
+        $client->request('GET', '/moderate/room?c=direct');
+        $client->request('GET', '/moderate');
+
+        self::assertSame($before, $this->room()->unreadCount($readerId), 'a list page marks nothing, however often it loads');
+        // Unread wears the one unseen bar with its words, and the post is closed until opened.
+        $card = $crawler->filter('#post-'.$a->getId());
+        self::assertStringContainsString('is-unseen', (string) $card->attr('class'));
+        self::assertSame('Not opened yet', trim($card->filter('.unseen-note')->text()));
+        self::assertSame('is-unseen', $card->attr('data-unread-class'));
+        self::assertCount(1, $card->filter('details.rm-open:not([open])'));
+        self::assertSame('/moderate/room/'.$a->getId().'/read', $card->attr('data-read-url'));
+    }
+
+    public function testOpeningOnePostLowersTheRoomCountByOne(): void
+    {
+        $client = static::createClient();
+        $author = $this->makeUser('open-author', ['ROLE_CURATOR']);
+        $reader = $this->loginAs($client, 'open-reader', ['ROLE_CURATOR']);
+        $readerId = (int) $reader->getId();
+        $a = $this->room()->post((int) $author->getId(), null, null, 'Open me.', title: 'Open me');
+        $this->room()->post((int) $author->getId(), null, null, 'Leave me.', title: 'Leave me');
+        $elsewhere = $this->room()->post((int) $author->getId(), null, (int) $author->getId(), 'Not yours.', title: 'Not yours');
+        $mine = $this->room()->post($readerId, null, null, 'My own.', title: 'My own');
+        $before = $this->room()->unreadCount($readerId);
+
+        $crawler = $client->request('GET', '/moderate/room');
+        self::assertSame((string) $before, trim($crawler->filter('.dtabs-modmode a[href$="/moderate/room"] .dtab-count')->text()), 'the room tab counts what is unread, on the room itself too');
+        $token = (string) $crawler->filter('[data-read-token]')->attr('data-read-token');
+
+        $client->request('POST', '/moderate/room/'.$a->getId().'/read', ['_token' => $token]);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['read' => true, 'unread' => $before - 1], json_decode((string) $client->getResponse()->getContent(), true));
+        self::assertSame($before - 1, $this->room()->unreadCount($readerId));
+
+        // Again: nothing more comes off.
+        $client->request('POST', '/moderate/room/'.$a->getId().'/read', ['_token' => $token]);
+        self::assertSame(['read' => false, 'unread' => $before - 1], json_decode((string) $client->getResponse()->getContent(), true));
+
+        // Your own post was never unread; somebody else's direct post is not yours to open.
+        $client->request('POST', '/moderate/room/'.$mine->getId().'/read', ['_token' => $token]);
+        self::assertSame(['read' => false, 'unread' => $before - 1], json_decode((string) $client->getResponse()->getContent(), true));
+        $client->request('POST', '/moderate/room/'.$elsewhere->getId().'/read', ['_token' => $token]);
+        self::assertResponseStatusCodeSame(404);
+        $client->request('POST', '/moderate/room/'.$a->getId().'/read', ['_token' => 'forged']);
+        self::assertResponseStatusCodeSame(403);
+
+        $crawler = $client->request('GET', '/moderate/room');
+        self::assertStringNotContainsString('is-unseen', (string) $crawler->filter('#post-'.$a->getId())->attr('class'));
+        self::assertCount(0, $crawler->filter('#post-'.$a->getId().' .unseen-note'));
+        self::assertCount(0, $crawler->filter('#post-'.$a->getId().' details.rm-open'));
+        self::assertSame($before - 1, $this->room()->unreadCount($readerId));
+    }
+
+    public function testArrivingFromAPostsSubmissionLinkMarksThatPostOnly(): void
+    {
+        $client = static::createClient();
+        $author = $this->makeUser('link-author', ['ROLE_CURATOR']);
+        $reader = $this->loginAs($client, 'link-reader', ['ROLE_CURATOR']);
+        $readerId = (int) $reader->getId();
+        $sub = $this->seedSubmission((int) $author->getId(), 'Linked fountain');
+        $a = $this->room()->post((int) $author->getId(), null, null, 'Look at this one.', (int) $sub->getId(), title: 'Linked');
+        $this->room()->post((int) $author->getId(), null, null, 'Something else.', title: 'Other');
+        $before = $this->room()->unreadCount($readerId);
+
+        $crawler = $client->request('GET', '/moderate/room');
+        $href = (string) $crawler->filter('#post-'.$a->getId().' .rm-about a')->attr('href');
+        self::assertStringContainsString('post='.$a->getId(), $href, 'the link names the post it comes from');
+
+        $client->request('GET', $href);
+        self::assertResponseIsSuccessful();
+        self::assertSame($before - 1, $this->room()->unreadCount($readerId));
+
+        // A post you may not see is not marked by naming it in a link.
+        $hidden = $this->room()->post((int) $author->getId(), null, (int) $author->getId(), 'Private.', title: 'Private');
+        $client->request('GET', '/moderate/submissions?post='.$hidden->getId());
+        self::assertFalse((bool) static::getContainer()->get(EntityManagerInterface::class)->getConnection()->fetchOne(
+            'SELECT 1 FROM curator_post_read WHERE user_id = :u AND post_id = :p',
+            ['u' => $readerId, 'p' => $hidden->getId()],
+        ));
+    }
+
+    /**
+     * The migration from one visit stamp to per-post reads: every post older
+     * than a curator's last visit arrives read, so nobody's count jumps. A
+     * curator who never opened the room counted nothing, and still does.
+     */
+    public function testTheBackfillKeepsOldPostsRead(): void
+    {
+        static::createClient();
+        $db = static::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $visitor = $this->makeUser('bf-visitor', ['ROLE_CURATOR']);
+        $never = $this->makeUser('bf-never', ['ROLE_CURATOR']);
+        $author = $this->makeUser('bf-author', ['ROLE_CURATOR']);
+        $old = $this->room()->post((int) $author->getId(), null, null, 'Before the visit.', title: 'Old');
+        $new = $this->room()->post((int) $author->getId(), null, null, 'After the visit.', title: 'New');
+        $db->executeStatement("UPDATE curator_post SET created_at = now() - interval '2 hours' WHERE id = :id", ['id' => $old->getId()]);
+
+        // The schema as it stood before the migration, inside this test's transaction.
+        $db->executeStatement('DROP TABLE curator_post_read');
+        $db->executeStatement('CREATE TABLE curator_room_visit (user_id BIGINT PRIMARY KEY, last_seen_at TIMESTAMP(0) WITH TIME ZONE NOT NULL)');
+        $db->executeStatement("INSERT INTO curator_room_visit (user_id, last_seen_at) VALUES (:u, now() - interval '1 hour')", ['u' => $visitor->getId()]);
+
+        require_once \dirname(__DIR__, 2).'/migrations/Version20260930200000.php';
+        $migration = new \DoctrineMigrations\Version20260930200000($db, new \Psr\Log\NullLogger());
+        $migration->up(new \Doctrine\DBAL\Schema\Schema());
+        foreach ($migration->getSql() as $query) {
+            $db->executeStatement($query->getStatement());
+        }
+
+        $read = static fn (User $u, $p): bool => (bool) $db->fetchOne(
+            'SELECT 1 FROM curator_post_read WHERE user_id = :u AND post_id = :p',
+            ['u' => $u->getId(), 'p' => $p->getId()],
+        );
+        self::assertTrue($read($visitor, $old), 'older than the last visit: read');
+        self::assertFalse($read($visitor, $new), 'newer than the last visit: still unread');
+        self::assertTrue($read($never, $old), 'never visited counted nothing, and still counts nothing');
+        self::assertTrue($read($never, $new));
+        self::assertFalse($read($author, $old), 'an author never reads their own post');
+        self::assertFalse((bool) $db->fetchOne("SELECT to_regclass('curator_room_visit') IS NOT NULL"), 'the visit stamp is gone');
     }
 
     private function seedSubmission(int $userId, string $title): Submission
@@ -560,7 +679,7 @@ final class CuratorRoomTest extends WebTestCase
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'The sign at the junction, photographed.';
         $form['title'] = 'Test post';
-        $form['images'] = json_encode([$up['id']]);
+        $form['images'] = (string) json_encode([$up['id']]);
         $client->submit($form);
         $crawler = $client->followRedirect();
         $img = $crawler->filter('.rm-post .rm-images img');
@@ -583,7 +702,7 @@ final class CuratorRoomTest extends WebTestCase
         $form = $crawler->filter('form.rm-compose')->form();
         $form['body'] = 'Trying to reuse the same picture.';
         $form['title'] = 'Test post';
-        $form['images'] = json_encode([$up['id']]);
+        $form['images'] = (string) json_encode([$up['id']]);
         $client->submit($form);
         $crawler = $client->followRedirect();
         self::assertSelectorTextContains('.flash-error', 'picture on this post is missing');

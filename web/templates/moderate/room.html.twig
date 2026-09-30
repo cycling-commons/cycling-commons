@@ -16,11 +16,11 @@
 {% include 'account/_shell_styles.html.twig' %}
 {% include 'moderate/_room_styles.html.twig' %}
 {% endblock %}
-{% block body_scripts %}<script src="{{ asset('js/room.js') }}" defer></script>{% endblock %}
+{% block body_scripts %}<script src="{{ asset('js/room.js') }}" defer></script><script src="{{ asset('js/open-to-read.js') }}" defer></script>{% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_room'} %}{% endblock %}
 
 {% block body %}
-<div class="dbody" id="main">
+<div class="dbody" id="main" data-read-token="{{ csrf_token('moderate-room-read') }}" data-read-kind="room">
   <div class="mh">
     <div class="kicker">{{ 'room.kicker'|trans }}</div>
     <h1>{{ 'room.heading'|trans }}</h1>

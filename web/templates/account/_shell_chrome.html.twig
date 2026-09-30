@@ -70,9 +70,10 @@
   {# Translations: site-wide overlays, unscoped like takedowns (translations.md §5). #}
   <a href="{{ path('moderate_translations') }}" class="dtab-mod {{ active == 'moderate_translations' ? 'on' : '' }}">{{ 'nav.translations'|trans }}{% if mod_translation_count %}<span class="dtab-count" title="{{ 'account.mod_translations_open'|trans }}">{{ mod_translation_count }}</span>{% endif %}</a>
   {# The curator room: the in-desk board the rulebook's "ask before acting"
-     points at (moderation-and-contribution.md §13). Badge counts posts since
-     this curator last had the room open, so it reads zero while you are in it. #}
-  <a href="{{ path('moderate_room') }}" class="dtab-mod {{ active == 'moderate_room' ? 'on' : '' }}">{{ 'nav.room'|trans }}{% if mod_room_count %}<span class="dtab-count" title="{{ 'account.mod_room_new'|trans }}">{{ mod_room_count }}</span>{% endif %}</a>
+     points at (moderation-and-contribution.md §13). Badge counts the posts
+     this curator has not opened (§13.7); each one opened takes one off,
+     live on the room page (assets/js/open-to-read.js). #}
+  <a href="{{ path('moderate_room') }}" class="dtab-mod {{ active == 'moderate_room' ? 'on' : '' }}">{{ 'nav.room'|trans }}{% if mod_room_count %}<span class="dtab-count" data-count-of="room" title="{{ 'account.mod_room_new'|trans }}">{{ mod_room_count }}</span>{% endif %}</a>
   </div>
   <div class="dtabs-more" data-nav-menu>
     <button type="button" class="dtab-mod dtabs-more-btn{{ active in _more ? ' on' }}" data-nav-toggle aria-expanded="false" aria-controls="cc-mod-more">{{ 'account.menu_more'|trans }}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
