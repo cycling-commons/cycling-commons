@@ -154,7 +154,7 @@ final class ModerationService
     /**
      * Rider takes back their own undecided submission (docs/specs/moderation-and-contribution.md §3.4).
      *
-     * @throws AlreadyDecidedException  when the submission is already settled
+     * @throws AlreadyDecidedException  when the submission is already settled or under legal hold
      * @throws NotTheSubmitterException when it is somebody else's
      */
     public function withdraw(int $submissionId, User $rider): Submission
@@ -169,6 +169,11 @@ final class ModerationService
             }
             if (!\in_array($submission->getStatus(), [SubmissionStatus::Pending, SubmissionStatus::NeedsInfo], true)) {
                 throw new AlreadyDecidedException(sprintf('Submission %d is already %s', $submissionId, $submission->getStatus()->value));
+            }
+            // Legal hold is beyond every change (docs/specs/photo-uploads.md §6d).
+            // The rider hears what a decided submission tells them, nothing about a hold.
+            if ($submission->isEscalated()) {
+                throw new AlreadyDecidedException(sprintf('Submission %d is under legal hold', $submissionId));
             }
 
             $item = null !== $submission->getItemId() ? $this->em->find(Item::class, $submission->getItemId()) : null;

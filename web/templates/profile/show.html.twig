@@ -157,9 +157,10 @@
               {% endif %}
               <span class="q-pill q-pill--{{ sub_pill[sub.status.value] ?? 'pend' }}">{{ ('account.sub_status_' ~ sub.status.value)|trans }}</span>
               {# The rider's own exit, only while nobody has decided (owner
-                 2026-08-16). The service re-checks state under a row lock, so a
-                 race with a curator ends in a flash, never a half-withdrawal. #}
-              {% if sub.status.value in ['pending', 'needs_info'] %}
+                 2026-08-16), and never on a submission under legal hold. The
+                 service re-checks both under a row lock, so a race with a
+                 curator ends in a flash, never a half-withdrawal. #}
+              {% if sub.status.value in ['pending', 'needs_info'] and not sub.escalated %}
                 <form class="withdraw-form" method="post" action="{{ path('profile_withdraw', {id: sub.id}) }}"
                       data-confirm="{{ 'account.withdraw_confirm'|trans }}">
                   <input type="hidden" name="_token" value="{{ csrf_token('withdraw' ~ sub.id) }}">

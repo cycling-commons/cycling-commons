@@ -779,6 +779,9 @@ approved/rejected). `decided_by` records the rider and `decided_at` starts
 the retention clock: the sweep and /account/contributions's lazy filter treat `withdrawn`
 exactly like `rejected`. A race with a curator ends in a flash and the real
 outcome, never a half-withdrawal (`AlreadyDecidedException` under the lock).
+A submission under legal hold (photo-uploads.md §6d) cannot be withdrawn: no
+button, and the service throws the same `AlreadyDecidedException`, so the
+rider sees the decided flash and nothing about a hold.
 Pinned by `WithdrawSubmissionTest`.
 
 ## 4. Apply-on-approve and change history

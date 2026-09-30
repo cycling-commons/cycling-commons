@@ -1529,6 +1529,11 @@ decidable would defeat the hold. The refusal is silent and logged rather than th
 sweeps a whole submission, and one held photo must neither abort the rest nor
 leak its existence through an error.
 
+The rest of a held submission's paths hold too. `ModerationService::withdraw()`
+refuses it with the `AlreadyDecidedException` a decided row gets, so the rider
+sees the same "a curator decided this one" flash and nothing about a hold, and
+/account/contributions shows no Withdraw button on it.
+
 **Only an admin can reach it**, at `/admin/escalated` — one page listing both
 kinds — behind a details element so nobody is shown the material by scrolling
 past it. A held submission's own text is deliberately not rendered there

@@ -12,8 +12,10 @@ use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Moderation\ModerationScope;
 use App\Moderation\ModerationService;
 use App\Moderation\NotTheSubmitterException;
+use App\Moderation\SubmissionQueue;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -121,5 +123,54 @@ final class WithdrawSubmissionTest extends WebTestCase
         $em->clear();
         self::assertSame(SubmissionStatus::Withdrawn, $em->find(Submission::class, (int) $pending->getId())->getStatus());
         self::assertSame(SubmissionStatus::Approved, $em->find(Submission::class, (int) $sub->getId())->getStatus());
+    }
+
+    /**
+     * Legal hold is beyond every change (docs/specs/photo-uploads.md §6d): the
+     * rider cannot withdraw a held submission, sees no button for it, and a
+     * form rendered before the hold ends in the same flash a decided one gets.
+     * The admin's release then returns it to the queue it left.
+     */
+    public function testAHeldSubmissionCannotBeWithdrawn(): void
+    {
+        $client = static::createClient();
+        $me = $this->rider('withdraw-held@example.test');
+        $sub = $this->submission($me, SubmissionStatus::Pending);
+        $id = (int) $sub->getId();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $moderation = static::getContainer()->get(ModerationService::class);
+        $admin = $this->rider('withdraw-held-admin@example.test');
+        $admin->setRoles(['ROLE_ADMIN']);
+        $em->flush();
+
+        // The page rendered before the hold still carries the form.
+        $client->loginUser($me);
+        $crawler = $client->request('GET', '/account/contributions');
+        $form = $crawler->filter('form[action$="/account/contributions/withdraw/'.$id.'"]')->form();
+
+        $moderation->escalateSubmission($id, $admin, 'Suspected illegal content.');
+
+        $client->request('GET', '/account/contributions');
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('withdraw/'.$id, (string) $client->getResponse()->getContent(),
+            'no withdraw button on a held row');
+
+        $client->submit($form);
+        self::assertResponseRedirects();
+        $client->followRedirect();
+        self::assertSelectorTextContains('.cc-notice', 'A curator decided this one before your withdrawal',
+            'the same words as for a decided submission, nothing about a hold');
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        $held = $em->find(Submission::class, $id);
+        self::assertSame(SubmissionStatus::Pending, $held->getStatus());
+        self::assertNull($held->getDecidedAt());
+
+        self::assertTrue(static::getContainer()->get(ModerationService::class)
+            ->releaseSubmission($id, $em->find(User::class, (int) $admin->getId())));
+        $queue = static::getContainer()->get(SubmissionQueue::class);
+        self::assertContains($id, array_column($queue->filtered(ModerationScope::global(), null, null, null), 'id'),
+            'released, it is back in the queue it left');
     }
 }
