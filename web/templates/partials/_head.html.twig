@@ -4,10 +4,12 @@
 <title>{{ page_title|default('Cycling Commons')|trans }}</title>
 <meta name="description" content="{{ page_description|default('Cycling Commons is an open, community-built map of the world\'s best riding.')|trans }}" />
 <link rel="canonical" href="{{ app.request.schemeAndHttpHost ~ app.request.pathInfo }}" />
+{# The alternates take the canonical's form: absolute, no query string, so a
+   shared link's `?utm_source=` never reaches a search engine as its own page. #}
 {% set _alt = locale_alternates() %}
 {% if _alt.localized %}
-{% for code, url in _alt.urls %}<link rel="alternate" hreflang="{{ code }}" href="{{ app.request.schemeAndHttpHost ~ url }}" />
-{% endfor %}<link rel="alternate" hreflang="x-default" href="{{ app.request.schemeAndHttpHost ~ _alt.urls['en'] }}" />
+{% for code, path in _alt.paths %}<link rel="alternate" hreflang="{{ code }}" href="{{ app.request.schemeAndHttpHost ~ path }}" />
+{% endfor %}<link rel="alternate" hreflang="x-default" href="{{ app.request.schemeAndHttpHost ~ _alt.paths['en'] }}" />
 {% endif %}
 <meta name="theme-color" content="#101E16" />
 <link rel="manifest" href="/site.webmanifest" />

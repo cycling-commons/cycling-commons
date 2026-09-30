@@ -97,6 +97,39 @@ final class LocalizedRoutingTest extends WebTestCase
         self::assertCount(1, $crawler->filter('link[hreflang="x-default"]'));
     }
 
+    /**
+     * Regression, 2026-10-01: a shared link's tracking parameters
+     * (`/?utm_source=instagram&utm_medium=social`) were copied into every
+     * hreflang alternate while the canonical was already clean. The alternates
+     * now take the canonical's form: absolute, no query string at all.
+     */
+    public function testTrackingParametersNeverReachCanonicalOrHreflang(): void
+    {
+        $client = static::createClient();
+        foreach (['/', '/regions', '/fr/regions'] as $path) {
+            $crawler = $client->request('GET', $path, ['utm_source' => 'instagram', 'utm_medium' => 'social']);
+            self::assertResponseIsSuccessful($path);
+
+            $canonical = $crawler->filter('link[rel="canonical"]');
+            self::assertCount(1, $canonical, $path);
+            $links = $crawler->filter('link[rel="alternate"][hreflang]');
+            self::assertGreaterThan(1, $links->count(), $path.' advertises its languages');
+
+            foreach ([$canonical->attr('href'), ...$links->each(static fn ($node) => $node->attr('href'))] as $href) {
+                self::assertIsString($href);
+                self::assertStringStartsWith('http', $href, $path.': absolute, like the canonical');
+                self::assertStringNotContainsString('?', $href, $path.': no query string in '.$href);
+            }
+        }
+
+        $crawler = $client->request('GET', '/regions', ['utm_source' => 'bluesky']);
+        $host = $client->getRequest()->getSchemeAndHttpHost();
+        self::assertSame($host.'/regions', $crawler->filter('link[rel="canonical"]')->attr('href'));
+        self::assertSame($host.'/regions', $crawler->filter('link[hreflang="en"]')->attr('href'));
+        self::assertSame($host.'/regions', $crawler->filter('link[hreflang="x-default"]')->attr('href'));
+        self::assertSame($host.'/fr/regions', $crawler->filter('link[hreflang="fr"]')->attr('href'));
+    }
+
     public function testHreflangAbsentOnEnglishOnlyPage(): void
     {
         $client = static::createClient();

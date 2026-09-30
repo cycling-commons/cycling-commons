@@ -155,6 +155,16 @@ session cookie, and the 404. These links count visits per platform; a
 per-post count (which toot or post brought the visit) is what Umami's own
 Links feature is for, not more paths here.
 
+**Tracking parameters never reach a search engine** (2026-10-01). The
+canonical (`partials/_head.html.twig`) is built from the scheme, host and
+path, so `/?utm_source=bluesky&utm_medium=social` names `/` as its canonical
+and Google folds the tagged URL into the home page. The hreflang alternates
+and `x-default` take the same form: absolute, no query string at all. They
+read `locale_alternates().paths` (`App\Twig\LocaleExtension`); the language
+switcher reads `.urls`, which keeps the query string so that switching
+language on `/map?scope=...` lands on the same view.
+`tests/Smoke/LocalizedRoutingTest.php` pins both.
+
 ### 2.3 Directive table
 
 As emitted by `CspSubscriber` (the file is the contract; this table is its

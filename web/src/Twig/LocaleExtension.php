@@ -39,13 +39,21 @@ final class LocaleExtension extends AbstractExtension
     }
 
     /**
-     * `urls` maps each enabled locale to this page. `localized` is true only when paths differ.
+     * This page in every enabled locale, in two forms.
      *
-     * @return array{localized: bool, urls: array<string, string>}
+     * `urls` keeps the query string, for the language switcher: `/map?scope=`
+     * (and feature/route/pending) is not in the route, and switching language
+     * must land on the same view. `paths` has no query string at all, for the
+     * hreflang block, which names the same clean URL as the canonical so a
+     * shared link's tracking parameters (`?utm_source=`) never reach a search
+     * engine as a page of their own. `localized` is true only when the paths
+     * differ.
+     *
+     * @return array{localized: bool, urls: array<string, string>, paths: array<string, string>}
      */
     public function localeAlternates(): array
     {
-        $empty = ['localized' => false, 'urls' => []];
+        $empty = ['localized' => false, 'urls' => [], 'paths' => []];
 
         $request = $this->requestStack->getCurrentRequest();
         if (null === $request) {
@@ -61,20 +69,21 @@ final class LocaleExtension extends AbstractExtension
         $params = $request->attributes->get('_route_params', []);
         unset($params['_locale']);
 
-        // Keep the query string: `/map?scope=` (and feature/route/pending) is not in the route.
         $query = $request->query->all();
         unset($query['_locale']);
         $suffix = [] === $query ? '' : '?'.http_build_query($query);
 
         $context = $this->router->getContext();
         $previous = $context->getParameter('_locale');
-        $urls = [];
+        $paths = [];
 
         try {
             foreach ($this->activeLocales->all() as $locale) {
                 $context->setParameter('_locale', $locale);
                 try {
-                    $urls[$locale] = $this->router->generate($route, $params).$suffix;
+                    // A route default that is not a path variable comes back
+                    // as a query string; the path is everything before it.
+                    $paths[$locale] = explode('?', $this->router->generate($route, $params), 2)[0];
                 } catch (\Throwable) {
                 }
             }
@@ -83,11 +92,9 @@ final class LocaleExtension extends AbstractExtension
         }
 
         return [
-            'localized' => \count(array_unique(array_map(
-                static fn (string $u): string => strtok($u, '?') ?: $u,
-                $urls,
-            ))) > 1,
-            'urls' => $urls,
+            'localized' => \count(array_unique($paths)) > 1,
+            'urls' => array_map(static fn (string $path): string => $path.$suffix, $paths),
+            'paths' => $paths,
         ];
     }
 }
