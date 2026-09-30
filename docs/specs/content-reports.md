@@ -377,16 +377,25 @@ to record what happened.
 
 **Photos are the one case the decision carries through.** A photo report
 raises a pending media takedown for every ground, not only the urgent one, so
-a curator always has something to grant or decline; upheld grants it, and
-rejected declines it and republishes anything withheld while it waited
-(`ContentReportService`, handing to `MediaTakedownService`, so the breaker,
-the event and the message stay the proven ones). The takedowns desk keeps only
-an uploader's request about their own photo, which is not a report. One rule
-keeps the photo and the report telling the same story
-(`ContentReportService::refusal()`, checked before anything is saved or sent;
-a refusal shows under the status field and the report stays as it was;
-`PhotoReportDecisionTest` pins it):
+a curator always has something to grant or decline; rejected declines it and
+republishes anything withheld while it waited (`ContentReportService`, handing
+to `MediaTakedownService`, so the breaker, the event and the message stay the
+proven ones). The takedowns desk keeps only an uploader's request about their
+own photo, which is not a report. Two rules keep the photo and the report
+telling the same story (`ContentReportService::refusal()`, checked before
+anything is saved or sent; a refusal shows under the status field and the
+report stays as it was; `PhotoReportDecisionTest` pins both):
 
+* **Upheld always removes the photo** (`MediaTakedownService::removeOnReport()`).
+  A waiting takedown of either source is granted; with none waiting (the
+  ground was declined before and the finality ledger swallowed this report's
+  request, or the photo never reached approval) the same grant steps run
+  without one. The ledger (photo-uploads.md §6c) stops a stranger's repeat
+  claim from re-opening a declined ground; it never stops a curator's Upheld.
+  Upheld is **refused** when nothing can be removed: the photo is already gone
+  (choose Closed), or it is under legal hold (an administrator decides). The
+  photo moves first and the decision is recorded only once it has, so no
+  reporter or author is ever mailed "upheld" about a photo that is still there.
 * **Closed (`moot`) is not offered while a takedown waits on the photo**, and
   is refused if posted anyway. That takedown is decided nowhere else, and one
   takedown at a time is the rule, so a moot close would leave a hidden photo

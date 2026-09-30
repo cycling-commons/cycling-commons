@@ -787,13 +787,15 @@ final class ContentReportTest extends WebTestCase
         $report = $this->reports()[0];
         $token = $this->deskToken($client, $report);
 
+        // Closed, because the uuid names no photo: Upheld would have nothing
+        // to remove and is refused (content-reports.md §9).
         $client->request('POST', '/moderate/reports/'.$report->getId().'/decide', [
             '_token' => $token,
-            'status' => 'upheld',
-            'note' => 'Checked on the ground, the gate is locked.',
+            'status' => 'moot',
+            'note' => 'The photo is no longer on the site.',
         ]);
 
-        self::assertSame(ReportStatus::Upheld, $this->reports()[0]->getStatus());
+        self::assertSame(ReportStatus::Moot, $this->reports()[0]->getStatus());
         self::assertEmailCount(0);
     }
 

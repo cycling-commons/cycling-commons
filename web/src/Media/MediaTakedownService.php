@@ -174,6 +174,42 @@ final class MediaTakedownService
     }
 
     /**
+     * An upheld report on the reports desk: the photo comes down.
+     *
+     * Whatever the takedown slot holds. A waiting request of either source is
+     * granted as usual. With none waiting (the ground was declined before and
+     * the ledger swallowed this report's request, another report's request was
+     * already decided, or the photo never reached approval) the same grant
+     * steps run without one: the ledger records what a stranger's repeat claim
+     * may re-open, never what a curator may decide.
+     *
+     * @see docs/specs/content-reports.md §9
+     *
+     * @return bool whether the files were removed; false under legal hold or when they are already gone
+     */
+    public function removeOnReport(MediaUpload $upload, User $curator, ?string $note = null): bool
+    {
+        if ($upload->isEscalated() || null !== $upload->getObjectsDeletedAt()) {
+            return false;
+        }
+
+        if ($upload->isTakedownPending()) {
+            $this->grant($upload, $curator, $note);
+
+            return null !== $upload->getObjectsDeletedAt();
+        }
+
+        $this->detach($upload);
+        $upload->resolveTakedown();
+        $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownGranted, $note);
+        $this->disposal->deleteObjects($upload);
+        $this->notify($upload, UserMessageKind::MediaRemovedOnReport, 'messages.body.media_removed_on_report', $note);
+        $this->em->flush();
+
+        return null !== $upload->getObjectsDeletedAt();
+    }
+
+    /**
      * Decline: republish; third-party category is final.
      *
      * @see docs/specs/photo-uploads.md §6c

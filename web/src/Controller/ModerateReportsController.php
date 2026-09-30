@@ -171,8 +171,8 @@ final class ModerateReportsController extends AbstractController
             return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
         }
 
-        // Refused before anything else is looked at: Moot while a takedown
-        // waits on the photo.
+        // Refused before anything else is looked at: a photo under legal hold,
+        // Moot while a takedown waits, Upheld with nothing left to remove.
         $refusal = $this->reports->refusal($report, $status);
         if (null !== $refusal) {
             $this->addFlash(self::STATUS_FLASH, $refusal);

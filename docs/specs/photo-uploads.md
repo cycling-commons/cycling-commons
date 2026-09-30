@@ -1389,7 +1389,11 @@ request per photo at a time, either source; an undecided report occupies the
 slot and a later filer is silently acknowledged. **One decided report per
 photo per category is final** — a repeat of a declined claim matches the
 ledger and does not re-open, so a stream of fresh copies cannot keep a photo
-down or a curator busy.
+down or a curator busy. The ledger binds reporters, not curators: a curator
+who upholds a later report on the reports desk removes the photo whether or
+not a request is pending (`MediaTakedownService::removeOnReport()`,
+[content-reports.md](content-reports.md) §9), and that desk will not close a
+photo report as moot while its request is still pending.
 
 **Abuse hardening**, in the order it actually binds:
 

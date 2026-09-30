@@ -14,7 +14,9 @@ use App\Media\Entity\ConsentRecord;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaConsent;
 use App\Media\MediaDecisionService;
+use App\Media\MediaEscalationService;
 use App\Media\MediaStorage;
+use App\Media\MediaTakedownService;
 use App\Media\ProcessedPhoto;
 use App\Support\ContentReportService;
 use App\Support\Entity\ContentReport;
@@ -22,13 +24,14 @@ use App\Support\ReportGround;
 use App\Support\ReportStatus;
 use App\Support\ReportTarget;
 use Doctrine\ORM\EntityManagerInterface;
+use League\Flysystem\FilesystemOperator;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Uid\Uuid;
 
 /**
  * What a decision on the reports desk does to the photo it is about
- * (docs/specs/content-reports.md §9).
+ * (docs/specs/content-reports.md §9, photo-uploads.md §6c and §6d).
  *
  * Every photo report raises a pending takedown, and the desk is the only place
  * that pending takedown is ever decided. So the three outcomes have to leave the
@@ -36,6 +39,8 @@ use Symfony\Component\Uid\Uuid;
  *
  * * **Moot cannot close a report while a takedown waits on the photo.** It
  *   would leave the photo hidden, on no desk, and blocking every later report.
+ * * **Upheld always removes the photo**, whatever the takedown slot holds,
+ *   and is refused (with no mail) when nothing can be removed.
  */
 final class PhotoReportDecisionTest extends WebTestCase
 {
@@ -146,6 +151,14 @@ final class PhotoReportDecisionTest extends WebTestCase
         ]);
     }
 
+    private function filesystem(): FilesystemOperator
+    {
+        /** @var FilesystemOperator $fs */
+        $fs = static::getContainer()->get('media.storage.eu01');
+
+        return $fs;
+    }
+
     // -- Moot (BUG-01) -------------------------------------------------------
 
     public function testMootIsRefusedWhileATakedownWaitsOnThePhoto(): void
@@ -180,5 +193,86 @@ final class PhotoReportDecisionTest extends WebTestCase
 
         $this->decide($client, $report, 'moot', 'The photo is no longer on the site.');
         self::assertSame(ReportStatus::Moot, $this->fresh($report)->getStatus());
+    }
+
+    // -- Upheld (BUG-02) -----------------------------------------------------
+
+    public function testUpheldRemovesThePhotoEvenWhenTheGroundWasDeclinedBefore(): void
+    {
+        $client = $this->client();
+        $upload = $this->approved($this->rider('ledger-owner@example.org'));
+        $prefix = $upload->getPathPrefix();
+        $client->loginUser($this->rider('ledger-curator@example.org', curator: true));
+
+        $first = $this->report($upload->getId()->toRfc4122(), ReportGround::PrivateProperty);
+        $this->decide($client, $first, 'rejected', 'A public fountain, nothing private.');
+        self::assertFalse($this->photo($upload)->isTakedownPending());
+
+        // The same ground again finds the ledger and raises no takedown.
+        $second = $this->report($upload->getId()->toRfc4122(), ReportGround::PrivateProperty);
+        self::assertFalse($this->photo($upload)->isTakedownPending());
+
+        $this->decide($client, $second, 'upheld', 'On a second look the garden behind is private.');
+
+        self::assertSame(ReportStatus::Upheld, $this->fresh($second)->getStatus());
+        self::assertNotNull($this->photo($upload)->getObjectsDeletedAt(), 'upheld removed the photo');
+        self::assertFalse($this->filesystem()->fileExists($prefix.'/sm.webp'));
+    }
+
+    public function testUpheldRemovesAPhotoWhoseSlotTheUploadersOwnRequestHolds(): void
+    {
+        $client = $this->client();
+        $owner = $this->rider('slot-owner@example.org');
+        $upload = $this->approved($owner);
+        static::getContainer()->get(MediaTakedownService::class)->request($upload, 'That is me, please take it down.');
+
+        // One takedown at a time: the report is filed, its takedown is not.
+        $report = $this->report($upload->getId()->toRfc4122(), ReportGround::PersonalData);
+
+        $client->loginUser($this->rider('slot-curator@example.org', curator: true));
+        $this->decide($client, $report, 'upheld', 'A person is clearly identifiable.');
+
+        self::assertSame(ReportStatus::Upheld, $this->fresh($report)->getStatus());
+        self::assertNotNull($this->photo($upload)->getObjectsDeletedAt());
+    }
+
+    public function testUpheldIsRefusedUnderLegalHoldAndTellsNobody(): void
+    {
+        $client = $this->client();
+        $upload = $this->approved($this->rider('hold-owner@example.org'));
+        $report = $this->report($upload->getId()->toRfc4122(), ReportGround::Unlawful);
+
+        // The form as a curator had it open, before somebody else escalated.
+        $client->loginUser($this->rider('hold-curator@example.org', curator: true));
+        $page = $client->request('GET', '/moderate/reports/'.$report->getId());
+        $token = (string) $page->filter('form.decide input[name="_token"]')->attr('value');
+        static::getContainer()->get(MediaEscalationService::class)
+            ->escalate($this->photo($upload), $this->rider('hold-escalator@example.org'), 'Suspected illegal content.');
+
+        $client->request('POST', '/moderate/reports/'.$report->getId().'/decide', [
+            '_token' => $token,
+            'status' => 'upheld',
+            'note' => 'Remove it.',
+        ]);
+        self::assertEmailCount(0, null, 'no "upheld" mail when nothing was removed');
+
+        self::assertSame(ReportStatus::Open, $this->fresh($report)->getStatus());
+        $held = $this->photo($upload);
+        self::assertNull($held->getObjectsDeletedAt(), 'the evidence survives');
+        self::assertTrue($held->isEscalated());
+    }
+
+    public function testUpheldIsRefusedWhenThereIsNoPhotoLeftToRemove(): void
+    {
+        $client = $this->client();
+        $report = $this->report(Uuid::v4()->toRfc4122(), ReportGround::PrivateProperty);
+
+        $client->loginUser($this->rider('gone-curator@example.org', curator: true));
+        $this->decide($client, $report, 'upheld', 'Remove it.');
+        self::assertEmailCount(0, null, 'nothing was removed, so nobody hears "upheld"');
+        $client->followRedirect();
+        self::assertSelectorExists('#d-status-error');
+
+        self::assertSame(ReportStatus::Open, $this->fresh($report)->getStatus());
     }
 }

@@ -181,12 +181,14 @@ final class ContentReportService
 
         $upload = $this->photoOf($report);
         if (null === $upload) {
-            // Already gone: nothing waits on it, so Moot is what is left.
-            return null;
+            // Already gone: Moot is what is left, and Upheld would remove nothing.
+            return ReportStatus::Upheld === $status ? 'report.desk.refused_nothing_to_remove' : null;
         }
 
         return match (true) {
+            $upload->isEscalated() => 'report.desk.refused_held',
             ReportStatus::Moot === $status && $upload->isTakedownPending() => 'report.desk.refused_moot_pending',
+            ReportStatus::Upheld === $status && null !== $upload->getObjectsDeletedAt() => 'report.desk.refused_nothing_to_remove',
             default => null,
         };
     }
@@ -195,11 +197,14 @@ final class ContentReportService
      * Carry a decision about a photo through to the photo itself.
      *
      * The desk records what a curator decided; for a picture that decision has
-     * to move a file as well. Upheld grants the pending takedown, which is what
-     * takes it down for good; rejected declines it, which puts back anything
-     * that was withheld while it was waiting. `Moot` does neither: it is only
-     * offered when nothing waits on the photo, which is the whole meaning of
-     * that outcome.
+     * to move a file as well. Upheld removes the photo, whatever the takedown
+     * slot holds ({@see MediaTakedownService::removeOnReport()}); rejected
+     * declines the waiting takedown, which puts back anything that
+     * was withheld while it was waiting. `Moot` does neither: it is only offered
+     * when nothing waits on the photo, which is the whole meaning of that
+     * outcome.
+     *
+     * @throws ReportDecisionRefused when upheld removed nothing
      */
     private function carryDecisionToPhoto(ContentReport $report, ReportStatus $status, string $note, User $curator): void
     {
@@ -208,11 +213,12 @@ final class ContentReportService
             return;
         }
 
-        match ($status) {
-            ReportStatus::Upheld => $this->takedowns->grant($upload, $curator, $note),
-            ReportStatus::Rejected => $this->takedowns->decline($upload, $curator, $note),
-            default => null,
-        };
+        if (ReportStatus::Upheld === $status && !$this->takedowns->removeOnReport($upload, $curator, $note)) {
+            throw new ReportDecisionRefused('report.desk.refused_nothing_to_remove');
+        }
+        if (ReportStatus::Rejected === $status) {
+            $this->takedowns->decline($upload, $curator, $note);
+        }
     }
 
     /** Move a report between its waiting states. Nothing is sent: the reporter hears from us when it is decided. */
@@ -225,9 +231,13 @@ final class ContentReportService
     /**
      * Record what a curator decided, then tell everybody who is owed an answer.
      *
-     * Order matters: the decision is persisted first, so a mail failure cannot
-     * lose it, and the author flag is set only after the message is queued, so
-     * a retry cannot tell them twice.
+     * A photo decision moves the photo first and is recorded only once it
+     * has: an upheld report that removed nothing is refused, so no reporter or
+     * author is ever told "upheld" about a photo that is still there.
+     *
+     * The decision is persisted before any mail, so a mail failure cannot lose
+     * it, and the author flag is set only after the message is queued, so a
+     * retry cannot tell them twice.
      *
      * @throws ReportDecisionRefused when {@see refusal()} names a reason, before anything is saved or sent
      */
@@ -238,11 +248,11 @@ final class ContentReportService
             throw new ReportDecisionRefused($refusal);
         }
 
+        $this->carryDecisionToPhoto($report, $status, trim($note), $curator);
+
         $now = $this->clock->now();
         $report->decide($status, trim($note), (int) $curator->getId(), $now);
         $this->em->flush();
-
-        $this->carryDecisionToPhoto($report, $status, trim($note), $curator);
 
         $contact = $report->getReporterContact();
         if (null !== $contact) {
