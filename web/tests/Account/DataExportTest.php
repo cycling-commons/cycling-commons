@@ -224,6 +224,8 @@ final class DataExportTest extends WebTestCase
         $account = $this->entry($zip, 'account.json');
         self::assertSame($user->getEmail(), $account['email']);
         self::assertSame('Export Rider', $account['display_name']);
+        // The rider's own rider# pseudonym is data about them, so it is theirs to take.
+        self::assertSame($user->getPseudonym(), $account['pseudonym']);
 
         $contributions = $this->entry($zip, 'contributions.json');
         self::assertCount(1, $contributions['submissions']);

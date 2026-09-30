@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Tests\Translation;
 
 use App\Catalog\Entity\Submission;
-use App\Catalog\RiderPseudonym;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
@@ -161,7 +160,7 @@ final class ModerateTranslationsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'nav.map');
         self::assertSelectorTextContains('.tr-english', 'Map');
-        self::assertSelectorTextContains('.tr-pending', RiderPseudonym::for((int) $rider->getId()));
+        self::assertSelectorTextContains('.tr-pending', 'rider#'.$rider->getPseudonym());
         $published = $crawler->filter('textarea[name="translation_decision[published]"]');
         self::assertSame(1, $published->count());
         self::assertStringContainsString('Carte detail visible', (string) $published->text());
@@ -308,7 +307,7 @@ final class ModerateTranslationsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.tr-history');
         self::assertSelectorTextContains('.tr-history', 'Carte history alpha');
-        self::assertSelectorTextContains('.tr-history', RiderPseudonym::for((int) $firstRider->getId()));
+        self::assertSelectorTextContains('.tr-history', 'rider#'.$firstRider->getPseudonym());
         self::assertSelectorTextContains('.tr-pending', 'Carte history beta');
         $main = (string) $crawler->filter('#main')->html();
         self::assertLessThan(strpos($main, 'Carte history beta'), strpos($main, 'Carte history alpha'));
@@ -529,7 +528,7 @@ final class ModerateTranslationsTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.q-list', 'Startseite decided');
         self::assertSelectorTextNotContains('.q-list', 'Carte encore ouverte');
-        self::assertSelectorTextContains('.q-list', RiderPseudonym::for((int) $rider->getId()));
+        self::assertSelectorTextContains('.q-list', 'rider#'.$rider->getPseudonym());
         self::assertSame(0, $crawler->filter('a.q-review')->count());
         self::assertSame(
             1,

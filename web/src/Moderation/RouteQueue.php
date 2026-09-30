@@ -40,7 +40,7 @@ final class RouteQueue
         ['sql' => $where, 'params' => $params, 'types' => $types] = $this->pendingWhere($scope, $regionId);
 
         $sql = 'SELECT r.id, r.name, r.region_id, reg.name AS region_name, reg.slug AS region_slug, r.distance_m, r.ascent_m,
-                       r.proposed_by, r.created_at, u.display_name, u.public_profile, u.uuid AS user_uuid,
+                       r.proposed_by, r.created_at, u.display_name, u.public_profile, u.uuid AS user_uuid, u.pseudonym,
                        (SELECT COUNT(*) FROM recommended_route a
                          WHERE a.state IN '.ItemState::servedSqlTuple()."
                            AND a.region_id IS NOT DISTINCT FROM r.region_id) AS active_in_region
@@ -64,7 +64,7 @@ final class RouteQueue
             'regionSlug' => $row['region_slug'],
             'km' => round(((int) $row['distance_m']) / 1000, 1),
             'ascent' => null === $row['ascent_m'] ? null : (int) $row['ascent_m'],
-            'proposer' => DeskRider::of((int) $row['proposed_by'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
+            'proposer' => DeskRider::of((int) $row['proposed_by'], $row['pseudonym'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'activeInRegion' => (int) $row['active_in_region'],
             'cap' => $cap,
@@ -203,7 +203,7 @@ final class RouteQueue
         $sql = "SELECT s.id, s.route_id, r.name AS route_name, s.reason, s.note, s.user_id, s.created_at, s.changes,
                        COALESCE(jsonb_array_length(s.segments), 0) AS seg_count,
                        rr.body_text AS rider_reply,
-                       u.display_name, u.public_profile, u.uuid AS user_uuid
+                       u.display_name, u.public_profile, u.uuid AS user_uuid, u.pseudonym
                 FROM route_suggestion s
                 JOIN recommended_route r ON r.id = s.route_id
                 LEFT JOIN users u ON u.id = s.user_id
@@ -230,7 +230,7 @@ final class RouteQueue
             'routeName' => (string) $row['route_name'],
             'reason' => (string) $row['reason'],
             'note' => $row['note'],
-            'rider' => DeskRider::of((int) $row['user_id'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
+            'rider' => DeskRider::of((int) $row['user_id'], $row['pseudonym'], $row['display_name'], $row['public_profile'], $row['user_uuid']),
             'when' => RelativeTime::ago(new \DateTimeImmutable((string) $row['created_at']), new \DateTimeImmutable()),
             'segmentCount' => (int) $row['seg_count'],
             // What a `metadata` correction proposes, one row per field, so the

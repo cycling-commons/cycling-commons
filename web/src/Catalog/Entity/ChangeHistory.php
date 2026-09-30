@@ -21,7 +21,7 @@ use Doctrine\ORM\Mapping as ORM;
 class ChangeHistory
 {
     /**
-     * `changed_by` for a change nobody made. Do not pass to RiderPseudonym — that would mint a fake rider#.
+     * `changed_by` for a change nobody made. Do not pass to RiderPseudonym: that would mint a fake rider#.
      */
     public const int SYSTEM_ACTOR = 0;
 

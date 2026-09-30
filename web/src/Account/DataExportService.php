@@ -82,7 +82,7 @@ final class DataExportService
     private function account(int $userId): array
     {
         $row = $this->db->fetchAssociative(
-            'SELECT u.uuid, u.email, u.display_name, u.email_verified, u.email_verified_at,
+            'SELECT u.uuid, u.pseudonym, u.email, u.display_name, u.email_verified, u.email_verified_at,
                     u.two_fa_enabled, u.public_profile, u.locale, u.bike_types, u.riding_styles,
                     u.default_map_mode, u.keep_media_credit, u.age_confirmed_at,
                     u.base_place, u.base_radius_km, u.base_region_ids, u.base_country_codes,

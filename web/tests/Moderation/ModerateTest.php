@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\Submission;
-use App\Catalog\RiderPseudonym;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -184,7 +183,7 @@ final class ModerateTest extends WebTestCase
 
         $crawler = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains($card, RiderPseudonym::for((int) $submitter->getId()));
+        self::assertSelectorTextContains($card, 'rider#'.$submitter->getPseudonym());
         self::assertSame(0, $crawler->filter($card.' a')->count());
 
         $submitter->setPublicProfile(true);

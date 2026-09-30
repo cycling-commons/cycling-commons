@@ -1135,11 +1135,42 @@ identity, and always was.
 - **Disambiguation is the `uuid`'s job, and every surface already uses it.**
   The public profile is `/riders/{uuid}`; the attribution link embedded in
   contributed photos points at a uuid-keyed page
-  ([photo-uploads.md](photo-uploads.md) §1.3c, §5d); moderation is pseudonymous
-  and never shows a curator's name at all. Admin lists that show a name show
-  the email beside it.
+  ([photo-uploads.md](photo-uploads.md) §1.3c, §5d); a curator desk names a
+  rider by display name only when that rider's profile is public, and
+  otherwise by their stored pseudonym (`DeskRider::of()`, "The rider
+  pseudonym" below), and never shows a curator's name at all. Admin lists
+  that show a name show the email beside it.
 - A name is **stored exactly as typed** — `setDisplayName()` does no
   normalization of any kind.
+
+### The rider pseudonym (owner, 2026-09-30)
+
+A rider who has not made their profile public is shown as `rider#` and eight
+characters, such as `rider#k7m2x9qp`: on the curator desks, in the public
+change history, in translate mode and in the rider's own data export
+(`account.json`, `pseudonym`).
+
+- **Random, stored once.** `users.pseudonym` holds the eight characters:
+  Crockford base32 in lower case without `i`, `l`, `o` and `u`
+  (`0123456789abcdefghjkmnpqrstvwxyz`), so 32^8, about 10^12, names. The
+  `User` constructor draws one (`RiderPseudonym::random()`, `random_int`), so
+  every way an account is created (registration, `app:user:create`, fixtures)
+  gets one, and the `PrePersist` callback draws again while the value is
+  already stored by another account. The column is `NOT NULL`, unique
+  (`uniq_users_pseudonym`) and held to the format by `chk_users_pseudonym`.
+  Nothing computes it from the id or anything else.
+- **It never changes.** Not when the profile goes public or private, not when
+  the display name changes. There is no setter.
+- **One class writes the handle**: `RiderPseudonym::handle($stored, $userId)`
+  returns `rider#` and the stored value.
+- **A removed account** has no row, so no stored pseudonym. Its work that
+  stays (submissions, change history, route proposals and suggestions keep the
+  plain user id, §6.3) shows the handle derived from that id: `rider#` and the
+  first four hex characters of crc32b(`cc-sub-<id>`), the handle every rider
+  had before pseudonyms were stored. Four hex characters never read as a
+  stored pseudonym.
+- `Version20260930163712` added the column and gave every existing account a
+  random value; the handles shown before it were replaced once.
 
 ### The display-name hint (owner, 2026-09-30)
 

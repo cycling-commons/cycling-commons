@@ -409,7 +409,7 @@ final class TranslateController extends AbstractController
 
         return [
             'anonymous' => false,
-            'handle' => RiderPseudonym::for((int) $user->getId()),
+            'handle' => RiderPseudonym::handle($user->getPseudonym(), (int) $user->getId()),
             'name' => null !== $uuid ? $user->getDisplayName() : null,
             'profile_url' => null !== $uuid ? $this->generateUrl('rider_profile', ['uuid' => $uuid]) : null,
         ];

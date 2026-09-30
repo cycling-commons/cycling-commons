@@ -492,7 +492,7 @@ weighted-by-who-pressed-it rule ("I know these roads by hand"); offered for
 every letter whose stances include `exists` (not water, not R).
 
 The public change history shows every actor as a stable pseudonym
-(`RiderPseudonym`, e.g. `rider#175a`) by design — including the moderator who
+(`RiderPseudonym`, e.g. `rider#k7m2x9qp`) by design, including the moderator who
 flipped a status — so account names never leak from the drawer.
 
 ## Read view (drawer "current details")

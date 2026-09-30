@@ -14,12 +14,14 @@ use App\Account\TimeFormat;
 use App\Catalog\BikeType;
 use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
+use App\Catalog\RiderPseudonym;
 use App\Catalog\RidingStyle;
 use App\Form\CatalogFieldConstraints;
 use App\Repository\UserRepository;
 use App\Validator\MailableEmail;
 use App\Validator\PlainDisplayName;
 use App\World\Entity\Country;
+use Doctrine\ORM\Event\PrePersistEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 use Scheb\TwoFactorBundle\Model\BackupCodeInterface;
 use Scheb\TwoFactorBundle\Model\Totp\TotpConfiguration;
@@ -41,6 +43,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
 #[ORM\UniqueConstraint(name: 'uniq_users_uuid', columns: ['uuid'])]
+#[ORM\UniqueConstraint(name: 'uniq_users_pseudonym', columns: ['pseudonym'])]
 #[ORM\HasLifecycleCallbacks]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface, BackupCodeInterface
 {
@@ -51,6 +54,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     #[ORM\Column(type: 'uuid', unique: false)]
     private ?Uuid $uuid = null;
+
+    /**
+     * The eight characters of the rider's `rider#` handle, drawn at random
+     * when the account is created and never changed after
+     * ({@see RiderPseudonym}, docs/specs/account-and-auth.md §9).
+     */
+    #[ORM\Column(type: 'string', length: 8)]
+    private string $pseudonym;
 
     // Entity-level so every write path is covered; length matches the column.
     #[ORM\Column(type: 'string', length: 180, unique: true)]
@@ -231,11 +242,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    public function __construct()
+    {
+        $this->pseudonym = RiderPseudonym::random();
+    }
+
     #[ORM\PrePersist]
-    public function onCreate(): void
+    public function onCreate(PrePersistEventArgs $args): void
     {
         $this->createdAt = $this->updatedAt = new \DateTimeImmutable();
         $this->uuid ??= Uuid::v7();
+        // One in 32^8 draws clashes with a stored one; that account draws again.
+        $users = $args->getObjectManager()->getRepository(self::class);
+        while (!RiderPseudonym::isValid($this->pseudonym) || $users->count(['pseudonym' => $this->pseudonym]) > 0) {
+            $this->pseudonym = RiderPseudonym::random();
+        }
     }
 
     #[ORM\PreUpdate]
@@ -335,6 +356,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function getUuid(): ?Uuid
     {
         return $this->uuid;
+    }
+
+    /** The eight characters after `rider#`; set once, no setter. */
+    public function getPseudonym(): string
+    {
+        return $this->pseudonym;
     }
 
     public function getEmail(): string

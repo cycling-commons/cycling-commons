@@ -87,7 +87,7 @@ nullable integer column (unindexed — provenance lookups only). Rows survive
 account deletion as anonymous data *by decoupling, not cascade* — the
 deletion contract and the contrasting `user_message.user_id` cascade FK are
 owned by [moderation-and-contribution.md](moderation-and-contribution.md).
-Deskside display pseudonymizes contributors (`rider#<hash>`,
+Deskside display pseudonymizes contributors (`rider#<pseudonym>`,
 `App\Moderation\RouteQueue`).
 
 **`route_vote`** — the typed seasonal vote:
@@ -357,7 +357,7 @@ directly (`App\Moderation\RouteQueue`).
   count):
   `App\Moderation\DeskRider` gives the display name, linked to
   `/riders/{uuid}`, when the rider's profile is public and they have a display
-  name, and the stable pseudonym `rider#<hash4>` with no link otherwise
+  name, and the stored pseudonym `rider#<pseudonym>` with no link otherwise
   (`moderate/_rider_name.html.twig`). The link is styled as a link.
 - **Region** is the region's name in the page's language: `region.<slug>.label`
   through the `cc_region_label()` Twig function

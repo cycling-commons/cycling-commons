@@ -908,7 +908,9 @@ shape returned by `SubmissionQueue` is a deliberate shared view-model consumed
 by both `moderate/index.html.twig` and `map.js` (as `CC_PENDING` JSON):
 `{id, itemId, type, letter, country, region, title, lat, lng, who, when,
 body, was, now, riderReply, priorRejection}` — `who` is the stable pseudonym
-`RiderPseudonym::for()` (`rider#<hash4>`), `was`/`now` are the server-joined
+`RiderPseudonym::handle()` (`rider#` and the account's stored eight
+characters, [account-and-auth.md](account-and-auth.md) §9 "The rider
+pseudonym"), `was`/`now` are the server-joined
 diff strings. Contributor identity is never exposed to curators beyond the
 pseudonym.
 
@@ -1128,7 +1130,7 @@ at a time, so the row is sized for that:
   rider through `App\Moderation\DeskRider`: a rider who has made their profile
   public and has a display name is shown by that name (with their
   `/riders/{uuid}` as the link target), and everyone else stays
-  `rider#<hash4>` with no link. Wherever a desk shows the name, a public one is
+  `rider#<pseudonym>` with no link. Wherever a desk shows the name, a public one is
   a link to that profile (the list follows the naming rule below). Showing the
   pseudonym to a rider who had deliberately gone public read as the setting
   being broken (owner-reported 2026-08-12).
@@ -3003,7 +3005,7 @@ is pseudonymous by default — a decision should turn on the contribution, not o
 who sent it — but `public_profile` is an explicit opt-in that already puts a
 name on the contributors wall and on `/riders/{uuid}`, so hiding it from the one
 person who has to read the work was inconsistent rather than protective. A
-private account still shows `rider#<hash>`, which is where the protection
+private account still shows `rider#<pseudonym>`, which is where the protection
 matters. Public change history is unchanged.
 
 One class decides it for every desk (`App\Moderation\DeskRider`), and one

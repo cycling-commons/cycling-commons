@@ -199,7 +199,7 @@ final class RouteModerateController extends AbstractController
     {
         $row = $db->fetchAssociative(
             'SELECT r.id, r.name, ST_AsGeoJSON(r.geom) AS geom, r.distance_m, r.ascent_m, r.region_id, r.attributes, r.state,
-                    r.proposed_by, u.display_name AS proposer_name, u.uuid AS proposer_uuid, u.public_profile AS proposer_public,
+                    r.proposed_by, u.display_name AS proposer_name, u.uuid AS proposer_uuid, u.public_profile AS proposer_public, u.pseudonym AS proposer_pseudonym,
                     reg.name AS region_name, reg.slug AS region_slug
              FROM recommended_route r
                   LEFT JOIN users u ON u.id = r.proposed_by
@@ -262,7 +262,7 @@ final class RouteModerateController extends AbstractController
                 'state' => $row['state'], 'attributes' => $attrs,
                 // Named by the same rule as the queue card (DeskRider).
                 'proposer' => null === $row['proposed_by'] ? null
-                    : DeskRider::of((int) $row['proposed_by'], $row['proposer_name'], $row['proposer_public'], $row['proposer_uuid']),
+                    : DeskRider::of((int) $row['proposed_by'], $row['proposer_pseudonym'], $row['proposer_name'], $row['proposer_public'], $row['proposer_uuid']),
             ],
             'details' => RouteProposalDetails::rows($attrs),
             'active_in_region' => $this->moderation->activeCountForRegion(null === $row['region_id'] ? null : (int) $row['region_id']),

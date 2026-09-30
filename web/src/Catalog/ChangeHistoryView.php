@@ -40,7 +40,7 @@ final class ChangeHistoryView
     {
         $rows = $this->db->fetchAllAssociative(
             'SELECT ch.field, ch.old_value, ch.new_value, ch.changed_by, ch.changed_at,
-                    u.display_name, COALESCE(u.public_profile, false) AS public_profile
+                    u.display_name, u.pseudonym, COALESCE(u.public_profile, false) AS public_profile
              FROM change_history ch
              LEFT JOIN users u ON u.id = ch.changed_by
              WHERE ch.item_id = :itemId
@@ -65,7 +65,7 @@ final class ChangeHistoryView
                     ? self::SYSTEM_LABEL
                     : ($r['public_profile'] && \is_string($r['display_name']) && '' !== $r['display_name']
                         ? $r['display_name']
-                        : RiderPseudonym::for($r['changed_by'])),
+                        : RiderPseudonym::handle($r['pseudonym'], (int) $r['changed_by'])),
                 'when' => RelativeTime::ago($changedAt, $now),
                 'changedAt' => $changedAt->format(\DateTimeInterface::ATOM),
             ];

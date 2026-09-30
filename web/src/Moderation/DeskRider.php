@@ -11,8 +11,8 @@ use App\Entity\User;
 
 /**
  * How a curator desk names a rider: by display name, linked to their rider
- * profile, when the rider made that profile public; otherwise by the stable
- * pseudonym with no link. Every desk card and review page asks this one class,
+ * profile, when the rider made that profile public; otherwise by the stored
+ * pseudonym with no link (RiderPseudonym::handle()). Every desk card and review page asks this one class,
  * and templates/moderate/_rider_name.html.twig writes the answer.
  *
  * A fellow curator (who decided, who posted in the room) is named by display
@@ -27,10 +27,13 @@ use App\Entity\User;
 final class DeskRider
 {
     /**
+     * `$pseudonym` is the stored `users.pseudonym`, null when the account no
+     * longer exists.
+     *
      * @return array{name:string, uuid:?string} `uuid` is set only when the
      *                                          name may link to `rider_profile`
      */
-    public static function of(int|string $userId, mixed $displayName, mixed $publicProfile, mixed $uuid): array
+    public static function of(int|string $userId, mixed $pseudonym, mixed $displayName, mixed $publicProfile, mixed $uuid): array
     {
         $name = \is_string($displayName) ? trim($displayName) : '';
         if (\in_array($publicProfile, [true, 1, '1', 't', 'true'], true) && '' !== $name) {
@@ -39,7 +42,7 @@ final class DeskRider
             return ['name' => $name, 'uuid' => '' !== $profile ? $profile : null];
         }
 
-        return ['name' => RiderPseudonym::for($userId), 'uuid' => null];
+        return ['name' => RiderPseudonym::handle($pseudonym, $userId), 'uuid' => null];
     }
 
     /**
@@ -47,7 +50,7 @@ final class DeskRider
      */
     public static function ofUser(User $user): array
     {
-        return self::of((int) $user->getId(), $user->getDisplayName(), $user->isPublicProfile(), $user->getUuid()?->toRfc4122());
+        return self::of((int) $user->getId(), $user->getPseudonym(), $user->getDisplayName(), $user->isPublicProfile(), $user->getUuid()?->toRfc4122());
     }
 
     /**

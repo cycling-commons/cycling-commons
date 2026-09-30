@@ -222,7 +222,7 @@ final class SubmissionQueue
         $rows = $this->db->fetchAllAssociative(
             'SELECT s.id, s.item_id, s.title, s.type, s.letter, s.status, s.user_id, s.decided_at, s.decision_note,
                     s.changes, u.display_name AS decided_by_name, u.public_profile AS decided_by_public, u.uuid AS decided_by_uuid,
-                    su.public_profile, su.display_name, su.uuid AS user_uuid,
+                    su.public_profile, su.display_name, su.uuid AS user_uuid, su.pseudonym,
                     rr.body_text AS rider_reply
              FROM submission s LEFT JOIN users u ON u.id = s.decided_by
                   LEFT JOIN users su ON su.id = s.user_id
@@ -506,7 +506,7 @@ final class SubmissionQueue
                     it.attributes AS item_attributes, it.letter AS item_letter, it.osm_ref, it.osm_checked_at,
                     ST_Y(ST_PointOnSurface(it.geom)) AS item_lat, ST_X(ST_PointOnSurface(it.geom)) AS item_lng,
                     rr.body_text AS rider_reply,
-                    u.public_profile, u.display_name, u.uuid AS user_uuid
+                    u.public_profile, u.display_name, u.uuid AS user_uuid, u.pseudonym
              FROM submission s LEFT JOIN region r ON r.id = s.region_id
                   LEFT JOIN users u ON u.id = s.user_id
                   LEFT JOIN item it ON it.id = s.item_id
@@ -761,7 +761,7 @@ final class SubmissionQueue
      */
     private static function submitterLabel(array $row): string
     {
-        return DeskRider::of((int) $row['user_id'], $row['display_name'] ?? null, $row['public_profile'] ?? null, $row['user_uuid'] ?? null)['name'];
+        return DeskRider::of((int) $row['user_id'], $row['pseudonym'] ?? null, $row['display_name'] ?? null, $row['public_profile'] ?? null, $row['user_uuid'] ?? null)['name'];
     }
 
     /**
@@ -771,7 +771,7 @@ final class SubmissionQueue
      */
     private static function submitterUuid(array $row): string
     {
-        return DeskRider::of((int) $row['user_id'], $row['display_name'] ?? null, $row['public_profile'] ?? null, $row['user_uuid'] ?? null)['uuid'] ?? '';
+        return DeskRider::of((int) $row['user_id'], $row['pseudonym'] ?? null, $row['display_name'] ?? null, $row['public_profile'] ?? null, $row['user_uuid'] ?? null)['uuid'] ?? '';
     }
 
     /**

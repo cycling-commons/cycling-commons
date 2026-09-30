@@ -10,7 +10,6 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Region;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
-use App\Catalog\RiderPseudonym;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -165,7 +164,7 @@ final class RouteModerateTest extends WebTestCase
 
     /**
      * One pseudonym rule on both desk pages (moderation-and-contribution.md):
-     * a private proposer is `rider#<hash4>` with no link, a public one is their
+     * a private proposer is `rider#<pseudonym>` with no link, a public one is their
      * display name linked to /riders/{uuid}, and the queue card agrees with the
      * review page.
      */
@@ -178,7 +177,7 @@ final class RouteModerateTest extends WebTestCase
         self::assertInstanceOf(User::class, $proposer);
         $proposer->setDisplayName('Route Rider');
         $em->flush();
-        $pseudonym = RiderPseudonym::for((int) $proposer->getId());
+        $pseudonym = 'rider#'.$proposer->getPseudonym();
 
         $client->loginUser($this->curator());
         $client->request('GET', '/moderate/routes/'.$route->getId());
