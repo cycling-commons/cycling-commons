@@ -75,4 +75,51 @@ final class PurgeItemsCommandTest extends KernelTestCase
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM media_upload WHERE id = :id', ['id' => $mediaId]));
         self::assertSame(0, $storage->variantsExist('test-bucket-eu-01', $prefix), 'the stored files are gone too');
     }
+
+    /**
+     * Legal hold is beyond every deletion path (docs/specs/photo-uploads.md
+     * §6d): an item with a held submission is left standing with that
+     * submission, named in the output of the dry run and of the real run,
+     * while the other items of the same run go.
+     */
+    public function testAnItemWithAHeldSubmissionIsLeftStanding(): void
+    {
+        self::bootKernel();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $db = static::getContainer()->get(Connection::class);
+
+        $rider = (new User())->setEmail('purge-held@test.test')->setDisplayName('Purge Held');
+        $rider->setPassword('x');
+        $em->persist($rider);
+        $em->flush();
+        $uid = (int) $rider->getId();
+
+        $item = static fn (string $name): int => (int) $db->fetchOne(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at, imported_at)
+             VALUES ('B', :n, ST_SetSRID(ST_MakePoint(6.0, 50.4), 4326), 'BE', 'unverified', 'user', :ref, '{}', NOW(), NOW(), NOW())
+             RETURNING id",
+            ['n' => $name, 'ref' => 'user:'.$name],
+        );
+        $heldItem = $item('Held Tap');
+        $plainItem = $item('Plain Tap');
+        $held = (new Submission())->setType(SubmissionType::Edit)->setLetter('B')->setUserId($uid)->setItemId($heldItem)
+            ->setTitle('Held Tap')->setGeom('{"type":"Point","coordinates":[6.0,50.4]}')->setCountryCode('BE')->setChanges([])->setPayload([]);
+        $held->escalate($uid, 'Suspected illegal content.');
+        $em->persist($held);
+        $em->flush();
+        $heldId = (int) $held->getId();
+
+        $tester = new CommandTester((new Application(self::$kernel))->find('app:items:purge'));
+        $ids = ['--id' => [(string) $heldItem, (string) $plainItem]];
+
+        self::assertSame(0, $tester->execute($ids));
+        self::assertStringContainsString('legal hold', $tester->getDisplay());
+        self::assertStringContainsString('SUB-'.$heldId, $tester->getDisplay());
+
+        self::assertSame(0, $tester->execute($ids + ['--force' => true]));
+        self::assertStringContainsString('SUB-'.$heldId, $tester->getDisplay());
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM item WHERE id = :id', ['id' => $heldItem]), 'the held item stays');
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM submission WHERE id = :id', ['id' => $heldId]), 'the held submission stays');
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM item WHERE id = :id', ['id' => $plainItem]), 'the other item goes');
+    }
 }

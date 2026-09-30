@@ -159,7 +159,9 @@ history, confirmations and content reports; the submissions about it and the
 messages sent about them; its rider uploads, objects included; and each Commons
 photo on it that no remaining item and no coverage point still uses (directly,
 or through the coverage point's Wikidata image), objects and `commons_photo`
-row. A photo another place uses is kept. The database part is one transaction;
+row. A photo another place uses is kept. An item with a submission or a photo
+under legal hold (photo-uploads.md §6d) is left standing, whole, and named in
+the dry run and the real run. The database part is one transaction;
 stored objects are deleted after it commits. Dev, 2026-09-14: 79 retired
 scenic items removed with 59 photos; 2 photos stayed because other places use
 them.

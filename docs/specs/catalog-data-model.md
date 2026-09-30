@@ -360,7 +360,8 @@ row loses to an OSM row.
   (`app:catalog:import`, `seed-manual`, `seed-climbs`, `seed-wikidata`; the
   one way OUT is `app:items:purge`, 2026-09-06: an item with its photos,
   submissions, checks and history, dry run by default, for test rows that
-  reached the catalogue, never a moderation act) and
+  reached the catalogue, never a moderation act; an item with a submission or
+  photo under legal hold is left standing and named) and
   **never writes**. It declines to ADD a second row, and names every skip with
   the id in the way, the distance, and — when the row being held out comes from
   a better source — the command that resolves it. A count alone would let a

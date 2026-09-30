@@ -36,6 +36,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *   place uses stays, because deleting it would take that place's photo too.
  *
  * Without `--write` it reports what it would remove and changes nothing.
+ * Either way, an item with a submission or a photo under legal hold is left
+ * standing, whole, and named (docs/specs/photo-uploads.md §6d).
  *
  * @see docs/specs/scenic-views.md §4
  *
@@ -87,6 +89,16 @@ final class PurgeCatalogItemsCommand extends Command
             "SELECT id, name, attributes FROM item WHERE letter = :l AND state = 'retired' ORDER BY name",
             ['l' => $letter],
         );
+        // Legal hold is beyond every deletion path (docs/specs/photo-uploads.md
+        // §6d): an item with a held submission or photo stays, whole, and is named.
+        $holds = [] === $rows ? [] : $this->holds(array_map(static fn (array $r): int => (int) $r['id'], $rows));
+        if ([] !== $holds) {
+            $io->warning("Left standing, under legal hold:\n".implode("\n", array_map(
+                static fn (array $r): string => \sprintf('%s (#%d): %s', $r['name'], (int) $r['id'], implode(', ', $holds[(int) $r['id']])),
+                array_values(array_filter($rows, static fn (array $r): bool => isset($holds[(int) $r['id']]))),
+            )));
+            $rows = array_values(array_filter($rows, static fn (array $r): bool => !isset($holds[(int) $r['id']])));
+        }
         if ([] === $rows) {
             $io->success('No retired items to remove.');
 
@@ -166,5 +178,41 @@ final class PurgeCatalogItemsCommand extends Command
         $io->success(\sprintf('Removed %d item(s) and %d photo(s).', \count($ids), \count($objects)));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * What holds each item: its held submissions, and the held photos on it
+     * or on one of its submissions.
+     *
+     * @param list<int> $ids
+     *
+     * @return array<int, list<string>> item id => `SUB-n` and `photo <uuid>` labels
+     */
+    private function holds(array $ids): array
+    {
+        /** @var list<array{item_id: int|string, label: string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT s.item_id, 'SUB-' || s.id AS label
+               FROM submission s
+              WHERE s.item_id IN (:ids) AND s.escalated_at IS NOT NULL
+             UNION
+             SELECT m.item_id, 'photo ' || m.id::text
+               FROM media_upload m
+              WHERE m.item_id IN (:ids) AND m.escalated_at IS NOT NULL
+             UNION
+             SELECT s.item_id, 'photo ' || m.id::text
+               FROM media_upload m
+               JOIN submission s ON s.id = m.submission_id
+              WHERE s.item_id IN (:ids) AND m.escalated_at IS NOT NULL
+             ORDER BY label",
+            ['ids' => $ids],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+        $holds = [];
+        foreach ($rows as $r) {
+            $holds[(int) $r['item_id']][] = $r['label'];
+        }
+
+        return $holds;
     }
 }

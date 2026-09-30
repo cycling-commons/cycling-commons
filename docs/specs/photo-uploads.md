@@ -1532,7 +1532,10 @@ leak its existence through an error.
 The rest of a held submission's paths hold too. `ModerationService::withdraw()`
 refuses it with the `AlreadyDecidedException` a decided row gets, so the rider
 sees the same "a curator decided this one" flash and nothing about a hold, and
-/account/contributions shows no Withdraw button on it.
+/account/contributions shows no Withdraw button on it. `app:items:purge` and
+`app:catalog:purge-items` leave an item with a held submission or photo
+standing, whole, and name it (`SUB-n`, `photo <uuid>`) in the dry run and the
+real run.
 
 **Only an admin can reach it**, at `/admin/escalated` — one page listing both
 kinds — behind a details element so nobody is shown the material by scrolling

@@ -6,7 +6,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Command;
 
+use App\Catalog\Entity\Submission;
+use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Media\Entity\ConsentRecord;
+use App\Media\Entity\MediaUpload;
+use App\Media\MediaConsent;
 use App\Media\MediaStorage;
 use App\Media\ProcessedPhoto;
 use App\Tests\Coverage\CoverageSchema;
@@ -17,6 +22,7 @@ use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Permanently removing retired catalog items, their records and the photos
@@ -164,5 +170,53 @@ final class PurgeCatalogItemsCommandTest extends KernelTestCase
 
         self::assertSame(Command::INVALID, $tester->getStatusCode());
         self::assertTrue($this->exists('item', 'id', $live));
+    }
+
+    /**
+     * Legal hold is beyond every deletion path (docs/specs/photo-uploads.md
+     * §6d): a retired item with a held submission, or a held photo, is left
+     * standing with them and named in the output; the dry run names it too,
+     * and the other retired items still go.
+     */
+    public function testAnItemUnderLegalHoldIsLeftStanding(): void
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $user = (new User())->setEmail('purge-held-'.uniqid('', true).'@test.test');
+        $user->setPassword('x');
+        $em->persist($user);
+        $em->flush();
+        $uid = (int) $user->getId();
+
+        $heldSub = $this->item('Held words', 'retired');
+        $heldPhoto = $this->item('Held picture', 'retired');
+        $plain = $this->item('Plain retired', 'retired');
+        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('P')->setUserId($uid)->setItemId($heldSub)
+            ->setTitle('Held words')->setGeom('{"type":"Point","coordinates":[7.8,46.0]}')->setCountryCode('CH')->setChanges([])->setPayload([]);
+        $sub->escalate($uid, 'Suspected illegal content.');
+        $em->persist($sub);
+        $consent = new ConsentRecord(Uuid::v4(), $uid, MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
+        $em->persist($consent);
+        $upload = new MediaUpload(Uuid::v4(), $uid, $consent->getId(), 'EU', 1200, 900, 4242, bucket: 'test-bucket-eu-01');
+        $upload->approve($heldPhoto);
+        $upload->escalate($uid, 'Suspected illegal content.');
+        $em->persist($upload);
+        $em->flush();
+        $subId = (int) $sub->getId();
+        $mediaId = $upload->getId()->toRfc4122();
+
+        $dry = $this->run_(['--letter' => 'P', '--state' => 'retired']);
+        $dry->assertCommandIsSuccessful();
+        self::assertStringContainsString('legal hold', $dry->getDisplay());
+        self::assertStringContainsString('Held words (#'.$heldSub.')', $dry->getDisplay());
+        self::assertStringContainsString('Held picture (#'.$heldPhoto.')', $dry->getDisplay());
+
+        $tester = $this->run_(['--letter' => 'P', '--state' => 'retired', '--write' => true]);
+        $tester->assertCommandIsSuccessful();
+        self::assertStringContainsString('legal hold', $tester->getDisplay());
+        self::assertTrue($this->exists('item', 'id', $heldSub), 'the item with a held submission stays');
+        self::assertTrue($this->exists('submission', 'id', $subId), 'the held submission stays');
+        self::assertTrue($this->exists('item', 'id', $heldPhoto), 'the item with a held photo stays');
+        self::assertTrue($this->exists('media_upload', 'id', $mediaId), 'the held photo stays');
+        self::assertFalse($this->exists('item', 'id', $plain), 'the other retired item goes');
     }
 }

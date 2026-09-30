@@ -25,8 +25,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *
  * For test rows that reached the catalogue, not for moderation: a curator
  * who wants a place gone rejects it on the desk, where the author is told.
- * Dry run by default; --force writes. A photo under legal hold is left
- * standing and named, and its item is left with it.
+ * Dry run by default; --force writes. An item with a submission or a photo
+ * under legal hold is left standing, whole, and named in the output.
  *
  * @api
  */
@@ -74,14 +74,28 @@ final class PurgeItemsCommand extends Command
                     continue;
                 }
                 $subs = array_map(intval(...), $this->db->fetchFirstColumn('SELECT id FROM submission WHERE item_id = :id', ['id' => $id]));
-
                 $uploads = $this->uploadsFor($id, $subs);
+
+                // Legal hold is beyond every deletion path (docs/specs/photo-uploads.md
+                // §6d): a held submission or photo keeps its item, and nothing of
+                // that item is touched, files included.
+                $holds = array_merge(
+                    array_map(
+                        static fn (mixed $s): string => 'SUB-'.(int) $s,
+                        $this->db->fetchFirstColumn('SELECT id FROM submission WHERE item_id = :id AND escalated_at IS NOT NULL ORDER BY id', ['id' => $id]),
+                    ),
+                    array_map(
+                        static fn (MediaUpload $u): string => 'photo '.$u->getId()->toRfc4122(),
+                        array_values(array_filter($uploads, static fn (MediaUpload $u): bool => $u->isEscalated())),
+                    ),
+                );
+                if ([] !== $holds) {
+                    $held[] = sprintf('item %d (%s): %s', $id, (string) $item['name'], implode(', ', $holds));
+                    continue;
+                }
+
                 $photos = 0;
                 foreach ($uploads as $upload) {
-                    if ($upload->isEscalated()) {
-                        $held[] = sprintf('%s on item %d (%s)', $upload->getId()->toRfc4122(), $id, (string) $item['name']);
-                        continue 2;
-                    }
                     if ($force) {
                         $this->disposal->purge($upload);
                     }
@@ -121,7 +135,7 @@ final class PurgeItemsCommand extends Command
 
         $io->table(['id', 'name', 'ref', 'photos', 'submissions', 'checks / history'], $rows);
         if ([] !== $held) {
-            $io->warning("Left standing, photo under legal hold:\n".implode("\n", $held));
+            $io->warning("Left standing, under legal hold:\n".implode("\n", $held));
         }
         $io->{$force ? 'success' : 'note'}($force ? 'Deleted.' : 'Dry run: nothing deleted. Add --force.');
 
