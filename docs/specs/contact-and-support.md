@@ -625,7 +625,8 @@ An open bug this curator has not opened carries the unseen bar
 ([moderation-and-contribution.md §5.2f](moderation-and-contribution.md)) until
 its page loads for them. A resolved or declined bug carries it for nobody.
 
-One form sets status, severity, area, the public flag and the outcome note,
+One form sets status, severity, area, the public flag, the public title and
+body, and the outcome note,
 because a curator triaging twenty reports should not save four times per report. Reaching
 resolved or declined mails the reporter, so the note is required for those two:
 "we are not fixing this" with no reason is the message that makes somebody never
@@ -769,11 +770,13 @@ where there is scripting and keeps a real button where there is not.
 *(Added 2026-08-28, `Version20260828200000`.)*
 
 `internal_note` is **curator-only. Never mailed, never published.** The outcome
-note is written FOR the reporter: it is the text mailed to them and, once
-published, the text on `/known-issues`. So it cannot hold "same root cause as
-#7", "waiting on the map rebuild", or anybody's name. Without a second field a
-curator either says nothing or says it in the place that gets sent to a
-stranger, and there is no third option.
+note is written FOR the reporter: it is the text mailed to them and shown on
+their `/account/reports`. It is never published: `/known-issues` shows the
+public title and the public body (`public_title`, `public_body`), which the
+curator writes for a stranger reading cold. So the outcome note cannot hold
+"same root cause as #7", "waiting on the map rebuild", or anybody's name.
+Without a second field a curator either says nothing or says it in the place
+that gets sent to a stranger, and there is no third option.
 
 `BugDeskNotesTest` pins all three of: it is saved, it is not in the outcome
 mail, and it is not on the public list.
@@ -921,7 +924,7 @@ button and the footer), so the page does not repeat them.
 | Table | Holds |
 |---|---|
 | `contact_message` | topic, status, name, email, body, user id, page path, locale, ip hash, `due_at`, handling note, timestamps |
-| `bug_report` | title, body, steps, severity, area, status, user id, reporter email, page path, browser, viewport, build, locale, ip hash, `is_public`, public title, outcome note, `notified_at`, timestamps |
+| `bug_report` | title, body, steps, severity, area, status, user id, reporter email, page path, browser, viewport, build, locale, ip hash, `is_public`, public title, public body, outcome note, `notified_at`, timestamps |
 | `bug_screenshot` | report id, position, mime, `bytea`, size, dimensions, `state` (pending, ready, refused) and `refusal` (§6) |
 
 `bug_report.user_id` is nullable with **no foreign key** to `users`: anybody may
@@ -1169,11 +1172,11 @@ reporter who does know markdown can still type it and it renders the same.
 | Surface | Field |
 |---|---|
 | `/moderate/bugs/{id}` | the reporter's body and steps, and the curator's note |
-| `/known-issues` | the curator's published note |
-| `/account/reports` | the curator's note, to the reporter |
+| `/known-issues` | the curator's public body, under the public title |
+| `/account/reports` | the curator's outcome note, to the reporter |
 
 The reporter's own words are rendered only on the curator desk. Publishing a
-report to `/known-issues` publishes the curator's note, never the raw body:
-that has been true since the desk was built (§9) and markdown does not change
-it.
+report to `/known-issues` publishes the public title and the public body the
+curator wrote for it, never the raw body and never the outcome note, which is
+a reply to one person (§9); markdown does not change that.
 

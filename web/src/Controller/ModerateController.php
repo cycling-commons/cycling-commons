@@ -154,7 +154,7 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * Moderator rulebook: curators only, not the public wiki.
+     * Curator rulebook: curators only, not the public wiki.
      */
     #[Route('/moderate/rulebook', name: 'moderate_rulebook')]
     public function rulebook(): Response
