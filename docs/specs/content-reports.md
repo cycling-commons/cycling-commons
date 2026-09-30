@@ -548,8 +548,11 @@ it next to Report a bug.
   box is not an oracle for which ids exist (same rule as
   `ReportTarget::acceptsId()`).
 - **Cards**, one per `ReportTarget` except `town`, saying where the Report
-  link is on that surface; the photo card says a photo reported for showing a person
-  is withheld at once (`canAutoWithhold()`).
+  link is on that surface; the photo card says a reported photo stays up while
+  a curator looks, except on `intimate_or_child`, the one ground that hides it
+  at once (`ReportGround::autoWithholds()`). Pinned by `PhotoReportCopyTest`,
+  which also pins the contributor's `media_removed_on_report` message naming no
+  ground, since a removal can follow any of them.
 - **What happens next** repeats §6 and §7 in plain words, and claims no
   more: a confirmation with a reference, the decision with reasons, the
   author told only when a report is upheld, a person deciding every time.
