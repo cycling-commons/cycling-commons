@@ -127,7 +127,7 @@ final class MessagesPageTest extends WebTestCase
         self::assertCount(2, $crawler->filter('.msg-row'));
         self::assertCount(2, $crawler->filter('.msg-row.msg-new'));
         $listText = $crawler->filter('.msg-list')->text();
-        self::assertStringContainsString('Contribution approved — thank you!', $listText);
+        self::assertStringContainsString('Contribution approved. Thank you!', $listText);
         self::assertStringContainsString('Please clarify the gate location.', $listText);
         self::assertStringContainsString('From a curator', $listText);
 
