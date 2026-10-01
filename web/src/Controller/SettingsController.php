@@ -59,6 +59,7 @@ final class SettingsController extends AbstractController
         $wasPublic = $user->isPublicProfile();
         $wasNamed = $user->getDisplayName();
         $wasSubscribed = $user->isUpdatesOptIn();
+        $wasCadence = $user->getUpdatesCadence();
 
         $profileForm = $this->createForm(SettingsType::class, $user);
         $profileForm->handleRequest($request);
@@ -95,7 +96,7 @@ final class SettingsController extends AbstractController
 
             // Consent is proved by a record, not by a checkbox that used to be
             // ticked. @see App\Account\UpdatesSubscription
-            $this->updates->applied($user, $wasSubscribed);
+            $this->updates->applied($user, $wasSubscribed, $wasCadence);
 
             $this->em->flush();
 

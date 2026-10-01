@@ -1710,6 +1710,10 @@ profile:
   public_pending_many: '%count% voorgestelde routes wachten op verificatie'
 settings:
   updates_consent: 'Mail me als er een uitgave komt. Alleen release-notities, een paar keer per jaar, en je kunt altijd stoppen: hier of via een link in het bericht.'
+  updates_consent_v2: "Houd me op de hoogte. Je kunt altijd stoppen: hier of via een link in het bericht."
+  updates_cadence_legend: 'Hoe vaak'
+  updates_cadence_big: 'Alleen groot nieuws: hoogstens 4 keer per jaar'
+  updates_cadence_every: 'Elke update: hoogstens 2 keer per maand'
   delete:
     keep_media_credit: 'Mijn naam op mijn bijgedragen foto''s houden'
     keep_media_credit_help: 'Je goedgekeurde foto''s blijven hoe dan ook in de Commons — ze staan onder CC BY-SA 4.0. Dit bepaalt alleen of ze je naam blijven vermelden. Kies Nee en ze worden vanaf dan toegeschreven aan een anonieme fietser, ook in kopieën die mensen al hebben gedownload.'
@@ -4267,8 +4271,8 @@ flash:
   export_rate_limited: 'Je hebt je gegevens vandaag al een paar keer opgevraagd. Probeer het morgen opnieuw.'
   takedown_requested: 'Bedankt — de foto is al van de kaart, en een regiobeheerder leest je bericht binnenkort.'
 form:
-  label_updates_opt_in: 'Laat het me weten als er iets uitkomt'
-  help_updates_opt_in: 'Alleen release-notities, een paar keer per jaar. Nooit reclame, nooit gedeeld, en elk bericht heeft een afmeldlink van één klik.'
+  label_updates_opt_in: "Houd me op de hoogte"
+  help_updates_opt_in: "Groot nieuws hoogstens 4 keer per jaar, of elke update hoogstens 2 keer per maand. Nooit gedeeld, en elk bericht heeft een afmeldlink met één klik."
   label_name: 'Naam'
   error_totp_mismatch: 'Die code klopte niet. Kijk in je authenticator-app en probeer het opnieuw.'
   error_email_required: 'Vul je e-mailadres in.'

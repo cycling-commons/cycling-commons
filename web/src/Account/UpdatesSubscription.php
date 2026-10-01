@@ -23,6 +23,10 @@ use Symfony\Component\Uid\Uuid;
  *   split as the photo licence, and the reason is the same: a flag alone cannot
  *   answer "what did they actually agree to", which is the question that gets
  *   asked when somebody complains.
+ * - **Changing the cadence while opted in writes a consent record too.** How
+ *   often is part of what was agreed, so a new answer to it is a new consent,
+ *   recorded the same way. The account stores the current choice
+ *   (`users.updates_cadence`); the records keep every one that was given.
  * - **Opting out needs no proof.** Withdrawing consent must be at least as easy
  *   as giving it, so the flag flips and nothing is demanded in return. The
  *   consent record stays: it is evidence of a thing that did happen, not a
@@ -50,24 +54,28 @@ final class UpdatesSubscription
     /**
      * Record a change of mind, if it is one.
      *
-     * Called with the value the form already wrote onto the account, so it
-     * compares against what was there before rather than guessing.
+     * Called with the values the form already wrote onto the account, so it
+     * compares against what was there before rather than guessing. A rider who
+     * is off, or who saved without touching either control, gets no record.
      */
-    public function applied(User $user, bool $wasOptedIn): void
+    public function applied(User $user, bool $wasOptedIn, UpdatesCadence $wasCadence): void
     {
-        if ($user->isUpdatesOptIn() === $wasOptedIn) {
+        if (!$user->isUpdatesOptIn()) {
             return;
         }
 
-        if ($user->isUpdatesOptIn()) {
-            $this->em->persist(new ConsentRecord(
-                Uuid::v4(),
-                (int) $user->getId(),
-                UpdatesConsent::KIND,
-                UpdatesConsent::VERSION,
-                UpdatesConsent::hash(),
-            ));
+        $cadence = $user->getUpdatesCadence();
+        if ($wasOptedIn && $cadence === $wasCadence) {
+            return;
         }
+
+        $this->em->persist(new ConsentRecord(
+            Uuid::v4(),
+            (int) $user->getId(),
+            UpdatesConsent::KIND,
+            UpdatesConsent::version($cadence),
+            UpdatesConsent::hash($cadence),
+        ));
     }
 
     /**
@@ -84,6 +92,10 @@ final class UpdatesSubscription
 
     /**
      * Turn the list off for whoever this link belongs to.
+     *
+     * Off is off at every cadence: the flag goes false and nothing is sent.
+     * The cadence stays on the account as the answer the settings page shows
+     * if the rider turns the list on again.
      *
      * Returns false for a bad signature, an unknown account, or an account that
      * was already off, so the caller can answer the same way in every case: a

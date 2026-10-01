@@ -1705,6 +1705,10 @@ profile:
   public_pending_many: '%count% itinéraires proposés en attente de vérification'
 settings:
   updates_consent: 'Prévenez-moi par courriel quand une version sort. Uniquement des notes de version, quelques fois par an, et vous pouvez arrêter quand vous voulez, ici ou depuis un lien dans le message.'
+  updates_consent_v2: "Tenez-moi au courant. Vous pouvez arrêter quand vous voulez, ici ou depuis un lien dans le message."
+  updates_cadence_legend: 'À quelle fréquence'
+  updates_cadence_big: 'Seulement les grandes nouveautés : au plus 4 fois par an'
+  updates_cadence_every: 'Chaque mise à jour : au plus 2 fois par mois'
   delete:
     keep_media_credit: 'Garder mon nom sur les photos que j''ai contribuées'
     keep_media_credit_help: 'Vos photos approuvées restent dans le Commons dans tous les cas — elles sont sous licence CC BY-SA 4.0. Ceci décide seulement si elles continuent de vous nommer. Choisissez Non et elles seront attribuées à un cycliste anonyme à partir de là, y compris dans les copies déjà téléchargées.'
@@ -4260,8 +4264,8 @@ flash:
   export_rate_limited: 'Vous avez déjà demandé vos données plusieurs fois aujourd''hui. Réessayez demain.'
   takedown_requested: 'Merci — la photo est déjà hors de la carte, et un curateur lira votre message sous peu.'
 form:
-  label_updates_opt_in: 'Prévenez-moi quand quelque chose sort'
-  help_updates_opt_in: 'Uniquement des notes de version, quelques fois par an. Jamais de publicité, jamais partagé, et chaque message porte un lien de désinscription en un clic.'
+  label_updates_opt_in: "Tenez-moi au courant"
+  help_updates_opt_in: "Les grandes nouvelles au plus 4 fois par an, ou chaque mise à jour au plus 2 fois par mois. Jamais partagé, et chaque message contient un lien de désinscription en un clic."
   label_name: 'Nom'
   error_totp_mismatch: 'Ce code ne correspond pas. Vérifiez votre application d''authentification et réessayez.'
   error_email_required: 'Saisissez votre adresse électronique.'

@@ -1714,6 +1714,10 @@ profile:
   public_pending_many: '%count% proposed routes awaiting verification'
 settings:
   updates_consent: 'Email me when a release ships. Release notes only, a few times a year, and you can stop at any time from here or from a link in the message.'
+  updates_consent_v2: "Keep me up to date. You can stop at any time from here or from a link in the message."
+  updates_cadence_legend: 'How often'
+  updates_cadence_big: 'Big news only: at most 4 times a year'
+  updates_cadence_every: 'Every update: at most 2 times a month'
   delete:
     keep_media_credit: 'Keep my name on the photos I contributed'
     keep_media_credit_help: 'Your approved photos stay in the Commons either way — they are licensed CC BY-SA 4.0. This only decides whether they keep naming you. Choose No and they are credited to an anonymous rider from then on, including in copies people have already downloaded.'
@@ -4286,8 +4290,8 @@ flash:
   export_rate_limited: 'You have already requested your data a few times today. Please try again tomorrow.'
   takedown_requested: 'Thank you — the photo is off the map already, and a curator will read your message shortly.'
 form:
-  label_updates_opt_in: 'Tell me when something ships'
-  help_updates_opt_in: 'Release notes only, a few times a year. Never marketing, never shared, and every message carries a one-click unsubscribe.'
+  label_updates_opt_in: "Keep me up to date"
+  help_updates_opt_in: "Big news at most 4 times a year, or every update at most 2 times a month. Never shared, and every message carries a one-click unsubscribe."
   label_name: 'Name'
   error_totp_mismatch: 'That code did not match. Check your authenticator app and try again.'
   error_email_required: 'Please enter your email address.'

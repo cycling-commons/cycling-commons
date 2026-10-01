@@ -11,6 +11,7 @@ use App\Account\DistanceUnit;
 use App\Account\ElevationUnit;
 use App\Account\RowsPerPage;
 use App\Account\TimeFormat;
+use App\Account\UpdatesCadence;
 use App\Catalog\BikeType;
 use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
@@ -212,6 +213,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
      */
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $updatesOptIn = false;
+
+    /**
+     * How often a rider on the release list agreed to hear from us
+     * ({@see UpdatesCadence}). Kept while the flag is off, as the
+     * answer the settings page shows if the rider turns the list on again.
+     */
+    #[ORM\Column(name: 'updates_cadence', type: 'string', length: 8, options: ['default' => 'big'])]
+    private string $updatesCadence = UpdatesCadence::Big->value;
 
     /**
      * The dormancy clock. Written on every successful sign-in.
@@ -842,6 +851,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setUpdatesOptIn(bool $updatesOptIn): static
     {
         $this->updatesOptIn = $updatesOptIn;
+
+        return $this;
+    }
+
+    public function getUpdatesCadence(): UpdatesCadence
+    {
+        return UpdatesCadence::tryFrom($this->updatesCadence) ?? UpdatesCadence::Big;
+    }
+
+    public function setUpdatesCadence(UpdatesCadence $cadence): static
+    {
+        $this->updatesCadence = $cadence->value;
 
         return $this;
     }

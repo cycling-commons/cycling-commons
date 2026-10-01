@@ -79,15 +79,53 @@ override it; nothing in the deploy needs to.
 
 ## 4. The release list
 
-A **release** list, not a marketing list, and the difference bounds what may
-ever be sent: if it is not "the software changed", it does not go here.
+An **updates** list: news about Cycling Commons itself, new versions first,
+and never anything from or for somebody else. Since v2 (owner 2026-10-01:
+"don't be so narrow, make it more like Keep me up to date") it is not limited
+to release notes; the cadence the rider picked is the ceiling.
 
 | Piece | Where |
 |---|---|
 | The flag | `users.updates_opt_in`, default **false** |
+| How often | `users.updates_cadence`: `big` (default) or `every` (`App\Account\UpdatesCadence`) |
 | The consent | a `consent_record` row, kind `release-updates` (`App\Account\UpdatesConsent`) |
 | Turning it on and off | `App\Account\UpdatesSubscription`, called from the settings save |
 | The one-click link | `/unsubscribe?u=<uuid>&t=<hmac>` |
+
+**One switch with a choice, not two lists.** The settings page (Profile tab,
+beside Public profile) has one switch, "Keep me up to date. You can stop at
+any time from here or from a link in the message.", and under it two radios: **Big news only: at most 4 times a year**
+(pre-selected) and **Every update: at most 2 times a month**. One list with a
+cadence means nobody gets the same news twice. Each cadence is a ceiling the
+rider agreed to, not a schedule. The radios show while the switch is on
+(`assets/settings/updates-cadence.js`); without script they stay shown, and a
+choice saved while the switch is off is a stored preference that sends nothing.
+Nothing sends these mails yet.
+
+**What each action stores and records.**
+
+| Action | `updates_opt_in` | `updates_cadence` | `consent_record` |
+|---|---|---|---|
+| Opt in | true | the chosen cadence | new row, version `v2-big` or `v2-every` |
+| Change cadence while on | stays true | the new cadence | new row for the new cadence |
+| Change cadence while off | stays false | the new cadence | none |
+| Save without changing either | unchanged | unchanged | none |
+| Opt out on the settings page | false | kept | none; earlier rows stay |
+| The unsubscribe link | false | kept | none; earlier rows stay |
+
+**Consent versions.** `v1` (until 2026-10-01) is the single sentence "Email me
+when a release ships. Release notes only, a few times a year, ...", still in the
+catalogue as `settings.updates_consent` so a v1 record points at what was
+agreed; its hash is sha256 of `release-updates|v1|settings.updates_consent`.
+`v2` is the switch's new sentence (`settings.updates_consent_v2`) plus the
+chosen radio (`settings.updates_cadence_big` or `_every`). The record's version
+names both (`v2-big`, `v2-every`), and its hash is sha256 of
+`release-updates|<version>|settings.updates_consent_v2|<radio key>`.
+`UpdatesConsent::textKeys()` maps any recorded version back to its keys. Riders
+who opted in under v1 keep their v1 record and are on `big`, which is what "a
+few times a year" promised; a new record appears only when they change the
+cadence or opt in again. The account export (`account.json`) carries both
+`updates_opt_in` and `updates_cadence`.
 
 **Nobody is opted in by anything except asking.** Not by the migration, not by
 registering, not by having been here first.

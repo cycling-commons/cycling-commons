@@ -9,6 +9,7 @@ use App\Account\DistanceUnit;
 use App\Account\ElevationUnit;
 use App\Account\RowsPerPage;
 use App\Account\TimeFormat;
+use App\Account\UpdatesCadence;
 use App\Catalog\BikeType;
 use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
@@ -209,6 +210,16 @@ final class SettingsType extends AbstractType
                 'label' => 'form.label_updates_opt_in',
                 'required' => false,
                 'help' => 'form.help_updates_opt_in',
+            ])
+            // How often, as one choice on the same list so nobody gets the
+            // same news twice. Saved whatever the switch says; only the
+            // switch decides whether anything is sent.
+            ->add('updatesCadence', EnumType::class, [
+                'class' => UpdatesCadence::class,
+                'label' => 'settings.updates_cadence_legend',
+                'required' => true,
+                'expanded' => true,
+                'choice_label' => static fn (UpdatesCadence $c): string => $c->labelKey(),
             ]);
     }
 

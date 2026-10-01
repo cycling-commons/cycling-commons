@@ -283,16 +283,31 @@
         {# The release list. Beside the public-profile toggle because both are
            "what do you want to be true about your account", and it is the only
            mail we ever send that a rider chose rather than needed. #}
+        {# The sentence is App\Account\UpdatesConsent::TEXT_KEY and each radio's
+           is UpdatesCadence::labelKey(): together they are what a consent
+           record says was agreed. The radios hide while the switch is off
+           (settings/updates-cadence.js); without script they stay shown, and a
+           choice saved while off sends nothing. #}
         <div class="toggle">
           <span class="lab">
-            <small>{{ 'settings.updates_consent'|trans }}</small>
+            <small>{{ constant('App\\Account\\UpdatesConsent::TEXT_KEY')|trans }}</small>
           </span>
           <label class="sw">
-            {{ form_widget(profileForm.updatesOptIn, {attr: {class: ''}}) }}
+            {{ form_widget(profileForm.updatesOptIn, {attr: {class: '', 'data-updates-toggle': ''}}) }}
             <span class="track"></span><span class="knob"></span>
           </label>
         </div>
         {% include 'partials/_form_errors.html.twig' with {form: profileForm.updatesOptIn} %}
+        <fieldset class="updates-cadence" data-updates-cadence>
+          <legend class="vh">{{ 'settings.updates_cadence_legend'|trans }}</legend>
+          {% for child in profileForm.updatesCadence %}
+            <label>
+              {{ form_widget(child) }}
+              <span>{{ child.vars.label|trans }}</span>
+            </label>
+          {% endfor %}
+        </fieldset>
+        {% include 'partials/_form_errors.html.twig' with {form: profileForm.updatesCadence} %}
       </div>
       <div class="field">
         {# The link follows what is SAVED: the public page exists only once
@@ -475,5 +490,6 @@
 <script src="{{ asset('js/auth-validate.js') }}" defer></script>
 <script src="{{ asset('settings/base-location.js') }}" defer></script>
 <script src="{{ asset('settings/public-profile.js') }}" defer></script>
+<script src="{{ asset('settings/updates-cadence.js') }}" defer></script>
 <script src="{{ asset('js/name-hint.js') }}" defer></script>
 {% endblock %}

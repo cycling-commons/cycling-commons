@@ -1710,6 +1710,10 @@ profile:
   public_pending_many: '%count% vorgeschlagene Routen warten auf Verifizierung'
 settings:
   updates_consent: 'Schreib mir, wenn eine Version erscheint. Nur Release-Notizen, ein paar Mal im Jahr, und du kannst jederzeit aufhören: hier oder über einen Link in der Nachricht.'
+  updates_consent_v2: "Halte mich auf dem Laufenden. Du kannst jederzeit aufhören: hier oder über einen Link in der Nachricht."
+  updates_cadence_legend: 'Wie oft'
+  updates_cadence_big: 'Nur große Neuigkeiten: höchstens 4-mal im Jahr'
+  updates_cadence_every: 'Jedes Update: höchstens 2-mal im Monat'
   delete:
     keep_media_credit: 'Meinen Namen auf meinen Fotos behalten'
     keep_media_credit_help: 'Deine freigegebenen Fotos bleiben ohnehin im Commons — sie stehen unter CC BY-SA 4.0. Dies entscheidet nur, ob sie dich weiterhin nennen. Wählst du Nein, werden sie ab dann einer anonymen Radfahrerin oder einem anonymen Radfahrer zugeschrieben, auch in bereits heruntergeladenen Kopien.'
@@ -4268,8 +4272,8 @@ flash:
   export_rate_limited: 'Du hast deine Daten heute schon einige Male angefordert. Bitte versuch es morgen erneut.'
   takedown_requested: 'Danke — das Foto ist bereits von der Karte, und ein Kurator liest deine Nachricht in Kürze.'
 form:
-  label_updates_opt_in: 'Sag mir Bescheid, wenn etwas erscheint'
-  help_updates_opt_in: 'Nur Release-Notizen, ein paar Mal im Jahr. Nie Werbung, nie weitergegeben, und jede Nachricht hat eine Abmeldung mit einem Klick.'
+  label_updates_opt_in: "Halte mich auf dem Laufenden"
+  help_updates_opt_in: "Große Neuigkeiten höchstens 4 Mal im Jahr, oder jedes Update höchstens 2 Mal im Monat. Nie weitergegeben, und jede Nachricht hat einen Abmeldelink mit einem Klick."
   label_name: 'Name'
   error_totp_mismatch: 'Der Code stimmte nicht. Sieh in deiner Authenticator-App nach und versuche es erneut.'
   error_email_required: 'Gib deine E-Mail-Adresse ein.'

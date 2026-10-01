@@ -1717,6 +1717,10 @@ profile:
   public_pending_many: '%count% rutas propuestas a la espera de verificación'
 settings:
   updates_consent: 'Escríbeme cuando salga una versión. Solo notas de versión, unas pocas veces al año, y puedes parar cuando quieras: aquí o desde un enlace del mensaje.'
+  updates_consent_v2: "Mantenme al día. Puedes parar cuando quieras: aquí o desde un enlace del mensaje."
+  updates_cadence_legend: 'Con qué frecuencia'
+  updates_cadence_big: 'Solo las grandes novedades: como mucho 4 veces al año'
+  updates_cadence_every: 'Cada actualización: como mucho 2 veces al mes'
   delete:
     keep_media_credit: 'Mantener mi nombre en las fotos que aporté'
     keep_media_credit_help: 'Tus fotos aprobadas se quedan en el Commons en cualquier caso — están licenciadas bajo CC BY-SA 4.0. Esto solo decide si siguen llevando tu nombre. Elige No y a partir de entonces se atribuirán a un ciclista anónimo, también en las copias que la gente ya se haya descargado.'
@@ -4295,8 +4299,8 @@ flash:
   export_rate_limited: 'Ya has pedido tus datos varias veces hoy. Inténtalo mañana.'
   takedown_requested: 'Gracias — la foto ya está fuera del mapa, y un curador leerá tu mensaje en breve.'
 form:
-  label_updates_opt_in: 'Avísame cuando salga algo'
-  help_updates_opt_in: 'Solo notas de versión, unas pocas veces al año. Nunca publicidad, nunca se comparte, y cada mensaje lleva un enlace de baja de un clic.'
+  label_updates_opt_in: "Mantenme al día"
+  help_updates_opt_in: "Grandes novedades como máximo 4 veces al año, o cada novedad como máximo 2 veces al mes. Nunca se comparte, y cada mensaje lleva un enlace para darte de baja con un clic."
   label_name: 'Nombre'
   error_totp_mismatch: 'Ese código no coincide. Comprueba tu aplicación de autenticación e inténtalo de nuevo.'
   error_email_required: 'Escribe tu dirección de correo.'
