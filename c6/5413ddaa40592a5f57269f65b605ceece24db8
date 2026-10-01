@@ -1,0 +1,88 @@
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_fad3fefde4406f 1530
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_a778c0b3c34117 768-777
+  s_49442ae34d3603::t_3abad2c3e7cc0f 764-767
+  s_49442ae34d3603::t_fb0c07cb485a9f 976-977
+  s_49442ae34d3603::t_c2255bdcd8ec80 778-790
+web/templates/map/index.html.twig
+  s_49442ae34d3603::t_aa8a1e606f00d7 48-49
+web/tests/js/town-quick-picks.test.mjs
+  s_49442ae34d3603::t_64e0f2dd86ee63 60-62
+web/templates/messages/index.html.twig
+  s_49442ae34d3603::t_199ceff31ba92b 243
+web/assets/styles/text-credit.css
+  s_49442ae34d3603::t_8b46112d5b64e4 1-35
+docs/specs/content-reports.md
+  s_49442ae34d3603::t_6e0bf5d2597f34 168-172
+docs/specs/map-and-search.md
+  s_49442ae34d3603::t_6e0bf5d2597f34 801-807,2585-2590
+  s_49442ae34d3603::t_8ff834b27dfa3d 2584,2591-2595
+  s_49442ae34d3603::t_d9386c3ca05ae8 800,808-811
+  s_49442ae34d3603::t_ccc1d809ee9cec 2596-2597
+web/assets/map/drawer.js
+  s_49442ae34d3603::t_199ceff31ba92b 821
+web/assets/map/places.js
+  s_49442ae34d3603::t_3971adc10caf66 162-163,166,169
+  s_49442ae34d3603::t_d43daa9818e5a1 21
+web/assets/styles/page/pages/region.css
+  s_49442ae34d3603::t_72411b6696eed3 80-81
+web/tests/Moderation/PlaceTextProposalTest.php
+  s_49442ae34d3603::t_38eb1e4b559de1 367,372-383,392
+  s_49442ae34d3603::t_f2be95776982e3 365-366
+web/assets/map/lightbox.js
+  s_49442ae34d3603::t_199ceff31ba92b 20
+web/templates/pages/region.html.twig
+  s_49442ae34d3603::t_8305fca73a28ad 103-104
+  s_49442ae34d3603::t_75060ea9558e47 101-102,126,131
+  s_49442ae34d3603::t_1fc04f93fc0eea 127
+  s_49442ae34d3603::t_199ceff31ba92b 184
+  s_49442ae34d3603::t_293adebd827bfd 121-125,128-130,139,141
+  s_49442ae34d3603::t_85b2e8acd53ac6 134
+web/templates/media/photo.html.twig
+  s_49442ae34d3603::t_199ceff31ba92b 76
+web/tests/js/text-credit-actions.test.mjs
+  s_49442ae34d3603::t_1e866f5c91dd76 78
+  s_49442ae34d3603::t_fee3027866bde3 1-77,79-101
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_fad3fefde4406f 1525
+web/assets/styles/map.css
+  s_49442ae34d3603::t_72411b6696eed3 1353-1355
+web/tests/js/town-text.test.mjs
+  s_49442ae34d3603::t_64e0f2dd86ee63 66-71,76-78,81,117,120,122-123
+  s_49442ae34d3603::t_30b3e9f4ad94d8 15,19,64
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_fad3fefde4406f 1534
+web/templates/partials/_text_credit_actions.html.twig
+  s_49442ae34d3603::t_3e91a159d29bba 1-20
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_fad3fefde4406f 1536
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_fad3fefde4406f 1530
+web/assets/map/town-text.js
+  s_49442ae34d3603::t_3971adc10caf66 7-8,72-106
+  s_49442ae34d3603::t_9d5a5c35963d9e 6,9-11
+web/templates/partials/_head.html.twig
+  s_49442ae34d3603::t_aa8a1e606f00d7 33-34
+web/tests/Controller/RegionsPagesTest.php
+  s_49442ae34d3603::t_725289a69c9201 127
+  s_49442ae34d3603::t_37061de1af3bf8 128
+web/templates/profile/public.html.twig
+  s_49442ae34d3603::t_199ceff31ba92b 58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c65413ddaa40592a5f57269f65b605ceece24db8",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
