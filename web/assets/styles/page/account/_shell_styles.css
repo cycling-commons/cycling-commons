@@ -69,8 +69,9 @@
   .dtabs .dtabs-more-dd a:hover{background:rgba(20,22,14,.06)}
   .dtabs .dtabs-more-dd a.on{box-shadow:inset 3px 0 0 var(--trail);background:rgba(255,90,31,.12);font-weight:600}
   .dtabs.dtabs-modmode a.on{background:rgba(255,90,31,.2)}
-  /* per-tab open-count badge (scoped to the moderator's jurisdiction) */
-  .dtab-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--clay);color:var(--paper);font-size:.72rem;font-weight:700;line-height:1;vertical-align:middle}
+  /* per-tab open-count badge (scoped to the moderator's jurisdiction), the same
+     orange as every other unread count (owner 2026-10-01) */
+  .dtab-count{display:inline-flex;align-items:center;justify-content:center;min-width:1.15rem;height:1.15rem;margin-left:.45rem;padding:0 .35rem;border-radius:999px;background:var(--trail);color:var(--ink);font-family:var(--mono);font-size:.72rem;font-weight:700;line-height:1;vertical-align:middle}
 
   /* ── The page: one container, one head ──────────────────────────────────
      `.dbody` is the content column of every shell page, rider or curator; it
