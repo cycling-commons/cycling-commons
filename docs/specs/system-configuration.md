@@ -66,7 +66,7 @@ rather than a second copy drifting in PHP.
 | `map.item_verify_threshold` | 2 | 1–20 | map | `ItemConfirmationService`. Global on purpose: never scoped per type, country or region (moderation-and-contribution.md §10.1). |
 | `route.region_active_cap` | 30 | 1–1000 | routes | `RouteModerationService`, `RouteQueue` |
 | `route.ride_verify_threshold` | 3 | 1–100 | routes | `RouteCommunityService` |
-| `moderation.retention_months` | 3 | 1–120 | moderation | `RetentionService` |
+| `moderation.retention_months` | 3 | 1–120 | moderation | `MediaDisposalService::collectRejected()`: how long a rejected photo's files are kept. Nothing else reads it: contributions and their threads stay while the account does, and Trash purges after a fixed 30 days (moderation-and-contribution.md §6, §8). The key keeps its name because a stored override may exist. |
 | `media.urgent_breaker_hourly` | 10 | 0–500 (0 disables auto-withhold, photo-uploads.md §6c) | media | `UrgentWithholdBreaker` |
 | `media.urgent_breaker_daily` | 25 | 0–2000 (0 disables auto-withhold) | media | `UrgentWithholdBreaker` |
 | `community.voting_live` | 0 | 0–1 | community | `MapController` (0 hides every vote call to action) |
@@ -81,7 +81,7 @@ admin who opens the page. `min_blocks`'s ceiling is
 
 **Ranges are guardrails against a fat finger, not editorial opinion.** They
 bound what cannot be *meant* — a zero cap freezes every region's queue, a zero
-retention deletes decided rows the moment they are decided, a zero ride
+retention deletes a rejected photo's files the moment it is rejected, a zero ride
 threshold verifies on nothing — and leave the judgement inside those bounds to
 the admin.
 

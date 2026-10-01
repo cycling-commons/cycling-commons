@@ -121,7 +121,8 @@ final class CatalogProvider
      */
     public function goneForMap(ModerationScope $scope, int $limit = 500): array
     {
-        $where = "i.attributes->>'condition' = '".GoneRows::CONDITION."'";
+        // A place in the curators' Trash is on no layer (moderation-and-contribution.md §6).
+        $where = "i.attributes->>'condition' = '".GoneRows::CONDITION."' AND i.state <> 'trashed'";
         $params = ['limit' => $limit];
         $types = ['limit' => \Doctrine\DBAL\ParameterType::INTEGER];
         $frag = $scope->sqlFragment('i');

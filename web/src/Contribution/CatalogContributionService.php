@@ -872,12 +872,13 @@ final class CatalogContributionService implements ContributionStubInterface
             $this->em->flush();
 
             if (SubmissionType::NewItem === $type) {
-                /* Revive a rejected/retired OSM row rather than minting a twin. */
+                /* Revive a rejected, retired or trashed OSM row rather than minting a twin
+                   (a trashed one keeps its source_ref for its 30 days in the bin). */
                 $item = null !== $draft->osmRef
                     ? $this->em->getRepository(Item::class)->findOneBy([
                         'sourceRef' => $draft->osmRef,
                         'letter' => $draft->type->letter(),
-                        'state' => [ItemState::Rejected, ItemState::Retired],
+                        'state' => [ItemState::Rejected, ItemState::Retired, ItemState::Trashed],
                     ])
                     : null;
                 // Materialized OSM objects keep source_ref so coverage can dedupe.

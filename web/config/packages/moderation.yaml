@@ -1,5 +1,7 @@
-# Moderation retention config (M8 phase 1) — thresholds are config, not
-# constants (README threshold principle).
+# How long a rejected photo's files are kept, in months (photo-uploads.md §6):
+# the one timer this key drives. Contributions and their threads stay while the
+# rider's account does (moderation-and-contribution.md §8), and Trash purges
+# after a fixed 30 days (TrashBin::TRASH_DAYS).
 #
 # A DEFAULT, not the live value: this key is runtime-editable from the admin
 # system-config page and an override in `system_setting` wins

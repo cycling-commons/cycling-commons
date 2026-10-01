@@ -211,6 +211,10 @@
       <li>{{ 'privacy.retention_logs'|trans|rich }}</li>
       <li>{{ 'privacy.retention_ratelimit'|trans|rich }}</li>
       <li>{{ 'privacy.retention_contributions'|trans|rich }}</li>
+      {# Threads live as long as the account (owner 2026-10-01,
+         ContributionDeletionHook); Trash keeps a row 30 days, then the purge
+         (TrashBin::TRASH_DAYS, moderation-and-contribution.md §6, §8). #}
+      <li>{{ 'privacy.retention_messages'|trans|rich }}</li>
       {# GDPR Art. 13(2)(a) requires the retention period to be STATED, and the
          consent ledger is the one store the app keeps indefinitely on purpose
          (docs/specs/photo-uploads.md §4). Leaving it undisclosed while the

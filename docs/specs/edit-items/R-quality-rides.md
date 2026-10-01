@@ -102,8 +102,9 @@ applies it through this same gate, credited to the rider who asked (§7.1).
 Proposal decisions and correction resolutions feed the shared moderation-feedback
 system ([`../moderation-and-contribution.md`](../moderation-and-contribution.md) §7):
 the rider gets a dashboard message on approve/reject/retire and on done/dismissed,
-dismissed corrections are retained 3 months then GC'd, and spam can be Trashed
-(immediate hard delete).
+dismissed corrections stay as long as the rider's account, and spam can be
+Trashed (30 days in the curators' bin, restorable, then deleted for good;
+moderation-and-contribution.md §6, §8).
 
 ## Curator form (proposal review + metadata edit)
 

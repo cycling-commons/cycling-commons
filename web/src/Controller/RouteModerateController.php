@@ -17,10 +17,10 @@ use App\Moderation\DeskRider;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RegionFullException;
-use App\Moderation\RetentionService;
 use App\Moderation\RouteModerationService;
 use App\Moderation\RouteProposalDetails;
 use App\Moderation\RouteQueue;
+use App\Moderation\TrashBin;
 use App\Moderation\TrashBlockedException;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
@@ -46,7 +46,7 @@ final class RouteModerateController extends AbstractController
     public function __construct(
         private readonly RouteQueue $queue,
         private readonly RouteModerationService $moderation,
-        private readonly RetentionService $retention,
+        private readonly TrashBin $trashBin,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly PageSize $pageSize,
     ) {
@@ -55,7 +55,7 @@ final class RouteModerateController extends AbstractController
     #[Route('/moderate/routes', name: 'moderate_routes')]
     public function index(Request $request): Response
     {
-        $this->retention->sweepOpportunistically();
+        $this->trashBin->sweepOpportunistically();
 
         /** @var User $user */
         $user = $this->getUser();
@@ -328,9 +328,10 @@ final class RouteModerateController extends AbstractController
     }
 
     /**
-     * Permanent hard delete: correction (any status) or proposal (`submitted`/`rejected` only).
+     * Into the curators' Trash for 30 days: correction (any status) or
+     * proposal (`submitted`/`rejected` only).
      *
-     * @see docs/specs/route-domain.md §3
+     * @see docs/specs/moderation-and-contribution.md §6
      */
     #[Route('/moderate/routes/trash', name: 'moderate_routes_trash', methods: ['POST'])]
     public function trash(Request $request): Response

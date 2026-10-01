@@ -105,7 +105,8 @@ final class ModerateMessageController extends AbstractController
     private function resolveSubmission(int $id): ?array
     {
         $submission = $this->em->find(Submission::class, $id);
-        if (null === $submission) {
+        // A row in Trash has no thread to write to (moderation-and-contribution.md §6).
+        if (null === $submission || $submission->isTrashed()) {
             return null;
         }
 
@@ -117,7 +118,7 @@ final class ModerateMessageController extends AbstractController
     {
         $route = $this->em->find(RecommendedRoute::class, $id);
         // Imported routes carry no proposer.
-        if (null === $route || null === $route->getProposedBy()) {
+        if (null === $route || null === $route->getProposedBy() || $route->isTrashed()) {
             return null;
         }
 
@@ -128,7 +129,7 @@ final class ModerateMessageController extends AbstractController
     private function resolveCorrection(int $id): ?array
     {
         $suggestion = $this->em->find(RouteSuggestion::class, $id);
-        if (null === $suggestion) {
+        if (null === $suggestion || $suggestion->isTrashed()) {
             return null;
         }
 

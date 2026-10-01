@@ -12,7 +12,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Dashboard message. `user_id` is ON DELETE CASCADE to users.
+ * Dashboard message. `user_id` is ON DELETE SET NULL to users: account
+ * deletion removes a rider's messages itself (ContributionDeletionHook), and
+ * only a held submission's thread keeps a message whose recipient is gone.
+ * `trashed_at` is set while the row the thread is about is in Trash.
  *
  * @see docs/specs/moderation-and-contribution.md §7
  *
@@ -28,8 +31,8 @@ class UserMessage
     #[ORM\Column(type: Types::BIGINT)]
     private ?int $id = null;
 
-    #[ORM\Column(name: 'user_id', type: Types::BIGINT)]
-    private int $userId;
+    #[ORM\Column(name: 'user_id', type: Types::BIGINT, nullable: true)]
+    private ?int $userId;
 
     #[ORM\Column(type: Types::STRING, length: 32, enumType: UserMessageKind::class)]
     private UserMessageKind $kind;
@@ -58,6 +61,10 @@ class UserMessage
 
     #[ORM\Column(name: 'body_text', type: Types::TEXT, nullable: true)]
     private ?string $bodyText;
+
+    /** Set while the thread's row is in Trash (MessageService::trashThread()). */
+    #[ORM\Column(name: 'trashed_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $trashedAt = null;
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
@@ -116,7 +123,8 @@ class UserMessage
         return $this->id;
     }
 
-    public function getUserId(): int
+    /** Null only on a held submission's thread whose rider deleted their account. */
+    public function getUserId(): ?int
     {
         return $this->userId;
     }
@@ -196,6 +204,11 @@ class UserMessage
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getTrashedAt(): ?\DateTimeImmutable
+    {
+        return $this->trashedAt;
     }
 
     public function getReadAt(): ?\DateTimeImmutable

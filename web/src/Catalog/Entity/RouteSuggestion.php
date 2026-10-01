@@ -66,6 +66,17 @@ class RouteSuggestion
     #[ORM\Column(name: 'resolved_by', type: Types::BIGINT, nullable: true)]
     private ?int $resolvedBy = null;
 
+    /** In the curators' Trash since then (moderation-and-contribution.md §6). */
+    #[ORM\Column(name: 'trashed_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $trashedAt = null;
+
+    #[ORM\Column(name: 'trashed_by', type: Types::BIGINT, nullable: true)]
+    private ?int $trashedBy = null;
+
+    /** The status a restore puts back. */
+    #[ORM\Column(name: 'trashed_from', type: Types::STRING, length: 12, nullable: true, enumType: RouteSuggestionStatus::class)]
+    private ?RouteSuggestionStatus $trashedFrom = null;
+
     /**
      * @param list<array{start: float, end: float}>|null        $segments
      * @param array<string, array{was: mixed, now: mixed}>|null $changes
@@ -144,5 +155,49 @@ class RouteSuggestion
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    /** Into the bin: the status it had is kept for a restore. */
+    public function moveToTrash(int $curatorId, \DateTimeImmutable $at): void
+    {
+        if (RouteSuggestionStatus::Trashed === $this->status) {
+            return;
+        }
+        $this->trashedFrom = $this->status;
+        $this->status = RouteSuggestionStatus::Trashed;
+        $this->trashedAt = $at;
+        $this->trashedBy = $curatorId;
+    }
+
+    /** Out of the bin, back to exactly the status it had. */
+    public function restoreFromTrash(): void
+    {
+        if (RouteSuggestionStatus::Trashed !== $this->status || null === $this->trashedFrom) {
+            return;
+        }
+        $this->status = $this->trashedFrom;
+        $this->trashedFrom = null;
+        $this->trashedAt = null;
+        $this->trashedBy = null;
+    }
+
+    public function isTrashed(): bool
+    {
+        return RouteSuggestionStatus::Trashed === $this->status;
+    }
+
+    public function getTrashedAt(): ?\DateTimeImmutable
+    {
+        return $this->trashedAt;
+    }
+
+    public function getTrashedBy(): ?int
+    {
+        return $this->trashedBy;
+    }
+
+    public function getTrashedFrom(): ?RouteSuggestionStatus
+    {
+        return $this->trashedFrom;
     }
 }

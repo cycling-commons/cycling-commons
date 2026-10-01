@@ -27,7 +27,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
  * What the room reads of `submission` is another matter: the composer's
  * search lists queue cards, so it narrows by the reader's `ModerationScope`
  * like the queue (§9.2), and no read here returns a submission under legal
- * hold (docs/specs/photo-uploads.md §6d).
+ * hold (docs/specs/photo-uploads.md §6d) or in Trash (§6).
  *
  * @see docs/specs/moderation-and-contribution.md §13
  *
@@ -375,6 +375,7 @@ final class CuratorRoom
                FROM submission s
                LEFT JOIN region r ON r.id = s.region_id
               WHERE s.escalated_at IS NULL'.('' !== $frag['sql'] ? ' AND '.$frag['sql'] : '')."
+                AND s.status <> 'trashed'
                 AND ((:idp::text IS NOT NULL AND s.id::text LIKE :idp || '%')
                      OR s.title ILIKE :like OR r.name ILIKE :like)
               ORDER BY (s.id::text = :idp) DESC, (s.status = 'pending') DESC, s.id DESC
@@ -573,7 +574,7 @@ final class CuratorRoom
                 FROM curator_post p
                 LEFT JOIN users a ON a.id = p.author_id
                 LEFT JOIN users r ON r.id = p.recipient_id
-                LEFT JOIN submission s ON s.id = p.about_submission_id AND s.escalated_at IS NULL
+                LEFT JOIN submission s ON s.id = p.about_submission_id AND s.escalated_at IS NULL AND s.status <> \'trashed\'
                 WHERE '.implode(' AND ', $where).'
                 ORDER BY p.created_at DESC
                 LIMIT '.self::PER_PAGE;
@@ -657,8 +658,8 @@ final class CuratorRoom
 
     /**
      * Where the linked submission is listed: the open queue while it waits,
-     * History once decided. Null while it is held (the join leaves it out),
-     * withdrawn or gone, as no desk lists it then.
+     * History once decided. Null while it is held or in Trash (the join
+     * leaves it out), withdrawn or gone, as no desk lists it then.
      *
      * @return 'queue'|'history'|null
      */
@@ -674,14 +675,14 @@ final class CuratorRoom
     /** The title the edit page shows in the about chip; none while the submission is held. */
     public function submissionTitle(int $id): ?string
     {
-        $t = $this->db->fetchOne('SELECT title FROM submission WHERE id = :id AND escalated_at IS NULL', ['id' => $id]);
+        $t = $this->db->fetchOne("SELECT title FROM submission WHERE id = :id AND escalated_at IS NULL AND status <> 'trashed'", ['id' => $id]);
 
         return false === $t ? null : (string) $t;
     }
 
     private function submissionExists(int $id): bool
     {
-        return false !== $this->db->fetchOne('SELECT 1 FROM submission WHERE id = :id AND escalated_at IS NULL', ['id' => $id]);
+        return false !== $this->db->fetchOne("SELECT 1 FROM submission WHERE id = :id AND escalated_at IS NULL AND status <> 'trashed'", ['id' => $id]);
     }
 
     private function isCurator(int $userId): bool

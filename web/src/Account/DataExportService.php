@@ -107,6 +107,8 @@ final class DataExportService
 
     /**
      * Submissions and accepted field changes. `decided_by` is never exported.
+     * A row in the curators' Trash is shown nowhere, here included
+     * (moderation-and-contribution.md §6).
      *
      * @return array<string, mixed>
      */
@@ -186,7 +188,7 @@ final class DataExportService
     {
         return $this->decodeAll($this->db->fetchAllAssociative(
             'SELECT id, kind, sender, channel, ref_id, ref_label, body_key, body_params,
-                    body_text, media_id, created_at, read_at
+                    body_text, media_id, created_at, read_at, trashed_at
              FROM user_message WHERE user_id = ? ORDER BY created_at',
             [$userId],
         ), ['body_params']);

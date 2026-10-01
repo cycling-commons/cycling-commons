@@ -14,7 +14,6 @@ use App\Catalog\RouteMetadata;
 use App\Catalog\RouteSuggestionStatus;
 use App\Entity\User;
 use App\Media\MediaDecisionService;
-use App\Media\MediaDisposalService;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
@@ -22,6 +21,7 @@ use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 
 /**
  * Write-path for route moderation. Region cap is enforced on approve.
@@ -44,7 +44,7 @@ final class RouteModerationService
         private readonly AdminActionLogger $adminLog,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly MediaDecisionService $mediaDecisions,
-        private readonly MediaDisposalService $mediaDisposal,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -249,7 +249,7 @@ final class RouteModerationService
      */
     public function resolveSuggestion(int $suggestionId, RouteSuggestionStatus $status, User $curator, array $rejectMediaIds = []): RouteSuggestion
     {
-        if (RouteSuggestionStatus::Pending === $status) {
+        if (!\in_array($status, [RouteSuggestionStatus::Done, RouteSuggestionStatus::Dismissed], true)) {
             throw new \LogicException('Resolution must be done or dismissed.');
         }
 
@@ -286,28 +286,58 @@ final class RouteModerationService
     }
 
     /**
-     * Hard-delete a route correction in any status.
+     * Move a route correction in any status to Trash: kept with its photos
+     * and its thread for TrashBin::TRASH_DAYS days, hidden everywhere but the
+     * Trash list, then purged (TrashBin). No message to the rider.
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
     public function trashSuggestion(int $id, User $curator): void
     {
         $this->em->wrapInTransaction(function () use ($id, $curator): void {
-            $s = $this->em->find(RouteSuggestion::class, $id);
-            if (null === $s) {
+            $s = $this->em->find(RouteSuggestion::class, $id, LockMode::PESSIMISTIC_WRITE);
+            if (null === $s || $s->isTrashed()) {
                 throw new \InvalidArgumentException(sprintf('Suggestion %d not found.', $id));
             }
             $route = $this->em->find(RecommendedRoute::class, $s->getRouteId());
             $this->assertInScope($curator, $route?->getRegionId());
 
             $this->adminLog->log($curator, TrashActions::TrashCorrection, null, sprintf('suggestion %d on route %d', $id, $s->getRouteId()));
-            $this->mediaDisposal->purgeForRoute($s->getRouteId(), $id);
-            $this->em->remove($s);
+            $now = $this->clock->now();
+            $s->moveToTrash((int) $curator->getId(), $now);
+            $this->messages->trashThread('correction', $id, $now);
         });
     }
 
     /**
-     * Hard-delete a proposal only while submitted or rejected.
+     * Take a route correction out of Trash, back to the status it had, its
+     * thread with it. No message to the rider.
+     *
+     * @throws \InvalidArgumentException when it is not in the bin
+     *
+     * @see docs/specs/moderation-and-contribution.md §6
+     */
+    public function restoreSuggestion(int $id, User $curator): RouteSuggestion
+    {
+        return $this->em->wrapInTransaction(function () use ($id, $curator): RouteSuggestion {
+            $s = $this->em->find(RouteSuggestion::class, $id, LockMode::PESSIMISTIC_WRITE);
+            if (null === $s || !$s->isTrashed()) {
+                throw new \InvalidArgumentException(sprintf('Suggestion %d is not in Trash.', $id));
+            }
+            $route = $this->em->find(RecommendedRoute::class, $s->getRouteId());
+            $this->assertInScope($curator, $route?->getRegionId());
+
+            $s->restoreFromTrash();
+            $this->messages->restoreThread('correction', $id);
+            $this->adminLog->log($curator, TrashActions::RestoreCorrection, null, sprintf('suggestion %d on route %d', $id, $s->getRouteId()));
+
+            return $s;
+        });
+    }
+
+    /**
+     * Move a proposal to Trash, only while submitted or rejected: kept with
+     * its photos and its thread for TrashBin::TRASH_DAYS days, then purged.
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
@@ -322,8 +352,34 @@ final class RouteModerationService
 
             // Content-free: a submitted name is unvetted free text (docs/specs/moderation-and-contribution.md §6).
             $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf('route %d state=%s', $routeId, $route->getState()->value));
-            $this->mediaDisposal->purgeForRoute($routeId, null);
-            $this->em->remove($route);
+            $now = $this->clock->now();
+            $route->moveToTrash((int) $curator->getId(), $now);
+            $this->messages->trashThread('route', $routeId, $now);
+        });
+    }
+
+    /**
+     * Take a proposal out of Trash, back to submitted or rejected as it was,
+     * its thread with it. No message to the proposer.
+     *
+     * @throws \InvalidArgumentException when it is not in the bin
+     *
+     * @see docs/specs/moderation-and-contribution.md §6
+     */
+    public function restoreProposal(int $routeId, User $curator): RecommendedRoute
+    {
+        return $this->em->wrapInTransaction(function () use ($routeId, $curator): RecommendedRoute {
+            $route = $this->em->find(RecommendedRoute::class, $routeId, LockMode::PESSIMISTIC_WRITE);
+            if (null === $route || !$route->isTrashed()) {
+                throw new \InvalidArgumentException(sprintf('Route %d is not in Trash.', $routeId));
+            }
+            $this->assertInScope($curator, $route->getRegionId());
+
+            $route->restoreFromTrash();
+            $this->messages->restoreThread('route', $routeId);
+            $this->adminLog->log($curator, TrashActions::RestoreRouteProposal, null, sprintf('route %d state=%s', $routeId, $route->getState()->value));
+
+            return $route;
         });
     }
 
@@ -412,10 +468,11 @@ final class RouteModerationService
         );
     }
 
+    /** A route in Trash is found only by restoreProposal(). */
     private function load(int $routeId): RecommendedRoute
     {
         $route = $this->em->find(RecommendedRoute::class, $routeId);
-        if (null === $route) {
+        if (null === $route || $route->isTrashed()) {
             throw new \InvalidArgumentException(sprintf('Route %d not found.', $routeId));
         }
 

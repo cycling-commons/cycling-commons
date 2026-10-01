@@ -13,6 +13,7 @@ use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionReason;
+use App\Catalog\RouteSuggestionStatus;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\AdminActionLog;
@@ -32,10 +33,12 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Task 11 (moderation-feedback spec M9): Trash is an immediate, permanent
- * hard delete for spam/abusive contributions — audited content-free (never
- * the rider's body/note text), and it never writes a UserMessage (trashing
- * must never feed spam back to the spammer).
+ * Trash for spam and abusive contributions: the row goes into the curators'
+ * bin (kept 30 days, restorable, then purged; TrashBinTest owns those), is
+ * audited content-free (never the rider's body/note text), and never writes a
+ * UserMessage (trashing must never feed spam back to the spammer).
+ *
+ * @see docs/specs/moderation-and-contribution.md §6
  */
 final class TrashTest extends WebTestCase
 {
@@ -196,7 +199,7 @@ final class TrashTest extends WebTestCase
 
     // ── Service layer: content-free audit, no message, state guardrail ─────────
 
-    public function testTrashSubmissionDeletesRowWritesContentFreeAuditAndNoMessage(): void
+    public function testTrashSubmissionPutsTheRowInTheBinWritesContentFreeAuditAndNoMessage(): void
     {
         $rider = $this->rider('sub');
         $sub = $this->seedSubmission((int) $rider->getId());
@@ -205,11 +208,13 @@ final class TrashTest extends WebTestCase
 
         $this->moderation()->trashSubmission($subId, $curator);
 
-        // Doctrine nulls a GeneratedValue identifier on the entity instance
-        // once its row is actually deleted, so the id must be captured
-        // before the call, not read off $sub afterward.
         $this->em()->clear();
-        self::assertNull($this->em()->find(Submission::class, $subId));
+        $kept = $this->em()->find(Submission::class, $subId);
+        self::assertNotNull($kept, 'Trash keeps the row for its 30 days');
+        self::assertSame(SubmissionStatus::Trashed, $kept->getStatus());
+        self::assertSame(SubmissionStatus::Pending, $kept->getTrashedFrom(), 'the status a restore puts back');
+        self::assertSame((int) $curator->getId(), $kept->getTrashedBy());
+        self::assertNotNull($kept->getTrashedAt());
 
         $log = $this->adminLogFor(TrashActions::TrashSubmission);
         self::assertNotNull($log);
@@ -222,13 +227,13 @@ final class TrashTest extends WebTestCase
     }
 
     /**
-     * Trash removes the content and its history at once, and the submission's
-     * message thread is part of that history: the needs-info question, the
-     * rider's reply and a curator's note all go, from both inboxes. A thread
-     * about another submission, or another channel's thread that happens to
-     * carry the same number, stays.
+     * Trash takes the submission's thread out of both inboxes at once and
+     * keeps it with the row: the needs-info question, the rider's reply and a
+     * curator's note are all still stored, and none of them is listed. A
+     * thread about another submission, or another channel's thread that
+     * happens to carry the same number, stays in view.
      */
-    public function testTrashSubmissionDeletesItsMessageThreadForBothParties(): void
+    public function testTrashSubmissionHidesItsMessageThreadFromBothInboxesAndKeepsIt(): void
     {
         $rider = $this->rider('sub-thread');
         $curator = $this->curator();
@@ -254,26 +259,33 @@ final class TrashTest extends WebTestCase
 
         $this->em()->clear();
         $db = $this->em()->getConnection();
-        self::assertSame(0, (int) $db->fetchOne(
-            "SELECT COUNT(*) FROM user_message WHERE channel = 'submission' AND ref_id = ?",
+        self::assertSame(3, (int) $db->fetchOne(
+            "SELECT COUNT(*) FROM user_message WHERE channel = 'submission' AND ref_id = ? AND trashed_at IS NOT NULL",
             [$subId],
-        ), 'no message about the trashed submission is left, in either inbox');
-        $left = array_map(static fn (UserMessage $m): int => (int) $m->getId(), [...$this->messagesFor($riderId), ...$this->messagesFor($curatorId)]);
-        sort($left);
+        ), 'the whole thread is kept with the row, marked as in the bin');
+        $listed = [];
+        foreach ([$riderId, $curatorId] as $reader) {
+            foreach ($messages->listFor($reader, 0, 100) as $m) {
+                $listed[] = (int) $m->getId();
+            }
+            foreach ($messages->repliesBySender($reader, [$subId]) as $m) {
+                $listed[] = (int) $m->getId();
+            }
+        }
+        $listed = array_values(array_unique($listed));
+        sort($listed);
         sort($keptIds);
-        self::assertSame($keptIds, $left, 'only the other submission\'s thread and the route thread remain');
+        self::assertSame($keptIds, $listed, 'only the other submission\'s thread and the route thread are in any inbox');
+        self::assertSame(2, $messages->unreadCount($riderId), 'the hidden thread counts towards no unread badge');
     }
 
     /**
-     * Trashing a NEW-place submission takes its unapproved item with it.
-     *
-     * Intake creates the item up front in state `submitted` so the pending pin
-     * reaches the curator's map. Trash used to delete only the submission,
-     * stranding that item for good — `source_ref` pointing at a submission that
-     * no longer exists, and nothing anywhere to sweep it (owner-reported
-     * 2026-08-03).
+     * Trashing a NEW-place submission takes its unapproved item off the map
+     * with it. Intake creates the item up front in state `submitted` so the
+     * pending pin reaches the curator's map; in the bin it is `trashed`,
+     * which no layer serves, and the purge deletes it with the submission.
      */
-    public function testTrashSubmissionAlsoRemovesItsUnapprovedNewItem(): void
+    public function testTrashSubmissionAlsoTakesItsUnapprovedNewItemOffTheMap(): void
     {
         $rider = $this->rider('sub-newitem');
         $sub = $this->seedSubmission((int) $rider->getId());
@@ -284,8 +296,8 @@ final class TrashTest extends WebTestCase
         $this->moderation()->trashSubmission($subId, $this->curator());
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(Submission::class, $subId));
-        self::assertNull($this->em()->find(Item::class, $itemId), 'the unapproved item goes with the submission');
+        self::assertSame(SubmissionStatus::Trashed, $this->em()->find(Submission::class, $subId)?->getStatus());
+        self::assertSame(ItemState::Trashed, $this->em()->find(Item::class, $itemId)?->getState(), 'the unapproved item waits in the bin with the submission');
     }
 
     /**
@@ -304,8 +316,8 @@ final class TrashTest extends WebTestCase
         $this->moderation()->trashSubmission($subId, $this->curator());
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(Submission::class, $subId));
-        self::assertNotNull($this->em()->find(Item::class, $itemId), 'an approved catalogue item survives Trash');
+        self::assertSame(SubmissionStatus::Trashed, $this->em()->find(Submission::class, $subId)?->getStatus());
+        self::assertSame(ItemState::Unverified, $this->em()->find(Item::class, $itemId)?->getState(), 'an approved catalogue item survives Trash untouched');
     }
 
     /**
@@ -326,7 +338,7 @@ final class TrashTest extends WebTestCase
         $this->moderation()->trashSubmission($subId, $this->curator());
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(Submission::class, $subId));
+        self::assertSame(SubmissionStatus::Trashed, $this->em()->find(Submission::class, $subId)?->getStatus());
         $still = $this->em()->find(Item::class, $itemId);
         self::assertNotNull($still, 'the edited item survives');
         self::assertSame('Tough', $still->getAttributes()['effort'] ?? null, 'and keeps its pre-edit value');
@@ -372,10 +384,12 @@ final class TrashTest extends WebTestCase
         $this->moderation()->trashSubmission($subId, $this->curator());
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(Submission::class, $subId));
+        $kept = $this->em()->find(Submission::class, $subId);
+        self::assertSame(SubmissionStatus::Trashed, $kept?->getStatus());
+        self::assertSame(SubmissionStatus::Rejected, $kept->getTrashedFrom());
     }
 
-    public function testTrashSuggestionDeletesRowIncludingSegmentsWritesContentFreeAuditAndNoMessage(): void
+    public function testTrashSuggestionPutsTheRowInTheBinWritesContentFreeAuditAndNoMessage(): void
     {
         $rider = $this->rider('corr');
         $route = $this->route(ItemState::Verified);
@@ -387,8 +401,11 @@ final class TrashTest extends WebTestCase
         $this->routeModeration()->trashSuggestion($sId, $curator);
 
         $this->em()->clear();
-        // The row (and its `segments` JSON column) is entirely gone.
-        self::assertNull($this->em()->find(RouteSuggestion::class, $sId));
+        // The row, segments and all, waits in the bin.
+        $kept = $this->em()->find(RouteSuggestion::class, $sId);
+        self::assertSame(RouteSuggestionStatus::Trashed, $kept?->getStatus());
+        self::assertSame(RouteSuggestionStatus::Pending, $kept->getTrashedFrom());
+        self::assertEquals([['start' => 0.1, 'end' => 0.4]], $kept->getSegments());
 
         $log = $this->adminLogFor(TrashActions::TrashCorrection);
         self::assertNotNull($log);
@@ -399,7 +416,7 @@ final class TrashTest extends WebTestCase
         self::assertCount(0, $this->messagesFor((int) $rider->getId()));
     }
 
-    public function testTrashProposalInSubmittedDeletesRowWritesContentFreeAudit(): void
+    public function testTrashProposalInSubmittedPutsTheRouteInTheBinWritesContentFreeAudit(): void
     {
         $rider = $this->rider('prop-submitted');
         $route = $this->route(ItemState::Submitted, (int) $rider->getId());
@@ -409,7 +426,9 @@ final class TrashTest extends WebTestCase
         $this->routeModeration()->trashProposal($routeId, $curator);
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(RecommendedRoute::class, $routeId));
+        $kept = $this->em()->find(RecommendedRoute::class, $routeId);
+        self::assertSame(ItemState::Trashed, $kept?->getState());
+        self::assertSame(ItemState::Submitted, $kept->getTrashedFrom());
 
         $log = $this->adminLogFor(TrashActions::TrashRouteProposal);
         self::assertNotNull($log);
@@ -425,7 +444,7 @@ final class TrashTest extends WebTestCase
      * detail page surface today (detail() 404s a rejected route), so it can
      * only be reached at the service layer.
      */
-    public function testTrashProposalInRejectedDeletesRow(): void
+    public function testTrashProposalInRejectedPutsTheRouteInTheBin(): void
     {
         $route = $this->route(ItemState::Rejected);
         $routeId = (int) $route->getId();
@@ -433,7 +452,9 @@ final class TrashTest extends WebTestCase
         $this->routeModeration()->trashProposal($routeId, $this->curator());
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(RecommendedRoute::class, $routeId));
+        $kept = $this->em()->find(RecommendedRoute::class, $routeId);
+        self::assertSame(ItemState::Trashed, $kept?->getState());
+        self::assertSame(ItemState::Rejected, $kept->getTrashedFrom());
     }
 
     public function testTrashProposalBlockedForAnActiveRouteThrowsAndWritesNoAudit(): void
@@ -463,7 +484,7 @@ final class TrashTest extends WebTestCase
 
     // ── HTTP layer: routes, CSRF, redirect-after-POST, access control ──────────
 
-    public function testModerateTrashEndpointDeletesSubmissionWithSuccessFlash(): void
+    public function testModerateTrashEndpointBinsSubmissionWithSuccessFlash(): void
     {
         $client = static::createClient();
         $rider = $this->rider('http-sub');
@@ -480,10 +501,10 @@ final class TrashTest extends WebTestCase
         ]);
         self::assertResponseRedirects();
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash-success', 'Trashed');
+        self::assertSelectorTextContains('.flash-success', 'Moved to Trash');
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(Submission::class, $sub->getId()));
+        self::assertSame(SubmissionStatus::Trashed, $this->em()->find(Submission::class, $sub->getId())?->getStatus());
     }
 
     public function testModerateTrashEndpointRiderIsForbidden(): void
@@ -526,7 +547,7 @@ final class TrashTest extends WebTestCase
         self::assertNotNull($this->em()->find(Submission::class, $sub->getId()));
     }
 
-    public function testRouteTrashEndpointDeletesCorrectionWithSuccessFlash(): void
+    public function testRouteTrashEndpointBinsCorrectionWithSuccessFlash(): void
     {
         $client = static::createClient();
         $rider = $this->rider('http-corr');
@@ -544,13 +565,13 @@ final class TrashTest extends WebTestCase
         ]);
         self::assertResponseRedirects('/moderate/routes');
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash-success', 'Trashed');
+        self::assertSelectorTextContains('.flash-success', 'Moved to Trash');
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(RouteSuggestion::class, $s->getId()));
+        self::assertSame(RouteSuggestionStatus::Trashed, $this->em()->find(RouteSuggestion::class, $s->getId())?->getStatus());
     }
 
-    public function testRouteTrashEndpointDeletesASubmittedProposalWithSuccessFlash(): void
+    public function testRouteTrashEndpointBinsASubmittedProposalWithSuccessFlash(): void
     {
         $client = static::createClient();
         $rider = $this->rider('http-prop');
@@ -567,10 +588,10 @@ final class TrashTest extends WebTestCase
         ]);
         self::assertResponseRedirects('/moderate/routes');
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash-success', 'Trashed');
+        self::assertSelectorTextContains('.flash-success', 'Moved to Trash');
 
         $this->em()->clear();
-        self::assertNull($this->em()->find(RecommendedRoute::class, $route->getId()));
+        self::assertSame(ItemState::Trashed, $this->em()->find(RecommendedRoute::class, $route->getId())?->getState());
     }
 
     /**
@@ -669,11 +690,12 @@ final class TrashTest extends WebTestCase
         ]);
         self::assertResponseStatusCodeSame(403, 'a bad token destroys nothing');
 
+        // A GET only shows the bin; it trashes nothing.
         $client->request('GET', '/moderate/trash?kind=submission&id='.$sub->getId());
-        self::assertResponseStatusCodeSame(405, 'and neither does a GET');
+        self::assertResponseIsSuccessful();
 
         $this->em()->clear();
-        self::assertNotNull($this->em()->find(Submission::class, $sub->getId()));
+        self::assertSame(SubmissionStatus::Pending, $this->em()->find(Submission::class, $sub->getId())?->getStatus());
     }
 
     public function testRouteTrashStillNeedsAValidToken(): void

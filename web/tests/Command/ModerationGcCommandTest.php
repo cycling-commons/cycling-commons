@@ -17,14 +17,15 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * `app:moderation:gc` (test-suite review 2026-08-24).
+ * `app:moderation:gc`, the wrapper an operator and a timer invoke.
  *
- * RetentionTest owns the retention rules themselves. This pins the wrapper an
- * operator and a cron actually invoke: that it really deletes (there is no dry
- * run here, unlike expire-closures), that it reports honest counts, and that
- * it is safe to run twice.
+ * It empties the curators' Trash of what has waited there longer than 30
+ * days, with its thread, and touches nothing else: a settled submission and
+ * its thread are on no timer (owner 2026-10-01). TrashBinTest owns the bin's
+ * own rules; this pins that the command really deletes, reports honest
+ * counts, is safe to run twice, and leaves settled work alone.
  *
- * @see docs/specs/moderation-and-contribution.md §8
+ * @see docs/specs/moderation-and-contribution.md §6, §8
  */
 final class ModerationGcCommandTest extends KernelTestCase
 {
@@ -39,18 +40,39 @@ final class ModerationGcCommandTest extends KernelTestCase
         $this->db = static::getContainer()->get(Connection::class);
     }
 
-    public function testItDeletesADecidedRowPastTheCutoffAndSaysSo(): void
+    public function testItEmptiesTrashPastThirtyDaysAndSaysSo(): void
     {
-        $old = $this->submission(SubmissionStatus::Rejected, '-4 months');
-        $young = $this->submission(SubmissionStatus::Rejected, '-1 day');
+        $old = $this->trashed(SubmissionStatus::Rejected, '-31 days');
+        $young = $this->trashed(SubmissionStatus::Pending, '-29 days');
 
         $tester = $this->run_();
 
         $tester->assertCommandIsSuccessful();
-        // The count in the output is what a cron log shows; it has to be real.
-        self::assertMatchesRegularExpression('/Deleted \d+ dismissed route correction\(s\) and [1-9]\d* rejected submission\(s\)/', $tester->getDisplay());
-        self::assertFalse($this->exists($old), 'a rejected submission past the cutoff survived the sweep');
-        self::assertTrue($this->exists($young), 'a recently rejected submission was deleted early');
+        // The count in the output is what a timer's log shows; it has to be real.
+        self::assertMatchesRegularExpression('/Deleted from Trash: [1-9]\d* submission\(s\)/', $tester->getDisplay());
+        self::assertFalse($this->exists($old), 'a row 31 days in Trash survived the purge');
+        self::assertTrue($this->exists($young), 'a row 29 days in Trash was deleted early');
+    }
+
+    /**
+     * The old three-month retention sweep is gone: a rejected or withdrawn
+     * submission and its thread stay as long as the rider's account, however
+     * old the decision.
+     */
+    public function testASettledSubmissionAndItsThreadAreNeverCollected(): void
+    {
+        $uid = $this->rider();
+        $rejected = $this->submission(SubmissionStatus::Rejected, '-4 months');
+        $withdrawn = $this->submission(SubmissionStatus::Withdrawn, '-5 years');
+        $this->message($uid, 'submission', (int) $rejected->getId());
+        $this->message($uid, 'submission', (int) $withdrawn->getId());
+
+        $this->run_()->assertCommandIsSuccessful();
+
+        self::assertTrue($this->exists($rejected));
+        self::assertTrue($this->exists($withdrawn));
+        self::assertSame(1, $this->threadSize('submission', (int) $rejected->getId()));
+        self::assertSame(1, $this->threadSize('submission', (int) $withdrawn->getId()));
     }
 
     public function testAPendingRowIsNeverCollected(): void
@@ -66,37 +88,27 @@ final class ModerationGcCommandTest extends KernelTestCase
 
     public function testASecondRunIsAQuietNoOp(): void
     {
-        $this->submission(SubmissionStatus::Rejected, '-4 months');
+        $this->trashed(SubmissionStatus::Pending, '-40 days');
 
         $this->run_();
         $second = $this->run_();
 
         $second->assertCommandIsSuccessful();
-        // Idempotent: a cron that fires twice must not report phantom work.
-        self::assertStringContainsString('Deleted 0 dismissed route correction(s) and 0 rejected submission(s).', $second->getDisplay());
+        // Idempotent: a timer that fires twice must not report phantom work.
+        self::assertStringContainsString('Deleted from Trash: 0 submission(s), 0 route correction(s), 0 route', $second->getDisplay());
     }
 
     /**
-     * A swept submission takes its message thread with it, as Trash does
-     * (MessageService::deleteThread()): a rider's inbox never keeps a
-     * conversation about a row that no longer exists. Held and young rows
-     * keep theirs. A dismissed route correction past the cutoff goes with its
-     * thread too.
+     * A purged row takes its message thread with it. A row under legal hold
+     * stays in the bin with its thread, however long it has been there.
      */
-    public function testASweptSubmissionTakesItsMessageThreadWithIt(): void
+    public function testAPurgedRowTakesItsMessageThreadWithIt(): void
     {
-        $rider = (new User())->setEmail('gc-thread-'.uniqid('', true).'@test.test');
-        $rider->setPassword('x');
-        $this->em->persist($rider);
-        $this->em->flush();
-        $uid = (int) $rider->getId();
-
-        $rejected = $this->submission(SubmissionStatus::Rejected, '-4 months');
-        $withdrawn = $this->submission(SubmissionStatus::Withdrawn, '-4 months');
-        $held = $this->submission(SubmissionStatus::Rejected, '-4 months');
+        $uid = $this->rider();
+        $gone = $this->trashed(SubmissionStatus::NeedsInfo, '-31 days');
+        $held = $this->trashed(SubmissionStatus::Pending, '-90 days');
         $this->db->executeStatement('UPDATE submission SET escalated_at = NOW() WHERE id = ?', [$held->getId()]);
-        $young = $this->submission(SubmissionStatus::Rejected, '-1 day');
-        foreach ([$rejected, $withdrawn, $held, $young] as $sub) {
+        foreach ([$gone, $held] as $sub) {
             $this->message($uid, 'submission', (int) $sub->getId());
             $this->message($uid, 'submission', (int) $sub->getId());
         }
@@ -106,23 +118,31 @@ final class ModerationGcCommandTest extends KernelTestCase
              VALUES ('gc thread route', ST_SetSRID(ST_GeomFromText('LINESTRING(5.2 50.4, 5.3 50.5)'), 4326), 5000, 'unverified', 'user', :ref, '{}', NOW(), NOW()) RETURNING id",
             ['ref' => 'user:gc-'.uniqid()],
         );
-        $dismissed = (int) $this->db->fetchOne(
-            "INSERT INTO route_suggestion (route_id, user_id, reason, status, created_at, resolved_at, resolved_by)
-             VALUES (:r, :u, 'other', 'dismissed', NOW() - INTERVAL '5 months', NOW() - INTERVAL '4 months', 1) RETURNING id",
+        $correction = (int) $this->db->fetchOne(
+            "INSERT INTO route_suggestion (route_id, user_id, reason, status, created_at, trashed_at, trashed_by, trashed_from)
+             VALUES (:r, :u, 'other', 'trashed', NOW() - INTERVAL '40 days', NOW() - INTERVAL '31 days', 1, 'pending') RETURNING id",
             ['r' => $route, 'u' => $uid],
         );
-        $this->message($uid, 'correction', $dismissed);
+        $this->message($uid, 'correction', $correction);
 
         $this->run_()->assertCommandIsSuccessful();
 
-        self::assertFalse($this->exists($rejected));
-        self::assertFalse($this->exists($withdrawn));
-        self::assertSame(0, $this->threadSize('submission', (int) $rejected->getId()), 'the rejected row left its thread behind');
-        self::assertSame(0, $this->threadSize('submission', (int) $withdrawn->getId()), 'the withdrawn row left its thread behind');
-        self::assertTrue($this->exists($held), 'a held row is never swept');
+        self::assertFalse($this->exists($gone));
+        self::assertSame(0, $this->threadSize('submission', (int) $gone->getId()), 'the purged row left its thread behind');
+        self::assertTrue($this->exists($held), 'a held row is never purged');
         self::assertSame(2, $this->threadSize('submission', (int) $held->getId()), 'a held row keeps its thread');
-        self::assertSame(2, $this->threadSize('submission', (int) $young->getId()), 'a young row keeps its thread');
-        self::assertSame(0, $this->threadSize('correction', $dismissed), 'the dismissed correction left its thread behind');
+        self::assertFalse((bool) $this->db->fetchOne('SELECT 1 FROM route_suggestion WHERE id = ?', [$correction]));
+        self::assertSame(0, $this->threadSize('correction', $correction), 'the purged correction left its thread behind');
+    }
+
+    private function rider(): int
+    {
+        $rider = (new User())->setEmail('gc-thread-'.uniqid('', true).'@test.test');
+        $rider->setPassword('x');
+        $this->em->persist($rider);
+        $this->em->flush();
+
+        return (int) $rider->getId();
     }
 
     private function message(int $userId, string $channel, int $refId): void
@@ -147,10 +167,20 @@ final class ModerationGcCommandTest extends KernelTestCase
         return $tester;
     }
 
+    /** A row put in the bin `$ago`, the way Trash leaves it. */
+    private function trashed(SubmissionStatus $from, string $ago): Submission
+    {
+        $sub = $this->submission($from, null);
+        $sub->moveToTrash(1, new \DateTimeImmutable($ago));
+        $this->em->flush();
+
+        return $sub;
+    }
+
     private function submission(SubmissionStatus $status, ?string $decidedAt): Submission
     {
         $sub = (new Submission())
-            ->setType(SubmissionType::NewItem)->setLetter('D')->setUserId(7)
+            ->setType(SubmissionType::Edit)->setLetter('D')->setUserId(7)
             ->setStatus($status)->setTitle('gc-cmd fixture '.uniqid())
             ->setGeom('{"type":"Point","coordinates":[5.5,50.5]}')
             ->setCountryCode('BE')

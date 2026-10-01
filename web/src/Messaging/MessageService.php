@@ -148,6 +148,8 @@ final class MessageService
             ->andWhere($qb->expr()->orX('m.userId = :id', 'm.senderId = :id'))
             // Rider replies stay on the desk; the controller re-attaches the reader's own.
             ->andWhere('m.kind != :moderationReply')
+            // A thread whose row is in Trash is in no inbox (moderation-and-contribution.md §6).
+            ->andWhere('m.trashedAt IS NULL')
             ->setParameter('moderationReply', UserMessageKind::RiderReply)
             ->setParameter('id', $userId)
             ->orderBy('m.createdAt', 'DESC')
@@ -164,7 +166,7 @@ final class MessageService
     public function countFor(int $userId, ?MessageCategory $category = null, bool $unreadOnly = false): int
     {
         $sql = 'SELECT COUNT(*) FROM user_message
-                 WHERE (user_id = :u OR sender_id = :u) AND kind <> :moderationReply';
+                 WHERE (user_id = :u OR sender_id = :u) AND kind <> :moderationReply AND trashed_at IS NULL';
         $params = ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value];
         $types = [];
 
@@ -193,7 +195,7 @@ final class MessageService
                     COUNT(*) AS n,
                     COUNT(*) FILTER (WHERE read_at IS NULL AND user_id = :u) AS unread
                FROM user_message
-              WHERE (user_id = :u OR sender_id = :u) AND kind <> :moderationReply
+              WHERE (user_id = :u OR sender_id = :u) AND kind <> :moderationReply AND trashed_at IS NULL
               GROUP BY kind',
             ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value],
         );
@@ -242,6 +244,7 @@ final class MessageService
             ->where('m.senderId = :id')
             ->andWhere('m.kind = :moderationReply')
             ->andWhere('m.channel = :channel')
+            ->andWhere('m.trashedAt IS NULL')
             ->andWhere($qb->expr()->in('m.refId', ':refIds'))
             ->setParameter('id', $userId)
             ->setParameter('moderationReply', UserMessageKind::RiderReply)
@@ -259,7 +262,7 @@ final class MessageService
     {
         return (int) $this->db->fetchOne(
             'SELECT COUNT(*) FROM user_message
-             WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply',
+             WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply AND trashed_at IS NULL',
             ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value],
         );
     }
@@ -268,7 +271,7 @@ final class MessageService
     {
         $this->db->executeStatement(
             'UPDATE user_message SET read_at = now()
-             WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply',
+             WHERE user_id = :u AND read_at IS NULL AND kind <> :moderationReply AND trashed_at IS NULL',
             ['u' => $userId, 'moderationReply' => UserMessageKind::RiderReply->value],
         );
     }
@@ -286,7 +289,7 @@ final class MessageService
 
         $this->db->executeStatement(
             'UPDATE user_message SET read_at = now()
-             WHERE user_id = :u AND read_at IS NULL AND id IN (:ids)',
+             WHERE user_id = :u AND read_at IS NULL AND trashed_at IS NULL AND id IN (:ids)',
             ['u' => $userId, 'ids' => $ids],
             ['ids' => ArrayParameterType::INTEGER],
         );
@@ -302,7 +305,7 @@ final class MessageService
      */
     public function markOpened(int $userId, int $id): ?bool
     {
-        $recipient = $this->db->fetchOne('SELECT user_id FROM user_message WHERE id = :id', ['id' => $id]);
+        $recipient = $this->db->fetchOne('SELECT user_id FROM user_message WHERE id = :id AND trashed_at IS NULL', ['id' => $id]);
         if (false === $recipient || (int) $recipient !== $userId) {
             return null;
         }
@@ -310,6 +313,37 @@ final class MessageService
         return 1 === (int) $this->db->executeStatement(
             'UPDATE user_message SET read_at = now() WHERE id = :id AND user_id = :u AND read_at IS NULL',
             ['id' => $id, 'u' => $userId],
+        );
+    }
+
+    /**
+     * Take one thread out of every inbox while the row it is about sits in
+     * Trash: each message on this channel about this reference, whoever sent
+     * or received it, stays stored and is shown nowhere but the Trash list.
+     * Runs inside the caller's transaction.
+     *
+     * @see docs/specs/moderation-and-contribution.md §6
+     *
+     * @return int messages hidden
+     */
+    public function trashThread(string $channel, int $refId, \DateTimeImmutable $at): int
+    {
+        return (int) $this->db->executeStatement(
+            'UPDATE user_message SET trashed_at = :at WHERE channel = :channel AND ref_id = :ref AND trashed_at IS NULL',
+            ['at' => $at->format('Y-m-d H:i:s'), 'channel' => $channel, 'ref' => $refId],
+        );
+    }
+
+    /**
+     * Put a restored row's thread back where it was, read state and all.
+     *
+     * @return int messages shown again
+     */
+    public function restoreThread(string $channel, int $refId): int
+    {
+        return (int) $this->db->executeStatement(
+            'UPDATE user_message SET trashed_at = NULL WHERE channel = :channel AND ref_id = :ref AND trashed_at IS NOT NULL',
+            ['channel' => $channel, 'ref' => $refId],
         );
     }
 

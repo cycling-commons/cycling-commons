@@ -27,9 +27,9 @@ use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OsmUnansweredException;
 use App\Moderation\OutOfScopeException;
-use App\Moderation\RetentionService;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TextCreditUndecidedException;
+use App\Moderation\TrashBin;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -56,7 +56,7 @@ final class ModerateController extends AbstractController
     public function __construct(
         private readonly ModerationService $moderation,
         private readonly SubmissionQueue $queue,
-        private readonly RetentionService $retention,
+        private readonly TrashBin $trashBin,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly MediaTakedownService $takedowns,
         private readonly MediaEscalationService $escalations,
@@ -71,7 +71,7 @@ final class ModerateController extends AbstractController
     #[Route('/moderate/submissions', name: 'moderate_submissions')]
     public function index(Request $request): Response
     {
-        $this->retention->sweepOpportunistically();
+        $this->trashBin->sweepOpportunistically();
 
         return $this->renderQueue(
             $request->query->getString('country'),
@@ -242,7 +242,7 @@ final class ModerateController extends AbstractController
         }
 
         $submission = $this->em->find(Submission::class, $submissionId);
-        if (null === $submission || null === $submission->getItemId()) {
+        if (null === $submission || null === $submission->getItemId() || $submission->isTrashed()) {
             return $refuse('bad_ref');
         }
         // Same boundary decide() enforces, before anything is written.
@@ -378,7 +378,7 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * Permanent hard delete of a spam/abusive submission. Audited content-free; no rider message.
+     * A spam/abusive submission into the curators' Trash for 30 days. Audited content-free; no rider message.
      *
      * @see docs/specs/moderation-and-contribution.md §5
      */

@@ -296,18 +296,18 @@ curates it.** Until then it exists for us purely as cached coverage (category 1)
                  │
                  ▼
         materialize into canonical store
-     { osm_ref + submitted edit }   ── policy violation ──▶  trashed immediately
-                 │                                            (no retention)
+     { osm_ref + submitted edit }   ── policy violation ──▶  trashed: hidden,
+                 │                                            deleted after 30 days
           moderation review
         (optional double-check)
              ┌───┴───┐
         approve     reject
              │         │
              ▼         ▼
-      curated item   retained 3 months
-      (category 2)   (dispute window)
+      curated item   kept while the
+      (category 2)   rider's account is
                          │
-                    GC deletes
+                account deletion deletes
 ```
 
 Rules:
@@ -354,10 +354,11 @@ Rules:
     reappears in the hole the item left. The row itself stays - a curator may
     disagree, and the report is a record either way.
 - **Approve → stays** as a curated category-2 item.
-- **Reject → retained 3 months**, then the garbage collector deletes it. The
-  window exists to handle disputes: we keep the record long enough to review a
-  challenge.
-- **Policy-violating content is trashed immediately**, with no retention window.
+- **Reject → kept as long as the rider's account**, and deleted with it
+  (moderation-and-contribution.md §8). The record stays to handle a dispute.
+- **Policy-violating content is trashed**: hidden at once, kept 30 days in the
+  curators' bin in case it was a mistake, then deleted for good
+  (moderation-and-contribution.md §6).
 - **Optional double-moderator check** for safety-sensitive or contested items.
 
 This lifecycle rides the existing submission / moderation / retention (Trash)

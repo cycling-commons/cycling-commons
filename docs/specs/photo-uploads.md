@@ -281,7 +281,7 @@ design preference of its own:
 
 | column | why §6 requires it |
 |---|---|
-| `decided_at` (nullable) | §6 retains rejected media for `moderation.retention_months`; that window has to measure from a rejection timestamp |
+| `decided_at` (nullable) | §6 keeps a rejected photo's files for `moderation.retention_months`; that window has to measure from a rejection timestamp |
 | `objects_deleted_at` (nullable) | the tombstone marker — without it the sweep would retry a row whose objects are already gone, forever |
 | `item_id` (nullable) | the deletion hook must find the approved photo's item to anonymize its credit, and walking `submission_id → submission → item_id` breaks once retention purges the submission |
 | `credit_frozen` (nullable) | once the account is gone there is no profile left to resolve a credit from, so §6's departing-rider choice is frozen onto the row (`''` = anonymous, `null` = the account still exists) |
@@ -1197,10 +1197,11 @@ map payload serves the route's `photos` alongside `photo`
 
 The disposal *classes* are owned by
 [moderation-and-contribution.md](moderation-and-contribution.md) — one
-source of truth: **rejected** content is retained
-`moderation.retention_months` (M8) and **Trash** is the immediate,
-no-retention hard delete for spam/abuse/policy-violating (incl. illegal)
-content, with only a content-free audit row (§6/M9). This document does not
+source of truth: a **rejected** submission is kept as long as the rider's
+account (moderation-and-contribution.md §8), and **Trash** keeps a trashed row
+30 days in the curators' bin and then purges it for spam/abuse/policy-violating
+content, with only a content-free audit row left (moderation-and-contribution.md
+§6). This document does not
 restate that machinery; it defines only what those classes MEAN for media
 objects, plus the one media-only class:
 
@@ -1211,17 +1212,20 @@ objects, plus the one media-only class:
   its history has something to hang on; an orphan was never moderated, so a
   log with no row would be litter rather than history. Trash was already the
   other stated exception.
-- **Rejected** — follows the standard retention window
-  (`moderation.retention_months`); when it lapses, the bucket objects are
-  deleted and the row is kept as a tombstone (audit).
-- **Trashed:** when a submission, a route proposal or a route correction
-  (§5i) is Trashed, its photos follow Trash
-  semantics *exactly*: bucket objects, `media_upload` rows, AND their
-  `media_moderation_event` rows are hard-deleted **immediately** — no
-  retention window, and no content survives, consistent with Trash's
-  content-free principle (the submission's content-free Trash audit row is
-  the only trace). This is the deliberate exception to §5b's
-  "events survive forever".
+- **Rejected:** kept for `moderation.retention_months` (system-configuration.md
+  §2, 3 by default) after the decision; when it lapses, `app:media:gc`
+  deletes the bucket objects and keeps the row as a tombstone (audit). This
+  window is the setting's only job.
+- **Trashed:** while a submission, a route proposal or a route correction
+  (§5i) waits in the curators' Trash, its photos are untouched (a pending one
+  stays pending and unpublished). When the purge deletes the row, 30 days
+  later (`TrashBin`), its photos follow Trash semantics *exactly*: bucket
+  objects, `media_upload` rows, AND their `media_moderation_event` rows are
+  hard-deleted, and no content survives, consistent with Trash's
+  content-free principle (the content-free Trash audit row is the only
+  trace). This is the deliberate exception to §5b's "events survive
+  forever". A restore inside the 30 days leaves the photos exactly as they
+  were.
 
 One console command (`app:media:gc`, cron-able, ResetPasswordCleanup
 shape) sweeps the first two classes; Trash deletion is synchronous with
@@ -1551,15 +1555,17 @@ escalated it, when, and in whose words.
 
 **The hold is enforced at the chokepoint.** For photos, every destructive path
 funnels through `MediaDisposalService::purge()` / `deleteObjects()`, and both
-refuse a held row, so Trash, orphan collection, the retention sweep and account
-deletion all stop there — a hold that one forgotten path could bypass is not a
+refuse a held row, so the Trash purge, orphan collection, the rejected-photo
+sweep and account deletion all stop there: a hold that one forgotten path could bypass is not a
 hold. `grant()`, `decline()` and `dismissAsAbuse()` refuse it too, and the desk
 queries exclude it. For submissions the same three places are covered:
 `trashSubmission()` throws on a held row, every `SubmissionQueue` predicate
 adds `escalated_at IS NULL` (including the counts and the country filter, so a
-held row leaves no phantom badge behind), and `RetentionService`'s sweep skips
-it — that sweep is the one deletion path that runs unattended, and therefore
-the one most likely to quietly destroy evidence. Escalating a submission holds
+held row leaves no phantom badge behind), and the unattended deletion paths,
+the Trash purge (`TrashBin::purgeExpired()`) and account deletion
+(`ContributionDeletionHook`), skip it with its thread: they run with nobody
+watching, and are therefore the ones most likely to quietly destroy
+evidence. Escalating a submission holds
 **its attached photos with it**: same act, same person, and leaving them
 decidable would defeat the hold. The refusal is silent and logged rather than thrown: Trash
 sweeps a whole submission, and one held photo must neither abort the rest nor

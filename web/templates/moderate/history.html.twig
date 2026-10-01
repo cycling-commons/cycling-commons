@@ -32,6 +32,7 @@
   <nav class="lfilter" aria-label="{{ 'moderate.desk_aria'|trans }}">
     <a class="lchip" href="{{ path('moderate_submissions') }}">{{ 'moderate.desk_queue'|trans }}</a>
     <a class="lchip on mod-desk-hist" href="{{ path('moderate_history') }}">{{ 'moderate.desk_history'|trans }}</a>
+    <a class="lchip" href="{{ path('moderate_trash_bin') }}">{{ 'moderate.desk_trash'|trans }}</a>
   </nav>
 
   {# The same four selects the queue carries, plus the search: a curator who
@@ -77,10 +78,12 @@
   </div>
 
   {# ── History ── what this desk has already settled.
-     Only approved + rejected can appear: Trash hard-deletes the row and
-     escalation lifts it off every desk, so there is nothing else to filter for
-     (moderation-and-contribution.md §5.2). Plain links, not JS: a filter that
-     survives a reload and can be linked to a colleague is worth a page load. #}
+     Only approved + rejected can appear: a trashed row waits on the Trash
+     page and escalation lifts it off every desk, so there is nothing else to
+     filter for (moderation-and-contribution.md §5.2). The content-free
+     "Trashed" lines are the audit record of each Trash, kept after the purge.
+     Plain links, not JS: a filter that survives a reload and can be linked to
+     a colleague is worth a page load. #}
   <nav class="lfilter" aria-label="{{ 'moderate.history.heading'|trans }}">
     <a class="lchip {{ history_filters.mine ? '' : 'on' }}" href="{{ path('moderate_history', hparams|merge({hstatus: history_filters.status})) }}">{{ 'moderate.history.everyone'|trans }}</a>
     <a class="lchip {{ history_filters.mine ? 'on' : '' }}" href="{{ path('moderate_history', hparams|merge({handled: 'mine', hstatus: history_filters.status})) }}">{{ 'moderate.history.mine'|trans }}</a>

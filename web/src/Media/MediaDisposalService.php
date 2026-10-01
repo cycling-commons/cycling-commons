@@ -8,7 +8,8 @@ namespace App\Media;
 
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
-use App\Moderation\RetentionService;
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
@@ -31,7 +32,7 @@ final class MediaDisposalService
         private readonly MediaDecisionService $decisions,
         private readonly PhotoGallery $gallery,
         private readonly MediaEventLog $events,
-        private readonly RetentionService $retention,
+        private readonly SettingsProviderInterface $settings,
         private readonly ClockInterface $clock,
         private readonly LoggerInterface $logger,
     ) {
@@ -99,9 +100,23 @@ final class MediaDisposalService
         return \count($orphans);
     }
 
+    /**
+     * Rejected before this, a photo's files are due for deletion: the
+     * `moderation.retention_months` window, the one timer that setting still
+     * drives.
+     *
+     * @see docs/specs/photo-uploads.md §6
+     * @see docs/specs/system-configuration.md §2
+     */
+    public function rejectedCutoff(): \DateTimeImmutable
+    {
+        return $this->clock->now()->modify(\sprintf('-%d months', $this->settings->get(SettingsRegistry::MODERATION_RETENTION_MONTHS)));
+    }
+
+    /** A rejected photo's files go after the window; the row stays as a tombstone. */
     public function collectRejected(): int
     {
-        $cutoff = $this->retention->cutoff();
+        $cutoff = $this->rejectedCutoff();
 
         /** @var list<MediaUpload> $expired */
         $expired = $this->em->createQuery(
@@ -120,7 +135,7 @@ final class MediaDisposalService
         return \count($expired);
     }
 
-    /** Trash: everything now, in the caller's transaction. @see docs/specs/photo-uploads.md §6 */
+    /** Trash purge, 30 days after the trash: everything, in the caller's transaction. @see docs/specs/photo-uploads.md §6 */
     public function purgeForSubmission(int $submissionId): int
     {
         $uploads = $this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $submissionId]);
@@ -132,9 +147,9 @@ final class MediaDisposalService
     }
 
     /**
-     * Trash of a route proposal (`$suggestionId` null: the photos sent with
-     * the proposal) or of one photo correction: everything now, in the
-     * caller's transaction.
+     * Trash purge of a route proposal (`$suggestionId` null: the photos sent
+     * with the proposal) or of one photo correction, 30 days after the trash:
+     * everything, in the caller's transaction.
      *
      * @see docs/specs/photo-uploads.md §5i
      */

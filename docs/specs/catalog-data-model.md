@@ -232,11 +232,12 @@ has this option, and there is no all-refs form.
 | `verified` | Passed the community verification gate | Verification mechanics (edit-items/README.md funnel) |
 | `rejected` | Moderation outcome | Moderation |
 | `retired` | Removed from serving | **Curator decision only — never automatic** (a curator running `app:catalog:dedupe --write` after reading its dry run is that decision; see §5a) |
+| `trashed` | In the curators' Trash for 30 days: a route proposal, or the still-`submitted` place of a new-place submission. Restore puts back the state it had; the purge deletes the row | Trash (moderation-and-contribution.md §6) |
 
 `ItemState::SERVED = [Unverified, Verified]` is the single constant defining
 what the public ever sees; every serving query filters through
-`ItemState::servedSqlTuple()`. `submitted`/`rejected`/`retired` are never
-served.
+`ItemState::servedSqlTuple()`. `submitted`/`rejected`/`retired`/`trashed` are
+never served.
 
 **No auto-retire on re-harvest absence.** The harvest is capped/ranked, so
 absence from a re-run can mean "fell below cap", not "deleted upstream".

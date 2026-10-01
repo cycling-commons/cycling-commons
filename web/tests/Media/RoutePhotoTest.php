@@ -27,6 +27,7 @@ use App\Media\ProcessedPhoto;
 use App\Moderation\ModerationScope;
 use App\Moderation\RouteModerationService;
 use App\Moderation\RouteQueue;
+use App\Moderation\TrashBin;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Uid\Uuid;
@@ -295,7 +296,7 @@ final class RoutePhotoTest extends KernelTestCase
         self::assertNotNull($this->em->find(MediaUpload::class, $upload->getId()), 'a photo waiting for a curator is not garbage');
     }
 
-    public function testTrashingAProposalTakesItsPhotosWithIt(): void
+    public function testTrashingAProposalTakesItsPhotosWithItWhenTheBinIsEmptied(): void
     {
         $route = $this->route(ItemState::Submitted);
         $upload = $this->upload();
@@ -303,6 +304,10 @@ final class RoutePhotoTest extends KernelTestCase
         $this->em->flush();
 
         $this->moderation->trashProposal((int) $route->getId(), $this->curator);
+        $this->em->clear();
+        self::assertNotNull($this->em->find(MediaUpload::class, $upload->getId()), 'kept while the proposal waits in Trash');
+
+        static::getContainer()->get(TrashBin::class)->purgeExpired(new \DateTimeImmutable(\sprintf('+%d days', TrashBin::TRASH_DAYS + 1)));
         $this->em->clear();
 
         self::assertNull($this->em->find(MediaUpload::class, $upload->getId()));

@@ -48,13 +48,18 @@ final readonly class MessageMailer
         }
 
         // Re-read: the creating transaction may have rolled back after queueing.
-        // Re-read: the creating transaction may have rolled back after queueing.
         $id = $message->getId();
-        if (null === $id || null === $this->em->find(UserMessage::class, $id)) {
+        $stored = null === $id ? null : $this->em->find(UserMessage::class, $id);
+        // Gone, or its thread went to Trash before this send ran.
+        if (null === $stored || null !== $stored->getTrashedAt()) {
             return;
         }
 
-        $user = $this->em->find(User::class, $message->getUserId());
+        $recipientId = $message->getUserId();
+        if (null === $recipientId) {
+            return;
+        }
+        $user = $this->em->find(User::class, $recipientId);
         if (!$user instanceof User) {
             return;
         }

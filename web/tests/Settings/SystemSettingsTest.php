@@ -8,7 +8,7 @@ namespace App\Tests\Settings;
 
 use App\Catalog\CuratedReadiness;
 use App\Entity\User;
-use App\Moderation\RetentionService;
+use App\Media\MediaDisposalService;
 use App\Repository\AdminActionLogRepository;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
@@ -274,18 +274,23 @@ final class SystemSettingsTest extends KernelTestCase
         self::assertSame(10, $readiness->threshold());
     }
 
-    public function testRetentionCutoffFollowsAChangedRetentionWindow(): void
+    public function testRejectedPhotoWindowFollowsAChangedRetentionSetting(): void
     {
-        /** @var RetentionService $retention */
-        $retention = static::getContainer()->get(RetentionService::class);
-        self::assertSame($this->default(SettingsRegistry::MODERATION_RETENTION_MONTHS), $retention->retentionMonths());
+        // The setting's one remaining job: how long a rejected photo's files
+        // are kept (docs/specs/photo-uploads.md §6). Contributions and their
+        // threads are on no timer (moderation-and-contribution.md §8).
+        /** @var MediaDisposalService $disposal */
+        $disposal = static::getContainer()->get(MediaDisposalService::class);
+        self::assertSame(
+            (new \DateTimeImmutable())->modify(sprintf('-%d months', $this->default(SettingsRegistry::MODERATION_RETENTION_MONTHS)))->format('Y-m'),
+            $disposal->rejectedCutoff()->format('Y-m'),
+        );
 
         $this->writer->set(SettingsRegistry::MODERATION_RETENTION_MONTHS, 12, null);
 
-        self::assertSame(12, $retention->retentionMonths());
         self::assertSame(
             (new \DateTimeImmutable())->modify('-12 months')->format('Y-m'),
-            $retention->cutoff()->format('Y-m'),
+            $disposal->rejectedCutoff()->format('Y-m'),
         );
     }
 

@@ -674,11 +674,22 @@ with an account**. Removal targets personal data only.
   as contributed-content anonymization is needed, it is written as hooks on
   this seam — contributions are dissociated and retained under an anonymous
   "former contributor" identity, never deleted.
-- **Two intended `user_id` DB cascades:** `user_message` (curator/system
-  correspondence *to* the recipient, not contributed content — contract in
-  [moderation-and-contribution.md](moderation-and-contribution.md)) and
-  `moderator_area` (scoping assignments, meaningless without the curator —
-  same doc). `admin_action_log` FKs are `ON DELETE SET NULL`;
+- **`App\Moderation\ContributionDeletionHook`** (owner 2026-10-01: messages
+  about contributions live as long as the account): deletes the rider's
+  rejected and withdrawn submissions and dismissed route corrections (also
+  while in the curators' Trash) with their threads, then every message
+  addressed to the rider and every reply they wrote to a curator, on any
+  channel. Approved and pending contributions, applied corrections and
+  rejected route proposals stay. A submission under legal hold stays with its
+  whole thread. Contract and table in moderation-and-contribution.md §8;
+  pinned by `tests/Moderation/ContributionRetentionTest.php` for the rider's
+  own deletion and the dormancy sweep.
+- **One intended `user_id` DB cascade:** `moderator_area` (scoping
+  assignments, meaningless without the curator, moderation-and-contribution.md
+  §9). `user_message.user_id` is `ON DELETE SET NULL` since
+  `Version20261001210000`: the hook above deletes the correspondence, and only
+  a held submission's thread reaches the `SET NULL` (moderation-and-contribution.md
+  §7.6, §8). `admin_action_log` FKs are `ON DELETE SET NULL`;
   `reset_password_request.user_id` is a restrictive FK (see above); everything
   else holds plain ids.
 - Admin removal is only offered when the user has a pending self-requested
@@ -927,8 +938,9 @@ lives in the shell header.
   `/moderate/submissions`, and only "MODERATION" with a lit More on
   `/moderate/providers`.
 - Dashboard **Contributions pane** renders the user's real submissions
-  (retention-filtered — a rejected submission past the retention cutoff never
-  renders, see [moderation-and-contribution.md](moderation-and-contribution.md))
+  (every status but `trashed`: a rejected or withdrawn one stays as long as
+  the account, and one in the curators' Trash never renders, see
+  [moderation-and-contribution.md](moderation-and-contribution.md) §6, §8)
   and route proposals as ONE list, newest first, under one `?page=` pager (20
   per page, `ProfileController::contributionsPage()` pages the SQL union of
   both, then loads that page's rows). Owner-reported 2026-09-30: with the
@@ -1011,7 +1023,7 @@ a bookmark still lands. Example: `/fr/messages` goes to
 |---|---|---|
 | Waiting for you | Questions on your contributions (`submission` rows at `needs_info`), questions on your translations (latest proposal per key at `needs_info`), unread messages. A tile with a count has a red edge. | `/account/contributions`, `/translate/mine?status=needs_info`, `/account/messages` |
 | Your work | Contributions at `pending`, route proposals at `submitted`, translations at `pending` (latest per key), own bug reports still open (`BugStatus::open()`) | `/account/contributions`, `/account/contributions`, `/translate/mine?status=pending`, `/account/reports` |
-| Your last contributions | The 5 newest submissions with their status pill, after the same retention filter as `/account/contributions` | `/account/contributions` |
+| Your last contributions | The 5 newest submissions with their status pill, leaving out one in the curators' Trash as `/account/contributions` does | `/account/contributions` |
 | Worth a look near you | The 5 stale places inside the base area (`App\Account\StaleNearby`, the same query `/account/contributions` uses; moderation-and-contribution.md §10.1a). Without a base location: a line and a link to `/account/settings`. | the map, per place |
 
 A zero shows the drawn check mark, named "Clear" for a screen reader. The
@@ -1561,7 +1573,9 @@ A pending self-request is what arms the admin **Execute account removal** /
 `purge()` seam, with audit.
 
 What survives deletion, and why, is stated on the privacy notice rather than
-left implicit: the contributions given to the open map (with provenance), and
+left implicit (`privacy.retention_messages` says what goes: the messages about
+the rider's contributions and the ones turned down or withdrawn): the
+contributions given to the open map (with provenance), and
 the consent ledger, the evidence that a licence was granted at all (CC BY-SA
 4.0 for a photo; for a translation, whichever consent version the translator
 ticked, translations.md §6), kept under Art. 17(3)(e) and disclosed under

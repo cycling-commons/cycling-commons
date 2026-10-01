@@ -156,12 +156,14 @@ write-path — every transition is transactional and appends
   writes a `decision_note` history row).
 - **retire**: only from a SERVED state; **note required**.
 - **verified is sticky**: no automatic demotion; curator retire is the exit.
-- **Trash** (hard, immediate, permanent delete — spam/abuse):
+- **Trash** (spam/abuse; into the curators' bin for 30 days, restorable, then
+  purged with photos and thread, moderation-and-contribution.md §6):
   `trashProposal()` only while `submitted` or `rejected`
-  (`TrashBlockedException` otherwise — never an active or retired route);
-  `trashSuggestion()` at any status. Both audit content-free via
-  `AdminActionLogger` first (no rider-authored text in the immutable log) and
-  never send a message.
+  (`TrashBlockedException` otherwise, never an active or retired route; the
+  route's state becomes `trashed`); `trashSuggestion()` at any status. Both
+  audit content-free via `AdminActionLogger` first (no rider-authored text in
+  the immutable log) and never send a message. Restore is
+  `restoreProposal()` / `restoreSuggestion()` from the Trash page.
 - Curator actions are scoped to the curator's assigned moderation areas
   (`ModerationScopeProvider` — [moderation-and-contribution.md](moderation-and-contribution.md)).
 
@@ -437,12 +439,12 @@ resolved, the bar is gone for every curator.
   either landed before it or waits for the save to commit.
 - **Corrections**: listed against their route with a located-stretch count
   (`jsonb_array_length(segments)`); curator marks done / dismissed (each
-  messages the rider) or Trashes spam (hard delete, no message).
+  messages the rider) or Trashes spam (into the bin for 30 days, no message).
 - **Photos**: a proposal's pending photos show on its detail page inside the
   decision form, a photo correction's on its card, each with its distance to
   the route, its month and a **Keep** box ticked by default. Approve or done
   keeps the ticked photos and rejects the rest; reject or dismiss rejects them
-  all; Trash purges them (photo-uploads.md §5i).
+  all; the Trash purge, 30 days after Trash, deletes them (photo-uploads.md §5i).
 - The desk shows a measured-vs-declared surface hint:
   `SurfaceVocabulary::suggestFromProfile()` folds the measured A-layer
   profile to the coarse Asphalt/Mixed/Gravel buckets (`SurfaceVocabulary::BUCKETS`).
@@ -806,8 +808,8 @@ proposer edits their own proposal directly (route-domain.md §4.6).
   as `now: null`.
 - **How it is moderated: the existing channel, unchanged.** It lands on the
   Routes desk beside every other correction, shown as a was/now card, and is
-  resolved by the same **done / dismissed** verbs, messaged, Trashed and GC'd
-  the same way. No second queue, no new state, no new verb.
+  resolved by the same **done / dismissed** verbs, messaged and Trashed the
+  same way. No second queue, no new state, no new verb.
 - **Why not the item pipeline:** `/improve` builds an *edit submission*, and
   the `submission` table's letter range is A-G, N-Q, and **R bypasses it**
   (moderation-and-contribution.md §3.1), because `submission.item_id`
@@ -1031,10 +1033,10 @@ contract is the consumption semantics:
 - **FIT-file proposals** (GPX only today) and **curator track replacement**
   (which would require re-projecting stored correction fractions,
   route-domain.md §7).
-- **Rejected route-proposal GC** — dismissed corrections and rejected item
-  submissions have a 3-month retention + GC contract
-  ([moderation-and-contribution.md](moderation-and-contribution.md));
-  whether rejected route proposals join it is still open.
+- **Rejected route proposals on account deletion:** a rider's dismissed
+  corrections and rejected item submissions go when their account goes
+  ([moderation-and-contribution.md](moderation-and-contribution.md) §8);
+  whether rejected route proposals join them is still open.
 - **Resolved corrections' segments** are never shown (pending only,
   route-domain.md §7); a history view is recorded future work.
 

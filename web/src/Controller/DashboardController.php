@@ -12,7 +12,6 @@ use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Entity\User;
 use App\Messaging\MessageService;
-use App\Moderation\RetentionService;
 use App\Routing\LocalePrefix;
 use App\Support\SupportRepository;
 use App\Translation\ProposalService;
@@ -51,7 +50,6 @@ final class DashboardController extends AbstractController
         private readonly MessageService $messages,
         private readonly ProposalService $proposals,
         private readonly SupportRepository $support,
-        private readonly RetentionService $retention,
         private readonly StaleNearby $staleNearby,
     ) {
     }
@@ -90,18 +88,17 @@ final class DashboardController extends AbstractController
             ['key' => 'reports', 'route' => 'my_reports', 'params' => [], 'label' => 'support.mine.title', 'note' => 'rider_dashboard.note.not_fixed', 'count' => $this->support->countOpenBugsByUser($userId)],
         ];
 
-        // The same retention filter as /profile: a rejected or withdrawn
-        // submission past the cutoff is gone there, so it is gone here too
-        // (moderation-and-contribution.md §8).
+        // Every contribution the rider still has, as on /profile: a decided
+        // one stays as long as the account (moderation-and-contribution.md
+        // §8); one a curator moved to Trash is shown nowhere (§6).
         /** @var list<Submission> $recent */
         $recent = $this->em->createQueryBuilder()
             ->select('s')
             ->from(Submission::class, 's')
             ->where('s.userId = :uid')
-            ->andWhere('(s.status NOT IN (:swept) OR s.decidedAt IS NULL OR s.decidedAt >= :cutoff)')
+            ->andWhere('s.status <> :trashed')
             ->setParameter('uid', $userId)
-            ->setParameter('swept', [SubmissionStatus::Rejected, SubmissionStatus::Withdrawn])
-            ->setParameter('cutoff', $this->retention->cutoff())
+            ->setParameter('trashed', SubmissionStatus::Trashed)
             ->orderBy('s.createdAt', 'DESC')
             ->addOrderBy('s.id', 'DESC')
             ->setMaxResults(self::RECENT)

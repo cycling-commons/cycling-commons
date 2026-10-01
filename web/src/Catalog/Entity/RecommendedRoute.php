@@ -90,6 +90,17 @@ class RecommendedRoute
     #[ORM\Column(name: 'revised_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $revisedAt = null;
 
+    /** A proposal in the curators' Trash since then (moderation-and-contribution.md §6). */
+    #[ORM\Column(name: 'trashed_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $trashedAt = null;
+
+    #[ORM\Column(name: 'trashed_by', type: 'bigint', nullable: true)]
+    private ?int $trashedBy = null;
+
+    /** The state a restore puts back: submitted or rejected. */
+    #[ORM\Column(name: 'trashed_from', type: 'string', length: 12, nullable: true, enumType: ItemState::class)]
+    private ?ItemState $trashedFrom = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -271,6 +282,50 @@ class RecommendedRoute
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    /** Into the bin: the state it had is kept for a restore. */
+    public function moveToTrash(int $curatorId, \DateTimeImmutable $at): void
+    {
+        if (ItemState::Trashed === $this->state) {
+            return;
+        }
+        $this->trashedFrom = $this->state;
+        $this->trashedAt = $at;
+        $this->trashedBy = $curatorId;
+        $this->setState(ItemState::Trashed);
+    }
+
+    /** Out of the bin, back to exactly the state it had. */
+    public function restoreFromTrash(): void
+    {
+        if (ItemState::Trashed !== $this->state || null === $this->trashedFrom) {
+            return;
+        }
+        $this->setState($this->trashedFrom);
+        $this->trashedFrom = null;
+        $this->trashedAt = null;
+        $this->trashedBy = null;
+    }
+
+    public function isTrashed(): bool
+    {
+        return ItemState::Trashed === $this->state;
+    }
+
+    public function getTrashedAt(): ?\DateTimeImmutable
+    {
+        return $this->trashedAt;
+    }
+
+    public function getTrashedBy(): ?int
+    {
+        return $this->trashedBy;
+    }
+
+    public function getTrashedFrom(): ?ItemState
+    {
+        return $this->trashedFrom;
     }
 
     private function touch(): void

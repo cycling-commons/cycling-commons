@@ -20,6 +20,7 @@ use App\Media\MediaConsent;
 use App\Media\MediaStorage;
 use App\Media\ProcessedPhoto;
 use App\Moderation\ModerationService;
+use App\Moderation\TrashBin;
 use App\Service\UserDeletionService;
 use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
@@ -169,7 +170,7 @@ final class MediaDisposalTest extends KernelTestCase
         self::assertStringContainsString('0 orphaned', $second, 'a second run finds nothing left to do');
     }
 
-    public function testTrashingASubmissionTakesItsPhotosImmediatelyAndCompletely(): void
+    public function testTrashingASubmissionTakesItsPhotosCompletelyWhenTheBinIsEmptied(): void
     {
         $rider = $this->rider('trash-rider@example.test');
         $curator = $this->rider('trash-curator@example.test');
@@ -188,6 +189,11 @@ final class MediaDisposalTest extends KernelTestCase
 
         static::getContainer()->get(ModerationService::class)
             ->trashSubmission((int) $submission->getId(), $curator);
+        $this->em->clear();
+        self::assertNotNull($this->em->find(MediaUpload::class, $upload->getId()), 'kept, untouched, while the submission waits in Trash');
+        self::assertTrue($this->filesystem->fileExists($prefix.'/orig.webp'));
+
+        static::getContainer()->get(TrashBin::class)->purgeExpired(new \DateTimeImmutable(\sprintf('+%d days', TrashBin::TRASH_DAYS + 1)));
         $this->em->clear();
 
         self::assertFalse($this->filesystem->fileExists($prefix.'/orig.webp'));

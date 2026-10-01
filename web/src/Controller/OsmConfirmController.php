@@ -146,7 +146,7 @@ final class OsmConfirmController extends AbstractController
         }
         $existing = $this->db->fetchAssociative(
             "SELECT id, state FROM item WHERE source_ref = :ref AND letter = :letter
-                 AND state NOT IN ('rejected', 'retired') LIMIT 1",
+                 AND state NOT IN ('rejected', 'retired', 'trashed') LIMIT 1",
             ['ref' => $ref, 'letter' => $poi['letter']],
         );
         if (false !== $existing) {

@@ -103,6 +103,21 @@ class Submission
     #[ORM\Column(name: 'escalated_reason', type: 'text', nullable: true)]
     private ?string $escalatedReason = null;
 
+    /**
+     * In the curators' Trash since then; deleted for good TrashBin::TRASH_DAYS later.
+     *
+     * @see docs/specs/moderation-and-contribution.md §6
+     */
+    #[ORM\Column(name: 'trashed_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $trashedAt = null;
+
+    #[ORM\Column(name: 'trashed_by', type: 'bigint', nullable: true)]
+    private ?int $trashedBy = null;
+
+    /** The status a restore puts back. */
+    #[ORM\Column(name: 'trashed_from', type: 'string', length: 12, nullable: true, enumType: SubmissionStatus::class)]
+    private ?SubmissionStatus $trashedFrom = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -321,5 +336,49 @@ class Submission
     public function getEscalatedReason(): ?string
     {
         return $this->escalatedReason;
+    }
+
+    /** Into the bin: the status it had is kept for a restore. */
+    public function moveToTrash(int $curatorId, \DateTimeImmutable $at): void
+    {
+        if (SubmissionStatus::Trashed === $this->status) {
+            return;
+        }
+        $this->trashedFrom = $this->status;
+        $this->status = SubmissionStatus::Trashed;
+        $this->trashedAt = $at;
+        $this->trashedBy = $curatorId;
+    }
+
+    /** Out of the bin, back to exactly the status it had. */
+    public function restoreFromTrash(): void
+    {
+        if (SubmissionStatus::Trashed !== $this->status || null === $this->trashedFrom) {
+            return;
+        }
+        $this->status = $this->trashedFrom;
+        $this->trashedFrom = null;
+        $this->trashedAt = null;
+        $this->trashedBy = null;
+    }
+
+    public function isTrashed(): bool
+    {
+        return SubmissionStatus::Trashed === $this->status;
+    }
+
+    public function getTrashedAt(): ?\DateTimeImmutable
+    {
+        return $this->trashedAt;
+    }
+
+    public function getTrashedBy(): ?int
+    {
+        return $this->trashedBy;
+    }
+
+    public function getTrashedFrom(): ?SubmissionStatus
+    {
+        return $this->trashedFrom;
     }
 }

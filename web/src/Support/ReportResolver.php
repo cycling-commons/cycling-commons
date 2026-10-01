@@ -10,6 +10,8 @@ use App\Catalog\Entity\Item;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
+use App\Catalog\ItemState;
+use App\Catalog\SubmissionStatus;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Messaging\Entity\UserMessage;
@@ -95,7 +97,8 @@ final class ReportResolver
     private function route(string $id): array
     {
         $route = $this->em->find(RecommendedRoute::class, (int) $id);
-        if (!$route instanceof RecommendedRoute) {
+        // A proposal in Trash reads as gone (moderation-and-contribution.md §6).
+        if (!$route instanceof RecommendedRoute || $route->isTrashed()) {
             return self::gone();
         }
 
@@ -114,7 +117,7 @@ final class ReportResolver
     private function item(string $id): array
     {
         $item = $this->em->find(Item::class, (int) $id);
-        if (!$item instanceof Item) {
+        if (!$item instanceof Item || ItemState::Trashed === $item->getState()) {
             return self::gone();
         }
 
@@ -175,7 +178,7 @@ final class ReportResolver
     private function message(string $id): array
     {
         $message = $this->em->find(UserMessage::class, (int) $id);
-        if (!$message instanceof UserMessage) {
+        if (!$message instanceof UserMessage || null !== $message->getTrashedAt()) {
             return self::gone();
         }
 
@@ -199,7 +202,7 @@ final class ReportResolver
     public function lastContributor(int $itemId): ?User
     {
         $submission = $this->em->getRepository(Submission::class)->findOneBy(
-            ['itemId' => $itemId],
+            ['itemId' => $itemId, 'status' => SubmissionStatus::Approved],
             ['id' => 'DESC'],
         );
 
@@ -235,7 +238,7 @@ final class ReportResolver
         }
 
         $item = $this->em->find(Item::class, (int) $id);
-        if (!$item instanceof Item) {
+        if (!$item instanceof Item || ItemState::Trashed === $item->getState()) {
             return [];
         }
 

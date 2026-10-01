@@ -16,6 +16,13 @@
     <h1>{{ 'moderate_routes.title'|trans }}</h1>
   </div>
 
+  {# Trash is one list for the whole desk: route proposals and corrections
+     wait there beside submissions (moderation-and-contribution.md §6). #}
+  <nav class="lfilter" aria-label="{{ 'moderate_routes.title'|trans }}">
+    <a class="lchip on" href="{{ path('moderate_routes') }}">{{ 'moderate.desk_queue'|trans }}</a>
+    <a class="lchip" href="{{ path('moderate_trash_bin') }}">{{ 'moderate.desk_trash'|trans }}</a>
+  </nav>
+
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 

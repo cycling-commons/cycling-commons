@@ -14,7 +14,6 @@ use App\Entity\User;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\ModerationService;
 use App\Moderation\NotTheSubmitterException;
-use App\Moderation\RetentionService;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -76,7 +75,6 @@ final class ProfileController extends AbstractController
     public function show(
         Request $request,
         EntityManagerInterface $em,
-        RetentionService $retention,
         Connection $db,
         SubmissionChangeSummary $changes,
         PageSize $pageSize,
@@ -94,21 +92,23 @@ final class ProfileController extends AbstractController
 
         /** @var list<string> $letters */
         $letters = $db->fetchFirstColumn(
-            'SELECT DISTINCT letter FROM submission WHERE user_id = :uid ORDER BY letter',
+            "SELECT DISTINCT letter FROM submission WHERE user_id = :uid AND status <> 'trashed' ORDER BY letter",
             ['uid' => $userId],
         );
 
         // Route proposals are contributions under their own chip, letter R:
         // listed under All and under Routes, hidden by another kind's chip and
         // by the withdrawn view (a proposal has no withdrawn state).
-        $routeCount = (int) $em->getRepository(RecommendedRoute::class)->count(['proposedBy' => $userId]);
+        $routeCount = (int) $db->fetchOne(
+            "SELECT COUNT(*) FROM recommended_route WHERE proposed_by = :uid AND state <> 'trashed'",
+            ['uid' => $userId],
+        );
         $showRoutes = \in_array($letterFilter, ['', ItemType::QualityRides->letter()], true) && '' === $statusFilter;
 
         [$pager, $entries] = $this->contributionsPage(
             $em,
             $db,
             $userId,
-            $retention->cutoff(),
             $letterFilter,
             $statusFilter,
             $showRoutes,
@@ -188,9 +188,9 @@ final class ProfileController extends AbstractController
      * proposals in one list, newest first, paged in SQL over the union of
      * both so a route never sits behind a page of places.
      *
-     * Submissions follow the retention rule (moderation-and-contribution.md
-     * §8): a rejected or withdrawn row past the cutoff is hidden even before
-     * the sweep deletes it. Route proposals join only when `$withRoutes`.
+     * Every decided row stays while the account does (moderation-and-
+     * contribution.md §8); a row in the curators' Trash is left out (§6).
+     * Route proposals join only when `$withRoutes`.
      *
      * @return array{0: array{page: int, pages: int, total: int, perPage: int, offset: int, prev: int|null, next: int|null}, 1: list<array{sub: Submission|null, route: RecommendedRoute|null}>}
      *
@@ -200,20 +200,15 @@ final class ProfileController extends AbstractController
         EntityManagerInterface $em,
         Connection $db,
         int $userId,
-        \DateTimeImmutable $cutoff,
         string $letterFilter,
         string $statusFilter,
         bool $withRoutes,
         int $page,
         int $perPage,
     ): array {
-        $params = [
-            'uid' => $userId,
-            'swept' => [SubmissionStatus::Rejected->value, SubmissionStatus::Withdrawn->value],
-            'cutoff' => $cutoff->format('Y-m-d H:i:s'),
-        ];
-        $types = ['swept' => ArrayParameterType::STRING];
-        $where = 's.user_id = :uid AND (s.status NOT IN (:swept) OR s.decided_at IS NULL OR s.decided_at >= :cutoff)';
+        $params = ['uid' => $userId, 'trashed' => SubmissionStatus::Trashed->value];
+        $types = [];
+        $where = 's.user_id = :uid AND s.status <> :trashed';
         if ('' !== $letterFilter) {
             $where .= ' AND s.letter = :letter';
             $params['letter'] = $letterFilter;
@@ -224,7 +219,7 @@ final class ProfileController extends AbstractController
         }
         $union = "SELECT 'sub' AS kind, s.id, s.created_at FROM submission s WHERE ".$where;
         if ($withRoutes) {
-            $union .= " UNION ALL SELECT 'route' AS kind, r.id, r.created_at FROM recommended_route r WHERE r.proposed_by = :uid";
+            $union .= " UNION ALL SELECT 'route' AS kind, r.id, r.created_at FROM recommended_route r WHERE r.proposed_by = :uid AND r.state <> :trashed";
         }
 
         $pager = Pager::of($page, (int) $db->fetchOne('SELECT COUNT(*) FROM ('.$union.') c', $params, $types), $perPage);
@@ -308,7 +303,7 @@ final class ProfileController extends AbstractController
             "SELECT id, ref_id, kind, sender, body_text
                FROM user_message
               WHERE channel = 'submission' AND ref_id IN (:ids)
-                AND (user_id = :uid OR sender_id = :uid)
+                AND (user_id = :uid OR sender_id = :uid) AND trashed_at IS NULL
               ORDER BY id ASC",
             ['ids' => $ids, 'uid' => $userId],
             ['ids' => ArrayParameterType::INTEGER],

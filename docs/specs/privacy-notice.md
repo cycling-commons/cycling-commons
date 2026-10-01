@@ -31,7 +31,8 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | Nothing but a licence stamp is written into a photo | `App\Media\XmpRights` | a name or any other field is ever added to the packet |
 | A private profile shows no name at all | `PhotoPageController::attribution()` | attribution ever falls back to something other than `''` |
 | Turning a profile off takes the name down at once | same, resolved per render; no controller sets `Cache-Control` | a photo page is ever given a shared cache |
-| Dormant accounts are never deleted | nothing reads `lastLoginAt` on a schedule | `docs/TODO.md` 5g is built |
+| An account unused for 24 months is deleted, after three emails at 12, 22 and 23 months, and one sign-in keeps it (`privacy.retention_account`) | `App\Account\DormancySweep` and `DormancyLadder` (`app:accounts:dormancy --force`, a daily timer on the worker host; account-and-auth.md §6.5) | the ladder changes, or the timer is not installed (then nothing is deleted for silence and the sentence overstates) |
+| Messages about a rider's contributions kept while the account exists and deleted with it, with the rider's rejected and withdrawn contributions; approved ones stay without a name; a held one stays with its messages (`privacy.retention_messages`) | `App\Moderation\ContributionDeletionHook` on `UserDeletionService::purge()`; no sweep deletes them by age (moderation-and-contribution.md §8) | a time-based sweep is added back, or a deletion path skips the hooks |
 | Mail kept 24 months after a thread ends | policy, owner 2026-08-27 | the mailbox policy changes |
 | Contact-form messages deleted 24 months after they were answered or closed (`privacy.retention_mail`) | `App\Support\ContactMessageRetention`, daily in `app:media:gc` (contact-and-support.md §4) | the sweep stops running, or its clock stops being `updated_at` on an answered or closed message |
 | A bug reporter's address deleted 24 months after the outcome, kept while the bug is open (`privacy.retention_bugs`) | `App\Support\BugReporterEmailRetention`, daily in `app:media:gc` (contact-and-support.md §5) | the sweep stops running, or it touches an open report |
@@ -163,6 +164,12 @@ the code's clock, not a countdown to deletion; nothing scheduled ever reads it.
 
 The page now says what is actually true: deletion is immediate, and the only
 lag is the encrypted nightly backups, which roll off in at most 90 days.
+
+The same bullet states the dormancy rule (owner, 2026-10-01: "When they are out
+for 2 years we automatically delete their account"): an account nobody has
+signed into for 24 months is deleted the same way, after three emails, each
+naming the date (`DormancySweep`, account-and-auth.md §6.5). Until then the page
+said dormant accounts were never deleted.
 
 If a real grace period is ever built, this section and
 `privacy.retention_account` change together, in five locales.

@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Media\MessageHandler;
 
 use App\Catalog\Entity\RecommendedRoute;
+use App\Catalog\Entity\RouteSuggestion;
 use App\Catalog\Entity\Submission;
 use App\Media\ContinentResolver;
 use App\Media\Entity\MediaUpload;
@@ -199,7 +200,7 @@ final readonly class ScanAndReleaseUploadHandler
         $this->events->append($upload->getId(), null, $action, $note);
 
         $userId = $upload->getUserId();
-        if (null !== $userId) {
+        if (null !== $userId && !$this->ownerIsTrashed($upload)) {
             $this->messages->sendSystem(
                 $userId,
                 UserMessageKind::MediaScanRejected,
@@ -221,7 +222,7 @@ final readonly class ScanAndReleaseUploadHandler
     private function tellRiderIfTheyStoppedWaiting(MediaUpload $upload): void
     {
         $userId = $upload->getUserId();
-        if (null === $userId) {
+        if (null === $userId || $this->ownerIsTrashed($upload)) {
             return;
         }
         $waited = (new \DateTimeImmutable())->getTimestamp() - $upload->getCreatedAt()->getTimestamp();
@@ -237,5 +238,24 @@ final readonly class ScanAndReleaseUploadHandler
             '',
             'messages.body.'.UserMessageKind::MediaReady->value,
         );
+    }
+
+    /**
+     * The photo belongs to a contribution a curator moved to Trash: the
+     * rider hears nothing about it (moderation-and-contribution.md §6).
+     */
+    private function ownerIsTrashed(MediaUpload $upload): bool
+    {
+        $submissionId = $upload->getSubmissionId();
+        if (null !== $submissionId) {
+            return true === $this->em->find(Submission::class, $submissionId)?->isTrashed();
+        }
+        $suggestionId = $upload->getRouteSuggestionId();
+        if (null !== $suggestionId) {
+            return true === $this->em->find(RouteSuggestion::class, $suggestionId)?->isTrashed();
+        }
+        $routeId = $upload->getRouteId();
+
+        return null !== $routeId && true === $this->em->find(RecommendedRoute::class, $routeId)?->isTrashed();
     }
 }

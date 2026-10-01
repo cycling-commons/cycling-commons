@@ -302,7 +302,8 @@ final class MessagesController extends AbstractController
         $userId = (int) $user->getId();
 
         $message = $em->find(UserMessage::class, $id);
-        if (null === $message || $userId !== $message->getUserId()) {
+        // A thread in Trash is in no inbox, so there is nothing to answer.
+        if (null === $message || $userId !== $message->getUserId() || null !== $message->getTrashedAt()) {
             throw $this->createNotFoundException();
         }
 

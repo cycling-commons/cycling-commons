@@ -276,7 +276,7 @@ final class CuratorApplicationService
         $row = $this->db->fetchAssociative(
             "SELECT COUNT(*) AS total,
                     COUNT(*) FILTER (WHERE status = 'approved') AS approved
-             FROM submission WHERE user_id = ? AND country_code = ?",
+             FROM submission WHERE user_id = ? AND country_code = ? AND status <> 'trashed'",
             [$app->getUserId(), $app->getCountryCode()],
         );
 

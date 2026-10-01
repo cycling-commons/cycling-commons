@@ -1,0 +1,98 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The curators' Trash (moderation-and-contribution.md §6).
+
+  What a curator moved to Trash waits here for TrashBin::TRASH_DAYS days,
+  with what it said and its conversation, before the purge deletes it for
+  good. Every row is in the reader's areas and carries Restore, which puts it
+  back exactly as it was. The rider is told nothing either way.
+#}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'moderate.trash.kicker'|trans }}</div>
+    <h1>{{ 'moderate.trash.heading'|trans }}</h1>
+    <p class="lead">{{ 'moderate.trash.lead'|trans({'%days%': trash_days}) }}</p>
+  </div>
+
+  <nav class="lfilter" aria-label="{{ 'moderate.desk_aria'|trans }}">
+    <a class="lchip" href="{{ path('moderate_submissions') }}">{{ 'moderate.desk_queue'|trans }}</a>
+    <a class="lchip mod-desk-hist" href="{{ path('moderate_history') }}">{{ 'moderate.desk_history'|trans }}</a>
+    <a class="lchip on" href="{{ path('moderate_trash_bin') }}">{{ 'moderate.desk_trash'|trans }}</a>
+  </nav>
+
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  {% if entries is empty %}
+    <div class="empty-state"><p>{{ 'moderate.trash.empty'|trans }}</p></div>
+  {% else %}
+    <div class="q-list" id="qList">
+      {% for e in entries %}
+        <div class="q-item" data-trash-kind="{{ e.kind }}" data-trash-id="{{ e.id }}">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                {% include 'partials/_type_icon.html.twig' with {letter: e.letter, target: null} %}
+                <span class="q-tag q-tag--{{ e.kind == 'submission' ? (e.type == 'text' ? 'edit' : e.type) : 'edit' }}">{{ ('moderate.trash.kind_' ~ e.kind)|trans }}</span>
+                <h3 class="q-title">{{ e.title }}</h3>
+              </div>
+              <div class="q-submitter"><span class="q-who">
+                {%- include 'moderate/_rider_name.html.twig' with {rider: {name: e.who, uuid: e.whoUuid}} only -%}
+                {%- if e.trashedBy %} · {% include 'moderate/_rider_in_text.html.twig' with {text: 'moderate.trash.by'|trans({'%who%': '@@rider@@'}), rider: {name: e.trashedBy, uuid: e.trashedByUuid}} only %}{% endif -%}
+              </span></div>
+            </div>
+            <div class="q-acts">
+              <span class="q-when">{{ e.trashedAgo }}</span>
+              <span class="q-pill q-pill--ret">{{ 'moderate.trash.was'|trans({'%status%': ('moderate.trash.from_' ~ (e.from ?: 'unknown'))|trans}) }}</span>
+            </div>
+          </div>
+          {% if e.changes is not empty %}
+            <div class="q-diff">
+              {% for c in e.changes %}
+                {% if c.was %}<div class="q-was{% if c.was|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ c.label }}: {{ c.was }}</div>{% endif %}
+                <div class="q-now{% if c.now|length > 110 %} vclip" tabindex="0" role="button" aria-expanded="false{% endif %}">{{ c.label }}: {{ c.now }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if e.km is defined and e.km %}<p class="q-note">{{ 'moderate.trash.km'|trans({'%km%': e.km}) }}</p>{% endif %}
+          {% if e.note %}<p class="q-note">{{ e.note }}</p>{% endif %}
+          {% if e.photos > 0 %}<p class="q-note">{{ 'moderate.trash.photos'|trans({'%count%': e.photos}) }}</p>{% endif %}
+          {% if e.thread is not empty %}
+            <details class="q-thread">
+              <summary>{{ 'moderate.history.thread'|trans({'%count%': e.thread|length}) }}</summary>
+              <ol class="q-msgs">
+                {% for m in e.thread %}
+                  <li class="q-msg q-msg--{{ m.who }}">
+                    <span class="q-msg-who">{{ ('moderate.trash.said_' ~ m.who)|trans }}</span>
+                    <span class="q-msg-body">{{ m.body }}</span>
+                    <span class="q-msg-when">{{ m.when }}</span>
+                  </li>
+                {% endfor %}
+              </ol>
+            </details>
+          {% endif %}
+          <div class="q-acts">
+            <span class="q-when">{{ 'moderate.trash.purge_on'|trans({'%date%': e.purgeOn|cc_date}) }}</span>
+            <form method="post" action="{{ path('moderate_trash_restore', pager.page > 1 ? {page: pager.page} : {}) }}">
+              <input type="hidden" name="_token" value="{{ csrf_token('moderate-restore') }}">
+              <input type="hidden" name="kind" value="{{ e.kind }}">
+              <input type="hidden" name="id" value="{{ e.id }}">
+              <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.restore'|trans }}</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% include 'partials/_pager.html.twig' with {pager: pager, route: 'moderate_trash_bin', params: {}} %}
+</div>
+{% include 'partials/_vclip.html.twig' %}
+{% endblock %}

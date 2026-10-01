@@ -21,13 +21,13 @@ use App\Community\ItemConfirmationService;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaDecisionService;
-use App\Media\MediaDisposalService;
 use App\Media\PhotoAltSuggestion;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -52,13 +52,13 @@ final class ModerationService
         private readonly AdminActionLogger $adminLog,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly MediaDecisionService $mediaDecisions,
-        private readonly MediaDisposalService $mediaDisposal,
         private readonly ItemConfirmationService $confirmations,
         private readonly EscalationAlert $escalationAlert,
         private readonly OsmCandidates $osmCandidates,
         private readonly OsmLinker $osmLinker,
         private readonly ReplacedPlaces $replacedPlaces,
         private readonly PlaceTextWriter $placeTexts,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -204,16 +204,18 @@ final class ModerationService
     }
 
     /**
-     * Hard-delete a submission in any status, with its photos, its unapproved
-     * new item and its message thread. Audited content-free first.
+     * Move a submission in any status to Trash: hidden from every list, map
+     * and inbox, kept with its photos, its new place and its message thread
+     * for TrashBin::TRASH_DAYS days, then purged (TrashBin). Audited
+     * content-free first. No message to the rider.
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
     public function trashSubmission(int $id, User $curator): void
     {
         $this->em->wrapInTransaction(function () use ($id, $curator): void {
-            $submission = $this->em->find(Submission::class, $id);
-            if (null === $submission) {
+            $submission = $this->em->find(Submission::class, $id, LockMode::PESSIMISTIC_WRITE);
+            if (null === $submission || $submission->isTrashed()) {
                 throw new \InvalidArgumentException(sprintf('Unknown submission %d', $id));
             }
             if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
@@ -225,28 +227,58 @@ final class ModerationService
             }
 
             $this->adminLog->log($curator, TrashActions::TrashSubmission, null, sprintf('SUB-%d · type=%s', $id, $submission->getType()->value));
-            // Photos go immediately, no retention window (docs/specs/photo-uploads.md §6).
-            $this->mediaDisposal->purgeForSubmission($id);
-            $this->removeUnapprovedNewItem($submission);
-            // Its history goes too: the needs-info question, the rider's reply
-            // and any curator note, from both inboxes.
-            $this->messages->deleteThread('submission', $id);
-            $this->em->remove($submission);
+            $now = $this->clock->now();
+            $submission->moveToTrash((int) $curator->getId(), $now);
+            // A new place still waiting on the queue leaves the map with it.
+            $item = $this->newPlaceOf($submission);
+            if (null !== $item && ItemState::Submitted === $item->getState()) {
+                $item->setState(ItemState::Trashed);
+            }
+            $this->messages->trashThread('submission', $id, $now);
         });
     }
 
-    /** Trashing a NEW-place submission takes its still-submitted item with it. */
-    private function removeUnapprovedNewItem(Submission $submission): void
+    /**
+     * Take a submission out of Trash, back to exactly what it was: its
+     * status, its new place's pin, its thread in both inboxes. Photos never
+     * left. No message to the rider.
+     *
+     * @throws \InvalidArgumentException when it is not in the bin (restored already, or purged)
+     * @throws OutOfScopeException       outside the curator's areas
+     *
+     * @see docs/specs/moderation-and-contribution.md §6
+     */
+    public function restoreSubmission(int $id, User $curator): Submission
+    {
+        return $this->em->wrapInTransaction(function () use ($id, $curator): Submission {
+            $submission = $this->em->find(Submission::class, $id, LockMode::PESSIMISTIC_WRITE);
+            if (null === $submission || !$submission->isTrashed()) {
+                throw new \InvalidArgumentException(sprintf('SUB-%d is not in Trash', $id));
+            }
+            if (!$this->scopeProvider->allowsRegion($this->scopeProvider->scopeFor($curator), $submission->getRegionId())) {
+                throw new OutOfScopeException('Submission outside the curator\'s assigned areas.');
+            }
+
+            $submission->restoreFromTrash();
+            $item = $this->newPlaceOf($submission);
+            if (null !== $item && ItemState::Trashed === $item->getState()) {
+                $item->setState(ItemState::Submitted);
+            }
+            $this->messages->restoreThread('submission', $id);
+            $this->adminLog->log($curator, TrashActions::RestoreSubmission, null, sprintf('SUB-%d', $id));
+
+            return $submission;
+        });
+    }
+
+    /** The place a NEW-place submission created, if it still exists. */
+    private function newPlaceOf(Submission $submission): ?Item
     {
         if (SubmissionType::NewItem !== $submission->getType() || null === $submission->getItemId()) {
-            return;
+            return null;
         }
-        $item = $this->em->find(Item::class, $submission->getItemId());
-        if (null === $item || ItemState::Submitted !== $item->getState()) {
-            return;
-        }
-        // Only a still-submitted item: an approved place has other dependents.
-        $this->em->remove($item);
+
+        return $this->em->find(Item::class, $submission->getItemId());
     }
 
     private function approveNew(Item $item, Submission $submission, User $curator): void
@@ -436,7 +468,8 @@ final class ModerationService
         }
 
         $submission = $this->em->find(Submission::class, $id);
-        if (null === $submission) {
+        // A row in Trash is off every desk; the escalate button lives there.
+        if (null === $submission || $submission->isTrashed()) {
             throw new \InvalidArgumentException(sprintf('Unknown submission %d', $id));
         }
         // Same write-guard as decide()/trash() above. Escalation is the

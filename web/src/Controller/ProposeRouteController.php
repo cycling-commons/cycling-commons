@@ -131,7 +131,8 @@ final class ProposeRouteController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $route = $this->em->find(RecommendedRoute::class, $id);
-        if (null === $route || null === $route->getProposedBy() || $route->getProposedBy() !== $user->getId()) {
+        // A proposal in the curators' Trash is shown nowhere, its edit page included.
+        if (null === $route || null === $route->getProposedBy() || $route->getProposedBy() !== $user->getId() || $route->isTrashed()) {
             throw $this->createNotFoundException('No route proposal of yours.');
         }
         $back = $this->redirectToRoute('profile', ['letter' => ItemType::QualityRides->letter(), '_fragment' => 'route-'.$id], Response::HTTP_SEE_OTHER);

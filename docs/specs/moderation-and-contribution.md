@@ -756,7 +756,7 @@ texts are in scope: a town card's text in one language
 **One way to moderate.** A proposal is an ordinary submission of type `text`
 in the one queue: the same reject / needs-info decision on the map drawer,
 the same message thread, the same withdraw (§3.4), the same History desk and
-the same retention. No second moderation surface exists. Approve is the one
+the same retention (§8). No second moderation surface exists. Approve is the one
 difference: it happens on the text's ✎ form, where the curator decides the
 Wikipedia credit (below, "The Wikipedia credit"); the drawer's Approve on a
 `text` submission opens that form.
@@ -1028,13 +1028,14 @@ contributions row, POST + per-row CSRF to `profile_withdraw`, handled by
 `ModerationService::withdraw()`. It reuses the REJECT mechanics on purpose -
 same row lock, a `new`-item's minted row goes to state `rejected` (off the
 map, OSM ref stays claimed for a possible revive, exactly like a rejection),
-pending photos are rejected into the retention sweep - but it is NOT a
+pending photos are rejected (their files go on the rejected-photo window,
+photo-uploads.md §6) - but it is NOT a
 decision: only the submitter may do it (`NotTheSubmitterException`), there is
 no scope check, no outcome message to the person who did it themselves, and
 `withdrawn` never counts in the admin moderation-activity view (which filters
-approved/rejected). `decided_by` records the rider and `decided_at` starts
-the retention clock: the sweep and /account/contributions's lazy filter treat `withdrawn`
-exactly like `rejected`. A race with a curator ends in a flash and the real
+approved/rejected). `decided_by` records the rider and `decided_at` the
+moment; like a rejected row, a withdrawn one stays on /account/contributions as
+long as the account, and goes with it (§8). A race with a curator ends in a flash and the real
 outcome, never a half-withdrawal (`AlreadyDecidedException` under the lock).
 A submission under legal hold (photo-uploads.md §6d) cannot be withdrawn: no
 button, and the service throws the same `AlreadyDecidedException`, so the
@@ -1059,8 +1060,8 @@ on the same submission: the second sees the decided status and gets
   entirely. An edit whose target item has vanished fails loudly (transaction
   rolls back) rather than silently approving with no effect.
 - **reject** → `submission.status = rejected`; for `new` submissions the item
-  row flips to `rejected` but is **kept** (never served) until retention GC
-  (§8). Rejecting an `edit` never touches the item.
+  row flips to `rejected` but is **kept** (never served; §8 has no timer for
+  it). Rejecting an `edit` never touches the item.
 - **needs_info** → mutates nothing on the item; the submission leaves the map
   layer but stays on the queue (§6.2). **The note is mandatory for this
   decision and only this one**: the note IS the question. Sent blank, the
@@ -1447,27 +1448,24 @@ at a time, so the row is sized for that:
   `details.q-act` matched nothing and did nothing (owner-reported 2026-08-12).
   The handler closes on `.q-act-panel`, which is true in both the enhanced and
   the JS-less shape.
-- **The history shows trashed submissions too**, rebuilt from the content-free
-  audit log (2026-08-03). A curator who trashes something and then cannot find
-  it anywhere reasonably wonders whether it worked. The row is deleted, so the
-  entry comes from `admin_action_log` (`trash_submission`) and shows **only**
-  the reference, the type, who trashed it and when — never the title, because
-  preserving that would preserve the spam Trash exists to destroy. It is
-  unscoped (the audit carries no region, and a content-free row leaks nothing)
-  and it is hidden when an approved/rejected status filter is active, since a
-  trashed row is neither.
-- **Trash takes the message thread with it** (2026-09-30). The rulebook says
-  Trash removes the content and its history at once, and a submission's
-  history includes what was said about it: every `user_message` row with
-  `channel = 'submission'` and `ref_id` = the submission id goes in the same
-  transaction (`MessageService::deleteThread()`), from both inboxes. That is
-  the needs-info question and the outcome note in the rider's inbox, the
-  rider's reply in the curator's, and any curator note. A thread on another
-  channel that carries the same number (a route, a correction) is a different
-  subject and stays. A submission under legal hold cannot be trashed at all,
-  so its thread is never touched. Example: SUB-12 asked for a photo, the rider
-  answered, the curator trashes it as spam; neither inbox shows SUB-12 again.
-  Pinned by `TrashTest::testTrashSubmissionDeletesItsMessageThreadForBothParties`.
+- **The history shows each Trash as a content-free line**, rebuilt from the
+  audit log (2026-08-03). The entry comes from `admin_action_log`
+  (`trash_submission`) and shows **only** the reference, the type, who trashed
+  it and when, never the title. It is the permanent record of the action and
+  outlives the purge. The row itself, with its content, waits on the Trash
+  page (§6) for its 30 days. The line is unscoped (the audit carries no region,
+  and a content-free row leaks nothing) and it is hidden when an
+  approved/rejected status filter is active, since a trashed row is neither.
+- **Trash takes the message thread out of view and keeps it** (2026-10-01).
+  Every `user_message` row with `channel = 'submission'` and `ref_id` = the
+  submission id gets `trashed_at` in the same transaction
+  (`MessageService::trashThread()`), so neither inbox lists it, counts it as
+  unread, mails it or lets anyone answer it. A thread on another channel that
+  carries the same number (a route, a correction) is a different subject and
+  stays in view. Restore clears `trashed_at` (`restoreThread()`), read state
+  untouched; the purge deletes the thread (`deleteThread()`). A submission
+  under legal hold cannot be trashed at all. Pinned by
+  `TrashTest::testTrashSubmissionHidesItsMessageThreadFromBothInboxesAndKeepsIt`.
 - **Density switch** (`cards` ↔ `list`, remembered in `localStorage` per
   browser, never in the URL — it is a view preference, not a filter). List
   folds every row to a single line and hides body, diff, photos and rider
@@ -2218,15 +2216,15 @@ other one.
 
 ### 7.6 The FK exception — M10
 
-`user_message.user_id` carries the schema's only real user FK, `ON DELETE
-CASCADE` (migration `Version20260712150000`): messages are correspondence *to*
-the person, not contributed catalog content, and a DB-level cascade covers
-both account-deletion paths (self-service hook chain *and* the admin desk's
-`removeAccount`, which bypasses deletion hooks). This is a documented
-exception to the "contributed data is anonymised, never cascade-deleted" rule
-(§5.6); a practical consequence is that decision-path test fixtures must
-persist real users — fabricated ids violate the FK the moment a decision
-writes a message.
+`user_message.user_id` carries a real user FK, `ON DELETE SET NULL`
+(`Version20261001210000`; `ON DELETE CASCADE` from `Version20260712150000`
+until then): messages are correspondence *to* the person, not contributed
+catalog content. Every account-deletion path runs the deletion hooks
+(`UserDeletionService::purge()`), and `ContributionDeletionHook` deletes the
+rider's messages there, except a held submission's thread, which the
+`SET NULL` keeps (§8). A practical consequence is that decision-path test
+fixtures must persist real users: fabricated ids violate the FK the moment a
+decision writes a message.
 
 ### 7.7 Map links per kind
 
@@ -2346,36 +2344,117 @@ everything rather than erroring — it is a bookmark to a renamed shelf, not an
 attack. A filter that hid everything says so, and does not read as an empty
 inbox.
 
-## 8. Retention and garbage collection — M8 phase 1
+## 6. Trash, the curators' bin (2026-10-01)
 
-| Key | Value | Where |
+Owner, 2026-10-01: "The message thread about a contribution a curator moves to
+Trash: keep these a while including the trashed item." Thirty days.
+
+**What Trash does.** A curator trashes a submission (any status, never one
+under legal hold), a route correction (any status) or a route proposal (only
+while submitted or rejected). The row is not copied anywhere: it stays where
+it is and records the move.
+
+| Table | Marked by | Kept for a restore |
 |---|---|---|
-| `moderation.retention_months` | 3 | `web/config/packages/moderation.yaml` (wired via `web/config/services.yaml`) |
-| opportunistic-sweep throttle | 3600 s | `RetentionService::CACHE_TTL_SECONDS`, `web/src/Moderation/RetentionService.php` |
+| `submission` | `status = 'trashed'`, `trashed_at`, `trashed_by` | `trashed_from`, the status it had |
+| `route_suggestion` | `status = 'trashed'`, `trashed_at`, `trashed_by` | `trashed_from` |
+| `recommended_route` | `state = 'trashed'` (`ItemState::Trashed`), `trashed_at`, `trashed_by` | `trashed_from`, submitted or rejected |
+| `item` of a NEW-place submission, while still `submitted` | `state = 'trashed'` | restored to `submitted` |
+| `user_message` of the row's thread (channel `submission`, `correction` or `route`) | `trashed_at` | cleared on restore |
 
-`RetentionService` deletes rows past the cutoff for exactly two kinds:
-**rejected item submissions** (`decided_at < cutoff`) and **dismissed route
-corrections** (`resolved_at < cutoff`). Withdrawn submissions ride the rejected
-clock, and a submission under legal hold (`escalated_at` set) is never swept.
-Each swept row takes its message thread with it: the `user_message` rows on
-its channel and id (`submission` / `correction`), the same thread Trash
-deletes through `MessageService::deleteThread()`. One statement per kind
-deletes the rows and their threads together (a `DELETE … RETURNING id` feeding
-a `DELETE … USING`), so a rider's inbox never keeps a conversation about a row
-that no longer exists. `idx_user_message_thread` on `(channel, ref_id)`
-(`Version20260930180000`) serves these thread deletes and reads. Three runners, no scheduler yet:
+Photos are not touched in the bin: a pending photo stays pending and
+unpublished. The content-free audit line (`TrashActions::Trash*`) is written as
+before. `Version20261001210000` adds the columns.
 
-1. **Lazy point-of-use filtering** — reads exclude expired rows regardless of
-   whether a sweep ever ran (e.g. `ProfileController`'s contributions list
-   filters rejected-past-cutoff rows in the query). This is the correctness
-   layer; sweeps are hygiene.
-2. **Opportunistic sweep** on moderation desk renders — fire-and-forget,
-   cache-throttled, never throws (a failed sweep must not break the desk).
-3. **`app:moderation:gc`** — idempotent standalone console/cron entry point.
+**Hidden everywhere but the Trash list.** A trashed row is on no queue, no
+History page, no map layer (curator or public), no rider page (Contributions,
+the account dashboard, the messages page, the unread badge), not in the curator room's submission search or card links, not in
+an applicant's evidence count, and a report about it reads as gone. The
+rider's GDPR data export is the one exception: it is everything we hold about
+them (Art. 15), so a trashed row and its thread are in it, marked `trashed`
+(`trashed_at` on messages), until the purge deletes them. Positive
+status lists (`pending`, `needs_info`, `approved`, ...) leave it out by
+themselves; the queries that listed every status filter `<> 'trashed'`. No
+one can write to it: decide, withdraw, revise, escalate, the OSM answer, the
+proposer's edit page and the Routes desk's edit refuse it; a curator cannot
+message about it and the rider cannot reply on its thread; a photo of it that
+finishes scanning sends no message. A rider re-adding an OSM place whose item
+is in the bin revives that item, as for a rejected one, instead of failing on
+the unique `source_ref`.
 
-Deliberately **not** swept (open decisions, §14): rejected
-`recommended_route` rows, never-answered `needs_info` submissions, and
-approved rows.
+**The rider is told nothing**, on Trash or on restore: the contribution and its
+thread leave their account at once and, after a restore, come back as they
+were.
+
+**The Trash page** (`/moderate/trash`, `ModerateTrashController`, chip beside
+Queue and History on both desks) lists the bin in the reader's areas
+(`ModerationScope`), newest first and paged: kind, title, the rider, who
+trashed it and when, the status it had, what it changed, the photo count, the
+thread, and the day it is deleted for good. **Restore** (POST
+`/moderate/trash/restore`, CSRF `moderate-restore`) is for a curator of the
+area or an admin, and puts back exactly the status, the pin and the thread
+(`ModerationService::restoreSubmission()`, `RouteModerationService::
+restoreSuggestion()` / `::restoreProposal()`), audited content-free
+(`TrashActions::Restore*`).
+
+**The purge.** `TrashBin::purgeExpired()` deletes what has been in the bin more
+than `TrashBin::TRASH_DAYS` (30, a constant) days, one transaction per row,
+doing then what Trash used to do at once: the photos
+(`MediaDisposalService::purgeForSubmission()` / `purgeForRoute()`), for a new
+place its still-trashed item, the thread (`MessageService::deleteThread()`,
+for every kind), then the row; audited content-free with no actor
+(`TrashActions::Purge*`). A row under legal hold is never purged. It runs
+through the two runners §8 lists.
+
+## 8. Retention and garbage collection
+
+Owner, 2026-10-01: "Keep internal messages as long as the users are in the
+system. When they are out for 2 years we automatically delete their account,
+or they clear their accounts themselves."
+
+**No timer on settled work.** A rejected or withdrawn submission, a dismissed
+correction, a rejected route and every message about any of them stay as long
+as the rider's account exists. Nothing sweeps them by age.
+
+**Account deletion takes them** (`App\Moderation\ContributionDeletionHook`, a
+`UserDeletionHookInterface`, so it runs on every path through
+`UserDeletionService::purge()`: the rider's own deletion, the admin's Remove
+account, `app:user:purge` and the 24-month dormancy sweep, account-and-auth.md
+§6.3 and §6.5):
+
+| What | On account deletion |
+|---|---|
+| Their rejected and withdrawn submissions, also while in Trash | deleted, with their threads |
+| Their dismissed route corrections, also while in Trash | deleted, with their threads |
+| Every message addressed to them, and every reply they wrote to a curator, on any channel | deleted |
+| Their approved submissions and applied corrections | kept, credited to nobody (the catalog rows never pointed at the account) |
+| Their pending and needs-info submissions | kept for a curator to decide, without the thread |
+| Their rejected route proposals | kept (rejected-route GC is still open, §15), without the thread |
+| Their photos | `MediaDeletionHook`: what was never approved is purged, approved credit anonymised (photo-uploads.md §6) |
+| A submission under legal hold | kept, with its whole thread and photos |
+
+`user_message.user_id` is `ON DELETE SET NULL` since `Version20261001210000`
+(it was `ON DELETE CASCADE`, §7.6): the hook deletes the rider's messages
+itself, so the only rows that ever reach the `SET NULL` are those of a held
+submission's thread, which keep their place addressed to nobody.
+
+**What still runs on a clock here** is the Trash purge (§6). Two runners, the
+same pair the old retention sweep used:
+
+1. **Opportunistic** on the moderation desk renders (`/moderate/submissions`,
+   `/moderate/routes`, `/moderate/trash`): `TrashBin::sweepOpportunistically()`,
+   fire-and-forget, cache-throttled to once an hour (`moderation_trash_purge_last`),
+   never throws.
+2. **`app:moderation:gc`**: the idempotent console entry point for the worker
+   host's daily timer (operations.md).
+
+`moderation.retention_months` (system-configuration.md §2) no longer times any
+of this. Its one remaining reader is `MediaDisposalService::collectRejected()`:
+a rejected photo's files are deleted that many months after the decision, run
+by `app:media:gc` (photo-uploads.md §6).
+
+Still open (§15): rejected `recommended_route` rows, and never-answered
+`needs_info` submissions, which wait for ever unless the account goes.
 
 ## 9. Moderator areas — region/country scoping
 
@@ -3955,13 +4034,12 @@ named by title and aria-label.
   [edit-items/README.md](edit-items/README.md#verification-threshold-x) or a
   parallel freshness signal. Nothing in the code consumes the tallies for
   state transitions today; the funnel wiring is undecided.
-- **Rejected route-proposal GC:** joining the 3-month sweep means deleting
-  catalog rows whose `source_ref` provenance assumed permanence and orphaning
-  their `route_change_history` rows — needs an M9-style content-free snapshot
-  or a tombstone before inclusion.
-- **Retention for never-answered `needs_info` rows** (live forever today —
-  auto-reject after N months?) and for **approved** rows.
-- **Read-message expiry** (do old read messages ever GC?).
+- **Rejected route proposals on account deletion:** they stay (§8). Deleting
+  them means deleting catalog rows whose `source_ref` provenance assumed
+  permanence and orphaning their `route_change_history` rows; that needs an
+  M9-style content-free snapshot or a tombstone first.
+- **Never-answered `needs_info` rows** wait for ever while the account exists
+  (auto-reject after N months?).
 - **GDPR story for free-text bodies on no-FK user rows** (correction bodies
   specifically): anonymised-by-decoupling is the deliberate default (§5.6),
   but whether authored *text* should join a deletion hook is unconfirmed.

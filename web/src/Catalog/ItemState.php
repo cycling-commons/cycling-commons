@@ -8,6 +8,8 @@ namespace App\Catalog;
 
 /**
  * Lifecycle state of a catalog row. Imports enter Unverified; upsert-updates never touch state.
+ * Trashed is the curators' bin, never served: a route proposal, or the still-submitted
+ * place of a new-place submission, while it waits 30 days in Trash.
  *
  * @see docs/specs/catalog-data-model.md §4
  *
@@ -20,6 +22,7 @@ enum ItemState: string
     case Verified = 'verified';
     case Rejected = 'rejected';
     case Retired = 'retired';
+    case Trashed = 'trashed';
 
     /** docs/specs/catalog-data-model.md §4: the only lifecycle states ever served publicly. */
     public const array SERVED = [self::Unverified, self::Verified];
