@@ -1353,9 +1353,9 @@
   .cc-city-links{margin-top:.6rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
   .cc-city-links a{color:rgb(var(--chrome-fg) / .85);text-decoration:underline}
   .cc-town{margin-top:.2rem}
-  /* Who may change the town text and how: one plain sentence and the link (moderation-and-contribution.md §3.1b). */
-  .cc-town-edit{margin:.55rem 0 0;font-size:.82rem;line-height:1.5;color:rgb(var(--chrome-fg) / .75)}
-  .cc-town-edit-link{color:var(--chrome-link);text-decoration:underline;white-space:nowrap}
+  /* A card with no text: the one plain link to write one (moderation-and-contribution.md §3.1b). */
+  .cc-town-add{margin:.55rem 0 0;font-size:.82rem;line-height:1.5}
+  .cc-town-add a{color:var(--chrome-link);text-decoration:underline}
   .cc-town-wait{aspect-ratio:auto;min-height:3.2rem;margin-top:.8rem}
   /* The report badge: a ringed exclamation mark before every report link on the map (owner 2026-09-08). */
   .cc-bang{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;border-radius:50%;border:1px solid rgb(var(--chrome-fg) / .45);color:rgb(var(--chrome-fg) / .85);font-weight:700;font-size:.72rem;text-decoration:none;vertical-align:middle}

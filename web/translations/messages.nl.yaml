@@ -1522,11 +1522,10 @@ region:
   about_h: 'Over deze regio'
   about_source: 'Tekst van Wikipedia:'
   about_source_adapted: "Door de regiobeheerders van deze regio bewerkt uit Wikipedia:"
-  about_source_curator: "Geschreven door de regiobeheerders van deze regio."
-  about_source_adapted_by: "Door %name% bewerkt uit Wikipedia, goedgekeurd door de regiobeheerders van deze regio:"
-  about_source_rider: "Geschreven door %name%, goedgekeurd door de regiobeheerders van deze regio."
+  about_source_curator: "Geschreven door de regiobeheerders van deze regio,"
+  about_source_adapted_by: "Door %name% bewerkt uit Wikipedia:"
+  about_source_rider: "Geschreven door %name%,"
   about_removed_rider: 'een fietser met verwijderd account'
-  about_edit_note: 'Iedereen die is aangemeld kan een wijziging van deze tekst voorstellen. Een regiobeheerder van deze regio keurt hem goed.'
   about_edit: 'Deze tekst bewerken'
   about_write: 'Een tekst voor deze regio schrijven'
   cta_map: 'Open deze regio op de kaart'
@@ -2464,13 +2463,13 @@ map:
   d_show_fewer: 'Minder tonen'
   d_report_text: 'Deze tekst melden'
   d_wiki_edited: 'Bewerkt door onze regiobeheerders, naar Wikipedia CC BY-SA 4.0'
-  d_wiki_edited_by: 'Bewerkt door {name}, goedgekeurd door onze regiobeheerders, naar Wikipedia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Bewerkt door {name}, naar Wikipedia CC BY-SA 4.0'
   d_text_written: 'Geschreven door onze regiobeheerders, CC BY-SA 4.0'
-  d_text_written_by: 'Geschreven door {name}, goedgekeurd door onze regiobeheerders, CC BY-SA 4.0'
+  d_text_written_by: 'Geschreven door {name}, CC BY-SA 4.0'
   d_text_edit: 'Deze tekst bewerken'
   d_text_add: 'Een tekst voor deze plaats schrijven'
   d_text_edit_signin: 'Log in om deze tekst te bewerken'
-  d_text_edit_note: 'Iedereen die is aangemeld kan een wijziging van deze tekst voorstellen. Een regiobeheerder van deze regio keurt hem goed.'
+  d_text_add_signin: 'Log in om een tekst voor deze plaats te schrijven'
   d_place_text_label: 'Tekst ({lang})'
   d_founded: 'Gesticht'
   d_inhabitants: 'Inwoners'

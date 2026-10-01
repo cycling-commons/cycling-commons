@@ -1522,11 +1522,10 @@ region:
   about_h: 'Über diese Region'
   about_source: 'Text aus Wikipedia:'
   about_source_adapted: "Von den Kuratoren dieser Region aus Wikipedia bearbeitet:"
-  about_source_curator: "Von den Kuratoren dieser Region geschrieben."
-  about_source_adapted_by: "Von %name% aus Wikipedia bearbeitet, von den Kuratoren dieser Region freigegeben:"
-  about_source_rider: "Von %name% geschrieben, von den Kuratoren dieser Region freigegeben."
+  about_source_curator: "Von den Kuratoren dieser Region geschrieben,"
+  about_source_adapted_by: "Von %name% aus Wikipedia bearbeitet:"
+  about_source_rider: "Von %name% geschrieben,"
   about_removed_rider: 'ein Fahrer mit gelöschtem Konto'
-  about_edit_note: 'Wer angemeldet ist, kann eine Änderung dieses Textes vorschlagen. Ein Kurator dieser Region gibt sie frei.'
   about_edit: 'Diesen Text bearbeiten'
   about_write: 'Einen Text für diese Region schreiben'
   cta_map: 'Diese Region auf der Karte öffnen'
@@ -2467,13 +2466,13 @@ map:
   d_show_fewer: 'Weniger anzeigen'
   d_report_text: 'Diesen Text melden'
   d_wiki_edited: 'Von unseren Kuratoren bearbeitet, nach Wikipedia CC BY-SA 4.0'
-  d_wiki_edited_by: 'Von {name} bearbeitet, von unseren Kuratoren freigegeben, nach Wikipedia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Von {name} bearbeitet, nach Wikipedia CC BY-SA 4.0'
   d_text_written: 'Von unseren Kuratoren geschrieben, CC BY-SA 4.0'
-  d_text_written_by: 'Von {name} geschrieben, von unseren Kuratoren freigegeben, CC BY-SA 4.0'
+  d_text_written_by: 'Von {name} geschrieben, CC BY-SA 4.0'
   d_text_edit: 'Diesen Text bearbeiten'
   d_text_add: 'Einen Text für diesen Ort schreiben'
   d_text_edit_signin: 'Anmelden, um diesen Text zu bearbeiten'
-  d_text_edit_note: 'Wer angemeldet ist, kann eine Änderung dieses Textes vorschlagen. Ein Kurator dieser Region gibt sie frei.'
+  d_text_add_signin: 'Anmelden, um einen Text für diesen Ort zu schreiben'
   d_place_text_label: 'Text ({lang})'
   d_founded: 'Gegründet'
   d_inhabitants: 'Einwohner'

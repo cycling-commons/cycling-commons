@@ -18,7 +18,7 @@ import { liftScopeForHit } from './scope-ui.js';
 import { showRouteCorrections } from './corrections.js';
 import { layerGlyph } from './icons.js';
 import { watchJson } from './commons-photo.js';
-import { townCredit, townCitesWiki, townEditHtml, townPenHtml } from './town-text.js';
+import { townCredit, townCitesWiki, townAddHtml, townPenHtml } from './town-text.js';
 
 export function bumpPlaceReq(){ _placeReq++; }
 
@@ -163,7 +163,7 @@ function townHtml(d, name, meta){
   const wiki = townCitesWiki(d) ? `<a href="${safeHref(t.url)}" target="_blank" rel="noopener">Wikipedia ↗</a> · ` : '';
   // Anyone signed in may suggest a change; a curator of the town's region approves it (moderation-and-contribution.md §3.1b).
   const editOpts = { signedIn: !!window.CC_CONFIRM_TOKEN, lang: lang.slice(0,2), from: location.pathname+location.search };
-  const edit = townEditHtml(d, meta, name, editOpts, D);
+  const edit = townAddHtml(d, meta, name, editOpts, D);
   const pen = townPenHtml(meta, name, editOpts, D);
   // Facts first, then the paragraph (owner 2026-09-08: "place these 2 info points above the text").
   const text = facts + (t ? `<div class="cc-city-info">${escPend(t.extract)}</div>` : '') + (t ? `

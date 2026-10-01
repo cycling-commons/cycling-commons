@@ -1526,11 +1526,10 @@ region:
   about_h: 'About this region'
   about_source: 'Text from Wikipedia:'
   about_source_adapted: "Adapted from Wikipedia by this region's curators:"
-  about_source_curator: "Written by this region's curators."
-  about_source_adapted_by: "Adapted from Wikipedia by %name%, approved by this region's curators:"
-  about_source_rider: "Written by %name%, approved by this region's curators."
+  about_source_curator: "Written by this region's curators,"
+  about_source_adapted_by: 'Adapted from Wikipedia by %name%:'
+  about_source_rider: 'Written by %name%,'
   about_removed_rider: 'a removed rider'
-  about_edit_note: 'Anyone signed in can suggest an edit to this text. A curator of this region approves it.'
   about_edit: 'Edit this text'
   about_write: 'Write a text for this region'
   cta_map: 'Open this region on the map'
@@ -3060,13 +3059,13 @@ map:
   d_show_fewer: 'Show fewer'
   d_report_text: 'Report this text'
   d_wiki_edited: 'Edited by our curators, after Wikipedia CC BY-SA 4.0'
-  d_wiki_edited_by: 'Edited by {name}, approved by our curators, after Wikipedia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Edited by {name}, after Wikipedia CC BY-SA 4.0'
   d_text_written: 'Written by our curators, CC BY-SA 4.0'
-  d_text_written_by: 'Written by {name}, approved by our curators, CC BY-SA 4.0'
+  d_text_written_by: 'Written by {name}, CC BY-SA 4.0'
   d_text_edit: 'Edit this text'
   d_text_add: 'Write a text for this town'
   d_text_edit_signin: 'Sign in to edit this text'
-  d_text_edit_note: 'Anyone signed in can suggest an edit to this text. A curator of this region approves it.'
+  d_text_add_signin: 'Sign in to write a text for this town'
   d_place_text_label: 'Text ({lang})'
   d_founded: 'Founded'
   d_inhabitants: 'Inhabitants'

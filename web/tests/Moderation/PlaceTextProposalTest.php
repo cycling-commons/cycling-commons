@@ -362,19 +362,26 @@ final class PlaceTextProposalTest extends WebTestCase
         $curatorA = $this->user('ptext-cur-a8@example.com', ['ROLE_CURATOR'], $a);
         $curatorB = $this->user('ptext-cur-b8@example.com', ['ROLE_CURATOR'], $b);
 
-        // The region page invites the edit, in one sentence, with the link,
-        // and the credit line ends in the ringed pencil to the same form.
+        // The region page's credit line ends in the ringed pencil to the
+        // form, with no sentence and no second link under it.
         $crawler = $client->request('GET', '/regions/ptext-a');
         self::assertResponseIsSuccessful();
         $page = (string) $client->getResponse()->getContent();
-        self::assertStringContainsString('Anyone signed in can suggest an edit to this text.', $page);
-        self::assertStringContainsString('/regions/ptext-a/text', $page);
+        self::assertStringNotContainsString('Anyone signed in can suggest an edit', $page);
         $pen = $crawler->filter('.rg-about-attrib a.rg-about-pen');
         self::assertCount(1, $pen, 'the pencil is on the credit line');
         self::assertSame('/regions/ptext-a/text', $pen->attr('href'));
         self::assertSame('Edit this text', $pen->attr('aria-label'));
         self::assertSame('Edit this text', $pen->attr('title'));
-        self::assertSame($crawler->filter('.rg-about-edit a')->attr('href'), $pen->attr('href'), 'the same target as the link');
+        self::assertCount(0, $crawler->filter('.rg-about-write'), 'a region with a text has no plain link');
+
+        // A region with no text has no credit line, so one plain link stands instead.
+        $crawler = $client->request('GET', '/regions/ptext-b');
+        self::assertResponseIsSuccessful();
+        $write = $crawler->filter('.rg-about-write a');
+        self::assertSame('Write a text for this region', $write->text());
+        self::assertSame('/regions/ptext-b/text', $write->attr('href'));
+        self::assertSame('Write a text for this region', trim($crawler->filter('.rg-about-write')->text()), 'the link alone, no sentence');
 
         $client->loginUser($rider);
         $crawler = $client->request('GET', '/regions/ptext-a/text?lang=en');
@@ -406,7 +413,7 @@ final class PlaceTextProposalTest extends WebTestCase
         $client->request('GET', '/regions/ptext-a');
         $page = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('Ptext A is flat and windy.', $page);
-        self::assertStringContainsString('Adapted from Wikipedia by Streekfietser, approved by this region&#039;s curators:', $page,
+        self::assertStringContainsString('Adapted from Wikipedia by Streekfietser:', $page,
             'the form started from the article, so the adaptation keeps its citation and names the rider');
     }
 
@@ -805,7 +812,7 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertResponseRedirects();
         $client->request('GET', '/regions/ptext-a');
         $page = (string) $client->getResponse()->getContent();
-        self::assertStringContainsString('Adapted from Wikipedia by Heuvelfietser, approved by this region&#039;s curators:', $page);
+        self::assertStringContainsString('Adapted from Wikipedia by Heuvelfietser:', $page);
         self::assertStringContainsString('https://en.wikipedia.org/wiki/Ptext', $page);
 
         // Dropped on a second text: no citation, the writer alone.
@@ -817,6 +824,7 @@ final class PlaceTextProposalTest extends WebTestCase
         $client->request('GET', '/regions/ptext-a');
         $page = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('Written by Heuvelfietser,', $page);
+        self::assertCount(1, $client->getCrawler()->filter('.rg-about-attrib a[href="https://creativecommons.org/licenses/by-sa/4.0/"]'), 'a fresh text carries the licence too');
         self::assertStringNotContainsString('https://en.wikipedia.org/wiki/Ptext', $page);
     }
 

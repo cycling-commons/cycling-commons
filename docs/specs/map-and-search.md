@@ -810,10 +810,13 @@ for one thing in five languages. Fixed across all five.
   approving curator decided the Wikipedia credit
   ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1b).
   A lead written by someone other than the curator who approved it names them:
-  `region.about_source_adapted_by` ("Adapted from Wikipedia by {name},
-  approved by this region's curators:") or `region.about_source_rider`
-  ("Written by {name}, approved by this region's curators."), the name being
-  the public display name, else the `rider#` handle. Pinned by
+  `region.about_source_adapted_by` ("Adapted from Wikipedia by {name}:") or
+  `region.about_source_rider` ("Written by {name}," then the linked "CC BY-SA
+  4.0", as every credit line on the page carries the licence, owner
+  2026-10-01), the name being the public display name, else the `rider#`
+  handle; a curator's own fresh text reads "Written by this region's
+  curators, CC BY-SA 4.0". The credit names the writer,
+  not the approving curator (owner 2026-10-01). Pinned by
   `PlaceTextProposalTest` and `RegionsPagesTest`.
 
   **The hero opens with the same three figures as `/coverage`**, in the same
@@ -2590,9 +2593,13 @@ a curator of that region, and on approval it becomes the local text for that
 language exactly as the pen writes it
 ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1b). The
 endpoint then also carries `editedBy: {name}` when the writer is not the
-approving curator, and the credit reads "Edited by {name}, approved by our
-curators, after Wikipedia CC BY-SA 4.0". A local text stands without a
-Wikipedia page ("Written by ...", no Wikipedia link), so a town Wikipedia has
+approving curator. The approving curator decides whether the Wikipedia
+credit stays (`derived`, [moderation-and-contribution.md](moderation-and-contribution.md)
+§3.1b): kept, the Wikipedia link and "Edited by {name}, after Wikipedia CC
+BY-SA 4.0"; dropped, no Wikipedia link and "Written by {name}, CC BY-SA 4.0"
+(`townCitesWiki()` in `town-text.js`; a missing flag keeps the credit). The
+credit names the writer, not the approving curator (owner 2026-10-01). A local text stands
+without a Wikipedia page ("Written by ...", no Wikipedia link), so a town Wikipedia has
 nothing on can still be written about. The endpoint keeps the town's point in
 `town_place` (first reader's point, never moved): it decides the region.
 Pinned by `tests/js/town-text.test.mjs` and `TownControllerTest`.

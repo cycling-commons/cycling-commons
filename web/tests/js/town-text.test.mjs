@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
-// The town card's text line (assets/map/town-text.js): anyone signed in can
-// suggest an edit and a curator of the region approves it, said in one
-// sentence with the link; a visitor gets a sign-in link that comes back to
-// the form; the credit line carries a ringed pencil after its "!" that goes
-// where the link goes; the credit names a rider whose text a curator approved,
-// and credits Wikipedia only while the text is based on the article
-// (moderation-and-contribution.md §3.1b).
+// The town card's text line (assets/map/town-text.js): a card with a text
+// carries a ringed pencil after its ringed "!" on the credit line, which opens the
+// form; a card with no text carries one plain link to write one; a visitor's
+// pencil and link go to sign-in, which comes back to the form; the credit
+// names a rider whose text a curator approved, and credits Wikipedia only
+// while the text is based on the article (moderation-and-contribution.md
+// §3.1b).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { townTextHref, townCredit, townCitesWiki, townEditHtml, townPenHtml, townEditTarget } from '../../assets/map/town-text.js';
+import { townTextHref, townCredit, townCitesWiki, townAddHtml, townPenHtml, townEditTarget } from '../../assets/map/town-text.js';
 
 const D = {
   textEdit: 'Edit this text', textAdd: 'Write a text for this town', textEditSignin: 'Sign in to edit this text',
-  textEditNote: 'Anyone signed in can suggest an edit to this text. A curator of this region approves it.',
+  textAddSignin: 'Sign in to write a text for this town',
   wikiText: 'Text CC BY-SA 4.0', wikiEdited: 'Edited by our curators, after Wikipedia CC BY-SA 4.0',
-  wikiEditedBy: 'Edited by {name}, approved by our curators, after Wikipedia CC BY-SA 4.0',
-  textWritten: 'Written by our curators, CC BY-SA 4.0', textWrittenBy: 'Written by {name}, approved by our curators, CC BY-SA 4.0',
+  wikiEditedBy: 'Edited by {name}, after Wikipedia CC BY-SA 4.0',
+  textWritten: 'Written by our curators, CC BY-SA 4.0', textWrittenBy: 'Written by {name}, CC BY-SA 4.0',
   riderRemoved: 'a removed rider',
 };
 const META = { osm: 'node/59518', ll: [51.2194, 4.4025] };
@@ -39,40 +39,37 @@ test('the form address names the element, the card language, the point, the name
 
 test('no element, no link', () => {
   assert.equal(townTextHref({ osm: 'bogus' }, 'x', 'en'), '');
-  assert.equal(townEditHtml(TEXT, { osm: '' }, 'x', { signedIn: true, lang: 'en' }, D), '');
+  assert.equal(townAddHtml({ text: null }, { osm: '' }, 'x', { signedIn: true, lang: 'en' }, D), '');
 });
 
-test('a signed-in reader gets the sentence and "Edit this text"', () => {
-  const html = townEditHtml(TEXT, META, 'Antwerpen', { signedIn: true, lang: 'en' }, D);
-  assert.match(html, /Anyone signed in can suggest an edit to this text\. A curator of this region approves it\./);
-  assert.match(html, /<a class="cc-town-edit-link" href="\/town\/node\/59518\/text\?[^"]*">Edit this text<\/a>/);
+test('a card with a text has no sentence and no link under it: the pencil on the credit line is the way in', () => {
+  assert.equal(townAddHtml(TEXT, META, 'Antwerpen', { signedIn: true, lang: 'en' }, D), '');
+  assert.equal(townAddHtml(TEXT, META, 'Antwerpen', { signedIn: false, lang: 'en' }, D), '');
 });
 
-test('a card with no text yet invites one', () => {
-  const html = townEditHtml({ text: null }, META, 'Hamlet', { signedIn: true, lang: 'en' }, D);
-  assert.match(html, />Write a text for this town</);
+test('a card with no text yet carries one plain link to write one', () => {
+  const html = townAddHtml({ text: null }, META, 'Hamlet', { signedIn: true, lang: 'en' }, D);
+  assert.match(html, /^<p class="cc-town-add"><a href="\/town\/node\/59518\/text\?[^"]*">Write a text for this town<\/a><\/p>$/);
+  assert.doesNotMatch(html, /Anyone signed in/, 'the link alone, no sentence');
 });
 
-test('a visitor gets a sign-in link that comes back to the form', () => {
-  const html = townEditHtml(TEXT, META, 'Antwerpen', { signedIn: false, lang: 'fr' }, D);
-  assert.match(html, /Anyone signed in can suggest an edit/);
+test('a visitor gets the same link to sign in, which comes back to the form', () => {
+  const html = townAddHtml({ text: null }, META, 'Hamlet', { signedIn: false, lang: 'fr' }, D);
   const href = /href="([^"]+)"/.exec(html)[1].replace(/&amp;/g, '&');
   assert.ok(href.startsWith('/fr/login?_target_path='), href);
   assert.ok(decodeURIComponent(href.split('_target_path=')[1]).startsWith('/fr/town/node/59518/text?'));
-  assert.match(html, />Sign in to edit this text</);
+  assert.match(html, />Sign in to write a text for this town</);
 });
 
-test('the pencil goes where the link goes, labelled "Edit this text"', () => {
+test('the pencil on the credit line opens the form, labelled "Edit this text"', () => {
   const opts = { signedIn: true, lang: 'en', from: '/map?town=x' };
   const pen = townPenHtml(META, 'Antwerpen', opts, D);
   const m = /^<a class="cc-pen" href="([^"]+)" title="Edit this text" aria-label="Edit this text">✎<\/a>$/.exec(pen);
   assert.ok(m, pen);
   assert.equal(m[1].replace(/&amp;/g, '&'), townTextHref(META, 'Antwerpen', 'en', '/map?town=x'));
-  const link = /class="cc-town-edit-link" href="([^"]+)"/.exec(townEditHtml(TEXT, META, 'Antwerpen', opts, D))[1];
-  assert.equal(m[1], link, 'the same target as the "Edit this text" link');
 });
 
-test('a visitor\'s pencil goes to sign in, like the link', () => {
+test('a visitor\'s pencil goes to sign in', () => {
   const opts = { signedIn: false, lang: 'nl' };
   const pen = townPenHtml(META, 'Antwerpen', opts, D);
   assert.match(pen, /aria-label="Sign in to edit this text"/);
@@ -83,7 +80,7 @@ test('a visitor\'s pencil goes to sign in, like the link', () => {
 });
 
 test('the name the card was opened with is escaped', () => {
-  const html = townEditHtml(TEXT, META, '<b>x</b>', { signedIn: true, lang: 'en' }, D);
+  const html = townAddHtml({ text: null }, META, '<b>x</b>', { signedIn: true, lang: 'en' }, D);
   assert.doesNotMatch(html, /<b>x<\/b>/);
 });
 
@@ -91,15 +88,15 @@ test('the credit follows who wrote the text', () => {
   assert.equal(townCredit({ edited: false, ...TEXT }, D), 'Text CC BY-SA 4.0');
   assert.equal(townCredit({ edited: true, derived: true, editedBy: null, ...TEXT }, D), 'Edited by our curators, after Wikipedia CC BY-SA 4.0');
   assert.equal(townCredit({ edited: true, derived: true, editedBy: { name: 'Dorpsfietser' }, ...TEXT }, D),
-    'Edited by Dorpsfietser, approved by our curators, after Wikipedia CC BY-SA 4.0');
+    'Edited by Dorpsfietser, after Wikipedia CC BY-SA 4.0');
   assert.equal(townCredit({ edited: true, editedBy: { name: null }, text: { extract: 'x', url: null } }, D),
-    'Written by a removed rider, approved by our curators, CC BY-SA 4.0');
+    'Written by a removed rider, CC BY-SA 4.0');
   assert.equal(townCredit({ edited: true, editedBy: null, text: { extract: 'x', url: null } }, D), 'Written by our curators, CC BY-SA 4.0');
 });
 
 test('a text the curator approved as written fresh credits its writer alone, with no Wikipedia link', () => {
   const fresh = { edited: true, derived: false, editedBy: { name: 'Dorpsfietser' }, ...TEXT };
-  assert.equal(townCredit(fresh, D), 'Written by Dorpsfietser, approved by our curators, CC BY-SA 4.0');
+  assert.equal(townCredit(fresh, D), 'Written by Dorpsfietser, CC BY-SA 4.0');
   assert.equal(townCitesWiki(fresh), false, 'no Wikipedia link');
   assert.equal(townCredit({ ...fresh, editedBy: null }, D), 'Written by our curators, CC BY-SA 4.0');
 });
@@ -112,12 +109,12 @@ test('a text based on the article keeps the Wikipedia link and credit', () => {
   assert.equal(townCitesWiki({ edited: true, derived: true, text: { extract: 'x', url: null } }), false, 'no article, nothing to link');
 });
 
-test('the town card renders the line and the pencil after the "!", and the signed-in signal is the riders\' confirm token', () => {
+test('the town card renders the line and the pencil after the "!", the link only without a text, and the signed-in signal is the riders\' confirm token', () => {
   const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
   const places = fs.readFileSync(path.join(root, 'assets', 'map', 'places.js'), 'utf8');
-  assert.match(places, /import \{ townCredit, townCitesWiki, townEditHtml, townPenHtml \} from '\.\/town-text\.js';/);
+  assert.match(places, /import \{ townCredit, townCitesWiki, townAddHtml, townPenHtml \} from '\.\/town-text\.js';/);
   assert.match(places, /const editOpts = \{ signedIn: !!window\.CC_CONFIRM_TOKEN,/);
-  assert.match(places, /townEditHtml\(d, meta, name, editOpts, D\)/);
+  assert.match(places, /const edit = townAddHtml\(d, meta, name, editOpts, D\);/);
   assert.match(places, /const pen = townPenHtml\(meta, name, editOpts, D\);/);
   assert.match(places, /const wiki = townCitesWiki\(d\) \?/);
   // The pencil sits right after the "!" report mark on the credit line.

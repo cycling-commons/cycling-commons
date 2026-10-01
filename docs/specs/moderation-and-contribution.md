@@ -791,9 +791,7 @@ writer's claim only, shown to the approving curator as a hint. Send and Cancel s
 secondary button of one height (`.btn-p`, `.btn-g`); below them, in small
 print, the licence line says the text is published under CC BY-SA 4.0 and
 credited to the writer by public name, else rider handle; no tick box, as for
-place edits (moderation-and-contribution.md §1). The card and the page both carry one plain sentence:
-"Anyone signed in can suggest an edit to this text. A curator of this region
-approves it."
+place edits (moderation-and-contribution.md §1).
 
 **The row.** `type = text`, `letter = ''`, `item_id` NULL, `title` = the
 town's or region's name, `changes = {"text:<lang>": {was, now}}` (`was` is
@@ -873,12 +871,18 @@ the row has an article (checked while the box starts from the fetched
 article, else as stored). Rulebook RB-TOWN-07.
 
 **Credit.** A text written by someone other than the curator who approved it
-names the writer: "Edited by {name}, approved by our curators, after
-Wikipedia CC BY-SA 4.0" on the card (or "Written by ...", with no article),
-"Adapted from Wikipedia by {name}, approved by this region's curators:" or
-"Written by {name}, approved by this region's curators." on the region page.
-The name is the public display name, else the `rider#` handle
-(`DeskRider::of()`). A curator's own text keeps "our curators".
+names the writer. On the card (`townCredit()`, `townCitesWiki()` in
+`town-text.js`; the endpoint carries `derived`): kept, the Wikipedia link
+and "Edited by {name}, after Wikipedia CC BY-SA 4.0"; dropped, or with no
+article, no Wikipedia link and "Written by {name}, CC BY-SA 4.0". On the
+region page: kept, "Adapted from Wikipedia by {name}:" with the article's
+link and "· CC BY-SA 4.0"; dropped, "Written by {name}, CC BY-SA 4.0" with
+no article link ("Written by this region's curators, CC BY-SA 4.0" for a
+curator's own text), CC BY-SA 4.0 linked to the licence as on every variant
+(owner 2026-10-01). The credit names the writer
+only, never the approving curator (owner 2026-10-01: drop "approved by our
+curators"); who approved stays on the row (`approved_by`, `approvedBy`). The name is the public display name, else the `rider#`
+handle (`DeskRider::of()`). A curator's own text keeps "our curators".
 
 **Curators.** A curator's own proposal inside their area applies at once
 (§1.6: the proposal is filed and approved in the same request); outside it,

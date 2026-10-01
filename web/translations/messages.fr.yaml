@@ -1517,11 +1517,10 @@ region:
   about_h: 'À propos de cette région'
   about_source: 'Texte de Wikipédia :'
   about_source_adapted: "Adapté de Wikipédia par les curateurs de cette région :"
-  about_source_curator: "Écrit par les curateurs de cette région."
-  about_source_adapted_by: "Adapté de Wikipédia par %name%, approuvé par les curateurs de cette région :"
-  about_source_rider: "Écrit par %name%, approuvé par les curateurs de cette région."
+  about_source_curator: "Écrit par les curateurs de cette région,"
+  about_source_adapted_by: "Adapté de Wikipédia par %name% :"
+  about_source_rider: "Écrit par %name%,"
   about_removed_rider: 'un cycliste au compte supprimé'
-  about_edit_note: 'Toute personne connectée peut proposer une modification de ce texte. Un curateur de cette région l’approuve.'
   about_edit: 'Modifier ce texte'
   about_write: 'Écrire un texte pour cette région'
   cta_map: 'Ouvrir cette région sur la carte'
@@ -2458,14 +2457,14 @@ map:
   d_show_more: 'Afficher {n} de plus'
   d_show_fewer: 'Afficher moins'
   d_report_text: 'Signaler ce texte'
-  d_wiki_edited: 'Modifié par nos curateurs, daprès Wikipédia CC BY-SA 4.0'
-  d_wiki_edited_by: 'Modifié par {name}, approuvé par nos curateurs, d’après Wikipédia CC BY-SA 4.0'
+  d_wiki_edited: 'Modifié par nos curateurs, d’après Wikipédia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Modifié par {name}, d’après Wikipédia CC BY-SA 4.0'
   d_text_written: 'Écrit par nos curateurs, CC BY-SA 4.0'
-  d_text_written_by: 'Écrit par {name}, approuvé par nos curateurs, CC BY-SA 4.0'
+  d_text_written_by: 'Écrit par {name}, CC BY-SA 4.0'
   d_text_edit: 'Modifier ce texte'
   d_text_add: 'Écrire un texte pour cette ville'
   d_text_edit_signin: 'Connectez-vous pour modifier ce texte'
-  d_text_edit_note: 'Toute personne connectée peut proposer une modification de ce texte. Un curateur de cette région l’approuve.'
+  d_text_add_signin: 'Connectez-vous pour écrire un texte pour cette ville'
   d_place_text_label: 'Texte ({lang})'
   d_founded: 'Fondée'
   d_inhabitants: 'Habitants'

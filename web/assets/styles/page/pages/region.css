@@ -82,6 +82,6 @@ section.rg-about+section.pad{padding-top:clamp(1.75rem,3.5vw,2.75rem)}
 /* The edit badge ending the credit line: the report badge's ring with a pencil. */
 .rg-about-attrib .rg-about-pen{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.2rem;border-radius:50%;border:1px solid rgba(20,22,14,.45);color:inherit;font-family:var(--sans);font-size:.72rem;letter-spacing:0;line-height:1;vertical-align:middle;text-decoration:none}
 .rg-about-attrib .rg-about-pen:hover{border-color:var(--clay);color:var(--clay)}
-/* Who may change the text and how: one plain sentence and the link. */
-.rg-about-edit{font-size:.9rem;line-height:1.55;color:#4f5344;margin:.5rem 0 0}
-.rg-about-edit a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}
+/* A region with no text: the one plain link to write one. */
+.rg-about-write{font-size:.9rem;line-height:1.55;color:#4f5344;margin:.5rem 0 0}
+.rg-about-write a{color:var(--clay);text-decoration:underline;text-underline-offset:3px}

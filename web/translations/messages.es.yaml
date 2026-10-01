@@ -1528,11 +1528,10 @@ region:
   about_h: 'Sobre esta región'
   about_source: 'Texto de Wikipedia:'
   about_source_adapted: "Adaptado de Wikipedia por los curadores de esta región:"
-  about_source_curator: "Escrito por los curadores de esta región."
-  about_source_adapted_by: "Adaptado de Wikipedia por %name%, aprobado por los curadores de esta región:"
-  about_source_rider: "Escrito por %name%, aprobado por los curadores de esta región."
+  about_source_curator: "Escrito por los curadores de esta región,"
+  about_source_adapted_by: "Adaptado de Wikipedia por %name%:"
+  about_source_rider: "Escrito por %name%,"
   about_removed_rider: 'un ciclista con la cuenta eliminada'
-  about_edit_note: 'Cualquier persona con sesión iniciada puede proponer un cambio en este texto. Un curador de esta región lo aprueba.'
   about_edit: 'Editar este texto'
   about_write: 'Escribir un texto para esta región'
   cta_map: 'Abrir esta región en el mapa'
@@ -3068,13 +3067,13 @@ map:
   d_show_fewer: 'Ver menos'
   d_report_text: 'Denunciar este texto'
   d_wiki_edited: 'Editado por nuestros curadores, a partir de Wikipedia CC BY-SA 4.0'
-  d_wiki_edited_by: 'Editado por {name}, aprobado por nuestros curadores, a partir de Wikipedia CC BY-SA 4.0'
+  d_wiki_edited_by: 'Editado por {name}, a partir de Wikipedia CC BY-SA 4.0'
   d_text_written: 'Escrito por nuestros curadores, CC BY-SA 4.0'
-  d_text_written_by: 'Escrito por {name}, aprobado por nuestros curadores, CC BY-SA 4.0'
+  d_text_written_by: 'Escrito por {name}, CC BY-SA 4.0'
   d_text_edit: 'Editar este texto'
   d_text_add: 'Escribir un texto para esta localidad'
   d_text_edit_signin: 'Inicia sesión para editar este texto'
-  d_text_edit_note: 'Cualquier persona con sesión iniciada puede proponer un cambio en este texto. Un curador de esta región lo aprueba.'
+  d_text_add_signin: 'Inicia sesión para escribir un texto para esta localidad'
   d_place_text_label: 'Texto ({lang})'
   d_founded: 'Fundada'
   d_inhabitants: 'Habitantes'

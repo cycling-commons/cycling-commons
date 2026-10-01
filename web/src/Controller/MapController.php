@@ -494,10 +494,10 @@ final class MapController extends AbstractController
             'alongRouteH' => 'd_along_route_h', 'alongRouteWithin' => 'd_along_route_within', 'alongRouteWait' => 'd_along_route_wait',
             'alongRouteCovH' => 'd_along_route_cov_h', 'nothingAlongRoute' => 'd_nothing_along_route',
             'showMore' => 'd_show_more', 'showFewer' => 'd_show_fewer',
-            // docs/specs/moderation-and-contribution.md §3.1b: who wrote the town text, and "Edit this text".
+            // docs/specs/moderation-and-contribution.md §3.1b: who wrote the town text, its pencil, and the link to write one.
             'wikiEditedBy' => 'd_wiki_edited_by', 'textWritten' => 'd_text_written', 'textWrittenBy' => 'd_text_written_by',
             'textEdit' => 'd_text_edit', 'textAdd' => 'd_text_add', 'textEditSignin' => 'd_text_edit_signin',
-            'textEditNote' => 'd_text_edit_note', 'placeTextLabel' => 'd_place_text_label',
+            'textAddSignin' => 'd_text_add_signin', 'placeTextLabel' => 'd_place_text_label',
             'reportText' => 'd_report_text', 'wikiEdited' => 'd_wiki_edited', 'founded' => 'd_founded', 'inhabitants' => 'd_inhabitants', 'circa' => 'd_circa', 'yearBc' => 'd_year_bc',
             'raceStageStart' => 'd_race_stage_start', 'raceStageFinish' => 'd_race_stage_finish', 'raceStageStartFinish' => 'd_race_stage_start_finish', 'nothingHere' => 'd_nothing_here',
             'kindShop' => 'd_kind_shop', 'kindStation' => 'd_kind_station', 'kindPump' => 'd_kind_pump',

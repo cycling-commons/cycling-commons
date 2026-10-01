@@ -108,7 +108,8 @@ final class RegionsPagesTest extends WebTestCase
     /**
      * A region without a lead still has the section: anyone signed in can
      * write one, and a curator of the region approves it
-     * (moderation-and-contribution.md §3.1b). No text and no credit line.
+     * (moderation-and-contribution.md §3.1b). No text and no credit line,
+     * so one plain link to the form, without a sentence.
      */
     public function testDetailPageWithoutContextInvitesAText(): void
     {
@@ -120,7 +121,8 @@ final class RegionsPagesTest extends WebTestCase
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('Write a text for this region', $html);
         self::assertStringContainsString('/regions/ctx-less-region/text', $html);
-        self::assertStringContainsString('A curator of this region approves it.', $html);
+        self::assertStringContainsString('<p class="rg-about-write"><a href="/regions/ctx-less-region/text">Write a text for this region</a></p>', $html);
+        self::assertStringNotContainsString('A curator of this region approves it.', $html);
         self::assertStringNotContainsString('class="rg-about-text"', $html);
         self::assertStringNotContainsString('class="rg-about-attrib"', $html);
     }
