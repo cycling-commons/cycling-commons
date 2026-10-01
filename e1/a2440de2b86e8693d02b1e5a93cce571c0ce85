@@ -1,0 +1,25 @@
+web/tests/Provider/ProviderDefaultsTest.php
+  s_49442ae34d3603::t_cf749a34e26d9e 174
+web/migrations/Version20261001230000.php
+  s_49442ae34d3603::t_31a09ed7f8b79b 35,37
+  s_49442ae34d3603::t_aa164b951c6bf3 1-34,36,38-48
+docs/specs/data-provider-hierarchy.md
+  s_49442ae34d3603::t_aa164b951c6bf3 1153
+  s_49442ae34d3603::t_e5f083f1779346 1157-1159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e1a2440de2b86e8693d02b1e5a93cce571c0ce85",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
