@@ -6,9 +6,10 @@
    text in that language yet. The box keeps whatever the rider wrote. Under
    the box a polite live count says how many of the allowed characters are
    used, counted as the server counts them (code points); the server enforces
-   the limit either way. The adaptation tick of a region lead follows the
-   language too, and hides where there is no article to adapt; the server
-   checks it again either way.
+   the limit either way. "Where your text comes from" follows the language
+   too: shown where there is an article to adapt, hidden and disabled where
+   there is none, so its required radios never block the send; the server
+   checks the answer again either way.
 
    A file rather than an inline block, so the page carries no CSP nonce. */
 (function () {
@@ -17,11 +18,10 @@
   var box = document.getElementById('pt-text');
   if (!form || !select || !box) { return; }
   var texts = {};
-  var derived = null;
+  var articles = null;
   try { texts = JSON.parse(form.getAttribute('data-texts') || '{}'); } catch (e) { texts = {}; }
-  try { derived = form.hasAttribute('data-derived') ? JSON.parse(form.getAttribute('data-derived')) : null; } catch (e) { derived = null; }
-  var field = document.getElementById('pt-derived-field');
-  var tick = document.getElementById('pt-derived');
+  try { articles = form.hasAttribute('data-articles') ? JSON.parse(form.getAttribute('data-articles')) : null; } catch (e) { articles = null; }
+  var source = document.getElementById('pt-source');
   var quote = document.getElementById('pt-current-text');
   var none = document.getElementById('pt-current-none');
   var count = document.getElementById('pt-text-count');
@@ -46,10 +46,10 @@
   select.addEventListener('change', function () {
     var lang = select.value;
     showCurrent(lang);
-    if (derived && field && tick) {
-      var d = derived[lang];
-      field.hidden = d === null || d === undefined;
-      tick.checked = d === true;
+    if (articles && source) {
+      var asked = articles[lang] === true;
+      source.hidden = !asked;
+      source.disabled = !asked;
     }
   });
   box.addEventListener('input', recount);

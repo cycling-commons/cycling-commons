@@ -16,6 +16,10 @@
   CSP nonce). Without script the select still decides which language the
   text is sent for, and the server enforces the length either way.
 
+  Where the language has a Wikipedia article, the writer says where their
+  text comes from: adapted from the article, or their own (two radios,
+  required, no default). The server refuses a send without the answer.
+
   The same page is where a curator of the area corrects a waiting proposal
   (`correcting` set, route moderate_text): the box holds the rider's text,
   the language is the proposal's and cannot change, the rider's note shows
@@ -23,6 +27,12 @@
   the writer) gives way to the lead saying the rider stays credited. There
   the curator either approves the text in the box, with an optional note
   to the writer, or saves the correction and decides later.
+
+  Where the language has a Wikipedia article to credit, the correction page
+  asks the curator whether that credit stays (`credit`, owner 2026-10-01):
+  two radios and no default, required for Approve only (Save correction
+  carries `formnovalidate`), with the writer's own claim as the hint. The
+  server refuses an approval without the choice either way.
 #}
 {% extends 'base.html.twig' %}
 
@@ -61,7 +71,7 @@
 
       <form method="post" action="{{ action }}" id="place-text-form"
             data-texts="{{ texts|json_encode }}"
-            {% if derived is not null %}data-derived="{{ derived|json_encode }}"{% endif %}>
+            {% if articles is not null %}data-articles="{{ articles|json_encode }}"{% endif %}>
         <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
         {% for k, v in hidden %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
 
@@ -89,15 +99,44 @@
           <p class="chint" id="pt-text-hint">{{ 'place_text.field_text_hint'|trans({'%max%': max}) }}</p>
         </div>
 
-        {# The licence question, as on the Regions desk: offered only for a
-           language with an article to adapt, and checked again on the server. #}
-        {% if derived is not null %}
-          <div class="cfield" id="pt-derived-field"{{ derived[lang] is null ? ' hidden' }}>
-            <label class="cinline" for="pt-derived">
-              <input type="checkbox" id="pt-derived" name="derived" value="1"{{ derived[lang] ? ' checked' }}>
+        {# Where the writer's text comes from: a required choice of two, with no
+           default, asked only for a language with an article to adapt and
+           checked again on the server. Hidden and disabled for a language
+           without one, so its `required` never blocks the send. It is the
+           writer's claim only; the approving curator decides the credit.
+           Not shown when a curator corrects a proposal (`articles` null):
+           their own credit choice decides there. #}
+        {% if articles is not null %}
+          {% set has_article = articles[lang] ?? false %}
+          <fieldset class="cpick pt-pick pt-source" id="pt-source"{{ not has_article ? ' hidden disabled' }}>
+            <legend>{{ 'place_text.field_source'|trans }} <span class="req" aria-hidden="true">*</span></legend>
+            <label class="cinline" for="pt-source-adapted">
+              <input type="radio" id="pt-source-adapted" name="derived" value="adapted" required{{ source == 'adapted' ? ' checked' }}>
               <span>{{ 'place_text.field_derived'|trans }}</span>
             </label>
-          </div>
+            <label class="cinline" for="pt-source-own">
+              <input type="radio" id="pt-source-own" name="derived" value="own" required{{ source == 'own' ? ' checked' }}>
+              <span>{{ 'place_text.field_own'|trans }}</span>
+            </label>
+          </fieldset>
+        {% endif %}
+
+        {% if credit %}
+          <fieldset class="cpick pt-pick pt-credit" id="pt-credit" aria-describedby="pt-credit-hint">
+            <legend>{{ 'place_text.correct.credit_legend'|trans }} <span class="req" aria-hidden="true">*</span></legend>
+            <label class="cinline" for="pt-credit-keep">
+              <input type="radio" id="pt-credit-keep" name="credit" value="keep" required{{ credit.choice == 'keep' ? ' checked' }}>
+              <span>{{ 'place_text.correct.credit_keep'|trans }}</span>
+            </label>
+            <label class="cinline" for="pt-credit-drop">
+              <input type="radio" id="pt-credit-drop" name="credit" value="drop" required{{ credit.choice == 'drop' ? ' checked' }}>
+              <span>{{ 'place_text.correct.credit_drop'|trans }}</span>
+            </label>
+            <p class="chint" id="pt-credit-hint">{{ 'place_text.correct.credit_hint'|trans }}</p>
+            {% if credit.claim is not null %}
+              <p class="chint pt-credit-claim" id="pt-credit-claim">{{ 'place_text.correct.credit_claim'|trans({'%choice%': (credit.claim ? 'place_text.field_derived' : 'place_text.field_own')|trans}) }}</p>
+            {% endif %}
+          </fieldset>
         {% endif %}
 
         {% if correcting %}
@@ -123,7 +162,8 @@
         <div class="pt-actions">
           {% if correcting %}
             <button type="submit" name="do" value="approve" class="btn btn-p">{{ 'place_text.correct.approve'|trans }}</button>
-            <button type="submit" name="do" value="save" class="btn btn-g">{{ 'place_text.correct.submit'|trans }}</button>
+            {# Saving a correction leaves the decision, and the credit question, for later. #}
+            <button type="submit" name="do" value="save" class="btn btn-g" formnovalidate>{{ 'place_text.correct.submit'|trans }}</button>
           {% else %}
             <button type="submit" class="btn btn-p">{{ 'place_text.submit'|trans }}</button>
           {% endif %}

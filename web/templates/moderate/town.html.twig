@@ -52,6 +52,11 @@
         <label for="text-{{ lang }}">{{ 'moderate.town.field_text'|trans }}</label>
         <textarea id="text-{{ lang }}" name="text" maxlength="{{ text_max }}" required>{{ row.extract|default('') }}</textarea>
         <p class="hint">{{ 'moderate.town.hint'|trans({'%max%': text_max}) }}</p>
+        {# The licence question, only where there is an article to credit
+           (moderation-and-contribution.md §3.1b); the server checks it again. #}
+        {% if row and row.page_url %}
+          <label class="derived"><input type="checkbox" name="derived" value="1"{{ row.derived ? ' checked' }}> <span>{{ 'place_text.field_derived'|trans }}</span></label>
+        {% endif %}
         <button type="submit">{{ 'moderate.town.save'|trans }}</button>
       </form>
     </section>

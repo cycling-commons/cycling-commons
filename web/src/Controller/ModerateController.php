@@ -29,6 +29,7 @@ use App\Moderation\OsmUnansweredException;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RetentionService;
 use App\Moderation\SubmissionQueue;
+use App\Moderation\TextCreditUndecidedException;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -312,6 +313,16 @@ final class ModerateController extends AbstractController
                 }
 
                 $this->addFlash('error', 'moderate.error.osm_unanswered');
+
+                return $this->redirectToRoute('moderate_submissions');
+            } catch (TextCreditUndecidedException) {
+                // moderation-and-contribution.md §3.1b - a town or region text
+                // is approved on its own form, where the Wikipedia credit is decided.
+                if ($wantsJson) {
+                    return $this->json(['error' => 'text_credit_undecided', 'form' => $this->generateUrl('moderate_text', ['id' => (int) $data['submission_id']])], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
+                $this->addFlash('error', 'moderate.error.text_credit_undecided');
 
                 return $this->redirectToRoute('moderate_submissions');
             } catch (AlreadyDecidedException|\InvalidArgumentException|\LogicException) {

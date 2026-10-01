@@ -89,7 +89,7 @@ final class TownControllerTest extends WebTestCase
         $towns = self::getContainer()->get(TownSummaryRepository::class);
         $towns->claim('node/999990105', 'en');
         $towns->record('node/999990105', 'en', null, null, []);
-        $towns->overrideText('node/999990105', 'en', 'A hamlet with a steep lane.', 1, 'Hamlet', 1);
+        $towns->overrideText('node/999990105', 'en', 'A hamlet with a steep lane.', true, 1, 'Hamlet', 1);
 
         $client->request('GET', '/map/town/node/999990105?lang=en&lat=50.1&lng=4.1');
         $data = $this->payload($client);
@@ -97,6 +97,7 @@ final class TownControllerTest extends WebTestCase
         self::assertNull($data['text']['url'], 'no page to link, and none invented');
         self::assertTrue($data['edited']);
         self::assertNull($data['editedBy'], 'written and approved by the same curator: "our curators"');
+        self::assertFalse($data['derived'], 'no article to be based on, whatever the writer said');
 
         /** @var Connection $db */
         $db = self::getContainer()->get('doctrine.dbal.default_connection');

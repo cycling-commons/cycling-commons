@@ -806,7 +806,8 @@ for one thing in five languages. Fixed across all five.
   same for every reader so the page stays cacheable; a visitor signs in on
   the way. The proposal is a `text` submission filed in this
   region, approved by one of its curators, and written into that locale's
-  entry of `context_curated` with the rider as `userId`
+  entry of `context_curated` with the rider as `userId` and `derived` as the
+  approving curator decided the Wikipedia credit
   ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1b).
   A lead written by someone other than the curator who approved it names them:
   `region.about_source_adapted_by` ("Adapted from Wikipedia by {name},
@@ -2563,9 +2564,12 @@ above it, save per language. Saving calls `TownSummaryRepository::overrideText()
 the row becomes answered, `edited_by`/`edited_at` are set, and from then on it
 is LOCAL, "we can't connect to online anymore": the fetch never claims an
 answered row, and any future refresh sweep must skip `edited_at IS NOT NULL`.
-The endpoint carries `edited: true` and the card's credit reads "Edited by our
-curators, after Wikipedia CC BY-SA 4.0" (a rewrite of CC BY-SA text keeps its
-attribution; the Wikipedia link stays). The pen is limited to towns inside the
+The endpoint carries `edited: true` and `derived`, the box's "I adapted this
+from the Wikipedia article" tick (offered where the row has an article,
+checked while the box starts from it): adapted, the card's credit reads
+"Edited by our curators, after Wikipedia CC BY-SA 4.0" (a rewrite of CC BY-SA
+text keeps its attribution; the Wikipedia link stays); written fresh, "Written
+by our curators, CC BY-SA 4.0" with no Wikipedia link. The pen is limited to towns inside the
 curator's areas (where the town lies: `town_place`); a curator of another
 region gets the proposal form below. Pinned by `ModerateTownControllerTest`
 and `PlaceTextProposalTest`.

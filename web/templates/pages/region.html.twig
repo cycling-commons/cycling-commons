@@ -109,7 +109,9 @@
        citation - the licence follows a derivative - but the line must say the
        text was changed, or a reader credits our edit to Wikipedia. A curator
        who WROTE the lead gets no Wikipedia credit at all: claiming a source
-       for text that did not come from it is the worse error of the two. #}
+       for text that did not come from it is the worse error of the two.
+       For a rider's text, which of the two it is was the approving curator's
+       decision (`derived`, moderation-and-contribution.md §3.1b). #}
     {# A rider's approved text names them (their public name, else their
        rider# handle); a curator's own text says "this region's curators". #}
     {% set rider = region.context.byRider|default(false) ? (region.context.author ?? 'region.about_removed_rider'|trans) : null %}

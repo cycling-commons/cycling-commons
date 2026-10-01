@@ -12,7 +12,10 @@
 
    The credit follows who wrote the local text: the curators ("Edited by our
    curators"), or a rider whose proposal a curator approved, by the name the
-   server may show (their public name, else their rider# handle). */
+   server may show (their public name, else their rider# handle). It credits
+   Wikipedia only while the text is based on the article (`derived`, decided
+   by the approving curator, owner 2026-10-01); a text written fresh is the
+   writer's alone, with no Wikipedia link. */
 import { escPend, safeHref } from './util.js';
 
 /* Unprefixed paths are English; the others carry their language. */
@@ -33,10 +36,17 @@ export function townTextHref(meta, name, lang, from) {
   return `${PREFIX[lang] || ''}/town/${type}/${id}/text?${q}`;
 }
 
+/** Whether the card credits and links the Wikipedia article: there is one,
+    and the text is the article or based on it. A missing flag keeps the
+    credit, the licence-safe reading. */
+export function townCitesWiki(d) {
+  const t = d && d.text;
+  return !!(t && t.url) && (!d.edited || d.derived !== false);
+}
+
 /** The licence and credit words for the text, before escaping. */
 export function townCredit(d, D) {
-  const t = d && d.text;
-  const fromWiki = !!(t && t.url);
+  const fromWiki = townCitesWiki(d);
   if (!d || !d.edited) return D.wikiText || 'Text CC BY-SA 4.0';
   if (d.editedBy) {
     const name = d.editedBy.name || D.riderRemoved || 'a removed rider';

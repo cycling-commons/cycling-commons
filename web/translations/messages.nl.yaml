@@ -3110,6 +3110,8 @@ place_text:
   current_none: 'Er is nog geen tekst in deze taal.'
   count: '%count% van %max%'
   field_derived: 'Ik heb dit bewerkt uit het Wikipedia-artikel'
+  field_source: 'Waar je tekst vandaan komt'
+  field_own: 'Ik heb mijn eigen tekst geschreven'
   field_note: 'Opmerking voor de regiobeheerder (optioneel)'
   field_note_hint: 'Waar je informatie vandaan komt, of wat je veranderde en waarom.'
   licence: 'Je tekst wordt gepubliceerd onder <b>CC BY-SA 4.0</b>. Na goedkeuring staat hij op jouw naam: je naam als je profiel openbaar is, anders je fietsersnaam.'
@@ -3134,6 +3136,11 @@ place_text:
     approved: "Goedgekeurd. De tekst staat online, en de schrijver krijgt je goedkeuring als bericht."
     reply_label: "Notitie voor de schrijver (optioneel)"
     reply_hint: "Gaat mee met de goedkeuring, in de berichten van de schrijver. Verbetering opslaan verstuurt ze niet."
+    credit_legend: 'Vermelding van Wikipedia'
+    credit_keep: 'Wikipedia-vermelding behouden: de tekst is gebaseerd op het Wikipedia-artikel'
+    credit_drop: 'Wikipedia-vermelding weghalen: de tekst is nieuw geschreven'
+    credit_hint: 'Goedkeuren vraagt deze keuze. Behoud de vermelding zolang de tekst de woorden of feiten van het artikel als basis gebruikt. Haal ze alleen weg als de tekst nieuw geschreven is.'
+    credit_claim: 'De schrijver zegt: „%choice%”.'
   error:
     lang: 'Kies een van de talen uit de lijst.'
     empty: 'Schrijf eerst de tekst.'
@@ -3143,6 +3150,8 @@ place_text:
     no_location: 'We weten nog niet waar deze plaats ligt. Open hem op de kaart en gebruik "Deze tekst bewerken" op zijn kaartje.'
     unknown: 'Deze tekst kan hier niet bewerkt worden.'
     correct_unchanged: 'Dit is de tekst zoals de fietser hem stuurde. Verander iets, of ga terug naar de wachtrij.'
+    credit_required: 'Kies of de Wikipedia-vermelding blijft, en keur dan goed.'
+    source_required: 'Zeg waar je tekst vandaan komt: bewerkt uit het Wikipedia-artikel, of je eigen tekst.'
 
 moderate:
   rider_removed: 'een fietser met verwijderd account'
@@ -3281,6 +3290,7 @@ moderate:
     decision_label: 'Beslissing'
     review_on_map: 'Bekijken'
     edit_form: 'Formulier bewerken'
+    approve_on_form: 'Goedkeuren op het formulier van de tekst, waar je kiest of de Wikipedia-vermelding blijft'
     cancel: 'Annuleren'
     submit: 'Beslissing registreren'
     view: 'Op de kaart bekijken ↗'
@@ -3291,6 +3301,7 @@ moderate:
     needs_info_note_required: 'Zeg wat je moet weten. Een infoverzoek zonder vraag laat de fietser niets om op te antwoorden.'
     no_recipient: 'Kon niet bepalen aan wie het bericht moet worden gestuurd.'
     osm_unanswered: 'Koppel deze plek aan OSM, of leg vast dat er geen OSM-tegenhanger is, voordat je goedkeurt.'
+    text_credit_undecided: 'Keur deze tekst goed op zijn formulier (✎): daar kies je of de Wikipedia-vermelding blijft.'
   osm:
     question: 'Welk OSM-object is deze plek?'
     none: 'Niet in OSM'

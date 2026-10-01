@@ -26,6 +26,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * language local: the fetch never touches it again, and the card says our
  * curators wrote it. Reached from a town report's "Open it".
  *
+ * The curator says, where the language has a Wikipedia article, whether
+ * their text is adapted from it: the card then keeps the article's link and
+ * credit (moderation-and-contribution.md §3.1b). The tick starts checked
+ * while the box holds the fetched article, and as stored once it is local.
+ *
  * Only for a town inside the curator's areas, decided by where the town lies
  * (TownPlaceRepository). Anyone else, a curator of another region included,
  * suggests a text through the card's "Edit this text" form, which files a
@@ -83,7 +88,7 @@ final class ModerateTownController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $title = trim((string) $request->request->get('title'));
-        $towns->overrideText($osmType.'/'.$osmId, $lang, $text, (int) $user->getId(), '' === $title ? null : mb_substr($title, 0, 240), (int) $user->getId());
+        $towns->overrideText($osmType.'/'.$osmId, $lang, $text, $request->request->has('derived'), (int) $user->getId(), '' === $title ? null : mb_substr($title, 0, 240), (int) $user->getId());
         $this->addFlash('notice', 'moderate.town.saved');
 
         return $this->redirectToRoute('moderate_town', ['osmType' => $osmType, 'osmId' => $osmId]);

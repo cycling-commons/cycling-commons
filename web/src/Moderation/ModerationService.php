@@ -105,6 +105,12 @@ final class ModerationService
                     if (SubmissionType::NewItem === $submission->getType() && null !== $item && !$item->osmAnswered()) {
                         throw new OsmUnansweredException('Link this place to OSM, or record that it has no OSM counterpart, before approving it.');
                     }
+                    // moderation-and-contribution.md §3.1b: a text whose language
+                    // has a Wikipedia article is approved only with the curator's
+                    // decision on the credit, made on the text's own form.
+                    if (SubmissionType::Text === $submission->getType() && $this->placeTexts->creditUndecided($submission)) {
+                        throw new TextCreditUndecidedException('Decide whether the Wikipedia credit stays, on the text\'s own form, before approving it.');
+                    }
                     $submission->setStatus(SubmissionStatus::Approved);
                     if (null !== $item) {
                         match ($submission->getType()) {

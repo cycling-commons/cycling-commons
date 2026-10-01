@@ -17,8 +17,14 @@ use Doctrine\DBAL\Connection;
  * local text for that language, or the region page's lead for that locale.
  *
  * The same stores the curators' direct pens write (the town page and the
- * Regions desk), with who wrote the text, who approved it and which proposal
- * it came from.
+ * Regions desk), with who wrote the text, who approved it, which proposal it
+ * came from, and whether it is based on the Wikipedia article (`derived`: the
+ * credit keeps the article's link, owner 2026-10-01).
+ *
+ * Where the language has an article to credit, the approving curator decides
+ * that last point explicitly: the payload carries `_credit` ({by, at, claim})
+ * and `derived` holds the decision. {@see self::creditUndecided()} is the
+ * check every approval passes through.
  *
  * @see docs/specs/moderation-and-contribution.md §3.1b
  *
@@ -46,6 +52,7 @@ final readonly class PlaceTextWriter
                 $proposal['ref'],
                 $proposal['lang'],
                 $proposal['text'],
+                $proposal['derived'],
                 $submission->getUserId(),
                 '' === $submission->getTitle() ? null : mb_substr($submission->getTitle(), 0, 240),
                 $approvedBy,
@@ -56,6 +63,36 @@ final readonly class PlaceTextWriter
         }
 
         $this->setRegionLead((int) $proposal['ref'], $proposal['lang'], $proposal['text'], $proposal['derived'], $submission->getUserId(), $approvedBy, $submission->getId());
+    }
+
+    /**
+     * Whether the text a proposal names has a Wikipedia article to credit in
+     * its language: the town card's fetched article, or the region's article
+     * (own locale, then English, as the region page cites it).
+     *
+     * @param array{target: string, ref: string, lang: string, text: string, derived: bool} $proposal
+     */
+    public function hasSource(array $proposal): bool
+    {
+        if (PlaceText::TOWN === $proposal['target']) {
+            return $this->towns->hasArticle($proposal['ref'], $proposal['lang']);
+        }
+        $wiki = $this->db->fetchOne('SELECT context FROM region WHERE id = :id', ['id' => (int) $proposal['ref']]);
+
+        return RegionLead::hasSource(PlaceText::decode($wiki), $proposal['lang']);
+    }
+
+    /**
+     * True when approving this Text submission still needs the curator's
+     * decision on the Wikipedia credit: its language has an article to credit
+     * and no curator has recorded the decision (`_credit`) on it.
+     */
+    public function creditUndecided(Submission $submission): bool
+    {
+        $payload = $submission->getPayload();
+        $proposal = PlaceText::fromPayload($payload);
+
+        return null !== $proposal && !\is_array($payload['_credit'] ?? null) && $this->hasSource($proposal);
     }
 
     /**

@@ -3103,6 +3103,8 @@ place_text:
   current_none: 'Il n’y a pas encore de texte dans cette langue.'
   count: '%count% sur %max%'
   field_derived: 'J’ai adapté ce texte de l’article Wikipédia'
+  field_source: 'D’où vient votre texte'
+  field_own: 'J’ai écrit mon propre texte'
   field_note: 'Note pour le curateur (facultatif)'
   field_note_hint: 'D’où viennent vos informations, ou ce que vous avez changé et pourquoi.'
   licence: 'Votre texte est publié sous <b>CC BY-SA 4.0</b>. Une fois approuvé, il vous est crédité : par votre nom si votre profil est public, sinon par votre pseudonyme de cycliste.'
@@ -3127,6 +3129,11 @@ place_text:
     approved: "Approuvé. Le texte est en ligne, et l'auteur reçoit votre approbation dans ses messages."
     reply_label: "Note à l'auteur (facultative)"
     reply_hint: "Envoyée avec l'approbation, dans les messages de l'auteur. Enregistrer la correction ne l'envoie pas."
+    credit_legend: 'Crédit Wikipédia'
+    credit_keep: 'Garder le crédit Wikipédia : le texte s’appuie sur l’article Wikipédia'
+    credit_drop: 'Retirer le crédit Wikipédia : le texte est écrit de zéro'
+    credit_hint: 'Ce choix est nécessaire pour approuver. Gardez le crédit tant que le texte reprend les mots ou les faits de l’article comme base. Retirez-le seulement si le texte est écrit de zéro.'
+    credit_claim: 'La personne qui l’a écrit indique : « %choice% ».'
   error:
     lang: 'Choisissez une des langues de la liste.'
     empty: 'Écrivez d’abord le texte.'
@@ -3136,6 +3143,8 @@ place_text:
     no_location: 'Nous ne savons pas encore où se trouve cette ville. Ouvrez-la sur la carte et utilisez « Modifier ce texte » sur sa fiche.'
     unknown: 'Ce texte ne peut pas être modifié ici.'
     correct_unchanged: 'C’est le texte tel que le cycliste l’a envoyé. Changez quelque chose, ou revenez à la file.'
+    credit_required: 'Choisissez si le crédit Wikipédia reste, puis approuvez.'
+    source_required: 'Indiquez d’où vient votre texte : adapté de l’article Wikipédia, ou écrit par vous.'
 
 moderate:
   rider_removed: 'un cycliste au compte supprimé'
@@ -3274,6 +3283,7 @@ moderate:
     decision_label: 'Décision'
     review_on_map: 'Examiner'
     edit_form: 'Modifier le formulaire'
+    approve_on_form: 'Approuver sur le formulaire du texte, où vous choisissez si le crédit Wikipédia reste'
     cancel: 'Annuler'
     submit: 'Enregistrer la décision'
     view: 'Voir sur la carte ↗'
@@ -3284,6 +3294,7 @@ moderate:
     needs_info_note_required: 'Dites ce qu''il vous manque. Une demande d''information sans question ne laisse au cycliste rien à répondre.'
     no_recipient: 'Impossible d''identifier le destinataire du message.'
     osm_unanswered: 'Liez ce lieu à OSM, ou indiquez qu''il n''a pas d''équivalent OSM, avant de l''approuver.'
+    text_credit_undecided: 'Approuvez ce texte sur son formulaire (✎) : vous y choisissez si le crédit Wikipédia reste.'
   osm:
     question: 'Quel objet OSM est ce lieu ?'
     none: 'Absent d''OSM'

@@ -36,7 +36,11 @@ final class ModerateTownControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Testdorp is een dorp.', (string) $client->getResponse()->getContent(), 'the fetched text is shown to write over');
 
-        $form = $crawler->filter('form.townform')->reduce(static fn ($node) => 'nl' === $node->filter('input[name=lang]')->attr('value'))->first()->form([
+        $nl = $crawler->filter('form.townform')->reduce(static fn ($node) => 'nl' === $node->filter('input[name=lang]')->attr('value'))->first();
+        // The licence question where there is an article: checked while the box starts from it.
+        self::assertNotNull($nl->filter('input[name=derived]')->attr('checked'));
+        self::assertCount(0, $crawler->filter('form.townform')->reduce(static fn ($node) => 'fr' === $node->filter('input[name=lang]')->attr('value'))->filter('input[name=derived]'), 'no article, no question');
+        $form = $nl->form([
             'text' => 'Testdorp: vlak, kasseien in het centrum, start van de dorpsronde.',
         ]);
         $client->submit($form);
@@ -55,7 +59,17 @@ final class ModerateTownControllerTest extends WebTestCase
         /** @var array<string, mixed> $data */
         $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertTrue($data['edited']);
+        self::assertTrue($data['derived'], 'adapted from the article: the Wikipedia credit stays');
         self::assertStringStartsWith('Testdorp: vlak', $data['text']['extract']);
+
+        // Unticked: written fresh, so the card credits our curators alone.
+        $crawler = $client->request('GET', '/moderate/town/node/999990201');
+        $form = $crawler->filter('form.townform')->reduce(static fn ($node) => 'nl' === $node->filter('input[name=lang]')->attr('value'))->first()->form([
+            'text' => 'Testdorp: een dorp met een molen.',
+        ]);
+        $form['derived']->untick();
+        $client->submit($form);
+        self::assertFalse($towns->find('node/999990201', 'nl')['derived'] ?? null);
     }
 
     public function testALanguageNobodyOpenedYetCanStillBeWritten(): void

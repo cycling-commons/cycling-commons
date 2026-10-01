@@ -3129,6 +3129,8 @@ place_text:
   current_none: 'There is no text in this language yet.'
   count: '%count% of %max%'
   field_derived: 'I adapted this from the Wikipedia article'
+  field_source: 'Where your text comes from'
+  field_own: 'I wrote my own text'
   field_note: 'Note for the curator (optional)'
   field_note_hint: 'Where your information comes from, or what you changed and why.'
   licence: 'Your text is published under <b>CC BY-SA 4.0</b>. Once approved it is credited to you: by your name if your profile is public, otherwise by your rider handle.'
@@ -3153,6 +3155,11 @@ place_text:
     approved: "Approved. The text is live, and the writer gets your approval in their messages."
     reply_label: "Note to the writer (optional)"
     reply_hint: "Sent with the approval, in the writer's messages. Save correction does not send it."
+    credit_legend: 'Wikipedia credit'
+    credit_keep: 'Keep the Wikipedia credit: the text is based on the Wikipedia article'
+    credit_drop: 'Drop the Wikipedia credit: the text is written fresh'
+    credit_hint: "Approve needs this choice. Keep the credit while the text still uses the article's words or facts as its base. Drop it only when the text is written fresh."
+    credit_claim: 'The writer says: "%choice%".'
   error:
     lang: 'Pick one of the languages in the list.'
     empty: 'Write the text first.'
@@ -3162,6 +3169,8 @@ place_text:
     no_location: 'We do not know yet where this town lies. Open it on the map and use "Edit this text" on its card.'
     unknown: 'This text cannot be edited here.'
     correct_unchanged: 'This is the text as the rider sent it. Change something, or go back to the queue.'
+    credit_required: 'Choose whether the Wikipedia credit stays, then approve.'
+    source_required: 'Say where your text comes from: adapted from the Wikipedia article, or your own text.'
 
 moderate:
   rider_removed: 'a removed rider'
@@ -3302,6 +3311,7 @@ moderate:
     view: 'View on map ↗'
     review_on_map: 'Review'
     edit_form: 'Edit the form'
+    approve_on_form: "Approve on the text's form, where you choose whether the Wikipedia credit stays"
     cancel: 'Cancel'
   error:
     submission_id_required: 'Submission ID is required.'
@@ -3310,6 +3320,7 @@ moderate:
     needs_info_note_required: 'Say what you need to know. A needs-info request without a question leaves the rider with nothing to answer.'
     no_recipient: 'Could not identify who to message.'
     osm_unanswered: 'Link this place to OSM, or record that it has no OSM counterpart, before approving it.'
+    text_credit_undecided: 'Approve this text on its form (✎): you choose there whether the Wikipedia credit stays.'
   osm:
     question: 'Which OSM object is this place?'
     none: 'Not in OSM'

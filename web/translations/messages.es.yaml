@@ -3137,6 +3137,8 @@ place_text:
   current_none: 'Todavía no hay texto en este idioma.'
   count: '%count% de %max%'
   field_derived: 'He adaptado esto del artículo de Wikipedia'
+  field_source: 'De dónde viene tu texto'
+  field_own: 'He escrito mi propio texto'
   field_note: 'Nota para el curador (opcional)'
   field_note_hint: 'De dónde viene tu información, o qué cambiaste y por qué.'
   licence: 'Tu texto se publica bajo <b>CC BY-SA 4.0</b>. Una vez aprobado se te atribuye: con tu nombre si tu perfil es público, si no con tu alias de ciclista.'
@@ -3161,6 +3163,11 @@ place_text:
     approved: "Aprobado. El texto ya está publicado, y quien lo escribió recibe tu aprobación en sus mensajes."
     reply_label: "Nota para quien lo escribió (opcional)"
     reply_hint: "Se envía con la aprobación, en los mensajes de quien lo escribió. Guardar corrección no la envía."
+    credit_legend: 'Crédito de Wikipedia'
+    credit_keep: 'Mantener el crédito de Wikipedia: el texto se basa en el artículo de Wikipedia'
+    credit_drop: 'Quitar el crédito de Wikipedia: el texto está escrito desde cero'
+    credit_hint: 'Para aprobar hace falta esta elección. Mantén el crédito mientras el texto use como base las palabras o los datos del artículo. Quítalo solo si el texto está escrito desde cero.'
+    credit_claim: 'Quien lo escribió dice: «%choice%».'
   error:
     lang: 'Elige uno de los idiomas de la lista.'
     empty: 'Escribe primero el texto.'
@@ -3170,6 +3177,8 @@ place_text:
     no_location: 'Aún no sabemos dónde está esta localidad. Ábrela en el mapa y usa «Editar este texto» en su ficha.'
     unknown: 'Este texto no se puede editar aquí.'
     correct_unchanged: 'Es el texto tal como lo envió el ciclista. Cambia algo o vuelve a la cola.'
+    credit_required: 'Elige si el crédito de Wikipedia se mantiene y luego aprueba.'
+    source_required: 'Indica de dónde viene tu texto: adaptado del artículo de Wikipedia, o escrito por ti.'
 
 moderate:
   rider_removed: 'un ciclista con la cuenta eliminada'
@@ -3310,6 +3319,7 @@ moderate:
     view: 'Ver en el mapa ↗'
     review_on_map: 'Revisar'
     edit_form: 'Editar el formulario'
+    approve_on_form: 'Aprobar en el formulario del texto, donde eliges si el crédito de Wikipedia se mantiene'
     cancel: 'Cancelar'
   error:
     submission_id_required: 'El identificador del envío es obligatorio.'
@@ -3318,6 +3328,7 @@ moderate:
     needs_info_note_required: 'Di qué necesitas saber. Un «faltan datos» sin pregunta deja al ciclista sin nada que responder.'
     no_recipient: 'No se ha podido identificar a quién escribir.'
     osm_unanswered: 'Vincula este lugar a OSM, o registra que no tiene equivalente en OSM, antes de aprobarlo.'
+    text_credit_undecided: 'Aprueba este texto en su formulario (✎): allí eliges si el crédito de Wikipedia se mantiene.'
   osm:
     question: '¿Qué objeto de OSM es este lugar?'
     none: 'No está en OSM'

@@ -18,3 +18,10 @@
 /* The size and colour of report.css's form notes (.reqlegend); `.reppage p`
    would otherwise set it as body text. */
 .reppage .pt-licence{font-size:.85rem;color:#4f5344;line-height:1.55;margin:.9rem 0 0}
+/* The two required choices of two: the writer's "Where your text comes
+   from" and, on the correction page, the curator's "Wikipedia credit". The
+   picker box of report.css (.cpick), with a radio and its sentence per row. */
+.pt-pick .cinline{display:flex;align-items:flex-start;gap:.6rem;margin:.55rem 0 0;
+  font-size:.90rem;line-height:1.55;color:#3a3d30;cursor:pointer}
+.pt-pick .cinline input{flex:0 0 auto;margin-top:.25rem}
+.pt-credit .pt-credit-claim{font-style:italic}

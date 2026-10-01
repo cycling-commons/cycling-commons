@@ -705,6 +705,12 @@ function buildRecord(layer, f){
     const alsoConfirm = ('B' !== s.letter && 'R' !== s.letter && 'text' !== s.type && !assertsAbsence)
       ? `<label class="cc-mod-also"><input type="checkbox" class="cc-mod-confirm-cb"> ${D.alsoConfirm||'Also confirm — I know this place (counts as verified)'}</label>`
       : '';
+    /* A town or region text is approved on its own form, where the curator
+       decides whether the Wikipedia credit stays (moderation-and-contribution.md
+       §3.1b): its Approve opens that form instead of posting the decision. */
+    const approveBtn = 'text' === s.type
+      ? `<a class="cc-mod-btn approve" href="/moderate/text/${encodeURIComponent(s.id)}" target="_blank" rel="noopener" title="${escPend(D.approveOnForm||'Approve on the text\'s form, where you choose whether the Wikipedia credit stays')}">✓ ${D.approve||'Approve'}</a>`
+      : `<button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>`;
     /* Curator-only decide chrome; a rider sees a preview of their own pending pin. */
     moderate = window.CC_IS_CURATOR
       ? `<div class="cc-mod" data-id="${escPend(s.id)}">
@@ -712,7 +718,7 @@ function buildRecord(layer, f){
       <textarea class="cc-mod-note" placeholder="${D.modNotePh||'Optional note — a reason, or context…'}"></textarea>
       ${alsoConfirm}
       <div class="cc-mod-acts">
-        <button class="cc-mod-btn approve" data-decision="approve">✓ ${D.approve||'Approve'}</button>
+        ${approveBtn}
         <button class="cc-mod-btn info" data-decision="needs_info">? ${D.needsInfo||'Needs info'}</button>
         <button class="cc-mod-btn reject" data-decision="reject">✕ ${D.reject||'Reject'}</button>
       </div>

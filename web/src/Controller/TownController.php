@@ -119,6 +119,11 @@ final class TownController extends AbstractController
             'routes' => is_numeric($lat) && is_numeric($lng) ? $routes->near((float) $lat, (float) $lng) : [],
             'facts' => (object) $row['facts'],
             'edited' => $row['edited'],
+            // Whether the text is based on the Wikipedia article: the card then
+            // keeps the article's link and "after Wikipedia" credit. A fetched
+            // text is the article; a local one as its approving curator decided
+            // (moderation-and-contribution.md §3.1b).
+            'derived' => $row['derived'],
             'editedBy' => $byRider ? ['name' => $row['editor']] : null,
             'photo' => $this->photo($row['qid'], $continent, $wikidata, $admission, $bus, $budget),
         ]);

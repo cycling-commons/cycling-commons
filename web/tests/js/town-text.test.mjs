@@ -4,14 +4,15 @@
 // suggest an edit and a curator of the region approves it, said in one
 // sentence with the link; a visitor gets a sign-in link that comes back to
 // the form; the credit line carries a ringed pencil after its "!" that goes
-// where the link goes; the credit names a rider whose text a curator approved
+// where the link goes; the credit names a rider whose text a curator approved,
+// and credits Wikipedia only while the text is based on the article
 // (moderation-and-contribution.md §3.1b).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { townTextHref, townCredit, townEditHtml, townPenHtml, townEditTarget } from '../../assets/map/town-text.js';
+import { townTextHref, townCredit, townCitesWiki, townEditHtml, townPenHtml, townEditTarget } from '../../assets/map/town-text.js';
 
 const D = {
   textEdit: 'Edit this text', textAdd: 'Write a text for this town', textEditSignin: 'Sign in to edit this text',
@@ -88,21 +89,37 @@ test('the name the card was opened with is escaped', () => {
 
 test('the credit follows who wrote the text', () => {
   assert.equal(townCredit({ edited: false, ...TEXT }, D), 'Text CC BY-SA 4.0');
-  assert.equal(townCredit({ edited: true, editedBy: null, ...TEXT }, D), 'Edited by our curators, after Wikipedia CC BY-SA 4.0');
-  assert.equal(townCredit({ edited: true, editedBy: { name: 'Dorpsfietser' }, ...TEXT }, D),
+  assert.equal(townCredit({ edited: true, derived: true, editedBy: null, ...TEXT }, D), 'Edited by our curators, after Wikipedia CC BY-SA 4.0');
+  assert.equal(townCredit({ edited: true, derived: true, editedBy: { name: 'Dorpsfietser' }, ...TEXT }, D),
     'Edited by Dorpsfietser, approved by our curators, after Wikipedia CC BY-SA 4.0');
   assert.equal(townCredit({ edited: true, editedBy: { name: null }, text: { extract: 'x', url: null } }, D),
     'Written by a removed rider, approved by our curators, CC BY-SA 4.0');
   assert.equal(townCredit({ edited: true, editedBy: null, text: { extract: 'x', url: null } }, D), 'Written by our curators, CC BY-SA 4.0');
 });
 
+test('a text the curator approved as written fresh credits its writer alone, with no Wikipedia link', () => {
+  const fresh = { edited: true, derived: false, editedBy: { name: 'Dorpsfietser' }, ...TEXT };
+  assert.equal(townCredit(fresh, D), 'Written by Dorpsfietser, approved by our curators, CC BY-SA 4.0');
+  assert.equal(townCitesWiki(fresh), false, 'no Wikipedia link');
+  assert.equal(townCredit({ ...fresh, editedBy: null }, D), 'Written by our curators, CC BY-SA 4.0');
+});
+
+test('a text based on the article keeps the Wikipedia link and credit', () => {
+  const kept = { edited: true, derived: true, editedBy: { name: 'Dorpsfietser' }, ...TEXT };
+  assert.equal(townCitesWiki(kept), true);
+  assert.equal(townCitesWiki({ edited: false, ...TEXT }), true, 'the fetched article itself');
+  assert.equal(townCitesWiki({ edited: true, ...TEXT }), true, 'no flag: the credit stays, the licence-safe reading');
+  assert.equal(townCitesWiki({ edited: true, derived: true, text: { extract: 'x', url: null } }), false, 'no article, nothing to link');
+});
+
 test('the town card renders the line and the pencil after the "!", and the signed-in signal is the riders\' confirm token', () => {
   const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
   const places = fs.readFileSync(path.join(root, 'assets', 'map', 'places.js'), 'utf8');
-  assert.match(places, /import \{ townCredit, townEditHtml, townPenHtml \} from '\.\/town-text\.js';/);
+  assert.match(places, /import \{ townCredit, townCitesWiki, townEditHtml, townPenHtml \} from '\.\/town-text\.js';/);
   assert.match(places, /const editOpts = \{ signedIn: !!window\.CC_CONFIRM_TOKEN,/);
   assert.match(places, /townEditHtml\(d, meta, name, editOpts, D\)/);
   assert.match(places, /const pen = townPenHtml\(meta, name, editOpts, D\);/);
+  assert.match(places, /const wiki = townCitesWiki\(d\) \?/);
   // The pencil sits right after the "!" report mark on the credit line.
   assert.match(places, /\$\{credit\}<\/a> \$\{report\}\$\{pen\}<\/div>/);
 });

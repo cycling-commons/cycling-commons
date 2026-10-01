@@ -3111,6 +3111,8 @@ place_text:
   current_none: 'In dieser Sprache gibt es noch keinen Text.'
   count: '%count% von %max%'
   field_derived: 'Ich habe dies aus dem Wikipedia-Artikel bearbeitet'
+  field_source: 'Woher dein Text stammt'
+  field_own: 'Ich habe meinen eigenen Text geschrieben'
   field_note: 'Notiz für den Kurator (optional)'
   field_note_hint: 'Woher deine Angaben stammen, oder was du geändert hast und warum.'
   licence: 'Dein Text wird unter <b>CC BY-SA 4.0</b> veröffentlicht. Nach der Freigabe wird er dir zugeschrieben: mit deinem Namen, wenn dein Profil öffentlich ist, sonst mit deinem Fahrernamen.'
@@ -3135,6 +3137,11 @@ place_text:
     approved: "Freigegeben. Der Text ist online, und die schreibende Person erhält deine Freigabe in ihren Nachrichten."
     reply_label: "Notiz an die schreibende Person (optional)"
     reply_hint: "Geht mit der Freigabe in die Nachrichten der schreibenden Person. Korrektur speichern sendet sie nicht."
+    credit_legend: 'Wikipedia-Nachweis'
+    credit_keep: 'Wikipedia-Nachweis behalten: Der Text beruht auf dem Wikipedia-Artikel'
+    credit_drop: 'Wikipedia-Nachweis entfernen: Der Text ist neu geschrieben'
+    credit_hint: 'Für die Freigabe ist diese Wahl nötig. Behalte den Nachweis, solange der Text die Worte oder Fakten des Artikels als Grundlage nutzt. Entferne ihn nur, wenn der Text neu geschrieben ist.'
+    credit_claim: 'Die schreibende Person sagt: „%choice%“.'
   error:
     lang: 'Wähle eine der Sprachen aus der Liste.'
     empty: 'Schreib zuerst den Text.'
@@ -3144,6 +3151,8 @@ place_text:
     no_location: 'Wir wissen noch nicht, wo dieser Ort liegt. Öffne ihn auf der Karte und nutze „Diesen Text bearbeiten“ auf seiner Karte.'
     unknown: 'Dieser Text kann hier nicht bearbeitet werden.'
     correct_unchanged: 'Das ist der Text, wie der Fahrer ihn geschickt hat. Ändere etwas oder geh zurück zur Warteschlange.'
+    credit_required: 'Wähle, ob der Wikipedia-Nachweis bleibt, und gib dann frei.'
+    source_required: 'Gib an, woher dein Text stammt: aus dem Wikipedia-Artikel bearbeitet oder selbst geschrieben.'
 
 moderate:
   rider_removed: 'ein Fahrer mit gelöschtem Konto'
@@ -3282,6 +3291,7 @@ moderate:
     decision_label: 'Entscheidung'
     review_on_map: 'Prüfen'
     edit_form: 'Formular bearbeiten'
+    approve_on_form: 'Im Formular des Textes freigeben, wo du wählst, ob der Wikipedia-Nachweis bleibt'
     cancel: 'Abbrechen'
     submit: 'Entscheidung erfassen'
     view: 'Auf der Karte ansehen ↗'
@@ -3292,6 +3302,7 @@ moderate:
     needs_info_note_required: 'Sag, was du wissen musst. Eine Rückfrage ohne Frage lässt der fahrenden Person nichts zu beantworten.'
     no_recipient: 'Der Empfänger der Nachricht konnte nicht ermittelt werden.'
     osm_unanswered: 'Verknüpfe diesen Ort mit OSM, oder halte fest, dass es kein OSM-Gegenstück gibt, bevor du genehmigst.'
+    text_credit_undecided: 'Gib diesen Text in seinem Formular (✎) frei: Dort wählst du, ob der Wikipedia-Nachweis bleibt.'
   osm:
     question: 'Welches OSM-Objekt ist dieser Ort?'
     none: 'Nicht in OSM'

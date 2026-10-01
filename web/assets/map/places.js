@@ -18,7 +18,7 @@ import { liftScopeForHit } from './scope-ui.js';
 import { showRouteCorrections } from './corrections.js';
 import { layerGlyph } from './icons.js';
 import { watchJson } from './commons-photo.js';
-import { townCredit, townEditHtml, townPenHtml } from './town-text.js';
+import { townCredit, townCitesWiki, townEditHtml, townPenHtml } from './town-text.js';
 
 export function bumpPlaceReq(){ _placeReq++; }
 
@@ -159,7 +159,8 @@ function townHtml(d, name, meta){
   const reportHref = '/report/town/'+encodeURIComponent(String(meta.osm||'').replace('/', '-'))+'?name='+encodeURIComponent(name||'')+'&from='+encodeURIComponent(location.pathname+location.search);
   const report = `<a class="cc-bang" href="${safeHref(reportHref)}" title="${escPend(D.reportText||'Report this text')}" aria-label="${escPend(D.reportText||'Report this text')}">!</a>`;
   const credit = escPend(townCredit(d, D));
-  const wiki = (t && t.url) ? `<a href="${safeHref(t.url)}" target="_blank" rel="noopener">Wikipedia ↗</a> · ` : '';
+  // The article's link only while the text is based on it (moderation-and-contribution.md §3.1b).
+  const wiki = townCitesWiki(d) ? `<a href="${safeHref(t.url)}" target="_blank" rel="noopener">Wikipedia ↗</a> · ` : '';
   // Anyone signed in may suggest a change; a curator of the town's region approves it (moderation-and-contribution.md §3.1b).
   const editOpts = { signedIn: !!window.CC_CONFIRM_TOKEN, lang: lang.slice(0,2), from: location.pathname+location.search };
   const edit = townEditHtml(d, meta, name, editOpts, D);

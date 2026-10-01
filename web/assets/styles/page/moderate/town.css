@@ -21,3 +21,7 @@
 .townform button:hover{background:#ff703d}
 .townform button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .hint{font-size:.85rem;color:#6d7060;margin:.3rem 0 0}
+/* The adaptation tick: a sentence beside its box, not a field label. */
+.townform label.derived{display:flex;align-items:flex-start;gap:.5rem;font-family:inherit;font-size:.88rem;
+  letter-spacing:normal;text-transform:none;color:#3a3d30;margin:.6rem 0 0}
+.townform label.derived input{flex:0 0 auto;margin-top:.2rem}

@@ -382,6 +382,11 @@ export function submitModeration(btn){
         mapToast(D.osmUnanswered||'Link this place to OSM, or record that it has no OSM counterpart, before approving it.', {center:true});
         return;
       }
+      if('text_credit_undecided'===code){
+        // moderation-and-contribution.md §3.1b - the credit is decided on the text's form.
+        mapToast(D.textCreditUndecided||'Approve this text on its form (✎): choose there whether the Wikipedia credit stays.', {center:true});
+        return;
+      }
       if('needs_info_note_required'===code){
         mapToast(D.needsInfoNote||'Ask the rider what you need to know — a needs-info with no question tells them nothing.', {center:true});
         return;
@@ -496,7 +501,8 @@ export function initCommunity(){
     });
     document.addEventListener('click', e=>{
       const btn=e.target.closest('.cc-mod-btn'); if(!btn) return;
-      if(btn.disabled) return;
+      // A link (a text's Approve, which opens its form) follows its href.
+      if(btn.disabled || !btn.dataset.decision) return;
       submitModeration(btn);
     });
     document.addEventListener('click', e=>{

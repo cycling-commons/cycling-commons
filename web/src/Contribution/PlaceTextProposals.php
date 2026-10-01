@@ -16,6 +16,7 @@ use App\Moderation\AlreadyDecidedException;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OutOfScopeException;
+use App\Moderation\PlaceTextWriter;
 use App\Town\TownPlaceRepository;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
@@ -40,6 +41,16 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
  * is still open amends it rather than filing a second. A curator of the
  * submission's area may correct a waiting proposal before deciding it; it
  * stays the rider's proposal ({@see self::correct()}).
+ *
+ * Where the text's language has a Wikipedia article to credit, approving it
+ * takes the curator's explicit decision on that credit (owner 2026-10-01):
+ * keep it, the text is based on the article, or drop it, the text is written
+ * fresh. The writer's own choice ("I adapted this from the Wikipedia
+ * article" or "I wrote my own text", required where there is an article) is
+ * their claim only; the decision is recorded on the payload
+ * ({@see self::recordCredit()}) in the approval's transaction, and the
+ * generic decision refuses a text that has none
+ * ({@see PlaceTextWriter::creditUndecided()}).
  *
  * @see docs/specs/moderation-and-contribution.md §3.1b
  *
@@ -68,6 +79,30 @@ final readonly class PlaceTextProposals
         $row = $this->towns->find($osmRef, $lang);
 
         return null !== $row && $row['answered'] ? (string) $row['extract'] : '';
+    }
+
+    /**
+     * A town card's current text in one language and whether it is based on
+     * the Wikipedia article: the fetched article is, a local text as it was
+     * approved.
+     *
+     * @return array{text: string, derived: bool}
+     */
+    public function currentTown(string $osmRef, string $lang): array
+    {
+        $row = $this->towns->find($osmRef, $lang);
+        if (null === $row || !$row['answered']) {
+            return ['text' => '', 'derived' => false];
+        }
+        $text = (string) $row['extract'];
+
+        return ['text' => $text, 'derived' => '' !== $text && $row['derived'] && null !== $row['page_url']];
+    }
+
+    /** Whether a town card's text in this language has a Wikipedia article to credit. */
+    public function townHasArticle(string $osmRef, string $lang): bool
+    {
+        return $this->towns->hasArticle($osmRef, $lang);
     }
 
     /**
@@ -110,7 +145,7 @@ final readonly class PlaceTextProposals
 
     /**
      * What readers see now for the text a proposal names, and whether that
-     * language has an article to adapt (only ever for a region).
+     * language has a Wikipedia article to adapt and credit.
      *
      * @param array{target: string, ref: string, lang: string, text: string, derived: bool} $proposal
      *
@@ -121,7 +156,7 @@ final readonly class PlaceTextProposals
     public function liveText(array $proposal): array
     {
         if (PlaceText::TOWN === $proposal['target']) {
-            return ['text' => $this->currentTownText($proposal['ref'], $proposal['lang']), 'derived' => false, 'canDerive' => false];
+            return $this->currentTown($proposal['ref'], $proposal['lang']) + ['canDerive' => $this->towns->hasArticle($proposal['ref'], $proposal['lang'])];
         }
         $region = $this->regionById((int) $proposal['ref']);
         if (null === $region) {
@@ -153,17 +188,24 @@ final readonly class PlaceTextProposals
     }
 
     /**
+     * `$derived` is the writer's answer to where the text comes from: true "I
+     * adapted this from the Wikipedia article", false "I wrote my own text",
+     * null no answer. Where the language has an article the answer is
+     * required; where it has none there is no question and the text is the
+     * writer's own.
+     *
      * @return array{submission: Submission, applied: bool}
      *
      * @throws PlaceTextRefused             on text the form must send back
      * @throws TooManyRequestsHttpException past the contribution rate limit
      */
-    public function proposeTown(User $by, string $osmRef, string $lang, string $text, string $note, ?string $name, ?float $lat, ?float $lng): array
+    public function proposeTown(User $by, string $osmRef, string $lang, string $text, string $note, ?string $name, ?float $lat, ?float $lng, ?bool $derived): array
     {
         if (1 !== preg_match('~^(node|way|relation)/\d{1,16}$~', $osmRef)) {
             throw new PlaceTextRefused('place_text.error.unknown');
         }
         [$lang, $text, $note] = $this->checked($lang, $text, $note);
+        $derived = self::sourceAnswered($this->towns->hasArticle($osmRef, $lang), $derived);
 
         $where = $this->places->locate($osmRef);
         if (null === $where && null !== $lat && null !== $lng && TownPlaceRepository::valid($lat, $lng)) {
@@ -174,6 +216,8 @@ final readonly class PlaceTextProposals
             throw new PlaceTextRefused('place_text.error.no_location');
         }
 
+        // The words are the proposal; the adaptation claim alone changes
+        // nothing a reader sees until a curator decides the credit.
         $was = $this->currentTownText($osmRef, $lang);
         if ($was === $text) {
             throw new PlaceTextRefused('place_text.error.unchanged');
@@ -187,11 +231,15 @@ final readonly class PlaceTextProposals
             'ref' => $osmRef,
             'lang' => $lang,
             'text' => $text,
+            'derived' => $derived,
             'details' => ['note' => $note],
         ], $was, $this->townTitle($osmRef, $name), $point, $where['countryCode'], $where['regionId']);
     }
 
     /**
+     * `$derived` is the writer's answer to where the text comes from, as for
+     * a town ({@see self::proposeTown()}).
+     *
      * @param array{id: int, slug: string, name: string, countryCode: string, wiki: ?array<string, mixed>, curated: ?array<string, mixed>} $region
      *
      * @return array{submission: Submission, applied: bool}
@@ -199,12 +247,11 @@ final readonly class PlaceTextProposals
      * @throws PlaceTextRefused             on text the form must send back
      * @throws TooManyRequestsHttpException past the contribution rate limit
      */
-    public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, bool $derived): array
+    public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, ?bool $derived): array
     {
         [$lang, $text, $note] = $this->checked($lang, $text, $note);
+        $derived = self::sourceAnswered(RegionLead::hasSource($region['wiki'], $lang), $derived);
         $current = $this->currentRegionText($region, $lang);
-        // An adaptation claim stands only where there is an article to adapt.
-        $derived = $derived && RegionLead::hasSource($region['wiki'], $lang);
         if ($current['text'] === $text && $current['derived'] === $derived) {
             throw new PlaceTextRefused('place_text.error.unchanged');
         }
@@ -234,16 +281,17 @@ final readonly class PlaceTextProposals
      * `payload.text` and the `now` side of `changes` carry the corrected words
      * (`was` stays what readers saw when the rider sent it), and
      * `payload._corrected` records who corrected it, when, and what the rider
-     * sent (their first words, however often it is corrected). A region's
-     * adaptation claim can be corrected too, where there is an article to
-     * adapt. The rider's own later revision replaces the payload, and with it
-     * this record: the words are theirs again.
+     * sent (their first words, however often it is corrected). The writer's
+     * adaptation claim stays theirs: whether the Wikipedia credit stays is
+     * the curator's decision at approval ({@see self::approve()}). The
+     * rider's own later revision replaces the payload, and with it this
+     * record: the words are theirs again.
      *
      * @throws PlaceTextRefused        on text the form must send back
      * @throws OutOfScopeException     outside the curator's areas
      * @throws AlreadyDecidedException once it is decided, withdrawn or held
      */
-    public function correct(Submission $submission, User $curator, string $text, bool $derived): Submission
+    public function correct(Submission $submission, User $curator, string $text): Submission
     {
         $this->assertCorrectable($submission, $curator);
         $proposal = PlaceText::fromPayload($submission->getPayload());
@@ -251,16 +299,15 @@ final readonly class PlaceTextProposals
             throw new PlaceTextRefused('place_text.error.unknown');
         }
         [, $text] = $this->checked($proposal['lang'], $text, '');
-        $live = $this->liveText($proposal);
-        $derived = PlaceText::REGION === $proposal['target'] && $derived && $live['canDerive'];
-        if ($text === $proposal['text'] && $derived === $proposal['derived']) {
+        if ($text === $proposal['text']) {
             throw new PlaceTextRefused('place_text.error.correct_unchanged');
         }
-        if ($text === $live['text'] && (PlaceText::TOWN === $proposal['target'] || $derived === $live['derived'])) {
+        $live = $this->liveText($proposal);
+        if ($text === $live['text'] && (PlaceText::TOWN === $proposal['target'] || $proposal['derived'] === $live['derived'])) {
             throw new PlaceTextRefused('place_text.error.unchanged');
         }
 
-        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived): Submission {
+        return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text): Submission {
             $this->em->lock($submission, LockMode::PESSIMISTIC_WRITE);
             $this->em->refresh($submission);
             $this->assertCorrectable($submission, $curator);
@@ -271,11 +318,8 @@ final readonly class PlaceTextProposals
                 'by' => (int) $curator->getId(),
                 'at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
                 'from' => \is_string($prior['from'] ?? null) ? $prior['from'] : $proposal['text'],
-            ] + (PlaceText::REGION === $proposal['target'] ? ['fromDerived' => \is_bool($prior['fromDerived'] ?? null) ? $prior['fromDerived'] : $proposal['derived']] : []);
+            ];
             $payload['text'] = $text;
-            if (PlaceText::REGION === $proposal['target']) {
-                $payload['derived'] = $derived;
-            }
             $changes = $submission->getChanges();
             $key = PlaceText::changeKey($proposal['lang']);
             $was = \is_array($changes[$key] ?? null) ? ($changes[$key]['was'] ?? null) : null;
@@ -294,15 +338,21 @@ final readonly class PlaceTextProposals
      * live, and the note reaches the writer with the approval, as a note on
      * the map's Approve does.
      *
+     * Where the language has a Wikipedia article to credit, `$credit` is the
+     * curator's decision on it and is required: true keeps the credit (the
+     * text is based on the article), false drops it (written fresh), null is
+     * no decision and is sent back. Without an article there is no question,
+     * and the text is credited to its writer alone.
+     *
      * One transaction: a correction the approval refuses is not kept either.
      * The text in the box is checked as a correction is, so a changed text is
      * recorded in `_corrected` before it is applied.
      *
-     * @throws PlaceTextRefused        on text or a note the form must send back
+     * @throws PlaceTextRefused        on text, a note or a missing credit decision the form must send back
      * @throws OutOfScopeException     outside the curator's areas
      * @throws AlreadyDecidedException once it is decided, withdrawn or held
      */
-    public function approve(Submission $submission, User $curator, string $text, bool $derived, string $note): Submission
+    public function approve(Submission $submission, User $curator, string $text, ?bool $credit, string $note): Submission
     {
         $this->assertCorrectable($submission, $curator);
         $proposal = PlaceText::fromPayload($submission->getPayload());
@@ -314,15 +364,37 @@ final readonly class PlaceTextProposals
         if (mb_strlen($note) > self::REPLY_MAX) {
             throw new PlaceTextRefused('moderate.error.note_too_long');
         }
-        $derived = PlaceText::REGION === $proposal['target'] && $derived && $this->liveText($proposal)['canDerive'];
+        $canDerive = $this->liveText($proposal)['canDerive'];
+        if ($canDerive && null === $credit) {
+            throw new PlaceTextRefused('place_text.error.credit_required');
+        }
+        $derived = $canDerive && true === $credit;
 
         return $this->em->wrapInTransaction(function () use ($submission, $curator, $proposal, $text, $derived, $note): Submission {
-            if ($text !== $proposal['text'] || $derived !== $proposal['derived']) {
-                $this->correct($submission, $curator, $text, $derived);
+            if ($text !== $proposal['text']) {
+                $this->correct($submission, $curator, $text);
             }
+            $this->recordCredit($submission, $curator, $derived);
 
             return $this->moderation->decide((int) $submission->getId(), 'approve', $curator, '' === $note ? null : $note);
         });
+    }
+
+    /**
+     * What the writer said about the Wikipedia article when they sent the
+     * text: true "I adapted this from the Wikipedia article", false "I wrote
+     * my own text", null when they were not asked (no article, or a town text
+     * sent before the question existed).
+     */
+    public static function writerClaim(Submission $submission): ?bool
+    {
+        $payload = $submission->getPayload();
+        $credit = $payload['_credit'] ?? null;
+        if (\is_array($credit) && \array_key_exists('claim', $credit)) {
+            return \is_bool($credit['claim']) ? $credit['claim'] : null;
+        }
+
+        return \is_bool($payload['derived'] ?? null) ? $payload['derived'] : null;
     }
 
     /**
@@ -433,19 +505,69 @@ final readonly class PlaceTextProposals
         return ['submission' => $submission, 'applied' => $this->applyIfCurator($submission, $by)];
     }
 
-    /** A curator's own proposal inside their area applies at once; outside it, it waits. */
+    /**
+     * A curator's own proposal inside their area applies at once; outside it,
+     * it waits. Their own answer on the form (adapted, or their own text) is
+     * the credit decision, recorded as any approving curator's is.
+     */
     private function applyIfCurator(Submission $submission, User $by): bool
     {
-        if (!\in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true)) {
+        if (!\in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true)
+            || !$this->scopes->allowsRegion($this->scopes->scopeFor($by), $submission->getRegionId())) {
             return false;
         }
+        $derived = true === ($submission->getPayload()['derived'] ?? null);
         try {
-            $this->moderation->decide((int) $submission->getId(), 'approve', $by, null);
+            $this->em->wrapInTransaction(function () use ($submission, $by, $derived): void {
+                $this->recordCredit($submission, $by, $derived);
+                $this->moderation->decide((int) $submission->getId(), 'approve', $by, null);
+            });
         } catch (OutOfScopeException) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * The approving curator's decision on the Wikipedia credit, on the
+     * payload: `derived` becomes the decision, and `_credit` records who made
+     * it, when, and what the writer had claimed. Called inside the approval's
+     * transaction, so a refused approval keeps no decision.
+     */
+    private function recordCredit(Submission $submission, User $curator, bool $derived): void
+    {
+        $this->em->lock($submission, LockMode::PESSIMISTIC_WRITE);
+        $this->em->refresh($submission);
+        $claim = self::writerClaim($submission);
+        $payload = $submission->getPayload();
+        $payload['derived'] = $derived;
+        $payload['_credit'] = [
+            'by' => (int) $curator->getId(),
+            'at' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+            'claim' => $claim,
+        ];
+        $submission->setPayload($payload);
+        $this->em->flush();
+    }
+
+    /**
+     * The writer's adaptation claim. Where there is an article to adapt they
+     * must say whether they adapted it or wrote their own text; where there
+     * is none, the text is their own.
+     *
+     * @throws PlaceTextRefused when an article exists and they did not say
+     */
+    private static function sourceAnswered(bool $hasArticle, ?bool $derived): bool
+    {
+        if (!$hasArticle) {
+            return false;
+        }
+        if (null === $derived) {
+            throw new PlaceTextRefused('place_text.error.source_required');
+        }
+
+        return $derived;
     }
 
     /**

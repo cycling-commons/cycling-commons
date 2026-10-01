@@ -754,9 +754,12 @@ texts are in scope: a town card's text in one language
 (lead) in one locale.
 
 **One way to moderate.** A proposal is an ordinary submission of type `text`
-in the one queue: the same approve / reject / needs-info decision on the map
-drawer, the same message thread, the same withdraw (§3.4), the same History
-desk and the same retention. No second moderation surface exists.
+in the one queue: the same reject / needs-info decision on the map drawer,
+the same message thread, the same withdraw (§3.4), the same History desk and
+the same retention. No second moderation surface exists. Approve is the one
+difference: it happens on the text's ✎ form, where the curator decides the
+Wikipedia credit (below, "The Wikipedia credit"); the drawer's Approve on a
+`text` submission opens that form.
 
 **The form.** "Edit this text" on the town card (`places.js`, the line is
 drawn by `assets/map/town-text.js`) and on the region page opens one small
@@ -772,9 +775,19 @@ switching the language swaps it); the box itself starts empty and keeps what
 the rider typed, with a polite live count "x of 1200" under it (the server
 enforces the limit either way); at most 1,200 characters folded to one
 paragraph; an optional
-note for the curator (the card body, `payload.details.note`), and for a
-region the "I adapted this from the Wikipedia article" tick where there is an
-article to adapt. Send and Cancel sit side by side as a primary and a
+note for the curator (the card body, `payload.details.note`), and, where
+there is an article to adapt (for a town: the card's fetched article in that
+language; for a region: the article in that locale or English), a required
+fieldset "Where your text comes from" with two radios and no default, "I
+adapted this from the Wikipedia article" and "I wrote my own text" (owner
+2026-10-01: "Required one of the 2. Same for the regions."; `name=derived`,
+values `adapted` / `own`). The language select shows it for a language with
+an article and hides and disables it for one without, so its required radios
+never block the send. A send without an answer where there is an article is
+refused (`place_text.error.source_required`, "Say where your text comes
+from: adapted from the Wikipedia article, or your own text.", 422, nothing
+filed, the words and the answer kept in the form). The answer is the
+writer's claim only, shown to the approving curator as a hint. Send and Cancel sit side by side as a primary and a
 secondary button of one height (`.btn-p`, `.btn-g`); below them, in small
 print, the licence line says the text is published under CC BY-SA 4.0 and
 credited to the writer by public name, else rider handle; no tick box, as for
@@ -785,8 +798,11 @@ approves it."
 **The row.** `type = text`, `letter = ''`, `item_id` NULL, `title` = the
 town's or region's name, `changes = {"text:<lang>": {was, now}}` (`was` is
 the text readers saw at proposal time), `payload = {target: town|region, ref:
-"node/123" | "<region id>", lang, text, derived (region), details: {note}}`.
-An unchanged text is sent back; a second proposal for the same text and
+"node/123" | "<region id>", lang, text, derived, details: {note}}`
+(`derived` is the writer's claim until approval, then the curator's
+decision; approval adds `_credit`, below). An unchanged text is sent back
+(for a town, the words alone decide: the claim by itself changes nothing a
+reader sees); a second proposal for the same text and
 language while the first is open amends it (§7.3b). Proposals spend the
 `contribution_submit` limiter.
 
@@ -803,12 +819,58 @@ The pending pin is the town's point or the region's point on surface.
 (`PlaceTextWriter`): a town text becomes the card's local text for that
 language (`TownSummaryRepository::overrideText()`: row local from then on,
 `edited_by` = the writer, `approved_by` = the approving curator,
-`submission_id`); a region text becomes that locale's lead in
+`submission_id`, `derived` = the curator's credit decision, true only where
+the row has an article); a region text becomes that locale's lead in
 `region.context_curated` (`{text, derived, userId, approvedBy, submissionId,
 at}`, the other locales untouched; the adaptation claim stands only where an
 article exists). Reject, needs-info and withdraw leave the text readers see
 as it was. The submission row keeps who proposed, who decided and was/now,
 as for every submission.
+
+**The Wikipedia credit: the approving curator decides it (owner 2026-10-01:
+"moderator should decide when approving if the wikimedia attribution/link is
+still needed. Required field.").** Every approved text stores whether it is
+based on the Wikipedia article: `town_summary.derived` for a town
+(migration `Version20261001120000`, which set it true on the local rows that
+existed, where the row has an article: the credit they showed, the
+licence-safe reading) and the `derived` of the locale's `context_curated`
+entry for a region. Where the text's language has an article to credit
+(`PlaceTextWriter::hasSource()`), approving it takes the curator's explicit
+choice, with no default: on the correction form a required fieldset
+"Wikipedia credit" with two radios, "Keep the Wikipedia credit: the text is
+based on the Wikipedia article" and "Drop the Wikipedia credit: the text is
+written fresh", the hint "Approve needs this choice. Keep the credit while
+the text still uses the article's words or facts as its base. Drop it only
+when the text is written fresh.", and the writer's claim under it ('The
+writer says: "I adapted this from the Wikipedia article".' or 'The writer
+says: "I wrote my own text".'), when they made one. The writer's own radios
+are not on this form: the curator's choice is the decision. Save correction carries `formnovalidate`: it needs no
+choice. `PlaceTextProposals::approve()` refuses a missing choice
+(`place_text.error.credit_required`, 422, nothing kept). Where there is no
+article there is no question and the text is approved as the writer's own
+(`derived = false`). The decision is recorded in the approval's transaction
+on the payload: `derived` becomes the decision and `_credit = {by, at,
+claim}` records who decided, when, and what the writer had claimed.
+
+No other path approves such a text without it. `ModerationService::decide()`
+refuses `approve` on a `text` submission whose language has an article and
+whose payload carries no `_credit` (`PlaceTextWriter::creditUndecided()`,
+`TextCreditUndecidedException`); `ModerateController::decide` answers the map
+with 422 `{error: "text_credit_undecided", form: "/moderate/text/{id}"}` and
+the desk with the flash "Approve this text on its form (✎): you choose there
+whether the Wikipedia credit stays.". The drawer's Approve on a `text`
+submission is a link to `/moderate/text/{id}` in a new tab (title "Approve on
+the text's form, where you choose whether the Wikipedia credit stays");
+reject and needs-info stay on the map. The queue card has no decision
+buttons (decisions are made on the map, moderation-and-contribution.md
+§5.2), and there is no bulk
+approve. A curator's own text applied at once inside their area
+(`applyIfCurator`) records their own answer on the form as the decision, the
+same way.
+The curators' direct pens decide it themselves: the Regions desk's per-locale
+tick and, on `/moderate/town/{type}/{id}`, the same tick per language where
+the row has an article (checked while the box starts from the fetched
+article, else as stored). Rulebook RB-TOWN-07.
 
 **Credit.** A text written by someone other than the curator who approved it
 names the writer: "Edited by {name}, approved by our curators, after
@@ -836,9 +898,9 @@ correction mode: the text readers see now in the proposal's language,
 read-only, as "Current text"; the box prefilled with the rider's proposed
 text, with the same "x of 1200" count; the language select fixed (disabled)
 to the proposal's language; the rider's note read-only as "The rider's note"
-in place of the note field (nothing when they left none); for a region, the
-adaptation tick as the rider sent it (it can be corrected where an article
-exists); an optional "Note to the writer" box (up to 2000 characters, the
+in place of the note field (nothing when they left none); where an article
+exists, the "Wikipedia credit" choice with the writer's claim as its hint
+(above); an optional "Note to the writer" box (up to 2000 characters, the
 limit of the map's decision form); the buttons Approve, "Save correction"
 and Cancel (back to the queue); no licence line, since the lead says the
 text stays credited to the rider. Save correction
@@ -847,8 +909,8 @@ submission in place and applies nothing**: `payload.text` and the `now` side
 of `changes` carry the corrected words, `was` stays what readers saw when the
 rider sent it, the writer (`user_id`), status (pending or needs-info), note
 and thread are unchanged, and `payload._corrected = {by: <curator id>, at,
-from: <the rider's words>}` (plus `fromDerived` for a region) records the
-correction; `from` keeps the rider's first words however often the text is
+from: <the rider's words>}` records the correction (the writer's
+adaptation claim stays theirs; the credit is decided at approval); `from` keeps the rider's first words however often the text is
 corrected. The page then returns to the queue with "Correction saved. The
 suggestion still waits for your decision.", and the card shows the
 corrected text in its diff and a "Corrected" tag (`moderate.corrected`,
@@ -856,15 +918,15 @@ corrected text in its diff and a "Corrected" tag (`moderate.corrected`,
 point, and the note box is not sent. Approve (`PlaceTextProposals::approve()`,
 `do=approve`, owner 2026-10-01: "approve a region or town text inside the
 edit form, including the optional response to the writer") does both in one
-transaction: when the box or the tick differs from the proposal it first
-records the correction as Save correction does, then makes the ordinary
-approve decision (`ModerationService::decide()`), with the note as the
+transaction: when the box differs from the proposal it first records the
+correction as Save correction does, then records the credit decision
+(`_credit`), then makes the ordinary approve decision (`ModerationService::decide()`), with the note as the
 decision note, so the writer gets the usual approval message with the note
 in it. A text left as the rider sent it is approved as it is, with no
-`_corrected`. A refused approval (for example a note over the limit, 422)
-keeps no correction either. The page returns to the queue with "Approved.
+`_corrected`. A refused approval (a note over the limit, or no credit
+choice where one is needed, 422) keeps no correction and no decision. The page returns to the queue with "Approved.
 The text is live, and the writer gets your approval in their messages."
-Approving, here or on the map, writes the text credited to the rider as
+Approving writes the text credited to the rider as
 writer and the curator as approver (`PlaceTextWriter`, unchanged),
 `submission_id` pointing at the row that keeps the correction record. A later revision by the rider (§7.3b) replaces
 the payload, and with it `_corrected`: the words are theirs again.

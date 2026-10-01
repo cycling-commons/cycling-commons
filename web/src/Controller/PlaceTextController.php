@@ -50,6 +50,11 @@ final class PlaceTextController extends AbstractController
 
     private const string CORRECT_CSRF_ID = 'moderate-text';
 
+    /** The two answers to "Where your text comes from", as the form sends them. */
+    private const string SOURCE_ADAPTED = 'adapted';
+
+    private const string SOURCE_OWN = 'own';
+
     /** Endonyms, as the language menu spells them. */
     private const array LANG_NAMES = ['en' => 'English', 'fr' => 'Français', 'nl' => 'Nederlands', 'de' => 'Deutsch', 'es' => 'Español'];
 
@@ -65,8 +70,11 @@ final class PlaceTextController extends AbstractController
         $lang = $this->lang($source->getString('lang'), $request);
 
         $texts = [];
+        $articles = [];
         foreach (PlaceText::LANGS as $l) {
-            $texts[$l] = $proposals->currentTownText($ref, $l);
+            $texts[$l] = $proposals->currentTown($ref, $l)['text'];
+            // "Where your text comes from" is asked only where there is an article to adapt.
+            $articles[$l] = $proposals->townHasArticle($ref, $l);
         }
         $context = [
             'target' => PlaceText::TOWN,
@@ -75,11 +83,13 @@ final class PlaceTextController extends AbstractController
             'hidden' => array_filter(['name' => $name, 'lat' => $lat, 'lng' => $lng, 'from' => $from], static fn ($v): bool => null !== $v && '' !== $v),
             'back' => $from ?? $this->generateUrl('map'),
             'texts' => $texts,
-            'derived' => null,
+            'articles' => $articles,
         ];
 
         if ('POST' === $request->getMethod()) {
-            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeTown($user, $ref, $lang, $text, $note, '' === $name ? null : $name, $lat, $lng));
+            $derived = self::sourceAnswer($request);
+
+            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeTown($user, $ref, $lang, $text, $note, '' === $name ? null : $name, $lat, $lng, $derived));
         }
 
         return $this->form($context, $lang, '', null);
@@ -96,12 +106,11 @@ final class PlaceTextController extends AbstractController
         $lang = $this->lang($source->getString('lang'), $request);
 
         $texts = [];
-        $derived = [];
+        $articles = [];
         foreach (PlaceText::LANGS as $l) {
-            $current = $proposals->currentRegionText($region, $l);
-            $texts[$l] = $current['text'];
-            // The tick is offered only where there is an article to adapt.
-            $derived[$l] = RegionLead::hasSource($region['wiki'], $l) ? $current['derived'] : null;
+            $texts[$l] = $proposals->currentRegionText($region, $l)['text'];
+            // "Where your text comes from" is asked only where there is an article to adapt.
+            $articles[$l] = RegionLead::hasSource($region['wiki'], $l);
         }
         $context = [
             'target' => PlaceText::REGION,
@@ -110,13 +119,13 @@ final class PlaceTextController extends AbstractController
             'hidden' => [],
             'back' => $this->generateUrl('region_detail', ['slug' => $slug]),
             'texts' => $texts,
-            'derived' => $derived,
+            'articles' => $articles,
         ];
 
         if ('POST' === $request->getMethod()) {
-            $tick = $request->request->has('derived');
+            $derived = self::sourceAnswer($request);
 
-            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeRegion($user, $region, $lang, $text, $note, $tick));
+            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeRegion($user, $region, $lang, $text, $note, $derived));
         }
 
         return $this->form($context, $lang, '', null);
@@ -129,6 +138,10 @@ final class PlaceTextController extends AbstractController
      * proposal and leaves the decision for later; Approve puts the text in
      * the box live and sends the optional note to the writer with the
      * approval. Both return to the queue.
+     *
+     * Where the language has a Wikipedia article to credit, Approve needs the
+     * curator's choice in the "Wikipedia credit" fieldset (`credit`: keep or
+     * drop, no default); the writer's own claim shows beside it as a hint.
      *
      * Only a curator whose areas cover the submission (403 otherwise), only
      * while it waits: a decided, withdrawn or held one goes back to the queue
@@ -158,13 +171,23 @@ final class PlaceTextController extends AbstractController
             }
             $approve = 'approve' === $request->request->getString('do');
             $reply = $request->request->getString('reply');
+            $choice = $request->request->getString('credit');
+            $credit = match ($choice) {
+                'keep' => true,
+                'drop' => false,
+                default => null,
+            };
             try {
                 if ($approve) {
-                    $proposals->approve($submission, $curator, $text, $request->request->has('derived'), $reply);
+                    $proposals->approve($submission, $curator, $text, $credit, $reply);
                 } else {
-                    $proposals->correct($submission, $curator, $text, $request->request->has('derived'));
+                    $proposals->correct($submission, $curator, $text);
                 }
             } catch (PlaceTextRefused $e) {
+                if (\is_array($context['credit'])) {
+                    $context['credit']['choice'] = null === $credit ? null : $choice;
+                }
+
                 return $this->form(['reply' => $reply] + $context, $proposal['lang'], $text, $e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         } catch (OutOfScopeException) {
@@ -208,7 +231,10 @@ final class PlaceTextController extends AbstractController
             'hidden' => [],
             'back' => $this->generateUrl('moderate_submissions'),
             'texts' => [$lang => $live['text']],
-            'derived' => PlaceText::REGION === $proposal['target'] ? [$lang => $live['canDerive'] ? $proposal['derived'] : null] : null,
+            // The writer's own answer is not a field here: the curator's credit choice decides.
+            'articles' => null,
+            // The decision Approve needs, only where there is an article to credit.
+            'credit' => $live['canDerive'] ? ['claim' => PlaceTextProposals::writerClaim($submission), 'choice' => null] : null,
             'langs' => [$lang => self::LANG_NAMES[$lang] ?? $lang],
             'correcting' => ['note' => $note],
             'reply' => '',
@@ -223,6 +249,12 @@ final class PlaceTextController extends AbstractController
      */
     private function submit(Request $request, array $context, string $lang, callable $propose): Response
     {
+        // A send that comes back refused keeps the writer's answer.
+        $context['source'] = match (self::sourceAnswer($request)) {
+            true => self::SOURCE_ADAPTED,
+            false => self::SOURCE_OWN,
+            null => null,
+        };
         $text = $request->request->getString('text');
         if (!$this->isCsrfTokenValid(self::CSRF_ID, $request->request->getString('_token'))) {
             return $this->form($context, $lang, $text, 'flash.invalid_token', Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -256,6 +288,8 @@ final class PlaceTextController extends AbstractController
     {
         return $this->render('contribute/place_text.html.twig', $context + [
             'correcting' => null,
+            'credit' => null,
+            'source' => null,
             'sent' => null,
             'lang' => $lang,
             'text' => $text,
@@ -265,6 +299,19 @@ final class PlaceTextController extends AbstractController
             'note_max' => PlaceText::NOTE_MAX,
             'csrf_id' => self::CSRF_ID,
         ], new Response(status: $status));
+    }
+
+    /**
+     * The writer's answer to "Where your text comes from": true adapted from
+     * the Wikipedia article, false their own text, null no answer.
+     */
+    private static function sourceAnswer(Request $request): ?bool
+    {
+        return match ($request->request->getString('derived')) {
+            self::SOURCE_ADAPTED => true,
+            self::SOURCE_OWN => false,
+            default => null,
+        };
     }
 
     /** The language asked for, else the page's own. */

@@ -649,6 +649,10 @@ final class MapController extends AbstractController
                 'replacesOsm' => $t->trans('moderate.replaces.osm_takes'),
                 'replacesMetres' => $t->trans('improve.similar.metres', ['%m%' => '%m%']),
                 'osmUnanswered' => $t->trans('moderate.error.osm_unanswered'),
+                // A town or region text is approved on its own form, where the
+                // curator decides the Wikipedia credit (moderation-and-contribution.md §3.1b).
+                'approveOnForm' => $t->trans('moderate.action.approve_on_form'),
+                'textCreditUndecided' => $t->trans('moderate.error.text_credit_undecided'),
             ],
         ];
     }

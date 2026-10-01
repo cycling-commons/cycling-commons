@@ -8,6 +8,7 @@ namespace App\Town;
 
 use App\Moderation\DeskRider;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 
 /**
  * The town card's cache: one row per (OpenStreetMap ref, reader language).
@@ -20,7 +21,7 @@ use Doctrine\DBAL\Connection;
  *
  * @phpstan-type CyclingEvent array{qid: string, label: string, rels: list<string>, n: int, last: ?int, url: ?string}
  * @phpstan-type TownFacts array{founded?: array{year: int, precision: int}, population?: array{n: int, year: ?int}}
- * @phpstan-type TownRow array{answered: bool, qid: ?string, title: ?string, extract: ?string, page_url: ?string, page_lang: ?string, cycling: list<CyclingEvent>, facts: TownFacts, edited: bool, editedBy: ?int, approvedBy: ?int, editor: ?string}
+ * @phpstan-type TownRow array{answered: bool, qid: ?string, title: ?string, extract: ?string, page_url: ?string, page_lang: ?string, cycling: list<CyclingEvent>, facts: TownFacts, edited: bool, derived: bool, editedBy: ?int, approvedBy: ?int, editor: ?string}
  *
  * @api
  */
@@ -43,7 +44,7 @@ final readonly class TownSummaryRepository
     public function find(string $osmRef, string $lang): ?array
     {
         $row = $this->db->fetchAssociative(
-            'SELECT ts.answered, ts.qid, ts.title, ts.extract, ts.page_url, ts.page_lang, ts.cycling, ts.facts, ts.edited_at,
+            'SELECT ts.answered, ts.qid, ts.title, ts.extract, ts.page_url, ts.page_lang, ts.cycling, ts.facts, ts.edited_at, ts.derived,
                     ts.edited_by, ts.approved_by, u.display_name, u.public_profile, u.pseudonym, u.uuid
                FROM town_summary ts LEFT JOIN users u ON u.id = ts.edited_by
               WHERE ts.osm_ref = :r AND ts.lang = :l',
@@ -67,6 +68,9 @@ final readonly class TownSummaryRepository
             'cycling' => $cycling,
             'facts' => $facts,
             'edited' => null !== $row['edited_at'],
+            // A local text based on the Wikipedia article keeps its credit;
+            // a fetched row is the article itself.
+            'derived' => null === $row['edited_at'] || (bool) $row['derived'],
             'editedBy' => null === $row['edited_by'] ? null : (int) $row['edited_by'],
             'approvedBy' => null === $row['approved_by'] ? null : (int) $row['approved_by'],
             // What a public page may call the writer: their name when their
@@ -110,30 +114,47 @@ final readonly class TownSummaryRepository
      * `$userId` wrote the text; `$approvedBy` let it onto the card (the same
      * curator when they wrote it on the town page or proposed it inside their
      * area); `$submissionId` is the approved proposal, null for the town page.
+     * `$derived` says the text is based on the Wikipedia article, so the card
+     * keeps the article's link and credit; it stands only where the row has an
+     * article to credit (fail-closed, as a region's lead).
      */
-    public function overrideText(string $osmRef, string $lang, string $extract, int $userId, ?string $title, int $approvedBy, ?int $submissionId = null): void
+    public function overrideText(string $osmRef, string $lang, string $extract, bool $derived, int $userId, ?string $title, int $approvedBy, ?int $submissionId = null): void
     {
         $this->db->executeStatement(
-            'INSERT INTO town_summary (osm_ref, lang, answered, title, extract, cycling, facts, edited_by, approved_by, submission_id, edited_at, checked_at)
-             VALUES (:r, :l, TRUE, :t, :e, \'[]\', \'{}\', :u, :a, :s, NOW(), NOW())
+            'INSERT INTO town_summary (osm_ref, lang, answered, title, extract, cycling, facts, derived, edited_by, approved_by, submission_id, edited_at, checked_at)
+             VALUES (:r, :l, TRUE, :t, :e, \'[]\', \'{}\', FALSE, :u, :a, :s, NOW(), NOW())
              ON CONFLICT (osm_ref, lang) DO UPDATE
                 SET answered = TRUE, extract = EXCLUDED.extract, title = COALESCE(town_summary.title, EXCLUDED.title),
+                    derived = :d AND town_summary.page_url IS NOT NULL,
                     edited_by = EXCLUDED.edited_by, approved_by = EXCLUDED.approved_by, submission_id = EXCLUDED.submission_id,
                     edited_at = NOW(), checked_at = NOW()',
-            ['r' => $osmRef, 'l' => $lang, 't' => $title, 'e' => $extract, 'u' => $userId, 'a' => $approvedBy, 's' => $submissionId],
+            ['r' => $osmRef, 'l' => $lang, 't' => $title, 'e' => $extract, 'd' => $derived, 'u' => $userId, 'a' => $approvedBy, 's' => $submissionId],
+            ['d' => ParameterType::BOOLEAN],
+        );
+    }
+
+    /**
+     * Whether the card's text in this language has a Wikipedia article to
+     * credit: the row fetched one. A language nobody has opened yet has none.
+     */
+    public function hasArticle(string $osmRef, string $lang): bool
+    {
+        return true === $this->db->fetchOne(
+            'SELECT page_url IS NOT NULL FROM town_summary WHERE osm_ref = :r AND lang = :l',
+            ['r' => $osmRef, 'l' => $lang],
         );
     }
 
     /**
      * Every language row of one town, for the desk.
      *
-     * @return array<string, array{title: ?string, extract: ?string, page_lang: ?string, page_url: ?string, edited: bool, answered: bool}> lang => row
+     * @return array<string, array{title: ?string, extract: ?string, page_lang: ?string, page_url: ?string, edited: bool, derived: bool, answered: bool}> lang => row
      */
     public function rowsFor(string $osmRef): array
     {
         $out = [];
         $rows = $this->db->fetchAllAssociative(
-            'SELECT lang, answered, title, extract, page_lang, page_url, edited_at FROM town_summary WHERE osm_ref = :r',
+            'SELECT lang, answered, title, extract, page_lang, page_url, edited_at, derived FROM town_summary WHERE osm_ref = :r',
             ['r' => $osmRef],
         );
         foreach ($rows as $row) {
@@ -143,6 +164,7 @@ final readonly class TownSummaryRepository
                 'page_lang' => null === $row['page_lang'] ? null : (string) $row['page_lang'],
                 'page_url' => null === $row['page_url'] ? null : (string) $row['page_url'],
                 'edited' => null !== $row['edited_at'],
+                'derived' => null === $row['edited_at'] || (bool) $row['derived'],
                 'answered' => (bool) $row['answered'],
             ];
         }
