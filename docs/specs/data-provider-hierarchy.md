@@ -1150,11 +1150,13 @@ Registry row:
 | `match_radius_m` | 50 |
 | `refresh_cadence` | twice yearly, matching the publisher |
 
-Field map: `beschrijvi` to the note, `plaats` to the town, and `type` twice
+Field map: `beschrijvi` to the note, and `type` twice
 through a value map (2026-09-05): `Regulier, 24-7 open` / `Alleen overdag
 bereikbaar` to `availability` (Always / Daytime only), `Storing` to
 `condition` (Out of order). Both are form fields on letter B, so a rider can
-correct what the register says. What is true of every tap in the register
+correct what the register says. No town: the water form has no town field and
+a tap has its point, so `plaats` is not read and the towns an earlier harvest
+wrote were removed (`Version20261001230000`, owner 2026-10-01). What is true of every tap in the register
 is said once on the row, as its defaults (§5.2, `Version20261001220000`):
 `type` Drinking tap, `potable` Yes (public supply), `seasonal` Frost-shut in
 winter, `bottleFill` Yes, `cost` Free. Being in the national drinking-water

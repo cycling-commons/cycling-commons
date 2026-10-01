@@ -171,7 +171,7 @@ final class ProviderDefaultsTest extends KernelTestCase
         );
         $map = json_decode((string) $row['field_map'], true);
         self::assertIsArray($map);
-        self::assertSame(['_layer', 'availability', 'condition', 'note', 'town'], self::sortedKeys($map));
+        self::assertSame(['_layer', 'availability', 'condition', 'note'], self::sortedKeys($map));
         self::assertSame(['Storing' => 'Out of order'], $map['condition']['values']);
     }
 
