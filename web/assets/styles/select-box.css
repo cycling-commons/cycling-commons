@@ -16,6 +16,10 @@
    field as an underline); the button keeps a ring for the keyboard, like
    every other control on the site. */
 .cc-sel-btn:focus-visible{outline:2px solid var(--trail,#FF5A1F);outline-offset:2px}
+/* One arrow: the button draws its own (::after). A page's `select` rule draws
+   the select's arrow as a background image (atlas.css), and the mirror copies
+   that rule onto the button, so without this every dropdown showed two. */
+.cc-sel-btn{background-image:none!important}
 .cc-sel-btn::after{content:"";flex:none;width:.42rem;height:.42rem;margin:0 .15rem 0 0;
   border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-25%) rotate(45deg)}
 .cc-sel-btn[aria-expanded="true"]::after{transform:translateY(25%) rotate(-135deg)}

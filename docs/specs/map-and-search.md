@@ -442,7 +442,10 @@ map module opens `#drawer` behind its back.
   blocks the form and its message shows under the button. The button wears
   whatever the page gave its selects: at load, every stylesheet rule written
   for `select` is copied for `.cc-sel-btn`, so a context's look follows with
-  no per-page CSS. One watcher picks up selects added later; `data-native`
+  no per-page CSS. The arrow is the one thing not taken over: the button
+  draws its own (`::after`) and drops any background image, because the
+  site's `select` rule draws the native arrow as one (atlas.css) and copying
+  it put two arrows on every dropdown. One watcher picks up selects added later; `data-native`
   opts one out, and `multiple` or `size` selects stay native. The list is
   `position: fixed` in the colours of the button it opened from, so no panel
   with overflow hidden cuts it off. Keyboard: arrows, Home/End, type-ahead,
