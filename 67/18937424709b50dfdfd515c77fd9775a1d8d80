@@ -1,0 +1,37 @@
+web/migrations/Version20261001233000.php
+  s_49442ae34d3603::t_87a37411f40386 1-41
+web/assets/map/icons.js
+  s_49442ae34d3603::t_a84e33aee1d1dd 54
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_a84e33aee1d1dd 4917
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_a84e33aee1d1dd 4927
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_a84e33aee1d1dd 4895
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_a84e33aee1d1dd 4888
+docs/specs/edit-items/B-water-food.md
+  s_49442ae34d3603::t_cf749a34e26d9e 24
+web/src/Catalog/CatalogFormRegistry.php
+  s_49442ae34d3603::t_a84e33aee1d1dd 78
+web/tests/js/kind-icons.test.cjs
+  s_49442ae34d3603::t_a84e33aee1d1dd 67-68
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_a344c560bf7c0a 4896
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6718937424709b50dfdfd515c77fd9775a1d8d80",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
