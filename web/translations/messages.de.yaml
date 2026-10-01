@@ -3109,7 +3109,7 @@ place_text:
   lead_region: 'Wer angemeldet ist, kann eine Änderung des Einleitungstextes dieser Region vorschlagen. Ein Kurator dieser Region gibt sie frei, bevor sie erscheint.'
   field_lang: 'Sprache'
   field_text: 'Text'
-  field_text_hint: 'Ein Absatz, höchstens %max% Zeichen. Schreiben Sie den ganzen Text so, wie Leser ihn sehen sollen, nicht nur die Änderung.'
+  field_text_hint: 'Schreiben Sie den ganzen Text so, wie Leser ihn sehen sollen, nicht nur die Änderung.'
   current_h: 'Aktueller Text'
   current_none: 'In dieser Sprache gibt es noch keinen Text.'
   count: '%count% von %max%'

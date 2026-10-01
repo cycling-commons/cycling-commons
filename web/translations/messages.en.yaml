@@ -3127,7 +3127,7 @@ place_text:
   lead_region: "Anyone signed in can suggest an edit to this region's about text. A curator of this region approves it before it shows."
   field_lang: 'Language'
   field_text: 'Text'
-  field_text_hint: 'One paragraph, at most %max% characters. Write the whole text as readers should see it, not only the change.'
+  field_text_hint: 'Write the whole text as readers should see it, not only the change.'
   current_h: 'Current text'
   current_none: 'There is no text in this language yet.'
   count: '%count% of %max%'

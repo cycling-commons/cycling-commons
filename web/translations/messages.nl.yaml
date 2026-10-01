@@ -3108,7 +3108,7 @@ place_text:
   lead_region: 'Iedereen die is aangemeld kan een wijziging voorstellen van de introductietekst van deze regio. Een regiobeheerder van deze regio keurt hem goed voordat hij verschijnt.'
   field_lang: 'Taal'
   field_text: 'Tekst'
-  field_text_hint: 'Eén alinea, hoogstens %max% tekens. Schrijf de hele tekst zoals lezers hem moeten zien, niet alleen de wijziging.'
+  field_text_hint: 'Schrijf de hele tekst zoals lezers hem moeten zien, niet alleen de wijziging.'
   current_h: 'Huidige tekst'
   current_none: 'Er is nog geen tekst in deze taal.'
   count: '%count% van %max%'

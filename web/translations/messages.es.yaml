@@ -3135,7 +3135,7 @@ place_text:
   lead_region: 'Cualquier persona con sesión iniciada puede proponer un cambio en el texto de presentación de esta región. Un curador de esta región lo aprueba antes de que aparezca.'
   field_lang: 'Idioma'
   field_text: 'Texto'
-  field_text_hint: 'Un párrafo, como máximo %max% caracteres. Escribe el texto completo tal como deben verlo los lectores, no solo el cambio.'
+  field_text_hint: 'Escribe el texto completo tal como deben verlo los lectores, no solo el cambio.'
   current_h: 'Texto actual'
   current_none: 'Todavía no hay texto en este idioma.'
   count: '%count% de %max%'

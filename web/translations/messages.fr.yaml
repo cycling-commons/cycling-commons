@@ -3101,7 +3101,7 @@ place_text:
   lead_region: 'Toute personne connectée peut proposer une modification du texte de présentation de cette région. Un curateur de cette région l’approuve avant qu’il n’apparaisse.'
   field_lang: 'Langue'
   field_text: 'Texte'
-  field_text_hint: 'Un paragraphe, au plus %max% caractères. Écrivez le texte entier tel que les lecteurs doivent le voir, pas seulement la modification.'
+  field_text_hint: 'Écrivez le texte entier tel que les lecteurs doivent le voir, pas seulement la modification.'
   current_h: 'Texte actuel'
   current_none: 'Il n’y a pas encore de texte dans cette langue.'
   count: '%count% sur %max%'

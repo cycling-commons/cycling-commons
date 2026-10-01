@@ -96,7 +96,7 @@
           <textarea id="pt-text" name="text" required maxlength="{{ max }}" aria-describedby="pt-text-hint pt-text-count">{{ text }}</textarea>
           <p class="chint pt-count" id="pt-text-count" aria-live="polite" data-max="{{ max }}"
              data-words="{{ 'place_text.count'|trans({'%count%': '%count%', '%max%': max}) }}">{{ 'place_text.count'|trans({'%count%': text|length, '%max%': max}) }}</p>
-          <p class="chint" id="pt-text-hint">{{ 'place_text.field_text_hint'|trans({'%max%': max}) }}</p>
+          <p class="chint" id="pt-text-hint">{{ 'place_text.field_text_hint'|trans }}</p>
         </div>
 
         {# Where the writer's text comes from: a required choice of two, with no
