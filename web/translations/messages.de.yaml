@@ -2557,6 +2557,8 @@ best:
   quiet_cta: 'In deiner Region abstimmen'
 
 improve:
+  condition:
+    not_checked: 'Noch nicht geprüft'
   eyebrow: 'Beitragen · neuer Eintrag'
   title: 'Einen Ort verbessern oder hinzufügen.'
   lead: 'Details korrigieren, Bedingungen melden, Fotos hinzufügen oder einen neuen Ort zum offenen Radatlas hinzufügen.'

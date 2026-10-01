@@ -48,6 +48,13 @@ see the rationale note under Fix details below) defaults per kind:
 | `shop` (and unknown/absent kind) | `Unknown` | staffed — hours are meaningful and unknown until told (`ServiceKind::hasOpeningHours()`) |
 | `station` / `pump` | `24/7` preselected, **overridable** | unmanned — 24/7 is the default assumption, but some stations follow a host building's hours (e.g. inside a library) |
 
+The default preselects only when a rider adds a NEW place (`ImproveType`,
+`add_mode`). On a place that exists with no stored value the select shows its
+empty first option, like every optional select in the place forms: preselecting
+there stored `24/7` (or `Unknown`) the first time somebody saved the form to fix
+something else, an answer nobody gave (owner 2026-10-01). The drawer still
+states the assumed `24/7` for an unmanned kind (below).
+
 **Drawer presentation** (`web/assets/map/drawer.js`, glyphs in `web/assets/map/icons.js`): when a station/pump has no
 stored `openingHours`, the drawer states the assumed default as a read-only
 "Opening hours · 24/7" value row instead of an "add" prompt (`schemaRows`'

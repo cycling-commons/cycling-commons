@@ -110,6 +110,16 @@ name is not an attribute: it lives on `Item::name` and travels as a change,
 never through the attribute vocabulary (`ImproveType`,
 `CatalogContributionService`).
 
+**An empty value shows as empty.** Every select in the place forms is
+optional and opens with an empty first option (a dash, or "Not checked yet"
+on "Still as mapped?"). A place with nothing stored for a field shows that empty
+option, never the first real choice and never the field's registry default, so
+saving the form for another reason stores nothing nobody chose (owner
+2026-10-01). A registry default (an unmanned station's `24/7`, `Unknown`
+opening hours, a closure's `Unknown` length) preselects only on a NEW place,
+where the rider sees it before sending. The review step lists only fields with
+an answer.
+
 **Setting the location (add mode, `?mode=add`).** The *first* action is always to set the location, and
 it varies by type:
 - **point** types (water, toilets, services, stays, hazards, getting-there, shelter, scenic, history): tap the map

@@ -998,8 +998,10 @@ offered a rider standing at a viewpoint the chance to call the view broken
 
 **No default.** A default would make every untouched edit form assert "as
 mapped" about a place its editor never looked at, and turn a no-op edit into a
-change the intake refuses. Silence means nobody has said. A data provider
-cannot give it a default either: the registry
+change the intake refuses. Silence means nobody has said. The edit form shows
+an empty value as its empty first option, worded **"Not checked yet"**
+(`improve.condition.not_checked`), so saving the form for another reason keeps
+it empty. A data provider cannot give it a default either: the registry
 refuses one (data-provider-hierarchy.md §5.2), and only a provider's own
 record (RIVM's "Storing", Out of order) or a rider sets it.
 

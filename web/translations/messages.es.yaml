@@ -1953,6 +1953,8 @@ best:
   quiet_cta: 'Vota en tu propia región'
 
 improve:
+  condition:
+    not_checked: 'Aún sin comprobar'
   eyebrow: 'Aportar · entrada nueva'
   title: 'Mejora o añade un lugar.'
   lead: 'Corrige detalles, señala condiciones, añade fotos o añade un lugar nuevo al atlas ciclista abierto.'

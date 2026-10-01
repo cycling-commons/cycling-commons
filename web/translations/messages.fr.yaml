@@ -2549,6 +2549,8 @@ best:
   quiet_cta: 'Votez dans votre région'
 
 improve:
+  condition:
+    not_checked: 'Pas encore vérifié'
   eyebrow: 'Contribuer · nouvelle entrée'
   title: 'Améliorer ou ajouter un lieu.'
   lead: 'Corrigez des détails, signalez des conditions, ajoutez des photos ou ajoutez un nouveau lieu à l''atlas cycliste ouvert.'

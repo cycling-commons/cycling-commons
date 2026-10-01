@@ -1269,14 +1269,16 @@
       if (!ctrl) return;
       var val;
       if (ctrl.tagName === 'SELECT') {
+        // The empty first option (a dash, or "Not checked yet" on "Still
+        // as mapped?") is not an answer; omit unanswered fields.
+        if (!ctrl.value) return;
         var opt = ctrl.options[ctrl.selectedIndex];
         val = opt ? opt.text : ctrl.value;
       } else {
         val = ctrl.value;
       }
       val = (val || '').trim();
-      // Placeholder em dash is not an answer; omit unanswered fields.
-      if (!val || val === '—' || val === '-') return;
+      if (!val) return;
       var labelEl = fieldEl.querySelector('label');
       var label = labelEl ? labelEl.textContent.trim() : ctrl.name;
       fieldRows.push(RC.kvRow(label, val.length > 120 ? val.slice(0, 120) + '…' : val));

@@ -2554,6 +2554,8 @@ best:
   quiet_cta: 'Stem in je eigen regio'
 
 improve:
+  condition:
+    not_checked: 'Nog niet gecontroleerd'
   eyebrow: 'Bijdragen · nieuwe invoer'
   title: 'Verbeter of voeg een plek toe.'
   lead: 'Gegevens corrigeren, omstandigheden melden, foto''s toevoegen, of een nieuwe plek toevoegen aan de open fietsatlas.'

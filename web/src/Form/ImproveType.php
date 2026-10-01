@@ -35,6 +35,8 @@ use Symfony\Component\Validator\Constraints\NotBlank;
  */
 final class ImproveType extends AbstractType
 {
+    private const string CONDITION = 'condition';
+
     public function __construct(
         private readonly CatalogFormRegistry $registry,
     ) {
@@ -73,7 +75,7 @@ final class ImproveType extends AbstractType
             if ($field->derived) {
                 continue;
             }
-            $this->addCatalogField($details, $field, $current);
+            $this->addCatalogField($details, $field, $current, $addMode);
         }
         $builder->add($details);
 
@@ -82,7 +84,7 @@ final class ImproveType extends AbstractType
             if ($field->derived) {
                 continue;
             }
-            $this->addCatalogField($extras, $field, $current);
+            $this->addCatalogField($extras, $field, $current, $addMode);
         }
         $builder->add($extras);
 
@@ -135,21 +137,33 @@ final class ImproveType extends AbstractType
         }
     }
 
-    /** @param array<string, scalar|list<string>|null> $current */
-    private function addCatalogField(FormBuilderInterface $builder, CatalogField $field, array $current): void
+    /**
+     * A field's registry default preselects only on a NEW place, where nothing
+     * is stored yet and the rider sees what is picked before sending it. On a
+     * place that exists, an empty stored value shows as the empty first
+     * option: preselecting there would store an answer nobody gave the first
+     * time somebody saved the form for another reason.
+     *
+     * @param array<string, scalar|list<string>|null> $current
+     */
+    private function addCatalogField(FormBuilderInterface $builder, CatalogField $field, array $current, bool $addMode): void
     {
         $attr = [];
         if ('' !== $field->placeholder) {
             $attr['placeholder'] = $field->placeholder;
         }
 
-        $data = $current[$field->name] ?? ('' !== $field->default ? $field->default : null);
+        $data = $current[$field->name] ?? ($addMode && '' !== $field->default ? $field->default : null);
 
         match ($field->kind) {
             FieldKind::Select => $builder->add($field->name, ChoiceType::class, [
                 'label' => $field->label,
                 'required' => false,
-                'placeholder' => '—',
+                // The empty first option is what an unanswered field shows.
+                // "Still as mapped?" says so in words: it is the question only
+                // a rider who looked can answer, and it has no default anywhere
+                // (catalog-data-model.md §7).
+                'placeholder' => self::CONDITION === $field->name ? 'improve.condition.not_checked' : '—',
                 'choices' => [] === $field->choiceLabels ? array_combine($field->choices, $field->choices) : array_flip($field->choiceLabels),
                 'data' => $data,
             ]),
