@@ -10,7 +10,7 @@
   so the row is sized for that: heading and actions share the TOP block, and a
   submission with nothing extra to show is two lines tall — near enough the
   list view that the default card costs nothing to scan. A card only grows when
-  it carries something a curator must actually look at: a photo, an edit diff,
+  it carries something a curator must actually look at: an edit diff,
   the rider's words, a reply.
 
   The three <details> triggers are buttons beside the primary action rather
@@ -34,25 +34,28 @@
     : (item.type == 'text' ? path('moderate_text', {id: item.id}) : null) %}
 <div class="q-item {{ row_unseen ? 'is-unseen' }}" data-item-id="{{ item.id }}"{% if row_unseen %} data-unread-class="is-unseen"{% endif %}>
   <div class="q-top">
-    {# The photo, in the row. A curator scanning a queue can tell a real place
-       from a mis-tap or a joke by looking, and a 44px crop answers that faster
-       than the title does (owner 2026-08-12). It opens the full size, because
-       "is anyone identifiable in this" cannot be answered at 44px — the same
-       reason the wizard's own thumbnails link out. #}
-    {% if item.photos|length > 0 %}
-      <a class="q-thumb" href="{{ item.photos[0].lg }}" target="_blank" rel="noopener"
-         title="{{ 'improve.step3.open_full'|trans }}">
-        <img src="{{ item.photos[0].sm }}" alt="" loading="lazy" width="44" height="44">
-        {% if item.photos|length > 1 %}<span class="q-thumb-n">{{ item.photos|length }}</span>{% endif %}
-      </a>
-    {% endif %}
     <div class="q-headwrap">
       <div class="q-head">
-        {# The type's icon first, as on every other row (owner 2026-08-25). A
-           submitted photo, when there is one, sits before the whole block as
-           the 44px thumbnail above. #}
-        {% include 'partials/_type_icon.html.twig' with {letter: item.letter} %}
-        <span class="q-tag q-tag--{{ item.type }}">{{ ('moderate.type.' ~ item.type)|trans }}</span>
+        {# The type's icon first, as on every other row (owner 2026-08-25); a
+           town or region text gets the town or region icon (owner 2026-10-01). #}
+        {% include 'partials/_type_icon.html.twig' with {letter: item.letter, target: item.textTarget|default(null)} %}
+        {# Then the photo. A curator scanning a queue can tell a real place
+           from a mis-tap or a joke by looking (owner 2026-08-12), and the crop
+           is no taller than the heading line, so a photo never makes the row
+           higher (owner 2026-10-01). It opens the full size, because "is
+           anyone identifiable in this" cannot be answered at that size. #}
+        {% if item.photos|length > 0 %}
+          <a class="q-thumb" href="{{ item.photos[0].lg }}" target="_blank" rel="noopener"
+             title="{{ 'improve.step3.open_full'|trans }}">
+            <img src="{{ item.photos[0].sm }}" alt="" loading="lazy" width="26" height="26">
+            {% if item.photos|length > 1 %}<span class="q-thumb-n">{{ item.photos|length }}</span>{% endif %}
+          </a>
+        {% endif %}
+        {# A town or region text always replaces a text readers already see
+           (the Wikipedia text is the default), so its tag says Edit; the
+           town or region icon before it says what it edits (owner 2026-10-01). #}
+        {% set tag_type = item.type == 'text' ? 'edit' : item.type %}
+        <span class="q-tag q-tag--{{ tag_type }}">{{ ('moderate.type.' ~ tag_type)|trans }}</span>
         {# The rider answered a needs-info question. It used to arrive as a
            message in the curator's PERSONAL inbox; moderation work belongs on
            the desk, so the signal has to be here where it can be scanned

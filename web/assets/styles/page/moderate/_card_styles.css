@@ -177,14 +177,14 @@
      an administrator is not the same act as deleting spam. */
   .btn-act.btn-secondary.btn-alarm{color:#6b21a8;border-color:rgba(107,33,168,.5)}
   .btn-act.btn-secondary.btn-alarm:hover{background:rgba(107,33,168,.1);color:#6b21a8;border-color:#6b21a8}
-  /* Row thumbnail: small, square, and the first thing in the row — a curator
-     scanning a queue reads the picture before the title. */
-  .q-thumb{position:relative;flex:0 0 44px;display:block;border-radius:5px;overflow:hidden;
+  /* Row thumbnail: small and square, right after the type icon, and no taller
+     than the heading line, so a photo never makes the row higher. */
+  .q-thumb{position:relative;flex:0 0 26px;align-self:center;display:block;border-radius:4px;overflow:hidden;
     border:1px solid rgba(20,22,14,.18);background:var(--paper-deep);line-height:0}
-  .q-thumb img{width:44px;height:44px;object-fit:cover;display:block}
+  .q-thumb img{width:26px;height:26px;object-fit:cover;display:block}
   .q-thumb:hover{border-color:var(--trail)}
   .q-thumb-n{position:absolute;right:0;bottom:0;background:rgba(20,22,14,.78);color:var(--paper);
-    font-family:var(--mono);font-size:.68rem;padding:0 .2rem;border-radius:3px 0 0 0;line-height:1.3}
+    font-family:var(--mono);font-size:.56rem;padding:0 .15rem;border-radius:3px 0 0 0;line-height:1.25}
   /* The OSM identity chip (catalog-data-model.md §5b): one small pill in the
      meta line, three states. Open pops the candidates + "Not in OSM". */
   .osm-chip{display:inline-flex;align-items:center;gap:.3rem;margin-left:.45rem;vertical-align:middle;

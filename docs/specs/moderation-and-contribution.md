@@ -1169,8 +1169,16 @@ by letter. The map page injects that set as `window.CC_TYPE_ICONS`
 read it; server pages render it through `cc_type_icons()` in
 `partials/_type_icon.html.twig`, which every record row (contributions,
 votes, History) opens with. Never an emoji literal in a template or a module,
-and never a second set. A row shows: icon · type tag (new / edit) · title ·
-kind, then date · Map · status on the right; History is that same row with
+and never a second set. A Text submission has no letter: its row shows the
+town or the region icon instead (`PlaceText::ICONS`, through
+`cc_text_icons()` in the same partial, owner 2026-10-01), from the queue
+row's `textTarget`, and its tag reads Edit, not Text: a proposal always
+replaces a text readers already see, the Wikipedia text by default (owner
+2026-10-01). The Type filter keeps its Text option. A row shows: icon · photo (when the submission carries
+one) · type tag (new / edit) · title · kind, then date · Map · status on the
+right. The photo is a 26 px square after the icon, no taller than the
+heading line, so a photo never makes the row higher (owner 2026-10-01); it
+opens the full size; History is that same row with
 its everyone/mine and approved/rejected chips on top (trashed rows join the
 unfiltered first page, as before).
 

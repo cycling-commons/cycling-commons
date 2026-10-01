@@ -25,6 +25,18 @@ final class PlaceText
     public const string TOWN = 'town';
     public const string REGION = 'region';
 
+    /**
+     * The row icon of a Text submission, by target, drawn in the 24-box of
+     * the category icons (partials/_type_icon.html.twig, via
+     * `cc_text_icons()`): a text has no catalogue letter, so it has no
+     * category icon of its own (owner 2026-10-01: "add a city or a region
+     * icon"). Town: two houses with windows. Region: a folded map.
+     */
+    public const array ICONS = [
+        self::TOWN => 'M2 21V11.5l4.5-3.5 4.5 3.5V21Z M12 21V6.5l5-4 5 4V21Z M5.5 14h2v2h-2Z M15.5 8.5h3v2h-3Z M15.5 12.5h3v2h-3Z M15.5 16.5h3v2h-3Z',
+        self::REGION => 'M2 5l6.5-2.5 7 2.5L22 2.5V19l-6.5 2.5-7-2.5L2 21.5Z M8 4.5h1v14h-1Z M15 7h1v13h-1Z',
+    ];
+
     /** Same cap for both: a region's lead and a town card's paragraph. */
     public const int MAX = 1200;
 

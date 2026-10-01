@@ -100,21 +100,24 @@
         {% set row_unseen = unseen_ids[h.id] is defined %}
         <div class="q-item {{ row_unseen ? 'is-unseen' }}" data-submission-id="{{ h.id }}">
           <div class="q-top">
-            {# The picture, as in the open queue. A trashed row has none by
-               design — the audit is content-free — and a rejected one may have
-               lost its photos to disposal, so this is `if`, not `else`. #}
-            {% if h.photos is defined and h.photos|length > 0 %}
-              <a class="q-thumb" href="{{ h.photos[0].lg }}" target="_blank" rel="noopener"
-                 title="{{ 'improve.step3.open_full'|trans }}">
-                <img src="{{ h.photos[0].sm }}" alt="" loading="lazy" width="44" height="44">
-              </a>
-            {% endif %}
             {# The same row a rider sees on /profile (owner 2026-08-25): icon,
                type tag, title + kind; date · Map · verdict on the right. #}
             <div class="q-headwrap">
               <div class="q-head">
-                {% if h.letter is defined and h.letter %}{% include 'partials/_type_icon.html.twig' with {letter: h.letter} %}{% endif %}
-                {% if h.type %}<span class="q-tag q-tag--{{ h.type }}">{{ ('moderate.type.' ~ h.type)|trans }}</span>{% endif %}
+                {% include 'partials/_type_icon.html.twig' with {letter: h.letter|default(''), target: h.textTarget|default(null)} %}
+                {# The picture after the icon, as in the open queue. A trashed
+                   row has none by design (the audit is content-free) and a
+                   rejected one may have lost its photos to disposal, so this
+                   is `if`, not `else`. #}
+                {% if h.photos is defined and h.photos|length > 0 %}
+                  <a class="q-thumb" href="{{ h.photos[0].lg }}" target="_blank" rel="noopener"
+                     title="{{ 'improve.step3.open_full'|trans }}">
+                    <img src="{{ h.photos[0].sm }}" alt="" loading="lazy" width="26" height="26">
+                  </a>
+                {% endif %}
+                {# A town or region text is tagged Edit, as in the queue. #}
+                {% set tag_type = h.type == 'text' ? 'edit' : h.type %}
+                {% if tag_type %}<span class="q-tag q-tag--{{ tag_type }}">{{ ('moderate.type.' ~ tag_type)|trans }}</span>{% endif %}
                 <h3 class="q-title">{{ h.title }}
                   {# The item's own kind. A custom title hides what a row is about;
                      an unnamed one already reads as its type, so repeating it there

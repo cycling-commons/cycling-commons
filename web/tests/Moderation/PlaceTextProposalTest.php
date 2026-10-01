@@ -10,6 +10,7 @@ use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Contribution\PlaceText;
 use App\Contribution\PlaceTextProposals;
 use App\Entity\User;
 use App\Moderation\DeskSeen;
@@ -68,12 +69,13 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertContains((int) $sub->getId(), $this->queueIds($curatorA), 'a curator of the town\'s region sees it');
         self::assertNotContains((int) $sub->getId(), $this->queueIds($curatorB), 'a curator of another region does not');
 
-        // The desk card is the ordinary one: a Text tag and the was/now diff.
+        // The desk card is the ordinary one: an Edit tag (it replaces the text
+        // readers see) and the was/now diff.
         $client->loginUser($curatorA);
-        $client->request('GET', '/moderate/submissions');
+        $crawler = $client->request('GET', '/moderate/submissions');
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
-        self::assertStringContainsString('q-tag--text', $html);
+        self::assertSame('Edit', $crawler->filter('.q-item[data-item-id="'.$sub->getId().'"] .q-tag--edit')->text());
         self::assertStringContainsString('Testdorp: vlak, kasseien in het centrum.', $html);
     }
 
@@ -366,6 +368,19 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertSame('_blank', $pen->attr('target'));
         self::assertNotNull($pen->attr('data-opens'), 'following it takes the unseen bar off');
         self::assertSame($pen->attr('href'), $card->filter('a.q-title-link')->attr('href'), 'the title opens the same form');
+        self::assertSame(PlaceText::ICONS[PlaceText::TOWN], $card->filter('.q-head .q-icon svg path')->attr('d'), 'a town text shows the town icon');
+
+        // A region text shows the region icon, in the queue and in History.
+        $client->loginUser($rider);
+        $crawler = $client->request('GET', '/regions/ptext-a/text?lang=en');
+        $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'en', 'text' => 'Ptext A is flat.']));
+        $region = $this->latestText((int) $rider->getId());
+        $client->loginUser($curatorA);
+        $crawler = $client->request('GET', '/moderate/submissions');
+        self::assertSame(PlaceText::ICONS[PlaceText::REGION], $crawler->filter('.q-item[data-item-id="'.$region->getId().'"] .q-head .q-icon svg path')->attr('d'));
+        $this->moderation()->decide((int) $region->getId(), 'approve', $curatorA, null);
+        $crawler = $client->request('GET', '/moderate/submissions/history');
+        self::assertSame(PlaceText::ICONS[PlaceText::REGION], $crawler->filter('.q-item[data-submission-id="'.$region->getId().'"] .q-head .q-icon svg path')->attr('d'));
     }
 
     public function testTheCorrectionFormHoldsTheRidersTextAndNoteInTheirLanguage(): void
