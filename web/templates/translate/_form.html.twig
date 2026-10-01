@@ -101,7 +101,7 @@
             {% for locale in dev_locales %}
               <label>
                 <input type="checkbox" data-deepl-locale="{{ locale }}"{{ locale == app.request.locale ? ' checked' : '' }}>
-                {{ ('lang.' ~ locale)|trans }}
+                {{ cc_languages(built: true)[locale]|default(locale) }}
               </label>
             {% endfor %}
           </fieldset>
@@ -190,7 +190,7 @@
         {% for locale in dev_locales %}
           <label>
             {{ form_widget(attribute(form, 'save_' ~ locale)) }}
-            {{ ('lang.' ~ locale)|trans }}
+            {{ cc_languages(built: true)[locale]|default(locale) }}
           </label>
         {% endfor %}
       </fieldset>

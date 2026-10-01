@@ -52,7 +52,10 @@ hundred words of voice, and running that through the same workflow five times
 per post is the cost that quietly stops anybody writing the second one.
 
 A reader in French, German or Spanish gets the English posts on their own URL,
-and the index says so once at the top. That is a smaller lie than an empty page
+and the index says so once at the top, with a link to each of the blog's
+languages that this deployment serves, named by the one provider
+(`App\Routing\Languages`, dev-environment.md §7 i18n); the admin's post
+language offers the same set. That is a smaller lie than an empty page
 and a much smaller one than a blog nobody updates. A Dutch reader following a
 link to an English-only post reads it rather than meeting a 404.
 

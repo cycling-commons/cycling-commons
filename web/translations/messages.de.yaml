@@ -17,13 +17,6 @@ blog:
   status.draft: 'Entwurf'
   status.published: 'Veröffentlicht'
 
-lang:
-  en: 'English'
-  nl: 'Nederlands'
-  fr: 'Français'
-  de: 'Deutsch'
-  es: 'Español'
-
 nav:
   tagline: 'OPEN ATLAS — EST. 2026'
   map: 'Karte'
@@ -2978,12 +2971,6 @@ translate:
     rate_limited: 'Zu viele Vorschläge in dieser Stunde. Versuche es später erneut.'
     bad_locale: 'Diese Sprache kann auf der Website nicht übersetzt werden.'
     conflict: 'Jemand hat diesen Schlüssel gerade vorgeschlagen. Bitte versuche es erneut.'
-  locale:
-    en: 'Englisch'
-    fr: 'Französisch'
-    nl: 'Niederländisch'
-    de: 'Deutsch'
-    es: 'Spanisch'
   stale:
     tag: 'Englisch geändert v%from% → v%to%'
     notice: 'Das Englische hat sich geändert, nachdem diese Übersetzung erstellt wurde (v%from% → v%to%). Lies sie im Vergleich zum aktuellen Englisch.'

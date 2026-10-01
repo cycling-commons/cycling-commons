@@ -34,7 +34,7 @@
       {% for loc in locales %}
         <li>
           <div class="loc">{{ loc }}</div>
-          <div class="nm">{{ ('translate.locale.' ~ loc)|trans }}</div>
+          <div class="nm">{{ cc_languages(built: true)[loc]|default(loc) }}</div>
           <div class="chooser-actions">
             <a href="{{ path('translate', {_locale: loc}) }}">{{ 'translate.chooser.browse'|trans }}</a>
             {# Turns translate mode on and sends the reader to that locale's

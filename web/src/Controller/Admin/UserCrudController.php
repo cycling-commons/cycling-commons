@@ -10,6 +10,7 @@ use App\Catalog\Entity\Region;
 use App\Entity\User;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationScopeProvider;
+use App\Routing\Languages;
 use App\Service\GuardrailViolationException;
 use App\Service\UserAdminService;
 use App\World\Entity\Country;
@@ -59,6 +60,7 @@ final class UserCrudController extends AbstractCrudController
         private readonly AdminUrlGenerator $urls,
         private readonly TranslatorInterface $translator,
         private readonly ModerationScopeProvider $scopeProvider,
+        private readonly Languages $languages,
     ) {
     }
 
@@ -85,13 +87,10 @@ final class UserCrudController extends AbstractCrudController
             ->add(BooleanFilter::new('emailVerified', 'Email verified'))
             ->add(BooleanFilter::new('publicProfile', 'Public profile'))
             ->add(EntityFilter::new('country'))
-            ->add(ChoiceFilter::new('locale')->setChoices([
-                'English' => 'en',
-                'Français' => 'fr',
-                'Nederlands' => 'nl',
-                'Deutsch' => 'de',
-                'Español' => 'es',
-            ]))
+            // The languages this deployment serves. A rider whose stored
+            // language is no longer served is not offered as a filter; the
+            // site already treats that preference as unset.
+            ->add(ChoiceFilter::new('locale')->setChoices(array_flip($this->languages->options())))
             ->add(DateTimeFilter::new('createdAt', 'Registered'));
     }
 

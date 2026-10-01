@@ -17,13 +17,6 @@ blog:
   status.draft: 'Draft'
   status.published: 'Published'
 
-lang:
-  en: 'English'
-  nl: 'Nederlands'
-  fr: 'Français'
-  de: 'Deutsch'
-  es: 'Español'
-
 nav:
   tagline: 'OPEN ATLAS — EST. 2026'
   map: 'Map'
@@ -2385,12 +2378,6 @@ translate:
     rate_limited: 'Too many proposals this hour. Try again later.'
     bad_locale: 'That language cannot be translated from the website.'
     conflict: 'Someone else just submitted this key. Please try again.'
-  locale:
-    en: 'English'
-    fr: 'French'
-    nl: 'Dutch'
-    de: 'German'
-    es: 'Spanish'
   stale:
     tag: 'English changed v%from% → v%to%'
     notice: 'The English changed after this translation was made (v%from% → v%to%). Read it against the current English.'

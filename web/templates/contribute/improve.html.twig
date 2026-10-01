@@ -141,14 +141,17 @@
     nothing_changed: 'contribute.error.nothing_changed'|trans
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {# The outbound-links editor's own bag: its caps come from OutboundLinks so
-     raising one is a single edit rather than three, and the language names are
-     endonyms, matching the language menu. #}
+     raising one is a single edit rather than three. The language picker
+     offers the languages this deployment serves (`locales`); `localeNames`
+     names every built language, so a stored address tagged with one that is
+     no longer served still shows its tag rather than reading as "any
+     language". Both from the one provider (dev-environment.md §7 i18n). #}
   <script nonce="{{ csp_nonce() }}">window.CC_LINKS = {{ {
     maxEntries: constant('App\\Catalog\\Import\\OutboundLinks::MAX_ENTRIES'),
     maxUrls: constant('App\\Catalog\\Import\\OutboundLinks::MAX_URLS_PER_ENTRY'),
     maxLabel: constant('App\\Catalog\\Import\\OutboundLinks::MAX_LABEL_LENGTH'),
-    locales: constant('App\\Catalog\\Import\\OutboundLinks::LOCALES'),
-    localeNames: {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch', 'es': 'Español'},
+    locales: cc_languages()|keys,
+    localeNames: cc_languages(built: true),
     i18n: {
       addEntry: 'improve.links.add_entry'|trans,
       addLanguage: 'improve.links.add_language'|trans,

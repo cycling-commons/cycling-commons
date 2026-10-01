@@ -14,7 +14,7 @@
         <span class="q-pill q-pill--{{ pill[card.status] ?? 'ret' }}">{{ ('translate.mine.status.' ~ card.status)|trans }}</span>
       </div>
       <div class="q-submitter">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
-        · {{ ('translate.locale.' ~ card.locale)|trans }}</div>
+        · {{ cc_languages(built: true)[card.locale]|default(card.locale) }}</div>
     </div>
     <div class="q-acts">
       <time class="q-when" datetime="{{ card.when|date('c') }}">{{ card.when|cc_datetime }}</time>

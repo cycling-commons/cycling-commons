@@ -27,7 +27,7 @@
     <nav class="lfilter" aria-label="{{ 'translate.mine.filter_locale_aria'|trans }}">
       <a class="lchip tr-loc-all {{ locale_filter is null ? 'on' }}" href="{{ path('translate_mine', {locale: 'all'}|merge(status_q)) }}">{{ 'translate.mine.filter_all'|trans }}</a>
       {% for loc in locales %}
-        <a class="lchip tr-loc-{{ loc }} {{ locale_filter == loc ? 'on' }}" href="{{ path('translate_mine', {locale: loc}|merge(status_q)) }}">{{ ('translate.locale.' ~ loc)|trans }}</a>
+        <a class="lchip tr-loc-{{ loc }} {{ locale_filter == loc ? 'on' }}" href="{{ path('translate_mine', {locale: loc}|merge(status_q)) }}">{{ cc_languages(built: true)[loc]|default(loc) }}</a>
       {% endfor %}
     </nav>
     {% if status_chips|length > 1 or status_filter %}

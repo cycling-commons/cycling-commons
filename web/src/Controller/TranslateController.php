@@ -204,7 +204,9 @@ final class TranslateController extends AbstractController
             'status_filter' => $status?->value,
             'status_chips' => $result['statuses'],
             'locale_filter' => $localeFilter,
-            'locales' => TranslationLimits::LOCALES,
+            // The chips offer the served languages only; "all" still lists
+            // proposals made in a language that is no longer served.
+            'locales' => $this->translatableLocales(),
             'had_any' => $result['had_any'],
         ]);
     }

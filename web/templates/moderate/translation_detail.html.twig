@@ -52,7 +52,7 @@
     <a class="tr-back" href="{{ card.open ? path('moderate_translations') : path('moderate_translations_history') }}">{{ (card.open ? 'moderate.translation.back' : 'moderate.translation.back_history')|trans }}</a>
     <h1>{{ card.message_key }} <span class="tr-status">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span></h1>
     <p class="lead">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
-      · {{ ('translate.locale.' ~ card.locale)|trans }}</p>
+      · {{ cc_languages(built: true)[card.locale]|default(card.locale) }}</p>
   </div>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}

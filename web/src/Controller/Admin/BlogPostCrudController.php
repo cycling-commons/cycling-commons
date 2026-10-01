@@ -10,6 +10,7 @@ use App\Blog\BlogLocales;
 use App\Blog\BlogStatus;
 use App\Blog\Entity\BlogPost;
 use App\Entity\User;
+use App\Routing\Languages;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
@@ -46,6 +47,11 @@ final class BlogPostCrudController extends AbstractCrudController
 {
     use RiderDatedFields;
 
+    public function __construct(
+        private readonly Languages $languages,
+    ) {
+    }
+
     #[\Override]
     public static function getEntityFqcn(): string
     {
@@ -75,8 +81,10 @@ final class BlogPostCrudController extends AbstractCrudController
             ->setHelp('The URL. Leave it and it is made from the title; change it and it stays changed.')
             ->setRequired(false);
 
+        // The blog's languages that this deployment serves: a post in a
+        // language nobody may read would have no reader.
         yield ChoiceField::new('locale')
-            ->setChoices(array_combine(BlogLocales::WRITTEN, BlogLocales::WRITTEN))
+            ->setChoices(array_flip(array_intersect_key($this->languages->options(), array_flip(BlogLocales::WRITTEN))))
             ->setHelp('The language this post is WRITTEN in. Readers in other languages see the English posts.');
 
         yield TextareaField::new('lede')

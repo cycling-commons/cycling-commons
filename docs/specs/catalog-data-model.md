@@ -796,7 +796,12 @@ one door that skips the rule. An emptied editor posts `''` and normalises to
 null, so taking a link down is a real edit. The validator's message is NOT
 echoed back: every one of its rules is already enforced in the browser, so a
 rider can only reach it by posting by hand, and that is the case where naming
-internals is a favour to the wrong person. Pinned by
+internals is a favour to the wrong person. The per-url language picker offers
+the languages this deployment serves, named by the one provider
+(`App\Routing\Languages`, dev-environment.md §7 i18n); an address already
+tagged with a language that is no longer served keeps its tag, shown by name,
+and `OutboundLinks::LOCALES` accepts every built language so the edit posts it
+back unchanged (`links-editor-locales.test.cjs`). Pinned by
 `OutboundLinksEditorTest`. Design as written:
 
 Today `links` can only arrive from the importer. The wizard needs a field that

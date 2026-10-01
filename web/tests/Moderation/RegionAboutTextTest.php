@@ -10,6 +10,7 @@ use App\Catalog\Entity\Region;
 use App\Catalog\RegionLead;
 use App\Entity\User;
 use App\Moderation\Entity\ModeratorArea;
+use App\Routing\ActiveLocales;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -240,6 +241,44 @@ final class RegionAboutTextTest extends WebTestCase
         $stored = $this->stored((int) $region->getId());
         self::assertIsArray($stored);
         self::assertFalse($stored['fr']['derived'] ?? null, 'no article, so no citation may be claimed');
+    }
+
+    /**
+     * A deployment serving English and Dutch has those two slots. A text
+     * stored in a language it does not serve stays as it is through a save,
+     * and a posted value for that language is ignored
+     * (dev-environment.md §7 i18n).
+     */
+    public function testOnlyServedLanguagesHaveASlotAndAHiddenTextIsKept(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        static::getContainer()->set(ActiveLocales::class, new ActiveLocales('en', ['en', 'fr', 'nl', 'de', 'es'], ['en', 'nl']));
+        $region = $this->seedRegion('about-served');
+        $id = (int) $region->getId();
+        $kept = RegionLead::withEntry(null, 'fr', 'Un texte gardé.', false, 1, 1, null, new \DateTimeImmutable('2026-09-01'));
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement('UPDATE region SET context_curated = :c WHERE id = :id', ['c' => json_encode($kept, \JSON_THROW_ON_ERROR), 'id' => $id]);
+        $client->loginUser($this->curator('about-served@example.com', admin: true), 'main');
+
+        $crawler = $client->request('GET', '/moderate/regions/about-served/about');
+        self::assertResponseIsSuccessful();
+        self::assertSame(['English', 'Nederlands'], $crawler->filter('.ab-lang')->each(static fn ($n): string => $n->text()));
+        self::assertCount(0, $crawler->filter('textarea[name=text_fr]'));
+
+        $client->request('POST', '/moderate/regions/about-served/about', [
+            '_token' => $this->token($client, 'about-served'),
+            'text_en' => 'An English lead.',
+            'text_fr' => 'Injecté.',
+        ], [], ['HTTP_SEC_FETCH_SITE' => 'same-origin']);
+        self::assertResponseRedirects();
+
+        $stored = $this->stored($id);
+        self::assertIsArray($stored);
+        self::assertSame('An English lead.', $stored['en']['text'] ?? null);
+        // assertEquals: JSONB keeps the keys, not their order.
+        self::assertEquals($kept['fr'], $stored['fr'] ?? null, 'the hidden language keeps its stored text and credit');
     }
 
     /** An emptied box removes the override; the harvest comes back by itself. */

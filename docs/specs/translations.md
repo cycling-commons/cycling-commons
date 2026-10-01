@@ -344,8 +344,11 @@ it. Another account's rows never appear (a stranger hitting someone
 else's key history gets 404). The
 list **defaults to the current site locale** when that locale can be
 proposed (`fr`/`nl`/`de`/`es`); on English it defaults to all locales,
-because English cannot be proposed. Chips All · French · Dutch · German
-· Spanish override that (`?locale=all` or `?locale=nl`). Status chips
+because English cannot be proposed. Chips All plus one per language this
+deployment serves, each named in its own language (Nederlands, from the one
+provider, dev-environment.md §7 i18n) override that (`?locale=all` or
+`?locale=nl`); All still lists proposals in a language that is no longer
+served. Status chips
 compose with the locale query, filter on the **latest** row of each
 group, and still appear only when more than one status exists **in the
 filtered set**. An empty locale view (proposals exist, none in this
@@ -626,7 +629,8 @@ and open submissions. The bulb is that sum, also as a real number.
 page shows the English versions on every change row ("made against v2 ·
 English is now v3") next to the existing English-at-submit / English-now
 warning. A **Stale** chip beside Queue and History opens
-`/moderate/translations/stale`: one list per locale of stale keys (key,
+`/moderate/translations/stale`: one list per locale this deployment serves
+(its chips from the one provider, dev-environment.md §7 i18n) of stale keys (key,
 English `vN`, live translation, "made against vM"), newest English change
 first. It is a reading list. A curator who wants to fix one goes to
 `/translate/{id}` in that locale like any rider, and a second curator

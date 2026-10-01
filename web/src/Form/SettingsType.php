@@ -14,7 +14,7 @@ use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RidingStyle;
 use App\Entity\User;
-use App\Routing\ActiveLocales;
+use App\Routing\Languages;
 use App\World\Entity\Country;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -39,29 +39,9 @@ use Symfony\Component\Validator\Constraints\NotBlank;
  */
 final class SettingsType extends AbstractType
 {
-    /** Names for every built language; the served subset is picked below. */
-    private const array LANGUAGE_NAMES = [
-        'en' => 'English',
-        'fr' => 'Français',
-        'nl' => 'Nederlands',
-        'de' => 'Deutsch',
-        'es' => 'Español',
-    ];
-
     public function __construct(
-        private readonly ActiveLocales $activeLocales,
+        private readonly Languages $languages,
     ) {
-    }
-
-    /** @return array<string, string> label => locale */
-    private function languageChoices(): array
-    {
-        $choices = [];
-        foreach ($this->activeLocales->all() as $locale) {
-            $choices[self::LANGUAGE_NAMES[$locale] ?? strtoupper($locale)] = $locale;
-        }
-
-        return $choices;
     }
 
     /** @param array<array-key,mixed> $options */
@@ -131,7 +111,7 @@ final class SettingsType extends AbstractType
                 // Storing a preference for a language whose every page
                 // answers 404 would leave a rider stuck on a setting nobody
                 // can honour.
-                'choices' => $this->languageChoices(),
+                'choices' => array_flip($this->languages->options()),
                 'choice_translation_domain' => false,
             ])
             ->add('dateFormat', EnumType::class, [

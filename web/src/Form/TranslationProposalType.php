@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Form;
 
+use App\Routing\Languages;
 use App\Translation\TranslationConsent;
 use App\Translation\TranslationLimits;
 use Symfony\Component\Form\AbstractType;
@@ -21,9 +22,16 @@ use Symfony\Component\Validator\Constraints\NotBlank;
  * Rider proposal for one non-English catalogue key.
  *
  * @see docs/specs/translations.md §4
+ *
+ * @api
  */
 final class TranslationProposalType extends AbstractType
 {
+    public function __construct(
+        private readonly Languages $languages,
+    ) {
+    }
+
     /**
      * The per-locale field carrying the text for `$locale`.
      *
@@ -96,7 +104,8 @@ final class TranslationProposalType extends AbstractType
     {
         foreach ($locales as $locale) {
             $builder->add(self::valueField($locale), TextareaType::class, [
-                'label' => 'lang.'.$locale,
+                'label' => $this->languages->name($locale),
+                'translation_domain' => false,
                 'required' => false,
                 'constraints' => [
                     new Length(

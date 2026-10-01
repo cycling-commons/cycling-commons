@@ -52,7 +52,7 @@
                 <span class="q-pill q-pill--{{ pill[card.status] ?? 'ret' }}">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span>
               </div>
               <div class="q-submitter">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
-                · {{ ('translate.locale.' ~ card.locale)|trans }}</div>
+                · {{ cc_languages(built: true)[card.locale]|default(card.locale) }}</div>
             </div>
           </div>
         </article>

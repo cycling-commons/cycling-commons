@@ -17,13 +17,6 @@ blog:
   status.draft: 'Concept'
   status.published: 'Gepubliceerd'
 
-lang:
-  en: 'English'
-  nl: 'Nederlands'
-  fr: 'Français'
-  de: 'Deutsch'
-  es: 'Español'
-
 nav:
   tagline: 'OPEN ATLAS — EST. 2026'
   map: 'Kaart'
@@ -2977,12 +2970,6 @@ translate:
     rate_limited: 'Te veel voorstellen dit uur. Probeer later opnieuw.'
     bad_locale: 'Die taal kan vanaf de site niet vertaald worden.'
     conflict: 'Iemand heeft deze sleutel net ingediend. Probeer het opnieuw.'
-  locale:
-    en: 'Engels'
-    fr: 'Frans'
-    nl: 'Nederlands'
-    de: 'Duits'
-    es: 'Spaans'
   stale:
     tag: 'Engels gewijzigd v%from% → v%to%'
     notice: 'Het Engels is gewijzigd nadat deze vertaling is gemaakt (v%from% → v%to%). Lees hem tegenover het huidige Engels.'

@@ -17,13 +17,6 @@ blog:
   status.draft: 'Borrador'
   status.published: 'Publicado'
 
-lang:
-  en: 'English'
-  nl: 'Nederlands'
-  fr: 'Français'
-  de: 'Deutsch'
-  es: 'Español'
-
 nav:
   tagline: 'ATLAS ABIERTO — DESDE 2026'
   map: 'Mapa'
@@ -2392,12 +2385,6 @@ translate:
     rate_limited: 'Demasiadas propuestas esta hora. Inténtalo más tarde.'
     bad_locale: 'Ese idioma no se puede traducir desde el sitio.'
     conflict: 'Alguien acaba de enviar esta clave. Inténtalo de nuevo.'
-  locale:
-    en: 'Inglés'
-    fr: 'Francés'
-    nl: 'Neerlandés'
-    de: 'Alemán'
-    es: 'Español'
   stale:
     tag: 'El inglés cambió v%from% → v%to%'
     notice: 'El inglés cambió después de hacer esta traducción (v%from% → v%to%). Léela comparándola con el inglés actual.'

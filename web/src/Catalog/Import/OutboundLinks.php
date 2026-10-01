@@ -19,7 +19,13 @@ final class OutboundLinks
     public const int MAX_URLS_PER_ENTRY = 6;
     public const int MAX_ENTRIES_PER_HOST = 2;
     public const int MAX_LABEL_LENGTH = 40;
-    /** Site locales a url may be tagged with. Public so the wizard picker cannot drift from the validator. */
+    /**
+     * Every built language a url may be tagged with. Deliberately all of
+     * them, not only the served ones: imported links and links saved while a
+     * language was served keep their tag, and an edit of the item posts them
+     * back unchanged. The improve form's picker offers only the languages
+     * this deployment serves ({@see \App\Routing\Languages::options()}).
+     */
     public const array LOCALES = ['en', 'fr', 'nl', 'de', 'es'];
 
     /**

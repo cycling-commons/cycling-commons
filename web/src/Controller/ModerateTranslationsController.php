@@ -13,6 +13,7 @@ use App\Moderation\DeskRider;
 use App\Moderation\MissingQuestionException;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
+use App\Routing\Languages;
 use App\Routing\LocalePrefix;
 use App\Translation\CatalogueBrowser;
 use App\Translation\DecisionService;
@@ -50,6 +51,7 @@ final class ModerateTranslationsController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly PageSize $pageSize,
         private readonly StaleIndex $stale,
+        private readonly Languages $languages,
     ) {
     }
 
@@ -106,21 +108,24 @@ final class ModerateTranslationsController extends AbstractController
     #[Route('/moderate/translations/stale', name: 'moderate_translations_stale', methods: ['GET'])]
     public function stale(Request $request): Response
     {
+        // The translatable languages this deployment serves: a stale key in a
+        // language nobody may read is nobody's work.
+        $locales = array_values(array_filter(TranslationLimits::LOCALES, $this->languages->isServed(...)));
         $locale = $request->query->getString('locale', 'nl');
-        if (!TranslationLimits::isTranslatableLocale($locale)) {
-            $locale = 'nl';
+        if (!\in_array($locale, $locales, true)) {
+            $locale = \in_array('nl', $locales, true) ? 'nl' : ($locales[0] ?? null);
         }
         $rows = [];
-        foreach ($this->stale->listFor($locale) as $row) {
+        foreach (null === $locale ? [] : $this->stale->listFor($locale) as $row) {
             $entry = $this->em->find(TranslationEntry::class, $row['id']);
-            $rows[] = $row + ['live' => null !== $entry ? $this->browser->liveFor($entry, $locale)['live'] : ''];
+            $rows[] = $row + ['live' => null !== $entry && null !== $locale ? $this->browser->liveFor($entry, $locale)['live'] : ''];
         }
 
         return $this->render('moderate/translations_stale.html.twig', [
             'page_title' => 'meta.moderate_translations_title',
             'page_description' => 'meta.moderate_translations_description',
             'locale' => $locale,
-            'locales' => TranslationLimits::LOCALES,
+            'locales' => $locales,
             'rows' => $rows,
         ]);
     }

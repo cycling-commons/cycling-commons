@@ -125,6 +125,23 @@ final class InactiveLocaleTest extends WebTestCase
         self::assertSame(['nl'], $codes);
     }
 
+    /** The settings language dropdown reads the same provider as the menu. */
+    public function testTheSettingsLanguageOffersOnlyTheServedLanguages(): void
+    {
+        $client = static::createClient();
+        $this->serve(['en', 'nl']);
+        $client->loginUser($this->rider('inactive-locale-settings@example.com'));
+
+        $crawler = $client->request('GET', '/account/settings');
+        self::assertResponseIsSuccessful();
+
+        $options = $crawler->filter('select[name="settings[locale]"] option')->each(
+            static fn ($node): array => [(string) $node->attr('value'), trim($node->text())],
+        );
+        self::assertSame(['en', 'nl'], array_values(array_filter(array_column($options, 0))));
+        self::assertContains(['nl', 'Nederlands'], $options);
+    }
+
     private function rider(string $email): User
     {
         $container = static::getContainer();

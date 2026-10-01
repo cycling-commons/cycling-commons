@@ -12,7 +12,9 @@
     var MAX_ENTRIES = cfg.maxEntries || 4;
     var MAX_URLS = cfg.maxUrls || 6;
     var MAX_LABEL = cfg.maxLabel || 40;
-    var LOCALES = cfg.locales || ['en', 'fr', 'nl', 'de', 'es'];
+    /* The languages this deployment serves, and every built language's name
+       (Languages provider, via improve.html.twig). */
+    var LOCALES = cfg.locales || [];
     var LOCALE_NAMES = cfg.localeNames || {};
     hidden.dataset.linksMounted = '1';
 
@@ -76,6 +78,15 @@
           if (url.locale === code) opt.selected = true;
           select.appendChild(opt);
         });
+        /* A stored tag for a language no longer served stays what it is,
+           shown by name, rather than reading as "any language". */
+        if (url.locale && LOCALES.indexOf(url.locale) < 0) {
+          var kept = document.createElement('option');
+          kept.value = url.locale;
+          kept.textContent = LOCALE_NAMES[url.locale] || url.locale;
+          kept.selected = true;
+          select.appendChild(kept);
+        }
         select.addEventListener('change', function () {
           url.locale = select.value || undefined;
           sync();

@@ -1,6 +1,8 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {#
-  A town card's text, one box per language (docs/specs/map-and-search.md §6.5).
+  A town card's text, one box per language this deployment serves
+  (docs/specs/map-and-search.md §6.5; the languages from cc_languages()).
+  Text stored in a language it does not serve stays stored, unseen here.
 
   What a reader sees on the map is fetched from Wikipedia the first time
   anybody opens the town. A curator who knows better writes over it here.
@@ -30,11 +32,11 @@
     {% for m in messages %}<p class="flash {{ label }}">{{ m|trans }}</p>{% endfor %}
   {% endfor %}
 
-  {% for lang in langs %}
+  {% for lang, lang_name in langs %}
     {% set row = rows[lang]|default(null) %}
     <section class="langblock">
       <div class="langhead">
-        <h2>{{ ('lang.' ~ lang)|trans }}</h2>
+        <h2>{{ lang_name }}</h2>
         {% if row and row.edited %}<span class="tag local">{{ 'moderate.town.local'|trans }}</span>
         {% elseif row and row.answered and row.extract %}<span class="tag">{{ 'moderate.town.fetched'|trans({'%lang%': row.page_lang|default(lang)}) }}</span>
         {% else %}<span class="tag">{{ 'moderate.town.none'|trans }}</span>{% endif %}

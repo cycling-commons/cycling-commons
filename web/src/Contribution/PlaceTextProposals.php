@@ -17,6 +17,7 @@ use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\PlaceTextWriter;
+use App\Routing\Languages;
 use App\Town\TownPlaceRepository;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
@@ -70,6 +71,7 @@ final readonly class PlaceTextProposals
         private ModerationService $moderation,
         private RoleHierarchyInterface $roleHierarchy,
         private ModerationScopeProvider $scopes,
+        private Languages $languages,
     ) {
     }
 
@@ -204,6 +206,7 @@ final readonly class PlaceTextProposals
         if (1 !== preg_match('~^(node|way|relation)/\d{1,16}$~', $osmRef)) {
             throw new PlaceTextRefused('place_text.error.unknown');
         }
+        $this->assertServed($lang);
         [$lang, $text, $note] = $this->checked($lang, $text, $note);
         $derived = self::sourceAnswered($this->towns->hasArticle($osmRef, $lang), $derived);
 
@@ -249,6 +252,7 @@ final readonly class PlaceTextProposals
      */
     public function proposeRegion(User $by, array $region, string $lang, string $text, string $note, ?bool $derived): array
     {
+        $this->assertServed($lang);
         [$lang, $text, $note] = $this->checked($lang, $text, $note);
         $derived = self::sourceAnswered(RegionLead::hasSource($region['wiki'], $lang), $derived);
         $current = $this->currentRegionText($region, $lang);
@@ -568,6 +572,21 @@ final readonly class PlaceTextProposals
         }
 
         return $derived;
+    }
+
+    /**
+     * A new text is written only in a language this deployment serves. A
+     * correction or a decision is not asked this: the proposal's language
+     * is stored data, and one filed before its language was switched off
+     * is still decided ({@see self::checked()} takes every built language).
+     *
+     * @throws PlaceTextRefused
+     */
+    private function assertServed(string $lang): void
+    {
+        if (!$this->languages->isServed($lang)) {
+            throw new PlaceTextRefused('place_text.error.lang');
+        }
     }
 
     /**

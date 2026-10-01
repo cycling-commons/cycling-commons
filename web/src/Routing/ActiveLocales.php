@@ -19,9 +19,11 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * actually reach. A language whose catalogue is half machine-drafted is
  * built and translatable on dev while staying invisible in production, and
  * `CC_ACTIVE_LOCALES` is the one switch that decides it. Everything a reader
- * can see or reach reads this list: the language menu, the hreflang block,
- * the sitemap, the locale switcher, /translate, and the guard that sends a
- * prefixed path in a language this deployment does not serve to the default locale.
+ * can see or reach reads this list: the hreflang block, the sitemap, the
+ * locale switcher, /translate, the guard that sends a prefixed path in a
+ * language this deployment does not serve to the default locale, and
+ * {@see Languages}, the one provider every menu, dropdown and list of
+ * languages takes its entries and names from.
  *
  * **The default locale is always served.** It is every unprefixed route and
  * the source every translation is made from, so a deployment cannot switch

@@ -51,7 +51,7 @@
     <a class="tr-back" href="{{ path('translate_mine') }}">{{ 'translate.mine.back'|trans }}</a>
     <h1>{{ card.message_key }} <span class="tr-status">{{ ('moderate.translation.status.' ~ card.status)|trans }}</span></h1>
     <p class="lead">{{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
-      · {{ ('translate.locale.' ~ card.locale)|trans }}</p>
+      · {{ cc_languages(built: true)[card.locale]|default(card.locale) }}</p>
   </div>
 
   <div class="tr-story tr-history">

@@ -12,6 +12,7 @@ use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Contribution\PlaceText;
 use App\Contribution\PlaceTextProposals;
+use App\Contribution\PlaceTextRefused;
 use App\Entity\User;
 use App\Moderation\DeskSeen;
 use App\Moderation\Entity\ModeratorArea;
@@ -20,6 +21,7 @@ use App\Moderation\ModerationService;
 use App\Moderation\SeenSubject;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TextCreditUndecidedException;
+use App\Routing\ActiveLocales;
 use App\Town\TownPlaceRepository;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
@@ -939,7 +941,83 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertTrue($this->towns()->find(self::TOWN, 'en')['derived'] ?? null, 'adapted: the credit stays');
     }
 
+    /**
+     * A deployment serving English and Dutch offers those two, and a
+     * hand-made send for a language it does not serve is refused rather than
+     * filed, by the form and by the service behind it
+     * (dev-environment.md §7 i18n).
+     */
+    public function testTheFormOffersOnlyTheServedLanguagesAndRefusesAnother(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $this->serve(['en', 'nl']);
+        $this->twoRegions();
+        $this->fetchedTown('nl', 'Testdorp is een dorp.');
+        $rider = $this->user('ptext-rider-served@example.com', []);
+        $client->loginUser($rider);
+
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=fr&name=Testdorp&lat='.self::LAT.'&lng='.self::LNG);
+        self::assertResponseIsSuccessful();
+        $options = $crawler->filter('select#pt-lang option')->each(
+            static fn ($o): array => [(string) $o->attr('value'), $o->text()],
+        );
+        self::assertSame([['en', 'English'], ['nl', 'Nederlands']], $options);
+        self::assertSame('en', $crawler->filter('select#pt-lang option[selected]')->attr('value'), 'a hidden language asked for falls back to the page\'s');
+
+        $form = $crawler->filter('#place-text-form')->form();
+        $form->disableValidation();
+        $client->submit($form, ['lang' => 'fr', 'text' => 'Testdorp a une église.', 'derived' => 'own']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('Pick one of the languages in the list.', (string) $client->getResponse()->getContent());
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        self::assertSame(0, $em->getRepository(Submission::class)->count(['userId' => $rider->getId(), 'type' => SubmissionType::Text]), 'nothing is filed');
+
+        /** @var PlaceTextProposals $proposals */
+        $proposals = static::getContainer()->get(PlaceTextProposals::class);
+        try {
+            $proposals->proposeTown($rider, self::TOWN, 'fr', 'Testdorp a une église.', '', 'Testdorp', self::LAT, self::LNG, false);
+            self::fail('a hidden language is refused by the service too');
+        } catch (PlaceTextRefused $e) {
+            self::assertSame('place_text.error.lang', $e->getMessage());
+        }
+    }
+
+    /** The curator's town page: one box per served language, and only those are written. */
+    public function testTheTownPenHasABoxPerServedLanguageOnly(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $this->serve(['en', 'nl']);
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('en', 'Testville is a village.');
+        $curator = $this->user('ptext-cur-served@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($curator);
+        $crawler = $client->request('GET', '/moderate/town/'.self::TOWN);
+        self::assertResponseIsSuccessful();
+        self::assertSame(['English', 'Nederlands'], $crawler->filter('.langblock h2')->each(static fn ($h): string => $h->text()));
+        $token = (string) $crawler->filter('form.townform input[name=_token]')->first()->attr('value');
+
+        $client->request('POST', '/moderate/town/'.self::TOWN, ['_token' => $token, 'lang' => 'fr', 'text' => 'Testville est un village.']);
+        self::assertResponseRedirects('/moderate/town/'.self::TOWN);
+        self::assertNull($this->towns()->find(self::TOWN, 'fr'), 'a hidden language is not written');
+    }
+
     // ── Fixtures ─────────────────────────────────────────────────────────────
+
+    /**
+     * Serve a narrower set than the build carries. Before the first request:
+     * the services that read it take it in their constructors.
+     *
+     * @param list<string> $active
+     */
+    private function serve(array $active): void
+    {
+        static::getContainer()->set(ActiveLocales::class, new ActiveLocales('en', ['en', 'fr', 'nl', 'de', 'es'], $active));
+    }
 
     /** Approve on the text's form, with the curator's decision on the Wikipedia credit. */
     private function approve(Submission $submission, User $curator, bool $keepCredit): void

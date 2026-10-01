@@ -27,7 +27,7 @@
 
   <nav class="lfilter" aria-label="{{ 'translate.section_aria'|trans }}">
     {% for loc in locales %}
-      <a class="lchip{{ loc == locale ? ' on' }}" href="{{ path('moderate_translations_stale', {locale: loc}) }}">{{ ('translate.locale.' ~ loc)|trans }}</a>
+      <a class="lchip{{ loc == locale ? ' on' }}" href="{{ path('moderate_translations_stale', {locale: loc}) }}">{{ cc_languages(built: true)[loc]|default(loc) }}</a>
     {% endfor %}
   </nav>
 

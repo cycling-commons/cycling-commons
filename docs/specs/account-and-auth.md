@@ -1050,7 +1050,8 @@ and sign in the next day: `/account`.
 Two tabs:
 
 - **Profile** (default): account status; Identity section (display name,
-  country, language, base location); Riding preferences (preference chips,
+  country, language (the languages this deployment serves, from
+  `App\Routing\Languages`, dev-environment.md §7 i18n), base location); Riding preferences (preference chips,
   account-and-auth.md §9); Public profile section (toggle, the rider's
   private name `rider#xxxxxxxx` that others see while the toggle is off
   (owner 2026-10-01), view-as link/hint, split out of the former "Identity &

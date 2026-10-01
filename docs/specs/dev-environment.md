@@ -339,6 +339,42 @@ Day-one internationalisation across **EN / FR / NL / DE / ES**:
 
   The routes themselves are unchanged: every prefix is still compiled in, so
   turning a language back on is a variable and a restart, never a deploy.
+- **One provider for every list of languages (`App\Routing\Languages`).**
+  Every menu, dropdown and list of languages the site shows takes its entries
+  and its names from this one service, so a language looks the same and is
+  offered or hidden the same way everywhere. It holds the single table of
+  language names, each written in its own language (endonyms: "Nederlands"
+  whatever language the page is in), and answers two questions.
+  `options()` is the languages this deployment serves (`ActiveLocales`), in
+  the build's order: what anything offers for input. `names()` is every
+  language the build carries, served or not: only for naming what is already
+  stored. Twig reads it as `cc_languages()` (served) and
+  `cc_languages(built: true)` (every built language); PHP takes the service.
+  No template, form or controller holds a list of language names of its own,
+  and the catalogues hold none either.
+
+  Its readers, and what each shows on a deployment serving `en,nl`: the
+  language menu, the account language setting, the town and region text form
+  (`/town/…/text`, `/regions/…/text`), the curator's town page
+  (`/moderate/town/…`) and the Regions desk's about-text slots
+  (`/moderate/regions/…/about`) all show English and Nederlands; the
+  per-language link picker on the improve form offers the same two; the blog's
+  language links show the blog's languages that are served; the `/translate`
+  chooser, the "Your translations" language chips and the stale-key chips on
+  the translation desk show Nederlands; the admin user list's language filter
+  and the admin blog post language show English and Nederlands.
+
+  What is stored in a language that is no longer served stays stored and
+  keeps its name: a waiting text proposal is still corrected and decided in
+  its own language, a translation proposal card still says which language it
+  is in, a link tagged with such a language keeps its tag in the picker
+  (`OutboundLinks::LOCALES` deliberately accepts every built language, so an
+  edit posts imported and older tags back unchanged), and a Regions desk save
+  keeps a hidden language's about text as it is. Nothing new is written in
+  one: the text form refuses a send for a language this deployment does not
+  serve (`place_text.error.lang`, in `PlaceTextController` and again in
+  `PlaceTextProposals`), the curator's town page refuses its save, and the
+  Regions desk ignores a posted value for it.
 - **Path-prefix routing with clean EN.** English is served unprefixed; the
   other locales carry a path prefix (`/regions`, `/fr/regions`, `/nl/…`,
   `/de/…`, `/es/…`). The prefix map is the single constant

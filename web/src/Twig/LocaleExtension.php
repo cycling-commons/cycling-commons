@@ -7,13 +7,16 @@ declare(strict_types=1);
 namespace App\Twig;
 
 use App\Routing\ActiveLocales;
+use App\Routing\Languages;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * Current page regenerated in every enabled locale (language switcher + hreflang).
+ * Current page regenerated in every enabled locale (language switcher +
+ * hreflang), and `cc_languages()`: the one list of languages every menu,
+ * dropdown and list in a template reads ({@see Languages}).
  *
  * @api
  */
@@ -26,6 +29,7 @@ final class LocaleExtension extends AbstractExtension
         // language nobody may reach has no switcher entry and no hreflang
         // line pointing search engines at a 404 (dev-environment.md §7 i18n).
         private readonly ActiveLocales $activeLocales,
+        private readonly Languages $languages,
     ) {
     }
 
@@ -34,8 +38,19 @@ final class LocaleExtension extends AbstractExtension
     {
         return [
             new TwigFunction('locale_alternates', $this->localeAlternates(...)),
-            new TwigFunction('active_locales', $this->activeLocales->all(...)),
+            new TwigFunction('cc_languages', $this->languages(...)),
         ];
+    }
+
+    /**
+     * The languages this deployment serves, code => name; with `built: true`
+     * every language the build carries, for naming what is already stored.
+     *
+     * @return array<string, string>
+     */
+    public function languages(bool $built = false): array
+    {
+        return $built ? $this->languages->names() : $this->languages->options();
     }
 
     /**

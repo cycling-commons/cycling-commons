@@ -12,7 +12,7 @@
     <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ 'translate.kicker'|trans }}</div>
     <h1>{{ entry.messageKey }}{% if open %} <span class="tr-status">{{ ('translate.mine.status.' ~ open.status.value)|trans }}</span>{% endif %}</h1>
     <p class="lead">{{ 'moderate.translation.locale'|trans({'%locale%': locale}) }}
-      · {{ ('translate.locale.' ~ locale)|trans }}</p>
+      · {{ cc_languages(built: true)[locale]|default(locale) }}</p>
   </div>
 
   {% for msg in app.flashes('success') %}<div class="flash-success" role="alert">{{ msg|trans }}</div>{% endfor %}

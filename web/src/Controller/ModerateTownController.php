@@ -9,8 +9,8 @@ namespace App\Controller;
 use App\Contribution\PlaceText;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
+use App\Routing\Languages;
 use App\Routing\LocalePrefix;
-use App\Town\MessageHandler\ResolveTownSummaryHandler;
 use App\Town\OsmElementApi;
 use App\Town\TownPlaceRepository;
 use App\Town\TownSummaryRepository;
@@ -22,7 +22,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * The curator's pen for a town card's text (map-and-search.md §6.5,
- * 2026-09-08). One page per town, one box per language. Saving makes that
+ * 2026-09-08). One page per town, one box per language this deployment
+ * serves ({@see Languages::options()}). Saving makes that
  * language local: the fetch never touches it again, and the card says our
  * curators wrote it. Reached from a town report's "Open it".
  *
@@ -51,6 +52,7 @@ final class ModerateTownController extends AbstractController
     public function __construct(
         private readonly ModerationScopeProvider $scopes,
         private readonly TownPlaceRepository $places,
+        private readonly Languages $languages,
     ) {
     }
 
@@ -80,7 +82,9 @@ final class ModerateTownController extends AbstractController
         }
         $lang = (string) $request->request->get('lang');
         $text = trim(preg_replace('~\s+~u', ' ', (string) $request->request->get('text')) ?? '');
-        if (!\in_array($lang, ResolveTownSummaryHandler::LANGS, true) || '' === $text || mb_strlen($text) > self::TEXT_MAX) {
+        // Only a language this deployment serves: the page offers no box for
+        // any other, and a hand-made POST for one is refused.
+        if (!$this->languages->isServed($lang) || '' === $text || mb_strlen($text) > self::TEXT_MAX) {
             $this->addFlash('danger', 'moderate.town.refused');
 
             return $this->redirectToRoute('moderate_town', ['osmType' => $osmType, 'osmId' => $osmId]);
@@ -142,7 +146,8 @@ final class ModerateTownController extends AbstractController
             'osm_id' => $osmId,
             'ref' => $ref,
             'title' => $title,
-            'langs' => ResolveTownSummaryHandler::LANGS,
+            // One box per language this deployment serves, code => name.
+            'langs' => $this->languages->options(),
             'rows' => $rows,
             'text_max' => self::TEXT_MAX,
             'csrf_id' => self::CSRF_ID,

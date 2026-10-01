@@ -17,13 +17,6 @@ blog:
   status.draft: 'Brouillon'
   status.published: 'Publié'
 
-lang:
-  en: 'English'
-  nl: 'Nederlands'
-  fr: 'Français'
-  de: 'Deutsch'
-  es: 'Español'
-
 nav:
   tagline: 'ATLAS OUVERT — DEPUIS 2026'
   map: 'Carte'
@@ -2970,12 +2963,6 @@ translate:
     rate_limited: 'Trop de propositions cette heure. Réessayez plus tard.'
     bad_locale: 'Cette langue ne peut pas être traduite depuis le site.'
     conflict: 'Quelqu''un vient de proposer cette clé. Réessayez.'
-  locale:
-    en: 'Anglais'
-    fr: 'Français'
-    nl: 'Néerlandais'
-    de: 'Allemand'
-    es: 'Espagnol'
   stale:
     tag: 'L''anglais a changé v%from% → v%to%'
     notice: 'L''anglais a changé après que cette traduction a été faite (v%from% → v%to%). Relisez-la en la comparant à l''anglais actuel.'

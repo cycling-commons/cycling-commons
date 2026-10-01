@@ -16,6 +16,7 @@ use App\Entity\User;
 use App\EventSubscriber\StatelessLoginRedirectSubscriber;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\OutOfScopeException;
+use App\Routing\Languages;
 use App\Routing\LocalePrefix;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -55,8 +56,10 @@ final class PlaceTextController extends AbstractController
 
     private const string SOURCE_OWN = 'own';
 
-    /** Endonyms, as the language menu spells them. */
-    private const array LANG_NAMES = ['en' => 'English', 'fr' => 'Français', 'nl' => 'Nederlands', 'de' => 'Deutsch', 'es' => 'Español'];
+    public function __construct(
+        private readonly Languages $languages,
+    ) {
+    }
 
     #[Route('/town/{osmType}/{osmId}/text', name: 'town_text', requirements: ['osmType' => 'node|way|relation', 'osmId' => '\d{1,16}'], methods: ['GET', 'POST'])]
     public function town(string $osmType, string $osmId, Request $request, PlaceTextProposals $proposals): Response
@@ -71,7 +74,7 @@ final class PlaceTextController extends AbstractController
 
         $texts = [];
         $articles = [];
-        foreach (PlaceText::LANGS as $l) {
+        foreach (array_keys($this->languages->options()) as $l) {
             $texts[$l] = $proposals->currentTown($ref, $l)['text'];
             // "Where your text comes from" is asked only where there is an article to adapt.
             $articles[$l] = $proposals->townHasArticle($ref, $l);
@@ -107,7 +110,7 @@ final class PlaceTextController extends AbstractController
 
         $texts = [];
         $articles = [];
-        foreach (PlaceText::LANGS as $l) {
+        foreach (array_keys($this->languages->options()) as $l) {
             $texts[$l] = $proposals->currentRegionText($region, $l)['text'];
             // "Where your text comes from" is asked only where there is an article to adapt.
             $articles[$l] = RegionLead::hasSource($region['wiki'], $l);
@@ -235,7 +238,10 @@ final class PlaceTextController extends AbstractController
             'articles' => null,
             // The decision Approve needs, only where there is an article to credit.
             'credit' => $live['canDerive'] ? ['claim' => PlaceTextProposals::writerClaim($submission), 'choice' => null] : null,
-            'langs' => [$lang => self::LANG_NAMES[$lang] ?? $lang],
+            // The proposal's own language, served or not: it is stored data,
+            // and a proposal filed before its language was switched off is
+            // still decided here.
+            'langs' => [$lang => $this->languages->name($lang)],
             'correcting' => ['note' => $note],
             'reply' => '',
             'reply_max' => PlaceTextProposals::REPLY_MAX,
@@ -258,6 +264,12 @@ final class PlaceTextController extends AbstractController
         $text = $request->request->getString('text');
         if (!$this->isCsrfTokenValid(self::CSRF_ID, $request->request->getString('_token'))) {
             return $this->form($context, $lang, $text, 'flash.invalid_token', Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        // A send for a language this deployment does not serve is refused,
+        // never filed under the page's language instead.
+        $posted = $request->request->getString('lang');
+        if ('' !== $posted && !$this->languages->isServed(self::langCode($posted))) {
+            return $this->form($context, $lang, $text, 'place_text.error.lang', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         /** @var User $user */
         $user = $this->getUser();
@@ -294,7 +306,7 @@ final class PlaceTextController extends AbstractController
             'lang' => $lang,
             'text' => $text,
             'error' => $error,
-            'langs' => array_intersect_key(self::LANG_NAMES, array_flip(PlaceText::LANGS)),
+            'langs' => $this->languages->options(),
             'max' => PlaceText::MAX,
             'note_max' => PlaceText::NOTE_MAX,
             'csrf_id' => self::CSRF_ID,
@@ -314,12 +326,26 @@ final class PlaceTextController extends AbstractController
         };
     }
 
-    /** The language asked for, else the page's own. */
+    /**
+     * The language asked for when this deployment serves it, else the page's
+     * own, else the default. Only for choosing what the form shows: a send
+     * naming a language this deployment does not serve is refused in
+     * {@see self::submit()}.
+     */
     private function lang(string $asked, Request $request): string
     {
-        $asked = strtolower(substr($asked, 0, 2));
+        $asked = self::langCode($asked);
+        if ($this->languages->isServed($asked)) {
+            return $asked;
+        }
 
-        return \in_array($asked, PlaceText::LANGS, true) ? $asked : (\in_array($request->getLocale(), PlaceText::LANGS, true) ? $request->getLocale() : 'en');
+        return $this->languages->isServed($request->getLocale()) ? $request->getLocale() : $this->languages->defaultCode();
+    }
+
+    /** `nl`, `NL` and `nl-BE` all name Dutch. */
+    private static function langCode(string $raw): string
+    {
+        return strtolower(substr(trim($raw), 0, 2));
     }
 
     private static function coordinate(mixed $raw): ?float

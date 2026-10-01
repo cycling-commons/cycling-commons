@@ -34,9 +34,11 @@
       <p class="blang">
         {{ 'blog.fallback_note'|trans }}
         <span class="blang-pick">
-          {% for code in written_locales %}
+          {# The blog's languages that this deployment serves, named by the
+             one provider (dev-environment.md §7 i18n). #}
+          {% for code, name in cc_languages()|filter((name, code) => code in written_locales) %}
             <a href="{{ path('blog', {_locale: code}) }}" lang="{{ code }}"
-               {{ code == written_locale ? 'aria-current="page"' : '' }}>{{ ('lang.' ~ code)|trans }}</a>{% if not loop.last %} · {% endif %}
+               {{ code == written_locale ? 'aria-current="page"' : '' }}>{{ name }}</a>{% if not loop.last %} · {% endif %}
           {% endfor %}
         </span>
       </p>

@@ -43,7 +43,11 @@ final class PlaceText
     /** The rider's note to the curator. */
     public const int NOTE_MAX = 2000;
 
-    /** The languages a text can be written in: the site's own set. */
+    /**
+     * Every language a stored text or proposal may name: the languages the
+     * build carries. A new text is written only in one this deployment
+     * serves ({@see \App\Routing\Languages::options()}).
+     */
     public const array LANGS = RegionLead::LOCALES;
 
     /** The `changes` key for one language: `text:nl`. */

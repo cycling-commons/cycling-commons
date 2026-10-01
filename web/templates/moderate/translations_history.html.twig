@@ -53,7 +53,7 @@
               </div>
               <div class="q-submitter">{{ _self.who(card.who) }}
                 · {{ 'moderate.translation.locale'|trans({'%locale%': card.locale}) }}
-                · {{ ('translate.locale.' ~ card.locale)|trans }}</div>
+                · {{ cc_languages(built: true)[card.locale]|default(card.locale) }}</div>
             </div>
             <div class="q-acts">
               {% if card.when %}<time class="q-when" datetime="{{ card.when|date('c') }}">{{ card.when|cc_datetime }}</time>{% endif %}

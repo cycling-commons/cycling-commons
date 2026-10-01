@@ -789,9 +789,12 @@ for one thing in five languages. Fixed across all five.
   back to NULL and the harvest returns by itself), so undoing needs no
   re-import. Edited on its own page, `/moderate/regions/{slug}/about`, linked
   from each region card on the Regions desk and gated by moderator areas,
-  re-checked on the POST like every other moderation write; the page quotes
-  the harvested text per language so the curator judges against the real
-  article. Leads are capped at 1,200 characters and an overlong one is
+  re-checked on the POST like every other moderation write; the page has one
+  slot per language this deployment serves (`App\Routing\Languages`,
+  dev-environment.md §7 i18n) and quotes the harvested text per language so
+  the curator judges against the real article. A text stored in a language
+  that is not served stays as it is through a save, and a posted value for
+  it is ignored. Leads are capped at 1,200 characters and an overlong one is
   refused, not truncated. A language the curator saves unchanged keeps its
   entry, and with it the credit of whoever wrote it. Pinned by
   `RegionAboutTextTest`.
@@ -2566,8 +2569,9 @@ ends in a small "!" that opens the one report door, `/report/town/node-59518`
 (`ReportTarget::Town`, id = the element, never a language: the report is
 about the town). It lands on the reports desk like every other kind, and the
 desk's "open target" link goes to the curator's pen, `/moderate/town/{type}/{id}`
-(`ModerateTownController`): one box per language, the fetched paragraph shown
-above it, save per language. Saving calls `TownSummaryRepository::overrideText()`:
+(`ModerateTownController`): one box per language this deployment serves
+(`App\Routing\Languages`, dev-environment.md §7 i18n), the fetched paragraph
+shown above it, save per language; a save for any other language is refused. Saving calls `TownSummaryRepository::overrideText()`:
 the row becomes answered, `edited_by`/`edited_at` are set, and from then on it
 is LOCAL, "we can't connect to online anymore": the fetch never claims an
 answered row, and any future refresh sweep must skip `edited_at IS NOT NULL`.

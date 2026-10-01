@@ -787,7 +787,11 @@ licence) are. A card or page
 with no text has no credit line, so it carries one plain link instead: "Write
 a text for this town" ("Sign in to write a text for this town" for a
 visitor) or "Write a text for this region". There is no sentence beside
-either (owner 2026-10-01). A language select defaulting to the page language; above the box, the
+either (owner 2026-10-01). A language select defaulting to the page language,
+offering only the languages this deployment serves, by their own names
+(`App\Routing\Languages`, dev-environment.md §7 i18n; a send naming any
+other language is refused with `place_text.error.lang`, "Pick one of the
+languages in the list.", 422, nothing filed); above the box, the
 text readers see now in that language as a read-only quote labelled "Current
 text" ("There is no text in this language yet." where there is none;
 switching the language swaps it); the box itself starts empty and keeps what

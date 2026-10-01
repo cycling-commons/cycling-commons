@@ -5,12 +5,10 @@
    (e.g. the map) keep their clean path; locale_switch still records the choice
    (session + user). A disclosure of plain links (button + aria-expanded), NOT
    an ARIA menu — same pattern as the account chip; driven by js/nav-menus.js. #}
-{# Names for every BUILT language, filtered to the ones this deployment
-   serves (dev-environment.md §7 i18n): a language left out of CC_ACTIVE_LOCALES has no
-   entry here, and its prefixed paths answer 404. #}
-{% set _names = {'en': 'English', 'fr': 'Français', 'nl': 'Nederlands', 'de': 'Deutsch', 'es': 'Español'} %}
-{% set _locales = {} %}
-{% for code in active_locales() %}{% set _locales = _locales|merge({(code): _names[code]|default(code|upper)}) %}{% endfor %}
+{# The languages this deployment serves, from the one provider
+   (cc_languages(), dev-environment.md §7 i18n): a language left out of
+   CC_ACTIVE_LOCALES has no entry here, and its prefixed paths redirect to
+   English. #}
 {% set _alt = locale_alternates().urls %}
 <div class="lang-menu" data-nav-menu>
   <button type="button" class="lang-chip" data-nav-toggle aria-expanded="false" aria-controls="cc-lang-dd" aria-label="{{ 'nav.language'|trans }}">
@@ -19,7 +17,7 @@
     <svg class="lang-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
   </button>
   <div class="acct-dropdown lang-dropdown" id="cc-lang-dd" data-nav-dd hidden>
-    {% for code, label in _locales %}
+    {% for code, label in cc_languages() %}
       <a href="{{ path('locale_switch', {_locale: code}|merge(_alt[code] is defined ? {to: _alt[code]} : {})) }}"{% if app.request.locale == code %} aria-current="true"{% endif %}>{{ label }}</a>
     {% endfor %}
   </div>

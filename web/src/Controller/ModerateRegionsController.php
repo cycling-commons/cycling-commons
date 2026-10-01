@@ -11,6 +11,7 @@ use App\Catalog\OperationalRegions;
 use App\Catalog\RegionLead;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
+use App\Routing\Languages;
 use App\Routing\LocalePrefix;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -45,6 +46,7 @@ final class ModerateRegionsController extends AbstractController
         private readonly Connection $db,
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly CuratedReadiness $readiness,
+        private readonly Languages $languages,
     ) {
     }
 
@@ -197,12 +199,16 @@ final class ModerateRegionsController extends AbstractController
         $wiki = self::decodeJson($region['context']);
         $curated = self::decodeJson($region['context_curated']);
 
+        // One slot per language this deployment serves. A text stored in a
+        // language it does not serve stays stored, unseen here, and the save
+        // below keeps it as it is.
         $locales = [];
-        foreach (RegionLead::LOCALES as $locale) {
+        foreach ($this->languages->options() as $locale => $name) {
             $own = RegionLead::override($curated, $locale);
             $harvest = $wiki[$locale] ?? null;
             $locales[] = [
                 'code' => $locale,
+                'name' => $name,
                 'text' => $own['text'] ?? '',
                 'derived' => $own['derived'] ?? false,
                 'wiki' => \is_array($harvest) && \is_string($harvest['extract'] ?? null)
@@ -245,6 +251,15 @@ final class ModerateRegionsController extends AbstractController
         $curated = [];
         $now = new \DateTimeImmutable();
         foreach (RegionLead::LOCALES as $locale) {
+            // A language this deployment does not serve has no slot on the
+            // page: whatever is stored for it stays, and a posted value for
+            // it is ignored.
+            if (!$this->languages->isServed($locale)) {
+                if (isset($stored[$locale])) {
+                    $curated[$locale] = $stored[$locale];
+                }
+                continue;
+            }
             $text = trim((string) $request->request->get('text_'.$locale, ''));
             if ('' === $text) {
                 continue;
