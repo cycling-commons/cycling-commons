@@ -1,0 +1,124 @@
+web/src/Controller/ModerateController.php
+  s_49442ae34d3603::t_81296cfa04faeb 32
+  s_49442ae34d3603::t_b34d89058a0e9a 317-325
+  s_49442ae34d3603::t_e85d576bc1ccbf 326
+web/templates/contribute/place_text.html.twig
+  s_49442ae34d3603::t_45eceae0dc76c4 19-21
+  s_49442ae34d3603::t_c10c44c81e2b09 30-35,122-124,126-136,138-139,165-166
+  s_49442ae34d3603::t_6452b358ca351e 137
+  s_49442ae34d3603::t_9a1d17a6a9d82c 74,102-114,117-121,125
+  s_49442ae34d3603::t_259e9abc2b653c 22
+web/assets/map/town-text.js
+  s_49442ae34d3603::t_9d5a5c35963d9e 39-43
+  s_49442ae34d3603::t_c064f3c3d651c3 15-18,44-46,49
+web/assets/map/drawer.js
+  s_49442ae34d3603::t_103edece9054b5 708-713,721
+web/assets/map/places.js
+  s_49442ae34d3603::t_3971adc10caf66 21
+  s_49442ae34d3603::t_3c4d40cfd47f7f 162-163
+web/assets/styles/page/contribute/place-text.css
+  s_49442ae34d3603::t_72c87780dfb903 21-22,24,26
+  s_49442ae34d3603::t_99662c17cd5bf6 23,25,27
+web/tests/Controller/ModerateTownControllerTest.php
+  s_49442ae34d3603::t_44c56b417d2de8 39-43,62,64-72
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_6d7f8695b3b587 3136
+  s_49442ae34d3603::t_0ac7d8ea8b9abe 3106-3107,3132-3135,3146-3147,3286,3297
+web/tests/Controller/TownControllerTest.php
+  s_49442ae34d3603::t_44c56b417d2de8 92,100
+web/src/Moderation/TextCreditUndecidedException.php
+  s_49442ae34d3603::t_196f34d6f6b27a 1-21
+web/src/Controller/MapController.php
+  s_49442ae34d3603::t_d57627ada95ec3 652-653
+  s_49442ae34d3603::t_e33963b6202278 654-655
+web/src/Controller/TownController.php
+  s_49442ae34d3603::t_b8982a9f72cc63 122-126
+web/assets/contribute/place-text.js
+  s_49442ae34d3603::t_787feedcf25753 9-12,21,23-24,49-52
+web/assets/styles/map.css
+  s_49442ae34d3603::t_fb829831e2bdc4 636
+web/src/Moderation/ModerationService.php
+  s_49442ae34d3603::t_196f34d6f6b27a 108-113
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_6d7f8695b3b587 3314
+  s_49442ae34d3603::t_e571057b52fc1d 3132-3133,3158-3162,3172-3173,3323
+web/templates/moderate/town.html.twig
+  s_49442ae34d3603::t_4c710c1cbe0152 55-59
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_a778c0b3c34117 783-790,846-849,870-871
+  s_49442ae34d3603::t_8ff834b27dfa3d 867-868
+  s_49442ae34d3603::t_3abad2c3e7cc0f 757-762,803-805,822-823,830-845,850-866,869,872-874,901-903,912-913,921-923,926
+  s_49442ae34d3603::t_6240a7f94339a6 778-782,801-802,927,929
+web/src/Controller/ModerateTownController.php
+  s_49442ae34d3603::t_4c710c1cbe0152 29-33,91
+web/templates/moderate/rulebook.html.twig
+  s_49442ae34d3603::t_5047cd2f60b62b 248
+  s_49442ae34d3603::t_ea41d1ce07646f 240,253
+  s_49442ae34d3603::t_77bd5a4b5d2489 254
+web/templates/pages/region.html.twig
+  s_49442ae34d3603::t_163c173637bdf6 112-113
+  s_49442ae34d3603::t_3db83cf4f769d0 114
+web/src/Moderation/PlaceTextWriter.php
+  s_49442ae34d3603::t_75f718dade17e1 20-27,55,68-95
+  s_49442ae34d3603::t_c1cebd82cc2f2e 96-97
+web/src/Controller/PlaceTextController.php
+  s_49442ae34d3603::t_7fcc69036c6f04 53-57,73,75-77,86,92,109,111-113,122,128,234-235,252,292,304-307,309-314
+  s_49442ae34d3603::t_5fea9d6dcf4683 91,142-145,174-179,182,184,187-190,236-237,291
+  s_49442ae34d3603::t_19aa77bacf69f5 254-257
+  s_49442ae34d3603::t_c1cebd82cc2f2e 315-316
+  s_49442ae34d3603::t_ef289aa2739e88 90,126,253,308
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_6d7f8695b3b587 3322
+  s_49442ae34d3603::t_ec20d772ce2284 3140-3141,3166-3170,3180-3181,3331
+web/src/Town/TownSummaryRepository.php
+  s_49442ae34d3603::t_ec1d7aaaca3654 11,24,47,71-73,117-119,121,124-125,128,131-144
+  s_49442ae34d3603::t_4c710c1cbe0152 151,157,167
+web/migrations/Version20261001120000.php
+  s_49442ae34d3603::t_6bef3dacdf6877 1-46
+web/tests/Moderation/PlaceTextProposalTest.php
+  s_49442ae34d3603::t_859243af9ecc96 912-913
+  s_49442ae34d3603::t_c1cebd82cc2f2e 294,661,878,890-891,914,935,938-940,942-945,949
+  s_49442ae34d3603::t_81998c837e9776 249
+  s_49442ae34d3603::t_62f7ce070a6a71 221-248,250-293
+  s_49442ae34d3603::t_63a331649e4ea6 800
+  s_49442ae34d3603::t_fd5b564487cf45 22,96,101,111-112,665,724-725,727,730-746,748-789,791-799,801-805,807-810,812-848,852-867,871-877,879-889,893-901,903-905,907-909,915-921,924-927,929-930,932,934
+  s_49442ae34d3603::t_6236acfbfd8380 928,931,933
+  s_49442ae34d3603::t_a4c056b4f0ea5d 849-851
+  s_49442ae34d3603::t_aa821cbb9ed051 340,343,385,395,422,456,461,568,599,604,634,654,726,728-729,747,790,806,811,868-870,892,902,906,910-911,936-937,941
+  s_49442ae34d3603::t_34d8a767c85f5a 295,662
+web/src/Contribution/PlaceTextProposals.php
+  s_49442ae34d3603::t_c1cebd82cc2f2e 100,571-572
+  s_49442ae34d3603::t_9772601a6e3437 48-50,191-196,202,208,220,240-242,250,253,385-387,510-511,552-570
+  s_49442ae34d3603::t_dab2342292c3a2 219,306
+  s_49442ae34d3603::t_7997a2fd5b8d4a 94-99
+  s_49442ae34d3603::t_ac6edaa3085154 19,45-47,51-54,84-93,102-107,148,159,234,284-288,294,302,305,310,321,341-346,351,355,367-371,374-375,377,383-384,388-399,508-509,512,515-516,519,521-524,532-551
+  s_49442ae34d3603::t_0ff95870a12bd1 101
+web/assets/map/community.js
+  s_49442ae34d3603::t_103edece9054b5 385-389,504-505
+web/assets/styles/page/moderate/town.css
+  s_49442ae34d3603::t_4c710c1cbe0152 24-27
+docs/specs/map-and-search.md
+  s_49442ae34d3603::t_8a2c2038774b36 809-810,2567-2572
+web/tests/js/town-text.test.mjs
+  s_49442ae34d3603::t_7bfed4be8b2dc2 7-8,15,92-93,100-114,118,122
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_07978b0ce18de8 3114-3115,3140-3144,3154-3155,3294,3305
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_d86825eabb5138 3113-3114,3139-3143,3153-3154,3293,3304
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0d7efee8404148cd7356ae51aa9a683bcda7bed3",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
