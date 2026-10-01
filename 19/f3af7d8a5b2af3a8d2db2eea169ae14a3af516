@@ -1,0 +1,186 @@
+web/tests/Command/ModerationGcCommandTest.php
+  s_49442ae34d3603::t_28fa13bb0cd3fc 20,22-26,28,43,45-46,51-75,91,97-98,102-103,105,107-109,111,121-123,126,130-132,134-145,170-179,183
+web/src/Catalog/CatalogProvider.php
+  s_49442ae34d3603::t_14547fde265bab 124-125
+web/src/Catalog/SubmissionStatus.php
+  s_49442ae34d3603::t_7be573581fd36f 11,14,25
+web/src/Controller/DashboardController.php
+  s_49442ae34d3603::t_7702a907ce058b 91-93,99,101
+web/src/Catalog/Entity/RecommendedRoute.php
+  s_49442ae34d3603::t_ffb2c8debedc24 93-103,287-329
+  s_49442ae34d3603::t_593cf9b900aeee 330
+web/src/Contribution/CatalogContributionService.php
+  s_49442ae34d3603::t_cd8328ebad156f 875-876,881
+web/templates/moderate/trash.html.twig
+  s_49442ae34d3603::t_0405108a1f1743 1-46,48-98
+  s_49442ae34d3603::t_212f0c36dda6f6 47
+web/src/Moderation/ModerationService.php
+  s_49442ae34d3603::t_cd8328ebad156f 471-472
+  s_49442ae34d3603::t_6d91850f9fac27 30,61,207-210,217-218,230-246,248-270,274-275,278,280-281
+  s_49442ae34d3603::t_d715f631d6f8aa 247
+web/src/Controller/OsmConfirmController.php
+  s_49442ae34d3603::t_cd8328ebad156f 149
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_32df7a185ada0d 219,224,3203,3361,3364-3365,3368-3369,3371-3397,4156-4157,4701-4702
+  s_49442ae34d3603::t_aa294ba2b9b5ca 3191
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_aa294ba2b9b5ca 3172
+  s_49442ae34d3603::t_32df7a185ada0d 219,224,3184,3342,3345-3346,3349-3350,3352-3378,4137-4138,4679-4680
+web/src/Controller/ModerateTrashController.php
+  s_49442ae34d3603::t_a1852809329052 1-103
+web/src/Moderation/TrashBin.php
+  s_49442ae34d3603::t_3622302dfd60c5 1-261,263-300,302-332,334-417
+  s_49442ae34d3603::t_a85fa46c263d53 262,301,333
+web/tests/Settings/SystemSettingsTest.php
+  s_49442ae34d3603::t_81042dfd1b13f5 11,277,279-287,293
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_4e11acffc29e66 759,1031-1032,1036-1038,1063-1064
+  s_49442ae34d3603::t_6f6b26ac25b0c6 1451-1468,2219-2227,2347,2349-2357,2359-2369,2381-2389,2394-2457
+  s_49442ae34d3603::t_f501e5d19fff06 2370-2378,2390-2393
+  s_49442ae34d3603::t_42634d48fd3976 2379-2380
+  s_49442ae34d3603::t_0a1743cad2741f 4037-4042
+web/src/Controller/ProposeRouteController.php
+  s_49442ae34d3603::t_9cd39fcdf7f730 134-135
+docs/specs/privacy-notice.md
+  s_49442ae34d3603::t_29294e4e136134 34-35,168-172
+  s_49442ae34d3603::t_fe30cfe204448c 173
+web/templates/moderate_routes/index.html.twig
+  s_49442ae34d3603::t_de41769331dead 19-25
+web/tests/Moderation/TrashBinTest.php
+  s_49442ae34d3603::t_0df7d8407132ef 407,412-413,417-420
+  s_49442ae34d3603::t_98339f390b16c5 1-331,333-340,353-366,372-406,408-411,414-416,421-422
+  s_49442ae34d3603::t_9fba2be0c5622a 332,341-352
+  s_49442ae34d3603::t_42634d48fd3976 367-371
+docs/specs/edit-items/R-quality-rides.md
+  s_49442ae34d3603::t_e7ec000f8ab885 105-107
+web/src/Controller/ModerateController.php
+  s_49442ae34d3603::t_d715f631d6f8aa 32
+  s_49442ae34d3603::t_7702a907ce058b 59,74
+  s_49442ae34d3603::t_cd8328ebad156f 245
+  s_49442ae34d3603::t_262b3d44b252dd 381
+web/migrations/Version20261001210000.php
+  s_49442ae34d3603::t_8887b7b40a9f73 1-87
+web/src/Community/CuratorApplicationService.php
+  s_49442ae34d3603::t_f7653ccf132c39 279
+web/src/Messaging/MessageMailer.php
+  s_49442ae34d3603::t_0df0c829b75621 52-54,58-62
+web/tests/Profile/ContributionsRetentionTest.php
+  s_49442ae34d3603::t_28e1bea0dc6340 25,57
+  s_49442ae34d3603::t_b886367afcbd76 17-21,38-47,55,60-71
+  s_49442ae34d3603::t_ca9e02550fc8be 72
+web/src/Account/DataExportService.php
+  s_49442ae34d3603::t_c8141e20fa46be 191
+  s_49442ae34d3603::t_ca11ed036d1302 110-111
+web/src/Controller/ModerateMessageController.php
+  s_49442ae34d3603::t_9aefb72b99ac8f 108-109,121,132
+web/tests/Moderation/TrashTest.php
+  s_49442ae34d3603::t_a6321e2188667d 279
+  s_49442ae34d3603::t_539a9e67af83ec 408
+  s_49442ae34d3603::t_1acef379ddf5a6 16,36-41,202,212-217,230-234,236,262-263,265-276,278,283-286,288,299-300,319-320,341,387-389,392,404-407,419,429-431,447,455-457,487,504,507,550,568,571,574,591,594,693,695,698
+web/src/Catalog/ItemState.php
+  s_49442ae34d3603::t_7be573581fd36f 11-12,25
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_49442ae34d3603::t_297cf843a629a6 10,203,225,242-259
+  s_49442ae34d3603::t_93c97409214cc8 260
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_aa294ba2b9b5ca 3199
+  s_49442ae34d3603::t_32df7a185ada0d 220,225,3211,3369,3372-3373,3376-3377,3379-3405,4165-4166,4711-4712
+web/src/Command/ModerationGcCommand.php
+  s_49442ae34d3603::t_d84407424b0229 9,17-18,20,24,27,36,38,40-41
+web/src/Controller/MessagesController.php
+  s_49442ae34d3603::t_0e7995d6c75669 305-306
+web/src/Media/MediaDisposalService.php
+  s_49442ae34d3603::t_81042dfd1b13f5 104-106,111-116,119
+  s_49442ae34d3603::t_838fbf815efc9b 11-12,35,103,107-110,138,150-152
+web/src/Messaging/Entity/UserMessage.php
+  s_49442ae34d3603::t_ffb2c8debedc24 15-18,34-35,65-68,126-127,209-211
+  s_49442ae34d3603::t_39ee5b8f95d185 212-213
+web/src/Messaging/MessageService.php
+  s_49442ae34d3603::t_0df0c829b75621 151-152,169,198,247,265,274,292,308
+  s_49442ae34d3603::t_f56a323c99b37b 319-349
+docs/specs/photo-uploads.md
+  s_49442ae34d3603::t_975b485f76a046 284,1200-1204,1216-1228,1558,1564-1568
+  s_49442ae34d3603::t_f1e71d667db0e2 1215,1559
+docs/specs/system-configuration.md
+  s_49442ae34d3603::t_975b485f76a046 69,84
+web/src/Catalog/Entity/RouteSuggestion.php
+  s_49442ae34d3603::t_ffb2c8debedc24 69-79,159-202
+web/src/Moderation/TrashActions.php
+  s_49442ae34d3603::t_6d91850f9fac27 10-11,22-27
+docs/specs/route-domain.md
+  s_49442ae34d3603::t_f1e71d667db0e2 1036
+  s_49442ae34d3603::t_2f49b6d78efae4 159-160,162-166,442,447,811-812
+  s_49442ae34d3603::t_975b485f76a046 1037-1039
+web/src/Messaging/CuratorRoom.php
+  s_49442ae34d3603::t_9aefb72b99ac8f 30
+  s_49442ae34d3603::t_f7653ccf132c39 378,661-662,678,685
+  s_49442ae34d3603::t_6cf75efa94d6f2 577
+web/src/Catalog/RouteSuggestionStatus.php
+  s_49442ae34d3603::t_7be573581fd36f 10-11,20
+web/src/Moderation/ContributionDeletionHook.php
+  s_49442ae34d3603::t_3060311b0bfb7c 1-79
+web/templates/moderate/history.html.twig
+  s_49442ae34d3603::t_de41769331dead 35,81-86
+docs/specs/osm-data-architecture.md
+  s_49442ae34d3603::t_e7ec000f8ab885 307-308,310,357-361
+  s_49442ae34d3603::t_90e5ffc7ab37a0 299-300
+web/src/Controller/RouteModerateController.php
+  s_49442ae34d3603::t_d715f631d6f8aa 23
+  s_49442ae34d3603::t_262b3d44b252dd 331-332,334
+  s_49442ae34d3603::t_7702a907ce058b 49,58
+web/tests/Media/MediaDisposalTest.php
+  s_49442ae34d3603::t_a63feb4209883b 23,173,193-196
+  s_49442ae34d3603::t_7d0243dfa0aa08 197
+web/src/Support/ReportResolver.php
+  s_49442ae34d3603::t_d715f631d6f8aa 14
+  s_49442ae34d3603::t_343c0f5192fa03 13,100-101,120,181,205,241
+web/tests/Moderation/ContributionRetentionTest.php
+  s_49442ae34d3603::t_11e27e58ddd15a 1-244
+docs/specs/catalog-data-model.md
+  s_49442ae34d3603::t_b57e231e25541d 235,239-240
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_32df7a185ada0d 217,222,3177,3335,3338-3339,3342-3343,3345-3371,4130-4131,4672-4673
+  s_49442ae34d3603::t_aa294ba2b9b5ca 3165
+web/config/packages/moderation.yaml
+  s_49442ae34d3603::t_e7ec000f8ab885 1-4
+web/src/Moderation/RouteModerationService.php
+  s_49442ae34d3603::t_6b037bea38193b 24,47,252,289-291,298-299,306-334,339-340,355-382
+  s_49442ae34d3603::t_cd8328ebad156f 471,475
+web/src/Controller/ProfileController.php
+  s_49442ae34d3603::t_f38f2fe86ab819 95,103,209-211
+  s_49442ae34d3603::t_7702a907ce058b 102,104-105,191-193
+  s_49442ae34d3603::t_f74c97a632560a 222,306
+web/templates/moderate/index.html.twig
+  s_49442ae34d3603::t_de41769331dead 22
+web/src/Catalog/Entity/Submission.php
+  s_49442ae34d3603::t_ffb2c8debedc24 106-120,340-383
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_aa294ba2b9b5ca 3173
+  s_49442ae34d3603::t_32df7a185ada0d 219,224,3185,3343,3346-3347,3350-3351,3353-3379,4138-4139,4680-4681
+web/templates/pages/privacy.html.twig
+  s_49442ae34d3603::t_76d0aefe152aee 214-217
+docs/specs/account-and-auth.md
+  s_49442ae34d3603::t_2f49b6d78efae4 677-692,941-943,1026,1576-1578
+web/tests/Media/RoutePhotoTest.php
+  s_49442ae34d3603::t_a63feb4209883b 30,299,308-310
+  s_49442ae34d3603::t_63180a03928322 311
+web/templates/moderate/rulebook.html.twig
+  s_49442ae34d3603::t_7b804243945f0f 112,118,133-134,137,140,142,169,285,303
+  s_49442ae34d3603::t_f501e5d19fff06 117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "19f3af7d8a5b2af3a8d2db2eea169ae14a3af516",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
