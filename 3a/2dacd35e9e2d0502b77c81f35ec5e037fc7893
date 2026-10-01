@@ -1,0 +1,79 @@
+docs/specs/roadmap-and-changelog.md
+  s_49442ae34d3603::t_c82aa30503853e 82-85,96-97
+  s_49442ae34d3603::t_1ceb160206b3ba 90,95,98-128
+  s_49442ae34d3603::t_fbea015e2b88ca 129
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_9bfb6dcdd4d01c 1709-1711
+  s_49442ae34d3603::t_c82aa30503853e 1708,4267-4268
+web/src/Account/UpdatesConsent.php
+  s_49442ae34d3603::t_c82aa30503853e 10,12-15
+  s_49442ae34d3603::t_6136d04192f383 77
+  s_49442ae34d3603::t_5ae8cef210efb1 22-28,46,49-58,63-64,67-76,78,80-89
+web/src/Entity/User.php
+  s_49442ae34d3603::t_492d7166bf1256 14
+  s_49442ae34d3603::t_7339d458f4ed49 218,220-224,858-865,868
+  s_49442ae34d3603::t_a076bba3a72696 219
+  s_49442ae34d3603::t_db61ab49b595ba 217,866-867,869
+web/tests/Controller/SettingsUpdatesCadenceTest.php
+  s_49442ae34d3603::t_fe2d4c9b04bb00 38
+  s_49442ae34d3603::t_24bc8b028c5f76 1-37,39-147
+web/src/Form/SettingsType.php
+  s_49442ae34d3603::t_35c696e6d388b7 213-222
+  s_49442ae34d3603::t_2f58ee934b26be 12
+web/src/Account/UpdatesCadence.php
+  s_49442ae34d3603::t_f389d562b35174 1-39
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_9bfb6dcdd4d01c 1721-1723
+  s_49442ae34d3603::t_c82aa30503853e 1720,4302-4303
+web/tests/Account/DataExportTest.php
+  s_49442ae34d3603::t_1fadefb58311fd 229-231
+web/assets/styles/page/settings/index.css
+  s_49442ae34d3603::t_66b93b340e78f8 106-116
+web/tests/Account/UpdatesSubscriptionTest.php
+  s_49442ae34d3603::t_6136d04192f383 133,211-212,250,268-269
+  s_49442ae34d3603::t_a076bba3a72696 14
+  s_49442ae34d3603::t_7e2053ca23774d 263
+  s_49442ae34d3603::t_f8ea1a06bb63ae 92,130-132,248,251,257-261,264-267
+  s_49442ae34d3603::t_1c2704fe1b041b 7,39-43,49,53-91,93-129,135-148,156,159,173,177,195-210,245-247,249,262
+  s_49442ae34d3603::t_91368bc01806a4 134
+web/migrations/Version20261001190000.php
+  s_49442ae34d3603::t_9007055b3982f0 1-42
+web/tests/js/settings-updates-cadence.test.cjs
+  s_49442ae34d3603::t_1a998984112d05 1-49
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_c82aa30503853e 1717,4293-4294
+  s_49442ae34d3603::t_9bfb6dcdd4d01c 1718-1720
+web/src/Account/UpdatesSubscription.php
+  s_49442ae34d3603::t_7992036f831405 26-29,57-59,61,63,67-69,71-78,96-98
+  s_49442ae34d3603::t_d046863da5bb5d 99
+web/src/Account/DataExportService.php
+  s_49442ae34d3603::t_b1f7183f052913 88
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_c82aa30503853e 1713,4275-4276
+  s_49442ae34d3603::t_9bfb6dcdd4d01c 1714-1716
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_c82aa30503853e 1713,4274-4275
+  s_49442ae34d3603::t_9bfb6dcdd4d01c 1714-1716
+web/src/Controller/SettingsController.php
+  s_49442ae34d3603::t_7e2053ca23774d 62,99
+web/assets/settings/updates-cadence.js
+  s_49442ae34d3603::t_7cf4f52ce92656 1-18
+web/templates/settings/index.html.twig
+  s_49442ae34d3603::t_13534b3eb6a1eb 286-290,293,296,301-310,493
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3a2dacd35e9e2d0502b77c81f35ec5e037fc7893",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
