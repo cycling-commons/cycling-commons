@@ -92,7 +92,7 @@ final class ProfileController extends AbstractController
 
         /** @var list<string> $letters */
         $letters = $db->fetchFirstColumn(
-            "SELECT DISTINCT letter FROM submission WHERE user_id = :uid ORDER BY letter",
+            'SELECT DISTINCT letter FROM submission WHERE user_id = :uid ORDER BY letter',
             ['uid' => $userId],
         );
 
@@ -100,7 +100,7 @@ final class ProfileController extends AbstractController
         // listed under All and under Routes, hidden by another kind's chip and
         // by the withdrawn view (a proposal has no withdrawn state).
         $routeCount = (int) $db->fetchOne(
-            "SELECT COUNT(*) FROM recommended_route WHERE proposed_by = :uid",
+            'SELECT COUNT(*) FROM recommended_route WHERE proposed_by = :uid',
             ['uid' => $userId],
         );
         $showRoutes = \in_array($letterFilter, ['', ItemType::QualityRides->letter()], true) && '' === $statusFilter;
