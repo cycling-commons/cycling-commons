@@ -90,15 +90,34 @@ final class SocialLinksExtension extends AbstractExtension implements GlobalsInt
                 continue;
             }
 
-            $out[] = [
-                'name' => $name,
-                'label' => $label,
-                // Mastodon is a full URL because the instance is part of the
-                // address; the rest are handles on a known host.
-                'url' => \sprintf($template, rawurlencode(ltrim($handle, '@'))),
-            ];
+            // Mastodon is a full URL because the instance is part of the
+            // address: it is used as it is, and only as an https URL, never
+            // percent-encoded (an encoded address is a broken link, and the
+            // profile's rel="me" check fails on it). The rest are handles on
+            // a known host.
+            if ('%s' === $template) {
+                $url = self::httpsUrl($handle);
+                if (null === $url) {
+                    continue;
+                }
+            } else {
+                $url = \sprintf($template, rawurlencode(ltrim($handle, '@')));
+            }
+
+            $out[] = ['name' => $name, 'label' => $label, 'url' => $url];
         }
 
         return ['social' => $out];
+    }
+
+    /** The value when it is an https URL with a host, else null. */
+    private static function httpsUrl(string $value): ?string
+    {
+        $parts = parse_url($value);
+        if (false === $parts || 'https' !== strtolower($parts['scheme'] ?? '') || '' === ($parts['host'] ?? '')) {
+            return null;
+        }
+
+        return $value;
     }
 }

@@ -275,6 +275,14 @@ rule between the three.
   from `CC_SOCIAL_GITHUB` and renders nothing when that is unset, so a licence
   duty cannot rest on it, and it points at the repository rather than at the
   running build. `tests/Smoke/SourceOfferTest.php` pins both rules.
+- **Footer social row** (`App\Twig\SocialLinksExtension`, the `CC_SOCIAL_*`
+  variables in `web/.env`): one icon per account that is set, none for an
+  empty one. Every link carries `rel="me"`, which is how a Mastodon profile
+  verifies the site (owner 2026-10-01: Mastodon `@cyclingcommons` on
+  mastodon.social); the other networks ignore it. A handle goes onto its
+  network's host; Mastodon's value is the full address, used only when it is
+  an https URL and never percent-encoded.
+  `tests/Twig/SocialLinksExtensionTest.php` pins it.
 - **About page** (`pages/about.html.twig`, 2026-09-09): every block is
   left-aligned inside the full wrap, the reading column (`.col`) capping
   paragraphs and lists at 760px and never a heading. The beliefs run in the
