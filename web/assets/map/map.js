@@ -20,10 +20,10 @@ import { COVERAGE_ON, addCoverage, openCoverageFeatureByName,
          openCoverageByOsmRef, fetchCoverageCounts, covShownCount } from './coverage.js';
 import { setSurfaceTiles, surfaceTilesVisible } from './surface-tiles.js';
 import { schemaRows, initDrawerChrome, mapToast } from './drawer.js';
-import { refFromShare, idFromShare } from './share-links.js';
+import { refFromShare, idFromShare, townFromQuery } from './share-links.js';
 import { initPicking } from './picking.js';
 import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFeatureById,
-         openRouteById, openPendingById } from './places.js';
+         openRouteById, openPendingById, openPlace } from './places.js';
 import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
@@ -104,6 +104,12 @@ import { layerGlyph } from './icons.js';
     if(xp) openCoverageByOsmRef(xp);
     if(pp && !openPendingById(pp)) gone();
     if(rp && !openRouteById(rp)) gone();
+    // ?town=<osm ref>&ll=<lat>,<lng>&name=<name>: a town's card, as the town
+    // search opens it (an approved town text's message links here). A town is
+    // not a catalog feature, so it stays out of _dlHit: openPlace lifts the
+    // scope to the town's own region itself, then flies to it.
+    const tp=townFromQuery(_dl);
+    if(tp) openPlace(tp.name, {ll:tp.ll, osm:tp.osm});
     // ?finding=<id> — curator duplicate resolve. Last, so it owns the drawer
     // if a link ever carries both params.
     initDuplicateResolve();

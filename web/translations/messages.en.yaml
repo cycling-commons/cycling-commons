@@ -3614,6 +3614,7 @@ messages:
   you_sent: 'Sent by you'
   kind_submission_approved: 'Contribution approved — thank you!'
   view_on_map: 'View it on the map'
+  view_region_page: 'View the region page'
   kind_submission_rejected: 'Contribution not accepted'
   kind_submission_needs_info: 'A curator needs more information'
   kind_route_approved: 'Route proposal approved — thank you!'

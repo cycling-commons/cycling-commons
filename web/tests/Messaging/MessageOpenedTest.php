@@ -75,6 +75,42 @@ final class MessageOpenedTest extends WebTestCase
         return $m;
     }
 
+    /**
+     * An approval as ModerationService::decide() leaves it: an approved
+     * submission with its item, and a message labelled `SUB-<id>`. Its map
+     * link opens the item (docs/specs/moderation-and-contribution.md §7.7).
+     */
+    private function approvedPlace(User $rider, string $title): UserMessage
+    {
+        $item = (new Item())->setLetter('A')->setName($title)
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setSourceRef('opened-place-'.++$this->seq)->setSource(ItemSource::User)->setState(ItemState::Verified)
+            ->setAttributes([]);
+        $this->em()->persist($item);
+        $this->em()->flush();
+        $sub = (new Submission())->setType(SubmissionType::Edit)->setLetter('A')->setUserId((int) $rider->getId())
+            ->setItemId((int) $item->getId())->setTitle($title)
+            ->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setChanges([])->setPayload([]);
+        $sub->setStatus(SubmissionStatus::Approved);
+        $this->em()->persist($sub);
+        $this->em()->flush();
+
+        $m = $this->svc()->sendSystem(
+            (int) $rider->getId(),
+            UserMessageKind::SubmissionApproved,
+            'submission',
+            (int) $sub->getId(),
+            'SUB-'.$sub->getId(),
+            'messages.body.submission_approved',
+            ['%title%' => $title],
+        );
+        self::assertInstanceOf(UserMessage::class, $m);
+        $this->em()->flush();
+
+        return $m;
+    }
+
     private function token(Crawler $crawler): string
     {
         $list = $crawler->filter('[data-read-token]');
@@ -158,7 +194,7 @@ final class MessageOpenedTest extends WebTestCase
     {
         $client = static::createClient();
         $rider = $this->user('arriver');
-        $a = $this->approved($rider, 'Fountain G');
+        $a = $this->approvedPlace($rider, 'Fountain G');
         $b = $this->approved($rider, 'Fountain H');
 
         $client->loginUser($rider);

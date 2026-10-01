@@ -52,11 +52,11 @@ final class PhotoGallery
         return $holder instanceof Item ? $holder->getLetter() : ItemType::QualityRides->letter();
     }
 
-    /** The map query that opens the holder: `route=<id>` for a route, `feature=<name>` for a place. */
+    /** The map query that opens the holder, by id: `route=<id>` for a route, `item=<id>` for a place. */
     public static function mapQuery(Item|RecommendedRoute $holder): string
     {
         return $holder instanceof RecommendedRoute
             ? 'route='.(string) $holder->getId()
-            : 'feature='.rawurlencode($holder->getName());
+            : 'item='.(string) $holder->getId();
     }
 }

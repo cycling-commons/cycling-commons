@@ -1186,7 +1186,8 @@ answers which row carries an upload's gallery entry (`item_id`, or `route_id`
 once approved), and takedown (§6b, §6c), escalation (§6d), account deletion
 (§6), credit restamping and the description sync (§5e) all read it, so a
 route photo is withdrawn, anonymised or re-credited exactly like a photo on a
-place. The photo page links to the route on the map (`?route=<id>`). Trashing
+place. The photo page links to the route on the map (`?route=<id>`), and a
+place's photo to that place by id (`?item=<id>`, `PhotoGallery::mapQuery()`). Trashing
 a proposal or a correction purges its photos at once
 (`MediaDisposalService::purgeForRoute()`), the Trash semantics of §6. The
 map payload serves the route's `photos` alongside `photo`

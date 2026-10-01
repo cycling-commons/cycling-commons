@@ -12,6 +12,7 @@ use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaStorage;
+use App\Messaging\ApprovedSubmissionLinks;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\MessageCategory;
 use App\Messaging\MessageService;
@@ -48,7 +49,7 @@ final class MessagesController extends AbstractController
     }
 
     #[Route('/account/messages', name: 'messages')]
-    public function index(Request $request, MessageService $messages, Connection $db, SubmissionChangeSummary $changes): Response
+    public function index(Request $request, MessageService $messages, Connection $db, SubmissionChangeSummary $changes, ApprovedSubmissionLinks $approvedLinks): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -107,6 +108,14 @@ final class MessagesController extends AbstractController
 
         $answers = self::answersToQuestions($list, $userId);
 
+        // Where an approval sends its reader: the item, the town card, or the
+        // region page (docs/specs/moderation-and-contribution.md §7.7).
+        $approvedRefIds = array_values(array_unique(array_map(
+            static fn (UserMessage $m): int => $m->getRefId(),
+            array_filter($list, static fn (UserMessage $m): bool => 'submission' === $m->getChannel()
+                && UserMessageKind::SubmissionApproved === $m->getKind()),
+        )));
+
         return $this->render('messages/index.html.twig', [
             'page_title' => 'meta.messages_title',
             'page_description' => 'meta.messages_description',
@@ -119,6 +128,7 @@ final class MessagesController extends AbstractController
             'answers' => $answers['byQuestion'],
             'replyable_submission_ids' => $replyableSubmissionIds,
             'edit_targets' => $this->editTargets($db, $needsInfoRefIds, $userId),
+            'approved_targets' => $approvedLinks->for($approvedRefIds, $userId),
             'replyable_correction_ids' => $replyableCorrectionIds,
             'message_photos' => $this->messagePhotos($list),
             'submission_changes' => $this->submissionChanges($list, $userId, $changes),

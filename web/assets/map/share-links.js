@@ -60,3 +60,21 @@ export function refFromShare(value){
 export function idFromShare(value){
   return String(value ?? '').split('/')[0];
 }
+
+/* `?town=relation/2422528&ll=50.492,5.8636&name=Spa` -> the town card to open:
+   {name, ll:[lat, lng], osm}, or null when the link does not name one
+   (docs/specs/map-and-search.md §8). The ref is what the card's text is keyed
+   by; `ll` places it, because a town is not in the catalog and nothing else on
+   the map knows where it is. A missing name falls back to the ref, which is
+   what the moderation queue shows for an unnamed town too. */
+export function townFromQuery(params){
+  const get = k => (params && typeof params.get === 'function') ? params.get(k) : null;
+  const osm = String(get('town') ?? '');
+  if(!/^(node|way|relation)\/\d{1,16}$/.test(osm)) return null;
+  const m = String(get('ll') ?? '').match(/^\s*(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/);
+  if(!m) return null;
+  const lat = Number(m[1]), lng = Number(m[2]);
+  if(!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  const name = String(get('name') ?? '').trim().slice(0, 200);
+  return { name: name || osm, ll: [lat, lng], osm };
+}

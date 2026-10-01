@@ -2017,8 +2017,9 @@ wrong:
      `/account/messages#msg-<id>` (the contributions page's "answer the
      curator") opens that message on arrival.
    - **through its own link**: the message's links carry `msg=<id>`: the map
-     link of an approved place or route (`/map?feature=…&msg=<id>`,
-     `/map?route=…&msg=<id>`) and, for a needs-info question about a place,
+     link of an approved place, town text or route (`/map?item=…&msg=<id>`,
+     `/map?town=…&msg=<id>`, `/map?route=…&msg=<id>`,
+     moderation-and-contribution.md §7.7) and, for a needs-info question about a place,
      its edit form (`/improve?item=…&type=…&msg=<id>`, "Open it in the edit
      form"). Arriving at `map` or `improve` with `msg` marks that one
      message read (`App\EventSubscriber\OpenedByLinkSubscriber`), and only
@@ -2140,13 +2141,30 @@ writes a message.
 
 ### 7.7 Map links per kind
 
-Messages link to their subject only when it is publicly on the map:
-`submission_approved` → `/map?feature=<refLabel>`; `route_approved` and
-`correction_done` → `/map?route=<refId>`. Rejected / retired kinds carry no
-map link (subject not publicly visible). A needs-info question about a place
+Messages link to their subject only when it is public. A
+`submission_approved` message links to where the submission landed, read from
+the submission row (`App\Messaging\ApprovedSubmissionLinks`, only the
+reader's own approved submissions), never from the message's `ref_label`,
+which is the `SUB-<id>` receipt and names nothing the map can find:
+
+- a submission with an item behind it: that item, "View it on the map"
+  (`/map?item=<itemId>`);
+- a town text (moderation-and-contribution.md §3.1b): the town's card, "View it on the map"
+  (`/map?town=<osm ref>&ll=<lat>,<lng>&name=<title>`, map-and-search.md §8),
+  located by the submission's own point;
+- a region text: the region's page, "View the region page"
+  (`messages.view_region_page`, `/regions/<slug>`), by the region's current
+  slug while it is operational. The region page is not a `msg` target, so
+  this link carries no `msg`: the rider has opened the message to see it;
+- anything else (an approval with no item and no text target): no link,
+  rather than one that opens nothing.
+
+`route_approved` and `correction_done` → `/map?route=<refId>`. Rejected /
+retired kinds carry no map link (subject not publicly visible). A needs-info question about a place
 links to that place's edit form instead (`/improve?item=<itemId>&type=<letter>`,
-the reader's own submission with an item behind it, never a route). Every one
-of these links carries `&msg=<id>`, so following it opens the message (§7.5a).
+the reader's own submission with an item behind it, never a route). Every map
+and edit-form link carries `&msg=<id>`, so following it opens the message
+(moderation-and-contribution.md §7.5a).
 
 ### 7.8 Out of scope here
 
@@ -3858,7 +3876,3 @@ named by title and aria-label.
 - **GDPR story for free-text bodies on no-FK user rows** (correction bodies
   specifically): anonymised-by-decoupling is the deliberate default (§5.6),
   but whether authored *text* should join a deletion hook is unconfirmed.
-- **`/map?feature=<refLabel>` on approved-submission messages:** `ref_label`
-  for the submission channel is the `SUB-<id>` receipt, not the item name the
-  map's `?feature=` lookup matches — whether this deep link resolves for all
-  approved-submission messages is unverified.

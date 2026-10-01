@@ -3623,6 +3623,7 @@ messages:
   you_sent: 'Enviado por ti'
   kind_submission_approved: 'Aportación aprobada — ¡gracias!'
   view_on_map: 'Verlo en el mapa'
+  view_region_page: 'Ver la página de la región'
   kind_submission_rejected: 'Aportación no aceptada'
   kind_submission_needs_info: 'Un curador necesita más información'
   kind_route_approved: 'Propuesta de ruta aprobada — ¡gracias!'

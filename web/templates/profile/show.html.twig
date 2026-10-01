@@ -149,7 +149,7 @@
                     <a class="q-link" href="{{ path('map') }}?pending={{ sub.id }}"
                        target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
                   {% else %}
-                    <a class="q-link" href="{{ path('map') }}?feature={{ sub.title|url_encode }}"
+                    <a class="q-link" href="{{ path('map') }}?item={{ sub.itemId }}"
                        target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a>
                   {% endif %}
                   <a class="q-link" href="{{ path('improve') }}?item={{ sub.itemId }}&amp;type={{ sub.letter }}">{{ 'account.link_edit'|trans }}</a>
@@ -341,7 +341,7 @@
               </div>
               <div class="q-acts">
                 <time class="q-when" datetime="{{ s.last_confirmed|date('c') }}">{{ 'account.stale_nearby_last'|trans }} {{ s.last_confirmed|cc_date }}</time>
-                <span class="q-links"><a class="q-link" href="{{ path('map') }}?feature={{ s.name|url_encode }}"
+                <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ s.id }}"
                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
               </div>
             </div>
@@ -364,7 +364,7 @@
               </div>
               <div class="q-acts">
                 <time class="q-when" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time>
-                <span class="q-links"><a class="q-link" href="{{ path('map') }}?feature={{ c.name|url_encode }}"
+                <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ c.item_id }}"
                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
                 <span class="q-pill q-pill--{{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
               </div>

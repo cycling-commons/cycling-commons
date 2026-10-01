@@ -3595,6 +3595,7 @@ messages:
   you_sent: 'Door jou verstuurd'
   kind_submission_approved: 'Bijdrage goedgekeurd — bedankt!'
   view_on_map: 'Bekijk op de kaart'
+  view_region_page: 'Bekijk de regiopagina'
   kind_submission_rejected: 'Bijdrage niet aanvaard'
   kind_submission_needs_info: 'Een regiobeheerder heeft meer informatie nodig'
   kind_route_approved: 'Routevoorstel goedgekeurd — bedankt!'

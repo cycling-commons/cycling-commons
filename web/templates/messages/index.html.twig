@@ -196,11 +196,21 @@
                 <time class="q-when" datetime="{{ a.createdAt|date('c') }}">{{ a.createdAt|cc_datetime }}</time>
               </p>
             {% endfor %}
-            {# link to the item — only for kinds whose subject is publicly on the
-               map (approved submission by name; live route by id) #}
-            {# `msg` names this message, so arriving there opens it (§7.5a). #}
+            {# The link to the subject, only for kinds whose subject is public:
+               an approved submission goes where the controller found it (its
+               item, a town's card, a region's page; none when it has no
+               place), a live route by id (moderation-and-contribution.md §7.7).
+               `msg` names this message on the map and the edit form, so
+               arriving there opens it (moderation-and-contribution.md §7.5a). #}
             {% if m.kind.value == 'submission_approved' %}
-              <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?feature={{ m.refLabel|url_encode }}&amp;msg={{ m.id }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
+              {% set target = approved_targets[m.refId] ?? null %}
+              {% if target and target.kind == 'item' %}
+                <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?item={{ target.item }}&amp;msg={{ m.id }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
+              {% elseif target and target.kind == 'town' %}
+                <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?town={{ target.ref }}&amp;ll={{ target.ll }}&amp;name={{ target.name|url_encode }}&amp;msg={{ m.id }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
+              {% elseif target and target.kind == 'region' %}
+                <p class="q-map"><a class="q-link msg-region-link" href="{{ path('region_detail', {slug: target.slug}) }}">{{ 'messages.view_region_page'|trans }} →</a></p>
+              {% endif %}
             {% elseif m.kind.value in ['route_approved', 'correction_done'] %}
               <p class="q-map"><a class="q-link msg-map-link" href="{{ path('map') }}?route={{ m.refId }}&amp;msg={{ m.id }}">{{ 'messages.view_on_map'|trans }} ↗</a></p>
             {% elseif not mine and m.kind.value == 'submission_needs_info' and edit_targets[m.refId] is defined %}

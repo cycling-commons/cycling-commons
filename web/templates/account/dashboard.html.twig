@@ -67,7 +67,7 @@
         <li class="db-row">
           <span class="q-pill q-pill--ret">{{ s.typeLabelKey|trans }}</span>
           <span class="db-row-title">{{ s.name }}</span>
-          <span class="db-row-meta">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }} · <a href="{{ path('map') }}?feature={{ s.name|url_encode }}" target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+          <span class="db-row-meta">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }} · <a href="{{ path('map') }}?item={{ s.id }}" target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
         </li>
       {% endfor %}
     </ul>

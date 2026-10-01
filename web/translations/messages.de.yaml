@@ -3596,6 +3596,7 @@ messages:
   you_sent: 'Von dir gesendet'
   kind_submission_approved: 'Beitrag angenommen — danke!'
   view_on_map: 'Auf der Karte ansehen'
+  view_region_page: 'Regionsseite ansehen'
   kind_submission_rejected: 'Beitrag nicht angenommen'
   kind_submission_needs_info: 'Ein Kurator benötigt weitere Informationen'
   kind_route_approved: 'Routenvorschlag angenommen — danke!'
