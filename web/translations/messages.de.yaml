@@ -3853,6 +3853,9 @@ support:
     area.account: 'Anmelden und Konto'
     area.regions: 'Regionenseiten'
     area.translations: 'Übersetzungen'
+    area.messages: "Nachrichten und E-Mails"
+    area.desks: "Kurations-Desks"
+    area.api: "Die API (für Entwickler)"
     area.pages: 'Die übrigen Seiten'
     area.unsure: 'Nicht sicher'
     error.title: 'Geben Sie der Meldung einen kurzen Titel.'

@@ -3852,6 +3852,9 @@ support:
     area.account: 'Inloggen en account'
     area.regions: 'Regiopagina''s'
     area.translations: 'Vertalingen'
+    area.messages: "Berichten en e-mails"
+    area.desks: "Curatorbureaus"
+    area.api: "De API (voor ontwikkelaars)"
     area.pages: 'De overige pagina''s'
     area.unsure: 'Weet ik niet'
     error.title: 'Geef de melding een korte titel.'

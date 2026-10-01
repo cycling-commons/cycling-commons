@@ -31,6 +31,9 @@ enum BugArea: string
     case Account = 'account';
     case Regions = 'regions';
     case Translations = 'translations';
+    case Messages = 'messages';
+    case Desks = 'desks';
+    case Api = 'api';
     case Pages = 'pages';
     case Unsure = 'unsure';
 
@@ -44,8 +47,11 @@ enum BugArea: string
             self::Photos,
             self::Routes,
             self::Account,
+            self::Messages,
             self::Regions,
             self::Translations,
+            self::Desks,
+            self::Api,
             self::Pages,
             self::Unsure,
         ];
@@ -69,6 +75,13 @@ enum BugArea: string
         $path = (string) preg_replace('~^/(fr|nl|de|es)(?=/|$)~', '', $path);
 
         return match (true) {
+            // Before /account: the messages page lives under it.
+            str_starts_with($path, '/account/messages') => self::Messages,
+            str_starts_with($path, '/moderate') => self::Desks,
+            // The developer pages and the API itself, in every language
+            // (LocalizedPath::DEVELOPERS); `api` is `api` everywhere.
+            str_starts_with($path, '/api'),
+            1 === preg_match('~^/(developers|developpeurs|ontwikkelaars|entwickler|desarrolladores)(/|$)~', $path) => self::Api,
             str_starts_with($path, '/map') => self::Map,
             str_starts_with($path, '/photo'), str_starts_with($path, '/media') => self::Photos,
             str_starts_with($path, '/routes'), str_starts_with($path, '/propose-route') => self::Routes,

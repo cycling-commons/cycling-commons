@@ -3845,6 +3845,9 @@ support:
     area.account: 'Connexion et compte'
     area.regions: 'Pages de région'
     area.translations: 'Traductions'
+    area.messages: "Messages et e-mails"
+    area.desks: "Bureaux des curateurs"
+    area.api: "L'API (pour les développeurs)"
     area.pages: 'Les autres pages'
     area.unsure: 'Je ne sais pas'
     error.title: 'Donnez un titre court au signalement.'

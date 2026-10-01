@@ -341,8 +341,15 @@ has to be visible.
 
 **Severity** (critical / major / minor / cosmetic) and **area** (a fixed list,
 not a curator-managed table, because a list curators can grow ends up holding
-"Map", "map" and "Maps" within a month). The area is guessed from the path, locale
-prefix stripped, and the reporter can change it.
+"Map", "map" and "Maps" within a month). The list (`App\Support\BugArea`):
+the map, search, adding or fixing places, photos, routes, signing in and
+account, messages and emails, region pages, translations, curator desks, the
+API (for developers), the other pages, not sure. Messages, curator desks and
+the API joined 2026-10-01 (owner: "API needs to be a bug category ... not an
+endless list"). The area is guessed from the path, locale prefix stripped
+(`/account/messages` is Messages, `/moderate` is the desks, `/api` and the
+developer pages in every language are the API), and the reporter can change
+it.
 
 **Status** ({@see App\Support\BugStatus}): new, to be confirmed, planned, in
 progress, needs checking, resolved, declined. "To be confirmed"

@@ -300,6 +300,11 @@ final class BugReportTest extends WebTestCase
         self::assertSame(BugArea::Map, BugArea::guessFromPath('/nl/map'));
         self::assertSame(BugArea::Account, BugArea::guessFromPath('/de/account/settings'));
         self::assertSame(BugArea::Unsure, BugArea::guessFromPath('/'));
+        self::assertSame(BugArea::Messages, BugArea::guessFromPath('/fr/account/messages'));
+        self::assertSame(BugArea::Desks, BugArea::guessFromPath('/moderate/submissions'));
+        self::assertSame(BugArea::Api, BugArea::guessFromPath('/nl/ontwikkelaars/api'));
+        self::assertSame(BugArea::Api, BugArea::guessFromPath('/api/v1/regions'));
+        self::assertSame(BugArea::Unsure, BugArea::guessFromPath('/developersx'));
     }
 
     /**

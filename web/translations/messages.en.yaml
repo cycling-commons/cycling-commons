@@ -3871,6 +3871,9 @@ support:
     area.account: 'Signing in and account'
     area.regions: 'Region pages'
     area.translations: 'Translations'
+    area.messages: "Messages and emails"
+    area.desks: "Curator desks"
+    area.api: "The API (for developers)"
     area.pages: 'The other pages'
     area.unsure: 'Not sure'
     error.title: 'Give the report a short title.'
