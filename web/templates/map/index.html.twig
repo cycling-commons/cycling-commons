@@ -615,7 +615,10 @@
       </div>
       <a class="add-climb" href="{{ path('contribute') }}">{{ 'map.contribute'|trans }}</a>
     </div>
-    <div class="legend">
+    {# Hidden until panels.js syncLegend() has looked at what is on the map:
+       served visible, the surface key flashed on every load and then went
+       (owner 2026-10-01). The script shows it when a key has something to explain. #}
+    <div class="legend" hidden>
       {# Collapsible on every screen, not just phones (owner 2026-08-16). The
          key is a reference, not a permanent fixture: a rider who has learnt
          the colours wants the map back, and on a laptop the panel covers a
@@ -635,7 +638,7 @@
          2026-08-16): with the skin off and the Road-surface layer empty or
          switched off, six colours were being explained for a map that had none
          of them on it. #}
-      <div class="skey-block" id="surfaceKey">
+      <div class="skey-block" id="surfaceKey" hidden>
       {% set sc = cc_surface_colours() %}
       <h4>{{ 'item_type.road-surface.label'|trans }}</h4>
       <div class="skey">

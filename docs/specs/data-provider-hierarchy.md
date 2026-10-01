@@ -447,7 +447,9 @@ the registry for provider tiers and citations.
 pin needs the key there, not in a document. The existing legend
 (`templates/map/index.html.twig`, `syncLegend()` in `web/assets/map/panels.js`)
 explains **lines only**, surface and routes, and appears when a line layer is
-on. Every pin variation is undocumented today. The panel extends to cover pins,
+on. The panel and both keys are served `hidden`, and `syncLegend()` shows them
+once it has seen a line layer on the map, so nothing flashes on load (owner
+2026-10-01). Every pin variation is undocumented today. The panel extends to cover pins,
 and keeps its existing behaviour of showing only what is actually on the map, so
 a rider is never asked to read six meanings for symbols they cannot see.
 

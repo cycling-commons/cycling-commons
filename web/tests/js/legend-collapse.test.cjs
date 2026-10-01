@@ -28,7 +28,7 @@ const panels = read('assets/map/panels.js');
 
 /** Everything between <div class="lg-body" id="lgBody"> and the legend's close. */
 function legendMarkup() {
-  const m = twig.match(/<div class="legend">([\s\S]*?)\n {4}<\/div>/);
+  const m = twig.match(/<div class="legend" hidden>([\s\S]*?)\n {4}<\/div>/);
   assert.ok(m, 'the legend block was not found');
   return m[1];
 }
@@ -96,6 +96,12 @@ test('the surface key answers to BOTH the tile skin and the curated layer', () =
 
 test('an empty legend hides itself rather than sitting there as a box', () => {
   assert.match(panels, /legendEl\.hidden=!!\(surfaceKey\?\.hidden && routesKey\?\.hidden\)/);
+});
+
+test('the legend and its keys are served hidden, so nothing flashes before the script decides', () => {
+  assert.match(twig, /<div class="legend" hidden>/);
+  assert.match(twig, /<div class="skey-block" id="surfaceKey" hidden>/);
+  assert.match(twig, /<div class="rkey" id="routesKey" hidden>/);
 });
 
 test('the legend re-syncs from the one place the counts are recomputed', () => {
