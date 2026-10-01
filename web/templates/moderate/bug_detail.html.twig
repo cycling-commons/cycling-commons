@@ -194,12 +194,16 @@
 
          `required` while the chosen status sends it, so the browser stops the
          save at this field. A save the server refuses anyway comes back here:
-         the field autofocused, the reason under it. #}
-      <div class="d-reply" id="d-reply" data-when="{{ notifying_statuses|join(' ') }}">
+         the field autofocused, the reason under it.
+
+         A report with no address mails nobody: the box never shows and is
+         never required (owner 2026-10-01). #}
+      {% set reply_when = report.isAnswerable ? notifying_statuses|join(' ') : '' %}
+      <div class="d-reply" id="d-reply" data-when="{{ reply_when }}"{{ report.isAnswerable ? '' : ' hidden' }}>
         <label for="d-note">{{ 'support.bugs.outcome'|trans }} <span class="req" aria-hidden="true">*</span></label>
         <textarea id="d-note" name="outcome_note" maxlength="2000" rows="10"
                   data-missing="{{ 'support.bugs.outcome_missing'|trans }}"
-                  {{- cur_status in notifying_statuses ? ' required' : '' }}
+                  {{- report.isAnswerable and cur_status in notifying_statuses ? ' required' : '' }}
                   {%- if note_error %} aria-invalid="true" aria-describedby="d-note-error" autofocus{% endif %}
                   placeholder="{{ 'support.bugs.outcome_placeholder'|trans }}">{{ d.outcome_note ?? report.outcomeNote }}</textarea>
         {% if note_error %}

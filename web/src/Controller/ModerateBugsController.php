@@ -190,6 +190,8 @@ final class ModerateBugsController extends AbstractController
      * Reaching Resolved or Declined mails the reporter, once, with the note. So
      * the note is required for those two: "we are not fixing this" with no
      * reason is the message that makes somebody never report anything again.
+     * A report with no address mails nobody, so there the note is not asked
+     * for (owner 2026-10-01).
      */
     #[Route('/moderate/bugs/{id}/decide', name: 'moderate_bugs_decide', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function decide(int $id, Request $request): Response
@@ -221,7 +223,7 @@ final class ModerateBugsController extends AbstractController
         if ('' === $note && $wantsDefault && BugStatus::Resolved === $status) {
             $note = $this->mailer->bugOutcomeDefaultNote($report);
         }
-        if ($status->notifiesReporter() && '' === $note) {
+        if ($status->notifiesReporter() && $report->isAnswerable() && '' === $note) {
             // The page again, not a redirect: it opens on the reply field with
             // the reason beside it, and everything else the curator typed is
             // still in the form. The browser normally stops this submit first

@@ -137,6 +137,24 @@ final class BugDeskReplyTest extends WebTestCase
         self::assertSame('Grey map on first load', $page->filter('#d-ptitle')->attr('value'));
     }
 
+    public function testAReportWithNoAddressNeedsNoReply(): void
+    {
+        $client = $this->client();
+        $client->loginUser($this->curator());
+        $report = new BugReport('The map will not load', 'It stayed grey.');
+        $this->em()->persist($report);
+        $this->em()->flush();
+
+        $page = $client->request('GET', '/moderate/bugs/'.$report->getId());
+        self::assertNotNull($page->filter('#d-reply')->attr('hidden'), 'nobody to tell: the box never shows');
+        self::assertSame('', $page->filter('#d-reply')->attr('data-when'), 'and no status opens it');
+        self::assertNull($page->filter('#d-note')->attr('required'));
+
+        $this->decide($client, $report, ['status' => 'resolved', 'outcome_note' => '']);
+        self::assertResponseRedirects();
+        self::assertSame(BugStatus::Resolved, $this->fresh($report)->getStatus(), 'Fixed saves without a reply');
+    }
+
     public function testNotChangingThisNeedsTheReplyToo(): void
     {
         $client = $this->client();

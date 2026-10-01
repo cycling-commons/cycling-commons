@@ -630,7 +630,9 @@ body, and the outcome note,
 because a curator triaging twenty reports should not save four times per report. Reaching
 resolved or declined mails the reporter, so the note is required for those two:
 "we are not fixing this" with no reason is the message that makes somebody never
-report anything again.
+report anything again. A report with no address and no account mails nobody
+(`BugReport::isAnswerable()` false, "no address given"), so there the note is
+neither shown nor required, on any status (owner 2026-10-01).
 
 Reported text renders through `|bug_markdown` (§15), which escapes first and
 sanitises after, and never through `|rich`: the translations profile allows

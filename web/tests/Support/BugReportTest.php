@@ -760,7 +760,8 @@ final class BugReportTest extends WebTestCase
 
     /**
      * Resolved and Declined mail the reporter, so the desk refuses to reach
-     * them without a reason to send.
+     * them without a reason to send. A report with no address mails nobody;
+     * BugDeskReplyTest covers that it needs no reason.
      */
     public function testTheDeskRefusesAnOutcomeWithNoReason(): void
     {
@@ -768,6 +769,7 @@ final class BugReportTest extends WebTestCase
         $client->loginUser($this->curator());
 
         $report = new BugReport('Something broke', 'body');
+        $report->setReporterEmail('reporter@cyclingcommons.org');
         $this->em()->persist($report);
         $this->em()->flush();
         $id = (int) $report->getId();
