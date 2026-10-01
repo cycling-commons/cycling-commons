@@ -22,7 +22,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 final class ContributionsRetentionTest extends WebTestCase
 {
-    public function testAnOldRejectedSubmissionStaysAndATrashedOneIsHidden(): void
+    public function testAnOldRejectedSubmissionStaysAndATrashedOneShowsAsRemoved(): void
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
@@ -54,7 +54,9 @@ final class ContributionsRetentionTest extends WebTestCase
         $html = (string) $client->getResponse()->getContent();
         self::assertStringContainsString('Old rejected edit', $html);
         self::assertStringContainsString('Young rejected edit', $html);
-        self::assertStringNotContainsString('Trashed pending edit', $html);
+        // Kept on the rider's own list, tagged Removed, until the Trash purge.
+        self::assertStringContainsString('Trashed pending edit', $html);
+        self::assertStringContainsString('id="sub-'.$trashed->getId().'"', $html);
         self::assertStringNotContainsString('Someone elses submission', $html);
     }
 

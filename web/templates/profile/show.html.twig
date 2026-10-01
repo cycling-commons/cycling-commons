@@ -22,7 +22,7 @@
 
   {# ── Contributions — real data only (submissions + route proposals). #}
   <section class="dpane on" id="p-contrib">
-    {% set sub_pill = {'approved': 'ok', 'pending': 'pend', 'needs_info': 'pend', 'rejected': 'rej', 'withdrawn': 'rej'} %}
+    {% set sub_pill = {'approved': 'ok', 'pending': 'pend', 'needs_info': 'pend', 'rejected': 'rej', 'withdrawn': 'rej', 'trashed': 'rej'} %}
     <div class="mh">
       <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
       <h1>{{ 'account.contributions_title'|trans }}</h1>
@@ -63,7 +63,7 @@
         <a class="door" href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a>
       </div>
     {% else %}
-      {% set route_pill = {'verified': 'ok', 'unverified': 'conf', 'submitted': 'pend', 'rejected': 'rej', 'retired': 'ret'} %}
+      {% set route_pill = {'verified': 'ok', 'unverified': 'conf', 'submitted': 'pend', 'rejected': 'rej', 'retired': 'ret', 'trashed': 'rej'} %}
       <div class="q-list" id="qList">
       {% for e in entries %}
       {% if e.route %}
@@ -73,7 +73,9 @@
            :target outline marks the card it lands on. Map shows the route to
            its proposer while it waits (map-and-search.md §8); Edit reopens
            the proposal form until a curator decides (route-domain.md §4). #}
-        <div class="q-item" id="route-{{ p.id }}">
+        {# A route a curator moved to Trash stays here greyed, tagged Removed,
+           with no links, until the purge deletes it 30 days later. #}
+        <div class="q-item{{ p.state.value == 'trashed' ? ' is-removed' }}" id="route-{{ p.id }}">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">
@@ -107,13 +109,18 @@
            link is the pending deep-link the desk uses; the edit wizard binds
            the submitter's own Submitted item. A route correction (letter R)
            has no item-edit binding. #}
-        {% set sub_live = sub.itemId is not null and sub.letter != 'R' %}
+        {# A submission a curator moved to Trash stays on its rider's list,
+           greyed and tagged Removed, with no map or edit link and no
+           conversation, until the purge deletes it 30 days later (owner
+           2026-10-01). #}
+        {% set sub_removed = sub.status.value == 'trashed' %}
+        {% set sub_live = sub.itemId is not null and sub.letter != 'R' and not sub_removed %}
         {% set sub_pending_new = sub.type.value == 'new' and sub.status.value in ['pending', 'needs_info'] %}
         {# Anchor for the messages page, whose cards link back to the
            contribution they are about. No data-item-id: that attribute is the
            desk's live-removal hook for a decided submission, and this row is
            the rider's own record of it. #}
-        <div class="q-item" id="sub-{{ sub.id }}">
+        <div class="q-item{{ sub_removed ? ' is-removed' }}" id="sub-{{ sub.id }}">
           <div class="q-top">
             <div class="q-headwrap">
               <div class="q-head">

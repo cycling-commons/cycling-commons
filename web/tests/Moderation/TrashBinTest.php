@@ -329,7 +329,7 @@ final class TrashBinTest extends WebTestCase
 
     // ── Hidden everywhere but the Trash list ────────────────────────────────
 
-    public function testATrashedSubmissionIsHiddenFromTheRidersPagesButInTheirExport(): void
+    public function testATrashedSubmissionShowsAsRemovedOnTheRidersListAndIsInTheirExport(): void
     {
         $client = static::createClient();
         $rider = $this->rider();
@@ -338,7 +338,18 @@ final class TrashBinTest extends WebTestCase
         $this->moderation()->trashSubmission((int) $sub->getId(), $curator);
 
         $client->loginUser($rider);
-        foreach (['/account/contributions', '/account', '/account/messages'] as $page) {
+        // The rider's own list keeps it, greyed and tagged Removed, with no
+        // links and no conversation, until the purge.
+        $crawler = $client->request('GET', '/account/contributions');
+        self::assertResponseIsSuccessful();
+        $row = $crawler->filter('#sub-'.$sub->getId());
+        self::assertCount(1, $row);
+        self::assertStringContainsString('is-removed', (string) $row->attr('class'));
+        self::assertSame('Removed', $row->filter('.q-pill')->text());
+        self::assertCount(0, $row->filter('a.q-link'), 'no map, edit or conversation link');
+        self::assertStringNotContainsString(self::QUESTION, $row->text());
+
+        foreach (['/account', '/account/messages'] as $page) {
             $client->request('GET', $page);
             self::assertResponseIsSuccessful();
             $html = (string) $client->getResponse()->getContent();

@@ -2367,10 +2367,15 @@ unpublished. The content-free audit line (`TrashActions::Trash*`) is written as
 before. `Version20261001210000` adds the columns.
 
 **Hidden everywhere but the Trash list.** A trashed row is on no queue, no
-History page, no map layer (curator or public), no rider page (Contributions,
-the account dashboard, the messages page, the unread badge), not in the curator room's submission search or card links, not in
-an applicant's evidence count, and a report about it reads as gone. The
-rider's GDPR data export is the one exception: it is everything we hold about
+History page, no map layer (curator or public), no rider page but one (the
+account dashboard, the messages page, the unread badge), not in the curator
+room's submission search or card links, not in an applicant's evidence count,
+and a report about it reads as gone. Two exceptions, both the rider's own:
+the rider's Contributions list keeps the row, greyed and tagged **Removed**
+(`account.sub_status_trashed`, `account.route_state_trashed`), with no map,
+edit or conversation link (owner 2026-10-01: a rider whose real contribution
+was trashed by mistake sees what happened and can ask); and the GDPR data
+export: it is everything we hold about
 them (Art. 15), so a trashed row and its thread are in it, marked `trashed`
 (`trashed_at` on messages), until the purge deletes them. Positive
 status lists (`pending`, `needs_info`, `approved`, ...) leave it out by
@@ -2382,9 +2387,10 @@ finishes scanning sends no message. A rider re-adding an OSM place whose item
 is in the bin revives that item, as for a rejected one, instead of failing on
 the unique `source_ref`.
 
-**The rider is told nothing**, on Trash or on restore: the contribution and its
-thread leave their account at once and, after a restore, come back as they
-were.
+**The rider is sent nothing**, on Trash or on restore: no message, no email.
+On their Contributions list the row turns grey with the Removed tag, its thread
+leaves their messages page, and after a restore both come back as they were;
+after the purge the row is gone from the list too.
 
 **The Trash page** (`/moderate/trash`, `ModerateTrashController`, chip beside
 Queue and History on both desks) lists the bin in the reader's areas

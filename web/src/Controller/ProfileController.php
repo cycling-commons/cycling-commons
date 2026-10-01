@@ -92,7 +92,7 @@ final class ProfileController extends AbstractController
 
         /** @var list<string> $letters */
         $letters = $db->fetchFirstColumn(
-            "SELECT DISTINCT letter FROM submission WHERE user_id = :uid AND status <> 'trashed' ORDER BY letter",
+            "SELECT DISTINCT letter FROM submission WHERE user_id = :uid ORDER BY letter",
             ['uid' => $userId],
         );
 
@@ -100,7 +100,7 @@ final class ProfileController extends AbstractController
         // listed under All and under Routes, hidden by another kind's chip and
         // by the withdrawn view (a proposal has no withdrawn state).
         $routeCount = (int) $db->fetchOne(
-            "SELECT COUNT(*) FROM recommended_route WHERE proposed_by = :uid AND state <> 'trashed'",
+            "SELECT COUNT(*) FROM recommended_route WHERE proposed_by = :uid",
             ['uid' => $userId],
         );
         $showRoutes = \in_array($letterFilter, ['', ItemType::QualityRides->letter()], true) && '' === $statusFilter;
@@ -206,9 +206,11 @@ final class ProfileController extends AbstractController
         int $page,
         int $perPage,
     ): array {
-        $params = ['uid' => $userId, 'trashed' => SubmissionStatus::Trashed->value];
+        // A trashed row stays on its rider's list, greyed and tagged Removed,
+        // until the Trash purge deletes it 30 days later (owner 2026-10-01).
+        $params = ['uid' => $userId];
         $types = [];
-        $where = 's.user_id = :uid AND s.status <> :trashed';
+        $where = 's.user_id = :uid';
         if ('' !== $letterFilter) {
             $where .= ' AND s.letter = :letter';
             $params['letter'] = $letterFilter;
@@ -219,7 +221,7 @@ final class ProfileController extends AbstractController
         }
         $union = "SELECT 'sub' AS kind, s.id, s.created_at FROM submission s WHERE ".$where;
         if ($withRoutes) {
-            $union .= " UNION ALL SELECT 'route' AS kind, r.id, r.created_at FROM recommended_route r WHERE r.proposed_by = :uid AND r.state <> :trashed";
+            $union .= " UNION ALL SELECT 'route' AS kind, r.id, r.created_at FROM recommended_route r WHERE r.proposed_by = :uid";
         }
 
         $pager = Pager::of($page, (int) $db->fetchOne('SELECT COUNT(*) FROM ('.$union.') c', $params, $types), $perPage);

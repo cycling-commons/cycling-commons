@@ -3611,6 +3611,7 @@ account:
   sub_status_rejected: 'Rejected'
   sub_status_needs_info: 'Needs info'
   sub_status_withdrawn: 'Withdrawn'
+  sub_status_trashed: 'Removed'
   filter_all: 'All'
   filter_kind_aria: 'Filter contributions by category'
   withdraw: 'Withdraw'
@@ -3624,6 +3625,7 @@ account:
   route_state_verified: 'verified'
   route_state_rejected: 'not accepted'
   route_state_retired: 'retired'
+  route_state_trashed: 'removed'
 
 messages:
   photo_alt: 'The photo this message is about'

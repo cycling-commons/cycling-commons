@@ -3592,6 +3592,7 @@ account:
   sub_status_rejected: 'Afgewezen'
   sub_status_needs_info: 'Info nodig'
   sub_status_withdrawn: 'Ingetrokken'
+  sub_status_trashed: 'Verwijderd'
   filter_all: 'Alles'
   filter_kind_aria: 'Bijdragen filteren op categorie'
   withdraw: 'Intrekken'
@@ -3605,6 +3606,7 @@ account:
   route_state_verified: 'geverifieerd'
   route_state_rejected: 'niet aanvaard'
   route_state_retired: 'teruggetrokken'
+  route_state_trashed: 'verwijderd'
 
 messages:
   photo_alt: 'De foto waar dit bericht over gaat'

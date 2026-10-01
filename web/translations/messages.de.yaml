@@ -3593,6 +3593,7 @@ account:
   sub_status_rejected: 'Abgelehnt'
   sub_status_needs_info: 'Info benötigt'
   sub_status_withdrawn: 'Zurückgezogen'
+  sub_status_trashed: 'Entfernt'
   filter_all: 'Alle'
   filter_kind_aria: 'Beiträge nach Kategorie filtern'
   withdraw: 'Zurückziehen'
@@ -3606,6 +3607,7 @@ account:
   route_state_verified: 'verifiziert'
   route_state_rejected: 'nicht angenommen'
   route_state_retired: 'zurückgezogen'
+  route_state_trashed: 'entfernt'
 
 messages:
   photo_alt: 'Das Foto, um das es in dieser Nachricht geht'

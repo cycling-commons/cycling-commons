@@ -6,3 +6,6 @@
 .curating{font-size:.9rem;color:#4a4d40;padding:0;line-height:1.6;max-width:62ch}
 .curating .cta{display:block;margin-top:.55rem;color:var(--clay)}
 .note{background:var(--paper-deep);border-left:2px solid var(--glacier);padding:.9rem 1.1rem;font-size:.90rem;color:#4a4d40;margin:1.4rem 0;border-radius:0 6px 6px 0}
+/* A contribution a curator moved to Trash: greyed and tagged Removed until
+   the purge deletes it 30 days later. */
+.q-item.is-removed{opacity:.55}
