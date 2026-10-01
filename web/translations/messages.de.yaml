@@ -1731,11 +1731,14 @@ settings:
   email_hint: 'Um Ihre E-Mail-Adresse zu ändern, <a href="/de/contact?topic=question">schreiben Sie uns</a>.'
   toggle_public_b: 'Öffentliches Profil'
   toggle_public_small: 'Wenn deaktiviert, ist dein Profil verborgen und Beiträge bleiben anonym.'
+  private_name: "Dein privater Name, der statt deines Anzeigenamens erscheint, solange das öffentliche Profil aus ist:"
   toggle_public_delay: 'Änderungen hier greifen bei uns sofort. Die Karte wird zwischengespeichert, eine Foto-Nennung kann im Browser einer anderen Person also bis zu eine Stunde brauchen, um nachzuziehen.'
   toggle_public_curator: 'Als Kuratorin oder Kurator sehen andere Kuratorinnen und Kuratoren deinen Anzeigenamen auf den Moderationsseiten, unabhängig von diesem Schalter: Eine Entscheidung hat eine Urheberin oder einen Urheber. Dein öffentliches Profil auf der Website folgt diesem Schalter wie bei allen anderen.'
   submit_profile: 'Profil speichern'
-  view_public: 'Dein öffentliches Profil ansehen — genau so, wie andere es sehen'
-  view_public_off: 'Keine öffentliche Seite — aktiviere das öffentliche Profil, um eine zu erhalten.'
+  view_public: "Dein öffentliches Profil ansehen, genau so, wie andere es sehen"
+  view_public_off: "Keine öffentliche Seite. Aktiviere das öffentliche Profil, um eine zu erhalten."
+  view_public_save_on: "Klicke unten auf Profil speichern, um deine öffentliche Seite zu veröffentlichen."
+  view_public_save_off: "Klicke unten auf Profil speichern, um deine öffentliche Seite zu verbergen."
   cancel: 'Abbrechen'
   section_preferences: 'Fahrvorlieben'
   section_security: 'Sicherheit'

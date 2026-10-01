@@ -1051,9 +1051,12 @@ Two tabs:
 
 - **Profile** (default): account status; Identity section (display name,
   country, language, base location); Riding preferences (preference chips,
-  account-and-auth.md §9); Public profile section (toggle + view-as
-  link/hint — split out of the former "Identity & privacy" heading
-  2026-07-21); the profiles-opt-in notice.
+  account-and-auth.md §9); Public profile section (toggle, the rider's
+  private name `rider#xxxxxxxx` that others see while the toggle is off
+  (owner 2026-10-01), view-as link/hint, split out of the former "Identity &
+  privacy" heading 2026-07-21; the link follows the SAVED switch, and while
+  the switch differs from it the line says what Save profile will do,
+  `settings/public-profile.js`); the profiles-opt-in notice.
 - **Security**: password change, 2FA block, danger zone (account deletion §10).
 
 Contract points:

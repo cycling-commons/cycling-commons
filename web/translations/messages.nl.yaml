@@ -1731,11 +1731,14 @@ settings:
   email_hint: 'Wil je je e-mailadres wijzigen? <a href="/nl/contact?topic=question">Schrijf ons</a>.'
   toggle_public_b: 'Openbaar profiel'
   toggle_public_small: 'Als dit uitstaat, is je profiel verborgen en blijven bijdragen anoniem.'
+  private_name: "Je privénaam, die anderen zien in plaats van je weergavenaam zolang Openbaar profiel uit staat:"
   toggle_public_delay: 'Wijzigingen hier gaan bij ons meteen in. De kaart wordt gecachet, dus een fotovermelding kan in de browser van iemand anders tot een uur nodig hebben om bij te trekken.'
   toggle_public_curator: 'Als regiobeheerder zien andere regiobeheerders je weergavenaam op de moderatieschermen, wat deze schakelaar ook zegt: een beslissing heeft een auteur. Je openbare profiel op de site volgt deze schakelaar net als bij iedereen.'
   submit_profile: 'Profiel opslaan'
-  view_public: 'Bekijk je openbare profiel — precies zoals anderen het zien'
-  view_public_off: 'Geen openbare pagina — zet Openbaar profiel aan om er een te krijgen.'
+  view_public: "Bekijk je openbare profiel, precies zoals anderen het zien"
+  view_public_off: "Geen openbare pagina. Zet Openbaar profiel aan om er een te krijgen."
+  view_public_save_on: "Klik hieronder op Profiel opslaan om je openbare pagina te publiceren."
+  view_public_save_off: "Klik hieronder op Profiel opslaan om je openbare pagina te verbergen."
   cancel: 'Annuleren'
   section_preferences: 'Rijvoorkeuren'
   section_security: 'Beveiliging'

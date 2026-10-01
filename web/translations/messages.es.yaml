@@ -1738,11 +1738,14 @@ settings:
   email_hint: 'Para cambiar su dirección de correo, <a href="/es/contact?topic=question">escríbanos</a>.'
   toggle_public_b: 'Perfil público'
   toggle_public_small: 'Si está desactivado, tu perfil queda oculto y tus aportaciones se mantienen anónimas.'
+  private_name: "Tu nombre privado, que se muestra en lugar de tu nombre visible mientras el perfil público está desactivado:"
   toggle_public_delay: 'Los cambios aquí surten efecto al instante por nuestra parte. El mapa se guarda en caché, así que un crédito de foto puede tardar hasta una hora en actualizarse en el navegador de otra persona.'
   toggle_public_curator: 'Como curador, otros curadores ven tu nombre visible en los escritorios de moderación, diga lo que diga este ajuste: una decisión tiene autor. Tu perfil público en el sitio sigue este ajuste como el de cualquiera.'
   submit_profile: 'Guardar el perfil'
-  view_public: 'Ver tu perfil público — exactamente como lo ven los demás'
-  view_public_off: 'No hay página pública — activa el perfil público para tener una.'
+  view_public: "Ver tu perfil público, exactamente como lo ven los demás"
+  view_public_off: "No hay página pública. Activa el perfil público para tener una."
+  view_public_save_on: "Haz clic en Guardar el perfil abajo para publicar tu página pública."
+  view_public_save_off: "Haz clic en Guardar el perfil abajo para ocultar tu página pública."
   cancel: 'Cancelar'
   section_preferences: 'Preferencias de rodaje'
   section_security: 'Seguridad'

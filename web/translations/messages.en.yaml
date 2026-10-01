@@ -1735,11 +1735,14 @@ settings:
   email_hint: 'To change your email address, <a href="/contact?topic=question">write to us</a>.'
   toggle_public_b: 'Public profile'
   toggle_public_small: 'When off, your profile is hidden and contributions stay anonymous.'
+  private_name: "Your private name, shown instead of your display name while Public profile is off:"
   toggle_public_delay: 'Changes here take effect straight away on our side. The map is cached, so a photo credit can take up to an hour to catch up in somebody else''s browser.'
   toggle_public_curator: 'As a curator, other curators see your display name on the moderation desks, whatever this switch says: a decision has an author. Your public profile on the site follows this switch like everybody else''s.'
   submit_profile: 'Save profile'
-  view_public: 'View your public profile — exactly as others see it'
-  view_public_off: 'No public page — enable Public profile to get one.'
+  view_public: "View your public profile, exactly as others see it"
+  view_public_off: "No public page. Turn on Public profile to get one."
+  view_public_save_on: "Click Save profile below to publish your public page."
+  view_public_save_off: "Click Save profile below to hide your public page."
   cancel: 'Cancel'
   section_preferences: 'Riding preferences'
   section_security: 'Security'

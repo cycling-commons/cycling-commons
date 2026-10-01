@@ -1726,11 +1726,14 @@ settings:
   email_hint: 'Pour modifier votre adresse e-mail, <a href="/fr/contact?topic=question">écrivez-nous</a>.'
   toggle_public_b: 'Profil public'
   toggle_public_small: 'Désactivé, votre profil est masqué et les contributions restent anonymes.'
+  private_name: "Votre nom privé, affiché à la place de votre nom tant que le profil public est désactivé :"
   toggle_public_delay: 'Les changements faits ici prennent effet chez nous immédiatement. La carte est mise en cache : un crédit photo peut mettre jusqu''à une heure à se mettre à jour dans le navigateur de quelqu''un d''autre.'
   toggle_public_curator: 'En tant que curateur, les autres curateurs voient votre nom affiché sur les bureaux de modération, quel que soit ce réglage : une décision a un auteur. Votre profil public sur le site suit ce réglage comme celui de tout le monde.'
   submit_profile: 'Enregistrer le profil'
-  view_public: 'Voir votre profil public — exactement comme les autres le voient'
-  view_public_off: 'Pas de page publique — activez le profil public pour en obtenir une.'
+  view_public: "Voir votre profil public, exactement comme les autres le voient"
+  view_public_off: "Pas de page publique. Activez le profil public pour en obtenir une."
+  view_public_save_on: "Cliquez sur Enregistrer le profil ci-dessous pour publier votre page publique."
+  view_public_save_off: "Cliquez sur Enregistrer le profil ci-dessous pour masquer votre page publique."
   cancel: 'Annuler'
   section_preferences: 'Préférences de pratique'
   section_security: 'Sécurité'

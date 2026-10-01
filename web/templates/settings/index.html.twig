@@ -255,11 +255,14 @@
             <small>{{ 'settings.toggle_public_small'|trans }}</small>
           </span>
           <label class="sw">
-            {{ form_widget(profileForm.publicProfile, {attr: {class: ''}}) }}
+            {{ form_widget(profileForm.publicProfile, {attr: {class: '', 'data-public-toggle': ''}}) }}
             <span class="track"></span><span class="knob"></span>
           </label>
         </div>
         {{ form_errors(profileForm.publicProfile) }}
+        {# The name others see while the switch is off: the stored rider# handle
+           (RiderPseudonym), the same on every desk, credit and history row. #}
+        <p class="hint" style="margin:.5rem 0 0" data-private-name>{{ 'settings.private_name'|trans }} <b style="font-family:var(--mono)">{{ constant('App\\Catalog\\RiderPseudonym::PREFIX') ~ cc_user.pseudonym }}</b></p>
         {# The name on a map photo is a stored string, re-stamped the moment this
            toggle is saved (App\Media\RiderCreditSync). Our copy is right at
            once, and every region's catalog stamp moves with it, but a map
@@ -292,12 +295,18 @@
         {% include 'partials/_form_errors.html.twig' with {form: profileForm.updatesOptIn} %}
       </div>
       <div class="field">
-        <div class="hint" style="margin:.1rem 0 0">
+        {# The link follows what is SAVED: the public page exists only once
+           the switch is saved on. Flipping the switch says what Save profile
+           will do (settings/public-profile.js); without script the saved
+           state stays, which is still true. #}
+        <div class="hint" style="margin:.1rem 0 0" data-public-view data-saved="{{ cc_user.publicProfile ? 'on' : 'off' }}">
           {% if cc_user.publicProfile %}
-            <a href="{{ path('rider_profile', {uuid: cc_user.uuid}) }}" target="_blank" rel="noopener">{{ 'settings.view_public'|trans }} ↗</a>
+            <a href="{{ path('rider_profile', {uuid: cc_user.uuid}) }}" target="_blank" rel="noopener" data-public-saved>{{ 'settings.view_public'|trans }} ↗</a>
           {% else %}
-            <span data-view-public-off>{{ 'settings.view_public_off'|trans }}</span>
+            <span data-view-public-off data-public-saved>{{ 'settings.view_public_off'|trans }}</span>
           {% endif %}
+          <span data-public-pending="on" hidden>{{ 'settings.view_public_save_on'|trans }}</span>
+          <span data-public-pending="off" hidden>{{ 'settings.view_public_save_off'|trans }}</span>
         </div>
       </div>
     </div>
@@ -465,5 +474,6 @@
 <script src="{{ asset('js/password-toggle.js') }}" defer></script>
 <script src="{{ asset('js/auth-validate.js') }}" defer></script>
 <script src="{{ asset('settings/base-location.js') }}" defer></script>
+<script src="{{ asset('settings/public-profile.js') }}" defer></script>
 <script src="{{ asset('js/name-hint.js') }}" defer></script>
 {% endblock %}

@@ -88,9 +88,13 @@ input.is-invalid{border-bottom-color:var(--clay)}
    carries 1.1rem of bottom margin — a matching .85rem of padding on top of
    that read as a gap, so the row hugs the header and keeps its breathing
    room below. The neighbouring column's hint uses the same top offset. */
-.toggle{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.1rem 0 .85rem;border-bottom:1px solid rgba(20,22,14,.1);max-width:420px}
+/* The switch sits level with the first line of its words, however many lines
+   they wrap to, and the words are the same size as every hint on the page
+   (owner 2026-10-01: "keep one font size", "align top"). */
+.toggle{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:.1rem 0 .85rem;border-bottom:1px solid rgba(20,22,14,.1);max-width:420px}
 .toggle .lab b{display:block;font-size:.95rem}
-.toggle .lab small{color:#595c4d;font-size:.82rem}
+.toggle .lab small{display:block;color:#595c4d;font-size:.90rem;line-height:1.5}
+.toggle .sw{margin-top:.1rem}
 .sw{position:relative;flex:none;width:42px;height:24px}
 .sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
 .sw .track{position:absolute;inset:0;background:rgba(20,22,14,.22);border-radius:99px;transition:background .18s}
