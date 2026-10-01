@@ -21,7 +21,7 @@ Ride-critical drinking water / refill points (fountains, taps, cemetery taps, ca
 ### Fix details
 | Field | Control | Provenance |
 |---|---|---|
-| Type | select(Public fountain / Drinking tap / Cemetery tap / Café — refill point) | `[OSM]`; a provider may default it (RIVM: Drinking tap, data-provider-hierarchy.md §5.2) |
+| Type | select(Public fountain / Drinking tap / Cemetery tap / Café - refill point) | `[OSM]`; a provider may default it (RIVM: Drinking tap, data-provider-hierarchy.md §5.2) |
 | Potable? | select(Yes (public supply) / Unknown / No / non-potable) | `[tap]`; "Unknown" is a real answer, not a blank: somebody looked and nobody can say. It draws the unfilled drop, the same look a row nobody has spoken about gets. Renamed from "Unsigned — use judgement" 2026-09-10, which described a missing sign rather than the state of our knowledge. A spelling starting with "No" is forbidden here: `ModerationService::stanceFromAnswer()` and `icons.js waterKind()` both prefix-match "No" as non-potable. |
 | Seasonal availability | select(Year-round / Summer only / Frost-shut in winter / Unknown) | `[tap]` |
 | Availability | select(Unknown / Always / Daytime only / Ask or behind a gate) | `[tap]`, filled by the Dutch register's `type` where it has one; the clock badge reads it |

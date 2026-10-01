@@ -51,7 +51,7 @@ export const WATER_KINDS=['tap','no','unk','food','food_water'];
 const yes = v => v===true || v==='true' || v===1 || v==='1' || v==='yes';
 export function waterKind(p){
   p=p||{};
-  const food = yes(p.food) || p.osmFood===true || p.type==='Café — refill point';
+  const food = yes(p.food) || p.osmFood===true || p.type==='Café - refill point';
   let pot;
   /* Rider vocabulary wins, including its "Unknown": somebody looked and
      nobody can say, which outranks a stale OSM tag. Un… is tested BEFORE the

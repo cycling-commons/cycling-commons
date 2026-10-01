@@ -75,7 +75,7 @@ final class CatalogFormRegistry
 
             ItemType::WaterFood => new ItemFieldSet(
                 fields: [
-                    CatalogField::select('type', 'Type', ['Public fountain', 'Drinking tap', 'Cemetery tap', 'Café — refill point']),
+                    CatalogField::select('type', 'Type', ['Public fountain', 'Drinking tap', 'Cemetery tap', 'Café - refill point']),
                     // "Unknown" is a real answer here, not a blank: a rider or
                     // a curator looked and nobody can say whether you may
                     // drink it. It is the same word the three selects below
