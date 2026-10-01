@@ -1,0 +1,71 @@
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_fad3fefde4406f 1531,1533
+  s_49442ae34d3603::t_9e09313d0755ec 1532,3070
+  s_49442ae34d3603::t_0aa919b97de390 3072,3076
+web/src/Controller/MapController.php
+  s_49442ae34d3603::t_d57627ada95ec3 497,500
+web/tests/Controller/RegionsPagesTest.php
+  s_49442ae34d3603::t_71bffcd0eb2919 111-112,124-125
+web/tests/Moderation/PlaceTextProposalTest.php
+  s_49442ae34d3603::t_fd5b564487cf45 382-384
+  s_49442ae34d3603::t_38eb1e4b559de1 365-366
+  s_49442ae34d3603::t_9ed10b43c9320b 370,376-381,416,815,827
+web/assets/map/town-text.js
+  s_49442ae34d3603::t_c4db668341d1c1 79-80,83
+  s_49442ae34d3603::t_9d5a5c35963d9e 2,81
+  s_49442ae34d3603::t_f9ec9b7c069c7f 54-55,62-63,86-87
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_fad3fefde4406f 1525,1527
+  s_49442ae34d3603::t_9e09313d0755ec 1526,2466
+  s_49442ae34d3603::t_e8def57334f47a 2468,2472
+web/tests/js/town-text.test.mjs
+  s_49442ae34d3603::t_63a331649e4ea6 21-22
+  s_49442ae34d3603::t_db24a791fba149 3,5-9,42,45-47,50-53,56-57,61
+  s_49442ae34d3603::t_64e0f2dd86ee63 4,19,64
+  s_49442ae34d3603::t_c48ea012c68375 15,72,83,91,93,99,112,115,117
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_9e09313d0755ec 1521,2461
+  s_49442ae34d3603::t_fad3fefde4406f 1520,1522
+  s_49442ae34d3603::t_a70ac7902a2aa9 2460,2463,2467
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_3abad2c3e7cc0f 877
+  s_49442ae34d3603::t_015c4c7cacfd23 794,874-876,878-885
+web/templates/moderate/rulebook.html.twig
+  s_49442ae34d3603::t_9554732b1adf33 249
+web/templates/pages/region.html.twig
+  s_49442ae34d3603::t_293adebd827bfd 118-120
+  s_49442ae34d3603::t_a0d84c70ebf9ae 123,132,134-135
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_9e09313d0755ec 1526,2469
+  s_49442ae34d3603::t_fad3fefde4406f 1525,1527
+  s_49442ae34d3603::t_6f950d919fee19 2471,2475
+web/assets/styles/map.css
+  s_49442ae34d3603::t_fb829831e2bdc4 1356
+  s_49442ae34d3603::t_0825529bbef119 1357-1358
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_fad3fefde4406f 1529,1531
+  s_49442ae34d3603::t_9e09313d0755ec 1530,3062
+  s_49442ae34d3603::t_7c6d06fed2cd7a 3064,3068
+docs/specs/map-and-search.md
+  s_49442ae34d3603::t_dc52d792ed773e 813-819,2596-2602
+web/assets/map/places.js
+  s_49442ae34d3603::t_b77cf8383ea803 21,166
+web/assets/styles/page/pages/region.css
+  s_49442ae34d3603::t_5760ca1d01cd87 85-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "12c13d84fa0853cf95d6d8358b69d42cb2100d0e",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
