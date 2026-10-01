@@ -1527,6 +1527,7 @@ region:
   about_source_rider: "Geschreven door %name%,"
   about_removed_rider: 'een fietser met verwijderd account'
   about_edit: 'Deze tekst bewerken'
+  about_report: 'Deze tekst melden'
   about_write: 'Een tekst voor deze regio schrijven'
   cta_map: 'Open deze regio op de kaart'
   cta_apply: 'Word vrijwillig regiobeheerder'

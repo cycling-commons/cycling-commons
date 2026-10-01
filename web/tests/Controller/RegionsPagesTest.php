@@ -124,7 +124,8 @@ final class RegionsPagesTest extends WebTestCase
         self::assertStringContainsString('<p class="rg-about-write"><a href="/regions/ctx-less-region/text">Write a text for this region</a></p>', $html);
         self::assertStringNotContainsString('A curator of this region approves it.', $html);
         self::assertStringNotContainsString('class="rg-about-text"', $html);
-        self::assertStringNotContainsString('class="rg-about-attrib"', $html);
+        self::assertStringNotContainsString('rg-about-attrib', $html);
+        self::assertStringNotContainsString('tc-acts', $html, 'no credit line, so no icons on it');
     }
 
     public function testDetailPage404sForInfrastructureAndUnknownSlugs(): void

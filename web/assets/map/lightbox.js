@@ -17,7 +17,7 @@ const MEDIA_UUID = /\/(?:published|photos)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}
 export function reportLink(p){
   const m = MEDIA_UUID.exec(String(p && (p.lg || p.sm) || ''));
   if(!m) return '';
-  return ` · <a class="cc-lb-report" href="/report/photo/${m[1]}"><span class="cc-bang" aria-hidden="true">!</span>${escPend(D.reportPhoto||'Report this photo')}</a>`;
+  return ` · <a class="cc-lb-report" href="/report/photo/${m[1]}"><span class="ring-ico" aria-hidden="true">!</span>${escPend(D.reportPhoto||'Report this photo')}</a>`;
 }
 
 export let _lb={photos:[],i:0,name:''};

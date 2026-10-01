@@ -98,7 +98,10 @@
    is CC BY-SA 4.0 and the credit line must never drift from what it credits.
    The section is here text or not: anyone signed in can suggest one, and a
    curator of this region approves it (moderation-and-contribution.md §3.1b).
-   The link is the same for everybody, so the page stays cacheable; a visitor
+   A text's credit line ends in the ringed "!" to report it and the ringed
+   pencil to the form, as on the town card; with no text
+   there is no credit line, so one plain link to write one stands instead.
+   Both are the same for everybody, so the page stays cacheable; a visitor
    signs in on the way to the form. #}
 <section class="pad rg-about"><div class="wrap">
   <div class="kicker">{% trans %}region.about_h{% endtrans %}</div>
@@ -115,21 +118,27 @@
     {# A rider's approved text names them (their public name, else their
        rider# handle); a curator's own text says "this region's curators". #}
     {% set rider = region.context.byRider|default(false) ? (region.context.author ?? 'region.about_removed_rider'|trans) : null %}
-    {# The ringed pencil ends the credit line and opens the form; a visitor
-       signs in on the way. Every variant carries the CC BY-SA 4.0 licence,
-       linked. #}
-    {% set pen_label = 'region.about_edit'|trans %}
-    {% set pen %}<a class="rg-about-pen" href="{{ path('region_text', {slug: region.slug}) }}" title="{{ pen_label }}" aria-label="{{ pen_label }}">✎</a>{% endset %}
+    {# The credit line ends in the town card's two ringed icons
+       (partials/_text_credit_actions.html.twig): "!" to report the text
+       through the one report door (docs/specs/content-reports.md, target
+       `region`) and the pencil to the form; a visitor signs in on the way.
+       Every variant carries the CC BY-SA 4.0 licence, linked. #}
+    {% set actions %}{{ include('partials/_text_credit_actions.html.twig', {
+      report_href: path('content_report', {type: 'region', id: region.id, from: app.request.pathInfo}),
+      report_label: 'region.about_report'|trans,
+      edit_href: path('region_text', {slug: region.slug}),
+      edit_label: 'region.about_edit'|trans,
+    }) }}{% endset %}
     {% set licence %}<a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a>{% endset %}
     {% if region.context.url %}
-      <p class="rg-about-attrib">
+      <p class="rg-about-attrib tc-line">
         {%- if region.context.adapted and rider %}{{ 'region.about_source_adapted_by'|trans({'%name%': rider}) }}
         {%- elseif region.context.adapted %}{% trans %}region.about_source_adapted{% endtrans %}
         {%- else %}{% trans %}region.about_source{% endtrans %}{% endif %}
         <a href="{{ region.context.url }}" rel="noopener noreferrer">{{ region.context.title }}</a>
-        · <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noopener noreferrer">CC BY-SA 4.0</a> {{ pen }}</p>
+        · {{ licence }}{{ actions }}</p>
     {% elseif region.context.curated %}
-      <p class="rg-about-attrib">{% if rider %}{{ 'region.about_source_rider'|trans({'%name%': rider}) }}{% else %}{% trans %}region.about_source_curator{% endtrans %}{% endif %} {{ licence }} {{ pen }}</p>
+      <p class="rg-about-attrib tc-line">{% if rider %}{{ 'region.about_source_rider'|trans({'%name%': rider}) }}{% else %}{% trans %}region.about_source_curator{% endtrans %}{% endif %} {{ licence }}{{ actions }}</p>
     {% endif %}
   {% else %}
     <p class="rg-about-write"><a href="{{ path('region_text', {slug: region.slug}) }}">{{ 'region.about_write'|trans }}</a></p>
@@ -172,6 +181,6 @@
   {# Notice and action, DSA Article 16. The description on this page is written
      text like any other and can be wrong, or about a person
      (docs/specs/content-reports.md §5). #}
-  <p class="region-report"><a href="{{ path('content_report', {type: 'region', id: region.id, from: app.request.pathInfo}) }}"><span class="rep-bang" aria-hidden="true">!</span>{{ 'report.link_page'|trans }}</a></p>
+  <p class="region-report"><a href="{{ path('content_report', {type: 'region', id: region.id, from: app.request.pathInfo}) }}"><span class="ring-ico" aria-hidden="true">!</span>{{ 'report.link_page'|trans }}</a></p>
 </div></section>
 {% endblock %}

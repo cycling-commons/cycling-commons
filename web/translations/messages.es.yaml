@@ -1533,6 +1533,7 @@ region:
   about_source_rider: "Escrito por %name%,"
   about_removed_rider: 'un ciclista con la cuenta eliminada'
   about_edit: 'Editar este texto'
+  about_report: 'Denunciar este texto'
   about_write: 'Escribir un texto para esta región'
   cta_map: 'Abrir esta región en el mapa'
   cta_apply: 'Presentarse como curador'

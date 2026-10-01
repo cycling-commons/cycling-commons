@@ -1531,6 +1531,7 @@ region:
   about_source_rider: 'Written by %name%,'
   about_removed_rider: 'a removed rider'
   about_edit: 'Edit this text'
+  about_report: 'Report this text'
   about_write: 'Write a text for this region'
   cta_map: 'Open this region on the map'
   cta_apply: 'Volunteer as curator'

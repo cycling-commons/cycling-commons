@@ -1350,20 +1350,14 @@
   /* Long drawer text reads a step softer than the chrome: light text on the dark
      drawer looks heavier than its weight (owner 2026-09-30). */
   .cc-city-info{font-size:.92rem;color:rgb(var(--chrome-fg) / .74);line-height:1.6;margin-top:.7rem}
-  .cc-city-links{margin-top:.6rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
-  .cc-city-links a{color:rgb(var(--chrome-fg) / .85);text-decoration:underline}
+  /* The town text's credit line: its type, underlines and ringed icons are text-credit.css's (.tc-line). */
+  .cc-city-links{margin-top:.6rem}
+  .cc-city-links a{color:rgb(var(--chrome-fg) / .85)}
   .cc-town{margin-top:.2rem}
   /* A card with no text: the one plain link to write one (moderation-and-contribution.md §3.1b). */
   .cc-town-add{margin:.55rem 0 0;font-size:.82rem;line-height:1.5}
   .cc-town-add a{color:var(--chrome-link);text-decoration:underline}
   .cc-town-wait{aspect-ratio:auto;min-height:3.2rem;margin-top:.8rem}
-  /* The report badge: a ringed exclamation mark before every report link on the map (owner 2026-09-08). */
-  .cc-bang{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;border-radius:50%;border:1px solid rgb(var(--chrome-fg) / .45);color:rgb(var(--chrome-fg) / .85);font-weight:700;font-size:.72rem;text-decoration:none;vertical-align:middle}
-  .cc-bang:hover,a:hover>.cc-bang{border-color:var(--clay);color:var(--clay)}
-  /* The town text's edit badge: the same ring with a pencil, right after the credit line's "!" (moderation-and-contribution.md §3.1b). */
-  .cc-pen{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;border-radius:50%;border:1px solid rgb(var(--chrome-fg) / .45);color:rgb(var(--chrome-fg) / .85);font-size:.72rem;line-height:1;text-decoration:none;vertical-align:middle}
-  .cc-pen:hover{border-color:var(--clay);color:var(--clay)}
-  .cc-d-report .cc-bang,.cc-lb-report .cc-bang{margin:0 .35rem 0 0}
   .cc-town-facts{list-style:none;margin:.75rem 0 .2rem;padding:0;display:grid;grid-template-columns:auto 1fr;gap:.3rem 1rem;font-size:.9rem}
   .cc-town-facts li{display:contents}
   .cc-town-facts span{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65);align-self:baseline}

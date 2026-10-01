@@ -797,14 +797,18 @@ for one thing in five languages. Fixed across all five.
   `RegionAboutTextTest`.
 
   **Anyone signed in can suggest the lead (owner 2026-09-30).** The About
-  section is on every region page, with a lead or without one: under the text
-  and its credit, one sentence, "Anyone signed in can suggest an edit to this
-  text. A curator of this region approves it.", and "Edit this text" ("Write a
-  text for this region" when there is none) to `/regions/{slug}/text`. When
-  there is a lead, its credit line ends in a ringed pencil (`.rg-about-pen`,
-  label "Edit this text") to the same form. The link and the pencil are the
-  same for every reader so the page stays cacheable; a visitor signs in on
-  the way. The proposal is a `text` submission filed in this
+  section is on every region page, with a lead or without one. A lead's credit
+  line (`.rg-about-attrib.tc-line`) ends in the town card's two ringed icons
+  (`partials/_text_credit_actions.html.twig`,
+  [moderation-and-contribution.md](moderation-and-contribution.md) §3.1b): a
+  "!" labelled "Report this text" to `/report/region/{id}?from=` (the
+  `region` report target, [content-reports.md](content-reports.md)) and a
+  pencil labelled "Edit this text" to `/regions/{slug}/text`; with no lead
+  there is no credit line, so one plain
+  link stands instead, "Write a text for this region" (`.rg-about-write`).
+  There is no sentence beside either (owner 2026-10-01). The link and the
+  icons are the same for every reader so the page stays cacheable; a visitor
+  signs in on the way. The proposal is a `text` submission filed in this
   region, approved by one of its curators, and written into that locale's
   entry of `context_curated` with the rider as `userId` and `derived` as the
   approving curator decided the Wikipedia credit
@@ -2577,16 +2581,20 @@ curator's areas (where the town lies: `town_place`); a curator of another
 region gets the proposal form below. Pinned by `ModerateTownControllerTest`
 and `PlaceTextProposalTest`.
 
-**Anyone signed in can suggest the text (owner 2026-09-30).** Under the credit
-line the card says, in one sentence, "Anyone signed in can suggest an edit to
-this text. A curator of this region approves it.", followed by "Edit this
-text" (or "Write a text for this town" when the card has none) to the
-proposal form `/town/{type}/{id}/text?lang&name&lat&lng&from`. The credit
-line carries the same target as a ringed pencil (`.cc-pen`, the "!" badge's
-shape) right after its "!", labelled "Edit this text". A visitor, told apart
-by the riders' confirm token the page carries, gets "Sign in to edit this
-text" to `/login?_target_path=` that form, from the link and the pencil
-alike. The form quotes the current text read-only and starts with an empty
+**Anyone signed in can suggest the text (owner 2026-09-30).** The credit
+line (`.cc-city-links.tc-line`) ends in the region page's two ringed icons
+(`townActionsHtml()` in `town-text.js`, the markup of
+`partials/_text_credit_actions.html.twig`, styled by `styles/text-credit.css`,
+[moderation-and-contribution.md](moderation-and-contribution.md) §3.1b): the
+"!" labelled "Report this text" to `/report/town/{type}-{id}?name&from`, and
+a pencil labelled "Edit this text" to the proposal form
+`/town/{type}/{id}/text?lang&name&lat&lng&from`. A card with no text has no
+credit line, so it carries one plain link to the same form instead, "Write a
+text for this town" (`townAddHtml()`, `.cc-town-add`); there is no sentence
+beside either (owner 2026-10-01). A visitor, told apart by the riders'
+confirm token the page carries, goes to `/login?_target_path=` that form:
+the pencil is labelled "Sign in to edit this text", the link reads "Sign in
+to write a text for this town". The form quotes the current text read-only and starts with an empty
 box ([moderation-and-contribution.md](moderation-and-contribution.md) §3.1b). The proposal is a `text`
 submission in the one queue, filed in the region the town lies in, approved by
 a curator of that region, and on approval it becomes the local text for that

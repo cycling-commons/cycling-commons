@@ -57,6 +57,7 @@ test('the card fetches its text whenever it has a ref, with no fixed-text branch
 });
 
 test('the fetched text carries the report "!" to the town report route', () => {
-  assert.match(places, /const reportHref = '\/report\/town\/'\+encodeURIComponent\(String\(meta\.osm\|\|''\)\.replace\('\/', '-'\)\)/);
-  assert.match(places, /<a class="cc-bang" href="\$\{safeHref\(reportHref\)\}"/);
+  // The "!" and its address are town-text.js's (townActionsHtml, townReportHref).
+  assert.match(places, /const actions = townActionsHtml\(meta, name, editOpts, D\);/);
+  assert.match(places, /\$\{credit\}<\/a>\$\{actions\}<\/div>/);
 });

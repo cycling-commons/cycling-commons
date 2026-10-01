@@ -165,8 +165,11 @@ Pinned by `ContentReportTest::testACopyrightClaimNeedsTheWorkAndAName` and
 
 Every "Report" link that leads here, on the map drawer, the lightbox, the town
 card, and the region, profile, photo and message pages, carries the same
-ringed exclamation badge (`.cc-bang` on the map, `.rep-bang` in atlas.css;
-owner 2026-09-08). The page's intro is three plain sentences and no promise
+ringed exclamation badge (owner 2026-09-08): `.ring-ico`, defined once in
+`styles/text-credit.css` for the map and the site pages. On a town card's
+and a region page's text credit line it stands as its own ringed link
+beside the edit pencil (moderation-and-contribution.md §3.1b), to
+`/report/town/{type}-{id}` and `/report/region/{id}`. The page's intro is three plain sentences and no promise
 about anonymity: the address is required by Article 16 for every ground but
 one, so the old "you do not have to tell us who you are" was wrong.
 

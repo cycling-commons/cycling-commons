@@ -1,0 +1,20 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The two ringed icons ending a text's credit line: "!" to report the text
+  and "✎" to edit it (docs/specs/moderation-and-contribution.md §3.1b). The
+  town card on the map draws the same markup in script
+  (textCreditActionsHtml in assets/map/town-text.js), and both take their
+  look from styles/text-credit.css; tests/js/text-credit-actions.test.mjs
+  holds the two to one shape.
+
+  Params: report_href, report_label, edit_href, edit_label. An icon without
+  an address is left out; nothing renders when both are.
+#}
+{%- set report_href = report_href|default('') -%}
+{%- set edit_href = edit_href|default('') -%}
+{%- if report_href or edit_href -%}
+<span class="tc-acts">
+  {%- if report_href %}<a class="ring-ico ring-ico--report" href="{{ report_href }}" title="{{ report_label }}" aria-label="{{ report_label }}">!</a>{% endif -%}
+  {%- if edit_href %}<a class="ring-ico ring-ico--edit" href="{{ edit_href }}" title="{{ edit_label }}" aria-label="{{ edit_label }}">✎</a>{% endif -%}
+</span>
+{%- endif -%}

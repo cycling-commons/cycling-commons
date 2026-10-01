@@ -1,0 +1,35 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* A text's credit line and the ringed icons, one definition for every page
+   that shows them (docs/specs/moderation-and-contribution.md §3.1b): the
+   town card on the map (assets/map/town-text.js) and the region page's about
+   text (templates/partials/_text_credit_actions.html.twig) end their credit
+   line in the same "!" report and "✎" edit icons, and every "Report this ..."
+   link on the map and the site leads with the same ringed "!".
+
+   Loaded by partials/_head.html.twig (every site page) and by
+   map/index.html.twig. The colours come from the text around them
+   (currentColor), so the dark map drawer, its light theme and the paper
+   pages share these rules; --clay is each sheet's own. */
+
+/* The credit line: small mono capitals, its text links underlined. */
+.tc-line{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
+.tc-line a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+
+/* The two icons ending the line, spaced by the gap rather than by the
+   whitespace between them. */
+.tc-acts{display:inline-flex;align-items:center;gap:.35rem;margin-left:.35rem;vertical-align:middle}
+
+/* The ringed icon. An icon link is never underlined: the selectors outrank a
+   line's `a` rule, and an inline-flex box takes no underline from a link
+   around it, so the ring shows no underline and no gap in one. */
+.ring-ico{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;
+  width:1.15rem;height:1.15rem;margin:0;border-radius:50%;
+  border:1px solid color-mix(in srgb,currentColor 55%,transparent);
+  color:inherit;font-family:var(--sans);font-size:.72rem;font-weight:700;line-height:1;
+  letter-spacing:0;text-transform:none;text-decoration:none;vertical-align:middle}
+.ring-ico--edit{font-weight:400}
+a.ring-ico,.tc-line a.ring-ico,.tc-acts a.ring-ico{text-decoration:none}
+.ring-ico:hover,a:hover>.ring-ico{border-color:var(--clay);color:var(--clay)}
+a.ring-ico:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+/* Leading a "Report this ..." link: the icon, then the words. */
+a>.ring-ico{margin-right:.35rem}

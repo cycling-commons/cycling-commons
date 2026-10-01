@@ -1527,6 +1527,7 @@ region:
   about_source_rider: "Von %name% geschrieben,"
   about_removed_rider: 'ein Fahrer mit gelöschtem Konto'
   about_edit: 'Diesen Text bearbeiten'
+  about_report: 'Diesen Text melden'
   about_write: 'Einen Text für diese Region schreiben'
   cta_map: 'Diese Region auf der Karte öffnen'
   cta_apply: 'Ehrenamtlich Kurator werden'

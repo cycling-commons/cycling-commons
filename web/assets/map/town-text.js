@@ -3,11 +3,12 @@
 
    Anyone signed in can suggest a change to a town card's text; a curator of
    the town's region approves it (docs/specs/moderation-and-contribution.md
-   §3.1b, owner 2026-09-30). The card says so in one plain sentence and links
-   the form, and the credit line carries a ringed pencil right after its "!"
-   report mark that opens the same form. A visitor gets the same sentence and
-   a sign-in link that comes back to the form; their pencil goes there too.
-   Whether the reader is signed in is the page's own signal: the confirm
+   §3.1b, owner 2026-09-30). A card with a text carries a ringed pencil on its
+   credit line, right after the "!" report mark, that opens the form; the two
+   icons are the region page's too (textCreditActionsHtml). A card
+   with no text has no credit line, so it carries one plain link to the form
+   instead. A visitor's pencil and link go to sign-in, which comes back to the
+   form. Whether the reader is signed in is the page's own signal: the confirm
    token the riders' block carries (templates/map/index.html.twig).
 
    The credit follows who wrote the local text: the curators ("Edited by our
@@ -68,12 +69,41 @@ export function townEditTarget(meta, name, opts) {
   return (PREFIX[o.lang] || '') + '/login?_target_path=' + encodeURIComponent(href);
 }
 
-/** The pencil after the credit line's "!", or '' when the card names no element. */
-export function townPenHtml(meta, name, opts, D) {
-  const target = townEditTarget(meta, name, opts);
-  if (!target) return '';
-  const label = escPend((opts || {}).signedIn ? (D.textEdit || 'Edit this text') : (D.textEditSignin || 'Sign in to edit this text'));
-  return `<a class="cc-pen" href="${safeHref(target)}" title="${label}" aria-label="${label}">✎</a>`;
+/** The two ringed icons ending a text's credit line: "!" to report the
+    text, "✎" to edit it. The same markup as
+    templates/partials/_text_credit_actions.html.twig, which the region page
+    uses, and the same styles (styles/text-credit.css). An icon without an
+    address is left out; '' when both are. */
+export function textCreditActionsHtml(a) {
+  const o = a || {};
+  const icon = (kind, href, label, glyph) => {
+    if (!href) return '';
+    const l = escPend(label);
+    return `<a class="ring-ico ring-ico--${kind}" href="${safeHref(href)}" title="${l}" aria-label="${l}">${glyph}</a>`;
+  };
+  const icons = icon('report', o.reportHref, o.reportLabel, '!') + icon('edit', o.editHref, o.editLabel, '✎');
+  return icons ? `<span class="tc-acts">${icons}</span>` : '';
+}
+
+/** Where a town text's "!" goes: the one report door, keyed by the element,
+    never a page (docs/specs/content-reports.md); '' when the card names no
+    element. */
+export function townReportHref(meta, name, from) {
+  const osm = String((meta && meta.osm) || '');
+  if (!/^(node|way|relation)\/\d{1,16}$/.test(osm)) return '';
+  return '/report/town/' + encodeURIComponent(osm.replace('/', '-'))
+    + '?name=' + encodeURIComponent(name || '') + '&from=' + encodeURIComponent(from || '');
+}
+
+/** The town card's "!" and "✎" after its credit line. */
+export function townActionsHtml(meta, name, opts, D) {
+  const o = opts || {};
+  return textCreditActionsHtml({
+    reportHref: townReportHref(meta, name, o.from),
+    reportLabel: D.reportText || 'Report this text',
+    editHref: townEditTarget(meta, name, o),
+    editLabel: o.signedIn ? (D.textEdit || 'Edit this text') : (D.textEditSignin || 'Sign in to edit this text'),
+  });
 }
 
 /** The plain link to write a text, for a card that has none; '' when the

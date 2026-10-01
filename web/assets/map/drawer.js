@@ -818,7 +818,7 @@ function buildRecord(layer, f){
      path only (ContentReportController::cleanPath). */
   const reportFrom = encodeURIComponent(location.pathname + location.search);
   const reportLink = (f.id != null && !layer.pendingLayer && f.state !== 'submitted')
-    ? `<p class="cc-d-report"><a href="/report/${reportKind}/${encodeURIComponent(f.id)}?from=${reportFrom}"><span class="cc-bang" aria-hidden="true">!</span>${
+    ? `<p class="cc-d-report"><a href="/report/${reportKind}/${encodeURIComponent(f.id)}?from=${reportFrom}"><span class="ring-ico" aria-hidden="true">!</span>${
         escPend(D.reportPage || 'Report this page')}</a></p>`
     : '';
 

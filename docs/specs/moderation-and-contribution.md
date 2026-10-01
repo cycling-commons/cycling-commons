@@ -761,14 +761,33 @@ difference: it happens on the text's ✎ form, where the curator decides the
 Wikipedia credit (below, "The Wikipedia credit"); the drawer's Approve on a
 `text` submission opens that form.
 
-**The form.** "Edit this text" on the town card (`places.js`, the line is
-drawn by `assets/map/town-text.js`) and on the region page opens one small
-form per text (`PlaceTextController`, routes `town_text`
-`/town/{type}/{id}/text` and `region_text` `/regions/{slug}/text`, ROLE_USER;
-a visitor is sent to sign in and comes back to it). The town card's credit
-line and the region page's credit line also end in a ringed pencil (after the
-card's "!" report mark), labelled "Edit this text", to the same target as the
-link. A language select defaulting to the page language; above the box, the
+**The form.** The town card (`places.js`, the line is drawn by
+`assets/map/town-text.js`) and the region page open one small form per text
+(`PlaceTextController`, routes `town_text` `/town/{type}/{id}/text` and
+`region_text` `/regions/{slug}/text`, ROLE_USER; a visitor is sent to sign in
+and comes back to it). A text's credit line ends in two ringed icons, the
+same on the card and on the region page (owner 2026-10-01: "attribution
+style report and edit must look the same"): a "!" labelled "Report this
+text", to the one report door ([content-reports.md](content-reports.md);
+target `town` on the card, `region` on the page), and a pencil labelled
+"Edit this text" ("Sign in to edit this text" for a visitor on the card),
+which opens the form. One markup and one stylesheet draw them: the Twig
+partial `partials/_text_credit_actions.html.twig` on the region page and
+`textCreditActionsHtml()` in `town-text.js` on the card give the same
+`<span class="tc-acts">` with `a.ring-ico.ring-ico--report` and
+`a.ring-ico.ring-ico--edit` (`tests/js/text-credit-actions.test.mjs` renders
+the partial and compares it with the script's output byte for byte), and
+`styles/text-credit.css`, loaded on every site page by
+`partials/_head.html.twig` and on the map page, holds the credit line's type
+(`.tc-line`: small mono capitals, its text links underlined) and the one
+definition of the ringed icon (`.ring-ico`, also the "!" leading every
+"Report this ..." link on the map and the site). The icons are never
+underlined; the credit line's text links (Wikipedia, the credit, the
+licence) are. A card or page
+with no text has no credit line, so it carries one plain link instead: "Write
+a text for this town" ("Sign in to write a text for this town" for a
+visitor) or "Write a text for this region". There is no sentence beside
+either (owner 2026-10-01). A language select defaulting to the page language; above the box, the
 text readers see now in that language as a read-only quote labelled "Current
 text" ("There is no text in this language yet." where there is none;
 switching the language swaps it); the box itself starts empty and keeps what
@@ -954,8 +973,8 @@ is its own step: Approve on the same form, or any decision on the map.
 
 Pinned by `PlaceTextProposalTest`, `TownControllerTest`,
 `RegionsPagesTest::testDetailPageWithoutContextInvitesAText`,
-`DeskSeenTest::testTheTextCardsEditLinkOpensTheSubmission` and
-`tests/js/town-text.test.mjs`.
+`DeskSeenTest::testTheTextCardsEditLinkOpensTheSubmission`,
+`tests/js/town-text.test.mjs` and `tests/js/text-credit-actions.test.mjs`.
 
 ### 3.2 The `changes` contract
 

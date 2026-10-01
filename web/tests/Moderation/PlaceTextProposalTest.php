@@ -362,14 +362,25 @@ final class PlaceTextProposalTest extends WebTestCase
         $curatorA = $this->user('ptext-cur-a8@example.com', ['ROLE_CURATOR'], $a);
         $curatorB = $this->user('ptext-cur-b8@example.com', ['ROLE_CURATOR'], $b);
 
-        // The region page's credit line ends in the ringed pencil to the
-        // form, with no sentence and no second link under it.
+        // The region page's credit line ends in the town card's two ringed
+        // icons, "!" to report the text and the pencil to the form, with no
+        // sentence and no second link under it.
         $crawler = $client->request('GET', '/regions/ptext-a');
         self::assertResponseIsSuccessful();
         $page = (string) $client->getResponse()->getContent();
         self::assertStringNotContainsString('Anyone signed in can suggest an edit', $page);
-        $pen = $crawler->filter('.rg-about-attrib a.rg-about-pen');
-        self::assertCount(1, $pen, 'the pencil is on the credit line');
+        $icons = $crawler->filter('.rg-about-attrib.tc-line > .tc-acts > a.ring-ico');
+        self::assertCount(2, $icons, 'the "!" and the pencil are on the credit line');
+        $report = $icons->eq(0);
+        self::assertSame('ring-ico ring-ico--report', $report->attr('class'));
+        self::assertSame('!', $report->text());
+        self::assertSame('Report this text', $report->attr('aria-label'));
+        $href = (string) $report->attr('href');
+        self::assertStringStartsWith('/report/region/'.$a->getId().'?', $href, 'the one report door, region target');
+        parse_str((string) parse_url($href, \PHP_URL_QUERY), $q);
+        self::assertSame(['from' => '/regions/ptext-a'], $q, 'the report desk names the region from its id');
+        $pen = $icons->eq(1);
+        self::assertSame('ring-ico ring-ico--edit', $pen->attr('class'));
         self::assertSame('/regions/ptext-a/text', $pen->attr('href'));
         self::assertSame('Edit this text', $pen->attr('aria-label'));
         self::assertSame('Edit this text', $pen->attr('title'));
@@ -378,6 +389,7 @@ final class PlaceTextProposalTest extends WebTestCase
         // A region with no text has no credit line, so one plain link stands instead.
         $crawler = $client->request('GET', '/regions/ptext-b');
         self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('.tc-acts'));
         $write = $crawler->filter('.rg-about-write a');
         self::assertSame('Write a text for this region', $write->text());
         self::assertSame('/regions/ptext-b/text', $write->attr('href'));

@@ -12,11 +12,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { townTextHref, townCredit, townCitesWiki, townAddHtml, townPenHtml, townEditTarget } from '../../assets/map/town-text.js';
+import { townTextHref, townCredit, townCitesWiki, townAddHtml, townActionsHtml, townEditTarget, townReportHref } from '../../assets/map/town-text.js';
 
 const D = {
   textEdit: 'Edit this text', textAdd: 'Write a text for this town', textEditSignin: 'Sign in to edit this text',
-  textAddSignin: 'Sign in to write a text for this town',
+  textAddSignin: 'Sign in to write a text for this town', reportText: 'Report this text',
   wikiText: 'Text CC BY-SA 4.0', wikiEdited: 'Edited by our curators, after Wikipedia CC BY-SA 4.0',
   wikiEditedBy: 'Edited by {name}, after Wikipedia CC BY-SA 4.0',
   textWritten: 'Written by our curators, CC BY-SA 4.0', textWrittenBy: 'Written by {name}, CC BY-SA 4.0',
@@ -61,22 +61,24 @@ test('a visitor gets the same link to sign in, which comes back to the form', ()
   assert.match(html, />Sign in to write a text for this town</);
 });
 
-test('the pencil on the credit line opens the form, labelled "Edit this text"', () => {
+test('the credit line ends in the ringed "!" to the town report and the pencil to the form', () => {
   const opts = { signedIn: true, lang: 'en', from: '/map?town=x' };
-  const pen = townPenHtml(META, 'Antwerpen', opts, D);
-  const m = /^<a class="cc-pen" href="([^"]+)" title="Edit this text" aria-label="Edit this text">✎<\/a>$/.exec(pen);
-  assert.ok(m, pen);
-  assert.equal(m[1].replace(/&amp;/g, '&'), townTextHref(META, 'Antwerpen', 'en', '/map?town=x'));
+  const html = townActionsHtml(META, 'Antwerpen', opts, D);
+  const m = /^<span class="tc-acts"><a class="ring-ico ring-ico--report" href="([^"]+)" title="Report this text" aria-label="Report this text">!<\/a><a class="ring-ico ring-ico--edit" href="([^"]+)" title="Edit this text" aria-label="Edit this text">✎<\/a><\/span>$/.exec(html);
+  assert.ok(m, html);
+  assert.equal(m[1].replace(/&amp;/g, '&'), '/report/town/node-59518?name=Antwerpen&from=%2Fmap%3Ftown%3Dx');
+  assert.equal(m[1].replace(/&amp;/g, '&'), townReportHref(META, 'Antwerpen', '/map?town=x'));
+  assert.equal(m[2].replace(/&amp;/g, '&'), townTextHref(META, 'Antwerpen', 'en', '/map?town=x'));
 });
 
 test('a visitor\'s pencil goes to sign in', () => {
   const opts = { signedIn: false, lang: 'nl' };
-  const pen = townPenHtml(META, 'Antwerpen', opts, D);
-  assert.match(pen, /aria-label="Sign in to edit this text"/);
-  const href = /href="([^"]+)"/.exec(pen)[1].replace(/&amp;/g, '&');
+  const html = townActionsHtml(META, 'Antwerpen', opts, D);
+  assert.match(html, /aria-label="Sign in to edit this text"/);
+  const href = /class="ring-ico ring-ico--edit" href="([^"]+)"/.exec(html)[1].replace(/&amp;/g, '&');
   assert.equal(href, townEditTarget(META, 'Antwerpen', opts));
   assert.ok(href.startsWith('/nl/login?_target_path='), href);
-  assert.equal(townPenHtml({ osm: '' }, 'x', opts, D), '', 'no element, no pencil');
+  assert.equal(townActionsHtml({ osm: '' }, 'x', opts, D), '', 'no element, no icons');
 });
 
 test('the name the card was opened with is escaped', () => {
@@ -112,11 +114,11 @@ test('a text based on the article keeps the Wikipedia link and credit', () => {
 test('the town card renders the line and the pencil after the "!", the link only without a text, and the signed-in signal is the riders\' confirm token', () => {
   const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
   const places = fs.readFileSync(path.join(root, 'assets', 'map', 'places.js'), 'utf8');
-  assert.match(places, /import \{ townCredit, townCitesWiki, townAddHtml, townPenHtml \} from '\.\/town-text\.js';/);
+  assert.match(places, /import \{ townCredit, townCitesWiki, townAddHtml, townActionsHtml \} from '\.\/town-text\.js';/);
   assert.match(places, /const editOpts = \{ signedIn: !!window\.CC_CONFIRM_TOKEN,/);
   assert.match(places, /const edit = townAddHtml\(d, meta, name, editOpts, D\);/);
-  assert.match(places, /const pen = townPenHtml\(meta, name, editOpts, D\);/);
+  assert.match(places, /const actions = townActionsHtml\(meta, name, editOpts, D\);/);
   assert.match(places, /const wiki = townCitesWiki\(d\) \?/);
-  // The pencil sits right after the "!" report mark on the credit line.
-  assert.match(places, /\$\{credit\}<\/a> \$\{report\}\$\{pen\}<\/div>/);
+  // The "!" and the pencil end the credit line, which takes the shared credit style.
+  assert.match(places, /<div class="cc-city-links tc-line">\$\{wiki\}<a [^>]+>\$\{credit\}<\/a>\$\{actions\}<\/div>/);
 });

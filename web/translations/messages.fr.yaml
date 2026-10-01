@@ -1522,6 +1522,7 @@ region:
   about_source_rider: "Écrit par %name%,"
   about_removed_rider: 'un cycliste au compte supprimé'
   about_edit: 'Modifier ce texte'
+  about_report: 'Signaler ce texte'
   about_write: 'Écrire un texte pour cette région'
   cta_map: 'Ouvrir cette région sur la carte'
   cta_apply: 'Devenir curateur bénévole'
