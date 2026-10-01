@@ -189,7 +189,8 @@ final class ProfileController extends AbstractController
      * both so a route never sits behind a page of places.
      *
      * Every decided row stays while the account does (moderation-and-
-     * contribution.md §8); a row in the curators' Trash is left out (§6).
+     * contribution.md §8); a row in the curators' Trash shows as Removed until
+     * the purge deletes it (§6).
      * Route proposals join only when `$withRoutes`.
      *
      * @return array{0: array{page: int, pages: int, total: int, perPage: int, offset: int, prev: int|null, next: int|null}, 1: list<array{sub: Submission|null, route: RecommendedRoute|null}>}

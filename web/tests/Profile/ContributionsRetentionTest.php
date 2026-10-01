@@ -15,8 +15,8 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
  * The rider's contributions list keeps a rejected submission as long as the
- * account, however old the decision (owner 2026-10-01), and shows none that
- * a curator moved to Trash.
+ * account, however old the decision (owner 2026-10-01), and shows one that
+ * a curator moved to Trash as Removed until the purge deletes it.
  *
  * @see docs/specs/moderation-and-contribution.md §6, §8
  */
