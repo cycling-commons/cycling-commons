@@ -1,0 +1,74 @@
+docs/specs/catalog-data-model.md
+  s_49442ae34d3603::t_14ce6bc4f0cfad 1001-1004
+web/src/Provider/ProviderHarvest.php
+  s_49442ae34d3603::t_88728f3b638d7e 53-57,132,349-351,414,431-433
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_6e6165a353a9f6 5431-5434,5436-5439
+  s_49442ae34d3603::t_405bd4d4bdb8b9 5440
+web/tests/Provider/ModerateProvidersTest.php
+  s_49442ae34d3603::t_d88ece08fdc6b8 64-103
+  s_49442ae34d3603::t_8fccd7fe81ed40 63
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_6e6165a353a9f6 5399-5402,5404-5406
+  s_49442ae34d3603::t_7c298e423209eb 5407-5408
+docs/specs/edit-items/B-water-food.md
+  s_49442ae34d3603::t_14ce6bc4f0cfad 28
+  s_49442ae34d3603::t_a84e33aee1d1dd 24
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_6e6165a353a9f6 5420-5423,5425-5428
+  s_49442ae34d3603::t_691527f844c9ef 5429
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_6e6165a353a9f6 5398-5401,5403-5406
+  s_49442ae34d3603::t_37b92e542ad4b9 5407
+web/src/Provider/ProviderDefaults.php
+  s_49442ae34d3603::t_0bd6ba2ff99894 1-154
+web/src/Provider/Entity/DataProvider.php
+  s_49442ae34d3603::t_1ace722ed0a1ca 198
+  s_49442ae34d3603::t_f004df917b7028 185-197,199-200,489-503
+  s_49442ae34d3603::t_26dc7c466de407 504
+web/tests/Provider/ProviderDefaultsTest.php
+  s_49442ae34d3603::t_d8bca485391941 288,294-302,304
+  s_49442ae34d3603::t_289b5b1bfb4249 303
+  s_49442ae34d3603::t_d8da125097cd42 56-61
+  s_49442ae34d3603::t_809cbc66b13ef4 1-16,18-55,62-166,169-173,175-231,233,235-287,289-293,305-337
+  s_49442ae34d3603::t_07276d8f59cd2e 17,232,234
+  s_49442ae34d3603::t_b9a5109213e541 167-168
+  s_49442ae34d3603::t_7de8b0bc13aa47 174
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_6e6165a353a9f6 5391-5394,5396-5399
+  s_49442ae34d3603::t_310a65ee3c2acc 5400
+web/src/Provider/ProviderRegistry.php
+  s_49442ae34d3603::t_3c247c055f076b 46,66-69,126-127
+  s_49442ae34d3603::t_b9a5109213e541 128,294,298-311
+  s_49442ae34d3603::t_f5405e16b2b55f 312-313
+web/assets/styles/page/moderate_providers/index.css
+  s_49442ae34d3603::t_8c6b967f872ac8 40-45
+docs/specs/data-provider-hierarchy.md
+  s_49442ae34d3603::t_aa164b951c6bf3 1157-1158
+  s_49442ae34d3603::t_5f179435754316 87,294-297,309-351,916-921,1159-1167
+  s_49442ae34d3603::t_14ce6bc4f0cfad 944-945
+  s_49442ae34d3603::t_1acaaac99f5dff 922
+web/src/Controller/ModerateProvidersController.php
+  s_49442ae34d3603::t_4ae4e78651a1b5 9-10,12,15,55,105,154-155,165-196
+  s_49442ae34d3603::t_d9108bad8c73e1 197
+web/templates/moderate_providers/index.html.twig
+  s_49442ae34d3603::t_3f547110e734bd 97-122
+web/migrations/Version20261001220000.php
+  s_49442ae34d3603::t_8017bbd7ce7ad8 1-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "fe17fbf358108cd64cebce98417dba6c194616e0",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
