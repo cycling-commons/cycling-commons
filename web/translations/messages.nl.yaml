@@ -5395,7 +5395,16 @@ provider:
     kicker: 'Regiobeheerder'
     lead: 'Van wie we gegevens overnemen, en wat we hun verschuldigd zijn. Een rang bepaalt welke van twee registraties van dezelfde plek een fietser te zien krijgt; een licentie bepaalt wat deze site mag herpubliceren. Allebei zijn het moderatiehandelingen, en allebei laten ze een spoor na.'
     title: 'Bronnen'
+  defaults:
+    h: 'Standaardwaarden'
+    note: 'Wat een verversing invult waar de eigen gegevens van deze leverancier niets zeggen, in de woorden van het bewerkformulier van de categorie. Een standaardwaarde vervangt nooit een waarde van de leverancier, een al opgeslagen waarde of de bewerking van een fietser. "Nog zoals op de kaart?" heeft er geen: alleen een fietser die heeft gekeken kan dat beantwoorden.'
+    none: '(geen standaardwaarde)'
   error:
+    default_condition: '"Nog zoals op de kaart?" kan nooit een standaardwaarde hebben: alleen een fietser die heeft gekeken kan dat beantwoorden.'
+    default_field: 'Alleen een keuzeveld van het bewerkformulier van de categorie kan een standaardwaarde hebben.'
+    default_letter: 'Een standaardwaarde kan alleen worden ingesteld voor een categorie die deze leverancier vult.'
+    default_shape: 'De standaardwaarden konden niet worden gelezen. Laad de pagina opnieuw en sla nogmaals op.'
+    default_value: 'Een standaardwaarde moet een van de eigen keuzes van dat veld zijn.'
     attribution_required: 'Deze licentie verplicht een bronvermelding, dus zonder vermelding kan de bron niet worden gebruikt.'
     bad_url: 'De website moet een volledig http- of https-adres zijn.'
     in_use: 'Er staan rijen op de kaart die deze bron noemen. Pauzeer hem in plaats daarvan: dat behoudt de rijen en stopt het verversen.'

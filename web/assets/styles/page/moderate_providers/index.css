@@ -37,6 +37,12 @@
 .pv-src dt{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d;align-self:baseline}
 .pv-src dd{margin:0;word-break:break-all}
 .pv-src pre{margin:0;padding:.55rem .7rem;border-radius:6px;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.74rem;line-height:1.6;overflow-x:auto;white-space:pre}
+/* Defaults: the letter's own edit-form selects, one fieldset per letter. */
+.pv-defaults{border:1px solid rgba(20,22,14,.14);border-radius:8px;padding:.7rem .9rem;display:grid;gap:.6rem}
+.pv-defaults h4{margin:0;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8d7d}
+.pv-defaults fieldset{border:0;margin:0;padding:0;min-width:0}
+.pv-defaults legend{padding:0;margin:0 0 .5rem;font-family:var(--serif);font-weight:600;color:var(--ink)}
+.pv-defaults select{width:100%}
 .pv-hist{margin:.4rem 0 0;font-size:.82rem;color:#595c4d;line-height:1.7}
 .pv-hist li{list-style:none}
 .pv-hist .f{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#8a8d7d}

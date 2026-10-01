@@ -43,6 +43,7 @@ final class ProviderRegistry
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
         private readonly ProviderCitations $citations,
+        private readonly ProviderDefaults $defaults,
     ) {
     }
 
@@ -62,7 +63,10 @@ final class ProviderRegistry
     /**
      * Applies a desk edit, or refuses it with the reason.
      *
-     * @param array<string, bool|int|string|null> $fields
+     * `defaults` is the one array-valued field: `{letter: {field: value}}`,
+     * an empty value meaning "(no default)" ({@see ProviderDefaults}).
+     *
+     * @param array<string, bool|int|string|array<array-key, mixed>|null> $fields
      *
      * @throws ProviderRuleException
      */
@@ -118,6 +122,9 @@ final class ProviderRegistry
         }
         if (\array_key_exists('enabled', $fields)) {
             $this->applyEnabled($provider, (bool) $fields['enabled']);
+        }
+        if (\array_key_exists('defaults', $fields)) {
+            $provider->setDefaults($this->defaults->normalise($provider, \is_array($fields['defaults']) ? $fields['defaults'] : []));
         }
 
         // Last, and after every field is in place: a save that turns a
@@ -284,7 +291,24 @@ final class ProviderRegistry
             'surveyDateAttribute' => (string) $p->getSurveyDateAttribute(),
             'promoted' => $p->isPromoted() ? 'yes' : 'no',
             'enabled' => $p->isEnabled() ? 'yes' : 'no',
+            'defaults' => self::defaultsText($p->getDefaults()),
         ];
+    }
+
+    /**
+     * Defaults as one string, sorted: jsonb hands keys back in its own
+     * order, and a save that changed nothing must read the same both times.
+     *
+     * @param array<string, array<string, string>> $defaults
+     */
+    private static function defaultsText(array $defaults): string
+    {
+        ksort($defaults);
+        foreach ($defaults as &$fields) {
+            ksort($fields);
+        }
+
+        return json_encode($defaults, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE);
     }
 
     /**

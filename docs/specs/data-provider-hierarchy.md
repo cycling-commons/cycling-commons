@@ -84,6 +84,7 @@ A new table, `data_provider`, one row per dataset. Curator-maintained (§8).
 | `endpoint` | URL of the machine-readable source. |
 | `endpoint_kind` | `wfs`, `geojson`, `csv`, `arcgis`. |
 | `field_map` | JSON: which upstream field feeds which of our attributes. An entry is the upstream field name, or `{"from": <field>, "values": {<theirs>: <ours>}}` when the upstream values must land in one of our form vocabularies; a value the map does not name is dropped (`apply_field_map`). |
+| `defaults` | JSON, per letter: what a harvest fills in where the provider's own data is silent, in that letter's form vocabulary, e.g. `{"B": {"cost": "Free"}}` (§5.2). Never `condition`. |
 | `match_radius_m` | how close an upstream point must be to an OSM node to count as the same thing (§5). |
 | `refresh_cadence` | how often the harvest should re-read it. |
 | `last_run_at`, `last_count`, `last_error` | what the desk shows. |
@@ -290,6 +291,10 @@ For each upstream feature:
    2026-09-05 the update replaced the whole attributes object and the
    geometry, so the second RIVM run would have undone every rider's "Not
    there anymore", note, photo and relocation.
+10. **A default fills a gap, never a value.** After the field map, and on a
+   refresh after the merge of rule 9, the provider's defaults (§5.2) fill
+   each attribute that is still absent or empty. A field a person changed is
+   never a gap, even when they emptied it.
 
 ### 5.1 The match radius is a judgement, and it is per provider
 
@@ -300,6 +305,49 @@ under-matches and creates duplicate pins; 250 m over-matches and can swallow two
 real taps at either end of a square. The starting value is **50 m**, and the
 desk shows a curator the match counts at 25, 50, 100 and 250 m before they
 commit, because this number cannot be guessed from a form.
+
+### 5.2 Defaults: what is true of every record
+
+Some facts are true of every record in a register, and for that reason are
+not a column in it: every Dutch RIVM tap is a drinking tap, free,
+bottle-friendly and shut against frost in winter. The registry row says them
+once, in `data_provider.defaults` (owner 2026-10-01: "The harvester should be
+able to set defaults for these fields. Only 'Still as mapped?' should be empty
+by default; that must be confirmed by users").
+
+**Field map versus defaults.** The field map carries what the provider's
+DATA says, record by record. A default is what the provider's ROW says of
+every record. Before defaults existed the RIVM row faked its constants through
+the field map, mapping each value of its `type` column to the same answer, so
+a new `type` value upstream would have dropped all of them. A field map entry
+always wins over a default: a default only fills an attribute the record left
+empty.
+
+**Shape: per letter.** `{"B": {"type": "Drinking tap", "cost": "Free"}}`. The
+vocabulary is per letter (`type` is a different list on B and on Q), and one
+row may fill several letters, so a flat map could not say which list a value
+belongs to. A key for a letter the row does not fill is refused.
+
+**The rules, all in `App\Provider\ProviderDefaults` and enforced by
+`App\Provider\ProviderRegistry`:**
+
+- A default is a choice a rider could make: only a single-choice field of the
+  letter's edit form (`CatalogFormRegistry`), and only one of that field's own
+  choices. Free text, website, links and multi-choice fields are refused: a
+  default note would be the same sentence on thousands of places, and nobody
+  can check that it is true of each.
+- A default never claims somebody looked. `condition` ("Still as mapped?") is
+  refused with its own message, and so is a hazard's `stillPresent`; only a
+  rider standing there answers them (catalog-data-model.md §7).
+- A default only fills a gap (§5 rule 10): never over the provider's own
+  value, never over a value already stored on the row, never on a field a
+  person changed.
+
+The harvest applies them in PHP (`ProviderHarvest`, on insert and on
+refresh), because the app owns the vocabulary they are validated against; the
+Python normaliser only applies the field map. A change to a row's defaults is
+recorded in `data_provider_change` like every other field, and takes effect
+on the next refresh.
 
 ## 6. Drawing the map: grey until somebody here touches it
 
@@ -865,6 +913,13 @@ provider in one country for one or more letters: another country's register
 for the same letter is another row with its own endpoint and field map, which
 is why `country_code` and `letters` live on the row and not on the letter.
 
+Since 2026-10-01 every non-system row with letters shows a **Defaults**
+block (§5.2): per letter it fills, the same choice fields as that letter's
+edit form, with the same choices in the same words plus "(no default)", and
+without "Still as mapped?". Saving goes through the registry, which refuses a
+field the form does not have, a value outside the field's choices, and any
+default for `condition`.
+
 Since 2026-09-10 the row also carries the three custody settings of §6.7.2:
 whether the provider may take a record back, its margin in days, and the
 attribute that carries its survey date. All three are on the form, refused
@@ -886,6 +941,8 @@ What a curator **cannot** do, enforced server-side:
 - Delete or re-rank a `system` row (OSM, Wikidata).
 - Set a rank above the rider sources.
 - Enable a provider with no `attribution` when its licence code requires one.
+- Give "Still as mapped?" (`condition`) a default, or set a default outside
+  the letter's own form choices (§5.2).
 - Run a refresh that would insert more than a configured share of a country's
   existing rows for that letter without a second confirmation. A wrong
   `field_map` on a national dataset is how you flood a catalogue in one click.
@@ -1097,12 +1154,17 @@ Field map: `beschrijvi` to the note, `plaats` to the town, and `type` twice
 through a value map (2026-09-05): `Regulier, 24-7 open` / `Alleen overdag
 bereikbaar` to `availability` (Always / Daytime only), `Storing` to
 `condition` (Out of order). Both are form fields on letter B, so a rider can
-correct what the register says. And `potable` is `Yes (public supply)` for
-every `type` the register uses (`Version20260905010000`): being in the
-national drinking-water register IS the answer, and without it the map drew
-the "nobody said" drop on every RIVM tap. What is true of every tap in the
-register is said once on the row too (`Version20260905030000`, owner
-2026-09-05): `cost` Free, `bottleFill` Yes, `seasonal` Frost-shut in winter.
+correct what the register says. What is true of every tap in the register
+is said once on the row, as its defaults (§5.2, `Version20261001220000`):
+`type` Drinking tap, `potable` Yes (public supply), `seasonal` Frost-shut in
+winter, `bottleFill` Yes, `cost` Free. Being in the national drinking-water
+register IS the potability answer, and without it the map drew the "nobody
+said" drop on every RIVM tap. Until 2026-10-01 the last four rode the field
+map as value maps from `type` to a constant (`Version20260905010000`,
+`Version20260905030000`); the migration moved them to `defaults`, added
+`type`, and filled the existing rows' empty attributes the way a harvest
+would (on dev: `type` on 3280 of 3283 taps; the other four were already on
+every row).
 
 Measured against the harvest on 2026-08-26 (3287 upstream points, 2744 OSM
 `amenity=drinking_water` nodes in NL):

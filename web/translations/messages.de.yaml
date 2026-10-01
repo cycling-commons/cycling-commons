@@ -5396,7 +5396,16 @@ provider:
     kicker: 'Kurator'
     lead: 'Von wem wir Daten übernehmen und was wir ihnen schulden. Ein Rang entscheidet, welchen von zwei Einträgen zu einem Ort ein Radfahrer behält; eine Lizenz entscheidet, was diese Seite weiterveröffentlichen darf. Beides sind Moderationshandlungen, und beide hinterlassen eine Spur.'
     title: 'Datenquellen'
+  defaults:
+    h: 'Standardwerte'
+    note: 'Was eine Aktualisierung einträgt, wo die eigenen Daten dieses Anbieters nichts sagen, in den Worten des Bearbeitungsformulars der Kategorie. Ein Standardwert ersetzt nie einen Wert des Anbieters, einen bereits gespeicherten Wert oder die Bearbeitung einer Radfahrerin oder eines Radfahrers. „Noch wie auf der Karte?“ hat keinen: Das kann nur beantworten, wer nachgesehen hat.'
+    none: '(kein Standardwert)'
   error:
+    default_condition: '„Noch wie auf der Karte?“ kann nie einen Standardwert haben: Das kann nur beantworten, wer nachgesehen hat.'
+    default_field: 'Nur ein Auswahlfeld des Bearbeitungsformulars der Kategorie kann einen Standardwert haben.'
+    default_letter: 'Ein Standardwert lässt sich nur für eine Kategorie festlegen, die dieser Anbieter füllt.'
+    default_shape: 'Die Standardwerte konnten nicht gelesen werden. Laden Sie die Seite neu und speichern Sie erneut.'
+    default_value: 'Ein Standardwert muss eine der eigenen Auswahlmöglichkeiten dieses Feldes sein.'
     attribution_required: 'Diese Lizenz verlangt einen Quellenhinweis, ohne ihn kann die Datenquelle nicht genutzt werden.'
     bad_url: 'Die Website muss eine vollständige http- oder https-Adresse sein.'
     in_use: 'Auf der Karte stehen Einträge, die diese Quelle nennen. Pausiere sie stattdessen: das behält die Einträge und stoppt das Aktualisieren.'

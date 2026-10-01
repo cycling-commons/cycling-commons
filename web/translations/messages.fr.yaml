@@ -5388,7 +5388,16 @@ provider:
     kicker: 'Curateur'
     lead: 'De qui nous tenons nos données, et ce que nous leur devons. Un rang décide laquelle de deux fiches d''un même lieu un cycliste garde ; une licence décide ce que ce site peut republier. Ce sont deux actes de modération, et tous deux laissent une trace.'
     title: 'Fournisseurs'
+  defaults:
+    h: 'Valeurs par défaut'
+    note: 'Ce qu''une actualisation remplit là où les données de ce fournisseur ne disent rien, avec les mots du formulaire de la catégorie. Une valeur par défaut ne remplace jamais une valeur du fournisseur, une valeur déjà enregistrée ni la modification d''un cycliste. « Toujours conforme à la carte ? » n''en a pas : seul un cycliste qui a regardé peut y répondre.'
+    none: '(pas de valeur par défaut)'
   error:
+    default_condition: '« Toujours conforme à la carte ? » ne peut jamais avoir de valeur par défaut : seul un cycliste qui a regardé peut y répondre.'
+    default_field: 'Seul un champ à choix du formulaire de la catégorie peut avoir une valeur par défaut.'
+    default_letter: 'Une valeur par défaut ne peut être définie que pour une catégorie que ce fournisseur alimente.'
+    default_shape: 'Les valeurs par défaut n''ont pas pu être lues. Rechargez la page et enregistrez à nouveau.'
+    default_value: 'Une valeur par défaut doit être l''un des choix propres à ce champ.'
     attribution_required: 'Cette licence impose une mention : sans elle, le fournisseur ne peut pas être utilisé.'
     bad_url: 'Le site doit être une adresse http ou https complète.'
     in_use: 'Des fiches de la carte nomment ce fournisseur. Mettez-le en pause : cela garde les fiches et arrête les actualisations.'

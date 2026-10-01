@@ -183,6 +183,22 @@ class DataProvider
     private array $fieldMap = [];
 
     /**
+     * What a harvest fills in where the provider's own data is silent, per
+     * letter, in that letter's form vocabulary: `{"B": {"cost": "Free"}}`.
+     *
+     * Per letter because the vocabulary is: one row may fill several letters,
+     * and `type` means a different list on each. Only a gap is filled; the
+     * field map, a stored value and a person's edit all win, and `condition`
+     * never has one ({@see \App\Provider\ProviderDefaults}).
+     *
+     * @var array<string, array<string, string>>
+     *
+     * @see docs/specs/data-provider-hierarchy.md §5.2
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $defaults = [];
+
+    /**
      * How close an upstream point must be to an OSM node to be the same thing.
      *
      * A judgement per provider, not a constant: for the Dutch taps 25 m
@@ -468,6 +484,22 @@ class DataProvider
     public function setFieldMap(array $fieldMap): void
     {
         $this->fieldMap = $fieldMap;
+    }
+
+    /** @return array<string, array<string, string>> */
+    public function getDefaults(): array
+    {
+        return $this->defaults;
+    }
+
+    /**
+     * Written only through {@see \App\Provider\ProviderRegistry}, which holds the rules.
+     *
+     * @param array<string, array<string, string>> $defaults
+     */
+    public function setDefaults(array $defaults): void
+    {
+        $this->defaults = $defaults;
     }
 
     public function getMatchRadiusM(): int

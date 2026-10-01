@@ -6,9 +6,13 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\CatalogField;
+use App\Catalog\ItemType;
 use App\Entity\User;
+use App\Provider\Entity\DataProvider;
 use App\Provider\Exception\ProviderRuleException;
 use App\Provider\LicenceObligation;
+use App\Provider\ProviderDefaults;
 use App\Provider\ProviderRegistry;
 use App\Provider\RefreshCommandLine;
 use App\Routing\LocalePrefix;
@@ -48,6 +52,7 @@ final class ModerateProvidersController extends AbstractController
     public function __construct(
         private readonly ProviderRegistry $registry,
         private readonly RefreshCommandLine $refresh,
+        private readonly ProviderDefaults $defaults,
     ) {
     }
 
@@ -97,6 +102,7 @@ final class ModerateProvidersController extends AbstractController
                 'refreshCadence' => $p->getRefreshCadence(),
                 'runDry' => $this->refresh->dry($p->getKey()),
                 'runWrite' => $this->refresh->write($p->getKey()),
+                'defaults' => $p->isSystem() ? [] : $this->defaultsBlock($p),
             ];
         }
 
@@ -145,7 +151,8 @@ final class ModerateProvidersController extends AbstractController
                 'surveyDateAttribute' => $request->request->getString('surveyDateAttribute'),
                 'promoted' => $request->request->getBoolean('promoted'),
                 'enabled' => $request->request->getBoolean('enabled'),
-            ], $user);
+                // A row with no Defaults block posts none, and keeps its own.
+            ] + ($request->request->has('defaults') ? ['defaults' => $request->request->all('defaults')] : []), $user);
             $this->addFlash('success', 'provider.saved');
         } catch (ProviderRuleException $e) {
             // The message IS the catalogue key, so a refusal reads in the
@@ -154,5 +161,38 @@ final class ModerateProvidersController extends AbstractController
         }
 
         return $this->redirectToRoute('moderate_providers', ['open' => $id]);
+    }
+
+    /**
+     * The Defaults block: per letter the row fills, the same single-choice
+     * fields that letter's edit form shows, with what is set now.
+     * `condition` is not among them: only a rider who looked answers it.
+     *
+     * @return list<array{letter: string, typeKey: string, fields: list<array{name: string, label: string, choices: array<string, string>, current: string}>}>
+     */
+    private function defaultsBlock(DataProvider $p): array
+    {
+        $set = $p->getDefaults();
+        $out = [];
+        foreach ($p->getLetters() as $letter) {
+            $type = ItemType::fromLetter($letter);
+            $fields = $this->defaults->fieldsFor($letter);
+            if (null === $type || [] === $fields) {
+                continue;
+            }
+            $out[] = [
+                'letter' => $letter,
+                'typeKey' => $type->labelKey(),
+                'fields' => array_map(static fn (CatalogField $f): array => [
+                    'name' => $f->name,
+                    'label' => $f->label,
+                    // value => label; a keyed select shows its words, stores its key.
+                    'choices' => array_combine($f->choices, array_map(static fn (string $c): string => $f->choiceLabels[$c] ?? $c, $f->choices)),
+                    'current' => $set[$letter][$f->name] ?? '',
+                ], $fields),
+            ];
+        }
+
+        return $out;
     }
 }

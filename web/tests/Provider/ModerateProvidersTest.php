@@ -61,6 +61,47 @@ final class ModerateProvidersTest extends WebTestCase
     }
 
     /**
+     * The Defaults block shows the letter's own choice fields with what is
+     * set, and never "Still as mapped?" (data-provider-hierarchy.md §5.2).
+     */
+    public function testTheDeskShowsTheCategorysDefaultsWithoutCondition(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->user('provider-desk-defaults@example.com', ['ROLE_CURATOR']));
+
+        $crawler = $client->request('GET', '/moderate/providers');
+        self::assertResponseIsSuccessful();
+
+        $block = $crawler->filter('[data-provider-defaults="rivm-drinkwater"]');
+        self::assertSame(1, $block->count());
+        self::assertSame(0, $block->filter('select[name="defaults[B][condition]"]')->count());
+        self::assertSame('Drinking tap', $block->filter('select[name="defaults[B][type]"] option[selected]')->attr('value'));
+        self::assertSame('', $block->filter('select[name="defaults[B][availability]"] option')->first()->attr('value'), 'every field offers "(no default)"');
+        self::assertSame(0, $block->filter('select[name="defaults[B][availability]"] option[selected]')->count(), 'RIVM says availability itself');
+        self::assertSame(0, $crawler->filter('[data-provider-defaults="osm"]')->count(), 'a built-in row has no harvest to default');
+    }
+
+    public function testTheDeskSavesDefaultsThroughTheRegistry(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->user('provider-desk-defaults-save@example.com', ['ROLE_CURATOR']));
+        $crawler = $client->request('GET', '/moderate/providers');
+        $id = (int) $this->connection()->fetchOne("SELECT id FROM data_provider WHERE provider_key = 'rivm-drinkwater'");
+
+        $form = $crawler->filter('form[action$="/moderate/providers/'.$id.'"]')->form();
+        $form['defaults[B][cost]']->select('Customers only');
+        $form['defaults[B][bottleFill]']->select('');
+        $client->submit($form);
+        self::assertResponseRedirects();
+
+        /** @var array<string, array<string, string>> $saved */
+        $saved = json_decode((string) $this->connection()->fetchOne('SELECT defaults FROM data_provider WHERE id = :id', ['id' => $id]), true);
+        self::assertSame('Customers only', $saved['B']['cost']);
+        self::assertArrayNotHasKey('bottleFill', $saved['B'], '"(no default)" removes it');
+        self::assertSame('Drinking tap', $saved['B']['type'], 'what was not touched stays');
+    }
+
+    /**
      * The rule this registry exists for: serving rows from a dataset whose
      * licence names a notice, while showing none, is the licence breach.
      */

@@ -5417,7 +5417,16 @@ provider:
     kicker: 'Curator'
     lead: 'Who we take data from, and what we owe them. A rank decides which of two records of one place a rider keeps; a licence decides what this site may republish. Both are moderation acts, and both leave a trail.'
     title: 'Providers'
+  defaults:
+    h: 'Defaults'
+    note: 'What a refresh fills in where this provider''s own data says nothing, in the words of the category''s edit form. A default never replaces a value from the provider, a value already stored, or a rider''s edit. "Still as mapped?" has none: only a rider who looked can answer it.'
+    none: '(no default)'
   error:
+    default_condition: '"Still as mapped?" can never have a default: only a rider who looked can answer it.'
+    default_field: 'Only a choice field of the category''s edit form can have a default.'
+    default_letter: 'A default can only be set for a category this provider fills.'
+    default_shape: 'The defaults could not be read. Reload the page and save again.'
+    default_value: 'A default must be one of that field''s own choices.'
     attribution_required: 'This licence obliges an attribution notice, so the provider cannot be served without one.'
     bad_url: 'The homepage must be a full http or https address.'
     in_use: 'Rows on the map name this provider. Pause it instead: that keeps the rows and stops the refreshing.'

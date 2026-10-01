@@ -998,7 +998,10 @@ offered a rider standing at a viewpoint the chance to call the view broken
 
 **No default.** A default would make every untouched edit form assert "as
 mapped" about a place its editor never looked at, and turn a no-op edit into a
-change the intake refuses. Silence means nobody has said.
+change the intake refuses. Silence means nobody has said. A data provider
+cannot give it a default either: the registry
+refuses one (data-provider-hierarchy.md §5.2), and only a provider's own
+record (RIVM's "Storing", Out of order) or a rider sets it.
 
 `condition = 'Not there anymore'` is the only attribute value that changes what
 is served. One predicate, `App\Catalog\GoneRows::notGoneSql()`, is shared by

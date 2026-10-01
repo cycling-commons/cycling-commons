@@ -94,6 +94,32 @@
           {% if p.lastRunAt %}
             <p class="pv-note">{{ 'provider.last_run'|trans({'%when%': p.lastRunAt|cc_date, '%count%': p.lastCount ?? 0}) }}{% if p.lastError %} · {{ p.lastError }}{% endif %}</p>
           {% endif %}
+          {# What the harvest fills in where the provider's own data is silent
+             (data-provider-hierarchy.md §5.2): the same fields and choices as
+             the letter's edit form. "Still as mapped?" is not offered; only a
+             rider who looked answers it. #}
+          {% if p.defaults is not empty %}
+          <div class="pv-defaults" data-provider-defaults="{{ p.key }}">
+            <h4>{{ 'provider.defaults.h'|trans }}</h4>
+            <p class="pv-note">{{ 'provider.defaults.note'|trans }}</p>
+            {% for block in p.defaults %}
+              <fieldset>
+                <legend>{{ block.typeKey|trans }} ({{ block.letter }})</legend>
+                <div class="pv-grid">
+                {% for f in block.fields %}
+                  <div><label for="pv-def-{{ p.id }}-{{ block.letter }}-{{ f.name }}">{{ f.label|trans }}</label>
+                    <select id="pv-def-{{ p.id }}-{{ block.letter }}-{{ f.name }}" name="defaults[{{ block.letter }}][{{ f.name }}]">
+                      <option value="">{{ 'provider.defaults.none'|trans }}</option>
+                      {% for value, label in f.choices %}
+                        <option value="{{ value }}"{{ value == f.current ? ' selected' : '' }}>{{ label|trans }}</option>
+                      {% endfor %}
+                    </select></div>
+                {% endfor %}
+                </div>
+              </fieldset>
+            {% endfor %}
+          </div>
+          {% endif %}
           {# Where the rows come from, read-only (owner 2026-09-05). A built-in
              row has no endpoint: its harvest is its own code. #}
           {% if not p.system %}

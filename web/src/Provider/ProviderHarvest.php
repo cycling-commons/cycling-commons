@@ -50,6 +50,11 @@ use Doctrine\DBAL\Connection;
  * cannot give a provider a rank that outranks a rider's own contribution, and
  * neither can a harvest.
  *
+ * **A default fills a gap, never a value.** What the provider's registry row
+ * says of every record ({@see ProviderDefaults}) lands only on an attribute
+ * that is still empty after the field map, the merge with the stored row, and
+ * every person's edit.
+ *
  * **A vanished feature is not a deletion.** A row the upstream no longer
  * carries is left exactly where it is and counted as stale, because "the
  * publisher dropped it" and "the publisher's export broke" look identical from
@@ -124,7 +129,7 @@ final class ProviderHarvest
             }
 
             if (null !== $existing) {
-                $this->updateRow($existing, $feature, $osmRef, $now);
+                $this->updateRow($provider, $existing, $feature, $osmRef, $now);
                 ++$counts[$moved ? 'moved' : 'updated'];
                 if ($this->reclaim($provider, $existing, $feature)) {
                     ++$counts['reclaimed'];
@@ -341,7 +346,9 @@ final class ProviderHarvest
                 // timestamp is "we looked and there is nothing", which must
                 // never be retried as though it were a gap.
                 'checked' => $now->format('Y-m-d H:i:s'),
-                'attrs' => json_encode($feature['attributes'], \JSON_THROW_ON_ERROR),
+                // The provider's defaults fill what its own data left empty
+                // (data-provider-hierarchy.md §5.2).
+                'attrs' => json_encode(ProviderDefaults::fill($feature['attributes'], $feature['letter'], $provider->getDefaults()), \JSON_THROW_ON_ERROR),
                 'now' => $now->format('Y-m-d H:i:s'),
             ],
         );
@@ -404,7 +411,7 @@ final class ProviderHarvest
     /**
      * @param array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null} $feature
      */
-    private function updateRow(int $id, array $feature, ?string $osmRef, \DateTimeImmutable $now): void
+    private function updateRow(DataProvider $provider, int $id, array $feature, ?string $osmRef, \DateTimeImmutable $now): void
     {
         // Lifecycle state is not touched: a re-import updates facts, never
         // what a curator decided about the row (catalog-data-model.md §8).
@@ -421,6 +428,9 @@ final class ProviderHarvest
                 $attrs[$key] = $value;
             }
         }
+        // Last, so a default only lands where upstream, the row and every
+        // person were all silent; a field a person emptied stays empty.
+        $attrs = ProviderDefaults::fill($attrs, $feature['letter'], $provider->getDefaults(), $touched);
         $keepName = \in_array(Item::NAME_FIELD, $touched, true);
         $keepGeom = \in_array('location', $touched, true);
 

@@ -5428,7 +5428,16 @@ provider:
     kicker: 'Curador'
     lead: 'De quién tomamos datos y qué les debemos. Un rango decide cuál de dos fichas de un mismo lugar conserva un ciclista; una licencia decide qué puede republicar este sitio. Ambos son actos de moderación y ambos dejan rastro.'
     title: 'Proveedores'
+  defaults:
+    h: 'Valores por defecto'
+    note: 'Lo que una actualización rellena donde los datos propios de este proveedor no dicen nada, con las palabras del formulario de edición de la categoría. Un valor por defecto nunca sustituye un valor del proveedor, un valor ya guardado ni la edición de un ciclista. «¿Sigue como en el mapa?» no tiene ninguno: solo puede responderlo un ciclista que lo ha comprobado.'
+    none: '(sin valor por defecto)'
   error:
+    default_condition: '«¿Sigue como en el mapa?» nunca puede tener un valor por defecto: solo puede responderlo un ciclista que lo ha comprobado.'
+    default_field: 'Solo un campo de opciones del formulario de edición de la categoría puede tener un valor por defecto.'
+    default_letter: 'Solo se puede fijar un valor por defecto para una categoría que este proveedor rellena.'
+    default_shape: 'No se han podido leer los valores por defecto. Recargue la página y vuelva a guardar.'
+    default_value: 'Un valor por defecto debe ser una de las opciones propias de ese campo.'
     attribution_required: 'Esta licencia obliga a un aviso de atribución, así que sin él el proveedor no se puede usar.'
     bad_url: 'El sitio debe ser una dirección http o https completa.'
     in_use: 'Hay fichas en el mapa que nombran a este proveedor. Ponlo en pausa: eso conserva las fichas y detiene las actualizaciones.'
