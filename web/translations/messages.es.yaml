@@ -1970,7 +1970,7 @@ improve:
     heading: '¿Dónde está?'
     help: 'Busca la zona, o pega unas coordenadas, y luego pulsa en el mapa para fijar la ubicación.'
     search_label: 'Busca un lugar o una calle'
-    search_placeholder: 'p. ej. un pueblo, una calle, un café — o pega 50.492000, 5.860000'
+    search_placeholder: 'p. ej. un pueblo, una calle, un café, o pega 50.492000, 5.860000'
     map_aria: 'Mapa — pulsa para fijar la ubicación'
     readout_initial: '◎ Pulsa en el mapa para fijar la ubicación'
     reset: 'Reiniciar'

@@ -2566,7 +2566,7 @@ improve:
     heading: 'Où est-il ?'
     help: 'Recherchez la zone ou collez des coordonnées, puis appuyez sur la carte pour définir l''emplacement.'
     search_label: 'Trouver un lieu ou une rue'
-    search_placeholder: 'p. ex. une ville, une rue, un café — ou collez 50.492000, 5.860000'
+    search_placeholder: 'p. ex. une ville, une rue, un café, ou collez 50.492000, 5.860000'
     map_aria: 'Carte — appuyez pour définir l''emplacement'
     readout_initial: '◎ Appuyez sur la carte pour définir l''emplacement'
     reset: 'Réinitialiser'

@@ -1961,7 +1961,7 @@ improve:
     heading: 'Where is it?'
     help: 'Search for the area, or paste coordinates, then tap the map to set the location.'
     search_label: 'Find a place or street'
-    search_placeholder: 'e.g. a town, street, café — or paste 50.492000, 5.860000'
+    search_placeholder: 'e.g. a town, street, café, or paste 50.492000, 5.860000'
     map_aria: 'Map — tap to set the location'
     readout_initial: '◎ Tap the map to set the location'
     reset: 'Reset'

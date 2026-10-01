@@ -2571,7 +2571,7 @@ improve:
     heading: 'Waar is het?'
     help: 'Zoek het gebied of plak coördinaten, tik dan op de kaart om de locatie in te stellen.'
     search_label: 'Vind een plek of straat'
-    search_placeholder: 'bijv. een stad, straat, café — of plak 50.492000, 5.860000'
+    search_placeholder: 'bijv. een stad, straat, café, of plak 50.492000, 5.860000'
     map_aria: 'Kaart — tik om de locatie in te stellen'
     readout_initial: '◎ Tik op de kaart om de locatie in te stellen'
     reset: 'Opnieuw'

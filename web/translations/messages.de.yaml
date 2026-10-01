@@ -2574,7 +2574,7 @@ improve:
     heading: 'Wo ist es?'
     help: 'Suche das Gebiet oder füge Koordinaten ein, tippe dann auf die Karte, um den Ort zu setzen.'
     search_label: 'Einen Ort oder eine Straße finden'
-    search_placeholder: 'z. B. eine Stadt, Straße, ein Café — oder füge 50.492000, 5.860000 ein'
+    search_placeholder: 'z. B. eine Stadt, Straße, ein Café, oder füge 50.492000, 5.860000 ein'
     map_aria: 'Karte — tippen, um den Ort zu setzen'
     readout_initial: '◎ Tippe auf die Karte, um den Ort zu setzen'
     reset: 'Zurücksetzen'
