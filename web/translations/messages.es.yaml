@@ -3582,7 +3582,7 @@ account:
   status_pending: 'pendiente'
   status_confirmed: 'confirmado'
   votes_note: 'Tus votos son privados. El Commons registra <b>que</b> votaste y <b>cuándo</b>. Nunca hay un registro público de <b>qué</b> votaste.'
-  votes_routes_h: 'Papeletas de rutas'
+  votes_season_h: 'Votos de temporada'
   votes_places_h: 'Confirmaciones de lugares'
   stale_nearby_h: "Merece un vistazo cerca de ti"
   stale_nearby_body: "Nadie ha comprobado estos lugares desde hace tiempo. Si pasas por uno, un solo toque le dice a todos que sigue ahí."
@@ -3591,7 +3591,7 @@ account:
   stance_potable: 'Potable'
   stance_not_potable: 'No potable'
   stance_exists: 'Sigue ahí'
-  votes_empty: 'Todavía no hay votos. En el mapa ya funcionan dos cosas: votar por una ruta verificada y confirmar un lugar. La votación de temporada por región todavía no existe.'
+  votes_empty: 'Todavía no hay votos. En el mapa puedes confirmar un lugar o indicar que recorriste una ruta. Cuando la votación de temporada esté abierta, podrás votar ahí lo mejor de tu región.'
   votes_cta: 'Abrir el mapa'
   saved_empty: 'Todavía no hay nada guardado. Guardar regiones en tu cuenta aún no está construido — por ahora, la vía de entrada es el directorio de regiones.'
   saved_browse: 'Ver las regiones'

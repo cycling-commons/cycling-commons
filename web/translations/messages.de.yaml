@@ -3555,7 +3555,7 @@ account:
   status_pending: 'ausstehend'
   status_confirmed: 'bestätigt'
   votes_note: 'Deine Stimmen sind privat. The Commons speichert, <b>dass</b> du abgestimmt hast und <b>wann</b>. Ein öffentliches Protokoll darüber, <b>wofür</b> du gestimmt hast, gibt es nie.'
-  votes_routes_h: 'Routen-Stimmen'
+  votes_season_h: 'Saisonstimmen'
   votes_places_h: 'Orts-Bestätigungen'
   stale_nearby_h: "Einen Blick wert, in deiner Nähe"
   stale_nearby_body: "Diese Orte hat länger niemand kontrolliert. Wenn du vorbeikommst, sagt ein einziger Tipp allen anderen, dass es sie noch gibt."
@@ -3564,7 +3564,7 @@ account:
   stance_potable: 'Trinkbar'
   stance_not_potable: 'Nicht trinkbar'
   stance_exists: 'Noch vorhanden'
-  votes_empty: 'Noch keine Stimmen. Auf der Karte geht schon zweierlei: für eine verifizierte Route stimmen und einen Ort bestätigen. Die saisonale Regionsabstimmung gibt es noch nicht.'
+  votes_empty: 'Noch keine Stimmen. Auf der Karte kannst du einen Ort bestätigen oder melden, dass du eine Route gefahren bist. Sobald die Saisonabstimmung offen ist, kannst du dort für das Beste deiner Region stimmen.'
   votes_cta: 'Karte öffnen'
   saved_empty: 'Noch nichts gespeichert. Regionen speichern gibt es noch nicht — das Regionenverzeichnis ist vorerst der Einstieg.'
   saved_browse: 'Regionen durchstöbern'

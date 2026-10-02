@@ -977,16 +977,13 @@ lives in the shell header.
   `curator_application` rows with status pills (pending/approved/declined/
   withdrawn), or — when none exist — a door to the regions directory, so
   "where is my request?" always has an answer on the post-login landing.
-  The **Votes** pane renders both kinds of backing act the platform actually
-  persists — the user's own `route_vote` ballots (the only surface that shows
-  *what* was voted for, voter-only — [route-domain.md](route-domain.md) §6)
-  and their `item_confirmation` place confirmations with stance pills
-  (potable / not potable / still there —
-  [moderation-and-contribution.md](moderation-and-contribution.md) §1.6);
-  the `/vote` category ballots are receipt-only by design and so never appear
-  here. The empty pane names the two acts that work on the map today (a vote
-  for a verified route, a place confirmation) and says the seasonal region
-  vote is not built yet (`community.voting_live` is off). The **Saved-regions** pane says plainly that saving is not built yet
+  The **Votes** pane renders the user's own season votes (`season_vote`,
+  every category, with the round and the bike; the only surface that shows
+  *what* was voted for, voter-only, route-domain.md §8d) and their
+  `item_confirmation` place confirmations with stance pills (potable / not
+  potable / still there, [moderation-and-contribution.md](moderation-and-contribution.md)
+  §1.6). The empty pane names the two acts that work on the map today (a
+  place confirmation, a ridden route) and the season ballot. The **Saved-regions** pane says plainly that saving is not built yet
   and links the regions directory. The former preview sample data is gone
   Every dashboard pane renders real rows only. Empty panes use
   the shared `.empty-state` block (`account/_shell_styles.html.twig`):
@@ -1599,9 +1596,8 @@ and the README inside says which part is which.
 
 **What it holds.** `account.json`, `contributions.json` (submissions plus the
 `change_history` rows they produced), `community.json` (confirmations, season
-votes, route votes until `route_vote` is retired, rides, correction
-suggestions, country requests, curator applications, moderator areas),
-`messages.json`, `consent.json`, `translations.json`, and
+votes, rides, correction suggestions, country requests, curator applications,
+moderator areas), `messages.json`, `consent.json`, `translations.json`, and
 `photos/` — the stored originals as files, plus an `index.json` describing each
 one.
 

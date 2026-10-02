@@ -70,7 +70,7 @@ class 1.2 and are served through a view.
 ### 1.2 Pseudonymous participation records — aggregate views only
 
 Tables whose rows link a user id to an opinion or action:
-`item_confirmation`, `route_vote`, `route_ride`, `route_suggestion`,
+`item_confirmation`, `season_vote`, `route_ride`, `route_suggestion`,
 `translation_overlay`.
 
 `translation_overlay` holds the live interface strings the site renders, but

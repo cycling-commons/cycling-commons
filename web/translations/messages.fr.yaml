@@ -3547,7 +3547,7 @@ account:
   status_pending: 'en attente'
   status_confirmed: 'confirmé'
   votes_note: 'Vos votes sont privés. Le Commons enregistre <b>que</b> vous avez voté et <b>quand</b>. Il ne tient jamais de relevé public de <b>ce</b> pour quoi vous avez voté.'
-  votes_routes_h: 'Votes d''itinéraires'
+  votes_season_h: 'Votes de saison'
   votes_places_h: 'Confirmations de lieux'
   stale_nearby_h: "À vérifier près de chez vous"
   stale_nearby_body: "Personne n'a vérifié ces lieux depuis un moment. Si vous passez devant l'un d'eux, un seul geste indique à tous les autres qu'il est toujours là."
@@ -3556,7 +3556,7 @@ account:
   stance_potable: 'Potable'
   stance_not_potable: 'Non potable'
   stance_exists: 'Toujours là'
-  votes_empty: 'Aucun vote pour l''instant. Deux choses marchent déjà sur la carte : voter pour un itinéraire vérifié et confirmer un lieu. Le vote saisonnier par région n''existe pas encore.'
+  votes_empty: 'Aucun vote pour l''instant. Sur la carte, vous pouvez confirmer un lieu ou indiquer que vous avez parcouru un itinéraire. Dès que le vote de saison est ouvert, vous pourrez y voter pour le meilleur de votre région.'
   votes_cta: 'Ouvrir la carte'
   saved_empty: 'Rien d''enregistré pour l''instant. L''enregistrement de régions n''existe pas encore — le répertoire des régions est l''entrée pour le moment.'
   saved_browse: 'Parcourir les régions'

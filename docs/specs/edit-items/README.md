@@ -51,7 +51,7 @@ The real, server-rendered port of this registry lives in the Symfony app:
 **Persistence** — item submissions persist for real since data-API phase B
 ([../moderation-and-contribution.md](../moderation-and-contribution.md));
 route proposals bypass that pipeline entirely and land as `RecommendedRoute` rows (state `submitted`)
-with purpose-built `route_vote` / `route_ride` / `route_suggestion` tables (route-domain.md).
+with purpose-built `route_ride` / `route_suggestion` tables and the season ballot's `season_vote` (route-domain.md).
 
 ## Registry-derivation contract (P1–P4)
 

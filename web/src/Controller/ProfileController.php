@@ -5,9 +5,11 @@
 namespace App\Controller;
 
 use App\Account\StaleNearby;
+use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemType;
+use App\Catalog\Season;
 use App\Catalog\SubmissionStatus;
 use App\Contribution\SubmissionChangeSummary;
 use App\Entity\User;
@@ -17,6 +19,7 @@ use App\Moderation\NotTheSubmitterException;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
+use App\Vote\Round;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -160,15 +163,28 @@ final class ProfileController extends AbstractController
                 },
                 [],
             ),
-            // docs/specs/route-domain.md §6 — ballots private to the voter.
-            'votes' => $db->fetchAllAssociative(
-                'SELECT rv.season, rv.bike_type, rv.created_at, rr.id AS route_id, rr.name
-                   FROM route_vote rv JOIN recommended_route rr ON rr.id = rv.route_id
-                  WHERE rv.user_id = :uid
-                  ORDER BY rv.created_at DESC, rv.id DESC
-                  LIMIT 50',
+            // docs/specs/route-domain.md §8d: what a rider voted for is shown to that rider only.
+            'votes' => array_map(static function (array $v): array {
+                $type = ItemType::from((string) $v['category']);
+
+                return $v + [
+                    'letter' => $type->letter(),
+                    'label_key' => $type->labelKey(),
+                    'season_label_key' => Season::from((string) $v['season'])->labelKey(),
+                    'year_label' => Round::fromStored((string) $v['season'], (string) $v['round_start'])->yearLabel(),
+                    'bike_label_key' => null !== $v['bike_type'] ? BikeType::from((string) $v['bike_type'])->labelKey() : null,
+                ];
+            }, $db->fetchAllAssociative(
+                "SELECT sv.category, sv.subject_id, sv.season, sv.round_start, sv.bike_type, sv.created_at,
+                        COALESCE(i.name, rr.name, '') AS name
+                   FROM season_vote sv
+                   LEFT JOIN item i ON sv.category <> 'quality-rides' AND i.id = sv.subject_id
+                   LEFT JOIN recommended_route rr ON sv.category = 'quality-rides' AND rr.id = sv.subject_id
+                  WHERE sv.user_id = :uid
+                  ORDER BY sv.created_at DESC, sv.id DESC
+                  LIMIT 50",
                 ['uid' => $userId],
-            ),
+            )),
             'confirmations' => $this->confirmations($db, $userId),
             'stale_nearby' => $staleNearby->for($user, 12),
             'curator_applications' => $db->fetchAllAssociative(

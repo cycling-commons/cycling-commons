@@ -73,8 +73,9 @@ final class ProfileDashboardTest extends WebTestCase
         );
         $routeId = (int) $db->fetchOne("SELECT id FROM recommended_route WHERE source_ref = 'dash-loop-t'");
         $db->executeStatement(
-            "INSERT INTO route_vote (route_id, user_id, season, bike_type, created_at) VALUES (?, ?, 'summer', 'road', NOW())",
-            [$routeId, (int) $user->getId()],
+            "INSERT INTO season_vote (user_id, region_id, category, subject_id, bike_type, season, round_start, slot, created_at)
+             VALUES (?, 1, 'quality-rides', ?, 'Road', 'summer', '2026-06-01', 1, NOW())",
+            [(int) $user->getId(), $routeId],
         );
         $db->executeStatement(
             "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
@@ -94,6 +95,8 @@ final class ProfileDashboardTest extends WebTestCase
         self::assertStringContainsString('Pending review', $html, 'application status pill');
         self::assertStringContainsString('Whole country', $html, 'country-wide application label');
         self::assertStringContainsString('Dash Loop', $html, 'own route ballot listed');
+        self::assertStringContainsString('Summer 2026', $html, 'the round the vote counts in');
+        self::assertStringContainsString('Season votes', $html, 'one pane for every category');
         self::assertStringContainsString('Dash Fountain', $html, 'own place confirmation listed');
         self::assertStringContainsString('Potable', $html, 'confirmation stance pill');
         self::assertStringNotContainsString('See where curators are needed', $html, 'door hidden once applied');

@@ -6,7 +6,7 @@
 
 This document is the deep contract for item type **R · Quality rides**: how a
 route enters the system (GPX intake), who owns it (curators), how the
-community's voice works (typed votes, ride confirmations, located
+community's voice works (season votes, ride confirmations, located
 corrections, never edits once a curator has decided), how volume stays bounded (the per-region cap),
 and how best-of rankings are computed. The rider-facing digest lives in
 [edit-items/R-quality-rides.md](edit-items/R-quality-rides.md); the R
@@ -80,7 +80,7 @@ ref instead ([catalog-data-model.md](catalog-data-model.md)).
 
 ### 2.2 Community tables — the FK-less (anonymize-by-decoupling) rule
 
-`route_vote`, `route_ride`, `route_suggestion`, `route_change_history`
+`season_vote`, `route_ride`, `route_suggestion`, `route_change_history`
 reference users and routes as **plain indexed bigint columns with no
 database foreign keys** (house convention, matching `submission.user_id`);
 `recommended_route.proposed_by` follows the same no-FK rule as a plain
@@ -90,16 +90,6 @@ deletion contract and the contrasting `user_message.user_id` cascade FK are
 owned by [moderation-and-contribution.md](moderation-and-contribution.md).
 Deskside display pseudonymizes contributors (`rider#<pseudonym>`,
 `App\Moderation\RouteQueue`).
-
-**`route_vote`** — the typed seasonal vote:
-
-| Column | Type / constraint |
-|---|---|
-| `route_id`, `user_id` | bigint (no FK) |
-| `season` | `Season` string enum: `spring / summer / autumn / winter` |
-| `bike_type` | `BikeType` string enum (route-domain.md §8.2) |
-| `created_at` | timestamp — enables a future annual vote reset (route-domain.md §11) |
-| | **UNIQUE (`route_id`, `user_id`, `season`)** (`uniq_route_vote`); index (`route_id`, `season`, `bike_type`) for ranking |
 
 **`season_vote`**: one vote on the season ballot, for every votable category
 (route-domain.md §8c, §8d):
@@ -1167,6 +1157,10 @@ ballot" panel holds the rider's votes in this list (up to three, in no order,
 each with its own remove form), how many votes are left and how many riders
 voted in the list. While voting is off or the rider cannot vote yet, the page
 says why there is nothing to press.
+
+**`route_vote` is retired** (`Version20261002110000`): it held no real votes
+(owner 2026-10-02), so nothing was copied; the migration refuses to run on a
+table that is not empty.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 

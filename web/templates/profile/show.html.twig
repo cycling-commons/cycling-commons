@@ -286,9 +286,9 @@
     {% endif %}
   </section>
 
-  {# ── Votes — the user's own backing acts: route ballots (route-domain.md §6,
-     the only surface that shows WHAT was voted for, voter-only) and place
-     confirmations (moderation-and-contribution.md §1.6). #}
+  {# VOTES: the rider's own season votes (the only surface that shows WHAT was
+     voted for, voter-only, route-domain.md §8d) and place confirmations
+     (moderation-and-contribution.md §1.6). #}
   <section class="dpane" id="p-votes">
     <div class="mh">
       <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
@@ -301,22 +301,22 @@
       </div>
     {% else %}
       {% if votes is not empty %}
-        <h2 class="sec-band">{{ 'account.votes_routes_h'|trans }} <span class="sec-count">{{ votes|length }}</span></h2>
+        <h2 class="sec-band">{{ 'account.votes_season_h'|trans }} <span class="sec-count">{{ votes|length }}</span></h2>
         <div class="q-list">
         {% for v in votes %}
           <div class="q-item">
             <div class="q-top">
               <div class="q-headwrap">
                 <div class="q-head">
-                  {% include 'partials/_type_icon.html.twig' with {letter: 'R'} %}
-                  <span class="q-tag q-tag--route">{{ 'nav.routes'|trans }}</span>
+                  {% include 'partials/_type_icon.html.twig' with {letter: v.letter} %}
+                  <span class="q-tag q-tag--kind">{{ v.label_key|trans }}</span>
                   <h3 class="q-title">{{ v.name }}</h3>
                 </div>
-                <div class="q-submitter">{{ v.season }} · {{ v.bike_type }}</div>
+                <div class="q-submitter">{{ 'vote.round_label'|trans({'%season%': v.season_label_key|trans, '%year%': v.year_label}) }}{% if v.bike_label_key %} · {{ v.bike_label_key|trans }}{% endif %}</div>
               </div>
               <div class="q-acts">
                 <time class="q-when" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|cc_date }}</time>
-                <span class="q-links"><a class="q-link" href="{{ path('map') }}?route={{ v.route_id }}"
+                <span class="q-links"><a class="q-link" href="{{ path('map') }}?{{ v.letter == 'R' ? 'route' : 'item' }}={{ v.subject_id }}"
                   target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
               </div>
             </div>

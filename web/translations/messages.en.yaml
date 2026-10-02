@@ -3573,7 +3573,7 @@ account:
   status_pending: 'pending'
   status_confirmed: 'confirmed'
   votes_note: 'Your votes are private. The Commons records <b>that</b> you voted and <b>when</b>. It never makes a public record of <b>what</b> you voted for.'
-  votes_routes_h: 'Route ballots'
+  votes_season_h: 'Season votes'
   votes_places_h: 'Place confirmations'
   stale_nearby_h: "Worth a look near you"
   stale_nearby_body: "Nobody has checked these places for a while. If you ride past one, a single tap tells everyone else it is still there."
@@ -3582,7 +3582,7 @@ account:
   stance_potable: 'Potable'
   stance_not_potable: 'Not potable'
   stance_exists: 'Still there'
-  votes_empty: 'No votes yet. Two things already work on the map: vote for a verified route, and confirm a place. The seasonal region vote is not built yet.'
+  votes_empty: 'No votes yet. On the map you can confirm a place or say you rode a route. Once the season ballot is open, you can vote for the best of your region there.'
   votes_cta: 'Open the map'
   saved_empty: 'Nothing saved yet. Saving regions to your account is not built yet — the regions directory is the way in for now.'
   saved_browse: 'Browse the regions'

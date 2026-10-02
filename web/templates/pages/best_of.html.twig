@@ -110,9 +110,9 @@
       <span hidden>{% for cc, label in countries %}<a data-cc="{{ cc }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, cc: cc})) }}">{{ label }}</a>{% endfor %}</span>
     </form>
     {% if category.value == 'quality-rides' %}
-      {# Bike type belongs to the VOTE, not the route (RouteVote::$bikeType):
-         the same roads ranked by different people, which is the whole reason
-         a handbike rider's best is worth asking about separately. #}
+      {# Bike type belongs to the VOTE, not the route: the same roads ranked
+         by different people, which is the whole reason a handbike rider's
+         best is worth asking about separately. #}
       <div class="frow">
         <b>{% trans %}best.f_bike{% endtrans %}</b>
         <a class="{{ bike is empty ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, bike: null})) }}">{% trans %}best.any_bike{% endtrans %}</a>

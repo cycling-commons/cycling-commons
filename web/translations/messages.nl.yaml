@@ -3554,7 +3554,7 @@ account:
   status_pending: 'in afwachting'
   status_confirmed: 'bevestigd'
   votes_note: 'Jouw stemmen zijn privé. De Commons registreert <b>dat</b> je hebt gestemd en <b>wanneer</b>. Er komt nooit een openbaar overzicht van <b>wat</b> je hebt gestemd.'
-  votes_routes_h: 'Routestemmen'
+  votes_season_h: 'Seizoensstemmen'
   votes_places_h: 'Plekbevestigingen'
   stale_nearby_h: "De moeite waard bij jou in de buurt"
   stale_nearby_body: "Niemand heeft deze plekken al een tijd gecontroleerd. Kom je er langs, dan vertelt één tik iedereen dat de plek er nog is."
@@ -3563,7 +3563,7 @@ account:
   stance_potable: 'Drinkbaar'
   stance_not_potable: 'Niet drinkbaar'
   stance_exists: 'Nog aanwezig'
-  votes_empty: 'Nog geen stemmen. Op de kaart werken al twee dingen: stemmen op een geverifieerde route en een plek bevestigen. De seizoensstemming per regio is nog niet gebouwd.'
+  votes_empty: 'Nog geen stemmen. Op de kaart kun je een plek bevestigen of melden dat je een route reed. Zodra de seizoensstemming open is, kun je daar op het beste van je regio stemmen.'
   votes_cta: 'Open de kaart'
   saved_empty: 'Nog niets bewaard. Regio''s bewaren bestaat nog niet — de regiogids is voorlopig de ingang.'
   saved_browse: 'Bekijk de regio''s'
