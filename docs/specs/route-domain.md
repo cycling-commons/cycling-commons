@@ -971,6 +971,73 @@ the thing on the map.
 would offer a search engine a page of invented results.
 
 
+### 8c. The season ballot and its ranking (decided 2026-10-02, not built)
+
+**Status: specified, pending implementation.** Voting ships after launch
+(`route_vote` is empty, `/best` is simulated, §8b). This section is the rule the
+ballot and the real ranking are built to. Owner 2026-10-02: "a good voting
+system per season. It must hold up with a low number of voters and seasonal
+update, where the highest from last season get a handicap to prevent always
+having the same list", and "voting is not only for routes, for all experience
+categories".
+
+**One list per region, season and category.** The categories are the five
+votable types (`ItemType::isVotable()`): climbs, routes (quality rides), scenic
+views, history and culture, where to sleep. The season is the riding season
+(spring, summer, autumn, winter) of one year: spring 2027 is one round, spring
+2028 the next. A route list can be narrowed by bike type, because the bike type
+belongs to the vote (§8b); every rule below then applies to that narrowed list.
+
+| Rule | Value | Why |
+|---|---|---|
+| Ballot | **3 votes** per rider per region, season and category, at most 1 per item | One keen rider cannot carry an item; votes stay comparable with few voters |
+| Who may vote | confirmed email, account at least **14 days** old, at least one thing done on the site (a ride or "been there" confirmation, or a contribution) | With few voters one fake account would decide a list |
+| Ranking threshold | **5 different voters** on that list | Below that a "number 1" means nothing |
+| Handicap | last year's same-season **top 3** of the same list: votes x **0.75** | The list changes over the years, but a clearly loved item can still win |
+| Close calls | less than 1 vote apart after the handicap shares the place; the item that won less often before is shown first | Small numbers cannot honestly separate them |
+| Fresh start | votes count only for their own season and year | The list fills up again every season |
+
+**Below the threshold.** A list with fewer than 5 voters shows no ranks, under
+"No ranking yet": its items most confirmed first (ridden for climbs and routes,
+stayed for a bed, been there for a view or a heritage site, the same signal as
+the second number in §8b), newest first where nothing is confirmed, with the
+votes so far and how many voters are still needed ("3 of 5 voters"). There are
+no curators' picks to fall back on. A list reaches its ranking on its own: a
+region can show a climbs ranking while its beds still say "No ranking yet".
+
+**When the handicap starts.** It needs a winner: the first year has none, so
+nothing is handicapped until the same season a year later, and a season that
+never reached 5 voters names no top 3 and hands no handicap on.
+
+Worked example, Ardennes, spring 2028, climbs, 7 voters:
+
+| Climb | Votes | Spring 2027 top 3 | Score |
+|---|---|---|---|
+| A | 6 | won | 6 x 0.75 = 4.5 |
+| B | 5 | no | 5 |
+| C | 4 | no | 4 |
+| D | 3 | 3rd | 3 x 0.75 = 2.25 |
+
+Result: B first, A second, C third. In the same region and season the views list
+may have 6 voters and a ranking with no handicap (spring 2027 never reached 5
+voters), while where to sleep has 2 voters and shows "No ranking yet".
+
+Rejected alternative: a winner rests one season on a "Classics" shelf. More
+change, but the real favourite disappears for a season (owner chose the
+handicap, 2026-10-02).
+
+Rejected alternative: a ballot that carries forward into the next season until
+the rider changes it (the 2026-07-30 region-ballot design, "re-ranked, never
+reset"). It keeps last season's favourites counting without anyone voting for
+them again, which works against the handicap; every season starts empty
+(owner 2026-10-02: "Fresh start").
+
+Rejected alternative: a ranked ballot of up to 10 items scored by approval
+share (the same 2026-07-30 design). More detail per voter, but more work per
+voter, and with few voters the work is what keeps people from finishing; 3
+unordered votes is quick and still separates the favourites (owner 2026-10-02:
+"3 votes").
+
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
@@ -1023,6 +1090,9 @@ contract is the consumption semantics:
   counter increments and the uploaded track is **deleted immediately** — no
   personal ride data is ever stored. Same counter as the button, stronger
   evidence.
+- **The season ballot and ranking** (§8c): the 3-vote ballot, voter
+  eligibility, the 5-voter threshold, the 0.75 handicap and the "No ranking
+  yet" view, for all five votable categories.
 - **Seasonal nomination windows** per region once a region has traction.
 - **Annual vote reset/archival** — votes are timestamped from day one, so
   "archive votes older than the current edition" is a switch, not a schema
