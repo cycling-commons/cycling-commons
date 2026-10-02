@@ -1114,6 +1114,19 @@ round's votes are its result. Refusals are `App\Vote\BallotRefused` reasons:
 `voting_closed`, `not_eligible`, `not_votable`, `not_candidate`,
 `bike_required`, `ballot_full`, `already_voted`, `rate_limited`.
 
+**Results** (`App\Vote\SeasonResults`, table `season_result`). An open round
+is counted live. A closed round is stored, once, the first time anything reads
+its list more than an hour after it closed (so a vote cast in its last second
+has committed), and by the deletion hook before an account that voted in it is
+deleted (route-domain.md §8d, privacy). Stored rows are never updated, so a
+closed season's result does not change when an account goes, a place is
+retired or a route changes the bikes it declares. Rounds of a list are stored
+oldest first, because each needs the stored rounds before it. Counting ignores
+a row's current state: a place retired mid-round keeps its votes and place.
+A route list narrowed by a bike counts only votes cast on that bike, with its
+own threshold, handicap and history; a specialty bike also needs the route to
+declare it (route-domain.md §8.3). The list of every bike counts every vote.
+
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
