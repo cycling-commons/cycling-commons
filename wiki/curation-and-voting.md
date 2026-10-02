@@ -2,12 +2,11 @@
 
 # Curation & Voting
 
-!!! warning "Part design, part built"
-    This page is the intention for curation, and only part of it runs today. **Live:** the map's
-    three view modes, and the whole route path (propose, curator review, *I rode this*
-    verification, and seasonal recommend-votes in the drawer). **Design only:** the seasonal
-    ballot rounds, and voting on climbs, stays, views and heritage. The sections below say which
-    is which.
+!!! warning "Built, switched on after launch"
+    The map's three view modes and the route path (propose, curator review, *I rode this*
+    verification) are live. The season ballot described below is built and stays switched off
+    until after launch: until then `/vote` shows the lists without vote buttons and `/best`
+    shows a simulated result.
 
 **Curation over completeness** is one of the things that set the Cycling Commons apart. It is an
 important part of the Commons, not the whole of its intention: what the Commons is for, and the
@@ -24,7 +23,7 @@ The single organising principle of the Commons:
 |---|---|---|
 | **Examples** | best climbs, bike-friendly stays, finest views, history & culture, top quality rides | road surface, water points, toilets, repair stations, hazards, bike shops |
 | **Goal** | **curated**: the best, ranked | **complete**: as exhaustive as possible |
-| **How** | **routes**: rode-it counts plus seasonal recommend-votes on the map drawer. Climbs, stays, views & heritage (design): riders vote, refreshed in rounds | one-tap reports; confirm & decay |
+| **How** | riders vote in season rounds, three votes per list; routes also count *I rode this* | one-tap reports; confirm & decay |
 | **The value is** | the *ranking* | the *coverage* |
 
 Voting makes no sense for a water tap: it's either there or it isn't, and you want them all. Ranking
@@ -50,7 +49,7 @@ The best-of covers:
 - the best **bike-friendly stays**
 - the most scenic **views**
 - the best **history & culture** to ride past
-- the best **quality rides / routes** (routes' best-of is the map's season/bike Best-of ranking, not the seasonal ballot)
+- the best **quality rides / routes** (on the same season ballot; a route list can be narrowed to one bike)
 - (extensible: best café stops, best gravel, etc.)
 
 So when you arrive somewhere new, you get a clear, opinionated picture of the best there is, instead
@@ -58,37 +57,36 @@ of drowning in data.
 
 ## The voting rounds
 
-!!! note "Not live yet"
-    The seasonal ballot rounds described in this section are design; they are
-    planned to open after launch. The `/vote` page shows the design and records
-    nothing. What *is* running today is the route path below: propose, curator
-    review, rode-it verification, seasonal recommend-votes on the map drawer,
-    which feeds the Best-of ranking without a ballot. Everything else in this
-    page (the two strategies, regions, the backlog, integrity) describes
-    shipped behaviour.
-
-- **Riders vote** on the candidates in each region.
-- **A fresh round opens each season.** Four rounds a year give the Commons a rhythm that follows the
-  riding: a reason to come back as the season turns, and room for new entries to rise.
-- **Rounds re-rank, they don't reset.** The standing list carries forward and votes shift it. A
-  legendary climb is never wiped out by one low-turnout season; it just has to keep earning its place.
-- **These rounds cover climbs, stays, views, and heritage.** Routes sit outside the seasonal ballot:
-  they follow their own **propose, curator moderate, rode-it-verify, seasonal recommend-vote** flow
-  on the map drawer, feeding the same season/bike Best-of ranking rather than a ballot round.
+- **One list per region, season and kind.** Climbs, routes, scenic views, history & culture and
+  where to sleep each get their own list in every region, for every riding season. Spring 2027 is
+  one round, spring 2028 the next. South of the equator the seasons are the other way round.
+- **Three votes per list.** Each rider has three votes in a list, at most one per place, and can
+  change them until the season ends. A route vote also says which bike it was ridden on, so "best
+  on a handbike" is a list of its own.
+- **Who votes.** A confirmed email address, an account at least 14 days old, and one thing done
+  on the map: a confirmed place, a ridden route, or an accepted contribution. With few voters, one
+  fake account would otherwise decide a list.
+- **A ranking needs 5 voters.** Below that the list says "No ranking yet" and shows the places
+  riders confirmed most, with the votes so far.
+- **Last year's top 3 count a little less.** In the same season a year later their votes count
+  x0.75, so the list changes over the years while a clearly loved place can still win.
+- **Close calls share a place.** Less than one vote apart is too close to call; the place that won
+  less often before is listed first.
+- **Every season starts empty.** Votes count for their own season and year only. When a season
+  ends its result is stored, and it does not change afterwards.
 
 ## Solving the cold start
 
 Empty lists before a voting culture exists would kill the feature.
 
-What runs today: a route's place in the Best-of comes from what riders do on the map, rode-it
-confirmations plus recommend-votes, and nothing else. Nothing in the ranking is derived from usage.
-
-The design for the other lists is to seed an initial ranking from **aggregate popularity** (which
-roads see the most use, derived anonymously through
-[the sensing boundary](governance.md#the-sensing-boundary-how-activity-becomes-a-place-fact)) and
-then let votes layer *loved* on top of *used-a-lot*: two complementary signals, and a list that is
-never blank on day one. That sensing layer is not built. The heatmap the demo map shows is seeded
-sample data, not measured activity.
+A list with fewer than five voters does not pretend to have a winner. It shows the places riders
+confirmed most (newest first where nothing is confirmed yet) and how many voters it still needs,
+so a region can show a climbs ranking while its places to sleep still say "No ranking yet".
+Nothing in a ranking is derived from usage, and there are no curators' picks to fall back on.
+Seeding a list from anonymous aggregate popularity, through
+[the sensing boundary](governance.md#the-sensing-boundary-how-activity-becomes-a-place-fact),
+is a later idea: that sensing layer is not built, and the heatmap the demo map shows is sample
+data, not measured activity.
 
 ## The backlog: nothing is thrown away
 
@@ -98,11 +96,12 @@ all. The Commons *ranks* data; it never *discards* it.
 
 ## Integrity
 
-- **One rider, one vote** per candidate per round; guards against stacking.
+- **Three votes per rider per list**, at most one per place; the database itself refuses a fourth.
 - **`X` adapts to the region.** A flat province may have three climbs worth listing; the Alps have
   hundreds. The curated target scales with the density of genuinely good options.
 - **Provenance without identity** (Manifesto §VIII): the Commons stores that a vote was cast and when,
   never a public record of who voted for what.
-- **You can always see your own.** Your profile lists the route votes you've cast and the places
-  you've confirmed (water potability, "still here?" checks), a private view for your eyes only, so
-  "did I already back this?" never requires guessing.
+- **You can always see your own.** Your profile lists the season votes you've cast (with the round
+  and, for a route, the bike) and the places you've confirmed, a private view for your eyes only,
+  so "did I already back this?" never requires guessing. When you delete your account your votes
+  go with it; a season that has already ended keeps its totals, which do not say who voted.

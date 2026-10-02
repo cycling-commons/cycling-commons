@@ -983,10 +983,11 @@ the thing on the map.
 would offer a search engine a page of invented results.
 
 
-### 8c. The season ballot and its ranking (decided 2026-10-02, not built)
+### 8c. The season ballot and its ranking (decided 2026-10-02)
 
-**Status: specified, pending implementation.** Voting ships after launch
-(`route_vote` is empty, `/best` is simulated, §8b). This section is the rule the
+**Status: built, switched off until after launch** (`community.voting_live`;
+how it is built: route-domain.md §8d). While it is off, `/best` shows the
+simulated result of route-domain.md §8b. This section is the rule the
 ballot and the real ranking are built to. Owner 2026-10-02: "a good voting
 system per season. It must hold up with a low number of voters and seasonal
 update, where the highest from last season get a handicap to prevent always
@@ -1030,7 +1031,9 @@ Worked example, Ardennes, spring 2028, climbs, 7 voters:
 | C | 4 | no | 4 |
 | D | 3 | 3rd | 3 x 0.75 = 2.25 |
 
-Result: B first, A second, C third. In the same region and season the views list
+Result: B and A are less than 1 vote apart, so they share first place; B is
+listed first because A won before. C is third, a full vote below B. In the
+same region and season the views list
 may have 6 voters and a ranking with no handicap (spring 2027 never reached 5
 voters), while where to sleep has 2 voters and shows "No ranking yet".
 
@@ -1254,13 +1257,7 @@ contract is the consumption semantics:
   counter increments and the uploaded track is **deleted immediately** — no
   personal ride data is ever stored. Same counter as the button, stronger
   evidence.
-- **The season ballot and ranking** (§8c): the 3-vote ballot, voter
-  eligibility, the 5-voter threshold, the 0.75 handicap and the "No ranking
-  yet" view, for all five votable categories.
 - **Seasonal nomination windows** per region once a region has traction.
-- **Annual vote reset/archival** — votes are timestamped from day one, so
-  "archive votes older than the current edition" is a switch, not a schema
-  change.
 - **"Starts at / towns on route"** reverse-geocoding from the track (the map
   currently uses a demo-era name-keyed lookup with **no fallback** —
   fabricating a start town for rider proposals would be wrong data).
