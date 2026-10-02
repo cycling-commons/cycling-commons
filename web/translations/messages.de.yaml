@@ -2577,7 +2577,10 @@ best:
   everywhere_hint: 'Wähle ein Land, um jede Region zu sehen, auch die Listen ohne Rangfolge.'
   everywhere_empty: 'In dieser Runde hat noch keine Liste eine Rangfolge.'
   vote_here: 'In dieser Region abstimmen'
-  quiet_live: 'Noch nichts dieser Art auf der Karte in:'
+  filtered_out: 'Nichts in diesen Regionen passt zu diesen Filtern:'
+  quiet_live_heading: 'Noch nichts zum Abstimmen'
+  quiet_live: 'In diesen Regionen ist noch nichts dieser Art auf der Karte. Ein Ort kommt zur Abstimmung, sobald jemand ihn auf der Karte bestätigt.'
+  quiet_live_cta: 'Karte öffnen'
 
 improve:
   condition:

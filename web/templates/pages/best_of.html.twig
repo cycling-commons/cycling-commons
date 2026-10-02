@@ -61,6 +61,7 @@
     {% if r.place %}<span class="bar" aria-hidden="true"><i style="width:{{ r.share }}%"></i></span>{% endif %}
   </li>
 {% endmacro %}
+{% macro region_links(list) %}{% for r in list %}<a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a>{{ not loop.last ? ' · ' }}{% endfor %}{% endmacro %}
 {% import _self as best %}
 {# Each chip carries the CURRENT set with itself added or removed, so a link
    does what a checkbox would and the page still needs no script. #}
@@ -161,7 +162,11 @@
   {# A country is read region by region: that is the unit a rider rides in,
      and one national list flattens the Alps into Brittany. Everywhere keeps
      the single list, because there the country IS the unit. #}
-  {% if regions is not null and regions.ranked is not empty %}
+  {# Live, a country's view always lists its regions: even with no list to
+     show, the foot says which regions the filters emptied and which have
+     nothing on the map yet. #}
+  {% if regions is not null and (regions.ranked is not empty or (live and country is not null)) %}
+    {% if regions.ranked is not empty %}
     <div class="regions">
       {% for r in regions.ranked %}
         <section class="rgroup">
@@ -190,21 +195,37 @@
         </section>
       {% endfor %}
     </div>
+    {% endif %}
     {% if live and country is null %}<p class="empty">{{ 'best.everywhere_hint'|trans }}</p>{% endif %}
 
+    {# A region whose list the route filters emptied has places and votes:
+       it is named apart, never as a region with nothing yet. #}
+    {% if live and regions.filtered is not empty %}
+      <section class="quiet">
+        <p>{% trans %}best.filtered_out{% endtrans %}</p>
+        <p class="qlist">{{ best.region_links(regions.filtered) }}</p>
+      </section>
+    {% endif %}
     {% if regions.quiet is not empty %}
       {# Not hidden: "nobody has voted here yet" is an invitation, and a silent
          omission is not. #}
+      {% if live %}
+        {# Live, these regions have nothing of the kind on the map, so there is
+           nothing to vote for there yet: the way in is the map. #}
+        <section class="quiet">
+          <h2>{% trans %}best.quiet_live_heading{% endtrans %}</h2>
+          <p>{% trans %}best.quiet_live{% endtrans %}</p>
+          <p class="qlist">{{ best.region_links(regions.quiet) }}</p>
+          <p><a class="btn btn-p" href="{{ path('map') }}">{% trans %}best.quiet_live_cta{% endtrans %}</a></p>
+        </section>
+      {% else %}
       <section class="quiet">
         <h2>{% trans %}best.quiet_heading{% endtrans %}</h2>
-        {% if live %}<p>{% trans %}best.quiet_live{% endtrans %}</p>{% else %}<p>{% trans %}best.quiet_body{% endtrans %}</p>{% endif %}
-        <p class="qlist">
-          {% for r in regions.quiet %}
-            <a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a>{{ not loop.last ? ' · ' }}
-          {% endfor %}
-        </p>
+        <p>{% trans %}best.quiet_body{% endtrans %}</p>
+        <p class="qlist">{{ best.region_links(regions.quiet) }}</p>
         <p><a class="btn btn-p" href="{{ path('vote') }}">{% trans %}best.quiet_cta{% endtrans %}</a></p>
       </section>
+      {% endif %}
     {% endif %}
   {% elseif live and country is null %}
     <p class="empty">{% trans %}best.everywhere_empty{% endtrans %}</p>

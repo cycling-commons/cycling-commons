@@ -1970,7 +1970,10 @@ best:
   everywhere_hint: 'Pick a country to see every region, including the lists that have no ranking yet.'
   everywhere_empty: 'No list has a ranking yet this round.'
   vote_here: 'Vote in this region'
-  quiet_live: 'Nothing of this kind on the map yet in:'
+  filtered_out: 'Nothing in these regions matches these filters:'
+  quiet_live_heading: 'Nothing to vote for yet'
+  quiet_live: 'Nothing of this kind is on the map in these regions yet. A place joins the ballot once a rider confirms it on the map.'
+  quiet_live_cta: 'Open the map'
 
 improve:
   condition:

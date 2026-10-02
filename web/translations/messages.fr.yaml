@@ -2569,7 +2569,10 @@ best:
   everywhere_hint: 'Choisissez un pays pour voir toutes ses régions, y compris les listes sans classement.'
   everywhere_empty: 'Aucune liste n''a encore de classement dans ce tour.'
   vote_here: 'Voter dans cette région'
-  quiet_live: 'Rien de ce type sur la carte pour l''instant dans :'
+  filtered_out: 'Rien dans ces régions ne correspond à ces filtres :'
+  quiet_live_heading: 'Rien à voter pour l''instant'
+  quiet_live: 'Rien de ce type n''est encore sur la carte dans ces régions. Un lieu entre dans le vote dès qu''une personne le confirme sur la carte.'
+  quiet_live_cta: 'Ouvrir la carte'
 
 improve:
   condition:

@@ -1180,11 +1180,17 @@ round of it. A country view lists its operational regions
 "1="), votes, the confirmed count and a "x0.75" mark on handicapped rows, and
 a place retired mid-round keeps its place without a map link; a list below 5
 voters reads "No ranking yet" with no podium and no places, the 10 most
-confirmed rows with their votes so far and "N of 5 voters"; regions with
-nothing of the kind are named at the foot. The Everywhere view lists the 12
-ranked lists with the most voters; it counts only regions with at least 5
-voters in their own round, counted or stored, filtering both tables on their
-indexed `(region_id, category, round_start)`. `bike` takes **one** value in
+confirmed rows with their votes so far and "N of 5 voters". At the foot, a
+region whose list the difficulty and length filters emptied is named under
+"Nothing in these regions matches these filters", apart from the regions with
+nothing of the kind on the map ("Nothing to vote for yet", with a link to the
+map, where confirming a place puts it on the ballot). The Everywhere view lists
+the 12 ranked lists with the most voters. One query finds the regions with at
+least 5 voters in their own round, counted or stored, with that number,
+filtering both tables on their indexed `(region_id, category, round_start)`;
+the regions are then read busiest first and the reading stops once no region
+left could make the 12 (for a specialty bike the number is an upper bound, so
+the stop stays correct). `bike` takes **one** value in
 both modes (the preview included): a route list narrowed by bike is the votes
 cast on that bike (route-domain.md §8c). Difficulty and length only hide rows,
 with `BestOfPreview::routesMatching()`, the conditions the preview narrows by,

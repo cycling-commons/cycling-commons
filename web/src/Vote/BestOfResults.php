@@ -31,6 +31,7 @@ use Psr\Clock\ClockInterface;
  *
  * @phpstan-type Standing array{round: Round, voters: int, ranked: bool, closed: bool}
  * @phpstan-type Group array{slug: string, name: string, top: list<Ranked>, result: Standing}
+ * @phpstan-type Named array{slug: string, name: string}
  * @phpstan-type Picked array{id: int, name: string, votes: int, place: ?int, handicapped: bool}
  *
  * @see docs/specs/route-domain.md §8b, §8d
@@ -56,40 +57,48 @@ final class BestOfResults
     }
 
     /**
-     * Every operational region of a country; the ones with nothing of the
-     * kind on the map go to `quiet`.
+     * Every operational region of a country. The ones with nothing of the
+     * kind on the map go to `quiet`; the ones whose list the difficulty and
+     * length filters emptied go to `filtered`, because "nothing here yet"
+     * would be false for them.
      *
      * @param list<string> $difficulties
      * @param list<string> $lengths
      *
-     * @return array{ranked: list<Group>, quiet: list<array{slug: string, name: string}>}
+     * @return array{ranked: list<Group>, quiet: list<Named>, filtered: list<Named>}
      */
     public function byRegion(ItemType $type, ?Season $season, string $countryCode, ?BikeType $bike, array $difficulties = [], array $lengths = []): array
     {
         $bike = self::bikeFor($type, $bike);
         $ranked = [];
         $quiet = [];
+        $filtered = [];
         foreach ($this->regions->inCountry($countryCode) as $region) {
             $group = $this->group($region, $type, $season, $bike, $difficulties, $lengths);
             if (null === $group) {
                 $quiet[] = ['slug' => $region['slug'], 'name' => $region['name']];
-
-                continue;
+            } elseif ([] === $group['top']) {
+                $filtered[] = ['slug' => $region['slug'], 'name' => $region['name']];
+            } else {
+                $ranked[] = $group;
             }
-            $ranked[] = $group;
         }
 
-        return ['ranked' => $ranked, 'quiet' => $quiet];
+        return ['ranked' => $ranked, 'quiet' => $quiet, 'filtered' => $filtered];
     }
 
     /**
-     * The ranked lists anywhere, most voters first. Only regions whose votes
-     * could reach the threshold are counted at all.
+     * The ranked lists anywhere, most voters first, at most
+     * {@see self::EVERYWHERE_REGIONS}.
+     *
+     * The regions are walked busiest first and the walk stops as soon as no
+     * region left could make the cut, so only the lists shown (and the few
+     * that fall short on the way) are computed.
      *
      * @param list<string> $difficulties
      * @param list<string> $lengths
      *
-     * @return array{ranked: list<Group>, quiet: list<array{slug: string, name: string}>}
+     * @return array{ranked: list<Group>, quiet: list<Named>, filtered: list<Named>}
      */
     public function everywhere(ItemType $type, ?Season $season, ?BikeType $bike, array $difficulties = [], array $lengths = []): array
     {
@@ -98,29 +107,42 @@ final class BestOfResults
         foreach ($this->regions->all() as $region) {
             $byId[$region['id']] = $region;
         }
+        $busy = $this->busyRegions(array_values($byId), $type, $season, $bike);
+        // The order the page shows: most voters first, then by name.
+        $order = static fn (int $voters, string $name): array => [-$voters, $name];
+        uksort($busy, static fn (int $a, int $b): int => $order($busy[$a], $byId[$a]['name']) <=> $order($busy[$b], $byId[$b]['name']));
 
         $groups = [];
-        foreach ($this->busyRegions(array_values($byId), $type, $season, $bike) as $id) {
-            $group = $this->group($byId[$id], $type, $season, $bike, $difficulties, $lengths);
-            if (null !== $group && $group['result']['ranked'] && [] !== $group['top']) {
-                $groups[] = $group;
+        foreach ($busy as $id => $atMost) {
+            // A region's count here is its list's voters, or more for a
+            // specialty bike, never fewer. Once the next region cannot beat
+            // the last list kept, no region after it can.
+            $last = $groups[self::EVERYWHERE_REGIONS - 1] ?? null;
+            if (null !== $last && $order($atMost, $byId[$id]['name']) >= $order($last['result']['voters'], $last['name'])) {
+                break;
             }
+            $group = $this->group($byId[$id], $type, $season, $bike, $difficulties, $lengths);
+            if (null === $group || !$group['result']['ranked'] || [] === $group['top']) {
+                continue;
+            }
+            $groups[] = $group;
+            usort($groups, static fn (array $a, array $b): int => $order($a['result']['voters'], $a['name']) <=> $order($b['result']['voters'], $b['name']));
+            $groups = \array_slice($groups, 0, self::EVERYWHERE_REGIONS);
         }
-        usort($groups, static fn (array $a, array $b): int => [$b['result']['voters'], $a['name']] <=> [$a['result']['voters'], $b['name']]);
 
-        return ['ranked' => \array_slice($groups, 0, self::EVERYWHERE_REGIONS), 'quiet' => []];
+        return ['ranked' => $groups, 'quiet' => [], 'filtered' => []];
     }
 
     /**
      * The regions with at least the threshold of voters in their own round of
-     * this list, counted or stored. Every condition is on the indexed
-     * (region_id, category, round_start) of the two tables. A specialty bike's
-     * route gate is left to the list itself, so this may name a region that
-     * then falls short, never miss one.
+     * this list, counted or stored, with that number. Every condition is on
+     * the indexed (region_id, category, round_start) of the two tables. A
+     * specialty bike's route gate is left to the list itself, so for one the
+     * number is an upper bound: a region may then fall short, none is missed.
      *
      * @param list<RegionRow> $regions
      *
-     * @return list<int>
+     * @return array<int, int> region id => voters
      */
     private function busyRegions(array $regions, ItemType $type, ?Season $season, ?BikeType $bike): array
     {
@@ -146,16 +168,27 @@ final class BestOfResults
         $lists = '('.implode(' OR ', $terms).') AND category = :cat';
         $bikeVote = null !== $bike ? ' AND bike_type = :bikecol' : '';
 
-        return array_map(intval(...), $this->db->fetchFirstColumn(
-            "SELECT region_id FROM season_vote
-              WHERE $lists$bikeVote
-              GROUP BY region_id HAVING COUNT(DISTINCT user_id) >= :min
-             UNION
-             SELECT region_id FROM season_result
-              WHERE $lists AND bike_type = :bikecol AND voters >= :min",
+        /** @var list<array{region_id: int|string, voters: int|string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT region_id, MAX(voters) AS voters FROM (
+                 SELECT region_id, COUNT(DISTINCT user_id) AS voters FROM season_vote
+                  WHERE $lists$bikeVote
+                  GROUP BY region_id HAVING COUNT(DISTINCT user_id) >= :min
+                 UNION ALL
+                 SELECT region_id, MAX(voters) AS voters FROM season_result
+                  WHERE $lists AND bike_type = :bikecol AND voters >= :min
+                  GROUP BY region_id
+             ) busy
+             GROUP BY region_id",
             $params,
             $types,
-        ));
+        );
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r['region_id']] = (int) $r['voters'];
+        }
+
+        return $out;
     }
 
     /** Only a route list is narrowed by bike ({@see ListKey}). */
@@ -174,8 +207,8 @@ final class BestOfResults
     }
 
     /**
-     * One region's list, or null when it has nothing to show: nothing of the
-     * kind on the map, or nothing the route filters keep.
+     * One region's list, or null when nothing of the kind is on the map
+     * there. A list the route filters emptied has no rows.
      *
      * @param RegionRow    $region
      * @param list<string> $difficulties
@@ -204,15 +237,16 @@ final class BestOfResults
                 'id' => $c['id'], 'name' => $c['name'], 'votes' => $votes[$c['id']] ?? 0, 'place' => null, 'handicapped' => false,
             ], $this->candidates->top($type, $region['id'], self::CANDIDATE_POOL, $bike));
         }
+        if ([] === $picked) {
+            return null;
+        }
+
         // Difficulty and length hide rows of a route list; the places stay the list's own.
         if (ItemType::QualityRides === $type) {
             $keep = $this->cards->routesMatching(array_column($picked, 'id'), $difficulties, $lengths);
             $picked = array_values(array_filter($picked, static fn (array $p): bool => \in_array($p['id'], $keep, true)));
         }
         $picked = \array_slice($picked, 0, BallotRules::TOP_N);
-        if ([] === $picked) {
-            return null;
-        }
 
         $ids = array_column($picked, 'id');
         $rides = $this->candidates->confirmations($type, $ids);
@@ -223,7 +257,7 @@ final class BestOfResults
 
         $top = [];
         foreach ($picked as $p) {
-            $card = $cards[$p['id']] ?? ['note' => null, 'photo' => null, 'hue' => 0];
+            $card = $cards[$p['id']];
             $top[] = [
                 'id' => $p['id'],
                 'ref' => null,

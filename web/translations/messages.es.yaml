@@ -1979,7 +1979,10 @@ best:
   everywhere_hint: 'Elige un país para ver todas sus regiones, también las listas que aún no tienen clasificación.'
   everywhere_empty: 'Ninguna lista tiene clasificación todavía en esta ronda.'
   vote_here: 'Votar en esta región'
-  quiet_live: 'Todavía nada de este tipo en el mapa en:'
+  filtered_out: 'Nada en estas regiones coincide con estos filtros:'
+  quiet_live_heading: 'Todavía nada que votar'
+  quiet_live: 'Todavía no hay nada de este tipo en el mapa en estas regiones. Un lugar entra en la votación cuando alguien lo confirma en el mapa.'
+  quiet_live_cta: 'Abrir el mapa'
 
 improve:
   condition:

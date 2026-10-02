@@ -83,18 +83,24 @@ final class BestOfLiveTest extends WebTestCase
     }
 
     /** @param list<int> $subjects one voter each, every voter votes for all of them */
-    private function voters(int $regionId, int $count, array $subjects, string $category = 'climbs', ?string $bike = null): void
+    private function voters(int $regionId, int $count, array $subjects, string $category = 'climbs', ?string $bike = null, string $season = 'spring', string $roundStart = '2027-03-01'): void
     {
         for ($v = 0; $v < $count; ++$v) {
             $user = $this->user++;
             foreach ($subjects as $slot => $subject) {
                 $this->db->insert('season_vote', [
                     'user_id' => $user, 'region_id' => $regionId, 'category' => $category, 'subject_id' => $subject,
-                    'bike_type' => $bike, 'season' => 'spring', 'round_start' => '2027-03-01', 'slot' => $slot + 1,
-                    'created_at' => '2027-04-01 10:00:00',
+                    'bike_type' => $bike, 'season' => $season, 'round_start' => $roundStart, 'slot' => $slot + 1,
+                    'created_at' => $roundStart.' 10:00:00',
                 ]);
             }
         }
+    }
+
+    /** @return list<string> the region headings of the page, top to bottom */
+    private static function headings(\Symfony\Component\DomCrawler\Crawler $crawler): array
+    {
+        return $crawler->filter('.rgroup h2')->each(static fn ($n): string => trim($n->text()));
     }
 
     public function testARankedListShowsItsPlacesAndASharedFirst(): void
@@ -177,6 +183,85 @@ final class BestOfLiveTest extends WebTestCase
         $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Route Hills'));
         self::assertStringNotContainsString('Long Loop', $group->text());
         self::assertSame(['2'], $group->filter('ol.rank .n')->each(static fn ($n): string => trim($n->text())));
+    }
+
+    /**
+     * Twelve lists at most, busiest first, and the thirteenth busiest is never
+     * computed. A closed round is stored the first time its list is read, so
+     * a stored row for a region proves the page read its list.
+     */
+    public function testEverywhereComputesOnlyTheTwelveBusiestLists(): void
+    {
+        $ids = [];
+        for ($i = 0; $i < 13; ++$i) {
+            $rid = $this->region(sprintf('xa-b%02d', $i), sprintf('Busy %02d', $i));
+            $ids[$i] = $rid;
+            // Busy 00 has 5 voters, Busy 12 has 17: all ranked.
+            $this->voters($rid, 5 + $i, [(int) $this->climb($rid, sprintf('Col %02d', $i))->getId()], 'climbs', null, 'winter', '2026-12-01');
+        }
+
+        $crawler = $this->client->request('GET', '/best?season=winter');
+
+        self::assertResponseIsSuccessful();
+        $expected = array_map(static fn (int $i): string => sprintf('Busy %02d', $i), range(12, 1));
+        self::assertSame($expected, array_values(array_filter(self::headings($crawler), static fn (string $h): bool => str_starts_with($h, 'Busy '))));
+        $stored = array_map(intval(...), $this->db->fetchFirstColumn('SELECT DISTINCT region_id FROM season_result WHERE region_id IN (?)', [array_values($ids)], [\Doctrine\DBAL\ArrayParameterType::INTEGER]));
+        sort($stored);
+        self::assertSame(\array_slice(array_values($ids), 1), $stored, 'the least busy list was never read');
+    }
+
+    /** A region the route filters emptied is named apart from one with nothing on the map, even when no list is left. */
+    public function testFilteredRegionsAreNotCalledEmpty(): void
+    {
+        $rid = $this->region('xa-routes', 'Route Hills');
+        $this->voters($rid, 5, [$this->route($rid, 'Long Loop', 160_000)], 'quality-rides', 'Road');
+        $this->region('xa-empty', 'Empty Vale', 52.0);
+
+        $crawler = $this->client->request('GET', '/best?cat=quality-rides&len=Short&cc=XA');
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('.rgroup'));
+        $quiet = $crawler->filter('section.quiet');
+        self::assertCount(2, $quiet);
+        self::assertStringContainsString('Nothing in these regions matches these filters', $quiet->eq(0)->text());
+        self::assertStringContainsString('Route Hills', $quiet->eq(0)->text());
+        self::assertStringNotContainsString('Empty Vale', $quiet->eq(0)->text());
+        self::assertStringContainsString('Nothing to vote for yet', $quiet->eq(1)->text());
+        self::assertStringContainsString('Empty Vale', $quiet->eq(1)->text());
+        self::assertStringNotContainsString('Route Hills', $quiet->eq(1)->text());
+        self::assertStringNotContainsString('Nobody has voted here yet', (string) $this->client->getResponse()->getContent());
+    }
+
+    public function testLastYearsTopThreeCarryTheHandicapMark(): void
+    {
+        $rid = $this->region('xa-ranked', 'Ranked Hills');
+        $a = (int) $this->climb($rid, 'Col Again')->getId();
+        $this->db->insert('season_result', [
+            'region_id' => $rid, 'category' => 'climbs', 'bike_type' => '', 'season' => 'spring', 'round_start' => '2026-03-01',
+            'subject_id' => $a, 'subject_name' => 'Col Again', 'votes' => 6, 'score' => 24, 'handicapped' => 'false',
+            'place' => 1, 'wins_before' => 0, 'list_position' => 1, 'voters' => 6, 'frozen_at' => '2026-06-01 02:00:00',
+        ]);
+        $this->voters($rid, 5, [$a]);
+
+        $crawler = $this->client->request('GET', '/best?cc=XA');
+
+        $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Ranked Hills'));
+        self::assertStringContainsString('x0.75', $group->text());
+    }
+
+    /** A route list narrowed to one bike counts only the votes cast on that bike. */
+    public function testOneBikeShowsOnlyTheListsVotedOnThatBike(): void
+    {
+        $gravel = $this->region('xa-gravel', 'Gravel Hills');
+        $road = $this->region('xa-road', 'Road Hills', 52.0);
+        $this->voters($gravel, 5, [$this->route($gravel, 'Dust Loop', 40_000)], 'quality-rides', 'Gravel');
+        $this->voters($road, 5, [$this->route($road, 'Tarmac Loop', 40_000)], 'quality-rides', 'Road');
+
+        $crawler = $this->client->request('GET', '/best?cat=quality-rides&bike=Gravel');
+
+        self::assertResponseIsSuccessful();
+        self::assertContains('Gravel Hills', self::headings($crawler));
+        self::assertNotContains('Road Hills', self::headings($crawler));
     }
 
     public function testNowIsTheDefaultSeason(): void

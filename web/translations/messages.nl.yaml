@@ -2574,7 +2574,10 @@ best:
   everywhere_hint: 'Kies een land om elke regio te zien, ook de lijsten die nog geen rangschikking hebben.'
   everywhere_empty: 'Geen enkele lijst heeft in deze ronde al een rangschikking.'
   vote_here: 'Stem in deze regio'
-  quiet_live: 'Nog niets van deze soort op de kaart in:'
+  filtered_out: 'Niets in deze regio''s past bij deze filters:'
+  quiet_live_heading: 'Nog niets om op te stemmen'
+  quiet_live: 'Er staat in deze regio''s nog niets van deze soort op de kaart. Een plek komt op de stemlijst zodra iemand hem op de kaart bevestigt.'
+  quiet_live_cta: 'Open de kaart'
 
 improve:
   condition:
