@@ -76,6 +76,11 @@ tables:
     github_contributor: >-
         One GitHub login whose pull requests were merged and approved, with the window of those
         pull requests. Feeds the contributor count and arrival graph on the governance page.
+    # Hand-written migration (Version20261002100000). No entity: SeasonResults writes it with DBAL.
+    season_result: >-
+        The stored, never-updated result of one closed season-ballot list, one row per item
+        (route-domain.md §8d). Written once when a closed round is first read or an account that
+        voted in it is deleted, so a closed season's result cannot change afterwards.
 
     # Entities whose docblock does not stand alone.
     reset_password_request: >-
