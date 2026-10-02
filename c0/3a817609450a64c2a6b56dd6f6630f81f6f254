@@ -1,0 +1,23 @@
+web/tests/Vote/SeasonVotePrivacyTest.php
+  s_49442ae34d3603::t_d9878a985d17fc 146-165
+web/src/Account/DataExportService.php
+  s_49442ae34d3603::t_b0e1558d81ddd8 147,149-154
+docs/specs/account-and-auth.md
+  s_49442ae34d3603::t_f87306fed42819 1599-1600
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c03a817609450a64c2a6b56dd6f6630f81f6f254",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
