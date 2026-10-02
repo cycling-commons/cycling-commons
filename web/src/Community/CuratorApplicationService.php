@@ -14,6 +14,7 @@ use App\Messaging\UserMessageKind;
 use App\Moderation\Entity\ModeratorArea;
 use App\Service\AdminActionLogger;
 use App\Service\UserAdminService;
+use App\Support\SupportMailer;
 use App\World\CuratorScopes;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -39,6 +40,7 @@ final class CuratorApplicationService
         private readonly AdminActionLogger $audit,
         private readonly MessageService $messages,
         private readonly CuratorScopes $scopes,
+        private readonly SupportMailer $mailer,
     ) {
     }
 
@@ -131,6 +133,10 @@ final class CuratorApplicationService
         $this->notify($app, 'join.message.received', UserMessageKind::CuratorApplicationReceived);
         // Application flush already ran; this writes the acknowledgement message.
         $this->em->flush();
+
+        // Last, once both rows are committed: a dead mail transport is logged
+        // by the mailer and never reaches the applicant as an error.
+        $this->mailer->notifyCuratorApplication($app, $user, $this->regionName($app));
 
         return $app;
     }
@@ -298,15 +304,24 @@ final class CuratorApplicationService
         );
     }
 
+    /** The requested region's name, or null for the whole country or an area with no region row. */
+    private function regionName(CuratorApplication $app): ?string
+    {
+        $regionId = $app->getRequestedRegionId();
+        if (null === $regionId) {
+            return null;
+        }
+        $name = $this->db->fetchOne('SELECT name FROM region WHERE id = ?', [$regionId]);
+
+        return false !== $name ? (string) $name : null;
+    }
+
     /** Requested region name, else country name, else the ISO code. */
     private function scopeLabel(CuratorApplication $app): string
     {
-        $regionId = $app->getRequestedRegionId();
-        if (null !== $regionId) {
-            $name = $this->db->fetchOne('SELECT name FROM region WHERE id = ?', [$regionId]);
-            if (false !== $name) {
-                return (string) $name;
-            }
+        $region = $this->regionName($app);
+        if (null !== $region) {
+            return $region;
         }
 
         $name = $this->db->fetchOne('SELECT name FROM world_country WHERE iso2 = ?', [$app->getCountryCode()]);

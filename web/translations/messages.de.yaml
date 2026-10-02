@@ -4002,6 +4002,12 @@ support:
     bug_outcome_subject: 'Zu Ihrer Fehlermeldung (%reference%)'
     bug_outcome_thanks: 'Meldungen wie Ihre machen das hier besser. Danke für die Mühe.'
     bug_outcome_default_note: 'Danke für Ihre Meldung. Das ist jetzt behoben und geht mit dem nächsten Update online.'
+    curator_notify_kind: 'Kuratorbewerbung'
+    country_notify_kind: 'Länderanfrage'
+    profile_none: 'Keins'
+    country_total_label: 'Anfragen für dieses Land'
+    answer_yes: 'Ja'
+    answer_no: 'Nein'
 
 roles:
   kicker: 'Mitmachen'

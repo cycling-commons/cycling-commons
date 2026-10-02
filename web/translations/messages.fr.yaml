@@ -3994,6 +3994,12 @@ support:
     bug_outcome_subject: 'À propos de votre signalement (%reference%)'
     bug_outcome_thanks: 'Des signalements comme le vôtre font progresser tout cela. Merci d''avoir pris le temps.'
     bug_outcome_default_note: 'Merci de nous l''avoir signalé. C''est corrigé et ce sera en ligne avec la prochaine mise à jour.'
+    curator_notify_kind: 'Candidature de curateur'
+    country_notify_kind: 'Demande de pays'
+    profile_none: 'Aucun'
+    country_total_label: 'Demandes pour ce pays'
+    answer_yes: 'Oui'
+    answer_no: 'Non'
 
 roles:
   kicker: 'Participer'

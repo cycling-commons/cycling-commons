@@ -4001,6 +4001,12 @@ support:
     bug_outcome_subject: 'Over je bugmelding (%reference%)'
     bug_outcome_thanks: 'Meldingen zoals die van jou maken dit beter. Bedankt voor de moeite.'
     bug_outcome_default_note: 'Bedankt voor je melding. Het is opgelost en staat online met de volgende update.'
+    curator_notify_kind: 'Aanvraag als regiobeheerder'
+    country_notify_kind: 'Landaanvraag'
+    profile_none: 'Geen'
+    country_total_label: 'Aanvragen voor dit land'
+    answer_yes: 'Ja'
+    answer_no: 'Nee'
 
 roles:
   kicker: 'Doe mee'

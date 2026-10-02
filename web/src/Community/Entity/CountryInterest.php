@@ -60,9 +60,6 @@ class CountryInterest
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    /**
-     * @psalm-suppress UnusedProperty
-     */
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
@@ -110,6 +107,12 @@ class CountryInterest
     {
         $this->willingToCurate = $v;
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /** When this signal last changed: its creation, or the latest re-submission. */
+    public function getUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
     }
 
     public function getNote(): ?string

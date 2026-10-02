@@ -6,18 +6,25 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Community\Entity\CountryInterest;
+use App\Community\Entity\CuratorApplication;
+use App\Entity\User;
 use App\Support\Entity\BugReport;
 use App\Support\Entity\ContactMessage;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Intl\Countries;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * The two mails a support form sends, and the one it sends later.
+ * The two mails a support form sends, and the one it sends later. Plus the two
+ * that tell the support address a rider applied to curate or asked for a
+ * country, so neither waits unseen on an admin page nobody has open.
  *
  * **Every send is best-effort.** A dead mail transport must never lose a
  * message or a bug report: the row is written and committed first, the mail is
@@ -42,6 +49,7 @@ final readonly class SupportMailer
         private TranslatorInterface $translator,
         private LoggerInterface $logger,
         private SupportRecipients $recipients,
+        private UrlGeneratorInterface $urls,
         #[Autowire('%env(APP_SITE_URL)%')]
         private string $siteUrl,
         #[Autowire('%kernel.default_locale%')]
@@ -168,6 +176,115 @@ final readonly class SupportMailer
         }
 
         $this->send($email, 'bug notification', ['bug_report_id' => $report->getId()]);
+    }
+
+    /**
+     * Tell whoever is on duty that somebody offered to curate.
+     *
+     * Sent once per application, after it is committed. The reviewer answers
+     * on the applications desk; this mail only says that something is waiting
+     * there and carries enough to judge how urgent it is.
+     *
+     * @param ?string $regionName the requested region's name, when the application names one that exists
+     */
+    public function notifyCuratorApplication(CuratorApplication $application, User $applicant, ?string $regionName): void
+    {
+        $to = $this->recipients->all();
+        if ([] === $to) {
+            $this->logger->warning('A curator application arrived with no support recipients configured.', [
+                'curator_application_id' => $application->getId(),
+            ]);
+
+            return;
+        }
+
+        $country = $this->countryName($application->getCountryCode());
+        $place = $regionName ?? ('' !== $application->getRequestedArea() ? $application->getRequestedArea() : null);
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($this->fromEmail, $this->fromName()))
+            ->subject(\sprintf(
+                '[Cycling Commons] Curator application: %s%s',
+                null !== $place ? $place.', ' : '',
+                $country,
+            ))
+            ->htmlTemplate('emails/curator_application_notify.html.twig')
+            ->context([
+                'locale' => $this->defaultLocale,
+                'application' => $application,
+                'applicant' => $applicant,
+                'country_name' => $country,
+                'region_name' => $regionName,
+                'profile_url' => $applicant->isPublicProfile() && null !== $applicant->getUuid()
+                    ? rtrim($this->siteUrl, '/').$this->urls->generate('rider_profile', [
+                        'uuid' => $applicant->getUuid()->toRfc4122(),
+                        '_locale' => $this->defaultLocale,
+                    ])
+                    : null,
+                'desk_url' => rtrim($this->siteUrl, '/').$this->urls->generate('admin_curator_applications'),
+            ]);
+
+        $email->replyTo(new Address($applicant->getEmail(), $applicant->getDisplayName()));
+        foreach ($to as $address) {
+            $email->addTo($address);
+        }
+
+        $this->send($email, 'curator application notification', ['curator_application_id' => $application->getId()]);
+    }
+
+    /**
+     * Tell whoever is on duty that a rider asked for a country or an area.
+     *
+     * The caller decides whether a request is new enough to mail about
+     * ({@see \App\Community\CountryInterestService::record()}); this only
+     * writes it.
+     *
+     * @param int $countryTotal every request on file for this country, this one included
+     */
+    public function notifyCountryRequest(CountryInterest $interest, User $requester, int $countryTotal): void
+    {
+        $to = $this->recipients->all();
+        if ([] === $to) {
+            $this->logger->warning('A country request arrived with no support recipients configured.', [
+                'country_interest_id' => $interest->getId(),
+            ]);
+
+            return;
+        }
+
+        $country = $this->countryName($interest->getCountryCode());
+        $area = $interest->getRegionName();
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($this->fromEmail, $this->fromName()))
+            ->subject(\sprintf(
+                '[Cycling Commons] Country request: %s%s%s',
+                '' !== $area ? $area.', ' : '',
+                $country,
+                $interest->isWillingToCurate() ? ' (would curate)' : '',
+            ))
+            ->htmlTemplate('emails/country_request_notify.html.twig')
+            ->context([
+                'locale' => $this->defaultLocale,
+                'interest' => $interest,
+                'requester' => $requester,
+                'country_name' => $country,
+                'country_total' => $countryTotal,
+                'desk_url' => rtrim($this->siteUrl, '/').$this->urls->generate('admin_country_requests'),
+            ]);
+
+        $email->replyTo(new Address($requester->getEmail(), $requester->getDisplayName()));
+        foreach ($to as $address) {
+            $email->addTo($address);
+        }
+
+        $this->send($email, 'country request notification', ['country_interest_id' => $interest->getId()]);
+    }
+
+    /** The country's English name for the team, or the code when Intl has none. */
+    private function countryName(string $code): string
+    {
+        return Countries::exists($code) ? Countries::getName($code, $this->defaultLocale) : $code;
     }
 
     /** Tell the reporter their bug was filed, and how to follow it. */

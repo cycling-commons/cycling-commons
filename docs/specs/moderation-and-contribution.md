@@ -2918,6 +2918,25 @@ distinct and would let one person file the same country twice.
 country, busiest first, excluding the `''` rows: those are already the country
 total, and listing them as an area would count them twice.
 
+**The support address gets an email** (`SupportMailer::notifyCountryRequest()`,
+owner 2026-10-02), sent by `record()` after the flush, to the same recipients as
+the contact form and bug reports ([contact-and-support.md](contact-and-support.md)
+§7). It carries the country, the area or "the whole country", whether the rider
+would curate, the country's running total (every `country_interest` row for that
+code, this one included, as `/admin/country-requests` counts them), the rider's
+display name and address (also on Reply-To), their note and a link to
+`/admin/country-requests`. A failed send is logged and never reaches the rider:
+their request is already committed.
+
+The flood rule is **mail only when the request says something new**: a row that
+did not exist, or a rider who now ticks "I would curate" where before they only
+asked. Asking again for the same area, or changing the note, updates the row and
+sends nothing. The form is signed-in only and the `country_interest` limiter
+allows 10 posts per account per day, so one account can cause at most one mail
+per distinct area it names, never the same one twice. No per-country throttle on
+top: it would drop the second rider's request from the inbox, and the running
+total in the next mail cannot say who that was.
+
 Migration `Version20260913200000`.
 
 ### 11.1a Which areas are offered: `App\World\CuratorScopes`
@@ -3077,6 +3096,19 @@ promised time on it. Three details that are easy to get wrong:
   `country_code`, so a rider who volunteered for North Holland was told their
   application "to curate NL" had arrived: the wrong scope, and a database code
   rather than a place.
+
+**The support address gets an email too** (`SupportMailer::notifyCuratorApplication()`,
+owner 2026-10-02). `submit()` sends it last, once the application and the
+applicant's receipt are both flushed, to the same recipients as the contact form
+and bug reports ([contact-and-support.md](contact-and-support.md) §7). Subject
+`[Cycling Commons] Curator application: <country>`, with the requested region
+or area in front when there is one. It carries the requested scope, the
+applicant's display name and address (also on Reply-To), their public profile
+link or "None", the OSM handle with its check, the social link (printed, not
+linked), when it arrived, the `about` text, and a link to
+`/admin/curator-applications`. A failed send is logged and never reaches the
+applicant. No flood rule beyond the existing ones: one pending application per
+person per country, and the `curator_application` limiter (3 a day).
 
 **The applications desk is a list that opens.** Every application used to
 render expanded, so a reviewer scrolled past everything to reach the one they

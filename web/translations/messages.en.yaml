@@ -4020,6 +4020,12 @@ support:
     bug_outcome_subject: 'About your bug report (%reference%)'
     bug_outcome_thanks: 'Reports like yours are how this gets better. Thank you for the trouble.'
     bug_outcome_default_note: 'Thank you for reporting this. It is fixed now and will be live with the next update.'
+    curator_notify_kind: 'Curator application'
+    country_notify_kind: 'Country request'
+    profile_none: 'None'
+    country_total_label: 'Requests for this country'
+    answer_yes: 'Yes'
+    answer_no: 'No'
 
 roles:
   kicker: 'Get involved'

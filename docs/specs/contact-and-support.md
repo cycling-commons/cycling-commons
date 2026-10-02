@@ -565,6 +565,27 @@ the address published on the contact page itself. That last step matters in
 practice: a deployment that has filled in its legal identity block has, by
 definition, published an address it reads.
 
+**What the support address receives.** Four notifications, all from
+{@see App\Support\SupportMailer}, all in the site's default language, all with
+the sender's address on Reply-To and a link to the desk that handles them:
+
+| mail | subject | sent when | links to |
+|---|---|---|---|
+| `notifyContact` | `[Cycling Commons] <topic>` (`(clock)` for a topic with a legal deadline) | a contact message is committed | `/moderate/inbox` |
+| `notifyBug` | `[Cycling Commons] Bug in <area>: <title>` (`CRITICAL bug` for a critical one) | a bug report is committed | `/moderate/bugs/<id>` |
+| `notifyCuratorApplication` | `[Cycling Commons] Curator application: [<region or area>, ]<country>` | a curator application and the applicant's receipt are committed ([moderation-and-contribution.md](moderation-and-contribution.md) §11.2) | `/admin/curator-applications` |
+| `notifyCountryRequest` | `[Cycling Commons] Country request: [<area>, ]<country>[ (would curate)]` | a country request is committed and says something new ([moderation-and-contribution.md](moderation-and-contribution.md) §11.1) | `/admin/country-requests` |
+
+The last two exist so a volunteer or a request does not wait unseen on an admin
+page nobody has open (owner 2026-10-02). The curator application mail carries
+the country, the requested scope, the applicant's display name and address,
+their public profile link or "None", their OpenStreetMap handle and its check,
+their link, the time it arrived and their "about" text. The country request
+mail carries the country, the area (or the whole country), whether they would
+curate, how many requests that country now has (this one included, named areas
+counted, as the desk counts them), the requester's name and address, the time
+and their note. Times are printed in UTC with the zone named.
+
 The support list is separate from {@see App\Media\AlertRecipients} on purpose:
 that one is a pager for an intimate-imagery flood, this one is the front door,
 and either the pager drowns in "how do I add a water tap" or the front door

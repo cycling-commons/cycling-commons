@@ -1,0 +1,71 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# "Somebody offered to curate." Sent to whoever is on duty (SupportRecipients)
+   once the application is committed (CuratorApplicationService::submit).
+
+   In the site's default language, like every other mail to the team. Reply-To
+   is the applicant's own address, set in SupportMailer, so answering them is
+   one click; the decision itself is taken on the applications desk. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ 'support.email.curator_notify_kind'|trans([], null, locale) }} · {{ country_name }}{% endblock %}
+
+{% block content %}
+  {% set scope = region_name
+      ?: (application.requestedArea
+          ? application.requestedArea ~ ' (' ~ 'join.scope_not_yet'|trans([], null, locale) ~ ')'
+          : 'join.scope_whole_country'|trans([], null, locale)) %}
+
+  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.email.curator_notify_kind'|trans([], null, locale) }}</p>
+  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ country_name }} ({{ application.countryCode }})</p>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px">
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'admin.curator.scope_label'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ scope }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.from'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ applicant.displayName }} &lt;{{ applicant.email }}&gt;</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'admin.curator.see_profile'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">
+        {% if profile_url %}<a href="{{ profile_url }}" style="color:#14160e">{{ profile_url }}</a>{% else %}{{ 'support.email.profile_none'|trans([], null, locale) }}{% endif %}
+      </td>
+    </tr>
+    {% if application.osmUsername %}
+      <tr>
+        <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'admin.curator.osm_label'|trans([], null, locale) }}</td>
+        <td style="padding:4px 0;font-size:14px">
+          {{ application.osmUsername }} -
+          {% if application.osmVerifiedAt is null %}
+            {{ 'admin.curator.osm_unverified'|trans([], null, locale) }}
+          {% elseif application.osmExists %}
+            {{ 'admin.curator.osm_changesets'|trans({'%count%': application.osmChangesetCount}, null, locale) }}
+          {% else %}
+            {{ 'admin.curator.osm_not_found'|trans([], null, locale) }}
+          {% endif %}
+        </td>
+      </tr>
+    {% endif %}
+    {% if application.socialUrl %}
+      <tr>
+        <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'admin.curator.social_label'|trans([], null, locale) }}</td>
+        {# Printed, not linked: the scheme is pinned to http(s) by the service,
+           but a mail is no place to make an applicant's link one click away. #}
+        <td style="padding:4px 0;font-family:monospace;font-size:13px">{{ application.socialUrl }}</td>
+      </tr>
+    {% endif %}
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.received'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ application.createdAt|date('j F Y, H:i', 'UTC') }} UTC</td>
+    </tr>
+  </table>
+
+  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'admin.curator.about_label'|trans([], null, locale) }}</p>
+  <div style="padding:12px 16px;background:#f5eee0;border-radius:6px;font-size:14px;line-height:1.6;white-space:pre-wrap">{{ application.about }}</div>
+
+  <p style="margin:24px 0 0">
+    <a href="{{ desk_url }}" style="display:inline-block;background:#14160e;color:#fdfaf1;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:14px">{{ 'support.email.notify_cta'|trans([], null, locale) }}</a>
+  </p>
+{% endblock %}

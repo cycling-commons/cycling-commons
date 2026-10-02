@@ -4029,6 +4029,12 @@ support:
     bug_outcome_subject: 'Sobre su informe de error (%reference%)'
     bug_outcome_thanks: 'Informes como el suyo son los que hacen que esto mejore. Gracias por tomarse la molestia.'
     bug_outcome_default_note: 'Gracias por informarnos. Ya está arreglado y estará disponible con la próxima actualización.'
+    curator_notify_kind: 'Solicitud de curaduría'
+    country_notify_kind: 'Solicitud de país'
+    profile_none: 'Ninguno'
+    country_total_label: 'Solicitudes para este país'
+    answer_yes: 'Sí'
+    answer_no: 'No'
 
 roles:
   kicker: 'Participa'

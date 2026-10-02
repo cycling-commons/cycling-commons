@@ -8,6 +8,7 @@ namespace App\Community;
 
 use App\Community\Entity\CountryInterest;
 use App\Entity\User;
+use App\Support\SupportMailer;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -27,6 +28,7 @@ final class CountryInterestService
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
         private readonly PublicNoteFilter $notes,
+        private readonly SupportMailer $mailer,
     ) {
     }
 
@@ -36,6 +38,14 @@ final class CountryInterestService
      * One row per person per area, the area being '' for a whole country. A
      * rider who asks for Texas and later for New Mexico is two signals and one
      * person; asking for Texas twice is one of each.
+     *
+     * The support address hears about a request once it is committed, and
+     * only when it says something new: a row that did not exist, or a rider
+     * who now offers to curate where before they only asked. Asking again for
+     * the same area, or changing the note, updates the row and sends nothing.
+     * Together with the per-account `country_interest` limiter (10 a day) that
+     * is the whole flood rule: one account can produce at most one mail per
+     * distinct area it names, and never the same one twice.
      *
      * @param string $regionName the area inside the country, '' for all of it
      *
@@ -70,6 +80,7 @@ final class CountryInterestService
             ->findOneBy(['userId' => (int) $user->getId(), 'countryCode' => $cc, 'regionName' => $region]);
 
         $interest = $existing ?? new CountryInterest((int) $user->getId(), $cc, $region);
+        $wasWilling = null !== $existing && $existing->isWillingToCurate();
         $interest->setWillingToCurate($willingToCurate || $interest->isWillingToCurate());
         if (null !== $clean) {
             $interest->setNote($clean);
@@ -77,6 +88,10 @@ final class CountryInterestService
 
         $this->em->persist($interest);
         $this->em->flush();
+
+        if (null === $existing || (!$wasWilling && $interest->isWillingToCurate())) {
+            $this->mailer->notifyCountryRequest($interest, $user, $this->countryTotal($cc));
+        }
 
         return $interest;
     }
@@ -176,6 +191,12 @@ final class CountryInterestService
             ],
             $rows,
         );
+    }
+
+    /** Every request on file for one country, the named areas included, as the admin desk counts them. */
+    private function countryTotal(string $cc): int
+    {
+        return (int) $this->db->fetchOne('SELECT COUNT(*) FROM country_interest WHERE country_code = ?', [$cc]);
     }
 
     private function countryExists(string $cc): bool

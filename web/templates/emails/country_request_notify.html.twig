@@ -1,0 +1,48 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# "A rider asked for a country, or an area of one." Sent to whoever is on duty
+   (SupportRecipients) once the request is committed, and only when it is new
+   or newly offers to curate (CountryInterestService::record).
+
+   In the site's default language, like every other mail to the team. Reply-To
+   is the rider's own address, set in SupportMailer: somebody who offered to
+   curate is reached by writing to them. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ 'support.email.country_notify_kind'|trans([], null, locale) }} · {{ country_name }}{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.email.country_notify_kind'|trans([], null, locale) }}</p>
+  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ country_name }} ({{ interest.countryCode }})</p>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px">
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'admin.country_requests.area'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ interest.regionName ?: 'admin.country_requests.whole_country'|trans([], null, locale) }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'admin.country_requests.would_curate'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ (interest.willingToCurate ? 'support.email.answer_yes' : 'support.email.answer_no')|trans([], null, locale) }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.email.country_total_label'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ country_total }}</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.from'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ requester.displayName }} &lt;{{ requester.email }}&gt;</td>
+    </tr>
+    <tr>
+      <td style="padding:4px 14px 4px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.inbox.received'|trans([], null, locale) }}</td>
+      <td style="padding:4px 0;font-size:14px">{{ interest.updatedAt|date('j F Y, H:i', 'UTC') }} UTC</td>
+    </tr>
+  </table>
+
+  {% if interest.note %}
+    <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'admin.country_requests.note'|trans([], null, locale) }}</p>
+    <div style="padding:12px 16px;background:#f5eee0;border-radius:6px;font-size:14px;line-height:1.6;white-space:pre-wrap">{{ interest.note }}</div>
+  {% endif %}
+
+  <p style="margin:24px 0 0">
+    <a href="{{ desk_url }}" style="display:inline-block;background:#14160e;color:#fdfaf1;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:14px">{{ 'support.email.notify_cta'|trans([], null, locale) }}</a>
+  </p>
+{% endblock %}
