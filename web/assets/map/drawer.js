@@ -36,6 +36,7 @@ import { markOpened } from './desk-seen.js';
 import { routeClimbsSlot } from './route-climbs.js';
 import { hydrateRouteClimbs, hydrateRouteAlong, releaseRouteList } from './listed-place.js';
 import { routeAlongSlot } from './along-list.js';
+import { voteHref } from './vote-link.js';
 
 
 // Race-guard: bumped on every openDrawer() so a slow history fetch cannot paint a stale drawer.
@@ -729,8 +730,9 @@ function buildRecord(layer, f){
       ${badge}${body}${diff}${shapeSwitch}${context}${asked}${replied}
     </div>`;
   }
-  // Vote CTA: votable types only, and only while community.voting_live.
-  const vote = (window.CC_VOTING_LIVE && f.cur && CC_VOTABLE.has(layer.key)) ? `<a class="cc-d-act cc-d-vote" href="/vote">▲ ${D.voteRound||'Vote for it in this round'}</a>` : '';
+  // Vote CTA: a catalogue row of a votable kind, only while community.voting_live (route-domain.md §8d).
+  const voteUrl = (window.CC_VOTING_LIVE && CC_VOTABLE.has(layer.key)) ? voteHref(window.CC_VOTE_URL, layer.key, f.id) : null;
+  const vote = voteUrl ? `<a class="cc-d-act cc-d-vote" href="${escPend(voteUrl)}">▲ ${D.voteRound||'Vote for it in this round'}</a>` : '';
   // docs/specs/moderation-and-contribution.md §10 — confirmation panel, hydrated on open.
   const confirmPanel = (CC_CONFIRMABLE.has(layer.key) && f.id!=null)
     ? `<div class="cc-cf" data-item="${f.id}"><div class="cc-cf-body" data-cf-body></div><div class="cc-cf-login" hidden>${D.loginConfirm||'Log in to confirm'} · <a href="/login">${I18N.login||'Log in'}</a></div></div>`

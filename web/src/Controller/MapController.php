@@ -149,6 +149,7 @@ final class MapController extends AbstractController
             // window and drops its "?". One clock for tiles and pins.
             'witness_cutoff' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d'),
             'voting_live' => 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE),
+            'vote_url' => $this->generateUrl('vote'),
             'catalog_boot' => $this->catalogBoot($request, $catalogProvider),
         ];
 
@@ -441,11 +442,11 @@ final class MapController extends AbstractController
             'anonCredit' => 'anon_credit',
             'photosNone' => 'd_photos_none', 'photosOne' => 'd_photos_one',
             'photosMany' => 'd_photos_many',
-            'rodeThis' => 'd_rode_this', 'bikeTypePh' => 'd_bike_type_ph', 'recommend' => 'd_recommend',
-            'vote' => 'd_vote', 'suggestCorrection' => 'd_suggest_correction', 'optionalDetail' => 'd_optional_detail',
+            'rodeThis' => 'd_rode_this', 'bikeTypePh' => 'd_bike_type_ph',
+            'suggestCorrection' => 'd_suggest_correction', 'optionalDetail' => 'd_optional_detail',
             'markParts' => 'd_mark_parts', 'send' => 'd_send', 'loginRate' => 'd_login_rate',
-            'ridesProgress' => 'd_rides_progress', 'voteOne' => 'd_vote_one', 'voteMany' => 'd_vote_many',
-            'youRode' => 'd_you_rode', 'votedSeason' => 'd_voted_season',
+            'ridesProgress' => 'd_rides_progress',
+            'youRode' => 'd_you_rode',
             'reasonMetadata' => 'd_reason_metadata', 'whichDetail' => 'd_which_detail',
             'shouldBe' => 'd_should_be', 'notSet' => 'd_not_set', 'pickDetail' => 'd_pick_detail',
             'curatorNote' => 'd_curator_note', 'editOnDesk' => 'd_edit_on_desk',
@@ -467,7 +468,7 @@ final class MapController extends AbstractController
             'toastModeLift' => 'd_toast_mode_lift',
             'toastShownAnyway' => 'd_toast_shown_anyway', 'toastFilterToo' => 'd_toast_filter_too',
             'toastLimit' => 'd_toast_limit', 'toastOpenRoute' => 'd_toast_open_route',
-            'pickBikeRode' => 'd_pick_bike_rode', 'pickBikeVote' => 'd_pick_bike_vote',
+            'pickBikeRode' => 'd_pick_bike_rode',
             'undo' => 'd_undo', 'clear' => 'd_clear', 'done' => 'd_done', 'pointSet' => 'd_point_set',
             'barOne' => 'd_bar_one', 'barMany' => 'd_bar_many', 'marksOne' => 'd_marks_one', 'marksMany' => 'd_marks_many',
             'noPhoto' => 'd_no_photo', 'addPhoto' => 'd_add_photo', 'photoLoading' => 'd_photo_loading', 'add' => 'd_add', 'visitSite' => 'd_visit_site',

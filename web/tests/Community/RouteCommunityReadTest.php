@@ -9,10 +9,8 @@ namespace App\Tests\Community;
 use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteRide;
-use App\Catalog\Entity\RouteVote;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
-use App\Catalog\Season;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -75,26 +73,24 @@ final class RouteCommunityReadTest extends WebTestCase
         self::assertSame(1, $data['rideCount']);   // proposer excluded
         self::assertSame(3, $data['threshold']);
         self::assertTrue($data['iRode']);
-        self::assertFalse($data['iVotedThisSeason']);
+        // Votes live on the season ballot now (route-domain.md §8d).
+        self::assertArrayNotHasKey('voteCount', $data);
+        self::assertArrayNotHasKey('iVotedThisSeason', $data);
+        self::assertArrayNotHasKey('season', $data);
         self::assertIsString($data['token']);
         self::assertNotSame('', $data['token']);
     }
 
-    public function testMyVoteThisSeasonIsReflected(): void
+    public function testTheRouteVoteEndpointIsGone(): void
     {
         $client = static::createClient();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $me = $this->rider($em, 'voter@test.test');
         $route = $this->route($em, ItemState::Verified, null);
-        $season = Season::current(new \DateTimeImmutable());
-        $em->persist(new RouteVote($route->getId(), $me->getId(), $season, BikeType::Road));
-        $em->flush();
 
-        $client->loginUser($me);
-        $client->request('GET', '/routes/'.$route->getId().'/community');
-        $data = json_decode((string) $client->getResponse()->getContent(), true);
-        self::assertSame(1, $data['voteCount']);
-        self::assertTrue($data['iVotedThisSeason']);
+        $client->loginUser($this->rider($em, 'gone@test.test'));
+        $client->request('POST', '/routes/'.$route->getId().'/vote', ['season' => 'spring', 'bike_type' => 'Gravel']);
+
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testUnservedRouteIs404(): void

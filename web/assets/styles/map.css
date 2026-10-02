@@ -1300,7 +1300,7 @@
   .cc-rc-suggest summary:hover{color:var(--trail)}
   .cc-rc-login{font-size:.82rem;color:rgb(var(--chrome-fg) / .8)}
   .cc-rc-login a{color:var(--trail)}
-  .cc-rc-anon .cc-rc-ride,.cc-rc-anon .cc-rc-vote,.cc-rc-anon .cc-rc-suggest{opacity:.5;pointer-events:none}
+  .cc-rc-anon .cc-rc-ride,.cc-rc-anon .cc-rc-suggest{opacity:.5;pointer-events:none}
   /* Community confirmation panel (water potability / "still here?"). */
   /* The drawer's three action bands (owner 2026-08-13): community voice,
      change-the-record, report-a-state-change — each separated by a hairline,

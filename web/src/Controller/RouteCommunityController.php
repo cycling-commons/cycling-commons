@@ -11,7 +11,6 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemState;
 use App\Catalog\RouteMetadata;
 use App\Catalog\RouteSuggestionReason;
-use App\Catalog\Season;
 use App\Community\RouteCommunityService;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
@@ -45,11 +44,9 @@ final class RouteCommunityController extends AbstractController
     {
         $user = $this->requireUser();
         $route = $this->activeRoute($id);
-        $season = Season::current(new \DateTimeImmutable());
 
         return $this->json([
-            ...$this->community->snapshot($route, $user, $season),
-            'season' => $season->value,
+            ...$this->community->snapshot($route, $user),
             'token' => $csrf->getToken('route-community')->getValue(),
         ]);
     }
@@ -89,27 +86,6 @@ final class RouteCommunityController extends AbstractController
         }
 
         $this->community->recordRide($route, $user, $bike);
-
-        return $this->freshSnapshot($route, $user);
-    }
-
-    #[Route('/routes/{id}/vote', name: 'route_vote', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function vote(int $id, Request $request): JsonResponse
-    {
-        $user = $this->requireUser();
-        $this->validateCsrf($request);
-        $route = $this->activeRoute($id);
-        if (ItemState::Verified !== $route->getState()) {
-            throw $this->createNotFoundException('Route is not open for voting.');
-        }
-
-        $season = Season::tryFrom((string) $request->request->get('season'));
-        $bike = BikeType::tryFrom((string) $request->request->get('bike_type'));
-        if (null === $season || null === $bike) {
-            return $this->json(['error' => 'invalid_vote'], 422);
-        }
-
-        $this->community->recordVote($route, $user, $season, $bike);
 
         return $this->freshSnapshot($route, $user);
     }
@@ -234,8 +210,7 @@ final class RouteCommunityController extends AbstractController
     private function freshSnapshot(RecommendedRoute $route, User $user): JsonResponse
     {
         $this->em->refresh($route);
-        $season = Season::current(new \DateTimeImmutable());
 
-        return $this->json(['ok' => true, ...$this->community->snapshot($route, $user, $season)]);
+        return $this->json(['ok' => true, ...$this->community->snapshot($route, $user)]);
     }
 }

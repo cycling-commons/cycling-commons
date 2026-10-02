@@ -11,10 +11,8 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\RouteChangeHistory;
 use App\Catalog\Entity\RouteRide;
 use App\Catalog\Entity\RouteSuggestion;
-use App\Catalog\Entity\RouteVote;
 use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionReason;
-use App\Catalog\Season;
 use App\Entity\User;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
@@ -24,7 +22,7 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
- * Route community loop: snapshot, ride (and verify flip), vote, suggestion.
+ * Route community loop: snapshot, ride (and verify flip), suggestion. Votes are on the season ballot (route-domain.md §8d).
  *
  * @see docs/specs/route-domain.md §6
  *
@@ -48,12 +46,11 @@ final class RouteCommunityService
     }
 
     /**
-     * @return array{state: string, rideCount: int, threshold: int, iRode: bool, voteCount: int, iVotedThisSeason: bool}
+     * @return array{state: string, rideCount: int, threshold: int, iRode: bool}
      */
-    public function snapshot(RecommendedRoute $route, User $user, Season $season): array
+    public function snapshot(RecommendedRoute $route, User $user): array
     {
         $routeId = (int) $route->getId();
-        $userId = $user->getId();
 
         $rideCount = (int) $this->db->fetchOne(
             'SELECT COUNT(DISTINCT user_id) FROM route_ride WHERE route_id = :r AND user_id <> :p',
@@ -61,15 +58,7 @@ final class RouteCommunityService
         );
         $iRode = (bool) $this->db->fetchOne(
             'SELECT 1 FROM route_ride WHERE route_id = :r AND user_id = :u',
-            ['r' => $routeId, 'u' => $userId],
-        );
-        $voteCount = (int) $this->db->fetchOne(
-            'SELECT COUNT(*) FROM route_vote WHERE route_id = :r',
-            ['r' => $routeId],
-        );
-        $iVoted = (bool) $this->db->fetchOne(
-            'SELECT 1 FROM route_vote WHERE route_id = :r AND user_id = :u AND season = :s',
-            ['r' => $routeId, 'u' => $userId, 's' => $season->value],
+            ['r' => $routeId, 'u' => $user->getId()],
         );
 
         return [
@@ -77,8 +66,6 @@ final class RouteCommunityService
             'rideCount' => $rideCount,
             'threshold' => $this->rideVerifyThreshold(),
             'iRode' => $iRode,
-            'voteCount' => $voteCount,
-            'iVotedThisSeason' => $iVoted,
         ];
     }
 
@@ -119,21 +106,6 @@ final class RouteCommunityService
             }
         }
 
-        $this->em->flush();
-    }
-
-    /** Idempotent per (route, user, season). */
-    public function recordVote(RecommendedRoute $route, User $user, Season $season, BikeType $bike): void
-    {
-        $already = (bool) $this->db->fetchOne(
-            'SELECT 1 FROM route_vote WHERE route_id = :r AND user_id = :u AND season = :s',
-            ['r' => (int) $route->getId(), 'u' => $user->getId(), 's' => $season->value],
-        );
-        if ($already) {
-            return;
-        }
-
-        $this->em->persist(new RouteVote((int) $route->getId(), $user->getId(), $season, $bike));
         $this->em->flush();
     }
 

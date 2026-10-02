@@ -560,9 +560,8 @@ Endpoints (unlocalized paths, `App\Controller\RouteCommunityController` +
 
 | Endpoint | Access | Accepted route states | Returns |
 |---|---|---|---|
-| `GET /routes/{id}/community` | auth (401) | SERVED | snapshot `{state, rideCount, threshold, iRode, voteCount, iVotedThisSeason}` + `season` (current, server-computed) + `token` (CSRF) |
+| `GET /routes/{id}/community` | auth (401) | SERVED | snapshot `{state, rideCount, threshold, iRode}` + `token` (CSRF) |
 | `POST /routes/{id}/rode-it` | auth + CSRF | SERVED (unverified **and** verified) | `{ok: true}` + fresh snapshot |
-| `POST /routes/{id}/vote` | auth + CSRF | **verified only** — voting opens at verified (no vote-stuffing un-ridden routes) | `{ok: true}` + fresh snapshot |
 | `POST /routes/{id}/suggest` | auth + CSRF | SERVED | `{ok: true}` |
 | `GET /routes/{id}/corrections` | auth + `ROLE_CURATOR` (else 403) | SERVED | pending corrections + segments (route-domain.md §7) |
 | `GET /routes/{id}.gpx` | public | SERVED | GPX 1.1 of the stored geometry, ODbL `<copyright>` header, `Cache-Control: public, max-age=3600` |
@@ -582,11 +581,11 @@ served, so the drawer can't open for them anyway).
 - **Stateless CSRF, one token id.** `route-community` is registered in
   `framework.csrf.stateless_token_ids`
   (`web/config/packages/csrf.yaml`); the GET snapshot response delivers the
-  token, and all three POSTs send it back as `_token`. Details of the
+  token, and both POSTs send it back as `_token`. Details of the
   stateless-CSRF mechanism: [security-architecture.md](security-architecture.md).
-- **HTTP enum params are backing values** (`bike_type=E-bike`,
-  `season=spring`), not case names; unknown values → 422
-  (`invalid_bike_type` / `invalid_vote` / `invalid_reason` /
+- **HTTP enum params are backing values** (`bike_type=E-bike`), not case
+  names; unknown values → 422
+  (`invalid_bike_type` / `invalid_reason` /
   `invalid_segments`, `note_too_long`).
 - **Over-limit suggest → 429** `{error: "rate_limited"}` (JSON API; the
   flash+200 pattern applies only to HTML form pages like `/propose-route`).
@@ -597,9 +596,9 @@ served, so the drawer can't open for them anyway).
 
 ### 6.2 Idempotency and the verification flip
 
-- **rode-it** and **vote** carry no rate limiter: they are self-bounding via
-  their UNIQUE constraints, and a repeat POST is a silent no-op that returns
-  a fresh snapshot.
+- **rode-it** carries no rate limiter: it is self-bounding via its UNIQUE
+  constraint, and a repeat POST is a silent no-op that returns a fresh
+  snapshot.
 - **Verification flip** (`RouteCommunityService::recordRide()`): when a
   currently-`unverified` route's count of **distinct riders excluding the
   proposer** reaches `route.ride_verify_threshold`, the route flips to
@@ -612,17 +611,13 @@ served, so the drawer can't open for them anyway).
   `unverified` via this machine). The snapshot's `rideCount` uses the same
   proposer-excluding count, so the drawer's "N of X" always matches the
   flip's arithmetic.
-- **Season default** is computed server-side from the request month on a
-  Northern-hemisphere calendar (`Season::current()`: Mar–May spring, Jun–Aug
-  summer, Sep–Nov autumn, Dec–Feb winter); it only pre-selects the voter's
-  picker — the voter may override.
 
 ### 6.3 The cacheable-bulk contract
 
 The catalog region slices (`CatalogProvider::routes()`) serve every active route
 with `id / name / state / srcType / km / gain / loop` plus the canonicalized
 attributes (route-domain.md §9) — and **nothing dynamic or per-user**.
-Ride/vote counts and per-user state come only from the authenticated,
+Ride counts and per-user state come only from the authenticated,
 uncached `/community` fetch on drawer-open; best-of is a separate public
 endpoint (route-domain.md §8). Community writes therefore never invalidate
 the bulk payload.
@@ -1138,6 +1133,13 @@ account-and-auth.md §11); pages show totals. On account deletion
 then deletes all their `season_vote` rows: a closed season keeps its totals,
 which name nobody, and the open round loses the vote (the owner's 2026-07-30
 call for the ballot: past rounds keep the vote).
+
+**From the map.** The drawer of a catalogue row of a votable kind, and of a
+verified route, links to the ballot with the row picked
+(`/vote?cat=<category>&pick=<id>`, `web/assets/map/vote-link.js`) while
+`community.voting_live` is on. There is no vote endpoint per route: the old
+`POST /routes/{id}/vote` with its season picker is gone, so every vote counts
+in a ballot of three.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 

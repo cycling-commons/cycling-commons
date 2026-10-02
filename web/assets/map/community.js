@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* Route community and utility confirmations; curator decide POST.
    @see docs/specs/route-domain.md §6; docs/specs/moderation-and-contribution.md §10 */
-import { I18N, D, tpl, CC_SEASON_LABEL } from './i18n.js';
+import { I18N, D, tpl } from './i18n.js';
 import { CATALOG, layerByKey, LETTER_KEY } from './catalog.js';
 import { render } from './render.js';
 import { mapToast, closeDrawer, openDrawer, osmDrawer, renderPendingContext } from './drawer.js';
@@ -12,9 +12,9 @@ import { showPendingShape } from './pending-shape.js';
 import { escPend, curatorMayEdit } from './util.js';
 import { osmAnsweredHtml } from './osm-question.js';
 import { postConfirm } from './confirm-post.js';
+import { voteHref } from './vote-link.js';
 
 const CC_BIKES=['Road','Gravel','MTB','E-bike','Handbike','Recumbent','Trike','Tandem'];
-const CC_SEASONS=['spring','summer','autumn','winter'];
 /* `metadata` leads: asking for a detail to be corrected is the common errand,
    and the five after it report a problem (docs/specs/route-domain.md §7.1). */
 const CC_REASONS=[['metadata',D.reasonMetadata||'A detail is wrong'],['broken-track',D.reasonBroken||'Wrong / broken track'],['trim-privacy',D.reasonPrivacy||'Trim a private start/end'],['duplicate',D.reasonDuplicate||'Duplicate of another route'],['not-rideable',D.reasonNotRideable||'Not actually rideable'],['other',D.reasonOther||'Something else']];
@@ -104,16 +104,11 @@ export function routeCommunityPanel(id, state, regionId){
   const bikeL=I18N.bikes||{};
   const bikeOpts=CC_BIKES.map(b=>`<option value="${b}">${bikeL[b]||b}</option>`).join('');
   const bikePickOpts=`<option value="" selected disabled>${D.bikeTypePh||'Bike type…'}</option>`+bikeOpts;
-  const seasonOpts=CC_SEASONS.map(s=>`<option value="${s}">${CC_SEASON_LABEL[s]||s[0].toUpperCase()+s.slice(1)}</option>`).join('');
   const reasonOpts=CC_REASONS.map(([v,l])=>`<option value="${escPend(v)}">${escPend(l)}</option>`).join('');
   const fieldOpts=routeFields().map(f=>`<option value="${escPend(f.key)}">${escPend(f.label)}</option>`).join('');
-  // docs/specs/route-domain.md §6 — vote only for verified routes; rode-it for both.
-  const voteBlock = state==='verified' ? `
-    <div class="cc-rc-vote">
-      <label class="cc-rc-l">${D.recommend||'Recommend it'} <span class="cc-rc-count" data-rc="votes"></span></label>
-      <div class="cc-rc-row"><select class="cc-rc-season">${seasonOpts}</select><select class="cc-rc-vbike">${bikePickOpts}</select>
-        <button class="cc-rc-btn" data-rc-act="vote">▲ ${D.vote||'Vote'}</button></div>
-    </div>` : '';
+  // docs/specs/route-domain.md §8d: a verified route is voted for on the season ballot, picked there.
+  const voteUrl = (window.CC_VOTING_LIVE && state==='verified') ? voteHref(window.CC_VOTE_URL, 'experience', id) : null;
+  const voteBlock = voteUrl ? `<a class="cc-d-act cc-d-vote" href="${escPend(voteUrl)}">▲ ${D.voteRound||'Vote for it in this round'}</a>` : '';
   const rideProgress = state==='unverified' ? `<span class="cc-rc-count" data-rc="rides">…</span>` : '';
   return `<div class="cc-rc" data-route="${id}" data-state="${state||''}">
     ${deskLink(id, regionId)}
@@ -169,9 +164,7 @@ export function hydrateRouteCommunity(id){
 
 function paintRouteCommunity(box, s){
   const rides=box.querySelector('[data-rc="rides"]'); if(rides) rides.textContent=`· ${tpl(D.ridesProgress||'{n} of {m} to verify', {n:s.rideCount, m:s.threshold})}`;
-  const votes=box.querySelector('[data-rc="votes"]'); if(votes) votes.textContent=s.voteCount?`· ${tpl((s.voteCount===1?D.voteOne:D.voteMany)||`{n} vote${s.voteCount>1?'s':''}`, {n:s.voteCount})}`:'';
   if(s.iRode){ const b=box.querySelector('[data-rc-act="rode-it"]'); if(b){ b.textContent=`✓ ${D.youRode||'You rode this'}`; b.disabled=true; } }
-  if(s.iVotedThisSeason){ const b=box.querySelector('[data-rc-act="vote"]'); if(b){ b.textContent=`✓ ${D.votedSeason||'Voted this season'}`; b.disabled=true; } }
 }
 
 const CC_CF_STANCES={
@@ -254,11 +247,6 @@ function rcPost(box, act){
     const sel=box.querySelector('.cc-rc-rbike');
     if(!sel.value){ warnPick(sel, D.pickBikeRode||'Pick the bike type you rode it on first.'); return; }
     body.set('bike_type', sel.value);
-  }
-  if(act==='vote'){
-    const sel=box.querySelector('.cc-rc-vbike');
-    if(!sel.value){ warnPick(sel, D.pickBikeVote||'Pick a bike type to recommend it for first.'); return; }
-    body.set('season', box.querySelector('.cc-rc-season').value); body.set('bike_type', sel.value);
   }
   if(act==='suggest'){
     const reason=box.querySelector('.cc-rc-reason').value;
