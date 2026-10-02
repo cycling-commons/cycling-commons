@@ -936,9 +936,9 @@ split.
 
 **A public page showing what riders rated best, with invented numbers.** The
 ranking was public data with no page: `/map/best-of` answers to anyone and
-feeds the map's Curated mode, while `/vote` is a login-only preview of the
-BALLOT. So nobody outside could see an outcome, and a search engine could find
-nothing (known issue, 2026-09-06).
+feeds the map's Curated mode, while `/vote` is the login-only ballot
+(route-domain.md §8d). So nobody outside could see an outcome, and a search
+engine could find nothing (known issue, 2026-09-06).
 
 `route_vote` is empty and stays empty until the ballot ships, so a page built
 on real counts would be blank in every region and could settle nothing. Owner
@@ -1150,6 +1150,21 @@ changes no catalog stamp: the region slices carry no community data
 (route-domain.md §6.3), and the endpoint's one-minute `max-age` bounds how
 long a vote takes to show. The Curated readiness count (map-and-search.md
 §4.2) counts verified routes with a season vote in any round.
+
+**The ballot page** (`App\Controller\BallotController`, route `vote`,
+`templates/vote/ballot.html.twig`). Signed-in only and never in the page
+cache. Server-rendered forms, no script: a cast or remove is a POST (CSRF id
+`season-ballot`) answered with a 303 back to the list. The region is the one
+asked for, else the picked row's region (`?pick=<id>` from the map), else the
+rider's first base region, else none (the region picker only). The regions
+offered are the operational regions grouped by country
+(`App\Vote\BallotRegions`). Five category tabs;
+a `cat` that is missing, unknown or not votable opens climbs, and a `pick`
+that is not a row of that category on the ballot is ignored. The list shows
+the 100 most confirmed rows of the category in the region, plus the rider's
+own votes and the picked row wherever they sit. The page says how many votes
+are left, how many riders voted in the list, and, while voting is off or the
+rider cannot vote yet, why there is nothing to press.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 

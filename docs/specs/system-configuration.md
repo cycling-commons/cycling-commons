@@ -69,7 +69,7 @@ rather than a second copy drifting in PHP.
 | `moderation.retention_months` | 3 | 1–120 | moderation | `MediaDisposalService::collectRejected()`: how long a rejected photo's files are kept. Nothing else reads it: contributions and their threads stay while the account does, and Trash purges after a fixed 30 days (moderation-and-contribution.md §6, §8). The key keeps its name because a stored override may exist. |
 | `media.urgent_breaker_hourly` | 10 | 0–500 (0 disables auto-withhold, photo-uploads.md §6c) | media | `UrgentWithholdBreaker` |
 | `media.urgent_breaker_daily` | 25 | 0–2000 (0 disables auto-withhold) | media | `UrgentWithholdBreaker` |
-| `community.voting_live` | 0 | 0–1 | community | `MapController` (0 hides every vote call to action) |
+| `community.voting_live` | 0 | 0–1 | community | `MapController` (0 hides every vote call to action), `BallotService` (0 refuses every cast and remove, route-domain.md §8d) |
 | `app.alert_emails` | `SECURITY_ALERT_EMAIL` env | text, at most 500 characters: one or more comma-separated addresses | alerts | `AlertRecipients`; `SupportRecipients` as the fallback |
 | `app.support_emails` | `CC_SUPPORT_EMAILS` env (blank when unset) | text, at most 500 characters: comma-separated addresses, or empty | alerts | `SupportRecipients` |
 

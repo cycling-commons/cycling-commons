@@ -25,13 +25,11 @@ use App\Contribution\SimilarPlaces;
 use App\Coverage\CoverageRepository;
 use App\Entity\User;
 use App\Form\ImproveType;
-use App\Form\VoteType;
 use App\Media\Entity\MediaUpload;
 use App\Media\PhotoLocationConfirmation;
 use App\Media\PhotoValidator;
 use App\Moderation\ReplacedPlaces;
 use App\Routing\LocalePrefix;
-use App\Routing\LocalizedPath;
 use App\Service\ContributionReceipt;
 use App\Service\ContributionStubInterface;
 use Doctrine\DBAL\Exception\TableNotFoundException;
@@ -211,39 +209,6 @@ final class ContributeController extends AbstractController
         }
 
         return $this->redirectToRoute('improve', $params, Response::HTTP_MOVED_PERMANENTLY);
-    }
-
-    #[Route(LocalizedPath::VOTE, name: 'vote')]
-    #[IsGranted('ROLE_USER')]
-    public function vote(Request $request): Response
-    {
-        $form = $this->createForm(VoteType::class);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array<string, mixed> $data */
-            $data = $form->getData();
-            /** @var User $user */
-            $user = $this->getUser();
-
-            $receipt = $this->contributionStub->submit('vote', $data, $user);
-
-            return $this->render('contribute/vote.html.twig', [
-                'page_title' => 'meta.vote_title',
-                'page_description' => 'meta.vote_description',
-                'nav_active' => 'vote',
-                'receipt' => $receipt,
-                'form' => null,
-            ]);
-        }
-
-        return $this->render('contribute/vote.html.twig', [
-            'page_title' => 'meta.vote_title',
-            'page_description' => 'meta.vote_description',
-            'nav_active' => 'vote',
-            'receipt' => null,
-            'form' => $form,
-        ]);
     }
 
     /**

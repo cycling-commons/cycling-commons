@@ -1,0 +1,106 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/page/contribute/vote.css') }}">
+{% endblock %}
+{% block body %}
+<div class="vhead"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'vote.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'vote.title'|trans }}</h1>
+  <p class="vlead">{{ 'vote.lead'|trans }}</p>
+  {% if round %}
+    <div class="round">{{ 'vote.round'|trans({
+      '%round%': 'vote.round_label'|trans({'%season%': round.season.labelKey|trans, '%year%': round.yearLabel}),
+      '%date%': round.lastDay|cc_date,
+    }) }}</div>
+  {% endif %}
+</div></div>
+
+<div class="wrap" id="main">
+  {% for msg in app.flashes('success') %}<div class="flash-success" role="status">{{ msg|trans }}</div>{% endfor %}
+  {% for msg in app.flashes('error') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
+
+  {% if not open %}
+    <p class="vnote vclosed">{{ 'vote.closed_body'|trans }}</p>
+  {% elseif missing is not empty %}
+    <div class="vnote vneeds">
+      <h2>{{ 'vote.not_eligible_h'|trans }}</h2>
+      <ul>
+        {% if 'email' in missing %}<li>{{ 'vote.need_email'|trans }}</li>{% endif %}
+        {% if 'age' in missing and votes_from %}<li>{{ 'vote.need_age'|trans({'%date%': votes_from|cc_date, '%days%': min_age_days}) }}</li>{% endif %}
+        {% if 'activity' in missing %}<li>{{ 'vote.need_activity'|trans }}</li>{% endif %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {# A plain GET form: choosing a region needs no script. #}
+  <form class="vregion" method="get" action="{{ path('vote') }}">
+    <input type="hidden" name="cat" value="{{ category.value }}">
+    <label for="v-region">{{ 'vote.region_label'|trans }}</label>
+    <select id="v-region" name="region">
+      <option value="">{{ 'vote.region_none'|trans }}</option>
+      {% for country, list in regions %}
+        <optgroup label="{{ country }}">
+          {% for r in list %}<option value="{{ r.slug }}"{{ region and r.slug == region.slug ? ' selected' }}>{{ cc_region_label(r.slug, r.name) }}</option>{% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+    <button type="submit" class="add">{{ 'vote.show'|trans }}</button>
+  </form>
+
+  <nav class="vtabs" aria-label="{{ 'vote.title'|trans|e('html_attr') }}">
+    {% for c in categories %}
+      <a class="{{ c == category ? 'on' }}"{{ c == category ? ' aria-current="page"' }}
+         href="{{ path('vote', region ? {region: region.slug, cat: c.value} : {cat: c.value}) }}">{{ c.labelKey|trans }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if region %}
+    {% set is_route = category.value == 'quality-rides' %}
+    {% set left = per_list - mine|length %}
+    <p class="vleft">
+      {{ (left <= 0 ? 'vote.left_none' : (left == 1 ? 'vote.left_one' : 'vote.left_many'))|trans({'%count%': left, '%m%': per_list}) }}
+      · {{ (voters >= threshold ? 'vote.voters_count' : 'vote.voters_needed')|trans({'%n%': voters, '%m%': threshold}) }}
+    </p>
+    {% set verb = category.value in ['climbs', 'quality-rides'] ? 'vote.confirmed_rode' : (category.value == 'where-to-sleep' ? 'vote.confirmed_stayed' : 'vote.confirmed_been') %}
+    {% if candidates is empty %}
+      <p class="vnote">{{ 'vote.empty'|trans }}</p>
+    {% else %}
+      <ol class="cands">
+        {% for c in candidates %}
+          {% set voted = c.id in mine|keys %}
+          <li class="cand{{ voted ? ' in' }}{{ pick == c.id ? ' picked' }}" id="c-{{ c.id }}">
+            <div class="nm">
+              <h3><a href="{{ path('map') }}?{{ is_route ? 'route' : 'item' }}={{ c.id }}">{{ c.name }}</a></h3>
+              <div class="m">{{ verb|trans({'%n%': c.confirmations}) }}{% if voted and mine[c.id] %} · {{ mine[c.id]|trans }}{% endif %}</div>
+            </div>
+            {% if open and missing is empty and (voted or left > 0) %}
+              <form method="post" action="{{ path('vote') }}" class="vact">
+                <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+                <input type="hidden" name="region" value="{{ region.slug }}">
+                <input type="hidden" name="cat" value="{{ category.value }}">
+                <input type="hidden" name="id" value="{{ c.id }}">
+                {% if voted %}
+                  <span class="voted">{{ 'vote.voted'|trans }}</span>
+                  <button class="add" name="do" value="remove">{{ 'vote.remove'|trans }}</button>
+                {% else %}
+                  {% if is_route %}
+                    <label class="vh" for="b-{{ c.id }}">{{ 'vote.bike_label'|trans }}</label>
+                    <select id="b-{{ c.id }}" name="bike" required>
+                      <option value="">{{ 'vote.bike_ph'|trans }}</option>
+                      {% for b in bikes %}<option value="{{ b.value }}">{{ b.labelKey|trans }}</option>{% endfor %}
+                    </select>
+                  {% endif %}
+                  <button class="add" name="do" value="cast">{{ 'vote.cast'|trans }}</button>
+                {% endif %}
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+    <p class="vnote">{{ 'vote.threshold_note'|trans({'%m%': threshold}) }} <a href="{{ best_of_path({cat: category.value, cc: region.countryCode}) }}">{{ 'vote.see_results'|trans }}</a></p>
+  {% endif %}
+  <p class="vnote">{{ 'vote.privacy_note'|trans }}</p>
+</div>
+{% endblock %}

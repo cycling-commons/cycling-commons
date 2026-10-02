@@ -103,7 +103,7 @@ final class CatalogContributionService implements ContributionStubInterface
         return match ($kind) {
             'add' => $this->submitAdd($payload, $by),
             'improve' => $this->submitImprove($payload, $by),
-            // Voting is verification-gate machinery, not catalog intake.
+            // No other kind is catalogue intake: a vote goes through App\Vote\BallotService.
             default => new ContributionReceipt(
                 'CC-'.strtoupper(bin2hex(random_bytes(6))), $kind, false, new \DateTimeImmutable(),
             ),

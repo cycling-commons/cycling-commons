@@ -1473,10 +1473,9 @@ very next `moveend`.
   Reached through `MapController::mapI18n`, all five locales.
 - **Button target.** `JoinCountryController::index` (`join_country`, `CountryInterestService`) is where a
   rider records "we want the Commons here" and can offer to curate it - the
-  right target, unlike `vote` (`VoteType` carries no country field; that
-  page ranks candidate climbs/stays/views/heritage within already-onboarded
-  countries, not new ones). A named country links to `join_country` with
-  its code; no country ("this area") links to the plain `join` page
+  right target, unlike `vote` (the season ballot ranks catalogue rows in the
+  operational regions of countries already onboarded, not new ones). A named
+  country links to `join_country` with its code; no country ("this area") links to the plain `join` page
   (`PageController::join`), which asks for no country at all. Both are
   localized paths (`LocalizedPath::JOIN` / `JOIN_COUNTRY`), generated
   server-side in the template: `join_country`'s needs a `cc` the template
