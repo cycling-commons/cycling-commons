@@ -1038,6 +1038,20 @@ voter, and with few voters the work is what keeps people from finishing; 3
 unordered votes is quick and still separates the favourites (owner 2026-10-02:
 "3 votes").
 
+### 8d. The ballot as built
+
+How route-domain.md §8c is implemented. The rule is §8c; this section records
+the choices the rule leaves open.
+
+**Rounds** (`App\Vote\Round`, `App\Vote\Hemisphere`). Meteorological seasons
+of three whole months, starting on the 1st at 00:00 Coordinated Universal Time
+(UTC). A region south of the equator (the middle latitude of its bounding box
+is below 0) has the other season: its spring starts in September. A round's
+year is the year of its first month, so northern winter 2026 runs from
+December 2026 to February 2027 and is shown as "Winter 2026-27". A vote
+belongs to the round open in the voted row's region at the moment it is cast,
+never to the row's own `season` attribute.
+
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
