@@ -1113,10 +1113,16 @@ round's votes are its result. Refusals are `App\Vote\BallotRefused` reasons:
 `bike_required`, `ballot_full`, `already_voted`, `rate_limited`.
 
 **Results** (`App\Vote\SeasonResults`, table `season_result`). An open round
-is counted live. A closed round is stored, once, the first time anything reads
-its list more than an hour after it closed (so a vote cast in its last second
-has committed), and by the deletion hook before an account that voted in it is
-deleted (route-domain.md §8d, privacy). Stored rows are never updated, so a
+is counted live. A closed round is stored, once, by `app:vote:freeze`
+(`App\Command\VoteFreezeCommand`), which the worker host runs daily at
+01:37 UTC: every list with votes in a closed round that is not stored yet, per
+region and category the list of every bike and, for routes, the list of each
+bike voted on. A round waits an hour after it closes (so a vote cast in its
+last second has committed), so the run on the first day of a season stores
+the round that just closed. The command is idempotent; a list that nothing
+stored yet is also stored the first time anything reads it, and by the
+deletion hook before an account that voted in it is deleted
+(route-domain.md §8d, privacy). Stored rows are never updated, so a
 closed season's result does not change when an account goes, a place is
 retired or a route changes the bikes it declares. Rounds of a list are stored
 oldest first, because each needs the stored rounds before it. Counting ignores

@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Vote;
 
+use App\Catalog\BikeType;
+use App\Catalog\ItemType;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -15,11 +17,13 @@ use Psr\Clock\ClockInterface;
  * A list's result: counted live while its round is open, stored once it has
  * closed.
  *
- * A closed round is stored the first time anything reads its list more than
- * {@see BallotRules::FREEZE_GRACE} after it closed, and before an account that
- * voted in it is deleted ({@see SeasonVoteDeletionHook}). Stored rows are
- * never rewritten, so a closed season keeps its result when an account goes,
- * a place is retired or a route changes the bikes it declares.
+ * A closed round is stored by the daily `app:vote:freeze` once
+ * {@see BallotRules::FREEZE_GRACE} has passed after it closed
+ * ({@see self::freezeEveryClosed()}), and before an account that voted in it
+ * is deleted ({@see SeasonVoteDeletionHook}). A list read before the timer
+ * ran is stored by that read. Stored rows are never rewritten, so a closed
+ * season keeps its result when an account goes, a place is retired or a
+ * route changes the bikes it declares.
  *
  * Rounds are stored oldest first, because each needs the stored rounds before
  * it: last year's top 3 for the handicap, and every earlier first place for
@@ -57,12 +61,58 @@ final class SeasonResults
     }
 
     /**
+     * Stores every closed list with votes that is not stored yet: per region
+     * and category the list of every bike, and for routes the list of each
+     * bike voted on.
+     *
+     * @return int the lists that stored a round
+     */
+    public function freezeEveryClosed(): int
+    {
+        /** @var list<array{region_id: int|string, category: string, bike_type: ?string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT DISTINCT sv.region_id, sv.category, sv.bike_type
+               FROM season_vote sv
+              WHERE sv.round_start < :open
+                AND (NOT EXISTS (SELECT 1 FROM season_result r
+                                  WHERE r.region_id = sv.region_id AND r.category = sv.category
+                                    AND r.bike_type = '' AND r.round_start = sv.round_start)
+                     OR (sv.bike_type IS NOT NULL
+                         AND NOT EXISTS (SELECT 1 FROM season_result r
+                                          WHERE r.region_id = sv.region_id AND r.category = sv.category
+                                            AND r.bike_type = sv.bike_type AND r.round_start = sv.round_start)))
+              ORDER BY sv.region_id, sv.category",
+            ['open' => self::openStart($this->clock->now())],
+        );
+        $keys = [];
+        foreach ($rows as $r) {
+            $type = ItemType::from($r['category']);
+            $all = new ListKey((int) $r['region_id'], $type);
+            $keys[$all->regionId.'/'.$type->value.'/'] = $all;
+            if (null !== $r['bike_type'] && ItemType::QualityRides === $type) {
+                $keys[$all->regionId.'/'.$type->value.'/'.$r['bike_type']] = new ListKey($all->regionId, $type, BikeType::from($r['bike_type']));
+            }
+        }
+
+        $stored = 0;
+        foreach ($keys as $key) {
+            if ($this->freezeClosed($key) > 0) {
+                ++$stored;
+            }
+        }
+
+        return $stored;
+    }
+
+    /**
      * Stores every closed round of this list that holds votes and is not
      * stored yet, oldest first.
      *
      * @param bool $ignoreGrace store a round the moment it closed: the deletion hook may not wait
+     *
+     * @return int the rounds stored
      */
-    public function freezeClosed(ListKey $key, bool $ignoreGrace = false): void
+    public function freezeClosed(ListKey $key, bool $ignoreGrace = false): int
     {
         $now = $this->clock->now();
         [$join, $where, $params] = $this->scope($key);
@@ -77,13 +127,16 @@ final class SeasonResults
               ORDER BY sv.round_start",
             $params + ['bikecol' => $key->bikeColumn(), 'open' => self::openStart($now)],
         );
+        $stored = 0;
         foreach ($rounds as $row) {
             $round = Round::fromStored($row['season'], $row['round_start']);
             $closes = $ignoreGrace ? $round->closesAt() : $round->closesAt()->modify(BallotRules::FREEZE_GRACE);
-            if ($closes <= $now) {
-                $this->freeze($key, $round);
+            if ($closes <= $now && $this->freeze($key, $round)) {
+                ++$stored;
             }
         }
+
+        return $stored;
     }
 
     /**
@@ -140,9 +193,13 @@ final class SeasonResults
         return ['voters' => $voters, 'ranked' => $voters >= BallotRules::RANKING_THRESHOLD, 'closed' => $closed, 'entries' => $entries];
     }
 
-    private function freeze(ListKey $key, Round $round): void
+    /** @return bool whether the round had entries to store */
+    private function freeze(ListKey $key, Round $round): bool
     {
         $result = $this->compute($key, $round, true);
+        if ([] === $result['entries']) {
+            return false;
+        }
         $at = $this->clock->now()->format('Y-m-d H:i:s');
         $this->db->transactional(static function (Connection $db) use ($key, $round, $result, $at): void {
             foreach ($result['entries'] as $e) {
@@ -163,6 +220,8 @@ final class SeasonResults
                 );
             }
         });
+
+        return true;
     }
 
     /** @return ListResult */
