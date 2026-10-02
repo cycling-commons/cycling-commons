@@ -1162,9 +1162,11 @@ offered are the operational regions grouped by country
 a `cat` that is missing, unknown or not votable opens climbs, and a `pick`
 that is not a row of that category on the ballot is ignored. The list shows
 the 100 most confirmed rows of the category in the region, plus the rider's
-own votes and the picked row wherever they sit. The page says how many votes
-are left, how many riders voted in the list, and, while voting is off or the
-rider cannot vote yet, why there is nothing to press.
+own votes and the picked row wherever they sit. Beside the list, the "Your
+ballot" panel holds the rider's votes in this list (up to three, in no order,
+each with its own remove form), how many votes are left and how many riders
+voted in the list. While voting is off or the rider cannot vote yet, the page
+says why there is nothing to press.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 

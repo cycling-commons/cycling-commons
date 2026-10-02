@@ -1894,9 +1894,12 @@ scout:
 vote:
   kicker: 'Votación de temporada'
   title: 'Vota lo mejor de tu región.'
-  lead: 'Tres votos por lista, para los lugares a los que mandarías a alguien de confianza. Los votos cuentan solo para esta temporada, y puedes cambiarlos hasta que termine.'
   tab_climbs: 'Puertos'
-  round: '%round% · abierta hasta el %date%'
+  ballot_heading: 'Tu papeleta'
+  add: '▲ añadir'
+  on_ballot: '✓ en la papeleta'
+  empty_ballot: 'Elige hasta %m% de la lista. El orden no importa, y puedes cambiar tu elección hasta que termine la temporada.'
+  round: '◷ %round% · abierta hasta el %date%'
   round_label: '%season% %year%'
   region_label: 'Región'
   region_none: 'Elige una región'
@@ -1909,9 +1912,7 @@ vote:
   confirmed_rode: '%n% lo han recorrido'
   confirmed_stayed: '%n% se han alojado'
   confirmed_been: '%n% han estado'
-  cast: '▲ Votar'
-  remove: 'Quitar'
-  voted: '✓ Tu voto'
+  remove: 'quitar'
   bike_label: 'Recorrido en'
   bike_ph: 'Bici'
   empty: 'Todavía no hay nada de este tipo en el mapa en esta región.'
@@ -5082,8 +5083,8 @@ moderate_regions:
     flash_too_long: "Es demasiado largo para una entradilla. Mantenlo por debajo de 1200 caracteres."
 
 # Compartido por todos los acuses de recibo de envío
-# (contribute/_receipt_mark.html.twig); los grupos por página improve.receipt.* /
-# vote.receipt.* siguen siendo independientes.
+# (contribute/_receipt_mark.html.twig); el grupo por página improve.receipt.*
+# sigue siendo independiente.
 pager:
   label: 'Páginas'
   prev: 'Más recientes'

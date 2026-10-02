@@ -90,6 +90,7 @@ final class BallotController extends AbstractController
             'category' => $type,
             'regions' => $regions,
             'region' => $region,
+            'region_country' => null !== $region ? self::countryOf($regions, $region['id']) : null,
             'bikes' => BikeType::cases(),
             'csrf_id' => self::CSRF_ID,
             'per_list' => BallotRules::VOTES_PER_LIST,
@@ -97,6 +98,7 @@ final class BallotController extends AbstractController
             'round' => null,
             'candidates' => [],
             'mine' => [],
+            'ballot' => [],
             'pick' => null,
             'voters' => 0,
         ];
@@ -124,9 +126,16 @@ final class BallotController extends AbstractController
                 }
             }
 
+            $nameOf = array_column($candidates, 'name', 'id');
+            $ballot = [];
+            foreach ($mine as $id => $bikeKey) {
+                $ballot[] = ['id' => $id, 'name' => $nameOf[$id] ?? '', 'bike' => $bikeKey];
+            }
+
             $view['round'] = $round;
             $view['candidates'] = $candidates;
             $view['mine'] = $mine;
+            $view['ballot'] = $ballot;
             $view['voters'] = $this->results->list(new ListKey($region['id'], $type), $round)['voters'];
         }
 
@@ -143,8 +152,9 @@ final class BallotController extends AbstractController
         $id = self::positiveInt($form['id'] ?? null) ?? 0;
         try {
             if ('remove' === ($form['do'] ?? null)) {
-                $this->ballots->remove($user, $type, $id);
-                $this->addFlash('success', 'vote.removed');
+                if ($this->ballots->remove($user, $type, $id)) {
+                    $this->addFlash('success', 'vote.removed');
+                }
             } else {
                 $bike = $form['bike'] ?? null;
                 $this->ballots->cast($user, $type, $id, \is_string($bike) ? BikeType::tryFrom($bike) : null);
@@ -161,6 +171,18 @@ final class BallotController extends AbstractController
         }
 
         return $this->redirectToRoute('vote', $back, Response::HTTP_SEE_OTHER);
+    }
+
+    /** @param array<string, list<RegionRow>> $regions */
+    private static function countryOf(array $regions, int $regionId): ?string
+    {
+        foreach ($regions as $country => $list) {
+            if (\in_array($regionId, array_column($list, 'id'), true)) {
+                return (string) $country;
+            }
+        }
+
+        return null;
     }
 
     /** A votable category; anything else, absent or unknown, opens climbs. */

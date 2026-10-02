@@ -1887,9 +1887,12 @@ scout:
 vote:
   kicker: 'Seizoensstemming'
   title: 'Stem op het beste van je regio.'
-  lead: 'Drie stemmen per lijst, voor de plekken waar je een vriend naartoe zou sturen. Stemmen tellen alleen voor dit seizoen, en je kunt ze wijzigen tot het voorbij is.'
   tab_climbs: 'Klimmen'
-  round: '%round% · open tot %date%'
+  ballot_heading: 'Jouw stembrief'
+  add: '▲ toevoegen'
+  on_ballot: '✓ op stembrief'
+  empty_ballot: 'Kies er tot %m% uit de lijst. De volgorde telt niet, en je kunt je keuzes wijzigen tot het seizoen voorbij is.'
+  round: '◷ %round% · open tot %date%'
   round_label: '%season% %year%'
   region_label: 'Regio'
   region_none: 'Kies een regio'
@@ -1902,9 +1905,7 @@ vote:
   confirmed_rode: '%n% reden hem'
   confirmed_stayed: '%n% overnachtten er'
   confirmed_been: '%n% waren er'
-  cast: '▲ Stem'
-  remove: 'Weghalen'
-  voted: '✓ Jouw stem'
+  remove: 'verwijderen'
   bike_label: 'Gereden op'
   bike_ph: 'Fiets'
   empty: 'Nog niets van deze soort op de kaart in deze regio.'
@@ -5050,7 +5051,7 @@ moderate_regions:
     flash_too_long: "Dat is te lang voor een inleiding. Houd het onder 1200 tekens."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
-# improve.receipt.* / vote.receipt.* groups stay separate.
+# improve.receipt.* group stays separate.
 pager:
   label: 'Pagina''s'
   prev: 'Nieuwer'

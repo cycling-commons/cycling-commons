@@ -1882,9 +1882,12 @@ scout:
 vote:
   kicker: 'Vote de saison'
   title: 'Votez pour le meilleur de votre région.'
-  lead: 'Trois votes par liste, pour les lieux que vous conseilleriez à quelqu''un. Les votes comptent pour cette saison seulement, et vous pouvez les changer jusqu''à sa fin.'
   tab_climbs: 'Cols'
-  round: '%round% · ouvert jusqu''au %date%'
+  ballot_heading: 'Votre bulletin'
+  add: '▲ ajouter'
+  on_ballot: '✓ sur le bulletin'
+  empty_ballot: 'Choisissez jusqu''à %m% lieux dans la liste. L''ordre ne compte pas, et vous pouvez changer vos choix jusqu''à la fin de la saison.'
+  round: '◷ %round% · ouvert jusqu''au %date%'
   round_label: '%season% %year%'
   region_label: 'Région'
   region_none: 'Choisissez une région'
@@ -1897,9 +1900,7 @@ vote:
   confirmed_rode: '%n% l''ont parcouru'
   confirmed_stayed: '%n% y ont dormi'
   confirmed_been: '%n% y ont été'
-  cast: '▲ Voter'
-  remove: 'Retirer'
-  voted: '✓ Votre vote'
+  remove: 'retirer'
   bike_label: 'Parcouru en'
   bike_ph: 'Vélo'
   empty: 'Rien de ce type sur la carte dans cette région pour l''instant.'
@@ -5043,7 +5044,7 @@ moderate_regions:
     flash_too_long: "C'est trop long pour un chapeau. Restez sous 1200 caractères."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
-# improve.receipt.* / vote.receipt.* groups stay separate.
+# improve.receipt.* group stays separate.
 pager:
   label: 'Pages'
   prev: 'Plus récents'

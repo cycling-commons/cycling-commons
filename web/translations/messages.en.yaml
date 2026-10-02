@@ -1885,9 +1885,12 @@ scout:
 vote:
   kicker: 'Season ballot'
   title: 'Vote for the best of your region.'
-  lead: 'Three votes per list, for the places you would send a friend to. Votes count for this season only, and you can change them until it ends.'
   tab_climbs: 'Climbs'
-  round: '%round% · open until %date%'
+  ballot_heading: 'Your ballot'
+  add: '▲ add'
+  on_ballot: '✓ on ballot'
+  empty_ballot: 'Pick up to %m% from the list. The order does not matter, and you can change your picks until the season ends.'
+  round: '◷ %round% · open until %date%'
   round_label: '%season% %year%'
   region_label: 'Region'
   region_none: 'Pick a region'
@@ -1900,9 +1903,7 @@ vote:
   confirmed_rode: '%n% rode it'
   confirmed_stayed: '%n% stayed'
   confirmed_been: '%n% have been there'
-  cast: '▲ Vote'
-  remove: 'Remove'
-  voted: '✓ Your vote'
+  remove: 'remove'
   bike_label: 'Ridden on'
   bike_ph: 'Bike'
   empty: 'Nothing of this kind on the map in this region yet.'
@@ -5072,7 +5073,7 @@ moderate_regions:
     flash_too_long: "That is too long for a lead. Keep it under 1200 characters."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
-# improve.receipt.* / vote.receipt.* groups stay separate.
+# improve.receipt.* group stays separate.
 pager:
   label: 'Pages'
   prev: 'Newer'

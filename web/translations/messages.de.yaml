@@ -1890,9 +1890,12 @@ scout:
 vote:
   kicker: 'Saisonabstimmung'
   title: 'Stimme für das Beste deiner Region.'
-  lead: 'Drei Stimmen pro Liste, für die Orte, die du jemandem empfehlen würdest. Stimmen zählen nur für diese Saison, und du kannst sie ändern, bis sie endet.'
   tab_climbs: 'Anstiege'
-  round: '%round% · offen bis %date%'
+  ballot_heading: 'Dein Stimmzettel'
+  add: '▲ hinzufügen'
+  on_ballot: '✓ auf dem Stimmzettel'
+  empty_ballot: 'Wähle bis zu %m% aus der Liste. Die Reihenfolge zählt nicht, und du kannst deine Auswahl bis zum Ende der Saison ändern.'
+  round: '◷ %round% · offen bis %date%'
   round_label: '%season% %year%'
   region_label: 'Region'
   region_none: 'Region wählen'
@@ -1905,9 +1908,7 @@ vote:
   confirmed_rode: '%n% sind hier gefahren'
   confirmed_stayed: '%n% haben hier übernachtet'
   confirmed_been: '%n% waren schon dort'
-  cast: '▲ Abstimmen'
-  remove: 'Zurücknehmen'
-  voted: '✓ Deine Stimme'
+  remove: 'entfernen'
   bike_label: 'Gefahren mit'
   bike_ph: 'Rad'
   empty: 'In dieser Region ist noch nichts dieser Art auf der Karte.'
@@ -5051,7 +5052,7 @@ moderate_regions:
     flash_too_long: "Das ist zu lang für einen Vorspann. Bleib unter 1200 Zeichen."
 
 # Shared by every submission receipt (contribute/_receipt_mark.html.twig); the per-page
-# improve.receipt.* / vote.receipt.* groups stay separate.
+# improve.receipt.* group stays separate.
 pager:
   label: 'Seiten'
   prev: 'Neuer'

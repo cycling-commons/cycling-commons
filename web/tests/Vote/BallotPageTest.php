@@ -113,7 +113,8 @@ final class BallotPageTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.vclosed', 'The season ballot is not open yet.');
-        self::assertSelectorTextContains('.cands', 'Mur de Ballot');
+        self::assertSelectorTextContains('.vgrid #cands .cand', 'Mur de Ballot');
+        self::assertSelectorTextContains('.vgrid .ballot .bempty', 'Pick up to 3 from the list.');
         self::assertCount(0, $crawler->filter('button[name="do"]'));
     }
 
@@ -132,14 +133,23 @@ final class BallotPageTest extends WebTestCase
         self::assertResponseRedirects('/vote?region=xa-ballot&cat=climbs');
         $crawler = $this->client->followRedirect();
         self::assertSelectorTextContains('.flash-success', 'Your vote is in.');
-        self::assertSelectorTextContains('#c-'.$climb, 'Your vote');
-        self::assertSelectorTextContains('.vleft', 'You have 2 votes left in this list.');
+        self::assertSelectorTextContains('#c-'.$climb.' .add.in', 'on ballot');
+        self::assertSelectorTextContains('.ballot h3', 'Your ballot · Climbs');
+        self::assertSelectorTextContains('.ballot .bitem', 'Mur de Ballot');
+        self::assertSelectorTextContains('.ballot .vleft', 'You have 2 votes left in this list.');
         self::assertSame(1, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote WHERE user_id = ? AND subject_id = ?', [$u->getId(), $climb]));
 
-        $this->client->submit($crawler->filter('#c-'.$climb.' button[value="remove"]')->form());
+        $remove = $crawler->filter('.ballot .bitem button[value="remove"]')->form();
+        $this->client->submit($remove);
         $this->client->followRedirect();
         self::assertSelectorTextContains('.flash-success', 'Your vote is removed.');
+        self::assertSelectorExists('.ballot .bempty');
         self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote WHERE user_id = ?', [$u->getId()]));
+
+        // The same form again: nothing left to remove, so no claim that something was.
+        $this->client->submit($remove);
+        $this->client->followRedirect();
+        self::assertSelectorNotExists('.flash-success');
     }
 
     public function testAPickFromTheMapOpensItsRegionAndCategory(): void
@@ -201,7 +211,8 @@ final class BallotPageTest extends WebTestCase
         }
         $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
 
-        self::assertSelectorTextContains('.vleft', 'You have used your 3 votes in this list.');
+        self::assertSelectorTextContains('.ballot .vleft', 'You have used your 3 votes in this list.');
+        self::assertCount(3, $crawler->filter('.ballot .bitem'));
         self::assertCount(0, $crawler->filter('#c-'.$ids[3].' button[value="cast"]'));
     }
 
@@ -220,8 +231,9 @@ final class BallotPageTest extends WebTestCase
         $this->client->request('GET', '/fr/voter?region=xa-ballot&cat=quality-rides');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('#c-'.$route.' .m', 'VAE');
-        self::assertSelectorTextNotContains('#c-'.$route.' .m', 'E-bike');
+        self::assertSelectorTextContains('.ballot .bitem', 'Ballot Loop · VAE');
+        self::assertSelectorTextNotContains('.ballot .bitem', 'E-bike');
+        self::assertSelectorExists('#c-'.$route.' .add.in');
     }
 
     public function testUnknownCategoriesAndPicksAreIgnored(): void
