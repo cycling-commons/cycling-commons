@@ -1175,7 +1175,7 @@ the general bikes and the specialty bikes that route declares
 (`BallotCandidates::bikesFor()`). Beside the list, the "Your
 ballot" panel holds the rider's votes in this list (up to three, in no order,
 each with its own remove form), how many votes are left and how many riders
-voted in the list. While voting is off or the rider cannot vote yet, the page
+voted in the list (`SeasonResults::voters()`, one count, not the whole list). While voting is off or the rider cannot vote yet, the page
 says why there is nothing to press.
 
 **`route_vote` is retired** (`Version20261002110000`): it held no real votes

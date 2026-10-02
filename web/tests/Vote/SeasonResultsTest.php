@@ -246,4 +246,31 @@ final class SeasonResultsTest extends KernelTestCase
 
         self::assertSame([false, false], array_column($gravel['entries'], 'handicapped'));
     }
+
+    /** The ballot page's count: the same number as the list, and reading it stores nothing. */
+    public function testVotersCountsTheListWithoutComputingOrStoringIt(): void
+    {
+        $this->ballots([1 => [1001, 1002], 2 => [1001], 3 => [1002]], '2027-03-01');
+        $this->ballots([4 => [1001]], '2026-03-01');
+        $results = $this->results('2027-04-10T12:00:00+00:00');
+        $key = new ListKey(self::REGION, ItemType::Climbs);
+
+        self::assertSame(3, $results->voters($key, self::spring(2027)));
+        self::assertSame($results->list($key, self::spring(2027))['voters'], $results->voters($key, self::spring(2027)));
+        $this->db->executeStatement('DELETE FROM season_result WHERE region_id = ?', [self::REGION]);
+        self::assertSame(1, $results->voters($key, self::spring(2026)));
+        self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id = ?', [self::REGION]));
+    }
+
+    /** A closed round's count is its stored one, once stored. */
+    public function testVotersOfAStoredRoundIsTheStoredCount(): void
+    {
+        $this->ballots([1 => [1001], 2 => [1001]], '2026-03-01');
+        $results = $this->results('2027-04-10T12:00:00+00:00');
+        $key = new ListKey(self::REGION, ItemType::Climbs);
+        $results->freezeClosed($key);
+        $this->db->executeStatement('DELETE FROM season_vote WHERE user_id = 2');
+
+        self::assertSame(2, $results->voters($key, self::spring(2026)));
+    }
 }

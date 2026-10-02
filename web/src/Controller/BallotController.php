@@ -140,7 +140,7 @@ final class BallotController extends AbstractController
             }
             $view['mine'] = $mine;
             $view['ballot'] = $ballot;
-            $view['voters'] = $this->results->list(new ListKey($region['id'], $type), $round)['voters'];
+            $view['voters'] = $this->results->voters(new ListKey($region['id'], $type), $round);
         }
 
         return $this->render('vote/ballot.html.twig', $view);

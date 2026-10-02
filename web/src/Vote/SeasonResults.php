@@ -62,6 +62,27 @@ final class SeasonResults
     }
 
     /**
+     * How many riders voted in the list: the stored count of a stored round,
+     * else counted. Neither computes the list nor stores anything.
+     */
+    public function voters(ListKey $key, Round $round): int
+    {
+        if ($round->hasClosedBy($this->clock->now())) {
+            $stored = $this->db->fetchOne(
+                'SELECT voters FROM season_result
+                  WHERE region_id = :rid AND category = :cat AND bike_type = :bike AND round_start = :start
+                  LIMIT 1',
+                ['rid' => $key->regionId, 'cat' => $key->category->value, 'bike' => $key->bikeColumn(), 'start' => $round->startDate()],
+            );
+            if (false !== $stored) {
+                return (int) $stored;
+            }
+        }
+
+        return $this->countVoters($key, $round);
+    }
+
+    /**
      * Stores every closed list with votes that is not stored yet: per region
      * and category the list of every bike, and for routes the list of each
      * bike voted on.
@@ -157,7 +178,7 @@ final class SeasonResults
         $where .= ' AND sv.round_start = :start';
         $params['start'] = $round->startDate();
 
-        $voters = (int) $this->db->fetchOne("SELECT COUNT(DISTINCT sv.user_id) FROM season_vote sv $join WHERE $where", $params);
+        $voters = $this->countVoters($key, $round);
         /** @var list<array{subject_id: int|string, votes: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             "SELECT sv.subject_id, COUNT(*) AS votes FROM season_vote sv $join WHERE $where GROUP BY sv.subject_id",
@@ -192,6 +213,16 @@ final class SeasonResults
         }
 
         return ['voters' => $voters, 'ranked' => $voters >= BallotRules::RANKING_THRESHOLD, 'closed' => $closed, 'entries' => $entries];
+    }
+
+    private function countVoters(ListKey $key, Round $round): int
+    {
+        [$join, $where, $params] = $this->scope($key);
+
+        return (int) $this->db->fetchOne(
+            "SELECT COUNT(DISTINCT sv.user_id) FROM season_vote sv $join WHERE $where AND sv.round_start = :start",
+            $params + ['start' => $round->startDate()],
+        );
     }
 
     /** @return bool whether the round had entries to store */

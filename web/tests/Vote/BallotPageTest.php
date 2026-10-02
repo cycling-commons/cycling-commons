@@ -225,6 +225,24 @@ final class BallotPageTest extends WebTestCase
         self::assertSame(['', 'Road', 'Gravel', 'MTB', 'E-bike', 'Tandem'], $offered($tandem));
     }
 
+    public function testTheBallotSaysHowManyVotedInTheList(): void
+    {
+        $this->openVoting();
+        $rid = $this->region();
+        $climb = $this->item($rid, 'Counted');
+        foreach ([9101, 9102] as $other) {
+            $this->db->insert('season_vote', [
+                'user_id' => $other, 'region_id' => $rid, 'category' => 'climbs', 'subject_id' => $climb,
+                'bike_type' => null, 'season' => 'spring', 'round_start' => '2027-03-01', 'slot' => 1, 'created_at' => '2027-03-02 10:00:00',
+            ]);
+        }
+        $this->rider();
+
+        $this->client->request('GET', '/vote?region=xa-ballot');
+
+        self::assertSelectorTextContains('.ballot .vleft', '2 of 5 voters so far');
+    }
+
     public function testAFullListOffersNoMoreVotes(): void
     {
         $this->openVoting();
