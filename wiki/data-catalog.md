@@ -165,8 +165,8 @@ than uploaded, is not built yet.
 R is a route layer, not a per-road rating. What a road is like (quietness,
 smoothness, surface, lit or not, seasonal closure) is recorded on the road
 itself, under **A**. Best-of rankings of routes are derived from riders, never
-hand-picked; the vote mechanics are design, see
-[How data earns its place](data-priority.md).
+hand-picked: ride confirmations today, and the season ballot once voting is live, see
+[Curation & voting](curation-and-voting.md).
 
 ## Ride heatmap, derived & aggregate  *(auto, anonymized, never per-rider)*
 What renders today: the map's heat layer draws from `heat_point`, which the
@@ -196,7 +196,7 @@ anonymization happens at ingest, not in storage**:
 
 Result: a purely aggregate layer, publishable openly (ODbL), holding **the map, not the rider**
 (Manifesto §I). This is the *measured* side of routes; the rider-verified side is **R**: *I rode
-this* confirmations on the map drawer (seasonal recommend-votes are design).
+this* confirmations on the map drawer, and the season ballot once voting is live.
 
 ---
 

@@ -182,6 +182,16 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'The whole Commons');
     }
 
+    /** The vote card's footnote says what is: the ballot is built and switched off until launch. */
+    public function testTheVoteFootnoteSaysTheBallotIsBuilt(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/pages');
+
+        self::assertSelectorTextContains('.dirnote', 'The season vote is built and opens after launch.');
+        self::assertSelectorTextNotContains('.dirnote', 'not built');
+    }
+
     /**
      * A site directory whose links go nowhere is worse than no directory: it
      * teaches a reader the section is unbuilt. Five of the cards shipped with

@@ -117,7 +117,7 @@ visible:
 |------------------|------------------------|--------|
 | **1. Clearly defined boundaries** | Non-personal data only; the firm line between Commons and personal data (Manifesto §I), drawn at the aggregate by [the sensing boundary](#the-sensing-boundary-how-activity-becomes-a-place-fact) | *shipped* |
 | **2. Rules fit local conditions** | Curation is **per region**; the curated target `X` scales with local density | *shipped* |
-| **3. Collective-choice (those affected make the rules)** | The seasonal **voting rounds**: riders rank their own regions. *(Rounds are design, planned to open after launch; the shipped half is routes, which riders verify by riding and rank by seasonal recommend-vote. See [Curation & Voting](curation-and-voting.md))* | *partly shipped* |
+| **3. Collective-choice (those affected make the rules)** | The seasonal **voting rounds**: riders rank their own regions. *(The season ballot is built and switched on after launch; the half in use today is routes, which riders verify by riding them. See [Curation & Voting](curation-and-voting.md))* | *partly shipped* |
 | **4. Monitoring** | The **freshness model**: timestamps, reporter counts, confirm/decay | *shipped* |
 | **5. Graduated sanctions** | Escalating consequences for rule-breaking (warn → restrict → remove), sized to severity and repeat offence rather than a first-strike ban. Aimed at abuse: spam, vote-rigging, vandalism. [Pre-committed below](#principles-5-and-6-pre-committed) | *aspirational* (ladder written, untested) |
 | **6. Cheap conflict resolution** | A fast, low-cost way to settle *good-faith* disagreements (a contested edit, a curation call) without escalation or cost. Adjudication between members, not punishment. [Pre-committed below](#principles-5-and-6-pre-committed) | *aspirational* (path defined, unused) |
@@ -149,7 +149,7 @@ ban:
 
 1. **Warn**, for a first minor violation (spammy edit, an aggressive comment): a private note pointing at
    the rule. No public shaming.
-2. **Restrict**, for a repeat or serious offence: temporary loss of the capability abused (recommend-votes,
+2. **Restrict**, for a repeat or serious offence: temporary loss of the capability abused (votes,
    curation rights), never of access to the open data itself.
 3. **Remove**, for persistent abuse (vote-rigging, vandalism at scale): account removal, contributions
    redacted where feasible, OSM-style.

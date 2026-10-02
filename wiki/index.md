@@ -13,8 +13,8 @@ The reference documentation for the open cycling-data Commons. The public site
 - **[Data catalog](data-catalog.md)**: every kind of data a rider can contribute, and the firm line
   between the open Commons and a person's private data.
 - **[Curation & voting](curation-and-voting.md)**: the core idea, per-region *best-of* lists chosen
-  by riders. Routes are ranked today by ride confirmations and recommend-votes; the seasonal ballot
-  for climbs, stays, views and heritage is design. Curation, not overload.
+  by riders. Routes are ranked today by ride confirmations; the season ballot for climbs, routes,
+  views, heritage and stays is built and switched on after launch. Curation, not overload.
 - **[Contributing](contributing.md)**: how to add a fact or confirm one, how every edit is reviewed,
   and the intended path for giving durable facts back to OpenStreetMap (design, not built).
 - **[Scout](scout.md)**: the one-tap tagger that records what you notice while
@@ -31,8 +31,8 @@ The reference documentation for the open cycling-data Commons. The public site
 The Commons is an open atlas of the world's best riding (climbs, water, stays, hazards, viewpoints)
 that anyone can use and build on under the ODbL. Objective utility data (water, toilets, repair
 stations) aims to be **complete**. Subjective, experiential data (best climbs, bike-friendly stays,
-finest views, history & culture, top quality rides) is **curated**. Routes earn their place today,
-through rode-it verification and seasonal recommend-votes on the map; for climbs, stays, views and
-heritage the design is a rider ballot with a fresh round each season, and that ballot is not running
-yet. Either way you see the *best* of a region rather than an undifferentiated pile. It maps the
+finest views, history & culture, top quality rides) is **curated**. Routes earn their place today
+through rode-it verification on the map. A season ballot, built and switched on after launch, lets
+riders vote for a region's best climbs, routes, views, heritage and stays, with a fresh round each
+season. Either way you see the *best* of a region rather than an undifferentiated pile. It maps the
 world, not the rider: the Commons dataset is non-personal by design.
