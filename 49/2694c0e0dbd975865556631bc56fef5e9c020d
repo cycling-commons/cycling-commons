@@ -1,0 +1,35 @@
+docs/specs/security-architecture.md
+  s_49442ae34d3603::t_bee27d49a09bd8 607-608
+web/tests/Vote/BallotServiceTest.php
+  s_49442ae34d3603::t_52f0f06ccaba19 1-270
+web/config/packages/rate_limiter.yaml
+  s_49442ae34d3603::t_aec0249b9c719c 75-76
+  s_49442ae34d3603::t_d3c98350b63338 104-110
+web/src/Vote/BallotService.php
+  s_49442ae34d3603::t_555e1d7531c3c6 86
+  s_49442ae34d3603::t_72a7b39c3b6819 78
+  s_49442ae34d3603::t_a4f0191ca62d8a 106
+  s_49442ae34d3603::t_fce0a13dd8b9ab 1-77,79-85,87-104,107-173
+  s_49442ae34d3603::t_0c0207cfc93656 105
+web/src/Vote/BallotRefused.php
+  s_49442ae34d3603::t_836724af35e736 1-35
+docs/specs/route-domain.md
+  s_49442ae34d3603::t_a3d719a34c9177 1108-1116
+  s_49442ae34d3603::t_d3b82888dfbead 1159-1165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "492694c0e0dbd975865556631bc56fef5e9c020d",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
