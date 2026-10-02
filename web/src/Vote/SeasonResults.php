@@ -70,12 +70,12 @@ final class SeasonResults
         $rounds = $this->db->fetchAllAssociative(
             "SELECT DISTINCT sv.season, sv.round_start
                FROM season_vote sv $join
-              WHERE $where
+              WHERE $where AND sv.round_start < :open
                 AND NOT EXISTS (SELECT 1 FROM season_result r
                                  WHERE r.region_id = sv.region_id AND r.category = sv.category
                                    AND r.bike_type = :bikecol AND r.round_start = sv.round_start)
               ORDER BY sv.round_start",
-            $params + ['bikecol' => $key->bikeColumn()],
+            $params + ['bikecol' => $key->bikeColumn(), 'open' => self::openStart($now)],
         );
         foreach ($rounds as $row) {
             $round = Round::fromStored($row['season'], $row['round_start']);
@@ -84,6 +84,16 @@ final class SeasonResults
                 $this->freeze($key, $round);
             }
         }
+    }
+
+    /**
+     * The first day of the rounds open at `$now`. Both hemispheres change
+     * season on the same days, so every round that starts before it has
+     * closed.
+     */
+    private static function openStart(\DateTimeImmutable $now): string
+    {
+        return Round::containing($now, Hemisphere::North)->startDate();
     }
 
     /** @return ListResult */
