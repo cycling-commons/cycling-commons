@@ -110,7 +110,7 @@ function renderPlaceCard(name, meta, near, covGroups){
   document.querySelectorAll('#drawerBody .cc-near').forEach(b=>{
     const n=all[+b.dataset.i];
     b.onclick=()=>n.e.go();
-    b.onmouseenter=()=>highlightAt(n.e.ll, n.e.hlOff); b.onmouseleave=clearHighlight;
+    b.onmouseenter=()=>highlightAt(n.e.ll, n.e.hlOff, n.e.id!=null ? n.e.letter+':'+n.e.id : null); b.onmouseleave=clearHighlight;
   });
   document.querySelectorAll('#drawerBody .cc-near-more').forEach(b=>{
     b.onclick=()=>{ document.querySelectorAll(`#drawerBody li[data-more="${b.dataset.grp}"]`).forEach(li=>li.hidden=false);

@@ -84,9 +84,11 @@ function initSnapSheet(){
 }
 
 export const tipEl=document.getElementById('tip');
-export function showTip(text, lngLat){
+/* `off` is the pin's pixel offset from its point, for a pin fanned off a shared spot (pin-fan.js). */
+export function showTip(text, lngLat, off){
   const p=map.project(lngLat);
-  tipEl.textContent=text; tipEl.style.left=p.x+'px'; tipEl.style.top=p.y+'px'; tipEl.hidden=false;
+  const dx=off ? off[0] : 0, dy=off ? off[1] : 0;
+  tipEl.textContent=text; tipEl.style.left=(p.x+dx)+'px'; tipEl.style.top=(p.y+dy)+'px'; tipEl.hidden=false;
 }
 export function hideTip(){ tipEl.hidden=true; }
 map.on('move', ()=>{ if(!tipEl.hidden) hideTip(); });

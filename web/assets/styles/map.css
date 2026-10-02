@@ -1564,6 +1564,17 @@
      this the town pin, the hover ring or a revealed hit could sit under the
      pins around it. Popups stay above all three. */
   .cc-town-pin,.cc-highlight,.cc-pin.reveal{z-index:3}
+  /* Pins on one spot fan out (pin-fan.js, docs/specs/map-and-search.md):
+     the leader from a moved pin's tip back to its point, and the dot on the
+     point. A 1 px ink line over a 3 px paper casing, so it reads on the light,
+     dark and satellite maps alike. Slotted in just above the canvas, so every
+     pin paints over it; never a click target. */
+  .cc-fan-leg{width:0;height:0;pointer-events:none}
+  .cc-fan-leg svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+  .cc-fan-leg line{stroke-linecap:round}
+  .cc-fan-leg line.case{stroke:var(--paper);stroke-width:3;stroke-opacity:.85}
+  .cc-fan-leg line.ink{stroke:rgb(var(--mark-ink,20 22 14) / .8);stroke-width:1}
+  .cc-fan-leg circle{fill:rgb(var(--mark-ink,20 22 14));stroke:var(--paper);stroke-width:1.5}
   .maplibregl-popup{z-index:4}
   /* Pulse via a compositable pseudo-element transform/opacity, not a box-shadow
      spread repaint every frame over the map canvas (review W10). */

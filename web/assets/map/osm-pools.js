@@ -8,7 +8,8 @@ import { layerByKey, active, mode } from './catalog.js';
 import { inScope } from './scope-ui.js';
 import { mintKindIcons, pinEl, clusterEl, stateOf } from './icons.js';
 import { staysAccessible, shownAnyway } from './render.js';
-import { modeShows } from './filters.js';
+import { modeShows, placeKey } from './filters.js';
+import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
 import { splitPool, mergeListed, listedLettersChanged } from './ride-places.js';
 import { openDrawer, osmDrawer, waterDrawer } from './drawer.js';
 
@@ -192,9 +193,9 @@ export function confLeafPin(st, p, co){
   el.setAttribute('aria-label', drawerF.name+', '+drawerF.headline + (note ? ', '+note : ''));
   // stopPropagation: no rendered layer under this DOM pin — without it the map would re-scope (docs/specs/map-and-search.md §4.5).
   el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(st.layer, drawerF); flyToPin(lngLat); });
-  el.addEventListener('mouseenter', ()=>showTip(tip, lngLat));
+  el.addEventListener('mouseenter', ()=>showTip(tip, lngLat, fanOffsetOf(el)));
   el.addEventListener('mouseleave', hideTip);
-  el.addEventListener('focus', ()=>showTip(tip, lngLat));
+  el.addEventListener('focus', ()=>showTip(tip, lngLat, fanOffsetOf(el)));
   el.addEventListener('blur', hideTip);
   return el;
 }
@@ -219,7 +220,8 @@ export function updateConfMarkers(){
           el.addEventListener('click', e=>{ e.stopPropagation(); map.getSource(srcId).getClusterExpansionZoom(p.cluster_id).then(z=>map.easeTo({center:co, zoom:z+0.2})).catch(()=>{}); });
           m=new maplibregl.Marker({element:el, anchor:'center'}).setLngLat(co).addTo(map);
         } else {
-          m=new maplibregl.Marker({element:confLeafPin(st, p, co), anchor:'bottom'}).setLngLat(co).addTo(map);
+          m=fanPin(new maplibregl.Marker({element:confLeafPin(st, p, co), anchor:'bottom'}).setLngLat(co).addTo(map),
+            placeKey((st.layer||{}).letter, p.id));
         }
       }
       next[key]=m;
@@ -227,6 +229,7 @@ export function updateConfMarkers(){
     for(const k in on){ if(!next[k]) on[k].remove(); }
     st.onScreen=next;
   });
+  scheduleFanOut();
 }
 
 export const OSM_BULK = [

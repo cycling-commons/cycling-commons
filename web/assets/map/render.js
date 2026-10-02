@@ -15,6 +15,7 @@ import { covShownCount, coverageTotal, syncCoverageLayers, covIconFilter,
 import { openDrawer } from './drawer.js';
 import { NO_VALIDATE } from './tile-sources.js';
 import { attrMatch, narrowingCount, climbChipsMatch, modeShows, placeKey, createShownAnyway } from './filters.js';
+import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
 
 export const PREFS = window.CC_PREFS || {bikes: [], styles: []};
 
@@ -530,14 +531,16 @@ export function render(){
         // stopPropagation: same click-bleed-through as the steep marker.
         el.addEventListener('click', e=>{ e.stopPropagation(); openDrawer(layer,f); flyToPin(lngLat); });
         const tipText = summary ? `${f.name} · ${summary}` : f.name;
-        el.addEventListener('mouseenter', ()=>showTip(tipText, lngLat));
+        // A pin fanned off a shared spot (pin-fan.js) has its tip over its own seat.
+        el.addEventListener('mouseenter', ()=>showTip(tipText, lngLat, fanOffsetOf(el)));
         el.addEventListener('mouseleave', hideTip);
-        el.addEventListener('focus', ()=>showTip(tipText, lngLat));
+        el.addEventListener('focus', ()=>showTip(tipText, lngLat, fanOffsetOf(el)));
         el.addEventListener('blur', hideTip);
         el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDrawer(layer,f); flyToPin(lngLat); }});
         const m=new maplibregl.Marker({element:el,anchor:'bottom'})
           .setLngLat(lngLat)
           .addTo(map);
+        fanPin(m, placeKey(layer.letter, f.id));
         markers.push(m); n++;
       });
       return;
@@ -554,6 +557,8 @@ export function render(){
   });
   // confirmed/validated points are clustered (count bubble → category icon pins); unverified stay as dots
   updateConfMarkers();
+  // Pins on one spot fan out against this frame's pins (docs/specs/map-and-search.md, Pins on one spot fan out).
+  scheduleFanOut();
   // stacking, bottom → top: ride lines, climb lines, road-surface lines, then Mapillary on top
   const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
   dynamicIds.filter(id=>id.startsWith('experience-')).forEach(liftGroup);    

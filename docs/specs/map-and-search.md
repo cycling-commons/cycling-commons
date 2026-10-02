@@ -1969,6 +1969,65 @@ pins, the ring says which mode you are in without reading anything (owner
 2026-08-14). Inset `box-shadow`, never a real border - a border resizes the
 canvas and makes MapLibre re-measure on every toggle.
 
+### Pins on one spot fan out (2026-10-01)
+
+Two places can share a point: Grimsel and Susten both start at Innertkirchen,
+on exactly the same foot, so one pin hid the other and only the "?" badge
+peeked out (owner 2026-10-01: "Now you can't easily see the start.
+Confusing."). Pins on one spot now fan out, every one visible and clickable
+at once.
+
+- **Which pins.** Every bottom-anchored place pin drawn as a DOM marker: the
+  catalog pins `render()` draws (climbs and every other point layer, the
+  pending and removed layers included), the pools' leaf pins
+  (`updateConfMarkers()`), and the reveal pin (§12). Cluster bubbles, the
+  summit flag, the steepness markers, the town pin and the coverage tiles'
+  canvas icons are not pins and stay where they are. A pool keys its leaf pins
+  by record and point, so two places of one pool on one point are two pins.
+- **The rule.** Pins whose tips land within **12 px** of each other on screen,
+  at the current zoom, are one spot. Grouping is greedy in key order
+  (`letter:id`, numeric aware): each pin not yet taken gathers every free pin
+  within 12 px of itself, and a group never chains on through its members.
+  Neighbours come from a 12 px grid, never from comparing every pair. Only
+  pins within 80 px of the visible map are laid out. A pin on its own is
+  drawn as before.
+- **The layout.** The seats ring the mean of the group's tips (the point
+  itself when the pins share it). Up to eight sit evenly on one ring, radius
+  `max(28 px, 40 px / (2 sin(π/n)))`, so neighbours are 40 px tip to tip;
+  the ring is turned so no seat is straight below the point, where a pin's
+  body would hide it. A pair sits left and right, 28 px out (Innertkirchen:
+  two pins 56 px apart, tip to tip); three sit top, lower right, lower left.
+  Nine to sixteen follow a spiral out from the top, clockwise, starting at
+  40 px and growing 44 px a turn. A pile of more than sixteen stays as drawn:
+  zooming in parts it. Seats go in key order, so a pin keeps its seat between
+  renders; a pin `render()` redraws takes its last seat at once rather than
+  spreading again.
+- **The leader.** From each moved pin's tip to its own point: a 1 px ink line
+  over a 3 px paper casing, and a 6 px ink dot with a paper ring on the point.
+  It is a marker of its own at the point, slotted in just above the canvas,
+  so every pin paints over it, and never a click target.
+- **Motion.** A pin eases to its seat in 180 ms; under
+  `prefers-reduced-motion: reduce` it moves at once.
+- **When.** After every `render()` (filters, scope, view mode, layers), every
+  pool update (`moveend`, `idle`), and every `moveend`. One pass per frame at
+  most.
+- **What stays the same.** A pin's lngLat never changes, only its pixel
+  offset (`Marker.setOffset`): a click, `flyToPin`, a deep link (`?item=`),
+  the region scope and the item index all answer the true point. The "!",
+  clock and "?" badges ride on the pin, keyboard focus and tab order are
+  unchanged, and the hover tooltip stands over the moved pin.
+- **The halo and the hover ring land on the moved pin.** `highlightAt(ll,
+  offset, key)` finds the fanned pin by its `letter:id` (or, with no key, by
+  the point) and adds its offset, so a drawer open or a hovered list row rings
+  the pin the rider means, with its leader showing where it really stands.
+  When several fanned pins share the point and the caller names none, the
+  ring sits on the point where the leaders meet. Each pass that moves a pin
+  announces `cc:fanout`, and the halo follows (a zoom that parts a group
+  takes the halo with its pin).
+
+The geometry is pure (`web/assets/map/fan-out.js`, tested in
+`web/tests/js/fan-out.test.mjs`); `pin-fan.js` applies it to the map.
+
 ## 6. Selection model: tooltip + drawer
 
 ### 6.1 Interaction contract

@@ -85,7 +85,7 @@ export function bindAlongList(root, d, o = {}){
       const from = openListedPlace(entry.layer, entry.modeF, () => entry.go());
       if(from != null && o.onLifted) o.onLifted(from, mode());
     };
-    b.onmouseenter = () => highlightAt((entry && entry.ll) || it.ll, ringOffset(listedPinDrawn(entry), entry && entry.hlOff));
+    b.onmouseenter = () => highlightAt((entry && entry.ll) || it.ll, ringOffset(listedPinDrawn(entry), entry && entry.hlOff), letter+':'+it.id);
     b.onmouseleave = clearHighlight;
   });
   const covByLetter = Object.fromEntries((d.coverage||[]).map(g => [g.letter, g]));
@@ -165,7 +165,7 @@ export function bindRouteClimbs(root, climbs, o = {}){
       if(from != null && o.onLifted) o.onLifted(from, mode());
     };
     // The climb's pin stands at its foot (util.js pinPoint), which is `c.ll`.
-    b.onmouseenter = () => highlightAt(c.ll, ringOffset(listedPinDrawn(entry), entry && entry.hlOff));
+    b.onmouseenter = () => highlightAt(c.ll, ringOffset(listedPinDrawn(entry), entry && entry.hlOff), 'N:'+c.id);
     b.onmouseleave = clearHighlight;
   });
 }

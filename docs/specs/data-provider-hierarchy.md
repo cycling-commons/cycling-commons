@@ -404,6 +404,12 @@ on an ink disc inside a thin paper ring, 8.5:1, centred by flex; ochre on the
 disc's own fill vanished on a pale pin and on the light basemap. The key
 page's `.cc-q` row uses the same colours.
 
+**Placement is not a channel (2026-10-01).** Pins on one spot fan out
+around it, each with a thin leader back to a dot on the true point
+([map-and-search.md](map-and-search.md), Pins on one spot fan out). The
+leader and the dot say only "this pin stands over there"; they carry nothing
+about the place, so they spend none of the budget above.
+
 ### 6.3a The pin grammar (owner, 2026-09-04)
 
 The owner, on being shown the water/food split: "water has potable yes/no,

@@ -25,6 +25,7 @@ import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
 import { osmQuestionHtml, replacesHtml } from './osm-question.js';
 import { townPinSvg } from './town-pin.js';
+import { fanPin, fanRingFor } from './pin-fan.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, openRouteById, bumpPlaceReq } from './places.js';
@@ -1289,7 +1290,7 @@ export function openDrawer(layer, f){
     /* Halo offset onto the pin (anchor bottom). Flat OSM dots (no id) stay centred. Climbs: ring the foot. */
     const hlAt = f.route ? f.route[0] : (f.geom && f.geom.ll);   
     const isPin = !!(f.cur || f.pending || f.id != null);
-    highlightAt(hlAt, isPin ? [0,-16] : [0,0]);
+    highlightAt(hlAt, isPin ? [0,-16] : [0,0], f.id != null && layer.letter ? layer.letter+':'+f.id : null);
   }
   renderDrawerBody(layer, f);
   showDrawer({fresh:true});
@@ -1326,13 +1327,27 @@ export function showDrawer(opts){
 }
 
 // pulsing highlight marker — show where a hovered list item / town sits on the map
-let hlMarker=null;
-export function highlightAt(ll, offset){
+/* A ring on a pin (a non-zero `offset`) follows the pin when it is fanned off
+   a shared spot (pin-fan.js): it lands on the moved pin, found by `key`
+   (`letter:id`) or, with no key, by the point. When several fanned pins share
+   the point and none is named, it rings the point where their leaders meet.
+   It is placed again whenever the fan changes (zoom splits or joins a group). */
+let hlMarker=null, _hl=null;
+export function highlightAt(ll, offset, key){
   if(!ll){ return clearHighlight(); }
-  if(!hlMarker){ const el=document.createElement('div'); el.className='cc-highlight'; hlMarker=new maplibregl.Marker({element:el,anchor:'center'}); }
-  hlMarker.setOffset(offset||[0,0]).setLngLat([ll[1],ll[0]]).addTo(map);
+  _hl={ll, offset:offset||[0,0], key:key==null ? null : key};
+  placeHighlight();
 }
-export function clearHighlight(){ if(hlMarker) hlMarker.remove(); }
+function placeHighlight(){
+  if(!hlMarker){ const el=document.createElement('div'); el.className='cc-highlight'; hlMarker=new maplibregl.Marker({element:el,anchor:'center'}); }
+  const {ll, offset, key}=_hl;
+  const onPin = offset[0]!==0 || offset[1]!==0;
+  const fan = onPin ? fanRingFor(key, ll) : null;
+  const off = fan==='point' ? [0,0] : fan ? [offset[0]+fan[0], offset[1]+fan[1]] : offset;
+  hlMarker.setOffset(off).setLngLat([ll[1],ll[0]]).addTo(map);
+}
+document.addEventListener('cc:fanout', ()=>{ if(_hl) placeHighlight(); });
+export function clearHighlight(){ _hl=null; if(hlMarker) hlMarker.remove(); }
 // docs/specs/map-and-search.md §12 — reveal pin for a non-drawn search hit in Curated; never force Everything.
 let _revealMarker=null;
 export function clearRevealPin(){ if(_revealMarker){ _revealMarker.remove(); _revealMarker=null; } }
@@ -1341,7 +1356,7 @@ export function revealPinAt(layer, ll){
   // A hit nobody has confirmed, drawn as ours with the "?" and the pulse.
   const el=pinEl(layer, {rung:1, custody:'ours'});
   el.classList.add('reveal');
-  _revealMarker=new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([ll[1],ll[0]]).addTo(map);
+  _revealMarker=fanPin(new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([ll[1],ll[0]]).addTo(map), null);
 }
 // map-and-search.md §6.5 — the site's own pin on a town while its card is open. ll is [lat, lng].
 let _townMarker=null;
