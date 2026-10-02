@@ -6,89 +6,107 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
-use App\Catalog\Entity\RouteVote;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
-use App\Catalog\Season;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Clock\Clock;
+use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Clock\NativeClock;
 
 final class MapBestOfTest extends WebTestCase
 {
-    private function verifiedVotedRoute(EntityManagerInterface $em, Season $s, BikeType $b, int $regionId = 1): RecommendedRoute
+    private int $user = 6000;
+
+    #[\Override]
+    protected function setUp(): void
     {
+        Clock::set(new MockClock(new \DateTimeImmutable('2027-04-10T12:00:00+00:00')));
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        Clock::set(new NativeClock());
+        parent::tearDown();
+    }
+
+    private function votedRoute(string $season, string $start, string $bike, int $regionId = 1): int
+    {
+        $em = static::getContainer()->get(EntityManagerInterface::class);
         $r = (new RecommendedRoute())->setName('BestOf '.uniqid())
             ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
             ->setDistanceM(20000)->setState(ItemState::Verified)
-            ->setSource(ItemSource::User)->setSourceRef('user:bo-'.uniqid())->setRegionId($regionId);
+            ->setSource(ItemSource::User)->setSourceRef('user:bo-'.uniqid('', true))->setRegionId($regionId);
         $em->persist($r);
         $em->flush();
-        $em->persist(new RouteVote($r->getId(), 10, $s, $b));
-        $em->flush();
+        static::getContainer()->get(Connection::class)->insert('season_vote', [
+            'user_id' => $this->user++, 'region_id' => $regionId, 'category' => 'quality-rides', 'subject_id' => $r->getId(),
+            'bike_type' => $bike, 'season' => $season, 'round_start' => $start, 'slot' => 1, 'created_at' => $start.' 10:00:00',
+        ]);
 
-        return $r;
+        return (int) $r->getId();
     }
 
-    public function testPublicAndReturnsRankedIds(): void
+    /** @return array<string, mixed> */
+    private static function json(string $body): array
+    {
+        $data = json_decode($body, true, 512, \JSON_THROW_ON_ERROR);
+        self::assertIsArray($data);
+
+        return $data;
+    }
+
+    public function testPublicAndCachedForOneMinute(): void
     {
         $client = static::createClient();
-        $em = static::getContainer()->get(EntityManagerInterface::class);
-        $r = $this->verifiedVotedRoute($em, Season::Spring, BikeType::Gravel);
+        $r = $this->votedRoute('spring', '2027-03-01', 'Gravel');
 
-        // No login — endpoint is public (like the catalog region slices).
         $client->request('GET', '/map/best-of?season=spring&bike=Gravel');
         self::assertResponseIsSuccessful();
-        self::assertResponseHasHeader('Cache-Control');
-        $data = json_decode((string) $client->getResponse()->getContent(), true);
-        // Both facets echo back as LISTS: the map picks several of each
-        // (map-and-search.md §4.0), so a scalar could not describe the request.
+        $cache = (string) $client->getResponse()->headers->get('Cache-Control');
+        self::assertStringContainsString('public', $cache);
+        self::assertStringContainsString('max-age=60', $cache);
+        $data = self::json((string) $client->getResponse()->getContent());
         self::assertSame(['spring'], $data['season']);
         self::assertSame(['Gravel'], $data['bike']);
-        self::assertContains($r->getId(), $data['ids']);
+        self::assertContains($r, $data['ids']);
+    }
+
+    public function testLastYearsVotesAreNotOnTheMap(): void
+    {
+        $client = static::createClient();
+        $old = $this->votedRoute('spring', '2026-03-01', 'Road');
+        $now = $this->votedRoute('spring', '2027-03-01', 'Road');
+
+        $client->request('GET', '/map/best-of?season=spring');
+        $data = self::json((string) $client->getResponse()->getContent());
+        self::assertContains($now, $data['ids']);
+        self::assertNotContains($old, $data['ids']);
     }
 
     public function testSeveralSeasonsAndBikesRankTogether(): void
     {
         $client = static::createClient();
-        $em = static::getContainer()->get(EntityManagerInterface::class);
-        $springGravel = $this->verifiedVotedRoute($em, Season::Spring, BikeType::Gravel);
-        $autumnRoad = $this->verifiedVotedRoute($em, Season::Autumn, BikeType::Road);
+        $springGravel = $this->votedRoute('spring', '2027-03-01', 'Gravel');
+        $winterRoad = $this->votedRoute('winter', '2026-12-01', 'Road');
 
-        $client->request('GET', '/map/best-of?season=spring,autumn&bike=Gravel,Road');
-        self::assertResponseIsSuccessful();
-        $data = json_decode((string) $client->getResponse()->getContent(), true);
-        self::assertSame(['spring', 'autumn'], $data['season']);
+        $client->request('GET', '/map/best-of?season=spring,winter&bike=Gravel,Road');
+        $data = self::json((string) $client->getResponse()->getContent());
+        self::assertSame(['spring', 'winter'], $data['season']);
         self::assertSame(['Gravel', 'Road'], $data['bike']);
-        // One ranking over the union, not two answers stapled together.
-        self::assertContains($springGravel->getId(), $data['ids']);
-        self::assertContains($autumnRoad->getId(), $data['ids']);
-    }
-
-    public function testEmptyFacetNarrowsByNothing(): void
-    {
-        $client = static::createClient();
-        $em = static::getContainer()->get(EntityManagerInterface::class);
-        // A vote on a season nobody would guess, so a "defaults to today's
-        // season" regression cannot pass this by luck.
-        $r = $this->verifiedVotedRoute($em, Season::Winter, BikeType::Tandem);
-
-        $client->request('GET', '/map/best-of');
-        self::assertResponseIsSuccessful();
-        $data = json_decode((string) $client->getResponse()->getContent(), true);
-        self::assertSame([], $data['season'], 'no season param must mean every season');
-        self::assertSame([], $data['bike'], 'no bike param must mean every bike');
-        self::assertContains($r->getId(), $data['ids']);
+        self::assertContains($springGravel, $data['ids']);
+        self::assertContains($winterRoad, $data['ids']);
     }
 
     public function testUnknownValuesAreDroppedNotRejected(): void
     {
-        // A stale bookmark degrades to a wider answer instead of a 400.
         $client = static::createClient();
         $client->request('GET', '/map/best-of?season=spring,harvest&bike=Unicycle,all');
         self::assertResponseIsSuccessful();
-        $data = json_decode((string) $client->getResponse()->getContent(), true);
+        $data = self::json((string) $client->getResponse()->getContent());
         self::assertSame(['spring'], $data['season']);
         self::assertSame([], $data['bike']);
     }
@@ -96,32 +114,15 @@ final class MapBestOfTest extends WebTestCase
     public function testBestOfAcceptsCsvRegionSet(): void
     {
         $client = static::createClient();
-        $em = static::getContainer()->get(EntityManagerInterface::class);
-        $r1 = $this->verifiedVotedRoute($em, Season::Summer, BikeType::Gravel, 1);
-        $r24 = $this->verifiedVotedRoute($em, Season::Summer, BikeType::Gravel, 24);
+        $r1 = $this->votedRoute('summer', '2026-06-01', 'Gravel', 1);
+        $r24 = $this->votedRoute('summer', '2026-06-01', 'Gravel', 24);
 
-        $client->request('GET', '/map/best-of?season=summer&bike=Gravel&region=1');
-        self::assertResponseIsSuccessful();
-        $singleEtag = $client->getResponse()->getEtag();
-
-        $client->request('GET', '/map/best-of?season=summer&bike=Gravel&region=1,24');
-        self::assertResponseIsSuccessful();
-        $data = json_decode((string) $client->getResponse()->getContent(), true);
-        self::assertContains($r1->getId(), $data['ids']);
-        self::assertContains($r24->getId(), $data['ids']);
-        self::assertNotSame($singleEtag, $client->getResponse()->getEtag());
-    }
-
-    public function testBestOfRejectsGarbageCsvAsEverywhere(): void
-    {
-        $client = static::createClient();
-        $em = static::getContainer()->get(EntityManagerInterface::class);
-        $r1 = $this->verifiedVotedRoute($em, Season::Summer, BikeType::Gravel, 1);
-
-        // Non-numeric and overflow parts are dropped; the valid id (1) is kept.
-        $client->request('GET', '/map/best-of?season=summer&bike=Gravel&region=1,x,999999999999999999999');
-        self::assertResponseIsSuccessful();
-        $data = json_decode((string) $client->getResponse()->getContent(), true);
-        self::assertContains($r1->getId(), $data['ids']);
+        $client->request('GET', '/map/best-of?season=summer&region=1');
+        $single = $client->getResponse()->getEtag();
+        $client->request('GET', '/map/best-of?season=summer&region=1,24,x,999999999999999999999');
+        $data = self::json((string) $client->getResponse()->getContent());
+        self::assertContains($r1, $data['ids']);
+        self::assertContains($r24, $data['ids']);
+        self::assertNotSame($single, $client->getResponse()->getEtag());
     }
 }

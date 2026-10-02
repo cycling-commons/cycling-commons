@@ -8,164 +8,157 @@ namespace App\Tests\Catalog;
 
 use App\Catalog\BikeType;
 use App\Catalog\Entity\RecommendedRoute;
-use App\Catalog\Entity\RouteVote;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Clock\MockClock;
 
 final class RouteRankingServiceTest extends KernelTestCase
 {
-    private function em(): EntityManagerInterface
+    private Connection $db;
+    private EntityManagerInterface $em;
+    private int $user = 5000;
+
+    #[\Override]
+    protected function setUp(): void
     {
-        return static::getContainer()->get(EntityManagerInterface::class);
+        self::bootKernel();
+        $this->db = static::getContainer()->get(Connection::class);
+        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+    }
+
+    private function ranking(string $now = '2027-04-10T12:00:00+00:00'): RouteRankingService
+    {
+        return new RouteRankingService($this->db, new MockClock(new \DateTimeImmutable($now)));
     }
 
     /** @param list<string> $bikeTypes */
-    private function route(EntityManagerInterface $em, ItemState $state, int $regionId, array $bikeTypes = []): RecommendedRoute
+    private function route(int $regionId = 1, array $bikeTypes = [], ItemState $state = ItemState::Verified): int
     {
         $r = (new RecommendedRoute())->setName('R'.uniqid())
             ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
             ->setDistanceM(20000)->setState($state)
-            ->setSource(ItemSource::User)->setSourceRef('user:rank-'.uniqid())->setRegionId($regionId);
+            ->setSource(ItemSource::User)->setSourceRef('user:rank-'.uniqid('', true))->setRegionId($regionId);
         if ([] !== $bikeTypes) {
             $r->setAttributes(['bikeTypes' => $bikeTypes]);
         }
-        $em->persist($r);
-        $em->flush();
+        $this->em->persist($r);
+        $this->em->flush();
 
-        return $r;
+        return (int) $r->getId();
     }
 
-    private function vote(EntityManagerInterface $em, int $routeId, int $userId, Season $s, BikeType $b): void
+    private function vote(int $routeId, BikeType $bike, string $season = 'spring', string $start = '2027-03-01', string $at = '2027-04-01 10:00:00'): void
     {
-        $em->persist(new RouteVote($routeId, $userId, $s, $b));
-        $em->flush();
+        $this->db->insert('season_vote', [
+            'user_id' => $this->user++, 'region_id' => 1, 'category' => 'quality-rides', 'subject_id' => $routeId,
+            'bike_type' => $bike->value, 'season' => $season, 'round_start' => $start, 'slot' => 1, 'created_at' => $at,
+        ]);
     }
 
     public function testRanksByVoteCountThenRecency(): void
     {
-        self::bootKernel();
-        $em = $this->em();
-        $svc = static::getContainer()->get(RouteRankingService::class);
+        $a = $this->route();
+        $b = $this->route();
+        $this->vote($a, BikeType::Gravel);
+        $this->vote($b, BikeType::Gravel);
+        $this->vote($b, BikeType::Gravel);
 
-        $a = $this->route($em, ItemState::Verified, 1);   // 1 spring/gravel vote
-        $b = $this->route($em, ItemState::Verified, 1);   // 2 spring/gravel votes → ranks first
-        $this->vote($em, $a->getId(), 10, Season::Spring, BikeType::Gravel);
-        $this->vote($em, $b->getId(), 11, Season::Spring, BikeType::Gravel);
-        $this->vote($em, $b->getId(), 12, Season::Spring, BikeType::Gravel);
-
-        self::assertSame([$b->getId(), $a->getId()], $svc->bestOf([Season::Spring], [BikeType::Gravel], []));
+        self::assertSame([$b, $a], $this->ranking()->bestOf([Season::Spring], [BikeType::Gravel]));
     }
 
-    public function testExcludesZeroVoteAndOtherFacets(): void
+    public function testOnlyTheLatestRoundOfASeasonCounts(): void
     {
-        self::bootKernel();
-        $em = $this->em();
-        $svc = static::getContainer()->get(RouteRankingService::class);
+        $old = $this->route();
+        $now = $this->route();
+        $this->vote($old, BikeType::Road, 'spring', '2026-03-01', '2026-04-01 10:00:00');
+        $this->vote($now, BikeType::Road);
 
-        $voted = $this->route($em, ItemState::Verified, 1);
-        $this->route($em, ItemState::Verified, 1);                 // zero votes → excluded
-        $this->vote($em, $voted->getId(), 10, Season::Spring, BikeType::Gravel);
-        $this->vote($em, $voted->getId(), 11, Season::Summer, BikeType::Road);   // other facet, ignored
+        self::assertSame([$now], $this->ranking()->bestOf([Season::Spring], []));
+    }
 
-        self::assertSame([$voted->getId()], $svc->bestOf([Season::Spring], [BikeType::Gravel], []));
+    public function testOnALeapDayLastSpringIsStillTheLatestSpring(): void
+    {
+        $r = $this->route();
+        $this->vote($r, BikeType::Road);
+
+        self::assertSame([$r], $this->ranking('2028-02-29T12:00:00+00:00')->bestOf([Season::Spring], []));
+    }
+
+    public function testASouthernSpringCountsAsSpring(): void
+    {
+        $r = $this->route();
+        $this->vote($r, BikeType::Road, 'spring', '2026-09-01', '2026-10-01 10:00:00');
+
+        self::assertSame([$r], $this->ranking()->bestOf([Season::Spring], []));
+    }
+
+    public function testNoSeasonMeansTheLatestRoundOfEverySeason(): void
+    {
+        $winter = $this->route();
+        $older = $this->route();
+        $this->vote($winter, BikeType::Road, 'winter', '2026-12-01', '2027-01-10 10:00:00');
+        $this->vote($older, BikeType::Road, 'winter', '2025-12-01', '2026-01-10 10:00:00');
+
+        self::assertSame([$winter], $this->ranking()->bestOf([], []));
     }
 
     public function testAllBikesAggregatesAcrossBikeTypes(): void
     {
-        self::bootKernel();
-        $em = $this->em();
-        $svc = static::getContainer()->get(RouteRankingService::class);
+        $r = $this->route();
+        $this->vote($r, BikeType::Gravel);
+        $this->vote($r, BikeType::Road);
 
-        $r = $this->route($em, ItemState::Verified, 1);
-        $this->vote($em, $r->getId(), 10, Season::Spring, BikeType::Gravel);
-        $this->vote($em, $r->getId(), 11, Season::Spring, BikeType::Road);
-
-        self::assertSame([$r->getId()], $svc->bestOf([Season::Spring], [], []));   // both count
-        self::assertSame([$r->getId()], $svc->bestOf([Season::Spring], [BikeType::Gravel], [])); // one counts, still listed
+        self::assertSame([$r], $this->ranking()->bestOf([Season::Spring], []));
+        self::assertSame([$r], $this->ranking()->bestOf([Season::Spring], [BikeType::Gravel]));
     }
 
     public function testSpecialtyTypeRequiresDeclaredSuitability(): void
     {
-        self::bootKernel();
-        $em = $this->em();
-        $svc = static::getContainer()->get(RouteRankingService::class);
+        $suitable = $this->route(1, ['Handbike', 'Gravel']);
+        $notDeclared = $this->route(1, ['Gravel']);
+        $this->vote($suitable, BikeType::Handbike);
+        $this->vote($notDeclared, BikeType::Handbike);
 
-        $suitable = $this->route($em, ItemState::Verified, 1, ['Handbike', 'Gravel']);
-        $notDeclared = $this->route($em, ItemState::Verified, 1, ['Gravel']);   // handbike-voted but not declared
-        $this->vote($em, $suitable->getId(), 10, Season::Spring, BikeType::Handbike);
-        $this->vote($em, $notDeclared->getId(), 11, Season::Spring, BikeType::Handbike);
+        self::assertSame([$suitable], $this->ranking()->bestOf([Season::Spring], [BikeType::Handbike]));
+        $this->vote($notDeclared, BikeType::Gravel);
+        self::assertContains($notDeclared, $this->ranking()->bestOf([Season::Spring], [BikeType::Gravel]));
+    }
 
-        // Only the declared-suitable route appears in the Handbike list (P4-D4).
-        self::assertSame([$suitable->getId()], $svc->bestOf([Season::Spring], [BikeType::Handbike], []));
-        // But a general type (Gravel) is NOT gated by suitability — vote alone suffices.
-        $this->vote($em, $notDeclared->getId(), 12, Season::Spring, BikeType::Gravel);
-        self::assertContains($notDeclared->getId(), $svc->bestOf([Season::Spring], [BikeType::Gravel], []));
+    public function testAnUnverifiedRouteIsNeverListed(): void
+    {
+        $r = $this->route(1, [], ItemState::Unverified);
+        $this->vote($r, BikeType::Road);
+
+        self::assertSame([], $this->ranking()->bestOf([Season::Spring], []));
     }
 
     public function testEverywhereFacetIsHardCapped(): void
     {
-        // Without a region filter the aggregate is unbounded (route-domain.md
-        // §12 item 1); the Phase 1 guard caps it at MAX_RESULTS. Seed one more
-        // than the cap, all qualifying (verified + one spring/gravel vote), and
-        // assert the no-region facet returns exactly the cap.
-        self::bootKernel();
-        $em = $this->em();
-        $svc = static::getContainer()->get(RouteRankingService::class);
-
-        $routes = [];
         for ($i = 0; $i <= RouteRankingService::MAX_RESULTS; ++$i) {
-            $r = (new RecommendedRoute())->setName('Cap'.$i)
-                ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
-                ->setDistanceM(20000)->setState(ItemState::Verified)
-                ->setSource(ItemSource::User)->setSourceRef('user:cap-'.uniqid().'-'.$i);
-            $em->persist($r);
-            $routes[] = $r;
+            $this->vote($this->route(), BikeType::Gravel);
         }
-        $em->flush();
-        $uid = 1000;
-        foreach ($routes as $r) {
-            $em->persist(new RouteVote($r->getId(), $uid++, Season::Spring, BikeType::Gravel));
-        }
-        $em->flush();
 
-        $ids = $svc->bestOf([Season::Spring], [BikeType::Gravel], []);
-        self::assertCount(RouteRankingService::MAX_RESULTS, $ids);
+        self::assertCount(RouteRankingService::MAX_RESULTS, $this->ranking()->bestOf([Season::Spring], [BikeType::Gravel]));
     }
 
     public function testRegionScoping(): void
     {
-        self::bootKernel();
-        $em = $this->em();
-        $svc = static::getContainer()->get(RouteRankingService::class);
+        $r1 = $this->route(1);
+        $r2 = $this->route(2);
+        $r24 = $this->route(24);
+        $this->vote($r1, BikeType::Gravel);
+        $this->vote($r2, BikeType::Gravel);
+        $this->vote($r24, BikeType::Gravel);
 
-        $r1 = $this->route($em, ItemState::Verified, 1);
-        $r2 = $this->route($em, ItemState::Verified, 2);
-        $this->vote($em, $r1->getId(), 10, Season::Spring, BikeType::Gravel);
-        $this->vote($em, $r2->getId(), 11, Season::Spring, BikeType::Gravel);
-
-        self::assertSame([$r1->getId()], $svc->bestOf([Season::Spring], [BikeType::Gravel], [1]));
-    }
-
-    public function testMultiRegionSetMergesAcrossRegions(): void
-    {
-        self::bootKernel();
-        $em = $this->em();
-        $svc = static::getContainer()->get(RouteRankingService::class);
-
-        $r1 = $this->route($em, ItemState::Verified, 1);
-        $r24 = $this->route($em, ItemState::Verified, 24);
-        $r23 = $this->route($em, ItemState::Verified, 23);
-        $this->vote($em, $r1->getId(), 10, Season::Summer, BikeType::Gravel);
-        $this->vote($em, $r24->getId(), 11, Season::Summer, BikeType::Gravel);
-        $this->vote($em, $r23->getId(), 12, Season::Summer, BikeType::Gravel);
-
-        $ids = $svc->bestOf([Season::Summer], [BikeType::Gravel], [1, 24]);
-        self::assertContains($r1->getId(), $ids);
-        self::assertContains($r24->getId(), $ids);
-        self::assertNotContains($r23->getId(), $ids);
+        self::assertSame([$r1], $this->ranking()->bestOf([Season::Spring], [], [1]));
+        $both = $this->ranking()->bestOf([Season::Spring], [], [1, 24]);
+        self::assertContains($r1, $both);
+        self::assertContains($r24, $both);
+        self::assertNotContains($r2, $both);
     }
 }

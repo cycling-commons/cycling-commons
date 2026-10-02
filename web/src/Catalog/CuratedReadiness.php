@@ -154,12 +154,12 @@ final class CuratedReadiness
             $counts[(int) $r['region_id']][(string) $r['letter']] = (int) $r['n'];
         }
 
-        // Verified AND voted — same gate as RouteRankingService.
+        // Verified AND voted on the season ballot, any round: the same routes RouteRankingService can list.
         /** @var list<array{region_id: int|string, n: int|string}> $routes */
         $routes = $this->db->fetchAllAssociative(
             "SELECT rr.region_id, COUNT(DISTINCT rr.id) AS n
                FROM recommended_route rr
-               JOIN route_vote rv ON rv.route_id = rr.id
+               JOIN season_vote sv ON sv.subject_id = rr.id AND sv.category = 'quality-rides'
               WHERE rr.region_id IN (:rids)
                 AND rr.state = 'verified'
               GROUP BY rr.region_id",

@@ -6,13 +6,20 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Vote\Hemisphere;
+use App\Vote\Round;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Psr\Clock\ClockInterface;
 
 /**
- * Serve-time best-of ranking of `verified` routes. Empty facet lists mean "narrowed by nothing".
+ * Serve-time best-of membership for the map's Curated mode: `verified` routes
+ * with a season vote. Only votes in the latest started round of each picked
+ * season count, in either hemisphere, so last year's favourites leave the map
+ * when the season turns (route-domain.md §8c, fresh start). Empty facet lists
+ * mean "narrowed by nothing".
  *
- * @see docs/specs/route-domain.md §8
+ * @see docs/specs/route-domain.md §8.1, §8.2, §8d
  *
  * @api
  */
@@ -25,8 +32,10 @@ final class RouteRankingService
      */
     public const int MAX_RESULTS = 200;
 
-    public function __construct(private readonly Connection $db)
-    {
+    public function __construct(
+        private readonly Connection $db,
+        private readonly ClockInterface $clock,
+    ) {
     }
 
     /**
@@ -42,13 +51,23 @@ final class RouteRankingService
      */
     public function bestOf(array $seasons, array $bikes, array $regionIds = []): array
     {
-        $params = [];
-        $types = [];
-        $where = ["rr.state = 'verified'"];
+        // The round starts are computed from each round's first day, never by
+        // taking a year off the clock: on 29 February that lands on 1 March
+        // and drops last spring.
+        $now = $this->clock->now();
+        $starts = [];
+        foreach ([] !== $seasons ? $seasons : Season::cases() as $season) {
+            foreach (Hemisphere::cases() as $hemisphere) {
+                $starts[Round::latestStarted($season, $hemisphere, $now)->startDate()] = true;
+            }
+        }
 
-        // Empty list drops the facet; it does not mean "match nothing".
+        $params = ['cat' => ItemType::QualityRides->value, 'starts' => array_map(strval(...), array_keys($starts))];
+        $types = ['starts' => ArrayParameterType::STRING];
+        $where = ["rr.state = 'verified'", 'sv.category = :cat', 'sv.round_start IN (:starts)'];
+
         if ([] !== $seasons) {
-            $where[] = 'rv.season IN (:seasons)';
+            $where[] = 'sv.season IN (:seasons)';
             $params['seasons'] = array_map(static fn (Season $s): string => $s->value, $seasons);
             $types['seasons'] = ArrayParameterType::STRING;
         }
@@ -60,11 +79,11 @@ final class RouteRankingService
                 $key = 'bike'.$i;
                 $params[$key] = $bike->value;
                 if ($bike->isSpecialty()) {
-                    // docs/specs/route-domain.md §8.3 — JSONB containment.
+                    // docs/specs/route-domain.md §8.3, JSONB containment.
                     $params[$key.'text'] = $bike->value;
-                    $clauses[] = "(rv.bike_type = :$key AND rr.attributes -> 'bikeTypes' @> to_jsonb(:{$key}text::text))";
+                    $clauses[] = "(sv.bike_type = :$key AND rr.attributes -> 'bikeTypes' @> to_jsonb(:{$key}text::text))";
                 } else {
-                    $clauses[] = "rv.bike_type = :$key";
+                    $clauses[] = "sv.bike_type = :$key";
                 }
             }
             $where[] = '('.implode(' OR ', $clauses).')';
@@ -75,17 +94,17 @@ final class RouteRankingService
             $types['rids'] = ArrayParameterType::INTEGER;
         }
 
-        $sql = 'SELECT rv.route_id
-                FROM route_vote rv
-                JOIN recommended_route rr ON rr.id = rv.route_id
+        $sql = 'SELECT sv.subject_id
+                FROM season_vote sv
+                JOIN recommended_route rr ON rr.id = sv.subject_id
                 WHERE '.implode(' AND ', $where).'
-                GROUP BY rv.route_id
-                ORDER BY COUNT(*) DESC, MAX(rv.created_at) DESC, rv.route_id ASC
+                GROUP BY sv.subject_id
+                ORDER BY COUNT(*) DESC, MAX(sv.created_at) DESC, sv.subject_id ASC
                 LIMIT '.self::MAX_RESULTS;
 
-        /** @var list<array{route_id: int|string}> $rows */
+        /** @var list<array{subject_id: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative($sql, $params, $types);
 
-        return array_map(static fn (array $r): int => (int) $r['route_id'], $rows);
+        return array_map(static fn (array $r): int => (int) $r['subject_id'], $rows);
     }
 }

@@ -876,8 +876,8 @@ cached (catalog-data-model.md §9.1).
 ### 8.1 Endpoint
 
 `GET /map/best-of?season=<s>[,<s>…]&bike=<b>[,<b>…][&region=<id>]`
-(`MapController::bestOf`) — public and cacheable like the catalog slices (ETag +
-`public, max-age=300`).
+(`MapController::bestOf`) — public and cacheable (ETag + `public, max-age=60`,
+the same minute as the `/best` page cache).
 
 **Both facets are multi-valued** (owner 2026-08-20): the rider profile already
 takes several bike types, and a season picker that takes one cannot say
@@ -900,17 +900,19 @@ route lines.
 materialization (regions hold ≤ the active cap):
 
 - Candidates: `verified` routes (region-scoped when `region` is given),
-  joined to `route_vote` on the facet — so **only routes with ≥ 1 matching
-  vote appear** (a zero-vote verified route shows only in "Everything",
-  keeping best-of meaningful).
-- Facet match: seasons narrow with `rv.season IN (:seasons)`; bikes become
+  joined to `season_vote` (`category = 'quality-rides'`) on the facet,
+  counting only votes in the latest started round of each picked season, in
+  either hemisphere (no season picked means every season's latest round) —
+  so **only routes with ≥ 1 matching vote appear** (a zero-vote verified
+  route shows only in "Everything", keeping best-of meaningful).
+- Facet match: seasons narrow with `sv.season IN (:seasons)`; bikes become
   **one OR term per bike**, not a single `IN` list, because a specialty bike
   carries a second condition of its own (§8.3). Written per bike so the two
   halves can never be crossed: a vote for a handbike must not qualify on a
   route that declares itself tandem-friendly. The enum is eight values long,
   so the term count is bounded by the vocabulary. An empty list drops its
   facet from the query entirely.
-- Order: `COUNT(*) DESC, MAX(route_vote.created_at) DESC, route_id ASC`
+- Order: `COUNT(*) DESC, MAX(season_vote.created_at) DESC, subject_id ASC`
   (ties by most-recent matching vote, then id for determinism).
 
 ### 8.3 Specialty-bike suitability gate
@@ -1140,6 +1142,14 @@ verified route, links to the ballot with the row picked
 `community.voting_live` is on. There is no vote endpoint per route: the old
 `POST /routes/{id}/vote` with its season picker is gone, so every vote counts
 in a ballot of three.
+
+**On the map.** `GET /map/best-of` keeps its contract (route-domain.md §8.1,
+§8.2) and counts only votes in the latest started round of each picked season,
+so last year's favourites leave Curated mode when the season turns. A vote
+changes no catalog stamp: the region slices carry no community data
+(route-domain.md §6.3), and the endpoint's one-minute `max-age` bounds how
+long a vote takes to show. The Curated readiness count (map-and-search.md
+§4.2) counts verified routes with a season vote in any round.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 

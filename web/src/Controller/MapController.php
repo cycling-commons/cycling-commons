@@ -833,6 +833,8 @@ final class MapController extends AbstractController
     /**
      * Public best-of ranking for Curated mode.
      *
+     * One minute: a vote reaches the map within the same window as the /best page cache.
+     *
      * @see docs/specs/route-domain.md §8
      */
     #[Route('/map/best-of', name: 'map_best_of', methods: ['GET'])]
@@ -882,7 +884,7 @@ final class MapController extends AbstractController
         $response->setPublic();
         // docs/specs/account-and-auth.md §5: public cache; do not let a session cookie downgrade it.
         $response->headers->set(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER, 'true');
-        $response->setMaxAge(300);
+        $response->setMaxAge(60);
         $response->isNotModified($request);
 
         return $response;

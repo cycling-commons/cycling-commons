@@ -174,7 +174,7 @@ see the wiki page `wiki/developers/map-page.md`, "The map page, request by reque
 | `GET /map/catalog/stamps.json` | one freshness stamp per region, so a browser knows which regions moved (catalog-data-model.md §9.1) | public, ETag, **no-cache** (always revalidated) |
 | `GET /map/catalog/region/{rid}.json` | one region's rows in the payload's shapes; the map is built from these | public, ETag, max-age 86400, **URL-versioned by the stamp** |
 | `GET /map/item/{id}/history` | per-item change log for the drawer's "Recent changes"; empty list (200) for never-edited items, never 404 | public, ETag, max-age 60 |
-| `GET /map/best-of?season=&bike=` | ranked verified-route ids for the Curated facet (§4.2) | public, ETag, max-age 300 |
+| `GET /map/best-of?season=&bike=` | ranked verified-route ids for the Curated facet (§4.2) | public, ETag, max-age 60 |
 
 All five are exact-path `PUBLIC_ACCESS` in `security.yaml` (the scheb
 lazy-firewall caching gotcha — see
@@ -573,8 +573,9 @@ map module opens `#drawer` behind its back.
   §12). **R routes** honour a server-computed best-of: Curated mode fetches
   `GET /map/best-of` for the active *(season, bike)* facet (`#boSeason` /
   `#boBike` selects, shown only in Curated), flags the returned ids `cur`, and
-  filters to them. Membership only — the server's rank order is latent until a
-  ranked-list UI consumes it. Facet switches are race-guarded (`_bestOfReq`
+  filters to them. Only votes in the latest round of each picked season count
+  (route-domain.md §8d). Membership only — the server's rank order is latent
+  until a ranked-list UI consumes it. Facet switches are race-guarded (`_bestOfReq`
   token); on fetch failure Curated shows no picks rather than a stale set.
 - A rider with **exactly one** saved bike preselects the Bike facet; multi-bike
   riders keep the neutral `all` (the facet is single-valued).
@@ -609,7 +610,7 @@ for one thing in five languages. Fixed across all five.
   toggle is **gated** on a readiness count — curated items on the experiential
   letters in a served state (`ItemState::servedSqlTuple()`: a retired,
   rejected or still-submitted row keeps its `cur` flag but is on no map, so it
-  does not count) plus verified+voted best-of routes, against
+  does not count) plus verified routes with a season vote, against
   `map.curated_default_threshold` — so it cannot be set prematurely. Utility
   letters do not count towards readiness: they render in both modes. The gate
   lives on the curator **Regions** desk (`/moderate/regions`), scoped like every
