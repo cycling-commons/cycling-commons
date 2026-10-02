@@ -2437,6 +2437,7 @@ account, `app:user:purge` and the 24-month dormancy sweep, account-and-auth.md
 | Their pending and needs-info submissions | kept for a curator to decide, without the thread |
 | Their rejected route proposals | kept (rejected-route GC is still open, §15), without the thread |
 | Their photos | `MediaDeletionHook`: what was never approved is purged, approved credit anonymised (photo-uploads.md §6) |
+| Their season votes | `SeasonVoteDeletionHook`: the closed lists they voted in are stored first, then every vote row is deleted (route-domain.md §8d) |
 | A submission under legal hold | kept, with its whole thread and photos |
 
 `user_message.user_id` is `ON DELETE SET NULL` since `Version20261001210000`

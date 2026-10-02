@@ -684,6 +684,11 @@ with an account**. Removal targets personal data only.
   whole thread. Contract and table in moderation-and-contribution.md §8;
   pinned by `tests/Moderation/ContributionRetentionTest.php` for the rider's
   own deletion and the dormancy sweep.
+- **`App\Vote\SeasonVoteDeletionHook`**: stores the result of every closed
+  season list the rider voted in, then deletes all the rider's `season_vote`
+  rows. A closed season keeps its totals, which name nobody; the open round
+  loses the vote (route-domain.md §8d). Pinned by
+  `tests/Vote/SeasonVotePrivacyTest.php`.
 - **One intended `user_id` DB cascade:** `moderator_area` (scoping
   assignments, meaningless without the curator, moderation-and-contribution.md
   §9). `user_message.user_id` is `ON DELETE SET NULL` since
@@ -1593,9 +1598,10 @@ between two downloads would be a worse answer to both, so this is the superset
 and the README inside says which part is which.
 
 **What it holds.** `account.json`, `contributions.json` (submissions plus the
-`change_history` rows they produced), `community.json` (confirmations, route
-votes, rides, correction suggestions, country requests, curator applications,
-moderator areas), `messages.json`, `consent.json`, `translations.json`, and
+`change_history` rows they produced), `community.json` (confirmations, season
+votes, route votes until `route_vote` is retired, rides, correction
+suggestions, country requests, curator applications, moderator areas),
+`messages.json`, `consent.json`, `translations.json`, and
 `photos/` — the stored originals as files, plus an `index.json` describing each
 one.
 

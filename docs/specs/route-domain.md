@@ -118,6 +118,11 @@ Deskside display pseudonymizes contributors (`rider#<pseudonym>`,
 list, written once (route-domain.md §8d). No entity; the Doctrine schema
 filter excludes it.
 
+Unlike the tables above, `season_vote` is not kept as anonymous data after
+deletion: `season_vote` rows go with the account, after the closed rounds
+they count in are stored (route-domain.md §8d,
+`App\Vote\SeasonVoteDeletionHook`).
+
 **`route_ride`** — the "I rode this" confirmation:
 
 | Column | Type / constraint |
@@ -1126,6 +1131,14 @@ a row's current state: a place retired mid-round keeps its votes and place.
 A route list narrowed by a bike counts only votes cast on that bike, with its
 own threshold, handicap and history; a specialty bike also needs the route to
 declare it (route-domain.md §8.3). The list of every bike counts every vote.
+
+**Privacy.** A vote is personal data while it is tied to an account. Only the
+voter sees what they voted for (the profile's votes pane, the data export,
+account-and-auth.md §11); pages show totals. On account deletion
+`App\Vote\SeasonVoteDeletionHook` stores every closed list the rider voted in,
+then deletes all their `season_vote` rows: a closed season keeps its totals,
+which name nobody, and the open round loses the vote (the owner's 2026-07-30
+call for the ballot: past rounds keep the vote).
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 

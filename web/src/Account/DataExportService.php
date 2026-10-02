@@ -149,6 +149,11 @@ final class DataExportService
                  FROM route_vote WHERE user_id = ? ORDER BY created_at',
                 [$userId],
             ),
+            'season_votes' => $this->db->fetchAllAssociative(
+                'SELECT id, category, subject_id, region_id, season, round_start, bike_type, created_at
+                 FROM season_vote WHERE user_id = ? ORDER BY created_at, id',
+                [$userId],
+            ),
             'route_rides' => $this->db->fetchAllAssociative(
                 'SELECT id, route_id, bike_type, created_at
                  FROM route_ride WHERE user_id = ? ORDER BY created_at',
