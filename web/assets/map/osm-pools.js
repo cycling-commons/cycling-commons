@@ -208,7 +208,8 @@ export function updateConfMarkers(){
     const feats=map.querySourceFeatures(srcId).concat(_listed.size ? poolSplit(st).leaves : []), next={};
     for(const f of feats){
       const co=f.geometry.coordinates, p=f.properties;
-      const key = p.cluster ? 'c'+p.cluster_id : 'l'+co[0].toFixed(5)+','+co[1].toFixed(5);
+      // A leaf is keyed by its record too: two places on one point are two pins (they fan out, pin-fan.js).
+      const key = p.cluster ? 'c'+p.cluster_id : 'l'+(p.id!=null ? p.id+'@' : '')+co[0].toFixed(5)+','+co[1].toFixed(5);
       if(next[key]) continue;
       if(!p.cluster && !poolChipsPass(st.layer, st.key, p)) continue;
       let m=on[key];
