@@ -189,6 +189,17 @@ final class SeasonResultsTest extends KernelTestCase
         self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id = ?', [self::REGION]));
     }
 
+    /** The grace hour ends exactly an hour after the round closes: at that second the round is stored. */
+    public function testARoundIsStoredTheMomentItsGraceHourEnds(): void
+    {
+        $this->ballots([1 => [1001]], '2027-03-01');
+
+        $list = $this->results('2027-06-01T01:00:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2027));
+
+        self::assertTrue($list['closed']);
+        self::assertSame(1, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id = ?', [self::REGION]));
+    }
+
     public function testTheLastEveningOfMayIsStillSpring(): void
     {
         $this->ballots([1 => [1001]], '2027-03-01');

@@ -279,6 +279,19 @@ final class BallotServiceTest extends KernelTestCase
         self::assertSame(['2026-03-01'], $this->db->fetchFirstColumn('SELECT round_start FROM season_vote WHERE user_id = ?', [$u->getId()]));
     }
 
+    public function testRemovingLeavesAnotherRidersVoteInPlace(): void
+    {
+        $climb = $this->item('N', $this->region('xa-north', 'XA', 50.0));
+        [$mine, $theirs] = [$this->voter(), $this->voter()];
+        $s = $this->service();
+        $s->cast($mine, ItemType::Climbs, $climb, null);
+        $s->cast($theirs, ItemType::Climbs, $climb, null);
+
+        self::assertTrue($s->remove($mine, ItemType::Climbs, $climb));
+
+        self::assertSame([(int) $theirs->getId()], array_map(intval(...), $this->db->fetchFirstColumn('SELECT user_id FROM season_vote WHERE subject_id = ?', [$climb])));
+    }
+
     public function testTheLimiterStopsAFlood(): void
     {
         $climb = $this->item('N', $this->region('xa-north', 'XA', 50.0));
