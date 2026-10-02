@@ -1,0 +1,58 @@
+web/tests/Vote/MapVoteLinkTest.php
+  s_49442ae34d3603::t_9d636f1e4f4280 1-20
+web/tests/js/vote-link.test.mjs
+  s_49442ae34d3603::t_100779fe134dfa 1-40
+web/src/Community/RouteCommunityService.php
+  s_49442ae34d3603::t_fd9de7ff37a718 25
+  s_49442ae34d3603::t_3f8b35b8a3b3a6 49,51,61
+docs/specs/map-and-search.md
+  s_49442ae34d3603::t_28dcdf01ea5b3e 2221,2223
+web/templates/map/index.html.twig
+  s_49442ae34d3603::t_23bc8769d16e2e 935-936
+web/src/Controller/RouteCommunityController.php
+  s_49442ae34d3603::t_8dd89bb5a75ab8 49
+  s_49442ae34d3603::t_475fd1c48a2800 214
+web/assets/map/drawer.js
+  s_49442ae34d3603::t_ad35bfd98fd63e 39
+  s_49442ae34d3603::t_6e2911347ff1c1 733-735
+web/tests/Community/RouteCommunityReadTest.php
+  s_49442ae34d3603::t_9a845a9f15e928 76-79,84,90-93
+docs/specs/route-domain.md
+  s_49442ae34d3603::t_141d87f05efc73 584,586-588
+  s_49442ae34d3603::t_060a4f072e0b1d 620
+  s_49442ae34d3603::t_cd5d9fe78d89be 1137-1143
+  s_49442ae34d3603::t_c27bedc0a63d75 563
+  s_49442ae34d3603::t_1372873370382d 599-601
+web/src/Controller/MapController.php
+  s_49442ae34d3603::t_d72cd272c6206b 152
+  s_49442ae34d3603::t_b4e172e41ed8b0 471
+  s_49442ae34d3603::t_34e5e03b090598 445-446,448-449
+web/assets/map/vote-link.js
+  s_49442ae34d3603::t_9e52a7311aa8f6 1-20
+docs/specs/security-architecture.md
+  s_49442ae34d3603::t_0fd40251e9f35a 497
+web/assets/styles/map.css
+  s_49442ae34d3603::t_763537f44b3b01 1303
+wiki/developers/numbers.md
+  s_49442ae34d3603::t_55e897d8f93d5a 28
+web/assets/map/community.js
+  s_49442ae34d3603::t_be5d07de70d977 15
+  s_49442ae34d3603::t_c0927ad7a1fd82 109-111
+  s_49442ae34d3603::t_b8a74c8cab0b90 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e6341d15d1f979f5223fe6ad2f0001eef1a2a67b",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
