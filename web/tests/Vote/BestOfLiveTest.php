@@ -335,6 +335,18 @@ final class BestOfLiveTest extends WebTestCase
         self::assertNotContains('Road Hills', self::headings($crawler));
     }
 
+    /** The page says what the Commons keeps: each rider's votes, seen by that rider only (route-domain.md §8d, privacy). */
+    public function testThePageSaysWhoSeesAVote(): void
+    {
+        $this->client->request('GET', '/best');
+
+        $html = (string) $this->client->getResponse()->getContent();
+        self::assertStringContainsString('Only you see what you voted for. These pages show totals.', $html);
+        self::assertStringContainsString('Every season starts empty.', $html);
+        self::assertStringNotContainsString('never what they ranked', $html);
+        self::assertStringNotContainsString('re-ranked', $html);
+    }
+
     public function testNowIsTheDefaultSeason(): void
     {
         $this->region('xa-ranked', 'Ranked Hills');
