@@ -1052,6 +1052,18 @@ December 2026 to February 2027 and is shown as "Winter 2026-27". A vote
 belongs to the round open in the voted row's region at the moment it is cast,
 never to the row's own `season` attribute.
 
+**Scores and places** (`App\Vote\BallotRules`, `App\Vote\PlaceRanker`). The
+numbers of route-domain.md §8c are constants, not admin settings: they are
+the rules of a contest, and a value moved mid-season would change who could
+vote and who won after riders acted. Scores are kept in quarter votes (a vote
+is 4, a handicapped vote 3), so x0.75 and "less than 1 vote apart" are exact.
+A place is shared by every item less than one vote below the first item of
+that place, measured from that first item and not chained along the list;
+places skip after a shared one (1, 1, 3). Inside a shared place the item with
+fewer earlier first places in the same list (any season) is shown first, then
+the higher score. "Top 3" for the handicap is every item placed 1 to 3, which
+can be more than three items when places are shared.
+
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
