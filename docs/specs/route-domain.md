@@ -1086,6 +1086,17 @@ can be more than three items when places are shared.
 region when the vote is cast. `slot` (1 to 3, unique per rider and list) lets
 the database refuse a fourth vote whatever arrives at once.
 
+**What can get a vote** (`App\Vote\BallotCandidates`). A catalogue row in an
+operational region (catalog-data-model.md §2.4): a served `item` of a votable
+letter, or a `verified` route. An OpenStreetMap place that is not in the
+catalogue cannot get a vote; it joins the ballot once a rider confirms it into
+the catalogue. The ballot and the "No ranking yet" view list rows most
+confirmed first (drawer confirmations that vouch for a place; distinct riders
+for a route, the proposer left out, the drawer's own count), newest first
+among equals. A route list for a specialty bike (route-domain.md §8.3) only
+lists routes that declare that bike in `attributes.bikeTypes`; a general bike
+narrows nothing here, the same as best-of.
+
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
