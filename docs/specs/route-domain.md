@@ -876,7 +876,7 @@ cached (catalog-data-model.md §9.1).
 ### 8.1 Endpoint
 
 `GET /map/best-of?season=<s>[,<s>…]&bike=<b>[,<b>…][&region=<id>]`
-(`MapController::bestOf`) — public and cacheable (ETag + `public, max-age=60`,
+(`MapController::bestOf`), public and cacheable (ETag + `public, max-age=60`,
 the same minute as the `/best` page cache).
 
 **Both facets are multi-valued** (owner 2026-08-20): the rider profile already
@@ -902,8 +902,8 @@ materialization (regions hold ≤ the active cap):
 - Candidates: `verified` routes (region-scoped when `region` is given),
   joined to `season_vote` (`category = 'quality-rides'`) on the facet,
   counting only votes in the latest started round of each picked season, in
-  either hemisphere (no season picked means every season's latest round) —
-  so **only routes with ≥ 1 matching vote appear** (a zero-vote verified
+  either hemisphere (no season picked means every season's latest round), so
+  **only routes with ≥ 1 matching vote appear** (a zero-vote verified
   route shows only in "Everything", keeping best-of meaningful).
 - Facet match: seasons narrow with `sv.season IN (:seasons)`; bikes become
   **one OR term per bike**, not a single `IN` list, because a specialty bike

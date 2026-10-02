@@ -155,7 +155,8 @@ final class CuratedReadiness
         }
 
         // Verified AND voted on the season ballot, any round: a superset of
-        // the routes RouteRankingService lists (any round, not only the latest).
+        // the routes RouteRankingService lists, which counts only the latest
+        // started round of each picked season.
         /** @var list<array{region_id: int|string, n: int|string}> $routes */
         $routes = $this->db->fetchAllAssociative(
             "SELECT rr.region_id, COUNT(DISTINCT rr.id) AS n

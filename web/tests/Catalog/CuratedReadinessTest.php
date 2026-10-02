@@ -110,8 +110,8 @@ final class CuratedReadinessTest extends KernelTestCase
 
     /**
      * The R block has no `cur` flag to read: a verified route counts once it
-     * has a season vote, any round, on the `quality-rides` category — the
-     * same gate `RouteRankingService` applies to the map's best-of facet.
+     * has a season vote, any round, on the `quality-rides` category.
+     * RouteRankingService lists a subset: only the latest round.
      */
     public function testAVerifiedRouteWithASeasonVoteCountsTheRBlock(): void
     {
