@@ -4,9 +4,10 @@ doctrine:
         # Exclude PostGIS extension schemas AND the pipeline-owned coverage_*
         # cache tables (coverage-provider.md §2: pipeline
         # DDL, never a Doctrine migration) from Doctrine's schema diff tool.
-        # catalog_change is written by triggers only and has no entity
-        # (catalog-data-model.md §9.1), so the diff must not drop it either.
-        schema_filter: '~^(?!topology\.|coverage_|catalog_change$)~'
+        # catalog_change is written by triggers only and season_result by
+        # SeasonResults with DBAL; neither has an entity (catalog-data-model.md
+        # §9.1, route-domain.md §8d), so the diff must not drop them either.
+        schema_filter: '~^(?!topology\.|coverage_|catalog_change$|season_result(_id_seq)?$)~'
         types:
             # AES-256-GCM at-rest encryption (key derived from APP_SECRET) for the TOTP secret
             encrypted_string: App\Doctrine\EncryptedStringType

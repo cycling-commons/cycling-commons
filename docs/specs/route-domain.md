@@ -101,6 +101,23 @@ Deskside display pseudonymizes contributors (`rider#<pseudonym>`,
 | `created_at` | timestamp — enables a future annual vote reset (route-domain.md §11) |
 | | **UNIQUE (`route_id`, `user_id`, `season`)** (`uniq_route_vote`); index (`route_id`, `season`, `bike_type`) for ranking |
 
+**`season_vote`**: one vote on the season ballot, for every votable category
+(route-domain.md §8c, §8d):
+
+| Column | Type / constraint |
+|---|---|
+| `user_id`, `region_id`, `subject_id` | bigint (no FK). `subject_id` is an `item` id, or a `recommended_route` id when `category` is `quality-rides` |
+| `category` | `ItemType` value of a votable type |
+| `bike_type` | `BikeType`, set for routes only |
+| `season`, `round_start` | the round the vote counts in (route-domain.md §8d) |
+| `slot` | 1 to 3, `CHECK (slot BETWEEN 1 AND 3)` |
+| `created_at` | timestamp |
+| | **UNIQUE (`user_id`, `region_id`, `category`, `round_start`, `subject_id`)** and **UNIQUE (`user_id`, `region_id`, `category`, `round_start`, `slot`)**; index (`region_id`, `category`, `round_start`) |
+
+**`season_result`**: a closed round's result, one row per voted item and
+list, written once (route-domain.md §8d). No entity; the Doctrine schema
+filter excludes it.
+
 **`route_ride`** — the "I rode this" confirmation:
 
 | Column | Type / constraint |
@@ -1063,6 +1080,11 @@ places skip after a shared one (1, 1, 3). Inside a shared place the item with
 fewer earlier first places in the same list (any season) is shown first, then
 the higher score. "Top 3" for the handicap is every item placed 1 to 3, which
 can be more than three items when places are shared.
+
+**Storage.** One table, `season_vote`, for all five categories (route-domain.md
+§2.2). A list is (region, category, round); the region is the voted row's
+region when the vote is cast. `slot` (1 to 3, unique per rider and list) lets
+the database refuse a fourth vote whatever arrives at once.
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
