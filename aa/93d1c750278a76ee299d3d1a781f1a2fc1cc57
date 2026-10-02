@@ -1,0 +1,23 @@
+web/tests/Vote/BestOfLiveTest.php
+  s_49442ae34d3603::t_e8356c5f91f9e7 298-322
+web/src/Vote/BestOfResults.php
+  s_49442ae34d3603::t_a863683c255b62 285-288,308
+docs/specs/route-domain.md
+  s_49442ae34d3603::t_7053d2b278c5ad 1196-1198
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "aa93d1c750278a76ee299d3d1a781f1a2fc1cc57",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
