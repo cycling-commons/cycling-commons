@@ -1781,7 +1781,7 @@ export:
                           base location, preferences and timestamps.
       contributions.json  The submissions you made, and the field-level changes
                           they produced on the map once a curator accepted them.
-      community.json      Confirmations, route votes, rides, correction
+      community.json      Confirmations, season votes, rides, correction
                           suggestions, country requests, curator applications.
       messages.json       Your dashboard messages, in both directions.
       consent.json        Every photo licence you granted: which wording, which

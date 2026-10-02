@@ -1786,7 +1786,7 @@ export:
       contributions.json  Los envíos que hiciste y los cambios campo a campo
                           que produjeron en el mapa cuando un curador los
                           aceptó.
-      community.json      Confirmaciones, votos de rutas, salidas, sugerencias
+      community.json      Confirmaciones, votos de temporada, salidas, sugerencias
                           de corrección, peticiones de país y solicitudes de
                           curaduría.
       messages.json       Tus mensajes del panel, en ambos sentidos.

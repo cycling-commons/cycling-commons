@@ -1779,7 +1779,7 @@ export:
       contributions.json  Deine Einreichungen und die Feldänderungen, die sie
                           auf der Karte bewirkt haben, nachdem ein Kurator sie
                           angenommen hat.
-      community.json      Bestätigungen, Routen-Stimmen, Fahrten,
+      community.json      Bestätigungen, Saisonstimmen, Fahrten,
                           Korrekturvorschläge, Länderanfragen,
                           Kurator-Bewerbungen.
       messages.json       Deine Dashboard-Nachrichten, in beide Richtungen.

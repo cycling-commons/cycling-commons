@@ -1779,7 +1779,7 @@ export:
       contributions.json  De inzendingen die je deed, en de veldwijzigingen die
                           ze op de kaart opleverden nadat een regiobeheerder ze
                           accepteerde.
-      community.json      Bevestigingen, routestemmen, ritten,
+      community.json      Bevestigingen, seizoensstemmen, ritten,
                           correctievoorstellen, landverzoeken,
                           regiobeheerdersaanmeldingen.
       messages.json       Je dashboardberichten, in beide richtingen.

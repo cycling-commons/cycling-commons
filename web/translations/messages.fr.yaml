@@ -1774,7 +1774,7 @@ export:
       contributions.json  Les soumissions que vous avez faites, et les
                           modifications de champs qu'elles ont produites sur la
                           carte une fois acceptées par un curateur.
-      community.json      Confirmations, votes d'itinéraires, sorties,
+      community.json      Confirmations, votes de saison, sorties,
                           suggestions de correction, demandes de pays,
                           candidatures de curateur.
       messages.json       Vos messages de tableau de bord, dans les deux sens.

@@ -118,9 +118,8 @@ Deskside display pseudonymizes contributors (`rider#<pseudonym>`,
 list, written once (route-domain.md §8d). No entity; the Doctrine schema
 filter excludes it.
 
-Unlike the tables above, `season_vote` is not kept as anonymous data after
-deletion: `season_vote` rows go with the account, after the closed rounds
-they count in are stored (route-domain.md §8d,
+`season_vote` is the exception to this rule: its rows go with the account,
+after the closed rounds they count in are stored (route-domain.md §8d,
 `App\Vote\SeasonVoteDeletionHook`).
 
 **`route_ride`** — the "I rode this" confirmation:
