@@ -113,6 +113,10 @@ final class BallotPageTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.vclosed', 'The season ballot is not open yet.');
+        // The tabs open the main content, right under the header; the region picker is in the header.
+        self::assertSelectorExists('#main > nav.vtabs:first-child');
+        self::assertSelectorExists('.vhead form.vregion select#v-region');
+        self::assertCount(1, $crawler->filter('nav.vtabs ~ .vclosed'));
         self::assertSelectorTextContains('.vgrid #cands .cand', 'Mur de Ballot');
         self::assertSelectorTextContains('.vgrid .ballot .bempty', 'Pick up to 3 from the list.');
         self::assertCount(0, $crawler->filter('button[name="do"]'));
@@ -134,6 +138,7 @@ final class BallotPageTest extends WebTestCase
         $crawler = $this->client->followRedirect();
         self::assertSelectorTextContains('.flash-success', 'Your vote is in.');
         self::assertSelectorTextContains('#c-'.$climb.' .add.in', 'on ballot');
+        self::assertSelectorTextContains('#c-'.$climb.' button.add.in .vh', 'remove Mur de Ballot');
         self::assertSelectorTextContains('.ballot h3', 'Your ballot · Climbs');
         self::assertSelectorTextContains('.ballot .bitem', 'Mur de Ballot');
         self::assertSelectorTextContains('.ballot .vleft', 'You have 2 votes left in this list.');

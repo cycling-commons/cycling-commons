@@ -35,6 +35,8 @@
 .cand select{font-family:var(--mono);font-size:.74rem;padding:.4rem;border-radius:5px;border:1px solid rgba(20,22,14,.22);background:var(--paper)}
 .add{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .8rem;border:1.5px solid var(--ink);border-radius:5px;background:none;color:var(--ink);cursor:pointer;white-space:nowrap}
 .add.in{background:var(--trail);border-color:var(--trail)}
+/* "On ballot" as a plain marker, when the rider cannot change the vote. */
+.add.mark{cursor:default}
 .add:focus-visible,.bitem .x:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
 .ballot{background:var(--paper-deep);border-radius:10px;padding:1.4rem;align-self:start;position:sticky;top:5rem}
 .ballot h3{font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:#595c4d;margin-bottom:1rem}
@@ -46,9 +48,12 @@
 .vnote{font-size:.90rem;color:#595c4d;margin-top:1rem;line-height:1.5;border-left:2px solid var(--glacier);padding-left:.7rem}
 .vneeds h2{font-size:1rem;margin:0 0 .4rem}
 .vneeds ul{margin:0;padding-left:1.1rem}
-.vregion{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:1rem 0 1.2rem}
-.vregion label{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#595c4d}
-.vregion select{font-family:var(--mono);font-size:.78rem;padding:.35rem .5rem;border-radius:5px;border:1px solid rgba(20,22,14,.22);background:var(--paper);max-width:100%}
+/* The region picker sits in the dark header, so the tabs stay right under it. */
+.vregion{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:1.2rem}
+.vregion label{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.8)}
+.vregion select{font-family:var(--mono);font-size:.78rem;padding:.35rem .5rem;border-radius:5px;border:1px solid rgba(239,230,212,.5);background:var(--paper);color:var(--ink);max-width:100%}
+.vregion .add{border-color:var(--paper);color:var(--paper);padding:.4rem .8rem}
+.vregion select:focus-visible,.vregion .add:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
 .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 .flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

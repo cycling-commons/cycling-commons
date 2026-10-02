@@ -13,9 +13,35 @@
       '%date%': round.lastDay|cc_date,
     }) }}</div>
   {% endif %}
+  {# In the header, so the tabs stay right under it. A plain GET form:
+     choosing a region needs no script. #}
+  <form class="vregion" method="get" action="{{ path('vote') }}">
+    <input type="hidden" name="cat" value="{{ category.value }}">
+    <label for="v-region">{{ 'vote.region_label'|trans }}</label>
+    <select id="v-region" name="region">
+      <option value="">{{ 'vote.region_none'|trans }}</option>
+      {% for country, list in regions %}
+        <optgroup label="{{ country }}">
+          {% for r in list %}<option value="{{ r.slug }}"{{ region and r.slug == region.slug ? ' selected' }}>{{ cc_region_label(r.slug, r.name) }}</option>{% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+    <button type="submit" class="add">{{ 'vote.show'|trans }}</button>
+  </form>
 </div></div>
 
 <div class="wrap" id="main">
+  {# The tabs open the MAIN CONTENT and are not part of the header (owner,
+     2026-08-29). They choose what you are voting on, so they belong to the
+     thing they change, not to the title above it. Each tab is a link: the
+     list is chosen by the server, no script. #}
+  <nav class="vtabs" aria-label="{{ 'vote.title'|trans|e('html_attr') }}">
+    {% for c in categories %}
+      <a class="{{ c == category ? 'on' }}"{{ c == category ? ' aria-current="page"' }}
+         href="{{ path('vote', region ? {region: region.slug, cat: c.value} : {cat: c.value}) }}">{{ c.labelKey|trans }}</a>
+    {% endfor %}
+  </nav>
+
   {% for msg in app.flashes('success') %}<div class="flash-success" role="status">{{ msg|trans }}</div>{% endfor %}
   {% for msg in app.flashes('error') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}
 
@@ -31,32 +57,6 @@
       </ul>
     </div>
   {% endif %}
-
-  {# A plain GET form: choosing a region needs no script. #}
-  <form class="vregion" method="get" action="{{ path('vote') }}">
-    <input type="hidden" name="cat" value="{{ category.value }}">
-    <label for="v-region">{{ 'vote.region_label'|trans }}</label>
-    <select id="v-region" name="region">
-      <option value="">{{ 'vote.region_none'|trans }}</option>
-      {% for country, list in regions %}
-        <optgroup label="{{ country }}">
-          {% for r in list %}<option value="{{ r.slug }}"{{ region and r.slug == region.slug ? ' selected' }}>{{ cc_region_label(r.slug, r.name) }}</option>{% endfor %}
-        </optgroup>
-      {% endfor %}
-    </select>
-    <button type="submit" class="add">{{ 'vote.show'|trans }}</button>
-  </form>
-
-  {# The tabs open the MAIN CONTENT and are not part of the header (owner,
-     2026-08-29). They choose what you are voting on, so they belong to the
-     thing they change, not to the title above it. Each tab is a link: the
-     list is chosen by the server, no script. #}
-  <nav class="vtabs" aria-label="{{ 'vote.title'|trans|e('html_attr') }}">
-    {% for c in categories %}
-      <a class="{{ c == category ? 'on' }}"{{ c == category ? ' aria-current="page"' }}
-         href="{{ path('vote', region ? {region: region.slug, cat: c.value} : {cat: c.value}) }}">{{ c.labelKey|trans }}</a>
-    {% endfor %}
-  </nav>
 
   {% if region %}
     {% set is_route = category.value == 'quality-rides' %}
@@ -79,7 +79,7 @@
                 <input type="hidden" name="cat" value="{{ category.value }}">
                 <input type="hidden" name="id" value="{{ c.id }}">
                 {% if voted %}
-                  <button class="add in" name="do" value="remove">{{ 'vote.on_ballot'|trans }}</button>
+                  <button class="add in" name="do" value="remove">{{ 'vote.on_ballot'|trans }}<span class="vh">, {{ 'vote.remove'|trans }} {{ c.name }}</span></button>
                 {% else %}
                   {% if is_route %}
                     <label class="vh" for="b-{{ c.id }}">{{ 'vote.bike_label'|trans }}</label>
@@ -92,7 +92,7 @@
                 {% endif %}
               </form>
             {% elseif voted %}
-              <span class="add in">{{ 'vote.on_ballot'|trans }}</span>
+              <span class="add in mark">{{ 'vote.on_ballot'|trans }}</span>
             {% endif %}
           </div>
         {% else %}
