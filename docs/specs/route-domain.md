@@ -1193,7 +1193,9 @@ rule. No season chosen ("Now") means each region's open round, so a southern
 country shows its own season; a chosen season means each region's most recent
 round of it. A country view lists its operational regions
 (`App\Vote\BallotRegions`): a ranked list shows places (a shared place reads
-"1="), votes, the confirmed count and a "x0.75" mark on handicapped rows, and
+"1="), votes, the confirmed count, a "x0.75" mark on handicapped rows and a
+bar, the row's score against the score of the row listed first (full at
+most, since a row sharing first place can score more), and
 a place retired mid-round keeps its place without a map link; a list below 5
 voters reads "No ranking yet" with no podium and no places, the 10 most
 confirmed rows with their votes so far and "N of 5 voters". At the foot, a

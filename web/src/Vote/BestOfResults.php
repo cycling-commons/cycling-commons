@@ -282,8 +282,10 @@ final class BestOfResults
         }
 
         $cards = $this->cards->cards($type, $ids);
-        // Against the first row, as the preview's bar reads: how close to first place.
-        $lead = max([1, ...array_column($picked, 'votes')]);
+        // Against the first row's score, as the preview's bar reads: how close
+        // to first place. A row sharing first place can score above the row
+        // listed first, so the bar stops at full.
+        $lead = max(1, $picked[0]['score'] ?? 1);
 
         $top = [];
         foreach ($picked as $p) {
@@ -303,7 +305,7 @@ final class BestOfResults
                 'hue' => $card['hue'],
                 'votes' => $p['votes'],
                 'rides' => $rides[$p['id']] ?? 0,
-                'share' => (int) round(100 * $p['votes'] / $lead),
+                'share' => min(100, (int) round(100 * $p['score'] / $lead)),
                 'place' => $p['place'],
                 'shared' => null !== $p['place'] && ($placeCounts[$p['place']] ?? 0) > 1,
                 'handicapped' => $p['handicapped'],

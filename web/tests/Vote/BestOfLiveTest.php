@@ -295,6 +295,31 @@ final class BestOfLiveTest extends WebTestCase
         self::assertStringContainsString('x0.75', $group->text());
     }
 
+    /**
+     * The bar measures each row against the first row's score: B is listed
+     * first in a shared place and reads full, although handicapped A has
+     * more raw votes (route-domain.md §8c, the worked example).
+     */
+    public function testTheFirstRowReadsAFullBar(): void
+    {
+        $rid = $this->region('xa-ranked', 'Ranked Hills');
+        $a = (int) $this->climb($rid, 'Col Again')->getId();
+        $b = (int) $this->climb($rid, 'Col New')->getId();
+        $this->db->insert('season_result', [
+            'region_id' => $rid, 'category' => 'climbs', 'bike_type' => '', 'season' => 'spring', 'round_start' => '2026-03-01',
+            'subject_id' => $a, 'subject_name' => 'Col Again', 'votes' => 6, 'score' => 24, 'handicapped' => 'false',
+            'place' => 1, 'wins_before' => 0, 'list_position' => 1, 'voters' => 6, 'frozen_at' => '2026-06-01 02:00:00',
+        ]);
+        $this->voters($rid, 5, [$a, $b]);
+        $this->voters($rid, 1, [$a]);
+
+        $crawler = $this->client->request('GET', '/best?cc=XA');
+
+        $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Ranked Hills'));
+        self::assertSame(['Col New', 'Col Again'], $group->filter('ol.rank .nm a')->each(static fn ($n): string => trim($n->text())));
+        self::assertSame(['width:100%', 'width:90%'], $group->filter('ol.rank .bar i')->each(static fn ($n): string => (string) $n->attr('style')));
+    }
+
     /** A route list narrowed to one bike counts only the votes cast on that bike. */
     public function testOneBikeShowsOnlyTheListsVotedOnThatBike(): void
     {
