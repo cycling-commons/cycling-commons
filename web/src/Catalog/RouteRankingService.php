@@ -88,6 +88,8 @@ final class RouteRankingService
             $where[] = '('.implode(' OR ', $clauses).')';
         }
         if ([] !== $regionIds) {
+            // On the vote too, so the scan starts from idx_season_vote_list (region_id, category, round_start).
+            $where[] = 'sv.region_id IN (:rids)';
             $where[] = 'rr.region_id IN (:rids)';
             $params['rids'] = $regionIds;
             $types['rids'] = ArrayParameterType::INTEGER;

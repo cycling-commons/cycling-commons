@@ -889,7 +889,9 @@ route lines.
 `App\Catalog\RouteRankingService::bestOf()` — serve-time SQL, no
 materialization (regions hold ≤ the active cap):
 
-- Candidates: `verified` routes (region-scoped when `region` is given),
+- Candidates: `verified` routes (region-scoped when `region` is given, on
+  both the route's and the vote's `region_id`, so the vote side reads
+  `idx_season_vote_list`),
   joined to `season_vote` (`category = 'quality-rides'`) on the facet,
   counting only votes in the latest started round of each picked season, in
   either hemisphere (no season picked means every season's latest round), so
