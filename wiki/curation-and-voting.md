@@ -64,8 +64,8 @@ of drowning in data.
   change them until the season ends. A route vote also says which bike it was ridden on, so "best
   on a handbike" is a list of its own.
 - **Who votes.** A confirmed email address, an account at least 14 days old, and one thing done
-  on the map: a confirmed place, a ridden route, or an accepted contribution. With few voters, one
-  fake account would otherwise decide a list.
+  on the map: a confirmed place, a ridden route, or a contribution sent in (one that was turned down
+  does not count). With few voters, one fake account would otherwise decide a list.
 - **A ranking needs 5 voters.** Below that the list says "No ranking yet" and shows the places
   riders confirmed most, with the votes so far.
 - **Last year's top 3 count a little less.** In the same season a year later their votes count

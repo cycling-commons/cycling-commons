@@ -1911,7 +1911,7 @@ vote:
   not_eligible_h: 'Vous ne pouvez pas encore voter'
   need_email: 'Confirmez votre adresse e-mail.'
   need_age: 'Votre compte pourra voter à partir du %date%. Il faut un compte d''au moins %days% jours.'
-  need_activity: 'Faites d''abord une chose sur la carte : confirmez un lieu, indiquez que vous avez parcouru un itinéraire, ou faites accepter une contribution.'
+  need_activity: 'Faites d''abord une chose sur la carte : confirmez un lieu, indiquez que vous avez parcouru un itinéraire, ou envoyez une contribution.'
   saved: 'Votre vote est enregistré.'
   removed: 'Votre vote est retiré.'
   refused:

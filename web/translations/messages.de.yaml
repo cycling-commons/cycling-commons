@@ -1919,7 +1919,7 @@ vote:
   not_eligible_h: 'Du kannst noch nicht abstimmen'
   need_email: 'Bestätige deine E-Mail-Adresse.'
   need_age: 'Dein Konto kann ab %date% abstimmen. Dafür muss ein Konto mindestens %days% Tage alt sein.'
-  need_activity: 'Tu zuerst eine Sache auf der Karte: bestätige einen Ort, melde, dass du eine Route gefahren bist, oder lass einen Beitrag annehmen.'
+  need_activity: 'Tu zuerst eine Sache auf der Karte: bestätige einen Ort, melde, dass du eine Route gefahren bist, oder schick einen Beitrag ein.'
   saved: 'Deine Stimme ist abgegeben.'
   removed: 'Deine Stimme ist zurückgenommen.'
   refused:

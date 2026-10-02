@@ -1916,7 +1916,7 @@ vote:
   not_eligible_h: 'Je kunt nog niet stemmen'
   need_email: 'Bevestig je e-mailadres.'
   need_age: 'Je account kan stemmen vanaf %date%. Stemmen kan met een account van minstens %days% dagen oud.'
-  need_activity: 'Doe eerst één ding op de kaart: bevestig een plek, meld dat je een route reed, of laat een bijdrage goedkeuren.'
+  need_activity: 'Doe eerst één ding op de kaart: bevestig een plek, meld dat je een route reed, of stuur een bijdrage in.'
   saved: 'Je stem is binnen.'
   removed: 'Je stem is weggehaald.'
   refused:

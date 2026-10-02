@@ -188,6 +188,8 @@ final class BallotPageTest extends WebTestCase
         self::assertSelectorTextContains('.vneeds', 'You cannot vote yet');
         self::assertSelectorTextContains('.vneeds', 'Your account can vote from');
         self::assertSelectorTextContains('.vneeds', 'Do one thing on the map first');
+        // A pending contribution counts (route-domain.md §8d): it need not be accepted yet.
+        self::assertSelectorTextContains('.vneeds', 'or send a contribution.');
         self::assertCount(0, $crawler->filter('button[name="do"]'));
     }
 

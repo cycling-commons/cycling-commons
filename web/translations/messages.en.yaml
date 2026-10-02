@@ -1914,7 +1914,7 @@ vote:
   not_eligible_h: 'You cannot vote yet'
   need_email: 'Confirm your email address.'
   need_age: 'Your account can vote from %date%. Votes need an account that is at least %days% days old.'
-  need_activity: 'Do one thing on the map first: confirm a place, say you rode a route, or have a contribution accepted.'
+  need_activity: 'Do one thing on the map first: confirm a place, say you rode a route, or send a contribution.'
   saved: 'Your vote is in.'
   removed: 'Your vote is removed.'
   refused:

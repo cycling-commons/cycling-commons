@@ -1923,7 +1923,7 @@ vote:
   not_eligible_h: 'Todavía no puedes votar'
   need_email: 'Confirma tu dirección de correo.'
   need_age: 'Tu cuenta podrá votar desde el %date%. Para votar, la cuenta debe tener al menos %days% días.'
-  need_activity: 'Primero haz una cosa en el mapa: confirma un lugar, indica que recorriste una ruta o consigue que acepten una aportación.'
+  need_activity: 'Primero haz una cosa en el mapa: confirma un lugar, indica que recorriste una ruta o envía una aportación.'
   saved: 'Tu voto está registrado.'
   removed: 'Tu voto está retirado.'
   refused:
