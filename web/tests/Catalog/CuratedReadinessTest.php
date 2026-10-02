@@ -70,6 +70,26 @@ final class CuratedReadinessTest extends KernelTestCase
         );
     }
 
+    /** A verified route, so a season_vote joined to it can be tested without pulling in RecommendedRoute entity plumbing. */
+    private function addVerifiedRoute(): int
+    {
+        return (int) $this->db->fetchOne(
+            "INSERT INTO recommended_route (name, geom, state, source, source_ref, attributes, region_id, created_at, updated_at)
+             VALUES ('x', ST_SetSRID(ST_MakeLine(ST_MakePoint(4.5, 50.5), ST_MakePoint(4.6, 50.6)), 4326),
+                     'verified', 'user', :ref, '{}', :r, NOW(), NOW())
+             RETURNING id",
+            ['ref' => 'readiness-route:'.++$this->seq, 'r' => $this->regionId],
+        );
+    }
+
+    private function addSeasonVote(int $routeId, string $category = 'quality-rides'): void
+    {
+        $this->db->insert('season_vote', [
+            'user_id' => ++$this->seq, 'region_id' => $this->regionId, 'category' => $category, 'subject_id' => $routeId,
+            'bike_type' => 'Gravel', 'season' => 'spring', 'round_start' => '2026-03-01', 'slot' => 1, 'created_at' => '2026-04-01 10:00:00',
+        ]);
+    }
+
     /**
      * Only a row the map serves can make Best of worth opening: a retired,
      * rejected or still-submitted pick keeps its `cur` flag in `attributes`
@@ -86,6 +106,32 @@ final class CuratedReadinessTest extends KernelTestCase
         $rep = $this->readiness(25)->reportFor($this->regionId);
         self::assertSame(2, $rep['total']);
         self::assertSame(['A' => 0, 'N' => 1, 'O' => 1, 'P' => 0, 'Q' => 0, 'R' => 0], $rep['blocks']);
+    }
+
+    /**
+     * The R block has no `cur` flag to read: a verified route counts once it
+     * has a season vote, any round, on the `quality-rides` category — the
+     * same gate `RouteRankingService` applies to the map's best-of facet.
+     */
+    public function testAVerifiedRouteWithASeasonVoteCountsTheRBlock(): void
+    {
+        $route = $this->addVerifiedRoute();
+        $this->addSeasonVote($route, 'quality-rides');
+
+        $rep = $this->readiness(25)->reportFor($this->regionId);
+        self::assertSame(1, $rep['blocks']['R']);
+        self::assertSame(1, $rep['total']);
+    }
+
+    /** A vote cast on a different votable category must not count towards R. */
+    public function testASeasonVoteOfAnotherCategoryDoesNotCountTheRBlock(): void
+    {
+        $route = $this->addVerifiedRoute();
+        $this->addSeasonVote($route, 'climbs');
+
+        $rep = $this->readiness(25)->reportFor($this->regionId);
+        self::assertSame(0, $rep['blocks']['R']);
+        self::assertSame(0, $rep['total']);
     }
 
     public function testCountsOnlyCuratedItemsOnExperientialLetters(): void

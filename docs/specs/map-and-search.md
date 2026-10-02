@@ -574,7 +574,7 @@ map module opens `#drawer` behind its back.
   `GET /map/best-of` for the active *(season, bike)* facet (`#boSeason` /
   `#boBike` selects, shown only in Curated), flags the returned ids `cur`, and
   filters to them. Only votes in the latest round of each picked season count
-  (route-domain.md §8d). Membership only — the server's rank order is latent
+  (route-domain.md §8d). Membership only: the server's rank order is latent
   until a ranked-list UI consumes it. Facet switches are race-guarded (`_bestOfReq`
   token); on fetch failure Curated shows no picks rather than a stale set.
 - A rider with **exactly one** saved bike preselects the Bike facet; multi-bike

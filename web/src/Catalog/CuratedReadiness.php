@@ -154,7 +154,8 @@ final class CuratedReadiness
             $counts[(int) $r['region_id']][(string) $r['letter']] = (int) $r['n'];
         }
 
-        // Verified AND voted on the season ballot, any round: the same routes RouteRankingService can list.
+        // Verified AND voted on the season ballot, any round: a superset of
+        // the routes RouteRankingService lists (any round, not only the latest).
         /** @var list<array{region_id: int|string, n: int|string}> $routes */
         $routes = $this->db->fetchAllAssociative(
             "SELECT rr.region_id, COUNT(DISTINCT rr.id) AS n
