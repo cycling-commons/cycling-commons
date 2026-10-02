@@ -56,7 +56,7 @@ final class BallotCandidates
         $where = $s['where'];
         $params = ['rid' => $regionId] + $s['params'];
         if (ItemType::QualityRides === $type && null !== $bike && $bike->isSpecialty()) {
-            // route-domain.md §8.3 — JSONB containment.
+            // route-domain.md §8.3: JSONB containment.
             $where .= " AND s.attributes -> 'bikeTypes' @> to_jsonb(:bike::text)";
             $params['bike'] = $bike->value;
         }
