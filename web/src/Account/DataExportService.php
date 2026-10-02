@@ -144,9 +144,14 @@ final class DataExportService
                  FROM item_confirmation WHERE user_id = ? ORDER BY created_at',
                 [$userId],
             ),
+            // The name of what was voted for, as the profile's votes pane shows it.
             'season_votes' => $this->db->fetchAllAssociative(
-                'SELECT id, category, subject_id, region_id, season, round_start, bike_type, created_at
-                 FROM season_vote WHERE user_id = ? ORDER BY created_at, id',
+                "SELECT sv.id, sv.category, sv.subject_id, COALESCE(i.name, rr.name, '') AS subject_name,
+                        sv.region_id, sv.season, sv.round_start, sv.bike_type, sv.created_at
+                   FROM season_vote sv
+                   LEFT JOIN item i ON sv.category <> 'quality-rides' AND i.id = sv.subject_id
+                   LEFT JOIN recommended_route rr ON sv.category = 'quality-rides' AND rr.id = sv.subject_id
+                  WHERE sv.user_id = ? ORDER BY sv.created_at, sv.id",
                 [$userId],
             ),
             'route_rides' => $this->db->fetchAllAssociative(

@@ -1596,8 +1596,8 @@ and the README inside says which part is which.
 
 **What it holds.** `account.json`, `contributions.json` (submissions plus the
 `change_history` rows they produced), `community.json` (confirmations, season
-votes, rides, correction suggestions, country requests, curator applications,
-moderator areas), `messages.json`, `consent.json`, `translations.json`, and
+votes with the name of what each was for, rides, correction suggestions,
+country requests, curator applications, moderator areas), `messages.json`, `consent.json`, `translations.json`, and
 `photos/` — the stored originals as files, plus an `index.json` describing each
 one.
 

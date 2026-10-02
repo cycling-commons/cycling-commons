@@ -143,4 +143,24 @@ final class SeasonVotePrivacyTest extends KernelTestCase
         self::assertSame(['climbs', 'climbs'], array_column($community['season_votes'], 'category'));
         self::assertSame(['2027-03-01', '2027-06-01'], array_column($community['season_votes'], 'round_start'));
     }
+
+    /** The export names what each vote was for, as the profile's votes pane does. */
+    public function testTheExportNamesWhatEachVoteWasFor(): void
+    {
+        $u = $this->rider();
+        $route = $this->verifiedRoute();
+        $name = (string) $this->db->fetchOne('SELECT name FROM recommended_route WHERE id = ?', [$route]);
+        $this->vote($u, $route, 1, category: 'quality-rides', bike: 'Road');
+        $this->vote($u, 3999, 1);
+
+        $path = static::getContainer()->get(DataExportService::class)->export($u);
+        $zip = new \ZipArchive();
+        self::assertTrue($zip->open($path));
+        $community = json_decode((string) $zip->getFromName('community.json'), true, 512, \JSON_THROW_ON_ERROR);
+        $zip->close();
+        unlink($path);
+
+        self::assertIsArray($community);
+        self::assertSame([$name, ''], array_column($community['season_votes'], 'subject_name'), 'a row that no longer exists exports an empty name');
+    }
 }
