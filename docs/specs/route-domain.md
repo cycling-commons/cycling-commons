@@ -1097,6 +1097,14 @@ among equals. A route list for a specialty bike (route-domain.md §8.3) only
 lists routes that declare that bike in `attributes.bikeTypes`; a general bike
 narrows nothing here, the same as best-of.
 
+**Who may vote** (`App\Vote\VoterEligibility`). "At least one thing done" is
+any of: a route ride, a drawer confirmation of a place, a submission that is
+pending, needs info or approved, a route proposal that is submitted,
+unverified, verified or retired, an applied route correction. A submitter's
+own answer on a form, and anything rejected, withdrawn or trashed, does not
+count. The account is old enough 14 days after `users.created_at`, to the
+second.
+
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
