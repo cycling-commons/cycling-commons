@@ -1105,6 +1105,15 @@ own answer on a form, and anything rejected, withdrawn or trashed, does not
 count. The account is old enough 14 days after `users.created_at`, to the
 second.
 
+**Casting** (`App\Vote\BallotService`). Every write needs
+`community.voting_live` = 1. A cast checks, in this order: the ballot is open,
+the rider may vote, the category is votable, the row can get a vote, a route
+vote names a bike, the `season_vote` limiter; then it takes the lowest free
+slot. A remove deletes the rider's vote in the open round only; a closed
+round's votes are its result. Refusals are `App\Vote\BallotRefused` reasons:
+`voting_closed`, `not_eligible`, `not_votable`, `not_candidate`,
+`bike_required`, `ballot_full`, `already_voted`, `rate_limited`.
+
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 
 The R registry field set (`CatalogFormRegistry::for(ItemType::QualityRides)`)
@@ -1147,8 +1156,13 @@ contract is the consumption semantics:
   a 422 costs no quota. Suggestions are the flood vector — no UNIQUE bound,
   each pending row is a curator task; over-limit → 429 JSON
   (`rate_limited`, route-domain.md §6.1).
-- **vote / rode-it** are deliberately unlimited: self-bounded by their
-  UNIQUE constraints, repeats are idempotent no-ops (route-domain.md §6.2).
+- **rode-it** is deliberately unlimited: self-bounded by its UNIQUE
+  constraint, a repeat is an idempotent no-op (route-domain.md §6.2).
+- **`season_vote`** (60 an hour per rider) is consumed on every cast and
+  remove on the season ballot, after the cheap checks and before any write
+  (route-domain.md §8d). The three slots already bound what a rider can hold;
+  the limiter bounds a script switching votes on and off. Over-limit renders
+  as a flash on the ballot page (`vote.refused.rate_limited`).
 
 ## 11. Specified, pending implementation
 

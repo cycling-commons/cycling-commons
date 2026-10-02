@@ -72,6 +72,8 @@ framework:
                 adapter: cache.app
             cache.pow_challenge_limiter:
                 adapter: cache.app
+            cache.season_vote_limiter:
+                adapter: cache.app
     rate_limiter:
         contribution_submit:
             policy: sliding_window
@@ -99,6 +101,13 @@ framework:
             limit: 20
             interval: '1 day'
             cache_pool: cache.route_revise_limiter
+        # The season ballot (route-domain.md §8d, §10). A list holds three
+        # votes, so this only bounds a script switching votes on and off.
+        season_vote:
+            policy: sliding_window
+            limit: 60
+            interval: '1 hour'
+            cache_pool: cache.season_vote_limiter
         # Ride-check (spec 2026-07-14 §4.1): read-only compute (parse + two
         # PostGIS corridor queries, nothing persisted) — more generous than
         # intake, still bounded per rider per day.
