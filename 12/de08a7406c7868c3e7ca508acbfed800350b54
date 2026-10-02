@@ -1,0 +1,31 @@
+web/tests/Vote/BallotPageTest.php
+  s_49442ae34d3603::t_afe3b9f1ed37c8 191-192
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_b59540f4f7fc3d 1922
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_628531f0d534ca 1917
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_840860c9b57487 1926
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_1f24e0baf479f1 1914
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_a784e21f94d095 1919
+wiki/curation-and-voting.md
+  s_49442ae34d3603::t_d3fd01c2b4d660 67-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "12de08a7406c7868c3e7ca508acbfed800350b54",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
