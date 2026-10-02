@@ -2692,7 +2692,7 @@ buttons.
 `ItemType::isConfirmable()` = "has stances". One stance **per rider per item**
 (`item_confirmation`, UNIQUE `(item_id, user_id)`, tally index
 `(item_id, stance)`, and `(user_id, source)` for the season ballot's voter
-check, route-domain.md §8d), **switchable** — flipping potable ↔ not-potable updates
+check, route-domain.md §8d), **switchable**: flipping potable ↔ not-potable updates
 the row and never double-counts (`ItemConfirmationService::record()` rejects
 stances the item's type does not offer).
 

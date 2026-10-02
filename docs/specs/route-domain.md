@@ -102,11 +102,13 @@ Deskside display pseudonymizes contributors (`rider#<pseudonym>`,
 | `season`, `round_start` | the round the vote counts in (route-domain.md §8d) |
 | `slot` | 1 to 3, `CHECK (slot BETWEEN 1 AND 3)` |
 | `created_at` | timestamp |
-| | **UNIQUE (`user_id`, `region_id`, `category`, `round_start`, `subject_id`)** and **UNIQUE (`user_id`, `region_id`, `category`, `round_start`, `slot`)**; index (`region_id`, `category`, `round_start`) |
+| | **UNIQUE (`user_id`, `region_id`, `category`, `round_start`, `subject_id`)** and **UNIQUE (`user_id`, `region_id`, `category`, `round_start`, `slot`)**; index (`region_id`, `category`, `round_start`) (`idx_season_vote_list`, a list's votes); index (`category`, `subject_id`) (`idx_season_vote_subject`, a row's votes) |
 
 **`season_result`**: a closed round's result, one row per voted item and
-list, written once (route-domain.md §8d). No entity; the Doctrine schema
-filter excludes it.
+list, written once (route-domain.md §8d): **UNIQUE (`region_id`, `category`,
+`bike_type`, `round_start`, `subject_id`)** (`uniq_season_result`); index
+(`region_id`, `category`, `bike_type`, `subject_id`)
+(`idx_season_result_history`, a row's earlier first places in its list). No entity; the Doctrine schema filter excludes it.
 
 `season_vote` is the exception to this rule: its rows go with the account,
 after the closed rounds they count in are stored (route-domain.md §8d,
@@ -935,7 +937,7 @@ feeds the map's Curated mode, while `/vote` is the login-only ballot
 (route-domain.md §8d). So nobody outside could see an outcome, and a search
 engine could find nothing (known issue, 2026-09-06).
 
-`route_vote` is empty and stays empty until the ballot ships, so a page built
+While `community.voting_live` is off there are no real votes, so a page built
 on real counts would be blank in every region and could settle nothing. Owner
 2026-09-12: "for now like in the demo we need to simulate a page, this can
 also help us design the voting specs". `App\Catalog\BestOfPreview` therefore
@@ -1144,7 +1146,10 @@ account-and-auth.md §11); pages show totals. On account deletion
 `App\Vote\SeasonVoteDeletionHook` stores every closed list the rider voted in,
 then deletes all their `season_vote` rows: a closed season keeps its totals,
 which name nobody, and the open round loses the vote (the owner's 2026-07-30
-call for the ballot: past rounds keep the vote).
+call for the ballot: past rounds keep the vote). Until then a rider's votes of
+closed rounds stay tied to the account, with no expiry: the closed result is
+already stored and does not need them, and they are what the votes pane and
+the data export show the rider. They go when the account goes.
 
 **From the map.** The drawer of a catalogue row of a votable kind, and of a
 verified route, links to the ballot with the row picked

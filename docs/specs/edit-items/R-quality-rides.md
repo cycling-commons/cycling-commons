@@ -14,8 +14,8 @@
 Curated ride recommendations — a ridden track plus editorial metadata
 (difficulty, season, surface, note, bike-type suitability, accessibility).
 Supply is rider-*seeded* (GPX proposal) but curator-*owned*: curators approve,
-edit, and retire; the community's power is the **vote** (typed by season and
-bike type) and the **ride-confirmation**, not the upload.
+edit, and retire; the community's power is the **vote** (on the season
+ballot, naming the bike) and the **ride-confirmation**, not the upload.
 
 The historical model — "contributed GPX loops" editable via
 `improve.html?item=ride` — is retired. It was mechanically broken (the
@@ -37,9 +37,12 @@ a region drowns in 1000+ unvetted routes).
    counts toward their own route's threshold. v2 (future): optional GPX-proof —
    an uploaded ride is matched against sample points and **deleted immediately**
    after the check.
-4. **Votes** (only on `verified` routes): "I recommend this as a
-   [season] ride on [bike type]" — one per user per route per season.
-   Best-of lists rank per (region, season, bike type).
+4. **Votes** (only on `verified` routes): on the season ballot
+   ([`../route-domain.md`](../route-domain.md) §8c, §8d), a rider who may
+   vote has three votes per region and season, at most one per route, each
+   naming the bike it was ridden on; a specialty bike only on a route that
+   declares it. Best-of lists rank per (region, season), and per bike type
+   when narrowed.
 
 ## Location & search
 
@@ -94,7 +97,7 @@ applies it through this same gate, credited to the rider who asked (§7.1).
 
 | Action | Who | Effect |
 |---|---|---|
-| **Vote** (season + bike type) | ROLE_USER, `verified` routes only | `season_vote` row on the season ballot (route-domain.md §8c, §8d) |
+| **Vote** (on the season ballot, with the bike) | a rider who may vote (route-domain.md §8c), `verified` routes only; a specialty bike only where the route declares it | `season_vote` row on the season ballot (route-domain.md §8c, §8d) |
 | **"I rode this"** (bike type) | ROLE_USER, active routes | `route_ride` row; at threshold X → `verified` |
 | **Download GPX** | public, active routes | `GET /routes/{id}.gpx` from the stored trimmed track |
 | **Suggest a correction** | ROLE_USER | preset reason (wrong/broken track · trim a private start/end · duplicate · not actually rideable · other) + note, optionally locating the affected stretch(es) on the map ([`../route-domain.md`](../route-domain.md) §7) → moderated `route_suggestion` |
@@ -152,7 +155,7 @@ re-propose.
 - **Production (Symfony):** `RecommendedRoute` entity + purpose-built
   `route_ride` / `route_suggestion` / `route_change_history` tables, and the
   season ballot's `season_vote`. GPX parse, trim, simplify, distance/ascent
-  all in PHP (light tabular math — no Python pipeline involvement). The item
+  all in PHP (light tabular math, no Python pipeline involvement). The item
   `Submission`/`ModerationService` pipeline is **not** used for routes.
 - **Demo-era artifacts** (shared `ride` registry entry in
   `atlas/demo/edit-items.js`, the six fixture loops) are historical. The
