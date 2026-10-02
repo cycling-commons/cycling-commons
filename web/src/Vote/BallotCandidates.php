@@ -49,16 +49,24 @@ final class BallotCandidates
      * (route-domain.md §8.3); a general bike narrows nothing here, same as
      * best-of. The bike is ignored for every other type.
      *
+     * `$routeFilter` narrows a route list further before the limit: extra
+     * conditions on the route `s` with their parameters and types
+     * (`BestOfPreview::routeFilter($difficulties, $lengths, 's')`).
+     *
+     * @param array{0: string, 1: array<string, mixed>, 2: array<string, ArrayParameterType>}|null $routeFilter
+     *
      * @return list<Candidate>
      */
-    public function top(ItemType $type, int $regionId, int $limit, ?BikeType $bike = null): array
+    public function top(ItemType $type, int $regionId, int $limit, ?BikeType $bike = null, ?array $routeFilter = null): array
     {
-        $s = $this->source($type);
+        $s = $this->source($type, $bike);
         $where = $s['where'];
         $params = ['rid' => $regionId] + $s['params'];
-        if (ItemType::QualityRides === $type && null !== $bike && $bike->isSpecialty()) {
-            $where .= ' AND '.BikeSuitability::declares('s', 'bike');
-            $params['bike'] = $bike->value;
+        $types = [];
+        if (ItemType::QualityRides === $type && null !== $routeFilter) {
+            $where .= $routeFilter[0];
+            $params += $routeFilter[1];
+            $types = $routeFilter[2];
         }
 
         /** @var list<array{id: int|string, name: string, confirmations: int|string}> $rows */
@@ -69,6 +77,7 @@ final class BallotCandidates
               ORDER BY confirmations DESC, s.created_at DESC, s.id DESC
               LIMIT '.max(1, $limit),
             $params,
+            $types,
         );
 
         return array_map(static fn (array $r): array => [
@@ -118,6 +127,32 @@ final class BallotCandidates
                 BikeType::cases(),
                 static fn (BikeType $b): bool => !$b->isSpecialty() || \in_array($b, $declared, true),
             ));
+        }
+
+        return $out;
+    }
+
+    /**
+     * The regions among these that have a row a vote can go to: one query
+     * for a whole country, the same rows {@see self::top()} lists.
+     *
+     * @param list<int> $regionIds
+     *
+     * @return array<int, true>
+     */
+    public function regionsWithCandidates(ItemType $type, array $regionIds, ?BikeType $bike = null): array
+    {
+        if ([] === $regionIds) {
+            return [];
+        }
+        $s = $this->source($type, $bike);
+        $out = [];
+        foreach ($this->db->fetchFirstColumn(
+            'SELECT DISTINCT s.region_id '.$s['from'].' WHERE '.$s['where'].' AND s.region_id IN (:rids)',
+            ['rids' => $regionIds] + $s['params'],
+            ['rids' => ArrayParameterType::INTEGER],
+        ) as $id) {
+            $out[(int) $id] = true;
         }
 
         return $out;
@@ -227,22 +262,30 @@ final class BallotCandidates
 
     /**
      * FROM (the row as `s`, its operational region as `g`), the WHERE that
-     * puts a row on the ballot, and the confirmation count.
+     * puts a row on the ballot, and the confirmation count. A route list
+     * for a specialty bike also needs the route to declare it.
      *
      * @return array{from: string, where: string, count: string, params: array<string, string>}
      */
-    private function source(ItemType $type): array
+    private function source(ItemType $type, ?BikeType $bike = null): array
     {
         $from = 'FROM '.self::table($type).' s JOIN region g ON g.id = s.region_id';
         $where = 'g.geom IS NOT NULL AND '.OperationalRegions::predicate('g')." AND s.name <> ''";
 
         if (ItemType::QualityRides === $type) {
+            $params = [];
+            $where .= " AND s.state = 'verified'";
+            if (null !== $bike && $bike->isSpecialty()) {
+                $where .= ' AND '.BikeSuitability::declares('s', 'bike');
+                $params['bike'] = $bike->value;
+            }
+
             return [
                 'from' => $from,
-                'where' => $where." AND s.state = 'verified'",
+                'where' => $where,
                 'count' => '(SELECT COUNT(DISTINCT rr.user_id) FROM route_ride rr
                               WHERE rr.route_id = s.id AND rr.user_id <> COALESCE(s.proposed_by, -1))',
-                'params' => [],
+                'params' => $params,
             ];
         }
 

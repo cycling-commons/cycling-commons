@@ -814,22 +814,23 @@ final class BestOfPreview
     }
 
     /**
-     * The difficulty and length conditions on a route `r`, ready to append to
-     * a WHERE: a ranking narrowed by them and a real list's rows hidden by
-     * them answer the same question the same way.
+     * The difficulty and length conditions on the route aliased `$route`,
+     * ready to append to a WHERE: a ranking narrowed by them, a real list's
+     * rows hidden by them and the ballot candidates of a list below the
+     * threshold answer the same question the same way.
      *
      * @param list<string> $difficulties
      * @param list<string> $lengths
      *
      * @return array{0: string, 1: array<string, mixed>, 2: array<string, ArrayParameterType>}
      */
-    private static function routeFilter(array $difficulties, array $lengths): array
+    public static function routeFilter(array $difficulties, array $lengths, string $route = 'r'): array
     {
         $sql = '';
         $params = [];
         $types = [];
         if ([] !== $difficulties) {
-            $sql .= " AND r.attributes->'difficulty'->>'label' IN (:diffs)";
+            $sql .= " AND $route.attributes->'difficulty'->>'label' IN (:diffs)";
             $params['diffs'] = $difficulties;
             $types['diffs'] = ArrayParameterType::STRING;
         }
@@ -841,12 +842,12 @@ final class BestOfPreview
             [$from, $to] = self::LENGTHS[$name];
             $params["lf$i"] = $from;
             if (null === $to) {
-                $bands[] = "r.distance_m >= :lf$i";
+                $bands[] = "$route.distance_m >= :lf$i";
 
                 continue;
             }
             $params["lt$i"] = $to;
-            $bands[] = "(r.distance_m >= :lf$i AND r.distance_m < :lt$i)";
+            $bands[] = "($route.distance_m >= :lf$i AND $route.distance_m < :lt$i)";
         }
         if ([] !== $bands) {
             $sql .= ' AND ('.implode(' OR ', $bands).')';

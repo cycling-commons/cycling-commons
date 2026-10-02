@@ -232,6 +232,52 @@ final class BestOfLiveTest extends WebTestCase
         self::assertStringNotContainsString('Nobody has voted here yet', (string) $this->client->getResponse()->getContent());
     }
 
+    /**
+     * A region with nothing to vote for, and one whose places have no vote in
+     * this round, read no list. A closed round is stored the first time its
+     * list is read, so their unstored spring 2026 proves the page never read
+     * one (app:vote:freeze stores it, not a page view).
+     */
+    public function testRegionsWithNoVoteThisRoundReadNoList(): void
+    {
+        $empty = $this->region('xa-empty', 'Empty Vale');
+        $gone = $this->climb($empty, 'Col Gone');
+        $this->voters($empty, 5, [(int) $gone->getId()], 'climbs', null, 'spring', '2026-03-01');
+        $gone->setState(ItemState::Retired);
+        $this->em->flush();
+        $idle = $this->region('xa-idle', 'Idle Hills', 52.0);
+        $this->voters($idle, 5, [(int) $this->climb($idle, 'Col Idle')->getId()], 'climbs', null, 'spring', '2026-03-01');
+
+        $crawler = $this->client->request('GET', '/best?cc=XA');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Empty Vale', $crawler->filter('section.quiet')->text());
+        $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Idle Hills'));
+        self::assertStringContainsString('No ranking yet', $group->text());
+        self::assertStringContainsString('0 of 5 voters', $group->text());
+        self::assertStringContainsString('Col Idle', $group->text());
+        self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id IN (?, ?)', [$empty, $idle]));
+    }
+
+    /** Below the threshold the length filter narrows the candidates before the list is cut, not after. */
+    public function testARouteFilterFindsAMatchBelowTheMostConfirmed(): void
+    {
+        $rid = $this->region('xa-routes', 'Route Hills');
+        for ($i = 0; $i < 31; ++$i) {
+            $long = $this->route($rid, sprintf('Long %02d', $i), 160_000);
+            $this->db->executeStatement("INSERT INTO route_ride (route_id, user_id, bike_type, created_at) VALUES (?, ?, 'Road', NOW())", [$long, 8000 + $i]);
+        }
+        $this->route($rid, 'Short Loop', 20_000);
+
+        $crawler = $this->client->request('GET', '/best?cat=quality-rides&len=Short&cc=XA');
+
+        self::assertResponseIsSuccessful();
+        $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Route Hills'));
+        self::assertCount(1, $group);
+        self::assertStringContainsString('Short Loop', $group->text());
+        self::assertStringNotContainsString('Long ', $group->text());
+    }
+
     public function testLastYearsTopThreeCarryTheHandicapMark(): void
     {
         $rid = $this->region('xa-ranked', 'Ranked Hills');

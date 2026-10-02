@@ -1200,7 +1200,13 @@ confirmed rows with their votes so far and "N of 5 voters". At the foot, a
 region whose list the difficulty and length filters emptied is named under
 "Nothing in these regions matches these filters", apart from the regions with
 nothing of the kind on the map ("Nothing to vote for yet", with a link to the
-map, where confirming a place puts it on the ballot). The Everywhere view lists
+map, where confirming a place puts it on the ballot). Two grouped queries for
+the whole country find the regions with votes in their round (counted or
+stored) and the regions with anything to vote for; only a region with votes
+reads its list, so a region without either costs no list work
+(page-caching.md §4b). Below the threshold the difficulty and length filters
+narrow the candidates in the query, before the 10 most confirmed are taken.
+The Everywhere view lists
 the 12 ranked lists with the most voters. One query finds the regions with at
 least 5 voters in their own round, counted or stored, with that number,
 filtering both tables on their indexed `(region_id, category, round_start)`;
@@ -1208,9 +1214,10 @@ the regions are then read busiest first and the reading stops once no region
 left could make the 12 (for a specialty bike the number is an upper bound, so
 the stop stays correct). `bike` takes **one** value in
 both modes (the preview included): a route list narrowed by bike is the votes
-cast on that bike (route-domain.md §8c). Difficulty and length only hide rows,
-with `BestOfPreview::routesMatching()`, the conditions the preview narrows by,
-and never change a place. The page stays in the 60-second shared page cache
+cast on that bike (route-domain.md §8c). Difficulty and length only hide rows
+of a ranked list, with `BestOfPreview::routesMatching()`, and never change a
+place; below the threshold they narrow the candidates
+(`BestOfPreview::routeFilter()`, the same conditions the preview narrows by). The page stays in the 60-second shared page cache
 (page-caching.md §4b).
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)

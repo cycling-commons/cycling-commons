@@ -284,6 +284,15 @@ crawler on any query string to 1 request a second; the app side is this:
   filter link. The box is stored generated columns now (`region.bbox_*`,
   map-and-search.md §4.5) and `BestOfFilters` reads the country list once per
   request: a `/best` view takes about 0.1 s on dev.
+- **The live country view** (route-domain.md §8d, once `community.voting_live`
+  is on). Two grouped queries for the whole country say which regions have
+  votes in their round and which have anything to vote for; only a region
+  with votes reads its list (about six queries) and its rows (three), a
+  region with places but no vote reads its ten most confirmed places and
+  their cards (two), and a region with nothing on the map costs nothing
+  more. Measured in the test suite on a country of 12 regions (4 with a
+  ranked list, 4 with places and no vote, 4 with nothing): 53 queries for the
+  page, against 87 when every region read its list.
 
 **What gave an anonymous visitor a session**, found with a cookie jar against
 every public page, and fixed:
