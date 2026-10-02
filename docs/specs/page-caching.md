@@ -265,8 +265,9 @@ crawler on any query string to 1 request a second; the app side is this:
 
 - **One URL per filter state.** `App\Catalog\BestOfFilters::normalize()` maps
   any query to one form: `cat` (not the default first category), `season`,
-  then for quality rides `bike`, `diff`, `len` (known values, once each, in the
-  vocabulary's order), then `cc` (a country with a region). Nothing else, and
+  then for quality rides `bike` (one known value, the first one asked),
+  `diff`, `len` (known values, once each, in the vocabulary's order), then
+  `cc` (a country with a region). Nothing else, and
   nothing empty. `PageController::bestOf()` answers every other spelling with
   a 301 to it, and every filter link is built in it
   (`best_of_path()`, `App\Twig\BestOfExtension`), so a link never needs the

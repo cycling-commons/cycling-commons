@@ -23,6 +23,10 @@ use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
+use App\Vote\BallotRules;
+use App\Vote\BestOfResults;
 use App\World\CuratorScopes;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -398,15 +402,14 @@ final class PageController extends AbstractController
     }
 
     /**
-     * What riders rate best, as it will look once the ballot opens.
+     * What riders rate best.
      *
-     * **A design preview with invented tallies** (owner 2026-09-12: "for now
-     * like in the demo we need to simulate a page, this can also help us
-     * design the voting specs"). `route_vote` is empty and stays empty until
-     * the ballot ships, so a page built on real counts would be blank
-     * everywhere and could settle nothing. The names are real rows; only the
-     * numbers are made up, and {@see BestOfPreview} derives them from each
-     * row's id so a reload never reshuffles anything.
+     * While `community.voting_live` is off this is the design preview with
+     * invented tallies (route-domain.md §8b, {@see BestOfPreview}); the names
+     * are real rows, only the numbers are made up, derived from each row's id
+     * so a reload never reshuffles anything. Once it is on, the same page
+     * shows the season ballot's real lists (route-domain.md §8d,
+     * {@see BestOfResults}): ranked from 5 voters, "No ranking yet" before.
      *
      * Public, unlike `/vote`: the whole point of this one is that somebody who
      * has not joined can see what the vote produced.
@@ -416,7 +419,7 @@ final class PageController extends AbstractController
      * shared cache can hold each combination (page-caching.md §3.2).
      */
     #[Route(LocalizedPath::BEST_OF, name: 'best_of')]
-    public function bestOf(Request $request, BestOfPreview $preview, BestOfFilters $filters, RegionRegistryProvider $regions): Response
+    public function bestOf(Request $request, BestOfPreview $preview, BestOfResults $results, BestOfFilters $filters, RegionRegistryProvider $regions, SettingsProviderInterface $settings): Response
     {
         // One URL per filter state (BestOfFilters): any other spelling of the
         // same choice moves to it, so the page cache and a crawler see each
@@ -426,26 +429,48 @@ final class PageController extends AbstractController
             return $this->redirectToRoute('best_of', $normal, Response::HTTP_MOVED_PERMANENTLY);
         }
 
+        $live = 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE);
         $categories = BestOfPreview::categories();
         $type = ItemType::fromParam($normal['cat'] ?? $categories[0]->value);
-        $season = Season::tryFrom($normal['season'] ?? '') ?? Season::current(new \DateTimeImmutable());
+        $chosen = Season::tryFrom($normal['season'] ?? '');
         // An unknown country is "everywhere" rather than a 404: this is a
         // browsing control, not an identifier.
         $cc = $normal['cc'] ?? null;
         $countries = $this->bestOfCountries($regions, $request->getLocale());
 
-        // Comma-separated, because these three are questions with more than
-        // one honest answer: a rider who is happy on gravel or a mountain bike
-        // is asking about both at once (owner 2026-09-12).
+        // Length and effort are comma-separated, because they are questions
+        // with more than one honest answer (owner 2026-09-12). The bike is
+        // one: a list narrowed by bike is the votes cast on that bike
+        // (route-domain.md §8d).
         $many = static fn (string $key): array => isset($normal[$key]) ? explode(',', $normal[$key]) : [];
         $bikes = $many('bike');
         $lengths = $many('len');
         $difficulties = $many('diff');
 
+        if ($live) {
+            // No season chosen is "Now": each region's open round, which
+            // south of the equator is another season.
+            $season = $chosen;
+            $bike = BikeType::tryFrom($bikes[0] ?? '');
+            $ranking = [];
+            $byRegion = null === $cc
+                ? $results->everywhere($type, $chosen, $bike, $difficulties, $lengths)
+                : $results->byRegion($type, $chosen, $cc, $bike, $difficulties, $lengths);
+        } else {
+            $season = $chosen ?? Season::current(new \DateTimeImmutable());
+            $ranking = $preview->ranking($type, $season, $cc, $bikes, $difficulties, null, $lengths);
+            // A country big enough to have regions is asked region by region:
+            // one national top ten flattens the Alps into the Ardennes and
+            // tells a rider near neither of them anything (owner 2026-09-12).
+            $byRegion = null === $cc ? null : $preview->byRegion($type, $season, $cc, $bikes, $difficulties, BestOfPreview::TOP_N, $lengths);
+        }
+
         return $this->render('pages/best_of.html.twig', [
             'page_title' => 'meta.best_of_title',
             'page_description' => 'meta.best_of_description',
             'nav_active' => 'best_of',
+            'live' => $live,
+            'threshold' => BallotRules::RANKING_THRESHOLD,
             'categories' => $categories,
             'category' => $type,
             'seasons' => Season::cases(),
@@ -458,11 +483,8 @@ final class PageController extends AbstractController
             'difficulty' => $difficulties,
             'lengths' => array_keys(BestOfPreview::LENGTHS),
             'length' => $lengths,
-            'ranking' => $preview->ranking($type, $season, $cc, $bikes, $difficulties, null, $lengths),
-            // A country big enough to have regions is asked region by region:
-            // one national top ten flattens the Alps into the Ardennes and
-            // tells a rider near neither of them anything (owner 2026-09-12).
-            'regions' => null === $cc ? null : $preview->byRegion($type, $season, $cc, $bikes, $difficulties, BestOfPreview::TOP_N, $lengths),
+            'ranking' => $ranking,
+            'regions' => $byRegion,
         ]);
     }
 

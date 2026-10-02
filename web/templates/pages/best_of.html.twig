@@ -10,9 +10,11 @@
 {% if app.request.query.all is not empty %}<meta name="robots" content="noindex, follow">{% endif %}
 {% endblock %}
 {% block body %}
-{# One row, one way, wherever it appears. `podium` draws the top three with
-   what the catalogue actually holds about them; the rest are one line each. #}
-{% macro row(r, rank, podium) %}
+{# One row, one way, wherever it appears, preview or real result. `podium`
+   draws the top three with what the catalogue actually holds about them; the
+   rest are one line each. A row with no place is a list that has no ranking
+   yet (route-domain.md §8d). #}
+{% macro row(r, podium) %}
   {% set href = r.ref
       ? path('map') ~ '?ref=' ~ r.ref|url_encode
       : (r.letter == 'R' ? path('map') ~ '?route=' ~ r.id : path('map') ~ '?item=' ~ r.id) %}
@@ -20,29 +22,34 @@
      confirmation either way; only the verb changes with what the thing is. #}
   {% set verb = r.letter in ['N', 'R'] ? 'best.counts_rode' : (r.letter == 'O' ? 'best.counts_stayed' : 'best.counts_been') %}
   <li class="{{ podium ? 'pod' }}">
-    <span class="n">{{ rank }}</span>
+    <span class="n">{% if r.place %}{{ r.place }}{% if r.shared %}<abbr class="sh" title="{{ 'best.shared'|trans|e('html_attr') }}">=</abbr>{% endif %}{% else %}·{% endif %}</span>
     {% if podium %}
       {% if r.photo %}
-        <a class="shot" href="{{ href }}"><img src="{{ r.photo.sm }}" alt="" loading="lazy" width="112" height="84"></a>
+        {% if r.onMap %}<a class="shot" href="{{ href }}">{% else %}<span class="shot">{% endif %}<img src="{{ r.photo.sm }}" alt="" loading="lazy" width="112" height="84">{% if r.onMap %}</a>{% else %}</span>{% endif %}
       {% else %}
         {# Nothing is drawn here that could be taken for a photograph of this
            place: a flat two-tone panel carrying the rank. It holds the shape
            and the weight a picture will have, and its own hue keeps three
            podium cards from reading as one block, but no arrangement of two
            colours claims to be a castle. #}
-        <a class="shot shot--none" href="{{ href }}" style="--shot-h:{{ r.hue }}" aria-label="{{ 'best.no_photo'|trans|e('html_attr') }}"><span>{{ rank }}</span></a>
+        {% if r.onMap %}
+          <a class="shot shot--none" href="{{ href }}" style="--shot-h:{{ r.hue }}" aria-label="{{ 'best.no_photo'|trans|e('html_attr') }}"><span>{{ r.place }}</span></a>
+        {% else %}
+          <span class="shot shot--none" style="--shot-h:{{ r.hue }}" aria-hidden="true"><span>{{ r.place }}</span></span>
+        {% endif %}
       {% endif %}
     {% endif %}
     <span class="nm">
-      <a href="{{ href }}">{{ r.name }}</a>
+      {# A place retired mid-round keeps its place and loses its link. #}
+      {% if r.onMap %}<a href="{{ href }}">{{ r.name }}</a>{% else %}<span>{{ r.name }} <small class="gone">{{ 'best.gone'|trans }}</small></span>{% endif %}
       {% if r.note %}<em>{{ r.note }}</em>{% endif %}
       {# On the podium the stored fact is a tag, not a body: "castle" is two
          words under a picture. The filler paragraph is what a description
          will occupy, marked as filler so it is never read as one. Further
          down the list there is no room for a body, so filler only stands in
-         where the fact itself is missing. #}
-      {% if podium %}<em class="filler">{{ r.filler }}</em>
-      {% elseif not r.note %}<em class="filler">{{ r.filler }}</em>{% endif %}
+         where the fact itself is missing. A real result has no filler. #}
+      {% if r.filler and (podium or not r.note) %}<em class="filler">{{ r.filler }}</em>{% endif %}
+      {% if r.handicapped %}<small class="hc">{{ 'best.handicap'|trans }}</small>{% endif %}
       {% if podium and r.photo and r.photo.credit %}
         <small class="cred">{% if r.photo.creditUrl %}<a href="{{ r.photo.creditUrl }}" rel="noopener nofollow">{{ r.photo.credit }}</a>{% else %}{{ r.photo.credit }}{% endif %}{% if r.photo.license %} · {{ r.photo.license }}{% endif %}</small>
       {% endif %}
@@ -51,14 +58,14 @@
     {# On the winners too (owner 2026-09-13). The number says how many voted;
        the bar says how far ahead of the winner they are, and first place
        reading a full bar is what makes the shorter ones mean anything. #}
-    <span class="bar" aria-hidden="true"><i style="width:{{ r.share }}%"></i></span>
+    {% if r.place %}<span class="bar" aria-hidden="true"><i style="width:{{ r.share }}%"></i></span>{% endif %}
   </li>
 {% endmacro %}
 {% import _self as best %}
 {# Each chip carries the CURRENT set with itself added or removed, so a link
    does what a checkbox would and the page still needs no script. #}
 {% macro toggle(chosen, value) %}{{ (value in chosen ? chosen|filter(v => v != value) : chosen|merge([value]))|join(',') }}{% endmacro %}
-{% set q = {season: season.value, cc: country, bike: bike|join(','), diff: difficulty|join(','), len: length|join(',')} %}
+{% set q = {season: season ? season.value : null, cc: country, bike: bike|join(','), diff: difficulty|join(','), len: length|join(',')} %}
 {# The same dark band every other top-level page opens with (.chero, shared
    in atlas.css), so this one does not read as a different site. #}
 <div class="chero"><div class="wrap">
@@ -69,7 +76,7 @@
 
 <section class="pad"><div class="wrap">
   {# Said once, loudly, and never removed while the numbers are invented. #}
-  <p class="prev">{% trans %}best.preview{% endtrans %}</p>
+  {% if not live %}<p class="prev">{% trans %}best.preview{% endtrans %}</p>{% endif %}
 
   <div class="filters">
     <div class="frow">
@@ -80,8 +87,13 @@
     </div>
     <div class="frow">
       <b>{% trans %}best.f_season{% endtrans %}</b>
+      {# Live, no season is each region's open round: south of the equator
+         that is another season. #}
+      {% if live %}
+        <a class="{{ season is null ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, season: null})) }}">{% trans %}best.season_now{% endtrans %}</a>
+      {% endif %}
       {% for s in seasons %}
-        <a class="{{ s == season ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, season: s.value})) }}">{{ ('map.season_' ~ s.value)|trans }}</a>
+        <a class="{{ season and s == season ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, season: s.value})) }}">{{ ('map.season_' ~ s.value)|trans }}</a>
       {% endfor %}
     </div>
     {# A select, not chips. The country list is every onboarded country and
@@ -93,7 +105,7 @@
       {# In the normal form's order (BestOfFilters), so a choice of country
          lands on its one URL without a redirect. #}
       {% if category != categories|first %}<input type="hidden" name="cat" value="{{ category.value }}">{% endif %}
-      <input type="hidden" name="season" value="{{ season.value }}">
+      {% if season %}<input type="hidden" name="season" value="{{ season.value }}">{% endif %}
       {% if bike %}<input type="hidden" name="bike" value="{{ bike|join(',') }}">{% endif %}
       {% if difficulty %}<input type="hidden" name="diff" value="{{ difficulty|join(',') }}">{% endif %}
       {% if length %}<input type="hidden" name="len" value="{{ length|join(',') }}">{% endif %}
@@ -112,12 +124,13 @@
     {% if category.value == 'quality-rides' %}
       {# Bike type belongs to the VOTE, not the route: the same roads ranked
          by different people, which is the whole reason a handbike rider's
-         best is worth asking about separately. #}
+         best is worth asking about separately. One bike at a time: a list
+         narrowed by bike is the votes cast on that bike. #}
       <div class="frow">
         <b>{% trans %}best.f_bike{% endtrans %}</b>
         <a class="{{ bike is empty ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, bike: null})) }}">{% trans %}best.any_bike{% endtrans %}</a>
         {% for b in bikes %}
-          <a class="{{ b in bike ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, bike: best.toggle(bike, b)|trim})) }}">{{ b }}</a>
+          <a class="{{ b in bike ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, bike: b in bike ? null : b})) }}">{{ b }}</a>
         {% endfor %}
       </div>
       <div class="frow">
@@ -153,22 +166,38 @@
       {% for r in regions.ranked %}
         <section class="rgroup">
           <h2><a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a></h2>
-          {% if r.top|length > 0 %}
-            <ol class="rank pod3">{% for item in r.top|slice(0, 3) %}{{ best.row(item, loop.index, true) }}{% endfor %}</ol>
+          {# A real list says which round it is and how many voted; below the
+             threshold it has no places, so no podium (route-domain.md §8d). #}
+          {% if r.result %}
+            <p class="meta">
+              {{ 'vote.round_label'|trans({'%season%': r.result.round.season.labelKey|trans, '%year%': r.result.round.yearLabel}) }}
+              · {% if r.result.ranked %}{{ 'best.voters'|trans({'%n%': r.result.voters}) }}{% else %}<b>{{ 'best.no_ranking'|trans }}</b> · {{ 'best.voters_needed'|trans({'%n%': r.result.voters, '%m%': threshold}) }}{% endif %}
+              {% if r.result.closed and not r.result.ranked %} · {{ 'best.closed_no_ranking'|trans }}{% endif %}
+              {% if not r.result.closed %} · <a href="{{ path('vote', {region: r.slug, cat: category.value}) }}">{{ 'best.vote_here'|trans }}</a>{% endif %}
+            </p>
           {% endif %}
-          {% if r.top|length > 3 %}
-            <ol class="rank" start="4">{% for item in r.top|slice(3) %}{{ best.row(item, loop.index + 3, false) }}{% endfor %}</ol>
+          {% if r.result is null or r.result.ranked %}
+            {% if r.top|length > 0 %}
+              <ol class="rank pod3">{% for item in r.top|slice(0, 3) %}{{ best.row(item, true) }}{% endfor %}</ol>
+            {% endif %}
+            {% if r.top|length > 3 %}
+              <ol class="rank" start="4">{% for item in r.top|slice(3) %}{{ best.row(item, false) }}{% endfor %}</ol>
+            {% endif %}
+          {% else %}
+            <p class="nr">{{ 'best.no_ranking_body'|trans({'%m%': threshold}) }}</p>
+            <ol class="rank">{% for item in r.top %}{{ best.row(item, false) }}{% endfor %}</ol>
           {% endif %}
         </section>
       {% endfor %}
     </div>
+    {% if live and country is null %}<p class="empty">{{ 'best.everywhere_hint'|trans }}</p>{% endif %}
 
     {% if regions.quiet is not empty %}
       {# Not hidden: "nobody has voted here yet" is an invitation, and a silent
          omission is not. #}
       <section class="quiet">
         <h2>{% trans %}best.quiet_heading{% endtrans %}</h2>
-        <p>{% trans %}best.quiet_body{% endtrans %}</p>
+        {% if live %}<p>{% trans %}best.quiet_live{% endtrans %}</p>{% else %}<p>{% trans %}best.quiet_body{% endtrans %}</p>{% endif %}
         <p class="qlist">
           {% for r in regions.quiet %}
             <a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a>{{ not loop.last ? ' · ' }}
@@ -177,15 +206,19 @@
         <p><a class="btn btn-p" href="{{ path('vote') }}">{% trans %}best.quiet_cta{% endtrans %}</a></p>
       </section>
     {% endif %}
+  {% elseif live and country is null %}
+    <p class="empty">{% trans %}best.everywhere_empty{% endtrans %}</p>
+    <p class="empty">{% trans %}best.everywhere_hint{% endtrans %}</p>
   {% elseif ranking is empty %}
     <p class="empty">{% trans %}best.empty{% endtrans %}</p>
   {% else %}
-    <ol class="rank pod3">{% for r in ranking|slice(0, 3) %}{{ best.row(r, loop.index, true) }}{% endfor %}</ol>
+    <ol class="rank pod3">{% for r in ranking|slice(0, 3) %}{{ best.row(r, true) }}{% endfor %}</ol>
     {% if ranking|length > 3 %}
-      <ol class="rank" start="4">{% for r in ranking|slice(3) %}{{ best.row(r, loop.index + 3, false) }}{% endfor %}</ol>
+      <ol class="rank" start="4">{% for r in ranking|slice(3) %}{{ best.row(r, false) }}{% endfor %}</ol>
     {% endif %}
     <p class="empty">{% trans %}best.after{% endtrans %}</p>
   {% endif %}
+  {% if live %}<p class="empty">{% trans %}best.after{% endtrans %}</p>{% endif %}
 </div></section>
 {% endblock %}
 {% block body_scripts %}

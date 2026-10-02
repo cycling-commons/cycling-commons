@@ -2557,6 +2557,19 @@ best:
   quiet_heading: 'Personne n''a encore voté ici'
   quiet_body: 'Ces régions ont des lieux sur la carte et aucun classement derrière. Un seul cycliste qui connaît les routes change cela.'
   quiet_cta: 'Votez dans votre région'
+  season_now: 'Maintenant'
+  voters: '%n% personnes ont voté'
+  voters_needed: '%n% personnes sur %m% ont voté'
+  no_ranking: 'Pas encore de classement'
+  no_ranking_body: 'Une liste est classée dès que %m% personnes différentes y ont voté. D''ici là, voici les lieux les plus confirmés.'
+  closed_no_ranking: 'Ce tour s''est terminé sans classement.'
+  shared: 'Place partagée'
+  handicap: 'Dans le top 3 de l''an dernier : les votes comptent x0,75'
+  gone: 'N''est plus sur la carte'
+  everywhere_hint: 'Choisissez un pays pour voir toutes ses régions, y compris les listes sans classement.'
+  everywhere_empty: 'Aucune liste n''a encore de classement dans ce tour.'
+  vote_here: 'Voter dans cette région'
+  quiet_live: 'Rien de ce type sur la carte pour l''instant dans :'
 
 improve:
   condition:

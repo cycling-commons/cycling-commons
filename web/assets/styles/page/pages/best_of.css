@@ -121,3 +121,10 @@ ol.rank .bar i{display:block;height:100%;background:var(--trail)}
 .quiet p{font-size:.93rem;line-height:1.55;color:#4a4d40;margin:0 0 .8rem}
 .quiet .qlist a{color:var(--trail)}
 .empty{font-size:.95rem;color:#6d7060;padding:1.4rem 0}
+/* The real results (route-domain.md §8d): which round, how many voted, and
+   the marks a ranked row can carry. */
+.rgroup .meta{font-family:var(--mono);font-size:.72rem;color:#6d7060;margin:.2rem 0 .9rem}
+.rgroup .meta a{color:inherit}
+.rgroup .nr{max-width:72ch;font-size:.9rem;color:#4a4d40;margin:0 0 .6rem}
+ol.rank .n .sh{text-decoration:none;margin-left:.1rem}
+ol.rank .hc,ol.rank .gone{font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:#8a8d7c}

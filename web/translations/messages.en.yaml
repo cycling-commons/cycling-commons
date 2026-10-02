@@ -1958,6 +1958,19 @@ best:
   quiet_heading: 'Nobody has voted here yet'
   quiet_body: 'These regions have places on the map and no ranking behind them. One rider who knows the roads changes that.'
   quiet_cta: 'Vote in your own region'
+  season_now: 'Now'
+  voters: '%n% voters'
+  voters_needed: '%n% of %m% voters'
+  no_ranking: 'No ranking yet'
+  no_ranking_body: 'A list is ranked once %m% different riders have voted in it. Until then, these are the places riders confirmed most.'
+  closed_no_ranking: 'This round closed without a ranking.'
+  shared: 'Shared place'
+  handicap: 'In last year''s top 3: votes count x0.75'
+  gone: 'No longer on the map'
+  everywhere_hint: 'Pick a country to see every region, including the lists that have no ranking yet.'
+  everywhere_empty: 'No list has a ranking yet this round.'
+  vote_here: 'Vote in this region'
+  quiet_live: 'Nothing of this kind on the map yet in:'
 
 improve:
   condition:

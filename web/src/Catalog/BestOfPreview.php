@@ -18,10 +18,11 @@ use Doctrine\DBAL\Connection;
  * A seasonal result, simulated, so the shape can be argued about before the
  * ballot exists.
  *
- * **Why fabricate anything.** `route_vote` is empty and will stay empty until
- * the ballot opens, so a results page built on real counts would be a blank
- * screen in every region and could not answer the question it exists to
- * answer: what should this page show, and what makes a ranking believable.
+ * **Why fabricate anything.** `season_vote` stays empty until
+ * `community.voting_live` is switched on, and this page is what shows until
+ * then: a results page built on real counts would be a blank screen in every
+ * region and could not answer the question it exists to answer: what should
+ * this page show, and what makes a ranking believable.
  * The demo ballot at `/vote` was built for the same reason (owner 2026-09-12:
  * "for now like in the demo we need to simulate a page, this can also help us
  * design the voting specs").
@@ -32,8 +33,15 @@ use Doctrine\DBAL\Connection;
  * shows the same number on every load and nobody mistakes a reshuffle for a
  * vote. `simulated` rides on every row so a template cannot forget to say so.
  *
+ * **The real results use the same rows.** Once voting is live
+ * {@see \App\Vote\BestOfResults} fills this shape from the season ballot:
+ * the card of each row comes from cards(), the route filters from
+ * routesMatching(), and the template does not know which of the two it got.
+ *
  * @phpstan-type Photo array{sm: string, credit: ?string, creditUrl: ?string, license: ?string}
- * @phpstan-type Ranked array{id: int, ref: ?string, name: string, kind: string, letter: string, note: ?string, photo: ?Photo, notePlaceholder: bool, photoPlaceholder: bool, commonsFile: ?string, filler: string, hue: int, votes: int, rides: int, share: int, simulated: true}
+ * @phpstan-type Ranked array{id: int, ref: ?string, name: string, kind: string, letter: string, note: ?string, photo: ?Photo, notePlaceholder: bool, photoPlaceholder: bool, commonsFile: ?string, filler: ?string, hue: int, votes: int, rides: int, share: int, place: ?int, shared: bool, handicapped: bool, onMap: bool, simulated: bool}
+ * @phpstan-type Card array{note: ?string, photo: ?Photo, hue: int}
+ * @phpstan-type Row array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}
  *
  * @see docs/specs/route-domain.md §8
  *
@@ -89,6 +97,13 @@ final class BestOfPreview
         'Medium' => [50_000, 150_000],
         'Long' => [150_000, null],
     ];
+
+    /** What a catalogue place row hands a card, the same for a ranking and for cards(). */
+    private const string ITEM_COLUMNS = 'i.id, i.name, i.attributes, NULL AS ref, NULL AS distance_m,
+                       ST_Y(ST_PointOnSurface(i.geom)) AS lat, ST_X(ST_PointOnSurface(i.geom)) AS lng';
+
+    /** What a route row hands a card. */
+    private const string ROUTE_COLUMNS = 'r.id, r.name, r.attributes, NULL AS ref, r.distance_m, NULL AS lat, NULL AS lng';
 
     /** Asked once: the answer cannot change inside a request. */
     private ?bool $hasCoverage = null;
@@ -156,7 +171,7 @@ final class BestOfPreview
         foreach ($rows as $row) {
             // The bike is BOTH: the route records which bikes it suits
             // (`attributes.bikeTypes`, "Suitable bike types") and the vote
-            // records which bike the voter rated it on (RouteVote::$bikeType).
+            // records which bike the voter rated it on (SeasonVote::$bikeType).
             // Picking one narrows the rows AND changes who ranked them, which
             // together is what "best on a handbike" means.
             $ranked[] = $this->tally($row, $type, $season, $bikes, $shot);
@@ -170,19 +185,15 @@ final class BestOfPreview
         // Only the ten that survived: a photo lookup per candidate would be
         // four hundred queries to throw away three hundred and ninety of them.
         foreach ($ranked as $i => $r) {
+            $ranked[$i]['place'] = $i + 1;
             if (null !== $r['photo'] || null === $r['commonsFile']) {
                 continue;
             }
-            $ready = $this->admission->readyPhoto($r['commonsFile']);
-            if (null === $ready || !\is_string($ready['sm'] ?? null)) {
+            $photo = $this->readyPhoto($r['commonsFile']);
+            if (null === $photo) {
                 continue;
             }
-            $ranked[$i]['photo'] = [
-                'sm' => $ready['sm'],
-                'credit' => \is_string($ready['credit'] ?? null) ? $ready['credit'] : null,
-                'creditUrl' => \is_string($ready['creditUrl'] ?? null) && '' !== $ready['creditUrl'] ? $ready['creditUrl'] : null,
-                'license' => \is_string($ready['license'] ?? null) ? $ready['license'] : null,
-            ];
+            $ranked[$i]['photo'] = $photo;
             $ranked[$i]['photoPlaceholder'] = false;
         }
 
@@ -219,13 +230,99 @@ final class BestOfPreview
     }
 
     /**
+     * What a results card shows about these catalogue rows, nothing made up:
+     * one line about each, where there is one a picture with its credit, and
+     * the hue of the panel that stands in when there is none. The real
+     * results page uses it; the preview builds the same parts in tally().
+     *
+     * Every id asked gets a card, a row that no longer exists an empty one.
+     *
+     * @param list<int> $ids
+     *
+     * @return array<int, Card>
+     */
+    public function cards(ItemType $type, array $ids): array
+    {
+        if ([] === $ids) {
+            return [];
+        }
+        /** @var list<Row> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            ItemType::QualityRides === $type
+                ? 'SELECT '.self::ROUTE_COLUMNS.' FROM recommended_route r WHERE r.id IN (:ids)'
+                : 'SELECT '.self::ITEM_COLUMNS.' FROM item i WHERE i.id IN (:ids)',
+            ['ids' => $ids],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+        $shot = $this->readyFiles($rows);
+
+        $out = [];
+        foreach ($ids as $id) {
+            $out[$id] = ['note' => null, 'photo' => null, 'hue' => self::hue(crc32($type->value.':'.$id))];
+        }
+        foreach ($rows as $row) {
+            [$attrs, $file] = self::shown($row, $type, $shot);
+            $id = (int) $row['id'];
+            $out[$id]['note'] = self::describe($type, $attrs, false);
+            $out[$id]['photo'] = self::photo($attrs) ?? (null !== $file ? $this->readyPhoto($file) : null);
+        }
+
+        return $out;
+    }
+
+    /**
+     * The routes among these that the difficulty and length filters keep, in
+     * the order given. The same conditions routes() narrows a ranking by.
+     *
+     * @param list<int>    $ids
+     * @param list<string> $difficulties
+     * @param list<string> $lengths
+     *
+     * @return list<int>
+     */
+    public function routesMatching(array $ids, array $difficulties, array $lengths): array
+    {
+        if ([] === $ids || ([] === $difficulties && [] === $lengths)) {
+            return $ids;
+        }
+        [$where, $params, $types] = self::routeFilter($difficulties, $lengths);
+        $kept = array_map(intval(...), $this->db->fetchFirstColumn(
+            'SELECT r.id FROM recommended_route r WHERE r.id IN (:ids)'.$where,
+            ['ids' => $ids] + $params,
+            ['ids' => ArrayParameterType::INTEGER] + $types,
+        ));
+
+        return array_values(array_filter($ids, static fn (int $id): bool => \in_array($id, $kept, true)));
+    }
+
+    /**
+     * The small rendering of a fetched Commons file and its credit, or nothing.
+     *
+     * @return Photo|null
+     */
+    private function readyPhoto(string $file): ?array
+    {
+        $ready = $this->admission->readyPhoto($file);
+        if (null === $ready || !\is_string($ready['sm'] ?? null)) {
+            return null;
+        }
+
+        return [
+            'sm' => $ready['sm'],
+            'credit' => \is_string($ready['credit'] ?? null) ? $ready['credit'] : null,
+            'creditUrl' => \is_string($ready['creditUrl'] ?? null) && '' !== $ready['creditUrl'] ? $ready['creditUrl'] : null,
+            'license' => \is_string($ready['license'] ?? null) ? $ready['license'] : null,
+        ];
+    }
+
+    /**
      * Which of these rows already have a fetched picture, by Commons file name.
      *
      * One statement for the whole candidate set. The alternative is a lookup
      * per row, which for a five-category page across a country's regions runs
      * into the thousands, all to decide the order of ten.
      *
-     * @param list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}> $rows
+     * @param list<Row> $rows
      *
      * @return array<string, PhotoFacts> file => what the cached copy says about it
      */
@@ -233,15 +330,7 @@ final class BestOfPreview
     {
         $files = [];
         foreach ($rows as $row) {
-            $attrs = $row['attributes'] ?? null;
-            if (\is_string($attrs)) {
-                /** @var array<string, mixed> $attrs */
-                $attrs = (array) json_decode($attrs, true, 8, \JSON_THROW_ON_ERROR);
-            }
-            if (!\is_array($attrs)) {
-                continue;
-            }
-            $file = CommonsFile::fromTags($attrs);
+            $file = CommonsFile::fromTags(self::attributes($row));
             if (null !== $file) {
                 $files[$file] = true;
             }
@@ -279,11 +368,14 @@ final class BestOfPreview
      * region lands on says whether the catalogue reaches it at all, which is
      * the honest version of the same signal.
      *
+     * Each region carries `result`, the real list's standing, which a
+     * preview has none of.
+     *
      * @param list<string> $bikes
      * @param list<string> $difficulties
      * @param list<string> $lengths
      *
-     * @return array{ranked: list<array{slug: string, name: string, top: list<Ranked>}>, quiet: list<array{slug: string, name: string}>}
+     * @return array{ranked: list<array{slug: string, name: string, top: list<Ranked>, result: null}>, quiet: list<array{slug: string, name: string}>}
      */
     public function byRegion(ItemType $type, Season $season, string $countryCode, array $bikes = [], array $difficulties = [], int $perRegion = self::TOP_N, array $lengths = []): array
     {
@@ -301,7 +393,7 @@ final class BestOfPreview
 
                 continue;
             }
-            $ranked[] = $entry + ['top' => $top];
+            $ranked[] = $entry + ['top' => $top, 'result' => null];
         }
 
         return ['ranked' => $ranked, 'quiet' => $quiet];
@@ -333,17 +425,9 @@ final class BestOfPreview
      * a reader that the numbers move, which is the one thing this page must
      * not imply while it is a preview.
      *
-     * @return Ranked
-     */
-    /**
-     * @param array{id: int|string, name: string, attributes?: string|array<string, mixed>|null, ref?: string|null, distance_m?: int|string|null, lat?: float|string|null, lng?: float|string|null} $row
-     *
-     * @return Ranked
-     */
-    /**
-     * @param array{id: int|string, name: string, attributes?: string|array<string, mixed>|null, ref?: string|null, distance_m?: int|string|null, lat?: float|string|null, lng?: float|string|null} $row
-     * @param list<string>                                                                                                                                                                          $bikes
-     * @param array<string, PhotoFacts>                                                                                                                                                             $shot  files already fetched, with what their cached copy says
+     * @param Row                       $row
+     * @param list<string>              $bikes
+     * @param array<string, PhotoFacts> $shot  files already fetched, with what their cached copy says
      *
      * @return Ranked
      */
@@ -365,35 +449,7 @@ final class BestOfPreview
         }
         $rides = $votes + ($seed >> 8) % 40;     // never fewer people than voters
 
-        $attrs = $row['attributes'] ?? null;
-        if (\is_string($attrs)) {
-            /** @var array<string, mixed> $attrs */
-            $attrs = (array) json_decode($attrs, true, 8, \JSON_THROW_ON_ERROR);
-        }
-        $attrs = \is_array($attrs) ? $attrs : [];
-        // The one fact a route keeps in a column rather than in its
-        // attributes, and the first thing a rider reads about one.
-        if (is_numeric($row['distance_m'] ?? null)) {
-            $attrs['distanceM'] = $row['distance_m'];
-        }
-
-        // A coverage row hands its OpenStreetMap tags over as `attributes`, so
-        // `wikimedia_commons` and `image` arrive here unchanged and the file
-        // name needs no second query to find.
-        $file = CommonsFile::fromTags($attrs);
-
-        // A card shows only a photo PhotoValidator shows on this place, the
-        // rule the map drawer follows: on a scenic card, only a photo taken
-        // near its pin. A stored photo that fails it is dropped here, and a
-        // cached Commons file that fails it is treated as no file at all, so
-        // it neither earns the bonus below nor is looked up once the list is
-        // cut. On a scenic card a file not fetched yet has no known camera,
-        // so it is no file either.
-        $place = PhotoPlace::of($type->letter(), $row['lat'] ?? null, $row['lng'] ?? null);
-        $attrs = PhotoValidator::sift($attrs, $place)['attributes'];
-        if (null !== $file && (isset($shot[$file]) ? !PhotoValidator::verdict($shot[$file], $place)->shows() : $place->isScenicView())) {
-            $file = null;
-        }
+        [$attrs, $file] = self::shown($row, $type, $shot);
 
         // A photographed place outranks an unphotographed one, for the reason
         // the curated bonus exists: a podium of three empty panels shows the
@@ -435,12 +491,80 @@ final class BestOfPreview
             // picture panel is the largest thing on a podium card, so three
             // identical grey rectangles say nothing about how the row reads,
             // while a full circle of hues puts a purple block on cream paper.
-            'hue' => self::HUE_FROM + abs($seed) % self::HUE_RANGE,
+            'hue' => self::hue($seed),
             'votes' => $votes,
             'rides' => $rides,
             'share' => 0,
+            // ranking() numbers the rows once the list is cut. Nothing is
+            // shared, handicapped or retired in an invented tally.
+            'place' => null,
+            'shared' => false,
+            'handicapped' => false,
+            'onMap' => true,
             'simulated' => true,
         ];
+    }
+
+    /**
+     * The row's attributes with what a card may not show taken out, and its
+     * Commons file, or null where that file may not show either.
+     *
+     * @param Row                       $row
+     * @param array<string, PhotoFacts> $shot
+     *
+     * @return array{0: array<string, mixed>, 1: ?string}
+     */
+    private static function shown(array $row, ItemType $type, array $shot): array
+    {
+        $attrs = self::attributes($row);
+
+        // A coverage row hands its OpenStreetMap tags over as `attributes`, so
+        // `wikimedia_commons` and `image` arrive here unchanged and the file
+        // name needs no second query to find.
+        $file = CommonsFile::fromTags($attrs);
+
+        // A card shows only a photo PhotoValidator shows on this place, the
+        // rule the map drawer follows: on a scenic card, only a photo taken
+        // near its pin. A stored photo that fails it is dropped here, and a
+        // cached Commons file that fails it is treated as no file at all, so
+        // it neither earns the preview's bonus nor is looked up once the list
+        // is cut. On a scenic card a file not fetched yet has no known camera,
+        // so it is no file either.
+        $place = PhotoPlace::of($type->letter(), $row['lat'], $row['lng']);
+        $attrs = PhotoValidator::sift($attrs, $place)['attributes'];
+        if (null !== $file && (isset($shot[$file]) ? !PhotoValidator::verdict($shot[$file], $place)->shows() : $place->isScenicView())) {
+            $file = null;
+        }
+
+        return [$attrs, $file];
+    }
+
+    /**
+     * @param Row $row
+     *
+     * @return array<string, mixed>
+     */
+    private static function attributes(array $row): array
+    {
+        $attrs = $row['attributes'];
+        /** @var array<string, mixed> $attrs */
+        $attrs = \is_string($attrs) ? (array) json_decode($attrs, true, 8, \JSON_THROW_ON_ERROR) : [];
+        // The one fact a route keeps in a column rather than in its
+        // attributes, and the first thing a rider reads about one.
+        if (is_numeric($row['distance_m'])) {
+            $attrs['distanceM'] = $row['distance_m'];
+        }
+
+        return $attrs;
+    }
+
+    /**
+     * One hue per place, held steady by its seed, inside the amber-to-khaki
+     * band the rest of the site is built from.
+     */
+    private static function hue(int $seed): int
+    {
+        return self::HUE_FROM + abs($seed) % self::HUE_RANGE;
     }
 
     /**
@@ -591,24 +715,23 @@ final class BestOfPreview
      * is dropped, the same exclusivity the map applies, or the same castle
      * would rank twice under two names.
      *
-     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}>
+     * @return list<Row>
      */
     private function items(ItemType $type, ?string $countryCode, ?int $regionId = null): array
     {
         $letter = $type->letter();
-        $sql = 'SELECT id, name, attributes, NULL AS ref, NULL AS distance_m,
-                       ST_Y(ST_PointOnSurface(geom)) AS lat, ST_X(ST_PointOnSurface(geom)) AS lng
-                  FROM item
-                 WHERE letter = :letter
-                   AND state IN '.ItemState::servedSqlTuple()."
-                   AND name <> ''";
+        $sql = 'SELECT '.self::ITEM_COLUMNS.'
+                  FROM item i
+                 WHERE i.letter = :letter
+                   AND i.state IN '.ItemState::servedSqlTuple()."
+                   AND i.name <> ''";
         $params = ['letter' => $letter];
         if (null !== $countryCode) {
-            $sql .= ' AND country_code = :cc';
+            $sql .= ' AND i.country_code = :cc';
             $params['cc'] = $countryCode;
         }
         if (null !== $regionId) {
-            $sql .= ' AND region_id = :rid';
+            $sql .= ' AND i.region_id = :rid';
             $params['rid'] = $regionId;
         }
 
@@ -628,11 +751,11 @@ final class BestOfPreview
             $cov .= ' AND cp.region_id = :rid';
         }
 
-        /** @var list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}> $rows */
+        /** @var list<Row> $rows */
         $rows = $this->db->fetchAllAssociative(
             $this->hasCoverage()
-                ? '('.$sql.' ORDER BY id LIMIT 200) UNION ALL ('.$cov.' ORDER BY cp.id LIMIT 200)'
-                : $sql.' ORDER BY id LIMIT 200',
+                ? '('.$sql.' ORDER BY i.id LIMIT 200) UNION ALL ('.$cov.' ORDER BY cp.id LIMIT 200)'
+                : $sql.' ORDER BY i.id LIMIT 200',
             $params,
         );
 
@@ -640,7 +763,6 @@ final class BestOfPreview
     }
 
     /**
-     * /**
      * Routes, narrowed by what the route itself records.
      *
      * Both filters are the route's own attributes: difficulty as
@@ -652,22 +774,18 @@ final class BestOfPreview
      * would empty the list wherever the field has not been filled in yet,
      * which is most of the catalogue today.
      *
-     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null}>
-     */
-    /**
      * @param list<string> $bikes
      * @param list<string> $difficulties
      * @param list<string> $lengths
      *
-     * @return list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}>
+     * @return list<Row>
      */
     private function routes(?string $countryCode, array $bikes, array $difficulties, ?int $regionId = null, array $lengths = []): array
     {
-        $sql = 'SELECT r.id, r.name, r.attributes, NULL AS ref, r.distance_m, NULL AS lat, NULL AS lng FROM recommended_route r
+        $sql = 'SELECT '.self::ROUTE_COLUMNS.' FROM recommended_route r
                  WHERE r.state IN '.ItemState::servedSqlTuple()."
                    AND r.name <> ''";
         $params = [];
-        $types = [];
         if (null !== $countryCode) {
             $sql .= ' AND EXISTS (SELECT 1 FROM region g WHERE g.id = r.region_id AND g.country_code = :cc)';
             $params['cc'] = $countryCode;
@@ -676,8 +794,7 @@ final class BestOfPreview
             $sql .= ' AND r.region_id = :rid';
             $params['rid'] = $regionId;
         }
-        // Any of the chosen bikes, not all of them: a rider ticking Gravel and
-        // MTB is asking for routes that suit either.
+        // A route that suits any of the bikes asked (the page asks one at a time).
         if ([] !== $bikes) {
             $ors = [];
             foreach ($bikes as $i => $b) {
@@ -688,35 +805,53 @@ final class BestOfPreview
                         OR jsonb_array_length(r.attributes->'bikeTypes') = 0
                         OR ".implode(' OR ', $ors).')';
         }
+        [$where, $filterParams, $types] = self::routeFilter($difficulties, $lengths);
+
+        /** @var list<Row> $rows */
+        $rows = $this->db->fetchAllAssociative($sql.$where.' ORDER BY r.id LIMIT 200', $params + $filterParams, $types);
+
+        return $rows;
+    }
+
+    /**
+     * The difficulty and length conditions on a route `r`, ready to append to
+     * a WHERE: a ranking narrowed by them and a real list's rows hidden by
+     * them answer the same question the same way.
+     *
+     * @param list<string> $difficulties
+     * @param list<string> $lengths
+     *
+     * @return array{0: string, 1: array<string, mixed>, 2: array<string, ArrayParameterType>}
+     */
+    private static function routeFilter(array $difficulties, array $lengths): array
+    {
+        $sql = '';
+        $params = [];
+        $types = [];
         if ([] !== $difficulties) {
             $sql .= " AND r.attributes->'difficulty'->>'label' IN (:diffs)";
             $params['diffs'] = $difficulties;
             $types['diffs'] = ArrayParameterType::STRING;
         }
-        if ([] !== $lengths) {
-            $bands = [];
-            foreach ($lengths as $i => $name) {
-                if (!isset(self::LENGTHS[$name])) {
-                    continue;
-                }
-                [$from, $to] = self::LENGTHS[$name];
-                $params["lf$i"] = $from;
-                if (null === $to) {
-                    $bands[] = "r.distance_m >= :lf$i";
+        $bands = [];
+        foreach ($lengths as $i => $name) {
+            if (!isset(self::LENGTHS[$name])) {
+                continue;
+            }
+            [$from, $to] = self::LENGTHS[$name];
+            $params["lf$i"] = $from;
+            if (null === $to) {
+                $bands[] = "r.distance_m >= :lf$i";
 
-                    continue;
-                }
-                $params["lt$i"] = $to;
-                $bands[] = "(r.distance_m >= :lf$i AND r.distance_m < :lt$i)";
+                continue;
             }
-            if ([] !== $bands) {
-                $sql .= ' AND ('.implode(' OR ', $bands).')';
-            }
+            $params["lt$i"] = $to;
+            $bands[] = "(r.distance_m >= :lf$i AND r.distance_m < :lt$i)";
+        }
+        if ([] !== $bands) {
+            $sql .= ' AND ('.implode(' OR ', $bands).')';
         }
 
-        /** @var list<array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}> $rows */
-        $rows = $this->db->fetchAllAssociative($sql.' ORDER BY r.id LIMIT 200', $params, $types);
-
-        return $rows;
+        return [$sql, $params, $types];
     }
 }

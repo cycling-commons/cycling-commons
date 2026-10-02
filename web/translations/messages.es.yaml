@@ -1967,6 +1967,19 @@ best:
   quiet_heading: 'Aquí todavía no ha votado nadie'
   quiet_body: 'Estas regiones tienen lugares en el mapa y ninguna clasificación detrás. Una sola ciclista que conozca las carreteras lo cambia.'
   quiet_cta: 'Vota en tu propia región'
+  season_now: 'Ahora'
+  voters: '%n% personas han votado'
+  voters_needed: '%n% de %m% personas han votado'
+  no_ranking: 'Todavía sin clasificación'
+  no_ranking_body: 'Una lista tiene clasificación cuando %m% personas distintas han votado en ella. Hasta entonces, estos son los lugares más confirmados.'
+  closed_no_ranking: 'Esta ronda terminó sin clasificación.'
+  shared: 'Puesto compartido'
+  handicap: 'Entre los 3 primeros el año pasado: los votos cuentan x0,75'
+  gone: 'Ya no está en el mapa'
+  everywhere_hint: 'Elige un país para ver todas sus regiones, también las listas que aún no tienen clasificación.'
+  everywhere_empty: 'Ninguna lista tiene clasificación todavía en esta ronda.'
+  vote_here: 'Votar en esta región'
+  quiet_live: 'Todavía nada de este tipo en el mapa en:'
 
 improve:
   condition:

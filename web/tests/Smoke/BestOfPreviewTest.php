@@ -173,7 +173,7 @@ final class BestOfPreviewTest extends WebTestCase
     {
         yield 'empty parameters' => ['/best?season=autumn&bike=&diff=&len=&cc=', '/best?season=autumn'];
         yield 'another order' => ['/best?season=autumn&cat=quality-rides', '/best?cat=quality-rides&season=autumn'];
-        yield 'a value twice, out of order' => ['/best?cat=quality-rides&bike=Gravel,Road,Gravel', '/best?cat=quality-rides&bike=Road,Gravel'];
+        yield 'one bike, the first one asked' => ['/best?cat=quality-rides&bike=Gravel,Road,Gravel', '/best?cat=quality-rides&bike=Gravel'];
         yield 'a route filter on a category that has none' => ['/best?cat=climbs&bike=Road', '/best'];
         yield 'the default category' => ['/best?cat=climbs&season=winter', '/best?season=winter'];
         yield 'an unknown parameter' => ['/best?utm_source=x', '/best'];

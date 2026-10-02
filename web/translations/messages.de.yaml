@@ -2565,6 +2565,19 @@ best:
   quiet_heading: 'Hier hat noch niemand gestimmt'
   quiet_body: 'Diese Regionen haben Orte auf der Karte und keine Reihung dahinter. Eine Fahrerin, die die Straßen kennt, ändert das.'
   quiet_cta: 'In deiner Region abstimmen'
+  season_now: 'Jetzt'
+  voters: '%n% Abstimmende'
+  voters_needed: '%n% von %m% Abstimmenden'
+  no_ranking: 'Noch keine Rangfolge'
+  no_ranking_body: 'Eine Liste bekommt eine Rangfolge, sobald %m% verschiedene Personen darin abgestimmt haben. Bis dahin stehen hier die am häufigsten bestätigten Orte.'
+  closed_no_ranking: 'Diese Runde endete ohne Rangfolge.'
+  shared: 'Geteilter Platz'
+  handicap: 'Letztes Jahr unter den ersten 3: Stimmen zählen x0,75'
+  gone: 'Nicht mehr auf der Karte'
+  everywhere_hint: 'Wähle ein Land, um jede Region zu sehen, auch die Listen ohne Rangfolge.'
+  everywhere_empty: 'In dieser Runde hat noch keine Liste eine Rangfolge.'
+  vote_here: 'In dieser Region abstimmen'
+  quiet_live: 'Noch nichts dieser Art auf der Karte in:'
 
 improve:
   condition:

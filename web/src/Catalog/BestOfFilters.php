@@ -20,8 +20,9 @@ namespace App\Catalog;
  *
  * The form, in this order, each only when it says something: `cat` (not the
  * first category, which is the page's own default), `season`, then for the
- * category that shows them `bike`, `diff` and `len` (known values, once each,
- * in the vocabulary's order), then `cc` (a country with a region).
+ * category that shows them `bike` (one known value, the first one asked),
+ * `diff` and `len` (known values, once each, in the vocabulary's order), then
+ * `cc` (a country with a region).
  *
  * @see docs/specs/page-caching.md §3.2
  *
@@ -73,6 +74,11 @@ final class BestOfFilters
             ] as $key => $vocabulary) {
                 $chosen = array_map(trim(...), explode(',', self::scalar($query[$key] ?? null)));
                 $kept = array_values(array_filter($vocabulary, static fn (string $v): bool => \in_array($v, $chosen, true)));
+                if ('bike' === $key) {
+                    // One bike: a narrowed list is the votes cast on that bike (route-domain.md §8d).
+                    $asked = array_values(array_filter($chosen, static fn (string $v): bool => \in_array($v, $vocabulary, true)));
+                    $kept = \array_slice($asked, 0, 1);
+                }
                 if ([] !== $kept) {
                     $out[$key] = implode(',', $kept);
                 }

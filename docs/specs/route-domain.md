@@ -940,10 +940,14 @@ reader that votes are arriving, which is the one thing it must not imply.
 Every row carries `simulated: true` so no template can forget to say so, and
 the page says it in prose above the list.
 
+**Once voting is live** (`community.voting_live` = 1) the same page shows the
+season ballot's real lists instead (route-domain.md §8d); the preview stays
+for as long as the switch is off.
+
 **What the preview settled about the ballot.** The five votable types
 (`ItemType::isVotable()`) are the categories. Season is the round. And the
 split that matters: **bike type belongs to the VOTE, not the route**
-(`RouteVote::$bikeType`). "Best on a handbike" is the same roads ranked by
+(`season_vote.bike_type`). "Best on a handbike" is the same roads ranked by
 different people, not a filtered set of roads, which is exactly why it earns
 its own ranking. Difficulty is the opposite case: it is the route's own
 attribute (`DifficultyVocabulary`, stored `{label, score}`), so it filters the
@@ -1161,6 +1165,31 @@ says why there is nothing to press.
 **`route_vote` is retired** (`Version20261002110000`): it held no real votes
 (owner 2026-10-02), so nothing was copied; the migration refuses to run on a
 table that is not empty.
+
+**The results page** (`PageController::bestOf`, route `best_of`,
+`templates/pages/best_of.html.twig`, `App\Vote\BestOfResults`). With voting
+live, `/best` keeps the preview's page, filters and cards (route-domain.md
+§8b) and fills them with real lists: `BestOfResults` returns the shape
+`BestOfPreview::byRegion()` returns, each region carrying its list's round,
+voter count and whether it is ranked or closed, and takes each card's line,
+picture and panel hue from `BestOfPreview::cards()`, the preview's own photo
+rule. No season chosen ("Now") means each region's open round, so a southern
+country shows its own season; a chosen season means each region's most recent
+round of it. A country view lists its operational regions
+(`App\Vote\BallotRegions`): a ranked list shows places (a shared place reads
+"1="), votes, the confirmed count and a "x0.75" mark on handicapped rows, and
+a place retired mid-round keeps its place without a map link; a list below 5
+voters reads "No ranking yet" with no podium and no places, the 10 most
+confirmed rows with their votes so far and "N of 5 voters"; regions with
+nothing of the kind are named at the foot. The Everywhere view lists the 12
+ranked lists with the most voters; it counts only regions with at least 5
+voters in their own round, counted or stored, filtering both tables on their
+indexed `(region_id, category, round_start)`. `bike` takes **one** value in
+both modes (the preview included): a route list narrowed by bike is the votes
+cast on that bike (route-domain.md §8c). Difficulty and length only hide rows,
+with `BestOfPreview::routesMatching()`, the conditions the preview narrows by,
+and never change a place. The page stays in the 60-second shared page cache
+(page-caching.md §4b).
 
 ## 9. Attribute vocabulary (`recommended_route.attributes`)
 

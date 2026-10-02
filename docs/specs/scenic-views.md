@@ -327,7 +327,7 @@ Where the rule is applied, all server side:
 | `CatalogProvider::feature()` (catalog payload and a live insert) | `photo` and `photos` of every item (`PhotoValidator::sift()`), against the item's letter and pin |
 | `CoverageRepository::curatedOverlay()` (coverage drawer detail) | the same fields of the curated item, against the item's pin |
 | `CommonsPhotoAdmission::stateFor()` (`/map/coverage/photo/…`) | a Commons photo of a P coverage point answers `{"state": "none"}` unless its camera is within reach of the point, and a file whose camera is unknown or far is not downloaded for that point (`commons_photo.state = declined`) |
-| `BestOfPreview` | a card's stored photo, and its cached Commons file (no ranking bonus, no lookup) |
+| `BestOfPreview` (the preview's ranking and `cards()`, the real `/best` results' cards) | a card's stored photo, and its cached Commons file (no ranking bonus, no lookup) |
 
 The same verdict decides when a photo is linked: a Commons fetch, harvest or
 Wikidata lookup for a P point, `app:media:localise-commons` for a P item, a
