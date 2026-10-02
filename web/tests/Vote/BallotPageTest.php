@@ -69,12 +69,16 @@ final class BallotPageTest extends WebTestCase
         return (int) $item->getId();
     }
 
-    private function route(int $regionId, string $name): int
+    /** @param list<string> $bikes the bike types the route declares */
+    private function route(int $regionId, string $name, array $bikes = []): int
     {
         $route = (new RecommendedRoute())->setName($name)
             ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
             ->setDistanceM(20000)->setState(ItemState::Verified)->setSource(ItemSource::User)
             ->setSourceRef('user:page-'.bin2hex(random_bytes(6)))->setRegionId($regionId);
+        if ([] !== $bikes) {
+            $route->setAttributes(['bikeTypes' => $bikes]);
+        }
         $this->em->persist($route);
         $this->em->flush();
 
@@ -201,6 +205,22 @@ final class BallotPageTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(303);
         self::assertSame('Gravel', $this->db->fetchOne('SELECT bike_type FROM season_vote WHERE user_id = ?', [$u->getId()]));
+    }
+
+    /** The general bikes for every route; a specialty bike only where the route declares it (route-domain.md §8.3). */
+    public function testTheBikeChoiceOffersTheSpecialtyBikesTheRouteDeclares(): void
+    {
+        $this->openVoting();
+        $rid = $this->region();
+        $plain = $this->route($rid, 'Plain Loop');
+        $tandem = $this->route($rid, 'Tandem Loop', ['Road', 'Tandem']);
+        $this->rider();
+
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot&cat=quality-rides');
+        $offered = static fn (int $id): array => $crawler->filter('#b-'.$id.' option')->each(static fn ($n): string => (string) $n->attr('value'));
+
+        self::assertSame(['', 'Road', 'Gravel', 'MTB', 'E-bike'], $offered($plain));
+        self::assertSame(['', 'Road', 'Gravel', 'MTB', 'E-bike', 'Tandem'], $offered($tandem));
     }
 
     public function testAFullListOffersNoMoreVotes(): void

@@ -85,7 +85,8 @@
                     <label class="vh" for="b-{{ c.id }}">{{ 'vote.bike_label'|trans }}</label>
                     <select id="b-{{ c.id }}" name="bike" required>
                       <option value="">{{ 'vote.bike_ph'|trans }}</option>
-                      {% for b in bikes %}<option value="{{ b.value }}">{{ b.labelKey|trans }}</option>{% endfor %}
+                      {# The general bikes, and the specialty bikes this route declares (route-domain.md §8.3). #}
+                      {% for b in route_bikes[c.id] ?? bikes %}<option value="{{ b.value }}">{{ b.labelKey|trans }}</option>{% endfor %}
                     </select>
                   {% endif %}
                   <button class="add" name="do" value="cast">{{ 'vote.add'|trans }}</button>

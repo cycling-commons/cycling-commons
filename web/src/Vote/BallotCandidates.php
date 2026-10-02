@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Vote;
 
+use App\Catalog\BikeSuitability;
 use App\Catalog\BikeType;
 use App\Catalog\ConfirmationStance;
 use App\Catalog\ItemState;
@@ -56,8 +57,7 @@ final class BallotCandidates
         $where = $s['where'];
         $params = ['rid' => $regionId] + $s['params'];
         if (ItemType::QualityRides === $type && null !== $bike && $bike->isSpecialty()) {
-            // route-domain.md §8.3: JSONB containment.
-            $where .= " AND s.attributes -> 'bikeTypes' @> to_jsonb(:bike::text)";
+            $where .= ' AND '.BikeSuitability::declares('s', 'bike');
             $params['bike'] = $bike->value;
         }
 
@@ -76,6 +76,51 @@ final class BallotCandidates
             'name' => $r['name'],
             'confirmations' => (int) $r['confirmations'],
         ], $rows);
+    }
+
+    /**
+     * The bikes a vote for each of these routes can name: every general bike,
+     * and the specialty bikes the route declares (route-domain.md §8.3). A
+     * vote on any other bike would count in no bike's list.
+     *
+     * @param list<int> $routeIds
+     *
+     * @return array<int, list<BikeType>> route id => bikes, in `BikeType` order; a route that does not exist is left out
+     */
+    public function bikesFor(array $routeIds): array
+    {
+        if ([] === $routeIds) {
+            return [];
+        }
+        $specialty = array_values(array_filter(BikeType::cases(), static fn (BikeType $b): bool => $b->isSpecialty()));
+        $columns = [];
+        $params = ['ids' => $routeIds];
+        foreach ($specialty as $i => $b) {
+            $columns[] = BikeSuitability::declares('s', "b$i")." AS b$i";
+            $params["b$i"] = $b->value;
+        }
+        /** @var list<array<string, int|string|bool>> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT s.id, '.implode(', ', $columns).' FROM recommended_route s WHERE s.id IN (:ids)',
+            $params,
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
+        $out = [];
+        foreach ($rows as $r) {
+            $declared = [];
+            foreach ($specialty as $i => $b) {
+                if (true === $r["b$i"]) {
+                    $declared[] = $b;
+                }
+            }
+            $out[(int) $r['id']] = array_values(array_filter(
+                BikeType::cases(),
+                static fn (BikeType $b): bool => !$b->isSpecialty() || \in_array($b, $declared, true),
+            ));
+        }
+
+        return $out;
     }
 
     /** @return Subject|null */

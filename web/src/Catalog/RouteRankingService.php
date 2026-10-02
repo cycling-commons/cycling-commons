@@ -79,9 +79,8 @@ final class RouteRankingService
                 $key = 'bike'.$i;
                 $params[$key] = $bike->value;
                 if ($bike->isSpecialty()) {
-                    // docs/specs/route-domain.md §8.3, JSONB containment.
                     $params[$key.'text'] = $bike->value;
-                    $clauses[] = "(sv.bike_type = :$key AND rr.attributes -> 'bikeTypes' @> to_jsonb(:{$key}text::text))";
+                    $clauses[] = "(sv.bike_type = :$key AND ".BikeSuitability::declares('rr', $key.'text').')';
                 } else {
                     $clauses[] = "sv.bike_type = :$key";
                 }

@@ -92,6 +92,7 @@ final class BallotController extends AbstractController
             'region' => $region,
             'region_country' => null !== $region ? self::countryOf($regions, $region['id']) : null,
             'bikes' => BikeType::cases(),
+            'route_bikes' => [],
             'csrf_id' => self::CSRF_ID,
             'per_list' => BallotRules::VOTES_PER_LIST,
             'threshold' => BallotRules::RANKING_THRESHOLD,
@@ -134,6 +135,9 @@ final class BallotController extends AbstractController
 
             $view['round'] = $round;
             $view['candidates'] = $candidates;
+            if (ItemType::QualityRides === $type) {
+                $view['route_bikes'] = $this->candidates->bikesFor(array_column($candidates, 'id'));
+            }
             $view['mine'] = $mine;
             $view['ballot'] = $ballot;
             $view['voters'] = $this->results->list(new ListKey($region['id'], $type), $round)['voters'];

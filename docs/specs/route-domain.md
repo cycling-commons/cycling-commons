@@ -920,7 +920,10 @@ Best-of for a specialty type additionally requires the route's declared
 (width, turning radius, clearance). For general types a vote is itself the
 signal; declared suitability does not filter them. Which types count as
 specialty is defined by `BikeType::isSpecialty()`, the single owner of the
-split.
+split. The containment condition is written once,
+`App\Catalog\BikeSuitability::declares()`, and casting a season vote, the
+ballot's candidates, the season results and this best-of all use it
+(route-domain.md §8d).
 
 ### 8b. `/best`: the public result, simulated first (2026-09-12)
 
@@ -1106,11 +1109,13 @@ second.
 **Casting** (`App\Vote\BallotService`). Every write needs
 `community.voting_live` = 1. A cast checks, in this order: the ballot is open,
 the rider may vote, the category is votable, the row can get a vote, a route
-vote names a bike, the `season_vote` limiter; then it takes the lowest free
-slot. A remove deletes the rider's vote in the open round only; a closed
-round's votes are its result. Refusals are `App\Vote\BallotRefused` reasons:
-`voting_closed`, `not_eligible`, `not_votable`, `not_candidate`,
-`bike_required`, `ballot_full`, `already_voted`, `rate_limited`.
+vote names a bike, a specialty bike is one the route declares
+(route-domain.md §8.3: a vote on any other specialty bike would count in no
+list), the `season_vote` limiter; then it takes the lowest free slot. A remove
+deletes the rider's vote in the open round only; a closed round's votes are
+its result. Refusals are `App\Vote\BallotRefused` reasons: `voting_closed`,
+`not_eligible`, `not_votable`, `not_candidate`, `bike_required`,
+`bike_not_declared`, `ballot_full`, `already_voted`, `rate_limited`.
 
 **Results** (`App\Vote\SeasonResults`, table `season_result`). An open round
 is counted live. A closed round is stored, once, by `app:vote:freeze`
@@ -1165,7 +1170,9 @@ offered are the operational regions grouped by country
 a `cat` that is missing, unknown or not votable opens climbs, and a `pick`
 that is not a row of that category on the ballot is ignored. The list shows
 the 100 most confirmed rows of the category in the region, plus the rider's
-own votes and the picked row wherever they sit. Beside the list, the "Your
+own votes and the picked row wherever they sit. A route's bike choice offers
+the general bikes and the specialty bikes that route declares
+(`BallotCandidates::bikesFor()`). Beside the list, the "Your
 ballot" panel holds the rider's votes in this list (up to three, in no order,
 each with its own remove form), how many votes are left and how many riders
 voted in the list. While voting is off or the rider cannot vote yet, the page

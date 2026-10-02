@@ -93,12 +93,16 @@ final class BallotServiceTest extends KernelTestCase
         return (int) $item->getId();
     }
 
-    private function route(int $regionId, ItemState $state = ItemState::Verified): int
+    /** @param list<string> $bikes the bike types the route declares */
+    private function route(int $regionId, ItemState $state = ItemState::Verified, array $bikes = []): int
     {
         $route = (new RecommendedRoute())->setName('Loop '.bin2hex(random_bytes(3)))
             ->setGeom('{"type":"LineString","coordinates":[[5.2,50.4],[5.3,50.5]]}')
             ->setDistanceM(20000)->setState($state)->setSource(ItemSource::User)
             ->setSourceRef('user:svc-'.bin2hex(random_bytes(6)))->setRegionId($regionId);
+        if ([] !== $bikes) {
+            $route->setAttributes(['bikeTypes' => $bikes]);
+        }
         $this->em->persist($route);
         $this->em->flush();
 
@@ -175,6 +179,24 @@ final class BallotServiceTest extends KernelTestCase
         self::assertSame(BallotRefused::BIKE_REQUIRED, self::refusal(fn () => $this->service()->cast($u, ItemType::QualityRides, $route, null)));
         $this->service()->cast($u, ItemType::QualityRides, $route, BikeType::Gravel);
         self::assertSame('Gravel', $this->row((int) $u->getId(), $route)['bike_type']);
+    }
+
+    /** route-domain.md §8.3: a specialty bike counts only on a route that declares it, so a vote cannot be spent on one that does not. */
+    public function testASpecialtyBikeNeedsARouteThatDeclaresIt(): void
+    {
+        $rid = $this->region('xa-north', 'XA', 50.0);
+        $plain = $this->route($rid);
+        $suited = $this->route($rid, bikes: ['Road', 'Handbike']);
+        $u = $this->voter();
+        $s = $this->service();
+
+        self::assertSame(BallotRefused::BIKE_NOT_DECLARED, self::refusal(fn () => $s->cast($u, ItemType::QualityRides, $plain, BikeType::Handbike)));
+        self::assertSame(BallotRefused::BIKE_NOT_DECLARED, self::refusal(fn () => $s->cast($u, ItemType::QualityRides, $suited, BikeType::Tandem)));
+        $s->cast($u, ItemType::QualityRides, $plain, BikeType::Mtb);
+        $s->cast($u, ItemType::QualityRides, $suited, BikeType::Handbike);
+
+        self::assertSame('MTB', $this->row((int) $u->getId(), $plain)['bike_type']);
+        self::assertSame('Handbike', $this->row((int) $u->getId(), $suited)['bike_type']);
     }
 
     public function testTheBallotIsShutWhileVotingIsOff(): void

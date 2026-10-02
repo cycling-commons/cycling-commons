@@ -1932,6 +1932,7 @@ vote:
     not_votable: 'Este tipo de lugar no está en la votación.'
     not_candidate: 'Eso no está en esta votación. Solo los lugares del mapa pueden recibir un voto.'
     bike_required: 'Elige la bici con la que lo recorriste.'
+    bike_not_declared: 'Esta ruta no está marcada como apta para esa bici, así que un voto con ella no contaría.'
     ballot_full: 'Has usado todos tus votos en esta lista. Quita uno primero.'
     already_voted: 'Ya votaste por este.'
     rate_limited: 'Demasiados cambios en poco tiempo. Vuelve a intentarlo dentro de una hora.'

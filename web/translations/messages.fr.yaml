@@ -1920,6 +1920,7 @@ vote:
     not_votable: 'Ce type de lieu ne fait pas partie du vote.'
     not_candidate: 'Ce lieu ne fait pas partie de ce vote. Seuls les lieux présents sur la carte peuvent recevoir un vote.'
     bike_required: 'Choisissez le vélo avec lequel vous l''avez parcouru.'
+    bike_not_declared: 'Cet itinéraire n''est pas indiqué comme adapté à ce vélo : un vote avec ce vélo ne compterait pas.'
     ballot_full: 'Vous avez utilisé tous vos votes dans cette liste. Retirez-en un d''abord.'
     already_voted: 'Vous avez déjà voté pour celui-ci.'
     rate_limited: 'Trop de changements en peu de temps. Réessayez dans une heure.'

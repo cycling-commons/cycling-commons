@@ -66,6 +66,9 @@ final class BallotService
         if ($isRoute && null === $bike) {
             throw new BallotRefused(BallotRefused::BIKE_REQUIRED);
         }
+        if ($isRoute && $bike->isSpecialty() && !\in_array($bike, $this->candidates->bikesFor([$subject['id']])[$subject['id']] ?? [], true)) {
+            throw new BallotRefused(BallotRefused::BIKE_NOT_DECLARED);
+        }
         $this->consume($user);
 
         $now = $this->clock->now();

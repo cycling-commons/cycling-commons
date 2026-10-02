@@ -1923,6 +1923,7 @@ vote:
     not_votable: 'This kind of place is not on the ballot.'
     not_candidate: 'That is not on this ballot. Only places on the map can get a vote.'
     bike_required: 'Pick the bike you rode it on.'
+    bike_not_declared: 'This route is not marked as suitable for that bike, so a vote with it would not count.'
     ballot_full: 'You have used all your votes in this list. Remove one first.'
     already_voted: 'You already voted for this one.'
     rate_limited: 'Too many changes in a short time. Try again in an hour.'

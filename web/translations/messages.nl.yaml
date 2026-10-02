@@ -1925,6 +1925,7 @@ vote:
     not_votable: 'Dit soort plek staat niet op de stemlijst.'
     not_candidate: 'Dat staat niet op deze stemlijst. Alleen plekken op de kaart kunnen een stem krijgen.'
     bike_required: 'Kies de fiets waarop je hem reed.'
+    bike_not_declared: 'Deze route staat niet aangeduid als geschikt voor die fiets, dus een stem met die fiets telt niet.'
     ballot_full: 'Je hebt al je stemmen in deze lijst gebruikt. Haal er eerst een weg.'
     already_voted: 'Je stemde hier al op.'
     rate_limited: 'Te veel wijzigingen in korte tijd. Probeer het over een uur opnieuw.'

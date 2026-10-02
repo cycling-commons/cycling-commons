@@ -19,6 +19,7 @@ final class BallotRefused extends \RuntimeException
     public const string NOT_VOTABLE = 'not_votable';
     public const string NOT_CANDIDATE = 'not_candidate';
     public const string BIKE_REQUIRED = 'bike_required';
+    public const string BIKE_NOT_DECLARED = 'bike_not_declared';
     public const string BALLOT_FULL = 'ballot_full';
     public const string ALREADY_VOTED = 'already_voted';
     public const string RATE_LIMITED = 'rate_limited';

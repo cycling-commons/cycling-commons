@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Vote;
 
+use App\Catalog\BikeSuitability;
 use App\Catalog\BikeType;
 use App\Catalog\ItemType;
 use Doctrine\DBAL\ArrayParameterType;
@@ -266,7 +267,7 @@ final class SeasonResults
             $where .= ' AND sv.bike_type = :bike';
             $params['bike'] = $key->bike->value;
             if ($key->bike->isSpecialty()) {
-                $join = "JOIN recommended_route rr ON rr.id = sv.subject_id AND rr.attributes -> 'bikeTypes' @> to_jsonb(CAST(:biketext AS text))";
+                $join = 'JOIN recommended_route rr ON rr.id = sv.subject_id AND '.BikeSuitability::declares('rr', 'biketext');
                 $params['biketext'] = $key->bike->value;
             }
         }
