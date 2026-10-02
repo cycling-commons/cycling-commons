@@ -22,6 +22,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'item_confirmation')]
 #[ORM\UniqueConstraint(name: 'uniq_item_confirmation', columns: ['item_id', 'user_id'])]
 #[ORM\Index(name: 'idx_item_confirmation_tally', columns: ['item_id', 'stance'])]
+#[ORM\Index(name: 'idx_item_confirmation_user', columns: ['user_id', 'source'])]
 class ItemConfirmation
 {
     #[ORM\Id]

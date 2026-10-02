@@ -22,6 +22,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Table(name: 'route_suggestion')]
 #[ORM\Index(name: 'idx_route_suggestion_route', columns: ['route_id', 'status'])]
+#[ORM\Index(name: 'idx_route_suggestion_user', columns: ['user_id', 'status'])]
 class RouteSuggestion
 {
     #[ORM\Id]

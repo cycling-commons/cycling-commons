@@ -20,6 +20,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Table(name: 'route_ride')]
 #[ORM\UniqueConstraint(name: 'uniq_route_ride', columns: ['route_id', 'user_id'])]
+#[ORM\Index(name: 'idx_route_ride_user', columns: ['user_id'])]
 class RouteRide
 {
     #[ORM\Id]

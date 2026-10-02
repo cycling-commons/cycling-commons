@@ -119,7 +119,7 @@ after the closed rounds they count in are stored (route-domain.md §8d,
 | `route_id`, `user_id` | bigint (no FK) |
 | `bike_type` | `BikeType` string enum |
 | `created_at` | timestamp |
-| | **UNIQUE (`route_id`, `user_id`)** (`uniq_route_ride`) |
+| | **UNIQUE (`route_id`, `user_id`)** (`uniq_route_ride`); index (`user_id`) (`idx_route_ride_user`, the voter check of route-domain.md §8d) |
 
 **`route_suggestion`** — the moderated correction channel, for a reported
 problem, photos, or the metadata the route's own creator edited (§7.1):
@@ -133,7 +133,7 @@ problem, photos, or the metadata the route's own creator edited (§7.1):
 | `segments` | jsonb, nullable — located stretches (route-domain.md §7) |
 | `status` | `RouteSuggestionStatus` enum: `pending / done / dismissed` |
 | `created_at` / `resolved_at` / `resolved_by` | audit |
-| | index (`route_id`, `status`) |
+| | index (`route_id`, `status`); index (`user_id`, `status`) (`idx_route_suggestion_user`, the voter check of route-domain.md §8d) |
 
 **`route_change_history`** — append-only curator/community audit: `route_id`,
 `field` (attribute key or pseudo-field `state` / `name` / `decision_note`),

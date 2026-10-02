@@ -178,4 +178,20 @@ final class VoterEligibilityTest extends KernelTestCase
         // F2: a pending correction does not count either (only an applied, "done" one does).
         self::assertSame([VoterEligibility::ACTIVITY], $this->eligibility()->missing($pendingCorrection));
     }
+
+    /** The check runs on every ballot page and cast: each table it asks is indexed by rider first. */
+    public function testEachActivityTableIsIndexedByRider(): void
+    {
+        $leading = [];
+        foreach ($this->db->fetchAllAssociative(
+            "SELECT tablename, indexdef FROM pg_indexes WHERE tablename IN ('route_ride', 'item_confirmation', 'submission', 'route_suggestion')",
+        ) as $r) {
+            if (1 === preg_match('/\((\w+)/', (string) $r['indexdef'], $m) && 'user_id' === $m[1]) {
+                $leading[(string) $r['tablename']] = true;
+            }
+        }
+        ksort($leading);
+
+        self::assertSame(['item_confirmation', 'route_ride', 'route_suggestion', 'submission'], array_keys($leading));
+    }
 }
