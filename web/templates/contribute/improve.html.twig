@@ -81,7 +81,7 @@
      improve.js step 1: a climb (letter N) mounts the shared three-point
      editor instead of the single-pin Locate (Task 5). Only emitted here —
      the unbound branch above never reaches this template region. #}
-  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, similar: similar_edit|default(false), lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null), segment: current.segment|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
+  <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, similar: similar_edit|default(false), lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null), gain: current.gain|default(null), avg: current.avgGradient|default(null), segment: current.segment|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {% include 'contribute/_media_config.html.twig' with {max: 6} %}
   {# Every string improve.js renders itself (docs/plans/2026-08-01-improve-js-i18n.md).
      Serialised with all four JSON_HEX_* flags like the bags above — JSON_HEX_TAG

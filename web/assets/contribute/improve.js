@@ -390,7 +390,9 @@
       var initial = (window.CC_ITEM.route || window.CC_ITEM.grad || window.CC_ITEM.steep || window.CC_ITEM.steepPoint)
         ? { route: window.CC_ITEM.route, grad: window.CC_ITEM.grad, steep: window.CC_ITEM.steep,
             // Keep an existing rider-placed steepest or an edit would drop it.
-            steepPoint: window.CC_ITEM.steepPoint }
+            steepPoint: window.CC_ITEM.steepPoint,
+            // The stored measurement, shown under the map until a redraw re-measures it.
+            gain: window.CC_ITEM.gain, avg: window.CC_ITEM.avg }
         : undefined;
 
       var undoBtn = document.getElementById('wzUndo');

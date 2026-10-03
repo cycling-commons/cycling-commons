@@ -74,6 +74,8 @@
         state.lengthKm = routeLengthKm(state.route);
       }
       if (initial.grad) state.grad = initial.grad.slice();
+      if (initial.gain != null && initial.gain !== '') state.gain = initial.gain;
+      if (initial.avg) state.avg = String(initial.avg);
       if (initial.steep && initial.steep.at) {
         state.steep = {
           at: [initial.steep.at[1], initial.steep.at[0]],
