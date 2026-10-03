@@ -63,11 +63,12 @@ of drowning in data.
 - **You vote for next season.** The ballot open in autumn fills the winter list. Voting closes
   when winter starts, and the winter list is published that day and shown all winter. While a
   ballot is open no page shows any count, so nobody can read the standings and bet on them.
-- **A ranked top 5 per list.** Each rider picks five places in a list, at most one vote per place,
+- **A ranked top 5 per list.** Each rider picks up to five places in a list, at most one vote per place,
   and puts them in order: the number one gets 15 points, then 10, 7, 4 and 2.
   Picks and their order can change until the rider submits the ballot. A route vote also says
   which bike it was ridden on, so "best on a handbike" is a list of its own.
-- **Submit makes it count.** With all five picks in place the rider submits the ballot. Only a
+- **Submit makes it count.** The rider submits the ballot with one pick or more. A rider who
+  knows one place picks that one, and it gets the number one's 15 points. Only a
   submitted ballot counts, and it is final for that season. Picks never submitted count for
   nothing and are deleted when voting closes.
 - **Who votes.** A confirmed email address, an account at least 14 days old, and one thing done

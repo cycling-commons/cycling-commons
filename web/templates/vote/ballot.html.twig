@@ -159,14 +159,15 @@
           <p class="vleft">
             {{ (left <= 0 ? 'vote.left_none' : (left == 1 ? 'vote.left_one' : 'vote.left_many'))|trans({'%count%': left, '%m%': per_list}) }}
           </p>
-          {# Only a submitted ballot counts, and every vote must be filled first. #}
+          {# Only a submitted ballot counts. One vote is enough: each keeps the
+             points of its rank (owner 2026-10-04). #}
           {% if can_vote and ballot is not empty %}
             <form method="post" action="{{ path('vote') }}" class="vsubmit">
               <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
               <input type="hidden" name="region" value="{{ region.slug }}">
               <input type="hidden" name="cat" value="{{ category.value }}">
-              <p class="vsubmit-note">{{ (left > 0 ? 'vote.submit_needs' : 'vote.submit_note')|trans({'%m%': per_list}) }}</p>
-              <button class="add vsubmit-btn" name="do" value="submit"{{ left > 0 ? ' disabled' }}>{{ 'vote.submit'|trans }}</button>
+              <p class="vsubmit-note">{{ (left > 0 ? 'vote.submit_short' : 'vote.submit_note')|trans({'%m%': per_list}) }}</p>
+              <button class="add vsubmit-btn" name="do" value="submit">{{ 'vote.submit'|trans }}</button>
             </form>
           {% endif %}
         {% endif %}

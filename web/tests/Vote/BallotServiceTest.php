@@ -352,7 +352,7 @@ final class BallotServiceTest extends KernelTestCase
         self::assertSame(BallotRefused::RATE_LIMITED, self::refusal(fn () => $s->cast($u, ItemType::Climbs, $climb, null)));
     }
 
-    /** route-domain.md §8c: Submit needs every vote, stamps them all, and the ballot is then final. */
+    /** route-domain.md §8c: Submit stamps every vote cast, and the ballot is then final. */
     public function testASubmittedBallotIsFinal(): void
     {
         $rid = $this->region('xa-north', 'XA', 50.0);
@@ -368,7 +368,6 @@ final class BallotServiceTest extends KernelTestCase
             $s->cast($u, ItemType::Climbs, $id, null);
         }
 
-        self::assertSame(BallotRefused::BALLOT_INCOMPLETE, self::refusal(fn () => $s->submit($u, ItemType::Climbs, $rid)));
         $s->cast($u, ItemType::Climbs, $ids[BallotRules::VOTES_PER_LIST - 1], null);
         $round = $s->submit($u, ItemType::Climbs, $rid);
 
@@ -396,6 +395,25 @@ final class BallotServiceTest extends KernelTestCase
 
         self::assertNull($this->row((int) $u->getId(), $view)['submitted_at']);
         self::assertTrue($s->remove($u, ItemType::ScenicViews, $view));
+    }
+
+    /**
+     * A rider who knows one place votes for that one (owner 2026-10-04): a
+     * ballot of one is submitted, and its vote keeps the first place's points.
+     */
+    public function testABallotOfOneVoteIsSubmitted(): void
+    {
+        $rid = $this->region('xa-north', 'XA', 50.0);
+        $u = $this->voter();
+        $s = $this->service();
+        $s->cast($u, ItemType::WhereToSleep, $stay = $this->item('O', $rid), null);
+
+        $s->submit($u, ItemType::WhereToSleep, $rid);
+
+        $row = $this->row((int) $u->getId(), $stay);
+        self::assertNotNull($row['submitted_at']);
+        self::assertSame(1, (int) $row['slot']);
+        self::assertSame(15, BallotRules::POINTS_BY_SLOT[(int) $row['slot']]);
     }
 
     public function testNothingToSubmitIsIncomplete(): void

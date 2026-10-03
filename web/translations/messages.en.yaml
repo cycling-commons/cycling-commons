@@ -1889,7 +1889,7 @@ vote:
   ballot_heading: 'Your ballot'
   add: '▲ add'
   on_ballot: '✓ on ballot'
-  empty_ballot: 'Pick %m% from the list. Your first pick gets the most points. You can change your picks and their order until you submit.'
+  empty_ballot: 'Pick up to %m% from the list. Your first pick gets the most points. You can change your picks and their order until you submit.'
   round: '◷ Voting for %round% · open until %date%'
   round_label: '%season% %year%'
   hemi_north: 'North of the equator'
@@ -1925,7 +1925,7 @@ vote:
   removed: 'Your vote is removed.'
   submit: 'Submit my ballot'
   submit_note: 'Once submitted, your ballot counts and is final for this season.'
-  submit_needs: 'Pick all %m% to submit. Only a submitted ballot counts.'
+  submit_short: 'You can submit fewer than %m%. Each pick keeps the points of its place. Once submitted, your ballot counts and is final for this season.'
   submitted: 'Submitted on %date%. Your ballot counts and is final.'
   tab_submitted: 'submitted'
   submitted_flash: 'Your ballot is submitted.'
@@ -1947,7 +1947,7 @@ vote:
     already_voted: 'You already voted for this one.'
     rate_limited: 'Too many changes in a short time. Try again in an hour.'
     ballot_submitted: 'Your ballot for this list is already submitted and cannot change.'
-    ballot_incomplete: 'Pick all your votes before you submit.'
+    ballot_incomplete: 'Pick at least one place before you submit.'
 api:
   live_count: '%live% of %total% endpoints answer today'
 

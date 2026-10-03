@@ -1018,7 +1018,7 @@ belongs to the vote (§8b); every rule below then applies to that narrowed list.
 | Rule | Value | Why |
 |---|---|---|
 | Ballot | a ranked **top 5** per rider per region, season and category, at most 1 vote per item: the first choice is worth **15 points**, then **10**, **7**, **4** and **2** | One keen rider cannot carry an item; a favourite counts for more than a third pick |
-| Submit | a ballot is a **draft** until the rider submits it, with **all 5 votes** filled; only a submitted ballot counts, and it is **final** for that list and season. A draft left when voting closes counts for nothing and is deleted | A vote is a decision, not a click left behind; "make it definitive" (owner 2026-10-02) |
+| Submit | a ballot is a **draft** until the rider submits it, with **1 to 5 votes**; each vote keeps the points of its rank, so a ballot of one gives that place 15; only a submitted ballot counts, and it is **final** for that list and season. A draft left when voting closes counts for nothing and is deleted | A vote is a decision, not a click left behind; "make it definitive" (owner 2026-10-02). A rider who knows one place to sleep is not forced to pick four more (owner 2026-10-04) |
 | When | votes are cast in the **season before**; the ballot closes when the season starts, and the list is published that day and shown all season | No standing is visible while riders vote, so nobody can bet on one |
 | Public numbers | a **published** (closed) ranked list shows each row's **points** (owner 2026-10-03); never a vote or voter count, and nothing at all for a ballot still open | Points of a closed season settle nothing more, and say how close the list was; counts of people identify voters |
 | Who may vote | confirmed email, account at least **14 days** old, at least one thing done on the site (a ride or "been there" confirmation, or a contribution) | With few voters one fake account would decide a list |
@@ -1175,8 +1175,9 @@ ballot's votes are its result and cannot be changed.
 
 **Submitting** (`BallotService::submit()`, `season_vote.submitted_at`,
 `Version20261002150000`). The ballot is a draft until the rider submits it.
-Submit needs `VOTES_PER_LIST` votes in the list's open ballot (else
-`ballot_incomplete`) and stamps `submitted_at` on all of them in one
+Submit needs at least one vote in the list's open ballot (else
+`ballot_incomplete`; owner 2026-10-04: "If you only know about one stay you
+should not be forced to pick for others") and stamps `submitted_at` on all of them in one
 transaction. From then on a cast, move, remove or second submit of that list
 is refused with `ballot_submitted`. Each list is submitted on its own: the
 climbs ballot can be final while the views ballot is still a draft. Every
@@ -1278,9 +1279,10 @@ its rank, the points it is worth, an up and a down arrow (one form per row,
 `do=up` / `do=down`; the first row's up and the last row's down are hidden)
 and a remove form (the vote just cast fades in there; no "your vote is in"
 line, which read as if voting were done, owner 2026-10-03), how many votes
-are left, and **Submit my ballot**, greyed
-until every vote is filled, with "Once submitted, your ballot counts and is
-final for this season." A submitted ballot shows "Submitted on <date>. Your
+are left, and **Submit my ballot**, active from the first vote, with "You can submit fewer
+than 5. Each pick keeps the points of its place." while votes are left and
+"Once submitted, your ballot counts and is final for this season." once all
+are used. A submitted ballot shows "Submitted on <date>. Your
 ballot counts and is final." and no buttons at all, and a green ✓ sits on its
 heading and on its category tab, read out as "submitted"
 (`BallotService::submittedCategories()`, owner 2026-10-03). It shows

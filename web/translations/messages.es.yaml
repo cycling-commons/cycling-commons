@@ -1898,7 +1898,7 @@ vote:
   ballot_heading: 'Tu papeleta'
   add: '▲ añadir'
   on_ballot: '✓ en la papeleta'
-  empty_ballot: 'Elige %m% de la lista. Tu primera elección recibe más puntos. Puedes cambiar tu elección y su orden hasta que la envíes.'
+  empty_ballot: 'Elige hasta %m% de la lista. Tu primera elección recibe más puntos. Puedes cambiar tu elección y su orden hasta que la envíes.'
   round: '◷ Votación para %round% · abierta hasta el %date%'
   round_label: '%season% %year%'
   hemi_north: 'Al norte del ecuador'
@@ -1934,7 +1934,7 @@ vote:
   removed: 'Tu voto está retirado.'
   submit: 'Enviar mi papeleta'
   submit_note: 'Una vez enviada, tu papeleta cuenta y es definitiva para esta temporada.'
-  submit_needs: 'Elige los %m% para enviar. Solo cuenta una papeleta enviada.'
+  submit_short: 'Puedes enviar menos de %m%. Cada elección conserva los puntos de su puesto. Una vez enviada, tu papeleta cuenta y es definitiva para esta temporada.'
   submitted: 'Enviada el %date%. Tu papeleta cuenta y es definitiva.'
   tab_submitted: 'enviada'
   submitted_flash: 'Tu papeleta está enviada.'
@@ -1956,7 +1956,7 @@ vote:
     already_voted: 'Ya votaste por este.'
     rate_limited: 'Demasiados cambios en poco tiempo. Vuelve a intentarlo dentro de una hora.'
     ballot_submitted: 'Tu papeleta para esta lista ya está enviada y no puede cambiar.'
-    ballot_incomplete: 'Elige todos tus votos antes de enviar.'
+    ballot_incomplete: 'Elige al menos un lugar antes de enviar.'
 api:
   live_count: '%live% de %total% puntos finales responden hoy'
 

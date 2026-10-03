@@ -122,7 +122,7 @@ final class BallotPageTest extends WebTestCase
         self::assertSelectorExists('.vhead form.vregion select#v-region');
         self::assertCount(1, $crawler->filter('nav.vtabs ~ .vclosed'));
         self::assertSelectorTextContains('.vgrid #cands .cand', 'Mur de Ballot');
-        self::assertSelectorTextContains('.vgrid .ballot .bempty', 'Pick 5 from the list.');
+        self::assertSelectorTextContains('.vgrid .ballot .bempty', 'Pick up to 5 from the list.');
         self::assertCount(0, $crawler->filter('button[name="do"]'));
     }
 
@@ -404,8 +404,8 @@ final class BallotPageTest extends WebTestCase
         $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
         $this->client->submit($crawler->filter('#c-'.$ids[0].' button[value="cast"]')->form());
         $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
-        self::assertNotNull($crawler->filter('.vsubmit button[value="submit"]')->attr('disabled'), 'Submit waits for all 5 votes');
-        self::assertSelectorTextContains('.vsubmit-note', 'Pick all 5 to submit.');
+        self::assertNull($crawler->filter('.vsubmit button[value="submit"]')->attr('disabled'), 'one vote can be submitted');
+        self::assertSelectorTextContains('.vsubmit-note', 'You can submit fewer than 5.');
 
         foreach (\array_slice($ids, 1) as $id) {
             $crawler = $this->client->request('GET', '/vote?region=xa-ballot');

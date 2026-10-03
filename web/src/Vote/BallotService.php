@@ -243,8 +243,10 @@ final class BallotService
     }
 
     /**
-     * Makes the rider's ballot for this list final: every vote filled, all
-     * stamped at once, and from then on it counts and cannot change.
+     * Makes the rider's ballot for this list final: one vote or more, all
+     * stamped at once, and from then on it counts and cannot change. A rider
+     * who knows one place votes for that one; each vote keeps the points of
+     * its rank (owner 2026-10-04).
      *
      * @throws BallotRefused
      */
@@ -267,7 +269,6 @@ final class BallotService
                 ['u' => $userId, 'rid' => $regionId, 'cat' => $type->value],
             );
             $round = null;
-            $count = 0;
             foreach ($rows as $r) {
                 $candidate = Round::fromStored($r['season'], $r['round_start']);
                 if (!$candidate->isVotingOpenAt($now)) {
@@ -277,9 +278,8 @@ final class BallotService
                     throw new BallotRefused(BallotRefused::BALLOT_SUBMITTED);
                 }
                 $round = $candidate;
-                ++$count;
             }
-            if (null === $round || $count < BallotRules::VOTES_PER_LIST) {
+            if (null === $round) {
                 throw new BallotRefused(BallotRefused::BALLOT_INCOMPLETE);
             }
             $db->executeStatement(
