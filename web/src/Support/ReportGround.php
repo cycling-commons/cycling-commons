@@ -43,6 +43,33 @@ enum ReportGround: string
      * uploaded.
      */
     case Copyright = 'copyright';
+    /**
+     * "Something else" (owner 2026-10-03). Not a rule: the reporter's own
+     * words say what is wrong, and a curator who upholds it names the rule it
+     * breaks first ({@see self::isRule()}), because the statement of reasons
+     * (DSA Article 17) has to name a ground the author can read.
+     */
+    case Other = 'other';
+
+    /**
+     * Is this a rule in our terms? Every ground is but "Something else", which
+     * a curator turns into one before upholding the report.
+     */
+    public function isRule(): bool
+    {
+        return self::Other !== $this;
+    }
+
+    /**
+     * The rules a curator may name when upholding a "Something else" report
+     * about this kind of target.
+     *
+     * @return list<self>
+     */
+    public static function rulesFor(ReportTarget $target): array
+    {
+        return array_values(array_filter(self::forTarget($target), static fn (self $g): bool => $g->isRule()));
+    }
 
     /** The catalogue key. Mirrors the `terms.mod_std*` line it comes from. */
     public function label(): string

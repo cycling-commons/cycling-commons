@@ -309,17 +309,24 @@ final class ContentReportService
      *
      * @throws ReportDecisionRefused when {@see refusal()} names a reason, before anything is saved or sent
      */
-    public function decide(ContentReport $report, ReportStatus $status, string $note, User $curator): void
+    public function decide(ContentReport $report, ReportStatus $status, string $note, User $curator, ?ReportGround $rule = null): void
     {
         $refusal = $this->refusal($report, $status);
         if (null !== $refusal) {
             throw new ReportDecisionRefused($refusal);
         }
+        // An upheld "Something else" report names the rule it breaks, so the
+        // statement of reasons can (DSA Article 17); no other report takes one.
+        $rule = !$report->getGround()->isRule() && $status->owesStatementOfReasons() ? $rule : null;
+        if (!$report->getGround()->isRule() && $status->owesStatementOfReasons()
+            && (null === $rule || !\in_array($rule, ReportGround::rulesFor($report->getTargetType()), true))) {
+            throw new ReportDecisionRefused('report.desk.flash_needs_rule');
+        }
 
         $this->carryDecisionToPhoto($report, $status, trim($note), $curator);
 
         $now = $this->clock->now();
-        $report->decide($status, trim($note), (int) $curator->getId(), $now);
+        $report->decide($status, trim($note), (int) $curator->getId(), $now, $rule);
         $this->em->flush();
 
         $contact = $report->getReporterContact();

@@ -5327,6 +5327,10 @@ report:
     sent_body: 'Je antwoord staat bij de claim, zodat wie er daarna naar kijkt beide leest. We laten je weten wat er is besloten. Er gaat niets vanzelf terug online: een mens beslist.'
     back: 'Terug naar je berichten'
   desk:
+    field_rule: 'De regel die geschonden wordt'
+    rule_none: 'Kies een regel om de melding toe te wijzen'
+    rule_help: 'Deze melding zegt "Iets anders", dus noemt ze geen regel. Kies om haar toe te wijzen de regel uit onze voorwaarden die geschonden wordt. De auteur krijgt die regel te horen.'
+    flash_needs_rule: 'Kies de geschonden regel voordat je een melding "Iets anders" toewijst.'
     title: 'Meldingen'
     lede: 'Wat fietsers hebben gemeld over routes, plekken, regio- en stadsteksten, profielen, berichten en foto''s. Juridische claims en misbruik staan bovenaan. Vraagt iemand om een eigen foto te verwijderen, dan staat dat verzoek op het <a href="%takedowns%">verwijderingsbureau</a>.'
     empty: 'Niets in de wacht. Elke melding heeft een antwoord.'
@@ -5399,6 +5403,7 @@ report:
     intimate_or_child: 'Het is intiem beeld, of er staat een kind op'
     private_property: 'Het toont privéterrein dat niet openbaar hoort te zijn'
     copyright: 'Het is mijn werk en ik heb hier geen toestemming voor gegeven'
+    other: 'Iets anders'
   status:
     open: 'Open'
     in_progress: 'Wordt bekeken'

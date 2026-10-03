@@ -5349,6 +5349,10 @@ report:
     sent_body: 'Your answer sits with the claim, so whoever looks next reads both. We will tell you what was decided. Nothing goes back up on a timer: a person decides.'
     back: 'Back to your messages'
   desk:
+    field_rule: 'The rule it breaks'
+    rule_none: 'Pick a rule to uphold it'
+    rule_help: 'This report says "Something else", so it names no rule. To uphold it, pick the rule in our terms that it breaks. The author is told that rule.'
+    flash_needs_rule: 'Pick the rule it breaks before you uphold a "Something else" report.'
     title: 'Reports'
     lede: 'What riders have reported about routes, places, region and town texts, profiles, messages and photos. Legal claims and abuse sort to the top. When uploaders ask us to remove their own photo, that request is on the <a href="%takedowns%">takedowns desk</a>.'
     empty: 'Nothing waiting. Every report has an answer.'
@@ -5421,6 +5425,7 @@ report:
     intimate_or_child: 'It is intimate imagery, or it shows a child'
     private_property: 'It shows private property that should not be public'
     copyright: 'It is my work and I did not agree to this'
+    other: 'Something else'
   status:
     open: 'Open'
     in_progress: 'Being looked at'

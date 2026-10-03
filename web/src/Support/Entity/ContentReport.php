@@ -58,6 +58,13 @@ class ContentReport
     #[ORM\Column(length: 32, enumType: ReportGround::class)]
     private ReportGround $ground;
 
+    /**
+     * The rule a curator found broken when upholding a "Something else"
+     * report; the statement of reasons names it. Null for every other ground.
+     */
+    #[ORM\Column(name: 'rule_ground', length: 32, nullable: true, enumType: ReportGround::class)]
+    private ?ReportGround $ruleGround = null;
+
     #[ORM\Column(type: Types::TEXT)]
     private string $reason;
 
@@ -168,6 +175,16 @@ class ContentReport
         $this->targetLabel = $label;
     }
 
+    /**
+     * The rule the decision rests on: the curator's pick for a "Something
+     * else" report, else the reporter's own ground. What the statement of
+     * reasons names.
+     */
+    public function getRuleGround(): ReportGround
+    {
+        return $this->ruleGround ?? $this->ground;
+    }
+
     public function getGround(): ReportGround
     {
         return $this->ground;
@@ -261,8 +278,9 @@ class ContentReport
         $this->status = $status;
     }
 
-    public function decide(ReportStatus $status, string $note, int $curatorId, \DateTimeImmutable $at): void
+    public function decide(ReportStatus $status, string $note, int $curatorId, \DateTimeImmutable $at, ?ReportGround $rule = null): void
     {
+        $this->ruleGround = $rule;
         $this->status = $status;
         $this->decisionNote = $note;
         $this->decidedById = $curatorId;

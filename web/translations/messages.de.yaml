@@ -5328,6 +5328,10 @@ report:
     sent_body: 'Deine Antwort liegt bei dem Anspruch, sodass die nächste Person beides liest. Wir sagen dir, was entschieden wurde. Nichts geht nach einer Frist von selbst wieder online: ein Mensch entscheidet.'
     back: 'Zurück zu deinen Nachrichten'
   desk:
+    field_rule: 'Die verletzte Regel'
+    rule_none: 'Regel wählen, um stattzugeben'
+    rule_help: 'Diese Meldung sagt „Etwas anderes" und nennt keine Regel. Um ihr stattzugeben, wähle die Regel aus unseren Bedingungen, die verletzt ist. Die Person, die es erstellt hat, erfährt diese Regel.'
+    flash_needs_rule: 'Wähle die verletzte Regel, bevor du einer Meldung „Etwas anderes" stattgibst.'
     title: 'Meldungen'
     lede: 'Was Radfahrende zu Routen, Orten, Regions- und Ortstexten, Profilen, Nachrichten und Fotos gemeldet haben. Rechtliche Ansprüche und Missbrauch stehen oben. Bittet jemand, ein eigenes Foto zu entfernen, liegt dieser Antrag auf dem <a href="%takedowns%">Entfernungs-Desk</a>.'
     empty: 'Nichts offen. Jede Meldung hat eine Antwort.'
@@ -5400,6 +5404,7 @@ report:
     intimate_or_child: 'Es ist ein intimes Bild oder zeigt ein Kind'
     private_property: 'Es zeigt Privatgelände, das nicht öffentlich sein sollte'
     copyright: 'Es ist mein Werk und ich habe dem nicht zugestimmt'
+    other: 'Etwas anderes'
   status:
     open: 'Offen'
     in_progress: 'Wird bearbeitet'

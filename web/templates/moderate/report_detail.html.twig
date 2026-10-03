@@ -59,6 +59,10 @@
       {% endif %}
       <dt>{{ 'report.desk.field_ground'|trans }}</dt>
       <dd>{{ report.ground.label|trans }}{% if report.ground.isLegal %} · {{ 'report.desk.legal_claim'|trans }}{% endif %}</dd>
+      {% if not report.ground.isRule and report.ruleGround.isRule %}
+        <dt>{{ 'report.desk.field_rule'|trans }}</dt>
+        <dd>{{ report.ruleGround.label|trans }}</dd>
+      {% endif %}
       <dt>{{ 'support.inbox.status_label'|trans }}</dt>
       <dd>{{ report.status.label|trans }}</dd>
       {% if held %}
@@ -142,6 +146,20 @@
       {% for msg in status_errors %}
         <p class="ferr" id="d-status-error" role="alert">{{ msg|trans }}</p>
       {% endfor %}
+
+      {# A "Something else" report names no rule. To uphold it the curator
+         names the rule it breaks, and the author is told that rule (DSA
+         Article 17; content-reports.md §4). #}
+      {% if not report.ground.isRule %}
+        <label for="d-rule">{{ 'report.desk.field_rule'|trans }}</label>
+        <select id="d-rule" name="rule" aria-describedby="d-rule-help">
+          <option value="">{{ 'report.desk.rule_none'|trans }}</option>
+          {% for g in rules %}
+            <option value="{{ g.value }}"{{ report.ruleGround == g ? ' selected' }}>{{ g.label|trans }}</option>
+          {% endfor %}
+        </select>
+        <p class="warn" id="d-rule-help">{{ 'report.desk.rule_help'|trans }}</p>
+      {% endif %}
 
       <label for="d-note">{{ 'report.desk.field_note'|trans }} <span class="req" aria-hidden="true">*</span></label>
       <textarea id="d-note" name="note" maxlength="2000" rows="10"

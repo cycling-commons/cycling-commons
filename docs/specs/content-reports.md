@@ -98,7 +98,7 @@ wrote. `ReportResolver` returns `null` and the desk says "nobody in particular".
 
 ## 4. The grounds
 
-`App\Support\ReportGround` holds nine grounds. The first six mirror the
+`App\Support\ReportGround` holds ten grounds: nine rules and "Something else". The first six mirror the
 standards `/terms` §12 publishes, in the same words, because a reporter should
 be choosing from the rules we actually apply:
 
@@ -122,6 +122,20 @@ general list.
 | `intimate_or_child` | intimate imagery, or a child |
 | `private_property` | private property, such as somebody's house or garden |
 | `copyright` | somebody else's work, published without their permission |
+
+**"Something else" is a choice, not a rule (2026-10-03).** `other` sits last
+on every form (owner: "perhaps we need an option 'Something else'"). The
+reporter's written reason, required for every ground, says what is wrong. It
+is not a rule in our terms (`ReportGround::isRule()`), and the statement of
+reasons (Article 17) has to name one, so a curator who upholds such a report
+first picks the rule it breaks: the desk shows "The rule it breaks", offering
+`ReportGround::rulesFor()` (the target's grounds without `other`), and
+`ContentReportService::decide()` refuses Upheld without one
+(`report.desk.flash_needs_rule`). The pick is stored in
+`content_report.rule_ground` (`Version20261003100000`) and shown on the desk;
+`ContentReport::getRuleGround()` (the pick, else the reporter's own ground) is
+what the statement of reasons names. The reporter's choice stays on the row as
+filed.
 
 **One gate decides what a form offers:** `ReportGround::forTarget()`. A photo
 gets all nine; anything else gets the six that are not image only.

@@ -818,4 +818,53 @@ final class ContentReportTest extends WebTestCase
         $report->decide(ReportStatus::Upheld, 'On reflection, it is wrong.', 1, new \DateTimeImmutable());
         self::assertTrue($report->getStatus()->owesStatementOfReasons());
     }
+
+    /**
+     * "Something else" (owner 2026-10-03): offered on the form, and an upheld
+     * one names the rule it breaks, so the statement of reasons can
+     * (DSA Article 17, content-reports.md §4).
+     */
+    public function testSomethingElseIsOfferedAndUpholdingItNamesARule(): void
+    {
+        $client = $this->client();
+        $page = $client->request('GET', '/report/route/1');
+        self::assertCount(1, $page->filter('#report-form option[value="other"], #report-form input[value="other"]'), 'offered on the form');
+        $this->file($client, ground: 'other');
+        $report = $this->reports()[0];
+        self::assertSame(ReportGround::Other, $report->getGround());
+
+        $client->loginUser($this->curator());
+        $detail = $client->request('GET', '/moderate/reports/'.$report->getId());
+        self::assertCount(1, $detail->filter('select#d-rule'));
+        self::assertCount(0, $detail->filter('select#d-rule option[value="other"]'), 'Something else is not a rule');
+        self::assertCount(0, $detail->filter('select#d-rule option[value="generated"]'), 'a photo rule is not offered for a route');
+
+        $decide = function (array $extra) use ($client, $report): void {
+            $client->request('POST', '/moderate/reports/'.$report->getId().'/decide', [
+                '_token' => $this->deskToken($client, $report),
+                'status' => 'upheld',
+                'note' => 'The description invents a cafe that never existed.',
+            ] + $extra);
+        };
+
+        $decide([]);
+        self::assertSame(ReportStatus::Open, $this->reports()[0]->getStatus(), 'no rule, no uphold');
+        $decide(['rule' => 'generated']);
+        self::assertSame(ReportStatus::Open, $this->reports()[0]->getStatus(), 'a rule that cannot apply to a route is refused');
+
+        $decide(['rule' => 'untrue']);
+        $decided = $this->reports()[0];
+        self::assertSame(ReportStatus::Upheld, $decided->getStatus());
+        self::assertSame(ReportGround::Untrue, $decided->getRuleGround());
+        self::assertSame(ReportGround::Other, $decided->getGround(), 'the reporter\'s own choice is kept');
+    }
+
+    public function testOnlySomethingElseIsNotARule(): void
+    {
+        foreach (ReportGround::cases() as $g) {
+            self::assertSame(ReportGround::Other !== $g, $g->isRule(), $g->value);
+        }
+        self::assertNotContains(ReportGround::Other, ReportGround::rulesFor(ReportTarget::Photo));
+        self::assertContains(ReportGround::Other, ReportGround::forTarget(ReportTarget::Route));
+    }
 }

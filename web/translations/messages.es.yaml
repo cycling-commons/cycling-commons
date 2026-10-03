@@ -5360,6 +5360,10 @@ report:
     sent_body: 'Tu respuesta queda junto a la reclamación, así que quien la mire lee las dos. Te diremos qué se decidió. Nada vuelve solo por un plazo: decide una persona.'
     back: 'Volver a tus mensajes'
   desk:
+    field_rule: 'La norma que incumple'
+    rule_none: 'Elige una norma para estimarla'
+    rule_help: 'Este aviso dice «Otra cosa», así que no nombra ninguna norma. Para estimarlo, elige la norma de nuestras condiciones que incumple. Al autor se le comunica esa norma.'
+    flash_needs_rule: 'Elige la norma que incumple antes de estimar un aviso «Otra cosa».'
     title: 'Denuncias'
     lede: 'Lo que han denunciado las personas que pedalean sobre rutas, lugares, textos de región y de ciudad, perfiles, mensajes y fotos. Las reclamaciones legales y los abusos van arriba. Cuando alguien pide retirar una foto propia, la solicitud está en la <a href="%takedowns%">mesa de retiradas</a>.'
     empty: 'Nada pendiente. Cada denuncia tiene respuesta.'
@@ -5432,6 +5436,7 @@ report:
     intimate_or_child: 'Es una imagen íntima, o aparece un menor'
     private_property: 'Muestra propiedad privada que no debería ser pública'
     copyright: 'Es mi obra y no he dado mi permiso'
+    other: 'Otra cosa'
   status:
     open: 'Abierta'
     in_progress: 'En revisión'

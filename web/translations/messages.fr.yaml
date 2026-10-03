@@ -5320,6 +5320,10 @@ report:
     sent_body: 'Votre réponse est jointe à la réclamation, si bien que la personne suivante lit les deux. Nous vous dirons ce qui a été décidé. Rien ne remonte automatiquement : une personne décide.'
     back: 'Retour à vos messages'
   desk:
+    field_rule: 'La règle enfreinte'
+    rule_none: 'Choisissez une règle pour donner suite'
+    rule_help: 'Ce signalement dit « Autre chose » : il ne nomme aucune règle. Pour y donner suite, choisissez la règle de nos conditions qui est enfreinte. L''auteur est informé de cette règle.'
+    flash_needs_rule: 'Choisissez la règle enfreinte avant de donner suite à un signalement « Autre chose ».'
     title: 'Signalements'
     lede: 'Ce que les cyclistes ont signalé sur les itinéraires, lieux, textes de région et de ville, profils, messages et photos. Les réclamations légales et les abus passent en tête. Quand l''auteur d''une photo demande à retirer sa propre photo, la demande est sur le <a href="%takedowns%">bureau des retraits</a>.'
     empty: 'Rien en attente. Chaque signalement a une réponse.'
@@ -5392,6 +5396,7 @@ report:
     intimate_or_child: 'C''est une image intime, ou elle montre un enfant'
     private_property: 'Cela montre une propriété privée qui ne devrait pas être publique'
     copyright: 'C''est mon œuvre et je n''ai pas donné mon accord'
+    other: 'Autre chose'
   status:
     open: 'Ouvert'
     in_progress: 'En cours dexamen'

@@ -14,6 +14,7 @@ use App\Routing\LocalePrefix;
 use App\Support\ContentReportService;
 use App\Support\Entity\ContentReport;
 use App\Support\ReportDecisionRefused;
+use App\Support\ReportGround;
 use App\Support\ReportResolver;
 use App\Support\ReportStatus;
 use App\Support\ReportTarget;
@@ -150,6 +151,8 @@ final class ModerateReportsController extends AbstractController
             'nav_active' => '',
             'active' => 'moderate_reports',
             'report' => $report,
+            // The rules a curator may name to uphold a "Something else" report.
+            'rules' => ReportGround::rulesFor($report->getTargetType()),
             'resolved' => $resolved,
             'siblings' => $siblings,
             'statuses' => $statuses,
@@ -228,7 +231,7 @@ final class ModerateReportsController extends AbstractController
 
         // Persists and mails the reporter, if they left an address.
         try {
-            $this->reports->decide($report, $status, $note, $curator);
+            $this->reports->decide($report, $status, $note, $curator, ReportGround::tryFrom((string) $request->request->get('rule', '')));
         } catch (ReportDecisionRefused $e) {
             $this->addFlash(self::STATUS_FLASH, $e->getMessage());
 
