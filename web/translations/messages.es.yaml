@@ -2054,6 +2054,7 @@ improve:
     rider_mark: '+ Punto más duro'
     rider_cancel: 'Cancelar'
     rider_tap: '◎ Pulsa la carretera donde es más empinada'
+    rider_finding: '◎ Buscando el tramo más empinado. Arrastra el punto si no es correcto.'
     rider_pct: 'Pendiente (opcional)'
     rider_pct_ph: 'p. ej. 20%'
     rider_pct_invalid: 'Una pendiente como 20% o 18,5%'
@@ -2128,6 +2129,8 @@ improve:
     confirm_now_help: 'Déjalo sin marcar si no lo has visto hace poco. Los ciclistas lo confirman en el mapa.'
     measured_avg: 'media %pct% %'
     measured_max: 'máx %pct% %'
+    rider_point: '⬗ punto más empinado'
+    rider_point_pct: '⬗ punto más empinado %pct% %'
   locate:
     change: 'Cambiar la ubicación'
     confirm:

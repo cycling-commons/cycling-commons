@@ -1100,7 +1100,27 @@ honest definitions beat one field with a negotiable one.
   foot and summit are set: **+ Steepest point** arms a mode, the next tap places
   the marker, **Cancel** or Escape leaves the mode without one. A placed point
   shows two optional fields, gradient (`20` becomes `20%`; anything the server
-  would refuse is not stored) and note, plus **Remove**. The measured marker
+  would refuse is not stored) and note, plus **Remove**.
+- **The gradient fills itself (2026-10-02).** Placing or dragging the point
+  asks `POST /contribute/elevation` with `pointAt` for the gradient over **90 m**
+  of road centred on it (`ClimbProfiler::pointGradient()`,
+  `POINT_WINDOW_M`): 7 heights 15 m apart and the slope fitted through them,
+  because one height is too noisy (owner 2026-10-02: "the 60 or 90 m avg over
+  that point as 1 point is too noisy"). The figure lands in the gradient field
+  and on the marker; a figure the rider types is theirs and is never
+  overwritten, and a point placed again is measured again.
+- **The point is found for the rider (2026-10-02).** "+ Steepest point" asks
+  the same endpoint with `findPoint: true` (`ClimbProfiler::steepestPoint()`,
+  owner 2026-10-02: "can't the system find the steepest point by itself and
+  user then can correct it"). The whole line is read at the profile's
+  spacing and a 90 m window slides along it in 15 m steps, skipping tunnels
+  and galleries; then 300 m around the steepest stretch is read again every
+  15 m and the window of fitted slopes places the point. The point lands
+  there with its gradient, and the rider drags it if it is wrong (a drag
+  measures it again). While the server looks, the map says "Finding the
+  steepest spot. Drag the point if it is wrong."; a tap on the road in that
+  moment places the point by hand and wins. With no heights the tap is the
+  only way, as before. The measured marker
   reads "steepest 250 m" beside it, so the two numbers say what they measure.
 
 **Still open:** whether a climb may carry more than one, and whether the rider's
@@ -1313,6 +1333,7 @@ unlabelled bars with no axis and no silhouette.
 
 ---
 
+
 ### 6c. The full profile keeps one slope scale (2026-10-02)
 
 The full profile (`assets/map/climb-profile.js`) used to stretch every climb to
@@ -1325,6 +1346,28 @@ exaggeration and a gentler climb draws a lower silhouette: Furka (about 650 m
 over 11 km) fills about half the chart. A climb steeper than 12 % on average
 fills the chart, as before. On a phone the profile opens above the bottom sheet
 (`.cc-cp` z-index 1600, like the lightbox).
+
+### 6d. The full profile shows both steepest markers (2026-10-02)
+
+The full profile draws the two markers of [§5a](#5a-two-markers-one-measured-one-remembered)
+at their distance along the climb, in their map colours (owner 2026-10-02):
+
+- **Steepest 250 m** (`steep`, purple): the road is drawn heavy over the
+  window, with a bracket above it and the label "▲ 11% over 250 m". The window
+  is `steepWindowM` wide, centred on `steep.at`, and moved inside the climb when
+  it would hang over the foot or the summit (`windowSpan()`).
+- **Steepest point** (`steepPoint`, amber): a dashed line from the road to a
+  label in the top row, "⬗ 18%", or "⬗ ramp" without a figure. Its tooltip
+  carries the rider's note. The top row sits above the purple label, so the two
+  labels never meet.
+
+Both positions come from the stored coordinate, projected onto `route`
+(`metresAlong()` in `assets/map/profile-marks.js`). They are metres from the
+foot, not a share of the line: the chart's last bar is a full bin, so the
+chart is a little longer than the road (Furka: 22 bars of 500 m against
+10 597 m of road), and a share would land about 400 m past the spot. A climb
+without a `route` or a marker draws no marker, and the chart keeps no empty
+room for it.
 ## 7. Migration
 
 1. Stand up the elevation service ([§2](#2-the-elevation-service)); confirm

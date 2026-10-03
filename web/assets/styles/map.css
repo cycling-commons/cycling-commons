@@ -1519,6 +1519,17 @@
   .cc-cp-ele{font-family:var(--mono);font-size:13px;fill:var(--ink);font-weight:600}
   .cc-cp-num{font-family:var(--mono);font-size:12px;font-weight:600;text-anchor:middle}
   .cc-cp-pin{fill:var(--ink);stroke:#fff;stroke-width:2}
+  /* The two climb markers in their map colours (docs/specs/climb-elevation.md §6d):
+     purple for the measured steepest 250 m, amber for the rider's steepest point.
+     A paper halo keeps a label readable where the rider's line crosses it. */
+  .cc-cp-steep-road{fill:none;stroke:#5E18A0;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+  .cc-cp-steep-br{fill:none;stroke:#8B45C0;stroke-width:2}
+  .cc-cp-steep-t,.cc-cp-rider-t{font-family:var(--mono);font-size:13px;font-weight:700;
+    paint-order:stroke;stroke:var(--paper);stroke-width:4px;stroke-linejoin:round}
+  .cc-cp-steep-t{fill:#6E2BA8}
+  .cc-cp-rider-t{fill:#9A6410}
+  .cc-cp-rider-l{stroke:#C98A22;stroke-width:1.5;stroke-dasharray:4 3}
+  .cc-cp-rider-p{fill:#F2C46B;stroke:#C98A22;stroke-width:2}
   .cc-lightbox{position:absolute;inset:0;z-index:1400;display:none;align-items:center;justify-content:center;
     background:rgba(10,16,12,.92);padding:3vmin;flex-direction:column;gap:.8rem}
   .cc-lightbox.open{display:flex}

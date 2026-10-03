@@ -202,7 +202,9 @@ The mode gate in `improve.js`:
   convinced nothing had changed and Submit disabled — on an edit the **server**
   would have accepted perfectly well, since `ClimbGeometry::fromPayload()` is
   merged into the change diff there. The gate now also diffs the `route`,
-  `steep` and `segment` hidden fields against a snapshot taken once the editor
+  `steep`, `steepPoint` and `segment` hidden fields (`steepPoint` since
+  2026-10-02: a rider's steepest point placed on an unchanged line said
+  "Nothing has changed yet") against a snapshot taken once the editor
   has hydrated (`mountClimbEditor` writes the stored shape synchronously at
   mount and never re-snaps or re-profiles on its own, so anything different
   afterwards is the rider's doing).

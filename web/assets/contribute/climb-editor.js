@@ -320,16 +320,38 @@
       writeHidden();
     }
 
-    /* Rider steepest point — model-invisible ramps (docs/specs/climb-elevation.md). */
+    /* Rider steepest point — model-invisible ramps (docs/specs/climb-elevation.md).
+       Placed or dragged on the map (no pct given), it is measured over 90 m of
+       road at once and the figure fills the gradient field; a figure the rider
+       types is theirs and stays. */
     function setRiderPoint(ll, pct, note) {
+      var placed = pct === undefined;
       state.steepPoint = {
         at: ll,
-        pct: pct !== undefined ? pct : (state.steepPoint ? state.steepPoint.pct : ''),
+        pct: placed ? '' : pct,
         note: note !== undefined ? note : (state.steepPoint ? state.steepPoint.note : '')
       };
       placingRider = false;
       placeRiderMarker();
       writeHidden();
+      if (placed) measureRiderPoint();
+    }
+
+    var riderSeq = 0, riderAbort = null;
+
+    function measureRiderPoint() {
+      if (!state.steepPoint || state.route.length < 2 || !window.Cc.pointGradient) return;
+      var seq = ++riderSeq;
+      if (riderAbort) riderAbort.abort();
+      var ctl = riderAbort = new AbortController();
+      var at = state.steepPoint.at;
+      window.Cc.pointGradient(state.route, at, ctl.signal).then(function (measured) {
+        // A newer placement, a removed point or a typed figure wins.
+        if (seq !== riderSeq || !measured || !state.steepPoint || state.steepPoint.at !== at || state.steepPoint.pct) return;
+        state.steepPoint.pct = measured;
+        placeRiderMarker();
+        writeHidden();
+      }).catch(function () {});
     }
 
     function clearRiderPoint() {
@@ -340,12 +362,37 @@
       writeHidden();
     }
 
+    /* "+ Steepest point": the server finds the steepest 90 m and the point
+       lands there, to drag if it is wrong (owner 2026-10-02). A tap on the
+       road while it looks still places it by hand, and wins; with no heights
+       the tap is the only way, as before. */
+    var findingRider = false;
+
     function armRiderPoint() {
       placingRider = true;
+      findingRider = state.route.length >= 2 && !!window.Cc.findSteepestPoint;
       if (onChange) onChange(publicState());
+      if (!findingRider) return;
+      var seq = ++riderSeq;
+      if (riderAbort) riderAbort.abort();
+      var ctl = riderAbort = new AbortController();
+      window.Cc.findSteepestPoint(state.route, ctl.signal).then(function (found) {
+        if (seq !== riderSeq) return;
+        findingRider = false;
+        if (!found || !placingRider) { if (onChange) onChange(publicState()); return; }
+        snapshot();
+        setRiderPoint(found.at, found.pct);
+      }).catch(function () {
+        if (seq !== riderSeq) return;
+        findingRider = false;
+        if (onChange) onChange(publicState());
+      });
     }
 
     function cancelRiderPoint() {
+      riderSeq++;
+      if (riderAbort) riderAbort.abort();
+      findingRider = false;
       placingRider = false;
       if (onChange) onChange(publicState());
     }
@@ -421,7 +468,7 @@
     function publicState() {
       return {
         start: state.start, summit: state.summit, steep: state.steep, lengthKm: state.lengthKm, avg: state.avg, gain: state.gain,
-        steepPoint: state.steepPoint, placingRider: placingRider,
+        steepPoint: state.steepPoint, placingRider: placingRider, findingRider: findingRider,
         routing: routing, profiling: profiling,
         routeError: routeError, profileError: profileError
       };

@@ -331,4 +331,89 @@ final class ClimbProfilerTest extends TestCase
             'length must follow the road, not chord across the sampled-away bends',
         );
     }
+
+    /** docs/specs/climb-elevation.md §5a: the rider's point reads the slope over 90 m, not one height. */
+    public function testThePointGradientIsTheSlopeOverNinetyMetres(): void
+    {
+        // Seven heights 15 m apart rising 2.7 m each: 18 %.
+        $heights = [];
+        for ($k = 0; $k < 7; ++$k) {
+            $heights[] = 500.0 + 2.7 * $k;
+        }
+
+        self::assertSame('18%', $this->profilerFor($heights)->pointGradient($this->line(40), [50.004, 5.0]));
+    }
+
+    public function testOneOddHeightDoesNotSwingThePointGradient(): void
+    {
+        // 18 % with one reading 6 m too high in the middle of the window.
+        $heights = [];
+        for ($k = 0; $k < 7; ++$k) {
+            $heights[] = 500.0 + 2.7 * $k + (3 === $k ? 6.0 : 0.0);
+        }
+
+        self::assertSame('18%', $this->profilerFor($heights)->pointGradient($this->line(40), [50.004, 5.0]));
+    }
+
+    public function testThePointGradientNeedsALineAndHeights(): void
+    {
+        self::assertNull($this->profilerFor([500.0])->pointGradient([[50.0, 5.0]], [50.0, 5.0]));
+        $down = new ElevationClient(
+            new MockHttpClient(new MockResponse('', ['http_code' => 500])),
+            new NullLogger(),
+            'http://valhalla.test',
+            'Copernicus DEM GLO-30',
+        );
+        self::assertNull((new ClimbProfiler($down))->pointGradient($this->line(40), [50.004, 5.0]));
+    }
+
+    /**
+     * A height service that answers every point: 5 % all the way, and a
+     * 20 % wall from 600 m to 720 m along a line due north.
+     */
+    private function wallProfiler(): ClimbProfiler
+    {
+        $height = static function (float $lat): float {
+            $d = ($lat - 50.0) * 111_195.0;
+            $wall = max(0.0, min($d, 720.0) - 600.0);
+
+            return 300.0 + 0.05 * $d + 0.15 * $wall;
+        };
+        $client = new ElevationClient(
+            new MockHttpClient(static function (string $method, string $url, array $options) use ($height): MockResponse {
+                /** @var array{shape: list<array{lat: float, lon: float}>} $body */
+                $body = json_decode((string) $options['body'], true);
+
+                return new MockResponse((string) json_encode(['height' => array_map(static fn (array $p): float => $height((float) $p['lat']), $body['shape'])]));
+            }),
+            new NullLogger(),
+            'http://valhalla.test',
+            'Copernicus DEM GLO-30',
+        );
+
+        return new ClimbProfiler($client);
+    }
+
+    /** docs/specs/climb-elevation.md §5a: "+ Steepest point" lands on the wall, with the wall's gradient. */
+    public function testTheSteepestPointIsFoundOnTheWall(): void
+    {
+        $found = $this->wallProfiler()->steepestPoint($this->line(60));
+
+        self::assertNotNull($found);
+        self::assertSame('20%', $found['pct']);
+        $alongM = ($found['at'][0] - 50.0) * 111_195.0;
+        self::assertEqualsWithDelta(660.0, $alongM, 35.0, 'the point sits inside the 120 m wall');
+    }
+
+    public function testFindingThePointNeedsALineAndHeights(): void
+    {
+        self::assertNull($this->wallProfiler()->steepestPoint([[50.0, 5.0]]));
+        $down = new ElevationClient(
+            new MockHttpClient(new MockResponse('', ['http_code' => 500])),
+            new NullLogger(),
+            'http://valhalla.test',
+            'Copernicus DEM GLO-30',
+        );
+        self::assertNull((new ClimbProfiler($down))->steepestPoint($this->line(40)));
+    }
 }

@@ -33,6 +33,22 @@ final class ClimbProfiler
     /** Samples along the line. ~20 m spacing on a 4 km climb (docs/specs/climb-elevation.md §3c). */
     private const int SAMPLES = 200;
 
+    /**
+     * The rider's steepest point is read over this much road, centred on it:
+     * one height is too noisy, a 250 m window is the measured marker's job
+     * (owner 2026-10-02: "the 60 or 90 m avg over that point").
+     */
+    public const int POINT_WINDOW_M = 90;
+
+    /** Heights read across that window; a fitted slope, not two readings. */
+    private const int POINT_SAMPLES = 7;
+
+    /** Spacing of those heights, and the step the window slides by when the point is found. */
+    private const float POINT_STEP_M = 15.0;
+
+    /** Road read again around the steepest stretch, to place the found point exactly. */
+    private const float POINT_SEARCH_M = 300.0;
+
     /** Drop (m) a trailing stretch must lose before it counts as past the summit (docs/specs/climb-elevation.md §4a). */
     private const float OVERSHOOT_DROP_M = 8.0;
 
@@ -122,6 +138,175 @@ final class ClimbProfiler
                 ? null
                 : self::fmt(min(35.0, max(0.0, self::sustainedAt($pts, $elev, $cum, $total, $steepAt))), 0),
         ];
+    }
+
+    /**
+     * The gradient at one spot on the road: the slope fitted through
+     * {@see self::POINT_SAMPLES} heights spread over {@see self::POINT_WINDOW_M}
+     * centred on the vertex nearest `$at`, moved inside the line at either
+     * end. Fills the rider's steepest point, which the rider can still
+     * overwrite (docs/specs/climb-elevation.md §5a).
+     *
+     * @param list<array{0: float, 1: float}> $route [lat, lng], foot to summit
+     * @param array{0: float, 1: float}       $at    [lat, lng]
+     *
+     * @return string|null e.g. "18%"; null without a line or heights
+     */
+    public function pointGradient(array $route, array $at): ?string
+    {
+        if (\count($route) < 2) {
+            return null;
+        }
+        $cum = self::cumulative($route);
+        $total = $cum[\count($cum) - 1];
+        if ($total <= 0.0) {
+            return null;
+        }
+        $bestI = 0;
+        $bestD = \INF;
+        foreach ($route as $i => $p) {
+            $d = self::haversine($p, $at);
+            if ($d < $bestD) {
+                $bestD = $d;
+                $bestI = $i;
+            }
+        }
+        $win = min((float) self::POINT_WINDOW_M, $total);
+        $start = max(0.0, min($cum[$bestI] - $win / 2, $total - $win));
+        /** @var non-empty-list<float> $flat heights do not matter here, only the coordinates */
+        $flat = array_fill(0, \count($route), 0.0);
+        $pts = [];
+        $dist = [];
+        for ($k = 0; $k < self::POINT_SAMPLES; ++$k) {
+            $d = $start + $win * $k / (self::POINT_SAMPLES - 1);
+            $pts[] = self::at($route, $flat, $cum, $d)['coord'];
+            $dist[] = $d;
+        }
+        $read = $this->elevation->heights($pts);
+        if (null === $read) {
+            return null;
+        }
+
+        return self::fmt(min(35.0, max(0.0, self::slope($dist, $read['elevations']) * 100)), 0);
+    }
+
+    /**
+     * Finds the rider's steepest point for them, to correct by dragging
+     * (owner 2026-10-02: "can't the system find the steepest point by
+     * itself"). Two reads: the whole line at the profile's spacing, where a
+     * {@see self::POINT_WINDOW_M} window slides in 15 m steps to find the
+     * steepest stretch; then 300 m around it at 15 m, where the same window
+     * of fitted slopes places the point exactly. Tunnels and galleries are
+     * skipped, as for the measured marker.
+     *
+     * @param list<array{0: float, 1: float}> $route [lat, lng], foot to summit
+     *
+     * @return array{at: array{0: float, 1: float}, pct: string}|null null without a line or heights
+     */
+    public function steepestPoint(array $route): ?array
+    {
+        if (\count($route) < 2) {
+            return null;
+        }
+        $cum = self::cumulative($route);
+        $total = $cum[\count($cum) - 1];
+        if ($total <= 0.0) {
+            return null;
+        }
+        ['pts' => $pts, 'cum' => $scum] = self::sampleWithDistance($route, self::SAMPLES);
+        $read = $this->elevation->heights($pts);
+        if (null === $read) {
+            return null;
+        }
+        $elev = $read['elevations'];
+        $skip = array_map(
+            static fn (array $sp): array => [$sp[0] * $total, $sp[1] * $total],
+            $this->covered?->forShape($pts) ?? [],
+        );
+        $win = min((float) self::POINT_WINDOW_M, $total);
+        $covered = static function (float $a, float $b) use ($skip): bool {
+            foreach ($skip as [$s0, $s1]) {
+                if ($a < $s1 && $b > $s0) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        // Coarse: the steepest window over the whole line.
+        $centre = $win / 2;
+        $best = -\INF;
+        for ($a = 0.0; $a + $win <= $total + 0.001; $a += self::POINT_STEP_M) {
+            if ($covered($a, $a + $win)) {
+                continue;
+            }
+            $g = self::at($pts, $elev, $scum, $a + $win)['elev'] - self::at($pts, $elev, $scum, $a)['elev'];
+            if ($g > $best) {
+                $best = $g;
+                $centre = $a + $win / 2;
+            }
+        }
+
+        // Fine: 300 m around it, 15 m apart, slopes fitted over the window.
+        $from = max(0.0, $centre - self::POINT_SEARCH_M / 2);
+        $to = min($total, $centre + self::POINT_SEARCH_M / 2);
+        /** @var non-empty-list<float> $flat heights do not matter here, only the coordinates */
+        $flat = array_fill(0, \count($route), 0.0);
+        $near = [];
+        $dist = [];
+        for ($d = $from; $d <= $to + 0.001; $d += self::POINT_STEP_M) {
+            $near[] = self::at($route, $flat, $cum, $d)['coord'];
+            $dist[] = $d;
+        }
+        $fine = \count($near) >= self::POINT_SAMPLES ? $this->elevation->heights($near) : null;
+        if (null === $fine) {
+            return ['at' => self::at($route, $flat, $cum, $centre)['coord'], 'pct' => self::fmt(min(35.0, max(0.0, $best / $win * 100)), 0)];
+        }
+        $h = $fine['elevations'];
+        $bestG = -\INF;
+        $bestK = 0;
+        for ($k = 0; $k + self::POINT_SAMPLES <= \count($dist); ++$k) {
+            $xs = \array_slice($dist, $k, self::POINT_SAMPLES);
+            if ($covered($dist[$k], $dist[$k + self::POINT_SAMPLES - 1])) {
+                continue;
+            }
+            $g = self::slope($xs, \array_slice($h, $k, self::POINT_SAMPLES));
+            if ($g > $bestG) {
+                $bestG = $g;
+                $bestK = $k;
+            }
+        }
+        $mid = $near[max(0, $bestK + intdiv(self::POINT_SAMPLES, 2))] ?? null;
+        if (null === $mid) {
+            return null;
+        }
+
+        return ['at' => $mid, 'pct' => self::fmt(min(35.0, max(0.0, $bestG * 100)), 0)];
+    }
+
+    /**
+     * Least-squares slope of y over x.
+     *
+     * @param list<float> $x
+     * @param list<float> $y
+     */
+    private static function slope(array $x, array $y): float
+    {
+        $n = min(\count($x), \count($y));
+        if ($n < 2) {
+            return 0.0;
+        }
+        $mx = array_sum(\array_slice($x, 0, $n)) / $n;
+        $my = array_sum(\array_slice($y, 0, $n)) / $n;
+        $num = 0.0;
+        $den = 0.0;
+        for ($i = 0; $i < $n; ++$i) {
+            $num += ($x[$i] - $mx) * ($y[$i] - $my);
+            $den += ($x[$i] - $mx) ** 2;
+        }
+
+        return $den > 0.0 ? $num / $den : 0.0;
     }
 
     /**
@@ -285,7 +470,7 @@ final class ClimbProfiler
     /**
      * @param non-empty-list<array{0: float, 1: float}> $pts
      *
-     * @return list<float>
+     * @return non-empty-list<float>
      */
     private static function cumulative(array $pts): array
     {

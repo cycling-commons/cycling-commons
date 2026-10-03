@@ -140,11 +140,11 @@
     return Math.abs(WZ.loc.lat - initLat) > MOVED_EPS || Math.abs(WZ.loc.lng - initLng) > MOVED_EPS;
   }
 
-  /* Climb route/steepest and surface endpoints live in hidden fields pinMoved() cannot see. */
+  /* Climb route, both steepest markers and surface endpoints live in hidden fields pinMoved() cannot see. */
   var INITIAL_GEOM = null;
 
   function geomSnapshot() {
-    return ['route', 'steep', 'segment'].map(function (k) {
+    return ['route', 'steep', 'steepPoint', 'segment'].map(function (k) {
       var f = fld(k);
       return f ? f.value : '';
     }).join('|');
@@ -446,11 +446,13 @@
           WZ.locPending = !!(st.routing || st.profiling);
           if (riderCtl) riderCtl.render(st);
           if (st.placingRider) {
-            if (ro) ro.textContent = t('rider_tap');
-            setMapHint(t('rider_tap'));
+            var riderHint = st.findingRider ? t('rider_finding') : t('rider_tap');
+            if (ro) ro.textContent = riderHint;
+            setMapHint(riderHint);
           } else if (st.start && st.summit) {
             WZ.loc = { type: 'climb', start: st.start, summit: st.summit, lengthKm: st.lengthKm,
-                       gain: st.gain || '', avg: st.avg || '', max: (st.steep && st.steep.pct) || '' };
+                       gain: st.gain || '', avg: st.avg || '', max: (st.steep && st.steep.pct) || '',
+                       riderPoint: st.steepPoint || null };
             if (ro) {
               var txt = t('readout_climb_set');
               if (st.lengthKm) txt += ' · ' + t('climb_length', { '%km%': uKm(st.lengthKm) });
@@ -1263,6 +1265,11 @@
       if (WZ.loc.gain) locTxt += ' · △ ' + (window.ccElev ? window.ccElev(WZ.loc.gain) : Math.round(Number(WZ.loc.gain)) + ' m');
       if (WZ.loc.avg) locTxt += ' · ' + t('measured_avg', { '%pct%': pctNum(WZ.loc.avg) });
       if (WZ.loc.max) locTxt += ' · ' + t('measured_max', { '%pct%': pctNum(WZ.loc.max) });
+      if (WZ.loc.riderPoint) {
+        locTxt += ' · ' + (WZ.loc.riderPoint.pct
+          ? t('rider_point_pct', { '%pct%': pctNum(WZ.loc.riderPoint.pct) })
+          : t('rider_point'));
+      }
     }
 
     var fieldRows = [];

@@ -36,4 +36,45 @@
       };
     });
   };
+
+  /* The gradient over 90 m of road around one spot, for the rider's steepest
+     point (docs/specs/climb-elevation.md §5a). Resolves "18%", or null when
+     no height could be read; rejects on transport failure. */
+  window.Cc.pointGradient = function (coords, at, signal) {
+    if (!coords || coords.length < 2 || !at) return Promise.resolve(null);
+    return fetch('/contribute/elevation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CC-Token': window.CC_ELEV_TOKEN || '' },
+      body: JSON.stringify({
+        coords: coords.map(function (c) { return [c[1], c[0]]; }),
+        pointAt: [at[1], at[0]]
+      }),
+      signal: signal
+    }).then(function (r) {
+      if (r.status === 503) return null;
+      if (!r.ok) throw new Error('elevation HTTP ' + r.status);
+      return r.json();
+    }).then(function (d) { return d && d.pointPct ? String(d.pointPct) : null; });
+  };
+
+  /* The steepest 90 m of the line, found by the server for "+ Steepest point".
+     Resolves {at: [lng,lat], pct: "18%"}, or null when no height could be
+     read; rejects on transport failure. */
+  window.Cc.findSteepestPoint = function (coords, signal) {
+    if (!coords || coords.length < 2) return Promise.resolve(null);
+    return fetch('/contribute/elevation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CC-Token': window.CC_ELEV_TOKEN || '' },
+      body: JSON.stringify({ coords: coords.map(function (c) { return [c[1], c[0]]; }), findPoint: true }),
+      signal: signal
+    }).then(function (r) {
+      if (r.status === 503) return null;
+      if (!r.ok) throw new Error('elevation HTTP ' + r.status);
+      return r.json();
+    }).then(function (d) {
+      return d && Array.isArray(d.pointAt) && d.pointPct
+        ? { at: [d.pointAt[1], d.pointAt[0]], pct: String(d.pointPct) }
+        : null;
+    });
+  };
 })();

@@ -2044,6 +2044,7 @@ improve:
     rider_mark: '+ Steepest point'
     rider_cancel: 'Cancel'
     rider_tap: '◎ Tap the road where it is steepest'
+    rider_finding: '◎ Finding the steepest spot. Drag the point if it is wrong.'
     rider_pct: 'Gradient (optional)'
     rider_pct_ph: 'e.g. 20%'
     rider_pct_invalid: 'A gradient like 20% or 18.5%'
@@ -2117,6 +2118,8 @@ improve:
     confirm_now_help: 'Leave it off if you have not seen it lately. Riders confirm it on the map.'
     measured_avg: 'avg %pct% %'
     measured_max: 'max %pct% %'
+    rider_point: '⬗ steepest point'
+    rider_point_pct: '⬗ steepest point %pct% %'
   locate:
     change: 'Change location'
     confirm:

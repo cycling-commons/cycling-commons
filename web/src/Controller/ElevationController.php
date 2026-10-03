@@ -67,10 +67,33 @@ final class ElevationController extends AbstractController
         if (isset($rawSteep[0], $rawSteep[1]) && is_numeric($rawSteep[0]) && is_numeric($rawSteep[1])) {
             $steepAt = [(float) $rawSteep[0], (float) $rawSteep[1]];
         }
+        $pointAt = null;
+        $rawPoint = $payload['pointAt'] ?? null;
+        if (isset($rawPoint[0], $rawPoint[1]) && is_numeric($rawPoint[0]) && is_numeric($rawPoint[1])) {
+            $pointAt = [(float) $rawPoint[0], (float) $rawPoint[1]];
+        }
 
         // docs/specs/security-architecture.md §7 — per-user; after cheap validation.
         if (!$elevationLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
             return new JsonResponse(['error' => 'rate_limited'], 429);
+        }
+
+        // "+ Steepest point": the server finds the spot, the rider drags it if it is wrong (docs/specs/climb-elevation.md §5a).
+        if (true === ($payload['findPoint'] ?? null)) {
+            $found = $profiler->steepestPoint($coords);
+
+            return null === $found
+                ? new JsonResponse(['error' => 'elevation_unavailable'], 503)
+                : new JsonResponse(['pointAt' => $found['at'], 'pointPct' => $found['pct'], 'windowM' => ClimbProfiler::POINT_WINDOW_M]);
+        }
+
+        // The rider's steepest point alone: a 90 m reading, not the whole profile (docs/specs/climb-elevation.md §5a).
+        if (null !== $pointAt) {
+            $pct = $profiler->pointGradient($coords, $pointAt);
+
+            return null === $pct
+                ? new JsonResponse(['error' => 'elevation_unavailable'], 503)
+                : new JsonResponse(['pointPct' => $pct, 'windowM' => ClimbProfiler::POINT_WINDOW_M]);
         }
 
         $profile = $profiler->profile($coords, $steepAt);

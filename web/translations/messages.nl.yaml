@@ -2644,6 +2644,7 @@ improve:
     rider_mark: '+ Steilste punt'
     rider_cancel: 'Annuleren'
     rider_tap: '◎ Tik op de weg waar hij het steilst is'
+    rider_finding: '◎ Het steilste stuk wordt gezocht. Sleep het punt als het niet klopt.'
     rider_pct: 'Stijging (optioneel)'
     rider_pct_ph: 'bv. 20%'
     rider_pct_invalid: 'Een stijging zoals 20% of 18,5%'
@@ -2713,6 +2714,8 @@ improve:
     confirm_now_help: 'Laat het uit als je de plek niet recent hebt gezien. Fietsers bevestigen haar op de kaart.'
     measured_avg: 'gem. %pct% %'
     measured_max: 'max %pct% %'
+    rider_point: '⬗ steilste punt'
+    rider_point_pct: '⬗ steilste punt %pct% %'
   locate:
     change: 'Locatie wijzigen'
     confirm:

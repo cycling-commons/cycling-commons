@@ -7,10 +7,15 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Contribution\ClimbGeometry;
+use App\Elevation\ClimbProfiler;
+use App\Elevation\ElevationClient;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
@@ -150,5 +155,64 @@ final class ElevationControllerTest extends WebTestCase
         /** @var array{error: string} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true);
         self::assertSame('rate_limited', $body['error']);
+    }
+
+    /** The rider's steepest point asks for one spot: the answer is that spot's 90 m gradient, not a profile. */
+    public function testAPointAskReturnsItsNinetyMetreGradient(): void
+    {
+        $client = static::createClient();
+        $heights = [];
+        for ($k = 0; $k < 7; ++$k) {
+            $heights[] = 400.0 + 1.8 * $k;   // 12 % over 15 m steps
+        }
+        static::getContainer()->set(ClimbProfiler::class, new ClimbProfiler(new ElevationClient(
+            new MockHttpClient(new MockResponse((string) json_encode(['height' => $heights]))),
+            new NullLogger(),
+            'http://valhalla.test',
+            'Copernicus DEM GLO-30',
+        )));
+        $client->loginUser(self::user('elev-point@test.test'));
+        $line = [];
+        for ($i = 0; $i < 20; ++$i) {
+            $line[] = [50.400 + $i * 0.0002, 5.800];
+        }
+
+        self::post($client, (string) json_encode(['coords' => $line, 'pointAt' => [50.402, 5.800]]), ['HTTP_X_CC_TOKEN' => self::token(), 'HTTP_SEC_FETCH_SITE' => 'same-origin']);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['pointPct' => '12%', 'windowM' => 90], json_decode((string) $client->getResponse()->getContent(), true));
+    }
+
+    /** "+ Steepest point" asks the server to find the spot: a place on the line and its 90 m gradient come back. */
+    public function testAFindAskReturnsAPointAndItsGradient(): void
+    {
+        $client = static::createClient();
+        static::getContainer()->set(ClimbProfiler::class, new ClimbProfiler(new ElevationClient(
+            new MockHttpClient(static function (string $method, string $url, array $options): MockResponse {
+                /** @var array{shape: list<array{lat: float, lon: float}>} $body */
+                $body = json_decode((string) $options['body'], true);
+                // 10 % everywhere: 0.1 m up per metre north.
+                $h = array_map(static fn (array $p): float => 200.0 + 0.1 * ((float) $p['lat'] - 50.4) * 111_195.0, $body['shape']);
+
+                return new MockResponse((string) json_encode(['height' => $h]));
+            }),
+            new NullLogger(),
+            'http://valhalla.test',
+            'Copernicus DEM GLO-30',
+        )));
+        $client->loginUser(self::user('elev-find@test.test'));
+        $line = [];
+        for ($i = 0; $i < 30; ++$i) {
+            $line[] = [50.400 + $i * 0.0002, 5.800];
+        }
+
+        self::post($client, (string) json_encode(['coords' => $line, 'findPoint' => true]), ['HTTP_X_CC_TOKEN' => self::token(), 'HTTP_SEC_FETCH_SITE' => 'same-origin']);
+
+        self::assertResponseIsSuccessful();
+        /** @var array{pointAt: array{0: float, 1: float}, pointPct: string, windowM: int} $body */
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
+        self::assertSame('10%', $body['pointPct']);
+        self::assertSame(90, $body['windowM']);
+        self::assertEqualsWithDelta(5.8, $body['pointAt'][1], 0.0001);
     }
 }

@@ -3,9 +3,10 @@
    docs/specs/climb-elevation.md §6). Numbers come from `grad`/`binM`/`footEle`/
    `summitEle` — nothing is re-measured here. */
 import { escPend, gradColor, txtOn } from './util.js';
-import { D } from './i18n.js';
+import { D, tpl } from './i18n.js';
 import { uKm, uM, uElev, uKmValue, uDistUnit } from './units.js';
 import { verticalSpan } from './profile-scale.js';
+import { metresAlong, windowSpan } from './profile-marks.js';
 
 /* Below this, a two-digit % either overflows or shrinks unreadably. */
 const MIN_PX_FOR_LABEL = 30;
@@ -35,8 +36,12 @@ export function profileSvg(f){
      ViewBox ~1.9:1 so the SVG fills a laptop without stretching a gentle climb. */
   const W=1180, H=620;
   const BAND=30;                    // gradient-figure strip
-  // Side margins hold altitude labels outside the plot.
-  const padL=84, padR=84, padT=16, padB=BAND+46;
+  /* Marker positions in metres from the foot (docs/specs/climb-elevation.md §6d). */
+  const steepAtM = f.steep ? metresAlong(f.route, f.steep.at) : null;
+  const riderAtM = f.steepPoint ? metresAlong(f.route, f.steepPoint.at) : null;
+  const STEEP_ROOM = steepAtM!=null ? 36 : 0, RIDER_ROOM = riderAtM!=null ? 30 : 0;
+  // Side margins hold altitude labels outside the plot; the top holds the marker labels.
+  const padL=84, padR=84, padT=16+STEEP_ROOM+RIDER_ROOM, padB=BAND+46;
   const plotW=W-padL-padR, plotH=H-padT-padB;
   const base=padT+plotH;
   const x = m => padL + (m/totalM)*plotW;
@@ -85,12 +90,63 @@ export function profileSvg(f){
   const startMark=`<circle cx="${x(0).toFixed(1)}" cy="${y(h[0]).toFixed(1)}" r="5" class="cc-cp-pin"/>`;
   const endMark=`<circle cx="${x(totalM).toFixed(1)}" cy="${y(h[h.length-1]).toFixed(1)}" r="5" class="cc-cp-pin"/>`;
 
+  /* Road height at any distance, between the bin edges. */
+  const roadAt = m => {
+    const i = Math.min(grad.length-1, Math.max(0, Math.floor(m/binM)));
+    return h[i] + (h[i+1]-h[i])*Math.min(1, Math.max(0, (m - i*binM)/binM));
+  };
+  // A label stays clear of the altitude labels in the side margins.
+  const labelX = px => Math.min(padL+plotW-90, Math.max(padL+90, px));
+
+  /* The steepest 250 m: the road drawn heavy over the window, a bracket above
+     it and the figure the catalogue publishes. Same purple as its map marker. */
+  let steepMark = '';
+  if(steepAtM!=null){
+    const winM = Number(f.steepWindowM) || 250;
+    const [a, b] = windowSpan(steepAtM, winM, totalM);
+    const road = [];
+    for(let m=a; m<b; m+=Math.max(1, binM/4)) road.push(`${x(m).toFixed(1)},${y(roadAt(m)).toFixed(1)}`);
+    road.push(`${x(b).toFixed(1)},${y(roadAt(b)).toFixed(1)}`);
+    const top = Math.min(y(roadAt(a)), y(roadAt(b))) - 12;
+    const pct = String(f.steep.pct || f.maxGradient || '').replace(/%$/, '');
+    const label = `▲ ${tpl(D.steepOver || '{v} over {w}', {v: pct ? `${pct}%` : '', w: uM(winM)})}`;
+    /* The label clears the road under its whole width, not only under the
+       bracket: the road keeps rising to the right of the window. 13 px mono
+       is about 8 px a character. */
+    const lx = labelX((x(a)+x(b))/2), half = label.length*4 + 6;
+    let roadTop = top;
+    for(let px = lx-half; px <= lx+half; px += 4){
+      const m = Math.min(totalM, Math.max(0, (px-padL)/plotW*totalM));
+      roadTop = Math.min(roadTop, y(roadAt(m)) - 4);
+    }
+    const ly = Math.min(top, roadTop) - 8;
+    steepMark = `<g class="cc-cp-steep"><title>${escPend(D.steepest||'Steepest pitch')} · ${escPend(label)}</title>
+      <polyline points="${road.join(' ')}" class="cc-cp-steep-road"/>
+      <path d="M${x(a).toFixed(1)},${(top+6).toFixed(1)} V${top.toFixed(1)} H${x(b).toFixed(1)} V${(top+6).toFixed(1)}" class="cc-cp-steep-br"/>
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="cc-cp-steep-t" text-anchor="middle">${escPend(label)}</text></g>`;
+  }
+
+  /* The rider's steepest point: a dashed amber line from the road to a label
+     in the top row, above the measured window's label, so the two never meet. */
+  let riderMark = '';
+  if(riderAtM!=null){
+    const m = Math.min(totalM, riderAtM), px = x(m);
+    const sp = f.steepPoint;
+    const pct = sp.pct ? `${String(sp.pct).replace(/%$/, '')}%` : '';
+    const text = `⬗ ${pct || D.riderRamp || 'ramp'}`;
+    const tip = [D.riderSteepest||'Steepest point, marked by a rider', pct, sp.note].filter(Boolean).join(' · ');
+    riderMark = `<g class="cc-cp-rider"><title>${escPend(tip)}</title>
+      <line x1="${px.toFixed(1)}" y1="${(y(roadAt(m))-4).toFixed(1)}" x2="${px.toFixed(1)}" y2="26" class="cc-cp-rider-l"/>
+      <circle cx="${px.toFixed(1)}" cy="${y(roadAt(m)).toFixed(1)}" r="4" class="cc-cp-rider-p"/>
+      <text x="${labelX(px).toFixed(1)}" y="20" class="cc-cp-rider-t" text-anchor="middle">${escPend(text)}</text></g>`;
+  }
+
   const distLabel=`<text x="${(padL+plotW/2).toFixed(1)}" y="${H-8}" class="cc-cp-axis" text-anchor="middle">${uKm(totalKm, totalDisp<10?1:0)} · ${D.gradPerBin ? D.gradPerBin.replace('{b}', uM(binM)) : `per ${uM(binM)}`}</text>`;
 
   return `<svg class="cc-cp-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"
       aria-label="${escPend(f.name||'')} — ${uKm(totalKm)}, ${uElev(Math.round(climbM))}">
     ${cols}<line x1="${padL}" y1="${base}" x2="${padL+plotW}" y2="${base}" class="cc-cp-base"/>
-    ${startMark}${endMark}${endLabels}${ticks.join('')}${distLabel}
+    ${riderMark}${steepMark}${startMark}${endMark}${endLabels}${ticks.join('')}${distLabel}
   </svg>`;
 }
 

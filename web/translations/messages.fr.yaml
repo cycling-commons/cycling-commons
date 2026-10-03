@@ -2639,6 +2639,7 @@ improve:
     rider_mark: '+ Point le plus raide'
     rider_cancel: 'Annuler'
     rider_tap: '◎ Appuyez sur la route là où elle est la plus raide'
+    rider_finding: '◎ Recherche du passage le plus raide. Déplacez le point s''il est faux.'
     rider_pct: 'Pente (facultatif)'
     rider_pct_ph: 'ex. 20%'
     rider_pct_invalid: 'Une pente comme 20% ou 18,5%'
@@ -2708,6 +2709,8 @@ improve:
     confirm_now_help: 'Laissez la case vide si vous ne l''avez pas vu récemment. Les cyclistes le confirmeront sur la carte.'
     measured_avg: 'moy. %pct% %'
     measured_max: 'max %pct% %'
+    rider_point: '⬗ point le plus raide'
+    rider_point_pct: '⬗ point le plus raide %pct% %'
   locate:
     change: 'Modifier l''emplacement'
     confirm:
