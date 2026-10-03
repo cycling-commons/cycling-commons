@@ -4380,7 +4380,6 @@ form:
   label_verification_code: 'Bestätigungscode'
   ph_email: 'you@example.com'
   ph_display_name_settings: 'Dein öffentlicher Anzeigename'
-  display_name_free: 'Noch kein anderer Fahrer zeigt diesen Namen öffentlich.'
   display_name_shared: 'Ein anderer Fahrer nutzt diesen Namen schon. Du kannst ihn trotzdem wählen.'
   ph_display_name_register: 'Erscheint bei deinen Beiträgen'
   ph_min12: 'Mindestens 12 Zeichen'

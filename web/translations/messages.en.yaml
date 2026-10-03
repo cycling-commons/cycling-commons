@@ -4398,7 +4398,6 @@ form:
   label_verification_code: 'Verification code'
   ph_email: 'you@example.com'
   ph_display_name_settings: 'Your public display name'
-  display_name_free: 'No other rider shows this name publicly yet.'
   display_name_shared: 'Another rider already uses this name. You can still use it.'
   ph_display_name_register: 'Seen on your contributions'
   ph_min12: 'At least 12 characters'

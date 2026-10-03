@@ -1212,8 +1212,10 @@ change history, in translate mode and in the rider's own data export
 Sharing stays allowed, and a rider who wants a name of their own can see
 whether it is free. Under the display-name field on the sign-up form and in
 settings, a moment after the rider stops typing (500 ms), one line says
-**"No other rider shows this name publicly yet."** or **"Another rider already uses this
-name. You can still use it."** It is information, never a block: nothing
+**"Another rider already uses this name. You can still use it."** when the
+name is in use; a free name gets no line at all (owner 2026-10-03: the
+"No other rider shows this name publicly yet." line was noise). It is
+information, never a block: nothing
 reserves a name, and the next rider may still choose it. A shared name reads
 as a notice, in `--clay` and semibold (`[data-name-hint][data-state=shared]`
 in `atlas.css`), never in the error colour.
@@ -1239,7 +1241,7 @@ in `atlas.css`), never in the error colour.
   (`anon-<hmac(secret|display_name_check|ip)>`), for everybody. A rider typing
   a name spends a few; a script asking about names in bulk runs out.
 - **Without JavaScript:** the "check your email" page after sign-up shows the
-  hint for the name just submitted, and the settings page renders it
+  hint for the name just submitted when it is in use, and the settings page renders it
   server-side for the saved name on every visit, so it shows after a save.
   The sign-up form re-rendered with errors shows none: it runs before the
   proof of work and the registration limit, and would be a free way to ask.

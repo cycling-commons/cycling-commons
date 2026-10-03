@@ -191,9 +191,10 @@ final class DisplayNameHintTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.name-hint', 'Another rider already uses this name. You can still use it.');
 
+        // A free name needs no message (owner 2026-10-03).
         $this->signUp($client, 'other@example.com', 'Unique Rider Name');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.name-hint', 'No other rider shows this name publicly yet.');
+        self::assertSelectorNotExists('.name-hint[data-state]');
     }
 
     public function testSettingsShowTheHintWithoutJavaScript(): void
@@ -204,8 +205,9 @@ final class DisplayNameHintTest extends WebTestCase
 
         $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('#settings_displayName_hint', 'No other rider shows this name publicly yet.');
-        self::assertSelectorExists('#settings_displayName_hint[data-state="free"]');
+        // A free name needs no message (owner 2026-10-03).
+        self::assertSelectorExists('#settings_displayName_hint[hidden]');
+        self::assertSelectorNotExists('#settings_displayName_hint[data-state]');
 
         $this->createUser('twin@example.com', 'solo rider');
         $client->request('GET', '/account/settings');

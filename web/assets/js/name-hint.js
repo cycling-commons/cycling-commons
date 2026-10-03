@@ -25,10 +25,11 @@
     var asked = 0;
     var lastName = null;
 
+    // Only a name in use says anything; a free name needs no message.
     function show(inUse) {
-      if (inUse === true || inUse === false) {
-        hint.textContent = hint.getAttribute(inUse ? 'data-shared' : 'data-free');
-        hint.setAttribute('data-state', inUse ? 'shared' : 'free');
+      if (inUse === true) {
+        hint.textContent = hint.getAttribute('data-shared');
+        hint.setAttribute('data-state', 'shared');
         hint.hidden = false;
       } else {
         hint.textContent = '';

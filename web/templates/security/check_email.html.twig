@@ -20,7 +20,8 @@
       <p>{{ 'security.check_email.body'|trans }}</p>
       {# The display-name hint for a visitor without JavaScript (account-and-auth.md §9). #}
       {% if name_in_use is defined %}
-        <p class="name-hint" data-name-hint data-state="{{ name_in_use ? 'shared' : 'free' }}">{{ (name_in_use ? 'form.display_name_shared' : 'form.display_name_free')|trans }}</p>
+        {# Only a name in use says anything (owner 2026-10-03). #}
+        {% if name_in_use %}<p class="name-hint" data-name-hint data-state="shared">{{ 'form.display_name_shared'|trans }}</p>{% endif %}
       {% endif %}
       <p style="margin-top:1rem;font-size:.9rem;color:#5a5d4d">
         {{ 'security.check_email.no_email'|trans({'%url%': path('verify_resend')})|rich }}

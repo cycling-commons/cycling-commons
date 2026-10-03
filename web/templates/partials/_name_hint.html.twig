@@ -1,6 +1,7 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
-{# The display-name hint (account-and-auth.md §9): whether another account
-   already uses the typed name. Information only, never a block.
+{# The display-name hint (account-and-auth.md §9): says so when another
+   account already uses the typed name, and is hidden otherwise (owner
+   2026-10-03: a free name needs no message). Information only, never a block.
    js/name-hint.js asks display_name_check while the rider types.
    - input_id:   the display-name input it describes
    - class:      the page's small-print class
@@ -10,9 +11,8 @@
 <div class="{{ class }}" id="{{ input_id }}_hint" data-name-hint
      data-for="{{ input_id }}"
      data-url="{{ path('display_name_check') }}"
-     data-free="{{ 'form.display_name_free'|trans }}"
      data-shared="{{ 'form.display_name_shared'|trans }}"
      {% if stamp is defined and stamp %}data-stamp="{{ stamp }}"{% endif %}
-     aria-live="polite"{% if in_use is null %} hidden{% else %} data-state="{{ in_use ? 'shared' : 'free' }}"{% endif %}>
-  {%- if in_use is not null %}{{ (in_use ? 'form.display_name_shared' : 'form.display_name_free')|trans }}{% endif -%}
+     aria-live="polite"{% if not in_use %} hidden{% else %} data-state="shared"{% endif %}>
+  {%- if in_use %}{{ 'form.display_name_shared'|trans }}{% endif -%}
 </div>

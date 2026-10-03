@@ -4407,7 +4407,6 @@ form:
   label_verification_code: 'Código de verificación'
   ph_email: 'tu@ejemplo.com'
   ph_display_name_settings: 'Tu nombre público'
-  display_name_free: 'Ningún otro ciclista muestra este nombre públicamente todavía.'
   display_name_shared: 'Otro ciclista ya usa este nombre. Puedes elegirlo igualmente.'
   ph_display_name_register: 'Se ve en tus aportaciones'
   ph_min12: 'Al menos 12 caracteres'

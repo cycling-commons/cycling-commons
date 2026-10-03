@@ -4379,7 +4379,6 @@ form:
   label_verification_code: 'Verificatiecode'
   ph_email: 'you@example.com'
   ph_display_name_settings: 'Je openbare weergavenaam'
-  display_name_free: 'Nog geen andere fietser toont deze naam openbaar.'
   display_name_shared: 'Een andere fietser gebruikt deze naam al. Je kunt hem toch kiezen.'
   ph_display_name_register: 'Zichtbaar bij je bijdragen'
   ph_min12: 'Minimaal 12 tekens'
