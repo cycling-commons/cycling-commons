@@ -98,7 +98,12 @@ import { layerGlyph } from './icons.js';
     // A link whose target is gone says so, instead of silently showing the
     // rider's own area (docs/TODO.md 2026-09-25, a link must work years later).
     const gone = () => mapToast(D.linkGone || 'This place is no longer on the map.');
-    if(ip && !openFeatureById(ip)) gone();
+    // A place taken as it is from OpenStreetMap is drawn as that OSM point, not
+    // as a catalog row: the server names its reference and it opens as a
+    // ?ref= link would (map-and-search.md §8).
+    if(ip && !openFeatureById(ip)){
+      if(window.CC_ITEM_LINK_REF) openCoverageByOsmRef(window.CC_ITEM_LINK_REF); else gone();
+    }
     if(fp && !openFeatureByName(fp)) openCoverageFeatureByName(fp);
     // ?ref= widens on its own hit, like ?feature=: it cannot be resolved locally.
     if(xp) openCoverageByOsmRef(xp);

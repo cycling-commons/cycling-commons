@@ -17,6 +17,7 @@ use App\Catalog\ClosureExpiryService;
 use App\Catalog\ConfirmationFreshness;
 use App\Catalog\Entity\Item;
 use App\Catalog\Import\OsmLinker;
+use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\KindIcons;
 use App\Catalog\MapTheme;
@@ -43,6 +44,7 @@ use App\Security\TwoFactorPolicy;
 use App\Service\BaseAreaResolver;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -73,13 +75,13 @@ final class MapController extends AbstractController
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
-    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness): Response
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, Connection $db): Response
     {
-        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, scoutReview: true);
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, $db, scoutReview: true);
     }
 
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, bool $scoutReview = false): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, Connection $db, bool $scoutReview = false): Response
     {
         // Three bucket round trips, started together instead of one after the
         // other. Read in sequence they add up, and each carries its own
@@ -150,6 +152,7 @@ final class MapController extends AbstractController
             'witness_cutoff' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d'),
             'voting_live' => 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE),
             'vote_url' => $this->generateUrl('vote'),
+            'item_link_ref' => self::itemLinkRef($request, $db),
             'catalog_boot' => $this->catalogBoot($request, $catalogProvider),
         ];
 
@@ -239,6 +242,28 @@ final class MapController extends AbstractController
      * @see docs/specs/route-domain.md §6.4
      * @see docs/specs/map-and-search.md §6.3
      */
+    /**
+     * The OpenStreetMap reference of a `?item=<id>` link's place, when that
+     * place is a served row taken from OpenStreetMap. The map's region data
+     * holds the rows the Commons has added to; a row taken as it is from
+     * OpenStreetMap is drawn as that OpenStreetMap point instead, so the link
+     * opens it by its reference (owner 2026-10-03: a ballot link to "Fort de
+     * Marchovelette" opened nothing). Null for anything else.
+     */
+    private static function itemLinkRef(Request $request, Connection $db): ?string
+    {
+        $raw = $request->query->all()['item'] ?? null;
+        if (!\is_string($raw) || 1 !== preg_match('/^(\d{1,12})(?:\/|$)/', $raw, $m)) {
+            return null;
+        }
+        $ref = $db->fetchOne(
+            "SELECT source_ref FROM item WHERE id = :id AND source = 'osm' AND state IN ".ItemState::servedSqlTuple(),
+            ['id' => (int) $m[1]],
+        );
+
+        return \is_string($ref) && 1 === preg_match('#^(node|way)/\d+$#', $ref) ? $ref : null;
+    }
+
     #[Route('/map/route/{id}/climbs', name: 'map_route_climbs', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function routeClimbs(int $id, Request $request, RouteClimbService $routeClimbs, CatalogProvider $catalogProvider, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy): Response
     {

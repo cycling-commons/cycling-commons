@@ -2881,6 +2881,15 @@ Pinned by `tests/js/coord-search.test.cjs`.
 Handled in the map `load` handler; all query-param based (no hash state — §13.1
 is the pending permalink contract).
 
+**A link to a place taken from OpenStreetMap opens that point.** The region
+data holds the rows the Commons added to; a row taken as it is from
+OpenStreetMap is drawn as its OpenStreetMap point, so `?item=<id>` finds no
+catalog row for it. The page then names the row's reference
+(`MapController::itemLinkRef()`, `window.CC_ITEM_LINK_REF`, only for a served
+`source = 'osm'` row with a `node/` or `way/` reference) and the map opens it
+as a `?ref=` link would: drawer, pulsing halo, scope lifted to the point
+(owner 2026-10-03: a ballot link to "Fort de Marchovelette" opened nothing).
+
 **A link whose target is gone says so.** When `?item=`, `?pending=` or
 `?route=` resolves to nothing on this map (the row was retired, merged, or the
 link came from another environment where ids differ), the map shows the toast
