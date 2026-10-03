@@ -2753,7 +2753,11 @@ list from the current index on every search (`searchIdx()` in `search-ui.js`),
 so a region loaded by a new scope is searchable at once. With the reach on
 Everywhere, our items beyond the regions held come from `/v1/search?q=` (the
 public API, public-api.md §2.2): up to 30 hits, deduplicated against the index,
-each naming its region by slug. Picking one lifts the scope to that region,
+each naming its region by slug. A hit of any of our layers is kept, climbs (N)
+and routes (R) as much as the pool kinds: its layer is found by letter in
+`CATALOG` (`layerOfLetter()`), not in `LETTER_KEY`, which names only the
+OpenStreetMap pools and dropped every worldwide climb (owner 2026-10-02,
+Mortirolo). Picking one lifts the scope to that region,
 loads it (`window.CCCatalog.ensureRegion()`) and opens the place, or the route,
 from the rows it brought.
 

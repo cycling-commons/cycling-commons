@@ -3,7 +3,7 @@
    @see docs/specs/map-and-search.md §7 */
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, slug, txtOn, photonLang, COORD_COLOR } from './util.js';
-import { CITIES, layerByKey, LETTER_KEY } from './catalog.js';
+import { CATALOG, CITIES, layerByKey, LETTER_KEY } from './catalog.js';
 import { inScope, scopeLabel, liftScopeForHit, noteCoverageSearchHit } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
 import { openPlace, openCity, openFeatureById, openRouteById } from './places.js';
@@ -272,6 +272,11 @@ export function initSearchUi(){
       if(Array.isArray(c[0])) c=c[Math.floor(c.length/2)];
       return (c && c.length>=2) ? [+c[1], +c[0]] : null;
     };
+    /* Every layer of our own items, by letter: climbs (N) and routes (R) as
+       much as the pool kinds. LETTER_KEY names only the OpenStreetMap pools,
+       so a worldwide climb used to be dropped here (owner 2026-10-02:
+       "it does not find the Mortirolo climb"). */
+    const layerOfLetter = letter => CATALOG.find(l => l.letter===letter && !l.overlay && !l.pendingLayer) || null;
     const openApiHit = (letter, id, rid) => {
       const open = () => letter==='R' ? openRouteById(id) : openFeatureById(id);
       const done = () => { if(!open()) mapToast(D.linkGone || 'This place is no longer on the map.'); };
@@ -288,9 +293,9 @@ export function initSearchUi(){
         .then(d=>{
           if(ctl.signal.aborted) return;
           _apiHits=(d.features||[])
-            .filter(f=>f && f.properties && f.properties.name && LETTER_KEY[f.properties.letter])
+            .filter(f=>f && f.properties && f.properties.name && layerOfLetter(f.properties.letter))
             .filter(f=>!idxIds().has(f.properties.letter+':'+f.properties.id))
-            .map(f=>{ const p=f.properties, layer=layerByKey[LETTER_KEY[p.letter]], rid=p.region_id ? regionIdOf(p.region_id) : null;
+            .map(f=>{ const p=f.properties, layer=layerOfLetter(p.letter), rid=p.region_id ? regionIdOf(p.region_id) : null;
               return {name:p.name, key:slug(p.name), kind:layer.label, badge:layerGlyph(layer), color:layer.color,
                 letter:p.letter, ll:geomLL(f.geometry), rid:rid==null ? undefined : rid, id:p.id, verified:p.tier==='curated',
                 go:()=>openApiHit(p.letter, p.id, rid)}; })
