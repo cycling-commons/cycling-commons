@@ -1,0 +1,83 @@
+web/assets/contribute/climb-editor.js
+  s_49442ae34d3603::t_36e9fb7034fc10 323-326,328,331,337-354
+  s_49442ae34d3603::t_0541e3df0ce185 365-370,373,375-389,393-395,471
+web/tests/js/climb-profile-marks.test.mjs
+  s_49442ae34d3603::t_ec84479f1e7a4a 1-6,8,10,17-20,22-24,29-42
+  s_49442ae34d3603::t_b22f83254993db 7,9,11-16,21,25-28
+wiki/developers/numbers.md
+  s_49442ae34d3603::t_07cbba940e76c1 28
+web/assets/map/climb-profile.js
+  s_49442ae34d3603::t_d9d2c7584886cd 113-122,126
+  s_49442ae34d3603::t_96c304604ddb61 93-103,105,107-110,112,123-125,127-131,134,138-143
+  s_49442ae34d3603::t_2353d814faf39b 43-44
+  s_49442ae34d3603::t_b22f83254993db 9,39-42,104,106,132-133,135-137
+  s_49442ae34d3603::t_6ea4c5bf2c30cc 6,111,149
+web/src/Elevation/ClimbProfiler.php
+  s_49442ae34d3603::t_c1bcfe406a7d22 36-45,143-175,177-190,286-310
+  s_49442ae34d3603::t_83d5ccf4ccffd1 271,285
+  s_49442ae34d3603::t_38d44005a540ad 280-283
+  s_49442ae34d3603::t_d132754df567a8 176,473
+  s_49442ae34d3603::t_c6aa84aaea9e3a 46-51,191-270,272-279,284
+  s_49442ae34d3603::t_ac9f7babb0d1db 311
+docs/specs/moderation-and-contribution.md
+  s_49442ae34d3603::t_b4e9514fda84a8 205-207
+docs/specs/climb-elevation.md
+  s_49442ae34d3603::t_b4d426a8271440 1111-1123
+  s_49442ae34d3603::t_5838c21135ecea 1103-1110
+  s_49442ae34d3603::t_82e1f64e706aea 1336
+  s_49442ae34d3603::t_ab02a6de800d8d 1349-1370
+web/tests/Controller/ElevationControllerTest.php
+  s_49442ae34d3603::t_6709e7e7395427 184
+  s_49442ae34d3603::t_4b149acc23a2ff 217
+  s_49442ae34d3603::t_59de9f46d12d98 10-11,14,17-18,159-183
+  s_49442ae34d3603::t_d0151caa800aa8 185-216
+web/tests/Elevation/ClimbProfilerTest.php
+  s_49442ae34d3603::t_041097545366e3 369-418
+  s_49442ae34d3603::t_4fcbd55a993be7 334-368
+web/templates/contribute/improve.html.twig
+  s_49442ae34d3603::t_0541e3df0ce185 120
+  s_49442ae34d3603::t_6cb9f9e32ead07 142-143
+docs/specs/edit-items/N-climbs.md
+  s_49442ae34d3603::t_1be7128bdaa813 152
+web/assets/contribute/improve.js
+  s_49442ae34d3603::t_0541e3df0ce185 449-451
+  s_49442ae34d3603::t_6cb9f9e32ead07 143,147,454-455,1268-1272
+web/assets/contribute/climb-elevation.js
+  s_49442ae34d3603::t_eec79a3cccb0ec 39-58
+  s_49442ae34d3603::t_6ca7872749d35e 59-79
+web/assets/styles/map.css
+  s_49442ae34d3603::t_74ea443bc6bcfc 1522-1532
+web/src/Controller/ElevationController.php
+  s_49442ae34d3603::t_4b149acc23a2ff 97-98
+  s_49442ae34d3603::t_6ca7872749d35e 81-89
+  s_49442ae34d3603::t_eec79a3cccb0ec 70-74,90-96
+web/assets/map/profile-marks.js
+  s_49442ae34d3603::t_cd1493419a46c7 1-6,10,12-27,29-38
+  s_49442ae34d3603::t_b22f83254993db 7-9,11,28
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_3dc1656c717659 2650,2720-2721
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_25cfbbc13b98f5 2047,2121-2122
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_8222e4c9c6b856 2057,2132-2133
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_f01f64f9f34b81 2642,2712-2713
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_c7c1a032d69a17 2647,2717-2718
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "540d3950ba621cb645d9f5aa7d4152540786f779",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
