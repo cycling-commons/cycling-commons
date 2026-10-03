@@ -1,0 +1,27 @@
+web/templates/partials/_name_hint.html.twig
+  s_49442ae34d3603::t_532e0727bcd74e 2-4,16-17
+web/assets/js/name-hint.js
+  s_49442ae34d3603::t_532e0727bcd74e 28,30-32
+web/tests/Auth/DisplayNameHintTest.php
+  s_49442ae34d3603::t_532e0727bcd74e 194,197,208-210
+web/templates/security/check_email.html.twig
+  s_49442ae34d3603::t_6cda034d856d0f 23-24
+docs/specs/account-and-auth.md
+  s_49442ae34d3603::t_accbd5d773a909 1215-1218,1244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "925e54deda82a73d8803aaa742866ac4eda1068a",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
