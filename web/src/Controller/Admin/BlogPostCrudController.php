@@ -15,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -74,6 +75,8 @@ final class BlogPostCrudController extends AbstractCrudController
     #[\Override]
     public function configureFields(string $pageName): iterable
     {
+        // The row's primary key, on every admin list (owner 2026-10-04).
+        yield IdField::new('id', 'ID')->hideOnForm();
         yield TextField::new('title')
             ->setHelp('Up to '.BlogPost::TITLE_MAX.' characters.');
 

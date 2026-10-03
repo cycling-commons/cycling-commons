@@ -4513,6 +4513,7 @@ js:
   climb_how_3: 'Ziehe einen Marker, um ihn zu korrigieren — Route und Steigung werden neu berechnet.'
   climb_how_4: 'Rückgängig nimmt deine letzte Aktion zurück, auch ein Zurücksetzen.'
 admin:
+  col_id: 'ID'
   escalated:
     title: 'Fotos unter rechtlicher Sperre'
     warning_b: 'Mit Sorgfalt behandeln.'

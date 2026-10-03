@@ -24,6 +24,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
@@ -97,6 +98,8 @@ final class UserCrudController extends AbstractCrudController
     #[\Override]
     public function configureFields(string $pageName): iterable
     {
+        // The row's primary key, on every admin list (owner 2026-10-04).
+        yield IdField::new('id', 'ID')->hideOnForm();
         yield EmailField::new('email');
         yield TextField::new('displayName', 'Display Name');
         // docs/specs/account-and-auth.md §6.1 — roles/verified/lockout only via audited actions.

@@ -39,6 +39,7 @@
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>{{ 'admin.col_id'|trans }}</th>
                 <th>{{ 'admin.dashboard.col_user'|trans }}</th>
                 <th>{{ 'admin.dashboard.col_country'|trans }}</th>
                 <th>{{ 'admin.dashboard.col_registered'|trans }}</th>
@@ -47,12 +48,13 @@
         <tbody>
             {% for u in stats.recent %}
                 <tr>
+                    <td>{{ u.id }}</td>
                     <td>{{ u.displayName }} &middot; <span class="text-muted">{{ u.email }}</span></td>
                     <td>{{ u.country ? u.country.name : '—' }}</td>
                     <td>{{ u.createdAt ? u.createdAt|cc_datetime : '—' }}</td>
                 </tr>
             {% else %}
-                <tr><td colspan="3" class="text-muted">{{ 'admin.dashboard.no_recent'|trans }}</td></tr>
+                <tr><td colspan="4" class="text-muted">{{ 'admin.dashboard.no_recent'|trans }}</td></tr>
             {% endfor %}
         </tbody>
     </table>

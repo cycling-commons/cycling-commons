@@ -44,6 +44,7 @@
                         : 'join.scope_whole_country'|trans)) %}
             <details class="cur-row">
                 <summary>
+                    <span class="cur-id">#{{ row.app.id }}</span>
                     <span class="cur-name">{{ row.user ? row.user.displayName : 'admin.curator.applicant_gone'|trans }}</span>
                     <span class="cur-meta">{{ scope }} ({{ row.app.countryCode }})</span>
                     {# The answer, on the row itself. The desk lists decided

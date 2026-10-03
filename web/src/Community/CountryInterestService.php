@@ -167,12 +167,12 @@ final class CountryInterestService
      * always has one, and it is how somebody who offered to curate is
      * actually reached.
      *
-     * @return list<array{countryCode: string, regionName: string, willing: bool, note: ?string, displayName: ?string, email: ?string, updatedAt: string}>
+     * @return list<array{id: int, countryCode: string, regionName: string, willing: bool, note: ?string, displayName: ?string, email: ?string, updatedAt: string}>
      */
     public function requests(): array
     {
         $rows = $this->db->fetchAllAssociative(
-            'SELECT ci.country_code, ci.region_name, ci.willing_to_curate, ci.note,
+            'SELECT ci.id, ci.country_code, ci.region_name, ci.willing_to_curate, ci.note,
                     ci.updated_at, u.display_name, u.email
                FROM country_interest ci
                LEFT JOIN users u ON u.id = ci.user_id
@@ -181,6 +181,7 @@ final class CountryInterestService
 
         return array_map(
             static fn (array $r): array => [
+                'id' => (int) $r['id'],
                 'countryCode' => (string) $r['country_code'],
                 'regionName' => (string) $r['region_name'],
                 'willing' => (bool) $r['willing_to_curate'],

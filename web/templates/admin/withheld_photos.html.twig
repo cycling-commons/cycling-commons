@@ -36,6 +36,7 @@
                         <tr>
                             <th style="width:2rem"></th>
                             <th style="width:7rem">{{ 'admin.withheld.col_photo'|trans }}</th>
+                            <th>{{ 'admin.col_id'|trans }}</th>
                             <th>{{ 'admin.withheld.col_claim'|trans }}</th>
                             <th style="width:11rem">{{ 'admin.withheld.col_when'|trans }}</th>
                             {# The reporter column is a salted-hash prefix, never an address or an IP:
@@ -48,6 +49,8 @@
                             <tr>
                                 <td><input type="checkbox" name="media[]" value="{{ card.uuid }}" checked></td>
                                 <td><img src="{{ card.sm }}" alt="" style="width:6rem;height:auto;border-radius:4px"></td>
+                                {# media_upload's key is a UUID, so the ID is that. #}
+                                <td><code class="small">{{ card.uuid }}</code></td>
                                 <td>
                                     <div class="small">
                                         {{ card.itemName ?: ('admin.withheld.no_item'|trans) }}

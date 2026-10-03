@@ -590,6 +590,17 @@ and lists no moderator surface for anyone, curator included. Pinned by
 EasyAdmin 5; every surface is double-gated (`^/admin` firewall rule **and**
 `#[IsGranted('ROLE_ADMIN')]` on each controller).
 
+**Every list shows the row's key (owner 2026-10-04).** Each admin list has an
+"ID" column with the row's primary key, so a row on screen can be found in the
+database: the five EasyAdmin lists (users, activity, reset requests, releases,
+blog) start with `IdField`, the dashboard's recent accounts, the country
+requests, moderator areas, moderation activity (the region's key) and coverage
+runs have an ID column, a curator application shows `#<id>` on its row, a
+withheld photo shows its `media_upload` UUID, and the moderator-areas and
+coverage-run pages name the key in their title. An escalated submission
+already reads "SUB-<id>". The country requests' area table has no key: an
+area there is free text, not a row.
+
 ### 6.1 Support actions
 
 All account state changes go through `App\Service\UserAdminService` — the

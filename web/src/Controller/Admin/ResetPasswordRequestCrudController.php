@@ -14,6 +14,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -56,6 +57,8 @@ final class ResetPasswordRequestCrudController extends AbstractCrudController
     #[\Override]
     public function configureFields(string $pageName): iterable
     {
+        // The row's primary key, on every admin list (owner 2026-10-04).
+        yield IdField::new('id', 'ID')->hideOnForm();
         yield AssociationField::new('user', 'Account')->formatValue(
             static fn (mixed $v, ResetPasswordRequest $r): string => $r->getUser() instanceof User ? $r->getUser()->getEmail() : '—'
         );

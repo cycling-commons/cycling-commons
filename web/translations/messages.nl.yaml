@@ -4512,6 +4512,7 @@ js:
   climb_how_3: 'Sleep een marker om hem te corrigeren — de route en het stijgingspercentage worden opnieuw berekend.'
   climb_how_4: 'Ongedaan maken neemt je laatste actie terug, ook een reset.'
 admin:
+  col_id: 'ID'
   escalated:
     title: 'Foto''s onder juridische blokkade'
     warning_b: 'Voorzichtig behandelen.'

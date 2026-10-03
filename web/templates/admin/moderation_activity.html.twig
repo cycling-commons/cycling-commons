@@ -19,6 +19,7 @@
         <thead>
           <tr>
             <th>{{ 'admin.modactivity.col_month'|trans }}</th>
+            <th>{{ 'admin.col_id'|trans }}</th>
             <th>{{ 'admin.modactivity.col_region'|trans }}</th>
             <th class="text-end">{{ 'admin.modactivity.col_approved'|trans }}</th>
             <th class="text-end">{{ 'admin.modactivity.col_rejected'|trans }}</th>
@@ -28,6 +29,7 @@
           {% for row in rows %}
             <tr>
               <td>{{ row.month }}</td>
+              <td>{{ row.region_id ?? '' }}</td>
               <td>{{ row.region }}</td>
               <td class="text-end">{{ row.approved }}</td>
               <td class="text-end">{{ row.rejected }}</td>

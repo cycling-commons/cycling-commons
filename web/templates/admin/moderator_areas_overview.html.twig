@@ -20,6 +20,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th>{{ 'admin.col_id'|trans }}</th>
             <th>{{ 'admin.areas.col_person'|trans }}</th>
             <th>{{ 'admin.areas.col_areas'|trans }}</th>
             <th></th>
@@ -28,6 +29,7 @@
         <tbody>
           {% for row in rows %}
             <tr>
+              <td>{{ row.user.id }}</td>
               <td>
                 <strong>{{ row.user.displayName }}</strong><br>
                 <span class="text-muted small">{{ row.user.email }}</span>

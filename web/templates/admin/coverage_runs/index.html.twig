@@ -21,6 +21,7 @@
       <table class="table">
         <thead>
           <tr>
+            <th>{{ 'admin.col_id'|trans }}</th>
             <th>{{ 'admin.coverage_runs.col_started'|trans }}</th>
             <th>{{ 'admin.coverage_runs.col_family'|trans }}</th>
             <th>{{ 'admin.coverage_runs.col_trigger'|trans }}</th>
@@ -33,6 +34,7 @@
         <tbody>
           {% for run in runs %}
             <tr data-run="{{ run.id }}">
+              <td>{{ run.id }}</td>
               <td>
                 <a href="{{ path('admin_coverage_run', {id: run.id}) }}">
                   {{ run.started_at|date('Y-m-d H:i') }}

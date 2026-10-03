@@ -513,6 +513,7 @@ final class DashboardController extends AbstractDashboardController
     {
         $rows = $em->getConnection()->fetchAllAssociative(<<<'SQL'
             SELECT to_char(date_trunc('month', s.decided_at), 'YYYY-MM') AS month,
+                   r.id AS region_id,
                    COALESCE(r.name, s.country_code, '?') AS region,
                    COUNT(*) FILTER (WHERE s.status = 'approved') AS approved,
                    COUNT(*) FILTER (WHERE s.status = 'rejected') AS rejected
@@ -520,8 +521,8 @@ final class DashboardController extends AbstractDashboardController
             LEFT JOIN region r ON r.id = s.region_id
             WHERE s.decided_at IS NOT NULL
               AND s.decided_at >= date_trunc('month', NOW()) - INTERVAL '11 months'
-            GROUP BY 1, 2
-            ORDER BY 1 DESC, 2
+            GROUP BY 1, 2, 3
+            ORDER BY 1 DESC, 3
             SQL);
 
         return $this->render('admin/moderation_activity.html.twig', ['rows' => $rows]);

@@ -4505,6 +4505,7 @@ js:
   climb_how_3: 'Faites glisser un marqueur pour le corriger — l''itinéraire et la pente sont recalculés.'
   climb_how_4: 'Annuler revient sur votre dernière action, y compris une réinitialisation.'
 admin:
+  col_id: 'ID'
   escalated:
     title: 'Photos sous blocage légal'
     warning_b: 'À manipuler avec précaution.'

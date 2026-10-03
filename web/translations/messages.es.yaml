@@ -4544,6 +4544,7 @@ js:
   climb_how_3: 'Arrastra cualquier marcador para corregirlo — el recorrido y la pendiente se recalculan.'
   climb_how_4: 'Deshacer recupera lo último que hiciste, incluido un Reinicio.'
 admin:
+  col_id: 'ID'
   escalated:
     title: 'Fotos bajo retención legal'
     warning_b: 'Trátalo con cuidado.'

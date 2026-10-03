@@ -4534,6 +4534,7 @@ js:
   climb_how_3: 'Drag any marker to correct it — the route and the gradient are recalculated.'
   climb_how_4: 'Undo takes back the last thing you did, including a Reset.'
 admin:
+  col_id: 'ID'
   escalated:
     title: 'Photos under legal hold'
     warning_b: 'Handle with care.'

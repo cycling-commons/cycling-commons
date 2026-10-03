@@ -17,4 +17,5 @@
 .creq .yes{color:#1a7f37;font-weight:600}
 .creq .note{white-space:pre-wrap;overflow-wrap:anywhere}
 .creq .when{white-space:nowrap;opacity:.7;font-size:.92em}
+.creq .id{white-space:nowrap;opacity:.7;font-variant-numeric:tabular-nums}
 .creq-none{padding:1.1rem 1.3rem;background:var(--bs-body-bg,#fff);border:1px solid rgba(0,0,0,.125);border-radius:.375rem}

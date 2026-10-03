@@ -62,6 +62,7 @@
 
       <table>
         <thead><tr>
+          <th>{{ 'admin.col_id'|trans }}</th>
           <th>{{ 'admin.country_requests.who'|trans }}</th>
           <th>{{ 'admin.country_requests.area'|trans }}</th>
           <th>{{ 'admin.country_requests.note'|trans }}</th>
@@ -70,6 +71,7 @@
         <tbody>
         {% for p in c.people %}
           <tr>
+            <td class="id">{{ p.id }}</td>
             <td>
               {# The address is the whole point of a volunteer: a name cannot
                  be written to. An account without a display name shows the

@@ -10,6 +10,7 @@ use App\Support\Entity\ReleaseTag;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -44,6 +45,8 @@ final class ReleaseTagCrudController extends AbstractCrudController
     #[\Override]
     public function configureFields(string $pageName): iterable
     {
+        // The row's primary key, on every admin list (owner 2026-10-04).
+        yield IdField::new('id', 'ID')->hideOnForm();
         yield TextField::new('tag')
             ->setHelp('The git tag, with its v: v0.9.0. The bugs desk offers exactly these.');
         yield DateField::new('releasedAt', 'Released on')
