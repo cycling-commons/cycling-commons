@@ -22,11 +22,8 @@ use Twig\Extension\GlobalsInterface;
  * page of this site, and sitting between "Governance" and "Get involved" it
  * read as the latter.
  *
- * **Bluesky rather than X.** Not a slot left empty out of neglect: an atlas
- * built on open data has no business sending riders somewhere that is not, and
- * the AT Protocol is. Mastodon renders too when it is configured, which is why
- * every link carries `rel="me"`: that is what lets a Mastodon profile verify
- * this site claims the account back.
+ * **Every link carries `rel="me"`.** That is what lets a Mastodon profile
+ * verify this site claims the account back.
  *
  * A global rather than a function, because the footer renders on every page and
  * a function would need threading through every controller's context.

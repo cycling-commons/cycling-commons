@@ -64,9 +64,6 @@ parameters:
     # deployment shows the channels it actually has rather than a row of links
     # to somebody else's account, and a channel we open later needs a variable
     # rather than a deploy of new markup.
-    #
-    # Bluesky rather than X, deliberately: an atlas built on open data has no
-    # business sending riders somewhere that is not.
     cc.social.github: '%env(default:cc.blank:CC_SOCIAL_GITHUB)%'
     cc.social.youtube: '%env(default:cc.blank:CC_SOCIAL_YOUTUBE)%'
     cc.social.instagram: '%env(default:cc.blank:CC_SOCIAL_INSTAGRAM)%'
