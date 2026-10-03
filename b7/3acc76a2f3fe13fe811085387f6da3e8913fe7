@@ -1,0 +1,47 @@
+web/src/Vote/SeasonResults.php
+  s_49442ae34d3603::t_fe851f63f8a037 32,326
+web/src/Vote/BallotRules.php
+  s_49442ae34d3603::t_fe851f63f8a037 41-43,46,55-56
+web/tests/Vote/BallotRulesTest.php
+  s_49442ae34d3603::t_fe851f63f8a037 22,25
+docs/specs/route-domain.md
+  s_49442ae34d3603::t_dcf4751da91690 1008-1009,1020,1026,1039,1044,1046-1049,1053-1054,1122,1129-1130
+  s_49442ae34d3603::t_58426ee63172fa 1131,1306
+web/tests/Catalog/RouteRankingServiceTest.php
+  s_49442ae34d3603::t_fe851f63f8a037 64
+web/tests/Vote/BestOfLiveTest.php
+  s_49442ae34d3603::t_fe851f63f8a037 113,130-131
+  s_49442ae34d3603::t_acf8fbc13c993a 321,330
+web/tests/Vote/SeasonResultsTest.php
+  s_49442ae34d3603::t_fe851f63f8a037 90-91,98-99,102,111,134,136-141,148,151
+web/tests/Vote/BallotPageTest.php
+  s_49442ae34d3603::t_0abffc30f4777d 154,269,272,279
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_0980da1c41f290 2595
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_dca1461c4c246a 1988
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_0f4d7fbab63004 1997
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_aadd64670fe0dd 2587
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_cad18a0a097c9d 2592
+wiki/curation-and-voting.md
+  s_49442ae34d3603::t_01ed706218c694 67,78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b73acc76a2f3fe13fe811085387f6da3e8913fe7",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
