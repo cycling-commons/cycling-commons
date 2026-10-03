@@ -196,12 +196,20 @@
         list.style.maxHeight = Math.max(120, above) + 'px';
       }
     }
-    /* The list wears the colours of the control it opened from. */
+    /* The list wears the colours of the control it opened from. A control
+       with a clear background (a chip on a dark band) has light text for the
+       band behind it; its list falls back to the paper colours together, or
+       light text lands on the paper list and nothing can be read. */
     function theme() {
       var cs = getComputedStyle(btn);
       var clear = /rgba\(.*,\s*0\)$|^transparent$/.test(cs.backgroundColor);
-      if (clear) list.style.removeProperty('--sel-bg'); else list.style.setProperty('--sel-bg', cs.backgroundColor);
-      list.style.setProperty('--sel-fg', cs.color);
+      if (clear) {
+        list.style.removeProperty('--sel-bg');
+        list.style.removeProperty('--sel-fg');
+      } else {
+        list.style.setProperty('--sel-bg', cs.backgroundColor);
+        list.style.setProperty('--sel-fg', cs.color);
+      }
       list.style.fontFamily = cs.fontFamily;
       list.style.fontSize = cs.fontSize;
     }

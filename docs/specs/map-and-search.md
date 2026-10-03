@@ -448,7 +448,15 @@ map module opens `#drawer` behind its back.
   it put two arrows on every dropdown. One watcher picks up selects added later; `data-native`
   opts one out, and `multiple` or `size` selects stay native. The list is
   `position: fixed` in the colours of the button it opened from, so no panel
-  with overflow hidden cuts it off. Keyboard: arrows, Home/End, type-ahead,
+  with overflow hidden cuts it off; a button with a clear background (a chip
+  on a dark band) has light text for the band behind it, so its list falls
+  back to the paper colours for both (2026-10-03: light text on the paper
+  list read as an empty dropdown). A dropdown that filters or picks what a
+  page shows is a chip, `select.sel-chip` in atlas.css (`--dark` on a dark
+  band), the same pill as the filter chips beside it (owner 2026-10-03: "make
+  all the dropdowns like chips"): the country on /best, the ballot's region
+  and bike, rows per page, the contributors' country, and the curator desks'
+  filters and sorts. Form fields keep the underline. Keyboard: arrows, Home/End, type-ahead,
   Enter/Space, Esc, Tab. The button keeps a focus ring even where the page's
   `select` rules remove the outline. Opening lands the button in view at once,
   since the page scrolls smoothly and a button just reached with Tab may still

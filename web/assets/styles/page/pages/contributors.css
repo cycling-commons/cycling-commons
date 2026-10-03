@@ -13,9 +13,9 @@
 @media(max-width:720px){.ack .st{white-space:normal;max-width:14rem}}
 @media(max-width:520px){.ack .rg{display:none}.ack .st{font-size:.72rem}}
 .ack-bar{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
-.ack-q,.ack-rg{font-family:var(--mono);font-size:.85rem;padding:.5rem .8rem;border:1px solid rgba(20,22,14,.2);border-radius:6px;background:var(--paper);color:var(--ink)}
+.ack-q{font-family:var(--mono);font-size:.85rem;padding:.5rem .8rem;border:1px solid rgba(20,22,14,.2);border-radius:6px;background:var(--paper);color:var(--ink)}
 .ack-q{flex:1;min-width:200px}
-.ack-q:focus,.ack-rg:focus{outline:none;border-color:var(--trail)}
+.ack-q:focus{outline:none;border-color:var(--trail)}
 .ack-go{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem 1rem;min-height:34px;border:1px solid var(--clay);border-radius:30px;background:var(--paper);color:var(--clay);cursor:pointer}
 .ack-go:hover{background:var(--clay);color:var(--paper)}
 .ack-empty{font-size:.9rem;color:#7a7d6c;margin-top:1.2rem}

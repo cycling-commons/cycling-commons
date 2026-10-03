@@ -98,7 +98,7 @@
       {% if filter_area %}<input type="hidden" name="area" value="{{ filter_area }}">{% endif %}
       {% if public_only %}<input type="hidden" name="public" value="1">{% endif %}
       <label for="bugsort">{{ 'support.bugs.sort_label'|trans }}</label>
-      <select id="bugsort" name="sort" data-autosubmit>
+      <select id="bugsort" name="sort" class="sel-chip" data-autosubmit>
         {% for so in sorts %}
           <option value="{{ so.value }}"{{ sort == so.value ? ' selected' : '' }}>{{ so.label|trans }}</option>
         {% endfor %}

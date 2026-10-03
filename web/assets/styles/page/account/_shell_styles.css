@@ -121,7 +121,6 @@
   .mod-bar > .q-density:only-child{margin-left:0}
   .mod-filters{display:flex;gap:1rem;flex-wrap:wrap;align-items:end;margin:0}
   .mod-filters label{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
-  .mod-filters select{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:150px}
   .mod-search{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#595c4d;display:flex;flex-direction:column;gap:.3rem}
   .mod-search input{font-family:var(--sans);font-size:.9rem;padding:.5rem;min-height:34px;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);min-width:16rem}
   .mod-go{align-self:flex-end}

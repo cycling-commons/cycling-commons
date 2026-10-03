@@ -32,7 +32,7 @@
        setting must not automatically change context). #}
     <label>{{ 'moderate_routes.filter.region'|trans }}
       {# autocomplete=off: a reload shows the region applied, not the last one picked. #}
-      <select name="region" autocomplete="off">
+      <select name="region" class="sel-chip" autocomplete="off">
         <option value="">{{ (scope_global ? 'moderate_routes.filter.all_regions' : 'moderate_routes.filter.all_my_regions')|trans }}</option>
         {% for r in regions %}<option value="{{ r.id }}"{{ filter_region == r.id ? ' selected' }}>{{ cc_region_label(r.slug, r.name) }}</option>{% endfor %}
       </select>

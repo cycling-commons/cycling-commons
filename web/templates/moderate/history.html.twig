@@ -44,25 +44,25 @@
     {% if history_filters.mine %}<input type="hidden" name="handled" value="mine">{% endif %}
     {% if history_filters.status %}<input type="hidden" name="hstatus" value="{{ history_filters.status }}">{% endif %}
     <label>{{ 'moderate.filter.country'|trans }}
-      <select name="country" data-autosubmit>
+      <select name="country" class="sel-chip" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
         {% for c in countries %}<option value="{{ c }}"{{ history_filters.country == c ? ' selected' }}>{{ c }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ 'moderate.filter.region'|trans }}
-      <select name="region" data-autosubmit>
+      <select name="region" class="sel-chip" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
         {% for r in regions %}<option value="{{ r }}"{{ history_filters.region == r ? ' selected' }}>{{ r }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ 'moderate.filter.type'|trans }}
-      <select name="type" data-autosubmit>
+      <select name="type" class="sel-chip" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
         {% for t in types %}<option value="{{ t }}"{{ history_filters.type == t ? ' selected' }}>{{ ('moderate.type.' ~ t)|trans }}</option>{% endfor %}
       </select>
     </label>
     <label>{{ 'moderate.filter.category'|trans }}
-      <select name="letter" data-autosubmit>
+      <select name="letter" class="sel-chip" data-autosubmit>
         <option value="">{{ 'moderate.filter.all'|trans }}</option>
         {% for k in kinds %}<option value="{{ k.letter }}"{{ history_filters.letter == k.letter ? ' selected' }}>{{ k.labelKey|trans }}</option>{% endfor %}
       </select>

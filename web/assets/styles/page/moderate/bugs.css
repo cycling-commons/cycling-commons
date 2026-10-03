@@ -38,9 +38,6 @@
 .listhead .bugfound{margin:0}
 .bugsort{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:0}
 .bugsort label{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#595c4d}
-.bugsort select{font-family:inherit;font-size:.85rem;padding:.4rem .5rem;
-  border:1px solid rgba(20,22,14,.22);border-radius:5px;background:var(--paper)}
-.bugsort select:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
 .bugsort-go{font-family:inherit;font-weight:700;font-size:.82rem;padding:.4rem .8rem;border:0;
   border-radius:5px;background:var(--trail);color:var(--ink);cursor:pointer}
 .bugsort-go:hover{background:#ff703d}

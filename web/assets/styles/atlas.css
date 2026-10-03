@@ -139,6 +139,18 @@ select{font-family:var(--sans);font-size:1rem;color:var(--ink);background-color:
   background-repeat:no-repeat;background-position:right .1rem center;background-size:1rem}
 select:focus{border-bottom-color:var(--trail)}
 select option{color:var(--ink)}
+/* A dropdown that filters or picks what a page shows is a chip, the same pill
+   as the filter chips beside it (owner 2026-10-03). Form fields keep the
+   underline above. `--dark` is the same chip on a dark band. */
+select.sel-chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;line-height:1.4;
+  padding:.3rem 1.75rem .3rem .65rem;border:1px solid rgba(20,22,14,.22);border-radius:30px;color:#595c4d;
+  background-color:var(--paper);background-position:right .55rem center;background-size:.8rem;max-width:100%;min-height:0}
+select.sel-chip:hover,select.sel-chip:focus{border-color:var(--ink)}
+select.sel-chip:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+select.sel-chip--dark{background-color:transparent;color:var(--paper);border-color:rgba(239,230,212,.45);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23efe6d4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")}
+select.sel-chip--dark:hover,select.sel-chip--dark:focus{border-color:var(--paper)}
+select.sel-chip--dark option{color:var(--ink);background:var(--paper)}
 
 /* type */
 .kicker{font-family:var(--mono);font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--clay);margin-bottom:1rem;display:flex;align-items:flex-start;gap:.6rem}
@@ -203,8 +215,6 @@ input:not([type="checkbox"]):not([type="radio"]):focus-visible,select:focus-visi
 .pager-of{color:#595c4d;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
 .pager-size{display:flex;align-items:center;gap:.5rem;flex:none}
 .pager-size label{color:#595c4d;letter-spacing:.08em;text-transform:uppercase}
-.pager-size select{font-family:var(--mono);font-size:.74rem;padding:.35rem .5rem;min-height:32px;
-  border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper);color:var(--ink)}
 /* On a phone the range leads, the steps sit under it full width, and the
    page-length control keeps its own row rather than being squeezed to a
    sliver beside them. */
