@@ -1994,7 +1994,7 @@ best:
   no_ranking: 'Todavía sin clasificación'
   no_ranking_body: 'Una lista tiene clasificación cuando %m% personas distintas han votado en ella. Hasta entonces, estos son los lugares más confirmados.'
   shared: 'Puesto compartido'
-  handicap: 'Entre los 3 primeros el año pasado: los puntos cuentan x0,75'
+  handicap: 'Entre los 5 primeros el año pasado: los puntos cuentan x0,75'
   gone: 'Ya no está en el mapa'
   everywhere_hint: 'Elige un país para ver todas sus regiones, también las listas que aún no tienen clasificación.'
   everywhere_empty: 'Ninguna lista tiene clasificación todavía en esta ronda.'

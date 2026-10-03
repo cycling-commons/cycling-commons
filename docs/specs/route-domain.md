@@ -1005,6 +1005,8 @@ votes are ranked ("number 1 gets 5 points, number 2 3 and number 3 1"), riders
 can make betting possible", no page shows a number of voters, and the number of
 votes and the points stay easy to change ("perhaps voting goes from 3 to 5").
 On 2026-10-03 the owner set it: "let users vote top 5: 10, 7, 5, 3, 1 points".
+On 2026-10-04 the points became 15, 10, 7, 4 and 2, and the handicap covers
+last year's top 5, as long as the ballot.
 
 **One list per region, season and category.** The categories are the five
 votable types (`ItemType::isVotable()`): climbs, routes (quality rides), scenic
@@ -1015,13 +1017,13 @@ belongs to the vote (§8b); every rule below then applies to that narrowed list.
 
 | Rule | Value | Why |
 |---|---|---|
-| Ballot | a ranked **top 5** per rider per region, season and category, at most 1 vote per item: the first choice is worth **10 points**, then **7**, **5**, **3** and **1** | One keen rider cannot carry an item; a favourite counts for more than a third pick |
+| Ballot | a ranked **top 5** per rider per region, season and category, at most 1 vote per item: the first choice is worth **15 points**, then **10**, **7**, **4** and **2** | One keen rider cannot carry an item; a favourite counts for more than a third pick |
 | Submit | a ballot is a **draft** until the rider submits it, with **all 5 votes** filled; only a submitted ballot counts, and it is **final** for that list and season. A draft left when voting closes counts for nothing and is deleted | A vote is a decision, not a click left behind; "make it definitive" (owner 2026-10-02) |
 | When | votes are cast in the **season before**; the ballot closes when the season starts, and the list is published that day and shown all season | No standing is visible while riders vote, so nobody can bet on one |
 | Public numbers | a **published** (closed) ranked list shows each row's **points** (owner 2026-10-03); never a vote or voter count, and nothing at all for a ballot still open | Points of a closed season settle nothing more, and say how close the list was; counts of people identify voters |
 | Who may vote | confirmed email, account at least **14 days** old, at least one thing done on the site (a ride or "been there" confirmation, or a contribution) | With few voters one fake account would decide a list |
 | Ranking threshold | **5 different voters** on that list | Below that a "number 1" means nothing |
-| Handicap | last year's same-season **top 3** of the same list: points x **0.75** | The list changes over the years, but a clearly loved item can still win |
+| Handicap | last year's same-season **top 5** of the same list: points x **0.75** | The list changes over the years, but a clearly loved item can still win; top 5, as long as the ballot, so other or new places can win too (owner 2026-10-04) |
 | Close calls | less than 1 point apart after the handicap shares the place; the item that won less often before is shown first | Small numbers cannot honestly separate them |
 | Fresh start | votes count only for the season and year they were cast for | The list fills up again every season |
 
@@ -1034,22 +1036,22 @@ region can show a climbs ranking while its beds still say "No ranking yet".
 
 **When the handicap starts.** It needs a winner: the first year has none, so
 nothing is handicapped until the same season a year later, and a season that
-never reached 5 voters names no top 3 and hands no handicap on.
+never reached 5 voters names no top 5 and hands no handicap on.
 
 Worked example, Ardennes, spring 2028, climbs, 7 voters, who voted during
 winter 2027-28; the list is published on 1 March 2028:
 
-| Climb | Points (10 / 7 / 5 / 3 / 1 per rank) | Spring 2027 top 3 | Score |
+| Climb | Points (15 / 10 / 7 / 4 / 2 per rank) | Spring 2027 top 5 | Score |
 |---|---|---|---|
-| A | 40 | won | 40 x 0.75 = 30 |
-| B | 30 | no | 30 |
-| C | 19 | no | 19 |
-| D | 31 | 3rd | 31 x 0.75 = 23.25 |
+| A | 60 | won | 60 x 0.75 = 45 |
+| B | 45 | no | 45 |
+| C | 27 | no | 27 |
+| D | 50 | 3rd | 50 x 0.75 = 37.5 |
 
 Result: B and A score the same, so they share first place; B is listed first
 because A won before. D is third even with its handicap, C fourth. (The
-ballots: A first on four of them; B first on two and second and fourth on
-two more; D first on one and second on three; C second on two and third on one.) In the
+ballots: A first on four of them; B first on one and second on three; D
+first on two and second on two; C second on two and third on one.) In the
 same region and season the views list
 may have 6 voters and a ranking with no handicap (spring 2027 never reached 5
 voters), while where to sleep has 2 voters and shows "No ranking yet".
@@ -1117,15 +1119,16 @@ northern reader unless they see it is the southern summer (owner
 numbers of route-domain.md §8c are constants, not admin settings: they are
 the rules of a contest, and a value moved mid-season would change who could
 vote and who won after riders acted. An item's points are the sum over its
-votes of `POINTS_BY_SLOT` (10, 7, 5, 3, 1 by the rider's rank). Scores are kept in
+votes of `POINTS_BY_SLOT` (15, 10, 7, 4, 2 by the rider's rank). Scores are kept in
 quarter points (a point is 4, a handicapped point 3), so x0.75 and "less than
 1 point apart" are exact. A
 place is shared by every item less than one point below the first item of
 that place, measured from that first item and not chained along the list;
 places skip after a shared one (1, 1, 3). Inside a shared place the item with
 fewer earlier first places in the same list (any season) is shown first, then
-the higher score, then the item more riders voted for. "Top 3" for the handicap is every item placed 1 to 3, which
-can be more than three items when places are shared.
+the higher score, then the item more riders voted for. "Top 5" for the handicap is every item placed 1 to 5
+(`BallotRules::HANDICAP_TOP`), which can be more than five items when places
+are shared.
 
 **Storage.** One table, `season_vote`, for all five categories (route-domain.md
 §2.2). A list is (region, category, round); the region is the voted row's
@@ -1300,7 +1303,7 @@ was voted for in the season before, so a southern country shows its own
 season; a chosen season means each region's most recent started round of it.
 No list on the page belongs to a ballot that is still open, and the page no
 longer closes with a note about publishing and privacy, nor says "every season
-starts empty" (not true: last year's top 3 carry the handicap; owner
+starts empty" (not true: last year's top 5 carry the handicap; owner
 2026-10-03). A region's heading carries "No ranking yet" beside its name when
 its list is below the threshold, and no round line: the title names the round.
 The title names the season shown, in italics (owner 2026-10-03): "The best of *Autumn*", the

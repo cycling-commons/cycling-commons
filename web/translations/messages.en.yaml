@@ -1985,7 +1985,7 @@ best:
   no_ranking: 'No ranking yet'
   no_ranking_body: 'A list is ranked once %m% different riders have voted in it. Until then, these are the places riders confirmed most.'
   shared: 'Shared place'
-  handicap: 'In last year''s top 3: points count x0.75'
+  handicap: 'In last year''s top 5: points count x0.75'
   gone: 'No longer on the map'
   everywhere_hint: 'Pick a country to see every region, including the lists that have no ranking yet.'
   everywhere_empty: 'No list has a ranking yet this round.'

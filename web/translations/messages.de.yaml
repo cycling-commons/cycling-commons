@@ -2592,7 +2592,7 @@ best:
   no_ranking: 'Noch keine Rangfolge'
   no_ranking_body: 'Eine Liste bekommt eine Rangfolge, sobald %m% verschiedene Personen darin abgestimmt haben. Bis dahin stehen hier die am häufigsten bestätigten Orte.'
   shared: 'Geteilter Platz'
-  handicap: 'Letztes Jahr unter den ersten 3: Punkte zählen x0,75'
+  handicap: 'Letztes Jahr unter den ersten 5: Punkte zählen x0,75'
   gone: 'Nicht mehr auf der Karte'
   everywhere_hint: 'Wähle ein Land, um jede Region zu sehen, auch die Listen ohne Rangfolge.'
   everywhere_empty: 'In dieser Runde hat noch keine Liste eine Rangfolge.'

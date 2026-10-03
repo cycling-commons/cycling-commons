@@ -19,10 +19,10 @@ final class BallotRulesTest extends TestCase
     public function testTheRulesAreTheSpecsNumbers(): void
     {
         self::assertSame(5, BallotRules::VOTES_PER_LIST);
-        self::assertSame([1 => 10, 2 => 7, 3 => 5, 4 => 3, 5 => 1], BallotRules::POINTS_BY_SLOT);
+        self::assertSame([1 => 15, 2 => 10, 3 => 7, 4 => 4, 5 => 2], BallotRules::POINTS_BY_SLOT);
         self::assertSame(14, BallotRules::MIN_ACCOUNT_AGE_DAYS);
         self::assertSame(5, BallotRules::RANKING_THRESHOLD);
-        self::assertSame(3, BallotRules::HANDICAP_TOP);
+        self::assertSame(5, BallotRules::HANDICAP_TOP);
         self::assertSame(0.75, BallotRules::HANDICAP_QUARTERS / BallotRules::FULL_QUARTERS);
         self::assertSame(BallotRules::FULL_QUARTERS, BallotRules::CLOSE_CALL_QUARTERS);
     }

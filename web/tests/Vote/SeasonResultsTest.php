@@ -87,19 +87,19 @@ final class SeasonResultsTest extends KernelTestCase
         [$a, $b, $c, $d, $x] = [1001, 1002, 1003, 1004, 1005];
         // Spring 2027, five voters: A first, X second, D third.
         $this->ballots([1 => [$a, $x, $d], 2 => [$a, $x, $d], 3 => [$a, $x, $d], 4 => [$a, $x], 5 => [$a]], '2027-03-01');
-        // Spring 2028, seven ranked ballots (10, 7, 5, 3, 1 points): A 40, B 30, C 19, D 31.
-        $this->ballots([1 => [$a, $b], 2 => [$a, $d, $c, $b], 3 => [$a, $c], 4 => [$a, $d], 5 => [$b, $c], 6 => [$b, $d], 7 => [$d]], '2028-03-01');
+        // Spring 2028, seven ranked ballots (15, 10, 7, 4, 2 points): A 60, B 45, C 27, D 50.
+        $this->ballots([1 => [$a, $b], 2 => [$a, $b, $c], 3 => [$a, $b], 4 => [$a, $d], 5 => [$b, $d], 6 => [$d, $c], 7 => [$d, $c]], '2028-03-01');
 
         $list = $this->results('2028-04-10T12:00:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2028));
 
         self::assertSame(7, $list['voters']);
         self::assertTrue($list['ranked']);
         self::assertTrue($list['closed']);
-        // A 40 x 0.75 = 30 and B 30 share first, B first because A won before;
-        // D 31 x 0.75 = 23.25 is third, C 19 fourth. Scores in quarter points.
+        // A 60 x 0.75 = 45 and B 45 share first, B first because A won before;
+        // D 50 x 0.75 = 37.5 is third, C 27 fourth. Scores in quarter points.
         self::assertSame([$b, $a, $d, $c], array_column($list['entries'], 'subjectId'));
         self::assertSame([$b => 1, $a => 1, $d => 3, $c => 4], self::places($list['entries']));
-        self::assertSame([120, 120, 93, 76], array_column($list['entries'], 'score'));
+        self::assertSame([180, 180, 150, 108], array_column($list['entries'], 'score'));
         self::assertSame([false, true, true, false], array_column($list['entries'], 'handicapped'));
         self::assertSame([0, 1, 0, 0], array_column($list['entries'], 'winsBefore'));
         // Reading 2028 stored the closed spring 2027 it needed.
@@ -108,7 +108,7 @@ final class SeasonResultsTest extends KernelTestCase
 
     public function testWinsBeforeCountSharedFirstPlacesInAnySeason(): void
     {
-        // Summer 2027: 1001 and 1002 share first place, 13 points each.
+        // Summer 2027: 1001 and 1002 share first place, 40 points each.
         foreach ([1 => [1001, 1002], 2 => [1002, 1001], 3 => [1001], 4 => [1002], 5 => [1003]] as $user => $subjects) {
             foreach ($subjects as $subject) {
                 $this->vote($user, $subject, '2027-06-01', season: 'summer');
@@ -131,21 +131,24 @@ final class SeasonResultsTest extends KernelTestCase
         self::assertSame([1003 => 1, 1002 => 1, 1001 => 1], self::places($list['entries']));
     }
 
-    public function testEveryItemPlacedOneToThreeLastYearIsHandicapped(): void
+    public function testEveryItemPlacedOneToFiveLastYearIsHandicapped(): void
     {
-        // Spring 2027 places: 1001 first, 1002 second, 1003 and 1004 share third (2 points each), 1005 fifth (1 point).
-        $this->ballots([1 => [1001, 1002, 1003], 2 => [1001, 1002, 1003], 3 => [1001, 1002, 1004], 4 => [1001, 1002, 1004], 5 => [1001, 1002, 1005]], '2027-03-01');
-        $this->ballots([1 => [1001, 1002, 1003], 2 => [1004, 1005]], '2028-03-01');
+        // Spring 2027 places: 1001 first, 1002 second, 1003 third, 1004 and 1005 share fourth (10 points each), 1006 sixth (8 points).
+        $this->ballots([
+            1 => [1001, 1002, 1003, 1004, 1005], 2 => [1001, 1002, 1003, 1005, 1004], 3 => [1001, 1002, 1003, 1004, 1006],
+            4 => [1001, 1002, 1003, 1005, 1006], 5 => [1001, 1002, 1003, 1006],
+        ], '2027-03-01');
+        $this->ballots([1 => [1001, 1002, 1003], 2 => [1004, 1005, 1006]], '2028-03-01');
 
         $results = $this->results('2028-04-10T12:00:00+00:00');
         $key = new ListKey(self::REGION, ItemType::Climbs);
         $last = $results->list($key, self::spring(2027));
         $list = $results->list($key, self::spring(2028));
 
-        self::assertSame([1001 => 1, 1002 => 2, 1003 => 3, 1004 => 3, 1005 => 5], self::places($last['entries']));
+        self::assertSame([1001 => 1, 1002 => 2, 1003 => 3, 1004 => 4, 1005 => 4, 1006 => 6], self::places($last['entries']));
         $handicapped = array_column($list['entries'], 'handicapped', 'subjectId');
         ksort($handicapped);
-        self::assertSame([1001 => true, 1002 => true, 1003 => true, 1004 => true, 1005 => false], $handicapped);
+        self::assertSame([1001 => true, 1002 => true, 1003 => true, 1004 => true, 1005 => true, 1006 => false], $handicapped);
     }
 
     public function testAListBelowFiveVotersHasNoRanking(): void

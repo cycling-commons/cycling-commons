@@ -110,7 +110,7 @@ final class BestOfLiveTest extends WebTestCase
         $a = (int) $this->climb($rid, 'Col A')->getId();
         $b = (int) $this->climb($rid, 'Col B')->getId();
         $c = (int) $this->climb($rid, 'Col C')->getId();
-        // A and B 51 points each (10 + 7 from three riders each way), C 10.
+        // A and B 75 points each (15 + 10 from three riders each way), C 15.
         $this->voters($rid, 3, [$a, $b]);
         $this->voters($rid, 3, [$b, $a]);
         $this->voters($rid, 1, [$c]);
@@ -127,8 +127,8 @@ final class BestOfLiveTest extends WebTestCase
         self::assertStringNotContainsString('voters', $group->text(), 'no voter count in public (route-domain.md §8c)');
         self::assertStringNotContainsString('votes', $group->text(), 'no vote count in public');
         self::assertSame(['1=', '1=', '3'], $group->filter('ol.rank .n')->each(static fn ($n): string => trim($n->text())));
-        // A closed round shows its points (owner 2026-10-03): 3 x 10 + 3 x 7 each, and one first choice.
-        self::assertSame(['51 points', '51 points', '10 points'], $group->filter('ol.rank .pts')->each(static fn ($n): string => trim($n->text())));
+        // A closed round shows its points (owner 2026-10-03): 3 x 15 + 3 x 10 each, and one first choice.
+        self::assertSame(['75 points', '75 points', '15 points'], $group->filter('ol.rank .pts')->each(static fn ($n): string => trim($n->text())));
         self::assertStringNotContainsString('Lorem ipsum', $group->text(), 'a real card carries no filler');
     }
 
@@ -318,7 +318,7 @@ final class BestOfLiveTest extends WebTestCase
             'subject_id' => $a, 'subject_name' => 'Col Again', 'votes' => 6, 'score' => 24, 'handicapped' => 'false',
             'place' => 1, 'wins_before' => 0, 'list_position' => 1, 'voters' => 6, 'frozen_at' => '2026-06-01 02:00:00',
         ]);
-        // Again 44 points (2 x 10 + 2 x 7 + 10), x0.75 = 33; New 34 (2 x 7 + 2 x 10).
+        // Again 65 points (2 x 15 + 2 x 10 + 15), x0.75 = 48.75; New 50 (2 x 10 + 2 x 15).
         $this->voters($rid, 2, [$a, $b]);
         $this->voters($rid, 2, [$b, $a]);
         $this->voters($rid, 1, [$a]);
@@ -327,7 +327,7 @@ final class BestOfLiveTest extends WebTestCase
 
         $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Ranked Hills'));
         self::assertSame(['Col New', 'Col Again'], $group->filter('ol.rank .nm a')->each(static fn ($n): string => trim($n->text())));
-        self::assertSame(['width:100%', 'width:97%'], $group->filter('ol.rank .bar i')->each(static fn ($n): string => (string) $n->attr('style')));
+        self::assertSame(['width:100%', 'width:98%'], $group->filter('ol.rank .bar i')->each(static fn ($n): string => (string) $n->attr('style')));
     }
 
     /** A route list narrowed to one bike counts only the votes cast on that bike. */

@@ -2589,7 +2589,7 @@ best:
   no_ranking: 'Nog geen rangschikking'
   no_ranking_body: 'Een lijst wordt gerangschikt zodra %m% verschillende mensen erin gestemd hebben. Tot dan zijn dit de plekken die het vaakst bevestigd zijn.'
   shared: 'Gedeelde plaats'
-  handicap: 'Vorig jaar in de top 3: punten tellen x0,75'
+  handicap: 'Vorig jaar in de top 5: punten tellen x0,75'
   gone: 'Niet meer op de kaart'
   everywhere_hint: 'Kies een land om elke regio te zien, ook de lijsten die nog geen rangschikking hebben.'
   everywhere_empty: 'Geen enkele lijst heeft in deze ronde al een rangschikking.'

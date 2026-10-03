@@ -151,7 +151,7 @@ final class BallotPageTest extends WebTestCase
         self::assertSelectorTextContains('.ballot h3', 'Your ballot · Climbs');
         self::assertSelectorTextContains('.ballot .bitem', 'Mur de Ballot');
         self::assertSelectorTextContains('.ballot .bitem .brank', '1');
-        self::assertSelectorTextContains('.ballot .bitem .bpts', '10 points');
+        self::assertSelectorTextContains('.ballot .bitem .bpts', '15 points');
         self::assertSelectorTextContains('.ballot .vleft', 'You have 4 votes left in this list.');
         self::assertSame(1, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote WHERE user_id = ? AND subject_id = ?', [$u->getId(), $climb]));
 
@@ -266,17 +266,17 @@ final class BallotPageTest extends WebTestCase
         }
 
         $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
-        self::assertSame(['Côte Une 10 points', 'Côte Deux 7 points'], $crawler->filter('.ballot .bitem .bname')->each(static fn ($n): string => $n->text()));
+        self::assertSame(['Côte Une 15 points', 'Côte Deux 10 points'], $crawler->filter('.ballot .bitem .bname')->each(static fn ($n): string => $n->text()));
         self::assertNotNull($crawler->filter('.ballot .bitem')->first()->filter('button[value="up"]')->attr('hidden'), 'the first choice has nowhere to go up');
         self::assertNotNull($crawler->filter('.ballot .bitem')->last()->filter('button[value="down"]')->attr('hidden'), 'the last choice has nowhere to go down');
-        self::assertSame('[10,7,5,3,1]', $crawler->filter('#ballot')->attr('data-points'));
+        self::assertSame('[15,10,7,4,2]', $crawler->filter('#ballot')->attr('data-points'));
 
         $this->client->submit($crawler->filter('.ballot .bitem')->last()->filter('button[value="up"]')->form());
         self::assertResponseStatusCodeSame(303);
         $crawler = $this->client->followRedirect();
 
         self::assertStringStartsWith('Côte Deux', $crawler->filter('.ballot .bitem .bname')->first()->text());
-        self::assertSame(['10 points', '7 points'], $crawler->filter('.ballot .bitem .bpts')->each(static fn ($n): string => $n->text()));
+        self::assertSame(['15 points', '10 points'], $crawler->filter('.ballot .bitem .bpts')->each(static fn ($n): string => $n->text()));
     }
 
     public function testAFullListOffersNoMoreVotes(): void

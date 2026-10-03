@@ -61,7 +61,7 @@ final class RouteRankingServiceTest extends KernelTestCase
         ]);
     }
 
-    /** route-domain.md §8d: one first choice (10 points) beats two fifth choices (2 points). */
+    /** route-domain.md §8d: one first choice (15 points) beats two fifth choices (4 points). */
     public function testRanksByPointsBeforeVoteCount(): void
     {
         $first = $this->route();

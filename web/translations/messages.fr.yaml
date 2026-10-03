@@ -2584,7 +2584,7 @@ best:
   no_ranking: 'Pas encore de classement'
   no_ranking_body: 'Une liste est classée dès que %m% personnes différentes y ont voté. D''ici là, voici les lieux les plus confirmés.'
   shared: 'Place partagée'
-  handicap: 'Dans le top 3 de l''an dernier : les points comptent x0,75'
+  handicap: 'Dans le top 5 de l''an dernier : les points comptent x0,75'
   gone: 'N''est plus sur la carte'
   everywhere_hint: 'Choisissez un pays pour voir toutes ses régions, y compris les listes sans classement.'
   everywhere_empty: 'Aucune liste n''a encore de classement dans ce tour.'

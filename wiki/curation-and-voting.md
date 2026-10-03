@@ -64,7 +64,7 @@ of drowning in data.
   when winter starts, and the winter list is published that day and shown all winter. While a
   ballot is open no page shows any count, so nobody can read the standings and bet on them.
 - **A ranked top 5 per list.** Each rider picks five places in a list, at most one vote per place,
-  and puts them in order: the first choice gets 10 points, then 7, 5, 3 and 1.
+  and puts them in order: the number one gets 15 points, then 10, 7, 4 and 2.
   Picks and their order can change until the rider submits the ballot. A route vote also says
   which bike it was ridden on, so "best on a handbike" is a list of its own.
 - **Submit makes it count.** With all five picks in place the rider submits the ballot. Only a
@@ -75,7 +75,7 @@ of drowning in data.
   does not count). With few voters, one fake account would otherwise decide a list.
 - **A ranking needs 5 voters.** Below that the list says "No ranking yet" and shows the places
   riders confirmed most.
-- **Last year's top 3 count a little less.** In the same season a year later their points count
+- **Last year's top 5 count a little less.** In the same season a year later their points count
   x0.75, so the list changes over the years while a clearly loved place can still win.
 - **Close calls share a place.** Less than one point apart is too close to call; the place that won
   less often before is listed first.

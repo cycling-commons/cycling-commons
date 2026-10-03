@@ -29,7 +29,7 @@ use Psr\Clock\ClockInterface;
  * route changes the bikes it declares.
  *
  * Rounds are stored oldest first, because each needs the stored rounds before
- * it: last year's top 3 for the handicap, and every earlier first place for
+ * it: last year's top 5 for the handicap, and every earlier first place for
  * the order inside a shared place.
  *
  * Counting ignores a row's current state: a place retired mid-round keeps its
@@ -323,7 +323,7 @@ final class SeasonResults
         return [$join, $where, $params];
     }
 
-    /** @return list<int> what that round placed 1 to 3; nothing when it never reached a ranking */
+    /** @return list<int> what that round placed 1 to HANDICAP_TOP; nothing when it never reached a ranking */
     private function placedTopIn(ListKey $key, Round $round): array
     {
         return array_map(intval(...), $this->db->fetchFirstColumn(

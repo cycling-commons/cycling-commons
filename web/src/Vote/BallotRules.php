@@ -38,11 +38,12 @@ final class BallotRules
     public const int RANKING_THRESHOLD = 5;
 
     /**
-     * A rider ranks their votes, a top 5 (owner 2026-10-03): the first choice
-     * is worth 10 points, then 7, 5, 3 and 1. Keyed by `season_vote.slot`, one entry per vote
+     * A rider ranks their votes, a top 5 (owner 2026-10-03): the number one
+     * is worth 15 points, then 10, 7, 4 and 2 (owner 2026-10-04). Keyed by
+     * `season_vote.slot`, one entry per vote
      * ({@see self::VOTES_PER_LIST}), highest first.
      */
-    public const array POINTS_BY_SLOT = [1 => 10, 2 => 7, 3 => 5, 4 => 3, 5 => 1];
+    public const array POINTS_BY_SLOT = [1 => 15, 2 => 10, 3 => 7, 4 => 4, 5 => 2];
 
     /**
      * Scores are kept in quarter points, so x0.75 stays an integer: a point
@@ -51,8 +52,8 @@ final class BallotRules
     public const int FULL_QUARTERS = 4;
     public const int HANDICAP_QUARTERS = 3;
 
-    /** Last year's same-season places 1 to 3 carry the handicap. */
-    public const int HANDICAP_TOP = 3;
+    /** Last year's same-season places 1 to 5 carry the handicap (owner 2026-10-04, as long as the ballot). */
+    public const int HANDICAP_TOP = 5;
 
     /** Less than one point (four quarters) below the first item of a place shares it. */
     public const int CLOSE_CALL_QUARTERS = 4;
