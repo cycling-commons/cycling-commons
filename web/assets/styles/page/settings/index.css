@@ -135,3 +135,7 @@ input.is-invalid{border-bottom-color:var(--clay)}
   font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#5a5d4d}
 .tabs [role=tab][aria-selected="true"]{color:var(--trail);border-bottom-color:var(--trail)}
 .tabs [role=tab]:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+/* The name others see, at the display name field: it leads, the other is dimmed (owner 2026-10-03). */
+.seen-as{margin:.45rem 0 0;font-size:.9rem;color:#3d4034}
+.seen-as b{font-family:var(--mono);font-weight:700;color:var(--ink)}
+.seen-as .seen-dim{color:rgba(20,22,14,.42)}

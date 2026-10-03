@@ -1692,7 +1692,7 @@ profile:
   action_settings_link: 'Naar instellingen ↗'
   action_2fa: 'Twee-factor-authenticatie instellen / beheren'
   action_2fa_link: '2FA beheren ↗'
-  notice: '<b>Profielen zijn opt-in.</b> Alleen bijdragen die een fietser ervoor koos openbaar te delen, verschijnen hier — anonieme bewerkingen worden nooit toegeschreven. Data komt in de Commons terecht onder <b>ODbL 1.0</b>, media onder <b>CC BY-SA 4.0</b>; herkomst wordt bijgehouden zodat regiobeheerders feiten kunnen bevestigen, maar identiteit wordt alleen met toestemming getoond.'
+  notice: '<b>Een rennerspagina bestaat alleen als die renner Openbaar profiel heeft aangezet.</b> Ze toont de weergavenaam, het aantal bijdragen en de geverifieerde routes; de openbare site noemt nooit een renner die het uit heeft staan. Gegevens komen in de Commons onder <b>ODbL 1.0</b>, media onder <b>CC BY-SA 4.0</b>; de herkomst wordt bewaard zodat curatoren feiten kunnen bevestigen.'
   public_meta_title: 'Rijdersprofiel'
   public_meta_description: 'Een Cycling Commons-rijdersprofiel.'
   public_member_since: 'Op de Commons sinds'
@@ -1728,8 +1728,8 @@ settings:
   label_email: 'E-mail'
   email_hint: 'Wil je je e-mailadres wijzigen? <a href="/nl/contact?topic=question">Schrijf ons</a>.'
   toggle_public_b: 'Openbaar profiel'
-  toggle_public_small: 'Als dit uitstaat, is je profiel verborgen en blijven bijdragen anoniem.'
-  private_name: "Je privénaam, die anderen zien in plaats van je weergavenaam zolang Openbaar profiel uit staat:"
+  toggle_public_small: 'Als dit uitstaat, heb je geen openbare pagina en zien anderen je anonieme naam.'
+  seen_as: 'Anderen zien:'
   toggle_public_delay: 'Wijzigingen hier gaan bij ons meteen in. De kaart wordt gecachet, dus een fotovermelding kan in de browser van iemand anders tot een uur nodig hebben om bij te trekken.'
   toggle_public_curator: 'Als regiobeheerder zien andere regiobeheerders je weergavenaam op de moderatieschermen, wat deze schakelaar ook zegt: een beslissing heeft een auteur. Je openbare profiel op de site volgt deze schakelaar net als bij iedereen.'
   submit_profile: 'Profiel opslaan'
@@ -1745,7 +1745,7 @@ settings:
   twofa_disabled: 'Voeg een extra beveiligingslaag toe aan je account.'
   twofa_manage: '2FA beheren ↗'
   twofa_setup: '2FA instellen ↗'
-  notice: '<b>Profielen zijn opt-in.</b> Alleen bijdragen die jij wilt tonen, verschijnen openbaar — anonieme bewerkingen worden nooit toegeschreven. Data komt in de Commons terecht onder <b>ODbL 1.0</b>, media onder <b>CC BY-SA 4.0</b>.'
+  notice: '<b>Je profiel is privé tot je Openbaar profiel aanzet.</b> Staat het aan, dan zijn je weergavenaam, het aantal bijdragen en je geverifieerde routes openbaar. Staat het uit, dan zien anderen alleen je anonieme naam, nooit je weergavenaam. Gegevens komen in de Commons onder <b>ODbL 1.0</b>, media onder <b>CC BY-SA 4.0</b>.'
   section_export: 'Je gegevens downloaden'
   export_help: 'Alles wat we over je bewaren, in één ZIP-bestand: je account, je bijdragen, je berichten, je licentietoestemmingen en je foto''s als bestanden. Je wachtwoord en tweefactorgeheimen zitten er nooit in.'
   label_export_password: 'Huidig wachtwoord'
@@ -5253,7 +5253,7 @@ changelog:
   v093_contributions: "<b>Al je bijdragen in één lijst.</b> Plaatsen en routes staan samen, nieuwste eerst. Een route die je voorstelde kun je op de kaart openen en bewerken, ook de foto's, tot een curator beslist."
   v093_signin: "<b>Aanmelden is duidelijker.</b> Aangemeld blijven zegt dat het 7 dagen duurt in deze browser, en dat je het niet op een gedeeld toestel gebruikt. Je eerste aanmelding na het bevestigen van je e-mail opent je instellingen."
   v093_updates: "<b>Kies hoe vaak we schrijven.</b> Houd me op de hoogte, in je instellingen, vraagt nu hoe vaak: groot nieuws hoogstens 4 keer per jaar, of elke update hoogstens 2 keer per maand."
-  v093_privacy: "<b>Meer privacy.</b> Elke fietser heeft een willekeurige privénaam, en een privé-fietser is alleen via die naam te vinden. Je instellingen tonen hem. De kaart toont niet langer hoe ver een fotograaf van de pin stond. De berichten over je bijdragen blijven bewaard zolang je account bestaat en worden ermee gewist, en een account dat 24 maanden niemand gebruikte wordt gewist. Contactberichten gaan 24 maanden nadat de zaak is afgerond, en het antwoordadres van een melding 90 dagen na de beslissing."
+  v093_privacy: "<b>Meer privacy.</b> Elke fietser heeft een willekeurige anonieme naam, en een fietser zonder openbaar profiel is alleen via die naam te vinden. Je instellingen tonen hem. De kaart toont niet langer hoe ver een fotograaf van de pin stond. De berichten over je bijdragen blijven bewaard zolang je account bestaat en worden ermee gewist, en een account dat 24 maanden niemand gebruikte wordt gewist. Contactberichten gaan 24 maanden nadat de zaak is afgerond, en het antwoordadres van een melding 90 dagen na de beslissing."
   v093_messages: "<b>Ongelezen blijft ongelezen tot je het opent.</b> Een bericht, een post in de ruimte of nieuw werk op een bureau houdt zijn markering tot je het opent, niet wanneer een lijst het alleen toont. De naam van een plaats of route in een bericht staat tussen aanhalingstekens en cursief."
   v093_access: "<b>Makkelijker op telefoon en toetsenbord.</b> Het telefoonmenu bereikt elke hoofdpagina. De keuzes voor regio en Doe mee werken met alleen het toetsenbord, en elk formulierveld toont waar je bent. De dekkingskaart is een lichtere lavendel."
   v093_fixes: "<b>Onder de vele kleinere verbeteringen:</b> e-mails hebben een echte platte-tekstversie, lange lijsten langs een route klappen dicht na twee regels, een plaats uit twee bronnen houdt het record van de bron die we het meest vertrouwen, Bekijk op de kaart in je berichten opent de plaats zelf, taallijsten tonen alleen de talen van de site, en de wegdeklegende flitst niet meer op als de kaart opent."

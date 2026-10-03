@@ -1064,14 +1064,22 @@ and sign in the next day: `/account`.
 Two tabs:
 
 - **Profile** (default): account status; Identity section (display name,
+  with under it the name others see (owner 2026-10-03): "Others see:" and,
+  while Public profile is off, the anonymous name `rider#xxxxxxxx` with the
+  display name dimmed after it, the other way round while it is on;
+  `settings/public-profile.js` flips it with the switch and follows the
+  field as it is typed. "Anonymous name" since 2026-10-03, because "private
+  name" read as the rider's real name;
   country, language (the languages this deployment serves, from
   `App\Routing\Languages`, dev-environment.md §7 i18n), base location); Riding preferences (preference chips,
-  account-and-auth.md §9); Public profile section (toggle, the rider's
-  private name `rider#xxxxxxxx` that others see while the toggle is off
-  (owner 2026-10-01), view-as link/hint, split out of the former "Identity &
+  account-and-auth.md §9); Public profile section (toggle, view-as
+  link/hint, split out of the former "Identity &
   privacy" heading 2026-07-21; the link follows the SAVED switch, and while
   the switch differs from it the line says what Save profile will do,
-  `settings/public-profile.js`); the profiles-opt-in notice.
+  `settings/public-profile.js`); the notice that says what the switch does:
+  on, the display name, contribution counts and verified routes are public;
+  off, others see only the anonymous name. There is no per-contribution
+  choice, so the notice never offers one.
 - **Security**: password change, 2FA block, danger zone (account deletion §10).
 
 Contract points:

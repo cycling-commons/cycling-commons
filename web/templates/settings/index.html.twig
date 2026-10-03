@@ -67,6 +67,17 @@
         {{ form_label(profileForm.displayName) }}
         {{ form_widget(profileForm.displayName, {attr: profileForm.displayName.vars.attr|merge({'aria-describedby': profileForm.displayName.vars.id ~ '_hint'})}) }}
         {{ form_errors(profileForm.displayName) }}
+        {# The name others see, at the name (owner 2026-10-03): with Public
+           profile off the anonymous name leads and the display name is dimmed,
+           with it on the other way round. public-profile.js flips it with the
+           switch and follows the field as it is typed. #}
+        {% set anon_name = constant('App\\Catalog\\RiderPseudonym::PREFIX') ~ cc_user.pseudonym %}
+        {% set shown_public = profileForm.publicProfile.vars.checked %}
+        <p class="seen-as" data-seen-as data-anon="{{ anon_name }}" data-name="{{ cc_user.displayName }}" aria-live="polite">
+          {{ 'settings.seen_as'|trans }}
+          <b data-seen-main>{{ shown_public ? cc_user.displayName : anon_name }}</b>
+          <span class="seen-dim">(<span data-seen-other>{{ shown_public ? anon_name : cc_user.displayName }}</span>)</span>
+        </p>
         {% include 'partials/_name_hint.html.twig' with {input_id: profileForm.displayName.vars.id, class: 'hint', name_in_use: name_in_use} only %}
       </div>
       <div class="field">
@@ -260,9 +271,6 @@
           </label>
         </div>
         {{ form_errors(profileForm.publicProfile) }}
-        {# The name others see while the switch is off: the stored rider# handle
-           (RiderPseudonym), the same on every desk, credit and history row. #}
-        <p class="hint" style="margin:.5rem 0 0" data-private-name>{{ 'settings.private_name'|trans }} <b style="font-family:var(--mono)">{{ constant('App\\Catalog\\RiderPseudonym::PREFIX') ~ cc_user.pseudonym }}</b></p>
         {# The name on a map photo is a stored string, re-stamped the moment this
            toggle is saved (App\Media\RiderCreditSync). Our copy is right at
            once, and every region's catalog stamp moves with it, but a map

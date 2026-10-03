@@ -1692,7 +1692,7 @@ profile:
   action_settings_link: 'Zu Einstellungen ↗'
   action_2fa: '2FA einrichten / verwalten'
   action_2fa_link: '2FA verwalten ↗'
-  notice: '<b>Profile sind opt-in.</b> Hier erscheinen nur Beiträge, die ein Fahrer ausdrücklich öffentlich geteilt hat — anonyme Bearbeitungen werden nie zugeordnet. Daten treten The Commons unter <b>ODbL 1.0</b> bei, Medien unter <b>CC BY-SA 4.0</b>; Provenienz wird festgehalten, damit Kuratoren Fakten bestätigen können, aber Identität wird nur mit Zustimmung angezeigt.'
+  notice: '<b>Eine Fahrerseite gibt es nur, solange diese Person Öffentliches Profil eingeschaltet hat.</b> Sie zeigt den Anzeigenamen, die Zahl der Beiträge und die bestätigten Routen; die öffentliche Seite nennt nie jemanden, der es ausgeschaltet hat. Daten kommen unter <b>ODbL 1.0</b> in die Commons, Medien unter <b>CC BY-SA 4.0</b>; die Herkunft bleibt gespeichert, damit Kuratoren Fakten bestätigen können.'
   public_meta_title: 'Fahrerprofil'
   public_meta_description: 'Ein Cycling-Commons-Fahrerprofil.'
   public_member_since: 'Auf dem Commons seit'
@@ -1728,8 +1728,8 @@ settings:
   label_email: 'E-Mail'
   email_hint: 'Um Ihre E-Mail-Adresse zu ändern, <a href="/de/contact?topic=question">schreiben Sie uns</a>.'
   toggle_public_b: 'Öffentliches Profil'
-  toggle_public_small: 'Wenn deaktiviert, ist dein Profil verborgen und Beiträge bleiben anonym.'
-  private_name: "Dein privater Name, der statt deines Anzeigenamens erscheint, solange das öffentliche Profil aus ist:"
+  toggle_public_small: 'Wenn deaktiviert, hast du keine öffentliche Seite und andere sehen deinen anonymen Namen.'
+  seen_as: 'Andere sehen:'
   toggle_public_delay: 'Änderungen hier greifen bei uns sofort. Die Karte wird zwischengespeichert, eine Foto-Nennung kann im Browser einer anderen Person also bis zu eine Stunde brauchen, um nachzuziehen.'
   toggle_public_curator: 'Als Kuratorin oder Kurator sehen andere Kuratorinnen und Kuratoren deinen Anzeigenamen auf den Moderationsseiten, unabhängig von diesem Schalter: Eine Entscheidung hat eine Urheberin oder einen Urheber. Dein öffentliches Profil auf der Website folgt diesem Schalter wie bei allen anderen.'
   submit_profile: 'Profil speichern'
@@ -1745,7 +1745,7 @@ settings:
   twofa_disabled: 'Füge eine zusätzliche Sicherheitsebene zu deinem Konto hinzu.'
   twofa_manage: '2FA verwalten ↗'
   twofa_setup: '2FA einrichten ↗'
-  notice: '<b>Profile sind opt-in.</b> Nur Beiträge, die du öffentlich zeigen möchtest, erscheinen öffentlich — anonyme Bearbeitungen werden nie zugeordnet. Daten treten The Commons unter <b>ODbL 1.0</b> bei, Medien unter <b>CC BY-SA 4.0</b>.'
+  notice: '<b>Dein Profil bleibt privat, bis du Öffentliches Profil einschaltest.</b> Eingeschaltet sind dein Anzeigename, die Zahl deiner Beiträge und deine bestätigten Routen öffentlich. Ausgeschaltet sehen andere nur deinen anonymen Namen, nie deinen Anzeigenamen. Daten kommen unter <b>ODbL 1.0</b> in die Commons, Medien unter <b>CC BY-SA 4.0</b>.'
   section_export: 'Deine Daten herunterladen'
   export_help: 'Alles, was wir über dich gespeichert haben, in einer einzigen ZIP-Datei: dein Konto, deine Beiträge, deine Nachrichten, deine Lizenz-Einwilligungen und deine Fotos als Dateien. Dein Passwort und deine Zwei-Faktor-Geheimnisse sind nie dabei.'
   label_export_password: 'Aktuelles Passwort'
@@ -5254,7 +5254,7 @@ changelog:
   v093_contributions: "<b>Alle deine Beiträge in einer Liste.</b> Orte und Routen stehen zusammen, die neuesten zuerst. Eine Route, die du vorgeschlagen hast, kannst du auf der Karte öffnen und bearbeiten, Fotos eingeschlossen, bis eine Kuratorin oder ein Kurator entscheidet."
   v093_signin: "<b>Anmelden ist klarer.</b> Angemeldet bleiben sagt, dass es 7 Tage in diesem Browser gilt und nicht auf einem geteilten Gerät genutzt werden soll. Deine erste Anmeldung nach der Bestätigung deiner E-Mail öffnet deine Einstellungen."
   v093_updates: "<b>Wähle, wie oft wir schreiben.</b> Halte mich auf dem Laufenden, in deinen Einstellungen, fragt jetzt, wie oft: große Neuigkeiten höchstens 4 Mal im Jahr, oder jedes Update höchstens 2 Mal im Monat."
-  v093_privacy: "<b>Mehr Privatsphäre.</b> Alle Fahrenden haben einen zufälligen privaten Namen, und private Fahrende sind nur über diesen Namen zu finden. Deine Einstellungen zeigen ihn. Die Karte zeigt nicht mehr, wie weit jemand beim Fotografieren von der Markierung stand. Die Nachrichten zu deinen Beiträgen bleiben, solange dein Konto besteht, und werden mit ihm gelöscht, und ein Konto, das 24 Monate niemand genutzt hat, wird gelöscht. Kontaktnachrichten gehen 24 Monate nach Abschluss der Sache, die Antwortadresse einer Meldung 90 Tage nach der Entscheidung."
+  v093_privacy: "<b>Mehr Privatsphäre.</b> Alle Fahrenden haben einen zufälligen anonymen Namen, und Fahrende ohne öffentliches Profil sind nur über diesen Namen zu finden. Deine Einstellungen zeigen ihn. Die Karte zeigt nicht mehr, wie weit jemand beim Fotografieren von der Markierung stand. Die Nachrichten zu deinen Beiträgen bleiben, solange dein Konto besteht, und werden mit ihm gelöscht, und ein Konto, das 24 Monate niemand genutzt hat, wird gelöscht. Kontaktnachrichten gehen 24 Monate nach Abschluss der Sache, die Antwortadresse einer Meldung 90 Tage nach der Entscheidung."
   v093_messages: "<b>Ungelesen bleibt ungelesen, bis du es öffnest.</b> Eine Nachricht, ein Beitrag im Raum oder neue Arbeit auf einem Arbeitsplatz behält ihre Markierung, bis du sie öffnest, nicht schon, wenn eine Liste sie nur anzeigt. Der Name eines Orts oder einer Route in einer Nachricht steht in Anführungszeichen und kursiv."
   v093_access: "<b>Einfacher mit Handy und Tastatur.</b> Das Handymenü erreicht jede Hauptseite. Die Auswahl für Region und Mitmachen funktioniert allein mit der Tastatur, und jedes Formularfeld zeigt, wo du bist. Die Abdeckungskarte ist ein helleres Lavendel."
   v093_fixes: "<b>Unter den vielen kleineren Korrekturen:</b> E-Mails haben eine echte Nur-Text-Fassung, lange Listen entlang einer Route klappen nach zwei Zeilen zu, ein Ort aus zwei Quellen behält den Eintrag der Quelle, der wir am meisten vertrauen, Auf der Karte ansehen in deinen Nachrichten öffnet den Ort selbst, Sprachlisten zeigen nur die Sprachen der Website, und die Belagslegende blitzt beim Öffnen der Karte nicht mehr auf."

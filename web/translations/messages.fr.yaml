@@ -1687,7 +1687,7 @@ profile:
   action_settings_link: 'Aller aux paramètres ↗'
   action_2fa: 'Configurer / gérer l''authentification à deux facteurs'
   action_2fa_link: 'Gérer la 2FA ↗'
-  notice: '<b>Les profils sont optionnels.</b> Seules les contributions qu''un cycliste a choisi de partager publiquement apparaissent ici — les modifications anonymes ne sont jamais attribuées. Les données rejoignent le Commons sous <b>ODbL 1.0</b>, les médias sous <b>CC BY-SA 4.0</b> ; la provenance est conservée pour que les curateurs puissent confirmer les faits, mais l''identité n''est affichée qu''avec consentement.'
+  notice: '<b>Une page de cycliste n''existe que si ce cycliste a activé Profil public.</b> Elle montre son nom affiché, le nombre de ses contributions et ses itinéraires vérifiés ; le site public ne nomme jamais un cycliste qui l''a désactivé. Les données rejoignent le Commons sous <b>ODbL 1.0</b>, les médias sous <b>CC BY-SA 4.0</b> ; la provenance est conservée pour que les curateurs puissent confirmer les faits.'
   public_meta_title: 'Profil cycliste'
   public_meta_description: 'Un profil de cycliste Cycling Commons.'
   public_member_since: 'Sur le Commons depuis'
@@ -1723,8 +1723,8 @@ settings:
   label_email: 'Email'
   email_hint: 'Pour modifier votre adresse e-mail, <a href="/fr/contact?topic=question">écrivez-nous</a>.'
   toggle_public_b: 'Profil public'
-  toggle_public_small: 'Désactivé, votre profil est masqué et les contributions restent anonymes.'
-  private_name: "Votre nom privé, affiché à la place de votre nom tant que le profil public est désactivé :"
+  toggle_public_small: 'Désactivé, vous n''avez pas de page publique et les autres voient votre nom anonyme.'
+  seen_as: 'Les autres voient :'
   toggle_public_delay: 'Les changements faits ici prennent effet chez nous immédiatement. La carte est mise en cache : un crédit photo peut mettre jusqu''à une heure à se mettre à jour dans le navigateur de quelqu''un d''autre.'
   toggle_public_curator: 'En tant que curateur, les autres curateurs voient votre nom affiché sur les bureaux de modération, quel que soit ce réglage : une décision a un auteur. Votre profil public sur le site suit ce réglage comme celui de tout le monde.'
   submit_profile: 'Enregistrer le profil'
@@ -1740,7 +1740,7 @@ settings:
   twofa_disabled: 'Ajoutez une couche de sécurité supplémentaire à votre compte.'
   twofa_manage: 'Gérer la 2FA ↗'
   twofa_setup: 'Configurer la 2FA ↗'
-  notice: '<b>Les profils sont optionnels.</b> Seules les contributions que vous choisissez d''afficher apparaissent publiquement — les modifications anonymes ne sont jamais attribuées. Les données rejoignent le Commons sous <b>ODbL 1.0</b>, les médias sous <b>CC BY-SA 4.0</b>.'
+  notice: '<b>Votre profil reste privé tant que vous n''activez pas Profil public.</b> Activé, votre nom affiché, le nombre de vos contributions et vos itinéraires vérifiés sont publics. Désactivé, les autres ne voient que votre nom anonyme, jamais votre nom affiché. Les données rejoignent le Commons sous <b>ODbL 1.0</b>, les médias sous <b>CC BY-SA 4.0</b>.'
   section_export: 'Télécharger vos données'
   export_help: 'Tout ce que nous détenons à votre sujet, dans un seul fichier ZIP : votre compte, vos contributions, vos messages, vos consentements de licence et vos photos sous forme de fichiers. Votre mot de passe et vos secrets à deux facteurs n''y figurent jamais.'
   label_export_password: 'Mot de passe actuel'
@@ -5246,7 +5246,7 @@ changelog:
   v093_contributions: "<b>Toutes vos contributions dans une seule liste.</b> Lieux et parcours sont ensemble, les plus récents d'abord. Vous pouvez ouvrir sur la carte un parcours que vous avez proposé et le modifier, photos comprises, jusqu'à la décision d'un curateur."
   v093_signin: "<b>La connexion est plus claire.</b> Rester connecté indique que cela dure 7 jours dans ce navigateur, et qu'il ne faut pas l'utiliser sur un appareil partagé. Votre première connexion après la confirmation de votre e-mail ouvre vos paramètres."
   v093_updates: "<b>Choisissez la fréquence de nos messages.</b> Tenez-moi au courant, dans vos paramètres, demande maintenant à quelle fréquence : les grandes nouvelles au plus 4 fois par an, ou chaque mise à jour au plus 2 fois par mois."
-  v093_privacy: "<b>Plus de vie privée.</b> Chaque cycliste a un nom privé aléatoire, et un cycliste privé ne se trouve que par ce nom. Vos paramètres l'affichent. La carte ne montre plus à quelle distance du repère se tenait un photographe. Les messages sur vos contributions sont conservés tant que votre compte existe et supprimés avec lui, et un compte que personne n'a utilisé pendant 24 mois est supprimé. Les messages de contact partent 24 mois après la fin de l'affaire, et l'adresse de réponse d'un signalement 90 jours après la décision."
+  v093_privacy: "<b>Plus de vie privée.</b> Chaque cycliste a un nom anonyme aléatoire, et un cycliste au profil non public ne se trouve que par ce nom. Vos paramètres l'affichent. La carte ne montre plus à quelle distance du repère se tenait un photographe. Les messages sur vos contributions sont conservés tant que votre compte existe et supprimés avec lui, et un compte que personne n'a utilisé pendant 24 mois est supprimé. Les messages de contact partent 24 mois après la fin de l'affaire, et l'adresse de réponse d'un signalement 90 jours après la décision."
   v093_messages: "<b>Non lu reste non lu jusqu'à ce que vous l'ouvriez.</b> Un message, un message de la salle ou un nouveau travail sur un bureau garde sa marque jusqu'à ce que vous l'ouvriez, pas quand une liste se contente de l'afficher. Le nom d'un lieu ou d'un parcours dans un message est entre guillemets et en italique."
   v093_access: "<b>Plus simple au téléphone et au clavier.</b> Le menu du téléphone mène à chaque page principale. Les choix de région et de Participer fonctionnent au clavier seul, et chaque champ de formulaire montre où vous êtes. La carte de couverture est d'un lavande plus clair."
   v093_fixes: "<b>Parmi les nombreuses petites corrections :</b> les e-mails ont une vraie version en texte brut, les longues listes le long d'un parcours se replient après deux lignes, un lieu connu de deux sources garde la fiche de la source la plus fiable, Voir sur la carte dans vos messages ouvre le lieu lui-même, les listes de langues ne montrent que les langues du site, et la légende des revêtements ne clignote plus à l'ouverture de la carte."

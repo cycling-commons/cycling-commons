@@ -1699,7 +1699,7 @@ profile:
   action_settings_link: 'Ir a los ajustes ↗'
   action_2fa: 'Configurar o gestionar la autenticación en dos factores'
   action_2fa_link: 'Gestionar 2FA ↗'
-  notice: '<b>Los perfiles son voluntarios.</b> Aquí solo aparecen las aportaciones que un ciclista decidió compartir públicamente — las ediciones anónimas nunca se atribuyen. Los datos se incorporan al Commons bajo <b>ODbL 1.0</b> y los medios bajo <b>CC BY-SA 4.0</b>; la procedencia se conserva para que los curadores puedan confirmar los hechos, pero la identidad solo se muestra con consentimiento.'
+  notice: '<b>La página de un ciclista solo existe mientras ese ciclista tenga activado Perfil público.</b> Muestra su nombre visible, el número de sus aportaciones y sus rutas verificadas; el sitio público nunca nombra a un ciclista que lo tiene desactivado. Los datos entran en el Commons bajo <b>ODbL 1.0</b>, los medios bajo <b>CC BY-SA 4.0</b>; la procedencia se conserva para que los curadores puedan confirmar los hechos.'
   public_meta_title: 'Perfil de ciclista'
   public_meta_description: 'Un perfil de ciclista de Cycling Commons.'
   public_member_since: 'Rodando por el Commons desde'
@@ -1735,8 +1735,8 @@ settings:
   label_email: 'Correo electrónico'
   email_hint: 'Para cambiar su dirección de correo, <a href="/es/contact?topic=question">escríbanos</a>.'
   toggle_public_b: 'Perfil público'
-  toggle_public_small: 'Si está desactivado, tu perfil queda oculto y tus aportaciones se mantienen anónimas.'
-  private_name: "Tu nombre privado, que se muestra en lugar de tu nombre visible mientras el perfil público está desactivado:"
+  toggle_public_small: 'Si está desactivado, no tienes página pública y los demás ven tu nombre anónimo.'
+  seen_as: 'Los demás ven:'
   toggle_public_delay: 'Los cambios aquí surten efecto al instante por nuestra parte. El mapa se guarda en caché, así que un crédito de foto puede tardar hasta una hora en actualizarse en el navegador de otra persona.'
   toggle_public_curator: 'Como curador, otros curadores ven tu nombre visible en los escritorios de moderación, diga lo que diga este ajuste: una decisión tiene autor. Tu perfil público en el sitio sigue este ajuste como el de cualquiera.'
   submit_profile: 'Guardar el perfil'
@@ -1752,7 +1752,7 @@ settings:
   twofa_disabled: 'Añade una capa más de seguridad a tu cuenta.'
   twofa_manage: 'Gestionar 2FA ↗'
   twofa_setup: 'Configurar 2FA ↗'
-  notice: '<b>Los perfiles son voluntarios.</b> Solo aparecen públicamente las aportaciones que elijas mostrar — las ediciones anónimas nunca se atribuyen. Los datos se incorporan al Commons bajo <b>ODbL 1.0</b> y los medios bajo <b>CC BY-SA 4.0</b>.'
+  notice: '<b>Tu perfil es privado hasta que actives Perfil público.</b> Activado, tu nombre visible, el número de tus aportaciones y tus rutas verificadas son públicos. Desactivado, los demás solo ven tu nombre anónimo, nunca tu nombre visible. Los datos entran en el Commons bajo <b>ODbL 1.0</b>, los medios bajo <b>CC BY-SA 4.0</b>.'
   section_export: 'Descarga tus datos'
   export_help: 'Todo lo que tenemos sobre ti, en un único archivo ZIP: tu cuenta, tus aportaciones, tus mensajes, tus consentimientos de licencia y tus fotos como archivos. Tu contraseña y tus secretos de doble factor nunca se incluyen.'
   label_export_password: 'Contraseña actual'
@@ -5286,7 +5286,7 @@ changelog:
   v093_contributions: "<b>Todas tus contribuciones en una lista.</b> Lugares y rutas van juntos, primero los más recientes. Puedes abrir en el mapa una ruta que propusiste y editarla, fotos incluidas, hasta que un curador decida."
   v093_signin: "<b>Iniciar sesión es más claro.</b> Mantener la sesión dice que dura 7 días en este navegador y que no se use en un dispositivo compartido. Tu primer inicio de sesión tras confirmar tu correo abre tus ajustes."
   v093_updates: "<b>Elige con qué frecuencia te escribimos.</b> Mantenme al día, en tus ajustes, ahora pregunta con qué frecuencia: grandes novedades como máximo 4 veces al año, o cada novedad como máximo 2 veces al mes."
-  v093_privacy: "<b>Más privacidad.</b> Cada ciclista tiene un nombre privado aleatorio, y a un ciclista privado solo se le encuentra por ese nombre. Tus ajustes lo muestran. El mapa ya no muestra a qué distancia del marcador estaba quien tomó la foto. Los mensajes sobre tus aportaciones se guardan mientras exista tu cuenta y se borran con ella, y una cuenta que nadie ha usado en 24 meses se borra. Los mensajes de contacto se van 24 meses después de cerrar el asunto, y la dirección de respuesta de una denuncia 90 días después de la decisión."
+  v093_privacy: "<b>Más privacidad.</b> Cada ciclista tiene un nombre anónimo aleatorio, y a un ciclista sin perfil público solo se le encuentra por ese nombre. Tus ajustes lo muestran. El mapa ya no muestra a qué distancia del marcador estaba quien tomó la foto. Los mensajes sobre tus aportaciones se guardan mientras exista tu cuenta y se borran con ella, y una cuenta que nadie ha usado en 24 meses se borra. Los mensajes de contacto se van 24 meses después de cerrar el asunto, y la dirección de respuesta de una denuncia 90 días después de la decisión."
   v093_messages: "<b>Lo no leído sigue sin leer hasta que lo abres.</b> Un mensaje, una publicación de la sala o trabajo nuevo en un escritorio conserva su marca hasta que lo abres, no cuando una lista solo lo muestra. El nombre de un lugar o ruta en un mensaje va entre comillas y en cursiva."
   v093_access: "<b>Más fácil en el móvil y con teclado.</b> El menú del móvil llega a cada página principal. Los selectores de región y de Participa funcionan solo con el teclado, y cada campo del formulario muestra dónde estás. El mapa de cobertura es de un lavanda más claro."
   v093_fixes: "<b>Entre las muchas correcciones pequeñas:</b> los correos tienen una versión real en texto plano, las listas largas a lo largo de una ruta se pliegan tras dos filas, un lugar conocido por dos fuentes conserva el registro de la fuente más fiable, Verlo en el mapa en tus mensajes abre el propio lugar, las listas de idiomas muestran solo los idiomas del sitio, y la leyenda de superficies ya no parpadea al abrir el mapa."

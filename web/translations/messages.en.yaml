@@ -1696,7 +1696,7 @@ profile:
   action_settings_link: 'Go to settings ↗'
   action_2fa: 'Set up / manage two-factor authentication'
   action_2fa_link: 'Manage 2FA ↗'
-  notice: '<b>Profiles are opt-in.</b> Only contributions a rider chose to share publicly appear here — anonymous edits are never attributed. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>; provenance is kept so curators can confirm facts, but identity is shown only with consent.'
+  notice: '<b>A rider page exists only while that rider has turned on Public profile.</b> It shows their display name, their contribution counts and their verified routes; the public site never names a rider who has it off. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>; provenance is kept so curators can confirm facts.'
   public_meta_title: 'Rider profile'
   public_meta_description: 'A Cycling Commons rider profile.'
   public_member_since: 'Riding the Commons since'
@@ -1732,8 +1732,8 @@ settings:
   label_email: 'Email'
   email_hint: 'To change your email address, <a href="/contact?topic=question">write to us</a>.'
   toggle_public_b: 'Public profile'
-  toggle_public_small: 'When off, your profile is hidden and contributions stay anonymous.'
-  private_name: "Your private name, shown instead of your display name while Public profile is off:"
+  toggle_public_small: 'When off, you have no public page and others see your anonymous name.'
+  seen_as: 'Others see:'
   toggle_public_delay: 'Changes here take effect straight away on our side. The map is cached, so a photo credit can take up to an hour to catch up in somebody else''s browser.'
   toggle_public_curator: 'As a curator, other curators see your display name on the moderation desks, whatever this switch says: a decision has an author. Your public profile on the site follows this switch like everybody else''s.'
   submit_profile: 'Save profile'
@@ -1749,7 +1749,7 @@ settings:
   twofa_disabled: 'Add an extra layer of security to your account.'
   twofa_manage: 'Manage 2FA ↗'
   twofa_setup: 'Set up 2FA ↗'
-  notice: '<b>Profiles are opt-in.</b> Only contributions you choose to show appear publicly — anonymous edits are never attributed. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>.'
+  notice: '<b>Your profile is private unless you turn on Public profile.</b> With it on, your display name, your contribution counts and your verified routes are public. With it off, others see only your anonymous name, never your display name. Data joins the Commons under <b>ODbL 1.0</b>, media under <b>CC BY-SA 4.0</b>.'
   section_export: 'Download your data'
   export_help: 'Everything we hold about you, in one ZIP file: your account, your contributions, your messages, your licence consents, and your photos as files. Your password and two-factor secrets are never included.'
   label_export_password: 'Current password'
@@ -5275,7 +5275,7 @@ changelog:
   v093_contributions: "<b>All your contributions in one list.</b> Places and routes are together, newest first. You can open a route you proposed on the map and edit it, photos included, until a curator decides."
   v093_signin: "<b>Signing in is clearer.</b> Stay signed in says it lasts 7 days on this browser, and not to use it on a shared device. Your first sign-in after you confirm your email opens your settings."
   v093_updates: "<b>Choose how often we write.</b> Keep me up to date, in your settings, now asks how often: big news at most 4 times a year, or every update at most 2 times a month."
-  v093_privacy: "<b>More privacy.</b> Every rider has a random private name, and a private rider is found only by that name. Your settings show it. The map no longer shows how far a photographer stood from the pin. The messages about your contributions are kept while your account exists and deleted with it, and an account nobody has used for 24 months is deleted. Contact messages go 24 months after the matter ends, and a report's reply address 90 days after the decision."
+  v093_privacy: "<b>More privacy.</b> Every rider has a random anonymous name, and a rider with Public profile off is found only by that name. Your settings show it. The map no longer shows how far a photographer stood from the pin. The messages about your contributions are kept while your account exists and deleted with it, and an account nobody has used for 24 months is deleted. Contact messages go 24 months after the matter ends, and a report's reply address 90 days after the decision."
   v093_messages: "<b>Unread stays unread until you open it.</b> A message, a room post or new work on a desk keeps its mark until you open it, not when a list merely shows it. A place or route name in a message is quoted and in italics."
   v093_access: "<b>Easier on phones and keyboards.</b> The phone menu reaches every main page. The region and Get involved pickers work with the keyboard alone, and every form field shows where you are. The coverage heatmap is a lighter lavender."
   v093_fixes: "<b>Among many smaller fixes:</b> emails have a proper plain-text version, long lists along a route fold after two rows, a place known from two sources keeps the record from the source we trust most, View it on the map in your messages opens the place itself, language lists show only the languages the site is in, and the surface key no longer flashes when the map opens."
