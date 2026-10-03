@@ -30,7 +30,7 @@
     <link href="{{ site }}{{ path('changelog', {_locale: 'en'}) }}" />
     <content type="html">
       {%- apply escape('html') -%}
-        <ul>{% for key in release.keys %}<li>{{ key|trans({}, 'messages', 'en')|striptags }}</li>{% endfor %}</ul>
+        {% for name, keys in release.sections %}{% if name %}<h3>{{ ('changelog.section_' ~ name)|trans({}, 'messages', 'en') }}</h3>{% endif %}<ul>{% for key in keys %}<li>{{ key|trans({}, 'messages', 'en')|striptags }}</li>{% endfor %}</ul>{% endfor %}
       {%- endapply -%}
     </content>
   </entry>

@@ -97,7 +97,7 @@ final class PageController extends AbstractController
             'page_title' => 'meta.changelog_title',
             'page_description' => 'meta.changelog_description',
             'nav_active' => '',
-            'releases' => ReleaseNotes::RELEASES,
+            'releases' => ReleaseNotes::releases(),
         ]);
     }
 
@@ -130,7 +130,7 @@ final class PageController extends AbstractController
     public function changelogAtom(Request $request): Response
     {
         $response = $this->render('pages/changelog.atom.twig', [
-            'releases' => ReleaseNotes::RELEASES,
+            'releases' => ReleaseNotes::releases(),
             'site' => $request->getSchemeAndHttpHost(),
         ]);
         $response->headers->set('Content-Type', 'application/atom+xml; charset=UTF-8');

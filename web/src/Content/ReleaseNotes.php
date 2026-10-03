@@ -65,16 +65,49 @@ final class ReleaseNotes
     public const array STATUSES = ['now', 'next', 'later'];
 
     /**
+     * The groups a release's notes sit in, in display order, from 0.9.4-beta
+     * on (owner 2026-10-04): what everyone sees on the site, what a rider's
+     * account gains, and what curators gain. Each has its heading,
+     * `changelog.section_<name>`. An older release keeps its flat `keys`.
+     */
+    public const array SECTIONS = ['public', 'rider', 'curator'];
+
+    /**
      * Released versions, newest first.
      *
      * `version` is the git tag without the `v`, so the footer stamp and this
      * page agree: `BuildVersion` runs `git describe --tags --match 'v*'`, which
      * means tagging `v0.8.0-beta` is what makes both say the same thing.
      * `date` is the release date, ISO, and it is also the feed's timestamp.
+     * `sections` holds the notes by {@see self::SECTIONS}; a release from
+     * before sections has `keys`, one list without a heading.
      *
-     * @var list<array{version: string, date: string, keys: list<string>}>
+     * @var list<array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>}>
      */
     public const array RELEASES = [
+        [
+            'version' => '0.9.4-beta',
+            'date' => '2026-10-04',
+            'sections' => [
+                'public' => [
+                    'changelog.v094_ballot',
+                    'changelog.v094_best',
+                    'changelog.v094_fair',
+                    'changelog.v094_climbs',
+                    'changelog.v094_map',
+                    'changelog.v094_fixes',
+                ],
+                'rider' => [
+                    'changelog.v094_name',
+                    'changelog.v094_confirmations',
+                ],
+                'curator' => [
+                    'changelog.v094_bugs',
+                    'changelog.v094_providers',
+                    'changelog.v094_desk',
+                ],
+            ],
+        ],
         [
             'version' => '0.9.3-beta',
             'date' => '2026-10-01',
@@ -156,6 +189,44 @@ final class ReleaseNotes
     }
 
     /**
+     * Every release with its notes grouped, newest first. A release from
+     * before sections is one group without a heading (`''`); a sectioned
+     * one lists its groups in {@see self::SECTIONS} order and leaves out an
+     * empty one.
+     *
+     * @return list<array{version: string, date: string, sections: array<string, list<string>>}>
+     */
+    public static function releases(): array
+    {
+        return array_map(self::grouped(...), self::RELEASES);
+    }
+
+    /**
+     * One release with its notes grouped. A parameter rather than a loop over
+     * the constant, so static analysis reads the declared shape and not the
+     * entries the list happens to hold today.
+     *
+     * @param array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>} $release
+     *
+     * @return array{version: string, date: string, sections: array<string, list<string>>}
+     */
+    private static function grouped(array $release): array
+    {
+        $sections = [];
+        if (!isset($release['sections'])) {
+            $sections[''] = $release['keys'] ?? [];
+        } else {
+            foreach (self::SECTIONS as $name) {
+                if ([] !== ($release['sections'][$name] ?? [])) {
+                    $sections[$name] = $release['sections'][$name];
+                }
+            }
+        }
+
+        return ['version' => $release['version'], 'date' => $release['date'], 'sections' => $sections];
+    }
+
+    /**
      * The newest release.
      *
      * Static analysis can see that `RELEASES` is never empty and so reads any
@@ -163,7 +234,7 @@ final class ReleaseNotes
      * constant has an entry in it, which is why the caller still treats the
      * result as optional and the template guards on it.
      *
-     * @return array{version: string, date: string, keys: list<string>}
+     * @return array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>}
      */
     public static function latestRelease(): array
     {

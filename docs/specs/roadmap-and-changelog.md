@@ -167,12 +167,26 @@ catches the symptom whatever causes it next time.
 
 ## 6. Adding a release
 
-1. Add an entry at the **top** of `ReleaseNotes::RELEASES`.
+1. Add an entry at the **top** of `ReleaseNotes::RELEASES`, with its notes
+   under `sections` (see below), and set `APP_BUILD_VERSION` in `web/.env`
+   to the same version.
 2. Add its keys to `messages.en.yaml`, then the other four.
 3. `app:translations:sync`.
 4. Move anything it finished off `ReleaseNotes::ROADMAP`.
 5. Tag it `v<version>` so the footer agrees with the page.
 6. Run the tests: the key check fails on any locale you forgot.
+
+**Sections (from 0.9.4-beta, owner 2026-10-04).** A release's notes sit
+under three headings, in `ReleaseNotes::SECTIONS` order: `public` ("Public
+site": what everyone sees, the map, the pages, the ballot), `rider` ("Rider
+account": what a signed-in rider's own account pages gain) and `curator`
+("Curator account": the desks and what curators and admins handle). Each
+heading is `changelog.section_<name>`; an empty section is left out. Releases
+before 0.9.4-beta keep their flat `keys` and show no headings.
+`ReleaseNotes::releases()` gives the page and the feed one shape for both:
+an older release is one group named `''`. The feed puts each heading in an
+`<h3>` above its list. A note says what the reader gains ("See where a climb
+hurts most"), not what is on the screen; the details go in a blog article.
 
 ## 6a. What goes on the roadmap
 

@@ -4,6 +4,9 @@
 .crel-head{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap;margin:0 0 .9rem;padding-bottom:.5rem;border-bottom:2px solid rgba(20,22,14,.14)}
 .crel-v{font-family:var(--serif);font-weight:600;font-size:1.4rem;letter-spacing:-.01em}
 .crel-d{font-family:var(--mono);font-size:.68rem;letter-spacing:.11em;text-transform:uppercase;color:#595c4d}
+/* A release's section heading: the public site, a rider's account, curators. */
+.csec{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--clay);margin:1.2rem 0 .2rem}
+.crel-head + .csec{margin-top:0}
 .cline{display:flex;gap:.7rem;align-items:flex-start;padding:.5rem 0;font-size:.98rem;color:#3a3d30;line-height:1.6}
 /* One block beside the bullet: the title on its own line, the text under
    it at the full width, instead of the flex row splitting them into two

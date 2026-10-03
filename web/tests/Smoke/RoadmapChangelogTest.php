@@ -44,8 +44,13 @@ final class RoadmapChangelogTest extends WebTestCase
         $translator = static::getContainer()->get('translator');
 
         $keys = array_column(ReleaseNotes::ROADMAP, 'key');
-        foreach (ReleaseNotes::RELEASES as $release) {
-            $keys = array_merge($keys, $release['keys']);
+        foreach (ReleaseNotes::releases() as $release) {
+            foreach ($release['sections'] as $notes) {
+                $keys = array_merge($keys, $notes);
+            }
+        }
+        foreach (ReleaseNotes::SECTIONS as $section) {
+            $keys[] = 'changelog.section_'.$section;
         }
         foreach (ReleaseNotes::STATUSES as $status) {
             $keys[] = 'roadmap.group_'.$status;
@@ -75,6 +80,32 @@ final class RoadmapChangelogTest extends WebTestCase
         )));
 
         self::assertSame([], $unknown, 'An item with a status not in STATUSES renders nowhere at all.');
+    }
+
+    /**
+     * A note under a section name not in SECTIONS is never shown: the page
+     * lists the sections it knows, in their order.
+     */
+    public function testNoReleaseNoteHidesInAnUnknownSection(): void
+    {
+        $unknown = [];
+        foreach (ReleaseNotes::RELEASES as $release) {
+            $unknown = array_merge($unknown, array_diff(array_keys($release['sections'] ?? []), ReleaseNotes::SECTIONS));
+        }
+
+        self::assertSame([], array_values(array_unique($unknown)), 'A section not in SECTIONS renders nowhere at all.');
+    }
+
+    /** From 0.9.4-beta a release's notes sit under their section headings (owner 2026-10-04). */
+    public function testASectionedReleaseShowsItsHeadings(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/whats-new');
+
+        self::assertResponseIsSuccessful();
+        $headings = $crawler->filter('[id="v0.9.4-beta"] .csec')->each(static fn ($h): string => trim($h->text()));
+        self::assertSame(['Public site', 'Rider account', 'Curator account'], $headings);
+        self::assertCount(0, $crawler->filter('[id="v0.9.3-beta"] .csec'), 'an older release keeps its flat list');
     }
 
     /**
