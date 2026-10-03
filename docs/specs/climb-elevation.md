@@ -1313,6 +1313,18 @@ unlabelled bars with no axis and no silhouette.
 
 ---
 
+### 6c. The full profile keeps one slope scale (2026-10-02)
+
+The full profile (`assets/map/climb-profile.js`) used to stretch every climb to
+the full height of its chart, so an 11 km climb at 6.5 % looked as steep as a
+short wall (owner 2026-10-02, Furka Pass). The vertical span is now the largest
+of: the climb's own height gain, 60 m (a riser is not an alp), and the height a
+**12 % average** (`FULL_HEIGHT_GRADIENT`) gains over the climb's length
+(`verticalSpan()`). So every climb up to a 12 % average is drawn at the same
+exaggeration and a gentler climb draws a lower silhouette: Furka (about 650 m
+over 11 km) fills about half the chart. A climb steeper than 12 % on average
+fills the chart, as before. On a phone the profile opens above the bottom sheet
+(`.cc-cp` z-index 1600, like the lightbox).
 ## 7. Migration
 
 1. Stand up the elevation service ([§2](#2-the-elevation-service)); confirm

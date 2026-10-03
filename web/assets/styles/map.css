@@ -1672,6 +1672,9 @@
     .app.dock-open .dwr{display:none}
   }
 
+    /* The climb profile opens from the drawer, so on a phone it sits above
+       the bottom sheet (1550) too, like the lightbox. */
+    .cc-cp{z-index:1600}
   /* Route domain phase 4 (spec §8): the Curated best-of facets, now two
      multi-select chip rows at the top of the FILTERS block. They take the
      ordinary .chip skin; only their spacing lives here. */

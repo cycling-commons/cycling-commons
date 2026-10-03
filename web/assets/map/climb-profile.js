@@ -5,6 +5,7 @@
 import { escPend, gradColor, txtOn } from './util.js';
 import { D } from './i18n.js';
 import { uKm, uM, uElev, uKmValue, uDistUnit } from './units.js';
+import { verticalSpan } from './profile-scale.js';
 
 /* Below this, a two-digit % either overflows or shrinks unreadably. */
 const MIN_PX_FOR_LABEL = 30;
@@ -27,9 +28,8 @@ export function profileSvg(f){
   const totalM = grad.length*binM;
   const h = heights(grad, binM);
 
-  // Floor the vertical span so a 40 m riser is not drawn as an alp.
   const climbM = Math.max(...h) - Math.min(...h);
-  const spanM = Math.max(climbM, 60);
+  const spanM = verticalSpan(climbM, totalM);
 
   /* Figures live in their own band: early bins are too short to hold a label.
      ViewBox ~1.9:1 so the SVG fills a laptop without stretching a gentle climb. */
