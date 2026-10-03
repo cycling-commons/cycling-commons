@@ -3582,6 +3582,7 @@ account:
   mod_room_new: 'Beiträge im Raum, die du noch nicht geöffnet hast'
   tab_contributions: 'Beiträge'
   tab_votes: 'Stimmen'
+  tab_confirmations: 'Bestätigungen'
   tab_saved: 'Gespeicherte Regionen'
   tab_messages: 'Nachrichten'
   tab_scout: 'Scout'
@@ -3596,6 +3597,8 @@ account:
   votes_note: 'Deine Stimmen sind privat. The Commons speichert, <b>dass</b> du abgestimmt hast und <b>wann</b>. Ein öffentliches Protokoll darüber, <b>wofür</b> du gestimmt hast, gibt es nie.'
   votes_season_h: 'Saisonstimmen'
   votes_places_h: 'Orts-Bestätigungen'
+  votes_choice: 'Wahl %n%'
+  votes_draft: 'Nicht abgegeben, zählt nicht'
   stale_nearby_h: "Einen Blick wert, in deiner Nähe"
   stale_nearby_body: "Diese Orte hat länger niemand kontrolliert. Wenn du vorbeikommst, sagt ein einziger Tipp allen anderen, dass es sie noch gibt."
   stale_nearby_km: "%km% km entfernt"
@@ -3603,8 +3606,10 @@ account:
   stance_potable: 'Trinkbar'
   stance_not_potable: 'Nicht trinkbar'
   stance_exists: 'Noch vorhanden'
-  votes_empty: 'Noch keine Stimmen. Auf der Karte kannst du einen Ort bestätigen oder melden, dass du eine Route gefahren bist. Sobald die Saisonabstimmung offen ist, kannst du dort für das Beste deiner Region stimmen.'
+  votes_empty: 'Noch keine Stimmen. Wähle auf dem Stimmzettel eine Region und stimme für ihr Bestes.'
+  confirmations_empty: 'Noch keine Bestätigungen. Öffne auf der Karte einen Ort und sag, dass er noch da ist oder ob sein Wasser trinkbar ist.'
   votes_cta: 'Karte öffnen'
+  votes_ballot: 'Stimme für das Beste deiner Region'
   saved_empty: 'Noch nichts gespeichert. Regionen speichern gibt es noch nicht — das Regionenverzeichnis ist vorerst der Einstieg.'
   saved_browse: 'Regionen durchstöbern'
   curating_title: 'Kurator-Bewerbungen'

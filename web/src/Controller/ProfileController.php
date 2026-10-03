@@ -133,6 +133,10 @@ final class ProfileController extends AbstractController
             ['ids' => ArrayParameterType::INTEGER],
         );
 
+        // The Confirmations tab pages on its own key, so paging it never moves
+        // the contributions list beside it (owner 2026-10-03: "add pagination").
+        [$confirmationsPager, $confirmations] = $this->confirmations($db, $userId, $request->query->getInt('cpage', 1), $pageSize->resolve(self::PER_PAGE));
+
         return $this->render('profile/show.html.twig', [
             'page_title' => 'meta.profile_title',
             'page_description' => 'meta.profile_description',
@@ -172,10 +176,11 @@ final class ProfileController extends AbstractController
                     'label_key' => $type->labelKey(),
                     'season_label_key' => Season::from((string) $v['season'])->labelKey(),
                     'year_label' => Round::fromStored((string) $v['season'], (string) $v['round_start'])->yearLabel(),
+                    'hemisphere' => Round::fromStored((string) $v['season'], (string) $v['round_start'])->hemisphere,
                     'bike_label_key' => null !== $v['bike_type'] ? BikeType::from((string) $v['bike_type'])->labelKey() : null,
                 ];
             }, $db->fetchAllAssociative(
-                "SELECT sv.category, sv.subject_id, sv.season, sv.round_start, sv.bike_type, sv.created_at,
+                "SELECT sv.category, sv.subject_id, sv.season, sv.round_start, sv.slot, sv.bike_type, sv.created_at, sv.submitted_at,
                         COALESCE(i.name, rr.name, '') AS name
                    FROM season_vote sv
                    LEFT JOIN item i ON sv.category <> 'quality-rides' AND i.id = sv.subject_id
@@ -185,7 +190,8 @@ final class ProfileController extends AbstractController
                   LIMIT 50",
                 ['uid' => $userId],
             )),
-            'confirmations' => $this->confirmations($db, $userId),
+            'confirmations' => $confirmations,
+            'confirmations_pager' => $confirmationsPager,
             'stale_nearby' => $staleNearby->for($user, 12),
             'curator_applications' => $db->fetchAllAssociative(
                 'SELECT ca.country_code, ca.status, ca.created_at, ca.decision_note, r.slug AS region_slug
@@ -394,22 +400,29 @@ final class ProfileController extends AbstractController
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * One page of the rider's place confirmations, newest first.
+     *
+     * @return array{0: array{page: int, pages: int, total: int, perPage: int, offset: int, prev: ?int, next: ?int}, 1: list<array<string, mixed>>}
      */
-    private function confirmations(Connection $db, int $userId): array
+    private function confirmations(Connection $db, int $userId, int $page, int $perPage): array
     {
+        $pager = Pager::of($page, (int) $db->fetchOne(
+            'SELECT COUNT(*) FROM item_confirmation ic JOIN item i ON i.id = ic.item_id WHERE ic.user_id = :uid',
+            ['uid' => $userId],
+        ), $perPage);
         $rows = $db->fetchAllAssociative(
             'SELECT ic.stance, ic.created_at, i.id AS item_id, i.name, i.letter
                FROM item_confirmation ic JOIN item i ON i.id = ic.item_id
               WHERE ic.user_id = :uid
               ORDER BY ic.created_at DESC, ic.id DESC
-              LIMIT 50',
-            ['uid' => $userId],
+              LIMIT :limit OFFSET :offset',
+            ['uid' => $userId, 'limit' => $pager['perPage'], 'offset' => $pager['offset']],
+            ['limit' => ParameterType::INTEGER, 'offset' => ParameterType::INTEGER],
         );
         foreach ($rows as &$row) {
             $row['typeLabelKey'] = ItemType::fromParam((string) $row['letter'])->labelKey();
         }
 
-        return $rows;
+        return [$pager, $rows];
     }
 }

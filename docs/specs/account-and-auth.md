@@ -977,13 +977,19 @@ lives in the shell header.
   `curator_application` rows with status pills (pending/approved/declined/
   withdrawn), or — when none exist — a door to the regions directory, so
   "where is my request?" always has an answer on the post-login landing.
-  The **Votes** pane renders the user's own season votes (`season_vote`,
-  every category, with the round and the bike; the only surface that shows
-  *what* was voted for, voter-only, route-domain.md §8d) and their
-  `item_confirmation` place confirmations with stance pills (potable / not
-  potable / still there, [moderation-and-contribution.md](moderation-and-contribution.md)
-  §1.6). The empty pane names the two acts that work on the map today (a
-  place confirmation, a ridden route) and the season ballot. The **Saved-regions** pane says plainly that saving is not built yet
+  The **Votes** pane opens with a door to the season ballot (`/vote`, "Vote
+  for the best of your region"), because the pane lists votes and the
+  ballot is where they are cast. It renders the user's own season votes (`season_vote`,
+  every category, with the round, the choice number, "Not submitted, does not
+  count" on a draft, and the bike; the only surface that shows *what* was
+  voted for, voter-only, route-domain.md §8d). Empty, it says "No votes yet.
+  Pick a region on the ballot and vote for its best." The **Confirmations**
+  pane (`?tab=confirmations`, its own tab since 2026-10-03: a confirmation
+  says a place is real, not that it is the best, owner) lists "Worth a look
+  near you" and the user's `item_confirmation` place confirmations with
+  stance pills (potable / not potable / still there,
+  [moderation-and-contribution.md](moderation-and-contribution.md) §1.6);
+  empty, it says how to confirm a place on the map. The **Saved-regions** pane says plainly that saving is not built yet
   and links the regions directory. The former preview sample data is gone
   Every dashboard pane renders real rows only. Empty panes use
   the shared `.empty-state` block (`account/_shell_styles.html.twig`):

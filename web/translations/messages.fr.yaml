@@ -3574,6 +3574,7 @@ account:
   mod_room_new: 'Messages de la salle que vous n''avez pas encore ouverts'
   tab_contributions: 'Contributions'
   tab_votes: 'Votes'
+  tab_confirmations: 'Confirmations'
   tab_saved: 'Régions sauvegardées'
   tab_messages: 'Messages'
   tab_scout: 'Scout'
@@ -3588,6 +3589,8 @@ account:
   votes_note: 'Vos votes sont privés. Le Commons enregistre <b>que</b> vous avez voté et <b>quand</b>. Il ne tient jamais de relevé public de <b>ce</b> pour quoi vous avez voté.'
   votes_season_h: 'Votes de saison'
   votes_places_h: 'Confirmations de lieux'
+  votes_choice: 'Choix %n%'
+  votes_draft: 'Non validé, ne compte pas'
   stale_nearby_h: "À vérifier près de chez vous"
   stale_nearby_body: "Personne n'a vérifié ces lieux depuis un moment. Si vous passez devant l'un d'eux, un seul geste indique à tous les autres qu'il est toujours là."
   stale_nearby_km: "à %km% km"
@@ -3595,8 +3598,10 @@ account:
   stance_potable: 'Potable'
   stance_not_potable: 'Non potable'
   stance_exists: 'Toujours là'
-  votes_empty: 'Aucun vote pour l''instant. Sur la carte, vous pouvez confirmer un lieu ou indiquer que vous avez parcouru un itinéraire. Dès que le vote de saison est ouvert, vous pourrez y voter pour le meilleur de votre région.'
+  votes_empty: 'Pas encore de vote. Choisissez une région sur le bulletin et votez pour ce qu''elle a de meilleur.'
+  confirmations_empty: 'Pas encore de confirmation. Sur la carte, ouvrez un lieu et dites qu''il est toujours là, ou si son eau est potable.'
   votes_cta: 'Ouvrir la carte'
+  votes_ballot: 'Votez pour le meilleur de votre région'
   saved_empty: 'Rien d''enregistré pour l''instant. L''enregistrement de régions n''existe pas encore — le répertoire des régions est l''entrée pour le moment.'
   saved_browse: 'Parcourir les régions'
   curating_title: 'Candidatures de curateur'

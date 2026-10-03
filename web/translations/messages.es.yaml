@@ -3609,6 +3609,7 @@ account:
   mod_room_new: 'Entradas de la sala que aún no has abierto'
   tab_contributions: 'Aportaciones'
   tab_votes: 'Votos'
+  tab_confirmations: 'Confirmaciones'
   tab_saved: 'Regiones guardadas'
   tab_messages: 'Mensajes'
   tab_scout: 'Scout'
@@ -3623,6 +3624,8 @@ account:
   votes_note: 'Tus votos son privados. El Commons registra <b>que</b> votaste y <b>cuándo</b>. Nunca hay un registro público de <b>qué</b> votaste.'
   votes_season_h: 'Votos de temporada'
   votes_places_h: 'Confirmaciones de lugares'
+  votes_choice: 'Elección %n%'
+  votes_draft: 'Sin enviar, no cuenta'
   stale_nearby_h: "Merece un vistazo cerca de ti"
   stale_nearby_body: "Nadie ha comprobado estos lugares desde hace tiempo. Si pasas por uno, un solo toque le dice a todos que sigue ahí."
   stale_nearby_km: "a %km% km"
@@ -3630,8 +3633,10 @@ account:
   stance_potable: 'Potable'
   stance_not_potable: 'No potable'
   stance_exists: 'Sigue ahí'
-  votes_empty: 'Todavía no hay votos. En el mapa puedes confirmar un lugar o indicar que recorriste una ruta. Cuando la votación de temporada esté abierta, podrás votar ahí lo mejor de tu región.'
+  votes_empty: 'Aún no hay votos. Elige una región en la papeleta y vota por lo mejor de ella.'
+  confirmations_empty: 'Aún no hay confirmaciones. En el mapa, abre un lugar y di que sigue ahí, o si su agua es potable.'
   votes_cta: 'Abrir el mapa'
+  votes_ballot: 'Vota por lo mejor de tu región'
   saved_empty: 'Todavía no hay nada guardado. Guardar regiones en tu cuenta aún no está construido — por ahora, la vía de entrada es el directorio de regiones.'
   saved_browse: 'Ver las regiones'
   curating_title: 'Solicitudes de curaduría'

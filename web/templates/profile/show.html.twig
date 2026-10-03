@@ -287,17 +287,18 @@
   </section>
 
   {# VOTES: the rider's own season votes (the only surface that shows WHAT was
-     voted for, voter-only, route-domain.md §8d) and place confirmations
-     (moderation-and-contribution.md §1.6). #}
+     voted for, voter-only, route-domain.md §8d). Place confirmations have
+     their own pane below: they say a place is real, not that it is the best. #}
   <section class="dpane" id="p-votes">
     <div class="mh">
       <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
       <h1>{{ 'account.tab_votes'|trans }}</h1>
     </div>
-    {% if votes is empty and confirmations is empty %}
+    {# The ballot itself lives on /vote; this tab lists what was cast (owner 2026-10-02: "I can't vote"). #}
+    <p><a class="door" href="{{ path('vote') }}">{{ 'account.votes_ballot'|trans }}</a></p>
+    {% if votes is empty %}
       <div class="empty-state">
         <p>{{ 'account.votes_empty'|trans }}</p>
-        <a class="door" href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a>
       </div>
     {% else %}
       {% if votes is not empty %}
@@ -312,7 +313,7 @@
                   <span class="q-tag q-tag--kind">{{ v.label_key|trans }}</span>
                   <h3 class="q-title">{{ v.name }}</h3>
                 </div>
-                <div class="q-submitter">{{ 'vote.round_label'|trans({'%season%': v.season_label_key|trans, '%year%': v.year_label}) }}{% if v.bike_label_key %} · {{ v.bike_label_key|trans }}{% endif %}</div>
+                <div class="q-submitter">{% include 'vote/_hemisphere.html.twig' with {hemisphere: v.hemisphere} only %} {{ 'vote.round_label'|trans({'%season%': v.season_label_key|trans, '%year%': v.year_label}) }} · {{ 'account.votes_choice'|trans({'%n%': v.slot}) }}{% if v.submitted_at is null %} · <b>{{ 'account.votes_draft'|trans }}</b>{% endif %}{% if v.bike_label_key %} · {{ v.bike_label_key|trans }}{% endif %}</div>
               </div>
               <div class="q-acts">
                 <time class="q-when" datetime="{{ v.created_at|date('c') }}">{{ v.created_at|cc_date }}</time>
@@ -324,64 +325,82 @@
         {% endfor %}
         </div>
       {% endif %}
-      {# PLACES NEAR YOU WORTH A LOOK (owner 2026-08-12). The map's orange ring
-         is a passive colour; this is the half a rider can act on deliberately.
-         Above their own confirmations on purpose: this is a thing to DO, and
-         the list below it is a record of things already done.
-         Absent entirely without a base location - there is no "near you" to
-         answer, and a national list of old taps is a chore, which is what this
-         nudge must never become. #}
-      {% if stale_nearby is not empty %}
-        <h2 class="sec-band">{{ 'account.stale_nearby_h'|trans }} <span class="sec-count">{{ stale_nearby|length }}</span></h2>
-        <p class="note">{{ 'account.stale_nearby_body'|trans }}</p>
-        <div class="q-list">
-        {% for s in stale_nearby %}
-          <div class="q-item">
-            <div class="q-top">
-              <div class="q-headwrap">
-                <div class="q-head">
-                  {% if s.letter is defined %}{% include 'partials/_type_icon.html.twig' with {letter: s.letter} %}{% endif %}
-                  <span class="q-tag q-tag--kind">{{ s.typeLabelKey|trans }}</span>
-                  <h3 class="q-title">{{ s.name }}</h3>
-                </div>
-                <div class="q-submitter">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }}</div>
-              </div>
-              <div class="q-acts">
-                <time class="q-when" datetime="{{ s.last_confirmed|date('c') }}">{{ 'account.stale_nearby_last'|trans }} {{ s.last_confirmed|cc_date }}</time>
-                <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ s.id }}"
-                  target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-        </div>
-      {% endif %}
-      {% if confirmations is not empty %}
-        <h2 class="sec-band">{{ 'account.votes_places_h'|trans }} <span class="sec-count">{{ confirmations|length }}</span></h2>
-        <div class="q-list">
-        {% for c in confirmations %}
-          <div class="q-item">
-            <div class="q-top">
-              <div class="q-headwrap">
-                <div class="q-head">
-                  {% if c.letter is defined %}{% include 'partials/_type_icon.html.twig' with {letter: c.letter} %}{% endif %}
-                  <span class="q-tag q-tag--kind">{{ c.typeLabelKey|trans }}</span>
-                  <h3 class="q-title">{{ c.name }}</h3>
-                </div>
-              </div>
-              <div class="q-acts">
-                <time class="q-when" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time>
-                <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ c.item_id }}"
-                  target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
-                <span class="q-pill q-pill--{{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-        </div>
-      {% endif %}
     {% endif %}
     <div class="note">{{ 'account.votes_note'|trans|rich }}</div>
+  </section>
+
+  {# CONFIRMATIONS: what the rider has vouched for on the map ("still there",
+     "potable", moderation-and-contribution.md §1.6), and the places near them
+     worth a look again. Not votes (owner 2026-10-03). #}
+  <section class="dpane" id="p-confirmations">
+    <div class="mh">
+      <div class="kicker">{{ 'account.menu_personal'|trans }} · {{ cc_user.displayName }}</div>
+      <h1>{{ 'account.tab_confirmations'|trans }}</h1>
+    </div>
+    {% if confirmations_pager.total == 0 and stale_nearby is empty %}
+      <div class="empty-state">
+        <p>{{ 'account.confirmations_empty'|trans }}</p>
+        <a class="door" href="{{ path('map') }}">{{ 'account.votes_cta'|trans }}</a>
+      </div>
+    {% endif %}
+    {# PLACES NEAR YOU WORTH A LOOK (owner 2026-08-12). The map's orange ring
+       is a passive colour; this is the half a rider can act on deliberately.
+       Above their own confirmations on purpose: this is a thing to DO, and
+       the list below it is a record of things already done.
+       Absent entirely without a base location - there is no "near you" to
+       answer, and a national list of old taps is a chore, which is what this
+       nudge must never become. #}
+    {% if stale_nearby is not empty %}
+      <h2 class="sec-band">{{ 'account.stale_nearby_h'|trans }} <span class="sec-count">{{ stale_nearby|length }}</span></h2>
+      <p class="note">{{ 'account.stale_nearby_body'|trans }}</p>
+      <div class="q-list">
+      {% for s in stale_nearby %}
+        <div class="q-item">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                {% if s.letter is defined %}{% include 'partials/_type_icon.html.twig' with {letter: s.letter} %}{% endif %}
+                <span class="q-tag q-tag--kind">{{ s.typeLabelKey|trans }}</span>
+                <h3 class="q-title">{{ s.name }}</h3>
+              </div>
+              <div class="q-submitter">{{ 'account.stale_nearby_km'|trans({'%km%': s.km}) }}</div>
+            </div>
+            <div class="q-acts">
+              <time class="q-when" datetime="{{ s.last_confirmed|date('c') }}">{{ 'account.stale_nearby_last'|trans }} {{ s.last_confirmed|cc_date }}</time>
+              <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ s.id }}"
+                target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+    {% endif %}
+    {% if confirmations is not empty %}
+      <h2 class="sec-band">{{ 'account.votes_places_h'|trans }} <span class="sec-count">{{ confirmations_pager.total }}</span></h2>
+      <div class="q-list">
+      {% for c in confirmations %}
+        <div class="q-item">
+          <div class="q-top">
+            <div class="q-headwrap">
+              <div class="q-head">
+                {% if c.letter is defined %}{% include 'partials/_type_icon.html.twig' with {letter: c.letter} %}{% endif %}
+                <span class="q-tag q-tag--kind">{{ c.typeLabelKey|trans }}</span>
+                <h3 class="q-title">{{ c.name }}</h3>
+              </div>
+            </div>
+            <div class="q-acts">
+              <time class="q-when" datetime="{{ c.created_at|date('c') }}">{{ c.created_at|cc_date }}</time>
+              <span class="q-links"><a class="q-link" href="{{ path('map') }}?item={{ c.item_id }}"
+                target="_blank" rel="noopener">{{ 'account.link_map'|trans }} &#8599;</a></span>
+              <span class="q-pill q-pill--{{ c.stance == 'not_potable' ? 'rej' : 'ok' }}">{{ ('account.stance_' ~ c.stance)|trans }}</span>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+      {# Its own page key (`cpage`), and `tab` so a page link lands on this tab. #}
+      {% include 'partials/_pager.html.twig' with {pager: confirmations_pager, route: 'profile', key: 'cpage', params: {tab: 'confirmations'}} %}
+    {% endif %}
   </section>
 
   {# ── Saved regions: hidden until there is persistence behind it (owner,

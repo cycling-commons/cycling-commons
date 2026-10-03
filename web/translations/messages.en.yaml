@@ -3600,6 +3600,7 @@ account:
   mod_room_new: 'Room posts you have not opened yet'
   tab_contributions: 'Contributions'
   tab_votes: 'Votes'
+  tab_confirmations: 'Confirmations'
   tab_saved: 'Saved regions'
   tab_messages: 'Messages'
   tab_scout: 'Scout'
@@ -3614,6 +3615,8 @@ account:
   votes_note: 'Your votes are private. The Commons records <b>that</b> you voted and <b>when</b>. It never makes a public record of <b>what</b> you voted for.'
   votes_season_h: 'Season votes'
   votes_places_h: 'Place confirmations'
+  votes_choice: 'Choice %n%'
+  votes_draft: 'Not submitted, does not count'
   stale_nearby_h: "Worth a look near you"
   stale_nearby_body: "Nobody has checked these places for a while. If you ride past one, a single tap tells everyone else it is still there."
   stale_nearby_km: "%km% km away"
@@ -3621,8 +3624,10 @@ account:
   stance_potable: 'Potable'
   stance_not_potable: 'Not potable'
   stance_exists: 'Still there'
-  votes_empty: 'No votes yet. On the map you can confirm a place or say you rode a route. Once the season ballot is open, you can vote for the best of your region there.'
+  votes_empty: 'No votes yet. Pick a region on the ballot and vote for its best.'
+  confirmations_empty: 'No confirmations yet. On the map, open a place and say it is still there, or whether its water is drinkable.'
   votes_cta: 'Open the map'
+  votes_ballot: 'Vote for the best of your region'
   saved_empty: 'Nothing saved yet. Saving regions to your account is not built yet — the regions directory is the way in for now.'
   saved_browse: 'Browse the regions'
   curating_title: 'Curator applications'

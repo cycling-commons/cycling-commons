@@ -114,6 +114,9 @@
   <a href="{{ path('dashboard') }}" class="{{ active == 'dashboard' ? 'on' : '' }}">{{ 'nav.dashboard'|trans }}</a>
   <a href="{{ path('profile') }}" data-pane="contrib" class="{{ active == 'contrib' ? 'on' : '' }}">{{ 'account.tab_contributions'|trans }}</a>
   <a href="{{ path('profile') }}?tab=votes" data-pane="votes" class="{{ active == 'votes' ? 'on' : '' }}">{{ 'account.tab_votes'|trans }}</a>
+  {# Confirmations are not votes: "still there" or "potable" says a place is
+     real, not that it is the best (owner 2026-10-03). Their own tab. #}
+  <a href="{{ path('profile') }}?tab=confirmations" data-pane="confirmations" class="{{ active == 'confirmations' ? 'on' : '' }}">{{ 'account.tab_confirmations'|trans }}</a>
   {# Saved regions is hidden until it has a backend (owner, 2026-08-26). The
      pane in profile/show.html.twig is commented out with it, and account.js
      already guards every tab on its pane existing, so ?tab=saved is inert
