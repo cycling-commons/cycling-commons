@@ -1,0 +1,61 @@
+web/templates/account/_shell_chrome.html.twig
+  s_49442ae34d3603::t_00c84e86462ba2 117-119
+web/translations/messages.de.yaml
+  s_49442ae34d3603::t_5ddc0a53bd7980 3600
+  s_49442ae34d3603::t_1ec5b57a02f25e 3612
+  s_49442ae34d3603::t_8d417fe7af6cb3 3601
+  s_49442ae34d3603::t_00c84e86462ba2 3585,3609-3610
+web/translations/messages.fr.yaml
+  s_49442ae34d3603::t_8d417fe7af6cb3 3593
+  s_49442ae34d3603::t_00c84e86462ba2 3577,3602
+  s_49442ae34d3603::t_5ddc0a53bd7980 3592
+  s_49442ae34d3603::t_fb70efee1b783c 3601
+  s_49442ae34d3603::t_1ec5b57a02f25e 3604
+web/translations/messages.en.yaml
+  s_49442ae34d3603::t_8d417fe7af6cb3 3619
+  s_49442ae34d3603::t_00c84e86462ba2 3603,3627-3628
+  s_49442ae34d3603::t_1ec5b57a02f25e 3630
+  s_49442ae34d3603::t_5ddc0a53bd7980 3618
+web/translations/messages.nl.yaml
+  s_49442ae34d3603::t_8d417fe7af6cb3 3600
+  s_49442ae34d3603::t_5ddc0a53bd7980 3599
+  s_49442ae34d3603::t_00c84e86462ba2 3584,3608-3609
+  s_49442ae34d3603::t_1ec5b57a02f25e 3611
+web/src/Controller/ProfileController.php
+  s_49442ae34d3603::t_ad7ab98dd86f24 403-405
+  s_49442ae34d3603::t_64ee1daf84edc4 136-139,193-194,407,409-412,418-420,426
+  s_49442ae34d3603::t_8d417fe7af6cb3 183
+  s_49442ae34d3603::t_42efc4e4554a0e 179
+web/templates/profile/show.html.twig
+  s_49442ae34d3603::t_ad7ab98dd86f24 340,379,401-402
+  s_49442ae34d3603::t_00c84e86462ba2 290-291,299,328-339,341-364,366-371,375-378,380-388,391-396,399-400
+  s_49442ae34d3603::t_1ec5b57a02f25e 297-298
+  s_49442ae34d3603::t_42efc4e4554a0e 316
+web/translations/messages.es.yaml
+  s_49442ae34d3603::t_00c84e86462ba2 3612,3636-3637
+  s_49442ae34d3603::t_5ddc0a53bd7980 3627
+  s_49442ae34d3603::t_8d417fe7af6cb3 3628
+  s_49442ae34d3603::t_1ec5b57a02f25e 3639
+web/tests/Profile/ConfirmationsTabTest.php
+  s_49442ae34d3603::t_8fce68e0b7ba64 51-85
+  s_49442ae34d3603::t_38b6e156e97527 1-50,86
+docs/specs/account-and-auth.md
+  s_49442ae34d3603::t_3989a728f79723 983-992
+  s_49442ae34d3603::t_1be7128bdaa813 980-982
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1598763a0a620172d30509e0d0f25675379e205f",
+  "prompts": {},
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
