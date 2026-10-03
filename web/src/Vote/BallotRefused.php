@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Vote;
 
 /**
- * Why the ballot did not take a cast or a remove. The reason is a stable
+ * Why the ballot did not take a cast, a move, a remove or a submit. The reason is a stable
  * token; the page shows `vote.refused.<reason>`.
  *
  * @api
@@ -23,6 +23,8 @@ final class BallotRefused extends \RuntimeException
     public const string BALLOT_FULL = 'ballot_full';
     public const string ALREADY_VOTED = 'already_voted';
     public const string RATE_LIMITED = 'rate_limited';
+    public const string BALLOT_SUBMITTED = 'ballot_submitted';
+    public const string BALLOT_INCOMPLETE = 'ballot_incomplete';
 
     public function __construct(public readonly string $reason)
     {

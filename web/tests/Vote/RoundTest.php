@@ -108,4 +108,34 @@ final class RoundTest extends TestCase
         self::assertSame(Hemisphere::North, Hemisphere::ofLatitude(50.5));
         self::assertSame(Hemisphere::North, Hemisphere::ofLatitude(0.0));
     }
+
+    /** route-domain.md §8c: riders vote in one season for the next one's list. */
+    public function testTheBallotOpenNowIsForNextSeason(): void
+    {
+        $winter = Round::votingAt(self::at('2026-10-02T21:00:00+00:00'), Hemisphere::North);
+        self::assertSame([Season::Winter, 2026, '2026-12-01'], [$winter->season, $winter->year, $winter->startDate()]);
+
+        // Southern October is spring, so its ballot is for summer.
+        $summer = Round::votingAt(self::at('2026-10-02T21:00:00+00:00'), Hemisphere::South);
+        self::assertSame([Season::Summer, '2026-12-01'], [$summer->season, $summer->startDate()]);
+    }
+
+    public function testWinterVotesFillSpringOfTheNextYear(): void
+    {
+        $spring = Round::votingAt(self::at('2027-01-15T12:00:00+00:00'), Hemisphere::North);
+        self::assertSame([Season::Spring, 2027], [$spring->season, $spring->year]);
+        self::assertSame('2027-03-01', Round::of(Season::Winter, 2026, Hemisphere::North)->next()->startDate());
+    }
+
+    public function testTheBallotClosesWhenTheSeasonStarts(): void
+    {
+        $winter = Round::of(Season::Winter, 2026, Hemisphere::North);
+
+        self::assertSame('2026-09-01T00:00:00+00:00', $winter->votingOpensAt()->format('c'));
+        self::assertSame('2026-12-01T00:00:00+00:00', $winter->votingClosesAt()->format('c'));
+        self::assertSame('2026-11-30', $winter->lastVotingDay()->format('Y-m-d'));
+        self::assertTrue($winter->isVotingOpenAt(self::at('2026-11-30T23:59:59+00:00')));
+        self::assertFalse($winter->isVotingOpenAt(self::at('2026-12-01T00:00:00+00:00')));
+        self::assertFalse($winter->isVotingOpenAt(self::at('2026-08-31T23:59:59+00:00')));
+    }
 }

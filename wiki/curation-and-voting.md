@@ -23,7 +23,7 @@ The single organising principle of the Commons:
 |---|---|---|
 | **Examples** | best climbs, bike-friendly stays, finest views, history & culture, top quality rides | road surface, water points, toilets, repair stations, hazards, bike shops |
 | **Goal** | **curated**: the best, ranked | **complete**: as exhaustive as possible |
-| **How** | riders vote in season rounds, three votes per list; routes also count *I rode this* | one-tap reports; confirm & decay |
+| **How** | riders rank a top 5 per list for next season; routes also count *I rode this* | one-tap reports; confirm & decay |
 | **The value is** | the *ranking* | the *coverage* |
 
 Voting makes no sense for a water tap: it's either there or it isn't, and you want them all. Ranking
@@ -60,28 +60,36 @@ of drowning in data.
 - **One list per region, season and kind.** Climbs, routes, scenic views, history & culture and
   where to sleep each get their own list in every region, for every riding season. Spring 2027 is
   one round, spring 2028 the next. South of the equator the seasons are the other way round.
-- **Three votes per list.** Each rider has three votes in a list, at most one per place, and can
-  change them until the season ends. A route vote also says which bike it was ridden on, so "best
-  on a handbike" is a list of its own.
+- **You vote for next season.** The ballot open in autumn fills the winter list. Voting closes
+  when winter starts, and the winter list is published that day and shown all winter. While a
+  ballot is open no page shows any count, so nobody can read the standings and bet on them.
+- **A ranked top 5 per list.** Each rider picks five places in a list, at most one vote per place,
+  and puts them in order: the first choice gets 10 points, then 7, 5, 3 and 1.
+  Picks and their order can change until the rider submits the ballot. A route vote also says
+  which bike it was ridden on, so "best on a handbike" is a list of its own.
+- **Submit makes it count.** With all five picks in place the rider submits the ballot. Only a
+  submitted ballot counts, and it is final for that season. Picks never submitted count for
+  nothing and are deleted when voting closes.
 - **Who votes.** A confirmed email address, an account at least 14 days old, and one thing done
   on the map: a confirmed place, a ridden route, or a contribution sent in (one that was turned down
   does not count). With few voters, one fake account would otherwise decide a list.
 - **A ranking needs 5 voters.** Below that the list says "No ranking yet" and shows the places
-  riders confirmed most, with the votes so far.
-- **Last year's top 3 count a little less.** In the same season a year later their votes count
+  riders confirmed most.
+- **Last year's top 3 count a little less.** In the same season a year later their points count
   x0.75, so the list changes over the years while a clearly loved place can still win.
-- **Close calls share a place.** Less than one vote apart is too close to call; the place that won
+- **Close calls share a place.** Less than one point apart is too close to call; the place that won
   less often before is listed first.
-- **Every season starts empty.** Votes count for their own season and year only. When a season
-  ends its result is stored, and it does not change afterwards.
+- **Every season starts empty.** Votes count for one season of one year only. When voting for a
+  season closes its result is stored, and it does not change afterwards.
+- **No numbers in public.** The lists show places and how close each is to first, never how many
+  votes or voters they had.
 
 ## Solving the cold start
 
 Empty lists before a voting culture exists would kill the feature.
 
 A list with fewer than five voters does not pretend to have a winner. It shows the places riders
-confirmed most (newest first where nothing is confirmed yet) and how many voters it still needs,
-so a region can show a climbs ranking while its places to sleep still say "No ranking yet".
+confirmed most (newest first where nothing is confirmed yet), so a region can show a climbs ranking while its places to sleep still say "No ranking yet".
 Nothing in a ranking is derived from usage, and there are no curators' picks to fall back on.
 Seeding a list from anonymous aggregate popularity, through
 [the sensing boundary](governance.md#the-sensing-boundary-how-activity-becomes-a-place-fact),
@@ -96,7 +104,8 @@ all. The Commons *ranks* data; it never *discards* it.
 
 ## Integrity
 
-- **Three votes per rider per list**, at most one per place; the database itself refuses a fourth.
+- **Five votes per rider per list**, at most one per place; the database itself refuses a sixth
+  that arrives at the same moment.
 - **`X` adapts to the region.** A flat province may have three climbs worth listing; the Alps have
   hundreds. The curated target scales with the density of genuinely good options.
 - **Provenance without identity** (Manifesto §VIII): the Commons stores that a vote was cast and when,

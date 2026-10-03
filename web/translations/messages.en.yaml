@@ -1927,6 +1927,8 @@ vote:
     ballot_full: 'You have used all your votes in this list. Remove one first.'
     already_voted: 'You already voted for this one.'
     rate_limited: 'Too many changes in a short time. Try again in an hour.'
+    ballot_submitted: 'Your ballot for this list is already submitted and cannot change.'
+    ballot_incomplete: 'Pick all your votes before you submit.'
 api:
   live_count: '%live% of %total% endpoints answer today'
 

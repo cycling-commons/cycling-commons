@@ -16,6 +16,11 @@ use App\Catalog\Season;
  * 00:00 UTC. A round's year is the year of its first month, so northern winter
  * 2026 runs from December 2026 to February 2027.
  *
+ * A round's ballot is open during the season before it and closes when the
+ * round starts: riders vote in autumn for the winter list, which is published
+ * on the first day of winter and shown all winter. Nothing is counted in
+ * public while a ballot is open.
+ *
  * Every window here is computed from a round's first day, never by taking
  * months off the clock: "now minus three months" on 31 May is 3 March.
  *
@@ -55,6 +60,12 @@ final readonly class Round
         }
 
         return new self(self::map($hemisphere)[$first], $year, $hemisphere);
+    }
+
+    /** The round whose ballot is open at `$at`: the season after the one riders are in. */
+    public static function votingAt(\DateTimeImmutable $at, Hemisphere $hemisphere): self
+    {
+        return self::containing($at, $hemisphere)->next();
     }
 
     /** The most recent round of this season that has opened by `$now`. */
@@ -115,6 +126,35 @@ final readonly class Round
     public function hasClosedBy(\DateTimeImmutable $at): bool
     {
         return $this->closesAt() <= $at;
+    }
+
+    /** The ballot for this round opens when the season before it starts. */
+    public function votingOpensAt(): \DateTimeImmutable
+    {
+        return $this->opensAt()->modify('-3 months');
+    }
+
+    /** The ballot closes the moment the round starts, and the list is published. */
+    public function votingClosesAt(): \DateTimeImmutable
+    {
+        return $this->opensAt();
+    }
+
+    /** The last day riders can vote for this round. */
+    public function lastVotingDay(): \DateTimeImmutable
+    {
+        return $this->votingClosesAt()->modify('-1 day');
+    }
+
+    public function isVotingOpenAt(\DateTimeImmutable $at): bool
+    {
+        return $this->votingOpensAt() <= $at && $at < $this->votingClosesAt();
+    }
+
+    /** The round after this one, in the same hemisphere. */
+    public function next(): self
+    {
+        return self::containing($this->closesAt(), $this->hemisphere);
     }
 
     /** The same season a year earlier: the round the handicap looks at. */

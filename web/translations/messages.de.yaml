@@ -1932,6 +1932,8 @@ vote:
     ballot_full: 'Du hast alle deine Stimmen in dieser Liste vergeben. Nimm zuerst eine zurück.'
     already_voted: 'Dafür hast du schon gestimmt.'
     rate_limited: 'Zu viele Änderungen in kurzer Zeit. Versuch es in einer Stunde noch einmal.'
+    ballot_submitted: 'Dein Stimmzettel für diese Liste ist schon abgegeben und kann sich nicht mehr ändern.'
+    ballot_incomplete: 'Wähle alle deine Stimmen, bevor du abgibst.'
 ride_check:
   title: 'Meine Tour prüfen'
   notice: 'Deine GPX-Datei wird im Speicher verarbeitet und niemals gespeichert.'

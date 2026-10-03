@@ -15,11 +15,13 @@ use Doctrine\DBAL\ParameterType;
 use Psr\Clock\ClockInterface;
 
 /**
- * A list's result: counted live while its round is open, stored once it has
- * closed.
+ * A list's result: nothing while its ballot is open, stored once the ballot
+ * has closed.
  *
- * A closed round is stored by the daily `app:vote:freeze` once
- * {@see BallotRules::FREEZE_GRACE} has passed after it closed
+ * A round's ballot closes when the round starts ({@see Round::votingClosesAt()}).
+ * Until then no page counts it, so no standing can be read off the site while
+ * riders still vote. The round is stored by the daily `app:vote:freeze` once
+ * {@see BallotRules::FREEZE_GRACE} has passed after its ballot closed
  * ({@see self::freezeEveryClosed()}), and before an account that voted in it
  * is deleted ({@see SeasonVoteDeletionHook}). A list read before the timer
  * ran is stored by that read. Stored rows are never rewritten, so a closed
@@ -49,41 +51,28 @@ final class SeasonResults
     ) {
     }
 
-    /** @return ListResult */
+    /**
+     * The round's list once its ballot has closed; an empty, unranked list
+     * while riders can still vote for it.
+     *
+     * @return ListResult
+     */
     public function list(ListKey $key, Round $round): array
     {
         $now = $this->clock->now();
+        if ($now < $round->votingClosesAt()) {
+            return ['voters' => 0, 'ranked' => false, 'closed' => false, 'entries' => []];
+        }
         $this->freezeClosed($key);
-        if ($round->closesAt()->modify(BallotRules::FREEZE_GRACE) <= $now) {
+        if ($round->votingClosesAt()->modify(BallotRules::FREEZE_GRACE) <= $now) {
             return $this->stored($key, $round);
         }
 
-        return $this->compute($key, $round, $round->hasClosedBy($now));
+        return $this->compute($key, $round);
     }
 
     /**
-     * How many riders voted in the list: the stored count of a stored round,
-     * else counted. Neither computes the list nor stores anything.
-     */
-    public function voters(ListKey $key, Round $round): int
-    {
-        if ($round->hasClosedBy($this->clock->now())) {
-            $stored = $this->db->fetchOne(
-                'SELECT voters FROM season_result
-                  WHERE region_id = :rid AND category = :cat AND bike_type = :bike AND round_start = :start
-                  LIMIT 1',
-                ['rid' => $key->regionId, 'cat' => $key->category->value, 'bike' => $key->bikeColumn(), 'start' => $round->startDate()],
-            );
-            if (false !== $stored) {
-                return (int) $stored;
-            }
-        }
-
-        return $this->countVoters($key, $round);
-    }
-
-    /**
-     * Stores every closed list with votes that is not stored yet: per region
+     * Stores every list whose ballot has closed, with votes, that is not stored yet: per region
      * and category the list of every bike, and for routes the list of each
      * bike voted on.
      *
@@ -91,11 +80,13 @@ final class SeasonResults
      */
     public function freezeEveryClosed(): int
     {
+        $this->dropClosedDrafts();
+
         /** @var list<array{region_id: int|string, category: string, bike_type: ?string}> $rows */
         $rows = $this->db->fetchAllAssociative(
             "SELECT DISTINCT sv.region_id, sv.category, sv.bike_type
                FROM season_vote sv
-              WHERE sv.round_start < :open
+              WHERE sv.round_start <= :open AND sv.submitted_at IS NOT NULL
                 AND (NOT EXISTS (SELECT 1 FROM season_result r
                                   WHERE r.region_id = sv.region_id AND r.category = sv.category
                                     AND r.bike_type = '' AND r.round_start = sv.round_start)
@@ -127,10 +118,25 @@ final class SeasonResults
     }
 
     /**
-     * Stores every closed round of this list that holds votes and is not
-     * stored yet, oldest first.
+     * Deletes the draft votes of every ballot that has closed: a ballot never
+     * submitted counts for nothing, and a vote is personal data
+     * (route-domain.md §8c, §8d privacy).
      *
-     * @param bool $ignoreGrace store a round the moment it closed: the deletion hook may not wait
+     * @return int the draft votes deleted
+     */
+    public function dropClosedDrafts(): int
+    {
+        return (int) $this->db->executeStatement(
+            'DELETE FROM season_vote WHERE submitted_at IS NULL AND round_start <= :open',
+            ['open' => self::openStart($this->clock->now())],
+        );
+    }
+
+    /**
+     * Stores every round of this list whose ballot has closed, that holds
+     * votes and is not stored yet, oldest first.
+     *
+     * @param bool $ignoreGrace store a round the moment its ballot closed: the deletion hook may not wait
      *
      * @return int the rounds stored
      */
@@ -142,7 +148,7 @@ final class SeasonResults
         $rounds = $this->db->fetchAllAssociative(
             "SELECT DISTINCT sv.season, sv.round_start
                FROM season_vote sv $join
-              WHERE $where AND sv.round_start < :open
+              WHERE $where AND sv.round_start <= :open
                 AND NOT EXISTS (SELECT 1 FROM season_result r
                                  WHERE r.region_id = sv.region_id AND r.category = sv.category
                                    AND r.bike_type = :bikecol AND r.round_start = sv.round_start)
@@ -152,7 +158,7 @@ final class SeasonResults
         $stored = 0;
         foreach ($rounds as $row) {
             $round = Round::fromStored($row['season'], $row['round_start']);
-            $closes = $ignoreGrace ? $round->closesAt() : $round->closesAt()->modify(BallotRules::FREEZE_GRACE);
+            $closes = $ignoreGrace ? $round->votingClosesAt() : $round->votingClosesAt()->modify(BallotRules::FREEZE_GRACE);
             if ($closes <= $now && $this->freeze($key, $round)) {
                 ++$stored;
             }
@@ -163,29 +169,39 @@ final class SeasonResults
 
     /**
      * The first day of the rounds open at `$now`. Both hemispheres change
-     * season on the same days, so every round that starts before it has
-     * closed.
+     * season on the same days, so every round that starts on or before it
+     * has started, and its ballot has closed.
      */
     private static function openStart(\DateTimeImmutable $now): string
     {
         return Round::containing($now, Hemisphere::North)->startDate();
     }
 
-    /** @return ListResult */
-    private function compute(ListKey $key, Round $round, bool $closed): array
+    /**
+     * Counts a round whose ballot has closed. Never called for a ballot that
+     * is still open.
+     *
+     * @return ListResult
+     */
+    private function compute(ListKey $key, Round $round): array
     {
         [$join, $where, $params] = $this->scope($key);
         $where .= ' AND sv.round_start = :start';
         $params['start'] = $round->startDate();
 
         $voters = $this->countVoters($key, $round);
-        /** @var list<array{subject_id: int|string, votes: int|string}> $rows */
+        $points = 'CASE sv.slot';
+        foreach (BallotRules::POINTS_BY_SLOT as $slot => $worth) {
+            $points .= ' WHEN '.$slot.' THEN '.$worth;
+        }
+        $points .= ' ELSE 0 END';
+        /** @var list<array{subject_id: int|string, votes: int|string, points: int|string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            "SELECT sv.subject_id, COUNT(*) AS votes FROM season_vote sv $join WHERE $where GROUP BY sv.subject_id",
+            "SELECT sv.subject_id, COUNT(*) AS votes, SUM($points) AS points FROM season_vote sv $join WHERE $where GROUP BY sv.subject_id",
             $params,
         );
         if ([] === $rows) {
-            return ['voters' => 0, 'ranked' => false, 'closed' => $closed, 'entries' => []];
+            return ['voters' => 0, 'ranked' => false, 'closed' => true, 'entries' => []];
         }
 
         $ids = array_map(static fn (array $r): int => (int) $r['subject_id'], $rows);
@@ -194,7 +210,7 @@ final class SeasonResults
         $tallies = [];
         foreach ($rows as $r) {
             $id = (int) $r['subject_id'];
-            $tallies[] = ['subjectId' => $id, 'votes' => (int) $r['votes'], 'handicapped' => \in_array($id, $top, true), 'winsBefore' => $wins[$id] ?? 0];
+            $tallies[] = ['subjectId' => $id, 'votes' => (int) $r['votes'], 'points' => (int) $r['points'], 'handicapped' => \in_array($id, $top, true), 'winsBefore' => $wins[$id] ?? 0];
         }
 
         $names = $this->candidates->names($key->category, $ids);
@@ -212,7 +228,7 @@ final class SeasonResults
             ];
         }
 
-        return ['voters' => $voters, 'ranked' => $voters >= BallotRules::RANKING_THRESHOLD, 'closed' => $closed, 'entries' => $entries];
+        return ['voters' => $voters, 'ranked' => $voters >= BallotRules::RANKING_THRESHOLD, 'closed' => true, 'entries' => $entries];
     }
 
     private function countVoters(ListKey $key, Round $round): int
@@ -228,7 +244,7 @@ final class SeasonResults
     /** @return bool whether the round had entries to store */
     private function freeze(ListKey $key, Round $round): bool
     {
-        $result = $this->compute($key, $round, true);
+        $result = $this->compute($key, $round);
         if ([] === $result['entries']) {
             return false;
         }
@@ -283,8 +299,8 @@ final class SeasonResults
     }
 
     /**
-     * The votes that belong to this list, whatever the round: its region and
-     * category, and for a narrowed route list its bike. A specialty bike also
+     * The submitted votes that belong to this list, whatever the round: its
+     * region and category, and for a narrowed route list its bike. A specialty bike also
      * needs the route to declare that bike (route-domain.md §8.3).
      *
      * @return array{0: string, 1: string, 2: array<string, int|string>}
@@ -292,7 +308,8 @@ final class SeasonResults
     private function scope(ListKey $key): array
     {
         $params = ['rid' => $key->regionId, 'cat' => $key->category->value];
-        $where = 'sv.region_id = :rid AND sv.category = :cat';
+        // Only a submitted ballot counts; a draft counts for nothing (route-domain.md §8c).
+        $where = 'sv.region_id = :rid AND sv.category = :cat AND sv.submitted_at IS NOT NULL';
         $join = '';
         if (null !== $key->bike) {
             $where .= ' AND sv.bike_type = :bike';

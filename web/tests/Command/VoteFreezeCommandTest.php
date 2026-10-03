@@ -15,9 +15,9 @@ use Symfony\Component\Clock\NativeClock;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * `app:vote:freeze`, the daily timer that stores closed season lists, so a
- * closed result is fixed when its round closes and not when somebody first
- * reads it.
+ * `app:vote:freeze`, the daily timer that stores season lists whose ballot
+ * has closed, so a result is fixed when its season starts and not when
+ * somebody first reads it.
  *
  * @see docs/specs/route-domain.md §8d
  */
@@ -41,11 +41,12 @@ final class VoteFreezeCommandTest extends KernelTestCase
         parent::tearDown();
     }
 
-    private function vote(int $user, int $subject, string $start, string $category = 'climbs', ?string $bike = null, string $season = 'spring', int $slot = 1): void
+    private function vote(int $user, int $subject, string $start, string $category = 'climbs', ?string $bike = null, string $season = 'spring', int $slot = 1, bool $submitted = true): void
     {
         $this->db->insert('season_vote', [
             'user_id' => $user, 'region_id' => self::REGION, 'category' => $category, 'subject_id' => $subject,
             'bike_type' => $bike, 'season' => $season, 'round_start' => $start, 'slot' => $slot, 'created_at' => $start.' 10:00:00',
+            'submitted_at' => $submitted ? $start.' 10:05:00' : null,
         ]);
     }
 
@@ -79,8 +80,8 @@ final class VoteFreezeCommandTest extends KernelTestCase
         $this->vote(1, 2001, '2027-03-01', 'quality-rides', 'Gravel');
         $this->vote(2, 2001, '2027-03-01', 'quality-rides', 'Road');
         $this->vote(3, 2002, '2027-03-01', 'quality-rides', 'Road');
-        // The open summer round is not touched.
-        $this->vote(1, 1001, '2027-06-01', season: 'summer');
+        // In June riders vote for autumn: that ballot is open and not touched.
+        $this->vote(1, 1001, '2027-09-01', season: 'autumn');
 
         $tester = $this->run_('2027-06-01T01:30:00+00:00');
 
@@ -92,17 +93,18 @@ final class VoteFreezeCommandTest extends KernelTestCase
             'quality-rides/Gravel' => 1,
             'quality-rides/Road' => 2,
         ], $this->stored('2027-03-01'));
-        self::assertSame([], $this->stored('2027-06-01'));
+        self::assertSame([], $this->stored('2027-09-01'));
     }
 
-    public function testARoundInItsGraceHourWaitsForTheNextRun(): void
+    /** Summer's ballot closes at 00:00 on 1 June; in the hour after, its list waits. */
+    public function testAListInItsGraceHourWaitsForTheNextRun(): void
     {
-        $this->vote(1, 1001, '2027-03-01');
+        $this->vote(1, 1001, '2027-06-01', season: 'summer');
 
         $tester = $this->run_('2027-06-01T00:59:00+00:00');
 
         $tester->assertCommandIsSuccessful();
-        self::assertSame([], $this->stored('2027-03-01'));
+        self::assertSame([], $this->stored('2027-06-01'));
     }
 
     public function testASecondRunStoresNothingAndChangesNothing(): void

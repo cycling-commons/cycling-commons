@@ -61,6 +61,10 @@ class SeasonVote
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
+    /** When the rider submitted this list's ballot; null is a draft, which counts for nothing. */
+    #[ORM\Column(name: 'submitted_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $submittedAt = null;
+
     public function __construct(int $userId, int $regionId, ItemType $category, int $subjectId, ?BikeType $bikeType, Season $season, \DateTimeImmutable $roundStart, int $slot)
     {
         $this->userId = $userId;
@@ -117,6 +121,11 @@ class SeasonVote
     public function getSlot(): int
     {
         return $this->slot;
+    }
+
+    public function getSubmittedAt(): ?\DateTimeImmutable
+    {
+        return $this->submittedAt;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

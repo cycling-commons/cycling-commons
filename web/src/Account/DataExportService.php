@@ -147,7 +147,7 @@ final class DataExportService
             // The name of what was voted for, as the profile's votes pane shows it.
             'season_votes' => $this->db->fetchAllAssociative(
                 "SELECT sv.id, sv.category, sv.subject_id, COALESCE(i.name, rr.name, '') AS subject_name,
-                        sv.region_id, sv.season, sv.round_start, sv.bike_type, sv.created_at
+                        sv.region_id, sv.season, sv.round_start, sv.slot AS choice, sv.bike_type, sv.created_at, sv.submitted_at
                    FROM season_vote sv
                    LEFT JOIN item i ON sv.category <> 'quality-rides' AND i.id = sv.subject_id
                    LEFT JOIN recommended_route rr ON sv.category = 'quality-rides' AND rr.id = sv.subject_id

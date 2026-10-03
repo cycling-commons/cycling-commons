@@ -18,6 +18,7 @@ use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
 use App\Vote\BallotCandidates;
 use App\Vote\BallotRefused;
+use App\Vote\BallotRules;
 use App\Vote\BallotService;
 use App\Vote\Hemisphere;
 use App\Vote\Round;
@@ -141,7 +142,8 @@ final class BallotServiceTest extends KernelTestCase
         return $row;
     }
 
-    public function testAVoteLandsInTheOpenRoundOfThePlacesRegion(): void
+    /** route-domain.md §8c: riders vote in spring for the summer list. */
+    public function testAVoteCountsForTheNextRoundOfThePlacesRegion(): void
     {
         $rid = $this->region('xa-north', 'XA', 50.0);
         $climb = $this->item('N', $rid);
@@ -149,26 +151,27 @@ final class BallotServiceTest extends KernelTestCase
 
         $round = $this->service()->cast($u, ItemType::Climbs, $climb, BikeType::Road);
 
-        self::assertSame('2027-03-01', $round->startDate());
+        self::assertSame('2027-06-01', $round->startDate());
         $row = $this->row((int) $u->getId(), $climb);
         self::assertSame($rid, (int) $row['region_id']);
         self::assertSame('climbs', $row['category']);
-        self::assertSame('spring', $row['season']);
-        self::assertSame('2027-03-01', $row['round_start']);
+        self::assertSame('summer', $row['season']);
+        self::assertSame('2027-06-01', $row['round_start']);
         self::assertSame(1, (int) $row['slot']);
         self::assertNull($row['bike_type'], 'a place vote carries no bike');
     }
 
-    public function testASouthernPlaceVotesInItsOwnAutumn(): void
+    public function testASouthernPlaceVotesForItsOwnWinter(): void
     {
         $view = $this->item('P', $this->region('xb-south', 'XB', -34.0));
         $u = $this->voter();
 
         $this->service()->cast($u, ItemType::ScenicViews, $view, null);
 
+        // April is autumn down south, so the ballot is for its winter.
         $row = $this->row((int) $u->getId(), $view);
-        self::assertSame('autumn', $row['season']);
-        self::assertSame('2027-03-01', $row['round_start']);
+        self::assertSame('winter', $row['season']);
+        self::assertSame('2027-06-01', $row['round_start']);
     }
 
     public function testARouteVoteNeedsABikeAndKeepsIt(): void
@@ -205,6 +208,7 @@ final class BallotServiceTest extends KernelTestCase
         $u = $this->voter();
         self::assertSame(BallotRefused::VOTING_CLOSED, self::refusal(fn () => $this->service(live: 0)->cast($u, ItemType::Climbs, $climb, null)));
         self::assertSame(BallotRefused::VOTING_CLOSED, self::refusal(fn () => $this->service(live: 0)->remove($u, ItemType::Climbs, $climb)));
+        self::assertSame(BallotRefused::VOTING_CLOSED, self::refusal(fn () => $this->service(live: 0)->move($u, ItemType::Climbs, $climb, true)));
     }
 
     public function testAnAccountThatCannotVoteYetIsRefused(): void
@@ -226,26 +230,30 @@ final class BallotServiceTest extends KernelTestCase
         self::assertSame(BallotRefused::NOT_VOTABLE, self::refusal(fn () => $s->cast($u, ItemType::WaterFood, $this->item('B', $rid), null)));
     }
 
-    public function testThreeVotesPerListAndOnePerItem(): void
+    public function testAFullBallotAndOneVotePerItem(): void
     {
         $rid = $this->region('xa-north', 'XA', 50.0);
         $u = $this->voter();
         $s = $this->service();
-        [$a, $b, $c, $d] = [$this->item('N', $rid), $this->item('N', $rid), $this->item('N', $rid), $this->item('N', $rid)];
+        $ids = [];
+        for ($i = 0; $i <= BallotRules::VOTES_PER_LIST; ++$i) {
+            $ids[] = $this->item('N', $rid);
+        }
 
-        $s->cast($u, ItemType::Climbs, $a, null);
-        self::assertSame(BallotRefused::ALREADY_VOTED, self::refusal(fn () => $s->cast($u, ItemType::Climbs, $a, null)));
-        $s->cast($u, ItemType::Climbs, $b, null);
-        $s->cast($u, ItemType::Climbs, $c, null);
-        self::assertSame(BallotRefused::BALLOT_FULL, self::refusal(fn () => $s->cast($u, ItemType::Climbs, $d, null)));
+        $s->cast($u, ItemType::Climbs, $ids[0], null);
+        self::assertSame(BallotRefused::ALREADY_VOTED, self::refusal(fn () => $s->cast($u, ItemType::Climbs, $ids[0], null)));
+        foreach (\array_slice($ids, 1, BallotRules::VOTES_PER_LIST - 1) as $id) {
+            $s->cast($u, ItemType::Climbs, $id, null);
+        }
+        self::assertSame(BallotRefused::BALLOT_FULL, self::refusal(fn () => $s->cast($u, ItemType::Climbs, $ids[BallotRules::VOTES_PER_LIST], null)));
 
         // Another category and another region are other lists.
         $s->cast($u, ItemType::ScenicViews, $this->item('P', $rid), null);
         $s->cast($u, ItemType::Climbs, $this->item('N', $this->region('xa-east', 'XA', 51.0)), null);
-        self::assertSame(5, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote WHERE user_id = ?', [$u->getId()]));
+        self::assertSame(BallotRules::VOTES_PER_LIST + 2, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote WHERE user_id = ?', [$u->getId()]));
     }
 
-    public function testARemovedVoteFreesItsSlotForTheNext(): void
+    public function testARemovedVoteMovesTheOnesBelowItUp(): void
     {
         $rid = $this->region('xa-north', 'XA', 50.0);
         $u = $this->voter();
@@ -256,13 +264,54 @@ final class BallotServiceTest extends KernelTestCase
         $s->cast($u, ItemType::Climbs, $c, null);
 
         self::assertTrue($s->remove($u, ItemType::Climbs, $b));
+        self::assertSame(2, (int) $this->row((int) $u->getId(), $c)['slot'], 'the third choice is now the second');
         $s->cast($u, ItemType::Climbs, $d, null);
 
-        self::assertSame(2, (int) $this->row((int) $u->getId(), $d)['slot']);
-        self::assertSame([$a => null, $d => null, $c => null], $s->mine($u, ItemType::Climbs, $rid, Round::of(Season::Spring, 2027, Hemisphere::North)));
+        self::assertSame(3, (int) $this->row((int) $u->getId(), $d)['slot'], 'a new vote goes to the end');
+        self::assertSame([$a => null, $c => null, $d => null], $s->mine($u, ItemType::Climbs, $rid, Round::of(Season::Summer, 2027, Hemisphere::North)));
     }
 
-    public function testRemovingTouchesOnlyTheOpenRound(): void
+    public function testAMoveSwapsAVoteWithItsNeighbour(): void
+    {
+        $rid = $this->region('xa-north', 'XA', 50.0);
+        $u = $this->voter();
+        $s = $this->service();
+        [$a, $b, $c] = [$this->item('N', $rid), $this->item('N', $rid), $this->item('N', $rid)];
+        $s->cast($u, ItemType::Climbs, $a, null);
+        $s->cast($u, ItemType::Climbs, $b, null);
+        $s->cast($u, ItemType::Climbs, $c, null);
+        $created = $this->row((int) $u->getId(), $c)['created_at'];
+        $summer = Round::of(Season::Summer, 2027, Hemisphere::North);
+
+        self::assertTrue($s->move($u, ItemType::Climbs, $c, true));
+        self::assertSame([$a, $c, $b], array_keys($s->mine($u, ItemType::Climbs, $rid, $summer)));
+        self::assertTrue($s->move($u, ItemType::Climbs, $a, false));
+        self::assertSame([$c, $a, $b], array_keys($s->mine($u, ItemType::Climbs, $rid, $summer)));
+        self::assertSame($created, $this->row((int) $u->getId(), $c)['created_at'], 'a move keeps when the vote was cast');
+
+        // Nothing above the first or below the last.
+        self::assertFalse($s->move($u, ItemType::Climbs, $c, true));
+        self::assertFalse($s->move($u, ItemType::Climbs, $b, false));
+        self::assertSame([$c, $a, $b], array_keys($s->mine($u, ItemType::Climbs, $rid, $summer)));
+    }
+
+    public function testAMoveNeverTouchesAClosedBallot(): void
+    {
+        $rid = $this->region('xa-north', 'XA', 50.0);
+        [$a, $b] = [$this->item('N', $rid), $this->item('N', $rid)];
+        $u = $this->voter();
+        foreach ([$a => 1, $b => 2] as $id => $slot) {
+            $this->db->insert('season_vote', [
+                'user_id' => $u->getId(), 'region_id' => $rid, 'category' => 'climbs', 'subject_id' => $id,
+                'bike_type' => null, 'season' => 'spring', 'round_start' => '2027-03-01', 'slot' => $slot, 'created_at' => '2027-01-10 10:00:00',
+            ]);
+        }
+
+        self::assertFalse($this->service()->move($u, ItemType::Climbs, $b, true));
+        self::assertSame(2, (int) $this->row((int) $u->getId(), $b)['slot']);
+    }
+
+    public function testRemovingTouchesOnlyTheOpenBallot(): void
     {
         $rid = $this->region('xa-north', 'XA', 50.0);
         $climb = $this->item('N', $rid);
@@ -301,5 +350,57 @@ final class BallotServiceTest extends KernelTestCase
         $s->cast($u, ItemType::Climbs, $climb, null);
         $s->remove($u, ItemType::Climbs, $climb);
         self::assertSame(BallotRefused::RATE_LIMITED, self::refusal(fn () => $s->cast($u, ItemType::Climbs, $climb, null)));
+    }
+
+    /** route-domain.md §8c: Submit needs every vote, stamps them all, and the ballot is then final. */
+    public function testASubmittedBallotIsFinal(): void
+    {
+        $rid = $this->region('xa-north', 'XA', 50.0);
+        $u = $this->voter();
+        $s = $this->service();
+        $ids = [];
+        for ($i = 0; $i <= BallotRules::VOTES_PER_LIST; ++$i) {
+            $ids[] = $this->item('N', $rid);
+        }
+        [$a, $b] = $ids;
+        $spare = $ids[BallotRules::VOTES_PER_LIST];
+        foreach (\array_slice($ids, 0, BallotRules::VOTES_PER_LIST - 1) as $id) {
+            $s->cast($u, ItemType::Climbs, $id, null);
+        }
+
+        self::assertSame(BallotRefused::BALLOT_INCOMPLETE, self::refusal(fn () => $s->submit($u, ItemType::Climbs, $rid)));
+        $s->cast($u, ItemType::Climbs, $ids[BallotRules::VOTES_PER_LIST - 1], null);
+        $round = $s->submit($u, ItemType::Climbs, $rid);
+
+        self::assertSame('2027-06-01', $round->startDate());
+        self::assertSame(BallotRules::VOTES_PER_LIST, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote WHERE user_id = ? AND submitted_at IS NOT NULL', [$u->getId()]));
+        self::assertNotNull($s->submittedAt($u, ItemType::Climbs, $rid, $round));
+        self::assertSame(BallotRefused::BALLOT_SUBMITTED, self::refusal(fn () => $s->submit($u, ItemType::Climbs, $rid)));
+        self::assertSame(BallotRefused::BALLOT_SUBMITTED, self::refusal(fn () => $s->cast($u, ItemType::Climbs, $spare, null)));
+        self::assertSame(BallotRefused::BALLOT_SUBMITTED, self::refusal(fn () => $s->remove($u, ItemType::Climbs, $a)));
+        self::assertSame(BallotRefused::BALLOT_SUBMITTED, self::refusal(fn () => $s->move($u, ItemType::Climbs, $b, true)));
+        self::assertSame(BallotRules::VOTES_PER_LIST, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote WHERE user_id = ?', [$u->getId()]));
+    }
+
+    public function testSubmittingOneListLeavesTheOthersADraft(): void
+    {
+        $rid = $this->region('xa-north', 'XA', 50.0);
+        $u = $this->voter();
+        $s = $this->service();
+        for ($i = 0; $i < BallotRules::VOTES_PER_LIST; ++$i) {
+            $s->cast($u, ItemType::Climbs, $this->item('N', $rid), null);
+        }
+        $s->cast($u, ItemType::ScenicViews, $view = $this->item('P', $rid), null);
+
+        $s->submit($u, ItemType::Climbs, $rid);
+
+        self::assertNull($this->row((int) $u->getId(), $view)['submitted_at']);
+        self::assertTrue($s->remove($u, ItemType::ScenicViews, $view));
+    }
+
+    public function testNothingToSubmitIsIncomplete(): void
+    {
+        $rid = $this->region('xa-north', 'XA', 50.0);
+        self::assertSame(BallotRefused::BALLOT_INCOMPLETE, self::refusal(fn () => $this->service()->submit($this->voter(), ItemType::Climbs, $rid)));
     }
 }

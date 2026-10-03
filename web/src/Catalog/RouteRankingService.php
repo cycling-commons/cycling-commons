@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Vote\BallotRules;
 use App\Vote\Hemisphere;
 use App\Vote\Round;
 use Doctrine\DBAL\ArrayParameterType;
@@ -64,7 +65,8 @@ final class RouteRankingService
 
         $params = ['cat' => ItemType::QualityRides->value, 'starts' => array_map(strval(...), array_keys($starts))];
         $types = ['starts' => ArrayParameterType::STRING];
-        $where = ["rr.state = 'verified'", 'sv.category = :cat', 'sv.round_start IN (:starts)'];
+        // Only a submitted ballot counts (route-domain.md §8c).
+        $where = ["rr.state = 'verified'", 'sv.category = :cat', 'sv.round_start IN (:starts)', 'sv.submitted_at IS NOT NULL'];
 
         if ([] !== $seasons) {
             $where[] = 'sv.season IN (:seasons)';
@@ -95,12 +97,20 @@ final class RouteRankingService
             $types['rids'] = ArrayParameterType::INTEGER;
         }
 
+        // A started round's ballot has closed (Round::votingClosesAt()), so
+        // nothing here counts a ballot riders can still vote in. Points by
+        // the rider's rank, as the season list scores them.
+        $points = 'CASE sv.slot';
+        foreach (BallotRules::POINTS_BY_SLOT as $slot => $worth) {
+            $points .= ' WHEN '.$slot.' THEN '.$worth;
+        }
+        $points .= ' ELSE 0 END';
         $sql = 'SELECT sv.subject_id
                 FROM season_vote sv
                 JOIN recommended_route rr ON rr.id = sv.subject_id
                 WHERE '.implode(' AND ', $where).'
                 GROUP BY sv.subject_id
-                ORDER BY COUNT(*) DESC, MAX(sv.created_at) DESC, sv.subject_id ASC
+                ORDER BY SUM('.$points.') DESC, COUNT(*) DESC, MAX(sv.created_at) DESC, sv.subject_id ASC
                 LIMIT '.self::MAX_RESULTS;
 
         /** @var list<array{subject_id: int|string}> $rows */

@@ -1924,6 +1924,8 @@ vote:
     ballot_full: 'Vous avez utilisé tous vos votes dans cette liste. Retirez-en un d''abord.'
     already_voted: 'Vous avez déjà voté pour celui-ci.'
     rate_limited: 'Trop de changements en peu de temps. Réessayez dans une heure.'
+    ballot_submitted: 'Votre bulletin pour cette liste est déjà validé et ne peut plus changer.'
+    ballot_incomplete: 'Choisissez tous vos votes avant de valider.'
 ride_check:
   title: 'Vérifier mon parcours'
   notice: 'Votre GPX est traité en mémoire et n''est jamais conservé.'

@@ -9,14 +9,17 @@ namespace App\Vote;
 /**
  * Orders one list's tallies and gives each its place.
  *
- * A place is shared by every item less than one vote below the first item of
- * that place, measured from the first item and not chained along the list.
- * Inside a shared place the item that won fewer times before comes first.
+ * An item's score is its points (5, 3 or 1 a vote, by the rider's rank),
+ * in quarter points, x0.75 when handicapped. A place is shared by every item
+ * less than one point below the first item of that place, measured from the
+ * first item and not chained along the list.
+ * Inside a shared place the item that won fewer times before comes first,
+ * then the higher score, then the item more riders voted for.
  * Places skip after a shared one (1, 1, 3). Below the voter threshold nothing
  * gets a place.
  *
- * @phpstan-type Tally array{subjectId: int, votes: int, handicapped: bool, winsBefore: int}
- * @phpstan-type Placed array{subjectId: int, votes: int, handicapped: bool, winsBefore: int, score: int, place: ?int, position: int}
+ * @phpstan-type Tally array{subjectId: int, votes: int, points: int, handicapped: bool, winsBefore: int}
+ * @phpstan-type Placed array{subjectId: int, votes: int, points: int, handicapped: bool, winsBefore: int, score: int, place: ?int, position: int}
  *
  * @see docs/specs/route-domain.md §8c, §8d
  *
@@ -34,7 +37,7 @@ final class PlaceRanker
         $rows = [];
         foreach ($tallies as $t) {
             $rows[] = $t + [
-                'score' => $t['votes'] * ($t['handicapped'] ? BallotRules::HANDICAP_QUARTERS : BallotRules::FULL_QUARTERS),
+                'score' => $t['points'] * ($t['handicapped'] ? BallotRules::HANDICAP_QUARTERS : BallotRules::FULL_QUARTERS),
                 'place' => null,
                 'position' => 0,
             ];
@@ -60,8 +63,8 @@ final class PlaceRanker
                 $group[] = $rows[$i];
                 ++$i;
             }
-            usort($group, static fn (array $a, array $b): int => [$a['winsBefore'], $b['score'], $a['subjectId']]
-                <=> [$b['winsBefore'], $a['score'], $b['subjectId']]);
+            usort($group, static fn (array $a, array $b): int => [$a['winsBefore'], $b['score'], $b['votes'], $a['subjectId']]
+                <=> [$b['winsBefore'], $a['score'], $a['votes'], $b['subjectId']]);
 
             $place = \count($out) + 1;
             foreach ($group as $row) {

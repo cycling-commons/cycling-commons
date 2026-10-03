@@ -1936,6 +1936,8 @@ vote:
     ballot_full: 'Has usado todos tus votos en esta lista. Quita uno primero.'
     already_voted: 'Ya votaste por este.'
     rate_limited: 'Demasiados cambios en poco tiempo. Vuelve a intentarlo dentro de una hora.'
+    ballot_submitted: 'Tu papeleta para esta lista ya está enviada y no puede cambiar.'
+    ballot_incomplete: 'Elige todos tus votos antes de enviar.'
 api:
   live_count: '%live% de %total% puntos finales responden hoy'
 

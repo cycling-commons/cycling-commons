@@ -6,20 +6,19 @@ declare(strict_types=1);
 
 namespace App\Tests\Vote;
 
-use App\Vote\BallotRules;
 use App\Vote\PlaceRanker;
 use PHPUnit\Framework\TestCase;
 
 final class PlaceRankerTest extends TestCase
 {
-    /** @return array{subjectId: int, votes: int, handicapped: bool, winsBefore: int} */
-    private static function t(int $id, int $votes, bool $handicapped = false, int $wins = 0): array
+    /** @return array{subjectId: int, votes: int, points: int, handicapped: bool, winsBefore: int} */
+    private static function t(int $id, int $points, bool $handicapped = false, int $wins = 0, int $votes = 1): array
     {
-        return ['subjectId' => $id, 'votes' => $votes, 'handicapped' => $handicapped, 'winsBefore' => $wins];
+        return ['subjectId' => $id, 'votes' => $votes, 'points' => $points, 'handicapped' => $handicapped, 'winsBefore' => $wins];
     }
 
     /**
-     * @param list<array{subjectId: int, votes: int, handicapped: bool, winsBefore: int, score: int, place: ?int, position: int}> $placed
+     * @param list<array{subjectId: int, votes: int, points: int, handicapped: bool, winsBefore: int, score: int, place: ?int, position: int}> $placed
      *
      * @return array<int, ?int>
      */
@@ -35,17 +34,18 @@ final class PlaceRankerTest extends TestCase
 
     public function testTheWorkedExampleFromTheSpec(): void
     {
-        // route-domain.md §8c: Ardennes, spring 2028, climbs, 7 voters.
+        // route-domain.md §8c: Ardennes, spring 2028, climbs, 7 voters, in points.
         // A (1) won last spring, D (4) was third: both count x0.75.
-        $placed = PlaceRanker::rank([self::t(1, 6, true, 1), self::t(2, 5), self::t(3, 4), self::t(4, 3, true)], 7);
+        $placed = PlaceRanker::rank([self::t(1, 18, true, 1), self::t(2, 14), self::t(3, 10), self::t(4, 7, true)], 7);
 
         self::assertSame([2, 1, 3, 4], array_column($placed, 'subjectId'));
         self::assertSame([2 => 1, 1 => 1, 3 => 3, 4 => 4], self::places($placed));
-        self::assertSame([20, 18, 16, 9], array_column($placed, 'score'));
+        // Quarter points: 14 x 4, 18 x 3, 10 x 4, 7 x 3.
+        self::assertSame([56, 54, 40, 21], array_column($placed, 'score'));
         self::assertSame([1, 2, 3, 4], array_column($placed, 'position'));
     }
 
-    public function testExactlyOneVoteApartDoesNotShare(): void
+    public function testExactlyOnePointApartDoesNotShare(): void
     {
         self::assertSame([1 => 1, 2 => 2], self::places(PlaceRanker::rank([self::t(1, 5), self::t(2, 4)], 5)));
     }
@@ -62,8 +62,8 @@ final class PlaceRankerTest extends TestCase
 
     public function testASharedPlaceIsMeasuredFromItsFirstItemNotChained(): void
     {
-        // 5, 4.5 and 4: the second is within a vote of the first, the third is
-        // within a vote of the second but a full vote below the first.
+        // 5, 4.5 and 4 points: the second is within a point of the first, the
+        // third is within a point of the second but a full point below the first.
         $placed = PlaceRanker::rank([self::t(1, 5), self::t(2, 6, true), self::t(3, 4)], 6);
         self::assertSame([1 => 1, 2 => 1, 3 => 3], self::places($placed));
     }
@@ -80,13 +80,10 @@ final class PlaceRankerTest extends TestCase
         self::assertSame([], PlaceRanker::rank([], 9));
     }
 
-    public function testTheRulesAreTheSpecsNumbers(): void
+    public function testEqualScoresPutTheItemMoreRidersVotedForFirst(): void
     {
-        self::assertSame(3, BallotRules::VOTES_PER_LIST);
-        self::assertSame(14, BallotRules::MIN_ACCOUNT_AGE_DAYS);
-        self::assertSame(5, BallotRules::RANKING_THRESHOLD);
-        self::assertSame(3, BallotRules::HANDICAP_TOP);
-        self::assertSame(0.75, BallotRules::HANDICAP_QUARTERS / BallotRules::FULL_QUARTERS);
-        self::assertSame(BallotRules::FULL_QUARTERS, BallotRules::CLOSE_CALL_QUARTERS);
+        // 8 points from two riders (5 + 3) against 8 from four (3 + 3 + 1 + 1).
+        $placed = PlaceRanker::rank([self::t(1, 8, votes: 2), self::t(2, 8, votes: 4)], 5);
+        self::assertSame([2, 1], array_column($placed, 'subjectId'));
     }
 }

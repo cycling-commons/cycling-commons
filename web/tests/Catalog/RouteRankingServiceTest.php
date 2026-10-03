@@ -52,12 +52,35 @@ final class RouteRankingServiceTest extends KernelTestCase
         return (int) $r->getId();
     }
 
-    private function vote(int $routeId, BikeType $bike, string $season = 'spring', string $start = '2027-03-01', string $at = '2027-04-01 10:00:00'): void
+    private function vote(int $routeId, BikeType $bike, string $season = 'spring', string $start = '2027-03-01', string $at = '2027-04-01 10:00:00', int $slot = 1): void
     {
         $this->db->insert('season_vote', [
             'user_id' => $this->user++, 'region_id' => 1, 'category' => 'quality-rides', 'subject_id' => $routeId,
-            'bike_type' => $bike->value, 'season' => $season, 'round_start' => $start, 'slot' => 1, 'created_at' => $at,
+            'bike_type' => $bike->value, 'season' => $season, 'round_start' => $start, 'slot' => $slot, 'created_at' => $at,
+            'submitted_at' => $at,
         ]);
+    }
+
+    /** route-domain.md §8d: one first choice (10 points) beats two fifth choices (2 points). */
+    public function testRanksByPointsBeforeVoteCount(): void
+    {
+        $first = $this->route();
+        $thirds = $this->route();
+        $this->vote($first, BikeType::Road);
+        $this->vote($thirds, BikeType::Road, slot: 5);
+        $this->vote($thirds, BikeType::Road, slot: 5);
+
+        self::assertSame([$first, $thirds], $this->ranking()->bestOf([Season::Spring], []));
+    }
+
+    /** In April riders vote for summer: those votes are on an open ballot and stay off the map. */
+    public function testAnOpenBallotNeverReachesTheMap(): void
+    {
+        $r = $this->route();
+        $this->vote($r, BikeType::Road, 'summer', '2027-06-01');
+
+        self::assertSame([], $this->ranking()->bestOf([Season::Summer], []));
+        self::assertSame([], $this->ranking()->bestOf([], []));
     }
 
     public function testRanksByVoteCountThenRecency(): void

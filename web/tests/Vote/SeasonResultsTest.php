@@ -39,7 +39,7 @@ final class SeasonResultsTest extends KernelTestCase
         return new SeasonResults($this->db, new MockClock(new \DateTimeImmutable($now)), new BallotCandidates($this->db));
     }
 
-    private function vote(int $user, int $subject, string $start, string $category = 'climbs', ?string $bike = null, string $season = 'spring'): void
+    private function vote(int $user, int $subject, string $start, string $category = 'climbs', ?string $bike = null, string $season = 'spring', bool $submitted = true): void
     {
         $slot = 1 + (int) $this->db->fetchOne(
             'SELECT COUNT(*) FROM season_vote WHERE user_id = ? AND region_id = ? AND category = ? AND round_start = ?',
@@ -48,6 +48,7 @@ final class SeasonResultsTest extends KernelTestCase
         $this->db->insert('season_vote', [
             'user_id' => $user, 'region_id' => self::REGION, 'category' => $category, 'subject_id' => $subject,
             'bike_type' => $bike, 'season' => $season, 'round_start' => $start, 'slot' => $slot, 'created_at' => $start.' 10:00:00',
+            'submitted_at' => $submitted ? $start.' 10:05:00' : null,
         ]);
     }
 
@@ -86,17 +87,20 @@ final class SeasonResultsTest extends KernelTestCase
         [$a, $b, $c, $d, $x] = [1001, 1002, 1003, 1004, 1005];
         // Spring 2027, five voters: A first, X second, D third.
         $this->ballots([1 => [$a, $x, $d], 2 => [$a, $x, $d], 3 => [$a, $x, $d], 4 => [$a, $x], 5 => [$a]], '2027-03-01');
-        // Spring 2028, seven voters: A 6, B 5, C 4, D 3.
-        $this->ballots([1 => [$a, $b, $c], 2 => [$a, $b, $c], 3 => [$a, $b, $c], 4 => [$a, $b, $c], 5 => [$a, $b, $d], 6 => [$a, $d], 7 => [$d]], '2028-03-01');
+        // Spring 2028, seven ranked ballots (10, 7, 5, 3, 1 points): A 40, B 30, C 19, D 31.
+        $this->ballots([1 => [$a, $b], 2 => [$a, $d, $c, $b], 3 => [$a, $c], 4 => [$a, $d], 5 => [$b, $c], 6 => [$b, $d], 7 => [$d]], '2028-03-01');
 
         $list = $this->results('2028-04-10T12:00:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2028));
 
         self::assertSame(7, $list['voters']);
         self::assertTrue($list['ranked']);
-        self::assertFalse($list['closed']);
-        self::assertSame([$b, $a, $c, $d], array_column($list['entries'], 'subjectId'));
-        self::assertSame([$b => 1, $a => 1, $c => 3, $d => 4], self::places($list['entries']));
-        self::assertSame([false, true, false, true], array_column($list['entries'], 'handicapped'));
+        self::assertTrue($list['closed']);
+        // A 40 x 0.75 = 30 and B 30 share first, B first because A won before;
+        // D 31 x 0.75 = 23.25 is third, C 19 fourth. Scores in quarter points.
+        self::assertSame([$b, $a, $d, $c], array_column($list['entries'], 'subjectId'));
+        self::assertSame([$b => 1, $a => 1, $d => 3, $c => 4], self::places($list['entries']));
+        self::assertSame([120, 120, 93, 76], array_column($list['entries'], 'score'));
+        self::assertSame([false, true, true, false], array_column($list['entries'], 'handicapped'));
         self::assertSame([0, 1, 0, 0], array_column($list['entries'], 'winsBefore'));
         // Reading 2028 stored the closed spring 2027 it needed.
         self::assertSame(3, (int) $this->db->fetchOne("SELECT COUNT(*) FROM season_result WHERE region_id = ? AND round_start = '2027-03-01'", [self::REGION]));
@@ -104,8 +108,8 @@ final class SeasonResultsTest extends KernelTestCase
 
     public function testWinsBeforeCountSharedFirstPlacesInAnySeason(): void
     {
-        // Summer 2027: 1001 and 1002 share first place.
-        foreach ([1 => [1001], 2 => [1001], 3 => [1001, 1002], 4 => [1002], 5 => [1002]] as $user => $subjects) {
+        // Summer 2027: 1001 and 1002 share first place, 13 points each.
+        foreach ([1 => [1001, 1002], 2 => [1002, 1001], 3 => [1001], 4 => [1002], 5 => [1003]] as $user => $subjects) {
             foreach ($subjects as $subject) {
                 $this->vote($user, $subject, '2027-06-01', season: 'summer');
             }
@@ -114,8 +118,11 @@ final class SeasonResultsTest extends KernelTestCase
         foreach ([1, 2, 3, 4, 5] as $user) {
             $this->vote($user, 1001, '2027-09-01', season: 'autumn');
         }
-        // Spring 2028: three equal items share first place.
-        $this->ballots([1 => [1001, 1002, 1003], 2 => [1001, 1002, 1003], 3 => [1001, 1002, 1003], 4 => [1001, 1002, 1003], 5 => [1001, 1002, 1003]], '2028-03-01');
+        // Spring 2028: three items share first place, each ranked first, second and third twice.
+        $this->ballots([
+            1 => [1001, 1002, 1003], 2 => [1002, 1003, 1001], 3 => [1003, 1001, 1002],
+            4 => [1001, 1002, 1003], 5 => [1002, 1003, 1001], 6 => [1003, 1001, 1002],
+        ], '2028-03-01');
 
         $list = $this->results('2028-04-10T12:00:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2028));
 
@@ -126,8 +133,8 @@ final class SeasonResultsTest extends KernelTestCase
 
     public function testEveryItemPlacedOneToThreeLastYearIsHandicapped(): void
     {
-        // Spring 2027 places: 1001 first, 1002 second, 1003 and 1004 share third, 1005 fifth.
-        $this->ballots([1 => [1001, 1002, 1003], 2 => [1001, 1002, 1003], 3 => [1001, 1002, 1004], 4 => [1001, 1002, 1004], 5 => [1001, 1005]], '2027-03-01');
+        // Spring 2027 places: 1001 first, 1002 second, 1003 and 1004 share third (2 points each), 1005 fifth (1 point).
+        $this->ballots([1 => [1001, 1002, 1003], 2 => [1001, 1002, 1003], 3 => [1001, 1002, 1004], 4 => [1001, 1002, 1004], 5 => [1001, 1002, 1005]], '2027-03-01');
         $this->ballots([1 => [1001, 1002, 1003], 2 => [1004, 1005]], '2028-03-01');
 
         $results = $this->results('2028-04-10T12:00:00+00:00');
@@ -179,35 +186,48 @@ final class SeasonResultsTest extends KernelTestCase
         self::assertSame([1001 => 1, 1002 => 2], self::places($again['entries']));
     }
 
-    public function testARoundInItsGraceHourIsCountedLiveAndNotStored(): void
+    /** In the hour after the ballot closes the list is counted for the page, and not stored yet. */
+    public function testAListInItsGraceHourIsCountedAndNotStored(): void
     {
         $this->ballots([1 => [1001]], '2027-03-01');
 
-        $list = $this->results('2027-06-01T00:30:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2027));
+        $list = $this->results('2027-03-01T00:30:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2027));
 
         self::assertTrue($list['closed']);
         self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id = ?', [self::REGION]));
     }
 
-    /** The grace hour ends exactly an hour after the round closes: at that second the round is stored. */
-    public function testARoundIsStoredTheMomentItsGraceHourEnds(): void
+    /** The grace hour ends exactly an hour after the ballot closes: at that second the list is stored. */
+    public function testAListIsStoredTheMomentItsGraceHourEnds(): void
     {
         $this->ballots([1 => [1001]], '2027-03-01');
 
-        $list = $this->results('2027-06-01T01:00:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2027));
+        $list = $this->results('2027-03-01T01:00:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2027));
 
         self::assertTrue($list['closed']);
         self::assertSame(1, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id = ?', [self::REGION]));
     }
 
-    public function testTheLastEveningOfMayIsStillSpring(): void
+    /** route-domain.md §8c: while riders still vote, the list shows nothing, so no standing can be read off it. */
+    public function testTheSpringListIsHiddenUntilItsBallotCloses(): void
+    {
+        $this->ballots([1 => [1001], 2 => [1001], 3 => [1002], 4 => [1001], 5 => [1002]], '2027-03-01');
+
+        $list = $this->results('2027-02-28T23:30:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2027));
+
+        self::assertSame(['voters' => 0, 'ranked' => false, 'closed' => false, 'entries' => []], $list);
+        self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id = ?', [self::REGION]));
+    }
+
+    public function testFreezingLeavesAnOpenBallotAlone(): void
     {
         $this->ballots([1 => [1001]], '2027-03-01');
+        $this->ballots([1 => [1001]], '2027-06-01');
 
-        $list = $this->results('2027-05-31T23:30:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2027));
+        $stored = $this->results('2027-04-10T12:00:00+00:00')->freezeEveryClosed();
 
-        self::assertFalse($list['closed']);
-        self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id = ?', [self::REGION]));
+        self::assertSame(1, $stored);
+        self::assertSame(['2027-03-01'], $this->db->fetchFirstColumn('SELECT DISTINCT round_start FROM season_result WHERE region_id = ?', [self::REGION]));
     }
 
     public function testABikeListCountsOnlyThatBikesVoters(): void
@@ -258,30 +278,28 @@ final class SeasonResultsTest extends KernelTestCase
         self::assertSame([false, false], array_column($gravel['entries'], 'handicapped'));
     }
 
-    /** The ballot page's count: the same number as the list, and reading it stores nothing. */
-    public function testVotersCountsTheListWithoutComputingOrStoringIt(): void
+    /** route-domain.md §8c: a ballot never submitted counts for nothing. */
+    public function testADraftBallotIsNotCounted(): void
     {
-        $this->ballots([1 => [1001, 1002], 2 => [1001], 3 => [1002]], '2027-03-01');
-        $this->ballots([4 => [1001]], '2026-03-01');
-        $results = $this->results('2027-04-10T12:00:00+00:00');
-        $key = new ListKey(self::REGION, ItemType::Climbs);
+        $this->ballots([1 => [1001], 2 => [1001], 3 => [1001], 4 => [1002], 5 => [1002]], '2027-03-01');
+        $this->vote(6, 1003, '2027-03-01', submitted: false);
+        $this->vote(6, 1002, '2027-03-01', submitted: false);
 
-        self::assertSame(3, $results->voters($key, self::spring(2027)));
-        self::assertSame($results->list($key, self::spring(2027))['voters'], $results->voters($key, self::spring(2027)));
-        $this->db->executeStatement('DELETE FROM season_result WHERE region_id = ?', [self::REGION]);
-        self::assertSame(1, $results->voters($key, self::spring(2026)));
-        self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id = ?', [self::REGION]));
+        $list = $this->results('2027-04-10T12:00:00+00:00')->list(new ListKey(self::REGION, ItemType::Climbs), self::spring(2027));
+
+        self::assertSame(5, $list['voters']);
+        self::assertSame([1001, 1002], array_column($list['entries'], 'subjectId'));
     }
 
-    /** A closed round's count is its stored one, once stored. */
-    public function testVotersOfAStoredRoundIsTheStoredCount(): void
+    public function testDraftsAreDeletedOnceTheirBallotCloses(): void
     {
-        $this->ballots([1 => [1001], 2 => [1001]], '2026-03-01');
-        $results = $this->results('2027-04-10T12:00:00+00:00');
-        $key = new ListKey(self::REGION, ItemType::Climbs);
-        $results->freezeClosed($key);
-        $this->db->executeStatement('DELETE FROM season_vote WHERE user_id = 2');
+        $this->vote(1, 1001, '2027-03-01');                       // submitted, closed: kept
+        $this->vote(2, 1001, '2027-03-01', submitted: false);     // draft, closed: deleted
+        $this->vote(3, 1001, '2027-06-01', season: 'summer', submitted: false); // draft, still open: kept
 
-        self::assertSame(2, $results->voters($key, self::spring(2026)));
+        $dropped = $this->results('2027-04-10T12:00:00+00:00')->dropClosedDrafts();
+
+        self::assertSame(1, $dropped);
+        self::assertSame([1, 3], array_map(intval(...), $this->db->fetchFirstColumn('SELECT user_id FROM season_vote WHERE region_id = ? ORDER BY user_id', [self::REGION])));
     }
 }

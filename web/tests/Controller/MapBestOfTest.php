@@ -45,6 +45,7 @@ final class MapBestOfTest extends WebTestCase
         static::getContainer()->get(Connection::class)->insert('season_vote', [
             'user_id' => $this->user++, 'region_id' => $regionId, 'category' => 'quality-rides', 'subject_id' => $r->getId(),
             'bike_type' => $bike, 'season' => $season, 'round_start' => $start, 'slot' => 1, 'created_at' => $start.' 10:00:00',
+            'submitted_at' => $start.' 10:05:00',
         ]);
 
         return (int) $r->getId();

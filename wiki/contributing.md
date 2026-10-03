@@ -13,7 +13,7 @@ way the map grows in small pieces, the way OpenStreetMap was built.
 |--------|-----------|
 | **[tap]** | a one-tap report in the moment: "water here", "road closed", "great view" |
 | **[edit]** | a structured attribute edit: climb metrics, a café's opening hours |
-| **[vote]** | the season ballot: three votes per rider for a region's best climbs, routes, views, heritage and stays, one season at a time. Built and switched on after launch (see [Curation & voting](curation-and-voting.md)) |
+| **[vote]** | the season ballot: a ranked top 5 per rider for a region's best climbs, routes, views, heritage and stays, cast in one season for the next. Built and switched on after launch (see [Curation & voting](curation-and-voting.md)) |
 | **[auto]** | design: facts derived anonymously from aggregate signals, nothing personal. Nothing of the kind is collected today; see [the sensing boundary](governance.md#the-sensing-boundary-how-activity-becomes-a-place-fact) |
 
 A **[tap]** does not have to happen at a screen. [Scout](scout.md) records one

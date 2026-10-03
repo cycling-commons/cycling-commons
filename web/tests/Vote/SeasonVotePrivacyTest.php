@@ -55,6 +55,7 @@ final class SeasonVotePrivacyTest extends KernelTestCase
         $this->db->insert('season_vote', [
             'user_id' => $u->getId(), 'region_id' => self::REGION, 'category' => $category, 'subject_id' => $subject,
             'bike_type' => $bike, 'season' => $season, 'round_start' => $start, 'slot' => $slot, 'created_at' => $start.' 10:00:00',
+            'submitted_at' => $start.' 10:05:00',
         ]);
     }
 
@@ -79,8 +80,8 @@ final class SeasonVotePrivacyTest extends KernelTestCase
                 $this->vote($u, 3002, 2);
             }
         }
-        // The open summer round holds one vote of the rider who leaves.
-        $this->vote($riders[0], 3001, 1, '2027-06-01', 'summer');
+        // In July riders vote for autumn: that open ballot holds one vote of the rider who leaves.
+        $this->vote($riders[0], 3001, 1, '2027-09-01', 'autumn');
         $leaving = (int) $riders[0]->getId();
 
         static::getContainer()->get(UserDeletionService::class)->purge($riders[0]);
@@ -92,7 +93,7 @@ final class SeasonVotePrivacyTest extends KernelTestCase
             [self::REGION],
         );
         self::assertSame([[3001, 5, 5, 1], [3002, 3, 5, 2]], array_map(static fn (array $r): array => [(int) $r['subject_id'], (int) $r['votes'], (int) $r['voters'], (int) $r['place']], $stored));
-        self::assertSame(0, (int) $this->db->fetchOne("SELECT COUNT(*) FROM season_result WHERE round_start = '2027-06-01' AND region_id = ?", [self::REGION]), 'the open round is not stored');
+        self::assertSame(0, (int) $this->db->fetchOne("SELECT COUNT(*) FROM season_result WHERE round_start = '2027-09-01' AND region_id = ?", [self::REGION]), 'the open ballot is not stored');
     }
 
     public function testPurgingARiderStoresBothTheAllBikesAndTheBikeNarrowedRouteList(): void

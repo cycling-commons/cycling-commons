@@ -14,9 +14,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Stores the season ballot's closed lists, so a closed round's result is
- * fixed an hour after the round closes and not when somebody first reads
- * it. Idempotent: a stored list is never stored again.
+ * Stores the season lists whose ballot has closed, so a season's result is
+ * fixed an hour after the season starts (when its ballot closes) and not when
+ * somebody first reads it. Idempotent: a stored list is never stored again.
  *
  * @see docs/specs/route-domain.md §8d
  *

@@ -1929,6 +1929,8 @@ vote:
     ballot_full: 'Je hebt al je stemmen in deze lijst gebruikt. Haal er eerst een weg.'
     already_voted: 'Je stemde hier al op.'
     rate_limited: 'Te veel wijzigingen in korte tijd. Probeer het over een uur opnieuw.'
+    ballot_submitted: 'Je stembrief voor deze lijst is al ingediend en kan niet meer veranderen.'
+    ballot_incomplete: 'Kies al je stemmen voordat je indient.'
 ride_check:
   title: 'Controleer mijn rit'
   notice: 'Je GPX wordt in het geheugen verwerkt en nooit opgeslagen.'

@@ -87,6 +87,7 @@ final class CuratedReadinessTest extends KernelTestCase
         $this->db->insert('season_vote', [
             'user_id' => ++$this->seq, 'region_id' => $this->regionId, 'category' => $category, 'subject_id' => $routeId,
             'bike_type' => 'Gravel', 'season' => 'spring', 'round_start' => '2026-03-01', 'slot' => 1, 'created_at' => '2026-04-01 10:00:00',
+            'submitted_at' => '2026-04-01 10:05:00',
         ]);
     }
 

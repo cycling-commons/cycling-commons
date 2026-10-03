@@ -999,7 +999,12 @@ ballot and the real ranking are built to. Owner 2026-10-02: "a good voting
 system per season. It must hold up with a low number of voters and seasonal
 update, where the highest from last season get a handicap to prevent always
 having the same list", and "voting is not only for routes, for all experience
-categories".
+categories". Revised the same evening, after the owner tried the built ballot:
+votes are ranked ("number 1 gets 5 points, number 2 3 and number 3 1"), riders
+"vote for the next season, else people can see in between standings and that
+can make betting possible", no page shows a number of voters, and the number of
+votes and the points stay easy to change ("perhaps voting goes from 3 to 5").
+On 2026-10-03 the owner set it: "let users vote top 5: 10, 7, 5, 3, 1 points".
 
 **One list per region, season and category.** The categories are the five
 votable types (`ItemType::isVotable()`): climbs, routes (quality rides), scenic
@@ -1010,18 +1015,20 @@ belongs to the vote (§8b); every rule below then applies to that narrowed list.
 
 | Rule | Value | Why |
 |---|---|---|
-| Ballot | **3 votes** per rider per region, season and category, at most 1 per item | One keen rider cannot carry an item; votes stay comparable with few voters |
+| Ballot | a ranked **top 5** per rider per region, season and category, at most 1 vote per item: the first choice is worth **10 points**, then **7**, **5**, **3** and **1** | One keen rider cannot carry an item; a favourite counts for more than a third pick |
+| Submit | a ballot is a **draft** until the rider submits it, with **all 5 votes** filled; only a submitted ballot counts, and it is **final** for that list and season. A draft left when voting closes counts for nothing and is deleted | A vote is a decision, not a click left behind; "make it definitive" (owner 2026-10-02) |
+| When | votes are cast in the **season before**; the ballot closes when the season starts, and the list is published that day and shown all season | No standing is visible while riders vote, so nobody can bet on one |
+| Public numbers | a **published** (closed) ranked list shows each row's **points** (owner 2026-10-03); never a vote or voter count, and nothing at all for a ballot still open | Points of a closed season settle nothing more, and say how close the list was; counts of people identify voters |
 | Who may vote | confirmed email, account at least **14 days** old, at least one thing done on the site (a ride or "been there" confirmation, or a contribution) | With few voters one fake account would decide a list |
 | Ranking threshold | **5 different voters** on that list | Below that a "number 1" means nothing |
-| Handicap | last year's same-season **top 3** of the same list: votes x **0.75** | The list changes over the years, but a clearly loved item can still win |
-| Close calls | less than 1 vote apart after the handicap shares the place; the item that won less often before is shown first | Small numbers cannot honestly separate them |
-| Fresh start | votes count only for their own season and year | The list fills up again every season |
+| Handicap | last year's same-season **top 3** of the same list: points x **0.75** | The list changes over the years, but a clearly loved item can still win |
+| Close calls | less than 1 point apart after the handicap shares the place; the item that won less often before is shown first | Small numbers cannot honestly separate them |
+| Fresh start | votes count only for the season and year they were cast for | The list fills up again every season |
 
 **Below the threshold.** A list with fewer than 5 voters shows no ranks, under
 "No ranking yet": its items most confirmed first (ridden for climbs and routes,
 stayed for a bed, been there for a view or a heritage site, the same signal as
-the second number in §8b), newest first where nothing is confirmed, with the
-votes so far and how many voters are still needed ("3 of 5 voters"). There are
+the second number in §8b), newest first where nothing is confirmed. There are
 no curators' picks to fall back on. A list reaches its ranking on its own: a
 region can show a climbs ranking while its beds still say "No ranking yet".
 
@@ -1029,17 +1036,20 @@ region can show a climbs ranking while its beds still say "No ranking yet".
 nothing is handicapped until the same season a year later, and a season that
 never reached 5 voters names no top 3 and hands no handicap on.
 
-Worked example, Ardennes, spring 2028, climbs, 7 voters:
+Worked example, Ardennes, spring 2028, climbs, 7 voters, who voted during
+winter 2027-28; the list is published on 1 March 2028:
 
-| Climb | Votes | Spring 2027 top 3 | Score |
+| Climb | Points (10 / 7 / 5 / 3 / 1 per rank) | Spring 2027 top 3 | Score |
 |---|---|---|---|
-| A | 6 | won | 6 x 0.75 = 4.5 |
-| B | 5 | no | 5 |
-| C | 4 | no | 4 |
-| D | 3 | 3rd | 3 x 0.75 = 2.25 |
+| A | 40 | won | 40 x 0.75 = 30 |
+| B | 30 | no | 30 |
+| C | 19 | no | 19 |
+| D | 31 | 3rd | 31 x 0.75 = 23.25 |
 
-Result: B and A are less than 1 vote apart, so they share first place; B is
-listed first because A won before. C is third, a full vote below B. In the
+Result: B and A score the same, so they share first place; B is listed first
+because A won before. D is third even with its handicap, C fourth. (The
+ballots: A first on four of them; B first on two and second and fourth on
+two more; D first on one and second on three; C second on two and third on one.) In the
 same region and season the views list
 may have 6 voters and a ranking with no handicap (spring 2027 never reached 5
 voters), while where to sleep has 2 voters and shows "No ranking yet".
@@ -1057,8 +1067,20 @@ them again, which works against the handicap; every season starts empty
 Rejected alternative: a ranked ballot of up to 10 items scored by approval
 share (the same 2026-07-30 design). More detail per voter, but more work per
 voter, and with few voters the work is what keeps people from finishing; 3
-unordered votes is quick and still separates the favourites (owner 2026-10-02:
-"3 votes").
+ranked votes is quick and still separates the favourites (owner 2026-10-02:
+"3 votes", ranked the same evening).
+
+Rejected alternative: votes counted live while the season is on, with the
+list growing in public (the first build, 2026-10-02). It shows the standings
+while riders still vote, which invites betting and tactical votes (owner
+2026-10-02); riders now vote for the next season.
+
+**Easy to change.** The number of votes and the points per rank are one table
+in code (`BallotRules::POINTS_BY_SLOT`, with `VOTES_PER_LIST` kept equal by a
+test). Going from a top 3 to a top 5 (2026-10-03) was that edit and nothing else: the ballot page, the
+scoring SQL and the map read it, and the database only guards slots 1 to 10.
+Make the change between seasons: votes already cast keep their rank, and the
+open ballot would be scored on the new points.
 
 ### 8d. The ballot as built
 
@@ -1071,34 +1093,59 @@ of three whole months, starting on the 1st at 00:00 Coordinated Universal Time
 is below 0) has the other season: its spring starts in September. A round's
 year is the year of its first month, so northern winter 2026 runs from
 December 2026 to February 2027 and is shown as "Winter 2026-27". A vote
-belongs to the round open in the voted row's region at the moment it is cast,
-never to the row's own `season` attribute.
+belongs to the round **after** the one open in the voted row's region at the
+moment it is cast (`Round::votingAt()`), never to the row's own `season`
+attribute. A round's ballot opens when the season before it starts
+(`votingOpensAt()`) and closes when the round starts (`votingClosesAt()`), so
+the ballot page says "Voting for Winter 2026-27 · open until 30 November
+2026", with under it, large, how long is left (owner 2026-10-03,
+`App\Vote\Countdown`, `vote/_countdown.html.twig`, `assets/js/countdown.js`):
+"58 days left" while more than two days are left, "47 hours left" in the last
+two days, "5 h 12 min left" in the last day, a clock to the second
+("00:42:13 left") in the last hour, then "Voting has closed". The server
+renders the first value, so the page is right without script; the script
+keeps it moving (every minute, every second in the last hour). The /best
+block beside the filters carries the same countdown. Beside every round's
+name (the ballot header, the /best block, each vote in the account's Votes
+tab) sits a small drawn globe with the round's half of the world filled
+(`vote/_hemisphere.html.twig`, read out as "North of the equator" or "South
+of the equator"), because "Summer 2026-27" in November reads oddly to a
+northern reader unless they see it is the southern summer (owner
+2026-10-03).
 
 **Scores and places** (`App\Vote\BallotRules`, `App\Vote\PlaceRanker`). The
 numbers of route-domain.md §8c are constants, not admin settings: they are
 the rules of a contest, and a value moved mid-season would change who could
-vote and who won after riders acted. Scores are kept in quarter votes (a vote
-is 4, a handicapped vote 3), so x0.75 and "less than 1 vote apart" are exact.
-A place is shared by every item less than one vote below the first item of
+vote and who won after riders acted. An item's points are the sum over its
+votes of `POINTS_BY_SLOT` (10, 7, 5, 3, 1 by the rider's rank). Scores are kept in
+quarter points (a point is 4, a handicapped point 3), so x0.75 and "less than
+1 point apart" are exact. A
+place is shared by every item less than one point below the first item of
 that place, measured from that first item and not chained along the list;
 places skip after a shared one (1, 1, 3). Inside a shared place the item with
 fewer earlier first places in the same list (any season) is shown first, then
-the higher score. "Top 3" for the handicap is every item placed 1 to 3, which
+the higher score, then the item more riders voted for. "Top 3" for the handicap is every item placed 1 to 3, which
 can be more than three items when places are shared.
 
 **Storage.** One table, `season_vote`, for all five categories (route-domain.md
 §2.2). A list is (region, category, round); the region is the voted row's
-region when the vote is cast. `slot` (1 to 3, unique per rider and list) lets
-the database refuse a fourth vote whatever arrives at once.
+region when the vote is cast. `slot` is the rider's rank (1 is the first
+choice), unique per rider and list, so the database refuses a fourth vote
+whatever arrives at once. The `season_vote_slot_range` CHECK guards 1 to 10
+(`BallotRules::MAX_SLOTS`, `Version20261002140000`); the ballot length is the
+code's rule.
 
 **What can get a vote** (`App\Vote\BallotCandidates`). A catalogue row in an
 operational region (catalog-data-model.md §2.4): a served `item` of a votable
 letter, or a `verified` route. An OpenStreetMap place that is not in the
 catalogue cannot get a vote; it joins the ballot once a rider confirms it into
-the catalogue. The ballot and the "No ranking yet" view list rows most
-confirmed first (drawer confirmations that vouch for a place; distinct riders
-for a route, the proposer left out, the drawer's own count), newest first
-among equals. A route list for a specialty bike (route-domain.md §8.3) only
+the catalogue. The ballot lists every candidate A to Z
+(`BallotCandidates::alphabetical()`, owner 2026-10-03: "to make it fair it
+should be alphabetically and not related to people that have been there").
+The "No ranking yet" view lists rows most confirmed first (drawer
+confirmations that vouch for a place; distinct riders for a route, the
+proposer left out, the drawer's own count), newest first among equals; each
+row shows that count either way. A route list for a specialty bike (route-domain.md §8.3) only
 lists routes that declare that bike in `attributes.bikeTypes`; a general bike
 narrows nothing here, the same as best-of.
 
@@ -1115,20 +1162,38 @@ second.
 the rider may vote, the category is votable, the row can get a vote, a route
 vote names a bike, a specialty bike is one the route declares
 (route-domain.md §8.3: a vote on any other specialty bike would count in no
-list), the `season_vote` limiter; then it takes the lowest free slot. A remove
-deletes the rider's vote in the open round only; a closed round's votes are
-its result. Refusals are `App\Vote\BallotRefused` reasons: `voting_closed`,
+list), the `season_vote` limiter; then it takes the lowest free slot, so a
+new vote goes to the end of the rider's order. A remove deletes the rider's
+vote while its ballot is open and moves the votes ranked below it up one, so
+the ranks stay 1, 2, 3 and on without a gap. A move (`BallotService::move()`) swaps a vote with its
+neighbour above or below; the two rows are deleted and written again with
+their slots swapped, because the slot index is checked row by row. A closed
+ballot's votes are its result and cannot be changed.
+
+**Submitting** (`BallotService::submit()`, `season_vote.submitted_at`,
+`Version20261002150000`). The ballot is a draft until the rider submits it.
+Submit needs `VOTES_PER_LIST` votes in the list's open ballot (else
+`ballot_incomplete`) and stamps `submitted_at` on all of them in one
+transaction. From then on a cast, move, remove or second submit of that list
+is refused with `ballot_submitted`. Each list is submitted on its own: the
+climbs ballot can be final while the views ballot is still a draft. Every
+count (the season lists, the map's best-of, the regions with voters, the
+Curated readiness count) reads only votes with `submitted_at`. A draft left
+when voting closes is deleted by `app:vote:freeze` before it stores the lists
+(`SeasonResults::dropClosedDrafts()`). Refusals are `App\Vote\BallotRefused` reasons: `voting_closed`,
 `not_eligible`, `not_votable`, `not_candidate`, `bike_required`,
 `bike_not_declared`, `ballot_full`, `already_voted`, `rate_limited`.
 
-**Results** (`App\Vote\SeasonResults`, table `season_result`). An open round
-is counted live. A closed round is stored, once, by `app:vote:freeze`
+**Results** (`App\Vote\SeasonResults`, table `season_result`). Nothing is
+counted while a ballot is open: `list()` returns an empty, unranked list for a
+round that has not started. Once a round starts its ballot is closed, and its
+list is stored, once, by `app:vote:freeze`
 (`App\Command\VoteFreezeCommand`), which the worker host runs daily at
-01:37 UTC: every list with votes in a closed round that is not stored yet, per
-region and category the list of every bike and, for routes, the list of each
-bike voted on. A round waits an hour after it closes (so a vote cast in its
-last second has committed), so the run on the first day of a season stores
-the round that just closed. The command is idempotent; a list that nothing
+01:37 UTC: every list with votes whose ballot has closed that is not stored
+yet, per region and category the list of every bike and, for routes, the list
+of each bike voted on. A list waits an hour after its ballot closes (so a vote
+cast in its last second has committed), so the run on the first day of a
+season stores the list that season shows. The command is idempotent; a list that nothing
 stored yet is also stored the first time anything reads it, and by the
 deletion hook before an account that voted in it is deleted
 (route-domain.md §8d, privacy). Stored rows are never updated, so a
@@ -1149,7 +1214,9 @@ which name nobody, and the open round loses the vote (the owner's 2026-07-30
 call for the ballot: past rounds keep the vote). Until then a rider's votes of
 closed rounds stay tied to the account, with no expiry: the closed result is
 already stored and does not need them, and they are what the votes pane and
-the data export show the rider. They go when the account goes.
+the data export show the rider. They go when the account goes. A vote never
+submitted is deleted once its ballot closes; until then the votes pane marks
+it "Not submitted, does not count", and the export carries `submitted_at`.
 
 **From the map.** The drawer of a catalogue row of a votable kind, and of a
 verified route, links to the ballot with the row picked
@@ -1160,7 +1227,9 @@ in a ballot of three.
 
 **On the map.** `GET /map/best-of` keeps its contract (route-domain.md §8.1,
 §8.2) and counts only votes in the latest started round of each picked season,
-so last year's favourites leave Curated mode when the season turns. A vote
+ordered by points (`POINTS_BY_SLOT`), then by votes. A started round's ballot
+has closed, so the map never shows a ballot riders can still vote in, and
+last year's favourites leave Curated mode when the season turns. A vote
 changes no catalog stamp: the region slices carry no community data
 (route-domain.md §6.3), and the endpoint's one-minute `max-age` bounds how
 long a vote takes to show. The Curated readiness count (map-and-search.md
@@ -1168,22 +1237,52 @@ long a vote takes to show. The Curated readiness count (map-and-search.md
 
 **The ballot page** (`App\Controller\BallotController`, route `vote`,
 `templates/vote/ballot.html.twig`). Signed-in only and never in the page
-cache. Server-rendered forms, no script: a cast or remove is a POST (CSRF id
-`season-ballot`) answered with a 303 back to the list. The region is the one
+cache. Server-rendered forms that work without script: a cast, remove or move
+is a POST (CSRF id `season-ballot`) answered with a 303 back to the list. A
+small script (`assets/contribute/ballot.js`) removes the reloads that get in
+the way (owner 2026-10-02): choosing a region opens its list at once (no
+"Show" press), and the up and down arrows reorder the rows on the page and
+send the move in the background with `Accept: application/json`, answered
+`{"moved": true}`; when the server says no, the rows go back and the plain
+form shows the server's answer. The region is the one
 asked for, else the picked row's region (`?pick=<id>` from the map), else the
 rider's first base region, else none (the region picker only). The regions
 offered are the operational regions grouped by country
-(`App\Vote\BallotRegions`). Five category tabs;
+(`App\Vote\BallotRegions`). Each row of the list is compact and carries
+what the /best cards carry (`BestOfPreview::cards()`, owner 2026-10-03): the
+picture where there is one, else the kind's icon, and one line from the
+catalogue (a climb's length, average, height gain and surface; a place's
+note), above the confirmed count. A place to sleep shows its kind, read from
+its type label (`App\Catalog\StayKind`: hotel, house for a guest house,
+B&B, gîte or rental, tent for a campsite, bunk for a hostel or budget stay,
+cabin for a chalet or mountain hut, and a house outline with a "?" when the
+label names none of these): as the icon where there is no picture, and in
+words with its town as the row's line ("Hotel · Spa", `vote.stay_kind.*`). On the ballot only for now (owner 2026-10-03); the
+map's pins keep `KindIcons`. Five category tabs;
 a `cat` that is missing, unknown or not votable opens climbs, and a `pick`
 that is not a row of that category on the ballot is ignored. The list shows
-the 100 most confirmed rows of the category in the region, plus the rider's
-own votes and the picked row wherever they sit. A route's bike choice offers
+every row of the category in the region A to Z (`BALLOT_CANDIDATES`, 2000, is
+a guard and not a cut: an alphabetical list cut short would hide the end of
+the alphabet; the longest list was 291 on 2026-10-03), plus the rider's own
+votes and the picked row should the guard ever leave them out. On a screen narrower than 820 px the ballot panel comes before
+the list, so it stays in sight. A list longer
+than 8 rows gets a "Find a place" box (`ballot.js`) that narrows it by name,
+accents and case ignored. A route's bike choice offers
 the general bikes and the specialty bikes that route declares
 (`BallotCandidates::bikesFor()`). Beside the list, the "Your
-ballot" panel holds the rider's votes in this list (up to three, in no order,
-each with its own remove form), how many votes are left and how many riders
-voted in the list (`SeasonResults::voters()`, one count, not the whole list). While voting is off or the rider cannot vote yet, the page
-says why there is nothing to press.
+ballot" panel holds the rider's votes in this list in their order, each with
+its rank, the points it is worth, an up and a down arrow (one form per row,
+`do=up` / `do=down`; the first row's up and the last row's down are hidden)
+and a remove form (the vote just cast fades in there; no "your vote is in"
+line, which read as if voting were done, owner 2026-10-03), how many votes
+are left, and **Submit my ballot**, greyed
+until every vote is filled, with "Once submitted, your ballot counts and is
+final for this season." A submitted ballot shows "Submitted on <date>. Your
+ballot counts and is final." and no buttons at all, and a green ✓ sits on its
+heading and on its category tab, read out as "submitted"
+(`BallotService::submittedCategories()`, owner 2026-10-03). It shows
+no count of anyone else's votes or voters. While voting is off or the rider
+cannot vote yet, the page says why there is nothing to press.
 
 **`route_vote` is retired** (`Version20261002110000`): it held no real votes
 (owner 2026-10-02), so nothing was copied; the migration refuses to run on a
@@ -1196,16 +1295,50 @@ live, `/best` keeps the preview's page, filters and cards (route-domain.md
 `BestOfPreview::byRegion()` returns, each region carrying its list's round,
 voter count and whether it is ranked or closed, and takes each card's line,
 picture and panel hue from `BestOfPreview::cards()`, the preview's own photo
-rule. No season chosen ("Now") means each region's open round, so a southern
-country shows its own season; a chosen season means each region's most recent
-round of it. A country view lists its operational regions
-(`App\Vote\BallotRegions`): a ranked list shows places (a shared place reads
-"1="), votes, the confirmed count, a "x0.75" mark on handicapped rows and a
+rule. No season chosen means each region's current round, whose list
+was voted for in the season before, so a southern country shows its own
+season; a chosen season means each region's most recent started round of it.
+No list on the page belongs to a ballot that is still open, and the page no
+longer closes with a note about publishing and privacy, nor says "every season
+starts empty" (not true: last year's top 3 carry the handicap; owner
+2026-10-03). A region's heading carries "No ranking yet" beside its name when
+its list is below the threshold, and no round line: the title names the round.
+The title names the season shown, in italics (owner 2026-10-03): "The best of *Autumn*", the
+season chosen or else the one riders are in; above it the kicker names the
+year ("Seasonal rounds 2026", "2026-27" for a winter), and beside it the
+country loaded, with its outline (`RegionSilhouette::forCountry()`, the
+country row's stored `outline`) and its flag as on /regions, or
+"Everywhere". Beside the filters a block says
+when voting for the next season closes ("Voting for Winter 2026-27 is open
+until 30 November 2026."), the same countdown as the ballot page, and a
+**Vote for next season** button to the ballot; on a phone it sits under them. The hemisphere is the country's, the
+one most of its regions are in by their middle latitude (Colombia: 32 regions
+north, 1 south, so northern); each region's own list still follows its own
+latitude. Everywhere reads the northern seasons and
+the block adds that a country south of the equator shows its own. A signed-in rider who opens the bare page (no query) is sent
+to their home-base country (`users.base_country_codes`), at their first home
+region (`#r-<slug>`); in a country view their home regions lead the list,
+marked "Your region". There is no "Now" chip (owner 2026-10-03): the
+season chip of the season riders are in (in the country's hemisphere, the
+north for Everywhere) is lit when no season is chosen, and that chip links to
+the URL without `season`, so one season has one URL. The country picker is
+styled as a chip and opens the country as soon as it is picked. Each filter
+label sits in its own column, so chips that wrap line up under the first chip
+(`assets/pages/best-scope.js`); its Show button is only for a page without
+script. Signed-in pages skip the shared page cache
+(page-caching.md §2), so this default never reaches another visitor, and an
+anonymous visitor keeps the bare page. A country view lists its operational regions
+(`App\Vote\BallotRegions`): every list names its round; the way to next
+season's ballot is the one button beside the filters, not a link per region
+(owner 2026-10-03); a ranked list
+shows places (a shared place reads "1="), the confirmed count, a "x0.75" mark on handicapped rows and a
 bar, the row's score against the score of the row listed first (full at
 most, since a row sharing first place can score more), and
 a place retired mid-round keeps its place without a map link; a list below 5
 voters reads "No ranking yet" with no podium and no places, the 10 most
-confirmed rows with their votes so far and "N of 5 voters". At the foot, a
+confirmed rows. A ranked list shows each row's points ("40 points", before the
+x0.75 the row's own mark explains; owner 2026-10-03), the season being closed;
+no vote or voter count is shown anywhere on the page. At the foot, a
 region whose list the difficulty and length filters emptied is named under
 "Nothing in these regions matches these filters", apart from the regions with
 nothing of the kind on the map ("Nothing to vote for yet", with a link to the

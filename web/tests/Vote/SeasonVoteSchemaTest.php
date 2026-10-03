@@ -10,6 +10,7 @@ use App\Catalog\BikeType;
 use App\Catalog\Entity\SeasonVote;
 use App\Catalog\ItemType;
 use App\Catalog\Season;
+use App\Vote\BallotRules;
 use App\Vote\ListKey;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\DriverException;
@@ -54,12 +55,13 @@ final class SeasonVoteSchemaTest extends KernelTestCase
         self::assertSame(2, $found->getSlot());
     }
 
-    public function testAFourthSlotIsRefusedByTheDatabase(): void
+    /** The ballot length is BallotRules'; the database only guards 1 to MAX_SLOTS. */
+    public function testASlotBeyondTheGuardIsRefusedByTheDatabase(): void
     {
         $db = $this->db();
         $this->expectException(DriverException::class);
         $this->expectExceptionMessageMatches('/season_vote_slot_range/');
-        $this->insert($db, ['slot' => 4]);
+        $this->insert($db, ['slot' => BallotRules::MAX_SLOTS + 1]);
     }
 
     public function testTwoVotesCannotShareASlot(): void
