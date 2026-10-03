@@ -140,6 +140,11 @@ ol.rank .bar i{display:block;height:100%;background:var(--trail)}
 .vote-cta:hover{background:var(--ink);color:var(--paper)}
 .vote-cta:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
 @media (max-width:860px){.best-top{grid-template-columns:1fr}}
+/* Getting a rider's top 5 onto the map before the ballot closes. */
+.prep{margin:0 0 2.2rem;padding:1.2rem 1.3rem;border-left:3px solid var(--clay);background:var(--paper-deep);border-radius:0 8px 8px 0;max-width:72ch}
+.prep h2{font-size:1.25rem;margin:0 0 .45rem}
+.prep p{margin:0 0 .9rem;line-height:1.55;color:#3a3d30}
+.prep .prep-go{display:flex;flex-wrap:wrap;gap:.6rem;margin:0}
 .rgroup h2{font-size:1.05rem;margin:0 0 .3rem}
 .rgroup h2 a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(20,22,14,.2)}
 .rgroup h2 a:hover{border-color:var(--ink)}

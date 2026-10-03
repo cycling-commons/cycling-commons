@@ -1320,7 +1320,14 @@ until 30 November 2026."), the same countdown as the ballot page, and a
 one most of its regions are in by their middle latitude (Colombia: 32 regions
 north, 1 south, so northern); each region's own list still follows its own
 latitude. Everywhere reads the northern seasons and
-the block adds that a country south of the equator shows its own. A signed-in rider who opens the bare page (no query) is sent
+the block adds that a country south of the equator shows its own. Under the
+filters, before any list, "Is your top 5 on the map?" says the ballot lists
+only what is on the map and asks the rider to add a missing place now, with
+its name, so it is on next season's ballot once a curator accepts it. Its
+button adds a place of the category shown (`/improve?type=<category>&mode=add`;
+routes go to `/propose-route`), and a second one opens the map. It shows in
+every mode, because a new season starts with no votes and the map is what
+riders can work on (owner 2026-10-04). A signed-in rider who opens the bare page (no query) is sent
 to their home-base country (`users.base_country_codes`), at their first home
 region (`#r-<slug>`); in a country view their home regions lead the list,
 marked "Your region". There is no "Now" chip (owner 2026-10-03): the

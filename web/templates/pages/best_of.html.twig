@@ -176,6 +176,26 @@
   {% endif %}
   </div>
 
+  {# Next season's ballot lists only what is on the map, and a new season
+     starts with no votes, so the page's first job is getting a rider's
+     favourites onto the map (owner 2026-10-04). The button adds a place of
+     the category shown; routes are proposed on their own form. #}
+  {% set add = {
+      'climbs': {href: path('improve', {type: 'climbs', mode: 'add'}), label: 'best.prep_add_climbs'},
+      'where-to-sleep': {href: path('improve', {type: 'where-to-sleep', mode: 'add'}), label: 'best.prep_add_stays'},
+      'scenic-views': {href: path('improve', {type: 'scenic-views', mode: 'add'}), label: 'best.prep_add_views'},
+      'history-culture': {href: path('improve', {type: 'history-culture', mode: 'add'}), label: 'best.prep_add_heritage'},
+      'quality-rides': {href: path('propose_route'), label: 'best.prep_add_routes'},
+  }[category.value] ?? null %}
+  <section class="prep">
+    <h2>{% trans %}best.prep_heading{% endtrans %}</h2>
+    <p>{% trans %}best.prep_body{% endtrans %}</p>
+    <p class="prep-go">
+      {% if add %}<a class="btn btn-p" href="{{ add.href }}">{{ add.label|trans }}</a>{% endif %}
+      <a class="btn btn-g" href="{{ path('map') }}">{% trans %}best.prep_map{% endtrans %}</a>
+    </p>
+  </section>
+
   {# The same globe /regions and /coverage use, loaded only when asked for, so
      a reader who never opens it does not carry MapLibre. #}
   <div id="best-globe" class="globe" hidden data-zoom="2.4"

@@ -2601,6 +2601,14 @@ best:
   quiet_live_heading: 'Nog niets om op te stemmen in deze regio''s:'
   quiet_live: 'Ze hebben nog niets onder "%what%" op de kaart. Voeg er een toe op de kaart, of bevestig er een die je kent, en het kan volgend seizoen stemmen krijgen.'
   quiet_live_cta: 'Open de kaart'
+  prep_heading: 'Staat je top 5 op de kaart?'
+  prep_body: 'Je kunt alleen stemmen op wat op de kaart staat. Voeg nu een plek toe die ontbreekt, met haar naam. Zodra een curator ze aanvaardt, staat ze op de stembrief van volgend seizoen.'
+  prep_map: 'Open de kaart'
+  prep_add_climbs: 'Voeg een beklimming toe'
+  prep_add_stays: 'Voeg een slaapplek toe'
+  prep_add_views: 'Voeg een uitzicht toe'
+  prep_add_heritage: 'Voeg een erfgoedplek toe'
+  prep_add_routes: 'Stel een route voor'
 
 improve:
   condition:

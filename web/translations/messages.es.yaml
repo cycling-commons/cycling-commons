@@ -2006,6 +2006,14 @@ best:
   quiet_live_heading: 'Todavía no hay nada que votar en estas regiones:'
   quiet_live: 'Aún no tienen nada en «%what%» en el mapa. Añade algo en el mapa, o confirma algo que conozcas, y podrá recibir votos la próxima temporada.'
   quiet_live_cta: 'Abrir el mapa'
+  prep_heading: '¿Está tu top 5 en el mapa?'
+  prep_body: 'Solo puedes votar lo que está en el mapa. Añade ahora un lugar que falte, con su nombre. Cuando un curador lo acepte, estará en la papeleta de la próxima temporada.'
+  prep_map: 'Abrir el mapa'
+  prep_add_climbs: 'Añadir un puerto'
+  prep_add_stays: 'Añadir un alojamiento'
+  prep_add_views: 'Añadir un mirador'
+  prep_add_heritage: 'Añadir un lugar de patrimonio'
+  prep_add_routes: 'Proponer una ruta'
 
 improve:
   condition:

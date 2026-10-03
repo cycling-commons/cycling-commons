@@ -1997,6 +1997,14 @@ best:
   quiet_live_heading: 'Nothing to vote for yet in these regions:'
   quiet_live: 'They have nothing under "%what%" on the map yet. Add one on the map, or confirm one you know, and it can get votes next season.'
   quiet_live_cta: 'Open the map'
+  prep_heading: 'Is your top 5 on the map?'
+  prep_body: 'You can only vote for what is on the map. Add a place you miss now, with its name. Once a curator accepts it, it is on next season''s ballot.'
+  prep_map: 'Open the map'
+  prep_add_climbs: 'Add a climb'
+  prep_add_stays: 'Add a place to sleep'
+  prep_add_views: 'Add a view'
+  prep_add_heritage: 'Add a heritage place'
+  prep_add_routes: 'Propose a route'
 
 improve:
   condition:

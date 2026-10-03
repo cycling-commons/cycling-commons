@@ -2596,6 +2596,14 @@ best:
   quiet_live_heading: 'Rien à voter pour l''instant dans ces régions :'
   quiet_live: 'Elles n''ont encore rien dans « %what% » sur la carte. Ajoutez-en un sur la carte, ou confirmez-en un que vous connaissez, et il pourra recevoir des votes la saison prochaine.'
   quiet_live_cta: 'Ouvrir la carte'
+  prep_heading: 'Votre top 5 est-il sur la carte ?'
+  prep_body: 'Vous ne pouvez voter que pour ce qui est sur la carte. Ajoutez dès maintenant un lieu qui manque, avec son nom. Une fois accepté par un curateur, il figure sur le bulletin de la saison prochaine.'
+  prep_map: 'Ouvrir la carte'
+  prep_add_climbs: 'Ajouter un col'
+  prep_add_stays: 'Ajouter un hébergement'
+  prep_add_views: 'Ajouter un point de vue'
+  prep_add_heritage: 'Ajouter un lieu de patrimoine'
+  prep_add_routes: 'Proposer un itinéraire'
 
 improve:
   condition:

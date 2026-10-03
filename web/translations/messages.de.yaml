@@ -2604,6 +2604,14 @@ best:
   quiet_live_heading: 'In diesen Regionen gibt es noch nichts zum Abstimmen:'
   quiet_live: 'Sie haben noch nichts unter „%what%" auf der Karte. Füge etwas auf der Karte hinzu oder bestätige etwas, das du kennst, dann kann es in der nächsten Saison Stimmen bekommen.'
   quiet_live_cta: 'Karte öffnen'
+  prep_heading: 'Ist deine Top 5 auf der Karte?'
+  prep_body: 'Du kannst nur für das stimmen, was auf der Karte ist. Füge jetzt einen fehlenden Ort hinzu, mit seinem Namen. Sobald ein Kurator ihn annimmt, steht er auf dem Stimmzettel der nächsten Saison.'
+  prep_map: 'Karte öffnen'
+  prep_add_climbs: 'Anstieg hinzufügen'
+  prep_add_stays: 'Unterkunft hinzufügen'
+  prep_add_views: 'Aussicht hinzufügen'
+  prep_add_heritage: 'Kulturgut hinzufügen'
+  prep_add_routes: 'Route vorschlagen'
 
 improve:
   condition:
