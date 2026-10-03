@@ -139,6 +139,16 @@ select{font-family:var(--sans);font-size:1rem;color:var(--ink);background-color:
   background-repeat:no-repeat;background-position:right .1rem center;background-size:1rem}
 select:focus{border-bottom-color:var(--trail)}
 select option{color:var(--ink)}
+/* The globe beside a round's name, its half of the world filled
+   (vote/_hemisphere.html.twig, owner 2026-10-03). Text colour, so it
+   follows whatever line it sits in. */
+.hemi{display:inline-block;flex:none;vertical-align:-.28em;margin-right:.35rem}
+.hemi .hemi-fill{fill:currentColor;opacity:.8}
+.hemi .hemi-line{fill:none;stroke:currentColor;stroke-width:1.5}
+/* Beside the open ballot's line it stands two text lines high (owner
+   2026-10-03); in a list row it keeps the text's size. */
+.round .hemi,.vopen .hemi{width:3em;height:3em;margin-right:.7rem;vertical-align:middle}
+.round .hemi .hemi-line,.vopen .hemi .hemi-line{stroke-width:1.2}
 /* A dropdown that filters or picks what a page shows is a chip, the same pill
    as the filter chips beside it (owner 2026-10-03). Form fields keep the
    underline above. `--dark` is the same chip on a dark band. */

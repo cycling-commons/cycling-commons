@@ -12,6 +12,7 @@ use App\Catalog\ConfirmationStance;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\OperationalRegions;
+use App\Catalog\StayKind;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
@@ -59,6 +60,28 @@ final class BallotCandidates
      */
     public function top(ItemType $type, int $regionId, int $limit, ?BikeType $bike = null, ?array $routeFilter = null): array
     {
+        return $this->listed($type, $regionId, $limit, $bike, $routeFilter, 'confirmations DESC, s.created_at DESC, s.id DESC');
+    }
+
+    /**
+     * Every candidate A to Z, for the ballot (owner 2026-10-03: "to make it
+     * fair it should be alphabetically and not related to people that have
+     * been there"). The cap is only a guard; a region's list is far shorter.
+     *
+     * @return list<Candidate>
+     */
+    public function alphabetical(ItemType $type, int $regionId, int $limit, ?BikeType $bike = null): array
+    {
+        return $this->listed($type, $regionId, $limit, $bike, null, 'LOWER(s.name), s.id');
+    }
+
+    /**
+     * @param array{0: string, 1: array<string, mixed>, 2: array<string, ArrayParameterType>}|null $routeFilter
+     *
+     * @return list<Candidate>
+     */
+    private function listed(ItemType $type, int $regionId, int $limit, ?BikeType $bike, ?array $routeFilter, string $order): array
+    {
         $s = $this->source($type, $bike);
         $where = $s['where'];
         $params = ['rid' => $regionId] + $s['params'];
@@ -74,7 +97,7 @@ final class BallotCandidates
             'SELECT s.id, s.name, '.$s['count'].' AS confirmations
                '.$s['from'].'
               WHERE '.$where.' AND s.region_id = :rid
-              ORDER BY confirmations DESC, s.created_at DESC, s.id DESC
+              ORDER BY '.$order.'
               LIMIT '.max(1, $limit),
             $params,
             $types,
@@ -85,6 +108,34 @@ final class BallotCandidates
             'name' => $r['name'],
             'confirmations' => (int) $r['confirmations'],
         ], $rows);
+    }
+
+    /**
+     * The kind of stay each of these places is, read from its type label
+     * (`StayKind`; "unknown" when the label names no kind), and its town.
+     *
+     * @param list<int> $ids
+     *
+     * @return array<int, array{kind: string, town: ?string}> id => kind and town
+     */
+    public function stayKinds(array $ids): array
+    {
+        if ([] === $ids) {
+            return [];
+        }
+        /** @var list<array{id: int|string, t: ?string, town: ?string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT id, attributes->>'t' AS t, attributes->>'town' AS town FROM item WHERE id IN (:ids)",
+            ['ids' => $ids],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+        $out = [];
+        foreach ($rows as $r) {
+            $town = null !== $r['town'] && '' !== trim($r['town']) ? trim($r['town']) : null;
+            $out[(int) $r['id']] = ['kind' => StayKind::fromLabel($r['t']) ?? StayKind::UNKNOWN, 'town' => $town];
+        }
+
+        return $out;
     }
 
     /**

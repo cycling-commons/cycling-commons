@@ -108,7 +108,7 @@ export function routeCommunityPanel(id, state, regionId){
   const fieldOpts=routeFields().map(f=>`<option value="${escPend(f.key)}">${escPend(f.label)}</option>`).join('');
   // docs/specs/route-domain.md §8d: a verified route is voted for on the season ballot, picked there.
   const voteUrl = (window.CC_VOTING_LIVE && state==='verified') ? voteHref(window.CC_VOTE_URL, 'experience', id) : null;
-  const voteBlock = voteUrl ? `<a class="cc-d-act cc-d-vote" href="${escPend(voteUrl)}">▲ ${D.voteRound||'Vote for it in this round'}</a>` : '';
+  const voteBlock = voteUrl ? `<a class="cc-d-act cc-d-vote" href="${escPend(voteUrl)}">▲ ${D.voteRound||'Vote for it for next season'}</a>` : '';
   const rideProgress = state==='unverified' ? `<span class="cc-rc-count" data-rc="rides">…</span>` : '';
   return `<div class="cc-rc" data-route="${id}" data-state="${state||''}">
     ${deskLink(id, regionId)}

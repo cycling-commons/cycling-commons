@@ -106,6 +106,22 @@ final class BallotCandidatesTest extends KernelTestCase
         self::assertSame([2, 1, 0, 0], array_column($top, 'confirmations'));
     }
 
+    /** Owner 2026-10-03: the ballot lists A to Z, so how many have been there never moves a place up. */
+    public function testTheBallotListsAToZWhateverTheConfirmations(): void
+    {
+        $rid = $this->region('xa-north', 'XA', 50.0);
+        $zulu = $this->item('Q', $rid, 'Zulu Fort');
+        $abbey = $this->item('Q', $rid, 'abbey of Alpha');
+        $mill = $this->item('Q', $rid, 'Mill');
+        $this->confirm($zulu, 1);
+        $this->confirm($zulu, 2);
+
+        $list = (new BallotCandidates($this->db))->alphabetical(ItemType::HistoryCulture, $rid, 10);
+
+        self::assertSame([$abbey, $mill, $zulu], array_column($list, 'id'));
+        self::assertSame([0, 0, 2], array_column($list, 'confirmations'));
+    }
+
     public function testRoutesCountRidersButNotTheProposer(): void
     {
         $rid = $this->region('xa-north', 'XA', 50.0);

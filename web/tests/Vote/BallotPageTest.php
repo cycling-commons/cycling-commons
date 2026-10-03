@@ -122,7 +122,7 @@ final class BallotPageTest extends WebTestCase
         self::assertSelectorExists('.vhead form.vregion select#v-region');
         self::assertCount(1, $crawler->filter('nav.vtabs ~ .vclosed'));
         self::assertSelectorTextContains('.vgrid #cands .cand', 'Mur de Ballot');
-        self::assertSelectorTextContains('.vgrid .ballot .bempty', 'Pick up to 3 from the list.');
+        self::assertSelectorTextContains('.vgrid .ballot .bempty', 'Pick 5 from the list.');
         self::assertCount(0, $crawler->filter('button[name="do"]'));
     }
 
@@ -134,18 +134,25 @@ final class BallotPageTest extends WebTestCase
         $u = $this->rider();
 
         $crawler = $this->client->request('GET', '/vote?region=xa-ballot&cat=climbs');
-        self::assertSelectorTextContains('.round', 'Spring 2027');
+        // April is spring, so the ballot open now fills the summer list.
+        self::assertSelectorTextContains('.round', 'Voting for Summer 2027');
+        // 10 April 2027, 12:00 UTC; the summer ballot closes on 1 June.
+        self::assertSelectorTextSame('.vhead .vcount', '51 days left');
+        self::assertSame('North of the equator', $crawler->filter('.round svg.hemi')->attr('aria-label'), 'a globe with its half of the world filled');
         $this->client->submit($crawler->filter('#c-'.$climb.' button[value="cast"]')->form());
 
         self::assertResponseStatusCodeSame(303);
         self::assertResponseRedirects('/vote?region=xa-ballot&cat=climbs');
         $crawler = $this->client->followRedirect();
-        self::assertSelectorTextContains('.flash-success', 'Your vote is in.');
+        self::assertSelectorNotExists('.flash-success', 'no "your vote is in" line: the ballot shows it');
+        self::assertSelectorExists('.ballot .bitem.bnew', 'the vote just cast fades in');
         self::assertSelectorTextContains('#c-'.$climb.' .add.in', 'on ballot');
         self::assertSelectorTextContains('#c-'.$climb.' button.add.in .vh', 'remove Mur de Ballot');
         self::assertSelectorTextContains('.ballot h3', 'Your ballot · Climbs');
         self::assertSelectorTextContains('.ballot .bitem', 'Mur de Ballot');
-        self::assertSelectorTextContains('.ballot .vleft', 'You have 2 votes left in this list.');
+        self::assertSelectorTextContains('.ballot .bitem .brank', '1');
+        self::assertSelectorTextContains('.ballot .bitem .bpts', '10 points');
+        self::assertSelectorTextContains('.ballot .vleft', 'You have 4 votes left in this list.');
         self::assertSame(1, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote WHERE user_id = ? AND subject_id = ?', [$u->getId(), $climb]));
 
         $remove = $crawler->filter('.ballot .bitem button[value="remove"]')->form();
@@ -225,7 +232,8 @@ final class BallotPageTest extends WebTestCase
         self::assertSame(['', 'Road', 'Gravel', 'MTB', 'E-bike', 'Tandem'], $offered($tandem));
     }
 
-    public function testTheBallotSaysHowManyVotedInTheList(): void
+    /** route-domain.md §8c: the ballot shows the rider's own votes and no count of anyone else's. */
+    public function testTheBallotShowsNoCountOfOtherRiders(): void
     {
         $this->openVoting();
         $rid = $this->region();
@@ -233,32 +241,84 @@ final class BallotPageTest extends WebTestCase
         foreach ([9101, 9102] as $other) {
             $this->db->insert('season_vote', [
                 'user_id' => $other, 'region_id' => $rid, 'category' => 'climbs', 'subject_id' => $climb,
-                'bike_type' => null, 'season' => 'spring', 'round_start' => '2027-03-01', 'slot' => 1, 'created_at' => '2027-03-02 10:00:00',
+                'bike_type' => null, 'season' => 'summer', 'round_start' => '2027-06-01', 'slot' => 1, 'created_at' => '2027-04-02 10:00:00',
             ]);
         }
         $this->rider();
 
-        $this->client->request('GET', '/vote?region=xa-ballot');
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
 
-        self::assertSelectorTextContains('.ballot .vleft', '2 of 5 voters so far');
+        $text = $crawler->filter('#main')->text();
+        self::assertStringNotContainsString('voters', $text);
+        self::assertStringNotContainsString('A list gets a ranking', $text);
+        self::assertStringNotContainsString('Your vote is private', $text);
+    }
+
+    public function testARiderPutsTheirVotesInOrder(): void
+    {
+        $this->openVoting();
+        $rid = $this->region();
+        [$one, $two] = [$this->item($rid, 'Côte Une'), $this->item($rid, 'Côte Deux')];
+        $this->rider();
+        foreach ([$one, $two] as $id) {
+            $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+            $this->client->submit($crawler->filter('#c-'.$id.' button[value="cast"]')->form());
+        }
+
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+        self::assertSame(['Côte Une 10 points', 'Côte Deux 7 points'], $crawler->filter('.ballot .bitem .bname')->each(static fn ($n): string => $n->text()));
+        self::assertNotNull($crawler->filter('.ballot .bitem')->first()->filter('button[value="up"]')->attr('hidden'), 'the first choice has nowhere to go up');
+        self::assertNotNull($crawler->filter('.ballot .bitem')->last()->filter('button[value="down"]')->attr('hidden'), 'the last choice has nowhere to go down');
+        self::assertSame('[10,7,5,3,1]', $crawler->filter('#ballot')->attr('data-points'));
+
+        $this->client->submit($crawler->filter('.ballot .bitem')->last()->filter('button[value="up"]')->form());
+        self::assertResponseStatusCodeSame(303);
+        $crawler = $this->client->followRedirect();
+
+        self::assertStringStartsWith('Côte Deux', $crawler->filter('.ballot .bitem .bname')->first()->text());
+        self::assertSame(['10 points', '7 points'], $crawler->filter('.ballot .bitem .bpts')->each(static fn ($n): string => $n->text()));
     }
 
     public function testAFullListOffersNoMoreVotes(): void
     {
         $this->openVoting();
         $rid = $this->region();
-        $ids = [$this->item($rid, 'One'), $this->item($rid, 'Two'), $this->item($rid, 'Three'), $this->item($rid, 'Four')];
+        $ids = [];
+        foreach (['One', 'Two', 'Three', 'Four', 'Five', 'Six'] as $name) {
+            $ids[] = $this->item($rid, $name);
+        }
         $this->rider();
 
-        foreach (\array_slice($ids, 0, 3) as $id) {
+        foreach (\array_slice($ids, 0, 5) as $id) {
             $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
             $this->client->submit($crawler->filter('#c-'.$id.' button[value="cast"]')->form());
         }
         $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
 
-        self::assertSelectorTextContains('.ballot .vleft', 'You have used your 3 votes in this list.');
-        self::assertCount(3, $crawler->filter('.ballot .bitem'));
-        self::assertCount(0, $crawler->filter('#c-'.$ids[3].' button[value="cast"]'));
+        self::assertSelectorTextContains('.ballot .vleft', 'You have used your 5 votes in this list.');
+        self::assertCount(5, $crawler->filter('.ballot .bitem'));
+        self::assertCount(0, $crawler->filter('#c-'.$ids[5].' button[value="cast"]'));
+    }
+
+    /** The page's arrows are a background call (ballot.js): JSON back, no redirect, no flash. */
+    public function testAMoveAskedForAsJsonAnswersWithoutAReload(): void
+    {
+        $this->openVoting();
+        $rid = $this->region();
+        [$one, $two] = [$this->item($rid, 'Col Un'), $this->item($rid, 'Col Deux')];
+        $u = $this->rider();
+        foreach ([$one, $two] as $id) {
+            $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+            $this->client->submit($crawler->filter('#c-'.$id.' button[value="cast"]')->form());
+        }
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+        $form = $crawler->filter('.ballot .bitem')->last()->filter('button[value="up"]')->form();
+
+        $this->client->request('POST', $form->getUri(), $form->getValues() + ['do' => 'up'], [], ['HTTP_ACCEPT' => 'application/json']);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['moved' => true], json_decode((string) $this->client->getResponse()->getContent(), true));
+        self::assertSame(1, (int) $this->db->fetchOne('SELECT slot FROM season_vote WHERE user_id = ? AND subject_id = ?', [$u->getId(), $two]));
     }
 
     public function testMyRouteVoteNamesTheBikeInTheReadersLanguage(): void
@@ -269,7 +329,7 @@ final class BallotPageTest extends WebTestCase
         $u = $this->rider();
         $this->db->executeStatement(
             "INSERT INTO season_vote (user_id, region_id, category, subject_id, bike_type, season, round_start, slot, created_at)
-             VALUES (?, ?, 'quality-rides', ?, 'E-bike', 'spring', '2027-03-01', 1, NOW())",
+             VALUES (?, ?, 'quality-rides', ?, 'E-bike', 'summer', '2027-06-01', 1, NOW())",
             [$u->getId(), $rid, $route],
         );
 
@@ -329,5 +389,96 @@ final class BallotPageTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(403);
         self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_vote'));
+    }
+
+    public function testARiderSubmitsAFullBallotAndItIsFinal(): void
+    {
+        $this->openVoting();
+        $rid = $this->region();
+        $ids = [];
+        foreach (['One', 'Two', 'Three', 'Four', 'Five'] as $name) {
+            $ids[] = $this->item($rid, $name);
+        }
+        $this->rider();
+
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+        $this->client->submit($crawler->filter('#c-'.$ids[0].' button[value="cast"]')->form());
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+        self::assertNotNull($crawler->filter('.vsubmit button[value="submit"]')->attr('disabled'), 'Submit waits for all 5 votes');
+        self::assertSelectorTextContains('.vsubmit-note', 'Pick all 5 to submit.');
+
+        foreach (\array_slice($ids, 1) as $id) {
+            $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+            $this->client->submit($crawler->filter('#c-'.$id.' button[value="cast"]')->form());
+        }
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+        self::assertNull($crawler->filter('.vsubmit button[value="submit"]')->attr('disabled'));
+        $this->client->submit($crawler->filter('.vsubmit button[value="submit"]')->form());
+        $crawler = $this->client->followRedirect();
+
+        self::assertSelectorTextContains('.flash-success', 'Your ballot is submitted.');
+        self::assertSelectorTextContains('.vsubmitted', 'Your ballot counts and is final.');
+        self::assertCount(1, $crawler->filter('.vtabs a.on .vdone'), 'the climbs tab carries a check');
+        self::assertCount(1, $crawler->filter('.vtabs a .vdone'), 'only the submitted category');
+        self::assertCount(1, $crawler->filter('.ballot h3 .vdone'));
+        self::assertCount(0, $crawler->filter('.ballot button'), 'no move, remove or submit after submitting');
+        self::assertCount(0, $crawler->filter('#cands button'), 'no new votes after submitting');
+        self::assertCount(5, $crawler->filter('#cands .add.in.mark'));
+    }
+
+    /** Owner 2026-10-03: a ballot row says more than a name, in less space: one line from the catalogue, and a picture or the kind's icon. */
+    public function testARowCarriesALineAboutThePlaceAndAPictureSlot(): void
+    {
+        $this->openVoting();
+        $rid = $this->region();
+        $climb = $this->item($rid, 'Col Facts');
+        $this->db->executeStatement(
+            'UPDATE item SET attributes = ?::jsonb WHERE id = ?',
+            [(string) json_encode(['length' => 2000, 'avgGradient' => '9.0%', 'gain' => 180]), $climb],
+        );
+        $this->rider();
+
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+
+        $note = $crawler->filter('#c-'.$climb.' .note')->text();
+        self::assertStringContainsString('9.0%', $note);
+        self::assertStringContainsString('180 m up', $note);
+        self::assertCount(1, $crawler->filter('#c-'.$climb.' .cshot svg'), 'no photo, so the kind\'s icon');
+    }
+
+    /** Owner 2026-10-03: A to Z, and a long list can be narrowed by name. */
+    public function testTheBallotIsAToZWithAFindBox(): void
+    {
+        $this->openVoting();
+        $rid = $this->region();
+        foreach (['Zénith', 'Alpha', 'Mid'] as $name) {
+            $this->item($rid, $name);
+        }
+        $this->rider();
+
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot');
+
+        self::assertSame(['Alpha', 'Mid', 'Zénith'], $crawler->filter('#cands .cand h4')->each(static fn ($n): string => trim($n->text())));
+        self::assertCount(1, $crawler->filter('.vgrid > #cands > [data-cand-find][hidden] input#cand-find'), 'inside the list column, revealed by ballot.js on a long list');
+        self::assertCount(2, $crawler->filter('.vgrid > *'), 'the grid keeps its two columns: the list and the ballot');
+    }
+
+    /** Owner 2026-10-03: a place to sleep shows its kind, in an icon where there is no picture and in words, and its town. */
+    public function testAStayWithoutAPictureShowsItsKind(): void
+    {
+        $this->openVoting();
+        $rid = $this->region();
+        $hotel = $this->item($rid, 'Hotel Sans Photo');
+        $castle = $this->item($rid, 'Castle Stay');
+        $this->db->executeStatement("UPDATE item SET letter = 'O', attributes = '{\"t\":\"Hotel\",\"town\":\"Spa\"}'::jsonb WHERE id = ?", [$hotel]);
+        $this->db->executeStatement("UPDATE item SET letter = 'O', attributes = '{\"t\":\"Castle\"}'::jsonb WHERE id = ?", [$castle]);
+        $this->rider();
+
+        $crawler = $this->client->request('GET', '/vote?region=xa-ballot&cat=where-to-sleep');
+
+        self::assertSame(\App\Catalog\StayKind::PATHS['hotel'], $crawler->filter('#c-'.$hotel.' .cshot path')->attr('d'));
+        self::assertSame(\App\Catalog\StayKind::PATHS['unknown'], $crawler->filter('#c-'.$castle.' .cshot path')->attr('d'), 'an unknown kind is a house with a question mark');
+        self::assertSame('Hotel · Spa', trim($crawler->filter('#c-'.$hotel.' .note')->text()), 'the kind in words, and the town');
+        self::assertSame('Kind not known', trim($crawler->filter('#c-'.$castle.' .note')->text()));
     }
 }

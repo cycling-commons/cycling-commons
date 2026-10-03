@@ -1,0 +1,14 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# A small globe beside a round's name, the half of the world it is about
+   filled in (owner 2026-10-03): "Summer 2026-27" reads oddly in November
+   unless the reader sees it is the southern summer. Drawn, never an emoji.
+   Param: hemisphere (App\Vote\Hemisphere). #}
+{% set south = hemisphere.value == 'S' %}
+<svg class="hemi" viewBox="0 0 24 24" width="18" height="18" role="img"
+     aria-label="{{ (south ? 'vote.hemi_south' : 'vote.hemi_north')|trans|e('html_attr') }}">
+  <title>{{ (south ? 'vote.hemi_south' : 'vote.hemi_north')|trans }}</title>
+  <path class="hemi-fill" d="{{ south ? 'M2 12a10 10 0 0 0 20 0Z' : 'M2 12a10 10 0 0 1 20 0Z' }}"/>
+  <circle class="hemi-line" cx="12" cy="12" r="10"/>
+  <ellipse class="hemi-line" cx="12" cy="12" rx="4.2" ry="10"/>
+  <path class="hemi-line" d="M2 12h20"/>
+</svg>

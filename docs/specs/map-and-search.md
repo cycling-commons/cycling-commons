@@ -2285,7 +2285,7 @@ Footer actions are per-type:
 | Feature | Actions |
 |---|---|
 | Item with DB id (non-K) | `✎ Edit this item` (`/improve?item=&name=&type=&lat=&lng=`) + `◎ Fix location` (same query + `fix=location`, **only when coordinates are known**) |
-| Votable types (`CC_VOTABLE = {climbs, stays, scenic, history}`) with a DB id, while `community.voting_live` | `▲ Vote for it in this round`, a link to the season ballot with the row picked (route-domain.md §8d) |
+| Votable types (`CC_VOTABLE = {climbs, stays, scenic, history}`) with a DB id, while `community.voting_live` | `▲ Vote for it for next season`, a link to the season ballot with the row picked (route-domain.md §8d) |
 | Confirmable utilities (`CC_CONFIRMABLE = {water, services, hazards, transit, shelter}`) with DB id | confirmation panel (potability / "still here?"), hydrated async — contract in [moderation-and-contribution.md](moderation-and-contribution.md) |
 | K route | community panel (rode-it / a link to the season ballot / suggest-a-correction / `⤓ Download GPX` from `GET /routes/{id}.gpx`); contract in [route-domain.md](route-domain.md); riders never get an edit link |
 | Pending submission (curators) | moderation card (approve / needs-info / reject, A/R arm-then-Enter keyboard flow) — [moderation-and-contribution.md](moderation-and-contribution.md) |

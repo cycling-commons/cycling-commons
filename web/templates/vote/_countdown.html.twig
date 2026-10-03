@@ -1,0 +1,12 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# How long the ballot stays open (owner 2026-10-03): days, then hours in the
+   last two days, hours and minutes in the last day, a clock in the last hour.
+   The first value is the server's (App\\Vote\\Countdown); js/countdown.js
+   keeps it moving with the same steps.
+   Params: countdown ({key, params}), deadline (DateTimeImmutable), class. #}
+<div class="{{ class }}" data-countdown data-deadline="{{ deadline|date('c', 'UTC') }}" role="timer"
+     data-t-days="{{ 'vote.cd_days'|trans|e('html_attr') }}"
+     data-t-hours="{{ 'vote.cd_hours'|trans|e('html_attr') }}"
+     data-t-hm="{{ 'vote.cd_hm'|trans|e('html_attr') }}"
+     data-t-hms="{{ 'vote.cd_hms'|trans|e('html_attr') }}"
+     data-t-closed="{{ 'vote.cd_closed'|trans|e('html_attr') }}">{{ countdown.key|trans(countdown.params) }}</div>

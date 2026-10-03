@@ -1,6 +1,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
 .vhead{background:var(--ink);color:var(--paper);padding:3rem 0 2.4rem}
-.round{display:inline-flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--trail);margin-top:.8rem}
+.round{display:inline-flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;color:var(--trail);margin-top:.9rem}
+/* How long the ballot stays open (owner 2026-10-03): big, under the round. */
+.vcount{font-family:var(--mono);font-weight:700;font-size:clamp(1.5rem,3vw,2.1rem);letter-spacing:.02em;color:var(--paper);margin-top:.35rem;font-variant-numeric:tabular-nums}
+.vcount[data-step="hms"],.vcount[data-step="hm"]{color:var(--trail)}
 /* Pills, not four words in a row with one underlined (owner, 2026-08-29:
    "the tabs are not really recognizable as different tabs"). An outline gives
    every tab a resting shape you can see and aim at, and the chosen one is
@@ -24,15 +27,25 @@
 .vtabs a:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
 .vtabs a.on{background:var(--trail);border-color:var(--trail);color:var(--ink);font-weight:700}
 .vgrid{display:grid;grid-template-columns:1fr 320px;gap:2rem;padding:2.2rem 0}
-@media(max-width:820px){.vgrid{grid-template-columns:1fr}}
-.cand{display:flex;align-items:center;gap:1rem;padding:1rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
-.cand .nm{flex:1}.cand .nm h4{font-family:var(--serif);font-weight:600;font-size:1.15rem}.cand .nm .m{font-family:var(--mono);font-size:.72rem;color:#595c4d}
+/* Stacked on a small screen, the rider's ballot comes first: under a long
+   list it would be out of sight (owner 2026-10-03). */
+@media(max-width:820px){.vgrid{grid-template-columns:1fr}.vgrid > .ballot{order:-1}}
+.cand{display:flex;align-items:center;gap:.85rem;padding:.55rem 0;border-bottom:1px solid rgba(20,22,14,.1)}
+.cand .nm{flex:1;min-width:0}.cand .nm h4{font-family:var(--serif);font-weight:600;font-size:1.05rem;line-height:1.25}.cand .nm .m{font-family:var(--mono);font-size:.7rem;color:#595c4d}
+/* One line about the place, from the catalogue: length, gradient, surface, or its note. */
+.cand .nm .note{font-size:.85rem;color:#3d4034;line-height:1.35;margin:.1rem 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The picture, or the kind's icon where there is none. */
+.cshot{flex:none;width:72px;height:54px;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:rgba(20,22,14,.06);color:#595c4d}
+.cshot img{width:100%;height:100%;object-fit:cover;display:block}
+.cshot svg{width:26px;height:26px;opacity:.7}
+@media(max-width:560px){.cshot{width:56px;height:42px}}
 .cand .nm h4 a{color:inherit;text-decoration:none}
 .cand .nm h4 a:hover{text-decoration:underline}
 /* The row the map sent the rider to. */
 .cand.picked{box-shadow:inset 3px 0 0 var(--trail);padding-left:.8rem}
 .cand form{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.cand select{font-family:var(--mono);font-size:.74rem;padding:.4rem;border-radius:5px;border:1px solid rgba(20,22,14,.22);background:var(--paper)}
+
 .add{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .8rem;border:1.5px solid var(--ink);border-radius:5px;background:none;color:var(--ink);cursor:pointer;white-space:nowrap}
 .add.in{background:var(--trail);border-color:var(--trail)}
 /* "On ballot" as a plain marker, when the rider cannot change the vote. */
@@ -43,17 +56,46 @@
 .bitem{display:flex;align-items:center;gap:.7rem;padding:.55rem 0;border-bottom:1px solid rgba(20,22,14,.1);font-size:.92rem}
 .bitem form{margin-left:auto}
 .bitem .x{background:none;border:0;padding:0;color:var(--clay);cursor:pointer;font-family:var(--mono);font-size:.7rem}
+/* The rider's order: rank, then the points it is worth, then the arrows. */
+.bitem .brank{font-family:var(--mono);font-weight:700;font-size:.85rem;min-width:1.1rem;color:var(--ink);align-self:flex-start;padding-top:.12rem}
+.bitem .bname{display:flex;flex-direction:column;gap:.1rem}
+.bitem .bpts{font-family:var(--mono);font-size:.68rem;color:#5d6052}
+.bitem .bacts{display:flex;align-items:center;gap:.5rem}
+.bitem .mv{background:none;border:1px solid rgba(20,22,14,.25);border-radius:4px;padding:.05rem .4rem;
+  color:var(--ink);cursor:pointer;font-family:var(--mono);font-size:.8rem;line-height:1.3}
+.bitem .mv:hover{border-color:var(--clay);color:var(--clay)}
+.bitem .mv:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
 .bempty{color:#595c4d;font-size:.90rem;padding:1rem 0}
 .vleft{font-family:var(--mono);font-size:.72rem;color:#595c4d;margin-top:1rem;line-height:1.5}
+/* Submit makes the ballot count and final (route-domain.md §8c). */
+.vsubmit{margin-top:1rem;display:flex;flex-direction:column;gap:.55rem;align-items:flex-start}
+.vsubmit-note{font-size:.85rem;color:#3d4034;line-height:1.45;margin:0}
+.vsubmit-btn{background:var(--trail);border-color:var(--trail);color:var(--ink)}
+.vsubmit-btn:disabled{background:none;border-color:rgba(20,22,14,.3);color:rgba(20,22,14,.45);cursor:not-allowed}
+.vsubmitted{margin-top:1rem;font-size:.9rem;line-height:1.45;color:var(--ink);border-left:3px solid var(--trail);padding-left:.7rem}
 .vnote{font-size:.90rem;color:#595c4d;margin-top:1rem;line-height:1.5;border-left:2px solid var(--glacier);padding-left:.7rem}
 .vneeds h2{font-size:1rem;margin:0 0 .4rem}
 .vneeds ul{margin:0;padding-left:1.1rem}
 /* The region picker sits in the dark header, so the tabs stay right under it. */
 .vregion{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-top:1.2rem}
 .vregion label{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.8)}
-.vregion select{font-family:var(--mono);font-size:.78rem;padding:.35rem .5rem;border-radius:5px;border:1px solid rgba(239,230,212,.5);background:var(--paper);color:var(--ink);max-width:100%}
 .vregion .add{border-color:var(--paper);color:var(--paper);padding:.4rem .8rem}
-.vregion select:focus-visible,.vregion .add:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+.vregion .add:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
 .flash-success{background:rgba(44,84,64,.12);border-left:3px solid var(--spruce-lift);color:var(--spruce-lift);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 .flash-error{background:rgba(179,38,30,.1);border-left:3px solid var(--danger);color:var(--danger-ink);padding:.7rem 1rem;border-radius:0 5px 5px 0;font-size:.9rem;margin-bottom:1.4rem}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Find a place: the ballot list is A to Z and complete. */
+.cfind{margin:.2rem 0 .6rem}
+.cfind input{width:100%;max-width:24rem;font-family:var(--mono);font-size:.78rem;padding:.45rem .8rem;border:1px solid rgba(20,22,14,.22);border-radius:30px;background:var(--paper)}
+.cfind input:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+.cand[hidden]{display:none}
+
+/* The vote just cast fades in on the ballot, in place of a confirmation line. */
+.bitem.bnew{animation:bnew-in .9s ease-out both}
+@keyframes bnew-in{from{opacity:0;background:rgba(255,90,31,.28)}to{opacity:1;background:transparent}}
+@media (prefers-reduced-motion:reduce){.bitem.bnew{animation:none}}
+
+/* A submitted ballot: ✓ on its category tab and on the ballot card (owner 2026-10-03). */
+.vdone{display:inline-flex;align-items:center;justify-content:center;width:1.15rem;height:1.15rem;margin-left:.35rem;
+  border-radius:50%;background:#2F6B45;color:#fff;font-size:.7rem;font-weight:700;line-height:1;vertical-align:middle;letter-spacing:0}

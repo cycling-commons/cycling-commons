@@ -8,17 +8,18 @@
   <div class="kicker" style="color:var(--trail)">{{ region ? cc_region_label(region.slug, region.name) ~ (region_country ? ', ' ~ region_country) : 'vote.kicker'|trans }}</div>
   <h1 class="disp">{{ 'vote.title'|trans }}</h1>
   {% if round %}
-    <div class="round">{{ 'vote.round'|trans({
+    <div class="round">{% include 'vote/_hemisphere.html.twig' with {hemisphere: round.hemisphere} only %}{{ 'vote.round'|trans({
       '%round%': 'vote.round_label'|trans({'%season%': round.season.labelKey|trans, '%year%': round.yearLabel}),
-      '%date%': round.lastDay|cc_date,
+      '%date%': round.lastVotingDay|cc_date,
     }) }}</div>
+    {% include 'vote/_countdown.html.twig' with {countdown: countdown, deadline: round.votingClosesAt, class: 'vcount'} only %}
   {% endif %}
   {# In the header, so the tabs stay right under it. A plain GET form:
      choosing a region needs no script. #}
   <form class="vregion" method="get" action="{{ path('vote') }}">
     <input type="hidden" name="cat" value="{{ category.value }}">
     <label for="v-region">{{ 'vote.region_label'|trans }}</label>
-    <select id="v-region" name="region">
+    <select id="v-region" name="region" class="sel-chip sel-chip--dark">
       <option value="">{{ 'vote.region_none'|trans }}</option>
       {% for country, list in regions %}
         <optgroup label="{{ country }}">
@@ -38,7 +39,8 @@
   <nav class="vtabs" aria-label="{{ 'vote.title'|trans|e('html_attr') }}">
     {% for c in categories %}
       <a class="{{ c == category ? 'on' }}"{{ c == category ? ' aria-current="page"' }}
-         href="{{ path('vote', region ? {region: region.slug, cat: c.value} : {cat: c.value}) }}">{{ c.labelKey|trans }}</a>
+         href="{{ path('vote', region ? {region: region.slug, cat: c.value} : {cat: c.value}) }}">{{ c.labelKey|trans }}
+        {%- if c.value in submitted_categories %} <span class="vdone" aria-hidden="true">✓</span><span class="vh"> ({{ 'vote.tab_submitted'|trans }})</span>{% endif %}</a>
     {% endfor %}
   </nav>
 
@@ -60,16 +62,35 @@
 
   {% if region %}
     {% set is_route = category.value == 'quality-rides' %}
-    {% set can_vote = open and missing is empty %}
+    {# A submitted ballot is final (route-domain.md §8c): no add, move or remove. #}
+    {% set can_vote = open and missing is empty and submitted_at is null %}
     {% set left = per_list - mine|length %}
     {% set verb = category.value in ['climbs', 'quality-rides'] ? 'vote.confirmed_rode' : (category.value == 'where-to-sleep' ? 'vote.confirmed_stayed' : 'vote.confirmed_been') %}
     <div class="vgrid">
       <div id="cands">
+        {# The list is A to Z and complete; a long one narrows by name (ballot.js
+           reveals it). Inside the list column, not beside it: .vgrid has two. #}
+        <div class="cfind" data-cand-find hidden>
+          <label class="vh" for="cand-find">{{ 'vote.find'|trans }}</label>
+          <input type="search" id="cand-find" placeholder="{{ 'vote.find'|trans|e('html_attr') }}" autocomplete="off">
+        </div>
         {% for c in candidates %}
           {% set voted = c.id in mine|keys %}
+          {% set card = cards[c.id] ?? null %}
+          {% set href = path('map') ~ '?' ~ (is_route ? 'route' : 'item') ~ '=' ~ c.id %}
           <div class="cand{{ pick == c.id ? ' picked' }}" id="c-{{ c.id }}">
+            {# A picture where there is one, else the kind's own icon; never a made-up image. #}
+            <a class="cshot" href="{{ href }}" tabindex="-1" aria-hidden="true">
+              {%- if card and card.photo %}<img src="{{ card.photo.sm }}" alt="" loading="lazy" width="72" height="54">
+              {%- elseif stay_kinds[c.id] is defined %}<span class="q-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" fill-rule="evenodd" d="{{ stay_paths[stay_kinds[c.id].kind] }}"/></svg></span>
+              {%- else %}{% include 'partials/_type_icon.html.twig' with {letter: category.letter} only %}{% endif -%}
+            </a>
             <div class="nm">
-              <h4><a href="{{ path('map') }}?{{ is_route ? 'route' : 'item' }}={{ c.id }}">{{ c.name }}</a></h4>
+              <h4><a href="{{ href }}">{{ c.name }}</a></h4>
+              {# A place to sleep says what kind it is, in words, and where (owner 2026-10-03). #}
+              {% set stay = stay_kinds[c.id] ?? null %}
+              {% if stay %}<div class="note">{{ ('vote.stay_kind.' ~ stay.kind)|trans }}{% if stay.town %} · {{ stay.town }}{% endif %}</div>
+              {% elseif card and card.note %}<div class="note">{{ card.note }}</div>{% endif %}
               <div class="m">{{ verb|trans({'%n%': c.confirmations}) }}</div>
             </div>
             {% if can_vote and (voted or left > 0) %}
@@ -83,7 +104,7 @@
                 {% else %}
                   {% if is_route %}
                     <label class="vh" for="b-{{ c.id }}">{{ 'vote.bike_label'|trans }}</label>
-                    <select id="b-{{ c.id }}" name="bike" required>
+                    <select id="b-{{ c.id }}" name="bike" class="sel-chip" required>
                       <option value="">{{ 'vote.bike_ph'|trans }}</option>
                       {# The general bikes, and the specialty bikes this route declares (route-domain.md §8.3). #}
                       {% for b in route_bikes[c.id] ?? bikes %}<option value="{{ b.value }}">{{ b.labelKey|trans }}</option>{% endfor %}
@@ -100,18 +121,30 @@
           <div class="bempty">{{ 'vote.empty'|trans }}</div>
         {% endfor %}
       </div>
+      {# The vote just cast fades in here, in place of a "your vote is in" line. #}
+      {% set just_added = app.flashes('vote_added')|first %}
       <div class="ballot">
-        <h3>{{ 'vote.ballot_heading'|trans }} · {{ category.labelKey|trans }}</h3>
-        <div id="ballot">
+        <h3>{{ 'vote.ballot_heading'|trans }} · {{ category.labelKey|trans }}
+          {%- if submitted_at %} <span class="vdone" aria-hidden="true">✓</span><span class="vh"> ({{ 'vote.tab_submitted'|trans }})</span>{% endif %}</h3>
+        <div id="ballot" data-points="{{ points|keys|map(k => points[k])|json_encode }}"
+             data-pts-many="{{ 'vote.points'|trans|e('html_attr') }}" data-pts-one="{{ 'vote.point'|trans|e('html_attr') }}">
+          {# In the rider's order: the first choice scores the most
+             (BallotRules::POINTS_BY_SLOT). The arrows swap a vote with its
+             neighbour; one form per row, so no script is needed. #}
           {% for b in ballot %}
-            <div class="bitem">
-              <span>{{ b.name }}{% if b.bike %} · {{ b.bike|trans }}{% endif %}</span>
+            <div class="bitem{{ just_added and b.id == just_added ? ' bnew' }}">
+              <span class="brank">{{ b.rank }}</span>
+              <span class="bname">{{ b.name }}{% if b.bike %} · {{ b.bike|trans }}{% endif %}
+                <small class="bpts">{{ (b.points == 1 ? 'vote.point' : 'vote.points')|trans({'%n%': b.points}) }}</small></span>
               {% if can_vote %}
-                <form method="post" action="{{ path('vote') }}">
+                <form method="post" action="{{ path('vote') }}" class="bacts">
                   <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
                   <input type="hidden" name="region" value="{{ region.slug }}">
                   <input type="hidden" name="cat" value="{{ category.value }}">
                   <input type="hidden" name="id" value="{{ b.id }}">
+                  {# Both arrows on every row, the ends hidden: ballot.js reorders in place and shows them again. #}
+                  <button class="mv" name="do" value="up" title="{{ 'vote.move_up'|trans }}"{{ loop.first ? ' hidden' }}>↑<span class="vh"> {{ 'vote.move_up'|trans }}: {{ b.name }}</span></button>
+                  <button class="mv" name="do" value="down" title="{{ 'vote.move_down'|trans }}"{{ loop.last ? ' hidden' }}>↓<span class="vh"> {{ 'vote.move_down'|trans }}: {{ b.name }}</span></button>
                   <button class="x" name="do" value="remove">{{ 'vote.remove'|trans }} ×<span class="vh"> {{ b.name }}</span></button>
                 </form>
               {% endif %}
@@ -120,16 +153,27 @@
             <div class="bempty">{{ 'vote.empty_ballot'|trans({'%m%': per_list}) }}</div>
           {% endfor %}
         </div>
-        <p class="vleft">
-          {{ (left <= 0 ? 'vote.left_none' : (left == 1 ? 'vote.left_one' : 'vote.left_many'))|trans({'%count%': left, '%m%': per_list}) }}
-          · {{ (voters >= threshold ? 'vote.voters_count' : 'vote.voters_needed')|trans({'%n%': voters, '%m%': threshold}) }}
-        </p>
-        <div class="vnote">{{ 'vote.threshold_note'|trans({'%m%': threshold}) }} <a href="{{ best_of_path({cat: category.value, cc: region.countryCode}) }}">{{ 'vote.see_results'|trans }}</a></div>
-        <div class="vnote">{{ 'vote.privacy_note'|trans }}</div>
+        {% if submitted_at %}
+          <p class="vsubmitted" role="status">{{ 'vote.submitted'|trans({'%date%': submitted_at|cc_date}) }}</p>
+        {% else %}
+          <p class="vleft">
+            {{ (left <= 0 ? 'vote.left_none' : (left == 1 ? 'vote.left_one' : 'vote.left_many'))|trans({'%count%': left, '%m%': per_list}) }}
+          </p>
+          {# Only a submitted ballot counts, and every vote must be filled first. #}
+          {% if can_vote and ballot is not empty %}
+            <form method="post" action="{{ path('vote') }}" class="vsubmit">
+              <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+              <input type="hidden" name="region" value="{{ region.slug }}">
+              <input type="hidden" name="cat" value="{{ category.value }}">
+              <p class="vsubmit-note">{{ (left > 0 ? 'vote.submit_needs' : 'vote.submit_note')|trans({'%m%': per_list}) }}</p>
+              <button class="add vsubmit-btn" name="do" value="submit"{{ left > 0 ? ' disabled' }}>{{ 'vote.submit'|trans }}</button>
+            </form>
+          {% endif %}
+        {% endif %}
       </div>
     </div>
-  {% else %}
-    <div class="vnote">{{ 'vote.privacy_note'|trans }}</div>
   {% endif %}
 </div>
+<script src="{{ asset('contribute/ballot.js') }}" defer></script>
+<script src="{{ asset('js/countdown.js') }}" defer></script>
 {% endblock %}

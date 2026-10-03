@@ -9,6 +9,7 @@ namespace App\Controller;
 use App\Catalog\BestOfPreview;
 use App\Catalog\BikeType;
 use App\Catalog\ItemType;
+use App\Catalog\StayKind;
 use App\Entity\User;
 use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
@@ -17,21 +18,23 @@ use App\Vote\BallotRefused;
 use App\Vote\BallotRegions;
 use App\Vote\BallotRules;
 use App\Vote\BallotService;
+use App\Vote\Countdown;
 use App\Vote\Hemisphere;
-use App\Vote\ListKey;
 use App\Vote\Round;
-use App\Vote\SeasonResults;
 use App\Vote\VoterEligibility;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * The season ballot: three votes per list, for one region and one kind of
- * place.
+ * The season ballot: a ranked handful of votes per list (BallotRules), for
+ * one region and one kind of place, cast in one season for the next one's
+ * list. The page shows the rider's own ballot and no count of anyone's votes.
  *
  * Server-rendered forms and no script: a vote is a POST that comes back to
  * the list it was cast in. The page is per rider, so it is never in the
@@ -54,8 +57,9 @@ final class BallotController extends AbstractController
         private readonly BallotCandidates $candidates,
         private readonly BallotRegions $regions,
         private readonly VoterEligibility $eligibility,
-        private readonly SeasonResults $results,
         private readonly ClockInterface $clock,
+        private readonly TranslatorInterface $translator,
+        private readonly BestOfPreview $cards,
     ) {
     }
 
@@ -95,22 +99,29 @@ final class BallotController extends AbstractController
             'route_bikes' => [],
             'csrf_id' => self::CSRF_ID,
             'per_list' => BallotRules::VOTES_PER_LIST,
-            'threshold' => BallotRules::RANKING_THRESHOLD,
+            'points' => BallotRules::POINTS_BY_SLOT,
             'round' => null,
+            'countdown' => null,
             'candidates' => [],
+            'cards' => [],
+            'stay_kinds' => [],
+            'stay_paths' => StayKind::PATHS,
             'mine' => [],
             'ballot' => [],
             'pick' => null,
-            'voters' => 0,
+            'submitted_at' => null,
+            'submitted_categories' => [],
         ];
 
         if (null !== $region) {
-            $round = Round::containing($this->clock->now(), Hemisphere::ofLatitude($region['mid']));
+            // The ballot open now fills next season's list (route-domain.md §8c).
+            $round = Round::votingAt($this->clock->now(), Hemisphere::ofLatitude($region['mid']));
             $mine = [];
             foreach ($this->ballots->mine($user, $type, $region['id'], $round) as $id => $bike) {
                 $mine[$id] = null !== $bike ? BikeType::tryFrom($bike)?->labelKey() : null;
             }
-            $candidates = $this->candidates->top($type, $region['id'], BallotRules::BALLOT_CANDIDATES);
+            // A to Z: the order on the ballot never favours a place (owner 2026-10-03).
+            $candidates = $this->candidates->alphabetical($type, $region['id'], BallotRules::BALLOT_CANDIDATES);
 
             // The pick and the rider's own votes are on the page however far down the list they sit.
             $wanted = array_keys($mine);
@@ -130,17 +141,26 @@ final class BallotController extends AbstractController
             $nameOf = array_column($candidates, 'name', 'id');
             $ballot = [];
             foreach ($mine as $id => $bikeKey) {
-                $ballot[] = ['id' => $id, 'name' => $nameOf[$id] ?? '', 'bike' => $bikeKey];
+                $rank = \count($ballot) + 1;
+                $ballot[] = ['id' => $id, 'name' => $nameOf[$id] ?? '', 'bike' => $bikeKey, 'rank' => $rank, 'points' => BallotRules::POINTS_BY_SLOT[$rank] ?? 0];
             }
 
             $view['round'] = $round;
+            $view['countdown'] = Countdown::of($this->clock->now(), $round->votingClosesAt());
             $view['candidates'] = $candidates;
+            // A picture and one line about each, the /best cards (owner 2026-10-03: "more info, photo if available").
+            $view['cards'] = $this->cards->cards($type, array_column($candidates, 'id'));
+            // A place to sleep without a picture shows its kind: hotel, house, tent, bunk, cabin.
+            if (ItemType::WhereToSleep === $type) {
+                $view['stay_kinds'] = $this->candidates->stayKinds(array_column($candidates, 'id'));
+            }
             if (ItemType::QualityRides === $type) {
                 $view['route_bikes'] = $this->candidates->bikesFor(array_column($candidates, 'id'));
             }
             $view['mine'] = $mine;
             $view['ballot'] = $ballot;
-            $view['voters'] = $this->results->voters(new ListKey($region['id'], $type), $round);
+            $view['submitted_at'] = $this->ballots->submittedAt($user, $type, $region['id'], $round);
+            $view['submitted_categories'] = $this->ballots->submittedCategories($user, $region['id'], $round);
         }
 
         return $this->render('vote/ballot.html.twig', $view);
@@ -155,16 +175,36 @@ final class BallotController extends AbstractController
 
         $id = self::positiveInt($form['id'] ?? null) ?? 0;
         try {
-            if ('remove' === ($form['do'] ?? null)) {
+            $do = $form['do'] ?? null;
+            if ('up' === $do || 'down' === $do) {
+                $moved = $this->ballots->move($user, $type, $id, 'up' === $do);
+                // Reordering is a background call from the page (ballot.js): no reload.
+                if (self::wantsJson($request)) {
+                    return new JsonResponse(['moved' => $moved]);
+                }
+            } elseif ('submit' === $do) {
+                $regionId = self::regionIdOf($this->regions->byCountry($request->getLocale()), \is_string($form['region'] ?? null) ? $form['region'] : '');
+                if (null === $regionId) {
+                    throw new BallotRefused(BallotRefused::BALLOT_INCOMPLETE);
+                }
+                $this->ballots->submit($user, $type, $regionId);
+                $this->addFlash('success', 'vote.submitted_flash');
+            } elseif ('remove' === $do) {
                 if ($this->ballots->remove($user, $type, $id)) {
                     $this->addFlash('success', 'vote.removed');
                 }
             } else {
                 $bike = $form['bike'] ?? null;
                 $this->ballots->cast($user, $type, $id, \is_string($bike) ? BikeType::tryFrom($bike) : null);
-                $this->addFlash('success', 'vote.saved');
+                // No "your vote is in" line: it read as if voting were done. The
+                // ballot shows the vote, and the row just added fades in there
+                // (owner 2026-10-03). One page view only, like any flash.
+                $this->addFlash('vote_added', (string) $id);
             }
         } catch (BallotRefused $e) {
+            if (self::wantsJson($request)) {
+                return new JsonResponse(['moved' => false, 'error' => $this->translator->trans($e->messageKey())], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
             $this->addFlash('error', $e->messageKey());
         }
 
@@ -175,6 +215,25 @@ final class BallotController extends AbstractController
         }
 
         return $this->redirectToRoute('vote', $back, Response::HTTP_SEE_OTHER);
+    }
+
+    private static function wantsJson(Request $request): bool
+    {
+        return \in_array('application/json', $request->getAcceptableContentTypes(), true);
+    }
+
+    /** @param array<string, list<RegionRow>> $regions */
+    private static function regionIdOf(array $regions, string $slug): ?int
+    {
+        foreach ($regions as $list) {
+            foreach ($list as $r) {
+                if ($r['slug'] === $slug) {
+                    return $r['id'];
+                }
+            }
+        }
+
+        return null;
     }
 
     /** @param array<string, list<RegionRow>> $regions */
