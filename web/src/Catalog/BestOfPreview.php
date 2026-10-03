@@ -39,7 +39,7 @@ use Doctrine\DBAL\Connection;
  * routesMatching(), and the template does not know which of the two it got.
  *
  * @phpstan-type Photo array{sm: string, credit: ?string, creditUrl: ?string, license: ?string}
- * @phpstan-type Ranked array{id: int, ref: ?string, name: string, kind: string, letter: string, note: ?string, photo: ?Photo, notePlaceholder: bool, photoPlaceholder: bool, commonsFile: ?string, filler: ?string, hue: int, votes: int, rides: int, share: int, place: ?int, shared: bool, handicapped: bool, onMap: bool, simulated: bool}
+ * @phpstan-type Ranked array{id: int, ref: ?string, name: string, kind: string, letter: string, note: ?string, photo: ?Photo, notePlaceholder: bool, photoPlaceholder: bool, commonsFile: ?string, filler: ?string, hue: int, votes: int, points: ?int, rides: int, share: int, place: ?int, shared: bool, handicapped: bool, onMap: bool, simulated: bool}
  * @phpstan-type Card array{note: ?string, photo: ?Photo, hue: int}
  * @phpstan-type Row array{id: int|string, name: string, attributes: string|null, ref: string|null, distance_m: int|string|null, lat: float|string|null, lng: float|string|null}
  *
@@ -493,6 +493,8 @@ final class BestOfPreview
             // while a full circle of hues puts a purple block on cream paper.
             'hue' => self::hue($seed),
             'votes' => $votes,
+            // Points are a real list's, after its round closed; the preview invents none.
+            'points' => null,
             'rides' => $rides,
             'share' => 0,
             // ranking() numbers the rows once the list is cut. Nothing is

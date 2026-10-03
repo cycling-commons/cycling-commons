@@ -25,10 +25,15 @@ use App\Routing\LocalePrefix;
 use App\Routing\LocalizedPath;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
+use App\Vote\BallotRegions;
 use App\Vote\BallotRules;
 use App\Vote\BestOfResults;
+use App\Vote\Countdown;
+use App\Vote\Hemisphere;
+use App\Vote\Round;
 use App\World\CuratorScopes;
 use Doctrine\DBAL\Connection;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -419,7 +424,7 @@ final class PageController extends AbstractController
      * shared cache can hold each combination (page-caching.md §3.2).
      */
     #[Route(LocalizedPath::BEST_OF, name: 'best_of')]
-    public function bestOf(Request $request, BestOfPreview $preview, BestOfResults $results, BestOfFilters $filters, RegionRegistryProvider $regions, SettingsProviderInterface $settings): Response
+    public function bestOf(Request $request, BestOfPreview $preview, BestOfResults $results, BestOfFilters $filters, RegionRegistryProvider $regions, SettingsProviderInterface $settings, BallotRegions $ballotRegions, ClockInterface $clock, RegionSilhouette $silhouette): Response
     {
         // One URL per filter state (BestOfFilters): any other spelling of the
         // same choice moves to it, so the page cache and a crawler see each
@@ -438,6 +443,29 @@ final class PageController extends AbstractController
         $cc = $normal['cc'] ?? null;
         $countries = $this->bestOfCountries($regions, $request->getLocale());
 
+        // A signed-in rider who opens the bare page lands on their own
+        // country, scrolled to their home region (owner 2026-10-03). Signed-in
+        // pages skip the shared cache, so the default never reaches anyone else.
+        $user = $this->getUser();
+        $homeSlugs = [];
+        if ($user instanceof User) {
+            $bySlugId = array_column($ballotRegions->all(), 'slug', 'id');
+            foreach ($user->getBaseRegionIds() as $id) {
+                if (isset($bySlugId[$id])) {
+                    $homeSlugs[] = $bySlugId[$id];
+                }
+            }
+            if ([] === $request->query->all()) {
+                foreach ($user->getBaseCountryCodes() as $code) {
+                    if (isset($countries[$code])) {
+                        $anchor = [] !== $homeSlugs ? '#r-'.$homeSlugs[0] : '';
+
+                        return new RedirectResponse($this->generateUrl('best_of', ['cc' => $code]).$anchor);
+                    }
+                }
+            }
+        }
+
         // Length and effort are comma-separated, because they are questions
         // with more than one honest answer (owner 2026-09-12). The bike is
         // one: a list narrowed by bike is the votes cast on that bike
@@ -447,7 +475,39 @@ final class PageController extends AbstractController
         $lengths = $many('len');
         $difficulties = $many('diff');
 
+        $rounds = null;
+        // The season chip lit when none is chosen: the season riders are in
+        // now, in the country's half of the world (owner 2026-10-03: "Now is
+        // never an option").
+        // The hemisphere most of the country's regions are in: Colombia has one
+        // region south of the equator and 32 north of it, and its page names
+        // the northern season. Each region's own list still follows its own
+        // latitude (BestOfResults). Everywhere reads the north.
+        $hemisphere = Hemisphere::North;
+        if (null !== $cc) {
+            $south = 0;
+            $inCountry = $ballotRegions->inCountry($cc);
+            foreach ($inCountry as $r) {
+                $south += Hemisphere::South === Hemisphere::ofLatitude($r['mid']) ? 1 : 0;
+            }
+            $hemisphere = 2 * $south > \count($inCountry) ? Hemisphere::South : Hemisphere::North;
+        }
+        $currentSeason = Round::containing($clock->now(), $hemisphere)->season;
+        // The round named beside the title: the chosen season's latest, else the current one.
+        $shownRound = null === $chosen ? Round::containing($clock->now(), $hemisphere) : Round::latestStarted($chosen, $hemisphere, $clock->now());
         if ($live) {
+            // Which season the page shows, said in words above the lists: the
+            // country's hemisphere, the north for Everywhere.
+            $now = $clock->now();
+            $shown = null === $chosen ? Round::containing($now, $hemisphere) : Round::latestStarted($chosen, $hemisphere, $now);
+            $rounds = [
+                'shown' => $shown,
+                'voted' => Round::containing($shown->votingOpensAt(), $hemisphere),
+                'next' => Round::votingAt($now, $hemisphere),
+                'countdown' => Countdown::of($now, Round::votingAt($now, $hemisphere)->votingClosesAt()),
+                'now' => null === $chosen,
+                'southNote' => null === $cc,
+            ];
             // No season chosen is "Now": each region's open round, which
             // south of the equator is another season.
             $season = $chosen;
@@ -457,12 +517,17 @@ final class PageController extends AbstractController
                 ? $results->everywhere($type, $chosen, $bike, $difficulties, $lengths)
                 : $results->byRegion($type, $chosen, $cc, $bike, $difficulties, $lengths);
         } else {
-            $season = $chosen ?? Season::current(new \DateTimeImmutable());
+            $season = $chosen ?? $currentSeason;
             $ranking = $preview->ranking($type, $season, $cc, $bikes, $difficulties, null, $lengths);
             // A country big enough to have regions is asked region by region:
             // one national top ten flattens the Alps into the Ardennes and
             // tells a rider near neither of them anything (owner 2026-09-12).
             $byRegion = null === $cc ? null : $preview->byRegion($type, $season, $cc, $bikes, $difficulties, BestOfPreview::TOP_N, $lengths);
+        }
+        // The rider's home regions lead a country's list.
+        if (null !== $byRegion && [] !== $homeSlugs) {
+            $home = array_flip($homeSlugs);
+            usort($byRegion['ranked'], static fn (array $a, array $b): int => (isset($home[$b['slug']]) ? 1 : 0) <=> (isset($home[$a['slug']]) ? 1 : 0));
         }
 
         return $this->render('pages/best_of.html.twig', [
@@ -485,6 +550,13 @@ final class PageController extends AbstractController
             'length' => $lengths,
             'ranking' => $ranking,
             'regions' => $byRegion,
+            'rounds' => $rounds,
+            'current_season' => $currentSeason,
+            'shown_round' => $shownRound,
+            // The country's flag beside the title, as on /regions; none for Everywhere or a code without one.
+            'outline' => null !== $cc ? $silhouette->forCountry($cc) : null,
+            'flag' => null !== $cc && is_file($this->getParameter('kernel.project_dir').'/assets/flags/'.strtolower($cc).'.svg') ? 'flags/'.strtolower($cc).'.svg' : null,
+            'home_regions' => $homeSlugs,
         ]);
     }
 

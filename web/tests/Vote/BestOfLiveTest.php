@@ -10,6 +10,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Entity\User;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettingsWriter;
 use Doctrine\DBAL\Connection;
@@ -91,7 +92,7 @@ final class BestOfLiveTest extends WebTestCase
                 $this->db->insert('season_vote', [
                     'user_id' => $user, 'region_id' => $regionId, 'category' => $category, 'subject_id' => $subject,
                     'bike_type' => $bike, 'season' => $season, 'round_start' => $roundStart, 'slot' => $slot + 1,
-                    'created_at' => $roundStart.' 10:00:00',
+                    'created_at' => $roundStart.' 10:00:00', 'submitted_at' => $roundStart.' 10:05:00',
                 ]);
             }
         }
@@ -109,7 +110,9 @@ final class BestOfLiveTest extends WebTestCase
         $a = (int) $this->climb($rid, 'Col A')->getId();
         $b = (int) $this->climb($rid, 'Col B')->getId();
         $c = (int) $this->climb($rid, 'Col C')->getId();
-        $this->voters($rid, 5, [$a, $b]);
+        // A and B 51 points each (10 + 7 from three riders each way), C 10.
+        $this->voters($rid, 3, [$a, $b]);
+        $this->voters($rid, 3, [$b, $a]);
         $this->voters($rid, 1, [$c]);
 
         $crawler = $this->client->request('GET', '/best?cc=XA');
@@ -118,9 +121,14 @@ final class BestOfLiveTest extends WebTestCase
         self::assertSelectorNotExists('.prev');
         $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Ranked Hills'));
         self::assertCount(1, $group);
-        self::assertStringContainsString('Spring 2027', $group->text());
-        self::assertStringContainsString('6 voters', $group->text());
+        self::assertStringNotContainsString('Spring 2027', $group->text(), 'the title names the round, not each region (owner 2026-10-03)');
+        self::assertCount(0, $group->filter('.nr-chip'), 'a ranked list says nothing about a ranking it has');
+        self::assertStringNotContainsString('Vote for next season', $group->text(), 'one way to the ballot, the button beside the filters');
+        self::assertStringNotContainsString('voters', $group->text(), 'no voter count in public (route-domain.md §8c)');
+        self::assertStringNotContainsString('votes', $group->text(), 'no vote count in public');
         self::assertSame(['1=', '1=', '3'], $group->filter('ol.rank .n')->each(static fn ($n): string => trim($n->text())));
+        // A closed round shows its points (owner 2026-10-03): 3 x 10 + 3 x 7 each, and one first choice.
+        self::assertSame(['51 points', '51 points', '10 points'], $group->filter('ol.rank .pts')->each(static fn ($n): string => trim($n->text())));
         self::assertStringNotContainsString('Lorem ipsum', $group->text(), 'a real card carries no filler');
     }
 
@@ -134,7 +142,7 @@ final class BestOfLiveTest extends WebTestCase
 
         $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Quiet Vale'));
         self::assertStringContainsString('No ranking yet', $group->text());
-        self::assertStringContainsString('2 of 5 voters', $group->text());
+        self::assertStringNotContainsString('voters', $group->text());
         self::assertStringContainsString('Col Quiet', $group->text());
         self::assertCount(0, $group->filter('ol.pod3'), 'no podium before the threshold');
     }
@@ -254,7 +262,7 @@ final class BestOfLiveTest extends WebTestCase
         self::assertStringContainsString('Empty Vale', $crawler->filter('section.quiet')->text());
         $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Idle Hills'));
         self::assertStringContainsString('No ranking yet', $group->text());
-        self::assertStringContainsString('0 of 5 voters', $group->text());
+        self::assertStringNotContainsString('voters', $group->text());
         self::assertStringContainsString('Col Idle', $group->text());
         self::assertSame(0, (int) $this->db->fetchOne('SELECT COUNT(*) FROM season_result WHERE region_id IN (?, ?)', [$empty, $idle]));
     }
@@ -310,14 +318,16 @@ final class BestOfLiveTest extends WebTestCase
             'subject_id' => $a, 'subject_name' => 'Col Again', 'votes' => 6, 'score' => 24, 'handicapped' => 'false',
             'place' => 1, 'wins_before' => 0, 'list_position' => 1, 'voters' => 6, 'frozen_at' => '2026-06-01 02:00:00',
         ]);
-        $this->voters($rid, 5, [$a, $b]);
+        // Again 44 points (2 x 10 + 2 x 7 + 10), x0.75 = 33; New 34 (2 x 7 + 2 x 10).
+        $this->voters($rid, 2, [$a, $b]);
+        $this->voters($rid, 2, [$b, $a]);
         $this->voters($rid, 1, [$a]);
 
         $crawler = $this->client->request('GET', '/best?cc=XA');
 
         $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Ranked Hills'));
         self::assertSame(['Col New', 'Col Again'], $group->filter('ol.rank .nm a')->each(static fn ($n): string => trim($n->text())));
-        self::assertSame(['width:100%', 'width:90%'], $group->filter('ol.rank .bar i')->each(static fn ($n): string => (string) $n->attr('style')));
+        self::assertSame(['width:100%', 'width:97%'], $group->filter('ol.rank .bar i')->each(static fn ($n): string => (string) $n->attr('style')));
     }
 
     /** A route list narrowed to one bike counts only the votes cast on that bike. */
@@ -335,25 +345,49 @@ final class BestOfLiveTest extends WebTestCase
         self::assertNotContains('Road Hills', self::headings($crawler));
     }
 
+    /** route-domain.md §8c: votes for a season still open to voting never reach the page. */
+    public function testVotesOnAnOpenBallotStayOffThePage(): void
+    {
+        $rid = $this->region('xa-next', 'Next Hills');
+        $a = (int) $this->climb($rid, 'Col Next')->getId();
+        // In April riders vote for summer 2027; last summer had no votes.
+        $this->voters($rid, 6, [$a], 'climbs', null, 'summer', '2027-06-01');
+
+        $crawler = $this->client->request('GET', '/best?season=summer&cc=XA');
+
+        $group = $crawler->filter('.rgroup')->reduce(static fn ($n): bool => str_contains($n->text(), 'Next Hills'));
+        self::assertStringContainsString('Seasonal rounds 2026', $crawler->filter('.kicker')->first()->text(), 'last summer, the one that has started');
+        self::assertSame('No ranking yet', trim($group->filter('h2 .nr-chip')->text()), 'beside the region name (owner 2026-10-03)');
+        self::assertCount(0, $group->filter('ol.pod3'));
+        self::assertSame(0, (int) $this->db->fetchOne("SELECT COUNT(*) FROM season_result WHERE round_start = '2027-06-01'"));
+    }
+
     /** The page says what the Commons keeps: each rider's votes, seen by that rider only (route-domain.md §8d, privacy). */
     public function testThePageSaysWhoSeesAVote(): void
     {
         $this->client->request('GET', '/best');
 
         $html = (string) $this->client->getResponse()->getContent();
-        self::assertStringContainsString('Only you see what you voted for. These pages show totals.', $html);
-        self::assertStringContainsString('Every season starts empty.', $html);
+        self::assertStringNotContainsString('A list is published when voting for its season closes.', $html, 'removed (owner 2026-10-03)');
+        self::assertStringNotContainsString('Every season starts empty.', $html, 'not true: the handicap carries last year over (owner 2026-10-03)');
         self::assertStringNotContainsString('never what they ranked', $html);
         self::assertStringNotContainsString('re-ranked', $html);
     }
 
-    public function testNowIsTheDefaultSeason(): void
+    /** Owner 2026-10-03: no "Now" chip; the season riders are in is lit, and its chip is the bare URL. */
+    public function testTheCurrentSeasonIsTheDefaultChip(): void
     {
         $this->region('xa-ranked', 'Ranked Hills');
 
         $crawler = $this->client->request('GET', '/best?cc=XA');
 
-        self::assertContains('Now', $crawler->filter('.frow a.on')->each(static fn ($n): string => trim($n->text())));
+        $lit = $crawler->filter('.frow a.on')->each(static fn ($n): string => trim($n->text()));
+        self::assertContains('Spring', $lit);
+        self::assertNotContains('Now', $crawler->filter('.frow a')->each(static fn ($n): string => trim($n->text())));
+        $spring = $crawler->filter('.frow a')->reduce(static fn ($n): bool => 'Spring' === trim($n->text()));
+        self::assertStringNotContainsString('season=', (string) $spring->attr('href'));
+        $summer = $crawler->filter('.frow a')->reduce(static fn ($n): bool => 'Summer' === trim($n->text()));
+        self::assertStringContainsString('season=summer', (string) $summer->attr('href'));
     }
 
     public function testWhileVotingIsOffThePreviewStays(): void
@@ -363,5 +397,103 @@ final class BestOfLiveTest extends WebTestCase
         $this->client->request('GET', '/best');
 
         self::assertSelectorExists('.prev');
+    }
+
+    /** Owner 2026-10-03: the title names the season shown, and beside the filters the open ballot is a button. */
+    public function testThePageSaysWhichSeasonItShows(): void
+    {
+        $this->climb($this->region('xa-season', 'Season Hills'), 'Col Season');
+
+        $crawler = $this->client->request('GET', '/best?cc=XA');
+
+        self::assertSame('The best of Spring', trim($crawler->filter('h1')->text()));
+        self::assertSame('Spring', $crawler->filter('h1 em')->text());
+        self::assertSame('Seasonal rounds 2027', trim($crawler->filter('.kicker')->first()->text()));
+        $line = $crawler->filter('.season-now')->text();
+        self::assertStringContainsString('Voting for Summer 2027 is open until', $line);
+        self::assertSame('Vote for next season', trim($crawler->filter('.season-now a.vote-cta')->text()));
+        $winter = $this->client->request('GET', '/best?season=winter&cc=XA');
+        self::assertSame('The best of Winter', trim($winter->filter('h1')->text()));
+        self::assertSame('Seasonal rounds 2026-27', trim($winter->filter('.kicker')->first()->text()));
+        $everywhere = $this->client->request('GET', '/best');
+        self::assertSame('Everywhere', trim($everywhere->filter('.hscope')->text()));
+        self::assertCount(0, $everywhere->filter('.hscope img'), 'no flag for Everywhere');
+        self::assertCount(0, $crawler->filter('.hscope img'), 'XA has no flag file');
+        $this->db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('be-flag', 'Flag Vale', ST_GeomFromText('POLYGON((5 50,5 51,6 51,6 50,5 50))', 4326), 1000, 'BE', 'BEFLAG', 4, 'test', NOW(), NOW())",
+        );
+        self::assertCount(0, $crawler->filter('.hscope .hout'), 'no outline without a country row');
+        // The country row (admin level 2) carries the outline the title draws.
+        $this->db->executeStatement(
+            "INSERT INTO region (slug, name, geom, outline, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('be-country', 'Belgium', ST_GeomFromText('POLYGON((4 50,4 51,6 51,6 50,4 50))', 4326), '[[4,50,6,50,6,51,4,51,4,50]]', 30000, 'BE', 'BE', 2, 'test', NOW(), NOW())",
+        );
+        $belgium = $this->client->request('GET', '/best?cc=BE');
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $belgium->filter('.hscope img[src*="flags/be"]'));
+        self::assertCount(1, $belgium->filter('.hscope svg.hout path'));
+        self::assertStringNotContainsString('South of the equator', $line, 'a country has one hemisphere');
+
+        $everywhere = $this->client->request('GET', '/best')->filter('.season-now')->text();
+        self::assertStringContainsString('South of the equator', $everywhere);
+    }
+
+    /** Owner 2026-10-03: a signed-in rider lands on their own country, their home region first. */
+    public function testASignedInRiderOpensOnTheirHomeRegion(): void
+    {
+        $other = $this->region('xa-alpha', 'Alpha Vale');
+        $home = $this->region('xa-home', 'Zulu Home', 52.0);
+        $this->climb($other, 'Col Alpha');
+        $this->climb($home, 'Col Home');
+        $rider = (new User())->setEmail('best-home-'.bin2hex(random_bytes(3)).'@test.test')->setDisplayName('Homer');
+        $rider->setPassword('x');
+        $rider->setBaseRegionIds([$home])->setBaseCountryCodes(['XA']);
+        $this->em->persist($rider);
+        $this->em->flush();
+        $this->client->loginUser($rider);
+
+        $this->client->request('GET', '/best');
+
+        self::assertResponseRedirects('/best?cc=XA#r-xa-home');
+        $crawler = $this->client->request('GET', '/best?cc=XA');
+        $first = $crawler->filter('.rgroup')->first();
+        self::assertSame('r-xa-home', $first->attr('id'));
+        self::assertStringContainsString('Your region', $first->filter('h2')->text());
+        self::assertCount(1, $crawler->filter('.rgroup.home'));
+    }
+
+    public function testAnAnonymousVisitorKeepsTheBarePage(): void
+    {
+        $this->client->request('GET', '/best');
+
+        self::assertResponseIsSuccessful();
+    }
+
+    /** Owner 2026-10-03: beside the filters, how long the ballot stays open, counting down. */
+    public function testTheOpenBallotCountsDown(): void
+    {
+        $crawler = $this->client->request('GET', '/best');
+
+        // 10 April 2027, 12:00 UTC; summer's ballot closes on 1 June: 51 days.
+        $count = $crawler->filter('.season-now [data-countdown]');
+        self::assertSame('51 days left', trim($count->text()));
+        self::assertSame('2027-06-01T00:00:00+00:00', $count->attr('data-deadline'));
+        self::assertSame('%h% h %m% min left', $count->attr('data-t-hm'));
+    }
+
+    /** Owner 2026-10-03: a southern round carries a globe with its southern half filled. */
+    public function testASouthernCountryShowsTheSouthernHalfOfTheGlobe(): void
+    {
+        $this->db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('nz-south', 'South Vale', ST_GeomFromText('POLYGON((170 -45,170 -44,171 -44,171 -45,170 -45))', 4326), 1000, 'NZ', 'NZSOUTH', 4, 'test', NOW(), NOW())",
+        );
+
+        $crawler = $this->client->request('GET', '/best?cc=NZ');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('South of the equator', $crawler->filter('.season-now .vopen svg.hemi')->attr('aria-label'));
+        self::assertStringContainsString('Voting for Winter 2027', $crawler->filter('.season-now .vopen')->text(), 'April is southern autumn: the open ballot is for the southern winter');
     }
 }

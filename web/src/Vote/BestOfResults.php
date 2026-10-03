@@ -19,12 +19,14 @@ use Psr\Clock\ClockInterface;
  * category and season, in the shape {@see BestOfPreview::byRegion()} hands
  * the page, so the page and its cards stay the ones the preview designed.
  *
- * A list is ranked from 5 voters; before that it reads "No ranking yet" and
- * shows the most confirmed places with their votes so far.
+ * Every list shown is one whose ballot has closed: riders voted for it in
+ * the season before, and it is published when its own season starts. A list
+ * is ranked from 5 voters; below that it reads "No ranking yet" and shows the
+ * most confirmed places. The page shows places, never vote or voter counts.
  *
- * No season chosen means each region's open round, so a country south of the
- * equator shows its own season. A chosen season means each region's most
- * recent round of it.
+ * No season chosen means each region's current round, so a country south of
+ * the equator shows its own season. A chosen season means each region's most
+ * recent round of it that has started.
  *
  * @phpstan-import-type Ranked from BestOfPreview
  * @phpstan-import-type RegionRow from BallotRegions
@@ -92,7 +94,7 @@ final class BestOfResults
             $round = $this->round($region, $season);
             $list = $hasVotes
                 ? $this->results->list(new ListKey($region['id'], $type, $bike), $round)
-                : ['voters' => 0, 'ranked' => false, 'closed' => $round->hasClosedBy($this->clock->now()), 'entries' => []];
+                : ['voters' => 0, 'ranked' => false, 'closed' => true, 'entries' => []];
             if (!$list['ranked'] && !$hasCandidates) {
                 $quiet[] = $named;
 
@@ -162,7 +164,9 @@ final class BestOfResults
 
     /**
      * The regions with at least `$min` voters in their own round of this
-     * list, counted or stored, with that number. Every condition is on the
+     * list, counted or stored, with that number. Every round asked about has
+     * started, so its ballot has closed: this never counts a ballot riders
+     * can still vote in. Every condition is on the
      * indexed (region_id, category, round_start) of the two tables. A
      * specialty bike's route gate is left to the list itself, so for one the
      * number is an upper bound: a region may then fall short, none is missed.
@@ -199,7 +203,7 @@ final class BestOfResults
         $rows = $this->db->fetchAllAssociative(
             "SELECT region_id, MAX(voters) AS voters FROM (
                  SELECT region_id, COUNT(DISTINCT user_id) AS voters FROM season_vote
-                  WHERE $lists$bikeVote
+                  WHERE $lists$bikeVote AND submitted_at IS NOT NULL
                   GROUP BY region_id HAVING COUNT(DISTINCT user_id) >= :min
                  UNION ALL
                  SELECT region_id, MAX(voters) AS voters FROM season_result
@@ -304,6 +308,12 @@ final class BestOfResults
                 'filler' => null,
                 'hue' => $card['hue'],
                 'votes' => $p['votes'],
+                /* The points the closed round gave it, before the x0.75 the
+                   row's own mark explains (owner 2026-10-03: "we will show the
+                   points for the closed season"). Every list here is closed;
+                   none below the threshold shows any. A score is kept in
+                   quarter points, x4, or x3 when handicapped. */
+                'points' => null === $p['place'] ? null : intdiv($p['score'], $p['handicapped'] ? BallotRules::HANDICAP_QUARTERS : BallotRules::FULL_QUARTERS),
                 'rides' => $rides[$p['id']] ?? 0,
                 'share' => min(100, (int) round(100 * $p['score'] / $lead)),
                 'place' => $p['place'],

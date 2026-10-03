@@ -54,13 +54,17 @@
         <small class="cred">{% if r.photo.creditUrl %}<a href="{{ r.photo.creditUrl }}" rel="noopener nofollow">{{ r.photo.credit }}</a>{% else %}{{ r.photo.credit }}{% endif %}{% if r.photo.license %} · {{ r.photo.license }}{% endif %}</small>
       {% endif %}
     </span>
-    <span class="ct">{{ verb|trans({'%votes%': r.votes, '%n%': r.rides}) }}</span>
-    {# On the winners too (owner 2026-09-13). The number says how many voted;
-       the bar says how far ahead of the winner they are, and first place
-       reading a full bar is what makes the shorter ones mean anything. #}
+    {# The points of a closed round's ranked list (owner 2026-10-03); a ballot
+       still open never reaches this page. #}
+    <span class="ct">{% if r.points is defined and r.points is not null %}<b class="pts">{{ (r.points == 1 ? 'vote.point' : 'vote.points')|trans({'%n%': r.points}) }}</b> · {% endif %}{{ verb|trans({'%votes%': r.votes, '%n%': r.rides}) }}</span>
+    {# On the winners too (owner 2026-09-13). No vote or voter number is shown
+       (owner 2026-10-02); the bar says how close to the winner a row is, and
+       first place reading a full bar is what makes the shorter ones mean
+       anything. #}
     {% if r.place %}<span class="bar" aria-hidden="true"><i style="width:{{ r.share }}%"></i></span>{% endif %}
   </li>
 {% endmacro %}
+{% macro round_label(r) %}{{ 'vote.round_label'|trans({'%season%': r.season.labelKey|trans, '%year%': r.yearLabel}) }}{% endmacro %}
 {% macro region_links(list) %}{% for r in list %}<a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a>{{ not loop.last ? ' · ' }}{% endfor %}{% endmacro %}
 {% import _self as best %}
 {# Each chip carries the CURRENT set with itself added or removed, so a link
@@ -70,8 +74,14 @@
 {# The same dark band every other top-level page opens with (.chero, shared
    in atlas.css), so this one does not read as a different site. #}
 <div class="chero"><div class="wrap">
-  <div class="kicker" style="color:var(--trail)">{% trans %}best.kicker{% endtrans %}</div>
-  <h1 class="disp">{% trans %}best.title{% endtrans %}</h1>
+  <div class="kicker" style="color:var(--trail)">{{ 'best.kicker'|trans({'%year%': shown_round.yearLabel}) }}</div>
+  {# The season in the title, in italics, and beside it what is loaded: the
+     country (or Everywhere) and the round (owner 2026-10-03). #}
+  <div class="htitle">
+    <h1 class="disp">{{ ('best.title_' ~ (season ?: current_season).value)|trans|rich }}</h1>
+    {# The country with its flag, as on /regions; the year is in the kicker. #}
+    <p class="hscope">{% if outline %}<svg class="hout" viewBox="0 0 {{ outline.width }} {{ outline.height }}" role="presentation" focusable="false" aria-hidden="true"><path d="{{ outline.country }}" fill-rule="evenodd"/></svg>{% endif %}{% if flag %}<img src="{{ asset(flag) }}" alt="" width="28" height="21">{% endif %}{{ country and countries[country] is defined ? countries[country] : 'best.everywhere'|trans }}</p>
+  </div>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem">{% trans %}best.lead{% endtrans %}</p>
 </div></div>
 
@@ -79,6 +89,8 @@
   {# Said once, loudly, and never removed while the numbers are invented. #}
   {% if not live %}<p class="prev">{% trans %}best.preview{% endtrans %}</p>{% endif %}
 
+  {# The filters, and beside them the ballot that is open now. #}
+  <div class="best-top">
   <div class="filters">
     <div class="frow">
       <b>{% trans %}best.f_category{% endtrans %}</b>
@@ -88,13 +100,13 @@
     </div>
     <div class="frow">
       <b>{% trans %}best.f_season{% endtrans %}</b>
-      {# Live, no season is each region's open round: south of the equator
-         that is another season. #}
-      {% if live %}
-        <a class="{{ season is null ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, season: null})) }}">{% trans %}best.season_now{% endtrans %}</a>
-      {% endif %}
+      {# No "Now" chip (owner 2026-10-03): the season riders are in is lit by
+         default, and its chip is the bare URL, so one season has one URL.
+         With no season chosen each region shows its own current round, which
+         south of the equator is another season. #}
       {% for s in seasons %}
-        <a class="{{ season and s == season ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, season: s.value})) }}">{{ ('map.season_' ~ s.value)|trans }}</a>
+        {% set lit = season ? s == season : s == current_season %}
+        <a class="{{ lit ? 'on' }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, season: s == current_season ? null : s.value})) }}">{{ ('map.season_' ~ s.value)|trans }}</a>
       {% endfor %}
     </div>
     {# A select, not chips. The country list is every onboarded country and
@@ -111,13 +123,14 @@
       {% if difficulty %}<input type="hidden" name="diff" value="{{ difficulty|join(',') }}">{% endif %}
       {% if length %}<input type="hidden" name="len" value="{{ length|join(',') }}">{% endif %}
       <b><label for="f-cc">{% trans %}best.f_where{% endtrans %}</label></b>
-      <select id="f-cc" name="cc">
+      <select id="f-cc" name="cc" class="sel-chip">
         <option value="">{% trans %}best.everywhere{% endtrans %}</option>
         {% for cc, label in countries %}
           <option value="{{ cc }}"{{ cc == country ? ' selected' : '' }}>{{ label }}</option>
         {% endfor %}
       </select>
-      <button type="submit" class="chip">{% trans %}best.show{% endtrans %}</button>
+      {# Hidden by best-scope.js, which opens the country on pick; kept for a page without script. #}
+      <button type="submit" class="chip" data-scope-show>{% trans %}best.show{% endtrans %}</button>
       {# Revealed by best-globe.js: without it the button would open nothing. #}
       <button type="button" class="chip" id="best-globe-toggle" aria-pressed="false" hidden>{% trans %}best.on_globe{% endtrans %}</button>
       <span hidden>{% for cc, label in countries %}<a data-cc="{{ cc }}" rel="nofollow" href="{{ best_of_path(q|merge({cat: category.value, cc: cc})) }}">{{ label }}</a>{% endfor %}</span>
@@ -150,6 +163,18 @@
       </div>
     {% endif %}
   </div>
+  {# The ballot open now, beside the filters (owner 2026-10-03): the title
+     already names the season shown, so this says only when voting for the
+     next one closes, with the way in (route-domain.md §8c). #}
+  {% if rounds %}
+    <aside class="season-now">
+      <p class="vopen">{% include 'vote/_hemisphere.html.twig' with {hemisphere: rounds.next.hemisphere} only %}{{ 'best.voting_open'|trans({'%next%': best.round_label(rounds.next), '%date%': rounds.next.lastVotingDay|cc_date}) }}</p>
+      {% include 'vote/_countdown.html.twig' with {countdown: rounds.countdown, deadline: rounds.next.votingClosesAt, class: 'vcount vcount--light'} only %}
+      <a class="vote-cta" href="{{ path('vote', {cat: category.value}) }}">{{ 'best.vote_cta'|trans }}</a>
+      {% if rounds.southNote %}<p class="south">{{ 'best.south_note'|trans }}</p>{% endif %}
+    </aside>
+  {% endif %}
+  </div>
 
   {# The same globe /regions and /coverage use, loaded only when asked for, so
      a reader who never opens it does not carry MapLibre. #}
@@ -158,6 +183,8 @@
        data-maplibre-js="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}"
        data-maplibre-css="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.css') }}"
        data-style="https://tiles.openfreemap.org/styles/liberty" data-tiles="https://tiles.openfreemap.org/planet"></div>
+
+
 
   {# A country is read region by region: that is the unit a rider rides in,
      and one national list flattens the Alps into Brittany. Everywhere keeps
@@ -169,18 +196,14 @@
     {% if regions.ranked is not empty %}
     <div class="regions">
       {% for r in regions.ranked %}
-        <section class="rgroup">
-          <h2><a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a></h2>
-          {# A real list says which round it is and how many voted; below the
-             threshold it has no places, so no podium (route-domain.md §8d). #}
-          {% if r.result %}
-            <p class="meta">
-              {{ 'vote.round_label'|trans({'%season%': r.result.round.season.labelKey|trans, '%year%': r.result.round.yearLabel}) }}
-              · {% if r.result.ranked %}{{ 'best.voters'|trans({'%n%': r.result.voters}) }}{% else %}<b>{{ 'best.no_ranking'|trans }}</b> · {{ 'best.voters_needed'|trans({'%n%': r.result.voters, '%m%': threshold}) }}{% endif %}
-              {% if r.result.closed and not r.result.ranked %} · {{ 'best.closed_no_ranking'|trans }}{% endif %}
-              {% if not r.result.closed %} · <a href="{{ path('vote', {region: r.slug, cat: category.value}) }}">{{ 'best.vote_here'|trans }}</a>{% endif %}
-            </p>
-          {% endif %}
+        {% set mine = r.slug in home_regions %}
+        <section class="rgroup{{ mine ? ' home' }}" id="r-{{ r.slug }}">
+          <h2><a href="{{ path('region_detail', {slug: r.slug}) }}">{{ r.name }}</a>{% if mine %} <small class="home-chip">{{ 'best.your_region'|trans }}</small>{% endif %}
+            {%- if r.result and not r.result.ranked %} <small class="nr-chip">{{ 'best.no_ranking'|trans }}</small>{% endif %}</h2>
+          {# The title names the round; beside the name, "No ranking yet" for a
+             list below the threshold, which has no places, so no podium
+             (route-domain.md §8c, §8d). Never how many voted. The way to next
+             season's ballot is the button beside the filters, once. #}
           {% if r.result is null or r.result.ranked %}
             {% if r.top|length > 0 %}
               <ol class="rank pod3">{% for item in r.top|slice(0, 3) %}{{ best.row(item, true) }}{% endfor %}</ol>
@@ -213,9 +236,11 @@
         {# Live, these regions have nothing of the kind on the map, so there is
            nothing to vote for there yet: the way in is the map. #}
         <section class="quiet">
+          {# The regions first, then what is missing in them and what to do
+             (owner 2026-10-03: "Do you mean Brussels and Flanders?"). #}
           <h2>{% trans %}best.quiet_live_heading{% endtrans %}</h2>
-          <p>{% trans %}best.quiet_live{% endtrans %}</p>
           <p class="qlist">{{ best.region_links(regions.quiet) }}</p>
+          <p>{{ 'best.quiet_live'|trans({'%what%': category.labelKey|trans}) }}</p>
           <p><a class="btn btn-p" href="{{ path('map') }}">{% trans %}best.quiet_live_cta{% endtrans %}</a></p>
         </section>
       {% else %}
@@ -237,12 +262,12 @@
     {% if ranking|length > 3 %}
       <ol class="rank" start="4">{% for r in ranking|slice(3) %}{{ best.row(r, false) }}{% endfor %}</ol>
     {% endif %}
-    <p class="empty">{% trans %}best.after{% endtrans %}</p>
   {% endif %}
-  {% if live %}<p class="empty">{% trans %}best.after{% endtrans %}</p>{% endif %}
 </div></section>
 {% endblock %}
 {% block body_scripts %}
 <script src="{{ asset('pages/country-globe.js') }}" defer></script>
 <script src="{{ asset('pages/best-globe.js') }}" defer></script>
+<script src="{{ asset('pages/best-scope.js') }}" defer></script>
+<script src="{{ asset('js/countdown.js') }}" defer></script>
 {% endblock %}

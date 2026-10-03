@@ -9,7 +9,7 @@ namespace App\Catalog;
 use Doctrine\DBAL\Connection;
 
 /**
- * Inline SVG country outline with the region filled. Uses `region.outline`, not a slippy map.
+ * Inline SVG country outline, with a region filled or alone. Uses `region.outline`, not a slippy map.
  *
  * @api
  */
@@ -55,6 +55,26 @@ final class RegionSilhouette
             'width' => self::W,
             'height' => self::H,
         ];
+    }
+
+    /**
+     * The country's outline alone, for the title on /best (owner 2026-10-03:
+     * "also show the Belgian country outline").
+     *
+     * @return array{country: string, width: float, height: float}|null null without a usable outline
+     */
+    public function forCountry(string $countryCode): ?array
+    {
+        $rings = $this->rings(
+            'SELECT outline FROM region WHERE country_code = :cc AND admin_level = 2 LIMIT 1',
+            ['cc' => $countryCode],
+        );
+        $box = self::bbox($rings);
+        if (null === $box) {
+            return null;
+        }
+
+        return ['country' => self::path($rings, $box), 'width' => self::W, 'height' => self::H];
     }
 
     /**

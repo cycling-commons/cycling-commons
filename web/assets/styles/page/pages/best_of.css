@@ -5,13 +5,23 @@
    script, no nonce, and a shared cache can hold each combination
    (page-caching.md §3.2). */
 .filters{display:flex;flex-direction:column;gap:.9rem;margin:0 0 1.8rem}
-.frow{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+.frow{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;position:relative;padding-left:7.5rem}
+/* The title and, beside it, what is loaded. */
+.htitle{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem 1.4rem}
+.htitle h1 em{font-style:italic}
+.hscope{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--mono);font-size:.82rem;letter-spacing:.08em;
+  text-transform:uppercase;color:rgba(239,230,212,.85);margin:0}
+.hscope img{display:block;border-radius:2px;box-shadow:0 0 0 1px rgba(239,230,212,.25)}
+/* The country's outline, as on a region page. */
+.hout{display:block;height:2.6rem;width:auto}
+.hout path{fill:rgba(239,230,212,.12);stroke:rgba(239,230,212,.8);stroke-width:1.2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+/* The label sits in its own column, so chips that wrap line up under the
+   first chip, not under the label (owner 2026-10-03). */
 .frow > b{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--clay);flex:0 0 7rem}
+  color:var(--clay);position:absolute;left:0;top:.45rem;width:7rem}
 .frow a{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;
   text-decoration:none;padding:.3rem .65rem;border:1px solid rgba(20,22,14,.22);border-radius:30px;color:#595c4d}
-.frow select{font-family:var(--mono);font-size:.74rem;padding:.32rem .5rem;border-radius:5px;
-  border:1px solid rgba(20,22,14,.22);background:var(--paper);color:inherit;max-width:16rem}
+.frow select{max-width:16rem}
 .frow a:hover{border-color:var(--ink)}
 .frow a.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .globe{margin:0 0 1.6rem;border:1px solid rgba(20,22,14,.14);border-radius:10px;overflow:hidden}
@@ -92,7 +102,8 @@ ol.rank .cred a{color:inherit;border:0;text-decoration:underline}
 ol.rank .bar{flex:0 0 7rem;height:.4rem;border-radius:3px;background:rgba(20,22,14,.1);overflow:hidden}
 ol.rank .bar i{display:block;height:100%;background:var(--trail)}
 @media(max-width:720px){
-  .frow > b{flex:0 0 100%}
+  .frow{padding-left:0}
+  .frow > b{position:static;flex:0 0 100%;width:auto}
   ol.rank .bar{display:none}
 }
 /* On a phone the three columns do not fit: the name was squeezed to one
@@ -110,7 +121,25 @@ ol.rank .bar i{display:block;height:100%;background:var(--trail)}
    the name broke to one word a line and the counts landed on the next
    region (owner 2026-09-12). */
 .regions{margin-bottom:2.4rem;max-width:56rem}
-.rgroup{margin-bottom:1.8rem}
+.rgroup{margin-bottom:1.8rem;scroll-margin-top:5rem}
+/* The rider's home region leads and says so (owner 2026-10-03). */
+.rgroup.home{border-left:3px solid var(--trail);padding-left:.9rem}
+.home-chip{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--trail);color:var(--ink);padding:.12rem .45rem;border-radius:4px;margin-left:.4rem;vertical-align:middle}
+/* The filters with the open ballot beside them; stacked on a phone. */
+.best-top{display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:2rem;align-items:start;margin:0 0 1.8rem}
+.best-top .filters{margin:0}
+.season-now{padding:1rem 1.1rem;border-left:3px solid var(--trail);background:rgba(20,22,14,.04);border-radius:0 8px 8px 0}
+.season-now p{margin:0 0 .8rem;line-height:1.5}
+/* The globe and the line start at the same top (owner 2026-10-03). */
+.season-now .vopen{display:flex;align-items:flex-start}
+.season-now .vopen .hemi{margin-top:.2rem}
+.season-now .south{font-size:.82rem;color:#595c4d;margin:.8rem 0 0}
+.vote-cta{display:inline-block;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;
+  padding:.6rem .95rem;border-radius:6px;background:var(--trail);color:var(--ink);text-decoration:none;font-weight:700}
+.vote-cta:hover{background:var(--ink);color:var(--paper)}
+.vote-cta:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+@media (max-width:860px){.best-top{grid-template-columns:1fr}}
 .rgroup h2{font-size:1.05rem;margin:0 0 .3rem}
 .rgroup h2 a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(20,22,14,.2)}
 .rgroup h2 a:hover{border-color:var(--ink)}
@@ -128,3 +157,10 @@ ol.rank .bar i{display:block;height:100%;background:var(--trail)}
 .rgroup .nr{max-width:72ch;font-size:.9rem;color:#4a4d40;margin:0 0 .6rem}
 ol.rank .n .sh{text-decoration:none;margin-left:.1rem}
 ol.rank .hc,ol.rank .gone{font-family:var(--mono);font-size:.64rem;letter-spacing:.04em;color:#8a8d7c}
+
+/* The ballot's countdown beside the filters (owner 2026-10-03). */
+.vcount--light{font-family:var(--mono);font-weight:700;font-size:1.35rem;color:var(--ink);margin:-.3rem 0 .8rem;font-variant-numeric:tabular-nums}
+.vcount--light[data-step="hms"],.vcount--light[data-step="hm"]{color:var(--clay)}
+/* "No ranking yet" beside the region's name, like the "Your region" chip. */
+.nr-chip{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  border:1px solid rgba(20,22,14,.3);color:#3d4034;padding:.1rem .45rem;border-radius:4px;margin-left:.4rem;vertical-align:middle}
