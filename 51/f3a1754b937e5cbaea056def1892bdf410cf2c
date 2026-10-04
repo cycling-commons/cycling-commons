@@ -1,0 +1,48 @@
+docs/specs/account-and-auth.md
+  s_937283d41ef7bc::t_e88c9bf55ceadd 564,569-571,574
+  s_937283d41ef7bc::t_2b5e1bdcc00de4 565-568,572-573
+  s_937283d41ef7bc::t_474c81a7396bd1 1607
+  s_937283d41ef7bc::t_8242d252163d16 1124
+  s_937283d41ef7bc::t_2b0a5134205ff0 560,575-577,1125-1126,1608-1609
+web/src/Controller/JoinCountryController.php
+  s_937283d41ef7bc::t_b38741ebe26a73 53,106,108
+web/config/packages/rate_limiter.yaml
+  s_937283d41ef7bc::t_7dd2e060e2da1e 211
+  s_937283d41ef7bc::t_b38741ebe26a73 36,205-210,212-216,220,402
+web/translations/messages.fr.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 4373
+web/translations/messages.es.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 4408
+web/translations/messages.en.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 4399
+web/translations/messages.nl.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 4380
+web/src/Controller/SettingsController.php
+  s_937283d41ef7bc::t_93e4f1ded4d4c1 24,48-51,126-130,230-234,282-287
+web/tests/Security/PasswordReauthBudget.php
+  s_937283d41ef7bc::t_35292a44f9fe39 1-40
+web/translations/messages.de.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 4381
+web/tests/Auth/ProfileSettingsTest.php
+  s_937283d41ef7bc::t_178ff61440eff5 327,330-336,338-360,365-367,369-381
+  s_937283d41ef7bc::t_652834fad7ef12 12,328-329,337,361-364,368
+  s_937283d41ef7bc::t_c6ecf8560350cf 382-383
+docs/specs/security-architecture.md
+  s_937283d41ef7bc::t_474c81a7396bd1 623
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "51f3a1754b937e5cbaea056def1892bdf410cf2c",
+  "prompts": {},
+  "sessions": {
+    "s_937283d41ef7bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98a23f35-f764-496c-8456-1305521a51f9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
