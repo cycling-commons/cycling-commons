@@ -1,0 +1,50 @@
+web/translations/messages.nl.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 1671-1675
+web/assets/styles/page/security/2fa_setup.css
+  s_937283d41ef7bc::t_0d07315c9d2bed 12,14-16
+web/translations/messages.en.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 1675-1679
+docs/specs/account-and-auth.md
+  s_937283d41ef7bc::t_2b5e1bdcc00de4 429,537
+  s_937283d41ef7bc::t_e88c9bf55ceadd 395-400,406-411,424-428,430-433
+web/src/Form/TwoFactorSetupType.php
+  s_937283d41ef7bc::t_d8891ff5121f1e 8,18-22,31-59,68,79-84
+web/src/Controller/TwoFactorController.php
+  s_937283d41ef7bc::t_7dd2e060e2da1e 30
+  s_937283d41ef7bc::t_e4deff6c214c0f 18,21-22,29,31-35,54-55,78-89,92-93,97,122-123,130-170
+  s_937283d41ef7bc::t_da15a1b81868df 171-172
+web/tests/Auth/TwoFactorTest.php
+  s_937283d41ef7bc::t_fcfed29b853dee 524
+  s_937283d41ef7bc::t_da15a1b81868df 584,589-590
+  s_937283d41ef7bc::t_64ed9c80370166 9,118-159,475-523,525-583,585-588
+web/translations/messages.fr.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 1666-1670
+web/src/Security/TwoFactorSetupEnforcer.php
+  s_937283d41ef7bc::t_7dd2e060e2da1e 66-69
+  s_937283d41ef7bc::t_001129bbdb6b4d 40-46,60-65,70-71,75
+web/src/Security/NoRememberMeBeforeTwoFactor.php
+  s_937283d41ef7bc::t_3b6f41f9096d95 1-17,24-55
+  s_937283d41ef7bc::t_7dd2e060e2da1e 18-23
+web/translations/messages.es.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 1678-1682
+web/translations/messages.de.yaml
+  s_937283d41ef7bc::t_39ea8d39a79f6a 1671-1675
+web/templates/security/2fa_setup.html.twig
+  s_937283d41ef7bc::t_1b4c18536795b6 56-74,76,80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "be44ff5f7847cbf2b95a95b214fcbd25b39ed0e3",
+  "prompts": {},
+  "sessions": {
+    "s_937283d41ef7bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98a23f35-f764-496c-8456-1305521a51f9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
