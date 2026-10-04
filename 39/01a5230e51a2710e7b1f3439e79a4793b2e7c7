@@ -1,0 +1,14 @@
+web/.env
+  h_fb5318cde6cf17 105,107-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3901a5230e51a2710e7b1f3439e79a4793b2e7c7",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
