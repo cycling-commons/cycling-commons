@@ -248,9 +248,12 @@ evidence of good faith, and the four anti-spam layers do not care whether there
 is one. A signed-in reporter gets three things instead: the form pre-filled, the
 report attached to their account, and an answer when it is resolved.
 
-An address is optional. A report we cannot answer is still worth having: the
-fix helps everybody, including its author. A *wrong* address is refused, because
-the reporter would otherwise wait for an answer that bounced.
+**An address is required without an account** (owner 2026-08-28); a signed-in
+reporter is answered at their account address. A report nobody can be answered
+about is a dead end for the person who filed it, and hearing back is the one
+thing they wanted. A *wrong* address is refused too, because the reporter would
+otherwise wait for an answer that bounced (`BugReportController`,
+`support.bug.error.email_required`).
 
 **The address is kept until 24 months after the outcome**
 ({@see App\Support\BugReporterEmailRetention}). It exists to tell the reporter
@@ -660,7 +663,9 @@ resolved or declined mails the reporter, so the note is required for those two:
 "we are not fixing this" with no reason is the message that makes somebody never
 report anything again. A report with no address and no account mails nobody
 (`BugReport::isAnswerable()` false, "no address given"), so there the note is
-neither shown nor required, on any status (owner 2026-10-01).
+neither shown nor required, on any status (owner 2026-10-01). Only two kinds of
+row are like that: one filed before the address became required, and one whose
+address the 24-month retention sweep has cleared.
 
 Reported text renders through `|bug_markdown` (§15), which escapes first and
 sanitises after, and never through `|rich`: the translations profile allows
