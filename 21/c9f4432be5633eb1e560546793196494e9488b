@@ -1,0 +1,32 @@
+web/templates/pages/terms.html.twig
+  s_985749378da6fe::t_687480d37f69dd 122,125,128
+web/tests/Smoke/ContentPagesTest.php
+  s_985749378da6fe::t_f23c8e8eb779fb 79-87
+  s_985749378da6fe::t_2df3a942e08f3c 88-89
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_c9ae520cf1dda9 366,368,370
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_788abd45db4900 366,368,370
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_da53bbcb2bae09 367,369,371
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_62a7510d201ede 364,366,368
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_1c226082f1457f 366,368,370
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "21c9f4432be5633eb1e560546793196494e9488b",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
