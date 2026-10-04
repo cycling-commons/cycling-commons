@@ -1,0 +1,23 @@
+docs/specs/contact-and-support.md
+  s_937283d41ef7bc::t_f010dd8b88f3d2 814-820
+web/templates/emails/support_bug_outcome.html.twig
+  s_937283d41ef7bc::t_f010dd8b88f3d2 11-15,21
+web/tests/Support/BugDeskNotesTest.php
+  s_937283d41ef7bc::t_f010dd8b88f3d2 204-222
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b5edc2618954bd53428105ff9916ca381bf9234d",
+  "prompts": {},
+  "sessions": {
+    "s_937283d41ef7bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98a23f35-f764-496c-8456-1305521a51f9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
