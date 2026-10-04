@@ -54,9 +54,9 @@
 
   {% if report.status.value != 'moot' %}
     {% if reply_to|default(null) %}
-      <p style="margin:0 0 8px">If you think this is wrong, reply to this email with the reference above and a person will read it again. You can also take the matter to an out-of-court dispute settlement body, or to a court, in the country where you live. Nothing here takes that right away.</p>
+      <p style="margin:0 0 8px">If you think this is wrong, reply to this email with the reference above and we will read it again.</p>
     {% else %}
-      <p style="margin:0 0 8px">If you think this is wrong, you can take the matter to an out-of-court dispute settlement body, or to a court, in the country where you live. Nothing here takes that right away.</p>
+      <p style="margin:0 0 8px">If you think this is wrong, write to us through <a href="{{ url('contact') }}" style="color:#c2551f">our contact page</a> with the reference above and we will read it again.</p>
     {% endif %}
   {% endif %}
 

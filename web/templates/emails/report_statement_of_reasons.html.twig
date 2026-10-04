@@ -5,9 +5,9 @@
   is owed exactly when a restriction happened.
 
   Article 17(3) lists what it must contain, and every item below is one of them:
-  what was restricted, that it was a report and not our own scan, the ground in
-  our terms, the facts the curator relied on, whether a machine decided (it did
-  not: a person did, every time), and how to contest it.
+  what was restricted, that it came from a report, the ground in our terms, the
+  facts the curator relied on, who decided (a curator, which is the answer to
+  automated means), and how to contest it.
 
   The tone is deliberately not accusatory. Most upheld reports are honest
   mistakes about a gate, a surface or a photo, not bad faith.
@@ -43,7 +43,7 @@
     <blockquote style="margin:0 0 14px;padding:10px 14px;border-left:3px solid #8fb6a8;background:#f4efe3">{{ report.decisionNote|nl2br }}</blockquote>
   {% endif %}
 
-  <p style="margin:0 0 8px">This came from <strong>a report by another person</strong>, not from an automatic check. <strong>No machine made this decision.</strong> A curator read the content and the report and decided, as a person, that the rule above was broken.</p>
+  <p style="margin:0 0 8px">This came from <strong>a report</strong>. A curator read the content and the report and decided that the rule above was broken.</p>
 
   {% if report.ruleGround.isLegal %}
     <p style="margin:0 0 8px">The report said this was unlawful rather than simply against our rules, so we may also have had to keep a record of it.</p>
@@ -60,13 +60,13 @@
        the answer has to sit on the same row as the claim. #}
     <p style="margin:0 0 8px">This was a <strong>copyright claim</strong>{% if report.claimantName %}, made by <strong>{{ report.claimantName }}</strong>{% endif %}. {% if report.workOriginal %}They say the original is: {{ report.workOriginal }}{% endif %}</p>
 
-    <p style="margin:0 0 14px"><strong>If the work is yours, say so.</strong> <a href="https://cyclingcommons.org/report/{{ report.id }}/answer" style="color:#c2551f">Answer the claim here</a>, signed in with this account. Your answer goes on the same record as the claim, so whoever looks next reads both. You can answer once, so say everything at once. Nothing goes back up on a timer: a person decides.</p>
+    <p style="margin:0 0 14px"><strong>If the work is yours, say so.</strong> <a href="https://cyclingcommons.org/report/{{ report.id }}/answer" style="color:#c2551f">Answer the claim here</a>, signed in with this account. Your answer goes on the same record as the claim, so whoever looks next reads both. You can answer once, so say everything at once. Nothing goes back up on a timer: a curator decides.</p>
   {% endif %}
 
   {% if reply_to|default(null) %}
-    <p style="margin:0 0 8px"><strong>If we got it wrong, tell us.</strong> Reply to this email with the reference above and a different curator will read it again. You can also take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
+    <p style="margin:0 0 8px"><strong>If we got it wrong, tell us.</strong> Reply to this email with the reference above and a different curator will read it again.</p>
   {% else %}
-    <p style="margin:0 0 8px"><strong>If we got it wrong</strong>, you can take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
+    <p style="margin:0 0 8px"><strong>If we got it wrong, tell us</strong> through <a href="{{ url('contact') }}" style="color:#c2551f">our contact page</a>, with the reference above, and a different curator will read it again.</p>
   {% endif %}
 
   <p style="margin:0 0 14px">You can read the full rules and how we apply them at <a href="https://cyclingcommons.org/terms" style="color:#c2551f">cyclingcommons.org/terms</a>.</p>

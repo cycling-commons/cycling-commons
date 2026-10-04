@@ -138,8 +138,8 @@ final class ReportMailReplyToTest extends WebTestCase
     }
 
     /**
-     * No published address, no promise of a reply: the redress line still
-     * names the out-of-court route, and no Reply-To is set.
+     * No published address, no promise of a reply: the redress line points
+     * to the contact page instead, and no Reply-To is set.
      */
     public function testWithNoPublishedAddressTheMailsDoNotAskForAReply(): void
     {
@@ -177,7 +177,10 @@ final class ReportMailReplyToTest extends WebTestCase
             $body = strtolower((string) $email->getHtmlBody());
             self::assertStringNotContainsString('reply to this email', $body, (string) $email->getSubject());
         }
-        self::assertStringContainsString('out-of-court', strtolower((string) $sent[1]->getHtmlBody()));
-        self::assertStringContainsString('out-of-court', strtolower((string) $sent[2]->getHtmlBody()));
+        self::assertStringContainsString('our contact page', strtolower((string) $sent[1]->getHtmlBody()));
+        self::assertStringContainsString('our contact page', strtolower((string) $sent[2]->getHtmlBody()));
+        foreach ($sent as $email) {
+            self::assertStringNotContainsString('court', strtolower((string) $email->getHtmlBody()), (string) $email->getSubject());
+        }
     }
 }

@@ -50,13 +50,11 @@
     <p style="margin:0 0 8px">There was nothing left to decide, so the claim is closed.</p>
   {% endif %}
 
-  <p style="margin:0 0 8px">A curator decided this, as a person. No machine made this decision.</p>
-
   {% if report.status.value != 'rejected' %}
     {% if reply_to|default(null) %}
-      <p style="margin:0 0 8px"><strong>If we got it wrong, tell us.</strong> Reply to this email with the reference above and a person will read it again. You can also take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
+      <p style="margin:0 0 8px"><strong>If we got it wrong, tell us.</strong> Reply to this email with the reference above and we will read it again.</p>
     {% else %}
-      <p style="margin:0 0 8px"><strong>If we got it wrong</strong>, you can take it to an out-of-court dispute settlement body, or to a court, in the country where you live.</p>
+      <p style="margin:0 0 8px"><strong>If we got it wrong, tell us</strong> through <a href="{{ url('contact') }}" style="color:#c2551f">our contact page</a>, with the reference above, and we will read it again.</p>
     {% endif %}
   {% endif %}
 

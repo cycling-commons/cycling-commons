@@ -318,15 +318,17 @@ merge (§2).
 **On decision**, `emails/report_decided.html.twig`. Article 16(5). The curator's
 note is shown **verbatim for every outcome including `rejected`**, because a
 reporter who disagrees can only argue with a reason they can read. Every outcome
-but `moot` carries the redress line: reply to us, or go to an out-of-court
-dispute settlement body or a court where you live.
+but `moot` carries the redress line: reply to this email and we read it
+again. The mails do not lecture about courts or dispute bodies (owner
+2026-10-04); the reply route is the redress the mail offers.
 
 **Replies reach a person.** All three report mails (these two and the
 statement of reasons, content-reports.md §7) are sent from `cc.support.from_email`, the no-reply
 sender, with `Reply-To` set to `cc.support.public_email`, the address the
 contact page publishes (contact-and-support.md §4). When that address is empty
 the mails carry no `Reply-To` and leave out the "reply to this email"
-sentences; the out-of-court route stays. Pinned by `ReportMailReplyToTest`.
+sentences; the redress line then points to the contact page instead. Pinned
+by `ReportMailReplyToTest`.
 
 ## 7. What the author is told
 
@@ -337,9 +339,10 @@ is owed exactly when a restriction happened, and **only once**
 send it twice.
 
 Article 17(3) lists what it must contain, and each is in the template: what was
-restricted, that it came from a report rather than our own scan, the ground in
-our terms, the curator's facts, **whether automated means were used** (they were
-not: a person decided, every time), and how to contest it.
+restricted, that it came from a report, the ground in our terms, the curator's
+facts, **who decided** (a curator read the report and decided, which answers
+"automated means"), and how to contest it. The mails make no "no machine
+decided this" statements (owner 2026-10-04).
 
 It also says plainly that the account is fine and nothing else was touched,
 because most upheld reports are honest mistakes about a gate or a surface.
