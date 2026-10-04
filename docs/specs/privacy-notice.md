@@ -81,7 +81,7 @@ decision, which is why the Proton row needs no separate safeguard argument.
 
 **Services the browser contacts directly** (`privacy.bs_*`). Not our
 processors: the rider's browser fetches from them, so they see an IP address we
-never send them. Five rows, and the list is **exactly** the third-party hosts
+never send them. Four rows, and the list is **exactly** the third-party hosts
 in the CSP, because nothing outside that policy can load at all:
 
 | CSP host | Row |
@@ -90,7 +90,11 @@ in the CSP, because nothing outside that policy can load at all:
 | `ibasemaps-api.arcgis.com` | Esri |
 | `*.mapillary.com`, `*.fbcdn.net` | Mapillary (one row, Meta named in the cell) |
 | `photon.komoot.io` | Photon |
-| `commons.wikimedia.org`, `upload.wikimedia.org` | Wikimedia Commons |
+
+Wikimedia Commons is not a row: a Commons photo is downloaded on the worker
+and served from our own storage, so the CSP names no Wikimedia host and a
+browser never contacts one (owner 2026-09-27). Esri is therefore the only row
+outside the EEA, and `privacy.browser_services_post` names it alone.
 
 `analytics.bikecoders.life` and `COVERAGE_CSP_HOST` are deliberately absent:
 both are our own infrastructure, already covered by the analytics paragraph and

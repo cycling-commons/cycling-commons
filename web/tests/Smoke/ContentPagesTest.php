@@ -29,6 +29,23 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'What we collect');
     }
 
+    /**
+     * The browser-services table lists exactly the third-party hosts the CSP
+     * allows (privacy-notice.md §3). The CSP names no Wikimedia host, so the
+     * notice must not claim a transfer to the Wikimedia Foundation.
+     */
+    public function testPrivacyListsOnlyTheServicesTheBrowserCanReach(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/privacy');
+
+        $heading = $crawler->filterXPath('//h3[normalize-space()="Services your browser contacts directly"]');
+        self::assertCount(1, $heading);
+        $services = $heading->nextAll()->filter('table')->first()->filter('tbody tr td:first-child')->each(static fn ($td): string => trim($td->text()));
+        self::assertSame(['OpenFreeMap', 'Esri', 'Mapillary', 'Photon'], $services);
+        self::assertStringNotContainsString('Wikimedia Foundation', (string) $client->getResponse()->getContent());
+    }
+
     /** The contact form's 24 months (contact-and-support.md §4) is stated beside email's. */
     public function testPrivacyGivesContactFormMessagesTheMailPeriod(): void
     {
