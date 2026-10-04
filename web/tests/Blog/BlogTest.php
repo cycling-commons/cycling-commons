@@ -146,6 +146,22 @@ final class BlogTest extends WebTestCase
         self::assertStringContainsString('after.', $html);
     }
 
+    /** A post may be stored at BODY_MAX, and all of it is published. */
+    public function testALongPostIsPublishedToItsLastWord(): void
+    {
+        $client = $this->client();
+        $body = str_repeat('word ', 2600).'LASTWORD';
+        self::assertGreaterThan(8000, \strlen($body), 'longer than a bug report may render');
+        $post = new BlogPost('long-one', 'en', 'Long', $body);
+        $post->setStatus(BlogStatus::Published);
+        $this->em()->persist($post);
+        $this->em()->flush();
+
+        $client->request('GET', '/blog/long-one');
+
+        self::assertSelectorTextContains('.bbody', 'LASTWORD');
+    }
+
     // -- languages --------------------------------------------------------
 
     public function testDutchReadersSeeDutchPosts(): void

@@ -33,7 +33,9 @@ final class BugMarkdownExtension extends AbstractExtension
         return [
             new TwigFilter(
                 'bug_markdown',
-                fn (?string $text): string => $this->markdown->render($text),
+                fn (?string $text, ?int $maxLength = null): string => null === $maxLength
+                    ? $this->markdown->render($text)
+                    : $this->markdown->render($text, $maxLength),
                 ['is_safe' => ['html']],
             ),
             // NOT is_safe: this one returns plain text and Twig must escape it

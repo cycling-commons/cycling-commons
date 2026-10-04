@@ -47,7 +47,10 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
  */
 final class BugMarkdown
 {
-    /** Long enough for a stack trace, short enough that one report cannot be a page. */
+    /**
+     * Long enough for a stack trace, short enough that one report cannot be a
+     * page. A blog post passes its own, longer limit.
+     */
     private const int MAX_LENGTH = 8000;
 
     public function __construct(
@@ -56,7 +59,7 @@ final class BugMarkdown
     ) {
     }
 
-    public function render(?string $source): string
+    public function render(?string $source, int $maxLength = self::MAX_LENGTH): string
     {
         if (null === $source || '' === trim($source)) {
             return '';
@@ -65,7 +68,7 @@ final class BugMarkdown
         // Escape FIRST. Every rule below adds tags to text that can no longer
         // contain any of its own.
         $text = htmlspecialchars(
-            mb_substr(str_replace(["\r\n", "\r"], "\n", $source), 0, self::MAX_LENGTH),
+            mb_substr(str_replace(["\r\n", "\r"], "\n", $source), 0, $maxLength),
             \ENT_QUOTES | \ENT_SUBSTITUTE,
             'UTF-8',
         );

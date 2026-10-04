@@ -34,7 +34,7 @@
 
     {% if post.lede %}<p class="blede">{{ post.lede }}</p>{% endif %}
 
-    <div class="bbody">{{ post.body|bug_markdown }}</div>
+    <div class="bbody">{{ post.body|bug_markdown(constant('App\\Blog\\Entity\\BlogPost::BODY_MAX')) }}</div>
 
     {% if siblings is not empty %}
       <p class="bother">{{ 'blog.also_in'|trans }}

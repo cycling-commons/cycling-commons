@@ -25,7 +25,9 @@ went live. Nothing else.
 bullet lists, numbered lists. Not a shortcut: it means no second sanitiser
 profile, no second allowlist and no second place to get wrong. It also means a
 post cannot embed an image or an external link, which for a first blog is a
-feature rather than a limit.
+feature rather than a limit. A body holds up to 20000 characters
+(`BlogPost::BODY_MAX`), and the post page passes that limit to the renderer,
+so all of it is published; a bug report keeps the renderer's own 8000.
 
 **Two statuses**, `BlogStatus`. Draft or published. Scheduling, review states
 and expiry are all real and all somebody's second problem.

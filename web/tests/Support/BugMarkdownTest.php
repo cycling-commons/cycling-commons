@@ -151,6 +151,13 @@ final class BugMarkdownTest extends KernelTestCase
         self::assertLessThan(9000, \strlen($out));
     }
 
+    public function testACallerCanPassALongerLimit(): void
+    {
+        $out = $this->md()->render(str_repeat('a', 12000), 20000);
+
+        self::assertGreaterThan(12000, \strlen($out));
+    }
+
     // -- the plain preview -----------------------------------------------
 
     /**
