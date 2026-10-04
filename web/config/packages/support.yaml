@@ -57,8 +57,9 @@ parameters:
     cc.organisation.vat_number: '%env(default:cc.blank:CC_ORG_VAT)%'
     cc.organisation.contact_email: '%env(default:cc.blank:CC_ORG_CONTACT_EMAIL)%'
 
-    # Where to find us, for the footer's icon row. A handle, not a URL, except
-    # Mastodon, whose instance is part of the address.
+    # Where to find us, for the footer's icon row. A handle, or the network's
+    # own full https address (a Facebook page known only by its number has no
+    # handle). Mastodon is always the full address: the instance is part of it.
     #
     # EMPTY means the icon does not render. That is the point: a fresh
     # deployment shows the channels it actually has rather than a row of links

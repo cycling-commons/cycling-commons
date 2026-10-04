@@ -34,10 +34,37 @@ final class SocialLinksExtensionTest extends TestCase
         self::assertSame([], $this->links(mastodon: 'javascript:alert(1)'));
     }
 
-    /** @return array<string, string> name => url */
-    private function links(string $mastodon = '', string $instagram = '', string $strava = ''): array
+    /**
+     * The channel's own full address is used as it is: a Facebook page known
+     * only by its number has no handle, and a pasted YouTube link must not be
+     * encoded into the handle slot.
+     */
+    public function testAFullAddressOnTheChannelsOwnHostIsUsedAsItIs(): void
     {
-        $ext = new SocialLinksExtension('', '', $instagram, '', '', $mastodon, $strava);
+        $links = $this->links(
+            youtube: 'https://www.youtube.com/@CyclingCommons',
+            facebook: 'https://www.facebook.com/profile.php?id=61591531884599',
+            bluesky: '@cyclingcommons.org',
+        );
+
+        self::assertSame([
+            'youtube' => 'https://www.youtube.com/@CyclingCommons',
+            'facebook' => 'https://www.facebook.com/profile.php?id=61591531884599',
+            'bluesky' => 'https://bsky.app/profile/cyclingcommons.org',
+        ], $links);
+    }
+
+    public function testAnAddressOnAnotherHostDoesNotRender(): void
+    {
+        self::assertSame([], $this->links(facebook: 'https://example.com/profile.php?id=1'));
+        self::assertSame([], $this->links(youtube: 'http://www.youtube.com/@CyclingCommons'));
+        self::assertSame([], $this->links(instagram: 'javascript://www.instagram.com/x'));
+    }
+
+    /** @return array<string, string> name => url */
+    private function links(string $mastodon = '', string $instagram = '', string $strava = '', string $youtube = '', string $facebook = '', string $bluesky = ''): array
+    {
+        $ext = new SocialLinksExtension('', $youtube, $instagram, $facebook, $bluesky, $mastodon, $strava);
         $out = [];
         foreach ($ext->getGlobals()['social'] as $s) {
             $out[$s['name']] = $s['url'];

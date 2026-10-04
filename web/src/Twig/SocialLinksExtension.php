@@ -90,21 +90,35 @@ final class SocialLinksExtension extends AbstractExtension implements GlobalsInt
             // Mastodon is a full URL because the instance is part of the
             // address: it is used as it is, and only as an https URL, never
             // percent-encoded (an encoded address is a broken link, and the
-            // profile's rel="me" check fails on it). The rest are handles on
-            // a known host.
+            // profile's rel="me" check fails on it). The rest take a handle
+            // on a known host, or the full address on that same host, used
+            // as it is: a Facebook page known only by its number
+            // (`profile.php?id=…`) has no handle to give. An address on any
+            // other host does not render.
             if ('%s' === $template) {
                 $url = self::httpsUrl($handle);
-                if (null === $url) {
-                    continue;
-                }
+            } elseif (str_contains($handle, '://')) {
+                $url = self::onHost($handle, $template);
             } else {
                 $url = \sprintf($template, rawurlencode(ltrim($handle, '@')));
+            }
+            if (null === $url) {
+                continue;
             }
 
             $out[] = ['name' => $name, 'label' => $label, 'url' => $url];
         }
 
         return ['social' => $out];
+    }
+
+    /** The value when it is an https URL on the template's host (with or without `www.`), else null. */
+    private static function onHost(string $value, string $template): ?string
+    {
+        $url = self::httpsUrl($value);
+        $bare = static fn (string $host): string => preg_replace('/^www\./', '', strtolower($host)) ?? '';
+
+        return null !== $url && $bare((string) parse_url($url, \PHP_URL_HOST)) === $bare((string) parse_url($template, \PHP_URL_HOST)) ? $url : null;
     }
 
     /** The value when it is an https URL with a host, else null. */

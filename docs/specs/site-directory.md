@@ -281,7 +281,11 @@ rule between the three.
   verifies the site (owner 2026-10-01: Mastodon `@cyclingcommons` on
   mastodon.social); the other networks ignore it. A handle goes onto its
   network's host; Mastodon's value is the full address, used only when it is
-  an https URL and never percent-encoded.
+  an https URL and never percent-encoded. The other networks also take their
+  own full https address, used as it is (2026-10-04: the Facebook page is
+  known only by its number, `profile.php?id=61591531884599`, and a pasted
+  YouTube link must not be encoded into the handle slot); an address on any
+  other host does not render.
   `tests/Twig/SocialLinksExtensionTest.php` pins it.
 - **About page** (`pages/about.html.twig`, 2026-09-09): every block is
   left-aligned inside the full wrap, the reading column (`.col`) capping
