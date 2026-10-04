@@ -201,6 +201,25 @@ final class BugDeskNotesTest extends WebTestCase
         self::assertStringContainsString('Thank you for the report', (string) $mail->getHtmlBody());
     }
 
+    /**
+     * The bug form takes any address without an account, so the title is a
+     * stranger's words: the outcome mail names the report by its reference
+     * and never quotes the title.
+     */
+    public function testTheOutcomeMailNeverQuotesTheTitle(): void
+    {
+        $client = $this->client();
+        $report = $this->bug(title: 'Your account is locked. Call +31 6 0000 0000', email: 'victim@cyclingcommons.org');
+        $client->loginUser($this->curator());
+
+        $this->decide($client, $report);
+
+        self::assertEmailCount(1, null, 'the outcome mail');
+        $body = (string) self::getMailerMessage()?->getHtmlBody();
+        self::assertStringNotContainsString('locked', $body);
+        self::assertStringContainsString('Thank you for the report', $body);
+    }
+
     public function testTheInternalNoteNeverReachesThePublicList(): void
     {
         $client = $this->client();

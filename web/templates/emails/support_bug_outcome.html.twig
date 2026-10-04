@@ -8,14 +8,17 @@
 
    Not sent for Planned, In progress or Needs testing: being told a report moved
    between two internal states is noise, and noise is what teaches people to
-   ignore the next mail. #}
+   ignore the next mail.
+
+   The reference names the report, never its title: the bug form takes any
+   address without an account, so a title quoted here would let anyone have
+   us mail their words to a stranger. The curator's note is ours. #}
 {% extends 'emails/_base.html.twig' %}
 
 {% block title %}{{ 'support.email.bug_outcome_subject'|trans({'%reference%': reference}, null, locale) }}{% endblock %}
 
 {% block content %}
-  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ reference }} · {{ status_label }}</p>
-  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ report.title }}</p>
+  <p style="margin:0 0 16px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ reference }} · {{ status_label }}</p>
 
   {% if report.outcomeNote %}
     <div style="padding:12px 16px;background:#f5eee0;border-left:3px solid #3f6152;border-radius:0 6px 6px 0;font-size:14px;line-height:1.6;white-space:pre-wrap">{{ report.outcomeNote }}</div>

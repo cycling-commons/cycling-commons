@@ -811,6 +811,13 @@ that gets sent to a stranger, and there is no third option.
 `BugDeskNotesTest` pins all three of: it is saved, it is not in the outcome
 mail, and it is not on the public list.
 
+**The outcome mail never quotes the report's title.** It names the report by
+its reference and status, then carries the curator's outcome note. The bug
+form takes any address without an account, so a quoted title would let anyone
+have us mail their own words to a stranger once a curator closed the report
+(security audit 2026-10-04). The acknowledgement already carried only the
+reference. `BugDeskNotesTest` pins it.
+
 `fix_release` is the git tag the fix lands in, shown on the desk row as a tag.
 Since 2026-09-08 it is a choice, not free text (owner: "Fixed in should be a
 dropdown with release tags, release tags can be added in the admin section"):
