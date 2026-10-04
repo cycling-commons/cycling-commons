@@ -1,0 +1,25 @@
+docs/specs/security-architecture.md
+  s_985749378da6fe::t_966e721dcd9d64 614
+  s_985749378da6fe::t_e3d1e492ad01f2 615
+web/src/Contribution/CatalogContributionService.php
+  s_985749378da6fe::t_e1ba8b2a10693f 68-69,179,223,450,995,997,1007-1021,1162,1183
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_985749378da6fe::t_9f2afcbffa65f5 23,578-616
+  s_985749378da6fe::t_a35f4900b72046 617
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f47d09b137d9181fff2bb963df75f4e58247a736",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
