@@ -53,7 +53,7 @@ const CASES = [
     report_href: '/report/region/42?from=/regions/flanders', report_label: 'Report this text',
     edit_href: '/regions/flanders/text', edit_label: 'Edit this text',
   },
-  { report_href: '/report/town/node-1?name=A&from=/map', report_label: 'Report this text', edit_href: '', edit_label: 'Edit this text' },
+  { report_href: '/report/town/node-1?from=/map', report_label: 'Report this text', edit_href: '', edit_label: 'Edit this text' },
   { report_href: '', report_label: 'Report this text', edit_href: '/regions/x/text', edit_label: 'Edit this text' },
   { report_href: '', report_label: 'x', edit_href: '', edit_label: 'y' },
 ];

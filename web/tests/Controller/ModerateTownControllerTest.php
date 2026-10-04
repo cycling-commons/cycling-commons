@@ -106,12 +106,12 @@ final class ModerateTownControllerTest extends WebTestCase
     public function testTheReportFormTakesATown(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/report/town/node-999990204?name=Zwaag%20%3Cb%3Ex%3C%2Fb%3E');
+        $crawler = $client->request('GET', '/report/town/node-999990204?name=Zwaag%20%3Cb%3Ex%3C%2Fb%3E');
         self::assertResponseIsSuccessful();
-        $html = (string) $client->getResponse()->getContent();
-        self::assertStringContainsString('A town card', $html);
-        self::assertStringContainsString('This report is about Zwaag x.', $html, 'the name the card sent, as plain text');
-        self::assertStringContainsString('name="name" value="Zwaag x"', $html, 'and it travels with the form to become the label');
+        self::assertStringContainsString('A town card', $crawler->text());
+        // The name is ours to read, never the link's (ContentReportTest).
+        self::assertStringNotContainsString('This report is about', $crawler->text(), 'no town text read yet, so no name');
+        self::assertCount(0, $crawler->filter('input[name="name"]'));
         $client->request('GET', '/report/town/node/999990204');
         self::assertResponseStatusCodeSame(404, 'the id is one segment, never a path');
     }

@@ -245,7 +245,7 @@ final class ContentReportController extends AbstractController
             return $this->error($type, $id, 'report.error.rate_limited', Response::HTTP_TOO_MANY_REQUESTS, $request);
         }
 
-        $report = $this->reports->file($target, $id, $ground, $reason, '' !== $contact ? $contact : null, $this->cleanName((string) $request->request->get('name', '')), $ip);
+        $report = $this->reports->file($target, $id, $ground, $reason, '' !== $contact ? $contact : null, $this->resolver->nameBeforeFiling($target, $id), $ip);
         $report->setFromPath($this->cleanPath((string) $request->request->get('from', '')));
         if ($ground->needsOwnershipProof()) {
             $report->setRightsClaim(
@@ -279,14 +279,6 @@ final class ContentReportController extends AbstractController
      * a query string on this site can carry somebody's search terms, and an
      * off-site URL is somebody else's business.
      */
-    /** A display name the page sent along: plain text, one line, short. Never trusted as anything else. */
-    private function cleanName(string $candidate): ?string
-    {
-        $name = trim(preg_replace('~\s+~u', ' ', strip_tags($candidate)) ?? '');
-
-        return '' === $name ? null : mb_substr($name, 0, 120);
-    }
-
     private function cleanPath(string $candidate): ?string
     {
         if ('' === $candidate) {
@@ -334,10 +326,10 @@ final class ContentReportController extends AbstractController
             'from_path' => $this->cleanPath(
                 (string) ($request?->query->get('from') ?? '')
             ),
-            // What the page called the thing, e.g. the town's name. Shown to
-            // the reporter and stored as the report's label, so the desk reads
-            // "Zwaag" even for a target nothing resolves (owner 2026-09-08).
-            'about_name' => $this->cleanName((string) ($request?->query->get('name') ?? $request?->request->get('name') ?? '')),
+            // The town's name, so the reporter sees "This report is about
+            // Zwaag" (owner 2026-09-08). Read from our rows, never from the
+            // link: see ReportResolver::nameBeforeFiling().
+            'about_name' => $this->resolver->nameBeforeFiling($target, $id),
             'guard' => [
                 'stamp_field' => FormGuard::STAMP,
                 'stamp' => $this->guard->stamp(new \DateTimeImmutable()),

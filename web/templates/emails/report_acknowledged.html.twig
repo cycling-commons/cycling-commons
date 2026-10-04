@@ -4,9 +4,11 @@
   undue delay". This is that confirmation and nothing more, so it is sent the
   moment the row is written rather than waiting on a curator.
 
-  It quotes back what was reported and on what ground, because a reporter who
-  picked the wrong item needs to be able to see that from the email alone. It
-  does not name the author, and it does not promise an outcome.
+  It names the kind of thing reported, the ground and the reference, so a
+  reporter who picked the wrong item can say so from the email alone. It
+  prints nothing the request carried: the form is public and the address is
+  whatever the sender typed, so any posted text here would be mailed by us to
+  a stranger. It does not name the author, and it does not promise an outcome.
 
   @see docs/specs/content-reports.md §6
 #}
@@ -20,7 +22,7 @@
   <table role="presentation" style="margin:18px 0;border-collapse:collapse;font-size:14px">
     <tr>
       <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">What</td>
-      <td style="padding:4px 0">{{ report.targetType.label|trans }}{% if report.targetLabel %}: {{ report.targetLabel }}{% endif %}</td>
+      <td style="padding:4px 0">{{ report.targetType.label|trans }}</td>
     </tr>
     <tr>
       <td style="padding:4px 14px 4px 0;color:#595c4d;vertical-align:top">Why</td>

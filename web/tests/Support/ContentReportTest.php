@@ -76,6 +76,8 @@ final class ContentReportTest extends WebTestCase
      * The stamp is minted for a moment far enough in the past to clear
      * {@see FormGuard::MIN_SECONDS}, because a test that really waited four
      * seconds per report would add a minute to the suite for nothing.
+     *
+     * @param array<string, string> $extra more POST fields, as a script would send them
      */
     private function file(
         KernelBrowser $client,
@@ -85,6 +87,7 @@ final class ContentReportTest extends WebTestCase
         ?string $contact = 'reporter@cyclingcommons.org',
         bool $solve = false,
         bool $follow = true,
+        array $extra = [],
     ): void {
         $page = $client->request('GET', '/report/'.$type.'/'.$id);
         self::assertResponseIsSuccessful();
@@ -117,7 +120,7 @@ final class ContentReportTest extends WebTestCase
             'contact' => $contact ?? '',
             'pow_challenge' => $challenge,
             'pow_nonce' => $solve ? $this->solve($challenge, $difficulty) : '',
-        ]);
+        ] + $extra);
         // A filed report answers with a redirect to its own thank-you page
         // (owner 2026-09-08); a refused one re-renders the form with its status.
         if ($follow && $client->getResponse()->isRedirection()) {
@@ -137,6 +140,48 @@ final class ContentReportTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(1, $this->reports(), 'a reload shows the thank-you again and files nothing');
         self::assertStringContainsString('no-store', (string) $client->getResponse()->headers->get('Cache-Control'));
+    }
+
+    /**
+     * The form is public and the address is whatever the sender typed, so a
+     * name the request carried would make us mail a stranger's words to
+     * anyone. The page, the stored label and the
+     * acknowledgement all ignore it.
+     */
+    public function testANameTheRequestCarriesIsNeverShownStoredOrMailed(): void
+    {
+        $lure = 'Your account is locked. Call +31 6 0000 0000';
+        $client = $this->client();
+
+        $page = $client->request('GET', '/report/town/node-777001?name='.rawurlencode($lure));
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('locked', $page->text());
+
+        $this->file($client, type: 'town', id: 'node-777001', follow: false, extra: ['name' => $lure]);
+        self::assertEmailCount(1, null, 'the Article 16(4) acknowledgement');
+        $body = (string) $this->getMailerMessage()?->getHtmlBody();
+        self::assertStringContainsString('We have your report', $body);
+        self::assertStringNotContainsString('locked', $body);
+        self::assertNull($this->reports()[0]->getTargetLabel());
+    }
+
+    /** A town is public for every town, so the form names it from our own rows. */
+    public function testATownReportIsAboutTheTownsOwnName(): void
+    {
+        $client = $this->client();
+        $this->em()->getConnection()->executeStatement(
+            "INSERT INTO town_summary (osm_ref, lang, answered, title, checked_at) VALUES ('node/777002', 'en', true, 'Zwaag', now())",
+        );
+
+        $page = $client->request('GET', '/report/town/node-777002?name=Elsewhere');
+        self::assertResponseIsSuccessful();
+        // The text, not the markup: the language links keep the query string.
+        self::assertStringContainsString('This report is about Zwaag.', $page->text());
+        self::assertStringNotContainsString('Elsewhere', $page->text());
+
+        $this->file($client, type: 'town', id: 'node-777002', follow: false, extra: ['name' => 'Elsewhere']);
+        self::assertStringNotContainsString('Elsewhere', (string) $this->getMailerMessage()?->getHtmlBody());
+        self::assertSame('Zwaag', $this->reports()[0]->getTargetLabel());
     }
 
     /** What the browser does in report-challenge.js, in PHP. */

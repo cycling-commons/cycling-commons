@@ -84,11 +84,15 @@ reload of the thank-you shows it again and files nothing (owner 2026-09-08:
 a reload had filed the same report twice, and the desk showed the place's id
 twice). A signed-in reader is not shown the email field: the account's address is
 the reporter contact (owner 2026-09-08, "we already have their email"), which
-is what the desk answers to. A page may also send `?name=`, what it called
-the thing (the town card sends the town's name): the form says "This report
-is about Zwaag", and the name is stored as the report's `target_label`, so
-the desk reads it even when nothing resolves. Plain text, one line, 120
-characters, never used for anything but display.
+is what the desk answers to. A town report names the town: the form says
+"This report is about Zwaag", and that name is stored as the report's
+`target_label`. The name comes from our own `town_summary` row
+(`ReportResolver::nameBeforeFiling()`), never from the request. A town card is
+public for every town, so naming one answers no question about whether a row
+exists; every other target stays unnamed until a curator opens it. A name the
+request carries (`?name=`, a posted `name`) is ignored: the form is public, so
+a label taken from the request would print a stranger's words on our page and
+in our mail (security audit 2026-10-04).
 
 **Why places and regions have no author.** They are not written by one person.
 A place starts as a seeded or harvested row (`seeded-rows-stay-unassigned`) and
@@ -289,7 +293,7 @@ it (review 2026-08-30). Pinned by `ContentReportTest`.
 | Region page | `templates/pages/region.html.twig` |
 | Messages | `templates/messages/index.html.twig`, on received messages only |
 | Photo page and lightbox | `templates/media/photo.html.twig`, `/report/photo/{uuid}` |
-| Map town card | `assets/map/places.js`, the `!` beside the Wikipedia text, `/report/town/{osm}?name=`, the OpenStreetMap element as `node-59518` |
+| Map town card | `assets/map/places.js`, the `!` beside the Wikipedia text, `assets/map/town-text.js` `townReportHref()`, `/report/town/{osm}`, the OpenStreetMap element as `node-59518` |
 
 The drawer link renders for **real database ids only**. A coverage POI we do not
 store has nothing of ours to report, and its words belong to OpenStreetMap.
@@ -300,10 +304,13 @@ Two emails, both only when an address was given.
 
 **On filing**, immediately, `emails/report_acknowledged.html.twig`. Article
 16(4) wants a confirmation "without undue delay", so it is sent when the row is
-written and does not wait for a curator. It quotes back the target and the
-ground, so a reporter who picked the wrong item can see that from the email
-alone, and carries the report uuid as a reference. It does not name the author
-and does not promise an outcome.
+written and does not wait for a curator. It names the kind of thing reported
+and the ground, so a reporter who picked the wrong item can see that from the
+email alone, and carries the report uuid as a reference. No report mail prints
+the target's label or any other text the request carried: the address is
+whatever the sender typed, so posted text in the body would let anyone make us
+mail their words to anyone (security audit 2026-10-04). It does not name the
+author and does not promise an outcome.
 
 Photo reports get the same two emails as any other report, since the
 merge (§2).

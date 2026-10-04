@@ -63,18 +63,41 @@ final class ReportResolver
     private function town(string $id): array
     {
         [$type, $osmId] = explode('-', $id, 2) + [1 => '0'];
-        $title = $this->em->getConnection()->fetchOne(
-            'SELECT title FROM town_summary WHERE osm_ref = :r AND title IS NOT NULL ORDER BY (lang = \'en\') DESC, lang LIMIT 1',
-            ['r' => $type.'/'.$osmId],
-        );
 
         return [
-            'label' => \is_string($title) ? $title : $type.'/'.$osmId,
+            'label' => $this->townTitle($id) ?? $type.'/'.$osmId,
             'author' => null,
             'exists' => true,
             'link_route' => 'moderate_town',
             'link_params' => ['osmType' => $type, 'osmId' => (int) $osmId],
         ];
+    }
+
+    /** The title a town card shows, in English where there is one; null when no card has been read yet. */
+    private function townTitle(string $id): ?string
+    {
+        [$type, $osmId] = explode('-', $id, 2) + [1 => '0'];
+        $title = $this->em->getConnection()->fetchOne(
+            'SELECT title FROM town_summary WHERE osm_ref = :r AND title IS NOT NULL ORDER BY (lang = \'en\') DESC, lang LIMIT 1',
+            ['r' => $type.'/'.$osmId],
+        );
+
+        return \is_string($title) ? $title : null;
+    }
+
+    /**
+     * The name the report form shows and the report keeps as its label, read
+     * from our own rows and never from the request.
+     *
+     * A town only. A town card is public for every town, so naming one answers
+     * no question about whether a row exists; every other target stays
+     * unresolved until a curator opens it (see the class docblock). The name
+     * is never the reporter's own text: a label the request carried would put
+     * a stranger's words on our page and in our mail.
+     */
+    public function nameBeforeFiling(ReportTarget $target, string $id): ?string
+    {
+        return ReportTarget::Town === $target ? $this->townTitle($id) : null;
     }
 
     /**

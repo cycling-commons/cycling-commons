@@ -87,19 +87,19 @@ export function textCreditActionsHtml(a) {
 
 /** Where a town text's "!" goes: the one report door, keyed by the element,
     never a page (docs/specs/content-reports.md); '' when the card names no
-    element. */
-export function townReportHref(meta, name, from) {
+    element. The form reads the town's name from the server, never the link. */
+export function townReportHref(meta, from) {
   const osm = String((meta && meta.osm) || '');
   if (!/^(node|way|relation)\/\d{1,16}$/.test(osm)) return '';
   return '/report/town/' + encodeURIComponent(osm.replace('/', '-'))
-    + '?name=' + encodeURIComponent(name || '') + '&from=' + encodeURIComponent(from || '');
+    + '?from=' + encodeURIComponent(from || '');
 }
 
 /** The town card's "!" and "✎" after its credit line. */
 export function townActionsHtml(meta, name, opts, D) {
   const o = opts || {};
   return textCreditActionsHtml({
-    reportHref: townReportHref(meta, name, o.from),
+    reportHref: townReportHref(meta, o.from),
     reportLabel: D.reportText || 'Report this text',
     editHref: townEditTarget(meta, name, o),
     editLabel: o.signedIn ? (D.textEdit || 'Edit this text') : (D.textEditSignin || 'Sign in to edit this text'),

@@ -66,8 +66,8 @@ test('the credit line ends in the ringed "!" to the town report and the pencil t
   const html = townActionsHtml(META, 'Antwerpen', opts, D);
   const m = /^<span class="tc-acts"><a class="ring-ico ring-ico--report" href="([^"]+)" title="Report this text" aria-label="Report this text">!<\/a><a class="ring-ico ring-ico--edit" href="([^"]+)" title="Edit this text" aria-label="Edit this text">✎<\/a><\/span>$/.exec(html);
   assert.ok(m, html);
-  assert.equal(m[1].replace(/&amp;/g, '&'), '/report/town/node-59518?name=Antwerpen&from=%2Fmap%3Ftown%3Dx');
-  assert.equal(m[1].replace(/&amp;/g, '&'), townReportHref(META, 'Antwerpen', '/map?town=x'));
+  assert.equal(m[1].replace(/&amp;/g, '&'), '/report/town/node-59518?from=%2Fmap%3Ftown%3Dx');
+  assert.equal(m[1].replace(/&amp;/g, '&'), townReportHref(META, '/map?town=x'));
   assert.equal(m[2].replace(/&amp;/g, '&'), townTextHref(META, 'Antwerpen', 'en', '/map?town=x'));
 });
 

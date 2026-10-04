@@ -81,7 +81,6 @@
         {# Where they clicked from. Carried, never shown: it is context for the
            curator, not a question for the reporter. #}
         {% if from_path %}<input type="hidden" name="from" value="{{ from_path }}">{% endif %}
-        {% if about_name %}<input type="hidden" name="name" value="{{ about_name }}">{% endif %}
         {# Honeypots. Not a captcha, and never a third party: see contact-and-support.md §3. #}
         <div class="hp" aria-hidden="true">
           <input type="text" name="{{ guard.honeypot_a }}" tabindex="-1" autocomplete="off">
