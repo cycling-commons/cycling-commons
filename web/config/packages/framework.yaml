@@ -5,6 +5,12 @@ framework:
         log: true
     router:
         utf8: true
+    # The Host header is client input, and every absolute URL the router builds
+    # during a request takes its host from it: the password-reset link, the
+    # registration verify link, the account-exists mail. A request naming any
+    # host outside this comma-separated list of regexes answers 400 before a
+    # controller runs. Empty (the .env default, used by dev) trusts every host.
+    trusted_hosts: '%env(TRUSTED_HOSTS)%'
     session:
         # Redis, not PHP's file handler: production runs two frontends behind a
         # load balancer, and on-disk sessions mean a rider who logs in on one
