@@ -431,6 +431,14 @@ Invariant for fixtures and seeded elevated accounts: set **both**
   as that proof is not spent separately: enrolling replaces every backup code.
   The pending secret sits on a detached copy of the user, so the stored secret
   answers the old-code check and no flush can persist an unconfirmed one.
+- **Every enrolment mails the account's own address**
+  (`App\Security\TwoFactorChangeNotice`, `emails/two_factor_changed.html.twig`,
+  in the account's saved language): "Two-factor sign-in is now on for your
+  account" the first time, "Your two-factor sign-in moved to a new app" when it
+  replaced one. It says when (UTC), and what to do if it was not them: change
+  the password, then write to the public support address so an admin can turn
+  the new factor off (Disarm 2FA, account-and-auth.md §6). It carries no
+  display name and nothing a form posted. A refused attempt sends nothing.
 - Interstitial login: scheb's `two_factor` firewall entry
   (`auth_form_path: 2fa_login`, `check_path: 2fa_login_check`); TOTP or a
   single-use backup code.

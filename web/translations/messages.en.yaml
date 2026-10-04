@@ -1595,6 +1595,16 @@ security:
     forgot: 'Forgot your password?'
     reset: 'Set a new one.'
     ignore: 'If this was not you, you can ignore this email. Nothing about your account has changed.'
+  twofactor_email:
+    subject_on: 'Two-factor sign-in is now on for your account'
+    subject_moved: 'Your two-factor sign-in moved to a new app'
+    body_on: 'Two-factor sign-in was just turned on for your Cycling Commons account. From now on, signing in asks for a code from the app that was set up.'
+    body_moved: 'Your Cycling Commons account now uses a new app for two-factor sign-in. The old app and the old backup codes no longer work.'
+    when: 'When: %when% UTC'
+    not_you: 'Was this not you? Then somebody may be using your account.'
+    change_password: 'Change my password'
+    write_us: 'Then write to us, so we can turn the new two-factor off:'
+    was_you: 'Was it you? Then you do not need to do anything.'
   reset_email:
     subject: 'Your Cycling Commons password reset link'
     heading: 'Reset your password'

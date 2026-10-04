@@ -1591,6 +1591,16 @@ security:
     forgot: 'Wachtwoord vergeten?'
     reset: 'Kies een nieuw.'
     ignore: 'Was jij dit niet? Dan kun je deze e-mail negeren. Er is niets aan je account veranderd.'
+  twofactor_email:
+    subject_on: 'Twee-factor-inloggen staat nu aan voor je account'
+    subject_moved: 'Je twee-factor-inloggen gebruikt een nieuwe app'
+    body_on: 'Twee-factor-inloggen is net aangezet voor je Cycling Commons-account. Vanaf nu vraagt inloggen om een code uit de app die is ingesteld.'
+    body_moved: 'Je Cycling Commons-account gebruikt nu een nieuwe app voor twee-factor-inloggen. De oude app en de oude back-upcodes werken niet meer.'
+    when: 'Wanneer: %when% UTC'
+    not_you: 'Was jij dit niet? Dan gebruikt iemand misschien je account.'
+    change_password: 'Mijn wachtwoord wijzigen'
+    write_us: 'Schrijf ons daarna, zodat we de nieuwe twee-factor uitzetten:'
+    was_you: 'Was jij het? Dan hoef je niets te doen.'
   reset_email:
     subject: 'Je link om je Cycling Commons-wachtwoord opnieuw in te stellen'
     heading: 'Stel je wachtwoord opnieuw in'

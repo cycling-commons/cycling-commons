@@ -1,0 +1,40 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# Two-factor was set up or moved to a new app (App\Security\TwoFactorChangeNotice).
+   Sent to the account's own confirmed address, so the owner learns of a change
+   made from a session they may not hold. No display name and nothing a form
+   carried: only what changed, when, and what to do if it was not them. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ ('security.twofactor_email.subject_' ~ kind)|trans({}, null, locale) }}{% endblock %}
+
+{% block content %}
+  <h1 style="font-size:24px;font-weight:600;margin:0 0 14px">
+    {{ ('security.twofactor_email.subject_' ~ kind)|trans({}, null, locale) }}
+  </h1>
+
+  <p style="margin:0 0 8px">{{ ('security.twofactor_email.body_' ~ kind)|trans({}, null, locale) }}</p>
+
+  <p style="margin:0 0 8px;font-family:monospace">{{ 'security.twofactor_email.when'|trans({'%when%': when}, null, locale) }}</p>
+
+  <p style="margin:18px 0 8px"><strong>{{ 'security.twofactor_email.not_you'|trans({}, null, locale) }}</strong></p>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px 0 22px;border-collapse:collapse">
+    <tr>
+      <td align="center" style="background:#e85d26;border-radius:6px">
+        <a href="{{ url('settings', {tab: 'security'}) }}"
+           style="display:inline-block;color:#ffffff;font-weight:700;font-size:16px;padding:14px 28px;text-decoration:none">
+          {{ 'security.twofactor_email.change_password'|trans({}, null, locale) }}
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin:0 0 14px">
+    {{ 'security.twofactor_email.write_us'|trans({}, null, locale) }}
+    <a href="mailto:{{ support_email }}" style="color:#c2551f">{{ support_email }}</a>
+  </p>
+
+  <p style="font-size:13px;color:#5a5d4d;margin:0">
+    {{ 'security.twofactor_email.was_you'|trans({}, null, locale) }}
+  </p>
+{% endblock %}

@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\TwoFactorSetupType;
 use App\Routing\LocalePrefix;
+use App\Security\TwoFactorChangeNotice;
 use Doctrine\ORM\EntityManagerInterface;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
@@ -53,6 +54,7 @@ final class TwoFactorController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $hasher,
         RateLimiterFactoryInterface $passwordReauthLimiter,
+        TwoFactorChangeNotice $notice,
         ?TotpAuthenticatorInterface $totpAuthenticator = null,
     ): Response {
         // Nullable: `when@dev` disables TOTP; requiring it 500s the setup page.
@@ -102,6 +104,7 @@ final class TwoFactorController extends AbstractController
                 // docs/specs/account-and-auth.md §4 — keyed hashes; plaintext shown once.
                 $user->setBackupCodes(array_map(User::hashBackupCode(...), $backupCodes));
                 $entityManager->flush();
+                $notice->send($user, $replacing);
 
                 $session->remove(self::PENDING_SECRET_KEY);
 

@@ -1598,6 +1598,16 @@ security:
     forgot: '¿Olvidaste tu contraseña?'
     reset: 'Elige una nueva.'
     ignore: 'Si no fuiste tú, puedes ignorar este correo. En tu cuenta no ha cambiado nada.'
+  twofactor_email:
+    subject_on: 'El inicio de sesión en dos factores ya está activo en tu cuenta'
+    subject_moved: 'Tu inicio de sesión en dos factores usa una aplicación nueva'
+    body_on: 'Se acaba de activar el inicio de sesión en dos factores en tu cuenta de Cycling Commons. A partir de ahora, iniciar sesión pide un código de la aplicación configurada.'
+    body_moved: 'Tu cuenta de Cycling Commons ahora usa una aplicación nueva para el inicio de sesión en dos factores. La aplicación antigua y los códigos de respaldo antiguos ya no funcionan.'
+    when: 'Cuándo: %when% UTC'
+    not_you: '¿No fuiste tú? Entonces puede que alguien esté usando tu cuenta.'
+    change_password: 'Cambiar mi contraseña'
+    write_us: 'Después escríbenos, para que desactivemos el nuevo inicio de sesión en dos factores:'
+    was_you: '¿Fuiste tú? Entonces no tienes que hacer nada.'
   reset_email:
     subject: 'Tu enlace para restablecer la contraseña de Cycling Commons'
     heading: 'Restablece tu contraseña'

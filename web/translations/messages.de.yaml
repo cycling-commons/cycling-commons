@@ -1591,6 +1591,16 @@ security:
     forgot: 'Passwort vergessen?'
     reset: 'Wähle ein neues.'
     ignore: 'Wenn du das nicht warst, kannst du diese E-Mail ignorieren. An deinem Konto hat sich nichts geändert.'
+  twofactor_email:
+    subject_on: 'Die Zwei-Faktor-Anmeldung ist jetzt für dein Konto aktiv'
+    subject_moved: 'Deine Zwei-Faktor-Anmeldung nutzt eine neue App'
+    body_on: 'Für dein Cycling-Commons-Konto wurde gerade die Zwei-Faktor-Anmeldung eingeschaltet. Ab jetzt fragt die Anmeldung nach einem Code aus der eingerichteten App.'
+    body_moved: 'Dein Cycling-Commons-Konto nutzt jetzt eine neue App für die Zwei-Faktor-Anmeldung. Die alte App und die alten Backup-Codes funktionieren nicht mehr.'
+    when: 'Wann: %when% UTC'
+    not_you: 'Warst du das nicht? Dann nutzt vielleicht jemand dein Konto.'
+    change_password: 'Mein Passwort ändern'
+    write_us: 'Schreib uns danach, damit wir die neue Zwei-Faktor-Anmeldung abschalten:'
+    was_you: 'Warst du es? Dann musst du nichts tun.'
   reset_email:
     subject: 'Dein Link zum Zurücksetzen deines Cycling-Commons-Passworts'
     heading: 'Setze dein Passwort zurück'

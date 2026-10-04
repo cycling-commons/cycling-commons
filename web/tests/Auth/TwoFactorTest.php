@@ -418,6 +418,15 @@ final class TwoFactorTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('ul.codes li');
 
+        // The account's own address hears of it at once.
+        self::assertEmailCount(1, null, 'the two-factor notice');
+        $mail = self::getMailerMessage();
+        self::assertNotNull($mail);
+        self::assertEmailAddressContains($mail, 'to', $email);
+        self::assertEmailHeaderSame($mail, 'subject', 'Two-factor sign-in is now on for your account');
+        self::assertStringContainsString('Change my password', (string) $mail->getHtmlBody());
+        self::assertStringNotContainsString('twofactor_email.', (string) $mail->getHtmlBody(), 'every line translated');
+
         $user = $this->fetchUser($email);
         self::assertTrue($user->isTwoFaEnabled());
         self::assertSame($secret, $user->getTotpSecret());
@@ -523,10 +532,16 @@ final class TwoFactorTest extends WebTestCase
         $this->submitSetup($client, ['currentCode' => 'not-a-code']);
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('.alert-error', 'does not match your current app');
+        self::assertEmailCount(0, null, 'nothing changed, so nothing to tell');
         self::assertSame($data['secret'], $this->fetchUser($email)->getTotpSecret(), 'a wrong code replaces nothing');
 
         $this->submitSetup($client, ['currentCode' => $this->currentTotpCode($data['secret'])]);
         self::assertSelectorExists('ul.codes li');
+        self::assertEmailCount(1, null, 'the two-factor notice');
+        $mail = self::getMailerMessage();
+        self::assertNotNull($mail);
+        self::assertEmailAddressContains($mail, 'to', $email);
+        self::assertEmailHeaderSame($mail, 'subject', 'Your two-factor sign-in moved to a new app');
         self::assertNotSame($data['secret'], $this->fetchUser($email)->getTotpSecret());
     }
 

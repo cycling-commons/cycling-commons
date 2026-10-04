@@ -1586,6 +1586,16 @@ security:
     forgot: 'Mot de passe oublié ?'
     reset: 'Choisissez-en un nouveau.'
     ignore: 'Si ce n''était pas vous, vous pouvez ignorer cet e-mail. Rien n''a changé dans votre compte.'
+  twofactor_email:
+    subject_on: 'La connexion à deux facteurs est activée sur votre compte'
+    subject_moved: 'Votre connexion à deux facteurs utilise une nouvelle application'
+    body_on: 'La connexion à deux facteurs vient d''être activée sur votre compte Cycling Commons. Désormais, la connexion demande un code de l''application qui a été configurée.'
+    body_moved: 'Votre compte Cycling Commons utilise maintenant une nouvelle application pour la connexion à deux facteurs. L''ancienne application et les anciens codes de secours ne fonctionnent plus.'
+    when: 'Quand : %when% UTC'
+    not_you: 'Ce n''était pas vous ? Alors quelqu''un utilise peut-être votre compte.'
+    change_password: 'Changer mon mot de passe'
+    write_us: 'Ensuite, écrivez-nous pour que nous désactivions la nouvelle connexion à deux facteurs :'
+    was_you: 'C''était vous ? Alors vous n''avez rien à faire.'
   reset_email:
     subject: 'Votre lien de réinitialisation du mot de passe Cycling Commons'
     heading: 'Réinitialisez votre mot de passe'
