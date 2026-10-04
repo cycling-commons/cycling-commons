@@ -1,0 +1,23 @@
+.github/workflows/ci-app.yml
+  s_985749378da6fe::t_98393b7b583f88 59-62
+web/tools/check-raw-translations.sh
+  s_985749378da6fe::t_6981b5520c63b1 36-48,63,92
+docs/specs/security-architecture.md
+  s_985749378da6fe::t_05cd2753577707 289-291
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4debde06cef2e5dd42e1880f0d2a60bc0f6bfd97",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
