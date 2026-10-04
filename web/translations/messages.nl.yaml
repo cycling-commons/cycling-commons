@@ -1668,6 +1668,11 @@ twofactor:
     step2_h2: 'Voer de 6-cijferige code in'
     submit: 'Verifiëren & inschakelen'
     back: '← Terug naar beveiligingsinstellingen'
+    replace_lead: 'Twee-factor-authenticatie staat al aan. Om naar een nieuwe app over te stappen, vul je eerst een code uit je huidige app of een van je back-upcodes in.'
+    password_lead: 'Vul eerst je wachtwoord in, zodat we weten dat jij het bent.'
+    current_code_label: 'Code uit je huidige app, of een back-upcode'
+    current_code_required: 'Vul een code uit je huidige app in, of een van je back-upcodes.'
+    current_code_wrong: 'Die code past niet bij je huidige app en is geen van je back-upcodes.'
 profile:
   badge_public: 'Opt-in openbare bijdrager'
   badge_private: 'Privéprofiel'

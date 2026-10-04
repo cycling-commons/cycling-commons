@@ -1675,6 +1675,11 @@ twofactor:
     step2_h2: 'Introduce el código de 6 dígitos'
     submit: 'Verificar y activar'
     back: '← Volver a los ajustes de seguridad'
+    replace_lead: 'La autenticación en dos factores ya está activa. Para pasarla a una aplicación nueva, escribe primero un código de tu aplicación actual o uno de tus códigos de respaldo.'
+    password_lead: 'Escribe primero tu contraseña, para confirmar que eres tú.'
+    current_code_label: 'Código de tu aplicación actual, o un código de respaldo'
+    current_code_required: 'Escribe un código de tu aplicación actual, o uno de tus códigos de respaldo.'
+    current_code_wrong: 'Ese código no coincide con tu aplicación actual ni con ninguno de tus códigos de respaldo.'
 profile:
   badge_public: 'Colaborador público voluntario'
   badge_private: 'Perfil privado'

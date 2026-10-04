@@ -1663,6 +1663,11 @@ twofactor:
     step2_h2: 'Entrez le code à 6 chiffres'
     submit: 'Vérifier & activer'
     back: '← Retour aux paramètres de sécurité'
+    replace_lead: 'L''authentification à deux facteurs est déjà active. Pour la passer sur une nouvelle application, saisissez d''abord un code de votre application actuelle ou l''un de vos codes de secours.'
+    password_lead: 'Saisissez d''abord votre mot de passe, pour confirmer que c''est bien vous.'
+    current_code_label: 'Code de votre application actuelle, ou un code de secours'
+    current_code_required: 'Saisissez un code de votre application actuelle, ou l''un de vos codes de secours.'
+    current_code_wrong: 'Ce code ne correspond ni à votre application actuelle ni à l''un de vos codes de secours.'
 profile:
   badge_public: 'Contributeur public (optionnel)'
   badge_private: 'Profil privé'

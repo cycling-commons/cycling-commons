@@ -1672,6 +1672,11 @@ twofactor:
     step2_h2: 'Enter the 6-digit code'
     submit: 'Verify & enable'
     back: '← Back to security settings'
+    replace_lead: 'Two-factor is already on. To move it to a new app, first enter a code from your current app or one of your backup codes.'
+    password_lead: 'Enter your password first, to confirm it is you.'
+    current_code_label: 'Code from your current app, or a backup code'
+    current_code_required: 'Enter a code from your current app, or one of your backup codes.'
+    current_code_wrong: 'That code does not match your current app or any of your backup codes.'
 profile:
   badge_public: 'Opt-in public contributor'
   badge_private: 'Private profile'

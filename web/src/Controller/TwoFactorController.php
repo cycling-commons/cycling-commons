@@ -15,13 +15,23 @@ use Endroid\QrCode\Writer\SvgWriter;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Totp\TotpAuthenticatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Self-service TOTP enrolment. Secret stays in session until a valid code.
+ *
+ * Enrolling replaces whatever second factor the account had, so it is guarded
+ * like one: an account that already has two-factor
+ * proves it holds the old one (a current code or a backup code), and a
+ * remember-me session confirms the password, because a REMEMBERME cookie is
+ * exactly what a shared or stolen browser carries. Both checks spend the
+ * shared password_reauth budget.
  *
  * @see docs/specs/account-and-auth.md §4
  *
@@ -41,6 +51,8 @@ final class TwoFactorController extends AbstractController
     public function setup(
         Request $request,
         EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $hasher,
+        RateLimiterFactoryInterface $passwordReauthLimiter,
         ?TotpAuthenticatorInterface $totpAuthenticator = null,
     ): Response {
         // Nullable: `when@dev` disables TOTP; requiring it 500s the setup page.
@@ -63,17 +75,26 @@ final class TwoFactorController extends AbstractController
             $session->set(self::PENDING_SECRET_KEY, $pendingSecret);
         }
 
-        // In-memory only until a valid code — never flushed here.
-        $user->setTotpSecret($pendingSecret);
+        // The pending secret lives on a detached copy, so the account keeps
+        // its stored secret for the old-code check below and nothing a later
+        // flush in this request does can persist an unconfirmed one.
+        $pending = clone $user;
+        $pending->setTotpSecret($pendingSecret);
 
-        $form = $this->createForm(TwoFactorSetupType::class);
+        $replacing = $user->isTotpAuthenticationEnabled();
+        $remembered = !$this->isGranted('IS_AUTHENTICATED_FULLY');
+        $form = $this->createForm(TwoFactorSetupType::class, null, [
+            'current_code' => $replacing,
+            'current_password' => $remembered,
+        ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()
+            && $this->provesItIsTheOwner($form, $user, $replacing, $remembered, $hasher, $passwordReauthLimiter, $totpAuthenticator)) {
             /** @var string $code */
             $code = $form->get('code')->getData();
 
-            if ($totpAuthenticator->checkCode($user, $code)) {
+            if ($totpAuthenticator->checkCode($pending, $code)) {
                 $backupCodes = $this->generateBackupCodes();
 
                 $user->setTotpSecret($pendingSecret);
@@ -98,11 +119,55 @@ final class TwoFactorController extends AbstractController
         return $this->render('security/2fa_setup.html.twig', [
             'form' => $form,
             'setup_complete' => false,
-            'qr_code_uri' => $this->buildQrCodeDataUri($totpAuthenticator->getQRContent($user)),
+            'replacing' => $replacing,
+            'qr_code_uri' => $this->buildQrCodeDataUri($totpAuthenticator->getQRContent($pending)),
             'manual_secret' => $pendingSecret,
             'page_title' => 'meta.twofa_setup_title',
             'page_description' => 'meta.twofa_setup_description',
         ]);
+    }
+
+    /**
+     * The checks that stand in for "this is the account's owner" before a
+     * second factor is replaced, each putting its error on its own field.
+     *
+     * One try from the budget per submission that has anything to check, so a
+     * script gets five guesses a quarter of an hour at the password and the
+     * six-digit code together. A backup code that proves ownership is not
+     * spent here: enrolling replaces every backup code a moment later.
+     */
+    private function provesItIsTheOwner(
+        FormInterface $form,
+        User $user,
+        bool $replacing,
+        bool $remembered,
+        UserPasswordHasherInterface $hasher,
+        RateLimiterFactoryInterface $passwordReauthLimiter,
+        TotpAuthenticatorInterface $totpAuthenticator,
+    ): bool {
+        if (!$replacing && !$remembered) {
+            return true;
+        }
+        if (!$passwordReauthLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted()) {
+            $form->addError(new FormError('flash.reauth_too_many'));
+
+            return false;
+        }
+
+        $proven = true;
+        if ($remembered && !$hasher->isPasswordValid($user, (string) $form->get('currentPassword')->getData())) {
+            $form->get('currentPassword')->addError(new FormError('flash.current_password_incorrect'));
+            $proven = false;
+        }
+        if ($replacing) {
+            $current = trim((string) $form->get('currentCode')->getData());
+            if (!$totpAuthenticator->checkCode($user, $current) && !$user->isBackupCode($current)) {
+                $form->get('currentCode')->addError(new FormError('twofactor.setup.current_code_wrong'));
+                $proven = false;
+            }
+        }
+
+        return $proven;
     }
 
     /** SVG data-URI so QR rendering does not need GD/Imagick. */

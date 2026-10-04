@@ -392,12 +392,23 @@ Invariant for fixtures and seeded elevated accounts: set **both**
 2. `App\Security\TwoFactorSetupEnforcer` (`kernel.request` listener,
    priority 7): closes the remember-me / direct-navigation gap — a
    not-fully-enrolled elevated user is redirected to `/2fa/setup` on **every**
-   main request. Path bypasses run **before any token read** (an eager
+   main request. A request with neither a session cookie nor a `REMEMBERME`
+   cookie is skipped before any token read, since nobody is signed in on it.
+   A request carrying only `REMEMBERME` (the first request of a new browser
+   session, or a stolen cookie replayed with curl) is checked like any other:
+   the token read signs it in through the remember-me authenticator first.
+   Path bypasses run **before any token read** (an eager
    `getToken()` would boot the lazy firewall + session and destroy the
    cacheability of public endpoints): `/2fa*`, `/_wdt`, `/_profiler`,
    `/assets`, `/map`, `/routes/`, `/items/` (`BYPASS_PREFIXES` in the class),
    plus the setup route itself and `/logout` (always reachable).
    2FA-in-progress tokens are never touched — scheb owns the interstitial.
+3. `App\Security\NoRememberMeBeforeTwoFactor` (`LoginSuccessEvent`,
+   priority -48): no `REMEMBERME` cookie is minted for a user for whom
+   `requiresSetup()` is true, even with "Stay signed in" ticked. scheb
+   withholds the cookie only while its own 2FA token is in play, which an
+   account with no secret never gets. The rider ticks the box again at the
+   first login after enrolling.
 
 ### Enrolment flow (`App\Controller\TwoFactorController`, `/2fa/setup`)
 
@@ -410,6 +421,16 @@ Invariant for fixtures and seeded elevated accounts: set **both**
   `TwoFactorController::BACKUP_CODE_COUNT = 8`, each 80 bits of entropy
   (10 random bytes as grouped hex). Shown exactly once; stored only as keyed
   hashes.
+- **Enrolling replaces the second factor, so it is guarded like one**
+  (security audit 2026-10-04). An account that already has two-factor
+  (`isTotpAuthenticationEnabled()`) must enter a current code from its app or
+  one of its backup codes before the new secret is saved; a remembered session
+  (not `IS_AUTHENTICATED_FULLY`) must also enter its password. Both checks run
+  on the confirming POST, spend one try from `password_reauth` (account-and-auth.md §5), and
+  put a wrong answer on its own field with nothing saved. A backup code used
+  as that proof is not spent separately: enrolling replaces every backup code.
+  The pending secret sits on a detached copy of the user, so the stored secret
+  answers the old-code check and no flush can persist an unconfirmed one.
 - Interstitial login: scheb's `two_factor` firewall entry
   (`auth_form_path: 2fa_login`, `check_path: 2fa_login_check`); TOTP or a
   single-use backup code.
@@ -513,7 +534,7 @@ stay unprefixed):
 | `^(/[a-z]{2})?/verify` | `PUBLIC_ACCESS` — the locale prefix is part of the match since the verify link was localized (above) |
 | `(/[a-z]{2})?/riders/` | `PUBLIC_ACCESS` (public rider profiles, §7) |
 | `^/map/catalog\.json$`, `^/map/best-of$`, `^/map/item/\d+/history$`, `^/routes/\d+\.gpx$`, `^/items/\d+/confirmations$` | `PUBLIC_ACCESS` — **exact-path, explicitly public** so scheb's lazy-firewall `TwoFactorAccessListener` skips the session read that would downgrade `Cache-Control` to private (data contracts: [catalog-data-model.md](catalog-data-model.md), [route-domain.md](route-domain.md), [moderation-and-contribution.md](moderation-and-contribution.md)) |
-| `(/[a-z]{2})?/2fa/setup` | `ROLE_USER` — must precede the interstitial rule: setup is reached *fully* authenticated |
+| `(/[a-z]{2})?/2fa/setup` | `ROLE_USER` — must precede the interstitial rule: setup is reached signed in, not mid-interstitial. A remembered session may enrol but confirms its password on the POST (account-and-auth.md §4) |
 | `^/2fa` | `IS_AUTHENTICATED_2FA_IN_PROGRESS` (scheb interstitial) |
 | `(/[a-z]{2})?/account(/\|$)` | `ROLE_USER`: the whole rider area (§8) |
 | `(/[a-z]{2})?/translate`, `^/scout/tags` | `ROLE_USER`: backstops mirroring the controllers' `IsGranted` attributes (review 2026-08-16 finding 7). `/media/*` and `/contribute/elevation` are deliberately absent: THE stateless-JSON pattern ([security-architecture.md](security-architecture.md) §5.1) owns their clean 401s, and an `access_control` rule would turn those into login redirects |

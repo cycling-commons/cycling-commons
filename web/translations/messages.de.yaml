@@ -1668,6 +1668,11 @@ twofactor:
     step2_h2: 'Den 6-stelligen Code eingeben'
     submit: 'Bestätigen & aktivieren'
     back: '← Zurück zu den Sicherheitseinstellungen'
+    replace_lead: 'Die Zwei-Faktor-Authentifizierung ist schon aktiv. Um sie auf eine neue App umzuziehen, gib zuerst einen Code aus deiner aktuellen App oder einen deiner Backup-Codes ein.'
+    password_lead: 'Gib zuerst dein Passwort ein, damit wir wissen, dass du es bist.'
+    current_code_label: 'Code aus deiner aktuellen App oder ein Backup-Code'
+    current_code_required: 'Gib einen Code aus deiner aktuellen App oder einen deiner Backup-Codes ein.'
+    current_code_wrong: 'Dieser Code passt weder zu deiner aktuellen App noch zu einem deiner Backup-Codes.'
 profile:
   badge_public: 'Öffentlicher Beitragender (opt-in)'
   badge_private: 'Privates Profil'

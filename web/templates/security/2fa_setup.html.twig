@@ -53,11 +53,31 @@
 
       {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
       {% include 'partials/_form_errors.html.twig' with {form: form} %}
+        {# Replacing a second factor, or doing it from a remember-me session,
+           first proves this is the account's owner (TwoFactorController). #}
+        {% if form.currentPassword is defined or form.currentCode is defined %}
+          <p class="lead">{{ (replacing ? 'twofactor.setup.replace_lead' : 'twofactor.setup.password_lead')|trans }}</p>
+        {% endif %}
+        {% for name in ['currentPassword', 'currentCode'] %}
+          {% if attribute(form, name) is defined %}
+            {% set field = attribute(form, name) %}
+            <div class="field">
+              {{ form_label(field) }}
+              {{ form_widget(field) }}
+              {% if not field.vars.valid %}
+                <div class="alert-error" role="alert">
+                  {% for error in field.vars.errors %}{{ error.message|trans }}{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
         <div class="field">
+          {% if form.currentPassword is defined or form.currentCode is defined %}{{ form_label(form.code) }}{% endif %}
           {{ form_widget(form.code) }}
           {% if not form.code.vars.valid %}
             <div class="alert-error" role="alert">
-              {% for error in form.code.vars.errors %}{{ error.message }}{% endfor %}
+              {% for error in form.code.vars.errors %}{{ error.message|trans }}{% endfor %}
             </div>
           {% endif %}
         </div>

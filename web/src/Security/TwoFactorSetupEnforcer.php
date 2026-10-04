@@ -37,6 +37,13 @@ final class TwoFactorSetupEnforcer
         '/items/',
     ];
 
+    /**
+     * The remember-me cookie's name: security.yaml sets none, so Symfony's
+     * default. TwoFactorTest replays the cookie the login really set, so a
+     * rename there fails that test rather than reopening the gap.
+     */
+    private const string REMEMBER_ME_COOKIE = 'REMEMBERME';
+
     public function __construct(
         private readonly TokenStorageInterface $tokenStorage,
         private readonly TwoFactorPolicy $twoFactorPolicy,
@@ -50,17 +57,22 @@ final class TwoFactorSetupEnforcer
             return;
         }
 
-        // No session cookie, nobody signed in, nothing to enforce: do not ask
-        // for a token. Since the Symfony 7.4 patch releases of September 2026
-        // the first token read on the lazy firewall counts as session use, so
-        // that one call turned every anonymous page private and uncacheable
-        // (RoadmapChangelogTest, 2026-09-21). A signed-in user always carries
-        // the cookie, so the check below still reaches everyone it is for.
-        if (!$event->getRequest()->hasPreviousSession()) {
+        // No session cookie and no remember-me cookie, nobody signed in,
+        // nothing to enforce: do not ask for a token. Since the Symfony 7.4
+        // patch releases of September 2026 the first token read on the lazy
+        // firewall counts as session use, so that one call turned every
+        // anonymous page private and uncacheable (RoadmapChangelogTest,
+        // 2026-09-21). A signed-in user carries one of the two: the session,
+        // or on the first request of a new browser session only the
+        // remember-me cookie, which the token read below turns into a login.
+        // That second case is the one a stolen cookie arrives as, so it is
+        // checked like the first.
+        $request = $event->getRequest();
+        if (!$request->hasPreviousSession() && !$request->cookies->has(self::REMEMBER_ME_COOKIE)) {
             return;
         }
 
-        $path = $event->getRequest()->getPathInfo();
+        $path = $request->getPathInfo();
         foreach (self::BYPASS_PREFIXES as $prefix) {
             if (str_starts_with($path, $prefix)) {
                 return;

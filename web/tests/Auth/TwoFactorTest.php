@@ -6,6 +6,7 @@ namespace App\Tests\Auth;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Tests\Security\PasswordReauthBudget;
 use Doctrine\ORM\EntityManagerInterface;
 use OTPHP\TOTP;
 use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Totp\TotpAuthenticatorInterface;
@@ -111,6 +112,48 @@ final class TwoFactorTest extends WebTestCase
             '_username' => $email,
             '_password' => $plain,
         ]);
+        $client->submit($form);
+    }
+
+    /** Sign in with "Stay signed in" ticked, without following the redirect. */
+    private function submitRememberedLogin(KernelBrowser $client, string $email, string $plain): void
+    {
+        $crawler = $client->request('GET', '/login');
+        $form = $crawler->selectButton('Sign in')->form([
+            '_username' => $email,
+            '_password' => $plain,
+        ]);
+        $form['_remember_me']->tick();
+        $client->submit($form);
+    }
+
+    /** Pass scheb's interstitial with a current code, for an account that has two-factor. */
+    private function completeTwoFactorLogin(KernelBrowser $client, string $email, string $plain, string $secret): void
+    {
+        $this->submitLogin($client, $email, $plain);
+        self::assertResponseRedirects('/2fa');
+        $crawler = $client->followRedirect();
+        $form = $crawler->selectButton('Verify')->form();
+        $form['_auth_code'] = $this->currentTotpCode($secret);
+        $client->submit($form);
+        self::assertResponseRedirects();
+    }
+
+    /**
+     * Post the setup form with a valid code for the new secret on the page.
+     *
+     * @param array<string, string> $proof the owner checks: currentCode, currentPassword
+     */
+    private function submitSetup(KernelBrowser $client, array $proof): void
+    {
+        $crawler = $client->request('GET', '/2fa/setup');
+        self::assertResponseIsSuccessful();
+        $secret = trim($crawler->filter('code.secret')->text());
+        $form = $crawler->selectButton('Verify & enable')->form();
+        foreach ($proof as $field => $value) {
+            $form['two_factor_setup['.$field.']'] = $value;
+        }
+        $form['two_factor_setup[code]'] = $this->currentTotpCode($secret);
         $client->submit($form);
     }
 
@@ -427,6 +470,122 @@ final class TwoFactorTest extends WebTestCase
         foreach ($client->getResponse()->headers->getCookies() as $cookie) {
             self::assertStringNotContainsStringIgnoringCase('SESS', $cookie->getName(), 'a cacheable public endpoint must not set a session cookie');
         }
+    }
+
+    /**
+     * A remember-me cookie alone is a signed-in request too: a rider promoted
+     * to curator after ticking "Stay signed in" comes back on the cookie, with
+     * no session, and is sent to setup like anyone else.
+     */
+    public function testARememberMeCookieAloneIsStillSentToSetup(): void
+    {
+        $client = static::createClient();
+        $email = 'promoted-curator@example.com';
+        $this->createUser($email, 'hunter2secure!');
+
+        $this->submitRememberedLogin($client, $email, 'hunter2secure!');
+        self::assertNotNull($client->getCookieJar()->get('REMEMBERME'), 'a rider may stay signed in');
+
+        $user = $this->fetchUser($email);
+        $user->setRoles(['ROLE_CURATOR']);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+        $client->getCookieJar()->expire('MOCKSESSID');
+
+        $client->request('GET', '/moderate');
+        self::assertResponseRedirects('/2fa/setup');
+    }
+
+    /** No seven-day cookie before there is a second factor behind it. */
+    public function testNoRememberMeCookieIsSetBeforeTwoFactorIsSetUp(): void
+    {
+        $client = static::createClient();
+        $email = 'new-curator@example.com';
+        $this->createUser($email, 'hunter2secure!', role: 'ROLE_CURATOR');
+
+        $this->submitRememberedLogin($client, $email, 'hunter2secure!');
+        self::assertResponseRedirects('/2fa/setup');
+        self::assertNull($client->getCookieJar()->get('REMEMBERME'));
+    }
+
+    /** Replacing two-factor proves the old one first: a wrong code changes nothing, a current one does. */
+    public function testReplacingTwoFactorNeedsACodeFromTheOldOne(): void
+    {
+        $client = static::createClient();
+        $email = 'replace-totp@example.com';
+        $data = $this->createUser($email, 'hunter2secure!', withTotp: true);
+        self::assertIsString($data['secret']);
+        $this->completeTwoFactorLogin($client, $email, $data['plain'], $data['secret']);
+
+        $crawler = $client->request('GET', '/2fa/setup');
+        self::assertCount(1, $crawler->filter('input[name="two_factor_setup[currentCode]"]'));
+        self::assertCount(0, $crawler->filter('input[name="two_factor_setup[currentPassword]"]'), 'a full sign-in is not asked for the password again');
+
+        $this->submitSetup($client, ['currentCode' => 'not-a-code']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.alert-error', 'does not match your current app');
+        self::assertSame($data['secret'], $this->fetchUser($email)->getTotpSecret(), 'a wrong code replaces nothing');
+
+        $this->submitSetup($client, ['currentCode' => $this->currentTotpCode($data['secret'])]);
+        self::assertSelectorExists('ul.codes li');
+        self::assertNotSame($data['secret'], $this->fetchUser($email)->getTotpSecret());
+    }
+
+    /** Somebody who lost the app proves ownership with a backup code instead. */
+    public function testABackupCodeAlsoProvesTheOldFactor(): void
+    {
+        $client = static::createClient();
+        $email = 'replace-backup@example.com';
+        $data = $this->createUser($email, 'hunter2secure!', withTotp: true, backupCodes: ['aaaa-bbbb-cccc-dddd-eeee']);
+        self::assertIsString($data['secret']);
+        $this->completeTwoFactorLogin($client, $email, $data['plain'], $data['secret']);
+
+        $this->submitSetup($client, ['currentCode' => 'aaaa-bbbb-cccc-dddd-eeee']);
+        self::assertSelectorExists('ul.codes li');
+        $user = $this->fetchUser($email);
+        self::assertNotSame($data['secret'], $user->getTotpSecret());
+        self::assertFalse($user->isBackupCode('aaaa-bbbb-cccc-dddd-eeee'), 'enrolling issues a fresh set of backup codes');
+    }
+
+    /** A remember-me session confirms the password before it enrols anything. */
+    public function testARememberedSessionConfirmsThePasswordBeforeEnrolling(): void
+    {
+        $client = static::createClient();
+        $email = 'remembered-enrol@example.com';
+        $this->createUser($email, 'hunter2secure!');
+        $this->submitRememberedLogin($client, $email, 'hunter2secure!');
+        $client->getCookieJar()->expire('MOCKSESSID');
+
+        $crawler = $client->request('GET', '/2fa/setup');
+        self::assertCount(1, $crawler->filter('input[name="two_factor_setup[currentPassword]"]'));
+
+        $this->submitSetup($client, ['currentPassword' => 'not-my-password']);
+        self::assertSelectorTextContains('.alert-error', 'Current password is incorrect');
+        self::assertFalse($this->fetchUser($email)->isTwoFaEnabled());
+
+        $this->submitSetup($client, ['currentPassword' => 'hunter2secure!']);
+        self::assertSelectorExists('ul.codes li');
+        self::assertTrue($this->fetchUser($email)->isTwoFaEnabled());
+    }
+
+    /** The owner checks spend the shared password budget: past it, even the right code is refused. */
+    public function testOwnerChecksStopWhenThePasswordBudgetIsSpent(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $budget = PasswordReauthBudget::install(static::getContainer());
+        $email = 'replace-budget@example.com';
+        $data = $this->createUser($email, 'hunter2secure!', withTotp: true);
+        self::assertIsString($data['secret']);
+        $this->completeTwoFactorLogin($client, $email, $data['plain'], $data['secret']);
+
+        for ($i = 0; $i < $budget; ++$i) {
+            $this->submitSetup($client, ['currentCode' => 'not-a-code']);
+            self::assertSelectorTextContains('.alert-error', 'does not match your current app');
+        }
+
+        $this->submitSetup($client, ['currentCode' => $this->currentTotpCode($data['secret'])]);
+        self::assertSelectorTextContains('.form-errors', 'Too many tries');
+        self::assertSame($data['secret'], $this->fetchUser($email)->getTotpSecret());
     }
 
     /** #18: /2fa/setup with no authenticated user redirects to login, never 500s. */
