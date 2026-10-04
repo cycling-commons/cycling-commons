@@ -83,7 +83,10 @@ final readonly class SupportMailer
         $this->send(
             (new TemplatedEmail())
                 ->from(new Address($this->fromEmail, $this->fromName()))
-                ->to(new Address($message->getEmail(), $message->getName() ?? ''))
+                // The address alone: the name is the sender's own typing,
+                // and a To display name is text we would deliver to whoever
+                // owns that address.
+                ->to(new Address($message->getEmail()))
                 ->subject($this->trans('support.email.ack_subject', ['%reference%' => $reference], $locale))
                 ->htmlTemplate('emails/support_contact_ack.html.twig')
                 ->context([

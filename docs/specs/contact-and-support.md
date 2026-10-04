@@ -1011,7 +1011,9 @@ Corrections from 2026-08-27, after seeing the first version:
   text, not visible text, so it covers nothing in its corner.
 * **The acknowledgement never quotes the sender back.** Anyone can type a
   message and put somebody else's address in the email field, so echoing the
-  text would make us a spam reflector. Pinned by
+  text would make us a spam reflector. That includes the name they typed: the
+  acknowledgement is addressed to the bare address, with no display name in
+  its To header (security audit 2026-10-04). Pinned by
   `ContactFormTest::testTheAcknowledgementNeverQuotesTheSenderBack`. The desk
   notification does carry the message, and must: it goes to an address we
   configured.

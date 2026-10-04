@@ -377,7 +377,7 @@ final class ContactFormTest extends WebTestCase
     {
         $client = $this->client();
         $marker = 'BUY-CHEAP-WATCHES-AT-EXAMPLE-DOT-TEST';
-        $this->submit($client, ['message' => 'Hello. '.$marker]);
+        $this->submit($client, ['message' => 'Hello. '.$marker, 'name' => 'NAME-'.$marker]);
 
         $sawAck = false;
         for ($i = 0;; ++$i) {
@@ -391,6 +391,7 @@ final class ContactFormTest extends WebTestCase
             if (\in_array('rider@cyclingcommons.org', $to, true)) {
                 $sawAck = true;
                 self::assertStringNotContainsString($marker, $whole, 'the sender copy must not echo their own text');
+                self::assertSame('', $mail->getTo()[0]->getName(), 'nor their name, in the To header');
             } else {
                 self::assertStringContainsString($marker, $whole, 'the desk notification must carry the message');
             }
