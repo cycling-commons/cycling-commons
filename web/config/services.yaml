@@ -188,6 +188,12 @@ services:
 
 when@test:
     services:
+        # Where a town lies, with no OpenStreetMap request: a test names the
+        # point it needs (FakeTownPointSource::place()).
+        App\Town\TownPointSource:
+            class: App\Tests\Town\FakeTownPointSource
+            public: true
+
         # Replaced by a fixed reading in ScenicBikeWayIntakeTest, which a
         # private alias does not allow.
         App\Contribution\BikeWayLocator:

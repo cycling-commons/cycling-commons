@@ -71,6 +71,24 @@ final class ModerationScopeProvider
     }
 
     /**
+     * Whether the region is one of this curator's own, for the paths where a
+     * curator's own words go live with no second curator: their town or region
+     * text applied on sending, and the direct pen on a town page.
+     *
+     * Stricter than {@see self::allowsRegion()} by one case. Work with no
+     * region is on every curator's desk, so anyone may decide it; it is no
+     * curator's own area, so only a global curator writes it unreviewed.
+     */
+    public function coversRegion(ModerationScope $scope, ?int $regionId): bool
+    {
+        if ($scope->global) {
+            return true;
+        }
+
+        return null !== $regionId && $this->allowsRegion($scope, $regionId);
+    }
+
+    /**
      * Every region id this scope covers, or null when it covers all of them.
      * The same rule as {@see self::allowsRegion()}, answered for the whole map
      * at once so a page can decide per region without a query each time.

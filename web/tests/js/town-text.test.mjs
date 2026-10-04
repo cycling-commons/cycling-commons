@@ -25,14 +25,15 @@ const D = {
 const META = { osm: 'node/59518', ll: [51.2194, 4.4025] };
 const TEXT = { text: { extract: 'Antwerp is a city.', url: 'https://en.wikipedia.org/wiki/Antwerp' } };
 
-test('the form address names the element, the card language, the point, the name and the way back', () => {
+test('the form address names the element, the card language, the name and the way back, never a point', () => {
   const href = townTextHref(META, 'Antwerpen', 'nl', '/nl/map?town=x');
   assert.ok(href.startsWith('/nl/town/node/59518/text?'), href);
   const q = new URL(href, 'https://x.test').searchParams;
   assert.equal(q.get('lang'), 'nl');
   assert.equal(q.get('name'), 'Antwerpen');
-  assert.equal(q.get('lat'), '51.21940');
-  assert.equal(q.get('lng'), '4.40250');
+  // Where the town lies is read by the server from OpenStreetMap.
+  assert.equal(q.get('lat'), null);
+  assert.equal(q.get('lng'), null);
   assert.equal(q.get('from'), '/nl/map?town=x');
   assert.ok(townTextHref(META, 'A', 'en').startsWith('/town/'), 'English is the unprefixed path');
 });

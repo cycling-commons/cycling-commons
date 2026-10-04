@@ -14,7 +14,6 @@ use App\Media\PhotoPlace;
 use App\Town\Message\ResolveTownSummary;
 use App\Town\MessageHandler\ResolveTownSummaryHandler;
 use App\Town\OsmElementApi;
-use App\Town\TownPlaceRepository;
 use App\Town\TownRoutes;
 use App\Town\TownSummaryRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -58,7 +57,6 @@ final class TownController extends AbstractController
         RateLimiterFactoryInterface $coveragePhotoFetchLimiter,
         RateLimiterFactoryInterface $coveragePhotoGlobalLimiter,
         TownRoutes $routes,
-        TownPlaceRepository $places,
     ): Response {
         if (null !== ($limited = $this->rateLimited($request, $coveragePhotoLimiter))) {
             return $limited;
@@ -71,13 +69,7 @@ final class TownController extends AbstractController
         $continent = $this->continent($request, $continents);
         $budget = fn (): bool => $this->fetchBudgetAllows($request, $coveragePhotoFetchLimiter, $coveragePhotoGlobalLimiter);
 
-        // Where the town lies decides whose region its text belongs to
-        // (moderation-and-contribution.md §3.1b). The first reader's point is
-        // kept; the poll that follows is not asked again.
         $row = $towns->find($ref, $lang);
-        if (null === $row || $row['answered']) {
-            $this->recordPlace($request, $ref, $places);
-        }
         if (null === $row) {
             // Three outbound requests follow, so this spends the same
             // admission budget a Commons fetch does.
@@ -181,15 +173,6 @@ final class TownController extends AbstractController
         }
 
         return $continents->resolve((float) $lat, (float) $lng);
-    }
-
-    private function recordPlace(Request $request, string $ref, TownPlaceRepository $places): void
-    {
-        $lat = $request->query->get('lat');
-        $lng = $request->query->get('lng');
-        if (is_numeric($lat) && is_numeric($lng)) {
-            $places->record($ref, (float) $lat, (float) $lng);
-        }
     }
 
     /** @param array<string, mixed> $payload */

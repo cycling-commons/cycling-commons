@@ -2651,8 +2651,9 @@ checked while the box starts from it): adapted, the card's credit reads
 "Edited by our curators, after Wikipedia CC BY-SA 4.0" (a rewrite of CC BY-SA
 text keeps its attribution; the Wikipedia link stays); written fresh, "Written
 by our curators, CC BY-SA 4.0" with no Wikipedia link. The pen is limited to towns inside the
-curator's areas (where the town lies: `town_place`); a curator of another
-region gets the proposal form below. Pinned by `ModerateTownControllerTest`
+curator's areas (where the town lies: `town_place`, read from OpenStreetMap,
+moderation-and-contribution.md §3.1b); a curator of another region, or a
+limited curator for a town in no region, gets the proposal form below. Pinned by `ModerateTownControllerTest`
 and `PlaceTextProposalTest`.
 
 **Anyone signed in can suggest the text (owner 2026-09-30).** The credit
@@ -2682,9 +2683,12 @@ BY-SA 4.0"; dropped, no Wikipedia link and "Written by {name}, CC BY-SA 4.0"
 (`townCitesWiki()` in `town-text.js`; a missing flag keeps the credit). The
 credit names the writer, not the approving curator (owner 2026-10-01). A local text stands
 without a Wikipedia page ("Written by ...", no Wikipedia link), so a town Wikipedia has
-nothing on can still be written about. The endpoint keeps the town's point in
-`town_place` (first reader's point, never moved): it decides the region.
-Pinned by `tests/js/town-text.test.mjs` and `TownControllerTest`.
+nothing on can still be written about. The endpoint never records where the
+town lies: the reader's `lat`/`lng` place the routes near it and pick the
+photo's bucket, nothing more. The point that decides a town text's region is
+read from OpenStreetMap by the server (`town_place`,
+moderation-and-contribution.md §3.1b), and the text form's link carries no
+point either. Pinned by `tests/js/town-text.test.mjs` and `TownControllerTest`.
 
 Every town takes this one path, the `CITIES` quick-picks included
 (owner-reported 2026-09-30: Spa showed a fixed English sentence with no "!",

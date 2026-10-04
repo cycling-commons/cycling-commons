@@ -818,12 +818,25 @@ language while the first is open amends it (§7.3b). Proposals spend the
 
 **Which curators see it.** A region text is filed in that region. A town text
 is filed in the region the town lies in: `town_place` keeps one point per
-OpenStreetMap ref, recorded from the first town card reader's map (the
-Photon hit) and never moved by a later request; the form's own point only
-seeds it when none is kept. `SpatialResolver` puts that point in a region
-(smallest wins), and area scope (§9) does the rest. A town outside every
-region files with a NULL region, which every curator's scope covers (§9.2).
-The pending pin is the town's point or the region's point on surface.
+OpenStreetMap ref, read by the server from OpenStreetMap
+(`TownPlaceRepository::locate()` through `OsmElementApi::point()`: a node is
+its own point, a way the mean of its nodes, a relation its `admin_centre` or
+`label` node, else the mean of its nodes). It is never taken from a request:
+the card endpoint and the text form carry no point, because a point a client
+could name would let anyone file a town in any region, or in none, and let a
+curator place a town inside their own area to write it unreviewed (security
+audit 2026-10-04). The lookup happens the first time a text needs the point,
+and only for a town whose card somebody opened (that read already spent the
+third-party budget, map-and-search.md §6.5); until then, or while
+OpenStreetMap does not answer, the town has no known place and the form says
+so (`place_text.error.no_location`). A row with `from_osm` false is a point a
+reader's map sent before this rule: not trusted, replaced at its next use.
+`SpatialResolver` puts the point in a region (smallest wins), and area scope
+(moderation-and-contribution.md §9) does the rest. A town outside every
+region files with a NULL region, which every curator's desk shows
+(moderation-and-contribution.md §9.2) and which is no curator's own area (see
+**Curators.** below). The pending pin is the town's point or the region's point
+on surface.
 
 **Approve writes** through the same stores the curators' pens use
 (`PlaceTextWriter`): a town text becomes the card's local text for that
@@ -897,13 +910,18 @@ curators"); who approved stays on the row (`approved_by`, `approvedBy`). The nam
 handle (`DeskRider::of()`). A curator's own text keeps "our curators".
 
 **Curators.** A curator's own proposal inside their area applies at once
-(§1.6: the proposal is filed and approved in the same request); outside it,
-it queues like a rider's. The direct pens stay for a curator's own area: the
-Regions desk about page (unchanged language entries keep their writer's
-credit on save) and `/moderate/town/{type}/{id}`, which is now limited to
-towns whose kept point lies inside the curator's areas. A curator outside the
-town's region, or a limited curator for a town with no kept point
-(fail-closed), is sent to the proposal form with a note saying why.
+(moderation-and-contribution.md §1.6: the proposal is filed and approved in
+the same request); outside it, it queues like a rider's. The direct pens stay
+for a curator's own area: the Regions desk about page (unchanged language
+entries keep their writer's credit on save) and `/moderate/town/{type}/{id}`,
+which is limited to towns whose point lies inside the curator's areas. Both
+ask `ModerationScopeProvider::coversRegion()`, which is `allowsRegion()` minus
+one case: a NULL region. Work with no region is on every curator's desk, so
+any curator may decide it, but it is in no curator's own area, so only a
+global curator writes it unreviewed. A curator outside the town's region, a
+limited curator for a town in no region, and a limited curator for a town
+whose point cannot be read yet (fail-closed) are sent to the proposal form
+with a note saying why.
 
 **A curator corrects a waiting text before deciding it (owner 2026-10-01:
 "I should be able to edit it. Typos etc.").** The Text card carries the ✎
@@ -2510,6 +2528,11 @@ path of every new country.
   write-guard predicate). Rule: `region_id IS NULL` OR `region_id ∈ regionIds`
   OR the region's `country_code ∈ countryCodes` (codes uppercased on both
   sides).
+- `ModerationScopeProvider::coversRegion()` is the stricter question for a
+  curator's own unreviewed words (a town or region text applied on sending,
+  the town page's direct pen, moderation-and-contribution.md §3.1b): global,
+  or a non-NULL region `allowsRegion()` admits. A NULL region is on every
+  desk, and in nobody's own area.
 
 ### 9.3 Enforcement — filtering AND hard guards
 

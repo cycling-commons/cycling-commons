@@ -22,7 +22,9 @@ use App\Moderation\SeenSubject;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TextCreditUndecidedException;
 use App\Routing\ActiveLocales;
+use App\Tests\Town\FakeTownPointSource;
 use App\Town\TownPlaceRepository;
+use App\Town\TownPointSource;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -163,6 +165,106 @@ final class PlaceTextProposalTest extends WebTestCase
         self::assertNull($data['editedBy']);
     }
 
+    /**
+     * Where a town lies is read from OpenStreetMap, never from a request. A
+     * point a reader's map sent (the only kind kept before) is not trusted:
+     * a curator of region B who placed the town in B does not get to write it.
+     */
+    public function testAReadersPointNeverPlacesTheTown(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a, $b] = $this->twoRegions();
+        $this->fetchedTown('en', 'Testville is a village.');
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement('UPDATE town_place SET lat = -40.5, lng = -120.5, from_osm = FALSE WHERE osm_ref = :r', ['r' => self::TOWN]);
+        $curatorB = $this->user('ptext-cur-b-pin@example.com', ['ROLE_CURATOR'], $b);
+
+        $client->loginUser($curatorB);
+        $client->request('GET', '/moderate/town/'.self::TOWN);
+        self::assertResponseRedirects('/town/'.self::TOWN.'/text', null, 'the reader\'s point in B is not where the town lies');
+
+        // The text form carries no point, and one a script adds is ignored.
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=en&name=Testdorp&lat=-40.5&lng=-120.5');
+        $form = $crawler->filter('#place-text-form')->form(['lang' => 'en', 'text' => 'Testville, pinned in B.', 'note' => '', 'derived' => 'adapted']);
+        self::assertArrayNotHasKey('lat', $form->getPhpValues());
+        $client->request('POST', $form->getUri(), $form->getPhpValues() + ['lat' => '-40.5', 'lng' => '-120.5']);
+        $sub = $this->latestText((int) $curatorB->getId());
+        self::assertSame(SubmissionStatus::Pending, $sub->getStatus(), 'it waits for a curator of the town\'s own region');
+        self::assertSame($a->getId(), $sub->getRegionId(), 'filed where OpenStreetMap puts the town');
+        self::assertSame(
+            ['lat' => -40.5, 'lng' => -140.5, 'from_osm' => true],
+            $db->fetchAssociative('SELECT lat, lng, from_osm FROM town_place WHERE osm_ref = :r', ['r' => self::TOWN]),
+            'the reader\'s point is replaced by the element\'s own',
+        );
+    }
+
+    /** A town in no region is on every curator's desk, and in nobody's own area. */
+    public function testATownOutsideEveryRegionNeverAppliesACuratorsOwnText(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        [$a] = $this->twoRegions();
+        $this->fetchedTown('en', 'Testville is a village.');
+        /** @var FakeTownPointSource $osm */
+        $osm = static::getContainer()->get(TownPointSource::class);
+        $osm->place(self::TOWN, 1.0, 1.0);
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement('DELETE FROM town_place WHERE osm_ref = :r', ['r' => self::TOWN]);
+        $curatorA = $this->user('ptext-cur-a-sea@example.com', ['ROLE_CURATOR'], $a);
+
+        $client->loginUser($curatorA);
+        $client->request('GET', '/moderate/town/'.self::TOWN);
+        self::assertResponseRedirects('/town/'.self::TOWN.'/text', null, 'no direct pen outside their own area');
+
+        $this->propose($client, 'Testville, written at sea.', 'en');
+        self::assertStringContainsString('Sent for review', (string) $client->getResponse()->getContent());
+        $sub = $this->latestText((int) $curatorA->getId());
+        self::assertNull($sub->getRegionId());
+        self::assertSame(SubmissionStatus::Pending, $sub->getStatus(), 'another curator decides it');
+        self::assertSame('Testville is a village.', $this->towns()->find(self::TOWN, 'en')['extract'] ?? null);
+    }
+
+    /**
+     * Only a town whose card somebody opened is looked up: that read spent
+     * the third-party budget, so a form post for any other id costs
+     * OpenStreetMap nothing.
+     */
+    public function testATownNobodyOpenedIsNotLookedUp(): void
+    {
+        static::createClient();
+        /** @var FakeTownPointSource $osm */
+        $osm = static::getContainer()->get(TownPointSource::class);
+        $osm->place('node/999990399', -40.5, -140.5);
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement("DELETE FROM town_summary WHERE osm_ref = 'node/999990399'");
+
+        /** @var TownPlaceRepository $places */
+        $places = static::getContainer()->get(TownPlaceRepository::class);
+        self::assertNull($places->locate('node/999990399'));
+        self::assertSame(0, $osm->asked);
+    }
+
+    /** OpenStreetMap not answering leaves the town unplaced, never placed by a guess. */
+    public function testATownIsUnplacedWhileOpenStreetMapIsDown(): void
+    {
+        static::createClient();
+        $this->fetchedTown('en', 'Testville is a village.');
+        /** @var Connection $db */
+        $db = static::getContainer()->get(Connection::class);
+        $db->executeStatement('UPDATE town_place SET from_osm = FALSE WHERE osm_ref = :r', ['r' => self::TOWN]);
+        /** @var FakeTownPointSource $osm */
+        $osm = static::getContainer()->get(TownPointSource::class);
+        $osm->down = true;
+
+        /** @var TownPlaceRepository $places */
+        $places = static::getContainer()->get(TownPlaceRepository::class);
+        self::assertNull($places->locate(self::TOWN));
+    }
+
     public function testTheTownPenIsLimitedToTheCuratorsAreas(): void
     {
         $client = static::createClient();
@@ -230,7 +332,7 @@ final class PlaceTextProposalTest extends WebTestCase
         $client->loginUser($rider);
 
         // Two radios in a required fieldset, no default.
-        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=nl&name=Testdorp&lat='.self::LAT.'&lng='.self::LNG);
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=nl&name=Testdorp');
         $fieldset = $crawler->filter('fieldset#pt-source');
         self::assertCount(1, $fieldset);
         self::assertNull($fieldset->attr('hidden'));
@@ -753,7 +855,7 @@ final class PlaceTextProposalTest extends WebTestCase
 
         $client->loginUser($rider);
         // The rider's form asks their own claim where the town has an article.
-        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=nl&name=Testdorp&lat='.self::LAT.'&lng='.self::LNG);
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=nl&name=Testdorp');
         self::assertCount(1, $crawler->filter('fieldset#pt-source'), 'the town form asks the writer\'s claim');
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'nl', 'text' => 'Testdorp heeft een kerk.', 'derived' => 'own']));
         $sub = $this->latestText((int) $rider->getId());
@@ -894,7 +996,7 @@ final class PlaceTextProposalTest extends WebTestCase
 
         // French: nobody has opened it, so there is no article to credit.
         $client->loginUser($rider);
-        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=fr&name=Testdorp&lat='.self::LAT.'&lng='.self::LNG);
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=fr&name=Testdorp');
         $source = $crawler->filter('fieldset#pt-source');
         self::assertNotNull($source->attr('hidden'), 'no claim to make');
         self::assertNotNull($source->attr('disabled'), 'so its required radios never block the send');
@@ -928,7 +1030,7 @@ final class PlaceTextProposalTest extends WebTestCase
         $curatorA = $this->user('ptext-cur-a34@example.com', ['ROLE_CURATOR'], $a);
 
         $client->loginUser($curatorA);
-        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=en&name=Testville&lat='.self::LAT.'&lng='.self::LNG);
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=en&name=Testville');
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => 'en', 'text' => 'Testville, written fresh by its curator.', 'derived' => 'own']));
         self::assertStringContainsString('Text updated', (string) $client->getResponse()->getContent());
         $sub = $this->latestText((int) $curatorA->getId());
@@ -957,7 +1059,7 @@ final class PlaceTextProposalTest extends WebTestCase
         $rider = $this->user('ptext-rider-served@example.com', []);
         $client->loginUser($rider);
 
-        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=fr&name=Testdorp&lat='.self::LAT.'&lng='.self::LNG);
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang=fr&name=Testdorp');
         self::assertResponseIsSuccessful();
         $options = $crawler->filter('select#pt-lang option')->each(
             static fn ($o): array => [(string) $o->attr('value'), $o->text()],
@@ -978,7 +1080,7 @@ final class PlaceTextProposalTest extends WebTestCase
         /** @var PlaceTextProposals $proposals */
         $proposals = static::getContainer()->get(PlaceTextProposals::class);
         try {
-            $proposals->proposeTown($rider, self::TOWN, 'fr', 'Testdorp a une église.', '', 'Testdorp', self::LAT, self::LNG, false);
+            $proposals->proposeTown($rider, self::TOWN, 'fr', 'Testdorp a une église.', '', 'Testdorp', false);
             self::fail('a hidden language is refused by the service too');
         } catch (PlaceTextRefused $e) {
             self::assertSame('place_text.error.lang', $e->getMessage());
@@ -1042,7 +1144,7 @@ final class PlaceTextProposalTest extends WebTestCase
     /** Sends the town form; `$source` answers "Where your text comes from" (adapted or own). */
     private function propose(KernelBrowser $client, string $text, string $lang, string $note = '', string $source = 'adapted'): void
     {
-        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang='.$lang.'&name=Testdorp&lat='.self::LAT.'&lng='.self::LNG);
+        $crawler = $client->request('GET', '/town/'.self::TOWN.'/text?lang='.$lang.'&name=Testdorp');
         self::assertResponseIsSuccessful();
         $client->submit($crawler->filter('#place-text-form')->form(['lang' => $lang, 'text' => $text, 'note' => $note, 'derived' => $source]));
     }
@@ -1077,9 +1179,15 @@ final class PlaceTextProposalTest extends WebTestCase
         $db->executeStatement('DELETE FROM town_place WHERE osm_ref = :r', ['r' => self::TOWN]);
         $this->towns()->claim(self::TOWN, $lang);
         $this->towns()->record(self::TOWN, $lang, 'Q99999931', ['title' => 'Testdorp', 'extract' => $extract, 'url' => 'https://'.$lang.'.wikipedia.org/wiki/Testdorp', 'lang' => $lang], []);
+        // Where OpenStreetMap puts the town, read once now so the trusted
+        // point is a row before any request (a rebooted kernel gets a fresh
+        // fake source).
+        /** @var FakeTownPointSource $osm */
+        $osm = static::getContainer()->get(TownPointSource::class);
+        $osm->place(self::TOWN, self::LAT, self::LNG);
         /** @var TownPlaceRepository $places */
         $places = static::getContainer()->get(TownPlaceRepository::class);
-        $places->record(self::TOWN, self::LAT, self::LNG);
+        self::assertNotNull($places->locate(self::TOWN));
     }
 
     /** @param list<string> $roles */

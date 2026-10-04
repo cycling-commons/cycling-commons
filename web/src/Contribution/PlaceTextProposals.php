@@ -201,7 +201,7 @@ final readonly class PlaceTextProposals
      * @throws PlaceTextRefused             on text the form must send back
      * @throws TooManyRequestsHttpException past the contribution rate limit
      */
-    public function proposeTown(User $by, string $osmRef, string $lang, string $text, string $note, ?string $name, ?float $lat, ?float $lng, ?bool $derived): array
+    public function proposeTown(User $by, string $osmRef, string $lang, string $text, string $note, ?string $name, ?bool $derived): array
     {
         if (1 !== preg_match('~^(node|way|relation)/\d{1,16}$~', $osmRef)) {
             throw new PlaceTextRefused('place_text.error.unknown');
@@ -211,10 +211,6 @@ final readonly class PlaceTextProposals
         $derived = self::sourceAnswered($this->towns->hasArticle($osmRef, $lang), $derived);
 
         $where = $this->places->locate($osmRef);
-        if (null === $where && null !== $lat && null !== $lng && TownPlaceRepository::valid($lat, $lng)) {
-            $this->places->record($osmRef, $lat, $lng);
-            $where = $this->places->locate($osmRef);
-        }
         if (null === $where) {
             throw new PlaceTextRefused('place_text.error.no_location');
         }
@@ -511,13 +507,14 @@ final readonly class PlaceTextProposals
 
     /**
      * A curator's own proposal inside their area applies at once; outside it,
-     * it waits. Their own answer on the form (adapted, or their own text) is
-     * the credit decision, recorded as any approving curator's is.
+     * or for a town outside every region, it waits for another curator. Their
+     * own answer on the form (adapted, or their own text) is the credit
+     * decision, recorded as any approving curator's is.
      */
     private function applyIfCurator(Submission $submission, User $by): bool
     {
         if (!\in_array('ROLE_CURATOR', $this->roleHierarchy->getReachableRoleNames($by->getRoles()), true)
-            || !$this->scopes->allowsRegion($this->scopes->scopeFor($by), $submission->getRegionId())) {
+            || !$this->scopes->coversRegion($this->scopes->scopeFor($by), $submission->getRegionId())) {
             return false;
         }
         $derived = true === ($submission->getPayload()['derived'] ?? null);

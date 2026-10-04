@@ -100,9 +100,10 @@ final class ModerateTownController extends AbstractController
 
     /**
      * Why this curator may not write this town here, as a flash key, or null
-     * when they may. A town nobody has opened on the map since its point was
-     * first kept has no known region: a curator with limited areas cannot be
-     * shown to hold it, so the answer is no (fail-closed).
+     * when they may. A town whose point cannot be read yet has no known
+     * region, and a town outside every region is in no curator's area: a
+     * curator with limited areas cannot be shown to hold either, so the
+     * answer is no (fail-closed).
      */
     private function outsideAreas(string $ref): ?string
     {
@@ -117,7 +118,7 @@ final class ModerateTownController extends AbstractController
             return 'moderate.town.where_unknown';
         }
 
-        return $this->scopes->allowsRegion($scope, $where['regionId']) ? null : 'moderate.town.outside_area';
+        return $this->scopes->coversRegion($scope, $where['regionId']) ? null : 'moderate.town.outside_area';
     }
 
     private function toProposal(string $flash, string $osmType, int $osmId): Response

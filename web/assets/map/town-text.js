@@ -28,11 +28,6 @@ export function townTextHref(meta, name, lang, from) {
   if (!/^(node|way|relation)$/.test(type || '') || !/^\d{1,16}$/.test(id || '')) return '';
   const q = new URLSearchParams({ lang: lang || 'en' });
   if (name) q.set('name', name);
-  const ll = (meta && meta.ll) || [];
-  if (ll.length >= 2 && Number.isFinite(+ll[0]) && Number.isFinite(+ll[1])) {
-    q.set('lat', (+ll[0]).toFixed(5));
-    q.set('lng', (+ll[1]).toFixed(5));
-  }
   if (from) q.set('from', from);
   return `${PREFIX[lang] || ''}/town/${type}/${id}/text?${q}`;
 }

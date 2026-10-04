@@ -67,8 +67,6 @@ final class PlaceTextController extends AbstractController
         $ref = $osmType.'/'.$osmId;
         $source = 'POST' === $request->getMethod() ? $request->request : $request->query;
         $name = trim($source->getString('name'));
-        $lat = self::coordinate($source->get('lat'));
-        $lng = self::coordinate($source->get('lng'));
         $from = StatelessLoginRedirectSubscriber::localPath($source->getString('from'));
         $lang = $this->lang($source->getString('lang'), $request);
 
@@ -83,7 +81,7 @@ final class PlaceTextController extends AbstractController
             'target' => PlaceText::TOWN,
             'title' => $proposals->townTitle($ref, $name),
             'action' => $this->generateUrl('town_text', ['osmType' => $osmType, 'osmId' => $osmId]),
-            'hidden' => array_filter(['name' => $name, 'lat' => $lat, 'lng' => $lng, 'from' => $from], static fn ($v): bool => null !== $v && '' !== $v),
+            'hidden' => array_filter(['name' => $name, 'from' => $from], static fn ($v): bool => null !== $v && '' !== $v),
             'back' => $from ?? $this->generateUrl('map'),
             'texts' => $texts,
             'articles' => $articles,
@@ -92,7 +90,7 @@ final class PlaceTextController extends AbstractController
         if ('POST' === $request->getMethod()) {
             $derived = self::sourceAnswer($request);
 
-            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeTown($user, $ref, $lang, $text, $note, '' === $name ? null : $name, $lat, $lng, $derived));
+            return $this->submit($request, $context, $lang, fn (User $user, string $text, string $note): array => $proposals->proposeTown($user, $ref, $lang, $text, $note, '' === $name ? null : $name, $derived));
         }
 
         return $this->form($context, $lang, '', null);
@@ -346,10 +344,5 @@ final class PlaceTextController extends AbstractController
     private static function langCode(string $raw): string
     {
         return strtolower(substr(trim($raw), 0, 2));
-    }
-
-    private static function coordinate(mixed $raw): ?float
-    {
-        return is_numeric($raw) ? (float) $raw : null;
     }
 }

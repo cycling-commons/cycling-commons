@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use App\Tests\Town\FakeTownPointSource;
+use App\Town\TownPointSource;
 use App\Town\TownSummaryRepository;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -99,9 +101,15 @@ final class TownControllerTest extends WebTestCase
         self::assertNull($data['editedBy'], 'written and approved by the same curator: "our curators"');
         self::assertFalse($data['derived'], 'no article to be based on, whatever the writer said');
 
+        // The reader's lat/lng place the routes and the photo bucket, never
+        // the town: where it lies is read from OpenStreetMap when a text
+        // needs it (TownPlaceRepository).
         /** @var Connection $db */
         $db = self::getContainer()->get('doctrine.dbal.default_connection');
-        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM town_place WHERE osm_ref = 'node/999990105'"), 'the reader\'s point is kept for the town');
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM town_place WHERE osm_ref = 'node/999990105'"), 'a card read records no point');
+        /** @var FakeTownPointSource $osm */
+        $osm = self::getContainer()->get(TownPointSource::class);
+        self::assertSame(0, $osm->asked, 'and asks OpenStreetMap nothing');
     }
 
     public function testALanguageWeDoNotSpeakFallsBackToEnglish(): void
