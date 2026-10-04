@@ -76,6 +76,17 @@ final class ContentPagesTest extends WebTestCase
         );
     }
 
+    /** "Section 15 of the terms" must name one section. */
+    public function testTermsSectionsAreNumberedOnceEach(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/terms');
+
+        $numbers = $crawler->filter('h2 > span.n')->each(static fn ($n): int => (int) $n->text());
+        self::assertNotEmpty($numbers);
+        self::assertSame(range(1, \count($numbers)), $numbers);
+    }
+
     public function testLicensesRenders(): void
     {
         $client = static::createClient();
