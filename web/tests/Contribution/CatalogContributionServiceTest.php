@@ -20,6 +20,7 @@ use App\Entity\User;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 
 final class CatalogContributionServiceTest extends KernelTestCase
@@ -572,6 +573,46 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertNotNull($item);
         self::assertSame([[50.46, 5.85], [50.47, 5.86], [50.48, 5.87]], $item->getAttributes()['route']);
         self::assertSame([5.85, 50.46], json_decode((string) $item->getGeom(), true)['coordinates']);
+    }
+
+    /**
+     * The climb profile is a Valhalla call, and it runs before the hourly
+     * contribution limit. A refused edit must still spend the per-minute
+     * budget, or a loop of refused edits is unmetered Valhalla load.
+     */
+    public function testARefusedClimbEditStillSpendsTheElevationBudget(): void
+    {
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.86,50.47]}', [
+            'route' => [[50.47, 5.86], [50.48, 5.87]],
+        ]);
+        $rider = $this->rider();
+        $budget = static::getContainer()->get('limiter.elevation')->create('user-'.(string) $rider->getId());
+        $before = $budget->consume(0)->getRemainingTokens();
+
+        try {
+            $this->service->submit('improve', ['_item_id' => $item->getId(), 'lat' => 50.47, 'lng' => 5.86], $rider);
+            self::fail('an unchanged climb is refused');
+        } catch (ValidationFailedException $e) {
+            self::assertStringContainsString('contribute.error.nothing_changed', (string) $e->getViolations());
+        }
+
+        self::assertSame($before - 1, $budget->consume(0)->getRemainingTokens());
+    }
+
+    public function testAnEmptyElevationBudgetStopsTheClimbBeforeValhalla(): void
+    {
+        $item = $this->item('N', '{"type":"Point","coordinates":[5.86,50.47]}', [
+            'route' => [[50.47, 5.86], [50.48, 5.87]],
+        ]);
+        $rider = $this->rider();
+        $budget = static::getContainer()->get('limiter.elevation')->create('user-'.(string) $rider->getId());
+        $budget->consume($budget->consume(0)->getRemainingTokens());
+
+        $this->expectException(TooManyRequestsHttpException::class);
+        $this->service->submit('improve', [
+            '_item_id' => $item->getId(), 'lat' => 50.47, 'lng' => 5.86,
+            'route' => '[[50.46,5.85],[50.47,5.86],[50.48,5.87]]',
+        ], $rider);
     }
 
     public function testVoteStaysUnpersisted(): void

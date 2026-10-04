@@ -65,6 +65,8 @@ final class CatalogContributionService implements ContributionStubInterface
         private readonly OsmLinker $linker,
         private readonly ItemConfirmationService $confirmations,
         private readonly BikeWayLocator $bikeWays,
+        private readonly RateLimiterFactoryInterface $elevationLimiter,
+        private readonly RateLimiterFactoryInterface $routeSnapLimiter,
     ) {
     }
 
@@ -174,7 +176,7 @@ final class CatalogContributionService implements ContributionStubInterface
             } catch (\InvalidArgumentException) {
                 $this->reject('contribute.error.invalid_geometry', 'route');
             }
-            $attributes = $this->deriveClimbProfile($attributes);
+            $attributes = $this->deriveClimbProfile($attributes, $by);
         }
 
         // New segment items store geometry as an attribute; edits keep it payload-only.
@@ -218,7 +220,7 @@ final class CatalogContributionService implements ContributionStubInterface
         $source = 'scout' === ($payload['via'] ?? null) ? ItemSource::Scout : null;
 
         if (ItemType::ScenicViews === $type) {
-            $payload['_bikeway'] = $this->bikeWayCheck($payload);
+            $payload['_bikeway'] = $this->bikeWayCheck($payload, $by);
         }
 
         $draft = new SubmissionDraft(
@@ -445,7 +447,7 @@ final class CatalogContributionService implements ContributionStubInterface
             $proposed['segment'] = $this->decodeSegment($rawSegment);
         }
         /* Max gradient follows the marker only when the marker moved (docs/specs/climb-elevation.md §5). */
-        $proposed = $this->deriveClimbProfile($proposed, $item->getAttributes());
+        $proposed = $this->deriveClimbProfile($proposed, $by, $item->getAttributes());
         /* Decode links before the diff: stored array vs posted JSON would look like a change. */
         $proposed = $this->decodeLinks($proposed);
 
@@ -990,8 +992,9 @@ final class CatalogContributionService implements ContributionStubInterface
      *
      * @return array{known: bool, nearestM: ?int, withinM: int, far: bool, overruled: bool}
      */
-    private function bikeWayCheck(array $payload): array
+    private function bikeWayCheck(array $payload, User $by): array
     {
+        $this->spendValhallaBudget($this->routeSnapLimiter, $by);
         $reading = $this->bikeWays->nearest((float) $payload['lat'], (float) $payload['lng']);
         $overruled = '1' === (string) ($payload['bikewayOverride'] ?? '');
         if ($reading->far() && \array_key_exists('bikewayOverride', $payload) && !$overruled) {
@@ -999,6 +1002,21 @@ final class CatalogContributionService implements ContributionStubInterface
         }
 
         return $reading->toArray() + ['overruled' => $reading->far() && $overruled];
+    }
+
+    /**
+     * Every Valhalla call on the intake path spends the same per-minute budget
+     * as the editor endpoint that makes it, BEFORE the call. The hourly
+     * contribution limit comes later, in submitDraft(), so a request that is
+     * refused after profiling would otherwise cost Valhalla and no budget.
+     *
+     * @see docs/specs/security-architecture.md §7
+     */
+    private function spendValhallaBudget(RateLimiterFactoryInterface $limiter, User $by): void
+    {
+        if (!$limiter->create('user-'.(string) $by->getId())->consume()->isAccepted()) {
+            throw new TooManyRequestsHttpException(null, 'contribute.error.rate_limited');
+        }
     }
 
     private function reject(string $message, string $field): never
@@ -1141,7 +1159,7 @@ final class CatalogContributionService implements ContributionStubInterface
      *
      * @return array<string, mixed>
      */
-    private function deriveClimbProfile(array $attrs, ?array $current = null): array
+    private function deriveClimbProfile(array $attrs, User $by, ?array $current = null): array
     {
         /* `avg` is a transport key, never an attribute. */
         unset($attrs['avg']);
@@ -1162,6 +1180,7 @@ final class CatalogContributionService implements ContributionStubInterface
             ? [(float) $steep['at'][0], (float) $steep['at'][1]]
             : null;
 
+        $this->spendValhallaBudget($this->elevationLimiter, $by);
         $p = $this->profiler->profile($coords, $manualAt);
         if (null === $p) {
             // No elevation, no numbers — never a guess (docs/specs/climb-elevation.md §2d).
