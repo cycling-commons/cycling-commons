@@ -1,0 +1,58 @@
+docs/specs/moderation-and-contribution.md
+  s_937283d41ef7bc::t_2bb92a706e342b 821-836,839,913-924,2531-2535
+  s_937283d41ef7bc::t_c250ff5f300436 837-838
+web/src/Controller/PlaceTextController.php
+  s_937283d41ef7bc::t_3a04281263bffa 84,93
+web/migrations/Version20261004140000.php
+  s_937283d41ef7bc::t_ecb1f1b49c1ba1 1-44
+web/src/Town/TownPlaceRepository.php
+  s_937283d41ef7bc::t_1856a9b16e17c7 91-92
+  s_937283d41ef7bc::t_2e88ecfeb1e5ab 11,16-23,31-36,40-43,49,57-90,93
+web/src/Town/TownPointSource.php
+  s_937283d41ef7bc::t_747a5130f9c1f3 1-27
+web/src/Contribution/PlaceTextProposals.php
+  s_937283d41ef7bc::t_5612b045519e41 510-512,517
+  s_937283d41ef7bc::t_3a04281263bffa 204
+web/config/services.yaml
+  s_937283d41ef7bc::t_6c8e12bff3d380 191-196
+web/src/Town/OsmElementApi.php
+  s_937283d41ef7bc::t_017153b1520eaf 14-15,25,44-78,82-97,103,115,123-142,146
+  s_937283d41ef7bc::t_a920332c4963a4 79-81
+web/tests/Controller/TownControllerTest.php
+  s_937283d41ef7bc::t_08b2130b73fd6f 9-10,104-106,109-112
+web/src/Controller/ModerateTownController.php
+  s_937283d41ef7bc::t_396a80b77b0ef9 103-106
+  s_937283d41ef7bc::t_5612b045519e41 121
+web/tests/js/town-text.test.mjs
+  s_937283d41ef7bc::t_10757597baffef 28,34-36
+docs/specs/map-and-search.md
+  s_937283d41ef7bc::t_2bb92a706e342b 2654-2656,2686-2691
+web/tests/Town/FakeTownPointSource.php
+  s_937283d41ef7bc::t_616586593cc2da 1-44
+web/src/Moderation/ModerationScopeProvider.php
+  s_937283d41ef7bc::t_5612b045519e41 74-90
+  s_937283d41ef7bc::t_03eba82d0e62ed 73
+web/tests/Moderation/PlaceTextProposalTest.php
+  s_937283d41ef7bc::t_30e9f926141f63 188,190-192
+  s_937283d41ef7bc::t_3698a3cd3a8fe7 25,27,1083,1182-1187,1190
+  s_937283d41ef7bc::t_ef95941708caa5 168-187,189,193-267
+  s_937283d41ef7bc::t_8df35a41fd68ac 335,858,999,1033,1062,1147
+web/tests/Town/OsmElementPointTest.php
+  s_937283d41ef7bc::t_1e05316f590d92 1-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "16700506a103a1455c957ef9d6fdf866fd4c68e6",
+  "prompts": {},
+  "sessions": {
+    "s_937283d41ef7bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98a23f35-f764-496c-8456-1305521a51f9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
