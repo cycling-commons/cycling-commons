@@ -255,14 +255,18 @@
         /* No id yet means the upload has not landed; the field is hidden then,
            so this is belt and braces rather than a real path. */
         if (!item.id) return;
-        var body = new FormData();
-        body.append('_token', token);
-        body.append('alt', altInput.value);
-        /* keepalive: the change event fires on the blur that a click on
-           Next causes, and without it the browser cancels this request
-           when the page moves on. */
-        fetch(cfg.uploadUrl + '/' + encodeURIComponent(item.id) + '/alt', {
-          method: 'POST', body: body, credentials: 'same-origin', keepalive: true
+        var alt = altInput.value;
+        /* The upload already fetched the token, so this resolves at once and
+           the request still leaves inside the blur that a click on Next causes. */
+        ensureToken().then(function (token) {
+          var body = new FormData();
+          body.append('_token', token);
+          body.append('alt', alt);
+          /* keepalive: without it the browser cancels this request when the
+             page moves on. */
+          return fetch(cfg.uploadUrl + '/' + encodeURIComponent(item.id) + '/alt', {
+            method: 'POST', body: body, credentials: 'same-origin', keepalive: true
+          });
         }).then(function (r) {
           /* Silent on success. A failure must not eat what they typed, so the
              field keeps its value and the next change tries again. */

@@ -118,3 +118,15 @@ test('every mount point ships the poll url and the pending strings', () => {
     assert.match(twig, /stillChecking: 'media\.pending\.still_checking'\|trans/, `${tpl} is missing the give-up string`);
   }
 });
+
+test('a description edit sends the token the upload fetched', () => {
+  // The module keeps the token in `csrfToken`; a bare `token` outside a
+  // callback that names it is a ReferenceError on the first edit.
+  const change = js.match(/altInput\.addEventListener\('change', function \(\) \{([\s\S]*?)\n      \}\);/);
+  assert.ok(change, 'the description change handler not found');
+  assert.match(change[1], /ensureToken\(\)\.then\(function \(token\) \{/,
+    'the save must take its token from ensureToken()');
+  const code = change[1].replace(/\/\*[\s\S]*?\*\//g, '');
+  const outside = code.replace(/ensureToken\(\)\.then\(function \(token\) \{[\s\S]*?\n        \}\)/, '');
+  assert.doesNotMatch(outside, /\btoken\b/, 'no bare `token` outside the callback that receives it');
+});
