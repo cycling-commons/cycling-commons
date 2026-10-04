@@ -282,4 +282,35 @@ final class BlogTest extends WebTestCase
 
         self::assertCount(1, $page->filter('link[type="application/atom+xml"]'));
     }
+
+    /**
+     * One feed per locale prefix (blog.md §5). A feed reader often sends no
+     * Accept-Language, so the path picks the posts, never the header.
+     */
+    public function testEachLocaleHasItsOwnFeed(): void
+    {
+        $client = $this->client();
+        $this->post('english-feed', 'en', 'The English one');
+        $this->post('dutch-feed', 'nl', 'De Nederlandse');
+
+        $client->request('GET', '/nl/blog.atom', server: ['HTTP_ACCEPT_LANGUAGE' => 'en']);
+        $xml = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('xml:lang="nl"', $xml);
+        self::assertStringContainsString('De Nederlandse', $xml);
+        self::assertStringNotContainsString('The English one', $xml);
+        self::assertStringNotContainsString('Accept-Language', (string) $client->getResponse()->headers->get('Vary'));
+
+        $client->request('GET', '/blog.atom', server: ['HTTP_ACCEPT_LANGUAGE' => 'nl']);
+        $xml = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('xml:lang="en"', $xml);
+        self::assertStringContainsString('The English one', $xml);
+    }
+
+    public function testTheDutchIndexAdvertisesTheDutchFeed(): void
+    {
+        $client = $this->client();
+        $page = $client->request('GET', '/nl/blog');
+
+        self::assertSame('/nl/blog.atom', $page->filter('link[type="application/atom+xml"]')->attr('href'));
+    }
 }

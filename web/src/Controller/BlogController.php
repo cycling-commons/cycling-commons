@@ -97,10 +97,10 @@ final class BlogController extends AbstractController
     }
 
     /**
-     * Atom, next to the changelog's and for the same reason.
-     *
-     * Not localised in the path: a feed reader subscribes once, and the
-     * `Accept-Language` it sends is what decides which posts it gets.
+     * Atom, one per locale prefix like every page here: `/blog.atom` is the
+     * English feed and `/nl/blog.atom` the Dutch one. A feed reader fetches
+     * from its own server and often sends no `Accept-Language`, so the path
+     * is the only reliable way to hand a Dutch subscriber the Dutch posts.
      */
     #[Route('/blog.atom', name: 'blog_atom', methods: ['GET'])]
     public function feed(Request $request): Response
@@ -114,11 +114,9 @@ final class BlogController extends AbstractController
         ]);
         $response->headers->set('Content-Type', 'application/atom+xml; charset=UTF-8');
         // A reader polls. Nothing here is personal and nothing changes between
-        // visits, so it caches like the changelog's does. `Vary` on the
-        // language, because that is what picks the posts.
+        // visits, so it caches like the changelog's does.
         $response->setPublic();
         $response->setMaxAge(3600);
-        $response->setVary('Accept-Language');
 
         return $response;
     }

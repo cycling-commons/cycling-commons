@@ -81,12 +81,15 @@ same day would otherwise swap places between page loads.
 
 `/blog` and `/blog/{slug}`, locale-prefixed like every other page, in the
 ordinary page shape: dark `.lhero`, then the body. `/blog.atom` alongside,
-next to the changelog's feed and for the same reason.
+next to the changelog's feed.
 
-**One feed, not one per language.** A reader subscribes once and people share
-the URL; five per-locale feeds would split one small readership five ways.
-Which posts a subscriber gets follows the `Accept-Language` they send, the feed
-declares it in `xml:lang`, and the response carries `Vary: Accept-Language`.
+**One feed per locale prefix**, like every other page: `/blog.atom` is the
+English feed, `/nl/blog.atom` the Dutch one, and a language with no posts of
+its own (`BlogLocales::resolve()`) serves the English posts. The feed declares
+its language in `xml:lang`. Not one feed chosen by `Accept-Language`: a feed
+reader fetches from its own server and often sends no such header, so a Dutch
+subscriber would get the English posts. The index links the feed of the
+locale it is in.
 
 Entries carry the lede, not the body: a feed is a standfirst and a link.
 

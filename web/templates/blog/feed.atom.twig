@@ -2,10 +2,9 @@
 {#
   The blog as Atom (docs/specs/blog.md §5).
 
-  ONE feed, not one per language. A feed reader subscribes once and people
-  share the URL; five per-locale feeds would split one small readership five
-  ways. Which posts a subscriber gets follows the Accept-Language they send,
-  and the feed says which language it served in `xml:lang`.
+  One feed per locale prefix: /blog.atom is English, /nl/blog.atom Dutch. A
+  language with no posts of its own serves the English ones. The feed says
+  which language it served in `xml:lang`.
 
   Entries carry the LEDE, not the body. The body is restricted markdown and
   would have to be rendered and re-escaped into XML to travel; a standfirst and
