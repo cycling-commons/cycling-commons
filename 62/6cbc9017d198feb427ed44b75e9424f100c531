@@ -1,0 +1,31 @@
+web/.env.prod
+  s_937283d41ef7bc::t_0de054ada3c81d 2-6
+web/.env.staging
+  s_937283d41ef7bc::t_0de054ada3c81d 17-20
+web/.env.test
+  s_937283d41ef7bc::t_0de054ada3c81d 7-10
+web/.env
+  s_937283d41ef7bc::t_0de054ada3c81d 28-33
+web/config/packages/framework.yaml
+  s_937283d41ef7bc::t_8bbf37e49e9d8d 8-13
+web/tests/Security/TrustedHostsTest.php
+  s_937283d41ef7bc::t_4253efa7c4af23 1-63
+docs/specs/security-architecture.md
+  s_937283d41ef7bc::t_6193350f72777b 717
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "626cbc9017d198feb427ed44b75e9424f100c531",
+  "prompts": {},
+  "sessions": {
+    "s_937283d41ef7bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98a23f35-f764-496c-8456-1305521a51f9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
