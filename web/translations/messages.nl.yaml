@@ -4377,6 +4377,7 @@ flash:
   deletion_code_invalid: 'Ongeldige of verlopen verwijdercode.'
   account_deleted: 'Je account is definitief verwijderd.'
   export_rate_limited: 'Je hebt je gegevens vandaag al een paar keer opgevraagd. Probeer het morgen opnieuw.'
+  reauth_too_many: 'Te veel pogingen. Wacht 15 minuten en probeer het dan opnieuw.'
   takedown_requested: 'Bedankt — de foto is al van de kaart, en een regiobeheerder leest je bericht binnenkort.'
 form:
   label_updates_opt_in: "Houd me op de hoogte"

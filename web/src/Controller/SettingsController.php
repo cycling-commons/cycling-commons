@@ -21,6 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -44,6 +45,10 @@ final class SettingsController extends AbstractController
         private readonly RiderCreditSync $creditSync,
         private readonly UpdatesSubscription $updates,
         private readonly DisplayNameCheck $nameCheck,
+        // The one budget for every password check outside the login form
+        // (rate_limiter.yaml password_reauth): no authenticator runs here, so
+        // neither login throttling nor the account lockout would count these.
+        private readonly RateLimiterFactoryInterface $passwordReauthLimiter,
     ) {
     }
 
@@ -118,6 +123,11 @@ final class SettingsController extends AbstractController
             /** @var string $currentPassword */
             $currentPassword = $passwordForm->get('currentPassword')->getData();
 
+            if (!$this->passwordTryAllowed($user)) {
+                $this->addFlash('password_error', 'flash.reauth_too_many');
+
+                return $this->redirectToRoute('settings', ['tab' => 'security']);
+            }
             if (!$this->passwordHasher->isPasswordValid($user, $currentPassword)) {
                 $this->addFlash('password_error', 'flash.current_password_incorrect');
 
@@ -217,6 +227,11 @@ final class SettingsController extends AbstractController
 
         // Password re-check before issuing a deletion code (shared-session).
         $password = (string) $request->request->get('current_password', '');
+        if ('' !== $password && !$this->passwordTryAllowed($user)) {
+            $this->addFlash('error', 'flash.reauth_too_many');
+
+            return $this->redirectToRoute('settings', ['tab' => 'security']);
+        }
         if ('' === $password || !$this->passwordHasher->isPasswordValid($user, $password)) {
             $this->addFlash('error', 'flash.current_password_incorrect');
 
@@ -264,6 +279,12 @@ final class SettingsController extends AbstractController
     }
 
     /** @see docs/specs/photo-uploads.md §6 */
+    /** Spend one try from the rider's password budget; false once it is gone. */
+    private function passwordTryAllowed(User $user): bool
+    {
+        return $this->passwordReauthLimiter->create('user-'.(string) $user->getId())->consume()->isAccepted();
+    }
+
     private function hasApprovedPhotos(User $user): bool
     {
         return (bool) $this->db->fetchOne(

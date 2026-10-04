@@ -9,6 +9,7 @@ use App\Catalog\MapTheme;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\BaseLocationService;
+use App\Tests\Security\PasswordReauthBudget;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -321,6 +322,63 @@ final class ProfileSettingsTest extends WebTestCase
         $this->loginAs($client, $email, $newPlain);
         $client->request('GET', '/account/contributions');
         self::assertResponseIsSuccessful();
+    }
+
+    /**
+     * The password change and the deletion request share one budget of
+     * password checks (rate_limiter.yaml password_reauth),
+     * so a remembered session is no unmetered password oracle. Past it, even
+     * the right password is refused and nothing changes.
+     */
+    public function testPasswordChecksInSettingsShareOneBudget(): void
+    {
+        $client = static::createClient();
+        $client->disableReboot();
+        $budget = PasswordReauthBudget::install(static::getContainer());
+
+        $email = 'pw-budget@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Budget Rider');
+        $this->loginAs($client, $email, $plain);
+
+        $changePassword = function (string $current) use ($client): void {
+            $crawler = $client->request('GET', '/account/settings');
+            $client->submit($crawler->selectButton('Change password')->form([
+                'settings_password[currentPassword]' => $current,
+                'settings_password[newPassword][first]' => 'newsecurepass12!',
+                'settings_password[newPassword][second]' => 'newsecurepass12!',
+            ]));
+            self::assertResponseRedirects('/account/settings?tab=security');
+            $client->followRedirect();
+        };
+        $requestDeletion = function (string $current) use ($client): void {
+            $crawler = $client->request('GET', '/account/settings');
+            $token = $crawler->filter('form[action$="/account/settings/delete-request"] input[name="_token"]')->attr('value');
+            $client->request('POST', '/account/settings/delete-request', ['_token' => $token, 'current_password' => $current]);
+            self::assertResponseRedirects('/account/settings?tab=security');
+            $client->followRedirect();
+        };
+
+        // Spent from both doors: the first half on the password form, the
+        // rest on the deletion request.
+        $half = intdiv($budget, 2);
+        for ($i = 0; $i < $half; ++$i) {
+            $changePassword('WRONGPASSWORD');
+            self::assertSelectorTextContains('.flash-error', 'Current password is incorrect');
+        }
+        for ($i = $half; $i < $budget; ++$i) {
+            $requestDeletion('wrong-password');
+            self::assertSelectorTextContains('.flash-error', 'Current password is incorrect');
+        }
+
+        $requestDeletion($plain);
+        self::assertSelectorTextContains('.flash-error', 'Too many tries');
+        $changePassword($plain);
+        self::assertSelectorTextContains('.flash-error', 'Too many tries');
+
+        $user = $this->fetchUser($email);
+        self::assertNull($user->getDeletionCode(), 'no deletion code past the budget');
+        $hasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+        self::assertTrue($hasher->isPasswordValid($user, $plain), 'the password is unchanged past the budget');
     }
 
     public function testPasswordChangeTooShortIsRejected(): void

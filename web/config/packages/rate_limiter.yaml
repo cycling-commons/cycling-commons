@@ -33,7 +33,7 @@ framework:
                 adapter: cache.app
             cache.curator_application_limiter:
                 adapter: cache.app
-            cache.curator_reauth_limiter:
+            cache.password_reauth_limiter:
                 adapter: cache.app
             cache.password_reset_limiter:
                 adapter: cache.app
@@ -202,16 +202,22 @@ framework:
             limit: 3
             interval: '1 day'
             cache_pool: cache.curator_application_limiter
-        # Confirming a password before sending an application from a
-        # remember-me session (account-and-auth.md). Its own limiter, never the
-        # application's: that one allows 3 a DAY, so two typos would have cost a
-        # rider their ability to apply until tomorrow. Sized like the firewall's
-        # own login throttling instead, because that is what this is.
-        curator_reauth:
+        # Every password or second-factor check a signed-in rider is asked for
+        # outside the login form (account-and-auth.md section 5): the password
+        # change and the deletion request in settings, the curator application
+        # from a remember-me session, and replacing two-factor. None of these
+        # runs an authenticator, so neither login throttling nor the account
+        # lockout sees them; without this a remembered session is an unmetered
+        # password oracle. One budget for all of
+        # them, so four doors do not mean four times the guesses. Sized like
+        # the firewall's own login throttling, because that is what this is,
+        # and never shared with an action's own quota: two typos must not cost
+        # a rider their 3-a-day curator application.
+        password_reauth:
             policy: sliding_window
             limit: 5
             interval: '15 minutes'
-            cache_pool: cache.curator_reauth_limiter
+            cache_pool: cache.password_reauth_limiter
         # Anonymous account-mail endpoints (account-and-auth.md §2). Both had
         # no quota at all (security scan 2026-08-25): one unauthenticated POST
         # persists a row and sends a message to an address the sender chose, so
@@ -393,7 +399,7 @@ when@test:
                     adapter: cache.adapter.array
                 cache.curator_application_limiter:
                     adapter: cache.adapter.array
-                cache.curator_reauth_limiter:
+                cache.password_reauth_limiter:
                     adapter: cache.adapter.array
                 cache.password_reset_limiter:
                     adapter: cache.adapter.array

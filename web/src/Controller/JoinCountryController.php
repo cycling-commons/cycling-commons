@@ -50,7 +50,7 @@ final class JoinCountryController extends AbstractController
         CuratorApplicationService $applications,
         RateLimiterFactoryInterface $countryInterestLimiter,
         RateLimiterFactoryInterface $curatorApplicationLimiter,
-        RateLimiterFactoryInterface $curatorReauthLimiter,
+        RateLimiterFactoryInterface $passwordReauthLimiter,
         UserPasswordHasherInterface $hasher,
         TranslatorInterface $translator,
     ): Response {
@@ -103,9 +103,9 @@ final class JoinCountryController extends AbstractController
             // Remember-me: re-auth at submit, before the application limiter.
             $needsReauth = $isApplication && !$this->isGranted('IS_AUTHENTICATED_FULLY');
             if ($needsReauth) {
-                $reauth = $curatorReauthLimiter->create('user-'.(string) $user->getId());
+                $reauth = $passwordReauthLimiter->create('user-'.(string) $user->getId());
                 if (!$reauth->consume()->isAccepted()) {
-                    $this->addFlash('error', $translator->trans('join.error.too_many'));
+                    $this->addFlash('error', $translator->trans('flash.reauth_too_many'));
 
                     return $this->redirectToRoute('join_country', ['cc' => $code, 'region' => $request->query->getString('region')]);
                 }

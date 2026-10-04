@@ -4378,6 +4378,7 @@ flash:
   deletion_code_invalid: 'Ungültiger oder abgelaufener Löschcode.'
   account_deleted: 'Dein Konto wurde dauerhaft gelöscht.'
   export_rate_limited: 'Du hast deine Daten heute schon einige Male angefordert. Bitte versuch es morgen erneut.'
+  reauth_too_many: 'Zu viele Versuche. Warte 15 Minuten und versuch es dann erneut.'
   takedown_requested: 'Danke — das Foto ist bereits von der Karte, und ein Kurator liest deine Nachricht in Kürze.'
 form:
   label_updates_opt_in: "Halte mich auf dem Laufenden"

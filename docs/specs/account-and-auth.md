@@ -557,9 +557,23 @@ the password is confirmed **on submit**, only when the session is remembered:
 - A wrong answer writes nothing and re-renders the form with the rider's typing
   and their region selection intact — a typo costs the retry and nothing else.
 - It is checked **before** the application limiter is consumed and guarded by
-  `curator_reauth` (5 per 15 min) rather than `curator_application` (3 per
+  `password_reauth` (5 per 15 min) rather than `curator_application` (3 per
   **day**), because charging failed passwords against the latter would cost a
   rider their ability to apply at all.
+
+**Every password or second-factor check outside the login form shares one
+budget, `password_reauth`** (5 per 15 minutes per user, security audit
+2026-10-04): the curator application above, the password change and the
+deletion request in settings (account-and-auth.md §8, §10), and replacing
+two-factor (account-and-auth.md §4). None of these runs an authenticator, so
+login throttling and the account lockout (account-and-auth.md §3) never see
+them, and a remembered session would otherwise be an unmetered
+password oracle. One budget for all four, so four doors are not four times the
+guesses. A try is spent before the password is compared; past the budget the
+answer is "Too many tries. Wait 15 minutes, then try again." and nothing is
+compared or changed. The data export keeps its own daily allowance
+(account-and-auth.md §11), which
+is spent the same way and is already tighter.
 
 **The login page's "already signed in" shortcut still tests
 `IS_AUTHENTICATED_FULLY`, not `getUser()`.** Nothing routinely triggers it now,
@@ -1107,7 +1121,9 @@ Contract points:
 - Password-change and both deletion-flow redirects target
   `settings?tab=security` so flashes land on the visible tab.
 - Password change requires the **current password** (checked against the
-  hasher) before the new one is accepted.
+  hasher) before the new one is accepted. The check spends a try from
+  `password_reauth`, shared with the deletion request below
+  (account-and-auth.md §5).
 - **Email is read-only** in settings with a contact-support note — an email
   change would require re-verification (EmailVerifier token flow); the
   simple, honest option is documented in the controller docblock.
@@ -1588,7 +1604,9 @@ range on single-page ones.
 Two-step flow in `SettingsController` (danger zone, Security tab), both steps
 POST + CSRF:
 
-1. `settings_delete_request` — `UserDeletionService::requestDeletion()`
+1. `settings_delete_request` — the account password is re-checked first,
+   spending a try from `password_reauth` (account-and-auth.md §5). Then
+   `UserDeletionService::requestDeletion()`
    generates an 8-hex-char one-time code (`bin2hex(random_bytes(4))`,
    uppercased), stores it with `deletionRequestedAt`, and emails it.
 2. `settings_delete_confirm` — code validated with `hash_equals`

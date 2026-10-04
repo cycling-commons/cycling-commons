@@ -4370,6 +4370,7 @@ flash:
   deletion_code_invalid: 'Code de suppression invalide ou expiré.'
   account_deleted: 'Votre compte a été définitivement supprimé.'
   export_rate_limited: 'Vous avez déjà demandé vos données plusieurs fois aujourd''hui. Réessayez demain.'
+  reauth_too_many: 'Trop d''essais. Attendez 15 minutes, puis réessayez.'
   takedown_requested: 'Merci — la photo est déjà hors de la carte, et un curateur lira votre message sous peu.'
 form:
   label_updates_opt_in: "Tenez-moi au courant"

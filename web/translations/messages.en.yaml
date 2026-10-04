@@ -4396,6 +4396,7 @@ flash:
   deletion_code_invalid: 'Invalid or expired deletion code.'
   account_deleted: 'Your account has been permanently deleted.'
   export_rate_limited: 'You have already requested your data a few times today. Please try again tomorrow.'
+  reauth_too_many: 'Too many tries. Wait 15 minutes, then try again.'
   takedown_requested: 'Thank you — the photo is off the map already, and a curator will read your message shortly.'
 form:
   label_updates_opt_in: "Keep me up to date"

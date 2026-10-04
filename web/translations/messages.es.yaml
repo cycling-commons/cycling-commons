@@ -4405,6 +4405,7 @@ flash:
   deletion_code_invalid: 'Código de eliminación no válido o caducado.'
   account_deleted: 'Tu cuenta se ha eliminado de forma permanente.'
   export_rate_limited: 'Ya has pedido tus datos varias veces hoy. Inténtalo mañana.'
+  reauth_too_many: 'Demasiados intentos. Espera 15 minutos y vuelve a intentarlo.'
   takedown_requested: 'Gracias — la foto ya está fuera del mapa, y un curador leerá tu mensaje en breve.'
 form:
   label_updates_opt_in: "Mantenme al día"
