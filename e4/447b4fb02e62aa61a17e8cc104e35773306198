@@ -1,0 +1,21 @@
+web/templates/contribute/improve.html.twig
+  s_985749378da6fe::t_0a360e1f5a594a 298
+web/tests/Contribution/SimilarPlacesFlowTest.php
+  s_985749378da6fe::t_52b4aff0c2b28c 125-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e4447b4fb02e62aa61a17e8cc104e35773306198",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
