@@ -122,6 +122,10 @@ final class SimilarPlacesFlowTest extends WebTestCase
         self::assertSame(['item:'.$provider], json_decode((string) $box->attr('data-ticks'), true), "the rider's own ticks come back");
         self::assertSame((string) $new->getId(), $box->attr('data-item'), 'the place is never similar to itself');
         self::assertSame(self::TAP, $box->attr('data-ref'), 'nor the OSM point it is');
+        // The parser forgives a stray quote, so read the tag as it was sent:
+        // with every quoted value taken out, no quote may be left.
+        self::assertSame(1, preg_match('/<div class="osmq simq" id="wz-similar"[^>]*>/', (string) $client->getResponse()->getContent(), $tag));
+        self::assertStringNotContainsString('"', (string) preg_replace('/="[^"]*"/', '', $tag[0]), 'no stray quote between the attributes');
 
         // Only the ticks change: that is a revision, not "nothing changed".
         $client->submit($crawler->selectButton('Next →')->form(['improve[replaces]' => '']));

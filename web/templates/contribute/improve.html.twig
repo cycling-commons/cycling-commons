@@ -295,7 +295,7 @@
          pin is placed; what stays ticked is replaced when a curator approves. #}
       <div class="osmq simq" id="wz-similar" hidden
            data-url="{{ path('contribute_similar') }}" data-type="{{ item_type.value }}" data-radius="250"
-           {% if similar_edit|default(false) %}data-item="{{ similar_item }}" data-ref="{{ similar_ref }}"{% if similar_ticks is not null %} data-ticks="{{ similar_ticks|json_encode }}"{% endif %}{% endif %}"
+           {% if similar_edit|default(false) %}data-item="{{ similar_item }}" data-ref="{{ similar_ref }}"{% if similar_ticks is not null %} data-ticks="{{ similar_ticks|json_encode }}"{% endif %}{% endif %}
            data-t-one="{{ 'improve.similar.heading_one'|trans({'%m%': '%m%'}) }}"
            data-t-many="{{ 'improve.similar.heading_many'|trans({'%n%': '%n%', '%m%': '%m%'}) }}"
            data-t-osm="{{ 'improve.similar.from_osm'|trans }}"
