@@ -13,7 +13,7 @@ use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 
 /**
- * Public per-shard objects and the private quarantine bucket.
+ * Public per-shard objects and the private bucket (quarantine and legal hold).
  *
  * @see docs/specs/media-storage-architecture.md §2, §4
  *
@@ -25,6 +25,9 @@ final class MediaStorage
 
     /** Unscanned bytes live only in private storage. @see docs/specs/media-storage-architecture.md §2.2 */
     private const string QUARANTINE_PREFIX = 'quarantine/';
+
+    /** A photo under legal hold leaves the public bucket for this prefix. @see docs/specs/photo-uploads.md §6d */
+    private const string HELD_PREFIX = 'held/';
 
     /** @var array<string, FilesystemOperator> bucket name => filesystem, built on demand */
     private array $filesystems;
@@ -166,6 +169,93 @@ final class MediaStorage
         } catch (FilesystemException) {
             // Already absent, or the shard is unreachable.
         }
+    }
+
+    /**
+     * Move a photo's variants from its public shard into the private bucket.
+     *
+     * Copy, check, then delete: the public objects go only once every variant
+     * that existed is in the private bucket, so a failure leaves the photo
+     * where it was rather than lost. Idempotent: a second call finds nothing
+     * public and the held copy already there.
+     *
+     * @return bool false when the copy is incomplete and the public objects stay
+     *
+     * @see docs/specs/photo-uploads.md §6d
+     */
+    public function withhold(string $bucket, string $prefix): bool
+    {
+        return $this->move($this->filesystemFor($bucket), $prefix, $this->filesystemFor($this->privateBucket), self::HELD_PREFIX.$prefix);
+    }
+
+    /**
+     * Put a held photo's variants back under their public key. Same order as
+     * {@see withhold()}: the held copy goes only once the public one is whole.
+     *
+     * @return bool false when the copy is incomplete and the held objects stay
+     */
+    public function unwithhold(string $bucket, string $prefix): bool
+    {
+        return $this->move($this->filesystemFor($this->privateBucket), self::HELD_PREFIX.$prefix, $this->filesystemFor($bucket), $prefix);
+    }
+
+    /**
+     * Open one variant of a held photo, or null if missing. For the admin's
+     * legal-hold page only: the private bucket has no public URL.
+     *
+     * @return resource|null
+     */
+    public function readHeldStream(string $prefix, string $variant)
+    {
+        self::assertVariant($variant);
+
+        try {
+            return $this->filesystemFor($this->privateBucket)->readStream(self::HELD_PREFIX.$prefix.'/'.$variant.'.webp');
+        } catch (FilesystemException) {
+            return null;
+        }
+    }
+
+    /** How many of the three variants the private bucket holds for a held photo. */
+    public function heldVariantsExist(string $prefix): int
+    {
+        return $this->variantsExist($this->privateBucket, self::HELD_PREFIX.$prefix);
+    }
+
+    private function move(FilesystemOperator $from, string $fromPrefix, FilesystemOperator $to, string $toPrefix): bool
+    {
+        $moved = [];
+        foreach (self::VARIANTS as $variant) {
+            $key = '/'.$variant.'.webp';
+            try {
+                if (!$from->fileExists($fromPrefix.$key)) {
+                    continue;
+                }
+                $stream = $from->readStream($fromPrefix.$key);
+                try {
+                    $to->writeStream($toPrefix.$key, $stream);
+                } finally {
+                    if (\is_resource($stream)) {
+                        fclose($stream);
+                    }
+                }
+                if (!$to->fileExists($toPrefix.$key)) {
+                    return false;
+                }
+                $moved[] = $fromPrefix.$key;
+            } catch (FilesystemException) {
+                return false;
+            }
+        }
+        foreach ($moved as $key) {
+            try {
+                $from->delete($key);
+            } catch (FilesystemException) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

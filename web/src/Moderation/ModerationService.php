@@ -20,7 +20,9 @@ use App\Catalog\SubmissionType;
 use App\Community\ItemConfirmationService;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
+use App\Media\HeldPhotoNotRestored;
 use App\Media\MediaDecisionService;
+use App\Media\MediaEscalationService;
 use App\Media\PhotoAltSuggestion;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
@@ -59,6 +61,7 @@ final class ModerationService
         private readonly ReplacedPlaces $replacedPlaces,
         private readonly PlaceTextWriter $placeTexts,
         private readonly ClockInterface $clock,
+        private readonly MediaEscalationService $mediaEscalations,
     ) {
     }
 
@@ -486,7 +489,8 @@ final class ModerationService
         }
 
         $submission->escalate((int) $curator->getId(), $reason);
-        foreach ($this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $id]) as $upload) {
+        $uploads = $this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $id]);
+        foreach ($uploads as $upload) {
             if (!$upload->isEscalated()) {
                 $upload->escalate((int) $curator->getId(), $reason);
             }
@@ -494,11 +498,18 @@ final class ModerationService
         // Content-free: the audit records that SUB-N was escalated, never what it said.
         $this->adminLog->log($curator, self::ACTION_ESCALATE, null, sprintf('SUB-%d', $id));
         $this->em->flush();
+        foreach ($uploads as $upload) {
+            $this->mediaEscalations->withholdObjects($upload);
+        }
 
         $this->escalationAlert->escalated('submission', sprintf('SUB-%d', $id), $reason, '/admin/escalated');
     }
 
-    /** An admin lifts the hold; the submission returns to the queue it left. */
+    /**
+     * An admin lifts the hold; the submission returns to the queue it left.
+     *
+     * @throws HeldPhotoNotRestored when a photo could not go back to its public key; the hold stays
+     */
     public function releaseSubmission(int $id, User $admin, ?string $note = null): bool
     {
         $submission = $this->em->find(Submission::class, $id);
@@ -506,8 +517,13 @@ final class ModerationService
             return false;
         }
 
+        $uploads = $this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $id]);
+        // Objects first: if one cannot go back, the whole hold stays.
+        foreach ($uploads as $upload) {
+            $this->mediaEscalations->restoreObjects($upload);
+        }
         $submission->releaseEscalation();
-        foreach ($this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $id]) as $upload) {
+        foreach ($uploads as $upload) {
             $upload->releaseEscalation();
         }
         $this->adminLog->log($admin, self::ACTION_ESCALATE_RELEASE, null, sprintf('SUB-%d%s', $id, null !== $note ? ' · '.$note : ''));

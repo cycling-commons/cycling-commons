@@ -12,17 +12,23 @@ use App\Catalog\ItemState;
 use App\Entity\User;
 use App\Media\Entity\ConsentRecord;
 use App\Media\Entity\MediaUpload;
+use App\Media\HeldPhotoNotRestored;
 use App\Media\MediaAction;
 use App\Media\MediaConsent;
 use App\Media\MediaDecisionService;
 use App\Media\MediaDisposalService;
 use App\Media\MediaEscalationService;
+use App\Media\MediaEventLog;
 use App\Media\MediaStorage;
 use App\Media\MediaTakedownCategory;
 use App\Media\MediaTakedownService;
+use App\Media\PhotoGallery;
 use App\Media\ProcessedPhoto;
+use App\Moderation\EscalationAlert;
 use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\UnableToWriteFile;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Uid\Uuid;
@@ -43,6 +49,7 @@ final class MediaEscalationTest extends KernelTestCase
     private MediaDisposalService $disposal;
     private MediaStorage $storage;
     private FilesystemOperator $filesystem;
+    private FilesystemOperator $private;
 
     #[\Override]
     protected function setUp(): void
@@ -54,6 +61,7 @@ final class MediaEscalationTest extends KernelTestCase
         $this->disposal = static::getContainer()->get(MediaDisposalService::class);
         $this->storage = static::getContainer()->get(MediaStorage::class);
         $this->filesystem = static::getContainer()->get('media.storage.eu01');
+        $this->private = static::getContainer()->get('media.storage.private');
     }
 
     private function rider(string $email): User
@@ -115,8 +123,13 @@ final class MediaEscalationTest extends KernelTestCase
         // see it again, and nobody else ever does.
         self::assertSame([], $this->takedowns->pendingCards());
         self::assertSame([], $this->takedowns->withheldThirdPartyCards());
-        // …and still stored, which is the whole point.
-        self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
+        // Out of the public bucket: its URL was on the map, so it sits in tiles
+        // and caches. Still stored, privately, which is the whole point.
+        foreach (MediaStorage::VARIANTS as $variant) {
+            self::assertFalse($this->filesystem->fileExists($upload->getPathPrefix().'/'.$variant.'.webp'), "public {$variant} is gone");
+            self::assertSame('S', $this->private->read('held/'.$upload->getPathPrefix().'/sm.webp'));
+        }
+        self::assertSame(3, $this->storage->heldVariantsExist($upload->getPathPrefix()));
 
         $sent = static::getContainer()->get('mailer.message_logger_listener')->getEvents()->getEvents();
         self::assertCount(1, $sent, 'unthrottled: every escalation reaches a human');
@@ -148,7 +161,7 @@ final class MediaEscalationTest extends KernelTestCase
         self::assertNotNull($this->em->find(MediaUpload::class, $upload->getId()), 'the row survives');
         self::assertNull($upload->getObjectsDeletedAt(), 'the tombstone was never set');
         foreach (MediaStorage::VARIANTS as $variant) {
-            self::assertTrue($this->filesystem->fileExists($prefix.'/'.$variant.'.webp'), "{$variant} survives");
+            self::assertTrue($this->private->fileExists('held/'.$prefix.'/'.$variant.'.webp'), "{$variant} survives");
         }
     }
 
@@ -201,7 +214,12 @@ final class MediaEscalationTest extends KernelTestCase
         // Deliberately NOT back on the map: it was the desk's decision before
         // the hold and it is the desk's decision again.
         self::assertArrayNotHasKey('photos', $this->itemOf($upload)->getAttributes());
-        self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
+        // The objects are back where the row says they are, so the desk,
+        // Trash and the retention sweep find them; the held copy is gone.
+        foreach (MediaStorage::VARIANTS as $variant) {
+            self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/'.$variant.'.webp'), "public {$variant} is back");
+        }
+        self::assertSame(0, $this->storage->heldVariantsExist($upload->getPathPrefix()));
         $actions = array_map(
             static fn (\App\Media\Entity\MediaModerationEvent $e): string => $e->getAction(),
             $this->em->getRepository(\App\Media\Entity\MediaModerationEvent::class)->findBy(['mediaId' => $upload->getId()], ['id' => 'ASC']),
@@ -224,5 +242,62 @@ final class MediaEscalationTest extends KernelTestCase
         self::assertSame('Two adults, one appears coerced.', $held[0]['reason']);
         self::assertSame('Escalation Rider', $held[0]['escalatedBy']);
         self::assertSame($upload->getId()->toRfc4122(), $held[0]['uuid']);
+    }
+
+    public function testEscalatingAgainMovesNothingTwice(): void
+    {
+        $curator = $this->rider('escalate-idem@example.com');
+        $upload = $this->approved($this->rider('escalate-idem-owner@example.com'));
+
+        $this->escalations->escalate($upload, $curator, 'First.');
+        $this->escalations->withholdObjects($upload);
+
+        self::assertSame(3, $this->storage->heldVariantsExist($upload->getPathPrefix()));
+        self::assertSame(0, $this->storage->variantsExist('test-bucket-eu-01', $upload->getPathPrefix()));
+    }
+
+    public function testAnAdminSeesTheHeldPhotoAndNobodyElseCan(): void
+    {
+        $curator = $this->rider('escalate-view@example.com');
+        $upload = $this->approved($this->rider('escalate-view-owner@example.com'));
+
+        $stream = $this->escalations->heldStream($upload, 'sm');
+        self::assertNull($stream, 'a photo that is not held has no held copy to show');
+
+        $this->escalations->escalate($upload, $curator, 'Escalating.');
+        $stream = $this->escalations->heldStream($upload, 'sm');
+        self::assertIsResource($stream);
+        self::assertSame('S', stream_get_contents($stream));
+    }
+
+    public function testAFailedMoveBackKeepsTheHold(): void
+    {
+        $curator = $this->rider('escalate-stuck@example.com');
+        $admin = $this->rider('escalate-stuck-admin@example.com');
+        $upload = $this->approved($this->rider('escalate-stuck-owner@example.com'));
+        $this->escalations->escalate($upload, $curator, 'Escalating.');
+
+        // The public shard refuses writes, so the variants cannot go back.
+        $brokenPublic = $this->createStub(FilesystemOperator::class);
+        $brokenPublic->method('writeStream')->willThrowException(UnableToWriteFile::atLocation('x', 'shard down'));
+        $c = static::getContainer();
+        $escalations = new MediaEscalationService(
+            $this->em,
+            $c->get(MediaEventLog::class),
+            $c->get(MediaDecisionService::class),
+            $c->get(PhotoGallery::class),
+            $c->get(EscalationAlert::class),
+            new MediaStorage(null, [], 'test-bucket-private', 'https://img.test', ['test-bucket-eu-01' => $brokenPublic, 'test-bucket-private' => $this->private]),
+            new NullLogger(),
+        );
+
+        try {
+            $escalations->release($upload, $admin, 'Done.');
+            self::fail('a release whose objects cannot go back must not lift the hold');
+        } catch (HeldPhotoNotRestored) {
+        }
+
+        self::assertTrue($upload->isEscalated());
+        self::assertSame(3, $this->storage->heldVariantsExist($upload->getPathPrefix()), 'the held copy is untouched');
     }
 }

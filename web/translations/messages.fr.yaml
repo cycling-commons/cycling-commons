@@ -4539,6 +4539,7 @@ admin:
     release: 'Lever le blocage'
     release_help: 'Lève le blocage et rend la photo à la modération normale. Cela ne la remet pas sur la carte et ne supprime rien.'
     released: 'Le blocage a été levé.'
+    release_failed: 'La photo n''a pas pu revenir du stockage privé, le blocage reste donc en place. Réessayez plus tard.'
   flood:
     title: 'Playbook : vague de signalements de photos'
     state_open_b: 'Le coupe-circuit de retrait automatique est OUVERT.'

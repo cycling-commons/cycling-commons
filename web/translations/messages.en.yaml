@@ -4568,6 +4568,7 @@ admin:
     release: 'Release the hold'
     release_help: 'Lifts the hold and hands the photo back to normal moderation. It does not put it back on the map and it deletes nothing.'
     released: 'The hold has been released.'
+    release_failed: 'The photo could not be moved back from private storage, so the hold stays. Try again later.'
   flood:
     title: 'Playbook: a flood of photo reports'
     state_open_b: 'The auto-withhold breaker is OPEN right now.'

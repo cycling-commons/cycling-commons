@@ -15,6 +15,7 @@ use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
 use App\Media\AlertRecipients;
 use App\Media\Entity\MediaUpload;
+use App\Media\HeldPhotoNotRestored;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
@@ -529,7 +530,33 @@ final class DashboardController extends AbstractDashboardController
     }
 
     /**
-     * Photos and submissions under legal hold. Release lifts the hold; it deletes nothing.
+     * A held photo's small variant, read from the private bucket. Its public
+     * key is empty while the hold lasts, so this is the only way to see it.
+     *
+     * @see docs/specs/photo-uploads.md §6d
+     */
+    #[AdminRoute('/escalated/photo/{uuid}', 'escalated_photo', options: ['methods' => ['GET'], 'requirements' => ['uuid' => '[0-9a-f-]{36}']])]
+    public function escalatedPhoto(string $uuid, MediaEscalationService $escalations, EntityManagerInterface $em): Response
+    {
+        $upload = Uuid::isValid($uuid) ? $em->find(MediaUpload::class, Uuid::fromString($uuid)) : null;
+        $stream = null !== $upload ? $escalations->heldStream($upload, 'sm') : null;
+        if (null === $stream) {
+            throw $this->createNotFoundException('No such held photo.');
+        }
+
+        $bytes = (string) stream_get_contents($stream);
+        fclose($stream);
+
+        return new Response($bytes, Response::HTTP_OK, [
+            'Content-Type' => 'image/webp',
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /**
+     * Photos and submissions under legal hold. Release puts the objects back
+     * under their public key and lifts the hold; it deletes nothing.
      *
      * @see docs/specs/photo-uploads.md §6d
      */
@@ -546,14 +573,26 @@ final class DashboardController extends AbstractDashboardController
             $note = trim((string) $request->request->get('note', '')) ?: null;
             $submissionId = (int) $request->request->get('submission', 0);
             if ($submissionId > 0) {
-                $moderation->releaseSubmission($submissionId, $actor, $note);
+                try {
+                    $moderation->releaseSubmission($submissionId, $actor, $note);
+                } catch (HeldPhotoNotRestored) {
+                    $this->addFlash('danger', $translator->trans('admin.escalated.release_failed'));
+
+                    return $this->redirectToRoute('admin_escalated');
+                }
             } else {
                 $uuid = (string) $request->request->get('media');
                 $upload = Uuid::isValid($uuid) ? $em->find(MediaUpload::class, Uuid::fromString($uuid)) : null;
                 if (null === $upload) {
                     throw $this->createNotFoundException('No such photo.');
                 }
-                $escalations->release($upload, $actor, $note);
+                try {
+                    $escalations->release($upload, $actor, $note);
+                } catch (HeldPhotoNotRestored) {
+                    $this->addFlash('danger', $translator->trans('admin.escalated.release_failed'));
+
+                    return $this->redirectToRoute('admin_escalated');
+                }
             }
             $this->addFlash('success', $translator->trans('admin.escalated.released'));
 

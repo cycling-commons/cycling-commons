@@ -4546,6 +4546,7 @@ admin:
     release: 'Blokkade opheffen'
     release_help: 'Heft de blokkade op en geeft de foto terug aan de normale moderatie. Het zet hem niet terug op de kaart en verwijdert niets.'
     released: 'De blokkade is opgeheven.'
+    release_failed: 'De foto kon niet terug uit de privéopslag, dus de blokkade blijft. Probeer het later opnieuw.'
   flood:
     title: 'Playbook: golf van fotomeldingen'
     state_open_b: 'De noodrem op automatisch offline halen staat OPEN.'

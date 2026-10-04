@@ -69,7 +69,7 @@
                            material by scrolling past it. #}
                         <details class="mb-3">
                             <summary>{{ 'admin.escalated.reveal'|trans }}</summary>
-                            <img src="{{ card.sm }}" alt="" class="mt-2" style="max-width:22rem;height:auto;border-radius:4px">
+                            <img src="{{ path('admin_escalated_photo', {uuid: card.uuid}) }}" alt="" loading="lazy" class="mt-2" style="max-width:22rem;height:auto;border-radius:4px">
                         </details>
 
                         <form method="post">

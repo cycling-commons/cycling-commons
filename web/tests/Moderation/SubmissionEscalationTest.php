@@ -13,6 +13,8 @@ use App\Entity\User;
 use App\Media\Entity\ConsentRecord;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaConsent;
+use App\Media\MediaStorage;
+use App\Media\ProcessedPhoto;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationScope;
 use App\Moderation\ModerationService;
@@ -143,6 +145,32 @@ final class SubmissionEscalationTest extends KernelTestCase
         $this->moderation->escalateSubmission($id, $curator, 'Both the words and the photo.');
 
         self::assertTrue($upload->isEscalated());
+    }
+
+    /** A held submission's photos leave the public bucket too, and come back on release. */
+    public function testAttachedPhotosLeaveThePublicBucketWhileHeld(): void
+    {
+        $curator = $this->user('esc-sub-objects');
+        $admin = $this->user('esc-sub-objects-admin');
+        $author = $this->user('esc-sub-objects-author');
+        $id = (int) $this->submission($author)->getId();
+
+        $consent = new ConsentRecord(Uuid::v4(), (int) $author->getId(), MediaConsent::KIND, MediaConsent::VERSION, MediaConsent::hash('x'));
+        $this->em->persist($consent);
+        $upload = new MediaUpload(Uuid::v4(), (int) $author->getId(), $consent->getId(), 'EU', 900, 600, 4242, bucket: 'test-bucket-eu-01');
+        $this->em->persist($upload);
+        $upload->claim($id);
+        $this->em->flush();
+        $storage = static::getContainer()->get(MediaStorage::class);
+        $storage->store('test-bucket-eu-01', $upload->getPathPrefix(), new ProcessedPhoto('O', 'L', 'S', 900, 600));
+
+        $this->moderation->escalateSubmission($id, $curator, 'Both the words and the photo.');
+        self::assertSame(0, $storage->variantsExist('test-bucket-eu-01', $upload->getPathPrefix()));
+        self::assertSame(3, $storage->heldVariantsExist($upload->getPathPrefix()));
+
+        self::assertTrue($this->moderation->releaseSubmission($id, $admin, null));
+        self::assertSame(3, $storage->variantsExist('test-bucket-eu-01', $upload->getPathPrefix()));
+        self::assertSame(0, $storage->heldVariantsExist($upload->getPathPrefix()));
     }
 
     public function testEscalatingTwiceAlertsOnceAndAnEmptyReasonIsRefused(): void

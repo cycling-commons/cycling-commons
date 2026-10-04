@@ -73,7 +73,7 @@ the provider's policy support for source conditions is verified).
 
 | Bucket (shape, not the deployed name) | Access | Holds |
 |---|---|---|
-| one private bucket per environment | private | quarantine (unscanned bytes) only (§2.2) |
+| one private bucket per environment | private | quarantine (unscanned bytes) and photos under legal hold (§2.2) |
 | one public bucket per shard per environment, numbered | anonymous-read via proxy | published derivatives only |
 
 Each environment owns its own buckets (owner 2026-08-18, superseding the
@@ -169,8 +169,13 @@ was wrong twice over.
   archival copy of exactly the data we said we deleted is not a cheap safety
   net, it is a broken promise with a backup.
 
-So the private bucket holds the quarantine and nothing else. The raw bytes are
-deleted the moment the derivatives exist; there is no clean-original archive.
+So the private bucket holds the quarantine, plus one other thing: the
+derivatives of a photo under legal hold, under `held/<uuid>/<rev>/`
+([`photo-uploads.md`](photo-uploads.md) §6d). That photo was on the map, so its
+public URL is in tiles and caches; unlinking it does not hide it. Escalation
+moves the three variants there (copy, check, then delete the public ones), and
+release moves them back. The raw bytes are deleted the moment the derivatives
+exist; there is no clean-original archive.
 Revisit only alongside a decision to keep raw uploads at all, which would be a
 change to §3 of the product spec, not to this one.
 
@@ -334,6 +339,7 @@ Recorded so the history is not lost. Verified 2026-08-11, updated 2026-09-29.
 | Virus scanning | **built** 2026-08-16 (`ClamAvScanner`, `clamav` sidecar) |
 | Async workers | **built** 2026-08-16 (Messenger + `worker` container); transport moved from a Redis stream to Postgres (`doctrine://`) 2026-09-21 |
 | Private bucket / quarantine | **built** 2026-08-16 (`media.storage.private`, `quarantine/<uuid>`) |
+| Legal hold leaves the public bucket | **built** 2026-10-04 (`MediaStorage::withhold()` / `unwithhold()`, `held/<uuid>/<rev>/`) |
 | Release gate on the worker | **built** 2026-08-16 (`ScanAndReleaseUploadHandler`) |
 | Bug-report and curator-room pictures checked on the worker | **built** 2026-09-27 (`CheckPictureHandler`, `Version20260927140000`) |
 | Immutable keys | **built** 2026-08-16 (`published/<uuid>/<rev>/`, `app:media:backfill-keys`) |

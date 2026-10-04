@@ -1548,7 +1548,10 @@ illegal imagery is read. All three call the same services. A held photo's
 report shows as held there and cannot be decided until the hold is released.
 
 **What escalation does.** Hides the photo from the public *and* from the
-moderation desk; sets a **legal hold** on the row; alerts the configured
+moderation desk; moves its three variants out of the public bucket into the
+private one, under `held/<uuid>/<rev>/` (an approved photo's URL is already in
+tiles and caches, so taking it off the map alone leaves the bytes one request
+away); sets a **legal hold** on the row; alerts the configured
 recipients immediately and **unthrottled** (one mail per escalation, carrying
 the curator's words, the uuid and a link — never the image); and records who
 escalated it, when, and in whose words.
@@ -1586,10 +1589,17 @@ and a held number cannot be linked anew
 kinds — behind a details element so nobody is shown the material by scrolling
 past it. A held submission's own text is deliberately not rendered there
 either: an admin reads the curator's description and decides whether to go
-looking. **Releasing** lifts the
-hold and hands the row back to normal moderation; it republishes nothing and
-deletes nothing, because when the material had to be reported, the authority it
-was reported to decides when it may go.
+looking. The page shows a held photo through
+`/admin/escalated/photo/{uuid}`, which reads the private copy and answers
+`Cache-Control: private, no-store`. **Releasing** moves the variants back under
+their public key, lifts the hold and hands the row back to normal moderation;
+it puts nothing back on the map and deletes nothing, because when the material
+had to be reported, the authority it was reported to decides when it may go. If
+the variants cannot move back, the hold stays and the admin is told. The move
+out runs after the hold is stored and never blocks it: a failure is logged as
+critical and the photo stays held. The caching proxy in front of the public
+bucket can still hold a copy of the old URL; purging it is an operations step,
+since the proxy is configured outside this repository.
 
 **Curator welfare is part of the design.** The escalating curator is not asked
 to look again, and no other curator ever sees it. The one thing they are asked

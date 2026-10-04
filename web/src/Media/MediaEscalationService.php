@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Media\Entity\MediaUpload;
 use App\Moderation\EscalationAlert;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Suspected illegal content: hide, legal-hold, alert. Does not decide.
@@ -31,6 +32,8 @@ final class MediaEscalationService
         private readonly MediaDecisionService $decisions,
         private readonly PhotoGallery $gallery,
         private readonly EscalationAlert $alert,
+        private readonly MediaStorage $storage,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -52,17 +55,24 @@ final class MediaEscalationService
         $this->detachFromItem($upload);
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::Escalated, $reason);
         $this->em->flush();
+        $this->withholdObjects($upload);
 
         $this->alert->escalated('photo', $upload->getId()->toRfc4122(), $reason, '/admin/escalated');
     }
 
-    /** Lift the hold; do not put the photo back on the map. */
+    /**
+     * Lift the hold; do not put the photo back on the map.
+     *
+     * @throws HeldPhotoNotRestored when the objects could not go back to their
+     *                              public key; the hold then stays
+     */
     public function release(MediaUpload $upload, User $admin, ?string $note = null): bool
     {
         if (!$upload->isEscalated()) {
             return false;
         }
 
+        $this->restoreObjects($upload);
         $upload->releaseEscalation();
         $this->events->append($upload->getId(), (int) $admin->getId(), MediaAction::EscalationReleased, $note);
         $this->em->flush();
@@ -71,9 +81,71 @@ final class MediaEscalationService
     }
 
     /**
+     * Take a held photo's objects out of the public bucket.
+     *
+     * Its URL was on the map before the hold, so it sits in tiles, caches and
+     * logs; hiding the gallery entry alone leaves the bytes one request away.
+     * Runs after the hold is flushed, so nothing can delete the row while the
+     * objects move. A failed move is logged, never thrown: the hold and the
+     * alert must still happen.
+     */
+    public function withholdObjects(MediaUpload $upload): void
+    {
+        if (null === $upload->getRevision()) {
+            return;   // never published: the bytes are in quarantine, which is private
+        }
+
+        try {
+            $done = $this->storage->withhold($upload->getStorageBucket(), $upload->getPathPrefix());
+        } catch (ShardUnavailable) {
+            $done = false;
+        }
+        if (!$done) {
+            $this->logger->critical('A photo under legal hold is still in the public bucket.', ['media' => $upload->getId()->toRfc4122()]);
+        }
+    }
+
+    /**
+     * Put a released photo's objects back under their public key, so every
+     * later path (the desk, Trash, the retention sweep) finds them where the
+     * row says they are. Still off the map.
+     *
+     * @throws HeldPhotoNotRestored when the move back is incomplete
+     */
+    public function restoreObjects(MediaUpload $upload): void
+    {
+        if (null === $upload->getRevision()) {
+            return;
+        }
+
+        try {
+            $done = $this->storage->unwithhold($upload->getStorageBucket(), $upload->getPathPrefix());
+        } catch (ShardUnavailable $e) {
+            throw new HeldPhotoNotRestored($upload->getId()->toRfc4122(), $e);
+        }
+        if (!$done) {
+            throw new HeldPhotoNotRestored($upload->getId()->toRfc4122());
+        }
+    }
+
+    /**
+     * One variant of a held photo, for the admin's legal-hold page.
+     *
+     * @return resource|null
+     */
+    public function heldStream(MediaUpload $upload, string $variant)
+    {
+        if (!$upload->isEscalated() || null === $upload->getRevision()) {
+            return null;
+        }
+
+        return $this->storage->readHeldStream($upload->getPathPrefix(), $variant);
+    }
+
+    /**
      * Everything currently held, newest first.
      *
-     * @return list<array{uuid: string, sm: string, reason: string, escalatedAt: \DateTimeImmutable, escalatedBy: string, itemName: string}>
+     * @return list<array{uuid: string, reason: string, escalatedAt: \DateTimeImmutable, escalatedBy: string, itemName: string}>
      */
     public function held(int $page = 1, int $perPage = self::PER_PAGE): array
     {
@@ -97,7 +169,6 @@ final class MediaEscalationService
             $curator = null !== $by ? $this->em->find(User::class, $by) : null;
             $cards[] = [
                 'uuid' => $upload->getId()->toRfc4122(),
-                'sm' => (string) $this->decisions->describe($upload)['sm'],
                 'reason' => $upload->getEscalatedReason() ?? '',
                 'escalatedAt' => $at,
                 'escalatedBy' => $curator?->getDisplayName() ?? '',

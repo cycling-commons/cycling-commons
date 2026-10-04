@@ -317,7 +317,8 @@ final class PhotoReportDecisionTest extends WebTestCase
 
         $held = $this->photo($upload);
         self::assertTrue($held->isEscalated());
-        self::assertTrue($this->filesystem()->fileExists($prefix.'/sm.webp'), 'held, never deleted');
+        self::assertFalse($this->filesystem()->fileExists($prefix.'/sm.webp'), 'out of the public bucket');
+        self::assertSame(3, static::getContainer()->get(MediaStorage::class)->heldVariantsExist($prefix), 'held, never deleted');
         $item = $this->em()->find(Item::class, (int) $held->getItemId());
         self::assertInstanceOf(Item::class, $item);
         self::assertArrayNotHasKey('photos', $item->getAttributes(), 'off the map at once');

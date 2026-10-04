@@ -4547,6 +4547,7 @@ admin:
     release: 'Sperre aufheben'
     release_help: 'Hebt die Sperre auf und gibt das Foto an die normale Moderation zurück. Es kommt dadurch nicht auf die Karte zurück und es wird nichts gelöscht.'
     released: 'Die Sperre wurde aufgehoben.'
+    release_failed: 'Das Foto konnte nicht aus dem privaten Speicher zurückgeholt werden, die Sperre bleibt also bestehen. Bitte versuche es später erneut.'
   flood:
     title: 'Playbook: Welle von Fotomeldungen'
     state_open_b: 'Der Schutzschalter für automatisches Zurückhalten ist OFFEN.'

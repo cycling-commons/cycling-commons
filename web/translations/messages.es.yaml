@@ -4578,6 +4578,7 @@ admin:
     release: 'Levantar la retención'
     release_help: 'Levanta la retención y devuelve la foto a la moderación normal. No la vuelve a poner en el mapa y no borra nada.'
     released: 'La retención se ha levantado.'
+    release_failed: 'La foto no se pudo devolver desde el almacenamiento privado, así que la retención sigue. Inténtalo más tarde.'
   flood:
     title: 'Protocolo: avalancha de informes sobre fotos'
     state_open_b: 'El interruptor de ocultación automática está ABIERTO ahora mismo.'
