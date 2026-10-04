@@ -1,0 +1,23 @@
+web/src/Support/SupportMailer.php
+  s_937283d41ef7bc::t_467b56c7bf3bb7 86-89
+web/tests/Support/ContactFormTest.php
+  s_937283d41ef7bc::t_467b56c7bf3bb7 380,394
+docs/specs/contact-and-support.md
+  s_937283d41ef7bc::t_0d6109993d97cf 1014-1016
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "89cf35558d3d8f5a8e8cd13b0975a3242bd29a70",
+  "prompts": {},
+  "sessions": {
+    "s_937283d41ef7bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98a23f35-f764-496c-8456-1305521a51f9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
