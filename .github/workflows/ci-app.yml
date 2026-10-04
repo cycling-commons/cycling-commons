@@ -56,6 +56,10 @@ jobs:
       # Parity cannot see a key that all five catalogues lack; this asks the
       # extractor which keys the templates and PHP use.
       - run: ./tools/check-used-translations.sh
+      # The one gate behind "|trans|raw is banned" (security-architecture.md
+      # §3, §4.1). It ran only in `make app-test`, so a template that pipes a
+      # translation into |raw could merge with CI green.
+      - run: ./tools/check-raw-translations.sh
       - run: vendor/bin/php-cs-fixer fix --dry-run --diff
       - run: vendor/bin/phpstan analyse --no-progress
       - run: vendor/bin/psalm --no-cache

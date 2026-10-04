@@ -33,6 +33,19 @@ cd "$(dirname "$0")/.."
 
 hits=0
 
+# Tracked templates when git is there; every template on disk when it is not
+# (the dev container mounts web/ without .git). An empty list is a failure,
+# never a pass: a gate that scanned nothing has checked nothing.
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  templates=$(git ls-files 'templates/*.twig')
+else
+  templates=$(find templates -name '*.twig' | sort)
+fi
+if [ -z "$templates" ]; then
+  echo "check-raw-translations: found no templates to scan" >&2
+  exit 1
+fi
+
 # --- 1. Single-statement filter/function form: |trans(...)|raw, trans(...)|raw ---
 # Lazily scan from "{{" to "|trans"/"trans(", then lazily onward to "|raw",
 # refusing to cross a "}}", a "|rich", or a "json_encode" on the way there.
@@ -47,7 +60,7 @@ while IFS= read -r f; do
     echo "RAW TRANSLATION: $f:$line: $rest"
     hits=1
   done < <(grep -nP "$FILTER_PATTERN" "$f")
-done < <(git ls-files 'templates/*.twig')
+done <<< "$templates"
 
 # --- 2. Block form: {% apply raw %} ... {% trans %} ... {% endapply %} ---
 # Line-based state machine (an awk one-liner would lose the file name across
@@ -76,7 +89,7 @@ while IFS= read -r f; do
   ' "$f"; then
     hits=1
   fi
-done < <(git ls-files 'templates/*.twig')
+done <<< "$templates"
 
 if [ "$hits" -eq 0 ]; then
   echo "no |trans|raw occurrences (security-architecture.md §3, §4.1)"

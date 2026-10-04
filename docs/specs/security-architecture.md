@@ -286,7 +286,9 @@ New pages with inline scripts should be added to `inlineScriptPages()`.
 markup (`<b>`, `<a href>`, `<code>`, …) render through `|trans|rich`. There
 are zero `|trans|raw` occurrences in `web/templates/`; keep it that way.
 Enforced by `web/tools/check-raw-translations.sh` (wired into `make
-app-test`), which greps every tracked Twig template for a `|trans` reaching
+app-test` and the App CI workflow), which greps every Twig template (the
+tracked ones in a git checkout, every one on disk without git, and it fails
+when it finds none) for a `|trans` reaching
 `|raw` in one statement, filter form, function form, or the `{% apply raw
 %}{% trans %}…{% endapply %}` block form. The claim was untrue between the
 overlay feature landing and 2026-08-31:
