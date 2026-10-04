@@ -202,6 +202,24 @@ final class SystemSettingsTest extends KernelTestCase
         self::assertFalse($this->writer->reset($key, null), 'nothing left to reset');
     }
 
+    /** The two address lists are text; resetting one reads and logs it as text. */
+    public function testATextSettingResetsAndIsAuditedAsText(): void
+    {
+        $actor = $this->actor();
+        foreach ([SettingsRegistry::ALERT_EMAILS, SettingsRegistry::SUPPORT_EMAILS] as $key) {
+            $default = $this->registry->get($key)->default;
+            $this->writer->set($key, 'cover@example.org', $actor);
+
+            self::assertTrue($this->writer->reset($key, $actor));
+            self::assertSame($default, $this->settings->getString($key));
+            self::assertFalse($this->settings->isOverridden($key));
+
+            $logs = static::getContainer()->get(AdminActionLogRepository::class)
+                ->findBy(['action' => SystemSettingsWriter::ACTION_RESET], ['id' => 'DESC'], 1);
+            self::assertSame(sprintf('%s: cover@example.org -> %s (default)', $key, $default), $logs[0]->getNote());
+        }
+    }
+
     public function testAStoredValueOutsideTheCurrentRangeFallsBackToTheDefault(): void
     {
         // A row written when the bound was looser must not outlive the rule:

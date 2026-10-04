@@ -83,14 +83,14 @@ final class SystemSettingsWriter
             return false;
         }
 
-        $old = $this->settings->get($key);
+        $old = $def->isString() ? $this->settings->getString($key) : $this->settings->get($key);
         $this->db->executeStatement('DELETE FROM system_setting WHERE setting_key = :k', ['k' => $key]);
         $this->settings->invalidate();
         $this->adminLog->log(
             $actor,
             self::ACTION_RESET,
             null,
-            sprintf('%s: %d -> %d (default)', $key, $old, $def->default)
+            sprintf('%s: %s -> %s (default)', $key, $old, $def->default)
         );
 
         return true;
