@@ -1,0 +1,38 @@
+web/translations/messages.es.yaml
+  s_937283d41ef7bc::t_2db4af5e0d2b0c 1601-1610
+web/templates/emails/two_factor_changed.html.twig
+  s_937283d41ef7bc::t_053e325f63e71c 1-40
+web/src/Security/TwoFactorChangeNotice.php
+  s_937283d41ef7bc::t_f3246dc07ce4d5 1-63
+web/translations/messages.nl.yaml
+  s_937283d41ef7bc::t_2db4af5e0d2b0c 1594-1603
+web/translations/messages.de.yaml
+  s_937283d41ef7bc::t_2db4af5e0d2b0c 1594-1603
+web/tests/Auth/TwoFactorTest.php
+  s_937283d41ef7bc::t_ecdc6e26de0391 421-427,429,535,540-544
+  s_937283d41ef7bc::t_967a05ec3d321c 428
+web/translations/messages.fr.yaml
+  s_937283d41ef7bc::t_2db4af5e0d2b0c 1589-1598
+web/src/Controller/TwoFactorController.php
+  s_937283d41ef7bc::t_a40ece0c686730 10,57,107
+web/translations/messages.en.yaml
+  s_937283d41ef7bc::t_2db4af5e0d2b0c 1598-1607
+docs/specs/account-and-auth.md
+  s_937283d41ef7bc::t_967a05ec3d321c 434-441
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a75bba4322e285ee8e022f2ab0649210545d750d",
+  "prompts": {},
+  "sessions": {
+    "s_937283d41ef7bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98a23f35-f764-496c-8456-1305521a51f9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
