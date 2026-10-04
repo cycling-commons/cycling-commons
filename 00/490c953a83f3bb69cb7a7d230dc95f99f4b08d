@@ -1,0 +1,48 @@
+docs/specs/content-reports.md
+  s_937283d41ef7bc::t_ad46e0e0a51954 87-95,296,307-313
+web/templates/emails/report_answer_decided.html.twig
+  s_937283d41ef7bc::t_4c782f1eac2cb5 24
+web/templates/emails/report_decided.html.twig
+  s_937283d41ef7bc::t_4c782f1eac2cb5 28
+web/templates/emails/report_acknowledged.html.twig
+  s_937283d41ef7bc::t_4c782f1eac2cb5 25
+  s_937283d41ef7bc::t_35e7e721319bcd 7-10
+  s_937283d41ef7bc::t_8a5877dd80a682 11
+web/templates/emails/report_statement_of_reasons.html.twig
+  s_937283d41ef7bc::t_4c782f1eac2cb5 29
+web/assets/map/town-text.js
+  s_937283d41ef7bc::t_771c6aac1ff1ee 90-91,95,102
+web/tests/js/text-credit-actions.test.mjs
+  s_937283d41ef7bc::t_771c6aac1ff1ee 56
+web/src/Controller/ContentReportController.php
+  s_937283d41ef7bc::t_771c6aac1ff1ee 248,329-332
+web/tests/Support/ContentReportTest.php
+  s_937283d41ef7bc::t_7dd2e060e2da1e 148
+  s_937283d41ef7bc::t_8a19123ba3bd3b 158,178-180
+  s_937283d41ef7bc::t_8a9588f807b767 79-80,90,123,145-147,149-157,159-177,181-185
+  s_937283d41ef7bc::t_bffc72c6de37be 186
+web/src/Support/ReportResolver.php
+  s_937283d41ef7bc::t_771c6aac1ff1ee 68,76-95,97-101
+  s_937283d41ef7bc::t_7dd2e060e2da1e 96
+  s_937283d41ef7bc::t_2dd0f698c7c4e2 102
+web/tests/Controller/ModerateTownControllerTest.php
+  s_937283d41ef7bc::t_08b2130b73fd6f 109,111-114
+web/tests/js/town-text.test.mjs
+  s_937283d41ef7bc::t_b76488c53c2274 69-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "00490c953a83f3bb69cb7a7d230dc95f99f4b08d",
+  "prompts": {},
+  "sessions": {
+    "s_937283d41ef7bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "98a23f35-f764-496c-8456-1305521a51f9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
