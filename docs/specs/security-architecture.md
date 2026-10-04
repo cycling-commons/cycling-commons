@@ -128,7 +128,7 @@ blocker) the script gives up after 15 s.
 
 **Social short links** (owner 2026-10-01). Every profile links to
 `cyclingcommons.org`, through a short path that says which platform the
-visitor came from. `App\Controller\SocialLinkController` answers six paths,
+visitor came from. `App\Controller\SocialLinkController` answers nine paths,
 each a 302 to the home page with two UTM parameters, which Umami reads by
 itself:
 
@@ -140,17 +140,20 @@ itself:
 | `/ig` | `/?utm_source=instagram&utm_medium=social` |
 | `/yt` | `/?utm_source=youtube&utm_medium=social` |
 | `/r` | `/?utm_source=reddit&utm_medium=social` |
+| `/fb` | `/?utm_source=facebook&utm_medium=social` (2026-10-04) |
+| `/gh` | `/?utm_source=github&utm_medium=social` (2026-10-04) |
+| `/st` | `/?utm_source=strava&utm_medium=social` (2026-10-04) |
 
 The target is the bare `/`, never a locale prefix, so the home page picks the
 language as it does for any visitor. 302, not 301: a browser keeps a
 permanent redirect for good, which would freeze the target and its parameters
 in every browser that ever followed one. The answer is `public, max-age=3600`,
-and `security.yaml` names the six paths `PUBLIC_ACCESS` for the same reason
+and `security.yaml` names the nine paths `PUBLIC_ACCESS` for the same reason
 as `robots.txt`: without it scheb's lazy firewall reads the session and the
 response turns private. The two-letter paths share their shape with the
-locale prefixes; no locale is called `bs`, `li`, `ig` or `yt`, so routing
+locale prefixes; no locale is called `bs`, `li`, `ig`, `yt`, `fb`, `gh` or `st`, so routing
 sends them to the redirect, and any other short path is a 404.
-`tests/Routing/SocialLinkTest.php` pins the six targets, the caching, no
+`tests/Routing/SocialLinkTest.php` pins the nine targets, the caching, no
 session cookie, and the 404. These links count visits per platform; a
 per-post count (which toot or post brought the visit) is what Umami's own
 Links feature is for, not more paths here.

@@ -14,7 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  * with its UTM parameters (security-architecture.md §2.2).
  *
  * Two-letter paths share their shape with the locale prefixes (`/fr`, `/nl`),
- * so these also pin that `/bs`, `/li`, `/ig` and `/yt` reach the redirect
+ * so these also pin that `/bs`, `/li`, `/ig`, `/yt`, `/fb`, `/gh` and `/st` reach the redirect
  * rather than a 404 or a locale redirect.
  */
 final class SocialLinkTest extends WebTestCase
@@ -26,6 +26,9 @@ final class SocialLinkTest extends WebTestCase
         '/ig' => '/?utm_source=instagram&utm_medium=social',
         '/yt' => '/?utm_source=youtube&utm_medium=social',
         '/r' => '/?utm_source=reddit&utm_medium=social',
+        '/fb' => '/?utm_source=facebook&utm_medium=social',
+        '/gh' => '/?utm_source=github&utm_medium=social',
+        '/st' => '/?utm_source=strava&utm_medium=social',
     ];
 
     public function testEachShortLinkRedirectsHomeWithItsUtmParameters(): void
@@ -62,7 +65,7 @@ final class SocialLinkTest extends WebTestCase
     public function testAnUnknownShortPathStaysA404(): void
     {
         $client = static::createClient();
-        foreach (['/x', '/tw', '/fb', '/mm', '/fr/bs', '/M'] as $path) {
+        foreach (['/x', '/tw', '/fa', '/mm', '/fr/bs', '/M'] as $path) {
             $client->request('GET', $path);
             self::assertResponseStatusCodeSame(404, $path);
         }

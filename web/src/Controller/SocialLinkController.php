@@ -38,10 +38,13 @@ final class SocialLinkController
         'ig' => 'instagram',
         'yt' => 'youtube',
         'r' => 'reddit',
+        'fb' => 'facebook',
+        'gh' => 'github',
+        'st' => 'strava',
     ];
 
     /** The keys of {@see self::LINKS}; a test holds the two together. */
-    public const string CODE_PATTERN = 'm|bs|li|ig|yt|r';
+    public const string CODE_PATTERN = 'm|bs|li|ig|yt|r|fb|gh|st';
 
     private const int MAX_AGE = 3600;
 
