@@ -5332,6 +5332,7 @@ changelog:
   v094_fair: "<b>Every place gets a fair chance.</b> The ballot lists places A to Z, and nobody sees the standings while voting is open. Last year's top 5 get a small disadvantage, so other or new places can win too."
   v094_climbs: "<b>See where a climb hurts most.</b> The climb profile marks the steepest 250 m and the steepest point, and a gentle climb no longer looks like a wall. When you add a climb, the map finds the steepest point for you; drag it if it is wrong. The form starts from the climb's known height gain and average gradient."
   v094_map: "<b>Find places faster on the map.</b> Pins on one spot fan out, so you can tap each one. A search everywhere also finds climbs and routes. A link to a place from OpenStreetMap opens it on the map. On a phone, the climb profile opens above the bottom panel."
+  v094_security: "<b>Several security improvements</b> to sign-in, two-factor and our emails."
   v094_fixes: "<b>Among smaller fixes:</b> filters look and work the same on every page, and French and Dutch texts have their apostrophes back."
   v094_name: "<b>Know how others see you.</b> Your settings show the name other riders see: your anonymous name while your profile is private, your display name when it is public."
   v094_confirmations: "<b>Find your confirmations and votes quickly.</b> The places you confirmed have their own tab, page by page, and your votes show what you picked."

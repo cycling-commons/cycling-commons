@@ -95,6 +95,7 @@ final class ReleaseNotes
                     'changelog.v094_fair',
                     'changelog.v094_climbs',
                     'changelog.v094_map',
+                    'changelog.v094_security',
                     'changelog.v094_fixes',
                 ],
                 'rider' => [
