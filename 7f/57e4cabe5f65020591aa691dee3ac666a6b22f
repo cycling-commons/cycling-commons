@@ -1,0 +1,29 @@
+web/templates/blog/post.html.twig
+  s_985749378da6fe::t_9eaa921ecb3197 37
+web/src/Twig/BugMarkdownExtension.php
+  s_985749378da6fe::t_9eaa921ecb3197 36-38
+web/tests/Support/BugMarkdownTest.php
+  s_985749378da6fe::t_a585008fb38f9b 154-160
+docs/specs/blog.md
+  s_985749378da6fe::t_b6f5a51a0ae8d6 28-30
+web/src/Support/BugMarkdown.php
+  s_985749378da6fe::t_9eaa921ecb3197 50-53,62,71
+web/tests/Blog/BlogTest.php
+  s_985749378da6fe::t_97a4622a6bc7fb 149-164
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7f57e4cabe5f65020591aa691dee3ac666a6b22f",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
