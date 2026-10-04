@@ -1,0 +1,31 @@
+web/src/Twig/SocialLinksExtension.php
+  s_49442ae34d3603::t_8743773773d775 93-97,100-101,105-107,115-121
+  s_49442ae34d3603::t_cac7e8a770ab96 122-123
+web/config/packages/support.yaml
+  s_49442ae34d3603::t_d5ce83ce30480a 60-62
+web/tests/Twig/SocialLinksExtensionTest.php
+  s_49442ae34d3603::t_8743773773d775 37-63,65,67
+docs/specs/site-directory.md
+  s_49442ae34d3603::t_53a1c537b4afa4 284-288
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ba4df87d045a8dbc9e04965e58a5cb6ae662ef4e",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  },
+  "sessions": {
+    "s_49442ae34d3603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdafdbd-81d4-4db5-9e3f-fe208040d123",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
