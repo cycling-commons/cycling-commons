@@ -1,0 +1,16 @@
+docs/specs/dev-environment.md
+  h_fb5318cde6cf17 216
+pipeline/coverage/load.py
+  h_fb5318cde6cf17 98-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d9e3951cf20578f8d62e4f3f6bb0417e853d6170",
+  "prompts": {},
+  "humans": {
+    "h_fb5318cde6cf17": {
+      "author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
