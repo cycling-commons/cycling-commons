@@ -207,6 +207,27 @@ def test_a_bad_release_is_a_one_line_reason(catalog, capsys):
     assert "Not an Overture release id: 'latest'" in capsys.readouterr().err
 
 
+class MissingReleaseCon:
+    """DuckDB's answer when the release prefix is not on S3."""
+
+    def execute(self, sql, params=None):
+        import duckdb
+        raise duckdb.IOException('IO Error: No files found that match the pattern '
+                                 '"s3://overturemaps-us-west-2/release/2020-01-01.0/theme=divisions/type=division_area/*"\n'
+                                 'LINE 2: FROM read_parquet(...)')
+
+
+def test_a_missing_overture_release_is_a_one_line_reason_not_a_traceback(catalog, capsys):
+    from onboarding.overture import Overture
+    rc = planner.main(["DK", "--release", "2020-01-01.0"], source=Overture("2020-01-01.0", con=MissingReleaseCon()),
+                      connect=lambda dsn: contextlib.nullcontext(catalog), index_loader=lambda src: INDEX)
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert err.count("\n") == 1, err
+    assert "Overture 2020-01-01.0" in err and "No files found" in err
+    assert catalog.execute("SELECT count(*) FROM country").fetchone()[0] == 0
+
+
 def test_an_unknown_level_is_refused_by_the_command_line(catalog, capsys):
     with pytest.raises(SystemExit) as exc:
         planner.main(["DK", "--level", "duchy"], source=FakeOverture(refuse=True),

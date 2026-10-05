@@ -39,9 +39,19 @@ class Overture:
             self._con.execute("SET enable_progress_bar = false;")
         return self._con
 
+    def _query(self, sql: str, params: list):
+        import duckdb
+
+        try:
+            return self.con.execute(sql, params)
+        except (duckdb.IOException, duckdb.HTTPException) as exc:
+            # A missing release or an unreachable bucket; any other DuckDB error is a bug and keeps its traceback.
+            first = str(exc).strip().splitlines()[0] if str(exc).strip() else type(exc).__name__
+            raise OvertureError(f"Overture {self.release}: {first}") from exc
+
     def country_box(self, cc: str) -> tuple[float, float, float, float]:
         """Box over the country's land divisions, read from their bbox columns only."""
-        row = self.con.execute(
+        row = self._query(
             f"""SELECT min(bbox.xmin), min(bbox.ymin), max(bbox.xmax), max(bbox.ymax)
                 FROM read_parquet('{self.path}', hive_partitioning=1)
                 WHERE country = ? AND "class" = 'land'""",
@@ -53,7 +63,7 @@ class Overture:
 
     def divisions(self, cc: str, subtype: str, box: tuple[float, float, float, float]) -> list[Division]:
         x0, y0, x1, y1 = box
-        rows = self.con.execute(
+        rows = self._query(
             f"""SELECT region, names.primary, CAST(to_json(names.common) AS VARCHAR), ST_AsGeoJSON(geometry)
                 FROM read_parquet('{self.path}', hive_partitioning=1)
                 WHERE country = ? AND subtype = ? AND "class" = 'land'
