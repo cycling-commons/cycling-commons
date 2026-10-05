@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Onboarding;
 
+use App\Catalog\CountryTimezones;
+use App\Catalog\RegionRegistryProvider;
 use App\Entity\User;
 use App\Onboarding\Countries;
 use Doctrine\DBAL\Connection;
@@ -368,5 +370,37 @@ final class CountryCommandsTest extends KernelTestCase
             self::assertStringContainsString('DE', $e->getMessage());
         }
         self::assertSame('live', $this->db()->fetchOne("SELECT status FROM country WHERE code = 'DE'"));
+    }
+
+    public function testTheMapShowsACountryOnlyOnceItIsLive(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        $db = $this->db();
+        $db->executeStatement(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('xf-rowless', 'XF', ST_Multi(ST_GeomFromText('POLYGON((10 10,11 10,11 11,10 11,10 10))', 4326)), 12000, 'XF', 'XF-R', 4, 'test', NOW(), NOW())",
+        );
+        $this->command('app:country:apply', ['country' => 'XA'])->assertCommandIsSuccessful();
+        $db->executeStatement("UPDATE country SET timezones = '{Etc/GMT-3}' WHERE code = 'XA'");
+        $registry = static::getContainer()->get(RegionRegistryProvider::class);
+        $timezones = static::getContainer()->get(CountryTimezones::class);
+        $slugs = static fn (): array => array_column($registry->all(), 'slug');
+
+        self::assertNotContains('xa-west', $slugs(), 'a seeded country is not on the map');
+        self::assertContains('xb-north', $slugs(), 'a live country is');
+        self::assertContains('xf-rowless', $slugs(), 'a region without a country row stays visible');
+        self::assertArrayNotHasKey('Etc/GMT-3', $timezones->map());
+        foreach ($registry->all() as $region) {
+            if ('xb-north' === $region['slug']) {
+                self::assertSame([], $region['adj'], 'a hidden neighbour is not named');
+            }
+        }
+
+        $this->command('app:country:mark-live', ['country' => 'XA'])->assertCommandIsSuccessful();
+
+        self::assertContains('xa-west', $slugs());
+        self::assertContains('xa-east', $slugs());
+        self::assertSame('XA', $timezones->map()['Etc/GMT-3'] ?? null);
     }
 }
