@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test country-lists-check app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test country-lists-check app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe course-data coverage-regions country-plan
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -334,6 +334,10 @@ licenses-check: ## Verify every tracked file resolves to a licence (reuse lint o
 # rows it owns. Runbooks say `regions=$(make -s coverage-regions)`.
 coverage-regions: ## Echo every onboarded extract (country_extract rows of seeded/live countries)
 	@$(DOCKER_COMP) exec -T pipeline python -m coverage.regions
+
+country-plan: ## Plan a country on the dev stack (writes country_plan_region, never region): make country-plan c=DK [args="--level county"]
+	@test -n "$(c)" || { echo "country-plan: pass c=<ISO code>, e.g. make country-plan c=DK" >&2; exit 1; }
+	@$(DOCKER_COMP) exec -T pipeline python -m onboarding.plan $(c) $(args)
 
 coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → PostGIS → MinIO)
 	@$(DOCKER_COMP) up --detach --wait minio

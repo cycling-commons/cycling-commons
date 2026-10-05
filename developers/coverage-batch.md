@@ -8,7 +8,7 @@ extracts into the two coverage artifacts
 2. **`coverage/<cc>/<stamp>/points.pmtiles`** (CC bucket, one file per country)
    - the vector tiles the map draws.
 
-Per region (`COVERAGE_REGIONS`, csv, each swapped independently): download
+Per onboarded extract (`country_extract` rows of seeded or live countries, or `COVERAGE_REGIONS` when set; each swapped independently): download
 (md5-checked, skipped when unchanged) -> `osmium tags-filter` on the
 `pipeline/contract/coverage-contract.json` selectors -> pyosmium parse -> atomic
 per-region swap into `coverage_poi`. Then once per run: per-letter GeoJSONL
@@ -100,7 +100,7 @@ Check the result:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `COVERAGE_REGIONS` | `europe/belgium,europe/netherlands,europe/germany` | csv of Geofabrik regions, each swapped independently. **Keep every onboarded country here.** Since ownership is decided by geometry, a region omitted from this list stops refreshing the border rows it owns, and no neighbour re-creates them — the disappearance this design removed, reintroduced by configuration. |
+| `COVERAGE_REGIONS` | empty | csv of Geofabrik regions, each swapped independently. Empty means every onboarded extract, read from `country_extract` (`python -m coverage.regions`). Set it only to run a subset on purpose: since ownership is decided by geometry, a region left out of a run does not refresh the border rows it owns. |
 | `COVERAGE_WORKDIR` | `/data/work` | scratch dir: extracts, GeoJSONL, pmtiles, and the raw PBFs unless `COVERAGE_PBF_DIR` is set |
 | `COVERAGE_PBF_DIR` | `COVERAGE_WORKDIR` | where the raw `<region>-latest.osm.pbf` downloads live. On the valhalla host both CC environments set `/data/pbf`, one shared volume, so each region is kept once. Derived files stay in the workdir. |
 | `COVERAGE_PBF_PATH` | – | local PBF override; skips the Geofabrik download (dev/fixture runs) |
@@ -263,7 +263,7 @@ file.
    — **`planet` has no configured country, so `resolve_country()` HARD FAILS on it**
      (`pipeline/coverage/load.py`). That is deliberate: an unresolvable slug must not
      silently disable the ownership filter and revert that run to last-writer-wins.
-     For the dry-run, add a temporary `COUNTRY_BY_REGION` entry, or use a `dev/`-prefixed
+     For the dry-run, add a temporary seeded `country` + `country_extract` row for `planet` in the throwaway database, or use a `dev/`-prefixed
      slug, which skips the filter by design. Do not "fix" it by removing the hard fail.
 4. Record, per step, wall-clock / peak RSS / disk written (template):
 

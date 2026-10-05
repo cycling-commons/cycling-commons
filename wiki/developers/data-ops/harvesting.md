@@ -70,7 +70,7 @@ make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
 
 ## Running it
 
-<!-- CODE-ILLUSTRATIVE the full harvest: every onboarded region, the COVERAGE_REGIONS default in developers/docker/compose.yaml -->
+<!-- CODE-ILLUSTRATIVE the full harvest: every onboarded extract, read from the database -->
 ```bash
 make coverage-refresh regions=$(make -s coverage-regions)
 ```
@@ -83,9 +83,8 @@ make coverage-refresh regions=$(make -s coverage-regions)
     for up to a week.
 
     That is why the command above passes `regions=` from `make -s coverage-regions`, which reads
-    the committed default out of `developers/docker/compose.yaml` and is therefore immune to a local
-    override. Use it rather than pasting a list: three pages used to carry their own copy of the
-    twenty-two extracts, and a copy is a thing that drifts.
+    the onboarded extracts straight from the database (`country_extract`) and is therefore immune
+    to a local override.
 
 One invocation runs the whole chain, per region then once at the end:
 
@@ -204,8 +203,8 @@ soon as both are.
 
     <!-- CODE-ILLUSTRATIVE post-harvest acceptance queries -->
     ```sql
-    -- Per-extract country stamps. Each extract resolves to one country in the
-    -- pipeline's COUNTRY_BY_REGION map, so one row per extract is the expected
+    -- Per-extract country stamps. Each extract belongs to one country in
+    -- country_extract, so one row per extract is the expected
     -- shape; a second country with a handful of rows is a border case to look
     -- at, not a failure of the run.
     SELECT s.slug, p.country_code, count(*)

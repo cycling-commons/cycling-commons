@@ -173,8 +173,8 @@ make coverage-refresh   # from the repo root; it waits for MinIO itself
 ```
 
 `make coverage-refresh` runs the whole chain inside the pipeline container:
-download (or reuse) the Geofabrik extract for `COVERAGE_REGIONS` (default
-`europe/belgium,europe/netherlands`) → filter (`osmium tags-filter`) → parse (pyosmium) → load
+download (or reuse) the Geofabrik extract of every onboarded country (`country_extract`;
+`COVERAGE_REGIONS` overrides) → filter (`osmium tags-filter`) → parse (pyosmium) → load
 `coverage_poi` (atomic per-region swap, drift abort) → build tiles
 (tippecanoe) → verify (go-pmtiles) → upload the versioned artifact + the
 stable `coverage/manifest.json` to MinIO.

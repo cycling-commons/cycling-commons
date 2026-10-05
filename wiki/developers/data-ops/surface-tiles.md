@@ -15,7 +15,7 @@ country-scale line data affordable.
 
 ## Running it
 
-<!-- CODE-ILLUSTRATIVE build the three surface artifacts for every onboarded region (the COVERAGE_REGIONS default in developers/docker/compose.yaml) -->
+<!-- CODE-ILLUSTRATIVE build the three surface artifacts for every onboarded region (the onboarded extracts, from the database) -->
 ```bash
 make surface-tiles regions=$(make -s coverage-regions)
 ```

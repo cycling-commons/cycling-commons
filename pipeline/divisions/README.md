@@ -1,149 +1,17 @@
-# pipeline/divisions — region onboarding + Overture exporter
+# pipeline/divisions: Overture divisions access
 
-Region source for the Symfony catalog importer (`app:catalog:import`), from the
-**Overture Maps `divisions` theme** (`division_area`), plus the tooling that
-makes onboarding a new country or state a repeatable process.
+The Overture Maps `divisions` theme (`division_area`) code the onboarding
+planner uses (`python -m onboarding.plan`, pipeline/onboarding/): DuckDB reads
+of the public release, geodesic areas, the area probe, and the candidates
+exporter that fills `world_division`. The pipeline image installs DuckDB's
+httpfs and spatial extensions at build time.
 
-Every onboarding run seeds **levels 2 + 4 by default**: the Overture
-`admin_level=2` country outline alongside the configured operating level
-(L4 unless the country's `country.subtype` says otherwise). This is a deliberate owner decision — see
-"Operational vs infrastructure rows" below for why the L2 row exists and
-where it must never appear.
+How a country is onboarded, end to end:
+[wiki: Onboarding a new country](../../wiki/developers/data-ops/onboarding-a-country.md).
 
-## Onboarding a country or state (the onboarding playbook)
-
-One fixed sequence for every country/state. ⚑ marks a human judgment.
-
-| # | Step | Command |
-|---|------|---------|
-| 1 | ⚑ Choose the operating level | `make region-probe c="NL"` → read `web/var/scaffold/nl/areas.md` |
-| 2 | Scaffold config + label stubs | `make region-scaffold c="NL" flags="--probe-areas"` |
-| 3 | ⚑ Review + merge | freeze slugs/exonyms; merge `config-block.py` into `config.py`, `translations.patch.yaml` into the 4 catalogs |
-| 4 | Export Overture geojson (levels 2 + 4) | `make divisions-data c="NL"` — always emits the L2 country outline alongside the operating-level divisions, same run, same command |
-| 5 | Seed `Region` rows | stage artifacts (including the L2 outline), `app:catalog:import` (see below) — upsert-by-slug, so re-running is safe |
-| 6 | Coverage | the country's `country_extract` rows (`coverage.regions.onboarded_map`) name its Geofabrik extracts — an unresolvable extract hard-fails that region's coverage run (`resolve_country`, the nearest-region-wins ownership rule) rather than silently disabling ownership — then `make coverage-refresh regions=europe/netherlands` |
-| 6b | **Elevation** | check the country's box already has GLO-30 tiles, and install them if not: `tools/elevation/dem-install.sh <continent> <PRESET>` **on the Valhalla host**. See "Elevation is step 6b" below |
-| 6c | **The other tile artifacts** | `make surface-tiles regions=<geofabrik>` and `make routes-tiles regions=<geofabrik>`. Coverage is not the only per-country tile set. See below |
-| 7 | ⚑ Moderators | assign 2–4 region atoms per moderator (admin; `moderator_area` rows) |
-| 8 | Specs | record the rollout in `docs/specs/` (region-scoping §7, coverage-provider) |
-
-### Step 6c: coverage is not the only per-country tile set
-
-**Added 2026-08-14, after the same question was asked about it.** Step 6 builds
-`coverage.pmtiles`, the POI plane. Two more tile sets are built per country and
-neither is in step 6:
-
-| Artifact | Command | What a country without it loses |
-|---|---|---|
-| Road surface (3 files: classified, to-do, gaps) | `make surface-tiles regions=<geofabrik>` | the Surfaces skin is blank there: no road-surface colouring, no "needs recording" arm, no gap grid |
-| Cycle-route network | `make routes-tiles regions=<geofabrik>` | no node networks, no numbered junctions, no named routes (RAVeL, knooppunten, EuroVelo) |
-
-Both read the same Geofabrik extract as coverage and take the same `regions=`
-list, so onboarding a country is three builds, not one.
-
-> **PASS EVERY REGION, NOT JUST THE NEW ONE.** This is the trap, and it cost a
-> rebuild on 2026-08-14. Coverage accumulates in `coverage_poi`, so
-> `make coverage-refresh regions=<one>` reloads one country and then rebuilds
-> the tiles *from the whole table* — per-region runs are correct and are what
-> the rollout memory recommends. **Surface and routes have no database at all**
-> (`Dated/2026-08-09-surface-line-tiles-design.md`): they read the PBFs named
-> in `regions=` and publish an artifact containing exactly those. Running them
-> one country at a time therefore REPLACES the previous artifact rather than
-> adding to it, and the manifest ends up listing only the last country built,
-> with the older artifacts pruned. Always rebuild these two with the full
-> `COVERAGE_REGIONS` list:
->
-> ```bash
-> make surface-tiles regions="$(the whole comma-separated list)"
-> make routes-tiles  regions="$(the whole comma-separated list)"
-> ```
->
-> Check `country_codes` in each manifest afterwards. One entry where you
-> expected nineteen is this mistake.
-
-**Check what the manifests already carry before assuming:** each publishes a
-`country_codes` list, so the honest test is whether the new country is in it.
-
-```bash
-curl -s "$COVERAGE_PUBLIC_BASE_URL/surface/manifest.json" | python3 -m json.tool | grep -A20 country_codes
-curl -s "$COVERAGE_PUBLIC_BASE_URL/routes/manifest.json"  | python3 -m json.tool | grep -A20 country_codes
-```
-
-On 2026-08-14 both listed exactly the twelve countries onboarded before that
-day, which is what makes this a step rather than a note: every older country
-has all three artifacts, so a new country missing two of them is invisible by
-comparison, and the failure looks like "the surface layer is broken in Chile"
-rather than "nobody built it".
-
-### Elevation is step 6b, not an afterthought
-
-**Added 2026-08-14 because it was missing.** Seven countries onboarded that day
-and every one of them but Slovenia had no elevation data, which nobody noticed
-until the owner asked — the procedure existed only as scripts on the host and
-lines in a shell history, so each rollout rediscovered it.
-
-**A country with no DEM gets no climb profiles.** Not wrong ones: an
-`ElevationEndpoints` box with no configured instance falls back to the default,
-which answers `null` for ground it does not hold, and `ElevationClient` refuses
-any reply with a non-numeric sample. So the failure is silent and honest, which
-is exactly why it survives a rollout unnoticed.
-
-**Check before you fetch** — the box may already cover the country. Slovenia
-needed nothing because the EUROPE tile set already reaches it. One request
-against a summit whose height you know settles it:
-
-```bash
-curl -sG --data-urlencode 'json={"shape":[{"lat":46.06,"lon":14.51}]}' \
-  http://127.0.0.1:8002/height        # Ljubljana -> 299, so Slovenia is covered
-```
-
-`null` means no tile. Then, **on the Valhalla host**:
-
-```bash
-tools/elevation/dem-install.sh africa RWANDA SOUTHAFRICA
-```
-
-which fetches the GeoTIFFs, converts them to `.hgt` in the `osgeo/gdal`
-container (the host has no GDAL on purpose — it is a routing box, and the
-container is capped with `--cpus` so live routing keeps its share), and moves
-the result into that instance's `elevation_data`. Presets live in
-`fetch-glo30.sh`; add one per country rather than passing raw bboxes, so the
-next person inherits the box you worked out.
-
-**Two traps this step carries.**
-- **The preset's upper bounds must be one degree PAST the ground you want**, because
-  a cell is named for its south-west corner and the fetch loop runs
-  `seq LAT0 $((LAT1-1))`. Three presets were wrong on first write — Rwanda's
-  northern strip, Colombia's Caribbean coast, Chile's Cape Horn — and the gap
-  only ever shows up later as one climb with no profile.
-- **A continent with tiles the app never asks for is the same as no tiles.**
-  `ELEVATION_URLS` must name the instance, or the box falls through to the
-  default. `africa` and `south-america` instances existed and were empty AND
-  unlisted for months.
-
-**Operating-level rule (pipeline/divisions/README.md):** seed at the
-official administrative level whose subdivisions are of reasonable riding
-size, preferring legibility + stable ISO 3166-2 identity over an exact match
-with the ~17k km² band (ADVISORY — Brussels sits far below it). Small official
-regions are fine: moderation composes upward (one moderator holds 2–4 atoms).
-Group into synthetic macro-regions ONLY when no official level fits.
-
-**State-level onboarding:** pass `--only` to the scaffolder
-(`php bin/console app:region:scaffold US --only=US-CA`) and a Geofabrik
-sub-region to coverage (`north-america/us/california`) — the rest of the
-country onboards later, demand-driven.
-
-**Review step 3 in detail:** the scaffolder EMITS, NEVER APPLIES. You must
-- freeze each **slug** (permanent identity — upsert-by-slug): established
-  English exonym where one truly exists (`wallonia`, `flanders`), else the
-  native form (`noord-holland`); act on every collision warning
-  (NL example: `limburg-nl`, because BE also has a Limburg);
-- fix **exonyms** in all four locales and delete the `# TODO exonym?` markers
-  (sokil ships English msgids only, so no locale is pre-localized);
-- add the `all_<cc>` country rung the map scope selector needs;
-- add the country's IANA timezone(s) to `TZ_COUNTRY` in `web/assets/map/scope.js` — the cold-start home-country
-  guess silently resolves to nothing for the new country's visitors otherwise,
-  and no test catches the gap.
+Every onboarded country carries its level-2 outline beside its operating level;
+see "Operational vs infrastructure rows" below for why it exists and where it
+must never appear.
 
 ## Onboarded so far
 
@@ -229,7 +97,7 @@ Overture's dual-language labels and inverted-comma sort forms, which yields
 `asturias-principado-de` and `valenciana-comunidad` — none of them a name
 anyone uses. This is what review step 3 is for.
 
-Spain also needed three timezones in `TZ_COUNTRY` rather than one:
+Spain also needed three timezones (the country's `timezones`) rather than one:
 `Europe/Madrid`, `Atlantic/Canary` (the Canaries run an hour behind) and
 `Africa/Ceuta`.
 
@@ -253,7 +121,7 @@ across mixed levels — smallest-area-wins — is the point) and `RegionResolver
 (L2 must stay matchable so evidence in not-yet-subdivided countries anchors
 somewhere).
 
-The rule is **derived**, never stored: no flag, no playbook step, nothing to
+The rule is **derived**, never stored: no flag, no onboarding step, nothing to
 go stale. When a country later onboards a finer level (see below), its
 previous operating level demotes to infrastructure automatically the moment
 the finer rows land.
@@ -262,12 +130,12 @@ A country whose **only** `region` row is its L2 outline is thereby
 operational by the same rule (the LU precedent) and will appear on
 `/regions` — so importing the L2 outline alone for a not-yet-onboarded
 country makes that country public. Import the L2 outline only as part of a
-full onboarding run (step 4 above), or together with its subdivisions —
-never on its own ahead of the rest of the playbook.
+full onboarding run (`app:country:apply` seeds them together), or together with its subdivisions —
+never on its own ahead of the rest of the onboarding.
 
 **Finer levels (6+) stay a per-country decision, on evidence.** Levels 2 and 4
 are the default for every country; going deeper (e.g. ~3,000 US counties) is a
-separate, per-country `COUNTRY_CONFIG` setting made only when a country's
+separate, per-country decision (`--level` on the planner) made only when a country's
 scale or shape demands it, not a default applied everywhere.
 
 ## What the exporter produces
@@ -294,9 +162,9 @@ with the plain-English country slug (`belgium`, matching LU's `luxembourg`):
 - `country_code` is **required** by the importer — an unstamped region is a
   silent moderation-jurisdiction hole (map-and-search.md §4.5 risk 1).
 - `name` is an English placeholder; the rider-facing label comes from the
-  `messages` translations domain (`region.<slug>.label`, 4 locales).
+  `region.labels` column (5 locales; edit with `app:country:label`).
 - `slug` is **identity** (upsert-by-slug). Never change a slug — it orphans the
-  region row. The ISO→slug map lives in `config.py`.
+  region row. The planner assigns slugs and stores them in `country_plan_region`.
 - Geometry is stored as `MultiPolygon` (single polygons are promoted).
 
 ## Provenance / licence
@@ -307,28 +175,20 @@ for the release pinned in `config.OVERTURE_RELEASE`. Bump that constant
 deliberately — a newer release may shift boundaries, which is a versioned
 re-import event (slugs/ISO codes stay identity; region rows are never deleted).
 
-## Run the export + import (playbook steps 4–5)
+## Re-export a live country (an Overture release bump)
 
 ```bash
-make divisions-data c="NL"        # → pipeline/divisions/out/region-*.geojson
-mkdir -p web/var/catalog-out
-cp pipeline/divisions/out/region-<each-new-slug>.geojson web/var/catalog-out/
-docker exec cycling-commons-dev-app-1 php -d memory_limit=2G \
-  bin/console app:catalog:import /app/var/catalog-out
+make divisions-data c="NL"     # pipeline container -> pipeline/divisions/out/region-*.geojson
 ```
 
-**`-d memory_limit=2G` is not optional past a handful of countries.** The import
-sends every region's geometry as a query parameter, and in the dev environment
-Doctrine's SQL logger retains all of them for the profiler — 162 regions is
-~101 MB of GeoJSON, which exhausts the default 128 MB limit part-way through
-and dies with a fatal error. The whole import runs in one transaction, so a
-crash rolls back cleanly and re-running is safe; it is a limit to raise, not
-damage to repair.
+The spec (subtype, ISO code to slug, names, box) comes from the country's live
+`country` and `region` rows, so a re-export keeps every slug. Import the files
+with `app:catalog:import` (pass `-d memory_limit=2G` past a handful of countries:
+the dev SQL logger keeps every geometry parameter).
 
 ## Tests
 
 ```bash
-docker compose -f developers/docker/compose.yaml exec pipeline python -m pytest tests/test_divisions_export.py tests/test_divisions_probe.py -q   # offline
-docker compose -f developers/docker/compose.yaml exec -e RUN_LIVE_OVERTURE=1 pipeline python -m pytest tests/test_divisions_export.py tests/test_divisions_probe.py -q   # + live Overture smoke
-cd web && php bin/phpunit --filter ScaffoldRegionsCommandTest
+make pipeline-test                                              # offline
+docker compose -f developers/docker/compose.yaml exec -T -e RUN_LIVE_OVERTURE=1 pipeline python -m pytest tests -q -k live
 ```
