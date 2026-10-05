@@ -1,0 +1,11 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type": "Feature", "properties": {"id": "denmark", "parent": "europe", "name": "Denmark", "iso3166-1:alpha2": ["DK"], "urls": {"pbf": "https://download.geofabrik.de/europe/denmark-latest.osm.pbf"}}},
+    {"type": "Feature", "properties": {"id": "great-britain", "parent": "europe", "name": "Great Britain", "iso3166-1:alpha2": ["GB"], "urls": {"pbf": "https://download.geofabrik.de/europe/great-britain-latest.osm.pbf"}}},
+    {"type": "Feature", "properties": {"id": "united-kingdom", "parent": "europe", "name": "United Kingdom", "iso3166-1:alpha2": ["GB"], "urls": {"pbf": "https://download.geofabrik.de/europe/united-kingdom-latest.osm.pbf"}}},
+    {"type": "Feature", "properties": {"id": "ireland-and-northern-ireland", "parent": "europe", "name": "Ireland and Northern Ireland", "iso3166-1:alpha2": ["IE", "GB"], "urls": {"pbf": "https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf"}}},
+    {"type": "Feature", "properties": {"id": "us", "parent": "north-america", "name": "United States of America", "iso3166-1:alpha2": ["US"], "urls": {"pbf": "https://download.geofabrik.de/north-america/us-latest.osm.pbf"}}},
+    {"type": "Feature", "properties": {"id": "us/california", "parent": "us", "name": "California", "iso3166-2": ["US-CA"], "urls": {"pbf": "https://download.geofabrik.de/north-america/us/california-latest.osm.pbf"}}}
+  ]
+}
