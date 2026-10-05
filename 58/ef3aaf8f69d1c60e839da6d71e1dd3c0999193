@@ -1,0 +1,23 @@
+.github/workflows/ci-tools.yml
+  s_8fe2e4dc6b0b60::t_4661a9514e4a95 5,12
+tools/gates/country_lists.py
+  s_8fe2e4dc6b0b60::t_dbcc5be393a014 10-14
+tools/gates/tests/test_country_lists.py
+  s_8fe2e4dc6b0b60::t_0f9316f8c1868e 24-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "58ef3aaf8f69d1c60e839da6d71e1dd3c0999193",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
