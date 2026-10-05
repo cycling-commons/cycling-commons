@@ -2,14 +2,14 @@
 name: ci-tools
 on:
   pull_request:
-    paths: ['tools/**', '.github/workflows/ci-tools.yml']
+    paths: ['tools/**', 'pipeline/**', 'web/src/**', 'web/assets/**', 'web/templates/**', 'web/translations/**', 'developers/docker/**', 'Makefile', '.github/workflows/ci-tools.yml']
   push:
     # staging is a deploy source (deploy-staging.yaml); without it here, a
     # push could deploy code that never passed CI. symfony-base-clean does not
     # deploy and runs no CI.
     # production included: deploy-production.yaml ships from that branch.
     branches: [main, staging, production]
-    paths: ['tools/**', '.github/workflows/ci-tools.yml']
+    paths: ['tools/**', 'pipeline/**', 'web/src/**', 'web/assets/**', 'web/templates/**', 'web/translations/**', 'developers/docker/**', 'Makefile', '.github/workflows/ci-tools.yml']
 jobs:
   wallonia:
     runs-on: ubuntu-latest
@@ -21,4 +21,4 @@ jobs:
       - run: pip install pytest
       # Every tools suite, same set as `make tools-test`. The divisions suite
       # moved to pipeline/ with the code (ci-pipeline.yml runs it).
-      - run: cd tools && python3 -m pytest wallonia/tests wikimedia/tests -q
+      - run: cd tools && python3 -m pytest wallonia/tests wikimedia/tests gates/tests -q

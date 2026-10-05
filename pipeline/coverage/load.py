@@ -46,8 +46,8 @@ _SESSION_BUDGET = (
     # 60min, not 10. Production onboards a country unattended, on a timer, with
     # nobody watching the output — so the default has to be large enough for the
     # largest country anyone will onboard, or the job simply fails at 3 a.m. and
-    # the region silently has no coverage. europe/spain failed at 10min on
-    # 2026-08-08, exactly as europe/germany, europe/france and europe/italy had
+    # the region silently has no coverage. Spain failed at 10min on
+    # 2026-08-08, exactly as Germany, France and Italy had
     # during the 08-06 rollout (see load_region below for WHY the big ones are
     # slow). Raising it does not make a runaway query safe — it makes an honest
     # one possible; the runaway is bounded by the advisory lock (one harvest at
@@ -268,9 +268,9 @@ def _materialize_operational_regions(cur) -> None:
     outside them, and `luxembourg` — operational, being its country's only
     level — correctly stays.
 
-    **Cost.** This is also why the 2026-08-06 rollout made europe/germany,
-    europe/france and europe/italy exceed the then-10-minute
-    COVERAGE_STATEMENT_TIMEOUT (europe/spain joined them on 08-08, which is why
+    **Cost.** This is also why the 2026-08-06 rollout made Germany,
+    France and Italy exceed the then-10-minute
+    COVERAGE_STATEMENT_TIMEOUT (Spain joined them on 08-08, which is why
     the default is now 60min — an unattended production run must not need a
     human to pass a bigger number). The US
     outline spans 358.9 degrees of longitude — Alaska crosses the antimeridian

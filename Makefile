@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test country-lists-check app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe course-data coverage-regions
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -288,8 +288,11 @@ divisions-data: ## Export region-<slug>.geojson from Overture divisions to pipel
 region-probe: ## Probe Overture subdivision areas (make region-probe c="NL" [subtypes="region,county"])
 	@$(DOCKER_COMP) exec -T pipeline python -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes)) --out divisions/out/scaffold
 
-tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits)
-	cd tools && python3 -m pytest wallonia/tests wikimedia/tests credits/tests -q
+tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits + gates)
+	cd tools && python3 -m pytest wallonia/tests wikimedia/tests credits/tests gates/tests -q
+
+country-lists-check: ## Fail if a hand-kept list of countries crept back into the code (countries are rows)
+	@python3 tools/gates/country_lists.py
 
 credits-check: ## Verify /credits still names every dependency, and that its links resolve
 	@python3 tools/credits/check_credits.py
