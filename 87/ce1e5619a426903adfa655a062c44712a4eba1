@@ -1,0 +1,71 @@
+web/assets/map/scope.js
+  s_8fe2e4dc6b0b60::t_28941005663467 27-31,589
+web/src/Catalog/CountryTimezones.php
+  s_8fe2e4dc6b0b60::t_a9d735a6d2fc70 1-42
+web/src/Catalog/RegionLabels.php
+  s_8fe2e4dc6b0b60::t_cfba81f84d4b4e 1-90
+web/src/Controller/MapController.php
+  s_8fe2e4dc6b0b60::t_c7d6f7c1016b77 18,27,69,96,99-100,152-153
+web/src/Controller/ModerateRegionsController.php
+  s_8fe2e4dc6b0b60::t_92f772906d8198 11,55,79,99,194,228
+web/src/Controller/PlaceTextController.php
+  s_8fe2e4dc6b0b60::t_1148d9c3d75541 10,100,118
+web/src/Twig/RegionLabelExtension.php
+  s_8fe2e4dc6b0b60::t_0f0d7aeca58237 9,15-17,24,34,36-37,40
+web/src/World/Command/ScaffoldRegionsCommand.php
+  s_985749378da6fe::t_2022ab858d04b8 22,26,166
+web/templates/map/index.html.twig
+  s_8fe2e4dc6b0b60::t_2eb319edfd1d48 958-959
+web/templates/pages/region.html.twig
+  s_8fe2e4dc6b0b60::t_2de107958599a8 17
+web/templates/pages/regions.html.twig
+  s_8fe2e4dc6b0b60::t_24d58f877be064 78
+web/templates/profile/show.html.twig
+  s_8fe2e4dc6b0b60::t_70f092f8b1bb40 245,274
+web/templates/settings/index.html.twig
+  s_8fe2e4dc6b0b60::t_62688732e6067b 156
+web/tests/Catalog/RegionLabelsTest.php
+  s_8fe2e4dc6b0b60::t_0f9808ea7f4fd3 1-85
+web/tests/Controller/MapScopeRegistryTest.php
+  s_8fe2e4dc6b0b60::t_9d5a83ac43e553 32-35
+web/tests/World/ScaffoldRegionsCommandTest.php
+  s_985749378da6fe::t_a4f3590f5be427 20,100
+web/tests/js/scope.test.cjs
+  s_8fe2e4dc6b0b60::t_4ec8dfa20c4155 484,496,508,516,524,529-538,740,767,776,784,792,799,807
+web/translations/messages.de.yaml
+  s_8fe2e4dc6b0b60::t_257b3000565d1b 938-939
+web/translations/messages.en.yaml
+  s_8fe2e4dc6b0b60::t_9708279ab2984d 938-939
+web/translations/messages.es.yaml
+  s_8fe2e4dc6b0b60::t_6b30bcee342c8a 940-941
+web/translations/messages.fr.yaml
+  s_8fe2e4dc6b0b60::t_70ec6fc3b0dbc8 933-934
+web/translations/messages.nl.yaml
+  s_8fe2e4dc6b0b60::t_8718946ebabf37 938-939
+wiki/developers/data-ops/onboarding-a-country.md
+  s_985749378da6fe::t_15dfa69048ed01 89,101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "87ce1e5619a426903adfa655a062c44712a4eba1",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
