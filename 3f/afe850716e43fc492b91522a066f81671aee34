@@ -1,0 +1,23 @@
+web/src/Catalog/CountryTimezones.php
+  s_8fe2e4dc6b0b60::t_64edc1bee74bb7 14-16,31
+web/src/Catalog/RegionRegistryProvider.php
+  s_8fe2e4dc6b0b60::t_7b69a0842901a5 52-53
+web/tests/Onboarding/CountryCommandsTest.php
+  s_8fe2e4dc6b0b60::t_9fa2f7c377c20d 9-10,374-405
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3fafe850716e43fc492b91522a066f81671aee34",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
