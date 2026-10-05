@@ -95,7 +95,8 @@ def resolve_country(region: str, onboarded: Mapping[str, str]) -> str | None:
             return cc
     raise RuntimeError(
         f"{region!r} is not an onboarded extract nor below one: no seeded or live country "
-        "holds it in country_extract. Onboard its country first (make country-onboard); "
+        "holds it in country_extract. Onboard its country first (wiki: Onboarding a new country, "
+        "developers/data-ops/onboarding-a-country.md); "
         "dev/fixture is the only intentional skip."
     )
 
