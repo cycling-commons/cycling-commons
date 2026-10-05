@@ -1,0 +1,39 @@
+web/migrations/Version20261005120000.php
+  s_8fe2e4dc6b0b60::t_8e512590768162 1-53
+web/migrations/Version20261005120100.php
+  s_8fe2e4dc6b0b60::t_87f7a3788cc4b2 1-2131
+web/src/Catalog/Entity/CountryExtract.php
+  s_8fe2e4dc6b0b60::t_3a0711c1973322 1-38
+web/src/Catalog/Entity/CountryPlanRegion.php
+  s_8fe2e4dc6b0b60::t_46d9d0c6260855 1-87
+web/src/Catalog/Entity/OnboardedCountry.php
+  s_8fe2e4dc6b0b60::t_24d84d70c83e1e 1-111
+web/src/Catalog/Entity/Region.php
+  s_985749378da6fe::t_b7b60a079680ab 65-72,199-212
+web/tests/Onboarding/CountrySeedMigrationTest.php
+  s_8fe2e4dc6b0b60::t_b84c60fcf44e9e 1-145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "26603153e9e004a90b04f520855fa4e720ec29aa",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
