@@ -56,7 +56,7 @@ final class CountryBundleTest extends KernelTestCase
         $export->assertCommandIsSuccessful();
         $json = $export->getDisplay();
         /** @var array<string, string> $before */
-        $before = $this->db()->fetchAllKeyValue("SELECT slug, encode(ST_AsEWKB(geom), 'hex') FROM region WHERE country_code = 'XA'");
+        $before = $this->db()->fetchAllKeyValue("SELECT slug, encode(ST_AsEWKB(geom), 'hex') FROM region WHERE country_code = 'XA' ORDER BY slug");
         /** @var array{regions: list<array{slug: string, geometry: array<string, mixed>}>} $bundle */
         $bundle = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
 
@@ -72,7 +72,7 @@ final class CountryBundleTest extends KernelTestCase
         self::assertSame(['test/xaland'], $db->fetchFirstColumn("SELECT slug FROM country_extract WHERE country_code = 'XA'"));
         self::assertSame('West-Xa', $db->fetchOne("SELECT labels->>'nl' FROM country_plan_region WHERE slug = 'xa-west'"));
         self::assertEquals(['xa-west' => 4, 'xaland' => 2], array_map('intval', $db->fetchAllKeyValue("SELECT slug, admin_level FROM country_plan_region WHERE country_code = 'XA'")));
-        self::assertSame($before, $db->fetchAllKeyValue("SELECT slug, encode(ST_AsEWKB(geom), 'hex') FROM country_plan_region WHERE country_code = 'XA'"), 'geometry is byte-identical after the round trip');
+        self::assertSame($before, $db->fetchAllKeyValue("SELECT slug, encode(ST_AsEWKB(geom), 'hex') FROM country_plan_region WHERE country_code = 'XA' ORDER BY slug"), 'geometry is byte-identical after the round trip');
         self::assertSame(['iso_code' => 'XA-W', 'name' => 'West', 'area_km2' => '7000.5', 'en' => 'West'],
             $db->fetchAssociative("SELECT iso_code, name, area_km2::text AS area_km2, labels->>'en' AS en FROM country_plan_region WHERE slug = 'xa-west'"));
         self::assertSame(['50', '50', '52', '51'], array_map(static fn ($v): string => (string) (0 + $v), json_decode((string) $db->fetchOne("SELECT bbox::text FROM country WHERE code = 'XA'"), true, 512, \JSON_THROW_ON_ERROR)));
