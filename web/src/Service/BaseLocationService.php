@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\User;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -73,5 +74,49 @@ final class BaseLocationService
         }
 
         return \count($rows);
+    }
+
+    /**
+     * rederiveAll() for riders whose base area reaches within $bandDeg of the listed countries' regions; writes only changed rows.
+     *
+     * @param list<string> $countries ISO 3166-1 alpha-2, upper case
+     *
+     * @return int users updated
+     */
+    public function rederiveNear(array $countries, float $bandDeg): int
+    {
+        /** @var list<array{id: int|string, base_lng: float|string, base_lat: float|string, base_radius_km: int|string, ids: string, ccs: string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT u.id, ST_X(u.base_point) AS base_lng, ST_Y(u.base_point) AS base_lat, u.base_radius_km,
+                    u.base_region_ids::text AS ids, u.base_country_codes::text AS ccs
+               FROM users u
+              WHERE u.base_point IS NOT NULL
+                AND EXISTS (SELECT 1 FROM region r
+                             WHERE r.country_code IN (:ccs) AND r.geom IS NOT NULL
+                               AND (ST_DWithin(r.geom, u.base_point, :deg)
+                                    OR ST_DWithin(r.geom::geography, u.base_point::geography, u.base_radius_km * 1000.0)))
+              ORDER BY u.id ASC',
+            ['ccs' => $countries, 'deg' => $bandDeg],
+            ['ccs' => ArrayParameterType::STRING],
+        );
+
+        $updated = 0;
+        foreach ($rows as $row) {
+            $derived = $this->resolver->resolve((float) $row['base_lat'], (float) $row['base_lng'], (int) $row['base_radius_km']);
+            if (json_decode($row['ids'], true) === $derived['regionIds'] && json_decode($row['ccs'], true) === $derived['countryCodes']) {
+                continue;
+            }
+            $this->db->executeStatement(
+                'UPDATE users SET base_region_ids = :ids, base_country_codes = :ccs WHERE id = :id',
+                [
+                    'ids' => json_encode($derived['regionIds'], \JSON_THROW_ON_ERROR),
+                    'ccs' => json_encode($derived['countryCodes'], \JSON_THROW_ON_ERROR),
+                    'id' => $row['id'],
+                ],
+            );
+            ++$updated;
+        }
+
+        return $updated;
     }
 }

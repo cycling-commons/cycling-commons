@@ -45,7 +45,8 @@ final class Restamper
             JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(i.geom))
             WHERE r.country_code <> ''
               AND (i.country_code IN (:ccs)
-                   OR EXISTS (SELECT 1 FROM region rl
+                   OR i.geom && (SELECT ST_SetSRID(ST_Extent(geom)::geometry, 4326) FROM region WHERE country_code IN (:ccs))
+                      AND EXISTS (SELECT 1 FROM region rl
                                WHERE rl.country_code IN (:ccs)
                                  AND ST_Contains(rl.geom, ST_PointOnSurface(i.geom))))
             ORDER BY i.id, r.area_km2 ASC NULLS LAST, r.id ASC

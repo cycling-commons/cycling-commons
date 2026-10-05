@@ -7,7 +7,10 @@ declare(strict_types=1);
 namespace App\Tests\Onboarding;
 
 use App\Entity\User;
+use App\Onboarding\Countries;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -33,12 +36,12 @@ final class CountryCommandsTest extends KernelTestCase
         return $tester;
     }
 
-    private function plan(string $cc, string $slug, string $wkt, int $admin, string $iso): void
+    private function plan(string $cc, string $slug, string $wkt, int $admin, string $iso, float $area = 12000): void
     {
         $this->db()->executeStatement(
             'INSERT INTO country_plan_region (country_code, slug, iso_code, name, labels, admin_level, area_km2, geom)
-             VALUES (:cc, :slug, :iso, :name, CAST(:labels AS jsonb), :admin, 12000, ST_Multi(ST_GeomFromText(:wkt, 4326)))',
-            ['cc' => $cc, 'slug' => $slug, 'iso' => $iso, 'name' => ucfirst($slug), 'admin' => $admin, 'wkt' => $wkt,
+             VALUES (:cc, :slug, :iso, :name, CAST(:labels AS jsonb), :admin, :area, ST_Multi(ST_GeomFromText(:wkt, 4326)))',
+            ['cc' => $cc, 'slug' => $slug, 'iso' => $iso, 'name' => ucfirst($slug), 'admin' => $admin, 'wkt' => $wkt, 'area' => $area,
                 'labels' => json_encode(['en' => ucfirst($slug), 'fr' => 'Fr '.$slug], \JSON_THROW_ON_ERROR)],
         );
     }
@@ -211,5 +214,159 @@ final class CountryCommandsTest extends KernelTestCase
 
         self::assertSame('object', $this->db()->fetchOne("SELECT jsonb_typeof(labels) FROM region WHERE slug = 'xa-west'"));
         self::assertSame('Xa-Westen', $this->db()->fetchOne("SELECT labels->>'de' FROM region WHERE slug = 'xa-west'"));
+    }
+
+    public function testApplyRestampsANeighboursSubmissionIntoASmallerNewRegion(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        $this->plan('XA', 'xa-cape', 'POLYGON((51.2 51.2,51.4 51.2,51.4 51.4,51.2 51.4,51.2 51.2))', 4, 'XA-C', 500);
+        $db = $this->db();
+        $xbNorth = (int) $db->fetchOne("SELECT id FROM region WHERE slug = 'xb-north'");
+        $userId = (int) $db->fetchOne('SELECT user_id FROM submission ORDER BY id DESC LIMIT 1');
+        $submission = (int) $db->fetchOne(
+            "INSERT INTO submission (type, letter, user_id, status, title, geom, region_id, country_code, changes, payload, created_at)
+             VALUES ('new', 'B', :u, 'pending', 'Cape tap', ST_SetSRID(ST_MakePoint(51.3, 51.3), 4326), :r, 'XB', '{}', '{}', NOW()) RETURNING id",
+            ['u' => $userId, 'r' => $xbNorth],
+        );
+
+        $this->command('app:country:apply', ['country' => 'XA'])->assertCommandIsSuccessful();
+
+        self::assertSame(
+            ['region_id' => (int) $db->fetchOne("SELECT id FROM region WHERE slug = 'xa-cape'"), 'country_code' => 'XA'],
+            array_map(static fn ($v) => \is_numeric($v) ? (int) $v : $v, (array) $db->fetchAssociative('SELECT region_id, country_code FROM submission WHERE id = ?', [$submission])),
+            'the smaller new region wins over the neighbour that stamped it',
+        );
+    }
+
+    public function testAFailureInsideApplyRollsEverythingBack(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        $this->plan('XA', 'xa-middle', 'POLYGON((50.5 50,51.5 50,51.5 51,50.5 51,50.5 50))', 4, 'XA-M');
+
+        $tester = $this->command('app:country:apply', ['country' => 'XA']);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('overlap', $tester->getDisplay());
+        self::assertSame('planned', $this->db()->fetchOne("SELECT status FROM country WHERE code = 'XA'"));
+        self::assertSame(0, (int) $this->db()->fetchOne("SELECT COUNT(*) FROM region WHERE country_code = 'XA'"));
+    }
+
+    public function testApplyReDerivesTheBandAndLeavesFarRowsAlone(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        $db = $this->db();
+        $xfFar = (int) $db->fetchOne(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
+             VALUES ('xf-far', 'XF Far', ST_Multi(ST_GeomFromText('POLYGON((10 10,11 10,11 11,10 11,10 10))', 4326)), 12000, 'XF', 'XF-F', 4, 'test', NOW(), NOW()) RETURNING id",
+        );
+        // A catalog-wide rewrite touches these (NULL-then-reassign, a fresh surface profile, a rider's stale base).
+        $farItem = (int) $db->fetchOne(
+            "INSERT INTO item (letter, name, geom, region_id, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('B', 'Far tap', ST_SetSRID(ST_MakePoint(10.5, 10.5), 4326), :r, 'XF', 'unverified', 'user', 'apply:far', '{}', NOW(), NOW()) RETURNING id",
+            ['r' => $xfFar],
+        );
+        $nearItem = (int) $db->fetchOne(
+            "INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('B', 'Near tap', ST_SetSRID(ST_MakePoint(50.5, 50.5), 4326), '', 'unverified', 'user', 'apply:near', '{}', NOW(), NOW()) RETURNING id",
+        );
+        $farHeat = (int) $db->fetchOne(
+            "INSERT INTO heat_point (geom, weight, source, computed_at, region_id) VALUES (ST_SetSRID(ST_MakePoint(10.5, 10.5), 4326), 1, 'test', NOW(), :r) RETURNING id",
+            ['r' => $xfFar],
+        );
+        $nearHeat = (int) $db->fetchOne(
+            "INSERT INTO heat_point (geom, weight, source, computed_at) VALUES (ST_SetSRID(ST_MakePoint(51.5, 50.5), 4326), 1, 'test', NOW()) RETURNING id",
+        );
+        $farRoute = (int) $db->fetchOne(
+            "INSERT INTO recommended_route (name, geom, region_id, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('Far loop', ST_SetSRID(ST_GeomFromText('LINESTRING(10.4 10.4,10.6 10.6)'), 4326), :r, 'published', 'user', 'apply:far', '{\"surfaces\":{\"covered\":50,\"parts\":[]}}', NOW(), NOW()) RETURNING id",
+            ['r' => $xfFar],
+        );
+        $farUser = (new User())->setEmail('apply-far-'.uniqid('', true).'@test.test');
+        $farUser->setPassword('x');
+        $nearUser = (new User())->setEmail('apply-near-'.uniqid('', true).'@test.test');
+        $nearUser->setPassword('x');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($farUser);
+        $em->persist($nearUser);
+        $em->flush();
+        $db->executeStatement(
+            "UPDATE users SET base_point = ST_SetSRID(ST_MakePoint(10.5, 10.5), 4326), base_radius_km = 5, base_region_ids = '[999999]', base_country_codes = '[\"ZZ\"]' WHERE id = ?",
+            [(int) $farUser->getId()],
+        );
+        $db->executeStatement(
+            "UPDATE users SET base_point = ST_SetSRID(ST_MakePoint(50.5, 50.5), 4326), base_radius_km = 5, base_region_ids = '[]', base_country_codes = '[]' WHERE id = ?",
+            [(int) $nearUser->getId()],
+        );
+        $ctid = static fn (string $table, int $id): string => (string) $db->fetchOne("SELECT ctid::text FROM {$table} WHERE id = ?", [$id]);
+        $before = [$ctid('item', $farItem), $ctid('heat_point', $farHeat), $ctid('recommended_route', $farRoute), $ctid('users', (int) $farUser->getId())];
+
+        $this->command('app:country:apply', ['country' => 'XA'])->assertCommandIsSuccessful();
+
+        $xaWest = (int) $db->fetchOne("SELECT id FROM region WHERE slug = 'xa-west'");
+        $xaEast = (int) $db->fetchOne("SELECT id FROM region WHERE slug = 'xa-east'");
+        self::assertSame($xaWest, (int) $db->fetchOne('SELECT region_id FROM item WHERE id = ?', [$nearItem]), 'an item in the band is re-derived');
+        self::assertSame($xaEast, (int) $db->fetchOne('SELECT region_id FROM heat_point WHERE id = ?', [$nearHeat]), 'a heat point in the band is re-derived');
+        self::assertContains($xaWest, json_decode((string) $db->fetchOne('SELECT base_region_ids FROM users WHERE id = ?', [(int) $nearUser->getId()]), true, 512, \JSON_THROW_ON_ERROR), 'a rider base in the band is re-derived');
+        self::assertSame(
+            $before,
+            [$ctid('item', $farItem), $ctid('heat_point', $farHeat), $ctid('recommended_route', $farRoute), $ctid('users', (int) $farUser->getId())],
+            'rows far from XA and its neighbours are not written',
+        );
+        self::assertSame($xfFar, (int) $db->fetchOne('SELECT region_id FROM item WHERE id = ?', [$farItem]));
+    }
+
+    public function testApplyDoesNotRewriteARowWhoseRegionStays(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        $this->command('app:country:apply', ['country' => 'XA'])->assertCommandIsSuccessful();
+        $db = $this->db();
+        $item = (int) $db->fetchOne(
+            "INSERT INTO item (letter, name, geom, region_id, country_code, state, source, source_ref, attributes, created_at, updated_at)
+             VALUES ('B', 'Kept tap', ST_SetSRID(ST_MakePoint(50.5, 50.5), 4326), (SELECT id FROM region WHERE slug = 'xa-west'), 'XA', 'unverified', 'user', 'apply:kept', '{}', NOW(), NOW()) RETURNING id",
+        );
+        $before = (string) $db->fetchOne('SELECT ctid::text FROM item WHERE id = ?', [$item]);
+
+        $this->command('app:country:apply', ['country' => 'XA'])->assertCommandIsSuccessful();
+
+        self::assertSame($before, (string) $db->fetchOne('SELECT ctid::text FROM item WHERE id = ?', [$item]), 'no NULL-then-reassign');
+    }
+
+    public function testApplyGivesUpOnAHeldLockAndWritesNothing(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        // A second session, outside DAMA's per-test transaction, holds the lock.
+        $other = DriverManager::getConnection((new DsnParser(['postgresql' => 'pdo_pgsql']))->parse($_SERVER['DATABASE_URL'] ?? $_ENV['DATABASE_URL'] ?? ''));
+        $other->beginTransaction();
+        $other->executeStatement('LOCK TABLE heat_point IN ACCESS EXCLUSIVE MODE');
+        try {
+            $tester = $this->command('app:country:apply', ['country' => 'XA']);
+        } finally {
+            $other->rollBack();
+            $other->close();
+        }
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('waited 10 s for a lock', $tester->getDisplay());
+        self::assertSame('planned', $this->db()->fetchOne("SELECT status FROM country WHERE code = 'XA'"));
+        self::assertSame(0, (int) $this->db()->fetchOne("SELECT COUNT(*) FROM region WHERE country_code = 'XA'"));
+    }
+
+    public function testMarkSeededNeverDemotesALiveCountry(): void
+    {
+        self::bootKernel();
+        $countries = new Countries($this->db());
+
+        try {
+            $countries->markSeeded('DE');
+            self::fail('a live country was marked seeded');
+        } catch (\InvalidArgumentException $e) {
+            self::assertStringContainsString('DE', $e->getMessage());
+        }
+        self::assertSame('live', $this->db()->fetchOne("SELECT status FROM country WHERE code = 'DE'"));
     }
 }

@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Catalog;
 
 use App\Service\BaseLocationService;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -43,6 +44,27 @@ final class RegionDerivations
         $assigned = $this->recomputeMembership();
         $rederived = $this->baseLocations->rederiveAll();
         $surfaced = $this->surfaces->recomputeAll();
+
+        return ['assigned' => $assigned, 'rederived' => $rederived, 'surfaced' => $surfaced];
+    }
+
+    /**
+     * dependents() for rows within $bandDeg of the listed countries' regions; writes only rows whose value changes.
+     *
+     * @param list<string> $countries ISO 3166-1 alpha-2, upper case
+     *
+     * @return array{assigned: int, rederived: int, surfaced: int} rows written
+     */
+    public function dependentsNear(array $countries, float $bandDeg): array
+    {
+        if ([] === $countries) {
+            return ['assigned' => 0, 'rederived' => 0, 'surfaced' => 0];
+        }
+        $assigned = $this->membershipNear('item', 'ST_PointOnSurface(m.geom)', $countries, $bandDeg)
+            + $this->membershipNear('recommended_route', 'ST_PointOnSurface(m.geom)', $countries, $bandDeg)
+            + $this->membershipNear('heat_point', 'm.geom', $countries, $bandDeg);
+        $rederived = $this->baseLocations->rederiveNear($countries, $bandDeg);
+        $surfaced = $this->surfaces->recomputeNear($countries, $bandDeg);
 
         return ['assigned' => $assigned, 'rederived' => $rederived, 'surfaced' => $surfaced];
     }
@@ -142,5 +164,31 @@ final class RegionDerivations
         );
 
         return $assigned;
+    }
+
+    /**
+     * Smallest-area-wins, as recomputeMembership(), for rows in the band or held by a listed region.
+     *
+     * @param list<string> $countries
+     */
+    private function membershipNear(string $table, string $point, array $countries, float $bandDeg): int
+    {
+        return (int) $this->db->executeStatement(
+            "WITH scope AS (SELECT id, geom FROM region WHERE country_code IN (:ccs) AND geom IS NOT NULL),
+                  cand AS (
+                    SELECT t.id FROM {$table} t JOIN scope s ON ST_DWithin(s.geom, t.geom, :deg)
+                    UNION
+                    SELECT t.id FROM {$table} t WHERE t.region_id IN (SELECT id FROM region WHERE country_code IN (:ccs))
+                  ),
+                  m AS (
+                    SELECT m.id, (SELECT r.id FROM region r WHERE ST_Contains(r.geom, {$point})
+                                   ORDER BY r.area_km2 ASC NULLS LAST, r.id ASC LIMIT 1) AS region_id
+                      FROM {$table} m JOIN cand ON cand.id = m.id
+                  )
+             UPDATE {$table} t SET region_id = m.region_id FROM m
+              WHERE t.id = m.id AND t.region_id IS DISTINCT FROM m.region_id",
+            ['ccs' => $countries, 'deg' => $bandDeg],
+            ['ccs' => ArrayParameterType::STRING],
+        );
     }
 }

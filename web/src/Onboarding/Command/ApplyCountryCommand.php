@@ -14,6 +14,7 @@ use App\Onboarding\CountryStatus;
 use App\Onboarding\Restamper;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
+use Doctrine\DBAL\Exception\DriverException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -83,6 +84,8 @@ final class ApplyCountryCommand extends Command
 
         try {
             $this->db->beginTransaction();
+            // Apply waits behind a harvest or an import at most this long, then gives up without writing.
+            $this->db->executeStatement("SET LOCAL lock_timeout = '10s'");
             foreach ($plan as $row) {
                 $this->regions->upsert([
                     'slug' => $row['slug'], 'name' => $row['name'], 'area_km2' => $row['area_km2'],
@@ -92,8 +95,8 @@ final class ApplyCountryCommand extends Command
             }
             $this->regions->assertTessellates();
             $this->derivations->shapes();
-            $derived = $this->derivations->dependents();
             $neighbours = $this->countries->neighbours($cc);
+            $derived = $this->derivations->dependentsNear([$cc, ...$neighbours], Countries::NEIGHBOUR_DEG);
             $stamped = $this->restamper->restamp([$cc, ...$neighbours], false);
             $this->countries->markSeeded($cc);
             $this->countries->fillTimezones($cc);
@@ -102,14 +105,17 @@ final class ApplyCountryCommand extends Command
             if ($this->db->isTransactionActive()) {
                 $this->db->rollBack();
             }
-            $io->error($e->getMessage());
+            // 55P03 lock_not_available: DBAL does not map it to LockWaitTimeoutException on PostgreSQL.
+            $io->error($e instanceof DriverException && '55P03' === $e->getSQLState()
+                ? sprintf('%s: waited 10 s for a lock another writer holds (a harvest or an import); nothing was written. Rerun apply when it is done.', $cc)
+                : $e->getMessage());
 
             return Command::FAILURE;
         }
         $this->labels->reset();
 
         $io->text(sprintf('%s: %d region row(s); neighbours: %s', $cc, \count($plan), [] === $neighbours ? 'none' : implode(',', $neighbours)));
-        $io->text(sprintf('membership %d, rider bases %d, route surfaces %d', $derived['assigned'], $derived['rederived'], $derived['surfaced']));
+        $io->text(sprintf('rows re-derived near %s: membership %d, rider bases %d, route surfaces %d', implode(',', [$cc, ...$neighbours]), $derived['assigned'], $derived['rederived'], $derived['surfaced']));
         $io->table(['table', 'country', 'rows'], RestampRegionsCommand::rows($stamped));
         $io->success(sprintf('%s is seeded. Next: python -m onboarding.repair %s', $cc, $cc));
 

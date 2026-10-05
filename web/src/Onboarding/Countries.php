@@ -114,12 +114,16 @@ final class Countries
         return (int) $this->db->fetchOne('SELECT COUNT(*) FROM region WHERE country_code = :cc', ['cc' => $cc]);
     }
 
+    /** @throws \InvalidArgumentException when $cc is not planned or seeded (a live country is never demoted) */
     public function markSeeded(string $cc): void
     {
-        $this->db->executeStatement(
-            "UPDATE country SET status = 'seeded', seeded_at = COALESCE(seeded_at, NOW()) WHERE code = :cc",
+        $changed = $this->db->executeStatement(
+            "UPDATE country SET status = 'seeded', seeded_at = COALESCE(seeded_at, NOW()) WHERE code = :cc AND status IN ('planned', 'seeded')",
             ['cc' => $cc],
         );
+        if (1 !== (int) $changed) {
+            throw new \InvalidArgumentException(sprintf('%s is no longer planned or seeded; nothing was written.', $cc));
+        }
     }
 
     /** Only while empty: the seeded lists keep their aliases and an imported bundle keeps staging's list. */
