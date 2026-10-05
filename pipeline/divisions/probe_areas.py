@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """Probe Overture division_area for a country's candidate operating levels.
 
-Onboarding step 1 (tools/divisions/README.md): BEFORE seeding, report
+Onboarding step 1 (pipeline/divisions/README.md): BEFORE seeding, report
 each candidate subtype's subdivisions and geodesic areas against the ~17k km²
 calibration band (ADVISORY — map-and-search.md §4.5; Brussels sits far
 below it deliberately), and derive a bbox for COUNTRY_CONFIG predicate
@@ -15,7 +15,7 @@ export_divisions. The default --out lands inside web/var/scaffold/ so the
 PHP scaffolder (app container, /app = web/) can read probe.json.
 
 Usage:
-    cd tools && python3 -m divisions.probe_areas --country NL
+    cd pipeline && python3 -m divisions.probe_areas --country NL
 """
 import argparse
 import json
@@ -72,7 +72,7 @@ def candidate_report(cc, per_subtype):
         "preferring legibility + stable ISO identity over an exact band match. Small",
         "official regions are fine — moderation composes upward, one moderator holds",
         "2–4 atoms. Group into synthetic macro-regions ONLY when no official level",
-        "fits (tools/divisions/README.md).",
+        "fits (pipeline/divisions/README.md).",
     ]
     return "\n".join(lines) + "\n"
 

@@ -130,4 +130,6 @@ jobs:
 
       # The pinned set, so CI and the container agree on every version.
       - run: pip install --no-cache-dir -r requirements.txt
+      # The image installs these at build time (pipeline/Dockerfile); the native run mirrors it.
+      - run: python -c "import duckdb; c = duckdb.connect(); c.install_extension('httpfs'); c.install_extension('spatial')"
       - run: python -m pytest tests -q

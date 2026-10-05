@@ -53,7 +53,7 @@ final class CuratorScopesTest extends KernelTestCase
     /**
      * Slovenia's 212 municipalities have a median of 65 km², Luxembourg's
      * cantons 218, Switzerland's cantons 883. The line is 500 km², which is
-     * the call tools/divisions/config.py had made by hand.
+     * the call pipeline/divisions/config.py had made by hand.
      */
     public function testACountryOfDivisionsTooSmallToCurateOffersOnlyItself(): void
     {

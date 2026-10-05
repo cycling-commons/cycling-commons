@@ -3,7 +3,7 @@
 #
 # Install Copernicus GLO-30 elevation for one continent's Valhalla instance.
 # RUNS ON THE VALHALLA HOST. Onboarding playbook step 6b
-# (tools/divisions/README.md) — a country with no DEM gets no climb profiles.
+# (pipeline/divisions/README.md) — a country with no DEM gets no climb profiles.
 #
 #   ./dem-install.sh <continent> <preset|bbox> [<preset|bbox> …]
 #

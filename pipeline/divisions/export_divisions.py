@@ -17,7 +17,7 @@ Requires duckdb with httpfs + spatial (see requirements.txt). Regeneration hits
 the public Overture S3 bucket anonymously — a network step, like the OSM harvest.
 
 Usage:
-    cd tools && python3 -m divisions.export_divisions --country BE --out divisions/out
+    cd pipeline && python3 -m divisions.export_divisions --country BE --out divisions/out
 """
 import argparse
 import json
@@ -85,7 +85,12 @@ def _connect():
     import duckdb
 
     con = duckdb.connect()
-    con.execute("INSTALL httpfs; LOAD httpfs; INSTALL spatial; LOAD spatial;")
+    # The image installs both at build time; a missing one must fail, never download.
+    con.execute("SET autoinstall_known_extensions = false;")
+    try:
+        con.execute("LOAD httpfs; LOAD spatial;")
+    except duckdb.Error as exc:
+        raise SystemExit(f"DuckDB httpfs/spatial are not installed ({exc}); run this in the pipeline image.") from exc
     con.execute("SET s3_region='us-west-2';")
     # public bucket -> anonymous / unsigned access
     con.execute("SET s3_access_key_id=''; SET s3_secret_access_key='';")
@@ -213,7 +218,7 @@ def export_country(cc, out_dir, release=None, con=None):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Overture divisions -> region-<slug>.geojson")
     ap.add_argument("--country", required=True, help="ISO 3166-1 alpha-2 (e.g. BE)")
-    ap.add_argument("--out", default=str(OUT_DEFAULT), help="output dir (default tools/divisions/out)")
+    ap.add_argument("--out", default=str(OUT_DEFAULT), help="output dir (default pipeline/divisions/out)")
     ap.add_argument("--release", default=None, help="Overture release (default config.OVERTURE_RELEASE)")
     args = ap.parse_args(argv)
     written = export_country(args.country.upper(), args.out, args.release)

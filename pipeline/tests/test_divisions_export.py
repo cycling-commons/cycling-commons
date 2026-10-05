@@ -159,7 +159,7 @@ def test_nl_config_seeds_all_12_provinces_at_region_level():
 
 def test_nl_limburg_slug_is_disambiguated():
     # BE also has a Limburg province; slug is GLOBAL identity
-    # (tools/divisions/README.md).
+    # (pipeline/divisions/README.md).
     assert NL["slugs"]["NL-LI"] == "limburg-nl"
 
 

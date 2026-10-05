@@ -518,7 +518,7 @@ def load_region(
                         f"{src_region}: no `region` rows for country {country_code!r} — "
                         "the ownership filter would drop every staged row. Run region "
                         "onboarding step 5 (region seeding) for this country before "
-                        "loading coverage (tools/divisions/README.md)."
+                        "loading coverage (pipeline/divisions/README.md)."
                     )
                 # This guard only covers THIS extract's country, and deliberately so.
                 # Nearest-wins reads every onboarded country's regions, so a NEIGHBOUR
@@ -713,7 +713,7 @@ def load_region(
             #
             # It is also the general path for a country onboarding a FINER level:
             # its previous operating level demotes to infrastructure the moment
-            # the finer rows land (tools/divisions/README.md), and every POI
+            # the finer rows land (pipeline/divisions/README.md), and every POI
             # stamped with the old level has to be re-derived. Run with
             # COVERAGE_FULL_MEMBERSHIP=1 after any such change, or only the
             # rows OSM happened to touch get repaired.

@@ -18,13 +18,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      # pyproj: export_divisions imports it at module level, so the divisions
-      # suite needs it even offline (duckdb stays lazy inside _connect()).
-      - run: pip install pytest pyproj
+      - run: pip install pytest
       # Every tools suite, same set as `make tools-test`. The divisions suite
-      # was missing here since Phase 2 added it (07-20 review, finding 8 sweep),
-      # and wikimedia had no suite at all until 2026-08-24 — which made this job
-      # worse than absent for that directory: the path filter is `tools/**`, so
-      # editing tools/wikimedia started a job that went green having tested
-      # nothing it touched.
-      - run: cd tools && python3 -m pytest wallonia/tests divisions/tests wikimedia/tests -q
+      # moved to pipeline/ with the code (ci-pipeline.yml runs it).
+      - run: cd tools && python3 -m pytest wallonia/tests wikimedia/tests -q

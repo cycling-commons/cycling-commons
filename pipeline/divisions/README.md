@@ -1,4 +1,4 @@
-# tools/divisions — region onboarding + Overture exporter
+# pipeline/divisions — region onboarding + Overture exporter
 
 Region source for the Symfony catalog importer (`app:catalog:import`), from the
 **Overture Maps `divisions` theme** (`division_area`), plus the tooling that
@@ -121,7 +121,7 @@ next person inherits the box you worked out.
   default. `africa` and `south-america` instances existed and were empty AND
   unlisted for months.
 
-**Operating-level rule (tools/divisions/README.md):** seed at the
+**Operating-level rule (pipeline/divisions/README.md):** seed at the
 official administrative level whose subdivisions are of reasonable riding
 size, preferring legibility + stable ISO 3166-2 identity over an exact match
 with the ~17k km² band (ADVISORY — Brussels sits far below it). Small official
@@ -310,9 +310,9 @@ re-import event (slugs/ISO codes stay identity; region rows are never deleted).
 ## Run the export + import (playbook steps 4–5)
 
 ```bash
-make divisions-data c="NL"        # → tools/divisions/out/region-*.geojson
+make divisions-data c="NL"        # → pipeline/divisions/out/region-*.geojson
 mkdir -p web/var/catalog-out
-cp tools/divisions/out/region-<each-new-slug>.geojson web/var/catalog-out/
+cp pipeline/divisions/out/region-<each-new-slug>.geojson web/var/catalog-out/
 docker exec cycling-commons-dev-app-1 php -d memory_limit=2G \
   bin/console app:catalog:import /app/var/catalog-out
 ```

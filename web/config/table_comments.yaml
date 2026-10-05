@@ -24,7 +24,7 @@ tables:
     # Hand-written migration (Version20260914010000). Loaded by app:divisions:import.
     world_division: >-
         Division boundaries we hold but have not necessarily onboarded, one row per
-        division, from Overture via tools/divisions/export_candidates.py. What a rider can
+        division, from Overture via pipeline/divisions/export_candidates.py. What a rider can
         ask for and what onboarding promotes from; `region` is what the Commons runs.
     # Pipeline-owned (pipeline/coverage/load.py). Recreated by a harvest.
     coverage_poi: >-

@@ -5,7 +5,7 @@
 Adding a country to the map is a fixed sequence: seed its **regions** (the scope-selector areas and
 moderation jurisdictions), wire them up, then let the [harvest](harvesting.md) fill them with POIs.
 This page is the practical walk-through; the tool reference is
-[`tools/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/tools/divisions/README.md),
+[`pipeline/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/pipeline/divisions/README.md),
 and the coverage side of what onboarding feeds is
 [coverage-provider.md](https://github.com/cycling-commons/cycling-commons/blob/main/docs/specs/coverage-provider.md).
 
@@ -46,7 +46,7 @@ That case needed a small extension to the exporter, which is now a reusable path
 (Andorra, Malta, Liechtenstein): Overture's country-level polygon has a null `region` column, so the
 exporter keys it on the ISO 3166-1 code. The config block that produced it:
 
-<!-- CODE-FROM tools/divisions/config.py -->
+<!-- CODE-FROM pipeline/divisions/config.py -->
 ```python
 "LU": {
     "subtype": "country",
@@ -72,7 +72,7 @@ writes nothing anywhere. Nothing is committed, no row is created, and running it
 nothing. That is deliberate, because everything it emits is about to be reviewed by a person, and
 the things step 3 asks you to freeze are permanent.
 
-`tools/divisions/README.md` is the full reference for the emitted shape and every flag.
+`pipeline/divisions/README.md` is the full reference for the emitted shape and every flag.
 
 ## Step 3: what you must freeze by hand
 
@@ -107,10 +107,10 @@ The scaffolder emits stubs; you make the permanent decisions:
 
 <!-- CODE-ILLUSTRATIVE export then import the region artifacts -->
 ```bash
-make divisions-data c="NL"                      # -> tools/divisions/out/region-*.geojson
+make divisions-data c="NL"                      # -> pipeline/divisions/out/region-*.geojson
 mkdir -p web/var/catalog-nl
-cp tools/divisions/out/region-<each-new-slug>.geojson web/var/catalog-nl/   # the subdivisions
-cp tools/divisions/out/region-netherlands.geojson web/var/catalog-nl/       # the L2 country outline
+cp pipeline/divisions/out/region-<each-new-slug>.geojson web/var/catalog-nl/   # the subdivisions
+cp pipeline/divisions/out/region-netherlands.geojson web/var/catalog-nl/       # the L2 country outline
 docker compose -f developers/docker/compose.yaml exec -T app php -d memory_limit=2G \
   bin/console app:catalog:import /app/var/catalog-nl
 ```
@@ -130,7 +130,7 @@ re-running is safe.
 
 !!! tip "Import an isolated directory"
     `app:catalog:import` processes *every* file in the directory you give it, and `make divisions-data`
-    adds to `tools/divisions/out/` without clearing it. Point the import at a folder holding only the
+    adds to `pipeline/divisions/out/` without clearing it. Point the import at a folder holding only the
     new country's artifacts, not the shared `catalog-out` and not a `region-*` glob over `out/`,
     otherwise it reprocesses every stale artifact sitting there.
 
@@ -319,7 +319,7 @@ anything about the country that did not fit the playbook. Luxembourg's single-re
 in the specs for exactly this reason, and it is the reason the next micro-state is an hour's work
 rather than a day's.
 
-`tools/divisions/README.md` carries the per-country rollout notes.
+`pipeline/divisions/README.md` carries the per-country rollout notes.
 
 ## Try it
 
@@ -371,6 +371,6 @@ rather than a day's.
 
 ## Where to go deeper
 
-- [`tools/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/tools/divisions/README.md): the exporter, the scaffolder,
+- [`pipeline/divisions/README.md`](https://github.com/cycling-commons/cycling-commons/blob/main/pipeline/divisions/README.md): the exporter, the scaffolder,
   Overture provenance, the operational-versus-infrastructure rule for level-2 rows, the per-country
   rollout notes, and the full command reference.

@@ -42,7 +42,7 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "pipeline"))
 from commons_photo import licence_of, usable_photo  # noqa: E402
 from divisions.config import COUNTRY_CONFIG  # noqa: E402
 
@@ -122,7 +122,7 @@ def in_country_box(cc: str, lat: float, lng: float) -> bool:
     any road anybody here rides, in regions that do not exist.
 
     The bbox is the SAME one the region onboarding used
-    (tools/divisions/config.py), so "somewhere we have regions for" means one
+    (pipeline/divisions/config.py), so "somewhere we have regions for" means one
     thing across both tools. A country with no config falls through as allowed —
     it has no onboarded area to be outside of.
     """

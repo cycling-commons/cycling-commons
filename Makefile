@@ -282,17 +282,18 @@ pivot-data: ## Harvest official Wallonia accommodation (Tourisme Wallonie, CC-BY
 wallonia-export: ## Export catalog import artifacts (fixtures + cached harvest) to tools/wallonia/out/ (strict cached replay)
 	cd tools && python3 -m wallonia.export --strict-cache
 
-divisions-data: ## Export region-<slug>.geojson from Overture divisions to tools/divisions/out/ (country: make divisions-data c="BE")
-	cd tools && python3 -m divisions.export_divisions --country $(or $(c),BE) --out divisions/out
+divisions-data: ## Export region-<slug>.geojson from Overture divisions to pipeline/divisions/out/ (country: make divisions-data c="BE")
+	@$(DOCKER_COMP) exec -T pipeline python -m divisions.export_divisions --country $(or $(c),BE) --out divisions/out
 
-region-probe: ## Onboarding step 1: probe Overture subdivision areas (make region-probe c="NL" [subtypes="region,county"])
-	cd tools && python3 -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes))
+region-probe: ## Probe Overture subdivision areas (make region-probe c="NL" [subtypes="region,county"])
+	@$(DOCKER_COMP) exec -T pipeline python -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes)) --out divisions/out/scaffold
+	@mkdir -p web/var/scaffold && cp -r pipeline/divisions/out/scaffold/. web/var/scaffold/
 
 region-scaffold: ## Onboarding step 2: emit region config + label stubs for review (make region-scaffold c="NL" [flags="--probe-areas"])
 	@$(DOCKER_COMP) exec -T --user $(DEV_UID):$(DEV_GID) app php bin/console app:region:scaffold $(or $(c),NL) $(flags)
 
 tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits)
-	cd tools && python3 -m pytest wallonia/tests divisions/tests wikimedia/tests credits/tests -q
+	cd tools && python3 -m pytest wallonia/tests wikimedia/tests credits/tests -q
 
 credits-check: ## Verify /credits still names every dependency, and that its links resolve
 	@python3 tools/credits/check_credits.py

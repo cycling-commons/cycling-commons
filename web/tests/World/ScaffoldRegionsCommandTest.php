@@ -16,7 +16,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * tools/divisions/README.md: the scaffolder derives a reviewable
+ * pipeline/divisions/README.md: the scaffolder derives a reviewable
  * COUNTRY_CONFIG block + 4-locale label stubs from the World bundle, warns on
  * slug/name collisions, and EMITS, NEVER APPLIES.
  *

@@ -140,7 +140,7 @@ COUNTRY_CONFIG = {
     # France — 13 métropole régions (subtype=region -> ISO 3166-2). The 96
     # départements (probe: web/var/scaffold/fr/areas.md) sit far closer to the
     # advisory band, but régions were chosen for legibility and a translatable
-    # label count; the derived operational rule (tools/divisions/README.md)
+    # label count; the derived operational rule (pipeline/divisions/README.md)
     # demotes them to infrastructure automatically if départements ever land.
     # The DOM (Guadeloupe, Réunion, …) are not subtype=region rows in Overture
     # and are deliberately outside this bbox and this config.
@@ -313,7 +313,7 @@ COUNTRY_CONFIG = {
         },
         "bbox": [122.83, 23.95, 154.09, 45.62],
     },
-    # United States — STATE-LEVEL onboarding (tools/divisions/README.md): only
+    # United States — STATE-LEVEL onboarding (pipeline/divisions/README.md): only
     # California and Colorado are seeded, the rest of the country onboards later,
     # demand-driven. The exporter seeds exactly what `slugs` lists, so no --only
     # flag is needed here. bbox is the CA+CO union, NOT the country: the US

@@ -283,7 +283,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         // digitisation slivers the tolerance is designed to absorb. Consumes the
         // artifacts from `make divisions-data` (generated, gitignored); skipped
         // when they are absent (e.g. CI). DAMA rolls the import back.
-        $out = \dirname(__DIR__, 3).'/tools/divisions/out';
+        $out = \dirname(__DIR__, 3).'/pipeline/divisions/out';
         $files = ['region-wallonia.geojson', 'region-flanders.geojson', 'region-brussels.geojson'];
         foreach ($files as $f) {
             if (!is_file($out.'/'.$f)) {

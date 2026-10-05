@@ -46,7 +46,6 @@ CREDITS_PAGE = REPO / "web/templates/pages/credits.html.twig"
 COMPOSER_JSON = REPO / "web/composer.json"
 REQUIREMENTS = [
     REPO / "pipeline/requirements.txt",
-    REPO / "tools/divisions/requirements.txt",
     REPO / "developers/docker/wiki/requirements.txt",
 ]
 DOCKER_DIR = REPO / "developers/docker"
