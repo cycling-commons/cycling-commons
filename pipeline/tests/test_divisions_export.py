@@ -62,8 +62,6 @@ def test_area_km2_is_rounded_int():
     assert isinstance(f["properties"]["area_km2"], int)
 
 
-
-
 def test_lu_whole_country_feature_shape():
     # Luxembourg is seeded as ONE region at subtype=country (admin_level 2). The
     # slug map is keyed on the ISO 3166-1 code because Overture's country-level
@@ -144,17 +142,11 @@ def test_live_overture_be(tmp_path):
     assert wal["geometry"]["type"] == "MultiPolygon"
 
 
-
-
-
-
 def test_nl_feature_carries_admin_level_4_and_frozen_slug():
     f = build_feature("NL-NH", "NL", MULTI, 2670.0, NL)
     assert f["properties"]["slug"] == "noord-holland"
     assert f["properties"]["admin_level"] == 4
     assert f["properties"]["country_code"] == "NL"
-
-
 
 
 @pytest.mark.skipif(os.environ.get("RUN_LIVE_OVERTURE") != "1",
@@ -165,9 +157,7 @@ def test_live_overture_nl(tmp_path):
     assert "region-noord-holland.geojson" in {p.name for p in written}
 
 
-
-
-def test_l2_cfg_builds_a_country_subtype_config():
+def test_l2_spec_builds_a_country_subtype_config():
     cfg = l2_spec("BE", "belgium", "Belgium", BE["bbox"])
     assert cfg["subtype"] == "country"
     assert cfg["slugs"] == {"BE": "belgium"}

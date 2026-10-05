@@ -11,8 +11,7 @@ pushdown. Emits, per country:
     <out>/<cc-lower>/probe.json  machine output for the onboarding planner
 
 Network: hits the public Overture S3 bucket anonymously, like
-export_divisions. The default --out is pipeline/divisions/out/scaffold; `make
-region-probe` copies it to web/var/scaffold/ for the PHP scaffolder.
+export_divisions. The default --out is pipeline/divisions/out/scaffold.
 
 Usage:
     cd pipeline && python3 -m divisions.probe_areas --country NL

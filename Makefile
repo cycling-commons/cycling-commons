@@ -287,7 +287,6 @@ divisions-data: ## Export region-<slug>.geojson from Overture divisions to pipel
 
 region-probe: ## Probe Overture subdivision areas (make region-probe c="NL" [subtypes="region,county"])
 	@$(DOCKER_COMP) exec -T pipeline python -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes)) --out divisions/out/scaffold
-	@mkdir -p web/var/scaffold && cp -r pipeline/divisions/out/scaffold/. web/var/scaffold/
 
 tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits)
 	cd tools && python3 -m pytest wallonia/tests wikimedia/tests credits/tests -q

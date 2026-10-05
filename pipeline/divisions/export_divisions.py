@@ -23,6 +23,7 @@ import argparse
 import json
 import os
 import pathlib
+import sys
 
 from pyproj import Geod
 
@@ -177,6 +178,8 @@ def export_country(cc, out_dir, spec, l2=None, release=None, con=None):
     configs = [spec]
     if l2 is not None and spec["subtype"] != "country":
         configs.append(l2_spec(cc, *l2, spec.get("bbox")))
+    elif spec["subtype"] != "country":
+        print(f"  warning: no level-2 row for {cc}; its country outline is not exported", file=sys.stderr)
     written = []
     for c in configs:
         seen = set()

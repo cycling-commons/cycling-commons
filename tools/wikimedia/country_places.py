@@ -35,6 +35,7 @@ import argparse
 import functools
 from pathlib import Path
 import json
+import os
 import pathlib
 import sys
 import time
@@ -116,11 +117,16 @@ COMPOSE = Path(__file__).resolve().parents[2] / "developers/docker/compose.yaml"
 @functools.cache
 def load_country_boxes() -> dict[str, list[float]]:
     """country.bbox per onboarded country, from the dev stack's database."""
-    out = subprocess.run(
-        ["docker", "compose", "-f", str(COMPOSE), "exec", "-T", "db", "psql", "-U", "cc", "-d", "cyclingcommons",
-         "-At", "-c", "SELECT COALESCE(json_object_agg(code, bbox), '{}') FROM country WHERE bbox IS NOT NULL"],
-        check=True, capture_output=True, text=True,
-    ).stdout.strip()
+    user = os.environ.get("POSTGRES_USER", "cc")
+    db = os.environ.get("POSTGRES_DB", "cyclingcommons")
+    try:
+        out = subprocess.run(
+            ["docker", "compose", "-f", str(COMPOSE), "exec", "-T", "db", "psql", "-U", user, "-d", db,
+             "-At", "-c", "SELECT COALESCE(json_object_agg(code, bbox), '{}') FROM country WHERE bbox IS NOT NULL"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        raise SystemExit(f"cannot read country boxes from the dev database ({exc}); start the dev stack (make up)") from exc
     return json.loads(out or "{}")
 
 
@@ -135,10 +141,9 @@ def in_country_box(cc: str, lat: float, lng: float, boxes: dict[str, list[float]
     municipalities. Seeding those puts scenic pins thousands of kilometres from
     any road anybody here rides, in regions that do not exist.
 
-    The bbox is the SAME one the region onboarding used
-    (pipeline/divisions/config.py), so "somewhere we have regions for" means one
-    thing across both tools. A country with no config falls through as allowed —
-    it has no onboarded area to be outside of.
+    The bbox is the onboarded country's `country.bbox`, so "somewhere we have
+    regions for" means one thing across both tools. A country with no bbox falls
+    through as allowed: it has no onboarded area to be outside of.
     """
     box = (load_country_boxes() if boxes is None else boxes).get(cc.upper())
     if not box:
