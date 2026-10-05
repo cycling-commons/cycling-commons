@@ -1,0 +1,62 @@
+pipeline/onboarding/overture.py
+  s_8fe2e4dc6b0b60::t_d51f89b5c9de3e 31-32
+  s_8fe2e4dc6b0b60::t_f4a711fffa4be5 28-30
+  s_8fe2e4dc6b0b60::t_ed5f6041cd6820 33-35
+  s_dc8c0f761cbf60::t_cf41bad558c33d 1-27,36-62
+pipeline/tests/test_onboarding_plan.py
+  s_8fe2e4dc6b0b60::t_ab5cfc18e98935 143,150-151
+  s_8fe2e4dc6b0b60::t_c539ab06e22064 144-149
+  s_8fe2e4dc6b0b60::t_5a931d99a2d0bb 7-8
+  s_8fe2e4dc6b0b60::t_2245ddd85d7235 4-6
+  s_8fe2e4dc6b0b60::t_a7dc842c75d082 9-11,140-142
+  s_8fe2e4dc6b0b60::t_d49b6eb2959c97 152-154
+  s_dc8c0f761cbf60::t_439c6445967cb0 1-3,12-139,155-173
+pipeline/onboarding/__init__.py
+  s_8fe2e4dc6b0b60::t_dc1eb8c51f638b 1-2
+pipeline/onboarding/extracts.py
+  s_8fe2e4dc6b0b60::t_9c377a3eaf0866 1-54
+pipeline/onboarding/labels.py
+  s_8fe2e4dc6b0b60::t_d5c786e0be246a 1-33
+pipeline/onboarding/levels.py
+  s_8fe2e4dc6b0b60::t_1f56c3b37d0c3b 1-38
+pipeline/onboarding/neighbours.py
+  s_8fe2e4dc6b0b60::t_45df35193843f9 1-43
+pipeline/onboarding/plan.py
+  s_8fe2e4dc6b0b60::t_66e0ef9a8bc3ba 1-248
+pipeline/onboarding/slugs.py
+  s_8fe2e4dc6b0b60::t_543c1b4805fd32 1-80
+pipeline/tests/fixtures/geofabrik-index.json
+  s_8fe2e4dc6b0b60::t_a995f48cd6ca27 1-11
+pipeline/tests/test_onboarding_extracts.py
+  s_8fe2e4dc6b0b60::t_e64de793c5a53f 1-34
+pipeline/tests/test_onboarding_labels.py
+  s_8fe2e4dc6b0b60::t_0055d0e663a4a4 1-21
+pipeline/tests/test_onboarding_levels.py
+  s_8fe2e4dc6b0b60::t_00820355740705 1-31
+pipeline/tests/test_onboarding_slugs.py
+  s_8fe2e4dc6b0b60::t_690a1ae7bef95a 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6ae32c512311afd22b35bf52013c23ebaec19372",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_dc8c0f761cbf60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-aaadb6a5ee4512fab",
+        "model": "unknown"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
