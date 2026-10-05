@@ -24,8 +24,9 @@ def test_two_at_the_same_depth_stop_with_both_named():
 
 
 def test_a_shared_extract_is_not_an_exact_match():
-    with pytest.raises(ExtractUndecided, match=r"\[IE\]"):
+    with pytest.raises(ExtractUndecided, match=r"\[IE\]") as exc:
         choose_extract(INDEX, "IE")
+    assert "extracts that include IE: europe/ireland-and-northern-ireland" in str(exc.value)
 
 
 def test_an_override_must_exist_in_the_index():

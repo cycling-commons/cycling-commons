@@ -27,7 +27,7 @@ def choose_level(country_km2: float, medians: dict[str, float | None], override:
     small country (the Luxembourg rule), else NoLevelFits."""
     if override:
         if override not in SUBTYPE_ADMIN_LEVEL:
-            raise ValueError(f"--level {override}: not one of {', '.join(SUBTYPE_ADMIN_LEVEL)}")
+            raise NoLevelFits(f"--level {override}: not one of {', '.join(SUBTYPE_ADMIN_LEVEL)}")
         return override
     for subtype in LEVEL_PROBE_ORDER:
         median = medians.get(subtype)

@@ -32,6 +32,11 @@ def test_an_override_wins_and_must_be_a_slug():
         assign([("DK-84", "Region Hovedstaden", None)], "DK", set(), {"DK-99": "x"})
 
 
+def test_an_override_cannot_take_an_existing_region_slug():
+    with pytest.raises(SlugError, match="--slug DK-84=brussels: taken by an existing region"):
+        assign([("DK-84", "Region Hovedstaden", None)], "DK", {"brussels"}, {"DK-84": "brussels"})
+
+
 def test_a_name_without_latin_letters_falls_back_then_stops():
     assert assign([("JP-13", "東京都", "Tokyo")], "JP", set(), {}) == {"JP-13": "tokyo"}
     with pytest.raises(SlugError, match="--slug JP-13="):

@@ -7,6 +7,7 @@ import pathlib
 import subprocess
 import sys
 
+import psycopg
 import pytest
 
 from catalog_rows import add_country, add_region
@@ -87,6 +88,15 @@ def test_a_small_country_is_one_region_at_level_two():
     assert [(r.slug, r.admin_level, r.iso_code, r.name) for r in plan.regions] == [("luxembourg", 2, "LU", "Luxembourg")]
 
 
+def test_a_county_or_lower_region_has_no_iso_code_but_the_outline_keeps_its_own():
+    rows = [division(None, "Hamlet One", {}, (11.0, 55.0, 11.5, 55.5), 50.0),
+            division(None, "Hamlet Two", {}, (11.5, 55.0, 12.0, 55.5), 50.0)]
+    plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS, "localadmin": rows}, OUTLINE, set(), INDEX,
+                              level="localadmin")
+    assert [(r.slug, r.iso_code, r.admin_level) for r in plan.regions] == [
+        ("hamlet-one", None, 8), ("hamlet-two", None, 8), ("denmark", "DK", 2)]
+
+
 def test_write_plan_replaces_an_earlier_plan_in_one_transaction(catalog):
     plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX)
     planner.write_plan(catalog, plan)
@@ -104,6 +114,16 @@ def test_an_extract_owned_by_another_country_stops_the_write(catalog):
     plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX)
     with pytest.raises(planner.PlanError, match="europe/denmark already belongs to XB"):
         planner.write_plan(catalog, plan)
+
+
+def test_a_write_failing_partway_leaves_nothing(catalog):
+    plan = planner.build_plan("DK", "2026-08-19.0", {"region": REGIONS}, OUTLINE, set(), INDEX)
+    plan.regions[1].geometry = {"type": "Polygon", "coordinates": "not coordinates"}
+    with pytest.raises(psycopg.Error):
+        planner.write_plan(catalog, plan)
+    assert catalog.execute("SELECT count(*) FROM country").fetchone()[0] == 0
+    assert catalog.execute("SELECT count(*) FROM country_plan_region").fetchone()[0] == 0
+    assert catalog.execute("SELECT count(*) FROM country_extract").fetchone()[0] == 0
 
 
 def test_main_refuses_a_live_country_before_any_network(catalog, monkeypatch, capsys):
@@ -157,6 +177,42 @@ def test_main_stops_with_the_reason_when_no_level_fits(catalog, capsys):
     assert rc == 1
     assert "no level fits; rerun with --level <subtype>" in capsys.readouterr().err
     assert catalog.execute("SELECT count(*) FROM country").fetchone()[0] == 0
+
+
+class BuggyOverture(FakeOverture):
+    def divisions(self, cc, subtype, box):
+        raise KeyError("names")
+
+
+def test_a_bug_inside_the_planner_is_a_traceback_not_a_reason(catalog):
+    with pytest.raises(KeyError):
+        planner.main(["DK"], source=BuggyOverture(), connect=lambda dsn: contextlib.nullcontext(catalog),
+                     index_loader=lambda src: INDEX)
+
+
+def test_a_broken_geofabrik_index_says_where_it_came_from(catalog, capsys):
+    def broken(src):
+        return json.loads("<html>")
+    rc = planner.main(["DK"], source=FakeOverture(), connect=lambda dsn: contextlib.nullcontext(catalog),
+                      index_loader=broken)
+    assert rc == 1
+    assert "Geofabrik index" in capsys.readouterr().err
+    assert catalog.execute("SELECT count(*) FROM country").fetchone()[0] == 0
+
+
+def test_a_bad_release_is_a_one_line_reason(catalog, capsys):
+    rc = planner.main(["DK", "--release", "latest"], connect=lambda dsn: contextlib.nullcontext(catalog),
+                      index_loader=lambda src: INDEX)
+    assert rc == 1
+    assert "Not an Overture release id: 'latest'" in capsys.readouterr().err
+
+
+def test_an_unknown_level_is_refused_by_the_command_line(catalog, capsys):
+    with pytest.raises(SystemExit) as exc:
+        planner.main(["DK", "--level", "duchy"], source=FakeOverture(refuse=True),
+                     connect=lambda dsn: contextlib.nullcontext(catalog), index_loader=lambda src: INDEX)
+    assert exc.value.code == 2
+    assert "invalid choice: 'duchy'" in capsys.readouterr().err
 
 
 @pytest.mark.skipif(__import__("os").environ.get("RUN_LIVE_OVERTURE") != "1", reason="hits Overture S3 and Geofabrik")

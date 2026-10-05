@@ -23,7 +23,7 @@ from onboarding.extracts import GEOFABRIK_INDEX, ExtractUndecided, choose_extrac
 from onboarding.labels import LOCALES, country_phrases, region_labels
 from onboarding.levels import LEVEL_PROBE_ORDER, NoLevelFits, choose_level
 from onboarding.neighbours import country_status, neighbours
-from onboarding.overture import Division, Overture
+from onboarding.overture import Division, Overture, OvertureError
 from onboarding.slugs import SlugError, assign
 
 
@@ -104,7 +104,7 @@ def build_plan(cc: str, release: str, level_rows: dict[str, list[Division]], out
         labels, fallbacks = region_labels(d.common, d.primary)
         regions.append(PlanRegion(
             slug=slugs[key],
-            iso_code=None if subtype == "county" and d is not outline else key,
+            iso_code=key if subtype in ("country", "region") or d is outline else None,
             name=labels["en"],
             labels=labels, fallbacks=fallbacks,
             admin_level=2 if d is outline else admin,
@@ -200,10 +200,18 @@ def _overrides(pairs: list[str]) -> dict[str, str]:
     return out
 
 
+def _index(loader, source: str) -> dict:
+    try:
+        return loader(source)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PlanError(f"Geofabrik index {source}: {exc}") from exc
+
+
 def main(argv=None, *, source=None, connect=psycopg.connect, index_loader=load_index) -> int:
     ap = argparse.ArgumentParser(description="Plan a country's onboarding (writes country_plan_region, never region)")
     ap.add_argument("country", help="ISO 3166-1 alpha-2, e.g. DK")
-    ap.add_argument("--level", help="Overture subtype to seed at, overriding the level rule")
+    ap.add_argument("--level", choices=list(config.SUBTYPE_ADMIN_LEVEL),
+                    help="Overture subtype to seed at, overriding the level rule")
     ap.add_argument("--slug", action="append", default=[], help="KEY=slug override (KEY: ISO code, or native name for counties)")
     ap.add_argument("--extract", help="Geofabrik extract, overriding the index rule, e.g. europe/denmark")
     ap.add_argument("--release", default=config.OVERTURE_RELEASE, help="Overture release")
@@ -222,8 +230,8 @@ def main(argv=None, *, source=None, connect=psycopg.connect, index_loader=load_i
             print(f"{cc} is {status}: its slugs are frozen identity, a new plan would orphan them. Nothing written.",
                   file=sys.stderr)
             return 1
-        overture = source or Overture(args.release)
         try:
+            overture = source or Overture(args.release)
             overrides = _overrides(args.slug)
             box = overture.country_box(cc)
             outline_rows = overture.divisions(cc, "country", box)
@@ -233,11 +241,11 @@ def main(argv=None, *, source=None, connect=psycopg.connect, index_loader=load_i
             if args.level and args.level not in level_rows and args.level != "country":
                 level_rows[args.level] = overture.divisions(cc, args.level, box)
             taken = {slug for (slug,) in conn.execute("SELECT slug FROM region WHERE slug IS NOT NULL")}
-            plan = build_plan(cc, args.release, level_rows, outline_rows[0], taken, index_loader(args.index),
+            plan = build_plan(cc, args.release, level_rows, outline_rows[0], taken, _index(index_loader, args.index),
                               level=args.level, slug_overrides=overrides, extract=args.extract)
             write_plan(conn, plan)
             plan.neighbours = neighbours(conn, cc, source="plan")
-        except (PlanError, NoLevelFits, ExtractUndecided, SlugError, LookupError, ValueError) as exc:
+        except (PlanError, NoLevelFits, ExtractUndecided, SlugError, OvertureError) as exc:
             print(str(exc), file=sys.stderr)
             return 1
     print(json.dumps(plan_json(plan), ensure_ascii=False, indent=1) if args.json else render_table(plan))

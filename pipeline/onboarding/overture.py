@@ -9,6 +9,10 @@ from divisions import config
 from divisions.export_divisions import _connect, geodesic_area_km2
 
 
+class OvertureError(LookupError):
+    """The release or the country's rows are not there; the message is the one-line reason."""
+
+
 @dataclass(frozen=True)
 class Division:
     iso: str | None
@@ -21,7 +25,10 @@ class Division:
 class Overture:
     def __init__(self, release: str, con=None):
         self.release = release
-        self.path = config.division_area_path(release)
+        try:
+            self.path = config.division_area_path(release)
+        except ValueError as exc:
+            raise OvertureError(str(exc)) from exc
         self._con = con
 
     @property
@@ -41,7 +48,7 @@ class Overture:
             [cc],
         ).fetchone()
         if row is None or row[0] is None:
-            raise LookupError(f"Overture {self.release} has no land divisions for {cc}")
+            raise OvertureError(f"Overture {self.release} has no land divisions for {cc}")
         return tuple(float(v) for v in row)
 
     def divisions(self, cc: str, subtype: str, box: tuple[float, float, float, float]) -> list[Division]:

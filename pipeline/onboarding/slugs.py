@@ -58,6 +58,8 @@ def assign(rows: list[tuple[str, str, str | None]], cc: str, taken: set[str],
             raise SlugError(f"--slug {key}={slug}: no region has key {key}")
         if not SLUG_RE.match(slug) or len(slug) > SLUG_MAX:
             raise SlugError(f"--slug {key}={slug}: not a slug (lowercase letters, digits and single dashes)")
+        if slug in taken:
+            raise SlugError(f"--slug {key}={slug}: taken by an existing region")
     out: dict[str, str] = {}
     for key, preferred, fallback in rows:
         if key in overrides:

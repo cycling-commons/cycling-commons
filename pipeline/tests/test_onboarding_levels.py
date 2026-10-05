@@ -27,5 +27,5 @@ def test_no_fit_stops_with_the_probe_table():
 
 def test_an_override_skips_the_rule_but_must_be_a_subtype():
     assert choose_level(20_271, {"region": 96.0}, override="country") == "country"
-    with pytest.raises(ValueError, match="--level"):
+    with pytest.raises(NoLevelFits, match="--level duchy"):
         choose_level(20_271, {}, override="duchy")

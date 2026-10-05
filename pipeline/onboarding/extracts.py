@@ -47,7 +47,11 @@ def choose_extract(index: dict, cc: str, override: str | None = None) -> str:
         return override
     found = candidates(index, cc)
     if not found:
-        raise ExtractUndecided(f"no Geofabrik extract carries iso3166-1:alpha2 = [{cc}]; rerun with --extract <slug>")
+        shared = sorted(s for f in index.get("features", [])
+                        if cc in ((p := f.get("properties", {})).get("iso3166-1:alpha2") or []) and (s := _slug(p)))
+        hint = f"; extracts that include {cc}: {', '.join(shared)}" if shared else ""
+        raise ExtractUndecided(
+            f"no Geofabrik extract carries iso3166-1:alpha2 = [{cc}]{hint}; rerun with --extract <slug>")
     shallowest = [s for s in found if s.count("/") == found[0].count("/")]
     if len(shallowest) > 1:
         raise ExtractUndecided(f"several extracts at the same depth: {', '.join(shallowest)}; rerun with --extract <slug>")
