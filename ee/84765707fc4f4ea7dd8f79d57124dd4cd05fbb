@@ -1,0 +1,87 @@
+.github/workflows/ci-pipeline.yml
+  s_8fe2e4dc6b0b60::t_b9b6eec23be750 133-134
+.github/workflows/ci-tools.yml
+  s_8fe2e4dc6b0b60::t_1824f23caf1b71 21,23-24
+.gitignore
+  s_8fe2e4dc6b0b60::t_6e73b9c3f46fa7 75
+.pre-commit-config.yaml
+  s_8fe2e4dc6b0b60::t_8901b9bac9e3a6 128
+Makefile
+  s_8fe2e4dc6b0b60::t_159a71b0b12537 285-286,288-290,296
+pipeline/.dockerignore
+  s_8fe2e4dc6b0b60::t_e298e3fe3f7828 16
+pipeline/Dockerfile
+  s_8fe2e4dc6b0b60::t_72c271b0ad083d 61-62
+pipeline/coverage/load.py
+  s_8fe2e4dc6b0b60::t_ebb47fc2d509f1 521,716
+pipeline/divisions/README.md
+  s_8fe2e4dc6b0b60::t_f4e856169b60da 1,124,313,315
+pipeline/divisions/config.py
+  s_8fe2e4dc6b0b60::t_fced120496c7e2 143,316
+pipeline/divisions/export_candidates.py
+  s_8fe2e4dc6b0b60::t_87a7e788129a3f 46
+pipeline/divisions/export_divisions.py
+  s_8fe2e4dc6b0b60::t_f186e6d7c05c0a 20,88-93,221
+pipeline/divisions/probe_areas.py
+  s_8fe2e4dc6b0b60::t_87a6934fdaac34 4,18,75
+pipeline/requirements.txt
+  s_8fe2e4dc6b0b60::t_5d7d1fce7ad68e 10-11
+pipeline/tests/test_divisions_export.py
+  s_8fe2e4dc6b0b60::t_166b285f72c270 162
+pipeline/tests/test_divisions_image.py
+  s_8fe2e4dc6b0b60::t_e8b62a4a77df23 1-16
+pipeline/tests/test_divisions_probe.py
+  s_8fe2e4dc6b0b60::t_96112de0dcf0cc 2,42
+pipeline/tests/test_load.py
+  s_8fe2e4dc6b0b60::t_c10597c86545a0 131
+pipeline/tests/test_run.py
+  s_8fe2e4dc6b0b60::t_45b079857f94bd 261
+tools/elevation/README.md
+  s_8fe2e4dc6b0b60::t_2d68f5d930cfa1 28
+tools/elevation/dem-install.sh
+  s_8fe2e4dc6b0b60::t_cbd0942c8a170d 6
+tools/wallonia/export.py
+  s_8fe2e4dc6b0b60::t_6ccbd2a885ebff 29
+tools/wikimedia/country_places.py
+  s_8fe2e4dc6b0b60::t_e0580ce0ab0495 45,125
+web/config/table_comments.yaml
+  s_8fe2e4dc6b0b60::t_d2a91ed85214ab 27
+web/src/Command/DivisionsImportCommand.php
+  s_8fe2e4dc6b0b60::t_c248f9359c2b15 20,47,79
+web/src/World/Command/ScaffoldRegionsCommand.php
+  s_8fe2e4dc6b0b60::t_35d7bf46b05b5a 122,168,178,245-246,266
+web/src/World/CuratorScopes.php
+  s_8fe2e4dc6b0b60::t_83b9a5810ff5e9 42
+web/templates/admin/moderator_areas_overview.html.twig
+  s_8fe2e4dc6b0b60::t_52625fc214d635 7
+web/templates/pages/credits.html.twig
+  s_8fe2e4dc6b0b60::t_9a8fa757fd9cb4 140
+web/tests/Catalog/ImportCatalogCommandTest.php
+  s_8fe2e4dc6b0b60::t_34d3b4262594e6 286
+web/tests/Moderation/ModerationScopeProviderTest.php
+  s_8fe2e4dc6b0b60::t_10385175c30354 17
+web/tests/World/CuratorScopesTest.php
+  s_8fe2e4dc6b0b60::t_39291c5e03349b 56
+web/tests/World/ScaffoldRegionsCommandTest.php
+  s_8fe2e4dc6b0b60::t_ea7fcf0238b3b5 19
+web/tests/js/scope-chips.test.cjs
+  s_8fe2e4dc6b0b60::t_af84b73a78804c 40
+wiki/developers/data-ops/onboarding-a-country.md
+  s_8fe2e4dc6b0b60::t_e407ed8a5eaa79 8,49,75,110,112-113,133,322,374
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ee84765707fc4f4ea7dd8f79d57124dd4cd05fbb",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
