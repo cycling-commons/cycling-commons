@@ -95,4 +95,42 @@ final class CheckElevationCommandTest extends KernelTestCase
             self::assertTrue($p['lat'] > 46 && $p['lat'] < 47 && $p['lon'] > 10 && $p['lon'] < 11);
         }
     }
+
+    /** @return array{0: CommandTester, 1: int} the tester and the number of requests made */
+    private function failingTester(MockResponse $response): array
+    {
+        $calls = 0;
+        $http = new MockHttpClient(static function () use (&$calls, $response): MockResponse {
+            ++$calls;
+
+            return $response;
+        });
+        $db = $this->db();
+        $tester = new CommandTester(new CheckElevationCommand(new Countries($db), new ElevationSample($db), new ElevationProbe($http, new ElevationEndpoints('http://elev.test'))));
+        $tester->execute(['country' => 'XA']);
+
+        return [$tester, $calls];
+    }
+
+    public function testATransportErrorAbortsAtOnceAndNamesTheInstance(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        [$tester, $calls] = $this->failingTester(new MockResponse('', ['error' => 'Connection refused']));
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertSame(1, $calls, 'no point after the first transport error is asked');
+        self::assertStringContainsString('elevation instance unreachable: http://elev.test', $tester->getDisplay());
+        self::assertStringNotContainsString('install DEM', $tester->getDisplay());
+    }
+
+    public function testAnHttpErrorIsUnreachableNotMissingTiles(): void
+    {
+        self::bootKernel();
+        $this->seed();
+        [$tester, $calls] = $this->failingTester(new MockResponse('Bad Gateway', ['http_code' => 502]));
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertSame(1, $calls);
+        self::assertStringContainsString('elevation instance unreachable: http://elev.test', $tester->getDisplay());
+        self::assertStringContainsString('HTTP 502', $tester->getDisplay());
+    }
 }

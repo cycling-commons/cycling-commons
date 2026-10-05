@@ -10,6 +10,7 @@ use App\Onboarding\Countries;
 use App\Onboarding\CountryStatus;
 use App\Onboarding\ElevationProbe;
 use App\Onboarding\ElevationSample;
+use App\Onboarding\ElevationUnreachable;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -88,7 +89,13 @@ final class CheckElevationCommand extends Command
 
                 return Command::FAILURE;
             }
-            $h = $this->probe->height($endpoint, $p['lat'], $p['lon']);
+            try {
+                $h = $this->probe->height($endpoint, $p['lat'], $p['lon']);
+            } catch (ElevationUnreachable $e) {
+                $io->error(sprintf('%s. Fix the instance, then rerun app:country:check-elevation %s.', $e->getMessage(), $cc));
+
+                return Command::FAILURE;
+            }
             $heights[] = $h;
             $rows[] = [sprintf('%.4f', $p['lat']), sprintf('%.4f', $p['lon']), $endpoint, null === $h ? 'null' : sprintf('%.1f', $h)];
         }
@@ -96,7 +103,7 @@ final class CheckElevationCommand extends Command
 
         $bad = self::badCount($heights);
         if (self::failed($heights)) {
-            $io->error(sprintf('%d of %d answers are null or 0: install DEM tiles for %s (wiki: Building elevation tiles), restart the instance, check ELEVATION_URLS.', $bad, \count($heights), $cc));
+            $io->error(sprintf('%d of %d answers are null or 0: install DEM tiles for %s (wiki: Building elevation tiles), restart the instance, check ELEVATION_URLS, then run app:country:check-elevation %s and app:country:mark-live %s.', $bad, \count($heights), $cc, $cc, $cc));
 
             return Command::FAILURE;
         }
