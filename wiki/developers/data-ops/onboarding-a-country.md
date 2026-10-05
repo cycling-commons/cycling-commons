@@ -29,14 +29,15 @@ repository provides:
 The planner only writes the plan and prints it; the confirmation belongs to the runner. Steps 2-5 run
 unattended, one after the other; the first failure stops the rest and alerts like any other
 scheduled job. Every step checks the status it needs and is safe to rerun, so a failed run is fixed
-by starting it again. Staging always goes first; production then receives staging's exact rows (see
+by starting it again; a failed elevation check is the exception (see *Elevation check* below).
+Staging always goes first; production then receives staging's exact rows (see
 *Promoting to production*).
 
 A country moves through three states, stored in `country.status`:
 
 - **planned**: a plan exists (`country_plan_region`); nothing a rider sees has changed.
 - **seeded**: its `region` rows exist, so the harvest may run and its extracts count as onboarded.
-- **live**: every step passed.
+- **live**: every step passed; only now does the country show on the map.
 
 The configuration lives in four tables: `country` (name, status, timezones, labels), `country_extract`
 (its Geofabrik extracts), `country_plan_region` (the plan) and `region` (the seeded regions, with
@@ -79,11 +80,15 @@ flags with `args="--level county"`. It writes the plan and nothing else.
 ## What each step does
 
 **Apply** turns the plan into `region` rows in one transaction, with the same upsert, provenance
-check and tessellation check the catalog import uses (`RegionUpserter`), then recomputes adjacency,
-outlines, membership, rider base areas and route surfaces (`RegionDerivations`), re-stamps rider
-data for the new country and its neighbours, and fills the country's timezones (the map's
-home-country hint for visitors who are not signed in) from PHP's zone table when it has none yet.
-It refuses a plan whose slug already belongs to another country.
+check and tessellation check the catalog import uses (`RegionUpserter`), then recomputes adjacency
+and outlines, and re-derives membership, rider base areas and route surfaces (`RegionDerivations`)
+for the rows within 0.11° of the new country and its neighbours only, writing a row only when its
+value really changes. It re-stamps rider data for the same countries, and fills the country's
+timezones (the map's home-country hint for visitors who are not signed in) from PHP's zone table
+when it has none yet. It refuses a plan whose slug already belongs to another country. It waits at
+most 10 seconds for a lock another writer holds (a harvest, a catalog import), then stops without
+writing anything and says so; start it again once that writer is done. The full catalog import
+still re-derives every row.
 
 **Re-stamp** (`app:regions:restamp --countries=DK,DE`, also on its own; `--dry-run` counts without
 writing, `--recount` refreshes the coverage counts afterwards) gives a submission the region and
@@ -99,15 +104,27 @@ surface lock, repair exits with code 2 and says to start it again later.
 
 **Elevation check** samples 25 points inside the country and asks the elevation instance
 `ElevationEndpoints` picks for each. It fails when more than 80 % of the answers are null or exactly
-0, the two silent ways Valhalla says "no tiles here". The fix is a DEM install on the routing host,
-which [Building elevation tiles](elevation-tiles.md) owns: install, restart that continent's
-instance, check that the instance is listed in `ELEVATION_URLS`, then start the run again.
+0, the two silent ways Valhalla says "no tiles here". An instance that does not answer at all (a
+timeout, a refused connection, an HTTP error) is a different failure: the check stops at the first
+one with `elevation instance unreachable: <endpoint>`, so fix or start that instance rather than
+installing tiles. Missing tiles are fixed by a DEM install on the routing host, which
+[Building elevation tiles](elevation-tiles.md) owns: install, restart that continent's instance and
+check that the instance is listed in `ELEVATION_URLS`. Then finish by hand instead of starting the
+whole run again, which would repeat the harvest:
+
+<!-- CODE-ILLUSTRATIVE finish an onboarding after a DEM install -->
+```bash
+php bin/console app:country:check-elevation DK
+php bin/console app:country:mark-live DK
+```
 
 **Mark live** records that every step passed, and only on a seeded country.
 
-!!! warning "A seeded country is already on the map"
-    The region registry serves every region row, so a country shows up in the scope selector as soon
-    as apply has run. `live` records that every step passed; it does not gate what riders see.
+!!! note "A country is on the map once it is live"
+    The region registry behind the scope selector and the timezone hint serve a country's regions
+    only once its status is `live`, so a seeded country whose harvest or elevation check has not
+    passed yet is not shown. Moderation and the harvest already see it from `seeded` on. Regions of a
+    country that has no `country` row at all are always shown.
 
 ## Promoting to production
 
@@ -119,7 +136,8 @@ sequence then runs there, so production gets staging's exact slugs, labels and b
 ## Fixing a label
 
 Region and country labels are rows (`region.labels`, `country.labels`), so the in-site translation
-tool does not reach them:
+tool does not reach them. Translations it had approved before the labels moved were folded into these
+rows by a migration. Edit a label with:
 
 <!-- CODE-ILLUSTRATIVE fix one region label and one country phrase -->
 ```bash
@@ -142,6 +160,11 @@ planner and the coverage commands read the tables the migrations create.
   moderation.
 - **A new UI language.** Onboarding Denmark does not add Danish.
 - **Official data providers.** Separate, per-licence work.
+- **A shared Geofabrik extract.** The planner takes an extract whose ISO list is exactly the one
+  country, so a country Geofabrik ships only together with others cannot be onboarded by the
+  command: `europe/ireland-and-northern-ireland` covers Ireland and is already GB's, and
+  `africa/south-africa` bundles Lesotho and Eswatini. Such a country needs a hand-made plan and a
+  decision on which country owns the shared extract.
 - **Part of a country.** The planner plans a whole country at one level. The two US states and two
   Canadian provinces were seeded by hand before the planner existed; adding a third state is not
   something the planner does.
