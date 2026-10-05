@@ -21,3 +21,10 @@ def test_timezone_ids_and_catalogue_country_keys_are_flagged():
     zones = "'Europe/Brussels' 'Europe/Berlin' 'Asia/Tokyo' 'America/Denver'"
     assert country_lists.findings("x.js", zones)[0].startswith("x.js: 4 IANA zones")
     assert country_lists.findings("m.yaml", "region:\n  all_be:\n    label: x\n") == ["m.yaml: an all_<cc> catalogue key"]
+
+
+def test_vendored_lib_and_test_paths_are_skipped_but_source_is_scanned(tmp_path):
+    for rel in ("web/assets/lib/vendor.js", "pipeline/tests/test_x.py", "pipeline/coverage/x.py"):
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text("ONBOARDED_REGIONS = ()")
+    assert country_lists.scan(tmp_path) == ["pipeline/coverage/x.py: names ONBOARDED_REGIONS"]

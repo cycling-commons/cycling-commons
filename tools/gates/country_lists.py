@@ -7,6 +7,11 @@ slugs, four or more distinct IANA zone ids, or an `all_<cc>` catalogue key.
 Tests, fixtures, migrations (the 2026-10-05 seed holds the old list by design)
 and prose are out of scope. Three slugs in one file are examples in a docstring.
 
+Any path component in SKIP_PARTS is skipped wherever it sits: `lib` covers
+vendored code such as web/assets/lib, `out` generated artifacts, `gates` this
+file. Limits: it does not see a YAML `region.<slug>.label` block, nor a bare
+array of ISO codes such as ['BE', 'NL', 'DE']; review still has to.
+
 Usage: tools/gates/country_lists.py
 """
 from __future__ import annotations
