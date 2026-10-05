@@ -643,4 +643,26 @@ final class ImportCatalogCommandTest extends KernelTestCase
         self::assertNotNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'l2-parent']));
         self::assertNotNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'l4-child']));
     }
+
+    public function testItemCountryComesFromTheRegionItLiesIn(): void
+    {
+        $src = __DIR__.'/../fixtures/catalog';
+        $dir = sys_get_temp_dir().'/catalog-import-de-'.getmypid();
+        @mkdir($dir, 0777, true);
+        /** @var array{properties: array<string, mixed>} $region */
+        $region = json_decode((string) file_get_contents($src.'/region-square.geojson'), true, 512, \JSON_THROW_ON_ERROR);
+        $region['properties']['country_code'] = 'DE';
+        $region['properties']['iso_code'] = 'DE-TST';
+        file_put_contents($dir.'/region-square.geojson', json_encode($region, \JSON_THROW_ON_ERROR));
+        copy($src.'/services.json', $dir.'/services.json');
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+
+        $inside = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1001']);
+        self::assertNotNull($inside);
+        self::assertSame('DE', $inside->getCountryCode(), 'not the hard-coded BE');
+        $outside = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1003']);
+        self::assertNotNull($outside);
+        self::assertSame('', $outside->getCountryCode(), 'outside every region: no country');
+    }
 }

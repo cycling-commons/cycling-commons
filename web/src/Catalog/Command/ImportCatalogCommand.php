@@ -13,13 +13,12 @@ use App\Catalog\Import\ItemUpsert;
 use App\Catalog\Import\ProvinceMap;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
-use App\Catalog\OperationalRegions;
+use App\Catalog\RegionDerivations;
+use App\Catalog\RegionUpserter;
 use App\Catalog\ServiceKind;
-use App\Catalog\SurfaceProfiler;
 use App\Media\Commons\CommonsFile;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
-use App\Service\BaseLocationService;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception as DBALException;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -54,9 +53,6 @@ final class ImportCatalogCommand extends Command
     /** Property keys consumed into columns - never stored as attributes. */
     private const array CONSUMED_KEYS = ['n', 'name', 'prov', 'source', 'ref'];
 
-    /** Same-level overlap above this fraction of the smaller area is a bad import; at or below it is a digitization sliver. */
-    private const float REGION_OVERLAP_TOLERANCE = 0.001;
-
     /**
      * Rows the duplicate guard held out, reported after the transaction.
      *
@@ -74,8 +70,8 @@ final class ImportCatalogCommand extends Command
     public function __construct(
         private readonly Connection $db,
         private readonly AttributeVocabulary $vocabulary,
-        private readonly SurfaceProfiler $surfaces,
-        private readonly BaseLocationService $baseLocations,
+        private readonly RegionUpserter $regionUpserter,
+        private readonly RegionDerivations $derivations,
         private readonly DuplicateGuard $duplicates,
     ) {
         parent::__construct();
@@ -101,17 +97,12 @@ final class ImportCatalogCommand extends Command
         try {
             $this->db->beginTransaction();
             $regions = $this->importRegions($dir, $io);
-            $this->recomputeAdjacency();
-            $this->recomputeOutlines();
+            $this->derivations->shapes();
             $items = $this->importItemLayers($dir, $io);
             $routes = $this->importRoutes($dir, $io);
             $heat = $this->importHeat($dir, $io);
-            $assigned = $this->recomputeMembership();
-            // docs/specs/map-and-search.md §4.5 — re-derive bases in this transaction (no queue).
-            $rederived = $this->baseLocations->rederiveAll();
-            $io->text(sprintf('Re-derived base areas for %d rider(s).', $rederived));
-            // Surfaces after membership, same transaction.
-            $surfaced = $this->surfaces->recomputeAll();
+            $derived = $this->derivations->dependents();
+            $io->text(sprintf('Re-derived base areas for %d rider(s).', $derived['rederived']));
             $this->db->commit();
         } catch (\InvalidArgumentException|\JsonException|DBALException $e) {
             if ($this->db->isTransactionActive()) {
@@ -137,7 +128,7 @@ final class ImportCatalogCommand extends Command
             ));
         }
 
-        $io->success(sprintf('Catalog import: %d region(s), %d item(s) upserted, %d route(s), %d heat point(s), %d region-assigned, %d route surface profile(s).', $regions, $items, $routes, $heat, $assigned, $surfaced));
+        $io->success(sprintf('Catalog import: %d region(s), %d item(s) upserted, %d route(s), %d heat point(s), %d region-assigned, %d route surface profile(s).', $regions, $items, $routes, $heat, $derived['assigned'], $derived['surfaced']));
 
         return Command::SUCCESS;
     }
@@ -146,84 +137,18 @@ final class ImportCatalogCommand extends Command
     {
         $count = 0;
         foreach (glob($dir.'/region-*.geojson') ?: [] as $file) {
-            /** @var array{properties: array{slug: string, name: string, area_km2?: float|int, country_code?: mixed, iso_code?: mixed, admin_level?: mixed, source?: mixed}, geometry: array<string, mixed>} $feature */
+            /** @var array{properties: array<string, mixed>, geometry: array<string, mixed>} $feature */
             $feature = json_decode((string) file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
-            $props = $feature['properties'];
-            [$countryCode, $isoCode, $adminLevel, $source] = $this->regionProvenance($props, $file);
-            // docs/specs/map-and-search.md §4.5 — country_code required (unstamped region is invisible to country-scoped curators).
-            $this->db->executeStatement(
-                'INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, created_at, updated_at)
-                 VALUES (:slug, :name, ST_SetSRID(ST_GeomFromGeoJSON(:geom), 4326), :area, :cc, :iso, :admin, :source, NOW(), NOW())
-                 ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, geom = EXCLUDED.geom,
-                   area_km2 = EXCLUDED.area_km2, country_code = EXCLUDED.country_code,
-                   iso_code = EXCLUDED.iso_code, admin_level = EXCLUDED.admin_level, source = EXCLUDED.source,
-                   updated_at = CASE WHEN (region.name, ST_AsEWKB(region.geom), region.area_km2, region.country_code, region.iso_code, region.admin_level, region.source)
-                                     IS DISTINCT FROM (EXCLUDED.name, ST_AsEWKB(EXCLUDED.geom), EXCLUDED.area_km2, EXCLUDED.country_code, EXCLUDED.iso_code, EXCLUDED.admin_level, EXCLUDED.source)
-                                THEN NOW() ELSE region.updated_at END',
-                [
-                    'slug' => $feature['properties']['slug'],
-                    'name' => $feature['properties']['name'],
-                    'geom' => json_encode($feature['geometry'], \JSON_THROW_ON_ERROR),
-                    'area' => $feature['properties']['area_km2'] ?? null,
-                    'cc' => $countryCode,
-                    'iso' => $isoCode,
-                    'admin' => $adminLevel,
-                    'source' => $source,
-                ],
-            );
+            // docs/specs/map-and-search.md §4.5: country_code required (unstamped region is invisible to country-scoped curators).
+            $this->regionUpserter->upsert($feature['properties'], json_encode($feature['geometry'], \JSON_THROW_ON_ERROR), basename($file));
             ++$count;
-            $io->writeln(sprintf('  region %s', $feature['properties']['slug']));
+            $io->writeln(sprintf('  region %s', \is_string($feature['properties']['slug'] ?? null) ? $feature['properties']['slug'] : '?'));
         }
 
-        // docs/specs/map-and-search.md §4.5 — same-level tessellation; reject overlap here, smallest-area-wins if one slips through.
-        $this->assertRegionsTessellate();
+        // docs/specs/map-and-search.md §4.5: same-level tessellation; reject overlap here, smallest-area-wins if one slips through.
+        $this->regionUpserter->assertTessellates();
 
         return $count;
-    }
-
-    /**
-     * @param array<string, mixed> $props
-     *
-     * @return array{0: string, 1: string|null, 2: int|null, 3: string|null} [countryCode, isoCode, adminLevel, source]
-     */
-    private function regionProvenance(array $props, string $file): array
-    {
-        $rawCc = \is_string($props['country_code'] ?? null) ? strtoupper(trim($props['country_code'])) : '';
-        if (1 !== preg_match('/^[A-Z]{2}$/', $rawCc)) {
-            throw new \InvalidArgumentException(sprintf('%s: region artifact missing required 2-letter country_code (got %s) — an unstamped region is a silent moderation-jurisdiction hole (map-and-search.md §4.5).', basename($file), '' === $rawCc ? '<missing>' : sprintf('"%s"', $rawCc)));
-        }
-
-        $iso = \is_string($props['iso_code'] ?? null) && '' !== trim($props['iso_code'])
-            ? strtoupper(trim($props['iso_code'])) : null;
-        $admin = \is_numeric($props['admin_level'] ?? null) ? (int) $props['admin_level'] : null;
-        $source = \is_string($props['source'] ?? null) && '' !== trim($props['source'])
-            ? trim($props['source']) : null;
-
-        return [$rawCc, $iso, $admin, $source];
-    }
-
-    /**
-     * @throws \InvalidArgumentException when two same-country, same-level regions overlap
-     */
-    private function assertRegionsTessellate(): void
-    {
-        // docs/specs/map-and-search.md §4.5 — same (country, admin_level) must tessellate; IS NOT DISTINCT FROM keeps NULL-level rows in the guard. Cross-level containment is expected.
-        /** @var array{a: string, b: string}|false $overlap */
-        $overlap = $this->db->fetchAssociative(
-            "SELECT a.slug AS a, b.slug AS b
-               FROM region a JOIN region b ON a.id < b.id
-              WHERE a.country_code = b.country_code AND a.country_code <> ''
-                AND a.admin_level IS NOT DISTINCT FROM b.admin_level
-                AND a.geom IS NOT NULL AND b.geom IS NOT NULL
-                AND ST_Overlaps(a.geom, b.geom)
-                AND ST_Area(ST_Intersection(a.geom, b.geom))
-                    > :tol * LEAST(ST_Area(a.geom), ST_Area(b.geom))
-              LIMIT 1",
-            ['tol' => self::REGION_OVERLAP_TOLERANCE],
-        );
-        if (false !== $overlap) {
-            throw new \InvalidArgumentException(sprintf('Region overlap: "%s" and "%s" share more than a boundary sliver at the same admin level within one country — same-level regions must tessellate, not overlap (map-and-search.md §4.5; cross-level containment is expected, map-and-search.md §4.5).', $overlap['a'], $overlap['b']));
-        }
     }
 
     private function importItemLayers(string $dir, SymfonyStyle $io): int
@@ -298,7 +223,7 @@ final class ImportCatalogCommand extends Command
                         'letter' => $letter,
                         'name' => $name,
                         'geom' => json_encode($geometry, \JSON_THROW_ON_ERROR),
-                        'cc' => 'BE',
+                        'cc' => $this->countryAt($geomJson),
                         'sub' => $subdivisions[ProvinceMap::CODES[$prov] ?? ''] ?? null,
                         'state' => 'unverified',
                         'source' => $source,
@@ -483,112 +408,25 @@ final class ImportCatalogCommand extends Command
         return $map;
     }
 
-    private function recomputeMembership(): int
+    /** Country of the smallest region holding the feature, '' outside every region (SpatialResolver's rule). */
+    private function countryAt(string $geomJson): string
     {
-        // docs/specs/catalog-data-model.md §6 — smallest-area-wins; uncontained rows stay NULL.
-        $this->db->executeStatement('UPDATE item SET region_id = NULL');
-        $assigned = (int) $this->db->executeStatement(
-            'UPDATE item SET region_id = m.region_id FROM (
-                SELECT DISTINCT ON (i.id) i.id AS item_id, r.id AS region_id
-                FROM item i JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(i.geom))
-                ORDER BY i.id, r.area_km2 ASC NULLS LAST, r.id ASC
-             ) m WHERE item.id = m.item_id',
+        $cc = $this->db->fetchOne(
+            'SELECT country_code FROM region
+              WHERE ST_Contains(geom, ST_PointOnSurface(ST_SetSRID(ST_GeomFromGeoJSON(:g), 4326)))
+              ORDER BY area_km2 ASC NULLS LAST, id ASC LIMIT 1',
+            ['g' => $geomJson],
         );
 
-        $this->db->executeStatement('UPDATE recommended_route SET region_id = NULL');
-        $assigned += (int) $this->db->executeStatement(
-            'UPDATE recommended_route SET region_id = m.region_id FROM (
-                SELECT DISTINCT ON (rr.id) rr.id AS route_id, r.id AS region_id
-                FROM recommended_route rr JOIN region r ON ST_Contains(r.geom, ST_PointOnSurface(rr.geom))
-                ORDER BY rr.id, r.area_km2 ASC NULLS LAST, r.id ASC
-             ) m WHERE recommended_route.id = m.route_id',
-        );
-
-        // docs/specs/catalog-data-model.md §6 — heat points need rid; unstamped would render in every scope or none.
-        $this->db->executeStatement('UPDATE heat_point SET region_id = NULL');
-        $assigned += (int) $this->db->executeStatement(
-            'UPDATE heat_point SET region_id = m.region_id FROM (
-                SELECT DISTINCT ON (h.id) h.id AS heat_id, r.id AS region_id
-                FROM heat_point h JOIN region r ON ST_Contains(r.geom, h.geom)
-                ORDER BY h.id, r.area_km2 ASC NULLS LAST, r.id ASC
-             ) m WHERE heat_point.id = m.heat_id',
-        );
-
-        return $assigned;
+        return \is_string($cc) ? $cc : '';
     }
 
-    /** Derived adj: never authored. Empty array, never NULL, when a region touches nothing. */
-    private function recomputeAdjacency(): void
-    {
-        $this->db->executeStatement(self::adjacencySql());
-    }
-
-    /**
-     * Neighbours are OPERATIONAL regions only, on both sides (catalog-data-model.md §2.4).
-     *
-     * Every region intersects its own country outline, so the unfiltered
-     * version made the level-2 row a neighbour of all twelve Dutch provinces -
-     * and the spotlight, which punches its clear hole through the union of
-     * region + neighbours, then lit the whole Netherlands instead of North
-     * Holland and its four real neighbours (owner 2026-08-24).
-     *
-     * The `a` predicate sits INSIDE the subquery deliberately: for a
-     * non-operational row it matches nothing, so COALESCE writes the empty
-     * array. A country outline ends up with no neighbours, which is the truth
-     * about a row that is not a scope.
-     *
-     * Shared with Version20260824120000, so a fix here cannot drift from what
-     * deployed databases were backfilled with.
-     */
+    /** Kept for Version20260824120000 and RegionAdjacencyTest; the rule lives in RegionDerivations. */
     public static function adjacencySql(): string
     {
-        return 'UPDATE region a SET adj = COALESCE((
-                SELECT array_agg(b.id ORDER BY b.id)
-                FROM region b
-                WHERE b.id <> a.id AND ST_Intersects(a.geom, b.geom)
-                  AND '.OperationalRegions::predicate('b').'
-                  AND '.OperationalRegions::predicate('a').'
-             ), ARRAY[]::int[])
-             WHERE a.geom IS NOT NULL';
+        return RegionDerivations::adjacencySql();
     }
 
-    /** Derived ranking outline, never authored. Empty array, never NULL. */
-    private function recomputeOutlines(): void
-    {
-        $this->db->executeStatement(self::OUTLINE_SQL);
-    }
-
-    /**
-     * Compute part area once (correlated ST_Area of the whole geom is quadratic). Must match Version20260727120000.
-     */
-    public const OUTLINE_SQL = <<<'SQL'
-        UPDATE region r SET outline = COALESCE((
-            SELECT json_agg(ring)
-            FROM (
-                SELECT (
-                    SELECT json_agg(round(v::numeric, 3) ORDER BY o)
-                    FROM (
-                        SELECT unnest(ARRAY[ST_X(p.geom), ST_Y(p.geom)]) AS v,
-                               (p.path[1] * 2) + generate_series(0, 1) AS o
-                        FROM ST_DumpPoints(ST_ExteriorRing(z.g)) p
-                    ) pt
-                ) AS ring
-                FROM (
-                    SELECT parts.g,
-                           parts.a,
-                           max(parts.a) OVER () AS mx,
-                           sum(parts.a) OVER () AS total
-                    FROM (
-                        SELECT ST_SimplifyPreserveTopology(d.geom, 0.05) AS g,
-                               ST_Area(d.geom::geography) AS a
-                        FROM ST_Dump(r.geom) d
-                    ) parts
-                ) z
-                WHERE z.g IS NOT NULL
-                  AND GeometryType(z.g) = 'POLYGON'
-                  AND z.a >= LEAST(GREATEST(z.total * 0.01, 5e6), z.mx)
-            ) rings
-        ), '[]'::json)::jsonb
-        WHERE r.geom IS NOT NULL
-        SQL;
+    /** Kept for Version20260727120000; the rule lives in RegionDerivations. */
+    public const string OUTLINE_SQL = RegionDerivations::OUTLINE_SQL;
 }
