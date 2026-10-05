@@ -1,0 +1,36 @@
+pipeline/onboarding/extracts.py
+  s_8fe2e4dc6b0b60::t_842e8dfd3a4f75 53-54
+  s_8fe2e4dc6b0b60::t_6e01dcaefa35fe 50-52
+pipeline/onboarding/levels.py
+  s_8fe2e4dc6b0b60::t_47ee06a26f3d11 30
+pipeline/onboarding/overture.py
+  s_8fe2e4dc6b0b60::t_a4478bc892046c 12-15,28-31,51
+pipeline/onboarding/plan.py
+  s_8fe2e4dc6b0b60::t_bc8ae4d5661a76 26,107,203-209,213-214,234,244,248
+pipeline/onboarding/slugs.py
+  s_8fe2e4dc6b0b60::t_5a076d44562e97 61-62
+pipeline/tests/test_onboarding_extracts.py
+  s_8fe2e4dc6b0b60::t_1adf4ce44a5255 27,29
+pipeline/tests/test_onboarding_levels.py
+  s_8fe2e4dc6b0b60::t_d77f6a17e37ed2 30
+pipeline/tests/test_onboarding_plan.py
+  s_8fe2e4dc6b0b60::t_cfdb5316a98fbf 10,91-99,119-128,182-217
+pipeline/tests/test_onboarding_slugs.py
+  s_8fe2e4dc6b0b60::t_38b62527124f38 35-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b53a306c7ccc523707aad76b561306e8bd809ec5",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
