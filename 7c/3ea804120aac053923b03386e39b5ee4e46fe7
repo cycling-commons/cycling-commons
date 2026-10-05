@@ -1,0 +1,25 @@
+web/src/Onboarding/Command/CheckElevationCommand.php
+  s_8fe2e4dc6b0b60::t_18e606aedcd25f 1-107
+web/src/Onboarding/ElevationProbe.php
+  s_8fe2e4dc6b0b60::t_e70ec8f6341867 1-52
+web/src/Onboarding/ElevationSample.php
+  s_8fe2e4dc6b0b60::t_bda035923c7602 1-69
+web/tests/Onboarding/CheckElevationCommandTest.php
+  s_8fe2e4dc6b0b60::t_d21d80002f5b73 1-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7c3ea804120aac053923b03386e39b5ee4e46fe7",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
