@@ -17,10 +17,11 @@ Requires duckdb with httpfs + spatial (see requirements.txt). Regeneration hits
 the public Overture S3 bucket anonymously — a network step, like the OSM harvest.
 
 Usage:
-    cd pipeline && python3 -m divisions.export_divisions --country BE --out divisions/out
+    make divisions-data c="BE"   (pipeline container; reads the live country + region rows)
 """
 import argparse
 import json
+import os
 import pathlib
 
 from pyproj import Geod
@@ -141,45 +142,41 @@ def query_country(con, cc, cfg, release):
     return con.execute(sql, params).fetchall()
 
 
-def l2_cfg(cc):
-    """A synthetic COUNTRY_CONFIG block selecting a country's level-2 outline.
+def l2_spec(cc, slug, name, bbox):
+    """A spec selecting a country's level-2 outline: subtype='country' rows key on the ISO 3166-1 code."""
+    return {"subtype": "country", "slugs": {cc: slug}, "names": {cc: name}, "bbox": bbox}
 
-    Reuses query_country/build_feature wholesale: subtype='country' rows carry
-    region=NULL, so the slug map is keyed on the ISO 3166-1 code (the LU
-    precedent), and SUBTYPE_ADMIN_LEVEL stamps admin_level=2.
-    """
-    if cc not in config.COUNTRY_L2:
-        raise SystemExit(
-            f"No COUNTRY_L2 entry for {cc} — every onboardable country needs "
-            "a level-2 slug/name."
-        )
-    slug, name = config.COUNTRY_L2[cc]
-    return {
-        "subtype": "country",
-        "slugs": {cc: slug},
-        "names": {cc: name},
-        "bbox": config.COUNTRY_CONFIG[cc].get("bbox"),
+
+def spec_from_db(conn, cc):
+    """(operating spec, level-2 (slug, name) or None) from a live country's rows."""
+    row = conn.execute("SELECT subtype, bbox FROM country WHERE code = %s", (cc,)).fetchone()
+    if row is None:
+        raise SystemExit(f"no country row for {cc}; onboard it first (python -m onboarding.plan {cc})")
+    subtype, bbox = row
+    level = config.SUBTYPE_ADMIN_LEVEL[subtype]
+    rows = conn.execute(
+        "SELECT iso_code, slug, name, admin_level FROM region WHERE country_code = %s AND iso_code IS NOT NULL",
+        (cc,),
+    ).fetchall()
+    spec = {
+        "subtype": subtype,
+        "slugs": {iso: slug for iso, slug, _name, al in rows if al == level},
+        "names": {iso: name for iso, _slug, name, al in rows if al == level},
+        "bbox": bbox,
     }
+    l2 = next(((slug, name) for _iso, slug, name, al in rows if al == 2 and subtype != "country"), None)
+    return spec, l2
 
 
-def export_country(cc, out_dir, release=None, con=None):
+def export_country(cc, out_dir, spec, l2=None, release=None, con=None):
     """Query Overture for `cc`'s operating-level regions and write region-<slug>.geojson."""
     release = release or config.OVERTURE_RELEASE
-    cfg = config.COUNTRY_CONFIG.get(cc)
-    if cfg is None:
-        raise SystemExit(
-            f"No COUNTRY_CONFIG for {cc} — add its operating level + ISO->slug map "
-            "(map-and-search.md §4.5a)."
-        )
     con = con or _connect()
     out_dir = pathlib.Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    # Always emit the level-2 country outline alongside the operating level
-    # (2+4 default). A country
-    # operating AT level 2 (LU) already emits it as its operating level.
-    configs = [cfg]
-    if cfg["subtype"] != "country":
-        configs.append(l2_cfg(cc))
+    configs = [spec]
+    if l2 is not None and spec["subtype"] != "country":
+        configs.append(l2_spec(cc, *l2, spec.get("bbox")))
     written = []
     for c in configs:
         seen = set()
@@ -216,12 +213,17 @@ def export_country(cc, out_dir, release=None, con=None):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Overture divisions -> region-<slug>.geojson")
+    import psycopg
+
+    ap = argparse.ArgumentParser(description="Re-export a live country's regions from Overture -> region-<slug>.geojson")
     ap.add_argument("--country", required=True, help="ISO 3166-1 alpha-2 (e.g. BE)")
     ap.add_argument("--out", default=str(OUT_DEFAULT), help="output dir (default pipeline/divisions/out)")
     ap.add_argument("--release", default=None, help="Overture release (default config.OVERTURE_RELEASE)")
     args = ap.parse_args(argv)
-    written = export_country(args.country.upper(), args.out, args.release)
+    cc = args.country.upper()
+    with psycopg.connect(os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")) as conn:
+        spec, l2 = spec_from_db(conn, cc)
+    written = export_country(cc, args.out, spec, l2=l2, release=args.release)
     print(f"Wrote {len(written)} region artifact(s) to {args.out}")
 
 

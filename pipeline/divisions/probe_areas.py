@@ -4,11 +4,11 @@
 Onboarding step 1 (pipeline/divisions/README.md): BEFORE seeding, report
 each candidate subtype's subdivisions and geodesic areas against the ~17k km²
 calibration band (ADVISORY — map-and-search.md §4.5; Brussels sits far
-below it deliberately), and derive a bbox for COUNTRY_CONFIG predicate
+below it deliberately), and derive a bbox for the Overture predicate
 pushdown. Emits, per country:
 
     <out>/<cc-lower>/areas.md    human report: per-subtype tables + level advice
-    <out>/<cc-lower>/probe.json  machine output for `app:region:scaffold --probe-areas`
+    <out>/<cc-lower>/probe.json  machine output for the onboarding planner
 
 Network: hits the public Overture S3 bucket anonymously, like
 export_divisions. The default --out is pipeline/divisions/out/scaffold; `make

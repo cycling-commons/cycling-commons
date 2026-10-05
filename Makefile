@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe course-data coverage-regions
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -288,9 +288,6 @@ divisions-data: ## Export region-<slug>.geojson from Overture divisions to pipel
 region-probe: ## Probe Overture subdivision areas (make region-probe c="NL" [subtypes="region,county"])
 	@$(DOCKER_COMP) exec -T pipeline python -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes)) --out divisions/out/scaffold
 	@mkdir -p web/var/scaffold && cp -r pipeline/divisions/out/scaffold/. web/var/scaffold/
-
-region-scaffold: ## Onboarding step 2: emit region config + label stubs for review (make region-scaffold c="NL" [flags="--probe-areas"])
-	@$(DOCKER_COMP) exec -T --user $(DEV_UID):$(DEV_GID) app php bin/console app:region:scaffold $(or $(c),NL) $(flags)
 
 tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits)
 	cd tools && python3 -m pytest wallonia/tests wikimedia/tests credits/tests -q

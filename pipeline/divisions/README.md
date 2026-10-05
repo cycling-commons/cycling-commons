@@ -6,7 +6,7 @@ makes onboarding a new country or state a repeatable process.
 
 Every onboarding run seeds **levels 2 + 4 by default**: the Overture
 `admin_level=2` country outline alongside the configured operating level
-(L4 unless a country's `COUNTRY_CONFIG` says otherwise). This is a deliberate owner decision — see
+(L4 unless the country's `country.subtype` says otherwise). This is a deliberate owner decision — see
 "Operational vs infrastructure rows" below for why the L2 row exists and
 where it must never appear.
 
@@ -21,7 +21,7 @@ One fixed sequence for every country/state. ⚑ marks a human judgment.
 | 3 | ⚑ Review + merge | freeze slugs/exonyms; merge `config-block.py` into `config.py`, `translations.patch.yaml` into the 4 catalogs |
 | 4 | Export Overture geojson (levels 2 + 4) | `make divisions-data c="NL"` — always emits the L2 country outline alongside the operating-level divisions, same run, same command |
 | 5 | Seed `Region` rows | stage artifacts (including the L2 outline), `app:catalog:import` (see below) — upsert-by-slug, so re-running is safe |
-| 6 | Coverage | add the Geofabrik region to `COVERAGE_REGIONS` **and** `COUNTRY_BY_REGION` (`pipeline/coverage/load.py`) — a missing entry now hard-fails that region's coverage run (`resolve_country`, the nearest-region-wins ownership rule) rather than silently disabling ownership — then `make coverage-refresh regions=europe/netherlands` |
+| 6 | Coverage | the country's `country_extract` rows (`coverage.regions.onboarded_map`) name its Geofabrik extracts — an unresolvable extract hard-fails that region's coverage run (`resolve_country`, the nearest-region-wins ownership rule) rather than silently disabling ownership — then `make coverage-refresh regions=europe/netherlands` |
 | 6b | **Elevation** | check the country's box already has GLO-30 tiles, and install them if not: `tools/elevation/dem-install.sh <continent> <PRESET>` **on the Valhalla host**. See "Elevation is step 6b" below |
 | 6c | **The other tile artifacts** | `make surface-tiles regions=<geofabrik>` and `make routes-tiles regions=<geofabrik>`. Coverage is not the only per-country tile set. See below |
 | 7 | ⚑ Moderators | assign 2–4 region atoms per moderator (admin; `moderator_area` rows) |

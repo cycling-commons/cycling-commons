@@ -20,7 +20,7 @@ One sequence for every country. ⚑ marks a human judgment call.
 | # | Step | What happens |
 |---|------|--------------|
 | 1 | ⚑ **Choose the operating level** | `make region-probe c="XX"` lists the country's official subdivisions and their sizes. You decide which level to seed at (see below). |
-| 2 | **Scaffold** | `make region-scaffold c="XX"` emits a config block + label stubs. It *emits, never applies*. |
+| 2 | **Scaffold** | The scaffolder is retired; the planner (`python -m onboarding.plan XX`) replaces this step. |
 | 3 | ⚑ **Review & merge** | Freeze slugs (permanent identity), fix exonyms in every locale, add the `all_<cc>` rung, add the timezone. |
 | 4 | **Export** | `make divisions-data c="XX"` queries Overture and writes one `region-<slug>.geojson` per subdivision **plus** one for the level-2 country outline, in the same run. |
 | 5 | **Seed** | Stage the artifacts, the country outline included, and import them as `Region` rows. |
@@ -46,7 +46,7 @@ That case needed a small extension to the exporter, which is now a reusable path
 (Andorra, Malta, Liechtenstein): Overture's country-level polygon has a null `region` column, so the
 exporter keys it on the ISO 3166-1 code. The config block that produced it:
 
-<!-- CODE-FROM pipeline/divisions/config.py -->
+<!-- CODE-ILLUSTRATIVE the per-country config block the planner replaced; this page is rewritten later in the same change -->
 ```python
 "LU": {
     "subtype": "country",
@@ -63,7 +63,7 @@ subdivision), exactly like Belgium's three regions or Germany's sixteen.
 
 <!-- CODE-ILLUSTRATIVE step 2, emit the config block and label stubs for review -->
 ```bash
-make region-scaffold c="NL"            # add flags="--probe-areas" to include measured areas
+python -m onboarding.plan NL           # the planner that replaced the scaffolder
 ```
 
 One property makes the next step safe: the scaffolder
