@@ -1,0 +1,47 @@
+Makefile
+  s_8fe2e4dc6b0b60::t_cc336172a04716 332-337
+developers/docker/compose.yaml
+  s_8fe2e4dc6b0b60::t_1ac368168978d8 263-265
+pipeline/coverage/dispatch.py
+  s_8fe2e4dc6b0b60::t_9ec59199568490 23,92
+pipeline/coverage/load.py
+  s_8fe2e4dc6b0b60::t_8ef24e8322a507 15,79-80,83-87,93,97-99,463-464
+pipeline/coverage/regions.py
+  s_8fe2e4dc6b0b60::t_5f7fc26c530936 2-8,10-55,57-58
+pipeline/coverage/run.py
+  s_8fe2e4dc6b0b60::t_aa59fe9bc15784 32,38,238-242,263,268,273,280-281,294-295,309-310,350-351,361,366,429-430,437,442-443,466,469,544,555,584,587,636-637,644,649-650,666,669,715,725,749,894,905,907,917-918,958
+pipeline/tests/catalog_rows.py
+  s_8fe2e4dc6b0b60::t_e2379949db48b3 1-21
+pipeline/tests/conftest.py
+  s_8fe2e4dc6b0b60::t_8409f267f3f66a 74-103
+pipeline/tests/test_line_run_tracking.py
+  s_8fe2e4dc6b0b60::t_224ed077236b8e 26,29
+pipeline/tests/test_load.py
+  s_8fe2e4dc6b0b60::t_a2aa603fdedf42 499
+pipeline/tests/test_regions.py
+  s_8fe2e4dc6b0b60::t_f5a9aba67b3adb 2-4,8-10,13-16,19-23,28,30,32-51,54-55,79,93
+pipeline/tests/test_run.py
+  s_8fe2e4dc6b0b60::t_b977d8a44923d3 199,206,260,262,344,346,418,420,474,476,549
+pipeline/tests/test_run_surface.py
+  s_8fe2e4dc6b0b60::t_3b99e00bc0975d 21-25,39,316,337,432,451,491,598,620,623-624
+wiki/developers/data-ops/onboarding-a-country.md
+  s_8fe2e4dc6b0b60::t_1e8ef532f5af7d 151
+wiki/developers/numbers.md
+  s_8fe2e4dc6b0b60::t_7c18e874e4036a 54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6a60d1be2221b98f034a1cf0bba80fe0b9c46e0e",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
