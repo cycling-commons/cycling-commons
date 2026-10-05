@@ -328,7 +328,7 @@ damage to repair.
 ## Tests
 
 ```bash
-cd tools && python3 -m pytest divisions/tests -q          # offline
-RUN_LIVE_OVERTURE=1 python3 -m pytest divisions/tests -q  # + live Overture smoke
+docker compose -f developers/docker/compose.yaml exec pipeline python -m pytest tests/test_divisions_export.py tests/test_divisions_probe.py -q   # offline
+docker compose -f developers/docker/compose.yaml exec -e RUN_LIVE_OVERTURE=1 pipeline python -m pytest tests/test_divisions_export.py tests/test_divisions_probe.py -q   # + live Overture smoke
 cd web && php bin/phpunit --filter ScaffoldRegionsCommandTest
 ```

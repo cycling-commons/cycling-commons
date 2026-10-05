@@ -11,8 +11,8 @@ pushdown. Emits, per country:
     <out>/<cc-lower>/probe.json  machine output for `app:region:scaffold --probe-areas`
 
 Network: hits the public Overture S3 bucket anonymously, like
-export_divisions. The default --out lands inside web/var/scaffold/ so the
-PHP scaffolder (app container, /app = web/) can read probe.json.
+export_divisions. The default --out is pipeline/divisions/out/scaffold; `make
+region-probe` copies it to web/var/scaffold/ for the PHP scaffolder.
 
 Usage:
     cd pipeline && python3 -m divisions.probe_areas --country NL
@@ -22,7 +22,7 @@ import json
 import pathlib
 
 from . import config
-from .export_divisions import _connect, geodesic_area_km2
+from .export_divisions import OUT_DEFAULT, _connect, geodesic_area_km2
 
 # KEEP 80-150 % of Wallonia's ~16.9k km² (map-and-search.md §4.5) — advisory.
 BAND_KM2 = (13_520, 25_350)
@@ -118,8 +118,8 @@ def main(argv=None):
     ap.add_argument("--country", required=True, help="ISO 3166-1 alpha-2 (e.g. NL)")
     ap.add_argument("--subtypes", default="region",
                     help="csv of Overture subtypes to probe (default: region)")
-    ap.add_argument("--out", default="../web/var/scaffold",
-                    help="base output dir (default ../web/var/scaffold, relative to tools/)")
+    ap.add_argument("--out", default=str(OUT_DEFAULT / "scaffold"),
+                    help="base output dir (default pipeline/divisions/out/scaffold)")
     ap.add_argument("--release", default=None, help="Overture release (default config.OVERTURE_RELEASE)")
     args = ap.parse_args(argv)
     probe_country(args.country.upper(), args.out,
