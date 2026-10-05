@@ -46,17 +46,25 @@ final class RegionUpserter
     public function upsert(array $props, string $geometryJson, string $context, ?array $labels = null): void
     {
         [$countryCode, $isoCode, $adminLevel, $source] = self::provenance($props, $context);
+        foreach (['slug', 'name'] as $key) {
+            if (!\is_string($props[$key] ?? null) || '' === trim($props[$key])) {
+                throw new \InvalidArgumentException(sprintf('%s: region artifact missing required %s', $context, $key));
+            }
+        }
+        if (isset($props['area_km2']) && !\is_numeric($props['area_km2'])) {
+            throw new \InvalidArgumentException(sprintf('%s: region artifact area_km2 is not numeric', $context));
+        }
         $this->db->executeStatement(self::SQL, [
-            'slug' => \is_string($props['slug'] ?? null) ? $props['slug'] : '',
-            'name' => \is_string($props['name'] ?? null) ? $props['name'] : '',
+            'slug' => $props['slug'],
+            'name' => $props['name'],
             'geom' => $geometryJson,
-            'area' => \is_numeric($props['area_km2'] ?? null) ? (float) $props['area_km2'] : null,
+            'area' => isset($props['area_km2']) ? (float) $props['area_km2'] : null,
             'cc' => $countryCode,
             'iso' => $isoCode,
             'admin' => $adminLevel,
             'source' => $source,
             // An empty map never replaces stored labels (a re-import without labels keeps the seeded ones).
-            'labels' => null === $labels || [] === $labels ? null : json_encode($labels, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE),
+            'labels' => null === $labels || [] === $labels ? null : json_encode((object) $labels, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE),
         ]);
     }
 

@@ -39,6 +39,7 @@ final class RegionDerivations
      */
     public function dependents(): array
     {
+        // The caller must hold a transaction: bases and surfaces have to land with membership.
         $assigned = $this->recomputeMembership();
         $rederived = $this->baseLocations->rederiveAll();
         $surfaced = $this->surfaces->recomputeAll();
@@ -111,7 +112,7 @@ final class RegionDerivations
 
     private function recomputeMembership(): int
     {
-        // docs/specs/catalog-data-model.md §6 — smallest-area-wins; uncontained rows stay NULL.
+        // docs/specs/catalog-data-model.md §6: smallest-area-wins; uncontained rows stay NULL.
         $this->db->executeStatement('UPDATE item SET region_id = NULL');
         $assigned = (int) $this->db->executeStatement(
             'UPDATE item SET region_id = m.region_id FROM (
@@ -130,7 +131,7 @@ final class RegionDerivations
              ) m WHERE recommended_route.id = m.route_id',
         );
 
-        // docs/specs/catalog-data-model.md §6 — heat points need rid; unstamped would render in every scope or none.
+        // docs/specs/catalog-data-model.md §6: heat points need rid; unstamped would render in every scope or none.
         $this->db->executeStatement('UPDATE heat_point SET region_id = NULL');
         $assigned += (int) $this->db->executeStatement(
             'UPDATE heat_point SET region_id = m.region_id FROM (

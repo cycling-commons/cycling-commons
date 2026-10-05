@@ -56,4 +56,22 @@ final class RegionUpserterTest extends KernelTestCase
         static::getContainer()->get(RegionUpserter::class)
             ->upsert(['country_code' => ''] + self::props(), self::SQUARE, 'plan XA/ups-square');
     }
+
+    /** @return iterable<string, array{array<string, mixed>, string}> */
+    public static function badProps(): iterable
+    {
+        yield 'slug missing' => [['slug' => null] + self::props(), 'missing required slug'];
+        yield 'name missing' => [['name' => ''] + self::props(), 'missing required name'];
+        yield 'area not numeric' => [['area_km2' => 'big'] + self::props(), 'area_km2 is not numeric'];
+    }
+
+    /** @param array<string, mixed> $props */
+    #[\PHPUnit\Framework\Attributes\DataProvider('badProps')]
+    public function testMalformedPropertiesAreRefused(array $props, string $message): void
+    {
+        self::bootKernel();
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+        static::getContainer()->get(RegionUpserter::class)->upsert($props, self::SQUARE, 'file.geojson');
+    }
 }

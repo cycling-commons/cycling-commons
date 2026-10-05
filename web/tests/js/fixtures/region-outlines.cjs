@@ -3,7 +3,7 @@
 // Simplified region outlines — the ranking geometry `rankByGroundDistance`
 // consumes. Generated from
 // the live 32-region dev DB by the SAME statement the catalog import runs
-// (ImportCatalogCommand::recomputeOutlines), so what these tests rank is what
+// (RegionDerivations::OUTLINE_SQL), so what these tests rank is what
 // the browser ranks:
 //
 //   parts of each region's geometry with area >= max(1% of the region, 5 km2),

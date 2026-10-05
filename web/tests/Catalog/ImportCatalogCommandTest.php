@@ -247,7 +247,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
     public function testAdjacentRegionsWithSubPermilleSliverImport(): void
     {
         // The other half of the tessellation guard: it TOLERATES the sub-permille
-        // slivers real adjacent admin boundaries carry (REGION_OVERLAP_TOLERANCE
+        // slivers real adjacent admin boundaries carry (RegionUpserter::OVERLAP_TOLERANCE
         // = 0.001). Two same-country regions sharing an edge whose interiors
         // overlap by << 0.1% of the smaller area must IMPORT — only a MEANINGFUL
         // overlap trips (testOverlappingRegionsInSameCountryFail). This pins the
