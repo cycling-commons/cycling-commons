@@ -53,7 +53,7 @@ def test_a_failed_step_stops_the_rest(catalog):
 def test_a_held_coverage_lock_stops_with_a_rerun_hint(catalog, capsys):
     _world(catalog)
     assert _main(catalog, lambda step: repair.LOCK_HELD) == repair.LOCK_HELD
-    assert "another coverage run holds the lock; start this again once it has finished" in capsys.readouterr().err
+    assert "another coverage, routes or surface run holds its lock; start this again once it has finished" in capsys.readouterr().err
 
 
 def test_repair_needs_a_seeded_country(catalog, capsys):
@@ -66,3 +66,28 @@ def test_no_neighbours_means_no_neighbour_harvest():
     steps = repair.plan_steps(["asia/japan"], [])
     assert [s.name for s in steps] == ["harvest the new country", "rebuild point tiles",
                                       "rebuild route tiles", "rebuild surface tiles"]
+
+
+def test_each_step_is_announced_before_it_runs(catalog, capsys):
+    _world(catalog)
+    seen = []
+
+    def runner(step):
+        seen.append((step.name, f"[repair] {step.name}: starting" in capsys.readouterr().out))
+        return 0
+
+    assert _main(catalog, runner) == 0
+    assert seen and all(announced for _, announced in seen)
+
+
+def test_a_bad_country_code_is_refused(catalog, capsys):
+    assert repair.main(["D1"], connect=lambda dsn: contextlib.nullcontext(catalog), runner=lambda s: 0) == 1
+    assert "is not an ISO 3166-1 alpha-2 code" in capsys.readouterr().err
+
+
+def test_a_country_without_extracts_is_refused(catalog, capsys):
+    add_country(catalog, "DK", "seeded", [])
+    ran = []
+    assert _main(catalog, lambda step: ran.append(step) or 0) == 1
+    assert "DK has no country_extract row" in capsys.readouterr().err
+    assert ran == []

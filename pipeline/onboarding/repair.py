@@ -48,13 +48,17 @@ def run_step(step: Step) -> int:
 
 
 def main(argv=None, *, connect=psycopg.connect, runner=run_step, clock=time.monotonic) -> int:
+    # A pipe block-buffers stdout while the children write straight to the fd; keep our lines in order.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(line_buffering=True)
     ap = argparse.ArgumentParser(description="Harvest a seeded country and repair its neighbours")
     ap.add_argument("country", help="ISO 3166-1 alpha-2, e.g. DK")
     args = ap.parse_args(argv)
     cc = args.country.strip().upper()
     if not re.fullmatch(r"[A-Z]{2}", cc):
         print(f"{args.country!r} is not an ISO 3166-1 alpha-2 code", file=sys.stderr)
-        return 2
+        return 1
 
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with connect(dsn) as conn:
@@ -72,11 +76,12 @@ def main(argv=None, *, connect=psycopg.connect, runner=run_step, clock=time.mono
 
     print(f"[repair] {cc}: extracts {','.join(own)}; neighbours {','.join(nbs) or 'none'}")
     for step in plan_steps(own, nb_extracts):
+        print(f"[repair] {step.name}: starting")
         started = clock()
         rc = runner(step)
         print(f"[repair] {step.name}: rc {rc} in {_dur(clock() - started)}")
         if rc == LOCK_HELD:
-            print(f"[repair] {step.name}: another coverage run holds the lock; start this again once it has finished",
+            print(f"[repair] {step.name}: another coverage, routes or surface run holds its lock; start this again once it has finished",
                   file=sys.stderr)
             return rc
         if rc != 0:
