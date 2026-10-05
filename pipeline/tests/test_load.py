@@ -496,7 +496,7 @@ def test_load_region_raises_when_country_has_no_regions(db):
     staged row. With previous=0 (a brand-new extract — exactly the onboarding
     case) nothing else catches it, so this must raise rather than exit 0."""
     ensure_schema(db)
-    with pytest.raises(RuntimeError, match="onboarding step 5"):
+    with pytest.raises(RuntimeError, match="app:country:apply"):
         load_region(db, [_row("node/1", "B")], "europe/belgium", "BE")
     assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 0
 

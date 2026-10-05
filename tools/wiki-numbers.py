@@ -58,7 +58,6 @@ def numbers() -> list[tuple[str, str, str, str]]:
     contract = _contract()
     whitelist = _one(r"TAG_WHITELIST\s*=\s*\[(.*?)\];", "web/src/Coverage/CoverageRepository.php")
     item_type = _text("web/src/Catalog/ItemType.php")
-    regions = _one(r"COVERAGE_REGIONS:\s*[\"']?([^\"'\n]+)", "developers/docker/compose.yaml")
     hgt = 3601 * 3601 * 2
 
     rows = [
@@ -86,10 +85,6 @@ def numbers() -> list[tuple[str, str, str, str]]:
          len(_text("web/assets/map/map.js").splitlines()),
          "lines in `map.js` itself, which is imports plus the boot sequence",
          "`web/assets/map/map.js`"),
-        ("geofabrik-regions",
-         len(regions.split(",")),
-         "Geofabrik extracts the harvest runs by default",
-         "`developers/docker/compose.yaml`"),
         ("seeded-pins",
          len(re.findall(r"'letter'\s*=>\s*'[A-Z]'\s*,\s*'name'",
                         _text("web/src/Catalog/Command/SeedManualCatalogCommand.php"))),

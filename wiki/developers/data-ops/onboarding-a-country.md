@@ -148,7 +148,7 @@ SELECT slug, country_code, area_km2, admin_level FROM region WHERE country_code 
 Add the country to **both** the coverage country map and the harvest region list. The country map
 tells the pipeline which country an extract owns:
 
-<!-- CODE-FROM pipeline/coverage/load.py -->
+<!-- CODE-ILLUSTRATIVE the code list country_extract replaced; this page is rewritten later in the same change -->
 ```python
 COUNTRY_BY_REGION = {
     "europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE",

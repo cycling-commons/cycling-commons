@@ -329,17 +329,12 @@ licenses-check: ## Verify every tracked file resolves to a licence (reuse lint o
 # Fixture run (no network): make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
 # (pbf paths are as seen INSIDE the pipeline container, workdir /app = pipeline/)
 # Bucket creds match the compose defaults; override MINIO_ROOT_USER/PASSWORD if you changed developers/docker/.env.
-# The committed list of onboarded Geofabrik extracts, read out of compose.yaml's
-# own default rather than out of your environment. That distinction is the whole
-# point: a local developers/docker/.env may pin COVERAGE_REGIONS to a single
-# country, and harvesting one country of a bordering set deletes the border rows
-# that country owns, with nothing re-creating them until its neighbour runs. A
-# rider watches a POI vanish for up to a week. So the runbooks say
-# `regions=$(make -s coverage-regions)` instead of pasting the list into three
-# pages that then drift apart.
-coverage-regions: ## Echo the committed COVERAGE_REGIONS default (the full onboarded set)
-	@grep -oE 'COVERAGE_REGIONS:\s*\$$\{COVERAGE_REGIONS:-[^}]+\}' developers/docker/compose.yaml \
-	  | sed -E 's/.*COVERAGE_REGIONS:-//; s/\}$$//'
+# The onboarded Geofabrik extracts, read from the database rather than your
+# environment: a local developers/docker/.env may pin COVERAGE_REGIONS to one
+# country, and harvesting one country of a bordering set deletes the border
+# rows it owns. Runbooks say `regions=$(make -s coverage-regions)`.
+coverage-regions: ## Echo every onboarded extract (country_extract rows of seeded/live countries)
+	@$(DOCKER_COMP) exec -T pipeline python -m coverage.regions
 
 coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → PostGIS → MinIO)
 	@$(DOCKER_COMP) up --detach --wait minio
