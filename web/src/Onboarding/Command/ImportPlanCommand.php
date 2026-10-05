@@ -44,8 +44,18 @@ final class ImportPlanCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $file = (string) $input->getOption('file');
         $raw = @file_get_contents('-' === $file ? 'php://stdin' : $file);
+        if (false === $raw) {
+            $io->error(sprintf('Nothing written: cannot read %s.', $file));
+
+            return Command::FAILURE;
+        }
+        if ('' === trim($raw)) {
+            $io->error('Nothing written: empty input (did the export fail?).');
+
+            return Command::FAILURE;
+        }
         try {
-            $bundle = CountryBundle::validate(json_decode(false === $raw ? '' : $raw, true, 512, \JSON_THROW_ON_ERROR));
+            $bundle = CountryBundle::validate(json_decode($raw, true, 512, \JSON_THROW_ON_ERROR));
         } catch (\JsonException|\InvalidArgumentException $e) {
             $io->error(sprintf('Nothing written: %s', $e->getMessage()));
 

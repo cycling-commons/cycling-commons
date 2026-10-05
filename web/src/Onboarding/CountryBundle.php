@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Onboarding;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -30,7 +31,7 @@ final class CountryBundle
         ) ?: [];
         $regions = [];
         foreach ($this->db->fetchAllAssociative(
-            'SELECT slug, iso_code, name, labels::text AS labels, admin_level, area_km2, ST_AsGeoJSON(geom, 15) AS geojson
+            'SELECT slug, iso_code, name, labels::text AS labels, admin_level, area_km2, ST_AsGeoJSON(geom, 17) AS geojson
                FROM region WHERE country_code = :cc AND geom IS NOT NULL ORDER BY admin_level DESC, slug',
             ['cc' => $cc],
         ) as $r) {
@@ -136,6 +137,15 @@ final class CountryBundle
         $json = static fn (mixed $v): string => json_encode($v, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE);
 
         return $this->db->transactional(function (Connection $db) use ($bundle, $c, $json): int {
+            /** @var list<array{slug: string, country_code: string}> $taken */
+            $taken = $db->fetchAllAssociative(
+                'SELECT slug, country_code FROM country_extract WHERE slug IN (:slugs) AND country_code <> :cc',
+                ['slugs' => $bundle['extracts'], 'cc' => $c['code']],
+                ['slugs' => ArrayParameterType::STRING],
+            );
+            if ([] !== $taken) {
+                throw new \InvalidArgumentException(\sprintf('extract %s already belongs to %s here.', $taken[0]['slug'], trim($taken[0]['country_code'])));
+            }
             // The WHERE re-checks status inside the transaction, so a concurrent seed cannot be overwritten.
             $written = $db->executeStatement(
                 "INSERT INTO country (code, name, subtype, bbox, labels, timezones, status, overture_release, planned_at)
@@ -171,10 +181,11 @@ final class CountryBundle
         });
     }
 
-    /** An empty array or a string-keyed array; a JSON list is not a label object. */
+    /** An empty array or a string-keyed map of strings; a JSON list or nested value is not a label object. */
     private static function isLabelObject(mixed $v): bool
     {
-        return \is_array($v) && ([] === $v || !array_is_list($v));
+        return \is_array($v) && ([] === $v || !array_is_list($v))
+            && [] === array_filter($v, static fn ($label): bool => !\is_string($label));
     }
 
     /** Non-object JSON reads as no labels; always returns something that encodes as a JSON object. */

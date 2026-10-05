@@ -35,7 +35,7 @@ final class CountryBundleTest extends KernelTestCase
         $db->executeStatement("INSERT INTO country_extract (slug, country_code) VALUES ('test/xaland', 'XA')");
         $db->executeStatement(
             "INSERT INTO region (slug, name, geom, area_km2, country_code, iso_code, admin_level, source, labels, created_at, updated_at) VALUES
-             ('xa-west', 'West', ST_Multi(ST_GeomFromText('POLYGON((50 50,51 50,51 51,50 51,50 50))', 4326)), 7000.5, 'XA', 'XA-W', 4, 'overture', '{\"en\":\"West\",\"nl\":\"West-Xa\"}', NOW(), NOW()),
+             ('xa-west', 'West', ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON('{\"type\":\"Polygon\",\"coordinates\":[[[50.98765432109876543,50.12345678901234567],[51.1234567890123456,50.00000000000001],[51.333333333333333,51.987654321098765],[50.7777777777777777,51.0000000000000009],[50.98765432109876543,50.12345678901234567]]]}'), 4326)), 7000.5, 'XA', 'XA-W', 4, 'overture', '{\"en\":\"West\",\"nl\":\"West-Xa\"}', NOW(), NOW()),
              ('xaland', 'Xaland', ST_Multi(ST_GeomFromText('POLYGON((50 50,52 50,52 51,50 51,50 50))', 4326)), 14000, 'XA', 'XA', 2, 'overture', '{}', NOW(), NOW())",
         );
     }
@@ -55,6 +55,8 @@ final class CountryBundleTest extends KernelTestCase
         $export = $this->command('app:country:export', ['country' => 'XA']);
         $export->assertCommandIsSuccessful();
         $json = $export->getDisplay();
+        /** @var array<string, string> $before */
+        $before = $this->db()->fetchAllKeyValue("SELECT slug, encode(ST_AsEWKB(geom), 'hex') FROM region WHERE country_code = 'XA'");
         /** @var array{regions: list<array{slug: string, geometry: array<string, mixed>}>} $bundle */
         $bundle = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
 
@@ -70,12 +72,12 @@ final class CountryBundleTest extends KernelTestCase
         self::assertSame(['test/xaland'], $db->fetchFirstColumn("SELECT slug FROM country_extract WHERE country_code = 'XA'"));
         self::assertSame('West-Xa', $db->fetchOne("SELECT labels->>'nl' FROM country_plan_region WHERE slug = 'xa-west'"));
         self::assertEquals(['xa-west' => 4, 'xaland' => 2], array_map('intval', $db->fetchAllKeyValue("SELECT slug, admin_level FROM country_plan_region WHERE country_code = 'XA'")));
-        foreach ($bundle['regions'] as $r) {
-            self::assertTrue((bool) $db->fetchOne(
-                'SELECT ST_Equals(geom, ST_SetSRID(ST_GeomFromGeoJSON(:g), 4326)) FROM country_plan_region WHERE slug = :s',
-                ['g' => json_encode($r['geometry'], \JSON_THROW_ON_ERROR), 's' => $r['slug']],
-            ), $r['slug'].' geometry survives the round trip');
-        }
+        self::assertSame($before, $db->fetchAllKeyValue("SELECT slug, encode(ST_AsEWKB(geom), 'hex') FROM country_plan_region WHERE country_code = 'XA'"), 'geometry is byte-identical after the round trip');
+        self::assertSame(['iso_code' => 'XA-W', 'name' => 'West', 'area_km2' => '7000.5', 'en' => 'West'],
+            $db->fetchAssociative("SELECT iso_code, name, area_km2::text AS area_km2, labels->>'en' AS en FROM country_plan_region WHERE slug = 'xa-west'"));
+        self::assertSame(['50', '50', '52', '51'], array_map(static fn ($v): string => (string) (0 + $v), json_decode((string) $db->fetchOne("SELECT bbox::text FROM country WHERE code = 'XA'"), true, 512, \JSON_THROW_ON_ERROR)));
+        self::assertSame('All Xaland', $db->fetchOne("SELECT labels->>'en' FROM country WHERE code = 'XA'"));
+        self::assertCount(2, $bundle['regions']);
     }
 
     public function testExportNeedsALiveCountry(): void
@@ -127,5 +129,73 @@ final class CountryBundleTest extends KernelTestCase
 
         self::assertSame('object', $this->db()->fetchOne("SELECT jsonb_typeof(labels) FROM country WHERE code = 'XA'"));
         self::assertSame('object', $this->db()->fetchOne("SELECT jsonb_typeof(labels) FROM country_plan_region WHERE slug = 'xaland'"));
+    }
+
+    private function exportedXaThenForgotten(): string
+    {
+        $this->seedLiveXa();
+        $json = $this->command('app:country:export', ['country' => 'XA'])->getDisplay();
+        $this->db()->executeStatement("DELETE FROM region WHERE country_code = 'XA'");
+        $this->db()->executeStatement("DELETE FROM country_extract WHERE country_code = 'XA'");
+        $this->db()->executeStatement("DELETE FROM country WHERE code = 'XA'");
+
+        return $json;
+    }
+
+    public function testAWrongVersionOrAMissingKeyWritesNothing(): void
+    {
+        self::bootKernel();
+        $json = $this->exportedXaThenForgotten();
+        /** @var array<string, mixed> $bundle */
+        $bundle = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
+        $wrongVersion = ['version' => 2] + $bundle;
+        $noExtracts = $bundle;
+        unset($noExtracts['extracts']);
+        $nestedLabel = $bundle;
+        $nestedLabel['country']['labels'] = ['en' => ['x']];
+
+        foreach ([$wrongVersion, $noExtracts, $nestedLabel] as $bad) {
+            $tester = $this->command('app:country:import-plan', ['--file' => $this->tempFile(json_encode($bad, \JSON_THROW_ON_ERROR))]);
+            self::assertSame(1, $tester->getStatusCode());
+            self::assertStringContainsString('Not a country bundle', $tester->getDisplay());
+        }
+        self::assertFalse($this->db()->fetchOne("SELECT code FROM country WHERE code = 'XA'"));
+    }
+
+    public function testUnreadableAndEmptyInputSayWhy(): void
+    {
+        self::bootKernel();
+        $missing = $this->command('app:country:import-plan', ['--file' => '/nonexistent/bundle.json']);
+        self::assertSame(1, $missing->getStatusCode());
+        self::assertStringContainsString('cannot read /nonexistent/bundle.json', $missing->getDisplay());
+        $empty = $this->command('app:country:import-plan', ['--file' => $this->tempFile('')]);
+        self::assertStringContainsString('empty input', $empty->getDisplay());
+    }
+
+    public function testAnExtractOwnedByAnotherCountryIsRefusedInOneLine(): void
+    {
+        self::bootKernel();
+        $json = $this->exportedXaThenForgotten();
+        $this->db()->executeStatement("INSERT INTO country (code, name, subtype, status) VALUES ('XD', 'Xdland', 'region', 'live')");
+        $this->db()->executeStatement("INSERT INTO country_extract (slug, country_code) VALUES ('test/xaland', 'XD')");
+
+        $tester = $this->command('app:country:import-plan', ['--file' => $this->tempFile($json)]);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString('extract test/xaland already belongs to XD', $tester->getDisplay());
+        self::assertStringNotContainsString('SQLSTATE', $tester->getDisplay());
+        self::assertFalse($this->db()->fetchOne("SELECT code FROM country WHERE code = 'XA'"));
+    }
+
+    public function testApplyAcceptsAnImportedPlan(): void
+    {
+        self::bootKernel();
+        $json = $this->exportedXaThenForgotten();
+        $this->command('app:country:import-plan', ['--file' => $this->tempFile($json)])->assertCommandIsSuccessful();
+
+        $this->command('app:country:apply', ['country' => 'XA'])->assertCommandIsSuccessful();
+
+        self::assertSame('seeded', $this->db()->fetchOne("SELECT status FROM country WHERE code = 'XA'"));
+        self::assertSame(2, (int) $this->db()->fetchOne("SELECT COUNT(*) FROM region WHERE country_code = 'XA'"));
     }
 }

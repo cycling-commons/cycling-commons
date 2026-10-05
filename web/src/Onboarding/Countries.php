@@ -56,7 +56,7 @@ final class Countries
     {
         $out = [];
         foreach ($this->db->fetchAllAssociative(
-            'SELECT slug, iso_code, name, labels::text AS labels, admin_level, area_km2, ST_AsGeoJSON(geom, 15) AS geojson
+            'SELECT slug, iso_code, name, labels::text AS labels, admin_level, area_km2, ST_AsGeoJSON(geom, 17) AS geojson
                FROM country_plan_region WHERE country_code = :cc ORDER BY admin_level DESC, slug',
             ['cc' => $cc],
         ) as $r) {
