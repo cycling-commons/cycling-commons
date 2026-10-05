@@ -6,24 +6,22 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
-use Symfony\Component\Translation\TranslatorBagInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use App\Catalog\RegionLabels;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
  * `cc_region_label(slug, name)`: a region's display name in the page's
- * language, from `region.<slug>.label` (map-and-search.md §4.5), or the
- * registry name when no label is translated for that slug. A plain string, so
- * it can go into a translation parameter or an attribute without being
- * escaped twice.
+ * language (RegionLabels: region.labels, then English, then the name). A
+ * plain string, so it can go into a translation parameter or an attribute
+ * without being escaped twice.
  *
  * @api
  */
 final class RegionLabelExtension extends AbstractExtension
 {
     public function __construct(
-        private readonly TranslatorInterface $translator,
+        private readonly RegionLabels $labels,
     ) {
     }
 
@@ -33,15 +31,12 @@ final class RegionLabelExtension extends AbstractExtension
         return [new TwigFunction('cc_region_label', $this->label(...))];
     }
 
-    public function label(?string $slug, ?string $name): string
+    public function label(?string $slug, ?string $name = null): string
     {
-        if (null !== $slug && '' !== $slug) {
-            $key = 'region.'.$slug.'.label';
-            if ($this->translator instanceof TranslatorBagInterface && $this->translator->getCatalogue()->has($key)) {
-                return $this->translator->trans($key);
-            }
+        if (null === $slug || '' === $slug) {
+            return (string) $name;
         }
 
-        return (string) $name;
+        return $this->labels->label($slug, $name);
     }
 }

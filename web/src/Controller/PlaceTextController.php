@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Catalog\Entity\Submission;
+use App\Catalog\RegionLabels;
 use App\Catalog\RegionLead;
 use App\Catalog\SubmissionType;
 use App\Contribution\PlaceText;
@@ -25,7 +26,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * "Edit this text": one small form per town card text and per region lead,
@@ -97,7 +97,7 @@ final class PlaceTextController extends AbstractController
     }
 
     #[Route('/regions/{slug}/text', name: 'region_text', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET', 'POST'])]
-    public function region(string $slug, Request $request, PlaceTextProposals $proposals, TranslatorInterface $translator): Response
+    public function region(string $slug, Request $request, PlaceTextProposals $proposals, RegionLabels $regionLabels): Response
     {
         $region = $proposals->region($slug);
         if (null === $region) {
@@ -115,7 +115,7 @@ final class PlaceTextController extends AbstractController
         }
         $context = [
             'target' => PlaceText::REGION,
-            'title' => $translator->trans('region.'.$slug.'.label'),
+            'title' => $regionLabels->label($slug),
             'action' => $this->generateUrl('region_text', ['slug' => $slug]),
             'hidden' => [],
             'back' => $this->generateUrl('region_detail', ['slug' => $slug]),

@@ -24,37 +24,11 @@
   const boundaryCache = new Map();
 
   // IANA timezone → ISO country, anonymous cold-start hint
-  // (docs/specs/map-and-search.md §4.5). Compute-only — nothing is stored.
-  const TZ_COUNTRY = {
-    'Europe/Brussels': 'BE',
-    'Europe/Amsterdam': 'NL',
-    'Europe/Berlin': 'DE', 'Europe/Busingen': 'DE',
-    'Europe/Luxembourg': 'LU',
-    'Europe/Paris': 'FR',
-    'Europe/Zurich': 'CH',
-    'Europe/London': 'GB', 'Europe/Belfast': 'GB',
-    'Europe/Rome': 'IT',
-      // Spain: mainland + Balearics (Europe/Madrid), Canaries, Ceuta/Melilla.
-    'Europe/Madrid': 'ES', 'Atlantic/Canary': 'ES', 'Africa/Ceuta': 'ES',
-    'Asia/Tokyo': 'JP',
-    'Australia/Sydney': 'AU', 'Australia/Melbourne': 'AU',
-    'Australia/Brisbane': 'AU', 'Australia/Perth': 'AU',
-    'Australia/Adelaide': 'AU', 'Australia/Hobart': 'AU',
-    'Australia/Darwin': 'AU', 'Australia/Canberra': 'AU',
-    'Australia/Broken_Hill': 'AU', 'Australia/Lindeman': 'AU',
-    'Australia/Lord_Howe': 'AU', 'Australia/Eucla': 'AU',
-    // Only onboarded US states; America/New_York is a country we have nothing for.
-    'America/Los_Angeles': 'US', 'America/Denver': 'US',
-    'Europe/Ljubljana': 'SI',
-    'Africa/Kigali': 'RW',
-    'Africa/Johannesburg': 'ZA',
-    'America/Bogota': 'CO',
-    // Chile: mainland America/Santiago; Easter Island Pacific/Easter.
-    'America/Santiago': 'CL', 'Pacific/Easter': 'CL',
-    // NZ: Chatham Islands are their own region and zone.
-    'Pacific/Auckland': 'NZ', 'Pacific/Chatham': 'NZ',
-    // Only onboarded CA provinces; America/Montreal is a link some browsers still resolve.
-    'America/Vancouver': 'CA', 'America/Toronto': 'CA', 'America/Montreal': 'CA',
+  // (docs/specs/map-and-search.md §4.5), served by the map page (CountryTimezones).
+  // Compute-only: nothing is stored.
+  const tzCountry = (tz) => {
+    const map = (typeof window !== 'undefined' && window.CC_TZ_COUNTRY) || {};
+    return tz && Object.prototype.hasOwnProperty.call(map, tz) ? map[tz] : null;
   };
   const currentTimezone = () => {
     if (typeof globalThis !== 'undefined' && globalThis.__ccTz) return globalThis.__ccTz; // test hook
@@ -612,7 +586,7 @@
           }
         }
       }
-      return onboarded(TZ_COUNTRY[currentTimezone()]);
+      return onboarded(tzCountry(currentTimezone()));
     },
 
     /** Resolve + apply the myArea scope from its source of truth; no-op if unavailable. */

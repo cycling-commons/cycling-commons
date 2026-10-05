@@ -153,7 +153,7 @@
         <div class="field">
           <div class="base-loc-current" data-base-current>
             {% if base_region_slugs is not empty %}
-              {%- set region_labels = base_region_slugs|map(s => ('region.' ~ s ~ '.label')|trans) -%}
+              {%- set region_labels = base_region_slugs|map(s => cc_region_label(s)) -%}
               {{ 'form.base_current'|trans({'%regions%': region_labels|join(' · ')}) }}
             {% else %}
               {# Empty derived set (base outside every seeded region — e.g. a Dutch

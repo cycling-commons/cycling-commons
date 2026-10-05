@@ -12,7 +12,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use DoctrineMigrations\Version20261005120100;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * The seed turns today's code lists into rows: 19 live countries, today's
@@ -43,8 +42,6 @@ final class CountrySeedMigrationTest extends KernelTestCase
         'north-america/canada/british-columbia', 'north-america/canada/quebec', 'north-america/us/california',
         'north-america/us/colorado', 'south-america/chile', 'south-america/colombia',
     ];
-
-    private const array LOCALES = ['en', 'fr', 'nl', 'de', 'es'];
 
     #[\Override]
     public static function setUpBeforeClass(): void
@@ -98,24 +95,6 @@ final class CountrySeedMigrationTest extends KernelTestCase
         ksort($expected);
         ksort($map);
         self::assertSame($expected, $map);
-    }
-
-    public function testEveryRegionLabelEqualsTheCatalogue(): void
-    {
-        foreach (self::LOCALES as $locale) {
-            /** @var array<string, mixed> $section */
-            $section = Yaml::parseFile(\dirname(__DIR__, 2).'/translations/messages.'.$locale.'.yaml')['region'];
-            foreach (Version20261005120100::REGION_LABELS as $slug => $labels) {
-                self::assertIsArray($section[$slug] ?? null, $slug.' missing from messages.'.$locale.'.yaml');
-                self::assertSame($section[$slug]['label'], $labels[$locale], $slug.' '.$locale);
-            }
-            foreach (Version20261005120100::COUNTRIES as $code => $country) {
-                self::assertSame($section['all_'.strtolower($code)]['label'], $country['labels'][$locale], $code.' '.$locale);
-            }
-        }
-        self::assertArrayHasKey('limburg-nl', Version20261005120100::REGION_LABELS);
-        self::assertArrayNotHasKey('everywhere', Version20261005120100::REGION_LABELS);
-        self::assertArrayNotHasKey('all_be', Version20261005120100::REGION_LABELS);
     }
 
     public function testLabelsLandOnTheRegionRowsAndTheSeedReplays(): void

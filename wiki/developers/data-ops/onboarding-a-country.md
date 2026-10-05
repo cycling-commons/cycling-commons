@@ -86,7 +86,7 @@ The scaffolder emits stubs; you make the permanent decisions:
   not from Overture. Add the label and the country rung to each of `en`/`fr`/`nl`/`de`/`es`, the
   parity gate fails the build if one catalogue is missing a key, so a half-done country cannot ship:
 
-<!-- CODE-FROM web/translations/messages.en.yaml -->
+<!-- CODE-ILLUSTRATIVE the catalogue keys region.labels replaced; this page is rewritten later in the same change -->
 ```yaml
   luxembourg:
     label: 'Luxembourg'
@@ -98,7 +98,7 @@ The scaffolder emits stubs; you make the permanent decisions:
   cold-start "guess the visitor's home country" resolves to nothing for that country's riders (and no
   test catches the gap):
 
-<!-- CODE-FROM web/assets/map/scope.js -->
+<!-- CODE-ILLUSTRATIVE the timezone table CountryTimezones replaced; this page is rewritten later in the same change -->
 ```javascript
     'Europe/Luxembourg': 'LU',
 ```

@@ -29,12 +29,9 @@ final class MapScopeRegistryTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $html = (string) $client->getResponse()->getContent();
 
-        // CC_REGIONS is injected as a JSON array literal; the bayern row must carry a label.
-        self::assertMatchesRegularExpression(
-            '/"slug":"bayern"[^}]*"label":"[^"]+"/',
-            preg_replace('/\s+/', '', $html) ?? '',
-            'CC_REGIONS bayern row is missing a label',
-        );
-        self::assertStringContainsString('"countryLabel":', $html);
+        $flat = preg_replace('/\s+/', '', $html) ?? '';
+        self::assertMatchesRegularExpression('/"slug":"bayern"[^}]*"label":"Bavaria"/', $flat, 'a region with no labels reads its name');
+        self::assertMatchesRegularExpression('/"slug":"bayern"[^}]*"countryLabel":"AllGermany"/', $flat, 'the country phrase comes from country.labels');
+        self::assertMatchesRegularExpression('#window\.CC_TZ_COUNTRY=\{[^;]*"Europe\\\\?/Berlin":"DE"#', $flat, 'the timezone map is served');
     }
 }

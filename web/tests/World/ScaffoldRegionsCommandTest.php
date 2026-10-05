@@ -17,7 +17,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 /**
  * pipeline/divisions/README.md: the scaffolder derives a reviewable
- * COUNTRY_CONFIG block + 4-locale label stubs from the World bundle, warns on
+ * COUNTRY_CONFIG block from the World bundle, warns on
  * slug/name collisions, and EMITS, NEVER APPLIES.
  *
  * Isolation: DAMA rolled-back transactions; emission goes to a temp dir.
@@ -97,6 +97,7 @@ final class ScaffoldRegionsCommandTest extends KernelTestCase
         self::assertStringContainsString('"NL-NH": "noord-holland"', $config, 'slug proposal is slugified native name');
         self::assertStringContainsString('"NL-NH": "Noord-Holland"', $config, 'names block carries the World name verbatim');
         self::assertStringContainsString('# TODO bbox', $config, 'without --probe-areas the bbox is an explicit TODO');
+        self::assertFileDoesNotExist($this->out.'/nl/translations.patch.yaml');
     }
 
     public function testOnlyRestrictsToAStateSubsetAndRejectsUnknownCodes(): void
@@ -122,30 +123,6 @@ final class ScaffoldRegionsCommandTest extends KernelTestCase
         $tester = $this->runScaffold(['country' => 'ZZ']);
         self::assertSame(Command::FAILURE, $tester->getStatusCode());
         self::assertStringContainsString('app:world:import', $tester->getDisplay());
-    }
-
-    public function testEmitsALocaleStubPerEnabledLocaleWithExonymMarkers(): void
-    {
-        $this->seedWorld();
-        $this->runScaffold(['country' => 'NL'])->assertCommandIsSuccessful();
-
-        // Read the locales from the kernel rather than listing them here, so
-        // adding a locale to framework.enabled_locales cannot leave this test
-        // asserting the old count.
-        /** @var list<string> $locales */
-        $locales = self::getContainer()->getParameter('kernel.enabled_locales');
-        self::assertContains('es', $locales, 'guard: the parameter is the real locale list');
-
-        $yaml = (string) file_get_contents($this->out.'/nl/translations.patch.yaml');
-        foreach ($locales as $locale) {
-            self::assertStringContainsString("\n{$locale}:\n", $yaml);
-        }
-        self::assertSame(\count($locales), substr_count($yaml, "  all_nl:\n"), 'every locale carries the all_<cc> country rung');
-        self::assertStringContainsString("label: 'Drenthe' # TODO exonym?", $yaml);
-        self::assertStringContainsString("label: 'All Netherlands' # TODO exonym?", $yaml);
-        // sokil db-only ships English msgids only -> NO locale is confidently
-        // localized; every label line carries the marker (design §2 refinement).
-        self::assertSame(0, substr_count($yaml, "label: 'Drenthe'\n"), 'no unmarked label lines');
     }
 
     public function testWarnsOnCrossCountryNameTwinAndExistingRegionSlug(): void

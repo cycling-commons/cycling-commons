@@ -8,6 +8,7 @@ namespace App\Controller;
 
 use App\Catalog\CuratedReadiness;
 use App\Catalog\OperationalRegions;
+use App\Catalog\RegionLabels;
 use App\Catalog\RegionLead;
 use App\Entity\User;
 use App\Moderation\ModerationScopeProvider;
@@ -51,7 +52,7 @@ final class ModerateRegionsController extends AbstractController
     }
 
     #[Route('/moderate/regions', name: 'moderate_regions')]
-    public function index(Request $request, TranslatorInterface $translator): Response
+    public function index(Request $request, TranslatorInterface $translator, RegionLabels $regionLabels): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -75,7 +76,7 @@ final class ModerateRegionsController extends AbstractController
         $threshold = $this->readiness->threshold();
         $minPerBlock = $this->readiness->minPerBlock();
 
-        $regions = array_map(static function (array $r) use ($reports, $minPerBlock, $translator, $confirmedCounts, $confirmedThreshold): array {
+        $regions = array_map(static function (array $r) use ($reports, $minPerBlock, $translator, $regionLabels, $confirmedCounts, $confirmedThreshold): array {
             $rep = $reports[$r['id']];
             $blocks = [];
             foreach (CuratedReadiness::BLOCKS as $letter => $labelKey) {
@@ -95,7 +96,7 @@ final class ModerateRegionsController extends AbstractController
                 'continent' => $r['continent'],
                 'countryName' => $r['countryName'],
                 'flag' => $r['flag'],
-                'label' => $translator->trans('region.'.$r['slug'].'.label'),
+                'label' => $regionLabels->label($r['slug']),
                 'defaultMode' => $r['defaultMode'],
                 'confirmed' => $confirmedCounts[$r['id']] ?? 0,
                 'confirmedThreshold' => $confirmedThreshold,
@@ -190,7 +191,7 @@ final class ModerateRegionsController extends AbstractController
     }
 
     #[Route('/moderate/regions/{slug}/about', name: 'moderate_regions_about', requirements: ['slug' => '[a-z0-9-]+'], methods: ['GET'])]
-    public function about(string $slug, TranslatorInterface $translator): Response
+    public function about(string $slug, RegionLabels $regionLabels): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -224,7 +225,7 @@ final class ModerateRegionsController extends AbstractController
             'region' => [
                 'id' => $region['id'],
                 'slug' => $slug,
-                'label' => $translator->trans('region.'.$slug.'.label'),
+                'label' => $regionLabels->label($slug),
                 'countryCode' => $region['country_code'],
                 'countryName' => $region['country_name'],
                 'flag' => null !== $region['world_iso2']

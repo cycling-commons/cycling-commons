@@ -242,7 +242,7 @@
     {% if curator_applications is empty %}
       <h2 class="sec-band">{{ 'account.curating_invite_title'|trans }}</h2>
       <p class="curating">
-        {% set region = curating.slug ? ('region.' ~ curating.slug ~ '.label')|trans : '' %}
+        {% set region = curating.slug ? cc_region_label(curating.slug) : '' %}
         {% if curating.state == 'region_local' %}
           {{ 'account.curating_region_local'|trans({'%region%': region}) }}
         {% elseif curating.state == 'region_national' %}
@@ -271,7 +271,7 @@
             <div class="q-headwrap">
               <div class="q-head">
                 <span class="q-tag q-tag--kind">{{ app.country_code }}</span>
-                <h3 class="q-title">{% if app.region_slug %}{{ ('region.' ~ app.region_slug ~ '.label')|trans }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h3>
+                <h3 class="q-title">{% if app.region_slug %}{{ cc_region_label(app.region_slug) }}{% else %}{{ 'account.curating_whole_country'|trans }}{% endif %}</h3>
               </div>
             </div>
             <div class="q-acts">
