@@ -28,6 +28,8 @@ security:
             logout: { path: logout, target: home, enable_csrf: true }
             remember_me:
                 secret: '%kernel.secret%'
+                # REMEMBERME in production; the dev stack's own name (services.yaml).
+                name: '%cc.remember_me_cookie%'
                 lifetime: 604800
                 secure: auto
                 samesite: lax

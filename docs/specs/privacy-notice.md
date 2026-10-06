@@ -111,8 +111,15 @@ Two rows, both read off a live response rather than off config:
 
 | Cookie | Set by | Lifetime |
 |---|---|---|
-| `PHPSESSID` | PHP's default, because `framework.session.name` is unset | browser session |
-| `REMEMBERME` | Symfony's default remember-me name | `security.yaml` `lifetime: 604800`, stated as 7 days |
+| `PHPSESSID` | `framework.session.name` is `%cc.session_cookie%`, PHP's default `PHPSESSID` in production (`services.yaml`) | browser session |
+| `REMEMBERME` | `remember_me.name` is `%cc.remember_me_cookie%`, Symfony's default `REMEMBERME` in production | `security.yaml` `lifetime: 604800`, stated as 7 days |
+
+The dev stack names them `CC_DEV_SESSION` and `CC_DEV_REMEMBERME` (`when@dev` in
+`services.yaml`): a browser keeps cookies per host, not per port, so on
+`localhost` another local app's `PHPSESSID` or `REMEMBERME` replaced ours and
+signed the rider out. The dev names keep the words the page cache bypass
+looks for (page-caching.md). Production is unchanged, so the notice's cookie
+table stays true. `DevCookieNamesTest` pins both.
 
 Two things the page says that are easy to get wrong:
 

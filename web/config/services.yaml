@@ -1,3 +1,18 @@
+# Login cookie names. Production keeps PHP's and Symfony's defaults, the
+# names the privacy notice lists (docs/specs/privacy-notice.md). The dev stack
+# names its own: a browser keeps cookies per host, not per port, so on
+# localhost another local app's PHPSESSID or REMEMBERME replaced ours and
+# signed the rider out (owner, 2026-10-06). The dev names keep the words
+# SESSION and REMEMBERME, which the page cache bypass looks for.
+parameters:
+    cc.session_cookie: PHPSESSID
+    cc.remember_me_cookie: REMEMBERME
+
+when@dev:
+    parameters:
+        cc.session_cookie: CC_DEV_SESSION
+        cc.remember_me_cookie: CC_DEV_REMEMBERME
+
 services:
     _defaults:
         autowire: true

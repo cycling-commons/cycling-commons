@@ -18,6 +18,8 @@ framework:
         # `session.storage.factory.mock_file` (test/framework.yaml), so the
         # suite still needs no Redis.
         handler_id: '%env(REDIS_URL)%'
+        # PHPSESSID in production; the dev stack's own name (services.yaml).
+        name: '%cc.session_cookie%'
         cookie_secure: auto
         cookie_samesite: lax
 
