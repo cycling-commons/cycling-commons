@@ -1,13 +1,13 @@
-docs/specs/privacy-notice.md
-  s_985749378da6fe::t_ba68d0b15cd940 114-122
 web/config/packages/framework.yaml
-  s_985749378da6fe::t_c307fc5e86c4a1 21-22
-web/config/packages/security.yaml
-  s_985749378da6fe::t_79e0c267ba1aaa 31-32
-web/config/services.yaml
-  s_985749378da6fe::t_a0a80d3abb01d6 1-15
+  s_985749378da6fe::t_a3d8a797917563 21-22
 web/tests/Security/DevCookieNamesTest.php
-  s_985749378da6fe::t_6076d1c7feae1a 1-48
+  s_985749378da6fe::t_4a09f466e7f418 1-48
+docs/specs/privacy-notice.md
+  s_985749378da6fe::t_fdc9cc022f77e1 114-122
+web/config/packages/security.yaml
+  s_985749378da6fe::t_a3d8a797917563 31-32
+web/config/services.yaml
+  s_985749378da6fe::t_a3d8a797917563 1-15
 ---
 {
   "schema_version": "authorship/3.0.0",
