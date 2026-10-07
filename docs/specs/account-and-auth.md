@@ -868,9 +868,9 @@ consequences, including that a dry run changes nothing).
 
 **An account not confirmed within 7 days is deleted** (owner, 2026-09-29).
 `App\Account\UnverifiedSweep` finds them, `app:accounts:purge-unverified`
-runs it, daily on the worker host (timer `purge-unverified`, NimbusLoomTeneo
-`extensions/valhalla/ansible/vars/valhalla.yml`). Dry by default, `--force`
-to act, like the dormancy sweep.
+runs it, daily on the worker host (timer `purge-unverified`, defined in the
+private infrastructure repository). Dry by default, `--force` to act, like
+the dormancy sweep.
 
 An unconfirmed account is an address somebody typed, not yet a person who
 joined. Bots sign up strangers, and before this every such row kept a
