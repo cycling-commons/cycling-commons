@@ -1190,6 +1190,8 @@ window.CC_VENDOR = {{ {
   window.CC_DATE = {{ {
     format: cc_user_date_format(),
     time: cc_user_time_format(),
+    timeZone: app.user.timeZone ?? null,
+    report: app.user and app.user.timeZone is null ? {token: csrf_token('time-zone'), url: path('account_time_zone'), detected: app.user.detectedTimeZone ?? ''} : null,
     locale: app.request.locale|default('en')
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
 </script>

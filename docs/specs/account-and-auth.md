@@ -1412,6 +1412,26 @@ the language supplies its own connector; otherwise it formats each half and
 joins them with a space, because ICU cannot mix an explicit pattern with a
 style and either preference may be explicit while the other is not.
 
+**Time zone** (2026-10-06): `users.time_zone` is the zone the rider chose
+(null is **Automatic**), `users.detected_time_zone` the zone their browser last
+reported. A moment in time (`cc_datetime`, and `cc-dates.js` in the browser) is
+written in the chosen zone, else the detected one, else UTC. Example: a rider in
+Amsterdam on Automatic reads 14:30 UTC as 16:30 in summer. A zone that does not
+exist is never stored (`User::setTimeZone()` stores it as automatic). The
+settings field names the zone Automatic currently follows once the browser has
+reported one ("Automatic (from your browser: Europe/Amsterdam)"). While the
+choice is automatic, a signed-in page hands `cc-dates.js` a report address and
+token (`data-cc-tz-*` on `<body>`, `CC_DATE.report` on the map), and the script
+posts the browser's zone (`Intl…resolvedOptions().timeZone`) to
+`POST /account/time-zone` (`TimeZoneController`, stateless `time-zone` token,
+same-origin) only when it differs from the stored one, so a rider who travels
+reads the zone they are in. No cookie carries it. A visitor who is not signed in
+reads UTC: their pages may sit in a shared cache, which must never hold one
+reader's zone. `cc_date` and `cc_month` stay zone-free: they print calendar
+dates (a vote's closing day), which must not move a day for a reader west of
+UTC. Both zones are account data: the privacy notice names them and the data
+export carries them.
+
 **Every human-readable date goes through one filter.** `App\Twig\
 DateDisplayExtension` provides `cc_date`, `cc_datetime` and `cc_month`, and no
 template calls `|date()` for display any more. A preference is only worth

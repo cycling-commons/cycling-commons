@@ -70,20 +70,23 @@ final class DateDisplayExtension extends AbstractExtension
 
         $date = $this->preference();
         $time = $this->timePreference();
+        // A moment in time reads in the reader's zone; a visitor reads UTC.
+        $user = $this->security->getUser();
+        $zone = $user instanceof User ? $user->effectiveTimeZone() : 'UTC';
         $datePattern = $date->pattern();
         $timePattern = $time->pattern();
 
         if (null === $datePattern && null === $timePattern) {
-            return $this->formatter($date->localeDateStyle(), \IntlDateFormatter::SHORT, null)->format($when) ?: '';
+            return $this->formatter($date->localeDateStyle(), \IntlDateFormatter::SHORT, null, $zone)->format($when) ?: '';
         }
 
         $datePart = null !== $datePattern
-            ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $datePattern)->format($when)
-            : $this->formatter($date->localeDateStyle(), \IntlDateFormatter::NONE, null)->format($when);
+            ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $datePattern, $zone)->format($when)
+            : $this->formatter($date->localeDateStyle(), \IntlDateFormatter::NONE, null, $zone)->format($when);
 
         $timePart = null !== $timePattern
-            ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $timePattern)->format($when)
-            : $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::SHORT, null)->format($when);
+            ? $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $timePattern, $zone)->format($when)
+            : $this->formatter(\IntlDateFormatter::NONE, \IntlDateFormatter::SHORT, null, $zone)->format($when);
 
         return trim(($datePart ?: '').' '.($timePart ?: ''));
     }
@@ -112,9 +115,9 @@ final class DateDisplayExtension extends AbstractExtension
         return $user instanceof User ? $user->getTimeFormat() : TimeFormat::Auto;
     }
 
-    private function formatter(int $dateStyle, int $timeStyle, ?string $pattern): \IntlDateFormatter
+    private function formatter(int $dateStyle, int $timeStyle, ?string $pattern, ?string $zone = null): \IntlDateFormatter
     {
-        $formatter = new \IntlDateFormatter($this->locale(), $dateStyle, $timeStyle);
+        $formatter = new \IntlDateFormatter($this->locale(), $dateStyle, $timeStyle, $zone);
         if (null !== $pattern) {
             $formatter->setPattern($pattern);
         }

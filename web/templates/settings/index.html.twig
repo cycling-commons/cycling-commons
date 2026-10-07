@@ -229,6 +229,12 @@
         {{ form_help(profileForm.timeFormat) }}
         {{ form_errors(profileForm.timeFormat) }}
       </div>
+      <div class="field">
+        {{ form_label(profileForm.timeZone) }}
+        {{ form_widget(profileForm.timeZone) }}
+        {{ form_help(profileForm.timeZone) }}
+        {{ form_errors(profileForm.timeZone) }}
+      </div>
       {# Distance and climbing are asked separately because miles-with-metres is
          a real combination (most of Britain rides it) — see DistanceUnit. Both
          are display-only: nothing the Commons stores leaves metric. #}

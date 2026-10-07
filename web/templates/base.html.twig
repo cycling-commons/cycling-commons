@@ -11,8 +11,13 @@
 {# The only per-visitor values these pages hold. On <body> rather than in a
    script so boot.js stays one shared file; a cached page can only ever have
    been rendered for an anonymous visitor, so it carries the defaults. #}
+{# Time zone (account-and-auth.md §9): the chosen one, or empty for the
+   browser's own; while automatic, a signed-in page also lets cc-dates.js report
+   the browser's zone when it differs from the stored one. #}
 <body data-cc-date-format="{{ cc_user_date_format() }}"
       data-cc-time-format="{{ cc_user_time_format() }}"
+      data-cc-time-zone="{{ app.user.timeZone ?? '' }}"
+      {%- if app.user and app.user.timeZone is null %} data-cc-tz-token="{{ csrf_token('time-zone') }}" data-cc-tz-detected="{{ app.user.detectedTimeZone ?? '' }}" data-cc-tz-url="{{ path('account_time_zone') }}"{% endif %}
       data-cc-distance-unit="{{ cc_user_distance_unit() }}"
       data-cc-elevation-unit="{{ cc_user_elevation_unit() }}">
 {% block chrome %}{% include 'partials/_nav.html.twig' %}{% endblock %}

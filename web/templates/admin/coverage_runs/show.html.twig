@@ -8,7 +8,7 @@
 {% extends '@EasyAdmin/page/content.html.twig' %}
 {% import 'admin/coverage_runs/_format.html.twig' as fmt %}
 
-{% block content_title %}{{ 'admin.coverage_runs.one_title'|trans({'%started%': run.started_at|date('Y-m-d H:i')}) }} (#{{ run.id }}){% endblock %}
+{% block content_title %}{{ 'admin.coverage_runs.one_title'|trans({'%started%': run.started_at|cc_datetime}) }} (#{{ run.id }}){% endblock %}
 
 {% block main %}
   {% set statuses = ['running', 'ok', 'partial', 'failed', 'abandoned'] %}

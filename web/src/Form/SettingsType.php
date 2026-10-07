@@ -49,6 +49,8 @@ final class SettingsType extends AbstractType
     #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $rider = $options['data'] ?? null;
+        $detectedZone = $rider instanceof User ? $rider->getDetectedTimeZone() : null;
         $builder
             ->add('displayName', TextType::class, [
                 'label' => 'form.label_display_name',
@@ -128,6 +130,21 @@ final class SettingsType extends AbstractType
                 'help' => 'form.help_time_format',
                 'required' => true,
                 'choice_label' => static fn (TimeFormat $f): string => $f->labelKey(),
+            ])
+            // Automatic (null) writes times in the zone the browser reports.
+            ->add('timeZone', ChoiceType::class, [
+                'label' => 'form.label_time_zone',
+                'help' => 'form.help_time_zone',
+                'required' => false,
+                'placeholder' => false,
+                // Automatic names the zone it follows once the browser reported one.
+                'choices' => [(null !== $detectedZone ? 'form.time_zone_auto_is' : 'form.time_zone_auto') => null]
+                    + array_combine(\DateTimeZone::listIdentifiers(), \DateTimeZone::listIdentifiers()),
+                'choice_translation_parameters' => static fn (?string $zone): array => null === $zone && null !== $detectedZone
+                    ? ['%zone%' => str_replace('_', ' ', $detectedZone)] : [],
+                'choice_translation_domain' => 'messages',
+                'choice_value' => static fn (?string $zone): string => $zone ?? '',
+                'choice_label' => static fn (?string $zone, string $key): string => null === $zone ? $key : str_replace('_', ' ', $zone),
             ])
             ->add('distanceUnit', EnumType::class, [
                 'class' => DistanceUnit::class,

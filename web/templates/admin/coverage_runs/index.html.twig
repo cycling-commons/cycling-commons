@@ -37,7 +37,7 @@
               <td>{{ run.id }}</td>
               <td>
                 <a href="{{ path('admin_coverage_run', {id: run.id}) }}">
-                  {{ run.started_at|date('Y-m-d H:i') }}
+                  {{ run.started_at|cc_datetime }}
                 </a>
               </td>
               <td data-family="{{ run.family }}">

@@ -263,6 +263,24 @@ final class DataExportTest extends WebTestCase
         $zip->close();
     }
 
+    /** The zone a rider chose and the one their browser reported are account data too. */
+    public function testTheTimeZonesAreExported(): void
+    {
+        $client = $this->client();
+        $user = $this->login($client, 'zones');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->find(User::class, $user->getId())?->setTimeZone('Europe/Lisbon')->setDetectedTimeZone('Europe/Amsterdam');
+        $em->flush();
+        $token = $this->exportToken($client);
+
+        [$zip] = $this->download($client, $token);
+
+        $account = $this->entry($zip, 'account.json');
+        self::assertSame('Europe/Lisbon', $account['time_zone']);
+        self::assertArrayHasKey('privacy_version_seen', $account, 'the notice version last seen is account data too');
+        self::assertSame('Europe/Amsterdam', $account['detected_time_zone']);
+    }
+
     public function testCredentialsAreNeverExported(): void
     {
         $client = $this->client();

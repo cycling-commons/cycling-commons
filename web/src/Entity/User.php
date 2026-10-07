@@ -152,6 +152,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(name: 'time_format', type: 'string', length: 10, options: ['default' => 'auto'])]
     private string $timeFormat = TimeFormat::Auto->value;
 
+    /** The zone the rider chose for times; null is "automatic" (account-and-auth.md §9). */
+    #[ORM\Column(name: 'time_zone', type: 'string', length: 64, nullable: true)]
+    private ?string $timeZone = null;
+
+    /** The zone the rider's browser last reported, used while timeZone is automatic. */
+    #[ORM\Column(name: 'detected_time_zone', type: 'string', length: 64, nullable: true)]
+    private ?string $detectedTimeZone = null;
+
     #[ORM\Column(name: 'distance_unit', type: 'string', length: 8, options: ['default' => 'km'])]
     private string $distanceUnit = DistanceUnit::Km->value;
 
@@ -666,6 +674,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         $this->timeFormat = $format->value;
 
         return $this;
+    }
+
+    public function getTimeZone(): ?string
+    {
+        return $this->timeZone;
+    }
+
+    /** A zone that does not exist is stored as automatic. */
+    public function setTimeZone(?string $zone): static
+    {
+        $this->timeZone = self::knownZone($zone);
+
+        return $this;
+    }
+
+    public function getDetectedTimeZone(): ?string
+    {
+        return $this->detectedTimeZone;
+    }
+
+    public function setDetectedTimeZone(?string $zone): static
+    {
+        $this->detectedTimeZone = self::knownZone($zone);
+
+        return $this;
+    }
+
+    /** The zone times are written in: the rider's choice, else what the browser reported, else UTC. */
+    public function effectiveTimeZone(): string
+    {
+        return $this->timeZone ?? $this->detectedTimeZone ?? 'UTC';
+    }
+
+    private static function knownZone(?string $zone): ?string
+    {
+        return null !== $zone && \in_array($zone, \DateTimeZone::listIdentifiers(), true) ? $zone : null;
     }
 
     public function getDistanceUnit(): DistanceUnit

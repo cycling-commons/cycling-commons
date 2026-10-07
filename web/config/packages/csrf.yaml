@@ -16,6 +16,7 @@ framework:
             - route-snap
             - scout-tags
             - scout-traffic
+            - time-zone
             - my-area
             - country-interest
             - curator-application

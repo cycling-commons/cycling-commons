@@ -149,4 +149,49 @@ final class DateDisplayExtensionTest extends TestCase
 
         self::assertSame(DateFormat::Auto, $user->getDateFormat());
     }
+
+    private function forRider(User $rider): DateDisplayExtension
+    {
+        $security = $this->createStub(Security::class);
+        $security->method('getUser')->willReturn($rider->setDateFormat(DateFormat::Ymd)->setTimeFormat(TimeFormat::H24));
+        $request = new Request();
+        $request->setLocale('en');
+        $stack = new RequestStack();
+        $stack->push($request);
+
+        return new DateDisplayExtension($security, $stack);
+    }
+
+    /** 14:30 UTC on 1 August is 16:30 in Amsterdam (summer time). */
+    public function testADateTimeIsWrittenInTheRidersChosenZone(): void
+    {
+        $out = $this->forRider((new User())->setTimeZone('Europe/Amsterdam'))->dateTime(self::WHEN);
+        self::assertSame('2026-08-01 16:30', $out);
+    }
+
+    public function testWithoutAChoiceTheZoneTheBrowserReportedIsUsed(): void
+    {
+        $out = $this->forRider((new User())->setDetectedTimeZone('America/New_York'))->dateTime(self::WHEN);
+        self::assertSame('2026-08-01 10:30', $out);
+    }
+
+    public function testAChosenZoneWinsOverTheDetectedOne(): void
+    {
+        $rider = (new User())->setTimeZone('Asia/Tokyo')->setDetectedTimeZone('America/New_York');
+        self::assertSame('2026-08-01 23:30', $this->forRider($rider)->dateTime(self::WHEN));
+    }
+
+    public function testAZoneThatDoesNotExistIsNeverStored(): void
+    {
+        $rider = (new User())->setTimeZone('Mars/Olympus')->setDetectedTimeZone('Nowhere');
+        self::assertNull($rider->getTimeZone());
+        self::assertNull($rider->getDetectedTimeZone());
+        self::assertSame('2026-08-01 14:30', $this->forRider($rider)->dateTime(self::WHEN), 'UTC, as before');
+    }
+
+    /** A page for a visitor may sit in a shared cache: it never carries one reader's zone. */
+    public function testAVisitorWhoIsNotSignedInReadsUtc(): void
+    {
+        self::assertStringContainsString('2:30', $this->extension(null)->dateTime(self::WHEN));
+    }
 }
