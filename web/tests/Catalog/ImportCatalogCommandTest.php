@@ -247,7 +247,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
     public function testAdjacentRegionsWithSubPermilleSliverImport(): void
     {
         // The other half of the tessellation guard: it TOLERATES the sub-permille
-        // slivers real adjacent admin boundaries carry (REGION_OVERLAP_TOLERANCE
+        // slivers real adjacent admin boundaries carry (RegionUpserter::OVERLAP_TOLERANCE
         // = 0.001). Two same-country regions sharing an edge whose interiors
         // overlap by << 0.1% of the smaller area must IMPORT — only a MEANINGFUL
         // overlap trips (testOverlappingRegionsInSameCountryFail). This pins the
@@ -283,7 +283,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         // digitisation slivers the tolerance is designed to absorb. Consumes the
         // artifacts from `make divisions-data` (generated, gitignored); skipped
         // when they are absent (e.g. CI). DAMA rolls the import back.
-        $out = \dirname(__DIR__, 3).'/tools/divisions/out';
+        $out = \dirname(__DIR__, 3).'/pipeline/divisions/out';
         $files = ['region-wallonia.geojson', 'region-flanders.geojson', 'region-brussels.geojson'];
         foreach ($files as $f) {
             if (!is_file($out.'/'.$f)) {
@@ -642,5 +642,27 @@ final class ImportCatalogCommandTest extends KernelTestCase
         $this->runImport($dir)->assertCommandIsSuccessful();
         self::assertNotNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'l2-parent']));
         self::assertNotNull($this->em->getRepository(Region::class)->findOneBy(['slug' => 'l4-child']));
+    }
+
+    public function testItemCountryComesFromTheRegionItLiesIn(): void
+    {
+        $src = __DIR__.'/../fixtures/catalog';
+        $dir = sys_get_temp_dir().'/catalog-import-de-'.getmypid();
+        @mkdir($dir, 0777, true);
+        /** @var array{properties: array<string, mixed>} $region */
+        $region = json_decode((string) file_get_contents($src.'/region-square.geojson'), true, 512, \JSON_THROW_ON_ERROR);
+        $region['properties']['country_code'] = 'DE';
+        $region['properties']['iso_code'] = 'DE-TST';
+        file_put_contents($dir.'/region-square.geojson', json_encode($region, \JSON_THROW_ON_ERROR));
+        copy($src.'/services.json', $dir.'/services.json');
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+
+        $inside = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1001']);
+        self::assertNotNull($inside);
+        self::assertSame('DE', $inside->getCountryCode(), 'not the hard-coded BE');
+        $outside = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/1003']);
+        self::assertNotNull($outside);
+        self::assertSame('', $outside->getCountryCode(), 'outside every region: no country');
     }
 }

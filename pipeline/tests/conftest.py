@@ -71,3 +71,33 @@ def db():
     conn.execute("DROP SCHEMA IF EXISTS coverage_pytest CASCADE")
     conn.commit()
     conn.close()
+
+
+@pytest.fixture()
+def catalog(db):
+    """The onboarding tables (web/migrations/Version20261005120000.php) in the test schema."""
+    db.execute(
+        "ALTER TABLE region ADD COLUMN slug varchar(80), ADD COLUMN name varchar(160), "
+        "ADD COLUMN iso_code varchar(10), ADD COLUMN source varchar(32), "
+        "ADD COLUMN labels jsonb NOT NULL DEFAULT '{}'"
+    )
+    db.execute(
+        "CREATE TABLE country (code char(2) PRIMARY KEY, name varchar(100) NOT NULL, "
+        "subtype varchar(20) NOT NULL, bbox jsonb, labels jsonb NOT NULL DEFAULT '{}', "
+        "timezones text[] NOT NULL DEFAULT '{}', "
+        "status varchar(10) NOT NULL CHECK (status IN ('planned', 'seeded', 'live')), "
+        "overture_release varchar(40), planned_at timestamptz, seeded_at timestamptz, live_at timestamptz)"
+    )
+    db.execute(
+        "CREATE TABLE country_extract (slug varchar(100) PRIMARY KEY, "
+        "country_code char(2) NOT NULL REFERENCES country (code) ON DELETE CASCADE)"
+    )
+    db.execute(
+        "CREATE TABLE country_plan_region (country_code char(2) NOT NULL REFERENCES country (code) ON DELETE CASCADE, "
+        "slug varchar(80) NOT NULL, iso_code varchar(10), name varchar(160) NOT NULL, "
+        "labels jsonb NOT NULL DEFAULT '{}', fallback_locales text[] NOT NULL DEFAULT '{}', "
+        "admin_level smallint NOT NULL, area_km2 double precision NOT NULL, "
+        "geom geometry(Geometry, 4326) NOT NULL, PRIMARY KEY (country_code, slug))"
+    )
+    db.commit()
+    return db

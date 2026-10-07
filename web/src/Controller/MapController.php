@@ -15,6 +15,7 @@ use App\Catalog\CatalogStamps;
 use App\Catalog\ChangeHistoryView;
 use App\Catalog\ClosureExpiryService;
 use App\Catalog\ConfirmationFreshness;
+use App\Catalog\CountryTimezones;
 use App\Catalog\Entity\Item;
 use App\Catalog\Import\OsmLinker;
 use App\Catalog\ItemState;
@@ -23,6 +24,7 @@ use App\Catalog\KindIcons;
 use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
 use App\Catalog\RegionBoundaryProvider;
+use App\Catalog\RegionLabels;
 use App\Catalog\RegionRegistryProvider;
 use App\Catalog\RideCheckService;
 use App\Catalog\RidingStyle;
@@ -65,7 +67,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 final class MapController extends AbstractController
 {
-    public function __construct(private readonly DeskSeen $deskSeen)
+    public function __construct(private readonly DeskSeen $deskSeen, private readonly RegionLabels $regionLabels, private readonly CountryTimezones $timezones)
     {
     }
 
@@ -104,10 +106,11 @@ final class MapController extends AbstractController
         if ($withRoadPieces && !$scoutReview) {
             $roadPieces->prefetch();
         }
+        $regionLabels = $this->regionLabels;
         $regionRows = array_map(
             static fn (array $r): array => $r + [
-                'label' => $translator->trans('region.'.$r['slug'].'.label'),
-                'countryLabel' => $translator->trans('region.all_'.strtolower($r['countryCode']).'.label'),
+                'label' => $regionLabels->label($r['slug']),
+                'countryLabel' => $regionLabels->countryLabel($r['countryCode']),
             ],
             $regions->all(),
         );
@@ -161,6 +164,8 @@ final class MapController extends AbstractController
                 ? ['roadpieces' => $roadPieces->countryTiles() ?: new \stdClass()]
                 : []),
             'coverage_countries' => $coverage->countryCodes(),
+            // Anonymous cold-start hint: IANA zone => onboarded country (country.timezones).
+            'tz_country' => $this->timezones->map() ?: new \stdClass(),
             // data-provider-hierarchy.md §6.7.7 rung 8: a tile point whose
             // check_date is on or after this day has a witness inside the
             // window and drops its "?". One clock for tiles and pins.

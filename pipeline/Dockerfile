@@ -58,6 +58,8 @@ RUN useradd -m -U -u 1000 appuser \
 COPY --chown=appuser:appuser . .
 
 USER appuser
+# Overture reads need httpfs + spatial; installed here so no host fetches code at run time.
+RUN python -c "import duckdb; c = duckdb.connect(); c.install_extension('httpfs'); c.install_extension('spatial')"
 
 # This is a BATCH image. Its default must not be a resident service — prod runs
 # it to completion (`python -m coverage.run …`) and there is nothing here that

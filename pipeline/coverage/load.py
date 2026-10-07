@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 
 import psycopg
@@ -37,52 +37,6 @@ DRIFT_ABORT_RATIO = 0.4
 # the call sites.
 BOUNDARY_SNAP_DEG = 0.01
 
-# Which country each Geofabrik extract is configured to cover. Lives here rather
-# than in run.py because it is now load-time DATA SEMANTICS, not orchestration:
-# it decides which staged rows this extract OWNS,
-# not merely what to stamp.
-COUNTRY_BY_REGION = {
-    "europe/belgium": "BE", "europe/netherlands": "NL", "europe/germany": "DE",
-    "europe/luxembourg": "LU",
-    # 2026-08-06 rollout.
-    "europe/france": "FR", "europe/switzerland": "CH", "europe/italy": "IT",
-    "europe/great-britain": "GB",
-    # Northern Ireland has no extract of its own — Geofabrik ships it inside the
-    # all-Ireland one, which also covers the Republic. Ireland is NOT onboarded,
-    # so nearest-region-wins deletes Republic rows for having no onboarded region
-    # within BOUNDARY_SNAP_DEG, EXCEPT in the ~1 km band along the border, where
-    # the snap hands them to northern-ireland. That band is mis-stamped GB until
-    # Ireland is onboarded, which re-harvests it with correct region stamps.
-    "europe/ireland-and-northern-ireland": "GB",
-    "australia-oceania/australia": "AU",
-    "asia/japan": "JP",
-    # State-level onboarding: only the two seeded states, not a north-america/us
-    # ancestor, so an unonboarded state's extract still hard-fails resolve_country
-    # instead of silently harvesting as US.
-    "north-america/us/california": "US", "north-america/us/colorado": "US",
-    # 2026-08-08 rollout. The Geofabrik extract covers the mainland, the
-    # Balearics and the Canaries — the same three areas the ES bbox spans.
-    "europe/spain": "ES",
-    # ——— 2026-08-14 rollout ———
-    "europe/slovenia": "SI",
-    "africa/rwanda": "RW",
-    # Geofabrik's South Africa extract BUNDLES Lesotho and Eswatini, the same
-    # shared-extract case as Northern Ireland: neither is onboarded, so
-    # nearest-region-wins deletes their rows for having no onboarded region
-    # within BOUNDARY_SNAP_DEG — except in the ~1 km band along the borders,
-    # which is mis-stamped ZA until one of them is onboarded. Lesotho is
-    # entirely enclosed by South Africa, so its band is its whole perimeter.
-    "africa/south-africa": "ZA",
-    "south-america/colombia": "CO",
-    "south-america/chile": "CL",
-    "australia-oceania/new-zealand": "NZ",
-    # Province-level onboarding, like the two US states: only the provinces
-    # actually seeded, so an unonboarded province's extract still hard-fails
-    # resolve_country instead of silently harvesting as CA.
-    "north-america/canada/british-columbia": "CA",
-    "north-america/canada/quebec": "CA",
-}
-
 # Per-session resource budget applied to the harvest connection at startup.
 # Every value is an
 # env knob with a conservative default; maintenance_work_mem × (1 + parallel
@@ -92,8 +46,8 @@ _SESSION_BUDGET = (
     # 60min, not 10. Production onboards a country unattended, on a timer, with
     # nobody watching the output — so the default has to be large enough for the
     # largest country anyone will onboard, or the job simply fails at 3 a.m. and
-    # the region silently has no coverage. europe/spain failed at 10min on
-    # 2026-08-08, exactly as europe/germany, europe/france and europe/italy had
+    # the region silently has no coverage. Spain failed at 10min on
+    # 2026-08-08, exactly as Germany, France and Italy had
     # during the 08-06 rollout (see load_region below for WHY the big ones are
     # slow). Raising it does not make a runaway query safe — it makes an honest
     # one possible; the runaway is bounded by the advisory lock (one harvest at
@@ -122,37 +76,28 @@ def apply_session_budget(conn: psycopg.Connection) -> None:
     conn.commit()
 
 
-def resolve_country(region: str) -> str | None:
-    """Resolve a Geofabrik region slug to its configured country.
+def resolve_country(region: str, onboarded: Mapping[str, str]) -> str | None:
+    """Resolve a Geofabrik region slug to its country, from coverage.regions.onboarded_map.
 
     Longest-prefix match on the slug's `/`-separated segments, so a sub-country
-    extract (`europe/germany/bayern`, per the onboarding playbook's own advice
-    for large countries) or any other descendant of an onboarded slug resolves
-    via its ancestor, instead of a bare `COUNTRY_BY_REGION.get(region)` missing
-    it entirely (final-review finding I1).
+    extract (`europe/germany/bayern`) resolves via its onboarded ancestor.
 
-    `dev/fixture` is the only explicit skip — no configured country, ownership
-    filtering intentionally disabled, offline fixture path only. Any OTHER
-    unresolvable slug (including `planet`, which spans every country and has
-    no single owner by construction) is a HARD FAILURE, not a silent skip:
-    since C1 an unresolved
-    country no longer just costs a missing `country_code` stamp — it silently
-    reverts that whole extract to non-deterministic last-writer-wins ownership.
+    `dev/fixture` is the only explicit skip. Any other unresolvable slug is a
+    HARD FAILURE: an unresolved country disables the ownership filter for the
+    whole extract, not just a missing `country_code` stamp.
     """
     if region == "dev/fixture":
         return None
     parts = region.split("/")
     for depth in range(len(parts), 0, -1):
-        cc = COUNTRY_BY_REGION.get("/".join(parts[:depth]))
+        cc = onboarded.get("/".join(parts[:depth]))
         if cc is not None:
             return cc
     raise RuntimeError(
-        f"{region!r} has no entry (or ancestor entry) in COUNTRY_BY_REGION "
-        "(pipeline/coverage/load.py) — add it before harvesting this region. "
-        "An unresolved country now silently disables the ownership filter for "
-        "the WHOLE extract instead of merely leaving country_code unset "
-        "; dev/fixture is "
-        "the only intentional skip."
+        f"{region!r} is not an onboarded extract nor below one: no seeded or live country "
+        "holds it in country_extract. Onboard its country first (wiki: Onboarding a new country, "
+        "developers/data-ops/onboarding-a-country.md); "
+        "dev/fixture is the only intentional skip."
     )
 
 # coverage-provider.md §2 DDL (indexes named below). Provenance is normalized:
@@ -324,9 +269,9 @@ def _materialize_operational_regions(cur) -> None:
     outside them, and `luxembourg` — operational, being its country's only
     level — correctly stays.
 
-    **Cost.** This is also why the 2026-08-06 rollout made europe/germany,
-    europe/france and europe/italy exceed the then-10-minute
-    COVERAGE_STATEMENT_TIMEOUT (europe/spain joined them on 08-08, which is why
+    **Cost.** This is also why the 2026-08-06 rollout made Germany,
+    France and Italy exceed the then-10-minute
+    COVERAGE_STATEMENT_TIMEOUT (Spain joined them on 08-08, which is why
     the default is now 60min — an unattended production run must not need a
     human to pass a bigger number). The US
     outline spans 358.9 degrees of longitude — Alaska crosses the antimeridian
@@ -516,9 +461,8 @@ def load_region(
                 if has_regions == 0:
                     raise RuntimeError(
                         f"{src_region}: no `region` rows for country {country_code!r} — "
-                        "the ownership filter would drop every staged row. Run region "
-                        "onboarding step 5 (region seeding) for this country before "
-                        "loading coverage (tools/divisions/README.md)."
+                        "the ownership filter would drop every staged row. "
+                        "Apply the country first (app:country:apply) before loading coverage."
                     )
                 # This guard only covers THIS extract's country, and deliberately so.
                 # Nearest-wins reads every onboarded country's regions, so a NEIGHBOUR
@@ -713,7 +657,7 @@ def load_region(
             #
             # It is also the general path for a country onboarding a FINER level:
             # its previous operating level demotes to infrastructure the moment
-            # the finer rows land (tools/divisions/README.md), and every POI
+            # the finer rows land (pipeline/divisions/README.md), and every POI
             # stamped with the old level has to be re-derived. Run with
             # COVERAGE_FULL_MEMBERSHIP=1 after any such change, or only the
             # rows OSM happened to touch get repaired.

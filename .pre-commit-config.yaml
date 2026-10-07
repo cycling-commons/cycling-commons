@@ -125,7 +125,7 @@ repos:
       #
       # It used to fire only on `web/**.{php,js}` and `pipeline/**.py`, which
       # silently missed six files the wiki actually quotes — among them
-      # tools/divisions/config.py, developers/docker/compose.yaml and
+      # pipeline/divisions/config.py, developers/docker/compose.yaml and
       # web/translations/messages.en.yaml. Three of those were edited in one
       # day (2026-08-14) with no warning: the wiki could have gone stale and
       # the hook would have reported nothing, which is worse than having no

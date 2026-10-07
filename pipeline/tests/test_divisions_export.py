@@ -11,9 +11,12 @@ import os
 import pytest
 
 from divisions import config
-from divisions.export_divisions import build_feature, build_where, export_country, l2_cfg
+from divisions.export_divisions import build_feature, build_where, export_country, l2_spec, spec_from_db
 
-BE = config.COUNTRY_CONFIG["BE"]
+BE = {"subtype": "region", "slugs": {"BE-WAL": "wallonia", "BE-VLG": "flanders", "BE-BRU": "brussels"},
+      "names": {"BE-WAL": "Wallonia", "BE-VLG": "Flanders", "BE-BRU": "Brussels"}, "bbox": [2.5, 49.4, 6.5, 51.6]}
+LU = {"subtype": "country", "slugs": {"LU": "luxembourg"}, "names": {"LU": "Luxembourg"}, "bbox": [5.7, 49.4, 6.6, 50.2]}
+NL = {"subtype": "region", "slugs": {"NL-NH": "noord-holland"}, "names": {"NL-NH": "North Holland"}, "bbox": [3.2, 50.7, 7.3, 53.6]}
 
 SQUARE = {
     "type": "Polygon",
@@ -57,14 +60,6 @@ def test_area_km2_is_rounded_int():
     f = build_feature("BE-WAL", "BE", MULTI, 16901.37, BE)
     assert f["properties"]["area_km2"] == 16901
     assert isinstance(f["properties"]["area_km2"], int)
-
-
-def test_unknown_country_raises():
-    with pytest.raises(SystemExit):
-        export_country("ZZ", "/tmp/does-not-matter")
-
-
-LU = config.COUNTRY_CONFIG["LU"]
 
 
 def test_lu_whole_country_feature_shape():
@@ -132,12 +127,12 @@ def test_duplicate_iso_rows_fail_loud(monkeypatch, tmp_path):
         lambda con, cc, cfg, release: [("BE-WAL", square), ("BE-WAL", square)],
     )
     with pytest.raises(SystemExit, match="multiple land rows for BE-WAL"):
-        export_country("BE", tmp_path, con=object())
+        export_country("BE", tmp_path, BE, con=object())
 
 
 @pytest.mark.skipif(os.environ.get("RUN_LIVE_OVERTURE") != "1", reason="hits Overture S3")
 def test_live_overture_be(tmp_path):
-    written = export_country("BE", tmp_path)
+    written = export_country("BE", tmp_path, BE, l2=("belgium", "Belgium"))
     slugs = {p.name for p in written}
     assert slugs == {"region-wallonia.geojson", "region-flanders.geojson", "region-brussels.geojson"}
     wal = json.loads((tmp_path / "region-wallonia.geojson").read_text())
@@ -147,22 +142,6 @@ def test_live_overture_be(tmp_path):
     assert wal["geometry"]["type"] == "MultiPolygon"
 
 
-NL = config.COUNTRY_CONFIG["NL"]
-
-
-def test_nl_config_seeds_all_12_provinces_at_region_level():
-    assert NL["subtype"] == "region"
-    assert len(NL["slugs"]) == 12
-    assert set(NL["slugs"]) == set(NL["names"])
-    assert all(iso.startswith("NL-") for iso in NL["slugs"])
-
-
-def test_nl_limburg_slug_is_disambiguated():
-    # BE also has a Limburg province; slug is GLOBAL identity
-    # (tools/divisions/README.md).
-    assert NL["slugs"]["NL-LI"] == "limburg-nl"
-
-
 def test_nl_feature_carries_admin_level_4_and_frozen_slug():
     f = build_feature("NL-NH", "NL", MULTI, 2670.0, NL)
     assert f["properties"]["slug"] == "noord-holland"
@@ -170,55 +149,27 @@ def test_nl_feature_carries_admin_level_4_and_frozen_slug():
     assert f["properties"]["country_code"] == "NL"
 
 
-def test_slugs_are_globally_unique_across_countries():
-    all_slugs = [s for cfg in config.COUNTRY_CONFIG.values() for s in cfg["slugs"].values()]
-    # Every onboarded country also carries an L2 country-outline slug
-    #, except when the
-    # primary config already IS the L2 row (LU: subtype "country") —
-    # export_country only appends l2_cfg() on top when the primary subtype
-    # differs, so including LU's COUNTRY_L2 entry here would flag its own
-    # slug as a false collision with itself.
-    all_slugs += [
-        slug
-        for cc, (slug, _name) in config.COUNTRY_L2.items()
-        if config.COUNTRY_CONFIG[cc]["subtype"] != "country"
-    ]
-    assert len(all_slugs) == len(set(all_slugs))
-
-
 @pytest.mark.skipif(os.environ.get("RUN_LIVE_OVERTURE") != "1",
                     reason="live Overture smoke (network) — set RUN_LIVE_OVERTURE=1")
 def test_live_overture_nl(tmp_path):
-    written = export_country("NL", tmp_path)
-    assert len(written) == 12
-    names = {p.name for p in written}
-    assert "region-limburg-nl.geojson" in names
-    assert "region-noord-holland.geojson" in names
+    written = export_country("NL", tmp_path, NL)
+    assert len(written) == 1
+    assert "region-noord-holland.geojson" in {p.name for p in written}
 
 
-def test_country_l2_covers_every_configured_country():
-    # Every onboardable country must have an L2 identity — a missing entry
-    # would make the always-emit-L2 branch fail loud mid-export.
-    for cc in config.COUNTRY_CONFIG:
-        assert cc in config.COUNTRY_L2, f"COUNTRY_L2 missing {cc}"
-        slug, name = config.COUNTRY_L2[cc]
-        assert slug and slug == slug.lower()
-        assert name
-
-
-def test_l2_cfg_builds_a_country_subtype_config():
-    cfg = l2_cfg("BE")
+def test_l2_spec_builds_a_country_subtype_config():
+    cfg = l2_spec("BE", "belgium", "Belgium", BE["bbox"])
     assert cfg["subtype"] == "country"
     assert cfg["slugs"] == {"BE": "belgium"}
     assert cfg["names"] == {"BE": "Belgium"}
     # bbox carries over so the Overture scan predicate stays cheap.
-    assert cfg["bbox"] == config.COUNTRY_CONFIG["BE"]["bbox"]
+    assert cfg["bbox"] == BE["bbox"]
 
 
 def test_l2_feature_shape_via_existing_builder():
     # The L2 outline flows through the SAME build_feature as every region:
     # provenance-identical rows (design §9).
-    f = build_feature("BE", "BE", MULTI, 30528.0, l2_cfg("BE"))
+    f = build_feature("BE", "BE", MULTI, 30528.0, l2_spec("BE", "belgium", "Belgium", BE["bbox"]))
     assert f["properties"] == {
         "slug": "belgium",
         "name": "Belgium",
@@ -228,3 +179,22 @@ def test_l2_feature_shape_via_existing_builder():
         "admin_level": 2,
         "source": "overture",
     }
+
+
+def test_spec_from_db_reads_the_live_rows(catalog):
+    from catalog_rows import add_country, add_region
+    add_country(catalog, "BE", "live", ["europe/belgium"])
+    catalog.execute("UPDATE country SET bbox = '[2.5, 49.4, 6.5, 51.6]' WHERE code = 'BE'")
+    add_region(catalog, 1, "BE", 4, "POLYGON((4 50,5 50,5 51,4 51,4 50))", slug="wallonia")
+    add_region(catalog, 2, "BE", 2, "POLYGON((3 49,6 49,6 52,3 52,3 49))", slug="belgium")
+    catalog.execute("UPDATE region SET iso_code = 'BE-WAL', name = 'Wallonia' WHERE id = 1")
+    catalog.execute("UPDATE region SET iso_code = 'BE', name = 'Belgium' WHERE id = 2")
+    spec, l2 = spec_from_db(catalog, "BE")
+    assert spec == {"subtype": "region", "slugs": {"BE-WAL": "wallonia"}, "names": {"BE-WAL": "Wallonia"},
+                    "bbox": [2.5, 49.4, 6.5, 51.6]}
+    assert l2 == ("belgium", "Belgium")
+
+
+def test_spec_from_db_refuses_an_unknown_country(catalog):
+    with pytest.raises(SystemExit, match="no country row for ZZ"):
+        spec_from_db(catalog, "ZZ")

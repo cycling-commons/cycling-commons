@@ -18,7 +18,11 @@ import shapely
 
 from coverage import run
 from coverage.contract import load_contract
-from coverage.regions import ONBOARDED_REGIONS
+# The onboarded set these runner tests assume; the real one is country_extract rows.
+ONBOARDED = {
+    "asia/japan": "JP", "europe/belgium": "BE", "europe/netherlands": "NL",
+    "north-america/us/california": "US", "north-america/us/colorado": "US",
+}
 from coverage.routes import RouteCounts
 from coverage.run import _extract_is_current, _run_routes, _run_surface
 from coverage.surface import SurfaceCounts
@@ -32,6 +36,7 @@ def contract():
 @pytest.fixture
 def offline(monkeypatch, tmp_path):
     """A workdir with a fake PBF already in place, and no network anywhere."""
+    monkeypatch.setattr(run, "_onboarded", lambda: dict(ONBOARDED))
     monkeypatch.delenv("COVERAGE_PBF_PATH", raising=False)
     monkeypatch.delenv("COVERAGE_FORCE_EXTRACT", raising=False)
     monkeypatch.setenv("COVERAGE_PBF_OFFLINE", "1")
@@ -308,7 +313,7 @@ def test_country_with_a_missing_region_is_not_built(tiled, offline, contract, ca
 
 def _current_cells(workdir, skip=()):
     """A current gap-cell file, one distinct cell each, for every onboarded region but `skip`."""
-    for i, region in enumerate(ONBOARDED_REGIONS):
+    for i, region in enumerate(ONBOARDED):
         if region in skip:
             continue
         slug = region.replace("/", "-")
@@ -329,7 +334,7 @@ def test_a_subset_run_publishes_gaps_from_every_current_region(tiled, offline, c
     assert tiled["published"] == ("surface", [], True, [])
     cells = _world_cells(offline)
     # California's cell from this run (1 km), and one 2 km cell per other onboarded region.
-    assert len(cells) == len(ONBOARDED_REGIONS)
+    assert len(cells) == len(ONBOARDED)
     us = sorted(c["km"] for c in cells if c["cctok"] == "|US|")
     assert us == [1.0, 2.0]                      # California's, and Colorado's from its cell file
     assert {c["cctok"] for c in cells} >= {"|BE|", "|NL|", "|JP|", "|US|"}
@@ -424,9 +429,7 @@ def test_first_v2_publish_refuses_when_a_countrys_build_failed(tiled, offline, c
     it would still take that country's v1 archive off the map."""
     tiled["live_v2"] = False
     (offline / "europe-belgium-latest.osm.pbf").write_bytes(b"pbf")
-    monkeypatch.setattr(run, "ONBOARDED_REGIONS", ("europe/belgium", "europe/netherlands"))
-    monkeypatch.setattr(run, "COUNTRY_BY_REGION",
-                        {"europe/belgium": "BE", "europe/netherlands": "NL"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
 
     def flaky_build(layer_files, out, contract, **kw):
         if out.name == "surface-be.pmtiles":
@@ -445,9 +448,7 @@ def test_first_v2_publish_with_retire_is_allowed_despite_a_failed_build(tiled, o
                                                                         monkeypatch):
     tiled["live_v2"] = False
     (offline / "europe-belgium-latest.osm.pbf").write_bytes(b"pbf")
-    monkeypatch.setattr(run, "ONBOARDED_REGIONS", ("europe/belgium", "europe/netherlands"))
-    monkeypatch.setattr(run, "COUNTRY_BY_REGION",
-                        {"europe/belgium": "BE", "europe/netherlands": "NL"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
 
     def flaky_build(layer_files, out, contract, **kw):
         if out.name == "surface-be.pmtiles":
@@ -487,7 +488,7 @@ def test_a_dev_fixture_surface_run_extracts_and_tiles_nothing(offline, contract,
 
 
 def test_a_region_that_is_not_onboarded_says_so(capsys):
-    assert run._complete_countries(["europe/germany/bayern"]) == {}
+    assert run._complete_countries(["europe/germany/bayern"], ONBOARDED) == {}
     assert ("[tiles] europe/germany/bayern: not an onboarded region, not tiled per country"
             in capsys.readouterr().out)
 
@@ -594,9 +595,7 @@ def test_first_v2_routes_publish_refuses_when_a_countrys_build_failed(routed, of
     """A country present this run but whose TILING failed must block a first
     v2 routes publish, the same as one missing from the run."""
     monkeypatch.setattr(run, "read_live_manifest", lambda family: ({"version": 2, "countries": {}}, False))
-    monkeypatch.setattr(run, "ONBOARDED_REGIONS", ("europe/belgium", "europe/netherlands"))
-    monkeypatch.setattr(run, "COUNTRY_BY_REGION",
-                        {"europe/belgium": "BE", "europe/netherlands": "NL"})
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
 
     def flaky(ways, knoop, out, contract):
         if out.name == "routes-be.pmtiles":
@@ -618,11 +617,11 @@ def test_a_routes_run_already_running_exits_2(offline, contract, monkeypatch, ca
 
 
 def test_complete_countries_groups_regions_by_country():
-    got = run._complete_countries(["europe/belgium", "north-america/us/california", "north-america/us/colorado"])
+    got = run._complete_countries(["europe/belgium", "north-america/us/california", "north-america/us/colorado"], ONBOARDED)
     assert got == {"BE": ["europe/belgium"],
                    "US": ["north-america/us/california", "north-america/us/colorado"]}
-    assert run._complete_countries(["north-america/us/california"]) == {}
-    assert run._complete_countries(["dev/fixture"]) == {}
+    assert run._complete_countries(["north-america/us/california"], ONBOARDED) == {}
+    assert run._complete_countries(["dev/fixture"], ONBOARDED) == {}
 
 
 def test_an_empty_todo_arm_is_published_without_that_arm(tiled, offline, contract, monkeypatch):
@@ -814,3 +813,19 @@ def test_the_road_piece_extract_reads_the_region_outlines_once(roadpieces_tiled,
     _run_roadpieces(["europe/netherlands"], offline, contract, publish=False)
     assert len(roadpieces_tiled["regions"]) == 1
     assert roadpieces_tiled["region_of"] == 42, "each piece is tagged with its region"
+
+
+def test_the_road_piece_run_takes_the_onboarded_countries_it_is_given(roadpieces_tiled, offline, contract):
+    """main() reads the onboarded countries once and hands them to every family's run."""
+    from coverage.run import _run_roadpieces
+    assert _run_roadpieces(["europe/netherlands"], offline, contract, publish=False,
+                           onboarded={"europe/netherlands": "NL"}) == 0
+
+
+def test_first_v2_roadpieces_publish_must_cover_every_onboarded_country(roadpieces_tiled, offline, contract,
+                                                                        monkeypatch, capsys):
+    from coverage.run import _run_roadpieces
+    monkeypatch.setattr(run, "read_live_manifest", lambda family: ({"version": 2, "countries": {}}, False))
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
+    assert _run_roadpieces(["europe/netherlands"], offline, contract) == 1
+    assert "first per-country publish refused" in capsys.readouterr().err

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 /**
@@ -150,6 +151,33 @@ final class SurfaceProfiler
             'SELECT id, ST_AsGeoJSON(geom) AS geom, attributes::text AS attributes FROM recommended_route ORDER BY id',
         );
 
+        return $this->recompute($rows);
+    }
+
+    /**
+     * recomputeAll() for routes within $bandDeg of the listed countries' regions.
+     *
+     * @param list<string> $countries ISO 3166-1 alpha-2, upper case
+     */
+    public function recomputeNear(array $countries, float $bandDeg): int
+    {
+        /** @var list<array{id: int|string, geom: string, attributes: string}> $rows */
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT rr.id, ST_AsGeoJSON(rr.geom) AS geom, rr.attributes::text AS attributes
+               FROM recommended_route rr
+              WHERE EXISTS (SELECT 1 FROM region r
+                             WHERE r.country_code IN (:ccs) AND r.geom IS NOT NULL AND ST_DWithin(r.geom, rr.geom, :deg))
+              ORDER BY rr.id',
+            ['ccs' => $countries, 'deg' => $bandDeg],
+            ['ccs' => ArrayParameterType::STRING],
+        );
+
+        return $this->recompute($rows);
+    }
+
+    /** @param list<array{id: int|string, geom: string, attributes: string}> $rows */
+    private function recompute(array $rows): int
+    {
         $updated = 0;
         foreach ($rows as $row) {
             /** @var array<string, mixed> $attributes */

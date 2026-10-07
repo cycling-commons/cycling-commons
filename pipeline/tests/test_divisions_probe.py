@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Offline tests for the onboarding area probe (tools/divisions/README.md step 1).
+"""Offline tests for the onboarding area probe (pipeline/divisions/README.md step 1).
 
 Pure helpers + file emission via a stub DuckDB connection; the live Overture
 query is skip-gated like the exporter's (RUN_LIVE_OVERTURE=1)."""
@@ -39,7 +39,7 @@ def test_candidate_report_flags_band_position():
     assert "below" in md and "in band" in md and "above" in md
     assert str(BAND_KM2[0]) not in md  # band rendered with thousands separators
     assert "13,520" in md
-    assert "moderation composes upward" in md  # tools/divisions/README.md advice
+    assert "moderation composes upward" in md  # pipeline/divisions/README.md advice
 
 
 class StubCon:

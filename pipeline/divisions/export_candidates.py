@@ -43,7 +43,7 @@ megabytes of coordinates, and decoding that as one JSON document is the same
 mistake again on the PHP side.
 
 Usage:
-    python -m tools.divisions.export_candidates --out web/var/divisions
+    python -m divisions.export_candidates --out web/var/divisions
 """
 
 import argparse

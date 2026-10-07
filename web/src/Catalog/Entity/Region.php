@@ -62,6 +62,14 @@ class Region
     #[ORM\Column(type: 'smallint', nullable: true)]
     private ?int $activeCap = null;
 
+    /**
+     * Display label per locale; RegionLabels falls back to `en`, then to `name`.
+     *
+     * @var array<string, string>
+     */
+    #[ORM\Column(type: 'json', options: ['jsonb' => true, 'default' => '{}'])]
+    private array $labels = [];
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
@@ -184,6 +192,20 @@ class Region
     public function setActiveCap(?int $activeCap): static
     {
         $this->activeCap = $activeCap;
+
+        return $this;
+    }
+
+    /** @return array<string, string> */
+    public function getLabels(): array
+    {
+        return $this->labels;
+    }
+
+    /** @param array<string, string> $labels */
+    public function setLabels(array $labels): static
+    {
+        $this->labels = $labels;
 
         return $this;
     }

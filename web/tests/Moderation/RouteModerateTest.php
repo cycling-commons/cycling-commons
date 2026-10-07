@@ -156,7 +156,7 @@ final class RouteModerateTest extends WebTestCase
 
     private function wallonia(EntityManagerInterface $em): Region
     {
-        $region = (new Region())->setSlug('wallonia')->setName('Wallonia registry name')->setCountryCode('BE');
+        $region = (new Region())->setSlug('wallonia')->setName('Wallonia registry name')->setCountryCode('BE')->setLabels(['en' => 'Wallonia', 'fr' => 'Wallonie']);
         $em->persist($region);
         $em->flush();
 

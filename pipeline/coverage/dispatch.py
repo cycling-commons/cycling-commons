@@ -20,7 +20,7 @@ import psycopg
 
 from . import run as _run
 from .load import apply_session_budget, ensure_schema
-from .regions import default_regions
+from .regions import env_regions, onboarded
 from .run import _dur
 from .tracker import RunTracker
 
@@ -82,7 +82,6 @@ def main(argv=None) -> int:
     budget_s = 60 * float(os.environ.get("COVERAGE_BUDGET_MIN", "240"))
     max_regions = int(os.environ.get("COVERAGE_MAX_REGIONS", "6"))
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
-    universe = default_regions()
     started = time.monotonic()
     loaded: list[str] = []
     failed: list[str] = []
@@ -90,6 +89,7 @@ def main(argv=None) -> int:
         conn.autocommit = True
         apply_session_budget(conn)
         ensure_schema(conn)
+        universe = env_regions() or onboarded(conn)
         tracker = RunTracker(conn)
         run_id = tracker.start("dispatcher", len(universe))
         order = order_by_staleness(conn, universe)

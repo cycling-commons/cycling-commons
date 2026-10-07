@@ -128,7 +128,7 @@ def test_load_region_backfills_cc_from_region_when_extract_left_it_null(db):
 
 def test_load_region_upserts_shared_border_entity_across_regions(db):
     """Geofabrik regional extracts overlap at borders, so the SAME OSM entity
-    (same ref) appears in two extracts (tools/divisions/README.md plan
+    (same ref) appears in two extracts (pipeline/divisions/README.md plan
     refinement; 203 such refs shared BE↔NL). The global UNIQUE(ref, letter) plus
     the per-src_region swap must UPSERT a shared entity, never crash on the
     second region's load — and a region-stamped row's country_code must equal its
@@ -496,7 +496,7 @@ def test_load_region_raises_when_country_has_no_regions(db):
     staged row. With previous=0 (a brand-new extract — exactly the onboarding
     case) nothing else catches it, so this must raise rather than exit 0."""
     ensure_schema(db)
-    with pytest.raises(RuntimeError, match="onboarding step 5"):
+    with pytest.raises(RuntimeError, match="app:country:apply"):
         load_region(db, [_row("node/1", "B")], "europe/belgium", "BE")
     assert db.execute("SELECT count(*) FROM coverage_poi").fetchone()[0] == 0
 

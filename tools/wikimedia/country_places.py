@@ -32,19 +32,20 @@ of the point of a scenic pin.
 from __future__ import annotations
 
 import argparse
+import functools
 from pathlib import Path
 import json
+import os
 import pathlib
 import sys
 import time
 import re
+import subprocess
 import urllib.parse
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from commons_photo import licence_of, usable_photo  # noqa: E402
-from divisions.config import COUNTRY_CONFIG  # noqa: E402
 
 # Wikidata returns the Q-id as the label when it can find no name at all. That
 # is not a name, and "Q130018" on a map pin is worse than no pin.
@@ -110,7 +111,26 @@ ORDER BY DESC(?links) LIMIT %(limit)d
 """
 
 
-def in_country_box(cc: str, lat: float, lng: float) -> bool:
+COMPOSE = Path(__file__).resolve().parents[2] / "developers/docker/compose.yaml"
+
+
+@functools.cache
+def load_country_boxes() -> dict[str, list[float]]:
+    """country.bbox per onboarded country, from the dev stack's database."""
+    user = os.environ.get("POSTGRES_USER", "cc")
+    db = os.environ.get("POSTGRES_DB", "cyclingcommons")
+    try:
+        out = subprocess.run(
+            ["docker", "compose", "-f", str(COMPOSE), "exec", "-T", "db", "psql", "-U", user, "-d", db,
+             "-At", "-c", "SELECT COALESCE(json_object_agg(code, bbox), '{}') FROM country WHERE bbox IS NOT NULL"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        raise SystemExit(f"cannot read country boxes from the dev database ({exc}); start the dev stack (make up)") from exc
+    return json.loads(out or "{}")
+
+
+def in_country_box(cc: str, lat: float, lng: float, boxes: dict[str, list[float]] | None = None) -> bool:
     """Inside the area this country was actually onboarded for.
 
     Wikidata's `country` property is sovereignty, not geography, and the
@@ -121,12 +141,11 @@ def in_country_box(cc: str, lat: float, lng: float) -> bool:
     municipalities. Seeding those puts scenic pins thousands of kilometres from
     any road anybody here rides, in regions that do not exist.
 
-    The bbox is the SAME one the region onboarding used
-    (tools/divisions/config.py), so "somewhere we have regions for" means one
-    thing across both tools. A country with no config falls through as allowed —
-    it has no onboarded area to be outside of.
+    The bbox is the onboarded country's `country.bbox`, so "somewhere we have
+    regions for" means one thing across both tools. A country with no bbox falls
+    through as allowed: it has no onboarded area to be outside of.
     """
-    box = COUNTRY_CONFIG.get(cc.upper(), {}).get("bbox")
+    box = (load_country_boxes() if boxes is None else boxes).get(cc.upper())
     if not box:
         return True
     west, south, east, north = box

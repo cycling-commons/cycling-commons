@@ -17,7 +17,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Loads the boundaries the project holds into `world_division`.
  *
- * Reads what `tools/divisions/export_candidates.py` wrote: one file per
+ * Reads what `pipeline/divisions/export_candidates.py` wrote: one file per
  * country, one GeoJSON Feature per line, every division of the curatable tier,
  * onboarded or not.
  *
@@ -44,7 +44,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 #[AsCommand(
     name: 'app:divisions:import',
-    description: 'Load division boundaries from tools/divisions output into world_division',
+    description: 'Load division boundaries from pipeline/divisions output into world_division',
 )]
 final class DivisionsImportCommand extends Command
 {
@@ -76,7 +76,7 @@ final class DivisionsImportCommand extends Command
 
         $files = glob($pattern) ?: [];
         if ([] === $files) {
-            $io->error(sprintf('No files match %s. Run tools/divisions/export_candidates.py first.', $pattern));
+            $io->error(sprintf('No files match %s. Run pipeline/divisions/export_candidates.py first.', $pattern));
 
             return Command::FAILURE;
         }

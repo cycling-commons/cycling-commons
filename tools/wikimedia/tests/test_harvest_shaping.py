@@ -8,34 +8,37 @@ a place outside the onboarded area is a pin in a region that does not exist.
 from wikimedia import climb_audit, commons_photo, country_places, item_links, prescreen_seeded
 
 
+BOXES = {"NL": [3.2, 50.7, 7.3, 53.6], "FR": [-5.24, 41.23, 9.66, 51.19]}
+
+
 # --- country_places.in_country_box ----------------------------------------
 # Wikidata's `country` is SOVEREIGNTY, not geography. The bbox is what keeps
 # that difference out of the catalog.
 
 def test_a_place_inside_the_onboarded_box_is_kept():
-    assert country_places.in_country_box("NL", 52.37, 4.90) is True   # Amsterdam
+    assert country_places.in_country_box("NL", 52.37, 4.90, boxes=BOXES) is True   # Amsterdam
 
 
 def test_caribbean_netherlands_is_rejected():
     """Bonaire is the Netherlands and is 7,800 km from any road the NL regions
     cover. The divisions config excludes the Caribbean municipalities, so the
     harvest must too."""
-    assert country_places.in_country_box("NL", 12.18, -68.30) is False
+    assert country_places.in_country_box("NL", 12.18, -68.30, boxes=BOXES) is False
 
 
 def test_a_french_southern_ocean_island_is_rejected():
     # Ile Amsterdam: French, and in the southern Indian Ocean.
-    assert country_places.in_country_box("FR", -37.83, 77.55) is False
+    assert country_places.in_country_box("FR", -37.83, 77.55, boxes=BOXES) is False
 
 
 def test_a_country_with_no_config_falls_through_as_allowed():
     """No onboarded area means nothing to be outside of. Rejecting here would
     silently empty the harvest for every country added later."""
-    assert country_places.in_country_box("ZZ", 0.0, 0.0) is True
+    assert country_places.in_country_box("ZZ", 0.0, 0.0, boxes=BOXES) is True
 
 
 def test_the_check_is_case_insensitive_on_the_country_code():
-    assert country_places.in_country_box("nl", 12.18, -68.30) is False
+    assert country_places.in_country_box("nl", 12.18, -68.30, boxes=BOXES) is False
 
 
 # --- item_links.entry_for --------------------------------------------------

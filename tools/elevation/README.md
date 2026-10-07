@@ -25,7 +25,7 @@ Then copy the `.hgt` files to the Valhalla host and restart it.
 
 `dem-install.sh` is those three stages plus the install, for one continent, as
 one resumable command — it is what onboarding step 6b runs
-(`tools/divisions/README.md`). Use it rather than the pieces unless you are
+(`pipeline/divisions/README.md`). Use it rather than the pieces unless you are
 debugging one of them.
 
 ## Trying it locally

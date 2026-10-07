@@ -13,3 +13,4 @@
 **/.mypy_cache/
 **/.ruff_cache/
 **/.venv/
+divisions/out/

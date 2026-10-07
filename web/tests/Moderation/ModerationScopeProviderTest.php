@@ -14,7 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * tools/divisions/README.md: "a moderator covers 2-4 provinces" is just
+ * pipeline/divisions/README.md: "a moderator covers 2-4 provinces" is just
  * several moderator_area rows — the provider must UNION all of a user's rows
  * (regions and countries), not pick one. Isolation: DAMA rollback.
  */

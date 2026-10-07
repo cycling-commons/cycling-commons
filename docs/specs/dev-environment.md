@@ -213,7 +213,7 @@ re-seedable.
   `DEV_UID`/`DEV_GID` (default 1000; override in `developers/docker/.env`).
   `web/Dockerfile` keeps its php-fpm master root on purpose so it can drop
   each worker itself; this changes only what it drops *to*. `composer
-  install`, `assets:install` and `app:region:scaffold` in the `Makefile`
+  install` and `assets:install` in the `Makefile`
   likewise run as `$(DEV_UID):$(DEV_GID)` via `docker compose exec --user`,
   for the same reason: `composer install` running as root is why
   `cc_api_vendor` and `public/bundles` used to end up root-owned on the host.

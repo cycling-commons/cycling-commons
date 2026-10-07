@@ -29,13 +29,13 @@ import psycopg
 
 from .contract import load_contract
 from .extract import export_lines, rideable_lines, run_extract, run_filter, run_way_filter
-from .load import COUNTRY_BY_REGION, apply_session_budget, ensure_schema, load_region, resolve_country
+from .load import apply_session_budget, ensure_schema, load_region, resolve_country
 from .ownership import Owners, anchor_point, pbf_header_box, region_fingerprint, snapshot_outlines
 from .pbfs import pbf_identity, pbf_path
 from .parse import parse_pois
 from .publish import (CountryBuild, GapsBuild, ensure_bucket, inputs_fingerprint,
                       prune_family, publish_countries, read_live_manifest, read_manifest)
-from .regions import ONBOARDED_REGIONS, default_regions
+from .regions import default_regions, load_onboarded
 from .roadpieces import SELECTOR as ROADPIECES_SELECTOR
 from .roadpieces import extract_region as roadpieces_extract_region
 from .routes import extract_region as routes_extract_region
@@ -240,6 +240,11 @@ def _ownership(workdir: pathlib.Path) -> Owners:
     return Owners.load(path)
 
 
+def _onboarded() -> dict[str, str]:
+    """The onboarded extracts and their countries, read once per pass (coverage.regions)."""
+    return load_onboarded()
+
+
 @contextlib.contextmanager
 def _line_run_lock(family: str):
     """Session pg_try_advisory_lock for one whole surface or routes run.
@@ -260,27 +265,25 @@ def _line_run_lock(family: str):
                 conn.execute("SELECT pg_advisory_unlock(%s)", (key,))
 
 
-def _complete_countries(regions: list[str]) -> dict[str, list[str]]:
+def _complete_countries(regions: list[str], onboarded: dict[str, str]) -> dict[str, list[str]]:
     """Countries whose every onboarded region is in this run, with those regions.
 
     A country built from part of its regions would publish over the whole one:
     `--regions north-america/us/california` must not take Colorado off the map.
-    A region outside ONBOARDED_REGIONS (a dev/ region, a sub-country extract
+    A region that is not onboarded (a dev/ region, a sub-country extract
     such as europe/germany/bayern) is extracted but never tiled per country.
     """
     wanted = set(regions)
     for region in regions:
-        if region in ONBOARDED_REGIONS:
+        if region in onboarded:
             continue
         if region.startswith("dev/"):
             print(f"[tiles] {region}: a dev/ region, extracted but not tiled per country")
         else:
             print(f"[tiles] {region}: not an onboarded region, not tiled per country")
     by_cc: dict[str, list[str]] = {}
-    for region in ONBOARDED_REGIONS:
-        cc = COUNTRY_BY_REGION.get(region)
-        if cc:
-            by_cc.setdefault(cc, []).append(region)
+    for region, cc in onboarded.items():
+        by_cc.setdefault(cc, []).append(region)
     out = {}
     for cc, members in sorted(by_cc.items()):
         present = [r for r in members if r in wanted]
@@ -293,7 +296,8 @@ def _complete_countries(regions: list[str]) -> dict[str, list[str]]:
 
 
 def _first_publish_refused(family: str, complete: dict[str, list[str]], live_v2: bool,
-                           retire: tuple[str, ...], failed: Iterable[str] = ()) -> bool:
+                           retire: tuple[str, ...], failed: Iterable[str] = (), *,
+                           onboarded: dict[str, str]) -> bool:
     """Is this the first v2 publish of `family` and does it lack a country?
 
     Until a v2 manifest is live, the app serves the v1 world archive; the first
@@ -307,8 +311,8 @@ def _first_publish_refused(family: str, complete: dict[str, list[str]], live_v2:
     """
     if live_v2 or retire or os.environ.get("COVERAGE_FIRST_PUBLISH_PARTIAL") == "1":
         return False
-    onboarded = {COUNTRY_BY_REGION[r] for r in ONBOARDED_REGIONS if r in COUNTRY_BY_REGION}
-    missing = sorted((onboarded - set(complete)) | (onboarded & set(failed)))
+    onboarded_ccs = set(onboarded.values())
+    missing = sorted((onboarded_ccs - set(complete)) | (onboarded_ccs & set(failed)))
     if not missing:
         return False
     print(f"[{family}] first per-country publish refused: no v2 manifest is live yet and this run "
@@ -355,7 +359,8 @@ def _roadpieces_inputs(workdir: pathlib.Path, regions: list[str]) -> str:
                               TILE_PROFILE["roadpieces"])
 
 
-def _world_gap_cells(workdir: pathlib.Path, wants: dict[str, str]) -> tuple[dict[str, list[pathlib.Path]], list[str]]:
+def _world_gap_cells(workdir: pathlib.Path, wants: dict[str, str],
+                     onboarded: dict[str, str]) -> tuple[dict[str, list[pathlib.Path]], list[str]]:
     """Every onboarded region's current gap-cell file, keyed by its country, and
     the onboarded regions that have none.
 
@@ -365,12 +370,12 @@ def _world_gap_cells(workdir: pathlib.Path, wants: dict[str, str]) -> tuple[dict
     """
     cells: dict[str, list[pathlib.Path]] = {}
     missing = []
-    for region in ONBOARDED_REGIONS:
+    for region, cc in onboarded.items():
         slug = region.replace("/", "-")
         path = workdir / f"surface_{slug}_gapcells.tsv"
         want = wants.get(region) or _region_stamp(workdir, _default_pbf(workdir, region))
         if path.exists() and _stamp_text(workdir, "surface", region) == want:
-            cells.setdefault(COUNTRY_BY_REGION[region], []).append(path)
+            cells.setdefault(cc, []).append(path)
         else:
             missing.append(region)
     return cells, missing
@@ -433,19 +438,21 @@ def _extract_is_current(extract: pathlib.Path, pbf: pathlib.Path, contract_file:
 
 def _run_surface(regions, workdir, contract, *, extract_only: bool = False,
                  publish: bool = True, retire: tuple[str, ...] = (),
-                 rebuilt: list[str] | None = None) -> int:
+                 rebuilt: list[str] | None = None,
+                 onboarded: dict[str, str] | None = None) -> int:
     """The line path, under the surface run lock; 2 when another surface run holds it."""
     with _line_run_lock("surface") as got:
         if not got:
             print("[surface] another surface run holds the run lock, exiting", file=sys.stderr)
             return 2
         return _surface_pass(regions, workdir, contract, extract_only=extract_only,
-                             publish=publish, retire=retire, rebuilt=rebuilt)
+                             publish=publish, retire=retire, rebuilt=rebuilt, onboarded=onboarded)
 
 
 def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
                   publish: bool = True, retire: tuple[str, ...] = (),
-                  rebuilt: list[str] | None = None) -> int:
+                  rebuilt: list[str] | None = None,
+                  onboarded: dict[str, str] | None = None) -> int:
     """The line path: PBF -> osmium -> GeoJSONL -> tippecanoe, per country. No
     database beyond the outline snapshot and the run lock.
 
@@ -468,9 +475,10 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
     failed = []
     wants: dict[str, str] = {}
     owners = _ownership(workdir)
+    onboarded = _onboarded() if onboarded is None else onboarded
     for region in regions:
         try:
-            country_code = resolve_country(region)
+            country_code = resolve_country(region, onboarded)
             pbf = fetch_pbf(region, workdir)
             want = _region_stamp(workdir, pbf)
             # Keyed by REGION, not by country: the US is onboarded as two
@@ -545,7 +553,7 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
         print(f"[surface] extract-only: {len(wants)} region extract(s) ready, not tiling")
         print(f"[surface] {_peak()}")
         return 1 if failed else 0
-    complete = _complete_countries(list(wants))
+    complete = _complete_countries(list(wants), onboarded)
     if all(r.startswith("dev/") for r in regions) and not retire:
         print(f"[surface] {_peak()}")
         return 1 if failed else 0
@@ -556,7 +564,7 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
         except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
             print(f"[surface] manifest read FAILED: {exc}", file=sys.stderr)
             return 1
-        if _first_publish_refused("surface", complete, live_v2, retire):
+        if _first_publish_refused("surface", complete, live_v2, retire, onboarded=onboarded):
             return 1
     built: dict[str, CountryBuild] = {}
     for cc, members in complete.items():
@@ -585,10 +593,10 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
         except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
             print(f"[surface] {cc}: build FAILED: {exc}", file=sys.stderr)
             failed.append(cc)
-    if publish and _first_publish_refused("surface", complete, live_v2, retire, failed=failed):
+    if publish and _first_publish_refused("surface", complete, live_v2, retire, failed=failed, onboarded=onboarded):
         return 1
     gaps_build = None
-    cells, missing = _world_gap_cells(workdir, wants)
+    cells, missing = _world_gap_cells(workdir, wants, onboarded)
     if missing:
         print(f"[surface] gaps: not rebuilt, no current cells for {', '.join(missing)}")
     else:
@@ -637,19 +645,21 @@ def _peak() -> str:
 
 def _run_routes(regions, workdir, contract, *, extract_only: bool = False,
                 publish: bool = True, retire: tuple[str, ...] = (),
-                rebuilt: list[str] | None = None) -> int:
+                rebuilt: list[str] | None = None,
+                onboarded: dict[str, str] | None = None) -> int:
     """The route-network path, under the routes run lock; 2 when another routes run holds it."""
     with _line_run_lock("routes") as got:
         if not got:
             print("[routes] another routes run holds the run lock, exiting", file=sys.stderr)
             return 2
         return _routes_pass(regions, workdir, contract, extract_only=extract_only,
-                            publish=publish, retire=retire, rebuilt=rebuilt)
+                            publish=publish, retire=retire, rebuilt=rebuilt, onboarded=onboarded)
 
 
 def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
                  publish: bool = True, retire: tuple[str, ...] = (),
-                 rebuilt: list[str] | None = None) -> int:
+                 rebuilt: list[str] | None = None,
+                 onboarded: dict[str, str] | None = None) -> int:
     """The route-network path: PBF -> osmium -> two-pass extract -> tippecanoe,
     per country.
 
@@ -665,9 +675,10 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
     failed = []
     extracted: list[str] = []
     owners = _ownership(workdir)
+    onboarded = _onboarded() if onboarded is None else onboarded
     for region in regions:
         try:
-            country_code = resolve_country(region)
+            country_code = resolve_country(region, onboarded)
             pbf = fetch_pbf(region, workdir)
             want = _region_stamp(workdir, pbf)
             # Keyed by REGION for the same multi-extract-country reason the
@@ -713,7 +724,7 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
     if extract_only:
         print(f"[routes] extract-only: {len(extracted)} region extract(s) ready, not tiling")
         return 1 if failed else 0
-    complete = _complete_countries(extracted)
+    complete = _complete_countries(extracted, onboarded)
     if all(r.startswith("dev/") for r in regions) and not retire:
         return 1 if failed else 0
     live = {"version": 2, "countries": {}}
@@ -723,7 +734,7 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
         except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
             print(f"[routes] manifest read FAILED: {exc}", file=sys.stderr)
             return 1
-        if _first_publish_refused("routes", complete, live_v2, retire):
+        if _first_publish_refused("routes", complete, live_v2, retire, onboarded=onboarded):
             return 1
     built: dict[str, CountryBuild] = {}
     for cc, members in complete.items():
@@ -747,7 +758,7 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
         except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
             print(f"[routes] {cc}: build FAILED: {exc}", file=sys.stderr)
             failed.append(cc)
-    if publish and _first_publish_refused("routes", complete, live_v2, retire, failed=failed):
+    if publish and _first_publish_refused("routes", complete, live_v2, retire, failed=failed, onboarded=onboarded):
         return 1
     if publish and (built or retire):
         try:
@@ -765,19 +776,21 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
 
 def _run_roadpieces(regions, workdir, contract, *, extract_only: bool = False,
                     publish: bool = True, retire: tuple[str, ...] = (),
-                    rebuilt: list[str] | None = None) -> int:
+                    rebuilt: list[str] | None = None,
+                    onboarded: dict[str, str] | None = None) -> int:
     """The road-piece path, under its run lock; 2 when another road-piece run holds it."""
     with _line_run_lock("roadpieces") as got:
         if not got:
             print("[roadpieces] another road-piece run holds the run lock, exiting", file=sys.stderr)
             return 2
         return _roadpieces_pass(regions, workdir, contract, extract_only=extract_only,
-                                publish=publish, retire=retire, rebuilt=rebuilt)
+                                publish=publish, retire=retire, rebuilt=rebuilt, onboarded=onboarded)
 
 
 def _roadpieces_pass(regions, workdir, contract, *, extract_only: bool = False,
                      publish: bool = True, retire: tuple[str, ...] = (),
-                     rebuilt: list[str] | None = None) -> int:
+                     rebuilt: list[str] | None = None,
+                     onboarded: dict[str, str] | None = None) -> int:
     """PBF -> osmium -> road pieces -> tippecanoe, per country
     (docs/specs/traffic-measurements.md §2).
 
@@ -789,12 +802,13 @@ def _roadpieces_pass(regions, workdir, contract, *, extract_only: bool = False,
     """
     failed = []
     extracted: list[str] = []
+    onboarded = _onboarded() if onboarded is None else onboarded
     # Each piece is tagged with the region that owns it; the outlines also
     # shape the extract stamp, so a region change rebuilds the extracts.
     owners = _ownership(workdir)
     for region in regions:
         try:
-            resolve_country(region)
+            resolve_country(region, onboarded)
             pbf = fetch_pbf(region, workdir)
             want = _region_stamp(workdir, pbf)
             slug = region.replace("/", "-")
@@ -822,7 +836,7 @@ def _roadpieces_pass(regions, workdir, contract, *, extract_only: bool = False,
     if extract_only:
         print(f"[roadpieces] extract-only: {len(extracted)} region extract(s) ready, not tiling")
         return 1 if failed else 0
-    complete = _complete_countries(extracted)
+    complete = _complete_countries(extracted, onboarded)
     if all(r.startswith("dev/") for r in regions) and not retire:
         return 1 if failed else 0
     live = {"version": 2, "countries": {}}
@@ -833,7 +847,7 @@ def _roadpieces_pass(regions, workdir, contract, *, extract_only: bool = False,
         except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
             print(f"[roadpieces] manifest read FAILED: {exc}", file=sys.stderr)
             return 1
-        if _first_publish_refused("roadpieces", complete, live_v2, retire):
+        if _first_publish_refused("roadpieces", complete, live_v2, retire, onboarded=onboarded):
             return 1
     built: dict[str, CountryBuild] = {}
     for cc, members in complete.items():
@@ -854,7 +868,7 @@ def _roadpieces_pass(regions, workdir, contract, *, extract_only: bool = False,
         except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
             print(f"[roadpieces] {cc}: build FAILED: {exc}", file=sys.stderr)
             failed.append(cc)
-    if publish and _first_publish_refused("roadpieces", complete, live_v2, retire, failed=failed):
+    if publish and _first_publish_refused("roadpieces", complete, live_v2, retire, failed=failed, onboarded=onboarded):
         return 1
     if publish and (built or retire):
         try:
@@ -1004,7 +1018,7 @@ def main(argv=None) -> int:
                          "and publishes the artifact from the whole index.")
     ap.add_argument("--regions",
                     help="csv of Geofabrik regions (default: $COVERAGE_REGIONS or every "
-                         f"onboarded region: {','.join(ONBOARDED_REGIONS)})")
+                         "onboarded extract in country_extract)")
     ap.add_argument("--trigger", default="manual",
                     help="what started this run, recorded in coverage_run "
                          "(dispatcher | bootstrap | manual)")
@@ -1015,8 +1029,9 @@ def main(argv=None) -> int:
                     help="csv of country codes to remove from the published manifest of the family "
                          "this run builds (offboarding). Nothing else ever removes a country.")
     args = ap.parse_args(argv)
+    onboarded = _onboarded()
     regions = ([r.strip() for r in args.regions.split(",") if r.strip()]
-               if args.regions else default_regions())
+               if args.regions else default_regions(onboarded))
     retire = tuple(c.strip().lower() for c in (args.retire or "").split(",") if c.strip())
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
@@ -1028,7 +1043,8 @@ def main(argv=None) -> int:
         return _tracked_line_run(
             family, args, regions,
             lambda rebuilt: runner(regions, workdir, contract, extract_only=args.extract_only,
-                                   publish=not args.no_publish, retire=retire, rebuilt=rebuilt))
+                                   publish=not args.no_publish, retire=retire, rebuilt=rebuilt,
+                                   onboarded=onboarded))
     failed = []
     dsn = os.environ.get("DATABASE_DSN", "postgresql://cc:cc@db:5432/cyclingcommons")
     with psycopg.connect(dsn) as conn:
@@ -1068,7 +1084,7 @@ def main(argv=None) -> int:
                 # unresolvable country is now a hard failure (raises), caught by the
                 # try/except like any other per-region failure, rather than the two
                 # call sites independently `.get()`-missing into a silent None.
-                country_code = resolve_country(region)
+                country_code = resolve_country(region, onboarded)
                 with tracker.step(region, "download") as st:
                     download_started = time.time()
                     pbf = fetch_pbf(region, workdir)

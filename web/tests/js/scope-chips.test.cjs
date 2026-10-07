@@ -37,7 +37,7 @@ const CCScope = require('../../assets/map/scope.js');
 const { chipModel } = require('../../assets/map/scope-chips.js');
 
 // Real bboxes of every onboarded region (BE 3, NL 12, DE 16, LU 1), computed from
-// tools/divisions/out/region-*.geojson. Ranking and bearing are pure functions of
+// pipeline/divisions/out/region-*.geojson. Ranking and bearing are pure functions of
 // these numbers, so synthetic boxes would pin nothing worth pinning.
 const RAW = [
   ['DE', 'baden-wurttemberg', [7.5117, 47.5324, 10.4956, 49.7913]],

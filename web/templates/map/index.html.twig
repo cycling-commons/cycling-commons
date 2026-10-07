@@ -1006,6 +1006,8 @@ window.CC_VENDOR = {{ {
   {# Region registry (map-and-search.md §4.5 Phase 2): id/slug/cc/bbox
      per region, consumed by window.CCScope for the scope selector + viewport. #}
   window.CC_REGIONS = {{ regions|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# IANA timezone => onboarded country, for the anonymous home-country hint (CountryTimezones). #}
+  window.CC_TZ_COUNTRY = {{ tz_country|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Tile archives per family and country (coverage-provider.md §4): cc, or '*'
      for one archive that serves every country, to {tiles: {arm: url}, bounds, stamp}.
      tile-sources.js mounts a country's source when its bounds meet the view.

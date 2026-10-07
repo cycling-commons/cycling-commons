@@ -39,7 +39,7 @@ use Doctrine\DBAL\Connection;
  *     Netherlands   12 provinces,       median 3,132 km²   offered
  *
  * 500 km² sits in the gap, and it reproduces by measurement the call
- * `tools/divisions/config.py` had made by hand for Slovenia and Luxembourg
+ * `pipeline/divisions/config.py` had made by hand for Slovenia and Luxembourg
  * (owner 2026-09-14). The median rather than the mean, because one huge
  * territory (Nunavut, the Northern Territory) must not make a country of small
  * provinces look curatable, nor one tiny city-state district the reverse.

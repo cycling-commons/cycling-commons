@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles roadpieces-tiles region-probe region-scaffold course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test country-lists-check app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe course-data coverage-regions country-plan roadpieces-tiles
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -282,17 +282,17 @@ pivot-data: ## Harvest official Wallonia accommodation (Tourisme Wallonie, CC-BY
 wallonia-export: ## Export catalog import artifacts (fixtures + cached harvest) to tools/wallonia/out/ (strict cached replay)
 	cd tools && python3 -m wallonia.export --strict-cache
 
-divisions-data: ## Export region-<slug>.geojson from Overture divisions to tools/divisions/out/ (country: make divisions-data c="BE")
-	cd tools && python3 -m divisions.export_divisions --country $(or $(c),BE) --out divisions/out
+divisions-data: ## Export region-<slug>.geojson from Overture divisions to pipeline/divisions/out/ (country: make divisions-data c="BE")
+	@$(DOCKER_COMP) exec -T pipeline python -m divisions.export_divisions --country $(or $(c),BE) --out divisions/out
 
-region-probe: ## Onboarding step 1: probe Overture subdivision areas (make region-probe c="NL" [subtypes="region,county"])
-	cd tools && python3 -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes))
+region-probe: ## Probe Overture subdivision areas (make region-probe c="NL" [subtypes="region,county"])
+	@$(DOCKER_COMP) exec -T pipeline python -m divisions.probe_areas --country $(or $(c),NL) $(if $(subtypes),--subtypes $(subtypes)) --out divisions/out/scaffold
 
-region-scaffold: ## Onboarding step 2: emit region config + label stubs for review (make region-scaffold c="NL" [flags="--probe-areas"])
-	@$(DOCKER_COMP) exec -T --user $(DEV_UID):$(DEV_GID) app php bin/console app:region:scaffold $(or $(c),NL) $(flags)
+tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits + gates)
+	cd tools && python3 -m pytest wallonia/tests wikimedia/tests credits/tests gates/tests -q
 
-tools-test: ## Run the tools Python test suites (wallonia + divisions + wikimedia + credits)
-	cd tools && python3 -m pytest wallonia/tests divisions/tests wikimedia/tests credits/tests -q
+country-lists-check: ## Fail if a hand-kept list of countries crept back into the code (countries are rows)
+	@python3 tools/gates/country_lists.py
 
 credits-check: ## Verify /credits still names every dependency, and that its links resolve
 	@python3 tools/credits/check_credits.py
@@ -328,17 +328,16 @@ licenses-check: ## Verify every tracked file resolves to a licence (reuse lint o
 # Fixture run (no network): make coverage-refresh regions=dev/fixture pbf=tests/fixtures/mini.osm.pbf
 # (pbf paths are as seen INSIDE the pipeline container, workdir /app = pipeline/)
 # Bucket creds match the compose defaults; override MINIO_ROOT_USER/PASSWORD if you changed developers/docker/.env.
-# The committed list of onboarded Geofabrik extracts, read out of compose.yaml's
-# own default rather than out of your environment. That distinction is the whole
-# point: a local developers/docker/.env may pin COVERAGE_REGIONS to a single
-# country, and harvesting one country of a bordering set deletes the border rows
-# that country owns, with nothing re-creating them until its neighbour runs. A
-# rider watches a POI vanish for up to a week. So the runbooks say
-# `regions=$(make -s coverage-regions)` instead of pasting the list into three
-# pages that then drift apart.
-coverage-regions: ## Echo the committed COVERAGE_REGIONS default (the full onboarded set)
-	@grep -oE 'COVERAGE_REGIONS:\s*\$$\{COVERAGE_REGIONS:-[^}]+\}' developers/docker/compose.yaml \
-	  | sed -E 's/.*COVERAGE_REGIONS:-//; s/\}$$//'
+# The onboarded Geofabrik extracts, read from the database rather than your
+# environment: a local developers/docker/.env may pin COVERAGE_REGIONS to one
+# country, and harvesting one country of a bordering set deletes the border
+# rows it owns. Runbooks say `regions=$(make -s coverage-regions)`.
+coverage-regions: ## Echo every onboarded extract (country_extract rows of seeded/live countries)
+	@$(DOCKER_COMP) exec -T pipeline python -m coverage.regions
+
+country-plan: ## Plan a country on the dev stack (writes country_plan_region, never region): make country-plan c=DK [args="--level county"]
+	@test -n "$(c)" || { echo "country-plan: pass c=<ISO code>, e.g. make country-plan c=DK" >&2; exit 1; }
+	@$(DOCKER_COMP) exec -T pipeline python -m onboarding.plan $(c) $(args)
 
 coverage-refresh: ## Refresh the coverage index + PMTiles (dev: Geofabrik → PostGIS → MinIO)
 	@$(DOCKER_COMP) up --detach --wait minio

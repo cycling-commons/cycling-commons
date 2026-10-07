@@ -75,7 +75,7 @@
         {% for reg in country.regions %}
           <a class="reg tier-{{ reg.tier }}{{ reg.stewardship == 'curated' ? ' has-curator' }}"
              href="{{ path('region_detail', {slug: reg.slug}) }}">
-            <span>{{ ('region.' ~ reg.slug ~ '.label')|trans }}</span>
+            <span>{{ cc_region_label(reg.slug) }}</span>
             <span class="tags">
             <span class="tag tag-tier">{{ ('regions.tier_' ~ reg.tier)|trans }}</span>
             {# The stewardship badge is shown for EVERY region, including the

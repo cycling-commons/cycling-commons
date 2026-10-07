@@ -481,6 +481,7 @@ test('inferHomeCountry: falls through to timezone when the My-area country is no
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['BE'] };
   // BE not in this registry -> falls through; DE via a DE timezone
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Berlin';
   assert.equal(S.inferHomeCountry(), 'DE'); // BE not onboarded here, tz DE is
 });
@@ -492,6 +493,7 @@ test('inferHomeCountry: My-area country wins over timezone when both are onboard
   ]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['BE'] };
   // DE is ALSO onboarded here (unlike the test above) -> My-area must still win.
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Berlin';
   assert.equal(S.inferHomeCountry(), 'BE');
 });
@@ -503,6 +505,7 @@ test('inferHomeCountry: anonymous circle country wins over timezone', () => {
   ]);
   // No CC_MY_AREA payload -> falls to the anon circle, centred inside the NL bbox.
   globalThis.localStorage.setItem('cc-my-area', JSON.stringify({ lat: 52.5, lng: 4.5, radiusKm: 40 }));
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Berlin'; // DE also onboarded, but the anon circle wins
   assert.equal(S.inferHomeCountry(), 'NL');
 });
@@ -510,6 +513,7 @@ test('inferHomeCountry: anonymous circle country wins over timezone', () => {
 test('inferHomeCountry: timezone maps to onboarded country', () => {
   const S = freshScope([{ id: 1, slug: 'noord-holland', countryCode: 'NL', bbox: [4, 52, 5, 53] }]);
   delete globalThis.window.CC_MY_AREA;
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Amsterdam';
   assert.equal(S.inferHomeCountry(), 'NL');
 });
@@ -517,7 +521,18 @@ test('inferHomeCountry: timezone maps to onboarded country', () => {
 test('inferHomeCountry: unknown/none -> null', () => {
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   delete globalThis.window.CC_MY_AREA;
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'America/New_York'; // US not onboarded
+  assert.equal(S.inferHomeCountry(), null);
+});
+
+test('inferHomeCountry: a zone the payload map lacks is no hint, and no map is no hint', () => {
+  const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
+  delete globalThis.window.CC_MY_AREA;
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Amsterdam': 'NL' };
+  globalThis.__ccTz = 'Europe/Berlin';
+  assert.equal(S.inferHomeCountry(), null);
+  delete globalThis.window.CC_TZ_COUNTRY;
   assert.equal(S.inferHomeCountry(), null);
 });
 
@@ -722,6 +737,7 @@ test('isDefault: false when init resolved the scope from localStorage', () => {
 test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/history (map-and-search.md §4.5 rule 1)', () => {
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['DE'] };
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Berlin';
   let historyWrites = 0;
   globalThis.history.replaceState = () => { historyWrites += 1; };
@@ -748,6 +764,7 @@ test('inferHomeCountry is compute-only: writes nothing to localStorage/URL/histo
 // inference now also resolves the opening scope, below localStorage/URL so no
 // existing visitor's choice is overridden.
 test('init: an inferred home country opens that country, not the hardcoded default', () => {
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Amsterdam';
   const s = boot({ regionsList: REGIONS_NL });      // default scope = Wallonia (BE)
   assert.equal(s.kind, 'country');
@@ -756,6 +773,7 @@ test('init: an inferred home country opens that country, not the hardcoded defau
 });
 
 test('init: an explicit stored scope still beats the inferred home', () => {
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Amsterdam';
   const s = boot({ ls: 'region:flanders', regionsList: REGIONS_NL });
   assert.deepEqual(s, { kind: 'region', regionIds: [24], countryCode: 'BE' });
@@ -763,6 +781,7 @@ test('init: an explicit stored scope still beats the inferred home', () => {
 });
 
 test('init: an explicit URL scope still beats the inferred home', () => {
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Amsterdam';
   const s = boot({ search: '?scope=region:brussels', regionsList: REGIONS_NL });
   assert.deepEqual(s, { kind: 'region', regionIds: [23], countryCode: 'BE' });
@@ -770,12 +789,14 @@ test('init: an explicit URL scope still beats the inferred home', () => {
 });
 
 test('init: an unmapped timezone falls back to the provided default', () => {
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'America/New_York';
   assert.deepEqual(boot({ regionsList: REGIONS_NL }), DEFAULT);   // Wallonia, as before
   delete globalThis.__ccTz;
 });
 
 test('init: inferring the home country still counts as default (isDefault true)', () => {
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Amsterdam';
   boot({ regionsList: REGIONS_NL });
   assert.equal(CCScope.isDefault(), true);   // nothing the rider chose — chips may still re-infer
@@ -783,6 +804,7 @@ test('init: inferring the home country still counts as default (isDefault true)'
 });
 
 test('init: inference writes nothing (map-and-search.md §4.5 rule 1)', () => {
+  globalThis.window.CC_TZ_COUNTRY = { 'Europe/Berlin': 'DE', 'Europe/Amsterdam': 'NL', 'Europe/Brussels': 'BE' };
   globalThis.__ccTz = 'Europe/Amsterdam';
   boot({ regionsList: REGIONS_NL });
   assert.equal(store.get('cc-scope'), undefined);   // opening on NL is not a rider choice

@@ -23,9 +23,10 @@ def line_run(db, monkeypatch, tmp_path):
         script["events"].append("connect")
         return contextlib.nullcontext(db)
     monkeypatch.setattr(run.psycopg, "connect", connect)
+    monkeypatch.setattr(run, "_onboarded", lambda: {"europe/belgium": "BE", "europe/netherlands": "NL"})
 
     def runner(regions, workdir, contract, *, extract_only=False, publish=True, retire=(),
-               rebuilt=None):
+               rebuilt=None, onboarded=None):
         script["events"].append("build")
         if script["raise"]:
             raise script["raise"]

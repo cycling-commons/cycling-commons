@@ -1,28 +1,27 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """Probe Overture division_area for a country's candidate operating levels.
 
-Onboarding step 1 (tools/divisions/README.md): BEFORE seeding, report
+Onboarding step 1 (pipeline/divisions/README.md): BEFORE seeding, report
 each candidate subtype's subdivisions and geodesic areas against the ~17k km²
 calibration band (ADVISORY — map-and-search.md §4.5; Brussels sits far
-below it deliberately), and derive a bbox for COUNTRY_CONFIG predicate
+below it deliberately), and derive a bbox for the Overture predicate
 pushdown. Emits, per country:
 
     <out>/<cc-lower>/areas.md    human report: per-subtype tables + level advice
-    <out>/<cc-lower>/probe.json  machine output for `app:region:scaffold --probe-areas`
+    <out>/<cc-lower>/probe.json  machine output for the onboarding planner
 
 Network: hits the public Overture S3 bucket anonymously, like
-export_divisions. The default --out lands inside web/var/scaffold/ so the
-PHP scaffolder (app container, /app = web/) can read probe.json.
+export_divisions. The default --out is pipeline/divisions/out/scaffold.
 
 Usage:
-    cd tools && python3 -m divisions.probe_areas --country NL
+    cd pipeline && python3 -m divisions.probe_areas --country NL
 """
 import argparse
 import json
 import pathlib
 
 from . import config
-from .export_divisions import _connect, geodesic_area_km2
+from .export_divisions import OUT_DEFAULT, _connect, geodesic_area_km2
 
 # KEEP 80-150 % of Wallonia's ~16.9k km² (map-and-search.md §4.5) — advisory.
 BAND_KM2 = (13_520, 25_350)
@@ -72,7 +71,7 @@ def candidate_report(cc, per_subtype):
         "preferring legibility + stable ISO identity over an exact band match. Small",
         "official regions are fine — moderation composes upward, one moderator holds",
         "2–4 atoms. Group into synthetic macro-regions ONLY when no official level",
-        "fits (tools/divisions/README.md).",
+        "fits (pipeline/divisions/README.md).",
     ]
     return "\n".join(lines) + "\n"
 
@@ -118,8 +117,8 @@ def main(argv=None):
     ap.add_argument("--country", required=True, help="ISO 3166-1 alpha-2 (e.g. NL)")
     ap.add_argument("--subtypes", default="region",
                     help="csv of Overture subtypes to probe (default: region)")
-    ap.add_argument("--out", default="../web/var/scaffold",
-                    help="base output dir (default ../web/var/scaffold, relative to tools/)")
+    ap.add_argument("--out", default=str(OUT_DEFAULT / "scaffold"),
+                    help="base output dir (default pipeline/divisions/out/scaffold)")
     ap.add_argument("--release", default=None, help="Overture release (default config.OVERTURE_RELEASE)")
     args = ap.parse_args(argv)
     probe_country(args.country.upper(), args.out,

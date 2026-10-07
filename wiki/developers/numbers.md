@@ -27,7 +27,6 @@ stale without the build saying so.
 | `drawer-tag-whitelist` | **32** | of those keys the POI drawer is allowed to render | `web/src/Coverage/CoverageRepository.php` |
 | `map-modules` | **70** | JavaScript modules the map is split into | `web/assets/map/` |
 | `map-js-lines` | **365** | lines in `map.js` itself, which is imports plus the boot sequence | `web/assets/map/map.js` |
-| `geofabrik-regions` | **22** | Geofabrik extracts the harvest runs by default | `developers/docker/compose.yaml` |
 | `seeded-pins` | **30** | hand-authored pins `make course-data` seeds | `web/src/Catalog/Command/SeedManualCatalogCommand.php` |
 | `api-rate-limit-per-minute` | **120** | requests a minute per client address on the public API | `web/config/packages/rate_limiter.yaml` |
 | `api-bbox-max-degrees` | **10.0** | widest bbox `/v1/search` accepts, on either axis | `web/src/Controller/Api/V1/PublicApiController.php` |
@@ -52,6 +51,7 @@ goes quietly wrong.
 |---|---|---|---|
 | Rows in `coverage_poi`, all onboarded countries | 2,063,788 | 2026-09-10 | `SELECT count(*) FROM coverage_poi;` |
 | Countries onboarded | 19 | 2026-09-10 | `SELECT count(DISTINCT country_code) FROM region;` |
+| Geofabrik extracts the harvest runs by default | 22 | 2026-10-05 | `make -s coverage-regions \| tr , '\n' \| wc -l` |
 | Region rows | 271 | 2026-09-10 | `SELECT count(*) FROM region;` |
 | `item` rows on a fresh clone after `make course-data` | 736 | 2026-09-10 | build an empty database, run the target, `SELECT count(*) FROM item;` |
 | Of which seeded by hand | 30 | 2026-09-10 | `make course-data` prints it; `tools/check-course-data.py` verifies it |
