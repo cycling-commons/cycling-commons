@@ -121,3 +121,6 @@ data/dem/
 # small country, and the reason a checked-in .hgt is a near miss rather than
 # an unimaginable one.
 data/valhalla/
+
+# php-cs-fixer run from the repository root (web/.gitignore covers web/)
+/.php-cs-fixer.cache
