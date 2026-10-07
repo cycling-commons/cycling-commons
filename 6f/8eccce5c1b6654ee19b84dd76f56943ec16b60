@@ -1,0 +1,45 @@
+web/assets/js/cc-dates.js
+  s_985749378da6fe::t_afe4febc4970df 10-11,15-30,32,40-41,63-64,67,76-92
+web/migrations/Version20261006230000.php
+  s_985749378da6fe::t_695595924d9190 1-39
+web/src/Controller/TimeZoneController.php
+  s_985749378da6fe::t_091752cd7bc757 1-51
+web/src/Form/SettingsType.php
+  s_985749378da6fe::t_ff8e6600570e30 52-53,134-148
+web/src/Twig/DateDisplayExtension.php
+  s_985749378da6fe::t_417455f1a0acfc 73-75,80,84-85,88-89,118,120
+web/templates/admin/coverage_runs/index.html.twig
+  s_985749378da6fe::t_bb29dcf80189c3 40
+web/templates/admin/coverage_runs/show.html.twig
+  s_985749378da6fe::t_33a86c7cd3a79a 11
+web/templates/boot.js.twig
+  s_985749378da6fe::t_f11a8b66cc76da 43-44
+web/templates/settings/index.html.twig
+  s_985749378da6fe::t_299982bab0f3a6 232-237
+web/tests/Account/DataExportTest.php
+  s_985749378da6fe::t_cbe16cfe1d9f3b 266-283
+web/tests/Account/TimeZoneControllerTest.php
+  s_985749378da6fe::t_568c1000c5bb0d 1-93
+web/tests/Auth/TimeZonePreferenceTest.php
+  s_985749378da6fe::t_bd19639fe7abc1 1-141
+web/tests/Twig/DateDisplayExtensionTest.php
+  s_985749378da6fe::t_d61eb9651977b8 152-196
+web/tests/js/cc-dates-zone.test.cjs
+  s_985749378da6fe::t_15b1c13e2cc5de 1-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6f8eccce5c1b6654ee19b84dd76f56943ec16b60",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
