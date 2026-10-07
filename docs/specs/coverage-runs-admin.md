@@ -32,7 +32,7 @@ this page reads them. Nothing new is measured.
 | took | `finished_at - started_at` |
 | rebuilt | per family: the run's own from `published_url`, and routes and surface from the `detail` of the night's `routes_publish` / `surface_publish` steps (comma-separated). "nothing changed" when a family ran and rebuilt no country, "failed" when its publish failed. A surface pass adds `gaps` when it republished the world gap grid. Without the steps a night that rebuilt all three read "points" alone (owner, 2026-09-29) |
 
-A `--routes` / `--surface` run opens its own row with one step,
+A `--routes` / `--surface` / `--roadpieces` run opens its own row with one step,
 `<family>_extract` (with `--extract-only`) or `<family>_publish`, whose
 `detail` repeats the rebuilt countries. Inside the dispatcher both the
 per-region `--extract-only` runs and the post-loop publish passes get the

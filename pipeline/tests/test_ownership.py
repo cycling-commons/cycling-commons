@@ -124,3 +124,12 @@ def test_pbf_header_box_reads_the_header_or_says_none(tmp_path):
     junk.write_bytes(b"pbf")
     assert pbf_header_box(junk) is None
     assert pbf_header_box(tmp_path / "absent.osm.pbf") is None
+
+
+def test_the_region_of_a_point_follows_the_owner_rule():
+    # The road-piece tiles carry this id, so the traffic page can count roads per region.
+    owners = Owners(ROWS)
+    assert owners.region(0.7, 0.5) == 1
+    assert owners.region(0.3, 0.3) == 3          # the smaller region wins
+    assert owners.region(2.005, 0.5) == 2        # the snap band
+    assert owners.region(2.5, 0.5) is None       # foreign

@@ -531,8 +531,9 @@ publishes there, no Geofabrik involved.
 **Nightly dispatch: `python -m coverage.dispatch`** (`pipeline/coverage/dispatch.py`)
 orders the onboarded regions by staleness and loads the stalest ones inside a
 time budget and a region cap, then runs `--tiles-only` once if anything
-loaded. Each loaded region also refreshes its routes and surface line
-extracts, and one offline pass per family (`--routes`, `--surface`) then
+loaded. Each loaded region also refreshes its routes, surface and road-piece
+line extracts, and one offline pass per family (`--routes`, `--surface`,
+`--roadpieces`; traffic-measurements.md section 2) then
 republishes only the countries whose inputs changed - an unchanged country
 costs a fingerprint comparison and nothing else. A pass that raises, or exits
 non-zero (2 when another run of its family holds the run lock), is logged and
@@ -561,10 +562,10 @@ run; while any onboarded region has no current cell file the grid is not
 rebuilt and the live one keeps serving. `dev/` regions never feed it. Unstamped coverage rows
 (no owning region) live under the fixed `zz` bucket, never a real country
 code. Layer names inside a file are unaffected by any of this (`b_be`,
-`surface_be`, `routes_be`, `knoop_be`, `gaps`).
+`surface_be`, `routes_be`, `knoop_be`, `roadpieces_be`, `gaps`).
 
 Each family's stable key (`coverage/manifest.json`, `surface/manifest.json`,
-`routes/manifest.json`) is a **manifest v2**:
+`routes/manifest.json`, `roadpieces/manifest.json`) is a **manifest v2**:
 ```json
 {"version": 2, "updated_at": "2026-09-24T03:12:05+00:00",
  "countries": {"be": {"stamp": "20260924-031205", "built_at": "2026-09-24T03:12:05+00:00",
@@ -574,8 +575,11 @@ Each family's stable key (`coverage/manifest.json`, `surface/manifest.json`,
                                 "todo": "https://.../surface/be/20260924-031205/todo.pmtiles"}}},
  "gaps": {"stamp": "20260924-031205", "built_at": "...", "inputs": "...", "url": "https://.../surface/gaps/20260924-031205/gaps.pmtiles"}}
 ```
-`gaps` exists only in `surface/manifest.json`; `coverage/manifest.json` and
-`routes/manifest.json` carry one tile arm each (`points`, `routes`). A publish
+`gaps` exists only in `surface/manifest.json`; `coverage/manifest.json`,
+`routes/manifest.json` and `roadpieces/manifest.json` carry one tile arm each
+(`points`, `routes`, `roadpieces`). The road-piece family (`run.py --roadpieces`,
+`make roadpieces-tiles`) holds every way a bike may ride at z14, labelled for
+traffic matching in Scout's ride review ([traffic-measurements.md](traffic-measurements.md) §2). A publish
 (`pipeline/coverage/publish.py::publish_countries`) reads the live manifest,
 replaces the entries it built, and writes it back under a Postgres advisory
 lock per family (`publish.manifest_lock`); it never drops a country except

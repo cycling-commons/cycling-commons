@@ -4,7 +4,7 @@ stalest onboarded regions, `--load-only` each in series inside a time budget,
 then `--tiles-only` once if anything loaded. One timer per environment; adding
 a region is a list entry; a failed region is first in line tomorrow, not next
 week. Budget and cap come from COVERAGE_BUDGET_MIN / COVERAGE_MAX_REGIONS.
-Each loaded region also refreshes its routes and surface extracts, and one
+Each loaded region also refreshes its routes, surface and road-piece extracts, and one
 offline pass per family then republishes only the countries whose inputs
 changed.
 
@@ -116,7 +116,7 @@ def main(argv=None) -> int:
                 loaded.append(region)
                 # The PBF this load just fetched feeds the line extracts too, so the
                 # expensive pass runs once per region per night, and offline.
-                for family in ("--routes", "--surface"):
+                for family in ("--routes", "--surface", "--roadpieces"):
                     step = family.lstrip("-") + "_extract"
                     t0 = time.monotonic()
                     with _offline():
@@ -146,7 +146,7 @@ def main(argv=None) -> int:
             if publish_failed:
                 print(f"[dispatch] publish FAILED (rc {rc})", file=sys.stderr)
             with _offline():
-                for family in ("--routes", "--surface"):
+                for family in ("--routes", "--surface", "--roadpieces"):
                     rc = _call(family, [family, "--regions", ",".join(universe), "--run-id", str(run_id)])
                     if rc == 2:
                         print(f"[dispatch] {family}: another {family} run holds its run lock, "

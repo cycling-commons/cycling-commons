@@ -20,7 +20,7 @@ export DEV_GID ?= $(shell id -g)
 
 # Misc
 .DEFAULT_GOAL = help
-.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles region-probe region-scaffold course-data coverage-regions
+.PHONY        : help up down check-env map-refs start restart build rebuild logs ps sh up-routing git-status wallonia-data wallonia-export divisions-data tools-test app-install app-serve app-test preflight licenses-check app-rector app-create-admin app-create-curator test-db-reset pipeline-test coverage-refresh provider-run surface-tiles routes-tiles roadpieces-tiles region-probe region-scaffold course-data coverage-regions
 
 help: ## Outputs this help screen
 	@grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-18s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
@@ -412,3 +412,14 @@ routes-tiles: ## Build + publish the cycle-route network PMTiles (regions=csv)
 		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
 		$(if $(offline),-e COVERAGE_PBF_OFFLINE=1) \
 		pipeline python -m coverage.run --routes $(ARGS)
+
+roadpieces-tiles: ## Build + publish the road-piece PMTiles for traffic matching (regions=csv)
+	@$(DOCKER_COMP) up --detach --wait minio
+	@$(DOCKER_COMP) run --rm \
+		-e COVERAGE_S3_ENDPOINT=http://minio:9000 \
+		-e COVERAGE_S3_KEY=$${MINIO_ROOT_USER:-ccadmin} \
+		-e COVERAGE_S3_SECRET=$${MINIO_ROOT_PASSWORD:-ccadminsecret} \
+		-e COVERAGE_PUBLIC_BASE_URL=http://localhost:9100/cc-maps \
+		$(if $(regions),-e COVERAGE_REGIONS=$(regions)) \
+		$(if $(offline),-e COVERAGE_PBF_OFFLINE=1) \
+		pipeline python -m coverage.run --roadpieces $(ARGS)

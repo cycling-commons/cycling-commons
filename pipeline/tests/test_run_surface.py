@@ -733,3 +733,84 @@ def test_a_pbf_replaced_mid_routes_extract_is_re_extracted(offline, contract, mo
         assert _run_routes(["europe/netherlands"], offline, contract,
                            extract_only=True, publish=False) == 0
     assert calls == ["extract", "extract"]
+
+
+@pytest.fixture()
+def roadpieces_tiled(offline, monkeypatch):
+    calls = {"built": [], "published": None, "extracts": 0}
+    def fake_extract(filtered, out, region_of=None):
+        calls["extracts"] += 1
+        calls["region_of"] = None if region_of is None else region_of([(5.0, 52.0), (5.1, 52.0)])
+        out.write_text('{"type":"Feature","id":1}\n')
+        return 1
+    monkeypatch.setattr(run, "roadpieces_extract_region", fake_extract)
+    def fake_build(files, out):
+        calls["built"].append((sorted(files), out.name))
+        out.write_bytes(b"pm")
+    monkeypatch.setattr(run, "build_roadpieces_pmtiles", fake_build)
+    monkeypatch.setattr(run, "artifact_bounds", lambda p: [0.0, 0.0, 1.0, 1.0])
+    monkeypatch.setattr(run, "read_live_manifest", lambda family: ({"version": 2, "countries": {}}, True))
+    monkeypatch.setattr(run, "ensure_bucket", lambda: None)
+    def fake_publish(family, built, *, gaps=None, retire=()):
+        calls["published"] = (family, sorted(built))
+        return {"countries": {}}
+    monkeypatch.setattr(run, "publish_countries", fake_publish)
+    monkeypatch.setattr(run, "prune_family", lambda family, manifest: [])
+    calls["regions"] = []
+    monkeypatch.setattr(run, "_ownership", lambda workdir: calls["regions"].append(workdir) or _FakeOwners())
+    return calls
+
+
+def test_run_roadpieces_extracts_builds_and_publishes_per_country(roadpieces_tiled, offline, contract):
+    from coverage.run import _run_roadpieces
+    assert _run_roadpieces(["europe/netherlands"], offline, contract) == 0
+    assert roadpieces_tiled["built"] == [(["NL"], "roadpieces-nl.pmtiles")]
+    assert roadpieces_tiled["published"] == ("roadpieces", ["NL"])
+    # Unchanged input, second run: the extract is reused.
+    _run_roadpieces(["europe/netherlands"], offline, contract, publish=False)
+    assert roadpieces_tiled["extracts"] == 1
+
+
+def test_roadpieces_is_a_published_family():
+    from coverage.publish import FAMILIES
+    assert FAMILIES["roadpieces"] == "roadpieces/manifest.json"
+    assert run.LINE_RUN_LOCK_KEYS["roadpieces"] not in (
+        v for k, v in run.LINE_RUN_LOCK_KEYS.items() if k != "roadpieces")
+
+
+def test_every_published_family_has_its_own_manifest_lock():
+    # A family without one failed its publish with KeyError after a full build.
+    from coverage.publish import FAMILIES, _MANIFEST_LOCK_KEYS
+    assert set(_MANIFEST_LOCK_KEYS) == set(FAMILIES)
+    keys = list(_MANIFEST_LOCK_KEYS.values()) + list(run.LINE_RUN_LOCK_KEYS.values()) + [run.COVERAGE_ADVISORY_LOCK_KEY]
+    assert len(keys) == len(set(keys))
+
+
+def test_a_change_to_the_labelling_rules_rebuilds_the_road_pieces(roadpieces_tiled, offline, contract, tmp_path, monkeypatch):
+    # The rules live in roadpieces.py, not in the extract or the contract: a
+    # relabel must not be served from yesterday's extract.
+    import os
+    from coverage.run import _run_roadpieces
+    rules = tmp_path / "roadpieces_rules.py"
+    rules.write_text("# rules\n")
+    os.utime(rules, (1, 1))
+    monkeypatch.setattr(run, "ROADPIECES_RULES", rules)
+    _run_roadpieces(["europe/netherlands"], offline, contract, publish=False)
+    assert roadpieces_tiled["extracts"] == 1
+    future = 4_000_000_000
+    os.utime(rules, (future, future))
+    _run_roadpieces(["europe/netherlands"], offline, contract, publish=False)
+    assert roadpieces_tiled["extracts"] == 2
+
+
+
+class _FakeOwners:
+    def region(self, lon, lat):
+        return 42
+
+
+def test_the_road_piece_extract_reads_the_region_outlines_once(roadpieces_tiled, offline, contract):
+    from coverage.run import _run_roadpieces
+    _run_roadpieces(["europe/netherlands"], offline, contract, publish=False)
+    assert len(roadpieces_tiled["regions"]) == 1
+    assert roadpieces_tiled["region_of"] == 42, "each piece is tagged with its region"

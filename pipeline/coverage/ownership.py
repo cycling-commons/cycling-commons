@@ -128,6 +128,7 @@ class Owners:
     def __init__(self, rows: list[dict]):
         rows = sorted(rows, key=lambda r: r["id"])
         self._cc = [r["cc"] for r in rows]
+        self._ids = [int(r["id"]) for r in rows]
         self._rank = [(float("inf") if r["area"] is None else r["area"], r["id"]) for r in rows]
         self._geoms = [shapely.from_wkb(bytes.fromhex(r["wkb"])) for r in rows]
         for g in self._geoms:
@@ -139,6 +140,15 @@ class Owners:
         return cls(json.loads(path.read_text()))
 
     def owner(self, lon: float, lat: float) -> str | None:
+        i = self._pick(lon, lat)
+        return None if i is None else self._cc[i]
+
+    def region(self, lon: float, lat: float) -> int | None:
+        """The id of the region that owns this point, by the same rule as owner()."""
+        i = self._pick(lon, lat)
+        return None if i is None else self._ids[i]
+
+    def _pick(self, lon: float, lat: float) -> int | None:
         s = BOUNDARY_SNAP_DEG
         near = self._tree.query(shapely.box(lon - s, lat - s, lon + s, lat + s))
         if len(near) == 0:
@@ -147,14 +157,14 @@ class Owners:
         # contains test is cheap. Distances are computed only near a border.
         inside = [int(i) for i in near if shapely.contains_xy(self._geoms[i], lon, lat)]
         if inside:
-            return self._cc[min(inside, key=lambda i: self._rank[i])]
+            return min(inside, key=lambda i: self._rank[i])
         p = shapely.Point(lon, lat)
         best = None
         for i in (int(i) for i in near):
             d = shapely.distance(self._geoms[i], p)
             if d <= s and (best is None or (d, self._rank[i]) < best[0]):
                 best = ((d, self._rank[i]), i)
-        return None if best is None else self._cc[best[1]]
+        return None if best is None else best[1]
 
     def keeper(self, country_code: str | None) -> Callable[[list[tuple[float, float]]], bool] | None:
         """A filter that keeps the features `country_code` owns, or None for dev/ regions."""

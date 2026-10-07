@@ -30,19 +30,21 @@ import psycopg
 from .contract import load_contract
 from .extract import export_lines, rideable_lines, run_extract, run_filter, run_way_filter
 from .load import COUNTRY_BY_REGION, apply_session_budget, ensure_schema, load_region, resolve_country
-from .ownership import Owners, pbf_header_box, region_fingerprint, snapshot_outlines
+from .ownership import Owners, anchor_point, pbf_header_box, region_fingerprint, snapshot_outlines
 from .pbfs import pbf_identity, pbf_path
 from .parse import parse_pois
 from .publish import (CountryBuild, GapsBuild, ensure_bucket, inputs_fingerprint,
                       prune_family, publish_countries, read_live_manifest, read_manifest)
 from .regions import ONBOARDED_REGIONS, default_regions
+from .roadpieces import SELECTOR as ROADPIECES_SELECTOR
+from .roadpieces import extract_region as roadpieces_extract_region
 from .routes import extract_region as routes_extract_region
 from .routes import load_way_ids
 from .routes import selector_expressions as routes_selectors
 from .surface import extract_region, merge_gap_cells
 from .surface import selector_expressions as surface_selectors
 from .tiles import (TILE_PROFILE, artifact_bounds, build_gaps_pmtiles, build_pmtiles,
-                    build_routes_pmtiles, build_surface_pmtiles, export_geojsonl,
+                    build_roadpieces_pmtiles, build_routes_pmtiles, build_surface_pmtiles, export_geojsonl,
                     verify_pmtiles)
 from .tracker import RunTracker
 
@@ -55,7 +57,10 @@ COVERAGE_ADVISORY_LOCK_KEY = 0xC07E7A6E
 # One run lock per line family (surface, routes), distinct from the coverage
 # run lock above and from the manifest locks (publish._MANIFEST_LOCK_KEYS,
 # 0xC07E7A70-72).
-LINE_RUN_LOCK_KEYS = {"surface": 0xC07E7A73, "routes": 0xC07E7A74}
+LINE_RUN_LOCK_KEYS = {"surface": 0xC07E7A73, "routes": 0xC07E7A74, "roadpieces": 0xC07E7A75}
+# The road-piece labelling rules: an extract older than this file was labelled
+# by other rules and is rebuilt.
+ROADPIECES_RULES = pathlib.Path(__file__).resolve().parent / "roadpieces.py"
 
 # The operational region outlines the owner rule reads, snapshotted per run.
 OUTLINES_FILE = "ownership-regions.json"
@@ -341,6 +346,13 @@ def _routes_inputs(workdir: pathlib.Path, regions: list[str]) -> str:
     return inputs_fingerprint(files, contract_fingerprint(),
                               *(_stamp_text(workdir, "routes", r) for r in sorted(regions)),
                               TILE_PROFILE["routes"])
+
+
+def _roadpieces_inputs(workdir: pathlib.Path, regions: list[str]) -> str:
+    """Fingerprint of a country's road-piece build inputs, for the rebuild rule."""
+    files = [workdir / f"roadpieces_{r.replace('/', '-')}.geojsonl" for r in regions]
+    return inputs_fingerprint(files, *(_stamp_text(workdir, "roadpieces", r) for r in sorted(regions)),
+                              TILE_PROFILE["roadpieces"])
 
 
 def _world_gap_cells(workdir: pathlib.Path, wants: dict[str, str]) -> tuple[dict[str, list[pathlib.Path]], list[str]]:
@@ -751,6 +763,113 @@ def _routes_pass(regions, workdir, contract, *, extract_only: bool = False,
     return 1 if failed else 0
 
 
+def _run_roadpieces(regions, workdir, contract, *, extract_only: bool = False,
+                    publish: bool = True, retire: tuple[str, ...] = (),
+                    rebuilt: list[str] | None = None) -> int:
+    """The road-piece path, under its run lock; 2 when another road-piece run holds it."""
+    with _line_run_lock("roadpieces") as got:
+        if not got:
+            print("[roadpieces] another road-piece run holds the run lock, exiting", file=sys.stderr)
+            return 2
+        return _roadpieces_pass(regions, workdir, contract, extract_only=extract_only,
+                                publish=publish, retire=retire, rebuilt=rebuilt)
+
+
+def _roadpieces_pass(regions, workdir, contract, *, extract_only: bool = False,
+                     publish: bool = True, retire: tuple[str, ...] = (),
+                     rebuilt: list[str] | None = None) -> int:
+    """PBF -> osmium -> road pieces -> tippecanoe, per country
+    (docs/specs/traffic-measurements.md §2).
+
+    The routes pass, simplified: one GeoJSONL per region and one archive per
+    country. No ownership split: a way near a border may sit in two countries'
+    archives, and the browser reads whichever tiles a ride touches, so a
+    duplicate costs bytes and never a wrong match. The contract does not shape
+    this family (its selection is in roadpieces.py), so it is not an input.
+    """
+    failed = []
+    extracted: list[str] = []
+    # Each piece is tagged with the region that owns it; the outlines also
+    # shape the extract stamp, so a region change rebuilds the extracts.
+    owners = _ownership(workdir)
+    for region in regions:
+        try:
+            resolve_country(region)
+            pbf = fetch_pbf(region, workdir)
+            want = _region_stamp(workdir, pbf)
+            slug = region.replace("/", "-")
+            out = workdir / f"roadpieces_{slug}.geojsonl"
+            stamp = workdir / f"roadpieces_{slug}.stamp"
+            if _extract_is_current(out, pbf, contract_path(), stamp,
+                                   extra_inputs=(ROADPIECES_RULES,), expected=want):
+                print(f"[roadpieces] {region}: extract unchanged, reusing {out.name}")
+            else:
+                stamp.unlink(missing_ok=True)
+                stamp.with_suffix(".src").unlink(missing_ok=True)
+                source = pbf_identity(pbf)
+                filtered = workdir / (slug + "-roadpieces.osm.pbf")
+                run_filter(pbf, filtered, [ROADPIECES_SELECTOR])
+                count = roadpieces_extract_region(
+                    filtered, out, region_of=lambda coords: owners.region(*anchor_point(coords)))
+                stamp.write_text(want, encoding="utf-8")
+                stamp.with_suffix(".src").write_text(source, encoding="utf-8")
+                print(f"[roadpieces] {region}: {count} pieces")
+            extracted.append(region)
+        except Exception as exc:  # noqa: BLE001 - one region must not stop the rest
+            print(f"[roadpieces] {region} FAILED: {exc}", file=sys.stderr)
+            failed.append(region)
+
+    if extract_only:
+        print(f"[roadpieces] extract-only: {len(extracted)} region extract(s) ready, not tiling")
+        return 1 if failed else 0
+    complete = _complete_countries(extracted)
+    if all(r.startswith("dev/") for r in regions) and not retire:
+        return 1 if failed else 0
+    live = {"version": 2, "countries": {}}
+    live_v2 = True
+    if publish:
+        try:
+            live, live_v2 = read_live_manifest("roadpieces")
+        except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
+            print(f"[roadpieces] manifest read FAILED: {exc}", file=sys.stderr)
+            return 1
+        if _first_publish_refused("roadpieces", complete, live_v2, retire):
+            return 1
+    built: dict[str, CountryBuild] = {}
+    for cc, members in complete.items():
+        try:
+            inputs = _roadpieces_inputs(workdir, members)
+            if live["countries"].get(cc.lower(), {}).get("inputs") == inputs:
+                print(f"[roadpieces] {cc}: unchanged, not rebuilt")
+                continue
+            files = [workdir / f"roadpieces_{r.replace('/', '-')}.geojsonl" for r in members]
+            n_pieces = sum(sum(1 for _ in f.open("rb")) for f in files)
+            if n_pieces == 0:
+                continue
+            out = workdir / f"roadpieces-{cc.lower()}.pmtiles"
+            build_roadpieces_pmtiles({cc: files}, out)
+            built[cc] = CountryBuild(paths={"roadpieces": out}, inputs=inputs,
+                                     bounds=artifact_bounds(out), counts={"pieces": n_pieces})
+            print(f"[roadpieces] {cc}: rebuilt ({n_pieces} pieces)")
+        except Exception as exc:  # noqa: BLE001 - one country must not stop the rest
+            print(f"[roadpieces] {cc}: build FAILED: {exc}", file=sys.stderr)
+            failed.append(cc)
+    if publish and _first_publish_refused("roadpieces", complete, live_v2, retire, failed=failed):
+        return 1
+    if publish and (built or retire):
+        try:
+            ensure_bucket()
+            doc = publish_countries("roadpieces", built, retire=retire)
+            if rebuilt is not None:
+                rebuilt.extend(sorted(cc.lower() for cc in built))
+            for key in prune_family("roadpieces", doc):
+                print(f"[roadpieces] pruned {key}")
+        except Exception as exc:  # noqa: BLE001 - the last manifest keeps serving
+            print(f"[roadpieces] publish FAILED: {exc}", file=sys.stderr)
+            failed.append("publish")
+    return 1 if failed else 0
+
+
 def _coverage_countries(layer_files: dict[tuple[str, str], pathlib.Path]) -> dict[str, dict]:
     """export_geojsonl's {(LETTER, CC): path} regrouped as {cc: {(LETTER, CC): path}},
     one entry per PMTiles archive the coverage points build must produce
@@ -856,6 +975,11 @@ def main(argv=None) -> int:
                          "per-region member way-id sets the --surface pass reads to "
                          "make its to-do arm route-aware: run --routes BEFORE "
                          "--surface when rebuilding both.")
+    ap.add_argument("--roadpieces", action="store_true",
+                    help="build the ROAD-PIECE artifact for traffic matching (every way a "
+                         "bike may ride, labelled cycle path / cycle lane / shared road, "
+                         "z14 only, way id as feature id; zero DB rows), tiled and "
+                         "published PER COUNTRY under roadpieces/<cc>/<stamp>/roadpieces.pmtiles.")
     ap.add_argument("--no-publish", action="store_true",
                     help="with --surface/--routes: build the artifacts but do not upload "
                          "them or move the manifest. For experiments and size "
@@ -897,8 +1021,10 @@ def main(argv=None) -> int:
     workdir = pathlib.Path(os.environ.get("COVERAGE_WORKDIR", "/data/work"))
     workdir.mkdir(parents=True, exist_ok=True)
     contract = load_contract()
-    if args.routes or args.surface:
-        family, runner = ("routes", _run_routes) if args.routes else ("surface", _run_surface)
+    if args.routes or args.surface or args.roadpieces:
+        family, runner = (("routes", _run_routes) if args.routes
+                          else ("roadpieces", _run_roadpieces) if args.roadpieces
+                          else ("surface", _run_surface))
         return _tracked_line_run(
             family, args, regions,
             lambda rebuilt: runner(regions, workdir, contract, extract_only=args.extract_only,

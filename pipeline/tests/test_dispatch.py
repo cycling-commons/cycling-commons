@@ -188,14 +188,16 @@ def test_each_loaded_region_gets_its_line_extracts_then_one_publish_pass_per_fam
     monkeypatch.setenv("COVERAGE_REGIONS", "europe/belgium,europe/netherlands")
     assert dispatch.main() == 0
     flags = [tuple(a for a in c if a.startswith("--")) for c in calls]
-    assert flags[:3] == [("--load-only", "--regions", "--run-id", "--trigger"),
+    assert flags[:4] == [("--load-only", "--regions", "--run-id", "--trigger"),
                          ("--routes", "--extract-only", "--regions", "--run-id"),
-                         ("--surface", "--extract-only", "--regions", "--run-id")]
+                         ("--surface", "--extract-only", "--regions", "--run-id"),
+                         ("--roadpieces", "--extract-only", "--regions", "--run-id")]
     # One night, one row: the extracts join the dispatcher's run, not their own.
     assert calls[1][calls[1].index("--run-id") + 1] == calls[0][calls[0].index("--run-id") + 1]
-    assert flags[-3:] == [("--tiles-only", "--regions", "--run-id"),
+    assert flags[-4:] == [("--tiles-only", "--regions", "--run-id"),
                           ("--routes", "--regions", "--run-id"),
-                          ("--surface", "--regions", "--run-id")]
+                          ("--surface", "--regions", "--run-id"),
+                          ("--roadpieces", "--regions", "--run-id")]
     night = calls[-1][calls[-1].index("--run-id") + 1]
     assert calls[-2][calls[-2].index("--run-id") + 1] == night
 
@@ -264,7 +266,7 @@ def test_a_raising_line_pass_is_a_failed_publish_and_the_night_goes_on(db, night
     monkeypatch.setattr(dispatch, "run_main", raising_routes)
     assert dispatch.main() == 1
     flags = [c[0] for c in calls if "--extract-only" not in c and "--load-only" not in c]
-    assert flags == ["--tiles-only", "--routes", "--surface"]
+    assert flags == ["--tiles-only", "--routes", "--surface", "--roadpieces"]
     assert _run_status(db)[:2] == ("partial", 1)
     err = capsys.readouterr().err
     assert "[dispatch] --routes FAILED: tippecanoe died" in err

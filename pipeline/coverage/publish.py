@@ -83,7 +83,8 @@ def ensure_bucket(client=None):
     }))
 
 
-FAMILIES = {"coverage": MANIFEST_KEY, "surface": "surface/manifest.json", "routes": "routes/manifest.json"}
+FAMILIES = {"coverage": MANIFEST_KEY, "surface": "surface/manifest.json", "routes": "routes/manifest.json",
+            "roadpieces": "roadpieces/manifest.json"}
 # <family>/<cc or gaps>/<stamp>/<arm>.pmtiles: one folder per country build,
 # so pruning is per country and never touches a neighbour's files.
 # A stamp is YYYYMMDD-HHMMSS; builds published with minute stamps (YYYYMMDD-HHMM)
@@ -92,7 +93,8 @@ _COUNTRY_KEY = re.compile(r"^(coverage|surface|routes)/([a-z]{2}|gaps)/(\d{8}-\d
 # One advisory-lock key per manifest, distinct from the run lock
 # (run.COVERAGE_ADVISORY_LOCK_KEY), which the coverage run holds on its own
 # connection while it publishes.
-_MANIFEST_LOCK_KEYS = {"coverage": 0xC07E7A70, "surface": 0xC07E7A71, "routes": 0xC07E7A72}
+_MANIFEST_LOCK_KEYS = {"coverage": 0xC07E7A70, "surface": 0xC07E7A71, "routes": 0xC07E7A72,
+                       "roadpieces": 0xC07E7A76}
 
 
 @dataclass(frozen=True)

@@ -391,9 +391,31 @@ def build_routes_pmtiles(way_files: dict[str, list[Path]], node_files: dict[str,
     _run(cmd)
 
 
+def build_roadpieces_pmtiles(files: dict[str, list[Path]], out_path: Path) -> None:
+    """tippecanoe -> the road-piece artifact for traffic matching: one
+    `roadpieces_<cc>` layer per country, z14 only
+    (docs/specs/traffic-measurements.md §2).
+
+    The browser snaps a ride to these lines, so every way stays, at full
+    detail, at the one zoom the matcher reads: no thinning, no simplification,
+    and the way id is the feature id (the GeoJSON `id`), because the summary a
+    rider sends names the way by it.
+    """
+    cmd = [
+        "tippecanoe", "-o", str(out_path), "--force", "--quiet",
+        "--minimum-zoom", "14", "--maximum-zoom", "14",
+        "--no-feature-limit", "--no-tile-size-limit",
+        "--no-line-simplification", "--no-simplification-of-shared-nodes",
+    ]
+    for cc in sorted(files):
+        for path in files[cc]:
+            cmd += ["-L", f"roadpieces_{cc.lower()}:{path}"]
+    _run(cmd)
+
+
 # Bumped whenever a builder's tippecanoe flags change: the rebuild rule
 # (coverage-provider.md §3) cannot see a flag change in the input files.
-TILE_PROFILE = {"coverage": "1", "surface": "1", "routes": "1", "gaps": "1"}
+TILE_PROFILE = {"coverage": "1", "surface": "1", "routes": "1", "gaps": "1", "roadpieces": "1"}
 
 
 def artifact_bounds(path) -> list[float]:
