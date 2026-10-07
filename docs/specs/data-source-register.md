@@ -239,14 +239,14 @@ is this.
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
-| Overture Maps `divisions` theme (`division_area`) | Every `region` polygon on the atlas, plus the ISO 3166-1/-2 codes the world directory is keyed on; and every candidate boundary in `world_division`, onboarded or not | ODbL (conflates OSM + geoBoundaries), attribution required (notice on `/credits`) | **Ingest** - in use (`tools/divisions/export_divisions.py` -> `app:catalog:import` for `region`; `tools/divisions/export_candidates.py` -> `app:divisions:import` for `world_division`) | verified (in use) |
+| Overture Maps `divisions` theme (`division_area`) | Every `region` polygon on the atlas, plus the ISO 3166-1/-2 codes the world directory is keyed on; and every candidate boundary in `world_division`, onboarded or not | ODbL (conflates OSM + geoBoundaries), attribution required (notice on `/credits`) | **Ingest** - in use (`pipeline/divisions/export_divisions.py` -> `app:catalog:import` for `region`; `pipeline/divisions/export_candidates.py` -> `app:divisions:import` for `world_division`) | verified (in use) |
 
 Provenance is recorded per row: `region.source` is `osm` or `overture`
 (`catalog-data-model.md` §4). Today every seeded row is `overture`. Both
-exporters read the release pinned in `tools/divisions/config.py:OVERTURE_RELEASE`
+exporters read the release pinned in `pipeline/divisions/config.py:OVERTURE_RELEASE`
 (`2026-08-19.0` today); bumping it is a versioned re-import, not a refresh, so
 the `/credits` notice moves with it.
-The onboarding playbook is `tools/divisions/README.md`.
+The onboarding playbook is `wiki/developers/data-ops/onboarding-a-country.md`.
 
 ### Imagery and elevation (not a letter, but sourced the same way)
 

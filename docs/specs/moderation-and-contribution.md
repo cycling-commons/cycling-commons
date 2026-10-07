@@ -2503,8 +2503,8 @@ exhausted` building a `<select>` that needs three columns. Both now select
 `id, name, country_code` through DBAL - the picker rendering in ~8 MiB, grouped
 into `optgroup`s by country. Raising `memory_limit` only moves the wall: every
 onboarded country adds geometry, and this page is
-[onboarding playbook](../../tools/divisions/README.md) step 7, so it sits on the
-path of every new country.
+[onboarding playbook](../../wiki/developers/data-ops/onboarding-a-country.md),
+so it sits on the path of every new country.
 
 ### 9.2 Scope semantics
 
@@ -3011,7 +3011,7 @@ only itself:
 | Switzerland | 26 cantons | 883 km² | offered |
 | Netherlands | 12 provinces | 3,132 km² | offered |
 
-The line reproduces by measurement the call `tools/divisions/config.py` had made
+The line reproduces by measurement the call `pipeline/divisions/config.py` had made
 by hand for Slovenia and Luxembourg (owner 2026-09-14). The median, not the
 mean, so one huge territory cannot make a country of small divisions look
 curatable, nor one city canton the reverse. Among countries not onboarded, 33
