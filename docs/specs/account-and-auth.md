@@ -784,6 +784,9 @@ unverified / locked / pending-removal + 10 recent signups). Honesty rule: no
 fabricated or stale stats on the dashboard — a metric joins only when its
 source is real.
 
+It also lists the daily jobs with their last good run (`App\Ops\JobHealth`),
+and shows a red warning at the top while one is late (operations.md §1).
+
 ### 6.6 Inactivity lifecycle — **Specified, pending implementation**
 
 Designed, not built; requires a `lastActiveAt` column

@@ -21,6 +21,8 @@ use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationService;
+use App\Ops\DailyJobs;
+use App\Ops\JobHealth;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Service\AdminDashboardStats;
@@ -65,6 +67,7 @@ final class DashboardController extends AbstractDashboardController
     public function __construct(
         private readonly AdminDashboardStats $stats,
         private readonly AlertRecipients $alertRecipients,
+        private readonly JobHealth $jobHealth,
     ) {
     }
 
@@ -75,6 +78,8 @@ final class DashboardController extends AbstractDashboardController
             'stats' => $this->stats->collect(),
             // No recipient means every alert is only a log line.
             'alerts_unconfigured' => !$this->alertRecipients->isConfigured(),
+            'jobs' => $this->jobHealth->report(),
+            'jobs_max_age' => DailyJobs::MAX_AGE_HOURS,
         ]);
     }
 

@@ -91,6 +91,8 @@ tables:
         Encrypted; keyed by an HMAC of rider and road.
     traffic_seen: >-
         HMACs of the dedupe codes already received, so no ride is counted twice.
+    job_run: >-
+        Last good run of each daily console job; the admin dashboard warns when one is late.
 
     # Entities whose docblock does not stand alone.
     reset_password_request: >-

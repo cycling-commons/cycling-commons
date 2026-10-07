@@ -69,7 +69,7 @@ final class AlertRecipientNoticeTest extends WebTestCase
 
         $page = $client->request('GET', '/admin');
         self::assertResponseIsSuccessful();
-        $notice = $page->filter('.alert-danger[role="alert"]');
+        $notice = $page->filter('.alert-danger[role="alert"][data-alert-recipients]');
         self::assertCount(1, $notice);
         self::assertStringContainsString(self::NOTICE, $notice->text());
         self::assertCount(1, $notice->filter('a[href$="/admin/system-config"]'));

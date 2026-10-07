@@ -7,10 +7,20 @@
     {% if alerts_unconfigured|default(false) %}
         {# AlertRecipients is empty: escalations, an opened circuit breaker and
            server errors are written to the log and mailed to nobody. #}
-        <div class="alert alert-danger" role="alert">
+        <div class="alert alert-danger" role="alert" data-alert-recipients>
             <strong>{{ 'admin.dashboard.no_alert_recipients_b'|trans }}</strong>
             {{ 'admin.dashboard.no_alert_recipients'|trans }}
             <a href="{{ path('admin_system_config') }}">{{ 'admin.dashboard.no_alert_recipients_link'|trans }}</a>
+        </div>
+    {% endif %}
+
+    {# The daily jobs run from timers outside this repository; a late one is
+       found here rather than by somebody noticing stale data (operations.md). #}
+    {% set late_jobs = jobs|default([])|filter(j => j.late) %}
+    {% if late_jobs is not empty %}
+        <div class="alert alert-danger" role="alert" data-jobs-late>
+            <strong>{{ 'admin.dashboard.jobs_late_b'|trans({'%count%': late_jobs|length}) }}</strong>
+            {{ 'admin.dashboard.jobs_late'|trans({'%hours%': jobs_max_age}) }}
         </div>
     {% endif %}
 

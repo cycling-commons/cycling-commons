@@ -7,7 +7,7 @@ doctrine:
         # catalog_change is written by triggers only and season_result by
         # SeasonResults with DBAL; neither has an entity (catalog-data-model.md
         # §9.1, route-domain.md §8d), so the diff must not drop them either.
-        schema_filter: '~^(?!topology\.|coverage_|traffic_|catalog_change$|season_result(_id_seq)?$)~'
+        schema_filter: '~^(?!topology\.|coverage_|traffic_|catalog_change$|season_result(_id_seq)?$|job_run$)~'
         types:
             # AES-256-GCM at-rest encryption (key derived from APP_SECRET) for the TOTP secret
             encrypted_string: App\Doctrine\EncryptedStringType
