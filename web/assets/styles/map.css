@@ -222,8 +222,21 @@
   .acct-dropdown[hidden]{display:none}
   .acct-dropdown a,.acct-dropdown button{display:block;width:100%;box-sizing:border-box;text-align:left;background:none;border:0;font-family:var(--sans);font-size:.9rem;color:var(--ink)!important;opacity:1!important;padding:.55rem .7rem;border-radius:5px;cursor:pointer;text-decoration:none;white-space:nowrap}
   .acct-dropdown a:hover,.acct-dropdown button:hover{background:rgba(16,30,22,.06)}
-  .acct-sec{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#8a8674;padding:.5rem .7rem .25rem;pointer-events:none}
-  .acct-sec:first-child{padding-top:.25rem}
+  /* Personal / Moderation / Admin groups, as atlas.css draws them: a solid
+     header (spruce / clay / ochre) over a light tint of the same hue. */
+  .acct-group{border-radius:6px;overflow:hidden;margin:.35rem 0 .3rem}
+  .acct-group:first-child{margin-top:0}
+  .acct-group-personal{background:rgba(28,58,42,.07)}
+  .acct-group-mod{background:rgba(181,83,46,.08)}
+  .acct-group-admin{background:rgba(200,146,58,.1)}
+  .acct-sec{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .7rem;pointer-events:none;color:var(--paper)}
+  .acct-sec-personal{background:var(--spruce)}
+  .acct-sec-mod{background:var(--clay)}
+  .acct-sec-admin{background:var(--ochre);color:var(--ink)}
+  .acct-group a{border-radius:0}
+  .acct-group-personal a:hover{background:rgba(28,58,42,.13)}
+  .acct-group-mod a:hover{background:rgba(181,83,46,.15)}
+  .acct-group-admin a:hover{background:rgba(200,146,58,.2)}
   /* The unread pill beside "Messages". map.css carries its own copy of the
      shared account chip's rules, and this one was missing, so on /map alone the
      count rendered as bare text welded to the label: "Messages5"

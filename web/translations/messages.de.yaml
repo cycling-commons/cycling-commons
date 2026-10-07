@@ -3699,6 +3699,7 @@ account:
   sign_out: 'Abmelden'
   menu_personal: 'Persönlich'
   menu_moderation: 'Moderation'
+  admin_panel: 'Verwaltung'
   mod_scope_all: 'Alle Gebiete'
   menu_more: 'Mehr'
   unread_messages: '%count% ungelesene Nachricht(en)'

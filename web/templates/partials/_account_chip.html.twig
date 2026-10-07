@@ -101,7 +101,12 @@
         <a href="{{ path('moderate_rulebook') }}">{{ 'nav.rulebook'|trans }}</a>
       </div>
     {% endif %}
-    {% if is_granted('ROLE_ADMIN') %}<a class="acct-sep" href="{{ path('admin') }}">{{ 'nav.admin'|trans }}</a>{% endif %}
+    {% if is_granted('ROLE_ADMIN') %}
+      <div class="acct-group acct-group-admin">
+        <div class="acct-sec acct-sec-admin">{{ 'nav.admin'|trans }}</div>
+        <a href="{{ path('admin') }}">{{ 'account.admin_panel'|trans }}</a>
+      </div>
+    {% endif %}
     <form method="post" action="{{ path('logout') }}">
       <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
       <button type="submit">{{ 'nav.logout'|trans }}</button>

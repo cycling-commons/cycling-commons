@@ -3717,6 +3717,7 @@ account:
   sign_out: 'Sign out'
   menu_personal: 'Personal'
   menu_moderation: 'Moderation'
+  admin_panel: 'Admin panel'
   mod_scope_all: 'All areas'
   menu_more: 'More'
   unread_messages: '%count% unread message(s)'

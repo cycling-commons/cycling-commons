@@ -3698,6 +3698,7 @@ account:
   sign_out: 'Uitloggen'
   menu_personal: 'Persoonlijk'
   menu_moderation: 'Moderatie'
+  admin_panel: 'Beheerpaneel'
   mod_scope_all: 'Alle gebieden'
   menu_more: 'Meer'
   unread_messages: '%count% ongelezen bericht(en)'

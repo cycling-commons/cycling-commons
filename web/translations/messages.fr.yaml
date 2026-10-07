@@ -3691,6 +3691,7 @@ account:
   sign_out: 'Se déconnecter'
   menu_personal: 'Personnel'
   menu_moderation: 'Modération'
+  admin_panel: 'Panneau d’administration'
   mod_scope_all: 'Toutes les zones'
   menu_more: 'Plus'
   unread_messages: '%count% message(s) non lu(s)'

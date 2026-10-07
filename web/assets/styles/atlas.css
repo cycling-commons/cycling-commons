@@ -105,14 +105,17 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;o
 .acct-group:first-child{margin-top:0}
 .acct-group-personal{background:rgba(28,58,42,.07)}
 .acct-group-mod{background:rgba(181,83,46,.08)}
+.acct-group-admin{background:rgba(200,146,58,.1)}
 .acct-sec{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.4rem .7rem;pointer-events:none;color:var(--paper)}
 .acct-sec-personal{background:var(--spruce)}
 .acct-sec-mod{background:var(--clay)}
+.acct-sec-admin{background:var(--ochre);color:var(--ink)}
 /* links inside a group: transparent (so the group tint shows) + square (the
    group already rounds the corners); hover deepens the tint. */
 .acct-group a{border-radius:0}
 .acct-group-personal a:hover{background:rgba(28,58,42,.13)}
 .acct-group-mod a:hover{background:rgba(181,83,46,.15)}
+.acct-group-admin a:hover{background:rgba(200,146,58,.2)}
 /* a hairline above a standalone item (Admin) sets it apart from the group above */
 .acct-dropdown a.acct-sep{margin-top:.25rem;border-top:1px solid rgba(20,22,14,.1);padding-top:.6rem}
 .acct-dropdown form{margin:.25rem 0 0;padding-top:.25rem;border-top:1px solid rgba(20,22,14,.1)}

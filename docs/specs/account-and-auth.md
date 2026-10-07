@@ -969,7 +969,10 @@ One continuous logged-in environment — dark identity bar + section tabs —
 included by `/account/contributions`, `/account/settings`, `/2fa/setup`, and the moderation pages.
 The same account chip (`partials/_account_chip.html.twig`) is used everywhere,
 including the public nav; the language switcher (`partials/_lang_menu.html.twig`)
-lives in the shell header.
+lives in the shell header. Its menu has up to three groups, each a solid header
+over a light tint of the same hue: Personal (spruce), Moderation (clay) and
+Admin (ochre, one "Admin panel" link). `atlas.css` and the map's own copy in
+`map.css` draw them alike.
 
 - **Personal mode** tabs: Dashboard · Contributions · Votes · Scout ·
   Translate · Messages · My bugs · Settings, under a "Personal" label (Saved
