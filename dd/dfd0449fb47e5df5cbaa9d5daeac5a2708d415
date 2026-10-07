@@ -1,0 +1,29 @@
+web/src/Service/BaseLocationJitter.php
+  s_985749378da6fe::t_affb25423935a2 1-43
+web/src/Service/BaseLocationService.php
+  s_985749378da6fe::t_0cc7b4a75fe5de 24,31-39
+web/tests/Auth/ProfileSettingsTest.php
+  s_985749378da6fe::t_f2c53f9dfe5b94 482-484,540,560
+web/tests/Controller/MyAreaControllerTest.php
+  s_985749378da6fe::t_4f944610b0b9da 95-97,106-107
+web/tests/Service/BaseLocationJitterTest.php
+  s_985749378da6fe::t_789f03b942dc5d 1-57
+web/tests/Service/BaseLocationServiceTest.php
+  s_985749378da6fe::t_772c4f8bdb71a7 44-53,66,75-88,94,106,126,138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "dddfd0449fb47e5df5cbaa9d5daeac5a2708d415",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
