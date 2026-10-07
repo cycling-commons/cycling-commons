@@ -479,8 +479,9 @@ final class ProfileSettingsTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $user = $this->fetchUser($email);
-        self::assertSame(0.45, $user->getBaseLat());
-        self::assertSame(-45.85, $user->getBaseLng());
+        // A random point within 2.5 km of the click, rounded to two decimals.
+        self::assertEqualsWithDelta(0.45, $user->getBaseLat(), 0.03);
+        self::assertEqualsWithDelta(-45.85, $user->getBaseLng(), 0.03);
         self::assertSame(60, $user->getBaseRadiusKm());
         self::assertSame('Namur', $user->getBasePlace());
         self::assertNotSame([], $user->getBaseRegionIds(), 'derivation should find the fixture region');
@@ -536,6 +537,7 @@ final class ProfileSettingsTest extends WebTestCase
         $svc = static::getContainer()->get(BaseLocationService::class);
         $svc->apply($user, 0.451234, -45.851234, 'Namur', 40);
         $em->flush();
+        $stored = [$user->getBaseLat(), $user->getBaseLng()];
 
         $crawler = $client->request('GET', '/account/settings');
         self::assertResponseIsSuccessful();
@@ -555,7 +557,7 @@ final class ProfileSettingsTest extends WebTestCase
         $updated = $this->fetchUser($email);
         self::assertSame(120, $updated->getBaseRadiusKm());
         self::assertSame('Namur', $updated->getBasePlace(), 'place is preserved across a radius-only change');
-        self::assertSame(0.45, $updated->getBaseLat(), 'stored point is unchanged by a radius-only submit');
+        self::assertSame($stored, [$updated->getBaseLat(), $updated->getBaseLng()], 'stored point is unchanged by a radius-only submit');
         self::assertNotSame([], $updated->getBaseRegionIds(), 'derivation re-ran against the wider radius');
     }
 

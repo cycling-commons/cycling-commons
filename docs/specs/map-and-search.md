@@ -1063,7 +1063,7 @@ the newest rung of that same ladder.
   shared/bookmarked `?scope=myarea` link always reflects the *opener's* area,
   not the sharer's.
 - **Source of truth, logged-in vs anonymous.** Logged in: `window.CC_MY_AREA`
-  (server-stored coarse point, §2). Logged out: an anonymous circle
+  (server-stored coarse point, a random spot up to 2.5 km from the one the rider picked, account-and-auth.md §2). Logged out: an anonymous circle
   `{lat, lng, radiusKm}` (2 decimals, ~1 km) in `localStorage['cc-my-area']`,
   written by the map-centre "Set my area" pin drop (cold-start chip, below) — never a
   device-location prompt. Anonymous region-set derivation is

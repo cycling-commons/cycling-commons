@@ -21,12 +21,22 @@ final class BaseLocationService
     public function __construct(
         private readonly Connection $db,
         private readonly BaseAreaResolver $resolver,
+        private readonly BaseLocationJitter $jitter = new BaseLocationJitter(),
     ) {
     }
 
     /** apply()/clear() do NOT flush - the caller owns the flush/transaction. */
     public function apply(User $user, float $lat, float $lng, ?string $place, int $radiusKm): void
     {
+        // A random point within 2.5 km of a new click, then rounded: never the
+        // address. The point already stored (a radius-only change hands it
+        // back) is kept as it is, or every save would move it further.
+        $d = User::BASE_COORD_DECIMALS;
+        $stored = $user->hasBaseLocation()
+            && round($lat, $d) === $user->getBaseLat() && round($lng, $d) === $user->getBaseLng();
+        if (!$stored) {
+            [$lat, $lng] = $this->jitter->apply($lat, $lng);
+        }
         $user->setBaseLocation($lat, $lng, $place);
         $user->setBaseRadiusKm($radiusKm);
         // Derive from the STORED (coarse, clamped) values - never the raw input

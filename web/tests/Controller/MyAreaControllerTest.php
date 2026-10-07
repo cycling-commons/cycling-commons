@@ -92,8 +92,9 @@ final class MyAreaControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         /** @var array{lat: float, lng: float, radiusKm: int, place: ?string, regionIds: list<int>, countryCodes: list<string>} $body */
         $body = json_decode((string) $client->getResponse()->getContent(), true);
-        self::assertSame(0.45, $body['lat']);
-        self::assertSame(-45.85, $body['lng']);
+        // A random point within 2.5 km of the click, rounded to two decimals.
+        self::assertEqualsWithDelta(0.45, $body['lat'], 0.03);
+        self::assertEqualsWithDelta(-45.85, $body['lng'], 0.03);
         self::assertSame(55, $body['radiusKm']);
         self::assertSame('Namur', $body['place']);
         self::assertSame([$region->getId()], $body['regionIds']);
@@ -102,8 +103,8 @@ final class MyAreaControllerTest extends WebTestCase
         $em->clear();
         $reloaded = $em->getRepository(User::class)->find($user->getId());
         self::assertNotNull($reloaded);
-        self::assertSame(0.45, $reloaded->getBaseLat());
-        self::assertSame(-45.85, $reloaded->getBaseLng());
+        self::assertSame($body['lat'], $reloaded->getBaseLat(), 'the stored point is the one the answer gave');
+        self::assertSame($body['lng'], $reloaded->getBaseLng());
         self::assertSame([$region->getId()], $reloaded->getBaseRegionIds());
         self::assertSame(['BE'], $reloaded->getBaseCountryCodes());
     }

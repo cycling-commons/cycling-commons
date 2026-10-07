@@ -41,6 +41,16 @@ final class BaseLocationServiceTest extends KernelTestCase
         $this->em->flush();
     }
 
+    /** Without the random shift, so each case can name the point it stores. */
+    private function service(): BaseLocationService
+    {
+        return new BaseLocationService(
+            static::getContainer()->get(\Doctrine\DBAL\Connection::class),
+            static::getContainer()->get(\App\Service\BaseAreaResolver::class),
+            new \App\Service\BaseLocationJitter(static fn (): float => 0.0),
+        );
+    }
+
     private function makeUser(): User
     {
         $u = (new User())->setEmail('base-loc-'.bin2hex(random_bytes(4)).'@example.test')->setPassword('x');
@@ -53,7 +63,7 @@ final class BaseLocationServiceTest extends KernelTestCase
     public function testApplyCoarsensDerivesAndSetsRadius(): void
     {
         $u = $this->makeUser();
-        $svc = static::getContainer()->get(BaseLocationService::class);
+        $svc = $this->service();
         $svc->apply($u, 0.451234, -45.851234, 'Namur', 55);
 
         self::assertSame(0.45, $u->getBaseLat());
@@ -62,12 +72,26 @@ final class BaseLocationServiceTest extends KernelTestCase
         self::assertSame(['BE'], $u->getBaseCountryCodes());
     }
 
+    /** Saving the point already stored (a radius-only change) must not move it again. */
+    public function testTheStoredPointIsNotShiftedAgain(): void
+    {
+        $u = $this->makeUser();
+        $svc = static::getContainer()->get(BaseLocationService::class);
+        $svc->apply($u, 0.451234, -45.851234, 'Namur', 55);
+        $first = [$u->getBaseLat(), $u->getBaseLng()];
+        for ($i = 0; $i < 20; ++$i) {
+            $svc->apply($u, (float) $u->getBaseLat(), (float) $u->getBaseLng(), 'Namur', 60 + $i);
+        }
+
+        self::assertSame($first, [$u->getBaseLat(), $u->getBaseLng()]);
+    }
+
     public function testApplyDoesNotFlush(): void
     {
         // apply() mutates the entity only — the caller owns the flush/transaction
         // (map-and-search.md §4.5).
         $u = $this->makeUser();
-        $svc = static::getContainer()->get(BaseLocationService::class);
+        $svc = $this->service();
         $svc->apply($u, 0.451234, -45.851234, 'Namur', 55);
 
         $this->em->clear();
@@ -79,7 +103,7 @@ final class BaseLocationServiceTest extends KernelTestCase
     public function testClearWipesBaseLocation(): void
     {
         $u = $this->makeUser();
-        $svc = static::getContainer()->get(BaseLocationService::class);
+        $svc = $this->service();
         $svc->apply($u, 0.451234, -45.851234, 'Namur', 55);
         $this->em->flush();
         self::assertTrue($u->hasBaseLocation());
@@ -99,7 +123,7 @@ final class BaseLocationServiceTest extends KernelTestCase
         $u->setBaseRegionIds([]); // stale
         $this->em->flush();
 
-        $svc = static::getContainer()->get(BaseLocationService::class);
+        $svc = $this->service();
         $n = $svc->rederiveAll();
 
         self::assertSame(1, $n);
@@ -111,7 +135,7 @@ final class BaseLocationServiceTest extends KernelTestCase
     public function testRederiveAllSkipsUsersWithoutABasePoint(): void
     {
         $this->makeUser(); // no base point set
-        $svc = static::getContainer()->get(BaseLocationService::class);
+        $svc = $this->service();
 
         self::assertSame(0, $svc->rederiveAll());
     }
