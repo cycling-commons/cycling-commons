@@ -15,6 +15,7 @@ import { PREFS, addHeatmap, updateHeatFilter, layerCounts, updateCounts, render,
 import { mapToast, clearRevealPin } from './drawer.js';
 import { layerGlyph } from './icons.js';
 import { refilterClusters, updateConfMarkers } from './osm-pools.js';
+import { trafficLayerAvailable, setTrafficLayer, trafficLayerVisible } from './traffic-layer.js';
 import { curScope, inScope } from './scope-ui.js';
 import { modeToShow } from './filters.js';
 import { surfaceTilesConfigured, setSurfaceTiles, surfaceTilesVisible,
@@ -152,9 +153,18 @@ export function initLayerList(){
     };
   }
 
+  // Measured traffic: curators only, drawn on the road-piece tiles.
+  const trafficBtn=document.getElementById('ovTraffic');
+  if(trafficBtn && trafficLayerAvailable()){
+    trafficBtn.hidden=false;
+    trafficBtn.onclick=async ()=>{ paintOverlay(trafficBtn, await setTrafficLayer(!trafficLayerVisible())); };
+  }
+
   /* Legend shows only what is on the map. Surface key: tile skin OR curated
      A layer with shown > 0 (ticked-but-empty must not explain six colours). */
   const surfaceKey=document.getElementById('surfaceKey'), routesKey=document.getElementById('routesKey');
+  // The ride review's step 2 key; scout-traffic.js shows it and says so with cc:legend.
+  const scoutKey=document.getElementById('scoutKey');
   const surfaceLayer=layerByKey['surface'];   // a lookup object, not a function
   const surfaceOnMap=()=>surfaceTilesVisible()
     || (!!surfaceLayer && active.has('surface') && layerCounts(surfaceLayer).shown > 0);
@@ -162,7 +172,7 @@ export function initLayerList(){
     if(surfaceKey) surfaceKey.hidden=!surfaceOnMap();
     if(routesKey) routesKey.hidden=!routesTilesVisible();
     const legendEl=document.querySelector('.legend');
-    if(legendEl) legendEl.hidden=!!(surfaceKey?.hidden && routesKey?.hidden);
+    if(legendEl) legendEl.hidden=!!(surfaceKey?.hidden && routesKey?.hidden && (scoutKey?.hidden ?? true));
   }
   /* Filters show only what there is to filter. Gated on total, never shown
      (shown already has the chips applied — filtering to nothing must not hide the chips). */
@@ -173,6 +183,7 @@ export function initLayerList(){
     });
   }
   document.addEventListener('cc:counts', ()=>{ syncLegend(); syncFilterGroups(); });
+  document.addEventListener('cc:legend', syncLegend);
   syncLegend(); syncFilterGroups();
 
   // Legend-as-filter + study mode.

@@ -25,10 +25,20 @@
   </div>
 
   <div class="scout-drop" id="scoutDrop">
-    <input type="file" id="scoutFile" accept=".fit,.zip,application/zip,application/octet-stream" hidden>
+    {# One ride or many (docs/specs/traffic-measurements.md §3.2): several files,
+       or a .zip with several rides, go to several-rides mode, read here one file
+       at a time; traffic summaries only. #}
+    <input type="file" id="scoutFile" multiple accept=".fit,.zip,application/zip,application/octet-stream" hidden>
     <button type="button" class="scout-pick" id="scoutPick">{{ 'scout.review_pick'|trans }}</button>
     <p class="scout-hint">{{ 'scout.review_hint'|trans }}</p>
   </div>
+
+  {# Two steps only when the ride has radar data: tags, then traffic. A ride
+     without radar shows the tag review alone, exactly as before. #}
+  <nav class="scout-steps" id="scoutSteps" hidden aria-label="{{ 'scout.review_title'|trans }}">
+    <button type="button" class="scout-step" id="scoutStepTags" aria-current="step">1 · {{ 'scout.review_step_tags'|trans }}</button>
+    <button type="button" class="scout-step" id="scoutStepTraffic">2 · {{ 'scout.review_step_traffic'|trans }}</button>
+  </nav>
 
   <p class="scout-msg" id="scoutMsg" role="status" hidden></p>
   {# What the ride carries beyond its tags: an overtake count, tags with no fix,
@@ -41,7 +51,53 @@
     {# Send everything still outstanding. Below the list, because it is the last
        thing you do — and it never sends what is already sent. #}
     <button type="button" class="scout-sendall" id="scoutSendAll">{{ 'scout.review_send_all'|trans }}</button>
+    <button type="button" class="scout-next" id="scoutNextTraffic" hidden>{{ 'scout.review_next_traffic'|trans }}</button>
   </div>
+
+  {# Step 2: the traffic summary of this ride. The rider sees every line before
+     anything is sent, and the click on Send is the consent for this ride. #}
+  <section class="scout-traffic" id="scoutTraffic" hidden>
+    <p class="scout-fact" id="scoutTrafficFacts" role="status"></p>
+    <p class="scout-fact" id="scoutTrafficUnmatched" hidden></p>
+    <button type="button" class="scout-sendall" id="scoutTrafficSend" hidden>{{ 'scout.review_traffic_send'|trans }}</button>
+    <p class="scout-msg" id="scoutTrafficMsg" role="status" hidden></p>
+    {# Opens the map's own Key panel at the lines this step draws. #}
+    <button type="button" class="scout-traffic-key" id="scoutTrafficKey"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="2"/><path d="M11.5 6H20"/><circle cx="6" cy="12" r="2"/><path d="M11.5 12H20"/><circle cx="6" cy="18" r="2"/><path d="M11.5 18H20"/></svg>{{ 'scout.review_key'|trans }}</button>
+    {# What this click sends: the rule, then every line. #}
+    <details class="scout-traffic-preview" id="scoutTrafficPreview" hidden>
+      <summary>{{ 'scout.review_traffic_preview'|trans }}</summary>
+      <p>{{ 'scout.review_traffic_intro'|trans }}</p>
+      <ol id="scoutTrafficLines"></ol>
+    </details>
+  </section>
+
+  {# Several rides: progress, one total, one send. #}
+  <section class="scout-traffic" id="scoutBulk" hidden>
+    <p class="scout-hint">{{ 'scout.review_bulk_hint'|trans }}</p>
+    <p class="scout-fact" id="scoutBulkProgress" role="status"></p>
+    {# What the batch holds, before anything is sent (ride-batch.js). #}
+    <table class="scout-bulk-sum" id="scoutBulkSum" hidden><tbody></tbody></table>
+    <details class="scout-bulk-years" id="scoutBulkYears" hidden>
+      <summary>{{ 'scout.review_bulk_years'|trans }}</summary>
+      <table>
+        <thead><tr>
+          <th scope="col">{{ 'scout.review_bulk_col_year'|trans }}</th>
+          <th scope="col">{{ 'scout.review_bulk_col_rides'|trans }}</th>
+          <th scope="col">{{ 'scout.review_bulk_col_distance'|trans }}</th>
+          <th scope="col">{{ 'scout.review_bulk_col_passed'|trans }}</th>
+          <th scope="col">{{ 'scout.review_bulk_col_nearby'|trans }}</th>
+        </tr></thead>
+        <tbody id="scoutBulkYearRows"></tbody>
+      </table>
+    </details>
+    <p class="scout-fact" id="scoutBulkSkipped" hidden></p>
+    <button type="button" class="scout-sendall" id="scoutBulkSend" hidden>{{ 'scout.review_bulk_send'|trans }}</button>
+    <p class="scout-msg" id="scoutBulkMsg" role="status" hidden></p>
+    <details class="scout-traffic-preview">
+      <summary>{{ 'scout.review_traffic_preview'|trans }}</summary>
+      <p>{{ 'scout.review_traffic_intro'|trans }}</p>
+    </details>
+  </section>
 
   {# The photo uploader, mounted once. media-upload.js addresses these ids
      directly, and it owns the consent gate — which is exactly why there is one

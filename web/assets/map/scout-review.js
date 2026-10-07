@@ -4,7 +4,7 @@
    The ride file is never uploaded — ScoutIntakeController refuses a payload carrying a track. */
 import { map } from './map-init.js';
 import { D, tpl } from './i18n.js';
-import { uSpeed } from './units.js';
+import { uSpeed, uSpeedValue } from './units.js';
 import { parseFit, extractTags, buildSurfaceSegments, countVehicles, MESG, semiToDeg,
          fitToDate, POI_RESUPPLY, OSM_SURFACE, LEGACY_RESUPPLY, SURF_TYPE } from '../lib/scout-fit.js';
 import { surfaceStyle } from './render.js';
@@ -13,8 +13,11 @@ import { DEVICE_CLASS, DEVICE_DECLARABLE, cutTrack, nearestTrackIndex, sliceTrac
 import { claimMapClicks, releaseMapClicks } from './picking.js';
 import { mapToast } from './drawer.js';
 import { enhanceSelect } from './select-box.js';
-import { unzipSync } from '../lib/fflate-0.8.3.js';
+import { unzipSync, gunzipSync } from '../lib/fflate-0.8.3.js';
 import { readBundle, isZip, bundleKey } from './scout-bundle.js';
+import { prepareTraffic, resetTraffic, showTrafficStep, showMatchedPieces, initScoutTraffic, TRAFFIC_LINE_IDS } from './scout-traffic.js';
+import { initScoutBulk, hideBulk, startBulk } from './scout-bulk.js';
+import { fitEntries } from '../lib/ride-archive.js';
 
 const RIDE_SRC = 'cc-scout-ride';
 const RIDE_LINE = 'cc-scout-ride-line';
@@ -99,8 +102,8 @@ function readFit(buffer) {
     seg.bkey = tap ? tap.bkey : null;
   });
 
-  /* Overtake count if the rider had a radar: shown, never sent
-     (docs/specs/moderation-and-contribution.md (Scout intake)). */
+  /* Vehicle passes if the rider had a radar: shown in step 2, and summarised
+     per road piece only when the rider sends (docs/specs/traffic-measurements.md). */
   const radar = countVehicles(parsed);
 
   /* Tags with no GPS fix: counted and named, not dropped silently. */
@@ -137,7 +140,8 @@ function readFit(buffer) {
       };
     });
 
-  return { track, tags, segments, radar, unplaceable, bareSurface, bareTaps };
+  /* `fit` stays in the browser: step 2 matches it to road pieces here. */
+  return { track, tags, segments, radar, unplaceable, bareSurface, bareTaps, fit: parsed };
 }
 
 function msg(text, isError) {
@@ -151,7 +155,7 @@ function msg(text, isError) {
 /* Keep scout layers on top — later style layers (catalog, surface, scope mask)
    would otherwise bury the ride. Guarded so styledata cannot loop. */
 function raiseScoutLayers() {
-  const ids = [RIDE_LINE, SEG_CASE, ...SEG_CLS.map(c => SEG_SRC + '-' + c)]
+  const ids = [RIDE_LINE, SEG_CASE, ...SEG_CLS.map(c => SEG_SRC + '-' + c), ...TRAFFIC_LINE_IDS]
     .filter(id => map.getLayer(id));
   if (!ids.length) return;
   const style = map.getStyle().layers.map(l => l.id);
@@ -221,16 +225,20 @@ function drawStretches() {
 }
 
 /* Vehicle pass markers: ground speed (or "?"). Measured here, never sent. */
-function passEl(pass) {
+function passEl(pass, i) {
   const d = document.createElement('div');
   d.className = 'scout-pass';
+  /* The car's place in the radar's list: step 2 colours it passing or nearby. */
+  d.dataset.pass = String(i);
   d.innerHTML = '<svg viewBox="0 0 24 12" width="17" height="9" aria-hidden="true">'
     + '<path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/>'
     + '<circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/>'
     + '</svg>';
   const sp = document.createElement('span');
   /* No speed → "?"; don't invent a number. */
-  sp.textContent = pass.ground == null ? '?' : uSpeed(pass.ground);
+  /* The bare number keeps the markers small; the legend names the unit, the hover gives both. */
+  sp.textContent = pass.ground == null ? '?' : uSpeedValue(pass.ground);
+  if (pass.ground != null) d.title = uSpeed(pass.ground);
   d.appendChild(sp);
   return d;
 }
@@ -239,10 +247,10 @@ function placePasses(radar) {
   passMarkers.forEach(m => m.remove());
   passMarkers = [];
   if (!radar || !radar.passes) return;
-  radar.passes.forEach(pass => {
+  radar.passes.forEach((pass, i) => {
     // Missing speed still places the marker with "?"; missing place does not.
     if (pass.lat == null || pass.lon == null) return;
-    passMarkers.push(new maplibregl.Marker({ element: passEl(pass), anchor: 'bottom' })
+    passMarkers.push(new maplibregl.Marker({ element: passEl(pass, i), anchor: 'bottom' })
       .setLngLat([pass.lon, pass.lat])
       .addTo(map));
   });
@@ -269,6 +277,11 @@ function clearRide() {
   SEG_CLS.forEach(cls => { if (map.getLayer(SEG_SRC + '-' + cls)) map.removeLayer(SEG_SRC + '-' + cls); });
   if (map.getLayer(SEG_CASE)) map.removeLayer(SEG_CASE);
   if (map.getSource(SEG_SRC)) map.removeSource(SEG_SRC);
+  resetTraffic();
+  const steps = el('scoutSteps');
+  if (steps) steps.hidden = true;
+  const traffic = el('scoutTraffic');
+  if (traffic) traffic.hidden = true;
   const list = el('scoutList');
   if (list) list.hidden = true;
   const tagList = el('scoutTags');
@@ -886,9 +899,12 @@ function renderRideFacts(parsed) {
   if (parsed.bundleUnmatched > 0) {
     lines.push(tplCount(t('scoutBundleUnmatched', '{n} note(s) or photo(s) in the bundle match no tag, so they are not used'), parsed.bundleUnmatched));
   }
-  lines.forEach(text => {
+  /* The radar total is good news, in plain white; the rest asks for attention. */
+  const firstOk = !!(parsed.radar && parsed.radar.total > 0);
+  lines.forEach((text, i) => {
     const p = document.createElement('p');
-    p.className = 'scout-fact';
+    p.className = firstOk && 0 === i ? 'scout-fact ok' : 'scout-fact';
+    if (firstOk && 0 === i) p.id = 'scoutRadarFact';
     p.textContent = text;
     box.appendChild(p);
   });
@@ -1011,32 +1027,92 @@ function show(parsed) {
   placeStretchMarkers();
   placeBareTaps(parsed.bareTaps);
   renderList();
+  const hasTags = tags.length > 0 || stretches.length > 0;
+  const hasRadar = !!(parsed.radar && parsed.radar.covered);
+  /* Two steps only with radar data; a ride without it reviews as before. */
+  el('scoutSteps').hidden = !hasRadar;
+  el('scoutNextTraffic').hidden = !(hasRadar && hasTags);
+  hideBulk();
+  if (hasRadar) prepareTraffic(parsed.fit);
+  else resetTraffic();
+  if (hasRadar && !hasTags) setStep(2);
+  else setStep(1);
+  const nothing = !hasTags && !hasRadar;
+  msg(nothing ? t('scoutNothing', 'Nothing in this ride to send.') : '', nothing);
+}
+
+/* Step 1 shows the tags, step 2 the cars and the road pieces the ride was
+   matched to; never both, so each step's map says only what that step sends. */
+function setStep(n) {
+  const rideHasTags = tags.length > 0 || stretches.length > 0;
+  const tagsBtn = el('scoutStepTags');
+  const trafficBtn = el('scoutStepTraffic');
+  if (tagsBtn) {
+    tagsBtn.setAttribute('aria-current', 1 === n ? 'step' : 'false');
+    /* A ride with radar and no tags: the tags step stays in view, greyed out,
+       and says why on hover. */
+    tagsBtn.setAttribute('aria-disabled', rideHasTags ? 'false' : 'true');
+    tagsBtn.title = rideHasTags ? '' : t('scoutStepNoTags', 'No tags in this ride');
+  }
+  if (trafficBtn) trafficBtn.setAttribute('aria-current', 2 === n ? 'step' : 'false');
   const list = el('scoutList');
-  if (list) list.hidden = false;
-  const empty = !tags.length && !stretches.length;
-  msg(empty ? t('scoutNoTags', 'That ride has no tags in it — nothing to review.') : '', empty);
+  if (list) list.hidden = 2 === n || !rideHasTags;
+  showTrafficStep(2 === n);
+  showCars(2 === n);
+  showTagLayers(1 === n);
+  showMatchedPieces(2 === n);
+}
+
+function showCars(on) {
+  passMarkers.forEach(m => { m.getElement().style.display = on ? '' : 'none'; });
+}
+
+function showTagLayers(on) {
+  [...tags.map(x => x.marker).filter(Boolean), ...segMarkers, ...bareMarkers]
+    .forEach(m => { m.getElement().style.display = on ? '' : 'none'; });
+  [SEG_CASE, ...SEG_CLS.map(c => SEG_SRC + '-' + c)].forEach(id => {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+  });
 }
 
 function loadFile(file) {
   if (!file) return;
   if (!/\.(fit|zip)$/i.test(file.name)) {
-    msg(t('scoutNeedFit', 'Open the .fit file of your ride, or the .zip your Scout phone app exported.'), true);
+    msg(t('scoutNeedFit', 'Open the .fit file of your ride, or a .zip with .fit files.'), true);
     return;
   }
   const reader = new FileReader();
   reader.onload = () => {
     let parsed;
     const bytes = new Uint8Array(reader.result);
-    /* A phone's bundle (docs/specs/scout-bundle.md): unpacked here, in memory. */
+    /* A phone's bundle (docs/specs/scout-bundle.md): unpacked here, in memory.
+       Any other .zip is read for its .fit rides: one opens here, several go to
+       several-rides mode. */
     if (isZip(bytes)) {
       let bundle;
       try {
         bundle = readBundle(bytes, unzipSync);
       } catch (e) {
         const code = e && e.code;
-        msg('version' === code ? t('scoutBundleVersion', 'This bundle is from a newer Scout app. Reload the page and try again.')
-          : 'too-large' === code ? t('scoutBundleTooLarge', 'This bundle is too large to open here.')
-          : t('scoutBundleBad', 'That .zip is not a Scout ride export.'), true);
+        if ('version' === code) {
+          msg(t('scoutBundleVersion', 'This bundle is from a newer Scout app. Reload the page and try again.'), true);
+          return;
+        }
+        const rides = fitEntries(file.name, bytes, { unzipSync, gunzipSync }).filter(r => !r.error);
+        if (rides.length > 1) { startBulk([file]); return; }
+        if (1 === rides.length) {
+          const b = rides[0].bytes;
+          try {
+            parsed = readFit(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
+          } catch (err) {
+            msg((err && err.message) ? err.message : t('scoutBadFile', 'That file could not be read as a ride.'), true);
+            return;
+          }
+          show(parsed);
+          return;
+        }
+        msg('too-large' === code ? t('scoutBundleTooLarge', 'This bundle is too large to open here.')
+          : t('scoutBundleBad', 'That .zip holds no ride file (.fit).'), true);
         return;
       }
       try {
@@ -1259,7 +1335,12 @@ export function initScoutReview() {
   const pick = el('scoutPick');
   if (pick && input) {
     pick.addEventListener('click', () => input.click());
-    input.addEventListener('change', () => loadFile(input.files && input.files[0]));
+    input.addEventListener('change', () => {
+      const files = input.files || [];
+      if (files.length > 1) startBulk(files);
+      else loadFile(files[0]);
+      input.value = '';
+    });
   }
   /* Close hides the card. State lives in module + map, so a pin brings it back. */
   const closeBtn = el('scoutClose');
@@ -1273,6 +1354,14 @@ export function initScoutReview() {
   }
 
   mountPhotos();
+  initScoutTraffic();
+  initScoutBulk({ onStart: () => { clearRide(); msg(''); } });
+  const tagsBtn = el('scoutStepTags');
+  if (tagsBtn) tagsBtn.addEventListener('click', () => { if (!tagsBtn.matches('[aria-disabled="true"]')) setStep(1); });
+  const trafficBtn = el('scoutStepTraffic');
+  if (trafficBtn) trafficBtn.addEventListener('click', () => setStep(2));
+  const nextBtn = el('scoutNextTraffic');
+  if (nextBtn) nextBtn.addEventListener('click', () => setStep(2));
   const sendAllBtn = el('scoutSendAll');
   if (sendAllBtn) sendAllBtn.addEventListener('click', () => sendAll(sendAllBtn));
   const drop = el('scoutDrop');
@@ -1282,7 +1371,9 @@ export function initScoutReview() {
     drop.addEventListener('drop', e => {
       e.preventDefault();
       drop.classList.remove('over');
-      loadFile(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+      const files = (e.dataTransfer && e.dataTransfer.files) || [];
+      if (files.length > 1) startBulk(files);
+      else loadFile(files[0]);
     });
   }
 }

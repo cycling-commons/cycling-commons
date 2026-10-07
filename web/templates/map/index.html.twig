@@ -234,6 +234,23 @@
         <h3>{{ 'map.map_overlays'|trans }}</h3>
         <button class="layer ov-row" id="ovSurface" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
         <button class="layer ov-row" id="ovRoutes" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
+        {# Measured traffic from riders' radars, curators only and only what passed
+           the disclosure rules (docs/specs/traffic-measurements.md §4.6). #}
+        {% if pending_is_curator|default(false) %}
+        <button class="layer ov-row" id="ovTraffic" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#C98A0B;--ic:#101E16"><i class="sw-g">≋</i></span><span class="nm">{{ 'map.mtraffic_layer'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
+        <div class="traffic-ctl" id="trafficCtl" hidden>
+          <label for="trafficGroup">{{ 'map.mtraffic_group'|trans }}</label>
+          <select id="trafficGroup"></select>
+          <ul class="traffic-key">
+            <li><span style="--c:#2E7D4F"></span>{{ 'map.mtraffic_quiet'|trans }}</li>
+            <li><span style="--c:#C98A0B"></span>{{ 'map.mtraffic_moderate'|trans }}</li>
+            <li><span style="--c:#D92D20"></span>{{ 'map.mtraffic_busy'|trans }}</li>
+          </ul>
+          <p class="traffic-note">{{ 'map.mtraffic_pattern'|trans }}</p>
+          <a class="traffic-note" href="{{ path('moderate_traffic') }}">{{ 'map.mtraffic_compare'|trans }} &#8599;</a>
+          <p class="traffic-note" id="trafficNote" hidden></p>
+        </div>
+        {% endif %}
       </div>
 
       {# Filters. Every group in here can make the map show LESS, which is why
@@ -556,6 +573,21 @@
         <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#8A5A32" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'map.legend_route_mtb'|trans }}</b></div></div>
         <div class="mkp-row"><span class="mkp-sw"><span class="mk-knoop" aria-hidden="true">42</span></span><div class="mkp-t"><b>{{ 'legend.line_knoop_h'|trans }}</b><span>{{ 'legend.line_knoop_t'|trans }}</span></div></div>
       </div>
+      {# The ride review's own lines (traffic-measurements.md section 3.1), on
+         the review page only: nowhere else draws them. #}
+      {% if scout_review|default(false) %}
+      {% set ccSpeedUnit = cc_user_distance_unit() == 'mi' ? 'mph' : 'km/h' %}
+      <div class="grp" id="mk-scout">
+        <h3>{{ 'legend.scout_h'|trans }}</h3>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#8A8C86" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.scout_gps_h'|trans }}</b><span>{{ 'legend.scout_gps_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#2F6FDB;border-top-width:6px" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.scout_path_h'|trans }}</b><span>{{ 'legend.scout_path_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#E8A33D;border-top-width:6px" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.scout_lane_h'|trans }}</b><span>{{ 'legend.scout_lane_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#7A3FB8;border-top-width:6px" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.scout_road_h'|trans }}</b><span>{{ 'legend.scout_road_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="mk-line" style="border-top-color:#D92D20;border-top-style:dashed" aria-hidden="true"></span></span><div class="mkp-t"><b>{{ 'legend.scout_none_h'|trans }}</b><span>{{ 'legend.scout_none_t'|trans }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="scout-pass" aria-hidden="true"><svg viewBox="0 0 24 12" width="17" height="9" aria-hidden="true"><path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/><circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/></svg></span></span><div class="mkp-t"><b>{{ 'legend.scout_car_h'|trans({'%unit%': ccSpeedUnit}) }}</b><span>{{ 'legend.scout_car_t'|trans({'%unit%': ccSpeedUnit}) }}</span></div></div>
+        <div class="mkp-row"><span class="mkp-sw"><span class="scout-pass nearby" aria-hidden="true"><svg viewBox="0 0 24 12" width="17" height="9" aria-hidden="true"><path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/><circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/></svg></span></span><div class="mkp-t"><b>{{ 'legend.scout_near_h'|trans({'%unit%': ccSpeedUnit}) }}</b><span>{{ 'legend.scout_near_t'|trans }}</span></div></div>
+      </div>
+      {% endif %}
       <div class="grp">
         <a class="cc-addclimb-go" href="{{ path('map_key') }}">{{ 'map.key_full'|trans }}</a>
       </div>
@@ -689,6 +721,24 @@
            the quality-note style. #}
         <div class="skey-note"><span class="rkey-node" aria-hidden="true">7</span>{{ 'map.legend_route_node'|trans }}</div>
       </div>
+      {# The ride review's step 2 lines (traffic-measurements.md section 3.1).
+         scout-traffic.js shows it while step 2 is on screen, with a row only
+         for what it drew. #}
+      {% if scout_review|default(false) %}
+      {% set ccSpeedUnit = cc_user_distance_unit() == 'mi' ? 'mph' : 'km/h' %}
+      <div class="rkey" id="scoutKey" hidden>
+        <h4>{{ 'legend.scout_h'|trans }}</h4>
+        <div class="skey">
+          <div class="rkey-row"><span class="skey-ln" style="--sc:#8A8C86"></span>{{ 'legend.scout_gps_h'|trans }}</div>
+          <div class="rkey-row"><span class="skey-ln" style="--sc:#2F6FDB"></span>{{ 'legend.scout_path_h'|trans }}</div>
+          <div class="rkey-row"><span class="skey-ln" style="--sc:#E8A33D"></span>{{ 'legend.scout_lane_h'|trans }}</div>
+          <div class="rkey-row"><span class="skey-ln" style="--sc:#7A3FB8"></span>{{ 'legend.scout_road_h'|trans }}</div>
+          <div class="rkey-row"><span class="skey-ln dash" style="--sc:#D92D20"></span>{{ 'legend.scout_none_h'|trans }}</div>
+          <div class="rkey-row"><span class="scout-pass" aria-hidden="true"><svg viewBox="0 0 24 12" width="17" height="9" aria-hidden="true"><path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/><circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/></svg></span>{{ 'legend.scout_car_h'|trans({'%unit%': ccSpeedUnit}) }}</div>
+          <div class="rkey-row"><span class="scout-pass nearby" aria-hidden="true"><svg viewBox="0 0 24 12" width="17" height="9" aria-hidden="true"><path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/><circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/></svg></span>{{ 'legend.scout_near_h'|trans({'%unit%': ccSpeedUnit}) }}</div>
+        </div>
+      </div>
+      {% endif %}
       </div>
     </div>
     {# Top-right: two glass icon buttons and nothing else. The base picker is
@@ -979,6 +1029,11 @@ window.CC_VENDOR = {{ {
   {# The stateless 'scout-tags' CSRF token scout-review.js sends as X-CC-Token
      (config/packages/csrf.yaml stateless_token_ids). #}
   window.CC_SCOUT_TOKEN = {{ csrf_token('scout-tags')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {# The stateless 'scout-traffic' token the traffic step sends with its summary
+     (docs/specs/traffic-measurements.md §4.1). #}
+  {% if scout_review|default(false) %}
+  window.CC_TRAFFIC_TOKEN = {{ csrf_token('scout-traffic')|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  {% endif %}
 </script>
 {# The photo-intake config below is one queue for a WHOLE RIDE, not for one
    place — a rider reviewing thirty tags may photograph several of them, hence

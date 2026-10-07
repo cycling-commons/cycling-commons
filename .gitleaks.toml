@@ -9,3 +9,15 @@ useDefault = true
 [[allowlists]]
 description = "PENDING_SECRET_KEY is a session-storage key NAME (App\\Controller\\TwoFactorController), not a credential — flagged only because the const name contains 'SECRET'."
 regexes = ['''2fa_pending_secret''']
+
+[[allowlists]]
+description = "Public development and test keys for traffic storage (App\\Traffic\\TrafficKeys::DEV_SECRET and TEST_SECRET). Published on purpose: staging and production refuse both and set their own TRAFFIC_SECRET (traffic-measurements.md 4.2)."
+condition = "AND"
+regexTarget = "line"
+regexes = ['''(DEV_SECRET|TEST_SECRET|TRAFFIC_SECRET|private const string SECRET)''']
+paths = [
+    '''web/src/Traffic/TrafficKeys\.php''',
+    '''web/\.env\.test''',
+    '''web/tests/Traffic/TrafficCipherTest\.php''',
+    '''developers/docker/compose\.yaml''',
+]

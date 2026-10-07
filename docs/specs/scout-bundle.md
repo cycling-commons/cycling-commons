@@ -57,7 +57,7 @@ ignored. The zip file's own name is free; the one above is the suggested form.
 
 | Field | Rule |
 |---|---|
-| `format` | Exactly `"scout-bundle"`. Anything else: the file is refused. |
+| `format` | Exactly `"scout-bundle"`. Anything else: the zip is not a bundle, and the page reads it as a plain archive of rides (below). |
 | `version` | `1`. A higher version is refused with a message to update the page. |
 | `fit` | Path of the ride inside the zip. |
 | `tags[].at` | The **FIT timestamp of the record the tag was written on**, UTC, whole seconds, ISO 8601 with `Z`. This is the link: the page reads the same timestamp from the FIT file for every tag. |
@@ -101,4 +101,9 @@ every photo.
   plus a note/photo index out; node-tested in `tests/js/scout-bundle.test.mjs`).
 - Zip: `web/assets/lib/fflate-0.8.3.js` (MIT, vendored verbatim).
 - Review page: `scout-review.js` opens `.fit` or `.zip`, fills the cards, and
-  hands a card's photos to the uploader on send.
+  hands a card's photos to the uploader on send. A `.zip` that is not a bundle
+  (no `scout.json`, another `format`, or over the bundle limits) is read for its
+  `.fit` and `.fit.gz` files (`web/assets/lib/ride-archive.js`): one ride opens
+  the review, several go to several-rides mode
+  (`docs/specs/traffic-measurements.md` section 3.2), none is refused. Only a
+  bundle of a newer `version` is refused.

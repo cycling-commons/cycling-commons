@@ -990,7 +990,7 @@ lives in the shell header.
   its room, so the block is the same width on every desk and the tabs never
   shift. A long list is cut with an ellipsis and reads in full on hover.
   The less-used desks (Data findings, with its count, then Regions,
-  Providers, Rulebook, Marker grammar) sit under a **More** dropdown at the
+  Providers, Rulebook, Marker grammar, Measured traffic) sit under a **More** dropdown at the
   end of the strip, so the bar
   fits a laptop screen; More is lit while one of them is on screen. Example:
   a curator for Wallonia sees "MODERATION / Wallonia" on

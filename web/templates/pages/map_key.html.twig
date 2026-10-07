@@ -249,6 +249,18 @@
     <div class="mk-row"><div class="mk-sw"><span class="mk-knoop" aria-hidden="true">42</span></div><div class="mk-t"><strong>{{ 'legend.line_knoop_h'|trans }}</strong><span>{{ 'legend.line_knoop_t'|trans }}</span></div><span class="mk-tag">{{ 'legend.tag_live'|trans }}</span></div>
   </div>
 
+  {% set ccSpeedUnit = cc_user_distance_unit() == 'mi' ? 'mph' : 'km/h' %}
+  <p class="mk-grp">{{ 'legend.scout_h'|trans }}</p>
+  <div class="mk-rows">
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#8A8C86" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.scout_gps_h'|trans }}</strong><span>{{ 'legend.scout_gps_t'|trans }}</span></div></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#2F6FDB;border-top-width:6px" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.scout_path_h'|trans }}</strong><span>{{ 'legend.scout_path_t'|trans }}</span></div></div>
+        <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#E8A33D;border-top-width:6px" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.scout_lane_h'|trans }}</strong><span>{{ 'legend.scout_lane_t'|trans }}</span></div></div>
+        <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#7A3FB8;border-top-width:6px" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.scout_road_h'|trans }}</strong><span>{{ 'legend.scout_road_t'|trans }}</span></div></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-line" style="border-top-color:#D92D20;border-top-style:dashed" aria-hidden="true"></span></div><div class="mk-t"><strong>{{ 'legend.scout_none_h'|trans }}</strong><span>{{ 'legend.scout_none_t'|trans }}</span></div></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-chip" aria-hidden="true"><svg viewBox="0 0 24 12" width="17" height="9" aria-hidden="true"><path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/><circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/></svg></span></div><div class="mk-t"><strong>{{ 'legend.scout_car_h'|trans({'%unit%': ccSpeedUnit}) }}</strong><span>{{ 'legend.scout_car_t'|trans({'%unit%': ccSpeedUnit}) }}</span></div></div>
+    <div class="mk-row"><div class="mk-sw"><span class="mk-chip nearby" aria-hidden="true"><svg viewBox="0 0 24 12" width="17" height="9" aria-hidden="true"><path fill="currentColor" d="M2 9h20a1 1 0 0 0 1-1V6.2a1.6 1.6 0 0 0-1.1-1.5l-4.2-1.3-2-1.9A2.4 2.4 0 0 0 14 1H8.3a2.4 2.4 0 0 0-2 1.1L4.6 4.6 2.1 5.3A1.5 1.5 0 0 0 1 6.8V8a1 1 0 0 0 1 1z"/><circle cx="6.5" cy="9.4" r="2.1" fill="currentColor"/><circle cx="17.5" cy="9.4" r="2.1" fill="currentColor"/></svg></span></div><div class="mk-t"><strong>{{ 'legend.scout_near_h'|trans({'%unit%': ccSpeedUnit}) }}</strong><span>{{ 'legend.scout_near_t'|trans }}</span></div></div>
+  </div>
+
   <a class="mk-back" href="{{ path('map') }}">{{ 'legend.back_to_map'|trans }}</a>
   </div>
 </div></section>

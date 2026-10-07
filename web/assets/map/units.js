@@ -40,6 +40,12 @@ export function uSpeed(kmh, decimals) {
   return Number(kmh).toFixed(decimals == null ? 0 : decimals) + ' km/h';
 }
 
+/** A speed given in km/h, without its unit: "32" or "20". */
+export function uSpeedValue(kmh, decimals) {
+  if (G.ccSpeedValue) return G.ccSpeedValue(kmh, decimals);
+  return Number(kmh).toFixed(decimals == null ? 0 : decimals);
+}
+
 /** The unit words themselves, for an axis caption above a column of numbers. */
 export function uDistUnit() { return G.ccDistUnit || 'km'; }
 export function uElevUnit() { return G.ccElevUnit || 'm'; }

@@ -85,17 +85,30 @@ a new way of judging them ([Contributing](contributing.md),
 
 ## Your ride stays yours
 
-Scout sends the tags you approve. Nothing else leaves your device.
+Scout sends what you approve: your tags, and, if you choose, a traffic summary.
+Nothing else leaves your device.
 
 - **The ride file is never uploaded.** The review screen reads it **in your own
   browser**. It is never posted, never stored on a server, and there is nothing
   to expire or delete, because we never had a copy.
 - **Only the tags travel**: the point you tapped, what you tagged it as, and
   when. Not the route between them.
-- **The overtake count is shown to you, and goes nowhere.** It is measured from
-  your own ride file while you look at it. Publishing traffic measurements is a
-  design question the project has not answered yet, and until it has, nothing is
-  collected.
+- **A traffic summary goes only when you send it.** With a radar, the review
+  has a second step: per road you rode, how far you rode, how many cars passed
+  and how fast, the date and the quarter hour, and whether you were on a cycle
+  path, a painted cycle lane or the road itself. On a cycle path no car passes
+  you: the cars the radar sees there drive on the road beside it, and they count
+  as nearby (noise), never as passing (safety). Your GPS track, your exact
+  times and your ride file stay on your device; which roads you rode, with the
+  date and quarter hour, is what the summary sends. You see every line before
+  you send.
+- **No road says who rides it.** A road shows measured traffic only once several
+  different riders have ridden it on several different days. Below that, nothing
+  is shown, to anyone. What is stored is
+  encrypted, and the results go to curators, never with a name.
+- **Several rides at once** work the same way: pick or drop many ride files, or
+  the archive your bike computer platform lets you download. Every ride is read
+  in your browser; only the traffic summaries are sent.
 - A tagged spot is a place you chose to publish. Everything around it (where
   you started, where you live, how fast you ride) stays on your machine. See
   [Location & privacy](location-privacy.md) for the whole picture.
@@ -128,9 +141,12 @@ Being honest about the edges is more useful than a feature list:
 
 The review screen tells you about the ride itself:
 
-- **overtakes**, drawn where they happened, each carrying the speed the vehicle
-  was doing (its own ground speed, not the difference between it and you), or
-  **?** when the radar gave no usable reading;
+- **overtakes**, in the traffic step, drawn where they happened, each carrying
+  the speed the vehicle was doing (its own ground speed, not the difference
+  between it and you), or **?** when the radar gave no usable reading;
+- **the roads the ride was matched to**, in the traffic step, coloured by where
+  you rode: cycle path, cycle lane or the road itself, with the kilometres that
+  could not be matched named rather than sent;
 - **tags with no GPS fix**, counted;
 - **surface stretches** recorded.
 

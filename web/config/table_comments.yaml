@@ -81,6 +81,16 @@ tables:
         The stored, never-updated result of one closed season-ballot list, one row per item
         (route-domain.md §8d). Written once when a closed round is first read or an account that
         voted in it is deleted, so a closed season's result cannot change afterwards.
+    # Hand-written migration (Version20261005020000). Every column is an HMAC or an
+    # AES-GCM blob (traffic-measurements.md §4.3).
+    traffic_cell: >-
+        Running radar traffic totals per road piece, direction and time key. Encrypted;
+        holds no rider and no time column.
+    traffic_rider: >-
+        Per rider and road piece: distance and days per time key, for the disclosure rules.
+        Encrypted; keyed by an HMAC of rider and road.
+    traffic_seen: >-
+        HMACs of the dedupe codes already received, so no ride is counted twice.
 
     # Entities whose docblock does not stand alone.
     reset_password_request: >-

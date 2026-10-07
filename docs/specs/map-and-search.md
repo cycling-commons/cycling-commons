@@ -1579,7 +1579,12 @@ two places, sized to their audience:
   recorded", on the map's cream casing from `SurfaceVocabulary::LINE_COLOUR`),
   **climbs** (gradient up and down, summit, steepest, rider's steepest) and
   **routes** (the rest, the selected one, national, regional, MTB, a junction
-  number). LIVE MARKS ONLY: the panel never shows a mark the map does not
+  number), and on `/scout/review` only, **Ride review (Scout)** (`#mk-scout`:
+  the grey GPS track, the sent roads in blue, amber and purple for bike only, cycle lane and
+  shared road, the red dashed part not sent, the passing car;
+  traffic-measurements.md section 3.1). The map's legend box carries the same
+  group (`#scoutKey`) while the review's step 2 is open.
+  LIVE MARKS ONLY: the panel never shows a mark the map does not
   draw. The waiting-for-a-moderator row (the red hourglass pin) is
   moderation chrome, gated by `pending_is_curator` from the controller (never
   `is_granted()`, per §"the 2FA policy applies in exactly one place").

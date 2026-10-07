@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Settings;
 
 use App\Catalog\CuratedReadiness;
+use App\Traffic\TrafficDisclosure;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 /**
@@ -48,6 +49,12 @@ final class SettingsRegistry
      */
     public const string SUPPORT_EMAILS = 'app.support_emails';
     public const string COMMUNITY_VOTING_LIVE = 'community.voting_live';
+    /**
+     * Which time groups measured traffic is shown in (traffic-measurements.md
+     * §4.5). One scheme platform-wide, so groups never overlap and one cannot
+     * be learnt by subtracting another.
+     */
+    public const string TRAFFIC_GROUPING = 'traffic.grouping';
 
     public const string GROUP_MAP = 'map';
     public const string GROUP_ROUTES = 'routes';
@@ -136,6 +143,16 @@ final class SettingsRegistry
                 return true;
             },
             allowsEmpty: true,
+        );
+
+        $grouping = $params->get(self::TRAFFIC_GROUPING);
+        $this->definitions[self::TRAFFIC_GROUPING] = $this->define(
+            key: self::TRAFFIC_GROUPING,
+            type: SettingDefinition::TYPE_STRING,
+            default: \is_string($grouping) ? $grouping : 'daytype',
+            group: self::GROUP_MODERATION,
+            maxLength: 20,
+            validator: static fn (string $value): bool => \in_array($value, TrafficDisclosure::SCHEMES, true),
         );
     }
 

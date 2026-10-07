@@ -3571,7 +3571,10 @@ outstanding, in order. It reads **Send all** until the first tag has gone
   system white behind the native popup and rendered pale cream on pale grey;
   both the closed control and its `option`s now state their own colours.
 
-**The cars that passed you land on the map** (owner 2026-08-12). "15 vehicles
+**The cars that passed you land on the map** (owner 2026-08-12), in the
+review's traffic step ([traffic-measurements.md](traffic-measurements.md) §3.1),
+which shows the cars and the matched road pieces while the tag step shows only
+the tags. "15 vehicles
 passed you on this ride" was true and impossible to act on; a radar reading only
 means something as a place — this corner, that bridge. Every counted pass is a
 small car marker at its own coordinates, carrying **ground speed** (the closing
@@ -3740,7 +3743,7 @@ Stated concretely, because "mostly works" is how a gap survives a release:
 |---|---|
 | **SURFACE tags (any sub-menu)** | **Refused.** A is segment-located and this endpoint carries one tapped point; an item minted from it gets Point geometry, which `CatalogProvider::surfaceSegments()` skips by design — it would succeed, say so, and never appear. A is not offered and the endpoint returns 422. The panel counts the stretches the parser found and says to add them from the map. |
 | **Start/END stretch pairing** | Computed by the vendored parser (`buildSurfaceSegments`), displayed as a count, **not submitted**. This is plan task 6 and the only thing standing between a Scout surface tag and a real A segment. |
-| **Overtake counts** | Read and **shown to the rider** — their ride, their number — and sent nowhere. There is no table to hold them: measurements live in their own store behind a five-rider gate, moderator-only (plan §2 / D2), and none of that is built. |
+| **Overtake counts** | Shown to the rider in the review's second step, and sent only when the rider sends a traffic summary: per road piece, distance, passes and car speeds with a coarse time key, never the ride. Stored encrypted, shown to curators only once disclosure rules pass ([traffic-measurements.md](traffic-measurements.md)). |
 | **Tags with no GPS fix** | Counted and named in the panel. They used to be dropped silently, which meant a rider who tapped thirteen times and saw eleven rows had no way to learn why. |
 | **An unterminated stretch** | The parser closes it at the ride's end and flags it; nothing reads the flag yet. |
 | **A stray END with no start** | Ignored by the parser, as on the device. |

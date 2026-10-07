@@ -15,6 +15,7 @@ framework:
             # /contribute/route road snap, the stateless sibling of 'elevation'.
             - route-snap
             - scout-tags
+            - scout-traffic
             - my-area
             - country-interest
             - curator-application

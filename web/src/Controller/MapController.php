@@ -31,6 +31,7 @@ use App\Catalog\RouteRankingService;
 use App\Catalog\Season;
 use App\Catalog\SurfaceVocabulary;
 use App\Coverage\CoverageManifest;
+use App\Coverage\RoadPiecesManifest;
 use App\Coverage\RoutesManifest;
 use App\Coverage\SurfaceManifest;
 use App\Entity\User;
@@ -75,13 +76,17 @@ final class MapController extends AbstractController
      */
     #[Route('/scout/review', name: 'scout_review')]
     #[IsGranted('ROLE_USER')]
-    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, Connection $db): Response
+    public function scoutReview(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, Connection $db, RoadPiecesManifest $roadPieces): Response
     {
-        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, $db, scoutReview: true);
+        // Only the review reads the road pieces: they exist for matching a
+        // ride, and the plain map has no use for a fetch of their manifest.
+        $roadPieces->prefetch();
+
+        return $this->map($request, $queue, $schema, $translator, $scopeProvider, $twoFactorPolicy, $coverage, $surface, $routes, $regions, $catalogProvider, $settings, $freshness, $db, scoutReview: true, roadPieces: $roadPieces);
     }
 
     #[Route('/map', name: 'map')]
-    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, Connection $db, bool $scoutReview = false): Response
+    public function map(Request $request, SubmissionQueue $queue, CatalogSchemaProvider $schema, TranslatorInterface $translator, ModerationScopeProvider $scopeProvider, TwoFactorPolicy $twoFactorPolicy, CoverageManifest $coverage, SurfaceManifest $surface, RoutesManifest $routes, RegionRegistryProvider $regions, CatalogProvider $catalogProvider, SettingsProviderInterface $settings, ConfirmationFreshness $freshness, Connection $db, bool $scoutReview = false, ?RoadPiecesManifest $roadPieces = null): Response
     {
         // Three bucket round trips, started together instead of one after the
         // other. Read in sequence they add up, and each carries its own
@@ -91,6 +96,14 @@ final class MapController extends AbstractController
         $routes->prefetch();
 
         $user = $this->getUser();
+        // docs/specs/moderation-and-contribution.md §5.3: ROLE_CURATOR and completed 2FA; /map is 2FA-bypass.
+        $curatorView = $user instanceof User && $this->isGranted('ROLE_CURATOR') && !$twoFactorPolicy->requiresSetup($user);
+        // Road pieces: the ride review matches against them, the curator's
+        // measured-traffic layer draws on them (traffic-measurements.md §2, §4.6).
+        $withRoadPieces = null !== $roadPieces && ($scoutReview || $curatorView);
+        if ($withRoadPieces && !$scoutReview) {
+            $roadPieces->prefetch();
+        }
         $regionRows = array_map(
             static fn (array $r): array => $r + [
                 'label' => $translator->trans('region.'.$r['slug'].'.label'),
@@ -144,7 +157,9 @@ final class MapController extends AbstractController
                 'surface' => $surface->countryTiles() ?: new \stdClass(),
                 'gaps' => $surface->gaps(),
                 'routes' => $routes->countryTiles() ?: new \stdClass(),
-            ],
+            ] + ($withRoadPieces
+                ? ['roadpieces' => $roadPieces->countryTiles() ?: new \stdClass()]
+                : []),
             'coverage_countries' => $coverage->countryCodes(),
             // data-provider-hierarchy.md §6.7.7 rung 8: a tile point whose
             // check_date is on or after this day has a witness inside the
@@ -415,7 +430,7 @@ final class MapController extends AbstractController
             'scoutApprove' => 'd_scout_approve', 'scoutSent' => 'd_scout_sent',
             'scoutSending' => 'd_scout_sending', 'scoutNamePh' => 'd_scout_name_ph',
             'scoutNeedName' => 'd_scout_need_name', 'scoutSendFailed' => 'd_scout_send_failed',
-            'scoutBadFile' => 'd_scout_bad_file', 'scoutNoTags' => 'd_scout_no_tags',
+            'scoutBadFile' => 'd_scout_bad_file',
             'scoutNeedFit' => 'd_scout_need_fit',
             'scoutBundleBad' => 'd_scout_bundle_bad', 'scoutBundleVersion' => 'd_scout_bundle_version',
             'scoutBundleTooLarge' => 'd_scout_bundle_too_large', 'scoutBundlePhotos' => 'd_scout_bundle_photos',
@@ -424,6 +439,55 @@ final class MapController extends AbstractController
             'scoutAddPhoto' => 'd_scout_add_photo', 'scoutPhotoAttached' => 'd_scout_photo_attached', 'scoutPhotosAttached' => 'd_scout_photos_attached',
             'scoutRadar' => 'd_scout_radar',
             'scoutPassNoFix' => 'd_scout_pass_nofix',
+            'scoutTrafficFacts' => 'd_scout_traffic_facts',
+            'scoutTrafficUnmatched' => 'd_scout_traffic_unmatched',
+            'scoutTrafficNothing' => 'd_scout_traffic_nothing',
+            'scoutTrafficLoading' => 'd_scout_traffic_loading',
+            'scoutTrafficSent' => 'd_scout_traffic_sent',
+            'scoutTrafficFailed' => 'd_scout_traffic_failed',
+            'scoutTrafficLimited' => 'd_scout_traffic_limited',
+            'scoutTrafficLine' => 'd_scout_traffic_line',
+            'scoutTrafficNoTiles' => 'd_scout_traffic_no_tiles',
+            'scoutStepNoTags' => 'd_scout_step_no_tags',
+            'scoutTrafficFactsNearby' => 'd_scout_traffic_facts_nearby',
+            'scoutTrafficFactsOff' => 'd_scout_traffic_facts_off',
+            'scoutTrafficCarsN' => 'd_scout_traffic_cars_n',
+            'scoutTrafficNearbyN' => 'd_scout_traffic_nearby_n',
+            'scoutDirF' => 'd_scout_dir_f',
+            'scoutDirB' => 'd_scout_dir_b',
+            'scoutLabelP' => 'd_scout_label_p',
+            'scoutLabelL' => 'd_scout_label_l',
+            'scoutLabelR' => 'd_scout_label_r',
+            'scoutDayWorkday' => 'd_scout_day_workday',
+            'scoutDayWeekend' => 'd_scout_day_weekend',
+            'scoutNothing' => 'd_scout_nothing',
+            'scoutBulkReading' => 'd_scout_bulk_reading',
+            'scoutBulkRides' => 'd_scout_bulk_rides',
+            'scoutBulkRidesN' => 'd_scout_bulk_rides_n',
+            'scoutBulkPeriod' => 'd_scout_bulk_period',
+            'scoutBulkMatched' => 'd_scout_bulk_matched',
+            'scoutBulkPassed' => 'd_scout_bulk_passed',
+            'scoutBulkNearby' => 'd_scout_bulk_nearby',
+            'scoutBulkSent' => 'd_scout_bulk_sent',
+            'scoutBulkNone' => 'd_scout_bulk_none',
+            'scoutBulkSkipped' => 'd_scout_bulk_skipped',
+            'scoutBulkSending' => 'd_scout_bulk_sending',
+            'trafficGroupAll' => 'd_traffic_group_all',
+            'trafficGroupWorkday' => 'd_traffic_group_workday',
+            'trafficGroupWeekend' => 'd_traffic_group_weekend',
+            'trafficBandNight' => 'd_traffic_band_night',
+            'trafficBandMorning' => 'd_traffic_band_morning',
+            'trafficBandDay' => 'd_traffic_band_day',
+            'trafficBandEvening' => 'd_traffic_band_evening',
+            'trafficBandLate' => 'd_traffic_band_late',
+            'trafficCarsPerKm' => 'd_traffic_cars_per_km',
+            'trafficNearbyPerKm' => 'd_traffic_nearby_per_km',
+            'trafficCarSpeed' => 'd_traffic_car_speed',
+            'trafficCarSpeedTop' => 'd_traffic_car_speed_top',
+            'trafficRiders' => 'd_traffic_riders',
+            'trafficDirF' => 'd_traffic_dir_f',
+            'trafficDirB' => 'd_traffic_dir_b',
+            'trafficNone' => 'd_traffic_none',
             'scoutCloseUnsent' => 'd_scout_close_unsent', 'scoutNoFix' => 'd_scout_no_fix',
             'scoutStretchToEnd' => 'd_scout_stretch_to_end',
             'scoutSetEnd' => 'd_scout_set_end', 'scoutKeepEnd' => 'd_scout_keep_end',

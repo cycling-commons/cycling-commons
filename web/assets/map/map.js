@@ -27,6 +27,7 @@ import { resolveLocalFeature, resolveLocalFeatureById, openFeatureByName, openFe
 import { initCommunity, initCuratorKeys } from './community.js';
 import { initSearchUi } from './search-ui.js';
 import { initScoutReview } from './scout-review.js';
+import { initTrafficLayer } from './traffic-layer.js';
 import { initDuplicateResolve } from './duplicate-resolve.js';
 import { initLayerList, initMapCtrl, initRailChrome, initBestOf, initFilterPill,
          initChips, initViewMode, initAddClimbHere, liftModeFor } from './panels.js';
@@ -318,6 +319,7 @@ import { layerGlyph } from './icons.js';
   initClickToScope();
 
   initRideCheck();
+  initTrafficLayer();
 
   initDrawerChrome();
   initScoutReview();

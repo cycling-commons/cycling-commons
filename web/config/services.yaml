@@ -64,6 +64,11 @@ services:
             $manifestUrl: '%routes.manifest_url%'
             $pinnedTilesUrl: '%routes.tiles_url%'
 
+    App\Coverage\RoadPiecesManifest:
+        arguments:
+            $manifestUrl: '%roadpieces.manifest_url%'
+            $pinnedTilesUrl: '%roadpieces.tiles_url%'
+
     App\EventSubscriber\CspSubscriber:
         arguments:
             $coverageCspHost: '%coverage.csp_host%'

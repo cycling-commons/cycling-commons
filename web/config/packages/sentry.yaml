@@ -11,6 +11,10 @@ sentry:
     options:
         environment: '%env(APP_ENV)%'
         send_default_pii: false
+        # No request body, ever. The SDK attaches bodies up to 10 KB by default
+        # whatever send_default_pii says, and bodies here carry traffic
+        # summaries, tag positions, messages and passwords.
+        max_request_body_size: never
         # Names the build on every event: cyclingcommons@<tag>+<sha12>.
         before_send: 'App\Support\SentryRelease'
         # Not errors: the site answering correctly. A 404 is mostly bots

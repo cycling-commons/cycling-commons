@@ -26,3 +26,14 @@ parameters:
     # because the two builds run as separate invocations.
     routes.manifest_url: '%env(ROUTES_MANIFEST_URL)%'
     routes.tiles_url: '%env(ROUTES_TILES_URL)%'
+    # Road pieces for traffic matching (traffic-measurements.md §2). Same
+    # manifest-or-pin contract, read only by Scout's ride review.
+    roadpieces.manifest_url: '%env(ROADPIECES_MANIFEST_URL)%'
+    roadpieces.tiles_url: '%env(ROADPIECES_TILES_URL)%'
+
+# Tests never read the dev stack's published road pieces: the container's
+# ROADPIECES_MANIFEST_URL would otherwise win over .env.test.
+when@test:
+    parameters:
+        roadpieces.manifest_url: ''
+        roadpieces.tiles_url: ''

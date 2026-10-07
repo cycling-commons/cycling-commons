@@ -1,0 +1,124 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Declared beside measured traffic (traffic-measurements.md §4.6).
+
+  One row per road-surface item that names an OSM way and says how busy it is,
+  when that way has measured traffic that passed the disclosure rules. The
+  number is cars per kilometre ridden, for the busier direction; the groups
+  are the one active scheme's.
+#}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+{% include 'account/_shell_styles.html.twig' %}
+<style>
+  .tcmp{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+  .tcmp th,.tcmp td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid rgba(20,22,14,.12)}
+  .tcmp th{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+  .tcmp-wrap{overflow-x:auto;margin-top:1rem}
+  .tprog{margin:0 0 2rem}
+  .tprog h2{font-size:1.15rem;margin:0 0 .35rem}
+  .tprog .note{margin:0 0 .8rem;font-size:.9rem;color:rgb(20 22 14 / .72)}
+  .tprog .tcmp td.n{text-align:right}
+  .tprog .tcmp td.zero{color:rgb(20 22 14 / .45)}
+  .tprog-country{border:1px solid rgba(20,22,14,.14);border-radius:8px;margin:0 0 .6rem;background:rgb(255 255 255 / .35)}
+  .tprog-country summary{display:flex;align-items:center;gap:.7rem;padding:.65rem .9rem;cursor:pointer;font-weight:700}
+  .tprog-country summary::-webkit-details-marker{display:none}
+  .tprog-country summary::before{content:'';width:.5rem;height:.5rem;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;flex:none}
+  .tprog-country[open] summary::before{transform:rotate(45deg)}
+  .tprog-country summary:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+  .tprog-country .flag{border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08);flex:none}
+  .tprog-country .name{flex:1;min-width:0}
+  .tprog-country .tot{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tprog-country .tot small{font-weight:400;color:rgb(20 22 14 / .6)}
+  .tprog-country .tcmp-wrap{margin:0;padding:0 .9rem .7rem}
+</style>
+{% endblock %}
+{% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_traffic'} %}{% endblock %}
+
+{% block body %}
+<div class="dbody" id="main">
+  <div class="mh">
+    <div class="kicker">{{ 'moderate.traffic.kicker'|trans }}</div>
+    <h1>{{ 'moderate.traffic.heading'|trans }}</h1>
+    <p class="lead">{{ 'moderate.traffic.lead'|trans }}</p>
+  </div>
+
+  {# Progress from the first ride (traffic-measurements.md section 4.6): roads
+     with data per onboarded country and region, counts only. A road's own
+     numbers stay hidden until it is usable. #}
+  <section class="tprog" aria-labelledby="tprog-h">
+    <h2 id="tprog-h">{{ 'moderate.traffic.progress_h'|trans }}</h2>
+    <p class="note">{{ 'moderate.traffic.progress_lead'|trans }}</p>
+    {% if progress.countries is empty %}
+      <p class="note">{{ 'moderate.traffic.progress_empty'|trans }}</p>
+    {% else %}
+      {# One fold per country: open when it has data, folded when it has none. #}
+      {% for c in progress.countries %}
+        <details class="tprog-country" data-progress-country="{{ c.country }}"{{ c.building + c.usable > 0 ? ' open' }}>
+          <summary>
+            {% if c.country|lower in flags %}<img class="flag" src="{{ asset('flags/' ~ c.country|lower ~ '.svg') }}" alt="" width="20" height="15">{% endif %}
+            <span class="name">{{ c.name }}</span>
+            <span class="tot"><span data-building>{{ c.building }}</span> <small>{{ 'moderate.traffic.col_building'|trans }}</small></span>
+            <span class="tot"><span data-usable>{{ c.usable }}</span> <small>{{ 'moderate.traffic.col_usable'|trans }}</small></span>
+          </summary>
+          <div class="tcmp-wrap">
+            <table class="tcmp">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'moderate.traffic.col_area'|trans }}</th>
+                  <th scope="col">{{ 'moderate.traffic.col_building'|trans }}</th>
+                  <th scope="col">{{ 'moderate.traffic.col_usable'|trans }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in c.regions %}
+                  <tr data-progress-region="{{ r.name }}">
+                    <td>{{ r.name }}</td>
+                    <td class="n{{ r.building == 0 ? ' zero' }}" data-building>{{ r.building }}</td>
+                    <td class="n{{ r.usable == 0 ? ' zero' }}" data-usable>{{ r.usable }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      {% endfor %}
+    {% endif %}
+    {% if progress.unplaced > 0 %}
+      <p class="note">{{ 'moderate.traffic.unplaced'|trans({'%n%': progress.unplaced}) }}</p>
+    {% endif %}
+    <p class="note">{{ 'moderate.traffic.built'|trans }} <time datetime="{{ built_at|date('c') }}" data-built-at="{{ built_at|date('c') }}">{{ built_at|cc_datetime }}</time>. {{ 'moderate.traffic.refresh'|trans }}</p>
+  </section>
+
+  <h2>{{ 'moderate.traffic.compare_h'|trans }}</h2>
+
+  {% if rows is empty %}
+    <div class="empty-state"><p>{{ 'moderate.traffic.empty'|trans }}</p></div>
+  {% else %}
+    <div class="tcmp-wrap">
+      <table class="tcmp">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'moderate.traffic.col_road'|trans }}</th>
+            <th scope="col">{{ 'moderate.traffic.col_declared'|trans }}</th>
+            {% for g in groups %}<th scope="col">{{ ('moderate.traffic.group.' ~ g|replace({'|': '_'}))|trans }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+            <tr data-way="{{ r.way }}">
+              <td><a href="{{ path('map') }}?item={{ r.id }}" target="_blank" rel="noopener">{{ r.name }}</a></td>
+              {% set declared_key = {'Quiet': 'map.traffic_quiet', 'Moderate': 'map.traffic_moderate', 'Busy': 'map.traffic_busy', 'Car-free': 'map.traffic_free'}[r.declared] ?? null %}
+              <td>{{ declared_key ? declared_key|trans : r.declared }}</td>
+              {% for g in groups %}
+                {% set m = r.measured[g] ?? null %}
+                <td data-group="{{ g }}">{{ m is null ? '' : (m.nearby ? 'moderate.traffic.per_km_nearby' : 'moderate.traffic.per_km')|trans({'%n%': m.n|number_format(1)}) }}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

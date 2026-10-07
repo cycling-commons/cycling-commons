@@ -3,14 +3,14 @@
    Included by every rider page under /account, 2FA setup, and every
    moderation page under /moderate, so the logged-in area is one continuous
    environment with the same account chip used in the public nav.
-   Param: `active` = dashboard | contrib | votes | saved | scout | translate | messages | settings | moderate_dashboard | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_providers | moderate_room | moderate_rulebook | moderate_reports. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
+   Param: `active` = dashboard | contrib | votes | saved | scout | translate | messages | settings | moderate_dashboard | moderate | moderate_routes | moderate_data | moderate_takedowns | moderate_translations | moderate_regions | moderate_providers | moderate_room | moderate_rulebook | moderate_reports | moderate_traffic. Submission history lives under the Submissions tab as Queue/History chips, so it keeps `active: moderate`.
    The curator's area names come from moderation_scope_names() on every
    moderation page, so the label block never changes between desks.
    Moderator tabs render ONLY inside the moderator section itself (curators
    reach it via the account-chip dropdown) — user pages show user tabs only,
    and on moderator pages the labelled group makes the section unmistakable. #}
 {% set active = active|default('contrib') %}
-{% set in_moderation = active in ['moderate_dashboard', 'moderate', 'moderate_routes', 'moderate_regions', 'moderate_providers', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports', 'moderate_markers'] %}
+{% set in_moderation = active in ['moderate_dashboard', 'moderate', 'moderate_routes', 'moderate_regions', 'moderate_providers', 'moderate_data', 'moderate_takedowns', 'moderate_translations', 'moderate_room', 'moderate_rulebook', 'moderate_history', 'moderate_bugs', 'moderate_reports', 'moderate_markers', 'moderate_traffic'] %}
 <header class="dtop">
   <div class="brandblock">
     <a class="brand" href="{{ path('home') }}"><img src="{{ asset('brand/logo-nav.svg') }}" alt="Cycling Commons"></a>
@@ -49,7 +49,7 @@
    queue of their own), so the strip fits a laptop screen without a sideways
    scrollbar. More is lit when one of them
    is the page on screen. #}
-{% set _more = ['moderate_data', 'moderate_regions', 'moderate_providers', 'moderate_rulebook', 'moderate_markers'] %}
+{% set _more = ['moderate_data', 'moderate_regions', 'moderate_providers', 'moderate_rulebook', 'moderate_markers', 'moderate_traffic'] %}
 <nav class="dtabs dtabs-modmode" aria-label="{{ 'account.menu_moderation'|trans }}">
   {# Two lines: the section name, then the curator's areas under it. #}
   <span class="dtabs-modlabel" aria-hidden="true"><span>{{ 'account.menu_moderation'|trans }}</span><span class="dtabs-scope{{ _scoped ? '' : ' dtabs-scope--off' }}"{% if _scoped %} title="{{ _scope_line }}"{% endif %}>{{ _scope_line }}</span></span>
@@ -102,6 +102,9 @@
     {# The marker grammar, every rung drawn by the map's own rules, checked by
        eye (data-provider-hierarchy.md §6.7.7). No badge: nothing queues here. #}
     <a href="{{ path('curator_marker_grammar') }}" class="{{ active == 'moderate_markers' ? 'on' : '' }}">{{ 'markers.title'|trans }}</a>
+    {# Measured traffic beside the declared values (traffic-measurements.md
+       section 4.6). No badge: nothing queues here. #}
+    <a href="{{ path('moderate_traffic') }}" class="{{ active == 'moderate_traffic' ? 'on' : '' }}">{{ 'nav.traffic'|trans }}</a>
     </div>
   </div>
 </nav>

@@ -55,6 +55,13 @@
     return num(v, decimals == null ? 0 : decimals) + ' ' + SPEED;
   }
 
+  /** The bare converted speed, for a marker whose unit the legend names. */
+  function ccSpeedValue(kmh, decimals) {
+    if (!numeric(kmh)) return '';
+    var v = 'mi' === DIST ? Number(kmh) * MI_PER_KM : Number(kmh);
+    return num(v, decimals == null ? 0 : decimals);
+  }
+
   function ccKmValue(km, decimals) {
     if (!numeric(km)) return 0;
     var v = 'mi' === DIST ? Number(km) * MI_PER_KM : Number(km);
@@ -86,6 +93,7 @@
   window.ccKmFromValue = ccKmFromValue;
   window.ccElevFromValue = ccElevFromValue;
   window.ccSpeed = ccSpeed;
+  window.ccSpeedValue = ccSpeedValue;
   window.ccDistUnit = DIST;
   window.ccSpeedUnit = SPEED;
   window.ccElevUnit = ELEV;

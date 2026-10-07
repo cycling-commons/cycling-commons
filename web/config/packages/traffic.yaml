@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Traffic measurements (docs/specs/traffic-measurements.md). The grouping is
+# the default of a system setting an admin can change (SettingsRegistry
+# TRAFFIC_GROUPING); `daytype` shows workday and weekend apart.
+parameters:
+    traffic.grouping: daytype

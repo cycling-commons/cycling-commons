@@ -95,7 +95,8 @@ test('the surface key answers to BOTH the tile skin and the curated layer', () =
 });
 
 test('an empty legend hides itself rather than sitting there as a box', () => {
-  assert.match(panels, /legendEl\.hidden=!!\(surfaceKey\?\.hidden && routesKey\?\.hidden\)/);
+  // The ride review's key counts too; it exists on the review page only.
+  assert.match(panels, /legendEl\.hidden=!!\(surfaceKey\?\.hidden && routesKey\?\.hidden && \(scoutKey\?\.hidden \?\? true\)\)/);
 });
 
 test('the legend and its keys are served hidden, so nothing flashes before the script decides', () => {

@@ -74,7 +74,18 @@ framework:
                 adapter: cache.app
             cache.season_vote_limiter:
                 adapter: cache.app
+            cache.traffic_submit_limiter:
+                adapter: cache.app
     rate_limiter:
+        # Traffic summaries from Scout's ride review (traffic-measurements.md
+        # §4.1). Per hour and sized for bulk mode: a five-year archive arrives
+        # in chunks of 500 lines, and every chunk is idempotent, so a retry
+        # after a broken connection costs budget and never a double count.
+        traffic_submit:
+            policy: sliding_window
+            limit: 120
+            interval: '1 hour'
+            cache_pool: cache.traffic_submit_limiter
         contribution_submit:
             policy: sliding_window
             limit: 20
