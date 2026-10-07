@@ -15,18 +15,12 @@ sentry:
         # whatever send_default_pii says, and bodies here carry traffic
         # summaries, tag positions, messages and passwords.
         max_request_body_size: never
-        # Names the build on every event: cyclingcommons@<tag>+<sha12>.
-        before_send: 'App\Support\SentryRelease'
-        # Not errors: the site answering correctly. A 404 is mostly bots
-        # probing for WordPress files and leaked .env files; an
-        # AccessDeniedException is a visitor who is not signed in, sent to
-        # the login page. Both filled the tracker (owner 2026-09-28). Matched
-        # with is_a, so subclasses go too. A signed-in rider refused a page
-        # (AccessDeniedHttpException, a 403) is still reported: that can be
-        # a real permission mistake.
-        ignore_exceptions:
-            - 'Symfony\Component\HttpKernel\Exception\NotFoundHttpException'
-            - 'Symfony\Component\Security\Core\Exception\AccessDeniedException'
+        # Drops the site answering a stranger correctly (a scanner's Host, a
+        # bot's 404, the login page for a visitor not signed in) and names
+        # the build on everything else: cyclingcommons@<tag>+<sha12>. No
+        # `ignore_exceptions`: it matches by class alone, and each of those
+        # classes also carries real faults (SentryNoise says which).
+        before_send: 'App\Support\SentryBeforeSend'
     # Errors only. The default wraps every DBAL query in a span; traces are
     # not collected today, so that is cost without a reader.
     tracing:
