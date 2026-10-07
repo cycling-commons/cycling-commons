@@ -46,6 +46,77 @@ final class ContentPagesTest extends WebTestCase
         self::assertStringNotContainsString('Wikimedia Foundation', (string) $client->getResponse()->getContent());
     }
 
+    /**
+     * Traffic summaries (traffic-measurements.md §5): what is sent is stated,
+     * and the banner no longer promises "no record of where you ride".
+     */
+    public function testPrivacyStatesWhatATrafficSummaryHolds(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/privacy');
+        $html = (string) $client->getResponse()->getContent();
+
+        self::assertStringContainsString('Traffic summaries', $html);
+        self::assertStringContainsString('which roads you rode, on which date and in which quarter hour', $html);
+        self::assertStringNotContainsString('any record of where you ride', $html);
+        self::assertStringNotContainsString('your route never leave', $html, 'which roads you rode is sent');
+        self::assertStringContainsString('which roads you rode, with the date and quarter hour, does', $html);
+    }
+
+    /** Error reports are disclosed with the other data collected automatically. */
+    public function testPrivacyNamesErrorReports(): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', '/privacy');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Error reports.', $crawler->filter('[data-collect-auto]')->text());
+        self::assertStringContainsString('the error reports', $crawler->filter('tr:contains("Hetzner")')->text(), 'part of the server inventory');
+    }
+
+    /**
+     * Every GDPR article link opens that article in the reader's language. The
+     * bare regulation URL opens at the recitals, whose numbers repeat the
+     * articles' (recital 32 is about consent, Article 32 about security).
+     *
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function privacyPages(): iterable
+    {
+        yield 'en' => ['/privacy', 'EN', 'GDPR'];
+        yield 'nl' => ['/nl/privacy', 'NL', 'AVG'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('privacyPages')]
+    public function testEveryGdprArticleLinkOpensThatArticle(string $path, string $lang, string $law): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', $path);
+        self::assertResponseIsSuccessful();
+
+        $articles = 0;
+        foreach ($crawler->filter('a[href*="eur-lex.europa.eu"]') as $a) {
+            \assert($a instanceof \DOMElement);
+            $href = $a->getAttribute('href');
+            self::assertStringStartsWith('https://eur-lex.europa.eu/legal-content/'.$lang.'/TXT/HTML/?uri=CELEX:32016R0679', $href);
+            if (1 === preg_match('/\barts?\.\s*(\d+)/i', $a->textContent, $m)) {
+                self::assertStringEndsWith('#art_'.$m[1], $href, $a->textContent);
+                self::assertStringStartsWith($law.' ', $a->textContent, 'every article is named with its law');
+                ++$articles;
+            }
+        }
+        self::assertGreaterThan(10, $articles);
+    }
+
+    /** Server locations are named as the EEA, not a town: hosting may move inside it. */
+    public function testThePrivacyPageNamesTheEeaForHetzner(): void
+    {
+        $client = static::createClient();
+        $row = $client->request('GET', '/privacy')->filter('tr:contains("Hetzner")')->text();
+
+        self::assertStringContainsString('European Economic Area', $row);
+        self::assertStringNotContainsString('Falkenstein', $row);
+    }
+
     /** The contact form's 24 months (contact-and-support.md §4) is stated beside email's. */
     public function testPrivacyGivesContactFormMessagesTheMailPeriod(): void
     {

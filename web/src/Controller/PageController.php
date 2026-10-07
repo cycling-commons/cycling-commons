@@ -682,12 +682,21 @@ final class PageController extends AbstractController
     }
 
     #[Route(LocalizedPath::PRIVACY, name: 'privacy')]
-    public function privacy(): Response
+    public function privacy(\Doctrine\ORM\EntityManagerInterface $em): Response
     {
+        // Opening the notice is reading it: the change bar goes from every page.
+        $user = $this->getUser();
+        if ($user instanceof User && ($user->getPrivacyVersionSeen() ?? 0) < \App\Legal\PrivacyNoticeVersions::CURRENT) {
+            $user->setPrivacyVersionSeen(\App\Legal\PrivacyNoticeVersions::CURRENT);
+            $em->flush();
+        }
+
         return $this->render('pages/privacy.html.twig', [
             'page_title' => 'meta.privacy_title',
             'page_description' => 'meta.privacy_description',
             'nav_active' => '',
+            'privacy_versions' => \App\Legal\PrivacyNoticeVersions::all(),
+            'privacy_current' => \App\Legal\PrivacyNoticeVersions::current(),
         ]);
     }
 

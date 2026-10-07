@@ -18,6 +18,7 @@
    own its own text whatever is nested inside it. */
 .banner p,.banner li,.banner b{color:inherit}
 .banner p{margin:0}
+.banner p+p{margin-top:.6rem}
 /* --trail on spruce is 3.99:1 — under the 4.5:1 AA floor for text this size,
    and in a safety notice the emphasised word is the one that must not be the
    hardest to read. A lifted trail keeps the warning colour at 5.35:1, and the

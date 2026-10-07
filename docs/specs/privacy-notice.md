@@ -36,7 +36,15 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | Mail kept 24 months after a thread ends | policy, owner 2026-08-27 | the mailbox policy changes |
 | Contact-form messages deleted 24 months after they were answered or closed (`privacy.retention_mail`) | `App\Support\ContactMessageRetention`, daily in `app:media:gc` (contact-and-support.md §4) | the sweep stops running, or its clock stops being `updated_at` on an answered or closed message |
 | A bug reporter's address deleted 24 months after the outcome, kept while the bug is open (`privacy.retention_bugs`) | `App\Support\BugReporterEmailRetention`, daily in `app:media:gc` (contact-and-support.md §5) | the sweep stops running, or it touches an open report |
+| Traffic summaries are sent only when the rider sends them from Scout's review, hold per road piece the distance, passes, car speeds, date and quarter hour, never the ride, and are stored encrypted (`privacy.collect_contribute_traffic`, `privacy.banner_body`) | `assets/lib/traffic-ride.js` builds the lines in the browser; `TrafficLine` refuses track-shaped keys; `TrafficStore` writes HMAC keys and AES-GCM payloads only (traffic-measurements.md §3, §4) | a line field is added that carries a position or a finer time, or a table gains a readable column |
+| A rider's coded traffic entries are deleted with the account; the totals stay, holding no rider (`privacy.retention_traffic`) | `App\Traffic\TrafficRiderDeletion` on `UserDeletionService::purge()` (traffic-measurements.md §4.7) | the hook is untagged, or the totals start holding a rider |
 | A content reporter's or photo requester's address deleted 90 days after the decision, kept while open and under legal hold (`privacy.retention_reports`) | `App\Support\ReportContactRetention` and `MediaTakedownService::purgeExpiredContacts()`, daily in `app:media:gc` (content-reports.md §10) | either sweep stops running, or the 90 days change |
+| The base location is stored as a random point up to 2.5 km from the picked point (`privacy.collect_account_base`) | `App\Service\BaseLocationJitter` (uniform over the disc), applied by `BaseLocationService::apply()` to a new point only: a point equal to the stored one is kept, so a radius-only change does not move it again | the radius changes, or a save path writes the picked point without the shift |
+| Scout tags are sent from the same ride review, each one an ordinary contribution; tags and traffic are both optional per ride (`privacy.collect_contribute_traffic`) | `assets/map/scout-review.js` (tags step, traffic step), scout-bundle.md | a step sends without the rider's action |
+| Data export up to 3 times a day, the limit only against abuse (`privacy.rights_portability`) | `rate_limiter.yaml` `data_export` (account-and-auth.md §11) | the limit changes |
+| Outside the EEA: Proton (Switzerland, adequacy decision) for the mailbox, Esri (United States) only when the satellite view is on, Mapillary images through Meta's worldwide network only when the street view is open; the server sends Esri nothing (`privacy.transfers_body`) | processor table above; `security-architecture.md` 2.3 | a server-side call to a host outside the EEA, a new processor outside it, or a new browser host outside it |
+| Error reports come from the server only, hold no IP address, no user and no request body, and stay on our own machines, named in the Hetzner row of the processor table (`privacy.collect_auto_errors`, `privacy.share_selfhosted`, `privacy.pr_hetzner_what`, `privacy.pr_hetzner_sees`) | `config/packages/sentry.yaml` (`send_default_pii: false`, `max_request_body_size: never`), `RemoveSentryLoginListenerPass`; GlitchTip runs on the worker host at Hetzner in Germany (owner 2026-10-07); no browser SDK. Pinned by `ErrorReportPrivacyTest` | a browser SDK is added, either option changes, or GlitchTip moves to a hosted service |
+| Every GDPR article link opens that article, in the reader's language, and is named with its law (GDPR, AVG, RGPD, DSGVO) | links point at `https://eur-lex.europa.eu/legal-content/<LANG>/TXT/HTML/?uri=CELEX:32016R0679#art_<n>`; the bare regulation URL opens at the recitals, whose numbers repeat the articles' (recital 32 is consent, Article 32 security). Pinned by `ContentPagesTest::testEveryGdprArticleLinkOpensThatArticle` | a link is added to the bare URL, or without its law's name |
 | Browser-contacted services | `security-architecture.md` 2.3, `connect-src` + `img-src` | a CSP host is added |
 | Cookie names and lifetimes | `config/packages/framework.yaml` (session), `config/packages/security.yaml` `remember_me.lifetime` | either is configured differently |
 | Account deletion is immediate | `App\Service\UserDeletionService::confirmDeletion()` | a real grace period is ever built |
@@ -49,7 +57,7 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | Uploads scanned, quarantined, EXIF stripped, re-encoded | `ClamAvScanner`, `media.storage.private`, `PhotoProcessor` | |
 | 2FA compulsory for elevated roles | `App\Security\LoginSuccessHandler` | |
 | Strict CSP | `security-architecture.md` 2 | |
-| Locate me reads the position in the browser, only on a tap, and sends it nowhere (`privacy.banner_body`) | `map-init.js` `locateControl()`: MapLibre `GeolocateControl`, one `getCurrentPosition`, no tracking; the position feeds only the camera and the dot. The tiles for the area the camera lands on then load from the basemap hosts in section 3, as they do for any pan, which is why the copy says so. `Permissions-Policy: geolocation=(self)` (`security-architecture.md` 2.1) | any request, log line or stored preference ever carries the position, or tracking is switched on |
+| Locate me reads the position in the browser, only on a tap, and sends it nowhere (`privacy.banner_locate`, its own paragraph in the banner) | `map-init.js` `locateControl()`: MapLibre `GeolocateControl`, one `getCurrentPosition`, no tracking; the position feeds only the camera and the dot. The tiles for the area the camera lands on then load from the basemap hosts in section 3, as they do for any pan, which is why the copy says so. `Permissions-Policy: geolocation=(self)` (`security-architecture.md` 2.1) | any request, log line or stored preference ever carries the position, or tracking is switched on |
 
 ## 3. The two "who sees my data" tables
 
@@ -61,7 +69,7 @@ instructions under contract. Three rows, corrected by the owner 2026-08-27:
 
 | Who | Where | For |
 |---|---|---|
-| Hetzner Online GmbH | Falkenstein, Germany | Servers, database, photo storage. **Falkenstein only**; an earlier draft said "Germany and Finland" and that was wrong |
+| Hetzner Online GmbH | European Economic Area | Servers, database, photo storage, error reports. The servers are in Falkenstein, Germany today, but the page names the EEA, as for Scaleway (owner 2026-10-07): the law asks whether data leaves the EEA, not for a town, and hosting may move inside the EEA without a new notice version |
 | Scaleway SAS | European Economic Area | The email the site itself sends, and the nightly backups |
 | Proton AG | Switzerland | The project mailbox: mail a person here reads and answers by hand |
 
@@ -217,9 +225,40 @@ is worth more than a vague implication.
   ever appointed, the page names them.
 - **Previous versions.** The page links its own file history in the public
   repository. The URL pins branch `main`, which is what `symfony-base-clean` becomes
-  at go-live; it 404s until then, and so does the route it sits on. A dated
-  change list on the page itself is the better answer and belongs with the
-  changelog work (`docs/TODO.md` item 9).
+  at go-live; it 404s until then, and so does the route it sits on. The page
+  also carries its own numbered versions (below).
+
+### 7a. Versions and telling riders (2026-10-07)
+
+The owner's rule: the notice never changes without the riders being told, and
+which version each account has seen is kept.
+
+- **The versions.** `App\Legal\PrivacyNoticeVersions` lists every version,
+  newest first: its number, its date and its changes (keys under
+  `privacy.change.*`, in all five locales). `CURRENT` is the newest number. The
+  page shows "Version 2 · 7 October 2026" at the top, in the reader's date
+  format, and under "Changes to this policy" every version with its changes.
+  Version 1 is the page as committed on 4 October 2026. Version 2 (7 October
+  2026) adds traffic summaries and Scout tags, the stored time zone, the base
+  location stored as a random point up to 2.5 km away instead of rounded to
+  about 1 km, and corrects the pseudonym sentence (with the profile off,
+  contributions show the fixed `rider#` pseudonym, which the old sentence
+  called "no name at all"). It also rewrites jargon in plain words, names each
+  service outside the EEA and what it sees, links every GDPR article, and
+  discloses the server's error reports.
+- **Who saw what.** `users.privacy_version_seen` holds the version an account
+  last saw (null is none yet). A new account starts at `CURRENT`: it signed up
+  under that text. Opening `/privacy` while signed in records `CURRENT`.
+- **Telling riders.** While a signed-in rider's version is below `CURRENT`,
+  every page (the base layout and the map) shows a bar: "Our privacy notice
+  changed on 7 October 2026. Read what changed", linking to the change list.
+  It goes once they open the notice. A visitor who is not signed in never sees
+  it: their pages may sit in a shared cache.
+- **The record.** The admin dashboard counts accounts per version seen, "none
+  yet" included, and the data export carries `privacy_version_seen`.
+- **Changing the notice.** A change to how data is handled adds a version to
+  `PrivacyNoticeVersions` with its date and change lines, raises `CURRENT`, and
+  ships with the copy change; a change that only fixes a typo does not.
 
 ## 8. Corrections the owner made to the first draft
 

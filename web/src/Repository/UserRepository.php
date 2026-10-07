@@ -89,6 +89,23 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
+     * Accounts per privacy notice version last seen, newest first; null is "none yet".
+     *
+     * @return list<array{version: int|null, accounts: int}>
+     */
+    public function countByPrivacyVersion(): array
+    {
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
+            'SELECT privacy_version_seen AS version, COUNT(*) AS accounts FROM users GROUP BY privacy_version_seen ORDER BY privacy_version_seen DESC NULLS LAST',
+        );
+
+        return array_map(static fn (array $r): array => [
+            'version' => null === $r['version'] ? null : (int) $r['version'],
+            'accounts' => (int) $r['accounts'],
+        ], $rows);
+    }
+
+    /**
      * @return list<User>
      */
     public function recentSignups(int $limit = 10): array

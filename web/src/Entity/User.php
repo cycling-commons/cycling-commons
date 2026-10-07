@@ -152,6 +152,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(name: 'time_format', type: 'string', length: 10, options: ['default' => 'auto'])]
     private string $timeFormat = TimeFormat::Auto->value;
 
+    /** The privacy notice version this rider last saw (App\Legal\PrivacyNoticeVersions); null is none. */
+    #[ORM\Column(name: 'privacy_version_seen', type: 'integer', nullable: true)]
+    private ?int $privacyVersionSeen = null;
+
     /** The zone the rider chose for times; null is "automatic" (account-and-auth.md §9). */
     #[ORM\Column(name: 'time_zone', type: 'string', length: 64, nullable: true)]
     private ?string $timeZone = null;
@@ -672,6 +676,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setTimeFormat(TimeFormat $format): static
     {
         $this->timeFormat = $format->value;
+
+        return $this;
+    }
+
+    public function getPrivacyVersionSeen(): ?int
+    {
+        return $this->privacyVersionSeen;
+    }
+
+    public function setPrivacyVersionSeen(?int $version): static
+    {
+        $this->privacyVersionSeen = $version;
 
         return $this;
     }

@@ -22,7 +22,7 @@ final class AdminDashboardStats
     }
 
     /**
-     * @return array{members:int,curators:int,admins:int,unverified:int,locked:int,pendingRemoval:int,recent:list<User>}
+     * @return array{members:int,curators:int,admins:int,unverified:int,locked:int,pendingRemoval:int,recent:list<User>,privacyVersions:list<array{version:int|null,accounts:int}>}
      */
     public function collect(): array
     {
@@ -34,6 +34,8 @@ final class AdminDashboardStats
             'locked' => $this->users->countLocked(),
             'pendingRemoval' => $this->users->countPendingRemoval(),
             'recent' => $this->users->recentSignups(10),
+            // How many accounts last saw each privacy notice version (privacy-notice.md).
+            'privacyVersions' => $this->users->countByPrivacyVersion(),
         ];
     }
 }

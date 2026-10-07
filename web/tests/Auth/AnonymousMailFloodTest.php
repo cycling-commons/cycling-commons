@@ -197,4 +197,19 @@ final class AnonymousMailFloodTest extends WebTestCase
         self::assertSame(1, $this->mailsSent());
         self::assertSame($before + 1, $this->userCount());
     }
+
+    /** A new account signs up under the privacy notice as it stands (docs/specs/privacy-notice.md). */
+    public function testANewAccountStartsAtTheCurrentPrivacyVersion(): void
+    {
+        $client = static::createClient();
+        $this->armCsrf($client);
+        $client->request('POST', '/register', $this->registrationPayload('privacy-start@example.com'));
+        self::assertResponseIsSuccessful();
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        $user = $em->getRepository(User::class)->findOneBy(['email' => 'privacy-start@example.com']);
+        self::assertNotNull($user);
+        self::assertSame(\App\Legal\PrivacyNoticeVersions::CURRENT, $user->getPrivacyVersionSeen());
+    }
 }

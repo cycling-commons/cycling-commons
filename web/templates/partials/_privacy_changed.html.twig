@@ -1,0 +1,15 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# The privacy notice changed since this signed-in rider last read it
+   (docs/specs/privacy-notice.md). Opening the notice records it as seen. #}
+{% set _privacy = cc_privacy_unseen() %}
+{% if _privacy %}
+<div class="privacy-changed" data-privacy-changed role="status">
+  <span>{{ 'privacy.changed_bar'|trans({'%date%': _privacy.date|cc_date}) }}</span>
+  <a href="{{ path('privacy') }}#changes">{{ 'privacy.changed_read'|trans }}</a>
+</div>
+<style>
+  .privacy-changed{display:flex;flex-wrap:wrap;gap:.4rem .8rem;align-items:center;justify-content:center;
+    padding:.55rem 1rem;background:#C8923A;color:#101E16;font-size:.88rem;line-height:1.4;text-align:center}
+  .privacy-changed a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}
+</style>
+{% endif %}

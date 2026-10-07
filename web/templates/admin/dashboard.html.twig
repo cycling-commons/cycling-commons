@@ -35,6 +35,34 @@
         {% endfor %}
     </div>
 
+    {# Who has seen which privacy notice version (privacy-notice.md). #}
+    <h2 class="h5 mt-4">{{ 'admin.dashboard.privacy_versions'|trans }}</h2>
+    <table class="table table-sm w-auto" data-privacy-versions>
+        <thead><tr><th>{{ 'admin.dashboard.col_privacy_version'|trans }}</th><th>{{ 'admin.dashboard.col_accounts'|trans }}</th></tr></thead>
+        <tbody>
+            {% for row in stats.privacyVersions %}
+                <tr>
+                    <td>{{ row.version is null ? 'admin.dashboard.privacy_none'|trans : row.version }}</td>
+                    <td>{{ row.accounts }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="h5 mt-4">{{ 'admin.dashboard.jobs'|trans }}</h2>
+    <table class="table table-sm w-auto">
+        <thead><tr><th>{{ 'admin.dashboard.col_job'|trans }}</th><th>{{ 'admin.dashboard.col_job_last'|trans }}</th><th>{{ 'admin.dashboard.col_job_state'|trans }}</th></tr></thead>
+        <tbody>
+            {% for job in jobs|default([]) %}
+                <tr data-job="{{ job.command }}" data-job-state="{{ job.late ? 'late' : 'ok' }}">
+                    <td><code>{{ job.command }}</code></td>
+                    <td>{{ job.lastRun ? job.lastRun|cc_datetime : 'admin.dashboard.job_never'|trans }}</td>
+                    <td>{% if job.late %}<span class="badge bg-danger">{{ 'admin.dashboard.job_late'|trans }}</span>{% else %}<span class="badge bg-success">{{ 'admin.dashboard.job_ok'|trans }}</span>{% endif %}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     <h2 class="h5 mt-4">{{ 'admin.dashboard.recent'|trans }}</h2>
     <table class="table table-striped">
         <thead>
