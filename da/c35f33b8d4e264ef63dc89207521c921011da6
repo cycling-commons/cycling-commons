@@ -1,0 +1,247 @@
+.gitleaks.toml
+  s_985749378da6fe::t_f7b14f8f11a169 12-23
+developers/docker/.env.example
+  s_985749378da6fe::t_b9afa387d1ec46 98-99
+developers/docker/compose.yaml
+  s_985749378da6fe::t_8a70ed044c6c99 82-88,202
+docs/specs/account-and-auth.md
+  s_985749378da6fe::t_aabec1237d82c2 993
+docs/specs/map-and-search.md
+  s_985749378da6fe::t_0ae90b3ebc31ae 1582-1587
+docs/specs/moderation-and-contribution.md
+  s_985749378da6fe::t_da696a0f86ede8 3574-3577,3746
+docs/specs/scout-bundle.md
+  s_985749378da6fe::t_0b16800deb38da 60,104-109
+docs/specs/security-architecture.md
+  s_985749378da6fe::t_8902b88242c4e3 618,713
+docs/specs/traffic-measurements.md
+  s_985749378da6fe::t_2d30bb1d2a8e6b 1-454
+web/.env
+  s_985749378da6fe::t_c0fd525c95a1ab 17-22,164-168
+web/.env.test
+  s_985749378da6fe::t_c77372763a2f14 58-59
+web/assets/js/cc-units.js
+  s_985749378da6fe::t_f1e642c62d75ab 58-64,96
+web/assets/lib/ride-archive.js
+  s_985749378da6fe::t_accfe14fd03e32 1-29
+web/assets/lib/ride-batch.js
+  s_985749378da6fe::t_eb2d63e48bba56 1-79
+web/assets/lib/road-pieces.js
+  s_985749378da6fe::t_b18e108aa41be4 1-276
+web/assets/lib/traffic-colours.js
+  s_985749378da6fe::t_552418a8ff25f8 1-37
+web/assets/lib/traffic-match.js
+  s_985749378da6fe::t_b259814368bba7 1-311
+web/assets/lib/traffic-ride.js
+  s_985749378da6fe::t_1dac567951cfc0 1-235
+web/assets/lib/traffic-summary.js
+  s_985749378da6fe::t_911783c0a0a635 1-243
+web/assets/map/map.js
+  s_985749378da6fe::t_b31236a303dee9 30,322
+web/assets/map/panels.js
+  s_985749378da6fe::t_788e99ecb463bb 18,156-162,166-167,175,186
+web/assets/map/scout-bulk.js
+  s_985749378da6fe::t_93847da137e7dd 1-193
+web/assets/map/scout-review.js
+  s_985749378da6fe::t_715548dd5f57b7 7,16,18-20,105-106,143-144,158,228,231-232,239-241,250,253,280-284,902-904,906-907,1030-1057,1059-1075,1081,1088-1090,1097-1115,1338-1343,1357-1364,1374-1376
+web/assets/map/scout-traffic.js
+  s_985749378da6fe::t_c93c959a94b3db 1-335
+web/assets/map/traffic-layer.js
+  s_985749378da6fe::t_aa4f516e7d8223 1-159
+web/assets/map/units.js
+  s_985749378da6fe::t_dee9f9e0a5737b 43-48
+web/assets/styles/key-swatches.css
+  s_985749378da6fe::t_13523d64fd4e2b 13-14
+web/assets/styles/map.css
+  s_985749378da6fe::t_93f2fe629ff33c 188-198,329-330,869,884,888-889,941-995,1083-1084
+web/composer.json
+  s_985749378da6fe::t_11be9975746cff 18
+web/composer.lock
+  s_985749378da6fe::t_fd5c5b1b759b0c 7,146-219
+web/config/packages/coverage.yaml
+  s_985749378da6fe::t_a145679ca21a17 29-39
+web/config/packages/csrf.yaml
+  s_985749378da6fe::t_e0817db953065a 18
+web/config/packages/doctrine.yaml
+  s_985749378da6fe::t_87f8b0f3de5335 10
+web/config/packages/rate_limiter.yaml
+  s_985749378da6fe::t_62cc1af6f5c9c1 77-78,80-88
+web/config/packages/sentry.yaml
+  s_985749378da6fe::t_4d01214f94e1ae 14-17
+web/config/packages/traffic.yaml
+  s_985749378da6fe::t_614d36a8d5c10d 1-6
+web/config/services.yaml
+  s_985749378da6fe::t_99eb0810c72e11 67-71
+web/config/table_comments.yaml
+  s_985749378da6fe::t_df2dca57ba4e28 84-93
+web/migrations/Version20261005020000.php
+  s_8fe2e4dc6b0b60::t_67de6612e8692b 1-49
+web/migrations/Version20261005030000.php
+  s_985749378da6fe::t_2ced336495d98f 1-44
+web/public/data/holidays/au.json
+  s_985749378da6fe::t_3bc0fbc49e2dbd 1
+web/public/data/holidays/be.json
+  s_985749378da6fe::t_8707876d56931c 1
+web/public/data/holidays/ca.json
+  s_985749378da6fe::t_d98335842f696e 1
+web/public/data/holidays/ch.json
+  s_985749378da6fe::t_836c6741035f9d 1
+web/public/data/holidays/co.json
+  s_985749378da6fe::t_2702a13a877271 1
+web/public/data/holidays/de.json
+  s_985749378da6fe::t_ebd11cd8758d34 1
+web/public/data/holidays/es.json
+  s_985749378da6fe::t_e1810c38b56fc3 1
+web/public/data/holidays/fr.json
+  s_985749378da6fe::t_94e81156f44f45 1
+web/public/data/holidays/gb.json
+  s_985749378da6fe::t_a961b7d1eed52b 1
+web/public/data/holidays/ie.json
+  s_985749378da6fe::t_9b552c644deb9d 1
+web/public/data/holidays/it.json
+  s_985749378da6fe::t_66ee50492f4801 1
+web/public/data/holidays/jp.json
+  s_985749378da6fe::t_a8797a3ffa8f83 1
+web/public/data/holidays/lu.json
+  s_985749378da6fe::t_14e060f412681d 1
+web/public/data/holidays/nl.json
+  s_985749378da6fe::t_4cfcdc8e2bb87e 1
+web/public/data/holidays/nz.json
+  s_985749378da6fe::t_5d4de72f04d255 1
+web/public/data/holidays/si.json
+  s_985749378da6fe::t_cd7deb4b04833c 1
+web/public/data/holidays/us.json
+  s_985749378da6fe::t_3bbae0cb10e9b9 1
+web/public/data/holidays/za.json
+  s_985749378da6fe::t_1b39d02733261e 1
+web/src/Controller/MapController.php
+  s_985749378da6fe::t_cf50ac82fe1414 34,79,81-85,89,99-106,160-162,433,442-490
+web/src/Controller/ModerateTrafficController.php
+  s_985749378da6fe::t_0b5e35e29c3cae 1-86
+web/src/Controller/TrafficController.php
+  s_985749378da6fe::t_66b5b1295bd388 1-87
+web/src/Coverage/RoadPiecesManifest.php
+  s_985749378da6fe::t_d71901d812d79c 1-78
+web/src/Settings/SettingsRegistry.php
+  s_985749378da6fe::t_b860efb93c41e7 10,52-57,147-156
+web/src/Traffic/Command/TrafficDumpCommand.php
+  s_985749378da6fe::t_a71d2137f4cbbe 1-72
+web/src/Traffic/Command/TrafficHolidaysCommand.php
+  s_985749378da6fe::t_234ca5f4ae3a0b 1-92
+web/src/Traffic/TrafficCipher.php
+  s_985749378da6fe::t_f3f8a17f890469 1-66
+web/src/Traffic/TrafficDisclosure.php
+  s_985749378da6fe::t_fe7660821d0419 1-193
+web/src/Traffic/TrafficIntake.php
+  s_985749378da6fe::t_4904bbc0a41549 1-97
+web/src/Traffic/TrafficKeys.php
+  s_985749378da6fe::t_6008cda87753b6 1-91
+web/src/Traffic/TrafficLine.php
+  s_985749378da6fe::t_330ae798cd5c56 1-155
+web/src/Traffic/TrafficPayloadRefused.php
+  s_985749378da6fe::t_9ebd4c62c75cf2 1-19
+web/src/Traffic/TrafficProgress.php
+  s_985749378da6fe::t_e30fc86085c697 1-97
+web/src/Traffic/TrafficRiderDeletion.php
+  s_985749378da6fe::t_a50ac3827c0332 1-31
+web/src/Traffic/TrafficStore.php
+  s_985749378da6fe::t_987c5f8b8f0cd5 1-202
+web/src/Traffic/TrafficView.php
+  s_985749378da6fe::t_7df65689639519 1-128
+web/templates/account/_shell_chrome.html.twig
+  s_985749378da6fe::t_b266bf355dd4ab 6,13,52,105-107
+web/templates/map/_scout_review.html.twig
+  s_985749378da6fe::t_a74c3da4d8d53e 28-31,36-42,54,57-101
+web/templates/map/index.html.twig
+  s_985749378da6fe::t_b76e3251ab5cb3 237-253,576-590,724-741,1032-1036
+web/templates/moderate/traffic.html.twig
+  s_985749378da6fe::t_0fdae147bbd8c1 1-124
+web/templates/pages/map_key.html.twig
+  s_985749378da6fe::t_3f6ccf5defbe71 252-263
+web/tests/Coverage/RoadPiecesManifestTest.php
+  s_985749378da6fe::t_f3d9f1304c7458 1-61
+web/tests/Security/ErrorTrackerBodyTest.php
+  s_985749378da6fe::t_4f1239ac360f62 1-27
+web/tests/Traffic/ModerateTrafficControllerTest.php
+  s_985749378da6fe::t_cb6e67b872031a 1-217
+web/tests/Traffic/ScoutReviewPageTest.php
+  s_985749378da6fe::t_22edcf30525578 1-53
+web/tests/Traffic/TrafficCipherTest.php
+  s_985749378da6fe::t_fb981f76b80867 1-109
+web/tests/Traffic/TrafficControllerTest.php
+  s_985749378da6fe::t_9442245f826ddb 1-176
+web/tests/Traffic/TrafficDisclosureTest.php
+  s_985749378da6fe::t_4805bf67384a78 1-183
+web/tests/Traffic/TrafficDumpCommandTest.php
+  s_985749378da6fe::t_53d4e031691af5 1-37
+web/tests/Traffic/TrafficHolidaysCommandTest.php
+  s_985749378da6fe::t_d04c4ae548c5ee 1-85
+web/tests/Traffic/TrafficLineTest.php
+  s_985749378da6fe::t_80efe760cc3829 1-147
+web/tests/Traffic/TrafficProgressTest.php
+  s_985749378da6fe::t_f6425ac32ae020 1-65
+web/tests/Traffic/TrafficRiderDeletionTest.php
+  s_985749378da6fe::t_0609cf52bbed28 1-67
+web/tests/Traffic/TrafficStoreTest.php
+  s_985749378da6fe::t_9873cb6c1b5ac4 1-165
+web/tests/Traffic/TrafficViewTest.php
+  s_985749378da6fe::t_452fb95d543189 1-169
+web/tests/js/fixtures/roadpieces-14-8419-5411.geojson
+  s_985749378da6fe::t_395542b1b56a73 1-75
+web/tests/js/legend-collapse.test.cjs
+  s_985749378da6fe::t_220597c8b3dea8 98-99
+web/tests/js/ride-archive.test.mjs
+  s_985749378da6fe::t_fab270317dd361 1-44
+web/tests/js/ride-batch.test.mjs
+  s_985749378da6fe::t_10b5e425fea209 1-72
+web/tests/js/road-pieces.test.mjs
+  s_985749378da6fe::t_49c285b8d621a3 1-110
+web/tests/js/scout-traffic.test.cjs
+  s_985749378da6fe::t_96982987d1dda3 1-346
+web/tests/js/traffic-layer.test.mjs
+  s_985749378da6fe::t_7b782a46f0f58a 1-42
+web/tests/js/traffic-match.test.mjs
+  s_985749378da6fe::t_1423cb2c94dbd1 1-188
+web/tests/js/traffic-ride.test.mjs
+  s_985749378da6fe::t_8709f4402fec7f 1-190
+web/tests/js/traffic-summary.test.mjs
+  s_985749378da6fe::t_3281a64f5b8532 1-192
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_e6231c1767168f 47,1901,1903-1918,2338-2339,2351-2406,3488-3520,4334,4478-4492,4868-4870
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_d80ec8eac1ee99 47,1896,1898-1913,2955-2956,2968-3023,3506-3538,4352,4496-4510,4889-4891
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_9d66fc65a5a31f 47,1905,1907-1922,2963-2964,2976-3031,3514-3546,4361,4505-4519,4899-4901
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_d27508581f57bc 47,1893,1895-1910,2330-2331,2343-2398,3480-3512,4326,4470-4484,4860-4862
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_2dc4e78665a001 47,1898,1900-1915,2335-2336,2348-2403,3487-3519,4333,4477-4491,4867-4869
+wiki/developers/numbers.md
+  s_985749378da6fe::t_a820b8e4194210 28-29
+wiki/scout.md
+  s_985749378da6fe::t_17760940d6aef8 88-89,96-111,144-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "dac35f33b8d4e264ef63dc89207521c921011da6",
+  "prompts": {},
+  "sessions": {
+    "s_8fe2e4dc6b0b60": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "882c5b78-b80b-4663-a77f-f4d8a04c9243",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    },
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
