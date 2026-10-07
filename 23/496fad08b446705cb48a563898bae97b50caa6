@@ -1,0 +1,23 @@
+web/src/Ops/JobRunRecorder.php
+  s_985749378da6fe::t_430dc03476c6e8 18-19
+web/src/Ops/JobHealth.php
+  s_985749378da6fe::t_430dc03476c6e8 14-15
+web/src/Ops/JobRunStore.php
+  s_985749378da6fe::t_430dc03476c6e8 13-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "23496fad08b446705cb48a563898bae97b50caa6",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
