@@ -15,6 +15,8 @@ use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
  * Records a daily job's run when it ends with success. A command with a
  * `--force` or `--write` switch is a dry run without it, and a dry run leaves
  * the work undone, so it does not count.
+ *
+ * @api
  */
 #[AsEventListener(event: ConsoleEvents::TERMINATE)]
 final readonly class JobRunRecorder

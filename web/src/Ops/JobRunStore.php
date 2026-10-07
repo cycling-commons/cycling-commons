@@ -10,6 +10,8 @@ use Doctrine\DBAL\Connection;
 
 /**
  * The last good run of each daily job, one row per command (`job_run`).
+ *
+ * @api
  */
 final readonly class JobRunStore
 {
