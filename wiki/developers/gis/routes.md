@@ -27,19 +27,24 @@ nothing downstream needs it.
 
 <!-- CODE-FROM web/src/Contribution/Gpx/GpxParser.php -->
 ```php
-foreach ($doc->getElementsByTagNameNS('*', 'trkpt') as $trkpt) {
-    $lat = $trkpt->getAttribute('lat');
-    $lng = $trkpt->getAttribute('lon');
+if ('trkpt' === $reader->localName) {
 ...
-            $ele = null;
-            foreach ($trkpt->getElementsByTagNameNS('*', 'ele') as $eleNode) {
-                $ele = is_numeric($eleNode->textContent) ? (float) $eleNode->textContent : null;
+    $points[] = [...self::coordinates($reader), null];
+...
+} elseif (null !== $pointDepth && 'ele' === $reader->localName && !$eleSeen) {
+    $eleSeen = true;
+    $text = $reader->readString();
+    $ele = is_numeric($text) ? (float) $text : null;
+...
+$lat = $trkpt->getAttribute('lat');
+$lng = $trkpt->getAttribute('lon');
 ```
 
 That is the entire read: one attribute for latitude, one for longitude, one nested element for
-elevation, walked once per `<trkpt>`. Everything else in `GpxParser::parse()`, the byte-size cap,
-the coordinate-range validation, the point-count cap, is about *rejecting* a bad file, never about
-reading more out of a good one.
+elevation, walked once per `<trkpt>`. The file is read as a stream, element by element, never
+built into a document in memory. Everything else in `GpxParser::parse()`, the byte-size cap,
+the element cap, the coordinate-range validation, the point-count cap, is about *rejecting* a
+bad file, never about reading more out of a good one.
 
 Turning that into the LineString this project stores is almost entirely a *subtraction*, not a
 transformation. `RouteProposalService::propose()` (`web/src/Contribution/RouteProposalService.php`)

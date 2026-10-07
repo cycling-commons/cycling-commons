@@ -205,15 +205,21 @@ Reject, never coerce. Every failure message is a translation key
 |---|---|---|
 | GPX file size | ≤ 15 MiB | `GpxParser::MAX_BYTES` (15 728 640) in `web/src/Contribution/Gpx/GpxParser.php`; mirrored by the form's `File(maxSize: '15M')` in `web/src/Form/ProposeRouteType.php`; php `upload_max_filesize`/`post_max_size` lifted to 16M/20M in `web/Dockerfile` |
 | Track points (pre-simplification) | ≥ 2 and ≤ 50 000 | `GpxParser::MIN_POINTS` / `MAX_POINTS` — dense tracks are rejected by density even under the byte cap |
+| XML elements | ≤ 3 000 000 | `GpxParser::MAX_ELEMENTS` - a body of millions of tiny elements is refused as "not a GPX track" after a bounded read; a 50 000-point GPX with time, elevation and a row of sensor extensions runs to well over a million. libxml warnings (a relative namespace URI) do not refuse a file; errors do |
 | Coordinates | finite; lat −90..90; lng −180..180 | `GpxParser::parse()` per-point |
 | Raw track length | ≥ 2 km and ≤ 400 km | `RouteProposalService::MIN_RAW_M` / `MAX_RAW_M` — measured on the **raw** parsed track, before trim |
 | Simplification work budget | 200 × n point-scans | `TrackProcessor::MAX_DP_WORK_FACTOR` — an adversarial saw-tooth trips a clean reject (`contribute.error.route_too_complex`) instead of quadratic CPU |
 | Route name | required, ≤ 200 chars, suspicious/invisible-character checks | `ProposeRouteType` (`rName`) |
 | Note | ≤ 2000 chars, same character checks | `ProposeRouteType` |
 
-XML parsing is XXE-safe (`DOMDocument` + `LIBXML_NONET`, PHP ≥ 8 never loads
-external entities) and namespace-agnostic (GPX 1.0/1.1). Zero `<trkpt>`
-elements report as "not a GPX track", not out-of-range.
+XML parsing is streamed (`XMLReader` + `LIBXML_NONET`, never a DOM), XXE-safe
+(PHP ≥ 8 never loads external entities) and namespace-agnostic (GPX 1.0/1.1).
+Streaming matters because the anonymous ride check reaches this parser: as a
+DOM, a 15 MiB body of tiny elements took 522 MB of libxml memory, outside PHP's
+`memory_limit`, and 8 seconds before it was refused; streamed, memory stays at
+the size of the body and the element cap ends the read. The byte cap stays
+15 MiB for anonymous callers too, since memory no longer grows with it. Zero
+`<trkpt>` elements report as "not a GPX track", not out-of-range.
 
 ### 4.2 Processing pipeline
 

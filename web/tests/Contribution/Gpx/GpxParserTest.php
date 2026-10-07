@@ -110,4 +110,57 @@ final class GpxParserTest extends TestCase
         $this->expectExceptionMessage('propose_route.error.gpx_too_large');
         new GpxParser()->parse($xml);
     }
+
+    public function testSelfClosingPointsAndNestedElevationAreRead(): void
+    {
+        $xml = '<?xml version="1.0"?><gpx version="1.1"><trk><trkseg>'
+            .'<trkpt lat="50.1" lon="5.1"/>'
+            .'<trkpt lat="50.2" lon="5.2"><extensions><x:p xmlns:x="urn:x"><ele>99</ele></x:p></extensions><ele>12</ele></trkpt>'
+            .'<trkpt lat="50.3" lon="5.3"><time>2026-10-05T00:00:00Z</time></trkpt>'
+            .'</trkseg></trk></gpx>';
+        $points = new GpxParser()->parse($xml)->points;
+
+        self::assertSame([[50.1, 5.1, null], [50.2, 5.2, 99.0], [50.3, 5.3, null]], $points, 'the first ele inside a point wins, as it always did');
+    }
+
+    public function testMalformedXmlAfterValidPointsIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('propose_route.error.gpx_invalid');
+        new GpxParser()->parse(str_replace('</gpx>', '</gpz>', self::GPX_11));
+    }
+
+    /**
+     * A body of millions of tiny elements is no GPX, even with two real points
+     * at its end. It is refused at the element cap, before the rest is read.
+     */
+    public function testAFloodOfElementsIsRefusedAtTheElementCap(): void
+    {
+        $xml = '<?xml version="1.0"?><gpx version="1.1"><trk><trkseg>'.str_repeat('<a/>', 3_000_000)
+            .'<trkpt lat="50.1" lon="5.1"/><trkpt lat="50.2" lon="5.2"/></trkseg></trk></gpx>';
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('propose_route.error.gpx_invalid');
+        new GpxParser()->parse($xml);
+    }
+
+    /** A libxml warning is not an error: a relative namespace URI reads as it always did. */
+    public function testAWarningDoesNotRefuseTheFile(): void
+    {
+        $xml = str_replace('xmlns="http://www.topografix.com/GPX/1/1"', 'xmlns="gpx11"', self::GPX_11);
+
+        self::assertCount(3, new GpxParser()->parse($xml)->points);
+    }
+
+    public function testALongRideWithRichExtensionsStaysUnderTheElementCap(): void
+    {
+        $pt = '<trkpt lat="50.%05d" lon="5.1"><ele>1</ele><time>t</time><extensions><a/><b/><c/><d/><e/><f/><g/><h/><i/><j/><k/><l/><m/><n/><o/><p/><q/><r/><s/><u/></extensions></trkpt>';
+        $pts = '';
+        for ($i = 0; $i < 50_000; ++$i) {
+            $pts .= sprintf($pt, $i % 90_000);
+        }
+        $xml = '<?xml version="1.0"?><gpx version="1.1"><trk><trkseg>'.$pts.'</trkseg></trk></gpx>';
+
+        self::assertCount(50_000, new GpxParser()->parse($xml)->points);
+    }
 }

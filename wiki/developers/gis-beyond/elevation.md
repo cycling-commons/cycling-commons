@@ -55,9 +55,10 @@ point's own recorded `<ele>` element, if it has one.
 
 <!-- CODE-FROM web/src/Contribution/Gpx/GpxParser.php -->
 ```php
-$ele = null;
-foreach ($trkpt->getElementsByTagNameNS('*', 'ele') as $eleNode) {
-    $ele = is_numeric($eleNode->textContent) ? (float) $eleNode->textContent : null;
+} elseif (null !== $pointDepth && 'ele' === $reader->localName && !$eleSeen) {
+    $eleSeen = true;
+    $text = $reader->readString();
+    $ele = is_numeric($text) ? (float) $text : null;
 ```
 
 That `ele` value is exactly what the rider's own device wrote into the file — never a DEM lookup,
