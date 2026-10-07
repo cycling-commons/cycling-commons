@@ -1,0 +1,53 @@
+docs/specs/account-and-auth.md
+  s_985749378da6fe::t_5ab691c264f78c 787-789
+web/config/packages/doctrine.yaml
+  s_985749378da6fe::t_d0a0fd49ae3c66 10
+web/config/table_comments.yaml
+  s_985749378da6fe::t_fed7050fd3c224 94-95
+web/migrations/Version20261007100000.php
+  s_985749378da6fe::t_ef52191afb2dd7 1-37
+web/src/Controller/Admin/DashboardController.php
+  s_985749378da6fe::t_f1491386a7bc19 24-25,70,81-82
+web/src/Ops/DailyJobs.php
+  s_985749378da6fe::t_13737707c78c95 1-31
+web/src/Ops/JobHealth.php
+  s_985749378da6fe::t_ebf7ead180dfdb 1-36
+web/src/Ops/JobRunRecorder.php
+  s_985749378da6fe::t_29c785a9d25012 1-46
+web/src/Ops/JobRunStore.php
+  s_985749378da6fe::t_02019e3da4b122 1-39
+web/templates/admin/dashboard.html.twig
+  s_985749378da6fe::t_10b89d5f9dbff0 10,17-26
+web/tests/Admin/DashboardJobsTest.php
+  s_985749378da6fe::t_dc863de85c3bd9 1-80
+web/tests/Ops/DailyJobsTest.php
+  s_985749378da6fe::t_4ab4ed11dad2d8 1-109
+web/tests/Security/AlertRecipientNoticeTest.php
+  s_985749378da6fe::t_16712bcff419f6 72
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_df6a3156dfcb51 4810-4818
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_3fc1bb3c0e8319 4831-4839
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_531f770de9b76d 4841-4849
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_c9e6342af90fdd 4802-4810
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_b7c89f04e42d49 4809-4817
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1c24124da83daa9b9e55e627603d729c88914543",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
