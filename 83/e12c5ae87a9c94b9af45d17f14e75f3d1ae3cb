@@ -1,0 +1,31 @@
+web/src/Form/TranslationProposalType.php
+  s_985749378da6fe::t_b99147f55aafd9 138
+docs/specs/translations.md
+  s_985749378da6fe::t_87dd5908290694 715-718,727-736,767-775,794,801-809,836-845,848-853,855-858
+  s_985749378da6fe::t_ad6e50a3b1beb7 541,551,561-562,578,580-581,594,596,920
+  s_985749378da6fe::t_32df08f5626d76 917-918,1031-1032,1056-1061,1063,1066-1071,1110,1112-1113
+  s_985749378da6fe::t_b4bb2a68ed0e1a 70-72,140,253-256,266,372,681-686,691-706,710-712,719,738-766,776-777,788-793,854,985-987,1021-1023,1108,1120-1122
+  s_985749378da6fe::t_07e725a1566252 737
+web/src/Translation/ProposalService.php
+  s_985749378da6fe::t_b99147f55aafd9 32,86
+web/src/Translation/Exception/ConsentRequiredException.php
+  s_985749378da6fe::t_b99147f55aafd9 10
+web/src/Controller/TranslateController.php
+  s_985749378da6fe::t_b99147f55aafd9 664
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "83e12c5ae87a9c94b9af45d17f14e75f3d1ae3cb",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
