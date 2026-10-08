@@ -15,8 +15,8 @@ namespace App\Content;
  *
  * - **One file, no table, no admin screen.** Editing the roadmap is a pull
  *   request, which is the same review the rest of the site gets and leaves a
- *   history for free. A database-backed roadmap with a curator queue is
- *   `docs/TODO.md` 7's destination, not its first version.
+ *   history for free. A database-backed roadmap with a curator queue would
+ *   be a later version, not this one.
  * - **Text lives in the catalogue like all other copy.** Every entry is a
  *   translation key, so the page reads in five languages the day it ships
  *   rather than being an English island.
@@ -56,6 +56,7 @@ final class ReleaseNotes
         ['key' => 'roadmap.item_osm_giveback', 'status' => 'later'],
         ['key' => 'roadmap.item_region_portrait', 'status' => 'later'],
         ['key' => 'roadmap.item_reviews', 'status' => 'later'],
+        ['key' => 'roadmap.item_favourites', 'status' => 'later'],
         ['key' => 'roadmap.item_heatmap', 'status' => 'later'],
         ['key' => 'roadmap.item_standing', 'status' => 'later'],
         ['key' => 'roadmap.item_map_a11y', 'status' => 'later'],
@@ -85,6 +86,33 @@ final class ReleaseNotes
      * @var list<array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>}>
      */
     public const array RELEASES = [
+        [
+            'version' => '0.9.5-beta',
+            'date' => '2026-10-09',
+            'sections' => [
+                'public' => [
+                    'changelog.v095_kinds',
+                    'changelog.v095_map',
+                    'changelog.v095_search',
+                    'changelog.v095_privacy',
+                    'changelog.v095_security',
+                    'changelog.v095_fixes',
+                ],
+                'rider' => [
+                    'changelog.v095_traffic',
+                    'changelog.v095_rides',
+                    'changelog.v095_scout_tags',
+                    'changelog.v095_time_zone',
+                    'changelog.v095_base',
+                    'changelog.v095_hints',
+                ],
+                'curator' => [
+                    'changelog.v095_traffic_desk',
+                    'changelog.v095_curator_kinds',
+                    'changelog.v095_grant',
+                ],
+            ],
+        ],
         [
             'version' => '0.9.4-beta',
             'date' => '2026-10-04',

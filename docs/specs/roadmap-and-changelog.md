@@ -1,7 +1,8 @@
 # Roadmap, changelog, and the release list
 
-Canonical. Covers `/roadmap`, `/changelog`, `/changelog.atom`, the release-notes
-opt-in on `/account/settings`, and `/unsubscribe`.
+Canonical. Covers `/roadmap`, `/whats-new` (and the `/changelog` redirect),
+`/changelog.atom`, the updates opt-in on `/account/settings`, and
+`/unsubscribe`.
 
 Related: [privacy-notice.md](privacy-notice.md) for the consent line,
 [contact-and-support.md](contact-and-support.md) for the other ways in.
@@ -13,24 +14,25 @@ coming. Owner, 2026-08-27: *"no way to inform them about updates"*. The answer
 is three surfaces that share one list, and a fourth that pushes it.
 
 Owner's constraint on the roadmap, 2026-08-28: **"for now it must be a very
-simple list."** The voting, following and rider proposals in `docs/TODO.md` 7
-are the destination, not the first version.
+simple list."** Voting, following and rider proposals are the destination, not
+the first version (§7).
 
 ## 2. One source, three readers
 
 `App\Content\ReleaseNotes` holds both lists as constants. `/roadmap` reads the
 unfinished half, `/whats-new` and the Atom feed read the released half.
-The English page was `/changelog` until 2026-09-29, when it took the name the
-page and the footer use; `/changelog` answers with a permanent redirect
-(`PageController::changelogMoved()`), because bug reports, search results and
-bookmarks carry it. The feed keeps `/changelog.atom`: feed readers are
-subscribed to that exact address, and nobody reads a feed address.
+The English page is `/whats-new`, the name the page and the footer use (each
+locale has its own path, `LocalizedPath::CHANGELOG`). `/changelog` answers with
+a permanent redirect to it (`PageController::changelogMoved()`), because bug
+reports, search results and bookmarks carry that address. The feed is
+`/changelog.atom`, unprefixed and English: feed readers are subscribed to that
+exact address, and nobody reads a feed address.
 
 **Why a PHP file and not a table.** Editing the roadmap is a pull request, which
 is the same review every other piece of copy gets and leaves a history for free.
 A table needs a migration, an admin screen, a permission, and a way to preview a
 change: all of it worth building when riders can propose items, none of it worth
-building to publish eight lines.
+building to publish a short list.
 
 **Why keys and not prose.** Every entry is a catalogue key, so the page reads in
 five languages the day it ships instead of being an English island.
@@ -49,15 +51,13 @@ and the roadmap links there. One fact, one place.
 ## 3. Versions, and the thing that has to be done by hand
 
 `ReleaseNotes::RELEASES[].version` is the git tag **without** its leading `v`.
-The footer stamp comes from somewhere else entirely: `BuildVersion` runs
-`git describe --tags --match 'v*' --always`.
+The footer stamp comes from somewhere else entirely: in a working copy
+`BuildVersion` runs `git describe --tags --match 'v*' --always`.
 
-They agree only if the release is tagged. Until 2026-08-28 no `v*` tag existed
-in this repository at all, which is why the footer showed a bare commit hash and
-the owner asked for `v0.8.0-beta`. **The code was already right**; what was
-missing was the tag.
+They agree only if the release is tagged. An untagged commit shows a bare
+commit hash or a `describe` suffix in the footer, whatever the page says.
 
-    git tag -a v0.8.0-beta -m "0.8.0-beta"
+    git tag -a v0.9.5-beta -m "0.9.5-beta"
 
 `RoadmapChangelogTest::testReleaseVersionsLookLikeGitTags` asserts the shape, not
 that the tag exists: the tag lives in git, and a test cannot make somebody create
@@ -66,23 +66,31 @@ stops a push to `production` whose commit carries no `v*` tag, and prints the
 commands (owner 2026-09-29, after an untagged release). Pushes to `main` and
 `staging` pass untouched; `SKIP=release-tag` pushes once without a tag. A tag
 added after a deploy is still right, and the footer shows it from the next
-deploy on. `REVISION` and `APP_BUILD_VERSION` remain the deployment fallbacks in that
-order.
+deploy on.
 
-**`APP_BUILD_VERSION` lives in `web/.env` alone.** Staging runs each release
-before production, on the same tagged commit, so the two environments never
-rightly name different versions, and one value means one edit per release.
-`ReleaseVersionDriftTest` asserts that `.env` names the version
-`ReleaseNotes::RELEASES[0]` announces, and that `.env.staging`, `.env.prod` and
-`.env.test` carry no copy of their own. A host's `.env.local` could still
-override it; nothing in the deploy needs to.
+A deployed release has no `.git`, only a `REVISION` file with the commit. Its
+footer number is then the `VERSION` file the deploy wrote beside it (the
+`git describe` output taken before `.git` is stripped), else
+`APP_BUILD_VERSION`, else the first twelve characters of the commit. The
+footer's source link always uses `REVISION`'s commit, so the label can never
+move the link off the running build.
+
+**`APP_BUILD_VERSION` lives in `web/.env` alone**, with its leading `v`
+(`APP_BUILD_VERSION=v0.9.5-beta`). Staging runs each release before
+production, on the same tagged commit, so the two environments never rightly
+name different versions, and one value means one edit per release.
+`ReleaseVersionDriftTest` asserts that `.env` names `v` plus the version
+`ReleaseNotes::RELEASES[0]` announces, that `.env.staging`, `.env.prod` and
+`.env.test` carry no copy of their own, and that no version is announced
+twice. A host's `.env.local` could still override it; nothing in the deploy
+needs to.
 
 ## 4. The release list
 
 An **updates** list: news about Cycling Commons itself, new versions first,
-and never anything from or for somebody else. Since v2 (owner 2026-10-01:
-"don't be so narrow, make it more like Keep me up to date") it is not limited
-to release notes; the cadence the rider picked is the ceiling.
+and never anything from or for somebody else. It is not limited to release
+notes (owner 2026-10-01: "don't be so narrow, make it more like Keep me up to
+date"); the cadence the rider picked is the ceiling.
 
 | Piece | Where |
 |---|---|
@@ -113,7 +121,7 @@ Nothing sends these mails yet.
 | Opt out on the settings page | false | kept | none; earlier rows stay |
 | The unsubscribe link | false | kept | none; earlier rows stay |
 
-**Consent versions.** `v1` (until 2026-10-01) is the single sentence "Email me
+**Consent versions.** `v1` is the earlier single sentence "Email me
 when a release ships. Release notes only, a few times a year, ...", still in the
 catalogue as `settings.updates_consent` so a v1 record points at what was
 agreed; its hash is sha256 of `release-updates|v1|settings.updates_consent`.
@@ -135,7 +143,7 @@ an address belongs to whoever typed it. This toggle is only ever shown to a
 signed-in rider whose address was verified at registration, so a confirmation
 mail would prove nothing and would train people to click links in mail from us.
 The standalone signup for people **without** an account is a different thing, it
-does need double opt-in, and it is not built (`docs/TODO.md` 10).
+does need double opt-in, and it is not built (§7).
 
 **Why the unsubscribe link is signed and not stored.** A stored token is another
 row to expire, revoke and leak. An HMAC over the account's uuid needs none of
@@ -154,29 +162,29 @@ the thing the reader wanted anyway. Unsubscribing is not destructive.
 consent was given, not a claim that it still holds. The flag is the current
 answer. Same shape as the photo licence consent.
 
-## 5. Caching, and the trap it walked into
+## 5. Caching, and the trap it avoids
 
 `/changelog.atom` sets `public, max-age=3600`, because a feed reader polls it and
-it holds nothing personal. That was silently rewritten to
-`private, must-revalidate` until an explicit `PUBLIC_ACCESS` rule was added for
-it in `security.yaml`: without one, scheb's lazy-firewall listener reads the
-token, the session usage index moves, and `AbstractSessionListener` overrides the
-controller. The same trap `/map/catalog.json` and `robots.txt` already carry a
-rule for. `RoadmapChangelogTest` asserts the header rather than the rule, so it
+it holds nothing personal. It needs an explicit `PUBLIC_ACCESS` rule in
+`security.yaml` to stay that way: without one, scheb's lazy-firewall listener
+reads the token, the session usage index moves, and `AbstractSessionListener`
+rewrites the header to `private, must-revalidate`. The same trap
+`/map/catalog/stamps.json`, the region slices and `robots.txt` carry a rule
+for. `RoadmapChangelogTest` asserts the header rather than the rule, so it
 catches the symptom whatever causes it next time.
 
 ## 6. Adding a release
 
 1. Add an entry at the **top** of `ReleaseNotes::RELEASES`, with its notes
    under `sections` (see below), and set `APP_BUILD_VERSION` in `web/.env`
-   to the same version.
+   to the same version with its leading `v`.
 2. Add its keys to `messages.en.yaml`, then the other four.
 3. `app:translations:sync`.
 4. Move anything it finished off `ReleaseNotes::ROADMAP`.
 5. Tag it `v<version>` so the footer agrees with the page.
 6. Run the tests: the key check fails on any locale you forgot.
 
-**Sections (from 0.9.4-beta, owner 2026-10-04).** A release's notes sit
+**Sections (owner 2026-10-04).** A release's notes sit
 under three headings, in `ReleaseNotes::SECTIONS` order: `public` ("Public
 site": what everyone sees, the map, the pages, the ballot), `rider` ("Rider
 account": what a signed-in rider's own account pages gain) and `curator`
@@ -190,24 +198,25 @@ hurts most"), not what is on the screen; the details go in a blog article.
 
 ## 6a. What goes on the roadmap
 
-Refreshed 2026-09-25 (owner): the roadmap carries **the big things only**,
-such as more data providers, the seasonal vote, more countries, Scout on more
-devices and giving data back. Bugs, deploy prerequisites, operations chores,
-content review rows and smaller features stay off it; the smaller features
-are private known issues on the curator desk (ten moved there on
-2026-09-26 by a one-off SQL script run on each server, not a migration;
-`is_public` false, status `planned`). The order
-inside a group is not a promise, and the page shows no numbers. An item that shipped is removed the day it ships, whether or
-not a release has been tagged yet; the changelog names it at the next tag
-(§6 step 4). Thirteen items is the size it has now; it should stay short,
-because a list nobody reads to the end is not a roadmap.
+Owner, 2026-09-25: the roadmap carries **the big things only**, such as more
+data providers, the seasonal vote, more countries, Scout on more devices and
+giving data back. Bugs, deploy prerequisites, operations chores, content
+review rows and smaller features stay off it; the smaller features are private
+known issues on the curator desk (`is_public` false, status `planned`).
+Items sit in three groups, `now`, `next` and `later`
+(`ReleaseNotes::STATUSES`). The order inside a group is not a promise, and the
+page shows no numbers. An item that shipped is removed the day it ships,
+whether or not a release has been tagged yet; the changelog names it at the
+next tag (§6 step 4). Fifteen items is the size it has now; it should stay
+short, because a list nobody reads to the end is not a roadmap.
 
 ## 7. Deliberately not built
 
-- **A standalone signup for people without an account** (`docs/TODO.md` 10). It
-  needs double opt-in and a subscriber table, and it is a different design from
-  a toggle on an account that already exists.
+- **A standalone signup for people without an account.** It needs double
+  opt-in and a subscriber table, and it is a different design from a toggle on
+  an account that already exists.
 - **Sending anything.** The list can be joined and left; no release mail is sent
   yet. That is the right order: a list nobody can leave is worse than no list,
   and a list with nothing to send is merely empty.
-- **Voting, following and rider proposals on the roadmap.** `docs/TODO.md` 7.
+- **Voting, following and rider proposals on the roadmap.** The roadmap
+  itself lists roadmap votes as a `next` item (`roadmap.item_roadmap_votes`).
