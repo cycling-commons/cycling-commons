@@ -1,0 +1,38 @@
+web/src/Service/UserAdminService.php
+  s_985749378da6fe::t_23b8ab840eb17d 222
+  s_985749378da6fe::t_f69fdf7244895e 88-110,162,200-221,223
+  s_985749378da6fe::t_4452fe7405fce3 224
+web/templates/admin/moderator_areas.html.twig
+  s_985749378da6fe::t_f5ba75bde75f84 4,9,37-46
+web/tests/Admin/UserAdminActionsTest.php
+  s_985749378da6fe::t_905a04dec9d4c0 241-331
+  s_985749378da6fe::t_7c21843164dd2e 24
+  s_985749378da6fe::t_6eded89b485972 106-108,110,114
+  s_985749378da6fe::t_cd16cde0da5b90 224-240
+  s_985749378da6fe::t_fa6ef05d27134c 109
+  s_985749378da6fe::t_e90d48672eda8f 332
+web/src/Controller/Admin/UserCrudController.php
+  s_985749378da6fe::t_b3e719cf13c075 142-144,186-195,197-231,304-308,323
+  s_985749378da6fe::t_f18cbb275f0f2c 121
+  s_985749378da6fe::t_b57365d734ec7f 118-119,122
+  s_985749378da6fe::t_efc27c9e7be349 120
+  s_985749378da6fe::t_6e801953e88be0 45
+web/tests/Admin/UserAdminServiceTest.php
+  s_985749378da6fe::t_d0c0499dc628c6 109-147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "65a9b7fb2cd72b6aef3b80e4ec3462a6ffebf7d6",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
