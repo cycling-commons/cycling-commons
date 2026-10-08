@@ -20,7 +20,7 @@ Submission/moderation/confirmation machinery:
 domain (states, votes, rides, corrections, GPX endpoint):
 [route-domain.md](route-domain.md). CSP/CSRF/sanitizer/limiters:
 [security-architecture.md](security-architecture.md). The coverage pipeline that
-will replace the transitional client-side index:
+serves OpenStreetMap reference data (tiles, coverage search and nearby):
 [coverage-provider.md](coverage-provider.md).
 
 Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
@@ -56,10 +56,10 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
    hand-set — funnel in
    [edit-items/README.md](edit-items/README.md#item-lifecycle-and-votability)).
 5. **Never break on missing externals.** Every third-party dependency (basemap,
-   Photon, Mapillary) degrades silently to a working map. The list is shorter
-   than it was: the region boundary and the editor's road snapping are served
-   by us now (`RegionBoundaryProvider`, `RouteSnapper`), so neither is an
-   external at all. Same for empty catalog pools: `catalog-load.js` boots `map.js` even
+   Photon, Mapillary) degrades silently to a working map. The region boundary
+   and the editor's road snapping are served by us (`RegionBoundaryProvider`,
+   `RouteSnapper`), so neither is an external at all. Same for empty catalog
+   pools: `catalog-load.js` boots `map.js` even
    when the catalog fetch fails.
 
 ## 2. Map shell and boot contract
@@ -71,8 +71,9 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   `liberty` basemap style, attribution control
   `© OpenStreetMap contributors · ODbL`.
   Optional Esri World Imagery satellite base (hidden by default, `#baseSeg`
-  Map/Satellite toggle; its terms are an open item —
-  `Dated/2026-08-09-esri-imagery-terms.md`). The region boundary renders as a
+  Map/Satellite toggle, shown only when a key is configured; the key and its
+  terms are recorded in [data-source-register.md](data-source-register.md)).
+  The region boundary renders as a
   spotlight mask + dashed outline; it is decorative — failure only logs. It
   comes from **our own** `/map/region/{slug}/boundary`
   (`RegionBoundaryProvider`, simplified and cacheable), not from Nominatim:
@@ -96,15 +97,11 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   relative imports AssetMapper emits, so losing it means `/assets/map/i18n.js`
   and its siblings are fetched at paths that exist nowhere, 404 into
   `index.php`, and return HTML the browser refuses on MIME type: no map at all.
-  Firefox does exactly this; Chromium happened to survive the same page, so a
-  green browser check is not evidence. It caught us twice on 2026-09-09: once
-  with the boot module above `importmap()`, and again after that was fixed, with
-  two MapLibre `modulepreload` links left in the preamble. The MapLibre boot
-  module and its preloads therefore both sit **below** `importmap()`, beside
-  `catalog-load.js` and the rest of the preload block.
-  `tests/Smoke/ImportMapOrderTest.php` pins both orderings, and the preload half
-  exists because the first version of that test checked only script tags and
-  passed over the second bug.
+  Firefox does exactly this; Chromium survives the same page, so a green
+  Chromium check is not evidence. The MapLibre boot module and its preloads
+  therefore both sit **below** `importmap()`, beside `catalog-load.js` and the
+  rest of the preload block. `tests/Smoke/ImportMapOrderTest.php` pins both
+  orderings (module scripts and module preloads).
 - **No WebGL2, no map.** v6 dropped WebGL1 and now **throws**
   `GPUInitializationError` from the `Map` constructor where v5 returned a map
   that silently never painted. `catalog-load.js` catches it, puts
@@ -138,8 +135,8 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   `map.isStyleLoaded()` already holds, otherwise binds it to `load`. `load`
   fires once and is never replayed, while `map.js` is injected only after the
   catalog fetch resolves; on a slow catalog (1.3 s against a 0.6 s style) that
-  injection lands after the event, and a map that only listened got no catalog
-  pins, no coverage layers and no deep link at all.
+  injection lands after the event, and a map that only listened would get no
+  catalog pins, no coverage layers and no deep link at all.
 - **Page-injected globals** (all nonce'd inline scripts in
   `templates/map/index.html.twig`):
 
@@ -151,7 +148,7 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
 | `CC_PREFS` | `{bikes:[], styles:[]}` value-lists; `[]/[]` for anonymous (§4.4) | all |
 | `MAPILLARY_TOKEN` | from `%env(MAPILLARY_TOKEN)%` via `twig.yaml` (§10) | all |
 | `CC_RIDECHECK` | `{url, token}` — ride-check endpoint + stateless CSRF token | `ROLE_USER` block only |
-| `CC_MY_AREA` | `{lat, lng, place, radiusKm, regionIds, countryCodes}` (any field may be `null`/empty when no base location is set) plus `{url, token}` for `POST /map/my-area` — feeds `scope.js`'s `myArea` kind (§4.5, map-and-search.md §4.5 Phase 4) | `ROLE_USER` block only |
+| `CC_MY_AREA` | `{lat, lng, place, radiusKm, regionIds, countryCodes}` (any field may be `null`/empty when no base location is set) plus `{url, token}` for `POST /map/my-area`: feeds `scope.js`'s `myArea` kind (§4.5) | `ROLE_USER` block only |
 | `CC_IS_CURATOR`, `CC_PENDING`, `CC_MOD_TOKEN` | pending-submission layer + decision CSRF token | curators with completed 2FA only (`MapController::map()` gates on `TwoFactorPolicy::requiresSetup()`) |
 | `CC_SEEN_TOKEN` | CSRF token for `POST /moderate/seen`: opening a pending submission in the drawer, or a Data finding with `?finding=`, records that this curator opened it, and each `CC_PENDING` row carries `unseen` so a search result for one not opened yet carries the unseen bar (moderation-and-contribution.md §5.2f, `assets/map/desk-seen.js`) | same curator block |
 
@@ -176,35 +173,32 @@ see the wiki page `wiki/developers/map-page.md`, "The map page, request by reque
 | `GET /map/item/{id}/history` | per-item change log for the drawer's "Recent changes"; empty list (200) for never-edited items, never 404 | public, ETag, max-age 60 |
 | `GET /map/best-of?season=&bike=` | ranked verified-route ids for the Curated facet (§4.2) | public, ETag, max-age 60 |
 
-All five are exact-path `PUBLIC_ACCESS` in `security.yaml` (the scheb
+All four are exact-path `PUBLIC_ACCESS` in `security.yaml` (the scheb
 lazy-firewall caching gotcha — see
 [account-and-auth.md](account-and-auth.md) §5).
 
-**The one planned exception, and the shape it has to take**
-(specified 2026-09-09, pending implementation). When a provider takes custody of
-an item back, the drawer owes the rider a sentence about their own confirmation
+**The one personal exception.** When a provider takes custody of an item
+back, the drawer tells the rider about their own confirmation
 (data-provider-hierarchy.md §6.7.3). That sentence is user bound and a shared
 cache cannot hold it, so it does not join the drawer body. It is a separate
-fragment, served `private, no-store`, requested only for a signed-in rider,
-memoised client-side per item id, and skipped entirely for anonymous visitors,
-who hold no confirmations. The drawer body stays public and cacheable.
+fragment, `GET /items/{id}/mine` (`ItemConfirmationController::mine`), served
+`private, no-store`, requested only for a signed-in rider (`loadMine()` in
+`drawer.js`), memoised client-side per item id, and skipped entirely for
+anonymous visitors, who hold no confirmations. The drawer body stays public and
+cacheable.
 
-That fragment must be the **only** route that touches the session. A drawer-body
-route that reads the user in order to decide whether to render the line stops
-being cacheable and the split buys nothing, which is the "Security touches
-session" blocker recorded against the page-caching work. It degrades too: if the
-fragment fails the drawer is still correct, only shorter.
+That fragment is the **only** route that touches the session. A drawer-body
+route that read the user in order to decide whether to render the line would
+stop being cacheable and the split would buy nothing (page-caching.md §4). It
+degrades too: if the fragment fails the drawer is still correct, only shorter.
 
-**The map holds only the regions it shows** (2026-09-28, catalog-data-model.md
-§9.1). `GET /map/catalog/stamps.json` is revalidated on every boot, and each
+**The map holds only the regions it shows** (catalog-data-model.md §9.1). `GET /map/catalog/stamps.json` is revalidated on every boot, and each
 region of the active scope is fetched from
 `GET /map/catalog/region/{rid}.json?v=<stamp>` and spliced into the payload in
 hand: the region's rows out, the slice's rows in. A new scope fetches its own
 regions; a moved stamp refetches that region only. The twelve Dutch provinces
-are 154 kB gzipped; every region in one document was 945 kB on production. A rider whose
-submission is approved reloads into it, rather than watching their
-contribution "disappear" until a cache expires (owner-reported, the Zuiderdijk
-approval).
+are 154 kB gzipped. A rider whose submission is approved reloads into it,
+rather than watching their contribution "disappear" until a cache expires.
 
 **Nothing downloads the whole world.** "Search everywhere" asks
 `/v1/search?q=` for our own items (§7.1), and a link points the loader at the
@@ -213,7 +207,7 @@ every region holding a `?feature=` name, region `0` for a place no region
 holds. Freshness is region-bound: a curator's decision in Wallonia moves only
 Wallonia's stamp (owner 2026-09-16: "the token must be region bound").
 
-An **already-open map tab hot-refreshes on tab return** (2026-08-13): a
+An **already-open map tab hot-refreshes on tab return**: a
 moderator's loop is approve-in-the-desk-tab → switch back to the open map, and
 that tab asks for nothing on its own. catalog-load.js re-reads the stamps on
 `visibilitychange`/`focus` (throttled) and pulls only the regions on screen
@@ -222,17 +216,15 @@ that moved; a change calls `window.__ccApplyCatalog` (registered by map.js):
 features from the new variables, `refreshPools()` (osm-pools.js) swaps every
 pool's data, re-seeds its cluster source and drops the on-screen markers so
 they are minted again from the new properties, the search index is rebuilt,
-the tile dedupe filters re-apply, and `render()` runs. Until 2026-09-08 only
-the surface re-mapped and every other letter waited for a reload: a stand
-approved on the desk kept its old icon and its old drawer in the open tab
-(owner: "it should invalidate the old drawer and icon cache").
+the tile dedupe filters re-apply, and `render()` runs, so a stand approved on
+the desk gets its new icon and its new drawer in the open tab (owner: "it
+should invalidate the old drawer and icon cache").
 
 ## 4. The shell: icon rail and drawer
 
-Replaced the always-open 340px filter rail on 2026-08-20 (owner-approved from
-a clickable prototype). Everything the rail used to hold is still here and
-still driven by the same modules; what changed is that the map gets the room
-by default and a rider asks for one section at a time.
+An icon rail and a drawer that opens one section at a time (owner-approved
+2026-08-20 from a clickable prototype): the map gets the room by default and a
+rider asks for one section at a time.
 
 ### 4.0 Rail, drawer, corner
 
@@ -261,10 +253,7 @@ toolbar steps aside, moves focus into the panel and resets the phone sheet to
 half height. `showDrawer({fresh: true})` is a NEW record: it also unfolds the
 drawer and scrolls it to its top. A re-render of the card already showing (a
 town's nearby coverage landing a second later) passes nothing, so it can
-neither scroll the rider back nor unfold what they folded. Owner-reported
-2026-09-16: a town card for Liege left the Search & region panel open over the
-map, because the card wrote `#drawerBody` and opened `#drawer` itself instead
-of going through `openDrawer()`, which was where `closeRailPanel()` sat.
+neither scroll the rider back nor unfold what they folded.
 `rail-shell.test.cjs` pins both halves: `showDrawer()` closes the panel, and no
 map module opens `#drawer` behind its back.
 
@@ -293,11 +282,9 @@ map module opens `#drawer` behind its back.
   - **Layers & filters** is one panel because view mode is a filter too (owner:
     "people will not understand why they are missing data"). Order: view mode,
     the layer list, MAP OVERLAYS, then FILTERS under mono sub-headers. FILTERS
-    leads with the **Best-of season and bike** facets, which used to sit in
-    the View mode band: they narrow harder than any chip under them, and up
-    there nobody found them - the map subtitle said "Best of · Summer · Road"
-    while the only bike control a rider could see was the profile chip
-    (2026-08-20). They stay hidden outside Best of, the only mode they change
+    leads with the **Best-of season and bike** facets, not the View mode
+    band: they narrow harder than any chip under them, and a rider looks for a
+    bike control among the filters (2026-08-20). They stay hidden outside Best of, the only mode they change
     anything in. The heatmap's own season chips stay LAST in the block, as far
     from them as it allows: two controls called "season" must never sit side by
     side.
@@ -325,16 +312,17 @@ map module opens `#drawer` behind its back.
   all those explanations. people know how filters work"). Sub-headers name the
   facet and stop. The one place that still explains itself is view mode, whose
   three words are product vocabulary rather than a filter mechanic.
-  - **Ride tools** holds ride check, scout, contribute and the places count.
+  - **Ride tools** holds Check my ride, Scout, Add a climb, Propose a route
+    and Contribute, in that order (§8.1).
     The low-zoom/curator-scope hint stays ON the map instead, beside the zoom
     controls - it has to be readable while a rider is zooming, and the drawer
     is closed by default. Beside, not above: stacked, it covered the z-level
     badge that shares MapLibre's bottom-left corner.
 - **An overlay row says whether it is on.** The two MAP OVERLAYS rows carry
   the same right-hand state column every layer row uses for its `shown/total`.
-  Without it they were a dimmed swatch beside a dimmed name with nothing on the
-  right, which reads as disabled rather than off (owner-reported 2026-08-20):
-  in that list the number is what says a row is alive.
+  Without it a dimmed swatch beside a dimmed name with nothing on the right
+  reads as disabled rather than off: in that list the number is what says a
+  row is alive.
 - **Filter transparency, always on the map.** When a chip filter narrows the
   catalog, a pill at the bottom of the map says so and offers a one-tap **Show
   all**, and the Layers icon wears an orange dot. The pill, the zoom hint and
@@ -400,9 +388,9 @@ map module opens `#drawer` behind its back.
   so its button can never open an empty menu - and that decision reads the KEY
   (`satelliteConfigured()`, map-init.js), never `map.getLayer('satellite')`:
   the layer is added inside `map.on('load')` and the chrome is built before
-  that fires, so the layer question always answered "no" and the picker hid
-  itself even where satellite worked (2026-08-20). The Surfaces and Cycle-routes
-  toggles left this corner: they are layers, and they live with the layers.
+  that fires, so the layer question would always answer "no". The Surfaces and
+  Cycle-routes toggles are not in this corner: they are layers, and they live
+  with the layers.
 - **Zebra bands.** Every `.grp` in a panel is a full-bleed band, every second
   one on `rgb(var(--chrome-fg) / .05)`, with a 1px `rgb(var(--chrome-fg) / .14)`
   hairline between consecutive groups - so a long panel reads as stacked blocks
@@ -410,20 +398,19 @@ map module opens `#drawer` behind its back.
 - **Phones (≤820px): the same behaviour, not a second layout** (owner
   2026-08-20). The rail stays where it is; the drawer stops taking layout room
   and slides OVER the map, capped at `min(320px, 85vw)` so the map is never
-  fully covered. The street-level dock hides the drawer while it is up. The
-  earlier phone re-skin - rail folded into a top bar, filters folded into a
-  swipe-up bottom sheet - is deleted: two layouts meant two sets of rules to
-  keep true, and the sheet was the half nobody could find. The FEATURE drawer's
-  own bottom sheet (§6.6) is untouched.
+  fully covered. The street-level dock hides the drawer while it is up. There
+  is no separate phone layout (no top bar, no filter bottom sheet): two
+  layouts would mean two sets of rules to keep true. The FEATURE drawer has its
+  own bottom sheet (§6.6).
 - **Both themes by construction.** Every rule in the shell reads a `--chrome-*`
   token (§4.6); a test pins that the section hardcodes no brand literal and
   that chrome text never drops below alpha `.65`.
 - **Element ids are load-bearing.** `#mode`, `#layers`, `#bestFacets`,
-  `#scopeChips`, `#searchTitle`, `#search`, `#searchRes`, `#count`,
+  `#scopeChips`, `#searchTitle`, `#search`, `#searchRes`,
   `#zoomHint`, `#baseSeg`, `#ovStreet`, `#ovSurface`, `#ovRoutes` and the chip
   group ids are bound by `panels.js`, `scope-ui.js`, `scope-header.js`,
-  `search-ui.js`, `mapillary.js` and `render.js`. The shell refactor MOVED
-  them; renaming one breaks its module silently.
+  `search-ui.js`, `mapillary.js` and `render.js`. Renaming one breaks its
+  module silently.
   `tests/js/rail-shell.test.cjs` pins each panel's ownership and that no id is
   rendered twice, which is the failure a markup move actually produces.
 - **Not built:** there is no GeoJSON export control. The design sketch asked
@@ -445,7 +432,7 @@ map module opens `#drawer` behind its back.
   no per-page CSS. The arrow is the one thing not taken over: the button
   draws its own (`::after`) and drops any background image, because the
   site's `select` rule draws the native arrow as one (atlas.css) and copying
-  it put two arrows on every dropdown. One watcher picks up selects added later; `data-native`
+  it would put two arrows on every dropdown. One watcher picks up selects added later; `data-native`
   opts one out, and `multiple` or `size` selects stay native. The list is
   `position: fixed` in the colours of the button it opened from, so no panel
   with overflow hidden cuts it off; a button with a clear background (a chip
@@ -498,34 +485,29 @@ map module opens `#drawer` behind its back.
   from the layer rows, the drawer type chip, search-result badges, the
   ride-check group badges, the contribute hub cards and the improve/propose
   eyebrows; each of those shows the category's **icon** on its colour swatch
-  instead. The change was forced by the grouping: sorting the list A–Z put
-  Public toilets (then letter M) last (far from Water & food, the row it belongs beside)
-  and Climbs (then letter B) above every utility, and once the list is ordered for humans
-  the letters read as a broken sequence (at the time A, C, M, D…) — which is exactly what
-  an identifier looks like when it is used as an ordinal.
+  instead. Once the list is grouped and ordered for humans, letters beside it
+  read as a broken sequence, which is what an identifier looks like when it is
+  used as an ordinal.
 - **A pin's position is `pinPoint()` (util.js), not `featurePoint()`.** They
   answer different questions: `featurePoint()` reads the stored anchor, the
   pin is drawn at the foot (`route[0]`). For a climb with a line the two agree,
-  because its stored point is the foot (catalog-data-model.md §6a). The rule lived only inside
-  render.js, so the curator's pending-review pin — built from the submission's
-  copy of the item anchor — landed on Côte de la Redoute's summit, 9 m from an
-  unrelated monument, and "Review on the map" highlighted the monument while
-  the climb's real pin sat unmarked at the other end of the line
-  (2026-08-03). Both readers now share the helper. A `new` submission keeps its
-  own point: there is no item yet, and that point is the only record of where
+  because its stored point is the foot (catalog-data-model.md §6a). The
+  curator's pending-review pin, built from the submission's copy of the item
+  anchor, uses the same helper, so "Review on the map" marks the climb's foot
+  and not whatever sits at its summit. A `new` submission keeps its own point: there is no item yet, and that point is the only record of where
   the place is.
 - **Layer stacking is decided in exactly one place**, `liftInfoLayersAboveRoutes()`
   (render.js). It moves each named layer to the top in turn, so the call order
-  *is* the z-order, bottom to top: **route lines → road surfaces → climb lines →
-  Mapillary**. Climbs sit above surfaces (2026-08-03, owner): they were lifted
-  first and so ended up underneath, and an 8 px teal surface line swallowed the
-  climb it describes — on La Redoute only a sliver of the gradient line showed
-  at the edges. A climb is a named thing a rider came to look at; a surface
+  *is* the z-order, bottom to top: **route lines, road surfaces, climb lines,
+  Mapillary, the OpenStreetMap coverage icons (`*-cov`), the selected coverage
+  icon**. The icons sit above every line (owner 2026-10-08): a route drawn over
+  a place hid it. Climbs sit above surfaces (owner 2026-08-03): underneath, an
+  8 px surface line swallows the climb it describes. A climb is a named thing a rider came to look at; a surface
   segment is a property of the road beneath it, and the narrower climb line
   still leaves the surface colour visible on both sides. **Do not fix stacking
   at draw time**: this function runs at the end of every render *and* after
   every selection move, so a `moveLayer` in `drawClimbLine` is silently
-  overridden a moment later (tried and reverted the same day).
+  overridden a moment later.
 - **The ride heatmap (no letter) is deliberately NOT a catalog entry:** the generated layer
   list holds the lettered types only; the heatmap is a sub-header inside the FILTERS block with its own
   On/Off toggle and season chips (§11).
@@ -579,14 +561,16 @@ map module opens `#drawer` behind its back.
   of (owner 2026-09-15, Veteranenmonument); utility layers always draw their confirmed pins, and
   their unverified OSM dots draw only in Everything (this gate changes under
   §12). **R routes** honour a server-computed best-of: Curated mode fetches
-  `GET /map/best-of` for the active *(season, bike)* facet (`#boSeason` /
-  `#boBike` selects, shown only in Curated), flags the returned ids `cur`, and
-  filters to them. Only votes in the latest round of each picked season count
+  `GET /map/best-of` for the active *(season, bike)* facet (the `#boSeason` /
+  `#boBike` chip rows, shown only in Curated, plus `&region=` for a named
+  region or My area), flags the returned ids `cur`, and filters to them. Only votes in the latest round of each picked season count
   (route-domain.md §8d). Membership only: the server's rank order is latent
   until a ranked-list UI consumes it. Facet switches are race-guarded (`_bestOfReq`
   token); on fetch failure Curated shows no picks rather than a stale set.
-- A rider with **exactly one** saved bike preselects the Bike facet; multi-bike
-  riders keep the neutral `all` (the facet is single-valued).
+- The facets open on today's season and on every bike the rider's profile
+  carries (`CC_PREFS.bikes`); with none, the bike row is empty and the server
+  ranks all bikes (§4.0).
+
 **NAMING: the mode is called "Best of" to riders, `curated` to the code.**
 Riders never see the word *Curated* as a mode name in any locale: it is
 **Best of** (en), **Best-of** (fr/nl/de), **Lo mejor** (es), from
@@ -604,16 +588,14 @@ that look like the same rename and are not:
 - **"curated picks"** is content a curator marked, which is what the readiness
   gate counts. Also not the mode.
 
-A half-finished rename was found on 2026-08-14: the map said Best of while the
-Regions desk, the region-status legend, the admin settings labels and the
-add-climb journey diagram (gone with the wizard on 2026-08-25) still said
-Curated / Sélection / Selectie / Auswahl / Curado, so one product had two names
-for one thing in five languages. Fixed across all five.
+The label is the same on every surface that names the mode (the map, the
+Regions desk, the region-status legend, the admin settings labels), in all five
+languages.
 
 - **Which mode the map OPENS in.** The global default is
   **Everything**, not Curated: Curated hides every non-curated experiential item,
-  so on an under-curated region it showed a near-empty map behind a panel counting
-  hundreds of places (the owner's "1488 where to sleep, 0/1488"). A region opens
+  so on an under-curated region it would show a near-empty map behind a panel
+  counting hundreds of places (the owner's "1488 where to sleep, 0/1488"). A region opens
   in Curated only once a moderator has flipped `region.curated_default`, and that
   toggle is **gated** on a readiness count — curated items on the experiential
   letters in a served state (`ItemState::servedSqlTuple()`: a retired,
@@ -628,9 +610,8 @@ for one thing in five languages. Fixed across all five.
   load; a later scope change never re-resolves. `MapViewMode::Confirmed` joins
   the stored preference (`users.default_map_mode`) and the toggle's persistence
   endpoint; no migration — the column stores the enum's string value.
-- **Confirmed will look thin until riders fill it, and that is honest.**
-  Measured in NL on 2026-08-12: 203 catalog features, 13 with any human
-  endorsement, everything else reference coverage. Unlike the Curated trap
+- **Confirmed looks thin until riders fill it, and that is honest.**
+  Unlike the Curated trap
   above, an empty Confirmed is a true statement about the data rather than a
   filter hiding data that exists — and it is the one screen that gives a rider a
   reason to press Confirm. If it ever needs widening, the open alternative is
@@ -647,11 +628,11 @@ for one thing in five languages. Fixed across all five.
   - **Who looks after it** — `curated` with its own curator, `countrywide`
     when only a country-scoped moderator covers it, else nothing.
 
-  These were a single ladder derived from `curated_default`, and the legend
-  then glossed it as "a curator maintains this region" — which that flag does
-  not mean. The conflation makes true things unsayable in both directions: a
-  busy region with nobody looking after it, and a curated region with nothing
-  in it yet. Wallonia is the worked example — growing **and** curated.
+  They are two axes because `curated_default` does not mean "a curator
+  maintains this region", and one ladder would make true things unsayable in
+  both directions: a busy region with nobody looking after it, and a curated
+  region with nothing in it yet. Wallonia is the worked example: growing
+  **and** curated.
 
   Country-scoped cover is reported as cover, not as nothing: one moderator for
   NL really does look after all twelve provinces. It is reported as *distinct*
@@ -675,39 +656,30 @@ for one thing in five languages. Fixed across all five.
 
   **The way in points at the region, not merely at its country.** The CTA
   carries `?region=<slug>` to `/join/{cc}`, which preselects that row in the
-  application's scope picker and titles the page *Help curate <region>*. The
-  picker had always been there and nothing ever pointed at a row in it, so a
-  rider clicking "do you want to join?" under North Holland's name arrived at a
-  country page headed "Nobody is curating Netherlands yet" - discouraging,
-  usually untrue (the country may have a curator; it is the *region* that is
-  short of one), and leaving them to find their region again in a list of
-  twelve. The slug is validated against the operational regions already fetched
+  application's scope picker and titles the page *Help curate <region>*, so a
+  rider who clicked under North Holland's name is not sent to a country page
+  saying nobody curates the Netherlands (the country may have a curator; it is
+  the *region* that is short of one). The slug is validated against the operational regions already fetched
   for that country, so a foreign or non-operational id falls back to the
   whole-country default rather than being trusted.
 
-  **On a region's own page the three states are sentences, not glossary
-  entries.** Since 2026-09-08 `/regions` has two views, chips Globe then List,
-  and a screen 900px or wider opens on the globe, a phone on the list (owner:
-  "should open on the globe page if not mobile"),
-  (owner: "a map version where you select the country on a world map"; the
-  flat map was a chip for an hour and was removed: "remove the map option").
-  The globe: `assets/pages/country-globe.js` (shared with `/coverage`'s globe view,
+  **`/regions` has two views**, chips Globe then List, and a screen 900px or
+  wider opens on the globe, a phone on the list (owner: "should open on the
+  globe page if not mobile"; "a map version where you select the country on a
+  world map"). The globe: `assets/pages/country-globe.js` (shared with `/coverage`'s globe view,
   [coverage-provider.md §9.1](coverage-provider.md)) loads the vendored MapLibre
   only when asked, closer on /regions (`data-zoom="2.8"`, so a small country is
   a target a pointer can hit), and draws one shape per country from `GET /regions/outlines.json`
   (`PageController::regionOutlines()`: PostGIS unions each country's stored
-  `region.outline` rings, about a second for all nineteen, kept a day in the
-  app cache keyed on the region table's last change; on the public cache list
-  with an ETag; the full geometries took 36 seconds for five). Countries, not
+  `region.outline` rings, kept a day in the app cache keyed on the region
+  table's last change; on the public cache list with an ETag). Countries, not
   regions (owner: "just the countries"); a click opens that country's tab in
-  the list below. Since the night of 2026-09-08 the basemap is made in the
-  shared module `assets/pages/country-globe.js`, not fetched: one colour for
-  the land, the sea, admin-2 borders, no names, no relief (owner: "more
-  simple, rest of the world one colour"), from the same planet vector tiles.
-  Raising each country by its item count was tried the same night and
-  reverted within the hour (owner: "raised effect is too much, revert to
-  normal flatland"; the blocks also hid the pointer's target). The coverage
-  globe shares the basemap. MapLibre's globe projection, framed close on Europe, or on
+  the list below. The basemap is made in the shared module
+  `assets/pages/country-globe.js`, not fetched: one colour for the land, the
+  sea, admin-2 borders, no names, no relief (owner: "more simple, rest of the
+  world one colour"), from the same planet vector tiles, and the countries lie
+  flat (owner: "revert to normal flatland"). The coverage globe shares the
+  basemap. MapLibre's globe projection, framed close on Europe, or on
   a signed-in rider's base when they have one (owner: "turn the globe already
   to their home base"; the page is private for them, so nothing personal is
   cached); no zoom (no buttons, wheel or pinch; owner: "without a zoom
@@ -727,27 +699,27 @@ for one thing in five languages. Fixed across all five.
   and the area (owner: "just count different things into X community
   items"). With
   scripting off every panel shows in place. The key (the two-axis legend,
-  maturity and stewardship) sits under the list since 2026-09-09, not above
-  the globe (owner: "the explanations must go to the bottom"). The curator
-  application link on
+  maturity and stewardship) sits under the list, not above the globe (owner:
+  "the explanations must go to the bottom"). The curator application link on
   each country row is an icon, a person with a plus, quiet grey and orange on
-  hover, named by title and aria-label (owner: the text was "getting too
-  much attention" nineteen times over). `/regions` is a directory and wants fragments a reader scans down
+  hover, named by title and aria-label (owner: text there was "getting too
+  much attention").
+
+  **On a region's own page the three states are sentences, not glossary
+  entries.** `/regions` is a directory and wants fragments a reader scans down
   a column; `/regions/{slug}` is about one place and wants a line that answers
   the question it is under. So the page has its own `regions.steward_line_*`
   copy rather than reusing the legend's `status_*_desc`, and the state itself
-  is a **chip** ahead of it (`COUNTRY-WIDE`), not the sentence's first clause
-  — as a clause it read like a definition of a term the reader had not been
-  given. The `countrywide` line says the vacancy out loud ("a curator is
-  covering the whole country, we are actively looking for local curators"),
-  because that state is the one where the page most needs a volunteer.
+  is a **chip** ahead of it (`COUNTRY-WIDE`), not the sentence's first clause:
+  as a clause it reads like a definition of a term the reader has not been
+  given. The `countrywide` line says the vacancy out loud
+  (`regions.steward_line_countrywide`).
   Curators are **named** where their profile is public
   (`RegionDirectoryProvider::curators`), behind a `Looked after by` label: a
-  bare name trailing the sentence read as part of it. Every state short of
+  bare name trailing the sentence reads as part of it. Every state short of
   `curated` ends in the same invitation, linking to `join_country`.
 
-  **An encyclopedic lead under the hero (built 2026-08-16, owner idea
-  2026-08-14).** A region page with three verified items has little to say;
+  **An encyclopedic lead under the hero (owner 2026-08-14).** A region page with three verified items has little to say;
   a short Wikipedia lead gives it context. The licence weigh decided the
   shape: Wikidata descriptions were rejected (CC0 but one terse line),
   **images are skipped deliberately** (the silhouette already fills that
@@ -767,7 +739,7 @@ for one thing in five languages. Fixed across all five.
   so the directory list never pays for text blobs. Pinned by
   `ImportRegionContextCommandTest` and `RegionsPagesTest`.
 
-  **A curator can override that lead (built 2026-08-16, owner same day).** The
+  **A curator can override that lead (owner 2026-08-16).** The
   harvest is a starting point, not the last word: a curator who knows the
   region should be able to replace it, or fill a language Wikipedia has no
   article in. The override lives in its OWN column, `region.context_curated`
@@ -840,32 +812,30 @@ for one thing in five languages. Fixed across all five.
 
   **The hero opens with the same three figures as `/coverage`**, in the same
   order and under the same labels: reference items on file, verified items,
-  routes. A region page that opened with only the last two made a region
-  holding thousands of reference items look like it held three, and asked a
-  reader moving between the two pages to learn the vocabulary twice. The total
+  routes. With only the last two, a region holding thousands of reference
+  items would look like it held three, and a reader moving between the two
+  pages would learn the vocabulary twice. The total
   is summed from the per-letter counts the by-kind block already fetches, not
   queried again, and is zero when the pipeline's `coverage_poi` is absent.
 
   **"What riders find here" reports two numbers per kind, never their sum.**
   `N in the Commons` is what somebody has stood at and a curator approved;
   `N on the map` is what OpenStreetMap knows is there and the coverage layer
-  draws underneath. Showing only the first told a reader that Wallonia holds
-  2 water points where the map draws 1,650. They are not added together:
+  draws underneath. Showing only the first would tell a reader that a region
+  holds 2 water points where the map draws 1,650. They are not added together:
   *checked* and *known about* is the distinction the whole Best of / Confirmed
   / Everything ladder rests on. The sentence defining the two terms marks them
   up as `<code>`, in the message rather than the template, because the terms
   are different words in each of the five locales; it renders through `|rich`,
   whose sanitiser allow-lists `<code>` and nothing that can carry script.
 
-- **The hint under the switch describes the mode that is ON (2026-08-31).** It
-  used to be one paragraph naming all three in sequence, sitting under a
-  three-way toggle, so whichever mode a rider was in they had to find their own
-  sentence inside a description of two others. The three strings ride on the
+- **The hint under the switch describes the mode that is ON**, so a rider
+  never has to find their own mode's sentence inside a description of the
+  other two. The three strings ride on the
   element as `data-curated` / `data-confirmed` / `data-all`, keyed by the same
   values the buttons carry, and `panels.js` copies the matching one into the
   text: no client i18n plumbing and no second vocabulary to drift. Each sentence
-  was rewritten to stand alone, because "Confirmed ADDS every place somebody has
-  checked" has nothing to add to once the other two are hidden. Pinned by
+  stands alone. Pinned by
   `view-mode-hint.test.cjs`.
 
 ### 4.2b Basemap labels follow the site language
@@ -893,45 +863,40 @@ name layer asks for `name:<document lang>`.
 
 ### 4.3 Filter chips
 
-**Freshness is gone; the other four are back** (2026-08-02, same day). The
-planner and the Freshness chips were removed permanently — Freshness was never
-wired to anything and `f.freshness` is produced by no server path. The other
-four returned once the reason they looked broken was fixed:
+Four chip groups, each backed by a real attribute. There is no Freshness
+filter: no server path produces a freshness value, and a chip that filters
+nothing is a promise the map cannot keep.
 
-| Group | Backing field | State |
+| Group | Backing field | Notes |
 |---|---|---|
-| Climb surface `#sqf` | `Climbs.sq` | Live. Chips now list **all five** registry values; the fifth was missing (see below). |
-| Climb traffic `#trf` | `Climbs.tr` | Live. 15/15 seeded climbs carry `tr`. |
-| Climb effort `#effortf` | `Climbs.effort` | Live. 5/15 carry a value; narrowing semantics make that honest. |
-| Stay accessibility `#accessf` | `WhereToSleep.accessibility` | Live, and the field is now **multi-select** — see below. |
+| Climb surface `#sqf` | `Climbs.sq` | lists **all five** registry values (see below) |
+| Climb traffic `#trf` | `Climbs.tr` | |
+| Climb effort `#effortf` | `Climbs.effort` | narrowing semantics keep a climb with no value honest |
+| Stay accessibility `#accessf` | `WhereToSleep.accessibility` | **multi-select** (see below) |
 
 - **`accessibility` is a multi-select** (`FieldKind::MultiSelect`, list<string>).
-  A stay is routinely step-free *and* handbike-friendly, and one-of-these
-  forced the rider to drop the rest — the very fact a rider who needs one of
-  them is searching for. `Unknown` went with the single select: nothing ticked
-  already means "not stated", and it cannot coexist with a real value.
+  A stay is routinely step-free *and* handbike-friendly, and a single select
+  would force the rider to drop the rest, the very fact a rider who needs one
+  of them is searching for. There is no `Unknown` value: nothing ticked means
+  "not stated", and it cannot coexist with a real value.
   `attrMatch()` is array-aware and matches on **any** overlap: filtering for
   handbike-friendly returns every stay that is handbike-friendly, not only the
   ones that are *nothing else*. The coverage tile prop `acc` stays a single
   string (it is derived from OSM `wheelchair=yes` in
   `pipeline/coverage/tiles.py`), and the MapLibre `in` expression over it is
   unaffected.
-- **All four now share `attrMatch()`'s narrowing semantics.** With every chip
+- **All four share `attrMatch()`'s narrowing semantics.** With every chip
   on nothing is hidden, including items with no value; deselecting any option
-  also hides valueless items, which cannot be confirmed to match. sq/tr used to
-  "always require" a matching value instead, and that was a **climb-eating
-  bug**: `CatalogFormRegistry` offers five `sq` values and the chips listed
-  four, so a climb edited to **"Broken / loose"** did not merely fail the
-  filter — it vanished from the map with every chip lit, and so did any climb
-  predating the attribute. Adding a value to the registry now means adding it
-  to `ALL_SURF`/`ALL_TRAF` in `render.js` **and** to the chips in
-  `map/index.html.twig`; the comment on those Sets says so.
+  also hides valueless items, which cannot be confirmed to match. A chip set
+  that lists fewer values than `CatalogFormRegistry` offers would make a climb
+  with the missing value vanish with every chip lit, so adding a value to the
+  registry means adding it to `ALL_SURF`/`ALL_TRAF` in `render.js` **and** to
+  the chips in `map/index.html.twig`; the comment on those Sets says so.
 
 - **A missing chip group means NO filter, never an empty selection.**
   `chipSet(id)` returns `null` when the container is absent and every reader
-  treats that as pass-through. Kept even though all four groups are back on
-  the panel: it is what makes removing a group from the template a safe,
-  one-file edit rather than a way to empty a layer.
+  treats that as pass-through. That makes removing a group from the template
+  a safe, one-file edit rather than a way to empty a layer.
 - The accessibility filter applies to the stays dot layer (`setFilter`), the
   clustered confirmed pins, and the legend counts alike.
 - **Shown anyway: one place a ride row opened** (owner decision 2026-09-15).
@@ -947,17 +912,14 @@ four returned once the reason they looked broken was fixed:
   on Clear. The exempted place is not counted in the pill's tally while it is
   drawn. Coverage tile icons need no exemption: a coverage point opened by ref
   keeps its icon through the `cov-sel` overlay, which no chip filters.
-- **Road surface (A) is an OVERLAY, not a data layer (2026-08-31).** It had a
-  row in Data layers *and* a Surfaces switch in Map overlays, one word apart, in
-  two different groups. Worse than confusing: they were not independent. The OSM
-  skin hides itself wherever a catalog item exists for that way
-  (`CC_CURATED_REFS`), so any rule that dropped our line while leaving the skin
-  hidden did not fall back to OSM. It left the road blank and the basemap showed
-  through, which is what a rider saw as a road "going orange" after a third
-  confirmation.
+- **Road surface (A) is an OVERLAY, not a data layer.** The OSM skin hides
+  itself wherever a catalog item exists for that way (`CC_CURATED_REFS`), so
+  the skin and our segments are not independent: any rule that dropped our
+  line while leaving the skin hidden would leave the road blank, with the
+  basemap showing through.
 
-  One control now, the overlay switch, which drives the skin and our items
-  together so the pair can never be half on (`catalog.js` `overlay: true`, and
+  One control, the overlay switch, drives the skin and our items together so
+  the pair can never be half on (`catalog.js` `overlay: true`, and
   `catalogUtility()` excludes overlays). And our items honour **neither the
   view-mode rungs nor the region scope**, because the skin honours neither: that
   agreement is the whole fix. Two absent gates rather than a second dedupe list,
@@ -967,67 +929,38 @@ four returned once the reason they looked broken was fixed:
 
   **Select-all reads the ROWS, not the catalogue** (`catalogRows()`). Walking
   every layer would switch the surface items on while the overlay switch still
-  read Off, which is the half-on state this change exists to make impossible,
-  reached by the one control never meant to touch it; it also made the label
-  lie, since an invisible row could never be "all on".
+  read Off, the half-on state the overlay exists to make impossible; it would
+  also make the label lie, since an invisible row could never be "all on".
 
   The letter stays. `A` is still the catalog type, the API type, the
   contribution type and what the coverage page counts; only the map's control
-  moved.
-- **A surface segment names who filed it (2026-08-31).** The segment shape
-  served in `CC_SURFACE` carried no contributor, so a road a rider had described
-  showed the OSM citation and nobody's name, while every other layer credited
-  its author. `CatalogProvider::surfaceSegments()` now carries `by`/`byName`/
+  is an overlay.
+- **A surface segment names who filed it.** `CatalogProvider::surfaceSegments()`
+  carries `by`/`byName`/
   `byUuid` on the same terms as `mapRow()`: named only with a public profile,
   fail-closed to anonymous, never a leaked name. OSM remains the source of the
   LINE, which `srcType` and the provenance line under the name still say; it was
   never the source of the values.
-- **Discipline chips (`#disc`): RETIRED (2026-08-03).** They were re-based onto
-  the 7 `RidingStyle` values and preselected from the rider's saved styles, but
-  they never filtered anything, because no server path tags an item with a
-  riding style — the same shape as Freshness above, and given the same answer
-  one day later. Being honestly labelled in the template was not enough: a
-  control that toggles is a control that promises, and the promise was empty.
-
-  Nothing that worked was lost. `RidingStyle` remains the vocabulary a rider
-  saves in their profile and remains the contract these chips get rebuilt on —
-  when the DATA carries style tags, not before. Removing the group was the
-  one-file edit `chipSet(id) === null` was designed to make safe; the template,
-  the `#disc` CSS, the `PREFS.styles` preselect in `panels.js` and the seven
-  `map.disc_*` catalogue keys went with it.
-
-- **The same call, the same day, on `/add-climb`'s "Targeted audience" chips.**
-  *(History: the wizard itself was retired on 2026-08-25; climbs are added on
-  `/improve`, whose `ImproveType` has no audience field either.)*
-  They were worse than the map's: not only did they filter nothing, *nothing
-  submitted them* — `AddClimbType` had no audience field and
-  `CatalogContributionService::CLIMB_FIELDS` mapped no such key — while the
-  wizard's review step listed the ticked ones back as though a curator would
-  receive them. Their labels were also the last untranslated strings on that
-  page. The gradient guidance they used to drive stays, as one static line: it
-  is advice for whoever is describing a climb, and it already names the handbike
-  ceiling the conditional version spelled out. (That static line went with
-  the wizard on 2026-08-25.)
-
-  Bringing either set back means giving items a real audience attribute in
-  `CatalogFormRegistry`, which is a vocabulary decision — the add-climb chips
-  mixed riding STYLES with bike TYPES, and the codebase keeps those apart
-  (`RidingStyle` vs `BikeType`). That is the owner's to make.
+- **No discipline or audience chips** (owner 2026-08-03). No server path tags
+  an item with a riding style or an audience, so such chips would filter
+  nothing. `RidingStyle` is the vocabulary a rider saves in their profile and
+  the contract such chips would be built on, once the DATA carries style tags.
+  Giving items a real audience attribute in `CatalogFormRegistry` is a
+  vocabulary decision for the owner: riding STYLES and bike TYPES stay apart
+  (`RidingStyle` vs `BikeType`).
 
 ### 4.3a The climb profile strip
 
-The drawer's gradient bars and their caption are a placeholder for the profile
-chart specified in [climb-elevation.md](climb-elevation.md): unlabelled bars of
-proportional width, with no axis and no elevation silhouette. Two rules already
-hold and are the reason it reads honestly in the meantime:
+The drawer's gradient strip, its distance axis, its caption and the full
+profile are owned by [climb-elevation.md §6](climb-elevation.md). Two rules
+the map relies on:
 
-- **The numbers beside the bars are the item's own stated avg/max**, not values
-  recomputed from the bars. Recomputing gave the same drawer two different
-  answers — the attribute rows read `8.4%` while the caption read `~7%`
-  (2026-08-04).
-- **The bars use `step`, not `interpolate`**, so the climb line on the map has
-  the same hard band edges the bars do, at `i/n` boundaries — each sample IS a
-  slice of the climb, not a point on it.
+- **The caption's numbers are the item's stored figures** (`avgGradient`,
+  `maxGradient`), not values recomputed from the bars, so the attribute rows
+  and the caption never give the same drawer two different answers.
+- **The map line uses `step`, not `interpolate`** (`drawClimbLine()` in
+  `render.js`), so the climb line on the map has the same hard band edges the
+  bars do: each sample IS a slice of the climb, not a point on it.
 
 ### 4.4 Preference prefilter
 
@@ -1039,18 +972,17 @@ hold and are the reason it reads honestly in the meantime:
   Only a *declared* non-overlap hides a route.
 - **Never silent:** an active prefilter shows the dismissable chip
   `#prefFilter` ("Routes for your bikes", `aria-pressed` reflects state). The
-  off state persists in `localStorage` key **`cc-pref-filter`**
-  (`on`/`off`, default `on` when preferences exist). Anonymous visitors
+  off state persists in `localStorage` key **`cc-pref-filter:<user id>`**
+  (`PREF_FILTER_KEY` in `render.js`; `on`/`off`, default `on` when preferences
+  exist). Anonymous visitors
   (`CC_PREFS.bikes` empty): zero behaviour change, chip group stays hidden.
 
 ### 4.5 Region / My-area scope
 
-The Search & region panel's Region group (a per-registry list of named
-regions/countries plus
-Everywhere) and its `scope.js` (`window.CCScope`) client model are the full
-region-scoping design owned by map-and-search.md §4.5 — this subsection
-covers only the `myArea` scope kind (map-and-search.md §4.5 Phase 4),
-the newest rung of that same ladder.
+This section owns region scoping: the Search & region panel's Region group
+(a per-registry list of named regions and countries) and its `scope.js`
+(`window.CCScope`) client model, with the scope kinds `region`, `country` and
+`myArea`.
 
 - **`myArea` scope kind.** A rider with a base location gets a **My-area**
   button, first entry in the Region group. Unlike `region`/`country`, its
@@ -1078,16 +1010,15 @@ the newest rung of that same ladder.
   the framing differs.
 - **Rid-only, no country arm.** `coverageParams()`/`coverageTileFilter()` and
   the best-of region param never send a country code for a myArea scope
-  (`countryCode` is always `null`) — Phase 5's country-polygon fallback
-  doesn't exist yet to safely resolve a circle to a country, so myArea stays
-  region-id-only on those arms until then.
+  (`countryCode` is always `null`): nothing resolves a circle to a country
+  safely, so myArea stays region-id-only on those arms.
 - **Empty derived set is "in scope: nothing", not "no scope."** When a myArea
   scope's derived region set is empty, `coverageParams()` returns `rids: []`
   (an empty array) rather than `null` — a distinct sentinel from Everywhere's
   `rids: null` — so `map.js`'s `fetchCoverageCounts()`/`runCoverageSearch()`
   skip the request instead of building an unscoped query that would silently
-  fall back to GLOBAL results (the leak-safe-hide rule of
-  map-and-search.md §4.5, extended to this client-side seam).
+  fall back to GLOBAL results (the leak-safe-hide rule, extended to this
+  client-side seam).
 - **Widen ladder:** myArea → the single registry-known country among the
   derived `countryCodes` (exactly one such country, else nothing wider: an
   ambiguous/border myArea has no single "wider" country); region → its
@@ -1116,10 +1047,9 @@ the newest rung of that same ladder.
   `hit-scope.js`, a leaf with a Node test (`hit-scope.test.mjs`).
   - **The target's own REGION, never its country.** A region is the smallest
     area that draws the hit, and it keeps as much of the rider's own scope as
-    reaching the place allows. Owner-reported 2026-09-16: a rider scoped to
-    Friesland clicked the city card for Liege and was moved to **All Belgium**,
-    which threw their scope away to show them one town. Liege is in Wallonia,
-    so Wallonia is the answer.
+    reaching the place allows: a rider scoped to Friesland who opens the city
+    card for Liège lands in Wallonia, not in all of Belgium (owner
+    2026-09-16).
   - **The region id when the caller knows it** (an item index entry, a served
     feature: `rid`), because that is the region the row itself is stamped
     with; `CCScope.regionOfPoint()` off the point otherwise, since a coverage
@@ -1134,10 +1064,9 @@ the newest rung of that same ladder.
     `liftScopeForHit(ll, rids)` then lifts to that region set
     (`hitScopeForAll` in `hit-scope.js`), the same multi-region scope a loaded
     ride sets (§9), with the country code kept only when every region shares
-    one. The header reads "Wallonia +2". Otherwise the places along the part
-    of the route outside its own region stayed hidden until the rider widened
-    the scope by hand (public known issue "A route that crosses a border
-    opens in one region only", fixed 2026-09-30). Nothing moves when the
+    one. The header reads "Wallonia +2", and the places along the part of the
+    route outside its own region show without the rider widening the scope by
+    hand. Nothing moves when the
     rider's scope already holds every one of those regions. A route inside
     one region carries no `rids` and lifts exactly like any other hit.
   - **Nothing moves when the scope already draws it**: Everywhere, or a scope
@@ -1182,13 +1111,11 @@ the newest rung of that same ladder.
     `map.scope_miss_go` ("Show {area}", filled with the label of the country
     under the map centre, `CCScope.countryAt()`) that calls
     `CCScope.setCountry()`; over open sea, or already in that country, the
-    chip stays hidden (2026-09-06; it used to offer Everywhere).
-    **The message names the filter, not the place** (owner 2026-08-15). It
-    first read "Nothing here in Free State", which is a claim about the
-    *region* and a false one: the map is blank because the scope is drawing one
-    region, not because the region the rider is looking at holds nothing. Say
-    what the map is doing; that is both true and the thing the rider can act
-    on.
+    chip stays hidden.
+    **The message names the filter, not the place** (owner 2026-08-15): the
+    map is blank because the scope is drawing one region, not because the
+    region the rider is looking at holds nothing. Say what the map is doing;
+    that is both true and the thing the rider can act on.
     Intersection, **not** "is the centre outside": if the two boxes do not
     overlap then nothing in scope can be on screen, which is the condition the
     chip is answering; a centre test would fire with half the scope still
@@ -1199,30 +1126,28 @@ the newest rung of that same ladder.
     test (§4.5a).
 
   *Why it exists:* coverage and catalog layers are scope-filtered, correctly and
-  deliberately, so panning to South Africa under a Netherlands scope drew an
-  empty map reading `0 places shown` and nothing naming the cause.
-  It read as broken data and cost a real dig from the inside (2026-08-14).
+  deliberately, so panning far outside the scope draws an empty map, and
+  without the chip nothing names the cause; it reads as broken data.
 - **Out-of-scope town opens lift the scope transiently:**
   town search is scope-exempt (a place is an explicit location choice), so
   opening a town whose coordinates fall **outside the current scope's bbox**
   lifts the scope to the town's own region through the one hit mechanism above
   (`liftScopeForHit`, `persist:false`: localStorage/URL keep the saved scope,
-  which also comes back the moment the card is closed). Without this, the scope-exempt town drawer filled
-  with nearby items while the scoped map rendered the same area empty — the
-  worst case being a myArea scope with an **empty derived set** (base
-  location outside every seeded region, e.g. a Dutch base today), where the
-  whole map is leak-safe-hidden. Bbox containment is the deliberate
+  which also comes back the moment the card is closed). Without this, the
+  scope-exempt town drawer would fill with nearby items while the scoped map
+  rendered the same area empty, the worst case being a myArea scope with an
+  **empty derived set** (base location outside every onboarded region), where
+  the whole map is leak-safe-hidden. Bbox containment is the deliberate
   approximation: an inside-bbox town already renders its surroundings, so no
   widen is needed there. Applies to every scope kind, not just myArea.
-- **Default precedence (map-and-search.md §4.5):** on load, `URL scope > myArea
+- **Default precedence:** on load, `URL scope > myArea
   (if available) > localStorage`. My-area wins the default scope whenever a
   base location is set, overriding a stale localStorage scope — except an
   explicit shared URL scope, which always wins.
-- **Country / multi-region scope dim mask.** A country scope now
-  greys the rest of the map instead of rendering with no visual boundary at
-  all — the gap a second bordering country (the Netherlands) exposed once a
-  scope could span more than one named region. `GET /map/scope/boundary`
-  (`MapController`, new) takes the same scope params the coverage endpoints
+- **Country / multi-region scope dim mask.** A country scope greys the rest
+  of the map, so a scope spanning more than one named region still has a
+  visible boundary. `GET /map/scope/boundary` (`MapController`) takes the same
+  scope params the coverage endpoints
   use (`rids` csv and/or `cc`) and returns a single GeoJSON Feature = the
   `ST_Union` of the matching `region.geom` rows (ETag + `max-age=3600`; 204
   when the scope resolves to no regions). For a **country** scope, `applyScope`
@@ -1231,11 +1156,9 @@ the newest rung of that same ladder.
   spotlight already builds). A **single named region** keeps drawing its own
   boundary (`GET /map/region/{slug}/boundary`, unchanged). **My-area** keeps
   its own soft ~64-vertex circle (`line-blur`) rather than switching to the
-  union mask — the deliberately fuzzy edge is itself the anti-border message
-  (map-and-search.md §4 above). **Everywhere** clears the mask entirely
-  (`setSpotlight(null)`); no mask ever draws for an empty scope. Design +
-  browser-verified results (NL union outline, single-province outline, no
-  mask for Everywhere).
+  union mask: the deliberately fuzzy edge is itself the anti-border message.
+  **Everywhere** clears the mask entirely (`setSpotlight(null)`); no mask ever
+  draws for an empty scope.
 - **Cross-border scope chips rank by adjacency.** The scope chips
   offered around a region (compass grid + linear list) include a *foreign*
   region ONLY when it shares a border with the active region — never by centroid
@@ -1245,17 +1168,15 @@ the newest rung of that same ladder.
   precomputed at catalog import into `region.adj` (`integer[]`, one
   `ST_Intersects` pass across all onboarded countries) and shipped inline in
   `CC_REGIONS`; `chipModel` (`scope-chips.js`) gates foreign chips on it.
-  Supersedes an earlier centroid-distance ranking.
 - **…and are ORDERED by polygon-edge distance.** Within the pool
   adjacency has made eligible, regions sort by the distance from the anchor to
   the nearest point on the region itself — 0 when the anchor is inside it —
-  rather than to its bbox centre. Centre distance misjudged anything large or
+  rather than to its bbox centre. Centre distance misjudges anything large or
   oddly shaped: from Groningen, the region it borders (Lower Saxony, 26 km)
-  ranked below one it does not (Bremen, 119 km), and a rider in Duisburg was
-  offered a Dutch region ahead of the German one they were standing in. The
-  geometry is a **ranking outline** precomputed at import into `region.outline`
-  (`jsonb`, exterior rings simplified to 0.05°, flat `[lng,lat,…]`, ~18 kB for 32
-  regions) and shipped inline in `CC_REGIONS`; real boundaries still come from
+  would rank below one it does not (Bremen, 119 km). The geometry is a
+  **ranking outline** precomputed at import into `region.outline` (`jsonb`,
+  exterior rings simplified to 0.05°, flat `[lng,lat,…]`) and shipped inline in
+  `CC_REGIONS`; real boundaries still come from
   `RegionBoundaryProvider`. Eligibility is still adjacency, so Utrecht stays
   all-Dutch. A region with no outline falls back to its bbox centre.
 - **Map-click scope refinement.** A map click resolves to its region
@@ -1279,15 +1200,13 @@ the newest rung of that same ladder.
 
   **`region.adj` must hold operational regions only** (catalog-data-model.md
   §2.4). The clear hole is punched through `active + adj`, so one non-scope id
-  in that list is not a cosmetic error: the first recompute paired every region
-  with every polygon it intersects, which includes its own level-2 country
-  outline, and selecting North Holland cleared the whole Netherlands while the
-  neighbour tier it was meant to show stayed invisible (owner 2026-08-24).
-  `ImportCatalogCommand::adjacencySql()` now applies the operational predicate
-  to **both** sides (a country outline gets an empty list, which is the truth
-  about a row that is not a scope), `Version20260824120000` backfills deployed
-  databases with that same SQL, and `RegionRegistryProvider` drops any adj id it
-  is not itself shipping — so a stale row cannot reach the client either.
+  in that list is not a cosmetic error: a region's own level-2 country outline
+  in it would clear the whole country and hide the neighbour tier.
+  `ImportCatalogCommand::adjacencySql()` applies the operational predicate to
+  **both** sides (a country outline gets an empty list, which is the truth
+  about a row that is not a scope), and `RegionRegistryProvider` drops any adj
+  id it is not itself shipping, so a stale row cannot reach the client
+  either.
 
 - **What a scope change costs, and what says so.** Picking a region is seconds
   of work, not a frame, so the map says it is busy. `scope-ui.js` answers
@@ -1302,36 +1221,23 @@ the newest rung of that same ladder.
   owns the map. It sits on the `.map-top` subtitle row rather than beside it:
   showing it hides no further map and moves no box.
 
-  Measured North Holland → Wallonia, 1440×900, dev stack, median of three runs
-  (the probe rewrites `scope-ui.js` in flight with `performance.measure` marks;
-  no measurement code ships). `applyScope` was **3449 ms** of blocked main
-  thread, **2728 ms** of it in `updateCoverageScopeFilter`. That call is 320
-  `map.setFilter` calls (8 coverage keys × 20 country source-layers, icon +
-  heat), and MapLibre validates a filter against a serialisation of the **whole
-  style** (663 layers here), so each call cost about 8.5 ms whatever the filter
-  said. The filters are built in `coverage.js` from fixed shapes and land on
-  layers `addCoverage()` already validated, so they now go in with
-  `NO_VALIDATE` (`{validate: false}`) and one filter object serves the whole
-  grid instead of one per layer: **2728 ms → 22 ms**, `applyScope` **3449 ms →
-  724 ms**, map idle on the new scope **10.2 s → 8.2 s**. What is left of
-  `applyScope` is `render()` (688 ms), and 675 ms of *that* is the same
-  validation on `addSource`/`addLayer` as it rebuilds the dynamic line layers:
-  `Map.addSource`/`Map.addLayer` take no options argument in MapLibre v6, so
-  there is no supported way to skip it and it stands. Everything past the block
-  (tile fetch, re-rasterisation) is MapLibre's; the dev browser rasterises on
-  the CPU (SwiftShader, no GPU), so those numbers are a floor, not a rider's.
-
-  **These numbers are for a style holding every country's layers**: all 320
-  coverage layers (and the 663 total) built at boot. With per-country tile
-  mounting (coverage-provider.md §4, "Client: one source per country in
-  view") `mountInView()` builds a country's coverage layers once its tile
-  source comes into view, so the layer count starts smaller and grows with
-  panning, and a country panned into view later pays the same `addLayer`
-  validation cost when its layers land (the cost this section could not skip,
-  above), not a per-`setFilter` one: `NO_VALIDATE` (`tile-sources.js`, shared
-  by the coverage, surface and routes filters) and one filter object for the
-  whole grid keep the `setFilter` cost flat whatever the number of mounted
-  countries.
+  **Where the block goes.** MapLibre validates a filter against a
+  serialisation of the **whole style**, so each `map.setFilter` costs several
+  milliseconds whatever the filter says, and a scope change sets one per
+  coverage key per mounted country source-layer
+  (`updateCoverageScopeFilter()` in `coverage.js`). Those filters are built
+  from fixed shapes and land on layers `addCoverage()` already validated, so
+  they go in with `NO_VALIDATE` (`{validate: false}`, `tile-sources.js`,
+  shared by the coverage, surface and routes filters) and one filter object
+  serves the whole grid instead of one per layer, which keeps the `setFilter`
+  cost flat whatever the number of mounted countries. What is left is
+  `render()` rebuilding the dynamic line layers: `Map.addSource`/`Map.addLayer`
+  take no options argument in MapLibre v6, so their validation cannot be
+  skipped. With per-country tile mounting (coverage-provider.md §4, "Client:
+  one source per country in view") `mountInView()` builds a country's coverage
+  layers once its tile source comes into view, so a country panned into view
+  later pays that `addLayer` cost when its layers land. Tile fetch and
+  re-rasterisation past the block are MapLibre's.
 
 #### 4.5a Boxes that cross the antimeridian
 
@@ -1343,22 +1249,21 @@ thing allowed to interpret it.
 It is not hypothetical. No single region we ship crosses the seam, but **New
 Zealand's country scope is the union of seventeen regions** running from
 Southland at 166.4°E to the Chatham Islands at 175.8°W. Taking the minimum west
-and the maximum east of those, which is what the union used to do, produced
+and the maximum east of those would produce
 
     [-176.9, -47.3, 178.6, -34.4]     355.5° wide
 
-a box containing every point on Earth. Nothing errored. New Zealand simply
-became everywhere: town search sent Photon a worldwide box, the
-"you are looking outside your filter" chip could never fire because the box
-always overlapped, and `regionOfPoint()` would hand a rider in Belgium a New
-Zealand region, because a box that contains everything also wins on centre
-distance. The same shape waits for the United States the day Alaska is
-onboarded. Fixed 2026-09-09; the same scope now reads
+a box containing every point on Earth, with nothing erroring: town search
+would send Photon a worldwide box, the "you are looking outside your filter"
+chip could never fire because the box always overlaps, and `regionOfPoint()`
+would hand a rider in Belgium a New Zealand region, because a box that
+contains everything also wins on centre distance. The same shape waits for the
+United States the day Alaska is onboarded. The union reads
 
     [166.4, -47.3, -175.8, -34.4]     17.7° wide
 
 **The rule: never compare a box by hand.** `b[0] <= lng && lng <= b[2]` is false
-almost everywhere a crossing region actually is, and was true everywhere else.
+almost everywhere a crossing region actually is, and true everywhere else.
 `CCScope` exposes the questions instead, and `scope-ui.js` and `places.js` ask
 them rather than reaching into the array:
 
@@ -1379,18 +1284,17 @@ into 17.7° instead of 355.5°.
 On the server, the crossing is detected by a **raw longitude span wider than
 180°**, not by comparing the shifted and unshifted spans. `ST_ShiftLongitude`
 adds 360 to a negative longitude and the result cannot hold the original
-mantissa, so every western-hemisphere region comes back about 1e-14 narrower;
-the span test says "crossing" for Madrid and Asturias too. It happens to map
-back to the same numbers for them, so that answer was right by luck rather than
-by reasoning. Only a box reaching from one edge of the seam to the other is
-wider than 180°.
+mantissa, so every western-hemisphere region comes back about 1e-14 narrower,
+and a comparison of the two spans would call Madrid and Asturias "crossing"
+too. Only a box reaching from one edge of the seam to the other is wider than
+180°.
 
 That expression lives in the database, not in the query: `region.bbox_w`,
 `bbox_s`, `bbox_e` and `bbox_n` are stored generated columns
 (`Version20260928200000`), computed when a region's shape is written.
-`RegionRegistryProvider::all()` reads them. Computing the box on each call
-read all 109 MB of region shapes for 271 regions, 350 ms on every page that
-lists regions (owner 2026-09-28, the `/best` filters).
+`RegionRegistryProvider::all()` reads them, so a page that lists regions never
+reads every region's shape to compute its box (owner 2026-09-28, the `/best`
+filters).
 
 #### 4.5b Coverage notice: outside every onboarded country
 
@@ -1496,8 +1400,7 @@ very next `moveend`.
 ### 4.6 Chrome theme: dark and light
 
 The map page's chrome (icon rail, drawer, legend, panels, popups) ships in two
-themes. Dark is the default and is the look the page has always had; light
-inverts the ground: paper (`--paper`) carries the chrome, ink (`--ink`)
+themes. Dark is the default; light inverts the ground: paper (`--paper`) carries the chrome, ink (`--ink`)
 carries the text, trail orange stays the accent. The basemap tiles are the
 same in both themes: liberty is a light style already, so only the chrome
 changes.
@@ -1509,7 +1412,7 @@ Mechanism, one attribute end to end:
   grounds and deep-on-cream partners for every pale-on-dark accent) in
   `:root` with the dark values, and redefines them under
   `html[data-map-theme="light"]`. No chrome rule reads the brand literals
-  directly anymore; a rule that does stays dark in light mode
+  directly; a rule that did would stay dark in light mode
   (pinned by `tests/js/map-theme.test.cjs`). The nav wordmark is the one
   asset swap: `brand/logo-nav-light.svg` (ink letterforms) replaces the
   cream-lettered `logo-nav.svg` via `content:url()` in light mode, because
@@ -1539,16 +1442,14 @@ Mechanism, one attribute end to end:
   the script is emitted only in the visitor branch, so a shared device's
   localStorage can never override a logged-in rider's profile value.
 
-### 4.7 Map key (2026-09-01)
+### 4.7 Map key
 
-Since 2026-09-09 every type draws its own one-colour icon
-(`ItemType::svgPath()` is never null): the emoji glyphs painted themselves
-in the platform font's colours, and the tent came out green and yellow on
-the landing page (owner: "no coloured icons"). Quality rides are a route
-winding across the land, a ribbon, not a star (owner: "a slinger line").
-The glyph stays as the text fallback only. The map rail's layer rows draw
-the same paths through `layerGlyph()` in `assets/map/icons.js`, so the
-route row shows the ribbon and not the old star. On `/map-key` the category
+Every type draws its own one-colour icon (`ItemType::svgPath()` is never
+null), never an emoji, which would paint in the platform font's colours
+(owner: "no coloured icons"). Quality rides are a route winding across the
+land, a ribbon, not a star (owner: "a slinger line"). The emoji glyph stays as
+the text fallback only. The map rail's layer rows draw the same paths through
+`layerGlyph()` in `assets/map/icons.js`. On `/map-key` the category
 tiles draw their hairlines from each tile's own shadow, so an empty slot at
 a row's end stays page-coloured, and the group headings sit at the site's
 kicker size.
@@ -1561,10 +1462,10 @@ two places, sized to their audience:
   row is read, never tapped. Anything that switches the map (the surface
   class rows, Study mode, the Gaps grid) lives in the overlay key box at the
   bottom-right corner, not here (owner 2026-09-21). The panel opens from the
-  rail's Key button only; the corner button that also opened it read as that
-  box's toggle and is gone, so the corner holds the bug circle and the box
-  and nothing else. The rail button shows the panel's open state
-  (`aria-expanded`). Since 2026-09-28 it carries the **whole key**, in the
+  rail's Key button only; a corner button for it would read as that box's
+  toggle, so the corner holds the bug circle and the box and nothing else. The
+  rail button shows the panel's open state (`aria-expanded`). It carries the
+  **whole key**, in the
   /map-key page's order (owner: "the map key in the map's drawer is not
   complete"): **How to read a pin** (the four axes, each as title, an example
   strip of real pins and the text, `.mkp-axis` / `.mkp-ex`), where a record
@@ -1587,13 +1488,17 @@ two places, sized to their audience:
   LIVE MARKS ONLY: the panel never shows a mark the map does not
   draw. The waiting-for-a-moderator row (the red hourglass pin) is
   moderation chrome, gated by `pending_is_curator` from the controller (never
-  `is_granted()`, per §"the 2FA policy applies in exactly one place").
+  `is_granted()`: the 2FA policy lives in one place, account-and-auth.md §4).
   Swatches reuse the real `.cc-pin` / `.cc-cluster` / `.cc-highlight`
   classes, and the line, chip, junction and tile swatches come from
   `styles/key-swatches.css`, which the /map-key page links too; category
   colours and glyphs come from `cc_category_colours()` (the public API's
-  `CategoryTable`) and the shared `partials/_key_macros.html.twig`, so the
-  two keys cannot drift from the map or from each other. The panel still
+  `CategoryTable`) and the shared `partials/_key_macros.html.twig`, and the
+  glyph colour on each fill from `cc_category_inks()` (`CategoryTable::inks()`,
+  the map's own `txtOn()` rule, pinned by `CategoryInkTest`), so the two keys
+  cannot drift from the map or from each other. Every icon in both keys sits on
+  the same light paper tile (`#DED2B8`, `.mkp-sw` and `.mk-sw`,
+  `key-swatch.test.cjs`), so a dark glyph reads as well as a white one. The panel still
   links to the full page, which adds the notes between the groups.
 - **The `/map-key` page** (`PageController::mapKey`,
   `LocalizedPath::MAP_KEY`, `pages/map_key.html.twig`, `legend.*` strings,
@@ -1609,7 +1514,7 @@ two places, sized to their audience:
   build on a planned tag or on the words "paper dot". Both keys link
   `styles/pins.css`, the one definition of the pin, and never copy its rules.
 
-**Basemap furniture (2026-09-10).** The liberty style's four POI layers ask
+**Basemap furniture.** The liberty style's four POI layers ask
 the OpenFreeMap sprite for an image named after each point's OSM class, and
 the sprite lacks most classes: one console warning per class, nothing drawn.
 `App\Catalog\BasemapIcons::set()` is the one registry of the classes a rider
@@ -1639,21 +1544,27 @@ draw it inline, and both keys render it through
 the keys cannot drift. Water & food kinds: drinking tap (blue drop), not for
 drinking (barred drop), nothing said (unfilled drop), food stop (fork and
 knife on the category disc), food stop with water (plus a small drop). Bike
-services: shop, repair stand, pump. The state badges sit top-left, opposite
+services: shop, repair stand, pump. Scenic views and history & culture: one
+glyph per kind (`placeKind()` in `icons.js` reads an item's `type` or a tile's
+`kind`; the tile layer matches `kind`, [osm-data-architecture.md §5a](osm-data-architecture.md)),
+and the drawer's Type row names the kind in the rider's language. A pin is
+already the category disc, so it draws the glyph alone (`kindGlyphSvg()`), not
+the kind's own disc, which would shrink the glyph to a dot. A round pin (a gross
+provider's record, `.cc-pin.disc`) is 26 px, still smaller than our own 30 px
+teardrop (owner 2026-10-08). The state badges sit top-left, opposite
 the `?`: red `!` = not usable right now (`condition`
 Out of order or Closed), ink clock = there, but not always (`seasonal`
 Summer only or Frost-shut in winter). `waterKind()` and `stateOf()` in
 `icons.js` are the two rules, shared by every renderer.
 
 Tier semantics pinned here (ruled 2026-09-01, amended 2026-09-04 and
-2026-09-09): grey FILL no longer means anything on water, potability having
-moved into the kind glyph (the grey drop is gone). The border answers
+2026-09-09): grey FILL means nothing on water, because potability is in the
+kind glyph. The border answers
 custody and the badge answers evidence, one mark each
 (data-provider-hierarchy.md §6.7): a register with a registry scope for the
 letter draws dashed, one without draws as the small disc, and either loses
 its `?` only when a witness is on record. Dashed borders are MONOCHROME
-(also ruled 2026-09-01, replacing the ochre dash: it did not read on a busy
-basemap): ink dashes over a white halo, legible on any ground, light or
+(ruled 2026-09-01: a coloured dash does not read on a busy basemap): ink dashes over a white halo, legible on any ground, light or
 dark, without spending a colour. There is no keeper tier and no paper dot.
 
 ## 5. Layer rendering strategy
@@ -1670,12 +1581,13 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   symbol layers** of small category discs minted at runtime
   (`miniIcon()`: category-colour disc + flat silhouette glyph — deliberately
   canvas-drawn because colour-emoji fonts can't be assumed installed). D · bike
-  services picks a per-`serviceKind` glyph via a `match` expression
-  (`shop ⚙ / station ⚒ / pump ⊕` — plain BMP symbols, not emoji; the kind
-  contract lives in [osm-data-architecture.md](osm-data-architecture.md) §5).
+  services picks a per-`serviceKind` glyph (`SERVICE_GLYPH` in `icons.js`, the
+  kind glyph from the `KindIcons` registry, with the plain BMP symbols
+  `⚙ / ⚒ / ⊕` only as a fallback; the kind contract lives in
+  [osm-data-architecture.md](osm-data-architecture.md) §5).
   **Confirmed** points (`p.c`) are excluded from the dot layers and promoted to
-  clustered DOM icon pins (`setupConfClusters()`: count bubbles at low zoom →
-  leaf pins when spread; cluster/leaf reconciliation runs only on
+  clustered DOM icon pins (`setupConfClusters()`: count bubbles at low zoom,
+  each for three places or more (`clusterMinPoints`), → leaf pins when spread; cluster/leaf reconciliation runs only on
   `moveend`/`idle`, never per animation frame). **While a ride check is
   loaded (§9) the places it lists never cluster:** `setListedPlaces()` hands
   the pools a set of `letter:id`, `splitPool()` (`ride-places.js`) keeps those
@@ -1724,19 +1636,17 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   riding-zoom one.
 
   **Below the floor the CONTROL says so, not the map.** A control a rider just
-  pressed must never leave the map unchanged and silent, but the answer has to
-  appear where the press happened: it was tried in the map's own corner hint
-  first, and nobody read it (owner 2026-08-20: "nobody is gone see that"). Two
-  channels, both at the control. The Surfaces row's state column takes a third
+  pressed must never leave the map unchanged and silent, and the answer has to
+  appear where the press happened, not in the map's corner hint (owner
+  2026-08-20: "nobody is gone see that"). Two channels, both at the control. The Surfaces row's state column takes a third
   value beside On and Off - "Zoom in", in the accent so it reads as a prompt
   rather than a count - and it follows the ZOOM as well as the press, so a
   rider who zooms out with the skin already on gets the same answer without
   touching anything. The press itself also raises a toast, once. The map's
-  corner hint keeps out of it and goes back to the pending-review line, which
-  the surface message had been displacing.
+  corner hint keeps out of it and keeps to the pending-review line.
 
   **The build carries the same floor** (`surface.minZoom: 10` in
-  `pipeline/contract/coverage-contract.json`, raised from 8 on 2026-08-20), so
+  `pipeline/contract/coverage-contract.json`), so
   the z8/z9 tiles are not produced at all rather than produced and never
   fetched. A cross-language test pins the contract floor to the client's
   `CLASSIFIED_MIN_ZOOM`: a client floor above the build's would fetch nothing
@@ -1755,8 +1665,8 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   the tile layers, because a rider filtering to "gravel" means gravel, not
   gravel-from-one-source. Dash gaps in the key are **transparent**, not cream:
   the curated layer has a white casing and the tile layer has none, so a painted
-  gap made the key disagree with the map it was explaining.
-- **Quality ticks** (owner shape, 2026-08-12): surface QUALITY finally has a
+  gap would make the key disagree with the map it explains.
+- **Quality ticks** (owner shape, 2026-08-12): surface QUALITY has a
   visual channel of its own — short coloured dashes drawn over the class lines
   (`surfq-*` layers in `surface-tiles.js`), green → amber → red from the OSM
   `smoothness` the tiles ship as `sm`, z13+ only, and **only where smoothness
@@ -1767,46 +1677,42 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   values; the drawer collapses them to the form's five for display), pinned by
   `surface-quality.test.cjs`. The legend explains the ticks in one non-filter
   note row (`.skey-note`); hiding a class hides its ticks via the layer
-  filter, not a legend row of their own. **Curated items get the same ticks**
-  (2026-08-14): the rider-recorded smoothness rides the consolidated A source
-  as `sm` and draws as `surface-q` in `render.js` (five form values, same
-  palette — `CURATED_SM_TONE`, kept in step with `SM_TONE` by hand because
-  surface-tiles imports render). A rider who had just recorded a road as
-  Excellent saw no ticks on it while the legend promised them "where
-  recorded" (owner-reported). Unlike the skin's thin light lines, the curated
+  filter, not a legend row of their own. **Curated items get the same ticks**:
+  the rider-recorded smoothness rides the consolidated A source as `sm` and
+  draws as `surface-q` in `render.js` (five form values, same palette:
+  `CURATED_SM_TONE`, kept in step with `SM_TONE` by hand because surface-tiles
+  imports render). Unlike the skin's thin light lines, the curated
   lines are wide and dark, so the curated ticks carry a cream casing tick
   underneath (`surface-q-case`, dash scaled by the width ratio so the two
   patterns stay in step) — an excellent-green tick on the paved slate is
-  invisible without it. The tile skin's ticks got the same casing the same
-  day (`surfq-case-<cc>`, id kept under the `surfq-` prefix so
-  applyClassVisibility toggles and re-filters it with the ticks).
+  invisible without it. The tile skin's ticks carry the same casing
+  (`surfq-case-<cc>`, under the `surfq-` prefix so applyClassVisibility
+  toggles and re-filters it with the ticks).
 - **Class lines are SOLID; the dash channel belongs to quality**
   (owner 2026-08-14): once ticks stitched over the lines, gravel's own ochre
   dashes and an amber quality tick were two dash patterns fighting on one
   line — and "smooth gravel vs rough gravel" is exactly what the ticks
-  exist to say. `SURFACE_STYLE` now carries colour only for
+  exist to say. `SURFACE_STYLE` carries colour only for
   paved/gravel/pave/dirt/rock (curated layer, tile skin and the legend
   swatches all read it); `unverified` keeps its red dash, because that dash
   IS its meaning and it never draws ticks.
-- **The tile lines dedupe against curated refs** (2026-08-13), the same rule
-  the coverage points have always had: a way already answered as one of our A
-  items is filtered out of the classified skin, the to-do arm and the quality
-  ticks (`surfDedupeFilter`, re-applied on every toggle since the refs arrive
-  with the catalog fetch). Before this, a rider's approved asphalt stretch
-  kept its red "Surface not recorded" dashes under the green curated line —
-  the map contradicting itself about a road somebody had just answered.
-- **A tile-line click hands the wizard the WHOLE way** (2026-08-13): vector
-  tiles clip geometry at tile borders, so the clicked feature is only one
-  tile's fragment — pins built from it covered part of the road, and a
-  boundary sliver produced a wizard with no line at all. `fullWayEnds`
+- **The tile lines dedupe against curated refs**, the same rule as the
+  coverage points: a way already answered as one of our A items is filtered
+  out of the classified skin, the to-do arm and the quality ticks
+  (`surfDedupeFilter`, re-applied on every toggle since the refs arrive with
+  the catalog fetch), so a rider's approved stretch never keeps red "Surface
+  not recorded" dashes under the curated line.
+- **A tile-line click hands the wizard the WHOLE way**: vector tiles clip
+  geometry at tile borders, so the clicked feature is only one tile's
+  fragment, and pins built from it would cover part of the road (a boundary
+  sliver, no line at all). `fullWayEnds`
   (surface-tiles.js) reassembles the way from every loaded tile via
   `querySourceFeatures` and takes the farthest-apart endpoint pair; the
   corridor click uses the same helper.
-- **The curator ghost layer of gone places** (2026-08-13): an item approved
-  as "Not there anymore" is hidden from the public payload for good (its row
-  and the reporter's submission mapping stay; its OSM ref stays claimed), but
-  hidden-everywhere answered removal and not RETURN — a rebuilt tap could
-  never be found to reactivate. `CatalogProvider::goneForMap()` hands
+- **The curator ghost layer of gone places**: an item approved as "Not there
+  anymore" is hidden from the public payload for good (its row and the
+  reporter's submission mapping stay; its OSM ref stays claimed), so a place
+  that comes back (a rebuilt tap) needs a way to be found and reactivated. `CatalogProvider::goneForMap()` hands
   curators these as `window.CC_GONE` (same curator-only channel as
   CC_PENDING, scoped like the pending queue); the map shows them as a
   "Removed places" moderation-group layer, off by default. Reactivation is
@@ -1820,11 +1726,10 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   [coverage-provider.md](coverage-provider.md) §4). The benchmark is
   OpenCycleMap and the brief is **readable by default, detail on demand**:
   three visual families (national icn/ncn rose-red, regional rcn/lcn/other
-  purple — the OpenCycleMap associations; a first cut had regional in blue and
-  it read as grey-green over polder fields), wide translucent corridor lines
-  so the basemap road stays legible inside them, and number badges from z12
-  with symbol collision doing the culling (a first cut held them to z13 and
-  read as "there are no knooppunt numbers" at planning zoom). Clicking a corridor
+  purple, the OpenCycleMap associations; blue reads as grey-green over polder
+  fields), wide translucent corridor lines so the basemap road stays legible
+  inside them, and number badges from z12 with symbol collision doing the
+  culling, so junction numbers show at planning zoom. Clicking a corridor
   opens the surface drawer for that **way** — the layer exists to close the
   loop with the surface skin (a signed way with no recorded surface is exactly
   the road worth asking about), so the improve action is the ordinary
@@ -1842,25 +1747,21 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   the basemap to show nothing, and a rider landing on a blank page cannot tell
   whether the feature is broken or the layer is missing. The control disables
   with the layer and switches off with it.
-- **A key for the BASE MAP's own road colours was built and removed the same
-  day (2026-08-15).** It explained liberty's importance-palette (motorway #fc8,
-  through-roads #fea, white-over-grey minors), grew zoom badges and a live
-  "you are below that zoom" line when it turned out those colours barely exist
-  at planning zoom - and was then withdrawn, because the diagnosis moved: the
-  problem is not that the base palette is unexplained, it is that THREE road
-  colour systems share one canvas (liberty's importance colours, the thin OSM
-  surface skin, the thick curated lines - the curated casing is 8 px at every
-  zoom over liberty's 2.5 px residential fill at z14, layer slot ~614 over
-  ~45-55, so ours buries theirs wherever we have data). The owner's direction,
-  recorded in docs/TODO.md ("Surfaces view: blank the base map's roads - one
-  colour system"), is to hide liberty's road linework while the skin is on and
-  offer a toggle to bring the full road system back; the key only makes sense
-  as part of that build, so it waits for it.
+- **There is no key for the BASE MAP's own road colours** (owner
+  2026-08-15). The problem is not that the base palette is unexplained, it is
+  that THREE road colour systems share one canvas (liberty's importance
+  colours, the thin OSM surface skin, the thick curated lines; the curated
+  casing is 8 px at every zoom over liberty's 2.5 px residential fill at z14,
+  so ours buries theirs wherever we have data). The owner's direction,
+  recorded in docs/TODO.md ("Surfaces view: blank the base map's roads"), is
+  to hide liberty's road linework while the skin is on and offer a toggle to
+  bring the full road system back; a key for the base palette only makes
+  sense as part of that build.
 - **`unverified` is labelled "Surface not recorded"**, not "unverified" — the
   class means OSM records no `surface` tag there, and riders are precisely who
-  *verifies* things, so the old word claimed the opposite of what it meant
-  (owner-reported 2026-08-12).
-- **The "needs recording" arm is served** (2026-08-12), and it is governed by
+  *verifies* things, so "unverified" would claim the opposite of what it means
+  (owner 2026-08-12).
+- **The "needs recording" arm is served**, and it is governed by
   **the legend row**, not by a control of its own. Every line in it is a road
   nobody has recorded a surface for — a road somebody could go and record — so
   it is the **contribution view**: "then people will know what to tag and extend
@@ -1873,19 +1774,20 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   only when the skin is on and that row is ticked. Drawn thinner and fainter
   than the classified arm: it is a to-do list, not an answer.
 - **It is not every untagged road, and the difference is editorial**
-  (2026-08-12). It was, and that cost as much as the entire classified skin
-  (Belgium: 42 MB against 43). Measured against our own tagged data, a Belgian
+  (owner 2026-08-12). Every untagged road would cost as much as the entire
+  classified skin (Belgium: 42 MB against 43). Measured against our own tagged
+  data, a Belgian
   road somebody HAS tagged is unpaved 0.1 % of the time when it is `primary`,
   0.5 % `secondary`, 2.5 % `tertiary`, 0.0 % `cycleway` and 7.2 %
   `residential` — and mappers tag the surprising road first, so an *untagged*
-  one of those is safer still. Drawing them as homework asked riders to go and
-  confirm asphalt. The arm now carries only the classes where nobody can predict
-  the answer — `track` (88 % unpaved when tagged), `path` (a coin flip) and
-  rural `unclassified` lanes — which took the Benelux arm from 119 MB to
-  **34.8 MB** and made the prompt sharper rather than weaker. The set lives in
+  one of those is safer still. Drawing them as homework would ask riders to go
+  and confirm asphalt. The arm carries only the classes where nobody can
+  predict the answer: `track` (88 % unpaved when tagged), `path` (a coin flip)
+  and rural `unclassified` lanes, which keeps the Benelux arm at **34.8 MB**
+  (119 MB for every untagged road) and the prompt sharp. The set lives in
   the contract (`surface.todo.highways`), not in the client.
-- **Below z11 the same question is answered by a grid, not by roads**
-  (2026-08-12). `surface-gaps.pmtiles` carries one square per ~6 km (a z12 tile)
+- **Below z11 the same question is answered by a grid, not by roads**.
+  `surface-gaps.pmtiles` carries one square per ~6 km (a z12 tile)
   with the kilometres of unrecorded to-do network inside it, its share of that
   cell's network, and a road count: **0.6 MB for the Benelux against 34.8 MB of
   lines**. It is the *planning* half of "what still needs recording" — a rider
@@ -1898,11 +1800,11 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   `web/tests/js/surface-zooms.test.cjs`). The client draws it **through z12**
   (`GAPS_MAX_ZOOM`, owner 2026-09-18) by stretching the z11 tiles, so squares
   and to-do lines overlap from z11 to z12; the `#skeyGaps` button hides above
-  z12, where it would switch on nothing. **The grid is opt-in since
-  2026-08-14** (`#skeyGaps`, below Study mode in the legend, shown only while
-  the skin is on): arriving with the skin, the squares tinted whole regions
-  pink at planning zoom — and translucent red over blue water reads PURPLE,
-  a colour with no legend row of its own. It is a contributor's
+  z12, where it would switch on nothing. **The grid is opt-in**
+  (`#skeyGaps`, below Study mode in the legend, shown only while the skin is
+  on, owner 2026-08-14): arriving with the skin, the squares would tint whole
+  regions pink at planning zoom, and translucent red over blue water reads
+  PURPLE, a colour with no legend row of its own. It is a contributor's
   question ("where is recording needed?"), not a rider's, so it waits behind
   a toggle whose label says what the squares mean. The *Surface not recorded*
   legend row still gates it too: that class off hides the unrecorded arm in
@@ -1932,22 +1834,21 @@ dark, without spending a colour. There is no keeper tier and no paper dot.
   `render()`'s tail re-applies the emphasis the moment the line is there. A
   route reached from OUTSIDE the rider's scope has no line yet at that
   instant, because the scope lift (§4.5) draws its region afterwards; guarding
-  the selection on the drawn layer left the picked route at the same salmon
-  and the same width as every other (owner-reported 2026-09-16, searching
-  "Liege to Spa, the Vesdre valley" from a Friesland scope).
-- **Stacking rule** (bottom → top): route lines, climb lines, road-surface
-  lines, Mapillary coverage — re-applied after any selection `moveLayer` so a
+  the selection on the drawn layer would leave the picked route at the same
+  colour and width as every other.
+- **Stacking rule** (bottom → top, §4.1): route lines, road-surface lines,
+  climb lines, Mapillary coverage, the coverage icons, re-applied after any selection `moveLayer` so a
   highlighted route never buries the surface colours
   (`liftInfoLayersAboveRoutes()`).
 
-### The pending layer is exempt from the region scope (2026-08-12)
+### The pending layer is exempt from the region scope
 
 A curator's pending layer is a **work queue**, not a view of a region. It is
 already scoped server-side to their own moderation area
 (`SubmissionQueue::pendingForMap` + `ModerationScope`), and running it through
-the map's region gate as well meant a curator whose map happened to be scoped
-elsewhere would read "Pending review 0/0" and conclude there was nothing to
-do (owner-reported). A desk's `?pending=` link changes no scope either: it
+the map's region gate as well would mean a curator whose map happened to be
+scoped elsewhere reads "Pending review 0/0" and concludes there is nothing to
+do (owner 2026-08-12). A desk's `?pending=` link changes no scope either: it
 turns the pending layer on and opens the submission in whatever scope the
 rider is in.
 
@@ -1955,26 +1856,36 @@ Two scopes for one question is one too many, and the server's is the one with
 authority. `featureVisible()` returns true for `pendingLayer` before any gate,
 and `layerCounts()` counts its whole set.
 
-**And the map says so** (2026-08-14), in the words of whoever is looking.
+**And the map says so**, in the words of whoever is looking.
 TWO audiences see this layer: a curator gets their moderation area's whole
 queue, a rider gets their own undecided submissions and nothing else
 (MapController). The on-map hint has a sentence for each, and the orange
 **curator-mode border answers to `CC_IS_CURATOR`, never to the layer being on
-screen** - a rider's own pending pins put it there too, and a plain account
-was wearing the border (owner-reported 2026-08-20).
+screen**: a rider's own pending pins put the layer on screen too, and a plain
+account never wears the border.
 
-The cost of that exemption is that
-scoping the map to one region while a queue sits in another looks exactly like
-a scope leak: the owner read it as one, scoped to Free State with sixteen
-pending submissions in North Holland. Both readings cannot be right, and the
-2026-08-12 decision is the one to keep - re-scoping the queue is what produced
-"Pending review 0/0" in the first place. So the on-map zoom hint names it
-instead: *"Pending review follows your moderation areas, not the map scope"*,
-shown while the layer is on, holds something, and the map is scoped narrower
-than Everywhere. Same slot as the coverage zoom hints
-([coverage-provider.md](coverage-provider.md)), and it takes precedence over
-them - a rider who is also a curator is more likely to be confused by pins in
-the wrong country than by an empty one.
+The cost of that exemption is that scoping the map to one region while a queue
+sits in another looks exactly like a scope leak. Re-scoping the queue would
+bring back "Pending review 0/0", so the on-map zoom hint names it
+instead: *"Pins waiting for review ignore the region filter: they follow the
+areas you moderate."* (`map.pending_follows_areas`), shown while the layer is
+on, holds something, and the map is scoped narrower than Everywhere. Same slot
+as the coverage zoom hints ([coverage-provider.md](coverage-provider.md)), and
+it takes precedence over them - a rider who is also a curator is more likely to
+be confused by pins in the wrong country than by an empty one.
+
+**Either reader closes it once read.** Both sentences carry a ✕ in the note's
+top-right corner, each under its own `App\Map\MapHint` name
+(`pending_follows_areas` for a curator, `pending_yours_anywhere` for a rider),
+so closing one never hides the other. Closing hides the note at once and
+stores the name in
+`users.closed_hints`, through `POST /map/hint/{hint}/close` (stateless CSRF id
+`map-hint`; 401 signed out, 404 for a name that is not a `MapHint`, 204 once
+stored). The page hands the list back as `window.CC_HINTS.closed`, so the note
+stays closed on every device. No settings screen shows the list, and nothing
+reopens a closed hint; the data export carries it with the other account
+settings. The orange curator-mode ring stays: it says which mode the map is
+in, the note only explains it.
 
 **And the map wears it.** `#map` takes `.cc-curator-mode` under the same
 condition, drawing an orange ring inset around the canvas: the hint explains the
@@ -1982,13 +1893,13 @@ pins, the ring says which mode you are in without reading anything (owner
 2026-08-14). Inset `box-shadow`, never a real border - a border resizes the
 canvas and makes MapLibre re-measure on every toggle.
 
-### Pins on one spot fan out (2026-10-01)
+### Pins on one spot fan out
 
 Two places can share a point: Grimsel and Susten both start at Innertkirchen,
 on exactly the same foot, so one pin hid the other and only the "?" badge
 peeked out (owner 2026-10-01: "Now you can't easily see the start.
-Confusing."). Pins on one spot now fan out, every one visible and clickable
-at once.
+Confusing."). Pins on one spot fan out, every one visible and clickable at
+once.
 
 - **Which pins.** Every bottom-anchored place pin drawn as a DOM marker: the
   catalog pins `render()` draws (climbs and every other point layer, the
@@ -2054,7 +1965,7 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
 - **Selection halo + centring:** opening a point feature drops a pulsing halo
   at the feature's exact coordinates and calls `flyToPin()` — centre + zoom to
   ≥ 14 with an offset so the drawer doesn't cover the pin (`pinOffset()` in
-  `util.js`): `[-150, 0]` beside the desktop drawer, and on a phone (the 820px
+  `util.js`): `[-200, 0]` beside the desktop drawer, and on a phone (the 820px
   layout flip) straight up into the middle of the half above the bottom sheet,
   which opens at half the screen.
   The halo offset is anchor-aware: `[0,-16]` for bottom-anchored teardrop pins
@@ -2063,29 +1974,37 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
   Routes get the line highlight instead of a point halo. The halo persists
   while the drawer is open; `closeDrawer()` clears halo, route highlight, and
   any corrections overlay.
+- **What changes with the zoom (owner 2026-10-08).** All in `icons.js`, set on
+  the map container as the map zooms (`syncZoomStyles()`):
+  - Our own teardrop pins grow from 70% at z8 to full size (30px) at z14
+    (`pinScale()`, `--pin-s`; the badges grow with them). A page without the
+    map draws them full size.
+  - A climb's summit chip and gradient chip show from z11 (`SUMMIT_MIN_ZOOM`,
+    class `.cc-z-lt11`); zoomed out, the chips of every climb piled up.
+  - An OpenStreetMap place waits for its category's icon zoom
+    (`iconMinZoom()`: water z11, the rest z12), on a tile and also when it is
+    one of our pool rows drawn as a small disc pin (`updateConfMarkers()`).
+    A count bubble still counts such rows.
 - **Coverage renders as a density heatmap at overview, individual icons from
-  z9 — no clustering, phantom-free at every zoom.** A coverage POI's icon is
-  drawn by its tile `<key>-<cc>-cov` layer (`minzoom 9`); the tiles carry every
-  point complete at z11–14, so the z9–10 icons are the **thinned** sample that
-  densifies to complete by z11 (the layer counts stay the exact total). At
-  overview zoom (z6–~9), a `<key>-<cc>-heat` heatmap layer on the **same**
-  source-layer (`maxzoom 9`) draws the region's coverage as a smooth density
+  z11 (water) and z12 (the rest), no clustering, phantom-free at every zoom.**
+  A coverage POI's icon is drawn by its tile `<key>-<cc>-cov` layer (`minzoom`
+  `iconMinZoom(key)`); the tiles carry every point complete at z11–14, so the
+  icons arrive complete (the layer counts stay the exact total). Below that, a
+  `<key>-<cc>-heat` heatmap layer on the **same** source-layer (`maxzoom`
+  `iconMinZoom(key)` + 0.75) draws the region's coverage as a smooth density
   surface, built from the tile's thinned z6–10 sample (`coverage-provider.md`
-  §4) — this fills the empty overview that the no-cluster z11 floor had left,
-  with the exact `/map/coverage/counts` still carrying the precise "how
-  much" alongside it. The two layers **cross-fade at z9** (heat `maxzoom 9`,
-  icon `minzoom 9`) so the actual spots are visible at the region-fit landing
-  zoom. The heat colour ramp runs to a deep green at max density (a pale top
-  stop punched white "holes" in a dense single-letter surface). Both are
+  §4), with the exact `/map/coverage/counts` carrying the precise "how
+  much" alongside it. The heatmap holds full until the icons start and fades
+  under them, so the map is never empty between the two; our own DOM pins show
+  at every zoom (coverage-provider.md §4). The heat colour ramp runs to a deep green at max density (a pale top
+  stop would punch white "holes" in a dense single-letter surface). Both are
   scope-filtered exactly per point (`covIconFilter()` for the icons,
-  `covHeatFilter()` — scope only, no dedupe/accessibility narrow — for
-  the heat), which is what eliminates the phantom bubbles a prior
-  cluster-bubble design produced at region borders (a cluster rendered at
-  its members' centroid, which could sit outside the scoped region): a
-  heatmap has no centroid to leak, only in-scope points contribute density,
-  so a soft feather at the region edge is honest rather than a false marker.
-  The heatmap supersedes a z6–10-is-empty stage, which itself replaced the
-  cluster bubbles; tile contract: [coverage-provider.md](coverage-provider.md) §4.
+  `covHeatFilter()`, scope only, no dedupe/accessibility narrow, for the heat).
+  No clustering: a cluster bubble renders at its members' centroid, which can
+  sit outside the scoped region, while a heatmap has no centroid to leak; only
+  in-scope points contribute density, so a soft feather at the region edge is
+  honest rather than a false marker. Tile contract:
+  [coverage-provider.md](coverage-provider.md) §4.
 - **Selected coverage POI stays visible on zoom-out:** a coverage POI's icon is
   drawn only by its tile `<key>-<cc>-cov` layer, which the z9 minzoom hides
   on zoom-out — so zooming out past z9 with a coverage POI selected would
@@ -2100,8 +2019,7 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
 ### 6.2 Registry-driven attribute rows
 
 `CatalogFormRegistry` is the **single source of truth** for which per-type
-attributes the drawer shows; the hand-maintained map.js whitelist model is
-permanently retired.
+attributes the drawer shows; map.js keeps no whitelist of its own.
 
 - **Delivery:** `App\Catalog\CatalogSchemaProvider::all()` walks the registry,
   keeps `CatalogField::$display === true` fields in `fields`-then-`addFields`
@@ -2150,9 +2068,9 @@ permanently retired.
   Surfaces breakdown (with its estimate method note). A **set** attribute row
   replaces a structural row of the same label (dedup-by-label); empty prompts
   never displace structural rows.
-- **Accepted losses** (recorded product trade-offs): per-row `OSM` provenance
-  tags on the surface drawer's Surface/Smoothness rows were dropped —
-  provenance shows only on the Source line; route `season` renders as chips.
+- **Accepted trade-offs:** the surface drawer's Surface/Smoothness rows carry
+  no per-row `OSM` provenance tag (provenance shows only on the Source line);
+  route `season` renders as chips.
 
 ### 6.3 Drawer anatomy
 
@@ -2184,21 +2102,16 @@ view and PIVOT to the Géoportail catalogue entry. `srcType` (the item's real
 items served through bulk-OSM layers.
 
 **Rider-contributed is a set, not a pair.** `isRiderSource()` (i18n.js) owns it:
-`user`, `manual` and `scout`. The test used to be written inline as
-`srcType==='user'||srcType==='manual'` in four separate places, every one of
-which omitted `scout` — the provenance a tag dropped while riding actually
-carries. The owner's own scenic addition therefore credited *OpenStreetMap
-(tourism=viewpoint / natural=peak / waterway=waterfall)*: the per-layer OSM
-fallback, on a place OSM had never heard of (reported 2026-08-14). Harvested and
-derived rows (`osm`/`pivot`/`wikidata`/`auto`) keep their real citation.
+`user`, `manual` and `scout`, and no drawer writes the test inline: a copy
+that forgets `scout` (the provenance a tag dropped while riding carries) would
+credit the per-layer OSM fallback on a place OSM has never heard of.
+Harvested and derived rows (`osm`/`pivot`/`wikidata`/`auto`) keep their real citation.
 
 **In the set is not the same as sharing the label.** `manual` is a row the
 project seeded by hand (`SeedManualCatalogCommand`); it belongs in
-`isRiderSource()` so it never falls back to an OSM citation, but until
-2026-08-16 it also borrowed `user`'s label, so the Furka Pass read *Source ·
-Rider-contributed* - a false claim, since no rider added it (owner-reported the
-night the CH climbs were recomputed). `manual` now has its own label,
-`d_src_manual` "Hand-curated", in five locales. Seeded rows join to no
+`isRiderSource()` so it never falls back to an OSM citation, but it does not
+borrow `user`'s label, which would claim a rider added it: `manual` has its
+own label, `d_src_manual` "Hand-curated", in five locales. Seeded rows join to no
 submission, so they carry no `by` key and never claim *shared anonymously*
 either; nothing needs assigning to a curator account for the line to be
 honest. `web/tests/js/source-labels.test.cjs` pins the whole chain: every
@@ -2209,11 +2122,10 @@ and all five locale files.
 **The person IS the source; how it reached us is the line beneath.** The Source
 line reads *Source · XanderK*, the name itself being the profile link, with the
 provenance citation ("tagged while riding, with Scout") dropped to a quieter
-line under it. They were two lines making two competing claims - *shared by X*
-above *source: Scout* - when between them they answer one question: a rider
-added this, and this is how it arrived. A row with nobody to name (anything
-harvested) keeps the citation on the Source line itself, where it has always
-been; a rider without a public profile reads *Source · shared anonymously*.
+line under it. Two lines would make two competing claims (*shared by X* above
+*source: Scout*) when between them they answer one question: a rider added
+this, and this is how it arrived. A row with nobody to name (anything
+harvested) keeps the citation on the Source line itself; a rider without a public profile reads *Source · shared anonymously*.
 
 **Who added it is a line of its own.** A point item has no creator column - the
 person is on the submission that minted it - so `CatalogProvider::itemRows()`
@@ -2223,19 +2135,15 @@ joins the earliest `type='new'` submission (via the indexed
 not made their profile public still yields `by: 0`, so the drawer says *shared
 anonymously* rather than nothing at all - the contribution is still a rider's,
 and saying so without naming them is what the flag is for. Harvested rows join
-to nothing and carry no key; OSM did not share anything with us. Before this,
-an addition tagged while riding read as though it had arrived from nowhere
-(owner-reported 2026-08-14). The profile link is `/riders/{uuid}`: display names
-stopped being unique on 2026-07-31, so the old `/profile?u=<slug>` was never a
-way to find a person - it went to the *reader's* own account page. The
-bulk-OSM drawer builders (`osmDrawer`, `waterDrawer`) construct their own
+to nothing and carry no key; OSM did not share anything with us. The profile
+link is `/riders/{uuid}`, because display names are not unique. The bulk-OSM
+drawer builders (`osmDrawer`, `waterDrawer`) construct their own
 object, so they must copy these keys over explicitly, as they do `srcType`.
 
 Both builders credit an authority row's publisher through the payload's
 provider map (`providerOf`, `providerSource`; data-provider-hierarchy.md §7):
 the headline's origin word, the Type row's method, a "Listed · Official
-registry entry" row and the Source line. `waterDrawer` joined on 2026-09-05,
-when the first RIVM tap opened read "Drinking water, OSM" twice. A register
+registry entry" row and the Source line. A register
 row that has no name (RIVM names none) also shows its `town`, so a rider who
 finds nothing there has a handle to report it by, beside the share link that
 carries the CC-row's id. The Verify row ("cross-check with the regional
@@ -2248,10 +2156,9 @@ item's `srcType`, not on the word appearing in the citation string: a free-text
 attribution that happens to contain "Scout" is not a reference to ours. All five
 locales keep the brand name untranslated, so one pattern covers them.
 
-**Share sits in the drawer header**, beside the type chip, not on the source
-line where it first landed. It is the **icon alone** - the share glyph means the
-same thing on every phone a rider owns, and the word beside it made a second
-chip competing with the type chip. Icon-only moves the label to `aria-label`
+**Share sits in the drawer header**, beside the type chip. It is the **icon
+alone**: the share glyph means the same thing on every phone a rider owns, and
+a word beside it would make a second chip competing with the type chip. Icon-only moves the label to `aria-label`
 (and `title`), with the `<svg>` `aria-hidden` so the button announces once. Sharing is something a rider decides the moment
 they recognise the place, and the source line is below the photo, the
 description and every record row — a scroll away from the name being shared on
@@ -2264,12 +2171,12 @@ saved scope is elsewhere, and hands the framing to the target itself (§8).
 
 `?ref=` exists because the name is not an identifier. Most OSM scenic views
 carry no `name` at all, so the drawer titles them by type and every one of them
-is called "Viewpoint": `?feature=Viewpoint` was a single link shared for
-thousands of separate places, and it opened whichever the search returned
-first. The ref is unique, it is already on the tile, and the guard that accepts
+is called "Viewpoint": `?feature=Viewpoint` would be a single link for
+thousands of separate places, opening whichever the search returned first. The
+ref is unique, it is already on the tile, and the guard that accepts
 it (`osmRefUrl` / `OSM_REF` in `osm-tags.js`) is deliberately the same
 `node|way` shape the detail route requires, so a link that can be shared is
-always a link that opens again. Reported by the owner, 2026-08-24.
+always a link that opens again.
 
 The **slug** exists because an id is unique and unreadable, and a shared link
 is read before it is clicked. It is decoration only: `shareQuery` appends it,
@@ -2282,17 +2189,16 @@ would mint `?ref=node/2348266912/viewpoint` and present our own word as the
 mapper's. The drawers therefore set `shareName` only when `p.n` is present, and
 `shareQuery` falls back to `f.name` only for a feature with a DB id, whose name
 is its own. A name in a script the slug cannot carry (`東京`, `Δελφοί`) folds to
-empty and the link is simply the bare id, never a row of hyphens. Owner ask,
-2026-08-24.
+empty and the link is simply the bare id, never a row of hyphens.
 
 Footer actions are per-type:
 
 | Feature | Actions |
 |---|---|
-| Item with DB id (non-K) | `✎ Edit this item` (`/improve?item=&name=&type=&lat=&lng=`) + `◎ Fix location` (same query + `fix=location`, **only when coordinates are known**) |
+| Item with DB id (non-R) | `✎ Edit this item` (`/improve?item=&name=&type=&lat=&lng=`) + `◎ Fix location` (same query + `fix=location`, **only when coordinates are known**) |
 | Votable types (`CC_VOTABLE = {climbs, stays, scenic, history}`) with a DB id, while `community.voting_live` | `▲ Vote for it for next season`, a link to the season ballot with the row picked (route-domain.md §8d) |
-| Confirmable utilities (`CC_CONFIRMABLE = {water, services, hazards, transit, shelter}`) with DB id | confirmation panel (potability / "still here?"), hydrated async — contract in [moderation-and-contribution.md](moderation-and-contribution.md) |
-| K route | community panel (rode-it / a link to the season ballot / suggest-a-correction / `⤓ Download GPX` from `GET /routes/{id}.gpx`); contract in [route-domain.md](route-domain.md); riders never get an edit link |
+| Confirmable layers (`CC_CONFIRMABLE` in `community.js`: water, services, hazards, transit, shelter, toilets, scenic, history, stays, climbs, surface) with DB id | confirmation panel (potability / "still here?"), hydrated async; contract in [moderation-and-contribution.md](moderation-and-contribution.md) |
+| R route | community panel (rode-it / a link to the season ballot / suggest-a-correction / `⤓ Download GPX` from `GET /routes/{id}.gpx`); contract in [route-domain.md](route-domain.md); riders never get an edit link |
 | Pending submission (curators) | moderation card (approve / needs-info / reject, A/R arm-then-Enter keyboard flow) — [moderation-and-contribution.md](moderation-and-contribution.md) |
 
 **Climbs on this route** (route drawer, owner decision 2026-09-15). Under the
@@ -2304,10 +2210,8 @@ where the ascent starts. The climbs near the route that it does not ride (it
 crosses them, passes their foot, rides them only downhill, or turns off well
 below the top) are not here: they are the climbs group of "Along this route"
 below (owner 2026-09-30). The rule is the ride check's
-(`RouteClimbService::climbsOn()`, route-domain.md §6.4), so dev route 24
-"Spa · Coo · Francorchamps" reads Col du Rosier and Thier Antoine here, and
-"Hockai · via RAVeL L44a" (left 2.4 km below its top) and Côte de la
-Haute-Levée in its along list. The km is the distance along
+(`RouteClimbService::climbsOn()`, route-domain.md §6.4). The km is the
+distance along
 the route in the rider's unit, whole units (`d_route_climb_at`, `{u} {n}`);
 the gradient is the climb's average (`avgGradient`), its headline figure, the
 one the climb drawer and hover line lead with. The list is fetched when the drawer opens from
@@ -2331,7 +2235,7 @@ your ride" (§9) is the same renderer and binder.
 
 **Along this route** (route drawer, owner decision 2026-09-15). Under the climbs,
 a route with a DB id shows what is along it, the same lists the ride check
-summary shows for an uploaded GPX (map-and-search.md §9), run on the route's own
+summary shows for an uploaded GPX (§9), run on the route's own
 stored line: "In the Commons along the route" (`d_along_route_h`) with the
 corridor under it ("Within 250 m of the route", `d_along_route_within`), places
 grouped by layer with `km along · m off`, then "Open coverage along the route"
@@ -2354,7 +2258,7 @@ same waiting line, "Looking along the route…" (`d_along_route_wait`); the list
 replace it, and a failed fetch removes it and shows nothing. One
 renderer and one binder serve both drawers: `along-list.js` writes the rows,
 `bindAlongList()` in `listed-place.js` wires hover and click exactly as a ride
-check row (map-and-search.md §9), after lifting the scope to the place's own region
+check row (§9), after lifting the scope to the place's own region
 when the scope hides it (`liftScopeForHit`, §4.5). `hydrateRouteAlong()` fetches
 and fills the slot.
 
@@ -2384,9 +2288,7 @@ drawer holds the route (`holdRoute()` in `drawer.js`). While it is held:
   the others dimmed), behind ANY drawer the rider opens next: a place, climb or
   coverage point from its own lists, and equally a pin, a coverage icon or a
   town the rider clicked on the map themselves. The map flies to that place and
-  the route line stays on the map. Before 2026-09-16 only the route's own lists
-  kept it, so a tap on a water pin beside the line lost the line the rider was
-  reading;
+  the route line stays on the map;
 - its listed pool places are leaf pins, never folded into a count bubble
   (`setListedPlaces(keys, 'route')` in `osm-pools.js`, run when the list
   arrives, not when the drawer opens; the ride check lists under its own owner
@@ -2405,7 +2307,7 @@ drawer holds the route (`holdRoute()` in `drawer.js`). While it is held:
   screen, keyed by its `letter:id` or, for an open coverage point, `letter:ref`
   (`drawerPlaceKeys()`). The nearest step back wins: the hop, then the held
   route, then a loaded ride's "‹ Ride summary" (`pickDrawerReturn` in
-  `ride-places.js`, map-and-search.md §9).
+  `ride-places.js`, §9).
 
 Three things let the route go (`letRouteGo()`): **closing the drawer by hand**
 (the ✕, the scrim, Escape, the phone sheet swiped away, all of which are
@@ -2424,13 +2326,10 @@ item id — a name-slug guess is never a faithful target.
 **No R ⇒ no add links either.** An empty registry row offers "＋ add" only for
 letters `/improve` can bind (`IMPROVABLE_LETTER` in `drawer.js`
 `schemaRows()`). R is not one: a route is a curated composition, not an atomic
-map feature, and `/improve` refuses `type=R` outright since the 2026-07-07
-review found the route-id / item-id collision
-(docs/specs/edit-items/R-quality-rides.md, "Editable: no, curator-only").
-The link was drawn for R all the same, and every one of its eight fields
-landed on the no-target page: owner-reported 2026-09-16 on route 111's
-Gradient-limited row. This is the rule that already keeps "Edit this item" off
-a route drawer (§6.3) and sends a route's photo prompt to `/propose-route`
+map feature, and `/improve` refuses `type=R` outright (route ids and item ids
+collide; [edit-items/R-quality-rides.md](edit-items/R-quality-rides.md),
+"Editable: no, curator-only"). The same rule keeps "Edit this item" off a
+route drawer and sends a route's photo prompt to `/propose-route`
 (`add-photo.js`).
 
 What a rider gets instead is the drawer's **correction box**: picking "A
@@ -2463,9 +2362,9 @@ and…"* cannot tell what was actually changed (owner-reported 2026-08-14). So
 clamped. Native, so Esc, focus trapping and the backdrop are the platform's
 rather than ours; rebuilt on each open from the rows last rendered, so it costs
 no second fetch and cannot show a stale log. It carries `margin:auto`
-explicitly — a modal `<dialog>` is centred by that UA rule, and the `*{margin:0}`
-reset at the top of `map.css` had been taking it away and pinning the panel to
-the top left.
+explicitly: a modal `<dialog>` is centred by that UA rule, and the `*{margin:0}`
+reset at the top of `map.css` would take it away and pin the panel to the top
+left.
 
 Every change, in the dialog and in the drawer list alike, uses the **moderator
 cards' from-to treatment** (`.cc-mod-was` / `.cc-mod-now`): the old value struck
@@ -2474,9 +2373,10 @@ became that", wherever a reader meets it.
 
 ### 6.4 Drawer accessibility
 
-- Empty-state styles meet **WCAG AA ≥ 4.5:1** against the drawer ink
-  (`--ink` #101E16): `.cc-d-rec li.empty .k` at `rgba(239,230,212,.6)`,
-  `.cc-d-add` at `.62` (values in `web/assets/styles/map.css`). Empty-vs-filled
+- Empty-state styles meet **WCAG AA ≥ 4.5:1** on both chrome themes:
+  `.cc-d-rec li.empty .k` and `.cc-d-add` both read the chrome token at
+  `rgb(var(--chrome-fg) / .72)`, above the `.65` contrast floor (§4.6; values
+  in `web/assets/styles/map.css`). Empty-vs-filled
   state is carried by **row content** (a value vs a "＋ add" link), never by
   dimmed contrast/colour alone.
 - Interactive drawer links get `:focus-visible` rings
@@ -2496,8 +2396,7 @@ carry as `meta.osm`; a pasted coordinate has none and shows no text), and
 **"In the Commons nearby · ≤ 5 km"**: every indexed item within 5 km, grouped by letter,
 nearest-first within each group. **A · road-surface segments are excluded**
 (corridor data would flood the card). **The card lands on the town itself**
-(2026-09-21, owner: a town found by search sat at z11.7 with nothing on the map
-to say where it was): `flyToPlace()` centres the town in the part of the map
+(owner 2026-09-21): `flyToPlace()` centres the town in the part of the map
 the drawer leaves free (`pinOffset`, the same framing `flyToPin` gives a
 catalogue pin) at `TOWN_ZOOM` = 14, fixed rather than "at least", and
 **the site's own pin stands on the point**: `showTownPin()` drops the mark
@@ -2507,20 +2406,17 @@ a bottom-anchored marker, cleared with the reveal pin when the drawer closes
 or another one opens. It stands above every pin (owner 2026-09-28), as do the
 hover halo and the reveal pin: `.cc-town-pin,.cc-highlight,.cc-pin.reveal`
 carry `z-index:3` in map.css, where ordinary pins carry none and stack in the
-order they were added; map popups sit above at `z-index:4`. Until then the card fitted bounds over the place and all
-nearby items (`maxZoom 13.5`) so hover-pulsed rows were always on screen; that
-framing is gone, and a nearby row's halo may now sit a drag away. Hovering a
-row still pulses an anchor-aware halo (`hlOff`, §6.1). A pulse over empty map
+order they were added; map popups sit above at `z-index:4`. A nearby row's
+halo may sit a drag away from that framing. Hovering a row pulses an anchor-aware halo (`hlOff`, §6.1). A pulse over empty map
 in Curated mode is intentional — it locates items whose dots the mode filter
 hides. Route drawers link their towns (`Starts at` / `Towns on route`) to the
 same card.
 
-**What Wikipedia and Wikidata know, fetched on first open (2026-09-07).**
-Owner: "the first time a town is shown in the drawer we see a spinner and it
-fetches text and images from wiki", the way the coverage photo already does,
-"and of course cycling related knowledge for that town". The "community notes,
-none yet" placeholder that stood there since the demo is gone; nothing was ever
-behind it. A Photon hit now carries the element ref Photon named
+**What Wikipedia and Wikidata know, fetched on first open.** Owner
+(2026-09-07): "the first time a town is shown in the drawer we see a spinner
+and it fetches text and images from wiki", the way the coverage photo already
+does, "and of course cycling related knowledge for that town". A Photon hit
+carries the element ref Photon named
 (`osm_type`+`osm_id`, `search-ui.js`), and a card opened from one shows a
 spinner slot that polls `GET /map/town/{node|way|relation}/{id}?lang=&lat=&lng=`
 (`TownController`, no-store, the coverage photo's poll and admission budgets).
@@ -2549,7 +2445,7 @@ The first reader claims a `town_summary` row for (ref, language) and queues
    (`CommonsApi::infoboxPopulation()`), on the article the reader is already
    being shown, and only when Wikidata returned no count at all.
 
-   **Measured before it was built** (2026-09-12). A survey of 100
+   **Why this shape** (measured 2026-09-12). A survey of 100
    OpenStreetMap places carrying a `wikidata` tag, ten per country across ten
    countries on five continents, stratified two cities / four towns / four
    villages:
@@ -2572,24 +2468,22 @@ The first reader claims a `town_summary` row for (ref, language) and queues
    district's headcount on a village card.
 
    Eight of the hundred have no population in any source, half of them in
-   Rwanda, where only 34 places in the whole country carry a Wikidata link.
-   Zwaag, the village this was reported against, is one of the eight: its
-   Dutch article has no infobox at all, so nothing here rescues it. National
-   statistics offices are still the source that would
-   (docs/plans/2026-09-08-town-knowledge-sources.md).
+   Rwanda, where only 34 places in the whole country carry a Wikidata link,
+   and some Dutch villages, whose articles have no infobox at all. National
+   statistics offices would be the source that fills them.
 
    The read is section 0 of the rendered article, not the wikitext: de
    holds its number in a `Metadaten Einwohnerzahl` template and nl and ja pull
    theirs from Wikidata, so only the rendered table has the resolved figure in
-   every language. Three shapes it must survive, each of which broke an
-   earlier reader: a label that stacks a count and a density over one cell
+   every language. Three shapes it must survive, each a trap for a naive
+   reader: a label that stacks a count and a density over one cell
    (nl), `Kaufkraft je Einwohner` sitting above `Einwohner` (de), and a
    `Population (2021)` header whose number is on the `• Total` row beneath it
    (en). Failure costs the card its inhabitants line and nothing else.
 
-4b. **The recommended routes that pass through the town** (`TownRoutes::near()`,
-   known issue 2026-09-06: "the Westfriese Omringdijk for Hoorn, the Great
-   Divide for Banff"). Ours, not Wikidata's: the race list below says what
+4b. **The recommended routes that pass through the town** (`TownRoutes::near()`:
+   "the Westfriese Omringdijk for Hoorn, the Great Divide for Banff"). Ours,
+   not Wikidata's: the race list below says what
    happened here, this says what a rider can ride from here, and finding it
    needs geometry rather than a claim. Served rows within
    `TownRoutes::THROUGH_M` (1 km) of the town's OpenStreetMap node, nearest
@@ -2629,7 +2523,7 @@ The first reader claims a `town_summary` row for (ref, language) and queues
    card shows up to eight, newest last edition first, as "Tour of Flanders,
    starts here, 21 editions, last 2025". This arm failing costs the town its
    list, not its paragraph; the query service is the slowest of the four
-   (7 s for Antwerp on 2026-09-07, 45 s cap).
+   (seconds for a big town, 45 s cap).
 
 The photo is the P18 path every scenic POI takes (`ResolveWikidataImage`,
 then Commons, then our own storage, never a hotlink): the handler claims the
@@ -2695,9 +2589,8 @@ read from OpenStreetMap by the server (`town_place`,
 moderation-and-contribution.md §3.1b), and the text form's link carries no
 point either. Pinned by `tests/js/town-text.test.mjs` and `TownControllerTest`.
 
-Every town takes this one path, the `CITIES` quick-picks included
-(owner-reported 2026-09-30: Spa showed a fixed English sentence with no "!",
-so it could be neither reported nor rewritten). Each `CITIES` entry is
+Every town takes this one path, the `CITIES` quick-picks included, so every
+town text can be reported and rewritten. Each `CITIES` entry is
 `{t?, ll, osm}` and nothing else. `osm` is the place element a Photon search
 for the town returns, checked on the OpenStreetMap API for its name and a
 `wikidata` tag (the resolver's only way in). Where Photon's first hit has no
@@ -2709,8 +2602,7 @@ is the town's point. Pinned by
 no races, no photo are answers, recorded; only a source that did not reply
 releases the claim so a later reader asks again. Pinned by
 `ResolveTownSummaryHandlerTest`, `TownControllerTest`, and the `watchJson`
-cases in `tests/js/commons-photo.test.mjs`. Not built: routes through a town
-from our own routes layer, which needs geometry, not Wikidata.
+cases in `tests/js/commons-photo.test.mjs`.
 
 ### 6.6 Mobile snap sheet (≤ 820 px)
 
@@ -2739,14 +2631,17 @@ Rules:
 
 ## 7. Search
 
-### 7.1 The unified item index — TRANSITIONAL
+### 7.1 The unified item index
 
 One deduplicated client-side **`ITEM_INDEX`** (built by `buildItemIndex()`,
-map.js) covers every served item exactly once, across all pools: `CATALOG`
-features (curated climbs/hazards/routes/pending) first, then PIVOT stays, then
-every bulk-OSM pool **including water** (whose dot layer registers outside
-`OSM_BULK` and must be appended explicitly). Both the search dropdown and
-`nearbyItems()` consume it. Dedup, two passes:
+`item-index.js`) covers every served catalog item of the regions the map holds
+exactly once, across all pools: `CATALOG` features (curated
+climbs/hazards/routes/pending) first, then PIVOT stays, then every pool of our
+own items **including water** (whose dot layer registers outside `OSM_BULK`
+and must be appended explicitly). OpenStreetMap reference points are not in
+it: they are searched live through `/map/coverage/search` and listed near a
+town through `/map/coverage/nearby` (coverage-provider.md). Both the search
+dropdown and `nearbyItems()` consume the index. Dedup, two passes:
 
 1. **letter + id** — the deliberate PIVOT→OSM stays concat means concat'd
    features share ids; first entry wins.
@@ -2769,8 +2664,25 @@ is rebuilt each time a region lands (`__ccApplyCatalog`). The dropdown takes its
 list from the current index on every search (`searchIdx()` in `search-ui.js`),
 so a region loaded by a new scope is searchable at once. With the reach on
 Everywhere, our items beyond the regions held come from `/v1/search?q=` (the
-public API, public-api.md §2.2): up to 30 hits, deduplicated against the index,
-each naming its region by slug. A hit of any of our layers is kept, climbs (N)
+public API, public-api.md §2.2): up to 30 hits, deduplicated against the index
+and against the coverage search's own hits of our items (its curated arm names
+the item as `itemId`; `search-dedupe.test.cjs`), each naming its region by slug.
+A row's right column says where the place is when the search knows it (a
+coverage hit's region), else its category: the group heading already names the
+category, and five castles can share "Château Gaillard". A long name wraps to
+two lines, and the full name and region are the row's tooltip. Returning to a
+search box that still holds a query (after picking a hit, or after the panel
+closed) runs it again, so the list comes back without retyping
+(`search-rows.test.cjs`). A scenic or history row shows its kind's glyph (a
+castle, not the category's temple front). A coverage hit that is our own item
+(`itemId`, with its region id `rid`) opens that item, loading its region first,
+never an OSM view of it with an extra icon over our pin. The OSM coverage discs
+size by `DISC_SIZES` 0.6 / 1.05 / 1.37 at z8 / z13 / z18, the drops by
+`DROP_SIZES` 0.66 / 1.15 / 1.5. The DOM disc pin (`.cc-pin.disc`) is
+drawn in the tile icon's own 24-box units at the same ramp: `discScale()` sets
+`--disc-s` on the map container as the map zooms, and the disc, its glyph and
+its "?" take the tile's sizes and positions in those units. One OSM point looks
+the same in both renderers at every zoom (`marker-grammar.test.cjs`). A hit of any of our layers is kept, climbs (N)
 and routes (R) as much as the pool kinds: its layer is found by letter in
 `CATALOG` (`layerOfLetter()`), not in `LETTER_KEY`, which names only the
 OpenStreetMap pools and dropped every worldwide climb (owner 2026-10-02,
@@ -2798,33 +2710,20 @@ the results the map holds; ticked, they stay, and the worldwide lookup asks
 the example in the empty search box names routes too
 (`map.search_placeholder_routes`: "A climb, town, viewpoint, route…").
 
-> **Transitional scope:** this whole-catalog-to-client model is superseded
-> going forward by [coverage-provider.md](coverage-provider.md) — the local
-> index shrinks to the curated pool and coverage search/nearby move to
-> `/map/coverage/*` endpoints. The **surviving contracts** are the dedupe
-> semantics, the unnamed-POI rules, the Photon policy (§7.2), the grouped
-> presentation (§7.3), and the drawer/halo behaviour.
-
 ### 7.2 Any-town place search — Photon policy
 
 - **Photon (komoot), never Nominatim, for type-ahead**: Nominatim's usage
-  policy forbids autocomplete. **And nothing else calls Nominatim either** —
-  as of 2026-08-09 the codebase makes zero Nominatim requests. The region
-  boundary moved to our own endpoint, and the add-climb wizard's last call
-  (which geocoded the hardcoded string "Wallonia" on every page load, wrong on
-  a worldwide wizard) was deleted rather than proxied (the wizard itself
-  followed on 2026-08-25; `improve.js` never made that call). Distributed browser
-  calls could never have honoured a per-application rate cap; the only way to
-  respect the policy at scale was to need it zero times. Photon's host is in
-  the CSP `connect-src`; Nominatim's is not, because there is nothing to
-  allow.
-- Debounced (350 ms; the local index re-ranks at 150 ms — both `setTimeout`
-  constants in the map.js search block), ≥ 3 chars, one in-flight request
+  policy forbids autocomplete. **And nothing else calls Nominatim either**:
+  the region boundary is our own endpoint. Distributed browser calls could
+  never honour a per-application rate cap; the only way to respect the policy
+  at scale is to need it zero times. Photon's host is in the CSP
+  `connect-src`; Nominatim's is not, because there is nothing to allow.
+- Debounced (350 ms; the local index re-ranks at 150 ms, both `setTimeout`
+  constants in `search-ui.js`), ≥ 3 chars, one in-flight request
   (stale ones aborted), bbox-biased to the region, filtered to place types
   (`place:city|town|village|hamlet|municipality`), capped at 6 with local
   quick-picks winning over their Photon twin.
-- **Names in the reader's language** (owner-reported 2026-09-07: Dutch UI,
-  "Antwerp" in the list). Photon takes `lang`, and speaks only `default`,
+- **Names in the reader's language** (owner 2026-09-07). Photon takes `lang`, and speaks only `default`,
   `de`, `en` and `fr`; `util.js photonLang()` maps the page language to one
   of those, and every language Photon lacks (nl, es) gets `default`, the
   place's own `name` tag, which is "Antwerpen" for a Dutch reader and
@@ -2832,21 +2731,20 @@ the example in the empty search box names routes too
   drawer title all carry that name. Pinned by `tests/js/photon-lang.test.mjs`.
 - The hardcoded `CITIES` constants remain instant quick-picks (matched first,
   no network). Each carries an OpenStreetMap ref, so a quick-pick opens the
-  same town card as the Photon hit it hides (map-and-search.md §6.5).
-- **Failure mode: silent degradation** to index + quick-picks — no toast, no
-  error state. (The muted "place search unavailable" row from the design was
-  not shipped; degradation is fully silent — see Open questions.)
-- **Shipped:** Photon results filter to
-  `properties.countrycode === 'BE'` (precise gate; bbox stays the coarse
-  pre-filter) to kill cross-border near-spellings; relaxing it for the
-  worldwide flip is a recorded open flag (§12, landed with the
-  coverage-provider work).
+  same town card as the Photon hit it hides (§6.5).
+- **Failure mode: silent degradation** to index + quick-picks: no toast, no
+  error state, no "place search unavailable" row (see Open questions).
+- **Scoped to the active country.** Photon results filter to the scope's
+  country (`CCScope.photonParams()`: `properties.countrycode` is the precise
+  gate, the bbox the coarse pre-filter, dropped for a box that crosses the
+  antimeridian, §4.5a) to kill cross-border near-spellings. With the search
+  reach on Everywhere (§4.5) Photon goes unscoped.
 
 ### 7.3 Dropdown presentation
 
 Grouped and scrollable: **Places first** (local towns, then geocoded ones),
 then items grouped by catalog letter (A–G, N–R) with colour chips, **total cap 30**
-(`CAP` in map.js `runS()`). Prefix matches rank above substring matches. The
+(`CAP` in `search-ui.js` `runS()`). Prefix matches rank above substring matches. The
 flat `sMatches` list preserves display order so keyboard navigation
 (↓/↑/Enter/Escape, `role="combobox"`/`listbox`) is untouched by grouping.
 
@@ -2855,7 +2753,7 @@ transitions, never per keystroke** — mutating an attribute of the element bein
 IME-composed restarts composition on Android Chrome, re-anchoring the caret at
 0 and reversing typed text ("spa" → "aps").
 
-### 7.4 A pasted coordinate pair (2026-09-12)
+### 7.4 A pasted coordinate pair
 
 Right-click on the map copies the spot as `52.367612, 5.239157`
 (`initCoordPopup`, map-init.js). The search box reads that same text back, so
@@ -2905,14 +2803,14 @@ catalog row for it. The page then names the row's reference
 (`MapController::itemLinkRef()`, `window.CC_ITEM_LINK_REF`, only for a served
 `source = 'osm'` row with a `node/` or `way/` reference) and the map opens it
 as a `?ref=` link would: drawer, pulsing halo, scope lifted to the point
-(owner 2026-10-03: a ballot link to "Fort de Marchovelette" opened nothing).
+(owner 2026-10-03).
 
 **A link whose target is gone says so.** When `?item=`, `?pending=` or
 `?route=` resolves to nothing on this map (the row was retired, merged, or the
 link came from another environment where ids differ), the map shows the toast
 "This place is no longer on the map." (`d_link_gone`) instead of silently
 opening the rider's own area. Keeping ids stable across a provider refresh and
-a fallback point in the link are open work (docs/TODO.md, 2026-09-25).
+a fallback point in the link are open work (docs/TODO.md).
 
 **The target's own framing is the last word, and the scope lifts to its region,
 not to its country.** Every link below resolves its target first, then lifts the
@@ -2927,24 +2825,20 @@ read as `applyScope`'s `keepCamera`), and claiming it means two things:
   late (`drawScope()` waits for two `requestAnimationFrame`s so the busy line
   can paint before the freeze), so its `fitBounds` would land AFTER the
   target's and show the whole region instead of the place in it.
-  Owner-reported 2026-09-16: a city card for Liege left the map at z7.3 over
-  the whole of Belgium, and Liege was never framed.
 - **The scope does not DRAW until that framing has landed** (`drawScope()`
   waits for the map's `moveend`, or `CAMERA_WAIT_MS` = 1400 ms for an opener
   that moves no camera at all). Drawing a scope holds the main thread for about
   a second; an ease started before that loses every frame it had, because the
   animation's clock runs on while nothing renders and the map draws only the
-  final position. Owner-reported 2026-09-16: "it teleports", measured at 18
-  frames in 3.5 s with the zoom crossing 9.13 to 10.52 in one 1.2 s gap. The
-  flight now runs on the OLD scope's layers, which are cheap because they are
+  final position (owner 2026-09-16: "it teleports"). The flight runs on the
+  OLD scope's layers, which are cheap because they are
   the ones already drawn, and the busy line names the region being drawn while
   it flies.
 - **A hop onto ground the map has never drawn is CUT, not panned**
   (`moveCamera()` in `map-init.js`, decision in `camera-hop.js`). A map
   animates over the tiles it has, and it only ever fetched the ones for
-  viewports it has actually drawn, so a long first hop slides for a second over
-  the style's background colour: owner-reported 2026-09-16, "now it scrolls to
-  the location while show a grey screen". **No arc shape fixes that.** A
+  viewports it has actually drawn, so a long first hop would slide for a
+  second over the style's background colour. **No arc shape fixes that.** A
   flatter arc (`flyTo`'s `curve` / `minZoom`) keeps the camera at higher zooms,
   where the same 270 km corridor needs MORE tiles and none of those are cached
   either; zooming further out needs low-zoom tiles the session never fetched;
@@ -2957,31 +2851,25 @@ read as `applyScope`'s `keepCamera`), and claiming it means two things:
   - **far** (cut): the canvas fades out over 180 ms, `jumpTo`, and fades back
     in on the first frame drawn where it landed (`CUT_DARK_MAX_MS` = 900 ms as
     the floor under a map that never paints). The fade hides the TRANSITION,
-    never the loading: waiting for `idle` instead measured 2.2 s of dark on a
-    first visit, a longer blank than the grey slide it replaced.
-  - Measured on the owner's own hops at a 1391 px map: Friesland to the Liege
-    route is a 269 km move against a 234 km viewport, so it cuts; Friesland to
-    Groningen is 62 km and a pin in the town being read is under a kilometre,
-    so both animate. Those are exactly the moves they called wrong and right
-    ("when i now go back to groningen it does pan and zoom").
+    never the loading: waiting for `idle` instead would mean seconds of dark
+    on a first visit.
+  - At a 1391 px map, Friesland to a route near Liège is a 269 km move against
+    a 234 km viewport, so it cuts; Friesland to Groningen is 62 km and a pin
+    in the town being read is under a kilometre, so both animate.
   - Every camera move the app makes goes through this door: `flyToPin()`,
     `fitMapTo()` (which asks `cameraForBounds` for the camera without moving,
     so the padding is already baked into centre and zoom) and `moveCamera()`
     itself. `prefers-reduced-motion` drops the fade, not the cut: the cut IS
     the reduced-motion answer.
 - **The tiled overlays park for the flight** (`tile-park.js`, parked by
-  `drawScope()` and put back when the camera lands). The coverage archive and
-  the surface archive carry 320 and 152 of the style's 637 layers; flying into
-  an area nobody has asked for yet makes the map fetch, parse and place every
-  one of them for the new viewport while the ease runs. A source with no
-  visible layer is asked for nothing, so the basemap and the catalogue lines
-  already in memory carry the animation, and the overlays come back with the
-  region. Owner-reported 2026-09-16: "page goes blank and rebuild on the now
-  focussed route", and the tell that named it, "back to Liege it also works so
-  it is only when it loads new data": the second visit has that data.
-  Visibility is the whole mechanism, 472 `setLayoutProperty` calls measured
-  under 1 ms, unlike `setFilter`, which revalidates the whole style each time
-  (coverage.js `NO_VALIDATE`).
+  `drawScope()` and put back when the camera lands). The coverage and surface
+  archives carry most of the style's layers; flying into an area nobody has
+  asked for yet would make the map fetch, parse and place every one of them
+  for the new viewport while the ease runs. A source with no visible layer is
+  asked for nothing, so the basemap and the catalogue lines already in memory
+  carry the animation, and the overlays come back with the region. Visibility
+  is the whole mechanism: `setLayoutProperty` is cheap, unlike `setFilter`,
+  which revalidates the whole style each time (`NO_VALIDATE`, §4.5).
 
 The ride check claims the camera the same way (§9).
 
@@ -2989,26 +2877,24 @@ The ride check claims the camera the same way (§9).
 |---|---|
 | `?feature=<name>` | exact-name match over `CATALOG` features: activates the layer if hidden, opens the drawer, flies to the pin. Falls back to one unscoped coverage search when the local index misses. Kept for links already in the wild; the site's own links to a catalog place name it by id (`?item=`): the contributions page, the messages page, the dashboard's "still there?" rows and the photo page. A name link cannot tell same-named places apart and opens nothing for an unnamed one, or for a submission whose title is not the item's name now. |
 | `?ref=<osm ref>` | one coverage POI by its OSM id (`node/462149319`, `way/…`). Resolved by a single `/map/coverage/poi/{osmType}/{osmId}` call, which is the only thing that knows the letter and the coordinates; lifts the scope on its own hit, like `?feature=`, and flies to the point straight after. |
-| `?item=<id>` | one catalog item by DB id: the desk's "what did I approve" link and the drawer's share link. Opens the drawer, flies to the pin. **Lifts the view mode** when the rider's own mode would not draw the target: to the lowest rung that does (Confirmed before Everything), for this visit only, never persisted, with a toast naming both modes (`liftModeFor`, panels.js; the rung rule is `modeShows` in filters.js, the same predicate `featureVisible` reads). `?feature=` and `?route=` lift the same way. Owner decision 2026-08-25: a curator approved a climb, opened the link in their own Best of mode, and found the halo over an empty map, because the climb was Verified but not a pick. |
+| `?item=<id>` | one catalog item by DB id: the desk's "what did I approve" link and the drawer's share link. Opens the drawer, flies to the pin. **Lifts the view mode** when the rider's own mode would not draw the target: to the lowest rung that does (Confirmed before Everything), for this visit only, never persisted, with a toast naming both modes (`liftModeFor`, panels.js; the rung rule is `modeShows` in filters.js, the same predicate `featureVisible` reads). `?feature=` and `?route=` lift the same way (owner 2026-08-25: a verified climb that is not a pick must not open as a halo over an empty Best of map). |
+| `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
+| `?route=<id>` | opens that R route **selected** (curator Routes desk link, a rider's proposals, the town card): lifts the scope to the route's own region (`rid`) when the scope does not draw it, and to **every region the route's line passes through** when it crosses a region or country border (`rids`, §4.5), so the places along the whole route are drawn (`liftScopeForHit`; `featureLL` in util.js reads a line's first point for a route with no region), lifts the view mode like `?item=` (above), opens the drawer, and frames the **whole route** clear of the drawer (`fitBounds` with `drawerFitPadding` and `pathBounds`, util.js: 400 px on the right on a desktop, the half-screen sheet on a phone; max zoom 14), then highlights it and shows the curator corrections overlay. The scope holds the camera for its own change, so the route's framing has the last word. **A route waiting for review** is not in the catalog payload: when the link names one, `MapController` puts that one route in the page as `window.CC_ROUTE_PREVIEW` (`CatalogProvider::submittedRoute`), for a curator whose moderation scope covers its region (the same 2FA-complete gate as the pending payload) and for the rider who proposed it, and for nobody else. It joins the routes layer for that visit with a "Status: waiting for review" row and no ride, vote, correction, download or report controls, because none of those endpoints take a route that is not live. The reveal pin (§12) stays as the fallback when the target is still not drawn. |
+| `?town=<osm ref>&ll=<lat>,<lng>&name=<name>` | a town's card, exactly as the town search opens it (`openPlace(name, {ll, osm})`, places.js): the card with its about text (keyed by the OSM ref, §6.5), the nearby places, the site's town pin, and the camera at `TOWN_ZOOM`. A town is not a catalog feature, so nothing on the map knows where it is: `ll` places it. `townFromQuery()` (share-links.js) is the gate: the ref must be `node|way|relation/<1-16 digits>`, `ll` two plain decimals within ±90 / ±180, and `name` (trimmed, at most 200 characters) falls back to the ref; anything else opens nothing. The link stays out of the catalog lift above (`_dlHit`): `openPlace` lifts the scope to the town's own region itself when the rider's scope does not hold the point, the same transient lift as the search. The link an approved town text's message carries (moderation-and-contribution.md §7.7). |
 
 **Both id params may carry a readable tail:** `?item=482/cote-de-wanne`, `?ref=node/462149319/roche-aux-faucons`. The id is everything before the first `/` after it (`idFromShare` / `refFromShare` in `share-links.js`); the slug is discarded on read. A renamed place, a hand-trimmed link and every bare-id link already sent out all open the same point. Slashes stay unencoded in the query value, because a `%2F` in the middle defeats the reason the slug is there.
-| `?pending=<id>` | curator deep link from the /moderate queue: activates the ⚑ layer, opens the submission drawer |
-| `?route=<id>` | opens that R route **selected** (curator Routes desk link, a rider's proposals, the town card): lifts the scope to the route's own region (`rid`) when the scope does not draw it, and to **every region the route's line passes through** when it crosses a region or country border (`rids`, §4.5), so the places along the whole route are drawn (`liftScopeForHit`; `featureLL` in util.js reads a line's first point for a route with no region), lifts the view mode like `?item=` (above), opens the drawer, and frames the **whole route** clear of the drawer (`fitBounds` with `drawerFitPadding` and `pathBounds`, util.js: 400 px on the right on a desktop, the half-screen sheet on a phone; max zoom 14), then highlights it and shows the curator corrections overlay. The scope holds the camera for its own change, so the route's framing has the last word. **A route waiting for review** is not in the catalog payload: when the link names one, `MapController` puts that one route in the page as `window.CC_ROUTE_PREVIEW` (`CatalogProvider::submittedRoute`), for a curator whose moderation scope covers its region (the same 2FA-complete gate as the pending payload) and for the rider who proposed it, and for nobody else. It joins the routes layer for that visit with a "Status: waiting for review" row and no ride, vote, correction, download or report controls, because none of those endpoints take a route that is not live. The reveal pin (§12) stays as the fallback when the target is still not drawn. Owner-reported 2026-09-15: the Routes desk's "Open this route on the map" for route 111 left the map on North Holland. |
-| `?town=<osm ref>&ll=<lat>,<lng>&name=<name>` | a town's card, exactly as the town search opens it (`openPlace(name, {ll, osm})`, places.js): the card with its about text (keyed by the OSM ref, §6.5), the nearby places, the site's town pin, and the camera at `TOWN_ZOOM`. A town is not a catalog feature, so nothing on the map knows where it is: `ll` places it. `townFromQuery()` (share-links.js) is the gate: the ref must be `node|way|relation/<1-16 digits>`, `ll` two plain decimals within ±90 / ±180, and `name` (trimmed, at most 200 characters) falls back to the ref; anything else opens nothing. The link stays out of the catalog lift above (`_dlHit`): `openPlace` lifts the scope to the town's own region itself when the rider's scope does not hold the point, the same transient lift as the search. The link an approved town text's message carries (moderation-and-contribution.md §7.7). |
 
 The same lift applies to a ride-check row (§9), commons places and followed routes alike: opening a listed place the rider's mode hides lifts to the lowest rung that draws it, exactly as `?item=` does. Clear undoes a ride's lift (§4.2).
 
-**A coverage point opened by ref names its type like a click does.** `?ref=`, a coverage search hit and a ride-check coverage row open the drawer from the detail response, which carries tags but not the tile's `t` label, so the Type row fell back to the layer name ("Getting there" for the Enkhuizen - Medemblik ferry, owner-reported 2026-09-15). `paintCoverageDetail()` (coverage.js) then reads `t` for that `ref` out of the coverage tiles (`readTileType()`, `tileTypeLabel()` in osm-tags.js) and re-renders the drawer body with it: "Ferry", "Train station". Tiles are only fetched for a source a visible layer uses, and the point's layer is often off or hidden by the mode, so the lookup adds a zero-radius, filtered circle layer per candidate source-layer (the point's country and `zz`, `coverageSourceLayers()`) until it ends. It waits for the source's `sourcedata` events, never a timer, and ends on a hit, when a newer drawer render supersedes it, or when the map goes idle with no hit (the rider moved on before the tile arrived; the drawer keeps the layer name).
+**A coverage point opened by ref names its type like a click does.** `?ref=`, a coverage search hit and a ride-check coverage row open the drawer from the detail response, which carries tags but not the tile's `t` label, so on its own the Type row would fall back to the layer name ("Getting there" for a ferry). `paintCoverageDetail()` (coverage.js) then reads `t` for that `ref` out of the coverage tiles (`readTileType()`, `tileTypeLabel()` in osm-tags.js) and re-renders the drawer body with it: "Ferry", "Train station". Tiles are only fetched for a source a visible layer uses, and the point's layer is often off or hidden by the mode, so the lookup adds a zero-radius, filtered circle layer per candidate source-layer (the point's country and `zz`, `coverageSourceLayers()`) until it ends. It waits for the source's `sourcedata` events, never a timer, and ends on a hit, when a newer drawer render supersedes it, or when the map goes idle with no hit (the rider moved on before the tile arrived; the drawer keeps the layer name).
 
 ### 8.1 "Add a climb here": the map is a starting point, not only a reader
 
-*(owner asked 2026-08-14: "how do we add a new climb via the map as a normal
-user". The answer was that you cannot. Every other letter had a bridge: a
-surface line has click-to-Edit, an item has "Edit this item", a coverage POI
-opens the wizard with its ref and geometry seeded, while a climb had only the
-`/contribute` link in the map-top box. A rider had to leave, find the wizard,
-and then re-locate the climb from scratch in its own small map having just been
-looking straight at it.)*
+Every letter has a bridge from the map into the contribution form: a surface
+line has click-to-Edit, an item has "Edit this item", a coverage POI opens the
+form with its ref and geometry seeded, and a new climb starts from the view the
+rider is looking at (owner 2026-08-14: "how do we add a new climb via the map
+as a normal user").
 
 - **Where:** a `.grp.cc-addclimb` block in the Ride tools panel, under ride-check
   and Scout, inside the same `ROLE_USER` gate. The panel's order (owner
@@ -3021,11 +2907,10 @@ looking straight at it.)*
   never stored) before pressing it. The target, `/improve`, is `ROLE_USER`, and
   a link that lands on a login wall is worse than no link; anonymous riders
   reach it through `/contribute`, which lists it.
-- **Target (since 2026-08-25):** `/improve?type=climbs&mode=add&lat=&lng=&z=`,
-  the climb add arm of the one contribution form
-  ([edit-items/N-climbs.md](edit-items/N-climbs.md)). The dedicated `/add-climb`
-  wizard was retired that day; `/add-climb?lat=&lng=&z=` still answers, as a
-  **301** to the same target, so old links and bookmarks keep working.
+- **Target:** `/improve?type=climbs&mode=add&lat=&lng=&z=`, the climb add arm
+  of the one contribution form ([edit-items/N-climbs.md](edit-items/N-climbs.md)).
+  `/add-climb?lat=&lng=&z=` answers with a **301** to the same target, so old
+  links and bookmarks keep working.
 - **What travels:** the **camera only**. `panels.js` `initAddClimbHere()`
   rewrites the href on every `move`, keeping the link's own query
   (`type`, `mode`) and setting `lat`/`lng`/`z`, coordinates rounded to
@@ -3034,18 +2919,16 @@ looking straight at it.)*
 - **What does NOT travel:** the foot pin. Seeding it from the map centre was
   the tempting version and it is wrong twice: one point cannot say which end of
   the climb it is, and a pin the rider did not place is a claim they did not
-  make. This is the same rule the wizard's own paste-a-coordinate path already
+  make. This is the same rule the form's own paste-a-coordinate path
   follows.
 - **Server side:** validation lives in the redirect.
   `ContributeController::addClimb()` (the `/add-climb` route) forwards `lat`,
   `lng` and `z` only when latitude/longitude are numeric and in range; junk
-  drops both (a junk link degrades to the wizard's own default centre, never to
+  drops both (a junk link degrades to the form's own default centre, never to
   a broken map), and zoom is **clamped** to 3..18 rather than rejected, because
   a bad zoom in an otherwise good link should not throw the coordinates away.
   `improve.js` honours `?lat=&lng=&z=` on its side (the same range check, `z`
-  clamped to 3..18 again) and opens the map at that view. Until 2026-08-25 this
-  was `ContributeController::startView()` returning `{lat, lng, zoom}` or `null`
-  into `window.CC_CLIMB_VIEW` for `add-climb.js`; both are gone.
+  clamped to 3..18 again) and opens the map at that view.
 
 ## 9. Ride-check ("what's along my GPX?")
 
@@ -3078,14 +2961,13 @@ requirement).
   geometry is simplified via `TrackProcessor::simplify()`. **Deliberately no
   privacy trim** — the track is shown only to its uploader and never stored;
   trimming would drop matches near the rider's real start/end.
-- **Corridor query idiom (hard-won, sub-second where the naive form took
-  62 s):**
+- **Corridor query idiom (sub-second, where the naive form takes about a
+  minute):**
   `WITH track AS MATERIALIZED (…GeomFromGeoJSON…), corridor AS MATERIALIZED (ST_Buffer(track::geography, :radius)::geometry)`
   probed with **`ST_Intersects(i.geom, corridor)`** — `ST_DWithin(::geography)`
   cannot use the GIST index, and an inlined track CTE re-parses the GeoJSON per
   row per `ST_*` call. The same corridor arms answer for a recommended route's
-  own line in the route drawer (`RideCheckService::alongRoute()`, map-and-search.md
-  §6.3). Letters **B–G and O–Q only** (the SQL excludes A and N; R is absent
+  own line in the route drawer (`RideCheckService::alongRoute()`, §6.3). Letters **B–G and O–Q only** (the SQL excludes A and N; R is absent
   because routes live in `recommended_route` and get their own overlap query).
   States gated by `ItemState::servedSqlTuple()`. Per match:
   `ST_Distance` (metres off-track) and
@@ -3097,8 +2979,7 @@ requirement).
   is those metres over the track's geodesic length, the ordering key, and
   km-along is `frac` times the ride's own distance (`distanceKm`), so the last
   place on the ride never reads past its end. A share in degrees times the
-  length in metres is kilometres out on a long route that turns: on
-  Liège-Bastogne-Liège (dev route 111) it puts places up to 3.9 km early. Cap
+  length in metres would be kilometres out on a long route that turns. Cap
   `MAX_PER_LETTER = 200` per letter with a `truncated` flag. A row's `ll` is
   the geometry's own point or first vertex.
 - **Climbs (N) are listed by the route drawer's rule, not by the corridor**
@@ -3115,10 +2996,7 @@ requirement).
   the radius the rider picked, the same radius as the corridor groups, and is
   not in the ridden set, so no climb is listed twice. A climb the ride passes
   at its foot, crosses, rides only downhill or leaves well below its top is
-  near; so on dev route 23 "Spa · Sankt Vith" the ride reads Col du Rosier
-  under "Climbs on your ride", and Thier Antoine (foot passed at 28 m) and
-  "Hockai · via RAVeL L44a" (157 m of a 17 km line ridden) in the climbs
-  group. The corridor query leaves letter N out, so a climb's stored point
+  near. The corridor query leaves letter N out, so a climb's stored point
   (the line's foot, catalog-data-model.md §6a) never lists it, and a climb
   without a line (fewer than two `attributes.route` pairs) is not listed. A
   climb row's `ll` is the climb's **foot** (the first `attributes.route`
@@ -3196,10 +3074,10 @@ requirement).
     provenance note, so uncurated OSM never reads as a verified Commons pick.
     The summary's two lists are written by `along-list.js` and wired by
     `bindAlongList()` in `listed-place.js`, the same code as the route drawer's
-    lists (map-and-search.md §6.3), so a long group folds after 2 rows behind
+    lists (§6.3), so a long group folds after 2 rows behind
     "Show N more" the same way.
   - A followed route opened from the summary holds its route like any route
-    drawer (map-and-search.md §6.3); "‹ Ride summary" lets it go, so the summary
+    drawer (§6.3); "‹ Ride summary" lets it go, so the summary
     never sits over a highlighted route.
   - **Clear** removes the track, releases the listed set (the pools cluster
     every place again) and the place shown anyway, and restores the rider's
@@ -3260,8 +3138,8 @@ requirement).
   panel's status line; closing the drawer by hand drops the route focus and a
   lifted scope, never the ride.
   Radius change re-posts; a new file replaces the previous overlay.
-  Ride-check owns the **`.cc-ride-*`** CSS namespace (it once collided with
-  the route-community `.cc-rc-*`). Errors surface as translated inline
+  Ride-check owns the **`.cc-ride-*`** CSS namespace, apart from the
+  route-community `.cc-rc-*`. Errors surface as translated inline
   messages.
 
 ## 10. Street-level imagery (Mapillary)
@@ -3277,13 +3155,14 @@ requirement).
   imagery coverage, the Street-View-blue analogy). Hidden by default; inserted
   below pin markers, above ride/surface lines (§5 stacking).
 - **Click → image:** the nearest rendered `image`-layer dot within a widening
-  pixel search resolves the image id **straight from the tiles** — no Graph
-  API on the click path (the Graph-API bbox resolver is retained as an unwired
-  legacy fallback). A "you-are-here" camera marker (`.cc-pin`, `#05CB63`)
+  pixel search resolves the image id **straight from the tiles**: no Graph
+  API on the click path (`mapillary.js` keeps a Graph-API bbox resolver as an
+  unwired fallback). A "you-are-here" camera marker (`.cc-pin`, `#05CB63`)
   drops at the image location and tracks the viewer's `image` event.
-- **Viewer:** official mapillary-js in a bottom dock, **lazy-injected from
-  unpkg on first open** (SRI-pinned, double-injection guard) so the map never
-  pays for it. Dock slides up immediately with a loading state; ⤢ toggles
+- **Viewer:** official mapillary-js in a bottom dock, **lazy-injected on first
+  open** from our own vendored copy (`assets/lib/mapillary-js-4.1.2.js` and
+  `.css`, digested URLs in `window.CC_VENDOR`; double-injection guard) so the
+  map never pays for it. Dock slides up immediately with a loading state; ⤢ toggles
   fullscreen; ✕ closes and removes the marker. The dock owns the bottom edge on
   mobile (hides the filters peek).
 - **Resizable dock:** top-edge grip (`#mlyGrip`, `role="separator"`), pointer
@@ -3308,9 +3187,9 @@ requirement).
 
 ## 11. Ride heatmap (no letter) and the illustrative planner
 
-**The heatmap is HIDDEN as of 2026-08-31**, and the planner's code is DELETED.
-The rest of this section describes what is behind the comments, because putting
-the heatmap back is uncommenting two blocks and nothing else.
+**The heatmap is HIDDEN** (owner 2026-08-31), and there is no planner. The rest
+of this section describes what is behind the comments, because putting the
+heatmap back is uncommenting two blocks and nothing else.
 
 - **Hidden until there are rides to draw (owner 2026-08-31).** With a handful of
   contributed routes a heatmap does not read as a thin feature, it reads as a
@@ -3320,8 +3199,8 @@ the heatmap back is uncommenting two blocks and nothing else.
   and the season chips (`#season`) in `map/index.html.twig`, and the whole
   **derived** category on the contribute hub, heading included, because the
   heatmap was the only card in it and a heading over an empty grid reads as
-  broken rather than as coming. Nothing else changed: the layer, the season
-  facet and the scope filter all still work, and everything that reads those
+  broken rather than as coming. The layer, the season facet and the scope
+  filter all still work, and everything that reads those
   elements does so through `querySelectorAll` or a null check, so their absence
   is a no-op. Every string stays in all five catalogues. What it needs before it
   returns is in docs/TODO.md, and the first item is the hard one: somebody has
@@ -3340,25 +3219,12 @@ the heatmap back is uncommenting two blocks and nothing else.
   real anonymized-ingest heatmap (map-match-then-discard, k-anonymity) is
   unbuilt; its privacy contract lives in the public wiki data catalog and gets
   its own spec when built.
-- The **"Plan from Spa" planner is off the map chrome as of 2026-08-02** (owner
-  decision; §4.3's chip groups came back the same day, the planner did not). It was openly faked: distance chips
-  picked the nearest sample loop by km, drew it, and opened a drawer carrying
-  the warning "⚠ Faked — the real planner stitches from the heatmap" — honest,
-  but a control that looks like a planner and is not one. The real planner, and
-  starting it from the rider's position, remain deferred; Locate me (§4.0) only
-  centres the map.
-- **The planner's code was deleted on 2026-08-31.** For four weeks after the
-  control went, `planner.js` was still imported, still called, still
-  `modulepreload`ed on every map view, and still shipped ten translated strings
-  in five languages for a drawer nobody could open. `initPlanner()` queried
-  `#planner .chip`, got an empty list from an element that is not in the markup,
-  and did nothing. `scope-ui.js` still listed two layer ids nothing creates.
-  Fifty-three lines of module, one preload, two dead ids and fifty catalogue
-  entries, all removed; each of the ten strings was checked to be used by that
-  module alone. The reasoning was already written here and in the map template's
-  own comment, so this only finished the job the 2026-08-02 decision started.
-  The frozen pre-Symfony demo at `atlas/demo/map.html` keeps its own copy, which
-  is what a frozen snapshot is for.
+- **No route planner on the map** (owner 2026-08-02). A planner that only
+  picks the nearest sample loop is a control that looks like a planner and is
+  not one. The real planner, and starting it from the rider's position, are
+  deferred; Locate me (§4.0) only centres the map. The frozen pre-Symfony demo
+  at `atlas/demo/map.html` keeps its own faked planner, which is what a frozen
+  snapshot is for.
 - **Ride privacy:** route/heat fixture tracks have their first and last
   ~350–750 m trimmed (`trimEnds()`, **seeded by route id** so the trim is
   deterministic per route — located-correction fractions are stored relative
@@ -3383,14 +3249,12 @@ else, never the simulated `c` attribute). **One definition of verified**, ruled
 the public API (`PublicItemsProvider`) and the Best-of readiness gate
 (`CuratedReadiness`) all read that one column, so a `?` disappearing from a pin
 means the record itself was promoted and a curator sees the same thing a rider
-does. Before this, three queries each carried their own extra clause and a
-single confirmation drew a full pin over an Unverified row. How that state is
+does. How that state is
 earned is `ItemConfirmationService`'s question, not this one, and is specified
 in moderation-and-contribution.md §10. An authority row (a Tourisme Wallonie stay, a RIVM tap) wears the
 dashed "?" community pin until a rider confirms it: the register's authority is
 its rank (data-provider-hierarchy.md §4), not a dot, and the harvester writes
-new rows `unverified` (its §5 rule 6). Ruled 2026-09-06, the night the first
-RIVM harvest drew 3283 taps nobody here had seen with the plain pin; pinned by
+new rows `unverified` (its §5 rule 6; owner 2026-09-06). Pinned by
 `CatalogProviderTest::testAuthorityRowsAreNotVerifiedByProvenanceAlone`.
 
 **Three tiers, the pin legend's three, and the same three in every list**
@@ -3402,10 +3266,9 @@ rider's or a register's); "OSM" is the imported baseline the catalogue does
 not hold. The legend's middle pin is therefore headed "Unconfirmed", not
 "Community, unconfirmed". A provider is a source, not a tier: the record
 panel names it. For that to hold, the item index carries UNNAMED items too
-(name = the layer's label, `unnamed` set, off text search): before, an
-unnamed registry tap reached the nearby list only through its OpenStreetMap
-twin, at the twin's position (up to `OsmLinker::TIGHT_M` off, so the hover
-highlight missed the pin) with no tier at all. Every leaf pin is a
+(name = the layer's label, `unnamed` set, off text search), so an unnamed
+registry tap reaches the nearby list as itself, at its own position and with
+its tier, not through its OpenStreetMap twin. Every leaf pin is a
 bottom-anchored teardrop, confirmed or not, so the highlight offset is the
 pin body's for both.
 
@@ -3437,15 +3300,12 @@ again.
 
 **A name deep-link must resolve the CURATED item, never its OSM twin.**
 `resolveLocalFeature()` searches three places, in order: `CATALOG[].features`,
-the PIVOT stays collection, and — since 2026-08-02 — the curated **pools**
-(`osmLayers[key].data`, the letters served as feature collections). The pools
-were the gap: a fountain's features live there and never in
-`CATALOG[].features`, so `/map?feature=<name>` resolved nothing locally and
-fell through to `openCoverageFeatureByName()`, which opens the tile-derived
-OpenStreetMap record. A rider following "view it on the map" from their own
-approved contribution therefore landed on a plain OSM point with none of their
-name, photos or attributes on it, and reasonably concluded the submission had
-been lost. `openPoolFeature()` opens the same drawer the pin's own click
+the PIVOT stays collection, and the curated **pools** (`osmLayers[key].data`,
+the letters served as feature collections). A fountain's features live in a
+pool and never in `CATALOG[].features`; without the pools `/map?feature=<name>`
+would fall through to `openCoverageFeatureByName()`, which opens the
+tile-derived OpenStreetMap record without the rider's name, photos or
+attributes. `openPoolFeature()` opens the same drawer the pin's own click
 builds, so deep link, search hit and pin click all show one record.
 
 **One counted confirmation is the whole threshold.** A single
@@ -3478,13 +3338,12 @@ counting it would let a rider verify their own contribution
   one place, so `?item=` / `?feature=` / `?route=` lift the mode to the lowest
   rung that draws it, transiently and with a toast (§8). A search pick inside a
   session keeps the reveal pin, because the rider chose the mode a moment ago.
-- **4.** Photon `countrycode === 'BE'` filter (§7.2).
+- **4.** Photon results filter to the scope's country (§7.2).
 
 ## 13. Pending map enhancements — **Specified, pending implementation**
 
-Approved 2026-06-26; deliberately deferred to the Symfony app (never built in
-the HTML demo). Current map.js has no hash-state code and a static elevation
-SVG.
+Approved 2026-06-26. The map has no hash-state code, and the climb profile
+([climb-elevation.md §6](climb-elevation.md)) is not interactive.
 
 ### 13.1 Full-state permalink
 
@@ -3533,9 +3392,8 @@ the current keyless source; Copernicus GLO-30 / SRTM for elevation
 [edit-items/N-climbs.md](edit-items/N-climbs.md)); **Photon** for type-ahead
 place search, and **no Nominatim at all** (§7.2); **our own Valhalla**, via
 `POST /contribute/route` → `RouteSnapper`, for the climb editor's draw preview
-(on `/improve`; the `/add-climb` wizard that first used it was retired 2026-08-25) —
-the public OSRM demo server it used to call is gone from the CSP, and the
-proxy keeps OSRM's response shape so the editor's parsing was untouched.
+on `/improve`. No public routing server is in the CSP; the proxy answers in
+OSRM's response shape, so the editor parses one shape.
 The coverage tiles themselves are specified in
 [coverage-provider.md](coverage-provider.md).
 
@@ -3549,10 +3407,9 @@ The coverage tiles themselves are specified in
   `CC_I18N` but only reachable via the legacy Graph-API fallback, which no
   click path calls — dead-string cleanup vs re-wiring is undecided.
 - **`?feature=` matches by exact name**, not id — two same-named features
-  resolve to the last one scanned. Superseded for coverage POIs by `?ref=`
-  (map-and-search.md §8, 2026-08-24), which the share button now prefers;
-  `?feature=` stays for catalog features and for links already in the wild.
-- **Region boundary + default bounds are Wallonia-hardcoded** (`map.js`
-  `addRegionBoundary('Wallonia')`, the boot `bounds`, and the Photon bbox) —
-  worldwide readiness for the map shell has no owner yet beyond the coverage
-  plan's Belgium-first staging.
+  resolve to the last one scanned. Coverage POIs use `?ref=` and catalog items
+  `?item=` (§8), which the share button prefers; `?feature=` stays for links
+  already in the wild.
+- **The fallback camera is a Wallonia box.** With no scope box (`CCScope.bbox()`
+  null), `catalog-load.js` opens the map on fixed Wallonia `bounds`. Whether a
+  worldwide default should replace it has no owner yet.

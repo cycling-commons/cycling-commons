@@ -26,8 +26,8 @@
    of catalog.js's colours (cc_category_colours), shared with the map's Key
    panel. #}
 {% set mkc = cc_category_colours() %}
-{# Light fills whose glyph flattens dark instead of white (txtOn in util.js). #}
-{% set mklt = ['B', 'E', 'G'] %}
+{# Light fills take an ink glyph, by the rule the map uses (CategoryTable::inks()). #}
+{% set mklt = cc_category_inks()|filter(i => i != '#fff')|keys %}
 
 
 
@@ -123,7 +123,7 @@
   <h2>{{ 'legend.kinds_h'|trans }}</h2>
   <p class="mk-note">{{ 'legend.kinds_note'|trans }}</p>
   {% for kLetter, kinds in cc_kind_icons() %}
-  <p class="mk-grp">{{ ('item_type.' ~ {'B':'water-food','D':'bike-services'}[kLetter] ~ '.label')|trans }}</p>
+  <p class="mk-grp">{{ ('item_type.' ~ {'B':'water-food','D':'bike-services','G':'shelter','P':'scenic-views','Q':'history-culture'}[kLetter] ~ '.label')|trans }}</p>
   <div class="mk-rows">
     {% for kind, kd in kinds %}
     <div class="mk-row mk-kind" data-kind="{{ kLetter }}:{{ kind }}">

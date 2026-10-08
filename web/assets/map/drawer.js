@@ -45,7 +45,7 @@ let _historyReq = 0;
 
 /* Which letters an empty field may offer "＋ add" for (docs/specs/map-and-search.md
    §6.2). Every letter but R: a route is a curated composition, not an atomic map
-   feature, and `/improve` refuses `type=R` outright since the 2026-07-07 review
+   feature, and `/improve` refuses `type=R` outright
    (the route-id/item-id collision; docs/specs/edit-items/R-quality-rides.md,
    "Editable: no, curator-only"). The link was still drawn for R, and every one
    of its eight fields landed on the "Pick a place to improve" fallback:
@@ -255,7 +255,10 @@ export function osmDrawer(layer, p, ll, src){
   const originLbl = provider ? provider.name : (community?sourceLabel(p.srcType):drawerOrigin(p.srcType, sourceLabel));
   // serviceKind label wins over raw OSM p.t when present.
   const kindLbl = p.serviceKind && ({shop:D.kindShop, station:D.kindStation, pump:D.kindPump}[p.serviceKind] || lbl);
-  const typeLbl = kindLbl || p.t || lbl;
+  // P and Q: the kind's own label in the rider's language, over the raw OSM `t` (osm-data-architecture.md §5a).
+  const typeField = ((window.CC_FIELD_SCHEMA || {})[(layer || {}).letter] || []).find(f => f.key === 'type');
+  const placeLbl = p.type && typeField && (typeField.choices || {})[p.type];
+  const typeLbl = kindLbl || placeLbl || p.t || lbl;
   let rec=[{label:D.type||'Type', value:typeLbl, method: provider ? provider.name : drawerOrigin(p.srcType, sourceLabel)}];
   if(p.town && layer.letter!=='O') rec.push({label:D.town||'Town', value:p.town});  // docs/specs/coverage-provider.md §2 — no province row when region_id is null (no Wallonia fallback).
   if(p.prov) rec.push({label:D.province||'Province', value:p.prov});
@@ -738,16 +741,18 @@ function buildRecord(layer, f){
   const confirmPanel = (CC_CONFIRMABLE.has(layer.key) && f.id!=null)
     ? `<div class="cc-cf" data-item="${f.id}"><div class="cc-cf-body" data-cf-body></div><div class="cc-cf-login" hidden>${D.loginConfirm||'Log in to confirm'} · <a href="/login">${I18N.login||'Log in'}</a></div></div>`
     : '';
-  /* Condition reports (closed/gone/out of order) as an edit, not a confirmation. Signed-in only. */
+  /* Condition reports (closed/gone/out of order) as an edit, not a confirmation. Signed-in only.
+     They write the "Still as mapped?" field, so only a letter that has it offers them:
+     hazards, climbs and stays do not, and the server refuses a report there. */
+  const hasCondition = ((window.CC_FIELD_SCHEMA || {})[layer.letter] || []).some(fd => fd.key === 'condition');
+  const condButtons = (CC_BREAKABLE.has(layer.key)
+      ? `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="out_of_order">⚠ ${D.osmBroken||'Out of order'}</button>`
+      : '')
+    + `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="closed">⌀ ${D.osmClosed||'Closed'}</button>`
+    + `<button type="button" class="cc-d-act confirm-osm-gone" data-osm-stance="gone">✕ ${D.osmGone||'Not there anymore'}</button>`;
   // Not for surface: closures ride seasonalClosure on the ordinary edit form.
-  const stateRow = (CC_CONFIRMABLE.has(layer.key) && layer.key!=='surface' && f.id!=null && window.CC_CONFIRM_TOKEN)
-    ? `<div class="cc-osmcf" data-item-cond="${f.id}">`
-        + (CC_BREAKABLE.has(layer.key)
-            ? `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="out_of_order">⚠ ${D.osmBroken||'Out of order'}</button>`
-            : '')
-        + `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="closed">⌀ ${D.osmClosed||'Closed'}</button>`
-        + `<button type="button" class="cc-d-act confirm-osm-gone" data-osm-stance="gone">✕ ${D.osmGone||'Not there anymore'}</button>`
-      + '</div>'
+  const stateRow = (CC_CONFIRMABLE.has(layer.key) && hasCondition && layer.key!=='surface' && f.id!=null && window.CC_CONFIRM_TOKEN)
+    ? `<div class="cc-osmcf" data-item-cond="${f.id}">` + condButtons + '</div>'
     : '';
   /* docs/specs/moderation-and-contribution.md §10 — one-tap OSM confirm (POST /osm/confirm). */
   // Surface tile lines keep their own confirm flow (mints the item).
@@ -761,12 +766,7 @@ function buildRecord(layer, f){
             ? `<button type="button" class="cc-d-act confirm-osm" data-osm-stance="potable">✓ ${D.waterA||'Drinking water'}</button>`
               + `<button type="button" class="cc-d-act confirm-osm-no" data-osm-stance="not_potable">✕ ${D.notPotable||'Not potable'}</button>`
             : `<button type="button" class="cc-d-act confirm-osm" data-osm-stance="exists">✓ ${D.confirmHere||'Confirm it\u2019s here'}</button>`)
-
-        + (CC_BREAKABLE.has(layer.key)
-            ? `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="out_of_order">⚠ ${D.osmBroken||'Out of order'}</button>`
-            : '')
-        + `<button type="button" class="cc-d-act confirm-osm-warn" data-osm-stance="closed">⌀ ${D.osmClosed||'Closed'}</button>`
-        + `<button type="button" class="cc-d-act confirm-osm-gone" data-osm-stance="gone">✕ ${D.osmGone||'Not there anymore'}</button>`
+        + (hasCondition ? condButtons : '')
       + '</div>')
     : '';
 
@@ -1107,7 +1107,7 @@ function gradStrip(grad, f){
   const axis=`<div class="cc-grad-axis"><span class="cc-grad-tick cc-grad-tick-0">0</span>${ticks.join('')}<span class="cc-grad-tick cc-grad-tick-end">${uKm(totalKm, total<10?1:0)}</span></div>`;
   /* Steep-window width travels with the figure (docs/specs/climb-elevation.md §5). */
   const steepW = (f && f.steepWindowM) ? Number(f.steepWindowM) : 100;
-  /* Strip opens the full profile (docs/specs/climb-elevation.md §4b). */
+  /* Strip opens the full profile (docs/specs/climb-elevation.md §4c). */
   return `<div class="cc-elev-cap">${tpl(D.gradProfile||'Gradient profile · per {b} · avg {a}% · steepest {w} {m}%', {a:avg, m:max, b:uM(binM), w:uM(steepW)})}</div>
     <button type="button" class="cc-grad-open" data-cc-profile aria-label="${escPend(D.openProfile||'Open the full profile')}" title="${escPend(D.openProfile||'Open the full profile')}">
       <div class="cc-grad${dnMax?' has-descent':''}" style="--up:${upH}px;--dn:${dnH}px">${bars}</div>${axis}
@@ -1354,6 +1354,8 @@ export function clearRevealPin(){ if(_revealMarker){ _revealMarker.remove(); _re
 export function revealPinAt(layer, ll){
   clearRevealPin();
   // A hit nobody has confirmed, drawn as ours with the "?" and the pulse.
+  // Its own pulse is the ring: the drawer's halo at the point sat on the pin's tip, a second ring off centre.
+  clearHighlight();
   const el=pinEl(layer, {rung:1, custody:'ours'});
   el.classList.add('reveal');
   _revealMarker=fanPin(new maplibregl.Marker({element:el, anchor:'bottom'}).setLngLat([ll[1],ll[0]]).addTo(map), null);

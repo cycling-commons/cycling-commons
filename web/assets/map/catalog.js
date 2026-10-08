@@ -27,7 +27,7 @@ export const CATALOG = [
   ,{ key:'stays', letter:'O', label:LAYER_L10N.stays||'Where to sleep', color:'#B5532E', icon:TYPE_ICON('O'), kind:'point', exp:true, votable:true, features:[] }
   ,{ key:'hazards', letter:'E', label:LAYER_L10N.hazards||'Hazards & conditions', color:'#C8923A', icon:TYPE_ICON('E'), kind:'point', exp:false, votable:false, features:[]}
   ,{ key:'transit', letter:'F', label:LAYER_L10N.transit||'Getting there', color:'#3E7D8C', icon:TYPE_ICON('F'), kind:'point', exp:false, votable:false, features:[] }
-  ,{ key:'shelter', letter:'G', label:LAYER_L10N.shelter||'Shelter', color:'#9A8FB6', icon:TYPE_ICON('G'), kind:'point', exp:false, votable:false, features:[] }
+  ,{ key:'shelter', letter:'G', label:LAYER_L10N.shelter||'Shelter', color:'#7A6DA5', icon:TYPE_ICON('G'), kind:'point', exp:false, votable:false, features:[] }
   ,{ key:'scenic', letter:'P', label:LAYER_L10N.scenic||'Scenic views', color:'#2C5440', icon:TYPE_ICON('P'), kind:'point', exp:true, votable:true, features:[] }
   ,{ key:'history', letter:'Q', label:LAYER_L10N.history||'History & culture', color:'#6E5849', icon:TYPE_ICON('Q'), kind:'point', exp:true, votable:true, features:[] }
   ,{ key:'experience', letter:'R', label:LAYER_L10N.experience||'Recommended routes', color:'#FF5A1F', icon:TYPE_ICON('R'), kind:'line', exp:false, votable:true, features:[] }

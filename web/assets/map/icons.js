@@ -26,13 +26,17 @@ export function hasWitness(cd, cutoff){
   return typeof cd==='string' && typeof cutoff==='string' && /^\d{4}-\d{2}-\d{2}$/.test(cd) && cd>=cutoff;
 }
 export const witnessCutoff = () => (typeof window.CC_WITNESS_CUTOFF==='string' ? window.CC_WITNESS_CUTOFF : undefined);
-/* The badge on a minted icon: the same ochre disc and mono "?" the DOM pin
-   wears (map.css .cc-pin.q::after), top-right of the 24-box. */
-function drawBadge(x, S){
-  const r=4.6, cx=24-r-0.4, cy=r+0.4;
-  x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.fillStyle='#C8923A'; x.fill();
-  x.lineWidth=0.8; x.strokeStyle='rgba(20,22,14,.55)'; x.stroke();
-  x.fillStyle='#14160E'; x.font='700 7.2px ui-monospace,Menlo,Consolas,monospace'; x.textAlign='center'; x.textBaseline='middle';
+/* A badged twin is minted on a 32-box with the 24-box icon centred in it, so
+   the "?" sits outside the disc's rim instead of on the glyph. */
+const BADGE_BOX=32, BADGE_PAD=(BADGE_BOX-24)/2;
+/* The badge on a minted icon: the same ink disc, paper ring and ochre mono
+   "?" the DOM pin wears (pins.css .cc-pin.q::after), its centre `off` up and
+   right of the icon's centre, in BADGE_BOX units. */
+function drawBadge(x){
+  const r=6.1, off=9.2, cx=BADGE_BOX/2+off, cy=BADGE_BOX/2-off;
+  x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.fillStyle='#14160E'; x.fill();
+  x.lineWidth=0.8; x.strokeStyle='#F3EBD8'; x.stroke();
+  x.fillStyle='#E3A649'; x.font='700 9.4px "Spline Sans Mono",ui-monospace,Menlo,Consolas,monospace'; x.textAlign='center'; x.textBaseline='middle';
   x.fillText('?', cx, cy+0.4);
 }
 // Resolve the two colour tokens against a category colour.
@@ -108,10 +112,10 @@ export function kindSvg(letter, kind, color, size){
 }
 
 // Mint every path-drawn kind as a map image, `kind-<letter>-<kind>` and its
-// badged twin `-q`, in the same 24-box (×2) miniIcon() uses, so kinds and
+// badged twin `-q`, in the same boxes (×2) miniIcon() uses, so kinds and
 // discs share one size ramp.
 export function mintKindIcons(){
-  const S=2, D=24*S;
+  const S=2;
   Object.keys(KIND_ICONS).forEach(letter=>{
     const key=Object.keys(KEY_LETTER).find(k=>KEY_LETTER[k]===letter);
     const color=((key && layerByKey[key])||{}).color||'#6b6f5e';
@@ -119,14 +123,16 @@ export function mintKindIcons(){
       const d=KIND_ICONS[letter][kind]; if(!d.paths) return;
       [false,true].forEach(badge=>{
         const id=kindImageId(letter, kind, badge); if(map.hasImage(id)) return;
+        const D=(badge?BADGE_BOX:24)*S;
         const cv=document.createElement('canvas'); cv.width=D; cv.height=D; const x=cv.getContext('2d');
         x.scale(S,S);
+        if(badge) x.translate(BADGE_PAD, BADGE_PAD);
         d.paths.forEach(p=>{
           const path=new Path2D(p.d);
           x.fillStyle=kindFill(p.fill, color); x.fill(path);
           if(p.stroke){ x.lineWidth=p.width||1.5; x.lineJoin='round'; x.strokeStyle=p.stroke; x.stroke(path); }
         });
-        if(badge) drawBadge(x, S);
+        if(badge){ x.translate(-BADGE_PAD, -BADGE_PAD); drawBadge(x); }
         map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
       });
     });
@@ -166,9 +172,10 @@ export function miniIcon(key, glyph, suffix, badge){
   const layer=layerByKey[key], color=(layer||{}).color||'#6b6f5e';
   const r=parseInt(color.slice(1,3),16),g=parseInt(color.slice(3,5),16),b=parseInt(color.slice(5,7),16);
   const dark=(0.299*r+0.587*g+0.114*b)<150;
-  const S=2, D=24*S, R=D/2;
+  // R is the centre; the disc keeps its 24-box radius on the larger badged box.
+  const S=2, D=(badge?BADGE_BOX:24)*S, R=D/2;
   const cv=document.createElement('canvas'); cv.width=D; cv.height=D; const x=cv.getContext('2d');
-  x.beginPath(); x.arc(R,R,R-2.5*S,0,Math.PI*2);
+  x.beginPath(); x.arc(R,R,9.5*S,0,Math.PI*2);
   x.fillStyle=color; x.fill();
   x.lineWidth=1.6*S; x.strokeStyle='rgba(20,22,14,.85)'; x.stroke();
   const drawn = !glyph && (key==='scenic' ? CAMERA_PATH : key==='toilets' ? TOILET_PATH : key==='climbs' ? MOUNTAIN_PATH : null);
@@ -189,7 +196,7 @@ export function miniIcon(key, glyph, suffix, badge){
     for(let i=0;i<gp.length;i+=4){ if(gp[i+3]>25){ gp[i]=dark?255:20; gp[i+1]=dark?255:22; gp[i+2]=dark?255:14; gp[i+3]=255; } }
     gx.putImageData(gd,0,0); x.drawImage(gc,0,0);
   }
-  if(badge){ x.save(); x.scale(S,S); drawBadge(x, S); x.restore(); }
+  if(badge){ x.save(); x.scale(S,S); drawBadge(x); x.restore(); }
   map.addImage(id,{width:D,height:D,data:new Uint8Array(x.getImageData(0,0,D,D).data.buffer)},{pixelRatio:S});
   return id;
 }
@@ -198,6 +205,32 @@ export function clusterEl(layer, count){
   const d=document.createElement('div');
   d.className='cc-cluster'; d.style.setProperty('--c', layer.color); d.textContent=count;
   return d;
+}
+
+/* P and Q: the kind IS the glyph (App\Catalog\PlaceKind,
+   docs/specs/osm-data-architecture.md §5a). A catalog item carries it as
+   `type`, a coverage point as the tile's `kind`; one without a known kind
+   keeps the category glyph. */
+export const PLACE_LETTER={shelter:'G', scenic:'P', history:'Q'};
+/* English label → kind (window.CC_PLACE_KIND_LABELS). A tile's `t` is the
+   contract's selector label, which is the kind's label (CoverageContractTest),
+   so a tile the pipeline has not stamped with `kind` still names it. */
+export const PLACE_KIND_LABELS = window.CC_PLACE_KIND_LABELS || {};
+export function kindOfLabel(letter, t){
+  return (t && (PLACE_KIND_LABELS[letter] || {})[t]) || null;
+}
+export function placeKind(key, p){
+  const letter=PLACE_LETTER[key]; if(!letter) return null;
+  const k=(p||{}).type || (p||{}).kind || kindOfLabel(letter, (p||{}).t);
+  return k && kindDef(letter, k) ? k : null;
+}
+// A kind's glyph without its disc, in currentColor, for a badge that is already the category colour.
+export function kindGlyphSvg(letter, kind, color, size){
+  const d=kindDef(letter, kind); if(!d || !d.paths) return '';
+  const paths=d.paths.filter(p=>!(p.fill==='@cat' && p.stroke))
+    .map(p=>`<path d="${p.d}" fill="${p.fill==='@ink' ? 'currentColor' : kindFill(p.fill, color)}"/>`).join('');
+  const s=size||15;
+  return `<svg viewBox="4 4 16 16" width="${s}" height="${s}" aria-hidden="true">${paths}</svg>`;
 }
 
 function pinGlyph(layer, props){
@@ -240,12 +273,17 @@ export function pinEl(layer,props){
   const white = txtOn(layer.color)==='#fff';
   // The shared state badges ride on top of any category's pin (§6.4).
   const badge = stateBadgeHtml(stateOf(props));
+  const place = placeKind(layer.key, props);
+  // The pin is already the category disc, so the glyph alone: the kind's own disc would shrink it to a dot.
+  if(place){ d.innerHTML=`<span class="kd" style="color:${white?'#fff':'#14160e'}">${kindGlyphSvg(PLACE_LETTER[layer.key], place, layer.color, 17)}</span>`+badge; return d; }
   if(layer.key==='scenic'){ d.innerHTML=`<span>${cameraSvg(white?'#fff':'#20241c')}</span>`+badge; return d; }
   if(layer.key==='toilets'){ d.innerHTML=`<span>${toiletSvg(white?'#fff':'#20241c')}</span>`+badge; return d; }
   if(layer.key==='climbs'){ d.innerHTML=`<span>${mountainSvg(white?'#fff':'#20241c')}</span>`+badge; return d; }
   // Water & food: the kind IS the glyph, drawn from the registry, not the 💧.
   if(layer.key==='water'){ d.innerHTML=`<span class="kd">${kindSvg('B', waterKind(props), layer.color, 17)}</span>`+badge; return d; }
-  d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`+badge; return d;
+  // Bike services draw their kind glyph; every other category its drawn icon, never the emoji (a shelter showed a coloured ⛑).
+  if(layer.key==='services'){ d.innerHTML=`<span${white?' style="filter:brightness(0) invert(1)"':''}>${pinGlyph(layer, props)}</span>`+badge; return d; }
+  d.innerHTML=`<span style="display:flex;color:${white?'#fff':'#14160e'}">${layerGlyph(layer, 15)}</span>`+badge; return d;
 }
 
 // Tile icon-image id for the selected-coverage overlay (survives cluster
@@ -254,6 +292,8 @@ export function coverageIconId(key, tp){
   tp=tp||{};
   const badge = !hasWitness(tp.cd, witnessCutoff());
   if(key==='water') return kindImageId('B', waterKind(tp), badge);
+  const place = placeKind(key, tp);
+  if(place) return kindImageId(PLACE_LETTER[key], place, badge);
   if(key==='services'){
     if(tp.kind==='station') return miniIcon('services', SERVICE_GLYPH.station, 'station', badge);
     if(tp.kind==='pump') return miniIcon('services', SERVICE_GLYPH.pump, 'pump', badge);
@@ -265,8 +305,43 @@ export function coverageIconId(key, tp){
    category, and the food half of letter B) shares one ramp; the drop is
    narrower than a disc in the same 24-box, so it rides a slightly larger one
    to keep the height the drops always had. */
-export const DISC_SIZES=[0.42,0.7,0.95];
-export const DROP_SIZES=[0.46,0.76,1.09];
+export const DISC_SIZES=[0.6,1.05,1.37];
+export const DROP_SIZES=[0.66,1.15,1.5];
+/* The disc ramp at any zoom, as the tile layer's linear interpolate computes
+   it. The DOM disc pin (.cc-pin.disc) is drawn in units of this scale, so one
+   OSM point is one size in both renderers at every zoom. */
+export function discScale(zoom){
+  const z=[8,13,18], s=DISC_SIZES;
+  if(zoom<=z[0]) return s[0];
+  if(zoom>=z[2]) return s[2];
+  const i=zoom<z[1] ? 0 : 1;
+  return s[i]+(s[i+1]-s[i])*(zoom-z[i])/(z[i+1]-z[i]);
+}
+/* Where each category's OSM icons start (docs/specs/coverage-provider.md §4):
+   the tile icons and a pool row drawn as a small disc pin both wait for it.
+   Water first, at z11 where the tiles hold every point; the rest at z12. */
+export const COV_ICON_MIN_ZOOM={water:11};
+export function iconMinZoom(key){ return COV_ICON_MIN_ZOOM[key] ?? 12; }
+/* Our own teardrops grow with the zoom: 70% at z8 and wider, full at z14. */
+const PIN_SIZES=[[8,0.7],[14,1]];
+export function pinScale(zoom){
+  const [[z0,s0],[z1,s1]]=PIN_SIZES;
+  if(zoom<=z0) return s0;
+  if(zoom>=z1) return s1;
+  return s0+(s1-s0)*(zoom-z0)/(z1-z0);
+}
+/* A climb's summit and gradient chips show from here (map.css .cc-z-lt11). */
+const SUMMIT_MIN_ZOOM=11;
+/* The zoom-driven pin styles, on the map container: the disc and teardrop
+   scales, and the class that hides summit chips zoomed out. */
+function syncZoomStyles(){
+  const el=map.getContainer(), z=map.getZoom();
+  el.style.setProperty('--disc-s', discScale(z).toFixed(3));
+  el.style.setProperty('--pin-s', pinScale(z).toFixed(3));
+  el.classList.toggle('cc-z-lt11', z < SUMMIT_MIN_ZOOM);
+}
+map.on('zoom', syncZoomStyles);
+syncZoomStyles();
 export function covIconSizes(key, tp){
   if(key!=='water') return DISC_SIZES;
   const k=waterKind(tp);

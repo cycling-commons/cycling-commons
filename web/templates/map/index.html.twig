@@ -73,7 +73,7 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5" opacity=".45"/></svg>
       {# Filter dot: shown by shell.js whenever a chip filter is narrowing the
          map, so "where did my data go?" has an answer on the rail as well as
-         in the on-map pill (Task 6). #}
+         in the on-map pill. #}
       <span class="fdot" aria-hidden="true"></span>
     </button>
     <button class="ib" id="ib-tools" type="button" data-panel="tools" data-tip="{{ 'map.rail_tools'|trans }}" aria-label="{{ 'map.rail_tools'|trans }}" aria-controls="dwr" aria-expanded="false">
@@ -140,7 +140,7 @@
         <div class="co" id="regionCoords">{{ 'map.coords'|trans }}</div>
       </div>
 
-      {# Region scope selector (map-and-search.md §4.5 Phase 2): the area
+      {# Region scope selector (map-and-search.md §4.5): the area
          the map + search filter to. Sits directly above View mode. Buttons carry a
          data-scope token (region:<slug> / country:<cc> / everywhere) that map.js
          hands to window.CCScope; labels come from region.<slug>.label. #}
@@ -148,7 +148,7 @@
       <div class="grp">
         <h3>{{ 'map.region'|trans }}</h3>
         <div class="scope-toggle" id="regionScope">
-          {# My area (map-and-search.md §4.5 Phase 4): the rider's home-base
+          {# My area (map-and-search.md §4.5): the rider's home-base
              circle, FIRST in the group. Revealed by map.js only when CCScope has a
              My-area source (logged-in base location or anonymous circle); the token is
              the bare literal 'myarea' — never coordinates. #}
@@ -161,8 +161,8 @@
              place to look at; the whole world is a search reach, offered as
              "Search everywhere" in the search box (map-and-search.md §4.5). #}
         </div>
-        {# "Set my area" cold-start prompt (map-and-search.md §4.5
-           Phase 4): the pref-chip pattern — hidden here, revealed by map.js only
+        {# "Set my area" cold-start prompt (map-and-search.md §4.5):
+           the pref-chip pattern, hidden here, revealed by map.js only
            when the rider has NO My-area source yet (no base location, no anon
            circle) and hasn't dismissed it. Tapping derives the base from the map
            centre (Komoot's suggest-home pattern); coordinates are rounded to 2
@@ -236,8 +236,9 @@
         <button class="layer ov-row" id="ovSurface" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#C8923A;--ic:#101E16"><i class="sw-g">▰</i></span><span class="nm">{{ 'map.surfaces'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
         <button class="layer ov-row" id="ovRoutes" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#7A4FCF;--ic:#EFE6D4"><i class="sw-g">⤳</i></span><span class="nm">{{ 'map.route_network'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
         {# Measured traffic from riders' radars, curators only and only what passed
-           the disclosure rules (docs/specs/traffic-measurements.md §4.6). #}
-        {% if pending_is_curator|default(false) %}
+           the disclosure rules (docs/specs/traffic-measurements.md §4.6), and
+           only once the `traffic.map_layer_live` system setting is 1. #}
+        {% if pending_is_curator|default(false) and traffic_layer_live|default(false) %}
         <button class="layer ov-row" id="ovTraffic" type="button" hidden aria-pressed="false"><span class="sw" style="--c:#C98A0B;--ic:#101E16"><i class="sw-g">≋</i></span><span class="nm">{{ 'map.mtraffic_layer'|trans }}</span><span class="ct">{{ 'map.overlay_off'|trans }}</span></button>
         <div class="traffic-ctl" id="trafficCtl" hidden>
           <label for="trafficGroup">{{ 'map.mtraffic_group'|trans }}</label>
@@ -256,7 +257,7 @@
 
       {# Filters. Every group in here can make the map show LESS, which is why
          they are gathered under one heading with one explanation, and why the
-         on-map pill exists (Task 6): a rider must never have to guess that a
+         on-map pill exists: a rider must never have to guess that a
          chip three scrolls up is the reason a place is missing.
 
          f-match / f-optin say which way a group narrows, and the pill's reset
@@ -337,7 +338,7 @@
         </div>
         </div>
 
-        {# Preference prefilter chip (spec 2026-07-14): revealed by panels.js
+        {# Preference prefilter chip (map-and-search.md §4.3): revealed by panels.js
            only when the logged-in rider has saved bike types. Never silent -
            the chip is the visible "your prefs are filtering routes"
            affordance and its own opt-out. #}
@@ -505,8 +506,9 @@
          categories that have more than one kind appear. #}
       <div class="grp">
         <h3>{{ 'legend.kinds_h'|trans }}</h3>
-        {% set kindCol = {'B': '#8FB6A8', 'D': '#6b6f5e'} %}
-        {% set kindInk = {'B': '#14160e', 'D': '#fff'} %}
+        {% set kindCol = cc_category_colours() %}
+        {# The glyph colour on each fill, by the rule the map uses (CategoryTable::inks()). #}
+        {% set kindInk = cc_category_inks() %}
         {% for kLetter, kinds in cc_kind_icons() %}
         {% for kind, kd in kinds %}
         <div class="mkp-row mk-kind" data-kind="{{ kLetter }}:{{ kind }}"><span class="mkp-sw">{% if kd.paths is defined %}{% include 'partials/_kind_icon.html.twig' with {letter: kLetter, kind: kind, size: 24, color: kindCol[kLetter]|default('#6b6f5e'), ink: kindInk[kLetter]|default('#fff')} %}{% else %}<span class="mk-disc" style="--c:{{ kindCol[kLetter]|default('#6b6f5e') }}"><span class="ic">{{ kd.glyph }}</span></span>{% endif %}</span><div class="mkp-t"><b>{{ ('legend.kind_' ~ kLetter|lower ~ '_' ~ kind ~ '_h')|trans }}</b><span>{{ ('legend.kind_' ~ kLetter|lower ~ '_' ~ kind ~ '_t')|trans }}</span></div></div>
@@ -918,7 +920,7 @@ window.CC_VENDOR = {{ {
 
 {% if is_granted('ROLE_USER') %}
 <script nonce="{{ csp_nonce() }}">
-  {# Ride-check (spec 2026-07-14 §4.3): endpoint + stateless CSRF token for the
+  {# Ride-check (map-and-search.md §9): endpoint + stateless CSRF token for the
      logged-in GPX upload. Riders-only block — anonymous visitors get no control. #}
 
   {# Confirming an OSM place has no item to fetch a token from — the point is
@@ -940,6 +942,10 @@ window.CC_VENDOR = {{ {
      not drift: merge() has to produce one PHP array before encoding, so
      every key shares one flag set. HEX-escaped "\/" and unescaped "/"
      decode to the identical JS string either way. #}
+  {# Map hints this person closed (map-and-search.md §4.5), with the close
+     endpoint and its stateless CSRF token; `url` only for a logged-in person,
+     so an anonymous reader gets no close button. #}
+  window.CC_HINTS = {{ ({closed: map_hints ?? []}|merge(app.user ? {url: path('map_hint_close', {hint: 'HINT'}), token: csrf_token('map-hint')} : {}))|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }};
   window.CC_MY_AREA = {{ (my_area ?? {})|merge({url: path('map_my_area_set'), token: csrf_token('my-area')})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# View-mode persistence: a
      logged-in rider's view-mode choice is saved to their PROFILE, not
@@ -995,6 +1001,7 @@ window.CC_VENDOR = {{ {
   {# The category icon set, letter → {glyph, svg}: ItemType::iconSet(), the only definition. #}
   window.CC_TYPE_ICONS = {{ type_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# The kind glyph set, letter → kind → drawing: KindIcons::set(), the only definition. #}
+  window.CC_PLACE_KIND_LABELS = {{ place_kind_labels|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_KIND_ICONS = {{ kind_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_BASEMAP_ICONS = {{ basemap_icons|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Surface line colours, class → hex: SurfaceVocabulary::LINE_COLOUR, the only palette. #}
@@ -1003,7 +1010,7 @@ window.CC_VENDOR = {{ {
      drawer, toasts) — built by MapController::mapI18n, one source of truth. #}
   window.CC_I18N = {{ map_i18n|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_PREFS = {{ rider_prefs|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
-  {# Region registry (map-and-search.md §4.5 Phase 2): id/slug/cc/bbox
+  {# Region registry (map-and-search.md §4.5): id/slug/cc/bbox
      per region, consumed by window.CCScope for the scope selector + viewport. #}
   window.CC_REGIONS = {{ regions|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# IANA timezone => onboarded country, for the anonymous home-country hint (CountryTimezones). #}
@@ -1026,6 +1033,8 @@ window.CC_VENDOR = {{ {
      rides; it does not need a tile artifact to exist. #}
   window.CC_SCOUT_TAGS = {{ scout_tags|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   window.CC_SCOUT_DETAILS = {{ scout_details|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  window.CC_SCOUT_ANSWERS = {{ scout_answers|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
+  window.CC_SCOUT_KINDS = {{ scout_kinds|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
   {# Surface label → map line class (SurfaceVocabulary::TO_TILE_CLASS): a stretch
      recolours when the rider changes its surface. #}
   window.CC_SURFACE_CLASS = {{ scout_surface_class|default({})|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};
@@ -1093,7 +1102,7 @@ window.CC_VENDOR = {{ {
   }|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   <script src="{{ asset('contribute/media-upload.js') }}"></script>
 {% endif %}
-{# Frontend review 2026-07-12 C5: map.js execution must wait for the catalog
+{# map.js execution must wait for the catalog
    globals (catalog-load.js injects it after the region fetches resolve), but
    its DOWNLOAD must not sit serialized behind them: the preload puts both in
    flight together, so boot() executes map.js straight from cache.
@@ -1112,8 +1121,8 @@ window.CC_VENDOR = {{ {
 {{ importmap([], {nonce: csp_nonce()}) }}
 {# Preload the WHOLE module graph, not just the entry: browsers do not walk
    import graphs for modulepreload, so a single map.js preload left the other
-   ~25 modules downloading in serial dependency waves after the catalog landed
-   (frontend review 2026-08-09 #1). The list is maintained by hand — a module
+   ~25 modules downloading in serial dependency waves after the catalog landed.
+   The list is maintained by hand, a module
    missing here still works, it just loads one wave later. Preloading does not
    execute anything, so the catalog gate below is untouched. #}
 {# MapLibre is ~1 MB of module across two files, and the second is only

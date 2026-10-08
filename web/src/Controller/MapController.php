@@ -23,6 +23,7 @@ use App\Catalog\ItemType;
 use App\Catalog\KindIcons;
 use App\Catalog\MapTheme;
 use App\Catalog\MapViewMode;
+use App\Catalog\PlaceKind;
 use App\Catalog\RegionBoundaryProvider;
 use App\Catalog\RegionLabels;
 use App\Catalog\RegionRegistryProvider;
@@ -37,6 +38,7 @@ use App\Coverage\RoadPiecesManifest;
 use App\Coverage\RoutesManifest;
 use App\Coverage\SurfaceManifest;
 use App\Entity\User;
+use App\Map\MapHint;
 use App\Media\PhotoLocationConfirmation;
 use App\Moderation\DeskSeen;
 use App\Moderation\ModerationScopeProvider;
@@ -145,6 +147,10 @@ final class MapController extends AbstractController
             'map_theme' => $user instanceof User
                 ? $user->getMapTheme()->value
                 : MapTheme::Dark->value,
+            // Map hints this person closed (map-and-search.md §4.5); anonymous readers close none.
+            'map_hints' => $user instanceof User
+                ? array_map(static fn (MapHint $h): string => $h->value, $user->getClosedHints())
+                : [],
             'my_area' => $user instanceof User ? [
                 'lat' => $user->getBaseLat(),
                 'lng' => $user->getBaseLng(),
@@ -171,6 +177,8 @@ final class MapController extends AbstractController
             // window and drops its "?". One clock for tiles and pins.
             'witness_cutoff' => $freshness->staleBefore(new \DateTimeImmutable())->format('Y-m-d'),
             'voting_live' => 1 === $settings->get(SettingsRegistry::COMMUNITY_VOTING_LIVE),
+            // The measured-traffic layer, for curators, once an admin switches it on (traffic-measurements.md §4.6).
+            'traffic_layer_live' => 1 === $settings->get(SettingsRegistry::TRAFFIC_MAP_LAYER_LIVE),
             'vote_url' => $this->generateUrl('vote'),
             'item_link_ref' => self::itemLinkRef($request, $db),
             'catalog_boot' => $this->catalogBoot($request, $catalogProvider),
@@ -229,6 +237,32 @@ final class MapController extends AbstractController
         }
         $params['scout_tags'] = array_map(static fn (array $byDetail): array => $byDetail[''], $offers);
         $params['scout_details'] = $offers;
+        // The value each sub-menu answer fills (NOTICE · POTHOLES → Potholes), in the rider's language, for the review card.
+        $answers = [];
+        foreach (ScoutTag::DETAIL_FIELDS as $tagType => $byDetail) {
+            foreach ($byDetail as $detail => $fields) {
+                $value = (string) end($fields);
+                $home = ScoutTag::lettersFor($tagType, $detail)[0] ?? '';
+                $answers[$tagType][(string) $detail] = $translator->trans(PlaceKind::label($home, $value) ?? $value);
+            }
+        }
+        $params['scout_answers'] = $answers;
+        // docs/specs/osm-data-architecture.md §5a: P and Q tags name their kind in review.
+        $kindLabels = [];
+        foreach (PlaceKind::LETTERS as $kindLetter) {
+            $kindLabels[$kindLetter] = array_map(static fn (string $label): string => $translator->trans($label), PlaceKind::labels($kindLetter));
+        }
+        $filled = [];
+        foreach (ScoutTag::DETAIL_FIELDS as $tagType => $byDetail) {
+            foreach ($byDetail as $detail => $fields) {
+                if (isset($fields['type'])) {
+                    $filled[$tagType][(string) $detail] = $fields['type'];
+                }
+            }
+        }
+        $params['scout_kinds'] = ['labels' => $kindLabels, 'byPick' => ScoutTag::DETAIL_KINDS, 'filled' => $filled];
+        // English label → kind: a tile's `t` names the kind before the pipeline stamps `kind`.
+        $params['place_kind_labels'] = array_combine(PlaceKind::LETTERS, array_map(static fn (string $l): array => array_flip(PlaceKind::labels($l)), PlaceKind::LETTERS));
         // Surface label → map line class, so a changed dropdown recolours the stretch.
         $params['scout_surface_class'] = SurfaceVocabulary::TO_TILE_CLASS;
 
@@ -442,9 +476,9 @@ final class MapController extends AbstractController
             'scoutBundlePhotoRemove' => 'd_scout_bundle_photo_remove', 'scoutBundlePhotosFailed' => 'd_scout_bundle_photos_failed',
             'scoutBundleUnmatched' => 'd_scout_bundle_unmatched',
             'scoutAddPhoto' => 'd_scout_add_photo', 'scoutPhotoAttached' => 'd_scout_photo_attached', 'scoutPhotosAttached' => 'd_scout_photos_attached',
-            'scoutRadar' => 'd_scout_radar',
+            'scoutRadar' => 'd_scout_radar', 'scoutRadar1' => 'd_scout_radar_1',
             'scoutPassNoFix' => 'd_scout_pass_nofix',
-            'scoutTrafficFacts' => 'd_scout_traffic_facts',
+            'scoutTrafficFacts' => 'd_scout_traffic_facts', 'scoutTrafficFacts1' => 'd_scout_traffic_facts_1',
             'scoutTrafficUnmatched' => 'd_scout_traffic_unmatched',
             'scoutTrafficNothing' => 'd_scout_traffic_nothing',
             'scoutTrafficLoading' => 'd_scout_traffic_loading',
@@ -452,12 +486,14 @@ final class MapController extends AbstractController
             'scoutTrafficFailed' => 'd_scout_traffic_failed',
             'scoutTrafficLimited' => 'd_scout_traffic_limited',
             'scoutTrafficLine' => 'd_scout_traffic_line',
+            'scoutDayGroup' => 'd_scout_day_group',
+            'scoutBand0' => 'd_scout_band_0', 'scoutBand1' => 'd_scout_band_1', 'scoutBand2' => 'd_scout_band_2', 'scoutBand3' => 'd_scout_band_3', 'scoutBand4' => 'd_scout_band_4',
             'scoutTrafficNoTiles' => 'd_scout_traffic_no_tiles',
             'scoutStepNoTags' => 'd_scout_step_no_tags',
             'scoutTrafficFactsNearby' => 'd_scout_traffic_facts_nearby',
             'scoutTrafficFactsOff' => 'd_scout_traffic_facts_off',
-            'scoutTrafficCarsN' => 'd_scout_traffic_cars_n',
-            'scoutTrafficNearbyN' => 'd_scout_traffic_nearby_n',
+            'scoutTrafficCarsN' => 'd_scout_traffic_cars_n', 'scoutTrafficCar1' => 'd_scout_traffic_car_1',
+            'scoutTrafficNearbyN' => 'd_scout_traffic_nearby_n', 'scoutTrafficNearby1' => 'd_scout_traffic_nearby_1',
             'scoutDirF' => 'd_scout_dir_f',
             'scoutDirB' => 'd_scout_dir_b',
             'scoutLabelP' => 'd_scout_label_p',
@@ -485,11 +521,11 @@ final class MapController extends AbstractController
             'trafficBandDay' => 'd_traffic_band_day',
             'trafficBandEvening' => 'd_traffic_band_evening',
             'trafficBandLate' => 'd_traffic_band_late',
-            'trafficCarsPerKm' => 'd_traffic_cars_per_km',
-            'trafficNearbyPerKm' => 'd_traffic_nearby_per_km',
+            'trafficLevelQuiet' => 'd_traffic_level_quiet', 'trafficLevelModerate' => 'd_traffic_level_moderate', 'trafficLevelBusy' => 'd_traffic_level_busy',
+            'trafficNearbyBand' => 'd_traffic_nearby_band',
             'trafficCarSpeed' => 'd_traffic_car_speed',
             'trafficCarSpeedTop' => 'd_traffic_car_speed_top',
-            'trafficRiders' => 'd_traffic_riders',
+            'trafficDays' => 'd_traffic_days',
             'trafficDirF' => 'd_traffic_dir_f',
             'trafficDirB' => 'd_traffic_dir_b',
             'trafficNone' => 'd_traffic_none',
@@ -499,6 +535,7 @@ final class MapController extends AbstractController
             'scoutEndFirst' => 'd_scout_end_first', 'scoutPickEnd' => 'd_scout_pick_end',
             'scoutPickOnRide' => 'd_scout_pick_on_ride', 'scoutPickAfterStart' => 'd_scout_pick_after_start',
             'scoutNeedEnd' => 'd_scout_need_end',
+            'scoutKind' => 'd_scout_kind', 'scoutNeedKind' => 'd_scout_need_kind', 'scoutNeedKinds' => 'd_scout_need_kinds',
             'scoutDescribe' => 'd_scout_describe', 'scoutRemove' => 'd_scout_remove',
             'scoutBareSurface' => 'd_scout_bare_surface', 'scoutShowBare' => 'd_scout_show_bare',
             'scoutBareTitle' => 'd_scout_bare_title', 'scoutBareInside' => 'd_scout_bare_inside',

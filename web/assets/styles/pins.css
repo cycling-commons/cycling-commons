@@ -16,15 +16,19 @@
 /* tilted teardrop: the 50% 50% 50% 0 radius makes the drop point down-left
    with NO rotate, so the glyph inside stays upright on its own (never rotate
    .cc-pin or the span) */
-.cc-pin{display:flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper,#EFE6D4)}
+/* --p scales our own teardrop with the zoom (--pin-s on the map container,
+   pinScale() in icons.js); a page without the map draws it full size. */
+.cc-pin{--p:var(--pin-s, 1);display:flex;align-items:center;justify-content:center;width:calc(30px * var(--p));height:calc(30px * var(--p));flex:none;border-radius:50% 50% 50% 0;background:var(--c);box-shadow:0 3px 8px rgba(16,30,22,.4);border:2px solid var(--paper,#EFE6D4)}
 /* The badges hang off the pin, so it must be a containing block. On the map
    MapLibre already makes every marker position:absolute and places it with a
    transform; a relative pin there would be laid out in page flow first and
    drift with every marker added. Only a pin on a page needs this. */
 .cc-pin:not(.maplibregl-marker){position:relative}
-.cc-pin span{font-size:.85rem;line-height:1;font-family:var(--emoji,"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif)}
+.cc-pin span{font-size:calc(.85rem * var(--p));line-height:1;font-family:var(--emoji,"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif)}
 /* The kind glyph (KindIcons::set() via icons.js kindSvg): drawn, not typed. */
 .cc-pin span.kd{display:flex}
+.cc-pin:not(.disc) span.kd svg{width:calc(17px * var(--p));height:calc(17px * var(--p))}
+.cc-pin:not(.disc) span:not(.kd) svg{width:calc(15px * var(--p));height:calc(15px * var(--p))}
 .cc-kind--glyph{font-family:var(--emoji,"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji","Noto Sans Symbols2",system-ui,sans-serif);font-style:normal}
 /* The two shared state badges (data-provider-hierarchy.md §6.3, top-left,
    opposite the "?"): red "!" = not usable right now, ink clock = there, but
@@ -32,10 +36,10 @@
    reveal pulse keeps its own pseudo-element. */
 /* 17px, the same as the "?": at 13-14px the "?" and the clock were hard to
    read on a pin (owner 2026-09-28). */
-.cc-pin .cc-st{position:absolute;width:17px;height:17px;top:-7px;left:-7px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font:700 12px/17px var(--mono,"Spline Sans Mono",monospace);
+.cc-pin .cc-st{position:absolute;width:calc(17px * var(--p));height:calc(17px * var(--p));top:calc(-7px * var(--p));left:calc(-7px * var(--p));border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font:700 calc(12px * var(--p))/1 var(--mono,"Spline Sans Mono",monospace);
   box-shadow:0 1px 3px rgba(16,30,22,.5)}
-.cc-pin .cc-st svg{width:11px;height:11px}
+.cc-pin .cc-st svg{width:calc(11px * var(--p));height:calc(11px * var(--p))}
 .cc-pin .cc-st.warn{background:#D92D20;color:#fff}
 .cc-pin .cc-st.hours{background:#14160E;color:#F3EBD8}
 /* "Somebody checked this, but a while ago." The ring replaces the paper
@@ -58,21 +62,31 @@
    beats the class rule. */
 .cc-pin.dashed{opacity:.95 !important;border:2.5px dashed #14160E;
   box-shadow:0 0 0 1.5px rgba(255,255,255,.95),0 3px 8px rgba(16,30,22,.4)}
-.cc-pin.disc{width:22px;height:22px;border-radius:50%;border:1.6px solid rgb(var(--mark-ink,20 22 14) / .85);box-shadow:0 2px 5px rgba(16,30,22,.35)}
-.cc-pin.disc span{font-size:.7rem}
-.cc-pin.disc span.kd svg{width:13px;height:13px}
+/* The OSM disc as the tile icon draws it, in the tile's own 24-box units:
+   --u is one unit at the tile ramp's scale for the current zoom (--disc-s,
+   discScale() in icons.js). Disc radius 9.5 with a 1.6 ring (miniIcon(),
+   KindIcons DISC), no shadow, as on the tile; a kind glyph spans 16 units
+   (kindGlyphSvg()'s viewBox), a drawn type glyph 13, a text glyph 12.5. */
+.cc-pin.disc{--u:calc(var(--disc-s, 1.37) * 1px);box-sizing:border-box;width:calc(20.6 * var(--u));height:calc(20.6 * var(--u));border-radius:50%;border:calc(1.6 * var(--u)) solid rgb(var(--mark-ink,20 22 14) / .85);box-shadow:none}
+.cc-pin.disc span{font-size:calc(12.5 * var(--u))}
+.cc-pin.disc span.kd svg{width:calc(16 * var(--u));height:calc(16 * var(--u))}
+.cc-pin.disc span:not(.kd) svg{width:calc(13 * var(--u));height:calc(13 * var(--u))}
 /* Axis 2, the badge, and it has exactly one mark: "?" = nobody has stood
    here on record. Absence of it is the verified signal on every border, so
    one sentence explains the whole grid. */
 /* Ink disc, ochre "?", paper ring: ochre on a pale pin or on the light
    basemap all but vanished (owner 2026-09-28: "? needs more contrast"). The
    ochre stays the mark's colour, now on ink, 8.5:1; the ring parts it from
-   any pin fill. 19px with the ring inside (box-sizing), and centred by flex
+   any pin fill. 15px with the ring inside (box-sizing), and centred by flex
    rather than a line height, which left the glyph low. */
-.cc-pin.q::after{content:"?";position:absolute;box-sizing:border-box;width:19px;height:19px;top:-8px;right:-8px;
+.cc-pin.q::after{content:"?";position:absolute;box-sizing:border-box;width:calc(15px * var(--p));height:calc(15px * var(--p));top:calc(-6px * var(--p));right:calc(-6px * var(--p));
   display:flex;align-items:center;justify-content:center;
-  background:#14160E;color:#E3A649;border:1.5px solid #F3EBD8;border-radius:50%;font-family:var(--mono,"Spline Sans Mono",monospace);font-size:12px;
+  background:#14160E;color:#E3A649;border:1.5px solid #F3EBD8;border-radius:50%;font-family:var(--mono,"Spline Sans Mono",monospace);font-size:calc(10px * var(--p));
   font-weight:700;line-height:1;box-shadow:0 1px 3px rgba(16,30,22,.5)}
+/* On the disc the badge is drawBadge()'s: radius 6.1 with a 0.8 ring on the
+   edge, centred 9.2 units up and right of the disc's centre so it sits
+   outside the rim, which puts it 7 units past the padding box. */
+.cc-pin.disc.q::after{width:calc(13 * var(--u));height:calc(13 * var(--u));top:calc(-7 * var(--u));right:calc(-7 * var(--u));border-width:calc(0.8 * var(--u));font-size:calc(9.4 * var(--u));box-shadow:none}
 /* The badge on its own, larger, for the key row that explains the mark
    itself rather than a pin wearing it. */
 .cc-q{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:20px;height:20px;border-radius:50%;

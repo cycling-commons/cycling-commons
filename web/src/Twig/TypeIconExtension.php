@@ -43,6 +43,8 @@ final class TypeIconExtension extends AbstractExtension
             // Letter => fill colour, from the public API's category table: the
             // one server-side copy of catalog.js's colours, for both map keys.
             new TwigFunction('cc_category_colours', static fn (): array => array_column(CategoryTable::CATEGORIES, 'color', 'letter')),
+            // Letter => the glyph colour on that fill, by the map's own rule.
+            new TwigFunction('cc_category_inks', static fn (): array => CategoryTable::inks()),
         ];
     }
 }

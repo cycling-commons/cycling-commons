@@ -6,7 +6,7 @@ import { map, flyToPin } from './map-init.js';
 import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { liftScopeForHit } from './scope-ui.js';
-import { mintKindIcons, miniIcon, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff } from './icons.js';
+import { mintKindIcons, miniIcon, iconMinZoom, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff, KIND_ICONS, PLACE_LETTER, PLACE_KIND_LABELS, kindOfLabel } from './icons.js';
 import { updateCounts, applyStaysAccessFilter } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
@@ -24,9 +24,13 @@ export const COVERAGE_CCS = (Array.isArray(window.CC_COVERAGE_COUNTRIES) && wind
 export const COVERAGE_ON = familyConfigured('coverage', 'points') && typeof pmtiles!=='undefined';
 /* The archive floor: build_pmtiles --minimum-zoom 6 (pipeline/coverage/tiles.py). */
 export const COVERAGE_MIN_ZOOM = 6;
+/* Below iconMinZoom() (icons.js) a category is its haze; our own pins show at
+   every zoom. Each haze holds until its own icons start and fades under them
+   over HEAT_FADE, so the map is never empty. */
+const HEAT_FADE=0.75;
 export const COV_SRC={
   services:'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)',
-  scenic:'OpenStreetMap (tourism=viewpoint / natural=peak / waterway=waterfall)',
+  scenic:'OpenStreetMap (tourism=viewpoint / waterway=waterfall, rapids / natural=cliff, cave_entrance, arch, rock, stone)',
   history:'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)',
   stays:'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)',
   shelter:'OpenStreetMap (shelter_type=picnic/weather/field/…)',
@@ -156,8 +160,12 @@ function addCoverageLayers(cc, src){
     const cutoff = witnessCutoff();
     const witnessed = cutoff ? ['>=',['to-string',['coalesce',['get','cd'],'']], cutoff] : false;
     const pick = (plain, badged) => ['case', witnessed, plain, badged];
-    const kindPair = kind => pick(kindImageId('B',kind,false), kindImageId('B',kind,true));
+    const kindPair = (kind, letter='B') => pick(kindImageId(letter,kind,false), kindImageId(letter,kind,true));
     const miniPair = (glyph, suffix) => pick(miniIcon(key, glyph, suffix, false), miniIcon(key, glyph, suffix, true));
+    /* P and Q: one glyph per kind, the tile's `kind` (osm-data-architecture.md §5a). */
+    const placeLetter = PLACE_LETTER[key];
+    const placeKinds = placeLetter ? Object.keys(KIND_ICONS[placeLetter] || {}).flatMap(k => [k, kindPair(k, placeLetter)]) : [];
+    const placeLabels = placeLetter ? Object.entries(PLACE_KIND_LABELS[placeLetter] || {}).flat() : [];
     const icon = key==='water'
       ? ['case', isFood,
           ['case', isPotable, kindPair('food_water'), kindPair('food')],
@@ -168,17 +176,20 @@ function addCoverageLayers(cc, src){
             'station', miniPair(SERVICE_GLYPH.station, 'station'),
             'pump', miniPair(SERVICE_GLYPH.pump, 'pump'),
             miniPair()]
-        : miniPair();
+        : placeKinds.length
+          // The stamped kind, else the kind the tile's label names (a tile from before the stamp).
+          ? ['match', placeLabels.length ? ['coalesce',['get','kind'],['match',['get','t'], ...placeLabels, '']] : ['get','kind'], ...placeKinds, miniPair()]
+          : miniPair();
     const heatId = cc ? key+'-'+cc+'-heat' : key+'-heat';
     // addLayer rejects `filter: null`; omit the key (default = unfiltered).
     const heatSpec={id:heatId, type:'heatmap', source:src, 'source-layer':srcLayer,
-      maxzoom: 9,
+      maxzoom: iconMinZoom(key)+HEAT_FADE,
       layout:{visibility:'none'},
       paint:{
         'heatmap-weight':0.6,
-        'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.9,9,1.3],
-        'heatmap-radius':['interpolate',['linear'],['zoom'],6,16,9,28],
-        'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.5,8,0.5,9,0],   // crossfade into icons at z9
+        'heatmap-intensity':['interpolate',['linear'],['zoom'],6,0.9,9,1.3,12,1.8],
+        'heatmap-radius':['interpolate',['linear'],['zoom'],6,16,9,28,12,36],
+        'heatmap-opacity':['interpolate',['linear'],['zoom'],6,0.5,iconMinZoom(key),0.5,iconMinZoom(key)+HEAT_FADE,0],   // full until the icons start, then fades under them
         // A light lavender ramp (owner 2026-09-30: the deep purple hid the base map).
         'heatmap-color':['interpolate',['linear'],['heatmap-density'],
           0,'rgba(0,0,0,0)',
@@ -187,9 +198,9 @@ function addCoverageLayers(cc, src){
           1,'rgba(140,104,196,0.62)']}};
     { const hf=covHeatFilter(); if(hf) heatSpec.filter=hf; }
     map.addLayer(heatSpec, COV_SEL_LAYER);
-    // Icons from z9 (docs/specs/coverage-provider.md §4); z6–8 tiles are thinned.
+    // Icons from iconMinZoom(key) (docs/specs/coverage-provider.md §4); below z11 the tiles are thinned.
     map.addLayer({id, type:'symbol', source:src, 'source-layer':srcLayer,
-      minzoom: 9,
+      minzoom: iconMinZoom(key),
       filter:covIconFilter(),   // dedupe + scope
       layout:{visibility:'none','icon-image':icon,'icon-allow-overlap':true,
         // One ramp per shape: the food discs size like every other disc.
@@ -232,6 +243,8 @@ export function covProps(key, tp, d){
   if(cc) p.cc=cc.toUpperCase();
   if(tp.ref) p.ref=tp.ref;
   if(key==='services' && tp.kind) p.serviceKind=tp.kind;
+  if(PLACE_LETTER[key] && tp.kind) p.type=tp.kind;
+  if(PLACE_LETTER[key] && !p.type && tp.t) p.type=kindOfLabel(PLACE_LETTER[key], tp.t) || undefined;
   // potable (docs/specs/coverage-provider.md §4): yes / no / absent, coerced
   // like the icon match. A pre-2026-09-04 tile's boolean `false` stays
   // undefined here: it covered both "tagged no" and "nobody said", and the
@@ -245,6 +258,7 @@ export function covProps(key, tp, d){
   if(d){
     if(d.name) p.n=d.name;
     if(key==='services' && d.kind) p.serviceKind=d.kind;
+    if(PLACE_LETTER[key] && d.kind) p.type=d.kind;
     const tags=d.tags||{};
     // The deep-link and search paths build `tp` by hand ({ref, n, kind}), so
     // they carry no `potable` and the drawer used to fall back to "tagged
@@ -315,7 +329,7 @@ export function openCoverageDrawer(key, tp, ll){
   const layer=layerByKey[key];
   const feat=p=>key==='water' ? waterDrawer(p, ll) : osmDrawer(layer, p, ll, COV_SRC[key]);
   openDrawer(layer, feat(covProps(key, tp, null)));
-  showSelectedCoverageIcon(key, tp, ll);   // keep the icon visible after openDrawer's clear, incl. when the z11 minzoom hides it on zoom-out
+  showSelectedCoverageIcon(key, tp, ll);   // keep the icon visible after openDrawer's clear, incl. when the icon layer's minzoom hides it on zoom-out
   if(!tp.ref) return;
   const myReq=++_covReq;
   fetch('/map/coverage/poi/'+tp.ref, {headers:{'Accept':'application/json'}})
@@ -343,7 +357,7 @@ export function openCoverageByRef(ref, letter, ll, name, itemId){
         return map.getLayer(id) && map.getLayoutProperty(id,'visibility')==='visible';
       });
       if(!drawn) revealPinAt(layer, ll);
-      else showSelectedCoverageIcon(key, Object.assign({kind:p.serviceKind}, p), lo);   // the kind rules read the record's own fields
+      else showSelectedCoverageIcon(key, Object.assign({kind:p.serviceKind || p.type}, p), lo);   // the kind rules read the record's own fields
       return;
     }
   }

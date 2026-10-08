@@ -6,7 +6,7 @@ import { showTip, hideTip } from './sheet.js';
 import { D } from './i18n.js';
 import { layerByKey, active, mode } from './catalog.js';
 import { inScope } from './scope-ui.js';
-import { mintKindIcons, pinEl, clusterEl, stateOf } from './icons.js';
+import { mintKindIcons, pinEl, pinClasses, clusterEl, stateOf, iconMinZoom } from './icons.js';
 import { staysAccessible, shownAnyway } from './render.js';
 import { modeShows, placeKey } from './filters.js';
 import { fanPin, fanOffsetOf, scheduleFanOut } from './pin-fan.js';
@@ -102,7 +102,8 @@ export function setupConfClusters(){
     const srcId=key+'-conf';
     if(!curated.length || map.getSource(srcId)) return;
     const st={key, layer:layerByKey[key], info, onScreen:{}, confirmed:curated};
-    map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13, data:clusterData(st)});
+    // A bubble stands for three places or more: a pair is just its two pins.
+    map.addSource(srcId,{type:'geojson', cluster:true, clusterRadius:48, clusterMaxZoom:13, clusterMinPoints:3, data:clusterData(st)});
     map.addLayer({id:srcId+'-hit', type:'circle', source:srcId, paint:{'circle-radius':0,'circle-opacity':0}});
     confState[srcId]=st;
   });
@@ -212,6 +213,8 @@ export function updateConfMarkers(){
       const key = p.cluster ? 'c'+p.cluster_id : 'l'+(p.id!=null ? p.id+'@' : '')+co[0].toFixed(5)+','+co[1].toFixed(5);
       if(next[key]) continue;
       if(!p.cluster && !poolChipsPass(st.layer, st.key, p)) continue;
+      // An OpenStreetMap place (the small disc) waits for its category's icon zoom, like the tile icons.
+      if(!p.cluster && map.getZoom() < iconMinZoom(st.key) && pinClasses(p).includes('disc')) continue;
       let m=on[key];
       if(!m){
         if(p.cluster){
@@ -235,7 +238,7 @@ export function updateConfMarkers(){
 
 export const OSM_BULK = [
   ['services', window.CC_SERVICES_OSM, 'OpenStreetMap (shop=bicycle / amenity=bicycle_repair_station / compressed_air)'],
-  ['scenic',   window.CC_SCENIC_OSM,   'OpenStreetMap (tourism=viewpoint / waterway=waterfall)'],
+  ['scenic',   window.CC_SCENIC_OSM,   'OpenStreetMap (tourism=viewpoint / waterway=waterfall, rapids / natural=cliff, cave_entrance, arch, rock, stone)'],
   ['history',  window.CC_HISTORY_OSM,  'OpenStreetMap (historic=castle/fort/ruins/monument/memorial/…)'],
   ['stays',    window.CC_STAYS_OSM,    'OpenStreetMap (tourism=camp_site/hostel/guest_house/chalet/hotel/…)'],
   ['shelter',  window.CC_SHELTER_OSM,  'OpenStreetMap (shelter_type=picnic/weather/field/…)'],

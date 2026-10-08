@@ -149,7 +149,7 @@ export const ROUTE_SEL_W=['interpolate',['linear'],['zoom'],9,7,13,10,16,13];
 export const ROUTE_SEL_CASE_W=['interpolate',['linear'],['zoom'],9,10,13,14,16,18];
 export let selectedRouteLayerId=null;
 export const routeLineIds=()=>map.getStyle().layers.map(l=>l.id).filter(id=>/^experience-\d+$/.test(id));
-/* Stacking authority — last lifted is highest: routes → surfaces → climbs → Mapillary. */
+/* Stacking authority, last lifted is highest: routes, surfaces, climbs, Mapillary, coverage icons. */
 export function liftInfoLayersAboveRoutes(){
   const liftGroup=id=>{ if(map.getLayer(id+'-case')) map.moveLayer(id+'-case'); if(map.getLayer(id)) map.moveLayer(id); };
   // consolidated A-layer (C3): one shared casing + one layer per surface class
@@ -160,6 +160,9 @@ export function liftInfoLayersAboveRoutes(){
   if(map.getLayer('surface-q')) map.moveLayer('surface-q');
   dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
   ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
+  // The coverage icons over every line (owner 2026-10-08), the selected icon on top of them.
+  map.getStyle().layers.map(l=>l.id).filter(id=>/-cov$/.test(id)).forEach(id=>map.moveLayer(id));
+  if(map.getLayer('cov-sel-icon')) map.moveLayer('cov-sel-icon');
 }
 /* Surface selection halo: dedicated geojson source (segments share one consolidated source). */
 export function showSurfaceSelection(path){
@@ -474,7 +477,7 @@ export function render(){
       layer.features.forEach((f,i)=>{
         if(!featureVisible(layer,f,tally)) return;
         if(f.route){                                    
-          /* lineGrad colours the line; `grad` draws the chart bars. */
+          /* `grad` colours the line and draws the chart bars; `lineGrad` colours it when `grad` is empty. */
           /* Line colour from the bars so the same stretch matches the strip (docs/specs/climb-elevation.md §4a). */
           const lineG = (f.grad && f.grad.length) ? f.grad : f.lineGrad;
           /* docs/specs/climb-elevation.md §4a — draw the climb, not overshoot past the summit. */
@@ -578,6 +581,19 @@ export function render(){
   updateZoomHint();
 }
 
+/* The pending note closes once read, the curator's and the rider's each under
+   its own name; the answer is stored on the account (window.CC_HINTS,
+   map-and-search.md §4.5), so it stays closed on every device. The note goes
+   at once; the write follows in the background. */
+const HINT_PENDING='pending_follows_areas', HINT_PENDING_MINE='pending_yours_anywhere';
+const hintClosed = h => (((window.CC_HINTS||{}).closed)||[]).includes(h);
+function closeHint(h){
+  const H=window.CC_HINTS||{};
+  H.closed=[...(H.closed||[]), h]; window.CC_HINTS=H;
+  updateZoomHint();
+  if(H.url) fetch(H.url.replace('HINT', h), {method:'POST', headers:{'X-CSRF-Token':H.token}}).catch(()=>{});
+}
+
 /* Zoom hint when coverage is on but the tileset/icon floor hides POIs. */
 export function updateZoomHint(){
   const el = document.getElementById('zoomHint');
@@ -593,12 +609,23 @@ export function updateZoomHint(){
   const pendingMsg = isCurator
     ? (I18N.pendingFollowsAreas || 'Pins waiting for review ignore the region filter: they follow the areas you moderate')
     : (I18N.pendingYoursAnywhere || 'Your pins waiting for review show wherever you added them, even outside this region');
+  const hintKey = isCurator ? HINT_PENDING : HINT_PENDING_MINE;
+  const pendingShown = pendingOn && !hintClosed(hintKey);
   /* Surface-skin zoom floor is explained on the row (and a toast), not this corner. */
-  const msg = pendingOn ? pendingMsg
+  const msg = pendingShown ? pendingMsg
     : !anyCoverage ? ''
     : z < 6 ? (I18N.zoomForCoverage || 'Zoom in to see the full-coverage layers')
     : '';
-  el.textContent = msg;
+  el.replaceChildren(document.createTextNode(msg));
+  const closable = pendingShown && !!(window.CC_HINTS||{}).url;
+  el.classList.toggle('has-x', closable);
+  if(closable){
+    const x=document.createElement('button');
+    x.type='button'; x.className='zoom-hint-x'; x.textContent='✕';
+    x.setAttribute('aria-label', I18N.areaDismiss||'Dismiss');
+    x.onclick=()=>closeHint(hintKey);
+    el.append(x);
+  }
   el.hidden = !msg;
 
   /* Curator border + hint only when CC_IS_CURATOR — a rider's own pending pins are not curator mode. */

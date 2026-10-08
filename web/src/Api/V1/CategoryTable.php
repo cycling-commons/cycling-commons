@@ -35,7 +35,7 @@ final class CategoryTable
         ['letter' => 'O', 'key' => 'stays', 'label' => 'Where to sleep', 'color' => '#B5532E', 'kind' => 'point', 'bestOf' => true],
         ['letter' => 'E', 'key' => 'hazards', 'label' => 'Hazards & conditions', 'color' => '#C8923A', 'kind' => 'point', 'bestOf' => false],
         ['letter' => 'F', 'key' => 'transit', 'label' => 'Getting there', 'color' => '#3E7D8C', 'kind' => 'point', 'bestOf' => false],
-        ['letter' => 'G', 'key' => 'shelter', 'label' => 'Shelter', 'color' => '#9A8FB6', 'kind' => 'point', 'bestOf' => false],
+        ['letter' => 'G', 'key' => 'shelter', 'label' => 'Shelter', 'color' => '#7A6DA5', 'kind' => 'point', 'bestOf' => false],
         ['letter' => 'P', 'key' => 'scenic', 'label' => 'Scenic views', 'color' => '#2C5440', 'kind' => 'point', 'bestOf' => true],
         ['letter' => 'Q', 'key' => 'history', 'label' => 'History & culture', 'color' => '#6E5849', 'kind' => 'point', 'bestOf' => true],
         ['letter' => 'R', 'key' => 'experience', 'label' => 'Recommended routes', 'color' => '#FF5A1F', 'kind' => 'line', 'bestOf' => false],
@@ -81,5 +81,24 @@ final class CategoryTable
             'kind' => $c['kind'],
             'bestOf' => $c['bestOf'],
         ], self::CATEGORIES);
+    }
+
+    /**
+     * Letter => the glyph colour that reads on that category's fill: white on
+     * a dark fill, ink on a light one. The rule is the map's txtOn()
+     * (assets/map/util.js, CategoryInkTest pins the threshold), so both map
+     * keys draw a glyph the colour the map draws it.
+     *
+     * @return array<string, string>
+     */
+    public static function inks(): array
+    {
+        $out = [];
+        foreach (self::CATEGORIES as $c) {
+            [$r, $g, $b] = array_map('hexdec', str_split(ltrim($c['color'], '#'), 2));
+            $out[$c['letter']] = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255 < 0.58 ? '#fff' : '#14160e';
+        }
+
+        return $out;
     }
 }

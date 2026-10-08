@@ -76,6 +76,64 @@ test('pinClasses puts the border and the badge on the element, and nothing about
   assert.equal(classes({ rung: 3, custody: 'ours' }), 'q', 'our own unconfirmed row: solid paper with the ?');
 });
 
+// One OSM point, one look, at every zoom (owner 2026-10-08: "the sizes also
+// are not the same"). The tile icon is a 24-unit box scaled by the
+// DISC_SIZES ramp; the DOM disc pin copies its geometry in the same units,
+// `--u`, which discScale() keeps equal to that ramp as the map zooms.
+test('the DOM disc scale follows the tile ramp between and beyond its stops', () => {
+  const sizes = JSON.parse((src.match(/export const DISC_SIZES=(\[[^\]]+\])/) || [])[1]);
+  const c = { DISC_SIZES: sizes };
+  vm.createContext(c);
+  vm.runInContext(lift('discScale'), c);
+  assert.equal(c.discScale(13), sizes[1]);
+  assert.equal(c.discScale(18), sizes[2]);
+  assert.ok(Math.abs(c.discScale(15.5) - (sizes[1] + sizes[2]) / 2) < 1e-9, 'linear between stops, like the tile interpolate');
+  assert.equal(c.discScale(5), sizes[0], 'clamped below z8');
+  assert.equal(c.discScale(21), sizes[2], 'clamped above z18');
+  assert.match(src, /map\.on\('zoom', syncZoomStyles\)/, 'the scale moves with the map');
+});
+
+test('the DOM disc copies the tile geometry unit for unit, badge included', () => {
+  const rule = sel => (css.match(new RegExp(sel.replace(/[.:]/g, m => '\\' + m) + '\\{[^}]*\\}')) || [''])[0];
+  const u = (r, prop) => Number((r.match(new RegExp('(?:^|[;{\\s])' + prop + ':calc\\((-?[\\d.]+) \\* var\\(--u\\)\\)')) || [])[1]);
+  const disc = rule('.cc-pin.disc'), badge = rule('.cc-pin.disc.q::after');
+  assert.match(disc, /--u:calc\(var\(--disc-s, ?[\d.]+\) \* 1px\)/);
+  // miniIcon() / KindIcons DISC: radius 9.5 with a 1.6 ring, so 20.6 across.
+  assert.equal(u(disc, 'width'), 20.6);
+  assert.equal(u(disc, 'height'), 20.6);
+  assert.match(disc, /border:calc\(1\.6 \* var\(--u\)\) solid/);
+  // drawBadge(): radius r with its ring on the edge, centred `off` up and
+  // right of the disc's centre. The disc's padding box starts 1.6 in, so its
+  // centre is 8.7 from each padding edge.
+  const draw = (src.match(/function drawBadge\(x\)\{[\s\S]*?\n\}/) || [''])[0];
+  const r = Number((draw.match(/const r=([\d.]+)/) || [])[1]);
+  const off = Number((draw.match(/off=([\d.]+)/) || [])[1]);
+  const ring = Number((draw.match(/x\.lineWidth=([\d.]+)/) || [])[1]);
+  const font = Number((draw.match(/x\.font='700 ([\d.]+)px/) || [])[1]);
+  const round = v => Math.round(v * 100) / 100;
+  const across = round(2 * r + ring);
+  assert.ok(off * Math.SQRT2 > 10.3, 'the centre of the "?" lies outside the disc rim (10.3), not on the glyph');
+  assert.equal(u(badge, 'width'), across);
+  assert.equal(u(badge, 'height'), across);
+  assert.equal(u(badge, 'top'), round(8.7 - off - across / 2));
+  assert.equal(u(badge, 'right'), round(8.7 - off - across / 2));
+  assert.equal(u(badge, 'border-width'), ring);
+  assert.equal(u(badge, 'font-size'), font);
+});
+
+// One "?" on every surface: ink disc, ochre mark, paper ring (owner
+// 2026-10-08: "? marks are different").
+test('the tile badge wears the DOM badge colours', () => {
+  const badgeCss = (css.match(/\.cc-pin\.q::after\{[^}]*\}/) || [''])[0];
+  const draw = (src.match(/function drawBadge\(x\)\{[\s\S]*?\n\}/) || [''])[0];
+  const colour = prop => (badgeCss.match(new RegExp('(?:^|[;{\\s])' + prop + ':(#[0-9A-Fa-f]{6})')) || [])[1];
+  const ring = (badgeCss.match(/border:[^;]*?(#[0-9A-Fa-f]{6})/) || [])[1];
+  assert.ok(colour('background') && colour('color') && ring, 'the DOM badge names its three colours');
+  assert.match(draw, new RegExp("fillStyle='" + colour('background') + "'; x\\.fill\\(\\)"), 'ink disc');
+  assert.match(draw, new RegExp("strokeStyle='" + ring + "'"), 'paper ring');
+  assert.match(draw, new RegExp("fillStyle='" + colour('color') + "'; x\\.font"), 'ochre mark');
+});
+
 test('no marker carries a verified dot any more', () => {
   assert.ok(!/\.cc-pin\.cur::after/.test(css + mapCss), 'the paper dot rule is gone');
   assert.ok(!/\.cc-pin\.community/.test(css + mapCss), 'the old one-class tier is gone; border and badge are two classes');

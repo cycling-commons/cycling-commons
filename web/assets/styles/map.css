@@ -206,8 +206,8 @@
      phone re-skin and the top-right corner panel - is gone rather than left
      dark in the file, and a test pins that it stays gone. */
   /* logged-in account chip + dropdown (partials/_account_chip.html.twig) — copied from
-     atlas.css since this page is standalone and doesn't load it (Task 7: map page gains
-     the account chip). Keep in sync with the atlas.css ".acct-*" block if that changes.
+     atlas.css since this page is standalone and doesn't load it.
+     Keep in sync with the atlas.css ".acct-*" block if that changes.
      The rail is already dark like atlas.css's --ink topnav, so the chip's default (dark-nav)
      styling applies as-is — no page-specific overrides needed. */
   .acct-menu{position:relative;flex:none}
@@ -354,8 +354,8 @@
   .search-res li:last-child button{border-bottom:none}
   .search-res button:hover,.search-res button.hl{background:rgba(255,90,31,.14)}
   .search-res .sw{flex:0 0 auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:5px;font-size:.74rem;font-weight:700;font-family:var(--emoji)}
-  .search-res .snm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .search-res .sub{flex:0 0 auto;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65)}
+  .search-res .snm{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25}
+  .search-res .sub{flex:0 1 auto;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65)}
   .search-res .scomm{margin-left:.45rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .65);border:1px solid rgb(var(--chrome-fg) / .22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
   .search-empty{padding:.6rem .55rem;font-size:.8rem;color:rgb(var(--chrome-fg) / .68)}
   /* The unseen bar (moderation-and-contribution.md §5.2f), the same mark the
@@ -370,7 +370,7 @@
   .search-widen button{width:100%;display:flex;align-items:center;gap:.4rem;background:none;border:none;color:var(--chrome-head);font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.55rem;cursor:pointer;transition:background .12s}
   .search-widen button::before{content:'⊕';font-size:.8rem}
   .search-widen button:hover{background:rgba(255,90,31,.14)}
-  /* grouped results (spec 2026-07-14 §3.3): sticky per-layer headers between rows */
+  /* grouped results (map-and-search.md §7.3): sticky per-layer headers between rows */
   .search-res .sgrp{position:sticky;top:0;background:rgb(var(--chrome-glass-deep) / .94);font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);padding:.35rem .55rem .25rem;border-bottom:1px solid rgb(var(--chrome-fg) / .1)}
 
   .chips{display:flex;flex-wrap:wrap;gap:.4rem}
@@ -401,7 +401,8 @@
      the ::before/::after badges; in this panel nothing does, so the badges
      (community "?", verified dot) silently anchor elsewhere without this. */
   .mkp-sw .cc-pin{position:relative}
-  .mkp-sw{display:flex;align-items:center;justify-content:center;gap:.3rem;min-height:42px;border-radius:7px;background:rgb(var(--chrome-fg) / .08)}
+  /* The key page's light paper tile (map_key.css .mk-sw), so a dark glyph reads as well as a white one. */
+  .mkp-sw{display:flex;align-items:center;justify-content:center;gap:.3rem;min-height:42px;border-radius:7px;background:#DED2B8}
   /* A border row shows its pin twice, with and without the badge. */
   .mkp-row.mkp-pair{grid-template-columns:84px 1fr}
   /* A tool heading led by its brand mark (Scout in the Tools panel). */
@@ -667,7 +668,7 @@
      footnote at the bottom of a full-screen map. */
   .cc-toast.center{top:50%;bottom:auto;font-size:1rem;padding:1rem 1.6rem;transform:translate(-50%,calc(-50% + 1rem))}
   .cc-toast.center.show{transform:translate(-50%,-50%)}
-  /* "Set my area" cold-start prompt (map-and-search.md §4.5 Phase 4):
+  /* "Set my area" cold-start prompt (map-and-search.md §4.5):
      a dismissible chip in the Region rail group; the ✕ matches the rail's muted
      control language. */
   .cc-area-prompt{margin-top:.55rem;align-items:center}
@@ -799,6 +800,11 @@
     font-size:.72rem;line-height:1.4;letter-spacing:.04em;padding:.4rem .6rem;border-radius:6px;
     pointer-events:none;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
   .zoom-hint[hidden]{display:none}
+  /* The close on the pending note (map-and-search.md §4.5): the hint
+     lets the pointer through to the map, its button takes it. */
+  .zoom-hint.has-x{padding-right:1.7rem}
+  .zoom-hint .zoom-hint-x{pointer-events:auto;position:absolute;top:.2rem;right:.25rem;background:transparent;border:none;color:inherit;opacity:.6;cursor:pointer;font-size:.8rem;line-height:1;padding:.1rem .25rem;transition:opacity .15s}
+  .zoom-hint .zoom-hint-x:hover,.zoom-hint .zoom-hint-x:focus-visible{opacity:1}
 
   .map-top{position:absolute;top:1.2rem;left:1.2rem;z-index:1000;background:rgb(var(--paper-glass) / .95);border-radius:8px;padding:.7rem 1rem}
   .map-top .rg{font-family:var(--serif);font-weight:600;font-size:1.05rem}
@@ -1253,7 +1259,7 @@
   .cc-d-share svg{width:11px;height:11px}
   .cc-d-share:hover{background:rgb(var(--chrome-fg) / .1);color:var(--chrome-fg-solid)}
   .cc-d-share:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
-  /* C1-T3 (spec W5): per-item "Recent changes" — filled async by map.js's
+  /* Per-item "Recent changes", filled async by map.js's
      loadItemHistory() into #cc-d-hist-slot; empty until the fetch resolves
      (and stays empty/no heading if the item has no history). */
   /* "Show changelog": a plain text link in the drawer's text colour (not a
@@ -1340,7 +1346,7 @@
   .cc-d-act.edit:hover{border-color:var(--trail);color:var(--trail)}
   .cc-d-act.fixloc{background:transparent;color:rgb(var(--chrome-fg) / .85);border:1px solid rgb(var(--chrome-fg) / .3)}
   .cc-d-act.fixloc:hover{border-color:var(--trail);color:var(--trail)}
-  /* Route domain phase 3 (spec §7): rode-it/vote/suggest community panel. */
+  /* Route community loop (route-domain.md §6): rode-it/vote/suggest community panel. */
   .cc-rc{display:flex;flex-direction:column;gap:.75rem;margin-top:.6rem}
   .cc-rc-l{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72);font-weight:600;display:block;margin-bottom:.45rem}
   .cc-rc-count{font-family:var(--sans);text-transform:none;letter-spacing:0;font-weight:400;color:rgb(var(--chrome-fg) / .68)}
@@ -1464,7 +1470,7 @@
      uncurated OSM, and must not read as verified Commons picks
  */
   .cc-near-note{margin-top:.5rem;color:rgb(var(--chrome-fg) / .65);font-family:var(--mono);font-size:.7rem;letter-spacing:.05em}
-  /* per-layer group header in the place card's nearby list (spec 2026-07-14 §3.3) */
+  /* per-layer group header in the place card's nearby list (map-and-search.md §6.5) */
   .cc-near-grp{display:flex;align-items:center;gap:.55rem;margin-top:.7rem;padding:.25rem 0;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .72)}
   .cc-comm-tag{margin-left:.45rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:rgb(var(--chrome-fg) / .68);border:1px solid rgb(var(--chrome-fg) / .22);border-radius:8px;padding:.08rem .35rem;vertical-align:middle}
   .cc-near-more{background:none;border:none;padding:.45rem 0;color:var(--trail);font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-decoration:none}
@@ -1519,8 +1525,7 @@
   .cc-d-return:hover,.cc-d-return:focus-visible{background:rgb(var(--chrome-fg) / .08)}
   .cc-d-photo{margin:1rem 0 0}
   /* aspect-ratio reserves the box BEFORE the Wikimedia thumb lands, so the
-     records/actions below stop jumping when it does (CLS — frontend review
-     2026-08-09 #7). 4/3 approximates the 520w thumbs, and a wide photo fills
+     records/actions below stop jumping when it does (CLS). 4/3 approximates the 520w thumbs, and a wide photo fills
      it. A tall photo (`is-tall`, set on load by drawer.js) is shown whole on a
      quiet ground instead, so a statue keeps its head. */
   .cc-d-photo>img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in}
@@ -1656,6 +1661,9 @@
     box-shadow:0 2px 7px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
   .cc-summit::before{content:"⚑";font-size:.72rem;color:#FF5A1F}
   .cc-summit:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}
+  /* The summit and gradient chips show from z11 (icons.js SUMMIT_MIN_ZOOM); wider, the climbs' chips piled up. */
+  .cc-z-lt11 .cc-summit,
+  .cc-z-lt11 .cc-steep{display:none}
   /* Where a search result is: above every pin (owner 2026-09-28). Pins stack
      in the order they were added, with no z-index of their own, so without
      this the town pin, the hover ring or a revealed hit could sit under the
@@ -1674,7 +1682,7 @@
   .cc-fan-leg circle{fill:rgb(var(--mark-ink,20 22 14));stroke:var(--paper);stroke-width:1.5}
   .maplibregl-popup{z-index:4}
   /* Pulse via a compositable pseudo-element transform/opacity, not a box-shadow
-     spread repaint every frame over the map canvas (review W10). */
+     spread repaint every frame over the map canvas. */
   /* Selection halo: a transparent-centre glowing ring + expanding pulse, so the
      selected marker (WebGL icon, painted beneath all DOM overlays) shows THROUGH
      the middle and reads as sitting on top of the pulse. */
@@ -1732,7 +1740,7 @@
     .demo-banner{padding:.35rem .6rem;font-size:.7rem}
     /* feature detail -> bottom slide-up */
     .cc-drawer{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;max-height:80vh;max-height:80svh;transform:translateY(102%);border-radius:14px 14px 0 0;box-shadow:0 -14px 34px -16px rgba(0,0,0,.6);z-index:1550;padding:1.2rem 1.3rem 2rem}
-    /* Snap sheet (spec 2026-07-14): three resting states. The sheet keeps its
+    /* Snap sheet (map-and-search.md §6.6): three resting states. The sheet keeps its
        full height and slides via translateY — .open alone now means "at half"
        (landing state); s-full/s-peek move it up/down. Inline transforms set by
        JS during a drag override these resting values. */
@@ -1772,14 +1780,14 @@
     .app.dock-open .dwr{display:none}
   }
 
-  /* Route domain phase 4 (spec §8): the Curated best-of facets, now two
+  /* Route best-of (route-domain.md §8): the Curated best-of facets, now two
      multi-select chip rows at the top of the FILTERS block. They take the
      ordinary .chip skin; only their spacing lives here. */
   .best-facets{margin-top:.2rem}
   .best-facets[hidden]{display:none}
   .best-facets .fh:first-child{margin-top:.8rem}
 
-  /* Located-correction picking (spec §16). */
+  /* Located-correction picking (route-domain.md §7). */
   .cc-drawer.cc-drawer-min{transform:translateX(calc(100% - 3.2rem));pointer-events:none}   /* slide mostly off so the map is clickable; can't be re-clicked during picking */
   .cc-rc-mark{margin:.4rem 0;padding:.4rem .7rem;border-radius:5px;border:1px solid var(--trail);background:transparent;color:var(--trail);font-family:var(--sans);font-weight:600;font-size:.8rem;cursor:pointer}
   .cc-rc-mark:hover{background:var(--trail);color:var(--ink)}
@@ -1796,7 +1804,7 @@
   /* !important beats the inline cursor that layer hover handlers keep writing. */
   .maplibregl-map.scout-picking .maplibregl-canvas{cursor:crosshair!important}
 
-  /* Moderator pending-corrections overlay (spec §16 S3/S5): colour-per-correction
+  /* Moderator pending-corrections overlay (route-domain.md §7): colour-per-correction
      stretches + numbered endpoint pins + bottom-left side list. */
   .cc-corr-pin{width:20px;height:20px;border-radius:50%;color:#fff;font-family:var(--sans);font-weight:700;font-size:.68rem;display:flex;align-items:center;justify-content:center;border:2px solid #FBF4E4;box-shadow:0 1px 4px rgba(0,0,0,.4)}
   .cc-corrpanel{position:absolute;left:1rem;bottom:1rem;z-index:1250;width:min(300px,80vw);max-height:44vh;overflow-y:auto;background:var(--chrome-bg);color:var(--chrome-fg-solid);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.45);padding:.7rem .8rem}
@@ -1808,7 +1816,7 @@
   .cc-corr-body b{text-transform:capitalize}
   .cc-corr-body em{display:block;font-style:normal;font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;color:rgb(var(--chrome-fg) / .68);margin-top:.15rem}
 
-  /* ---- Ride-check (spec 2026-07-14 §4.3) ---- */
+  /* ---- Ride-check (map-and-search.md §9) ---- */
   /* rail control: upload + inline radius + the "never stored" notice. NB the
      cc-rc-* namespace belongs to the route-community drawer above — ride-check
      uses cc-ride-* (an earlier revision shadowed the community button/note). */
@@ -1864,6 +1872,6 @@
   .cc-locked:hover,.cc-locked:focus-visible{border-style:solid;border-color:var(--trail);color:var(--trail)}
   .cc-locked-hint{margin:.4rem 0 0;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
 
-/* vestibular safety: the sibling contribute templates already carry this
-   kill-switch; the map page was the one surface without it (review W10) */
+/* vestibular safety: the same kill-switch the sibling contribute templates
+   carry */
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
