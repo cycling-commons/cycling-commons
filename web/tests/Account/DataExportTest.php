@@ -9,6 +9,7 @@ namespace App\Tests\Account;
 use App\Catalog\Entity\Submission;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Map\MapHint;
 use App\Media\Entity\ConsentRecord;
 use App\Media\Entity\MediaModerationEvent;
 use App\Media\Entity\MediaUpload;
@@ -279,6 +280,22 @@ final class DataExportTest extends WebTestCase
         self::assertSame('Europe/Lisbon', $account['time_zone']);
         self::assertArrayHasKey('privacy_version_seen', $account, 'the notice version last seen is account data too');
         self::assertSame('Europe/Amsterdam', $account['detected_time_zone']);
+    }
+
+    /** The map hints a person closed are stored on the account, so the export carries them. */
+    public function testClosedMapHintsAreExported(): void
+    {
+        $client = $this->client();
+        $user = $this->login($client, 'hints');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->find(User::class, $user->getId())?->closeHint(MapHint::PendingFollowsAreas);
+        $em->flush();
+        $token = $this->exportToken($client);
+
+        [$zip] = $this->download($client, $token);
+
+        $account = $this->entry($zip, 'account.json');
+        self::assertSame(['pending_follows_areas'], $account['closed_hints']);
     }
 
     public function testCredentialsAreNeverExported(): void

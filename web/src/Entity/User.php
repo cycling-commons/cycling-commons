@@ -18,6 +18,7 @@ use App\Catalog\MapViewMode;
 use App\Catalog\RiderPseudonym;
 use App\Catalog\RidingStyle;
 use App\Form\CatalogFieldConstraints;
+use App\Map\MapHint;
 use App\Repository\UserRepository;
 use App\Validator\MailableEmail;
 use App\Validator\PlainDisplayName;
@@ -139,6 +140,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     // Null = follow switcher / browser / site default.
     #[ORM\Column(type: 'string', length: 5, nullable: true)]
     private ?string $locale = null;
+
+    /**
+     * Map hints this person closed (MapHint values). No settings screen shows
+     * it; the map reads it (map-and-search.md §4.5).
+     *
+     * @var array<mixed> json hydrates bypassing the setter; getClosedHints() guards
+     */
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $closedHints = [];
 
     #[ORM\Column(type: 'string', length: 16, options: ['default' => 'auto'])]
     private string $defaultMapMode = MapViewMode::Auto->value;
@@ -589,6 +599,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
             }
         }
         $this->baseRegionIds = $clean;
+
+        return $this;
+    }
+
+    /** @return list<MapHint> unknown stored values dropped */
+    public function getClosedHints(): array
+    {
+        return array_values(array_filter(
+            array_map(static fn (mixed $v): ?MapHint => \is_string($v) ? MapHint::tryFrom($v) : null, $this->closedHints),
+            static fn (?MapHint $h): bool => null !== $h,
+        ));
+    }
+
+    public function closeHint(MapHint $hint): static
+    {
+        $values = array_map(static fn (MapHint $h): string => $h->value, $this->getClosedHints());
+        $this->closedHints = array_values(array_unique([...$values, $hint->value]));
 
         return $this;
     }

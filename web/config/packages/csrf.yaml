@@ -18,6 +18,7 @@ framework:
             - scout-traffic
             - time-zone
             - my-area
+            - map-hint
             - country-interest
             - curator-application
             # The floating bug button renders on EVERY page, anonymous readers
