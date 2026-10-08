@@ -85,6 +85,29 @@ final class UserAdminService
         $this->commit($actor, self::GRANT_CURATOR, $target);
     }
 
+    /**
+     * Make a rider a curator together with the areas they moderate.
+     * Empty lists mean all areas.
+     *
+     * @see docs/specs/moderation-and-contribution.md §9.4
+     *
+     * @param list<string> $countryCodes
+     * @param list<int>    $regionIds
+     */
+    public function grantCuratorWithAreas(User $target, User $actor, array $countryCodes, array $regionIds): void
+    {
+        if ($this->hasRole($target, 'ROLE_CURATOR')) {
+            throw new GuardrailViolationException('This account is already a curator. Change its areas with Assign moderation areas.');
+        }
+        // Checked before the transaction: a failed transaction closes the entity manager.
+        $this->checkAreas($countryCodes, $regionIds);
+
+        $this->em->wrapInTransaction(function () use ($target, $actor, $countryCodes, $regionIds): void {
+            $this->grantCurator($target, $actor);
+            $this->setModeratorAreas($target, $actor, $countryCodes, $regionIds);
+        });
+    }
+
     public function revokeCurator(User $target, User $actor): void
     {
         $this->setRole($target, 'ROLE_CURATOR', false);
@@ -136,17 +159,7 @@ final class UserAdminService
      */
     public function setModeratorAreas(User $target, User $actor, array $countryCodes, array $regionIds): void
     {
-        $countryCodes = array_values(array_unique(array_map(strtoupper(...), $countryCodes)));
-        $regionIds = array_values(array_unique(array_map(intval(...), $regionIds)));
-
-        $regions = [] !== $regionIds ? $this->em->getRepository(Region::class)->findBy(['id' => $regionIds]) : [];
-        if (\count($regions) !== \count($regionIds)) {
-            throw new \InvalidArgumentException('Unknown region in assignment.');
-        }
-        $countries = [] !== $countryCodes ? $this->em->getRepository(Country::class)->findBy(['iso2' => $countryCodes]) : [];
-        if (\count($countries) !== \count($countryCodes)) {
-            throw new \InvalidArgumentException('Unknown country in assignment.');
-        }
+        [$countryCodes, $regionIds, $regions] = $this->checkAreas($countryCodes, $regionIds);
 
         $note = sprintf(
             'regions: %s; countries: %s',
@@ -182,6 +195,31 @@ final class UserAdminService
             );
             $this->em->flush();
         }
+    }
+
+    /**
+     * Normalised areas. Throws on an unknown region or country.
+     *
+     * @param list<string> $countryCodes
+     * @param list<int>    $regionIds
+     *
+     * @return array{list<string>, list<int>, list<Region>}
+     */
+    private function checkAreas(array $countryCodes, array $regionIds): array
+    {
+        $countryCodes = array_values(array_unique(array_map(strtoupper(...), $countryCodes)));
+        $regionIds = array_values(array_unique(array_map(intval(...), $regionIds)));
+
+        $regions = [] !== $regionIds ? $this->em->getRepository(Region::class)->findBy(['id' => $regionIds]) : [];
+        if (\count($regions) !== \count($regionIds)) {
+            throw new \InvalidArgumentException('Unknown region in assignment.');
+        }
+        $countries = [] !== $countryCodes ? $this->em->getRepository(Country::class)->findBy(['iso2' => $countryCodes]) : [];
+        if (\count($countries) !== \count($countryCodes)) {
+            throw new \InvalidArgumentException('Unknown country in assignment.');
+        }
+
+        return [$countryCodes, $regionIds, $regions];
     }
 
     /**

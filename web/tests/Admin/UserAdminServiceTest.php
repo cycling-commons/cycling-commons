@@ -106,6 +106,45 @@ final class UserAdminServiceTest extends KernelTestCase
         self::assertStringNotContainsString('ROLE_USER', (string) $stored);
     }
 
+    public function testGrantCuratorWithAreasSavesTheRoleAndTheAreasTogether(): void
+    {
+        $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
+        $t = $this->user('t@example.com');
+
+        $this->svc->grantCuratorWithAreas($t, $admin, ['nl'], []);
+
+        self::assertContains('ROLE_CURATOR', $t->getRoles());
+        $areas = $this->em->getConnection()->fetchFirstColumn('SELECT country_code FROM moderator_area WHERE user_id = ?', [$t->getId()]);
+        self::assertSame(['NL'], $areas);
+        $actions = $this->em->getConnection()->fetchFirstColumn('SELECT action FROM admin_action_log WHERE target_user_id = ? ORDER BY id', [$t->getId()]);
+        self::assertSame([UserAdminService::GRANT_CURATOR, UserAdminService::MODERATOR_AREAS], $actions);
+    }
+
+    public function testGrantCuratorWithAnUnknownAreaGrantsNothing(): void
+    {
+        $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
+        $t = $this->user('t@example.com');
+
+        try {
+            $this->svc->grantCuratorWithAreas($t, $admin, [], [999999]);
+            self::fail('an unknown region must be refused');
+        } catch (\InvalidArgumentException) {
+        }
+
+        $roles = (string) $this->em->getConnection()->fetchOne('SELECT roles FROM users WHERE id = ?', [$t->getId()]);
+        self::assertStringNotContainsString('ROLE_CURATOR', $roles);
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM admin_action_log WHERE target_user_id = ?', [$t->getId()]));
+    }
+
+    public function testGrantCuratorWithAreasRefusesACurator(): void
+    {
+        $admin = $this->user('a@example.com', ['ROLE_ADMIN']);
+        $t = $this->user('t@example.com', ['ROLE_CURATOR']);
+
+        $this->expectException(GuardrailViolationException::class);
+        $this->svc->grantCuratorWithAreas($t, $admin, ['NL'], []);
+    }
+
     public function testCannotRevokeOwnAdmin(): void
     {
         $admin = $this->user('a@example.com', ['ROLE_ADMIN']);

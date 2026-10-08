@@ -21,7 +21,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Security review 2026-07-07 (critical #2): the User support-desk actions
+ * The User support-desk actions
  * (unlock / disarm 2FA / grant-revoke roles / remove account) used to render
  * as GET `<a href>` links with no CSRF token and no method guard, so a
  * cross-site page could trigger privilege escalation or account destruction
@@ -103,15 +103,15 @@ final class UserAdminActionsTest extends WebTestCase
         static::createClient();
         $router = static::getContainer()->get('router');
 
-        // MODERATOR_AREAS is deliberately exempt: it renders a form page (GET)
-        // before the curator submits it (POST), unlike every other entry here,
-        // which is a one-click mutation with no intermediate page — so it is
-        // GET+POST by design, not a CSRF gap (see moderator_areas() handler,
-        // which still enforces its own CSRF token check on the POST branch).
+        // MODERATOR_AREAS and GRANT_CURATOR are deliberately exempt: each
+        // renders a form page (GET) before the admin submits it (POST), unlike
+        // every other entry here, which is a one-click mutation with no
+        // intermediate page, so they are GET+POST by design, not a CSRF gap
+        // (both handlers still check the CSRF token on the POST branch).
         $actions = [
             UserAdminService::UNLOCK, UserAdminService::DISARM_2FA,
             UserAdminService::VERIFY_EMAIL, UserAdminService::UNVERIFY_EMAIL,
-            UserAdminService::GRANT_CURATOR, UserAdminService::REVOKE_CURATOR,
+            UserAdminService::REVOKE_CURATOR,
             UserAdminService::GRANT_ADMIN, UserAdminService::REVOKE_ADMIN,
             UserAdminService::REMOVE_ACCOUNT, UserAdminService::CANCEL_REMOVAL,
         ];
@@ -219,6 +219,115 @@ final class UserAdminActionsTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('JBSWY3DPEHPK3PXPSECRETSEED', (string) $client->getResponse()->getContent());
+    }
+
+    public function testARiderWhoIsNoCuratorHasNoModerationAreas(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin-areas@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider-areas@example.com');
+        $curator = $this->createUser('curator-areas@example.com', ['ROLE_CURATOR']);
+
+        $client->loginUser($admin);
+        $page = $this->detailCrawler($client, (int) $rider->getId());
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Not a curator', $page->text());
+        self::assertStringNotContainsString('All areas', $page->text(), 'a rider moderates nothing');
+
+        $page = $this->detailCrawler($client, (int) $curator->getId());
+        self::assertStringContainsString('All areas', $page->text(), 'a curator without areas moderates everywhere (§9.2)');
+    }
+
+    // ── Grant curator: areas first (moderation-and-contribution.md §9.4) ────
+
+    /** @param array<string, mixed> $fields */
+    private function postGrant(KernelBrowser $client, User $target, array $fields): void
+    {
+        $crawler = $client->request('GET', $this->actionUrl(UserAdminService::GRANT_CURATOR, (int) $target->getId()));
+        $token = (string) $crawler->filter('form input[name="token"]')->attr('value');
+        $client->request('POST', $this->actionUrl(UserAdminService::GRANT_CURATOR, (int) $target->getId()), ['token' => $token] + $fields);
+    }
+
+    public function testGrantCuratorOpensTheAreaPickerAndGrantsNothingYet(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider@example.com');
+
+        $client->loginUser($admin);
+        $detail = $this->detailCrawler($client, (int) $rider->getId());
+        $link = $detail->filter('a.action-'.UserAdminService::GRANT_CURATOR);
+        self::assertCount(1, $link, 'Grant curator opens a page, it is no longer a one-click form');
+
+        $client->request('GET', (string) $link->attr('href'));
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('form select[name="regions[]"]');
+        self::assertSelectorExists('form select[name="countries[]"]');
+        self::assertSelectorExists('form input[type="checkbox"][name="all_areas"]');
+        self::assertNotContains('ROLE_CURATOR', $this->reload('rider@example.com')->getRoles());
+    }
+
+    public function testGrantCuratorWithACountrySavesRoleAndArea(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider@example.com');
+
+        $client->loginUser($admin);
+        $this->postGrant($client, $rider, ['countries' => ['NL']]);
+        self::assertResponseRedirects();
+
+        self::assertContains('ROLE_CURATOR', $this->reload('rider@example.com')->getRoles());
+        $rows = static::getContainer()->get(EntityManagerInterface::class)
+            ->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $rider->getId()]);
+        self::assertCount(1, $rows);
+        self::assertSame('NL', $rows[0]->getCountryCode());
+    }
+
+    public function testGrantCuratorForAllAreasNeedsTheTick(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider@example.com');
+
+        $client->loginUser($admin);
+        $this->postGrant($client, $rider, ['all_areas' => '1']);
+        self::assertResponseRedirects();
+
+        self::assertContains('ROLE_CURATOR', $this->reload('rider@example.com')->getRoles());
+        $rows = static::getContainer()->get(EntityManagerInterface::class)
+            ->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $rider->getId()]);
+        self::assertCount(0, $rows, 'All areas means no area rows (§9.2)');
+    }
+
+    public function testGrantCuratorWithoutAClearChoiceGrantsNothing(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider@example.com');
+        $client->loginUser($admin);
+
+        foreach ([[], ['all_areas' => '1', 'countries' => ['NL']]] as $fields) {
+            $this->postGrant($client, $rider, $fields);
+            $client->followRedirect();
+            self::assertSelectorExists('.alert-danger, .flash-danger, [class*="danger"]');
+            self::assertNotContains('ROLE_CURATOR', $this->reload('rider@example.com')->getRoles());
+        }
+        $logs = static::getContainer()->get(AdminActionLogRepository::class)
+            ->findBy(['action' => UserAdminService::GRANT_CURATOR]);
+        self::assertCount(0, $logs);
+    }
+
+    public function testGrantCuratorRejectsPostWithoutCsrfToken(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider@example.com');
+
+        $client->loginUser($admin);
+        $client->request('POST', $this->actionUrl(UserAdminService::GRANT_CURATOR, (int) $rider->getId()), ['token' => 'forged', 'all_areas' => '1']);
+
+        self::assertNotContains('ROLE_CURATOR', $this->reload('rider@example.com')->getRoles());
     }
 
     // ── Moderator areas (assign) ─────────────────────────────────────────────

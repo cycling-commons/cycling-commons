@@ -42,7 +42,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * User CRUD + support-desk actions. Never exposes password, totpSecret, backupCodes.
  *
- * @see docs/specs/account-and-auth.md §6.5
+ * @see docs/specs/account-and-auth.md §6.6
  *
  * @api
  *
@@ -115,7 +115,11 @@ final class UserCrudController extends AbstractCrudController
         yield $this->riderDateTime('createdAt', 'Registered')->hideOnForm();
         yield TextField::new('email', $this->t('admin.field.mod_areas'))
             ->onlyOnDetail()
-            ->formatValue(fn ($v, User $u): string => implode(' · ', $this->scopeProvider->describe($u)) ?: $this->translator->trans('account.mod_scope_all'));
+            // A rider who is no curator moderates nothing; only a curator or an
+            // admin without areas moderates everywhere (moderation-and-contribution.md §9.2).
+            ->formatValue(fn ($v, User $u): string => [] === array_intersect(['ROLE_CURATOR', 'ROLE_ADMIN'], $u->getRoles())
+                ? $this->translator->trans('admin.field.mod_areas_none')
+                : (implode(' · ', $this->scopeProvider->describe($u)) ?: $this->translator->trans('account.mod_scope_all')));
     }
 
     #[\Override]
@@ -135,7 +139,9 @@ final class UserCrudController extends AbstractCrudController
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::DISARM_2FA, 'admin.action.disarm_2fa', 'fa fa-shield-halved', true, static fn (User $u) => $u->isTwoFaEnabled()))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::VERIFY_EMAIL, 'admin.action.verify_email', 'fa fa-envelope-circle-check', false, static fn (User $u) => !$u->isEmailVerified()))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::UNVERIFY_EMAIL, 'admin.action.unverify_email', 'fa fa-envelope', true, static fn (User $u) => $u->isEmailVerified()))
-            ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::GRANT_CURATOR, 'admin.action.grant_curator', 'fa fa-user-shield', false, fn (User $u) => !$this->svc->hasRole($u, 'ROLE_CURATOR')))
+            ->add(Crud::PAGE_DETAIL, Action::new(UserAdminService::GRANT_CURATOR, $this->t('admin.action.grant_curator'), 'fa fa-user-shield')
+                ->linkToCrudAction(UserAdminService::GRANT_CURATOR)
+                ->displayIf(fn (User $u) => !$this->svc->hasRole($u, 'ROLE_CURATOR')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REVOKE_CURATOR, 'admin.action.revoke_curator', 'fa fa-user', true, fn (User $u) => $this->svc->hasRole($u, 'ROLE_CURATOR')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::GRANT_ADMIN, 'admin.action.grant_admin', 'fa fa-user-gear', true, fn (User $u) => !$this->svc->hasRole($u, 'ROLE_ADMIN')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REVOKE_ADMIN, 'admin.action.revoke_admin', 'fa fa-user-minus', true, fn (User $u) => $this->svc->hasRole($u, 'ROLE_ADMIN')))
@@ -177,11 +183,52 @@ final class UserCrudController extends AbstractCrudController
         return $this->run($context, fn (User $t, User $a) => $this->svc->unverifyEmail($t, $a), 'admin.flash.email_unverified');
     }
 
-    /** @param AdminContext<User> $context */
-    #[AdminRoute(options: ['methods' => ['POST']])]
-    public function grant_curator(AdminContext $context): RedirectResponse
+    /**
+     * Grant curator together with its areas. GET shows the area picker, POST
+     * grants. "All areas" is an explicit tick, never an empty picker.
+     *
+     * @see docs/specs/moderation-and-contribution.md §9.4
+     *
+     * @param AdminContext<User> $context
+     */
+    #[AdminRoute(options: ['methods' => ['GET', 'POST']])]
+    public function grant_curator(AdminContext $context, Request $request, EntityManagerInterface $em): Response
     {
-        return $this->run($context, fn (User $t, User $a) => $this->svc->grantCurator($t, $a), 'admin.flash.role_changed');
+        /** @var User $target */
+        $target = $context->getEntity()->getInstance();
+
+        if (!$request->isMethod('POST')) {
+            return $this->renderAreaPicker($target, $em, grant: true);
+        }
+        if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token for a user support action.');
+        }
+        /** @var User $actor */
+        $actor = $this->getUser();
+        /** @var list<string> $countries */
+        $countries = array_map(strval(...), (array) $request->request->all('countries'));
+        /** @var list<int> $regions */
+        $regions = array_map(intval(...), (array) $request->request->all('regions'));
+        $allAreas = $request->request->getBoolean('all_areas');
+
+        if ($allAreas === ([] !== $countries || [] !== $regions)) {
+            $this->addFlash('danger', $this->translator->trans('admin.flash.areas_choose'));
+
+            return $this->redirect(
+                $this->urls->setController(self::class)->setAction(UserAdminService::GRANT_CURATOR)->setEntityId($target->getId())->generateUrl()
+            );
+        }
+
+        try {
+            $this->svc->grantCuratorWithAreas($target, $actor, $countries, $regions);
+            $this->addFlash('success', $this->translator->trans('admin.flash.curator_granted'));
+        } catch (\InvalidArgumentException|GuardrailViolationException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        return $this->redirect(
+            $this->urls->setController(self::class)->setAction(Action::DETAIL)->setEntityId($target->getId())->generateUrl()
+        );
     }
 
     /** @param AdminContext<User> $context */
@@ -254,6 +301,11 @@ final class UserCrudController extends AbstractCrudController
             );
         }
 
+        return $this->renderAreaPicker($target, $em, grant: false);
+    }
+
+    private function renderAreaPicker(User $target, EntityManagerInterface $em, bool $grant): Response
+    {
         // Columns only — hydrating Region.geom OOMs this page.
         $regionRows = $em->getConnection()->fetchAllAssociative(
             'SELECT id, name, country_code FROM region ORDER BY country_code ASC, name ASC'
@@ -268,6 +320,7 @@ final class UserCrudController extends AbstractCrudController
             'countries' => $em->getRepository(Country::class)->findBy([], ['name' => 'ASC']),
             'regions' => $regions,
             'assigned' => $em->getRepository(ModeratorArea::class)->findBy(['userId' => (int) $target->getId()]),
+            'grant' => $grant,
         ]);
     }
 
