@@ -1,0 +1,42 @@
+web/tests/js/search-dedupe.test.cjs
+  s_985749378da6fe::t_68dab6cd9f81a5 1-22
+web/tests/Coverage/CoverageQueryTest.php
+  s_985749378da6fe::t_1e7181c70b36cb 180-193
+  s_985749378da6fe::t_7c21843164dd2e 119,393,468,492,509,583
+  s_985749378da6fe::t_b515970fcd0f0b 194-214,222-223
+  s_985749378da6fe::t_c960821e65c9e2 215-221
+  s_985749378da6fe::t_7e92d219b0ec29 407,533
+web/assets/map/search-ui.js
+  s_985749378da6fe::t_60c05b098caaa6 257-258
+  s_985749378da6fe::t_c1ebde0dbe0f70 11
+  s_985749378da6fe::t_1f605fb9ca2d73 331-333
+  s_985749378da6fe::t_d79c5d8f4138b9 254-255
+  s_985749378da6fe::t_279b9dc2cd8dc7 163-164,166-167,256,394-399
+web/tests/js/search-rows.test.cjs
+  s_985749378da6fe::t_7d57c03913eea1 1-31
+  s_985749378da6fe::t_c960821e65c9e2 32-35
+web/src/Coverage/CoverageRepository.php
+  s_985749378da6fe::t_60c05b098caaa6 331,335,544,569-571
+  s_985749378da6fe::t_bf7f427f360acb 540
+  s_985749378da6fe::t_ae661ec58d0982 334,405
+  s_985749378da6fe::t_34a0a3dcc6569f 13,162,338,361,363,365,533-539,556-568
+  s_985749378da6fe::t_a2e0653842e44d 541-543
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_985749378da6fe::t_3f3dc95e6fec39 261-276
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5d8fcdc06f2616b42d2b9d55e767fc35f3645c23",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
