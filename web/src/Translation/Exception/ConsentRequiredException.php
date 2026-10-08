@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace App\Translation\Exception;
 
 /**
- * Proposal submitted without CC BY-SA consent (no tick, and no current record).
+ * Proposal submitted without translation consent (no tick, and no current record).
  *
  * @see docs/specs/translations.md §4
  *

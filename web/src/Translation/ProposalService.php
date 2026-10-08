@@ -29,7 +29,7 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * In-site translation proposal intake under CC BY-SA consent.
+ * In-site translation proposal intake under the AGPL-3.0-only translation consent.
  *
  * @see docs/specs/translations.md §4, §6
  *
@@ -83,7 +83,7 @@ final class ProposalService
             throw new InvalidLocaleException(sprintf('Locale "%s" is not translatable.', $locale));
         }
 
-        // English edits are product copy, not a CC BY-SA grant (translations.md §6).
+        // English edits are product copy, not a rider grant (translations.md §6).
         $currentConsent = $isEnglish ? null : $this->consent->current($user);
         if (!$isEnglish && !$consentTick && null === $currentConsent) {
             throw new ConsentRequiredException('Consent tick required.');

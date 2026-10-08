@@ -661,7 +661,7 @@ final class TranslateController extends AbstractController
         $proposed = $open?->getProposedValue() ?? '';
         // No consent applies to a dev submit: nothing is being asked for,
         // and showing either the tick or the "you already agreed" line
-        // here would claim a CC BY-SA grant that this path never creates
+        // here would claim a rider grant that this path never creates
         // (translations.md §7.3). Nulling $standing and dropping the
         // 'consent' field from the form together cover both halves of
         // _form.html.twig's consent block; see that template's own

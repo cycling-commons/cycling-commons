@@ -135,7 +135,7 @@ final class TranslationProposalType extends AbstractType
             // and one tick box per locale listed, and no single "value"
             // field at all (translations.md §7.3).
             'locales' => [],
-            // English carries no CC BY-SA consent (translations.md §4.2, §6):
+            // English carries no translation consent (translations.md §4.2, §6):
             // it is product copy proposed by a curator, not a creative work
             // licensed in by a rider.
             'consent' => true,
