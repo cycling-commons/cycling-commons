@@ -8,7 +8,7 @@ import { inScope, scopeLabel, liftScopeForHit, noteCoverageSearchHit } from './s
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
 import { openPlace, openCity, openFeatureById, openRouteById } from './places.js';
 import { COVERAGE_ON, covScopeIsZero, covScopeQuery, openCoverageByRef } from './coverage.js';
-import { layerGlyph } from './icons.js';
+import { layerGlyph, kindGlyphSvg } from './icons.js';
 import { mapToast } from './drawer.js';
 import { unseenMark } from './desk-seen.js';
 
@@ -160,8 +160,11 @@ export function initSearchUi(){
       : unconfRow(m) ? `<span class="scomm">${escH(D.unconfirmed||'unconfirmed')}</span>`
       : (m.osm ? `<span class="scomm">${escH(D.osmTag||'OSM')}</span>` : '');
     // A pending submission this curator has not opened carries the unseen bar (moderation-and-contribution.md §5.2f).
+    /* The right column says where the place is when we know it: the group
+       heading already names the category, and five castles can share one name. */
     const sRow=(m,i)=>{ const u=unseenMark(m, I18N.unseen||'Not opened yet');
-      return `<li role="option"${u.attr}><button data-i="${i}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${tierTag(m)}${u.note}</span><span class="sub">${escH(m.kind)}</span></button></li>`; };
+      const sub=m.where||m.kind;
+      return `<li role="option"${u.attr}><button data-i="${i}" title="${escH(m.name+(m.where ? ' · '+m.where : ''))}"><span class="sw" style="background:${m.color};color:${txtOn(m.color)}">${m.badge}</span><span class="snm">${escH(m.name)}${tierTag(m)}${u.note}</span><span class="sub">${escH(sub)}</span></button></li>`; };
     const SCOPE_COLOR='#B5532E';
     // A scope hit is a jump, and the registry is searched whole so "More
     // regions…" can reach any region by name. A region in another country
@@ -248,9 +251,11 @@ export function initSearchUi(){
             .filter(h=>h && h.n && LETTER_KEY[h.letter] && Array.isArray(h.ll))
             .filter(h=>!(h.itemId!=null && idxIds().has(h.letter+':'+h.itemId)))
             .map(h=>{ const layer=layerByKey[LETTER_KEY[h.letter]];
-              return {name:h.n, key:slug(h.n), kind:layer.label, badge:layerGlyph(layer), color:layer.color,
-                letter:h.letter, ll:h.ll, cov:1, osm:!h.curated,
-                go:()=>openCoverageByRef(h.ref, h.letter, h.ll, h.n, h.itemId)}; });
+              // A scenic or history hit shows its kind's glyph: a castle, not the category's temple front.
+              return {name:h.n, key:slug(h.n), kind:layer.label, badge:(h.kind && kindGlyphSvg(h.letter, h.kind, layer.color, 15)) || layerGlyph(layer), color:layer.color,
+                letter:h.letter, ll:h.ll, cov:1, osm:!h.curated, itemId:h.itemId, where:h.region||'',
+                // Our own item opens as itself (its region loads first), never as an OSM point.
+                go:()=>h.itemId!=null ? openApiHit(h.letter, h.itemId, h.rid) : openCoverageByRef(h.ref, h.letter, h.ll, h.n)}; });
           _covSQ=slug(q);
           if(!sRes.hidden) runS();
         })
@@ -323,7 +328,9 @@ export function initSearchUi(){
       const byLetter={};
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       if(_covSQ===q) _covHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
-      if(_worldwide && _apiQ===q) _apiHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
+      // One place, one row: our own item can come back from both searches.
+      const covIds = _covSQ===q ? new Set(_covHits.filter(m=>m.itemId!=null).map(m=>m.letter+':'+m.itemId)) : new Set();
+      if(_worldwide && _apiQ===q) _apiHits.forEach(m=>{ if(covIds.has(m.letter+':'+m.id)) return; (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(secondRow(a)?1:0)-(secondRow(b)?1:0)));
       // A · one row per route name (up to "·"); other letters keep same-named distinct places.
       if(byLetter.A){
@@ -384,6 +391,12 @@ export function initSearchUi(){
     sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150);
       clearTimeout(_phDeb); _phDeb=setTimeout(()=>runPhoton(sBox.value),350);
       clearTimeout(_covDeb); _covDeb=setTimeout(()=>{ runCoverageSearch(sBox.value); runItemSearch(sBox.value); },250); });
+    /* Back in a box that still holds a query (after picking a hit, or after
+       the panel closed): the list comes back without retyping. */
+    const reopenS=()=>{ if(!sRes.hidden || !sBox.value.trim()) return;
+      runPhoton(sBox.value); runCoverageSearch(sBox.value); runItemSearch(sBox.value); runS(); };
+    sBox.addEventListener('focus', reopenS);
+    sBox.addEventListener('click', reopenS);
     sBox.addEventListener('keydown', e=>{
       if(sRes.hidden){ if(e.key==='ArrowDown') runS(); return; }
       if(e.key==='ArrowDown'){ e.preventDefault(); sHL=Math.min(sHL+1, sMatches.length-1); hlS(); }

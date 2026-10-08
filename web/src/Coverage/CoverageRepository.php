@@ -10,6 +10,7 @@ use App\Catalog\CoverageRetirement;
 use App\Catalog\Entity\Item;
 use App\Catalog\GoneRows;
 use App\Catalog\ItemState;
+use App\Catalog\PlaceKind;
 use App\Media\Commons\CommonsFile;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
@@ -158,7 +159,7 @@ final class CoverageRepository
             'ref' => $row['ref'],
             'letter' => $row['letter'],
             'name' => $row['name'],
-            'kind' => $row['kind'],
+            'kind' => $row['kind'] ?? self::placeKindOf($row['letter'], $tags),
             'll' => [(float) $row['lat'], (float) $row['lng']],
             // (object) so an empty whitelist intersection still encodes {}.
             'tags' => (object) array_intersect_key($tags, array_flip(self::TAG_WHITELIST)),
@@ -327,12 +328,14 @@ final class CoverageRepository
         $curatedTypes = ['limit' => ParameterType::INTEGER];
         // Curated arm is rid-only so a listed pin cannot be hidden by the map's rid gate (docs/specs/coverage-provider.md §5).
         $this->scopeBind($curatedParams, $curatedTypes, $rids, null);
-        /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
+        /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, region: string|null, rid: int|string|null, lat: string|float, lng: string|float}> $curated */
         $curated = $this->db->fetchAllAssociative(
             "SELECT i.id AS item_id, i.source_ref AS ref, i.letter, i.name,
-                    i.attributes->>'serviceKind' AS kind,
+                    COALESCE(i.attributes->>'serviceKind', CASE WHEN i.letter IN ('P', 'Q') THEN i.attributes->>'type' END) AS kind,
+                    r.name AS region, i.region_id AS rid,
                     ST_Y(i.geom) AS lat, ST_X(i.geom) AS lng
              FROM item i
+             LEFT JOIN region r ON r.id = i.region_id
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
                AND i.state IN '.ItemState::servedSqlTuple().'
                AND i.name ILIKE :like
@@ -355,10 +358,11 @@ final class CoverageRepository
             $covParams = ['like' => $like, 'q' => $q, 'limit' => $remaining];
             $covTypes = ['limit' => ParameterType::INTEGER];
             $this->scopeBind($covParams, $covTypes, $rids, $cc);
-            /** @var list<array{ref: string, letter: string, name: string|null, kind: string|null, lat: string|float, lng: string|float}> $coverage */
+            /** @var list<array{ref: string, letter: string, name: string|null, kind: string|null, region: string|null, tags: string, lat: string|float, lng: string|float}> $coverage */
             $coverage = $this->db->fetchAllAssociative(
-                'SELECT cp.ref, cp.letter, cp.name, cp.kind, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
+                'SELECT cp.ref, cp.letter, cp.name, cp.kind, r.name AS region, cp.tags::text AS tags, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
                  FROM coverage_poi cp
+                 LEFT JOIN region r ON r.id = cp.region_id
                  WHERE cp.name ILIKE :like
                    AND NOT EXISTS (SELECT 1 FROM item i WHERE cp.ref IN (i.source_ref, i.osm_ref) AND i.state IN '.ItemState::servedSqlTuple().' AND NOT ('.CoverageRetirement::untouchedOsmSql('i').'))'
                    .$this->scopeArm('cp', $rids, $cc).'
@@ -398,7 +402,7 @@ final class CoverageRepository
         /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
         $curated = $this->db->fetchAllAssociative(
             "SELECT i.id AS item_id, i.source_ref AS ref, i.letter, i.name,
-                    i.attributes->>'serviceKind' AS kind,
+                    COALESCE(i.attributes->>'serviceKind', CASE WHEN i.letter IN ('P', 'Q') THEN i.attributes->>'type' END) AS kind,
                     ST_Y(i.geom) AS lat, ST_X(i.geom) AS lng
              FROM item i
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
@@ -526,7 +530,18 @@ final class CoverageRepository
     }
 
     /**
-     * One search/nearby entry: {ref, letter, n?, kind?, ll, curated, itemId?}.
+     * A P or Q point's kind from its OSM tags, for a row the pipeline has not
+     * stamped yet (osm-data-architecture.md §5a).
+     *
+     * @param array<string, mixed> $tags
+     */
+    private static function placeKindOf(string $letter, array $tags): ?string
+    {
+        return \in_array($letter, PlaceKind::TYPED_LETTERS, true) ? PlaceKind::fromOsmTags($letter, $tags) : null;
+    }
+
+    /**
+     * One search/nearby entry: {ref, letter, n?, kind?, region?, rid?, ll, curated, itemId?}.
      *
      * @param array{ref: string, letter: string, name: string|null, kind: string|null, lat: string|float, lng: string|float, ...<array-key, mixed>} $row
      *
@@ -538,8 +553,22 @@ final class CoverageRepository
         if (null !== $row['name'] && '' !== $row['name']) {
             $entry['n'] = $row['name'];
         }
-        if (null !== $row['kind']) {
-            $entry['kind'] = $row['kind'];
+        $kind = $row['kind'];
+        if (null === $kind && \is_string($row['tags'] ?? null)) {
+            /** @var array<string, mixed> $tags */
+            $tags = json_decode($row['tags'], true, 512, \JSON_THROW_ON_ERROR);
+            $kind = self::placeKindOf($row['letter'], $tags);
+        }
+        if (null !== $kind) {
+            $entry['kind'] = $kind;
+        }
+        // Where it is: five castles can share one name (map-and-search.md §7.1).
+        if (\is_string($row['region'] ?? null) && '' !== $row['region']) {
+            $entry['region'] = $row['region'];
+        }
+        // Our item's region: the map loads it to open the item itself, not an OSM view of it.
+        if (is_numeric($row['rid'] ?? null)) {
+            $entry['rid'] = (int) $row['rid'];
         }
         $entry['ll'] = [(float) $row['lat'], (float) $row['lng']];
         $entry['curated'] = $curated;

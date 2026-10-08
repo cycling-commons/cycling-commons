@@ -116,7 +116,7 @@ final class CoverageQueryTest extends WebTestCase
         self::ensureCoverageSchema($db);
         // An untouched legacy row (coverage-retirement predicate) must NOT
         // be treated as payload-served: it lists once, as community — its
-        // coverage twin is not shadowed (finding 1, coverage-provider.md §9
+        // coverage twin is not shadowed (coverage-provider.md §9,
         // "zero display change").
         self::insertCoveragePoi($db, ['ref' => 'node/9010', 'name' => 'Fontaine oubliée']);
         $this->untouchedOsmItem('node/9010', 'Fontaine oubliée');
@@ -175,6 +175,50 @@ final class CoverageQueryTest extends WebTestCase
         $results = $this->getJson($client, '/map/coverage/search?q=pompe')['results'];
         self::assertSame('D', $results[0]['letter']);
         self::assertSame('pump', $results[0]['kind']);
+    }
+
+    public function testSearchCarriesAScenicItemsKind(): void
+    {
+        // osm-data-architecture.md §5a: our own waterfall draws the waterfall glyph in the results too.
+        $client = static::createClient();
+        self::ensureCoverageSchema($this->db());
+        $item = $this->item('manual:coo', 'Cascade de Coo', letter: 'P');
+        $item->setAttributes(['type' => 'waterfall']);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $results = $this->getJson($client, '/map/coverage/search?q=Cascade')['results'];
+        self::assertSame('P', $results[0]['letter']);
+        self::assertSame('waterfall', $results[0]['kind'] ?? null);
+    }
+
+    public function testSearchSaysWhereEachHitIsAndWhatKindItIs(): void
+    {
+        // Five castles share the name "Château Gaillard": the region tells them
+        // apart, and an OSM castle reads as a castle before the pipeline has
+        // stamped its kind (osm-data-architecture.md §5a).
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        $rid = (int) $db->fetchOne(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, admin_level, created_at, updated_at)
+             VALUES ('search-where-test', 'Normandy test', ST_SetSRID(ST_MakeEnvelope(0.0, 49.0, 2.0, 50.0), 4326), 100, 'FR', 4, NOW(), NOW())
+             RETURNING id",
+        );
+        self::insertCoveragePoi($db, [
+            'ref' => 'way/9301', 'letter' => 'Q', 'name' => 'Château Gaillard test',
+            'tags' => ['historic' => 'castle'], 'region_id' => $rid, 'country_code' => 'FR', 'lat' => 49.24, 'lng' => 1.40,
+        ]);
+
+        $results = $this->getJson($client, '/map/coverage/search?q=Gaillard%20test')['results'];
+        self::assertSame('Normandy test', $results[0]['region'] ?? null);
+        self::assertSame('castle', $results[0]['kind'] ?? null);
+
+        // Our own item names its region id, so the map opens the item itself.
+        $item = $this->item('wikidata:Q-test', 'Les Andelys test castle', 49.24, 1.40, 'Q');
+        $db->executeStatement('UPDATE item SET region_id = :r WHERE id = :id', ['r' => $rid, 'id' => $item->getId()]);
+        $hit = $this->getJson($client, '/map/coverage/search?q=Andelys%20test')['results'][0];
+        self::assertSame($rid, $hit['rid'] ?? null);
+        self::assertSame((int) $item->getId(), $hit['itemId'] ?? null);
     }
 
     public function testSearchOverlongQueryIsCappedAndStillAnswers(): void
@@ -346,7 +390,7 @@ final class CoverageQueryTest extends WebTestCase
         $db = $this->db();
         self::ensureCoverageSchema($db);
         // A confirmed (payload-served) item's coverage twin must not count
-        // (minor finding 7: rail coherence with the payload-on-top map).
+        // (rail coherence with the payload-on-top map).
         self::insertCoveragePoi($db, ['ref' => 'node/9705', 'letter' => 'B', 'name' => 'Fontaine confirmée']);
         $this->item('node/9705', 'Fontaine confirmée');
         // An untouched legacy row is not payload-served — it must still count.
@@ -360,7 +404,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testSearchScopesToRidsAndCc(): void
     {
-        // Region scope (map-and-search.md §4.5 Phase 3): rids filters
+        // Region scope (map-and-search.md §4.5): rids filters
         // community + curated rows to the region; cc catches unsplit rows.
         $client = static::createClient();
         $db = $this->db();
@@ -421,7 +465,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testCuratedArmIsRidOnlyForMapParity(): void
     {
-        // finding 6: the curated arm is rid-ONLY (drops cc), mirroring the map's
+        // The curated arm is rid-ONLY (drops cc), mirroring the map's
         // rid-only served-data gate — else the sidebar would list a curated POI
         // (region_id NULL, cc='BE') whose pin the map hides. The COMMUNITY arm
         // keeps cc, so an identically-shaped coverage row IS still listed.
@@ -445,7 +489,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testCcRejectsTrailingNewline(): void
     {
-        // finding 7: PCRE $ matches before a trailing \n, so 'BE\n' used to pass
+        // PCRE $ matches before a trailing \n, so 'BE\n' used to pass
         // and yield country_code = 'BE\n' matching nothing (the inverse of the
         // garbage-→-Everywhere contract). /D closes it: 'BE%0A' is garbage → cc
         // ignored → Everywhere, identical to the no-param counts.
@@ -462,7 +506,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testRidsParserEdges(): void
     {
-        // finding 17: zero-padded rids collapse onto their numeric value (no
+        // Zero-padded rids collapse onto their numeric value (no
         // wasted cap slot), overflow strings are rejected (garbage → Everywhere,
         // never a phantom empty scope), and an array-valued rids[] degrades to
         // Everywhere instead of Symfony's HTML 400.
@@ -486,7 +530,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testCountsScopeToRids(): void
     {
-        // Rail totals become scope-aware (map-and-search.md §4.5 Phase 3),
+        // Rail totals are scope-aware (map-and-search.md §4.5),
         // so "total" matches the scope-filtered "shown" dots the client renders.
         $client = static::createClient();
         $db = $this->db();
@@ -536,7 +580,7 @@ final class CoverageQueryTest extends WebTestCase
 
     public function testCapTruncationIsRescuedByCc(): void
     {
-        // finding 8/21: the 24-region cap is only safe because the cc arm is the
+        // The 24-region cap is only safe because the cc arm is the
         // complete fallback. A row whose region sorts PAST the cap is dropped from
         // the rids IN-list, but a country scope's cc arm still counts it — proven
         // by comparing a >24-id scope WITH vs WITHOUT cc.

@@ -258,6 +258,22 @@ final class CoveragePoiDetailTest extends WebTestCase
         self::assertSame('pump', $data['kind']);
     }
 
+    public function testAScenicOrHistoryPointNamesItsKindFromItsTags(): void
+    {
+        // Until the pipeline stamps `kind` on P and Q, the tag says it
+        // (osm-data-architecture.md §5a): the drawer reads "Ruins", not the layer name.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, [
+            'ref' => 'node/8801', 'letter' => 'Q', 'name' => 'Ruine test', 'tags' => ['historic' => 'ruins'],
+        ]);
+
+        $data = $this->getJson($client, '/map/coverage/poi/node/8801');
+        self::assertResponseIsSuccessful();
+        self::assertSame('ruins', $data['kind']);
+    }
+
     public function testCuratedOverlayMergesItemFieldsAndConfirmations(): void
     {
         $client = static::createClient();
