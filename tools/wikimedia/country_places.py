@@ -79,22 +79,23 @@ COUNTRY_QID = {
     "US": "Q30", "ES": "Q29",
 }
 
-# Wikidata classes per layer, with the catalogue `type` value each maps to.
-# The `type` strings are the registry's own choices — they must stay inside the
-# scenic-views / history-culture vocabularies or the seed refuses the row.
+# Wikidata classes per layer, with the catalogue kind each maps to
+# (App\Catalog\PlaceKind, docs/specs/osm-data-architecture.md §5a): one OSM tag
+# per kind. None: the class is no single kind (a lake, a national park, a
+# gorge), so the place is seeded without a Type and a curator sets it.
 SCENIC = {
-    "Q8502": "Viewpoint / high point",    # mountain
-    "Q23397": "Viewpoint / high point",   # lake
-    "Q34038": "Viewpoint / high point",   # waterfall
-    "Q46169": "Natural feature",          # national park
-    "Q179049": "Viewpoint / high point",  # gorge
+    "Q8502": "peak",          # mountain
+    "Q23397": None,           # lake
+    "Q34038": "waterfall",    # waterfall
+    "Q46169": None,           # national park
+    "Q179049": None,          # gorge
 }
 HISTORY = {
-    "Q23413": "Heritage site",     # castle
-    "Q44613": "Religious site",    # monastery
-    "Q16970": "Religious site",    # church building
-    "Q4989906": "Monument",        # monument
-    "Q33506": "Museum",            # museum
+    "Q23413": "castle",       # castle
+    "Q44613": "monastery",    # monastery
+    "Q16970": "worship",      # church building
+    "Q4989906": "monument",   # monument
+    "Q33506": "museum",       # museum
 }
 
 QUERY = """
@@ -190,7 +191,7 @@ def harvest(cc: str, per_layer: int = 6) -> dict:
     seen: set[str] = set()
 
     for layer, classes in (("scenic", SCENIC), ("history", HISTORY)):
-        for cls, type_label in classes.items():
+        for cls, kind in classes.items():
             try:
                 rows = query(cls, qid, per_layer * 2)
             except Exception as exc:  # noqa: BLE001 — recorded, not swallowed
@@ -227,7 +228,7 @@ def harvest(cc: str, per_layer: int = 6) -> dict:
                 out[layer].append({
                     "qid": q,
                     "name": label,
-                    "type": type_label,
+                    "type": kind,
                     "note": b.get("itemDescription", {}).get("value", ""),
                     "lat": round(float(lat), 5),
                     "lng": round(float(lng), 5),

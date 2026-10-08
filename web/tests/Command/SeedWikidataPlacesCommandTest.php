@@ -14,7 +14,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * `app:catalog:seed-wikidata` (test-suite review 2026-08-24).
+ * `app:catalog:seed-wikidata`.
  *
  * This command writes catalog rows a rider then sees on the map, from an
  * artifact harvested by tools/wikimedia/country_places.py, and it had no test
@@ -180,26 +180,23 @@ final class SeedWikidataPlacesCommandTest extends KernelTestCase
         self::assertStringContainsString('No places-*.json artifacts', $tester->getDisplay());
     }
 
-    public function testTheVocabularyGuardChecksKeysAndNotValues(): void
+    public function testTheTypeBecomesAKindOrIsLeftForACurator(): void
     {
-        // Worth pinning because it is easy to assume otherwise:
-        // AttributeVocabulary::assertValid compares attribute KEYS against the
-        // registry and never looks at the values. A harvest that invents a
-        // `type` string is NOT caught here, so the review of the artifact is
-        // the only thing standing between it and the catalog.
-        $place = $this->place('Q1', 'Test Viewpoint');
-        $place['type'] = 'Not A Registry Value';
-        $this->artifact('be', [$place]);
+        // osm-data-architecture.md §5a: a P or Q Type is one OSM tag. An old
+        // label that is one kind becomes it; anything else is left unset,
+        // never written as a value no OSM tag stands for.
+        $old = $this->place('Q1', 'Test Viewpoint');
+        $kind = $this->place('Q2', 'Test Cliff', 50.12, 5.12);
+        $kind['type'] = 'cliff';
+        $label = $this->place('Q3', 'Test Waterfall', 50.15, 5.15);
+        $label['type'] = 'Waterfall';
+        $this->artifact('be', [$old, $kind, $label]);
 
-        $tester = $this->run_();
+        $this->run_()->assertCommandIsSuccessful();
 
-        $tester->assertCommandIsSuccessful();
-        self::assertSame(
-            'Not A Registry Value',
-            json_decode((string) $this->db->fetchOne(
-                "SELECT attributes FROM item WHERE source_ref = 'wikidata:Q1'",
-            ), true)['type'],
-        );
+        self::assertArrayNotHasKey('type', $this->attributes('wikidata:Q1'), 'Viewpoint / high point: a viewpoint or a peak');
+        self::assertSame('cliff', $this->attributes('wikidata:Q2')['type'] ?? null);
+        self::assertSame('waterfall', $this->attributes('wikidata:Q3')['type'] ?? null);
     }
 
     /** @param array<string, mixed> $args */

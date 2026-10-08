@@ -21,7 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * C3-T9 (spec §W3): the hand-authored demo pins baked into map.js's CATALOG
+ * The hand-authored demo pins baked into map.js's CATALOG
  * array get a real `source = manual`, `state = unverified` item row each —
  * a seeded pin is a rider contribution, not a pre-verified fact.
  */
@@ -83,7 +83,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
 
     public function testSeededSelectValuesAreValidRegistryChoices(): void
     {
-        // finding 21: a typo'd choice in the seed (e.g. severity 'Modrate') would
+        // A typo'd choice in the seed (e.g. severity 'Modrate') would
         // seed, serve and render untranslated, silently. Pin EVERY seeded manual
         // item's select/multiselect attribute values to the CatalogFormRegistry
         // choices for its letter — the hazard's hazardType/severity/worstWhen
@@ -278,7 +278,7 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
     }
 
     /**
-     * C4-T11 dedup fix: items 11018/11019/11021 ("Abri Jean Poumay",
+     * Dedup: items 11018/11019/11021 ("Abri Jean Poumay",
      * "Belvédère de la Hoëgne", "Signal de Botrange") duplicated existing OSM
      * rows and double/triple-rendered on the map. The seeder must skip any
      * manual pin whose (name, letter) matches an existing non-manual item.

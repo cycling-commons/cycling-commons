@@ -5,8 +5,8 @@
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** R · Quality rides
-- **Map depiction:** line, icon ★, colour #FF5A1F (brand orange); `unverified` routes carry a **"proposed"** badge
-- **Editable:** **no, curator-only.** R is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Once a curator has decided a proposal nobody edits it but a curator, on the Routes desk; until then its proposer may edit it from their Contributions, and add photos to it there ([`../route-domain.md`](../route-domain.md) §4.6). Riders **propose**, **vote**, **confirm rides**, **download GPX**, **add photos** (`/propose-route?route=<id>`, a moderated photo correction, [`../route-domain.md`](../route-domain.md) §4.5) and **ask for a detail to be corrected** from the drawer's correction box (§7.1), which a curator then applies. Design source of truth: [`../route-domain.md`](../route-domain.md).
+- **Map depiction:** line, icon a winding route (`ItemType::svgPath()`; ★ is the text fallback), colour #FF5A1F (brand orange); `unverified` routes carry a **"proposed"** badge
+- **Editable:** **no, curator-only.** R is the deliberate exception to the every-type-has-an-edit-flow rule: a route is a *curated composition*, not an atomic map feature. Once a curator has decided a proposal nobody edits it but a curator, on the Routes desk; until then its proposer may edit it from their Contributions, and add photos to it there ([`../route-domain.md`](../route-domain.md) §4.6). Riders **propose**, **vote**, **confirm rides**, **download GPX**, **add photos** (`/propose-route?route=<id>`, a moderated photo correction, [`../route-domain.md`](../route-domain.md) §4.5) and **ask for a detail to be corrected** from the drawer's correction box ([`../route-domain.md`](../route-domain.md) §7.1), which a curator then applies. Design source of truth: [`../route-domain.md`](../route-domain.md).
 - **Lifecycle:** route-specific state machine (NOT the shared item funnel): `submitted` (rider proposal) → curator desk approval → `unverified` ("proposed" on the map) → X independent **"I rode this"** confirmations → `verified` (votable) · plus `rejected` and `retired`. A configurable **per-region cap (~30 active routes)** bounds supply; a full region admits a new route only by retiring a weaker one.
 
 ## What it is
@@ -17,11 +17,9 @@ Supply is rider-*seeded* (GPX proposal) but curator-*owned*: curators approve,
 edit, and retire; the community's power is the **vote** (on the season
 ballot, naming the bike) and the **ride-confirmation**, not the upload.
 
-The historical model — "contributed GPX loops" editable via
-`improve.html?item=ride` — is retired. It was mechanically broken (the
-route-id/item-id collision, 2026-07-07 security review critical #1; `/improve`
-now refuses `type=R`) and conceptually wrong (rider-editable route data is how
-a region drowns in 1000+ unvetted routes).
+Riders do not edit route data: rider-editable route data is how a region
+drowns in 1000+ unvetted routes, and route ids live in a separate sequence from
+item ids (security review 2026-07-07), so `/improve` refuses `type=R`.
 
 ## How a route is born
 
@@ -53,7 +51,7 @@ implementation).
 
 ## Privacy — trim the ends
 
-Unchanged commitment, now enforced at proposal ingest: the **first and last
+Enforced at proposal ingest: the **first and last
 ~350–750 m of every proposed ride are dropped deterministically before
 anything persists** — the untrimmed upload never touches storage, so a route
 never reveals where its proposer started or finished. The drawer states this
@@ -77,12 +75,9 @@ never reveals where its proposer started or finished. The drawer states this
 "Edit this item" and no per-field "＋ add" row
 (`IMPROVABLE_LETTER` in `drawer.js` `schemaRows()`, map-and-search.md §6.2),
 and a route's photo prompt goes to `/propose-route?route=<id>`
-(`add-photo.js`). Until 2026-09-16 the empty registry rows DID draw "＋ add",
-pointing at `/improve?item=<route id>&type=R&field=<name>`; all eight landed
-on the no-target page, because `/improve` refuses `type=R` (above).
-Owner-reported on route 111's Gradient-limited row. An old link of that shape
-now says "Routes are not edited here" rather than "Pick a place to improve"
-(moderation-and-contribution.md §1.4).
+(`add-photo.js`; none while the route is still `submitted`). An old
+`/improve?item=<route id>&type=R` link says "Routes are not edited here"
+rather than "Pick a place to improve" (moderation-and-contribution.md §1.4).
 
 **A route's metadata is set on the desk.** The curator form in the
 next-but-one section carries all eight fields, so every one of them can be
@@ -91,7 +86,8 @@ it from `RouteEditType`, whose widgets come from `RouteMetadataFields`, the
 same definitions the proposal form builds from, so a curator's value carries
 the proposal form's wording, options and validation. A rider asks for a
 detail to be corrected from the drawer's correction box; marking it done
-applies it through this same gate, credited to the rider who asked (§7.1).
+applies it through this same gate, credited to the rider who asked
+([`../route-domain.md`](../route-domain.md) §7.1).
 
 ## Rider actions (replaces the edit form)
 
@@ -157,9 +153,7 @@ re-propose.
   season ballot's `season_vote`. GPX parse, trim, simplify, distance/ascent
   all in PHP (light tabular math, no Python pipeline involvement). The item
   `Submission`/`ModerationService` pipeline is **not** used for routes.
-- **Demo-era artifacts** (shared `ride` registry entry in
-  `atlas/demo/edit-items.js`, the six fixture loops) are historical. The
-  Symfony `CatalogFormRegistry::for(QualityRides)` field set backs no form: it
+- The `CatalogFormRegistry::for(QualityRides)` field set backs no form: it
   feeds the drawer's display rows (`CatalogSchemaProvider::displayFields()`).
   The proposal and curator forms are built from `RouteMetadata` through
   `RouteMetadataFields` (`ProposeRouteType`, `RouteEditType`).

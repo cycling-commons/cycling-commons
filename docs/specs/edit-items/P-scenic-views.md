@@ -5,12 +5,13 @@
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** P · Scenic views
-- **Map depiction:** pin with a drawn camera (`ItemType::svgPath()`; the 📷 glyph from `ItemType::icon()` is only the text fallback), colour #2C5440
-- **Editable:** yes · Frontend demo · 2026-06-18
+- **Map depiction:** the kind's glyph on a disc (`KindIcons`, one per kind); a place with no kind yet keeps the drawn camera (`ItemType::svgPath()`; the 📷 glyph from `ItemType::icon()` is only the text fallback), colour #2C5440
+- **Editable:** yes · the `/improve` wizard (add, improve, materialize-on-edit)
 - **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
-Viewpoints, panoramas — the photo spot worth stopping for. (Split from the old "Scenic & cultural": this is the viewpoint/panorama half; heritage is now Q.)
+Viewpoints, panoramas, natural features: the photo spot worth stopping for. Heritage is
+[Q · History & culture](Q-history-culture.md).
 
 ## Read view (drawer "current details")
 - Type · Elevation · The 700 m step · Tower · Setting · What you see · Climate · Watershed · For cyclists
@@ -30,7 +31,7 @@ article, where repeating the panel title would be redundant.
 | Field | Control | Provenance |
 |---|---|---|
 | Name | input | `[edit]` |
-| Type | select(Viewpoint / high point / Natural feature) (tourism=viewpoint) | `[OSM]` |
+| Type | select (`type`, shown alphabetically: Viewpoint / Peak / Waterfall / Rapids / Cliff / Cave entrance / Rock arch / Rock / Boulder / Natural feature); every OSM tag is one of them, Natural feature is ours only ([osm-data-architecture.md §5a](../osm-data-architecture.md)) | `[OSM]` |
 | Access for bikes | select(Roadside / Short walk / Path only) | `[edit]` |
 | What can you see? | input | `[edit]` |
 | Still as mapped? | select(As mapped / Closed / Not there anymore) | `[tap]` |
@@ -55,8 +56,9 @@ Available on this type (CC BY-SA 4.0) — **several at once**.
 Location metadata (EXIF GPS) is stripped from uploaded photos before storage — the Commons maps places, not riders.
 
 ## Implementation
-- **Production:** OSM `tourism=viewpoint` and `waterway=waterfall` along a bike way, with a name or photo link, plus community edits ([scenic-views.md §2](../scenic-views.md)).
-- **Map icon: a drawn camera** (owner 2026-08-14), not the 📷 emoji — the
+- **Production:** OSM `tourism=viewpoint`, `waterway=waterfall`, `waterway=rapids` and `natural=cliff`, `cave_entrance`, `arch`, `rock`, `stone` along a bike way, with a name or photo link, plus community edits ([scenic-views.md §2](../scenic-views.md)). Never a peak; a peak is a kind for our own places only.
+- **Kind:** the Type is a kind, one OSM tag each, stamped on every OSM point and drawn as its own glyph ([osm-data-architecture.md §5a](../osm-data-architecture.md)).
+- **Map icon: the kind's glyph, else a drawn camera** (owner 2026-08-14), not the 📷 emoji. The
   pins render glyphs as flat silhouettes, and a camera emoji's silhouette is
   a blank rounded box. The path is `ItemType::svgPath()`, served as
   `window.CC_TYPE_ICONS`; `CAMERA_PATH` in `web/assets/map/icons.js` reads it and feeds both

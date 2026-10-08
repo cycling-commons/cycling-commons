@@ -172,10 +172,10 @@ enum ItemType: string
      * A drawn 24-box path for every type, one colour, filled with
      * currentColor (owner 2026-09-09: "no coloured icons"; the emoji glyphs
      * painted themselves in whatever colours the platform's font chose). The
-     * map's own paths (they used to live in icons.js). The glyph stays as the
-     * text fallback. Quality rides are a route winding across the land, a
-     * ribbon rather than a star (owner: "an icon of a route across a
-     * landscape, a slinger line").
+     * map draws these same paths: icons.js reads them through
+     * window.CC_TYPE_ICONS. The glyph stays as the text fallback. Quality
+     * rides are a route winding across the land, a ribbon rather than a star
+     * (owner: "an icon of a route across a landscape, a slinger line").
      */
     public function svgPath(): string
     {

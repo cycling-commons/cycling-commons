@@ -8,6 +8,7 @@ namespace App\Controller;
 
 use App\Catalog\Entity\Item;
 use App\Catalog\LocationMode;
+use App\Catalog\PlaceKind;
 use App\Catalog\SurfaceVocabulary;
 use App\Contribution\CatalogContributionService;
 use App\Entity\User;
@@ -117,6 +118,11 @@ final class ScoutIntakeController extends AbstractController
                 $details[$field] = $value;
             }
         }
+        // A scenic or history place goes back to OSM as one tag, so it needs its kind (docs/specs/osm-data-architecture.md §5a).
+        if (\in_array($letter, PlaceKind::LETTERS, true)
+            && null === PlaceKind::label($letter, (string) ($details['type'] ?? ''))) {
+            return new JsonResponse(['error' => 'kind_required'], 422);
+        }
         if ($autoFiledOther && !isset($details['hazardType'])) {
             $details['hazardType'] = 'Other';
         }
@@ -145,6 +151,8 @@ final class ScoutIntakeController extends AbstractController
                 'mode' => 'add',
                 'mediaIds' => $payload['mediaIds'] ?? null,
                 'via' => 'scout',
+                // The rider's raw pick: the Type above is a reading of it, the pick is the fact.
+                'scoutPick' => ['tag' => $type, 'detail' => $detail],
             ], $user);
         } catch (TooManyRequestsHttpException) {
             return new JsonResponse(['error' => 'rate_limited'], 429);

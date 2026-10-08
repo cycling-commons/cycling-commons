@@ -123,16 +123,17 @@ final class BallotCandidates
         if ([] === $ids) {
             return [];
         }
-        /** @var list<array{id: int|string, t: ?string, town: ?string}> $rows */
+        /** @var list<array{id: int|string, type: ?string, t: ?string, town: ?string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            "SELECT id, attributes->>'t' AS t, attributes->>'town' AS town FROM item WHERE id IN (:ids)",
+            "SELECT id, attributes->>'type' AS type, attributes->>'t' AS t, attributes->>'town' AS town FROM item WHERE id IN (:ids)",
             ['ids' => $ids],
             ['ids' => ArrayParameterType::INTEGER],
         );
         $out = [];
         foreach ($rows as $r) {
             $town = null !== $r['town'] && '' !== trim($r['town']) ? trim($r['town']) : null;
-            $out[(int) $r['id']] = ['kind' => StayKind::fromLabel($r['t']) ?? StayKind::UNKNOWN, 'town' => $town];
+            // The Type a rider can change first, then the import's label.
+            $out[(int) $r['id']] = ['kind' => StayKind::fromType($r['type']) ?? StayKind::fromLabel($r['t']) ?? StayKind::UNKNOWN, 'town' => $town];
         }
 
         return $out;

@@ -25,6 +25,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Type-aware improve / add-location wizard. Details come from the catalog registry.
@@ -39,7 +40,28 @@ final class ImproveType extends AbstractType
 
     public function __construct(
         private readonly CatalogFormRegistry $registry,
+        private readonly TranslatorInterface $translator,
     ) {
+    }
+
+    /**
+     * Label => value, the labels in alphabetical order of the rider's language
+     * when the field asks for it (a kind list: owner 2026-10-08).
+     *
+     * @return array<string, string>
+     */
+    private function selectChoices(CatalogField $field): array
+    {
+        if ([] === $field->choiceLabels) {
+            return array_combine($field->choices, $field->choices);
+        }
+        $labels = $field->choiceLabels;
+        if ($field->sortChoices) {
+            $collator = new \Collator($this->translator->getLocale());
+            uasort($labels, fn (string $a, string $b): int => (int) $collator->compare($this->translator->trans($a), $this->translator->trans($b)));
+        }
+
+        return array_flip($labels);
     }
 
     /** @param array<array-key,mixed> $options */
@@ -164,7 +186,7 @@ final class ImproveType extends AbstractType
                 // a rider who looked can answer, and it has no default anywhere
                 // (catalog-data-model.md §7).
                 'placeholder' => self::CONDITION === $field->name ? 'improve.condition.not_checked' : '—',
-                'choices' => [] === $field->choiceLabels ? array_combine($field->choices, $field->choices) : array_flip($field->choiceLabels),
+                'choices' => $this->selectChoices($field),
                 'data' => $data,
             ]),
             FieldKind::MultiSelect => $builder->add($field->name, ChoiceType::class, [

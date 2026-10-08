@@ -5,8 +5,8 @@
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** E · Hazards & conditions
-- **Map depiction:** ⚠ pin, colour #C8923A
-- **Editable:** yes · Frontend demo · 2026-06-18
+- **Map depiction:** pin with the type's drawn icon (`ItemType::svgPath()`; ⚠ is the text fallback), colour #C8923A
+- **Editable:** yes · the `/improve` wizard (add, improve)
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
@@ -49,16 +49,20 @@ duration field above exists. The reporter's own answer sets the window
 Months 180. Past it, the item is moved to `retired` and stops being served.
 
 - **The clock starts at the last sighting, not at creation.** An existence
-  confirmation restarts the full window — the "unless re-confirmed" half of
-  data-priority.md's promise — so a long roadworks closure that riders keep
+  confirmation restarts the full window (the "unless re-confirmed" half of the
+  promise in `wiki/data-priority.md`), so a long roadworks closure that riders keep
   confirming never falls off the map. A `form`-sourced confirmation does not
   count: that is the submitter answering their own contribution, the same
   exclusion the verified tier makes.
-- **`observedOn`**, when present, overrides the row's creation date. Scout
-  writes it, because a rider taps the tag on the road days before uploading.
+- **A Scout tap starts the clock at the tap**, not at the upload, because a
+  rider may tap a tag on the road days before uploading. The Scout intake keeps
+  the tap date as `observedAt` on the submission that creates the row, and
+  `ClosureExpiryService` reads it there in place of the row's creation date; a
+  later existence confirmation still restarts the window
+  (`ClosureExpiryServiceTest::testTheScoutTapDateStartsTheClockNotTheUpload`).
 - **Unknown is bounded, not forever.** It is the one answer with no duration in
   it, and letting it mean "never expires" would reproduce exactly the lie
-  Manifesto §VII names, so it gets the longest window and then has to be
+  principle VII of `wiki/manifesto.md` names, so it gets the longest window and then has to be
   re-reported.
 - **Retire, never delete.** `retired` is already outside the served states, so
   nothing in any serving path changed. The row, its history and its
@@ -73,10 +77,12 @@ Months 180. Past it, the item is moved to `retired` and stops being served.
   `d_rider_removed` ("a removed rider") the same way.
 
 **Something has to run it.** `app:catalog:expire-closures` (dry-run by default,
-`--write` to act) belongs on the worker host beside `app:moderation:gc` and
-`app:media:gc`. Until those timers exist, `GET /map/catalog/stamps.json`
-(`MapController::catalogStamps()`, read on every map boot) sweeps
-opportunistically at most once an hour: a safety net, not the mechanism.
+`--write` to act) belongs on the worker host's timers beside
+`app:moderation:gc` and `app:media:gc`; the repository schedules nothing itself
+([../operations.md](../operations.md) §1). `GET /map/catalog/stamps.json`
+(`MapController::catalogStamps()`, read on every map boot) also sweeps
+opportunistically at most once an hour (`ClosureExpiryService::sweepOpportunistically()`):
+a safety net, not the mechanism.
 
 ## Implementation
 - **Production:** community report + freshness decay (confirmations age out); safety-tagged, never auto from OSM.

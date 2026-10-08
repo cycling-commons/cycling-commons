@@ -53,14 +53,14 @@ How the source families flow into the two data planes as built
 
 ```
  OpenStreetMap (ODbL)          official registries:         our own inputs:
-   │                           Tourisme Wallonie PIVOT      riders (user) ·
+   │                           Tourisme Wallonie PIVOT      riders (user, scout) ·
    │ weekly per-region         (CC-BY) · Wikidata           curators (manual) ·
    │ Geofabrik extract                  │                   our tooling (auto)
    ▼                                    ▼                            │
  ┌──────────────────────────┐   ┌──────────────────────────────────────────┐
  │ COVERAGE PLANE - cache   │   │ CANONICAL STORE - the `item` table       │
- │ coverage_poi + PMTiles   │   │ source = pivot | wikidata | user |       │
- │ pure OSM subset (§5);    │   │          manual | auto | osm             │
+ │ coverage_poi + PMTiles   │   │ source = authority | wikidata | user |   │
+ │ pure OSM subset (§5);    │   │          scout | manual | auto | osm     │
  │ rebuilt weekly, never    │──▶│ `osm` rows = ref + OUR additions only    │
  │ edited, never canonical  │§6 │ (category 2), created the moment a       │
  └──────────────────────────┘   │ human curates a coverage object          │
@@ -192,23 +192,25 @@ public Overpass API on a user request.**
    bike shops in town X") and **vector tiles (S3/CDN)** for map display.
 3. User requests hit our tiles/index only, so there is zero live Overpass
    load. The planet-wide subset measures ≈ 4.7 M points
-   ([coverage-provider.md](coverage-provider.md) §10); per-region extracts
+   (coverage-provider.md §2, sizing); per-region extracts
    stay small, so ingestion and serving remain cheap.
 
-**Concrete implementation (shipped 2026-07-16).** The `pipeline` container runs
-a weekly per-region batch (`pipeline/coverage/`, regions from
-`COVERAGE_REGIONS`, v1 `europe/belgium`): Geofabrik PBF → `osmium tags-filter`
-→ pyosmium → the **`coverage_poi`** PostGIS table (atomic per-region swap),
-then tippecanoe builds **`coverage.pmtiles`** from the full index, go-pmtiles
-verifies it, and the artifact + manifest upload to the Cycling Commons' **own
-Hetzner Object Storage bucket** (name: deployment config, dev MinIO:
-`cc-maps`), deliberately separate from any
+**Concrete implementation.** The `pipeline` container runs a per-region batch
+(`pipeline/coverage/`; the regions are every onboarded country's Geofabrik
+extracts, read from `country_extract`, or `COVERAGE_REGIONS` for a subset):
+Geofabrik PBF → `osmium tags-filter` → pyosmium → the **`coverage_poi`**
+PostGIS table (atomic per-region swap), then tippecanoe builds one
+`points.pmtiles` per country from the full index, go-pmtiles verifies it, and
+the archives and `coverage/manifest.json` upload to the Cycling Commons' **own
+object-storage bucket** (name: deployment config, dev MinIO: `cc-maps`),
+deliberately separate from any
 shared basemap bucket so coverage cost stays observable
 (coverage-provider.md §1). Symfony serves search / nearby /
 counts / drawer detail from `coverage_poi` (`/map/coverage/*`); the map reads
-the PMTiles by byte range. Selectors, letters, and the D `serviceKind` mapping
-live in the shared contract file `pipeline/contract/coverage-contract.json`,
-held in sync with `App\Catalog\ServiceKind` by cross-language tests. Full
+the PMTiles by byte range. Selectors, letters, the D `serviceKind` mapping and
+the P and Q `placeKind` mapping live in the shared contract file
+`pipeline/contract/coverage-contract.json`, held in sync with
+`App\Catalog\ServiceKind` and `App\Catalog\PlaceKind` by cross-language tests. Full
 design: [coverage-provider.md](coverage-provider.md).
 
 ### The complete OSM item catalogue
@@ -220,18 +222,17 @@ a deliberate decision: every addition widens ingestion and the cache.
 |--------------|------|--------------|-------|
 | A · Road surface | line | `highway=*` with `surface=*` | Corridor data, not POIs |
 | B · Water & food | point | `amenity=drinking_water`, `drinking_water=yes`, `amenity=water_point`, `man_made=water_tap`, `shop=bakery` | Water sources + the bakery (the classic resupply stop; fills the "food" half of the letter). Cafés/restaurants deliberately excluded: too dense, low per-item signal |
-| C · Public toilets | point | `amenity=toilets` | Added 2026-07-30 ([edit-items/C-public-toilets.md](edit-items/C-public-toilets.md)) |
+| C · Public toilets | point | `amenity=toilets` | [edit-items/C-public-toilets.md](edit-items/C-public-toilets.md) |
 | **D · Bike shop** | point | `shop=bicycle` | Staffed; real opening hours apply |
 | **D · Self-service station** | point | `amenity=bicycle_repair_station` | Unmanned; **inherently 24/7** |
 | **D · Public pump** | point | `amenity=compressed_air` | Unmanned; 24/7 |
 | F · Getting there | point | `railway=station`, `railway=halt`, `amenity=ferry_terminal`, `route=ferry` | Ferries are route-critical crossings in this region. `route=ferry` ways reduce to the crossing midpoint (legitimately over water); the terminal is the land-side dock. A point tagged `usage=tourism` or `usage=leisure` (a heritage railway), or `bicycle=no` (a ferry that takes no bikes), is left out ([coverage-provider.md §7](coverage-provider.md)). A dock with no `bicycle` tag inherits the answer of the ferry routes that end at it, by topology, under `cc:` keys of its own, and is left out when every tagged route says no ([coverage-provider.md §3](coverage-provider.md)). A ferry route's `duration`, `seasonal` and `toll` are stored for the drawer |
 | G · Shelter | point | `shelter_type=picnic_shelter/weather_shelter/field_shelter/lean_to/basic_hut/gazebo/pavilion/rock_shelter/sun_shelter/wildlife_hide/dugout` (typed shelters only; bare `amenity=shelter` and `shelter_type=public_transport` bus stops stay out) | |
 | O · Where to sleep | point | `tourism=hotel/hostel/guest_house/chalet/camp_site/…` | |
-| P · Scenic views | point | `tourism=viewpoint`, `waterway=waterfall` | Within 250 m of a way a bike may ride, with a name or a photo link; never a peak ([scenic-views.md §2](scenic-views.md)) |
-| Q · History & culture | point | `historic=castle/fort/ruins/monument/memorial/…` | |
+| P · Scenic views | point | `tourism=viewpoint`, `waterway=waterfall`, `waterway=rapids`, `natural=cliff`, `natural=cave_entrance`, `natural=arch`, `natural=rock`, `natural=stone` | One kind per tag (§5a). Within 250 m of a way a bike may ride, with a name or a photo link; never a peak ([scenic-views.md §2](scenic-views.md)) |
+| Q · History & culture | point | `historic=castle/fort/ruins/monument/memorial/archaeological_site/manor/monastery` | One kind per tag (§5a) |
 
-Letters follow the 2026-08-25 renumbering (practical A–M, experiential N–Z;
-catalog-data-model.md §1 has the old -> new table).
+Letters are grouped practical A–M, experiential N–Z (catalog-data-model.md §1).
 
 Item types **N · Climbs**, **E · Hazards**, and **R · Recommended routes** are
 category-3 (our own data) and are **not** part of the OSM extract.
@@ -243,9 +244,10 @@ their **tags** we keep, which is a separate and equally deliberate list, because
 `osmium tags-filter` selects objects, not keys, so a matching object arrives
 carrying everything OSM has attached to it.
 
-We store **29 tag keys**: the 11 selector keys above, the 14 keys the POI drawer
-displays, and 4 provisional media/reference keys. Everything else is dropped
-before it reaches our database. The full list, the rationale, and the tests that
+We store **43 tag keys**: the 11 selector keys above, 2 keys the load rules
+read (`memorial`, `usage`), the 22 keys the POI drawer displays, 4
+media/reference keys, the 3 `cc:` keys the harvest writes on a ferry dock, and
+`check_date`. Everything else is dropped before it reaches our database. The full list, the rationale, and the tests that
 enforce it are in
 [coverage-provider.md §2.1](coverage-provider.md). Two consequences worth
 knowing here:
@@ -264,9 +266,8 @@ knowing here:
 ### Bike services: one type, three OSM kinds
 
 Item type **D · Bike services** carries a `serviceKind ∈ {shop, station, pump}`
-discriminator, derived from the OSM tag on ingest (and selectable on manual add,
-deferred until an add-new-bike-service flow exists; today items enter only
-via ingest or edits to existing items, which always carry a kind). The
+discriminator, derived from the OSM tag on ingest and chosen as the form's
+Type field (`CatalogFormRegistry`) when a rider adds or edits a place. The
 distinction is a data fact, not just presentation:
 
 - `shop` (`shop=bicycle`): staffed; opening hours are meaningful; the
@@ -283,6 +284,103 @@ Each kind gets a distinct marker so riders see the difference; the
 opening-hours default is kind-specific (`Unknown` for shops, `24/7` for
 stations/pumps). Edit-flow consequences live in
 [edit-items/D-bike-services.md](edit-items/D-bike-services.md).
+
+### 5a. Shelters, scenic views and history: every OSM tag is one kind
+
+Every Type of **P · Scenic views** and **Q · History & culture** is a kind.
+**Every OSM tag we show converts to exactly one kind**, so what we add can go
+back to OSM as that tag (owner 2026-10-07). A waterfall in OSM stays a
+waterfall here, and comes back out as `waterway=waterfall`. The other direction
+is optional: an own kind has no OSM tag, and a place of that kind stays ours.
+`App\Catalog\PlaceKind` is the one table:
+
+| Letter | Kind | OSM tag | Harvested |
+|---|---|---|---|
+| P | viewpoint | `tourism=viewpoint` | yes |
+| P | peak | `natural=peak` | no: a summit is where no rider is ([scenic-views.md §2](scenic-views.md) rule 1) |
+| P | waterfall | `waterway=waterfall` | yes |
+| P | rapids | `waterway=rapids` | yes |
+| P | cliff | `natural=cliff` | yes |
+| P | cave | `natural=cave_entrance` | yes |
+| P | arch | `natural=arch` | yes |
+| P | rock | `natural=rock` | yes |
+| P | stone | `natural=stone` | yes |
+| P | nature | none: a beautiful stretch to ride, such as a road through a forest | own kind |
+| Q | castle | `historic=castle` | yes |
+| Q | fort | `historic=fort` | yes |
+| Q | ruins | `historic=ruins` | yes |
+| Q | monument | `historic=monument` | yes |
+| Q | memorial | `historic=memorial` | yes |
+| Q | archaeological | `historic=archaeological_site` | yes |
+| Q | manor | `historic=manor` | yes |
+| Q | monastery | `historic=monastery` | yes |
+| Q | museum | `tourism=museum` | no: left out of the harvest ([edit-items/Q-history-culture.md](edit-items/Q-history-culture.md)) |
+| Q | worship | `amenity=place_of_worship` | no: every church is too many pins |
+| Q | heritage | none: a heritage site that is no single OSM kind | own kind |
+| Q | architecture | none: a building worth the stop for its architecture | own kind |
+
+A kind that is not harvested is still a Type for our own places.
+
+**G · Shelter** has a Type by the same rule (owner 2026-10-08), one per OSM
+`shelter_type`: basic hut, dugout, field shelter, gazebo, lean-to, pavilion,
+picnic shelter, rock shelter, sun shelter, weather shelter and wildlife hide,
+all harvested, plus bus shelter (`shelter_type=public_transport`) and
+defibrillator (`emergency=defibrillator`), which are not. It replaces the
+free `shelterType` list. G draws a glyph per kind and the contract's
+`placeKind` holds its rules, like P and Q. Migration `Version20261008110000`
+gave existing shelters their Type from the linked OSM point's `shelter_type`,
+else the old `shelterType` or `t` label, and removed `shelterType`.
+
+**O · Where to sleep** has a Type by the same rule (owner 2026-10-08), every
+one an OSM `tourism` tag, so every stay can go back to OSM: hotel, motel,
+guest house / B&B (`tourism=guest_house`), hostel, campsite
+(`tourism=camp_site`), chalet / gîte (`tourism=chalet`), mountain hut
+(`tourism=alpine_hut`), wilderness hut and holiday rental (`tourism=apartment`,
+not harvested). A label names both words riders know a type by: one type, not
+two. The authority's B&B, Gîte and Budget stay map onto guest house, chalet and
+hostel. It is a form field, filled on conversion and on import from the
+row's `t` label; it has no map glyphs yet (`PlaceKind::TYPED_LETTERS` holds O,
+`PlaceKind::LETTERS`, the glyph letters, does not), and the season ballot draws
+its stay icon from it (`StayKind::fromType()`). Migration
+`Version20261008090000` gave existing places their Type: the linked OSM point's
+`tourism` tag, else the `t` label; `Version20261008100000` folds the three
+types an earlier reading kept apart (bnb, gite, budget) into the OSM ones.
+
+The G, P and Q kinds are used the same way everywhere:
+
+- **Stored** as the item's `type` attribute: a key (`waterfall`), shown as its
+  translated label (`CatalogField::selectKeyed`). On every form the Type is the
+  second field, right after the name, and its list is in alphabetical order of
+  the rider's language (`sortChoices`, `ImproveType::selectChoices()`); the
+  stored order stays the match order. A harvested tag is never
+  stored as an own kind: an OSM castle is `castle`, not `heritage`.
+- **Harvested:** the pipeline stamps `coverage_poi.kind` from the contract's
+  `placeKind` rules, and the tiles carry it as `kind`, the same way D carries
+  `serviceKind`. A point with two matching tags is the first kind in the
+  contract order, as in the tile's `t` label.
+- **Drawn:** one glyph per kind on the category disc (`KindIcons`), on OSM
+  points and our own places alike, in both legends and on search rows. A tile
+  from before the stamp still names its kind in its `t` label (the contract's
+  selector label is the kind label), and the map reads it
+  (`window.CC_PLACE_KIND_LABELS`).
+- **Converted:** materialize-on-edit (§6) and the one-tap OSM confirm fill the
+  Type from the point's kind.
+- **Scout:** SCENERY · VIEW is a viewpoint. NATURE, HISTORY, CULTURE and
+  ARCHITECT name several kinds, so the ride review asks the rider which one,
+  with the own kind first where there is one (NATURE: Natural feature), and a
+  P or Q tag is not sent without it
+  ([moderation-and-contribution.md](moderation-and-contribution.md), Scout intake).
+
+Migration `Version20261007140000` turned the older Types into kinds. Per item:
+the linked OSM point's tag first, then an old label that is exactly one kind
+(Museum / culture is a museum; Natural feature, Heritage site and Architecture
+keep their own kinds; Viewpoint / high point only on a Scout row, where the
+device's VIEW wrote it), then an import's `t` label. A Heritage site whose
+name says castle ("… Castle", "Castle of …", "Château …", "Castello …") became a
+castle: the Wikidata harvest had filed its castles as Heritage site. A label
+naming two OSM kinds (Viewpoint / high point, Religious site) was cleared for a
+curator. Decided submissions and change history keep the old
+labels, because they record what was said then.
 
 ## 6. Materialize-on-edit lifecycle
 
@@ -314,7 +412,11 @@ Rules:
 
 - **Materialize on first edit.** Submitting an edit for an uncurated OSM object
   copies the referenced object into the canonical store as `{osm_ref, edit}` and
-  opens a submission. Nothing is materialized by mere viewing.
+  opens a submission. Nothing is materialized by mere viewing. The coverage
+  drawer's edit link opens `/improve?ref=<node|way/id>&type=<letter>`, the add
+  wizard with name and location prefilled from the cached POI, and the submit
+  mints the item with `source = osm`, `source_ref = <osm ref>`, one item per
+  ref, so the coverage dedupe (§8) engages.
 - **A confirmation is an edit** (owner decision 2026-08-12). A rider standing at
   an OSM tap answers one question - "drinkable?", "still here?" - and that answer
   is a claim about the place, so it materializes it exactly as the wizard would.
@@ -388,8 +490,8 @@ by the user terms. This governs the presentation layer, not the openness of the
 data: our own data (ODbL) is provided openly *through the API*, which is the
 sanctioned channel, and OSM-derived detail is obtained from OSM, so the
 no-scraping rule does not restrict any ODbL right over the underlying open data.
-The user terms must state both the API-only access rule and the scraping
-prohibition.
+The user terms state both the API-only access rule and the scraping
+prohibition (`pages/terms.html.twig`).
 
 ## 8. Surfacing curated vs community to users
 
@@ -403,40 +505,20 @@ delegated to [map-and-search.md](map-and-search.md), which consumes this
 document's data model unchanged, whether community records arrive from the
 cache or from OSM.
 
-## 9. Relationship to the current implementation
+## 9. Harvested OSM rows in the canonical store
 
-The initial Wallonia dataset harvested uncurated OSM into the `item` table and
-inlined it for the map. That single-region harvest is **superseded** by this
-architecture: uncurated OSM is cached coverage (§5), not canonical rows, and
-enters the canonical store only via materialize-on-edit (§6). The interim
-clause that let the harvest stand in for the coverage provider is **retired**:
-the pre-extract pipeline, the `coverage_poi` index, and the
-PMTiles artifact are live and are the only serving path for uncurated OSM.
-Harvested `item` rows no human ever touched are removed by
-`app:coverage:retire-legacy` (dry-run report first; the destructive run is
-owner-gated); anything with an edit, confirmation, or submission stays
-canonical. `tools/wallonia` remains for the retired atlas demo and the
-canonical seeds (climbs, routes, surface, PIVOT stays), but the coverage path
-never touches Overpass again.
+Uncurated OSM is cached coverage (§5), not canonical rows, and enters the
+canonical store only via materialize-on-edit (§6). The pre-extract pipeline,
+the `coverage_poi` index and the PMTiles archives are the only serving path for
+uncurated OSM. Older `source = osm` rows harvested straight into `item` that no
+human ever touched are left out of the catalog payload and removed by
+`app:coverage:retire-legacy` (the bare command is the dry-run report; `--force`
+deletes and is owner-gated, coverage-provider.md §9); anything with an edit,
+confirmation, or submission stays canonical. `tools/wallonia` remains for the
+atlas demo and the canonical seeds (climbs, routes, surface, PIVOT stays); the
+coverage path never touches Overpass.
 
 ## 10. Before go-live
 
 - Build the administrative **regions** (spatial buckets) worldwide.
-- ~~Stand up the **coverage provider**~~, done 2026-07-16: weekly per-region
-  extract in the `pipeline` service → `coverage_poi` (PostGIS) +
-  `coverage.pmtiles` on the CC bucket
-  ([coverage-provider.md](coverage-provider.md)).
-- ~~Implement **materialize-on-edit** against the cached coverage.~~ Done
-  2026-07-30 (edit arm): the coverage drawer's edit link opens
-  `/improve?ref=<node|way/id>&type=<slug>`, the same add wizard, with name and
-  location prefilled from the cached POI, and submit mints the item with
-  `source_ref = <osm ref>` / `source = osm` (one item per ref, enforced at
-  intake), so the §6 lifecycle and the coverage dedupe both engage.
-  Confirm arm done 2026-08-12: `POST /osm/confirm` mints the same item from a
-  single tap (§6), so a rider no longer has to fill a form to say the tap
-  works. Confirmations still count only on the materialized item once it is
-  approved and served - the tap proposes, a curator decides.
-- ~~Split **D · Bike services** into `shop / station / pump` kinds.~~ Done.
-  Kind-selectable manual add remains deferred until an add-new flow exists (§5).
-- Add the **API-only access** rule and **scraping prohibition** to the user terms.
 - Commission a **licence review** confirming §3.

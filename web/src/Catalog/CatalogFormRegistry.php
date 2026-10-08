@@ -138,6 +138,8 @@ final class CatalogFormRegistry
             ItemType::WhereToSleep => new ItemFieldSet(
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
+                    // What kind of stay, right after the name as on every form; every OSM tag converts to one (PlaceKind, osm-data-architecture.md §5a).
+                    CatalogField::selectKeyed('type', 'Type', PlaceKind::labels('O'), sorted: true),
                     CatalogField::text('town', 'Town / commune'),
                     // Keyed `web`, not `website` — same slot the drawer and harvest already use.
                     CatalogField::url('web', 'Website', placeholder: 'https://… (the place’s own site)'),
@@ -189,7 +191,8 @@ final class CatalogFormRegistry
 
             ItemType::Shelter => new ItemFieldSet(
                 fields: [
-                    CatalogField::select('shelterType', 'Shelter type', ['Refuge / chapel', 'Bus shelter', 'Café (seasonal)', 'Picnic hut']),
+                    // One type per OSM shelter_type, right after the name (PlaceKind, osm-data-architecture.md §5a).
+                    CatalogField::selectKeyed('type', 'Type', PlaceKind::labels('G'), sorted: true),
                     CatalogField::select('alwaysAccessible', 'Always accessible?', ['Yes — open structure', 'Daytime only', 'Seasonal', 'Unknown']),
                     CatalogField::select('waterNearby', 'Water nearby?', self::UNKNOWN_YES_NO),
                     CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
@@ -205,8 +208,8 @@ final class CatalogFormRegistry
             ItemType::ScenicViews => new ItemFieldSet(
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
-                    // One pick, one home: the Scout scenery picker's VIEW and NATURE land here; HISTORY, CULTURE and ARCHITECT are Q (ScoutTag::DETAIL_FIELDS).
-                    CatalogField::select('type', 'Type', ['Viewpoint / high point', 'Natural feature']),
+                    // One kind, one OSM tag (PlaceKind): the Scout picker's VIEW and NATURE land here; HISTORY, CULTURE and ARCHITECT are Q (ScoutTag).
+                    CatalogField::selectKeyed('type', 'Type', PlaceKind::labels('P'), sorted: true),
                     CatalogField::select('bikeAccess', 'Access for bikes', ['Roadside', 'Short walk', 'Path only']),
                     CatalogField::text('whatYouSee', 'What can you see?'),
                     CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
@@ -224,7 +227,7 @@ final class CatalogFormRegistry
             ItemType::HistoryCulture => new ItemFieldSet(
                 fields: [
                     CatalogField::text('name', 'Name', display: false),
-                    CatalogField::select('type', 'Type', ['Heritage site', 'Museum / culture', 'Monument', 'Religious site', 'Architecture']),
+                    CatalogField::selectKeyed('type', 'Type', PlaceKind::labels('Q'), sorted: true),
                     CatalogField::select('bikeParking', 'Bike parking', self::UNKNOWN_YES_NO),
                     CatalogField::select('condition', 'Still as mapped?', self::CONDITION_NO_PARTS),
                     CatalogField::textarea('note', 'Description', 'A useful tip about this spot'),

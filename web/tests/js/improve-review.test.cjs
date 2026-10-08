@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 // Node tests for the contribute wizard's review card
-// (web/assets/contribute/review-card.js, docs/plans/2026-08-01-improve-js-i18n.md).
+// (web/assets/contribute/review-card.js, docs/specs/security-architecture.md §4.3).
 //
 // The card is where two untrusted-ish inputs meet: rider-entered field text,
 // which a curator and later the public read back, and catalogue strings, which

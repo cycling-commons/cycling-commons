@@ -12,6 +12,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
+use App\Catalog\PlaceKind;
 use App\Community\ItemConfirmationService;
 use App\Contribution\CatalogContributionService;
 use App\Coverage\CoverageRepository;
@@ -181,7 +182,9 @@ final class OsmConfirmController extends AbstractController
         try {
             $receipt = $this->contributions->submit('add', [
                 'type' => $type->value,
-                'details' => [Item::NAME_FIELD => $name] + self::STANCE_FIELDS[$stance],
+                'details' => [Item::NAME_FIELD => $name] + self::STANCE_FIELDS[$stance]
+                    // osm-data-architecture.md §5a: the place keeps the kind its OSM tag names.
+                    + (null !== PlaceKind::label($type->letter(), (string) ($poi['kind'] ?? '')) ? ['type' => (string) $poi['kind']] : []),
                 'lat' => $poi['ll'][0],
                 'lng' => $poi['ll'][1],
                 'mode' => 'add',

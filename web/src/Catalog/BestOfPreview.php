@@ -606,16 +606,17 @@ final class BestOfPreview
         foreach (['note', 'type'] as $key) {
             $v = $attrs[$key] ?? null;
             if (\is_string($v) && '' !== trim($v)) {
-                return mb_substr(trim($v), 0, 140);
+                // A P or Q kind reads as its label (osm-data-architecture.md §5a).
+                return mb_substr(trim(('type' === $key ? PlaceKind::label($type->letter(), $v) : null) ?? $v), 0, 140);
             }
         }
 
         // An OpenStreetMap row says what it is in its own tags, and nowhere
         // else: `historic=memorial`, `natural=peak` with an elevation.
-        $kind = null;
+        $kind = PlaceKind::label($type->letter(), (string) PlaceKind::fromOsmTags($type->letter(), $attrs));
         foreach (['historic', 'tourism', 'natural', 'amenity', 'man_made', 'building', 'leisure'] as $key) {
             $v = $attrs[$key] ?? null;
-            if (\is_string($v) && '' !== $v && 'yes' !== $v) {
+            if (null === $kind && \is_string($v) && '' !== $v && 'yes' !== $v) {
                 $kind = str_replace('_', ' ', $v);
                 break;
             }

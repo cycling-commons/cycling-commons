@@ -8,6 +8,7 @@ namespace App\Tests\Catalog;
 
 use App\Catalog\ItemType;
 use App\Catalog\KindIcons;
+use App\Catalog\PlaceKind;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
 
@@ -37,6 +38,14 @@ final class KindIconsTest extends TestCase
                     }
                 }
             }
+        }
+    }
+
+    /** Every P and Q kind (one OSM tag each) has its glyph: osm-data-architecture.md §5a. */
+    public function testEveryPlaceKindHasItsGlyph(): void
+    {
+        foreach (PlaceKind::LETTERS as $letter) {
+            self::assertSame(array_keys(PlaceKind::labels($letter)), array_keys(KindIcons::set()[$letter] ?? []), "$letter kinds and glyphs agree");
         }
     }
 

@@ -113,8 +113,8 @@ final class CatalogFormRegistryTest extends TestCase
 
     public function testClimbsCarriesEffortFamousForAndApproach(): void
     {
-        // C2-T5: real, filterable difficulty/suitability attributes, framed as
-        // "what the climb is like" — replaces the hardcoded drawer decoration.
+        // Real, filterable difficulty/suitability attributes, framed as
+        // "what the climb is like".
         $set = $this->registry->for(ItemType::Climbs);
         $byName = [];
         foreach ($set->all() as $f) {
@@ -137,7 +137,7 @@ final class CatalogFormRegistryTest extends TestCase
 
     public function testWhereToSleepCarriesAccessibility(): void
     {
-        // C2-T5: "disability-friendly stay" rendered as a real, filterable attribute.
+        // "Disability-friendly stay" rendered as a real, filterable attribute.
         $set = $this->registry->for(ItemType::WhereToSleep);
         $byName = [];
         foreach ($set->all() as $f) {
@@ -159,7 +159,7 @@ final class CatalogFormRegistryTest extends TestCase
 
     public function testWhereToSleepWebAndBookingLinkAreUrlFields(): void
     {
-        // Security review 2026-07-07 (critical #3): both user-editable link
+        // Both user-editable link
         // fields must be url-kind so CatalogFieldConstraints restricts them to
         // http/https — a plain-text `javascript:` value used to reach the map's
         // <a href> (stored XSS).
@@ -190,7 +190,7 @@ final class CatalogFormRegistryTest extends TestCase
         self::assertContains('bestDirection', $names);
     }
 
-    /** P2-D2: bikeTypes is a single multi-select over BikeType::values() —
+    /** route-domain.md §9: bikeTypes is a single multi-select over BikeType::values() -
      *  the old single-select field plus a separate 'handbike' field are gone;
      *  Handbike is now just one of the bikeTypes choices. */
     public function testQualityRidesBikeTypesIsMultiSelectAndHandbikeFolded(): void
@@ -227,7 +227,7 @@ final class CatalogFormRegistryTest extends TestCase
     {
         // RAVeL is Wallonia's greenway network. It sat in the A-layer traffic
         // dropdown that now describes twelve countries, where it was both
-        // parochial and simply wrong (owner review 2026-08-12). The general
+        // parochial and simply wrong. The general
         // rule it stands for: a choice a rider picks from is vocabulary, and
         // vocabulary may not assume which country they are in.
         $local = ['RAVeL', 'Knooppunt', 'Bundesstraße', 'Sustrans'];

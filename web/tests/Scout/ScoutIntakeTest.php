@@ -22,7 +22,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  * Scout intake: one approved tag, one ordinary submission — and a track that
  * cannot be sent even by accident.
  *
- * @see docs/specs/Dated/2026-08-09-scout-cc-tagger-plan.md §1, tasks 1a/3/7
+ * @see docs/specs/moderation-and-contribution.md, "Scout intake"
  */
 final class ScoutIntakeTest extends WebTestCase
 {
@@ -46,7 +46,7 @@ final class ScoutIntakeTest extends WebTestCase
     private function post(KernelBrowser $client, array $payload): void
     {
         // Token + same-origin signal: the stateless 'scout-tags' CSRF check
-        // (review 2026-08-16 info note) refuses the POST without them.
+        // (security-architecture.md §5.1) refuses the POST without them.
         $token = static::getContainer()->get(\Symfony\Component\Security\Csrf\CsrfTokenManagerInterface::class)->getToken('scout-tags')->getValue();
         $client->request('POST', '/scout/tags', [], [], [
             'CONTENT_TYPE' => 'application/json',
@@ -90,7 +90,7 @@ final class ScoutIntakeTest extends WebTestCase
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
         // Provenance says HOW it arrived. It must not imply verification: the
-        // server never saw the ride file (plan §3).
+        // server never saw the ride file.
         self::assertSame(ItemSource::Scout, $item->getSource());
     }
 
@@ -98,14 +98,14 @@ final class ScoutIntakeTest extends WebTestCase
     {
         // The half of a Scout tag a form cannot supply: when the rider was
         // actually there. Kept in the raw payload the moderator reads until it
-        // becomes a first-class attribute (plan task 6a).
+        // becomes a first-class attribute.
         $client = static::createClient();
         $this->login($client, 'date');
 
         $this->post($client, [
             'tag' => 'scenery', 'letter' => 'P', 'lat' => 50.51, 'lng' => 6.06,
             'observedAt' => '2026-01-12T14:03:00Z',
-            'details' => ['name' => 'Vue sur la vallée'],
+            'details' => ['name' => 'Vue sur la vallée', 'type' => 'viewpoint'],
         ]);
 
         self::assertResponseIsSuccessful();
@@ -127,8 +127,8 @@ final class ScoutIntakeTest extends WebTestCase
 
     public function testASurfaceStretchBecomesAnASubmission(): void
     {
-        // Plan task 6: a start/END pair plus the ridden line between them is
-        // the one way letter A is reachable from Scout.
+        // A start/END pair plus the ridden line between them is the one way
+        // letter A is reachable from Scout.
         $client = static::createClient();
         $this->login($client, 'stretch');
 
@@ -347,7 +347,7 @@ final class ScoutIntakeTest extends WebTestCase
 
         $this->post($client, [
             'tag' => 'scenery', 'letter' => 'P', 'lat' => 52.0, 'lng' => 4.0,
-            'details' => ['name' => 'Waterkering'],
+            'details' => ['name' => 'Waterkering', 'type' => 'viewpoint'],
             'mediaIds' => '00000000-0000-4000-8000-000000000000',
         ]);
 
@@ -362,7 +362,7 @@ final class ScoutIntakeTest extends WebTestCase
            an A item would get Point geometry — which
            CatalogProvider::surfaceSegments() skips by design: a contribution
            that succeeds, tells the rider so, and then never appears anywhere.
-           Since plan task 6 (built 2026-08-18) A is reachable, but ONLY with
+           A is reachable from Scout, but ONLY with
            the segment excerpt — this guard is what keeps the old failure mode
            impossible. */
         $client = static::createClient();
@@ -444,6 +444,32 @@ final class ScoutIntakeTest extends WebTestCase
         self::assertSame('Potholes', $item->getAttributes()['hazardType'] ?? null);
     }
 
+    public function testTheSubmissionKeepsTheRawScoutPick(): void
+    {
+        // The Type is a lossy reading of the pick: VIEW becomes "Viewpoint /
+        // high point", which is two OSM tags. The raw pick is kept so a later
+        // mapping can give every sent tag its exact OSM kind.
+        $client = static::createClient();
+        $this->login($client, 'rawpick');
+
+        $this->post($client, [
+            'tag' => 'scenery', 'letter' => 'Q', 'detail' => 5,
+            'lat' => 52.0, 'lng' => 4.0,
+            'details' => ['name' => 'Raw pick kept', 'type' => 'manor'],
+        ]);
+        $this->post($client, [
+            'tag' => 'other', 'letter' => 'P',
+            'lat' => 52.001, 'lng' => 4.001,
+            'details' => ['name' => 'No pick at all', 'type' => 'viewpoint'],
+        ]);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $kept = $em->getRepository(Submission::class)->findOneBy(['title' => 'Raw pick kept']);
+        self::assertSame(['tag' => 'scenery', 'detail' => 5], $kept->getPayload()['scoutPick'] ?? null);
+        $bare = $em->getRepository(Submission::class)->findOneBy(['title' => 'No pick at all']);
+        self::assertSame(['tag' => 'other', 'detail' => null], $bare->getPayload()['scoutPick'] ?? null);
+    }
+
     public function testASubmenuAnswerNeverFollowsATagToAnotherLetter(): void
     {
         // Re-filing is allowed; carrying the old answer along is not.
@@ -455,7 +481,7 @@ final class ScoutIntakeTest extends WebTestCase
         $this->post($client, [
             'tag' => 'notice', 'letter' => 'P', 'detail' => 1,
             'lat' => 52.0, 'lng' => 4.0,
-            'details' => ['name' => 'Refiled as a view'],
+            'details' => ['name' => 'Refiled as a view', 'type' => 'viewpoint'],
         ]);
 
         self::assertResponseIsSuccessful();
@@ -467,26 +493,41 @@ final class ScoutIntakeTest extends WebTestCase
         self::assertArrayNotHasKey('hazardType', $item->getAttributes());
     }
 
-    public function testASceneryPickFillsTheTypeOnItsHomeLetter(): void
+    public function testABroadSceneryPickNeedsTheKindTheRiderSaw(): void
     {
-        // One pick, one home (owner 2026-09-07): ARCHITECT is Q with Type
-        // "Architecture" already answered, so the rider never picks it twice.
+        // ARCHITECT is no OSM tag: a castle and a manor are. The rider was
+        // there, so the review asks which one before the tag is sent
+        // (docs/specs/osm-data-architecture.md §5a).
         $client = static::createClient();
         $this->login($client, 'arch');
 
         $this->post($client, [
             'tag' => 'scenery', 'letter' => 'Q', 'detail' => 5,
             'lat' => 50.8949, 'lng' => 4.3415,
-            'details' => ['name' => 'Atomium'],
+            'details' => ['name' => 'Kasteel zonder soort'],
         ]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('kind_required', json_decode((string) $client->getResponse()->getContent(), true)['error'] ?? null);
 
+        $this->post($client, [
+            'tag' => 'scenery', 'letter' => 'Q', 'detail' => 5,
+            'lat' => 50.8949, 'lng' => 4.3415,
+            'details' => ['name' => 'Kasteel met soort', 'type' => 'Architecture'],
+        ]);
+        self::assertResponseStatusCodeSame(422, 'an old broad label is no kind');
+
+        $this->post($client, [
+            'tag' => 'scenery', 'letter' => 'Q', 'detail' => 5,
+            'lat' => 50.8949, 'lng' => 4.3415,
+            'details' => ['name' => 'Kasteel van Gaasbeek', 'type' => 'castle'],
+        ]);
         self::assertResponseIsSuccessful();
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Atomium']);
+        $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Kasteel van Gaasbeek']);
         self::assertSame('Q', $submission->getLetter());
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
-        self::assertSame('Architecture', $item->getAttributes()['type'] ?? null);
+        self::assertSame('castle', $item->getAttributes()['type'] ?? null);
     }
 
     public function testASceneryViewFillsTheTypeOnScenicViews(): void
@@ -505,48 +546,53 @@ final class ScoutIntakeTest extends WebTestCase
         $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Over the Ardennes']);
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
-        self::assertSame('Viewpoint / high point', $item->getAttributes()['type'] ?? null);
+        self::assertSame('viewpoint', $item->getAttributes()['type'] ?? null);
     }
 
-    public function testASceneryPickRefiledToAnotherLetterCarriesNoType(): void
+    public function testAViewRefiledToAnotherLetterCarriesTheRidersKind(): void
     {
-        // "Architecture" is not a scenic-views type; a rider who re-files the
-        // tag onto P answers Type at home.
+        // VIEW fills `viewpoint` on P only: on Q the rider names the kind.
         $client = static::createClient();
-        $this->login($client, 'archrefiled');
+        $this->login($client, 'viewrefiled');
 
         $this->post($client, [
-            'tag' => 'scenery', 'letter' => 'P', 'detail' => 5,
+            'tag' => 'scenery', 'letter' => 'Q', 'detail' => 4,
             'lat' => 50.5, 'lng' => 6.0,
-            'details' => ['name' => 'Refiled tower'],
+            'details' => ['name' => 'Refiled tower', 'type' => 'ruins'],
         ]);
 
         self::assertResponseIsSuccessful();
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Refiled tower']);
-        self::assertSame('P', $submission->getLetter());
+        self::assertSame('Q', $submission->getLetter());
         /** @var Item $item */
         $item = $em->getRepository(Item::class)->find($submission->getItemId());
-        self::assertArrayNotHasKey('type', $item->getAttributes());
+        self::assertSame('ruins', $item->getAttributes()['type'] ?? null);
     }
 
-    public function testEveryScenerySubmenuPickHasOneHomeAndItsTypeExistsThere(): void
+    public function testEveryScenerySubmenuPickHasOneHomeAndItsKindsExistThere(): void
     {
         // The two Type lists and the Scout picker must not drift apart.
         $registry = static::getContainer()->get(CatalogFormRegistry::class);
         foreach ([1, 2, 3, 4, 5] as $detail) {
             $home = ScoutTag::lettersFor('scenery', $detail);
             self::assertCount(1, $home, "SCENERY pick $detail has one home");
-            $type = ScoutTag::fieldsFor('scenery', $detail)['type'] ?? null;
-            self::assertNotNull($type, "SCENERY pick $detail fills Type");
             $options = [];
             foreach ($registry->for(ScoutTag::itemTypeFor($home[0]))->all() as $field) {
                 if ('type' === $field->name) {
                     $options = $field->choices;
                 }
             }
-            self::assertContains($type, $options, "$type is a Type on $home[0]");
+            $kinds = ScoutTag::kindsFor('scenery', $detail);
+            self::assertNotSame([], $kinds, "SCENERY pick $detail offers kinds");
+            foreach ($kinds as $kind) {
+                self::assertContains($kind, $options, "$kind is a Type on $home[0]");
+            }
         }
+        self::assertSame(['type' => 'viewpoint'], ScoutTag::fieldsFor('scenery', 4), 'VIEW is one kind, so it is filled');
+        self::assertSame([], ScoutTag::fieldsFor('scenery', 1), 'NATURE is many kinds: the rider picks');
+        self::assertSame('nature', ScoutTag::kindsFor('scenery', 1)[0], 'a nice road through a forest comes first');
+        self::assertSame('architecture', ScoutTag::kindsFor('scenery', 5)[0]);
         self::assertSame([], ScoutTag::fieldsFor('scenery', 6), 'UNKNOWN fills nothing');
     }
 }

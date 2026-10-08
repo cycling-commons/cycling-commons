@@ -37,12 +37,12 @@ _BIKE_CLASS = {"yes": "allowed", "designated": "allowed", "permissive": "allowed
 class PoiRow:
     ref: str            # 'node/<id>' | 'way/<id>' — item.source_ref format
     letter: str         # B C D F G O P Q (osm-data-architecture.md §5)
-    kind: str | None    # serviceKind for D (shop|station|pump), None otherwise
+    kind: str | None    # serviceKind for D, placeKind for G, P and Q (contract), None otherwise
     name: str | None
     lon: float
     lat: float
     tags: dict[str, str]              # object's tags trimmed to contract.stored_tag_keys
-    osm_version: int | None           # upstream version (Plan 3 snapshot source)
+    osm_version: int | None           # upstream version (materialize-on-edit snapshot source)
     osm_ts: datetime.datetime | None  # upstream last-edit timestamp
     src_region: str
     country_code: str | None
@@ -90,12 +90,11 @@ class _Collector(osmium.SimpleHandler):
         self._emit(f"way/{w.id}", tags, sum(lons) / len(lons), sum(lats) / len(lats), w)
 
     def _emit(self, ref: str, tags: dict[str, str], lon: float, lat: float, obj) -> None:
-        kind = self._contract.kind_for(tags)
         for letter in sorted(self._contract.letters_for(tags)):
             self.rows.append(PoiRow(
                 ref=ref,
                 letter=letter,
-                kind=kind if letter == "D" else None,
+                kind=self._contract.kind_for_letter(letter, tags),
                 name=tags.get("name"),
                 lon=lon,
                 lat=lat,

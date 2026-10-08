@@ -64,7 +64,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
 
         $region = $this->em->getRepository(Region::class)->findOneBy(['slug' => 'test-square']);
         self::assertNotNull($region);
-        // Phase 1 gate: provenance stamped from artifact properties
+        // Gate: provenance stamped from artifact properties
         // (map-and-search.md §4.5). country_code is the load-bearing one —
         // country-scoped curators match on it, so an unstamped region is a
         // silent moderation hole.
@@ -202,7 +202,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
 
     public function testRegionArtifactMissingCountryCodeFails(): void
     {
-        // Phase 1 gate: a region artifact with no country_code must fail loudly
+        // Gate: a region artifact with no country_code must fail loudly
         // at import, never insert an unstamped row — country-scoped curators
         // match on region.country_code, so an unstamped region is a silent
         // moderation-jurisdiction hole (map-and-search.md §4.5 risk 1).
@@ -252,7 +252,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
         // overlap by << 0.1% of the smaller area must IMPORT — only a MEANINGFUL
         // overlap trips (testOverlappingRegionsInSameCountryFail). This pins the
         // real-data gate for importing adjacent Flanders/Wallonia/Brussels
-        // boundaries (map-and-search.md §4.5 Phase 2).
+        // boundaries (map-and-search.md §4.5).
         $dir = sys_get_temp_dir().'/catalog-import-region-sliver-'.getmypid();
         @mkdir($dir, 0777, true);
         $square = static fn (string $slug, array $ring): string => json_encode([
@@ -277,7 +277,7 @@ final class ImportCatalogCommandTest extends KernelTestCase
 
     public function testRealBelgiumRegionsTessellate(): void
     {
-        // Real-data gate (map-and-search.md §4.5 Phase 2): the ACTUAL Overture
+        // Real-data gate (map-and-search.md §4.5): the ACTUAL Overture
         // Belgium boundaries (Wallonia/Flanders/Brussels) must pass the
         // tessellation guard through real PostGIS — adjacent admin polygons carry
         // digitisation slivers the tolerance is designed to absorb. Consumes the
@@ -387,6 +387,24 @@ final class ImportCatalogCommandTest extends KernelTestCase
         // Still two rows (updated, not multiplied) after a second run.
         $this->runImport($dir)->assertCommandIsSuccessful();
         self::assertCount(2, $this->em->getRepository(Item::class)->findBy(['sourceRef' => 'node/9001']));
+    }
+
+    public function testAnImportedLabelBecomesTheType(): void
+    {
+        // A stay's `t` names its type (osm-data-architecture.md §5a): the
+        // wizard shows it in the Type field and a rider can change it.
+        $dir = sys_get_temp_dir().'/catalog-import-stay-type-'.getmypid();
+        @mkdir($dir, 0777, true);
+        file_put_contents($dir.'/stays.json', json_encode(['layer' => 'stays', 'letter' => 'O', 'features' => [[
+            'type' => 'Feature',
+            'properties' => ['t' => 'Campsite', 'n' => 'Camping de la Semois', 'source' => 'osm', 'ref' => 'node/9201'],
+            'geometry' => ['type' => 'Point', 'coordinates' => [5.06, 49.79]],
+        ]]], \JSON_THROW_ON_ERROR));
+
+        $this->runImport($dir)->assertCommandIsSuccessful();
+        $item = $this->em->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/9201']);
+        self::assertNotNull($item);
+        self::assertSame('camp', $item->getAttributes()['type'] ?? null);
     }
 
     /**

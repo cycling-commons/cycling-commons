@@ -189,7 +189,7 @@ h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5r
 .wiz-errors strong{display:block;margin-bottom:.3rem}
 .wiz-errors ul{margin:0;padding-left:1.1rem}
 .cc-pin span{font-size:.8rem}
-/* three-point climb editor markers (foot/summit/steepest), Task 5.
+/* three-point climb editor markers (foot/summit/steepest).
    No `position` on .cc-marker: MapLibre's .maplibregl-marker{position:absolute}
    must win — a relative marker stays in-flow, stretches to the map's width and
    breaks the anchor translate(-50%,-100%); absolute is still the label's
@@ -305,6 +305,7 @@ h1.disp{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,4vw,2.5r
 /* Tight to the step above (owner 2026-09-08: "move the Next button up"); sticky, so it still sits at the bottom of a tall step. */
 .navrow{position:sticky;bottom:0;display:flex;align-items:center;gap:1rem;margin-top:.6rem;padding:.6rem 0;border-top:1px solid rgba(20,22,14,.12);background:linear-gradient(to top,var(--paper) 70%,rgba(239,230,212,0))}
 .navrow .spacer{flex:1}
+.navrow #wzChange{margin-bottom:0}
 
 /* submitted (client-side wizard) */
 .pane.submitted{text-align:center;padding:1rem}

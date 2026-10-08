@@ -80,19 +80,22 @@ class LetterSpec:
 class Contract:
     letters: dict[str, LetterSpec]
     service_kind: dict[str, str]  # "key=value" rule -> shop|station|pump (D only)
+    # Letter -> "key=value" rule -> kind, for P and Q (osm-data-architecture.md
+    # §5a): one kind per OSM tag, the same mapping as PlaceKind::harvestRules().
+    place_kind: dict[str, dict[str, str]]
     # Props carried on EVERY tile layer (ref/n/t identity + t label, plus the
     # rid/cc region-scoping keys — map-and-search.md §4.5). Per-letter
     # extras live in LetterSpec.tile_props; these are implicit and universal,
     # emitted by tiles.py::_letter_sql for every letter.
     universal_tile_props: list[str]
     # The road-surface LINE layer's selectors and class vocabulary
-    # (Dated/2026-08-09-surface-line-tiles-design.md). Kept as the raw mapping
+    # (coverage-provider.md §4). Kept as the raw mapping
     # rather than a typed spec: it is a value table, not a selector list, and
     # the shape it must agree with is the CLIENT's SURFACE_STYLE, which the
     # cross-language test pins directly.
     surface: dict
     # The cycle-route NETWORK layer (route=bicycle/mtb relations + knooppunt
-    # nodes — docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md).
+    # nodes, coverage-provider.md §4).
     # Raw mapping for the same reason as `surface`: a value table whose real
     # counterpart is the client's network styling, pinned cross-language by
     # routes-zooms.test.cjs.
@@ -124,6 +127,17 @@ class Contract:
         by the cross-language contract tests (coverage-provider.md §7).
         """
         for rule, kind in self.service_kind.items():
+            key, _, value = rule.partition("=")
+            if tags.get(key) == value:
+                return kind
+        return None
+
+    def kind_for_letter(self, letter: str, tags: dict) -> str | None:
+        """The kind a row of `letter` carries: D's serviceKind, P's and Q's
+        placeKind (first matching rule, as tiles.py::_label_case), else None."""
+        if letter == "D":
+            return self.kind_for(tags)
+        for rule, kind in self.place_kind.get(letter, {}).items():
             key, _, value = rule.partition("=")
             if tags.get(key) == value:
                 return kind
@@ -295,6 +309,15 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     if list(service_kind) != d_rules:
         raise ValueError("serviceKind rules must be exactly the D letter selectors")
 
+    if "placeKind" not in raw:
+        raise ValueError("contract missing top-level \"placeKind\" key")
+    place_kind = {letter: dict(rules) for letter, rules in raw["placeKind"].items()}
+    for letter, rules in place_kind.items():
+        if letter not in letters or list(rules) != [sel.tag for sel in letters[letter].selectors]:
+            raise ValueError(f"placeKind rules for {letter} must be exactly the {letter} letter selectors")
+        if any(len(kind) > 16 for kind in rules.values()):
+            raise ValueError("placeKind kinds must fit coverage_poi.kind varchar(16)")
+
     if "universalTileProps" not in raw:
         raise ValueError("contract missing top-level \"universalTileProps\" key")
     universal = list(raw["universalTileProps"])
@@ -341,6 +364,7 @@ def load_contract(path: pathlib.Path = CONTRACT_PATH) -> Contract:
     return Contract(
         letters=letters,
         service_kind=service_kind,
+        place_kind=place_kind,
         universal_tile_props=universal,
         surface=surface,
         routes=routes,

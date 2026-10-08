@@ -140,3 +140,16 @@ test('Reset on a place that already has a spot puts the pin back at its saved sp
   assert.match(body, /placed\[0\]\.setLngLat\(saved\)/, 'the same marker moves back; it is not removed');
   assert.match(body, /syncLoc\(\);\s*return;/, 'the form and the pin-photos warning learn the pin moved back');
 });
+
+// A place whose location is already set: "Change location" and "Next" sit on
+// one row, the nav row, so Next is not pushed down below the readout (owner
+// 2026-10-08). The button leaves with step 1 and with the expanded editor.
+test('the location check puts Change location beside Next', () => {
+  const js = fs.readFileSync(path.join(ROOT, 'assets', 'contribute', 'improve.js'), 'utf8');
+  const css = fs.readFileSync(path.join(ROOT, 'assets', 'styles', 'page', 'contribute', 'improve.css'), 'utf8');
+  assert.match(js, /navrow\.insertBefore\(changeBtn, navrow\.firstChild\)/);
+  assert.match(js, /changeBtn\.dataset\.offered = '1'/);
+  assert.match(js, /if \(cb && cb\.dataset\.offered\) cb\.hidden = n !== 1;/);
+  assert.match(js, /delete changeBtn\.dataset\.offered/);
+  assert.match(css, /\.navrow #wzChange\{margin-bottom:0\}/);
+});

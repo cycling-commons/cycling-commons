@@ -380,7 +380,7 @@ function renderList() {
     const head = document.createElement('button');
     head.type = 'button';
     head.className = 'scout-tag-head';
-    head.textContent = entry.n + ' · ' + (t('scoutTag_' + entry.tag, entry.tag));
+    head.textContent = entry.n + ' · ' + (t('scoutTag_' + entry.tag, entry.tag)) + (answerFor(entry) ? ' · ' + answerFor(entry) : '');
     head.addEventListener('click', () => map.flyTo({ center: [entry.lng, entry.lat], zoom: 16 }));
     li.appendChild(head);
     li.classList.add('open');
@@ -401,8 +401,21 @@ function renderList() {
         if (L === entry.letter) o.selected = true;
         sel.appendChild(o);
       });
-      sel.addEventListener('change', () => { entry.letter = sel.value; });
       body.appendChild(sel);
+      /* Scenic and history places name their kind; the list follows the letter. */
+      const kindBox = document.createElement('div');
+      const renderKind = () => {
+        kindBox.textContent = '';
+        const k = kindSelect(entry);
+        if (k) kindBox.appendChild(k);
+      };
+      sel.addEventListener('change', () => {
+        entry.letter = sel.value;
+        if (!(kindChoices(entry) || []).some(([k]) => k === entry.kind)) entry.kind = filledKind(entry, entry.letter);
+        renderKind();
+      });
+      renderKind();
+      body.appendChild(kindBox);
     }
 
     const row = document.createElement('div');
@@ -745,10 +758,60 @@ function removeBtn(entry) {
   return b;
 }
 
-/* Fallback name from tag type (and surface detail), so unnamed spots stay sendable. */
+/* P and Q go back to OSM as one tag each, so the rider names the kind
+   (docs/specs/osm-data-architecture.md §5a). The kinds the pick names come
+   first, then the rest of the letter's. Null: this letter has no kinds. */
+function kindChoices(entry) {
+  const kinds = window.CC_SCOUT_KINDS || {};
+  const all = (kinds.labels || {})[entry.letter];
+  if (!all) return null;
+  const first = ((kinds.byPick || {})[entry.tag] || {})[String(entry.detail)] || [];
+  const rest = Object.keys(all).filter(k => !first.includes(k)).sort((a, b) => all[a].localeCompare(all[b]));
+  const keys = [...first.filter(k => k in all), ...rest];
+  return keys.map(k => [k, all[k]]);
+}
+
+/** The kind the pick itself names (VIEW is a viewpoint), on its home letter only. */
+function filledKind(entry, letter) {
+  const kind = ((((window.CC_SCOUT_KINDS || {}).filled || {})[entry.tag] || {})[String(entry.detail)]) || '';
+  return kind && letter === lettersFor(entry.tag, entry.detail)[0] ? kind : '';
+}
+
+function needsKind(entry) {
+  const choices = kindChoices(entry);
+  return !!choices && !choices.some(([k]) => k === entry.kind);
+}
+
+function kindSelect(entry) {
+  const choices = kindChoices(entry);
+  if (!choices) return null;
+  const sel = document.createElement('select');
+  sel.className = 'scout-letter scout-kind';
+  sel.setAttribute('aria-label', t('scoutKind', 'What kind of place is it?'));
+  const none = document.createElement('option');
+  none.value = '';
+  none.textContent = t('scoutKind', 'What kind of place is it?');
+  sel.appendChild(none);
+  choices.forEach(([k, label]) => {
+    const o = document.createElement('option');
+    o.value = k;
+    o.textContent = label;
+    if (k === entry.kind) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change', () => { entry.kind = sel.value; });
+  return sel;
+}
+
+/* What the rider picked in the device's sub-menu, in words (NOTICE · POTHOLES → "Potholes"), or ''. */
+function answerFor(entry) {
+  return ((window.CC_SCOUT_ANSWERS || {})[entry.tag] || {})[String(entry.detail)] || '';
+}
+
+/* Fallback name from tag type and its surface or sub-menu answer, so unnamed spots stay sendable. */
 function fallbackName(entry) {
   const kind = t('scoutTag_' + entry.tag, entry.tag);
-  const detail = (entry.osmSurface || '').trim();
+  const detail = (entry.osmSurface || '').trim() || answerFor(entry);
   return detail ? kind + ' · ' + detail : kind;
 }
 
@@ -791,6 +854,10 @@ async function sendOne(entry, button, li) {
     msg(t('scoutNeedName', 'Give the tag a name before sending it.'), true);
     return;
   }
+  if (needsKind(entry)) {
+    msg(t('scoutNeedKind', 'Pick what kind of place it is before sending it.'), true);
+    return;
+  }
   if (!(await sendBundlePhotos(entry, button, li))) return;
   entry.sending = true;
   if (!entry.name || !entry.name.trim()) entry.name = fallbackName(entry);
@@ -807,9 +874,12 @@ async function sendOne(entry, button, li) {
         lat: entry.lat,
         lng: entry.lng,
         observedAt: entry.at || '',
+        /* The sub-menu answer: the server fills the field it stands for (ScoutTag::DETAIL_FIELDS). */
+        detail: entry.detail || undefined,
         details: Object.assign(
           { name: entry.name.trim() },
           entry.surface ? { surface: entry.surface } : {},
+          kindChoices(entry) ? { type: entry.kind } : {},
         ),
         /* Rider-approved excerpt {a, b, line} — the exception to "no track keys". */
         segment: entry.segment ? JSON.stringify(entry.segment) : undefined,
@@ -886,13 +956,17 @@ function renderRideFacts(parsed) {
   box.textContent = '';
   const lines = [];
   if (parsed.radar && parsed.radar.total > 0) {
-    lines.push(tplCount(t('scoutRadar', '{n} vehicles passed you on this ride'), parsed.radar.total));
+    lines.push(1 === parsed.radar.total
+      ? t('scoutRadar1', '1 vehicle passed you on this ride')
+      : tplCount(t('scoutRadar', '{n} vehicles passed you on this ride'), parsed.radar.total));
     /* Passes we could not place. */
     const placed = parsed.radar.passes.filter(x => x.lat != null && x.lon != null).length;
     if (placed < parsed.radar.total) {
       lines.push(tplCount(t('scoutPassNoFix', '{n} of them had no GPS fix, so they are not on the map'), parsed.radar.total - placed));
     }
   }
+  /* The car lines come first; step 2 shows them, step 1 does not. */
+  const radarLines = lines.length;
   if (parsed.unplaceable > 0) {
     lines.push(tplCount(t('scoutNoFix', '{n} tag(s) had no GPS fix and cannot be placed'), parsed.unplaceable));
   }
@@ -905,6 +979,7 @@ function renderRideFacts(parsed) {
     const p = document.createElement('p');
     p.className = firstOk && 0 === i ? 'scout-fact ok' : 'scout-fact';
     if (firstOk && 0 === i) p.id = 'scoutRadarFact';
+    if (i < radarLines) p.dataset.radar = '1';
     p.textContent = text;
     box.appendChild(p);
   });
@@ -967,12 +1042,11 @@ function show(parsed) {
   clearRide();
   placePasses(parsed.radar);
   track = parsed.track;
-  tags = parsed.tags.map(w => ({
-    ...w,
-    letter: 'other' === w.tag ? (w.letter || '')
-      : (w.letter || ((window.CC_SCOUT_TAGS || {})[w.tag] || ['B'])[0]),
-    approved: false,
-  }));
+  tags = parsed.tags.map(w => {
+    const letter = 'other' === w.tag ? (w.letter || '')
+      : (w.letter || ((window.CC_SCOUT_TAGS || {})[w.tag] || ['B'])[0]);
+    return { ...w, letter, kind: filledKind(w, letter), approved: false };
+  });
   /* Each stretch: geometry cut from the ride between the two taps — coordinates
      only. The one exception to "the ride never leaves the browser". */
   stretches = (parsed.segments || []).map(seg => {
@@ -1309,10 +1383,12 @@ async function sendAll(button) {
   button.textContent = t('scoutSending', 'Sending…');
   if (endPick) stopEndPick();
   let noEnd = 0;
+  let noKind = 0;
   for (const x of order) {
     const entry = x.ref;
     if (entry.approved || entry.dismissed) continue;
     if ('stretch' === x.kind && entry.needsEnd) { noEnd++; continue; }
+    if ('stretch' !== x.kind && needsKind(entry)) { noKind++; continue; }
     const li = list && list.querySelector('[data-n="' + entry.n + '"]');
     const rowBtn = li && li.querySelector('.scout-approve');
     if (!rowBtn) continue;
@@ -1324,6 +1400,10 @@ async function sendAll(button) {
   if (noEnd) {
     noEndText = tplCount(t('scoutNeedEnd', '{n} stretch(es) have no end yet and were not sent. Set the end, then send them.'), noEnd);
     msg(noEndText, true);
+  }
+  if (noKind) {
+    const kindText = tplCount(t('scoutNeedKinds', '{n} tag(s) have no kind of place yet and were not sent. Pick the kind, then send them.'), noKind);
+    msg(noEnd ? noEndText + ' ' + kindText : kindText, true);
   }
 }
 

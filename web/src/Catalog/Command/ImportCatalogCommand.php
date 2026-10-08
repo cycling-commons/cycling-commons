@@ -13,6 +13,7 @@ use App\Catalog\Import\ItemUpsert;
 use App\Catalog\Import\ProvinceMap;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Catalog\PlaceKind;
 use App\Catalog\RegionDerivations;
 use App\Catalog\RegionUpserter;
 use App\Catalog\ServiceKind;
@@ -179,6 +180,13 @@ final class ImportCatalogCommand extends Command
                     $kind = ServiceKind::fromLegacyLabel(\is_string($attributes['t'] ?? null) ? $attributes['t'] : null);
                     if (null !== $kind) {
                         $attributes['serviceKind'] = $kind->value;
+                    }
+                }
+                // A typed letter's `t` names its kind when the artifact gives no Type (osm-data-architecture.md §5a).
+                if (\in_array($type->letter(), PlaceKind::TYPED_LETTERS, true) && !isset($attributes['type'])) {
+                    $kind = PlaceKind::fromLabel($type->letter(), \is_string($attributes['t'] ?? null) ? $attributes['t'] : null);
+                    if (null !== $kind) {
+                        $attributes['type'] = $kind;
                     }
                 }
                 $this->vocabulary->assertValid($type, $attributes);

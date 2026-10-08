@@ -266,7 +266,7 @@ final class SeedManualCatalogCommand extends Command
                 'letter' => 'O', 'name' => 'Cyclist-friendly gîte · Amblève valley', 'lat' => 50.4500, 'lng' => 5.6200,
                 'ref' => 'manual:cyclist-friendly-gite-ambleve-valley',
                 'attributes' => [
-                    't' => 'Gîte / guesthouse', 'bikeStorage' => 'Yes — locked room',
+                    't' => 'Gîte / guesthouse', 'type' => 'guest_house', 'bikeStorage' => 'Yes — locked room',
                     'town' => 'Amblève valley, near Aywaille', 'c' => true,
                     'photo' => self::wc('Gîte rural de Puyolle.JPG', 'Darreenvt', 'Darreenvt', 'CC BY-SA 4.0'),
                 ],
@@ -297,7 +297,7 @@ final class SeedManualCatalogCommand extends Command
                 'letter' => 'G', 'name' => 'Shelter · Baraque Michel', 'lat' => 50.5020, 'lng' => 6.0500,
                 'ref' => 'manual:shelter-baraque-michel',
                 'attributes' => [
-                    't' => 'Refuge / chapel shelter', 'shelterType' => 'Refuge / chapel', 'alwaysAccessible' => 'Yes — open structure',
+                    't' => 'Refuge / chapel shelter', 'alwaysAccessible' => 'Yes — open structure',
                     'note' => 'Wind/rain refuge on exposed moorland at Baraque Michel, Hautes Fagnes.',
                     'photo' => self::wc('0 Xhoffraix - Baraque Michel - Chapelle Fischbach (1).JPG', 'Jean-Pol GRANDMONT', 'Jean-Pol GRANDMONT', 'CC BY 3.0'),
                 ],
@@ -315,14 +315,14 @@ final class SeedManualCatalogCommand extends Command
             [
                 'letter' => 'G', 'name' => 'Picnic shelter · Pont de Baileu', 'lat' => 50.4996, 'lng' => 6.0551,
                 'ref' => 'manual:picnic-shelter-pont-de-baileu',
-                'attributes' => ['t' => 'Picnic shelter', 'shelterType' => 'Picnic hut', 'note' => 'Hautes Fagnes, near Mont Rigi — wait out a shower on the plateau.'],
+                'attributes' => ['t' => 'Picnic shelter', 'type' => 'picnic_shelter', 'note' => 'Hautes Fagnes, near Mont Rigi, wait out a shower on the plateau.'],
             ],
             // P · Scenic views
             [
                 'letter' => 'P', 'name' => 'Signal de Botrange', 'lat' => 50.5010, 'lng' => 6.0940,
                 'ref' => 'manual:signal-de-botrange',
                 'attributes' => [
-                    'type' => 'Viewpoint / high point', 'bikeAccess' => 'Roadside',
+                    'type' => 'peak', 'bikeAccess' => 'Roadside',
                     'whatYouSee' => "Hautes Fagnes moorland — Belgium's largest nature reserve",
                     'note' => "Belgium's highest point (694 m) with the Baltia stone tower (1934) and a 1923 stone step up to exactly 700 m. Hautes Fagnes nature reserve, Waimes — the coldest, wettest spot in Belgium. For cyclists: a long, gentle plateau drag, but bleak, exposed, and often cold, windy or foggy even in summer.",
                     'c' => true,
@@ -337,7 +337,7 @@ final class SeedManualCatalogCommand extends Command
                 'letter' => 'P', 'name' => 'Cascade de Coo', 'lat' => 50.39359, 'lng' => 5.87664,
                 'ref' => 'manual:cascade-de-coo',
                 'attributes' => [
-                    'type' => 'Viewpoint / high point', 'bikeAccess' => 'Roadside',
+                    'type' => 'waterfall', 'bikeAccess' => 'Roadside',
                     'whatYouSee' => 'A ~15 m waterfall on the Amblève, enlarged by the monks of Stavelot in the 17th century',
                     'note' => 'A natural photo stop on the Amblève-valley run below the Côte de Stockeu.',
                     'c' => true,
@@ -349,7 +349,7 @@ final class SeedManualCatalogCommand extends Command
                 'letter' => 'Q', 'name' => 'Stavelot Abbey', 'lat' => 50.3950, 'lng' => 5.9290,
                 'ref' => 'manual:stavelot-abbey',
                 'attributes' => [
-                    'type' => 'Heritage site', 'note' => 'Benedictine abbey founded 651; town museums today.',
+                    'type' => 'monastery', 'note' => 'Benedictine abbey founded 651; town museums today.',
                     'cyclingStory' => 'At the foot of the Côte de Stockeu (Liège–Bastogne–Liège).',
                     'c' => true,
                     'photos' => [

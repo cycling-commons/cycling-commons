@@ -85,6 +85,51 @@ final class MaterializeFlowTest extends WebTestCase
         );
     }
 
+    public function testAnOsmWaterfallOpensTheWizardWithItsKindChosen(): void
+    {
+        // A waterfall in OSM stays a waterfall here (osm-data-architecture.md §5a).
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'kind');
+        $db = static::getContainer()->get(Connection::class);
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, [
+            'ref' => 'node/737373', 'letter' => 'P', 'kind' => 'waterfall', 'name' => 'Cascade de Coo',
+            'tags' => ['waterway' => 'waterfall'], 'lat' => 50.39, 'lng' => 5.88,
+        ]);
+
+        $client->request('GET', '/improve?ref=node/737373&type=scenic-views&lat=50.39&lng=5.88');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(
+            'waterfall',
+            $client->getCrawler()->filter('select[name="improve[details][type]"] option[selected]')->attr('value'),
+        );
+    }
+
+    public function testAnOsmHotelOpensTheWizardWithHotelChosen(): void
+    {
+        // The owner's Hotel Beemster: an OSM hotel converts to our hotel type.
+        $client = static::createClient();
+        $this->loginFreshUser($client, 'stay');
+        $db = static::getContainer()->get(Connection::class);
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, [
+            'ref' => 'way/281301259', 'letter' => 'O', 'name' => 'Hotel Beemster',
+            'tags' => ['tourism' => 'hotel'], 'lat' => 52.527, 'lng' => 4.922,
+        ]);
+
+        $client->request('GET', '/improve?ref=way/281301259&type=O&lat=52.527&lng=4.922');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(
+            'hotel',
+            $client->getCrawler()->filter('select[name="improve[details][type]"] option[selected]')->attr('value'),
+        );
+        // In alphabetical order of the rider's language (owner 2026-10-08), after the empty option.
+        $values = $client->getCrawler()->filter('select[name="improve[details][type]"] option')->each(static fn ($o) => (string) $o->attr('value'));
+        self::assertSame(['', 'camp', 'chalet', 'guest_house', 'apartment', 'hostel', 'hotel'], \array_slice($values, 0, 7));
+    }
+
     public function testUnknownAndMalformedRefsFallBackToTheExplainer(): void
     {
         $client = static::createClient();

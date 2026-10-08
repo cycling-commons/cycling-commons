@@ -33,6 +33,8 @@ final readonly class CatalogField
         public bool $derived = false,
         /** For a keyed select: stored value => label. Empty when the label IS the value. */
         public array $choiceLabels = [],
+        /** Offered in alphabetical order of the rider's language; the stored order stays the vocabulary's. */
+        public bool $sortChoices = false,
     ) {
     }
 
@@ -43,9 +45,9 @@ final readonly class CatalogField
      *
      * @param array<string, string> $labelsByValue value => label
      */
-    public static function selectKeyed(string $name, string $label, array $labelsByValue, bool $display = true): self
+    public static function selectKeyed(string $name, string $label, array $labelsByValue, bool $display = true, bool $sorted = false): self
     {
-        return new self($name, $label, FieldKind::Select, choices: array_keys($labelsByValue), display: $display, choiceLabels: $labelsByValue);
+        return new self($name, $label, FieldKind::Select, choices: array_keys($labelsByValue), display: $display, choiceLabels: $labelsByValue, sortChoices: $sorted);
     }
 
     /** A value the app computes and displays; nobody types it. */

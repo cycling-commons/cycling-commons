@@ -394,6 +394,44 @@ final class OsmConfirmTest extends WebTestCase
      * type with no working parts, and the endpoint now agrees, so the stored
      * vocabulary cannot drift past what the form is able to express.
      */
+    public function testATappedCastleKeepsItsKind(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'castle');
+        $db = static::getContainer()->get(Connection::class);
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, [
+            'ref' => 'node/818181', 'letter' => 'Q', 'kind' => 'castle', 'name' => 'Château de Bouillon',
+            'tags' => ['historic' => 'castle'], 'lat' => 49.79, 'lng' => 5.07,
+        ]);
+
+        $this->post($client, 'node/818181', 'exists', $this->mapToken($client));
+
+        self::assertResponseIsSuccessful();
+        $item = static::getContainer()->get(EntityManagerInterface::class)
+            ->getRepository(Item::class)->findOneBy(['sourceRef' => 'node/818181']);
+        self::assertNotNull($item);
+        self::assertSame('castle', $item->getAttributes()['type'] ?? null);
+    }
+
+    public function testAPlaceWithNoConditionFieldCannotBeReportedClosed(): void
+    {
+        // A stay has no "Still as mapped?" field, so the drawer must not offer
+        // Closed or Not there anymore on it (moderation-and-contribution.md §10.5).
+        $client = static::createClient();
+        $this->login($client, 'stay-closed');
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $item = (new Item())->setLetter('O')->setName('Hotel test')
+            ->setGeom('{"type":"Point","coordinates":[4.9,52.5]}')->setCountryCode('NL')
+            ->setState(ItemState::Unverified)->setSource(ItemSource::Osm)->setAttributes([]);
+        $em->persist($item);
+        $em->flush();
+
+        $client->request('POST', '/items/'.$item->getId().'/condition', ['_token' => $this->mapToken($client), 'stance' => 'closed']);
+
+        self::assertResponseStatusCodeSame(422);
+    }
+
     public function testAViewpointCannotBeReportedOutOfOrder(): void
     {
         $client = static::createClient();

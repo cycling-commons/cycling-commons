@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Catalog;
 
+use App\Catalog\PlaceKind;
 use App\Catalog\ServiceKind;
 use App\Coverage\CoverageRepository;
 use PHPUnit\Framework\TestCase;
@@ -87,6 +88,20 @@ final class CoverageContractTest extends TestCase
         self::assertSame($dRules, array_keys($contract['serviceKind']));
     }
 
+    public function testPlaceKindRulesAreThePhpRulesAndThePAndQSelectors(): void
+    {
+        $contract = $this->loadContract();
+        foreach (PlaceKind::LETTERS as $letter) {
+            self::assertSame(PlaceKind::harvestRules($letter), $contract['placeKind'][$letter], "$letter: contract and PlaceKind agree");
+            $selectors = array_map(static fn (array $s): string => $s['tag'], $contract['letters'][$letter]['selectors']);
+            self::assertSame($selectors, array_keys($contract['placeKind'][$letter]), "$letter: one rule per selector");
+            foreach ($contract['letters'][$letter]['selectors'] as $selector) {
+                $kind = $contract['placeKind'][$letter][$selector['tag']];
+                self::assertSame(PlaceKind::label($letter, $kind), $selector['label'], 'the tile label is the kind label');
+            }
+        }
+    }
+
     public function testTilePropsCarryTheLetterSpecificExtras(): void
     {
         $letters = $this->loadContract()['letters'];
@@ -101,7 +116,11 @@ final class CoverageContractTest extends TestCase
         self::assertSame(['potable', 'food', 'cd'], $letters['B']['tileProps']);
         self::assertSame(['kind', 'cd'], $letters['D']['tileProps']);
         self::assertSame(['acc', 'cd'], $letters['O']['tileProps']);
-        foreach (['F', 'G', 'P', 'Q'] as $letter) {
+        // G, P and Q carry their kind: one glyph per OSM tag (osm-data-architecture.md §5a).
+        foreach (['G', 'P', 'Q'] as $letter) {
+            self::assertSame(['kind', 'cd'], $letters[$letter]['tileProps']);
+        }
+        foreach (['F'] as $letter) {
             self::assertSame(['cd'], $letters[$letter]['tileProps']);
         }
     }
@@ -109,7 +128,7 @@ final class CoverageContractTest extends TestCase
     public function testUniversalTilePropsCarryTheScopeKeys(): void
     {
         // ref/n/t identity + the ridtok/cctok region-scoping tokens
-        // (map-and-search.md §4.5 Phase 3 review round: pipe-delimited
+        // (map-and-search.md §4.5: pipe-delimited
         // tokens so cluster bubbles can union them) are emitted on EVERY tile
         // layer by pipeline tiles.py::_letter_sql; per-letter tileProps stay
         // extras-only.

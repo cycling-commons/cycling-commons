@@ -56,6 +56,21 @@ final class StayKind
         'mountain hut' => 'chalet',
     ];
 
+    /** @var array<string, string> stay Type (PlaceKind, letter O) => kind */
+    private const array BY_TYPE = [
+        'hotel' => 'hotel', 'motel' => 'hotel',
+        'guest_house' => 'house', 'apartment' => 'house',
+        'hostel' => 'hostel',
+        'camp' => 'camp',
+        'chalet' => 'chalet', 'alpine_hut' => 'chalet', 'wilderness_hut' => 'chalet',
+    ];
+
+    /** The kind for a stay Type, the value a rider can change; null when none is set. */
+    public static function fromType(?string $type): ?string
+    {
+        return null === $type ? null : (self::BY_TYPE[$type] ?? null);
+    }
+
     /** The catalogue key of a kind's written-out name, beside its icon. */
     public static function labelKey(string $kind): string
     {

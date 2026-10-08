@@ -13,6 +13,7 @@ use App\Catalog\Import\OsmLinker;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
 use App\Catalog\LocationMode;
+use App\Catalog\PlaceKind;
 use App\Catalog\RoadType;
 use App\Catalog\ServiceKind;
 use App\Catalog\SubmissionType;
@@ -295,6 +296,10 @@ final class ContributeController extends AbstractController
         $current = [Item::NAME_FIELD => '' !== $osmName
             ? mb_substr($osmName, 0, 120)
             : (string) ($poi['name'] ?? '')];
+        // osm-data-architecture.md §5a: an OSM waterfall stays a waterfall.
+        if (null !== $poi && null !== PlaceKind::label($type->letter(), (string) ($poi['kind'] ?? ''))) {
+            $current['type'] = (string) $poi['kind'];
+        }
         $prechosen = SurfaceVocabulary::fromTileClass((string) $request->query->get('surface', ''));
         if (null !== $prechosen) {
             foreach ($this->registry->for($type)->all() as $field) {

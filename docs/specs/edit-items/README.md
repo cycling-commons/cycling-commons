@@ -9,10 +9,10 @@ service station): each editable type gets its own spec here, documenting what a 
 change, the field-level provenance, and how it's built. Having one per
 type is the guarantee that we've thought through the design and implementation options for each.
 
-**R is the deliberate exception** (since 2026-07-08): recommended routes are *curated
+**R is the deliberate exception** (owner 2026-07-08): recommended routes are *curated
 compositions* — riders propose (GPX + metadata), vote, confirm rides, and suggest corrections,
 but never edit route data; curators own all edits. See
-[`../route-domain.md`](../route-domain.md) and the rewritten
+[`../route-domain.md`](../route-domain.md) and
 [R-quality-rides.md](R-quality-rides.md).
 
 The **source of truth** for each type's fields is the Symfony registry,
@@ -39,17 +39,17 @@ The real, server-rendered port of this registry lives in the Symfony app:
   **translated out of this document's vocabulary on the way**. `votable`, `utility`,
   `unverified`, `verified`, "the funnel", "verified for coverage" and the per-fact
   provenance tags exist so curators and this spec can be precise with each other; a
-  rider adding a drinking fountain has no use for any of them, and the review step
-  said all seven at them. It now describes what happens instead — a curator reads it,
-  it appears as a small dot others can confirm, a few confirmations make it a full pin.
+  rider adding a drinking fountain has no use for any of them. The review step
+  describes what happens instead: a curator reads it, it appears as a small dot
+  others can confirm, and confirmations make it a full pin.
   **When a term is added here, it does not follow that it appears on a rider's screen.**
 - **Reachability** — the contribute hub deep-links each card with `?type=<slug>`; the map drawer's Edit/Add-photo
   links use `?type=<letter>` (`ItemType::fromParam()` resolves either) — **except R**: the route drawer offers
   vote / "I rode this" / GPX download / suggest-a-correction instead of an edit link. `/improve` with no
   item to bind (and no `mode=add` or OSM `ref`) renders the pick-a-place page; no type is a default edit item.
 
-**Persistence** — item submissions persist for real since data-API phase B
-([../moderation-and-contribution.md](../moderation-and-contribution.md));
+**Persistence**: item submissions persist as `submission` rows
+([../moderation-and-contribution.md](../moderation-and-contribution.md) §3);
 route proposals bypass that pipeline entirely and land as `RecommendedRoute` rows (state `submitted`)
 with purpose-built `route_ride` / `route_suggestion` tables and the season ballot's `season_vote` (route-domain.md).
 
@@ -96,10 +96,10 @@ inherits the shared feedback system owned by
 user-messages contract M1–M12, retention/GC, and Trash): every decision writes
 the submitter a dashboard message (thank-you on approve/done, informing on
 reject/dismiss; on item submissions, a needs-info request whose reply re-queues
-the submission — route channels use curator messages instead), an unread bulb
-on the account chip, curator↔rider pseudonymous messaging, 3-month retention +
-GC for dismissed corrections and rejected item submissions, and an immediate
-hard-delete **Trash** for spam. Per-type specs only note deviations.
+the submission; route channels use curator messages instead), an unread bulb
+on the account chip, curator to rider messaging, settled work kept as long as
+the rider's account exists (moderation-and-contribution.md §8), and **Trash**, a 30-day bin for spam
+(moderation-and-contribution.md §6). Per-type specs only note deviations.
 
 **The name is editable on every type, in both modes.** Add mode requires one
 (a new place must arrive named — the queue and the map both key on it); edit
@@ -131,8 +131,8 @@ it varies by type:
 - **climbs** use the same add arm, `/improve?type=climbs&mode=add`, with the shared three-point
   editor in place of the pin: draw the **foot**, then the **summit**; the road between them is
   auto-routed, a lockable **steepest** marker is placed, and length, gain and gradients are
-  measured from the DEM, never typed (three-point definition: [N-climbs.md](N-climbs.md)). The
-  dedicated `/add-climb` wizard was retired on 2026-08-25 and is now a 301 to this arm.
+  measured from the DEM, never typed (three-point definition: [N-climbs.md](N-climbs.md)).
+  `/add-climb` is a 301 to this arm.
 
 **Locate step.** The first step also carries (`web/templates/contribute/improve.html.twig`):
 - **Similar places** (add mode, every rider): once the pin is placed, the places of the same kind within
@@ -163,8 +163,8 @@ through the content report ([../content-reports.md](../content-reports.md)).
 [photo-uploads.md](../photo-uploads.md); this is the rider-facing summary.
 - **Add photos** — several at once (six per submission): JPG · PNG · WebP · HEIC (iPhone),
   CC BY-SA 4.0. Format is decided by decoding the bytes, never by the filename.
-- **Video is gone from the wizard** and deferred as its own future feature. Nothing in the
-  contribution flow accepts video, and nothing pretends to.
+- **No video.** Nothing in the contribution flow accepts video, and nothing pretends to;
+  video is a possible future feature of its own.
 - **Consent is asked when a photo is dropped**, about that photo — not as a gate in front of a drop
   zone nobody can use yet. The rider ticks that they license their photos under CC BY-SA 4.0 and took
   them themselves, with the licence one click away so they can read what they are agreeing to. The
@@ -176,8 +176,7 @@ through the content report ([../content-reports.md](../content-reports.md)).
 - **Real per-file progress**, driven by actual uploaded bytes, becoming a thumbnail on success and a
   named error on failure ("that photo is over 15 MB", "that file type cannot be used", …).
 - **Link instead of upload** is not built: the wizard takes uploads only. A photo by Commons link
-  (allowlisted, licence-checked, fetched and re-hosted) is future work
-  ([docs/TODO.md](../../TODO.md), "Photo by Commons link").
+  (allowlisted, licence-checked, fetched and re-hosted) is possible future work.
 - Photo credits link the licence deed, and for imported photos the image source (the Wikimedia
   Commons file page) and the author's Wikimedia profile. A rider upload has neither: it is credited to
   the photographer's Commons profile when public, and to "an anonymous rider" otherwise.
@@ -222,8 +221,10 @@ DELETE rows) holds one row per applied field change. The write/apply contract
 [../moderation-and-contribution.md](../moderation-and-contribution.md). The history is
 user-visible (W5): `GET /map/item/{id}/history` (`MapController::history()`, public,
 cacheable, 200-with-empty-list for never-edited items) feeds the map drawer's
-"Recent changes" section — field, old → new, anonymised rider pseudonym, when,
-newest first — visible to everyone including the contributor for their own edits.
+"Recent changes" section (`ChangeHistoryView`): field, old → new, who (the
+contributor's display name when their profile is public, else their rider
+pseudonym), when, newest first, visible to everyone including the contributor
+for their own edits.
 
 ## Item lifecycle and votability
 
@@ -260,11 +261,10 @@ The map's three view modes read this ladder from the top down: **Best of**
   mirror but haven't confirmed. Neither is votable until it clears the verification gate.
 - Best of surfaces items risen by community **votes**, not editorial hand-picking —
   moderation is a separate spam/abuse gate, not a quality ranking.
-- **Everything a rider can stand in front of is confirmable** (2026-08-12).
-  The old test was "could this place vanish", which excluded castles and
-  mountains; the right test is "was a rider there, and is this right" — which a
-  climb, a viewpoint and a castle can all be wrong about. Confirmable ≠ votable:
-  the votable types collect both.
+- **Everything a rider can stand in front of is confirmable** (owner 2026-08-12).
+  The test is "was a rider there, and is this right", which a climb, a viewpoint
+  and a castle can all be wrong about, not "could this place vanish".
+  Confirmable ≠ votable: the votable types collect both.
 - **A confirmation can also be negative.** `condition` (*Out of order · Closed ·
   Not there anymore*) travels as an ordinary edit, not a stance, and a place
   reported gone leaves the map without handing itself back to OSM
@@ -280,7 +280,7 @@ rider or curator has vouched for, and **Everything** is full coverage (the on-th
 completeness map).
 
 Per-pin state carries the trust/vote signal (unverified dot → verified pin → votable → best-of marker);
-the toggle no longer stands in for "trusted". Each per-type spec below tags its **Lifecycle** row
+the view-mode toggle does not stand in for "trusted". Each per-type spec below tags its **Lifecycle** row
 accordingly.
 
 **Route carve-out (R).** Recommended routes follow the same *shape* but a route-specific machine
@@ -363,10 +363,9 @@ threshold.
 | **R** | Quality rides | [R-quality-rides.md](R-quality-rides.md) | line + GPX | **votable** (typed: season + bike type) | **no — curator-only**; riders propose / vote / rode-it / suggest |
 | (none) | Ride heatmap | — | derived overlay | — | **no** (auto/aggregate, never per-rider) |
 
-**Letters renumbered 2026-08-25.** Practical types take A–M, experiential
-(votable) types take N–Z, so each half can grow without colliding. Old -> new:
-B->N, C->B, E->O, F->E, G->F, H->G, I->P, J->Q, K->R, M->C; A and D unchanged.
-Letters are identifiers, not display order.
+**Letter scheme** (owner 2026-08-25). Practical types take A–M, experiential
+(votable) types take N–Z, so each half can grow without colliding. Letters are
+identifiers, not display order.
 
 The ride heatmap has no letter: it is a derived, anonymized aggregate, not a
 catalogue type, and is never editable.

@@ -5,9 +5,9 @@
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** A · Road surface
-- **Map depiction:** line styled by surface class, icon ▰, colour #4E8C84. Rendered **above** ride/climb
+- **Map depiction:** line styled by surface class, icon `ItemType::svgPath()` (▰ text fallback), colour #4E8C84. Rendered **above** ride/climb
   lines so the surface (e.g. a gravel sector along a ride) reads on top.
-- **Editable:** yes · Frontend demo · 2026-06-18
+- **Editable:** yes · the `/improve` wizard in segment mode (add, improve, confirm or correct an OSM way)
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
@@ -17,7 +17,7 @@ Real road/path segments (RAVeL cycleway, forest gravel, pavé/sett) shown as lin
 A surface entry is a **segment**, not a point: the first action is to tap the **start**, then the **end**.
 (Contrast: most types drop a single pin; rides need none.)
 
-**The line between them follows the road** (2026-08-12). The two pins are snapped
+**The line between them follows the road** (owner 2026-08-12). The two pins are snapped
 with the same bicycle router the climb editor uses — `/contribute/route` → our
 Valhalla — and the path it returns is what is drawn and what is stored. A
 straight chord between two taps crosses fields, houses and the wrong bank of a
@@ -38,7 +38,7 @@ a real coordinate, and **both ends within 1 km of the pin they snapped from**.
 A segment may follow an actual ride — the demo includes a **gravel descent traced along the Spa · Sankt
 Vith loop** near its end, so a ride's real road type can be recorded.
 
-## Correcting or confirming OSM's answer (built 2026-08-12)
+## Correcting or confirming OSM's answer
 
 Most A segments a rider sees are not ours: they are the **OSM surface skin**, a
 tile layer of every surfaced way OSM knows
@@ -53,8 +53,8 @@ actions that are the **same submission** one decision apart:
 
 **Both prefill the surface.** What OSM says about the way is a *current detail*,
 and the "Fix details" step exists to show current details — opening it with an
-empty Surface dropdown asks the rider to retype what the drawer just told them,
-and reads as "we know nothing here" (owner-reported 2026-08-12). The difference
+empty Surface dropdown would ask the rider to retype what the drawer just told
+them (owner 2026-08-12). The difference
 between the two actions is therefore not the data, it is the step: confirming
 means the location is right too, so that step is skipped. The skip happens only
 *after* the pins are placed — jumping to the details with an empty segment field
@@ -71,13 +71,12 @@ line draws on top of the tile line; the tile stays underneath as OSM's answer.
 ends, so `sa`/`sb` place both pins on it, draggable — the rider adjusts rather
 than re-taps from a blank map. A wrong-but-close start beats an empty one.
 
-## Run-chaining: one click prefills the whole unrecorded run (built 2026-08-13)
+## Run-chaining: one click prefills the whole unrecorded run
 
-OSM splits a road wherever any tag changes, so a 16 km dijk is dozens of ways —
-one of them 30 m. A rider who clicks a red to-do dash used to get exactly that
-one way prefilled, and a rider who does not know the pins can be dragged gives
-up right there (owner-reported 2026-08-13). Now a **to-do click prefills the
-whole unrecorded run**: every same-named neighbour way, chained end to end
+OSM splits a road wherever any tag changes, so a 16 km dijk is dozens of ways,
+one of them 30 m, and a rider who does not know the pins can be dragged gives
+up on a 30 m prefill (owner 2026-08-13). So a **to-do click prefills the whole
+unrecorded run**: every same-named neighbour way, chained end to end
 (`unrecordedRunEnds` in `web/assets/map/surface-tiles.js`).
 
 - **The name is the join key** — no name, no chain (single-way fallback).
@@ -92,7 +91,7 @@ whole unrecorded run**: every same-named neighbour way, chained end to end
   unclassified are both "a local road" and do chain.
 - **Only unrecorded ways chain** — candidates come from the to-do source, so
   the run stops where somebody has already answered. A classified (skin) click
-  keeps its own way (`fullWayEnds`), unchanged.
+  keeps its own way (`fullWayEnds`).
 
 **Every covered red dash retires, not just the clicked one.** The run's way
 refs ride the wizard URL (`&srefs=way/…,way/…`, capped at 120), the controller
@@ -109,27 +108,21 @@ path on the map (orange halo under the class line — `showSurfaceSelection` in
 `web/assets/map/render.js`; cleared on drawer close), and the drawer's record
 leads with a **Length** row (great-circle over the drawn path, rider's unit).
 The wizard's readout, after a prefill, says the stretch is prefilled and that
-**either pin can be dragged** to cover more or less of the road — the hint the
-one-way-per-click behaviour taught us riders need.
+**either pin can be dragged** to cover more or less of the road.
 
-**And with no prefill it asks for the START (fixed 2026-08-14).** The Locate
-step's markup is rendered by Twig with `improve.step1.readout_initial` — "Tap
-the map to set the location", the *point* wording — and in segment mode
-nothing overwrote it until the first tap, so a rider adding a stretch from
-scratch was told to set one location on a step that wants two.
-`readout_segment_start` / `readout_segment_end` already existed in all five
-locales and were only ever reached from `syncLoc()`; the blank segment case
-now sets the first of them at init. Both prefill paths still write their own
-readout on `load`, so nothing about a prefilled stretch changed.
+**With no prefill it asks for the START.** The Locate step's markup is
+rendered with `improve.step1.readout_initial`, the *point* wording, so in
+segment mode the wizard sets `readout_segment_start` at init, and
+`readout_segment_end` after the first tap (`syncLoc()`). Both prefill paths
+write their own readout on `load`.
 
-## The wizard follows the road, not the router (built 2026-08-14)
+## The wizard follows the road, not the router
 
-The wizard used to snap the two pins with one router call, and the router
-answers the question it is asked: *fastest a→b*. On a long stretch that is not
-the road the rider is pointing at — dragging a pin along the Zuiderdijk first
-rerouted the middle onto the parallel road under the dijk, then left the dijk
-entirely via the N307 (owner-reported 2026-08-13). Three mechanisms fix this,
-all in `web/assets/contribute/improve.js`:
+A router answers the question it is asked: *fastest a→b*. On a long stretch
+that is not the road the rider is pointing at: a single router call along the
+Zuiderdijk reroutes the middle onto the parallel road under the dijk (owner
+2026-08-13). These mechanisms keep the line on the road, all in
+`web/assets/contribute/improve.js`:
 
 **1 · Geometry-seeded prefill.** A map click that opens the wizard already
 knows the road's shape: the run's tile fragments are stitched per way
@@ -143,25 +136,19 @@ succeeds, `ends` and the spanned refs come *from the walked line*, so on a
 fork (two same-named parallel roads) the item spans exactly the arm it draws.
 Classified (skin) clicks get the same seed for their single way
 (`fullWayLine`). A stale, mismatched or missing seed falls back to the
-router, exactly as before.
+router.
 
 **2 · Control points, and legs.** Right-click on the drawn line pins a
 **control point** (owner design 2026-08-13): a small round handle, draggable
-like the pins, right-click again to remove. A long-press touch variant
-shipped and did not fire reliably, so it was removed, code and copy both
-(owner 2026-08-14); a gesture that works sometimes teaches riders the
-feature is flaky.
+like the pins, right-click again to remove. There is no long-press touch
+gesture (owner 2026-08-14): a gesture that works only sometimes teaches riders
+the feature is flaky; touch uses the mode button below.
 
-**3 · Grabbing the line itself (2026-08-31).** Press the drawn line, drag to
-the road it should follow, let go. This is what a rider means by "move the
-route", and until now the only way to do it was to add a control point on the
-line and then drag that point: two gestures, nothing on screen connecting them,
-and a help line that described only the first. Worse, an armed tap on the road
-you actually wanted was ignored in silence, because `rightClickAt()` gives up
-beyond 35px of the line already drawn, and a parallel road is always further
-than that. Reported as "I do not drag the marker, I want to drag the road"
-(owner 2026-08-31), on a stretch the router had put on Dorpsweg when the dike
-beside it was meant.
+**3 · Grabbing the line itself** (owner 2026-08-31: "I do not drag the marker,
+I want to drag the road"). Press the drawn line, drag to the road it should
+follow, let go. A tap beside the line would not do it, because
+`rightClickAt()` gives up beyond 35px of the line already drawn, and a parallel
+road is always further than that.
 
 Underneath it is the same two steps, deliberately: the grab calls
 `rightClickAt()` to insert the control at the vertex grabbed (quietly, since the
@@ -178,12 +165,12 @@ can never re-route differently.
 - **Mouse only.** Touch keeps the mode button below, which is what the help line
   describes and what works without a hover to hint at grabbing.
 
-The help line now leads with the drag and keeps the control point as the way to
+The help line leads with the drag and keeps the control point as the way to
 pin a bend, which is the order a rider needs them in.
 
-**Touch route (built 2026-08-16): the "Add a point" MODE BUTTON**, the
-design the owner's candidate list called safest - discoverable, works with
-any pointer, and never fights MapLibre for a gesture. `#wzAddPt` sits beside
+**Touch route: the "Add a point" MODE BUTTON** (owner 2026-08-16):
+discoverable, works with any pointer, and never fights MapLibre for a
+gesture. `#wzAddPt` sits beside
 the help line, disabled until both pins are placed. Pressed (aria-pressed,
 wearing the line's own colour like the Hide-line peek button), it arms the
 mode: a tap on the line pins a control point through the SAME
@@ -197,7 +184,7 @@ confirm view) disarms and disables the button via `syncAddPt()` on every
 `drawSeg()`. The help line swaps to `improve.step1.ctrl_point_armed` while
 armed, so the active mode explains itself. Structural pins:
 `web/tests/js/wizard-addpoint.test.cjs`. The stretch is
-now a list of **legs** between waypoints (start pin · control points · end
+a list of **legs** between waypoints (start pin · control points · end
 pin); each leg holds its own line (`seed`/`route`/chord). A drag recalculates
 **only the legs touching the dragged point** — everything the rider already
 shaped stays put. Removing a control point joins its two legs' lines as they
@@ -211,7 +198,7 @@ right-click, everything up to it keeps its shape on a drag, the same
 gesture on the point removes it — always visible, not a toast that is
 gone before it is needed (`improve.step1.ctrl_point_help`).
 
-**3 · Trim, not re-route.** Dragging an endpoint to a position still on its
+**4 · Trim, not re-route.** Dragging an endpoint to a position still on its
 leg's existing line (~30 m) **trims** the line to that point and snaps the
 pin onto it — covering less of a prefilled run costs zero router calls and
 keeps the exact shape. Only a drag *off* the line asks the router, and only
@@ -219,22 +206,19 @@ for that leg.
 
 The submitted `segment.line` is the joined legs, capped under the server's
 3000-point limit (client caps at 2900; the seed itself is capped at 1200 at
-assembly). The server contract is unchanged — `a`, `b`, `line` — control
-points are a client-side editing tool and are not stored. Undo snapshots
+assembly). The server contract is `a`, `b`, `line`; control points are a
+client-side editing tool and are not stored. Undo snapshots
 pins, control points and legs together.
 
-**Editing an existing A item shows its stretch (2026-08-14).** The improve
-form for `?item=` used to open segment mode on an empty map ("editing a
-surface item does not show its track" — owner). Now `CC_ITEM.segment`
-carries the stored attribute, and the wizard opens with both pins placed and
+**Editing an existing A item shows its stretch** (owner 2026-08-14).
+`CC_ITEM.segment` carries the stored attribute, and the wizard opens with both pins placed and
 the stored line drawn as a `seed` leg — the stored attribute's *own values*,
 so an untouched edit reposts exactly what is stored, `INITIAL_GEOM` is
 re-snapshotted after the hydrate, and no phantom geometry change is ever
 recorded (pinned by `CatalogContributionServiceTest`). The other half is the
 server: `submitImprove` merges the `segment` hidden field into the diff the
-way it merges the climb shape (letter-gated to A) — before this the wizard
-said the new stretch would be recorded while the server silently dropped the
-field, the C6 class of bug — and on approve `ModerationService::applyEdit`
+way it merges the climb shape (letter-gated to A), and on approve
+`ModerationService::applyEdit`
 **rebuilds the item's LineString** from the new segment (line when present,
 a→b chord otherwise; pinned by `ImproveBindingTest`), because the map draws
 from geom, and applying only the attribute would keep showing the old road. Probe note: the wizard map exposes
@@ -242,12 +226,10 @@ from geom, and applying only the attribute would keep showing the old road. Prob
 real-input events do not reach the wizard canvas under Playwright — verify
 listeners with synthetic DOM events, real feel in a real browser.
 
-## Names, road type, and what we are allowed to assume (2026-08-12)
+## Names, road type, and what we are allowed to assume
 
-**The tile carries the way's `name`.** The basemap had been printing "Rue du
-Puits Saint-Martin" under our line while the drawer said "Paved · asphalt" and
-the wizard asked the rider to type a name we already had. The drawer now
-headlines with the street name and the class becomes its subtitle; the improve
+**The tile carries the way's `name`.** The drawer headlines with the street
+name and the class is its subtitle; the improve
 link carries `&name=`, and the wizard opens with it filled in. Composition
 happens at RENDER time, never in the tile: `name` is the OSM tag verbatim and
 the class comes from the locale dictionary, so a Dutch rider reads
@@ -256,7 +238,7 @@ English word into a name field for good. Cost: the Belgium artifact went from
 43 MB to **53.9 MB** (418,304 ways) — names are ~25%, and unnamed ways omit the
 key entirely rather than carrying an empty string.
 
-### One artifact, three countries, and no seam at the border (2026-08-12)
+### One artifact, three countries, and no seam at the border
 
 Belgium, the Netherlands and Luxembourg are built into **one** PMTiles archive
 with a source layer per country (`surface_be`, `surface_nl`, `surface_lu`), the
@@ -271,12 +253,11 @@ same shape the coverage tiles use:
 | "needs recording" arm (same three) | 414,774 | 34.8 MB |
 | gap grid (same three, 2,163 cells) | — | 0.6 MB |
 
-**The "needs recording" arm stopped being "every untagged way" on 2026-08-12,
-and the reason is editorial before it is about bytes.** It was every untagged
-way, and it cost as much as the entire classified skin (894,217 ways, 119 MB).
-Measured against our own tagged data for the same countries, most of that was
-asking riders to confirm what is already known — of Belgian ways somebody HAS
-tagged, these are the shares that turned out unpaved:
+**The "needs recording" arm is not "every untagged way"** (owner 2026-08-12),
+and the reason is editorial before it is about bytes: every untagged way would
+cost as much as the entire classified skin, and most of it would ask riders to
+confirm what is already known. Of Belgian ways somebody HAS tagged, these are
+the shares that turn out unpaved:
 
 | highway | unpaved when tagged | in the to-do arm? |
 |---|---|---|
@@ -292,29 +273,25 @@ tagged, these are the shares that turned out unpaved:
 
 Mappers tag the surprising road first, so an *untagged* primary is even more
 certainly asphalt than that 0.1 % suggests. Keeping only the unpredictable
-classes cut the arm to 29 % of its size and made every line in it a road where
-riding actually settles something. The set is contract data
+classes makes every line in the arm a road where riding actually settles
+something. The set is contract data
 (`surface.todo.highways`), so widening it later is a one-line change plus a
 rebuild — no code, no client release.
 
-**The arm is ROUTE-AWARE since 2026-08-13** (owner decision 2026-08-12; plan:
-`docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md`). The
-class gate above has a second gate beside it, a union not a hierarchy: *an
-untagged way that carries a signed route or node network is homework whatever
-its highway class, because a rider will ride it BECAUSE it is signed.* The
-Zuiderdijk is the worked example — nine untagged tertiary/unclassified ways
-carrying LF-ZZ plus two rcn segments, drawing as a hole in the skin until this
-rule. The way-id sets come from the routes extractor
+**The arm is ROUTE-AWARE** (owner decision 2026-08-12). The class gate above
+has a second gate beside it, a union not a hierarchy: *an untagged way that
+carries a signed route or node network is homework whatever its highway class,
+because a rider will ride it BECAUSE it is signed.* The Zuiderdijk is the
+worked example: untagged tertiary/unclassified ways carrying LF-ZZ plus rcn
+segments. The way-id sets come from the routes extractor
 (`pipeline/coverage/routes.py`, per-region `routes_<slug>_wayids.txt` in the
 workdir), which is why `coverage.run --routes` runs before `--surface` when
-rebuilding both. A brief 2026-08-12 stopgap that added `tertiary` + `cycleway`
-to `todo.highways` was withdrawn the same night: class was the wrong key, and
-it would have bought back most of the bytes the measurement above saved. The
-gap grid counts route homework too, so the squares and the lines keep
-answering the same question.
+rebuilding both. Widening `todo.highways` by class instead (adding `tertiary`
+and `cycleway`) is the wrong key and would buy back most of the bytes the
+measurement above saves. The gap grid counts route homework too, so the
+squares and the lines answer the same question.
 
-**Surface QUALITY has its own channel since 2026-08-13** (owner shape,
-2026-08-12). The classified arm's features carry `sm` (raw OSM `smoothness`,
+**Surface QUALITY has its own channel** (owner 2026-08-12). The classified arm's features carry `sm` (raw OSM `smoothness`,
 gated on contract `surface.quality.values` — an unlisted value is dropped at
 extract time, never guessed into a bucket) and `mtb` (`mtb:scale`), both
 omitted when absent. The client draws short coloured ticks over the class
@@ -349,7 +326,7 @@ than a missing kilometre.
 directory written in one pass, so adding a country means re-running tippecanoe
 over all of them — there is no append.
 
-**So the per-country extract is cached** (2026-08-12), which is the half worth
+**So the per-country extract is cached**, which is the half worth
 caching: an osmium pass plus a full node-location walk over a national PBF,
 against a tiling run that reads GeoJSONL already on disk. A country is
 re-extracted only when its `.geojsonl` is older than the PBF it came from **or
@@ -359,9 +336,9 @@ extract while leaving the PBF untouched, and a stale file would then be tiled as
 if it were current. An empty extract (what a killed run leaves behind) is never
 reused: it would publish a country with no roads and no error.
 `COVERAGE_FORCE_EXTRACT=1` is the hatch for a pipeline change no timestamp can
-show. Measured on a BE+LU rebuild: both extracts reused, only the tiling ran.
+show.
 
-### Why the names stay in the tile, measured (2026-08-12)
+### Why the names stay in the tile, measured
 
 The alternative considered was a name table on our side, fetched when a rider
 opens the drawer, keeping the tile lean. Measured before deciding, on the
@@ -396,9 +373,8 @@ zoom levels. The drawer opens at z14+ and the name is dead weight at z8, so the
 saving is most of the 25% with no behaviour change. Not built — it is a
 tippecanoe filter and a re-harvest, and the current figure is comfortable.
 
-**Road type is now editable.** The drawer has always shown OSM's `highway` tag
-and the form had no counterpart, which makes a read-only row feel like a locked
-door. The form offers six kinds a rider can tell apart from the saddle;
+**Road type is editable.** The drawer shows OSM's `highway` tag, and a
+read-only row would feel like a locked door, so the form offers six kinds a rider can tell apart from the saddle;
 `App\Catalog\RoadType` owns the mapping and `RoadTypeContractTest` keeps the
 map module's copy identical. **`unclassified` is not offered**: it is a British
 road CLASS meaning "a public road below tertiary", and every rider outside
@@ -409,13 +385,10 @@ word.
 
 ### Assumptions are shown, marked, and never stored
 
-The old harvester wrote `traffic` from a constant keyed on surface class:
-`Open road` on everything that was not a cycleway, `Car-free` on everything that
-was. That is worse than an empty field, because it is an empty field wearing a
-fact's clothes.
-
-What replaces it is an inference from `highway` — a residential street really is
-quieter than a secondary road — under three rules:
+A `traffic` value written from a constant keyed on surface class would be worse
+than an empty field: an empty field wearing a fact's clothes. The map instead
+infers traffic from `highway` (a residential street really is quieter than a
+secondary road) under three rules:
 
 1. **It is rendered as an assumption.** An ochre `!` beside the value, next to
    (never instead of) the glacier-green `[OSM]` badge that means "OSM said so".
@@ -436,16 +409,13 @@ quieter than a secondary road — under three rules:
 `assumedTraffic()` in `web/assets/map/surface-tiles.js` holds the rules;
 unknown highway values return null rather than a nearest guess.
 
-**The course fixture stopped exporting them too** (2026-08-12). `traffic` and
+**The course fixture exports no assumptions either.** `traffic` and
 `smoothness` are dropped in `tools/wallonia/export.py`, not fixed in
 `atlas/demo/surface-data.js`: the fixture is harvested output, and hand-editing
-it is how a re-harvest silently undoes the fix. The 351 imported demo rows were
-deleted the same day, so the catalog's A layer now starts empty and fills only
-with what riders submit.
+it is how a re-harvest silently undoes the fix.
 
-**Legend affordances** (2026-08-12): each class row carries a ✓ when shown and
-loses it when filtered out, because "these seven rows are buttons" was something
-a rider had to discover by clicking. **Study mode is gated on the surface skin
+**Legend affordances**: each class row carries a ✓ when shown and loses it when
+filtered out, so a rider sees the rows are buttons. **Study mode is gated on the surface skin
 being on** — stripping the basemap with no surface lines to study is a blank
 page, so the control disables with the layer and switches off with it.
 
@@ -462,13 +432,11 @@ Segment-located types never resolve through `coverage_poi` — it is the point
 index, and surface lines never enter PostGIS. The submission keeps a point (its
 start, which is what resolves the region); the **item** gets the LineString.
 
-## Confirmation: "as described", since 2026-08-13
+## Confirmation: "as described"
 
-A surface item is confirmable like every other letter, by the same correction
-that brought climbs in ("could it vanish" is the wrong test): a rider who rode
-the stretch is exactly who can vouch for it, and the drawer's status line was
-saying "not confirmed yet" to a second rider with no way to answer
-(owner-reported). The stance is the ordinary `exists` record; only the WORDS
+A surface item is confirmable like every other letter ("could it vanish" is
+the wrong test): a rider who rode the stretch is exactly who can vouch for it
+(owner 2026-08-13). The stance is the ordinary `exists` record; only the WORDS
 differ — the panel asks *"Is it as described?"* with *"✓ As I rode it"*
 (`stanceKind: accuracy`, ItemConfirmationController → community.js), because a
 road rarely leaves. The gone/closed condition row and the OSM one-tap row stay
@@ -477,23 +445,23 @@ off for A: a stretch is not a place that vanishes, closures ride the
 drawer confirmation counts toward the `v` derivation as usual, so a confirmed
 stretch surfaces in Confirmed mode.
 
-Refined the same evening (owner, two passes): the panel is an explicit
-**yes/no pair** — "✓ Yes" filled orange as the button people should see, and
-"✗ No" (`ConfirmationStance::NotAsDescribed`, stance column widened to 20,
-migration `Version20260813210000`). The "no" never verifies (a warning is not
-a vouching, same rule as `not_potable`) and carries NO comment field: a why
-box was built and removed the same evening on owner decision — what changed
-belongs in the EDIT FORM, the one moderation pipeline, so a negative answer
-shows a pointer to "✎ Edit this item" instead of opening a second free-text
-entry point to the curators. The moderation drawer gained **Approve &
-confirm** — a tick on the decision that also records the curator's own
+The panel is an explicit **yes/no pair** (owner 2026-08-13): "✓ Yes" filled
+orange as the button people should see, and "✗ No"
+(`ConfirmationStance::NotAsDescribed`, stance column widened to 20, migration
+`Version20260813210000`). The "no" never verifies (a warning is not a
+vouching, same rule as `not_potable`) and carries NO comment field (owner
+decision): what changed belongs in the EDIT FORM, the one moderation pipeline,
+so a negative answer shows a pointer to "✎ Edit this item" instead of opening
+a second free-text entry point to the curators. The moderation drawer carries
+**Approve & confirm**: a tick on the decision that also records the curator's own
 confirmation, which verifies outright through the existing
 weighted-by-who-pressed-it rule ("I know these roads by hand"); offered for
 every letter whose stances include `exists` (not water, not R).
 
-The public change history shows every actor as a stable pseudonym
-(`RiderPseudonym`, e.g. `rider#k7m2x9qp`) by design, including the moderator who
-flipped a status — so account names never leak from the drawer.
+The public change history names an actor by display name only when their
+profile is public, else by their stable pseudonym (`RiderPseudonym`, e.g.
+`rider#k7m2x9qp`), the moderator who flipped a status included
+(`ChangeHistoryView`).
 
 ## Read view (drawer "current details")
 - Surface
@@ -506,8 +474,8 @@ flipped a status — so account names never leak from the drawer.
 | Field | Control | Provenance |
 |---|---|---|
 | Surface | select(Asphalt / Concrete / Paving stones / Sett — pavé / Compacted / Fine gravel / Gravel / Dirt / Rock) | `[OSM]` |
-| Smoothness | select(Excellent / Good / Intermediate / Bad / Very bad) | `[OSM]` |
 | Road type | select(Main road / Local road / Residential street / Farm or forest track / Path or trail / Cycleway) | `[OSM]` |
+| Smoothness | select(Excellent / Good / Intermediate / Bad / Very bad) | `[OSM]` |
 | Traffic | select(Quiet / Moderate / Busy / Car-free) | `[edit]` |
 | Segregated from cars? | select(Unknown / Yes / No) | `[OSM]` |
 
@@ -519,27 +487,21 @@ flipped a status — so account names never leak from the drawer.
 | Width (m) | input | `[OSM]` |
 | Note | textarea | `[edit]` |
 
-**Three vocabulary/layout corrections, 2026-08-12 (owner review):**
+**Vocabulary and layout** (owner review 2026-08-12):
 
-- **`Car-free`, not `Car-free (RAVeL)`.** RAVeL is Wallonia's brand for its
-  greenway network, and this layer serves twelve countries. It was also a second
-  spelling of a value the harvester already writes as plain `Car-free` (132 rows
-  against 1), so the dropdown now agrees with the data. Same reasoning retires
-  `Cycleway · RAVeL` as the *displayed* legend and drawer label — it is
-  `Cycleway` now, in five locales. The harvester's stored `Cycleway · RAVeL`
-  label stays mapped in `SurfaceVocabulary::BUCKETS`: stored values are history,
-  display is not.
+- **`Car-free`, not a regional brand.** RAVeL is Wallonia's brand for its
+  greenway network, and this layer serves many countries, so the value is
+  plain `Car-free`, and the legend and drawer say `Cycleway`, in five locales.
+  The harvester's stored `Cycleway · RAVeL` label stays mapped in
+  `SurfaceVocabulary::BUCKETS`: stored values are kept, display is not.
 - **`Forestry work`, not `Forestry`.** The bare noun does not say what closes
   the road. It is the logging season.
-- **Segregated sits beside Traffic**, not in "Add missing". They are one
-  question asked twice, and on a narrow screen they were pages apart. Which pane
-  a field lives in is presentation only — both merge into one flat attribute set
-  on submit — so nothing about storage moved with it.
+- **Segregated sits beside Traffic**, not in "Add missing": they are one
+  question asked twice. Which pane a field lives in is presentation only (both
+  merge into one flat attribute set on submit).
 
-`Version20260812010000` carries the two renames across existing rows and
-undecided submissions. It reverses only the closure rename: merging two traffic
-spellings into one is a one-way door, and a `down()` that renamed all 133 rows
-back would corrupt the 132 that never carried the parenthetical.
+Migration `Version20260812010000` moved existing rows and undecided submissions
+onto these spellings.
 
 ### Report a problem
 Not built: per-type reasons are not offered. A rider reports a place through the content report ([../content-reports.md](../content-reports.md)).
@@ -568,12 +530,10 @@ GeoJSON source + one shared casing layer) because MapLibre cannot data-drive
 distinguishes gravel/pavé/dirt from solid paved must live at the layer level.
 Line width scales from the `width=` tag.
 
-**The class (`cls`) is derived at serve time when a row lacks one**
-(2026-08-13): only harvested rows ever stored a `cls` attribute, so a
-rider-materialized segment (the confirm/correct flow stores the form
-vocabulary — `surface: 'Asphalt'` — and nothing else) drew in the grey
-`other` fallback instead of its class colour. `CatalogProvider::
-surfaceSegments()` now fills a missing `cls` from
+**The class (`cls`) is derived at serve time when a row lacks one.** Only
+harvested rows store a `cls` attribute; a rider-materialized segment stores the
+form vocabulary (`surface: 'Asphalt'`) and nothing else. `CatalogProvider::
+surfaceSegments()` fills a missing `cls` from
 `SurfaceVocabulary::TO_TILE_CLASS` (the stored-label → map-class inverse of
 `TILE_CLASS`, covering both the declarable vocabulary and the harvester-only
 spellings); a stored `cls` is never second-guessed, and an unknown label
@@ -586,7 +546,7 @@ still falls through to `other` rather than being guessed.
   ([../coverage-provider.md](../coverage-provider.md) §4).
 - **A items** are the curated corridors drawn on top of the skin, served through the catalog region
   slices: rider materializations from the confirm/correct flow above, and the fixture segments
-  (`atlas/demo/surface-data.js`) that `tools/wallonia/export.py` exports for the catalog import. Region-bbox bulk harvesting
-  is superseded ([../catalog-data-model.md](../catalog-data-model.md) §12).
+  (`atlas/demo/surface-data.js`) that `tools/wallonia/export.py` exports for the catalog import. There is
+  no region-bbox bulk harvest of A items ([../catalog-data-model.md](../catalog-data-model.md) §12).
 - **Rendering:** one MapLibre line sub-layer per surface class (solid = paved, dashed = gravel,
   dotted = rough), line width from `width=`.

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Catalog;
 
+use App\Catalog\PlaceKind;
 use App\Catalog\StayKind;
 use PHPUnit\Framework\TestCase;
 
@@ -21,6 +22,19 @@ final class StayKindTest extends TestCase
             self::assertSame($kind, StayKind::fromLabel($label), $label);
             self::assertArrayHasKey($kind, StayKind::PATHS);
         }
+    }
+
+    /** The stay Type a rider can change (PlaceKind, letter O) picks the drawing first. */
+    public function testEveryStayTypeHasADrawing(): void
+    {
+        foreach (array_keys(PlaceKind::labels('O')) as $type) {
+            $kind = StayKind::fromType($type);
+            self::assertNotNull($kind, $type);
+            self::assertArrayHasKey($kind, StayKind::PATHS);
+        }
+        self::assertSame('camp', StayKind::fromType('camp'));
+        self::assertSame('house', StayKind::fromType('guest_house'));
+        self::assertNull(StayKind::fromType(null));
     }
 
     public function testAnUnknownLabelHasNone(): void

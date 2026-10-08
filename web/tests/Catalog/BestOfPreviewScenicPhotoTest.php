@@ -44,7 +44,7 @@ final class BestOfPreviewScenicPhotoTest extends KernelTestCase
                    VALUES ('P', :name, ST_GeomFromText('POINT(5.8 50.4)', 4326), 'BE', :rid, 'verified', 'manual', :ref, CAST(:attrs AS jsonb), NOW(), NOW())";
         foreach (['Item far' => 50.4036, 'Item near' => 50.4009] as $name => $cameraLat) {
             $db->executeStatement($insert, ['name' => $name, 'rid' => $rid, 'ref' => 'manual:best-'.$name, 'attrs' => json_encode([
-                'type' => 'Viewpoint',
+                'type' => 'viewpoint',
                 'photo' => ['sm' => 'https://img.test/'.rawurlencode($name).'.webp', 'cameraAt' => [$cameraLat, 5.8], 'credit' => 'Jane Rider', 'license' => 'CC BY-SA 4.0'],
             ], \JSON_THROW_ON_ERROR)]);
         }
@@ -70,9 +70,14 @@ final class BestOfPreviewScenicPhotoTest extends KernelTestCase
         /** @var BestOfPreview $preview */
         $preview = self::getContainer()->get(BestOfPreview::class);
         $photoByName = [];
+        $noteByName = [];
         foreach ($preview->ranking(ItemType::ScenicViews, Season::Summer, 'BE', regionId: $rid) as $row) {
             $photoByName[$row['name']] = $row['photo']['sm'] ?? null;
+            $noteByName[$row['name']] = $row['note'] ?? null;
         }
+        // The kind reads as its label, whether we hold the place or OSM does (osm-data-architecture.md §5a).
+        self::assertSame('Viewpoint', $noteByName['Item near'] ?? null);
+        self::assertSame('Viewpoint', $noteByName['Coverage near'] ?? null);
 
         self::assertArrayHasKey('Item far', $photoByName);
         self::assertNull($photoByName['Item far'], 'a stored photo from 400 m away is not the view from the pin');

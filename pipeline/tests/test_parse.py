@@ -82,11 +82,13 @@ def test_way_reduces_to_centroid(rows):
     assert way.name == "Hôtel du Centre"
 
 
-def test_service_kind_only_on_d(rows):
+def test_kind_on_d_p_and_q_only(rows):
     by_ref = _by_ref(rows)
     assert by_ref["node/101"][0].kind == "shop"
     assert by_ref["node/102"][0].kind == "pump"
     assert by_ref["node/103"][0].kind is None
+    kinds = {r.letter: r.kind for r in rows if r.letter in ("P", "Q")}
+    assert kinds and all(kinds.values()), "every P and Q row carries its kind"
 
 
 def test_name_tags_and_osm_metadata(rows):

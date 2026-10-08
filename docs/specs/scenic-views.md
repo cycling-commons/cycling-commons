@@ -29,11 +29,17 @@ sat on or near their summits.
 Every scenic view on the map meets all of these. Each rule says what it is,
 where it is enforced, and when it takes effect.
 
-**Rule 1: a scenic view is a viewpoint or a waterfall, never a peak.**
-- OSM coverage selects `tourism=viewpoint` and `waterway=waterfall` only
-  (`letters.P.selectors` in `pipeline/contract/coverage-contract.json`).
-- A peak's point is its summit. A viewpoint on a summit road (Mont Ventoux,
-  the Puy de Dôme) is kept by rule 2 like any other viewpoint.
+**Rule 1: a scenic view is one of the P kinds; OSM coverage never loads a peak.**
+- The P kinds are a viewpoint, a peak, a waterfall, rapids, a cliff, a cave
+  entrance, a rock arch, a rock and a boulder, one OSM tag each, and a natural
+  feature: a beautiful stretch to ride, such as a road through a forest, which
+  no OSM tag names and which stays ours
+  ([osm-data-architecture.md §5a](osm-data-architecture.md)).
+- OSM coverage loads them all except the peak (`letters.P.selectors` in
+  `pipeline/contract/coverage-contract.json`). A peak's point is its summit,
+  where no rider is. A viewpoint on a summit road (Mont Ventoux, the Puy de
+  Dôme) is kept by rule 2 like any other viewpoint.
+- A peak is still a kind for our own places, such as a summit a road crosses.
 
 **Rule 2: a scenic view lies within 250 m of a way a bike may ride.**
 - 250 m is a short walk from where the bike stops.
@@ -77,7 +83,7 @@ of the pin.**
   now counts, never the moves on the way. Otherwise the photo is hidden until a
   curator confirms it at the new pin. The person moving the pin is told how
   many photos that hides before saving.
-- Details, sources and where it is enforced: scenic-views.md §8.
+- Details, sources and where it is enforced: §8.
 
 **Rule 5: a rider may add a scenic view farther than 250 m from a bike way,
 after a warning.**
@@ -104,7 +110,7 @@ after a warning.**
 | OSM coverage points (rules 1, 2, 3) | on the next coverage pipeline run for that country, which reloads the points and rebuilds the tiles the map draws |
 | Catalog items (rule 2) | when `app:scenic:bikeway-review --apply` runs (§4) |
 | A rider's new place (rule 5) | at once, in the add form |
-| Photos (rule 4) | at once for photos fetched from now on; photos already stored need `app:media:backfill-photo-camera --write`, then `app:scenic:prune-photos --write` removes the ones that fail (scenic-views.md §8). A pin move counts at once, on the next read |
+| Photos (rule 4) | at once for every photo whose camera is known; a stored file never asked for its camera needs `app:media:backfill-photo-camera --write`, then `app:scenic:prune-photos --write` removes the ones that fail (§8). A pin move counts at once, on the next read |
 
 ## 3. OSM coverage points
 
@@ -112,7 +118,8 @@ The coverage load applies rules 1 to 3
 ([coverage-provider.md §7](coverage-provider.md)), before the merge and the
 drift guard:
 
-1. the extract pass selects only viewpoints and waterfalls (rule 1);
+1. the extract pass selects only the harvested P kinds, never a peak (rule 1),
+   and stamps each point's kind (`coverage_poi.kind`);
 2. staged P points with no name and none of the photo-link tags are removed
    (rule 3);
 3. each region's bike ways are filtered from its extract
@@ -120,8 +127,7 @@ drift guard:
    removed (rule 2).
 
 The tiles are built from the loaded points, so a country's map shows the rules
-only after its run. Counts after the first runs in dev (2026-09-14, rules 1 and
-2): Switzerland 3,798 scenic points, the Netherlands 1,758.
+only after its run.
 
 ## 4. Catalog items
 
@@ -162,9 +168,7 @@ or through the coverage point's Wikidata image), objects and `commons_photo`
 row. A photo another place uses is kept. An item with a submission or a photo
 under legal hold (photo-uploads.md §6d) is left standing, whole, and named in
 the dry run and the real run. The database part is one transaction;
-stored objects are deleted after it commits. Dev, 2026-09-14: 79 retired
-scenic items removed with 59 photos; 2 photos stayed because other places use
-them.
+stored objects are deleted after it commits.
 
 ## 5. Adding a scenic view
 
@@ -337,15 +341,14 @@ rider approval, and every seed and import
 `photo` is removed when refused; `photos` keeps the shown entries in order and
 is removed when none are left.
 
-Photos stored before the camera was recorded are hidden until
-`app:media:backfill-photo-camera --write` runs: it asks Commons for the camera of
+A stored Commons file that was never asked for its camera counts as having
+none, so its photo stays hidden until `app:media:backfill-photo-camera --write`
+runs: it asks Commons for the camera of
 every ready `commons_photo` row never asked (batches of 20, one POST each, the
 `APP_COMMONS_USER_AGENT` User-Agent, one second apart), records every answer
 including "none", stamps `cameraAt` into stored photo entries whose `source`
 names a checked file, and stamps `distanceM` into rider entries. Without
-`--write` it asks and reports only. Dev dry run, 2026-09-14: 796 files asked,
-248 with a camera point; 4 of 109 scenic item photos and 20 of 118 cached
-photos on scenic coverage points have a camera within 250 m.
+`--write` it asks and reports only.
 
 ### Removing stored photos that fail the rule
 
@@ -385,12 +388,8 @@ What is kept:
   entry's own `distanceM` and `locationConfirmed`.
 
 `App\Media\Commons\CommonsPhotoUsage` answers "what still names this file" for
-this command and for `app:catalog:purge-items` (scenic-views.md §4). Coverage references come
+this command and for `app:catalog:purge-items` (§4). Coverage references come
 from two scans of `coverage_poi`, never one query per file.
-
-Dev dry run, 2026-09-14: 47 scenic items with photos; 42 entries removed from
-42 items; 53 Commons files deleted (1 never checked for a camera) and 2 kept
-because an item still shows them; 1 rider photo listed for a person.
 
 Tests: `tests/Media/PhotoValidatorTest.php` (near, far, no camera, rider
 distance, curator confirmation, no pin, hide), `PhotoLocationConfirmationTest` and

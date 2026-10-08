@@ -5,8 +5,8 @@
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** O · Where to sleep
-- **Map depiction:** ⛺ pin, colour #B5532E
-- **Editable:** yes · Frontend demo · 2026-06-18
+- **Map depiction:** pin with the type's drawn icon (`ItemType::svgPath()`; ⛺ is the text fallback), colour #B5532E; no per-kind glyphs (`PlaceKind::LETTERS` leaves O out)
+- **Editable:** yes · the `/improve` wizard (add, improve, materialize-on-edit)
 - **Lifecycle:** *votable* — verified (≥ X community confirmations) → votable → **best-of** (top-voted); appears in **Best-of** mode once it earns votes. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is
@@ -22,6 +22,7 @@ Bike-friendly stays riders actually used — gîtes and B&Bs with secure storage
 | Field | Control | Provenance |
 |---|---|---|
 | Name | input | `[edit]` |
+| Type | select (`type`), alphabetical: Campsite / Chalet / gîte / Guest house / B&B / Holiday rental / Hostel / Hotel / Motel / Mountain hut / Wilderness hut; one OSM `tourism=` tag each, filled when an OSM point is converted ([osm-data-architecture.md §5a](../osm-data-architecture.md)) | `[OSM]` |
 | Town / commune | input (`town`) | `[edit]` |
 | Website | url (`web`) | `[edit]` |
 | Secure bike storage | select(Yes — locked room / Yes — garage/shed / On request / No) | `[edit]` |
@@ -48,3 +49,6 @@ Location metadata (EXIF GPS) is stripped from uploaded photos before storage —
 - **Production:** OSM `tourism=camp_site`, `hostel`, `guest_house`, `chalet`, `wilderness_hut`,
   `alpine_hut`, `motel` and `hotel` harvested (`pipeline/contract/coverage-contract.json`, letter O),
   plus community and partner contributions.
+- **Kind:** the Type is a kind, one OSM `tourism=` tag each (`App\Catalog\PlaceKind`); Holiday rental
+  (`tourism=apartment`) is a kind for our own places only and is not harvested. O has kinds but no
+  per-kind map glyphs ([osm-data-architecture.md §5a](../osm-data-architecture.md)).

@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * The D (BikeServices) improve form is kind-aware in its opening-hours DEFAULT
- * (spec §5): a staffed shop defaults to 'Unknown', while a self-service station
+ * (edit-items/D-bike-services.md): a staffed shop defaults to 'Unknown', while a self-service station
  * or public pump is unmanned and defaults to the assumed '24/7' — preselected
  * but overridable, because some stations follow a host building's hours (e.g.
  * a repair station inside a library).

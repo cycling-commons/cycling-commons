@@ -5,8 +5,8 @@
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 - **Catalog layer:** F · Getting there
-- **Map depiction:** 🚆 pin, colour #3E7D8C
-- **Editable:** yes · Frontend demo · 2026-06-18
+- **Map depiction:** pin with the type's drawn icon (`ItemType::svgPath()`; 🚆 is the text fallback), colour #3E7D8C
+- **Editable:** yes · the `/improve` wizard (add, improve, materialize-on-edit)
 - **Lifecycle:** *utility / coverage* — verified (≥ X community confirmations) then shown; **never votable, never best-of** (value is completeness). Lives in **Everything** mode. See [README — lifecycle & votability](README.md#item-lifecycle-and-votability).
 
 ## What it is

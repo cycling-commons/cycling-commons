@@ -11,6 +11,7 @@ use App\Catalog\Import\DuplicateGuard;
 use App\Catalog\Import\ItemUpsert;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemType;
+use App\Catalog\PlaceKind;
 use App\Media\Commons\CommonsFile;
 use App\Media\PhotoFacts;
 use App\Media\PhotoPlace;
@@ -160,8 +161,7 @@ final class SeedWikidataPlacesCommand extends Command
             }
             $io->writeln(sprintf('  %s — %s', $country, implode(', ', $parts)));
         }
-        // Reported BEFORE the empty-counts return (test-suite review
-        // 2026-08-24): an artifact whose places all fall outside the onboarded
+        // Reported BEFORE the empty-counts return: an artifact whose places all fall outside the onboarded
         // regions used to answer "Nothing matched — check --country", which
         // names the wrong cause and sends the operator to fix an option that
         // was never the problem.
@@ -221,9 +221,14 @@ final class SeedWikidataPlacesCommand extends Command
         $photo = $place['photo'];
 
         $attributes = [
-            'type' => (string) $place['type'],
             'photo' => self::commonsPhoto($photo['file'], $photo['credit'], $photo['user'], $photo['license'], $photo['camera'] ?? null),
         ];
+        // A P or Q Type is a kind, one OSM tag (osm-data-architecture.md §5a): a broad label is left for a curator.
+        $rawType = (string) ($place['type'] ?? '');
+        $kind = null !== PlaceKind::label($type->letter(), $rawType) ? $rawType : PlaceKind::fromLabel($type->letter(), $rawType);
+        if (null !== $kind) {
+            $attributes['type'] = $kind;
+        }
         if ('' !== (string) ($place['note'] ?? '')) {
             $attributes['note'] = (string) $place['note'];
         }

@@ -100,6 +100,9 @@
     if (nextBtn) {
       nextBtn.textContent = (n === WZ.last ? t('nav_submit') : t('nav_next')) + ' →';
     }
+    // "Change location" rides in the nav row on step 1 only.
+    var cb = document.getElementById('wzChange');
+    if (cb && cb.dataset.offered) cb.hidden = n !== 1;
     if (n === WZ.last) renderReview();
     refreshGate();
     window.scrollTo(0, 0);
@@ -509,7 +512,7 @@
         confirmView = false;
         if (mapEl) mapEl.classList.remove('confirm');
         if (searchWrap) searchWrap.hidden = false;
-        if (changeBtn) changeBtn.hidden = true;
+        if (changeBtn) { changeBtn.hidden = true; delete changeBtn.dataset.offered; }
         if (wzReset) wzReset.style.display = '';
         placed.forEach(function (m) { m.getElement().classList.remove('glow'); });
         placed.forEach(function (m) { if (m.setDraggable) m.setDraggable(true); });
@@ -1065,7 +1068,14 @@
           if (searchWrap) searchWrap.hidden = true;
           if (wzReset) wzReset.style.display = 'none';
           if (locSection && locSection.dataset.confirmHelp && locHelp) locHelp.textContent = locSection.dataset.confirmHelp;
-          if (changeBtn) { changeBtn.hidden = false; changeBtn.addEventListener('click', expandEditor); }
+          if (changeBtn) {
+            // Beside Next in the nav row, so Next sits right under the map (owner 2026-10-08).
+            var navrow = document.getElementById('navrow');
+            if (navrow) navrow.insertBefore(changeBtn, navrow.firstChild);
+            changeBtn.dataset.offered = '1';
+            changeBtn.hidden = false;
+            changeBtn.addEventListener('click', expandEditor);
+          }
         }
         wmap.on('load', function () {
           // CONFIRM shrinks #wmap after build; resize or the canvas stays tall and the pin is off-screen.

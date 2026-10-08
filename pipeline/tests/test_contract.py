@@ -55,22 +55,23 @@ def test_letter_specific_tile_props():
     assert contract.letters["B"].tile_props == ["potable", "food", "cd"]
     assert contract.letters["D"].tile_props == ["kind", "cd"]
     assert contract.letters["O"].tile_props == ["acc", "cd"]
-    for letter in ("F", "G", "P", "Q"):
-        assert contract.letters[letter].tile_props == ["cd"]
+    # `kind` joined P and Q on 2026-10-07, G on 2026-10-08: one kind per OSM tag, one glyph per kind.
+    for letter in ("G", "P", "Q"):
+        assert contract.letters[letter].tile_props == ["kind", "cd"]
+    assert contract.letters["F"].tile_props == ["cd"]
 
 
 def test_universal_tile_props_carry_the_scope_keys():
     # ref/n/t identity + the ridtok/cctok region-scoping tokens are emitted on
     # EVERY layer (map-and-search.md §4.5): pipe-delimited membership tokens
-    # so tippecanoe can union them across a cluster (finding 2). Per-letter
+    # so tippecanoe can union them across a cluster. Per-letter
     # tileProps stay extras-only.
     contract = load_contract()
     assert contract.universal_tile_props == ["ref", "n", "t", "ridtok", "cctok"]
 
 
 def test_universal_tile_props_required_not_optional(tmp_path):
-    # A contract missing universalTileProps is an error, not a silent empty list
-    # (finding 18: load_contract used to accept the absent key without complaint).
+    # A contract missing universalTileProps is an error, not a silent empty list.
     raw = _raw()
     del raw["universalTileProps"]
     with pytest.raises(ValueError, match="universalTileProps"):
@@ -85,6 +86,33 @@ def test_service_kind_mapping_matches_php_service_kind_cases():
         "amenity=compressed_air": "pump",
     }
     assert [s.tag for s in contract.letters["D"].selectors] == list(contract.service_kind)
+
+
+def test_place_kind_rules_are_exactly_the_p_and_q_selectors():
+    # Every harvested P and Q point gets the kind its tag names
+    # (osm-data-architecture.md §5a), the same mapping as PlaceKind::harvestRules().
+    contract = load_contract()
+    assert set(contract.place_kind) == {"G", "P", "Q"}
+    for letter, rules in contract.place_kind.items():
+        assert [s.tag for s in contract.letters[letter].selectors] == list(rules)
+    assert contract.place_kind["P"]["waterway=waterfall"] == "waterfall"
+    assert contract.place_kind["Q"]["historic=archaeological_site"] == "archaeological"
+
+
+def test_place_kind_rules_must_match_the_selectors(tmp_path):
+    raw = _raw()
+    del raw["placeKind"]["Q"]["historic=monastery"]
+    with pytest.raises(ValueError, match="placeKind"):
+        load_contract(_reload(tmp_path, raw))
+
+
+def test_kind_for_letter_reads_the_letters_own_rules():
+    contract = load_contract()
+    assert contract.kind_for_letter("D", {"shop": "bicycle"}) == "shop"
+    assert contract.kind_for_letter("P", {"waterway": "waterfall"}) == "waterfall"
+    assert contract.kind_for_letter("Q", {"historic": "castle", "tourism": "museum"}) == "castle"
+    assert contract.kind_for_letter("Q", {"tourism": "museum"}) is None, "museums are left out of the harvest"
+    assert contract.kind_for_letter("B", {"amenity": "drinking_water"}) is None
 
 
 def test_letters_for_matches_selectors():
@@ -219,7 +247,10 @@ def test_scenic_selects_no_peaks():
     at most 5 of 207 Valais peaks sat within 200 m of a bike way."""
     tags = [s.tag for s in load_contract().letters["P"].selectors]
     assert "natural=peak" not in tags
-    assert tags == ["tourism=viewpoint", "waterway=waterfall"]
+    assert tags == [
+        "tourism=viewpoint", "waterway=waterfall", "waterway=rapids", "natural=cliff",
+        "natural=cave_entrance", "natural=arch", "natural=rock", "natural=stone",
+    ]
 
 
 def test_scenic_carries_a_near_way_rule_and_no_other_letter_does():

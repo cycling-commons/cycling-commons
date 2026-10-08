@@ -21,7 +21,7 @@
 {% endblock %}
 {% block body %}
 {% if unbound|default(false) %}
-{# ── UNBOUND EXPLAINER (spec §6: no fake default editor) ── #}
+{# ── UNBOUND EXPLAINER (moderation-and-contribution.md §1.4: no fake default editor) ── #}
 <div class="wrap" id="main">
   {# A link that NAMED a target is not answered by "pick a place": the rider
      picked one. The reason says what happened instead (ContributeController
@@ -79,11 +79,11 @@
 
   {# The bound item's letter + current climb shape (route/grad/steep), for
      improve.js step 1: a climb (letter N) mounts the shared three-point
-     editor instead of the single-pin Locate (Task 5). Only emitted here —
+     editor instead of the single-pin Locate. Only emitted here -
      the unbound branch above never reaches this template region. #}
   <script nonce="{{ csp_nonce() }}">window.CC_ITEM = {{ {letter: item_type.letter, similar: similar_edit|default(false), lat: item_lat|default(null), lng: item_lng|default(null), route: current.route|default(null), grad: current.grad|default(null), steep: current.steep|default(null), steepPoint: current.steepPoint|default(null), gain: current.gain|default(null), avg: current.avgGradient|default(null), segment: current.segment|default(null)}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }};</script>
   {% include 'contribute/_media_config.html.twig' with {max: 6} %}
-  {# Every string improve.js renders itself (docs/plans/2026-08-01-improve-js-i18n.md).
+  {# Every string improve.js renders itself (docs/specs/security-architecture.md §4.3).
      Serialised with all four JSON_HEX_* flags like the bags above — JSON_HEX_TAG
      is the one that matters here, because it turns `<`/`>` into </> so
      a catalogue string containing `</script>` cannot close this block.
@@ -625,7 +625,7 @@
   import * as maplibregl from "{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}";
   window.maplibregl = maplibregl;
 </script>
-{# climb-elevation.js + climb-editor.js must load before improve.js (Task 5: the
+{# climb-elevation.js + climb-editor.js must load before improve.js (the
    climb edit path calls window.Cc.mountClimbEditor / window.Cc.profileFromRoute).
    Harmless no-op include for non-climb items — the scripts only attach to window.Cc. #}
 <script nonce="{{ csp_nonce() }}">

@@ -64,13 +64,10 @@ final class ScoutTag
             3 => ['hazardType' => 'Bad corner'],
             4 => ['hazardType' => 'Other'],
         ],
-        // The pick IS the Type on its home letter; a re-filed tag carries none.
+        // VIEW is one OSM tag, so it is the kind on P; the other picks name
+        // several kinds and the rider picks one in review (DETAIL_KINDS).
         'scenery' => [
-            1 => ['type' => 'Natural feature'],
-            2 => ['type' => 'Heritage site'],
-            3 => ['type' => 'Museum / culture'],
-            4 => ['type' => 'Viewpoint / high point'],
-            5 => ['type' => 'Architecture'],
+            4 => ['type' => 'viewpoint'],
         ],
         // Road-closed + duration so ClosureLifetime can retire it.
         'closure' => [
@@ -81,6 +78,27 @@ final class ScoutTag
             5 => ['hazardType' => 'Road closed', 'closedFor' => 'Unknown'],
         ],
     ];
+
+    /**
+     * @var array<string, array<int, list<string>>> tag type → poi_detail → the
+     *                                              kinds (PlaceKind) the review
+     *                                              offers first, on the home letter
+     */
+    public const array DETAIL_KINDS = [
+        'scenery' => [
+            1 => ['nature', 'waterfall', 'rapids', 'cliff', 'cave', 'arch', 'rock', 'stone', 'peak'],
+            2 => ['heritage', 'castle', 'fort', 'ruins', 'manor', 'monastery', 'archaeological', 'monument', 'memorial'],
+            3 => ['museum', 'worship', 'monument', 'memorial', 'heritage'],
+            4 => ['viewpoint'],
+            5 => ['architecture', 'castle', 'manor', 'monastery', 'worship', 'monument'],
+        ],
+    ];
+
+    /** @return list<string> */
+    public static function kindsFor(string $type, ?int $detail): array
+    {
+        return self::DETAIL_KINDS[$type][$detail] ?? [];
+    }
 
     /** @return list<string> */
     public static function lettersFor(string $type, ?int $detail = null): array
