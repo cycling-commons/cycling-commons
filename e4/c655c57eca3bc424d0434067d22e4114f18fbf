@@ -1,0 +1,45 @@
+web/src/Account/DataExportService.php
+  s_985749378da6fe::t_9b05c08feac3e4 88,101
+web/config/packages/csrf.yaml
+  s_985749378da6fe::t_404b77368f6ff7 21
+web/src/Entity/User.php
+  s_985749378da6fe::t_448f64c02fc84d 144-152
+  s_985749378da6fe::t_4119ec8b8f94d1 606-618,621
+  s_985749378da6fe::t_4e9f11130c9c73 21
+  s_985749378da6fe::t_16a3f773a9ea10 619-620
+  s_985749378da6fe::t_9767474ea39be7 622
+web/tests/Account/DataExportTest.php
+  s_985749378da6fe::t_b51e9fe8929b1d 12
+  s_985749378da6fe::t_2a7afd06e3f777 285-298
+  s_985749378da6fe::t_703efd0cb9c48e 299-300
+web/src/Controller/MapHintController.php
+  s_985749378da6fe::t_934a51b2176688 1-45
+web/migrations/Version20261008220000.php
+  s_985749378da6fe::t_a11320887d238b 1-32
+web/tests/Controller/MapHintControllerTest.php
+  s_985749378da6fe::t_75a6cf6c4813aa 70-87
+  s_985749378da6fe::t_01f0a1a6018610 1-69,88-130
+web/src/Map/MapHint.php
+  s_985749378da6fe::t_179728f4612e44 21-23
+  s_985749378da6fe::t_ec8d64b7516c85 1-20,24
+web/tests/js/map-hint-close.test.cjs
+  s_985749378da6fe::t_01e5969be035d9 28-30
+  s_985749378da6fe::t_4790e9a0d437a2 1-2,6-19,24-26,32-43
+  s_985749378da6fe::t_75a6cf6c4813aa 3-5,20-23,27,31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e4c655c57eca3bc424d0434067d22e4114f18fbf",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
