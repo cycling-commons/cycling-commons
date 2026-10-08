@@ -141,6 +141,42 @@ final class ClimbProfiler
     }
 
     /**
+     * The measured attributes a climb stores from one profile, the set both
+     * writers save (docs/specs/climb-elevation.md §4). `steep` is not in it:
+     * each writer decides whether a hand-placed marker keeps its place.
+     *
+     * @param array{
+     *     length: float, gain: float, footEle: float, summitEle: float,
+     *     avgGradient: string, maxGradient: string,
+     *     grad: list<int>, lineGrad: list<int>,
+     *     demSource: string, binM: int, steepWindowM: int, ...
+     * } $profile a non-null result of {@see self::profile()}
+     *
+     * @return array{
+     *     length: float, gain: float, footEle: float, summitEle: float,
+     *     avgGradient: string, maxGradient: string,
+     *     grad: list<int>, lineGrad: list<int>,
+     *     demSource: string, binM: int, steepWindowM: int
+     * }
+     */
+    public static function storedAttributes(array $profile): array
+    {
+        return [
+            'length' => round($profile['length']),
+            'gain' => round($profile['gain']),
+            'footEle' => $profile['footEle'],
+            'summitEle' => $profile['summitEle'],
+            'avgGradient' => $profile['avgGradient'],
+            'maxGradient' => $profile['maxGradient'],
+            'grad' => $profile['grad'],
+            'lineGrad' => $profile['lineGrad'],
+            'demSource' => $profile['demSource'],
+            'binM' => $profile['binM'],
+            'steepWindowM' => $profile['steepWindowM'],
+        ];
+    }
+
+    /**
      * The gradient at one spot on the road: the slope fitted through
      * {@see self::POINT_SAMPLES} heights spread over {@see self::POINT_WINDOW_M}
      * centred on the vertex nearest `$at`, moved inside the line at either

@@ -135,22 +135,34 @@ final class FormErrorsVisibleTest extends WebTestCase
             'All three error surfaces should carry the one measured colour.'
         );
 
+        // Page CSS lives in assets/styles/page/** (form-errors.md §3); a
+        // template's own <style> block is the other place a copy can hide.
         $offenders = [];
-        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root.'/templates'));
-        foreach ($files as $file) {
-            if (!$file->isFile() || !str_ends_with((string) $file, '.twig')) {
-                continue;
-            }
-            $twig = (string) file_get_contents((string) $file);
-            // A page may still override layout (a margin); redefining the
-            // colour is what puts the two copies back out of step.
-            if (preg_match('/\.(field-errors|alert-error|form-errors)[^{}]*\{[^}]*color:/', $twig)) {
-                $offenders[] = substr((string) $file, \strlen($root) + 11);
+        $scanned = [];
+        foreach (['templates' => '.twig', 'assets/styles/page' => '.css'] as $dir => $extension) {
+            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root.'/'.$dir));
+            foreach ($files as $file) {
+                if (!$file->isFile() || !str_ends_with((string) $file, $extension)) {
+                    continue;
+                }
+                $path = substr((string) $file, \strlen($root) + 1);
+                $scanned[] = $path;
+                $source = (string) file_get_contents((string) $file);
+                if ('.css' === $extension) {
+                    // A comment naming a class is not a rule for it.
+                    $source = (string) preg_replace('#/\*.*?\*/#s', '', $source);
+                }
+                // A page may still override layout (a margin); redefining the
+                // colour is what puts the two copies back out of step.
+                if (preg_match('/\.(field-errors|alert-error|form-errors)[^{}]*\{[^}]*color:/', $source)) {
+                    $offenders[] = $path;
+                }
             }
         }
 
+        self::assertContains('assets/styles/page/security/2fa_setup.css', $scanned, 'page stylesheets are scanned too');
         self::assertSame([], $offenders, sprintf(
-            "These templates set an error colour of their own. Use the rule in atlas.css:\n  %s",
+            "These templates and page stylesheets set an error colour of their own. Use the rule in atlas.css:\n  %s",
             implode("\n  ", $offenders)
         ));
     }

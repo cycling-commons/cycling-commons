@@ -133,7 +133,6 @@ final readonly class ScanAndReleaseUploadHandler
             $processed->takenAt,
         );
         $this->resolveCoordinates($upload, $processed, $message);
-        $this->storage->deleteQuarantine($upload->getQuarantineKey());
 
         $this->events->append(
             $upload->getId(),
@@ -143,6 +142,9 @@ final readonly class ScanAndReleaseUploadHandler
         );
         $this->tellRiderIfTheyStoppedWaiting($upload);
         $this->em->flush();
+
+        // After the flush: a failed flush leaves the bytes for the redelivery to release.
+        $this->storage->deleteQuarantine($upload->getQuarantineKey());
     }
 
     /** GPS → distance, then destroy. @see docs/specs/photo-uploads.md §3 */

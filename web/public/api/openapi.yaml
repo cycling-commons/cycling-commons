@@ -85,10 +85,11 @@ tags:
     description: The route domain — geometry, surfaces, ratings, GPX.
   - name: Contributions
     description: |
-      **Planned — phase 2.** The write path routes a submission through the
-      same review loop as in-app contributions. The write-auth model (OAuth
-      user delegation vs. per-app pseudo-author) is an open decision; this
-      section is a draft of the request shape only.
+      **Planned, phase 2.** The write path routes a submission through the
+      same review loop as in-app contributions. The write-auth model is
+      decided: a write-scoped key issued to a registered partner app, plus an
+      app-scoped author reference, so the app's end user needs no Commons
+      account. This section is a draft of the request shape only.
 
 paths:
   /v1/catalog:
@@ -118,11 +119,11 @@ paths:
       security: []   # PoC: open read-only; keys arrive with the v1 label
       description: >
         **Implemented (PoC).** Everything an external map needs to wire the
-        Commons overlays in one call: the current routes PMTiles URL (null
-        when no tileset is published, then skip the routes overlay), the
-        per-country source-layer naming contract, the route style groups,
-        the coverage (raw-OSM) PMTiles URL with its per-letter source-layer
-        contract, the category table (practical letters A-M and experiential N-Z, with colours, glyphs and
+        Commons overlays in one call: the routes PMTiles archives, one per
+        country (empty when none is published, then skip the routes overlay),
+        the per-country source-layer naming contract, the route style groups,
+        the coverage (raw-OSM) PMTiles archives, one per country, with their
+        per-letter source-layer contract, the category table (practical letters A-M and experiential N-Z, with colours, glyphs and
         the Best of flag), and the attribution string the consumer must
         display. Cacheable for an hour; the tile URLs change when a new
         build is published, which is why consumers read them here instead of
@@ -182,9 +183,10 @@ paths:
         '200':
           description: >
             Matching features. Page through with the `next_cursor` foreign
-            member; it is absent on the last page.
+            member; it is absent on the last page. The PoC carries the
+            attribution in the body (`licence` and `attribution` foreign
+            members); the `X-Attribution` header is the keyed v1 design.
           headers:
-            X-Attribution: { $ref: '#/components/headers/X-Attribution' }
             X-RateLimit-Remaining: { $ref: '#/components/headers/X-RateLimit-Remaining' }
           content:
             application/geo+json:
@@ -487,7 +489,9 @@ components:
 
   headers:
     X-Attribution:
-      description: The required attribution string for the data in this response.
+      description: >
+        The required attribution string for the data in this response. Keyed
+        v1 design (public-api.md §5); the PoC does not send it.
       schema: { type: string }
     X-RateLimit-Remaining:
       description: Requests remaining in the current window (with `X-RateLimit-Limit` and `X-RateLimit-Reset`; monthly quota travels in `X-Quota-*`).
@@ -543,7 +547,7 @@ components:
         Commons look is offered for consumers that want to match it.
       required: [version, attribution, routes, categories]
       properties:
-        version: { type: string, example: '0.1' }
+        version: { type: string, example: '0.2' }
         attribution:
           type: string
           description: The string a consumer must display while Commons overlays are visible.
@@ -551,9 +555,25 @@ components:
         routes:
           type: object
           properties:
-            tilesUrl:
-              type: [string, 'null']
-              description: Current routes PMTiles archive; null when none is published.
+            tiles:
+              type: object
+              description: >
+                The published archives, keyed by lowercase country code, or `*`
+                for one archive that covers every country. Empty when none is
+                published.
+              additionalProperties:
+                type: object
+                properties:
+                  tiles:
+                    type: object
+                    properties:
+                      routes: { type: string, format: uri }
+                  bounds:
+                    type: array
+                    items: { type: number }
+                    minItems: 4
+                    maxItems: 4
+                  stamp: { type: string, example: '20260816-2223' }
             countries:
               type: array
               items: { type: string }
@@ -584,9 +604,25 @@ components:
           type: object
           description: The dense raw-OSM layer as data-only vector tiles.
           properties:
-            tilesUrl:
-              type: [string, 'null']
-              description: Current coverage PMTiles archive; null when none is published.
+            tiles:
+              type: object
+              description: >
+                The published archives, keyed by lowercase country code, or `*`
+                for one archive that covers every country. Empty when none is
+                published.
+              additionalProperties:
+                type: object
+                properties:
+                  tiles:
+                    type: object
+                    properties:
+                      points: { type: string, format: uri }
+                  bounds:
+                    type: array
+                    items: { type: number }
+                    minItems: 4
+                    maxItems: 4
+                  stamp: { type: string, example: '20260915-1901' }
             countries:
               type: array
               items: { type: string }

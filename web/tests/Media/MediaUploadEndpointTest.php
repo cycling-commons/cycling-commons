@@ -15,7 +15,9 @@ use App\Media\MediaAction;
 use App\Media\MediaConsent;
 use App\Media\MediaStatus;
 use App\Media\Message\ScanAndReleaseUpload;
+use App\Media\MessageHandler\ScanAndReleaseUploadHandler;
 use App\Media\Scan\ScannerUnavailable;
+use Doctrine\ORM\Decorator\EntityManagerDecorator;
 use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -344,6 +346,72 @@ final class MediaUploadEndpointTest extends WebTestCase
         self::assertSame(1, $scanner->calls, 'a released photo is never rescanned');
         self::assertSame($revision, $row->getRevision(), 'and never republished under a new key');
         self::assertSame(MediaStatus::Pending, $row->getStatus());
+    }
+
+    /**
+     * The row is released before the quarantine object goes
+     * (docs/specs/media-storage-architecture.md §3). A release whose flush
+     * fails leaves the bytes in quarantine, so the redelivery scans and
+     * releases them instead of settling the photo as unreadable.
+     */
+    public function testAFailedReleaseFlushKeepsTheQuarantineObjectForTheRetry(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'flushfail');
+        $token = $this->token($client);
+        $consentId = $this->consentId($client, $token);
+
+        $client->request(
+            'POST', '/media/photos',
+            ['_token' => $token, 'consentId' => $consentId, 'lat' => '50.47', 'lng' => '5.86'],
+            ['photo' => $this->photoFile()],
+        );
+        self::assertResponseStatusCodeSame(202);
+        $id = (string) $this->json($client)['id'];
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $failingHandler = $this->releaseHandlerWith(new class($em) extends EntityManagerDecorator {
+            #[\Override]
+            public function flush(): void
+            {
+                throw new \RuntimeException('database went away');
+            }
+        });
+        $transport = static::getContainer()->get('messenger.transport.async');
+        $envelopes = [...$transport->get()];
+        self::assertCount(1, $envelopes);
+        $message = $envelopes[0]->getMessage();
+        self::assertInstanceOf(ScanAndReleaseUpload::class, $message);
+
+        try {
+            $failingHandler($message);
+            self::fail('a failed flush escapes so Messenger retries');
+        } catch (\RuntimeException $e) {
+            self::assertSame('database went away', $e->getMessage());
+        }
+        self::assertTrue($this->privateFs()->fileExists('quarantine/'.$id), 'the bytes wait for the retry');
+
+        // The redelivery, on a clean unit of work, as a fresh worker would see it.
+        $em->clear();
+        static::getContainer()->get('test.media.release_handler')($message);
+
+        $row = $em->find(MediaUpload::class, Uuid::fromString($id));
+        self::assertNotNull($row);
+        self::assertSame(MediaStatus::Pending, $row->getStatus(), 'released, not settled as unreadable');
+        self::assertNotNull($row->getRevision());
+        self::assertFalse($this->privateFs()->fileExists('quarantine/'.$id));
+    }
+
+    /** The container's release handler with its entity manager swapped. */
+    private function releaseHandlerWith(EntityManagerInterface $em): ScanAndReleaseUploadHandler
+    {
+        $real = static::getContainer()->get('test.media.release_handler');
+        $args = [];
+        foreach ((new \ReflectionMethod(ScanAndReleaseUploadHandler::class, '__construct'))->getParameters() as $param) {
+            $args[] = 'em' === $param->getName() ? $em : (new \ReflectionProperty($real, $param->getName()))->getValue($real);
+        }
+
+        return new ScanAndReleaseUploadHandler(...$args);
     }
 
     public function testAnInfectedUploadIsDeletedRejectedAndNeverPublished(): void

@@ -138,6 +138,28 @@ final class CoverageRunsTest extends WebTestCase
         self::assertSame(['points be,nl', 'routes au,be', 'surface nothing changed'], $rebuilt);
     }
 
+    /**
+     * The dispatcher's post-loop passes are routes, surface and roadpieces
+     * (pipeline/coverage/dispatch.py); each records `<family>_publish` under
+     * the night's run, and the list names every one of them.
+     */
+    public function testANightsRoadpiecesPassIsNamedWithWhatItRebuilt(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        $run = self::insertCoverageRun($db, ['url' => 'be']);
+        self::insertCoverageRunStep($db, $run, ['region' => null, 'step' => 'roadpieces_publish', 'detail' => 'be,nl']);
+
+        $client->loginUser($this->createUser('runs-night-roadpieces@example.com', ['ROLE_ADMIN'], admin2fa: true));
+        $crawler = $client->request('GET', $this->listUrl());
+
+        self::assertResponseIsSuccessful();
+        $row = $crawler->filter('tr[data-run="'.$run.'"]');
+        self::assertSame('points · roadpieces', trim($row->filter('td[data-family]')->text()));
+        $rebuilt = $row->filter('[data-rebuilt-family]')->each(static fn ($el) => preg_replace('/\s+/', ' ', trim($el->text())));
+        self::assertSame(['points be', 'roadpieces be,nl'], $rebuilt);
+    }
+
     public function testAFailedPublishInsideANightSaysSo(): void
     {
         $client = static::createClient();

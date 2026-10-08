@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Catalog\Import;
 
 use App\Catalog\Import\ItemUpsert;
+use App\Elevation\ClimbProfiler;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,13 +33,31 @@ final class MeasuredKeysTest extends TestCase
     {
         $source = file_get_contents(__DIR__.'/../../../src/Command/RecomputeClimbProfilesCommand.php');
         self::assertNotFalse($source);
-        // Only the persisting block: keys written as $attrs['x'] = ...
+        // The shared mapping of the profile, and the keys the command sets itself as $attrs['x'] = ...
+        self::assertStringContainsString('ClimbProfiler::storedAttributes($p)', $source);
         preg_match_all("/\\\$attrs\\['(\\w+)'\\] = /", $source, $m);
-        $written = array_values(array_unique($m[1]));
+        $written = array_values(array_unique([...array_keys(ClimbProfiler::storedAttributes(self::profile())), ...$m[1]]));
         sort($written);
         $declared = ItemUpsert::MEASURED_KEYS;
         sort($declared);
         self::assertSame($written, $declared,
             'ItemUpsert::MEASURED_KEYS must be exactly the keys RecomputeClimbProfilesCommand writes');
+    }
+
+    /**
+     * @return array{
+     *     length: float, gain: float, footEle: float, summitEle: float,
+     *     avgGradient: string, maxGradient: string,
+     *     grad: list<int>, lineGrad: list<int>,
+     *     demSource: string, binM: int, steepWindowM: int
+     * }
+     */
+    private static function profile(): array
+    {
+        return [
+            'length' => 1000.0, 'gain' => 80.0, 'footEle' => 200.0, 'summitEle' => 280.0,
+            'avgGradient' => '8.0', 'maxGradient' => '9', 'grad' => [8], 'lineGrad' => [8],
+            'demSource' => 'Copernicus DEM GLO-30', 'binM' => 100, 'steepWindowM' => 250,
+        ];
     }
 }

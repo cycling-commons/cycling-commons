@@ -45,15 +45,20 @@ final class ClosureExpiryService
 
         /** @var list<array{id: int, name: string, attributes: string, observed_at: string}> $rows */
         $rows = $this->db->fetchAllAssociative(
-            // Newest of observedOn (Scout), created_at, and the latest existence confirmation.
+            // The last sighting: the tap a Scout ride recorded (`observedAt` on
+            // the submission that created the row), else the creation date, or
+            // a later existence confirmation. The creation date is no floor: a
+            // ride uploaded days after the tap starts its clock at the tap.
             "SELECT i.id, i.name, i.attributes,
                     GREATEST(
-                        i.created_at,
-                        COALESCE((i.attributes->>'observedOn')::timestamp, i.created_at),
+                        COALESCE((SELECT (s.payload->>'observedAt')::timestamp FROM submission s
+                                   WHERE s.item_id = i.id AND s.type = 'new'
+                                     AND s.payload->>'observedAt' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+                                   ORDER BY s.id LIMIT 1), i.created_at),
                         COALESCE((SELECT MAX(c.created_at) FROM item_confirmation c
                                    WHERE c.item_id = i.id
                                      AND c.stance = 'exists'
-                                     AND c.source <> 'form'), i.created_at)
+                                     AND c.source <> 'form'), '-infinity'::timestamp)
                     ) AS observed_at
              FROM item i
              WHERE i.letter = 'E'

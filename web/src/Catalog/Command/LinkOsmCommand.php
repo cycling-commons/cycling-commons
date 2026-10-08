@@ -80,10 +80,12 @@ final class LinkOsmCommand extends Command
         $review = [];
         $taken = [];
         foreach ($rows as $row) {
-            $found = $this->linker->candidateFor(
-                (string) $row['letter'], (string) $row['name'],
-                (float) $row['lat'], (float) $row['lng'],
-            );
+            $found = '' !== trim((string) $row['name'])
+                ? $this->linker->candidateFor(
+                    (string) $row['letter'], (string) $row['name'],
+                    (float) $row['lat'], (float) $row['lng'],
+                )
+                : $this->onTop($row);
             if (null === $found) {
                 continue;
             }
@@ -132,6 +134,21 @@ final class LinkOsmCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * An unnamed legacy OSM row: its position is the OSM point's own, so the
+     * point it sits on (OsmLinker::ON_TOP_M, no name) is the one.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array{ref: string, name: string, distanceM: float, confident: bool}|null
+     */
+    private function onTop(array $row): ?array
+    {
+        $ref = $this->linker->onTopOf((string) $row['letter'], (float) $row['lat'], (float) $row['lng'], (int) $row['id']);
+
+        return null === $ref ? null : ['ref' => $ref, 'name' => '', 'distanceM' => 0.0, 'confident' => true];
+    }
+
     /** @param list<string> $lines */
     private function section(SymfonyStyle $io, string $title, array $lines): void
     {
@@ -152,15 +169,17 @@ final class LinkOsmCommand extends Command
      */
     private function candidates(?string $letter, array $sources, bool $relink): array
     {
-        // `source = 'osm'` rows are excluded because their source_ref IS the
-        // osm ref; and `auto` rows are pipeline-derived with no real-world
+        // An `osm` row whose source_ref IS an OSM ref needs no link; one from a
+        // legacy import keeps a made-up ref (`fx:water:50.47447,5.86273`) and
+        // does. `auto` rows are pipeline-derived with no real-world
         // counterpart to link.
         $sql = "SELECT i.id, i.letter, i.source, i.name,
                        ST_Y(ST_Centroid(i.geom)) AS lat, ST_X(ST_Centroid(i.geom)) AS lng
                   FROM item i
-                 WHERE i.source NOT IN ('osm', 'auto')
+                 WHERE i.source <> 'auto'
+                   AND NOT (i.source = 'osm' AND i.source_ref ~ '^(node|way|relation)/[0-9]+$')
                    AND i.state IN ".ItemState::servedSqlTuple()."
-                   AND i.name IS NOT NULL AND i.name <> ''
+                   AND (COALESCE(i.name, '') <> '' OR i.source = 'osm')
                    AND i.geom IS NOT NULL";
         $params = [];
         if (!$relink) {

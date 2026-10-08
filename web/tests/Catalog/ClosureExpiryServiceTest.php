@@ -14,6 +14,7 @@ use App\Catalog\Entity\Item;
 use App\Catalog\Entity\ItemConfirmation;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Entity\User;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -35,7 +36,9 @@ final class ClosureExpiryServiceTest extends KernelTestCase
         $this->db = $this->em->getConnection();
         $this->db->executeStatement("DELETE FROM item_confirmation WHERE item_id IN (SELECT id FROM item WHERE source_ref LIKE 'test:closure%')");
         $this->db->executeStatement("DELETE FROM change_history WHERE item_id IN (SELECT id FROM item WHERE source_ref LIKE 'test:closure%')");
+        $this->db->executeStatement("DELETE FROM submission WHERE item_id IN (SELECT id FROM item WHERE source_ref LIKE 'test:closure%')");
         $this->db->executeStatement("DELETE FROM item WHERE source_ref LIKE 'test:closure%'");
+        $this->db->executeStatement("DELETE FROM users WHERE email LIKE 'closure-%@example.com'");
     }
 
     private function service(string $now = self::NOW): ClosureExpiryService
@@ -133,19 +136,45 @@ final class ClosureExpiryServiceTest extends KernelTestCase
         self::assertCount(1, $this->service()->due());
     }
 
-    /** Scout tags a ride days before it is uploaded; the tap is the observation. */
-    public function testAnExplicitObservationDateWinsOverTheRowsCreationDate(): void
+    /**
+     * Scout tags a ride days before it is uploaded; the tap is the observation.
+     * The row is created today, the rider tapped it in March: the clock starts
+     * at the tap, kept as `observedAt` on the submission that created the row.
+     */
+    public function testTheScoutTapDateStartsTheClockNotTheUpload(): void
     {
-        // Row created today, but the rider tagged it three months ago.
-        $item = $this->hazard(
-            'scout',
-            ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Days', 'observedOn' => '2026-03-01 08:00:00'],
-            '2026-03-01 08:00:00',
-        );
+        $item = $this->hazard('scout', ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Days'], '2026-05-31 08:00:00');
+        $this->creatingSubmission($item, '2026-03-01');
 
-        self::assertCount(1, $this->service()->due());
-        self::assertSame('2026-03-01', $this->service()->due()[0]['observedAt']);
-        self::assertNotNull($item->getId());
+        $due = $this->service()->due();
+
+        self::assertCount(1, $due, 'closed for days, tapped in March: not news in June');
+        self::assertSame('2026-03-01', $due[0]['observedAt']);
+    }
+
+    public function testAConfirmationAfterTheTapStillRestartsTheWindow(): void
+    {
+        $item = $this->hazard('scout-confirmed', ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Days'], '2026-05-31 08:00:00');
+        $this->creatingSubmission($item, '2026-03-01');
+        $this->confirm($item, '2026-05-30 08:00:00');
+
+        self::assertSame([], $this->service()->due());
+    }
+
+    private function creatingSubmission(Item $item, string $observedAt): void
+    {
+        $user = new User();
+        $user->setEmail('closure-'.$item->getId().'@example.com');
+        $user->setDisplayName('Closure rider');
+        $user->setPassword('x');
+        $this->em->persist($user);
+        $this->em->flush();
+        $userId = (int) $user->getId();
+        $this->db->executeStatement(
+            "INSERT INTO submission (type, letter, item_id, user_id, status, title, geom, country_code, changes, payload, created_at)
+             VALUES ('new', 'E', :item, :user, 'approved', 'Test', ST_SetSRID(ST_MakePoint(4.87, 50.47), 4326), 'BE', '{}', :payload, NOW())",
+            ['item' => $item->getId(), 'user' => $userId, 'payload' => json_encode(['via' => 'scout', 'observedAt' => $observedAt], \JSON_THROW_ON_ERROR)],
+        );
     }
 
     public function testHazardsThatAreNotClosuresAreNeverTouched(): void

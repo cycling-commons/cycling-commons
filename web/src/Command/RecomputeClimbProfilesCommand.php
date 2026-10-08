@@ -96,17 +96,7 @@ final class RecomputeClimbProfilesCommand extends Command
             }
 
             if ($write) {
-                $attrs['length'] = round($p['length']);
-                $attrs['gain'] = round($p['gain']);
-                $attrs['footEle'] = $p['footEle'];
-                $attrs['summitEle'] = $p['summitEle'];
-                $attrs['avgGradient'] = $p['avgGradient'];
-                $attrs['maxGradient'] = $p['maxGradient'];
-                $attrs['grad'] = $p['grad'];
-                $attrs['lineGrad'] = $p['lineGrad'];
-                $attrs['demSource'] = $p['demSource'];
-                $attrs['binM'] = $p['binM'];
-                $attrs['steepWindowM'] = $p['steepWindowM'];
+                $attrs = [...$attrs, ...ClimbProfiler::storedAttributes($p)];
                 // Do not overwrite a hand-placed steepest marker (docs/specs/climb-elevation.md §5).
                 $existing = $attrs['steep'] ?? null;
                 if (!\is_array($existing) || true !== ($existing['manual'] ?? false)) {

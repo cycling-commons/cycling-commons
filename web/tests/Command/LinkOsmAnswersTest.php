@@ -67,6 +67,31 @@ final class LinkOsmAnswersTest extends KernelTestCase
             'pretending that band is answered would hide it from the data desk');
     }
 
+    public function testAnOldOsmRowWithAMadeUpRefIsLinkedToo(): void
+    {
+        // A legacy import kept `fx:water:50.47447,5.86273`, not the node id, so
+        // its OSM twin showed beside it (owner 2026-10-08, the Spa springs).
+        $id = $this->seed('Panorama Testberg', 50.5001, 4.9, ItemSource::Osm);
+
+        $this->runCommand(['--write' => true]);
+
+        self::assertSame('node/77001', $this->row($id)['osm_ref']);
+    }
+
+    public function testAnUnnamedOldOsmRowLinksToThePointItSitsOn(): void
+    {
+        // Its position IS the OSM point's, so the on-top rule decides, not a name.
+        $this->db->executeStatement(
+            "INSERT INTO coverage_poi (ref, letter, name, geom, tags, country_code)
+             VALUES ('node/77002', 'P', NULL, ST_SetSRID(ST_MakePoint(4.95, 50.55), 4326), '{}', 'BE')",
+        );
+        $id = $this->seed('', 50.55001, 4.95, ItemSource::Osm);
+
+        $this->runCommand(['--write' => true]);
+
+        self::assertSame('node/77002', $this->row($id)['osm_ref']);
+    }
+
     public function testACuratorsNotInOsmIsNeverReconsidered(): void
     {
         $id = $this->seed('Panorama Testberg', 50.5001, 4.9);
@@ -81,13 +106,13 @@ final class LinkOsmAnswersTest extends KernelTestCase
             'a human said "not in OSM"; the sweep must not overrule that by default');
     }
 
-    private function seed(string $name, float $lat, float $lng): int
+    private function seed(string $name, float $lat, float $lng, ItemSource $source = ItemSource::User): int
     {
         $this->db->executeStatement(
             'INSERT INTO item (letter, name, geom, country_code, state, source, source_ref, attributes, created_at, updated_at)
              VALUES (\'P\', :name, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326), \'BE\', :state, :source, :ref, \'{}\', NOW(), NOW())',
             ['name' => $name, 'lat' => $lat, 'lng' => $lng,
-                'state' => ItemState::Unverified->value, 'source' => ItemSource::User->value,
+                'state' => ItemState::Unverified->value, 'source' => $source->value,
                 'ref' => 'test:loa:'.uniqid('', true)],
         );
 

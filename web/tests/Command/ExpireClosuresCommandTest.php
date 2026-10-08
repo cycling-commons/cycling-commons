@@ -17,7 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * `app:catalog:expire-closures` (test-suite review 2026-08-24).
+ * `app:catalog:expire-closures`.
  *
  * ClosureExpiryService is well covered by ClosureExpiryServiceTest. The
  * COMMAND was not, and the command owns the one decision the service does not:

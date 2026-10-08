@@ -61,9 +61,8 @@ final class CoverageRunController extends AbstractController
 
     /**
      * Each run's tile families with what each rebuilt: its own family from
-     * published_url, then the routes and surface passes a nightly run holds as
-     * `<family>_publish` steps (coverage-runs-admin.md §2). Without them a
-     * night that rebuilt all three read "points" alone.
+     * published_url, then the routes, surface and roadpieces passes a nightly
+     * run holds as `<family>_publish` steps (coverage-runs-admin.md §2).
      *
      * @param list<array<string, mixed>> $runs
      *
@@ -76,7 +75,7 @@ final class CoverageRunController extends AbstractController
             <<<'SQL'
             SELECT DISTINCT ON (s.run_id, s.step) s.run_id, s.step, s.status, s.detail
             FROM coverage_run_step s
-            WHERE s.run_id IN (:ids) AND s.step IN ('routes_publish', 'surface_publish')
+            WHERE s.run_id IN (:ids) AND s.step IN ('routes_publish', 'surface_publish', 'roadpieces_publish')
             ORDER BY s.run_id, s.step, s.started_at DESC, s.id DESC
             SQL,
             ['ids' => $ids],

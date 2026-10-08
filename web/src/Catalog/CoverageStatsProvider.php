@@ -226,6 +226,20 @@ final class CoverageStatsProvider
     }
 
     /**
+     * The /coverage bucket of a source. A match over every case, so a new
+     * source cannot fall into "derived" unseen (a Scout tag is a rider's).
+     */
+    public static function bucketFor(ItemSource $source): string
+    {
+        return match ($source) {
+            ItemSource::Osm => 'osm',
+            ItemSource::Authority, ItemSource::Wikidata => 'partner',
+            ItemSource::User, ItemSource::Scout, ItemSource::Manual => 'riders',
+            ItemSource::Auto => 'derived',
+        };
+    }
+
+    /**
      * Items per country by provenance. Unrecognised sources fall into `derived` rather than vanishing.
      *
      * @return array<string, list<array{key:string, count:int}>>
@@ -238,19 +252,11 @@ final class CoverageStatsProvider
               GROUP BY country_code, source",
         );
 
-        $bucketOf = [
-            ItemSource::Osm->value => 'osm',
-            ItemSource::Authority->value => 'partner',
-            ItemSource::Wikidata->value => 'partner',
-            ItemSource::User->value => 'riders',
-            ItemSource::Manual->value => 'riders',
-            ItemSource::Auto->value => 'derived',
-        ];
-
         $totals = [];
         foreach ($rows as $row) {
             $cc = (string) $row['cc'];
-            $bucket = $bucketOf[(string) $row['source']] ?? 'derived';
+            $source = ItemSource::tryFrom((string) $row['source']);
+            $bucket = null !== $source ? self::bucketFor($source) : 'derived';
             $totals[$cc][$bucket] = ($totals[$cc][$bucket] ?? 0) + (int) $row['n'];
         }
 

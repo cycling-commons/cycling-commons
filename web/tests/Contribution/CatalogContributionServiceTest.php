@@ -16,10 +16,15 @@ use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
+use App\Elevation\ClimbProfiler;
+use App\Elevation\ElevationClient;
 use App\Entity\User;
 use App\Service\ContributionStubInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 
@@ -533,6 +538,48 @@ final class CatalogContributionServiceTest extends KernelTestCase
         self::assertSame([6, 9, 13], $item->getAttributes()['grad']);
         self::assertSame('26%', $item->getAttributes()['steep']['pct']);
         self::assertFalse($item->getAttributes()['steep']['manual']);
+    }
+
+    /**
+     * A contributed climb stores the same measured set the recompute command
+     * stores (docs/specs/climb-elevation.md §4): its two altitudes and the
+     * window its steepest figure was read over, from the same profile.
+     */
+    public function testAContributedClimbStoresItsAltitudesAndSteepWindow(): void
+    {
+        self::ensureKernelShutdown();
+        self::bootKernel();
+        static::getContainer()->set(ClimbProfiler::class, new ClimbProfiler(new ElevationClient(
+            new MockHttpClient(static function (string $method, string $url, array $options): MockResponse {
+                /** @var array{shape: list<array{lat: float, lon: float}>} $body */
+                $body = json_decode((string) $options['body'], true);
+                // 8 % everywhere: 0.08 m up per metre north, from 200 m at the foot.
+                $h = array_map(static fn (array $p): float => 200.0 + 0.08 * ((float) $p['lat'] - 50.51) * 111_195.0, $body['shape']);
+
+                return new MockResponse((string) json_encode(['height' => $h]));
+            }),
+            new NullLogger(),
+            'http://valhalla.test',
+            'Copernicus DEM GLO-30',
+        )));
+        $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->service = static::getContainer()->get(ContributionStubInterface::class);
+
+        $receipt = $this->service->submit('add', [
+            'type' => 'climbs', 'details' => ['name' => 'Measured Col'], 'lat' => 50.51, 'lng' => 5.24,
+            'route' => '[[50.51,5.24],[50.52,5.24]]', // [lat,lng], foot first, about 1.1 km due north
+        ], $this->user());
+
+        $sub = $this->em->find(Submission::class, $receipt->submissionId);
+        self::assertNotNull($sub);
+        $this->em->clear();
+        $item = $this->em->find(Item::class, $sub->getItemId());
+        self::assertNotNull($item);
+        $attrs = $item->getAttributes();
+        self::assertSame('Copernicus DEM GLO-30', $attrs['demSource'] ?? null, 'the profile ran');
+        self::assertEqualsWithDelta(200.0, $attrs['footEle'] ?? null, 0.5);
+        self::assertEqualsWithDelta(289.0, $attrs['summitEle'] ?? null, 0.5);
+        self::assertSame(250, $attrs['steepWindowM'] ?? null);
     }
 
     /** A climb's point is the foot of its line (owner 2026-09-30), whatever pin the form sent. */

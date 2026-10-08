@@ -11,7 +11,7 @@
 
 {% block main %}
   {% set statuses = ['running', 'ok', 'partial', 'failed', 'abandoned'] %}
-  {% set families = ['points', 'routes', 'surface'] %}
+  {% set families = ['points', 'routes', 'surface', 'roadpieces'] %}
   <div class="col-lg-10">
     <p class="text-muted">{{ 'admin.coverage_runs.lead'|trans }}</p>
 
@@ -57,7 +57,7 @@
               </td>
               <td class="text-end">{{ fmt.duration(run.seconds) }}</td>
               <td>
-                {# A night holds points, routes and surface; a manual run one family. #}
+                {# A night holds points, routes, surface and roadpieces; a manual run one family. #}
                 {% for f in run.families %}
                   <div data-rebuilt-family="{{ f.family }}">
                     {%- if run.families|length > 1 -%}

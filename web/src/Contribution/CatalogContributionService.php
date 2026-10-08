@@ -1187,14 +1187,7 @@ final class CatalogContributionService implements ContributionStubInterface
             return $attrs;
         }
 
-        $attrs['length'] = round($p['length']);
-        $attrs['gain'] = round($p['gain']);
-        $attrs['avgGradient'] = $p['avgGradient'];
-        $attrs['maxGradient'] = $p['maxGradient'];
-        $attrs['grad'] = $p['grad'];
-        $attrs['lineGrad'] = $p['lineGrad'];
-        $attrs['binM'] = $p['binM'];
-        $attrs['demSource'] = $p['demSource'];
+        $attrs = [...$attrs, ...ClimbProfiler::storedAttributes($p)];
         if (null !== $manualAt) {
             $attrs['steep'] = ['at' => $manualAt, 'pct' => $p['sustainedAtSteep'] ?? ($steep['pct'] ?? ''), 'manual' => true];
         } else {
