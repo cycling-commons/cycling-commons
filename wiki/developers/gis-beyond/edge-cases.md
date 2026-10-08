@@ -43,12 +43,9 @@ across that one seam:
   in advance, roughly where the data actually sits, so you can choose a range with the seam somewhere
   the data never touches.
 
-This project has an exact, named, verified answer for where this breaks, because it was looked for
-and written down before it happened rather than discovered by accident later. The region-scoping
-design's risk register (`docs/specs/Dated/2026-07-19-region-scoping-design.md` §8, risk 11) named
-both break points, a naive union on the client and a naive `ST_XMin`/`ST_XMax` on the server, and
-recorded the fix as required before any straddling country was seeded. Two were seeded first, so for
-a while the register described something live.
+This project has an exact, named answer for where this breaks. The map contract
+(`docs/specs/map-and-search.md` §4.5a) names both break points: the union of region boxes on the
+client, and the box the server computes for a region whose raw longitude span is wider than 180°.
 
 The shape chosen is the second of the two general fixes above, and the reason is that it is not
 ours: GeoJSON already specifies it. RFC 7946 §5.2 says a bounding box that crosses the antimeridian
@@ -339,9 +336,9 @@ present in this codebase before this chapter ever pointed at them.
     ```
 
     `0.8` degrees — the real width, recovered by refusing to treat ±180° as an ordinary number line
-    for exactly the length of one comparison. This is the precise failure the region-scoping risk
-    register names as **required** to fix before any seam-straddling country is seeded, and the query
-    above is exactly `CCScope.bbox()`'s own `Math.min`/`Math.max` shape, run on two literal numbers
+    for exactly the length of one comparison. This is the precise failure `docs/specs/map-and-search.md`
+    §4.5a describes, and the query above is exactly `CCScope.bbox()`'s own `Math.min`/`Math.max`
+    shape, run on two literal numbers
     so it works on any install. On a stack that has seeded the two countries, the same arithmetic on
     the real rows shows the defect live:
 

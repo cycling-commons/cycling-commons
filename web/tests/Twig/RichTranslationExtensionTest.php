@@ -10,7 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Twig\Environment;
 
 /**
- * Frontend review 2026-07-12 W61: |rich renders the inline markup the
+ * |rich (security-architecture.md §3) renders the inline markup the
  * translation catalogs legitimately use, and neutralizes everything a
  * hostile translation PR could smuggle in.
  */

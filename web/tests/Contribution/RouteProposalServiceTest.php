@@ -65,7 +65,7 @@ final class RouteProposalServiceTest extends KernelTestCase
         self::assertSame(['Road', 'Gravel'], $route->getAttributes()['bikeTypes']);
         self::assertArrayNotHasKey('gradientLimited', $route->getAttributes(), 'empty fields are not stored');
 
-        // Privacy trim (D4): stored geometry starts ≥350 m inside the upload.
+        // Privacy trim (route-domain.md §4.3): stored geometry starts ≥350 m inside the upload.
         $geom = json_decode((string) $route->getGeom(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertSame('LineString', $geom['type']);
         [$lng0, $lat0] = $geom['coordinates'][0];

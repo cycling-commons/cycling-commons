@@ -14,7 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * Phase C1-T1: `manual` is a new ItemSource for hand-added/seeded demo pins,
+ * `manual` is the ItemSource for hand-added/seeded demo pins,
  * treated like a rider contribution — it must resolve like any other source
  * and be served by CatalogProvider exactly like an `osm` item in the same
  * state (source-agnostic serving outside letter O's osm/authority split).

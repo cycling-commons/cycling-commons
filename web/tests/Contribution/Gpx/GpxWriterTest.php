@@ -10,7 +10,7 @@ use App\Contribution\Gpx\GpxWriter;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Route-domain spec §7: the writer serializes a user-influenced route name into
+ * route-domain.md §6: the writer serializes a user-influenced route name into
  * <name> element text. XMLWriter must XML-escape it so the output stays
  * well-formed and no name can inject markup.
  */

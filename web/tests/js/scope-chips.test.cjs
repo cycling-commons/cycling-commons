@@ -3,19 +3,15 @@
 // Node smoke tests for the scope-chip VIEW model (web/assets/map/scope-chips.js).
 //
 // These PIN TODAY'S BEHAVIOUR. Every expectation below was computed from the real
-// scope.js maths against the real bboxes of all 32 onboarded regions, and each one
-// that has a browser-verified counterpart in the 2026-07-23 run ledger agrees with
-// it. The extraction is behaviour-preserving, so a failure here means the refactor
+// scope.js maths against the real bboxes of all 32 onboarded regions. The extraction is behaviour-preserving, so a failure here means the refactor
 // moved something — not that the expectation is stale.
 //
 // scope.js is required as the REAL scopeApi rather than stubbed, so the ranking and
 // compass maths are exercised end to end. Same browser-global mocks as scope.test.cjs.
 //
-// 2026-07-23 cross-border update: chipModel's pool now comes from regionsNear (ALL
-// countries), not contextualRegions(cc) (one country) — docs/specs/2026-07-23-
-// map-and-search.md §4.5. Phase 0's country-scoped pinning tests below (e.g.
-// "Germany caps at 8 of 16", "Flanders -> only Brussels+Wallonia") are DELIBERATELY
-// rewritten to the new cross-border ground truth, not preserved as a regression.
+// chipModel's pool comes from regionsNear (ALL countries), not contextualRegions(cc)
+// (one country), per map-and-search.md §4.5. The expectations below are the
+// cross-border ground truth.
 'use strict';
 
 const test = require('node:test');
@@ -195,9 +191,9 @@ test('once the rider has chosen, the scope country beats the inferred home', () 
 
 test('linear: a Duisburg-area country scope surfaces Dutch regions by distance', () => {
   // A DE country scope anchored near the NL border (via mapCenter) ranks cross-border.
-  // This REPLACES the Phase 0 "Germany caps at 8 of 16" expectation: Dutch Limburg,
-  // 63 km away, could not appear at all under contextualRegions (country-scoped by
-  // construction); regionsNear (Task 1) ranks across every onboarded country instead.
+  // Dutch Limburg, 63 km away, could not appear at all under contextualRegions
+  // (country-scoped by construction); regionsNear ranks across every onboarded
+  // country instead.
   //
   // 2026-07-27 edge-distance update: the FIRST chip is now Nordrhein-Westfalen,
   // because Duisburg is inside it — an edge distance of 0 that centroid ranking
@@ -220,9 +216,8 @@ test('linear: a Duisburg-area country scope surfaces Dutch regions by distance',
 
 test('more reflects the GLOBAL registry total, not the active country', () => {
   // Belgium alone has 3 regions; with a cross-border pool the More chip appears
-  // because 32 onboarded regions exist, reachable via search. This REPLACES the
-  // Phase 0 "Belgium shows all 3 regions and NO More chip" expectation, which
-  // pinned `more` against the active country's own total instead of the global one.
+  // because 32 onboarded regions exist, reachable via search: `more` counts against
+  // the global total, not the active country's own.
   const m = chipModel({
     scope: { kind: 'country', regionIds: [], countryCode: 'BE' },
     isDefault: false, activeRegions: [], registry: REGIONS,
@@ -287,9 +282,9 @@ test('compass: Utrecht offers its true neighbours, not the far north-east', () =
   assert.equal(m.more, true);
 });
 
-test('compass: Flanders now reaches into the Netherlands (deliberate change from Phase 0)', () => {
-  // Phase 0's "drops the whole empty N row" pinned an all-BE pool (Brussels/Wallonia
-  // both lie south, so the country-scoped N row was vacant). Cross-border ranking
+test('compass: Flanders reaches into the Netherlands', () => {
+  // Brussels and Wallonia both lie south of Flanders, so an all-BE pool leaves the
+  // N row vacant. Cross-border ranking
   // fills that N row with the genuinely nearest regions, which are Dutch.
   const m = compassFor('flanders');
   const shown = m.rows.flat().map((c) => c.slug);

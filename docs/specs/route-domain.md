@@ -100,7 +100,8 @@ Deskside display pseudonymizes contributors (`rider#<pseudonym>`,
 | `category` | `ItemType` value of a votable type |
 | `bike_type` | `BikeType`, set for routes only |
 | `season`, `round_start` | the round the vote counts in (route-domain.md §8d) |
-| `slot` | 1 to 3, `CHECK (slot BETWEEN 1 AND 3)` |
+| `slot` | the rider's rank, 1 is the first choice; `CHECK (slot BETWEEN 1 AND 10)` (`season_vote_slot_range`), the ballot length of 5 being the code's rule (route-domain.md §8d) |
+| `submitted_at` | timestamp, nullable; set on all of a rider's votes in one list when they submit the ballot, and only submitted votes count (route-domain.md §8d) |
 | `created_at` | timestamp |
 | | **UNIQUE (`user_id`, `region_id`, `category`, `round_start`, `subject_id`)** and **UNIQUE (`user_id`, `region_id`, `category`, `round_start`, `slot`)**; index (`region_id`, `category`, `round_start`) (`idx_season_vote_list`, a list's votes); index (`category`, `subject_id`) (`idx_season_vote_subject`, a row's votes) |
 
@@ -140,7 +141,8 @@ problem, photos, or the metadata the route's own creator edited (§7.1):
 **`route_change_history`** — append-only curator/community audit: `route_id`,
 `field` (attribute key or pseudo-field `state` / `name` / `decision_note`),
 `old_value` / `new_value` (json, nullable), `changed_by` (**non-null** bigint),
-`created_at`. One row per state transition or per changed metadata field;
+`suggestion_id` (bigint, nullable: the correction whose approval wrote the row,
+route-domain.md §7.1), `created_at`. One row per state transition or per changed metadata field;
 never updated or deleted. Route-scoped because `change_history.item_id` FKs
 `item` and routes live outside the item pipeline.
 
@@ -218,7 +220,7 @@ Streaming matters because the anonymous ride check reaches this parser: as a
 DOM, a 15 MiB body of tiny elements took 522 MB of libxml memory, outside PHP's
 `memory_limit`, and 8 seconds before it was refused; streamed, memory stays at
 the size of the body and the element cap ends the read. The byte cap stays
-15 MiB for anonymous callers too, since memory no longer grows with it. Zero
+15 MiB for anonymous callers too, since memory does not grow with it. Zero
 `<trkpt>` elements report as "not a GPX track", not out-of-range.
 
 ### 4.2 Processing pipeline
@@ -472,8 +474,12 @@ resolved, the bar is gone for every curator.
 
 | Parameter | Value | Config key |
 |---|---|---|
-| Active-route cap per region | 30 | `route.region_active_cap` (`web/config/packages/route_domain.yaml`, injected via `web/config/services.yaml`) |
-| Ride-verify threshold | 3 | `route.ride_verify_threshold` (same files) |
+| Active-route cap per region | 30 (1 to 1000) | `route.region_active_cap` |
+| Ride-verify threshold | 3 (1 to 100) | `route.ride_verify_threshold` |
+
+Both are system settings (`SettingsRegistry`, editable on the admin
+system-config page, system-configuration.md §2); the defaults a fresh database
+starts from are in `web/config/packages/route_domain.yaml`.
 
 "Active" = state in `ItemState::SERVED`. Counting is per `region_id`, with
 NULL region as its own bucket
@@ -501,10 +507,9 @@ no count because both states are active. So a region cannot pass the cap by
 any other path.
 
 **`region.active_cap` is declared but read by nothing.** The column exists
-(`Version20260719140000`) with an entity getter and setter, and this section
-has described it as a per-region override, but both `regionCap()` readers
-(`RouteModerationService`, `RouteQueue`) return the global setting alone.
-Every region therefore shares one number today. Lowering that number also
+(`Version20260719140000`) with an entity getter and setter, but both
+`regionCap()` readers (`RouteModerationService`, `RouteQueue`) return the
+global setting alone, so every region shares one number. Lowering that number
 retires nothing, so a region can legitimately sit above its cap.
 
 ### 5.2 Active routes on the desk
@@ -805,10 +810,8 @@ proposer edits their own proposal directly (route-domain.md §4.6).
   the value widget for the chosen field, prefilled with what the route says
   now. One field per correction: the box is a narrow column in the drawer, so a
   picker plus one widget is what fits, and each correction is one decision for
-  the curator. The five other reasons stay as they were and point at stretches
-  of the line instead.
-- **Who:** any signed-in rider, on any route, exactly as the other reasons
-  already work. There is no ownership gate: this is a suggestion, not an edit.
+  the curator. The other five reasons point at stretches of the line instead.
+- **Who:** any signed-in rider, on any route, as for the other reasons. There is no ownership gate: this is a suggestion, not an edit.
 - **The vocabulary** comes from `RouteMetadata` through
   `CatalogSchemaProvider::routeCorrectionFields()` (`CC_ROUTE_FIELDS`): the
   same eight fields, labels and options the proposal form and the desk form
@@ -849,9 +852,8 @@ The thread runs both ways, on the messaging that already exists:
 
 - the rider opens it with that note;
 - the curator answers from the card's **Message the rider** box
-  (`ModerateMessageController`, channel `correction`), which was already
-  region-scoped and already worked;
-- the rider answers back from `/account/messages` (`messages_reply`), which now also
+  (`ModerateMessageController`, channel `correction`, region-scoped);
+- the rider answers back from `/account/messages` (`messages_reply`), which
   accepts a curator's message on the `correction` channel while the correction
   is still `pending`, delivering it to the curator who wrote it. No status
   flips: a correction has no needs-info state.
@@ -884,7 +886,7 @@ absent list narrows by nothing** — no seasons aggregates across every season,
 no bikes across every bike type. Unknown parts are dropped rather than
 rejected, the same forgiving rule the `region` CSV follows, so a stale
 bookmark degrades to a wider answer instead of a 400; the literal `all` is
-still accepted for `bike` and means the same as omitting it.
+accepted for `bike` and means the same as omitting it.
 
 Response: `{season: [...], bike: [...], ids}` — the echoed facets are LISTS,
 and the ranked route ids come best first, with **rank encoded by array
@@ -912,8 +914,12 @@ materialization (regions hold ≤ the active cap):
   route that declares itself tandem-friendly. The enum is eight values long,
   so the term count is bounded by the vocabulary. An empty list drops its
   facet from the query entirely.
-- Order: `COUNT(*) DESC, MAX(season_vote.created_at) DESC, subject_id ASC`
-  (ties by most-recent matching vote, then id for determinism).
+- Order: by points (`BallotRules::POINTS_BY_SLOT`), then by votes, then
+  `MAX(season_vote.created_at) DESC`, then `subject_id ASC` (ties by most-recent
+  matching vote, then id for determinism). Only submitted votes count
+  (route-domain.md §8d).
+- At most `RouteRankingService::MAX_RESULTS` (200) ids; a region-scoped answer
+  holds at most the active cap and is never truncated.
 
 ### 8.3 Specialty-bike suitability gate
 
@@ -935,13 +941,11 @@ split. The containment condition is written once,
 ballot's candidates, the season results and this best-of all use it
 (route-domain.md §8d).
 
-### 8b. `/best`: the public result, simulated first (2026-09-12)
+### 8b. `/best`: the public result, and its simulated preview
 
-**A public page showing what riders rated best, with invented numbers.** The
-ranking was public data with no page: `/map/best-of` answers to anyone and
-feeds the map's Curated mode, while `/vote` is the login-only ballot
-(route-domain.md §8d). So nobody outside could see an outcome, and a search
-engine could find nothing (known issue, 2026-09-06).
+**`/best` is the public page of what riders rated best.** `/map/best-of` feeds
+the map's Curated mode and `/vote` is the login-only ballot (route-domain.md
+§8d); `/best` is where an outcome is public and findable.
 
 While `community.voting_live` is off there are no real votes, so a page built
 on real counts would be blank in every region and could settle nothing. Owner
@@ -957,7 +961,7 @@ the page says it in prose above the list.
 season ballot's real lists instead (route-domain.md §8d); the preview stays
 for as long as the switch is off.
 
-**What the preview settled about the ballot.** The five votable types
+**What the preview set for the ballot.** The five votable types
 (`ItemType::isVotable()`) are the categories. Season is the round. And the
 split that matters: **bike type belongs to the VOTE, not the route**
 (`season_vote.bike_type`). "Best on a handbike" is the same roads ranked by
@@ -1005,14 +1009,12 @@ ballot and the real ranking are built to. Owner 2026-10-02: "a good voting
 system per season. It must hold up with a low number of voters and seasonal
 update, where the highest from last season get a handicap to prevent always
 having the same list", and "voting is not only for routes, for all experience
-categories". Revised the same evening, after the owner tried the built ballot:
-votes are ranked ("number 1 gets 5 points, number 2 3 and number 3 1"), riders
-"vote for the next season, else people can see in between standings and that
-can make betting possible", no page shows a number of voters, and the number of
-votes and the points stay easy to change ("perhaps voting goes from 3 to 5").
-On 2026-10-03 the owner set it: "let users vote top 5: 10, 7, 5, 3, 1 points".
-On 2026-10-04 the points became 15, 10, 7, 4 and 2, and the handicap covers
-last year's top 5, as long as the ballot.
+categories". Votes are ranked; riders "vote for the next season, else people
+can see in between standings and that can make betting possible"; no page
+shows a number of voters; and the number of votes and the points stay easy to
+change. The owner set a ranked top 5 (2026-10-03) worth 15, 10, 7, 4 and 2
+points, with the handicap covering last year's top 5, as long as the ballot
+(2026-10-04).
 
 **One list per region, season and category.** The categories are the five
 votable types (`ItemType::isVotable()`): climbs, routes (quality rides), scenic
@@ -1074,21 +1076,21 @@ them again, which works against the handicap; every season starts empty
 
 Rejected alternative: a ranked ballot of up to 10 items scored by approval
 share (the same 2026-07-30 design). More detail per voter, but more work per
-voter, and with few voters the work is what keeps people from finishing; 3
-ranked votes is quick and still separates the favourites (owner 2026-10-02:
-"3 votes", ranked the same evening).
+voter, and with few voters the work is what keeps people from finishing; a
+ranked top 5 is quick and still separates the favourites (owner 2026-10-02 to
+2026-10-04).
 
 Rejected alternative: votes counted live while the season is on, with the
-list growing in public (the first build, 2026-10-02). It shows the standings
-while riders still vote, which invites betting and tactical votes (owner
-2026-10-02); riders now vote for the next season.
+list growing in public. It shows the standings while riders still vote, which
+invites betting and tactical votes (owner 2026-10-02); riders vote for the
+next season instead.
 
 **Easy to change.** The number of votes and the points per rank are one table
 in code (`BallotRules::POINTS_BY_SLOT`, with `VOTES_PER_LIST` kept equal by a
-test). Going from a top 3 to a top 5 (2026-10-03) was that edit and nothing else: the ballot page, the
-scoring SQL and the map read it, and the database only guards slots 1 to 10.
-Make the change between seasons: votes already cast keep their rank, and the
-open ballot would be scored on the new points.
+test). Changing the ballot length or the points is that edit and nothing else:
+the ballot page, the scoring SQL and the map read it, and the database only
+guards slots 1 to 10. Make the change between seasons: votes already cast keep
+their rank, and the open ballot would be scored on the new points.
 
 ### 8d. The ballot as built
 
@@ -1139,8 +1141,9 @@ are shared.
 **Storage.** One table, `season_vote`, for all five categories (route-domain.md
 §2.2). A list is (region, category, round); the region is the voted row's
 region when the vote is cast. `slot` is the rider's rank (1 is the first
-choice), unique per rider and list, so the database refuses a fourth vote
-whatever arrives at once. The `season_vote_slot_range` CHECK guards 1 to 10
+choice), unique per rider and list, so two votes never share a rank whatever
+arrives at once; a vote past the ballot's length is refused by the code
+(`ballot_full`). The `season_vote_slot_range` CHECK guards 1 to 10
 (`BallotRules::MAX_SLOTS`, `Version20261002140000`); the ballot length is the
 code's rule.
 
@@ -1231,9 +1234,8 @@ it "Not submitted, does not count", and the export carries `submitted_at`.
 **From the map.** The drawer of a catalogue row of a votable kind, and of a
 verified route, links to the ballot with the row picked
 (`/vote?cat=<category>&pick=<id>`, `web/assets/map/vote-link.js`) while
-`community.voting_live` is on. There is no vote endpoint per route: the old
-`POST /routes/{id}/vote` with its season picker is gone, so every vote counts
-in a ballot of three.
+`community.voting_live` is on. There is no vote endpoint per route: every vote
+is cast on the season ballot.
 
 **On the map.** `GET /map/best-of` keeps its contract (route-domain.md §8.1,
 §8.2) and counts only votes in the latest started round of each picked season,
@@ -1262,18 +1264,21 @@ offered are the operational regions grouped by country
 what the /best cards carry (`BestOfPreview::cards()`, owner 2026-10-03): the
 picture where there is one, else the kind's icon, and one line from the
 catalogue (a climb's length, average, height gain and surface; a place's
-note), above the confirmed count. A place to sleep shows its kind, read from
-its type label (`App\Catalog\StayKind`: hotel, house for a guest house,
-B&B, gîte or rental, tent for a campsite, bunk for a hostel or budget stay,
-cabin for a chalet or mountain hut, and a house outline with a "?" when the
-label names none of these): as the icon where there is no picture, and in
+note), above the confirmed count. A place to sleep shows its kind (`App\Catalog\StayKind`,
+in `BallotCandidates`), read from its stay Type, the one a rider can change
+(`StayKind::fromType()`: hotel or motel a hotel, guest house or apartment a
+house, hostel a bunk bed, camp a tent, chalet, alpine hut or wilderness hut a
+cabin), else from its imported type label (`StayKind::fromLabel()`: guest
+house, B&B, gîte or furnished rental a house, campsite a tent, hostel or budget
+stay a bunk bed, chalet or mountain hut a cabin), else a house outline with a
+"?": as the icon where there is no picture, and in
 words with its town as the row's line ("Hotel · Spa", `vote.stay_kind.*`). On the ballot only for now (owner 2026-10-03); the
 map's pins keep `KindIcons`. Five category tabs;
 a `cat` that is missing, unknown or not votable opens climbs, and a `pick`
 that is not a row of that category on the ballot is ignored. The list shows
 every row of the category in the region A to Z (`BALLOT_CANDIDATES`, 2000, is
 a guard and not a cut: an alphabetical list cut short would hide the end of
-the alphabet; the longest list was 291 on 2026-10-03), plus the rider's own
+the alphabet), plus the rider's own
 votes and the picked row should the guard ever leave them out. On a screen narrower than 820 px the ballot panel comes before
 the list, so it stays in sight. A list longer
 than 8 rows gets a "Find a place" box (`ballot.js`) that narrows it by name,
@@ -1295,10 +1300,6 @@ heading and on its category tab, read out as "submitted"
 no count of anyone else's votes or voters. While voting is off or the rider
 cannot vote yet, the page says why there is nothing to press.
 
-**`route_vote` is retired** (`Version20261002110000`): it held no real votes
-(owner 2026-10-02), so nothing was copied; the migration refuses to run on a
-table that is not empty.
-
 **The results page** (`PageController::bestOf`, route `best_of`,
 `templates/pages/best_of.html.twig`, `App\Vote\BestOfResults`). With voting
 live, `/best` keeps the preview's page, filters and cards (route-domain.md
@@ -1309,10 +1310,7 @@ picture and panel hue from `BestOfPreview::cards()`, the preview's own photo
 rule. No season chosen means each region's current round, whose list
 was voted for in the season before, so a southern country shows its own
 season; a chosen season means each region's most recent started round of it.
-No list on the page belongs to a ballot that is still open, and the page no
-longer closes with a note about publishing and privacy, nor says "every season
-starts empty" (not true: last year's top 5 carry the handicap; owner
-2026-10-03). A region's heading carries "No ranking yet" beside its name when
+No list on the page belongs to a ballot that is still open. A region's heading carries "No ranking yet" beside its name when
 its list is below the threshold, and no round line: the title names the round.
 The title names the season shown, in italics (owner 2026-10-03): "The best of *Autumn*", the
 season chosen or else the one riders are in; above it the kicker names the
@@ -1426,7 +1424,7 @@ contract is the consumption semantics:
   constraint, a repeat is an idempotent no-op (route-domain.md §6.2).
 - **`season_vote`** (60 an hour per rider) is consumed on every cast and
   remove on the season ballot, after the cheap checks and before any write
-  (route-domain.md §8d). The three slots already bound what a rider can hold;
+  (route-domain.md §8d). The five slots already bound what a rider can hold;
   the limiter bounds a script switching votes on and off. Over-limit renders
   as a flash on the ballot page (`vote.refused.rate_limited`).
 
@@ -1437,7 +1435,6 @@ contract is the consumption semantics:
   counter increments and the uploaded track is **deleted immediately** — no
   personal ride data is ever stored. Same counter as the button, stronger
   evidence.
-- **Seasonal nomination windows** per region once a region has traction.
 - **"Starts at / towns on route"** reverse-geocoding from the track (the map
   currently uses a demo-era name-keyed lookup with **no fallback** —
   fabricating a start town for rider proposals would be wrong data).
@@ -1456,12 +1453,10 @@ contract is the consumption semantics:
 Accepted, documented tradeoffs — re-visit when the triggering condition
 arrives:
 
-1. ~~**Best-of has no LIMIT without a region filter.**~~ **Resolved
-   (map-and-search.md §4.5 Phase 1, 2026-07-19):**
-   `RouteRankingService::bestOf` now applies a hard
-   `LIMIT RouteRankingService::MAX_RESULTS` (200). The Everywhere/no-region
-   facet is bounded; region-scoped facets (≤ the active cap) are never
-   truncated. The guard landed before any scope-widening UI exists.
+1. **Best-of without a region stops at 200.** `RouteRankingService::bestOf`
+   applies `LIMIT RouteRankingService::MAX_RESULTS` (200), so the
+   Everywhere/no-region facet is bounded; region-scoped facets (at most the
+   active cap) are never truncated (route-domain.md §8.2).
 2. **Rank is positional** in the best-of response; the SQL ordering is latent
    until a ranked-list UI consumes it.
 3. **Concurrent threshold-crossing rode-its** can each write a

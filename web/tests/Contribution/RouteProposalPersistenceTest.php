@@ -13,7 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * Route domain v1 (spec §4.1): a rider proposal is a RecommendedRoute row in
+ * route-domain.md §2.1: a rider proposal is a RecommendedRoute row in
  * state `submitted` carrying the proposing rider in `proposed_by` (plain int
  * column, house style — no ORM relation). NULL for imported routes.
  */
@@ -46,7 +46,7 @@ final class RouteProposalPersistenceTest extends KernelTestCase
         self::bootKernel();
         $em = static::getContainer()->get(EntityManagerInterface::class);
 
-        // Imported route: never carries a proposing rider (spec §4.1). Persisted
+        // Imported route: never carries a proposing rider (route-domain.md §2.1). Persisted
         // WITHOUT setProposedBy() — the nullable column must round-trip as null.
         $route = (new RecommendedRoute())
             ->setName('Imported · Ardenne')

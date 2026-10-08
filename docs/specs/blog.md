@@ -3,8 +3,6 @@
 An index, a post, and a feed. Canonical. Owns `/blog`, `/blog/{slug}`,
 `/blog.atom`, `blog_post`, and the EasyAdmin CRUD behind them.
 
-Built 2026-08-29, MVP by request.
-
 ## 1. Why it exists
 
 Everything this project publishes today is either a page that describes what
@@ -70,9 +68,12 @@ people, not code.
 
 ## 4. Reads
 
-`App\Blog\BlogRepository`. Four queries: the index page, its count, one post by
-slug, and the siblings of a post. All of them go through one private
-`liveQuery()` so the filter cannot drift between them.
+`App\Blog\BlogRepository`. The queries for one language (the index page, its
+count, one post by slug, the archive beside a post, the feed) all go through
+one private `liveQuery()`, so the filter cannot drift between them. The two
+that cross languages, the siblings of a post and the sitemap's `liveSlugs()`,
+carry the same two conditions, status published and a non-null
+`published_at`, written out. The sitemap lists the index and every live post.
 
 The index orders by `published_at DESC` then `id DESC`: two posts published the
 same day would otherwise swap places between page loads.
@@ -95,7 +96,7 @@ Entries carry the lede, not the body: a feed is a standfirst and a link.
 
 ### The archive beside a post
 
-*(Added 2026-08-29.)* A post page carries the other posts in a sticky right
+A post page carries the other posts in a sticky right
 column. Somebody who has just finished one is the likeliest person on the site
 to read a second, and the index is a click most of them will not make.
 

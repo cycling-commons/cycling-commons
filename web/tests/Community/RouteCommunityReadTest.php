@@ -59,7 +59,7 @@ final class RouteCommunityReadTest extends WebTestCase
         $proposer = $this->rider($em, 'prop@test.test');
         $route = $this->route($em, ItemState::Unverified, $proposer->getId());
 
-        // Proposer's own ride does NOT count toward the threshold (P3-D1); my ride does.
+        // Proposer's own ride does NOT count toward the threshold (route-domain.md §6.2); my ride does.
         $em->persist(new RouteRide($route->getId(), $proposer->getId(), BikeType::Gravel));
         $em->persist(new RouteRide($route->getId(), $me->getId(), BikeType::Road));
         $em->flush();

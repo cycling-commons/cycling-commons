@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
- * POST /map/ride-check (spec 2026-07-14 §4.1): the stateless JSON intake for
+ * POST /map/ride-check (map-and-search.md §9): the stateless JSON intake for
  * the ride-check — in-controller auth (clean 401), stateless CSRF, per-user
  * daily limiter, translated validation errors, nothing persisted.
  */

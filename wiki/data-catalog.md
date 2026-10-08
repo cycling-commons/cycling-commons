@@ -380,7 +380,7 @@ repeated below.
 ## P. Scenic views, per POI
 - **Form:**
   - *name*
-  - *type* (viewpoint / high point · natural feature)
+  - *type* (viewpoint · peak · waterfall · rapids · cliff · cave entrance · rock arch · rock · boulder · natural feature); every OpenStreetMap tag we show is one of them, and natural feature (a beautiful stretch to ride) is ours only
   - *access for bikes* (roadside · short walk · path only)
   - *what can you see*
   - *best light* (morning · golden hour · sunset · any)
@@ -388,13 +388,13 @@ repeated below.
   - *official site*
   - *other pages about this place*
   - *a description*
-- **OSM / media:** `tourism=viewpoint`; photos under CC BY-SA, a rider's own or from Wikimedia Commons with the licence checked
+- **OSM / media:** `tourism=viewpoint`, `waterway=waterfall`, `waterway=rapids`, `natural=cliff`, `cave_entrance`, `arch`, `rock`, `stone` (never a peak); photos under CC BY-SA, a rider's own or from Wikimedia Commons with the licence checked
 - **Design:** photo spots as a kind of their own, with the best angle
 
 ## Q. History & culture, per POI
 - **Form:**
   - *name*
-  - *type* (heritage site · museum / culture · monument · religious site · architecture)
+  - *type* (castle · fort · ruins · monument · memorial · archaeological site · manor · monastery · museum · place of worship · heritage site · architecture); every OpenStreetMap tag we show is one of them, and heritage site and architecture are ours only
   - *bike parking?*
   - *opening hours*
   - *entry fee?*

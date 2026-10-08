@@ -15,7 +15,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Unread bulb on the account chip (moderation-feedback spec M4, Task 6):
+ * Unread bulb on the account chip (moderation-and-contribution.md §7, M4):
  * count rendering, opening a message clearing it (a visit does not),
  * and the anonymous no-DB-touch path.
  *

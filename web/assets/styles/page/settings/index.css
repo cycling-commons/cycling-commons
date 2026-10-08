@@ -54,7 +54,7 @@ h2.sec{font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;text-transf
    + orange (--trail) knob; custom appearance drops the browser's default blue.
    The INPUT is 32px tall with a transparent box and the 6px bar is painted on
    the track pseudo-elements: styling height on the input itself gave the
-   slider a 6px touch target, unusable on a phone (mobile audit 2026-07-27). */
+   slider a 6px touch target, unusable on a phone. */
 .radius-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;
   height:32px;border:none;margin:0;padding:0;background:transparent;cursor:pointer}
 .radius-row input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;
@@ -128,7 +128,7 @@ input.is-invalid{border-bottom-color:var(--clay)}
 .danger-zone h2.sec{color:var(--clay);margin-top:0}
 .acct-id{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-/* Profile / Security tabs (spec 2026-07-14) */
+/* Profile / Security tabs (account-and-auth.md §8) */
 .dpane{display:none} .dpane.on{display:block}
 .tabs{display:flex;gap:.4rem;margin:1.2rem 0 1.8rem;border-bottom:1px solid rgba(20,22,14,.14)}
 .tabs [role=tab]{background:none;border:none;border-bottom:2px solid transparent;padding:.55rem 1rem;cursor:pointer;

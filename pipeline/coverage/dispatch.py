@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Nightly coverage dispatcher (worker build plan §2.5 E3, §4.2): pick the
+"""Nightly coverage dispatcher (coverage-provider.md §3): pick the
 stalest onboarded regions, `--load-only` each in series inside a time budget,
 then `--tiles-only` once if anything loaded. One timer per environment; adding
 a region is a list entry; a failed region is first in line tomorrow, not next

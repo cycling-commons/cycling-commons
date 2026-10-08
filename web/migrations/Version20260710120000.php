@@ -13,7 +13,7 @@ final class Version20260710120000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'route_ride — "I rode this" confirmations (route-domain v1 phase 3, spec §4.2)';
+        return 'route_ride: "I rode this" confirmations (route-domain.md §2.2)';
     }
 
     public function up(Schema $schema): void

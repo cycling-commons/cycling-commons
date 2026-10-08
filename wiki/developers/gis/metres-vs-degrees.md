@@ -109,10 +109,9 @@ the difference is invisible. On a real table it is not.
 Chapter 5 walks through exactly this in this codebase: `Catalog/RideCheckService.php`,
 `RideCheckService::corridorGroups()` compares a rider's uploaded track against every catalog item.
 Written the obvious way, `ST_DWithin` with `::geography` on both sides, PostgreSQL has no faster way
-to answer it than checking the ellipsoid maths against every single row in the table. The design
-note that shipped the fix records that shape at 62 seconds live
-(`docs/specs/Dated/2026-07-14-town-search-and-ride-check-design.md`); the shipped version answers in
-under one.
+to answer it than checking the ellipsoid maths against every single row in the table. The ride-check
+contract records that shape at 62 seconds live (`docs/specs/map-and-search.md` §9); the shipped
+version answers in under one.
 
 The fix is chapter 5's subject, not this chapter's.
 What belongs here is smaller: **cast to `geography` when the question is genuinely "how far apart, in

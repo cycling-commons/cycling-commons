@@ -8,7 +8,7 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * submission + change_history schema (moderation spec §6/§9), plus
+ * submission + change_history schema (moderation-and-contribution.md §3.1), plus
  * region.country_code so submissions and regions can be filtered/matched
  * by country from day one.
  */

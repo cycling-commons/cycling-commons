@@ -11,7 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Settings two-tab layout (Profile / Security, spec 2026-07-14): default tab,
+ * Settings two-tab layout (Profile / Security, account-and-auth.md §8): default tab,
  * ?tab=security activation, and a failed password submission landing on the
  * Security tab so the errors are visible.
  *

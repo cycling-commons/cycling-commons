@@ -23,7 +23,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DomCrawler\Crawler;
 
 /**
- * Task 9 (moderation-feedback spec M6b): the needs-info reply loop — a rider
+ * moderation-and-contribution.md §7 (M6b): the needs-info reply loop, a rider
  * answers a curator's needs-info request from their own /account/messages page, and
  * the reply re-queues the submission (back to `pending`) plus delivers a
  * `rider_reply` message addressed to the deciding curator. That address is a

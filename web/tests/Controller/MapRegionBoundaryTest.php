@@ -11,8 +11,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * The region spotlight boundary endpoint (map-and-search.md §4.5
- * Phase 1) that retired the map's Nominatim fetch: a simplified DB polygon,
+ * The region spotlight boundary endpoint (map-and-search.md §4.5): a
+ * simplified DB polygon,
  * served public + cacheable.
  */
 final class MapRegionBoundaryTest extends WebTestCase

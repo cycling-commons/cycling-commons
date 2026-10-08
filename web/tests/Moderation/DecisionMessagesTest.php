@@ -18,7 +18,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Task 3 (moderation-feedback spec M2/M11): every item-pipeline decision
+ * moderation-and-contribution.md §7 (M2/M11): every item-pipeline decision
  * (approve/reject/needs_info) writes the submitter exactly one message,
  * atomically with the decision itself — and the decision-note textarea
  * enforces the shared 2000-character cap (M11).

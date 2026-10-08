@@ -24,7 +24,7 @@ security:
                 check_path: login
                 enable_csrf: true
                 default_target_path: dashboard
-                success_handler: App\Security\LoginSuccessHandler  # enforces 2FA setup for elevated roles; else /profile on the first sign-in, /dashboard after
+                success_handler: App\Security\LoginSuccessHandler  # enforces 2FA setup for elevated roles; else the target path, or /account/settings on the first sign-in and /account after
             logout: { path: logout, target: home, enable_csrf: true }
             remember_me:
                 secret: '%kernel.secret%'
@@ -34,7 +34,7 @@ security:
                 secure: auto
                 samesite: lax
             login_throttling:
-                max_attempts: 5        # Symfony's built-in throttle; the User-field lockout (Task 7) adds a hard lock + cooldown
+                max_attempts: 5        # Symfony's built-in throttle; the User-field lockout adds a hard lock + cooldown
             two_factor:                # scheb: interstitial after primary auth for users who have 2FA enabled
                 auth_form_path: 2fa_login
                 check_path: 2fa_login_check
@@ -72,7 +72,7 @@ security:
         # route behind a login is not one. Same reason /photo/{uuid}/report is
         # public, and this is its generalisation.
         - { path: ^/report/, roles: PUBLIC_ACCESS }
-        # Public rider profiles (spec 2026-07-14): explicit PUBLIC_ACCESS for the
+        # Public rider profiles (account-and-auth.md §7): explicit PUBLIC_ACCESS for the
         # same scheb lazy-firewall reason as /map/catalog/stamps.json below.
         - { path: '^(/[a-z]{2})?/riders/', roles: PUBLIC_ACCESS }
         # Explicit PUBLIC_ACCESS (not just "no rule matches") so scheb's lazy-firewall
@@ -91,10 +91,8 @@ security:
         # DB boundary that replaced the Nominatim fetch. Same lazy-firewall
         # rationale as /map/catalog/stamps.json above.
         - { path: '^/map/region/[a-z0-9-]+/boundary$', roles: PUBLIC_ACCESS }
-        # The My-area scope boundary (same response shape, same cacheability);
-        # it was added after this list and missed the treatment — the one
-        # cacheable /map endpoint scheb was still session-reading (frontend
-        # review 2026-08-09 #2).
+        # The My-area scope boundary (same response shape, same cacheability),
+        # so scheb does not read the session for it either.
         - { path: '^/map/scope/boundary$', roles: PUBLIC_ACCESS }
         # Same cacheability rationale as /map/catalog/stamps.json above: explicit
         # PUBLIC_ACCESS so scheb's TwoFactorAccessListener skips the session
@@ -132,8 +130,7 @@ security:
         - { path: '^(/[a-z]{2})?/2fa/setup', roles: ROLE_USER }
         - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
         - { path: '^(/[a-z]{2})?/account(/|$)', roles: ROLE_USER }
-        # Backstops mirroring the controllers' own IsGranted attributes (review
-        # 2026-08-16 finding 7): if a route is ever added to these controllers
+        # Backstops mirroring the controllers' own IsGranted attributes: if a route is ever added to these controllers
         # without the attribute, it stays behind login anyway. Deliberately NOT
         # listed: /media/* and /contribute/elevation - they follow THE
         # stateless-JSON pattern (security-architecture.md §5.1) whose clean

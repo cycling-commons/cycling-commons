@@ -92,7 +92,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame('Ecocyclo', $shop['properties']['n']);
         self::assertSame('Brabant wallon', $shop['properties']['prov']);      // via world_subdivision join
         self::assertSame([4.4, 50.7], $shop['geometry']['coordinates']);      // GeoJSON [lng, lat]
-        // W6: the raw ItemSource value IS meant to reach the client (map.js maps
+        // The raw ItemSource value IS meant to reach the client (map.js maps
         // it to a display label) — but under 'srcType', never the free-text
         // 'source'/'ref' import columns that would leak internal detail.
         self::assertSame('osm', $shop['properties']['srcType']);
@@ -130,8 +130,7 @@ final class CatalogProviderTest extends KernelTestCase
         $f = $this->payload()['E'];
         self::assertSame('FeatureCollection', $f['type']);
         // Locate the seeded hazard by name rather than assuming it is the ONLY E
-        // feature — the DB is shared across tests, so a global count(1) is fragile
-        // (finding 21 / CodeRabbit).
+        // feature, the DB is shared across tests, so a global count(1) is fragile.
         $matches = array_values(array_filter(
             $f['features'],
             static fn (array $ft): bool => 'Test crosswind' === ($ft['properties']['n'] ?? null),
@@ -160,7 +159,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame('http://example.test', $e['authority']['features'][0]['properties']['web']);
         self::assertIsInt($e['osm']['features'][0]['properties']['id']);
         self::assertIsInt($e['authority']['features'][0]['properties']['id']);
-        // W6: each bucket's srcType matches the split it was fetched by.
+        // Each bucket's srcType matches the split it was fetched by.
         self::assertSame('osm', $e['osm']['features'][0]['properties']['srcType']);
         self::assertSame('authority', $e['authority']['features'][0]['properties']['srcType']);
     }
@@ -318,7 +317,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame([50.61, 4.41], $climb['geom']['ll']);                // [lat, lng]
         self::assertSame('Wikidata (P625) · OpenStreetMap', $climb['source']); // attribution -> source
         self::assertArrayNotHasKey('attribution', $climb);
-        self::assertSame('wikidata', $climb['srcType']);                      // W6: raw enum, separate from the citation text above
+        self::assertSame('wikidata', $climb['srcType']);                      // raw enum, separate from the citation text above
         self::assertSame([[50.61, 4.41], [50.62, 4.42]], $climb['route']);    // raw [lat,lng] pass-through
         self::assertSame(1, $climb['descTr']);
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
@@ -381,7 +380,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame(2001, $seg['wayId']);                                // from source_ref 'way/2001'
         self::assertSame([[50.1, 4.2], [50.2, 4.3]], $seg['path']);           // flipped to [lat,lng]
         self::assertSame('Asphalt', $seg['surface']);
-        self::assertSame('osm', $seg['srcType']);                             // W6
+        self::assertSame('osm', $seg['srcType']);
         self::assertArrayNotHasKey('edit', $seg);                             // accepted loss (map.js hardcodes it)
         // The map edit-bridge's `?item=` target — the real DB id, an integer.
         self::assertIsInt($seg['id']);
@@ -489,13 +488,13 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame([[50.6, 4.4], [50.7, 4.5], [50.6, 4.4]], $route['loop']);
         self::assertSame(['name' => 'Test U.', 'public' => true], $route['uploader']);
         self::assertSame('Tester', $route['photo']['credit']);
-        self::assertSame('auto', $route['srcType']);                          // W6
-        // C2-T7 (spec §W2): QualityRides registry attributes (dominantSurface,
+        self::assertSame('auto', $route['srcType']);
+        // QualityRides registry attributes (dominantSurface,
         // quietness, etc.) forward the same way difficulty/uploader/photo
         // always have — an approved improve-form edit must reach the client.
         self::assertSame('Mixed', $route['dominantSurface']);
         self::assertSame('4', $route['quietness']);
-        // Heat points carry rid as element 3 (07-20 review finding 5): both
+        // Heat points carry rid as element 3: both
         // fixture points sit inside the region-square fixture, so this pins
         // the whole chain — import → recomputeMembership stamping → payload.
         $regionId = (int) $this->em->getConnection()->fetchOne(
@@ -561,7 +560,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame('unverified', $byName['State route proposed']['state'] ?? null);
     }
 
-    /** P2-D1: a proposal's rider-vocabulary difficulty string is canonicalized on
+    /** route-domain.md §9: a proposal's rider-vocabulary difficulty string is canonicalized on
      *  intake (RouteProposalService) and served as {score,label} (CatalogProvider),
      *  the same shape imports use — never the raw legacy string. */
     public function testProposedRouteServesCanonicalDifficulty(): void
@@ -598,7 +597,7 @@ final class CatalogProviderTest extends KernelTestCase
     public function testServedPoiCarriesRealVerifiedFlag(): void
     {
         // import() promotes the shape fixtures to verified (coverage
-        // retirement, Task 14) — every served D feature carries the real flag.
+        // retirement), every served D feature carries the real flag.
         foreach ($this->payload()['D']['features'] as $f) {
             self::assertSame(1, $f['properties']['v']);
         }
@@ -655,7 +654,7 @@ final class CatalogProviderTest extends KernelTestCase
         self::assertSame(1, $this->payload()['A'][0]['v']);
     }
 
-    /** Plan 2 Task 13: payload ships the served OSM refs so the map's tile
+    /** The payload ships the served OSM refs so the map's tile
      *  layers can hide already-curated objects (osm-data-architecture.md §8
      *  ref dedupe, client half). */
     public function testPayloadCarriesServedOsmRefs(): void
@@ -692,7 +691,7 @@ final class CatalogProviderTest extends KernelTestCase
     }
 
     /**
-     * Phase 2 (map-and-search.md §4.5): every served feature carries
+     * map-and-search.md §4.5: every served feature carries
      * its region_id as `rid` so map.js `featureVisible` can filter by scope.
      * Rows outside every region carry no rid (byte-stable for null-region rows).
      */

@@ -10,7 +10,7 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Add deletion_code and deletion_requested_at columns to the users table (GDPR Art. 17 / Task 9).
+ * Add deletion_code and deletion_requested_at columns to the users table (GDPR Art. 17).
  */
 final class Version20260629001745 extends AbstractMigration
 {

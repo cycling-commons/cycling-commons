@@ -13,9 +13,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * The moderated correction channel (spec §4.2 route_suggestion): riders report
+ * The moderated correction channel (route-domain.md §2.2, route_suggestion): riders report
  * a route problem (preset reason + note); curators resolve done/dismissed.
- * Riders never edit route data (D3).
+ * Riders never edit route data (route-domain.md §1).
  */
 final class RouteSuggestionTest extends KernelTestCase
 {

@@ -13,8 +13,8 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * Final-review fix: with the unique canonical-display-name index (spec
- * 2026-07-14), `app:user:create` defaults the display name to the email
+ * With the unique canonical-display-name index (account-and-auth.md §9),
+ * `app:user:create` defaults the display name to the email
  * local part — so creating "curator@foo.org" then "curator@bar.org" both
  * default to "curator" and collide. The command must surface a friendly
  * error, not an uncaught Doctrine\DBAL\Exception\UniqueConstraintViolationException.

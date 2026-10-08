@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
 // Node smoke tests for the map scope model (web/assets/map/scope.js) — the
-// suite the module's dual-export guard exists for (07-20 review finding 8:
-// the guard predated the tests; now they are real). No dependencies: node:test
+// suite the module's dual-export guard exists for. No dependencies: node:test
 // ships with Node ≥18 — run with `node --test web/tests/js` (make scope-test).
 //
 // scope.js is a browser IIFE; it reads window/location/localStorage/history
@@ -48,7 +47,7 @@ const REGIONS_NL = REGIONS.concat([
 ]);
 
 // Fresh-page init: set the URL + storage a browser would arrive with, wipe the
-// event/persist capture and window.CC_MY_AREA (Task 6 payload) + the anon
+// event/persist capture and window.CC_MY_AREA + the anon
 // circle's localStorage entry, then re-run init exactly like the map page does.
 function boot({ search = '', ls = null, myArea = null, defaultScope = DEFAULT, areaLs = null, regionsList = REGIONS } = {}) {
   globalThis.location = { href: `http://localhost/map${search}`, search };
@@ -97,7 +96,7 @@ test('init: a malformed URL token falls back cleanly', () => {
   assert.deepEqual(boot({ search: '?scope=country:XX' }), DEFAULT);
 });
 
-test('multi-region URL token collapses to its first resolvable region (07-20 finding 10)', () => {
+test('multi-region URL token collapses to its first resolvable region', () => {
   const s = boot({ search: '?scope=region:wallonia,flanders' });
   assert.deepEqual(s, { kind: 'region', regionIds: [1], countryCode: 'BE' });
   // First token stale -> the first RESOLVABLE one wins, not null.
@@ -237,18 +236,18 @@ test('coverageTileFilter: region scope shows in-region tokens, hides others, ren
   const f = CCScope.coverageTileFilter();
   assert.equal(shows(f, { ridtok: '|1|', cctok: '|BE|' }), true, 'in-region icon shows');
   assert.equal(shows(f, { ridtok: '|24|', cctok: '|BE|' }), false, 'out-of-region icon hides');
-  // A cluster bubble whose UNIONed ridtok includes region 1 shows (finding 2).
+  // A cluster bubble whose UNIONed ridtok includes region 1 shows.
   assert.equal(shows(f, { ridtok: '|24||1||24|', cctok: '|BE|' }), true, 'bubble with a region-1 member shows');
   assert.equal(shows(f, { ridtok: '|24||23|', cctok: '|BE|' }), false, 'bubble with no region-1 member hides');
   // Prop-less (both tokens empty) renders — the weekly-rebuild fallback.
   assert.equal(shows(f, { ridtok: '', cctok: '' }), true, 'prop-less renders');
-  // cc-bearing rid-less row hides under a REGION scope (finding 5).
+  // cc-bearing rid-less row hides under a REGION scope.
   assert.equal(shows(f, { ridtok: '', cctok: '|BE|' }), false, 'cc-only row hides under region scope');
   // No false positive: region 1 must not match region 21's token.
   assert.equal(shows(f, { ridtok: '|21|', cctok: '|BE|' }), false, 'delimiters prevent |1| matching |21|');
 });
 
-test('coverageTileFilter: country scope admits cc-bearing rid-less rows (finding 5)', () => {
+test('coverageTileFilter: country scope admits cc-bearing rid-less rows', () => {
   boot();
   CCScope.setCountry('BE');   // regionIds [1,24,23], cc BE
   const f = CCScope.coverageTileFilter();
@@ -447,7 +446,7 @@ test('bestOfRegionIds: single named region, myArea derived set, else null', () =
   assert.deepEqual(CCScope.bestOfRegionIds(), [1, 24]);
 });
 
-// ---- inferHomeCountry (Task 2, map-and-search.md §4.5) -
+// ---- inferHomeCountry (map-and-search.md §4.5) ---------
 //
 // Each of these tests needs its OWN registry (a different country mix than the
 // shared BE fixture above), so they run against a fully isolated module
@@ -472,11 +471,9 @@ function freshScope(regionsList) {
   return S;
 }
 
-// Renamed from the brief's literal working title ('My-area country wins over
-// timezone') — its own assertions don't test precedence: countryCodes:['BE']
-// against a DE-only registry means BE is NOT onboarded, so the My-area branch
-// falls through and this actually exercises the timezone fallthrough. The
-// real precedence case is the next test.
+// Not a precedence test: countryCodes:['BE'] against a DE-only registry means
+// BE is NOT onboarded, so the My-area branch falls through and this exercises
+// the timezone fallthrough. The real precedence case is the next test.
 test('inferHomeCountry: falls through to timezone when the My-area country is not onboarded', () => {
   const S = freshScope([{ id: 1, slug: 'bayern', countryCode: 'DE', bbox: [10, 48, 12, 50] }]);
   globalThis.window.CC_MY_AREA = { lat: 50.8, lng: 4.3, radiusKm: 40, countryCodes: ['BE'] };
@@ -536,7 +533,7 @@ test('inferHomeCountry: a zone the payload map lacks is no hint, and no map is n
   assert.equal(S.inferHomeCountry(), null);
 });
 
-// ---- searchScopes (Task 3, map-and-search.md §4.5) --
+// ---- searchScopes (map-and-search.md §4.5) ----------
 
 test('searchScopes: matches region by label and slug', () => {
   const S = freshScope([
@@ -594,7 +591,7 @@ test('searchScopes: limit caps the result count to the top-ranked entries', () =
   assert.deepEqual(capped[0], full[0]); // the cap keeps the highest-ranked entry, not an arbitrary one
 });
 
-// ---- regionOfPoint / contextualRegions (Task 4, map-and-search.md §4.5) --
+// ---- regionOfPoint / contextualRegions (map-and-search.md §4.5) ----------
 
 test('regionOfPoint: returns the bbox-containing region, nearest centre on overlap', () => {
   const S = freshScope([
@@ -606,7 +603,7 @@ test('regionOfPoint: returns the bbox-containing region, nearest centre on overl
   assert.equal(S.regionOfPoint(11.4, 49.4).slug, 'a'); // overlap: nearer a's centre (11,49) than b's (12,50)
 });
 
-// Regression for the task-4 review finding: "nearest centre" must mean nearest on
+// Regression: "nearest centre" must mean nearest on
 // the ground, not nearest in raw squared degrees. A longitude degree is only
 // ~0.656 of a latitude degree at 49°N, so an unscaled metric over-weights
 // east-west separation by 1/cos²(lat) ≈ 2.3x and can pick the visually farther
@@ -933,7 +930,7 @@ test('label: an empty registry resolves the active (everywhere) scope to null �
   // when CC_REGIONS is empty), so label() is asked for an everywhere scope
   // either way; the guard (map.js writeScopeHeader()) never sees a truthy
   // label from an unresolved region/country here, so it never wipes the
-  // server-rendered fallback text with blanks (07-20 review finding 7).
+  // server-rendered fallback text with blanks.
   const S = freshScope([]);
   assert.equal(S.get().kind, 'everywhere');
   assert.equal(S.label(S.get()), null);

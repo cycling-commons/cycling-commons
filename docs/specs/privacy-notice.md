@@ -21,8 +21,6 @@ it**. The failure mode is not a missing page; it is a page that was true in
 August and is quietly false in November because a host was added to the CSP and
 nobody thought of `/privacy`.
 
-Written 2026-08-27, closing `docs/TODO.md` item 5.
-
 ## 2. Source of truth for every claim
 
 | Claim on the page | Where it is true | Breaks when |
@@ -36,8 +34,8 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | Mail kept 24 months after a thread ends | policy, owner 2026-08-27 | the mailbox policy changes |
 | Contact-form messages deleted 24 months after they were answered or closed (`privacy.retention_mail`) | `App\Support\ContactMessageRetention`, daily in `app:media:gc` (contact-and-support.md §4) | the sweep stops running, or its clock stops being `updated_at` on an answered or closed message |
 | A bug reporter's address deleted 24 months after the outcome, kept while the bug is open (`privacy.retention_bugs`) | `App\Support\BugReporterEmailRetention`, daily in `app:media:gc` (contact-and-support.md §5) | the sweep stops running, or it touches an open report |
-| Traffic summaries are sent only when the rider sends them from Scout's review, hold per road piece the distance, passes, car speeds, date and quarter hour, never the ride, and are stored encrypted (`privacy.collect_contribute_traffic`, `privacy.banner_body`) | `assets/lib/traffic-ride.js` builds the lines in the browser; `TrafficLine` refuses track-shaped keys; `TrafficStore` writes HMAC keys and AES-GCM payloads only (traffic-measurements.md §3, §4) | a line field is added that carries a position or a finer time, or a table gains a readable column |
-| A rider's coded traffic entries are deleted with the account; the totals stay, holding no rider (`privacy.retention_traffic`) | `App\Traffic\TrafficRiderDeletion` on `UserDeletionService::purge()` (traffic-measurements.md §4.7) | the hook is untagged, or the totals start holding a rider |
+| Traffic summaries are sent only when the rider sends them from Scout's review, hold per road piece the distance, passes, car speeds, part of the day and a day group (never the date), never the ride or its first and last 500 m, and name no rider; they wait encrypted until their road has enough rides, then join plain totals (`privacy.collect_contribute_traffic`, `privacy.banner_body`) | `assets/lib/traffic-ride.js` builds the lines in the browser; `TrafficLine` refuses track-shaped keys; `TrafficPool` seals each waiting line with AES-256-GCM (`TrafficCipher`) under a random id and releases a road's block only whole; `TrafficStore` keeps HMAC dedupe codes and the plain totals (traffic-measurements.md §3, §4) | a line field is added that carries a position, a date or a finer time, a line or total gains anything naming a rider, or lines skip the waiting room |
+| A waiting line is deleted once it joins the totals; the totals hold no rider, so nothing in them is deleted with an account (`privacy.retention_traffic`) | `TrafficPool::releaseOne()`, `TrafficStore::addToTotal()` (traffic-measurements.md §4.3, §4.7); `TrafficAccountDeletionTest` | a table gains anything naming a rider |
 | A content reporter's or photo requester's address deleted 90 days after the decision, kept while open and under legal hold (`privacy.retention_reports`) | `App\Support\ReportContactRetention` and `MediaTakedownService::purgeExpiredContacts()`, daily in `app:media:gc` (content-reports.md §10) | either sweep stops running, or the 90 days change |
 | The base location is stored as a random point up to 2.5 km from the picked point (`privacy.collect_account_base`) | `App\Service\BaseLocationJitter` (uniform over the disc), applied by `BaseLocationService::apply()` to a new point only: a point equal to the stored one is kept, so a radius-only change does not move it again | the radius changes, or a save path writes the picked point without the shift |
 | Scout tags are sent from the same ride review, each one an ordinary contribution; tags and traffic are both optional per ride (`privacy.collect_contribute_traffic`) | `assets/map/scout-review.js` (tags step, traffic step), scout-bundle.md | a step sends without the rider's action |
@@ -54,7 +52,7 @@ Written 2026-08-27, closing `docs/TODO.md` item 5.
 | TOTP secret AES-256-GCM, key outside the DB | `App\Doctrine\EncryptedStringType`, `ENCRYPTION_SECRET` | see `account-and-auth.md` 4 |
 | Backup codes are keyed hashes | `User::hashBackupCode()` | |
 | HSTS | nginx, `operations.md` 4 ownership table | |
-| Uploads scanned, quarantined, EXIF stripped, re-encoded | `ClamAvScanner`, `media.storage.private`, `PhotoProcessor` | |
+| Uploads scanned, quarantined, EXIF stripped, re-encoded | `ClamAvScanner`, the private bucket (`MEDIA_S3_PRIVATE_BUCKET`), `PhotoProcessor` on the worker | |
 | 2FA compulsory for elevated roles | `App\Security\LoginSuccessHandler` | |
 | Strict CSP | `security-architecture.md` 2 | |
 | Locate me reads the position in the browser, only on a tap, and sends it nowhere (`privacy.banner_locate`, its own paragraph in the banner) | `map-init.js` `locateControl()`: MapLibre `GeolocateControl`, one `getCurrentPosition`, no tracking; the position feeds only the camera and the dot. The tiles for the area the camera lands on then load from the basemap hosts in section 3, as they do for any pan, which is why the copy says so. `Permissions-Policy: geolocation=(self)` (`security-architecture.md` 2.1) | any request, log line or stored preference ever carries the position, or tracking is switched on |
@@ -69,20 +67,18 @@ instructions under contract. Three rows, corrected by the owner 2026-08-27:
 
 | Who | Where | For |
 |---|---|---|
-| Hetzner Online GmbH | European Economic Area | Servers, database, photo storage, error reports. The servers are in Falkenstein, Germany today, but the page names the EEA, as for Scaleway (owner 2026-10-07): the law asks whether data leaves the EEA, not for a town, and hosting may move inside the EEA without a new notice version |
+| Hetzner Online GmbH | European Economic Area | Servers, database, photo storage, error reports. The servers are in Falkenstein, Germany, but the page names the EEA, as for Scaleway (owner 2026-10-07): the law asks whether data leaves the EEA, not for a town, and hosting may move inside the EEA without a new notice version |
 | Scaleway SAS | European Economic Area | The email the site itself sends, and the nightly backups |
 | Proton AG | Switzerland | The project mailbox: mail a person here reads and answers by hand |
 
-Two things this table exists to stop happening again:
+Two things this table guards against:
 
 - **The mailbox is a processor and is the easiest one to miss.** No code touches
   it, so it never appears in a grep of the repo, yet every person who writes to
-  the address printed on the page has their message sitting in it. It was absent
-  until the owner pointed it out.
-- **Scaleway's row says "European Economic Area", not a city.** The exact region
-  is unconfirmed (`docs/TODO.md` item 5f). Both candidates are inside the EEA,
-  which is the fact the law turns on, so the row is true as written and gets
-  more precise once the answer is known.
+  the address printed on the page has their message sitting in it.
+- **Scaleway's row says "European Economic Area", not a city.** The exact
+  Scaleway region is not yet confirmed. Both candidates are inside the EEA,
+  which is the fact the law turns on, so the row is true as written.
 
 Switzerland sits outside the EEA but under a European Commission adequacy
 decision, which is why the Proton row needs no separate safeguard argument.
@@ -124,24 +120,24 @@ Two rows, both read off a live response rather than off config:
 
 The dev stack names them `CC_DEV_SESSION` and `CC_DEV_REMEMBERME` (`when@dev` in
 `services.yaml`): a browser keeps cookies per host, not per port, so on
-`localhost` another local app's `PHPSESSID` or `REMEMBERME` replaced ours and
-signed the rider out. The dev names keep the words the page cache bypass
-looks for (page-caching.md). Production is unchanged, so the notice's cookie
-table stays true. `DevCookieNamesTest` pins both.
+`localhost` another local app's `PHPSESSID` or `REMEMBERME` would replace ours
+and sign the rider out. The dev names keep the words the page cache bypass
+looks for (page-caching.md). Production uses the default names, so the
+notice's cookie table stays true. `DevCookieNamesTest` pins both.
 
 Two things the page says that are easy to get wrong:
 
-- **When the session cookie appears.** Until 2026-08-27 it was set on the first
-  page view for everybody, and the page said so. Two writes caused it, and both
-  had to go before the cookie did:
-  `LocaleSubscriber` guarded its `_locale` write on `hasSession()`, which is
-  true on every request the moment sessions are enabled rather than meaning
-  "this reader has one"; and `partials/_bug_fab.html.twig` renders on every
-  page and called `csrf_token('bug_report')`, which was still a stateful id.
-  With the subscriber on `hasPreviousSession()` and `bug_report` in
-  `csrf.yaml`'s `stateless_token_ids`, the only public page left that starts a
-  session is `/contact` (`contact_form` is deliberately still stateful, see
-  below). If either change is reverted, this copy goes back to being false.
+- **When the session cookie appears.** Signing in sets it. Reading a public
+  page sets no cookie at all, and that rests on two things together:
+  `LocaleSubscriber` writes `_locale` only when `hasPreviousSession()` is true
+  (`hasSession()` is true on every request once sessions are enabled, so it
+  does not mean "this reader has one"), and the forms a signed-out reader can
+  open use stateless CSRF token ids (`csrf.yaml` `stateless_token_ids`:
+  `submit`, the default for Symfony forms, `authenticate` for sign-in,
+  `bug_report` for the bug button on every page, and `content_report` and
+  `contact_form` for `/report` and `/contact`).
+  `ContactFormTest::testLookingAtTheFormStartsNoSession` pins the contact page.
+  If either half is reverted, a first page view starts a session again.
 - **`main_auth_profile_token`, `main_deauth_profile_token` and `sf_redirect`
   are the Symfony profiler's** (`SecurityDataCollector`), so they exist in dev
   and test only and must never be listed. Anyone verifying the page with curl
@@ -155,40 +151,26 @@ No consent banner: both cookies are strictly necessary for a service the reader
 asked for. This is stated on the page on purpose, so the absence reads as a
 decision rather than an oversight.
 
-**Why `contact_form` stays stateful.** It was made stateless in the same round
-and reverted: `ContactFormTest::testAnOffSiteReferrerIsNotKeptAtAll` fails,
-because `SameOriginCsrfTokenManager` validates on Origin or Referer and a
-submission carrying a foreign referrer is then rejected. `/contact` is one page,
-and a reader who is there is about to send us something, so a session there is
-defensible. Do not add it back without solving that test first.
+Because a signed-out reader carries no session, the public pages can be held
+by a shared cache: `PublicPageCacheSubscriber` marks the pages it lists public
+only when nobody is signed in and no session exists (page-caching.md). The
+photo page is not on that list, which the attribution row in section 2 relies
+on.
 
-**What this does not fix.** Every HTML page still answers
-`Cache-Control: max-age=0, must-revalidate, private`, and that is not the
-cookie's doing. `AbstractSessionListener` stamps it whenever the session's
-usage index moves, and the layout reads `app.user` in the nav, the account chip
-and the bug fab to decide what to render. Measured 2026-08-27: `/riders/<uuid>`
-has an explicit `PUBLIC_ACCESS` rule and is still stamped `private`, while
-`/robots.txt`, which renders no layout, is not. A signed-in-aware header and a
-shared cache for the same HTML response cannot both be had; splitting the nav
-out (ESI, or hydrating it client-side) is the only route, and nothing here
-depends on it.
+## 5. Retention: deletion is immediate
 
-## 5. Retention: the grace period that never existed
-
-Until 2026-08-27 the page promised "a short grace period" after account
-closure. **There is no grace period in the code and there never was.**
+**There is no grace period after account closure.**
 `UserDeletionService::confirmDeletion()` verifies a code that expires after one
 hour and then calls `purge()`, which removes the row. `deletionRequestedAt` is
 the code's clock, not a countdown to deletion; nothing scheduled ever reads it.
 
-The page now says what is actually true: deletion is immediate, and the only
-lag is the encrypted nightly backups, which roll off in at most 90 days.
+The page says so: deletion is immediate, and the only lag is the encrypted
+nightly backups, which roll off in at most 90 days.
 
 The same bullet states the dormancy rule (owner, 2026-10-01: "When they are out
 for 2 years we automatically delete their account"): an account nobody has
 signed into for 24 months is deleted the same way, after three emails, each
-naming the date (`DormancySweep`, account-and-auth.md §6.5). Until then the page
-said dormant accounts were never deleted.
+naming the date (`DormancySweep`, account-and-auth.md §6.5).
 
 If a real grace period is ever built, this section and
 `privacy.retention_account` change together, in five locales.
@@ -198,7 +180,7 @@ If a real grace period is ever built, this section and
 Article 32 is not on Article 13's mandatory list, and a notice that describes
 what it holds without ever saying how it is guarded reads as though nothing is.
 
-**Four sentences, not seven** (owner, 2026-08-27, revising the first draft).
+**Four sentences, not seven** (owner, 2026-08-27).
 The question raised was a fair one: the source is public and anyone may read
 it, so why restate the measures at all? Because "read the code" only serves
 people who read PHP, and a rider reading a privacy notice does not. The answer
@@ -208,10 +190,10 @@ source for anyone who wants the real thing. The full Art. 32 list is
 
 **Write the four broadly on purpose.** "Two-factor secrets and backup codes are
 encrypted, with the key held outside the database" survives an algorithm change.
-"AES-256-GCM" does not, and the first draft named it here. Anything that pins a
+"AES-256-GCM" does not. Anything that pins a
 version, a cipher or a product belongs in the spec, not on the page.
 
-The closing sentence refuses to claim perfection and now also says plainly what
+The closing sentence refuses to claim perfection and also says plainly what
 does **not** exist: no certification and no penetration test. An honest absence
 is worth more than a vague implication.
 
@@ -223,10 +205,8 @@ is worth more than a vague implication.
 - **DPO.** None appointed, and none required (Art. 37). Saying so, and naming
   the address that handles requests instead, removes the question. If one is
   ever appointed, the page names them.
-- **Previous versions.** The page links its own file history in the public
-  repository. The URL pins branch `main`, which is what `symfony-base-clean` becomes
-  at go-live; it 404s until then, and so does the route it sits on. The page
-  also carries its own numbered versions (below).
+- **Previous versions.** The page links its own file history on branch `main`
+  in the public repository, and carries its own numbered versions (below).
 
 ### 7a. Versions and telling riders (2026-10-07)
 
@@ -260,12 +240,12 @@ which version each account has seen is kept.
   `PrivacyNoticeVersions` with its date and change lines, raises `CURRENT`, and
   ships with the copy change; a change that only fixes a typo does not.
 
-## 8. Corrections the owner made to the first draft
+## 8. Claims that read fine and are not true
 
-Recorded because each was a claim that read fine and was not true, and the same
-mistakes are easy to make again.
+The owner corrected each of these in a draft of the page. They are kept
+because the same mistakes are easy to make again.
 
-| Was | Is |
+| Wrong | Right |
 |---|---|
 | "a display name ... it's all anyone else sees" | A private profile (the default) shows **no** name at all; a public one shows the name, country, join month and contribution counts |
 | "photos or video you upload" | Images only. `MediaController::SNIFFED_TYPES` accepts JPEG, PNG, WebP, HEIC, HEIF and no video format |
@@ -274,58 +254,49 @@ mistakes are easy to make again.
 | "you have never seen a cookie banner here and never will" | "there is no cookie banner here", plus: if something ever needed one we would ask rather than assume. A promise about the future we might not keep is worth less than the fact |
 | Local storage "never sent to our server" | True but incomplete. It now also says no other website can read it, because that is the reassurance a reader actually wants and the same-origin rule is why it holds |
 | "We'll respond within one month" | "within one month at the latest", with the Art. 12(3) extension stated: up to three months for a genuinely complex request, and only if we say so inside the first month. A ceiling, not an average |
-| Hetzner "Germany and Finland" | Falkenstein, Germany |
+| Hetzner "Germany and Finland" | "European Economic Area"; the servers are in Falkenstein, Germany (section 3) |
 | Mapillary implied to be outside the EEA | Meta Platforms Ireland Limited, in Ireland. Verified against Mapillary's own terms. The image bytes still come from Meta's worldwide network, and the page says so |
 
-A second round, 2026-08-27, after the owner read it again:
-
-| Was | Is |
+| Wrong | Right |
 |---|---|
 | "The climbs, places, fixes and votes you submit" | Also routes, on-the-spot checks, region descriptions, translations, reports, bug reports and messages. The old list named four of eleven things a rider actually sends |
 | The `/account/settings` link shown to everyone | Only a link when signed in. `/account/settings` is behind the firewall, so it sent a signed-out reader to a login form for a page they were only being told about |
 | Nothing about mail retention | Kept while the matter is open, deleted within **24 months** of it ending; legal threads until the matter finishes. Art. 13(2)(a) allows criteria where no fixed period is possible, and "while it is open" is the criterion |
-| Silence about dormant accounts | Stated plainly: nothing deletes them today, and if that changes we write first. See `docs/TODO.md` 5g |
-| Nothing about what we host ourselves | A paragraph before the tables. The lists are short because routing, elevation, tiles, photos and analytics all run on our own machines; two external services were brought in-house in 2026 |
+| Silence about dormant accounts | Stated plainly: an account unused for 24 months is deleted, after three emails (section 5) |
+| Nothing about what we host ourselves | A paragraph before the tables. The lists are short because routing, elevation, tiles, photos and analytics all run on our own machines |
 | Credits named "Copernicus DEM GLO-30" | "Copernicus WorldDEM-30", and Airbus's years run to 2018. The required notice in the paragraph was right; the summary line beside it was not, and the summary is what gets read |
 
-**How fast does a name come down?** This answer was wrong the first time it was
-written here, and the correction is the useful part.
-
-The photo **page** was always immediate: `PhotoPageController::attribution()`
-resolves the credit per render and returns an empty one the moment
-`publicProfile` is false, and nothing in that path sets a `Cache-Control` a
-shared cache could hold. The **map** was not. A gallery credit is a stored
-string, written once at approval, and until 2026-08-28 nothing ever rewrote it.
-A rider who turned their profile off kept their name on the map for good. See
-`docs/TODO.md` 5h and `App\Media\RiderCreditSync`.
-
-Now: the store is rewritten the moment the profile or the display name changes,
-so our copy is correct at once. Two limits remain and the page states both.
-A name change moves every region's catalog stamp (catalog-data-model.md §9.1),
-so a map loaded after it shows the new name; a map already open in somebody's
-browser shows the old one until it next checks the stamps, on reload or when
-the tab comes back into view. The page's "up to an hour" stays a safe bound for
-a fresh load. And a page somebody else saved, or a search engine cached, is
+**How fast does a name come down?** The photo **page** is immediate:
+`PhotoPageController::attribution()` resolves the credit per render and returns
+an empty one the moment `publicProfile` is false, and nothing in that path sets
+a `Cache-Control` a shared cache could hold. The **map** carries a stored
+credit string in each gallery entry, written at approval, so
+`App\Media\RiderCreditSync` rewrites that store the moment the profile or the
+display name changes, and our copy is correct at once. Two limits remain, and
+the copy states both. A name change moves every region's catalog stamp
+(catalog-data-model.md §9.1), so a map loaded after it shows the new name; a
+map already open in somebody's browser shows the old one until it next checks
+the stamps, on reload or when the tab comes back into view. The settings
+page's "up to an hour" (`settings.toggle_public_delay`) is a safe bound for a
+fresh load. And a page somebody else saved, or a search engine cached, is
 beyond reach entirely.
 
 There is nothing to purge in the image file itself: `XmpRights` never wrote a
 name into it.
 
-**The regulation is named per locale already** and needs no change: GDPR in
+**The regulation is named per locale:** GDPR in
 English, AVG in Dutch, DSGVO in German, RGPD in French and Spanish. A reader
 searching for the name they know finds it.
 
 ## 9. Copy rules specific to this page
 
 - Every fact that can carry a number carries one. "A short grace period", "such
-  as the map library CDN" and "a single essential cookie" were the exact
-  failures item 5 was raised for.
+  as the map library CDN" and "a single essential cookie" are the kind of
+  sentence this rule exists to stop.
 - Consequences first, the legal term after, per the project copy rule. "We tell
   you what happened and what to do" before "(Art. 34)".
 - Abbreviations are spelled out on first use: DPO, CSRF, CSP, EEA, HSTS.
-- No em-dashes. The retention and sharing lists were converted to the
-  `<b>Label.</b> Text` form when they were touched; the `collect_*`, `why_*`
-  and `rights_*` lists still carry them and are a separate sweep.
+- No em-dashes. List items use the `<b>Label.</b> Text` form.
 
 ## 9a. Where machines are involved, and why it is not on this page
 
@@ -334,8 +305,7 @@ deliberate: the machine translation processes **Wikipedia summaries**, not
 anybody's personal data, so it is not a processor, not a transfer, and not a
 legal basis. Putting it here would have implied all three.
 
-**The whole inventory, verified 2026-08-28 by grepping for every AI and ML
-dependency in the repository:**
+**The whole inventory of AI and machine-learning use in the repository:**
 
 | What | Where | Disclosed |
 |---|---|---|
@@ -343,30 +313,28 @@ dependency in the repository:**
 | Catalogue scanner | `App\Catalog\CatalogScanner` | `/terms` 13 and 12: it flags, a curator decides |
 
 Nothing else. No chatbot, no generated text, no automated decision about a
-person, no profiling. `/privacy`'s existing "Automated decisions" section
-already said the last two and stays true.
+person, no profiling. `/privacy`'s "Automated decisions" section says the last
+two.
 
 **Why MyMemory is not in the browser-services table.** It is called by the
 pipeline, offline, before anything is published. A rider's browser never
 contacts it, and it never sees a rider.
 
 **The legal posture matches the accessibility statement.** The EU AI Act's
-Article 50 transparency obligations start applying on **2 August 2026**. Whether
-they reach a machine-translated description of a water tap is genuinely
-arguable, and the human-review carve-out in 50(4) may cover it. The page says
-what is true and explicitly claims compliance with nothing, exactly as
-`/accessibility` refuses to claim the European Accessibility Act.
-
-**Verify the date before relying on it.** It is the date in the Regulation as
-adopted; there were proposals during 2025 to delay parts of the Act, and this
-was written without access to anything later than mid-2026.
+Article 50 transparency obligations apply from **2 August 2026** in the
+Regulation as adopted (proposals to delay parts of the Act were made in 2025;
+check the current text before relying on the date). Whether they reach a
+machine-translated description of a water tap is genuinely arguable, and the
+human-review carve-out in 50(4) may cover it. The page says what is true and
+explicitly claims compliance with nothing, exactly as `/accessibility` refuses
+to claim the European Accessibility Act.
 
 ## 10. Deploy prerequisites
 
-None. The change is templates and translation copy only: no migration, no env
-var, no new route. `app:translations:sync` runs on deploy and picks up the 57
-new keys for the community translation surface.
+A copy change is templates and translations: `app:translations:sync` runs on
+deploy and puts new `privacy.*` keys on the community translation surface. The
+version record of section 7a needs the `users.privacy_version_seen` column
+(migration `Version20261006240000`).
 
-One open item before launch: `docs/TODO.md` item 5f, the exact Scaleway
-region. It does not block, because the row already says the thing the law
-turns on.
+One open item: the exact Scaleway region. It does not block, because the row
+already says the thing the law turns on (section 3).

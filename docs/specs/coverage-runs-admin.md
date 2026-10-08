@@ -2,15 +2,14 @@
 
 # What the harvest did last night: /admin/coverage-runs
 
-Status: **built 2026-09-22** (`c9979adc5`). Option 1 of two, with the
-dropped-by-rule detail, chosen by the owner.
+Status: **built**. A read-only admin page over the pipeline's run history,
+with the points each load rule dropped.
 
 ## 1. Why
 
 The coverage batch runs unattended on the worker host every night. Its output
-goes to the journal and, once the checks are registered, to a healthchecks.io
-ping. Neither answers, from the
-admin backend, the questions an operator asks the morning after: did it run,
+goes to the journal, which does not answer, from the admin backend, the
+questions an operator asks the morning after: did it run,
 what took how long, which regions changed, and why did a region lose points.
 The answers already exist in two tables the pipeline writes
 (`coverage_run`, `coverage_run_step`, [tracker.py](../../pipeline/coverage/tracker.py));
@@ -25,12 +24,12 @@ this page reads them. Nothing new is measured.
 | Column | Source |
 |---|---|
 | started | `coverage_run.started_at`, local time |
-| tiles | `family` (`points`, `routes`, `surface`), then every family the run published inside itself: a nightly run reads `points · routes · surface` |
+| tiles | `family` (`points`, `routes`, `surface`, `roadpieces`), then every family whose `routes_publish`, `surface_publish` or `roadpieces_publish` step the run holds: a nightly run reads `points · routes · surface · roadpieces` |
 | trigger | `trigger` (`dispatcher`, `bootstrap`, `manual`) |
 | status | `status`; a `running` row older than twelve hours reads **abandoned** (a killed run never finishes its row) |
 | regions | `regions_loaded` of `regions_requested`; routes and surface runs load nothing, so only `regions_requested` |
 | took | `finished_at - started_at` |
-| rebuilt | per family: the run's own from `published_url`, and routes and surface from the `detail` of the night's `routes_publish` / `surface_publish` steps (comma-separated). "nothing changed" when a family ran and rebuilt no country, "failed" when its publish failed. A surface pass adds `gaps` when it republished the world gap grid. Without the steps a night that rebuilt all three read "points" alone (owner, 2026-09-29) |
+| rebuilt | per family: the run's own from `published_url`, and routes, surface and roadpieces from the `detail` of the night's `routes_publish` / `surface_publish` / `roadpieces_publish` steps (comma-separated). "nothing changed" when a family ran and rebuilt no country, "failed" when its publish failed. A surface pass adds `gaps` when it republished the world gap grid |
 
 A `--routes` / `--surface` / `--roadpieces` run opens its own row with one step,
 `<family>_extract` (with `--extract-only`) or `<family>_publish`, whose
@@ -38,7 +37,8 @@ A `--routes` / `--surface` / `--roadpieces` run opens its own row with one step,
 per-region `--extract-only` runs and the post-loop publish passes get the
 night's `--run-id`, so their steps land under the night's run and open no
 row; an extract that died before it could record its own step is recorded by
-the dispatcher instead (`tracker.has_step`), so none goes missing. The pipeline writes these rows over two short connections, one
+the dispatcher instead (`tracker.has_step`), so none goes missing. The
+pipeline writes these rows over two short connections, one
 before and one after the build; a database that is down costs the history, not
 the tiles.
 
@@ -62,20 +62,20 @@ europe/belgium     download    0 s  cached
 
 A failed step shows its `detail` (the exception text) in place of the numbers.
 
-## 3. The one pipeline change: dropped points, per rule, per region
+## 3. Dropped points, per rule, per region
 
-Before this change `load_region` printed each rule's drop count and returned
-`LoadResult(inserted, previous)`; the tracker wrote `detail = "previous N"` on
-the load step and the drop counts were lost with the log.
+`load_region` records what each contract rule removed, so the counts outlive
+the log.
 
-- `LoadResult` gained `dropped: dict[str, int]`
-  ([load.py](../../pipeline/coverage/load.py)), keyed by a short rule label:
-  `name:P`, `name:Q`, `exclude:F:bicycle`, `exclude:Q:memorial`, `near_way`.
-  The print lines stayed as they were.
+- `LoadResult` carries `dropped: dict[str, int]`
+  ([load.py](../../pipeline/coverage/load.py)), non-zero counts only, keyed by
+  a short rule label: `name:<letter>` (`nameOrTags`),
+  `exclude:<letter>:<key>` (`excludeTagValues`, e.g. `exclude:F:bicycle`,
+  `exclude:Q:memorial`), `near_way`. `load_region` also prints each count.
 - The load step's `detail` is JSON:
   `{"previous": 1402118, "dropped": {"name:P": 1363, "near_way": 69}}`.
   `CoverageRunController::readLoadDetail()` parses it; a `detail` that does not
-  parse as JSON (rows from before this change) is shown as the plain text it is.
+  parse as JSON (an older plain `previous N`) is shown as the plain text it is.
 - Tests: `test_load.py` asserts the dict for a fixture with known drops;
   `test_run.py` asserts the load step's detail is the JSON form.
 

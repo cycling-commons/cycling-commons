@@ -32,8 +32,8 @@ here at all) but a spatial one, and it works differently enough from a B-tree th
 understanding rather than just switching on.
 
 This chapter ends with a real rewrite that happened in this repository, is recorded in the code's
-own comment and in the design note that shipped it
-(`docs/specs/Dated/2026-07-14-town-search-and-ride-check-design.md`), and took one query from 62
+own comment and in the ride-check contract
+(`docs/specs/map-and-search.md` §9), and took one query from 62
 seconds to under a second without changing what it returns.
 
 ## Bounding boxes
@@ -223,9 +223,8 @@ scan**, `Seq Scan` in a query plan, meaning the database walks the table from th
 last because it has no better way in, and for every one of those rows it computes an exact
 ellipsoid distance against the whole simplified track, a line with a lot of vertices in it.
 
-The design note that shipped the rewrite
-(`docs/specs/Dated/2026-07-14-town-search-and-ride-check-design.md`, the execution note on the §4.2
-corridor predicate) records what that cost, and it is not a rounding error: `ST_DWithin(::geography)`
+The ride-check contract
+(`docs/specs/map-and-search.md` §9, the corridor query idiom) records what that cost, and it is not a rounding error: `ST_DWithin(::geography)`
 on the column, with an inlined `track` CTE re-parsing the GeoJSON per row per `ST_*` call, came to
 **62 s live**. Sixty-two seconds, for a request a rider is sitting and waiting for.
 

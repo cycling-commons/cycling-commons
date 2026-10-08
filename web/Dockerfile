@@ -45,7 +45,7 @@ COPY docker/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
 COPY docker/verify-imagemagick-policy.php /usr/local/bin/verify-imagemagick-policy
 RUN php /usr/local/bin/verify-imagemagick-policy
 
-# Route GPX proposals can be up to 15 MB (spec §5.3/§15) — the php defaults
+# Route GPX proposals can be up to 15 MB (route-domain.md §4.1), the php defaults
 # (upload_max_filesize=2M, post_max_size=8M) would reject them before Symfony's
 # File constraint. post_max_size stays comfortably above upload + form fields.
 RUN { \

@@ -56,8 +56,8 @@ final class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
         $user = $token->getUser();
 
         // Read before the stamp below overwrites it. A new account has
-        // nothing to count yet, so its first landing is the contributions
-        // page with the curating invitation (account-and-auth.md §8).
+        // nothing to count yet, so its first landing is its settings
+        // (FIRST_LOGIN_ROUTE, account-and-auth.md §8).
         $firstLogin = $user instanceof User && self::isFirstSinceConfirmation($user);
 
         // The dormancy clock, and only here: this runs after 2FA, so it means

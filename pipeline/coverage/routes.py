@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """Cycle-route NETWORK layer for the coverage plane.
 
-Plan: docs/plans/handoffs/2026-08-12-routes-layer-and-surface-quality.md,
-decided with the owner 2026-08-12. `route=bicycle` and `route=mtb` relations
+Spec: docs/specs/coverage-provider.md §4. `route=bicycle` and `route=mtb` relations
 out of OSM, rendered as corridors plus knooppunt numbers — the thing that makes
 a map "feel like it knows where to ride" (OpenCycleMap is the benchmark,
 readable-by-default the brief; CyclOSM was rejected as unreadable at scale).

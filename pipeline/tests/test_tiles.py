@@ -113,7 +113,7 @@ def test_export_carries_scope_tokens_when_stamped(db, tmp_path):
     """A region-stamped row emits ridtok="|<region_id>|" + cctok="|<cc>|"; a
     cc-only boundary row (region_id NULL) emits an EMPTY ridtok but a non-empty
     cctok — the shape the client hides under a region scope yet shows under its
-    country scope (map-and-search.md §4.5, finding 5)."""
+    country scope (map-and-search.md §4.5)."""
     ensure_schema(db)
     sid = _src_id(db)
     db.execute(

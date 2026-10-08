@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * Frontend review 2026-07-12 W3: every HTML response must carry a
+ * Every HTML response must carry a
  * Content-Security-Policy whose script-src is limited to self + a request
  * nonce + vendored same-origin libraries, and every inline <script> in the rendered page
  * must carry that same nonce — otherwise the policy would silently break the
@@ -214,7 +214,8 @@ final class CspTest extends WebTestCase
     /** @return iterable<string, array{string}> */
     public static function cacheablePages(): iterable
     {
-        // page-caching.md §6. /coverage and /map are deliberately absent.
+        // Cacheable pages from page-caching.md §6, /coverage in both sorts. /map is
+        // deliberately absent: it is not cacheable and keeps its nonce.
         foreach ([
             'home' => '/',
             'about' => '/about',

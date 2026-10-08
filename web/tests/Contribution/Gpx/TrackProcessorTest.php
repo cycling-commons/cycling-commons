@@ -49,7 +49,7 @@ final class TrackProcessorTest extends TestCase
         self::assertSame(3, $this->processor->ascentM($points));
     }
 
-    /** Spec D4: same content hash → identical trim; endpoints move ≥350 m and ≤750 m. */
+    /** route-domain.md §4.3: same content hash → identical trim; endpoints move ≥350 m and ≤750 m. */
     public function testTrimIsDeterministicAndMovesEndpointsWithinSpecRange(): void
     {
         // Straight ~11 km line along a meridian, a point every ~111 m.

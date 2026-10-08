@@ -3,7 +3,7 @@
 r"""Export official administrative subdivisions from Overture Maps `division_area`
 as region-<slug>.geojson artifacts for App\Catalog\Command\ImportCatalogCommand.
 
-Worldwide-ready region export (map-and-search.md §4.5 Phase 2). A country
+Worldwide-ready region export (map-and-search.md §4.5). A country
 is seeded at ONE operating level (Belgium: subtype=region -> ISO 3166-2
 BE-WAL/BE-VLG/BE-BRU). Provenance: source="overture" (Overture divisions theme,
 ODbL — conflates OSM + geoBoundaries, carries ISO 3166-1/-2 and a normalised
@@ -102,7 +102,7 @@ def _connect():
 def build_where(cc, cfg):
     """WHERE clauses + params selecting a country's operating-level LAND areas.
 
-    class='land' (07-20 review finding 4): division_area carries a maritime
+    class='land': division_area carries a maritime
     twin row (territorial waters) for coastal divisions; without the filter a
     coastal country's export could silently ship a sea polygon as the region
     and corrupt membership stamping. Belgium happened to be single-row; the
@@ -190,8 +190,7 @@ def export_country(cc, out_dir, spec, l2=None, release=None, con=None):
                 print(f"  skip {iso}: in Overture but not in {cc} config")
                 continue
             if iso in seen:
-                # Never last-wins-overwrite a written artifact (07-20 review
-                # finding 4): >1 land row per ISO means release/schema drift or a
+                # Never last-wins-overwrite a written artifact: >1 land row per ISO means release/schema drift or a
                 # config mistake — a human decides which geometry is the region.
                 raise SystemExit(
                     f"Overture returned multiple land rows for {iso} in {cc} "

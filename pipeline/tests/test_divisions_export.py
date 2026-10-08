@@ -2,7 +2,7 @@
 """Offline unit tests for the Overture divisions exporter.
 
 These drive the pure `build_feature` helper (no network). The live Overture
-query is exercised by the `--country BE` run in the plan (Task 1 Step 6) and by
+query is exercised by a `--country BE` run and by
 `test_live_overture_be` below, which is skipped unless RUN_LIVE_OVERTURE=1.
 """
 import json
@@ -90,7 +90,7 @@ def test_country_where_clause_selects_country_subtype():
 
 
 def test_where_filters_maritime_rows():
-    # 07-20 review finding 4: coastal divisions carry a maritime twin row;
+    # Coastal divisions carry a maritime twin row;
     # only class='land' geometries may become regions.
     where, params = build_where("BE", BE)
     assert '"class" = ?' in where
@@ -120,7 +120,7 @@ def test_where_without_bbox_has_no_pushdown():
 
 def test_duplicate_iso_rows_fail_loud(monkeypatch, tmp_path):
     # Two land rows for one ISO must abort, never last-wins-overwrite the
-    # already-written artifact (07-20 review finding 4).
+    # already-written artifact.
     square = json.dumps(SQUARE)
     monkeypatch.setattr(
         "divisions.export_divisions.query_country",
@@ -168,7 +168,7 @@ def test_l2_spec_builds_a_country_subtype_config():
 
 def test_l2_feature_shape_via_existing_builder():
     # The L2 outline flows through the SAME build_feature as every region:
-    # provenance-identical rows (design §9).
+    # provenance-identical rows.
     f = build_feature("BE", "BE", MULTI, 30528.0, l2_spec("BE", "belgium", "Belgium", BE["bbox"]))
     assert f["properties"] == {
         "slug": "belgium",

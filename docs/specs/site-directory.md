@@ -2,7 +2,7 @@
 
 Canonical. Covers `/pages` (`web/templates/pages/pages.html.twig`,
 `PageController::pages()`), the page that lists every public and contributor
-surface of the Commons. Built 2026-09-06 (owner).
+surface of the Commons.
 
 ## 1. One directory, two drawings
 
@@ -10,8 +10,7 @@ The template holds the directory once, as data: six groups, each with its
 pages (route, heading, description, map position). Both drawings read from
 that one structure, so a page cannot be on one and off the other. The
 public pages without a parameter are on it, including the Blog and the API
-reference (added 2026-09-06 after the owner found Coverage under its old
-card name and the Blog missing). Two are not: Best of (`best_of`, `/best`)
+reference, plus the wiki (an outside link under Take part). Two are not: Best of (`best_of`, `/best`)
 and the contributors-and-curators page (`roles`,
 `/contributors-and-curators`). A page's heading is
 the word the nav uses for it where the nav has one, so Coverage reads
@@ -27,7 +26,7 @@ links the first and the footer the second (§5).
 
 - **Map** (default): the directory drawn as a touring map, in two SVGs
   from the same data: a wide map, and a tall strip map that a phone shows
-  in its place (site-directory.md §2, last two paragraphs).
+  in its place (§2, last two paragraphs).
 - **List**: one heading per country, in the map's order, with that
   country's cards under it; no per-card label, the heading says it. A short
   trail-orange dash before each heading is the list's one accent, matching
@@ -114,20 +113,22 @@ the URL does not name a view. Pinned by
 All strings live under `pages.*` in `translations/messages.*.yaml` (five
 locales): group names `group_*`, the toggle `view_map` / `view_list` /
 `view_aria`, the SVG's `map_aria`, and the key `key_*`. Page headings and
-descriptions reuse the `card_*` keys the list always had.
+descriptions reuse the `card_*` keys where one exists; the rest reuse the key
+the nav, footer or the page itself uses (`nav.coverage`, `footer.changelog`,
+`support.known.kicker`, `a11y.lead`), so a page reads the same everywhere.
 
-## 5. Header, footer and this page follow one rule (2026-09-08)
+## 5. Header, footer and this page follow one rule
 
 The header is for doing; the footer is the whole site; `/pages` draws the
-same list. Owner: the top row had "the most important items on top", the
-footer "multiple others, not all", and the directory everything, with no
-rule between the three.
+same list (owner 2026-09-08: the top row holds "the most important items on
+top", the footer "multiple others, not all", and the directory everything).
 
 - **Header** (`partials/_nav.html.twig`), in markup order: Regions, Coverage,
   Best of (`best_of`), Blog (only when `blog_has_posts()`), About, then the
   three buttons (Explore the map, Contribute, Get involved), then the account
-  chip or Log in, then the language pill. Vote, Developers and Licence left
-  the header for the footer; Vote comes back up when it ships.
+  chip or Log in, then the language pill. Vote, Developers and Licence are in
+  the footer, not the header; Vote is to move up to the header when voting
+  ships.
 - **Phone menu** (`assets/js/nav.js` copies every header link into the
   slide-in drawer). The drawer has room the bar has not, so six links carry
   `class="menu-only"`, hidden in the bar (`atlas.css`) and shown in the drawer
@@ -161,7 +162,7 @@ rule between the three.
   sits under Quality and reports in the footer but under About and the small
   print in the directory; Accessibility the other way round. `roles` and the
   governance page are in the footer and not in the directory.
-- **Landing page, the hero** (settled the night of 2026-09-08/09): the right
+- **Landing page, the hero** (owner 2026-09-08): the right
   half is the drawn loop, `home.way_*` keys, five stops on a lopsided lap (a
   spline through eight hand-placed points, every stop nudged a hair, level,
   not tilted). Riding "Ride with the map" (the map, orange) and Adding "Put
@@ -183,23 +184,18 @@ rule between the three.
   on the stretch of the lap from Riding to Adding, labelled
   `home.way_sources` ("Open data"): open data joins the loop where riders
   put in their finds. Each card
-  carries a soft drop shadow. The owner's rendered
-  image (`assets/brand/cc-ecosystem-mainpage.webp`, English text baked in,
-  alt `home.ecosystem_alt`) is kept as a test state: a CSS-only switch
-  under the drawing, two hidden radio boxes and the labels "1 / 3"
-  (`home.loop_toggle`), the drawn loop checked by default; the switch and
-  the image go when the choice is final. Below 1000px the lap moves under
-  the text and keeps its drawing down to 400px wide, big phones included
-  (2026-09-27): the box is sized so the whole drawing, app nodes and "Open
+  carries a soft drop shadow. Below 1000px the lap moves under
+  the text and keeps its drawing down to 400px wide, big phones included:
+  the box is sized so the whole drawing, app nodes and "Open
   data" included, takes about 75% of the width between the gutters, capped at
   a 300px box, and the cards shrink with it. There the lap sits in the dark
   end of the hero's gradient, so the earth is drawn a shade lighter than the
   ground (`#2C5440`) instead of darker (`#15301F`) as on a wide screen.
   Below 400px the lap goes and the stops stack in one column, 14rem wide
   and one line each (the kicker is kept for screen readers only), with a
-  chevron between them. The lap
-  stands still: a moving dash forced a
-  repaint of the whole hero on every frame, about a third of a laptop GPU. A faint 56px grid lies over the hero and the
+  chevron between them. The lap stands still: a moving dash repaints the
+  whole hero on every frame, about a third of a laptop GPU. A faint 56px
+  grid lies over the hero and the
   closing band, fading to the foot; the five thin trail contours sit in the
   lower third, clear of the drawing; the discipline label sits on its own
   line above its chips, no trailing dash.
@@ -210,7 +206,7 @@ rule between the three.
   in that ochre, no letter; the two group headings read "Utility: aiming for
   full coverage" and "Experience: curated & voted by riders", a colon, never
   a dash. The closing band keeps its map button and the account offer.
-- **Landing page, the best-climbs phone** (2026-09-26): before the ranking
+- **Landing page, the best-climbs phone**: before the ranking
   shows, the phone plays a map tour of about 15 seconds in plain SVG and CSS,
   no map library. Wallonia (the `world_division` polygon BE-WAL in Lambert 72,
   simplified at 500 m, inlined as `pages/_home_wallonia.svg.twig`) with the
@@ -242,7 +238,7 @@ rule between the three.
   steep stretch lit in `#B784DB`; the rank numbers stay trail orange. With
   reduced motion the map is not shown and the ranking stands as it ends.
 - **Footer colophon**: "stewarded by BikeCoders" is one link, the whole line.
-- **Footer build stamp, and the AGPL section 13 source offer** (2026-09-20):
+- **Footer build stamp, and the AGPL section 13 source offer**:
   the stamp beside the steward line is a **link**, and it is the only place on
   the page that discharges section 13. `cc_build()` (`VersionExtension`) returns
   the `BuildVersion` stamp plus a `url`: the repository root from
@@ -252,7 +248,7 @@ rule between the three.
   offer still stands with JavaScript off; `assets/js/version.js` only repaints
   it in the rider's own date format.
 
-  **Where the number comes from on a deployed host (2026-09-20).** A release
+  **Where the number comes from on a deployed host.** A release
   carries no `.git`, only the `REVISION` file the deploy writes, so
   `git describe` cannot name the tag there. `BuildVersion` then shows, in
   order: a `VERSION` file beside `REVISION` (the deploy's `git describe`,
@@ -267,9 +263,9 @@ rule between the three.
   Two rules, because each half is useless alone. A link that names no build
   points at whatever `HEAD` is, which stops being the served code the moment a
   box is hotfixed. A build name that is not a link offers nothing to fetch. The
-  colophon underneath states licences only and carries no link; the earlier
-  "Source code" text there was removed (owner, 2026-09-20) because the stamp now
-  says which code AND where to get it in one place.
+  colophon underneath states licences only and carries no link and no separate
+  "Source code" text (owner 2026-09-20): the stamp says which code AND where to
+  get it in one place.
 
   The GitHub glyph in the social row does **not** count as the offer. It comes
   from `CC_SOCIAL_GITHUB` and renders nothing when that is unset, so a licence
@@ -282,12 +278,12 @@ rule between the three.
   mastodon.social); the other networks ignore it. A handle goes onto its
   network's host; Mastodon's value is the full address, used only when it is
   an https URL and never percent-encoded. The other networks also take their
-  own full https address, used as it is (2026-10-04: the Facebook page is
-  known only by its number, `profile.php?id=61591531884599`, and a pasted
-  YouTube link must not be encoded into the handle slot); an address on any
-  other host does not render.
+  own full https address, used as it is (the Facebook page is known only by
+  its number, `profile.php?id=61591531884599`, and a pasted YouTube link must
+  not be encoded into the handle slot); an address on any other host does not
+  render.
   `tests/Twig/SocialLinksExtensionTest.php` pins it.
-- **About page** (`pages/about.html.twig`, 2026-09-09): every block is
+- **About page** (`pages/about.html.twig`): every block is
   left-aligned inside the full wrap, the reading column (`.col`) capping
   paragraphs and lists at 760px and never a heading. The beliefs run in the
   homepage's order (curation, the map not the rider, open for everyone,

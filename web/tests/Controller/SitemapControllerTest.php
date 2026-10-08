@@ -14,7 +14,7 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * /robots.txt and /sitemap.xml (test-suite review 2026-08-24).
+ * /robots.txt and /sitemap.xml.
  *
  * Both routes had no test of any kind, in any file. They are the two documents
  * that tell a crawler what this site is, so a silent break shows up as an

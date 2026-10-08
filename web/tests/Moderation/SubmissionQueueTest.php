@@ -409,7 +409,7 @@ final class SubmissionQueueTest extends KernelTestCase
         self::assertSame(2, $this->queue->total(ModerationScope::global()));
     }
 
-    // ── Moderator-areas scoping (task 2) ────────────────────────────────────
+    // ── Moderator-areas scoping ─────────────────────────────────────────────
 
     public function testLimitedScopeSeesOwnRegionCountryAndNullRegionOnly(): void
     {

@@ -9,7 +9,7 @@ namespace App\Tests\Security;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * Review 2026-08-16 finding 4: the baseline hardening headers ride on every
+ * The baseline hardening headers ride on every
  * main response — HTML pages AND the JSON endpoints CspSubscriber skips,
  * because nosniff matters most on the responses that carry no CSP.
  */
@@ -44,7 +44,7 @@ final class SecurityHeadersTest extends WebTestCase
         $client->request('GET', '/');
 
         // TLS terminates in front of the app: HSTS belongs to the nginx
-        // frontends (docs/plans/handoffs/2026-08-17-nginx-headers-devops.md).
+        // frontends (docs/specs/security-architecture.md §2.1).
         // If this assertion ever fails, someone added it app-side — decide
         // which layer owns it before doubling the header.
         self::assertFalse($client->getResponse()->headers->has('Strict-Transport-Security'));

@@ -163,7 +163,7 @@ def test_main_stage_order_and_region_failure_isolation(monkeypatch, tmp_path, ca
 
     class FakeResult:
         def fetchone(self):
-            return (True,)   # pg_try_advisory_lock → acquired (design §3.2)
+            return (True,)   # pg_try_advisory_lock → acquired (coverage-provider.md §3)
 
     class FakeConn:
         def __enter__(self):
@@ -264,7 +264,7 @@ def test_resolve_country_stamps_netherlands():
 
 def test_run_lock_is_exclusive_across_sessions(db):
     """A second session cannot take the run lock while the first holds it —
-    a staggered timer + a manual refresh can no longer overlap (design §3.2)."""
+    a staggered timer + a manual refresh cannot overlap (coverage-provider.md §3)."""
     assert COVERAGE_ADVISORY_LOCK_KEY  # a fixed non-zero bigint
     other = psycopg.connect(os.environ["DATABASE_DSN"])
     try:
@@ -436,7 +436,7 @@ def test_main_load_only_loads_and_builds_no_tiles(monkeypatch, tmp_path):
 
 
 def test_main_records_a_step_row_per_stage(monkeypatch, tmp_path):
-    """The timing tracker (worker build plan §2.11): every stage of a region
+    """The timing tracker (coverage-runs-admin.md): every stage of a region
     lands as one coverage_run_step row, a failing stage as status 'failed' with
     no later rows for that region, and the run row closes as 'partial'."""
     writes = []

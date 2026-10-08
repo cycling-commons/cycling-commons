@@ -20,7 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * Read-only reset diagnostics. Secrets (selector/hashedToken) are never exposed.
  *
- * @see docs/specs/account-and-auth.md §6.5
+ * @see docs/specs/account-and-auth.md §6.6
  *
  * @api
  *
@@ -49,7 +49,7 @@ final class ResetPasswordRequestCrudController extends AbstractCrudController
     #[\Override]
     public function configureActions(Actions $actions): Actions
     {
-        // docs/specs/account-and-auth.md §6.5 — Detail would render secret fields.
+        // docs/specs/account-and-auth.md §6.6: Detail would render secret fields.
         return $actions
             ->disable(Action::NEW, Action::EDIT, Action::DETAIL, Action::BATCH_DELETE);
     }

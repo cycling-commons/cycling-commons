@@ -4,60 +4,37 @@
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-> **Built** (checked 2026-09-14). `App\Elevation\ElevationClient` reads
-> [§2a](#2a-the-source)'s source through Valhalla, `App\Elevation\ClimbProfiler`
-> is the single implementation of everything in [§3](#3-sampling-and-binning)-[§5](#5-the-steepest-ramp-is-found-not-placed),
+> **Built.** `App\Elevation\ElevationClient` reads [§2a](#2a-the-source)'s
+> source through Valhalla, `App\Elevation\ClimbProfiler` is the single
+> implementation of everything in [§3](#3-sampling-and-binning)-[§5](#5-the-steepest-ramp-is-found-not-placed),
 > and `app:climbs:recompute` re-measures every climb with a line (dry run by
-> default). All 283 climbs in the dev catalogue are measured from Copernicus
-> GLO-30 and none stores a `headline`. No seeded climb types a measured value
-> (`testNoSeededClimbTypesAMeasuredValue`), so a freshly seeded climb shows no
-> gradient until `app:climbs:recompute --write` runs.
-> [§9](#9-owner-decisions-still-open) lists the calls left.
-> [§6](#6-the-chart)'s chart is built apart from provenance display.
+> default). No seeded climb types a measured value
+> (`SeedManualCatalogCommandTest::testNoSeededClimbTypesAMeasuredValue`), so a
+> freshly seeded climb shows no gradient until `app:climbs:recompute --write`
+> runs. [§9](#9-owner-decisions-still-open) lists the calls left.
 
-A rider marks two points — the **foot** and the **summit**. Everything else
+A rider marks two points, the **foot** and the **summit**. Everything else
 about the climb is measured: its length, its height gain, its average and
-maximum gradient, the shape of its profile, and where its steepest ramp is.
+steepest gradient, the shape of its profile, and where its steepest ramp is.
 Nobody types a gradient.
 
 This document owns how that measurement is done and how the result is
-displayed. The climb's *editing* flow (the three-point editor, the wizard steps,
-the moderation path) is owned by
-[edit-items/N-climbs.md](edit-items/N-climbs.md); the *catalog* rules for what an
-item may store are owned by [catalog-data-model.md](catalog-data-model.md).
+displayed. The climb's *editing* flow (the editor, the wizard steps, the
+moderation path) is owned by [edit-items/N-climbs.md](edit-items/N-climbs.md);
+the *catalog* rules for what an item may store are owned by
+[catalog-data-model.md](catalog-data-model.md).
 
 ---
 
-## 1. Why the current numbers cannot be trusted
+## 1. Why every figure is measured
 
-Three separate faults, all found on 2026-08-03/04.
+The evidence behind the rule that nobody types a gradient, measured on the
+Belgian seed climbs in August 2026.
 
-### 1a. The published figures were typed by hand
+### 1a. Hand-typed figures look like measured ones
 
-`Côte de la Redoute` displays `2.0 km · 8.4% avg` and `~20% (mid-climb ramp)`.
-Both were written into a JavaScript literal in commit `af75f60` (17 June 2026),
-when the map was a static HTML prototype, and later lifted verbatim into
-`SeedManualCatalogCommand`. They carry `source: 'OSM + community edits'`, which
-is a label rather than a provenance record: no dataset is named and nothing
-computed them.
-
-The same commit says, in its own comment: *"omit any attribute we cannot
-verify."* These are exactly the attributes nobody could verify. They shipped
-because **a plausible number is indistinguishable from a measured one** once it
-is on the page.
-
-Measured over the same 2.0 km, three independent sources agree with each other
-and not with the seeded figure:
-
-| source | gain | average |
-|---|---|---|
-| seeded value | — | **8.4%** |
-| EU-DEM 25 m | 176 m | 8.9% |
-| Shuttle Radar Topography Mission (SRTM) 30 m | 182 m | 9.2% |
-| climbfinder.com | 180 m | 9.0% |
-
-**And it is not one bad entry.** Every seeded headline was checked against the
-route stored in the *same array*, 2026-08-04:
+The first catalogue carried climb figures typed into the seed by hand. Checked
+against the route stored in the same seed entry:
 
 | climb | published | measured from its own line |
 |---|---|---|
@@ -66,82 +43,55 @@ route stored in the *same array*, 2026-08-04:
 | Côte de Stockeu | ~1.0 km · 9%+ | 1.00 km · **14.0%** |
 | Côte de la Roche-aux-Faucons | 1.5 km · 9% | 1.75 km · **3.2%** |
 
-Read the published column on its own: **8.4%, 9.3%, 9%+, 9%**. Four climbs that
-actually range from 3.2% to 14% were all published at about nine percent. That
-clustering is the tell — these are not measurements that drifted, they are
-plausible-looking numbers chosen to look like climb gradients.
+Four climbs that range from 3.2% to 14% were all published at about nine
+percent: plausible-looking numbers chosen to look like climb gradients. **A
+plausible number is indistinguishable from a measured one** once it is on the
+page. Even the lengths were typed: nothing derived the headline from the
+geometry it shipped with. And where the line itself is wrong, neither number is
+the truth (Roche-aux-Faucons' stored line was not the climb), so fixing the
+source without fixing the line ([§4a](#4a-the-line-must-end-at-the-summit))
+only measures the wrong thing precisely.
 
-Two details make the point sharper:
-
-- **Even the lengths were typed.** Roche-aux-Faucons is published at 1.5 km while
-  the route sitting beside it in the same seed entry is 1.75 km. Nothing derived
-  the headline from the geometry it shipped with.
-- **Where the line is also wrong, neither number is the truth.**
-  Roche-aux-Faucons' stored line is not the climb at all: climbfinder puts that
-  climb at 4.3 km averaging 5.4%, against our line's 1.75 km and 3.2%. So the
-  published 9%, our own 3.2%, and the real 5.4% are three different numbers, and
-  only the last one describes the road. Fixing the source without fixing the line
-  ([§4a](#4a-the-line-must-end-at-the-summit)) just measures the wrong thing
-  precisely.
+So seeds carry lines and no measured values, and `app:climbs:recompute` is the
+only writer of the figures ([§7](#7-measuring-the-catalogue)).
 
 ### 1b. The elevation source is too coarse for the bins we want to draw
 
-The profile comes from `profileFromRoute()` in
-`web/assets/contribute/climb-elevation.js`. Until 2026-08-04 it sampled the drawn
-line at 100 points and called open-meteo's elevation endpoint from the browser,
-which serves Copernicus GLO-90 — a **D**igital **E**levation **M**odel (DEM) on a
-roughly 90 m grid. It now posts to our own `/contribute/elevation`, which reads
-[§2a](#2a-the-source)'s source through Valhalla (guarded by the stateless
-`elevation` CSRF token — `window.CC_ELEV_TOKEN`, sent as `X-CC-Token` — and a
-per-user per-minute limiter: security-architecture.md §5.1/§7); everything
-below is what the 90 m grid produced, and why the source had to change.
-
-Sampling every 25 m into a 90 m grid produces a staircase. Measured on La
-Redoute's stored route:
-
-- **30 distinct elevation values across 99 samples**, with runs of up to **7
-  identical samples** in a row;
-- raw per-sample gradients spanning **−39% to +101%** (standard deviation 20.6);
-- **8 samples reading downhill** on a climb that never descends.
-
-At 100 m bins that is unpublishable. Same road, same request, three DEMs:
+A 90 m elevation grid (Copernicus GLO-90) sampled every 25 m produces a
+staircase. On La Redoute: 30 distinct values across 99 samples, runs of up to 7
+identical samples, raw per-sample gradients from -39% to +101%, and 8 samples
+reading downhill on a climb that never descends. The same road, the same
+request, at 100 m bins:
 
 ```
 climbfinder    [6, 7, 10, 6,  8, 8,   7,  9, 10,  9, 13, 16, 10,  9, 13, 10, 4, 6, 6, 5]
 EU-DEM 25 m    [5, 9, 13, 7, 11, 6,   3,  5, 10, 11, 13, 17, 11, 10, 13, 11, 4, 6, 7]
 SRTM 30 m      [7, 6,  9, 7, 12, 6,   5, 11,  8, 13, 13, 15, 10, 11,  9, 18, -2, 6, 11]
-GLO-90 (today) [6, 8, 12, 12, 25, 0, -10, 16, 12,  7, 11, 17,  8, 12, 17,  8, 7, 8, -2]
+GLO-90         [6, 8, 12, 12, 25, 0, -10, 16, 12,  7, 11, 17,  8, 12, 17,  8, 7, 8, -2]
 ```
 
 | source | distinct values (of 100) | longest flat run | mean error vs climbfinder | bins reading downhill |
 |---|---|---|---|---|
-| GLO-90 *(today)* | 28 | 6 | 4.7 pts | **2** |
+| GLO-90 | 28 | 6 | 4.7 pts | **2** |
 | SRTM 30 m | 92 | 2 | 2.4 pts | 1 |
-| **EU-DEM 25 m** | **100** | **1** | **1.4 pts** | **0** |
+| EU-DEM 25 m | 100 | 1 | 1.4 pts | 0 |
 
-The existing 11-bin display (≈220 m per bar on a 2.4 km climb) is not accurate —
-it is merely *wide enough to hide this*.
+A wide display (11 bars on a 2.4 km climb) merely hides this. A narrow window on
+a coarse grid publishes it: on GLO-90 a 100 m steepest window gave
+Roche-aux-Faucons a 32% ramp it does not have, and the noise inflated its
+ascent-only average from 5.7% to 6.3%. No clamping fixes a source that coarse.
 
-**And it stopped hiding it the moment anything measured narrower.** When
-`maxGradient` began coming from a 100 m window ([§5](#5-the-steepest-ramp-is-found-not-placed)),
-a redrawn Roche-aux-Faucons published a **32% ramp it does not have** (owner,
-2026-08-04). That is [§3a](#3a-bin-width-follows-the-source) arriving on the
-page: 100 m on a 90 m grid is barely one cell, so two adjacent samples on a
-staircase read as a wall. The same noise inflated the ascent-only average from
-5.7% to 6.3%, because ascent-only accumulates upward wobble and never subtracts
-it. Neither figure was wrong about its own arithmetic; both were wrong about the
-road, and no amount of clamping fixes a source that coarse.
+The downhill column is decisive here only because La Redoute never descends;
+on a climb that drops between two ramps the same count means nothing (see
+[§2a](#2a-the-source)).
 
-The last column is decisive **here and not in general**: La Redoute never
-descends, so a bin that reads downhill on it can only be an artifact. On a climb
-that genuinely drops between two ramps the same count means nothing — see the
-correction in [§2a](#2a-the-source).
+### 1c. A bar must mean the same thing on every climb
 
-### 1c. The bars mean different things on different climbs
-
-Seeded climbs carry hand-authored `grad` arrays of 10, 11 or 12 values. Editor-
-drawn climbs carry 11 values sampled from real elevation. Nothing in the payload
-distinguishes an estimate from a measurement, and both render identically.
+A profile whose bars are an estimate on one climb and a measurement on another,
+or a different distance on each, cannot be compared and cannot be checked. So
+every bar is measured, every chart states its bin width
+([§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb)), and `demSource`
+travels with the figures ([§4](#4-what-is-measured-and-what-is-stored)).
 
 ---
 
@@ -155,476 +105,199 @@ distinguishes an estimate from a measurement, and both render identically.
 |---|---|---|
 | Copernicus DEM GLO-30 | 30 m | worldwide land |
 
-There is no chain, no per-coordinate resolution order, and no regional
-fallback. That is the whole point of the decision: every mechanism this
-document previously needed — a priority list, a per-continent raster
-inventory, a `demSource` that varies by where you are standing — existed only
-to paper over a Europe-only first choice.
+There is no chain, no per-coordinate resolution order and no regional fallback.
+GLO-90's failure ([§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw))
+does not apply to GLO-30, of which it is a 3x downsample.
 
-**What replaced the chain.** The earlier design put EU-DEM v1 first for Europe,
-SRTM second, GLO-90 third as a worldwide floor. GLO-90 was genuinely too coarse
-([§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw)),
-which is what forced the fallback structure. But GLO-90 is a 3x downsample of
-GLO-30, so that verdict never applied to GLO-30 itself — it was inherited by
-association and left the better dataset untested for the entire design.
-
-**The measurement that settled it**, 2026-08-04, on all seven seeded climbs:
-the GLO-30 tile was converted to `.hgt` and **both sources read by identical
-code**, so the comparison isolates the raster rather than two services'
-interpolation. The reader was first checked against Valhalla `/height` on the
-same EU-DEM tile — 179 m and 8.62% against the service's 179 m and 8.61% — and
-only then used to judge anything.
+**The measurement that settled it**, on all seven Belgian seed climbs: the
+GLO-30 tile was converted to `.hgt` and both sources were read by identical
+code, so the comparison isolates the raster. The reader was first checked
+against Valhalla `/height` on the same EU-DEM tile (179 m and 8.62% against
+the service's 179 m and 8.61%).
 
 | | EU-DEM v1 | GLO-30 |
 |---|---|---|
 | La Redoute, gain | 179 m | **181 m** (climbfinder: 180 m) |
-| mean per-bin disagreement | — | 2.02 points (worst climb 3.04) |
+| mean per-bin disagreement | - | 2.02 points (worst climb 3.04) |
 | downhill bins on Mur de Huy, which never descends | 1 | **0** |
 
 The gain match against an independent reference is the load-bearing result.
-GLO-30 is **at least as good**, and the Mur de Huy row is a tiebreak rather than
-an argument: one bin on one climb. The spread between the two is not one of them
-being wrong — see the DSM note below.
+The EEA has since discontinued EU-DEM and points at Copernicus DEM, and GLO-30
+Public reads without an account, so the choice also follows the publisher.
 
-**A correction worth keeping, owner 2026-08-04.** An earlier draft of this
-section scored the sources on their total count of downhill bins, on the
-reasoning that a climb descending in its middle is impossible. **That is false.**
-Roche-aux-Faucons climbs to 228 m, descends to 185 m over more than a kilometre,
-then climbs to 270 m; 27 of Hockai's bins read downhill and every one is real
-rail-trail descent. The rule would have condemned the correct answer on both.
+**A downhill bin is not an artifact by itself** (owner, 2026-08-04).
+Roche-aux-Faucons climbs to 228 m, descends to 185 m over more than a
+kilometre, then climbs to 270 m; 27 of Hockai's bins read downhill and every
+one is real rail-trail descent. A downhill bin is only diagnostic on a road
+known to rise monotonically. The measure that generalises is **disagreement
+about direction**: bins where two sources differ on whether the road rises. A
+descent both see is terrain; one only a single source sees is an artifact.
+Across the seven climbs the two sources dispute 33 of 266 bins: Hockai's
+descents are agreed, EU-DEM's lone downhill bins on Mur de Huy and Bohissau are
+disputed. `tools/elevation/compare-sources.js` reports this column.
 
-A downhill bin is only diagnostic on a road **known** to rise monotonically —
-which is exactly why it was decisive against GLO-90 on La Redoute, a climb that
-never descends. Everywhere else it is a question.
+**GLO-30 is a surface model.** It reads the first surface the sensor sees:
+canopy and buildings, not bare ground. On a wooded climb a reading over a
+tree-lined stretch is partly the trees. No bare-earth model at useful
+resolution exists worldwide, so this is a permanent error term, and the most
+likely explanation whenever two good sources agree on a total and disagree over
+a stretch.
 
-The measure that generalises is **disagreement about direction**: bins where the
-two sources differ on whether the road rises. A descent both see is terrain; one
-only a single source sees is an artifact — and it needs no prior knowledge of
-the road, so it works on climbs nobody has profiled. Across all seven climbs the
-sources dispute **33 of 266 bins**, and the split is clean: Hockai's 27 descents
-are almost entirely agreed, while EU-DEM's lone downhill bin on Mur de Huy *and*
-on Bohissau are both disputed, i.e. artifacts. `compare-sources.js` reports this
-column.
+**Tunnels and galleries are the larger error.** Where the road runs under
+cover, a surface model reads the mountain on top of it: on the Grimsel the
+profile climbs 768 m to 822 m in 140 m and then goes flat, the hillside above a
+gallery. The error cancels over a whole climb and concentrates in its worst
+hundred metres, so it lands on the steepest figure. Two rules handle it:
 
-**What adopting it retires.** Three things stop being problems rather than
-getting solved:
+- **The steepest figure is the 95th percentile of sliding 250 m windows**
+  (`ClimbProfiler::MAX_WINDOW_M`, `STEEPEST_PERCENTILE`), not the raw maximum.
+  250 m keeps the window above GLO-30's four-cell floor
+  ([§3a](#3a-bin-width-follows-the-source)), and a maximum on a surface model
+  picks the artifact: denser sampling found more spikes, not more road.
+  Validated against two independent truths: Wallonia's 50 cm LiDAR puts
+  Stockeu's steepest at 16.7% and we read 16.7%; the owner reports Furka at
+  about 10% and we read 10.3%. Two points in different terrain fitting one
+  estimator, to be re-tested as more ground truth appears. A 30% clamp on
+  `maxGradient` stays as a guard, above any real sustained 250 m, so it fires
+  only when the estimator is wrong.
+- **Windows over cover are skipped.** `App\Elevation\CoveredSpans` asks
+  Valhalla's `/trace_attributes` for OSM's `tunnel` flag per matched edge, and
+  `steepestWindow()` drops any window overlapping a covered span. Spans are
+  fractions of the line, not metres, because the map-matched geometry differs
+  in length from the shape sent. The lookup runs on the profiler's own samples
+  (at most 400 points, `CoveredSpans::MAX_POINTS`): matching follows the road
+  between samples, so a short tunnel is still found. A failed lookup returns no
+  spans and the climb measures as if uncovered; a climb where every window
+  straddles cover is measured whole.
 
-- **EU-DEM's access terms.** Its readme places it under a GMES delegated
-  regulation setting user registration conditions, not an open-data licence.
-  GLO-30 Public is on the AWS Open Data registry and reads without an account.
-  [§2c](#2c-licensing-is-a-gate-not-a-footnote) shrinks to one attribution.
-- **Per-region raster inventory.** One dataset covers every country onboarded
-  from here, so acquisition stops being a step in
-  [country onboarding](catalog-data-model.md).
-- **`demSource` as a variable.** It becomes a constant, and the bin floor in
-  [§3a](#3a-bin-width-follows-the-source) becomes a single number rather than a
-  table lookup.
+Measured with cover skipped: Grimsel 14% to 12% (truth about 11%), Susten 12%
+to 11%, Klausen 15% to 14%; every climb without cover (Furka, Gotthard,
+Nufenen, Stockeu, Redoute, Huy) is unchanged.
 
-**What it does not fix.** GLO-30 is a **Digital Surface Model** — the first
-surface as illuminated by the sensors, so canopy and buildings, not bare ground.
-On a wooded Ardennes climb a reading over a tree-lined stretch is partly the
-trees. EU-DEM was a DSM too, so this is not a regression; it is a permanent
-error term, and the most likely explanation whenever two good sources agree on a
-total and disagree over a stretch. A **DTM** at useful resolution would be the
-better input, and none is available worldwide.
+**What is still not corrected.** Cover is excluded from the steepest search
+only. Gallery readings remain in `gain`, in the bars and in the line
+colouring, where they are diluted enough not to have shown up as wrong.
+GLO-30 Public withholds tiles over a few countries, so "worldwide" has holes
+and [§2d](#2d-failure-is-honest) still has to hold.
 
-**The Alps made that error term much larger, and it has a second cause.**
-Seeding six Swiss passes on 2026-08-06 produced credible lengths and averages —
-Nufenen measured 13.27 km at 8.5% against a published 13.4 km at 8.5%, Furka
-10.31 km at 6.5% against ~10.1 km at 6.6% — beside **steepest-100 m figures of
-35%** on Grimsel, Susten and Klausen. No pass road sustains that.
+### 2a-i. What GLO-30 costs
 
-The cause is not canopy, it is **tunnels and avalanche galleries**. Where the
-road runs under cover, a surface model reads the mountain on top of it. On the
-Grimsel the profile climbs **768 m to 822 m in 140 m and then goes flat** — a
-54 m step that is the hillside above a gallery, not tarmac. Alpine pass roads
-are full of them, and roads cut into a cliff face give the same reading from the
-wall beside the carriageway.
+- **No registration.** GLO-30 Public is on the AWS Open Data registry at
+  `s3://copernicus-dem-30m/` (eu-central-1) and reads over plain HTTPS without
+  an account (`tools/elevation/fetch-glo30.sh`).
+- **No Valhalla rebuild for profiles.** Valhalla's skadi reads elevation from
+  the directory named by `additional_data.elevation`, separately from the
+  routing graph, so adding tiles is a file copy and a restart. A rebuild is
+  only needed for elevation-aware routing (`build_elevation`), which is a
+  different feature.
+- **Conversion resamples.** GLO-30 ships as Cloud Optimized GeoTIFF; skadi
+  reads SRTM-format `.hgt` (1 arc-second in both directions). GLO-30 decimates
+  longitude by latitude band (a tile at 50°N is 2400 × 3600, 1.5″ by 1″) so its
+  cells stay roughly square, and `tools/elevation/to-hgt.sh` upsamples
+  longitude onto the `.hgt` grid. That adds no information and destroys none.
+  The factor changes with latitude band, so the converter reads each tile's
+  actual size.
+- **Storage is the real cost.** A 1 arc-second `.hgt` tile is 3601 × 3601 × 2
+  bytes = 24.7 MB. Global land is about 14,000 to 26,000 tiles, 340 to 630 GB,
+  so tiles are fetched for onboarded regions only (the presets and boxes in
+  `fetch-glo30.sh`; [country onboarding](catalog-data-model.md)).
 
-This is the Stockeu finding at a larger scale (GLO-30 27%, Wallonia LiDAR
-16.7%): **an error that cancels over a whole climb but concentrates in its worst
-hundred metres.**
+### 2b. Our own Valhalla, not a public API
 
-**FIXED 2026-08-07, and the diagnosis was not the one expected.** The first
-suspicion was sampling: `SAMPLES` is a fixed 200 regardless of length, so a
-26 km climb samples every 130 m and a 100 m window spans less than one interval.
-Measured, that turned out to be innocent — densifying Furka to 10 m, 20 m, 30 m
-and 50 m spacing moved the published figure by less than half a point. Two other
-things were guilty:
+Elevation is read from the project's own Valhalla, never from a third-party
+elevation API, and nothing in the browser calls an elevation host. A lookup
+happens when a climb's line changes (the editor's preview, a saved
+contribution, `app:climbs:recompute`), never per page view or map render.
 
-- **The window was below the source's resolution.**
-  [§3a](#3a-bin-width-follows-the-source)'s own rule — never narrower than about
-  four DEM cells — puts GLO-30's floor at 120 m, and the window was 100 m. It
-  had always been asking the grid a question finer than its cells; short,
-  unroofed Ardennes climbs simply hid it.
-- **A maximum is an extreme-value statistic, and on a DSM the extreme is the
-  artifact.** The tell is that the raw maximum got *worse* as sampling improved:
-  denser sampling finds more spikes, not more road. Grimsel's raw window went
-  from 35% to 77% between 50 m and 20 m spacing. Worse, 35% was not a
-  measurement at all — Grimsel, Susten and Klausen all published exactly 35%
-  because they were hitting a `min(35.0, …)` clamp, which turned three artifacts
-  into three plausible-looking steep passes.
+`POST /contribute/elevation` (`ElevationController`) serves the editor: login
+required (401, not a redirect), the stateless `elevation` CSRF token
+(`window.CC_ELEV_TOKEN`, sent as `X-CC-Token`), and the per-user `elevation`
+limiter, 30 a minute, consumed after the cheap validation
+(security-architecture.md §5.1, §7). A saved climb contribution spends the same
+budget (`CatalogContributionService::deriveClimbProfile()`). The editor aborts
+an in-flight profile request when a newer one replaces it (`climb-editor.js`).
 
-The published figure is now the **95th percentile of sliding 250 m windows**
-(`MAX_WINDOW_M`, `STEEPEST_PERCENTILE`). Validated against the only two
-independent truths available, and it hits both: Wallonia's 50 cm LiDAR puts
-Stockeu's steepest at **16.7%** and we now read **16.7%**; the owner reports
-Furka at **~10%** and we now read **10.3%**. Those are two points, in different
-countries and different terrain, fitting one estimator — worth re-testing as
-more ground truth appears, not treated as settled.
+### 2b-i. Valhalla answers the heights
 
-The clamp stays at 30% as a guard rather than a filter: above any real road's
-sustained 250 m, so it fires only when the estimator itself is wrong, which is
-when it should be visible.
-
-`steepWindowM` travels with the figure and the caption is built from it, so the
-copy can no longer say "100m" over a 250 m window — which is exactly what four
-translation catalogues did until this landed.
-
-**Tunnels, fixed the same day.** The percentile stopped a roof reading becoming
-the headline but left it in the data, and Grimsel still read 14% against a real
-~11%. The road network already knows where the roofs are: Valhalla's
-`/trace_attributes` map-matches a shape onto real edges and reports OSM's
-`tunnel` flag per edge. So this is a lookup, not a heuristic about what a step in
-a profile "probably" means. {@see App\Elevation\CoveredSpans} does that lookup
-and `steepestWindow()` drops any window overlapping cover.
-
-| | before | tunnel-aware | truth |
-|---|---:|---:|---:|
-| Grimsel | 14% | **12%** | ~11% |
-| Susten | 12% | **11%** | — |
-| Klausen | 15% | **14%** | — |
-| Furka, Gotthard, Nufenen, Stockeu, Redoute, Huy | — | **unchanged** | — |
-
-That last row is the result that matters: every climb with no cover measured
-identically, so the change moves only what it claims to move. Grimsel carries
-**2,082 m under cover across 9 spans**, 8% of the climb; Stockeu carries none.
-
-Three details that are load-bearing:
-
-- **Spans are fractions of the line, not metres.** Map-matching snaps to the
-  carriageway, so the matched geometry is not the shape that was sent and its
-  length differs. A fraction survives that; a metre offset drifts.
-- **The lookup runs on the profiler's own 200 samples**, not the stored route.
-  Matching follows the ROAD between samples, so a 33 m tunnel is still found from
-  points 130 m apart — measured on Grimsel, Susten and Klausen, the 200-point
-  shape returns identical spans to the full 690-point route. One call, not three.
-- **A failure costs accuracy, never a profile.** An unreachable instance returns
-  no spans and the climb measures exactly as it did before cover was considered.
-  The same applies if every window straddles cover, on a climb that is mostly
-  tunnel: it falls back to measuring the lot.
-
-**What is still not fixed.** Cover is excluded from the STEEPEST search only.
-The gallery readings remain in `gain`, in the bars and in the line colouring,
-where they are diluted enough not to have shown up as wrong — that is an
-argument for leaving them alone until someone measures a case where they are,
-not proof that they are right.
-
-Two further limits worth stating plainly. GLO-30 Public **withholds tiles over a
-few countries**, so "worldwide" has holes and
-[§2d](#2d-failure-is-honest) still has to hold. And the evidence is **one tile,
-one massif, one latitude band** — Benelux is the widening that would confirm it,
-via [tools/elevation](../../tools/elevation/README.md).
-
-**EU-DEM's status.** The 37 GB of converted tiles already in place stay usable
-and need not be deleted; they are simply no longer the plan. The EEA has
-discontinued EU-DEM outright, marking it superseded and pointing at Copernicus
-DEM, so this decision follows the publisher's own. For the record, v1.1 was also
-measured and agreed with v1 to 0.54 of a point per bin — the finer grid bought
-per-sample smoothness, not a better answer, so nothing was lost by never
-acquiring it.
-
-### 2a-i. What adopting GLO-30 actually costs
-
-Checked 2026-08-04, because "register and rebuild" turns out to be the wrong
-model of the work on both counts.
-
-**No registration is required.** GLO-30 Public is on the AWS Open Data registry
-at `s3://copernicus-dem-30m/` (eu-central-1) and reads without an account:
-`aws s3 ls --no-sign-request s3://copernicus-dem-30m/`. Registering with the
-Copernicus Data Space Ecosystem is what unlocks the *restricted* instances;
-the public one does not need it. Note that GLO-30 Public withholds a small
-subset of tiles over certain countries, so "worldwide" has holes and
-[§2d](#2d-failure-is-honest) still has to hold.
-
-**No Valhalla rebuild is required either — for profiles.** Elevation is read by
-skadi from the directory named by `additional_data.elevation`, *separately from
-the routing graph*. Adding or replacing elevation tiles is a file copy and a
-restart, which is exactly what the existing EU-DEM procedure does. A **rebuild
-is only needed if elevation should influence routing decisions** — hill-aware
-bicycle costing — which is what `build_elevation` does at tile-build time. Those
-are two different features and only the second is expensive.
-
-**Conversion is required, and it resamples.** GLO-30 ships as Cloud Optimized
-GeoTIFF; skadi expects SRTM-format `.hgt`. So it goes through the same GDAL step
-EU-DEM does — the pipeline exists, the input changes.
-
-The longitude decimation is **confirmed, not a caution**: the tile covering La
-Redoute is **2400 × 3600**, i.e. 1.5″ in longitude against 1″ in latitude.
-Copernicus does this deliberately, because meridians converge — at 50°N, 1.5″ of
-longitude is ≈30 m of ground, the same as 1″ of latitude, so the cells stay
-roughly square. `.hgt` cannot express that, since it is 1″ in both directions by
-definition.
-
-The conversion therefore **upsamples longitude 1.5″ → 1″**. That adds no
-information but destroys none either, which is why the measured result holds up.
-Two consequences worth carrying: the decimation factor **changes with latitude
-band**, so a converter must not hard-code 2400 and must read each tile's actual
-size; and a `.hgt` from GLO-30 is ~1.5× larger than its source information
-warrants, so the storage table below is a floor rather than an estimate of
-content.
-
-**Storage is the real cost.** A 1 arc-second `.hgt` tile is 3601×3601×2 bytes =
-**24.7 MB**, and the existing Europe set checks the arithmetic: 1517 tiles ×
-24.7 MB = 36.6 GB against 37 GB measured. Global land is on the order of
-14,000–26,000 tiles, so:
-
-| scope | tiles | `.hgt` size |
-|---|---|---|
-| Europe (already converted) | 1,517 | 37 GB |
-| global land | ~14,000–26,000 | **~340–630 GB** |
-
-That is a different class of commitment from the current 37 GB, and it is
-per-instance if the deployment stays regional. **Scope it to onboarded regions**
-([country onboarding](catalog-data-model.md)) rather than the globe: the
-Commons is worldwide in ambition, but coverage arrives country by country and
-an unpopulated continent needs no raster.
-
-### 2b. Start on the public API; self-host when something makes it necessary
-
-Elevation is looked up when a climb's LINE changes — not per page view, not per
-map render. Doing the arithmetic before reaching for infrastructure (owner,
-2026-08-04):
-
-- opentopodata's public endpoint allows **100 locations per call**, so a climb up
-  to 2 km at 20 m sampling is **one call**. A 17 km climb is nine.
-- The budget is **1000 calls/day**, which is roughly **65 climb contributions a
-  day** at a generous 15 route-changes each — far beyond any volume this project
-  will see before it has other reasons to run its own service.
-
-So the public API is the starting point, and self-hosting is what the following
-require rather than a precondition:
-
-1. **A bulk recompute.** [§7](#7-migration) sweeps every climb with a route.
-   That is seven items today and finishes in seconds; a catalogue of thousands,
-   re-swept because the source or the binning changed, would take days at
-   1000/day.
-2. **Sustained contribution volume**, on the arithmetic above.
-3. **Terms of use.** opentopodata asks heavy and production users to run their
-   own instance. That is a courtesy this project extends to other people's
-   infrastructure as a matter of course, and it is the most likely trigger of
-   the three.
-
-**One thing to get right on the public API:** the lookup fires on every resolved
-route change, so a rider dragging a summit repeatedly can spend calls quickly and
-meet the 1 call/second limit mid-edit. `recomputeProfile()` already aborts an
-in-flight request when a newer one supersedes it; it also needs a settle delay so
-a drag costs one lookup rather than one per intermediate position. Without that,
-a throttled response shows a rider "profile unavailable" for a climb that is
-perfectly fine.
-
-### 2b-i. Self-hosting: Valhalla already does this
-
-The stack **already runs Valhalla** — opt-in `routing` compose profile, today
-with `build_elevation: "False"`. Valhalla serves `POST /height`, which takes a
-shape and returns an elevation per point; with `range: true` it returns
-cumulative distance alongside each height, which is precisely the input
-[§3](#3-sampling-and-binning) bins. So the self-hosted option is not a new
-service. It is a flag and a directory of tiles.
-
-**This is proven, not theoretical.** The owner already runs a Valhalla instance
-for another application, fed by a converter that reads the EU-DEM mosaic and
-writes SRTM-format `.hgt` tiles into Valhalla's `additional_data.elevation`
-directory. Measured against that instance, 2026-08-04, on the same road as
-[§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw):
-
-| | GLO-90 (public API) | Valhalla, EU-DEM `.hgt` | EU-DEM 25 m direct |
-|---|---|---|---|
-| distinct values | 30 / 99 | **83 / 99** | 100 / 100 |
-| longest identical run | 7 | **3** | 1 |
-| 100 m bins reading downhill | several, incl. −10% mid-climb | **0** | 0 |
-| gain vs climbfinder (180 m) | — | **179 m** | 180 m |
-
-Gain lands within a metre of the reference. The remaining coarseness is
-explained and bounded, and it is **not** a resampling loss. EU-DEM v1 is already
-published at 1 arc-second, which is exactly the `.hgt` grid, so the conversion is
-grid-aligned and moves no cells. The single loss is that `.hgt` stores **integer
-metres**. That costs per-sample fidelity — 83 distinct readings of 99 against
-v1.1's 99 — and costs the aggregate figures nothing, and it is comfortably past
-the bar [§3a](#3a-bin-width-follows-the-source) sets for 100 m bins, which GLO-90
-fails. The read path still interpolates between cells, per
-[§3d](#3d-where-the-coordinates-come-from-and-what-the-dem-returns); the rounding
-is applied to the interpolated result.
-
-**The single source removes this section's hardest constraint.** A Valhalla
-instance has one elevation directory and cannot choose a source per coordinate,
-which is why an earlier draft had to argue that per-continent instances happened
-to match the source chain's partition. With [§2a](#2a-the-source) settled on one
-worldwide dataset that argument is unnecessary: **every instance gets the same
-tiles**, differing only in which part of the world they cover. `demSource` is a
-constant, and a climb near a regional boundary cannot get a different answer
-depending on which instance it reached.
+Valhalla serves `POST /height`, which takes a `shape` and returns one elevation
+per point. `App\Elevation\ElevationClient` posts the profiler's samples there
+(at most `MAX_POINTS = 600`, timeout 8 s) and computes nothing itself.
+`ELEVATION_URL` is the base URL and the master switch: unset, there are no
+profiles at all, never a guess ([§2d](#2d-failure-is-honest)).
+`ELEVATION_DEM_SOURCE` (`Copernicus DEM GLO-30`) is the attribution string
+stored with each measurement as `demSource`. Changing dataset is a tile swap
+and a restart, not a deploy.
 
 **The trap: Valhalla fails by returning zeros.** An instance with no elevation
-tiles loaded does not error — `/height` answers `0` for every point, which is a
-valid-looking sea-level profile. The other application's client defends against
-this by requiring at least half the samples to be non-zero before accepting a
-result, and falling back otherwise. **Any client here must do the same**, and
-it is why [§8](#8-testing) pins a known elevation rather than merely asserting
-the call succeeded. A silent zero is worse than a failure, because
-[§2d](#2d-failure-is-honest) cannot catch what does not report itself.
+tiles for an area does not error: `/height` answers `0` for every point, a
+valid-looking sea-level profile. So the client refuses a reply in which fewer
+than half the samples are non-zero (`MIN_NONZERO_SHARE = 0.5`). Only exact
+zeros count, so a route that merely touches sea level is kept. A reply whose
+length does not match the request is refused too (it would attach elevations
+to the wrong coordinates), as is a missing-sample sentinel below -1000 m.
+Pinned by `ElevationClientTest`.
 
-**Remaining alternatives**, if Valhalla ever stops fitting:
-
-- **An opentopodata container** — speaks the API the public endpoint speaks, so
-  adopting it is a base-URL change. Removes the daily budget and the per-call
-  location cap without changing the client.
-- **The `pipeline` tier** — [dev-environment.md §3](dev-environment.md) places
-  "Rasters (rasterio/DEM)" there and the service's docstring already names *DEM
-  sampling* as its job; `DEM_DIR` is mounted read-only with a `GET /dem` health
-  check and nothing samples it yet. This is the only route that can select a
-  source **per coordinate** rather than per instance, which matters only if
-  regional partitioning proves too coarse.
-
-Either alternative stays internal-only on an opt-in compose profile — an
-unauthenticated elevation service has no business on a public port.
-
-**The client must not care which it is talking to.** One setting names the base
-URL, one names the source order; unset means the public endpoint. That is what
-keeps this a deployment decision instead of a code change.
-
-**What to prepare, in order:**
-
-1. **Confirm licensing** ([§2c](#2c-licensing-is-a-gate-not-a-footnote)) — this
-   gates acquiring the data at all, not just publishing it, and EU-DEM's credit
-   is mandatory on every surface that shows a derived profile.
-2. **Generate the tiles — or reuse the ones that exist.** The converter is GDAL
-   over the GLO-30 tiles, scripted in
-   [tools/elevation](../../tools/elevation/README.md). The existing 37 GB of
-   EU-DEM `.hgt` does **not** carry over — it is a different dataset, so
-   [§2a](#2a-the-source)'s decision means converting Benelux first and then
-   whichever regions are onboarded, rather than topping up a Europe that is
-   already done.
-3. **Point `additional_data.elevation` at them** and set `build_elevation`, per
-   instance.
-4. **Then** the client, behind the base-URL setting, with the non-zero guard
-   above and [§8](#8-testing)'s fixture test pinning the answer, so a source
-   swap that silently changes La Redoute's gradient is caught.
-
-**Step 4 is built** (2026-08-04). `App\Elevation\ElevationClient` posts to
-Valhalla `/height` and `POST /contribute/elevation` exposes it to the editor,
-login-gated. Both the base URL (`ELEVATION_URL`) and the attribution string
-(`ELEVATION_DEM_SOURCE`) are environment settings, so changing dataset is a tile
-swap and a restart rather than a deploy — and an unset URL disables profiles
-rather than erroring, per [§2d](#2d-failure-is-honest).
-
-The non-zero guard is the part with teeth, and it is tested directly: an
-all-zero reply is refused, while a route that merely *touches* sea level is
-kept, because only exact zeros count and a real climb is never mostly at exactly
-sea level. A reply whose length does not match the request is refused too —
-zipping mismatched arrays would attach elevations to the wrong coordinates,
-which is a wrong profile rather than no profile.
-
-**This also took the browser out of it.** The editor no longer calls a third
-party directly, so the dataset is no longer whatever that API happened to serve,
-the page's CSP lost an external host, and the sample count stopped being someone
-else's cap — it is 200 now, which puts a 4 km climb at the ~20 m spacing
-[§3c](#3c-sampling) asks for rather than the 43 m the old 100-point limit forced.
+Valhalla serves the routing call as well ([§3e](#3e-the-routing-call)): the
+same instances, the same master switch.
 
 ### 2b-ii. One Valhalla per continent, chosen by where the climb is
 
-Elevation stopped being a single-endpoint question on **2026-08-06**, when the
-rollout took the atlas to France, Switzerland, the United Kingdom, Italy,
-Australia, Japan, California and Colorado.
-
-The host runs **six Valhalla instances, one per continent**, and skadi reads
-`additional_data.elevation` per instance. An instance therefore answers `/height`
-for exactly the tiles in its own directory — and, per
-[§2d](#2d-failure-is-honest), answers **zeros** rather than an error everywhere
-else. Asking the Europe instance for a climb on Mount Buller is not a routing
-inefficiency; it is a request that comes back looking like a flat climb at sea
-level.
+The host runs **six Valhalla instances, one per continent**, and each answers
+`/height` only for the tiles in its own directory, with zeros elsewhere. Asking
+the Europe instance for a climb in Australia returns a flat climb at sea level.
 
 So the client picks the instance from the shape's coordinates
-(`App\Elevation\ElevationEndpoints`, driven by `ELEVATION_URLS`;
-`ELEVATION_URL` stays both the default and the master switch, so unsetting it
-still disables profiles entirely). Three properties make this safe to get wrong:
+(`App\Elevation\ElevationEndpoints`, driven by `ELEVATION_URLS` as
+`key=url,key=url`; `ELEVATION_URL` stays the default and the master switch).
+Three properties make this safe to get wrong:
 
 - **The boxes are tile sets, not continents.** They are tested in a fixed
-  priority order, and `europe` is first *because* the EUROPE tile set already
-  covers Sicily and southern Spain, which a truthful Africa box would otherwise
-  claim. The `europe` box is a copy of `fetch-glo30.sh`'s EUROPE bbox; the two
-  must be widened together.
-- **A continent with no configured instance falls back to the default** rather
-  than resolving to nothing, and an unrecognised key in `ELEVATION_URLS` is
-  dropped rather than trusted — a typo'd `occeania` must not look configured.
+  order and the first match wins. `europe` is first because the Europe tile set
+  covers Sicily and southern Spain, which the Africa box would otherwise claim.
+  The `europe` box is a copy of `fetch-glo30.sh`'s `EUROPE` box; the two are
+  widened together.
+- **A continent with no configured instance falls back to the default**, never
+  to the next box, and an unrecognised key in `ELEVATION_URLS` is dropped
+  rather than trusted.
 - **A misroute costs a missing profile, never a wrong one.** The wrong instance
-  returns zeros and `MIN_NONZERO_SHARE` refuses them. This is the same guard that
-  already protects against an un-tiled instance, now doing double duty.
+  returns zeros and `MIN_NONZERO_SHARE` refuses them.
 
 The shape is routed by its **first point**. A climb is one road between a foot
-and a summit, so it does not cross a continent; a shape that somehow did is still
-answered by one dataset rather than stitched from two, which is the better of the
-two failures.
+and a summit and does not cross a continent; a shape that did would still be
+answered by one dataset rather than stitched from two. Pinned by
+`ElevationEndpointsTest`.
 
 ### 2c. Licensing is a gate, not a footnote
 
-Attribution requirements may not be assumed from memory. They must be read from
-the distribution, recorded in
-[osm-data-architecture.md](osm-data-architecture.md)'s licensing section, and
-surfaced wherever a profile is displayed, **before this ships**. The project's
-posture on data licences is deliberate and this is data.
+Attribution requirements are read from the distribution, never assumed from
+memory, and recorded before data is used: the source's row in
+[data-source-register.md](data-source-register.md) and its notice on
+[credits-page.md](credits-page.md)'s `/credits` page.
 
-**Copernicus DEM GLO-30**, the source [§2a](#2a-the-source) settles on:
+**Copernicus DEM GLO-30** is free under the Copernicus DEM Licence, attribution
+required. Its notice ("produced using Copernicus WorldDEM-30 © DLR e.V.
+2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under
+COPERNICUS by the European Union and ESA; all rights reserved") is carried in
+the upstream's own wording:
 
-- **Free for the general public** for the GLO-30 Public instance, under the
-  Copernicus DEM Licence. Full terms live on the Copernicus Data Space COP-DEM
-  collection page and **must be read before publishing** — the AWS registry
-  entry links them rather than restating them.
-- The AWS Open Data registry gives the citation form *"Copernicus Digital
-  Elevation Model (DEM) was accessed on `DATE` from
-  https://registry.opendata.aws/copernicus-dem."* That is the **registry's**
-  citation for access, and it is not automatically the same thing as the
-  licence's own attribution requirement. Both need checking; assuming the
-  citation discharges the licence is exactly the shortcut this section exists to
-  prevent.
-- Where the credit belongs: on **every surface showing a derived profile** — the
-  chart and any gradient figure computed from it — not on a licences page alone.
+- in full on `/credits` (a required notice, never reworded);
+- in short form in the map's attribution control (`map-init.js`), because the
+  map is where the derived gradients are looked at;
+- in each climb's provenance line in the drawer, where `demSource` links to the
+  Copernicus DEM collection page (`srcLine()` in `drawer.js`).
 
-**Why this is now smaller than it was.** The previous source, EU-DEM, placed
-access under a GMES delegated regulation setting *user registration conditions*
-rather than an open-data licence — a materially heavier instrument. Adopting
-GLO-30 retires that question rather than answering it. The EU-DEM notes are kept
-below only because 37 GB of converted tiles still exist and could be used.
-
-<details>
-<summary>EU-DEM terms, retained for the tiles already converted</summary>
-
-- Its credit is **mandatory and displayed**, in this exact wording:
-
-  > Data funded under GMES preparatory action 2009 on Reference Data Access by
-  > the European Commission, DG Enterprise and Industry.
-
-- The requested citation is *European Commission - DG ENTR, 2012, EU-DEM Version
-  1*. Both strings are v1-specific; v1.1 is an EEA product with different
-  wording.
-- Access is stated as "governed by Commission delegated regulation (EU) No
-  12386/13 of 12.7.2013 supplementing Regulation (EU) No 911/2010 ... establishing
-  registration and licensing conditions for GMES users". The instrument of that
-  date supplementing 911/2010 appears to be Delegated Regulation (EU) **No
-  1159/2013**, so the readme's number looks like an internal reference -
-  **verify before relying on it**.
-
-</details>
+The AWS registry's citation form is a citation for access and is not, by
+itself, the licence's attribution requirement.
 
 ### 2d. Failure is honest
 
 No elevation, no profile. A climb whose elevation lookup fails keeps its
-geometry and displays no gradient figures at all — it never falls back to a
-guess. The rider is told the profile could not be measured, and the submission
-is still valid: the line is the contribution, the profile is derived from it.
-
----
+geometry and displays no gradient figures at all; it never falls back to a
+guess. `ClimbProfiler::profile()` returns null, `POST /contribute/elevation`
+answers 503 (not 200 with nulls) and the editor shows the profile as
+unavailable; a saved contribution keeps its line and stores no figures; the
+recompute skips the climb with a warning. The submission is still valid: the
+line is the contribution, the profile is derived from it.
 
 ### 2e. This pipeline serves the platform, not only Cycling Commons
 
@@ -632,47 +305,24 @@ is still valid: the line is the contribution, the profile is derived from it.
 application that reads the shared Valhalla. What gets installed is the union of
 every consumer's requirement, and each consumer must be able to print its own.**
 
-#### What went wrong
+**Why.** The Valhalla host is shared: Cycling Commons asks it for climb
+profiles, and a second application asks it for route planning, ride climb
+metres and per-region priors. The installed coverage once matched exactly the
+union of Cycling Commons' presets in `fetch-glo30.sh`, on all six continents,
+while 143 of the other consumer's 175 countries had no elevation. Because
+Valhalla answers `0` rather than failing, nothing surfaced it, and Cycling
+Commons could not see it because its own requirement was fully met.
 
-The Valhalla host is shared. Cycling Commons asks it for climb profiles; a second
-application asks it for route planning, for the climb metres on every recorded
-ride, and for per-region energy priors. One `elevation_data` directory per
-continent, several readers.
+**The split.**
 
-The installed coverage was measured against the presets in
-`tools/elevation/fetch-glo30.sh` and matched **exactly**, on all six continents:
-
-| continent | installed box | presets that explain it |
-|---|---|---|
-| europe | 35-72 / -11-32 | `EUROPE` |
-| asia | 24-46 / 122-146 | `JAPAN` |
-| africa | -35-0 / 16-33 | `SOUTHAFRICA` ∪ `RWANDA` |
-| south-america | -56-13 / -82--66 | `COLOMBIA` ∪ `CHILE` |
-| oceania | -48--9 / 112-179 | `AUSTRALIA` ∪ `NEWZEALAND` |
-| north-america | 32-63 / -140--56 | `USWEST` ∪ `USROCKY` ∪ `CANADAWEST` ∪ `CANADAEAST` |
-
-Not "roughly ours" but precisely the union of our seventeen presets, to the
-degree. The other consumer covers 175 countries, whose areas touch 16,619
-one-degree cells; 3,439 of them were covered. **143 of its 175 countries had no
-elevation**, and because Valhalla answers `0` rather than failing (§2d applies
-to our client, not to the engine), nothing surfaced it. Rides in those countries
-recorded zero climb.
-
-The failure is invisible from inside Cycling Commons *because* our own
-requirement was fully met the whole time. That is the property that makes it
-worth a spec entry rather than a bug fix.
-
-#### The split
-
-1. **Action lives here.** Fetch, convert, validate, install: one pipeline, one
-   validator (`compare-sources.js`), one write-up
+1. **Action lives here.** Fetch, convert, validate, install: one pipeline
+   (`tools/elevation/`), one validator (`compare-sources.js`), one write-up
    (`wiki/developers/data-ops/elevation-tiles.md`). No other repository carries
-   a copy of these scripts. A second copy drifts, and the copy that travels
-   without the validator is the one that gets trusted by accident.
-2. **Requirement lives with each consumer**, and must be machine-readable.
-   Cycling Commons declares through the presets in `fetch-glo30.sh`. The other
-   consumer declares through a console command that derives its cell list from
-   its own coverage tables rather than from anyone's memory:
+   a copy of these scripts.
+2. **Requirement lives with each consumer**, machine-readable. Cycling Commons
+   declares through the presets in `fetch-glo30.sh`. The other consumer
+   declares through a console command that derives its cell list from its own
+   coverage tables:
 
    ```
    app:elevation:coverage --installed=<file>                # gap report
@@ -680,22 +330,21 @@ worth a spec entry rather than a bug fix.
    app:elevation:coverage --country=XX --plan               # bbox for one country
    ```
 
-3. **The input to a fetch is the union**, never one consumer's list. Today the
-   presets are the whole input; that is the defect this section closes.
+3. **The input to a fetch is the union**, never one consumer's list.
+   `fetch-glo30.sh` takes a preset or a bounding box, so a box from another
+   consumer's plan is fetched the same way as a preset.
 
-#### Consequences accepted
+**Consequences accepted.**
 
-- **Onboarding a region is two-sided.** New elevation does not backfill anything
-  computed before it. Each consumer re-runs its own recompute — ours is
-  `app:climbs:recompute`; every other consumer is responsible for its own.
-- **Consumers guard themselves against the silent zero.** The other consumer's
-  batch refuses to report success when more than 95% of a country's results
-  come back with zero climb. This pipeline cannot check what it does not own,
-  and a consumer that trusts a shared resource blindly will publish sea level.
-- **Direction of travel.** As Cycling Commons becomes the data initiator for the
-  catalogue, consumers move from reading the shared Valhalla directly to reading
-  a Cycling Commons API. The requirement/action split above holds either way,
-  and is the smaller change to make first.
+- **Onboarding a region is two-sided.** New elevation does not backfill
+  anything computed before it. Each consumer re-runs its own recompute; ours is
+  `app:climbs:recompute`.
+- **Consumers guard themselves against the silent zero.** This pipeline cannot
+  check what it does not own; our own guard is `MIN_NONZERO_SHARE`
+  ([§2b-i](#2b-i-valhalla-answers-the-heights)).
+- **Direction of travel.** As Cycling Commons becomes the data initiator for
+  the catalogue, consumers move from reading the shared Valhalla directly to
+  reading a Cycling Commons API. The requirement/action split holds either way.
 
 ---
 
@@ -703,33 +352,32 @@ worth a spec entry rather than a bug fix.
 
 ### 3a. Bin width follows the source
 
-**A bin is never narrower than four DEM cells.** Differencing two elevations one
-or two cells apart measures the grid, not the road — which is precisely the
-GLO-90 failure in [§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw).
+**A window is never narrower than about four DEM cells.** Differencing two
+elevations one or two cells apart measures the grid, not the road, which is
+the GLO-90 failure in [§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw).
 
-| source | cell | minimum bin |
+| source | cell | floor |
 |---|---|---|
 | EU-DEM 25 m | 25 m | 100 m |
-| SRTM 30 m | 30 m | 120 m |
+| GLO-30 | 30 m | 120 m |
 | GLO-90 | 90 m | 360 m |
 
 This is an engineering guideline drawn from the measurements above, not a
-theorem: at 100 m on GLO-90 the profile produced impossible descents, and at
-≈220 m (2.5 cells) it was plausible but still noisy.
+theorem. The steepest window (250 m, [§5](#5-the-steepest-ramp-is-found-not-placed))
+keeps to it. The display ladder ([§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb))
+and the average ([§4b](#4b-average-gradient-counts-only-the-climbing)) start
+at 100 m, under GLO-30's floor ([§9](#9-owner-decisions-still-open)).
 
 ### 3b. A bar is a distance, not a fraction of the climb
 
-**This is the rule, and it replaces a worse one** (owner, 2026-08-05). The
-profile used to be **eleven equal slices of whatever the climb happened to be**,
-so a bar meant ~220 m on a 2.4 km climb and 1.5 km on Hockai. Two charts looked
-alike and were not comparable, and any short ramp was averaged flat on a long
-climb.
-
-Bars are now a real distance, from the ladder **{100, 150, 200, 250, 500, 1000,
-2000} m**, taking the narrowest that keeps the chart to **25 bars or fewer**. So
-a 2.4 km climb draws 24 bars of 100 m; past 2.5 km it steps to 150 m, and so on.
-The last rung is a floor rather than a guarantee — an unusually long route draws
-more bars instead of being silently truncated.
+Owner, 2026-08-05. Bars are a real distance, from the ladder **{100, 150, 200,
+250, 500, 1000, 2000} m** (`ClimbProfiler::BIN_LADDER`), taking the narrowest
+that keeps the chart to **25 bars or fewer** (`MAX_BARS`,
+`ClimbProfiler::binWidthFor()`). A 2.4 km climb draws 24 bars of 100 m; past
+2.5 km it steps to 150 m, and so on. The last rung is a floor rather than a
+guarantee: an unusually long route draws more bars instead of being truncated.
+Equal slices of each climb would make a bar mean 220 m on one climb and 1.5 km
+on another, and would average any short ramp flat on a long climb.
 
 | climb | length | bin | bars |
 |---|---|---|---|
@@ -738,156 +386,103 @@ more bars instead of being silently truncated.
 | Roche-aux-Faucons | 4.24 km | 200 m | 22 |
 | Hockai | 16.90 km | 1000 m | 17 |
 
-**The average does NOT follow this ladder.** It stays at 100 m bins
-([§4b](#4b-average-gradient-counts-only-the-climbing)), because a published
-figure must not change merely because a climb grew long enough to be redrawn
-with wider bars.
+**The average does not follow this ladder.** It stays at 100 m bins
+([§4b](#4b-average-gradient-counts-only-the-climbing)), so a published figure
+never changes merely because a climb grew long enough to be redrawn with wider
+bars.
 
-**The caption always states the bin width** ("per 100 m"). That was true before
-and unenforced; with the width now varying by climb it is the difference between
-a chart and a decoration, and it is the same fault as
-[§1c](#1c-the-bars-mean-different-things-on-different-climbs).
+**The caption always states the bin width** ("per 100 m", from `binM`). A
+chart whose bars silently mean different distances on different climbs is the
+fault [§1c](#1c-a-bar-must-mean-the-same-thing-on-every-climb) rules out.
 
-**And the length beside the chart must be the measured one.** It stops at the
-summit, while the drawn line may not — La Redoute displayed "2.4 km" above 21
-bars of 100 m. `length` and `gain` are stored for exactly this reason
+**The length beside the chart is the measured one.** It stops at the summit,
+while the drawn line may not, which is why `length` and `gain` are stored
 ([§4](#4-what-is-measured-and-what-is-stored)).
-
-**The caption always states the bin width** ("per 100 m"). A chart whose bars
-silently mean different distances on different climbs is the same class of fault
-as [§1c](#1c-the-bars-mean-different-things-on-different-climbs).
 
 ### 3c. Sampling
 
-Sample the routed line at **one fifth of the bin width** (20 m for a 100 m bin),
-so every bar averages five readings rather than differencing two. Long climbs
-are batched against the self-hosted service; there is no 100-point ceiling.
+The profiler reads heights at up to **200 points** of the routed line
+(`ClimbProfiler::SAMPLES`): every vertex when the line has 200 or fewer,
+otherwise 200 vertices spread evenly by index. Distance along the climb comes
+from the full-resolution line, not from the samples
+(`sampleWithDistance()`), and a height between two samples is interpolated by
+distance (`at()`). Bars, the average and the steepest window are all read off
+that one distance/elevation series. 200 samples put a 4 km climb at about 20 m
+spacing; a 26 km climb samples about every 130 m, which densifying showed moves
+the published figures by less than half a point.
 
 ### 3d. Where the coordinates come from, and what the DEM returns
 
-Stated explicitly because it is the first thing a reader asks and nothing above
-says it: **the elevation source never produces coordinates.** A DEM has no idea
-a road exists. It is a lookup table — hand it a latitude and longitude, it
-returns a height there. The trajectory comes entirely from routing.
+**The elevation source never produces coordinates.** A DEM is a lookup table:
+hand it a latitude and longitude, it returns a height there. The trajectory
+comes entirely from routing.
 
 The full chain for one climb:
 
 1. The rider taps **foot** and **summit** on the map.
-2. **The routing engine produces the line.** `climb-editor.js` POSTs the taps
-   to `/contribute/route`, which snaps them to the road network via **our own
-   Valhalla** (`RouteSnapper`, bicycle costing) and returns the polyline
-   actually ridden. This is the only step that decides *where* the climb goes.
-   **Changed 2026-08-09** (`ebf8eba`): it used to call the public OSRM demo
-   server straight from the browser, whose own policy forbids backing an
-   application. The proxy keeps OSRM's response shape, so the editor's parsing
-   was untouched; `ClimbGeometry` still only validates what comes back.
-3. **That polyline is resampled** to the interval in
-   [§3c](#3c-sampling) — routed vertices sit where the road bends, not at even
-   spacing, so points are interpolated along it to get one every 20 m.
-4. **Those points are sent to `/height`** as `shape`, with `range: true`.
-   Valhalla returns one elevation per point *and* the cumulative distance to it,
-   so no distance arithmetic is needed on our side.
-5. **Bins are cut** from that distance/elevation series per
-   [§3a](#3a-bin-width-follows-the-source)–[§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb).
+2. **The routing engine produces the line.** `climb-editor.js` posts the taps
+   to `POST /contribute/route`, which snaps them to the road network through
+   our Valhalla (`RouteSnapper`, `bicycle` costing) and returns the polyline
+   actually ridden ([§3e](#3e-the-routing-call)). This is the only step that
+   decides *where* the climb goes.
+3. **The line is sampled** per [§3c](#3c-sampling).
+4. **The samples are sent to `/height`** as `shape`
+   ([§2b-i](#2b-i-valhalla-answers-the-heights)); Valhalla returns one
+   elevation per point.
+5. **Bins are cut** from the distance/elevation series per
+   [§3a](#3a-bin-width-follows-the-source)-[§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb).
 
-So step 2 owns the geometry and step 4 owns the heights, and they are
-independent: a profile can be recomputed against a better DEM without re-routing,
-and a re-drawn line gets a new profile without changing sources.
+Step 2 owns the geometry and step 4 owns the heights, and they are
+independent: a profile can be recomputed against a better DEM without
+re-routing, and a redrawn line gets a new profile without changing sources.
 
-**What `/height` does with a `.hgt` file.** Tiles are named for their south-west
-corner (`N50E005.hgt`) and hold a raw grid of 16-bit elevations — 3601×3601 for
-one arc-second. A lookup takes the integer part of the coordinate to pick the
-tile and the fractional part to index the grid, then **interpolates between the
-four surrounding cells** rather than snapping to the nearest one. Measured
-2026-08-04: walking 60 m in 2 m steps returned values changing every ~14 m on a
-~6.7% slope — run length tracking the *gradient* rather than the 30 m cell size,
-which is the signature of interpolation.
+**What `/height` does with a `.hgt` file.** Tiles are named for their
+south-west corner (`N50E005.hgt`) and hold a raw grid of 16-bit elevations,
+3601 × 3601 for one arc-second. A lookup interpolates between the four
+surrounding cells rather than snapping to the nearest one: walking 60 m in 2 m
+steps returned values changing every ~14 m on a ~6.7% slope, tracking the
+gradient rather than the 30 m cell.
 
-**But the reply is integer metres**, and that is a second, independent argument
-for the [§3a](#3a-bin-width-follows-the-source) floor. Rounding to the metre is
-±0.5 m on every reading regardless of how good the source raster is. Over a
-100 m bin at 9% — 9 m of rise — that is ±0.5 of a percentage point, which is
-tolerable. Over a 20 m bin it would be ±2.5 points, and the bar would be mostly
-rounding error. Sampling at one fifth of the bin width
-([§3c](#3c-sampling)) also helps here: averaging five readings dilutes the
-quantisation that differencing two endpoints would keep at full strength.
+**The reply is integer metres**, a second argument for the
+[§3a](#3a-bin-width-follows-the-source) floor. Rounding to the metre is ±0.5 m
+on every reading. Over a 100 m bin at 9% (9 m of rise) that is ±0.5 of a
+percentage point; over a 20 m bin it would be ±2.5 points, and the bar would be
+mostly rounding error.
 
-### 3e. The routing call — external and client-side until 2026-08-09, ours since
+### 3e. The routing call
 
-**This section's heading was true when it was written and is not any more.**
-Both halves of the chain moved server-side, and the reasoning below is kept
-because it is what argued them there.
+Both halves of the chain run on the server, against our own Valhalla:
 
 | | where it runs | endpoint |
 |---|---|---|
-| geometry | **the server** (`RouteSnapper`, via `POST /contribute/route`) | our Valhalla, bicycle costing |
-| elevation | **the server** (`ElevationClient`) | our Valhalla `/height`, per-continent (`ELEVATION_URLS`) |
-| validation | the server (`ClimbGeometry`) | — |
+| geometry | the server (`RouteSnapper`, via `POST /contribute/route`) | our Valhalla `/route`, `bicycle` costing, per continent (`ElevationEndpoints`) |
+| elevation | the server (`ElevationClient`) | our Valhalla `/height`, per continent (`ELEVATION_URLS`) |
+| validation | the server (`ClimbGeometry`) | - |
 
-Neither `router.project-osrm.org` nor `api.open-meteo.com` is called by
-anything, and neither host is in the CSP. The editor's own parsing was left
-alone: the snap proxy deliberately returns OSRM's response shape.
+No public routing or elevation host is called, and none is in the CSP.
 
-**Hardened 2026-08-24 (test-suite review).** `POST /contribute/route` now
-follows THE stateless-JSON pattern
+`POST /contribute/route` follows the stateless-JSON pattern
 ([security-architecture.md](security-architecture.md) §5.1) exactly as its
-sibling `/contribute/elevation` does, because they are the same shape of thing:
-JSON posted by the same two editor pages to the same upstream Valhalla. Until
-then it carried `#[IsGranted('ROLE_USER')]` and nothing else, which meant three
-divergences from the sibling, none of them visible from reading either file
-alone:
+sibling `/contribute/elevation` does, because both carry JSON from the same
+editor pages to the same Valhalla: an anonymous caller gets a clean 401 (a
+redirect would read as a successful response with an HTML body); it takes the
+stateless `route-snap` token (`window.CC_ROUTE_TOKEN`), separate from the
+unrelated `route-community`; and the per-user `route_snap` limiter, 90 a
+minute, is consumed after validation, so a malformed body costs no budget.
+`RouteControllerTest` mirrors `ElevationControllerTest` case for case so the
+two endpoints do not drift. The reply keeps OSRM's response shape (`routes[0]
+.geometry.coordinates`, `distance`; `code: NoRoute` with no route), which the
+editor parses; with no route the editor keeps the straight line.
 
-- an anonymous caller got a **302 to the login page**, which a `fetch()` reads
-  as a successful response with an HTML body, instead of a clean `401`;
-- **no CSRF token**, where elevation requires `X-CC-Token`. It now takes the
-  `route-snap` stateless token (`window.CC_ROUTE_TOKEN`), a separate id from
-  the existing and unrelated `route-community`;
-- **no rate limiter**, so one account could spend the whole routing box's
-  capacity at 8 s per upstream call. It now has `route_snap`, 90/minute per
-  user, consumed after validation so a malformed body costs no budget.
-
-`RouteControllerTest` mirrors `ElevationControllerTest` case for case, on
-purpose: the two endpoints must not drift again.
-
-Three consequences — of the arrangement as it WAS, which is why it changed.
-
-**`router.project-osrm.org` was the OSRM project's public demo server** — no
-service guarantee, and explicitly not intended to back an application. This
-paragraph used to argue that the stack **already runs Valhalla**
-([§2b-i](#2b-i-self-hosting-valhalla-already-does-this)), that a Valhalla
-instance with routing tiles serves `/route` as well as `/height`, and that the
-same service could therefore supply both.
-
-**That is what happened, 2026-08-09** (`ebf8eba`). Snapping goes through
-`POST /contribute/route` → `RouteSnapper` → our Valhalla with bicycle costing
-(driving refused the greenways). OSRM's host left the CSP; the demo-server
-dependency is gone. The rest of this section is kept as the reasoning that
-led there.
-Verified 2026-08-04: the existing European instance answers `/route` with
-`"costing":"bicycle"` today, so this is a client change rather than an
-infrastructure one.
-
-**It requests the `driving` profile.** The URL is
-`/route/v1/driving/…` — the only profile the demo server offers. A climb is
-normally a road, so this is usually right; where it is wrong it is silently
-wrong, routing around a surface a bike may use and a car may not. A cycling
-profile is a reason to move to Valhalla independent of elevation.
-
-**The server never sees the road.** `ClimbGeometry` decodes and validates the
-posted payload — pairs of finite numbers, within `MAX_POINTS` — and by design
-checks shape rather than truth. It cannot confirm the polyline follows a road,
-because it never asked a router. So a route is a *contribution*, verified by
-moderation like any other, not a computed fact. Any future server-side
-recompute ([§7](#7-migration)) needs its own routing call rather than trusting
-the stored line.
+**The server never sees the road in the payload.** `ClimbGeometry` decodes and
+validates a posted line (pairs of finite numbers, within `MAX_POINTS`) and by
+design checks shape rather than truth. So a route is a *contribution*, verified
+by moderation like any other, not a computed fact.
 
 **Not used: `/route` with `elevation_interval`.** Valhalla can route and sample
-elevation in a single call, returning both geometry and heights. That suits a
-caller who has no geometry yet; here the snap has already produced the line the
-rider approved, and re-routing would risk returning a *different* line than the
-one on screen. Still true now that the snap IS Valhalla: the two calls are
-deliberately separate so the elevation is measured along the exact line the
-rider saw and accepted.
+elevation in one call, but re-routing at measurement time could return a
+different line than the one on screen. The two calls stay separate so the
+elevation is measured along the exact line the rider saw and accepted.
 
 ---
 
@@ -895,99 +490,68 @@ rider saw and accepted.
 
 Everything below is **derived**. None of it is a form field, and
 `CatalogField::$derived` ([edit-items/N-climbs.md](edit-items/N-climbs.md))
-is how the edit form is kept from offering a box for any of it.
+keeps the edit form from offering a box for any of it. The letter-N keys are
+allowed by `AttributeVocabulary` (`App\Catalog\Import`).
 
 | attribute | definition |
 |---|---|
-| `length` | great-circle length of the routed line |
-| `gain` | summit elevation − foot elevation |
-| `avgGradient` | **ascent only**: the sum of the climbing, over the length — see [§4b](#4b-average-gradient-counts-only-the-climbing) |
-| `maxGradient` | the **steepest 250 m** (the 95th-percentile window, `MAX_WINDOW_M`); see [§5](#5-the-steepest-ramp-is-found-not-placed) |
-| `grad` | per-bin gradients, bin width per [§3](#3-sampling-and-binning) |
-| `elev` | elevation at each bin edge, for the silhouette |
+| `length` | length along the routed line to the summit (haversine per segment), metres |
+| `gain` | summit elevation minus foot elevation, metres |
+| `footEle`, `summitEle` | the two altitudes, metres above sea level ([§4c](#4c-the-full-profile-and-the-two-altitudes)) |
+| `avgGradient` | **ascent only**: the sum of the climbing over the length, one decimal ([§4b](#4b-average-gradient-counts-only-the-climbing)) |
+| `maxGradient` | the **steepest 250 m**: the 95th-percentile window, whole percent ([§5](#5-the-steepest-ramp-is-found-not-placed)) |
+| `steepWindowM` | the window `maxGradient` was measured over (250), so the caption names it |
+| `steep` | the measured steepest marker, `{at, pct, manual}` ([§5](#5-the-steepest-ramp-is-found-not-placed)) |
+| `grad` | per-bin gradients, whole percent, clamped to ±35, bin width per [§3](#3-sampling-and-binning) |
 | `binM` | the bin width in metres, so the chart can label itself |
-| `demSource` | which source answered, for attribution and for the bin floor |
+| `lineGrad` | sustained gradient per band of about 25 m (at most ~120 bands), for colouring a line that has no `grad` ([§6a](#6a-a-descent-must-look-like-a-descent)) |
+| `demSource` | which source answered, for attribution |
 
-`elev` and `binM` do not exist today; `demSource` is the provenance flag whose
-absence made [§1c](#1c-the-bars-mean-different-things-on-different-climbs)
-undetectable. All three need adding to the letter-N vocabulary in
-`AttributeVocabulary`.
+`steepPoint` is stored beside them but is a rider's contribution, not a
+measurement ([§5a](#5a-two-markers-one-measured-one-remembered)).
 
-**`headline` is retired.** It is a stored display string (`"2.0 km · 8.4% avg"`)
-that nothing recomputes, so it drifts the moment a climb is redrawn. The drawer
-composes that line from `length` and `avgGradient` at render time.
+Two writers fill the set, `app:climbs:recompute --write` and a saved climb
+contribution (`CatalogContributionService::deriveClimbProfile()`), and both
+write all of it: the measured keys come from one mapping of the profile
+(`ClimbProfiler::storedAttributes()`), and each writer sets `steep` itself so a
+hand-placed marker keeps its place. Neither writes when the profile is null
+([§2d](#2d-failure-is-honest)).
+
+**There is no stored `headline`.** A stored display string (`"2.0 km · 8.4%
+avg"`) drifts the moment a climb is redrawn, so both writers remove it and the
+drawer composes that line from `length` and `avgGradient` at render time.
 
 ### 4a. The line must end at the summit
 
-`gain` and `avgGradient` are only meaningful if the line stops climbing. La
-Redoute's stored route does not: measured 2026-08-04, it runs **362 m past the
-high point**, and those last metres descend — the final 100 m bin reads −7.4%.
-
-The cost is not cosmetic. Over the stored line the climb averages **6.80%**;
-trimmed at its summit it averages **8.61%** over 2080 m, against climbfinder's
-9.0% over 2000 m. **Overshooting the top understates the climb by 1.8
-percentage points** — an error several times larger than the difference between
-the DEM sources [§2a](#2a-the-source) agonises over. Getting the source right
-and the endpoint wrong still publishes a wrong number.
-
-This is a rider-input problem, not a data problem: marking a summit a few
-hundred metres late is easy and the map gives no feedback that it happened. So:
+`gain` and `avgGradient` are only meaningful if the line stops climbing. A line
+that runs on past the top understates the climb: La Redoute's line drawn 362 m
+past its high point averaged 6.80%; trimmed at the summit it averages 8.61%
+over 2080 m, against climbfinder's 9.0% over 2000 m. Marking a summit a few
+hundred metres late is easy, so:
 
 - **`length` and `gain` are measured to the highest point on the line**, not to
   its last point. The tail beyond the summit is excluded from every derived
-  figure.
-- **A trailing descent is a warning, not a silent trim.** If the line continues
-  materially past its high point, the editor says so and offers to cut it there
-  — the rider may have meant to include a dip, and a spec that quietly discards
-  part of a contribution is the kind of thing [§1](#1-why-the-current-numbers-cannot-be-trusted)
-  is written against.
-- **"Materially" means metres LOST, not metres travelled** (owner, 2026-08-05).
-  An earlier draft flagged on tail *distance*, and it was wrong: many climbs
-  finish on a plateau, and **on flat ground the highest point is decided by DEM
-  noise rather than by the road**, so its position wanders by whatever the
-  quantisation happens to do. Roche-aux-Faucons is flat for its last 73 m; its
-  tail is 130 m long and loses **1 m**, and the route is correct. La Redoute's
-  tail is 361 m and loses **10 m**, and that is a descent. The threshold is on
-  the drop — 8 m in `ClimbProfiler` — and for the same reason the summit is the
-  **last** point at the maximum, not the first: a climb does not end where its
-  plateau begins.
-- **[§7](#7-migration)'s sweep must re-derive endpoints, not just elevations.**
-  Every existing climb was drawn without this check.
+  figure, and the map draws the climb foot to summit (`trimToClimb()` in
+  `render.js`, cut at `length`). The tail stays in `route`: it is part of the
+  contribution, not of the climb.
+- **The summit is the last point at the maximum, not the first**, so a climb
+  that finishes on a plateau does not end where its plateau begins.
+- **"Past the summit" means metres lost, not metres travelled** (owner,
+  2026-08-05). On flat ground the highest point is decided by DEM noise, so a
+  tail's distance says nothing: Roche-aux-Faucons' 130 m tail loses 1 m and
+  the route is correct; La Redoute's 361 m tail lost 10 m, a descent. The
+  profiler reports `overshootM` only when the tail drops at least 8 m
+  (`OVERSHOOT_DROP_M`), with the drop as `overshootDropM`.
+  `app:climbs:recompute` prints such a climb as a warning and leaves the line
+  alone. The editor receives `overshootM` and shows no warning and no cut.
 
-**And the line must run uphill, which is a separate check.** Measured across
-every climb with a route, 2026-08-04, and the two defects found have **different
-origins** — which matters more than the count:
-
-| climb | high point sits at | origin |
-|---|---|---|
-| Mur de Huy, Ereffe, Bohissau, Hockai, Stockeu | at or within 5 m of the end | correct |
-| **Côte de la Roche-aux-Faucons** | **0%** | **seed data, stored backwards** — fixed |
-| Côte de la Redoute | 90%, 361 m of descent | **a route drawn in the editor**, during testing |
-
-An earlier draft of this section said "three of seven", counting Stockeu. Its
-tail is **5 m**, which is noise rather than a defect, and the real figure was
-never a count of seed errors at all:
-
-- **Roche-aux-Faucons was a seed error** — hand-authored summit-to-foot in
-  `SeedManualCatalogCommand`, starting at 242 m and ending at 181 m. One entry,
-  now reversed at source.
-- **La Redoute's overshoot is not in the seed at all.** The seeded route is
-  1959 m and ends at its summit. The 361 m of trailing descent belongs to a
-  route **drawn through the contribute wizard** while testing the moderation
-  flow — which makes it the more important of the two, because it is what the
-  live editor accepts from a real rider today, with no warning of any kind.
-
-So this is a validation rule rather than a footnote, and the validation belongs
-in the **editor**, not only in a migration sweep over seeded rows.
-
-The reversed case is the dangerous one, because the trim rule above **fails
-silently on it**. "Measure to the highest point" on a descending line puts the
-summit at index 0, giving a length of 0 m, a gain of 0 m, and an average
-gradient of 0% — numbers that are not obviously broken in a database column.
-Guard it explicitly: if the high point is at or near the *start*, the line is
-reversed, and the answer is to say so — offer to flip it — never to publish a
-zero. A climb whose foot and summit are the same height is not a climb, and a
-zero-length one is a bug report, not a measurement.
+**A reversed line is refused.** A line stored summit to foot puts the highest
+point at its start; measured "to the highest point" it would give a length,
+gain and average of zero, numbers that are not obviously broken in a database
+column. So a line whose highest point is its first point gets no profile at all
+(`ClimbProfiler::profile()` returns null), and the recompute reports it as "no
+elevation, or the line runs downhill". A zero-length climb is a bug report,
+not a measurement.
 
 ### 4b. Average gradient counts only the climbing
 
@@ -1001,153 +565,57 @@ averages and they are far apart:
 | climbfinder, same road | 5.4% |
 
 Net gain lets a descent cancel out the climbing either side of it, which is not
-what the rider did — they climbed both ramps. Ascent-only is what climb sites
-publish and what the legs remember, and it lands within 0.3 of a point of the
-reference here. **We publish ascent-only.**
+what the rider did. Ascent-only is what climb sites publish and what the legs
+remember. **We publish ascent-only.**
 
-**Measured over ~100 m bins, not raw samples.** Ascent-only is noise-sensitive
-by construction: every upward wobble in the DEM adds to the total and nothing
-ever subtracts, so summing raw sample deltas inflates the figure on exactly the
-wooded climbs whose readings are least trustworthy. Binning first is the same
-defence as [§3a](#3a-bin-width-follows-the-source)'s floor, and it is stable —
-the same climb reads 5.8% at 50 m bins, 5.7% at 100 m, 5.6% at 200 m, against
-6.0% unbinned.
+**Measured over ~100 m bins, not raw samples** (`AVG_BIN_M`). Ascent-only is
+noise-sensitive by construction: every upward wobble adds and nothing
+subtracts. Binning first is stable: the same climb reads 5.8% at 50 m bins,
+5.7% at 100 m, 5.6% at 200 m, against 6.0% unbinned.
 
-**One decimal place.** The average is the headline figure and whole percent
-throws away a distinction riders care about; 8.6% and 9.4% are not the same
-climb. The maximum stays whole, because it is one window's reading and that
-precision is not real.
+**One decimal place.** The average is the headline figure, and 8.6% and 9.4%
+are not the same climb. The steepest figure stays whole, because it is one
+window's reading and that precision is not real.
+
+### 4c. The full profile and the two altitudes
+
+`profile()` returns **`footEle`** and **`summitEle`**, read from the same
+elevation array every other figure is measured from. `gain` gives a chart its
+height but not its position: it can say "+225 m" and not "277 m -> 502 m",
+which is the pair every published climb profile leads with. A climb without
+them shows no altitude labels rather than an invented sea level. Côte de
+Stockeu measures 278 m -> 506 m here; myCols publishes 277 m -> 502 m.
+
+The drawer's 52 px gradient strip is a **button** that opens the full profile
+(`assets/map/climb-profile.js`) in its own popup: the road's silhouette, each
+bin filled in its gradient colour with the figure written in a band under it,
+both altitudes, and a distance ruler. Nothing is re-measured there: the
+silhouette is the cumulative sum of the `grad` bins the strip already draws, so
+the two charts cannot disagree about the same climb.
 
 ---
-
-### 4b. The full profile, and the two altitudes (2026-08-08)
-
-`profile()` now also returns **`footEle`** and **`summitEle`**, metres above sea
-level, read from the same elevation array every other figure here is measured
-from. `gain` gives a chart its height but not its position: it can say "+225 m"
-and not "277 m -> 502 m", which is the pair every published climb profile leads
-with and the one that tells a rider whether they will be cold at the top.
-`app:climbs:recompute --write` stores both. Rows measured before this simply do
-not have them, and the chart omits the labels rather than inventing a sea level.
-
-Independent check on the first climb that had one: Côte de Stockeu measures
-**278 m -> 506 m** here; myCols publishes 277 m -> 502 m.
-
-The drawer's 52 px gradient strip is now a **button** that opens the full
-profile (`assets/map/climb-profile.js`) in its own popup: the road's silhouette,
-each bin filled in its gradient colour with the figure written inside it, both
-altitudes, and a distance ruler. Nothing is re-measured there — the silhouette
-is the cumulative sum of the `grad` bins the strip already draws, so the two
-charts cannot disagree about the same climb.
 
 ## 5. The steepest ramp is found, not placed
 
 `steepestWindow()` slides a **250 m** window (`MAX_WINDOW_M`) along the profile
-at a fixed step, skips any window overlapping a tunnel or gallery, and returns
-the 95th-percentile window gradient (`STEEPEST_PERCENTILE`,
-[§2a](#2a-the-source)) with its coordinate. **That is the default and only
-behaviour**: the rider marks foot and summit, and the steepest ramp appears
-where the measurement puts it.
+at a fixed step (a tenth of the window, at least 5 m), skips any window
+overlapping a tunnel or gallery, and returns the 95th-percentile window
+gradient (`STEEPEST_PERCENTILE`, [§2a](#2a-the-source)) with the coordinate of
+that window's centre. A climb shorter than one window is its own steepest
+stretch. The step is a fixed distance, not route vertex to vertex: a routing
+engine puts vertices where the road bends, so a straight has almost none and a
+vertex-stepped window can miss the steepest stretch entirely.
 
-### 5a. Two markers: one measured, one remembered
+**It is labelled with its window ("steepest 250 m"), not "max gradient"**
+(owner, 2026-08-05). "Max gradient" invites comparison with a **point**
+maximum, so Mur de Huy's famous ~26% hairpin reads as a contradiction of our
+sustained figure when the two measure different distances. Naming the window
+settles it, which is why the figure ships without a `~`: a tilde on a value
+whose measurement distance is stated hedges about nothing. `steepWindowM`
+travels with the figure and the caption is built from it.
 
-Proposed by the owner, 2026-08-05, and it resolves the Mur de Huy problem
-properly rather than by wording.
-
-The measurement above and a rider's knowledge answer **different questions**, and
-the section on the max ramp shows the DEM cannot answer the second one at all:
-Mur de Huy's Chapelle hairpin is smaller than a GLO-30 cell, so no window width
-recovers its 26%. That is not a precision we can reach by computing harder. It is
-information the dataset does not contain and a rider does.
-
-So there are two markers:
-
-| | placed by | means |
-|---|---|---|
-| **steepest 250 m** | us, automatically | the steepest sustained 250 m the DEM can see, comparable across every climb |
-| **steepest point** | a rider, by hand | where the wall actually is, on a road they have ridden |
-
-Ours stays ours: derived on every redraw, never edited, and it is the figure the
-catalogue publishes and sorts on, because it is the only one measured the same
-way everywhere. Theirs is a contribution — a distinct icon at a place they
-choose, going through the same moderation as any other, and it can carry a
-gradient the DEM cannot see.
-
-**Why not just let riders correct our number.** Because then the published field
-means something different on every climb, depending on whether anyone happened
-to edit it — which is exactly how the catalogue ended up publishing four
-different definitions of "max gradient" and calling them one field
-([§1a](#1a-the-published-figures-were-typed-by-hand)). Two fields with two
-honest definitions beat one field with a negotiable one.
-
-**Built 2026-08-05.** Stored as `steepPoint` — `{at, pct, note}` — beside
-`steep`, never merged with it:
-
-- **The percentage is optional.** A rider may know *where* the wall is without
-  knowing how steep, and demanding a number invites an invented one. `note`
-  gives them somewhere to say what they do know ("the hairpin after the
-  chapel"), bounded to 120 characters because it is a landmark, not a paragraph.
-- **A distinct icon**, amber and filled against the derived marker's purple
-  triangle, in the editor and on the map. Two markers that meant different
-  things and looked alike would be worse than one.
-- **It never moves on its own.** Every other derived value is recomputed on
-  redraw; this one is only ever placed, dragged or cleared by a rider, and it
-  survives an edit to anything else on the climb.
-- **It travels as geometry**, through the same submission and moderation path as
-  the line itself — no new review mechanic
-  ([moderation-and-contribution.md](moderation-and-contribution.md)).
-- **The editor control, 2026-09-25** (`rider-steep.js`). Under the map, once
-  foot and summit are set: **+ Steepest point** arms a mode, the next tap places
-  the marker, **Cancel** or Escape leaves the mode without one. A placed point
-  shows two optional fields, gradient (`20` becomes `20%`; anything the server
-  would refuse is not stored) and note, plus **Remove**.
-- **The gradient fills itself (2026-10-02).** Placing or dragging the point
-  asks `POST /contribute/elevation` with `pointAt` for the gradient over **90 m**
-  of road centred on it (`ClimbProfiler::pointGradient()`,
-  `POINT_WINDOW_M`): 7 heights 15 m apart and the slope fitted through them,
-  because one height is too noisy (owner 2026-10-02: "the 60 or 90 m avg over
-  that point as 1 point is too noisy"). The figure lands in the gradient field
-  and on the marker; a figure the rider types is theirs and is never
-  overwritten, and a point placed again is measured again.
-- **The point is found for the rider (2026-10-02).** "+ Steepest point" asks
-  the same endpoint with `findPoint: true` (`ClimbProfiler::steepestPoint()`,
-  owner 2026-10-02: "can't the system find the steepest point by itself and
-  user then can correct it"). The whole line is read at the profile's
-  spacing and a 90 m window slides along it in 15 m steps, skipping tunnels
-  and galleries; then 300 m around the steepest stretch is read again every
-  15 m and the window of fitted slopes places the point. The point lands
-  there with its gradient, and the rider drags it if it is wrong (a drag
-  measures it again). While the server looks, the map says "Finding the
-  steepest spot. Drag the point if it is wrong."; a tap on the road in that
-  moment places the point by hand and wins. With no heights the tap is the
-  only way, as before. The measured marker
-  reads "steepest 250 m" beside it, so the two numbers say what they measure.
-
-**Still open:** whether a climb may carry more than one, and whether the rider's
-figure should ever appear in listings or sorting. It does not today, and that is
-the safe default — a field that means the same thing everywhere is what can be
-sorted on.
-
-The third tap survives as an **override**, for the case the rider is on the road
-and the model is not: a marker they move is flagged `manual: true` and keeps its
-position, with its percentage re-read from the profile at that point (already
-the behaviour in `climb-editor.js`). An automatic marker is re-derived whenever
-the line changes.
-
-**And it is labelled with its window ("steepest 250 m"), not "max gradient"**
-(owner, 2026-08-05, when the window was 100 m; the caption is built from
-`steepWindowM`, [§2a](#2a-the-source)). The name was doing damage the number
-could not fix: "max gradient" invites comparison with a **point** maximum, so
-Mur de Huy's famous ~26% (its steepest hairpin) read as a contradiction of
-our 19% (the 100 m figure then), when the two simply measure different
-distances. Naming the window settles it, and it is why the figure
-ships without a `~`: a tilde on a value whose measurement distance is stated is
-hedging about something that is not uncertain. The average ships plain for the
-same reason, which closes the accidental split
-[§9](#9-owner-decisions-still-open) flagged.
-
-**Could we publish a shorter "max ramp" as well?** Measured on the live GLO-30
-service, 2026-08-05, at four window widths:
+**A shorter "max ramp" cannot come from this data.** Measured on GLO-30 at four
+window widths:
 
 | climb | 25 m | 50 m | 100 m | 150 m |
 |---|---|---|---|---|
@@ -1156,38 +624,79 @@ service, 2026-08-05, at four window widths:
 | Côte de la Redoute | 21% | 18% | 17% | 16% |
 | Côte d'Ereffe | 23% | 21% | 19% | 16% |
 
-**No — not from this data.** GLO-30's cells are ~30 m, so a 25 m window is *less
-than one cell*, and the table shows exactly the two failures that predicts.
-Shortening the window does **not** recover Mur de Huy's famous 26% — the DEM
-cannot see that hairpin at any width, because the hairpin is smaller than a
-cell. And it invents **41%** on Stockeu, a gradient no paved road has. A shorter
-window yields a bigger number, not a truer one, which is
-[§1b](#1b-the-elevation-source-is-too-coarse-for-the-bins-we-want-to-draw)'s
-failure one scale down.
+A 25 m window is less than one GLO-30 cell. Shortening the window does not
+recover Mur de Huy's 26% (the hairpin is smaller than a cell) and invents 41%
+on Stockeu, a gradient no paved road has. A finer source (Wallonia publishes
+1 m LiDAR terrain data) or a rider would measure a ramp; this dataset cannot.
 
-What would actually measure a ramp is a finer source — Wallonia publishes 1 m
-LiDAR terrain data — or a rider with a known-good device. Both are real options
-and neither is this dataset. Until then, publishing a 25 m figure would be
-inventing precision.
+The 250 m window reads gentler than a climb database's steepest 100 m; the
+caption names the window, so a reader can see the two measure different
+distances. It is also not the same number as the worst display bar: the bars
+sit at fixed boundaries, the window wherever it falls
+([§6a](#6a-a-descent-must-look-like-a-descent)).
 
-**Why 100 m** (owner, 2026-08-04). It was 150 m, chosen only as a
-noise-averaging distance. But the window is not a free parameter: climb
-databases publish the steepest **100 m**, so any longer window reads
-systematically gentler than every other source describing the same road, and a
-rider comparing us against climbfinder sees us understate a climb they know.
-Matching the convention is worth more than the marginal smoothing.
+**The measured marker can be moved.** An automatic `steep` marker is re-derived
+whenever the line changes. A rider who drags it sets `manual: true`: it keeps
+its position through a redraw and only its percentage is re-read from the
+profile at that point (`sustainedAtSteep`), and `app:climbs:recompute` never
+overwrites it.
 
-**Superseded 2026-08-07: the window is 250 m** (`MAX_WINDOW_M`). 100 m is below
-GLO-30's four-cell floor, and on Alpine passes it published roof and gallery
-artifacts as ramps ([§2a](#2a-the-source)). The published figure can therefore
-read gentler than a database's steepest 100 m; the caption names the window,
-so a reader can see the two measure different distances.
+### 5a. Two markers: one measured, one remembered
 
-It still is not the same number as the worst display bar. The bars sit at fixed
-boundaries, their width from the [§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb)
-ladder; the marker is a fixed 250 m window wherever it falls. Both
-are true, they measure different distances, and the marker is the one that
-answers "how steep does this get".
+Owner, 2026-08-05. The measurement above and a rider's knowledge answer
+different questions, and the DEM cannot answer the second one: Mur de Huy's
+hairpin is smaller than a GLO-30 cell, so no window recovers its 26%. That is
+information the dataset does not contain and a rider does.
+
+| | placed by | means |
+|---|---|---|
+| **steepest 250 m** (`steep`) | us, automatically | the steepest sustained 250 m the DEM can see, comparable across every climb |
+| **steepest point** (`steepPoint`) | a rider | where the wall actually is, on a road they have ridden |
+
+Ours is derived on every redraw and is the figure the catalogue publishes and
+sorts on, because it is measured the same way everywhere. Theirs is a
+contribution, a distinct icon at a place they choose, through the same
+moderation as any other. Letting riders correct our number instead would make
+the published field mean something different on every climb
+([§1a](#1a-hand-typed-figures-look-like-measured-ones)); two fields with two
+honest definitions beat one field with a negotiable one.
+
+`steepPoint` is stored as `{at, pct, note}` beside `steep`, never merged with
+it (`ClimbGeometry`):
+
+- **The percentage is optional.** A rider may know *where* the wall is without
+  knowing how steep. `note` holds what they do know ("the hairpin after the
+  chapel"), cut at 120 characters.
+- **A distinct icon**, amber and filled against the measured marker's purple
+  triangle, in the editor and on the map.
+- **It never moves on its own.** It is only placed, dragged or cleared by a
+  rider, and survives an edit to anything else on the climb.
+- **It travels as geometry**, through the same submission and moderation path
+  as the line, with no new review mechanic
+  ([moderation-and-contribution.md](moderation-and-contribution.md)).
+- **The editor control** (`rider-steep.js`). Under the map, once foot and
+  summit are set: **+ Steepest point** arms a mode, **Cancel** or Escape leaves
+  it. A placed point shows two optional fields, gradient (`20` becomes `20%`;
+  anything the server would refuse is not stored) and note, plus **Remove**.
+- **The point is found for the rider.** "+ Steepest point" asks
+  `POST /contribute/elevation` with `findPoint: true`
+  (`ClimbProfiler::steepestPoint()`, owner 2026-10-02). The line is read at the
+  profile's spacing and a 90 m window slides along it in 15 m steps, skipping
+  tunnels and galleries; then 300 m around the steepest stretch is read again
+  every 15 m and the steepest fitted slope places the point. While the server
+  looks, the map says "Finding the steepest spot. Drag the point if it is
+  wrong."; a tap on the road in that moment places the point by hand and wins.
+  With no heights the tap is the only way.
+- **The gradient fills itself.** Placing or dragging the point asks the same
+  endpoint with `pointAt` for the gradient over **90 m** of road centred on it
+  (`ClimbProfiler::pointGradient()`, `POINT_WINDOW_M`): 7 heights 15 m apart
+  and the slope fitted through them, because one height is too noisy (owner
+  2026-10-02). The figure lands in the gradient field and on the marker; a
+  figure the rider types is theirs and is never overwritten.
+
+The measured marker reads "steepest 250 m" beside it, so the two numbers say
+what they measure. The rider's figure does not appear in listings or sorting
+([§9](#9-owner-decisions-still-open)).
 
 ---
 
@@ -1195,162 +704,77 @@ answers "how steep does this get".
 
 ### 6a. A descent must look like a descent
 
-The bars carried no zero. Each was `10 + (p/max)*30` pixels with a 6-pixel
-floor, so a **−15% bin rendered as a short bar pointing the same way as every
-climbing one** — a chart that says "gentle rise" where the road drops. On a
-climb that genuinely descends between two ramps, which is what prompted this
-([§2a](#2a-the-source)'s correction), the profile told the opposite of the truth.
+**Bars hang below a baseline where the gradient is negative** (`gradStrip()` in
+`drawer.js`), and the dashed zero line is drawn only when something descends.
+A chart without a zero draws a -15% bin as a short bar pointing the same way as
+every climbing one, telling the opposite of the truth on a climb that drops
+between two ramps.
 
-Bars now hang below a baseline where the gradient is negative, and the dashed
-zero line is drawn only when something actually descends — an ordinary climb is
-not decorated with a rule that explains nothing.
-
-**The line and the bars share one series** (owner, 2026-08-05): the map takes
-its colour from the bars, so the same stretch of road is the same colour in both
-places. They were separate — bars at fixed bin boundaries, line from a window
-sliding every ~25 m — and disagreed about the colour band on up to **11 of 21
-bars**, which is indefensible when they are two pictures of one profile.
-
-**A residual worth knowing about, not yet decided.** The steepest-ramp marker is
-a sliding window at *any* offset (250 m since 2026-08-07, [§5](#5-the-steepest-ramp-is-found-not-placed)),
-and a ramp that straddles a bin boundary is split between two bars. The worked
-example is historical, measured 2026-08-05 with the then 100 m window: on Côte
-de Stockeu the marker read 27% while sitting on a 14% bar, because its window
-spanned two of them; the neighbouring bar read 23%. Two ways out, and they
-trade against each other:
-
-- **Publish the sliding window** (today). Truer to the road (in the example,
-  27% really was there over 100 m), but not verifiable from the chart a reader
-  is looking at.
-- **Publish the steepest bar.** Verifiable by eye and always consistent with the
-  marker's position, at the cost of understating a ramp that happens to straddle
-  a boundary: Stockeu would read 23% rather than 27%.
-
-This is an editorial call about which kind of wrongness is worse, and the
-published figures have moved enough already. Recorded rather than decided.
-
-*(Previously, and kept because the reasoning still holds:)* The
-map line used to take its colour from the chart's bins, and the steepest-ramp
-marker then landed *off* the darkest stretch — on La Redoute the marker read 17%
-at 970 m while the darkest band sat at 1100 m reading 15%, two different pieces
-of road (owner-reported 2026-08-05). Neither number was wrong: the marker slides
-its window to any offset, and a fixed bin cannot.
-
-So `lineGrad` colours the line — the sustained gradient measured at each band's
-own centre — while `grad` keeps its fixed bins for the chart, because columns
-have to be comparable between climbs. The darkest part of the line is now the
-steepest part of the road by construction, which is where the marker is: across
-all seven climbs the marker and the darkest band land in the **same colour
-band**, and on La Redoute at the same point.
-
-Three details mattered, and all three were found by looking at the map rather
-than at the numbers:
-
-- **The band gradient must be measured at its centre *distance***, not by
-  resolving that centre to the nearest sampled coordinate. That quantisation
-  alone under-read La Redoute's peak by a whole colour step.
-- **`lineGrad` and the drawn geometry must cover the same extent.**
-  `line-progress` runs 0..1 over whatever is rendered, so bands measured over a
-  different length get stretched — measuring to the summit while drawing the
-  whole route pushed the darkest band **145 m past** the marker. The fix is to
-  make both the *climb*: the map draws foot-to-summit, which is what every
-  published figure already describes. Drawing the whole stored line instead put
-  a 2.44 km line with a descending blue tail beside a chart and a length that
-  both said 2.1 km (owner-reported 2026-08-05). The overshoot stays in `route` —
-  it is a contribution, and [§4a](#4a-the-line-must-end-at-the-summit) warns
-  rather than discarding — but it is not part of the climb, so it is not drawn
-  as one.
-- **The steepest window must slide by a fixed step**, not from route vertex to
-  route vertex. A routing engine puts vertices where the road bends, so a
-  straight has almost none: on Côte d'Ereffe no vertex fell near 660 m, the
-  17.7% window there was never evaluated, and the marker landed **634 m away**
-  on a 17% stretch. Stepping by distance also makes the marker and the line
-  agree by construction, because both now measure the same way.
-
-Verified across all seven climbs: every marker now sits within one colour band
-of the darkest stretch, and within 20 m of it on six of them. The seventh is
-Hockai, where 167 m is a little over one band on a 17 km climb whose top
-windows are all within 0.1 of a point of each other.
-
-**The chart carries a distance axis.** With bars at a real width
-([§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb)) a profile can be
-read as a *position* along the climb, not only as a silhouette — which is what
-lets the steepest-ramp marker on the map correspond to something on the chart.
-Ticks are one per kilometre, or per 500 m under 1.5 km, and an interior tick
-that would crowd the end label is dropped rather than printed: a 2.1 km climb
-showing "2" beside "2.1 km" is noise. Each bar's tooltip names its stretch
-("1.2–1.3 km · 12%"), because on a 22-bar chart "12%" alone leaves the reader
-counting bars.
-
-**Both directions share one scale.** A −12% bar is exactly as long as a +12%
+**Both directions share one scale.** A -12% bar is exactly as long as a +12%
 one. Scaling each side to its own extreme would make a shallow dip look as
-dramatic as the steepest ramp on the climb, which is the same class of dishonesty
-as the missing zero.
+dramatic as the steepest ramp.
 
-**A climbing bar rests ON the baseline, not on the floor of the strip.** Worth
-stating because the first implementation got it wrong in a way that looked
-plausible: bottom-aligning each bar to its column put every climbing bar below
-the zero line, so the second half of a climb that dips and rises again read as
-though it were still descending (owner-reported 2026-08-04). Verified in a
-browser rather than by inspection — every climbing bar's lower edge and every
-descending bar's upper edge measure 0 px from the baseline.
+**A climbing bar rests on the baseline, not on the floor of the strip.**
+Bottom-aligning each bar to its column put every climbing bar below the zero
+line, so the second half of a climb that dips and rises again read as though it
+were still descending (owner-reported 2026-08-04).
+
+**The chart carries a distance axis** in the rider's distance unit: ticks every
+0.5 up to a 1.5 total, every 1 up to 6, and otherwise a sixth of the total
+rounded up; an interior tick that would crowd the end label is dropped. Each
+bar's tooltip names its stretch ("1.2-1.3 km · 12%"). The caption reads
+"Gradient profile · per {bin} · avg {avg}% · steepest {window} {max}%", from
+`binM`, `avgGradient`, `steepWindowM` and `maxGradient`.
+
+**The map line and the bars share one series** (owner, 2026-08-05): the map
+colours the climb line from `grad`, in hard steps over the line's progress
+(`drawClimbLine()` in `render.js`), so the same stretch of road is the same
+colour on the map and in the strip. `lineGrad` colours the line only for a
+climb that has no `grad`. The line and its colour bands both cover foot to
+summit ([§4a](#4a-the-line-must-end-at-the-summit)); bands measured over a
+different extent than the one drawn get stretched along it.
+
+**Open: the steepest marker and the bars can disagree.** The steepest window
+can sit at any offset, so a ramp that straddles a bin boundary is split between
+two bars (on Côte de Stockeu, with a 100 m window, the marker read 27% while
+sitting on a 14% bar beside a 23% one). Publishing the sliding window is truer
+to the road but not verifiable from the chart; publishing the steepest bar is
+verifiable by eye but understates a straddling ramp. Recorded rather than
+decided ([§9](#9-owner-decisions-still-open)).
 
 ### 6b. Descents are blue
 
-Colour carried no direction. `gradColor()` was a single purple ramp keyed on
-gradient, and since every negative falls in its first band, **a −12% drop wore
-the same pale purple as a 3% rise** — on the strip *and* on the map line. The
-dip was invisible unless you read the bar heights, which before
-[§6a](#6a-a-descent-must-look-like-a-descent) it did not have either.
+`gradColor()` (`assets/map/util.js`) colours climbing gradients on a purple
+ramp and descending gradients on a blue one: `#A6CFF2` → `#5BA0E8` → `#2B76D0`
+→ `#184F9F` → `#0A2A66`. The blue mirrors the purple exactly, with **the same
+five |gradient| thresholds and the same light-to-dark progression**, so
+steepness reads the same in either direction and only the hue says which way
+the road goes. A single ramp would give a -12% drop the same pale colour as a
+3% rise.
 
-Descending gradients now use a blue ramp: `#A6CFF2` → `#5BA0E8` → `#2B76D0` →
-`#184F9F` → `#0A2A66`. It mirrors the purple exactly — **the same five
-|gradient| thresholds and the same light-to-dark progression** — so steepness
-reads identically in either direction and only the hue says which way the road
-goes. A rider who has learnt that dark means steep does not have to learn a
-second scale.
+`gradColor()` serves the strip, the full profile and the map line alike, so a
+climb that descends shows blue on the map where it descends. The map key's
+gradient swatches use the same colours (`key-swatches.css`).
 
-This is in `gradColor()` itself rather than in the drawer, so **the map line and
-the profile strip agree**: the same stretch of road is the same colour in both,
-and a climb that descends shows blue on the map where it descends.
+### 6c. The full profile keeps one slope scale
 
-The reference is the industry-standard climb profile (climbfinder, and the
-same shape used by every climbing site):
+Owner, 2026-10-02. The full profile does not stretch every climb to the full
+height of its chart, which made an 11 km climb at 6.5% look as steep as a short
+wall. The vertical span is the largest of: the climb's own height gain, 60 m (a
+riser is not an alp), and the height a **12% average** (`FULL_HEIGHT_GRADIENT`)
+gains over the climb's length (`verticalSpan()` in
+`assets/map/profile-scale.js`). So every climb up to a 12% average is drawn at
+the same exaggeration and a gentler climb draws a lower silhouette: Furka
+(about 650 m over 11 km) fills about half the chart. A climb steeper than 12%
+on average fills the chart. On a phone the profile opens above the bottom sheet
+(`.cc-cp` z-index 1600, like the lightbox). Pinned by
+`web/tests/js/climb-profile-scale.test.mjs`.
 
-- **Bars at fixed distance**, one per bin, coloured on a gradient scale from
-  yellow through orange to dark red.
-- **The gradient printed on each bar**, in whole per cent.
-- **The elevation silhouette** drawn over the bars from `elev`.
-- **A distance axis** in kilometres, and the **foot and summit elevations**
-  labelled at the ends.
-- **The steepest ramp marked** on the bar containing it, distinctly, with its
-  own percentage — it is not the bar's value.
-- **A caption stating the bin width and the source**, e.g.
-  `per 100 m · EU-DEM 25 m`.
+### 6d. The full profile shows both steepest markers
 
-This replaces `gradStrip()` in `web/assets/map/drawer.js`, which draws
-unlabelled bars with no axis and no silhouette.
-
----
-
-
-### 6c. The full profile keeps one slope scale (2026-10-02)
-
-The full profile (`assets/map/climb-profile.js`) used to stretch every climb to
-the full height of its chart, so an 11 km climb at 6.5 % looked as steep as a
-short wall (owner 2026-10-02, Furka Pass). The vertical span is now the largest
-of: the climb's own height gain, 60 m (a riser is not an alp), and the height a
-**12 % average** (`FULL_HEIGHT_GRADIENT`) gains over the climb's length
-(`verticalSpan()`). So every climb up to a 12 % average is drawn at the same
-exaggeration and a gentler climb draws a lower silhouette: Furka (about 650 m
-over 11 km) fills about half the chart. A climb steeper than 12 % on average
-fills the chart, as before. On a phone the profile opens above the bottom sheet
-(`.cc-cp` z-index 1600, like the lightbox).
-
-### 6d. The full profile shows both steepest markers (2026-10-02)
-
-The full profile draws the two markers of [§5a](#5a-two-markers-one-measured-one-remembered)
-at their distance along the climb, in their map colours (owner 2026-10-02):
+Owner, 2026-10-02. The full profile draws the two markers of
+[§5a](#5a-two-markers-one-measured-one-remembered) at their distance along the
+climb, in their map colours:
 
 - **Steepest 250 m** (`steep`, purple): the road is drawn heavy over the
   window, with a bracket above it and the label "▲ 11% over 250 m". The window
@@ -1367,190 +791,142 @@ foot, not a share of the line: the chart's last bar is a full bin, so the
 chart is a little longer than the road (Furka: 22 bars of 500 m against
 10 597 m of road), and a share would land about 400 m past the spot. A climb
 without a `route` or a marker draws no marker, and the chart keeps no empty
-room for it.
-## 7. Migration
+room for it. Pinned by `web/tests/js/climb-profile-marks.test.mjs`.
 
-1. Stand up the elevation service ([§2](#2-the-elevation-service)); confirm
-   licensing first.
-2. Recompute every letter-N item that has a `route`, writing the derived set
-   from [§4](#4-what-is-measured-and-what-is-stored).
-3. **Delete the hand-authored values** — `grad`, `avgGradient`, `maxGradient`
-   and `headline` — from `SeedManualCatalogCommand` and from any row a recompute
-   did not reach. A climb with no route cannot be measured and must show no
-   gradient figures rather than the old ones.
-4. Only then build the chart ([§6](#6-the-chart)). Drawing 100 m bins on today's
-   data would publish a 10% descent in the middle of La Redoute.
+---
 
-Order matters: steps 2 and 3 are what *"only use the measured data"* means, and
-the chart is only honest once they are done.
+## 7. Measuring the catalogue
 
-### 7a. Drawing the line without the editor (built 2026-08-16)
+`app:climbs:recompute` (`RecomputeClimbProfilesCommand`) measures every letter-N
+item that has a `route` and prints old and new average and steepest figures; it
+is a dry run unless `--write` is given, and `--id N` limits it to one climb.
+With `--write` it stores the full derived set of
+[§4](#4-what-is-measured-and-what-is-stored), keeps a hand-moved `steep`
+marker, and removes any `headline`. It is the only writer of measurements
+besides the contribution path, so there is exactly one implementation the
+published numbers come from (`ClimbProfiler`).
 
-Step 2 can only reach a climb that HAS a route, and the migration left eight
-Belgian climbs with none - nothing to measure and nothing for the map to draw.
-Drawing them in the browser editor is right for one climb and wrong for eight:
-a hand-drawn line is also how both logged endpoint defects got in (La Redoute's
-361 m of trailing descent, [§4a](#4a-the-line-must-end-at-the-summit), and
-Roche-aux-Faucons stored backwards).
+Seeds carry lines and no measured values (`SeedManualCatalogCommand`,
+`app:catalog:seed-climbs`). A climb with no route cannot be measured and shows
+no gradient figures.
+
+### 7a. Drawing the line without the editor
+
+A climb with no route has nothing to measure and nothing for the map to draw.
+Drawing many lines in the browser editor is also how endpoint defects get in (a
+line run past the summit, a line stored backwards,
+[§4a](#4a-the-line-must-end-at-the-summit)).
 
 `tools/wikimedia/climb_line.py` routes foot -> summit through **the same
 Valhalla with the same `bicycle` costing** the editor's snap uses
 (`RouteSnapper`), so it produces the line the editor would have produced, and
-makes "redraw it to the real col" a rerunnable act rather than a memory of
-where somebody clicked. Four modes, and each names a defect rather than a
-gesture:
+makes a redraw rerunnable. Four modes, each named for a defect:
 
-- **`--extend`** - the line stops short of the top. Routes only from the stored
-  last point to the new summit and appends. **Not a redraw**, deliberately: a
-  whole-line reroute can legitimately come back on a DIFFERENT road (Gotthard
-  has the cobbled Tremola and the modern road, 2 km apart in length), which
-  would silently replace a curator's choice of road with the router's.
-- **`--trim-crest-within-km KM`** - the line runs ON past the top, over a
-  descent and up a second rise, so [§4a](#4a-the-line-must-end-at-the-summit)'s
-  trailing-descent rule cannot save it: the tail is not noise, it is a
-  different hill. Cuts at the highest point inside the window. Deterministic,
-  so no eyeballed index.
-- **`--reverse`** - routing is not symmetric. Côte des Forges came back 2.01 km
-  of detour foot -> summit where summit -> foot is the 1.48 km road the climb
-  actually is (one-ways and turn restrictions). The climb is the road either
-  way and storage order is ours, so it asks downhill and flips.
-- **`--find-foot KM`** - `climb_foot.py` is the better finder (it walks a real
-  road graph and knows a junction from a driveway) but it needs Overpass, which
-  answered 504 for half of the 2026-08-16 batch. This fires routes at a ring of
-  bearings and cuts each returned line at the published length. It canNOT tell
-  a valley road from a driveway, so every candidate prints with its gradient
-  and **a human picks** - a candidate whose gradient is nothing like the
-  published figure took the wrong road.
+- **`--extend`**: the line stops short of the top. Routes only from the stored
+  last point to the new summit and appends. Not a redraw: a whole-line reroute
+  can come back on a different road (Gotthard has the cobbled Tremola and the
+  modern road), which would replace a curator's choice of road with the
+  router's.
+- **`--trim-crest-within-km KM`**: the line runs on past the top, over a
+  descent and up a second rise, which the trailing-descent rule cannot catch.
+  Cuts at the highest point inside the window.
+- **`--reverse`**: routing is not symmetric. Côte des Forges came back as
+  2.01 km of detour foot -> summit where summit -> foot is the 1.48 km road the
+  climb is (one-ways and turn restrictions). It asks downhill and flips.
+- **`--find-foot KM`**: fires routes at a ring of bearings and cuts each at the
+  published length. It cannot tell a valley road from a driveway, so every
+  candidate prints with its gradient and a person picks. `climb_foot.py` is the
+  better finder (it walks a real road graph) but needs Overpass.
 
-`tools/wikimedia/climb_profile_probe.py` is the diagnosis half: it prints WHERE
-a bad segment sits, because a -12% at 200 m and a -12% at 4 km mean opposite
-things - a dip in the road versus a line drawn over the top. That distinction
-is what settled Roche-aux-Faucons.
+`tools/wikimedia/climb_profile_probe.py` prints where a bad segment sits,
+because a -12% at 200 m and a -12% at 4 km mean opposite things: a dip in the
+road versus a line drawn over the top.
 
-Neither tool computes a gradient. `app:climbs:recompute --id N --write` stays
-the only thing that writes measurements, so there is still exactly one place
-the published numbers come from.
+Neither tool computes a gradient. `app:climbs:recompute --id N --write` writes
+the measurements.
 
-### 7b. Seeding passes at scale (built 2026-08-16)
+### 7b. Seeding passes at scale
 
-§7a draws ONE line. The catalogue also needed a hundred, and the gap that had
-blocked that for months was never the geometry: `climb_candidates.py` says it
-plainly - "Wikidata knows the col, not where the climb begins".
+`tools/wikimedia/climb_sides.py` finds climbs from a col without a published
+length. **A pass climb is the road from the valley to the col**, so it leaves
+the col in every direction, follows each road down, and stops where the
+descending stops. That point is the foot and its distance is the length, and
+because a col has two or more roads leaving it, every side comes back without
+anyone choosing one: "Stelvio from Prato" and "Stelvio from Bormio" are two
+rows. `climb_candidates.py` supplies the cols.
 
-`tools/wikimedia/climb_sides.py` asks the question the other way round and
-needs neither a published length nor Overpass. **A pass climb is not "N km of
-road" - it is the road from the valley to the col.** So it leaves the col in
-every direction, follows each road DOWN, and stops where the descending stops.
-That point is the foot, its distance is the length, and because a col has two
-or more roads leaving it, **every side comes back without anyone choosing one**
-- which is what makes "Stelvio from Prato" and "Stelvio from Bormio" two rows
-instead of an argument.
+**Road-bike costing is load-bearing.** Plain `bicycle` costing returned the
+Camino de Santiago footpath beside the N-135 as 47% of the climb to Roncevaux.
+`climb_sides.py` routes with `bicycle_type: Road`, `avoid_bad_surfaces: 1.0`,
+`use_roads: 1.0`. This is deliberately stricter than `climb_line.py`, which
+must match the editor's own `RouteSnapper`: some stored climbs are greenways
+(Hockai's whole line is a RAVeL), and the harvester may be stricter than the
+editor while the editor may never be stricter than its riders.
 
-**Road-bike costing is load-bearing, not a preference.** The first run used
-plain `bicycle` costing and returned the Camino de Santiago FOOTPATH beside the
-N-135 as 47% of the climb to Roncevaux, plus a hiking trail at the Col de
-l'Iseran. The router was not wrong - a bike can ride those - but a pass climb is
-a paved road. `bicycle_type: Road`, `avoid_bad_surfaces: 1.0`, `use_roads: 1.0`
-brings Roncevaux back at 0% off-road. This is DELIBERATELY stricter than
-`climb_line.py`, which must match the editor's own `RouteSnapper`: some stored
-climbs really are greenways (Hockai's whole line is a RAVeL), and the harvester
-may be stricter than the editor while the editor may never be stricter than its
-riders.
+**`climb_audit.py` is the second opinion.** Arithmetic cannot tell a driveway
+from a col road. Valhalla's `trace_attributes` snaps each stored line back onto
+the road graph and reports what every edge is (`road_class`, `surface`, `use`,
+name). It traces with the same costing the harvest routed with, because a laxer
+profile can snap a good road line onto the footpath beside it. Four verdicts:
+DROP (the trace proves it is not a road), DUPLICATE (a border col in two
+countries' files, or a row already in the catalogue), CHECK (a person decides)
+and KEEP. Two traps it guards: Wikidata publishes US elevations in feet (a
+summit-height ratio of 3.28 to the measured one is converted, since nothing else
+lands there), and a side much shorter than another side of the same col is
+usually the descent-stop cutting at a terrace. `--name-feet` reverse-geocodes
+each surviving foot so a two-sided pass gets two names.
 
-**`climb_audit.py` is the second opinion, and it is a different instrument.**
-Arithmetic cannot tell a driveway from a col road - "a 40 km side at 1.2% is a
-valley road and a 900 m one at 14% is a driveway, and both look like climbs to
-arithmetic". Valhalla's `trace_attributes` snaps each stored line back onto the
-road graph and reports what every edge IS: `road_class`, `surface`, `use`, and
-the road's name. A via ferrata says so. It traces with the SAME costing the
-harvest routed with, because map-matching is a routing problem too and a laxer
-profile can snap a good road line onto the footpath beside it - the audit
-inventing the very defect it exists to find.
-
-Four verdicts, of which only CHECK is a judgement a person must make: DROP (the
-trace proves it is not a road), DUPLICATE (a border col in two countries' files,
-or a row already in the catalogue), CHECK, KEEP. On the 2026-08-16 run: 74 KEEP,
-21 CHECK, 15 DUPLICATE, 8 DROP - the eight being two hiking trails, a via
-ferrata at 20.5%, a railway pass, a forest road and a walking trail.
-
-**Two traps the review surfaced, both fixed in the tool.** Wikidata publishes US
-elevations in FEET, so Independence Pass read 12103 against a measured 3687 and
-the summit check called it 8 km off the col - a units bug wearing the costume of
-a data defect, caught by the feet-per-metre ratio because nothing else lands
-there. And a side much shorter than another side of the same col is usually the
-descent-stop cutting at a terrace rather than a genuinely short side; Bernina
-came back 4 km against a real 30, self-consistent enough that nothing else would
-have caught it.
-
-`app:catalog:seed-climbs` imports the reviewed artifact, KEEP-only by default,
-and **refuses DROP outright** rather than offering it behind a flag. It writes
-one item per side, identified `wikidata:<qid>:<side>` so a re-run upserts each
-side onto itself, geometry at the line's foot rather than Wikidata's
-coordinate (a climb's point is its foot, catalog-data-model.md §6a; the
-region and the duplicate check are asked there too), and
-`state = unverified` like every seeded row. It writes NO gradients: recompute
-remains the only writer, and the command says so on the way out. Naming is a
-rider question rather than a data one - "Stelvio Pass" names a col, "Stelvio
-Pass from Prato" names a climb - so the foot is reverse-geocoded into the
-artifact and tidied at import: an administrative area is dropped rather than
-shortened ("from Pitkin County" is not how anyone says it), a place already
-inside the pass name is not repeated, and two sides that would still collide are
-told apart by their road, or by their length when they share one. Pinned by
+`app:catalog:seed-climbs` (`SeedClimbsCommand`) imports the reviewed artifact,
+KEEP-only by default, and **refuses DROP outright**. It writes one item per
+side, identified `wikidata:<qid>:<side>` so a re-run upserts each side onto
+itself, geometry at the line's foot (a climb's point is its foot,
+catalog-data-model.md §6a; the region and the duplicate check are asked there
+too), and `state = unverified` like every seeded row. It writes no gradients.
+"Stelvio Pass" names a col and "Stelvio Pass from Prato" names a climb, so the
+foot is reverse-geocoded into the artifact and tidied at import: an
+administrative area is dropped rather than shortened, a place already inside
+the pass name is not repeated, and two sides that would still collide are told
+apart by their road, or by their length when they share one. Pinned by
 `SeedClimbsCommandTest`.
 
-### 7c. Ten climbs in every country (2026-09-06)
+### 7c. Ten climbs in every country
 
-Owner: "does every country have at least ten climbs; if not, add them."
-Fourteen of nineteen did not. The gap was never the geometry, it was the
-candidate list: §7b harvested the twelve best-known *mountain passes* per
-country, and a flat country has none, a Canadian one has gravel tracks,
-and Colombia's raced climbs are not passes in Wikidata's sense (one item
-for the whole country). Four widenings, all in `climb_candidates.py` /
-`climb_sides.py` and all flags, so the old behaviour is the default:
+Owner, 2026-09-06: every onboarded country has at least ten climbs. A flat
+country has no mountain passes, so the candidate list widens beyond them, all
+by flag in `climb_candidates.py` / `climb_sides.py` with the pass harvest as
+the default:
 
-- **`--limit`** raised from 12 to 40, then 150 where a country has the
-  passes (Chile 575, Canada 520, Japan 484 in Wikidata).
+- **`--limit`**: how many candidates per country (`climb_sides.py` default
+  12, `climb_candidates.py` default 15; up to 150 where a country has the
+  passes).
 - **`--class hill | climb | steep | mountain`**: Wikidata classes beside
-  mountain pass. Dutch and Luxembourg climbs are `hill` (Q54050), the
-  Flemish walls are `hillclimbing` (Q5762701), and the big summit roads
-  (Cauberg, Ventoux, Alto de Letras) are `mountain` (Q8502). A mountain
-  with no road to its top yields no side, so asking costs time only.
-- **`--source osm`**: named `mountain_pass=yes` nodes from OpenStreetMap
-  via Overpass, ordered by tagged elevation because no fame proxy exists
-  there. Colombia went from one candidate to 106. Such a col carries
-  `osm:node:<id>` where a Wikidata col carries a Q-id;
+  mountain pass. Dutch and Luxembourg climbs are `hill` (Q54050), the Flemish
+  walls `hillclimbing` (Q5762701), and the big summit roads (Cauberg, Ventoux,
+  Alto de Letras) `mountain` (Q8502). A mountain with no road to its top yields
+  no side.
+- **`--source osm`**: named `mountain_pass=yes` nodes from OpenStreetMap via
+  Overpass, ordered by tagged elevation. Such a col carries `osm:node:<id>`;
   `app:catalog:seed-climbs` files it with `source = osm` and ref
   `osm:node:<id>:<side>` (`testAnOpenStreetMapColKeepsItsOwnProvenance`).
-- **`--min-km` and `--min-pct`**, and `--flat-km` with them: the walker's
-  floors were Alpine (1 km, 4%, a 2 km flat window). A Dutch berg is 600 m
-  of 10% (Keutenberg came back 0.61 km at 10.5% only with `--flat-km 0.5
-  --min-km 0.5`), so hills run with short windows.
-- Candidate labels fall back through nl, fr, de, es, it, ja when English
-  has none, so a Slovenian pass is "Razdrto", not "Q22693587".
+- **`--min-km`, `--min-pct` and `--flat-km`**: the walker's floors default to
+  Alpine values (1 km, 4%, a 2 km flat window). A Dutch berg is 600 m of 10%,
+  so hills run with short windows.
+- Candidate labels fall back through nl, fr, de, es, it, ja when English has
+  none, so a Slovenian pass is "Razdrto", not its Q-id.
 
-The audit is unchanged and did its job: 371 sides, 241 KEEP, and its DROPs
-were tracks and paths (23 of Canada's 31 Wikidata sides). Hand rulings
-before seeding, all listed at the foot of
-`docs/plans/2026-09-06-climb-review.md`: OpenStreetMap nodes named by
-their elevation dropped; two British walkers' cols dropped because the
-walk had snapped onto a neighbouring road climb (Lairig Ghru onto the
-Cairngorm ski road, Sty Head onto Honister); five Luxembourg CHECK rows
-kept (a real road with a short track section, 9 to 16% off-road), owner
-may veto; Rwanda's volcano rows left out because both walks land on the
-same park road far below the summit, which would name a climb after a
-top it never reaches. 181 sides seeded, then measured by
-`app:climbs:recompute --write` as always.
+Hand rulings at review, as decisions: OpenStreetMap cols named by their
+elevation are dropped; a walkers' col whose walk snapped onto a neighbouring
+road climb is dropped; a real road with a short track section (9 to 16%
+off-road) may be kept on CHECK. Rwanda has fewer than ten: it has no named pass
+in either source, its volcano walks land on a park road far below the summit,
+and its raced climbs (the Kigali walls) are streets, which need a line drawn
+each in the editor.
 
-Result: every country at ten or more except Rwanda (4). Rwanda has no
-named pass in either source and its raced climbs (the Tour du Rwanda's
-Kigali walls) are streets, not features; they need a hand-drawn line each,
-which is the editor's job, not a harvester's.
+### 7d. The three Belgian seed climbs, checked against references
 
-### 7d. The three Belgian seed climbs, checked against references (2026-09-14)
-
-The hand-authored Belgian climbs in `SeedManualCatalogCommand` are checked
-against published profiles. A foot or summit is right when its height agrees
-within the few metres two elevation models differ by.
+The seeded Belgian climbs in `SeedManualCatalogCommand` are checked against
+published profiles (2026-09-14). A foot or summit is right when its height
+agrees within the few metres two elevation models differ by.
 
 | climb | ours (GLO-30) | reference | verdict |
 |---|---|---|---|
@@ -1562,52 +938,68 @@ PJAMM (1.29 km, 123 m) and Wikipedia (1.3 km, 121 m) put Mur de Huy's foot
 about 100 m higher up the road. Climbfinder is the reference kept, because it
 agrees on all three figures.
 
-**The stored line is drawn vertex for vertex.** `drawClimbLine` sends
-`route` to MapLibre unchanged, so a line stored with too few points cuts
-the corners of the road at high zoom. The seed carries each line as the road
-shape Valhalla returns (`trace_route`, `bicycle` costing, `map_snap`).
-
-A trace of all 283 climb lines through Valhalla on 2026-09-14 found Mur de
-Huy the only one stored sparse (35 points on 1.4 km, up to 6.8 m off the
-road; 68 points after). The other lines are already road shapes. Where a
-harvested line differs from today's trace at the same length, the difference
-is the routing profile (`climb_sides.py` uses road-bike costing), not missing
-points, so those lines stay as they are.
+**The stored line is drawn vertex for vertex.** `drawClimbLine()` sends the
+stored `route` (cut at the summit) to MapLibre, so a line stored with too few
+points cuts the corners of the road at high zoom. The seed carries each line as
+the road shape Valhalla returns (`trace_route`, `bicycle` costing, `map_snap`).
+A harvested line that differs from a fresh trace at the same length differs by
+routing profile (`climb_sides.py` uses road-bike costing), not by missing
+points, so it stays as it is.
 
 ---
 
 ## 8. Testing
 
-- **Unit** — binning: bin width chosen per [§3a](#3a-bin-width-follows-the-source)
-  and [§3b](#3b-a-bar-is-a-distance-not-a-fraction-of-the-climb) for a 500 m, a 2 km and a 17 km
-  climb; a bin never narrower than four cells of the answering source.
-- **Unit** — `steepestWindow` finds a planted ramp; a `manual` marker survives a
-  re-profile and an automatic one moves.
-- **Unit** — no elevation yields no figures, never zeros or a fallback.
-- **Regression** — La Redoute's first 2.0 km measures 9.0% ± 0.2 and 180 m ± 5 m
-  against a recorded EU-DEM fixture. That is the number three sources agree on,
-  and it is what the seeded 8.4% failed.
-- **Browser** — the climb editor must be exercised in a real browser. A headless
-  probe reported green against a broken geometry path for hours
-  ([edit-items/N-climbs.md](edit-items/N-climbs.md) records why).
+- **Profiler** (`web/tests/Elevation/ClimbProfilerTest.php`): ascent-only
+  ignores a descent in the middle; a line that only descends is refused rather
+  than measured as zero; a flat summit is not reported as running past the top
+  and a real trailing descent is; length and gain stop at the summit; the bin
+  width climbs the ladder and never exceeds the bar cap; the profile is binned
+  at the width it reports; provenance travels with the measurement; no
+  elevation means no profile; a single bad sample does not become the steepest
+  figure; the steepest figure carries its window; a step under a gallery is not
+  the steepest stretch; length is measured along the road, not across the
+  hairpins; the point gradient is the slope over 90 m and one odd height does
+  not swing it; the steepest point is found on the wall.
+- **Client and endpoints**: `ElevationClientTest` (the zero guard, a
+  wrong-length reply, the missing-sample sentinel, an upstream failure, no
+  configured service, too many points), `ElevationEndpointsTest` (instance
+  choice, Europe winning its overlap with Africa, fallback, first point,
+  unknown keys), `CoveredSpansTest` (tunnel spans, merged galleries, lookup
+  failure).
+- **Controllers**: `ElevationControllerTest` and `RouteControllerTest`, case
+  for case ([§3e](#3e-the-routing-call)).
+- **Seeds and contributions**: `SeedManualCatalogCommandTest`
+  (`testNoSeededClimbTypesAMeasuredValue`, the road shape point for point),
+  `SeedClimbsCommandTest`, `CatalogContributionServiceTest`
+  (`testClimbSubmissionStoresRouteGradSteep`), `ClimbGeometryTest`.
+- **Browser code**: `web/tests/js/climb-profile-scale.test.mjs`,
+  `climb-profile-marks.test.mjs`, `climb-editor-rider.test.cjs`.
+- **Source comparison**: `tools/elevation/compare-sources.js` reads climbs from
+  the dev database and reports per-bin disagreement between two DEMs
+  ([§2a](#2a-the-source)).
 
 ---
 
 ## 9. Owner decisions still open
 
 - **Widen the GLO-30 evidence geographically.** The comparison against EU-DEM
-  was run on Belgian climbs in one tile (`N50E005`). Climbs now exist in every
-  onboarded country, the Netherlands included, but the comparison has not been
-  repeated on them. The Netherlands is the interesting test, because the
-  decimation factor changes with latitude.
-- **Recompute cadence** — on submission only, or a periodic sweep as DEM sources
-  are updated.
-- **Whether the changed numbers need saying out loud.** The sweep ran on
-  2026-08-05 and moved figures riders recognise — Stockeu from `9%+` to 14.0%,
-  Mur de Huy's maximum from `~26%` to 19% under its new name. The naming carries
-  most of the explanation, but whether a rider who knew the old numbers gets
-  told *why* they changed is still an editorial call rather than a technical one.
-
-*(Closed: the `~` question — measured values ship plain, and the maximum states
-the distance it is measured over, so there is nothing left to hedge. See
-[§5](#5-the-steepest-ramp-is-found-not-placed).)*
+  was run on Belgian climbs in one tile (`N50E005`). Climbs exist in every
+  onboarded country, but the comparison has not been repeated on them. The
+  Netherlands is the interesting test, because GLO-30's longitude decimation
+  changes with latitude.
+- **The 100 m rung under GLO-30's floor.** The display ladder and the average
+  bins start at 100 m, below the 120 m four-cell floor of
+  [§3a](#3a-bin-width-follows-the-source).
+- **Recompute cadence**: on submission only, or a periodic sweep as the DEM is
+  updated.
+- **Sliding window or steepest bar** for the published steepest figure
+  ([§6a](#6a-a-descent-must-look-like-a-descent)).
+- **The rider's steepest point**: whether a climb may carry more than one, and
+  whether the rider's figure should ever appear in listings or sorting. It does
+  not, which is the safe default: a field that means the same thing everywhere
+  is what can be sorted on.
+- **Whether the changed numbers need saying out loud.** Measuring moved figures
+  riders recognise (Stockeu from `9%+` to 14.0%, Mur de Huy's steepest from
+  `~26%` to a sustained figure under its new name). Whether a rider who knew
+  the old numbers is told why they changed is an editorial call.

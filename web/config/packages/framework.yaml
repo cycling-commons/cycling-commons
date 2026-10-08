@@ -24,7 +24,7 @@ framework:
         cookie_samesite: lax
 
 # Proxy trust is prod-only: dev talks to PHP-FPM directly and must keep seeing
-# the real peer address (review 2026-08-16 finding 3). Without this, behind the
+# the real peer address. Without this, behind the
 # LB + nginx frontends getClientIp() returns the proxy, so every per-IP rate
 # limiter (coverage_read, content_report, media_report_urgent) collapses into
 # one shared bucket.

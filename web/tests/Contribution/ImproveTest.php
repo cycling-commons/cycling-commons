@@ -18,12 +18,12 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
  * Improve page: auth-gate, type-aware rendering (every catalogue letter), and the real edit
- * submission (Task 4 — see ImproveBindingTest for the prefill/was-now-snapshot
+ * submission (see ImproveBindingTest for the prefill/was-now-snapshot
  * scenarios this file doesn't duplicate).
  *
  * The wizard's Details step is driven by the catalog registry — each type
  * renders its own Fix-details (`improve[details][*]`) and Add-missing
- * (`improve[extras][*]`) fields. Since Task 4, `/improve` is bound to a real
+ * (`improve[extras][*]`) fields. `/improve` is bound to a real
  * item (`?item=<dbId>`, the map edit-bridge's target) and its letter — not a
  * `?type=` query param — drives which type's fields render; every scenario
  * below therefore seeds a real `Item` of the letter under test. Bare
@@ -86,7 +86,7 @@ final class ImproveTest extends WebTestCase
 
     /**
      * A real seeded Item to bind `/improve?item=` to — the edit flow only
-     * ever renders its type-aware form for a real target (spec §6/§8).
+     * ever renders its type-aware form for a real target (moderation-and-contribution.md §1.4).
      *
      * @param array<string, mixed> $attributes
      */
@@ -190,7 +190,7 @@ final class ImproveTest extends WebTestCase
      * Owner-reported 2026-09-16: the route drawer's "+ add" on route 111's
      * Gradient-limited row went to /improve?item=111&type=R and landed on the
      * generic explainer. /improve refuses type=R by design (the route-id /
-     * item-id collision, 2026-07-07 review; docs/specs/edit-items/R-quality-rides.md),
+     * item-id collision; docs/specs/edit-items/R-quality-rides.md),
      * so the page now says routes are not edited here. The drawer no longer
      * draws that link at all (drawer.js schemaRows).
      */
@@ -318,7 +318,7 @@ final class ImproveTest extends WebTestCase
     }
 
     /**
-     * Frontend review 2026-07-12 (critical C6): the segment branch of the
+     * The segment branch of the
      * wizard's syncLoc stored the two drawn endpoints only in memory — the
      * form POSTed with no segment data while the UI toasted "submit to
      * record it". The form must expose a hidden `segment` field for
@@ -598,7 +598,7 @@ final class ImproveTest extends WebTestCase
     }
 
     /**
-     * Security review 2026-07-07 (critical #3): a stay's `web` field is
+     * A stay's `web` field is
      * user-editable and its value is interpolated into an `<a href>` on the
      * public map. A `javascript:` (or any non-http) scheme must be rejected by
      * validation — the submission never persists, so the payload can never

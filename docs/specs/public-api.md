@@ -10,8 +10,7 @@ This document owns the **technical shape** of the public read API: the data we
 serve, the two transports (data-only vector tiles and JSON/GeoJSON REST), the
 auth and metering mechanics, versioning, attribution-in-responses, and a worked
 consumer integration. It is the endpoint contract that
-[api-strategy.md](api-strategy.md) ("any future endpoint contract belongs
-alongside osm-data-architecture.md §7") and
+[api-strategy.md](api-strategy.md) and
 [osm-data-architecture.md §7](osm-data-architecture.md) defer to.
 
 It **consumes unchanged** and does not restate:
@@ -36,13 +35,14 @@ bringing new information in comes later.
 
 The API exposes the **Commons layer only**. The account layer, meaning email,
 IP logs, password hashes and moderation internals, is **never** reachable
-through any endpoint or tile ([osm-data-architecture.md §8](osm-data-architecture.md)). This
+through any endpoint or tile ([api-strategy.md §8](api-strategy.md)). This
 is enforced at the serialization boundary: public responses are built from
-dedicated public DTOs that carry no personal data, not from internal entities,
-and below that, at the database itself: the API reads through a dedicated
-Postgres role that has no grant on any account table
+dedicated public DTOs that carry no personal data, not from internal entities.
+The design adds a second layer at the database itself, a dedicated Postgres
+role with no grant on any account table; that layer is specified but not built,
+and the live endpoints read through the default connection
 ([public-api-personal-data-boundary.md](public-api-personal-data-boundary.md)
-owns the full enforcement stack).
+owns the full enforcement stack and records which parts are built).
 
 | Product | Content | Category | Default response |
 |---------|---------|----------|------------------|
@@ -70,7 +70,7 @@ object appears once, as curated, and every feature is marked with its `tier`
 (community vs. curated/verified) so consumers can rank and style accordingly
 ([osm-data-architecture.md §8](osm-data-architecture.md)).
 
-**The trust envelope (built 2026-09-10).** Every item feature carries six
+**The trust envelope.** Every item feature carries six
 fields beside `tier`, computed by the same `ItemEvidenceResolver` the map draws
 from ([data-provider-hierarchy.md §6.7.7](data-provider-hierarchy.md)), so the
 API and a pin can never disagree:
@@ -97,8 +97,8 @@ is a count and dates, never a person: the personal-data boundary holds
 The API is split by workload. Dense ambient map layers travel as **vector
 tiles** (the only viable transport for millions of coverage points); precise,
 low-volume lookups, meaning search, single-item detail, metadata and write,
-travel as **REST**. The split mirrors the internal architecture (`coverage.pmtiles` +
-`/map/coverage/*`), so the public API is largely a keyed, versioned,
+travel as **REST**. The split mirrors the internal architecture (the
+per-country PMTiles archives + `/map/coverage/*`), so the public API is largely a keyed, versioned,
 contract-stable face over artifacts we already build, not a new subsystem.
 
 ### 2.1 Data-only vector tiles
@@ -110,26 +110,32 @@ MapLibre style, which binds style layers to our source-layers and paints them
 however it wants. This is what makes the tiles reusable across consumers with
 different looks (§7).
 
-**Artifacts.** `coverage.pmtiles` (coverage POIs + coverage polygons) on the
-Cycling Commons tiles bucket behind the nginx-fronted tiles host, served by HTTP byte-range;
-the artifact and infra already exist ([coverage-provider.md](coverage-provider.md),
-[osm-data-architecture.md §5](osm-data-architecture.md)). Route tiles
-(`routes.pmtiles`) exist since 2026-08-13 and the PoC serves them to external
-consumers unkeyed, discovered through `/v1/map-config` (see the PoC note in
-§2.2); whether they stay unkeyed at v1 remains the §9 decision. Browsers never
-read the storage bucket directly: every tile URL points at the nginx-fronted
-tiles host, where caching and cross-origin headers are controlled.
+**Artifacts.** The tile archives sit on the Cycling Commons tiles bucket
+behind the nginx-fronted tiles host and are read by HTTP byte-range. They are
+published per country under a versioned key `<family>/<cc>/<stamp>/<arm>.pmtiles`
+([coverage-provider.md §4](coverage-provider.md)): coverage points as
+`coverage/<cc>/<stamp>/points.pmtiles`, one source-layer per letter and
+country (`{letter}_{cc}`), and recommended cycle routes as
+`routes/<cc>/<stamp>/routes.pmtiles` (`routes_{cc}` lines, `knoop_{cc}`
+nodes). The PoC serves both to external consumers unkeyed, discovered through
+`/v1/map-config` (see the PoC note in §2.2), so a consumer never hardcodes a
+URL that changes with every build; whether they stay unkeyed at v1 remains the
+§9 decision. Browsers never read the storage bucket directly: every tile URL
+points at the nginx-fronted tiles host, where caching and cross-origin headers
+are controlled.
 
-**The tile schema is the contract.** Each tileset publishes a **TileJSON**
-(`minzoom`, `maxzoom`, `bounds`, `attribution`, and `vector_layers` with each
-source-layer's `fields`). The TileJSON *is* the stable interface a consumer's
-style binds to. Initial source-layers:
+**The tile schema is the contract.** For the keyed v1, each tileset publishes
+a **TileJSON** (`minzoom`, `maxzoom`, `bounds`, `attribution`, and
+`vector_layers` with each source-layer's `fields`). The TileJSON *is* the
+stable interface a consumer's style binds to. *Proposed* v1 source-layers
+(the PoC archives above carry the per-country layers `/v1/map-config` names
+instead, and no region layer yet):
 
 | Source-layer | Geometry | Key fields |
 |--------------|----------|------------|
 | `coverage_poi` | point | `letter`, `serviceKind`, `osm_ref`, `tier`, `name` |
 | `coverage_region` | polygon | `region_id`, `name`, coverage/adoption stats |
-| `routes` *(when built)* | line | `route_id`, `name`, `surface`, rating summary |
+| `routes` | line | `route_id`, `name`, `surface`, rating summary |
 
 Field names and source-layer names are stable within a tile schema version
 (§6). We also publish an **optional reference MapLibre style JSON**, our exact
@@ -155,8 +161,8 @@ contract.
 | GET | `/v1/routes?bbox=` · `/v1/routes/{id}` · `/v1/routes/{id}.gpx` | the K route domain + GPX download |
 | POST | `/v1/contributions` **(phase-2, §8)** | write path → the existing submission / moderation loop |
 
-**PoC status (2026-08-18).** Two endpoints are implemented and live in the
-app: `/v1/map-config` (routes tiles, coverage tiles, category table with the
+**What answers today (the PoC).** Two endpoints are implemented and live in
+the app: `/v1/map-config` (routes tiles, coverage tiles, category table with the
 Best of flag, attribution) and the `/v1/search` subset `bbox` and/or `q` +
 optional `letter` + optional `tier` + `limit` (`hydrate`/`cursor` stay draft;
 `bbox` spans at most 10x10 degrees and is required unless `q` is given; `q` is
@@ -206,16 +212,14 @@ or field-level changes land in both places, and
 `tests/Smoke/ApiReferenceTest.php` pins the `/developers` teaser page to the
 contract so they cannot drift.
 
-**The page counts itself.** Its banner asserted "Draft contract, API not live
-yet" long after `/v1/map-config` started answering, because the sentence was
-written by hand and nothing could make it wrong (known issue, 2026-09-06). It
-now reads "N of M endpoints answer today", with M the paths in the OpenAPI
-document and N the routes named `api_v1_*` in the router (`App\Api\ApiSurface`,
-pinned by `tests/Smoke/ApiSurfaceTest.php`). Shipping an endpoint updates the
-sentence; nobody has to remember. The same test refuses a live endpoint the
-contract does not describe.
+**The page counts itself.** Its banner reads "N of M endpoints answer
+today", with M the paths in the OpenAPI document and N the routes named
+`api_v1_*` in the router (`App\Api\ApiSurface`, pinned by
+`tests/Smoke/ApiSurfaceTest.php`). A sentence written by hand goes stale the
+day an endpoint ships; a counted one updates itself. The same test refuses a
+live endpoint the contract does not describe.
 
-**A path nobody built answers in JSON, and says why** (2026-09-29).
+**A path nobody built answers in JSON, and says why.**
 `App\Controller\Api\V1\PlannedApiController` catches every `/v1` path no
 endpoint claims (route `api_planned`, priority -100, deliberately not
 `api_v1_*` so the page's count stays honest). A method and path the OpenAPI
@@ -224,11 +228,11 @@ answers **`501`** `{"error": "not_implemented"}`; anything else answers a JSON
 **`404`** `{"error": "not_found"}`. Both carry `live` (the paths that answer
 today, from the router), `reference` and `contract` (the `/developers/api`
 page and `openapi.yaml`, on the main site from `DEFAULT_URI`, because the api
-host serves `/v1` alone). Before this, `/v1/regions` from the contract was the
-site's HTML 404 page, and a consumer could not tell "planned" from "wrong URL"
-(GlitchTip, 2026-09-28). Pinned by `tests/Api/PlannedEndpointTest.php`.
+host serves `/v1` alone). A consumer can tell "planned" from "wrong URL"
+without reading the site's HTML 404 page. Pinned by
+`tests/Api/PlannedEndpointTest.php`.
 
-The reference is in `sitemap.xml` from 2026-09-12. Its content is English only
+The reference is in `sitemap.xml`. Its content is English only
 and its paths are localised in all five, so it is one entry with alternates
 like any other page: the URL is per language even where the words are not.
 
@@ -272,8 +276,11 @@ constraint that OSM detail is otherwise obtained from OSM directly live in
 ## 5. Attribution in responses
 
 Every OSM-derived tile and REST response carries `© OpenStreetMap contributors`;
-Commons data carries `© Cycling Commons contributors (ODbL)`. Attribution is
-delivered three ways so a consumer cannot miss it:
+Commons data carries `© Cycling Commons contributors (ODbL)`. Today the PoC
+carries it in the body: `/v1/map-config` has an `attribution` string, and every
+`/v1/search` collection carries `licence` and `attribution` foreign members.
+For the keyed v1, attribution is delivered three ways so a consumer cannot
+miss it:
 
 - TileJSON `attribution` (MapLibre renders it in the map's attribution control).
 - An `X-Attribution` response header on REST responses.
@@ -297,6 +304,10 @@ enforcement is reserved case-by-case.
   under them.
 
 ## 7. Consumer integration: a worked example
+
+This is the keyed v1 flow. The PoC needs no key, and its tile URLs come from
+`/v1/map-config` (§2.2); the wiki walk-through under `wiki/developers/api/`
+shows the PoC version end to end.
 
 A typical consumer runs MapLibre and already stacks a basemap, its own
 administrative polygons, and its own points of interest on one map. Adding the
@@ -346,15 +357,15 @@ or an edit to an existing `osm_ref` / item id) and opens a submission exactly as
 the in-app improve form does, subject to the same materialize-on-edit and
 moderation rules ([osm-data-architecture.md §6](osm-data-architecture.md)).
 
-**Decided, the write-auth model (2026-07-31): per-app key plus app-scoped author
-reference.** The end user of a consuming app never needs a Commons account;
-the app is the authenticated, accountable party. This extends the account
-layer's identity model ([account-and-auth.md §9](account-and-auth.md), where the
-stable opaque identifier *is* the identity and the display name is a non-unique
-label) across the API boundary. It supersedes both models previously listed
-here: OAuth user-delegation demanded a Commons account we explicitly do not
-want to require, and a single per-app pseudo-author had no per-author
-provenance, and the app-scoped reference below restores exactly that.
+**Decided, the write-auth model (owner, 2026-07-31): per-app key plus
+app-scoped author reference.** The end user of a consuming app never needs a
+Commons account; the app is the authenticated, accountable party. This extends
+the account layer's identity model ([account-and-auth.md §9](account-and-auth.md),
+where the stable opaque identifier *is* the identity and the display name is a
+non-unique label) across the API boundary. Two alternatives were rejected:
+OAuth user-delegation demands a Commons account we explicitly do not want to
+require, and a single per-app pseudo-author has no per-author provenance,
+which the app-scoped reference below provides.
 
 - **The app authenticates.** Writes require a write-scoped key issued only to
   **registered partner apps** (an `api_app` registry: name, key hash, scopes,
@@ -395,16 +406,15 @@ provenance, and the app-scoped reference below restores exactly that.
 
 ## 9. Open decisions (pending owner)
 
-- **Route tiles at v1** (§2.1): ship `routes.pmtiles` in v1, or keep routes
-  REST/GeoJSON-only until a later version. *Resolved for the PoC (2026-08-18):
-  the artifact exists and is served unkeyed via `/v1/map-config`; the open
-  half is whether v1 keys it.*
+- **Route tiles at v1** (§2.1): the per-country route archives exist and the
+  PoC serves them unkeyed via `/v1/map-config`; the open question is whether
+  v1 keys them.
 - **Key/URL scheme for tiles** (§3): key path segment vs. signed URL, and the
   referer-allowlist policy.
 - **Best-of response composition** (§2.2): what `/v1/regions/{id}/best`
   returns (routes only, or routes + top-voted items per letter) and how it
   relates to the in-app rankings pages. The endpoint itself is committed, and it
-  is advertised on `/developers` (aligned 2026-07-30).
+  is advertised on `/developers`.
 - Pricing numbers, billable-unit definition, and bulk-export reconciliation are
   **inherited from [api-strategy.md §10](api-strategy.md)** and not reopened
   here.

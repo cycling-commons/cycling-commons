@@ -360,16 +360,13 @@ final class TranslateModeTest extends WebTestCase
     }
 
     /**
-     * The on-page bar and its script (translations.md §4.1, task-10-brief.md)
+     * The on-page bar and its script (translations.md §4.1)
      * appear only while the mode is on, and never otherwise: a page with the
      * mode off must stay byte-identical to today.
      *
-     * task-10-brief.md's Step 7 snippet requests `/nl/about`, but that path
-     * matches no route (`debug:router` names the Dutch about page
-     * `about.nl` at `/nl/over-ons`, exactly as {@see DUTCH_PAGE} and every
-     * other test in this class already says) and would 404 both times,
-     * making the assertions pass for the wrong reason. Using DUTCH_PAGE here
-     * is that fix, not a behaviour change.
+     * The request goes to {@see DUTCH_PAGE} (`/nl/over-ons`, the Dutch about
+     * page `about.nl` per `debug:router`): `/nl/about` matches no route and
+     * would 404 both times, making the assertions pass for the wrong reason.
      */
     public function testBarAndScriptRenderOnlyWhenActive(): void
     {

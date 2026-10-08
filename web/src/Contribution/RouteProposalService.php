@@ -32,8 +32,8 @@ use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 final class RouteProposalService
 {
     /* Public so the error message can quote them in the reader's units. */
-    public const int MIN_RAW_M = 2_000;     // spec §4.1
-    public const int MAX_RAW_M = 400_000;   // spec §4.1
+    public const int MIN_RAW_M = 2_000;     // route-domain.md §4.1
+    public const int MAX_RAW_M = 400_000;   // route-domain.md §4.1
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -275,7 +275,7 @@ final class RouteProposalService
     /**
      * A GPX made into what a route stores: the privacy-trimmed, simplified
      * line as GeoJSON, its length and climb, its region and its derived
-     * surfaces (spec §4.2, §4.3).
+     * surfaces (route-domain.md §4.2, §4.3).
      *
      * @return array{geom: string, distanceM: int, ascentM: int|null, regionId: int|null, surfaces: array{covered: int, parts: list<array{surface: string, pct: int}>}|null}
      *

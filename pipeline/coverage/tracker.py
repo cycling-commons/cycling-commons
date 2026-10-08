@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Harvest timing tracker (worker build plan §2.11): one coverage_run row per
+"""Harvest timing tracker (coverage-runs-admin.md): one coverage_run row per
 batch and one coverage_run_step row per step, written by run.py as it goes.
 Queryable after the container is gone, and what the dispatcher reads to order
 regions by staleness (coverage_source_freshness) and to estimate whether the

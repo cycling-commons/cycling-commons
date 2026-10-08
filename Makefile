@@ -369,7 +369,7 @@ coverage-tiles: ## Rebuild + publish the coverage PMTiles from the rows already 
 		pipeline python -m coverage.run --tiles-only
 
 # The road-surface LINE layer: one pass over each region's PBF, NO database at
-# all (Dated/2026-08-09-surface-line-tiles-design.md), tiled and published PER
+# all (docs/specs/coverage-provider.md §4), tiled and published PER
 # COUNTRY:
 #   classified.pmtiles   the classified skin (what is under your tyres), z8-13
 #   todo.pmtiles         roads nobody has recorded, in the classes where the

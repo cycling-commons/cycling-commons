@@ -19,7 +19,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
- * POST /contribute/elevation hardening (review 2026-08-16 finding 5): the
+ * POST /contribute/elevation hardening: the
  * stateless X-CC-Token header and the per-user per-minute limiter, both
  * sitting in front of an upstream Valhalla call. Login alone is not a quota.
  *

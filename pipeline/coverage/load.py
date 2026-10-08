@@ -26,8 +26,8 @@ from coverage.tracker import ensure_tracker_schema
 DRIFT_ABORT_RATIO = 0.4
 
 # Degrees (SRID 4326) a region-less POI may sit outside every region polygon and
-# still snap to the nearest region of its own country (map-and-search.md §4.5
-# §6, finding 5). ~0.01° ≈ 1.1 km at Belgian latitudes — wide enough for
+# still snap to the nearest region of its own country (map-and-search.md §4.5).
+# ~0.01° ≈ 1.1 km at Belgian latitudes, wide enough for
 # polygon-simplification gaps, tight enough that a genuine outside-coverage point
 # stays unstamped. That 1.1 km figure is NORTH-SOUTH only, where a degree of
 # latitude is ~constant; east-west a degree of longitude shrinks with cos(lat),
@@ -64,7 +64,7 @@ _SESSION_BUDGET = (
 
 def apply_session_budget(conn: psycopg.Connection) -> None:
     """Apply the env-driven SET SESSION resource budget to the harvest
-    connection (design §3.1). Session-scoped only — never changes global
+    connection (coverage-provider.md §3). Session-scoped only, never changes global
     cluster config. Postgres validates each value on SET."""
     for setting, env, default in _SESSION_BUDGET:
         value = os.environ.get(env, default)
@@ -107,10 +107,8 @@ def resolve_country(region: str, onboarded: Mapping[str, str]) -> str | None:
 # — any extract on Earth gets a row the first time it's harvested); smallint holds
 # far more than Geofabrik's ~700 extracts.
 #
-# Sizing (corrected 2026-07-23 — earlier comments here claimed a "100M+ row
-# target", which was naive area extrapolation from German POI density). The
-# osm-data-architecture.md §5 subset is ≈ 4.7 M points planet-wide (taginfo
-# breakdown: coverage-provider.md §10), so the whole table lands around 2 GB, not
+# Sizing: the osm-data-architecture.md §5 subset is ≈ 4.7 M points planet-wide (taginfo
+# breakdown: coverage-provider.md §2), so the whole table lands around 2 GB, not
 # tens of GB. Measured at 375,078 rows (BE+NL+DE, compacted): 341 B/row heap +
 # 176 B/row indexes. This normalization plus region_id bigint→int is worth
 # 16.2 B/row (-4.2 % heap) — real, but do not oversell it.
@@ -126,11 +124,11 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ref           varchar(160) NOT NULL,  -- 'node/6863042080' | 'way/…' = item.source_ref format
     letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5)
-    kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
+    kind          varchar(16),            -- serviceKind for D (shop|station|pump), placeKind for G P Q, else NULL
     name          varchar(255),           -- OSM name tag, NULL when unnamed
     geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
     tags          jsonb        NOT NULL,  -- trimmed to contract storedTagKeys (parse.py), NOT the object's full tag set
-    osm_version   int,                    -- upstream version (Plan 3 materialization snapshot)
+    osm_version   int,                    -- upstream version (materialize-on-edit snapshot)
     osm_ts        timestamptz,            -- upstream last-edit timestamp
     src_region_id smallint     NOT NULL REFERENCES coverage_source(id), -- harvest extract (normalized)
     country_code  char(2),                -- stamped from extract config
@@ -141,7 +139,7 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
 
 _INDEX_DDL = (
     # CONCURRENTLY so an absent index never takes a blocking lock mid-harvest on
-    # the shared prod cluster (design §3.6); requires autocommit (ensure_schema
+    # the shared prod cluster (coverage-provider.md §2); requires autocommit (ensure_schema
     # toggles it). IF NOT EXISTS keeps the bootstrap idempotent.
     "CREATE INDEX CONCURRENTLY IF NOT EXISTS coverage_poi_geom_idx ON coverage_poi USING gist (geom)",
     # Every radius query the app runs casts to geography
@@ -204,7 +202,7 @@ def ensure_schema(conn: psycopg.Connection) -> None:
     an absent index never takes a blocking lock mid-harvest — which requires
     autocommit (CONCURRENTLY cannot run in a txn block). A failed CONCURRENTLY
     build leaves an INVALID index to drop + rebuild; acceptable for a bootstrap
-    that only creates indexes on a brand-new cluster (design §3.6)."""
+    that only creates indexes on a brand-new cluster (coverage-provider.md §2)."""
     if os.environ.get("COVERAGE_ENSURE_EXTENSION", "1") != "0":
         try:
             conn.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
@@ -388,12 +386,10 @@ def load_region(
                 "SELECT id FROM coverage_source WHERE slug = %s", (src_region,)
             ).fetchone()[0]
             _materialize_operational_regions(cur)
-            # Rows this source currently owns. Ownership is now decided by geometry,
-            # not by which extract ran last (coverage-provider.md §1
-            # §3, C1 final-review fix), so this count no longer flaps week to week from
-            # a neighbour reclaiming shared border rows — it is a stable baseline for
-            # the drift guard below, which is exactly what the design set out to fix
-            # (design §2.2).
+            # Rows this source currently owns. Ownership is decided by geometry,
+            # not by which extract ran last (coverage-provider.md §1, §3), so this
+            # count does not flap week to week from a neighbour reclaiming shared
+            # border rows: it is a stable baseline for the drift guard below.
             previous = cur.execute(
                 "SELECT count(*) FROM coverage_poi WHERE src_region_id = %s", (src_id,)
             ).fetchone()[0]
@@ -413,23 +409,23 @@ def load_region(
                     ))
             # Ownership by geometry, not by write order.
             # Nearest-region-wins
-            # (final-review C1): find the SINGLE closest region to the row, across ALL
+            # (coverage-provider.md §1): find the SINGLE closest region to the row, across ALL
             # onboarded countries, not just the extract's own — containment (distance 0)
-            # always wins, so decision 2's BOUNDARY_SNAP_DEG rescue is preserved exactly.
+            # always wins, so the BOUNDARY_SNAP_DEG rescue is preserved exactly.
             # This extract keeps the row only if that nearest region's country is its
             # own; every other extract's run deletes it. That makes the predicate
             # mutually exclusive: a row within the snap of BOTH its own and a
             # neighbour's region (Geofabrik's overlap buffer is 0.1026 deg, 10x the
-            # 0.01 deg snap, so this band is not an edge case) used to pass both
+            # 0.01 deg snap, so this band is not an edge case) would otherwise pass both
             # extracts' independent "is a region of MY country within range" checks and
-            # fall back to ON CONFLICT / last-writer-wins — the C1 defect this replaces.
+            # fall back to ON CONFLICT / last-writer-wins.
             # Two classes are deleted here:
             #   * a border entity whose nearest region belongs to a NEIGHBOURING extract.
             #     Geofabrik's cuts overlap, so one entity arrives in several extracts;
             #     ON CONFLICT below used to hand it to whoever ran last (319 rows were
             #     mis-owned). Now exactly one extract ever stages it.
             #   * a row with no region within BOUNDARY_SNAP_DEG of ANY onboarded country
-            #     (decision 1: COALESCE(..., '') never equals a real two-letter cc). All
+            #     (COALESCE(..., '') never equals a real two-letter cc). All
             #     380 measured today are foreign or offshore — Czech/Austrian viewpoints,
             #     the Wadden Sea, France, Luxembourg — not "in the country but outside
             #     every province", which the snap already rescues. Onboarding those
@@ -567,7 +563,7 @@ def load_region(
             # (ref, letter) per extract), so DO UPDATE never hits "affect a row a
             # second time"; an intra-batch dup fails loud and rolls the swap back —
             # the generic-error guarantee.
-            # Capture the ids the upsert touched (design §3.4) so the membership
+            # Capture the ids the upsert touched (coverage-provider.md §3) so the membership
             # recompute below runs on the delta only, not the whole slice —
             # otherwise the 3 membership UPDATEs would rewrite every region_id each
             # week and undo the diff-merge's WAL savings. Postgres has no
@@ -625,7 +621,7 @@ def load_region(
                 "                          WHERE country_code IS NOT NULL); "
                 "END IF; END $$"
             )
-            # Delta-scoped membership (design §3.4): restrict the 3 recompute
+            # Delta-scoped membership (coverage-provider.md §3): restrict the 3 recompute
             # UPDATEs to rows the upsert touched, so unchanged rows keep last
             # week's region_id/cc (correct while the `region` table is unchanged)
             # and the diff-merge's write savings survive. COVERAGE_FULL_MEMBERSHIP=1
@@ -694,7 +690,7 @@ def load_region(
                 """,
                 (src_id,),
             )
-            # Boundary-miss rescue (map-and-search.md §4.5, finding 5): a POI
+            # Boundary-miss rescue (map-and-search.md §4.5): a POI
             # inside the extract but outside every region polygon — an ST_Contains
             # gap from polygon simplification, ~206 rows in dev Belgium — snaps to
             # the NEAREST region of its OWN country within BOUNDARY_SNAP_DEG,

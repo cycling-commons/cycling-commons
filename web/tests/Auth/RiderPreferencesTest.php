@@ -14,7 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Rider preference selectors on /account/settings (spec 2026-07-14): bike types +
+ * Rider preference selectors on /account/settings (account-and-auth.md §9): bike types +
  * riding styles round-trip through the settings form as multi-select
  * checkbox groups; both are optional.
  *

@@ -25,7 +25,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * registry-driven form with its current name + attributes, and on submit
  * persists an Edit submission whose `changes` holds only genuinely-changed
  * fields (was/now). No item id -> an "unbound" explainer, never a fake
- * default editor (spec §6, §8).
+ * default editor (moderation-and-contribution.md §1.4).
  *
  * Field-name note: letter D is BikeServices ({@see \App\Catalog\ItemType}).
  * Its real registry fields ({@see \App\Catalog\CatalogFormRegistry::for()})
@@ -57,16 +57,16 @@ final class ImproveBindingTest extends WebTestCase
         $crawler = $client->request('GET', '/improve?item='.$item->getId());
 
         self::assertResponseIsSuccessful();
-        // Edit-bridge acceptance (spec §8): current name visible, and the
+        // Edit-bridge acceptance (moderation-and-contribution.md §1.4): current name visible, and the
         // registry field holding 'tools' is prefilled with the item's value.
         self::assertStringContainsString('Repair station · Malmedy', (string) $client->getResponse()->getContent());
         self::assertGreaterThan(0, $crawler->filter('input[value="Repair station"], option[selected][value="Repair station"]')->count());
     }
 
     /**
-     * C2-T6 (spec §W2): the climb drawer shows effort/famousFor/approach
-     * (C2-T5) plus road quality (sq) and traffic (tr) — this task makes sq/tr
-     * registry-declared selects too (CatalogFormRegistry::for(Climbs)), so
+     * The climb drawer shows effort/famousFor/approach plus road quality (sq)
+     * and traffic (tr), all registry-declared selects
+     * (CatalogFormRegistry::for(Climbs)), so
      * /improve?item=<id> must prefill all five for a bound climb.
      */
     public function testImproveFormForClimbExposesEffortRoadQualityTrafficFamousForAndApproach(): void
@@ -172,7 +172,7 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * C2-T7 (spec §W2): D · Bike services drawer reconciliation — pumpValve
+     * D · Bike services drawer reconciliation, pumpValve
      * now renders as a real drawer row (map.js's POI_ATTR_FIELDS.services),
      * so an approved edit must actually update the item and leave a
      * change_history row, not just prefill the form.
@@ -591,7 +591,7 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * C2-T7 (spec §W2): O · Where to sleep — the registry's Website field is
+     * O · Where to sleep, the registry's Website field is
      * now keyed 'web' (not 'website'), matching the key osmDrawer already
      * reads/renders and every OSM-harvested stay already carries. Confirms
      * both the prefill (regression for the rename) and the round-trip for
@@ -642,7 +642,7 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * Task 5: the edit flow wires the shared three-point climb editor
+     * The edit flow wires the shared three-point climb editor
      * (window.Cc.mountClimbEditor) into `/improve?item=<id>` for a climb
      * (letter N). ImproveType adds hidden `route`/`grad`/`steep` fields
      * top-level (not nested under details/extras) so the form renders them
@@ -713,7 +713,7 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * Task 5: submitImprove decodes route/grad/steep from the top-level
+     * submitImprove decodes route/grad/steep from the top-level
      * payload (App\Contribution\ClimbGeometry, same shape the shared editor
      * writes) and merges them into $proposed, so a route edit is both
      * recorded in the submission's was/now `changes` and applied to
@@ -773,7 +773,7 @@ final class ImproveBindingTest extends WebTestCase
     }
 
     /**
-     * Security review 2026-07-07 (critical): the R (Recommended routes) layer
+     * The R (Recommended routes) layer
      * lives in `recommended_route` — a separate table and id sequence from
      * `item`. The map edit-bridge renders its "Edit this ride" link as
      * `/improve?item=<recommended_route.id>&type=R` (map.js), so resolving that

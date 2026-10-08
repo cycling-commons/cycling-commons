@@ -19,7 +19,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * Ride-check (spec 2026-07-14 §4.2): given an uploaded GPX, list the served
+ * Ride-check (map-and-search.md §9): given an uploaded GPX, list the served
  * catalog items inside a corridor of the track (grouped by letter, ordered by
  * distance along the ride) plus the Commons routes the ride genuinely follows.
  * Real PostGIS via KernelTestCase — the point is the ST_* corridor maths.

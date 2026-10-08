@@ -9,7 +9,7 @@ namespace App\Tests\Security;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * Review 2026-08-16 finding 7: `access_control` backstops the controllers'
+ * `access_control` backstops the controllers'
  * own IsGranted attributes, with a wildcard locale group `(/[a-z]{2})?` so a
  * future locale never silently falls outside the rules (owner, 2026-08-17).
  *

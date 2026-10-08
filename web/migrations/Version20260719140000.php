@@ -10,10 +10,9 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * region: iso_code / admin_level / source / active_cap — the Phase 1
- * foundation-hardening columns the region-scoping design needs before region
- * rows may multiply beyond the Wallonia seed (map-and-search.md §4.5 and
- * §7 "Phase 1"). All nullable:
+ * region: iso_code / admin_level / source / active_cap, the columns region rows
+ * need to cover more than one seeded region (map-and-search.md §4.5). All
+ * nullable:
  *  - iso_code joins the World bundle's Subdivision.code (e.g. BE-WAL);
  *  - admin_level / source carry import provenance (osm|overture, level 4…);
  *  - active_cap overrides route.region_active_cap per region (map-and-search.md §4.5).

@@ -18,7 +18,7 @@ use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
- * Route-domain spec §5: /propose-route is the rider intake for R.
+ * route-domain.md §4: /propose-route is the rider intake for R.
  * The old improve?type=quality-rides&mode=add entry is repointed here.
  */
 final class ProposeRouteFlowTest extends WebTestCase

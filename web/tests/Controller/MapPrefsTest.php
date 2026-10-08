@@ -14,7 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * window.CC_PREFS emission on the map page (map prefilter spec 2026-07-14):
+ * window.CC_PREFS emission on the map page (map-and-search.md §4.3):
  * a logged-in rider's saved preferences ride the page render; anonymous
  * visitors get empty lists (zero behaviour change).
  *

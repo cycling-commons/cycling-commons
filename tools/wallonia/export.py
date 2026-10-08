@@ -27,7 +27,7 @@ OUT = pathlib.Path(__file__).resolve().parent / "out"
 
 # Region boundary artifacts (region-<slug>.geojson) are no longer produced here.
 # They moved to pipeline/divisions/ (Overture division_area, worldwide-ready) —
-# map-and-search.md §4.5 Phase 2. This module still emits the POI /
+# map-and-search.md §4.5. This module still emits the POI /
 # fixture catalog layers below.
 
 LETTERS = {"services": "D", "scenic": "P", "history": "Q",
@@ -120,8 +120,7 @@ def surface_feature(seg):
     # on surface class: every non-cycleway got "Open road", every cycleway
     # "Car-free", every paved way "Good". No tag was ever consulted. Imported,
     # they filled the catalog with an empty field wearing a fact's clothes —
-    # 134 rows saying "Open road" about roads nobody had looked at (owner
-    # review 2026-08-12; the imported rows were deleted the same day).
+    # 134 rows saying "Open road" about roads nobody had looked at.
     #
     # Dropped HERE rather than fixed in the fixture, because the fixture is
     # harvested output and hand-editing it is how a re-harvest silently undoes

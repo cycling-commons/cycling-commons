@@ -127,7 +127,7 @@ final class CountryInterestTest extends WebTestCase
     {
         $client = static::createClient();
         $client->request('GET', '/join/ES');
-        // Decision 1: both signals require a verified account.
+        // Both signals require a verified account.
         self::assertResponseRedirects();
         self::assertStringContainsString('/login', (string) $client->getResponse()->headers->get('Location'));
     }

@@ -11,7 +11,7 @@ use Doctrine\Migrations\AbstractMigration;
 
 /**
  * The media quarantine and immutable published keys
- * (docs/specs/media-storage-architecture.md §3, §4; media plan tasks 2, 4, 5).
+ * (docs/specs/media-storage-architecture.md §3, §4).
  *
  * Three columns' worth of change, each of which exists because a fact that used
  * to be derived has to become a fact that was recorded:
@@ -38,8 +38,7 @@ use Doctrine\Migrations\AbstractMigration;
  * photo reads as "nothing published", which is the same thing every other
  * revision-less row means and is handled everywhere as such.
  *
- * It is a one-off over a handful of rows: no production photos exist yet, which
- * is exactly why task 5 had to land before any real traffic.
+ * It is a one-off over a handful of rows: no production photos exist yet.
  */
 final class Version20260816210000 extends AbstractMigration
 {

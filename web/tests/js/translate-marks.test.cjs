@@ -28,7 +28,7 @@ test('a lone zero-width character is not a mark', () => {
   assert.equal(MARK_RE.exec('a​b'), null);
 });
 
-// ---- spanning marks (translations.md §4.1, task-13): a string carrying a
+// ---- spanning marks (translations.md §4.1): a string carrying a
 // tag lands its start mark and end mark in two different text nodes once
 // the browser parses it. MARK_RE requires both in ONE node, so it never
 // matches this shape; wrapSpanningNodes in translate-mode.js finds it with
@@ -96,8 +96,7 @@ test('residualMarks discards a pair that both opens and closes in the same strin
   assert.deepEqual(residualMarks(text), { starts: 0, ends: 0, firstEnd: -1 });
 });
 
-// ---- the two shapes the spanning guard must tell apart (review finding,
-// task-13 fix-up). wrapSpanningNodes sums residualMarks() over every text
+// ---- the two shapes the spanning guard must tell apart. wrapSpanningNodes sums residualMarks() over every text
 // node the candidate ancestor contains and claims it only on an exact
 // {starts: 1, ends: 1}. These tests reproduce that same arithmetic over
 // hand-built node text, one call per (simulated) text node in document

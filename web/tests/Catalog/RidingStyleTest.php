@@ -23,7 +23,7 @@ final class RidingStyleTest extends TestCase
     public function testContainsNoHardwareTypes(): void
     {
         // Hardware lives in BikeType; the style enum must never duplicate it
-        // (spec: E-bike, Handbike, Recumbent, Trike, Tandem are bikes, not styles).
+        // (account-and-auth.md §9: E-bike, Handbike, Recumbent, Trike, Tandem are bikes, not styles).
         $hardwareOnly = array_diff(BikeType::values(), RidingStyle::values());
         self::assertContains('E-bike', $hardwareOnly);
         self::assertContains('Handbike', $hardwareOnly);

@@ -74,7 +74,7 @@ def test_load_region_inserts_and_backfills_region_id(db):
 
 def test_load_region_snaps_boundary_miss_to_nearest_region(db):
     """A cc-bearing POI just OUTSIDE every region polygon (an ST_Contains gap)
-    snaps to the nearest region of its own country (finding 5); one genuinely far
+    snaps to the nearest region of its own country; one genuinely far
     away stays NULL."""
     ensure_schema(db)
     db.execute(
@@ -93,7 +93,7 @@ def test_load_region_snaps_boundary_miss_to_nearest_region(db):
 
 def test_load_region_never_snaps_across_country(db):
     """The snap is constrained to the POI's own country_code, so a border POI is
-    never pulled into a neighbouring country's region (finding 5)."""
+    never pulled into a neighbouring country's region."""
     ensure_schema(db)
     db.execute(
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (8, 100, 'FR', "
@@ -109,7 +109,7 @@ def test_load_region_never_snaps_across_country(db):
 
 
 def test_load_region_backfills_cc_from_region_when_extract_left_it_null(db):
-    """region ⇒ cc invariant (finding 8): a stamped row whose extract left
+    """region ⇒ cc invariant: a stamped row whose extract left
     country_code NULL gets cc backfilled from its region, so the controller's
     24-region cap always has a complete cc safety net."""
     ensure_schema(db)
@@ -271,8 +271,9 @@ def test_load_region_generic_error_rolls_back_whole_swap(db):
 
 def test_delta_membership_noop_reload_rewrites_nothing(db):
     """A stamped, unchanged row is not rewritten under delta membership — the
-    ctid is stable across an identical reload (Task 3 skipped the data write;
-    Task 4 stops the whole-slice region_id rewrite that would otherwise churn it)."""
+    ctid is stable across an identical reload (the diff-merge skips the data write;
+    delta membership skips the whole-slice region_id rewrite that would otherwise
+    churn it)."""
     ensure_schema(db)
     db.execute(
         "INSERT INTO region (id, area_km2, country_code, geom) VALUES (7, 100, 'BE', "
@@ -288,7 +289,7 @@ def test_delta_membership_noop_reload_rewrites_nothing(db):
 
 def test_full_membership_recomputes_whole_slice(db, monkeypatch):
     """The invariant + escape hatch: after a region change, a delta reload does
-    NOT restamp an unchanged row, but COVERAGE_FULL_MEMBERSHIP=1 does (design §3.4)."""
+    NOT restamp an unchanged row, but COVERAGE_FULL_MEMBERSHIP=1 does (coverage-provider.md §3)."""
     ensure_schema(db)
     rows = [_row("node/1", "B", lon=5.0, lat=50.5, src_region="dev/fixture", country_code=None)]
     load_region(db, rows, "dev/fixture", None)            # no region yet → region_id NULL
@@ -309,7 +310,7 @@ def test_full_membership_recomputes_whole_slice(db, monkeypatch):
 def test_ensure_schema_gated_extension_still_builds_schema(db, monkeypatch):
     """With COVERAGE_ENSURE_EXTENSION=0 the privileged CREATE EXTENSION step is
     skipped (devops installs it at cluster init) yet the table + all indexes are
-    still built (design §3.6). pg_trgm already exists in public via the fixture."""
+    still built (coverage-provider.md §2). pg_trgm already exists in public via the fixture."""
     monkeypatch.setenv("COVERAGE_ENSURE_EXTENSION", "0")
     ensure_schema(db)
     idx = {r[0] for r in db.execute(
@@ -397,7 +398,7 @@ def test_ownership_is_independent_of_load_order(db):
 
 
 def test_ownership_is_independent_of_load_order_in_the_border_band(db):
-    """C1 regression test. Same shape as test_ownership_is_independent_of_load_order,
+    """Same shape as test_ownership_is_independent_of_load_order,
     but the shared entity sits at lon 3.995 — 0.005 deg from the BE/NL edge, INSIDE
     BOUNDARY_SNAP_DEG (0.01) of BOTH regions, not the 0.5 deg the other tests use.
     Geofabrik's real overlap buffer is 0.1026 deg, ten times the snap, so the whole
@@ -574,7 +575,7 @@ def test_owner_dropping_the_entity_removes_it(db):
 
 
 def test_rows_in_no_onboarded_region_are_dropped(db):
-    """Design decision 1: all 380 such rows were measured as foreign or offshore,
+    """All 380 such rows were measured as foreign or offshore,
     not province-less, so they are not staged at all."""
     ensure_schema(db)
     db.execute(
@@ -592,7 +593,7 @@ def test_rows_in_no_onboarded_region_are_dropped(db):
 
 
 def test_boundary_snap_rows_keep_their_owner(db):
-    """Design decision 2: the snap is UNCHANGED, so a row just outside every polygon
+    """The snap is UNCHANGED, so a row just outside every polygon
     but within BOUNDARY_SNAP_DEG of its own country's region is still owned and still
     region-stamped. Decisions 1 and 2 meet at this boundary and must not be conflated."""
     ensure_schema(db)

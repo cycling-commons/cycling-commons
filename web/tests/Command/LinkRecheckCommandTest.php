@@ -17,7 +17,7 @@ use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
 /**
- * `app:links:recheck` (test-suite review 2026-08-24).
+ * `app:links:recheck`.
  *
  * SafeBrowsing and LinkVerdictStore each have their own tests. The command
  * that joins them did not, and it carries the one rule neither service can

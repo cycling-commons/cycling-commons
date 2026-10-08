@@ -35,7 +35,7 @@ The page has two halves and they are governed differently. Everything
 installable (packages, runtimes, images, fonts, vendored libraries) is covered
 by the marker contract and the gate in §3 to §7 of this document, and needs no
 further mechanism. The dataset half is generated from the provider registry
-(`App\Provider`) since 2026-09-04. See §8.
+(`App\Provider`). See §8.
 
 ## 2. The three tiers of credit
 
@@ -49,9 +49,9 @@ were courtesy copy). They are visually distinguished:
 | **Thank-you row** | a row with its own sentence, no `*` | Yes | Geofabrik, MapLibre, Symfony |
 | **Dependency list** | one entry in the `.pkglist` run | Names only, no prose to reword | PHPStan, Ubuntu, boto3 |
 
-The `*` is deliberately quiet. It was a filled `REQUIRED NOTICE` pill until
-2026-08-27; on eight of fifteen rows a loud badge shouted an in-house reminder
-at readers who have no use for it. The footnote it links to sits at the foot of
+The `*` is deliberately quiet: a loud badge on most rows would shout an
+in-house reminder at readers who have no use for it. The footnote it links to
+sits at the foot of
 the page, not in the hero, so the page opens on credits rather than on
 housekeeping. Screen readers get the wording from a visually hidden span,
 because a bare `*` tells them nothing.
@@ -133,9 +133,9 @@ none of them is a second list that can drift.
 ### 4.1 First-party vendored code is exempt, by its own header
 
 `web/assets/lib/` holds both third-party libraries and code the project owns.
-`scout-fit.js` is the current example: MIT, copyright BikeCoders, vendored
-verbatim from the Scout repository so that two implementations of the FIT
-binary format cannot drift into disagreeing about somebody's ride.
+`scout-fit.js` is one example: MIT, copyright BikeCoders, vendored verbatim
+from the Scout repository so that two implementations of the FIT binary format
+cannot drift into disagreeing about somebody's ride.
 
 The exemption is derived from the file, never from a list in the checker:
 
@@ -172,32 +172,32 @@ reason, recorded here so it is not "simplified" later:
 | Trigger | Behaviour | Why |
 |---------|-----------|-----|
 | staged `credits.html.twig` | **hard fail** | You are editing the credits. They must be right. |
-| staged `composer.json`, any `requirements.txt`, compose files, `web/assets/lib/**` | **warn only** | Holding a dependency bump hostage to a copy page is backwards. The predictable result is `--no-verify`, which kills the gate's credibility. The commit lands and the developer is told what just went uncredited, while they still have the context to fix it. |
+| staged `composer.json`, any `requirements.txt`, `developers/docker/**`, `web/assets/lib/**` | **warn only** | Holding a dependency bump hostage to a copy page is backwards. The predictable result is `--no-verify`, which kills the gate's credibility. The commit lands and the developer is told what just went uncredited, while they still have the context to fix it. |
 | `make credits-check`, `ci-credits.yml` | **hard fail** | The page therefore cannot *ship* stale, it just cannot block unrelated work. |
 | `--links`, `ci-credits.yml` only | **advisory** | Needs network. An upstream site being down for an hour is not a reason to fail somebody's pull request. |
 
 `ci-credits.yml` carries **no `paths:` filter**, deliberately. The gate's inputs
-are spread across `web/composer.json`, three `requirements.txt` files,
-`developers/docker/**` and `web/assets/lib/**`; writing that set into a workflow
-filter would be a second copy of the list in the script, and it would drift the
-same way. Add a fourth `requirements.txt` and the filter silently stops covering
+are spread across `web/composer.json`, two `requirements.txt` files,
+`developers/docker/**`, `web/assets/lib/**` and `web/public/lib/**`; writing
+that set into a workflow filter would be a second copy of the list in the
+script, and it would drift the same way. Add a third `requirements.txt` and the
+filter silently stops covering
 it while the job keeps going green, which is worse than no job at all. The
 offline pass takes well under a second, so there is nothing to optimise. Same
 reasoning as `warn-wiki-code-drift` being `always_run`.
 
 ### 5.2 Link rot needs a clock, not a trigger
 
-`uvicorn.org` was credited on 2026-08-27 and did not resolve. The remaining 68
-links were then checked by hand, all 2xx.
-
-The lesson is not "add a link check". It is that **no commit causes link rot**,
+A credited `uvicorn.org` once stopped resolving with nothing in the repository
+having changed. The lesson is not "add a link check". It is that **no commit
+causes link rot**,
 so no change-triggered job can ever catch it. Nothing in this repository
 changes when an upstream project moves its domain. `ci-credits.yml` therefore
 runs `--links` on a weekly schedule (`cron: '17 6 * * 1'`, UTC) as well as on
 pull requests, and the Monday run is the one that matters.
 
 GitHub runs `schedule:` triggers from the **default branch only**, which is
-`main`, and `ci-credits.yml` is on `main`. Nothing needs installing on a host or
+`main`, where `ci-credits.yml` lives. Nothing needs installing on a host or
 in a developer's shell: GitHub schedules it, not us. Two GitHub behaviours
 worth knowing: schedule times are UTC and are best-effort rather than exact,
 and GitHub disables scheduled workflows automatically in a repository with 60
@@ -235,38 +235,34 @@ Stated so nobody reads a green run as a broader guarantee than it is.
 
 ## 8. Dataset rows are generated from the provider registry
 
-**Built 2026-09-04** (`dc4d22355`): `App\Provider` (`web/src/Provider/`),
+Built from `App\Provider` (`web/src/Provider/`),
 `App\Twig\ProviderCreditsExtension`, and a loop over `credited_providers()` in
 `credits.html.twig`. This section is the credits-page half of a contract owned
 by [data-provider-hierarchy.md](data-provider-hierarchy.md) §9 and §9.2,
 recorded here so the two documents cannot drift.
 
-The page's software half is finished and needs nothing from this. Packages,
-runtimes, container images, fonts and vendored libraries are covered by the
-marker contract (§3) and the gate (§5). Nothing below changes any of it.
+The page's software half does not use the registry. Packages, runtimes,
+container images, fonts and vendored libraries are covered by the marker
+contract (§3) and the gate (§5).
 
-The dataset half is what moved. Instead of a `.crow` per source written by
-hand in the template, the template calls one Twig function and loops:
+For the dataset half the template calls one Twig function and loops:
 
 ```
 credited_providers()      App\Twig\ProviderCreditsExtension
 ```
 
-It returns every enabled `data_provider` row, ordered by `name` and split into
-a `required` and a `courtesy` list (§8.4), each carrying `key`, `name`,
+It returns every credited `data_provider` row
+(`ProviderCitations::creditedSql()`: serving, or paused with rows still on the
+map, the same answer the map's citations give), ordered by `name` and split
+into a `required` and a `courtesy` list (§8.4), each carrying `key`, `name`,
 `homepage`, `licence`, `attribution`, `creator` and the already-resolved
 sentence (§8.6). Every generated link carries
 `data-pkg="manual:provider-<key>"` (§3).
 
-**"Keep the old data as is" means no wording changes, not no migration.** This
-was misread once (2026-08-27) as "existing rows stay hand-written and the
-registry only covers new sources", and the misreading is worth recording
-because it is the natural one. What §9.2 actually guarantees is that seeded
-providers carry a `blurb_key` pointing at the message key their row already
-uses, so `credits.osm_p` and `credits.overture_p` keep all five translations
-and `/fr/credits` reads exactly as it does today. The row moves; not one word
-does. A `blurb_key` on `osm` would have nothing to do under an additive model,
-which is the tell.
+**Seeded providers keep their wording.** Each seeded provider carries a
+`blurb_key` pointing at the message key its hand-written row used, so
+`credits.osm_p`, `credits.overture_p` and the rest keep all five
+translations. The row moved into the registry; the words did not change.
 
 ### 8.1 The contract, in both directions
 
@@ -275,65 +271,42 @@ which is the tell.
 | **Registry to page** | A provider admitted at `/moderate/providers` appears on `/credits` **with nobody editing a template**. Not a follow-up task, not a checklist item. If a curator has to open a Twig file, this has not landed. |
 | **Page to registry** | A hand-written row for a dataset the registry also carries is a **duplicate and must be deleted** in the same change. Two rows for OpenStreetMap is the failure this replaces, not an acceptable transition state. |
 
-### 8.2 What moves with the rows, and the one thing that does not
+### 8.2 What a generated row carries, and what it keeps
 
-Deleting a hand-written dataset row is not just deleting markup:
-
-- **Its `manual:` marker** went with it. The hand-written dataset ids
-  (`manual:openstreetmap-data`, `manual:overture-divisions`,
-  `manual:copernicus-dem` and the rest) no longer exist; every generated row
-  carries `manual:provider-<key>` instead (§3). `manual:` never orphans, so the
-  gate stays green either way, which is exactly why this had to be done
-  deliberately rather than left to a failing check.
+- **Its marker** is `manual:provider-<key>` (§3). There are no hand-written
+  dataset markers. `manual:` never orphans, so the gate cannot notice a
+  dataset marker that should not be there; §8.1 and the registry carry that
+  guarantee instead.
 - **Its required-notice `*`** is not hand-placed: it comes from the registry
-  (§2, §8.4.1). The wording of a required notice still may not be
-  edited; it now lives in the registry's `attribution` field, and the same
-  one-way-door rule applies to it there.
-- **Its licence chip changes language, deliberately.** The `lic_*` keys used
-  only by data rows (`lic_open_data`, `lic_osm_extracts`, `lic_linked`,
-  `lic_per_photo`) go orphan, because the registry supplies the licence label
-  as an untranslated fact. A licence name is not prose. Accepted consequence,
-  not an oversight: the chip on `/fr/credits` reads "Open data" rather than
-  "Données ouvertes".
-- **Its translation key stays exactly where it is.** The one thing that does
-  *not* move, stated because the obvious assumption is wrong: a generated row
-  does not mean untranslated prose. `blurb_key` keeps `credits.osm_p` and the
-  rest alive and pointed at (§8.6). Deleting them would be a regression, not a
-  cleanup, and [translations.md](translations.md) parity must still pass after
-  the sweep.
-- **The parked rows went too.** Drinkwaterkaart.nl and Nationaal Georegister
-  sat inside Twig comments awaiting a decision. The owner's call (2026-08-27)
-  was that both are deleted by hand at the switchover, and they were: the
-  registry carries those sources, so there is nothing to unpark and no
-  decision left to make.
+  (§2, §8.4.1). The wording of a required notice still may not be edited; it
+  lives in the registry's `attribution` field, and the same one-way-door rule
+  applies to it there.
+- **Its licence chip is untranslated, deliberately.** The registry supplies
+  the licence label as a fact, and a licence name is not prose, so the chip
+  on `/fr/credits` reads "Open data" rather than "Données ouvertes".
+- **Its sentence stays translated.** A generated row does not mean
+  untranslated prose: `blurb_key` keeps `credits.osm_p` and the rest in use
+  (§8.6). Deleting those keys would be a regression, not a cleanup.
 
 ### 8.3 The generated rows are their own group
 
 Owner's call, 2026-08-27. `credited_providers()` renders into its **own
-`.cgroup`**, not interleaved with whatever hand-written rows remain. Two
-reasons, and the second is the one that shapes the markup:
-
-- **Ordering stops being a problem.** The hand-written data rows are ordered
-  editorially, not alphabetically: OpenStreetMap is first because its sentence
-  opens "The foundation of the atlas". A registry sort order cannot express
-  that, and does not have to once the two sets do not share a list.
-- **The registry is expected to grow large.** Ten providers is a group of rows.
-  A hundred is a wall, and a wall of equal-weight rows is how a page stops
-  being read at all.
+`.cgroup`**, not interleaved with hand-written rows, ordered by name. The
+registry is expected to grow large: ten providers is a group of rows, a
+hundred is a wall, and a wall of equal-weight rows is how a page stops being
+read at all.
 
 ### 8.4 Two weights, and where the weight comes from
 
-**Accepted and now owned by
-[data-provider-hierarchy.md](data-provider-hierarchy.md) §9.3** (commit
-`8ab9aa7a`). It was raised here because "one `.crow` per entry" and "could grow
-to an enormous list" cannot both hold.
+Owned by [data-provider-hierarchy.md](data-provider-hierarchy.md) §9.3.
+"One `.crow` per entry" and "could grow to an enormous list" cannot both hold.
 
-The software half of this page already solved this, and the split it uses is
-not arbitrary: notable things get a row and a sentence, the long tail gets a
-linked name in one comma-separated run (§2, the third tier). Forty-two entries
-fit in five lines that way and stay completely readable.
+The software half of this page solves the same problem with the same split:
+notable things get a row and a sentence, the long tail gets a linked name in
+one comma-separated run (§2, the third tier). Forty-odd entries fit in a few
+lines that way and stay readable.
 
-For providers the split should not be an editorial judgement about which are
+For providers the split is not an editorial judgement about which are
 interesting. It falls out of the licence:
 
 | Provider | Rendering | Why it has to be this way |
@@ -361,13 +334,14 @@ this page therefore relies on:
 
 - **Default false.** A provider is in the comma run unless somebody deliberately
   spends a promotion on it.
-- **An explicit act on the desk**, recorded in moderation history like any other
-  provider change.
-- **The desk shows how many promoted rows exist**, so the count cannot creep
-  unnoticed.
+- **An explicit act on the desk**, recorded in `data_provider_change` like any
+  other provider change.
+- **The desk should show how many promoted rows exist**, so the count cannot
+  creep unnoticed. Not built: `/moderate/providers` shows the checkbox per
+  provider and no count.
 
-For the template this changes one line: a row is a `.crow` when the licence
-requires a notice **or** `promoted` is true, and a comma-run entry otherwise.
+A row is a `.crow` when the licence requires a notice **or** `promoted` is
+true, and a comma-run entry otherwise.
 
 As built, `ProviderCreditsExtension` puts a promoted row in the `required`
 list, and every row in that list renders with the `*` required-notice marker.
@@ -390,8 +364,6 @@ The Dutch taps are the case that proves it:
 | Registry it is served from | the Kadaster's Nationaal Georegister |
 
 A credit naming only the publisher credits the pipe rather than the person.
-That is exactly the mistake the hand-written Nationaal Georegister row made,
-and why that row was parked rather than shown.
 
 **Decided (owner, 2026-08-27): creator gets its own small line, in normal
 case.** Not the `.lic` chip. That chip is mono and uppercased, and pushing
@@ -401,7 +373,7 @@ where the uppercasing mangles a domain name and the chip stops being scannable
 as a licence. Creator and publisher are facts about people, not a licence
 string, and they read as one.
 
-The shape, so it does not have to be re-decided at build time:
+The decided shape:
 
 | Question | Answer |
 |----------|--------|
@@ -419,9 +391,6 @@ Created by drinkwaterkaart.nl, published by RIVM
 PUBLIC DOMAIN MARK 1.0                         <- .lic chip
 ```
 
-That is the credit the hand-written row failed to give, which is why it was
-parked rather than shown.
-
 **What is built** is smaller than the decided shape. The template appends
 `credits.made_by` (`'Dataset made by %creator%.'`) to the row's sentence,
 inside its `<p>`, whenever `creator` is set; it does not compare `creator`
@@ -434,15 +403,16 @@ name, above the chip) or keep `credits.made_by` in the sentence.
 
 ### 8.5 Curator-entered text is the provider module's problem, not this page's
 
-Owner's call, 2026-08-27. Every string on `/credits` was developer-written
-before the registry. Registry fields such as `attribution` are curator-entered,
-which is a new escaping surface on a public page, and attribution strings frequently want a
-link inside them.
+Owner's call, 2026-08-27. Registry fields such as `attribution` and `blurb`
+are curator-entered, which is an escaping surface on a public page.
 
-`App\Provider` owns validating and sanitising that on the way in. Entry is
-restricted to admins and curators, so this is trusted-but-checked input rather
-than public input. The credits template renders what the registry hands it and
-adds no sanitiser of its own; if that ever changes, it is a
+`App\Provider` owns checking that on the way in: `ProviderRegistry` trims each
+field and refuses to enable a provider whose licence requires an attribution
+while the attribution is empty. Entry is restricted to curators
+(`ROLE_CURATOR` on `/moderate/providers`), so this is trusted-but-checked input
+rather than public input. The credits template prints the strings with Twig's
+auto-escaping and adds no sanitiser of its own, so a link written into an
+attribution shows as text. Allowing markup there would be a
 [security-architecture.md](security-architecture.md) decision, not a template
 one.
 
@@ -452,8 +422,8 @@ Owned by [data-provider-hierarchy.md](data-provider-hierarchy.md) §9.2 and
 summarised here because it decides what this page renders.
 
 **Facts come from the registry and are never translated:** `name`, `full_name`
-(publisher), `creator`, `homepage`, licence code and label, `attribution`,
-release year. The attribution line
+(publisher), `creator`, `homepage`, licence code and label, `attribution`.
+The attribution line
 especially must never be translated, because it is the exact wording a licence
 obliges us to show, which is the same one-way-door rule as §2.
 
@@ -465,22 +435,19 @@ Two columns carry it and the renderer prefers the first:
 | `blurb_key` | a message key, e.g. `credits.osm_p` | seeded rows, which therefore keep every existing translation |
 | `blurb` | free English text | a provider a curator adds at `/moderate/providers` |
 
-A curator cannot write Spanish, so a `blurb` is registered as a
-`translation_entry` under a synthetic key `provider.<key>.blurb` and translated
-the way everything else on the site is. That fits the table's own rule that
-identity is the message key and never the display wording
-([translations.md](translations.md) §3.1), and needs exactly one change: the
-sync that projects `messages.en.yaml` into `translation_entry` also projects
-registry blurbs. Overlays resolve by key and do not care where the English came
-from. Until a translation is approved, English shows, which is already what
-happens for a new YAML key. A provider added on Tuesday is right in English
-immediately and right in five languages when the queue clears, with no deploy
-either time.
+A curator's `blurb` shows in English in every locale. The design for
+translating it: register it as a `translation_entry` under a synthetic key
+`provider.<key>.blurb`, translated the way everything else on the site is.
+That fits the table's own rule that identity is the message key and never the
+display wording ([translations.md](translations.md) §3.1), and needs one
+change: the sync that projects `messages.en.yaml` into `translation_entry`
+also projects registry blurbs. Overlays resolve by key and do not care where
+the English came from. Not built: the sync does not read the registry.
 
 `credited_providers()` therefore returns facts as values plus an
 already-resolved sentence. **The template renders and does not choose.**
 
-### 8.7 The gate afterwards: one blind spot, one new check worth writing
+### 8.7 The gate and the generated rows: one blind spot, one check worth writing
 
 The gate reads the template. Generated rows are invisible to it, so the
 dataset half of the page is outside the gate's coverage entirely.
@@ -488,16 +455,14 @@ That is acceptable only because a different guarantee replaces it: the registry
 is the single source, so a dataset cannot be *uncredited* the way a package
 can.
 
-One new check becomes possible and is worth writing:
+One check is worth writing:
 
 > **DUPLICATE**: a hand-written `.crow` whose link host matches the `homepage`
 > of a provider returned by `credited_providers()`.
 
-That is §8.1's page-to-registry rule made mechanical. It guards the migration
-sweep, and then keeps guarding: any curator can later add a source the page
-still credits by hand, and the page then names it twice.
-Open: not written yet; `tools/credits/check_credits.py` has no DUPLICATE
-check, although the registry now exists.
+That is §8.1's page-to-registry rule made mechanical: any curator can add a
+source the page still credits by hand, and the page then names it twice.
+Open: not written; `tools/credits/check_credits.py` has no DUPLICATE check.
 
 ### 8.8 The line: scheduled ingest is a provider, on demand is not
 
@@ -508,14 +473,13 @@ replacing a taste judgement with a mechanical one.
 > online API, on a schedule: once a week, a month, or a year. Something fetched
 > **on demand**, per request, is not a provider and stays hand-written.
 
-This is a better rule than the one it replaces ("software, fonts and basemap
-stay hand-written") because it does not depend on what kind of thing something
-is, only on how it reaches us. It also matches what the registry is *for*: rank
+The rule does not depend on what kind of thing something is, only on how it
+reaches us. It also matches what the registry is *for*: rank
 resolution, duplicate guards, coverage suppression and citation are all
 questions about rows we hold. There is nothing to rank about an image tile
 fetched while the reader is looking at it.
 
-Applied to the page as it stands today:
+Applied to the page:
 
 | Row | How it reaches us | Verdict |
 |-----|-------------------|---------|
@@ -525,16 +489,14 @@ Applied to the page as it stands today:
 | Geofabrik | harvested | provider |
 | Wikimedia Commons | resolved and cached at harvest | provider |
 | Wikipedia | fetched at build time | provider |
-| Copernicus DEM GLO-30 | DEM tiles installed on the host | provider |
-| Nationaal Georegister (parked) | scheduled import | provider |
-| Drinkwaterkaart.nl (parked) | via the Georegister | provider |
+| Copernicus WorldDEM-30 | DEM tiles installed on the host | provider |
+| RIVM drinking-water taps (via the Nationaal Georegister) | scheduled import | provider |
 | **Mapillary** | live API, per request | **hand-written** |
 | **Esri World Imagery** | live tiles, per request | **hand-written** |
 | OpenFreeMap | live tiles, per request | hand-written |
 | Photon | live geocoding, per request | hand-written |
 | Valhalla, MapLibre, Protomaps, Redoc | software we run or ship | hand-written (§3, gated) |
 
-So the map group keeps its two required notices, hand-placed, after the
-migration. `manual:mapillary-service` and `manual:esri-imagery` stay valid
-markers, and the `#credits-req` footnote is still needed by rows outside the
-generated group. Neither of those was safe to assume before this rule existed.
+So the map group keeps its two required notices, hand-placed:
+`manual:mapillary-service` and `manual:esri-imagery` are valid markers, and the
+`#credits-req` footnote is needed by rows outside the generated group.

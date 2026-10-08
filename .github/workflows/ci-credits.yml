@@ -2,10 +2,10 @@
 name: ci-credits
 # NO `paths:` FILTER, DELIBERATELY.
 #
-# The gate's inputs are spread across web/composer.json, three requirements.txt
-# files, developers/docker/** and web/assets/lib/**. Writing that set out here
-# would be a second copy of a list that already lives in
-# tools/credits/check_credits.py, and it would drift the same way: add a fourth
+# The gate's inputs are spread across web/composer.json, two requirements.txt
+# files, developers/docker/**, web/assets/lib/** and web/public/lib/**. Writing
+# that set out here would be a second copy of a list that already lives in
+# tools/credits/check_credits.py, and it would drift the same way: add a third
 # requirements.txt and the filter silently stops covering it, while the job
 # keeps going green. That is worse than having no job, because the silence
 # reads as an all-clear. This is the same reasoning that made
@@ -24,11 +24,9 @@ on:
   # changed, so no change-triggered job could ever have caught it. A weekly
   # sweep is the only thing that can.
   #
-  # DORMANT UNTIL GO-LIVE, and that is expected. GitHub runs schedule: from the
-  # DEFAULT BRANCH only. The public repo's default branch is `main`; this file
-  # lives on `symfony-base-clean`, which becomes `main` at go-live. Until then the
-  # pull_request and push triggers work and this cron never fires. Nothing has
-  # to be installed on a host or in WSL either way: GitHub schedules it.
+  # GitHub runs schedule: from the DEFAULT BRANCH only, which is `main`, so this
+  # cron fires from the copy of this file on `main`. Nothing has to be
+  # installed on a host or in WSL: GitHub schedules it.
   # Times are UTC and best-effort, not exact.
   schedule:
     - cron: '17 6 * * 1'

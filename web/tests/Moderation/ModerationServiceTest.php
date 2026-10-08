@@ -172,9 +172,9 @@ final class ModerationServiceTest extends KernelTestCase
     }
 
     /**
-     * C2-T6 (spec §W2): the climb form↔drawer reconciliation round-trips —
+     * The climb form↔drawer reconciliation round-trips -
      * an approved 'effort' edit updates the item's attribute and leaves a
-     * change_history row (shows up in the C1-T3 drawer history view).
+     * change_history row (shows up in the drawer's Recent changes).
      */
     public function testApproveEditUpdatesClimbEffortWithHistory(): void
     {

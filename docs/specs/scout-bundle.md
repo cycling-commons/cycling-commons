@@ -19,7 +19,7 @@ when the two disagree, fix both in the same change.
 
 Everything is read in the rider's browser, as with a bare `.fit`. The page
 unpacks the zip in memory, reads the ride, and fills the cards. The route is
-never uploaded. A card sends exactly what it sends today; its photos travel
+never uploaded. A card sends the same fields as a card from a bare `.fit`; its photos travel
 through the ordinary photo uploader (photo-uploads.md), consent gate included,
 **when the rider sends that card**. A photo on a card that is never sent never
 leaves the phone.
@@ -58,7 +58,7 @@ ignored. The zip file's own name is free; the one above is the suggested form.
 | Field | Rule |
 |---|---|
 | `format` | Exactly `"scout-bundle"`. Anything else: the zip is not a bundle, and the page reads it as a plain archive of rides (below). |
-| `version` | `1`. A higher version is refused with a message to update the page. |
+| `version` | `1`. Any other version is refused with a message that the bundle is from a newer Scout app and the page should be reloaded. |
 | `fit` | Path of the ride inside the zip. |
 | `tags[].at` | The **FIT timestamp of the record the tag was written on**, UTC, whole seconds, ISO 8601 with `Z`. This is the link: the page reads the same timestamp from the FIT file for every tag. |
 | `tags[].n` | Optional. Only when two tags share one second: `0`, `1`, … in the order they appear in the FIT file. Absent means `0`. |
@@ -90,17 +90,19 @@ A **surface stretch** is keyed on the tap that **starts** it.
 
 ## 6. Limits
 
-The page refuses a bundle whose `scout.json` is over 1 MB, whose ride is over
-64 MB, or whose unpacked total is over 300 MB, before reading any of it. These
-guard the browser, not the server; the server's own limits still apply to
-every photo.
+The page does not open as a bundle a zip whose `scout.json` is over 1 MB, whose
+ride is over 64 MB, or whose unpacked total is over 300 MB; it checks the sizes
+before inflating anything but `scout.json` (`BUNDLE_LIMITS` in
+`scout-bundle.js`), and then reads the zip as a plain archive of rides (§7).
+These guard the browser, not the server; the server's own limits still apply
+to every photo.
 
 ## 7. Where the code is
 
 - Reader: `web/assets/map/scout-bundle.js` (pure: zip bytes in, ride bytes
-  plus a note/photo index out; node-tested in `tests/js/scout-bundle.test.mjs`).
+  plus a note/photo index out; node-tested in `web/tests/js/scout-bundle.test.mjs`).
 - Zip: `web/assets/lib/fflate-0.8.3.js` (MIT, vendored verbatim).
-- Review page: `scout-review.js` opens `.fit` or `.zip`, fills the cards, and
+- Review page: `web/assets/map/scout-review.js` opens `.fit` or `.zip`, fills the cards, and
   hands a card's photos to the uploader on send. A `.zip` that is not a bundle
   (no `scout.json`, another `format`, or over the bundle limits) is read for its
   `.fit` and `.fit.gz` files (`web/assets/lib/ride-archive.js`): one ride opens

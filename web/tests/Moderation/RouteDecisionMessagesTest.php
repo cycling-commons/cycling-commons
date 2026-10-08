@@ -21,7 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Task 4 (moderation-feedback spec M2/M11): route approve/reject/retire and
+ * moderation-and-contribution.md §7 (M2/M11): route approve/reject/retire and
  * correction resolve/dismiss decisions message the proposer/suggester —
  * atomically with the decision — and the correction note enforces the shared
  * 2000-character cap (M11).

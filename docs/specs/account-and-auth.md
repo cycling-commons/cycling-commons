@@ -21,7 +21,7 @@ domain in [route-domain.md](route-domain.md), CSP/CSRF/sanitizer details in
 
 ---
 
-## 1. User model — one entity, a role ladder, no staff table
+## 1. User model: one entity, a role ladder, no staff table
 
 There is exactly **one account entity**, `App\Entity\User`
 (`web/src/Entity/User.php`, table `users`), identified by email, with a JSON
@@ -37,15 +37,15 @@ appends the implicit `ROLE_USER`, and the admin role-mutation helper
 (`UserAdminService::setRole()`) strips it before persisting elevated-role
 changes. Registration, however, stores `['ROLE_USER']` verbatim
 (`RegistrationController`), so self-registered rows carry it in the `roles`
-JSON — the invariant is behavioural (`getRoles()`), not a storage guarantee.
+JSON: the invariant is behavioural (`getRoles()`), not a storage guarantee.
 
 **Why no separate AdminUser/staff table:** curators are trusted riders, not an
 organizationally separate staff class. A rider *becomes* a curator by earning
-`ROLE_CURATOR` and keeps one identity, profile, and contribution history —
+`ROLE_CURATOR` and keeps one identity, profile, and contribution history:
 which matters for provenance. Hard operator isolation (a separate login domain)
 is deliberately deferred unless a concrete need appears; mandatory 2FA on
 elevated roles plus lockout cover the near-term risk. Per-area curator scoping
-exists as data on the side (`moderator_area` rows — contract in
+exists as data on the side (`moderator_area` rows, contract in
 [moderation-and-contribution.md](moderation-and-contribution.md)), not as extra
 roles.
 
@@ -53,26 +53,28 @@ roles.
 
 | Group | Fields | Notes |
 |---|---|---|
-| Identity | `id` (int PK), `uuid` (UUIDv7, table-level unique constraint `uniq_users_uuid`), `email` (unique), `displayName` (§9 — deliberately **not** unique), `country` (nullable FK, `SET NULL`), `locale` (nullable; null = follow switcher/browser) | `uuid` is assigned in the `PrePersist` callback and is the only identifier ever exposed publicly (§7) |
+| Identity | `id` (int PK), `uuid` (UUIDv7, table-level unique constraint `uniq_users_uuid`), `email` (unique), `displayName` (§9, deliberately **not** unique), `pseudonym` (8 characters, drawn once at creation, the `rider#` handle, §9), `country` (nullable FK, `SET NULL`), `locale` (nullable; null = follow switcher/browser) | `uuid` is assigned in the `PrePersist` callback and is the only identifier ever exposed publicly (§7) |
 | Auth | `password` (hash, `auto` hasher), `roles` (json) | |
 | Email verification | `emailVerified`, `emailVerifiedAt` | token flow is signed-URL (§2), no stored token column |
 | 2FA | `twoFaEnabled`, `totpSecret` (encrypted at rest, §4), `backupCodes` (json, keyed hashes) | |
 | Lockout | `failedLoginAttempts`, `lockedUntil`, `isLocked()` | §3 |
 | Deletion | `deletionCode`, `deletionRequestedAt` | §10 |
 | Governance | `publicProfile` (bool, opt-in, default false) | §7 |
-| Preferences | `bikeTypes` (json), `ridingStyles` (json), `defaultMapMode` (string, default `auto`; `auto \| everything \| confirmed \| curated`), `dateFormat`/`timeFormat` (string, default `auto`), `distanceUnit` (string, default `km`), `elevationUnit` (string, default `m`) | §9 |
-| Age (GDPR Art. 8) | `ageConfirmedAt` (nullable datetime — when they declared 16+; NULL = predates the gate, or created by an admin/console path) | §2; deliberately **not** a date of birth |
-| Media | `keepMediaCredit` (bool) — the departing rider's credit choice, read at deletion | photo-uploads.md §6 |
-| Base location (optional, account-private) | `basePoint` (geometry GeoJSON Point: a new point is shifted to a random spot up to 2.5 km away, uniform over the disc, by `App\Service\BaseLocationJitter`, then rounded to 2dp; a point equal to the stored one is kept, so a radius-only save does not move it), `basePlace` (varchar(120), town-level label for the scope line), `baseRadiusKm` (smallint, default 40, clamped [10,150]), `baseRegionIds`/`baseCountryCodes` (json, derived — `App\Service\BaseAreaResolver`, cap 8) | map-and-search.md §4.5 Phase 4; **never** exposed on the public profile (§7 below); no GIST index (nothing queries users spatially) |
-| Audit | `createdAt`, `updatedAt` (lifecycle callbacks) | there is **no** `lastActiveAt` — required by the unbuilt inactivity lifecycle (§6.6) |
+| Preferences | `bikeTypes` (json), `ridingStyles` (json), `defaultMapMode` (string, default `auto`; `auto \| everything \| confirmed \| curated`), `mapTheme` (string, default `dark`; map-and-search.md), `dateFormat`/`timeFormat` (string, default `auto`), `timeZone`/`detectedTimeZone` (nullable), `distanceUnit` (string, default `km`), `elevationUnit` (string, default `m`), `rowsPerPage` (string, default `auto`, §9.4) | §9 |
+| Updates and notices | `updatesOptIn` (bool, default false), `updatesCadence` (string, default `big`), `privacyVersionSeen` (nullable int) | roadmap-and-changelog.md; privacy-notice.md |
+| Age (GDPR Art. 8) | `ageConfirmedAt` (nullable datetime: when they declared 16+; NULL = predates the gate, or created by an admin/console path) | §2; deliberately **not** a date of birth |
+| Media | `keepMediaCredit` (bool): the departing rider's credit choice, read at deletion | photo-uploads.md §6 |
+| Base location (optional, account-private) | `basePoint` (geometry GeoJSON Point: a new point is shifted to a random spot up to 2.5 km away, uniform over the disc, by `App\Service\BaseLocationJitter`, then rounded to 2dp; a point equal to the stored one is kept, so a radius-only save does not move it), `basePlace` (varchar(120), town-level label for the scope line), `baseRadiusKm` (smallint, default 40, clamped [10,150]), `baseRegionIds`/`baseCountryCodes` (json, derived: `App\Service\BaseAreaResolver`, cap 8) | map-and-search.md §4.5; **never** exposed on the public profile (§7 below); no GIST index (nothing queries users spatially) |
+| Activity | `lastLoginAt` (stamped on every sign-in, remember-me included), `inactivity12mAt`/`inactivity22mAt`/`inactivity23mAt` (the three dormancy notices) | §6.5 |
+| Audit | `createdAt`, `updatedAt` (lifecycle callbacks) | |
 
 The entity implements `UserInterface`, `PasswordAuthenticatedUserInterface`,
 scheb's `TwoFactorInterface` (TOTP) and `BackupCodeInterface`. Validation
-(email format/length and uniqueness, display-name format — §9) sits **on the
-entity**, not on individual forms, so every write path — registration form,
-settings form, console commands, admin CRUD, fixtures — is covered.
+(email format/length and uniqueness, display-name format, §9) sits **on the
+entity**, not on individual forms, so every write path (registration form,
+settings form, console commands, admin CRUD, fixtures) is covered.
 
-Privacy consequence (standing rule): the platform **does** hold personal data —
+Privacy consequence (standing rule): the platform **does** hold personal data:
 email, password hash, encrypted 2FA secret, login metadata. Public copy must
 never claim otherwise; the *dataset* being non-personal is a separate claim.
 
@@ -86,7 +88,7 @@ both have to move with it.
 
 ## 2. Registration, email verification, password reset
 
-All built on permissive MIT libraries — `symfony/security-bundle`,
+All built on permissive MIT libraries: `symfony/security-bundle`,
 `symfonycasts/verify-email-bundle`, `symfonycasts/reset-password-bundle`,
 `scheb/2fa-bundle` (+totp, +backup-code), `easycorp/easyadmin-bundle`. A
 proprietary in-house auth bundle (private, unnamed here) was a **pattern
@@ -97,11 +99,11 @@ reference only**: never a dependency, no code copied.
 - Fields: email, display name (2–100 chars, `RegistrationFormType`), repeated
   password (**min 12 chars**, `Length(min: 12)` in
   `web/src/Form/RegistrationFormType.php`, plus `NotCompromisedPassword`
-  (review 2026-08-16 info note) on all three password forms — k-anonymity: only
+  on all three password forms (k-anonymity: only
   the first five SHA-1 hex chars reach haveibeenpwned; `skipOnError` so an API
   outage never blocks anyone; disabled in test via `validator.yaml`
-  `when@test`), an **age declaration** and an
-  agree-terms checkbox. Preferences are *not* asked at registration —
+  `when@test`)), an **age declaration** and an
+  agree-terms checkbox. Preferences are *not* asked at registration:
   friction-free by design (§9).
 
 **The age gate (GDPR Art. 8).** Art. 8 gates consent-based processing of a
@@ -115,7 +117,7 @@ It is **self-declared, and deliberately not a date of birth**. Art. 8(2) asks
 for *reasonable efforts* given available technology, and for a service like
 this one that is a declaration; collecting a birthday to answer a yes/no
 question would store more personal data than the question is worth
-(Art. 5(1)(c)). The declaration is stored as `users.age_confirmed_at` — a
+(Art. 5(1)(c)). The declaration is stored as `users.age_confirmed_at`: a
 timestamp, because null/not-null already carries the boolean and the *when* is
 the part worth keeping.
 
@@ -124,22 +126,22 @@ a 422 with the rest of the input preserved. **Existing accounts keep NULL**:
 they registered before the gate existed, and back-filling a declaration nobody
 made would be a record of something that never happened.
 - New accounts get `['ROLE_USER']` and `emailVerified = false`.
-- **An address the mailer refuses is a form error, not a 500** (2026-09-29).
+- **An address the mailer refuses is a form error, not a 500.**
   `Assert\Email` in its default mode accepts `j..t@gmail.com`; `new Address()`
-  refuses it with an exception, and on sign-up that came after the row was
-  written, so the address was then "taken". `App\Validator\MailableEmail` on
+  refuses it with an exception, which on sign-up would come after the row is
+  written and leave the address "taken". `App\Validator\MailableEmail` on
   `User::$email` (and on the reset and resend forms) builds the same `Address`
   the mailer would and reports a refusal as `form.error_email_mailable`
   ("Check it for typos, such as two dots in a row").
-- **One spelling per mailbox** (2026-09-29). `User::setEmail()` stores the
+- **One spelling per mailbox.** `User::setEmail()` stores the
   address trimmed and in lower case (`User::normalizeEmail()`), and every
   lookup lower-cases what it is given: `UserRepository::findByEmail()`, and the
   login provider through `UserRepository::loadUserByIdentifier()` (the provider
   in `security.yaml` has no `property`, so Symfony asks the repository).
-  Before this, `Rider@example.com` and `rider@example.com` were two accounts
-  and two confirmation mails. Migration `Version20260929010000` lower-cases the
-  existing rows, except one whose lower-case form another account already
-  holds: two accounts on one mailbox is for a person to merge.
+  `Rider@example.com` and `rider@example.com` are one account. Migration
+  `Version20260929010000` lower-cased the rows that existed before, except one
+  whose lower-case form another account already held: two accounts on one
+  mailbox is for a person to merge.
 - **A taken address is answered like a new one** (owner, 2026-09-29). The
   form never says which addresses have accounts: sign-up with an address that
   already has one renders the same check-your-email page, and the inbox learns
@@ -159,13 +161,13 @@ made would be a record of something that never happened.
   a 500. Pinned by `RegistrationTest::testATakenAddressIsAnsweredLikeANewOne`,
   `testATakenConfirmedAddressGetsTheWayToSignIn` and
   `testATakenAddressIsMailedOncePerQuarterHour`.
-- A verification mail is sent (verify-email bundle, signed URLs — no stored
+- A verification mail is sent (verify-email bundle, signed URLs: no stored
   token). **It greets nobody by name and is addressed to the bare address**
-  (`EmailVerifier::sendConfirmation()`, 2026-09-29): the address may belong to
-  a stranger a bot signed up, and the display name is whatever the bot typed,
-  so putting it in the mail let a stranger's text go out from our domain.
+  (`EmailVerifier::sendConfirmation()`): the address may belong to a stranger
+  a bot signed up, and the display name is whatever the bot typed, so putting
+  it in the mail would let a stranger's text go out from our domain.
   **The link works for 24 hours** (`config/packages/verify_email.yaml`,
-  `lifetime: 86400`; the bundle's default was one hour): a rider who signs up
+  `lifetime: 86400`; the bundle's default is one hour): a rider who signs up
   at night confirms in the morning, and a new link is one form away. The mail
   and the check-your-email page say "24 hours" in their own translated words,
   not the bundle's untranslated duration. **The link is localized** (owner, 2026-08-27): signing up on
@@ -187,14 +189,14 @@ made would be a record of something that never happened.
   `LoginSuccessHandler` honours it after authentication. An anonymous visit
   to a gated page (e.g. `/join/BE`,
   [moderation-and-contribution.md](moderation-and-contribution.md) §11)
-  therefore lands back on that page after account creation — no re-navigation
+  therefore lands back on that page after account creation: no re-navigation
   needed.
 
-**Bot layers on sign-up** (2026-09-29). On 2026-09-28 bots signed up
-strangers' addresses with random names (`TQzXxAvQrqrRKJjPh`), so our
-confirmation mail went to people who never visited. The per-connection limit
-below did not stop it: a bot that uses many addresses is under every one of
-them. Sign-up now carries the contact form's four local layers
+**Bot layers on sign-up.** Bots sign strangers' addresses up with random names
+(`TQzXxAvQrqrRKJjPh`), so our confirmation mail would go to people who never
+visited. The per-connection limit below cannot stop that alone: a bot that
+uses many connections is under every one of them. Sign-up carries the contact
+form's four local layers
 ([contact-and-support.md](contact-and-support.md) §3), through
 `App\Security\SignupGuard`, and still no third-party CAPTCHA:
 
@@ -213,8 +215,7 @@ Refusals are form-level errors under `security.guard.*`, a 422, with the
 input kept (passwords excepted, as always). The page runs
 `register-validate.js` before `form-challenge.js`, and the challenge script
 leaves a submit alone once validation has prevented it
-(`tests/js/form-challenge.test.cjs`); before that it would have solved and
-posted the invalid form anyway. Pinned by `RegistrationTest`, which sends
+(`tests/js/form-challenge.test.cjs`). Pinned by `RegistrationTest`, which sends
 every case through the real guards (`GuardedSignupTrait`) so a validation
 test cannot pass only because a bot guard refused it first.
 
@@ -261,19 +262,19 @@ bundle with its own `ResetPasswordRequest` entity):
 - The token is moved from the URL into the session on arrival (prevents
   Referer leakage), consumed before the new password is persisted.
 - **Completing a reset clears any brute-force lock** (`lockedUntil = null`,
-  counter reset) — the reset flow is the owner's recovery path out of a
+  counter reset): the reset flow is the owner's recovery path out of a
   lockout DoS (§3).
 - **Completing a reset confirms the address.** The reset link was opened from
   the inbox, which proves the address as well as a confirmation link does.
   Without this, an unconfirmed rider who reset their password still could not
   sign in. Pinned by `ResetPasswordTest::testPasswordResetConfirmsTheAddress`.
 - Repository throttling in the bundle prevents reset-request floods; stuck
-  rows are visible/purgeable via the admin diagnostics CRUD (§6.5).
+  rows are visible/purgeable via the admin diagnostics CRUD (§6.6).
 
 **Both of these endpoints are budgeted per address** (`password_reset` and
 `registration`, 5 per hour each,
-[security-architecture.md](security-architecture.md) §7). Neither had a quota
-until the 2026-08-25 security scan. One unauthenticated POST to either persists
+[security-architecture.md](security-architecture.md) §7). One unauthenticated
+POST to either persists
 a row and sends a message to an address the sender chose, so a loop is two
 attacks at once: an inbox flood aimed at somebody else and a table flood aimed
 at us. The bundle's own repository throttle does not cover it, because that one
@@ -296,7 +297,7 @@ salted hashes of the address rather than the address itself.
 `MAILER_DSN` env var. Sender identity is `noreply@cyclingcommons.org`.
 All transactional emails (verification, password reset, account-deletion
 code) extend one branded shell, `templates/emails/_base.html.twig`
-Email templates use email-client-safe markup only — presentation tables + inline
+Email templates use email-client-safe markup only: presentation tables + inline
 styles, paper backdrop, ink header band carrying the wide wordmark
 (`assets/brand/logo-email.png`, a PNG render of the nav SVG since mail
 clients strip SVG), orange action button. Copy lives in the extending
@@ -315,18 +316,18 @@ worded by the reset bundle's translations ("1 hour", "1 uur").
 
 Two complementary layers:
 
-1. **Per-IP throttle** — Symfony's built-in `login_throttling`,
+1. **Per-IP throttle**: Symfony's built-in `login_throttling`,
    `max_attempts: 5` (`web/config/packages/security.yaml`). Covers
    many-accounts-from-one-address attacks.
-2. **Per-account hard lock** — `App\Security\LoginThrottleListener`:
+2. **Per-account hard lock**: `App\Security\LoginThrottleListener`:
    - `LOCKOUT_THRESHOLD = 5` failed attempts →
    - `LOCKOUT_MINUTES = 15` lock (`lockedUntil = now + 15min`).
 
 Lock semantics (all in `LoginThrottleListener`):
 
 - A locked account is rejected at `CheckPassportEvent` **before password
-  verification** — the correct password does not bypass the lock.
-- Failures **while locked never count and never re-arm the window** — the
+  verification**: the correct password does not bypass the lock.
+- Failures **while locked never count and never re-arm the window**: the
   advertised cooldown genuinely elapses (otherwise repeated attempts would be a
   permanent DoS).
 - A failure after an *expired* lock starts a fresh window (stale counter
@@ -344,12 +345,11 @@ per-account budget as a wrong password, the fifth one locks the account, and
 from then on even a **correct** code is refused at `CheckPassportEvent`.
 
 `/2fa_login_check` therefore has **no rate limiter of its own, deliberately**.
-A 2026-08-25 security scan read that missing limiter as a missing gate and
-filed it as unlimited six-digit guessing on exactly the elevated accounts 2FA
-is mandatory for. Reproducing it end to end showed the opposite. The report was
-wrong, but only because of the wiring above, which at the time nothing stated
-and nothing tested: narrowing `LoginThrottleListener` to the password step
-would have made it true. `App\Tests\Auth\TwoFactorBruteForceTest` pins the
+A missing limiter there looks like unlimited six-digit guessing on exactly the
+elevated accounts 2FA is mandatory for (a security scan of 2026-08-25 filed it
+so), and it is not, but only because of the wiring above: narrowing
+`LoginThrottleListener` to the password step would make it true.
+`App\Tests\Auth\TwoFactorBruteForceTest` pins the
 behaviour, including that the lock is per account so one attacked rider cannot
 lock out another.
 
@@ -367,17 +367,17 @@ for a dedicated change, not built.
 (admins included via the role hierarchy). The rule lives in exactly one place:
 `App\Security\TwoFactorPolicy`:
 
-- `isMandatoryFor(User)` — `ROLE_CURATOR` reachable in the user's role set
+- `isMandatoryFor(User)`: `ROLE_CURATOR` reachable in the user's role set
   (role-hierarchy aware, so `ROLE_ADMIN` qualifies).
-- `requiresSetup(User)` — mandatory **and** not *fully enrolled*.
+- `requiresSetup(User)`: mandatory **and** not *fully enrolled*.
 
 **Fully enrolled** is defined by `User::isTotpAuthenticationEnabled()`:
-`twoFaEnabled && totpSecret !== null` — a secret alone is not enrolment.
+`twoFaEnabled && totpSecret !== null`: a secret alone is not enrolment.
 Invariant for fixtures and seeded elevated accounts: set **both**
 `totpSecret` and `twoFaEnabled(true)`, or the account loops to `/2fa/setup`
 (dev seed secret `JBSWY3DPEHPK3PXP`).
 
-### Enforcement — two cooperating layers
+### Enforcement: three cooperating layers
 
 1. `App\Security\LoginSuccessHandler` (the `main` firewall's
    `success_handler`): after full authentication, an elevated user for whom
@@ -390,7 +390,7 @@ Invariant for fixtures and seeded elevated accounts: set **both**
    before the handler stamps it) and `/account` on every sign-in after that
    (§8). A saved target path wins over both.
 2. `App\Security\TwoFactorSetupEnforcer` (`kernel.request` listener,
-   priority 7): closes the remember-me / direct-navigation gap — a
+   priority 7): closes the remember-me / direct-navigation gap, so a
    not-fully-enrolled elevated user is redirected to `/2fa/setup` on **every**
    main request. A request with neither a session cookie nor a `REMEMBERME`
    cookie is skipped before any token read, since nobody is signed in on it.
@@ -402,7 +402,7 @@ Invariant for fixtures and seeded elevated accounts: set **both**
    cacheability of public endpoints): `/2fa*`, `/_wdt`, `/_profiler`,
    `/assets`, `/map`, `/routes/`, `/items/` (`BYPASS_PREFIXES` in the class),
    plus the setup route itself and `/logout` (always reachable).
-   2FA-in-progress tokens are never touched — scheb owns the interstitial.
+   2FA-in-progress tokens are never touched: scheb owns the interstitial.
 3. `App\Security\NoRememberMeBeforeTwoFactor` (`LoginSuccessEvent`,
    priority -48): no `REMEMBERME` cookie is minted for a user for whom
    `requiresSetup()` is true, even with "Stay signed in" ticked. scheb
@@ -414,7 +414,7 @@ Invariant for fixtures and seeded elevated accounts: set **both**
 
 - The freshly generated secret lives **in the session**
   (key `2fa_pending_secret`), *not* on the entity, until the user proves the
-  scan by entering a valid code — only then are secret + `twoFaEnabled`
+  scan by entering a valid code: only then are secret + `twoFaEnabled`
   persisted. The pending secret is reused across GET/POST so the scanned QR
   stays valid; QR rendered as inline SVG data-URI (no GD/Imagick dependency).
 - On confirmation, **backup codes** are issued:
@@ -426,7 +426,7 @@ Invariant for fixtures and seeded elevated accounts: set **both**
   (`isTotpAuthenticationEnabled()`) must enter a current code from its app or
   one of its backup codes before the new secret is saved; a remembered session
   (not `IS_AUTHENTICATED_FULLY`) must also enter its password. Both checks run
-  on the confirming POST, spend one try from `password_reauth` (account-and-auth.md §5), and
+  on the confirming POST, spend one try from `password_reauth` (§5), and
   put a wrong answer on its own field with nothing saved. A backup code used
   as that proof is not spent separately: enrolling replaces every backup code.
   The pending secret sits on a detached copy of the user, so the stored secret
@@ -437,7 +437,7 @@ Invariant for fixtures and seeded elevated accounts: set **both**
   account" the first time, "Your two-factor sign-in moved to a new app" when it
   replaced one. It says when (UTC), and what to do if it was not them: change
   the password, then write to the public support address so an admin can turn
-  the new factor off (Disarm 2FA, account-and-auth.md §6). It carries no
+  the new factor off (Disarm 2FA, §6). It carries no
   display name and nothing a form posted. A refused attempt sends nothing.
 - Interstitial login: scheb's `two_factor` firewall entry
   (`auth_form_path: 2fa_login`, `check_path: 2fa_login_check`); TOTP or a
@@ -452,21 +452,21 @@ Invariant for fixtures and seeded elevated accounts: set **both**
   `base64(iv || tag || ciphertext)`. A database-only leak does not expose
   authenticator seeds.
 - Backup codes are stored as `HMAC-SHA256(code, HKDF(APP_SECRET))`
-  (`User::hashBackupCode()`) — a DB-only leak cannot even compute candidate
+  (`User::hashBackupCode()`): a DB-only leak cannot even compute candidate
   hashes.
 - Shared trade-off: rotating the key invalidates stored TOTP secrets and backup
   codes (affected users re-enrol).
 
-**Why `ENCRYPTION_SECRET` exists** (security scan 2026-08-25). Before it, the
-two variables were one, and there was no way to separate them. `APP_SECRET` is
+**Why `ENCRYPTION_SECRET` exists** (security scan 2026-08-25). `APP_SECRET` is
 a signing key that an incident runbook may quite reasonably tell you to
 rotate; this is a data-encryption key that can only be rotated by re-encrypting
-every row. Rotating the shared value produced a **completely silent** 2FA
+every row. Rotating one shared value would produce a **completely silent** 2FA
 outage: `convertToPHPValue()` hydrates unreadable ciphertext as null on purpose
-so that a mis-set variable cannot 500 every login, so the symptom was elevated
-users being told their code was wrong, one at a time, with nothing in the logs.
+so that a mis-set variable cannot 500 every login, so the symptom would be
+elevated users being told their code was wrong, one at a time, with nothing in
+the logs.
 
-Unset, the fallback keeps every existing deployment working with no change.
+Unset, the fallback to `APP_SECRET` keeps a deployment working with no change.
 To separate them: set `ENCRYPTION_SECRET` to the **current** value of
 `APP_SECRET`, deploy, confirm, and only then is `APP_SECRET` free to rotate.
 
@@ -477,16 +477,16 @@ before and after touching either variable. Backup codes are a keyed hash rather
 than ciphertext, so they cannot be audited this way: nothing can tell a wrong
 key from a wrong code. That asymmetry is why the audit names TOTP only.
 - TOTP parameters: SHA1, 30 s period, 6 digits
-  (`User::getTotpAuthenticationConfiguration()`); issuer `Cycling Commons`
-  (`web/config/packages/scheb_2fa.yaml`).
-- **`leeway: 1`** since 2026-08-30, owner's call: one window either side is
+  (`User::getTotpAuthenticationConfiguration()`); issuer from `TOTP_ISSUER`
+  (`Cycling Commons` in the committed `.env`; `web/config/packages/scheb_2fa.yaml`).
+- **`leeway: 1`** (owner 2026-08-30): one window either side is
   accepted, so a code stays valid for about 90 seconds rather than 30. At the
   bundle default of 0, a phone clock a few seconds out, or a code typed at
   second 29 of its own window, is refused as wrong, and the person is told they
   entered the wrong code when they did not. The cost is a shoulder-surfing
   window three times as long; the GUESS space is unchanged at one in a million
   per attempt, and attempts are bounded by the login limiter that a wrong TOTP
-  code already counts against (§ above). Every authenticator app makes the same
+  code already counts against (§3). Every authenticator app makes the same
   trade.
 - The 2FA setup page carries a "Settings · Security" breadcrumb back-link and
   its post-enrolment Done button targets `/account/settings?tab=security` (§8).
@@ -496,8 +496,8 @@ key from a wrong code. That asymmetry is why the audit names TOTP only.
 Between the password and the second factor the session holds a
 `TwoFactorToken` whose `getUser()` returns the real `User`. Controllers that
 gate on `getUser() instanceof User` therefore look, from the inside, exactly as
-they do after a completed login, and a 2026-08-25 security scan read that as
-state-changing POSTs being reachable mid-interstitial.
+they do after a completed login, which reads like state-changing POSTs being
+reachable mid-interstitial (a security scan of 2026-08-25 filed it so).
 
 They are not. scheb's `TwoFactorAccessListener` refuses every path that is not
 the interstitial itself or explicitly `PUBLIC_ACCESS`, and redirects it to
@@ -512,11 +512,11 @@ for a state-changing route. `App\Tests\Auth\TwoFactorInterstitialLockdownTest`
 pins the behaviour.
 
 Admin recovery: the support desk's **Disarm 2FA** action (§6) clears secret +
-codes and disables the flag — audited, confirm-gated.
+codes and disables the flag: audited, confirm-gated.
 
 ## 5. Firewall and access-control shape
 
-`web/config/packages/security.yaml` — a **single `main` firewall** (lazy):
+`web/config/packages/security.yaml`: a **single `main` firewall** (lazy):
 
 | Element | Value |
 |---|---|
@@ -531,7 +531,7 @@ codes and disables the flag — audited, confirm-gated.
 | `two_factor` | scheb interstitial (`2fa_login` / `2fa_login_check`) |
 
 `access_control` (ordered; localized routes carry an optional two-letter
-locale prefix matched by the WILDCARD group `(/[a-z]{2})?` — a literal locale
+locale prefix matched by the WILDCARD group `(/[a-z]{2})?`: a literal locale
 list would silently exclude the next locale added (owner, 2026-08-17); English
 paths are clean; `logout`, `/2fa` interstitial, `/api`, `/admin`
 stay unprefixed):
@@ -539,52 +539,47 @@ stay unprefixed):
 | Path pattern | Access |
 |---|---|
 | `(/[a-z]{2})?/(login\|register\|reset-password)` | `PUBLIC_ACCESS` |
-| `^(/[a-z]{2})?/verify` | `PUBLIC_ACCESS` — the locale prefix is part of the match since the verify link was localized (above) |
+| `^(/[a-z]{2})?/verify` | `PUBLIC_ACCESS`: the verify link is localized (§2) |
 | `(/[a-z]{2})?/riders/` | `PUBLIC_ACCESS` (public rider profiles, §7) |
-| `^/map/catalog\.json$`, `^/map/best-of$`, `^/map/item/\d+/history$`, `^/routes/\d+\.gpx$`, `^/items/\d+/confirmations$` | `PUBLIC_ACCESS` — **exact-path, explicitly public** so scheb's lazy-firewall `TwoFactorAccessListener` skips the session read that would downgrade `Cache-Control` to private (data contracts: [catalog-data-model.md](catalog-data-model.md), [route-domain.md](route-domain.md), [moderation-and-contribution.md](moderation-and-contribution.md)) |
-| `(/[a-z]{2})?/2fa/setup` | `ROLE_USER` — must precede the interstitial rule: setup is reached signed in, not mid-interstitial. A remembered session may enrol but confirms its password on the POST (account-and-auth.md §4) |
+| `^/(robots\.txt\|sitemap\.xml)$`, the social short links `^/(m\|bs\|li\|ig\|yt\|r\|fb\|gh\|st)$`, `(/[a-z]{2})?/changelog\.atom$`, `^/unsubscribe`, `^/report/`, `^/map/catalog/stamps\.json$`, `^/map/catalog/region/\d+\.json$`, `^/map/best-of$`, `^/map/item/\d+/history$`, `^/map/region/<slug>/boundary$`, `^/map/scope/boundary$`, `^/routes/\d+\.gpx$`, `^/items/\d+/confirmations$`, `^/photo/<uuid>$` and `/report`, `^/map/coverage/(search\|nearby\|counts)$`, `^/map/coverage/poi/(node\|way)/\d+$`, `^/v1/` | `PUBLIC_ACCESS`: **exact-path, explicitly public** so scheb's lazy-firewall `TwoFactorAccessListener` skips the session read that would downgrade `Cache-Control` to private (data contracts: [catalog-data-model.md](catalog-data-model.md), [route-domain.md](route-domain.md), [moderation-and-contribution.md](moderation-and-contribution.md), [content-reports.md](content-reports.md), [public-api.md](public-api.md)) |
+| `(/[a-z]{2})?/2fa/setup` | `ROLE_USER`: must precede the interstitial rule, since setup is reached signed in, not mid-interstitial. A remembered session may enrol but confirms its password on the POST (§4) |
 | `^/2fa` | `IS_AUTHENTICATED_2FA_IN_PROGRESS` (scheb interstitial) |
 | `(/[a-z]{2})?/account(/\|$)` | `ROLE_USER`: the whole rider area (§8) |
-| `(/[a-z]{2})?/translate`, `^/scout/tags` | `ROLE_USER`: backstops mirroring the controllers' `IsGranted` attributes (review 2026-08-16 finding 7). `/media/*` and `/contribute/elevation` are deliberately absent: THE stateless-JSON pattern ([security-architecture.md](security-architecture.md) §5.1) owns their clean 401s, and an `access_control` rule would turn those into login redirects |
+| `(/[a-z]{2})?/translate`, `^/scout/tags` | `ROLE_USER`: backstops mirroring the controllers' `IsGranted` attributes. `/media/*` and `/contribute/elevation` are deliberately absent: THE stateless-JSON pattern ([security-architecture.md](security-architecture.md) §5.1) owns their clean 401s, and an `access_control` rule would turn those into login redirects |
 | `(/[a-z]{2})?/moderate` | `ROLE_CURATOR` |
 | `^/admin` | `ROLE_ADMIN` |
 
 Rule of thumb encoded above: any *cacheable public* endpoint needs an explicit
 exact-path `PUBLIC_ACCESS` entry **and** (if it is not already under a bypassed
-prefix) a `TwoFactorSetupEnforcer` bypass — "no rule matches" is not enough
+prefix) a `TwoFactorSetupEnforcer` bypass: "no rule matches" is not enough
 under the lazy firewall.
 
 **A second factor that cannot be enrolled is never demanded.**
 `TwoFactorPolicy::requiresSetup()` is false when the TOTP provider is absent.
-`when@dev` switches it off for local convenience
+`when@dev` switches TOTP and backup codes off for local convenience
 (`config/packages/scheb_2fa.yaml`), which also removes
-`TotpAuthenticatorInterface` — and two things then went wrong together, locking
-a newly approved curator out of the entire dev stack (owner-reported
-2026-08-14): `TwoFactorController::setup()` REQUIRED that service and so
-answered 500, while `TwoFactorSetupEnforcer` sent every not-yet-enrolled curator
-to exactly that page on every request. The setup action now takes the service as
-nullable and renders `security/2fa_unavailable.html.twig` instead, which also
-states the live rule ("curators and admins must set up two-factor before they
-can reach the moderation desks"). Nothing changes where the provider is on:
-`when@dev` cannot reach prod or staging, and the mandate itself is untouched —
-`isMandatoryFor()` still answers true for every curator.
+`TotpAuthenticatorInterface`. Otherwise `TwoFactorSetupEnforcer` would send
+every not-yet-enrolled curator to a setup page that cannot work, on every
+request. `TwoFactorController::setup()` takes the service as nullable and, when
+it is absent, renders `security/2fa_unavailable.html.twig`, which states the
+live rule ("curators and admins must set up two-factor before they can reach
+the moderation desks"). Nothing changes where the provider is on, and the
+mandate itself is untouched: `isMandatoryFor()` answers true for every curator.
 
 **Re-authentication is asked for at the moment of commitment, never at the
 door.** With remember-me on a 7-day lifetime, a returning rider holds a real
-user object while being only `IS_AUTHENTICATED_REMEMBERED`. `/join/{cc}` (the
-curator application) used to demand `IS_AUTHENTICATED_FULLY` — the only place
-in the codebase that did — which sent that rider to `/login` merely to *look at*
-a form. The owner's objection was the right one: "why am I going to login when I
-want to apply for curation of a region when I am already logged in — this does
-not make sense to a normal user." It did not, and the demand was inconsistent:
-the same remembered session may change settings, set a base location, propose
-places and upload photos, all `ROLE_USER`. So the page is `ROLE_USER` too, and
-the password is confirmed **on submit**, only when the session is remembered:
+user object while being only `IS_AUTHENTICATED_REMEMBERED`. Sending that rider
+to `/login` merely to *look at* the curator application would make no sense
+(owner: "why am I going to login when I want to apply for curation of a region
+when I am already logged in"), and the same remembered session may change
+settings, set a base location, propose places and upload photos, all
+`ROLE_USER`. So `/join/{cc}` is `ROLE_USER` too, and the password is confirmed
+**on submit**, only when the session is remembered:
 
 - The field renders only for a remembered session; a fully-authenticated rider
   never sees it.
 - A wrong answer writes nothing and re-renders the form with the rider's typing
-  and their region selection intact — a typo costs the retry and nothing else.
+  and their region selection intact: a typo costs the retry and nothing else.
 - It is checked **before** the application limiter is consumed and guarded by
   `password_reauth` (5 per 15 min) rather than `curator_application` (3 per
   **day**), because charging failed passwords against the latter would cost a
@@ -593,38 +588,37 @@ the password is confirmed **on submit**, only when the session is remembered:
 **Every password or second-factor check outside the login form shares one
 budget, `password_reauth`** (5 per 15 minutes per user, security audit
 2026-10-04): the curator application above, the password change and the
-deletion request in settings (account-and-auth.md §8, §10), and replacing
-two-factor (account-and-auth.md §4). None of these runs an authenticator, so
-login throttling and the account lockout (account-and-auth.md §3) never see
+deletion request in settings (§8, §10), and replacing two-factor (§4). None of
+these runs an authenticator, so login throttling and the account lockout (§3)
+never see
 them, and a remembered session would otherwise be an unmetered
 password oracle. One budget for all four, so four doors are not four times the
 guesses. A try is spent before the password is compared; past the budget the
 answer is "Too many tries. Wait 15 minutes, then try again." and nothing is
 compared or changed. The data export keeps its own daily allowance
-(account-and-auth.md §11), which
+(§11), which
 is spent the same way and is already tighter.
 
-**The login page's "already signed in" shortcut still tests
-`IS_AUTHENTICATED_FULLY`, not `getUser()`.** Nothing routinely triggers it now,
-but it was a genuine dead end: a merely-remembered visitor sent to `/login` was
-told *"you are already signed in"* and redirected home — told they were done
-while the page they asked for went on refusing them, with no way through
-(reproduced by dropping the session cookie and keeping `REMEMBERME`). A
-remembered rider gets the form, and the firewall's stored target path carries
-them onward. This is what any future FULLY page will need. `/register` keeps the
-plain `getUser()` test — somebody who is remembered does not need an account.
+**The login page's "already signed in" shortcut tests
+`IS_AUTHENTICATED_FULLY`, not `getUser()`.** Tested on `getUser()`, a
+merely-remembered visitor sent to `/login` by a page that demands a full
+sign-in would be told *"you are already signed in"* and redirected home, with
+no way through. A remembered rider gets the form, and the firewall's stored
+target path carries them onward. This is what any future FULLY page will need.
+`/register` keeps the plain `getUser()` test: somebody who is remembered does
+not need an account.
 
 **Boundary rule:** EasyAdmin `/admin` (`ROLE_ADMIN`) is dry record/user
 administration only. Curator content review is the branded in-product
-`/moderate` shell (`ROLE_CURATOR`) — review happens within the product, never
+`/moderate` shell (`ROLE_CURATOR`): review happens within the product, never
 in a back-office tool. See
 [moderation-and-contribution.md](moderation-and-contribution.md).
-Machine-translation assist (DeepL), when built, is an `/admin` operator
-tool that only creates *drafts*; publishing still goes through `/moderate`
-([translations.md](translations.md) §7).
+Machine translation (DeepL) is a developer tool on the dev environment only,
+never on `/admin`, staging or production ([translations.md](translations.md)
+§7).
 
 The desk is reached from the account chip's moderation group only
-(2026-09-06, owner). The `/pages` directory is the public face of the site
+(owner 2026-09-06). The `/pages` directory is the public face of the site
 and lists no moderator surface for anyone, curator included. Pinned by
 `ContentPagesTest::testTheDirectoryNeverListsTheModerationDesk`.
 
@@ -646,7 +640,7 @@ area there is free text, not a row.
 
 ### 6.1 Support actions
 
-All account state changes go through `App\Service\UserAdminService` — the
+All account state changes go through `App\Service\UserAdminService`: the
 generic EasyAdmin NEW/EDIT/DELETE/BATCH_DELETE actions are **disabled** on the
 User CRUD (`App\Controller\Admin\UserCrudController`) precisely so no mutation
 can bypass the guardrails and audit log. Actions are conditionally displayed
@@ -658,43 +652,44 @@ can bypass the guardrails and audit log. Actions are conditionally displayed
 | Disarm 2FA | `twoFaEnabled` | clear secret + backup codes, disable flag | yes |
 | Mark email verified | `!emailVerified` | set verified + timestamp | no |
 | Unverify email | `emailVerified` | clear both | yes |
-| Grant curator | lacks role | add `ROLE_CURATOR` | no |
+| Grant curator | lacks role | area picker: an explicit "All areas" tick, or chosen countries and regions (one of the two, never both or neither), then `ROLE_CURATOR` and the `moderator_area` rows in one transaction (`UserAdminService::grantCuratorWithAreas()`) | form page |
 | Revoke curator | has role | remove it | yes |
 | Grant admin | lacks role | add `ROLE_ADMIN` | yes |
 | Revoke admin | has role | remove it (guardrails) | yes |
 | Execute account removal | `deletionRequestedAt != null` | §6.3 | yes |
 | Cancel pending removal | `deletionRequestedAt != null` | clear code + timestamp | no |
-| Moderator areas | has `ROLE_CURATOR` | replace `moderator_area` rows (contract in [moderation-and-contribution.md](moderation-and-contribution.md)) | form page |
+| Moderator areas | has `ROLE_CURATOR` | replace `moderator_area` rows (contract in [moderation-and-contribution.md](moderation-and-contribution.md) §9) | form page |
 
 **Transport convention (standing rule):** every state-changing support action
 is a **POST-only `#[AdminRoute]` with a CSRF token** (shared token id
 `UserCrudController::CSRF_TOKEN_ID = 'ea-user-support'`; the action renders
 through a custom form template instead of EA's GET link, and the handler
-re-validates the token — defence in depth). Enforced by
+re-validates the token, defence in depth). Enforced by
 `testEverySupportActionRouteIsPostOnly` in
-`web/tests/Admin/UserAdminActionsTest.php`. The single sanctioned exception is
-`moderator_areas`: a genuine intermediate form page, GET (render) + POST
-(submit, same CSRF token).
+`web/tests/Admin/UserAdminActionsTest.php`. The two sanctioned exceptions are
+`moderator_areas` and `grant_curator`: each is a genuine intermediate form page
+(the area picker), GET (render) + POST (submit, same CSRF token). See
+[moderation-and-contribution.md](moderation-and-contribution.md) §9.4.
 
 **A second door onto the same grant path.** Curator applications
 ([moderation-and-contribution.md](moderation-and-contribution.md) §11) let a
 rider apply to curate a country instead of an admin picking one from the User
-CRUD. Approving one calls this exact `UserAdminService::grantCurator()` — same
-method, same `grant_curator` audit row — and, in the same transaction, also
-creates the requested `ModeratorArea`. No new authority model: granting
+CRUD. Approving one calls the same `UserAdminService::grantCurator()` (same
+`grant_curator` audit row) and, in the same transaction, also creates the
+requested `ModeratorArea`. No new authority model: granting
 `ROLE_CURATOR` stays admin-only either way, and the application flow is scope
 selection glued onto the existing grant, not a parallel one.
 
-### 6.2 Audit trail — `AdminActionLog`
+### 6.2 Audit trail: `AdminActionLog`
 
 `App\Entity\AdminActionLog` (table `admin_action_log`): `actor` (nullable
-User — `null` means *system*, reserved for future automated actions),
+User; `null` means *system*, reserved for future automated actions),
 `action` (string), `targetUser` (nullable, FK `ON DELETE SET NULL` so rows
 outlive removed accounts), `note`, `createdAt`. Contract points:
 
 - Every support action writes a row via `AdminActionLogger`.
 - **Mutation and audit row are one transaction** (`wrapInTransaction` in
-  `UserAdminService::commit()` / `removeAccount()`): they can never diverge —
+  `UserAdminService::commit()` / `removeAccount()`): they can never diverge:
   the trail can neither miss a change nor claim a removal that rolled back.
 - On removal the row is written first (target still resolvable) and the
   target's email is snapshotted into `note` for traceability after the FK
@@ -702,32 +697,34 @@ outlive removed accounts), `note`, `createdAt`. Contract points:
 - Surfaced as a read-only EA CRUD ("Activity" menu;
   `AdminActionLogCrudController` disables NEW/EDIT/DELETE/BATCH_DELETE).
 
-### 6.3 Account removal — anonymize, not delete
+### 6.3 Account removal: anonymize, not delete
 
 Commons rule: contributed data is community-owned and **never cascade-deletes
 with an account**. Removal targets personal data only.
 
 - Admin removal (`UserAdminService::removeAccount()`), self-service
-  deletion (§10) and the operator's console command `app:user:purge <email>...`
-  (2026-09-20: dry run by default, `--force` to act, refuses the last
-  `ROLE_ADMIN`; for accounts that never asked, such as test riders left on a
-  deployed database) all route through the **shared seam**
-  `UserDeletionService::purge()`: run every `UserDeletionHookInterface`
-  pre-delete hook, then remove the `User` row.
-  `tests/Account/PurgeUserCommandTest.php` pins the command.
-- **One hook implementation exists**: `App\Service\ResetPasswordCleanupHook`
-  — purges the user's
+  deletion (§10), the dormancy and unconfirmed sweeps (§6.5, §6.7) and the
+  operator's console command `app:user:purge <email>...` (dry run by default,
+  `--force` to act, refuses the last `ROLE_ADMIN`; for accounts that never
+  asked, such as test riders left on a deployed database) all route through
+  the **shared seam** `UserDeletionService::purge()`: run every
+  `UserDeletionHookInterface` pre-delete hook, then remove the `User` row.
+  `tests/Account/PurgeUserCommandTest.php` pins the command. Removal is a hard
+  delete of the row and the public profile URL 404s naturally. Contributed
+  content is written as hooks on this seam: dissociated and retained, never
+  deleted with the account. The hooks:
+- **`App\Service\ResetPasswordCleanupHook`** purges the user's
   `reset_password_request` rows via the bundle's `removeRequests()` before
   the row delete. `reset_password_request.user_id` is a plain restrictive FK
-  (no `ON DELETE` action — `Version20260628225933`), so without the hook
-  BOTH deletion paths threw an FK violation for any user with a live reset
-  request (regression pinned:
+  (no `ON DELETE` action, `Version20260628225933`), so without the hook every
+  deletion path would throw an FK violation for a user with a live reset
+  request (pinned:
   `AccountDeletionTest::testConfirmDeletionSucceedsWithPendingResetRequest`).
-  Beyond that, removal is a hard delete of the row and the public profile
-  URL 404s naturally. **Specified, pending implementation:**
-  as contributed-content anonymization is needed, it is written as hooks on
-  this seam — contributions are dissociated and retained under an anonymous
-  "former contributor" identity, never deleted.
+- **`App\Media\MediaDeletionHook`** drops the rider's unmoderated photos and
+  anonymises the credit on approved ones, by the rider's `keepMediaCredit`
+  choice (photo-uploads.md §6).
+- **`App\Translation\TranslationDeletionHook`** clears the rider's identity on
+  licensed translation rows and keeps the strings (translations.md §3.2).
 - **`App\Moderation\ContributionDeletionHook`** (owner 2026-10-01: messages
   about contributions live as long as the account): deletes the rider's
   rejected and withdrawn submissions and dismissed route corrections (also
@@ -756,52 +753,13 @@ with an account**. Removal targets personal data only.
 
 ### 6.4 Guardrails (baked into `UserAdminService`, not optional)
 
-- No self-targeting for revoke-admin / remove-account (`assertNotSelf`) — an
+- No self-targeting for revoke-admin / remove-account (`assertNotSelf`): an
   admin cannot lock themselves out of the panel.
 - The last remaining `ROLE_ADMIN` can never be removed or demoted
-  (`assertNotLastAdmin`) — the system always has ≥ 1 admin.
-- Violations throw `GuardrailViolationException`, surfaced as a danger flash —
+  (`assertNotLastAdmin`): the system always has ≥ 1 admin.
+- Violations throw `GuardrailViolationException`, surfaced as a danger flash:
   never a 500.
 - Destructive actions carry a confirmation step (table above).
-
-### 6.5 Secret fields and diagnostics
-
-**Hard rule — never rendered, never editable in any admin surface:**
-`password`, `totpSecret`, `backupCodes`, and
-`ResetPasswordRequest.hashedToken`/`selector`. The User CRUD exposes only:
-email, displayName, roles, emailVerified, twoFaEnabled (read-only),
-lockedUntil, publicProfile, createdAt, plus a read-only moderator-areas
-descriptor on detail. Roles/emailVerified/lockedUntil display but are not
-form-editable — changes go through the audited actions only.
-
-`ResetPasswordRequestCrudController` is a read-only diagnostics list (target
-user, requestedAt, expiresAt) whose only permitted mutation is a single-row
-Delete to purge a stuck request; token/selector are never exposed.
-
-The dashboard (`DashboardController` + `AdminDashboardStats`) shows only real
-counts, all derived live from the `users` table (members / curators / admins /
-unverified / locked / pending-removal + 10 recent signups). Honesty rule: no
-fabricated or stale stats on the dashboard — a metric joins only when its
-source is real.
-
-It also lists the daily jobs with their last good run (`App\Ops\JobHealth`),
-and shows a red warning at the top while one is late (operations.md §1).
-
-### 6.6 Inactivity lifecycle — **Specified, pending implementation**
-
-Designed, not built; requires a `lastActiveAt` column
-that does not exist yet:
-
-| Inactivity | Event |
-|---|---|
-| 12 months | notice email #1 ("log in to reset the clock") |
-| 22 months | notice #2 + deletion warning |
-| ~24 months − 7 days | final notice |
-| 24 months | removal via the §6.3 path — personal data scrubbed, contributions anonymized & retained |
-
-Mechanism when built: idempotent scheduled command; localized notices via
-`User.locale`; automated removals write `AdminActionLog` rows with
-`actor = null`; admins can reset the clock or exempt an account.
 
 ### 6.5 Dormant accounts
 
@@ -833,12 +791,12 @@ write first and give time; one missing notice means that was not done.
 after the final notice starts again from zero.
 
 **The remember-me cookie is a sign-in.** `LoginSuccessHandler` stamps the
-clock after the login form, and only there, because it runs after 2FA. A rider
-who ticked "remember me" never sees the form again: the seven-day cookie signs
-them in on the first request of every browser session and is renewed on use, so
-somebody who visited weekly for two years still carried a `lastLoginAt` from
-the last password they typed, and the sweep would have warned and closed an
-account in daily use (review 2026-08-30). `App\Security\RememberedLoginListener`
+clock after the login form, because it runs after 2FA. A rider who ticked
+"remember me" never sees the form again: the seven-day cookie signs them in on
+the first request of every browser session and is renewed on use, so counting
+only the form would leave somebody who visits weekly with the `lastLoginAt` of
+the last password they typed, and the sweep would warn and close an account in
+daily use. `App\Security\RememberedLoginListener`
 listens to `LoginSuccessEvent` for the remember-me authenticator alone and
 calls the same `recordLogin()`. It is safe to count: scheb withholds the cookie
 until 2FA has passed. Once per browser session, not per request, because the
@@ -854,8 +812,8 @@ column. Pinned by `DormancySweepTest::testAnAdministratorIsNeverWarnedNorDeleted
 **Deletion is the ordinary deletion.** It calls
 `UserDeletionService::purge()`, the same path a rider's own request takes, so
 contributions are anonymised rather than cascaded and a photo licence consent
-survives exactly as it does today. A second deletion path would have drifted
-from the first within a year.
+survives exactly as on a rider's own deletion. A second deletion path would
+drift from the first.
 
 **Dry by default, `--force` to act.** For a command whose failure mode is
 deleting somebody's account, the cron entry should have to opt in.
@@ -863,6 +821,29 @@ deleting somebody's account, the cron entry should have to opt in.
 Guarded by `DormancyLadderTest` (the arithmetic, including that an unwarned
 account is never deletable however old) and `DormancySweepTest` (the
 consequences, including that a dry run changes nothing).
+
+### 6.6 Secret fields and diagnostics
+
+**Hard rule, never rendered and never editable in any admin surface:**
+`password`, `totpSecret`, `backupCodes`, and
+`ResetPasswordRequest.hashedToken`/`selector`. The User CRUD exposes only:
+email, displayName, roles, emailVerified, twoFaEnabled (read-only),
+lockedUntil, publicProfile, createdAt, plus a read-only moderator-areas
+descriptor on detail. Roles/emailVerified/lockedUntil display but are not
+form-editable: changes go through the audited actions only.
+
+`ResetPasswordRequestCrudController` is a read-only diagnostics list (target
+user, requestedAt, expiresAt) whose only permitted mutation is a single-row
+Delete to purge a stuck request; token/selector are never exposed.
+
+The dashboard (`DashboardController` + `AdminDashboardStats`) shows only real
+counts, all derived live from the `users` table (members / curators / admins /
+unverified / locked / pending-removal + 10 recent signups). Honesty rule: no
+fabricated or stale stats on the dashboard: a metric joins only when its
+source is real.
+
+It also lists the daily jobs with their last good run (`App\Ops\JobHealth`),
+and shows a red warning at the top while one is late (operations.md §1).
 
 ### 6.7 Unconfirmed accounts
 
@@ -873,8 +854,8 @@ private infrastructure repository). Dry by default, `--force` to act, like
 the dormancy sweep.
 
 An unconfirmed account is an address somebody typed, not yet a person who
-joined. Bots sign up strangers, and before this every such row kept a
-stranger's address on file for good. That is also why, unlike §6.5, **no
+joined. Bots sign up strangers, and without the sweep every such row would keep
+a stranger's address on file for good. That is also why, unlike §6.5, **no
 warning mail goes out**: the only address to write to is the stranger's.
 `/privacy` states the rule (`privacy.retention_unconfirmed`), and the
 check-your-email page and the resend page both say it at the moment it
@@ -898,26 +879,25 @@ rider's own request. Pinned by `UnverifiedSweepTest`.
 `App\Controller\RiderProfileController`, route `rider_profile` =
 `/{locale?}/riders/{uuid}` (UUID regex requirement, `PUBLIC_ACCESS`).
 
-- **UUID-only in URLs** — never the integer id (non-enumerable; UUIDv7,
+- **UUID-only in URLs**: never the integer id (non-enumerable; UUIDv7,
   unique constraint `uniq_users_uuid`).
 - **Exists only while `publicProfile` is ON.** Toggle off, unknown uuid, and
   hard-deleted accounts all 404 identically. Opt-in public posture: profiles
-  are public contributors only — no private/anonymous profile pages;
+  are public contributors only: no private/anonymous profile pages;
   provenance is kept, identity is opt-in.
 - **The /contributors wall rides on the same toggle.**
   `App\Catalog\ContributorWallProvider` lists riders with `publicProfile`
   ON **and** ≥1 public contribution (approved submissions + served route
   proposals), alphabetical/non-ranked, each row linking `rider_profile`;
   per-row counts are the same figures the profile page already exposes
-  (facts, climbs, photos, checks, routes since 2026-09-06).
+  (facts, climbs, photos, checks, routes).
   Riders without the toggle never appear regardless of volume. The page's
   six stat cards are aggregate site totals over ALL contributors
-  (opt-in or not) — aggregates credit the crowd without identifying anyone.
-  Facts, contributors and routes since the wall was built; climbs added
-  (approved `type=new`, letter N), photos shared and on-the-spot checks
-  since 2026-09-06 (owner), each under the same boundary as the profile
-  tiles below. This replaced the demo's fake sample-handle wall.
-- **A curator's wall row carries a "Curator" chip** (2026-09-06, owner):
+  (opt-in or not): aggregates credit the crowd without identifying anyone.
+  They count facts, contributors, routes, climbs (approved `type=new`,
+  letter N), photos shared and on-the-spot checks, each under the same
+  boundary as the profile tiles below.
+- **A curator's wall row carries a "Curator" chip** (owner 2026-09-06):
   `ROLE_CURATOR` or `ROLE_ADMIN` in the stored roles, read in
   `ContributorWallProvider::wall()`. It is an office, not a score: no
   count, no effect on the alphabetical order, and only on riders who are on
@@ -925,7 +905,7 @@ rider's own request. Pinned by `UnverifiedSweepTest`.
   page still shows no role (the frozen exposure list below is unchanged).
   Pinned by `ContributorsPageTest::testACuratorRowCarriesTheCuratorChipAndARiderRowDoesNot`.
 - **"View as others see it" is the real page**: settings links the rider's own
-  public URL (`target="_blank"`) with **zero owner special-casing** — what the
+  public URL (`target="_blank"`) with **zero owner special-casing**: what the
   owner sees is byte-for-byte what others get. When the toggle is OFF the link
   is replaced by a hint; there is no preview of a non-existent page. Settings
   is the link's only home (deliberately removed from the profile dashboard).
@@ -934,7 +914,7 @@ rider's own request. Pinned by `UnverifiedSweepTest`.
   counters (below), and up to **10** most recent **Verified** routes
   by name, each deep-linked to the map via `?route=` (limit is the `findBy`
   third argument in `RiderProfileController::show()`).
-- **Contribution counters (built 2026-08-16, owner boundaries 2026-08-13).**
+- **Contribution counters (owner boundaries 2026-08-13).**
   Four tiles: *Places added* (approved `type=new` submissions), *Edits
   accepted* (approved `type=edit`), *Photos shared* (approved media whose
   objects still exist - a granted takedown deletes them and a deleted photo
@@ -951,8 +931,8 @@ rider's own request. Pinned by `UnverifiedSweepTest`.
   says what CAN be contributed. The headline "N accepted contributions" is
   places + edits. Pinned by `RiderProfileTest::testCountersCountApprovedWorkOnly`
   and `ModerationActivityPageTest`.
-- **Pending-route count spans both pre-Verified states** — `Submitted` +
-  `Unverified` — but Submitted route **names never render** (un-vetted);
+- **Pending-route count spans both pre-Verified states** (`Submitted` +
+  `Unverified`), but Submitted route **names never render** (un-vetted);
   rejected submissions never appear (not Approved). State machine:
   [route-domain.md](route-domain.md).
 - **Never shown:** email, IPs, locale, roles, 2FA state, base location (point,
@@ -968,7 +948,7 @@ rider's own request. Pinned by `UnverifiedSweepTest`.
 
 ### Shell (`web/templates/account/_shell_chrome.html.twig`)
 
-One continuous logged-in environment — dark identity bar + section tabs —
+One continuous logged-in environment (dark identity bar + section tabs),
 included by `/account/contributions`, `/account/settings`, `/2fa/setup`, and the moderation pages.
 The same account chip (`partials/_account_chip.html.twig`) is used everywhere,
 including the public nav; the language switcher (`partials/_lang_menu.html.twig`)
@@ -977,17 +957,18 @@ over a light tint of the same hue: Personal (spruce), Moderation (clay) and
 Admin (ochre, one "Admin panel" link). `atlas.css` and the map's own copy in
 `map.css` draw them alike.
 
-- **Personal mode** tabs: Dashboard · Contributions · Votes · Scout ·
-  Translate · Messages · My bugs · Settings, under a "Personal" label (Saved
+- **Personal mode** tabs: Dashboard · Contributions · Votes · Confirmations ·
+  Scout · Translate · Messages · My bugs · Settings, under a "Personal" label (Saved
   stays hidden until it has a backend). The account chip lists Dashboard first
   too. A rider's proposed routes have no tab of their own: they are
   contributions, so the Contributions tab lists them, and its kind filter
   carries a **Routes** chip (`?letter=R`, first after All) that shows only
   them. Example: a rider with two climb edits and one proposed route sees
   All · Routes · Climbs; Routes lists the route, Climbs hides it.
-- **Moderator mode** (`/moderate/submissions`, `/moderate/routes`): the bar carries **only**
-  the moderation tabs (Submissions, Routes, with open counts) on its own darker
-  colour under a **MODERATION** label — no user items. Curators cross between
+- **Moderator mode** (every `/moderate` page): the bar carries **only** the
+  moderation tabs (Dashboard, Submissions, Routes, Takedowns, Reports, Bugs,
+  Translations, the curator room, each with its open count) on its own darker
+  colour under a **MODERATION** label: no user items. Curators cross between
   the two modes via the account-chip dropdown in both directions. The label
   block has two lines: MODERATION, then the curator's areas (assigned area
   names, or "All areas"), read by `moderation_scope_names()`. The line shows
@@ -1035,7 +1016,7 @@ Admin (ochre, one "Admin panel" link). `atlas.css` and the map's own copy in
   (catalog-data-model.md §4). The pane closes with a
   **Curator applications** section: the user's own
   `curator_application` rows with status pills (pending/approved/declined/
-  withdrawn), or — when none exist — a door to the regions directory, so
+  withdrawn), or, when none exist, a door to the regions directory, so
   "where is my request?" always has an answer on the post-login landing.
   The **Votes** pane opens with a door to the season ballot (`/vote`, "Vote
   for the best of your region"), because the pane lists votes and the
@@ -1044,13 +1025,13 @@ Admin (ochre, one "Admin panel" link). `atlas.css` and the map's own copy in
   count" on a draft, and the bike; the only surface that shows *what* was
   voted for, voter-only, route-domain.md §8d). Empty, it says "No votes yet.
   Pick a region on the ballot and vote for its best." The **Confirmations**
-  pane (`?tab=confirmations`, its own tab since 2026-10-03: a confirmation
+  pane (`?tab=confirmations`, its own tab: a confirmation
   says a place is real, not that it is the best, owner) lists "Worth a look
   near you" and the user's `item_confirmation` place confirmations with
   stance pills (potable / not potable / still there,
   [moderation-and-contribution.md](moderation-and-contribution.md) §1.6);
   empty, it says how to confirm a place on the map. The **Saved-regions** pane says plainly that saving is not built yet
-  and links the regions directory. The former preview sample data is gone
+  and links the regions directory.
   Every dashboard pane renders real rows only. Empty panes use
   the shared `.empty-state` block (`account/_shell_styles.html.twig`):
   left-aligned message plus a bordered door link (the same block every desk
@@ -1059,7 +1040,7 @@ Admin (ochre, one "Admin panel" link). `atlas.css` and the map's own copy in
   head and container; `/account/messages` rows are the same card with `msg-*` state
   hooks (new, mine) layered on.
 
-### Rider dashboard (`App\Controller\DashboardController`, `/account`, 2026-09-19)
+### Rider dashboard (`App\Controller\DashboardController`, `/account`)
 
 One read-only page with the rider's own open counts, route `dashboard`,
 `ROLE_USER`. It has the curator dashboard's look
@@ -1081,7 +1062,7 @@ pages about the account.
 | Messages | `/account/messages` | `messages` |
 | Settings | `/account/settings` | `settings` |
 
-The first paths (`/profile`, `/profile/reports`, `/messages`, `/settings`)
+The older paths (`/profile`, `/profile/reports`, `/messages`, `/settings`)
 redirect (301) to these with their query string
 (`App\Controller\MovedAccountPathsController`), so a link in a sent email or
 a bookmark still lands. Example: `/fr/messages` goes to
@@ -1116,11 +1097,9 @@ from) wins over both (§4, `LoginSuccessHandler`).
 some accounts it holds a time from before the confirmation: migration
 `Version20260828130000` starts it at `created_at` for every account that
 existed when it ran, and accounts created before §2's confirmation rule could
-sign in unconfirmed. With the null test alone those riders confirmed, signed
-in and landed on the dashboard (owner report 2026-09-30, a fresh account on
-the deployed site). The clean path (sign up, confirm, sign in, all on current
-code) was already right; `FirstSignInLandingTest` pins both, through the real
-sign-up form and the real confirmation mail.
+sign in unconfirmed. With the null test alone those riders would confirm, sign
+in and land on the dashboard (owner report 2026-09-30). `FirstSignInLandingTest`
+pins both paths, through the real sign-up form and the real confirmation mail.
 
 Example: a rider signs up, verifies, and signs in: `/account/settings`. They sign out
 and sign in the next day: `/account`.
@@ -1134,13 +1113,11 @@ Two tabs:
   while Public profile is off, the anonymous name `rider#xxxxxxxx` with the
   display name dimmed after it, the other way round while it is on;
   `settings/public-profile.js` flips it with the switch and follows the
-  field as it is typed. "Anonymous name" since 2026-10-03, because "private
-  name" read as the rider's real name;
+  field as it is typed. It says "Anonymous name", because "private name"
+  reads as the rider's real name;
   country, language (the languages this deployment serves, from
   `App\Routing\Languages`, dev-environment.md §7 i18n), base location); Riding preferences (preference chips,
-  account-and-auth.md §9); Public profile section (toggle, view-as
-  link/hint, split out of the former "Identity &
-  privacy" heading 2026-07-21; the link follows the SAVED switch, and while
+  §9); Public profile section (toggle, view-as link/hint; the link follows the SAVED switch, and while
   the switch differs from it the line says what Save profile will do,
   `settings/public-profile.js`); the notice that says what the switch does:
   on, the display name, contribution counts and verified routes are public;
@@ -1158,14 +1135,14 @@ Contract points:
 - Password change requires the **current password** (checked against the
   hasher) before the new one is accepted. The check spends a try from
   `password_reauth`, shared with the deletion request below
-  (account-and-auth.md §5).
-- **Email is read-only** in settings with a contact-support note — an email
+  (§5).
+- **Email is read-only** in settings with a contact-support note: an email
   change would require re-verification (EmailVerifier token flow); the
   simple, honest option is documented in the controller docblock.
 - Saving settings applies the (possibly changed) locale to the session
   immediately; clearing it falls back to browser/site default.
 - Preference checkbox groups use the **chip-check pill pattern** (label wraps
-  the input; `:has(input:checked)` drives the active look) — the established
+  the input; `:has(input:checked)` drives the active look): the established
   styling shared with the propose-route form.
 
 ### Support playbook: manual email-change requests
@@ -1173,11 +1150,11 @@ Contract points:
 This playbook is mirrored as an admin page: **/admin → Playbooks → Email
 change** (`DashboardController::emailChangePlaybook`,
 `admin/playbook_email_change.html.twig`) so the script sits in front of the
-operator executing the change — this section stays the canonical text; keep
+operator executing the change: this section stays the canonical text; keep
 the two in sync. The menu section is deliberately plural: future operator
 playbooks slot in beside it.
 
-A manual flow is only safer than self-serve if support actually verifies —
+A manual flow is only safer than self-serve if support actually verifies:
 otherwise it is the same account-takeover vector with a human rubber stamp.
 "Legit" means proving control of the account's **existing anchors**; this
 platform has exactly three: the old mailbox, the password, and (when
@@ -1186,15 +1163,15 @@ script, in order:
 
 1. **Never trust the request mail itself.** From-headers are spoofable, and
    "writing from my new address because I lost the old one" is the standard
-   opening of an attack. Request content proves nothing — display name,
+   opening of an attack. Request content proves nothing: display name,
    contributions and join date are all public on rider profiles.
-2. **Anchor 1 — the old mailbox:** reply to the address **on file** (typed
+2. **Anchor 1, the old mailbox:** reply to the address **on file** (typed
    from the admin panel, never reply-to) with a one-time confirmation code
    and require it back. If they can receive there, the change is low-risk.
-3. **Anchor 2 — a logged-in session:** if the old mailbox is claimed dead,
+3. **Anchor 2, a logged-in session:** if the old mailbox is claimed dead,
    dictate an in-account action ("set your riding radius to 120 km", "paste
    this code into your display name for an hour") and verify it happened.
-   That proves password possession — and for 2FA-enrolled accounts it
+   That proves password possession: and for 2FA-enrolled accounts it
    implicitly proves the TOTP factor too, since login required it.
 4. **No anchor left** (can't receive at the old address AND can't log in) =
    account recovery, not an email change, and there is no honest way to
@@ -1204,10 +1181,10 @@ script, in order:
 5. **After verifying, still hedge:** notify the old address with a
    "this wasn't me" contest window and delay execution 48–72 h; record the
    change through the audited admin path (the `UserAdminService` audit-note
-   pattern of the account-support desk, account-and-auth.md §6) so there is
+   pattern of the account-support desk, §6) so there is
    a trail.
 
-Rule of thumb: **urgency is a red flag, never a reason to skip a step** —
+Rule of thumb: **urgency is a red flag, never a reason to skip a step**:
 the legitimate owner survives a 48-hour delay; the attacker's window
 usually doesn't.
 
@@ -1221,9 +1198,8 @@ somebody their own name is a stranger's property, and a name is exactly the
 field a rider is most likely to want their real one in. The `uuid` is the
 identity, and always was.
 
-- No uniqueness constraint, no `UniqueEntity`, no canonical shadow column.
-  They were removed together: keeping a canonicalized copy around would keep
-  implying that names identify accounts.
+- No uniqueness constraint, no `UniqueEntity`, no canonical shadow column:
+  a canonicalized copy would imply that names identify accounts.
 - Nothing looks a rider up by name. Display names are read for display and
   never used as a key, so non-uniqueness costs no lookup anywhere.
 - **Disambiguation is the `uuid`'s job, and every surface already uses it.**
@@ -1239,7 +1215,7 @@ identity, and always was.
   "Curator-facing naming"); the name links to the uuid-keyed profile only
   when that profile is public. Admin
   lists that show a name show the email beside it.
-- A name is **stored exactly as typed** — `setDisplayName()` does no
+- A name is **stored exactly as typed**: `setDisplayName()` does no
   normalization of any kind.
 
 ### The rider pseudonym (owner, 2026-09-30)
@@ -1272,8 +1248,8 @@ change history, in translate mode and in the rider's own data export
   name as null (`DeskRider::of()`, `SubmissionQueue` `who`,
   `ChangeHistoryView` `who`) and the view writes the label, so the publicly
   cached history body does not vary by locale.
-- `Version20260930163712` added the column and gave every existing account a
-  random value; the handles shown before it were replaced once.
+- `Version20260930163712` added the column and gave every account that
+  existed then a random value.
 
 ### The display-name hint (owner, 2026-09-30)
 
@@ -1337,7 +1313,7 @@ a bulk list of public names.
 Not being an identifier does not make the field a free-for-all: it renders in
 photo credits, on public profiles and in admin lists. Four rules, and **all of
 them live on the `User` entity**, not on the two form types, so admin CRUD,
-console commands and fixtures are held to them too — a rule only a form
+console commands and fixtures are held to them too: a rule only a form
 enforces is a rule an administrator walks straight past.
 
 | rule | constraint | rejects |
@@ -1358,39 +1334,39 @@ live on the entity beside the maximum.
 
 ### Preference vocabularies
 
-- `App\Catalog\RidingStyle` — 7-case, **style-only** string enum: Road,
+- `App\Catalog\RidingStyle`, a 7-case, **style-only** string enum: Road,
   Gravel, Touring, Bikepacking, Trail, Urban, Leisure. **This enum is the
   contract for the map's Discipline chips** (consumed by
   [map-and-search.md](map-and-search.md)); hardware is deliberately excluded.
-- `App\Catalog\BikeType` — the shared 8-case hardware enum owned by the route
+- `App\Catalog\BikeType`: the shared 8-case hardware enum owned by the route
   domain ([route-domain.md](route-domain.md) §8.3, including the
   General/Specialty split), reused here for the rider's own declaration.
   Specialty/accessibility semantics (`BikeType::isSpecialty()`) belong to
   route ranking, not accounts.
 - Storage: two JSON columns on `users` (`bike_types`, `riding_styles`),
   default `[]`. Entity accessors are enum-typed and **silently drop unknown
-  stored strings on read** (`tryFrom` + filter) — a future enum rename can
+  stored strings on read** (`tryFrom` + filter): a future enum rename can
   never fatal a page render; setters dedupe.
 - Preferences live on the **Settings page only**; registration and the public
   profile form are untouched (the public *page* renders the chips, §7).
-  Map prefiltering reads these values — contract in
+  Map prefiltering reads these values: contract in
   [map-and-search.md](map-and-search.md).
 
 ### Date notation
 
-`App\Account\DateFormat` — `auto | ymd | dmy | mdy | long`, stored on
+`App\Account\DateFormat`: `auto | ymd | dmy | mdy | long`, stored on
 `users.date_format`, default `auto`.
 
-**Three halves of one answer, and nothing else formats a date (2026-09-20).**
+**Three halves of one answer, and nothing else formats a date.**
 Twig uses `cc_date`, `cc_datetime` and `cc_month`
 (`App\Twig\DateDisplayExtension`), the browser uses `window.ccDate`,
 `ccMonth`, `ccTime` and `ccDateTime` (`assets/js/cc-dates.js`, fed by
 `window.CC_DATE`), and PHP outside Twig asks `App\Account\DatePreference`
 for the ICU pattern (the admin screens' `DateTimeField`s, through
 `Controller\Admin\RiderDatedFields`). Anything that writes a date itself
-writes it in a format the rider did not choose. The footer build stamp did
-exactly that until 2026-09-20, and `/map`, which does not extend
-`base.html.twig`, carried the units bridge but not the date one. ISO stays
+writes it in a format the rider did not choose. `/map`, which does not extend
+`base.html.twig`, emits `window.CC_DATE` itself, beside the units bridge. ISO
+stays
 where a machine reads it: `datetime="…"` attributes, the Atom feed, the data
 export's own header. Pinned by `tests/js/rider-date-format.test.cjs`, which
 also fails on a template printing a date-looking property with no filter.
@@ -1400,22 +1376,21 @@ independent: plenty of people read a site in English and still expect
 `01-08-2026`, and `2026-08-01` reads as a filename to most of Europe. Deriving
 the format from the interface language would give those riders no way to say
 so. `auto` is the default and means "whatever suits the language I am reading";
-the other four are explicit and mean the same thing in every locale — the
+the other four are explicit and mean the same thing in every locale: the
 pattern is fixed, only month **names** localise.
 
-`App\Account\TimeFormat` — `auto | h24 | h12`, on `users.time_format`, is a
-**second, independent** preference. An earlier version derived it from the date
-order (month-first implies twelve-hour), which was tidy reasoning and wrong for
-real people: someone can want `01-08-2026` and `2:30 PM`, or `08/01/2026` and
-`14:30`, and a clock convention guessed from a date order is a guess about
-somebody's habits made from the wrong evidence.
+`App\Account\TimeFormat`: `auto | h24 | h12`, on `users.time_format`, is a
+**second, independent** preference, never derived from the date order
+(month-first does not imply twelve-hour): someone can want `01-08-2026` and
+`2:30 PM`, or `08/01/2026` and `14:30`, and a clock convention guessed from a
+date order is a guess about somebody's habits made from the wrong evidence.
 
 `cc_datetime` uses one ICU formatter when **both** halves follow the locale, so
 the language supplies its own connector; otherwise it formats each half and
 joins them with a space, because ICU cannot mix an explicit pattern with a
 style and either preference may be explicit while the other is not.
 
-**Time zone** (2026-10-06): `users.time_zone` is the zone the rider chose
+**Time zone.** `users.time_zone` is the zone the rider chose
 (null is **Automatic**), `users.detected_time_zone` the zone their browser last
 reported. A moment in time (`cc_datetime`, and `cc-dates.js` in the browser) is
 written in the chosen zone, else the detected one, else UTC. Example: a rider in
@@ -1437,15 +1412,15 @@ export carries them.
 
 **Every human-readable date goes through one filter.** `App\Twig\
 DateDisplayExtension` provides `cc_date`, `cc_datetime` and `cc_month`, and no
-template calls `|date()` for display any more. A preference is only worth
-having if it is honoured everywhere — a dropdown that fixes eight dates and
+template calls `|date()` for display. A preference is only worth having if it
+is honoured everywhere: a dropdown that fixes eight dates and
 misses the ninth is worse than no dropdown, because the rider now believes the
 site listens. `|date('c')` **stays** wherever it feeds a `<time datetime="">`
 attribute: HTML defines that as ISO 8601, and it has nothing to do with what a
 person reads.
 
 Formatting goes through ICU rather than PHP's `date()`, because month names
-have to come out in the page's language — the *page's*, not the rider's stored
+have to come out in the page's language: the *page's*, not the rider's stored
 locale, since a Dutch rider following a German link is reading a German page.
 
 The client half is `assets/js/cc-dates.js` (`window.ccDate`, `window.ccMonth`),
@@ -1456,8 +1431,8 @@ page, which is exactly the failure the preference exists to prevent.
 
 ### Distance and elevation units
 
-`App\Account\DistanceUnit` — `km | mi`, stored on `users.distance_unit`,
-default `km`. `App\Account\ElevationUnit` — `m | ft`, on
+`App\Account\DistanceUnit`: `km | mi`, stored on `users.distance_unit`,
+default `km`. `App\Account\ElevationUnit`: `m | ft`, on
 `users.elevation_unit`, default `m`. Migration `Version20260808220000`.
 
 **Two preferences, not one imperial switch.** Miles with metres of climbing is
@@ -1466,8 +1441,8 @@ a unit they never use to get the one they do. Same argument as date vs time
 above: two habits, two columns.
 
 **Display only. Nothing stored ever leaves metric.** The database, the API, the
-GPX pipeline and every measurement in the Commons stay in kilometres and metres
-— a dataset whose units depend on who is reading it is a dataset nobody can
+GPX pipeline and every measurement in the Commons stay in kilometres and metres:
+a dataset whose units depend on who is reading it is a dataset nobody can
 join. Conversion happens at the last step before a number becomes text, and
 nowhere else. Anonymous visitors get metric, which is what the app has always
 shown.
@@ -1482,30 +1457,28 @@ UnitDisplayExtension` exposes it to templates:
 | `\|cc_elev` | metres of height | `1,240 m` / `4,068 ft` |
 | `\|cc_km2` | square kilometres | `16,089 km²` / `6,212 sq mi` |
 | `\|cc_per_km2` | count per km² | the density number alone, fixed decimals |
-| `cc_distance_suffix()` / `cc_elevation_suffix()` / `cc_area_suffix()` | — | the bare unit word, for axis captions and input labels |
+| `cc_distance_suffix()` / `cc_elevation_suffix()` / `cc_area_suffix()` | nothing | the bare unit word, for axis captions and input labels |
 | `cc_km_value()` / `cc_elev_value()` | metric | the converted **number**, for form fields and example placeholders |
 
 A short horizontal distance follows the **distance** preference and lands in
 feet, not fractions of a mile: "820 ft off the track" is a distance somebody can
 picture, "0.16 mi" is not.
 
-**Speed follows the distance preference, and has no control of its own**
-(2026-08-12). A rider who reads miles reads mph; a second setting could only let
+**Speed follows the distance preference, and has no control of its own.** A
+rider who reads miles reads mph; a second setting could only let
 the two disagree. `ccSpeed()` / `uSpeed()` take km/h and write `32 km/h` or
-`20 mph`, whole numbers — a radar reading 31.6 km/h is not that precise. The
+`20 mph`, whole numbers: a radar reading 31.6 km/h is not that precise. The
 first consumer is Scout's overtake markers
-([moderation-and-contribution.md](moderation-and-contribution.md) — "Scout
+([moderation-and-contribution.md](moderation-and-contribution.md), "Scout
 intake").
 
-Areas and densities move in opposite directions — a square mile is bigger, so a
+Areas and densities move in opposite directions: a square mile is bigger, so a
 country covers fewer of them and each holds more places.
 
-**Units left the translated strings.** Messages that used to write their own
-unit (`'{n} m climbing'`, `'%m% m ascent'`, `'Length (km)'`, `'km {a} · {b} m
-off'`, the route/ride length bounds) now place an already-formatted value:
-`'{n} climbing'`, `'%v% ascent'`, `'Length (%u%)'`, `'{a} along · {b} off'`,
-`'between %min% and %max%'`. A string that spells its own unit cannot follow a
-preference.
+**Units stay out of the translated strings.** Messages place an
+already-formatted value (`'{n} climbing'`, `'%v% ascent'`, `'Length (%u%)'`,
+`'{a} along · {b} off'`, `'between %min% and %max%'`) and never spell a unit
+themselves. A string that spells its own unit cannot follow a preference.
 
 The client half is `assets/js/cc-units.js` (`window.ccKm`, `window.ccM`,
 `window.ccElev`, plus `ccKmValue`/`ccElevValue` and the reverse
@@ -1524,50 +1497,36 @@ well as out:
   server-side from the drawn line and the DEM (climb-elevation.md §4) and only
   DISPLAYED in the rider's unit, through `ccKm`/`ccElev` in `improve.js`
   (the measured block under the map and the review line), so no transformer
-  is needed. Until 2026-08-25 the retired `/add-climb` wizard had typed length
-  and gain fields with model transformers on `AddClimbType`; both the fields
-  and the transformers are gone;
-- the base-location radius slider — the **input stays kilometres** (that is what
+  is needed;
+- the base-location radius slider: the **input stays kilometres** (that is what
   is stored and what the controller reads) and only the read-out follows the
   preference;
-- the ride-check radius select — option **values** stay metres, because the
+- the ride-check radius select: option **values** stay metres, because the
   server accepts only its own fixed set (`RideCheckService::ALLOWED_RADII`);
   the labels convert.
 
-**The baked display strings are gone** (2026-08-09). Ten seeded climbs carried
-pre-formatted `record` / `headline` values in `item.attributes` (`"2.2 km"`),
-written before either was derived at render time. A stored string cannot follow
-a preference — no formatter runs late enough — so the number went back to being
-a number:
+**No baked display strings.** A stored string such as `"2.2 km"` cannot follow
+a preference (no formatter runs late enough), so lengths and gains are stored
+as numbers in metres in `item.attributes`, never as pre-formatted `record` or
+`headline` text. `app:climbs:recompute --write` re-measures climbs that have a
+drawn line; `app:catalog:retire-baked-length --write`
+({@see App\Catalog\Command\RetireBakedLengthCommand}) parses a baked `record`
+"Length" row into the discrete `length` attribute for a point-only seed with no
+line to measure. A **measured** length always wins; an unparseable value is
+reported and left alone. Both are dry runs by default and safe to re-run.
 
-- `app:climbs:recompute --write` re-measured the 13 climbs that have a drawn
-  line, storing `length`/`gain` in metres and dropping `headline`;
-- `app:catalog:retire-baked-length --write`
-  ({@see App\Catalog\Command\RetireBakedLengthCommand}) parsed the remaining
-  baked `record` "Length" rows into the discrete `length` attribute for the
-  eight point-only Wikidata seeds, which have no line to measure. A **measured**
-  length always wins; an unparseable value is reported and left alone; the
-  consumed row leaves `record`, and `record` goes with it when it empties. Dry
-  run by default, safe to re-run.
-
-**The steepest-ramp label gave its width back to the value** (2026-08-09). The
-climb field used to be called `Steepest 250m (%)`, which failed three ways at
-once: a msgid cannot be interpolated, so the number had to be retyped in five
-catalogues whenever `ClimbProfiler::MAX_WINDOW_M` moved — and it went stale
-immediately, reading "Steepest 100m" under a caption saying "steepest 250m";
-it could not follow a rider reading in feet; and the width is not even a
-per-TYPE fact, since every climb stores the window it was actually measured at
-(`steepWindowM`) and rows measured before 2026-08-07 really are 100 m ones.
-
-The label is now `Steepest sustained (%)` — it still says WHICH measurement it
-is, which was the point of the 2026-08-05 rename ("max gradient" invites
-comparison with a point maximum; Mur de Huy's famous ~26% is its steepest
-hairpin, not its steepest sustained stretch). The width travels with the value:
+**The steepest-ramp label carries no width.** The climb field is
+`Steepest sustained (%)`: it says WHICH measurement it is ("max gradient"
+invites comparison with a point maximum; Mur de Huy's famous ~26% is its
+steepest hairpin, not its steepest sustained stretch), and a width in the label
+could neither be interpolated into a msgid nor follow a rider reading in feet.
+Every climb stores the window it was measured at (`steepWindowM`), and the
+width travels with the value:
 the drawer writes **"13% over 820 ft"** from that climb's own `steepWindowM`,
 in the reader's unit, falling back to 100 m for rows that predate the
 attribute. `BackfillAttributesCommand::LEGACY_LABELS` keeps the two retired
 labels resolving to `maxGradient` so an older harvest re-import still lands.
-A baked `Max gradient` stays deliberately unmatched — it is a point maximum
+A baked `Max gradient` stays deliberately unmatched: it is a point maximum
 from somebody else's compilation, a different measurement.
 
 One thing stays metric on purpose: an imported Wikidata *description* ("is a
@@ -1577,13 +1536,13 @@ somebody else's sentence is not unit conversion.
 ### The curating invitation on the landing pane
 
 With a curator application in flight, this block answers "where is my request?".
-**Without one, the reader is a rider, not a curator** — telling them they have
+**Without one, the reader is a rider, not a curator**: telling them they have
 no application in progress states the obvious in somebody else's vocabulary,
 under a heading ("Curator applications") that is not about them. So the empty
 case is an invitation, and it answers the question a rider might actually have:
 *does my own patch have anyone looking after it?*
 
-Best evidence first — base region, else declared country, else nothing:
+Best evidence first: base region, else declared country, else nothing:
 
 | state | when | says |
 |---|---|---|
@@ -1596,7 +1555,7 @@ Best evidence first — base region, else declared country, else nothing:
 
 Region-level and country-level cover are reported **separately** rather than
 folded into one boolean. A moderator scoped to NL is real cover for all twelve
-provinces, so those regions are not "uncovered" — but they are not done either:
+provinces, so those regions are not "uncovered": but they are not done either:
 a region can have its own curators alongside the country's, and somebody who
 actually rides there sees what a country-wide view never will. Collapsing the
 two would either nag people whose area is handled or ignore people whose area
@@ -1605,14 +1564,14 @@ needs them.
 Every state carries a way in, including the covered ones. There is more to do
 than curating, and "we have someone" is not a reason to close the door.
 
-### 9.4 How long a page is (2026-08-09)
+### 9.4 How long a page is
 
 `users.rows_per_page` (`App\Account\RowsPerPage`, migration
 `Version20260809120000`) sits beside the unit and format preferences and is
 display-only in exactly the same way.
 
 **`auto` is the default, and it is not a number.** Each list keeps the size it
-was designed around — 20 for messages because a message is a card, 25 for a
+was designed around: 20 for messages because a message is a card, 25 for a
 moderation desk because a queue item is a row of work, 60 for the contributors
 wall because a wall row is one line and somebody scanning for a name would
 rather scroll than click. Any single global default would have to be wrong for
@@ -1622,7 +1581,7 @@ patience, not about our page design.
 
 `App\Pagination\PageSize::resolve(int $surfaceDefault)` is the only reader.
 Each list passes the size it was built for and gets back either that number or
-the rider's choice — so the surface default stays in the CALL, the resolver
+the rider's choice: so the surface default stays in the CALL, the resolver
 holds no opinion about how long a message list should be, and adding a paged
 list never means editing it. A signed-out reader always gets the default;
 there is nowhere to store a choice for them.
@@ -1633,20 +1592,19 @@ moment anyone *wants* a different page length is the moment they are looking at
 a pager, and sending them off to find a settings tab is the kind of
 correct-but-useless routing that means the setting never gets changed. The
 pager's control POSTs to `settings_rows_per_page`, writes the same column, and
-returns to the list — via a submitted `back` field, not `Referer`, and only
+returns to the list: via a submitted `back` field, not `Referer`, and only
 relative paths are honoured (the strict allowlist regex shared with
-`LocaleController::isSafeInternalPath` — no `//`, no backslash, no control
-characters anywhere, `\A…\z` anchored; review 2026-08-16 finding 8), or a
+`LocaleController::isSafeInternalPath`: no `//`, no backslash, no control
+characters anywhere, `\A…\z` anchored), or a
 logged-in POST becomes an open redirect.
 
 **Referer, where it is used at all, is same-ORIGIN and never same-prefix.**
-`LocaleController::switch` falls back to `Referer` when no `to` is given, and
-that check was `str_starts_with($referer, $request->getSchemeAndHttpHost())`
-until the 2026-08-25 security scan. A prefix match on
-`https://cyclingcommons.org` also accepts
-`https://cyclingcommons.org.evil.example/`, which is a different site, so the
-switcher was an open redirect reachable by an ordinary GET link.
-`LocaleController::isSameOrigin` now compares the parsed host, scheme and port,
+`LocaleController::switch` falls back to `Referer` when no `to` is given. A
+prefix match on `https://cyclingcommons.org` would also accept
+`https://cyclingcommons.org.evil.example/`, which is a different site, and make
+the switcher an open redirect reachable by an ordinary GET link (security scan
+2026-08-25). `LocaleController::isSameOrigin` compares the parsed host, scheme
+and port,
 which additionally refuses `https://user@evil.example/` (userinfo dressed up to
 look like the real host) and any downgrade from https to http. Nothing else in
 the app trusts `Referer` for a destination; the pagers use a submitted `back`
@@ -1659,19 +1617,19 @@ range on single-page ones.
 Two-step flow in `SettingsController` (danger zone, Security tab), both steps
 POST + CSRF:
 
-1. `settings_delete_request` — the account password is re-checked first,
-   spending a try from `password_reauth` (account-and-auth.md §5). Then
+1. `settings_delete_request`: the account password is re-checked first,
+   spending a try from `password_reauth` (§5). Then
    `UserDeletionService::requestDeletion()`
    generates an 8-hex-char one-time code (`bin2hex(random_bytes(4))`,
    uppercased), stores it with `deletionRequestedAt`, and emails it.
-2. `settings_delete_confirm` — code validated with `hash_equals`
+2. `settings_delete_confirm`: code validated with `hash_equals`
    (case-insensitive via uppercasing), **expires 1 hour** after the request
    (`+1 hour` in `UserDeletionService::confirmDeletion()`). On success:
    `purge()` (the shared hook seam, §6.3), flush, session invalidated,
    redirect home.
 
 A pending self-request is what arms the admin **Execute account removal** /
-**Cancel pending removal** actions (§6.1) — an admin path through the same
+**Cancel pending removal** actions (§6.1): an admin path through the same
 `purge()` seam, with audit.
 
 What survives deletion, and why, is stated on the privacy notice rather than
@@ -1698,7 +1656,7 @@ and the README inside says which part is which.
 `change_history` rows they produced), `community.json` (confirmations, season
 votes with the name of what each was for, rides, correction suggestions,
 country requests, curator applications, moderator areas), `messages.json`, `consent.json`, `translations.json`, and
-`photos/` — the stored originals as files, plus an `index.json` describing each
+`photos/`: the stored originals as files, plus an `index.json` describing each
 one.
 
 **What it does not, by construction.** Every query names its columns; none is
@@ -1721,24 +1679,17 @@ is the heaviest read the app offers.
 `deleteFileAfterSend()`, `Cache-Control: no-store, private`. Photo binaries are
 staged as temp files that `ZipArchive` reads at `close()`, so a rider with a
 hundred photos costs disk rather than memory. A tombstoned upload is still
-listed, with `"file": null` — hiding the row would hide a fact about them.
+listed, with `"file": null`, because hiding the row would hide a fact about them.
 
 ---
 
 ## Open questions
 
-- **Inactivity lifecycle** (§6.6) — design confirmed 2026-07-01 but pending
-  implementation; blocked on a `lastActiveAt` schema addition and a scheduler.
-- **Anonymize-in-place hooks** — the `UserDeletionHookInterface` seam exists
-  and both deletion paths route through it, but no hook implementations exist
-  yet; until they do, account removal hard-deletes the User row while
-  contributed rows keep plain user ids. The anonymous "former contributor"
-  presentation is unbuilt.
-- **CAPTCHA / IP-diversity step-up before hard lockout** (§3) — recorded as a
+- **CAPTCHA / IP-diversity step-up before hard lockout** (§3): recorded as a
   deliberate future product decision; the bounded lockout DoS stands until
   then.
-- **User-index role/locked filters** in the admin desk — deferred (needs
+- **User-index role/locked filters** in the admin desk: deferred (needs
   custom EA filter classes for jsonb containment and `lockedUntil > now`);
   the dashboard count cards partially cover the visibility need.
 - **Deferred-until-needed hard operator isolation** (separate admin login
-  domain) — explicitly not planned; revisit only on a concrete threat.
+  domain): explicitly not planned; revisit only on a concrete threat.

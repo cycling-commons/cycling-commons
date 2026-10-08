@@ -8,7 +8,7 @@ is wrong, and how a curator answers them.
 
 Canonical. Owns `/report/{type}/{id}`, `/report/{id}/answer`,
 `/moderate/reports`, the `content_report` table, and the three report emails.
-Photos are reported here too, since 2026-08-30 (§2).
+Photos are reported here too (§2).
 
 ## 1. Why this exists
 
@@ -19,10 +19,9 @@ submitted exclusively by electronic means**. Article 16(5) requires that the
 notifier be told the decision. Article 17 requires that the person whose content
 was restricted be given a statement of reasons.
 
-Before this, the Commons had three of those and only for photographs. Every
-other kind of content, a route description, a place name, a region text, a
-display name, a message from another rider, had no route at all except the
-contact form, which is a conversation and not a notice.
+Every kind of content the Commons hosts, a route description, a place name, a
+region or town text, a display name, a message from another rider, a photo,
+has this one route. The contact form is a conversation, not a notice.
 
 Two things follow from Article 16 that shape every decision below:
 
@@ -31,25 +30,26 @@ Two things follow from Article 16 that shape every decision below:
    the person the Article exists for.
 2. **No fee, no friction, no third party.** Not a captcha service, not an email
    round trip before the notice is accepted. See
-   `docs/specs/contact-and-support.md` §3.
+   contact-and-support.md §3.
 
-## 2. Photos: one door since 2026-08-30
+## 2. Photos: one door
 
-Until 2026-08-30 photos had their own form, `/photo/{uuid}/report`, because an
-intimate-imagery report there **withholds the photo before any person has seen
-it**, which is right for an image and wrong for everything else. The owner
-asked for one door ("we need one to rule them all", docs/TODO.md 19), and the
-merge kept the one thing photos really do have: the auto-withhold is now a
-property of the ground-and-target pair (`ReportTarget::canAutoWithhold()`,
-photos only; `ReportGround::autoWithholds()`, the intimate-or-child ground
-only), behind the site-wide circuit breaker photo-uploads.md §6b describes.
-`/photo/{uuid}/report` answers 301 to `/report/photo/{uuid}`; a page that
-carries pictures asks which thing is meant, the entry or one of its photos
-(§5); the reports desk carries a decision through to the file (§9); and the
-takedowns desk keeps only what an uploader asked us to remove about their own
-picture. The old address answers 301 to a GET and 308 to a POST, so a form left
-open in a tab before the change keeps what somebody typed; the photo page and
-the lightbox link the shared route directly, not through the redirect.
+Photos are reported through the same form as everything else (owner: "we need
+one to rule them all"). The one thing photos really have of their own is that
+an intimate-imagery report **withholds the photo before any person has seen
+it**, which is right for an image and wrong for everything else. That
+auto-withhold is a property of the ground-and-target pair
+(`ReportTarget::canAutoWithhold()`, photos only; `ReportGround::autoWithholds()`,
+the intimate-or-child ground only), behind the site-wide circuit breaker
+photo-uploads.md §6c describes. A page that carries pictures asks which thing
+is meant, the entry or one of its photos (§5); the reports desk carries a
+decision through to the file (§9); and the takedowns desk keeps only what an
+uploader asked us to remove about their own picture.
+
+`/photo/{uuid}/report` (`MediaReportController`) answers 301 to a GET and 308
+to a POST, both to `/report/photo/{uuid}`, so an old link or a form left open
+in a tab keeps working and keeps what somebody typed. The photo page and the
+lightbox link the shared route directly, not through the redirect.
 
 **Why one door** (owner 2026-08-30: "the map with an open drawer can have
 content on the page that is not allowed, but also the picture on the page can
@@ -68,7 +68,7 @@ entry, and the photo that should come down stayed up.
 | `region` | `RegionText` | `Catalog\Entity\Region` | no |
 | `rider` | `DisplayName` | `Entity\User` by uuid | yes, themselves |
 | `message` | `Message` | `Messaging\Entity\UserMessage` | yes, `senderId`, if any |
-| `town` | `Town` | a `town_summary` ref, `node-59518` (map-and-search.md §6.5, 2026-09-08) | no |
+| `town` | `Town` | a `town_summary` ref, `node-59518` (map-and-search.md §6.5) | no |
 | `photo` | `Photo` | a `MediaUpload` by uuid | yes, the uploader |
 
 The form's header shows the page the reporter came from (`from_path`, the
@@ -80,9 +80,7 @@ the link is a button beside the target line, the "Seen on" path shows only
 when the target has no link of its own, and the "Who wrote it" row shows
 only when there is an author.
 A filed report answers 303 to `/report/{type}/{id}/sent`, its own GET, so a
-reload of the thank-you shows it again and files nothing (owner 2026-09-08:
-a reload had filed the same report twice, and the desk showed the place's id
-twice). A signed-in reader is not shown the email field: the account's address is
+reload of the thank-you shows it again and files nothing (owner 2026-09-08). A signed-in reader is not shown the email field: the account's address is
 the reporter contact (owner 2026-09-08, "we already have their email"), which
 is what the desk answers to. A town report names the town: the form says
 "This report is about Zwaag", and that name is stored as the report's
@@ -95,7 +93,7 @@ a label taken from the request would print a stranger's words on our page and
 in our mail (security audit 2026-10-04).
 
 **Why places and regions have no author.** They are not written by one person.
-A place starts as a seeded or harvested row (`seeded-rows-stay-unassigned`) and
+A place starts as a seeded or harvested row, assigned to no account, and
 grows through submissions from many riders. Naming the last editor as "the
 author" would send an Article 17 statement to somebody for a word another rider
 wrote. `ReportResolver` returns `null` and the desk says "nobody in particular".
@@ -115,11 +113,7 @@ be choosing from the rules we actually apply:
 | `advertising` | The Commons is not a listings site |
 | `generated` | Photographs that are not photographs |
 
-The other three came in with photos (2026-08-30), when the photo form's own
-list (`MediaTakedownCategory`) folded into this one: `identifiable_self` and
-`identifiable_other` became `personal_data`, `intimate_or_child` and
-`private_property` kept their names, and its `other` means picking from the
-general list.
+The other three:
 
 | Case | What it is |
 |---|---|
@@ -127,7 +121,7 @@ general list.
 | `private_property` | private property, such as somebody's house or garden |
 | `copyright` | somebody else's work, published without their permission |
 
-**"Something else" is a choice, not a rule (2026-10-03).** `other` sits last
+**"Something else" is a choice, not a rule.** `other` sits last
 on every form (owner: "perhaps we need an option 'Something else'"). The
 reporter's written reason, required for every ground, says what is wrong. It
 is not a rule in our terms (`ReportGround::isRule()`), and the statement of
@@ -142,7 +136,7 @@ what the statement of reasons names. The reporter's choice stays on the row as
 filed.
 
 **One gate decides what a form offers:** `ReportGround::forTarget()`. A photo
-gets all nine; anything else gets the six that are not image only.
+gets all ten; anything else gets the seven that are not image only.
 `isImageOnly()` is true for `generated`, `intimate_or_child` and
 `private_property`; the controller refuses such a ground on POST for a target
 that is not a photo, so the rule lives in the enum rather than in a template.
@@ -152,9 +146,9 @@ has to keep resolving. Pinned by
 
 `isLegal()` is true for `unlawful`, `personal_data`, `intimate_or_child` and
 `copyright`. Those are a legal claim rather than a quality judgement, so they
-sort to the top of the desk (`ReportGround::urgent()`, which since 2026-09-08
-also holds `abuse`: not a legal claim, but a person is being hurt while it
-waits) and the acknowledgement email says so. `untrue` covers stale as well as
+sort to the top of the desk (`ReportGround::urgent()`, which also holds
+`abuse`: not a legal claim, but a person is being hurt while it waits) and the
+acknowledgement email says so. `untrue` covers stale as well as
 false: a map goes out of date as often as it is wrong.
 
 **`private_property` is its own ground, and not a legal claim** (owner
@@ -188,11 +182,9 @@ ringed exclamation badge (owner 2026-09-08): `.ring-ico`, defined once in
 and a region page's text credit line it stands as its own ringed link
 beside the edit pencil (moderation-and-contribution.md §3.1b), to
 `/report/town/{type}-{id}` and `/report/region/{id}`. The page's intro is three plain sentences and no promise
-about anonymity: the address is required by Article 16 for every ground but
-one, so the old "you do not have to tell us who you are" was wrong.
+about anonymity: the address is required for every ground but one (below).
 
-Three properties it borrows from the photo report, which has been running since
-August and got them right:
+Three properties hold for every target:
 
 * **The GET never looks anything up**, with one deliberate exception below. A
   form that 404s for an id that does not exist is an existence oracle. This one
@@ -209,8 +201,9 @@ August and got them right:
   is closed as `moot`, which is a real outcome.
 
 An unknown `type`, or an id shaped wrong for its type
-(`ReportTarget::acceptsId()`: a uuid for `rider` and `photo`, a positive
-integer for the rest), is a 404 and not a hint.
+(`ReportTarget::acceptsId()`: a uuid for `rider` and `photo`, an
+OpenStreetMap element such as `node-59518` for `town`, a positive integer for
+the rest), is a 404 and not a hint.
 
 **Which thing, then why.** When the target is an `Item` with photos, the form
 first asks which thing is meant: the entry, or one of its photos, shown as a
@@ -246,20 +239,19 @@ is that rule, and the controller checks the ground rather than the markup, so a
 stale form cannot slip past it. Pinned by
 `testAnAddressIsRequiredExceptWhereTheLawForbidsAsking` and
 `testTheChildGroundStillTakesAReportWithNoAddress`. The address costs the
-reporter no exposure: it is read in one place, `ContentReportService::send()`,
-which hands it to the mailer, and nobody at any desk can see it
+reporter no exposure: it is read only inside `ContentReportService`, which
+hands it to the mailer, and nobody at any desk can see it
 (contact-and-support.md §16; `testTheDeskNeverShowsTheReporterAddress`).
 
 Spam control is the same guard the contact form uses: two off-screen honeypots
 and a signed timestamp (`App\Security\FormGuard`), never a third-party captcha.
 CSRF is the **stateless** `content_report` token
 ([security-architecture.md §5.2](security-architecture.md)), like `contact_form`
-and `bug_report`. It was stateful at first, on the reasoning that a standalone
-page is not chrome on every page; but the page is linked from every drawer and
-every footer, and a stateful token starts a session on the GET, so every
-crawler that followed a "Report this" link left a Redis row behind and every
-reader was handed a session cookie for looking at a form. Stateless costs
-nothing to open. One consequence worth knowing: a POST whose `Origin`/`Referer`
+and `bug_report`. The page is linked from every drawer and every footer, and a
+stateful token would start a session on the GET, leaving a Redis row behind
+for every crawler that followed a "Report this" link and handing every reader a
+session cookie for looking at a form. Stateless costs nothing to open. One
+consequence worth knowing: a POST whose `Origin`/`Referer`
 is another site is refused before the controller runs, which is the right
 answer for a cross-site post and is pinned by `ContactFormTest`.
 
@@ -279,9 +271,8 @@ report written while it opens still carries a nonce. Fetched rather than
 rendered into the form, because a challenge is single use and one in the markup
 could not survive the page being cached
 ([page-caching.md §3.1](page-caching.md)); it also means an ordinary report,
-which is nearly all of them, costs no challenge at all.
-The photo form had this from the start; folding it into this route had dropped
-it (review 2026-08-30). Pinned by `ContentReportTest`.
+which is nearly all of them, costs no challenge at all. Pinned by
+`ContentReportTest`.
 
 **Where the links are:**
 
@@ -312,8 +303,7 @@ whatever the sender typed, so posted text in the body would let anyone make us
 mail their words to anyone (security audit 2026-10-04). It does not name the
 author and does not promise an outcome.
 
-Photo reports get the same two emails as any other report, since the
-merge (§2).
+Photo reports get the same two emails as any other report.
 
 **On decision**, `emails/report_decided.html.twig`. Article 16(5). The curator's
 note is shown **verbatim for every outcome including `rejected`**, because a
@@ -323,7 +313,7 @@ again. The mails do not lecture about courts or dispute bodies (owner
 2026-10-04); the reply route is the redress the mail offers.
 
 **Replies reach a person.** All three report mails (these two and the
-statement of reasons, content-reports.md §7) are sent from `cc.support.from_email`, the no-reply
+statement of reasons, §7) are sent from `cc.support.from_email`, the no-reply
 sender, with `Reply-To` set to `cc.support.public_email`, the address the
 contact page publishes (contact-and-support.md §4). When that address is empty
 the mails carry no `Reply-To` and leave out the "reply to this email"
@@ -355,7 +345,7 @@ curator may restore the content from there. Nothing is automated: the "put it
 back after 14 days unless sued" clock is a US DMCA mechanism we do not run
 (legal-sources.md). Template `support/report_answer.html.twig`.
 
-**The answer reopens the report** (2026-09-30). The page tells the author "we
+**The answer reopens the report.** The page tells the author "we
 will tell you what was decided", so the answer is not only stored
 (`ContentReportService::answer()`):
 
@@ -436,8 +426,8 @@ date, and the author only when there is one. It does not show whether the
 reporter can be answered: the system handles that. The note's label carries
 the star; nothing explains it.
 
-**It decides about the report, never about the content.** Following
-`one-way-to-moderate`, the decide form has exactly three fields: `_token`,
+**It decides about the report, never about the content.** Following the
+one-way-to-moderate principle (photo-uploads.md §5c), the decide form has exactly three fields: `_token`,
 `status`, `note`. There is no delete and no hide. The curator goes to the
 surface that already moderates that thing, does the work there, and comes back
 to record what happened.
@@ -500,7 +490,7 @@ a fresh report reads Open (owner 2026-09-08).
 | Status | Label | Meaning | Reporter mailed | Author mailed |
 |---|---|---|---|---|
 | `open` | Open | waiting | - | - |
-| `in_progress` | Being looked at | a curator is on it (2026-09-08) | - | - |
+| `in_progress` | Being looked at | a curator is on it | - | - |
 | `upheld` | Upheld, and acted on | we agreed, and acted | yes | yes, once, if there is one |
 | `rejected` | Looked at, nothing wrong | we looked, nothing wrong | yes | no |
 | `moot` | Closed | nothing left to act on: already gone, or never there; not while a takedown waits on a photo | yes | no |
@@ -529,11 +519,9 @@ about one route is a different fact from one report.
 
 `content_report`, `Version20260828140000`. `Version20260830010000` adds the
 copyright fields (`work_original`, `claimant_name`) and the uploader's answer
-(`counter_notice`, `counter_notice_at`); `Version20260830020000` carried the unresolved third-party photo
-requests over from the takedowns desk, the category copied verbatim as the
-ground because the vocabularies were merged rather than mapped. It had to run
-after the code, or they would have left one desk without arriving at the
-other.
+(`counter_notice`, `counter_notice_at`); `Version20260830020000` moves
+unresolved third-party photo requests from the takedowns desk onto this table;
+`Version20261003100000` adds `rule_ground` (§4).
 
 The reporter's IP is **never stored**. `reporter_key` holds
 `PseudonymousKey::of('content-report', $ip, $secret)`, a keyed sha256, 64 hex
@@ -571,7 +559,7 @@ it on the same clock. Pinned by `ReportContactRetentionTest` and
 
 * **Appeals are by email**, not a form. Both decision emails say "reply to this
   email with the reference", and the reply goes to `cc.support.public_email`
-  (content-reports.md §6). A structured appeal surface is worth building when
+  (§6). A structured appeal surface is worth building when
   there is enough volume to need one, and not before. The one form is the
   author's answer to an upheld copyright claim (§7), which reopens the report on
   the desk and gets both sides a mail when it is decided again.
@@ -590,8 +578,8 @@ it on the same clock. Pinned by `ReportContactRetentionTest` and
 
 ## 12. The guide page, `/report`
 
-Built 2026-09-06 (owner: "report a bug, but also, very important, report a
-page or a photo; that page is missing"). The report forms stay on the things
+The owner asked for it: "report a bug, but also, very important, report a
+page or a photo; that page is missing". The report forms stay on the things
 themselves (§5, "where the links are"); this page is the door for a reader
 who is not standing in front of the thing: the footer and the directory link
 it next to Report a bug.

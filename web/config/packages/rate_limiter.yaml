@@ -90,14 +90,14 @@ framework:
             policy: sliding_window
             limit: 20
             interval: '1 hour'
-        # Route-domain spec §5.5: proposals are heavier than pin edits — the
+        # route-domain.md §10: proposals are heavier than pin edits, the
         # supply gate starts at intake.
         route_propose:
             policy: sliding_window
             limit: 3
             interval: '1 day'
             cache_pool: cache.route_propose_limiter
-        # Route-domain spec §13 P3-D4: the suggest channel is the flood vector
+        # route-domain.md §10: the suggest channel is the flood vector
         # (each pending row is a curator task); vote/rode-it self-bound by UNIQUE.
         route_suggest:
             policy: sliding_window
@@ -119,7 +119,7 @@ framework:
             limit: 60
             interval: '1 hour'
             cache_pool: cache.season_vote_limiter
-        # Ride-check (spec 2026-07-14 §4.1): read-only compute (parse + two
+        # Ride-check (map-and-search.md §9): read-only compute (parse + two
         # PostGIS corridor queries, nothing persisted) — more generous than
         # intake, still bounded per rider per day.
         ride_check:
@@ -135,7 +135,7 @@ framework:
             limit: 5
             interval: '1 day'
             cache_pool: cache.ride_check_anon_limiter
-        # Climb-editor elevation profiling (review 2026-08-16 finding 5): every
+        # Climb-editor elevation profiling: every
         # call is an upstream Valhalla request, and Valhalla is shared
         # infrastructure. Per MINUTE, not per day: redrawing a climb
         # legitimately re-profiles several times in one editing session, so the
@@ -146,8 +146,7 @@ framework:
             interval: '1 minute'
             cache_pool: cache.elevation_limiter
         # Climb-editor and route-editor road snap: the SAME upstream Valhalla,
-        # reached through /contribute/route. It shipped with login as its only
-        # guard, which is not a quota (test-suite review 2026-08-24). The budget
+        # reached through /contribute/route. Login alone is not a quota. The budget
         # is larger than elevation's because one edit snaps per leg: dragging a
         # route with a dozen control points is a dozen calls, and improve.js
         # re-snaps the touched legs on every drag.

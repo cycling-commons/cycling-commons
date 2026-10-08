@@ -28,7 +28,7 @@ use Twig\Extension\GlobalsInterface;
  * A global rather than a function, because the footer renders on every page and
  * a function would need threading through every controller's context.
  *
- * @see docs/specs/contact-and-support.md §19
+ * @see docs/specs/site-directory.md §5
  *
  * @api
  */

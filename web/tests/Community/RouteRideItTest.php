@@ -55,7 +55,7 @@ final class RouteRideItTest extends WebTestCase
         $route = $this->unverifiedRoute($em, $proposer->getId());
         $rid = $route->getId();
 
-        // Proposer rides first — must NOT count (P3-D1).
+        // Proposer rides first, must NOT count (route-domain.md §6.2).
         $client->loginUser($proposer);
         $client->request('POST', '/routes/'.$rid.'/rode-it', ['bike_type' => 'Gravel', '_token' => $this->token($client, $rid)]);
         self::assertResponseIsSuccessful();
@@ -77,14 +77,14 @@ final class RouteRideItTest extends WebTestCase
 
         $em->clear();
         self::assertSame(ItemState::Verified, $em->find(RecommendedRoute::class, $rid)->getState());
-        // The flip logged one state row attributed to the tipping rider (P3-D2).
+        // The flip logged one state row attributed to the tipping rider (route-domain.md §6.2).
         $rows = $em->getConnection()->fetchAllAssociative(
             "SELECT new_value, changed_by FROM route_change_history WHERE route_id = :r AND field = 'state'",
             ['r' => $rid],
         );
         self::assertCount(1, $rows);
         self::assertSame('"verified"', $rows[0]['new_value']);   // JSONB-encoded
-        self::assertSame($tippingRiderId, (int) $rows[0]['changed_by']);   // attributed to the 3rd rider (P3-D2)
+        self::assertSame($tippingRiderId, (int) $rows[0]['changed_by']);   // attributed to the 3rd rider
     }
 
     public function testResubmitIsIdempotent(): void

@@ -12,7 +12,7 @@ use App\Catalog\ItemType;
 use PHPUnit\Framework\TestCase;
 
 /**
- * C2-T5: the new difficulty/suitability attributes (effort/famousFor/approach
+ * The difficulty/suitability attributes (effort/famousFor/approach
  * for climbs, accessibility for stays) must be registry-declared and therefore
  * vocabulary-valid, without breaking any existing allowed key.
  */

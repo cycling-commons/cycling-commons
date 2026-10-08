@@ -105,7 +105,7 @@ final class GpxParserTest extends TestCase
 
     public function testRejectsOversizedInput(): void
     {
-        $xml = str_replace('creator="test"', 'creator="'.str_repeat('x', 15_728_641).'"', self::GPX_11);   // just over 15 MiB (spec §15)
+        $xml = str_replace('creator="test"', 'creator="'.str_repeat('x', 15_728_641).'"', self::GPX_11);   // just over 15 MiB (route-domain.md §4.1)
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('propose_route.error.gpx_too_large');
         new GpxParser()->parse($xml);

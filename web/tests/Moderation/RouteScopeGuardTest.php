@@ -17,7 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * moderator-areas spec 2026-07-14, task 4: hard scope guards on the routes
+ * moderation-and-contribution.md §9: hard scope guards on the routes
  * desk. A curator confined to region A must not be able to see, view, decide
  * on, or trash a route proposal that lives in region B — even by posting the
  * id directly, bypassing whatever the queue happens to render.

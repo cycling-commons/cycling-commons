@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Cycle-route network layer (docs/plans/handoffs/2026-08-12-routes-layer-and-
-surface-quality.md). The acceptance case throughout is the Zuiderdijk: a way on
-a national LF route AND two rcn node-network segments, with no surface tag —
+"""Cycle-route network layer (docs/specs/coverage-provider.md §4). The
+acceptance case throughout is the Zuiderdijk: a way on a national LF route AND
+two rcn node-network segments, with no surface tag -
 the extractor has to see all three memberships, pick the strongest for the
 line's colour, and hand the way id to the surface pass as homework."""
 

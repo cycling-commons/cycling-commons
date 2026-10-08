@@ -24,7 +24,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Seed reviewed climb-sides. One item per side, not per pass. Writes no gradients — those are measured.
  *
- * @see docs/specs/climb-elevation.md §7a
+ * @see docs/specs/climb-elevation.md §7b
  *
  * @api
  */

@@ -35,7 +35,7 @@ final class RouteModerateTest extends WebTestCase
         return $u;
     }
 
-    // Task 4: decisions now write the proposer a message, and user_message.user_id
+    // Decisions write the proposer a message, and user_message.user_id
     // has a real FK to users(id) — proposedBy must be a persisted user, not a
     // fabricated id.
     private function proposer(EntityManagerInterface $em): User

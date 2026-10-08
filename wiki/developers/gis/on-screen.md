@@ -283,7 +283,7 @@ const isNotPotable = ['==',['to-string',['get','potable']],'no'];
 const cutoff = witnessCutoff();
 const witnessed = cutoff ? ['>=',['to-string',['coalesce',['get','cd'],'']], cutoff] : false;
 const pick = (plain, badged) => ['case', witnessed, plain, badged];
-const kindPair = kind => pick(kindImageId('B',kind,false), kindImageId('B',kind,true));
+const kindPair = (kind, letter='B') => pick(kindImageId(letter,kind,false), kindImageId(letter,kind,true));
 const miniPair = (glyph, suffix) => pick(miniIcon(key, glyph, suffix, false), miniIcon(key, glyph, suffix, true));
 const icon = key==='water'
   ? ['case', isFood,
@@ -315,6 +315,16 @@ Same shape as the water example, `match` on a tile property, one arm per value, 
 catch-all, just with three named values instead of a yes/no split. One `addLayer()` call still draws
 shops, stations and pumps as three visually distinct glyphs, because the branching lives in the
 expression, not in three separate layers.
+
+The scenic-views and history layers match the same `kind` property, with one arm per kind in the
+`KindIcons` registry: a waterfall, a cliff, a castle, a ruin. Each kind is one OpenStreetMap tag, so
+the glyph on the map is also the tag the place would carry back to OpenStreetMap:
+
+<!-- CODE-FROM web/assets/map/coverage.js -->
+```js
+const placeLetter = PLACE_LETTER[key];
+const placeKinds = placeLetter ? Object.keys(KIND_ICONS[placeLetter] || {}).flatMap(k => [k, kindPair(k, placeLetter)]) : [];
+```
 
 ## Clicking things
 

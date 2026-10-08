@@ -10,14 +10,14 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Route domain v1 phase 1 (spec §4.1): recommended_route.proposed_by — the
+ * route-domain.md §2.1: recommended_route.proposed_by, the
  * proposing rider's users.id for rider-proposed routes (NULL for imports).
  */
 final class Version20260708120000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'recommended_route.proposed_by (rider proposals, route-domain v1 phase 1)';
+        return 'recommended_route.proposed_by (rider proposals, route-domain.md §2.1)';
     }
 
     public function up(Schema $schema): void

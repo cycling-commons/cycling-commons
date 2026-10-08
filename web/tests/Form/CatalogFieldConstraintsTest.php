@@ -14,7 +14,7 @@ use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\Url;
 
 /**
- * Security review 2026-07-07 (critical #3): user-editable URL attributes (the
+ * User-editable URL attributes (the
  * stay's `web` / `bookingLink`) were plain text fields, so `javascript:…` and
  * other non-http schemes passed validation, persisted, and were interpolated
  * into an `<a href>` on the public map (stored XSS). A url-kind field must emit

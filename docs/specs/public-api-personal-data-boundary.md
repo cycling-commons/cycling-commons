@@ -56,11 +56,20 @@ The public data model of [public-api.md §1](public-api.md):
 The later rows are public by content: `world_division` holds Overture
 boundaries; `data_provider` is the provider registry the credits page and the
 map cite (names, licences, letters, rank; no person); `coverage_count` is kept
-counts of visible rows per bucket; `commons_photo`, `wikidata_image` and
-`town_summary` cache Wikimedia Commons, Wikidata and Wikipedia answers;
+counts of visible rows per bucket; `commons_photo` and `wikidata_image` cache
+Wikimedia Commons and Wikidata answers; `town_summary` caches Wikipedia
+answers and also holds local texts written or approved by a curator;
 `link_verdict` is a Safe Browsing verdict per URL; `catalog_change` is an
 append-only count per region, written by triggers; `translation_entry` is the
 English interface strings; `release_tag` is the list of release names.
+
+Four of these tables carry an account id beside public content:
+`recommended_route.proposed_by` and `trashed_by`, `change_history.changed_by`,
+`route_change_history.changed_by`, and `town_summary.edited_by` and
+`approved_by`.
+By the rule §1.2 applies to `translation_overlay`, a table that names a person
+is served through a view without that column; which of the four move is an
+open decision (§8).
 
 `change_history` / `route_change_history` are included **only if** audit review
 confirms they carry no free-text that could hold personal data beyond what the
@@ -100,7 +109,10 @@ public. **Not built until an endpoint needs it.**
 `contact_message`, `bug_report`, `bug_screenshot`, `content_report`,
 `curator_post`, `curator_post_image`, `curator_post_read`,
 `catalog_finding`, `translation_proposal`, `data_provider_change`,
-`github_contributor`, `blog_post`, `coverage_run`, `coverage_run_step`.
+`github_contributor`, `blog_post`, `coverage_run`, `coverage_run_step`,
+`moderation_seen`, `job_run`, `country`, `country_extract`,
+`country_plan_region`, `town_place`, `season_result`, `traffic_pool`,
+`traffic_seen`, `traffic_total`.
 
 The class also holds site internals with no place in the dataset, whether
 or not they carry personal data: the default-deny grant (§2) means an
@@ -127,9 +139,24 @@ unlisted table is simply out of reach. Notes on the less obvious rows:
   boundary (§6).
 - **`coverage_run`** and **`coverage_run_step`** are pipeline telemetry
   (pipeline/coverage/tracker.py), not dataset.
-- **`messenger_messages`** is the Doctrine Messenger queue (the async
-  transport since 2026-09-21): serialized jobs such as uploads to scan and
-  pictures to check, not dataset.
+- **`messenger_messages`** is the Doctrine Messenger queue (the `async` and
+  `failed` transports): serialized jobs such as uploads to scan and pictures
+  to check, not dataset.
+- **`moderation_seen`** records which desk items each curator has opened;
+  **`job_run`** the last good run of each daily console job.
+- **`country`**, **`country_extract`** and **`country_plan_region`** are the
+  onboarding state of each country (planned, seeded, live), its Geofabrik
+  extracts and a confirmed plan before it becomes `region` rows;
+  **`town_place`** is where each town lies, which decides the region a town
+  text belongs to. No person, but site internals rather than dataset.
+- **`season_result`** holds the stored results of the season ballot per
+  region. It names no voter; the site publishes the results through the
+  website, and no API endpoint serves them.
+- **`traffic_pool`**, **`traffic_seen`** and **`traffic_total`** are the radar
+  traffic tables ([traffic-measurements.md §4.3](traffic-measurements.md)):
+  sealed lines waiting under a random id, HMAC dedupe codes, and the plain
+  totals per road. The totals name no rider, but results go to curators only,
+  so none of the three is dataset.
 
 - **The three media tables** ([photo-uploads.md](photo-uploads.md)) are here,
   even though the photos themselves are public. What the API serves is the
@@ -145,9 +172,10 @@ unlisted table is simply out of reach. Notes on the less obvious rows:
   nothing about its paperwork being public.
 
 - **`users` gets no grant at all** — not even public columns. The `users` table
-  mixes public (`display_name`, `country_id`, `public_profile`) and radioactive
-  (`email`, `password`, `totp_secret`, `backup_codes`, `deletion_code`,
-  `base_point`/`base_place`/`base_*` home-area fields, `locale`) columns.
+  mixes public (`display_name`, `pseudonym`, `country_id`, `public_profile`)
+  and radioactive (`email`, `password`, `totp_secret`, `backup_codes`,
+  `deletion_code`, `base_point`/`base_place`/`base_*` home-area fields,
+  `locale`, `time_zone`, `detected_time_zone`) columns.
   Column-level grants could split it, but a zero-grant table plus the
   §1.2 view pattern is simpler to audit: the answer to "can the API see the
   users table?" is *no*, unconditionally.
@@ -489,9 +517,13 @@ independently landable:
 
 ## 8. Open decisions (pending owner)
 
-- **`uuid` in views**: if `api_public_contributor` is ever built, whether the
-  public user identifier is `id`, `uuid`, or `display_name`-slug — ties into
-  the parked `User.uuid` product decision.
+- **The identifier in views**: if `api_public_contributor` is ever built,
+  which public user identifier it exposes. `users.uuid` is the one the site
+  already publishes, in `/riders/<uuid>`.
+- **Account ids on §1.1 tables**: whether `recommended_route`,
+  `change_history`, `route_change_history` and `town_summary` are granted
+  with their account-id columns withheld (column grants or a view), or move
+  to §1.2 (§1.1).
 - **Prod credential management** for `cc_api_read` (secrets handling on the CC
   cluster) — ops runbook detail, decided at deploy time.
 

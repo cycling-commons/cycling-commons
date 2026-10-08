@@ -22,7 +22,7 @@ stale without the build saying so.
 | id | value | what it is | derived from |
 |---|---|---|---|
 | `catalog-letters` | **12** | editable catalog types, each with one letter | `web/src/Catalog/ItemType.php` |
-| `selector-rules` | **42** | OSM tag rules that decide whether an object is worth keeping | `pipeline/contract/coverage-contract.json` |
+| `selector-rules` | **48** | OSM tag rules that decide whether an object is worth keeping | `pipeline/contract/coverage-contract.json` |
 | `stored-tag-keys` | **43** | tag keys the harvest keeps on a coverage row; every other key is dropped at parse time | `pipeline/contract/coverage-contract.json` |
 | `drawer-tag-whitelist` | **32** | of those keys the POI drawer is allowed to render | `web/src/Coverage/CoverageRepository.php` |
 | `map-modules` | **70** | JavaScript modules the map is split into | `web/assets/map/` |
@@ -57,7 +57,7 @@ goes quietly wrong.
 | Of which seeded by hand | 30 | 2026-09-10 | `make course-data` prints it; `tools/check-course-data.py` verifies it |
 | Import rows the duplicate guard holds out | 84 | 2026-09-10 | the count `app:catalog:import` reports as skipped |
 | `coverage_poi` rows the course fixture builds | 10 | 2026-09-10 | `make course-data`, then count the table |
-| Ride-check corridor query, before and after the rewrite | 62 s to under 1 s | 2026-07 | `docs/specs/` design note for the rewrite |
+| Ride-check corridor query, before and after the rewrite | 62 s to under 1 s | 2026-07 | `docs/specs/map-and-search.md` §9 |
 | Radius query, sequential scan against functional index | 716 ms to 2 ms | 2026-07 | `pipeline/coverage/load.py` records both |
 | Tag payload dropped by narrowing the stored keys | 73 MB to 35 MB | 2026-07 | one Belgian extract, parsed both ways |
 | One Geofabrik extract, downloaded against stored | 4.8 GB to 28 MB | 2026-08 | `make coverage-refresh regions=europe/belgium` |

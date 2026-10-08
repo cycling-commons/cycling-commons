@@ -136,7 +136,7 @@ def _assemble_climb(m, p, traced):
     matching CatalogFormRegistry's Climbs field keys) instead of baking them into
     display strings, so the improve edit form can prefill them from item.attributes.
     `record` keeps only the derived "Length" row: Length is computed, not an editable
-    attribute, and the drawer's C2-T6 climb branch renders the editable rows straight
+    attribute, and the drawer's climb branch renders the editable rows straight
     from the discrete attributes (and dedups by label) — leaving them in `record` too
     would just duplicate.
     """

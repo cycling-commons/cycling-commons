@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #
-# The async tier (media-storage-architecture.md; plan task 1). One bus, one
+# The async tier (media-storage-architecture.md §3). One bus, one
 # transport on the app's own Postgres, a failure transport - and NO when@prod
 # gating: the same env-driven single-path rule the storage layer follows, for
 # the same reason (a prod block would need a duplicate staging twin to stay

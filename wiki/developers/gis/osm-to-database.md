@@ -128,9 +128,9 @@ contract file, `pipeline/contract/coverage-contract.json`, loaded by
 `pipeline/coverage/contract.py::load_contract()`: it defines eight catalogue letters, `B` water &
 food, `C` public toilets, `D` bike services, `F` getting there, `G` shelter, `O` where to sleep,
 `P` scenic views, `Q` history & culture, matching the point catalogue in `docs/specs/osm-data-architecture.md` §5, and
-under each letter a list of exact `tag=value` rules. Counted directly from that file, there are 42
+under each letter a list of exact `tag=value` rules. Counted directly from that file, there are 48
 such rules ([the count is generated](../numbers.md), not typed here; for example `tourism=hotel`, `tourism=hostel`,
-`tourism=camp_site`, … under letter `O` alone) built from 10 distinct tag keys. Letter `P` also carries two
+`tourism=camp_site`, … under letter `O` alone) built from 11 distinct tag keys. Letter `P` also carries two
 rules that filter after the selection, a name or photo link and a bike way within 250 m
 (`docs/specs/scenic-views.md` §2). `extract.py::selector_expressions()` turns every rule into an
 `nw/key=value` osmium expression, `nw` for "node or way", tying back to the previous section's model,
@@ -189,8 +189,8 @@ hundreds of megabytes of tag payload, for keys nothing anywhere ever renders.
 
 The 43 kept keys split into seven groups, and they are easy to double-count:
 
-- **10 selector keys**: `amenity`, `drinking_water`, `historic`, `man_made`, `railway`,
-  `route`, `shelter_type`, `shop`, `tourism`, `waterway`, the same keys the 42 selector rules above
+- **11 selector keys**: `amenity`, `drinking_water`, `historic`, `man_made`, `natural`, `railway`,
+  `route`, `shelter_type`, `shop`, `tourism`, `waterway`, the same keys the 48 selector rules above
   are built from. They are kept because `pipeline/coverage/tiles.py`'s `_label_case` re-reads them
   at tile-build time to derive the type label a rider sees.
 - **2 rule keys**: `memorial` and `usage`. No selector and no drawer reads them; the load reads
@@ -284,7 +284,7 @@ CREATE TABLE IF NOT EXISTS coverage_poi (
     id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ref           varchar(160) NOT NULL,  -- 'node/6863042080' | 'way/…' = item.source_ref format
     letter        char(1)      NOT NULL,  -- B C D F G O P Q (osm-data-architecture.md §5)
-    kind          varchar(16),            -- serviceKind for D (shop|station|pump), NULL otherwise
+    kind          varchar(16),            -- serviceKind for D (shop|station|pump), placeKind for G P Q, else NULL
     name          varchar(255),           -- OSM name tag, NULL when unnamed
     geom          geometry(Point, 4326) NOT NULL, -- nodes as-is; ways centroid at load
     tags          jsonb        NOT NULL,  -- trimmed to contract storedTagKeys (parse.py), NOT the object's full tag set

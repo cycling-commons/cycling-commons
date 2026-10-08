@@ -22,7 +22,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * Task 8 (moderation-feedback spec M6a): a curator can send a rider a
+ * moderation-and-contribution.md §7.4 (M6a): a curator can send a rider a
  * free-form personal message from any desk row — the pending-submission
  * queue, a route-correction row, or a route's own detail page — through the
  * single `POST /moderate/message` endpoint.

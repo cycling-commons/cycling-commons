@@ -56,21 +56,20 @@ Keep the dotted cards in step with `confirmationAges()`.
 
 ### 1.1 Entry-point matrix
 
-The map drawer builds these URLs (`web/assets/map/map.js`) and `improve.js`
+The map drawer builds these URLs (`web/assets/map/drawer.js`) and `improve.js`
 interprets them — a real cross-file contract:
 
 | From (drawer) | Link params | Step 1 (LOCATE) behaviour |
 |---|---|---|
 | "+ add" on an empty field | `item`, `type`, `field=<key>` | **Skipped** — wizard starts on step 2, step-1 stepper chip hidden, the matching field scrolled to and focused |
-| "✎ Edit this item" | `item`, `type`, `name`, `lat`, `lng` | **Compact confirm-map** (point types only): view-only reassurance, Next enabled without interaction, expandable via "◎ Change location" |
+| "✎ Edit this item" | `item`, `type`, `name`, `lat`, `lng` | **Compact confirm-map** (point types only): view-only reassurance, Next enabled without interaction, expandable via "◎ Change location", which sits in the nav row beside Next on step 1 (owner 2026-10-08) |
 | "◎ Fix location" | as edit + `fix=location` | **Expanded editor** directly — pin pre-placed and repositionable, search visible |
 | "Add a new place" | `mode=add` | Full locate editor (pin / two-tap segment per `LocationMode`) |
 
 **mode=add server side.** `ContributeController::addPlace()` renders the wizard
 (`ImproveType` `add_mode: true` — which injects a **required name** into the
 details pane, since several field sets carry none) for every type except R
-(/propose-route); N (climbs) has been included since 2026-08-25, when the
-dedicated /add-climb wizard was retired (`/add-climb` is a 301 to
+(/propose-route), climbs (N) included (`/add-climb` is a 301 to
 `/improve?type=climbs&mode=add`; [edit-items/N-climbs.md](edit-items/N-climbs.md)).
 `CatalogContributionService::submitAdd()` persists it as a NewItem submission
 (§3.3), with the two drawn endpoints of a segment-located type stored as the
@@ -93,8 +92,9 @@ at intake (`already_materialized`); unknown/malformed refs degrade to the
 explainer. Covered by `MaterializeFlowTest`.
 
 The mode gate in `improve.js`:
-`LOCATE = (ADD || hasCoords || RELOCATE) ? locationMode : 'off'`, where
-`RELOCATE` is `fix=location` and `hasCoords` means valid `lat`+`lng` params.
+`LOCATE = (ADD || hasCoords || RELOCATE || (IS_CLIMB && item has a route)) ? locationMode : 'off'`,
+where `RELOCATE` is `fix=location`, `hasCoords` means valid `lat`+`lng` params,
+and a climb with a stored line always gets its map, because the line is the item.
 
 - **`field=<key>` contract:** the key is guarded to an alphabetic token and
   matched against both `improve[details][<key>]` and `improve[extras][<key>]`
@@ -113,20 +113,21 @@ The mode gate in `improve.js`:
 
 ### 1.2 Gating and search
 
-- **Step 1 is the only gated step**: Next is disabled until `WZ.loc` is set —
-  a pin placed (point), both endpoints placed (segment), or the location known
-  from the entry point. Steps 2–4 are never gated; step 4's Next becomes
-  "Submit for review →".
+- **Step 1 gates on the location** (`refreshGate()` in `improve.js`): Next is
+  disabled until `WZ.loc` is set (a pin placed for a point, both endpoints
+  placed for a segment, or the location known from the entry point), and,
+  where a curator is asked the OSM question (§1.6), until it is answered.
+  Steps 2 and 3 are not gated; step 4's Next becomes "Submit for review →" and
+  stays disabled while nothing has changed (below). Any step's Next waits while
+  a photo is still uploading.
 - **Place search is keyless Photon** (`photon.komoot.io`, called client-side
   from `improve.js`), debounced **320 ms**. Mandatory offline fallback: on
   fetch failure the results dropdown shows "Search unavailable — tap the map
   instead" and map-tap keeps working — the geocoder is never load-bearing.
 - **A pasted coordinate pair short-circuits the geocoder.** The map's
   right-click popup copies a spot as `lat, lng`, so the search box has to read
-  that back: `web/assets/contribute/coords.js` (`window.Cc.parseLatLng`; it was
-  shared with `add-climb.js` until that wizard was retired on 2026-08-25, and
-  shared since 2026-09-12 with the map's own search box,
-  map-and-search.md §7.4) parses
+  that back: `web/assets/contribute/coords.js` (`window.Cc.parseLatLng`, shared
+  with the map's own search box, map-and-search.md §7.4) parses
   `lat, lng`, `50.4920°N 5.8600°E`, `N50.49 E5.86`
   and `geo:`/`@` prefixes, and the query never reaches Photon. The pair is
   shown as a result row before anything moves, so the rider sees what was read
@@ -138,10 +139,9 @@ The mode gate in `improve.js`:
   camera and the pin are two different things, and every change test in the
   wizard reads the pin: `nothingChanged()` compares `WZ.loc` against the item's
   own position, and the server compares `improve[lat]`/`improve[lng]` against
-  the row's geometry. A result row that only flew the camera therefore left a
-  rider watching the map arrive at a new address and then being told "Nothing
-  has changed yet" on step 4, with Next disabled. Both routes into the search
-  box now end at the same `placeAt()`. `improve[place]` carries the name of the
+  the row's geometry. A result that only flew the camera would leave the rider
+  told "Nothing has changed yet" on step 4, so both routes into the search box
+  end at the same `placeAt()`. `improve[place]` carries the name of the
   place the rider picked, and is a label the server never diffs; only the pin
   counts as a location change. The climb exception above still holds, and holds
   for the same reason: `placeAt` is null on that branch.
@@ -153,13 +153,9 @@ The mode gate in `improve.js`:
   entry. Two thresholds that drift apart would give a rider an enabled Submit
   and a 422.
 
-  It was 1e-5, about 1.1 m, matched to a `was`/`now` string of five decimals.
-  Nobody corrects a pin at the zoom where a metre is small. Measured in a real
-  browser: at z19 a 4 px drag travels 0.36 m and at z14 the same drag travels
-  11.6 m, so the wizard worked at the default zoom and silently refused exactly
-  the deliberate small correction it exists for. It recorded the new point,
-  showed it in its own readout, and then said "Nothing has changed yet" with
-  Submit greyed out.
+  The threshold is this small because riders correct a pin zoomed in: at z19 a
+  4 px drag travels 0.36 m, so a metre-sized threshold would refuse exactly
+  the deliberate small correction the wizard exists for.
 
   `FORMAT_DECIMALS` is 7 for the same reason and must stay in step with
   `MOVED_EPS`: the recorded string **is** the geometry an approval applies
@@ -195,22 +191,17 @@ The mode gate in `improve.js`:
   looking authoritative. Out-of-range values, a third number, trailing text and
   decimal commas are all refused the same way, and the query falls through to
   the geocoder.
-- **The client's "nothing changed" gate covers geometry that is not a pin**
-  (2026-08-03, owner-reported). `pinMoved()` only ever compared lat/lng, and
-  only for `type === 'point'`, so a climb's route/steepest and a road surface's
-  endpoints were invisible to it: moving a climb's summit left the wizard
-  convinced nothing had changed and Submit disabled — on an edit the **server**
-  would have accepted perfectly well, since `ClimbGeometry::fromPayload()` is
-  merged into the change diff there. The gate now also diffs the `route`,
-  `steep`, `steepPoint` and `segment` hidden fields (`steepPoint` since
-  2026-10-02: a rider's steepest point placed on an unchanged line said
-  "Nothing has changed yet") against a snapshot taken once the editor
+- **The client's "nothing changed" gate covers geometry that is not a pin.**
+  `pinMoved()` compares lat/lng for a point; the server merges
+  `ClimbGeometry::fromPayload()` into the change diff, so the client gate also
+  diffs the `route`, `steep`, `steepPoint` and `segment` hidden fields
+  (`geomSnapshot()` in `improve.js`) against a snapshot taken once the editor
   has hydrated (`mountClimbEditor` writes the stored shape synchronously at
   mount and never re-snaps or re-profiles on its own, so anything different
   afterwards is the rider's doing).
 - **An edit that changes nothing is refused.** `[] === $changes` with no photo,
-  no photo link and an unmoved pin (~1 m tolerance, because the wizard posts
-  the item's own coordinates straight back) is not a contribution: it costs a
+  no photo link and an unmoved pin (`MOVED_EPS` tolerance, above, because the
+  wizard posts the item's own coordinates straight back) is not a contribution: it costs a
   curator a queue row to read, tells the rider's dashboard a suggestion is
   pending, and applies nothing on approve. `CatalogContributionService` rejects
   it with `contribute.error.nothing_changed`; the wizard disables Submit on the
@@ -227,11 +218,9 @@ The mode gate in `improve.js`:
   the whole review sliding under the pointer.
 - **The lifecycle block is ONE paragraph.** It says what happens next and what
   this type means for the rider (votable, or confirmed-not-voted) in a single
-  sentence per type — `improve.lifecycle.funnel_votable` /
-  `funnel_utility`. The second paragraph that used to sit under it repeated
-  the first in different words, and said "after a few of them agree", which is
-  not what the code does: one counted confirmation promotes a dot to a full
-  pin (map-and-search.md §12).
+  sentence per type, `improve.lifecycle.funnel_votable` /
+  `funnel_utility`. It never says "after a few of them agree": one counted
+  confirmation promotes a dot to a full pin (map-and-search.md §12).
 - **Every string the wizard renders itself is translated**, through
   `window.CC_IMPROVE_I18N` (`improve.step1.*`, `improve.step3.link_*`,
   `improve.review.*`, `improve.nav.submit`) — the readouts, the toasts, the
@@ -243,38 +232,31 @@ The mode gate in `improve.js`:
 - The Back/Next bar is a sticky bottom row (`.navrow`, `position: sticky`) so
   the confirm control stays reachable under a tall map.
 
-**A rider's needs-info answer is desk work, not personal mail** (2026-08-03,
-owner-reported). The reply is still *addressed* to the deciding curator — that
-address is a lookup key, because `SubmissionQueue`'s LATERAL join reads the row
-to render "Rider replied" on the queue card and in the map drawer, and deleting
-it would take the desk's copy of the answer with it. But it is now excluded
-from `listFor()`, `unreadCount()` and `markAllRead()`, so it never appears in
-the inbox a rider uses for their own contributions and never inflates the
-account chip's badge. The rider still sees their own answer in their own
-thread: the exclusion is skipped when the reader is the sender.
+**A rider's needs-info answer is desk work, not personal mail** (owner
+2026-08-03). The reply is *addressed* to the deciding curator: that address is
+a lookup key, because `SubmissionQueue`'s LATERAL join reads the row to render
+"Rider replied" on the queue card and in the map drawer. It is excluded from
+`listFor()`, `unreadCount()` and `markAllRead()`, so it never appears in the
+inbox a rider uses for their own contributions and never inflates the account
+chip's badge. The rider still sees their own answer in their own thread: the
+exclusion is skipped when the reader is the sender.
 
-Because the personal inbox was carrying that notification, the desk now has to:
-a replied submission shows an **Answered** tag on its queue card, beside the
-type tag, so a curator can spot it while scanning. The reply itself is further
-down the card, as before. The reply also flips the submission back to
-`pending`, so it is already back in the queue it left.
+On the desk, a replied submission shows an **Answered** tag on its queue card,
+beside the type tag, so a curator can spot it while scanning; the reply itself
+is further down the card. The reply also flips the submission back to
+`pending`, so it is back in the queue it left.
 
-**And the reply follows the submission into the history.** A decided
-submission leaves the queue, which was the last surface still showing it — so
-taking it out of the inbox made an answered-then-approved submission's answer
-invisible everywhere (owner-reported immediately). `history()` now carries the
-same LATERAL join and the settled row renders it.
+**The reply follows the submission into the history.** A decided submission
+leaves the queue, so `history()` carries the same LATERAL join and the settled
+row renders the reply.
 
-**A settled row says what was decided, and opens it.** The history listed a
-verdict and a title and nothing else — nothing a curator could check
-(owner-reported 2026-08-03). It now renders the same before/after the queue
-card does, from a `diffStrings()` helper both share so the two cannot drift.
-The title links to **`/map?item=<id>`**, a new deep link resolved by DB id
-(`resolveLocalFeatureById`, covering CATALOG features and the OSM pools). It
-replaces `?pending=<id>`, which could not work by construction: a settled
-submission is not in the pending payload, so the link opened the map at the
-default scope with nothing selected. Only **approved** rows link — a rejected
-item is not on the map, and a link that lands nowhere is worse than no link.
+**A settled row says what was decided, and opens it.** It renders the same
+before/after the queue card does, from a `diffStrings()` helper both share so
+the two cannot drift. The title links to **`/map?item=<id>`**, a deep link
+resolved by DB id (`resolveLocalFeatureById`, covering CATALOG features and the
+OSM pools); a settled submission is not in the pending payload, so
+`?pending=<id>` cannot open it. Only **approved** rows link: a rejected item is
+not on the map, and a link that lands nowhere is worse than no link.
 
 **The record is its own page under the submissions desk, and both desks page
 and search** (2026-08-03, owner; chips 2026-08-26). `/moderate/submissions/history`
@@ -340,13 +322,13 @@ oldest first, behind a disclosure on the history row — the row stays one line
 because most submissions never had a conversation. This is the only surface
 that carries it: the queue card and the settled row show just the latest reply,
 `change_history` records what was *applied* rather than what was *asked*, and
-the reply is no longer personal mail. One query per page (`threadsFor()`), not
+the reply is not personal mail. One query per page (`threadsFor()`), not
 one per row.
 
 The owner's other proposal — grouping the desk history by item — was **not**
 built because it largely exists: `change_history` is already served per item at
 `/map/item/{id}/history` and rendered as "Recent changes" in the map drawer,
-which the history row's `?item=` link now opens in one click.
+which the history row's `?item=` link opens in one click.
 
 **The account chip's open count says where it points** (2026-08-03,
 owner asked twice what the number referred to; 2026-08-26 the total grew).
@@ -368,15 +350,14 @@ personal bar and cut to one pixel on the moderation bar (owner-reported
 2026-09-19). Both bars share these rules (`account/_shell_styles.html.twig`),
 with `.3rem` between tabs and `.85rem` of side padding in each.
 
-**`hidden` must actually hide** (2026-08-03, owner-reported). An author rule
-that sets `display` beats the UA's `[hidden]{display:none}` — author styles win
-over UA styles regardless of specificity — so every element in the wizard whose
-display came from a class silently ignored the attribute. `#wzChange` is the
-one that got away with it for months: improve.js correctly keeps "Change
-location" hidden for climbs (the three-point editor is directly editable) and
-for non-confirm edits, and the CSS showed it anyway. The template had already
-accumulated three separate one-off `[hidden]` patches, each added after that
-element bit; they are replaced by a single `#wiz [hidden]{display:none}`.
+**`hidden` must actually hide.** An author rule that sets `display` beats the
+UA's `[hidden]{display:none}` (author styles win over UA styles regardless of
+specificity), so an element whose display comes from a class would ignore the
+attribute. One rule, `#wiz [hidden]{display:none}` in
+`assets/styles/page/contribute/improve.css`, makes every `hidden` in the wizard
+hold; `#wzChange` ("Change location") depends on it, since improve.js keeps it
+hidden for climbs (the three-point editor is directly editable) and for
+non-confirm edits.
 
 **No "Fix location" on a climb, and no "Where is it?" on an existing item**
 (2026-08-03, owner):
@@ -386,14 +367,14 @@ element bit; they are replaced by a single `#wiz [hidden]{display:none}`.
   `fix=location` is the thing that expands it. **Letter N has no such gate** —
   the three-point editor is live the moment the form opens, foot, summit and
   steepest all draggable. Both links therefore landed on an identical page, and
-  a second door into one room reads as a second room. Gated to `'B' !==
-  layer.letter`.
+  a second door into one room reads as a second room. Gated to `'N' !==
+  layer.letter` in `drawer.js`.
 - **"Where is it?" only asks a question nobody has answered yet.** An existing
   item's location was settled when it was created, so an edit's step 1 heading
   is *"Check the location"* over the already-written "This location is already
   set — check it looks right, or change it." Add mode keeps the original
-  question. improve.js's confirm-help swap now writes the sentence the server
-  already rendered, making it a harmless no-op.
+  question. improve.js's confirm-help swap writes the sentence the server
+  already rendered.
 
 **Placing a climb is explained before it is attempted, and it is undoable**
 (2026-08-03, owner request). A climb is not a dropped pin: three points in
@@ -403,47 +384,35 @@ therefore carries a four-line how-to for letter N — tap foot then summit, tap
 again for the steepest ramp (optional), drag any marker to correct it, and Undo
 takes back the last thing you did.
 
-**The steepest marker stays where it is while the route changes**
-(2026-08-03, owner-reported). It used to be re-derived from the gradient
-profile on every resolve unless the rider had placed it by hand, so dragging
-the summit a little further up the road made the steepest ramp jump elsewhere
-on the climb — the rider changed one end and watched a different marker move.
-Extending a climb does not relocate its steepest ramp; only the numbers around
-it change. The position is therefore kept and the **%** is re-read from the new
-profile at that fixed position.
+**A hand-placed steepest marker stays where it is while the route changes**
+(owner 2026-08-03). Dragging or re-tapping the marker sets `steep.manual`;
+extending the climb then relocates nothing the rider placed, and only the
+numbers around it change. An automatic marker is re-derived from every new
+profile, because the line decides where the steepest ramp is
+([edit-items/N-climbs.md](edit-items/N-climbs.md)).
 
-**Its percentage stays too.** How steep a ramp is, is a property of the ROAD —
-where the rider decided the climb starts and ends cannot change it, so any
-movement in the printed figure is a measurement artefact, not new information.
-Two artefacts produced one: the 11 display bars are equal slices of the *whole*
-climb, so a longer climb widens every bin and averages a short ramp flat; and
-the elevation profile is 100 samples spread over the route, so a longer route
-samples the same ramp more coarsely. Re-reading through either made 19% print
-as 10% (and 16% after only the first was fixed — exactly what an artefact looks
-like). The number is now re-measured **only when the marker is actually
-(re)placed**.
+**Its percentage is read at its own position, never off the display bars.**
+How steep a ramp is, is a property of the ROAD, so a figure that moves when
+the rider moves the other end is a measurement artefact. The display bars are
+bins over the *whole* climb (`BIN_LADDER`, at most `MAX_BARS` 25, in
+`App\Elevation\ClimbProfiler`), so a longer climb widens every bin and averages
+a short ramp flat. A hand-placed marker's % is therefore the server's sustained
+window of up to 250 m (`MAX_WINDOW_M`) centred on it (`sustainedAtSteep`,
+returned by `window.Cc.profileFromRoute()` on every profile), the same
+measurement as the maximum. A bar lookup keyed on cumulative distance is the
+fallback for a drag before the first profile resolves.
 
-When it *is* measured, it is measured the way the maximum is — a ~150 m
-sustained window (`profileFromRoute().sustainedAt`), never off the display
-bars. The old bar lookup also mapped position→bar by **vertex index**, which is
-not position along a climb at all: a router packs vertices through curves, so
-it picked the wrong bar whenever the shape changed. It survives as a fallback for
-a drag before the first profile resolves, now keyed on cumulative distance.
+The one case that moves a hand-placed marker is the route no longer passing
+it: shorten the climb past the steepest ramp and it would otherwise float
+beside a road that is no longer part of the climb. Then it is re-derived,
+because a marker stranded off the climb is wrong however it got there. "Still
+on the climb" is nearest-route-vertex within **100 m** (`STEEP_ON_ROUTE_KM` in
+`climb-editor.js`); the snap through our Valhalla returns roughly 40 m vertex
+spacing, so a marker on the road sits well inside it while one left behind by
+a shortened route is hundreds of metres out.
 
-The one case that moves the marker is the route no longer passing it: shorten
-the climb past the steepest ramp and it would otherwise float beside a road
-that is no longer part of the climb. Then — and only then — it is re-derived,
-**including a hand-placed one**, because a marker stranded off the climb is
-wrong however it got there. "Still on the climb" is nearest-route-vertex within
-**100 m** (`STEEP_ON_ROUTE_KM`); the snap returns roughly 40 m vertex spacing,
-so a marker on the road sits well inside it while one left behind by a
-shortened route is hundreds of metres out. (Measured against OSRM, which the
-editor called until 2026-08-09; it snaps through our own Valhalla now and the
-proxy keeps the same response shape, so the spacing this threshold was chosen
-around is unchanged — worth re-measuring if that ever stops being true.)
-
-A failed or timed-out elevation fetch no longer deletes the marker either: the
-position is a fact about the climb, and only the % needs a gradient to refresh.
+A failed or timed-out elevation fetch does not delete the marker: the position
+is a fact about the climb, and only the % needs a gradient to refresh.
 
 `mountClimbEditor` keeps a snapshot stack (25 deep) and exposes `undo()` /
 `canUndo()`:
@@ -470,17 +439,13 @@ distinction is the useful one for the question being asked, because adding on
 top of one of ours is a duplicate while adding beside the other is often the
 whole point.
 
-**It drew nothing at all until 2026-09-12** (owner: "the map for the add new
-point does not show any of our tile data nor our categories"). The endpoint
-had always answered, with both arms: the overlay read `p.lng` / `p.lat` while
-`CoverageRepository::entry()` emits `ll: [lat, lng]`, so every marker was
-placed at `[undefined, undefined]` and none appeared. Nothing logged, because
-that is not an error MapLibre raises.
+Each entry carries its position as `ll: [lat, lng]`
+(`CoverageRepository::entry()`), and the overlay reads it in that order.
 
 **Below zoom 11 it says so** rather than going quiet. An empty map reads as
 "nothing is mapped here", which is the opposite of the truth and exactly the
-wrong thing to tell somebody about to add a place; the note now says to zoom
-in. Above it the note counts what is in view and how many are already ours.
+wrong thing to tell somebody about to add a place; the note (`known_zoom`) says
+to zoom in. Above it the note counts what is in view and how many are already ours.
 Climbs are exempt: a climb is a line, and a dot beside it answers nothing.
 
 ### 1.3 Segment carrier
@@ -489,8 +454,7 @@ Segment-located types (road surface, `LocationMode::Segment`) POST their drawn
 endpoints through a **hidden `segment` field** added by `ImproveType`: the
 wizard writes `{"a":[lng,lat],"b":[lng,lat]}` JSON when both taps are placed
 and clears it on reset/incomplete. The value lands in `Submission::payload`.
-The drawn endpoints must never live only in JS memory — that was a real
-data-loss bug class this contract closes.
+The drawn endpoints must never live only in JS memory, or a submit loses them.
 
 ### 1.4 Edit binding and refusals
 
@@ -506,28 +470,25 @@ data-loss bug class this contract closes.
   live in `recommended_route`, a separate sequence from `item`, so resolving a
   R id against the item table would bind an unrelated item. Riders interact
   with routes via the community loop ([route-domain.md](route-domain.md)).
-- **The explainer says WHY when the link named a target.** "Pick a place to
-  improve" is no answer to a rider who picked one, and that is what a route's
-  "＋ add" row used to land on (owner-reported 2026-09-16, route 111's
-  Gradient-limited field). `renderUnbound($reason)` takes one of three:
+- **The explainer says WHY when the link named a target** (owner 2026-09-16).
+  "Pick a place to improve" is no answer to a rider who picked one.
+  `renderUnbound($reason)` takes one of three:
   `route` ("Routes are not edited here", `improve.unbound_route_*`) for a
   `type=R` link, `missing` ("That place could not be opened",
   `improve.unbound_missing_*`) for a link that named an `item` or a `ref` this
   rider cannot open (gone, not served, not theirs, wrong type for the id), and
   none for a bare `/improve`, where "pick a place" IS the answer. The reason
   is on the section as `data-reason` so a test can assert which one ran. The
-  map no longer draws the R link at all (map-and-search.md §6.2).
+  map draws no "＋ add" link for a route field (map-and-search.md §6.2).
 - The form is prefilled with the item's current `name` + attribute values;
   was → now is computed server-side at submit (§3.2), never trusted from the
   client.
 
 ### 1.5 The receipt offers the way forward, not only the way back (2026-08-31)
 
-After submitting, the only thing on the page was "Back to the map". The
-reference printed directly above it is a real submission id, and Contributions
-(`/account/contributions`) is the page that tracks it: where a rider answers a curator's
-question and sees the decision. Sending them back to the map left the one thing
-they might want to do next off the screen.
+The receipt prints a real submission id, and Contributions
+(`/account/contributions`) is the page that tracks it: where a rider answers a
+curator's question and sees the decision. So the receipt carries two buttons.
 
 Two buttons, and the order is the argument: Contributions is the forward action
 and carries the weight, back to the map is the way back and stays quiet. They
@@ -541,8 +502,7 @@ should send somebody.
 ### 1.6 A curator's own edit is applied at once (2026-09-06)
 
 Owner: "If I change anything on an item when I have curator rights I should not
-have to approve it." Built the same night, and deliberately NOT a new
-mechanic: `CatalogContributionService::applyIfCurator()` runs
+have to approve it." Deliberately NOT a new mechanic: `CatalogContributionService::applyIfCurator()` runs
 `ModerationService::decide(approve)` on the edit it just filed, as the same
 person, so the item change, the `change_history` rows, the OSM re-check on a
 move and the area check are exactly the ones the desk button would have made.
@@ -551,12 +511,10 @@ Outside the curator's assigned areas the edit queues like anyone's
 "Suggestion submitted" (`ContributionReceipt::$applied`,
 `improve.receipt.applied_*`).
 
-**A NEW place too, once the wizard asks the identity question**
-(2026-09-12). Approving a new place needs the OSM answer first (§5b of
-catalog-data-model.md), and that question used to be asked only on the queue
-card, so a curator filing their own place queued behind themselves and then
-answered their own question on the desk a moment later (owner 2026-09-06).
-The wizard now asks it on the locate step: `OsmLinker::nearby()` candidates
+**A NEW place too: the wizard asks the identity question** (owner
+2026-09-12). Approving a new place needs the OSM answer first
+(catalog-data-model.md §5b), so for a curator the wizard asks it on the locate
+step: `OsmLinker::nearby()` candidates
 for the point, served curator-only by `ContributeController::osmNearby()`,
 plus "Not in OpenStreetMap" as the last choice. A candidate this atlas
 already holds is not offered as a refusal: it carries that row's id from
@@ -575,14 +533,12 @@ asked. That note counts whatever is in the map view; this counts a fixed
 250 m around the pin. Two different numbers about the same worry, on one
 screen, is one too many. The answer rides in the `osmAnswer` form
 field, `ContributeController::addPlace()` hands it to the service as
-`_osm_answer` (the plain add arm, the one that asks; until 2026-09-21 only
-the from-OSM arm mapped it, and that arm never asks, so a curator's own
-place queued unanswered), and
+`_osm_answer` (the plain add arm; the from-OSM arm never asks), and
 `CatalogContributionService::answerOsmIfCurator()` records it
 before `applyIfCurator()` runs, with the desk's own exclusivity guard: a
 taken ref is not recorded and the place queues, where a human sees the clash.
-Unanswered, it queues exactly as before, so the question is an opening and
-never a new barrier. A place taken from an OSM node answered it by
+Unanswered, the place queues, so the question is an opening and never a
+barrier. A place taken from an OSM node answered it by
 construction and needs none of this.
 
 **A rider is never asked** (§5b). The block, the script and the endpoint are
@@ -614,9 +570,8 @@ records the SAME drawer confirmation the "Still here?" button writes
 verifies the row exactly as their click would; the receipt then reads
 `improve.receipt.applied_confirmed_body` (`ContributionReceipt::$confirmed`).
 The self-apply also runs when the edit MERGES into the curator's own open
-submission on that place (§7.3b): the merge path skipped it until 2026-09-08,
-so a curator who fixed a place that already carried their description
-suggestion found their own words in the queue (the Shimano stand). The box is
+submission on that place (§7.3b), so a curator never finds their own words in
+the queue (`testACuratorsEditAppliesEvenWhenItMergesIntoAnOpenSuggestion`). The box is
 ignored on an edit that queues, so a rider cannot tick past the review.
 Pinned by `CatalogContributionServiceTest::testACuratorsEditCanAlsoConfirmThePlace`
 and its two siblings.
@@ -628,12 +583,15 @@ question answered (catalog-data-model.md §5b). A place taken from an OSM node
 (`/improve?ref=node/...`) has answered it by construction and applies at once;
 the wizard then reads "Apply change" and offers the same "Mark it confirmed"
 box, whose tick records the same drawer confirmation and verifies the row on
-the curator's word. A place from a bare pin still queues, for everyone,
-because the wizard does not ask the OSM question yet (docs/TODO.md); the
-receipt says "submitted", not "applied", and the box is ignored. Section 6.3
-still holds for riders: a submitter's own form answer never counts. Pinned by
+the curator's word. A place from a bare pin applies once the curator answers
+the locate step's OSM question (above); left unanswered it queues, the receipt
+says "submitted", not "applied", and the box is ignored. Section 6.3 still
+holds for riders: a submitter's own form answer never counts. Pinned by
 `testACuratorsNewPlaceFromAnOsmNodeIsAppliedAtOnce`,
-`testACuratorsNewPlaceCanAlsoBeMarkedConfirmed` and
+`testACuratorsNewPlaceIsAppliedWhenTheyAnswerNotInOsm`,
+`testACuratorsNewPlaceIsAppliedWhenTheyLinkAnOsmObject`,
+`testACuratorsNewPlaceCanAlsoBeMarkedConfirmed`,
+`testACuratorsNewPlaceStillQueuesWithNoOsmAnswer` and
 `testACuratorsNewPlaceWithoutAnOsmAnswerStillQueues`.
 
 **What still queues is for another curator (owner decision, 2026-09-30).**
@@ -720,8 +678,8 @@ LATERAL join the submissions desk uses (route-domain.md §7.1).
 | `type` | varchar(8), enum `SubmissionType` | `new` \| `edit` \| `hazard` \| `photo` \| `text`; queue renders all five, intake produces `new`/`edit` and `text` (§3.1b) |
 | `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table: a rider asks for a route change through `route_suggestion`, route-domain.md §7.1); `''` for `text`, which has no catalog kind |
 | `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction; NULL for `text` |
-| `user_id` | bigint | submitter — deliberately **no FK** (survives account deletion as anonymous data; see §5.6) |
-| `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) |
+| `user_id` | bigint | submitter, deliberately **no FK** (survives account deletion as anonymous data; see §8) |
+| `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) \| `trashed` (§6) |
 | `title` | varchar(200) | queue/drawer display |
 | `geom` | geometry(Geometry, 4326) | pending-pin location — always a Point in practice |
 | `country_code` / `region_id` | varchar(2) / bigint NULL | resolved at submit (§2) |
@@ -752,7 +710,7 @@ Wikipedia credit (below, "The Wikipedia credit"); the drawer's Approve on a
 
 **The form.** The town card (`places.js`, the line is drawn by
 `assets/map/town-text.js`) and the region page open one small form per text
-(`PlaceTextController`, routes `town_text` `/town/{type}/{id}/text` and
+(`PlaceTextController`, routes `town_text` `/town/{osmType}/{osmId}/text` and
 `region_text` `/regions/{slug}/text`, ROLE_USER; a visitor is sent to sign in
 and comes back to it). A text's credit line ends in two ringed icons, the
 same on the card and on the region page (owner 2026-10-01: "attribution
@@ -829,8 +787,9 @@ audit 2026-10-04). The lookup happens the first time a text needs the point,
 and only for a town whose card somebody opened (that read already spent the
 third-party budget, map-and-search.md §6.5); until then, or while
 OpenStreetMap does not answer, the town has no known place and the form says
-so (`place_text.error.no_location`). A row with `from_osm` false is a point a
-reader's map sent before this rule: not trusted, replaced at its next use.
+so (`place_text.error.no_location`). A row with `from_osm` false holds a point
+a reader's map sent (`Version20261004140000`): it is not trusted and is
+replaced at its next use.
 `SpatialResolver` puts the point in a region (smallest wins), and area scope
 (moderation-and-contribution.md §9) does the rest. A town outside every
 region files with a NULL region, which every curator's desk shows
@@ -891,7 +850,7 @@ approve. A curator's own text applied at once inside their area
 (`applyIfCurator`) records their own answer on the form as the decision, the
 same way.
 The curators' direct pens decide it themselves: the Regions desk's per-locale
-tick and, on `/moderate/town/{type}/{id}`, the same tick per language where
+tick and, on `/moderate/town/{osmType}/{osmId}`, the same tick per language where
 the row has an article (checked while the box starts from the fetched
 article, else as stored). Rulebook RB-TOWN-07.
 
@@ -913,7 +872,7 @@ handle (`DeskRider::of()`). A curator's own text keeps "our curators".
 (moderation-and-contribution.md §1.6: the proposal is filed and approved in
 the same request); outside it, it queues like a rider's. The direct pens stay
 for a curator's own area: the Regions desk about page (unchanged language
-entries keep their writer's credit on save) and `/moderate/town/{type}/{id}`,
+entries keep their writer's credit on save) and `/moderate/town/{osmType}/{osmId}`,
 which is limited to towns whose point lies inside the curator's areas. Both
 ask `ModerationScopeProvider::coversRegion()`, which is `allowsRegion()` minus
 one case: a NULL region. Work with no region is on every curator's desk, so
@@ -1008,17 +967,17 @@ catalog payload (serving contract:
 [catalog-data-model.md](catalog-data-model.md) §4, §9); `submitted` items feed
 only the curator pending layer (§6).
 
-### 3.3b The submitter keeps their hands on a pending item (built 2026-08-16)
+### 3.3b The submitter keeps their hands on a pending item
 
 Two owner rules from the same review: "while an item is waiting for review I
 should be able to edit it", and the pending pin must be visible to its maker.
-The improve wizard now binds a `Submitted`-state item for its SUBMITTER too
+The improve wizard binds a `Submitted`-state item for its SUBMITTER too
 (not just curators): ownership is any submission of theirs on that item id,
 nothing is exposed that is not their own data, and the edit lands as one more
 submission on the same queue. And `/map` serves a rider their OWN
 pending/needs-info rows (`SubmissionQueue::ownPendingForMap()`, scoped by
 user - their rows are theirs wherever they are) as the same pending layer -
-WITHOUT `CC_IS_CURATOR`, which is now set by the CONTROLLER only where the
+WITHOUT `CC_IS_CURATOR`, which is set by the CONTROLLER only where the
 2FA policy was applied (a setup-pending curator holds the role, not the
 capability), so a rider's pending card is a preview: badge, proposed change,
 shape switch, conversation - never decide controls. The /account/contributions rows link
@@ -1027,7 +986,7 @@ region + country stamps as words (town-level waits on the gazetteer item).
 Pinned by `MapCuratorInjectionTest` (own rows only, no chrome flag, no
 capability before 2FA) and `MyContributionsTest`.
 
-### 3.4 Withdraw — the rider's own exit (built 2026-08-16)
+### 3.4 Withdraw: the rider's own exit
 
 A rider may take back their own submission while it is `pending` or
 `needs_info` (owner 2026-08-16): a Withdraw chip on the /account/contributions
@@ -1070,7 +1029,7 @@ on the same submission: the second sees the decided status and gets
   row flips to `rejected` but is **kept** (never served; §8 has no timer for
   it). Rejecting an `edit` never touches the item.
 - **needs_info** → mutates nothing on the item; the submission leaves the map
-  layer but stays on the queue (§6.2). **The note is mandatory for this
+  layer but stays on the queue (§5.5). **The note is mandatory for this
   decision and only this one**: the note IS the question. Sent blank, the
   rider is told "a curator needs more information" with nothing to answer,
   while the submission disappears from the map until they answer — so an
@@ -1084,8 +1043,8 @@ on the same submission: the second sees the decided status and gets
 
 Every decision also fills `decision_note`/`decided_by`/`decided_at` and writes
 the submitter's outcome message inside the same transaction (§7.2). Decisions
-require `ROLE_CURATOR` (access-control rule `^(/(fr|nl|de|es))?/moderate` →
-`ROLE_CURATOR` in `web/config/packages/security.yaml` — locale-prefixed) and
+require `ROLE_CURATOR` (access-control rule `^(/[a-z]{2})?/moderate` →
+`ROLE_CURATOR` in `web/config/packages/security.yaml`, locale-prefixed) and
 pass the moderator area guard (§9).
 
 ### 4.1 `change_history` (entity `App\Catalog\Entity\ChangeHistory`)
@@ -1156,10 +1115,8 @@ corrections) and `open_data_count()` count the curator's areas (§9);
 `pending_takedown_count()`, `open_report_count()`, `open_bug_count()` and
 `pending_translation_count()` count everything; `curator_room_unread()` is
 §13.7. Each is read once per request (the tab strip and the account chip ask
-for the same numbers) and forgotten between requests (`ResetInterface`). A
-badge passed by some controllers and not others vanished on the desks that did
-not pass it, which read as though visiting a desk had cleared it. These are
-open-work counts: they go down when the work is decided, never because a page
+for the same numbers) and forgotten between requests (`ResetInterface`), so no
+desk can show a badge another desk lacks. These are open-work counts: they go down when the work is decided, never because a page
 was visited. The More menu's button carries the sum of the badges inside it
 (today only Data queues there), so waiting data findings show without opening
 the menu.
@@ -1198,16 +1155,13 @@ and `map.js` write as "a removed rider", `was`/`now` are the server-joined
 diff strings. Contributor identity is never exposed to curators beyond the
 pseudonym.
 
-**`priorRejection` — the decision this curator may be about to reverse
-(2026-08-14).** A rejected place is **revived, not twinned**, when somebody
-proposes it again (`CatalogContributionService::submitDraft()`, 2026-08-12 —
-the unique key spans `(source, source_ref, letter)` and counts rejected rows,
-so twinning was a constraint error in the rider's face), and the earlier
-report and its rejection therefore hang off the
-same item id. That is exactly what makes overturning possible, and it is also
-what hid it: the row carried the new report and nothing else, leaving the
-curator to reverse a verdict they did not know existed. `SubmissionQueue`
-now reads the **newest** `rejected` submission per item id in one query
+**`priorRejection`: the decision this curator may be about to reverse.** A
+rejected place is **revived, not twinned**, when somebody proposes it again
+(`CatalogContributionService::submitDraft()`: the unique key spans
+`(source, source_ref, letter)` and counts rejected rows), so the earlier report
+and its rejection hang off the same item id. So that a curator never reverses a
+verdict they do not know exists, `SubmissionQueue` reads the **newest**
+`rejected` submission per item id in one query
 (`priorRejections()`, `DISTINCT ON (item_id)`, `decided_at DESC NULLS LAST,
 id DESC`) and travels `{when, note}` — an ISO timestamp formatted at render
 time by the reader's own date preference (`cc_date` on the desk,
@@ -1248,20 +1202,18 @@ submissions desk, History, Routes, Takedowns, Translations, Data, Regions, and o
 side `/account/contributions` (contributions, route proposals, curator applications, votes)
 and `/account/messages`. A page's own stylesheet keeps only what is truly its own
 (the data desk's side-by-side pair, the takedown photo size). A rider reading
-their own contribution and a curator deciding it are looking at one card; the
-desks that had grown their own row shapes (History's one-liners, Takedowns'
-tinted log, the data desk's green Yes) are on the card and the orange button
-system like everything else. The empty state is left-aligned prose on every
-page (`.empty-state`; the centred block and the ▲ ornament are gone).
+their own contribution and a curator deciding it are looking at one card, on
+the one orange button system. The empty state is left-aligned prose on every
+page (`.empty-state`).
 `tests/js/shell-list-system.test.cjs` pins it: no shell page may define a
 shared rule locally, use the public `.wrap`, or render a row that is not a
 `.q-item`.
 
 **Category icons have one home (owner 2026-08-25: "use the same as in the
 map, and make sure these are the only ones in the system").**
-`ItemType::icon()` is the glyph per type and `ItemType::svgPath()` the drawn
-path for climbs, scenic views and toilets; `ItemType::iconSet()` packs both
-by letter. The map page injects that set as `window.CC_TYPE_ICONS`
+`ItemType::svgPath()` is the drawn path for every type (one colour,
+`currentColor`) and `ItemType::icon()` the glyph kept as the text fallback;
+`ItemType::iconSet()` packs both by letter. The map page injects that set as `window.CC_TYPE_ICONS`
 (`MapController`), and `catalog.js` (`TYPE_ICON`, `TYPE_SVG`) and `icons.js`
 read it; server pages render it through `cc_type_icons()` in
 `partials/_type_icon.html.twig`, which every record row (contributions,
@@ -1277,24 +1229,20 @@ right. The photo is a 26 px square after the icon, no taller than the
 heading line, so a photo never makes the row higher (owner 2026-10-01); it
 opens the full size; History is that same row with
 its everyone/mine and approved/rejected chips on top (trashed rows join the
-unfiltered first page, as before).
+unfiltered first page only).
 
 **Queue item layout (2026-08-02, owner).** The desk is a queue worked dozens
 at a time, so the row is sized for that:
 
-- **One action row, four buttons** (`.q-acts`), sharing the card's **top
+- **One action row of icon buttons** (`.q-acts`), sharing the card's **top
   block** with the heading (`.q-top`): an ordinary submission is two lines
   tall, near enough the list view that the default card costs nothing to scan,
-  and a card only grows when it carries something a curator must look at — a
-  photo, an edit diff, the rider's words, a reply. The buttons are the primary
-  **Review ↗**, then Message the rider / Escalate / Trash. The last three were
-  link-ish `<summary>` text stacked in a two-column block below the primary
-  action, which cost two horizontal rules and two extra rows for three
-  controls. Since 2026-08-25 all five are icon-only (◎ review on the map,
-  ✎ edit the form (a place edit's wizard, or a town or region text's
-  correction form, §3.1b), ✉ message, ⚑ escalate, the bin), the word kept as the
-  tooltip and the accessible name: five worded buttons repeated per row read
-  as a wall on the list view (owner). A new place also carries the OSM
+  and a card only grows when it carries something a curator must look at: a
+  photo, an edit diff, the rider's words, a reply. The five buttons are icons
+  (◎ review on the map, ✎ edit the form (a place edit's wizard, or a town or
+  region text's correction form, §3.1b), ✉ message the rider, ⚑ escalate, 🗑
+  trash), the word kept as the tooltip and the accessible name: five worded
+  buttons repeated per row read as a wall on the list view (owner). A new place also carries the OSM
   identity chip in its meta line (open / linked / not in OSM,
   [catalog-data-model.md](catalog-data-model.md) §5b). On the map, a
   brand-new submission opens in its final form: `MapController` attaches the
@@ -1302,26 +1250,27 @@ at a time, so the row is sized for that:
   the one place the served-state gate is bypassed, curators only) as
   `preview`, and the drawer renders it with the live-item renderers (rows,
   gradient strip, length) under "This item, as proposed" instead of the raw
-  field dump; a climb's after-line is coloured by its bars (2026-08-25). They keep their order — **Escalate before Trash** (§6d of
-  [photo-uploads.md](photo-uploads.md)), so a curator reaching for "destroy
-  this" because it is illegal meets the right verb first.
-- **Both destructive verbs open with WHEN to use them and close with a ticked
-  acknowledgement** (`.q-act-when`, `.q-act-ack`). A button label cannot carry
-  the difference between "this edit is wrong" and "this content is criminal",
-  and the two mistakes are not symmetrical: Trash on a merely-wrong
-  contribution destroys it for good, and Escalate on spam spends an
-  administrator's attention. The tick is a UI speed bump — native `required`,
-  no POST until ticked — and is deliberately **not** the real gate: the
-  server's own checks are unchanged (a reason for Escalate, the typed `DELETE`
-  for Trash, both re-checked server-side).
-- **No link to the public wiki rulebook** (2026-08-03, owner). A world-readable
-  page describing how moderators decide what to destroy is a social-engineering
-  aid: it tells anyone which words get a submission trashed and which get it
-  escalated. The link is gone from all three desks (submissions queue, routes
-  queue, routes detail). The rulebook becomes a **moderators-only page reached
-  from the moderation menu**; until that page exists these panels carry no link
-  rather than a public one. The `moderate.trash.rulebook_link` string is kept
-  for it.
+  field dump; a climb's after-line is coloured by its bars. The buttons keep
+  their order, **Escalate before Trash** (photo-uploads.md §6d), so a curator
+  reaching for "destroy this" because it is illegal meets the right verb first.
+- **Both destructive verbs open with WHEN to use them** (`.q-act-when`). A
+  button label cannot carry the difference between "this edit is wrong" and
+  "this content is criminal", and the two mistakes are not symmetrical: Trash
+  on a merely-wrong contribution takes it out of sight and deletes it for good
+  30 days later (§6), and Escalate on spam spends an administrator's
+  attention. Escalate also closes with a ticked acknowledgement (`.q-act-ack`,
+  native `required`) and needs a reason, re-checked server-side, because an
+  escalation alerts an administrator and nobody can undo it. Trash has no tick
+  and no typed confirmation (owner 2026-08-12): opening its panel and pressing
+  Trash inside it are already two deliberate acts, and the warning does the
+  work.
+- **No rulebook link in the decision panels** (owner 2026-08-03). A
+  world-readable page describing how moderators decide what to destroy is a
+  social-engineering aid: it tells anyone which words get a submission trashed
+  and which get it escalated. The rulebook is a **moderators-only page**
+  (`moderate_rulebook`, in the moderation bar's More menu), and the trash and
+  escalate panels on the submissions queue, routes queue and routes detail
+  carry no link to it.
 - **The rulebook is the page, and there is no PDF** (2026-09-30, owner). The
   rules live in `templates/moderate/rulebook.html.twig` and in git, and nothing
   else carries them: the page has no download link, there is no
@@ -1389,25 +1338,17 @@ at a time, so the row is sized for that:
     (the curator room, the in-page `#reports` link) is screen-only
     (`.rb-screen`), with a plain `span.rb-print` twin for print, and the logo
     is embedded as an image, so a saved PDF references nothing on the site.
-- **The rulebook covers every desk, and quotes no number** (2026-08-25,
-  owner). The 2026-08-03 text described only the submissions queue and the
-  takedowns desk, and four of its claims had gone stale: the typed `DELETE`
-  (removed 2026-08-12), "currently 3 months" (a runtime system setting), "the
-  photo comes off the map the moment they ask" (true for an uploader's own
-  request and the intimate-or-child category only; a third-party report stays
-  published until decided) and "never per moderator" (true of the admin
-  activity table, not of the History desk's *Handled by me* filter). The page
-  now has a section per desk (the OSM question and approve-and-confirm before
+- **The rulebook covers every desk, and quotes no number** (owner
+  2026-08-25). The page has a section per desk (the OSM question and approve-and-confirm before
   approval; Routes with edit-before-publish, the region cap, retire and located
   corrections; Data with its two questions and dismiss-is-final; Regions with
   the map default and the about-text attribution tick; takedowns with the
   categories, the one-month reply clock, decline-is-final-per-category and the
   flood banner) plus account rules (mandatory 2FA, hard scope refusals, the
   unsafe-link marks). Every "ask" points at the **curator room**, the in-desk
-  board at `/moderate/room` (§13), linked by `path('moderate_room')` since the
-  route landed on 2026-08-26.
-  Rule kept from the original: the rulebook names mechanisms, never settings'
-  values, so it cannot rot when an administrator changes a threshold.
+  board at `/moderate/room` (§13), linked by `path('moderate_room')`.
+  The rulebook names mechanisms, never settings' values, so it cannot rot
+  when an administrator changes a threshold.
 - **The four triggers never leave their line.** The server renders three
   `<details>`; a nonce script upgrades each into a real disclosure — a
   `<button aria-expanded aria-controls>` that stays in the row, with its panel
@@ -1416,16 +1357,16 @@ at a time, so the row is sized for that:
   able to message, escalate and trash; without it the native `<details>` opens
   inline and the trigger drops to the next line (`.q-act[open]`), which is the
   only cost of having no JS. `display:contents` on `<details>` is **not** an
-  alternative — Chrome then renders the panel while it is closed (tested
-  2026-08-03). Each panel carries an explicit hook — `.q-act--message` /
-  `.q-act--escalate` / `.q-act--trash`, copied onto the upgraded button — so
-  neither tests nor CSS depend on sibling order.
-- The long sentence that used to *be* the trigger ("This is illegal content —
-  escalate it") is now the panel's own heading, read at the moment it applies;
-  the button says **Escalate**.
+  alternative: Chrome then renders the panel while it is closed. Each panel
+  carries an explicit hook (`.q-act--message` / `.q-act--escalate` /
+  `.q-act--trash`, copied onto the upgraded button), so neither tests nor CSS
+  depend on sibling order.
+- The long sentence ("This is illegal content, escalate it") is the escalate
+  panel's own heading (`.q-act-head`), read at the moment it applies; the
+  button says **Escalate**.
 - **Header on one line**: type tag, title and age share a row, with the
   submitter and **where it is, in words** beneath — the region and country the
-  row already carried, with the exact coordinates on hover (2026-08-12). Three
+  row already carried, with the exact coordinates on hover. Three
   decimals of latitude are not something a curator can picture, and the map is
   one click away in the same row for the case where the exact spot is the
   question. A nearby-town label would need a gazetteer we do not hold
@@ -1439,31 +1380,27 @@ at a time, so the row is sized for that:
   `rider#<pseudonym>` with no link. A rider whose account no longer exists is
   "a removed rider", never linked
   ([account-and-auth.md](account-and-auth.md) §9). Wherever a desk shows the name, a public one is
-  a link to that profile (the list follows the naming rule below). Showing the
-  pseudonym to a rider who had deliberately gone public read as the setting
-  being broken (owner-reported 2026-08-12).
-- **Thumbnails in the row, in both lists** (2026-08-12). A photo is the fastest
-  thing to judge and the queue row showed none, so a curator had to open the map
-  to learn whether there was one at all. `pendingPhotos()` takes a `settled`
+  a link to that profile (the list follows the naming rule below). A rider who
+  deliberately went public expects to see their name (owner 2026-08-12).
+- **Thumbnails in the row, in both lists.** A photo is the fastest thing to
+  judge, so the row shows it without a trip to the map. `pendingPhotos()` takes a `settled`
   flag: the open queue lists photos still awaiting a verdict, the history lists
   the **approved** ones — those objects are live and are what the row is a
   record of, while rejected media is deleted on expiry
   ([photo-uploads.md](photo-uploads.md) §6) and would leave a broken thumbnail
   on an audit trail.
 - **Cancel actually cancels.** The desk replaces each `<details>` with a button
-  and moves its panel into `.q-panels`, so a cancel handler that walked up to
-  `details.q-act` matched nothing and did nothing (owner-reported 2026-08-12).
-  The handler closes on `.q-act-panel`, which is true in both the enhanced and
-  the JS-less shape.
+  and moves its panel into `.q-panels`, so the cancel handler closes on
+  `.q-act-panel`, which is true in both the enhanced and the JS-less shape.
 - **The history shows each Trash as a content-free line**, rebuilt from the
-  audit log (2026-08-03). The entry comes from `admin_action_log`
+  audit log. The entry comes from `admin_action_log`
   (`trash_submission`) and shows **only** the reference, the type, who trashed
   it and when, never the title. It is the permanent record of the action and
   outlives the purge. The row itself, with its content, waits on the Trash
   page (§6) for its 30 days. The line is unscoped (the audit carries no region,
   and a content-free row leaks nothing) and it is hidden when an
   approved/rejected status filter is active, since a trashed row is neither.
-- **Trash takes the message thread out of view and keeps it** (2026-10-01).
+- **Trash takes the message thread out of view and keeps it**.
   Every `user_message` row with `channel = 'submission'` and `ref_id` = the
   submission id gets `trashed_at` in the same transaction
   (`MessageService::trashThread()`), so neither inbox lists it, counts it as
@@ -1480,11 +1417,10 @@ at a time, so the row is sized for that:
   everything hidden is review context the map drawer shows again. The switch
   is revealed by script, so a JS-less curator keeps the full-context cards.
 
-**The routes desk joined the shared card (2026-08-03).** It was the last desk on
-the older `.msg-rider` stacked layout. A curator moves between `/moderate/submissions`,
-`/moderate/routes` and `/moderate/takedowns` in one sitting, so the card must
-not change shape under them — and one desk learning something the others do not
-is exactly how the routes desk ended up months behind.
+**The routes desk uses the shared card.** A curator moves between
+`/moderate/submissions`, `/moderate/routes` and `/moderate/takedowns` in one
+sitting, so the card must not change shape under them, and one desk must not
+learn something the others do not.
 
 - **The card system is one file, not a copy.**
   `assets/styles/page/moderate/_card_styles.css` holds the `.q-*` CSS and
@@ -1498,19 +1434,16 @@ is exactly how the routes desk ended up months behind.
 - **The density switch folds every `.q-list` on the page.** The routes desk has
   two sections (proposals and corrections) and a curator switching density means
   the desk, not one section of it.
-- **Route corrections are one partial now** (`moderate_routes/_correction_item.html.twig`),
-  shared by the overview and a route's own page. They had drifted into two
-  different cards for the same thing: the overview carried Message + Trash, the
-  detail page carried Trash alone — and only one of them told a curator *when*
-  Trash is the right verb, or asked for the typed `DELETE`. The weaker of the
-  two was guarding the destructive verb.
-- **Trash on the routes desk now carries the WHEN copy and the ticked
-  acknowledgement**, like the submissions desk. **Escalate is deliberately
-  absent**: a route proposal is a GPX and a note, and the escalation path exists
-  for uploaded imagery ([photo-uploads.md](photo-uploads.md) §6d).
+- **Route corrections are one partial** (`moderate_routes/_correction_item.html.twig`),
+  shared by the overview and a route's own page, carrying Message and Trash, so
+  one route correction never shows as two different cards.
+- **Trash on the routes desk carries the WHEN copy**, like the submissions
+  desk. **Escalate is deliberately absent**: a route proposal is a GPX and a
+  note, and the escalation path exists for uploaded imagery
+  ([photo-uploads.md](photo-uploads.md) §6d).
 - `tests/Messaging/CuratorMessageTest` reads its CSRF token from
-  `.q-act--message` instead of `.msg-rider`. Per-panel hooks, not sibling order,
-  so a desk gaining another action does not move it.
+  `.q-act--message`. Per-panel hooks, not sibling order, so a desk gaining
+  another action does not move it.
 
 ### 5.3 Curator payload gating on `/map`
 
@@ -1559,14 +1492,11 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
   escape; needs-info leaves them pending, because the rider is still being
   asked. The `/moderate/submissions` list shows the same thumbs as review context, and
   keeps routing the decision to the map.
-- **The OSM question is asked here too** (2026-09-21, owner-reported: a
-  scenic view of their own refused with `osm_unanswered`, and nowhere in the
-  drawer to answer). A new place is not admitted until somebody has said
-  which OSM object it is, or that there is none
-  ([catalog-data-model.md §5b](catalog-data-model.md)). The queue card has
-  carried that chip since 2026-08-25, but the decision is made in the drawer,
-  so a curator who clicked Approve there met a generic "could not record"
-  toast with no way forward. Now `SubmissionQueue::rows()` puts the question
+- **The OSM question is asked here too** (owner 2026-09-21). A new place is
+  not admitted until somebody has said which OSM object it is, or that there
+  is none ([catalog-data-model.md §5b](catalog-data-model.md)). The queue card
+  carries that chip, and since the decision is made in the drawer, the drawer
+  asks it too: `SubmissionQueue::rows()` puts the question
   on every pending row (`osm: {state, ref, candidates}`, `null` when there is
   none: edits, and every rider-facing payload from `ownPendingForMap()`), and
   the drawer draws it above the note for a `new` submission
@@ -1576,39 +1506,32 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
   emitted in the curator block beside `CC_MOD_TOKEN`); the endpoint answers
   JSON (`{state, ref}`, or a 422 with `bad_ref` / `ref_taken`), the answered
   chip replaces the question in place, and Approve goes through. The decide
-  POST's own 422 codes (`osm_unanswered`, `needs_info_note_required`) now
-  reach the toast as their message instead of "please try again", and
+  POST's own 422 codes (`osm_unanswered`, `needs_info_note_required`) reach
+  the toast as their message, and
   `osm_unanswered` highlights the question block.
 
-**Approving keeps the curator on the item** (2026-08-03, owner-reported). The
-decision used to close the drawer on a toast, so a curator had to reload to see
-what they had just applied — and for an edit the map went on drawing the
-pre-edit values. Now the `decide` response's `item` is used to update the map
-in place *and* reopen the drawer on the applied result:
+**Approving keeps the curator on the item** (owner 2026-08-03). The `decide`
+response's `item` is used to update the map in place *and* reopen the drawer on
+the applied result, so the curator sees what they just applied without a reload:
 
-- **Pool letters** come back as a GeoJSON `feature`. `addCuratedFeature()` now
-  **replaces** a feature whose id is already present instead of returning early
-  — the early return was why an approved edit never refreshed.
+- **Pool letters** come back as a GeoJSON `feature`. `addCuratedFeature()`
+  **replaces** a feature whose id is already present.
 - **N · climbs** come back as the `climb` object map.js consumes, rebuilt
   through the same mapper the bulk payload uses (`climbFromRow`), so the
-  live-updated climb cannot drift from the served one. Climbs were previously
-  excluded from `featureForItem()` along with A and R.
-- **A · segments and R · routes** still send nothing and keep the old
-  close-and-toast: a segment's geometry and the route domain are not worth
+  live-updated climb cannot drift from the served one.
+- **A · segments and R · routes** send nothing and close the drawer on a
+  toast: a segment's geometry and the route domain are not worth
   half-supporting on this path.
 
-**A pending card must name the change and show what it changes** (2026-08-03,
-owner-reported). Two defects, one cause:
+**A pending card must name the change and show what it changes** (owner
+2026-08-03):
 
-- The proposed-change block was gated on `was && now`, and the queue card's
-  diff on `was` alone. A field with **no previous value** therefore rendered no
-  change anywhere — and that is the entire "+ add a missing field" funnel, the
-  commonest contribution there is. A curator got a card naming an item and
-  never naming the change they were being asked to approve. Both are now gated
-  on `now`; the struck-out line appears only when there is something to strike
-  out.
+- The proposed-change block and the queue card's diff are gated on `now`, so
+  a field with **no previous value** (the whole "+ add a missing field"
+  funnel, the commonest contribution there is) still shows its change; the
+  struck-out line appears only when there is something to strike out.
 - Even with the change shown, `shade: Exposed` means nothing on its own. An
-  edit's card now carries **the target item's own rows** ("This item today"),
+  edit's card carries **the target item's own rows** ("This item today"),
   read from the catalogue the map has already loaded and rendered with the
   drawer's own row renderer (`recRowsHtml`, extracted for exactly this — a
   second renderer is how an escaping rule gets forgotten in one of them).
@@ -1639,9 +1562,7 @@ It is recorded as **`source = 'form'`**, and form-sourced rows do not count:
 - not towards the verification threshold (`ItemConfirmationService::verifyIfEarned()`,
   §10), which is the load-bearing half. Counting a submitter's own answer
   would let them supply one of the confirmations their own contribution needs,
-  with one stranger's tap then enough to verify it. The funnel in the lifecycle
-  copy ("after a few of them agree it is really there") depends on that not
-  being possible.
+  with one stranger's tap then enough to verify it.
 
 Answering in the drawer later **promotes** the row to `drawer` (the submitter
 has now confirmed it as a rider, and it starts counting); a form answer never
@@ -1657,51 +1578,32 @@ carries the approved item as the catalog's own GeoJSON feature
 (`CatalogProvider::featureForItem()`, the same per-row mapping the bulk payload
 uses, so a live-inserted feature can never drift from the served one), and the
 drawer inserts it into the pool it belongs to (`addCuratedFeature()`,
-idempotent by item id). Before this the pending pin simply vanished on approve
-and the place appeared nowhere until the curator reloaded — the map's pools are
-built once, at boot. It joins as a **community** pin (dashed, `v` absent):
+idempotent by item id); the map's pools are built once, at boot, so without
+this the place would appear nowhere until a reload. It joins as a **community** pin (dashed, `v` absent):
 approved is not confirmed, and only a rider's confirmation flips that. Letters
 whose payload is not a feature collection (A segments, R routes) send
-no item and keep the reload behaviour.
+no item and need a reload.
 
-**The decision buttons are delegated, not bound per element (2026-08-03).**
-This is the part that actually broke, and it is worth stating plainly because
-the failure was invisible.
+**The decision buttons are delegated, not bound per element.** The drawer body
+is re-rendered often (the async "Recent changes" fetch alone rewrites it after
+open), and a per-element listener does not survive that: the buttons would come
+back looking identical and do nothing, with no request, toast or error.
+`community.js` delegates every community button off `document`, the
+`.cc-mod-btn` decision buttons included, and hands the click to
+`submitModeration()`.
 
-`drawer.js` used to bind a click listener to each `.cc-mod-btn` immediately
-after writing the card. The drawer body is re-rendered often — the async
-"Recent changes" fetch alone rewrites it after open — and a per-element
-listener does not survive that: the buttons come back looking identical and do
-**nothing at all**. No request, no toast, no error, nothing to tell a curator
-their click had not registered. It presented as intermittent, because whether
-it worked depended on whether a re-render happened to land between opening the
-drawer and pressing the button.
+**A note for whoever tests this.** Playwright's `page.click()` dispatches no
+events at all against this drawer in the dev browser (SwiftShader, no GPU): a
+document-level capture listener sees nothing, while `element.click()` works
+normally. Any probe that concludes "the button does nothing" from
+`page.click()` alone is measuring the harness.
 
-`community.js` already delegated every other community button off `document`
-for exactly this reason, and says so in a comment: *"drawer is re-rendered
-often"*. The moderation buttons now do the same. `submitModeration()` itself
-was never at fault, and neither was the endpoint: it answers a real approve in
-~150 ms with the full `item.climb` payload.
+### 5.2a Geometry is summarised, never dumped
 
-Verified after the change: approve → the pending pin goes, the drawer closes
-and reopens on the applied result, the toast names the reference, and the
-drawer's own attribute row shows the newly approved value.
-
-**A note for whoever tests this next.** Playwright's `page.click()` dispatches
-no events at all against this drawer in the dev browser (SwiftShader, no GPU) —
-a document-level capture listener sees nothing, while `element.click()` works
-normally. Any probe that concludes "the button does nothing" from `page.click()`
-alone is measuring the harness. That mistake cost a full diagnosis here, and
-produced a confident, wrong root-cause write-up (a CSRF-token theory) that this
-paragraph replaces.
-
-### 5.2a Geometry is summarised, never dumped (2026-08-03)
-
-A climb edit used to fill the curator's card with the raw payload: two hundred
-coordinate pairs, then the gradient array, then the marker JSON. Nobody can
-decide anything from that. The one question a curator has about a redrawn climb
-— did it get longer, and where does it end now — was the one thing the card did
-not answer (owner: "this is pretty useless").
+A raw climb payload (two hundred coordinate pairs, the gradient array, the
+marker JSON) decides nothing. The one question a curator has about a redrawn
+climb is whether it got longer and where it ends now, so the card answers
+that.
 
 `App\Contribution\ChangeValue` formats a changed value for a human, and both
 diff paths use it: `SubmissionQueue::diffStrings()` (desk cards, the map
@@ -1722,15 +1624,13 @@ Everything else is untouched — a word stays a word, a multi-select joins with
 commas. Malformed geometry degrades to something printable rather than throwing,
 because a broken payload must not take the whole queue card down with it.
 
-### 5.2b Before/after for a proposed shape (2026-08-03)
+### 5.2b Before/after for a proposed shape
 
-Summarising geometry as text (§5.2a) made the card readable, but it did not make
-a redrawn climb *reviewable*: `summit 50.4860, 5.6927` still says nothing about
-whether the summit moved somewhere sensible, and the map went on drawing the
-climb exactly as it is today (owner: "a human can't handle this data — we need
-to see it on the map").
+Text (§5.2a) makes the card readable, not *reviewable*: `summit 50.4860,
+5.6927` says nothing about whether the summit moved somewhere sensible (owner:
+"a human can't handle this data, we need to see it on the map").
 
-A pending card for a climb now carries a **Shape on the map · Before | After**
+A pending card for a climb carries a **Shape on the map · Before | After**
 switch, and the map draws whichever side is selected:
 
 - **After** — solid, in the violet the change history uses for a new value. It
@@ -1759,39 +1659,32 @@ source**, because removing a source still in use by a sibling layer throws, and
 a throw there leaves the old side on screen while the switch says otherwise. The
 switch is delegated off `document` like every other card control (§5.2).
 
-### 5.2c The Before side never claims a road is unrecorded (2026-08-31)
+### 5.2c The Before side never claims a road is unrecorded (owner 2026-08-31)
 
-A new stretch has a Before, and it is the same road: an unavailable Before
-button told a curator nothing about what the proposal replaces (owner
-2026-08-12). That Before used to be flagged `unrecorded`, which the client draws
-in the legend's red "Surface not recorded" dashes.
+A new stretch has a Before, and it is the same road (owner 2026-08-12): a
+missing Before tells a curator nothing about what the proposal replaces.
 
-`shapeSides()` cannot know that. A new stretch means WE held nothing for that
-way; OSM's surface tags live in the tile artifact and never reach the query. On
-a road nobody has tagged the flag happened to be right, which is why it survived
-since August; on a road OSM describes it was a red line asserting ignorance that
-the drawer beside it disproved, reading "Paved · asphalt · OSM" two inches away
-(owner-reported 2026-08-31).
-
-The Before is drawn in the neutral before-style instead: where the stretch sits,
-without claiming what was known about it. **This reverses the 2026-08-12
-decision and the cost is real:** a genuinely untagged road no longer stands out
-here. That signal was only ever correct by luck. Getting it back means asking
-the tile under the way what class it carries, which is a client-side question;
-the `unrecorded` key stays in the shape's type and `pending-shape.js` still
+`shapeSides()` cannot know whether the road's surface is recorded: a new
+stretch means WE held nothing for that way, and OSM's surface tags live in the
+tile artifact and never reach the query. So the Before is drawn in the neutral
+before-style: where the stretch sits, without claiming what was known about
+it, and never in the legend's red "Surface not recorded" dashes. The cost is
+that a genuinely untagged road does not stand out here. Getting that signal
+means asking the tile under the way what class it carries, a client-side
+question; the `unrecorded` key stays in the shape's type and `pending-shape.js`
 styles it, so the answer has somewhere to land. §5.2d records the baseline that
 would make it answerable.
 
-### 5.2d What OSM said, so a curator can see what changed (2026-08-31)
+### 5.2d What OSM said, so a curator can see what changed
 
 A rider can turn an asphalt road into a gravel one. Usually they are right,
 having ridden it; when they are not, the desk is the only place anybody would
-notice, and the desk could not tell. `was` is what OUR catalogue held, which for
-a new item is nothing, so changing what OSM already said produced exactly the
-same submission as describing a road nobody had touched.
+notice. `was` is what OUR catalogue held, which for a new item is nothing, so
+without a baseline changing what OSM already said would read the same as
+describing a road nobody had touched.
 
-The map already knows: it draws the tile and prints the OSM values in the drawer
-two inches from the edit button. It now carries them on the edit link
+The map draws the tile and prints the OSM values in the drawer, and carries
+them on the edit link
 (`osm_surface`, `osm_highway`), `ContributeController::osmBaseline()` maps them
 through the form's own vocabularies, and `CatalogContributionService::newItemChanges()`
 records them as the side the rider changed FROM. The desk needs no new UI: the
@@ -1805,11 +1698,11 @@ baseline is worse than none. An OSM value the form cannot express is left out.
 
 Safe on this path specifically, because `approveNew()` applies nothing from the
 change map: `was` here is a display fact and nothing reads it as state. On an
-edit `was` keeps its old meaning, which `applyEdit()` still compares against.
-Showing the OSM value even when the rider AGREES with it needs its own field
-rather than more weight on `was`, and is an optional item in docs/TODO.md.
+edit `was` keeps its meaning, which `applyEdit()` compares against. Showing
+the OSM value even when the rider AGREES with it would need its own field
+rather than more weight on `was`; it is not built.
 
-### 5.2e A new item is reviewed as itself, not as a diff (2026-08-31)
+### 5.2e A new item is reviewed as itself, not as a diff
 
 There is nothing to diff a new item against, so the item **is** the proposal: it
 waits in state `submitted` holding exactly what the rider asked for. The desk
@@ -1820,9 +1713,8 @@ throughout, because everything is proposed from nothing.
 That is also what makes the card survive a revision. A revision is diffed
 against the item, and the item already carries the earlier round, so the second
 round records nothing for those fields. `mergeChanges()` (§7.3b) keeps them in
-the map from now on; reading the item is what shows the submissions filed before
-that existed, without rewriting their rows. Two independent reasons for the same
-answer, which is why this is the rule and not a patch.
+the map, and reading the item also shows older submissions whose rows were
+filed without it, without rewriting them.
 
 Shape fields stay out either way. A stretch or a line is reviewed on the map
 (§5.2a, §5.2b) and never as text, whichever side the rows are built from.
@@ -1840,8 +1732,7 @@ map's own lists. Its words, "Not opened yet" (`room.unread`), sit in the row's
 heading as `.unseen-note`, visually hidden, from
 `templates/partials/_unseen.html.twig`, so a screen reader hears the state and
 nobody depends on the colour alone. It is the only unread treatment: the
-rider's messages (§7.5a) and the room's posts (§13.7) use it too, in place of
-the dot, the heavier edge and the bold title they carried before. Counters are
+rider's messages (§7.5a) and the room's posts (§13.7) use it too. Counters are
 untouched by it: desk badges count open work (§5.0), the messages and room
 counts what is unread.
 
@@ -1920,17 +1811,97 @@ the opening.
 backfill: every item still waiting arrives unopened for every curator, and
 settled work needs no rows, since it never carries the bar.
 
-### 7.3a A rider can see WHAT they contributed (2026-08-03, owner)
+## 7. Messages: the moderation feedback system (M1-M12)
 
-Both rider-facing surfaces named the place and stopped there. "Your
-contribution Côte de la Redoute was approved" and a contributions row reading
-`EDIT · Côte de la Redoute · APPROVED` are the same text for every edit to that
-climb — a rider who fixed the gradient on Monday and the surface on Tuesday saw
-two identical rows and could not tell which one a curator had acted on. The
-information was already in the submission; only the curator's desk was showing
-it.
+### 7.0 What the M-codes mean
 
-Both now render the change, as the same was → now shape the desk's `.q-diff`
+`M1` to `M12` are the twelve decisions that define this system. Code comments
+and the section headings below cite them by number, so this table is what
+those citations resolve to.
+
+| Code | Decision | Where |
+|---|---|---|
+| M1 | One `UserMessage` entity carries all moderation feedback. It is the recipient's inbox copy, **not** the institutional audit trail: that stays on `Submission.decisionNote`/`decidedBy`/`decidedAt` and `route_change_history`. | §7.1 |
+| M2 | Every decision on every channel writes a message inside the decision's own transaction, so the pair is atomic and duplicate-proof. | §7.2 |
+| M3 | Riders read their messages on the Messages page (`/account/messages`, route `messages`) in the account shell ([account-and-auth.md](account-and-auth.md) §8). | §7.3, §7.5a |
+| M4 | Unread bulb on the shared account chip, server-rendered once per page load. No polling. | §7.5 |
+| M5 | The map page carries the account chip too, so the bulb reaches the biggest logged-in surface. | §7.5 |
+| M6 | The rider's reply to a needs-info request, which flips the submission back to `pending`. | §7.3 |
+| M6a | Curator to rider messaging (`curator_message`). | §7.4 |
+| M7 | Email as a delivery channel on top of messages. | §7.8 |
+| M8 | Retention and garbage collection. | §8 |
+| M9 | Trash, the curators' bin. | §6 |
+| M10 | `user_message.user_id` carries a real user FK: messages are correspondence *to* a person, not contributed content. | §7.6 |
+| M11 | Message and note bodies have an explicit length cap (`MessageService::BODY_TEXT_MAX_LENGTH`, 2000) and are HTML-escaped on every render. | §7.2, §7.4 |
+| M12 | Account lock/ban is **not** part of this system. Trash handles the content; the account is the admin desk's job. | §7.8 |
+
+### 7.1 `UserMessage` (entity `App\Messaging\Entity\UserMessage`): M1
+
+Columns: `user_id` (recipient), `kind` (enum `UserMessageKind`), `sender`
+(`system` \| `curator` \| `rider`), `sender_id` (NULL for system), `channel`
+(`submission`, `route`, `correction`, and the other senders' own: `curator_app`,
+`areas`, `media`, `translation`, `bug`), `ref_id`, `ref_label` (the human
+receipt, e.g. `SUB-42` or a route name), `body_key` + `body_params`
+(translation key + params for system messages), `body_text` (curator note or
+free-form body, verbatim), `media_id`, `trashed_at` (§6), `created_at`,
+`read_at`.
+
+**Inbox, not audit:** the message is the recipient's inbox copy. The
+institutional record of who decided what and why stays on the submission row's
+decision columns (§3.1) and `route_change_history`. Riders appear to curators
+as their desk name (§5.2, `DeskRider`).
+
+Kinds are the cases of `UserMessageKind`; §7.9 shelves them.
+
+### 7.2 Every decision writes a message, in-transaction: M2
+
+`MessageService::sendSystem()` **persists without flushing** and is called
+from inside the decision's `wrapInTransaction` closure, so the message commits
+atomically with the status flip; the already-decided guards make the pair
+duplicate-proof (at most one message per outcome). If the recipient's account
+is already gone (`recipientExists()`), `sendSystem()` returns `null` rather
+than violating the FK: the decision itself is never lost.
+
+System bodies render via translation keys (`messages.body.<kind>`) in the
+*viewer's* locale; the curator's note, when present, rides along in
+`body_text` and renders verbatim (escaped). Body cap:
+`MessageService::BODY_TEXT_MAX_LENGTH`, **2000** characters, shared by notes,
+curator messages and replies (M11).
+
+### 7.3 Needs-info reply loop: M6
+
+- The Messages page renders a reply form on a `submission_needs_info` message
+  whose submission is still `needs_info` and still has a live deciding curator.
+- `POST /account/messages/{id}/reply` (`messages_reply`, CSRF `message-reply`,
+  recipient-ownership checked) writes a `rider_reply` message **to the
+  deciding curator** (`decided_by`) and flips the submission `NeedsInfo →
+  Pending` in the same transaction, re-entering the queue. Stale cases
+  (already re-decided, curator account gone) flash `messages.reply_too_late`.
+  The reply is desk work, not personal mail (§1.2): it never shows in an inbox
+  but the rider's own.
+- **A question and its answer are one card.** The messages page folds the
+  reader's own reply into the card holding the question it answers
+  (`MessagesController::answersToQuestions()`, paired by submission and order
+  so a second ask-and-answer round stays straight). The card links its subject
+  to `/account/contributions#sub-<id>` and shows the reply form only while the
+  question is unanswered and the submission is still `needs_info`.
+- **Both ends of the conversation are visible to the rider.**
+  `MessageService::listFor()` matches `user_id = :id OR sender_id = :id`, so
+  the messages page is a thread rather than an inbox: sent rows carry no reply
+  form and are never counted unread. Each row carries `id="msg-<id>"` as an
+  anchor.
+- The rider's **contributions list** (`/account/contributions`) shows the same
+  exchange the curator's desk shows: the curator's question, the rider's own
+  last reply, and, while the status is `needs_info`, an "answer the curator"
+  link to `/account/messages#msg-<id>`. `ProfileController::threadsFor()` is
+  the one query behind it.
+
+### 7.3a A rider can see WHAT they contributed (owner 2026-08-03)
+
+"Your contribution Côte de la Redoute was approved" is the same text for every
+edit to that climb, so a rider who fixed the gradient on Monday and the surface
+on Tuesday could not tell which one a curator acted on. Both rider-facing
+surfaces render the change, as the same was → now shape the desk's `.q-diff`
 uses:
 
 - **`/account/contributions` contributions list**: under every row that changed something.
@@ -1953,7 +1924,7 @@ submitted. Multi-selects join with commas, because
 
 The struck-out half appears only when there was a previous value — adding a
 missing field is the commonest contribution there is and has nothing to strike
-out. That is the same gate the desk's card learned on 2026-08-03.
+out. That is the same gate the desk's card uses (§5.4).
 
 **The messages lookup is scoped by `user_id`.** A message is addressed to its
 recipient, so its `refId` should already be theirs — but this reads
@@ -1965,17 +1936,16 @@ row, and "should already be" is not an access rule.
 Owner decision, 2026-08-04: **"he needs to update his update."**
 
 A rider asked a question about their proposal has to be able to go back, see
-what they proposed, change it, and send the same submission again. Before this
-they could only file another one, which left the desk holding two competing
-proposals for one item with nothing to say which supersedes which — and left
-the curator's question attached to the abandoned one.
+what they proposed, change it, and send the same submission again. Filing
+another one would leave the desk holding two competing proposals for one item
+with nothing to say which supersedes which, and the curator's question attached
+to the abandoned one.
 
 - **The wizard opens on the rider's own proposal.** `/improve?item=…` overlays
   the `now` side of their undecided submission's `changes` onto the form
   defaults (`ContributeController`), so the fields show what they suggested,
-  not what the item currently says. Answering "is that ending really right?"
-  was otherwise impossible: the form showed the current climb, and re-submitting
-  would have re-proposed the item's own values.
+  not what the item currently says; otherwise re-submitting would re-propose
+  the item's own values.
 - **Submitting amends, and amending ADDS.** `CatalogContributionService::improve()`
   looks for the rider's own undecided submission on that item
   (`openSubmissionFor()`: status `pending` or `needs_info`) and updates its
@@ -1983,26 +1953,20 @@ the curator's question attached to the abandoned one.
   existing `changes`, never substituted for it
   (`CatalogContributionService::mergeChanges()`), because the second round is
   diffed against the ITEM and the item already holds the first round's values
-  while the submission is still pending. Replacing left the curator reviewing
-  only whatever the rider touched last: a road filed with a surface, a road
-  type and a smoothness, then lengthened, showed a shape and no values at all,
-  and would have been approved on values never shown (owner-reported
-  2026-08-31). `was` keeps the value from the round that first touched the
+  while the submission is still pending; replacing would leave the curator
+  reviewing only whatever the rider touched last (owner 2026-08-31). `was` keeps the value from the round that first touched the
   field, since that is what the item held before the submission began; `now` is
   always the newest. **The reference is unchanged**, so the
   message thread the rider and curator have already exchanged still names the
   thing they are discussing.
 - **A revision of a NEW submission is written to the ITEM.** For a new item the
   item is the proposal (§5.2e), and `ModerationService::approveNew()` only flips
-  its state because there is by design nothing to apply. So a revision recorded
-  only in `changes` was read by nobody and dropped the moment a curator
-  approved: a rider filed a road, went back and lengthened it, and the approved
-  item kept the first, shorter line (owner-reported 2026-08-31). Not a display
-  fault; the longer road was gone. The amend now writes the revised attributes,
-  and the geometry when the revision carries a stretch, straight onto the item.
-  Only while the item is still `submitted`, which is exactly the window in which
-  it belongs to this one undecided submission; an edit to a live item keeps
-  going through `changes` and the curator, as it always has.
+  its state because there is by design nothing to apply; a revision recorded
+  only in `changes` would be dropped on approval (owner 2026-08-31). The amend
+  writes the revised attributes, and the geometry when the revision carries a
+  stretch, straight onto the item. Only while the item is still `submitted`,
+  which is exactly the window in which it belongs to this one undecided
+  submission; an edit to a live item goes through `changes` and the curator.
 - **It returns to `pending`**, and the previous round's `decision_note` /
   `decided_at` / `decided_by` are cleared — a stale "we need more information"
   sitting on a freshly revised submission reads as a new complaint.
@@ -2014,13 +1978,11 @@ the curator's question attached to the abandoned one.
 Both halves are pinned by `ImproveBindingTest` — the amend, and the refusal to
 amend anything already decided.
 
-### 7.3c The form says a change is already waiting (built 2026-09-12)
+### 7.3c The form says a change is already waiting
 
 With a review backlog two riders can propose the same correction to the same
 item without either knowing. It costs the second rider their time and a curator
-a second reading of the same change, and until now nobody outside the desk
-could tell: a curator saw every pending row, the rider who filed one saw their
-own, everybody else saw nothing.
+a second reading of the same change.
 
 **Submission path only.** On the `/improve` form for that item, before ten
 minutes go into it. NEVER near the confirm buttons: confirming is the path
@@ -2069,16 +2031,14 @@ shared `_account_chip.html.twig` partial — **no polling**, consistent with the
 no-fetch header architecture. The map rail carries the chip, so the bulb
 reaches the largest logged-in surface.
 
-### 7.5a Paging, and read state that means something (2026-08-08)
+### 7.5a Paging, and read state that means something
 
 Every unbounded list on the account side pages through
-`App\Pagination\Pager::of()` and renders `partials/_pager.html.twig` — the
-same partial and the same arithmetic the moderation desks use. It moved out of
-`templates/moderate/` and its keys out of `moderate.pager.*` into a top-level
-`pager.*` group the moment a second surface needed it.
+`App\Pagination\Pager::of()` and renders `partials/_pager.html.twig`, the
+same partial and the same arithmetic the moderation desks use, with its keys
+in the top-level `pager.*` group.
 
-- **Messages** — 20 per page (`MessageService::PER_PAGE`). Before this the list
-  stopped at a hard 100 with nothing saying so.
+- **Messages**: 20 per page (`MessageService::PER_PAGE`).
 - **Contributions**: 20 per page, place submissions and route proposals in
   one list, newest first, under one `?page=` pager. The controller pages the
   union of both in SQL (`ProfileController::contributionsPage()`), so a route
@@ -2131,10 +2091,10 @@ tick in its header, with "Read" as its accessible name. A message the reader
 **sent** carries no marker at all; it was never unread to them. Without the
 script the message still opens and stays unread until its link is followed.
 
-### 7.5b The sweep — every unbounded list pages (2026-08-09)
+### 7.5b Every unbounded list pages
 
-§7.5a paged the account side. This closes the rest: **every list in the
-application that grows without bound now pages**, through the same
+§7.5a covers the account side. **Every other list in the application that grows
+without bound pages** too, through the same
 `Pager::of()` and the same partial, so "page 3 of 12 · 240 in total" means one
 thing everywhere and an out-of-range `?page=` lands on the last page rather
 than on nothing.
@@ -2149,65 +2109,56 @@ than on nothing.
 | Withheld-photo recovery (admin) | 25 | `MediaTakedownService::PER_PAGE` |
 | Legal holds — photos · submissions (admin) | 25 each | `MediaEscalationService::PER_PAGE`, `ModerationService::HELD_PER_PAGE` |
 | Curator applications (admin) | 15 | `CuratorApplicationService::PER_PAGE` |
-| Regions desk | 25 | `ModerateRegionsController::PER_PAGE` |
 | Contributors wall (public) | 60 | `ContributorWallProvider::PER_PAGE` |
 
-Five things this sweep settled that a page-size change alone would not have:
+Five rules that a page size alone does not give:
 
 1. **Every list and its count read one shared WHERE.** `RouteQueue`,
-   `MediaTakedownService` and `ContributorWallProvider` each grew a private
-   predicate (or source builder) that the page query and the count query both
-   use, the arrangement `SubmissionQueue` already had. A pager whose count
+   `MediaTakedownService`, `ContributorWallProvider` and `SubmissionQueue` each
+   hold a private predicate (or source builder) that the page query and the
+   count query both use. A pager whose count
    comes from a second, hand-kept copy of the filter drifts the day either one
    is edited.
 
 2. **A desk badge is not a pager count.** `RouteQueue::total()` and
    `pendingSuggestionCount()` deliberately ignore the region filter — a
    curator who has narrowed to one region should still see how much work the
-   whole scope holds — so the pagers read new `pendingCount()` /
-   `pendingSuggestionsCount()` methods that DO follow the filter. Both numbers
+   whole scope holds, so the pagers read `pendingCount()` /
+   `pendingSuggestionsCount()`, which DO follow the filter. Both numbers
    are correct and they are different numbers.
 
-3. **The takedown badge stopped building cards to count them.**
-   `deskBadges()` called `count($this->takedowns->pendingCards())`, hydrating
-   every pending upload and describing each one to arrive at an integer — on
-   every render of every moderation page, since the badge rides the shared
-   shell. It is `pendingCount()` now.
+3. **A badge never builds cards to count them.** The takedown badge rides the
+   shared shell on every moderation page, so it is
+   `MediaTakedownService::pendingCount()`, one SQL count, never a hydration of
+   every pending upload.
 
-4. **The Regions desk slices before it measures.** A global curator sees every
-   onboarded region on earth (Japan alone is 47 prefectures) and each row costs
-   a readiness count, so the page is taken before `reportForRegions()` runs.
-
-   **This is also what fixes the desk's ordering (2026-08-14).** The list is
-   grouped **continent → country → region**, and because the slice happens
-   before the reports are built, the `ORDER BY` has to *be* the display order —
-   sorting after the slice would shuffle rows within a page while leaving the
-   page boundaries wrong. So the grouping is a SQL sort (continent name,
-   country name, then `area_km2 DESC`) with the nesting assembled from the
+4. **The Regions desk does not page; it groups.** It lists every region the
+   curator can see, narrowed by the country filter, grouped **continent →
+   country → region** by the SQL sort in
+   `ModerateRegionsController::visibleRegions()` (continent name, nulls last,
+   country name, then `area_km2 DESC`), with the nesting assembled from the
    already-ordered rows. Continent and country come from the World reference
-   bundle, LEFT JOINed: a region whose country is missing from it groups under
-   `—` at the end rather than disappearing off a moderation surface.
-   Within a country the order stays area-descending — region *labels* are
-   translated, so sorting by them would mean sorting in PHP, which the slice
-   forbids.
+   bundle, LEFT JOINed: a region whose country is missing from it groups at
+   the end rather than disappearing off a moderation surface. Within a country
+   the order is area-descending; region *labels* are translated, so sorting by
+   them would mean sorting in PHP.
 
-   **Each country is a collapsed `<details>`** (owner, 2026-08-14): at 19
-   countries the grouping alone still left several screens before a curator
-   reached anything. It opens when the country filter has narrowed to it, or
-   when it is the only country on the page — the two cases where a shut group
-   would make the desk look empty. The `<summary>` carries `N of M ready`, so a
+   **Each country is a collapsed `<details>`** (owner 2026-08-14), so a long
+   list of countries does not push everything several screens down. It opens
+   when the country filter has narrowed to it, or when it is the only country
+   on the desk, the two cases where a shut group would make the desk look
+   empty. The `<summary>` carries `N of M ready`, so a
    closed group still answers *is there anything to do here*; a collapse that
    hides the number you came for is not a saving.
 
-   The three mode buttons follow the **map's own order** — Best of · Confirmed
-   · Everything (`map/index.html.twig`) — where the desk had them reversed. A
-   curator setting a region's default now meets the rungs in the order the map
-   presents them, which is also the order their gates unlock in.
+   The three mode buttons follow the **map's own order**, Best of · Confirmed
+   · Everything (`map/index.html.twig`), so a curator setting a region's
+   default meets the rungs in the order the map presents them, which is also
+   the order their gates unlock in.
 
-5. **The contributors wall's filters moved to the server.** The name search and
-   country select were JS over the rendered rows. Once the wall pages, a
-   client-side filter answers "no such rider" about riders who are merely on
-   page 4 — so both are query parameters (`?q=`, `?country=`) applied in SQL
+5. **The contributors wall filters on the server.** A client-side filter over
+   a paged wall would answer "no such rider" about riders who are merely on
+   page 4, so the name search and country select are query parameters (`?q=`, `?country=`) applied in SQL
    across the whole wall, the pager carries them, and the ILIKE escapes `%`
    and `_` so a rider called "100%" searches for themselves. The country
    options still come from the *unfiltered* wall, so narrowing never collapses
@@ -2224,8 +2175,7 @@ other one.
 ### 7.6 The FK exception — M10
 
 `user_message.user_id` carries a real user FK, `ON DELETE SET NULL`
-(`Version20261001210000`; `ON DELETE CASCADE` from `Version20260712150000`
-until then): messages are correspondence *to* the person, not contributed
+(`Version20261001210000`): messages are correspondence *to* the person, not contributed
 catalog content. Every account-deletion path runs the deletion hooks
 (`UserDeletionService::purge()`), and `ContributionDeletionHook` deletes the
 rider's messages there, except a held submission's thread, which the
@@ -2262,11 +2212,10 @@ and edit-form link carries `&msg=<id>`, so following it opens the message
 
 ### 7.8 Out of scope here
 
-**M7 email delivery is BUILT (2026-08-08).** The dashboard is still the record;
-email is the delivery channel on top of it, rendered per `User.locale`. Before
-this, a curator could ask a rider a question and the rider found out only by
-logging back in and looking — which made the needs-info loop, the one exchange
-in the system that is *waiting* on somebody, the least likely to complete.
+**M7 email delivery.** The dashboard is the record; email is the delivery
+channel on top of it, rendered per `User.locale`, so the needs-info loop, the
+one exchange in the system that is *waiting* on somebody, reaches the rider
+without them logging back in to look.
 
 - `MessageMailer` renders from the **same** `messages.kind_*` / `messages.body.*`
   keys the dashboard uses, in the **recipient's** locale — not the locale of the
@@ -2293,23 +2242,24 @@ in the system that is *waiting* on somebody, the least likely to complete.
   queue into an inbox.
 - A transport failure is logged and dropped. The row is the record.
 
-There is **no Messenger transport**, so the terminate subscriber is the delivery
-mechanism. When one is introduced the honest change is for the subscriber to
-dispatch rather than send; the outbox and the re-read stay useful either way.
+Message emails do not go through Messenger: the terminate subscriber is the
+delivery mechanism, and the `async` transport (`config/packages/messenger.yaml`)
+carries no message mail. Moving them onto it would mean the subscriber
+dispatches rather than sends; the outbox and the re-read stay useful either
+way.
 
 Not built: a per-user email preference. These are transactional messages about
 a person's own contributions, so there is nothing to unsubscribe from without
 also opting out of being asked questions — but if one is ever wanted, it belongs
 on `User` beside `locale`.
 
-The **M8 phase-2 scheduled GC runner** is still
-**specified, pending implementation** — see `operations.md` §1, which carries
-the systemd units. **M12
+The **M8 scheduled GC runner** is `app:moderation:gc` (§8); the repository
+schedules nothing itself, and operations.md §1 carries the timer units. **M12
 account lock/ban** is explicitly *not* part of this system: Trash handles the
 content, the account is the admin desk's job
 ([account-and-auth.md](account-and-auth.md)).
 
-### 7.9 Shelves — the inbox's three categories and its unread switch (2026-08-09)
+### 7.9 Shelves: the inbox's three categories and its unread switch
 
 `App\Messaging\MessageCategory` sorts the inbox onto three shelves, and the
 split is by **who started it**, not by which subsystem wrote the row — because
@@ -2329,7 +2279,7 @@ and notices are precisely the ones nobody should have to dig for.
 
 `RiderReply` is on no shelf by design: it is the rider's own answer to a
 needs-info question, addressed to the deciding curator so the desk can find it,
-and `listFor()` has always excluded it from the inbox.
+and `listFor()` excludes it from the inbox.
 `MessageCategory::allFiledKinds()` exists so `MessageFilterTest` can assert the
 shelves cover the enum minus that one — a new kind nobody filed would be
 invisible under every filter but "All", which is the sort of bug that surfaces
@@ -2370,8 +2320,8 @@ it is and records the move.
 | `user_message` of the row's thread (channel `submission`, `correction` or `route`) | `trashed_at` | cleared on restore |
 
 Photos are not touched in the bin: a pending photo stays pending and
-unpublished. The content-free audit line (`TrashActions::Trash*`) is written as
-before. `Version20261001210000` adds the columns.
+unpublished. The content-free audit line (`TrashActions::Trash*`) is written on
+every Trash. `Version20261001210000` adds the columns.
 
 **Hidden everywhere but the Trash list.** A trashed row is on no queue, no
 History page, no map layer (curator or public), no rider page but one (the
@@ -2412,7 +2362,7 @@ restoreSuggestion()` / `::restoreProposal()`), audited content-free
 
 **The purge.** `TrashBin::purgeExpired()` deletes what has been in the bin more
 than `TrashBin::TRASH_DAYS` (30, a constant) days, one transaction per row,
-doing then what Trash used to do at once: the photos
+deleting the photos
 (`MediaDisposalService::purgeForSubmission()` / `purgeForRoute()`), for a new
 place its still-trashed item, the thread (`MessageService::deleteThread()`,
 for every kind), then the row; audited content-free with no actor
@@ -2447,13 +2397,11 @@ account, `app:user:purge` and the 24-month dormancy sweep, account-and-auth.md
 | Their season votes | `SeasonVoteDeletionHook`: the closed lists they voted in are stored first, then every vote row is deleted (route-domain.md §8d) |
 | A submission under legal hold | kept, with its whole thread and photos |
 
-`user_message.user_id` is `ON DELETE SET NULL` since `Version20261001210000`
-(it was `ON DELETE CASCADE`, §7.6): the hook deletes the rider's messages
-itself, so the only rows that ever reach the `SET NULL` are those of a held
+`user_message.user_id` is `ON DELETE SET NULL` (`Version20261001210000`,
+§7.6): the hook deletes the rider's messages itself, so the only rows that ever reach the `SET NULL` are those of a held
 submission's thread, which keep their place addressed to nobody.
 
-**What still runs on a clock here** is the Trash purge (§6). Two runners, the
-same pair the old retention sweep used:
+**What runs on a clock here** is the Trash purge (§6). Two runners:
 
 1. **Opportunistic** on the moderation desk renders (`/moderate/submissions`,
    `/moderate/routes`, `/moderate/trash`): `TrashBin::sweepOpportunistically()`,
@@ -2462,8 +2410,8 @@ same pair the old retention sweep used:
 2. **`app:moderation:gc`**: the idempotent console entry point for the worker
    host's daily timer (operations.md).
 
-`moderation.retention_months` (system-configuration.md §2) no longer times any
-of this. Its one remaining reader is `MediaDisposalService::collectRejected()`:
+`moderation.retention_months` (system-configuration.md §2) times none of
+this. Its one reader is `MediaDisposalService::collectRejected()`:
 a rejected photo's files are deleted that many months after the decision, run
 by `app:media:gc` (photo-uploads.md §6).
 
@@ -2485,23 +2433,21 @@ through the NULL column.
 A user's scope is the union of their rows. Rows are storable for any user but
 inert without `ROLE_CURATOR`.
 
-**Assigning them has two surfaces.** `/admin/user/moderator_areas` is the
-per-user picker (the form `setModeratorAreas()` posts to), and
-`/admin/moderator-areas` is the overview: every elevated account with the
-regions it covers and a link into that picker. The overview exists because
-assignment was reachable only from one user's own page, so "which regions have a
-curator?" could be answered only by opening people one at a time - and nothing
-in the admin menu pointed at either (owner-reported 2026-08-14). An empty
+**Assigning them has two surfaces.** The user page's "Assign moderation areas"
+action (`UserCrudController::moderator_areas()`) is the per-user picker (the
+form `setModeratorAreas()` posts to), and `/admin/moderator-areas`
+(`admin_moderator_areas_overview`, in the admin menu) is the overview: every
+elevated account with the regions it covers and a link into that picker, so
+"which regions have a curator?" is answered on one page. An empty
 assignment renders as **Global (sees everything)**, never as "none": empty means
 global, which is the opposite, and getting that backwards would misread the most
 consequential row on the page.
 
 **Neither surface may hydrate `Region` entities.** A `Region` carries its `geom`
-polygon; the 271 rows onboarded by 2026-08-14 hold ~217 MB of geometry between
-them, and the picker page died with `Allowed memory size of 134217728 bytes
-exhausted` building a `<select>` that needs three columns. Both now select
-`id, name, country_code` through DBAL - the picker rendering in ~8 MiB, grouped
-into `optgroup`s by country. Raising `memory_limit` only moves the wall: every
+polygon, hundreds of megabytes across the onboarded regions, which would
+exhaust the 128 MB PHP memory limit to build a `<select>` that needs three
+columns. Both select `id, name, country_code` through DBAL, grouped into
+`optgroup`s by country. Raising `memory_limit` only moves the wall: every
 onboarded country adds geometry, and this page is
 [onboarding playbook](../../wiki/developers/data-ops/onboarding-a-country.md),
 so it sits on the path of every new country.
@@ -2516,8 +2462,13 @@ so it sits on the path of every new country.
   and areas are a division of labour laid over it rather than the grant itself.
   Defaulting a new curator to moderating nothing would make every appointment a
   two-step act whose second step is easy to forget, and the failure mode of
-  forgetting it is a silent one: a queue that looks empty. Revisit if curators
-  ever stop being hand-appointed.
+  forgetting it is a silent one: a queue that looks empty. The appointment
+  itself asks for the areas (§9.4), so "global" is never the result of a
+  forgotten second step: it is a tick the admin sets on purpose. Revisit if curators
+  ever stop being hand-appointed. The rule is about curators only: the admin
+  user page shows "Not a curator" for an account without `ROLE_CURATOR` or
+  `ROLE_ADMIN`, and "All areas" only for a curator or admin without rows
+  (`UserAdminActionsTest::testARiderWhoIsNoCuratorHasNoModerationAreas`).
 - **NULL-region items are in scope for every curator** — deliberate, so
   outside-all-regions submissions never fall through the cracks.
 - The in-scope rule exists exactly twice, as verified twins:
@@ -2549,14 +2500,12 @@ Hidden queue rows are not a security boundary. Scoping applies to:
   route detail page itself 403s out of scope. The 403-reveals-existence
   trade-off is accepted as consistent, documented semantics.
 
-  **The two escalation paths were the gap** (security scan 2026-08-25). They
-  were the only writes on the desk with no scope guard, and they are the
-  heaviest verb it has: escalation puts a row into legal hold, hides its
-  photos and mails a human. A region-limited curator could pull any submission
-  on the platform out of its queue. Both endpoints take a bare id, so "the
-  queue only shows you your own regions" was never a guard, which is the whole
-  reason §9.3 opens by saying hidden rows are not a security boundary. Pinned
-  by `App\Tests\Moderation\SubmissionEscalationTest`.
+  **The two escalation paths are guarded like the rest** (security scan
+  2026-08-25). Escalation is the heaviest verb on the desk: it puts a row into
+  legal hold, hides its photos and mails a human, and both endpoints take a
+  bare id, so without the guard a region-limited curator could pull any
+  submission on the platform out of its queue. Pinned by
+  `App\Tests\Moderation\SubmissionEscalationTest`.
 - **Visible scope**: the moderation shell label always shows the actor's scope
   — assigned area names via `ModerationScopeProvider::describe()`, or "All
   areas" (`account.mod_scope_all`).
@@ -2569,6 +2518,20 @@ code against the reference tables, replaces the target's rows, and writes the
 `moderator_areas` audit entry (resulting set as the note) in **one
 transaction** — the same pattern as every other admin desk mutation
 ([account-and-auth.md](account-and-auth.md)).
+
+**Appointing a curator asks for the areas first.** "Grant curator" on the
+admin user page opens the same area picker, with one extra tick: "All areas".
+The admin picks one or more regions or countries, or ticks All areas. Neither,
+or both, grants nothing and shows an error (`admin.flash.areas_choose`).
+`UserAdminService::grantCuratorWithAreas()` checks the areas first, then adds
+`ROLE_CURATOR` and saves the areas in one transaction, with the
+`grant_curator` and `moderator_areas` audit rows. It refuses an account that
+is already a curator; that account changes areas with "Assign moderation
+areas". So a new curator never moderates everywhere by accident in the time
+between the grant and the areas. Pinned by the `testGrantCurator*` tests in
+`UserAdminActionsTest` and `UserAdminServiceTest`. An approved curator
+application (§11.5) still uses `grantCurator()`, because the application
+already names its area.
 
 ## 10. Utility confirmations — potability & "still here?"
 
@@ -2585,13 +2548,13 @@ source of truth:
 | B · Water & food | `potable` / `not_potable` | `potability` |
 | B · Water & food, **authority row whose `potable` starts with "Yes"** (a register tap) | `exists` | `existence`. The register is the potability answer; asking a rider whether RIVM's tap is drinkable was the wrong question (owner 2026-09-06). `ItemConfirmationService::offeredFor()` is the one rule; the snapshot, the POST validation and `stanceKind` all read it. |
 | C · Public toilets, D · Services, E · Hazards, F · Getting there, G · Shelter, N · Climbs, O · Where to sleep, P · Scenic views, Q · History & culture | `exists` | `existence` |
-| A · Road surface, all remaining votable types | none — they vote, or are measured | — |
+| A · Road surface | `exists` / `not_as_described` | `accuracy` ([edit-items/A-road-surface.md](edit-items/A-road-surface.md)) |
+| R · Quality rides | none: routes have their own community loop ([route-domain.md](route-domain.md)) | - |
 
-**Why the second row grew** (owner decision 2026-08-12). The old test was
-"could this place vanish", which excluded a castle and a mountain. That was the
-wrong question: a confirmation is a rider saying *I was there and this is
-right* — that it exists, that it is where we say, that it is what we call it. A
-climb can be wrong about all three, and an AI-generated photo of a viewpoint is
+**Why the existence row is broad** (owner decision 2026-08-12). The test is
+not "could this place vanish", which would exclude a castle and a mountain. A
+confirmation is a rider saying *I was there and this is right*: that it exists,
+that it is where we say, that it is what we call it. A climb can be wrong about all three, and an AI-generated photo of a viewpoint is
 exactly what a second rider standing at the spot disproves. Everything a rider
 can stand in front of is confirmable; voting (best-of) remains a separate,
 additional funnel for the types that have it.
@@ -2612,12 +2575,10 @@ for the state change, on either of two grounds:
   row per rider is a database constraint, so a count of rows is a count of
   people.
 
-Ruled 2026-09-09, after the owner found the hole: "if the `?` mark is gone, it
-has verified state". Until then a lone confirmation removed the badge on the map
-while the record stayed Unverified, so the map and the database disagreed about
-what verified meant and a rider clearing a badge changed nothing a curator could
-see. `CatalogProvider`, `PublicItemsProvider` and `CuratedReadiness` now all read
-`state = 'verified'` and nothing else (map-and-search.md §12).
+Owner ruling 2026-09-09: "if the `?` mark is gone, it has verified state". The
+map and the database agree on what verified means: `CatalogProvider`,
+`PublicItemsProvider` and `CuratedReadiness` all read `state = 'verified'` and
+nothing else (map-and-search.md §12).
 
 **The curator's word is recorded, never inferred** (owner 2026-09-10:
 "curator confirmed, as this is stronger"). `item_confirmation.by_curator` is
@@ -2627,17 +2588,13 @@ answer on their next tap, and a demotion cannot rewrite who was standing there.
 `Version20260910170000` adds the column and backfills it from the roles each
 confirmer holds today, which is the only evidence the older rows left.
 
-Two readers used to reconstruct it from arithmetic instead, and both named the
-wrong witness the moment `map.item_verify_threshold` moved or one more rider
-confirmed:
+Readers use the recorded flag, never arithmetic over the threshold:
 
-- the drawer counted heads and said "1 rider confirmed" over a curator's
-  answer. It reads `byCurator` off the snapshot now and says "A curator
+- the drawer reads `byCurator` off the snapshot and says "A curator
   confirmed", or "{n} confirmed, one a curator" once riders stand behind it too
   (`d_confirmed_curator`, `d_confirmed_curator_many`).
-- `ItemEvidenceResolver` read "verified with fewer rows than the threshold" as a
-  curator's word. A recorded answer now settles `verifiedBy` outright; the count
-  speaks only where no such row exists, which is what a pre-column row and an
+- in `ItemEvidenceResolver` a recorded answer settles `verifiedBy` outright;
+  the count speaks only where no such row exists, which is what a pre-column row and an
   import-promoted row look like. The **rung** is unchanged either way, because
   rung 11 is a curator's word AND nothing else and `EvidenceRung` applies that
   test itself (data-provider-hierarchy.md §6.7.7).
@@ -2661,10 +2618,9 @@ they cost.
    somebody outside relies on it. That is the failure this project exists to
    fix, so it is not one to re-create in our own schema.
 
-2. **It re-opens the hole that was closed on 2026-09-09, one layer down.** Until
-   that ruling `verified` was derived three different ways in three files and
-   they could disagree. A scoped threshold moves that same variation out of the
-   queries and into the data, where it is harder to see: every row still reads
+2. **It would split `verified` again, one layer down.** The 2026-09-09 ruling
+   gave `verified` one derivation everywhere. A scoped threshold would move
+   variation out of the queries and into the data, where it is harder to see: every row still reads
    `state = 'verified'`, but two rows holding it earned it under different bars,
    and no query can tell them apart.
 
@@ -2705,7 +2661,7 @@ confirmations is a defect, not a cleanup.
 
 `NotPotable` never promotes, and neither does `NotAsDescribed`: a warning is not
 a vouching. Only `Potable` and `Exists` count towards the threshold
-(`ItemConfirmationService::VOUCHING`). Form-sourced answers never count at all,
+(`ConfirmationStance::vouching()`). Form-sourced answers never count at all,
 because a submitter is not a witness to their own submission. The POST response
 carries `verified: true` on the transition so the map can flip the "?" badge in
 place (`markItemVerified()`), instead of leaving a rider looking at a payload
@@ -2721,16 +2677,16 @@ check, route-domain.md §8d), **switchable**: flipping potable ↔ not-potable u
 the row and never double-counts (`ItemConfirmationService::record()` rejects
 stances the item's type does not offer).
 
-### 10.1a A confirmation goes off, and the map says so (built 2026-08-16)
+### 10.1a A confirmation goes off, and the map says so
 
 An item confirmed half a year ago is not the same claim as one confirmed last
-week, and until this the map drew them identically (owner 2026-08-12). A
+week (owner 2026-08-12). A
 **stale item's pin gains an orange ring**, so a rider passing it can see,
 without opening anything, that it is worth a look. **One confirmation resets
 the clock** - the point is a nudge, not a chore.
 
-**The failure this had to be designed against is not a wrong date.** It is
-that six months after launch most of the map is orange, and an orange that
+**The failure this is designed against is not a wrong date.** It is that six
+months after launch most of the map is orange, and an orange that
 means "everything" means nothing. Three rules keep the signal narrow, and all
 three live in `ConfirmationFreshness`:
 
@@ -2738,13 +2694,13 @@ three live in `ConfirmationFreshness`:
    stood next to already has its own state and its own signal (`v` absent in
    the payload, `stateUnverified` in the drawer). Ageing something that was
    never fresh would paint every harvested OSM row orange on day one.
-2. **Only letters whose confirmations GO OFF**, which is a NEW and narrower
-   predicate than §10.1's stance list: `ItemType::confirmationAges()`. Every
+2. **Only letters whose confirmations GO OFF**, a narrower predicate than
+   §10.1's stance list: `ItemType::confirmationAges()`. Every
    place a rider can stand next to is *confirmable* - that is §10.1's point -
    but **a tap breaks, a shop shuts, a hazard clears; a viewpoint does not
    stop being a view.** So B, C, D, E, F, G, O and A age; N, P and Q never do.
-   Reusing `confirmationStances()` here would have aged the whole map, because
-   the 2026-08-12 decision deliberately widened it to nearly every letter.
+   Reusing `confirmationStances()` here would age the whole map, because it
+   covers nearly every letter (§10.1).
 3. **`source <> 'form'`**, as everywhere else: a submitter answering their own
    improve form ([§6.3](#63-the-submitters-own-answer--item_confirmationsource))
    is not somebody having checked, and letting it reset the clock would let a
@@ -2765,12 +2721,9 @@ waiting-for-a-moderator pin is the red hourglass pin the pending layer draws,
 never a border. The keys state the months from the dial itself
 (`cc_stale_months()`), so a changed dial changes the key.
 
-**The drawer's freshness line was dead code until now.** `drawer.js` has
-rendered `f.freshness` since it was written and nothing ever produced it - the
-map template says so in as many words ("`f.freshness` is produced by no server
-path either"). `CatalogProvider::feature()` is that path; the drawer lit up
-with no client change. The key is **absent** for every item rules 1 and 2
-exclude, so those payloads stay byte-identical to what they served before.
+**The drawer's freshness line.** `CatalogProvider::feature()` emits
+`f.freshness`, which `drawer.js` renders. The key is **absent** for every item
+rules 1 and 2 exclude.
 
 **The rider's half.** The ring is a passive colour; `/account/contributions` carries the half
 a rider can act on - a short "worth a look near you" list, stale places inside
@@ -2808,7 +2761,7 @@ closure retires itself, and a confirmation ages itself. Pinned by
 
 The generic vote CTA is gated to votable layers (`CC_VOTABLE`), the
 confirmation panel to confirmable layers (`CC_CONFIRMABLE`) — both are layer
-key sets in `map.js` mirroring `ItemType::isVotable()`/`isConfirmable()`. The
+key sets in `community.js` mirroring `ItemType::isVotable()`/`isConfirmable()`. The
 panel hydrates async on drawer-open; water shows both tallies, other utilities
 a single confirm; anonymous viewers see the counts plus a "Log in to confirm"
 prompt (counts public, recording gated).
@@ -2823,13 +2776,14 @@ decision 2026-08-12).
 | Button | Writes | Offered on |
 |---|---|---|
 | ⚠ Out of order | `condition = 'Out of order'` | B · water, C · toilets, D · services (`CC_BREAKABLE`) |
-| ⌀ Closed | `condition = 'Closed'` | every confirmable type |
-| ✕ Not there anymore | `condition = 'Not there anymore'` | every confirmable type |
+| ⌀ Closed | `condition = 'Closed'` | B, C, D, F, G, P, Q |
+| ✕ Not there anymore | `condition = 'Not there anymore'` | B, C, D, F, G, P, Q |
 
-`condition` is a registry field (`CatalogFormRegistry::CONDITION`) on every
-confirmable point type, so the tap and the edit form write the same key with the
-same vocabulary — a rider who wants to say more opens the form and finds their
-own answer already chosen. It carries **no default**: a default would make every
+`condition` is a registry field on those seven types (`CatalogFormRegistry::CONDITION`
+for B, C and D, `CONDITION_NO_PARTS` without *Out of order* for F, G, P and Q),
+so the tap and the edit form write the same key with the same vocabulary: a
+rider who wants to say more opens the form and finds their own answer already
+chosen. It carries **no default**: a default would make every
 untouched edit form assert "as mapped" about a place its editor never looked at,
 and turn a no-op edit into a change the intake is meant to refuse.
 
@@ -2837,8 +2791,8 @@ Two endpoints, one gesture (`App\Controller\OsmConfirmController`):
 
 - `POST /osm/confirm` — for an OSM place we do not hold yet. See
   [osm-data-architecture.md](osm-data-architecture.md) §6: it fills the letter's
-  own form from the coverage row and files it, so a one-word answer no longer
-  needs a form.
+  own form from the coverage row and files it, so a one-word answer needs no
+  form.
 - `POST /items/{id}/condition` — for a place already ours. Materialising does
   not freeze a place: a water point added as existing and potable can be shut
   off, break, or be taken out next season. Files an `improve` submission with
@@ -2858,12 +2812,11 @@ to OSM: `CatalogProvider::itemRows()` stops drawing the item while
 ### 10.5 A nameless place can still be reported
 
 `submitImprove()` titles a submission with the item's name and the draft
-requires one — but most coverage-materialised POIs have none, a drinking-water
-node in OSM being nothing but tags. Those reports died on a validation error the
-rider could neither see nor fix. Callers that know a better word for the place
-pass `_title_fallback` (the one-tap report passes the layer's own label). The
-item is **not renamed** by it: the title is what the queue displays and nothing
-else.
+requires one, but most coverage-materialised POIs have none, a drinking-water
+node in OSM being nothing but tags. Callers that know a better word for the
+place pass `_title_fallback` (the one-tap report passes the layer's own label);
+failing that the type's own label titles it. The item is **not renamed** by it:
+the title is what the queue displays and nothing else.
 
 ## 11. Curator applications — the two doors an empty map needs
 
@@ -2874,22 +2827,20 @@ route, two forms.
 
 A country with no `region` rows offers only the demand form: there is nowhere
 to anchor a submission and nothing to scope a curator to, and
-`CuratorApplications` refuses an application for such a country whatever the
-payload says.
+`CuratorApplicationService` refuses an application for such a country whatever
+the payload says.
 
 A country that **is** onboarded offers both. Being on the Commons does not
 mean every part of it is, and for the United States or France the part is the
 only unit that decides anything (owner 2026-09-13: "Or region. f.e. USA we
-have states at the region level"). Until then the branch was chosen by
-`$onboarded` alone, so the only way to ask for an uncovered state was to
-volunteer to run it.
+have states at the region level"), so a rider can ask for an uncovered
+state without volunteering to run it.
 
 The posted `form` field names which branch runs. The CSRF token does not
 narrow that choice: both ids are stateless (`config/packages/csrf.yaml`), so
 one token satisfies either. That is sound only because both branches are
 things the same signed-in rider may do on this page, so picking between them
-wins nothing. Branch confusion was a vulnerability while the demand branch was
-unreachable by design on an onboarded country; it is reachable on purpose now.
+wins nothing.
 
 The map rail's one-line invite (`#emptyScopeInvite`,
 `web/assets/map/panels.js`) links here with the country pre-filled whenever
@@ -2908,7 +2859,7 @@ Entity `App\Community\Entity\CountryInterest`, table `country_interest`:
 | column | type | notes |
 |---|---|---|
 | `id` | bigint identity | |
-| `user_id` | bigint | no FK (house convention, §5.6) |
+| `user_id` | bigint | no FK (house convention, §3.1) |
 | `country_code` | varchar(2) | ISO 3166-1 alpha-2 |
 | `region_name` | varchar(120), default `''` | the area asked for; `''` is the whole country |
 | `willing_to_curate` | boolean, default false | the contact list for onboarding |
@@ -2981,13 +2932,12 @@ Overture ships no code, as it does for the uninhabited divisions.
 
 Filled by two steps, both bounded in memory:
 
-1. `python -m tools.divisions.export_candidates --out web/var/divisions` writes one
+1. `pipeline/divisions/export_candidates.py` (`python -m divisions.export_candidates --out web/var/divisions`) writes one
    NDJSON file per country, one Feature per line, geometry simplified to 0.0005°
    (about 55 m; Belgium 1.96 MB → 150 KB). It reads each country's box first,
    without geometry, then queries one country at a time inside it, which lets
-   DuckDB skip every block that cannot overlap. A query over the whole release
-   with geometry in it filled 21 GB of RAM and swap on the first attempt and was
-   killed by a memory guard on the next two (2026-09-14). The box is built from
+   DuckDB skip every block that cannot overlap; a query over the whole release
+   with geometry in it exhausts memory. The box is built from
    the country's own divisions, not its `country` row, because 31 territories
    have divisions and no country row. Resumable: a country whose file exists is
    skipped, and each is written to a `.part` file and renamed when complete.
@@ -2996,10 +2946,9 @@ Filled by two steps, both bounded in memory:
 
 **Excluded by ISO code, never by name.** `region` rows are named in English
 ("Bavaria", "Flanders") and the boundary data in the country's own language
-("Bayern", "Vlaanderen"). A name comparison matched none of them: 61 live
-regions were offered again as not yet on the Commons, and a curator could have
-applied for Bayern while Bavaria was live (measured 2026-09-14). Divisions with
-no ISO code are left out for the same reason.
+("Bayern", "Vlaanderen"), so a name comparison would offer live regions again
+as not yet on the Commons (a curator could apply for Bayern while Bavaria is
+live). Divisions with no ISO code are left out for the same reason.
 
 **Size is measured.** A country whose median division is under 500 km² offers
 only itself:
@@ -3011,8 +2960,8 @@ only itself:
 | Switzerland | 26 cantons | 883 km² | offered |
 | Netherlands | 12 provinces | 3,132 km² | offered |
 
-The line reproduces by measurement the call `pipeline/divisions/config.py` had made
-by hand for Slovenia and Luxembourg (owner 2026-09-14). The median, not the
+The line reproduces by measurement the call `pipeline/divisions/config.py`
+makes by hand for Slovenia and Luxembourg (owner 2026-09-14). The median, not the
 mean, so one huge territory cannot make a country of small divisions look
 curatable, nor one city canton the reverse. Among countries not onboarded, 33
 fall under the line, North Macedonia (median 273 km²) and Montenegro (427 km²)
@@ -3079,22 +3028,20 @@ by `user_id` + `country_code` **at review time** (`total`, `approved`
 standing — filing more submissions between applying and being reviewed changes
 what the reviewer sees. Nothing is copied or snapshotted onto
 `CuratorApplication` at submit. The form's `join.evidence_hint` copy
-deliberately does NOT state this mechanic:
-telling applicants their map edits "speak for them" read as a contribution
-prerequisite, which decision 3 explicitly rejects. The copy now leads with
-"you don't need to have added anything before applying", invites motivation
-and prior experience (the `join.about_label` question), and only mentions
-that existing contributions are gladly looked at. The reviewer-side
-evidence pane is unchanged.
+deliberately does NOT state this mechanic: telling applicants their map edits
+"speak for them" reads as a contribution prerequisite, and applying needs no
+prior contribution. The copy leads with "you don't need to have added anything
+before applying", invites motivation and prior experience (the
+`join.about_label` question), and only mentions that existing contributions
+are gladly looked at.
 
 **The sending is acknowledged, not just the deciding.** Submitting sends the
 applicant a dashboard message (`UserMessageKind::CuratorApplicationReceived`,
 `join.message.received`), which `MessageMailer` then delivers to their inbox
-with a link back to it. Approve and decline had always notified; submitting
-told the rider nothing beyond a flash they lose on the next click
-(owner-reported 2026-08-14). That is the wrong silence — a volunteer has just
-handed over their name and their reasons, and review is a human step with no
-promised time on it. Three details that are easy to get wrong:
+with a link back to it, as approve and decline do (owner 2026-08-14): a
+volunteer has just handed over their name and their reasons, and review is a
+human step with no promised time on it. Three details that are easy to get
+wrong:
 
 - It gets **its own kind**, not `CuratorMessage`: the email subject is derived
   from the kind, and "Message from a curator" is not what an automatic receipt
@@ -3106,10 +3053,9 @@ promised time on it. Three details that are easy to get wrong:
   mailer has nothing to deliver.
 - All three messages interpolate `%scope%` — the **requested region's name**
   when there is one, else the country's — resolved by
-  `CuratorApplicationService::scopeLabel()`. They used to interpolate the raw
-  `country_code`, so a rider who volunteered for North Holland was told their
-  application "to curate NL" had arrived: the wrong scope, and a database code
-  rather than a place.
+  `CuratorApplicationService::scopeLabel()`, never the raw `country_code`: a
+  rider who volunteered for North Holland is told about North Holland, not
+  "NL".
 
 **The support address gets an email too** (`SupportMailer::notifyCuratorApplication()`,
 owner 2026-10-02). `submit()` sends it last, once the application and the
@@ -3124,11 +3070,9 @@ linked), when it arrived, the `about` text, and a link to
 applicant. No flood rule beyond the existing ones: one pending application per
 person per country, and the `curator_application` limiter (3 a day).
 
-**The applications desk is a list that opens.** Every application used to
-render expanded, so a reviewer scrolled past everything to reach the one they
-meant, and it read `pending()` - a decided application simply vanished, leaving
-nowhere to see what had been answered. It now lists **every** application,
-newest first, one row each carrying the name, the scope and an
+**The applications desk is a list that opens.** It lists **every**
+application, decided ones included, newest first
+(`CuratorApplicationService::recent()`), one row each carrying the name, the scope and an
 **Open / Accepted / Declined** pill, with the detail behind a `<details>`
 disclosure (keyboard- and screen-reader-native, survives the CSP without a
 script, and opened by find-in-page). A decided row shows the record - status,
@@ -3179,8 +3123,8 @@ when it would merely repeat the title.
 **The desk links to the person's record.** The evidence line answers *how many*
 submissions they have had approved; `?by=<user id>` on `/moderate/submissions/history`
 answers *which ones*, which is the question a reviewer actually has in front of
-an application. Filtered on `submission.user_id` by id, never by display name -
-names stopped being unique on 2026-07-31. Trash rows are suppressed under this
+an application. Filtered on `submission.user_id` by id, never by display
+name, because display names are not unique. Trash rows are suppressed under this
 filter for the same reason they are suppressed under a title search: the
 `trash_submission` audit is content-free by design (§6) and records no
 submitter, so merging it in would put strangers' trashed rows under "see their
@@ -3301,24 +3245,18 @@ trusted moderators later, not built.
 
 ## 12. Specified, pending implementation
 
-- **M8 phase-2 scheduler** (§8) — the units are written in `operations.md` §1
-  and not installed. (**M7 email delivery is built** — §7.8.)
 - **M12 account lock/ban** — separate admin-desk work; recorded, unbuilt.
 - **Hazard intake UI** — `SubmissionType::Hazard` is queue-renderable but has
   no intake flow; `ModerationService` refuses to approve it until an apply path
-  exists. (Photo intake is **built** — see below.)
+  exists.
 - **Pending route proposals on the curator map** — routes are decided on the
   detail page only (§5.1); serving them onto the map like item submissions is
   an accepted follow-up.
-- **Materialize-on-edit** (osm-data-architecture.md §6) — this pipeline is the
-  designated machinery; the coverage-side trigger is not yet built
-  ([coverage-provider.md](coverage-provider.md)).
 
 ## Scout intake — a ride reviewed at home, one tag at a time
 
-**Status: built 2026-08-12** (`/scout/review`, `ScoutIntakeController`,
-`web/assets/map/scout-review.js`). Consolidated from
-`Dated/2026-08-09-scout-cc-tagger-plan.md` tasks 1, 5, 7 and 8.
+`/scout/review` (`MapController`), `ScoutIntakeController`,
+`web/assets/map/scout-review.js`.
 
 **FIT is the format.** Scout's own reader is vendored verbatim at
 `web/assets/lib/scout-fit.js` (MIT, same owner as this project), copied between
@@ -3334,10 +3272,8 @@ rule for a double-tapped tile, and the surface stretches a start/END pair
 describes. A surface tag therefore arrives carrying the OSM value the rider
 chose on the device, and `SurfaceVocabulary::fromOsmValue()` turns it into the
 declarable label so nobody picks the same thing twice. **FIT is the only format read**, and deliberately so: no Scout app writes GPX
-(owner, 2026-08-12), so a GPX reader would be a path no real ride can take — and
-one that quietly produced weaker tags, since `<wpt>` names carry no sub-type and
-no surface value. A ride routed through it would arrive stripped of half of what
-the rider recorded, with nothing to say so. Anything that is not `.fit` is
+(owner, 2026-08-12), so a GPX reader would be a path no real ride can take, and
+`<wpt>` names carry no sub-type and no surface value. Anything that is not `.fit` is
 named as such rather than attempted and failed deep inside a binary parser.
 
 **The ride never reaches the server.** It is read in the rider's own browser
@@ -3346,17 +3282,18 @@ tag the rider has approved. There is no upload, no server-side draft, nothing to
 expire and nothing to delete. That is a property of the code, not a policy:
 `ScoutIntakeController` **refuses** a payload carrying `track`, `polyline`,
 `records`, `coordinates`, `gpx`, `fit` and the rest with a 422, rather than
-ignoring the extra field — ignoring is how a trace starts arriving and nobody
-notices for a year. Four of those keys are covered by tests.
+ignoring the extra field (`TRACK_KEYS`): ignoring is how a trace starts
+arriving and nobody notices for a year. `ScoutIntakeTest` covers several of
+those keys.
 
-The one deliberate exception is **`segment`** (task 6 below): the
+The one deliberate exception is **`segment`** (surface stretches, below): the
 rider-approved excerpt of ridden line between a surface stretch's two taps —
 the same line they would draw in the map wizard, coordinates only (no
 timestamps), accepted only for letter A and only when the rider presses send on
 that stretch's card. The stretch is road data the rider chose to publish; the
 timings stay movement data and never leave the browser.
 
-**Surface stretches are A submissions (plan task 6, built 2026-08-18).** A
+**Surface stretches are A submissions** (owner 2026-08-18). A
 surface tag is a *transition*: a start type opens a stretch, END (or the next
 transition, or the end of the ride) closes it. The review panel turns each
 pair into its own card and its own line on the map, drawn in the **same
@@ -3373,10 +3310,8 @@ the nearest track point and re-cuts the line from the ride (`sliceTrack`) —
 start can never pass end, and a sent stretch locks. Deliberately the opposite
 of point pins (which drag free): a stretch endpoint IS a place on the ridden
 road. The card is titled
-"Surface" and is fixed to A
-(a stretch cannot be re-filed onto a point letter, and surface *transitions*
-no longer appear as bogus point cards defaulting to Water & food —
-owner-reported 2026-08-18); its surface dropdown is the A form's own
+"Surface" and is fixed to A (a stretch cannot be re-filed onto a point letter,
+and a surface *transition* never shows as a point card); its surface dropdown is the A form's own
 vocabulary, preselected from the device's OSM value, and an explicit choice
 outranks the device at intake. Each choice in it shows the line colour it draws on the map, on
 the map's cream casing (the map page's own dropdown, `select-box.js`,
@@ -3385,9 +3320,9 @@ stretch on the map at once (owner 2026-09-18), through `SurfaceVocabulary::TO_TI
 page as `CC_SURFACE_CLASS`, so the line always shows what will be sent. Sending posts the ordinary tag wire plus
 `segment` = `{a, b, line}` in `[lng, lat]` pairs, cut from the ride strictly
 between the taps (`scout-segments.js` `cutTrack`, tap points win the
-endpoints, ≤ 3000 points) and re-validated by the same
-`CatalogContributionService::decodeSegment` the map wizard uses (endpoint
-drift ≤ 1 km). A stretch closed by the next type tap ends there. A stretch
+endpoints, at most `MAX_SEGMENT_POINTS` 3000 points) and re-validated by the
+same `CatalogContributionService::decodeSegment` the map wizard uses (endpoint
+drift at most `MAX_SNAP_DRIFT_M`, 1 km). A stretch closed by the next type tap ends there. A stretch
 with **no END tap and no later type tap** runs to the ride's end, and that is
 rarely true, so **it cannot be sent until the rider decides** (owner,
 2026-09-18): its card says "No END tap", its send button is off, and "Send
@@ -3420,10 +3355,9 @@ use for a place, so a rider scanning a ride can find what still needs them; a
 sent tag turns green. Scout markers draw **above every map pin** (owner,
 2026-09-18): tag pins and stretch ends on top, vehicle passes just below them,
 catalogue pins under both, so a mapped place never hides a tag the rider must
-resolve. Dragging a tag is **free** (owner 2026-08-18, reversing
-the 2026-08-12 clamp): the ride is where the rider *was*, not where the thing
-*is* — a castle tagged from the road stands beside it, and the clamp made the
-correct position unreachable. The rider reviewing their own ride is the
+resolve. Dragging a tag is **free** (owner 2026-08-18): the ride is where the
+rider *was*, not where the thing *is*; a castle tagged from the road stands
+beside it. The rider reviewing their own ride is the
 authority on where it belongs.
 
 **One tag, one request, one decision.** No batch verb: a ride is thirty separate
@@ -3442,10 +3376,12 @@ ride file and cannot verify a thing about it. A Scout tag is worth exactly one
 ordinary submission, and a Scout ride-claim exactly one *I rode this*.
 
 **The tag vocabulary is stated once.** `App\Scout\ScoutTag::LETTERS` maps each
-of Scout's six tag types to the catalog letters it may become, the review panel
-offers exactly that list, and the endpoint validates against the same constant —
-so the panel can never present a choice the server refuses. `resupply` may be
-water or a bike service. `other` is the exception since 2026-08-18 (owner):
+of Scout's six tag types to the catalog letters it defaults to, best first;
+`ScoutTag::offerFor()` puts those first and then the rest of `REFILE_LETTERS`
+(B, D, E, G, P, Q), and the endpoint accepts exactly what `ScoutTag::allows()`
+says: any refile letter for a point tag, and A only for a surface stretch. So
+the panel can never present a choice the server refuses. `resupply` defaults
+to water or a bike service. `other` is the exception (owner 2026-08-18):
 it carries no category on the device and asks for none in review — its card is
 a free-text description only, and the intake auto-files it as an **E notice**
 with `hazardType: Other`, the curator's read of the text being the filing
@@ -3473,7 +3409,7 @@ tag's FIT timestamp. It is unpacked in the browser, the notes fill the name
 fields and the photos sit on their cards until that card is sent. The format
 is its own spec: [scout-bundle.md](scout-bundle.md).
 
-**The review screen shows everything at once** (2026-08-12). Rows are open, not
+**The review screen shows everything at once.** Rows are open, not
 collapsed: a rider came to check that thirteen tags are the right thirteen
 things, and hiding that behind thirteen clicks defeats the screen. Each row
 carries its letter and one compact control row — the name field with a camera
@@ -3512,42 +3448,54 @@ outstanding, in order. It reads **Send all** until the first tag has gone
 - **The sub-menu decides the letter and fills the fields.** Scout's second tap
   is the half that says what the rider meant, and it does not always land where
   the tag type alone would put it. **One pick, one home** (owner 2026-09-07):
-  every SCENERY pick lands on exactly one letter with `type` already answered.
-  VIEW is P · Viewpoint / high point, NATURE is P · Natural feature, HISTORY is
-  Q · Heritage site, CULTURE is Q · Museum / culture, ARCHITECT is Q ·
-  Architecture; UNKNOWN offers P then Q and fills nothing. The two Type lists
-  hold only these values plus Q's Monument and Religious site, so Monument
-  and Heritage site no longer sit on both letters. NOTICE · POTHOLES arrives
+  every SCENERY pick lands on exactly one letter. VIEW and NATURE are P;
+  HISTORY, CULTURE and ARCHITECT are Q; UNKNOWN offers P then Q.
+  **A kind for every place** (owner 2026-10-07,
+  [osm-data-architecture.md §5a](osm-data-architecture.md)): a P or Q tag is
+  not sent without its kind (`kind_required`). VIEW is one kind, so it arrives
+  as P · viewpoint. The other picks name several kinds, and the review card
+  asks the rider, who was there: a "What kind of place is it?" list with the
+  pick's kinds first (`ScoutTag::DETAIL_KINDS`; NATURE offers natural feature
+  first, for a beautiful stretch such as a road through a forest, then
+  waterfall, rapids, cliff, cave entrance, rock arch, rock, boulder and peak),
+  then the rest of the letter's.
+  The list follows the letter when the rider re-files the tag. "Send the rest"
+  skips a tag with no kind and says how many. NOTICE · POTHOLES arrives
   as E with `hazardType` already answered; CLOSURE · WEEKS as E with
   `closedFor`, which is what lets the map retire it by itself.
-  `ScoutTag::DETAIL_LETTERS` and `DETAIL_FIELDS` own both tables and the panel
-  reads them from the server, so it cannot offer a letter the endpoint refuses.
+  `ScoutTag::DETAIL_LETTERS`, `DETAIL_FIELDS` and `DETAIL_KINDS` own the
+  tables and the panel reads them from the server (`window.CC_SCOUT_KINDS`),
+  so it cannot offer a letter or a kind the endpoint refuses.
   A sub-menu answer never follows a tag the rider re-filed onto another letter
   (the field would not exist there): `ScoutIntakeController` fills the fields
   only when the letter is the pick's first offer. Pinned by
-  `ScoutIntakeTest::testEveryScenerySubmenuPickHasOneHomeAndItsTypeExistsThere`.
-  Vocabulary rename `Version20260907210000`: Nature reserve to Natural feature
-  on P, Museum to Museum / culture on Q, in items and undecided payloads.
-- **`hazardType` gained Potholes, Junction / crossing and Bad corner**, because
-  the device offers them and every notice tapped on the bars was otherwise
+  `ScoutIntakeTest::testEveryScenerySubmenuPickHasOneHomeAndItsKindsExistThere`
+  and `testABroadSceneryPickNeedsTheKindTheRiderSaw`.
+  The panel sends the pick as `detail` on every point tag; without it the
+  server fills nothing. The submission keeps the raw pick as `scoutPick`
+  (`{tag, detail}`): the Type is a reading of the pick, the pick is the fact.
+  The page also carries `window.CC_SCOUT_ANSWERS` (tag
+  type → pick → the filled value in the rider's language), so the card head
+  reads "3 · Notice · Potholes" and an unnamed tag falls back to that name.
+  Pinned by `web/tests/js/scout-review.test.cjs` and
+  `ScoutReviewPageTest::testTheReviewPageNamesWhatEachSubMenuAnswerFills`.
+- **`hazardType` carries Potholes, Junction / crossing and Bad corner**,
+  because the device offers them, so a notice tapped on the bars is not
   flattened to "Other".
 - **The panel closes, and closing ends the review** (owner 2026-08-12). The card
   covers the top-left corner of the map, which is exactly where a tag often is.
   A ✕ in its own corner — sticky, so it does not scroll away behind a long list
   — hides the card *and* clears the ride: the route line, the numbered pins and
   the overtake markers all go, and the file input is reset so the same ride can
-  be opened again. A first attempt left a "Review a ride" chip behind, which
-  still occupied the corner and read as not-closed. Nothing is stranded by it:
+  be opened again; nothing is left in the corner. Nothing is stranded by it:
   the tags live in the **rider's own ride file**, which we never had a copy of,
   so opening it again another day brings back everything not yet sent — and the
   confirm dialog says so, naming how many are outstanding. Reading a new ride
   clears first, so two rides can never be drawn over each other.
 - **The Scout mark is a fixed small square beside the title** (owner
-  2026-08-18: half the old mark, and the lead paragraph is gone — it explained
-  what the panel already shows, and the privacy promise lives on `/scout`
-  where a first-time rider actually reads it). This replaced the
-  measured-width mechanism the taller mark needed; the ResizeObserver went
-  with it.
+  2026-08-18), with no lead paragraph: the panel shows what it does, and the
+  privacy promise lives on `/scout` where a first-time rider actually reads
+  it.
 - **The `/scout` page shows this review screen in its hero** (owner
   2026-09-18): a real screenshot, `brand-src/import-a-scout-ride.webp`,
   served as four widths (480, 960, 1440, 1900 px) from
@@ -3567,9 +3515,9 @@ outstanding, in order. It reads **Send all** until the first tag has gone
   their owners' permission, so those chips stay text. A store badge appears
   only once the app is live in that store. The homepage keeps two, small and
   decorative.
-- **The category dropdown is opaque.** A translucent control mixed with the
-  system white behind the native popup and rendered pale cream on pale grey;
-  both the closed control and its `option`s now state their own colours.
+- **The category dropdown is opaque.** A translucent control would mix with the
+  system white behind the native popup, so both the closed control and its
+  `option`s state their own colours.
 
 **The cars that passed you land on the map** (owner 2026-08-12), in the
 review's traffic step ([traffic-measurements.md](traffic-measurements.md) §3.1),
@@ -3593,10 +3541,10 @@ the difference between it and the rider.
 - Speed follows the rider's **distance** preference
   ([account-and-auth.md](account-and-auth.md) §9); there is deliberately no
   separate speed setting.
-- Still **measured, never sent**: nothing on the server can hold a measurement
-  yet, and showing it while saying so is honest.
+- What the rider may send from it, and how it is stored, is
+  [traffic-measurements.md](traffic-measurements.md).
 
-**Curator-facing naming follows the rider's own choice** (2026-08-12). The desk
+**Curator-facing naming follows the rider's own choice** (owner 2026-08-12). The desk
 is pseudonymous by default — a decision should turn on the contribution, not on
 who sent it — but `public_profile` is an explicit opt-in that already puts a
 name on the contributors wall and on `/riders/{uuid}`, so hiding it from the one
@@ -3642,23 +3590,21 @@ overview, country requests, dashboard, escalated photos and submissions, user
 pages). Curator applications already link the applicant's profile.
 
 **A curator can open a pending item in the wizard.** `/improve?item=` binds only
-publicly-served states for everyone else, and the pending drawer was offering an
-"Edit this item" link that could never resolve. A curator is already reading
-that submission on the desk, so nothing is exposed that they cannot see — and
-the alternative was bouncing a typo back to the rider as a needs-info.
+publicly-served states for everyone else (and the submitter's own, §3.3b), so
+the pending drawer's "Edit this item" link resolves for a curator. A curator is
+already reading that submission on the desk, so nothing is exposed that they
+cannot see, and a typo need not go back to the rider as a needs-info.
 
-### A curator's confirmation verifies the item (2026-08-12)
+### A curator's confirmation verifies the item (owner 2026-08-12)
 
-Repetition by strangers is the only real check this project has — a photo can be
-generated, a place invented — which is why several unrelated riders mean
-something and one does not.
-
-It is the wrong instrument for a castle. Some entries a curator settles by
-looking (a listed monument, a station, a fountain in a town square), and making
-them wait for three riders to pass by is ceremony rather than verification
-(owner 2026-08-12). So a curator's own confirmation moves the item from
-`unverified` to `verified` in one press, recorded in the item's change history as
-an act of theirs rather than happening quietly.
+Repetition by strangers is the only real check this project has (a photo can be
+generated, a place invented), which is why §10.1 counts independent riders. It
+is the wrong instrument for a castle. Some entries a curator settles by looking
+(a listed monument, a station, a fountain in a town square), and making them
+wait for riders to pass by is ceremony rather than verification. So a curator's
+own confirmation moves the item from `unverified` to `verified` in one press,
+recorded in the item's change history as an act of theirs rather than happening
+quietly (§10.1, "Two ways to Verified").
 
 **Not a new moderation mechanic**, deliberately: it is the same confirm control
 every rider uses, weighted by who pressed it. Nothing queues, nothing is
@@ -3671,40 +3617,27 @@ guards, each of which would otherwise be a quiet way to launder a claim:
   entry is good);
 - an already-verified item is not re-promoted, so the history carries one row.
 
-Note what this exposed: **items never became `verified` from rider
-confirmations at all.** Only routes have a threshold (`route.ride_verify_threshold`).
-The tally is shown in the drawer and promotes nothing — a gap worth its own
-decision, not one to settle inside a curator shortcut.
+### Confirming covers votable places, and reaches OSM places (owner 2026-08-12)
 
-### Confirming widened, and reached OSM places (2026-08-12)
-
-**A place that can be gone can be confirmed** — not only utilities. A viewpoint
-gets built out, a monument fenced off, a gîte closed, and the rider standing
-there is the only person who knows (owner-reported: a second rider could do
-nothing at a viewpoint). So `ScenicViews`, `HistoryCulture` and `WhereToSleep`
-gained the `Exists` stance, and are now **both votable and confirmable** —
-voting ranks a region's best, confirming says the place is still there, and a
-letter can want both. Climbs stay vote-only: a mountain does not go anywhere.
-`CC_CONFIRMABLE` in the map mirrors it, and had also been missing `toilets`,
-which the server had allowed all along.
+**A place a rider can stand in front of can be confirmed**, not only utilities.
+A viewpoint gets built out, a monument fenced off, a gîte closed, and the rider
+standing there is the only person who knows. So `ScenicViews`, `HistoryCulture`,
+`WhereToSleep` and `Climbs` offer the `Exists` stance and are **both votable and
+confirmable** (§10.1): voting ranks a region's best, confirming says the place
+is there and right, and a letter can want both. `CC_CONFIRMABLE` in
+`community.js` mirrors `ItemType::isConfirmable()`.
 
 **An OSM place can be confirmed too, through the door that already exists.**
-Confirmation is keyed on an item, and an OSM pool point is not one — so the
-drawer said "confirm on the spot" with nothing to press. It now offers *Confirm
-it's here*, which is the same bridge the surface tiles use: the improve wizard,
+Confirmation is keyed on an item, and an OSM pool point is not one, so the
+drawer offers *Confirm it's here* (`d_confirm_here`), which is the same bridge the surface tiles use: the improve wizard,
 prefilled, opening on the details because agreeing includes agreeing with where
 it is. Submitting mints our item carrying the OSM ref, and from then on the
 ordinary one-tap panel applies. No second confirmation store keyed on a ref, and
 no new moderation mechanic.
 
-### A moved pin is a change (2026-08-12)
+### A moved pin is a change
 
-It used to count only towards *"did anything change"* and was then thrown away:
-the submission was filed at the item's OLD point, the diff never named the move,
-and approving it moved nothing. The rider did the work, the wizard accepted it,
-and the system dropped it silently — the worst of the three outcomes.
-
-A move now travels as `Item::LOCATION_FIELD` ('location'), a pseudo-field like
+A move travels as `Item::LOCATION_FIELD` ('location'), a pseudo-field like
 `name`: it is not an attribute, because the position lives in `geom`, but an
 edit has to be able to carry it. It appears in the desk diff as a coordinate
 pair, is applied by `ModerationService::applyEdit` on approve, and lands in the
@@ -3712,8 +3645,8 @@ item's change history like any other field. The submission itself is filed **at
 the proposed point**, not the current one — the desk pins submissions on a map,
 and a curator judging a move has to see where it is being moved TO.
 
-Moving nothing is still nothing: an edit whose pin has not moved, with no other
-change, is refused as before.
+Moving nothing is nothing: an edit whose pin has not moved, with no other
+change, is refused (§1.2).
 
 **And it is DRAWN, not printed.** "52.62142, 5.13569 → 52.62117, 5.13448" tells
 a curator that something moved and nothing about whether it moved to the right
@@ -3724,46 +3657,40 @@ is proposed — with the map framed on the pair, because a curator flipping
 between two off-screen points learns nothing. A ring rather than a pin so the
 item's own marker stays visible underneath: the comparison is the question.
 
-**The desk's confirmation gates changed** (owner 2026-08-12). Trash no longer
-asks the curator to type DELETE or to tick a box — opening the panel and
-pressing Trash inside it are already two deliberate acts on a control that is
-one icon among five, and a word typed fifty times is a reflex rather than a
-check. The server-side re-check went with it, on both desks, rather than being
-left as a hidden constant that always passes. What protects the row is what
-always did: a valid CSRF token, a POST, and the curator role. Escalation keeps
-its tick-box — it alerts an administrator and cannot be undone by anyone — and
-both panels gained a Cancel, because a panel that says "nothing can delete it
-afterwards" is not one to feel trapped in.
+**The desk's confirmation gates** (owner 2026-08-12). Trash asks for no typed
+word and no tick box, on either desk (§5.2): opening the panel and pressing
+Trash inside it are already two deliberate acts, and a word typed fifty times
+is a reflex rather than a check. What protects the row is a valid CSRF token, a
+POST, and the curator role. Escalation keeps its tick box, because it alerts an
+administrator and cannot be undone by anyone. Both panels carry a Cancel,
+because a panel that says "nothing can delete it afterwards" is not one to feel
+trapped in.
 
-### What a Scout ride carries that intake cannot yet take (2026-08-12)
+### What a Scout ride carries, and where each part goes
 
-Stated concretely, because "mostly works" is how a gap survives a release:
-
-| From the ride | Today |
+| From the ride | What happens |
 |---|---|
-| **SURFACE tags (any sub-menu)** | **Refused.** A is segment-located and this endpoint carries one tapped point; an item minted from it gets Point geometry, which `CatalogProvider::surfaceSegments()` skips by design — it would succeed, say so, and never appear. A is not offered and the endpoint returns 422. The panel counts the stretches the parser found and says to add them from the map. |
-| **Start/END stretch pairing** | Computed by the vendored parser (`buildSurfaceSegments`), displayed as a count, **not submitted**. This is plan task 6 and the only thing standing between a Scout surface tag and a real A segment. |
+| **A surface tap on its own** | Never an A point: a point would mint Point geometry, which `CatalogProvider::surfaceSegments()` skips by design. The endpoint refuses it (`segment_required`); a bare tap is the grey `?` pin above. |
+| **Start/END stretch pairing** | Paired by the vendored parser (`buildSurfaceSegments`) and sent as an A submission with its `segment` (surface stretches, above). |
 | **Overtake counts** | Shown to the rider in the review's second step, and sent only when the rider sends a traffic summary: per road piece, distance, passes and car speeds with a coarse time key, never the ride. Stored encrypted, shown to curators only once disclosure rules pass ([traffic-measurements.md](traffic-measurements.md)). |
-| **Tags with no GPS fix** | Counted and named in the panel. They used to be dropped silently, which meant a rider who tapped thirteen times and saw eleven rows had no way to learn why. |
-| **An unterminated stretch** | The parser closes it at the ride's end and flags it; nothing reads the flag yet. |
+| **Tags with no GPS fix** | Counted and named in the panel, never dropped silently. |
+| **An unterminated stretch** | The parser closes it at the ride's end and flags it; the card says "No END tap" and it is not sent until the rider decides (above). |
 | **A stray END with no start** | Ignored by the parser, as on the device. |
-| **The observation date** | Travels in the submission's raw payload, which the moderator reads. Not yet a first-class attribute (plan task 6a). |
+| **The observation date** | Sent as `observedAt` and kept as a date in the submission's raw payload, which the moderator reads; not a first-class attribute. |
 
-Everything else — NOTICE, CLOSURE, SCENERY, RESUPPLY, OTHER, with or without a
-sub-menu value — goes through the ordinary intake, with the sub-menu deciding
+Everything else (NOTICE, CLOSURE, SCENERY, RESUPPLY, OTHER, with or without a
+sub-menu value) goes through the ordinary intake, with the sub-menu deciding
 the letter offered first and filling the fields it answers.
 
-**Open:** the observation date rides in the submission's raw payload (which the
-moderator reads) rather than as a first-class attribute — making it one is task
-6a of the plan and a registry change of its own. And approving every tag by hand
-is the right default for a stranger and the wrong one for a rider with two
-hundred approved submissions behind them; contributor standing is in
-`docs/TODO.md`.
+**Open:** making the observation date a first-class attribute is a registry
+change of its own. Approving every tag by hand is the right default for a
+stranger and the wrong one for a rider with two hundred approved submissions
+behind them; contributor standing is not built.
 
 ## 13. The curator room, the in-desk board
 
-**Status: specified 2026-08-26 (owner), built (849fe97e). Pictures and the
-submission search added 2026-09-19 (owner).**
+Owner decisions 2026-08-26 (the room) and 2026-09-19 (pictures, the
+submission search).
 
 ### 13.1 Why it exists
 
@@ -3788,12 +3715,11 @@ the room deliberately does not reuse it for curators. A room that emails is a
 room people answer from their phone, and the rulebook's whole point is that
 this conversation stays at the desk.
 
-Two things this list once held and no longer does (owner 2026-09-19):
-**pictures** (§13.3, `curator_post_image`: a curator asking about a sign or a
-gate needs to show it, and a picture kept in the database and served to
-curators only has not left the desk) and **JavaScript** (§13.9: the composer's
-submission search and its uploader are scripts, over a plain form that still
-works without them).
+Pictures and JavaScript are allowed (owner 2026-09-19): **pictures** (§13.3,
+`curator_post_image`: a curator asking about a sign or a gate needs to show it,
+and a picture kept in the database and served to curators only has not left
+the desk) and **JavaScript** (§13.9: the composer's submission search and its
+uploader are scripts, over a plain form that still works without them).
 
 ### 13.3 Model: a board, not an inbox
 
@@ -3821,16 +3747,12 @@ unread bulb. The room stores one row per post instead.
 Indexes: `(pin, created_at DESC)` for the board read, `(recipient_id,
 created_at DESC)` for the Direct view and the badge.
 
-`curator_post_read` (2026-09-30): `user_id` and `post_id` (together the
-primary key, both `ON DELETE CASCADE`), `read_at`. One row per curator per
-post they have opened (§13.7). It replaced `curator_room_visit`, one "last had
-the room open" stamp per curator, which counted every post as seen once the
-board loaded; migration `Version20260930200000` backfilled a read row for
-every post older than each curator's stamp, and for every existing post for a
-curator who had never opened the room (who counted nothing), so nobody's
-count rose, then dropped the old table.
+`curator_post_read` (migration `Version20260930200000`): `user_id` and
+`post_id` (together the primary key, both `ON DELETE CASCADE`), `read_at`. One
+row per curator per post they have opened (§13.7); loading the board marks
+nothing.
 
-`curator_post_image` (2026-09-19): a picture on a post, kept **in the
+`curator_post_image`: a picture on a post, kept **in the
 database** and served to curators only, the way a bug report's screenshot is
 (contact-and-support.md §6). The web host holds the upload's raw bytes as
 `pending` and queues `CheckPicture`; the worker scans them and draws them
@@ -3916,7 +3838,7 @@ room per area would silence exactly the question it exists to answer.
 `curator_post` therefore holds no region column at all, so there is nothing a
 later query could accidentally filter on.
 
-**The submission search is scoped** (2026-09-30). It is not a post: it lists
+**The submission search is scoped.** It is not a post: it lists
 queue cards, their titles and statuses, so it follows the queue's rule and
 narrows by the reader's `ModerationScope` (§9.2), and it never lists a card
 under legal hold. The room still reaches past the asker's area: a card out of
@@ -3975,8 +3897,8 @@ matching `ModerateController`'s existing redirect discipline.
 ### 13.9 Surface
 
 `templates/moderate/room.html.twig`, inside the account shell with
-`active = 'moderate_room'`. `_shell_chrome.html.twig` gains `moderate_room` in
-its `in_moderation` list, and a Room tab carrying the §13.7 badge.
+`active = 'moderate_room'`. `_shell_chrome.html.twig` lists `moderate_room` in
+its `in_moderation` list and draws a Room tab carrying the §13.7 badge.
 
 Category chips across the top, pinned posts in their own block, then the list
 newest first, then the composer. **Plain forms first**, so the strict CSP has
@@ -4031,13 +3953,12 @@ still in the box.
 
 ### 13.10 The rulebook's link
 
-`templates/moderate/rulebook.html.twig` links the room by literal path, with a
-comment saying to switch once the route lands. When it lands, the screen-only
-anchor becomes `path('moderate_room')` and the comment goes. The
-`span.rb-print` twin stays: §5's PDF must carry no link annotations, and the
-route existing does not change that.
+`templates/moderate/rulebook.html.twig` links the room with
+`path('moderate_room')` as a screen-only anchor (`.rb-screen`), with a plain
+`span.rb-print` twin for print: a printed or saved copy carries no link
+annotations (§5.2, "A printed copy carries no links").
 
-## 14. Contributors and curators, the public explainer (2026-09-08)
+## 14. Contributors and curators, the public explainer (owner 2026-09-08)
 
 One page, two halves: `/contributors-and-curators` (`LocalizedPath::ROLES`,
 `PageController::roles()`, `pages/roles.html.twig`, slug localised in all
@@ -4069,26 +3990,17 @@ story field asks for hints, not credentials (owner: "sounds too much like it
 is needed"): where you ride, what you know about the place, what you have
 mapped before. Pinned by `RolesPageTest`.
 
-The same night the application page (`/join/{cc}`) took the site's full
-width with a 760px reading column from the left, its intro became two
-columns, the words left and one outlined `.btn.btn-g` to the roles page on
-the right, and the "add or fix something" link under it went. Get involved
-(`/join`) lost its "Riders and local knowledge" block and its five how-to
-lines (25 `join.howto*`/`heart_*` keys removed): that story lives on the
-roles page, and Get involved is "about all things needed beyond curators
-and contributors", opening on the skills the project needs; its closing
-block is left-aligned like the rest. On `/regions` the curator link on each
+The application page (`/join/{cc}`) takes the site's full width with a 760px
+reading column from the left; its intro is two columns, the words left and one
+outlined `.btn.btn-g` to the roles page on the right. Get involved (`/join`)
+carries no rider how-to: that story lives on the roles page, and Get involved
+is "about all things needed beyond curators and contributors", opening on the
+skills the project needs; its closing block is left-aligned like the rest. On `/regions` the curator link on each
 country row is an icon (a person with a plus), quiet grey, orange on hover,
 named by title and aria-label.
 
 ## 15. Open questions
 
-- **Confirmations vs the verification threshold (X):** whether
-  `item_confirmation` tallies are the counter feeding the
-  Unverified → Verified gate in
-  [edit-items/README.md](edit-items/README.md#verification-threshold-x) or a
-  parallel freshness signal. Nothing in the code consumes the tallies for
-  state transitions today; the funnel wiring is undecided.
 - **Rejected route proposals on account deletion:** they stay (§8). Deleting
   them means deleting catalog rows whose `source_ref` provenance assumed
   permanence and orphaning their `route_change_history` rows; that needs an
@@ -4096,5 +4008,5 @@ named by title and aria-label.
 - **Never-answered `needs_info` rows** wait for ever while the account exists
   (auto-reject after N months?).
 - **GDPR story for free-text bodies on no-FK user rows** (correction bodies
-  specifically): anonymised-by-decoupling is the deliberate default (§5.6),
+  specifically): anonymised-by-decoupling is the deliberate default (§3.1, §8),
   but whether authored *text* should join a deletion hook is unconfirmed.

@@ -64,7 +64,7 @@ final class ExportEnglishOverlaysCommandTest extends KernelTestCase
     }
 
     /**
-     * Finding 1 (task-11 review): a message key that is both a leaf and the
+     * A message key that is both a leaf and the
      * prefix of another key must not silently discard one of them. The old
      * by-reference walk this command used before the Psalm rewrite would
      * have hit a PHP fatal error on this shape (a reference into a string

@@ -19,7 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  */
 final class CountrySeedMigrationTest extends KernelTestCase
 {
-    /** web/assets/map/scope.js TZ_COUNTRY on 2026-10-05, frozen (Task 4 deletes it). */
+    /** web/assets/map/scope.js TZ_COUNTRY on 2026-10-05, frozen; scope.js reads window.CC_TZ_COUNTRY instead. */
     private const array TZ_COUNTRY_ON_2026_10_05 = [
         'Europe/Brussels' => 'BE', 'Europe/Amsterdam' => 'NL', 'Europe/Berlin' => 'DE', 'Europe/Busingen' => 'DE',
         'Europe/Luxembourg' => 'LU', 'Europe/Paris' => 'FR', 'Europe/Zurich' => 'CH', 'Europe/London' => 'GB',

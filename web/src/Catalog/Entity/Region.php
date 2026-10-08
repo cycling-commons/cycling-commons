@@ -55,7 +55,8 @@ class Region
     private ?string $source = null;
 
     /**
-     * Per-region override of `route.region_active_cap`; NULL = global default. Set via admin, never by import.
+     * Declared but read by nothing: the region cap is the global `route.region_active_cap` for every region.
+     * No import or admin form writes it, so it stays NULL.
      *
      * @see docs/specs/route-domain.md §5.1
      */

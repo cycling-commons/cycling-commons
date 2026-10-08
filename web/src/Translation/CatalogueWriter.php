@@ -63,14 +63,13 @@ final class CatalogueWriter
      * is captured whole so the caller can tell an empty tail (a mapping, no
      * value on this line) from a block scalar marker from a quoted value.
      *
-     * The hyphen is load-bearing: 74 lines of every catalogue are region
-     * labels under `regions:` whose keys carry one (`limburg-nl`,
-     * `baden-wurttemberg`, `nordrhein-westfalen`, ...), and those are
-     * exactly the strings this tool exists to draft. Without it those lines
-     * matched nothing, so they never joined the indentation stack, their
-     * `label:` children resolved to the phantom path `regions.label`, and a
-     * request for the real key was refused as "that key does not exist",
-     * which was false.
+     * The hyphen is load-bearing: the nine catalogue-type slugs under
+     * `item_type:` carry one (`road-surface`, `water-food`,
+     * `where-to-sleep`, ...), and their children are strings this tool
+     * drafts. Without it those lines would match nothing and never join the
+     * indentation stack, their `label:` children would resolve to the
+     * phantom path `item_type.label`, and a request for the real key would
+     * be refused as "that key does not exist".
      */
     private const string KEY_LINE_PATTERN = '/^(?<indent>[ ]*)(?<key>[A-Za-z0-9_.-]+):(?<tail>.*)$/';
 

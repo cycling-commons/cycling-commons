@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 /**
  * Climb-editor road snap via our Valhalla; OSRM response shape kept on purpose.
  *
- * Hardened 2026-08-24 (test-suite review) to match its sibling
+ * Hardened to match its sibling
  * /contribute/elevation exactly. Both POST JSON from the same two editor pages
  * to the same upstream Valhalla, and this one had login as its only guard:
  * `#[IsGranted]` alone, no stateless token, no quota. Login is not a quota, and

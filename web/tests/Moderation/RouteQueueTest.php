@@ -78,7 +78,7 @@ final class RouteQueueTest extends KernelTestCase
         self::assertSame(0, $withoutSegmentsRow['segmentCount']);
     }
 
-    // ── Moderator-areas scoping (task 4) ────────────────────────────────────
+    // ── Moderator-areas scoping ─────────────────────────────────────────────
 
     private function seedRegion(EntityManagerInterface $em, string $slug, string $name, string $country): Region
     {

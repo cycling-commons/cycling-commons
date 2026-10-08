@@ -18,7 +18,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * moderator-areas spec 2026-07-14, task 3: hard scope guards on submission
+ * moderation-and-contribution.md §9: hard scope guards on submission
  * writes. A curator confined to region A must not be able to decide, trash,
  * or message a submission that lives in region B — even by posting the id
  * directly, bypassing whatever the queue happens to render. ROLE_ADMIN stays

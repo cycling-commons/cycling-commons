@@ -222,7 +222,7 @@ services:
       clamav:
         condition: service_healthy
 
-  # ---- virus scanner sidecar (media plan task 3). clamd takes ~a minute to
+  # ---- virus scanner sidecar (media-storage-architecture.md §3.1). clamd takes ~a minute to
   # load signatures on first start; the generous healthcheck start_period is
   # that, not slowness. The worker waits for healthy so a scan never races the
   # signature load.
@@ -378,8 +378,8 @@ services:
   #
   # The PRIVATE bucket gets NO anonymous policy, and that is the point: an
   # unscanned upload sits there world-unreadable until the worker's clean
-  # verdict physically moves derivatives to the public bucket (media plan
-  # task 2).
+  # verdict physically moves derivatives to the public bucket
+  # (media-storage-architecture.md §2.2).
   #
   # Exits immediately after; `mb --ignore-existing` makes reruns free, so it
   # costs one short-lived container per `make up` and is a no-op from the

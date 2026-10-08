@@ -17,7 +17,7 @@ final class Version20260716120000 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // Map the harvester's human label onto the canonical serviceKind
-        // (OSM data architecture spec §5). jsonb_set adds the key in place.
+        // (edit-items/D-bike-services.md, service kinds). jsonb_set adds the key in place.
         $map = [
             'Bike shop' => 'shop',
             'Repair station' => 'station',

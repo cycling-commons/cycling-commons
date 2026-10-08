@@ -13,7 +13,7 @@ final class Version20260712150000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'user_message — moderation-feedback inbox (messages spec M1/M10; first real user_id FK, ON DELETE CASCADE)';
+        return 'user_message: moderation-feedback inbox (moderation-and-contribution.md §7, M1/M10; first real user_id FK, ON DELETE CASCADE)';
     }
 
     public function up(Schema $schema): void

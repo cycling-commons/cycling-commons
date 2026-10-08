@@ -313,7 +313,7 @@ final class CuratorWizardCopyTest extends WebTestCase
         $crawler = $client->request('GET', '/improve?type=scenic-views&mode=add');
         $form = $crawler->selectButton('Next →')->form([
             'improve[details][name]' => 'Uitkijkpunt Answered',
-            'improve[details][type]' => 'Viewpoint / high point',
+            'improve[details][type]' => 'viewpoint',
             'improve[lat]' => '50.4712',
             'improve[lng]' => '5.8601',
             'improve[mode]' => 'add',

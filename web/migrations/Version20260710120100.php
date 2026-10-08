@@ -13,7 +13,7 @@ final class Version20260710120100 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'route_vote — typed seasonal votes (route-domain v1 phase 3, spec §4.2)';
+        return 'route_vote: typed seasonal votes (route-domain.md §2.2)';
     }
 
     public function up(Schema $schema): void

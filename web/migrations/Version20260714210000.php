@@ -13,7 +13,7 @@ final class Version20260714210000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'moderator_area — region/country moderation-scope assignments (moderator-areas spec 2026-07-14)';
+        return 'moderator_area: region/country moderation-scope assignments (moderation-and-contribution.md §9)';
     }
 
     public function up(Schema $schema): void

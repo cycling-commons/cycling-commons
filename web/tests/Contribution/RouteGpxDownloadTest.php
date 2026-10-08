@@ -13,7 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * Route-domain spec §7: GET /routes/{id}.gpx — public for ACTIVE routes
+ * route-domain.md §6: GET /routes/{id}.gpx, public for ACTIVE routes
  * (unverified + verified), 404 for anything else. You can't ask riders to
  * ride-verify a track they can't download.
  */

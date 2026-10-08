@@ -13,13 +13,13 @@ final class Version20260708140000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'recommended_route.attributes.difficulty — normalize legacy string values to canonical {score,label} (P2-D1)';
+        return 'recommended_route.attributes.difficulty: normalize legacy string values to canonical {score,label} (route-domain.md §9)';
     }
 
     public function up(Schema $schema): void
     {
         // Rewrite string difficulty → {score,label} on the 5-level canonical scale
-        // (route-domain spec §12 P2-D1). Covers both the canonical labels and the
+        // (route-domain.md §9). Covers both the canonical labels and the
         // legacy rider vocab (Gentle/Moderate/Hard/Very hard).
         $map = ['Gentle' => 1, 'Easy' => 1, 'Moderate' => 2, 'Challenging' => 3, 'Hard' => 4, 'Very hard' => 5];
         $labels = [1 => 'Easy', 2 => 'Moderate', 3 => 'Challenging', 4 => 'Hard', 5 => 'Very hard'];

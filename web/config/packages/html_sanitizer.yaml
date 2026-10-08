@@ -1,5 +1,5 @@
-# Frontend review 2026-07-12 W61: translation catalogs are contributor-editable
-# (public repo), so rich copy rendered from them goes through this sanitizer —
+# Translation catalogs are contributor-editable
+# (public repo; security-architecture.md §3), so rich copy rendered from them goes through this sanitizer -
 # the |rich Twig filter — instead of a blanket |raw. The allowlist mirrors the
 # markup the catalogs actually use (grep '<' translations/messages.en.yaml).
 framework:
@@ -24,7 +24,7 @@ framework:
                 # The two strings that used it (settings email_hint, the email
                 # footer) colour their links from the surrounding template now.
 
-            # Bug-report bodies (docs/specs/contact-and-support.md §11). A
+            # Bug-report bodies (docs/specs/contact-and-support.md §15). A
             # separate profile from the translations one, and deliberately
             # narrower: this input comes from a stranger through a public form,
             # not from a merged pull request.

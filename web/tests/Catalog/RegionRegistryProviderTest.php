@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * The client-side region registry (map-and-search.md §4.5 Phase 2):
+ * The client-side region registry (map-and-search.md §4.5):
  * id/slug/countryCode/bbox per region, fed to window.CCScope. `countryCode`
  * (not `cc`) matches the scope-object contract.
  */

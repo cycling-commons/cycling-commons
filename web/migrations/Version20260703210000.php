@@ -8,8 +8,8 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * heat_point round-trips the season the ride-heat layer filters by (spec
- * §4.3): the fixture points are [lat, lng, season] but the column was missing.
+ * heat_point round-trips the season the ride-heat layer filters by
+ * (catalog-data-model.md §2.3): the fixture points are [lat, lng, season] but the column was missing.
  */
 final class Version20260703210000 extends AbstractMigration
 {

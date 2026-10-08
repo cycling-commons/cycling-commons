@@ -137,8 +137,8 @@ final class CatalogueWriterTest extends TestCase
     public function testWritesAKeyNestedThreeLevelsDeep(): void
     {
         // translate.stale.tag: translate: -> stale: -> tag:, three levels of
-        // indentation, the exact shape docs/specs/translations.md §7.4 and
-        // the plan both use as the walking example.
+        // indentation, the exact shape docs/specs/translations.md §7.4 uses
+        // as the walking example.
         $this->writer()->write('fr', 'translate.stale.tag', 'English changed v%from% -> v%to%');
 
         self::assertSame([53], $this->changedLineIndexes('fr'));

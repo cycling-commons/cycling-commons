@@ -3,7 +3,7 @@
 // scope-ui.js's coverage-notice wiring (docs/specs/map-and-search.md §4.5b)
 // cannot be loaded under node:test: it imports map-init.js, which reaches
 // for a live MapLibre instance at module load time. These are source-text
-// pins on the two contracts review round 2 asked for:
+// pins on two contracts:
 //
 //   1. while the coverage decision is pending (outlines needed but not yet
 //      loaded), the pan-away nudge stands down exactly as if the banner

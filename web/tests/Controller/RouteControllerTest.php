@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
- * POST /contribute/route hardening (test-suite review 2026-08-24).
+ * POST /contribute/route hardening.
  *
  * The road-snap endpoint is the twin of /contribute/elevation: same two editor
  * pages, same upstream Valhalla, same stateless-JSON contract. It shipped with

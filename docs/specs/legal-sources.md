@@ -9,14 +9,26 @@ to them in spec/wiki and in the website itself").
 
 ## The rule
 
-**Name the article in the text, link the act.** EUR-Lex is the official source
-and its per-article anchors are not stable across consolidations, so a deep link
-rots while the act's ELI URL does not. `Article 16 of the DSA` as link text
-pointing at the DSA is durable and still lands a reader on the right document.
+**Name the article in the text, and link it.** EUR-Lex is the official source.
 
-On the site, the link goes in the sentence that makes the claim, not in a
-footnote: somebody reading why we hold their address should be one click from
-the provision that allows it.
+On the site, a GDPR article links to that article, in the reader's language:
+`https://eur-lex.europa.eu/legal-content/<LANG>/TXT/HTML/?uri=CELEX:32016R0679#art_<n>`,
+with the law's local name in the link text ("GDPR Art. 17", "AVG art. 17"). The
+bare regulation URL opens at the recitals, whose numbers repeat the articles'
+(recital 32 is consent, Article 32 security), so a link to the act alone puts a
+reader on the wrong numbered paragraph.
+`ContentPagesTest::testEveryGdprArticleLinkOpensThatArticle` pins this on
+`/privacy` (privacy-notice.md §2). Other acts on the site link the act's ELI
+URL from the table below, with the article named in the text, as the DSA
+statement-of-reasons email does.
+
+The link goes in the sentence that makes the claim, not in a footnote:
+somebody reading why we hold their address should be one click from the
+provision that allows it.
+
+Specs and the wiki name the article in the text and link the act's ELI URL
+from the table below: anchors into a consolidated version are not stable,
+while the ELI URL is.
 
 ## The acts
 
@@ -33,7 +45,7 @@ The GDPR has four names in the five languages this site speaks, and the copy
 uses whichever one a reader of that language would recognise. They are the same
 regulation and they link to the same text.
 
-Two notes on the licence rows, because the mapping has been got wrong before.
+Two notes on the licence rows, because the mapping is easy to get wrong.
 
 **Interface text is code, not media.** The strings on the page, and the
 translations of them, ship in the software and carry the software's licence.

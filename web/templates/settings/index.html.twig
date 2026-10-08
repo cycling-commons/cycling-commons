@@ -157,9 +157,7 @@
               {{ 'form.base_current'|trans({'%regions%': region_labels|join(' · ')}) }}
             {% else %}
               {# Empty derived set (base outside every seeded region — e.g. a Dutch
-                 base today): say so instead of rendering a bare "Your area:".
-                 The map-side default for this state is the recorded Phase 5
-                 follow-up (map-and-search.md §4.5 Phase 4 review round). #}
+                 base today): say so instead of rendering a bare "Your area:". #}
               {{ 'form.base_current_none'|trans }}
             {% endif %}
           </div>
@@ -167,7 +165,7 @@
       {% endif %}
     </div>
 
-    {# ── Riding preferences (bike types + type of riding, spec 2026-07-14) ── #}
+    {# ── Riding preferences (bike types + type of riding, account-and-auth.md §9) ── #}
     <h2 class="sec">{{ 'settings.section_preferences'|trans }}</h2>
     <div class="grid-2">
       <div class="field">

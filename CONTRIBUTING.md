@@ -199,9 +199,10 @@ a clean run takes a few minutes. `staging` deploys on push, so this is the last
 point before a red gate reaches a server. `git push --no-verify` skips it.
 
 **Dev mail (Mailpit):** outbound email (registration confirmation, password-reset links, etc.)
-is sent to a [Mailpit](https://mailpit.axllent.org/) on the host at `:1025`. No real mail is
-sent in local development; read it at <http://localhost:8025>. The stack does **not** bundle its
-own Mailpit. No Mailpit yet? `docker run -d -p 8025:8025 -p 1025:1025 axllent/mailpit`.
+goes to the stack's bundled [Mailpit](https://mailpit.axllent.org/) service at `mailpit:1025` on
+the internal network. No real mail is sent in local development; read it at <http://localhost:8025>
+(`MAILPIT_UI_PORT` moves the UI if 8025 is taken). To use a Mailpit you already run on the host
+instead, set `MAILER_DSN=smtp://host.docker.internal:1025`.
 
 **Bootstrap an admin account** (requires the Docker DB to be running and migrations applied):
 

@@ -78,7 +78,7 @@ jobs:
       # `"ES" is not a known country code`.
       - run: php bin/console app:world:import --env=test
       - run: php bin/phpunit
-      # Map scope-model smoke tests (07-20 review finding 8): plain node:test,
+      # Map scope-model smoke tests: plain node:test,
       # no npm install; the runner image ships Node.
       - run: node --test tests/js/*.test.cjs
       # .mjs separately, exactly as `make scope-test` does: the ES-module tests

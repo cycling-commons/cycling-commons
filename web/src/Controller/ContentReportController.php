@@ -317,7 +317,7 @@ final class ContentReportController extends AbstractController
             'target_id' => $id,
             'grounds' => ReportGround::forTarget($target),
             // The pictures on the same page, so "Report this page" stops
-            // meaning only the entry. See the design spec §2: one open drawer
+            // meaning only the entry. See content-reports.md §5: one open drawer
             // holds the entry AND its photographs.
             'photos' => $this->resolver->photosOn($target, $id),
             'photo_grounds' => ReportGround::forTarget(ReportTarget::Photo),

@@ -11,7 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * Route-scoped append-only history (spec D9): routes live outside the item
+ * Route-scoped append-only history (route-domain.md §2.2): routes live outside the item
  * pipeline, so they get their own history table rather than reusing
  * change_history (whose item_id FKs `item`).
  */

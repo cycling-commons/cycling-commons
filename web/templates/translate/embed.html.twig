@@ -1,8 +1,8 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {# The drawer frame for translate mode (translations.md §4.1): the same form
    as translate/edit.html.twig with no page chrome. Fetched, never navigated
-   to. Task 10 wires the drawer that loads this and its own styling; this
-   template only has to render the right markup. #}
+   to. The drawer that loads this (partials/_translate_bar.html.twig) carries
+   its styling; this template only has to render the right markup. #}
 <div class="tr-embed" data-entry="{{ entry.id }}" data-locale="{{ locale }}">
   <h2 class="tr-embed-key">{{ entry.messageKey }}</h2>
   {% for msg in app.flashes('danger') %}<div class="flash-error" role="alert">{{ msg|trans }}</div>{% endfor %}

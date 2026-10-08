@@ -160,10 +160,9 @@ run of a region deletes the foreign rows it currently owns (last-writer-wins
 leftovers from before the nearest-region-wins ownership rule) —
 correct going forward, but under a staggered rollout nobody re-creates those
 rows until the neighbouring region's own timer next fires, up to a week later
-(a one-time replay of the design's §2.1 disappearance). Harmless if the
+(a one-time disappearance of those border rows). Harmless if the
 transition re-harvest runs all onboarded regions together in one
-`make coverage-refresh` instead of waiting for each timer, which is what the
-design's decision 3 assumes.
+`make coverage-refresh` instead of waiting for each timer.
 
     # /etc/systemd/system/cc-coverage.service
     [Unit]

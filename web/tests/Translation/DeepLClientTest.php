@@ -71,7 +71,7 @@ final class DeepLClientTest extends TestCase
         self::assertStringStartsWith(self::PAID_HOST.'/v2/translate', $requestedUrls[0]);
     }
 
-    // --- Empty target list (translations.md §7.2 handoff, gap 2) ---------
+    // --- Empty target list (translations.md §7.2) ------------------------
 
     public function testAnEmptyTargetListReturnsEmptyWithoutAnyHttpCall(): void
     {

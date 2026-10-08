@@ -14,16 +14,16 @@ model (including the stateless JSON-endpoint pattern), and the full
 rate-limiter inventory. Domain-specific security behaviour stays with its
 domain doc and is cross-linked, not restated:
 
-- [account-and-auth.md](account-and-auth.md) — login throttling and account
+- [account-and-auth.md](account-and-auth.md): login throttling and account
   lockout, 2FA policy, firewall/access-control shape, admin desk guardrails.
-- [moderation-and-contribution.md](moderation-and-contribution.md) — the
+- [moderation-and-contribution.md](moderation-and-contribution.md): the
   moderation/confirmation endpoints that *instantiate* the patterns named here.
-- [route-domain.md](route-domain.md) — the route community/moderation
+- [route-domain.md](route-domain.md): the route community/moderation
   endpoints, GPX intake validation.
-- [coverage-provider.md](coverage-provider.md) — the coverage read endpoints
-  and their (pending) anonymous limiter.
-- [public-api-personal-data-boundary.md](public-api-personal-data-boundary.md)
-  — the data-access counterpart to this doc: how the public API is structurally
+- [coverage-provider.md](coverage-provider.md): the coverage read endpoints
+  and their anonymous limiter.
+- [public-api-personal-data-boundary.md](public-api-personal-data-boundary.md):
+  the data-access counterpart to this doc, how the public API is structurally
   kept away from account data (Postgres role/grants, dedicated connection,
   deptrac, contract tests).
 
@@ -34,7 +34,7 @@ domain doc and is cross-linked, not restated:
 Two content sources are explicitly **untrusted** even though they render on
 our pages: **item attributes** (they survive OSM/Wikidata import, so they are
 attacker-editable upstream) and **translation catalogs** (the repo is public
-and contributor-oriented — a careless or malicious translation PR is an input
+and contributor-oriented: a careless or malicious translation PR is an input
 channel; in-site overlays in [translations.md](translations.md) are the same
 class). Defence is layered: output escaping everywhere
 (security-architecture.md §4), a sanitizer for the one place markup is
@@ -42,8 +42,8 @@ deliberately rendered from catalogs (security-architecture.md §3), and an
 enforced CSP so a payload that slips past both still does not execute
 (security-architecture.md §2).
 
-A third, narrower class: two reviewer-only free-text fields — the
-country-interest note and the curator-application "about" text — accept prose
+A third, narrower class: two reviewer-only free-text fields (the
+country-interest note and the curator-application "about" text) accept prose
 from any authenticated stranger. Neither is ever rendered on a public page, so
 their hardening (Unicode normalisation, invisible/bidi-control stripping, link
 rejection, length caps) lives with the contract that owns them
@@ -64,14 +64,13 @@ rather than being restated here.
   defaults to a document and gets the policy.
 - The policy is **enforced**, not report-only.
 
-Beside it, `App\EventSubscriber\SecurityHeadersSubscriber` (review 2026-08-16
-finding 4) stamps the baseline hardening trio — `X-Content-Type-Options:
-nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a
-`Permissions-Policy: camera=(), microphone=(), geolocation=(self)` - on
+Beside it, `App\EventSubscriber\SecurityHeadersSubscriber` stamps the
+baseline hardening trio (`X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin`, and
+`Permissions-Policy: camera=(), microphone=(), geolocation=(self)`) on
 **every** main response, explicitly including the non-HTML responses the CSP
 skip above exempts. HSTS is nginx's, not the app's: operations.md §4 has the
-ownership table, `docs/plans/handoffs/2026-08-17-nginx-headers-devops.md` the
-host-side work. Tests: `tests/Security/SecurityHeadersTest.php`.
+ownership table. Tests: `tests/Security/SecurityHeadersTest.php`.
 
 Camera and microphone are off for every origin. Geolocation is allowed for
 **this origin only** (`(self)`; owner decision 2026-09-15), because the map's
@@ -91,7 +90,7 @@ shared between:
 - the `script-src 'nonce-…'` the subscriber emits.
 
 **Rule: every inline `<script>` must be written as
-`<script nonce="{{ csp_nonce() }}">`.** A missed block is not a warning — it
+`<script nonce="{{ csp_nonce() }}">`.** A missed block is not a warning: it
 is a broken page under enforcement, which is why the test suite walks pages
 and asserts nonce coverage (security-architecture.md §2.6).
 
@@ -140,9 +139,9 @@ itself:
 | `/ig` | `/?utm_source=instagram&utm_medium=social` |
 | `/yt` | `/?utm_source=youtube&utm_medium=social` |
 | `/r` | `/?utm_source=reddit&utm_medium=social` |
-| `/fb` | `/?utm_source=facebook&utm_medium=social` (2026-10-04) |
-| `/gh` | `/?utm_source=github&utm_medium=social` (2026-10-04) |
-| `/st` | `/?utm_source=strava&utm_medium=social` (2026-10-04) |
+| `/fb` | `/?utm_source=facebook&utm_medium=social` |
+| `/gh` | `/?utm_source=github&utm_medium=social` |
+| `/st` | `/?utm_source=strava&utm_medium=social` |
 
 The target is the bare `/`, never a locale prefix, so the home page picks the
 language as it does for any visitor. 302, not 301: a browser keeps a
@@ -158,7 +157,7 @@ session cookie, and the 404. These links count visits per platform; a
 per-post count (which toot or post brought the visit) is what Umami's own
 Links feature is for, not more paths here.
 
-**Tracking parameters never reach a search engine** (2026-10-01). The
+**Tracking parameters never reach a search engine.** The
 canonical (`partials/_head.html.twig`) is built from the scheme, host and
 path, so `/?utm_source=bluesky&utm_medium=social` names `/` as its canonical
 and Google folds the tagged URL into the home page. The hreflang alternates
@@ -176,9 +175,9 @@ reading):
 | Directive | Value | Why |
 |---|---|---|
 | `default-src` | `'self'` | Deny-by-default baseline |
-| `script-src` | `'self' 'nonce-<per-request>'` (+ `'unsafe-eval'` on `/map` only — security-architecture.md §2.4) | No `'unsafe-inline'` and **no third-party script host at all** since 2026-08-09: the libraries are vendored same-origin (security-architecture.md §2.5) |
-| `style-src` | `'self' 'unsafe-inline'` | **Known gap, tracked in docs/TODO.md under "Opened 2026-08-25".** 209 `style="..."` attributes in `web/templates/` need it; each has to become a class before it can go. Runtime styling is NOT the reason and never was: CSP only restricts styles arriving as markup, so MapLibre's and the site JS's `.style` assignments are unaffected either way (the earlier note here said otherwise). What `'unsafe-inline'` leaves open is CSS-based exfiltration and UI redressing, not script execution, which `script-src` handles with a nonce |
-| `img-src` | `'self' data: blob: https://commons.wikimedia.org https://upload.wikimedia.org https://*.mapillary.com https://*.fbcdn.net` (+ `MEDIA_CSP_HOST` when set, for rider photos: photo-uploads.md §2) | Wikimedia `Special:FilePath` 302s to `upload.wikimedia.org` and CSP checks every hop, so both hosts are listed; `data:`/`blob:` for MapLibre sprites and generated icons. **The two Wikimedia hosts are on their way out**: they exist only for the catalogue items and recommended routes that still hotlink a Commons photo, and `app:media:localise-commons` (photo-uploads.md §5f) copies those into our own bucket. Wikimedia also moved thumbnails to a third host (`thumb.wikimedia.org`) in 2026, which broke every remaining hotlink; the fix is to finish the localisation, not to name a third host we would then delete |
+| `script-src` | `'self' 'nonce-<per-request>' https://analytics.bikecoders.life` (+ `'unsafe-eval'` on `/map` only, §2.4) | No `'unsafe-inline'`. The libraries are vendored same-origin (§2.5); the one named host is the self-hosted analytics loader (§2.2) |
+| `style-src` | `'self' 'unsafe-inline'` | **Known gap.** The `style="..."` attributes in `web/templates/` need it; each has to become a class before it can go. Runtime styling is NOT the reason: CSP only restricts styles arriving as markup, so MapLibre's and the site JS's `.style` assignments are unaffected either way. What `'unsafe-inline'` leaves open is CSS-based exfiltration and UI redressing, not script execution, which `script-src` handles with a nonce |
+| `img-src` | `'self' data: blob: https://*.mapillary.com https://*.fbcdn.net` (+ `MEDIA_CSP_HOST` when set, for rider photos: photo-uploads.md §2) | `data:`/`blob:` for MapLibre sprites and generated icons. **No Wikimedia host** (owner 2026-09-27): every Commons photo is downloaded on the worker, virus-scanned, drawn again and served from our own storage (photo-uploads.md §5f), so a browser never loads a picture from a file anyone can upload |
 | `font-src` | `'self'` | |
 | `connect-src` | see host table below | |
 | `worker-src` | `'self' blob:` | MapLibre v6 starts its tile worker from the same-origin module URL under `public/lib/`; `blob:` stays for mapillary-js and for v6's own cross-origin fallback |
@@ -194,26 +193,24 @@ reading):
 |---|---|
 | `'self'` | Own JSON/GPX endpoints |
 | `https://tiles.openfreemap.org` | Basemap vector tiles |
-| `https://ibasemaps-api.arcgis.com` | Satellite imagery (keyed since 2026-08-09; the old keyless `server.arcgisonline.com` host is gone with it) |
+| `https://ibasemaps-api.arcgis.com` | Satellite imagery (keyed) |
 | `https://*.mapillary.com` | Mapillary API + tiles (street-level) |
 | `https://*.fbcdn.net` | Mapillary image bytes (Meta CDN), fetched by mapillary-js |
-| `https://photon.komoot.io` | Geocoding (search-as-you-type; Nominatim was dropped from the policy with the OSM-POI search rework) |
+| `https://photon.komoot.io` | Geocoding (search-as-you-type) |
 | `https://analytics.bikecoders.life` | Self-hosted Umami analytics |
 | `COVERAGE_CSP_HOST` (env, when set) | Coverage PMTiles byte-range reads straight off the bucket/CDN (coverage-provider.md §4) |
 
-Two former hosts are deliberately absent: `router.project-osrm.org` and
-`api.open-meteo.com` — routing snap moved behind our own endpoints and
-elevation moved server-side (climb-elevation.md), so the browser no longer
-talks to either.
+Routing snap and elevation run behind our own endpoints (climb-elevation.md),
+so no routing or elevation host is in the list.
 
 Adding a third-party integration means extending this enumeration
-deliberately — nothing outside it can be fetched, and that is the point.
+deliberately: nothing outside it can be fetched, and that is the point.
 
-### 2.4 Decision record — `'unsafe-eval'` scoped to `/map`
+### 2.4 Decision record: `'unsafe-eval'` scoped to `/map`
 
 The Mapillary street-level viewer (mapillary-js) compiles MapLibre-style
 filter expressions with `new Function()` (its `FilterCreator`) when opened,
-which requires `'unsafe-eval'`. So `/map` — and **only** `/map` — relaxes
+which requires `'unsafe-eval'`. So `/map`, and **only** `/map`, relaxes
 `script-src` with `'unsafe-eval'`; every other response keeps the strict,
 eval-free policy. (MapLibre GL itself is CSP-safe; only mapillary-js needs
 this.) The subscriber detects the page by `_route === 'map'` or a path ending
@@ -221,8 +218,8 @@ in `/map`; the scoping is guarded by
 `CspTest::testUnsafeEvalIsScopedToTheMapPage`.
 
 **Residual risk assessment (accepted):** script *injection* is still blocked
-on `/map` — nonce + `'self'` + SRI, no `'unsafe-inline'` — the eval'ing
-library is SRI-pinned, and no app code evals user input.
+on `/map` (nonce + `'self'`, no `'unsafe-inline'`), the eval'ing library is
+vendored same-origin (§2.5), and no app code evals user input.
 
 **Alternative rejected (as not worth it now):** sandbox the viewer in a
 separate-origin iframe. Only stronger if a hard "no eval in the main
@@ -230,17 +227,16 @@ document" rule is required, and it needs new infrastructure
 (subdomain/CORS/CSP).
 
 **Exit condition:** an upstream mapillary-js build that drops
-`new Function()` removes the need entirely — worth checking on each
+`new Function()` removes the need entirely: worth checking on each
 mapillary-js upgrade.
 
-### 2.5 Vendored libraries (SRI on unpkg, superseded 2026-08-09)
+### 2.5 Vendored libraries
 
 The third-party libraries are **vendored same-origin**, so `script-src`
-carries no third-party host and no SRI hashes are needed: the bytes are ours,
+carries no library host and no SRI hashes are needed: the bytes are ours,
 served from our own origin, pinned by the repository itself. mapillary-js is
-still injected lazily (`web/assets/map/mapillary.js`) but from our own path,
-not a CDN. This replaced the earlier unpkg + SRI-pin arrangement: a
-compromised CDN response is no longer a case that needs defending against,
+injected lazily (`web/assets/map/mapillary.js`) but from our own path, not a
+CDN. A compromised CDN response is not a case that needs defending against,
 because no CDN is in the policy at all.
 
 They sit in **two places**, and which one a library belongs in is decided by
@@ -271,16 +267,17 @@ a dynamic `import()` instead, since it loads the library only when a page asks.
 
 | Test | Asserts |
 |---|---|
-| `testHtmlResponseCarriesCspWithNonce` | Header present on HTML; `default-src 'self'`; `object-src 'none'`; `script-src 'self' 'nonce-…'` and **no** unpkg host; **no** `'unsafe-inline'` in script-src |
-| `testNoPageAllowsInlineScript` | `'unsafe-inline'` absent from `script-src` on `/`, `/map`, `/regions` and `/contributors`, **anywhere in the directive**. It asserts on the directive's tokens, not on a substring of the header: the old check looked for the literal `script-src 'self' 'unsafe-inline'` and so stopped matching the moment a nonce sat between the two, which is the shape that actually turns up. Symfony's web debug toolbar appends `'unsafe-inline'` and a second nonce to whatever policy it finds, which is why a dev page's header carries the token while the test stayed green. If this ever fails, either our own policy grew one, or the profiler started rewriting responses in the test environment, meaning that environment no longer resembles production |
+| `testHtmlResponseCarriesCspWithNonce` | Header present on HTML; `default-src 'self'`; `object-src 'none'`; `script-src` is exactly `'self' 'nonce-…' https://analytics.bikecoders.life`, **no** unpkg host; **no** `'unsafe-inline'` in script-src |
+| `testNoPageAllowsInlineScript` | `'unsafe-inline'` absent from `script-src` on `/`, `/map`, `/regions` and `/contributors`, **anywhere in the directive**. It asserts on the directive's tokens, not on a substring of the header, because the shape that turns up has a nonce between `'self'` and `'unsafe-inline'`: Symfony's web debug toolbar appends `'unsafe-inline'` and a second nonce to whatever policy it finds in dev. If this ever fails, either our own policy grew one, or the profiler started rewriting responses in the test environment, meaning that environment no longer resembles production |
 | `testUnsafeEvalIsScopedToTheMapPage` | `'unsafe-eval'` present on `/map`, absent on `/` |
 | `testWorkerSrcAllowsSameOriginAndBlob` | `worker-src 'self' blob:` on `/map`. MapLibre v6's tile worker is a same-origin module URL; dropping `'self'` blocks every tile and says so only in the console |
-| `testEveryInlineScriptCarriesTheHeaderNonce` | On `/`, `/map`, `/regions`, `/contributors`: every `<script>` without `src` carries exactly the header's nonce |
+| `testEveryInlineScriptCarriesTheHeaderNonce` | On `/`, `/map`, `/regions`, `/contributors`: every executable `<script>` without `src` carries exactly the header's nonce |
+| `testCacheablePagesCarryNoNonceAtAll` | The pages meant to be shared-cached carry no executable inline script and reference no nonce (page-caching.md §3.2) |
 | `testNonHtmlResponsesSkipCsp` | `/map/catalog/stamps.json` has no CSP header |
 
 New pages with inline scripts should be added to `inlineScriptPages()`.
 
-## 3. Rich translations — the `|rich` sanitizer
+## 3. Rich translations: the `|rich` sanitizer
 
 **Rule: `|trans|raw` is banned.** Translation strings that carry inline
 markup (`<b>`, `<a href>`, `<code>`, …) render through `|trans|rich`. There
@@ -290,15 +287,9 @@ app-test` and the App CI workflow), which greps every Twig template (the
 tracked ones in a git checkout, every one on disk without git, and it fails
 when it finds none) for a `|trans` reaching
 `|raw` in one statement, filter form, function form, or the `{% apply raw
-%}{% trans %}…{% endapply %}` block form. The claim was untrue between the
-overlay feature landing and 2026-08-31:
-`web/templates/translate/_form.html.twig` (and, before it,
-`web/templates/translate/edit.html.twig`) rendered
-`{{ 'translate.consent.standing'|trans({'%date%': when})|raw }}` with no gate
-to catch it; a reviewer found it by reading the template, not by a failing
-check. The gate closes that gap for the single-statement shape; it does not
-and cannot cover the cross-statement, dataflow shape (security-architecture.md
-§4.1, category 3), which stays a human-review question.
+%}{% trans %}…{% endapply %}` block form. The gate covers the
+single-statement shape; it does not and cannot cover the cross-statement,
+dataflow shape (§4.1, category 3), which stays a human-review question.
 
 - `|rich` is `App\Twig\RichTranslationExtension`
   (`web/src/Twig/RichTranslationExtension.php`): it runs
@@ -309,17 +300,16 @@ and cannot cover the cross-statement, dataflow shape (security-architecture.md
 
 | Allowed element | Allowed attributes |
 |---|---|
-| `b`, `strong`, `i`, `em`, `code`, `br` | — |
-| `span` | `class`, `style` |
-| `a` | `href`, `style`, `class`, `target`, `rel` |
+| `b`, `strong`, `i`, `em`, `code`, `br` | none |
+| `span` | `class` |
+| `a` | `href`, `class`, `target`, `rel` |
 
   Link schemes are restricted to `http`, `https`, `mailto`; relative links
-  are allowed. The `style` attribute on `a`/`span` exists because a few
-  catalog links carry a colour override.
+  are allowed. No `style` attribute survives.
 
 The point is trust-boundary placement: the YAML catalogs are
 contributor-editable in a public repo, so they must not be able to inject
-script — with `|rich` they can only produce the allowlisted inline markup.
+script; with `|rich` they can only produce the allowlisted inline markup.
 Widening the allowlist is a deliberate change to this contract, not a
 convenience edit.
 
@@ -330,14 +320,14 @@ convenience edit.
 Twig autoescape (framework default) covers everything. Exactly three `|raw`
 categories are permitted:
 
-1. **`|rich` output** (security-architecture.md §3) — sanitizer-marked safe.
+1. **`|rich` output** (security-architecture.md §3): sanitizer-marked safe.
 2. **`json_encode(…)|raw` into a nonced inline script**, always with
-   `JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT` — the
+   `JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT`: the
    hex-escaped delimiters cannot break out of the `<script>` context. Used
    for the `window.CC_*` / `window.MAPILLARY_TOKEN` page-data assignments
    (e.g. `web/templates/base.html.twig`, `web/templates/map/index.html.twig`).
    As-built exception: three app-generated URL values (`path()`/`asset()`
-   output — `window.CC_RIDECHECK.url`, `window.CC_CATALOG_URL`,
+   output: `window.CC_RIDECHECK.url`, `window.CC_CATALOG_URL`,
    `window.CC_MAP_SRC` in `web/templates/map/index.html.twig`) are encoded
    with `JSON_UNESCAPED_SLASHES` only; they contain no user input, but new
    code must use the `JSON_HEX` set.
@@ -365,8 +355,7 @@ categories are permitted:
      by the catalogue.
    - **Twig's auto-escape running inside a `{% set %}…{% endset %}` block,
      with no explicit `|escape` filter.** `web/templates/pages/coverage.html.twig`
-     (line number omitted deliberately: the file is under active edit by
-     another workstream) sorts the density/total columns by wrapping each
+     sorts the density/total columns by wrapping each
      in its own template-written `<span>`, built with a block-form `{% set
      %}`, then concatenating and `|raw`-ing the pair:
      ```twig
@@ -391,8 +380,7 @@ categories are permitted:
    (`grep -rnP '\{%-?\s*set\s+[a-zA-Z_][a-zA-Z0-9_]*\s*-?%\}' web/templates/`)
    turns up exactly these two files (three `{% set %}…{% endset %}` blocks:
    `_form.html.twig`'s `when`, which carries no translation and is not this
-   category by itself, plus `coverage.html.twig`'s `_density` and `_total`);
-   there is no third site as of 2026-09-01.
+   category by itself, plus `coverage.html.twig`'s `_density` and `_total`).
 
 Any other `|raw` is a finding.
 
@@ -404,7 +392,7 @@ interpolation into `innerHTML`. Its contract:
 - **Every interpolated dynamic value passes through `escPend()`** (top of
   `map.js`: entity-escapes `& < > " '`). This includes item names,
   descriptions, attribute/record values, history rows, photo credits and
-  uploader names — item fields survive OSM/Wikidata import and are treated
+  uploader names: item fields survive OSM/Wikidata import and are treated
   as hostile.
 - **URLs pass through `safeHref()`** (`map.js`): only `http(s)://` or
   root-relative single-slash paths survive; anything else (incl.
@@ -417,12 +405,12 @@ not execute. It is a backstop and **not** the control: an injected `onerror`
 attribute needs no inline `<script>` tag, so attribute-level payloads are the
 realistic shape and escaping is what actually stops them.
 
-### 4.3 Node-built (the contribute wizard) — the direction of travel
+### 4.3 Node-built (the contribute wizard): the direction of travel
 
 `web/assets/contribute/improve.js` and `web/assets/contribute/review-card.js`
 build **no** markup: every node comes from `createElement` +
 `textContent`, so neither a rider's field value nor a catalogue string can
-become an element. There is no escaper in either file, deliberately — an
+become an element. There is no escaper in either file, deliberately: an
 escaper is something a later edit can forget to call, and these files leave
 nothing to forget. `review-card.js` also runs an `img src` through the same
 http(s)/root-relative rule as `safeHref()`.
@@ -435,7 +423,7 @@ Two rules follow from that and apply to any JS given a message bag:
   `reviewCard.emphasised()`: the translated sentence is split on its
   placeholder and the value goes into its own element as text.
 - **A message bag is serialised with the full `JSON_HEX` set**
-  (security-architecture.md §4.1) — `window.CC_IMPROVE_I18N` in
+  (security-architecture.md §4.1): `window.CC_IMPROVE_I18N` in
   `web/templates/contribute/improve.html.twig`.
 
 `web/tests/js/improve-review.test.cjs` is the regression net: a rider value of
@@ -444,11 +432,9 @@ each produce zero elements. Its document shim parses assigned `innerHTML` into
 real children, so the assertions fail rather than pass vacuously if the
 builders are ever rewritten on `innerHTML`.
 
-The map modules still follow §4.2 and want the same sweep; that is a separate
-change, because mixing it with this one makes the security-relevant diff
-unreviewable. (`add_climb.js` was on this list until it was deleted with the
-`/add-climb` wizard on 2026-08-25; climbs now go through `improve.js`, which
-is covered above.)
+The map modules still follow §4.2 and want the same sweep, as a change of its
+own so the security-relevant diff stays reviewable. Climbs go through
+`improve.js`, which is covered above.
 
 ## 5. CSRF model
 
@@ -458,11 +444,12 @@ Configuration: `web/config/packages/csrf.yaml`.
   (`framework.form.csrf_protection.token_id`), so every Symfony form shares
   one id.
 - `framework.csrf_protection.stateless_token_ids` lists the ids validated
-  **statelessly** (Symfony's same-origin/double-submit check — no session
+  **statelessly** (Symfony's same-origin/double-submit check: no session
   write, which keeps responses cacheable and JSON endpoints session-free):
   `submit`, `authenticate`, `logout`, `route-community`, `ride-check`,
-  `elevation`, `route-snap`, `scout-tags`, `my-area`, `country-interest`,
-  `curator-application`, `bug_report`, `content_report`, `contact_form`.
+  `elevation`, `route-snap`, `scout-tags`, `scout-traffic`, `time-zone`,
+  `my-area`, `country-interest`, `curator-application`, `bug_report`,
+  `content_report`, `contact_form`.
 - Token ids **not** in that list fall back to Symfony's default
   session-backed storage.
 
@@ -473,20 +460,20 @@ The app's convention for authenticated JSON APIs called from page JS
 docblock). Elements:
 
 1. **Unlocalized path** (`/routes/{id}/…`, `/items/{id}/…`,
-   `/map/ride-check`) — these are APIs, not pages; no locale prefix.
+   `/map/ride-check`): these are APIs, not pages; no locale prefix.
 2. **Dedicated CSRF token id**, registered in `stateless_token_ids`.
 3. **Token distribution over GET**: the snapshot endpoint returns
-   `token: <csrf value>` in its JSON — and only to callers who can actually
+   `token: <csrf value>` in its JSON: and only to callers who can actually
    POST (the public item-confirmations snapshot omits it for anonymous
    viewers). (ride-check has no snapshot endpoint; its token ships in the
    page instead, via `csrf_token('ride-check')` into `window.CC_RIDECHECK`
-   inside a nonced inline script — `web/templates/map/index.html.twig`.
+   inside a nonced inline script: `web/templates/map/index.html.twig`.
    `elevation` does the same: `window.CC_ELEV_TOKEN` in both climb-editor
    templates, sent as the `X-CC-Token` header. `route-snap` sits beside it in
    the same two templates as `window.CC_ROUTE_TOKEN`.)
 4. **In-controller auth gate, clean 401**: a `requireUser()` helper checks
    `isGranted('ROLE_USER')` *and* the user instance, and throws
-   `HttpException(401, 'authentication_required')` otherwise — a JSON client
+   `HttpException(401, 'authentication_required')` otherwise: a JSON client
    must never be 302-redirected to the login page. The `ROLE_USER` check also
    catches 2FA-in-progress tokens (they lack `ROLE_USER`).
 5. **Invalid token → 403** (`createAccessDeniedException`). `item-confirm`
@@ -505,30 +492,31 @@ Instances:
 | `route-snap` | `App\Controller\RouteController` | `POST /contribute/route` | [climb-elevation.md](climb-elevation.md) §3e |
 | `item-confirm` | `App\Controller\ItemConfirmationController` | `GET /items/{id}/confirmations`, `POST /items/{id}/confirm` | [moderation-and-contribution.md](moderation-and-contribution.md) |
 | `scout-tags` | `App\Controller\ScoutIntakeController` | `POST /scout/tags` | [map-and-search.md](map-and-search.md) |
+| `scout-traffic` | `App\Controller\TrafficController` | `POST /scout/traffic` (`X-CC-Token` header) | [traffic-measurements.md](traffic-measurements.md) §4.1 |
+| `time-zone` | `App\Controller\TimeZoneController` | `POST /account/time-zone` (`X-CC-Token` header) | [account-and-auth.md](account-and-auth.md) §9 |
+| `my-area` | `App\Controller\MyAreaController` | `POST /map/my-area` (`X-CSRF-Token` header) | [map-and-search.md](map-and-search.md) |
 
 **As-built deviation:** `item-confirm` follows every element of the pattern
 *except* that it is not listed in `stateless_token_ids`, so its tokens are
 session-backed (see Open questions).
 
-**That is why its token goes stale, and the drawer recovers once
-(2026-09-29).** A map tab opened before the session changed (signed out and
-back in elsewhere, or a new session) holds a token the session no longer has.
-The Confirm button used to answer every retry with "please try again" and
-resend the same dead token, so nothing worked until a reload (GlitchTip,
-2026-09-28, where the thrown exception also landed). Now the POST answers
+**That is why its token can go stale, and the drawer recovers once.** A map
+tab opened before the session changed (signed out and back in elsewhere, or a
+new session) holds a token the session no longer has. The POST answers
 `403 {"error": "invalid_token"}` as JSON, and `assets/map/confirm-post.js`
 fetches a fresh token from the GET snapshot and resends once. No token in the
 snapshot, or a `401`, means the rider is signed out, and the toast says to
 sign in. Pinned by `tests/js/confirm-post.test.mjs` and
 `ItemConfirmationControllerTest::testBadCsrfIs403`. Other session-backed
-JSON callers may show the same symptom; only this one is handled. `scout-tags` (added by the 2026-08-16
-review's info batch) deviates on element 4 only: it keeps its `IsGranted`
-attribute plus the `access_control` backstop (anonymous = login redirect, not
-a clean 401) because its caller is page JS behind a logged-in map session.
+JSON callers may show the same symptom; only this one is handled.
+`scout-tags`, `scout-traffic` and `time-zone` deviate on element 4 only: they
+keep an `IsGranted` attribute (plus the `access_control` backstop for
+`/scout/tags` and `/account`), so anonymous is a login redirect, not a clean 401, because their
+callers are page JS behind a signed-in session.
 
 ### 5.2 Stateless CSRF outside the JSON pattern
 
-Two token ids are stateless without being an instance of §5.1's pattern — they
+Two token ids are stateless without being an instance of §5.1's pattern: they
 guard ordinary HTML form POSTs (redirect-after-POST, flash messages), not a
 JSON API, so they skip elements 3 and 6 of that pattern (no token-over-GET
 snapshot, no JSON error body) while keeping the double-submit check
@@ -544,15 +532,14 @@ session-free:
 
 The last three are public forms that anybody may open. That is the reason they
 are stateless: a stateful token is minted into the session on the GET, so a
-form nobody has posted yet already starts a session, sends a cookie to every
-reader and leaves a Redis row behind every crawler hit (review 2026-08-30 for
-`content_report` and `contact_form`; `bug_report` earlier, because the floating
-button renders on every page). Pairs with `LocaleSubscriber`'s
+form nobody has posted yet would already start a session, send a cookie to
+every reader and leave a Redis row behind every crawler hit (`bug_report`
+renders on every page, in the floating button). Pairs with `LocaleSubscriber`'s
 `hasPreviousSession()` guard: both are needed, either one alone still sets the
 cookie. Pinned by the `testLookingAtTheFormStartsNoSession` tests.
 
-One route picks between the two ids **from server-known state alone** — whether
-the country has any `region` rows — never from the client-submitted form, so a
+One route picks between the two ids **from server-known state alone** (whether
+the country has any `region` rows), never from the client-submitted form, so a
 crafted POST cannot select the other branch's token/limiter/service by lying
 about which form it is.
 
@@ -567,7 +554,8 @@ use the session-backed default. Contracts live with their owners:
 | `curator-applications` (`DashboardController::CURATOR_APPS_CSRF_TOKEN_ID`) | Curator-application approve/decline | [moderation-and-contribution.md](moderation-and-contribution.md) §11 |
 | `route_edit`, `route-suggestion`, `route-trash` | Curator route desk | [route-domain.md](route-domain.md) |
 | `delete_request`, `delete_confirm` | Account deletion | [account-and-auth.md](account-and-auth.md) |
-| `ea-user-support` (`UserCrudController::CSRF_TOKEN_ID`) | Admin support actions | [account-and-auth.md](account-and-auth.md) |
+| `ea-user-support` (`UserCrudController::CSRF_TOKEN_ID`) | Admin support actions | [account-and-auth.md](account-and-auth.md) §6.1 |
+| `ea-system-config` (`DashboardController::SETTINGS_CSRF_TOKEN_ID`) | Admin system settings | [system-configuration.md](system-configuration.md) §4 |
 
 CSRF is never disabled on any state-changing endpoint.
 
@@ -605,30 +593,30 @@ exceptions, each for a reason worth knowing:
 
 | Limiter | Policy | Limit (current config) | Key | Guards | Over-limit behaviour |
 |---|---|---|---|---|---|
-| `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake — `App\Contribution\CatalogContributionService::submitDraft()` (every `/improve` arm: edit, `mode=add` for all catalog types including climbs since 2026-08-25) | `TooManyRequestsHttpException` → flash `contribute.error.rate_limited`, form re-rendered (`ContributeController`) |
-| `translation_propose` | sliding_window | 60 / 1 hour | `user-<id>` | In-site UI translation proposals — `App\Translation\ProposalService::submit()` ([translations.md](translations.md) §4); a human can translate a page, a loop cannot fill the curator desk | `TooManyRequestsHttpException` → flash `translate.error.rate_limited`, form re-rendered (`TranslateController`) |
-| `route_propose` | sliding_window | 3 / 1 day | `user-<id>` | Route proposal intake (GPX upload) — `App\Contribution\RouteProposalService::propose()`; proposals are heavier than pin edits, the supply gate starts at intake | `TooManyRequestsHttpException` → flash (`ProposeRouteController`) |
+| `contribution_submit` | sliding_window | 20 / 1 hour | `user-<id>` | All item-submission intake, `App\Contribution\CatalogContributionService::submitDraft()` (every `/improve` arm: edit, and `mode=add` for all catalog types including climbs) | `TooManyRequestsHttpException` → flash `contribute.error.rate_limited`, form re-rendered (`ContributeController`) |
+| `translation_propose` | sliding_window | 60 / 1 hour | `user-<id>` | In-site UI translation proposals: `App\Translation\ProposalService::submit()` ([translations.md](translations.md) §4); a human can translate a page, a loop cannot fill the curator desk | `TooManyRequestsHttpException` → flash `translate.error.rate_limited`, form re-rendered (`TranslateController`) |
+| `route_propose` | sliding_window | 3 / 1 day | `user-<id>` | Route proposal intake (GPX upload): `App\Contribution\RouteProposalService::propose()`; proposals are heavier than pin edits, the supply gate starts at intake | `TooManyRequestsHttpException` → flash (`ProposeRouteController`) |
 | `route_revise` | sliding_window | 20 / 1 day | `user-<id>` | The proposer's own edit of a route proposal still waiting for review, `App\Contribution\RouteProposalService::revise()` ([route-domain.md](route-domain.md) §4.6); a new GPX is parsed and profiled again, so this bounds that compute | `TooManyRequestsHttpException` → flash, form re-rendered (`ProposeRouteController::edit`) |
 | `route_suggest` | sliding_window | 5 / 1 day | `user-<id>` | Route correction channel: `App\Community\RouteCommunityService::recordSuggestion()`; the suggest channel is the flood vector (each pending row is a curator task); rode-it is self-bounded by its UNIQUE constraint instead | `429 {"error":"rate_limited"}` (`RouteCommunityController::suggest`) |
 | `season_vote` | sliding_window | 60 / 1 hour | `user-<id>` | The season ballot: every cast and remove, after the cheap checks (`App\Vote\BallotService`, route-domain.md §8d) | flash `vote.refused.rate_limited` on `/vote` |
-| `ride_check` | sliding_window | 20 / 1 day | `user-<id>` | GPX ride-check compute — `App\Controller\RideCheckController::check()`; read-only (parse + two PostGIS corridor queries, nothing persisted), hence more generous than intake | `429` JSON with translated `contribute.error.rate_limited` |
-| `ride_check_anon` | sliding_window | 5 / 1 day | `anon-<sha256(secret\|ride-check\|ip)>` | The same endpoint without an account. Its own limiter so the two cannot drain each other. The key is a salted one-way hash, never the address — pseudonymisation, not anonymisation: it stays personal data and is disclosed in the privacy notice | `429` JSON with translated `ride_check.error.anon_limit`, which names the limit and that an account raises it |
-| `elevation` | sliding_window | 30 / 1 minute | `user-<id>` | Climb-editor elevation profiling: `App\Controller\ElevationController::elevation()`; every call is an upstream Valhalla request (shared infrastructure), so the budget is per minute: generous for a rider redrawing a climb, a wall for a loop (review 2026-08-16 finding 5). The climb intake (`CatalogContributionService`, add and improve) spends one token before it profiles, because its profile runs before the hourly `contribution_submit` limit and a refused edit would otherwise cost Valhalla and no budget | `429 {"error":"rate_limited"}`; on intake, the form's rate-limit message |
-| `route_snap` | sliding_window | 90 / 1 minute | `user-<id>` | Climb-editor and route-editor road snap: `App\Controller\RouteController::route()`; the SAME upstream Valhalla as `elevation`, reached through `POST /contribute/route`. It shipped with `#[IsGranted]` and nothing else, so login was its only guard and login is not a quota (test-suite review 2026-08-24). Larger budget than `elevation` because one edit snaps per leg: dragging a route with a dozen control points is a dozen calls. A scenic-view intake spends one token before its nearest-bike-way check, the same upstream | `429 {"error":"rate_limited"}`; on intake, the form's rate-limit message |
+| `ride_check` | sliding_window | 20 / 1 day | `user-<id>` | GPX ride-check compute: `App\Controller\RideCheckController::check()`; read-only (parse + two PostGIS corridor queries, nothing persisted), hence more generous than intake | `429` JSON with translated `contribute.error.rate_limited` |
+| `ride_check_anon` | sliding_window | 5 / 1 day | `anon-<sha256(secret\|ride-check\|ip)>` | The same endpoint without an account. Its own limiter so the two cannot drain each other. The key is a salted one-way hash, never the address. That is pseudonymisation, not anonymisation: it stays personal data and is disclosed in the privacy notice | `429` JSON with translated `ride_check.error.anon_limit`, which names the limit and that an account raises it |
+| `elevation` | sliding_window | 30 / 1 minute | `user-<id>` | Climb-editor elevation profiling: `App\Controller\ElevationController::elevation()`; every call is an upstream Valhalla request (shared infrastructure), so the budget is per minute: generous for a rider redrawing a climb, a wall for a loop. The climb intake (`CatalogContributionService`, add and improve) spends one token before it profiles, because its profile runs before the hourly `contribution_submit` limit and a refused edit would otherwise cost Valhalla and no budget | `429 {"error":"rate_limited"}`; on intake, the form's rate-limit message |
+| `route_snap` | sliding_window | 90 / 1 minute | `user-<id>` | Climb-editor and route-editor road snap: `App\Controller\RouteController::route()`; the SAME upstream Valhalla as `elevation`, reached through `POST /contribute/route`. Login is not a quota, so `#[IsGranted]` alone is not enough. Larger budget than `elevation` because one edit snaps per leg: dragging a route with a dozen control points is a dozen calls. A scenic-view intake spends one token before its nearest-bike-way check, the same upstream | `429 {"error":"rate_limited"}`; on intake, the form's rate-limit message |
 | `traffic_submit` | sliding_window | 120 / 1 hour | `user-<id>` | Traffic summaries from Scout's ride review: `App\Controller\TrafficController::submit()` (`POST /scout/traffic`, stateless `scout-traffic` token). Sized for bulk mode, which sends an archive in chunks of 500 lines; every chunk is idempotent through the dedupe codes, so a retry costs budget and never a double count ([traffic-measurements.md](traffic-measurements.md) §4.1) | `429 {"error":"rate_limited"}` |
-| `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints — the app's first anonymous-read limiter, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | `429 JSON {"error":"rate_limited"}` (`CoverageController::rateLimited()`) |
+| `coverage_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Coverage read endpoints, consistent with the no-scraping access terms ([osm-data-architecture.md](osm-data-architecture.md) §7) | `429 JSON {"error":"rate_limited"}` (`CoverageController::rateLimited()`) |
 | `coverage_photo` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Polling a Commons photo for a coverage POI or a town card, `CoverageController::photo()` and `TownController` ([coverage-provider.md](coverage-provider.md) §7). Spent per poll; `commons-photo.js` backs off and gives up inside 45 seconds | `429 JSON {"error":"rate_limited"}` with `Retry-After` (`ThirdPartyBudget::rateLimited()`) |
 | `coverage_photo_fetch` | sliding_window | 60 / 1 hour | per **IP** (anonymous) | Admitting a new outbound fetch (a Commons file, a Wikidata lookup) from the same two endpoints, `ThirdPartyBudget::fetchBudgetAllows()`. Stops one script walking the corpus through our address | No fetch: the endpoint answers `{"state":"none"}`, as if there were no photo. Both this and `coverage_photo_global` are consumed even when the first refuses |
 | `coverage_photo_global` | sliding_window | 600 / 1 hour | **one global key** (`all`) | The same admission, site-wide: the real defence, since a distributed script defeats any per-address limit. Bounds the request rate Wikimedia sees from us and our storage growth (about 180 MB an hour at worst) | Same as `coverage_photo_fetch` |
-| `public_api_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Public API v1, `App\Controller\Api\V1\PublicApiController` (`/api/v1/map-config`, `/api/v1/search`, [public-api.md](public-api.md) §2.2). Same shape as `coverage_read` but its own pool, so an integration throttles only itself | `429 JSON {"error":"rate_limited","message":...}` with `Retry-After` |
-| `country_interest` | sliding_window | 10 / 1 day | `user-<id>` | Country-interest submissions — `App\Controller\JoinCountryController::index()`, country not yet onboarded ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form (`JoinCountryController`) |
-| `curator_application` | sliding_window | 3 / 1 day | `user-<id>` | Curator-application submissions — same controller, country onboarded; the tighter of the two, since an application is a task for a human reviewer, not just a counter ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form |
+| `public_api_read` | sliding_window | 120 / 1 min | per **IP** (anonymous) | Public API v1, `App\Controller\Api\V1\PublicApiController` (`/v1/map-config`, `/v1/search`, [public-api.md](public-api.md) §2.2). Same shape as `coverage_read` but its own pool, so an integration throttles only itself | `429 JSON {"error":"rate_limited","message":...}` with `Retry-After` |
+| `country_interest` | sliding_window | 10 / 1 day | `user-<id>` | Country-interest submissions: `App\Controller\JoinCountryController::index()`, country not yet onboarded ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form (`JoinCountryController`) |
+| `curator_application` | sliding_window | 3 / 1 day | `user-<id>` | Curator-application submissions: same controller, country onboarded; the tighter of the two, since an application is a task for a human reviewer, not just a counter ([moderation-and-contribution.md](moderation-and-contribution.md) §11) | Flash `join.error.too_many`, redirect back to the form |
 | `password_reauth` | sliding_window | 5 / 15 minutes | `user-<id>` | Every password or second-factor check outside the login form, one budget for all: the curator application from a remember-me session (`JoinCountryController`), the password change and the deletion request (`SettingsController`), and replacing two-factor (`TwoFactorController`), [account-and-auth.md](account-and-auth.md) §5. No authenticator runs on these, so login throttling and the lockout never count them; without this a remembered session is an unmetered password oracle. Never an action's own quota, so two typos never spend the application's 3-a-day budget; sized like the firewall's login throttling | `flash.reauth_too_many` ("Too many tries. Wait 15 minutes, then try again."): a flash and a redirect on the forms, a form error on `/2fa/setup`. Nothing is compared past the budget |
 | `media_upload` | sliding_window | 30 / 1 day | `user-<id>` | Photo uploads, `App\Controller\MediaController::upload()` ([photo-uploads.md](photo-uploads.md) §7). Each accepted upload costs an Imagick decode and three encodes, so a compute gate as much as a storage one | `429 JSON {"error":"rate_limited"}` |
 | `data_export` | sliding_window | 3 / 1 day | `user-<id>` | The GDPR data export, `App\Controller\DataExportController::export()` ([account-and-auth.md](account-and-auth.md) §11), consumed before the password check so it is no unmetered oracle. Art. 12(5) allows refusing repetitive requests | Flash `flash.export_rate_limited`, redirect to the security settings |
 | `content_report` | sliding_window | 15 / 1 day | per **IP** (anonymous) | Every report from `/report/{type}/{id}`, photos included, `App\Controller\ContentReportController` ([content-reports.md](content-reports.md) §5); anonymous by design (Art. 16 needs no account) and CAPTCHA-free, so this limiter, the queue-not-withhold design and the breaker are the abuse story | `429`, form re-rendered with `report.error.rate_limited` |
 | `media_report_urgent` | sliding_window | 1 / 1 day | per **IP** (anonymous) | A report on the `intimate_or_child` ground, same controller ([photo-uploads.md](photo-uploads.md) §6c): the one lever an anonymous visitor has that changes anything (auto-withhold), so its budget is one pull per IP per day; consumed **in addition to** `content_report` | `429`, same re-render |
-| `password_reset` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|password-reset\|ip)>` | Password-reset requests, in `App\Controller\ResetPasswordController::request()`. One unauthenticated POST persists a token row and mails a link to an address the sender chose, so an unbudgeted loop is both an inbox flood aimed at a third party and a table flood aimed at us (security scan 2026-08-25). Salted-hash key, same construction and the same pseudonymisation caveat as `ride_check_anon` | Redirect to `/reset-password/check-email`, the **same** answer a real request gets. Never a `429`: this page refuses to reveal whether an address has an account, and a distinguishable over-limit response would be exactly that oracle |
+| `password_reset` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|password-reset\|ip)>` | Password-reset requests, in `App\Controller\ResetPasswordController::request()`. One unauthenticated POST persists a token row and mails a link to an address the sender chose, so an unbudgeted loop is both an inbox flood aimed at a third party and a table flood aimed at us. Salted-hash key, same construction and the same pseudonymisation caveat as `ride_check_anon` | Redirect to `/reset-password/check-email`, the **same** answer a real request gets. Never a `429`: this page refuses to reveal whether an address has an account, and a distinguishable over-limit response would be exactly that oracle |
 | `registration` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|registration\|ip)>` | Sign-ups, in `App\Controller\RegistrationController::register()`; same shape and same reasoning as `password_reset`, consumed **before** the user row is written or any mail is sent, and after the bot layers ([account-and-auth.md](account-and-auth.md) §2), so a flood of obvious bots spends nobody's budget | `429`, form re-rendered with a visible error. A `429` is fine here, unlike above: the key is the connection, not the address, so it says nothing about which addresses have accounts (a taken address gets the same page as a new one, [account-and-auth.md](account-and-auth.md) §2) |
 | `verify_resend` | sliding_window | 5 / 1 hour | `anon-<sha256(secret\|verify-resend\|ip)>` | A new confirmation link, `App\Controller\VerificationResendController::resend()` ([account-and-auth.md](account-and-auth.md) §2); consumed before the address is looked up | `429`, form re-rendered with a visible error. It is about the sender, so it reveals nothing about the address |
 | `verify_resend_address` | sliding_window | 1 / 15 minutes | `anon-<sha256(secret\|verify-resend-address\|lower(email))>` | Same endpoint, and a sign-up on a taken address (`ExistingAccountNotice`), per address, spent only when a mail would go out, so nobody can aim the form at a stranger's inbox | The same "check your email" card a send gets, no mail. Never a `429`: that would say the address has an unconfirmed account |
@@ -642,7 +630,7 @@ exceptions, each for a reason worth knowing:
 
 **Not in this file, and deliberately:** the auto-withhold **circuit breaker**
 (`App\Media\UrgentWithholdBreaker`, [photo-uploads.md](photo-uploads.md) §6c)
-is the app's only **site-wide** budget — one global key rather than one per
+is the app's only **site-wide** budget: one global key rather than one per
 caller, because per-IP limits cannot bound a distributed attacker by
 definition, and without it a proxy pool could hide one photo per IP per day
 across the whole corpus. Its two windows (10/hour and 25/day) are
@@ -662,35 +650,33 @@ cache pool, `cache.<name>_limiter` (the three `verify_resend*` limiters share
 `cache.bug_report_nojs_limiter` and `public_api_read` uses
 `cache.public_api_limiter`). Each inherits `cache.app`, Redis in dev/prod and
 the array adapter in test via that inheritance, and all but `content_report`,
-`pow_challenge` and `ride_check_anon` are additionally overridden to the array
-adapter under `when@test`. A persistent pool would carry limiter counters
-across phpunit runs while DAMA reuses user ids, which flakes tests. A new
-limiter should copy this pool-plus-test-override shape.
-(`contribution_submit` predates the convention and uses the default pool.)
+`pow_challenge`, `ride_check_anon`, `season_vote` and `traffic_submit` are
+additionally overridden to the array adapter under `when@test`. A persistent
+pool would carry limiter counters across phpunit runs while DAMA reuses user
+ids, which flakes tests. A new limiter should copy this pool-plus-test-override
+shape. `contribution_submit` uses the default pool.
 
 ### One construction for every pseudonymous key
 
 `App\Security\PseudonymousKey` is the only place an address becomes a key:
 `hash_hmac('sha256', $purpose.'|'.$value, $secret)`, with `$purpose` keeping
-the namespaces apart so one budget can never drain another. Four call sites use
-it: the three limiters named above, plus
-`media_upload.takedown_reporter_hash`, which is the only **persisted** one.
+the namespaces apart so one budget can never drain another. `limiter()` puts
+`anon-` in front, for limiter keys that share a store with `user-<id>`; `of()`
+is the bare 64-hex digest. Call sites: the `ride_check_anon`, `password_reset`,
+`registration`, `verify_resend*` and `display_name_check` limiter keys
+(`limiter()`), and two **persisted** columns, `media_upload.takedown_reporter_hash`
+and `content_report.reporter_key` (`of()`, content-reports.md §10).
 
-It is HMAC because that is the primitive for a keyed hash. The four sites
-previously each hand-rolled `hash($secret.'|'.$value)`, which is
-length-extension shaped: knowing one output lets an attacker derive further
-valid outputs without the secret. Never exploitable here, since the digests are
-published nowhere, but there was no reason to keep the wrong primitive in four
-copies (security scan 2026-08-25).
+It is HMAC because that is the primitive for a keyed hash. A hand-rolled
+`hash($secret.'|'.$value)` is length-extension shaped: knowing one output lets
+an attacker derive further valid outputs without the secret.
 
 This is pseudonymisation, **not** anonymisation. The output still relates to a
 person and is still personal data; the privacy notice says so.
 
-Changing the construction changes every stored pseudonym. The 2026-08-25 switch
-needed no migration because nothing compares stored values, to each other or to
-a fresh one: the reporter hash is written and read back, and the index on it
-exists for a query that does not exist yet. A future change that has to preserve
-continuity will need one.
+Changing the construction changes every stored pseudonym. That needs no
+migration while nothing compares a stored value with a fresh one; a change that
+has to preserve continuity will need one.
 
 Login throttling is Symfony's built-in limiter and is inventoried in
 [account-and-auth.md](account-and-auth.md) §3, not here. **The 2FA
@@ -709,12 +695,12 @@ the specs.
 | Measure | Where it is built | Detail |
 |---|---|---|
 | Passwords never stored | `security.yaml` `password_hashers: auto` | Salted one-way hash; Symfony picks the strongest available algorithm |
-| TOTP secret encrypted at rest | `App\Doctrine\EncryptedStringType` | AES-256-GCM, key by HKDF-SHA256 from `ENCRYPTION_SECRET`, kept out of the database ([account-and-auth.md](account-and-auth.md) 4) |
-| Traffic data encrypted at rest | `App\Traffic\TrafficKeys`, `TrafficCipher`, `TrafficStore` | AES-256-GCM payloads and HMAC lookup keys, all by HKDF-SHA256 from `TRAFFIC_SECRET`, its own variable with no fallback; staging and production refuse the committed dev and test values. No traffic table holds a readable road, time, count or user, and none has a time column ([traffic-measurements.md](traffic-measurements.md) §4.2, §4.3) |
+| TOTP secret encrypted at rest | `App\Doctrine\EncryptedStringType` | AES-256-GCM, key by HKDF-SHA256 from `ENCRYPTION_SECRET`, kept out of the database ([account-and-auth.md](account-and-auth.md) §4) |
+| Waiting traffic lines encrypted at rest | `App\Traffic\TrafficKeys`, `TrafficCipher`, `TrafficPool`, `TrafficStore` | Every key comes by HKDF-SHA256 from `TRAFFIC_SECRET`, its own variable with no fallback; staging and production refuse the committed dev and test values. `TrafficPool` writes each waiting line to `traffic_pool` as an AES-256-GCM payload under a random id with an HMAC block key, with no account and no time column, until its block has enough lines. `TrafficStore` writes the plain `traffic_total` sums (road, direction, part of day, day type, quarter and counts), which hold no ride and no rider, and keeps only an HMAC of each dedupe code in `traffic_seen`. No traffic table holds a rider ([traffic-measurements.md](traffic-measurements.md) §4.2, §4.3) |
 | Backup codes not reversible | `User::hashBackupCode()` | `HMAC-SHA256(code, HKDF(APP_SECRET))`; a database-only leak cannot even compute candidates |
-| Transport encrypted | nginx | TLS, plus HSTS so a browser refuses an unencrypted connection at all ([operations.md](operations.md) 4 owns the header) |
+| Transport encrypted | nginx | TLS, plus HSTS so a browser refuses an unencrypted connection at all ([operations.md](operations.md) §4 owns the header) |
 | Backups unreadable at rest | infra, restic to Scaleway | Encrypted on our own servers before they leave; the storage provider holds ciphertext |
-| Uploads cannot carry malware | `ClamAvScanner` + `media.storage.private` | Scanned in a private quarantine bucket, released only on a pass ([media-storage-architecture.md](media-storage-architecture.md) 6) |
+| Uploads cannot carry malware | `ClamAvScanner` + `media.storage.private` | Scanned in a private quarantine bucket, released only on a pass ([media-storage-architecture.md](media-storage-architecture.md) §6) |
 | Uploads cannot carry hidden data | `PhotoProcessor` | Location metadata stripped, file re-encoded, only an authored licence packet written back (`XmpRights`) |
 | Least privilege | `security.yaml` roles + `LoginSuccessHandler` | Role-based access; every elevated account must have 2FA enabled before it can be used |
 | Credential stuffing bounded | `login_throttling` + `User` lockout | Section 6 above |
@@ -729,26 +715,25 @@ rather than implying any of those exist.
 `/privacy` have to still be true of it. They are written broadly for exactly
 that reason ("two-factor secrets and backup codes are encrypted" survives an
 algorithm change; "AES-256-GCM" would not). See
-[privacy-notice.md](privacy-notice.md) 6.
+[privacy-notice.md](privacy-notice.md) §6.
 
 ## 9. Open questions
 
-- **`item-confirm` is not in `stateless_token_ids`** — the controller
+- **`item-confirm` is not in `stateless_token_ids`**: the controller
   docblock and moderation-and-contribution.md describe the confirm POST as
   "stateless CSRF", but `web/config/packages/csrf.yaml` does not list the id,
   so it uses session-backed tokens as built. Harmless today (only logged-in
   users POST, so a session exists), but either the id should be added to the
   list or the "stateless" wording corrected.
-- **`coverage_read` prod client-IP propagation** — the config side is now
-  shipped (review 2026-08-16 finding 3): `when@prod` framework config trusts
-  `%env(TRUSTED_PROXIES)%` with `trusted_headers` locked to
-  `x-forwarded-for`/`x-forwarded-proto`, so `Request::getClientIp()` resolves
-  the rider once the hosts set `TRUSTED_PROXIES` to the cluster's private CIDR
-  (operations.md §3). Still open for prod flip: set that value and verify
-  nginx forwards `X-Forwarded-For` from the LB — checklist item in
-  `developers/coverage-batch.md`. Until verified, anonymous traffic could
-  share one bucket and 429 site-wide.
-- **CSP on empty-`Content-Type` responses** — `CspSubscriber` treats a
+- **Per-IP limiters and client-IP propagation.** The `when@prod` and
+  `when@staging` framework config trusts `%env(TRUSTED_PROXIES)%` with
+  `trusted_headers` locked to `x-forwarded-for`/`x-forwarded-proto`, so
+  `Request::getClientIp()` resolves the rider once the hosts set
+  `TRUSTED_PROXIES` to the cluster's private CIDR (operations.md §3). Verifying
+  the deployed value, and that nginx forwards `X-Forwarded-For` from the LB, is
+  a checklist item in `developers/coverage-batch.md`. Without it, anonymous
+  traffic shares one bucket and 429s site-wide.
+- **CSP on empty-`Content-Type` responses**: `CspSubscriber` treats a
   response without a `Content-Type` as a document and stamps the policy.
   Believed to affect no current endpoint; whether that default should be
   narrowed has not been decided.

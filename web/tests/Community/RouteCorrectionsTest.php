@@ -54,7 +54,7 @@ final class RouteCorrectionsTest extends WebTestCase
     }
 
     /**
-     * Postgres JSONB reorders object keys on write (Task 1's caveat): assert
+     * Postgres JSONB reorders object keys on write: assert
      * on the [start, end] VALUES, key-order-agnostic, not on raw key order.
      *
      * @return list<array{0: float, 1: float}>

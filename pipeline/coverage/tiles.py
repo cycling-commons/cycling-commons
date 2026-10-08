@@ -55,7 +55,7 @@ _EXTRA_SQL = {
     "food": ("'food', CASE WHEN tags ? 'shop' OR tags->>'amenity' IN "
              "('cafe', 'fast_food', 'restaurant', 'bar', 'pub') THEN true END"),
     # O: the stays accessibility filter narrows on the CatalogFormRegistry
-    # vocabulary (map.js applyStaysAccessFilter); the only OSM-derivable member
+    # vocabulary (web/assets/map/render.js applyStaysAccessFilter); the only OSM-derivable member
     # is wheelchair=yes → 'Wheelchair-accessible'. Everything else stays NULL.
     "acc": "'acc', CASE WHEN tags->>'wheelchair' = 'yes' THEN 'Wheelchair-accessible' END",
     # Every letter: a dated OSM check_date is a published witness
@@ -307,8 +307,7 @@ def build_surface_pmtiles(layer_files: dict[str, list[Path]], out_path: Path, co
                           *, min_zoom: int | None = None, max_zoom: int | None = None) -> None:
     """tippecanoe -> a road-surface LINE artifact, one `surface_<cc>` layer per country.
 
-    A different profile from the point build, and deliberately so
-    (Dated/2026-08-09-surface-line-tiles-design.md §4):
+    A different profile from the point build, and deliberately so:
 
     - **No thinning.** `--drop-densest-as-needed` exists to make dense POINT
       tiles fit; dropping lines would delete roads from the map at low zoom,
@@ -319,8 +318,7 @@ def build_surface_pmtiles(layer_files: dict[str, list[Path]], out_path: Path, co
       tyres", and z14+ overzooms from it for free.
 
     Measured on Belgium (2026-08-10, 417,371 classified ways): **43 MB**, of
-    which z8-9 is 11 MB — an order of magnitude under the design's "low
-    hundreds of MB" guess, which is why the z8 floor was affordable to keep.
+    which z8-9 is 11 MB, small enough to keep the z8 floor.
 
     The zoom range is an argument because the two arms want different ones: the
     classified skin spans z8-13 (a planning view of where the gravel is), while

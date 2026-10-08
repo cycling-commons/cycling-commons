@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Road-surface line layer (Dated/2026-08-09-surface-line-tiles-design.md)."""
+"""Road-surface line layer (docs/specs/coverage-provider.md §4)."""
 
 from __future__ import annotations
 

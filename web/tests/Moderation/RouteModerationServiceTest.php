@@ -269,7 +269,7 @@ final class RouteModerationServiceTest extends KernelTestCase
     public function testResolveSuggestionMarksItDone(): void
     {
         $route = $this->route(ItemState::Unverified);
-        // Task 4: resolveSuggestion now messages the suggester — user_message.user_id
+        // resolveSuggestion messages the suggester, user_message.user_id
         // has a real FK to users(id), so the suggestion's userId must be a persisted user.
         $suggester = $this->curator();
         $s = new \App\Catalog\Entity\RouteSuggestion((int) $route->getId(), (int) $suggester->getId(), \App\Catalog\RouteSuggestionReason::Duplicate, 'Same as #12');

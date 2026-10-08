@@ -24,7 +24,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Public rider profile (spec 2026-07-14): /riders/{uuid} exists only while
+ * Public rider profile (account-and-auth.md §7): /riders/{uuid} exists only while
  * publicProfile is ON; renders public-appropriate data only; never leaks the
  * email. Anonymous client throughout — the page must not require login.
  *

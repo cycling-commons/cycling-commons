@@ -23,11 +23,11 @@
     var placingRider = false;
     var routeSeq = 0;
     var profileSeq = 0;
-    var routeCtl = null;      // AbortController for the in-flight OSRM request
+    var routeCtl = null;      // AbortController for the in-flight route request (our Valhalla via /contribute/route)
     var profileCtl = null;    // AbortController for the in-flight elevation request
-    var routing = false;      // OSRM route request in flight
+    var routing = false;      // route request to /contribute/route in flight
     var profiling = false;    // elevation profile request in flight
-    var routeError = false;   // last OSRM attempt failed — the straight line stayed
+    var routeError = false;   // last route attempt failed; the straight line stayed
     var profileError = false; // last elevation attempt failed — no gradient profile
     var FETCH_TIMEOUT_MS = 10000;
     var ready = false;

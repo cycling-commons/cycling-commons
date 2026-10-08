@@ -25,7 +25,7 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\RawMessage;
 
 /**
- * Production 500 alerts (test-suite review 2026-08-24).
+ * Production 500 alerts.
  *
  * This subscriber is the only thing that tells anyone the site is throwing
  * 500s, and it had no test. Every branch that matters is a branch that fails

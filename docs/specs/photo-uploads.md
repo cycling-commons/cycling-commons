@@ -5,30 +5,27 @@
 > **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
 
 
-**Status:** canonical reference (design final 2026-07-31; EXECUTED
-2026-07-31) · **Audience:** contributors to Cycling Commons
+**Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
 This document is the contract for rider photo uploads, end to end: rider
 device → processed object storage → moderation → the item's `photos[]`
-attribute the map drawer renders. It supersedes the wizard's mock photo step
-(which uploads nothing and only records photo-URL *links* as reviewer
-context). Media licensing context lives in the site licences
+attribute the map drawer renders. Media licensing context lives in the site licences
 (media = CC BY-SA 4.0); the moderation machinery this rides on is
 [moderation-and-contribution.md](moderation-and-contribution.md).
 
 ## 1. Decisions
 
-1. **Photos only.** The video drop zone AND the video link row are removed
-   from the wizard (honest UI); video returns as its own feature someday.
-2. **CC buckets behind a proxy host — one bucket per continent.**
+1. **Photos only.** The wizard has no video drop zone and no video link row
+   (honest UI); video would be its own feature.
+2. **CC buckets behind a proxy host, one bucket per continent.**
    Files live in dedicated Cycling Commons
    object-storage buckets, sharded by continent; riders' browsers fetch them
    from a first-party caching proxy host **the owner runs** (the same
-   pattern the coverage tiles use), which routes by the URL's continent
-   segment (`<MEDIA_PUBLIC_BASE>/eu/…`, `/na/…`). The app resolves each
+   pattern the coverage tiles use), which routes by the URL's bucket
+   segment (`<MEDIA_PUBLIC_BASE>/eu-01/…`, `/na-01/…`). The app resolves each
    upload's continent from the wizard's pin coordinates (world reference
-   data: country → continent), stores the code on the row, and routes
-   writes through a per-continent storage map. The pin is required
+   data: country → continent), and stores the continent code and the full
+   name of the bucket the bytes went to on the row. The pin is required
    (missing_location); a pin that resolves to no continent (the sea, a
    point outside every onboarded region) refuses too
    (location_unresolvable; owner 2026-08-18: "not part of a continent, we
@@ -90,12 +87,12 @@ context). Media licensing context lives in the site licences
 
 ## 2. Storage plumbing
 
-- **Flysystem** with S3 adapters, **one storage per continent**:
-  `MEDIA_S3_ENDPOINT`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`, `MEDIA_S3_REGION`
-  (shared credentials) + one var per continent:
+- **Flysystem** with an S3 adapter that `MediaStorage` builds on demand for
+  each bucket name: `MEDIA_S3_ENDPOINT`, `MEDIA_S3_KEY`, `MEDIA_S3_SECRET`,
+  `MEDIA_S3_REGION` (shared credentials) + one var per continent:
   `MEDIA_S3_PUBLIC_BUCKET_<CC>`, the FULL bucket name new photos write to,
   stored verbatim on the row - the one key. Its last five characters
-  (`-eu-01`) are the public URL segment, so names must end `-<cc>-<nn>`.
+  (`eu-01`) are the public URL segment, so names must end `-<cc>-<nn>`.
   Retired buckets stay addressable without config. A continent whose var is
   unset refuses uploads (media-storage-architecture.md §2.1).
 - **Configured by environment variables, not by `when@` blocks** — the
@@ -112,9 +109,11 @@ context). Media licensing context lives in the site licences
 - **Dev** points at the dev stack's MinIO (compose profile `storage`) by
   default — a contributor needs no credentials of their own, exactly as the
   coverage pipeline already works. Buckets are created on demand by a dev
-  bootstrap, mirroring `publish.py::ensure_bucket`. Note the two hostnames:
-  the app writes server-side to `http://minio:9000`, the browser reads from
-  `http://localhost:9100`.
+  bootstrap (`minio-media-bucket`), mirroring `publish.py::ensure_bucket`.
+  Note the two hostnames: the app writes server-side to `http://minio:9000`,
+  the browser reads through the dev `media-proxy` at
+  `http://localhost:9102/img`, which maps each URL segment to its bucket as
+  the production proxy does.
 - **A developer may point media at their own MinIO instead** — one shared
   instance across projects rather than one per project. Setting `MEDIA_S3_*`
   in `developers/docker/.env` overrides the bundled defaults, and the
@@ -135,26 +134,21 @@ context). Media licensing context lives in the site licences
   a quarantine *prefix* inside the anonymous-read public bucket would be a
   contradiction. Key: `quarantine/<uuid>`.
 - Object layout: `published/<uuid>/<rev>/orig.webp | lg.webp | sm.webp`
-  **inside the shard's bucket**; the public URL prepends the shard:
-  `<MEDIA_PUBLIC_BASE>/<shard>/published/<uuid>/<rev>/<variant>.webp`. `<rev>`
-  is a short opaque token minted per processing run, so a published key never
-  changes meaning and the proxy in front of it can cache for a year
-  (media-storage-architecture.md §4). Photos written before that rule existed
-  sat at the mutable `photos/<uuid>/…`; `app:media:backfill-keys` moved them,
-  once, and there is no legacy branch in the URL builder.
-- **The shard is recorded per photo, not derived from the continent**
-  (`storage_shard`). The two are the same string today. A continent with no
-  bucket of its own REFUSES the upload (`storage_unavailable`; owner
-  2026-08-18: "storage must fail", never a borrow of another continent's
-  bucket), so every stored row is fully self-contained: the shard it records
-  is a bucket that existed when the bytes were written.
-- **Public base is resolved per continent, not by string-concatenating a
-  single base.** In production the continent is a path segment the owner-run
-  proxy routes on; against raw MinIO in development it is part of the bucket
-  name, and no single base URL can express both. So the continent map holds a
-  storage **and** a public base per continent, and `MediaStorage::url()` reads
-  the pair. `MEDIA_PUBLIC_BASE` remains the default for continents that do not
-  override it.
+  **inside the photo's bucket**; the public URL prepends the bucket's segment
+  (its last five characters):
+  `<MEDIA_PUBLIC_BASE>/<segment>/published/<uuid>/<rev>/<variant>.webp`
+  (`MediaStorage::url()`). `<rev>` is a short opaque token minted per
+  processing run, so a published key never changes meaning and the proxy in
+  front of it can cache for a year (media-storage-architecture.md §4). A row
+  without a revision names the old mutable `photos/<uuid>/…` layout;
+  `app:media:backfill-keys` moves it, and there is no legacy branch in the URL
+  builder (media-storage-architecture.md §4.1).
+- **The bucket is recorded per photo, not derived from the continent**
+  (`storage_bucket`, the full bucket name). A continent with no bucket of its
+  own REFUSES the upload (`storage_unavailable`; owner 2026-08-18: "storage
+  must fail", never a borrow of another continent's bucket), so every stored
+  row is fully self-contained: the bucket it records existed when the bytes
+  were written.
 - **Honest threat framing:** these paths are *guessing-infeasible*, not
   unguessable — a UUIDv4 carries ~122 random bits, so blind enumeration is
   impractical, but it is still only a secret in a URL. And the variant
@@ -183,9 +177,8 @@ answers `202 Accepted`. Everything below step "Persistence" happens on the
 worker, which is the only tier that can scan: the web tier's `disable_functions`
 excludes `proc_open`, and a tier that cannot scan must not be allowed to
 publish ([`media-storage-architecture.md`](media-storage-architecture.md) §1,
-§3). The decode moved with it, which is also where a decompression bomb now
-lands: on a worker built to be restarted, not on a host serving pages (§3.2
-there).
+§3). The decode runs there too, which is where a decompression bomb lands: on
+a worker built to be restarted, not on a host serving pages (§3.2 there).
 
 Validation the web tier CAN do, in this order, cheapest first:
 - identity, CSRF token, consent record;
@@ -206,14 +199,14 @@ is the second verification, never the address: it needs a decode the endpoint
 does not do, so the message carries the pin transiently and the worker records
 the EXIF-to-pin distance after it decodes (the worker's pinless resharding arm
 survives only for messages queued before the pin became required). A photo
-whose shard changes that way has published nothing yet, which is the only time
-a shard may change at all. There is no default continent (removed 2026-08-18):
-a pin that resolves to no continent at all is a `location_unresolvable`
-refusal, not a shard assignment.
+whose bucket changes that way has published nothing yet, which is the only time
+a bucket may change at all. There is no default continent: a pin that resolves
+to no continent at all is a `location_unresolvable` refusal, not a bucket
+assignment.
 
-**Persistence at intake:** a `media_upload` row —
+**Persistence at intake:** a `media_upload` row:
 `id (uuid) · user_id · status = 'pending_scan' · continent (CHAR(2), where the
-photo IS) · storage_shard (where the bytes WENT) · revision (NULL - nothing is
+photo IS) · storage_bucket (where the bytes WENT) · revision (NULL - nothing is
 published) · width = 0 · height = 0 · bytes (what arrived) ·
 consent_record_id (FK, NOT NULL) · created_at`, plus the raw object at
 `quarantine/<uuid>` in the private bucket. Written in that order, bytes first:
@@ -230,9 +223,10 @@ can be told it by a flag alone.
 
 ### 3a. What the worker does
 
-`ScanAndReleaseUpload` → `ScanAndReleaseUploadHandler`. No-op unless the row is
-still `pending_scan` **and** the quarantine object is still there, which is what
-makes a Messenger redelivery harmless.
+`ScanAndReleaseUpload` → `ScanAndReleaseUploadHandler`. A no-op unless the row
+is still `pending_scan`, which is what makes a Messenger redelivery harmless. A
+row still `pending_scan` whose quarantine object is gone is settled as
+`scan_unreadable`, not retried.
 
 1. **Scan** the bytes (ClamAV INSTREAM). An *infected* verdict is terminal in
    one pass: the object is deleted, the row is rejected and tombstoned, the
@@ -256,22 +250,23 @@ makes a Messenger redelivery harmless.
    natively in its container, so this costs no format compromise.
 8. **Release**: write the three variants under a freshly minted
    `published/<uuid>/<rev>/`, then stamp the revision, dimensions, byte size
-   and capture date on the row and set it `pending`, then delete the quarantine
-   object. Objects first, row second, quarantine last - the order IS the gate.
+   and capture date on the row and set it `pending`, flush the row with a
+   `released` event, and only then delete the quarantine object. Objects
+   first - the order IS the gate: nothing reads as published before its
+   objects exist. Row before quarantine delete: a flush that fails leaves the
+   bytes in quarantine, so the redelivery scans and releases them instead of
+   settling a still-`pending_scan` row as `scan_unreadable`.
 9. A file that will not decode ends like an infected one: object deleted, row
    rejected, rider told. The reason code lands in the event log
    (`scan_unreadable`), not in a response nobody is waiting for.
 
 Only `orig`, `lg` and `sm` are published; the raw upload is destroyed, never
 archived. Keeping it would keep the EXIF - including the GPS - that step 4
-promises to destroy, which is why the "clean originals stay private too" line
-in media-storage-architecture.md §2.2 is not implemented as written (see the
-note there).
+promises to destroy (media-storage-architecture.md §2.2).
 
-**Where the coordinates go.** They are used exactly once and then destroyed,
-and the async flow adds one case the synchronous one never had. An unclaimed
-row gets the coordinates written to it, and the claim destroys them as before.
-A row **claimed while it was still quarantined** has already been through
+**Where the coordinates go.** They are used exactly once and then destroyed.
+An unclaimed row gets the coordinates written to it, and the claim destroys
+them. A row **claimed while it was still quarantined** has already been through
 `MediaClaimService`, which ran that destruction against columns the decode had
 not filled yet - so the handler computes `gps_distance_m` itself, from the
 submission's own pin, and the coordinates never reach the database at all.
@@ -299,13 +294,13 @@ the same contract wording and asserts the version its user ticked in-app.
 
 ## 4. Wizard integration
 
-- The drop zone becomes a real `<input type="file"
+- The drop zone is a real `<input type="file"
   accept="image/jpeg,image/png,image/webp,image/heic" multiple>` + drag/drop;
   each file POSTs immediately with a **per-file upload progress bar** on its
   queue row (`.ulq .uq-row`, named `uq-*` rather than `chip*`: a chip is the
-  site's filter control, moderation-and-contribution.md) (XHR upload progress — real bytes, not a spinner; indeterminate
-  pulse when the browser can't compute length). The fake `IMG_1003.jpg`
-  generator dies.
+  site's filter control, moderation-and-contribution.md), driven by XHR upload
+  progress: real bytes, not a spinner, with an indeterminate pulse when the
+  browser cannot compute the length.
 - **The upload is asynchronous, so the row has a pending state**
   (media-storage-architecture.md §3.3). Two owner decisions, 2026-08-16:
   - **Optimistic preview.** While the worker runs, the row shows the rider's
@@ -368,15 +363,14 @@ the same contract wording and asserts the version its user ticked in-app.
   record for the current `kind` + `version`). The review step repeats the
   notice **at the foot of the step, directly under the provenance line** — the
   ODbL/CC BY-SA sentence and "you already granted the photo half, on this
-  date" are the same subject, so they close the step as one block. It sat
-  above the review card until 2026-08-02, where it opened step 4 with a legal
-  note before the rider reached their own answers. **On the review step the
-  notice appears only when the submission actually carries a photo**
-  (`syncReviewNotice()`, re-run on every queue change): consent is durable, so
-  a rider who donated a photo months ago was otherwise told "your photos join
-  the Commons" at the foot of a text-only correction containing no photos — a
-  sentence about nothing, in the one place the rider is checking what they are
-  really sending. The photo step keeps the notice unconditionally; that step
+  date" are the same subject, so they close the step as one block. Above the
+  review card it would open step 4 with a legal note before the rider reached
+  their own answers. **On the review step the notice appears only when the
+  submission actually carries a photo** (`syncReviewNotice()`, re-run on every
+  queue change): consent is durable, so without that rule a rider who donated
+  a photo months ago would be told "your photos join the Commons" at the foot
+  of a text-only correction containing no photos, a sentence about nothing in
+  the one place the rider is checking what they are really sending. The photo step keeps the notice unconditionally; that step
   *is* about photos. The modal only ever returns
   when the consent **wording version changes** — a new version means a new
   consent act, never a silent carry-over.
@@ -384,8 +378,8 @@ the same contract wording and asserts the version its user ticked in-app.
   in the submission payload as `mediaIds`; intake validates each id exists,
   is `pending`, and **belongs to the submitting user**, then stamps
   `submission_id` on the rows.
-- The video drop zone, `videoUrl` field, and video copy are removed; step-3
-  copy updates to photos-only in every locale.
+- The wizard carries no video drop zone, no `videoUrl` field and no video
+  copy; step-3 copy is photos-only in every locale.
 
 ## 5. Moderation path
 
@@ -403,20 +397,20 @@ Nothing public until approved — the rule everywhere else, applied here:
   inside one, every click to enlarge would also untick Keep.
 - **Approve** → uploads flip to `approved`, and the item's `photos[]`
   attribute gains
-  `{id, sm, lg, credit, license: 'CC BY-SA 4.0', distanceM, locationConfirmed?: true, takenAt?: 'YYYY-MM'}` per
-  photo. `distanceM` is `gps_distance_m`, the metres from the photo's GPS
-  position to the submission pin, or null when it carried none; a scenic view
-  shows the photo only when it is within 250 m, or when a curator confirmed it
-  was taken at the pin, which adds `locationConfirmed: true` (§5g). `id` is the upload's own uuid, and it is what takedown, escalation
-  and disposal match on. They used to compare the stored `sm` string against a
-  freshly built one, which silently stopped matching each time the address
-  moved — `photos/<uuid>/` to `published/<uuid>/<rev>/`, then the `-<cc>-<nn>`
-  bucket suffix — leaving a granted takedown's image on the item while the
-  code reported success. `MediaDecisionService::isEntryFor()` is the one place
-  that answers "is this entry that upload's?", and
-  `app:media:repair-galleries` re-points entries written before `id` existed (`takenAt` month-granular — public seasonal context, never a
-  precise timestamp) —
-  the exact shape the drawer/lightbox already render (photoList/photoCap).
+  `{id, sm, lg, credit, license: 'CC BY-SA 4.0', distanceM, distancePin?, locationConfirmed?: true, confirmedPin?, alt?, takenAt?: 'YYYY-MM'}`
+  per photo (`MediaDecisionService::describe()`), the shape the
+  drawer/lightbox render (photoList/photoCap). `distanceM` is
+  `gps_distance_m`, the metres from the photo's GPS position to the
+  submission pin, or null when it carried none; a scenic view shows the photo
+  only when it is within 250 m, or when a curator confirmed it was taken at the
+  pin, which adds `locationConfirmed: true` (§5g). `takenAt` is
+  month-granular: public seasonal context, never a precise timestamp. `id` is
+  the upload's own uuid, and it is what takedown, escalation and disposal
+  match on: a stored URL changes whenever the address scheme does, and a match
+  on it would silently miss, leaving a granted takedown's image on the item
+  while the code reported success. `MediaDecisionService::isEntryFor()` is the
+  one place that answers "is this entry that upload's?", and
+  `app:media:repair-galleries` re-points entries written without an `id`.
   **Responsive serving:** every photo `<img>` on rider-facing surfaces (map
   drawer, lightbox, wizard current-photos strip, moderation-queue thumbs)
   carries `srcset="{sm} 520w, {lg} 1400w"` with a fitting `sizes`
@@ -449,8 +443,9 @@ Nothing public until approved — the rule everywhere else, applied here:
   `ModerationService` on every applied change, user-visible per W5) — same
   conventions, media-scoped subject:
   `id · media_id (FK) · actor_id (nullable — null = system) · action
-  (uploaded | claimed | approved | rejected | credit_anonymized |
-  objects_deleted | location_confirmed, and the takedown and escalation
+  (uploaded | released | scan_infected | scan_unreadable | claimed | approved |
+  rejected | credit_anonymized | objects_deleted | location_confirmed, and the
+  takedown and escalation
   actions of §6b to §6d; `App\Media\MediaAction` lists them all) · note (nullable) · created_at`, indexed
   `(media_id, created_at)` like `idx_history_item_time`. Every lifecycle
   transition writes an event — upload, intake claim, each curator decision
@@ -528,32 +523,29 @@ mirrored.
 
 ### 5f. Localising the catalogue's Commons hotlinks
 
-Until 2026-09-09 there were **two** ways a photo reached a rider, and only one
-of them kept a copy.
+A Commons photo reaches a rider from our own bucket. A town card and a
+coverage POI have no photo until somebody opens them, so the server goes and
+finds one at request time: licence gate, download, virus scan, re-encode to
+three webp variants, store in our own bucket (`CommonsPhotoAdmission`,
+`FetchCommonsPhotoHandler`, coverage-provider.md §7). A seeded or harvested
+catalogue item arrives the other way: `SeedWikidataPlacesCommand`,
+`app:catalog:seed-manual`, `app:catalog:import` and the Wallonia enrich step
+turn a Commons file into a `Special:FilePath` URL and store that URL, a
+hotlink to Wikimedia.
 
-A town card and a coverage POI have no photo until somebody opens them, so the
-server goes and finds one at request time: licence gate, download, virus scan,
-re-encode to three webp variants, store in our own bucket
-(`CommonsPhotoAdmission`, `FetchCommonsPhotoHandler`, coverage-provider.md §7).
-A seeded or harvested catalogue item is the other shape.
-`SeedWikidataPlacesCommand` and the Wallonia enrich step turned an OSM
-`wikimedia_commons` tag into a `Special:FilePath` URL and **stored the URL**, so
-the drawer printed it and the rider's browser fetched the pixels from
-Wikimedia. Nothing was ever cached, because nothing ever asked: the row already
-"had" a photo.
-
-That was leftover rather than a decision, and it cost three things:
+A hotlink costs three things:
 
 1. **Wikimedia serves our traffic.** One request per rider per photo, from a
    project that gives its bandwidth away and does not owe us any of it.
 2. **The picture can vanish under us.** A file renamed or deleted on Commons
    takes our page's photo with it, silently.
-3. **The URL is a redirect chain we do not control.** When Wikimedia moved
-   thumbnails to `thumb.wikimedia.org`, every one of those photos went blank
-   behind our own `img-src` and nothing on our side had changed. That is what
-   surfaced this.
+3. **The URL is a redirect chain we do not control.** A change on Wikimedia's
+   side, such as thumbnails moving to another host, blanks every such photo
+   with nothing changed on ours. The CSP names no Wikimedia host
+   (security-architecture.md §2.3), so a hotlink does not load in a browser at
+   all.
 
-`app:media:localise-commons` ends it. It walks every item whose stored photo
+`app:media:localise-commons` replaces hotlinks with our own copies. It walks every item whose stored photo
 still points at Wikimedia, reads the filename back out of the URL
 (`CommonsFile`), and puts it through **the same handler a town card uses**:
 the same `PhotoValidator` check (§5h) judged against the item's own letter and
@@ -586,11 +578,11 @@ but the route no longer names it, so `--recheck-licences` cannot bring it back
 to that route.
 
 **Both photo shapes, and the gallery is the one that gets forgotten.** `photo`
-is the legacy singular field the seeders wrote; `photos` is the array a rider's
-uploads live in (§5), and `SeedManualCatalogCommand` used it for the
-hand-curated multi-photo climbs, so it holds Commons hotlinks too. A first cut
-of this command read only the singular field, left five photos on four items
-hotlinked, and reported success. Gallery entries are reported with their
+is the singular field the seeders write; `photos` is the array a rider's
+uploads live in (§5), and `SeedManualCatalogCommand` uses it for the
+hand-curated multi-photo climbs, so it holds Commons hotlinks too. The command
+reads both: reading only the singular field leaves gallery photos hotlinked
+while it reports success. Gallery entries are reported with their
 position (`#11003 Côte de la Roche-aux-Faucons [2]`), and a rider's own upload
 sitting in the same array is skipped: it is already ours and has no Commons
 attribution to carry.
@@ -633,18 +625,16 @@ Two rules the command exists to keep:
   removes it from a scenic item.
 
   A refusal is `unusable`, which is terminal because the verdict is about the
-  file. That reasoning holds only while OUR list is unchanged, and the first
-  real run proved it moves: nine photos were refused and **eight of them were
-  freely licensed**, carrying `CC BY 2.5`, `CC BY-SA 2.0 be` or
-  `CC BY-SA 2.0 de`, names `LicenceUrls` did not have yet. All three are now
-  accepted, and `--recheck-licences` re-opens past refusals so a list that grew
-  is applied to files already judged. Without it those eight would have stayed
-  hotlinked forever while the report said calmly that they were not ours.
+  file. That holds only while OUR list is unchanged, and the list grows: free
+  licence names such as `CC BY 2.5`, `CC BY-SA 2.0 be` and `CC BY-SA 2.0 de`
+  were added after files carrying them had been refused. `--recheck-licences`
+  re-opens past `licence` refusals so a list that grew is applied to files
+  already judged; without it such files would stay hotlinked forever while the
+  report said calmly that they were not ours.
 
-  The ninth is refused correctly and still is: Commons' bare `Attribution`
-  template is not a licence but a request for credit on terms written in prose,
-  with no deed to point a reader at. A licence we cannot identify is one we
-  cannot attribute.
+  Commons' bare `Attribution` template stays refused: it is not a licence but
+  a request for credit on terms written in prose, with no deed to point a
+  reader at. A licence we cannot identify is one we cannot attribute.
 
 Re-runnable by design: a localised row no longer matches the query, and a file
 we already hold (a coverage POI may have fetched it first) is reused rather
@@ -653,10 +643,6 @@ before its centroid (`ContinentResolver::forCountry()`), because the row states
 the country as a fact where a point-in-polygon lookup misses on any coastal shape,
 and a photo that resolves to no continent is refused rather than filed under a
 neighbour (§1).
-
-**Once every deployment has run it**, the two Wikimedia hosts in `img-src` can
-go (security-architecture.md §2.2): no page will hotlink anything, which is the
-point.
 
 A localised photo reaches the rider through the SAME caption a rider's own
 upload does (`photoCap()`), so it carries the uploader as a link to their
@@ -685,15 +671,14 @@ contributed the **item**, and never appears inside a photo caption.
 #### The licence has to be in the FILE, not only in the caption
 
 A rider's upload carries an XMP packet naming our licence and linking our photo
-page (§1.3c). A Commons copy carried **nothing at all** until 2026-09-09: the
-Imagick re-encode drops whatever XMP arrived with the file, and
-`FetchCommonsPhotoHandler` passed no packet of its own. Every Commons photo in
-our bucket was an orphan, with no author and no licence in the bytes. The
-caption on our page said the right thing; the file did not, and the file is
-what gets downloaded. CC BY-SA asks for the attribution to travel with the
-work.
+page (§1.3c). The Imagick re-encode drops whatever XMP arrives with a Commons
+file, so without a packet of our own a Commons copy would carry no author and
+no licence in the bytes: the caption on our page would say the right thing and
+the file, which is what gets downloaded, would not. CC BY-SA asks for the
+attribution to travel with the work.
 
-`XmpRights::forCommonsFile()` fixes it, and is deliberately NOT `forPhoto()`:
+`FetchCommonsPhotoHandler` therefore writes `XmpRights::forCommonsFile()`,
+which is deliberately NOT `forPhoto()`:
 
 | | `forPhoto()` (rider) | `forCommonsFile()` (Commons) |
 |---|---|---|
@@ -703,7 +688,7 @@ work.
 | `xmpRights:Owner` | absent | their Commons user page, when there is one |
 | `UsageTerms` | attribution via our page | their licence, plus a note that this copy was resized and re-encoded |
 
-Reusing the rider packet would have been worse than writing none: it would
+Reusing the rider packet would be worse than writing none: it would
 assert our licence over somebody else's work and send a reader following the
 file's own metadata to a page of ours that does not name them.
 
@@ -735,16 +720,15 @@ The packet goes on `orig` and `lg` only. `sm` is a 520px preview and a 1.4 KB
 rights block is most of that file; this matches what a rider's photo already
 does, and `sm` is not a copy anyone redistributes.
 
-**Files fetched before this change carry no packet**, and nothing else would
-ever revisit them: `app:media:localise-commons` looks for items still pointing
-at Wikimedia and these no longer do, while `CommonsPhotoRepository::retry()`
-only re-queues rows that are stuck. A `ready` row is not stuck.
+**A stored copy without a packet** is revisited by nothing else:
+`app:media:localise-commons` looks for items still pointing at Wikimedia, and
+`CommonsPhotoRepository::retry()` only re-queues rows that are stuck. A
+`ready` row is not stuck.
 
-`app:media:restamp-commons-rights` closes that. It reads each stored `lg`
-object, and re-fetches the ones carrying no XMP profile. Reading the file rather
-than trusting a `ready_at` date: the date is a guess about when the fix landed,
-the profile is the fact, so the command is safe to run repeatedly and reports
-zero once there is nothing left.
+`app:media:restamp-commons-rights` covers it. It reads each stored `lg`
+object, and re-fetches the ones carrying no XMP profile. It reads the file
+rather than trusting a `ready_at` date, because the profile is the fact, so the
+command is safe to run repeatedly and reports zero once there is nothing left.
 
 **The photo keeps its bucket and prefix.** They are baked into every published
 URL, so a re-fetch that moved the file would trade one broken thing for another,
@@ -754,21 +738,15 @@ quietly, and only on the pages nobody opened that day.
 bucket) when the pending row already carries one. Same URL, new bytes; nothing
 outside the command has to know it ran.
 
-Run on the dev catalogue 2026-09-09: 14 re-stamped, 2 already carried a packet,
-0 failed, and a second pass reported 16 already stamped and nothing to do. After
-the full localisation the same check reports **425 stored photos, all carrying a
-packet, none to do**.
-
 The licence link is the part with a trap under it. The set of licences we
 accept lives in `web/src/Media/licences.json`, read by `LicenceUrls`, and the
 set the caption can turn into a deed URL lives in `ccUrl()` in
-`assets/map/util.js`. Both files said in
-prose that they must agree and nothing made them. Adding a licence to the gate
-alone would start us republishing files under it while the caption pointed at
+`assets/map/util.js`. They must agree. Adding a licence to the gate alone
+would start us republishing files under it while the caption pointed at
 the generic `Commons:Licensing` index, which lists every licence Commons has
 ever seen and therefore identifies none: CC BY-SA asks for the licence to be
 identified, and the page would still look perfectly fine.
-`tests/Media/FreeLicenceLinkabilityTest.php` now fails on exactly that, reading
+`tests/Media/FreeLicenceLinkabilityTest.php` fails on exactly that, reading
 the JS table rather than restating it. Only that direction is checked: `ccUrl()`
 may know more names than the gate accepts, because it also captions rider
 uploads.
@@ -879,19 +857,15 @@ the facts:
 | `gps_distance_pin_lat`, `gps_distance_pin_lng` (double precision, nullable) | the submission pin `gps_distance_m` was measured to (`MediaUpload::resolveGps()`, from `MediaClaimService` and `ScanAndReleaseUploadHandler`); null when there is no distance |
 
 and every rider entry carries them as `distancePin` and `confirmedPin`, so
-`PhotoValidator` compares them with the item's pin at every read
-(photo-uploads.md §5h). This
+`PhotoValidator` compares them with the item's pin at every read (§5h). This
 covers every path that writes `item.geom`, including raw SQL, with no hook in
 any of them. A move below `PhotoValidator::PIN_STILL_M` (1 m) is coordinate
 rounding and counts as none. A move back to where the photo was measured
 counts as none too, because the rule reads where the pin is, not the path it
-took. A rider entry without a pin (none after migration
-`Version20260915090000`) counts as measured at the current pin.
-
-`Version20260915090000` filled the pins in: a distance got its submission's
-point, or the item's pin when no point submission is left; a confirmation got
-the item's pin. It stamped `distancePin` and `confirmedPin` into item entries.
-An item whose pin never moved shows the same photos as before.
+took. A rider entry without a pin counts as measured at the current pin;
+migration `Version20260915090000` gave every entry that existed before the
+pins its pins (a distance got its submission's point, or the item's pin when
+no point submission was left; a confirmation got the item's pin).
 
 **Telling people.** Moving a scenic view's pin can hide photos, so:
 
@@ -1187,9 +1161,10 @@ once approved), and takedown (§6b, §6c), escalation (§6d), account deletion
 (§6), credit restamping and the description sync (§5e) all read it, so a
 route photo is withdrawn, anonymised or re-credited exactly like a photo on a
 place. The photo page links to the route on the map (`?route=<id>`), and a
-place's photo to that place by id (`?item=<id>`, `PhotoGallery::mapQuery()`). Trashing
-a proposal or a correction purges its photos at once
-(`MediaDisposalService::purgeForRoute()`), the Trash semantics of §6. The
+place's photo to that place by id (`?item=<id>`, `PhotoGallery::mapQuery()`). A
+trashed proposal or correction keeps its photos until the Trash purge deletes
+the row, which purges them with it (`MediaDisposalService::purgeForRoute()`),
+the Trash semantics of §6. The
 map payload serves the route's `photos` alongside `photo`
 (`CatalogProvider`), sifted as every other gallery.
 
@@ -1227,10 +1202,11 @@ objects, plus the one media-only class:
   forever". A restore inside the 30 days leaves the photos exactly as they
   were.
 
-One console command (`app:media:gc`, cron-able, ResetPasswordCleanup
-shape) sweeps the first two classes; Trash deletion is synchronous with
-the Trash action itself (no window means no sweep).
-- Account deletion: the existing deletion-hook chain gains a media hook —
+`app:media:gc`, one of the daily jobs (operations.md §1), sweeps the first two
+classes; the Trash purge (`TrashBin::purgeExpired()`, run by
+`app:moderation:gc` and opportunistically from the desk) disposes of trashed
+photos with their row.
+- Account deletion: the deletion-hook chain includes a media hook:
   pending/rejected uploads are deleted outright; approved photos on served
   items stay (they are CC BY-SA-licensed contributions to the commons —
   same reasoning as anonymized ballots).
@@ -1310,15 +1286,13 @@ there is no page to open, so it keeps the bar until it is answered (grant or
 decline) or escalated, which takes it off for every curator. An answered
 request never carries it.
 
-**The desk keeps a history, and it is read from the event log
-(2026-08-14).** Until then the desk showed only OPEN requests, so an answered
-one vanished the moment it was answered — and this desk empties itself by
-design, so the screen went back to "Nothing to answer" with no trace that
-anything had been decided. The owner hit exactly that: *"we had one request
-that was rejected and now we do not know of it."* Nothing had been lost;
-`grant()`, `decline()` and `dismissAsAbuse()` had been writing
-`media_moderation_event` rows all along, and there was simply nowhere to read
-them (`MediaTakedownService::decidedCards()`).
+**The desk keeps a history, and it is read from the event log**
+(`MediaTakedownService::decidedCards()`). The open queue empties itself by
+design, so without the history an answered request would vanish the moment it
+was answered, with no trace that anything had been decided (owner: *"we had
+one request that was rejected and now we do not know of it."*). `grant()`,
+`decline()` and `dismissAsAbuse()` each write a `media_moderation_event` row,
+and the history reads those.
 
 Two things about it are load-bearing:
 
@@ -1347,7 +1321,7 @@ uploader's account at all — has its own route: §6c.
 
 The commoner depicts-me case: recognisable in a photo *somebody else* took,
 quite possibly with no account. Art. 17 does not require one, so the route is
-open to everyone; today it is built, not a mailbox.
+open to everyone, through a form rather than a mailbox.
 
 **Hidden is not removed.** Withholding detaches a photo from the map and
 404s its page; the objects stay in the bucket and the row stays in the
@@ -1372,19 +1346,19 @@ in `media_moderation_event` (`third_party_reported`, note suffixed
 `(auto-withheld)`).
 
 **The form** is the shared report route, `/report/photo/{uuid}`
-([content-reports.md](content-reports.md) §2, §5), since 2026-08-30; the old
-`/photo/{uuid}/report` answers 301 to a GET and 308 to a POST. It is linked
+([content-reports.md](content-reports.md) §2, §5); `/photo/{uuid}/report`
+answers 301 to a GET and 308 to a POST (`MediaReportController`). It is linked
 from every published photo page **and from the map's full-screen photo
 viewer** — the viewer is
 where somebody actually recognises themselves, so a link only on a page they
 would have to go find is a link nobody uses. The viewer reads the uuid back
-out of the stored image URL rather than from a new attribute, so galleries
-approved before the link existed carry it too; a URL that does not match is a
+out of the stored image URL rather than from a separate attribute, so every
+gallery entry carries it; a URL that does not match is a
 linked or imported photo and correctly gets no link, because we cannot take
 down somebody else's file.
 
-Fields: a ground (`ReportGround::forTarget(Photo)`, all nine; the photo
-form's old five categories folded into them, content-reports.md §4) · what is
+Fields: a ground (`ReportGround::forTarget(Photo)`, all ten,
+content-reports.md §4) · what is
 wrong (free text, ≤2000) · a reply email, **required except on
 `intimate_or_child`**, where the law forbids demanding one
 (content-reports.md §5). The copyright ground adds its own two fields. Nothing
@@ -1420,7 +1394,10 @@ photo report as moot while its request is still pending.
 **Abuse hardening**, in the order it actually binds:
 
 1. **The site-wide auto-withhold circuit breaker** (`UrgentWithholdBreaker`,
-   10/hour and 25/day, both windows, one global key). This is the control that
+   10/hour and 25/day by default, both windows, one global key; the budgets
+   are the runtime settings `media.urgent_breaker_hourly` and
+   `media.urgent_breaker_daily`, system-configuration.md §2, and 0 turns
+   auto-withhold off). This is the control that
    bounds the damage, and it exists because the per-IP limiters below **cannot
    defend the auto-withhold against a distributed attacker** — per-IP limits
    bound one IP and a proxy pool is many, while every photo's uuid sits in its
@@ -1438,7 +1415,8 @@ photo report as moot while its request is still pending.
    the cap. Whether a request withheld is **stored** on the row
    (`takedown_withheld`), never recomputed from the category — with the breaker
    open an urgent report legitimately leaves the photo up.
-2. Per-IP limiters: `media_report` 5/IP/day, `media_report_urgent` 1/IP/day
+2. Per-IP limiters: `content_report` 15/IP/day for every report from
+   `/report`, photos included, and `media_report_urgent` 1/IP/day
    ([security-architecture.md §7](security-architecture.md)). These price a
    single abuser, not a distributed one.
 3. **No CAPTCHA** (standing owner decision). Evaluated again when the breaker
@@ -1450,8 +1428,8 @@ photo report as moot while its request is still pending.
    that way, with no third party**: the local proof of work
    (`App\Security\ProofOfWork`, the same one the contact form uses) is
    demanded on the urgent ground only while the breaker is open, by
-   `ContentReportController` since the photo form folded into `/report`
-   ([content-reports.md §5](content-reports.md)). The standing decision holds:
+   `ContentReportController` ([content-reports.md §5](content-reports.md)).
+   The standing decision holds:
    no CAPTCHA, no script from anybody else, and nothing asked in peacetime.
 4. Email verification of the reporter was considered and **rejected**:
    disposable mailboxes make it a weak gate, and the reporter with the most to
@@ -1617,10 +1595,8 @@ validated where it is defined; an empty or malformed list cannot be saved.
 
 ## 5e. Photo descriptions
 
-Shipped 2026-08-28. Until then a rider uploaded a photo and we never asked what
-was in it, so a screen reader announced "image" and stopped. WCAG 1.1.1 is the
-most basic success criterion there is and it was the one we failed, in our own
-words, on `/accessibility`.
+A rider is asked what is in their photo, so a screen reader can say more than
+"image". WCAG 1.1.1 is the most basic success criterion there is.
 
 **Optional, and asked in plain language.** The wizard says *"what would somebody
 who cannot see it need to know?"* rather than "alt text", which means nothing to
@@ -1632,46 +1608,40 @@ the upload POSTs the moment a file is chosen and the rider has not typed
 anything yet. It also means a description can be fixed afterwards, and a slow
 typist never holds up the scan queue.
 
-**The typed words ride in the submission too** (fixed 2026-09-06). The
-endpoint above is called from the `change` event of the description box, which
-fires on the blur that a click on Next causes, and the browser cancelled that
-request as the page moved on: the rider typed a description, pressed Next, and
-the row kept no words at all (owner: "I had added a description to the photos
-when I uploaded them; now it is not visible"). Two fixes, belt and braces. The
-request is sent with `keepalive`, so it outlives the navigation. And the wizard
-keeps a second copy in a hidden field, `mediaAlts` (`{"<uuid>": "<text>"}`,
-updated on every keystroke), which `MediaClaimService::claim()` reads at claim
-time and writes onto any upload whose row still has no description, never over
-one the live save already wrote, because that one is the fresher word. The
-test that was missing was the one for this path; it is
+**The typed words ride in the submission too.** The endpoint above is called
+from the `change` event of the description box, which fires on the blur that a
+click on Next causes, and a browser may cancel that request as the page moves
+on. Two safeguards, belt and braces. The request is sent with `keepalive`, so
+it outlives the navigation. And the wizard keeps a second copy in a hidden
+field, `mediaAlts` (`{"<uuid>": "<text>"}`, updated on every keystroke), which
+`MediaClaimService::claim()` reads at claim time and writes onto any upload
+whose row still has no description, never over one the live save already
+wrote, because that one is the fresher word. Pinned by
 `MediaClaimTest::testTheTypedDescriptionSurvivesInTheSubmission`.
 
-The wizard's describe box under an existing photo of the rider's own no longer
-says "Your photo. Changes here take effect straight away." (owner, 2026-09-06):
-the box is the affordance and the sentence was noise. A stranger's box keeps
-its note, because that one changes what happens to the words. And the picture's
-own alt in the wizard falls back through the description, the place's name and
-then the place's type, so an unnamed registry tap reads "Photo of Water & food"
+The wizard's describe box under an existing photo of the rider's own carries no
+note (owner, 2026-09-06): the box is the affordance. A stranger's box keeps its
+note, because that one changes what happens to the words. The picture's own alt
+in the wizard falls back through the description, the place's name and then
+the place's type, so an unnamed registry tap reads "Photo of Water & food"
 rather than "Photo of".
 
-**The lightbox shows it** (2026-09-06, owner: "show the alt text in the image
-popup below the image"). `assets/map/lightbox.js` puts the description under
-the picture in plain type (`.cc-lb-desc`, hidden when nobody wrote one) and
-sets it as the image's alt, with the place's name as the fallback alt exactly
-as the drawer does. The credit line below it is unchanged.
+**The lightbox shows it** (owner, 2026-09-06). `assets/map/lightbox.js` puts
+the description under the picture in plain type (`.cc-lb-desc`, hidden when
+nobody wrote one) and sets it as the image's alt, with the place's name as the
+fallback alt exactly as the drawer does. The credit line sits below it.
 
-**It lives in TWO places and both are written together** (fixed 2026-08-30). The
-upload row, and a copy inside the item's `photos` gallery, which is what the
-map, the vector tiles and the wizard's review step all read. That copy is not a
-cache: it rides inside cached tiles, so it cannot be rebuilt on read. Writing
-only the row left every surface showing the description as it stood at approval,
-which made an edit look as though it had not happened. Pinned by
-`PhotoAltGallerySyncTest`.
+**It lives in TWO places and both are written together.** The upload row, and
+a copy inside the item's `photos` gallery, which is what the map, the vector
+tiles and the wizard's review step all read. That copy is not a cache: it
+rides inside cached tiles, so it cannot be rebuilt on read. Writing only the
+row would leave every surface showing the description as it stood at
+approval. Pinned by `PhotoAltGallerySyncTest`.
 
-**Anybody signed in can write one; only the uploader's takes effect at once**
-(owner, 2026-08-30). Before this, a wrong or missing description was stuck until
-whoever took the picture happened to return. Two routes, and the server enforces
-the split both ways:
+**Anybody signed in can write one; only the uploader's or a curator's takes
+effect at once** (owner, 2026-08-30), so a wrong or missing description is not
+stuck until whoever took the picture returns. The server enforces the split
+both ways:
 
 | Who | Route | What happens |
 |---|---|---|
@@ -1681,13 +1651,17 @@ the split both ways:
 | signed out | neither | no field is rendered |
 
 On the map's pending card the change key `photoAlt:<uuid>` is labelled
-"Photo description" (`fieldLabelFor()`), never by its uuid: the raw key once
-grew the diff's label column to the uuid's width and wrapped every value one
-letter per line (owner 2026-09-08, "broken display in the drawer").
+"Photo description" (`fieldLabelFor()`), never by its uuid: the raw key would
+grow the diff's label column to the uuid's width and wrap every value one
+letter per line.
 
-The review step shows the words either way (owner 2026-09-08: "missing my added alt text"): the owner's caption reads as live, anybody else's carries a small "proposed" tag (`.rm-item.is-proposed`, `improve.step4.proposed`), since a suggestion has not changed anything until a curator has seen it. The note that used to say so under the box is gone.
+The review step shows the words either way (owner, 2026-09-08): the owner's
+caption reads as live, anybody else's carries a small "proposed" tag
+(`.rm-item.is-proposed`, `improve.step4.proposed`), since a suggestion has not
+changed anything until a curator has seen it.
 
-The direct route refuses a non-owner and the suggestion route refuses the owner,
+The direct route refuses anybody but the uploader and a curator, and the
+suggestion route refuses the owner,
 so the `data-mine` attribute the template writes only chooses which 404 a
 tampered request gets. A suggestion is a normal `Edit` submission whose change
 key is `photoAlt:<uuid>` (`App\Media\PhotoAltSuggestion`), namespaced with a
@@ -1698,11 +1672,9 @@ follows. Approving it writes both copies through
 that item. No new moderation mechanic appears, which is the house rule
 (`one-way-to-moderate`). Pinned by `PhotoAltSuggestionTest`.
 
-**The fallback is the item's name.** Owner's call, 2026-08-28, and it reverses
-the original draft of this item, which said fall back to `alt=""` on the grounds
-that a filename read aloud is worse than silence. That reasoning is right about
-filenames and wrong about place names: "Zuiderdijk" beside a climb is real
-information. The chain is the rider's description, then the item's name, then a
+**The fallback is the item's name** (owner, 2026-08-28), not `alt=""`. A
+filename read aloud is worse than silence, but a place name is not:
+"Zuiderdijk" beside a climb is real information. The chain is the rider's description, then the item's name, then a
 generic string, and an empty or whitespace-only description collapses to null
 precisely so the fallback still fires.
 
@@ -1711,39 +1683,36 @@ render it without a per-photo query. Same trade-off as the credit, and the same
 consequence: it is a snapshot. Unlike the credit it does not go stale, because
 nothing else changes it.
 
-Two of the item's three open questions are answered by shipping: optional, and
-the uploader may edit it. **Whether it travels with the CC BY-SA export is still
-open**; it is a description *of* the photo rather than part of it, and the
-export work should settle it.
+**Open: whether it travels with the CC BY-SA export.** It is a description *of*
+the photo rather than part of it, and the export work should settle it.
 
-## 6d. No AI-generated images, and why the consent had to change
+## 6d. No AI-generated images, and what the consent says
 
-Added 2026-08-28 (owner). The Commons is a map of the real world, so a
+Owner rule, 2026-08-28. The Commons is a map of the real world, so a
 photograph that was never taken is worse than no photograph: it is a claim about
 a place, made confidently, that nobody can check by going there.
 
 **Three surfaces, one rule:**
 
-- `/terms` 12 gains a sixth takedown ground, `mod_std6`. It sits under "things
-  that are simply not true" in spirit, but nobody would infer it from there, and
-  a generated photo is now the easiest false thing to put on a map.
-- `/terms` 13, a new section, states where machines are involved at all and
-  says plainly that AI-generated or AI-altered uploads are not allowed.
-- The upload consent itself now carries it, because that is the sentence a
+- `/terms` 12 carries it as a takedown ground of its own, `mod_std6`. It sits
+  under "things that are simply not true" in spirit, but nobody would infer it
+  from there, and a generated photo is the easiest false thing to put on a map.
+- `/terms` 13 states where machines are involved at all and says plainly that
+  AI-generated or AI-altered uploads are not allowed.
+- The upload consent itself carries it, because that is the sentence a
   contributor actually reads and agrees to.
 
-**`MediaConsent::VERSION` went v3 to v4.** The contract wording is hashed onto
-every consent record, so changing the words without bumping the version would
-leave old records pointing at text that no longer exists. v3 records stay valid
-evidence of the v3 promise; only uploads from here carry v4.
+**Every wording change bumps `MediaConsent::VERSION`** (currently `v5`). The
+contract wording is hashed onto every consent record, so changing the words
+without bumping the version would leave old records pointing at text that no
+longer exists. An older record stays valid evidence of the promise it was
+given under; the next upload asks again.
 
-**v4 to v5 (2026-09-09).** The sentence no longer says "altered by AI": the
-rule is about the scene, not the software, so an AI denoiser is as fine as a
-darkroom. It says instead that nothing was altered *except to blur faces and
-number plates*, which is the one change the Commons asks for rather than
-forbids (the terms already refuse identifiable people and plates; the blur is
-how a rider complies before upload). Same mechanics as every bump: v4 records
-stay evidence of the v4 promise, the next upload asks again.
+**The v5 wording is about the scene, not the software** (2026-09-09): an AI
+denoiser is as fine as a darkroom. It says that nothing was altered *except to
+blur faces and number plates*, which is the one change the Commons asks for
+rather than forbids (the terms refuse identifiable people and plates; the blur
+is how a rider complies before upload).
 
 **What "altered" means, and what it does not.** Cropping, straightening and
 lifting shadows are ordinary photography and are fine. Adding or removing
@@ -1773,15 +1742,15 @@ decision.
 | per submission | 6 photos |
 | rate limit | 30 uploads/day/user |
 
-### 7a. The decoder's own limits (2026-08-03)
+### 7a. The decoder's own limits
 
 The 15 MB cap bounds the FILE. It does not bound what the file decodes to, and
-that is the gap: a few hundred kilobytes of entirely valid PNG — one long run
-of identical pixels — expands to gigabytes of pixel buffer and takes the worker
-with it. Every dimension check in `PhotoProcessor` used to run *after*
-`readImageBlob()` had already paid that cost.
+that is the gap: a few hundred kilobytes of entirely valid PNG (one long run
+of identical pixels) expands to gigabytes of pixel buffer and takes the worker
+with it. A dimension check that runs after `readImageBlob()` has already paid
+that cost.
 
-Two layers now, because either alone is a single point of failure:
+Two layers, because either alone is a single point of failure:
 
 1. **`PhotoProcessor` reads the header first.** `pingImageBlob()` parses enough
    to answer "how big does this claim to be" without allocating the canvas.
@@ -1792,14 +1761,12 @@ Two layers now, because either alone is a single point of failure:
    decode, so a lying or exotic header fails inside the decoder rather than
    after it.
 
-   **Only the stateless limits belong in PHP, and that is the lesson.** The
-   first version set the pixel-cache budgets there too (memory / map / disk)
-   plus time and threads. Those are consumed *cumulatively by the process*, not
-   per image: the test suite went red partway through with "unable to create
-   new image", having used its allowance up, and a PHP-FPM worker has exactly
-   that same long life, so in production it would have been every upload
-   failing after some hours, with no obvious cause. The memory, map, disk,
-   area, width and height budgets live in policy.xml instead, where
+   **Only the stateless limits belong in PHP.** The pixel-cache budgets
+   (memory / map / disk), time and threads are consumed *cumulatively by the
+   process*, not per image: set in PHP, a long-lived process (the test suite,
+   a PHP-FPM or messenger worker) uses its allowance up and every later decode
+   fails with "unable to create new image", with no obvious cause. The memory,
+   map, disk, area, width and height budgets live in policy.xml instead, where
    ImageMagick applies them per operation.
 
    **`time` depends on the ImageMagick major version, and the two differ.**
@@ -1823,35 +1790,35 @@ Two layers now, because either alone is a single point of failure:
    drops the XMP licence packet from WebP output (measured: the packet
    survives on 6.9.12 and on 7, not on 6.9.11), and trixie ships no
    ImageMagick 6 headers at all. Exact parity would mean an Ubuntu 24.04
-   base with PHP from a PPA, which is an open item in `docs/TODO.md`.
+   base with PHP from a PPA, and the CI runner to match; that is not done.
 2. **The image ships its own `policy.xml`** (`web/docker/imagemagick-policy.xml`,
    copied to `/etc/ImageMagick-7/policy.xml`). The allow pattern names each
    format in both cases, because ImageMagick 6 matches it case-sensitively
    and checks a blob write under the name the app passed to `setImageFormat`
    (`webp`, lower case) while it checks a file read under the coder's own
-   name (`WEBP`); upper case alone passed every read and failed every encode
-   with "empty or invalid image" and no policy message (2026-09-20). The
-   build's verifier now encodes each allowed format to a blob for that
-   reason. Debian's stock policy carries
+   name (`WEBP`); upper case alone passes every read and fails every encode
+   with "empty or invalid image" and no policy message. The build's verifier
+   encodes each allowed format to a blob for that reason. Debian's stock
+   policy carries
    resource limits and denies the URL/HTTP coders, but leaves every other coder
    readable and every delegate executable. Ours is deny-all-then-allow over the
    same five formats the application accepts, denies delegates and the
    `MSL/MVG/PS/EPS/PDF/SVG/URL/XPS/EPHEMERAL/...` module families (the
    ImageTragick surface), and refuses indirect `@file` reads.
 
-**Two things learned doing this, both worth keeping:**
+**Two things worth keeping:**
 
 - **ImageMagick parses `policy.xml` with its own XML parser, and a backtick
-  anywhere in the file — including inside a comment — silently swallows every
-  rule after it.** Measured against ImageMagick 7.1.1: the first draft used
-  backticks for code spans in two comments and the entire coder allowlist below
-  them was ignored, with GIF still decoding, no error and no log line. The file
-  says NO BACKTICKS at the top for that reason.
+  anywhere in the file, including inside a comment, silently swallows every
+  rule after it.** Measured against ImageMagick 7.1.1: backticks for code spans
+  in two comments made the entire coder allowlist below them ignored, with GIF
+  still decoding, no error and no log line. The file says NO BACKTICKS at the
+  top for that reason.
 - **So the build asserts the policy rather than trusting it.** A policy that
   silently does nothing is worse than no policy, because you stop looking.
 
-**The assertion, widened 2026-09-20 (owner: tell me if anything other than
-what we have gets enabled).** `web/docker/verify-imagemagick-policy.php` runs
+**The assertion** (owner, 2026-09-20: tell me if anything other than what we
+have gets enabled). `web/docker/verify-imagemagick-policy.php` runs
 in the image build (`web/Dockerfile`, straight after the COPY) and again in
 the suite (`tests/Media/ImageMagickPolicyTest`, skipped where there is no
 ext-imagick and no policy file). It asks three questions and fails on any
@@ -1897,13 +1864,11 @@ host) or `photo_unreadable` (policy in force: the app image, production).
   required; wizard submit carries `mediaIds` and intake stamps rows
   (foreign/consumed ids rejected); approve attaches `photos[]` with the
   credit rule; reject + orphan GC; account-deletion hook.
-- Suite baseline 898 stays green; in-memory storage adapter keeps tests
-  hermetic.
+- The in-memory storage adapter keeps tests hermetic.
 
 ## 9. Out of scope
 
-- Video (removed from UI; future feature).
-- Backfilling Wikimedia-photo items — untouched, same attribute shape.
+- Video (a feature of its own, if ever).
 - The proxy host itself (owner-run infrastructure).
 - Serving additional image formats: the newer **AV**1 **I**mage **F**ile
   format (AVIF) compresses ~20-30 % better than WebP but would mean a
@@ -1911,10 +1876,9 @@ host) or `photo_unreadable` (policy in force: the app image, production).
   optimization touching no stored data; WebP-only is the deliberate v1.
   (Responsive `srcset` serving IS in scope — §5.)
 
-## 10. Execution notes
+## 10. Implementation notes
 
-Built 2026-07-31. Two deviations from what a reader of §1–§9 might assume, both
-deliberate:
+Two things a reader of §1 to §9 might not assume, both deliberate:
 
 - **EXIF is read through ImageMagick's property bridge**
   (`Imagick::getImageProperty('exif:DateTimeOriginal' | 'exif:GPSLatitude' | …)`),
@@ -1923,19 +1887,15 @@ deliberate:
   (`'50/1,29/1,3000/100'`) and is converted here; a partial or malformed block
   yields nulls rather than an exception, because a broken EXIF header must
   never cost a rider their upload.
-- **New climbs get the uploader because they go through /improve (2026-08-25).**
-  The dedicated add-climb wizard never had a working uploader: its decorative
-  drop zone (`onclick="return false"`) had been removed on the honest-UI rule
-  (§1.1) and the step pointed riders to `/improve?item=…&add=photo` once the
-  climb existed. It was given `media-upload.js` on the morning of 2026-08-25 and
-  retired the same day: climbs are now added on `/improve?type=climbs&mode=add`
-  ([edit-items/N-climbs.md](edit-items/N-climbs.md)), so they use the one
-  uploader there is: same consent gate, same `CC_MEDIA` endpoints, the `mediaIds`
-  hidden field on `ImproveType`, and `CatalogContributionService::submitAdd`
-  claims the ids for the climb submission exactly as for any other new item.
-  Next is held while a photo is uploading or checking (the `cc:media-busy` event).
+- **New climbs use the one uploader there is.** Climbs are added on
+  `/improve?type=climbs&mode=add` ([edit-items/N-climbs.md](edit-items/N-climbs.md)),
+  so they get the same consent gate, the same `CC_MEDIA` endpoints, the
+  `mediaIds` hidden field on `ImproveType`, and
+  `CatalogContributionService::submitAdd` claims the ids for the climb
+  submission exactly as for any other new item. Next is held while a photo is
+  uploading or checking (the `cc:media-busy` event).
 
-One thing worth knowing for deployment: files written from the upload endpoint
-onward embed a `/photo/<uuid>` URL, so this feature must not ship without §5d's
-page — every photo uploaded in between would carry a dead attribution link.
+Every stored file embeds a `/photo/<uuid>` URL, so the photo page (§5d) is part
+of the licence contract: a route change there breaks the attribution link in
+every file already downloaded.
 

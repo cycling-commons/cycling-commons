@@ -5,9 +5,9 @@
 !!! note "This register admits a source. It does not run one."
     How an admitted dataset is stored, ranked against OpenStreetMap, refreshed,
     cited and drawn is
-    [data-provider-hierarchy.md](data-provider-hierarchy.md), which turned the
-    `pivot` bucket into `authority` plus a curator-maintained registry of
-    publishers. Licence admission stays here.
+    [data-provider-hierarchy.md](data-provider-hierarchy.md): `authority`
+    rows plus a curator-maintained registry of publishers. Licence admission
+    stays here.
 
 **Status:** canonical reference · **Audience:** contributors and curators
 adding data, or evaluating a new upstream source
@@ -53,7 +53,7 @@ the software. A source's terms are judged here only against **ODbL**.
 | CC BY 4.0, and attribution-only government licences (see §2) | **Yes, with attribution carried per row.** The precedent is Tourisme Wallonie PIVOT: a `data_provider` row (`wallonie-pivot`), its items stored as `item.source = 'authority'` with `item.provider_id` pointing at it ([`data-provider-hierarchy.md`](data-provider-hierarchy.md)) |
 | CC BY-SA 4.0 | **Media only.** Fine for the photo pool (same licence); keep out of the *database*, where share-alike collides with ODbL |
 | CC BY-NC / -ND, "personal use only" | **No.** Our data is redistributed commercially by anyone under ODbL, which these forbid |
-| No licence stated | **No, until asked.** Silence is not permission, and the Esri episode ([`Dated/2026-08-09-esri-imagery-terms.md`](Dated/2026-08-09-esri-imagery-terms.md)) is what the absence of a 401 is worth |
+| No licence stated | **No, until asked.** Silence is not permission: an endpoint that answers without a 401 has granted nothing (the Esri imagery case, §5) |
 | Terms of service forbidding bulk reuse | **No**, regardless of how the data itself is licensed (Google) |
 
 **Verdict vocabulary used in every table below:**
@@ -205,9 +205,9 @@ atlas want the same thing, and a licence grant costs them nothing.
 
 | Source | What it gives | Licence | Verdict | Confidence |
 |---|---|---|---|---|
-| Wikidata | Named places with coordinates and typed classes, worldwide | CC0 | **Ingest**, in use, 194 P / 240 Q rows seeded | verified (in use) |
+| Wikidata | Named places with coordinates and typed classes, worldwide | CC0 | **Ingest**, in use (`app:catalog:seed-wikidata`) | verified (in use) |
 | Wikimedia Commons | Photographs with machine-verifiable licences | Per file, mostly CC BY-SA / public domain | **Ingest as media**, in use, with the licence checked at harvest | verified (in use) |
-| OSM, as selected by `pipeline/contract/coverage-contract.json` | Baseline, worldwide. **P:** `tourism=viewpoint` and `waterway=waterfall` that carry a name or an `image`, `wikidata` or `wikimedia_commons` tag and lie within 250 m of a road or cycleway, or of a way tagged `bicycle=yes` or `designated`. **Q:** `historic=` `castle`, `fort`, `ruins`, `monument`, `memorial`, `archaeological_site`, `manor` or `monastery`, with the same name-or-tag rule, minus the `memorial=` types `bench`, `blue_plaque`, `ghost_bike`, `grave`, `plaque`, `stolperstein` and `tomb` | ODbL | **Ingest** (baseline) | verified |
+| OSM, as selected by `pipeline/contract/coverage-contract.json` | Baseline, worldwide. **P:** `tourism=viewpoint`, `waterway=waterfall`, `waterway=rapids` and `natural=cliff`, `cave_entrance`, `arch`, `rock` or `stone` that carry a name or an `image`, `wikidata` or `wikimedia_commons` tag and lie within 250 m of a road or cycleway, or of a way tagged `bicycle=yes` or `designated`. **Q:** `historic=` `castle`, `fort`, `ruins`, `monument`, `memorial`, `archaeological_site`, `manor` or `monastery`, with the same name-or-tag rule, minus the `memorial=` types `bench`, `blue_plaque`, `ghost_bike`, `grave`, `plaque`, `stolperstein` and `tomb` | ODbL | **Ingest** (baseline) | verified |
 | Europeana | European cultural heritage aggregation | Metadata CC0; objects per item | **Ingest** metadata | stated |
 | National heritage registers (Historic England, Rijksmonumenten, Onroerend Erfgoed Vlaanderen, Mérimée) | Authoritative, complete, per country | National licences, §2 | **Ingest** | unverified |
 | DATAtourisme (again) | French heritage and viewpoint POIs | Licence Ouverte 2.0 | **Ingest** | verified |
@@ -231,7 +231,7 @@ constraint; a selection rule is.
 
 **Assessment.** EuroVelo going ODbL in 2024 is the most consequential single
 fact in this register. It is a licence-identical, curated, pan-European route
-set, precisely K's shape, and it needs no negotiation, no attribution
+set, precisely R's shape, and it needs no negotiation, no attribution
 gymnastics and no architectural exception. If one thing here becomes work, it
 is this.
 
@@ -242,7 +242,7 @@ is this.
 | Overture Maps `divisions` theme (`division_area`) | Every `region` polygon on the atlas, plus the ISO 3166-1/-2 codes the world directory is keyed on; and every candidate boundary in `world_division`, onboarded or not | ODbL (conflates OSM + geoBoundaries), attribution required (notice on `/credits`) | **Ingest** - in use (`pipeline/divisions/export_divisions.py` -> `app:catalog:import` for `region`; `pipeline/divisions/export_candidates.py` -> `app:divisions:import` for `world_division`) | verified (in use) |
 
 Provenance is recorded per row: `region.source` is `osm` or `overture`
-(`catalog-data-model.md` §4). Today every seeded row is `overture`. Both
+(catalog-data-model.md §2.4). Today every seeded row is `overture`. Both
 exporters read the release pinned in `pipeline/divisions/config.py:OVERTURE_RELEASE`
 (`2026-08-19.0` today); bumping it is a versioned re-import, not a refresh, so
 the `/credits` notice moves with it.
@@ -305,6 +305,7 @@ When adding a row:
 - A `No` is as valuable as a `Yes` and must stay in the table. Deleting ruled-out
   sources is how the same source gets researched every year.
 
-The cost of not doing this is documented: `docs/specs/Dated/2026-08-09-esri-imagery-terms.md`
-records a layer that shipped against an endpoint that simply did not check for a
-key, and the absence of an error was read as a licence.
+The cost of not doing this is known: the Esri imagery layer first shipped
+against an endpoint that simply did not check for a key, and the absence of an
+error was read as a licence. It now runs under an ArcGIS Location Platform key
+with the terms recorded (§3, Imagery and elevation).

@@ -13,7 +13,7 @@ use Symfony\Component\Messenger\Stamp\SentStamp;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
 /**
- * The async tier itself (media plan task 1): the bus exists, and the media
+ * The async tier itself (media-storage-architecture.md §3): the bus exists, and the media
  * message is ROUTED to the async transport rather than handled inline.
  *
  * In test that transport is in-memory, which is the whole point: the media

@@ -13,7 +13,7 @@ final class Version20260712120000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'route_suggestion.segments — located correction stretches (route-domain spec §16 S4)';
+        return 'route_suggestion.segments: located correction stretches (route-domain.md §7)';
     }
 
     public function up(Schema $schema): void

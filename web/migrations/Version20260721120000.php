@@ -10,7 +10,7 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * heat_point.region_id (07-20 Phase 2 review finding 5): the ride-heat layer
+ * heat_point.region_id: the ride-heat layer
  * filters client-side on the active scope like every other served layer, so
  * each heat point carries its region membership. Nullable — a point in no
  * region stays NULL and is hidden in any named-region/country scope, the same

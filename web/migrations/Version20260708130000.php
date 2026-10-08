@@ -13,7 +13,7 @@ final class Version20260708130000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'route_change_history — append-only curator route audit (route-domain v1 phase 2, spec D9)';
+        return 'route_change_history: append-only curator route audit (route-domain.md §2.2)';
     }
 
     public function up(Schema $schema): void

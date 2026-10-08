@@ -5,7 +5,7 @@ Runs INSIDE the pipeline container (osmium-tool + pyosmium come from the image):
   docker compose -f developers/docker/compose.yaml exec -T pipeline python -m pytest tests -q
 CI never touches the network: mini.osm.pbf is a COMMITTED fixture, built once
 from the hand-written mini.osm via `osmium cat` (regenerate + re-commit on
-fixture changes — see the plan), per coverage-provider.md §3.
+fixture changes), per coverage-provider.md §3.
 """
 
 import os
@@ -53,7 +53,7 @@ def db():
     # area_km2 mirrors public.region: load_region's smallest-area-wins tie-break
     # (map-and-search.md §4.5) orders overlapping matches by it. country_code
     # mirrors public.region too — load_region's boundary-snap constrains to a
-    # POI's own country and backfills cc from the region (finding 5 / finding 8).
+    # POI's own country and backfills cc from the region.
     # admin_level mirrors public.region as well: every spatial step reads the
     # operational-region set, which is derived from it (load.py's
     # _materialize_operational_regions). It defaults to NULL here, and a country

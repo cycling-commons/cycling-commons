@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """Road-surface LINE layer for the coverage plane.
 
-Design: docs/specs/Dated/2026-08-09-surface-line-tiles-design.md, owner-approved
-2026-08-10. The A layer's curated corridors stay `item` rows; this is the
+Spec: docs/specs/coverage-provider.md §4. The A layer's curated corridors stay `item` rows; this is the
 reference skin underneath them — every surfaced way OSM knows about, rendered
 from tiles, with **zero database rows**.
 
@@ -162,7 +161,7 @@ class _Collector(osmium.SimpleHandler):
         mtb = tags.get("mtb:scale", "")
         if not _MTB_SCALE.fullmatch(mtb):
             mtb = ""
-        # 'way/<id>', NOT the design sketch's 'w<id>'. This ref is what the
+        # 'way/<id>', NOT 'w<id>'. This ref is what the
         # drawer hands to /improve, and materialize-on-edit then creates an A
         # item carrying it as source_ref — which every other path in the
         # codebase writes and reads as "way/NNN" (CatalogProvider::curatedRefs,

@@ -212,7 +212,7 @@ final class LocalizedRoutingTest extends WebTestCase
     }
 
     /**
-     * Review 2026-08-16 finding 8: browsers strip tab/CR/LF inside URLs before
+     * Browsers strip tab/CR/LF inside URLs before
      * resolving, so "/\t//evil.example" would leave the browser as
      * protocol-relative "//evil.example" — the exact redirect the `//` prefix
      * check exists to block. Control characters must fail the allowlist

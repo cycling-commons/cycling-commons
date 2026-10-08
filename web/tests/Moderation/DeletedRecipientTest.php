@@ -24,7 +24,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * Final-review fix (moderation-feedback spec M1/M10): `user_message.user_id`
+ * moderation-and-contribution.md §7 (M1/M10): `user_message.user_id`
  * carries a real FK (ON DELETE CASCADE) to `users`, but the author/proposer
  * columns of the entities a decision messages — `submission.user_id`,
  * `route_suggestion.user_id`, `recommended_route.proposed_by` — carry NO FK

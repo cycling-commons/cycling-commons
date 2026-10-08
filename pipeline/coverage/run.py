@@ -50,7 +50,7 @@ from .tracker import RunTracker
 
 GEOFABRIK_BASE = "https://download.geofabrik.de"
 
-# Fixed advisory-lock key for the whole coverage run (design §3.2). Any stable
+# Fixed advisory-lock key for the whole coverage run (coverage-provider.md §3). Any stable
 # non-zero bigint that no other advisory-lock user on the CC cluster shares; CC
 # is the only advisory-lock user there today. 0xC07E7A6E = "coverage" mnemonic.
 COVERAGE_ADVISORY_LOCK_KEY = 0xC07E7A6E
@@ -67,7 +67,7 @@ OUTLINES_FILE = "ownership-regions.json"
 
 
 def _acquire_run_lock(conn) -> bool:
-    """Session-level pg_try_advisory_lock for the whole run (design §3.2).
+    """Session-level pg_try_advisory_lock for the whole run (coverage-provider.md §3).
     Returns False when another coverage run already holds it. Held until the
     connection closes; the commit closes the implicit txn while the session
     keeps the lock."""
@@ -459,7 +459,7 @@ def _surface_pass(regions, workdir, contract, *, extract_only: bool = False,
     Deliberately not folded into the per-region loop above: that loop exists to
     keep coverage_poi in step, and lines never touch it. Sharing it would mean
     holding the coverage advisory lock and a Postgres session through a build
-    that needs neither (Dated/2026-08-09-surface-line-tiles-design.md §4).
+    that needs neither.
 
     One pass per region produces all three arms' extracts (the classified
     skin, the to-do arm and the gap cells) because they are three readings of
@@ -1051,7 +1051,7 @@ def main(argv=None) -> int:
         # Autocommit so the read-only phases (export COPYs, the manifest counts
         # query) never leave a transaction open across the long, non-DB tile
         # build/verify/upload phases — that would sit idle-in-transaction and be
-        # killed by COVERAGE_IDLE_TXN_TIMEOUT (design §3.1). The ONLY transactions
+        # killed by COVERAGE_IDLE_TXN_TIMEOUT (coverage-provider.md §3). The ONLY transactions
         # then are load_region's explicit `with conn.transaction()` swaps, which
         # is exactly what the idle/statement timeouts should be guarding.
         conn.autocommit = True

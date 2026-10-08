@@ -16,7 +16,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * `/account/messages` account-shell page (moderation-feedback spec M3): row display,
+ * `/account/messages` account-shell page (moderation-and-contribution.md §7, M3): row display,
  * unread styling, no read side effect on a visit, per-user isolation,
  * and the anon auth gate.
  *
