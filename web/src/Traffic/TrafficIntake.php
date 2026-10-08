@@ -15,8 +15,9 @@ use Symfony\Component\Clock\ClockInterface;
  * A line whose block codes were already claimed is a duplicate, whoever sends
  * it: that is what keeps a re-sent ride, or the same ride from a second
  * account, from counting twice. Codes are claimed once per request, so two
- * lines of one ride that share a block both count. The curator view is not
- * refreshed here: it is recomputed on a fixed cadence (TrafficView), so no
+ * lines of one ride that share a block both count. Accepted lines go into the
+ * waiting room, never straight into the totals (TrafficPool). The curator view
+ * is not refreshed here: it is recomputed on a fixed cadence (TrafficView), so no
  * single upload can be read off as the difference between two views.
  *
  * @api
@@ -28,6 +29,7 @@ final class TrafficIntake
     public function __construct(
         private readonly Connection $db,
         private readonly TrafficStore $store,
+        private readonly TrafficPool $pool,
         private readonly ClockInterface $clock,
     ) {
     }
@@ -39,7 +41,7 @@ final class TrafficIntake
      *
      * @throws TrafficPayloadRefused
      */
-    public function receive(int $userId, array $payload): array
+    public function receive(array $payload): array
     {
         foreach (array_keys($payload) as $key) {
             if (\in_array($key, TrafficLine::TRACK_KEYS, true)) {
@@ -50,7 +52,7 @@ final class TrafficIntake
             }
         }
         $lines = $payload['lines'] ?? null;
-        if (1 !== ($payload['v'] ?? null) || !\is_array($lines) || !array_is_list($lines) || \count($lines) > self::MAX_LINES) {
+        if (2 !== ($payload['v'] ?? null) || !\is_array($lines) || !array_is_list($lines) || \count($lines) > self::MAX_LINES) {
             throw new TrafficPayloadRefused('invalid');
         }
 
@@ -65,7 +67,7 @@ final class TrafficIntake
             null === $line ? ++$dropped : $valid[] = $line;
         }
 
-        return $this->db->transactional(function () use ($userId, $valid, $dropped): array {
+        return $this->db->transactional(function () use ($valid, $dropped): array {
             // Claim first: a code another request holds, even one still in
             // flight, is not claimed here, so a retry of a request that has
             // not finished yet counts nothing twice.
@@ -81,15 +83,13 @@ final class TrafficIntake
                 }
                 $fresh[] = $line;
             }
-            // One lock order for every request: by cell key, then by road.
-            usort($fresh, fn (array $a, array $b): int => strcmp($this->store->cellKey($a), $this->store->cellKey($b)));
+            // Each line waits on its own, in random order; then at most one
+            // ready block, any block, moves to the totals (§4.3).
+            shuffle($fresh);
             foreach ($fresh as $line) {
-                $this->store->addToCell($line);
+                $this->pool->add($line);
             }
-            usort($fresh, static fn (array $a, array $b): int => $a['way'] <=> $b['way']);
-            foreach ($fresh as $line) {
-                $this->store->addToRider($userId, $line);
-            }
+            $this->pool->releaseOne();
 
             return ['added' => \count($fresh), 'duplicate' => $duplicate, 'dropped' => $dropped];
         });

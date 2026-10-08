@@ -95,17 +95,22 @@ Nothing else leaves your device.
   when. Not the route between them.
 - **A traffic summary goes only when you send it.** With a radar, the review
   has a second step: per road you rode, how far you rode, how many cars passed
-  and how fast, the date and the quarter hour, and whether you were on a cycle
+  and how fast, the part of the day, and whether you were on a cycle
   path, a painted cycle lane or the road itself. On a cycle path no car passes
   you: the cars the radar sees there drive on the road beside it, and they count
   as nearby (noise), never as passing (safety). Your GPS track, your exact
   times and your ride file stay on your device; which roads you rode, with the
-  date and quarter hour, is what the summary sends. You see every line before
-  you send.
-- **No road says who rides it.** A road shows measured traffic only once several
-  different riders have ridden it on several different days. Below that, nothing
-  is shown, to anyone. What is stored is
-  encrypted, and the results go to curators, never with a name.
+  part of the day, is what the summary sends. You see every line before you
+  send.
+- **Nothing names you.** A summary carries no account and no code for you. The
+  first and last 500 m of every ride are never sent, and the date goes only as
+  a group of about six days. Each road waits until enough rides from several
+  days have come in, so your ride reaches the totals in pieces, mixed with
+  other rides.
+- **No road says who rides it.** A road shows measured traffic only once enough
+  rides on several different days have come in. Below that, nothing is shown,
+  to anyone. Curators see only quiet, moderate or busy, never a number and
+  never a name.
 - **Several rides at once** work the same way: pick or drop many ride files, or
   the archive your bike computer platform lets you download. Every ride is read
   in your browser; only the traffic summaries are sent.

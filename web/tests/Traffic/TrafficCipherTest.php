@@ -55,22 +55,26 @@ final class TrafficCipherTest extends TestCase
         new TrafficCipher($this->keys(base64_encode(random_bytes(32))))->open($blob);
     }
 
-    public function testLookupKeysAreStableAndDifferPerPurpose(): void
+    public function testABlockKeyNamesOneRoadDirectionAndTimeBlockAcrossQuarters(): void
     {
         $k = $this->keys();
+        $line = ['way' => 7, 'dir' => 'f', 'band' => 1, 'dayType' => 'workday', 'quarter' => '2026-Q4', 'label' => 'r'];
 
-        self::assertSame($k->wayKey(7), $k->wayKey(7));
-        self::assertNotSame($k->wayKey(7), $k->wayKey(8));
-        self::assertSame(32, \strlen($k->wayKey(7)));
-        self::assertNotSame($k->riderKey(1, 7), $k->riderKey(2, 7), 'one code per rider');
-        self::assertNotSame($k->riderKey(1, 7), $k->riderKey(1, 8), 'and per road');
+        self::assertSame(32, \strlen($k->blockKey($line)));
+        self::assertSame($k->blockKey($line), $k->blockKey(['quarter' => '2026-Q3'] + $line), 'quarters wait together');
+        self::assertNotSame($k->blockKey($line), $k->blockKey(['band' => 2] + $line), 'one block per part of the day');
+        self::assertNotSame($k->blockKey($line), $k->blockKey(['dir' => 'b'] + $line));
+        self::assertNotSame($k->blockKey($line), $this->keys(base64_encode(random_bytes(32)))->blockKey($line), 'keyed with the traffic secret');
         self::assertNotSame($k->seenCode(str_repeat('a', 64)), $k->seenCode(str_repeat('b', 64)));
+        foreach (['bucketKey', 'voice', 'dayCode', 'riderKey'] as $gone) {
+            self::assertFalse(method_exists($k, $gone), "{$gone}: nothing keys a rider or a stored total");
+        }
     }
 
     public function testAMissingSecretStopsInsteadOfFallingBack(): void
     {
         $this->expectException(\LogicException::class);
-        $this->keys('')->wayKey(1);
+        $this->keys('')->seenCode(str_repeat('a', 64));
     }
 
     public function testProductionRefusesTheCommittedDevelopmentAndTestKeys(): void
@@ -78,13 +82,13 @@ final class TrafficCipherTest extends TestCase
         foreach (['prod', 'staging'] as $env) {
             foreach ([TrafficKeys::DEV_SECRET, TrafficKeys::TEST_SECRET] as $known) {
                 try {
-                    $this->keys($known, $env)->wayKey(1);
+                    $this->keys($known, $env)->seenCode(str_repeat('a', 64));
                     self::fail("{$env} accepted a committed key");
                 } catch (\LogicException) {
                 }
             }
         }
-        self::assertSame(32, \strlen($this->keys(TrafficKeys::DEV_SECRET, 'dev')->wayKey(1)));
+        self::assertSame(32, \strlen($this->keys(TrafficKeys::DEV_SECRET, 'dev')->seenCode(str_repeat('a', 64))));
     }
 
     public function testABlobOpensOnlyForTheRowItWasSealedFor(): void

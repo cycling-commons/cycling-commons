@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 /* The curator's measured-traffic layer (docs/specs/traffic-measurements.md §4.6).
-   Road pieces from the road-piece tiles, coloured by cars per kilometre for the
-   chosen time group. Only groups that passed the disclosure rules come from the
+   Road pieces from the road-piece tiles, coloured by quiet, moderate or busy for
+   the chosen time group; the server sends bands, never numbers. Only groups that passed the disclosure rules come from the
    server; a piece without one stays undrawn, which says nothing about it. */
 import { map } from './map-init.js';
 import { D, tpl } from './i18n.js';
@@ -69,7 +69,7 @@ function applyStates() {
     if (!map.getSource(sourceId)) return;
     map.removeFeatureState({ source: sourceId, sourceLayer });
     byWay.forEach((entry, way) => {
-      map.setFeatureState({ source: sourceId, sourceLayer, id: way }, { shown: true, colour: colourFor(entry.carsPerKm) });
+      map.setFeatureState({ source: sourceId, sourceLayer, id: way }, { shown: true, colour: colourFor(entry.traffic) });
     });
   });
 }
@@ -81,16 +81,17 @@ function onClick(e) {
   const lines = entry.directions.map(d => {
     /* A cycle path: no car passed its riders. The cars beside it drove on the
        road next to it, so they show as nearby (noise, not safety). */
+    const band = b => t('trafficLevel' + b.charAt(0).toUpperCase() + b.slice(1), b);
     const parts = ['p' === d.label
-      ? tpl(t('trafficNearbyPerKm', '{n} cars per km nearby, on the road beside the path'), { n: d.nearbyPerKm ?? 0 })
-      : tpl(t('trafficCarsPerKm', '{n} cars per km'), { n: d.carsPerKm })];
+      ? tpl(t('trafficNearbyBand', '{band} on the road beside the path'), { band: band(d.nearby || 'quiet') })
+      : band(d.traffic)];
     if (d.carSpeedBand !== null) {
       // The last band is open-ended: 150 and faster.
       parts.push(d.carSpeedBand >= 150
         ? tpl(t('trafficCarSpeedTop', 'cars at {v} km/h or faster'), { v: d.carSpeedBand })
         : tpl(t('trafficCarSpeed', 'cars at {v}-{w} km/h'), { v: d.carSpeedBand, w: d.carSpeedBand + 9 }));
     }
-    parts.push(tpl(t('trafficRiders', '{riders} riders on {days} days'), { riders: d.riders, days: d.days }));
+    parts.push(tpl(t('trafficDays', 'on {days} days'), { days: d.days }));
     return ('f' === d.dir ? t('trafficDirF', 'One way') : t('trafficDirB', 'Other way')) + ': ' + parts.join(', ');
   });
   if (popup) popup.remove();
@@ -123,7 +124,7 @@ function chooseGroup(g) {
   const note = el('trafficNote');
   if (note) {
     note.hidden = byWay.size > 0;
-    note.textContent = byWay.size ? '' : t('trafficNone', 'No road has enough riders in this group yet.');
+    note.textContent = byWay.size ? '' : t('trafficNone', 'No road has enough rides in this group yet.');
   }
   applyStates();
 }

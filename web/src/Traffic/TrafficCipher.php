@@ -11,8 +11,8 @@ namespace App\Traffic;
  * stored as nonce . tag . ciphertext. The row a payload belongs to is bound in
  * as associated data, so a blob that was changed, moved to another row, or
  * sealed with another key does not open. The JSON is padded with spaces to a
- * multiple of PAD_STEP bytes, so a blob's size says little about how much a
- * rider row holds.
+ * multiple of PAD_STEP bytes, so a blob's size says little about what a
+ * waiting line holds.
  *
  * @see docs/specs/traffic-measurements.md §4.2
  *

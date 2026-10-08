@@ -41,6 +41,21 @@ final class ScoutReviewPageTest extends WebTestCase
         self::assertStringContainsString('window.CC_TRAFFIC_TOKEN', (string) $client->getResponse()->getContent());
     }
 
+    public function testTheReviewPageNamesWhatEachSubMenuAnswerFills(): void
+    {
+        $client = static::createClient();
+        $this->rider($client);
+
+        $client->request('GET', '/scout/review');
+
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringContainsString('window.CC_SCOUT_ANSWERS', $html);
+        self::assertStringContainsString('"notice":{"1":"Potholes"', $html);
+        self::assertStringContainsString('"scenery":{"4":"Viewpoint"}', $html);
+        self::assertStringContainsString('window.CC_SCOUT_KINDS', $html);
+        self::assertStringContainsString('"filled":{"scenery":{"4":"viewpoint"}}', $html);
+    }
+
     public function testThePlainMapDoesNotFetchThem(): void
     {
         $client = static::createClient();

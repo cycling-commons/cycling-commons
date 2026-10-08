@@ -57,10 +57,15 @@ final class ContentPagesTest extends WebTestCase
         $html = (string) $client->getResponse()->getContent();
 
         self::assertStringContainsString('Traffic summaries', $html);
-        self::assertStringContainsString('which roads you rode, on which date and in which quarter hour', $html);
+        self::assertStringContainsString('which roads you rode and in which part of the day', $html);
         self::assertStringNotContainsString('any record of where you ride', $html);
         self::assertStringNotContainsString('your route never leave', $html, 'which roads you rode is sent');
-        self::assertStringContainsString('which roads you rode, with the date and quarter hour, does', $html);
+        self::assertStringContainsString('which roads you rode, with the part of the day, does', $html);
+        self::assertStringContainsString('The first and last 500 m of every ride are never sent', $html);
+        self::assertStringNotContainsString('quarter hour', $html, 'no time finer than a part of the day is sent');
+        self::assertStringContainsString('Nothing we store names you or codes you', $html);
+        self::assertStringNotContainsString('rider code', $html, 'no rider code of any kind');
+        self::assertStringNotContainsString('coded entry', $html, 'no entry per rider is kept');
     }
 
     /** Error reports are disclosed with the other data collected automatically. */

@@ -56,28 +56,28 @@ function distance(metres) {
   return uKm(metres / 1000, 1);
 }
 
-function clock(slot) {
-  const m = slot * 15;
-  return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
-}
-
 /* Every field that is sent, in words: the consent covers exactly this. */
 function lineText(line) {
-  /* The line's local day and quarter hour as a local date, so the rider's own
-     date and time settings (cc-dates.js) can write them. */
+  /* The line's local day as a local date, so the rider's own date setting
+     (cc-dates.js) can write it. Its time is only the part of the day. */
   const u = new Date(line.day * 86400000);
-  const local = new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate(), Math.floor(line.slot / 4), (line.slot % 4) * 15);
+  const local = new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate(), 12);
+  const nearby = line.nearby || 0;
   const cars = 'p' === line.label
-    ? tpl(t('scoutTrafficNearbyN', '{n} cars nearby'), { n: line.nearby || 0 })
-    : tpl(t('scoutTrafficCarsN', '{n} cars passed'), { n: line.passes });
+    ? (1 === nearby ? t('scoutTrafficNearby1', '1 car nearby') : tpl(t('scoutTrafficNearbyN', '{n} cars nearby'), { n: nearby }))
+    : (1 === line.passes ? t('scoutTrafficCar1', '1 car passed') : tpl(t('scoutTrafficCarsN', '{n} cars passed'), { n: line.passes }));
   return tpl(t('scoutTrafficLine', '{label}, {dir}, {dist}, {cars}, {day} {date} {time}'), {
     label: t('scoutLabel' + line.label.toUpperCase(), line.label),
     dir: 'f' === line.dir ? t('scoutDirF', 'one way') : t('scoutDirB', 'the other way'),
     dist: distance(line.distanceM),
     cars,
     day: 'weekend' === line.dayType ? t('scoutDayWeekend', 'weekend') : t('scoutDayWorkday', 'workday'),
-    date: window.ccDate ? window.ccDate(local) : local.getFullYear() + '-' + String(local.getMonth() + 1).padStart(2, '0') + '-' + String(local.getDate()).padStart(2, '0'),
-    time: window.ccTime ? window.ccTime(local) : clock(line.slot),
+    /* The date stays in the browser: what is sent is its day group. */
+    date: tpl(t('scoutDayGroup', 'day group {n} ({date})'), {
+      n: line.dayGroup,
+      date: window.ccDate ? window.ccDate(local) : local.getFullYear() + '-' + String(local.getMonth() + 1).padStart(2, '0') + '-' + String(local.getDate()).padStart(2, '0'),
+    }),
+    time: t('scoutBand' + line.band, ['night', 'morning rush', 'day', 'evening rush', 'evening'][line.band] || ''),
   });
 }
 
@@ -151,10 +151,12 @@ function syncScoutKey() {
   document.dispatchEvent(new Event('cc:legend'));
 }
 
-/* The radar total says again what step 2's own line says; one line is enough there. */
+/* The car lines belong to step 2, where the cars are on the map. There the
+   radar total says again what step 2's own line says; one line is enough. */
 function syncRadarFact() {
+  document.querySelectorAll('#scoutFacts [data-radar]').forEach(p => { p.hidden = !piecesShown; });
   const radarFact = el('scoutRadarFact');
-  if (radarFact) radarFact.hidden = !!(piecesShown && summary && summary.lines.length > 0);
+  if (radarFact && piecesShown) radarFact.hidden = !!(summary && summary.lines.length > 0);
 }
 
 /** Pan and zoom to the next part of the ride that matched no road, longest first. */
@@ -195,7 +197,9 @@ function render() {
   } else {
     /* One line: what passed the rider, what only drove beside a cycle path,
        and what was on a part not sent; together they make the radar total. */
-    const parts = [tpl(t('scoutTrafficFacts', '{km} km matched to roads, {n} cars passed you'), { km: km(summary.matchedKm), n: summary.cars })];
+    const parts = [1 === summary.cars
+      ? tpl(t('scoutTrafficFacts1', '{km} km matched to roads, 1 car passed you'), { km: km(summary.matchedKm) })
+      : tpl(t('scoutTrafficFacts', '{km} km matched to roads, {n} cars passed you'), { km: km(summary.matchedKm), n: summary.cars })];
     if (summary.nearby > 0) {
       parts.push(tpl(t('scoutTrafficFactsNearby', '{n} nearby beside a cycle path'), { n: summary.nearby }));
     }
@@ -229,7 +233,7 @@ function render() {
     list.textContent = '';
     summary.lines
       .slice()
-      .sort((a, b) => a.day - b.day || a.slot - b.slot)
+      .sort((a, b) => a.day - b.day || a.band - b.band)
       .forEach(line => {
         const li = document.createElement('li');
         li.textContent = lineText(line);

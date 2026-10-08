@@ -28,28 +28,35 @@ final class TrafficLine
     public const array TRACK_KEYS = ['track', 'points', 'trkpt', 'polyline', 'records', 'route', 'coordinates',
         'gpx', 'fit', 'lat', 'lng', 'lon', 'time', 'timestamp'];
 
-    private const array KEYS = ['way', 'region', 'dir', 'label', 'slot', 'dayType', 'season', 'quarter', 'day',
+    private const array KEYS = ['way', 'region', 'dir', 'label', 'band', 'dayType', 'quarter', 'dayGroup',
         'distanceM', 'timeS', 'passes', 'nearby', 'avgSpeedKmh', 'carSpeedBins', 'blocks'];
+    /** Day groups of a quarter (traffic-measurements.md §3.4): the date is never sent. */
+    public const int DAY_GROUPS = 16;
     private const array LABELS = ['p', 'l', 'r'];
     private const array DIRS = ['f', 'b'];
     private const array DAY_TYPES = ['workday', 'weekend'];
-    private const array SEASONS = ['spring', 'summer', 'autumn', 'winter'];
     private const string FIRST_QUARTER = '2010-Q1';
-    /** A quarter hour plus the one interval a slot boundary hands to the later line. */
-    private const int MAX_TIME_S = 905;
-    private const int MAX_DISTANCE_M = 20000;
+    /**
+     * Seconds in each part of the day (traffic-measurements.md §3.4): night
+     * 00-06, morning rush 06-09, day 09-16, evening rush 16-19, evening 19-24.
+     */
+    public const array BAND_SECONDS = [21600, 10800, 25200, 10800, 18000];
+    /** The one interval a band boundary hands to the later line. */
+    private const int BOUNDARY_S = 5;
+    private const int MAX_DISTANCE_M = 200000;
     private const float MIN_KMH = 3.0;
     private const float MAX_KMH = 80.0;
     private const int MAX_PASSES = 300;
     private const int MAX_PASSES_PER_KM = 60;
-    private const int MAX_BLOCKS = 3;
+    /** Five-minute blocks in the longest band, plus one for a block that straddles its start. */
+    private const int MAX_BLOCKS = 85;
 
     /**
      * The line, normalised, or null when it is implausible.
      *
      * @param array<array-key, mixed> $line
      *
-     * @return array{way: int, region: int|null, dir: string, label: string, slot: int, dayType: string, season: string, quarter: string, day: int, distanceM: int, timeS: int, passes: int, nearby: int, avgSpeedKmh: float, carSpeedBins: list<int>|null, blocks: list<string>}|null
+     * @return array{way: int, region: int|null, dir: string, label: string, band: int, dayType: string, quarter: string, dayGroup: int, distanceM: int, timeS: int, passes: int, nearby: int, avgSpeedKmh: float, carSpeedBins: list<int>|null, blocks: list<string>}|null
      *
      * @throws TrafficPayloadRefused
      */
@@ -65,8 +72,8 @@ final class TrafficLine
         }
 
         $way = $line['way'] ?? null;
-        $slot = $line['slot'] ?? null;
-        $day = $line['day'] ?? null;
+        $band = $line['band'] ?? null;
+        $dayGroup = $line['dayGroup'] ?? null;
         $distance = $line['distanceM'] ?? null;
         $time = $line['timeS'] ?? null;
         $passes = $line['passes'] ?? null;
@@ -81,16 +88,15 @@ final class TrafficLine
         if (!\is_string($quarter) || 1 !== preg_match('/^(\d{4})-Q([1-4])$/D', $quarter, $q)) {
             return null;
         }
-        if (!\is_int($way) || $way < 1 || !\is_int($slot) || $slot < 0 || $slot > 95
-            || !\is_int($day) || !\is_int($distance) || !\is_int($time) || !\is_int($passes) || !\is_int($nearby)
+        if (!\is_int($way) || $way < 1 || !\is_int($band) || !isset(self::BAND_SECONDS[$band])
+            || !\is_int($dayGroup) || $dayGroup < 0 || $dayGroup >= self::DAY_GROUPS || !\is_int($distance) || !\is_int($time) || !\is_int($passes) || !\is_int($nearby)
             || !\in_array($line['dir'] ?? null, self::DIRS, true)
             || !\in_array($line['label'] ?? null, self::LABELS, true)
-            || !\in_array($line['dayType'] ?? null, self::DAY_TYPES, true)
-            || !\in_array($line['season'] ?? null, self::SEASONS, true)) {
+            || !\in_array($line['dayType'] ?? null, self::DAY_TYPES, true)) {
             return null;
         }
 
-        if ($time < 1 || $time > self::MAX_TIME_S || $distance < 1 || $distance > self::MAX_DISTANCE_M) {
+        if ($time < 1 || $time > self::BAND_SECONDS[$band] + self::BOUNDARY_S || $distance < 1 || $distance > self::MAX_DISTANCE_M) {
             return null;
         }
         $kmh = $distance / $time * 3.6;
@@ -107,16 +113,10 @@ final class TrafficLine
             return null;
         }
 
-        // The local date may run a day ahead of UTC (east of Greenwich), never
-        // more, and so may its quarter on the first day of one.
-        $latestDay = intdiv($now->getTimestamp(), 86400) + 1;
-        $latest = new \DateTimeImmutable('@'.($latestDay * 86400));
-        $latestQuarter = $latest->format('Y').'-Q'.(intdiv((int) $latest->format('n') - 1, 3) + 1);
-        if (strcmp($quarter, self::FIRST_QUARTER) < 0 || strcmp($quarter, $latestQuarter) > 0 || $day > $latestDay) {
-            return null;
-        }
-        $date = new \DateTimeImmutable('@'.($day * 86400));
-        if ($date->format('Y') !== $q[1] || (string) (intdiv((int) $date->format('n') - 1, 3) + 1) !== $q[2]) {
+        // A local quarter may run a day ahead of UTC (east of Greenwich), never more.
+        $tomorrow = $now->modify('+1 day');
+        $latestQuarter = $tomorrow->format('Y').'-Q'.(intdiv((int) $tomorrow->format('n') - 1, 3) + 1);
+        if (strcmp($quarter, self::FIRST_QUARTER) < 0 || strcmp($quarter, $latestQuarter) > 0) {
             return null;
         }
 
@@ -146,8 +146,8 @@ final class TrafficLine
         }
 
         return [
-            'way' => $way, 'region' => $region, 'dir' => $line['dir'], 'label' => $line['label'], 'slot' => $slot,
-            'dayType' => $line['dayType'], 'season' => $line['season'], 'quarter' => $quarter, 'day' => $day,
+            'way' => $way, 'region' => $region, 'dir' => $line['dir'], 'label' => $line['label'], 'band' => $band,
+            'dayType' => $line['dayType'], 'quarter' => $quarter, 'dayGroup' => $dayGroup,
             'distanceM' => $distance, 'timeS' => $time, 'passes' => $passes, 'nearby' => $nearby, 'avgSpeedKmh' => $kmh,
             'carSpeedBins' => $bins, 'blocks' => array_values(array_unique($blocks)),
         ];

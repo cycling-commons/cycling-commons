@@ -49,7 +49,7 @@ final class TrafficController extends AbstractController
         }
 
         try {
-            $result = $intake->receive((int) $user->getId(), $payload);
+            $result = $intake->receive($payload);
         } catch (TrafficPayloadRefused $e) {
             return new JsonResponse(['error' => $e->getMessage()], 422);
         }

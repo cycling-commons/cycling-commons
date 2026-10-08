@@ -81,14 +81,16 @@ tables:
         The stored, never-updated result of one closed season-ballot list, one row per item
         (route-domain.md §8d). Written once when a closed round is first read or an account that
         voted in it is deleted, so a closed season's result cannot change afterwards.
-    # Hand-written migration (Version20261005020000). Every column is an HMAC or an
-    # AES-GCM blob (traffic-measurements.md §4.3).
-    traffic_cell: >-
-        Running radar traffic totals per road piece, direction and time key. Encrypted;
-        holds no rider and no time column.
-    traffic_rider: >-
-        Per rider and road piece: distance and days per time key, for the disclosure rules.
-        Encrypted; keyed by an HMAC of rider and road.
+    # Hand-written migrations (Version20261005020000, Version20261007130000), traffic-measurements.md §4.3.
+    # traffic_pool: HMAC block key plus an AES-GCM payload under a random id (TrafficPool).
+    # traffic_total: plain way, dir, band, day_type, quarter, label, region and counts (TrafficStore).
+    # traffic_seen: one HMAC of each dedupe code (TrafficStore).
+    traffic_pool: >-
+        Traffic lines waiting until their block (road, direction, part of day, day type) has
+        enough of them. Encrypted; no account, no time column.
+    traffic_total: >-
+        Plain traffic sums per road, direction, part of day, day type and quarter, from lines
+        that left the waiting room together. No rider.
     traffic_seen: >-
         HMACs of the dedupe codes already received, so no ride is counted twice.
     job_run: >-

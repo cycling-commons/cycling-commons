@@ -14,9 +14,10 @@ installable declares what it covers, next to the link:
     <a href="https://phpstan.org/"
        data-pkg="phpstan/phpstan phpstan/phpstan-doctrine">PHPStan</a>
 
-and this script reads those markers, builds the real inventory from four files
-that are already sources of truth for something else, and reports the two ways
-they can disagree:
+and this script reads those markers, builds the real inventory from sources
+that are already the truth for something else (composer.json, the Python
+requirements files, the Docker compose files and Dockerfiles, and the vendored
+library directories), and reports the two ways they can disagree:
 
     MISSING   an installed thing no marker covers   (uncredited)
     ORPHAN    a marker matching nothing installed   (a lie about what we run)
@@ -68,10 +69,9 @@ VERSIONED_LIB = re.compile(r"^(?P<name>.+?)-\d[\d.]*$")
 REQUIREMENT_LINE = re.compile(r"^(?P<name>[A-Za-z0-9][A-Za-z0-9._-]*)")
 DATA_PKG = re.compile(r'data-pkg="([^"]*)"')
 HREF = re.compile(r'href="(https://[^"]+)"')
-# Rows are routinely parked inside a Twig comment rather than deleted, so the
-# copy and its translation keys survive the wait (the Drinkwaterkaart.nl row is
-# the standing example). A parked row credits nobody and links nowhere, so it
-# must not satisfy a marker or be link-checked.
+# A row can be parked inside a Twig comment rather than deleted, so the copy
+# and its translation keys survive the wait. A parked row credits nobody and
+# links nowhere, so it must not satisfy a marker or be link-checked.
 TWIG_COMMENT = re.compile(r"\{#.*?#\}", re.S)
 
 

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-FileCopyrightText: 2026 BikeCoders
 //
 // Matching a ride to road pieces (docs/specs/traffic-measurements.md §3.3).
 //

@@ -12,30 +12,14 @@
 
 <section class="pad"><div class="wrap">
 
-  {# EVERY ROW IN THIS GROUP IS TEMPORARY.
-     When App\Provider lands, these hand-written dataset rows are replaced by
-     one loop over credited_providers() (App\Twig\ProviderCreditsExtension),
-     so a provider admitted at /moderate/providers reaches this page with
-     nobody editing a template. A hand-written row for a dataset the registry
-     also carries is then a duplicate and must go in the same change, the
-     parked rows included: the owner's call is that those are deleted by hand
-     at the switchover, not restored.
-     The wording is NOT lost: the registry carries a blurb_key pointing at the
-     message key each row already uses, so credits.osm_p and the rest keep all
-     five translations. Do not delete a translation key during that sweep.
-     Do not add a dataset row here without reading
-     docs/specs/credits-page.md §8 and data-provider-hierarchy.md §9 first.
-     The groups BELOW this one (map, software, type) are not affected. The line
-     is HOW A SOURCE REACHES US, not what kind of thing it is: a dataset we
-     import on a schedule is a provider, anything fetched on demand per request
-     is not. So Mapillary, Esri, OpenFreeMap and Photon stay hand-written with
-     their hand-placed markers, and the #credits-req footnote is still needed
-     after the migration. credits-page.md §8.8 has the row-by-row table. #}
-  {# The data credits are GENERATED from the provider registry
-     (docs/specs/data-provider-hierarchy.md §9). They were hand-written rows
-     here until 2026-09-04, which meant adding the eleventh provider was an
-     edit in five languages, and a row could disagree with the registry about
-     a licence with nothing to notice.
+  {# The data credits are GENERATED from the provider registry: one loop over
+     credited_providers() (App\Twig\ProviderCreditsExtension), so a provider
+     admitted at /moderate/providers reaches this page with nobody editing a
+     template (docs/specs/credits-page.md §8, data-provider-hierarchy.md §9).
+     A hand-written row for a dataset the registry carries would be a
+     duplicate: a dataset gets its credit by being a provider, not by a row
+     here. Each seeded provider's blurb_key points at a credits.*_p message
+     key, so those keys are live even though no template names them.
 
      The weight is the licence's call, not ours: a licence that obliges an
      attribution notice gets its own row with the required marker, because a
@@ -193,7 +177,8 @@
         <a href="https://github.com/SymfonyCasts/verify-email-bundle" data-pkg="symfonycasts/verify-email-bundle">SymfonyCasts Verify Email</a>,
         <a href="https://twig.symfony.com/" data-pkg="twig/*">Twig</a>,
         <a href="https://ubuntu.com/" data-pkg="manual:production-host-os">Ubuntu</a>,
-        <a href="https://uvicorn.dev/" data-pkg="uvicorn">Uvicorn</a>.</p>
+        <a href="https://uvicorn.dev/" data-pkg="uvicorn">Uvicorn</a>,
+        <a href="https://www.yasumi.dev/" data-pkg="azuyalabs/yasumi">Yasumi</a>.</p>
       </div>
     </div>
   </div>

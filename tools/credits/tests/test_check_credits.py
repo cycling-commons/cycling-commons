@@ -256,9 +256,8 @@ def test_markers_are_read_from_the_page(tmp_path: Path):
 def test_a_parked_row_credits_nobody(tmp_path: Path):
     """A row inside a Twig comment is waiting, not shipping.
 
-    The Drinkwaterkaart.nl row has been parked this way since 2026-08-26. If a
-    parked marker still counted, hiding a row would silently satisfy the gate
-    for a credit no reader can see.
+    If a parked marker still counted, hiding a row would silently satisfy the
+    gate for a credit no reader can see.
     """
     page = tmp_path / "credits.html.twig"
     page.write_text(

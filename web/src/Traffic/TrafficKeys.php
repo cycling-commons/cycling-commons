@@ -10,12 +10,12 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * The secrets behind traffic storage, all derived from TRAFFIC_SECRET with
- * HKDF-SHA256: one AES-256-GCM key for payloads and four HMAC keys for the
- * lookups (way, bucket, rider, seen). Lookups are HMACs so a row is found
- * without its road, time or rider ever being stored readable.
+ * HKDF-SHA256: one AES-256-GCM key for the waiting room's payloads and two
+ * HMAC keys (block, seen). A waiting line is found by its block without its
+ * road or time ever being stored readable.
  *
  * TRAFFIC_SECRET is its own variable, never APP_SECRET or ENCRYPTION_SECRET,
- * and there is no fallback: losing it makes every stored total unreadable,
+ * and there is no fallback: losing it makes every waiting line unreadable,
  * and a guessed default would make the encryption decorative. Staging and
  * production refuse the committed development and test values.
  *
@@ -46,21 +46,17 @@ final class TrafficKeys
         return $this->derive('enc');
     }
 
-    public function wayKey(int $way): string
+    /**
+     * The waiting room's name for a line's block: one road, direction, part of
+     * the day and day type, across quarters (traffic-measurements.md §4.3). It
+     * says how many lines wait per block, and nothing about which road or time.
+     *
+     * @param array{way: int, dir: string, band: int, dayType: string} $line
+     */
+    public function blockKey(array $line): string
     {
-        return hash_hmac('sha256', (string) $way, $this->derive('way'), true);
-    }
-
-    /** @param array{way: int, dir: string, label: string, slot: int, dayType: string, season: string, quarter: string} $key */
-    public function bucketKey(array $key): string
-    {
-        return hash_hmac('sha256', implode('|', [$key['way'], $key['dir'], $key['label'], $key['slot'],
-            $key['dayType'], $key['season'], $key['quarter']]), $this->derive('bucket'), true);
-    }
-
-    public function riderKey(int $userId, int $way): string
-    {
-        return hash_hmac('sha256', $userId.'|'.$way, $this->derive('rider'), true);
+        return hash_hmac('sha256', implode('|', [$line['way'], $line['dir'], $line['band'], $line['dayType']]),
+            $this->derive('block'), true);
     }
 
     /** The stored form of a block code the browser sent (64 hex characters). */

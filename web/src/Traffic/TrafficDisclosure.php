@@ -7,15 +7,14 @@ declare(strict_types=1);
 namespace App\Traffic;
 
 /**
- * The rules before any traffic number is shown (docs/specs/traffic-measurements.md §4.4).
+ * The rules before any traffic is shown (docs/specs/traffic-measurements.md §4.4).
  *
- * A quiet road with one regular rider is the case these exist for: a number
- * there would say that somebody rides it, and when. So a group (one road
- * piece, one direction, one time group of the active scheme) is shown only
- * with several riders, on several days, none of them dominant, over enough
- * distance that one car cannot swing it. Below the rules the group does not
- * appear at all; there is no "too few riders" entry that would itself say
- * someone rides there. Riders and days come out as coarse bands, never counts.
+ * A group (one road piece, one direction, one time group of the active scheme)
+ * is shown only with enough lines, on enough day groups, over enough distance
+ * that one car cannot swing it, and only as a band: quiet, moderate or busy.
+ * Never a number, so one ride cannot be read off a value. Below the rules the
+ * group does not appear at all; there is no "too few rides" entry that would
+ * itself say someone rides there. Days come out as a coarse band too.
  *
  * Public copy never states these numbers.
  *
@@ -23,104 +22,76 @@ namespace App\Traffic;
  */
 final class TrafficDisclosure
 {
-    public const int MIN_RIDERS = 5;
-    public const int MIN_DAYS = 3;
-    public const float MAX_SHARE = 0.5;
+    public const int MIN_LINES = 5;
+    public const int MIN_DAY_GROUPS = 3;
     public const int MIN_DISTANCE_M = 2000;
     /** Measured car speeds a group needs before its typical speed is shown. */
     public const int MIN_SPEED_PASSES = 5;
+    /** Cars per km from which a road is moderate, and from which it is busy. */
+    public const float MODERATE_FROM = 1.0;
+    public const float BUSY_FROM = 3.0;
 
     public const array SCHEMES = ['all', 'daytype', 'daytype_band'];
 
-    /** Slot (local quarter hour) upper bounds of the bands, exclusive. */
-    private const array BANDS = [24 => 'night', 36 => 'morning', 64 => 'day', 76 => 'evening', 96 => 'late'];
+    /** The five parts of the day, by band index (traffic-measurements.md §3.4). */
+    private const array BANDS = ['night', 'morning', 'day', 'evening', 'late'];
 
     /**
-     * @param iterable<array<string, mixed>>                                                $cells
-     * @param list<array{way: int, buckets: array<string, array{d: int, days: list<int>}>}> $riders
-     * @param \Closure(array<string, mixed>): string                                        $bucketOf the key a cell is filed under in rider rows
+     * @param iterable<array<string, mixed>> $rows totals rows (TrafficStore::totals())
      *
-     * @return list<array{way: int, dir: string, label: string, group: string, carsPerKm: float, nearbyPerKm: float, carSpeedBand: int|null, riders: string, days: string}>
+     * @return list<array{way: int, dir: string, label: string, group: string, traffic: string, nearby: string, carSpeedBand: int|null, days: string}>
      */
-    public function evaluate(iterable $cells, array $riders, string $scheme, string $sinceQuarter, \Closure $bucketOf): array
+    public function evaluate(iterable $rows, string $scheme, string $sinceQuarter): array
     {
         if (!\in_array($scheme, self::SCHEMES, true)) {
             $scheme = 'daytype';
         }
 
         $groups = [];
-        $bucketGroup = [];
-        foreach ($cells as $cell) {
-            if (strcmp((string) $cell['quarter'], $sinceQuarter) < 0) {
+        foreach ($rows as $row) {
+            if (strcmp((string) $row['quarter'], $sinceQuarter) < 0) {
                 continue;
             }
-            $group = self::groupOf($cell, $scheme);
-            $id = $cell['way'].'|'.$cell['dir'].'|'.$group;
+            $group = self::groupOf($row, $scheme);
+            $id = $row['way'].'|'.$row['dir'].'|'.$group;
             $g = $groups[$id] ??= [
-                'way' => (int) $cell['way'], 'dir' => (string) $cell['dir'], 'group' => $group,
-                'distance' => 0, 'passes' => 0, 'nearby' => 0, 'speedPasses' => 0, 'bins' => array_fill(0, TrafficStore::SPEED_BINS, 0),
-                'labels' => [],
+                'way' => (int) $row['way'], 'dir' => (string) $row['dir'], 'group' => $group,
+                'distance' => 0, 'passes' => 0, 'nearby' => 0, 'lines' => 0, 'speedPasses' => 0,
+                'bins' => array_fill(0, TrafficStore::SPEED_BINS, 0), 'labels' => [], 'days' => [],
             ];
-            $g['distance'] += $cell['distanceM'];
-            $g['passes'] += $cell['passes'];
-            $g['nearby'] += $cell['nearby'] ?? 0;
-            $g['speedPasses'] += $cell['speedPasses'];
-            foreach ($cell['bins'] as $i => $n) {
-                $g['bins'][$i] += $n;
+            $g['distance'] += (int) $row['distanceM'];
+            $g['passes'] += (int) $row['passes'];
+            $g['nearby'] += (int) $row['nearby'];
+            $g['lines'] += (int) $row['lines'];
+            $g['speedPasses'] += (int) $row['speedPasses'];
+            foreach ($row['bins'] as $i => $n) {
+                $g['bins'][$i] += (int) $n;
             }
-            $g['labels'][$cell['label']] = ($g['labels'][$cell['label']] ?? 0) + $cell['distanceM'];
+            $g['labels'][$row['label']] = ($g['labels'][$row['label']] ?? 0) + (int) $row['distanceM'];
+            // A day group is one of 16 per quarter: the same group in two rows
+            // of one quarter may be one day, two quarters never share a day.
+            $g['days'][$row['quarter']] = ($g['days'][$row['quarter']] ?? 0) | (int) $row['days'];
             $groups[$id] = $g;
-            $bucketGroup[$bucketOf($cell)] = $id;
-        }
-
-        // Per group: each rider row's distance and dates inside it.
-        $perRider = [];
-        foreach ($riders as $r => $row) {
-            foreach ($row['buckets'] as $bucket => $entry) {
-                $id = $bucketGroup[$bucket] ?? null;
-                if (null === $id || $entry['d'] <= 0) {
-                    continue;
-                }
-                $perRider[$id][$r]['d'] = ($perRider[$id][$r]['d'] ?? 0) + $entry['d'];
-                foreach ($entry['days'] as $day) {
-                    $perRider[$id][$r]['days'][$day] = true;
-                }
-            }
         }
 
         $shown = [];
-        foreach ($groups as $id => $g) {
-            $contributors = $perRider[$id] ?? [];
-            $days = [];
-            $riderDistance = 0;
-            $largest = 0;
-            foreach ($contributors as $c) {
-                $days += $c['days'] ?? [];
-                $riderDistance += $c['d'];
-                $largest = max($largest, $c['d']);
-            }
-            // Distance with no rider row left (an account deleted since) is
-            // one more contributor: it may not dominate either.
-            $orphaned = max(0, $g['distance'] - $riderDistance);
-            $largest = max($largest, $orphaned);
-            if (\count($contributors) < self::MIN_RIDERS || \count($days) < self::MIN_DAYS
-                || $g['distance'] < self::MIN_DISTANCE_M
-                || $largest / max($g['distance'], $riderDistance) > self::MAX_SHARE) {
+        foreach ($groups as $g) {
+            $days = array_sum(array_map(static fn (int $bits): int => substr_count(decbin($bits), '1'), $g['days']));
+            if ($g['lines'] < self::MIN_LINES || $days < self::MIN_DAY_GROUPS || $g['distance'] < self::MIN_DISTANCE_M) {
                 continue;
             }
             arsort($g['labels']);
+            $km = $g['distance'] / 1000;
             $shown[] = [
                 'way' => $g['way'],
                 'dir' => $g['dir'],
                 'label' => (string) array_key_first($g['labels']),
                 'group' => $g['group'],
-                // One decimal: finer would let two views be subtracted into one upload.
-                'carsPerKm' => round($g['passes'] / ($g['distance'] / 1000), 1),
+                'traffic' => self::level($g['passes'] / $km),
                 // Cars on the road beside a cycle path: noise, not safety.
-                'nearbyPerKm' => round($g['nearby'] / ($g['distance'] / 1000), 1),
+                'nearby' => self::level($g['nearby'] / $km),
                 'carSpeedBand' => $g['speedPasses'] >= self::MIN_SPEED_PASSES ? self::medianBand($g['bins']) : null,
-                'riders' => self::riderBand(\count($contributors)),
-                'days' => self::dayBand(\count($days)),
+                'days' => self::dayBand($days),
             ];
         }
 
@@ -137,16 +108,17 @@ final class TrafficDisclosure
         return match ($scheme) {
             'all' => ['all'],
             'daytype_band' => array_merge(...array_map(
-                static fn (string $day): array => array_map(static fn (string $band): string => $day.'|'.$band, array_values(self::BANDS)),
+                static fn (string $day): array => array_map(static fn (string $band): string => $day.'|'.$band, self::BANDS),
                 ['workday', 'weekend'],
             )),
             default => ['workday', 'weekend'],
         };
     }
 
-    public static function riderBand(int $riders): string
+    /** Quiet, moderate or busy, for a number of cars per km. */
+    public static function level(float $carsPerKm): string
     {
-        return $riders >= 20 ? '20+' : ($riders >= 10 ? '10-19' : '5-9');
+        return $carsPerKm >= self::BUSY_FROM ? 'busy' : ($carsPerKm >= self::MODERATE_FROM ? 'moderate' : 'quiet');
     }
 
     public static function dayBand(int $days): string
@@ -154,22 +126,17 @@ final class TrafficDisclosure
         return $days >= 10 ? '10+' : '3-9';
     }
 
-    /** @param array<string, mixed> $cell */
-    private static function groupOf(array $cell, string $scheme): string
+    /** @param array<string, mixed> $row */
+    private static function groupOf(array $row, string $scheme): string
     {
         if ('all' === $scheme) {
             return 'all';
         }
         if ('daytype' === $scheme) {
-            return (string) $cell['dayType'];
-        }
-        foreach (self::BANDS as $upper => $band) {
-            if ($cell['slot'] < $upper) {
-                return $cell['dayType'].'|'.$band;
-            }
+            return (string) $row['dayType'];
         }
 
-        return $cell['dayType'].'|late';
+        return $row['dayType'].'|'.(self::BANDS[(int) $row['band']] ?? 'late');
     }
 
     /**

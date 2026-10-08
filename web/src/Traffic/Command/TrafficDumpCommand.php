@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Traffic\Command;
 
+use App\Traffic\TrafficPool;
 use App\Traffic\TrafficStore;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -27,8 +28,10 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 #[AsCommand(name: 'app:traffic:dump', description: 'Print the traffic tables decrypted (development only)')]
 final class TrafficDumpCommand extends Command
 {
-    public function __construct(private readonly TrafficStore $store)
-    {
+    public function __construct(
+        private readonly TrafficStore $store,
+        private readonly TrafficPool $pool,
+    ) {
         parent::__construct();
     }
 
@@ -43,29 +46,28 @@ final class TrafficDumpCommand extends Command
     {
         $way = null !== $input->getOption('way') ? (int) $input->getOption('way') : null;
 
-        $cells = new Table($output);
-        $cells->setHeaders(['way', 'region', 'dir', 'label', 'slot', 'day type', 'season', 'quarter', 'm', 's', 'cars', 'nearby', 'with speed', 'sends']);
-        foreach ($this->store->cells() as $c) {
-            if (null !== $way && $c['way'] !== $way) {
+        $totals = new Table($output);
+        $totals->setHeaders(['way', 'region', 'dir', 'label', 'band', 'day type', 'quarter', 'm', 's', 'cars', 'nearby', 'with speed', 'lines', 'day groups']);
+        foreach ($this->store->totals() as $t) {
+            if (null !== $way && $t['way'] !== $way) {
                 continue;
             }
-            $cells->addRow([$c['way'], $c['region'] ?? '-', $c['dir'], $c['label'], $c['slot'], $c['dayType'], $c['season'], $c['quarter'],
-                $c['distanceM'], $c['timeS'], $c['passes'], $c['nearby'] ?? 0, $c['speedPasses'], $c['contributions']]);
+            $totals->addRow([$t['way'], $t['region'] ?? '-', $t['dir'], $t['label'], $t['band'], $t['dayType'], $t['quarter'],
+                $t['distanceM'], $t['timeS'], $t['passes'], $t['nearby'], $t['speedPasses'], $t['lines'], substr_count(decbin($t['days']), '1')]);
         }
-        $output->writeln('<info>traffic_cell</info>');
-        $cells->render();
+        $output->writeln('<info>traffic_total</info> (plain sums; days are groups, never dates)');
+        $totals->render();
 
-        $riders = new Table($output);
-        $riders->setHeaders(['row', 'way', 'buckets', 'm', 'days']);
-        foreach ($this->store->riders() as $i => $r) {
-            if (null !== $way && $r['way'] !== $way) {
+        $waiting = new Table($output);
+        $waiting->setHeaders(['way', 'dir', 'label', 'band', 'day type', 'quarter', 'day group', 'm', 'cars', 'nearby']);
+        foreach ($this->pool->waiting() as $l) {
+            if (null !== $way && $l['way'] !== $way) {
                 continue;
             }
-            $days = array_unique(array_merge(...array_column($r['buckets'], 'days') ?: [[]]));
-            $riders->addRow([$i + 1, $r['way'], \count($r['buckets']), array_sum(array_column($r['buckets'], 'd')), \count($days)]);
+            $waiting->addRow([$l['way'], $l['dir'], $l['label'], $l['band'], $l['dayType'], $l['quarter'], $l['dayGroup'], $l['distanceM'], $l['passes'], $l['nearby']]);
         }
-        $output->writeln('<info>traffic_rider</info> (one row per rider per road; rows are not linked to accounts)');
-        $riders->render();
+        $output->writeln('<info>traffic_pool</info> (the waiting room, decrypted)');
+        $waiting->render();
 
         return Command::SUCCESS;
     }

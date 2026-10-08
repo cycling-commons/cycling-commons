@@ -28,7 +28,7 @@ use Symfony\Contracts\Cache\ItemInterface;
  */
 final class TrafficView
 {
-    private const string CACHE_KEY = 'traffic.view.v5.';
+    private const string CACHE_KEY = 'traffic.view.v7.';
     /** How often the view is recomputed, in seconds. */
     public const int CADENCE = 21600;
     /** How far back the shown numbers reach, in quarters of a year. */
@@ -46,10 +46,10 @@ final class TrafficView
     ) {
     }
 
-    /** @return list<array{way: int, dir: string, label: string, group: string, carsPerKm: float, nearbyPerKm: float, carSpeedBand: int|null, riders: string, days: string}> */
+    /** @return list<array{way: int, dir: string, label: string, group: string, traffic: string, nearby: string, carSpeedBand: int|null, days: string}> */
     public function shown(): array
     {
-        /* @var list<array{way: int, dir: string, label: string, group: string, carsPerKm: float, nearbyPerKm: float, carSpeedBand: int|null, riders: string, days: string}> */
+        /* @var list<array{way: int, dir: string, label: string, group: string, traffic: string, nearby: string, carSpeedBand: int|null, days: string}> */
         return $this->built()['shown'];
     }
 
@@ -77,17 +77,15 @@ final class TrafficView
         $sealed = $this->cache->get($this->cacheKey(), function (ItemInterface $item): string {
             $item->expiresAfter(self::CADENCE);
             $since = $this->sinceQuarter();
-            $cells = [];
+            $rows = [];
             $regionOfWay = [];
-            foreach ($this->store->cells() as $cell) {
-                $cells[] = $cell;
-                if (strcmp((string) $cell['quarter'], $since) >= 0) {
-                    $way = (int) $cell['way'];
-                    $region = isset($cell['region']) ? (int) $cell['region'] : null;
-                    $regionOfWay[$way] ??= $region;
+            foreach ($this->store->totals() as $row) {
+                $rows[] = $row;
+                if (strcmp($row['quarter'], $since) >= 0) {
+                    $regionOfWay[$row['way']] ??= $row['region'];
                 }
             }
-            $shown = $this->disclosure->evaluate($cells, $this->store->riders(), $this->scheme(), $since, $this->store->bucketHex(...));
+            $shown = $this->disclosure->evaluate($rows, $this->scheme(), $since);
             $usable = array_values(array_unique(array_column($shown, 'way')));
 
             return $this->cipher->seal([

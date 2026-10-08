@@ -38,16 +38,17 @@ final class ModerateTrafficController extends AbstractController
         $scope = $scopeProvider->scopeFor($user);
         $groups = TrafficDisclosure::groupsOf($view->scheme());
 
-        // Busier direction per way and group, as the map layer shows it. A
-        // cycle path has no passing cars; its value is the cars on the road
-        // beside it, marked nearby (noise, not safety).
+        // Busier direction per way and group, as the map layer shows it: a
+        // band, never a number. A cycle path has no passing cars; its band is
+        // the cars on the road beside it, marked nearby (noise, not safety).
+        $rank = ['quiet' => 0, 'moderate' => 1, 'busy' => 2];
         $measured = [];
         foreach ($view->shown() as $entry) {
             $nearby = 'p' === $entry['label'];
-            $value = $nearby ? $entry['nearbyPerKm'] : $entry['carsPerKm'];
+            $band = $nearby ? $entry['nearby'] : $entry['traffic'];
             $current = $measured[$entry['way']][$entry['group']] ?? null;
-            if (null === $current || $value > $current['n']) {
-                $measured[$entry['way']][$entry['group']] = ['n' => $value, 'nearby' => $nearby];
+            if (null === $current || $rank[$band] > $rank[$current['band']]) {
+                $measured[$entry['way']][$entry['group']] = ['band' => $band, 'nearby' => $nearby];
             }
         }
 

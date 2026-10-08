@@ -20,8 +20,8 @@ final class TrafficLineTest extends TestCase
     public static function line(array $over = []): array
     {
         return $over + [
-            'way' => 4521877, 'dir' => 'f', 'label' => 'r', 'slot' => 73, 'dayType' => 'workday',
-            'season' => 'autumn', 'quarter' => '2026-Q4', 'day' => 20731,
+            'way' => 4521877, 'dir' => 'f', 'label' => 'r', 'band' => 3, 'dayType' => 'workday',
+            'quarter' => '2026-Q4', 'dayGroup' => 9,
             'distanceM' => 3210, 'timeS' => 421, 'passes' => 7, 'avgSpeedKmh' => 27.4,
             'carSpeedBins' => [0, 0, 0, 0, 0, 1, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0],
             'blocks' => [str_repeat('a', 64), str_repeat('b', 64)],
@@ -46,23 +46,25 @@ final class TrafficLineTest extends TestCase
     public static function implausible(): iterable
     {
         yield 'no time' => [self::line(['timeS' => 0])];
-        yield 'longer than a slot and its boundary' => [self::line(['timeS' => 906, 'distanceM' => 6000])];
+        yield 'longer than its band and the boundary' => [self::line(['band' => 1, 'timeS' => 10806, 'distanceM' => 60000])];
+        yield 'over 200 km' => [self::line(['band' => 2, 'timeS' => 25000, 'distanceM' => 200001])];
         yield 'walking pace' => [self::line(['distanceM' => 50, 'timeS' => 400])];
         yield 'motorway pace' => [self::line(['distanceM' => 20000, 'timeS' => 600])];
         yield 'too many cars per km' => [self::line(['distanceM' => 1000, 'timeS' => 200, 'passes' => 61])];
         yield 'more speeds than cars' => [self::line(['passes' => 2])];
         yield 'fifteen bins' => [self::line(['carSpeedBins' => array_fill(0, 15, 0)])];
         yield 'negative bin' => [self::line(['carSpeedBins' => [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])];
-        yield 'slot 96' => [self::line(['slot' => 96])];
+        yield 'band 5' => [self::line(['band' => 5])];
+        yield 'band as text' => [self::line(['band' => '3'])];
+        yield 'day group 16' => [self::line(['dayGroup' => 16])];
+        yield 'day group as text' => [self::line(['dayGroup' => '9'])];
+        yield 'no day group' => [array_diff_key(self::line(), ['dayGroup' => true])];
         yield 'unknown label' => [self::line(['label' => 'x'])];
         yield 'unknown direction' => [self::line(['dir' => 'n'])];
-        yield 'unknown season' => [self::line(['season' => 'monsoon'])];
-        yield 'quarter in the future' => [self::line(['quarter' => '2027-Q1', 'day' => 20820])];
-        yield 'quarter before the project' => [self::line(['quarter' => '2009-Q4', 'day' => 14600])];
-        yield 'day outside its quarter' => [self::line(['day' => 20600])];
-        yield 'day in the future' => [self::line(['day' => 20740])];
+        yield 'quarter in the future' => [self::line(['quarter' => '2027-Q1'])];
+        yield 'quarter before the project' => [self::line(['quarter' => '2009-Q4'])];
         yield 'no block' => [self::line(['blocks' => []])];
-        yield 'four blocks' => [self::line(['blocks' => array_fill(0, 4, str_repeat('c', 64))])];
+        yield 'more blocks than the longest band holds' => [self::line(['blocks' => array_map(static fn (int $i): string => str_pad(dechex($i), 64, '0', \STR_PAD_LEFT), range(1, 86))])];
         yield 'block not hex' => [self::line(['blocks' => [str_repeat('z', 64)]])];
         yield 'way zero' => [self::line(['way' => 0])];
         yield 'way as text' => [self::line(['way' => '4521877'])];
@@ -94,18 +96,39 @@ final class TrafficLineTest extends TestCase
         TrafficLine::accept(self::line(['note' => 'hi']), self::now());
     }
 
-    public function testAFullSlotPlusTheBoundarySecondsIsKept(): void
+    public function testAFullBandPlusTheBoundarySecondsIsKept(): void
     {
-        self::assertNotNull(TrafficLine::accept(self::line(['timeS' => 903, 'distanceM' => 6000]), self::now()));
-        self::assertNull(TrafficLine::accept(self::line(['timeS' => 906, 'distanceM' => 6000]), self::now()));
+        // The morning rush runs 06-09: three hours, plus the one interval a band boundary hands on.
+        self::assertNotNull(TrafficLine::accept(self::line(['band' => 1, 'timeS' => 10805, 'distanceM' => 60000]), self::now()));
+        self::assertNull(TrafficLine::accept(self::line(['band' => 1, 'timeS' => 10806, 'distanceM' => 60000]), self::now()));
+        self::assertNotNull(TrafficLine::accept(self::line(['band' => 2, 'timeS' => 25205, 'distanceM' => 150000]), self::now()), 'the day band runs 09-16');
+    }
+
+    public function testADateAQuarterHourASeasonOrARiderRefusesTheWholeRequest(): void
+    {
+        // A time finer than a part of the day, a date, or anything naming a rider is never accepted.
+        foreach (['slot' => 73, 'season' => 'autumn', 'day' => 20731, 'rider' => str_repeat('5b', 32)] as $key => $value) {
+            try {
+                TrafficLine::accept(self::line([$key => $value]), self::now());
+                self::fail("{$key} was not refused");
+            } catch (TrafficPayloadRefused $e) {
+                self::assertSame('invalid', $e->getMessage());
+            }
+        }
+    }
+
+    public function testTheDayGroupIsKept(): void
+    {
+        self::assertSame(9, TrafficLine::accept(self::line(), self::now())['dayGroup'] ?? null);
+        self::assertSame(0, TrafficLine::accept(self::line(['dayGroup' => 0]), self::now())['dayGroup'] ?? null);
     }
 
     public function testANewQuarterAlreadyBegunEastOfGreenwichIsKept(): void
     {
         $lateSeptember = new \DateTimeImmutable('2026-09-30 23:30:00 UTC');
         // 1 October local, in a zone ahead of UTC.
-        self::assertNotNull(TrafficLine::accept(self::line(['quarter' => '2026-Q4', 'day' => 20727]), $lateSeptember));
-        self::assertNull(TrafficLine::accept(self::line(['quarter' => '2026-Q4', 'day' => 20728]), $lateSeptember));
+        self::assertNotNull(TrafficLine::accept(self::line(['quarter' => '2026-Q4']), $lateSeptember));
+        self::assertNull(TrafficLine::accept(self::line(['quarter' => '2027-Q1']), $lateSeptember));
     }
 
     public function testCarsBesideACyclePathAreNearbyNeverPassing(): void

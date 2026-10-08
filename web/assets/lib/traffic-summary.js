@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-FileCopyrightText: 2026 BikeCoders
 //
 // The traffic summary a rider sends (docs/specs/traffic-measurements.md §3.4).
 //
 // Built in the browser from the decoded ride and its road-piece matches. A
-// line is one road piece, direction and local quarter hour: how far the rider
-// rode on it with the radar on, how many cars passed, and their speeds in
-// bands. No position, no exact time and no order leave this module: the date
-// travels as a day number for the several-days rule, and the dedupe codes are
-// hashes the server can only compare.
+// line is one road piece, direction, part of the local day and date: how far
+// the rider rode on it with the radar on, how many cars passed, and their
+// speeds in bands. No position, no time finer than a part of the day and no
+// order leave this module: the date travels as a day number for the
+// several-days rule, and the dedupe codes are hashes the server can only
+// compare.
 
 import { MESG, findDevKey, semiToDeg, fitToDate } from './scout-fit.js';
 
@@ -16,35 +18,67 @@ const SECONDS_PER_BLOCK = 300;
 const MAX_STEP_S = 5;
 const SPEED_BINS = 16;
 
-const SEASONS_NORTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer',
-  'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
-const SOUTH = { winter: 'summer', summer: 'winter', spring: 'autumn', autumn: 'spring' };
+/** Local hours at which bands 1-4 start: night, morning rush, day, evening rush, evening. */
+const BAND_STARTS = [6, 9, 16, 19];
 
 const pad = n => String(n).padStart(2, '0');
 
 /**
- * The time key of one moment: local quarter hour, day type, season, quarter of
- * the year and the local day number.
+ * The time key of one moment: part of the local day (band 0-4), day type,
+ * quarter of the year and the local day number.
  *
  * @param {number} unixS UTC seconds
  * @param {number} offsetS local offset from UTC, seconds
- * @param {number} lat for the hemisphere
+ * @param {number} _lat unused; kept so callers pass the place as before
  * @param {Set<string>} holidays local dates (YYYY-MM-DD) that count as weekend
  */
-export function timeKey(unixS, offsetS, lat, holidays) {
+export function timeKey(unixS, offsetS, _lat, holidays) {
   const local = unixS + offsetS;
   const d = new Date(local * 1000);
   const month = d.getUTCMonth();
   const iso = `${d.getUTCFullYear()}-${pad(month + 1)}-${pad(d.getUTCDate())}`;
   const weekday = d.getUTCDay();
-  const north = SEASONS_NORTH[month];
   return {
-    slot: d.getUTCHours() * 4 + Math.floor(d.getUTCMinutes() / 15),
+    band: BAND_STARTS.filter(h => d.getUTCHours() >= h).length,
     dayType: weekday === 0 || weekday === 6 || (holidays && holidays.has(iso)) ? 'weekend' : 'workday',
-    season: lat < 0 ? SOUTH[north] : north,
     quarter: `${d.getUTCFullYear()}-Q${Math.floor(month / 3) + 1}`,
     day: Math.floor(local / 86400),
   };
+}
+
+/**
+ * A day as one of 16 groups: its place in its quarter (0 on the quarter's first
+ * day) modulo 16. Each group holds 5 or 6 dates of the quarter, so a group sent
+ * in place of the date names none of them.
+ *
+ * @param {number} day local date as days since 1970-01-01
+ */
+export function dayGroupOf(day) {
+  const d = new Date(day * 86400000);
+  const first = Date.UTC(d.getUTCFullYear(), Math.floor(d.getUTCMonth() / 3) * 3, 1) / 86400000;
+  return (day - first) % 16;
+}
+
+/**
+ * Which records to keep: those at least `cut` metres of ridden distance from the
+ * ride's first fix and from its last one. The ends are where a rider lives or
+ * works, so they never become lines. A record without a fix takes the
+ * distance of the last fix before it.
+ *
+ * @returns {boolean[]} one per record
+ */
+export function trimEnds(records, cut = 500) {
+  const at = [];
+  let run = 0;
+  let prev = null;
+  for (const r of records) {
+    if (r.lat != null && r.lon != null) {
+      if (prev) run += metres(prev, r);
+      prev = r;
+    }
+    at.push(run);
+  }
+  return at.map(m => m >= cut && run - m >= cut);
 }
 
 /**
@@ -138,14 +172,16 @@ export async function buildLines({ records, matches, passes, offsetS, holidays }
     const r = records[i];
     if (!m || m.way === null || r.lat == null || r.lon == null) return null;
     const tk = timeKey(r.t, offsetS, r.lat, (holidays && holidays[m.cc]) || null);
-    const key = [m.way, m.dir, m.label, tk.slot, tk.dayType, tk.season, tk.quarter, tk.day].join('|');
+    const key = [m.way, m.dir, m.label, tk.band, tk.dayType, tk.quarter, tk.day].join('|');
     if (!byKey.has(key)) {
       byKey.set(key, {
         line: {
           // The region adds nothing the way id does not already say; the
           // curator page counts roads per region by it.
-          way: m.way, region: m.region ?? null, dir: m.dir, label: m.label, slot: tk.slot, dayType: tk.dayType,
-          season: tk.season, quarter: tk.quarter, day: tk.day,
+          way: m.way, region: m.region ?? null, dir: m.dir, label: m.label, band: tk.band, dayType: tk.dayType,
+          quarter: tk.quarter, dayGroup: dayGroupOf(tk.day),
+          // Shown to the rider in "Show what is sent"; never sent (traffic-ride.js wire()).
+          day: tk.day,
           distanceM: 0, timeS: 0, passes: 0, nearby: 0, avgSpeedKmh: null, carSpeedBins: null, blocks: [],
         },
         bins: new Array(SPEED_BINS).fill(0),
@@ -171,7 +207,7 @@ export async function buildLines({ records, matches, passes, offsetS, holidays }
     const entry = byKey.get(key);
     entry.blocks.add(Math.floor(records[i].t / SECONDS_PER_BLOCK) * SECONDS_PER_BLOCK);
     // An interval counts on the later record's line when both fixes are on
-    // the same piece in the same direction, so a slot boundary loses nothing.
+    // the same piece in the same direction, so a band boundary loses nothing.
     if (i === 0 || keys[i - 1] === null) continue;
     const pm = matches[i - 1];
     const cm = matches[i];

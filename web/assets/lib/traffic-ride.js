@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-FileCopyrightText: 2026 BikeCoders
 //
 // One ride into its traffic summary, and the summary onto the wire
 // (docs/specs/traffic-measurements.md §3). Used by the single-ride step and by
@@ -8,7 +9,7 @@
 import { countVehicles } from './scout-fit.js';
 import { loadPieces } from './road-pieces.js';
 import { matchRide, riddenParts } from './traffic-match.js';
-import { buildLines, recordsFromFit, localOffsetSeconds, zoneOffsetSeconds } from './traffic-summary.js';
+import { buildLines, recordsFromFit, localOffsetSeconds, zoneOffsetSeconds, trimEnds } from './traffic-summary.js';
 
 /** Lines a request aims for; a ride is never split to meet it. */
 export const CHUNK_LINES = 500;
@@ -54,21 +55,27 @@ export async function fetchHolidays(cc) {
   return holidayCache.get(cc);
 }
 
+/** Metres cut from each end of a ride: where a rider lives or works. */
+export const TRIM_M = 500;
+
 /**
  * The traffic summary of one decoded FIT ride, or null when it has no radar data.
  *
  * @param {object} fit parseFit() output
- * @param {{entries: object, fetchTile?: Function, fetchHolidays?: Function}} deps
- * @returns {Promise<null|{lines: Array, cars: number, matchedKm: number, unmatchedKm: number, year: number|null, matched: Array}>}
+ * @param {{entries: object, fetchTile?: Function, fetchHolidays?: Function, trimM?: number}} deps
+ * @returns {Promise<null|{lines: Array, cars: number, matchedKm: number, unmatchedKm: number, trimmedKm: number, year: number|null, matched: Array}>}
  */
-export async function summariseRide(fit, { entries, fetchTile, fetchHolidays: holidaysFor = fetchHolidays }) {
+export async function summariseRide(fit, { entries, fetchTile, fetchHolidays: holidaysFor = fetchHolidays, trimM = TRIM_M }) {
   const radar = countVehicles(fit);
   if (!radar || !radar.covered) return null;
 
   const records = recordsFromFit(fit);
   const points = records.filter(r => r.lat != null).map(r => [r.lon, r.lat]);
   const { pieces } = await loadPieces(points, entries, fetchTile);
-  const matches = matchRide(records, pieces);
+  // The first and last metres never become lines: a cut record counts as no
+  // road, but is not "unmatched" either.
+  const keep = trimEnds(records, trimM);
+  const matches = matchRide(records, pieces).map((m, i) => (keep[i] ? m : { ...m, way: null, label: null, dir: null }));
 
   const ccs = [...new Set(matches.map(m => m.cc).filter(Boolean))];
   const holidays = {};
@@ -98,11 +105,17 @@ export async function summariseRide(fit, { entries, fetchTile, fetchHolidays: ho
   // Radar-on distance that found no road piece: told to the rider and drawn on
   // the map, never sent. Each unbroken stretch is one line.
   let unmatched = 0;
+  let trimmed = 0;
   const unmatchedLines = [];
   let run = null;
   for (let i = 1; i < records.length; i++) {
     const a = records[i - 1];
     const b = records[i];
+    if (a.lat != null && b.lat != null && !(keep[i - 1] && keep[i])) {
+      trimmed += metres(a, b);
+      run = null;
+      continue;
+    }
     const off = a.lat != null && b.lat != null && a.radar && b.radar && b.t - a.t <= 5 && matches[i].way === null;
     if (!off) { run = null; continue; }
     unmatched += metres(a, b);
@@ -119,6 +132,8 @@ export async function summariseRide(fit, { entries, fetchTile, fetchHolidays: ho
     allCars: radar.total,
     matchedKm: lines.reduce((m, l) => m + l.distanceM, 0) / 1000,
     unmatchedKm: unmatched / 1000,
+    // The cut ends, told to the rider; never drawn, never sent.
+    trimmedKm: trimmed / 1000,
     unmatchedLines,
     passKinds,
     year: first ? new Date(first.t * 1000).getUTCFullYear() : null,
@@ -193,6 +208,8 @@ export function makeChunks(lines) {
  * Sends the requests not yet acknowledged, in order, and marks each that the
  * server accepted. Calling it again after a failure resends only the rest;
  * every request is idempotent on the server, so nothing counts twice either way.
+ * A line leaves without its date: the date stays in the browser for "Show what
+ * is sent", and the server gets only the day group (traffic-summary.js).
  *
  * @param {Array<{lines: Array, sent: boolean}>} chunks from makeChunks()
  * @param {(body: {v: number, lines: Array}) => Promise<{ok: boolean, added?: number, duplicate?: number, dropped?: number, error?: string}>} post
@@ -205,7 +222,7 @@ export async function sendChunks(chunks, post, onProgress = () => {}) {
     onProgress(i + 1, pending.length);
     let res;
     try {
-      res = await post({ v: 1, lines: pending[i].lines });
+      res = await post({ v: 2, lines: pending[i].lines.map(wire) });
     } catch (e) {
       res = { ok: false, error: 'network' };
     }
@@ -220,6 +237,12 @@ export async function sendChunks(chunks, post, onProgress = () => {}) {
     total.dropped += res.dropped || 0;
   }
   return total;
+}
+
+/** A line as sent: everything but the date, which never leaves the browser. */
+function wire(line) {
+  const { day, ...sent } = line;
+  return sent;
 }
 
 /** The POST the review uses: same-origin, the stateless token in a header. */

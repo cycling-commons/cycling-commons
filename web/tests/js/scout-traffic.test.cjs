@@ -200,7 +200,14 @@ test('good facts are plain white; amber stays for what the rider should notice',
 test('with every car on a matched road, step 2 says it in one line', () => {
   assert.match(review, /p\.id = 'scoutRadarFact'/);
   const sync = fn(traffic, 'syncRadarFact');
-  assert.match(sync, /piecesShown && summary && summary\.lines\.length > 0/);
+  assert.match(sync, /summary && summary\.lines\.length > 0/);
+});
+
+test('the car lines show on step 2 only; step 1 is about the tags', () => {
+  assert.match(review, /p\.dataset\.radar = '1'/);
+  const sync = fn(traffic, 'syncRadarFact');
+  assert.match(sync, /querySelectorAll\('#scoutFacts \[data-radar\]'\)/);
+  assert.match(sync, /!piecesShown/);
 });
 
 test('the key shows the car as the map draws it, without a speed that overflows', () => {
@@ -290,13 +297,14 @@ test('a cycle-path line names its cars as nearby, a road line as passing', () =>
   assert.match(text, /scoutTrafficCarsN/);
 });
 
-test('a short stretch reads in metres, and the date and time follow the rider\'s settings', () => {
+test('a short stretch reads in metres, the date follows the rider\'s settings, the time is the part of the day', () => {
   const dist = fn(traffic, 'distance');
   assert.match(dist, /metres < 1000/);
   assert.match(dist, /uM\(Math\.round\(metres \/ 10\) \* 10\)/);
   const text = fn(traffic, 'lineText');
   assert.match(text, /window\.ccDate/);
-  assert.match(text, /window\.ccTime/);
+  assert.match(text, /'scoutBand' \+ line\.band/);
+  assert.doesNotMatch(text, /ccTime|line\.slot/, 'no clock time is sent, so none is shown');
   assert.doesNotMatch(text, /toLocaleDateString/);
 });
 
@@ -343,4 +351,36 @@ test('several rides show a summary, a folded breakdown per year, and what was se
   assert.match(bulk, /scoutBulkSent/);
   assert.match(bulk, /window\.ccDate/);
   assert.doesNotMatch(bulk, /scoutBulkTotal/);
+});
+
+test('one car reads in the singular: "1 car passed", never "1 cars passed"', () => {
+  const text = fn(traffic, 'lineText');
+  assert.match(text, /scoutTrafficCar1/);
+  assert.match(text, /scoutTrafficNearby1/);
+  const render = fn(traffic, 'render');
+  assert.match(render, /scoutTrafficFacts1/);
+  assert.match(review, /scoutRadar1/);
+  const controller = read('src/Controller/MapController.php');
+  for (const [name, key] of [['scoutTrafficCar1', 'd_scout_traffic_car_1'], ['scoutTrafficNearby1', 'd_scout_traffic_nearby_1'],
+    ['scoutTrafficFacts1', 'd_scout_traffic_facts_1'], ['scoutRadar1', 'd_scout_radar_1']]) {
+    assert.match(controller, new RegExp(`'${name}' => '${key}'`));
+  }
+});
+
+test('both sends post the chunks as they are: no rider key, no password step', () => {
+  assert.match(fn(traffic, 'send'), /sendChunks\(chunks, postTraffic\)/);
+  assert.match(fn(bulk, 'sendAll'), /sendChunks\(chunks, postTraffic, \(i, n\) => \{/);
+  assert.doesNotMatch(traffic + bulk + panel, /askRiderKey|scoutRiderKey|CC_TRAFFIC_RIDER/);
+});
+
+test('a line shows its day group, with the date that stays in the browser', () => {
+  const text = fn(traffic, 'lineText');
+  assert.match(text, /scoutDayGroup/);
+  assert.match(text, /line\.dayGroup/);
+});
+
+test('the five parts of the day reach the script', () => {
+  const controller = read('src/Controller/MapController.php');
+  for (const n of [0, 1, 2, 3, 4]) assert.match(controller, new RegExp(`'scoutBand${n}' => 'd_scout_band_${n}'`));
+  assert.match(controller, /'scoutDayGroup' => 'd_scout_day_group'/);
 });

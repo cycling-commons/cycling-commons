@@ -25,21 +25,19 @@ final class TrafficViewTest extends WebTestCase
         $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
 
         return $over + [
-            'way' => 4521877, 'dir' => 'f', 'label' => 'r', 'slot' => 73, 'dayType' => 'workday',
-            'season' => 'autumn', 'quarter' => $now->format('Y').'-Q'.(intdiv((int) $now->format('n') - 1, 3) + 1),
-            'day' => intdiv($now->getTimestamp(), 86400), 'distanceM' => 1000, 'timeS' => 150, 'passes' => 4,
+            'way' => 4521877, 'dir' => 'f', 'label' => 'r', 'band' => 3, 'dayType' => 'workday',
+            'quarter' => $now->format('Y').'-Q'.(intdiv((int) $now->format('n') - 1, 3) + 1), 'region' => null,
+            'dayGroup' => 0, 'distanceM' => 1000, 'timeS' => 150, 'passes' => 4, 'nearby' => 0,
             'avgSpeedKmh' => 24.0, 'carSpeedBins' => null,
         ];
     }
 
-    /** Five riders, five days, 1 km each on one road. */
+    /** Five lines on five day groups, 1 km each on one road, as they leave the waiting room. */
     private function fiveRiders(): void
     {
         $store = static::getContainer()->get(TrafficStore::class);
-        for ($r = 1; $r <= 5; ++$r) {
-            $line = self::line(['day' => self::line()['day'] - $r]);
-            $store->addToCell($line);
-            $store->addToRider(1000 + $r, $line);
+        for ($g = 0; $g < 5; ++$g) {
+            $store->addToTotal(self::line(['dayGroup' => $g]));
         }
         static::getContainer()->get(TrafficView::class)->invalidate();
     }
@@ -71,7 +69,7 @@ final class TrafficViewTest extends WebTestCase
         self::assertCount(1, $shown);
         self::assertSame(4521877, $shown[0]['way']);
         self::assertSame('workday', $shown[0]['group'], 'the default scheme splits workday and weekend');
-        self::assertSame(4.0, $shown[0]['carsPerKm']);
+        self::assertSame('busy', $shown[0]['traffic']);
     }
 
     public function testANewUploadDoesNotChangeTheViewUntilTheNextRecompute(): void
@@ -80,25 +78,20 @@ final class TrafficViewTest extends WebTestCase
         $this->fiveRiders();
         $before = static::getContainer()->get(TrafficView::class)->shown();
 
-        $line = self::line(['day' => self::line()['day'] - 9, 'passes' => 40]);
-        static::getContainer()->get(TrafficStore::class)->addToCell($line);
-        static::getContainer()->get(TrafficStore::class)->addToRider(1009, $line);
+        static::getContainer()->get(TrafficStore::class)->addToTotal(self::line(['dayGroup' => 9, 'passes' => 40]));
 
         self::assertSame($before, static::getContainer()->get(TrafficView::class)->shown(),
             'no upload may be read off as the difference between two views');
     }
 
-    public function testCarsPerKmIsShownToOneDecimal(): void
+    public function testARoadIsShownAsABandNeverANumber(): void
     {
         self::bootKernel();
         $this->fiveRiders();
-        $line = self::line(['day' => self::line()['day'] - 7, 'distanceM' => 3000, 'passes' => 1]);
-        static::getContainer()->get(TrafficStore::class)->addToCell($line);
-        static::getContainer()->get(TrafficStore::class)->addToRider(1007, $line);
-        static::getContainer()->get(TrafficView::class)->invalidate();
 
-        $value = static::getContainer()->get(TrafficView::class)->shown()[0]['carsPerKm'];
-        self::assertSame(round($value, 1), $value);
+        $shown = static::getContainer()->get(TrafficView::class)->shown()[0];
+        self::assertSame('busy', $shown['traffic'], '4 cars per km');
+        self::assertArrayNotHasKey('carsPerKm', $shown);
     }
 
     public function testTheSchemeIsTheAdminSetting(): void
@@ -148,12 +141,31 @@ final class TrafficViewTest extends WebTestCase
     public function testTheCuratorMapCarriesTheLayerAndTheRoadPieces(): void
     {
         $client = static::createClient();
+        $settings = static::getContainer()->get(SystemSettingsWriter::class);
+        $settings->set(SettingsRegistry::TRAFFIC_MAP_LAYER_LIVE, 1, null);
+        try {
+            $this->user($client, ['ROLE_CURATOR'], true);
+            $client->request('GET', '/map');
+
+            $html = (string) $client->getResponse()->getContent();
+            self::assertStringContainsString('id="ovTraffic"', $html);
+            self::assertStringContainsString('"roadpieces":', $html);
+        } finally {
+            $settings->set(SettingsRegistry::TRAFFIC_MAP_LAYER_LIVE, 0, null);
+        }
+    }
+
+    /** Not in use yet (owner 2026-10-08): off by default, a curator's map shows no traffic layer. */
+    public function testWhileTheSettingIsOffACuratorSeesNoLayer(): void
+    {
+        $client = static::createClient();
         $this->user($client, ['ROLE_CURATOR'], true);
         $client->request('GET', '/map');
 
         $html = (string) $client->getResponse()->getContent();
-        self::assertStringContainsString('id="ovTraffic"', $html);
-        self::assertStringContainsString('"roadpieces":', $html);
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('id="ovTraffic"', $html);
+        self::assertStringNotContainsString('id="trafficCtl"', $html);
     }
 
     public function testARiderMapHasNeither(): void

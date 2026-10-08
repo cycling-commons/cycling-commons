@@ -10,28 +10,7 @@
 {% extends 'base.html.twig' %}
 {% block head_styles %}
 {% include 'account/_shell_styles.html.twig' %}
-<style>
-  .tcmp{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
-  .tcmp th,.tcmp td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid rgba(20,22,14,.12)}
-  .tcmp th{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
-  .tcmp-wrap{overflow-x:auto;margin-top:1rem}
-  .tprog{margin:0 0 2rem}
-  .tprog h2{font-size:1.15rem;margin:0 0 .35rem}
-  .tprog .note{margin:0 0 .8rem;font-size:.9rem;color:rgb(20 22 14 / .72)}
-  .tprog .tcmp td.n{text-align:right}
-  .tprog .tcmp td.zero{color:rgb(20 22 14 / .45)}
-  .tprog-country{border:1px solid rgba(20,22,14,.14);border-radius:8px;margin:0 0 .6rem;background:rgb(255 255 255 / .35)}
-  .tprog-country summary{display:flex;align-items:center;gap:.7rem;padding:.65rem .9rem;cursor:pointer;font-weight:700}
-  .tprog-country summary::-webkit-details-marker{display:none}
-  .tprog-country summary::before{content:'';width:.5rem;height:.5rem;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;flex:none}
-  .tprog-country[open] summary::before{transform:rotate(45deg)}
-  .tprog-country summary:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
-  .tprog-country .flag{border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08);flex:none}
-  .tprog-country .name{flex:1;min-width:0}
-  .tprog-country .tot{font-variant-numeric:tabular-nums;white-space:nowrap}
-  .tprog-country .tot small{font-weight:400;color:rgb(20 22 14 / .6)}
-  .tprog-country .tcmp-wrap{margin:0;padding:0 .9rem .7rem}
-</style>
+<link rel="stylesheet" href="{{ asset('styles/page/moderate/traffic.css') }}">
 {% endblock %}
 {% block chrome %}{% include 'account/_shell_chrome.html.twig' with {active: 'moderate_traffic'} %}{% endblock %}
 
@@ -112,7 +91,7 @@
               <td>{{ declared_key ? declared_key|trans : r.declared }}</td>
               {% for g in groups %}
                 {% set m = r.measured[g] ?? null %}
-                <td data-group="{{ g }}">{{ m is null ? '' : (m.nearby ? 'moderate.traffic.per_km_nearby' : 'moderate.traffic.per_km')|trans({'%n%': m.n|number_format(1)}) }}</td>
+                <td data-group="{{ g }}">{{ m is null ? '' : (m.nearby ? 'moderate.traffic.level_nearby' : 'moderate.traffic.level')|trans({'%band%': ('moderate.traffic.band_' ~ m.band)|trans}) }}</td>
               {% endfor %}
             </tr>
           {% endfor %}

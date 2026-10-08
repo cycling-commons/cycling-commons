@@ -4,50 +4,43 @@
 
 **Status:** canonical reference · **Audience:** contributors to Cycling Commons
 
-> **Implemented** (2026-07-29). Every file path below is the real location in
-> the tree, and the admin page described in §4 is live at
-> `/admin/system-config`.
+> Every file path below is the real location in the tree, and the admin page
+> described in §4 is live at `/admin/system-config`.
 
 The site runs on a handful of editorial numbers: how much curated content a
 region needs before it may open in **Best of** (the rider-facing name for the
 mode whose identifier is `curated`, see map-and-search.md), how many routes a region may
 have live at once, how many riders must confirm a route before it verifies
-itself, how long decided moderation rows are kept. This document is the
+itself, how long a rejected photo's files are kept. This document is the
 contract for where those numbers live, who may change them, and what happens
 when they do.
 
-The numbers themselves — what each one *means* — are owned by the spec of the
+The numbers themselves, what each one *means*, are owned by the spec of the
 feature it belongs to:
 [map-and-search.md](map-and-search.md) §4.2 for the Curated readiness gate,
 [route-domain.md](route-domain.md) for the
 route cap and the ride threshold,
-[moderation-and-contribution.md](moderation-and-contribution.md) for retention.
+[photo-uploads.md](photo-uploads.md) for retention and the urgent-report breaker,
+[traffic-measurements.md](traffic-measurements.md) §4.5 for the traffic grouping.
 This document owns the *mechanism*.
 
 ---
 
 ## 1. The problem this solves
 
-Every threshold used to be a container parameter bound as a constructor scalar:
-
-```yaml
-App\Catalog\CuratedReadiness:
-    arguments:
-        $threshold: '%map.curated_default_threshold%'
-```
-
-That is the right shape for a number nobody changes. It is the wrong shape for
-an editorial dial: moving 25 to 20 meant editing YAML, running a deploy and
-rebuilding the container, which in practice means the number never moves and
-the gate stops matching the site it guards.
+A container parameter bound as a constructor scalar is the right shape for a
+number nobody changes. It is the wrong shape for an editorial dial: moving 25
+to 20 would mean editing YAML, running a deploy and rebuilding the container,
+which in practice means the number never moves and the gate stops matching the
+site it guards.
 
 The owner's ask was direct: *"In the admin we need to have a system config
 where we can set all variables like 25 / 3 / 5 etc."*
 
-**The design constraint that shapes everything below:** the YAML must keep
-owning the defaults. A fresh database — a contributor's stack, a CI run, a new
-environment — has to behave exactly as the bound-scalar code did, with no seed
-step and no fixture.
+**The design constraint that shapes everything below:** the YAML keeps owning
+the defaults. A fresh database (a contributor's stack, a CI run, a new
+environment) behaves exactly as the YAML says, with no seed step and no
+fixture.
 
 ## 2. What is configurable
 
@@ -63,7 +56,7 @@ rather than a second copy drifting in PHP.
 | `map.curated_default_min_blocks` | 3 | 1–6 | map | `CuratedReadiness` |
 | `map.curated_default_min_per_block` | 5 | 1–100 | map | `CuratedReadiness` |
 | `map.confirmation_stale_months` | 6 | 1–60 | map | `ConfirmationFreshness` |
-| `map.item_verify_threshold` | 2 | 1–20 | map | `ItemConfirmationService`. Global on purpose: never scoped per type, country or region (moderation-and-contribution.md §10.1). |
+| `map.item_verify_threshold` | 2 | 1–20 | map | `ItemConfirmationService`, `ItemEvidenceResolver`, `VerifyThresholdExtension`. Global on purpose: never scoped per type, country or region (moderation-and-contribution.md §10.1). |
 | `route.region_active_cap` | 30 | 1–1000 | routes | `RouteModerationService`, `RouteQueue` |
 | `route.ride_verify_threshold` | 3 | 1–100 | routes | `RouteCommunityService` |
 | `moderation.retention_months` | 3 | 1–120 | moderation | `MediaDisposalService::collectRejected()`: how long a rejected photo's files are kept. Nothing else reads it: contributions and their threads stay while the account does, and Trash purges after a fixed 30 days (moderation-and-contribution.md §6, §8). The key keeps its name because a stored override may exist. |
@@ -72,6 +65,8 @@ rather than a second copy drifting in PHP.
 | `community.voting_live` | 0 | 0–1 | community | `MapController` (0 hides every vote call to action), `BallotService` (0 refuses every cast and remove, route-domain.md §8d), `PageController::bestOf` (0 shows the simulated `/best`, route-domain.md §8b) |
 | `app.alert_emails` | `SECURITY_ALERT_EMAIL` env | text, at most 500 characters: one or more comma-separated addresses | alerts | `AlertRecipients`; `SupportRecipients` as the fallback |
 | `app.support_emails` | `CC_SUPPORT_EMAILS` env (blank when unset) | text, at most 500 characters: comma-separated addresses, or empty | alerts | `SupportRecipients` |
+| `traffic.grouping` | `daytype` | text, one of `TrafficDisclosure::SCHEMES` (`all`, `daytype`, `daytype_band`) | moderation | `TrafficView::scheme()` (traffic-measurements.md §4.5) |
+| `traffic.map_layer_live` | 0 | 0–1 | moderation | `MapController` and `map/index.html.twig`: 0 leaves the curators' measured-traffic layer and its controls out of the page while the layer is not in use (traffic-measurements.md §4.6) |
 
 The defaults column is the YAML value, not a duplicate: the registry reads each
 one out of the parameter bag at construction, and a missing or non-numeric
@@ -80,21 +75,17 @@ admin who opens the page. `min_blocks`'s ceiling is
 `count(CuratedReadiness::BLOCKS)`, so the gate can never demand a seventh block.
 
 **Ranges are guardrails against a fat finger, not editorial opinion.** They
-bound what cannot be *meant* — a zero cap freezes every region's queue, a zero
+bound what cannot be *meant* (a zero cap freezes every region's queue, a zero
 retention deletes a rejected photo's files the moment it is rejected, a zero ride
-threshold verifies on nothing — and leave the judgement inside those bounds to
+threshold verifies on nothing) and leave the judgement inside those bounds to
 the admin.
 
-**Two types, and no more without meaning it.** Settings were integer-only while
-every one of them was a count or a threshold, and this document said the first
-non-integer one would need a type discriminator in the registry, a wider column
-in `system_setting` and a matching input in the template — deliberately a
-schema change rather than something sneaking in behind a generic `mixed`.
-
-That happened on 2026-08-02 for **`app.alert_emails`**, the addresses
-operational alerts go to ([photo-uploads.md §6c, §6d](photo-uploads.md)), which
-have to be editable when the usual reader is away — an escalation cannot wait
-for somebody to come back from holiday. So all three pieces were done:
+**Two types, and no more without meaning it.** Most settings are counts or
+thresholds. The text settings exist because some values are not numbers: the
+alert addresses ([photo-uploads.md §6c, §6d](photo-uploads.md)) have to be
+editable when the usual reader is away, since an escalation cannot wait for
+somebody to come back from holiday. A type is deliberately a schema decision
+rather than something sneaking in behind a generic `mixed`:
 `SettingDefinition` carries a `type` with per-type validation (`min`/`max` for
 integers, `maxLength` plus a closure validator for text), `setting_value` is
 `TEXT` and each definition reads its own value back out of it
@@ -120,8 +111,8 @@ number nobody typed. The one exception is `app.support_emails`, defined with
 `allowsEmpty: true`: empty means "use the alert list" (`SupportRecipients`
 falls back to `app.alert_emails`), so an unset value cannot leave the contact
 form announcing to nobody ([contact-and-support.md §7](contact-and-support.md)). The per-key **Reset** buttons carry `formnovalidate` so a
-row can always be put back to its default even while a sibling field is empty
-— the server's reset branch runs before validation, and without the attribute
+row can always be put back to its default even while a sibling field is empty:
+the server's reset branch runs before validation, and without the attribute
 the browser's own `required` check would refuse to submit at all.
 
 ### 2.1 What is deliberately NOT configurable
@@ -162,8 +153,8 @@ consumer → SettingsProviderInterface::get(key) → SystemSettings
   silently move a number somebody deliberately chose. "Reset" (§4) is how a key
   goes back to following the default.
 - **The definition, not the row, is the authority.** A stored value that no
-  longer fits the definition's range — because a later release tightened the
-  bound — is ignored in favour of the default, so a legal-at-the-time number
+  longer fits the definition's range (because a later release tightened the
+  bound) is ignored in favour of the default, so a legal-at-the-time number
   can never outlive the rule that made it legal. A row for a key the registry
   no longer defines is inert rather than fatal.
 - **Before the migration has run** (a fresh checkout warming caches, or
@@ -174,7 +165,7 @@ consumer → SettingsProviderInterface::get(key) → SystemSettings
 ### 3.1 Caching
 
 `CuratedReadiness` reads three settings on every curator-desk render, so the
-whole override map lives in **one** cache item with an in-request memo — never
+whole override map lives in **one** cache item with an in-request memo, never
 a row read per key, never two pool hits in one render.
 `SystemSettingsWriter` is the only writer and invalidates on every write, so
 there is no other staleness path.
@@ -193,7 +184,7 @@ gone, and the next test would read a number that exists nowhere.
 
 **Deliberately a plain form, not an EasyAdmin CRUD over a settings entity.**
 These are typed, grouped, range-checked fields with help text explaining what
-moving each one does to the site — not rows somebody browses, sorts and
+moving each one does to the site, not rows somebody browses, sorts and
 deletes. The precedent it follows is the email-change playbook
 ([account-and-auth.md §8](account-and-auth.md)), not a CRUD controller.
 
@@ -206,23 +197,23 @@ The page contract:
   is a legal-looking number for none of these keys. One bad field rejects the
   whole submission and the page re-renders with what the admin typed still in
   it, so nobody ends up with half of what they entered applied.
-- **Reset per row**, its own submit button, handled *before* validation — a key
+- **Reset per row**, its own submit button, handled *before* validation: a key
   can always go back to its default even when a sibling field is currently
   holding a number the page would refuse. The button is disabled when there is
   nothing stored to reset.
 - **Only genuine changes are written.** Re-saving an untouched form neither
   pins the defaults into the table nor fills the audit log with `25 -> 25`.
 - **One `AdminActionLog` row per change**, via
-  `App\Service\AdminActionLogger` — action `system_setting.change` or
+  `App\Service\AdminActionLogger`: action `system_setting.change` or
   `system_setting.reset`, note `key: old -> new`. Both fit the 40-character
   action column.
 - **POST/redirect/GET on both branches**, so a refresh never re-submits.
-- **Stateless same-origin CSRF**: the token is minted into the template and
-  read back out of the rendered page (`getToken()` outside a request has no
-  session to live in).
+- **CSRF**: a token for the id `ea-system-config`
+  (`DashboardController::SETTINGS_CSRF_TOKEN_ID`) is minted into the form and
+  checked on both branches before anything is written.
 
 Validation lives in `SystemSettingsWriter`, not in the controller, so no future
-caller — a console command, a fixture, a second admin surface — can write a
+caller (a console command, a fixture, a second admin surface) can write a
 value the admin page would refuse.
 
 ## 5. Adding a setting
@@ -236,7 +227,7 @@ value the admin page would refuse.
    `type: SettingDefinition::TYPE_STRING`, a `maxLength`, a `validator`
    closure, and `allowsEmpty: true` only when empty has a meaning of its own.
 3. Add `admin.settings.field.<key_with_underscores>.label` and `.help` to **every**
-   catalog (en/fr/nl/de/es) — a pre-commit hook enforces parity. Write the
+   catalog (en/fr/nl/de/es); a pre-commit hook enforces parity. Write the
    help as *what moving this does to the site*, not as a restatement of the
    label.
 4. Change the consumer to take `SettingsProviderInterface` and read through it.
@@ -253,11 +244,10 @@ until somebody changes it.
 - **Migration:** `Version20260729120000` creates `system_setting`
   (`setting_key` PK, `setting_value`, `updated_at`, `updated_by_id` → users
   `ON DELETE SET NULL`). Additive and empty; no backfill, no downtime.
-  `setting_value` was created `INT` and widened to `TEXT` by
-  `Version20260802220000` for the text settings (§2). It rides
-  the normal `doctrine:migrations:migrate` chain — but until it has run, the
-  admin page cannot save (§3 makes the *read* path degrade to defaults, not the
-  write path).
+  `Version20260802220000` makes `setting_value` `TEXT` for the text settings
+  (§2). Both ride the normal `doctrine:migrations:migrate` chain; until they
+  have run, the admin page cannot save (§3 makes the *read* path degrade to
+  defaults, not the write path).
 - **Changes are visible in the admin activity log**, which is where to look
   when a threshold's behaviour changed and nobody deployed.
 - **Rolling back a bad number** is a Reset in the admin, not a release.

@@ -6,16 +6,28 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseFit } from '../../assets/lib/scout-fit.js';
-import { timeKey, buildLines, blockCode, localOffsetSeconds, zoneOffsetSeconds, recordsFromFit } from '../../assets/lib/traffic-summary.js';
+import { timeKey, buildLines, blockCode, localOffsetSeconds, zoneOffsetSeconds, recordsFromFit, dayGroupOf, trimEnds } from '../../assets/lib/traffic-summary.js';
 
 const NONE = new Set();
 // Monday 5 October 2026 17:59:30 UTC.
 const MON = Date.UTC(2026, 9, 5, 17, 59, 30) / 1000;
 
-test('the slot is the local quarter hour', () => {
-  assert.equal(timeKey(MON, 0, 52, NONE).slot, 71);          // 17:45-18:00
-  assert.equal(timeKey(MON + 60, 0, 52, NONE).slot, 72);     // 18:00-18:15
-  assert.equal(timeKey(MON, 7200, 52, NONE).slot, 79);       // 19:59:30 local
+test('the band is the part of the local day: night, morning rush, day, evening rush, evening', () => {
+  const at = (h, m = 0) => Date.UTC(2026, 9, 5, h, m) / 1000;
+  assert.equal(timeKey(at(5, 59), 0, 52, NONE).band, 0);
+  assert.equal(timeKey(at(6), 0, 52, NONE).band, 1);
+  assert.equal(timeKey(at(9), 0, 52, NONE).band, 2);
+  assert.equal(timeKey(at(16), 0, 52, NONE).band, 3);
+  assert.equal(timeKey(MON, 0, 52, NONE).band, 3);           // 17:59:30
+  assert.equal(timeKey(at(19), 0, 52, NONE).band, 4);
+  assert.equal(timeKey(MON, 7200, 52, NONE).band, 4);        // 19:59:30 local
+  assert.equal(timeKey(at(23, 59), 0, 52, NONE).band, 4);
+});
+
+test('no quarter hour and no season is kept', () => {
+  const k = timeKey(MON, 0, 52, NONE);
+  assert.equal(k.slot, undefined);
+  assert.equal(k.season, undefined);
 });
 
 test('Saturday, Sunday and a public holiday are weekend', () => {
@@ -28,16 +40,8 @@ test('the local date decides the day near midnight', () => {
   // 22:30 UTC on Friday is 00:30 Saturday at +2.
   const k = timeKey(Date.UTC(2026, 9, 9, 22, 30) / 1000, 7200, 52, NONE);
   assert.equal(k.dayType, 'weekend');
-  assert.equal(k.slot, 2);
+  assert.equal(k.band, 0);
   assert.equal(k.day, Math.floor((Date.UTC(2026, 9, 9, 22, 30) / 1000 + 7200) / 86400));
-});
-
-test('seasons are meteorological and flip south of the equator', () => {
-  const jan = Date.UTC(2026, 0, 15, 12) / 1000;
-  assert.equal(timeKey(jan, 0, 52, NONE).season, 'winter');
-  assert.equal(timeKey(jan, 0, -33, NONE).season, 'summer');
-  assert.equal(timeKey(Date.UTC(2026, 3, 15) / 1000, 0, 52, NONE).season, 'spring');
-  assert.equal(timeKey(Date.UTC(2026, 3, 15) / 1000, 0, -33, NONE).season, 'autumn');
 });
 
 test('the quarter is the local quarter of the year', () => {
@@ -71,10 +75,16 @@ function ride({ start = MON, seconds = 120, radarOff = () => false } = {}) {
   return { records, matches };
 }
 
-test('a ride across a quarter hour becomes two lines', async () => {
+test('a ride across a quarter hour stays one line inside its band', async () => {
   const { records, matches } = ride();
   const lines = await buildLines({ records, matches, passes: [], offsetS: 0, holidays: {} });
-  assert.deepEqual(lines.map(l => l.slot).sort(), [71, 72]);
+  assert.deepEqual(lines.map(l => l.band), [3]);
+});
+
+test('a ride across a band boundary becomes two lines', async () => {
+  const { records, matches } = ride({ start: Date.UTC(2026, 9, 5, 18, 59, 30) / 1000 });
+  const lines = await buildLines({ records, matches, passes: [], offsetS: 0, holidays: {} });
+  assert.deepEqual(lines.map(l => l.band).sort(), [3, 4]);
   const total = lines.reduce((m, l) => m + l.distanceM, 0);
   assert.ok(Math.abs(total - 119 * 5) < 2, `distance ${total}`);
   for (const l of lines) {
@@ -82,7 +92,6 @@ test('a ride across a quarter hour becomes two lines', async () => {
     assert.equal(l.dir, 'f');
     assert.equal(l.label, 'r');
     assert.equal(l.dayType, 'workday');
-    assert.equal(l.season, 'autumn');
     assert.equal(l.quarter, '2026-Q4');
     assert.ok(Math.abs(l.avgSpeedKmh - 18) < 0.5);
   }
@@ -117,7 +126,7 @@ test('a line without any measured car speed sends no bins', async () => {
   assert.equal(line.carSpeedBins, null);
 });
 
-test('a fifteen-minute line carries the codes of its three five-minute blocks', async () => {
+test('a line carries the code of every five-minute block it covers', async () => {
   const { records, matches } = ride({ start: Date.UTC(2026, 9, 5, 9) / 1000, seconds: 900 });
   const [line] = await buildLines({ records, matches, passes: [], offsetS: 0, holidays: {} });
   assert.equal(line.blocks.length, 3);
@@ -149,7 +158,7 @@ test('unmatched records send nothing, and a line never carries a position or a t
   matches.forEach((m, i) => { if (i < 10) Object.assign(m, { way: null, label: null, dir: null }); });
   const lines = await buildLines({ records, matches, passes: [], offsetS: 0, holidays: {} });
   assert.equal(lines.length, 1);
-  assert.deepEqual(Object.keys(lines[0]).sort(), ['avgSpeedKmh', 'blocks', 'carSpeedBins', 'day', 'dayType', 'dir', 'distanceM', 'label', 'nearby', 'passes', 'quarter', 'region', 'season', 'slot', 'timeS', 'way']);
+  assert.deepEqual(Object.keys(lines[0]).sort(), ['avgSpeedKmh', 'band', 'blocks', 'carSpeedBins', 'day', 'dayGroup', 'dayType', 'dir', 'distanceM', 'label', 'nearby', 'passes', 'quarter', 'region', 'timeS', 'way']);
 });
 
 test('the holiday list of the ride country is used', async () => {
@@ -189,4 +198,43 @@ test('zones inside a country follow the place', () => {
   assert.equal(zoneOffsetSeconds(jan, 'au', 130.8, -12.4), 9.5 * 3600, 'Darwin');
   assert.equal(zoneOffsetSeconds(MON, 'es', -15.4, 28.1), 3600, 'the Canaries run an hour behind Madrid');
   assert.equal(zoneOffsetSeconds(MON, 'es', -3.7, 40.4), 7200);
+});
+
+test('the day group is the day\'s place in its quarter, modulo 16', () => {
+  const day = (y, m, d) => Date.UTC(y, m - 1, d) / 86400000;
+  assert.equal(dayGroupOf(day(2026, 7, 1)), 0, 'the first day of Q3');
+  assert.equal(dayGroupOf(day(2026, 9, 12)), 9, '12 September is day 73 of Q3: 73 = 4 x 16 + 9');
+  assert.equal(dayGroupOf(day(2026, 7, 17)), 0, 'day 16 starts the groups again');
+  assert.equal(dayGroupOf(day(2026, 10, 1)), 0, 'a new quarter starts at 0');
+  const sizes = new Array(16).fill(0);
+  for (let d = day(2026, 7, 1); d <= day(2026, 9, 30); d++) sizes[dayGroupOf(d)]++;
+  assert.ok(sizes.every(n => n === 5 || n === 6), 'each group holds 5 or 6 dates: ' + sizes.join(','));
+});
+
+test('a line carries its day group, and keeps its day only for the rider\'s own view', async () => {
+  const { records, matches } = ride({ start: Date.UTC(2026, 8, 12, 9) / 1000, seconds: 30 });
+  const [line] = await buildLines({ records, matches, passes: [], offsetS: 0, holidays: {} });
+  assert.equal(line.dayGroup, 9);
+  assert.equal(line.day, Date.UTC(2026, 8, 12) / 86400000);
+});
+
+test('the first and last 500 m of a ride are cut, wherever the ride starts', () => {
+  // 1 km due north at 5 m per second: the first and last 100 records are within 500 m.
+  const records = Array.from({ length: 201 }, (_, s) => ({ t: s, lat: 52 + s * 5 / 111_320, lon: 5 }));
+  const keep = trimEnds(records, 500);
+  assert.equal(keep.length, 201);
+  assert.equal(keep.filter(Boolean).length, 1, 'a 1 km ride keeps only its middle');
+  const long = Array.from({ length: 1001 }, (_, s) => ({ t: s, lat: 52 + s * 5 / 111_320, lon: 5 }));
+  const k = trimEnds(long, 500);
+  assert.equal(k[99], false);
+  assert.equal(k[101], true);
+  assert.equal(k[899], true);
+  assert.equal(k[901], false);
+});
+
+test('records without a fix take the cut of the fixes around them', () => {
+  const records = Array.from({ length: 401 }, (_, s) => ({ t: s, lat: s % 2 ? null : 52 + s * 5 / 111_320, lon: s % 2 ? null : 5 }));
+  const keep = trimEnds(records, 500);
+  assert.equal(keep[51], false, 'a fixless record near the start is cut too');
+  assert.equal(keep[201], true);
 });

@@ -11,114 +11,95 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * The rules before anything is shown (docs/specs/traffic-measurements.md §4.4):
- * several riders, several days, no dominant rider, enough distance. Below them,
- * nothing at all comes out, not even an empty entry.
+ * enough lines, on enough day groups, over enough distance. What comes out is a
+ * band (quiet, moderate, busy), never a number; below the rules nothing at all
+ * comes out, not even an empty entry.
  */
 final class TrafficDisclosureTest extends TestCase
 {
-    private static function cell(array $over = []): array
+    /** A totals row of 5 lines, 1 km each, 8 cars each, on day groups 0, 1 and 2. */
+    private static function row(array $over = []): array
     {
         return $over + [
-            'way' => 7, 'dir' => 'f', 'label' => 'r', 'slot' => 73, 'dayType' => 'workday', 'season' => 'autumn',
-            'quarter' => '2026-Q4', 'distanceM' => 0, 'timeS' => 0, 'passes' => 0, 'speedSum' => 0.0,
-            'speedPasses' => 0, 'bins' => array_fill(0, 16, 0), 'contributions' => 0,
+            'way' => 7, 'dir' => 'f', 'label' => 'r', 'band' => 3, 'dayType' => 'workday', 'quarter' => '2026-Q4', 'region' => null,
+            'distanceM' => 5000, 'timeS' => 900, 'passes' => 40, 'nearby' => 0, 'speedSum' => 0.0, 'speedPasses' => 0,
+            'bins' => array_fill(0, 16, 0), 'lines' => 5, 'days' => 0b111,
         ];
     }
 
-    private static function bucket(array $cell): string
+    private static function evaluate(array $rows, string $scheme = 'daytype'): array
     {
-        return implode('|', [$cell['way'], $cell['dir'], $cell['label'], $cell['slot'], $cell['dayType'], $cell['season'], $cell['quarter']]);
+        return new TrafficDisclosure()->evaluate($rows, $scheme, '2024-Q1');
     }
 
-    /**
-     * A cell and its riders: each rider rode `$metres` on its own day unless days are given.
-     *
-     * @param list<int>       $metres per rider
-     * @param list<list<int>> $days   per rider
-     */
-    private static function scene(array $metres, array $days = [], array $cellOver = [], int $passes = 40): array
+    public function testFiveLinesOnThreeDayGroupsWithEnoughDistanceAreShownAsABand(): void
     {
-        $cell = self::cell($cellOver + ['distanceM' => array_sum($metres), 'passes' => $passes, 'contributions' => \count($metres)]);
-        $riders = [];
-        foreach ($metres as $i => $m) {
-            $riders[] = ['way' => $cell['way'], 'buckets' => [self::bucket($cell) => ['d' => $m, 'days' => $days[$i] ?? [20000 + $i]]]];
-        }
-
-        return [[$cell], $riders];
-    }
-
-    private static function evaluate(array $cells, array $riders, string $scheme = 'daytype'): array
-    {
-        return new TrafficDisclosure()->evaluate($cells, $riders, $scheme, '2024-Q1', self::bucket(...));
-    }
-
-    public function testFiveRidersOnFiveDaysWithEnoughDistanceAreShown(): void
-    {
-        [$cells, $riders] = self::scene([1000, 1000, 1000, 1000, 1000]);
-        $shown = self::evaluate($cells, $riders);
+        $shown = self::evaluate([self::row()]);
 
         self::assertCount(1, $shown);
         self::assertSame(7, $shown[0]['way']);
         self::assertSame('workday', $shown[0]['group']);
-        self::assertSame(8.0, $shown[0]['carsPerKm']);
-        self::assertSame('5-9', $shown[0]['riders']);
+        self::assertSame('busy', $shown[0]['traffic'], '8 cars per km');
         self::assertSame('3-9', $shown[0]['days']);
+        self::assertArrayNotHasKey('carsPerKm', $shown[0], 'never a number');
+        self::assertArrayNotHasKey('riders', $shown[0]);
     }
 
-    public function testFourRidersShowNothing(): void
+    public function testTheBandsSplitAtOneAndThreeCarsPerKm(): void
     {
-        [$cells, $riders] = self::scene([2000, 2000, 2000, 2000]);
-        self::assertSame([], self::evaluate($cells, $riders));
+        self::assertSame('quiet', self::evaluate([self::row(['passes' => 4])])[0]['traffic'], '0.8 per km');
+        self::assertSame('moderate', self::evaluate([self::row(['passes' => 5])])[0]['traffic'], '1.0 per km');
+        self::assertSame('moderate', self::evaluate([self::row(['passes' => 14])])[0]['traffic'], '2.8 per km');
+        self::assertSame('busy', self::evaluate([self::row(['passes' => 15])])[0]['traffic'], '3.0 per km');
     }
 
-    public function testFiveRidersOnTwoDaysShowNothing(): void
+    public function testFourLinesShowNothing(): void
     {
-        [$cells, $riders] = self::scene([1000, 1000, 1000, 1000, 1000], [[1], [1], [1], [2], [2]]);
-        self::assertSame([], self::evaluate($cells, $riders), 'one group ride is one moment of traffic');
+        self::assertSame([], self::evaluate([self::row(['lines' => 4, 'distanceM' => 4000])]));
     }
 
-    public function testOneRiderWithMostOfTheDistanceShowsNothing(): void
+    public function testTwoDayGroupsShowNothing(): void
     {
-        // Four riders once, one rider every weekend: the regular would be visible.
-        [$cells, $riders] = self::scene([500, 500, 500, 500, 2500]);
-        self::assertSame([], self::evaluate($cells, $riders));
+        self::assertSame([], self::evaluate([self::row(['days' => 0b11])]), 'one group ride is one moment of traffic');
     }
 
     public function testTooLittleDistanceShowsNothing(): void
     {
-        [$cells, $riders] = self::scene([380, 380, 380, 380, 380]);
-        self::assertSame([], self::evaluate($cells, $riders));
+        self::assertSame([], self::evaluate([self::row(['distanceM' => 1900])]));
+    }
+
+    public function testDayGroupsAreCountedPerQuarterAndAddedUp(): void
+    {
+        $q3 = self::row(['quarter' => '2026-Q3', 'days' => 0b11, 'lines' => 3, 'distanceM' => 3000]);
+        $q4 = self::row(['quarter' => '2026-Q4', 'days' => 0b11, 'lines' => 2, 'distanceM' => 2000]);
+        self::assertCount(1, self::evaluate([$q3, $q4]), 'two groups in each of two quarters are four days');
+
+        $morning = self::row(['band' => 1, 'days' => 0b11, 'lines' => 3, 'distanceM' => 3000]);
+        $evening = self::row(['band' => 3, 'days' => 0b11, 'lines' => 2, 'distanceM' => 2000]);
+        self::assertSame([], self::evaluate([$morning, $evening], 'all'), 'the same two groups in one quarter are two days');
     }
 
     public function testWorkdayAndWeekendAreSeparateGroupsThatEachNeedTheRules(): void
     {
-        [$a, $ra] = self::scene([1000, 1000, 1000, 1000, 1000]);
-        [$b, $rb] = self::scene([1000, 1000], [], ['dayType' => 'weekend']);
-        $shown = self::evaluate([...$a, ...$b], [...$ra, ...$rb]);
-
-        self::assertSame(['workday'], array_column($shown, 'group'));
+        $weekend = self::row(['dayType' => 'weekend', 'lines' => 2]);
+        self::assertSame(['workday'], array_column(self::evaluate([self::row(), $weekend]), 'group'));
     }
 
     public function testTheBandSchemeSplitsTheDayAndTheAllSchemeJoinsIt(): void
     {
-        [$a, $ra] = self::scene([1000, 1000, 1000], [], ['slot' => 30]);   // 07:30, morning
-        [$b, $rb] = self::scene([1000, 1000, 1000], [], ['slot' => 70]);   // 17:30, evening
-        // Different riders in each: make the second group's riders distinct.
-        $rb = array_map(static fn ($r, $i) => $r + ['_' => $i], $rb, array_keys($rb));
-        foreach ($rb as $i => $r) {
-            $rb[$i]['buckets'][array_key_first($r['buckets'])]['days'] = [21000 + $i];
-        }
+        $morning = self::row(['band' => 1, 'lines' => 3, 'distanceM' => 3000, 'days' => 0b111]);
+        $evening = self::row(['band' => 3, 'lines' => 3, 'distanceM' => 3000, 'days' => 0b111000]);
 
-        self::assertSame([], self::evaluate([...$a, ...$b], [...$ra, ...$rb], 'daytype_band'), 'three riders per band');
-        $all = self::evaluate([...$a, ...$b], [...$ra, ...$rb], 'all');
+        self::assertSame([], self::evaluate([$morning, $evening], 'daytype_band'), 'three lines per band');
+        $all = self::evaluate([$morning, $evening], 'all');
         self::assertCount(1, $all);
         self::assertSame('all', $all[0]['group']);
+        self::assertSame('workday|morning', TrafficDisclosure::groupsOf('daytype_band')[1]);
     }
 
     public function testDataOlderThanThePeriodIsLeftOut(): void
     {
-        [$cells, $riders] = self::scene([1000, 1000, 1000, 1000, 1000], [], ['quarter' => '2023-Q4']);
-        self::assertSame([], self::evaluate($cells, $riders));
+        self::assertSame([], self::evaluate([self::row(['quarter' => '2023-Q4'])]));
     }
 
     public function testTheCarSpeedBandNeedsFiveMeasuredSpeeds(): void
@@ -126,58 +107,29 @@ final class TrafficDisclosureTest extends TestCase
         $bins = array_fill(0, 16, 0);
         $bins[6] = 3;
         $bins[7] = 1;
-        [$cells, $riders] = self::scene([1000, 1000, 1000, 1000, 1000], [], ['bins' => $bins, 'speedPasses' => 4]);
-        self::assertNull(self::evaluate($cells, $riders)[0]['carSpeedBand']);
+        self::assertNull(self::evaluate([self::row(['bins' => $bins, 'speedPasses' => 4])])[0]['carSpeedBand']);
 
         $bins[7] = 2;
-        [$cells, $riders] = self::scene([1000, 1000, 1000, 1000, 1000], [], ['bins' => $bins, 'speedPasses' => 5]);
-        self::assertSame(60, self::evaluate($cells, $riders)[0]['carSpeedBand'], 'the median falls in 60-69 km/h');
-    }
-
-    public function testCoarseBandsInsteadOfCounts(): void
-    {
-        self::assertSame('5-9', TrafficDisclosure::riderBand(9));
-        self::assertSame('10-19', TrafficDisclosure::riderBand(10));
-        self::assertSame('20+', TrafficDisclosure::riderBand(31));
-        self::assertSame('3-9', TrafficDisclosure::dayBand(9));
-        self::assertSame('10+', TrafficDisclosure::dayBand(10));
+        self::assertSame(60, self::evaluate([self::row(['bins' => $bins, 'speedPasses' => 5])])[0]['carSpeedBand'], 'the median falls in 60-69 km/h');
     }
 
     public function testDirectionsAreSeparateGroups(): void
     {
-        [$a, $ra] = self::scene([1000, 1000, 1000, 1000, 1000]);
-        [$b, $rb] = self::scene([1000, 1000, 1000, 1000, 1000], [], ['dir' => 'b']);
-        $shown = self::evaluate([...$a, ...$b], [...$ra, ...$rb]);
-
+        $shown = self::evaluate([self::row(), self::row(['dir' => 'b'])]);
         self::assertEqualsCanonicalizing(['f', 'b'], array_column($shown, 'dir'));
     }
 
-    public function testDistanceLeftByADeletedAccountStillCountsAsOneContributor(): void
+    public function testACyclePathShowsNoPassingCarsAndTheBandOfItsNearbyOnes(): void
     {
-        // Five small riders remain; a deleted account supplied 9 km of the 10.
-        [$cells, $riders] = self::scene([200, 200, 200, 200, 200]);
-        $cells[0]['distanceM'] = 10000;
+        $shown = self::evaluate([self::row(['label' => 'p', 'passes' => 0, 'nearby' => 40])]);
 
-        self::assertSame([], self::evaluate($cells, $riders), 'one person\'s rides must not show because their account is gone');
+        self::assertSame('quiet', $shown[0]['traffic']);
+        self::assertSame('busy', $shown[0]['nearby']);
     }
 
-    public function testACyclePathShowsNoPassingCarsAndItsNearbyOnes(): void
+    public function testCoarseDayBands(): void
     {
-        // 5 km of cycle path beside a road that 40 cars drove on.
-        [$cells, $riders] = self::scene([1000, 1000, 1000, 1000, 1000], [], ['label' => 'p', 'nearby' => 40], 0);
-        $shown = self::evaluate($cells, $riders);
-
-        self::assertCount(1, $shown);
-        self::assertSame(0.0, $shown[0]['carsPerKm']);
-        self::assertSame(8.0, $shown[0]['nearbyPerKm']);
-    }
-
-    public function testARoadShowsNoNearbyCars(): void
-    {
-        [$cells, $riders] = self::scene([1000, 1000, 1000, 1000, 1000]);
-        $shown = self::evaluate($cells, $riders);
-
-        self::assertSame(8.0, $shown[0]['carsPerKm']);
-        self::assertSame(0.0, $shown[0]['nearbyPerKm'], 'a cell written before nearby existed counts none');
+        self::assertSame('3-9', TrafficDisclosure::dayBand(9));
+        self::assertSame('10+', TrafficDisclosure::dayBand(10));
     }
 }

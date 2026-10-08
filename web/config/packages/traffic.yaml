@@ -4,3 +4,6 @@
 # TRAFFIC_GROUPING); `daytype` shows workday and weekend apart.
 parameters:
     traffic.grouping: daytype
+    # Default of the setting that shows curators the traffic layer on the map
+    # (SettingsRegistry TRAFFIC_MAP_LAYER_LIVE): off while it is not in use.
+    traffic.map_layer_live: 0

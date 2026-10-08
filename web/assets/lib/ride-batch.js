@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-FileCopyrightText: 2026 BikeCoders
 //
 // Several rides at once (docs/specs/traffic-measurements.md §3.2): what a
 // batch of ride summaries adds up to. One total, the period the rides cover

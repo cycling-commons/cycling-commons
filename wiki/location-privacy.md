@@ -110,6 +110,7 @@ with a login. None of that is used by, or shared with, the location feature desc
 
 ## For the curious
 
-The full engineering design, including the exact rules that keep this feature banner-free, lives in
-the project's internal design notes. This page is the
-plain-language notice that stands in for a consent banner, as that design calls for.
+The engineering rules behind this feature live in the project's specifications:
+`docs/specs/map-and-search.md` §4.5 for the scope model and `docs/specs/privacy-notice.md` §4 for
+what the site stores on your device. This page is the plain-language notice that stands in for a
+consent banner.

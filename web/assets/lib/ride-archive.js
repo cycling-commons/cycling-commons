@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-FileCopyrightText: 2026 BikeCoders
 //
 // The ride files inside a folder entry or an exported archive
 // (docs/specs/traffic-measurements.md §3.2). Bike computer platforms export a

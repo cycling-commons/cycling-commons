@@ -59,16 +59,15 @@ final class ModerateTrafficControllerTest extends WebTestCase
     {
         $store = static::getContainer()->get(TrafficStore::class);
         $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-        for ($r = 1; $r <= $riders; ++$r) {
-            $line = [
-                'way' => $way, 'region' => $this->region, 'dir' => 'f', 'label' => $label, 'slot' => 30, 'dayType' => 'workday', 'season' => 'autumn',
-                'quarter' => $now->format('Y').'-Q'.(intdiv((int) $now->format('n') - 1, 3) + 1),
-                'day' => intdiv($now->getTimestamp(), 86400) - $r, 'distanceM' => 1000, 'timeS' => 150,
+        $quarter = $now->format('Y').'-Q'.(intdiv((int) $now->format('n') - 1, 3) + 1);
+        // Lines as they leave the waiting room: one per day group.
+        for ($r = 0; $r < $riders; ++$r) {
+            $store->addToTotal([
+                'way' => $way, 'region' => $this->region, 'dir' => 'f', 'label' => $label, 'band' => 1, 'dayType' => 'workday',
+                'quarter' => $quarter, 'dayGroup' => $r % 16, 'distanceM' => 1000, 'timeS' => 150,
                 'passes' => 'p' === $label ? 0 : 4, 'nearby' => 'p' === $label ? 4 : 0,
                 'avgSpeedKmh' => 24.0, 'carSpeedBins' => null,
-            ];
-            $store->addToCell($line);
-            $store->addToRider(2000 + $r, $line);
+            ]);
         }
         static::getContainer()->get(TrafficView::class)->invalidate();
     }
@@ -87,7 +86,8 @@ final class ModerateTrafficControllerTest extends WebTestCase
         self::assertCount(1, $row);
         self::assertStringContainsString('Dorpsweg', $row->text());
         self::assertStringContainsString('Busy', $row->text());
-        self::assertStringContainsString('4', $row->filter('[data-group="workday"]')->text());
+        self::assertStringContainsString('busy', $row->filter('[data-group="workday"]')->text(), '4 cars per km, shown as a band');
+        self::assertDoesNotMatchRegularExpression('/\d/', $row->filter('[data-group="workday"]')->text(), 'never a number');
     }
 
     public function testACyclePathShowsItsNearbyCarsMarkedAsNearby(): void
@@ -102,7 +102,7 @@ final class ModerateTrafficControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         $cell = $page->filter('tr[data-way="'.self::WAY.'"] [data-group="workday"]');
-        self::assertStringContainsString('4.0', $cell->text());
+        self::assertStringContainsString('busy', $cell->text());
         self::assertStringContainsString('nearby', $cell->text());
     }
 

@@ -37,7 +37,18 @@ function fitRide({ seconds = 40, radar = true, car = true } = {}) {
   };
 }
 
-const deps = { entries: ENTRIES, fetchTile: async () => TILE, fetchHolidays: async () => new Set() };
+// The fixture ride is 200 m: the tests that read its lines turn the end cut off.
+const deps = { entries: ENTRIES, fetchTile: async () => TILE, fetchHolidays: async () => new Set(), trimM: 0 };
+
+test('by default the first and last 500 m are cut: a 200 m ride sends nothing, and the cut is not unmatched', async () => {
+  const got = await summariseRide(fitRide(), { ...deps, trimM: undefined });
+  assert.equal(got.lines.length, 0);
+  assert.equal(got.unmatchedKm, 0, 'the cut ends are not red on the map');
+  assert.deepEqual(got.unmatchedLines, []);
+  assert.ok(got.trimmedKm > 0.15, `trimmed ${got.trimmedKm}`);
+  assert.equal(got.allCars, 1, 'the radar still counted its car, for the rider');
+  assert.deepEqual(got.passKinds, [null], 'a car on a cut end is neither passing nor nearby');
+});
 
 test('a ride along the cycle path becomes lines on way 200, its car nearby', async () => {
   // No car drives on a cycle path: the radar's car drove on the road beside it.
@@ -48,7 +59,7 @@ test('a ride along the cycle path becomes lines on way 200, its car nearby', asy
   assert.equal(got.nearby, 1);
   assert.equal(got.lines.reduce((n, l) => n + l.passes, 0), 0);
   assert.equal(got.lines.reduce((n, l) => n + l.nearby, 0), 1);
-  assert.equal(got.lines[0].slot, 40, '10:00 local from the activity offset of +2 h');
+  assert.equal(got.lines[0].band, 2, '10:00 local from the activity offset of +2 h is the day band');
   assert.equal(got.lines[0].dayType, 'workday');
   assert.ok(got.matchedKm > 0.15 && got.matchedKm < 0.25, `matched ${got.matchedKm}`);
   assert.equal(got.unmatchedKm, 0);
@@ -95,7 +106,7 @@ test('the matched pieces come back for the map, never for the wire', async () =>
   assert.ok(got.matched.some(p => p.id === 200 && p.label === 'p' && p.coords.length >= 2));
 });
 
-const line = (i, blocks = ['a'.repeat(63) + (i % 16).toString(16)]) => ({ way: i, dir: 'f', label: 'r', slot: 1, dayType: 'workday', season: 'autumn', quarter: '2026-Q4', day: 1, distanceM: 100, timeS: 20, passes: 0, avgSpeedKmh: 18, carSpeedBins: null, blocks });
+const line = (i, blocks = ['a'.repeat(63) + (i % 16).toString(16)]) => ({ way: i, dir: 'f', label: 'r', band: 2, dayType: 'workday', quarter: '2026-Q4', day: 1, distanceM: 100, timeS: 20, passes: 0, avgSpeedKmh: 18, carSpeedBins: null, blocks });
 
 /** A ride of n lines where neighbours share a block, as consecutive lines of a real ride do. */
 function rideLines(n, salt) {
@@ -143,7 +154,7 @@ test('every request carries only v and lines, shuffled inside the request', asyn
   const lines = rideLines(400, 'cc');
   const server = fakeServer();
   await sendChunks(makeChunks(lines), server.post);
-  assert.ok(server.sent.every(b => b.v === 1 && Object.keys(b).length === 2));
+  assert.ok(server.sent.every(b => b.v === 2 && Object.keys(b).length === 2));
   assert.notDeepEqual(server.sent[0].lines.map(l => l.way), lines.map(l => l.way), 'the order says nothing about the ride');
 });
 
@@ -187,4 +198,14 @@ test('each line carries the region its road piece names', async () => {
   const got = await summariseRide(fitRide(), deps);
   assert.ok(got.lines.length >= 1);
   assert.ok(got.lines.every(l => l.region === 9));
+});
+
+test('a sent line carries its day group and never its date; the chunks keep the date for the rider\'s view', async () => {
+  const chunks = makeChunks(rideLines(30, 'e1').map(l => ({ ...l, day: 20708, dayGroup: 9 })));
+  const server = fakeServer();
+  await sendChunks(chunks, server.post);
+  const sent = server.sent.flatMap(b => b.lines);
+  assert.ok(sent.every(l => !('day' in l) && l.dayGroup === 9));
+  assert.ok(chunks.every(c => c.lines.every(l => l.day === 20708)));
+  assert.ok(sent.every(l => !('rider' in l)), 'no rider code of any kind');
 });

@@ -6,22 +6,18 @@ declare(strict_types=1);
 
 namespace App\Traffic;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 
 /**
- * Encrypted traffic storage (docs/specs/traffic-measurements.md §4.3).
+ * The plain traffic totals and the dedupe codes
+ * (docs/specs/traffic-measurements.md §4.3).
  *
- * Three tables, none readable without TRAFFIC_SECRET: totals per time key
- * (no rider), one row per rider per road piece (distance and days per time key,
- * for the disclosure rules), and the dedupe codes. A row holds only its HMAC
- * key and a sealed payload bound to that key; nothing links two rows of one
- * road. Every add rewrites the payload with a fresh nonce.
- *
- * Callers run the adds inside one transaction, in key order. A row is created
- * empty before it is locked, so two requests that both add to a new row queue
- * on the same lock instead of both starting from zero.
+ * A totals row sums the lines of one road, direction, part of the day, day
+ * type and quarter, with the day groups they came from. No rider is in it:
+ * lines reach it only from the waiting room (TrafficPool), a block at a time.
+ * The dedupe codes are HMACs of the browser's block fingerprints, kept for
+ * good so the same ride never counts twice.
  *
  * @api
  */
@@ -32,7 +28,6 @@ final class TrafficStore
     public function __construct(
         private readonly Connection $db,
         private readonly TrafficKeys $keys,
-        private readonly TrafficCipher $cipher,
     ) {
     }
 
@@ -61,142 +56,59 @@ final class TrafficStore
         return $claimed;
     }
 
-    /** @param array<string, mixed> $line a validated line (TrafficLine) */
-    public function addToCell(array $line): void
+    /**
+     * Adds one line to its totals row. The row is created empty first and then
+     * locked, so two writers queue on one lock instead of both starting from
+     * zero. Callers add a block's lines in key order.
+     *
+     * @param array<string, mixed> $line a validated line (TrafficLine)
+     */
+    public function addToTotal(array $line): void
     {
-        $key = $this->keys->bucketKey($line);
-        $cell = $this->lockedPayload('traffic_cell', 'bucket_key', $key) ?? [
-            'way' => $line['way'], 'region' => $line['region'] ?? null, 'dir' => $line['dir'], 'label' => $line['label'], 'slot' => $line['slot'],
-            'dayType' => $line['dayType'], 'season' => $line['season'], 'quarter' => $line['quarter'],
-            'distanceM' => 0, 'timeS' => 0, 'passes' => 0, 'nearby' => 0, 'speedSum' => 0.0, 'speedPasses' => 0,
-            'bins' => array_fill(0, self::SPEED_BINS, 0), 'contributions' => 0,
-        ];
-        // A road's region is the same on every line; a line without one keeps it.
-        $cell['region'] ??= $line['region'] ?? null;
-        $cell['distanceM'] += $line['distanceM'];
-        $cell['timeS'] += $line['timeS'];
-        $cell['passes'] += $line['passes'];
-        $cell['nearby'] = ($cell['nearby'] ?? 0) + ($line['nearby'] ?? 0);
-        $cell['speedSum'] += (float) ($line['avgSpeedKmh'] ?? 0) * $line['timeS'];
+        $key = [$line['way'], $line['dir'], $line['band'], $line['dayType'], $line['quarter']];
+        $this->db->executeStatement('INSERT INTO traffic_total (way, dir, band, day_type, quarter, label) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING',
+            [...$key, $line['label']]);
+        $row = $this->db->fetchAssociative('SELECT region, bins, speed_passes FROM traffic_total WHERE way = ? AND dir = ? AND band = ? AND day_type = ? AND quarter = ? FOR UPDATE', $key);
+        \assert(\is_array($row));
+
+        $bins = json_decode((string) $row['bins'], true);
+        $bins = \is_array($bins) && self::SPEED_BINS === \count($bins) ? array_map(intval(...), $bins) : array_fill(0, self::SPEED_BINS, 0);
+        $speedCars = 0;
         if (\is_array($line['carSpeedBins'] ?? null)) {
             foreach ($line['carSpeedBins'] as $i => $n) {
-                $cell['bins'][$i] += $n;
-            }
-            $cell['speedPasses'] += array_sum($line['carSpeedBins']);
-        }
-        ++$cell['contributions'];
-        $this->write('traffic_cell', 'bucket_key', $key, $cell);
-    }
-
-    /** @param array<string, mixed> $line */
-    public function addToRider(int $userId, array $line): void
-    {
-        $key = $this->keys->riderKey($userId, $line['way']);
-        $rider = $this->lockedPayload('traffic_rider', 'rider_key', $key) ?? ['way' => $line['way'], 'buckets' => []];
-        $bucket = bin2hex($this->keys->bucketKey($line));
-        $entry = $rider['buckets'][$bucket] ?? ['d' => 0, 'days' => []];
-        $entry['d'] += $line['distanceM'];
-        if (!\in_array($line['day'], $entry['days'], true)) {
-            $entry['days'][] = $line['day'];
-            sort($entry['days']);
-        }
-        $rider['buckets'][$bucket] = $entry;
-        $this->write('traffic_rider', 'rider_key', $key, $rider);
-    }
-
-    /**
-     * The key a cell is filed under; callers sort their adds by it.
-     *
-     * @param array<string, mixed> $line
-     */
-    public function cellKey(array $line): string
-    {
-        return $this->keys->bucketKey($line);
-    }
-
-    /** @return iterable<array<string, mixed>> every cell, decrypted */
-    public function cells(): iterable
-    {
-        foreach ($this->db->iterateAssociative("SELECT bucket_key, payload FROM traffic_cell WHERE payload <> ''::bytea") as $row) {
-            yield $this->cipher->open(self::bytes($row['payload']), self::row('traffic_cell', self::bytes($row['bucket_key'])));
-        }
-    }
-
-    /**
-     * Every rider row, decrypted, with its bucket keys as given by bucketHex().
-     *
-     * @return list<array{way: int, buckets: array<string, array{d: int, days: list<int>}>}>
-     */
-    public function riders(): array
-    {
-        $out = [];
-        foreach ($this->db->iterateAssociative("SELECT rider_key, payload FROM traffic_rider WHERE payload <> ''::bytea") as $row) {
-            /** @var array{way: int, buckets: array<string, array{d: int, days: list<int>}>} $rider */
-            $rider = $this->cipher->open(self::bytes($row['payload']), self::row('traffic_rider', self::bytes($row['rider_key'])));
-            $out[] = $rider;
-        }
-
-        return $out;
-    }
-
-    /**
-     * The key a cell is filed under in rider rows.
-     *
-     * @param array<string, mixed> $cell
-     */
-    public function bucketHex(array $cell): string
-    {
-        return bin2hex($this->keys->bucketKey($cell));
-    }
-
-    /**
-     * Delete one rider's rows. The rows are read one at a time: each row's
-     * road comes out of its payload, and the row is the rider's when its key
-     * is the rider's key for that road.
-     */
-    public function deleteRidersOf(int $userId): int
-    {
-        $mine = [];
-        foreach ($this->db->iterateAssociative("SELECT rider_key, payload FROM traffic_rider WHERE payload <> ''::bytea") as $row) {
-            $key = self::bytes($row['rider_key']);
-            $way = (int) ($this->cipher->open(self::bytes($row['payload']), self::row('traffic_rider', $key))['way'] ?? 0);
-            if (hash_equals($this->keys->riderKey($userId, $way), $key)) {
-                $mine[] = $key;
+                $bins[$i] += (int) $n;
+                $speedCars += (int) $n;
             }
         }
-        if ([] === $mine) {
-            return 0;
+
+        $this->db->executeStatement('UPDATE traffic_total SET region = COALESCE(region, ?), distance_m = distance_m + ?, time_s = time_s + ?,
+            passes = passes + ?, nearby = nearby + ?, speed_sum = speed_sum + ?, speed_passes = speed_passes + ?, bins = ?,
+            lines = lines + 1, days = days | ?
+            WHERE way = ? AND dir = ? AND band = ? AND day_type = ? AND quarter = ?', [
+            $line['region'] ?? null, $line['distanceM'], $line['timeS'], $line['passes'], $line['nearby'] ?? 0,
+            (float) ($line['avgSpeedKmh'] ?? 0) * $line['timeS'], $speedCars, json_encode($bins, \JSON_THROW_ON_ERROR),
+            1 << (int) $line['dayGroup'], ...$key,
+        ]);
+    }
+
+    /**
+     * Every totals row.
+     *
+     * @return iterable<array{way: int, dir: string, label: string, band: int, dayType: string, quarter: string, region: int|null, distanceM: int, timeS: int, passes: int, nearby: int, speedSum: float, speedPasses: int, bins: list<int>, lines: int, days: int}>
+     */
+    public function totals(): iterable
+    {
+        foreach ($this->db->iterateAssociative('SELECT * FROM traffic_total ORDER BY way, dir, band, day_type, quarter') as $r) {
+            $bins = json_decode((string) $r['bins'], true);
+            yield [
+                'way' => (int) $r['way'], 'dir' => (string) $r['dir'], 'label' => (string) $r['label'], 'band' => (int) $r['band'],
+                'dayType' => (string) $r['day_type'], 'quarter' => (string) $r['quarter'],
+                'region' => null === $r['region'] ? null : (int) $r['region'],
+                'distanceM' => (int) $r['distance_m'], 'timeS' => (int) $r['time_s'], 'passes' => (int) $r['passes'],
+                'nearby' => (int) $r['nearby'], 'speedSum' => (float) $r['speed_sum'], 'speedPasses' => (int) $r['speed_passes'],
+                'bins' => \is_array($bins) && self::SPEED_BINS === \count($bins) ? array_map(intval(...), array_values($bins)) : array_fill(0, self::SPEED_BINS, 0),
+                'lines' => (int) $r['lines'], 'days' => (int) $r['days'],
+            ];
         }
-
-        return (int) $this->db->executeStatement('DELETE FROM traffic_rider WHERE rider_key IN (?)',
-            [$mine], [ArrayParameterType::BINARY]);
-    }
-
-    /** @return array<string, mixed>|null */
-    private function lockedPayload(string $table, string $column, string $key): ?array
-    {
-        $this->db->executeStatement("INSERT INTO {$table} ({$column}, payload) VALUES (?, ''::bytea) ON CONFLICT DO NOTHING",
-            [$key], [ParameterType::BINARY]);
-        $blob = self::bytes($this->db->fetchOne("SELECT payload FROM {$table} WHERE {$column} = ? FOR UPDATE", [$key], [ParameterType::BINARY]));
-
-        return '' === $blob ? null : $this->cipher->open($blob, self::row($table, $key));
-    }
-
-    /** @param array<string, mixed> $payload */
-    private function write(string $table, string $column, string $key, array $payload): void
-    {
-        $this->db->executeStatement("UPDATE {$table} SET payload = ? WHERE {$column} = ?",
-            [$this->cipher->seal($payload, self::row($table, $key)), $key],
-            [ParameterType::BINARY, ParameterType::BINARY]);
-    }
-
-    private static function row(string $table, string $key): string
-    {
-        return $table.'|'.bin2hex($key);
-    }
-
-    private static function bytes(mixed $value): string
-    {
-        return \is_resource($value) ? (string) stream_get_contents($value) : (string) $value;
     }
 }

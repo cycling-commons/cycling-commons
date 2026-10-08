@@ -53,15 +53,19 @@ final class TrafficControllerTest extends WebTestCase
 
         return $over + TrafficLineTest::line([
             'quarter' => $now->format('Y').'-'.$q,
-            'day' => intdiv($now->getTimestamp(), 86400),
             'blocks' => [bin2hex(random_bytes(32))],
         ]);
+    }
+
+    private function waiting(): int
+    {
+        return (int) static::getContainer()->get(\Doctrine\DBAL\Connection::class)->fetchOne('SELECT COUNT(*) FROM traffic_pool');
     }
 
     public function testASignedOutVisitorCannotSend(): void
     {
         $client = static::createClient();
-        $client->request('POST', '/scout/traffic', [], [], ['CONTENT_TYPE' => 'application/json'], '{"v":1,"lines":[]}');
+        $client->request('POST', '/scout/traffic', [], [], ['CONTENT_TYPE' => 'application/json'], '{"v":2,"lines":[]}');
 
         self::assertContains($client->getResponse()->getStatusCode(), [302, 401]);
     }
@@ -70,7 +74,7 @@ final class TrafficControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $this->rider($client, 'token');
-        $this->post($client, ['v' => 1, 'lines' => [self::line()]], 'not-the-token');
+        $this->post($client, ['v' => 2, 'lines' => [self::line()]], 'not-the-token');
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -79,18 +83,18 @@ final class TrafficControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $this->rider($client, 'track');
-        $body = $this->post($client, ['v' => 1, 'lines' => [self::line(['lat' => 52.0])]]);
+        $body = $this->post($client, ['v' => 2, 'lines' => [self::line(['lat' => 52.0])]]);
 
         self::assertResponseStatusCodeSame(422);
         self::assertSame('track_not_accepted', $body['error']);
-        self::assertCount(0, iterator_to_array(static::getContainer()->get(TrafficStore::class)->cells(), false));
+        self::assertSame(0, $this->waiting());
     }
 
     public function testATopLevelTrackIsRefusedToo(): void
     {
         $client = static::createClient();
         $this->rider($client, 'toplevel');
-        $this->post($client, ['v' => 1, 'lines' => [], 'points' => [[5, 52]]]);
+        $this->post($client, ['v' => 2, 'lines' => [], 'points' => [[5, 52]]]);
 
         self::assertResponseStatusCodeSame(422);
     }
@@ -99,11 +103,11 @@ final class TrafficControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $this->rider($client, 'many');
-        $this->post($client, ['v' => 1, 'lines' => array_fill(0, 2001, self::line())]);
+        $this->post($client, ['v' => 2, 'lines' => array_fill(0, 2001, self::line())]);
         self::assertResponseStatusCodeSame(422);
 
-        $this->post($client, ['v' => 2, 'lines' => [self::line()]]);
-        self::assertResponseStatusCodeSame(422);
+        $this->post($client, ['v' => 1, 'lines' => [self::line()]]);
+        self::assertResponseStatusCodeSame(422, 'the old shape, with a quarter hour and no rider code');
 
         $this->post($client, 'not json');
         self::assertResponseStatusCodeSame(400);
@@ -113,39 +117,37 @@ final class TrafficControllerTest extends WebTestCase
     {
         $client = static::createClient();
         $this->rider($client, 'valid');
-        $body = $this->post($client, ['v' => 1, 'lines' => [self::line(), self::line(['timeS' => 0])]]);
+        $body = $this->post($client, ['v' => 2, 'lines' => [self::line(), self::line(['timeS' => 0])]]);
 
         self::assertResponseIsSuccessful();
         self::assertSame(['ok' => true, 'added' => 1, 'duplicate' => 0, 'dropped' => 1], $body);
-        $cells = iterator_to_array(static::getContainer()->get(TrafficStore::class)->cells(), false);
-        self::assertCount(1, $cells);
-        self::assertCount(1, static::getContainer()->get(TrafficStore::class)->riders());
+        self::assertSame(1, $this->waiting(), 'the line waits for its block');
+        self::assertSame([], iterator_to_array(static::getContainer()->get(TrafficStore::class)->totals(), false));
     }
 
     public function testTheSamePayloadAgainAddsNothing(): void
     {
         $client = static::createClient();
         $this->rider($client, 'again');
-        $payload = ['v' => 1, 'lines' => [self::line()]];
+        $payload = ['v' => 2, 'lines' => [self::line()]];
         $this->post($client, $payload);
         $body = $this->post($client, $payload);
 
         self::assertSame(['ok' => true, 'added' => 0, 'duplicate' => 1, 'dropped' => 0], $body);
-        $cells = iterator_to_array(static::getContainer()->get(TrafficStore::class)->cells(), false);
-        self::assertSame(1, $cells[0]['contributions']);
+        self::assertSame(1, $this->waiting());
     }
 
     public function testASecondAccountSendingTheSameRideAddsNothing(): void
     {
         $client = static::createClient();
-        $payload = ['v' => 1, 'lines' => [self::line()]];
+        $payload = ['v' => 2, 'lines' => [self::line()]];
         $this->rider($client, 'first');
         $this->post($client, $payload);
         $this->rider($client, 'second');
         $body = $this->post($client, $payload);
 
         self::assertSame(1, $body['duplicate']);
-        self::assertCount(1, static::getContainer()->get(TrafficStore::class)->riders(), 'the second account counts as no rider');
+        self::assertSame(1, $this->waiting(), 'the second account adds nothing');
     }
 
     public function testTwoLinesSharingANewBlockInOneRequestAreBothAdded(): void
@@ -153,7 +155,7 @@ final class TrafficControllerTest extends WebTestCase
         $client = static::createClient();
         $this->rider($client, 'shared');
         $block = bin2hex(random_bytes(32));
-        $body = $this->post($client, ['v' => 1, 'lines' => [
+        $body = $this->post($client, ['v' => 2, 'lines' => [
             self::line(['blocks' => [$block]]),
             self::line(['way' => 99, 'blocks' => [$block]]),
         ]]);
@@ -168,9 +170,34 @@ final class TrafficControllerTest extends WebTestCase
         $limiter = static::getContainer()->get('limiter.traffic_submit')->create('user-'.(string) $user->getId());
         $limiter->consume($limiter->consume(0)->getRemainingTokens());
 
-        $body = $this->post($client, ['v' => 1, 'lines' => [self::line()]]);
+        $body = $this->post($client, ['v' => 2, 'lines' => [self::line()]]);
 
         self::assertResponseStatusCodeSame(429);
         self::assertSame('rate_limited', $body['error']);
+    }
+
+    public function testABlockOfFiveLinesOnThreeDayGroupsReachesTheTotalsWhole(): void
+    {
+        $client = static::createClient();
+        $this->rider($client, 'block');
+        $lines = array_map(fn (int $g): array => self::line(['dayGroup' => $g]), [0, 1, 2, 3]);
+        $this->post($client, ['v' => 2, 'lines' => $lines]);
+        self::assertSame(4, $this->waiting(), 'four lines wait');
+
+        $this->post($client, ['v' => 2, 'lines' => [self::line(['dayGroup' => 4])]]);
+
+        self::assertSame(0, $this->waiting());
+        $totals = iterator_to_array(static::getContainer()->get(TrafficStore::class)->totals(), false);
+        self::assertCount(1, $totals);
+        self::assertSame(5, $totals[0]['lines']);
+    }
+
+    public function testThePasswordCheckIsGone(): void
+    {
+        $client = static::createClient();
+        $this->rider($client, 'no-key');
+        $client->request('POST', '/scout/traffic/key', [], [], ['CONTENT_TYPE' => 'application/json'], '{"password":"x"}');
+
+        self::assertResponseStatusCodeSame(404);
     }
 }

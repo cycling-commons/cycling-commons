@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// The pure half of scout plan task 6: cutting the ridden line between a
+// The pure half of a Scout surface stretch: cutting the ridden line between a
 // stretch's two taps, and the device→map-class tables the colours hang on.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
