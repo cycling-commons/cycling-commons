@@ -1,0 +1,72 @@
+web/tests/Catalog/CoverageStatsBucketTest.php
+  s_985749378da6fe::t_4c3cc3e17e1c94 1-26
+web/tests/Catalog/ClosureExpiryServiceTest.php
+  s_985749378da6fe::t_b14b5fb669c9a0 17,166-172
+  s_985749378da6fe::t_3fed91488965b4 39,41,139-144,146-147,149-165,173-177
+web/tests/Contribution/CatalogContributionServiceTest.php
+  s_985749378da6fe::t_e8439a53015983 543-582
+  s_985749378da6fe::t_58ac08f2b8349e 19-20,24,26-27
+  s_985749378da6fe::t_27aa3c306feb7e 583-584
+web/assets/styles/page/partials/_privacy_changed.css
+  s_985749378da6fe::t_53355001788dc9 1-5
+web/tests/Command/LinkOsmAnswersTest.php
+  s_985749378da6fe::t_899b50e4a0f58b 81-94
+  s_985749378da6fe::t_2a75c3b4122aed 70-80,109,115
+web/templates/partials/_privacy_changed.html.twig
+  s_985749378da6fe::t_53355001788dc9 10
+web/tests/Smoke/FormErrorsVisibleTest.php
+  s_985749378da6fe::t_72d51ea1dc9b1c 141,163
+  s_985749378da6fe::t_2450bdff206ca1 138-139,142-159,165
+web/src/Catalog/Command/LinkOsmCommand.php
+  s_985749378da6fe::t_729c0cce14af4a 172-174,179-180
+  s_985749378da6fe::t_4c80f16f614b63 83-88,137-151,182
+web/tests/Admin/CoverageRunsTest.php
+  s_985749378da6fe::t_1804f012e698bc 141-162
+web/src/Controller/Admin/CoverageRunController.php
+  s_985749378da6fe::t_a57c7dc8a5e65a 64-65,78
+web/src/Elevation/ClimbProfiler.php
+  s_985749378da6fe::t_b0c2da83592500 144-178
+  s_985749378da6fe::t_8aa2d716a200d7 143
+web/src/Catalog/CoverageStatsProvider.php
+  s_985749378da6fe::t_e3a21975a070f3 229-241,258-259
+  s_985749378da6fe::t_90e9d33ff89be6 228
+web/public/api/openapi.yaml
+  s_985749378da6fe::t_ce324d6076897a 550,558-576,607-625
+web/templates/admin/coverage_runs/index.html.twig
+  s_985749378da6fe::t_a57c7dc8a5e65a 14,60
+web/tests/Smoke/NoStyleBlocksTest.php
+  s_985749378da6fe::t_48c3bd89708a04 1-35
+web/src/Media/MessageHandler/ScanAndReleaseUploadHandler.php
+  s_985749378da6fe::t_ac1bd8e134475b 145-147
+web/src/Contribution/CatalogContributionService.php
+  s_985749378da6fe::t_b4805cdfbe2927 1190
+web/src/Catalog/ClosureExpiryService.php
+  s_985749378da6fe::t_ac669d23c8b31e 48-51,54-57,61
+web/tests/Media/MediaUploadEndpointTest.php
+  s_985749378da6fe::t_96ecf8fa2f25cb 18,20
+  s_985749378da6fe::t_175ce2c6e248c0 351-415
+  s_985749378da6fe::t_83f593c267b99a 416
+web/tests/Command/ExpireClosuresCommandTest.php
+  s_985749378da6fe::t_7c21843164dd2e 20
+web/src/Command/RecomputeClimbProfilesCommand.php
+  s_985749378da6fe::t_b4805cdfbe2927 99
+web/tests/Catalog/Import/MeasuredKeysTest.php
+  s_985749378da6fe::t_0ad391173b9c9a 10,36-37,39,46-61
+  s_985749378da6fe::t_34fd5f329154c6 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "62da5c3735678363276a207b7ae6bdaace0ebe92",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
