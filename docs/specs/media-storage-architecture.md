@@ -11,25 +11,19 @@ sits underneath [`photo-uploads.md`](photo-uploads.md), which owns the
 change here. This document owns the *infrastructure*: buckets, the scanning
 boundary, key immutability, and the proxy in front of it all.
 
-Written 2026-08-11 from settled infrastructure decisions. The hosting shape
-below is given, not proposed.
+The hosting shape below is given, not proposed.
 
-**Build state (2026-08-16): the whole quarantine is LIVE.** The async tier
-exists (Messenger, an `async` transport on the app's own Postgres,
-`doctrine://` since 2026-09-21, a `doctrine://` failure transport, in-memory in
-test); the dev stack runs `worker` + `clamav`
-containers and bootstraps the private bucket (`cc-media-private`, NO anonymous
-policy); the scanner is built and pinned both ways (`App\Media\Scan\ClamAvScanner`,
-fail-closed semantics, EICAR proven live against the
-sidecar). And as of this round the flow itself moved: `POST /media/photos`
-writes the RAW bytes to the private bucket and dispatches,
-`ScanAndReleaseUploadHandler` scans, decodes and physically releases the
-derivatives under an immutable `published/<uuid>/<rev>/` key, and the wizard
-shows a pending state it resolves by polling. The mailer stays pinned to direct
-sending (`mailer.yaml message_bus: false`) so installing the bus changed
-nothing that was not asked to change.
-
-**One deviation from this document, stated plainly** - see §2.2.
+**What runs.** The async tier is Messenger: an `async` transport and a
+`failed` transport, both `doctrine://` on the app's own Postgres
+(`MESSENGER_TRANSPORT_DSN`; `async` is in-memory in test). The dev stack runs
+`worker` and `clamav` containers and bootstraps the private bucket
+(`cc-media-private`, no anonymous policy). The scanner is
+`App\Media\Scan\ClamAvScanner`, fail-closed. `POST /media/photos` writes the
+raw bytes to the private bucket and dispatches; `ScanAndReleaseUploadHandler`
+scans, decodes and physically releases the derivatives under an immutable
+`published/<uuid>/<rev>/` key; the wizard shows a pending state it resolves by
+polling. The mailer sends directly (`mailer.yaml` `message_bus: false`), not
+through the bus.
 
 ---
 
@@ -64,7 +58,7 @@ nginx proxy (the browser never addresses object storage), and publishing the
 names would hand out the one thing needed to bypass that proxy. Second, the
 names are not needed here: the code reads them from environment variables,
 and each deployment's values live in its server-side `.local` env or secret
-store. The dev stack's MinIO bucket names (e.g. `cc-maps`, `cc-media-eu`)
+store. The dev stack's MinIO bucket names (e.g. `cc-maps`, `cc-media-eu-01`)
 are exempt: they exist only on developer machines. Obscurity is the second
 lock, not the first: the buckets additionally carry policies that make
 direct reads fail (private buckets: no anonymous access at all; public
@@ -76,33 +70,33 @@ the provider's policy support for source conditions is verified).
 | one private bucket per environment | private | quarantine (unscanned bytes) and photos under legal hold (§2.2) |
 | one public bucket per shard per environment, numbered | anonymous-read via proxy | published derivatives only |
 
-Each environment owns its own buckets (owner 2026-08-18, superseding the
-same-day shared-bucket idea): a staging mistake can never touch production
-objects. The variable NAMES are identical across environments; only the
+Each environment owns its own buckets (owner 2026-08-18): a staging mistake
+can never touch production objects. The variable NAMES are identical across environments; only the
 values (the deployed bucket names) differ per server.
 
 ### 2.1 Public buckets are numbered and regional from the start
 
-`prod-EU-01`, `prod-EU-02`, `prod-US-01`, and so on. Buckets are not scarce
+One public bucket per continent and generation, its name ending in
+`-<cc>-<nn>` (`-eu-01`, `-eu-02`, `-na-01`, and so on). Buckets are not scarce
 here, and the numbering exists so that scale is a provisioning action rather
 than a migration: when one fills, or when a region deserves its own, the next
-bucket is added and new photos land there. **Existing objects never move** —
+bucket is added and new photos land there. **Existing objects never move**,
 which is only safe because a photo's bucket is recorded per photo (§4), not
 derived from a global setting.
 
 This also leaves the door open to a **C**ontent **D**elivery **N**etwork later:
 a regional bucket is a sane CDN origin, a single global one is not.
 
-**This is already half-built.** `MediaStorage` addresses a map of per-continent
-storages and per-continent public bases, `ContinentResolver` picks one, and
-`flysystem.yaml` declares them — the design has always been per-continent, and
-onboarding is documented as "add a bucket, add a storage, add one line". What
-changes is only the naming (a region *and* an ordinal) and that the chosen
-bucket becomes a stored fact per photo.
+**How the code does it.** `ContinentResolver` turns the pin into a continent,
+`MediaStorage::bucketFor()` returns that continent's active bucket name, the
+row stores it in `storage_bucket`, and `MediaStorage` builds an S3 filesystem
+on demand for whatever bucket name a row records. `flysystem.yaml` declares no
+storages outside test, and `MediaStorage::url()` builds every public URL from
+the one `MEDIA_PUBLIC_BASE` plus the bucket's segment (below).
 
-Three rulings that complete the model (owner 2026-08-18):
+The rulings that complete the model (owner 2026-08-18):
 
-- **There is no default continent.** `MEDIA_DEFAULT_CONTINENT` is removed. A
+- **There is no default continent.** There is no `MEDIA_DEFAULT_CONTINENT`. A
   pin that resolves to no continent (the sea, a point outside every
   onboarded region) is a `location_unresolvable` refusal at the endpoint:
   everything acceptable is linked to a continent through the world reference
@@ -117,36 +111,45 @@ Three rulings that complete the model (owner 2026-08-18):
   Provisioning the bucket is what turns the refusal off.
 - **The full bucket name is the ONE key** (owner 2026-08-20, final shape):
   writing uses the continent's `MEDIA_S3_PUBLIC_BUCKET_<CC>` value verbatim,
-  the row stores it verbatim, reading addresses the recorded name (a
-  filesystem is built on demand, so a retired bucket needs no config to stay
-  readable forever). Nothing else exists: no shard variable, no shard
-  column, nothing assembled from parts. All six continents (AF/AS/EU/NA/
-  OC/SA) are defined up front with real buckets. Continents advance
+  the row stores it verbatim (`media_upload.storage_bucket`), reading
+  addresses the recorded name (a filesystem is built on demand, so a retired
+  bucket needs no config to stay readable forever). Nothing else exists: no
+  shard variable, no shard column, nothing assembled from parts. All six
+  continents (AF/AS/EU/NA/OC/SA) have a variable. Continents advance
   independently (EU can be on `-03` while Africa sits on `-01`): bump the
   var, add one nginx location, done - no code, no config shape change, no
   moved object.
 - **Bucket names MUST end in `-<cc>-<nn>`**
-  (`cyclingcommons-media-public-staging-eu-01`; never more than 99
-  generations per continent): the name's LAST FIVE characters are the public
-  URL segment, `<MEDIA_PUBLIC_BASE>/<segment>/<key>`, e.g.
-  `https://staging-media.cyclingcommons.org/img/eu-01/published/...`. The
-  code refuses a name outside the convention rather than emitting a broken
-  URL. The public URL never names a bucket (§2.0); devops maps each segment
+  (`<name>-eu-01`; never more than 99 generations per continent): the name's
+  LAST FIVE characters are the public URL segment,
+  `<MEDIA_PUBLIC_BASE>/<segment>/<key>`, e.g.
+  `<MEDIA_PUBLIC_BASE>/eu-01/published/...`. The code refuses a name outside
+  the convention rather than emitting a broken URL. The public URL never
+  names a bucket (§2.0); devops maps each segment
   to its bucket at the proxy - one location per generation, kept alive as
   long as rows name it. The quarantine stays ONE bucket per environment
   (`MEDIA_S3_PRIVATE_BUCKET`), no numbering and no segment: it holds bytes
   only for the seconds between upload and scan verdict (§2.2).
+- **A bucket is renamed by copying it** (owner 2026-10-08: every bucket gets a
+  name that cannot be guessed from the pattern). The new name is the old one
+  with a random part added, just before `-<cc>-<nn>` on a public photo bucket;
+  the environment word (`staging` or `production`) always stays in the name.
+  Storage has no rename. Devops creates the new bucket and copies
+  the objects into it inside the provider; then
+  `app:media:rename-bucket <old> <new> --write` moves the recorded name on
+  `media_upload` and `commons_photo` in one transaction (a dry run without
+  `--write`). The new name must keep the old URL segment, so every published
+  URL stays the same: only the proxy location for that segment, and the
+  `MEDIA_S3_PUBLIC_BUCKET_<CC>` value, change. The names are typed on the host
+  and never committed (§2.0). The old bucket is deleted only once the proxy
+  serves from the new one.
 
-### 2.2 The private bucket earns its place — but not for moderation
+### 2.2 The private bucket earns its place, but not for moderation
 
-The open question was whether a private bucket is needed at all, given that
-moderation state does not require one.
-
-**It is not needed for moderation, and that stays decided.** A pending photo is
-*unlinked*, not *hidden* — [`photo-uploads.md`](photo-uploads.md) §2 argues
-this at length, and nothing here reopens it: the moderation queue is the only
-place a pending URL appears, buckets are never listable, and the proxy serves
-no directory index.
+**It is not needed for moderation.** A pending photo is *unlinked*, not
+*hidden*: [`photo-uploads.md`](photo-uploads.md) §2 argues this at length. The
+moderation queue is the only place a pending URL appears, buckets are never
+listable, and the proxy serves no directory index.
 
 **It is needed for the quarantine window**, which is a different problem. Bytes
 that have not been scanned yet must not be reachable by anyone, and the public
@@ -155,9 +158,8 @@ anonymous-read bucket is a contradiction: the object is world-readable the
 moment it is written, which is precisely the state scanning exists to prevent.
 So the raw upload lands in the private bucket, and only the worker can read it.
 
-**"Clean originals stay private too" was NOT implemented, and should not be.**
-The sentence rested on "they are not needed by any browser", and that premise
-was wrong twice over.
+**Clean originals are not kept private, deliberately.** "They are not needed
+by any browser" is wrong twice over.
 
 - The `orig.webp` variant *is* linked to a browser: the photo page offers it as
   "download the original", which is the CC BY-SA reuse story working as
@@ -190,7 +192,7 @@ as irreversible, which the disposal path in `photo-uploads.md` §6 already does.
 
 ```
 browser ──► web tier ──► private bucket            worker ──► public bucket
-            (validate)   photos/quarantine/…       (scan, re-encode)  published/…
+            (validate)   quarantine/<uuid>         (scan, re-encode)  published/…
                  │                                   ▲
                  └──────── message (Postgres) ───────┘
 ```
@@ -198,12 +200,13 @@ browser ──► web tier ──► private bucket            worker ──► 
 1. **Web tier** does only what it can do safely: authenticate, check consent,
    enforce the byte cap, sniff the declared type, mint an id, write the **raw**
    bytes to the private bucket under a quarantine prefix, record the photo as
-   pending, and dispatch a message. It never decodes the image and never
+   `pending_scan`, and dispatch a message. It never decodes the image and never
    publishes anything.
 2. **Worker** consumes the message, streams the object to `clamd` (INSTREAM),
    and only then decodes and re-encodes it into the variants (`orig`, `lg`,
    `sm`: `MediaStorage::VARIANTS`), writes all three to the public bucket,
-   deletes the quarantine object, and marks the photo ready.
+   stamps the row, saves it as `pending` (awaiting moderation), and only then
+   deletes the quarantine object.
 
 **The release gate is physical, not a flag.** A photo is published because its
 derivatives exist in the public bucket, and they exist because the worker put
@@ -226,7 +229,7 @@ marks the file failed, `scanner_unavailable`) and bug-report and curator-room
 pictures, below.
 
 **Bug-report and curator-room pictures** take the same boundary on a smaller
-scale (since 2026-09-27, `Version20260927140000`). The web host keeps the raw
+scale. The web host keeps the raw
 bytes in the picture's own row (`bug_screenshot`, `curator_post_image`) as
 `pending`, never served, and dispatches `CheckPicture` to the `async`
 transport. On the worker `CheckPictureHandler` runs them through
@@ -248,9 +251,9 @@ hundred kilobytes of valid PNG that expands to gigabytes
 
 That decode runs **on the worker** (`ScanAndReleaseUploadHandler`), never in
 the web request, so a hostile image exhausts a worker that is designed to be
-restarted, rather than a web host that is serving pages. The existing
-`ImageMagick` hardening stays as it is; note the policy gotchas already recorded
-in `dev-environment.md`.
+restarted, rather than a web host that is serving pages. The ImageMagick
+hardening, its `policy.xml` and the gotchas that come with it are in
+[photo-uploads.md §7a](photo-uploads.md).
 
 ### 3.3 Consequence for the rider: upload is asynchronous
 
@@ -290,36 +293,29 @@ Per photo, the database records the bucket, the revision and the continent —
 so a photo remains addressable after buckets are added (§2.1) and after a
 reprocess, without any global lookup table.
 
-### 4.1 What changed, and the one-off that made it true
+### 4.1 Rows from before immutable keys
 
-The old layout was `photos/<uuid>/orig.webp | lg.webp | sm.webp` inside the
-continent bucket - a fixed set of names under a per-photo prefix, **mutable by
-construction**: reprocessing overwrote in place.
+A row without a revision names the mutable layout
+`photos/<uuid>/orig.webp | lg.webp | sm.webp`, where reprocessing overwrote in
+place. `app:media:backfill-keys` moves such rows: copy each set to
+`published/<uuid>/<rev>/`, stamp the revision, then delete the old prefix.
+Copy, row, delete, in that order: any other has a window in which the row
+names objects that are not there, and a proxy that caches a 404 for a year is
+worse than running an idempotent command twice. A row with a NULL `revision`
+reads as "nothing published" until the command has run on it.
 
-`app:media:backfill-keys` moved the existing rows: copy each set to
-`published/<uuid>/<rev>/`, stamp the revision, then delete the old prefix. Copy,
-row, delete, in that order - any other has a window in which the row names
-objects that are not there, and a proxy that caches a 404 for a year is worse
-than running an idempotent command twice. **It is a deploy prerequisite, not an
-optional tidy-up:** the migration that adds the column deliberately leaves
-`revision` NULL, so an un-backfilled photo reads as "nothing published" until
-the command has run.
-
-The alternative - teaching the URL builder to recognise the old shape - was
-refused. A permanent legacy branch is exactly the "tolerate the old shape"
-pattern the dead-code sweep spent a session removing, and this is a handful of
-rows: no production photos exist yet, which is why this had to land before any
-real traffic.
+The URL builder deliberately does not recognise the old shape: a permanent
+legacy branch would tolerate a layout the backfill exists to end.
 
 ## 5. Serving
 
-Browsers never address object storage. Every public URL is an
-`images.cyclingcommons.org` URL, served by an nginx caching proxy, because
-Hetzner does not want high request rates hitting object storage directly.
+Browsers never address object storage. Every public URL is on a first-party
+media host, served by an nginx caching proxy, because Hetzner does not want
+high request rates hitting object storage directly.
 
-- `MEDIA_PUBLIC_BASE` is that host. It is already the only base the application
-  emits, and `MEDIA_CSP_HOST` already puts it in the **C**ontent-**S**ecurity-
-  **P**olicy `img-src`.
+- `MEDIA_PUBLIC_BASE` is that host. It is the only base the application emits,
+  and `MEDIA_CSP_HOST` puts it in the **C**ontent-**S**ecurity-**P**olicy
+  `img-src`.
 - The proxy **must not serve directory indexes**. Unlinked-not-hidden (§2.2)
   depends on it.
 - Long-lived caching is safe only because of §4. If keys ever become mutable
@@ -327,23 +323,21 @@ Hetzner does not want high request rates hitting object storage directly.
 
 ## 6. Build ledger
 
-Recorded so the history is not lost. Verified 2026-08-11, updated 2026-09-29.
-
 | | |
 |---|---|
-| Per-shard storages and public bases | **built** (`MediaStorage`, `ContinentResolver`, `flysystem.yaml`) |
-| Proxy-first URLs, never S3 direct | **built** (`MEDIA_PUBLIC_BASE`) |
+| Per-continent buckets, recorded per photo | **built** (`MediaStorage::bucketFor()`, `ContinentResolver`, `media_upload.storage_bucket`) |
+| Proxy-first URLs, never S3 direct | **built** (`MEDIA_PUBLIC_BASE`, `MediaStorage::url()`) |
 | CSP host env-backed, not admin-editable | **built** (`MEDIA_CSP_HOST`) |
-| Re-encode to WebP, EXIF stripped, pixel + dimension caps | **built** (`PhotoProcessor`, now on the worker) |
+| Re-encode to WebP, EXIF stripped, pixel + dimension caps | **built** (`PhotoProcessor`, on the worker) |
 | Consent, moderation, takedown, disposal, GC | **built** (`photo-uploads.md`) |
-| Virus scanning | **built** 2026-08-16 (`ClamAvScanner`, `clamav` sidecar) |
-| Async workers | **built** 2026-08-16 (Messenger + `worker` container); transport moved from a Redis stream to Postgres (`doctrine://`) 2026-09-21 |
-| Private bucket / quarantine | **built** 2026-08-16 (`media.storage.private`, `quarantine/<uuid>`) |
-| Legal hold leaves the public bucket | **built** 2026-10-04 (`MediaStorage::withhold()` / `unwithhold()`, `held/<uuid>/<rev>/`) |
-| Release gate on the worker | **built** 2026-08-16 (`ScanAndReleaseUploadHandler`) |
-| Bug-report and curator-room pictures checked on the worker | **built** 2026-09-27 (`CheckPictureHandler`, `Version20260927140000`) |
-| Immutable keys | **built** 2026-08-16 (`published/<uuid>/<rev>/`, `app:media:backfill-keys`) |
-| Wizard pending state | **built** 2026-08-16 (optimistic preview, 30 s patience limit) |
+| Virus scanning | **built** (`ClamAvScanner`, `clamav` sidecar) |
+| Async workers | **built** (Messenger on Postgres, `doctrine://`, and the `worker` container) |
+| Private bucket / quarantine | **built** (`MEDIA_S3_PRIVATE_BUCKET`, `quarantine/<uuid>`) |
+| Legal hold leaves the public bucket | **built** (`MediaStorage::withhold()` / `unwithhold()`, `held/<uuid>/<rev>/`) |
+| Release gate on the worker | **built** (`ScanAndReleaseUploadHandler`) |
+| Bug-report and curator-room pictures checked on the worker | **built** (`CheckPictureHandler`, `Version20260927140000`) |
+| Immutable keys | **built** (`published/<uuid>/<rev>/`, `app:media:backfill-keys`) |
+| Wizard pending state | **built** (optimistic preview, 30 s patience limit) |
 | Clean-original archive | **deliberately not built** - see §2.2 |
 | Nightly restic backups | infra, outside this repo |
 

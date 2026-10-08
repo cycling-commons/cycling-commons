@@ -1,5 +1,5 @@
-# Dev media proxy — the local stand-in for staging's
-# staging-media.cyclingcommons.org vhost.
+# Dev media proxy: the local stand-in for staging's media vhost
+# (<staging-media-host>).
 #
 # MediaStorage::url() emits <MEDIA_PUBLIC_BASE>/<shard>/<key>, where <shard> is
 # the bucket name's LAST FIVE characters, never the name itself (that is the
