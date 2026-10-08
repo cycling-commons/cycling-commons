@@ -8,6 +8,7 @@ namespace App\Tests\Catalog;
 
 use App\Catalog\ConfirmationFreshness;
 use App\Catalog\CustodyTier;
+use App\Catalog\Entity\ChangeHistory;
 use App\Catalog\ItemEvidenceResolver;
 use App\Settings\SettingsRegistry;
 use App\Tests\Settings\FakeSettings;
@@ -115,6 +116,27 @@ final class ItemEvidenceResolverTest extends TestCase
             self::assertSame(1, $e->rung, "{$source}: imported_at is not an upstream sighting without a registry row");
             self::assertNull($e->lastSeenUpstream);
         }
+    }
+
+    /** A copy we changed is ours (owner 2026-10-08): the teardrop, still with its "?" until somebody stands there. */
+    public function testAnOsmOrWikidataRowWeEditedIsOurs(): void
+    {
+        foreach (['osm', 'wikidata'] as $source) {
+            $e = $this->resolver()->fromRow(
+                $this->row(['source' => $source, 'ev_provider' => false, 'ev_scope' => null, 'ev_edited' => true]),
+                new \DateTimeImmutable(self::NOW),
+            );
+
+            self::assertSame(CustodyTier::Ours, $e->custody, $source);
+        }
+    }
+
+    public function testTheSelectFragmentCountsOnlyAPersonsEdits(): void
+    {
+        $sql = ItemEvidenceResolver::selectSql('i');
+        self::assertStringContainsString('AS ev_edited', $sql);
+        self::assertStringContainsString('changed_by <> '.ChangeHistory::SYSTEM_ACTOR, $sql, 'the closure clock is not an edit');
+        self::assertStringContainsString("field <> 'state'", $sql, 'a verification is counted by the state, not as an edit');
     }
 
     public function testARidersOwnRowIsOursAndAClaimUntilSomebodyConfirms(): void

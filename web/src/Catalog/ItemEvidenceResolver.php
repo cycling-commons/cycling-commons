@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
+use App\Catalog\Entity\ChangeHistory;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
 
@@ -61,11 +62,13 @@ final class ItemEvidenceResolver
                 COALESCE((SELECT {$i}.attributes->>ev_dp.survey_date_attribute FROM data_provider ev_dp
                            WHERE ev_dp.id = {$i}.provider_id AND ev_dp.survey_date_attribute IS NOT NULL),
                          {$i}.attributes->>'check_date') AS ev_witness,
-                {$i}.custody_reclaimed_at AS ev_reclaimed";
+                {$i}.custody_reclaimed_at AS ev_reclaimed,
+                EXISTS (SELECT 1 FROM change_history ev_h WHERE ev_h.item_id = {$i}.id
+                         AND ev_h.changed_by <> ".ChangeHistory::SYSTEM_ACTOR." AND ev_h.field <> 'state') AS ev_edited";
     }
 
     /**
-     * @param array{state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_curator?: bool|null, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, ...} $row
+     * @param array{state: string, source: string, imported_at: string|null, ev_provider: bool, ev_scope: bool|null, ev_conf: int|string, ev_curator?: bool|null, ev_last: string|null, ev_witness: string|null, ev_reclaimed: string|null, ev_edited?: bool|null, ...} $row
      */
     public function fromRow(array $row, \DateTimeImmutable $now): ItemEvidence
     {
@@ -95,7 +98,8 @@ final class ItemEvidenceResolver
         $custody = match (true) {
             null !== $verifiedBy && !$providerHolds => CustodyTier::Ours,
             $provider => (bool) ($row['ev_scope'] ?? false) ? CustodyTier::Specialty : CustodyTier::Gross,
-            \in_array($source, self::MIRRORED_SOURCES, true) => CustodyTier::Gross,
+            // A copy a person changed is ours (owner 2026-10-08); the "?" stays until somebody stands there.
+            \in_array($source, self::MIRRORED_SOURCES, true) => ($row['ev_edited'] ?? false) ? CustodyTier::Ours : CustodyTier::Gross,
             default => CustodyTier::Ours,
         };
         // imported_at is an upstream sighting only where an upstream exists
