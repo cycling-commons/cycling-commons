@@ -25,6 +25,9 @@ use App\Media\ShardUnavailable;
 use App\Media\XmpRights;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -203,6 +206,8 @@ final readonly class ScanAndReleaseUploadHandler
 
         $userId = $upload->getUserId();
         if (null !== $userId && !$this->ownerIsTrashed($upload)) {
+            // Refused by the checks alone: the statement of reasons says so
+            // (DSA Article 17(3)(c), content-reports.md §7).
             $this->messages->sendSystem(
                 $userId,
                 UserMessageKind::MediaScanRejected,
@@ -210,6 +215,17 @@ final readonly class ScanAndReleaseUploadHandler
                 $upload->getItemId() ?? 0,
                 '',
                 'messages.body.'.UserMessageKind::MediaScanRejected->value,
+                [],
+                null,
+                new StatementOfReasons(
+                    StatementDecision::NotPublished,
+                    StatementGround::FileRefused,
+                    '',
+                    $upload->getId()->toRfc4122(),
+                    automated: true,
+                    factsKey: 'dsa_statement.facts.file_refused',
+                    aboutPhoto: true,
+                ),
             );
         }
 

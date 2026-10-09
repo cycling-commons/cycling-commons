@@ -24,6 +24,9 @@ use App\Media\ProcessedPhoto;
 use App\Media\UrgentWithholdBreaker;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\UserMessageKind;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
 use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -166,12 +169,12 @@ final class ThirdPartyReportTest extends KernelTestCase
     }
 
     /**
-     * A contributor whose photo vanishes with no word from us reasonably
-     * concludes we deleted their work (docs/specs/photo-uploads.md §6c). Both
-     * halves are asserted together because sending the first without the
-     * second would be worse than sending neither.
+     * The urgent hide tells the contributor nothing: a word from us at that
+     * moment would warn somebody the report suspects (owner 2026-10-09,
+     * docs/specs/photo-uploads.md §6c). Giving the photo back tells them,
+     * with the statement of reasons for the hide that lasted until then.
      */
-    public function testHidingAPhotoTellsItsContributorAndSoDoesGivingItBack(): void
+    public function testHidingAPhotoTellsItsContributorNothingAndGivingItBackExplainsTheHide(): void
     {
         $owner = $this->rider('report-notify@example.com');
         $curator = $this->rider('report-notify-curator@example.com');
@@ -179,15 +182,40 @@ final class ThirdPartyReportTest extends KernelTestCase
 
         $this->takedowns->report($upload, MediaTakedownCategory::IntimateOrChild, 'Vandalism.', null, '203.0.113.30');
 
-        $messages = $this->messagesFor($owner);
-        self::assertCount(1, $messages);
-        self::assertSame(UserMessageKind::MediaHiddenPendingReview, $messages[0]->getKind());
+        self::assertSame([], $this->messagesFor($owner), 'no message and no statement at the hide');
 
         $this->takedowns->decline($upload, $curator, 'Nobody visible.');
 
         $messages = $this->messagesFor($owner);
-        self::assertCount(2, $messages);
-        self::assertSame(UserMessageKind::MediaRestoredAfterReview, $messages[1]->getKind());
+        self::assertCount(1, $messages);
+        self::assertSame(UserMessageKind::MediaRestoredAfterReview, $messages[0]->getKind());
+        $statement = StatementOfReasons::fromArray($messages[0]->getBodyParams()[StatementOfReasons::PARAM] ?? null);
+        self::assertNotNull($statement);
+        self::assertSame(StatementDecision::HiddenThenRestored, $statement->decision);
+        self::assertSame(StatementGround::IntimateOrChild, $statement->ground);
+        self::assertTrue($statement->automated);
+        self::assertSame('dsa_statement.facts.hidden_restored', $statement->factsKey);
+    }
+
+    /** Granted after the hide: the removal's statement says the photo was hidden when it was reported. */
+    public function testGrantingAnUrgentHideSaysThePhotoWasHiddenFirst(): void
+    {
+        $owner = $this->rider('report-urgent-grant@example.com');
+        $curator = $this->rider('report-urgent-grant-curator@example.com');
+        $upload = $this->approved($owner);
+
+        $this->takedowns->report($upload, MediaTakedownCategory::IntimateOrChild, 'A child.', null, '203.0.113.33');
+        $this->takedowns->grant($upload, $curator, 'A child is the subject.');
+
+        $messages = $this->messagesFor($owner);
+        self::assertCount(1, $messages);
+        self::assertSame(UserMessageKind::MediaRemovedOnReport, $messages[0]->getKind());
+        $statement = StatementOfReasons::fromArray($messages[0]->getBodyParams()[StatementOfReasons::PARAM] ?? null);
+        self::assertNotNull($statement);
+        self::assertSame(StatementDecision::Removed, $statement->decision);
+        self::assertSame('A child is the subject.', $statement->facts);
+        self::assertSame('dsa_statement.facts.report_upheld_hidden', $statement->factsKey);
+        self::assertFalse($statement->automated, 'a curator removed it');
     }
 
     /** A report that only queued changed nothing they could see, so it says nothing. */
@@ -217,7 +245,9 @@ final class ThirdPartyReportTest extends KernelTestCase
             static fn (UserMessage $m): UserMessageKind => $m->getKind(),
             $this->messagesFor($owner),
         );
-        self::assertSame([UserMessageKind::MediaHiddenPendingReview, UserMessageKind::MediaRestoredAfterReview], $kinds);
+        self::assertSame([UserMessageKind::MediaRestoredAfterReview], $kinds, 'nothing at the hide, the restore when it comes back');
+        $statement = StatementOfReasons::fromArray($this->messagesFor($owner)[0]->getBodyParams()[StatementOfReasons::PARAM] ?? null);
+        self::assertSame(StatementDecision::HiddenThenRestored, $statement?->decision, 'with the statement for the hide');
     }
 
     public function testIneligiblePhotosSwallowTheReportSilently(): void
@@ -455,10 +485,10 @@ final class ThirdPartyReportTest extends KernelTestCase
         self::assertSame($before, $this->itemOf($upload)->getAttributes()['photos'], 'back on the map');
         self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
         self::assertContains(MediaAction::TakedownDismissedAsAbuse, $this->actions($upload));
-        // Their photo did visibly disappear, so they were told that and told
-        // when it came back — never who reported it, and never the operator's
-        // note (see testRestoringAnAbusiveHideTellsTheContributor).
-        self::assertCount(2, $this->messagesFor($owner));
+        // Their photo did visibly disappear, so they are told when it comes
+        // back, with the statement for the hide: never who reported it, and
+        // never the operator's note (see testRestoringAnAbusiveHideTellsTheContributor).
+        self::assertCount(1, $this->messagesFor($owner));
         // THE point: a real report of the same kind must still be heard.
         self::assertFalse($upload->hasDecidedTakedown(MediaTakedownCategory::IntimateOrChild));
         $this->takedowns->report($upload, MediaTakedownCategory::IntimateOrChild, 'A real one, later.', null, '198.51.100.8');

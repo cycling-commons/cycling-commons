@@ -233,6 +233,7 @@
             <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong></p>
             <p>{{ 'moderate.trash.confirm_rest'|trans }}</p>
             <p class="q-act-when">{{ 'moderate.trash.when'|trans }}</p>
+            {% include 'moderate/_trash_ground.html.twig' with {uid: 'sub-' ~ item.id} only %}
             {# The typed DELETE and the tick-box are gone (owner 2026-08-12).
                Opening this panel and pressing Trash inside it is already two
                deliberate acts on a control that is one icon among five; a third

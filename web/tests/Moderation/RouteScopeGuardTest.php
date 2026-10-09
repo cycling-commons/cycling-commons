@@ -178,6 +178,7 @@ final class RouteScopeGuardTest extends WebTestCase
         $token = (string) $crawler->filter('.trash-confirm-proposal input[name="_token"]')->attr('value');
 
         $client->request('POST', '/moderate/routes/trash', [
+            'ground' => 'spam',
             'kind' => 'proposal',
             'confirm' => 'DELETE',
             'id' => (string) $routeB->getId(),

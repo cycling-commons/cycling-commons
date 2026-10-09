@@ -48,6 +48,7 @@ enum MessageCategory: string
                 UserMessageKind::MediaRemovedOnReport,
                 UserMessageKind::MediaHiddenPendingReview,
                 UserMessageKind::MediaRestoredAfterReview,
+                UserMessageKind::StatementOfReasons,
             ],
             self::General => [
                 UserMessageKind::BugOutcome,

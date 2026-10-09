@@ -230,7 +230,9 @@ row still `pending_scan` whose quarantine object is gone is settled as
 
 1. **Scan** the bytes (ClamAV INSTREAM). An *infected* verdict is terminal in
    one pass: the object is deleted, the row is rejected and tombstoned, the
-   rider is told (`media_scan_rejected`). A scanner **error** is not a verdict -
+   rider is told (`media_scan_rejected`, carrying a statement of reasons that
+   says our checks refused the file automatically, content-reports.md §7). A
+   scanner **error** is not a verdict -
    the exception escapes, Messenger retries, the bytes stay quarantined
    (media-storage-architecture.md §3.1).
 2. **Extract** from the original bytes (spec §1.3b): `taken_at`
@@ -1331,10 +1333,22 @@ open to everyone, through a form rather than a mailbox.
 database. **Only a curator removes anything** — granting is the sole path that
 deletes objects. Every user-facing surface says *hidden*, never *removed*, for
 the automatic action, because a contributor who reads "removed" reasonably
-concludes their work is gone. The contributor is messaged the moment their
-photo is hidden (`media_hidden_pending_review`) and again when it comes back
-(`media_restored_after_review`); if a curator grants the request, they get
-`media_removed_on_report` instead, which is the one message that means gone.
+concludes their work is gone. **The hide itself sends the contributor
+nothing** (owner 2026-10-09): a message or a statement at that moment would
+warn somebody the report suspects, the same reasoning as the legal hold
+(§6d), and since the report form says which ground hides at once, even a
+neutral "your photo is hidden" would name it. Their own view of the photo
+page shows the ordinary unpublished text, as for anybody. They hear once a
+curator has decided: put back, `media_restored_after_review`, which says the
+photo was hidden on a report while a curator looked and that it is back, and
+carries the statement of reasons for the hide (automated, the report's
+ground, `StatementDecision::HiddenThenRestored`); removed,
+`media_removed_on_report`, the one message that means gone, whose statement
+names the rule the report was upheld on, the curator's note, and that the
+photo was hidden when it was reported (`dsa_statement.facts.report_upheld_hidden`);
+escalated, nothing while the hold lasts (§6d), and the decision after it is
+the one explained (content-reports.md §7). An administrator dismissing the
+report as abuse puts the photo back the same way.
 A report that merely queues sends nothing — nothing they could see changed,
 and "somebody accused you" is not ours to volunteer.
 
@@ -1455,7 +1469,8 @@ admin-only, deliberately not in the public wiki (§6c *What stays private*).
 **Residual risk, accepted and named.** A distributed attacker can still spend
 the whole budget and can flood the desk with queued urgent cards regardless of
 it. Nothing is destroyed — hiding detaches, deletion needs a curator — and the
-contributors of hidden photos are told what happened and why, so the worst
+contributors of hidden photos are told what happened and why once a curator
+has decided, so the worst
 outcome is a bounded number of photos off the map for hours, and a noisy desk.
 
 **What stays private.** The decision test, the bias, the budgets and which
@@ -1479,7 +1494,10 @@ flow).
 never told who reported; neither ever sees the other's contact detail. On
 grant the uploader gets its own message kind (`media_removed_on_report` —
 "your request was granted" would be a lie to somebody who asked for nothing);
-on decline the uploader hears nothing, because nothing changed for them. A
+on decline the uploader hears nothing, because nothing changed for them,
+unless the report had hidden the photo: then the photo's return tells them,
+with the statement for the hide. Both messages say we cannot tell them who
+reported. A
 reporter who left an address is answered by a curator through the project
 mailbox within the month; the desk card shows the address to the curator
 only.

@@ -19,6 +19,7 @@ use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationScope;
 use App\Moderation\ModerationService;
 use App\Moderation\OutOfScopeException;
+use App\Moderation\StatementGround;
 use App\Moderation\SubmissionQueue;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -118,7 +119,7 @@ final class SubmissionEscalationTest extends KernelTestCase
         $this->moderation->escalateSubmission($id, $curator, 'Suspected illegal content.');
 
         try {
-            $this->moderation->trashSubmission($id, $curator);
+            $this->moderation->trashSubmission($id, $curator, StatementGround::Spam);
             self::fail('Trash must refuse a submission under legal hold');
         } catch (\LogicException) {
             // expected

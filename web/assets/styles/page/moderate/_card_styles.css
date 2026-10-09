@@ -119,6 +119,11 @@
   .q-act-when{border-left:2px solid var(--clay);padding-left:.6rem;font-weight:600}
   .q-act-ack{display:flex;align-items:flex-start;gap:.45rem;font-size:.84rem;line-height:1.45;color:#4a4d40;cursor:pointer}
   .q-act-ack input{margin-top:.2rem;flex:0 0 auto}
+  /* The ground a Trash names: spam tells the rider nothing, abuse sends a statement of reasons. */
+  .q-act-ground{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:.35rem;font-size:.86rem;color:#4a4d40}
+  .q-act-ground legend{font-weight:600;margin-bottom:.2rem}
+  .q-act-ground label{display:flex;align-items:flex-start;gap:.45rem;line-height:1.45}
+  .q-act-ground input[type=radio]{margin-top:.2rem;flex:0 0 auto}
   .q-act-panel textarea{width:100%;min-height:80px;font-family:var(--sans);font-size:.85rem;padding:.5rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;resize:vertical}
   .q-act-panel input[type=text]{font-family:var(--sans);font-size:.9rem;padding:.45rem .55rem;border:1px solid rgba(20,22,14,.25);border-radius:6px;background:var(--paper)}
 

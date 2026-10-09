@@ -1,0 +1,43 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The plain-text part of the statement of reasons, the same content as
+  statement_of_reasons.html.twig. A .txt template is not autoescaped, so an
+  apostrophe or & in a name comes out as itself.
+#}
+{{ s.headline }}
+
+{{ greeting }}
+
+{{ intro }}
+
+{{ labels['what'] }}
+{{ s.decision }} {{ s.scope }}
+
+{{ labels.why }}
+{% if s.facts_system %}{{ s.facts_system }}
+{% endif %}
+{% if s.facts %}{{ s.facts }}
+{% endif %}
+{{ s.source }}
+
+{{ labels.rule }}
+{{ s.ground }} {{ s.basis }}
+{{ labels.terms_link }}: {{ terms_url }}
+
+{{ labels.how }}
+{{ s.automated }}
+
+{{ labels.contest }}
+{{ s.redress }}
+{% if not can_reply %}{{ labels.contact_link }}: {{ contact_url }}
+{% endif %}
+{% if s.answer and answer_url %}{{ s.answer }}
+{{ labels.answer_link }}: {{ answer_url }}
+{% endif %}
+
+{{ labels.reference }}: {{ s.reference }}
+
+{{ signoff }}
+
+--
+Cycling Commons · open cycling atlas · https://cyclingcommons.org

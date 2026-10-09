@@ -64,8 +64,8 @@ entry, and the photo that should come down stayed up.
 | Path | Case | Points at | Has an author |
 |---|---|---|---|
 | `route` | `Route` | `Catalog\Entity\RecommendedRoute` | yes, `proposedBy` |
-| `item` | `Item` | `Catalog\Entity\Item` | no, see below |
-| `region` | `RegionText` | `Catalog\Entity\Region` | no |
+| `item` | `Item` | `Catalog\Entity\Item` | the rider who added it, if any, see below |
+| `region` | `RegionText` | `Catalog\Entity\Region` | no, see below |
 | `rider` | `DisplayName` | `Entity\User` by uuid | yes, themselves |
 | `message` | `Message` | `Messaging\Entity\UserMessage` | yes, `senderId`, if any |
 | `town` | `Town` | a `town_summary` ref, `node-59518` (map-and-search.md §6.5) | no |
@@ -92,11 +92,22 @@ request carries (`?name=`, a posted `name`) is ignored: the form is public, so
 a label taken from the request would print a stranger's words on our page and
 in our mail (security audit 2026-10-04).
 
-**Why places and regions have no author.** They are not written by one person.
-A place starts as a seeded or harvested row, assigned to no account, and
-grows through submissions from many riders. Naming the last editor as "the
-author" would send an Article 17 statement to somebody for a word another rider
-wrote. `ReportResolver` returns `null` and the desk says "nobody in particular".
+**A place's author is the rider who added it** (`App\Catalog\PlaceAuthor`):
+the rider whose approved new-place submission created the item
+(`submission.item_id`, type `new`, status `approved`, `user_id` neither NULL
+nor 0, the earliest such row). One person pressed send and a curator accepted
+it, so the Article 17 statement goes to them. Later edits by other riders do
+not make those riders its author. A place seeded from OpenStreetMap or a
+provider has none, and neither does one whose author deleted their account;
+the desk then says "nobody in particular".
+
+**Region texts and town cards have no author here.** Each language is written
+and approved separately (`region.context_curated` per language,
+`town_summary.edited_by` per language row), and a report does not record which
+language its reporter read, so naming one writer would tell the wrong person
+about somebody else's line. `ReportResolver` returns `null` for both. Recording
+the page language on the report would make the author findable; it is not
+built.
 
 ## 4. The grounds
 
@@ -604,8 +615,9 @@ it next to Report a bug.
   link is on that surface; the photo card says a reported photo stays up while
   a curator looks, except on `intimate_or_child`, the one ground that hides it
   at once (`ReportGround::autoWithholds()`). Pinned by `PhotoReportCopyTest`,
-  which also pins the contributor's `media_removed_on_report` message naming no
-  ground, since a removal can follow any of them.
+  which also pins the contributor's `media_removed_on_report` body line naming
+  no ground, since a removal can follow any of them; the statement of reasons
+  that message carries names the one it followed (§7).
 - **What happens next** repeats §6 and §7 in plain words, and claims no
   more: a confirmation with a reference, the decision with reasons, the
   author told only when a report is upheld, a person deciding every time.

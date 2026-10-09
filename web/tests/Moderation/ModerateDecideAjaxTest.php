@@ -287,6 +287,31 @@ final class ModerateDecideAjaxTest extends WebTestCase
         self::assertNull($data['item']);
     }
 
+    /** A rejection's note is its statement of reasons: without one the drawer is told why (content-reports.md §7). */
+    public function testARejectionWithoutANoteAnswersWithTheReason(): void
+    {
+        $client = static::createClient();
+        $this->login($client, 'ajax-curator-nonote@example.com', ['ROLE_CURATOR'], true);
+        $sub = $this->seedSubmission();
+
+        $client->request('GET', '/map');
+        self::assertSame(1, preg_match('/CC_MOD_TOKEN\s*=\s*"([^"]+)"/', (string) $client->getResponse()->getContent(), $m));
+
+        $client->request(
+            'POST',
+            '/moderate/decide',
+            ['moderation_decision' => ['submission_id' => (string) $sub->getId(), 'decision' => 'reject', 'note' => '', '_token' => $m[1]]],
+            [],
+            ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest', 'HTTP_ACCEPT' => 'application/json', 'HTTP_REFERER' => 'http://localhost/moderate'],
+        );
+
+        self::assertResponseStatusCodeSame(422);
+        /** @var array{error: string, message: string} $data */
+        $data = json_decode((string) $client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame('reject_note_required', $data['error']);
+        self::assertStringContainsString('Write the rider a note', $data['message']);
+    }
+
     public function testAjaxDecisionForbiddenForPlainRider(): void
     {
         $client = static::createClient();

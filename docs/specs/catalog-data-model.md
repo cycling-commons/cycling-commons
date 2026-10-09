@@ -603,6 +603,14 @@ chips carry the place filter, the form carries the kind, and a decision
 returns to the same view. Example: `/moderate/data?kind=duplicate&country=NL`
 shows only duplicate findings on Dutch rows.
 
+**Keeping one row retires the other**, and when a rider added the retired row
+(`App\Catalog\PlaceAuthor`: the approved new-place submission that created it)
+and the row kept is not theirs too, they are sent a statement of reasons
+(content-reports.md §7): retired, ground "another entry describes the same
+place", the curator's note on the decision as the facts. The desk says so
+under a duplicate's buttons. The same holds when an approved new place
+replaces another rider's place (§5a).
+
 **As built.** Materialisation answers by construction; `Version20260825110000`
 added `osm_checked_at` and backfilled the by-construction rows; the approval
 gate refuses an unanswered new place (`OsmUnansweredException`). The queue row

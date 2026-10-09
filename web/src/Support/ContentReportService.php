@@ -11,8 +11,12 @@ use App\Media\Entity\MediaUpload;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\MediaTakedownSource;
+use App\Messaging\MessageService;
 use App\Moderation\DeskSeen;
 use App\Moderation\SeenSubject;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
 use App\Security\PseudonymousKey;
 use App\Support\Entity\ContentReport;
 use Doctrine\ORM\EntityManagerInterface;
@@ -62,6 +66,9 @@ final class ContentReportService
         private readonly MediaEscalationService $escalations,
         // An answered claim is waiting work again, for every curator.
         private readonly DeskSeen $seen,
+        // The author's statement of reasons is a message in their inbox,
+        // emailed after the decision commits (content-reports.md §7).
+        private readonly MessageService $messages,
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
         // The no-reply sender every support mail uses (support.yaml).
@@ -246,9 +253,12 @@ final class ContentReportService
      * when nothing waits on the photo, which is the whole meaning of that
      * outcome.
      *
+     * The removal carries the uploader's statement of reasons, built here
+     * from the report, so it names the rule the report was upheld on.
+     *
      * @throws ReportDecisionRefused when upheld removed nothing
      */
-    private function carryDecisionToPhoto(ContentReport $report, ReportStatus $status, string $note, User $curator): void
+    private function carryDecisionToPhoto(ContentReport $report, ReportStatus $status, string $note, User $curator, ?ReportGround $rule): void
     {
         $upload = $this->photoOf($report);
         if (null === $upload) {
@@ -256,7 +266,8 @@ final class ContentReportService
         }
 
         $alreadyRemoved = null !== $upload->getObjectsDeletedAt() && self::keepsItsRemoval($report);
-        if (ReportStatus::Upheld === $status && !$alreadyRemoved && !$this->takedowns->removeOnReport($upload, $curator, $note)) {
+        $statement = $this->statementFor($report, $report->getGround()->isRule() ? $report->getGround() : $rule, $note, null);
+        if (ReportStatus::Upheld === $status && !$alreadyRemoved && !$this->takedowns->removeOnReport($upload, $curator, $note, $statement)) {
             throw new ReportDecisionRefused('report.desk.refused_nothing_to_remove');
         }
         // Only a report's own takedown. An uploader's request about their own
@@ -323,7 +334,7 @@ final class ContentReportService
             throw new ReportDecisionRefused('report.desk.flash_needs_rule');
         }
 
-        $this->carryDecisionToPhoto($report, $status, trim($note), $curator);
+        $this->carryDecisionToPhoto($report, $status, trim($note), $curator, $rule);
 
         $now = $this->clock->now();
         $report->decide($status, trim($note), (int) $curator->getId(), $now, $rule);
@@ -342,24 +353,56 @@ final class ContentReportService
      *
      * Separate from {@see decide()} because it needs the author, and only the
      * caller that decided knows who that is: the target is polymorphic, so
-     * there is no single query that finds them. Idempotent, so a curator who
-     * re-opens a report cannot send it twice.
+     * there is no single query that finds them ({@see ReportResolver}).
+     * Idempotent, so a curator who re-opens a report cannot send it twice.
+     *
+     * A message in the author's inbox, emailed once the decision has
+     * committed, worded by {@see StatementOfReasons}. A photo's uploader was
+     * told already: the removal itself carries the statement
+     * ({@see carryDecisionToPhoto()}).
+     *
+     * @param string|null $label what the report is about, as the desk names it
      */
-    public function tellAuthor(ContentReport $report, User $author): void
+    public function tellAuthor(ContentReport $report, User $author, ?string $label = null): void
     {
         if (!$report->getStatus()->owesStatementOfReasons() || $report->isAuthorTold()) {
             return;
         }
 
-        $this->send(
-            $author->getEmail(),
-            'emails/report_statement_of_reasons.html.twig',
-            'A decision about something you added',
-            ['report' => $report, 'author' => $author],
-        );
+        // A curator who upheld a report on their own content explains it to nobody.
+        if (!$report->getTargetType()->canAutoWithhold() && $author->getId() !== $report->getDecidedById()) {
+            $this->messages->sendStatement(
+                (int) $author->getId(),
+                0,
+                $this->statementFor($report, $report->getRuleGround(), (string) $report->getDecisionNote(), $label),
+            );
+        }
 
         $report->markAuthorTold($this->clock->now());
         $this->em->flush();
+    }
+
+    /**
+     * The statement of reasons for an upheld report: the rule it was upheld
+     * on, the curator's note as the facts, and for a copyright claim the page
+     * where the author answers it.
+     */
+    private function statementFor(ContentReport $report, ?ReportGround $rule, string $note, ?string $label): StatementOfReasons
+    {
+        $photo = $report->getTargetType()->canAutoWithhold();
+        $copyright = null !== $rule && $rule->needsOwnershipProof();
+
+        return new StatementOfReasons(
+            $photo ? StatementDecision::Removed : StatementDecision::ChangedOrRemoved,
+            (null !== $rule ? StatementGround::fromReport($rule) : null) ?? StatementGround::TermsOther,
+            mb_substr(trim($note), 0, StatementOfReasons::FACTS_MAX),
+            $report->getId()->toRfc4122(),
+            $photo ? null : $label,
+            fromReport: true,
+            factsKey: 'dsa_statement.facts.report_upheld',
+            answerPath: $copyright ? '/report/'.$report->getId()->toRfc4122().'/answer' : null,
+            aboutPhoto: $photo,
+        );
     }
 
     /**

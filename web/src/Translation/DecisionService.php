@@ -11,6 +11,10 @@ use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\MissingQuestionException;
+use App\Moderation\MissingReasonException;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
 use App\Translation\Entity\TranslationEntry;
 use App\Translation\Entity\TranslationOverlay;
 use App\Translation\Entity\TranslationProposal;
@@ -41,6 +45,7 @@ final class DecisionService
     /**
      * @throws UnknownProposalException    proposal id does not exist
      * @throws MissingQuestionException    needs_info without a note
+     * @throws MissingReasonException      reject without a note
      * @throws AlreadyDecidedException     proposal already settled
      * @throws SelfReviewException         curator is the submitter
      * @throws EmptyTranslationException   approve with an empty published string
@@ -53,6 +58,10 @@ final class DecisionService
         }
         if ('needs_info' === $decision && '' === trim((string) $note)) {
             throw new MissingQuestionException('A needs-info decision must carry the question to ask the rider.');
+        }
+        // A rejection's note is the facts of its statement of reasons (content-reports.md §7).
+        if ('reject' === $decision && '' === trim((string) $note)) {
+            throw new MissingReasonException('dsa_statement.desk.reject_note_required');
         }
 
         $proposal = $this->em->wrapInTransaction(function () use ($proposalId, $decision, $curator, $note, $published): TranslationProposal {
@@ -124,6 +133,13 @@ final class DecisionService
                     'messages.body.'.$kind->value,
                     ['%key%' => $messageKey, '%locale%' => $locale],
                     $note,
+                    'reject' === $decision ? new StatementOfReasons(
+                        StatementDecision::NotPublished,
+                        StatementGround::NotAccepted,
+                        trim((string) $note),
+                        'translation-'.$proposalId,
+                        $messageKey.' ('.$locale.')',
+                    ) : null,
                 );
             }
 

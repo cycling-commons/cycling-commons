@@ -1468,9 +1468,13 @@ The `?pending=<id>` deep link silently no-ops for non-curators.
   the drawer POSTs the same token the queue form family uses; CSRF is never
   disabled. The drawer rejects if the token is somehow absent (fail loudly,
   not a confusing 4xx).
-- One **optional note** may accompany ANY decision, including approve;
-  approve-with-empty-note is the fast path. Note length: `Length(max: 2000)`
-  on `ModerationDecisionType`.
+- One **note** may accompany ANY decision, including approve;
+  approve-with-empty-note is the fast path. Needs-info requires it (the
+  question), and so does **reject**: the note is the facts of the rider's
+  statement of reasons ([content-reports.md](content-reports.md) §7). A reject
+  without one answers 422 `reject_note_required` with the translated reason in
+  `message`, which the drawer shows and puts the focus on the note. Note
+  length: `Length(max: 2000)` on `ModerationDecisionType`.
 - Keyboard: **A**/**R** *arm* the decision (ring on the button, focus moves to
   the note); **Enter** in the note sends it. Never instant-submit. Mouse
   clicks submit immediately.
@@ -1840,7 +1844,8 @@ those citations resolve to.
 Columns: `user_id` (recipient), `kind` (enum `UserMessageKind`), `sender`
 (`system` \| `curator` \| `rider`), `sender_id` (NULL for system), `channel`
 (`submission`, `route`, `correction`, and the other senders' own: `curator_app`,
-`areas`, `media`, `translation`, `bug`), `ref_id`, `ref_label` (the human
+`areas`, `media`, `translation`, `bug`, and `statement` for a statement of
+reasons sent on its own), `ref_id`, `ref_label` (the human
 receipt, e.g. `SUB-42` or a route name), `body_key` + `body_params`
 (translation key + params for system messages), `body_text` (curator note or
 free-form body, verbatim), `media_id`, `trashed_at` (§6), `created_at`,
@@ -1867,6 +1872,21 @@ System bodies render via translation keys (`messages.body.<kind>`) in the
 `body_text` and renders verbatim (escaped). Body cap:
 `MessageService::BODY_TEXT_MAX_LENGTH`, **2000** characters, shared by notes,
 curator messages and replies (M11).
+
+**A decision that restricts what the rider added carries its statement of
+reasons** (DSA Article 17, [content-reports.md](content-reports.md) §7): a
+rejection of a submission, a route proposal or a translation, a retired route,
+a photo removed or hidden on a report, a refused file. The statement is stored
+on the same row, under the `_statement` body param
+(`StatementOfReasons::PARAM`; never a placeholder in the line), and
+`sendSystem(..., $statement)` puts it there. A decision with no message of its
+own (Trash as abuse, a retired place, photos left out of an approval, an upheld
+report) sends one of kind `statement_of_reasons` on channel `statement`
+(`MessageService::sendStatement()`, `ref_id` the row it is about, `ref_label`
+its reference). The messages page shows the statement under the body line,
+with the curator's note inside it rather than beside it; the email is the
+statement (§7.8). A rejection's note is therefore required, as a needs-info
+question is.
 
 ### 7.3 Needs-info reply loop: M6
 
@@ -2217,6 +2237,10 @@ channel on top of it, rendered per `User.locale`, so the needs-info loop, the
 one exchange in the system that is *waiting* on somebody, reaches the rider
 without them logging back in to look.
 
+- A message that carries a statement of reasons is emailed as the statement
+  itself (`StatementOfReasonsMailer`, `emails/statement_of_reasons.html.twig`),
+  from the support sender with `Reply-To` the published address, because its
+  redress line is "reply to this email" ([content-reports.md](content-reports.md) §7).
 - `MessageMailer` renders from the **same** `messages.kind_*` / `messages.body.*`
   keys the dashboard uses, in the **recipient's** locale — not the locale of the
   curator who made the decision. One wording, so an email cannot drift from the
@@ -2234,9 +2258,12 @@ without them logging back in to look.
   decision's transaction, so mailing there would announce decisions that can
   still roll back and would hold row locks across an SMTP round trip.
   `MessageOutbox` collects them and `MessageMailSubscriber` flushes on
-  `kernel.terminate` / `console.terminate` — after the response, after the
-  commit. The mailer **re-reads the row** before sending, so a rolled-back
-  decision sends nothing.
+  `kernel.terminate` / `console.terminate`, after the response and after the
+  commit, and on the messenger worker after every message it handled or
+  failed (`WorkerMessageHandledEvent`, `WorkerMessageFailedEvent`): the worker
+  runs for an hour, and a decision made in a handler (a refused upload, its
+  statement of reasons) must not wait for it to exit. The mailer **re-reads
+  the row** before sending, so a rolled-back decision sends nothing.
 - **`RiderReply` is deliberately silent.** It is addressed to the deciding
   curator, who has a desk that already shows it; mailing every reply turns a
   queue into an inbox.
@@ -2268,7 +2295,7 @@ that is the question a reader is actually asking when they reach for a filter.
 | Shelf | Means | Kinds |
 |---|---|---|
 | **Contributions** | an answer to something the rider offered or asked for | submission approved/rejected/needs-info, route approved/rejected/retired, correction done/dismissed, **and** takedown granted/declined |
-| **Notices** | something the platform did that the rider did not start | photo removed on report, hidden pending review, restored after review |
+| **Notices** | something the platform did that the rider did not start | photo removed on report, hidden pending review, restored after review, a statement of reasons sent on its own |
 | **General** | a person wrote to them | curator message |
 
 The takedown split is the case worth stating: a rider who *asked* for their own
@@ -2321,7 +2348,14 @@ it is and records the move.
 
 Photos are not touched in the bin: a pending photo stays pending and
 unpublished. The content-free audit line (`TrashActions::Trash*`) is written on
-every Trash. `Version20261001210000` adds the columns.
+every Trash, ending `ground=spam` or `ground=abuse`. `Version20261001210000`
+adds the columns.
+
+**Every Trash names its ground**: spam or abuse (`StatementGround::forTrash()`),
+a required radio in each Trash form (`moderate/_trash_ground.html.twig`, on the
+queue card, a route correction and a route proposal), checked again by
+`ModerationService::trashFacts()`. Abuse also needs the facts, in a box the
+rider reads. The ground is not stored on the row; the audit line carries it.
 
 **Hidden everywhere but the Trash list.** A trashed row is on no queue, no
 History page, no map layer (curator or public), no rider page but one (the
@@ -2344,10 +2378,16 @@ finishes scanning sends no message. A rider re-adding an OSM place whose item
 is in the bin revives that item, as for a rejected one, instead of failing on
 the unique `source_ref`.
 
-**The rider is sent nothing**, on Trash or on restore: no message, no email.
-On their Contributions list the row turns grey with the Removed tag, its thread
-leaves their messages page, and after a restore both come back as they were;
-after the purge the row is gone from the list too.
+**What the rider is sent.** Trash as **spam** sends nothing, no message and no
+email: DSA Article 17(2) does not apply to deceptive high-volume commercial
+content, and a statement would tell a spammer what got caught. Trash as
+**abuse** sends a statement of reasons with the curator's facts
+([content-reports.md](content-reports.md) §7), as a `statement_of_reasons`
+message on the `statement` channel, so it is not hidden with the thread and
+not purged with the row; it goes when the account goes. A restore sends
+nothing either way. On their Contributions list the row turns grey with the
+Removed tag, its thread leaves their messages page, and after a restore both
+come back as they were; after the purge the row is gone from the list too.
 
 **The Trash page** (`/moderate/trash`, `ModerateTrashController`, chip beside
 Queue and History on both desks) lists the bin in the reader's areas

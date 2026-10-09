@@ -26,6 +26,7 @@ use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationService;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RouteModerationService;
+use App\Moderation\StatementGround;
 use App\Moderation\TrashActions;
 use App\Moderation\TrashBin;
 use Doctrine\DBAL\Connection;
@@ -176,7 +177,7 @@ final class TrashBinTest extends WebTestCase
         $this->messages()->markAllRead((int) $rider->getId());
         $before = $this->db()->fetchAllAssociative('SELECT id, user_id, read_at FROM user_message WHERE channel = ? AND ref_id = ? ORDER BY id', ['submission', $id]);
 
-        $this->moderation()->trashSubmission($id, $curator);
+        $this->moderation()->trashSubmission($id, $curator, StatementGround::Spam);
         self::assertSame(0, $this->messages()->countFor((int) $rider->getId()), 'in the bin, the thread is in no inbox');
         $restoresBefore = $this->auditCount(TrashActions::RestoreSubmission);
 
@@ -209,8 +210,8 @@ final class TrashBinTest extends WebTestCase
         $sId = (int) $correction->getId();
         $rId = (int) $proposal->getId();
 
-        $this->routes()->trashSuggestion($sId, $curator);
-        $this->routes()->trashProposal($rId, $curator);
+        $this->routes()->trashSuggestion($sId, $curator, StatementGround::Spam);
+        $this->routes()->trashProposal($rId, $curator, StatementGround::Spam);
         $this->routes()->restoreSuggestion($sId, $curator);
         $this->routes()->restoreProposal($rId, $curator);
 
@@ -227,7 +228,7 @@ final class TrashBinTest extends WebTestCase
         $global = $this->curator();
         $local = $this->curator((int) $inArea->getId());
         $sub = $this->newPlace($rider, $global, (int) $elsewhere->getId());
-        $this->moderation()->trashSubmission((int) $sub->getId(), $global);
+        $this->moderation()->trashSubmission((int) $sub->getId(), $global, StatementGround::Spam);
 
         $scope = static::getContainer()->get(\App\Moderation\ModerationScopeProvider::class)->scopeFor($local);
         $listed = array_map(static fn (array $e): int => $e['id'], $this->bin()->page($scope, 1, 100));
@@ -248,7 +249,7 @@ final class TrashBinTest extends WebTestCase
         $itemId = (int) $sub->getItemId();
         $trashedAt = new \DateTimeImmutable();
         self::mockTime($trashedAt);
-        $this->moderation()->trashSubmission($id, $curator);
+        $this->moderation()->trashSubmission($id, $curator, StatementGround::Spam);
         $this->em()->clear();
 
         self::mockTime($trashedAt->modify('+29 days'));
@@ -282,8 +283,8 @@ final class TrashBinTest extends WebTestCase
 
         $trashedAt = new \DateTimeImmutable();
         self::mockTime($trashedAt);
-        $this->routes()->trashSuggestion($sId, $curator);
-        $this->routes()->trashProposal($rId, $curator);
+        $this->routes()->trashSuggestion($sId, $curator, StatementGround::Spam);
+        $this->routes()->trashProposal($rId, $curator, StatementGround::Spam);
 
         self::mockTime($trashedAt->modify('+31 days'));
         $this->bin()->purgeExpired();
@@ -304,7 +305,7 @@ final class TrashBinTest extends WebTestCase
         $id = (int) $sub->getId();
         $trashedAt = new \DateTimeImmutable();
         self::mockTime($trashedAt);
-        $this->moderation()->trashSubmission($id, $curator);
+        $this->moderation()->trashSubmission($id, $curator, StatementGround::Spam);
         $this->db()->executeStatement('UPDATE submission SET escalated_at = NOW() WHERE id = ?', [$id]);
 
         self::mockTime($trashedAt->modify('+400 days'));
@@ -324,7 +325,7 @@ final class TrashBinTest extends WebTestCase
         $this->em()->clear();
 
         $this->expectException(\LogicException::class);
-        $this->moderation()->trashSubmission((int) $sub->getId(), $curator);
+        $this->moderation()->trashSubmission((int) $sub->getId(), $curator, StatementGround::Spam);
     }
 
     // ── Hidden everywhere but the Trash list ────────────────────────────────
@@ -335,7 +336,7 @@ final class TrashBinTest extends WebTestCase
         $rider = $this->rider();
         $curator = $this->curator();
         $sub = $this->newPlace($rider, $curator);
-        $this->moderation()->trashSubmission((int) $sub->getId(), $curator);
+        $this->moderation()->trashSubmission((int) $sub->getId(), $curator, StatementGround::Spam);
 
         $client->loginUser($rider);
         // The rider's own list keeps it, greyed and tagged Removed, with no
@@ -378,7 +379,7 @@ final class TrashBinTest extends WebTestCase
         $curator = $this->curator();
         $sub = $this->newPlace($rider, $curator);
         $id = (int) $sub->getId();
-        $this->moderation()->trashSubmission($id, $curator);
+        $this->moderation()->trashSubmission($id, $curator, StatementGround::Spam);
 
         $client->loginUser($curator);
         foreach (['/moderate/submissions', '/moderate/submissions/history'] as $page) {
@@ -411,7 +412,7 @@ final class TrashBinTest extends WebTestCase
         $id = (int) $sub->getId();
         // A card still on the queue, for a real session-bound message token.
         $this->newPlace($this->rider(), $curator);
-        $this->moderation()->trashSubmission($id, $curator);
+        $this->moderation()->trashSubmission($id, $curator, StatementGround::Spam);
 
         $client->loginUser($curator);
         $crawler = $client->request('GET', '/moderate/submissions');

@@ -15,6 +15,7 @@ use App\Catalog\Import\OsmCandidates;
 use App\Catalog\Import\OsmLinker;
 use App\Catalog\ItemState;
 use App\Catalog\ItemType;
+use App\Catalog\PlaceAuthor;
 use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Community\ItemConfirmationService;
@@ -27,6 +28,8 @@ use App\Media\PhotoAltSuggestion;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
+use App\Support\ReportedSubjects;
+use App\Support\ReportTarget;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -62,6 +65,9 @@ final class ModerationService
         private readonly PlaceTextWriter $placeTexts,
         private readonly ClockInterface $clock,
         private readonly MediaEscalationService $mediaEscalations,
+        private readonly PlaceAuthor $placeAuthor,
+        // Whether a report led here, for the statement's source line (content-reports.md §7).
+        private readonly ReportedSubjects $reported,
     ) {
     }
 
@@ -78,6 +84,10 @@ final class ModerationService
         // Needs-info is the question; a blank note is refused (docs/specs/moderation-and-contribution.md §5.3).
         if ('needs_info' === $decision && '' === trim((string) $note)) {
             throw new MissingQuestionException('A needs-info decision must carry the question to ask the rider.');
+        }
+        // A rejection's note is the facts of its statement of reasons (content-reports.md §7).
+        if ('reject' === $decision && '' === trim((string) $note)) {
+            throw new MissingReasonException('dsa_statement.desk.reject_note_required');
         }
 
         return $this->em->wrapInTransaction(function () use ($submissionId, $decision, $curator, $note, $rejectMediaIds): Submission {
@@ -154,13 +164,26 @@ final class ModerationService
                 'reject' => UserMessageKind::SubmissionRejected,
                 'needs_info' => UserMessageKind::SubmissionNeedsInfo,
             };
-            // Outcome message rides the decision transaction.
-            $this->messages->sendSystem(
-                $submission->getUserId(), $kind,
-                'submission', $submissionId, 'SUB-'.$submissionId,
-                'messages.body.'.$kind->value, ['%title%' => $submission->getTitle()],
-                $note,
-            );
+            // Outcome message rides the decision transaction; a deleted account hears nothing.
+            // A rejection carries its statement of reasons (content-reports.md §7),
+            // except to the curator who rejected their own submission.
+            $riderId = $submission->getUserId();
+            if (null !== $riderId) {
+                $this->messages->sendSystem(
+                    $riderId, $kind,
+                    'submission', $submissionId, 'SUB-'.$submissionId,
+                    'messages.body.'.$kind->value, ['%title%' => $submission->getTitle()],
+                    $note,
+                    'reject' === $decision && $riderId !== $curator->getId() ? new StatementOfReasons(
+                        StatementDecision::NotPublished,
+                        StatementGround::NotAccepted,
+                        trim((string) $note),
+                        'SUB-'.$submissionId,
+                        $submission->getTitle(),
+                        fromReport: $this->followsReport($submission),
+                    ) : null,
+                );
+            }
 
             return $submission;
         });
@@ -210,13 +233,21 @@ final class ModerationService
      * Move a submission in any status to Trash: hidden from every list, map
      * and inbox, kept with its photos, its new place and its message thread
      * for TrashBin::TRASH_DAYS days, then purged (TrashBin). Audited
-     * content-free first. No message to the rider.
+     * content-free first, ground included.
+     *
+     * Spam tells the rider nothing (DSA Article 17(2)). Abuse sends them a
+     * statement of reasons with the curator's facts, on its own channel so the
+     * bin does not hide it with the thread.
+     *
+     * @throws MissingReasonException when the ground is not one Trash takes, or abuse comes without facts
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
-    public function trashSubmission(int $id, User $curator): void
+    public function trashSubmission(int $id, User $curator, StatementGround $ground, ?string $facts = null): void
     {
-        $this->em->wrapInTransaction(function () use ($id, $curator): void {
+        $facts = self::trashFacts($ground, $facts);
+
+        $this->em->wrapInTransaction(function () use ($id, $curator, $ground, $facts): void {
             $submission = $this->em->find(Submission::class, $id, LockMode::PESSIMISTIC_WRITE);
             if (null === $submission || $submission->isTrashed()) {
                 throw new \InvalidArgumentException(sprintf('Unknown submission %d', $id));
@@ -229,7 +260,7 @@ final class ModerationService
                 throw new \LogicException(sprintf('SUB-%d is under legal hold and cannot be trashed.', $id));
             }
 
-            $this->adminLog->log($curator, TrashActions::TrashSubmission, null, sprintf('SUB-%d · type=%s', $id, $submission->getType()->value));
+            $this->adminLog->log($curator, TrashActions::TrashSubmission, null, sprintf('SUB-%d · type=%s · ground=%s', $id, $submission->getType()->value, $ground->value));
             $now = $this->clock->now();
             $submission->moveToTrash((int) $curator->getId(), $now);
             // A new place still waiting on the queue leaves the map with it.
@@ -238,7 +269,43 @@ final class ModerationService
                 $item->setState(ItemState::Trashed);
             }
             $this->messages->trashThread('submission', $id, $now);
+
+            $riderId = $submission->getUserId();
+            // Nobody explains a decision to themselves.
+            if (null !== $riderId && $riderId !== $curator->getId() && $ground->owesStatement()) {
+                $this->messages->sendStatement($riderId, $id, new StatementOfReasons(
+                    StatementDecision::Removed,
+                    $ground,
+                    $facts,
+                    'SUB-'.$id,
+                    $submission->getTitle(),
+                    fromReport: $this->followsReport($submission),
+                    factsKey: 'dsa_statement.facts.trashed',
+                ));
+            }
         });
+    }
+
+    /**
+     * The facts a Trash decision carries: none for spam, the curator's own
+     * words for abuse. Shared with the route desk's Trash.
+     *
+     * @throws MissingReasonException
+     */
+    public static function trashFacts(StatementGround $ground, ?string $facts): string
+    {
+        if (!\in_array($ground, StatementGround::forTrash(), true)) {
+            throw new MissingReasonException('dsa_statement.desk.trash_needs_ground');
+        }
+        $facts = trim((string) $facts);
+        if ($ground->owesStatement() && '' === $facts) {
+            throw new MissingReasonException('dsa_statement.desk.trash_needs_facts');
+        }
+        if (mb_strlen($facts) > StatementOfReasons::FACTS_MAX) {
+            throw new MissingReasonException('moderate.error.note_too_long');
+        }
+
+        return $ground->owesStatement() ? $facts : '';
     }
 
     /**
@@ -312,10 +379,37 @@ final class ModerationService
         // One place, one row: what this place replaces (the same OSM point
         // held by another row, and the similar places the rider left ticked)
         // is retired now, and not before (catalog-data-model.md §5a).
-        $this->replacedPlaces->apply(
+        $retired = $this->replacedPlaces->apply(
             $item,
             ReplacedPlaces::ticks($submission->getPayload()['_replaces'] ?? null),
             fn (Item $changed, string $field, mixed $old, mixed $new) => $this->history($changed, $submission, $curator, $field, $old, $new),
+        );
+
+        // A rider whose place was replaced by somebody else's is told why
+        // (content-reports.md §7); replacing your own place tells you nothing,
+        // and neither does approving the place that replaces your own.
+        foreach ($retired as $old) {
+            $author = $this->placeAuthor->of((int) $old->getId());
+            if (null !== $author && $author !== $submission->getUserId() && $author !== $curator->getId()) {
+                $this->messages->sendStatement($author, (int) $old->getId(), self::retiredStatement($old, null));
+            }
+        }
+    }
+
+    /**
+     * The statement of reasons for a place taken off the map because another
+     * entry describes the same place. Shared with the duplicates desk.
+     */
+    public static function retiredStatement(Item $place, ?string $note, bool $fromReport = false): StatementOfReasons
+    {
+        return new StatementOfReasons(
+            StatementDecision::Retired,
+            StatementGround::Duplicate,
+            mb_substr(trim((string) $note), 0, StatementOfReasons::FACTS_MAX),
+            'place-'.(int) $place->getId(),
+            $place->getName(),
+            fromReport: $fromReport,
+            factsKey: 'dsa_statement.facts.retired_duplicate',
         );
     }
 

@@ -11,6 +11,7 @@ use App\Form\TranslationDecisionType;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\DeskRider;
 use App\Moderation\MissingQuestionException;
+use App\Moderation\MissingReasonException;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\Languages;
@@ -180,6 +181,8 @@ final class ModerateTranslationsController extends AbstractController
                 return $this->redirectToRoute('moderate_translations');
             } catch (MissingQuestionException) {
                 $this->addFlash('danger', 'moderate.error.needs_info_note_required');
+            } catch (MissingReasonException $e) {
+                $this->addFlash('danger', $e->getMessage());
             } catch (SelfReviewException) {
                 $this->addFlash('danger', 'moderate.translation.error.self_review');
             } catch (AlreadyDecidedException) {

@@ -258,6 +258,7 @@ final class ModerateScopeGuardTest extends WebTestCase
         $token = (string) $crawler->filter('.trash-confirm input[name="_token"]')->first()->attr('value');
 
         $client->request('POST', '/moderate/trash', [
+            'ground' => 'spam',
             'kind' => 'submission',
             'confirm' => 'DELETE',
             'id' => (string) $subB->getId(),

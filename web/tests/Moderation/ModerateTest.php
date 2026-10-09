@@ -337,6 +337,7 @@ final class ModerateTest extends WebTestCase
             'moderation_decision' => [
                 'submission_id' => (string) $sub->getId(),
                 'decision' => 'reject',
+                'note' => 'Not this place.',
                 '_token' => $token,
             ],
         ]);

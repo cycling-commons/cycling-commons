@@ -20,6 +20,7 @@ use App\Media\MediaConsent;
 use App\Media\MediaStorage;
 use App\Media\ProcessedPhoto;
 use App\Moderation\ModerationService;
+use App\Moderation\StatementGround;
 use App\Moderation\TrashBin;
 use App\Service\UserDeletionService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -188,7 +189,7 @@ final class MediaDisposalTest extends KernelTestCase
         $prefix = $upload->getPathPrefix();
 
         static::getContainer()->get(ModerationService::class)
-            ->trashSubmission((int) $submission->getId(), $curator);
+            ->trashSubmission((int) $submission->getId(), $curator, StatementGround::Spam);
         $this->em->clear();
         self::assertNotNull($this->em->find(MediaUpload::class, $upload->getId()), 'kept, untouched, while the submission waits in Trash');
         self::assertTrue($this->filesystem->fileExists($prefix.'/orig.webp'));

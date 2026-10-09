@@ -14,12 +14,14 @@ use App\Entity\User;
 use App\Form\RouteDecisionType;
 use App\Form\RouteEditType;
 use App\Moderation\DeskRider;
+use App\Moderation\MissingReasonException;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\OutOfScopeException;
 use App\Moderation\RegionFullException;
 use App\Moderation\RouteModerationService;
 use App\Moderation\RouteProposalDetails;
 use App\Moderation\RouteQueue;
+use App\Moderation\StatementGround;
 use App\Moderation\TrashBin;
 use App\Moderation\TrashBlockedException;
 use App\Pagination\Pager;
@@ -160,6 +162,8 @@ final class RouteModerateController extends AbstractController
             throw $this->createAccessDeniedException('Out of moderation scope.');
         } catch (RegionFullException) {
             $this->addFlash('danger', 'moderate_routes.error.region_full');
+        } catch (MissingReasonException $e) {
+            $this->addFlash('danger', $e->getMessage());
         } catch (\InvalidArgumentException|\LogicException) {
             $this->addFlash('danger', 'moderate_routes.error.undecidable');
         }
@@ -343,15 +347,24 @@ final class RouteModerateController extends AbstractController
         /** @var User $curator */
         $curator = $this->getUser();
 
+        // Spam tells the rider nothing; abuse sends a statement of reasons (content-reports.md §7).
+        $ground = StatementGround::tryFrom((string) $request->request->get('ground'));
+        $facts = (string) $request->request->get('facts', '');
+
         try {
+            if (null === $ground) {
+                throw new MissingReasonException('dsa_statement.desk.trash_needs_ground');
+            }
             match ($kind) {
-                'correction' => $this->moderation->trashSuggestion($id, $curator),
-                'proposal' => $this->moderation->trashProposal($id, $curator),
+                'correction' => $this->moderation->trashSuggestion($id, $curator, $ground, $facts),
+                'proposal' => $this->moderation->trashProposal($id, $curator, $ground, $facts),
                 default => throw new \InvalidArgumentException('Unknown trash kind.'),
             };
             $this->addFlash('success', 'moderate.trash.done');
         } catch (OutOfScopeException) {
             throw $this->createAccessDeniedException('Out of moderation scope.');
+        } catch (MissingReasonException $e) {
+            $this->addFlash('danger', $e->getMessage());
         } catch (TrashBlockedException) {
             $this->addFlash('danger', 'moderate.trash.blocked');
         } catch (\InvalidArgumentException) {

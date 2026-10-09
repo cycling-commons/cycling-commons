@@ -175,11 +175,9 @@ final class ModerateReportsController extends AbstractController
      * in the author's statement of reasons, so "upheld" with an empty note
      * produces a legally required message that explains nothing.
      *
-     * Telling the author is a checkbox rather than automatic, because the
-     * curator is the only one who knows whether the person the resolver found
-     * is really the person whose words were restricted. It is offered only when
-     * there is an author to tell, and {@see ContentReportService::tellAuthor()}
-     * refuses to send twice.
+     * An upheld decision tells the author whenever the resolver finds one
+     * (DSA Article 17 is owed, not offered), and
+     * {@see ContentReportService::tellAuthor()} refuses to send twice.
      */
     #[Route('/moderate/reports/{id}/decide', name: 'moderate_reports_decide', requirements: ['id' => '[0-9a-fA-F-]{36}'], methods: ['POST'])]
     public function decide(string $id, Request $request): Response
@@ -238,9 +236,12 @@ final class ModerateReportsController extends AbstractController
             return $this->redirectToRoute('moderate_reports_detail', ['id' => $id]);
         }
 
-        $author = $this->resolver->resolve($report)['author'];
-        if ($request->request->getBoolean('tell_author') && $author instanceof User) {
-            $this->reports->tellAuthor($report, $author);
+        // Upheld owes the author a statement of reasons, every time there is
+        // one to tell (content-reports.md §7); tellAuthor() sends it once.
+        $resolved = $this->resolver->resolve($report);
+        $author = $resolved['author'];
+        if ($author instanceof User) {
+            $this->reports->tellAuthor($report, $author, $resolved['label']);
         }
         // An author who answered the claim was promised the decision.
         if ($report->hasCounterNotice() && $author instanceof User) {

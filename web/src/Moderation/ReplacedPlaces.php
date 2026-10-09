@@ -82,9 +82,12 @@ final readonly class ReplacedPlaces
      *
      * @param array{items: list<int>, osm: list<string>} $ticks
      * @param callable(Item, string, mixed, mixed): void $history records one change on an item
+     *
+     * @return list<Item> the places retired, so their authors can be told why
      */
-    public function apply(Item $new, array $ticks, callable $history): void
+    public function apply(Item $new, array $ticks, callable $history): array
     {
+        $retired = [];
         $newId = (int) $new->getId();
 
         // A ticked OSM point becomes the new place's own when it has none and
@@ -108,6 +111,7 @@ final readonly class ReplacedPlaces
             $old->setState(ItemState::Retired);
             $history($old, 'state', $was, ItemState::Retired->value);
             $history($old, 'replaced_by', null, $newId);
+            $retired[] = $old;
 
             // The survivor inherits the retired row's OSM identity, as an
             // accepted duplicate does: otherwise retiring the row that held
@@ -118,6 +122,8 @@ final readonly class ReplacedPlaces
                 $history($new, 'osm_ref', null, $inherited);
             }
         }
+
+        return $retired;
     }
 
     /**

@@ -19,6 +19,8 @@ use App\Messaging\UserMessageKind;
 use App\Service\AdminActionLogger;
 use App\Settings\SettingsProviderInterface;
 use App\Settings\SettingsRegistry;
+use App\Support\ReportedSubjects;
+use App\Support\ReportTarget;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -45,6 +47,8 @@ final class RouteModerationService
         private readonly ModerationScopeProvider $scopeProvider,
         private readonly MediaDecisionService $mediaDecisions,
         private readonly ClockInterface $clock,
+        // Whether a report led here, for the statement's source line (content-reports.md §7).
+        private readonly ReportedSubjects $reported,
     ) {
     }
 
@@ -78,8 +82,15 @@ final class RouteModerationService
         });
     }
 
+    /**
+     * @throws MissingReasonException without a note: it is the facts of the proposer's statement of reasons
+     */
     public function reject(int $routeId, User $curator, ?string $note): RecommendedRoute
     {
+        if ('' === trim((string) $note)) {
+            throw new MissingReasonException('dsa_statement.desk.reject_note_required');
+        }
+
         return $this->em->wrapInTransaction(function () use ($routeId, $curator, $note): RecommendedRoute {
             $route = $this->load($routeId);
             $this->assertInScope($curator, $route->getRegionId());
@@ -88,7 +99,7 @@ final class RouteModerationService
             }
             $this->transition($route, ItemState::Rejected, $curator, $note);
             $this->decidePhotos($route, null, 'reject', $curator, $note);
-            $this->notifyProposer($route, UserMessageKind::RouteRejected, $note);
+            $this->notifyProposer($route, UserMessageKind::RouteRejected, $note, StatementDecision::NotPublished, StatementGround::NotAccepted, $curator);
 
             return $route;
         });
@@ -107,7 +118,7 @@ final class RouteModerationService
                 throw new \LogicException('Only an active (unverified/verified) route can be retired.');
             }
             $this->transition($route, ItemState::Retired, $curator, $note);
-            $this->notifyProposer($route, UserMessageKind::RouteRetired, $note);
+            $this->notifyProposer($route, UserMessageKind::RouteRetired, $note, StatementDecision::Retired, StatementGround::NotAccepted, $curator);
 
             return $route;
         });
@@ -280,7 +291,7 @@ final class RouteModerationService
             $routeName = $route?->getName() ?? sprintf('route-%d', $s->getRouteId());
             $kind = RouteSuggestionStatus::Done === $status ? UserMessageKind::CorrectionDone : UserMessageKind::CorrectionDismissed;
             $this->messages->sendSystem(
-                $s->getUserId(), $kind,
+                $riderId, $kind,
                 'correction', (int) $s->getId(), $routeName,
                 'messages.body.'.$kind->value, ['%name%' => $routeName],
             );
@@ -296,9 +307,11 @@ final class RouteModerationService
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
-    public function trashSuggestion(int $id, User $curator): void
+    public function trashSuggestion(int $id, User $curator, StatementGround $ground, ?string $facts = null): void
     {
-        $this->em->wrapInTransaction(function () use ($id, $curator): void {
+        $facts = ModerationService::trashFacts($ground, $facts);
+
+        $this->em->wrapInTransaction(function () use ($id, $curator, $ground, $facts): void {
             $s = $this->em->find(RouteSuggestion::class, $id, LockMode::PESSIMISTIC_WRITE);
             if (null === $s || $s->isTrashed()) {
                 throw new \InvalidArgumentException(sprintf('Suggestion %d not found.', $id));
@@ -306,10 +319,20 @@ final class RouteModerationService
             $route = $this->em->find(RecommendedRoute::class, $s->getRouteId());
             $this->assertInScope($curator, $route?->getRegionId());
 
-            $this->adminLog->log($curator, TrashActions::TrashCorrection, null, sprintf('suggestion %d on route %d', $id, $s->getRouteId()));
+            $this->adminLog->log($curator, TrashActions::TrashCorrection, null, sprintf('suggestion %d on route %d · ground=%s', $id, $s->getRouteId(), $ground->value));
             $now = $this->clock->now();
             $s->moveToTrash((int) $curator->getId(), $now);
             $this->messages->trashThread('correction', $id, $now);
+            $riderId = $s->getUserId();
+            // Nobody explains a decision to themselves.
+            if (null !== $riderId && $riderId !== $curator->getId() && $ground->owesStatement()) {
+                $this->messages->sendStatement($riderId, $id, new StatementOfReasons(
+                    StatementDecision::Removed, $ground, $facts, 'correction-'.$id, $route?->getName(),
+                    // A correction is never public, so only what its rider wrote in its thread can have been reported.
+                    fromReport: $this->reported->followsReport(null, null, 'correction', $id, $riderId),
+                    factsKey: 'dsa_statement.facts.trashed',
+                ));
+            }
         });
     }
 
@@ -345,9 +368,11 @@ final class RouteModerationService
      *
      * @see docs/specs/moderation-and-contribution.md §6
      */
-    public function trashProposal(int $routeId, User $curator): void
+    public function trashProposal(int $routeId, User $curator, StatementGround $ground, ?string $facts = null): void
     {
-        $this->em->wrapInTransaction(function () use ($routeId, $curator): void {
+        $facts = ModerationService::trashFacts($ground, $facts);
+
+        $this->em->wrapInTransaction(function () use ($routeId, $curator, $ground, $facts): void {
             $route = $this->load($routeId);
             $this->assertInScope($curator, $route->getRegionId());
             if (!\in_array($route->getState(), [ItemState::Submitted, ItemState::Rejected], true)) {
@@ -355,10 +380,18 @@ final class RouteModerationService
             }
 
             // Content-free: a submitted name is unvetted free text (docs/specs/moderation-and-contribution.md §6).
-            $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf('route %d state=%s', $routeId, $route->getState()->value));
+            $this->adminLog->log($curator, TrashActions::TrashRouteProposal, null, sprintf('route %d state=%s · ground=%s', $routeId, $route->getState()->value, $ground->value));
             $now = $this->clock->now();
             $route->moveToTrash((int) $curator->getId(), $now);
             $this->messages->trashThread('route', $routeId, $now);
+            $proposer = $route->getProposedBy();
+            if (null !== $proposer && $proposer !== $curator->getId() && $ground->owesStatement()) {
+                $this->messages->sendStatement($proposer, $routeId, new StatementOfReasons(
+                    StatementDecision::Removed, $ground, $facts, 'route-'.$routeId, $route->getName(),
+                    fromReport: $this->followsReport($route),
+                    factsKey: 'dsa_statement.facts.trashed',
+                ));
+            }
         });
     }
 
@@ -458,19 +491,34 @@ final class RouteModerationService
         }
     }
 
-    /** Outcome message rides the decision transaction; skipped for imported routes. */
-    private function notifyProposer(RecommendedRoute $route, UserMessageKind $kind, ?string $note): void
+    /**
+     * The proposer's message, which rides the decision transaction; skipped
+     * for imported routes. A rejection or a retirement carries its statement
+     * of reasons, the curator's note as its facts, saying whether a report
+     * led here (content-reports.md §7); a curator deciding on their own
+     * route gets the message without a statement.
+     */
+    private function notifyProposer(RecommendedRoute $route, UserMessageKind $kind, ?string $note, ?StatementDecision $restriction = null, ?StatementGround $ground = null, ?User $curator = null): void
     {
         $proposer = $route->getProposedBy();
         if (null === $proposer) {
             return;
         }
         $this->messages->sendSystem(
-            $route->getProposedBy(), $kind,
+            $proposer, $kind,
             'route', (int) $route->getId(), $route->getName(),
             'messages.body.'.$kind->value, ['%name%' => $route->getName()],
             $note,
+            null !== $restriction && null !== $ground && $proposer !== $curator?->getId()
+                ? new StatementOfReasons($restriction, $ground, trim((string) $note), 'route-'.(int) $route->getId(), $route->getName(), fromReport: $this->followsReport($route))
+                : null,
         );
+    }
+
+    /** A report on the route, or on what its proposer wrote in its thread, led to this decision. */
+    private function followsReport(RecommendedRoute $route): bool
+    {
+        return $this->reported->followsReport(ReportTarget::Route, (string) $route->getId(), 'route', (int) $route->getId(), $route->getProposedBy());
     }
 
     /** A route in Trash is found only by restoreProposal(). */

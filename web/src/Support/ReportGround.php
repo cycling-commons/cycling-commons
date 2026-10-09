@@ -9,11 +9,12 @@ namespace App\Support;
 /**
  * Why somebody is reporting it.
  *
- * The same five grounds `/terms` §12 already publishes as "what gets taken
- * down", plus the sixth added on 2026-08-28 for generated images. They are the
- * same list on purpose: a reporter should be choosing from the rules we
- * actually apply, and the statement of reasons DSA Article 17 requires has to
- * name a ground the author can go and read.
+ * Every case but `Other` is one of the nine grounds `/terms` §12 publishes as
+ * "what gets taken down", in the same order. They are the same list on
+ * purpose: a reporter should be choosing from the rules we actually apply,
+ * and the statement of reasons DSA Article 17 requires has to name a ground
+ * the author can go and read. A new case needs its `terms.mod_std*` line in
+ * all five languages.
  *
  * @see docs/specs/content-reports.md §2
  *

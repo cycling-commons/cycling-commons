@@ -24,6 +24,7 @@ use App\Messaging\UserMessageKind;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\RouteModerationService;
+use App\Moderation\StatementGround;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TrashActions;
 use App\Moderation\TrashBlockedException;
@@ -206,7 +207,7 @@ final class TrashTest extends WebTestCase
         $subId = (int) $sub->getId();
         $curator = $this->curator();
 
-        $this->moderation()->trashSubmission($subId, $curator);
+        $this->moderation()->trashSubmission($subId, $curator, StatementGround::Spam);
 
         $this->em()->clear();
         $kept = $this->em()->find(Submission::class, $subId);
@@ -255,7 +256,7 @@ final class TrashTest extends WebTestCase
         self::assertNotNull($keptChannel);
         $keptIds = [(int) $keptOther->getId(), (int) $keptChannel->getId()];
 
-        $this->moderation()->trashSubmission($subId, $curator);
+        $this->moderation()->trashSubmission($subId, $curator, StatementGround::Spam);
 
         $this->em()->clear();
         $db = $this->em()->getConnection();
@@ -293,7 +294,7 @@ final class TrashTest extends WebTestCase
         $subId = (int) $sub->getId();
         $itemId = (int) $item->getId();
 
-        $this->moderation()->trashSubmission($subId, $this->curator());
+        $this->moderation()->trashSubmission($subId, $this->curator(), StatementGround::Spam);
 
         $this->em()->clear();
         self::assertSame(SubmissionStatus::Trashed, $this->em()->find(Submission::class, $subId)?->getStatus());
@@ -313,7 +314,7 @@ final class TrashTest extends WebTestCase
         $subId = (int) $sub->getId();
         $itemId = (int) $item->getId();
 
-        $this->moderation()->trashSubmission($subId, $this->curator());
+        $this->moderation()->trashSubmission($subId, $this->curator(), StatementGround::Spam);
 
         $this->em()->clear();
         self::assertSame(SubmissionStatus::Trashed, $this->em()->find(Submission::class, $subId)?->getStatus());
@@ -335,7 +336,7 @@ final class TrashTest extends WebTestCase
         $subId = (int) $sub->getId();
         $itemId = (int) $item->getId();
 
-        $this->moderation()->trashSubmission($subId, $this->curator());
+        $this->moderation()->trashSubmission($subId, $this->curator(), StatementGround::Spam);
 
         $this->em()->clear();
         self::assertSame(SubmissionStatus::Trashed, $this->em()->find(Submission::class, $subId)?->getStatus());
@@ -358,7 +359,7 @@ final class TrashTest extends WebTestCase
         $subId = (int) $sub->getId();
         $curator = $this->curator();
 
-        $this->moderation()->trashSubmission($subId, $curator);
+        $this->moderation()->trashSubmission($subId, $curator, StatementGround::Spam);
         $this->em()->clear();
 
         $queue = static::getContainer()->get(SubmissionQueue::class);
@@ -381,7 +382,7 @@ final class TrashTest extends WebTestCase
         $sub = $this->seedSubmission((int) $rider->getId(), SubmissionStatus::Rejected);
         $subId = (int) $sub->getId();
 
-        $this->moderation()->trashSubmission($subId, $this->curator());
+        $this->moderation()->trashSubmission($subId, $this->curator(), StatementGround::Spam);
 
         $this->em()->clear();
         $kept = $this->em()->find(Submission::class, $subId);
@@ -398,7 +399,7 @@ final class TrashTest extends WebTestCase
         $routeId = (int) $route->getId();
         $curator = $this->curator();
 
-        $this->routeModeration()->trashSuggestion($sId, $curator);
+        $this->routeModeration()->trashSuggestion($sId, $curator, StatementGround::Spam);
 
         $this->em()->clear();
         // The row, segments and all, waits in the bin.
@@ -423,7 +424,7 @@ final class TrashTest extends WebTestCase
         $routeId = (int) $route->getId();
         $curator = $this->curator();
 
-        $this->routeModeration()->trashProposal($routeId, $curator);
+        $this->routeModeration()->trashProposal($routeId, $curator, StatementGround::Spam);
 
         $this->em()->clear();
         $kept = $this->em()->find(RecommendedRoute::class, $routeId);
@@ -449,7 +450,7 @@ final class TrashTest extends WebTestCase
         $route = $this->route(ItemState::Rejected);
         $routeId = (int) $route->getId();
 
-        $this->routeModeration()->trashProposal($routeId, $this->curator());
+        $this->routeModeration()->trashProposal($routeId, $this->curator(), StatementGround::Spam);
 
         $this->em()->clear();
         $kept = $this->em()->find(RecommendedRoute::class, $routeId);
@@ -463,7 +464,7 @@ final class TrashTest extends WebTestCase
         $before = $this->adminLogCountFor(TrashActions::TrashRouteProposal);
 
         try {
-            $this->routeModeration()->trashProposal((int) $route->getId(), $this->curator());
+            $this->routeModeration()->trashProposal((int) $route->getId(), $this->curator(), StatementGround::Spam);
             self::fail('Expected TrashBlockedException.');
         } catch (TrashBlockedException) {
             // expected — the guardrail fails BEFORE any audit row is written.
@@ -479,7 +480,7 @@ final class TrashTest extends WebTestCase
         $route = $this->route(ItemState::Retired);
 
         $this->expectException(TrashBlockedException::class);
-        $this->routeModeration()->trashProposal((int) $route->getId(), $this->curator());
+        $this->routeModeration()->trashProposal((int) $route->getId(), $this->curator(), StatementGround::Spam);
     }
 
     // ── HTTP layer: routes, CSRF, redirect-after-POST, access control ──────────
@@ -494,6 +495,7 @@ final class TrashTest extends WebTestCase
         $token = $this->submissionTrashToken($client);
 
         $client->request('POST', '/moderate/trash', [
+            'ground' => 'spam',
             'kind' => 'submission',
             'confirm' => 'DELETE',
             'id' => (string) $sub->getId(),
@@ -517,6 +519,7 @@ final class TrashTest extends WebTestCase
         // controller's own CSRF check ever runs, so no real token is needed.
         $client->loginUser($rider);
         $client->request('POST', '/moderate/trash', [
+            'ground' => 'spam',
             'kind' => 'submission',
             'confirm' => 'DELETE',
             'id' => (string) $sub->getId(),
@@ -536,6 +539,7 @@ final class TrashTest extends WebTestCase
 
         $client->loginUser($this->curator());
         $client->request('POST', '/moderate/trash', [
+            'ground' => 'spam',
             'kind' => 'submission',
             'confirm' => 'DELETE',
             'id' => (string) $sub->getId(),
@@ -558,6 +562,7 @@ final class TrashTest extends WebTestCase
         $token = $this->correctionTrashTokenFromRoutesIndex($client);
 
         $client->request('POST', '/moderate/routes/trash', [
+            'ground' => 'spam',
             'kind' => 'correction',
             'confirm' => 'DELETE',
             'id' => (string) $s->getId(),
@@ -581,6 +586,7 @@ final class TrashTest extends WebTestCase
         $token = $this->proposalTrashToken($client, (int) $route->getId());
 
         $client->request('POST', '/moderate/routes/trash', [
+            'ground' => 'spam',
             'kind' => 'proposal',
             'confirm' => 'DELETE',
             'id' => (string) $route->getId(),
@@ -613,6 +619,7 @@ final class TrashTest extends WebTestCase
         $before = $this->adminLogCountFor(TrashActions::TrashRouteProposal);
 
         $client->request('POST', '/moderate/routes/trash', [
+            'ground' => 'spam',
             'kind' => 'proposal',
             'confirm' => 'DELETE',
             'id' => (string) $active->getId(),
@@ -635,6 +642,7 @@ final class TrashTest extends WebTestCase
 
         $client->loginUser($rider);
         $client->request('POST', '/moderate/routes/trash', [
+            'ground' => 'spam',
             'kind' => 'proposal',
             'confirm' => 'DELETE',
             'id' => (string) $route->getId(),
@@ -653,6 +661,7 @@ final class TrashTest extends WebTestCase
 
         $client->loginUser($this->curator());
         $client->request('POST', '/moderate/routes/trash', [
+            'ground' => 'spam',
             'kind' => 'proposal',
             'confirm' => 'DELETE',
             'id' => (string) $route->getId(),
@@ -686,6 +695,7 @@ final class TrashTest extends WebTestCase
 
         $client->catchExceptions(true);
         $client->request('POST', '/moderate/trash', [
+            'ground' => 'spam',
             'kind' => 'submission', 'id' => (string) $sub->getId(), '_token' => 'not-a-token',
         ]);
         self::assertResponseStatusCodeSame(403, 'a bad token destroys nothing');
@@ -708,6 +718,7 @@ final class TrashTest extends WebTestCase
         $client->loginUser($this->curator());
 
         $client->request('POST', '/moderate/routes/trash', [
+            'ground' => 'spam',
             'kind' => 'proposal',
             'id' => (string) $route->getId(),
             '_token' => 'not-a-token',

@@ -12,9 +12,14 @@ use App\Catalog\FindingKind;
 use App\Catalog\FindingStatus;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\PlaceAuthor;
 use App\Entity\User;
+use App\Messaging\MessageService;
 use App\Moderation\ModerationScopeProvider;
+use App\Moderation\ModerationService;
 use App\Routing\LocalePrefix;
+use App\Support\ReportedSubjects;
+use App\Support\ReportTarget;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,8 +35,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * findings were console output, which meant in practice that nobody saw them.
  *
  * **Not the submission queue, deliberately.** Nobody proposed these; a scan
- * did. There is no rider to reply to, no message sent on a decision, and no
- * retention clock. Mixing them into the contribution queue would put machine
+ * did. There is no rider to reply to and no retention clock. The one message a
+ * decision sends is the statement of reasons a rider is owed when the place
+ * they added is the duplicate taken off the map (content-reports.md §7). Mixing them into the contribution queue would put machine
  * output in the same list as a person's work, and the two need different
  * attention.
  *
@@ -62,6 +68,9 @@ final class ModerateDataController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly CatalogFindingRepository $findings,
         private readonly ModerationScopeProvider $scopeProvider,
+        private readonly PlaceAuthor $placeAuthor,
+        private readonly MessageService $messages,
+        private readonly ReportedSubjects $reported,
     ) {
     }
 
@@ -146,7 +155,7 @@ final class ModerateDataController extends AbstractController
         $yes = 'yes' === $verdict || $keep > 0;
         $note = trim($request->request->getString('note'));
 
-        if ($yes && !$this->apply($finding, $keep > 0 ? $keep : null)) {
+        if ($yes && !$this->apply($finding, $keep > 0 ? $keep : null, $note, $user)) {
             $this->addFlash('warning', 'moderate_data.flash_not_in_finding');
 
             return $this->redirectToRoute('moderate_data');
@@ -184,7 +193,7 @@ final class ModerateDataController extends AbstractController
      * kind. Adding a kind means adding its branch, and a kind whose Accept does
      * nothing should not have been a finding.
      */
-    private function apply(CatalogFinding $finding, ?int $keepItemId): bool
+    private function apply(CatalogFinding $finding, ?int $keepItemId, string $note, User $curator): bool
     {
         switch ($finding->getKind()) {
             case FindingKind::Duplicate:
@@ -206,6 +215,18 @@ final class ModerateDataController extends AbstractController
                     : $item;
                 $winner = $loser === $item ? $related : $item;
                 $loser->setState(ItemState::Retired);
+
+                // The rider who added the row taken off the map is told why,
+                // unless the row kept is theirs too, or they decided it
+                // themselves (content-reports.md §7).
+                $author = $this->placeAuthor->of((int) $loser->getId());
+                if (null !== $author && $author !== $curator->getId() && (null === $winner || $author !== $this->placeAuthor->of((int) $winner->getId()))) {
+                    $this->messages->sendStatement($author, (int) $loser->getId(), ModerationService::retiredStatement(
+                        $loser,
+                        $note,
+                        $this->reported->followsReport(ReportTarget::Item, (string) $loser->getId()),
+                    ));
+                }
 
                 // The survivor inherits the retired row's OSM identity.
                 //

@@ -11,6 +11,7 @@ use App\Media\Entity\MediaUpload;
 use App\Media\MediaDecisionService;
 use App\Media\MediaStatus;
 use App\Media\MediaStorage;
+use App\Media\MediaTakedownSource;
 use App\Media\PhotoAttribution;
 use App\Media\PhotoGallery;
 use App\Media\XmpRights;
@@ -59,8 +60,13 @@ final class PhotoPageController extends AbstractController
                 'page_description' => 'media.page.unpublished_title',
                 'nav_active' => '',
                 'photo' => null,
+                // Only the uploader's own request is named to them: a photo a
+                // stranger's report hid reads as any unpublished photo, with no
+                // word of the report until a curator has decided it
+                // (content-reports.md §7).
                 'takedown_pending' => null !== $upload
                     && $upload->isTakedownPending()
+                    && MediaTakedownSource::Uploader === $upload->getTakedownSource()
                     && $this->isUploader($upload),
                 'can_request_takedown' => false,
             ], new Response('', Response::HTTP_NOT_FOUND));

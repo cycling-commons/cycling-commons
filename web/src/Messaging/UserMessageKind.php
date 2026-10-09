@@ -32,7 +32,11 @@ enum UserMessageKind: string
     case MediaTakedownDeclined = 'media_takedown_declined';
     /** Third-party report granted (docs/specs/photo-uploads.md §6c). */
     case MediaRemovedOnReport = 'media_removed_on_report';
-    /** Photo hidden pending review (docs/specs/photo-uploads.md §6c). */
+    /**
+     * Photo hidden pending review. No path sends it: an urgent hide tells the
+     * uploader nothing until a curator has decided (docs/specs/photo-uploads.md
+     * §6c). Messages stored with it still render, with their copy.
+     */
     case MediaHiddenPendingReview = 'media_hidden_pending_review';
     case MediaRestoredAfterReview = 'media_restored_after_review';
     /** Release slower than the wizard window (docs/specs/media-storage-architecture.md §3.3). */
@@ -44,6 +48,12 @@ enum UserMessageKind: string
     case TranslationNeedsInfo = 'translation_needs_info';
     /** A curator answered a bug report (docs/specs/contact-and-support.md §9). */
     case BugOutcome = 'bug_outcome';
+    /**
+     * A statement of reasons on its own (DSA Article 17): a contribution moved
+     * to Trash as abuse, a place taken off the map, an upheld report
+     * (docs/specs/content-reports.md §7).
+     */
+    case StatementOfReasons = 'statement_of_reasons';
 
     /** @return list<string>
      *

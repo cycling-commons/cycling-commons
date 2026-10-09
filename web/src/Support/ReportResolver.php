@@ -11,6 +11,7 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Region;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemState;
+use App\Catalog\PlaceAuthor;
 use App\Catalog\SubmissionStatus;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
@@ -38,10 +39,15 @@ use Symfony\Component\Uid\Uuid;
  * already gone is closed as {@see ReportStatus::Moot}. So every field here is
  * nullable and the desk renders what it got.
  *
- * **No author is also a normal answer.** Map places and region descriptions are
- * not owned by one person: they start as seeded rows and grow through
- * submissions from many riders. There is nobody to send an Article 17 statement
- * to, and inventing one would name the last editor for somebody else's line.
+ * **A place's author is the rider who added it** ({@see PlaceAuthor}): their
+ * approved new-place submission created the row, and an upheld report about
+ * it sends them the Article 17 statement. A place seeded from OpenStreetMap or
+ * a provider has none.
+ *
+ * **Region texts and town cards have no author here.** Each language is
+ * written separately, by whoever wrote or approved it, and a report does not
+ * say which language its reporter read, so naming one writer would tell the
+ * wrong person about somebody else's line.
  *
  * @see docs/specs/content-reports.md §8
  *
@@ -49,8 +55,10 @@ use Symfony\Component\Uid\Uuid;
  */
 final class ReportResolver
 {
-    public function __construct(private readonly EntityManagerInterface $em)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly PlaceAuthor $placeAuthor,
+    ) {
     }
 
     /**
@@ -146,9 +154,8 @@ final class ReportResolver
 
         return [
             'label' => $item->getName(),
-            // Deliberately null. See the class docblock: a place on the map has
-            // contributors, not an author.
-            'author' => null,
+            // The rider who added it; null for a seeded place (class docblock).
+            'author' => $this->user($this->placeAuthor->of((int) $id)),
             'exists' => true,
             // The map's own deep link (map-and-search.md 8): opens the drawer
             // on this place, so the curator sees what was reported (owner

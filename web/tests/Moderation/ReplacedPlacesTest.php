@@ -11,10 +11,16 @@ use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\SubmissionStatus;
 use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Messaging\Entity\UserMessage;
+use App\Messaging\UserMessageKind;
 use App\Moderation\ModerationService;
 use App\Moderation\ReplacedPlaces;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -137,6 +143,31 @@ final class ReplacedPlacesTest extends KernelTestCase
         self::assertNull($replaced->takesOsm((int) $none->getId(), null, ReplacedPlaces::ticks([])), 'no point, no line');
     }
 
+    /** The rider who added the replaced place hears why (content-reports.md §7). */
+    public function testTheRiderWhoAddedTheReplacedPlaceIsSentTheReasons(): void
+    {
+        $author = (new User())->setEmail('author@replaces.test');
+        $author->setPassword('x');
+        $this->em->persist($author);
+        $this->em->flush();
+        $theirs = $this->served('user:replaces-theirs', null, self::LAT + 0.00006, self::LNG);
+        $this->authoredBy($theirs, (int) $author->getId());
+        $mine = $this->served('user:replaces-mine', null, self::LAT + 0.00008, self::LNG);
+        $this->authoredBy($mine, $this->submitterId);
+
+        [, $sub] = $this->submitted(null, ItemSource::User, 'sub:replaces-told', ['item:'.$theirs->getId(), 'item:'.$mine->getId()]);
+        $this->service->decide((int) $sub->getId(), 'approve', $this->curator, null);
+
+        $statements = $this->em->getRepository(UserMessage::class)->findBy(['kind' => UserMessageKind::StatementOfReasons, 'refId' => [$theirs->getId(), $mine->getId()]]);
+        self::assertCount(1, $statements, 'replacing your own place tells you nothing');
+        self::assertSame($author->getId(), $statements[0]->getUserId());
+        $statement = StatementOfReasons::fromArray($statements[0]->getBodyParams()[StatementOfReasons::PARAM] ?? null);
+        self::assertNotNull($statement);
+        self::assertSame(StatementDecision::Retired, $statement->decision);
+        self::assertSame(StatementGround::Duplicate, $statement->ground);
+        self::assertSame('dsa_statement.facts.retired_duplicate', $statement->factsKey);
+    }
+
     public function testTicksAreCleanedBeforeUse(): void
     {
         self::assertSame(
@@ -179,6 +210,16 @@ final class ReplacedPlacesTest extends KernelTestCase
         $this->em->flush();
 
         return [$item, $sub];
+    }
+
+    /** The approved new-place submission that makes a rider a place's author. */
+    private function authoredBy(Item $item, int $userId): void
+    {
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('B')->setUserId($userId)
+            ->setItemId($item->getId())->setTitle('Kraan')->setGeom('{"type":"Point","coordinates":[5.86,50.47]}')->setCountryCode('BE')
+            ->setChanges([])->setPayload([])->setStatus(SubmissionStatus::Approved);
+        $this->em->persist($sub);
+        $this->em->flush();
     }
 
     private function item(Item $item): Item

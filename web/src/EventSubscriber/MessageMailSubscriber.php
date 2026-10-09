@@ -12,9 +12,14 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
+use Symfony\Component\Messenger\Event\WorkerMessageHandledEvent;
 
 /**
- * Send queued message emails on kernel/console terminate.
+ * Send queued message emails on kernel/console terminate, and on the
+ * messenger worker after each message it handled or failed: the worker runs
+ * for an hour, and a decision made in a handler (a refused upload) must not
+ * wait for it to exit.
  *
  * @see docs/specs/moderation-and-contribution.md §7.8
  *
@@ -35,6 +40,8 @@ final readonly class MessageMailSubscriber implements EventSubscriberInterface
         return [
             KernelEvents::TERMINATE => 'flush',
             ConsoleEvents::TERMINATE => 'flush',
+            WorkerMessageHandledEvent::class => 'flush',
+            WorkerMessageFailedEvent::class => 'flush',
         ];
     }
 

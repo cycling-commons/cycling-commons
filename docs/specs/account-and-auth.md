@@ -656,7 +656,7 @@ can bypass the guardrails and audit log. Actions are conditionally displayed
 | Revoke curator | has role | remove it | yes |
 | Grant admin | lacks role | add `ROLE_ADMIN` | yes |
 | Revoke admin | has role | remove it (guardrails) | yes |
-| Execute account removal | `deletionRequestedAt != null` | §6.3 | yes |
+| Execute account removal | `deletionRequestedAt != null` | §6.3, the rider's own request: no statement of reasons, they asked | yes |
 | Cancel pending removal | `deletionRequestedAt != null` | clear code + timestamp | no |
 | Moderator areas | has `ROLE_CURATOR` | replace `moderator_area` rows (contract in [moderation-and-contribution.md](moderation-and-contribution.md) §9) | form page |
 
@@ -716,6 +716,16 @@ stays as a contribution or as a record loses the id (NULL).
   asked, such as test riders left on a deployed database) all route through
   the **shared seam** `UserDeletionService::purge()`: run every
   `UserDeletionHookInterface` pre-delete hook, then remove the `User` row.
+  An account is erased whole or not at all: the hooks' statements, the
+  removal and the flush run in one transaction (`UserDeletionService::erase()`
+  for self-service deletion, `wrapInTransaction` on the admin paths). The
+  sweeps and `app:user:purge` erase each account in its own transaction
+  (`UserDeletionService::eraseInBatch()`): one that fails is rolled back, logged
+  by account id with the exception class and SQLSTATE (never the address or the
+  driver message, which can quote it), and the run goes on with the next
+  account, then reports the failures and exits with a failure. Pinned by
+  `AccountErasureTest::testAFailedDeletionLeavesTheAccountAndItsRowsUntouched`
+  and a failure test in each sweep's and the command's test.
   `tests/Account/PurgeUserCommandTest.php` pins the command. Removal is a hard
   delete of the row and the public profile URL 404s naturally. Contributed
   content is written as hooks on this seam: dissociated and retained, never

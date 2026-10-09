@@ -1,0 +1,33 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The statement of reasons a message carries (DSA Article 17), under the
+  message it belongs to. The same lines as the email
+  (App\Moderation\StatementOfReasons::lines()); plain text, escaped here.
+
+  Expects `s`, the lines from statement_of_reasons(m.bodyParams).
+
+  @see docs/specs/content-reports.md §7
+#}
+<dl class="msg-statement">
+  <dt>{{ 'dsa_statement.label.what'|trans }}</dt>
+  <dd>{{ s.decision }} {{ s.scope }}</dd>
+  <dt>{{ 'dsa_statement.label.why'|trans }}</dt>
+  <dd>
+    {% if s.facts_system %}<p>{{ s.facts_system }}</p>{% endif %}
+    {% if s.facts %}<p class="q-note msg-note">{{ s.facts }}</p>{% endif %}
+    <p>{{ s.source }}</p>
+  </dd>
+  <dt>{{ 'dsa_statement.label.rule'|trans }}</dt>
+  <dd>{{ s.ground }} {{ s.basis }} <a href="{{ path('terms') }}">{{ 'dsa_statement.label.terms_link'|trans }}</a></dd>
+  <dt>{{ 'dsa_statement.label.how'|trans }}</dt>
+  <dd>{{ s.automated }}</dd>
+  <dt>{{ 'dsa_statement.label.contest'|trans }}</dt>
+  <dd>
+    {{ s.redress }} <a href="{{ path('contact') }}">{{ 'dsa_statement.label.contact_link'|trans }}</a>
+    {% if s.answer and s.answer_path %}
+      <p>{{ s.answer }} <a href="{{ s.answer_path }}">{{ 'dsa_statement.copyright_answer_link'|trans }}</a></p>
+    {% endif %}
+  </dd>
+  <dt>{{ 'dsa_statement.label.reference'|trans }}</dt>
+  <dd><code>{{ s.reference }}</code></dd>
+</dl>

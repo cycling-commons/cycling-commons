@@ -8,11 +8,18 @@ namespace App\Tests\Moderation;
 
 use App\Catalog\Entity\CatalogFinding;
 use App\Catalog\Entity\Item;
+use App\Catalog\Entity\Submission;
 use App\Catalog\FindingKind;
 use App\Catalog\FindingStatus;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
+use App\Catalog\SubmissionStatus;
+use App\Catalog\SubmissionType;
 use App\Entity\User;
+use App\Messaging\Entity\UserMessage;
+use App\Messaging\UserMessageKind;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementOfReasons;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -107,6 +114,32 @@ final class ModerateDataDeskTest extends WebTestCase
         $this->em()->clear();
         self::assertSame(ItemState::Retired, $this->reload($loser)->getState());
         self::assertSame(ItemState::Unverified, $this->reload($keeper)->getState());
+    }
+
+    /** The rider who added the row taken off the map is told why (content-reports.md §7). */
+    public function testTheRiderWhoAddedTheRetiredDuplicateIsSentTheReasons(): void
+    {
+        $client = static::createClient();
+        [$keeper, $loser] = $this->pair('told');
+        $author = $this->user('data-author@test.test', []);
+        $sub = (new Submission())->setType(SubmissionType::NewItem)->setLetter('O')->setUserId((int) $author->getId())
+            ->setItemId($loser->getId())->setTitle('Hôtel Koru')->setGeom('{"type":"Point","coordinates":[4.90664,50.66887]}')
+            ->setCountryCode('BE')->setChanges([])->setPayload([])->setStatus(SubmissionStatus::Approved);
+        $this->em()->persist($sub);
+        $this->em()->flush();
+        $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
+
+        $client->loginUser($this->curator('data-told@test.test'));
+        $this->post($client, $finding, 'yes', 'Same hotel, the other entry has its website.');
+
+        self::assertResponseRedirects();
+        $message = $this->em()->getRepository(UserMessage::class)->findOneBy(['userId' => $author->getId(), 'kind' => UserMessageKind::StatementOfReasons]);
+        self::assertInstanceOf(UserMessage::class, $message);
+        $statement = StatementOfReasons::fromArray($message->getBodyParams()[StatementOfReasons::PARAM] ?? null);
+        self::assertNotNull($statement);
+        self::assertSame(StatementDecision::Retired, $statement->decision);
+        self::assertSame('Same hotel, the other entry has its website.', $statement->facts);
+        self::assertSame('place-'.$loser->getId(), $statement->reference);
     }
 
     public function testAcceptingAnOsmLinkWritesTheRef(): void

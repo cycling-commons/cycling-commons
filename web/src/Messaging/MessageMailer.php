@@ -8,6 +8,8 @@ namespace App\Messaging;
 
 use App\Entity\User;
 use App\Messaging\Entity\UserMessage;
+use App\Moderation\StatementOfReasons;
+use App\Moderation\StatementOfReasonsMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -34,6 +36,7 @@ final readonly class MessageMailer
         private EntityManagerInterface $em,
         private TranslatorInterface $translator,
         private LoggerInterface $logger,
+        private StatementOfReasonsMailer $statements,
         #[Autowire('%env(APP_SITE_URL)%')]
         private string $siteUrl,
         #[Autowire('%kernel.default_locale%')]
@@ -69,6 +72,16 @@ final readonly class MessageMailer
         }
 
         $locale = $user->getLocale() ?? $this->defaultLocale;
+
+        // A decision that restricted what they added: the email is the
+        // statement of reasons itself, with every element Article 17 asks
+        // for, and a reply reaches us (content-reports.md §7).
+        $statement = StatementOfReasons::fromArray($message->getBodyParams()[StatementOfReasons::PARAM] ?? null);
+        if (null !== $statement) {
+            $this->statements->send($email, $user->getDisplayName(), $locale, $user->getTimeZone() ?? $user->getDetectedTimeZone(), $statement);
+
+            return;
+        }
 
         $headline = $this->translator->trans('messages.kind_'.$message->getKind()->value, [], null, $locale);
         $bodyKey = $message->getBodyKey();

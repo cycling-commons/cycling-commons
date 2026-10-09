@@ -327,7 +327,7 @@ export function submitModeration(btn){
     .then(r=>{
       if(r.ok) return r.json();
       // A 422 names why (ModerateController::decide): show that, not "try again".
-      return r.json().catch(()=>({})).then(j=>{ throw Object.assign(new Error('decide'), {code: j && j.error}); });
+      return r.json().catch(()=>({})).then(j=>{ throw Object.assign(new Error('decide'), {code: j && j.error, text: j && j.message}); });
     })
     .then(res=>{
       hidePendingPin(id); closeDrawer();
@@ -377,6 +377,12 @@ export function submitModeration(btn){
       }
       if('needs_info_note_required'===code){
         mapToast(D.needsInfoNote||'Ask the rider what you need to know — a needs-info with no question tells them nothing.', {center:true});
+        return;
+      }
+      if('reject_note_required'===code){
+        // content-reports.md §7 - the note is the reason the rider is sent; the server words it.
+        if(noteEl){ noteEl.classList.add('cc-mod-invalid'); noteEl.focus(); }
+        mapToast(err.text||D.decisionErr||'Could not record the decision.', {center:true});
         return;
       }
       mapToast(D.decisionErr||'Could not record the decision — please try again.', {center:true});

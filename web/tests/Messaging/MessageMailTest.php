@@ -92,6 +92,32 @@ final class MessageMailTest extends KernelTestCase
     }
 
     /**
+     * The messenger worker runs for an hour: a decision made in a handler
+     * (a refused upload) is emailed once that message is handled, or has
+     * failed, not when the worker exits.
+     */
+    public function testTheWorkerSendsQueuedMailAfterEachMessage(): void
+    {
+        self::bootKernel();
+        $svc = self::getContainer()->get(MessageService::class);
+        $dispatcher = self::getContainer()->get(\Symfony\Contracts\EventDispatcher\EventDispatcherInterface::class);
+        $rider = $this->user('mail-worker@test.test');
+        $envelope = new \Symfony\Component\Messenger\Envelope(new \stdClass());
+
+        foreach ([
+            new \Symfony\Component\Messenger\Event\WorkerMessageHandledEvent($envelope, 'async'),
+            new \Symfony\Component\Messenger\Event\WorkerMessageFailedEvent($envelope, 'async', new \RuntimeException('boom')),
+        ] as $i => $event) {
+            $svc->sendSystem($rider->getId(), UserMessageKind::SubmissionApproved, 'submission', 10 + $i, 'SUB-'.(10 + $i), 'messages.body.submission_approved', ['%title%' => 'Col du Worker']);
+            $this->em()->flush();
+
+            $dispatcher->dispatch($event);
+
+            self::assertCount($i + 1, self::getMailerMessages(), $event::class.' sends what was queued');
+        }
+    }
+
+    /**
      * The rollback guard, which is the whole reason sends are queued rather
      * than made inside the decision transaction.
      */

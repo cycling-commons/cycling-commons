@@ -28,3 +28,10 @@
 .q-list.is-list .msg-open[open] details.q-diff{display:block}
 .q-list.is-list .msg-row.is-open .q-reply,
 .q-list.is-list .msg-open[open] .q-reply{display:flex}
+/* A statement of reasons (DSA Article 17): one heading per element, under the message it belongs to. */
+.msg-statement{margin:.6rem 0 0;font-size:.92rem}
+.msg-statement dt{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#595c4d;margin:.6rem 0 .15rem}
+.msg-statement dd{margin:0}
+.msg-statement dd p{margin:0 0 .3rem}
+.msg-statement a{color:var(--clay);text-decoration:underline;text-underline-offset:2px}
+.msg-statement code{font-family:var(--mono);font-size:.8rem}

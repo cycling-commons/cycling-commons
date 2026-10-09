@@ -11,6 +11,10 @@ use App\Catalog\Entity\RecommendedRoute;
 use App\Catalog\Entity\Submission;
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
+use App\Messaging\MessageService;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -36,6 +40,9 @@ final class MediaDecisionService
         private readonly EntityManagerInterface $em,
         private readonly MediaStorage $storage,
         private readonly MediaEventLog $events,
+        // Photos left out of an approval are a restriction their uploader is
+        // told the reasons for (content-reports.md §7).
+        private readonly MessageService $messages,
     ) {
     }
 
@@ -61,7 +68,13 @@ final class MediaDecisionService
             'status' => MediaStatus::Pending,
         ], ['createdAt' => 'ASC']);
         $place = new PhotoPlace($item?->getLetter() ?? $submission->getLetter(), null, null);
-        $attached = $this->decide($uploads, $place, $decision, $curator, $note, $rejectMediaIds, $item?->getId());
+        $left = [];
+        $attached = $this->decide($uploads, $place, $decision, $curator, $note, $rejectMediaIds, $item?->getId(), $left);
+        // A whole rejection carries its own statement; photos left out of an
+        // approval get theirs here.
+        if ('approve' === $decision) {
+            $this->tellLeftOut($left, $curator, StatementDecision::PhotosNotPublished, $note, 'SUB-'.(int) $submission->getId(), $submission->getTitle(), (int) $submission->getId());
+        }
 
         return null === $item ? null : $this->attach($item, $attached);
     }
@@ -95,7 +108,21 @@ final class MediaDecisionService
             'status' => MediaStatus::Pending,
         ], ['createdAt' => 'ASC']);
         $rejectAll = \in_array($decision, ['reject', 'dismissed'], true);
-        $attached = $this->decide($uploads, PhotoPlace::route(null, null), $rejectAll ? 'reject' : 'approve', $curator, $note, $rejectMediaIds, null);
+        $left = [];
+        $attached = $this->decide($uploads, PhotoPlace::route(null, null), $rejectAll ? 'reject' : 'approve', $curator, $note, $rejectMediaIds, null, $left);
+        // A rejected proposal carries its own statement. Photos left out of an
+        // approval, or sent with a correction that was dismissed, get theirs here.
+        if ('reject' !== $decision) {
+            $this->tellLeftOut(
+                $left,
+                $curator,
+                'dismissed' === $decision ? StatementDecision::NotPublished : StatementDecision::PhotosNotPublished,
+                $note,
+                null === $suggestionId ? 'route-'.(int) $route->getId() : 'correction-'.$suggestionId,
+                $route->getName(),
+                (int) $route->getId(),
+            );
+        }
 
         return $this->attach($route, $attached);
     }
@@ -106,10 +133,11 @@ final class MediaDecisionService
      *
      * @param list<MediaUpload> $uploads
      * @param list<string>      $rejectMediaIds
+     * @param list<MediaUpload> $rejected       filled with the photos this decision turned down
      *
      * @return list<array<string, mixed>>
      */
-    private function decide(array $uploads, PhotoPlace $place, string $decision, User $curator, ?string $note, array $rejectMediaIds, ?int $itemId): array
+    private function decide(array $uploads, PhotoPlace $place, string $decision, User $curator, ?string $note, array $rejectMediaIds, ?int $itemId, array &$rejected = []): array
     {
         // Skip unpublished rows, and every photo PhotoValidator refuses for this
         // place (legal hold, photo-uploads.md §6d): they stay pending.
@@ -124,10 +152,11 @@ final class MediaDecisionService
         $attached = [];
 
         foreach ($uploads as $upload) {
-            $rejected = 'reject' === $decision || isset($unticked[$upload->getId()->toRfc4122()]);
-            if ($rejected) {
+            $isRejected = 'reject' === $decision || isset($unticked[$upload->getId()->toRfc4122()]);
+            if ($isRejected) {
                 $upload->reject();
                 $this->events->append($upload->getId(), $curatorId, MediaAction::Rejected, $note);
+                $rejected[] = $upload;
                 continue;
             }
 
@@ -137,6 +166,36 @@ final class MediaDecisionService
         }
 
         return $attached;
+    }
+
+    /**
+     * One statement of reasons to each uploader whose photos this decision
+     * turned down while the rest went ahead. The curator's note is the facts
+     * when there is one. A curator who left out their own photos is told
+     * nothing: nobody explains a decision to themselves.
+     *
+     * @param list<MediaUpload> $rejected
+     */
+    private function tellLeftOut(array $rejected, User $curator, StatementDecision $decision, ?string $note, string $reference, string $subject, int $refId): void
+    {
+        $uploaders = [];
+        foreach ($rejected as $upload) {
+            $userId = $upload->getUserId();
+            if (null !== $userId && $userId !== $curator->getId()) {
+                $uploaders[$userId] = true;
+            }
+        }
+        foreach (array_keys($uploaders) as $userId) {
+            $this->messages->sendStatement($userId, $refId, new StatementOfReasons(
+                $decision,
+                StatementGround::NotAccepted,
+                mb_substr(trim((string) $note), 0, StatementOfReasons::FACTS_MAX),
+                $reference,
+                $subject,
+                factsKey: 'dsa_statement.facts.photos_not_kept',
+                aboutPhoto: StatementDecision::NotPublished === $decision,
+            ));
+        }
     }
 
     /**

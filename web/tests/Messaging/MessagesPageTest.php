@@ -9,6 +9,9 @@ namespace App\Tests\Messaging;
 use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -88,6 +91,43 @@ final class MessagesPageTest extends WebTestCase
         $client->request('GET', '/account/messages');
 
         self::assertResponseRedirects('/login?_target_path=%2Faccount%2Fmessages', 302);
+    }
+
+    // ── A statement of reasons shows under its message ─────────────────────
+
+    public function testARejectionShowsItsStatementOfReasons(): void
+    {
+        $client = static::createClient();
+        $email = 'messages-statement@example.com';
+        $plain = $this->createUser($email, 'securepass12345!', 'Statement Rider');
+        $riderId = $this->userId($email);
+
+        $this->svc()->sendSystem(
+            $riderId,
+            UserMessageKind::SubmissionRejected,
+            'submission',
+            303,
+            'SUB-303',
+            'messages.body.submission_rejected',
+            ['%title%' => 'Col du Refus'],
+            'The tap is 200 m further on.',
+            new StatementOfReasons(StatementDecision::NotPublished, StatementGround::NotAccepted, 'The tap is 200 m further on.', 'SUB-303', 'Col du Refus'),
+        );
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $this->loginAs($client, $email, $plain);
+        $crawler = $client->request('GET', '/account/messages');
+        self::assertResponseIsSuccessful();
+
+        $statement = $crawler->filter('.msg-row .msg-statement');
+        self::assertCount(1, $statement);
+        $text = $statement->text();
+        foreach (['What we decided', 'A curator decided not to publish "Col du Refus".', 'The tap is 200 m further on.', 'The rule', 'not a law', 'A curator made this decision.', 'If you disagree', 'SUB-303'] as $needle) {
+            self::assertStringContainsString($needle, $text);
+        }
+        self::assertCount(1, $crawler->filter('.msg-row .msg-note'), 'the note shows once, inside the statement');
+        self::assertCount(1, $statement->filter('a[href="/terms"]'));
+        self::assertCount(1, $statement->filter('a[href="/contact"]'));
     }
 
     // ── Rows + unread styling, and a visit marks nothing ───────────────────

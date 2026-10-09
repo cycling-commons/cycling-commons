@@ -13,6 +13,9 @@ use App\Media\Entity\MediaUpload;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Moderation\DeskRider;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
 use App\Security\PseudonymousKey;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
@@ -96,7 +99,14 @@ final class MediaTakedownService
     /**
      * Third-party report: queue unless urgent auto-withhold.
      *
+     * The uploader is told nothing here, also when the photo is hidden: a
+     * message or a statement at the hide would warn somebody the report
+     * suspects. The hide is explained once a curator has decided, with the
+     * removal ({@see grant()}) or with the photo's return ({@see decline()},
+     * {@see dismissAsAbuse()}), and not while a legal hold lasts.
+     *
      * @see docs/specs/photo-uploads.md §6c
+     * @see docs/specs/content-reports.md §7
      */
     public function report(MediaUpload $upload, string $category, string $reason, ?string $contact, string $reporterIp): void
     {
@@ -126,7 +136,6 @@ final class MediaTakedownService
         $upload->reportThirdParty($category, $reason, $contact, $this->hashReporter($reporterIp), $withheld);
         if ($withheld) {
             $this->detach($upload);
-            $this->notify($upload, UserMessageKind::MediaHiddenPendingReview, 'messages.body.media_hidden_pending_review', null);
         }
         $this->events->append(
             $upload->getId(),
@@ -150,9 +159,16 @@ final class MediaTakedownService
     /**
      * Grant: delete objects, keep the row.
      *
+     * A stranger's request granted is a removal the uploader is owed a
+     * statement of reasons for: the reports desk hands over the one it built
+     * from the report, else it is read from the stored category. When the
+     * report had hidden the photo on its own, the statement says so: that
+     * hide was never explained before. The uploader's own request granted
+     * owes none: they asked.
+     *
      * @see docs/specs/photo-uploads.md §6b
      */
-    public function grant(MediaUpload $upload, User $curator, ?string $note = null): void
+    public function grant(MediaUpload $upload, User $curator, ?string $note = null, ?StatementOfReasons $statement = null): void
     {
         // Legal hold: only an admin may act; grant would destroy preserved objects. @see docs/specs/photo-uploads.md §6d
         if (!$upload->isTakedownPending() || $upload->isEscalated()) {
@@ -160,6 +176,7 @@ final class MediaTakedownService
         }
 
         $thirdParty = MediaTakedownSource::ThirdParty === $upload->getTakedownSource();
+        $hiddenFirst = $thirdParty && $upload->isTakedownWithheld();
         $this->detach($upload);
         $upload->resolveTakedown();
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownGranted, $note);
@@ -169,6 +186,8 @@ final class MediaTakedownService
             $thirdParty ? UserMessageKind::MediaRemovedOnReport : UserMessageKind::MediaTakedownGranted,
             $thirdParty ? 'messages.body.media_removed_on_report' : 'messages.body.media_takedown_granted',
             $note,
+            // A curator removing their own photo explains it to nobody.
+            $thirdParty && $upload->getUserId() !== $curator->getId() ? $this->removalStatement($upload, $note, $statement, $hiddenFirst) : null,
         );
         $this->em->flush();
     }
@@ -187,14 +206,14 @@ final class MediaTakedownService
      *
      * @return bool whether the files were removed; false under legal hold or when they are already gone
      */
-    public function removeOnReport(MediaUpload $upload, User $curator, ?string $note = null): bool
+    public function removeOnReport(MediaUpload $upload, User $curator, ?string $note = null, ?StatementOfReasons $statement = null): bool
     {
         if ($upload->isEscalated() || null !== $upload->getObjectsDeletedAt()) {
             return false;
         }
 
         if ($upload->isTakedownPending()) {
-            $this->grant($upload, $curator, $note);
+            $this->grant($upload, $curator, $note, $statement);
 
             return null !== $upload->getObjectsDeletedAt();
         }
@@ -203,7 +222,10 @@ final class MediaTakedownService
         $upload->resolveTakedown();
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownGranted, $note);
         $this->disposal->deleteObjects($upload);
-        $this->notify($upload, UserMessageKind::MediaRemovedOnReport, 'messages.body.media_removed_on_report', $note);
+        $this->notify(
+            $upload, UserMessageKind::MediaRemovedOnReport, 'messages.body.media_removed_on_report', $note,
+            $upload->getUserId() !== $curator->getId() ? $this->removalStatement($upload, $note, $statement, false) : null,
+        );
         $this->em->flush();
 
         return null !== $upload->getObjectsDeletedAt();
@@ -211,6 +233,9 @@ final class MediaTakedownService
 
     /**
      * Decline: republish; third-party category is final.
+     *
+     * A photo a stranger's report had hidden comes back with the statement of
+     * reasons for that hide ({@see hideStatement()}).
      *
      * @see docs/specs/photo-uploads.md §6c
      */
@@ -228,13 +253,16 @@ final class MediaTakedownService
         if (!$thirdParty) {
             $this->notify($upload, UserMessageKind::MediaTakedownDeclined, 'messages.body.media_takedown_declined', $note);
         } elseif ($wasHidden) {
-            $this->notify($upload, UserMessageKind::MediaRestoredAfterReview, 'messages.body.media_restored_after_review', null);
+            $this->notify($upload, UserMessageKind::MediaRestoredAfterReview, 'messages.body.media_restored_after_review', null, $this->hideStatement($upload));
         }
         $this->em->flush();
     }
 
     /**
      * Abusive-report undo: republish without closing the category.
+     *
+     * A photo the report had hidden comes back with the statement of reasons
+     * for that hide ({@see hideStatement()}).
      *
      * @see docs/specs/photo-uploads.md §6c
      *
@@ -253,7 +281,7 @@ final class MediaTakedownService
         $this->reattach($upload);
         $this->events->append($upload->getId(), (int) $admin->getId(), MediaAction::TakedownDismissedAsAbuse, $note);
         if ($wasHidden) {
-            $this->notify($upload, UserMessageKind::MediaRestoredAfterReview, 'messages.body.media_restored_after_review', null);
+            $this->notify($upload, UserMessageKind::MediaRestoredAfterReview, 'messages.body.media_restored_after_review', null, $this->hideStatement($upload));
         }
         $this->em->flush();
 
@@ -541,7 +569,7 @@ final class MediaTakedownService
     }
 
     /** Notify the uploader; no-op if the account is already gone. */
-    private function notify(MediaUpload $upload, UserMessageKind $kind, string $bodyKey, ?string $note): void
+    private function notify(MediaUpload $upload, UserMessageKind $kind, string $bodyKey, ?string $note, ?StatementOfReasons $statement = null): void
     {
         $userId = $upload->getUserId();
         if (null === $userId) {
@@ -558,6 +586,57 @@ final class MediaTakedownService
             $bodyKey,
             [],
             $note,
+            $statement,
+        );
+    }
+
+    /**
+     * The statement of reasons for a photo removed on a report: the one the
+     * reports desk built, named after the place the photo shows, or else the
+     * stored category's rule with the curator's note as the facts
+     * (content-reports.md §7). A photo the report had hidden on its own
+     * carries the system line that says so.
+     */
+    private function removalStatement(MediaUpload $upload, ?string $note, ?StatementOfReasons $given, bool $hiddenFirst): StatementOfReasons
+    {
+        $factsKey = $hiddenFirst ? 'dsa_statement.facts.report_upheld_hidden' : 'dsa_statement.facts.report_upheld';
+        if (null !== $given) {
+            $statement = $given->withSubject($given->subject ?? $this->item($upload)?->getName());
+
+            return $hiddenFirst ? $statement->withFactsKey($factsKey) : $statement;
+        }
+
+        return new StatementOfReasons(
+            StatementDecision::Removed,
+            StatementGround::fromTakedownCategory($upload->getTakedownCategory()),
+            trim((string) $note),
+            $upload->getId()->toRfc4122(),
+            $this->item($upload)?->getName(),
+            fromReport: true,
+            factsKey: $factsKey,
+            aboutPhoto: true,
+        );
+    }
+
+    /**
+     * The statement of reasons for a hide that has ended: our checks hid the
+     * photo as soon as a stranger reported it on a ground that hides at once,
+     * and a curator, or an administrator dismissing the report as abuse, has
+     * put it back. Sent with the photo's return, never at the hide, so that
+     * nobody a report suspects is warned (content-reports.md §7).
+     */
+    private function hideStatement(MediaUpload $upload): StatementOfReasons
+    {
+        return new StatementOfReasons(
+            StatementDecision::HiddenThenRestored,
+            StatementGround::fromTakedownCategory($upload->getTakedownCategory()),
+            '',
+            $upload->getId()->toRfc4122(),
+            $this->item($upload)?->getName(),
+            fromReport: true,
+            automated: true,
+            factsKey: 'dsa_statement.facts.hidden_restored',
+            aboutPhoto: true,
         );
     }
 }

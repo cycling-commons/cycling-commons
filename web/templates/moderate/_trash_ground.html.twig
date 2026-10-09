@@ -1,0 +1,20 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  The ground a Trash names, inside every Trash form (the queue card, a route
+  correction, a route proposal). Spam tells the rider nothing, as DSA
+  Article 17(2) allows for deceptive high-volume commercial content; abuse
+  sends them a statement of reasons with the facts written here, so the
+  facts box is for abuse only. The server refuses abuse without facts and a
+  Trash without a ground (ModerationService::trashFacts()).
+
+  Expects `uid`, a string that keeps the ids on one page apart.
+
+  @see docs/specs/content-reports.md §7
+#}
+<fieldset class="q-act-ground">
+  <legend>{{ 'dsa_statement.desk.trash_ground'|trans }}</legend>
+  <label><input type="radio" name="ground" value="spam" required> <span>{{ 'dsa_statement.desk.trash_spam'|trans }}</span></label>
+  <label><input type="radio" name="ground" value="abuse" required> <span>{{ 'dsa_statement.desk.trash_abuse'|trans }}</span></label>
+  <label for="trash-facts-{{ uid }}">{{ 'dsa_statement.desk.trash_facts'|trans }}</label>
+  <textarea id="trash-facts-{{ uid }}" name="facts" maxlength="2000" rows="2"></textarea>
+</fieldset>

@@ -79,5 +79,6 @@ final class ContributionDeletionHook implements UserDeletionHookInterface
                          AND ref_id IN (SELECT id FROM submission WHERE escalated_at IS NOT NULL))",
             ['u' => $id],
         );
+        $this->db->executeStatement('UPDATE user_message SET sender_id = NULL WHERE sender_id = :u', ['u' => $id]);
     }
 }

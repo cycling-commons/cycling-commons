@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Media\Entity\ConsentRecord;
 use App\Media\Entity\MediaUpload;
 use App\Media\MediaConsent;
+use App\Media\MediaTakedownCategory;
 use App\Media\MediaTakedownService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -162,6 +163,29 @@ final class MediaTakedownEndpointTest extends WebTestCase
         $public = $client->request('GET', '/photo/'.$uuid);
         self::assertResponseStatusCodeSame(404);
         self::assertStringNotContainsString('removal request', $public->text());
+    }
+
+    /**
+     * A photo an urgent report hid shows its uploader the ordinary unpublished
+     * page: no "your removal request" they never made, and no word of the
+     * report until a curator has decided it (content-reports.md §7).
+     */
+    public function testAnUrgentReportShowsTheUploaderTheOrdinaryUnpublishedPage(): void
+    {
+        $client = $this->client();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $owner = $this->rider($em, 'td-urgent@example.test');
+        $upload = $this->approved($em, $owner);
+        $uuid = $upload->getId()->toRfc4122();
+        static::getContainer()->get(MediaTakedownService::class)
+            ->report($upload, MediaTakedownCategory::IntimateOrChild, 'A child.', null, '203.0.113.77');
+        self::assertTrue($this->reload($em, $upload)->isTakedownWithheld());
+
+        $client->loginUser($owner);
+        $mine = $client->request('GET', '/photo/'.$uuid);
+        self::assertResponseStatusCodeSame(404);
+        self::assertStringNotContainsString('removal request', $mine->text());
+        self::assertStringContainsString(static::getContainer()->get('translator')->trans('media.page.unpublished_body'), $mine->text());
     }
 
     public function testAnEmptyReasonIsRejectedWithoutWithdrawingThePhoto(): void

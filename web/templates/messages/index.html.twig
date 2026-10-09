@@ -155,7 +155,13 @@
             {# Params escaped before substitution (UserMessage::getBodyParamsHtml),
                so |rich keeps only the catalog's markup: the <em> around a name. #}
             {% if m.bodyKey and not (is_question and m.bodyText) %}{{ m.bodyKey|trans(m.bodyParamsHtml)|rich }}{% endif %}
-            {% if m.bodyText %}<p class="q-note msg-note">{{ m.bodyText }}</p>{% endif %}
+            {# A decision that restricted what the reader added carries its
+               statement of reasons (DSA Article 17), the curator's note
+               inside it (docs/specs/content-reports.md §7). #}
+            {% set statement = statement_of_reasons(m.bodyParams) %}
+            {% if statement %}
+              {% include 'messages/_statement.html.twig' with {s: statement} only %}
+            {% elseif m.bodyText %}<p class="q-note msg-note">{{ m.bodyText }}</p>{% endif %}
             {# WHAT the contribution was. "Your contribution X was approved"
                names a place and stops, and a rider with two edits to the same
                climb cannot tell which one this is about (owner-reported

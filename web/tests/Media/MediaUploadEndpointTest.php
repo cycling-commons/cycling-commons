@@ -445,6 +445,16 @@ final class MediaUploadEndpointTest extends WebTestCase
         $infected = array_values(array_filter($events, static fn (MediaModerationEvent $e): bool => MediaAction::ScanInfected === $e->getAction()));
         self::assertCount(1, $infected);
         self::assertSame('Eicar-Test-Signature', $infected[0]->getNote());
+
+        // The rider's statement of reasons says our checks refused it, not a curator.
+        $message = $em->getRepository(\App\Messaging\Entity\UserMessage::class)->findOneBy(['userId' => $row->getUserId(), 'kind' => \App\Messaging\UserMessageKind::MediaScanRejected]);
+        self::assertNotNull($message);
+        $statement = \App\Moderation\StatementOfReasons::fromArray($message->getBodyParams()[\App\Moderation\StatementOfReasons::PARAM] ?? null);
+        self::assertNotNull($statement);
+        $lines = $statement->lines(static::getContainer()->get(\Symfony\Contracts\Translation\TranslatorInterface::class), 'en', true);
+        self::assertStringNotContainsStringIgnoringCase('curator decided', $lines['decision']);
+        self::assertStringNotContainsStringIgnoringCase('curator looked at it', $lines['source']);
+        self::assertSame('Our automatic checks did not publish your photo.', $lines['decision']);
     }
 
     /**

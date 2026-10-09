@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Messaging;
 
 use App\Messaging\Entity\UserMessage;
+use App\Moderation\StatementOfReasons;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +23,9 @@ use Symfony\Component\Uid\Uuid;
 final class MessageService
 {
     public const int PER_PAGE = 20;
+
+    /** The channel of a statement of reasons sent on its own (DSA Article 17). */
+    public const string STATEMENT_CHANNEL = 'statement';
 
     private const int BODY_TEXT_MAX_LENGTH = 2000;
     private const string ERROR_TOO_LONG = 'moderate.error.note_too_long';
@@ -41,6 +45,11 @@ final class MessageService
      *
      * @see docs/specs/moderation-and-contribution.md §7.6
      *
+     * A decision that restricts what the rider added carries its statement of
+     * reasons (DSA Article 17) on the same row, under
+     * {@see StatementOfReasons::PARAM}: the inbox shows it under the message,
+     * and the email is the statement ({@see MessageMailer}).
+     *
      * @param array<string, mixed> $bodyParams
      *
      * @throws \InvalidArgumentException if the trimmed note exceeds 2000 characters
@@ -54,12 +63,16 @@ final class MessageService
         string $bodyKey,
         array $bodyParams = [],
         ?string $curatorNote = null,
+        ?StatementOfReasons $statement = null,
     ): ?UserMessage {
         if (!$this->recipientExists($userId)) {
             return null;
         }
 
         $note = $this->normalizeBody($curatorNote, true);
+        if (null !== $statement) {
+            $bodyParams[StatementOfReasons::PARAM] = $statement->toArray();
+        }
 
         $message = new UserMessage(
             $userId,
@@ -77,6 +90,28 @@ final class MessageService
         $this->outbox->queue($message);
 
         return $message;
+    }
+
+    /**
+     * A statement of reasons on its own, for a decision that has no message
+     * of its own to ride: a contribution moved to Trash as abuse, a place
+     * taken off the map, an upheld report. Its own channel, so the thread it
+     * is about can go to Trash or be purged without taking it along.
+     * Persists without flushing, like {@see sendSystem()}.
+     */
+    public function sendStatement(int $userId, int $refId, StatementOfReasons $statement): ?UserMessage
+    {
+        return $this->sendSystem(
+            $userId,
+            UserMessageKind::StatementOfReasons,
+            self::STATEMENT_CHANNEL,
+            $refId,
+            mb_substr($statement->reference, 0, 220),
+            'messages.body.statement_of_reasons',
+            ['%title%' => $statement->subject ?? ''],
+            null,
+            $statement,
+        );
     }
 
     /**

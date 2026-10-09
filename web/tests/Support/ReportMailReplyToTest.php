@@ -9,18 +9,25 @@ namespace App\Tests\Support;
 use App\Entity\User;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
+use App\Messaging\MessageService;
 use App\Moderation\DeskSeen;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
+use App\Moderation\StatementOfReasonsMailer;
 use App\Support\ContentReportService;
 use App\Support\ReportGround;
 use App\Support\ReportStatus;
 use App\Support\ReportTarget;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The report mails tell people to reply, so a reply has to reach somebody.
@@ -124,7 +131,6 @@ final class ReportMailReplyToTest extends WebTestCase
             '_token' => $token,
             'status' => 'upheld',
             'note' => 'The name has been reset.',
-            'tell_author' => '1',
         ]);
         self::assertResponseRedirects();
 
@@ -152,7 +158,17 @@ final class ReportMailReplyToTest extends WebTestCase
             $container->get(MediaTakedownService::class),
             $container->get(MediaEscalationService::class),
             $container->get(DeskSeen::class),
+            $container->get(MessageService::class),
             'test-secret',
+            'noreply@example.test',
+            '',
+        );
+        $statements = new StatementOfReasonsMailer(
+            $container->get(MailerInterface::class),
+            $container->get(TranslatorInterface::class),
+            $container->get(LoggerInterface::class),
+            'https://cyclingcommons.example',
+            'en',
             'noreply@example.test',
             '',
         );
@@ -168,7 +184,9 @@ final class ReportMailReplyToTest extends WebTestCase
             '203.0.113.78',
         );
         $service->decide($report, ReportStatus::Upheld, 'The name has been reset.', $this->user('reply-none-curator@example.test', ['ROLE_CURATOR']));
-        $service->tellAuthor($report, $author);
+        $statements->send($author->getEmail(), $author->getDisplayName(), 'en', null, new StatementOfReasons(
+            StatementDecision::ChangedOrRemoved, StatementGround::Abuse, 'The name has been reset.', $report->getId()->toRfc4122(), fromReport: true,
+        ));
 
         $sent = self::sent();
         self::assertCount(3, $sent);
@@ -178,7 +196,8 @@ final class ReportMailReplyToTest extends WebTestCase
             self::assertStringNotContainsString('reply to this email', $body, (string) $email->getSubject());
         }
         self::assertStringContainsString('our contact page', strtolower((string) $sent[1]->getHtmlBody()));
-        self::assertStringContainsString('our contact page', strtolower((string) $sent[2]->getHtmlBody()));
+        self::assertStringContainsString('contact page', strtolower((string) $sent[2]->getHtmlBody()));
+        self::assertStringContainsString('https://cyclingcommons.example/contact', (string) $sent[2]->getHtmlBody());
         foreach ($sent as $email) {
             self::assertStringNotContainsString('court', strtolower((string) $email->getHtmlBody()), (string) $email->getSubject());
         }

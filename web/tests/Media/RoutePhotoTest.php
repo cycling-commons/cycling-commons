@@ -27,6 +27,7 @@ use App\Media\ProcessedPhoto;
 use App\Moderation\ModerationScope;
 use App\Moderation\RouteModerationService;
 use App\Moderation\RouteQueue;
+use App\Moderation\StatementGround;
 use App\Moderation\TrashBin;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -303,7 +304,7 @@ final class RoutePhotoTest extends KernelTestCase
         $this->claims->claimForRoute([$upload->getId()->toRfc4122()], $this->rider, $route, null);
         $this->em->flush();
 
-        $this->moderation->trashProposal((int) $route->getId(), $this->curator);
+        $this->moderation->trashProposal((int) $route->getId(), $this->curator, StatementGround::Spam);
         $this->em->clear();
         self::assertNotNull($this->em->find(MediaUpload::class, $upload->getId()), 'kept while the proposal waits in Trash');
 

@@ -19,8 +19,12 @@ use App\Media\Entity\MediaUpload;
 use App\Media\MediaAction;
 use App\Media\MediaConsent;
 use App\Media\MediaStatus;
+use App\Messaging\Entity\UserMessage;
+use App\Messaging\UserMessageKind;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementOfReasons;
 use App\Moderation\SubmissionQueue;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -229,13 +233,34 @@ final class MediaModerationTest extends KernelTestCase
         self::assertCount(1, $photos, 'only the kept photo reaches the item');
     }
 
+    /** A photo left out of an approval is a restriction its uploader is told about (content-reports.md §7). */
+    public function testAPhotoLeftOutOfAnApprovalSendsItsUploaderTheReasons(): void
+    {
+        [, $submission] = $this->seedEdit();
+        $this->claimedUpload($submission);
+        $drop = $this->claimedUpload($submission);
+
+        $this->moderation->decide(
+            (int) $submission->getId(), 'approve', $this->curator, 'The second one is not yours.',
+            [$drop->getId()->toRfc4122()],
+        );
+
+        $message = $this->em->getRepository(UserMessage::class)->findOneBy(['userId' => $drop->getUserId(), 'kind' => UserMessageKind::StatementOfReasons]);
+        self::assertInstanceOf(UserMessage::class, $message);
+        $statement = StatementOfReasons::fromArray($message->getBodyParams()[StatementOfReasons::PARAM] ?? null);
+        self::assertNotNull($statement);
+        self::assertSame(StatementDecision::PhotosNotPublished, $statement->decision);
+        self::assertSame('The second one is not yours.', $statement->facts);
+        self::assertSame('SUB-'.$submission->getId(), $statement->reference);
+    }
+
     public function testARejectedSubmissionRejectsEveryPhotoAndTouchesNoItem(): void
     {
         [$item, $submission] = $this->seedEdit();
         $one = $this->claimedUpload($submission);
         $two = $this->claimedUpload($submission);
 
-        $this->moderation->decide((int) $submission->getId(), 'reject', $this->curator, null);
+        $this->moderation->decide((int) $submission->getId(), 'reject', $this->curator, 'Not this place.');
         $this->em->clear();
 
         self::assertSame(MediaStatus::Rejected, $this->em->find(MediaUpload::class, $one->getId())?->getStatus());
@@ -250,7 +275,7 @@ final class MediaModerationTest extends KernelTestCase
 
         // The curator ticked "keep" — but rejecting the submission rejects all
         // of its photos, with no per-photo escape (docs/specs/photo-uploads.md §5).
-        $this->moderation->decide((int) $submission->getId(), 'reject', $this->curator, null, []);
+        $this->moderation->decide((int) $submission->getId(), 'reject', $this->curator, 'Not this place.', []);
         $this->em->clear();
 
         self::assertSame(MediaStatus::Rejected, $this->em->find(MediaUpload::class, $spared->getId())?->getStatus());

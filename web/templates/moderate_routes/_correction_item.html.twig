@@ -90,6 +90,7 @@
             <p><strong class="trash-warn">{{ 'moderate.trash.confirm_head'|trans }}</strong></p>
             <p>{{ 'moderate.trash.confirm_rest'|trans }}</p>
             <p class="q-act-when">{{ 'moderate.trash.when'|trans }}</p>
+            {% include 'moderate/_trash_ground.html.twig' with {uid: 'corr-' ~ s.id} only %}
             <button type="submit" class="btn-act btn-secondary">{{ 'moderate.trash.button'|trans }}</button>
           </form>
         </div>

@@ -23,10 +23,12 @@ use App\Media\PhotoLocationConfirmation;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\AlreadyDecidedException;
 use App\Moderation\MissingQuestionException;
+use App\Moderation\MissingReasonException;
 use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ModerationService;
 use App\Moderation\OsmUnansweredException;
 use App\Moderation\OutOfScopeException;
+use App\Moderation\StatementGround;
 use App\Moderation\SubmissionQueue;
 use App\Moderation\TextCreditUndecidedException;
 use App\Moderation\TrashBin;
@@ -41,6 +43,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Curator moderation queue.
@@ -65,6 +68,7 @@ final class ModerateController extends AbstractController
         private readonly ItemConfirmationService $confirmations,
         private readonly OsmLinker $linker,
         private readonly PageSize $pageSize,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -305,6 +309,15 @@ final class ModerateController extends AbstractController
                 $this->addFlash('error', 'moderate.error.needs_info_note_required');
 
                 return $this->redirectToRoute('moderate_submissions');
+            } catch (MissingReasonException $e) {
+                // A rejection's note is its statement of reasons (content-reports.md §7).
+                if ($wantsJson) {
+                    return $this->json(['error' => 'reject_note_required', 'message' => $this->translator->trans($e->getMessage())], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
+                $this->addFlash('error', $e->getMessage());
+
+                return $this->redirectToRoute('moderate_submissions');
             } catch (OsmUnansweredException) {
                 // catalog-data-model.md §5b - the card shows the question; this
                 // is the curator clicking approve before answering it.
@@ -378,9 +391,12 @@ final class ModerateController extends AbstractController
     }
 
     /**
-     * A spam/abusive submission into the curators' Trash for 30 days. Audited content-free; no rider message.
+     * A spam or abusive submission into the curators' Trash for 30 days.
+     * Audited content-free. The curator names the ground: spam tells the
+     * rider nothing, abuse sends them a statement of reasons with the facts
+     * the curator wrote (content-reports.md §7).
      *
-     * @see docs/specs/moderation-and-contribution.md §5
+     * @see docs/specs/moderation-and-contribution.md §6
      */
     #[Route('/moderate/trash', name: 'moderate_trash', methods: ['POST'])]
     public function trash(Request $request): Response
@@ -398,10 +414,16 @@ final class ModerateController extends AbstractController
             if ('submission' !== $kind) {
                 throw new \InvalidArgumentException('Unknown trash kind.');
             }
-            $this->moderation->trashSubmission($id, $curator);
+            $ground = StatementGround::tryFrom((string) $request->request->get('ground'));
+            if (null === $ground) {
+                throw new MissingReasonException('dsa_statement.desk.trash_needs_ground');
+            }
+            $this->moderation->trashSubmission($id, $curator, $ground, (string) $request->request->get('facts', ''));
             $this->addFlash('success', 'moderate.trash.done');
         } catch (OutOfScopeException) {
             throw $this->createAccessDeniedException('Out of moderation scope.');
+        } catch (MissingReasonException $e) {
+            $this->addFlash('danger', $e->getMessage());
         } catch (\InvalidArgumentException) {
             $this->addFlash('danger', 'moderate.trash.error');
         }

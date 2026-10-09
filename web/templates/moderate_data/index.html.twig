@@ -130,6 +130,9 @@
           <button type="submit" name="verdict" value="no" class="btn-act btn-secondary">{{ 'moderate_data.no'|trans }}</button>
         </form>
         {% if f.kind == 'duplicate' %}
+          {# A rider who added the place taken off the map gets a statement of
+             reasons with this note (docs/specs/content-reports.md §7). #}
+          <p class="fd-note-help">{{ 'dsa_statement.desk.retire_note'|trans }}</p>
           {# Yes/No above answers with the ranked keeper. The map is where the
              curator can see both pins in place and choose a different one, or
              keep both. #}

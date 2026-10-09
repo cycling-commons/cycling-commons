@@ -54,9 +54,9 @@ final class CounterNoticeTest extends WebTestCase
         $upload = $this->approved($owner);
         $report = $this->copyrightReport($upload);
 
-        // First decision: upheld, the photo comes down, the author is told.
+        // First decision: upheld, the photo comes down, the author is told without being asked to.
         $client->loginUser($curator);
-        $this->decide($client, $report, 'upheld', 'The original is on the claimant\'s own site, dated earlier.', tellAuthor: true);
+        $this->decide($client, $report, 'upheld', 'The original is on the claimant\'s own site, dated earlier.');
         $decided = $this->fresh($report);
         self::assertSame(ReportStatus::Upheld, $decided->getStatus());
         self::assertTrue($decided->isAuthorTold());
@@ -171,7 +171,7 @@ final class CounterNoticeTest extends WebTestCase
         return $report;
     }
 
-    private function decide(KernelBrowser $client, ContentReport $report, string $status, string $note, bool $tellAuthor = false): void
+    private function decide(KernelBrowser $client, ContentReport $report, string $status, string $note): void
     {
         $page = $client->request('GET', '/moderate/reports/'.$report->getId());
         self::assertResponseIsSuccessful();
@@ -181,7 +181,7 @@ final class CounterNoticeTest extends WebTestCase
             '_token' => $token,
             'status' => $status,
             'note' => $note,
-        ] + ($tellAuthor ? ['tell_author' => '1'] : []));
+        ]);
         self::assertResponseRedirects();
     }
 

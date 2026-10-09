@@ -165,12 +165,10 @@
       <textarea id="d-note" name="note" maxlength="2000" rows="10"
                 placeholder="{{ 'report.desk.note_placeholder'|trans }}">{{ report.decisionNote }}</textarea>
 
+      {# Upheld sends the author a statement of reasons with this note, every
+         time there is an author (docs/specs/content-reports.md §7). #}
       {% if resolved.author and not report.isAuthorTold %}
-        <div class="check">
-          <input type="checkbox" id="d-tell" name="tell_author" value="1">
-          <label for="d-tell">{{ 'report.desk.tell_author'|trans({'%name%': author_rider.name}) }}</label>
-        </div>
-        <p class="warn">{{ 'report.desk.tell_author_note'|trans }}</p>
+        <p class="warn">{{ 'dsa_statement.desk.report_author_told'|trans({'%name%': author_rider.name}) }}</p>
       {% endif %}
 
       <p class="dact"><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>
