@@ -16,6 +16,11 @@
 # database. It is idempotent, so run it after every migration and after every
 # pipeline harvest that recreates a coverage table.
 tables:
+    # Hand-written migration (Version20261009030000). Written by App\Legal\LegalNotice.
+    legal_notice_sent: >-
+        One row per account and announced legal page version that was emailed (page is
+        privacy or terms). An interrupted announcement continues from here and mails nobody
+        twice; the rows go with the account.
     # Hand-written migration (Version20260928150000). Written by triggers only.
     catalog_change: >-
         Append-only count of catalog changes, one row per changing statement and region

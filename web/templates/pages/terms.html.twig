@@ -2,7 +2,7 @@
 {% extends 'base.html.twig' %}
 {# The terms' text is translations/terms.<locale>.yaml, its own domain,
    outside the in-site translation system (docs/specs/translations.md §6). #}
-{% trans_default_domain 'terms' %}
+{% trans_default_domain text_domain %}
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('styles/page/pages/terms.css') }}">
 {% endblock %}
@@ -15,7 +15,8 @@
 
 <section class="pad"><div class="wrap">
   <div class="legal">
-    <p class="upd" data-terms-version="{{ terms_current.number }}">{{ 'terms.version_line'|trans({'%n%': terms_current.number, '%date%': terms_current.date|cc_date}) }}</p>
+    <p class="upd" data-terms-version="{{ terms_current.number }}">{{ 'terms.version_line'|trans({'%n%': terms_current.number, '%date%': terms_current.effective|cc_date}) }}</p>
+    {% include 'pages/_legal_upcoming.html.twig' with {page: 'terms'} %}
 
     <h2><span class="n">1</span>{% trans %}terms.h1_accepting{% endtrans %}</h2>
     <p>{% trans %}terms.accepting_p1_pre{% endtrans %} <a href="{{ path('privacy') }}">{% trans %}terms.accepting_p1_privacy{% endtrans %}</a>{% trans %}terms.accepting_p1_mid{% endtrans %} <b>{% trans %}terms.accepting_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}terms.accepting_p1_mid2{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}terms.accepting_p1_governance{% endtrans %}</a>{% trans %}terms.accepting_p1_post{% endtrans %}</p>
@@ -138,7 +139,7 @@
         {% endfor %}
       </ol>
     </div>
-    <p>{% trans %}terms.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/translations/terms.{{ app.request.locale }}.yaml">{% trans %}terms.changes_versions_link{% endtrans %}</a>{% trans %}terms.changes_versions_post{% endtrans %}</p>
+    <p>{% trans %}terms.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/translations/{{ text_domain }}.{{ app.request.locale }}.yaml">{% trans %}terms.changes_versions_link{% endtrans %}</a>{% trans %}terms.changes_versions_post{% endtrans %}</p>
 
     <h2><span class="n">16</span>{% trans %}terms.h16_contact{% endtrans %}</h2>
     <p>{% trans %}terms.contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans({}, 'messages') }} <a href="{{ path('contact') }}">{{ 'support.contact.title_short'|trans({}, 'messages') }}</a>){% trans %}terms.contact_post{% endtrans %}</p>

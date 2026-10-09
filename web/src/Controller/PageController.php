@@ -19,6 +19,9 @@ use App\Catalog\Season;
 use App\Community\CommunityProgress;
 use App\Content\ReleaseNotes;
 use App\Entity\User;
+use App\Legal\LegalPageView;
+use App\Legal\PrivacyNoticeVersions;
+use App\Legal\TermsVersions;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -682,33 +685,46 @@ final class PageController extends AbstractController
     }
 
     #[Route(LocalizedPath::PRIVACY, name: 'privacy')]
-    public function privacy(\Doctrine\ORM\EntityManagerInterface $em): Response
+    public function privacy(Request $request, \Doctrine\ORM\EntityManagerInterface $em, LegalPageView $view, ClockInterface $clock): Response
     {
-        // Opening the notice is reading it: the change bar goes from every page.
+        // Opening the notice is reading it, an announced version included: the change bar goes from every page.
         $user = $this->getUser();
-        if ($user instanceof User && ($user->getPrivacyVersionSeen() ?? 0) < \App\Legal\PrivacyNoticeVersions::CURRENT) {
-            $user->setPrivacyVersionSeen(\App\Legal\PrivacyNoticeVersions::CURRENT);
+        if ($user instanceof User && ($user->getPrivacyVersionSeen() ?? 0) < PrivacyNoticeVersions::CURRENT) {
+            $user->setPrivacyVersionSeen(PrivacyNoticeVersions::CURRENT);
             $em->flush();
         }
+        $legal = $view->params(PrivacyNoticeVersions::class, 'next' === $request->query->get('v'), $clock->now());
 
         return $this->render('pages/privacy.html.twig', [
             'page_title' => 'meta.privacy_title',
             'page_description' => 'meta.privacy_description',
             'nav_active' => '',
-            'privacy_versions' => \App\Legal\PrivacyNoticeVersions::all(),
-            'privacy_current' => \App\Legal\PrivacyNoticeVersions::current(),
+            'privacy_versions' => $legal['versions'],
+            'privacy_current' => $legal['current'],
+            'legal' => $legal,
+            'text_domain' => $legal['text_domain'],
         ]);
     }
 
     #[Route(LocalizedPath::TERMS, name: 'terms')]
-    public function terms(): Response
+    public function terms(Request $request, \Doctrine\ORM\EntityManagerInterface $em, LegalPageView $view, ClockInterface $clock): Response
     {
+        // Opening the terms is reading them, an announced version included: the change bar goes from every page.
+        $user = $this->getUser();
+        if ($user instanceof User && ($user->getTermsVersionSeen() ?? 0) < TermsVersions::CURRENT) {
+            $user->setTermsVersionSeen(TermsVersions::CURRENT);
+            $em->flush();
+        }
+        $legal = $view->params(TermsVersions::class, 'next' === $request->query->get('v'), $clock->now());
+
         return $this->render('pages/terms.html.twig', [
             'page_title' => 'meta.terms_title',
             'page_description' => 'meta.terms_description',
             'nav_active' => '',
-            'terms_versions' => \App\Legal\TermsVersions::all(),
-            'terms_current' => \App\Legal\TermsVersions::current(),
+            'terms_versions' => $legal['versions'],
+            'terms_current' => $legal['current'],
+            'legal' => $legal,
+            'text_domain' => $legal['text_domain'],
         ]);
     }
 

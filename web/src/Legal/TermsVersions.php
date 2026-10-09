@@ -14,7 +14,7 @@ namespace App\Legal;
  *
  * @api
  */
-final class TermsVersions
+final class TermsVersions extends LegalVersions
 {
     public const int CURRENT = 2;
 

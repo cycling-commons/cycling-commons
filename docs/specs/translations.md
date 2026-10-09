@@ -141,7 +141,7 @@ That is the index. Do not full-text-index proposal snapshots for the browser.
 | submitter_id | FK `users`. Credit is resolved live (`rider#` plus display name only if the profile is public). Do **not** denormalize a display name onto this row (GDPR; account deletion unlinks the person). |
 | status | `pending` / `needs_info` / `approved` / `rejected` |
 | reviewer_id | FK, null until decided |
-| reviewer_note | required on needs-info, optional on reject |
+| reviewer_note | required on needs-info and on reject (a rejection's note is the facts of the translator's statement of reasons, content-reports.md §7) |
 | created_at / decided_at | |
 
 **`translation_overlay`** is the live override. One row per `(entry_id, locale)`.
@@ -661,8 +661,9 @@ rider’s `proposed_value` is not rewritten. Reject / needs-info ignore
 the edited field.
 
 Decisions are `approve` / `reject` / `needs_info` with the same note
-rules as item submissions (needs-info requires a question), and happen
-only on that detail page.
+rules as item submissions (needs-info requires a question, reject requires
+a note), and happen only on that detail page. A rejection's message carries
+the statement of reasons (content-reports.md §7).
 
 Rejected drafts stay out of the approved chain. Opening a rejected
 proposal appends that attempt after the published story. If the
@@ -836,15 +837,107 @@ The privacy notice and the terms of use are legal texts. Each is one file per
 page per language, in its own domain: `translations/privacy.<locale>.yaml`
 and `translations/terms.<locale>.yaml` (owner 2026-10-09). The in-site
 translation system works on the `messages` domain only (`CatalogueSync`,
-`OverlayTranslator`, `MarkedTranslator`, the DeepL draft tool), so these pages
-cannot be proposed, overlaid or marked in translate mode; a change to them is a
-change in git, by a developer, reviewed like code. The history of one file is
-then the record of every change to that page in that language, and each page
-links its own file's history (privacy-notice.md). Both pages carry a version
-number and date with what changed, newest first (`PrivacyNoticeVersions`,
-`TermsVersions`); the terms started at version 1 of 1 August 2026. The parity gate and the
-used-keys check cover both domains (`web/tools/check-translations.sh`,
-`web/tools/check-used-translations.sh`).
+`OverlayTranslator`, `MarkedTranslator`, the DeepL draft tool, the curator
+desk), so these pages cannot be proposed, overlaid or marked in translate
+mode; a change to them is a change in git, by a developer, reviewed like code.
+The history of one file is then the record of every change to that page in
+that language. The privacy notice and the terms link their own file's history
+(privacy-notice.md); the licences page does not. `LegalPagesSourceTest` and
+`LicensesPageSourceTest` hold the split, and the second shows that an overlay
+row on a `licenses.*` key changes nothing on `/licenses`. The page renders
+with `trans_default_domain 'licenses'`; the `/developers` link to it reads its
+label from the same domain (`licenses.kicker`). The privacy notice and the
+terms carry a version number and date with what changed, newest first
+(`PrivacyNoticeVersions`, `TermsVersions`, both on `LegalVersions`); the terms
+started at version 1 of 1 August 2026. The licences page has no version of
+its own: the terms include it, so a change to it follows the terms (below).
+
+**Telling people about a change** (owner 2026-10-09; DSA Art. 14(2), GDPR
+Arts. 12-13). Every version names the date it is published, the date it
+applies (`effective`) and whether it is **significant**.
+
+- A significant version (for the notice: a new purpose, recipient or country;
+  for the terms: a new rule or a change to a right) is emailed to every
+  account at least `LegalVersions::NOTICE_DAYS` (30) days before it applies,
+  in each person's language, with what changes, the date, a link to the new
+  text and a link to close the account (`app:legal:announce <page> <version>`,
+  `LegalNotice`, `emails/legal_change.html.twig`). It is an essential service
+  message, sent whatever the news setting, also to an account whose holder
+  once asked for a deletion code and let it expire. Not mailed: an account
+  with an unconfirmed address that never signed in, whose address may be a
+  stranger's and which the unverified sweep deletes within a week
+  (account-and-auth.md §6.7); one that signed in before sign-in needed a
+  confirmed address is mailed. One `legal_notice_sent` row per account and
+  version lets an interrupted run continue without mailing anyone twice. An
+  address the mail server refuses is logged by account id (never the
+  address), skipped, and counted; the command reports how many were mailed and
+  how many refused, exits with a failure when any were, and a second run mails
+  only the accounts without a row. The command refuses a version that is not
+  significant, applies in fewer than 30 days, or has no
+  `translations/<page>_next.<locale>.yaml` in all five languages for the
+  email to link. `LegalNoticeTest` holds every significant version from
+  `NOTICE_RULE_FROM` (3) on to the 30 days; version 2 of both pages came
+  before the rule.
+- A smaller change (clearer wording) applies the day it is published.
+- Every version shows a bar to a signed-in reader until they open the page
+  (`privacy_version_seen`, `terms_version_seen`): "changes on <date>" while
+  announced, "changed on <date>" after. Opening the page, the announced text
+  included, records the version as seen.
+- While a version is announced, its text sits in
+  `translations/<page>_next.<locale>.yaml` (domain `<page>_next`): the page
+  says when the new version applies and links `?v=next`, which shows it. That
+  is the only way a `_next` file is ever shown (`LegalPageView`): with no
+  version upcoming the page shows its main file, whatever `_next` files
+  exist, so a text whose version entry is missing never goes live. The text
+  therefore moves over the main file in a deploy on the effective date; until
+  then the page shows the old text under the new version number, and
+  `LegalPageViewTest` fails in CI from the day a `_next` file outlives its
+  version.
+
+**Texts the terms include by reference follow the same rule** (2026-10-09).
+The terms rest on texts outside `terms.*.yaml`: the contributor terms
+(`licenses/COMMONS-TERMS-CLAUSE.md`), the trademark policy (`TRADEMARK.md`),
+and the licences page the terms link for the licences, which is its template
+(`web/templates/pages/licenses.html.twig`), its text (the five
+`licenses.<locale>.yaml` files) and the licence texts it links (`LICENSE`,
+`licenses/COMMONS-DATA-LICENSE.md`, `licenses/COMMONS-MEDIA-LICENSE.md`,
+`licenses/COMMONS-TRANSLATIONS-LICENSE.md`, and the verbatim
+`licenses/ODbL-1.0.txt`, `licenses/DbCL-1.0.txt`,
+`licenses/CC-BY-SA-4.0.txt`). A significant change to any of them changes
+the deal as much as an edit to the terms.
+
+- Each is pinned by SHA-256 to the terms version that last accepted it, in
+  `App\Legal\TermsIncludedTexts::PINS` (read by
+  `TermsVersions::includedTexts()`), newest pin first. A file is hashed as it
+  is (line endings normalised). A pin on a `#key` subtree of a catalogue is
+  hashed by its keys and values instead, so moving keys around does not
+  count; no text is pinned that way now.
+- `TermsIncludedTextsTest` fails when a text differs from its newest pin. Its
+  message says what to do and prints the new hash, ready to paste.
+- A **significant** change (a new rule, a changed right or licence, anything a
+  contributor or reuser would decide differently on) needs a new significant
+  terms version, emailed at least 30 days ahead with `app:legal:announce`. The
+  changed text lands on or after the day that version applies, with a pin of
+  kind `significant` naming it; the test refuses such a pin before then.
+- An **editorial** change (a typo, a broken link, markup that changes no
+  words) is accepted by a pin of kind `editorial` with the reason written
+  out, so the ruling is reviewed in git with the change.
+- The test also finds every repository text the licences page or the terms
+  link on GitHub (`blob/main/...`) and fails if one is not pinned, so a new
+  link cannot add an unpinned text.
+- Files outside `web/` are skipped where only `web/` is mounted; CI has the
+  whole checkout, and the dev compose file mounts them read-only.
+
+The five `licenses.<locale>.yaml` pins are editorial: the text came over
+verbatim from the `messages` domain, where an overlay (§3) could change it
+outside git and the 30-day rule, and each pin's reason names the earlier
+`messages` subtree hash its keys and values still match. The template's
+editorial pin covers the domain switch. `Version20261009080000` deletes the
+overlays, proposals and `translation_entry` rows of the `licenses.*` keys
+that `messages` no longer holds.
+
+The parity gate and the used-keys check cover all three domains
+(`web/tools/check-translations.sh`, `web/tools/check-used-translations.sh`).
 
 ---
 

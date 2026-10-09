@@ -69,6 +69,7 @@ final class RegistrationController extends AbstractController
         // A new account signs up under the notice as it stands now.
 
         $user->setPrivacyVersionSeen(\App\Legal\PrivacyNoticeVersions::CURRENT);
+        $user->setTermsVersionSeen(\App\Legal\TermsVersions::CURRENT);
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 

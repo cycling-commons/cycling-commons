@@ -1,0 +1,15 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# An announced version of a legal page (App\Legal\LegalPageView): the date it
+   applies, and a link between the text that applies and the new text while
+   both exist. `page` is privacy or terms; the keys are in the page's domain. #}
+{% if legal.upcoming %}
+  <p class="upd" data-legal-upcoming="{{ legal.upcoming.number }}">
+    {% if legal.preview %}
+      {{ (page ~ '.next_box')|trans({'%date%': legal.upcoming.effective|cc_date}, page) }}
+      <a href="{{ path(page) }}">{{ (page ~ '.next_back')|trans({}, page) }}</a>
+    {% else %}
+      {{ (page ~ '.upcoming_box')|trans({'%date%': legal.upcoming.effective|cc_date}, page) }}
+      {% if legal.next_available %}<a href="{{ path(page, {v: 'next'}) }}">{{ (page ~ '.upcoming_link')|trans({}, page) }}</a>{% endif %}
+    {% endif %}
+  </p>
+{% endif %}

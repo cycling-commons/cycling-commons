@@ -166,6 +166,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(name: 'privacy_version_seen', type: 'integer', nullable: true)]
     private ?int $privacyVersionSeen = null;
 
+    /** The terms version this rider last saw (App\Legal\TermsVersions); null is none. */
+    #[ORM\Column(name: 'terms_version_seen', type: 'integer', nullable: true)]
+    private ?int $termsVersionSeen = null;
+
     /** The zone the rider chose for times; null is "automatic" (account-and-auth.md §9). */
     #[ORM\Column(name: 'time_zone', type: 'string', length: 64, nullable: true)]
     private ?string $timeZone = null;
@@ -715,6 +719,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setPrivacyVersionSeen(?int $version): static
     {
         $this->privacyVersionSeen = $version;
+
+        return $this;
+    }
+
+    public function getTermsVersionSeen(): ?int
+    {
+        return $this->termsVersionSeen;
+    }
+
+    public function setTermsVersionSeen(?int $version): static
+    {
+        $this->termsVersionSeen = $version;
 
         return $this;
     }

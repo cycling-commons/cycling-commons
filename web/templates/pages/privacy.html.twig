@@ -2,7 +2,7 @@
 {% extends 'base.html.twig' %}
 {# The notice's text is translations/privacy.<locale>.yaml, its own domain,
    outside the in-site translation system (docs/specs/privacy-notice.md). #}
-{% trans_default_domain 'privacy' %}
+{% trans_default_domain text_domain %}
 {#
   `/settings` is behind the firewall, so linking it to a signed-out reader sends
   them to a login form for a page they were only being told about (owner,
@@ -30,7 +30,8 @@
 
 <section class="pad"><div class="wrap">
   <div class="legal">
-    <p class="upd" data-privacy-version="{{ privacy_current.number }}">{{ 'privacy.version_line'|trans({'%n%': privacy_current.number, '%date%': privacy_current.date|cc_date}) }}</p>
+    <p class="upd" data-privacy-version="{{ privacy_current.number }}">{{ 'privacy.version_line'|trans({'%n%': privacy_current.number, '%date%': privacy_current.effective|cc_date}) }}</p>
+    {% include 'pages/_legal_upcoming.html.twig' with {page: 'privacy'} %}
 
     <h2>{% trans %}privacy.h_responsible{% endtrans %}</h2>
     <p>{% trans %}privacy.responsible_p1_pre{% endtrans %} <b>{% trans %}privacy.responsible_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}privacy.responsible_p1_mid{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}privacy.responsible_p1_governance{% endtrans %}</a>{{ 'privacy.responsible_p1_post'|trans|rich }}</p>
@@ -304,7 +305,7 @@
     </div>
     {# The history of this language's text file: every change to the notice
        in this language, line by line, with its date and commit message. #}
-    <p>{% trans %}privacy.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/translations/privacy.{{ app.request.locale }}.yaml">{% trans %}privacy.changes_versions_link{% endtrans %}</a>{% trans %}privacy.changes_versions_post{% endtrans %}</p>
+    <p>{% trans %}privacy.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/translations/{{ text_domain }}.{{ app.request.locale }}.yaml">{% trans %}privacy.changes_versions_link{% endtrans %}</a>{% trans %}privacy.changes_versions_post{% endtrans %}</p>
 
     <div class="disc" style="margin:2rem 0 0">{% trans %}privacy.footer_disc_pre{% endtrans %} <a href="{{ path('terms') }}">{% trans %}privacy.footer_disc_terms{% endtrans %}</a> {% trans %}privacy.footer_disc_mid{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}privacy.footer_disc_licences{% endtrans %}</a>{% trans %}privacy.footer_disc_post{% endtrans %}</div>
   </div>

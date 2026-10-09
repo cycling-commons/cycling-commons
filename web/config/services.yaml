@@ -186,6 +186,12 @@ services:
     # recorded name on demand. The name's last five characters (-eu-01) are
     # the public URL segment, so advancing a continent = bump its var + add
     # the nginx location for the new segment; nothing here changes shape.
+    # The legal pages read their text files to know whether an announced
+    # version's text is there (docs/specs/translations.md §6.2).
+    App\Legal\LegalPageView:
+        arguments:
+            $translationsDir: '%kernel.project_dir%/translations'
+
     App\Media\MediaStorage:
         arguments:
             $client: '@media.s3_client'

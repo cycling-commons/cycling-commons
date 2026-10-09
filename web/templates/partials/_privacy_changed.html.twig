@@ -1,11 +1,21 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
-{# The privacy notice changed since this signed-in rider last read it
-   (docs/specs/privacy-notice.md). Opening the notice records it as seen. #}
+{# The privacy notice or the terms changed, or will change, since this
+   signed-in rider last read them (docs/specs/privacy-notice.md,
+   docs/specs/translations.md §6.2). Opening the page records it as seen. #}
 {% set _privacy = cc_privacy_unseen() %}
+{% set _terms = cc_terms_unseen() %}
 {% if _privacy %}
 <div class="privacy-changed" data-privacy-changed role="status">
-  <span>{{ 'privacy.changed_bar'|trans({'%date%': _privacy.date|cc_date}, 'privacy') }}</span>
+  <span>{{ (_privacy.upcoming ? 'privacy.changing_bar' : 'privacy.changed_bar')|trans({'%date%': _privacy.effective|cc_date}, 'privacy') }}</span>
   <a href="{{ path('privacy') }}#changes">{{ 'privacy.changed_read'|trans({}, 'privacy') }}</a>
 </div>
+{% endif %}
+{% if _terms %}
+<div class="privacy-changed" data-terms-changed role="status">
+  <span>{{ (_terms.upcoming ? 'terms.changing_bar' : 'terms.changed_bar')|trans({'%date%': _terms.effective|cc_date}, 'terms') }}</span>
+  <a href="{{ path('terms') }}#changes">{{ 'terms.changed_read'|trans({}, 'terms') }}</a>
+</div>
+{% endif %}
+{% if _privacy or _terms %}
 <link rel="stylesheet" href="{{ asset('styles/page/partials/_privacy_changed.css') }}">
 {% endif %}

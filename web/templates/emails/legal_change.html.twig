@@ -1,0 +1,23 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  A significant change to the privacy notice or the terms, sent to every
+  account at least 30 days before it applies (App\Legal\LegalNotice). It
+  carries the date, what changes, where to read the new text, and how to
+  close the account for someone who does not agree. In the reader's language.
+
+  @see docs/specs/privacy-notice.md, docs/specs/translations.md §6.2
+#}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ ('legal_mail.subject_' ~ page)|trans({'%date%': date}, 'messages', locale) }}{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 8px">{{ 'legal_mail.hello'|trans({'%name%': name}, 'messages', locale) }}</p>
+  <p style="margin:0 0 8px">{{ ('legal_mail.intro_' ~ page)|trans({'%date%': date}, 'messages', locale) }}</p>
+  <p style="margin:16px 0 4px"><strong>{{ 'legal_mail.what_changes'|trans({}, 'messages', locale) }}</strong></p>
+  <ul style="margin:0 0 16px;padding-left:20px">
+    {% for c in changes %}<li style="margin:0 0 4px">{{ c|striptags }}</li>{% endfor %}
+  </ul>
+  <p style="margin:0 0 8px"><a href="{{ page_url }}">{{ ('legal_mail.read_' ~ page)|trans({}, 'messages', locale) }}</a></p>
+  <p style="margin:16px 0 8px">{{ 'legal_mail.disagree'|trans({'%date%': date}, 'messages', locale) }} <a href="{{ settings_url }}">{{ 'legal_mail.settings'|trans({}, 'messages', locale) }}</a></p>
+{% endblock %}

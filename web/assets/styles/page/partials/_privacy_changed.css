@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
-/* The "privacy notice changed" bar (partials/_privacy_changed.html.twig). */
+/* The "privacy notice / terms changed" bars (partials/_privacy_changed.html.twig). */
 .privacy-changed{display:flex;flex-wrap:wrap;gap:.4rem .8rem;align-items:center;justify-content:center;
   padding:.55rem 1rem;background:#C8923A;color:#101E16;font-size:.88rem;line-height:1.4;text-align:center}
 .privacy-changed a{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}

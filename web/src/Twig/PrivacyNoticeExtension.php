@@ -7,7 +7,10 @@ declare(strict_types=1);
 namespace App\Twig;
 
 use App\Entity\User;
+use App\Legal\LegalVersions;
 use App\Legal\PrivacyNoticeVersions;
+use App\Legal\TermsVersions;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -21,24 +24,50 @@ use Twig\TwigFunction;
  */
 final class PrivacyNoticeExtension extends AbstractExtension
 {
-    public function __construct(private readonly Security $security)
+    public function __construct(private readonly Security $security, private readonly ClockInterface $clock)
     {
     }
 
     #[\Override]
     public function getFunctions(): array
     {
-        return [new TwigFunction('cc_privacy_unseen', $this->unseen(...))];
+        return [
+            new TwigFunction('cc_privacy_unseen', $this->unseen(...)),
+            new TwigFunction('cc_terms_unseen', $this->termsUnseen(...)),
+        ];
     }
 
-    /** @return array{number: int, date: string, changes: list<string>}|null */
+    /** @return array{number: int, effective: string, upcoming: bool}|null */
     public function unseen(): ?array
     {
         $user = $this->security->getUser();
-        if (!$user instanceof User || ($user->getPrivacyVersionSeen() ?? 0) >= PrivacyNoticeVersions::CURRENT) {
+
+        return $user instanceof User ? $this->bar(PrivacyNoticeVersions::class, $user->getPrivacyVersionSeen()) : null;
+    }
+
+    /** @return array{number: int, effective: string, upcoming: bool}|null */
+    public function termsUnseen(): ?array
+    {
+        $user = $this->security->getUser();
+
+        return $user instanceof User ? $this->bar(TermsVersions::class, $user->getTermsVersionSeen()) : null;
+    }
+
+    /**
+     * The newest version this reader has not opened, and whether it is still
+     * announced (applies later) or already applies.
+     *
+     * @param class-string<LegalVersions> $versions
+     *
+     * @return array{number: int, effective: string, upcoming: bool}|null
+     */
+    private function bar(string $versions, ?int $seen): ?array
+    {
+        $latest = $versions::latest();
+        if (($seen ?? 0) >= $latest['number']) {
             return null;
         }
 
-        return PrivacyNoticeVersions::current();
+        return ['number' => $latest['number'], 'effective' => $latest['effective'], 'upcoming' => null !== $versions::upcoming($this->clock->now())];
     }
 }

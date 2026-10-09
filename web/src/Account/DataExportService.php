@@ -85,7 +85,7 @@ final class DataExportService
             'SELECT u.uuid, u.pseudonym, u.email, u.display_name, u.email_verified, u.email_verified_at,
                     u.two_fa_enabled, u.public_profile, u.locale, u.bike_types, u.riding_styles,
                     u.default_map_mode, u.keep_media_credit, u.age_confirmed_at,
-                    u.updates_opt_in, u.updates_cadence, u.time_zone, u.detected_time_zone, u.privacy_version_seen, u.closed_hints,
+                    u.updates_opt_in, u.updates_cadence, u.time_zone, u.detected_time_zone, u.privacy_version_seen, u.terms_version_seen, u.closed_hints,
                     u.base_place, u.base_radius_km, u.base_region_ids, u.base_country_codes,
                     ST_Y(u.base_point::geometry) AS base_lat, ST_X(u.base_point::geometry) AS base_lng,
                     u.created_at, u.updated_at, u.roles, c.iso2 AS country
