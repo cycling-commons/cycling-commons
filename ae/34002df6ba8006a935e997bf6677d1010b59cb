@@ -1,0 +1,135 @@
+docs/specs/api-strategy.md
+  s_985749378da6fe::t_1c49ae99444104 105-106,114,116,118-120,126-131,136-138,147-189,200-205,250-256,294-295
+  s_985749378da6fe::t_ee6a8ba2ed2e60 132-135,139-146,190-199,206-249
+wiki/developers/api/index.md
+  s_985749378da6fe::t_3b74913cfdc093 52
+web/src/BulkExport/BulkExportBusy.php
+  s_985749378da6fe::t_71c59979b2e685 1-20
+developers/docker/compose.yaml
+  s_985749378da6fe::t_4aaa6511e65dc2 120-121,214-215,383-384,413-414
+web/src/BulkExport/Command/BulkExportBuildCommand.php
+  s_985749378da6fe::t_39a24c8a5fa39e 1-9,11-21,24-44,46-69
+  s_985749378da6fe::t_1e5105c40ecd4b 10,22-23,45
+web/src/BulkExport/BulkExportStorage.php
+  s_985749378da6fe::t_42e732b0648a00 1-29,34-44,54-66,71-72,79-119,139-167
+  s_985749378da6fe::t_9be8450ac113f3 30-33,45-53,67-70,73-78,120-138
+web/src/BulkExport/BulkExportUnavailable.php
+  s_985749378da6fe::t_f9f7b24dc1ef07 1-20
+web/public/api/openapi.yaml
+  s_985749378da6fe::t_848bfdb9ed01df 53-60
+web/src/Controller/BulkExportDownloadController.php
+  s_985749378da6fe::t_9ea242a9adc58d 68-72
+  s_985749378da6fe::t_398c7eb84d130a 33-34
+  s_985749378da6fe::t_250599f1c70a6a 1-28,38,45-49,53-67,73-84,98-160,162-166,169-171
+  s_985749378da6fe::t_6c46055279e518 29-32,35-37,39-44,50-52,85-97,161,167-168
+wiki/data-catalog.md
+  s_985749378da6fe::t_3b74913cfdc093 243
+web/config/services.yaml
+  s_985749378da6fe::t_8c97136a02b84a 301-313
+  s_985749378da6fe::t_3392a2030a9e1a 208-214
+  s_985749378da6fe::t_2efe45864c9c1f 215,314
+docs/specs/page-caching.md
+  s_985749378da6fe::t_513403d3ac3741 295
+docs/specs/data-source-register.md
+  s_985749378da6fe::t_9516d7bf4061a9 59-65
+web/tests/BulkExport/SpyStorageAdapter.php
+  s_985749378da6fe::t_d61dc47a48a6c5 1-100
+web/config/packages/rate_limiter.yaml
+  s_985749378da6fe::t_df273d99286541 73-74,344-352
+web/src/Routing/LocalizedPath.php
+  s_985749378da6fe::t_addcaac0fb707e 194-203
+web/.env.staging
+  s_985749378da6fe::t_6b07968324228e 135-137
+web/tests/BulkExport/BulkExportLicencesTest.php
+  s_985749378da6fe::t_58c0288d67dfd4 1-32
+web/src/Controller/SitemapController.php
+  s_985749378da6fe::t_d2862b421d9d39 76-77
+web/templates/pages/developers_export.html.twig
+  s_985749378da6fe::t_d816ee1c147175 1-31,33-77,79-88
+  s_985749378da6fe::t_3e1939d1853165 78
+  s_985749378da6fe::t_e4cde09dfe7434 32
+web/tests/BulkExport/BulkExportCatalogTest.php
+  s_985749378da6fe::t_26677b42519c6c 43-45
+  s_985749378da6fe::t_2daaef3a6a717b 1-42,46-161
+web/templates/pages/developers.html.twig
+  s_985749378da6fe::t_ad847b2e16f5ce 28-34
+web/src/BulkExport/BulkExportCatalog.php
+  s_985749378da6fe::t_03f14f3ef679e3 152
+  s_985749378da6fe::t_dfbf44522e5556 1-14,17,23,34-41,48,50-60,66-67,82-83,85,90-91,93-94,96-98,100-101,104,123,139,141-144,155-156,168-169
+  s_985749378da6fe::t_2ce97023c1e09a 105,108,112,115-116,118,128-133,136,140,145,149,153,160,162,164
+  s_985749378da6fe::t_5cd22183b8fd51 15-16,18-22,24-33,45-47,49,61-65,68-81,84,86-89,92,95,99,102-103,106-107,109-111,114,124-127,134-135,154,157-159,161,163,165-167
+  s_985749378da6fe::t_d5bb2b6a87ca4b 42-44,137-138,146-148,150-151
+  s_985749378da6fe::t_7794838cd1e8fb 113,117,119-122
+web/config/packages/flysystem.yaml
+  s_985749378da6fe::t_673253298a1314 25
+  s_985749378da6fe::t_e205ca26afcf93 10-11,23-24
+web/tests/BulkExport/BulkExportCommandTest.php
+  s_985749378da6fe::t_fc82a0f8980032 1-8,10,13-36,55-56
+  s_985749378da6fe::t_3483b44e258728 9,11-12,37-54
+wiki/governance.md
+  s_985749378da6fe::t_38d6a1238c25ec 66-67,79-80
+web/src/Controller/BulkExportPageController.php
+  s_985749378da6fe::t_6c46055279e518 23-24,33-46,50,53
+  s_985749378da6fe::t_9c2735dff1f648 1-22,25-32,49,51-52,54-55
+  s_985749378da6fe::t_222f285391fd48 47-48
+web/src/BulkExport/BulkExportLicences.php
+  s_985749378da6fe::t_7e7f37e007d6f7 1-52
+web/src/Twig/BulkExportExtension.php
+  s_985749378da6fe::t_ad847b2e16f5ce 1-39
+docs/specs/public-api-personal-data-boundary.md
+  s_985749378da6fe::t_0f841e7395aae9 229-244
+web/src/BulkExport/BulkExportBuilder.php
+  s_985749378da6fe::t_2b9eca773e714f 250
+  s_985749378da6fe::t_ef8a4df6f77173 505
+  s_985749378da6fe::t_71c59979b2e685 17-18,39-42,46-49,76-78,108,116-118,124-131,133-153,157-161,183-184,190-209,246-249,253,255-258,261-295,297,301-331,519,547-552,554-559
+  s_985749378da6fe::t_cae9e0cea74251 1-16,19-38,43-45,50-75,79-107,109-115,119-123,132,154-156,162-182,185-189,210-245,251-252,254,259-260,296,298-300,332-504,506-518,520-546,553,560-574
+docs/specs/media-storage-architecture.md
+  s_985749378da6fe::t_513403d3ac3741 72
+docs/specs/osm-data-architecture.md
+  s_985749378da6fe::t_95765af0e19e64 516-517,519-520
+web/tests/BulkExport/BulkExportControllerTest.php
+  s_985749378da6fe::t_fb00a6be41608f 16,149-150,161,178,180,182,185,189,197,199,203,224-238
+  s_985749378da6fe::t_81dbd9d5e7b826 1-10,12-13,17-34,36-37,60-94,99-139,239-252,254-261
+  s_985749378da6fe::t_2b9eca773e714f 11,14-15,35,38-59,95-98,140-148,151-160,162-177,179,181,183-184,186-188,190-196,198,200-202,204-223
+  s_985749378da6fe::t_f5a53d9a4eab8b 253
+web/tests/BulkExport/BulkExportBuilderTest.php
+  s_985749378da6fe::t_106e3a66ed8de0 269-270
+  s_985749378da6fe::t_f5a53d9a4eab8b 443
+  s_985749378da6fe::t_f19417053ce8e6 10-11,13,15,17,19-21,23,193-268,271-336
+  s_985749378da6fe::t_804adacba6ec6c 1-9,12,14,16,18,22,24-145,147-192,337-442,444-469
+  s_985749378da6fe::t_ab3a23fe5e82a8 146
+web/src/EventSubscriber/PublicPageCacheSubscriber.php
+  s_985749378da6fe::t_d2862b421d9d39 82
+web/config/packages/security.yaml
+  s_985749378da6fe::t_679e3116c498f2 67-69
+web/.env
+  s_985749378da6fe::t_6b07968324228e 260-267
+docs/specs/public-api.md
+  s_985749378da6fe::t_0f841e7395aae9 191-196
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_11e762310741a7 353,601,615,623-652,3501
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_e8a8a324646a0c 353,601,623-652,3515
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_e83a7b1df00144 355,603,625-654,3523
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_a19ed7f849b23c 348,596,618-647,3493
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_24f195dbde202e 353,601,623-652,3500
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ae34002df6ba8006a935e997bf6677d1010b59cb",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
