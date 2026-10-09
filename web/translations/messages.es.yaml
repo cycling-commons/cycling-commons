@@ -851,9 +851,9 @@ settings:
   updates_cadence_every: 'Cada actualización: como mucho 2 veces al mes'
   delete:
     keep_media_credit: 'Mantener mi nombre en las fotos que aporté'
-    keep_media_credit_help: 'Tus fotos aprobadas se quedan en el Commons en cualquier caso — están licenciadas bajo CC BY-SA 4.0. Esto solo decide si siguen llevando tu nombre. Elige No y a partir de entonces se atribuirán a un ciclista anónimo, también en las copias que la gente ya se haya descargado.'
-    keep_media_credit_yes: 'Sí — conservar mi nombre en ellas'
-    keep_media_credit_no: 'No — atribuirlas a un ciclista anónimo'
+    keep_media_credit_help: 'Tus fotos aprobadas se quedan en el Commons en cualquier caso: están licenciadas bajo CC BY-SA 4.0. Esto solo decide si nuestras páginas siguen nombrándote, y solo cuenta si tu perfil es público cuando te vas. Elige No y a partir de entonces se atribuirán a un ciclista anónimo. Tu nombre nunca se escribió en los propios archivos de las fotos.'
+    keep_media_credit_yes: 'Sí, conservar mi nombre en ellas'
+    keep_media_credit_no: 'No, atribuirlas a un ciclista anónimo'
   eyebrow: 'Tu perfil'
   heading: 'Ajustes'
   tab_profile: 'Perfil'
@@ -3125,7 +3125,7 @@ support:
     incomplete: 'Este bloque aún no está completo. La ley neerlandesa lo exige, y aún faltan estas partes:'
     controller_note: 'La misma organización es la responsable del tratamiento de sus datos personales. Lo que eso significa se explica en el'
     controller_link: 'aviso de privacidad'
-    or_form: 'o use el'
+    or_form: 'o usa el formulario de'
   bug:
     kicker: 'Informar de un error'
     title: 'Algo está roto.'

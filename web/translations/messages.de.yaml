@@ -848,9 +848,9 @@ settings:
   updates_cadence_every: 'Jedes Update: höchstens 2-mal im Monat'
   delete:
     keep_media_credit: 'Meinen Namen auf meinen Fotos behalten'
-    keep_media_credit_help: 'Deine freigegebenen Fotos bleiben ohnehin im Commons — sie stehen unter CC BY-SA 4.0. Dies entscheidet nur, ob sie dich weiterhin nennen. Wählst du Nein, werden sie ab dann einer anonymen Radfahrerin oder einem anonymen Radfahrer zugeschrieben, auch in bereits heruntergeladenen Kopien.'
-    keep_media_credit_yes: 'Ja — mein Name bleibt dabei'
-    keep_media_credit_no: 'Nein — einer anonymen Radfahrerin oder einem anonymen Radfahrer zuschreiben'
+    keep_media_credit_help: 'Deine freigegebenen Fotos bleiben ohnehin im Commons: sie stehen unter CC BY-SA 4.0. Dies entscheidet nur, ob unsere Seiten dich weiterhin nennen, und es zählt nur, wenn dein Profil beim Gehen öffentlich ist. Wählst du Nein, werden sie ab dann einer anonymen Radfahrerin oder einem anonymen Radfahrer zugeschrieben. Dein Name wurde nie in die Fotodateien selbst geschrieben.'
+    keep_media_credit_yes: 'Ja, mein Name bleibt dabei'
+    keep_media_credit_no: 'Nein, einer anonymen Radfahrerin oder einem anonymen Radfahrer zuschreiben'
   eyebrow: 'Dein Profil'
   heading: 'Einstellungen'
   tab_profile: 'Profil'
@@ -3103,7 +3103,7 @@ support:
     incomplete: 'Dieser Block ist noch nicht ausgefüllt. Das niederländische Recht verlangt ihn, und diese Angaben fehlen noch:'
     controller_note: 'Dieselbe Organisation ist die für Ihre personenbezogenen Daten Verantwortliche. Was das bedeutet, steht in der'
     controller_link: 'Datenschutzerklärung'
-    or_form: 'oder nutzen Sie das'
+    or_form: 'oder nutze das Formular unter'
   bug:
     kicker: 'Fehler melden'
     title: 'Etwas ist kaputt.'

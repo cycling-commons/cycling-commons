@@ -38,6 +38,10 @@ while the ELI URL is.
 | DSA | Regulation (EU) 2022/2065, Digital Services Act | <https://eur-lex.europa.eu/eli/reg/2022/2065/oj> |
 | DSA Art. 18 contact points | The European Commission's list of national contact points for Art. 18 notifications, kept with the European Board for Digital Services | <https://digital-strategy.ec.europa.eu/en/library/points-contact-notifying-suspected-criminal-offences> |
 | The child-abuse directive | Directive 2011/93/EU | <https://eur-lex.europa.eu/eli/dir/2011/93/oj> |
+| AI Act | Regulation (EU) 2024/1689, artificial intelligence | <https://eur-lex.europa.eu/eli/reg/2024/1689/oj> |
+| Brussels Ia | Regulation (EU) 1215/2012, jurisdiction in civil and commercial matters | <https://eur-lex.europa.eu/eli/reg/2012/1215/oj> |
+| Rome I | Regulation (EC) 593/2008, the law applicable to contracts | <https://eur-lex.europa.eu/eli/reg/2008/593/oj> |
+| CJEU C-191/15 | *Verein für Konsumenteninformation v Amazon EU*, 28 July 2016: a choice-of-law term that does not tell a consumer they keep their own country's mandatory law is unfair | <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:62015CJ0191> |
 | AGPL-3.0-only | GNU Affero General Public License v3, for the code and the interface, translations included | <https://www.gnu.org/licenses/agpl-3.0.html> |
 | ODbL 1.0 | Open Database License, for the data | <https://opendatacommons.org/licenses/odbl/1-0/> |
 | CC BY-SA 4.0 | For standalone media and for the wiki prose | <https://creativecommons.org/licenses/by-sa/4.0/> |
@@ -81,7 +85,11 @@ name and the logo, which are deliberately not open.
 | DSA Art. 16(2)(c) | a notice carries the reporter's name and email, except for content involving Arts. 3 to 7 of Directive 2011/93/EU | the address is required, except on the `intimate_or_child` ground |
 | DSA Art. 16(4) | acknowledge receipt | `emails/report_acknowledged.html.twig` |
 | DSA Art. 16(5) | tell the reporter the outcome | `emails/report_decided.html.twig` |
-| DSA Art. 17 | statement of reasons to the author | `emails/report_statement_of_reasons.html.twig` |
+| DSA Art. 17 | statement of reasons to whoever's content or account is restricted | `App\Moderation\StatementOfReasons`, one wording for every path: rejections, Trash as abuse, retired places and routes, photos removed, hidden or refused, upheld reports (a place's author is the rider who added it), in the rider's messages and by email (content-reports.md §7); account suspension and removal for a breach, by email (account-and-auth.md §6.8). Art. 17(2): Trash as spam sends none |
+| DSA Art. 18 | notify the authorities of a suspected criminal offence threatening life or safety | Escalate holds the photo or submission and alerts an administrator, who notifies the authority by hand and records it on the held row (`AuthorityNotifications`, `/admin/escalated`); overdue after 24 hours; procedure and authority per country in operations.md §7; terms §12 (`terms.mod_escalate`) and the privacy notice (`privacy.share_authorities`, `privacy.retention_authorities`) say so |
+| AI Act Art. 50 | transparency about content a machine generated or manipulated | terms §13: machine-translated descriptions are labelled where they appear, generated photos are a ground for removal; no compliance claimed |
+| Brussels Ia Art. 18 | a consumer may sue in their own courts, and can be sued only there | terms §14 |
+| Rome I Art. 6(2) | a chosen law cannot take away the mandatory protection of the consumer's own law | terms §14, worded as C-191/15 asks |
 
 ## What we are NOT bound by, and say so
 

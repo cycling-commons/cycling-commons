@@ -848,9 +848,9 @@ settings:
   updates_cadence_every: 'Every update: at most 2 times a month'
   delete:
     keep_media_credit: 'Keep my name on the photos I contributed'
-    keep_media_credit_help: 'Your approved photos stay in the Commons either way — they are licensed CC BY-SA 4.0. This only decides whether they keep naming you. Choose No and they are credited to an anonymous rider from then on, including in copies people have already downloaded.'
-    keep_media_credit_yes: 'Yes — keep my name on them'
-    keep_media_credit_no: 'No — credit them to an anonymous rider'
+    keep_media_credit_help: 'Your approved photos stay in the Commons either way: they are licensed CC BY-SA 4.0. This only decides whether our pages keep naming you, and it counts only if your profile is public when you leave. Choose No and they are credited to an anonymous rider from then on. Your name was never written into the photo files themselves.'
+    keep_media_credit_yes: 'Yes, keep my name on them'
+    keep_media_credit_no: 'No, credit them to an anonymous rider'
   eyebrow: 'Your profile'
   heading: 'Settings'
   tab_profile: 'Profile'
@@ -3117,7 +3117,7 @@ support:
     incomplete: 'This block is not filled in yet. Dutch law requires it, and these parts are still missing:'
     controller_note: 'The same organisation is the data controller for your personal data. What that means is set out in the'
     controller_link: 'privacy notice'
-    or_form: 'or use the'
+    or_form: 'or use the form at'
   bug:
     kicker: 'Report a bug'
     title: 'Something is broken.'

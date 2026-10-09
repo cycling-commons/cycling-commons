@@ -18,6 +18,7 @@ namespace App\Legal;
  */
 final class TermsVersions extends LegalVersions
 {
+    public const string PAGE = 'terms';
     public const int CURRENT = 2;
 
     /**
@@ -34,6 +35,9 @@ final class TermsVersions extends LegalVersions
     #[\Override]
     protected static function entries(): array
     {
-        return self::all()[0];
+        return [
+            ['number' => 2, 'date' => '2026-10-09', 'effective' => '2026-10-09', 'significant' => false, 'changes' => ['terms.change.v2_data', 'terms.change.v2_code', 'terms.change.v2_backups', 'terms.change.v2_notice', 'terms.change.v2_more', 'terms.change.v2_reasons', 'terms.change.v2_suspension', 'terms.change.v2_authorities', 'terms.change.v2_included']],
+            ['number' => 1, 'date' => '2026-08-01', 'effective' => '2026-08-01', 'significant' => false, 'changes' => ['terms.change.v1_first']],
+        ];
     }
 }

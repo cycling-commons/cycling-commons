@@ -171,7 +171,8 @@ enum ReportGround: string
     /**
      * The grounds a picture can be reported on, but nothing else can.
      *
-     * `Generated` is about an image presented as a real photograph (terms §7);
+     * `Generated` is about an image presented as a real photograph (terms §12
+     * and §13);
      * `IntimateOrChild` and `PrivateProperty` are about what a picture shows.
      * A route, a place, a region description, a rider profile and a message
      * are text, so forTarget() offers these three only for a photo. Offering

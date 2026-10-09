@@ -16,14 +16,16 @@ namespace App\Legal;
  */
 final class PrivacyNoticeVersions extends LegalVersions
 {
+    public const string PAGE = 'privacy';
     public const int CURRENT = 2;
 
-    /** @return list<array{number: int, date: string, changes: list<string>}> translation keys under privacy.change */
-    public static function all(): array
+    #[\Override]
+    protected static function entries(): array
     {
         return [
-            ['number' => 2, 'date' => '2026-10-07', 'changes' => ['privacy.change.v2_traffic', 'privacy.change.v2_time_zone', 'privacy.change.v2_pseudonym', 'privacy.change.v2_base_location', 'privacy.change.v2_clearer', 'privacy.change.v2_errors']],
-            ['number' => 1, 'date' => '2026-10-04', 'changes' => ['privacy.change.v1_first']],
+            // Significant (traffic summaries are new processing), published before the notice rule (owner 2026-10-09).
+            ['number' => 2, 'date' => '2026-10-09', 'effective' => '2026-10-09', 'significant' => true, 'changes' => ['privacy.change.v2_traffic', 'privacy.change.v2_time_zone', 'privacy.change.v2_pseudonym', 'privacy.change.v2_base_location', 'privacy.change.v2_clearer', 'privacy.change.v2_errors', 'privacy.change.v2_notice', 'privacy.change.v2_more', 'privacy.change.v2_statements', 'privacy.change.v2_suspension', 'privacy.change.v2_authorities']],
+            ['number' => 1, 'date' => '2026-10-04', 'effective' => '2026-10-04', 'significant' => false, 'changes' => ['privacy.change.v1_first']],
         ];
     }
 }

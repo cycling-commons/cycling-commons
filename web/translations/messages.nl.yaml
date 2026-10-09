@@ -848,9 +848,9 @@ settings:
   updates_cadence_every: 'Elke update: hoogstens 2 keer per maand'
   delete:
     keep_media_credit: 'Mijn naam op mijn bijgedragen foto''s houden'
-    keep_media_credit_help: 'Je goedgekeurde foto''s blijven hoe dan ook in de Commons — ze staan onder CC BY-SA 4.0. Dit bepaalt alleen of ze je naam blijven vermelden. Kies Nee en ze worden vanaf dan toegeschreven aan een anonieme fietser, ook in kopieën die mensen al hebben gedownload.'
-    keep_media_credit_yes: 'Ja — houd mijn naam erbij'
-    keep_media_credit_no: 'Nee — schrijf ze toe aan een anonieme fietser'
+    keep_media_credit_help: 'Je goedgekeurde foto''s blijven hoe dan ook in de Commons: ze staan onder CC BY-SA 4.0. Dit bepaalt alleen of onze pagina''s je naam blijven noemen, en het telt alleen als je profiel openbaar is wanneer je vertrekt. Kies Nee en ze worden vanaf dan toegeschreven aan een anonieme fietser. Je naam is nooit in de fotobestanden zelf geschreven.'
+    keep_media_credit_yes: 'Ja, houd mijn naam erbij'
+    keep_media_credit_no: 'Nee, schrijf ze toe aan een anonieme fietser'
   eyebrow: 'Jouw profiel'
   heading: 'Instellingen'
   tab_profile: 'Profiel'
@@ -3102,7 +3102,7 @@ support:
     incomplete: 'Dit blok is nog niet ingevuld. De Nederlandse wet vereist het, en deze onderdelen ontbreken nog:'
     controller_note: 'Dezelfde organisatie is de verwerkingsverantwoordelijke voor je persoonsgegevens. Wat dat betekent staat in de'
     controller_link: 'privacyverklaring'
-    or_form: 'of gebruik het'
+    or_form: 'of gebruik het formulier via'
   bug:
     kicker: 'Bug melden'
     title: 'Er is iets stuk.'

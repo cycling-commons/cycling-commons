@@ -46,7 +46,7 @@ nobody thought of `/privacy`.
 | Mail kept 24 months after a thread ends | policy, owner 2026-08-27 | the mailbox policy changes |
 | Contact-form messages deleted 24 months after they were answered or closed (`privacy.retention_mail`) | `App\Support\ContactMessageRetention`, daily in `app:media:gc` (contact-and-support.md §4) | the sweep stops running, or its clock stops being `updated_at` on an answered or closed message |
 | A bug reporter's address deleted 24 months after the outcome, kept while the bug is open (`privacy.retention_bugs`) | `App\Support\BugReporterEmailRetention`, daily in `app:media:gc` (contact-and-support.md §5) | the sweep stops running, or it touches an open report |
-| Traffic summaries are sent only when the rider sends them from Scout's review, hold per road piece the distance, passes, car speeds, part of the day and a day group (never the date), never the ride or anything within 500 m of its start or end, and name no rider; they wait encrypted until their road has enough rides, then join plain totals (`privacy.collect_contribute_traffic`, `privacy.banner_body`) | `assets/lib/traffic-ride.js` builds the lines in the browser; `TrafficLine` refuses track-shaped keys; `TrafficPool` seals each waiting line with AES-256-GCM (`TrafficCipher`) under a random id and releases a road's block whole, up to 1000 lines per release; `TrafficStore` keeps HMAC dedupe codes and the plain totals (traffic-measurements.md §3, §4) | a line field is added that carries a position, a date or a finer time, a line or total gains anything naming a rider, or lines skip the waiting room |
+| Traffic summaries are sent only when the rider sends them from Scout's review. A line holds, per road piece: the way id and region, the direction, the label (cycle path, lane or road), the part of the day, the day type (workday or weekend), the quarter, a day group standing for at least four dates (never the date), distance, radar-on time, passes, `nearby` (cars beside a cycle path, instead of passes), the rider's average speed, car speed bins, and dedupe block codes (the page calls them "check values made from the ride"). Never the ride file, a GPS track, or anything within 500 m of its start or end, and no rider; lines wait encrypted until their road has enough rides, then join plain totals (`privacy.collect_contribute_traffic`, `privacy.banner_body`). The page names the categories; this row is the full list | `assets/lib/traffic-ride.js` builds the lines in the browser; `TrafficLine` refuses track-shaped keys; `TrafficPool` seals each waiting line with AES-256-GCM (`TrafficCipher`) under a random id and releases a road's block whole, up to 1000 lines per release; `TrafficStore` keeps HMAC dedupe codes and the plain totals (traffic-measurements.md §3, §4) | a line field is added (`TrafficLine::KEYS`), a field carries a position, a date or a finer time, a line or total gains anything naming a rider, or lines skip the waiting room |
 | A waiting line is deleted once it joins the totals; the totals hold no rider, so nothing in them is deleted with an account (`privacy.retention_traffic`) | `TrafficPool::releaseOne()`, `TrafficStore::addToTotal()` (traffic-measurements.md §4.3, §4.7); `TrafficAccountDeletionTest` | a table gains anything naming a rider |
 | A content reporter's or photo requester's address deleted 90 days after the decision, kept while open and under legal hold (`privacy.retention_reports`) | `App\Support\ReportContactRetention` and `MediaTakedownService::purgeExpiredContacts()`, daily in `app:media:gc` (content-reports.md §10) | either sweep stops running, or the 90 days change |
 | DSA Art. 18 recipient: the competent law-enforcement or judicial authority of the country concerned, or of the Netherlands when that is unclear; what we give: the curator's description, the reference, the dates, where it appeared, and the poster's account id, display name, email address and sign-up date; the material only on request; legal basis GDPR Art. 6(1)(c). The DSA is named without a link, since every eur-lex link on the page must open a GDPR article (`privacy.share_authorities`, `privacy.why_legal`) | operations.md §7 ("Which authority", "What we send"); `MediaEscalationService`, `ModerationService::escalateSubmission()` hold the material; the notification itself is made by hand outside the application. Europol is not named: operations.md §7 lists no Europol channel and uses the Dutch police under Art. 18(2) | operations.md §7 changes what is sent or the fallback authority, or a channel that sends data automatically is built |
@@ -90,7 +90,8 @@ Split deliberately, because the two groups answer different questions and carry
 different obligations.
 
 **Processors we appoint** (`privacy.pr_*`). Companies acting on our
-instructions under contract. Three rows, corrected by the owner 2026-08-27:
+instructions under contract. Three rows, corrected by the owner 2026-08-27; the
+copy says "the companies below", not a count:
 
 | Who | Where | For |
 |---|---|---|
@@ -130,6 +131,19 @@ outside the EEA, and `privacy.browser_services_post` names it alone.
 `analytics.bikecoders.life` and `COVERAGE_CSP_HOST` are deliberately absent:
 both are our own infrastructure, already covered by the analytics paragraph and
 the processor table respectively.
+
+**Services our server asks** (`privacy.h3_server_services`,
+`privacy.server_services_body`). Not browser hosts, so not in the CSP: our
+server calls them, and they see our server's address.
+
+| Service | Called by | Sends |
+|---|---|---|
+| Google Safe Browsing (United States) | `App\Catalog\Links\SafeBrowsing`, only when `SAFE_BROWSING_KEY` is set | the link, nothing about who added it |
+| GitHub (United States) | `App\Support\GitHubIssues`, when a curator publishes a bug | the public title and text the curator wrote |
+| OpenStreetMap | `App\Community\OsmUserVerifier`, on a curator application | the username the applicant gave |
+
+Whether `SAFE_BROWSING_KEY` is set in production is deployment config; the
+copy says "when that check is switched on" so it is true either way.
 
 **The drift rule.** Adding a third-party host to `security-architecture.md` 2.3
 means adding a row here in the same change, in five locales. The CSP enumeration
@@ -319,6 +333,11 @@ because the same mistakes are easy to make again.
 | Nothing about mail retention | Kept while the matter is open, deleted within **24 months** of it ending; legal threads until the matter finishes. Art. 13(2)(a) allows criteria where no fixed period is possible, and "while it is open" is the criterion |
 | Silence about dormant accounts | Stated plainly: an account unused for 24 months is deleted, after three emails (section 5) |
 | Nothing about what we host ourselves | A paragraph before the tables. The lists are short because routing, elevation, tiles, photos and analytics all run on our own machines |
+| "Your ride file and its GPS track never leave your device" | The ride file never leaves; a traffic summary holds no track; but a stretch tag sends the slice of the ride the rider picked |
+| Coded IP addresses "one day", in counters only | Counters expire within two days; some limiters key on the raw address; keyed hashes are also stored with content, photo and bug reports (as long as the report) and contact messages (up to 24 months) |
+| "bio, links, which contributions to show" on the profile | No such fields. A public profile shows display name, country, join month, bike types, riding styles, counts and proposed routes |
+| "Two services outside it" while describing three | "A handful of outside services ... each one named above": no count to go stale |
+| A release-list frequency cap stated as fact | No sender enforces it; the notice names the choice only |
 | Credits named "Copernicus DEM GLO-30" | "Copernicus WorldDEM-30", and Airbus's years run to 2018. The required notice in the paragraph was right; the summary line beside it was not, and the summary is what gets read |
 
 **How fast does a name come down?** The photo **page** is immediate:

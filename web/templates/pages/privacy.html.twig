@@ -51,6 +51,7 @@
       <li>{{ 'privacy.collect_account_2fa'|trans|rich }}</li>
       <li>{{ 'privacy.collect_account_base'|trans|rich }}</li>
       <li>{{ 'privacy.collect_account_timezone'|trans|rich }}</li>
+      <li>{{ 'privacy.collect_account_prefs'|trans|rich }}</li>
     </ul>
     <h3>{% trans %}privacy.h3_contribute{% endtrans %}</h3>
     <ul>
@@ -58,6 +59,12 @@
       <li>{{ 'privacy.collect_contribute_media'|trans|rich }}</li>
       {# docs/specs/traffic-measurements.md: only what the rider sends from Scout's review. #}
       <li>{{ 'privacy.collect_contribute_traffic'|trans|rich }}</li>
+      <li>{{ 'privacy.collect_contribute_rode'|trans|rich }}</li>
+      {# contact-and-support.md 5 and 9: a published bug carries only the
+         curator's public title and text, to the known-issues page and GitHub. #}
+      <li>{{ 'privacy.collect_contribute_bugs'|trans|rich }}</li>
+      {# OsmUserVerifier: a best-effort lookup of the handle the applicant gave. #}
+      <li>{{ 'privacy.collect_contribute_curator'|trans|rich }}</li>
       <li>{% trans %}privacy.collect_contribute_profile{% endtrans %} {{ priv.settings_link('privacy.collect_contribute_profile_link') }}{% trans %}privacy.collect_contribute_profile_post{% endtrans %}</li>
     </ul>
     <h3>{% trans %}privacy.h3_auto{% endtrans %}</h3>
@@ -127,11 +134,16 @@
        routing and elevation came back in-house in 2026 (security-architecture.md
        2.3 records the two hosts that left the policy with them), the analytics
        are self-hosted, the photos are ours. Saying so is not boasting, it is the
-       reason a rider's browser talks to five outside services instead of twenty. #}
+       reason a rider's browser talks to a handful of outside services instead
+       of twenty. #}
     <p>{{ 'privacy.share_selfhosted'|trans|rich }}</p>
     <ul>
       <li>{{ 'privacy.share_infra'|trans|rich }}</li>
       <li>{% trans %}privacy.share_osm_pre{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}privacy.share_osm_link{% endtrans %}</a>{% trans %}privacy.share_osm_post{% endtrans %}</li>
+      {# DSA Article 18: what an administrator sends is listed in operations.md §7
+         ("What we send"); the DSA is named without a link, because every
+         eur-lex link on this page opens a GDPR article (ContentPagesTest). #}
+      <li>{{ 'privacy.share_authorities'|trans|rich }}</li>
       <li>{{ 'privacy.share_noone'|trans|rich }}</li>
     </ul>
 
@@ -209,6 +221,12 @@
     </table></div>
     <p>{{ 'privacy.browser_services_post'|trans|rich }}</p>
 
+    {# Calls our server makes itself, so the service sees our address and not
+       the rider's: SafeBrowsing (off without SAFE_BROWSING_KEY, so the copy
+       says "when that check is switched on"), GitHubIssues, OsmUserVerifier. #}
+    <h3>{% trans %}privacy.h3_server_services{% endtrans %}</h3>
+    <p>{{ 'privacy.server_services_body'|trans|rich }}</p>
+
     <h2>{% trans %}privacy.h_transfers{% endtrans %}</h2>
     <p>{{ 'privacy.transfers_body'|trans|rich }}</p>
 
@@ -224,6 +242,9 @@
          ContributionDeletionHook); Trash keeps a row 30 days, then the purge
          (TrashBin::TRASH_DAYS, moderation-and-contribution.md §6, §8). #}
       <li>{{ 'privacy.retention_messages'|trans|rich }}</li>
+      {# The five suspension columns on users (account-and-auth.md §6.8);
+         suspended_by is cleared by its foreign key and left out of the export. #}
+      <li>{{ 'privacy.retention_suspension'|trans|rich }}</li>
       {# GDPR Art. 13(2)(a) requires the retention period to be STATED, and the
          consent ledger is the one store the app keeps indefinitely on purpose
          (docs/specs/photo-uploads.md §4). Leaving it undisclosed while the
@@ -241,6 +262,9 @@
          decision, never under legal hold (content-reports.md §10,
          ReportContactRetention, MediaTakedownService). #}
       <li>{{ 'privacy.retention_reports'|trans|rich }}</li>
+      {# The Art. 18 record on the held row and its admin log line
+         (AuthorityNotifications, operations.md §7). #}
+      <li>{{ 'privacy.retention_authorities'|trans|rich }}</li>
       <li>{{ 'privacy.retention_updates'|trans|rich }}</li>
     </ul>
 
@@ -297,7 +321,7 @@
       <ol class="pversions">
         {% for v in privacy_versions %}
           <li data-version="{{ v.number }}">
-            <b>{{ 'privacy.version_line'|trans({'%n%': v.number, '%date%': v.date|cc_date}) }}</b>
+            <b>{{ 'privacy.version_line'|trans({'%n%': v.number, '%date%': v.effective|cc_date}) }}</b>
             <ul>{% for c in v.changes %}<li>{{ c|trans|rich }}</li>{% endfor %}</ul>
           </li>
         {% endfor %}
