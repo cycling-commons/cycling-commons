@@ -114,7 +114,7 @@ final class SeedManualCatalogCommand extends Command
                 ],
             ],
             [
-                'letter' => 'N', 'name' => 'Hockai · via RAVeL L44a', 'lat' => 50.37607, 'lng' => 5.87635,
+                'letter' => 'N', 'name' => 'Hockai', 'lat' => 50.37607, 'lng' => 5.87635,
                 'ref' => 'manual:hockai-via-ravel-l44a',
                 'attributes' => [
                     'cur' => true,
@@ -195,7 +195,7 @@ final class SeedManualCatalogCommand extends Command
             ],
             // B · Water & food
             [
-                'letter' => 'B', 'name' => 'Public fountain · Stavelot', 'lat' => 50.3957, 'lng' => 5.9300,
+                'letter' => 'B', 'name' => 'Public fountain', 'lat' => 50.3957, 'lng' => 5.9300,
                 'ref' => 'manual:public-fountain-stavelot',
                 'attributes' => [
                     'type' => 'Public fountain', 'potable' => 'Yes (public supply)', 'seasonal' => 'Year-round',
@@ -203,7 +203,7 @@ final class SeedManualCatalogCommand extends Command
                 ],
             ],
             [
-                'letter' => 'B', 'name' => 'Pouhon La Sauvenière · Spa', 'lat' => 50.4851, 'lng' => 5.8983,
+                'letter' => 'B', 'name' => 'Pouhon La Sauvenière', 'lat' => 50.4851, 'lng' => 5.8983,
                 'ref' => 'manual:pouhon-la-sauveniere-spa',
                 'attributes' => [
                     'type' => 'Public fountain', 'potable' => 'Unknown', 'seasonal' => 'Year-round',
@@ -212,7 +212,7 @@ final class SeedManualCatalogCommand extends Command
                 ],
             ],
             [
-                'letter' => 'B', 'name' => 'Source Barisart · Spa', 'lat' => 50.4745, 'lng' => 5.8627,
+                'letter' => 'B', 'name' => 'Source Barisart', 'lat' => 50.4745, 'lng' => 5.8627,
                 'ref' => 'manual:source-barisart-spa',
                 'attributes' => [
                     'type' => 'Public fountain', 'potable' => 'Unknown', 'seasonal' => 'Year-round',
@@ -221,7 +221,7 @@ final class SeedManualCatalogCommand extends Command
                 ],
             ],
             [
-                'letter' => 'B', 'name' => 'Fontaine Nicolay · Stavelot', 'lat' => 50.39249, 'lng' => 5.92637,
+                'letter' => 'B', 'name' => 'Fontaine Nicolay', 'lat' => 50.39249, 'lng' => 5.92637,
                 'ref' => 'manual:fontaine-nicolay-stavelot',
                 'attributes' => [
                     'type' => 'Public fountain', 'potable' => 'Unknown',
@@ -229,7 +229,7 @@ final class SeedManualCatalogCommand extends Command
                 ],
             ],
             [
-                'letter' => 'B', 'name' => 'Fountain · Stavelot centre', 'lat' => 50.39484, 'lng' => 5.92994,
+                'letter' => 'B', 'name' => 'Fountain', 'lat' => 50.39484, 'lng' => 5.92994,
                 'ref' => 'manual:fountain-stavelot-centre',
                 'attributes' => [
                     'type' => 'Public fountain', 'potable' => 'Unknown',
@@ -238,7 +238,7 @@ final class SeedManualCatalogCommand extends Command
             ],
             // D · Bike services
             [
-                'letter' => 'D', 'name' => 'Repair station · Malmedy', 'lat' => 50.4260, 'lng' => 6.0270,
+                'letter' => 'D', 'name' => 'Repair station', 'lat' => 50.4260, 'lng' => 6.0270,
                 'ref' => 'manual:repair-station-malmedy',
                 'attributes' => [
                     't' => 'Public repair station', 'pumpValve' => 'Presta + Schrader', 'tools' => 'Tethered multi-tool set',
@@ -247,23 +247,23 @@ final class SeedManualCatalogCommand extends Command
                 ],
             ],
             [
-                'letter' => 'D', 'name' => 'North Bike · Stavelot', 'lat' => 50.3965, 'lng' => 5.9361,
+                'letter' => 'D', 'name' => 'North Bike', 'lat' => 50.3965, 'lng' => 5.9361,
                 'ref' => 'manual:north-bike-stavelot',
                 'attributes' => ['t' => 'Bike shop', 'town' => 'Stavelot town'],
             ],
             [
-                'letter' => 'D', 'name' => 'Ardennes Bike · Spa', 'lat' => 50.4896, 'lng' => 5.8424,
+                'letter' => 'D', 'name' => 'Ardennes Bike', 'lat' => 50.4896, 'lng' => 5.8424,
                 'ref' => 'manual:ardennes-bike-spa',
                 'attributes' => ['t' => 'Bike shop', 'town' => 'Spa'],
             ],
             [
-                'letter' => 'D', 'name' => 'E-bike charging · Botrange', 'lat' => 50.5019, 'lng' => 6.0930,
+                'letter' => 'D', 'name' => 'E-bike charging', 'lat' => 50.5019, 'lng' => 6.0930,
                 'ref' => 'manual:e-bike-charging-botrange',
                 'attributes' => ['t' => 'E-bike charging station', 'ebikeCharging' => 'Yes', 'town' => 'Signal de Botrange plateau'],
             ],
             // O · Where to sleep
             [
-                'letter' => 'O', 'name' => 'Cyclist-friendly gîte · Amblève valley', 'lat' => 50.4500, 'lng' => 5.6200,
+                'letter' => 'O', 'name' => 'Cyclist-friendly gîte', 'lat' => 50.4500, 'lng' => 5.6200,
                 'ref' => 'manual:cyclist-friendly-gite-ambleve-valley',
                 'attributes' => [
                     't' => 'Gîte / guesthouse', 'type' => 'guest_house', 'bikeStorage' => 'Yes — locked room',
@@ -273,7 +273,7 @@ final class SeedManualCatalogCommand extends Command
             ],
             // E · Hazards & conditions
             [
-                'letter' => 'E', 'name' => 'Exposed crosswind · Hautes Fagnes', 'lat' => 50.5160, 'lng' => 6.0700,
+                'letter' => 'E', 'name' => 'Exposed crosswind', 'lat' => 50.5160, 'lng' => 6.0700,
                 'ref' => 'manual:crosswind-hautes-fagnes',
                 'attributes' => [
                     'hazardType' => 'Crosswind / fog', 'severity' => 'Moderate',
@@ -294,7 +294,7 @@ final class SeedManualCatalogCommand extends Command
             ],
             // G · Shelter & emergency
             [
-                'letter' => 'G', 'name' => 'Shelter · Baraque Michel', 'lat' => 50.5020, 'lng' => 6.0500,
+                'letter' => 'G', 'name' => 'Shelter', 'lat' => 50.5020, 'lng' => 6.0500,
                 'ref' => 'manual:shelter-baraque-michel',
                 'attributes' => [
                     't' => 'Refuge / chapel shelter', 'alwaysAccessible' => 'Yes — open structure',
@@ -313,7 +313,7 @@ final class SeedManualCatalogCommand extends Command
                 'attributes' => ['t' => 'Belvedere shelter', 'note' => 'Covered rest stop & wind/rain refuge above the Hoëgne valley, Hautes Fagnes — one of the prettiest streams in the Fagnes.'],
             ],
             [
-                'letter' => 'G', 'name' => 'Picnic shelter · Pont de Baileu', 'lat' => 50.4996, 'lng' => 6.0551,
+                'letter' => 'G', 'name' => 'Picnic shelter', 'lat' => 50.4996, 'lng' => 6.0551,
                 'ref' => 'manual:picnic-shelter-pont-de-baileu',
                 'attributes' => ['t' => 'Picnic shelter', 'type' => 'picnic_shelter', 'note' => 'Hautes Fagnes, near Mont Rigi, wait out a shower on the plateau.'],
             ],

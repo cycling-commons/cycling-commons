@@ -314,14 +314,14 @@ final class SeedManualCatalogCommandTest extends KernelTestCase
             $payload['O']['osm']['features'],
         );
         self::assertContains(
-            'Cyclist-friendly gîte · Amblève valley',
+            'Cyclist-friendly gîte',
             $names,
             'a manual (source=manual) letter-O stay must be served in the osm bucket, not dropped by the authority split',
         );
 
         $gite = array_values(array_filter(
             $payload['O']['osm']['features'],
-            static fn (array $f): bool => 'Cyclist-friendly gîte · Amblève valley' === ($f['properties']['n'] ?? null),
+            static fn (array $f): bool => 'Cyclist-friendly gîte' === ($f['properties']['n'] ?? null),
         ))[0];
         self::assertSame('manual', $gite['properties']['srcType']);
         self::assertIsInt($gite['properties']['id']);

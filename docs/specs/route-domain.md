@@ -649,7 +649,7 @@ pass, to the metre, when the climb touches the line more than once), and its
 "off" is the metres between the two lines. On dev route 23 "Spa · Sankt Vith"
 the drawer's "Climbs on this route" reads Col du Rosier (km 3), and its along
 list's climbs group Thier Antoine (km 17.7, its foot passed at 28 m) and
-"Hockai · via RAVeL L44a" (km 115, 1% of its line within 40 m). The rules
+"Hockai" (km 115, 1% of its line within 40 m). The rules
 below decide what "ridden" means for both:
 
 - **Served climbs only**, by the catalog payload's rules: a served state
@@ -685,7 +685,7 @@ below decide what "ridden" means for both:
   Mont-le-Soie from Petit-Thier 59 m below), and the ones that stop short are
   Côte de Wanne on route 111 (709 m below, fraction 0.67), Côte de Bohissau on
   route 29 (747 m, 0.33), Côte de Stockeu on route 111 (1323 m, 0.43),
-  Thier Antoine on route 27 (1412 m, 0.47) and "Hockai · via RAVeL L44a" on
+  Thier Antoine on route 27 (1412 m, 0.47) and "Hockai" on
   routes 24 and 25 (2355 m and 2347 m, 0.86). A fraction threshold (0.9)
   would drop Wanne and Stockeu, which the race rides as its climbs; a
   distance threshold between 1323 m and 2347 m keeps them and makes Hockai
@@ -717,7 +717,7 @@ below decide what "ridden" means for both:
   (2026-09-30), every climb within 250 m keeps the same share of its line near
   the route whether the band is 40 m, 15 m or 8 m (at most 3 points of share
   apart, Côte de Wanne on route 27: 4%, 1%, 1%), so no listed climb is a road
-  that runs beside the route. "Hockai · via RAVeL L44a" (item 11004, 17.2 km)
+  that runs beside the route. "Hockai" (item 11004, 17.2 km)
   on route 24 "Spa · Coo · Francorchamps" is on the climb line, not beside
   it: the route's stored vertices lie on the climb line's own OpenStreetMap
   nodes (0.0 m) from Stavelot to below Hockai, 10.1 km inside the band,

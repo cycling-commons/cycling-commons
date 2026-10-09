@@ -440,16 +440,16 @@ is what closes that gap.
 
     <!-- CODE-ILLUSTRATIVE SAMPLE-FROM fresh-clone; sample output; every row is a seeded pin, the decimals move with the seed, the order does not -->
     ```text
-                name             | dist_m | frac
-    -----------------------------+--------+-------
-     Cascade de Coo              |   19.8 | 0.005
-     Fontaine Nicolay · Stavelot |  154.6 | 0.217
-     Stavelot Abbey              |   19.8 | 0.273
-     Public fountain · Stavelot  |   85.6 | 0.276
-     Fountain · Stavelot centre  |   10.2 | 0.277
-     North Bike · Stavelot       |  471.8 | 0.280
-     Côte de Stockeu             |    3.9 | 0.294
-     Hockai · via RAVeL L44a     |  291.6 | 0.843
+          name        | dist_m | frac
+    ------------------+--------+-------
+     Cascade de Coo   |   19.8 | 0.005
+     Fontaine Nicolay |  154.6 | 0.217
+     Stavelot Abbey   |   19.8 | 0.273
+     Public fountain  |   85.6 | 0.276
+     Fountain         |   10.2 | 0.277
+     North Bike       |  471.8 | 0.280
+     Côte de Stockeu  |    3.9 | 0.294
+     Hockai           |  291.6 | 0.843
     (8 rows)
     ```
 
