@@ -331,22 +331,143 @@ the mails carry no `Reply-To` and leave out the "reply to this email"
 sentences; the redress line then points to the contact page instead. Pinned
 by `ReportMailReplyToTest`.
 
-## 7. What the author is told
+## 7. What the author is told: the statement of reasons
 
-`emails/report_statement_of_reasons.html.twig`, Article 17. Sent **only for an
-upheld report** (`ReportStatus::owesStatementOfReasons()`), because Article 17
-is owed exactly when a restriction happened, and **only once**
-(`ContentReport::isAuthorTold()`), so a curator who re-opens a report cannot
-send it twice.
+Article 17 is owed to whoever's content or account is restricted, whatever
+started it. One builder words it everywhere: `App\Moderation\StatementOfReasons`
+(a value object) with `StatementDecision` (what was decided) and
+`StatementGround` (the rule). Every path that restricts a rider's content or
+account builds one, so the wording is in one place, the `dsa_statement.*`
+catalogue keys in all five languages.
 
-Article 17(3) lists what it must contain, and each is in the template: what was
-restricted, that it came from a report, the ground in our terms, the curator's
-facts, **who decided** (a curator read the report and decided, which answers
-"automated means"), and how to contest it. The mails make no "no machine
-decided this" statements (owner 2026-10-04).
+**What it says**, one line per Article 17(3) element
+(`StatementOfReasons::lines()`):
 
-It also says plainly that the account is fine and nothing else was touched,
-because most upheld reports are honest mistakes about a gate or a surface.
+| Element | Line | Where it comes from |
+|---|---|---|
+| (a) the decision and its scope | `decision`, `scope` | `StatementDecision`: not published, photos not published, removed, changed or removed, hidden then put back (`hidden_restored`), retired (taken off the map), account suspended (with the end, 24-hour clock, the reader's zone), account removed. The scope line says what is untouched (the account, everything else they added) |
+| (b) the facts, and whether a report started it | `facts`, `facts_system`, `source` | the curator's or administrator's own words, verbatim; a system line where software acted or no note was written (`dsa_statement.facts.*`); "this followed a report", "no report was involved" (a curator's check), or, for our checks alone, "No report was involved: our automatic checks found it" (`dsa_statement.source.automated`). Whether a report led to a desk decision is read from the reports on file, below |
+| (c) automated means | `automated` | "A curator made this decision", "An administrator made this decision", or, for the urgent-report hide and a refused file, "Our checks did this automatically, before a curator looked at it". An automated statement's decision line is its own (`dsa_statement.decision_automated.*`: "Our automatic checks did not publish your photo."), so no automated statement says a curator decided or looked; the hide keeps its wording. An account decision is an administrator's and is never automated (the builder refuses it). Pinned by `StatementOfReasonsTest`, every decision with and without automation, in five languages. No "no machine" statements (owner 2026-10-04) |
+| (d)/(e) the ground | `ground`, `basis` | `StatementGround`: the nine rules of terms §12 (same values as `ReportGround`), plus `not_accepted` (what the catalogue accepts: accurate, possible to check, something the Commons maps), `duplicate`, `file_refused`, `spam`, `misuse`, `false_identity`, and `terms_other` for an old photo report's "something else". `basis` says law (unlawful, personal data, intimate imagery or a child, copyright) or a rule of our terms; the statement links the terms |
+| (f) redress | `redress` | reply to the email with the reference, and we look at the decision again (owner 2026-10-09: no promise of a different curator, because replies reach the shared mailbox); the contact page when there is no reply address; the terms explain the rest. No court or dispute-body lecture (owner 2026-10-04) |
+
+**How it travels.** In the rider's messages and by email, with the
+`MessageOutbox` delivery every decision message has
+(moderation-and-contribution.md §7.8): sent after the decision commits, never
+from inside it. The statement rides the decision's own message
+(`MessageService::sendSystem(..., $statement)`, stored under the
+`_statement` body param), or, where the decision has no message of its own, a
+message of kind `statement_of_reasons` on channel `statement`
+(`MessageService::sendStatement()`). That channel is no thread, so Trash, the
+purge and a thread deletion leave it alone; it goes with the account
+(`ContributionDeletionHook` deletes every message addressed to the rider). The
+messages page shows it under the message (`messages/_statement.html.twig`,
+the Twig function `statement_of_reasons()`); the email is the statement itself
+(`StatementOfReasonsMailer`, `emails/statement_of_reasons.html.twig` and
+`.txt.twig`), from `cc.support.from_email` with `Reply-To`
+`cc.support.public_email` (§6), each line already translated into the
+recipient's language. An account decision has no inbox to write to, so it
+goes by email alone. A deleted account (user id NULL) is sent nothing, and
+the decision stands. A decision made on the messenger worker (a refused file)
+is emailed when that message is handled, not when the worker exits
+(moderation-and-contribution.md §7.8). An account statement the mail
+transport refuses is kept whole under Unsent statements in the admin desk,
+to send again (account-and-auth.md §6.8).
+
+**Whether a report led here** is read from the data, never from a box the
+curator ticks (`App\Support\ReportedSubjects`). A desk decision says "this
+followed a report" when a report on the content itself (the route, the new
+place a submission put on the map, the place a duplicate finding retires),
+or on a message its rider wrote in its thread (a correction is never public,
+so only that), is still open, in progress, or was upheld. A report found
+groundless or moot does not count. So a route whose report was upheld, and
+which a curator then retires on its desk, is not told "no report was
+involved". The desk and an upheld report can each send a statement for the
+same content; both then say a report led to it. Used by
+`RouteModerationService` (reject, retire, Trash for a proposal and a
+correction), `ModerationService` (reject, Trash) and the duplicates desk.
+Pinned by `StatementRecipientTest`.
+
+**Nobody is sent a statement about their own decision.** When the curator who
+decides is the rider whose content it is (photos they left out of their own
+correction, their own route or submission rejected, retired or moved to
+Trash, a report upheld on their own content, their own photo removed on a
+report, their own place retired as a duplicate), no statement is built; the
+plain decision message, where the decision has one, still goes. Pinned by
+`StatementRecipientTest`.
+
+**Which decisions send one** (every path that restricts what a rider added):
+
+| Decision | Decision line | Ground | Facts | Code |
+|---|---|---|---|---|
+| A submission rejected | not published | `not_accepted` | the note, **required** on reject | `ModerationService::decide()` |
+| A route proposal rejected | not published | `not_accepted` | the note, required | `RouteModerationService::reject()` |
+| A live route retired | retired | `not_accepted` | the note, required (as before) | `RouteModerationService::retire()` |
+| A translation proposal rejected | not published | `not_accepted` | the note, required | `Translation\DecisionService::decide()` |
+| Photos left out of an approval (unticked), or sent with a correction that was dismissed | photos not published / not published | `not_accepted` | the curator's note when there is one, and a system line | `MediaDecisionService::tellLeftOut()` |
+| A submission, route proposal or route correction moved to Trash as **abuse** | removed | `abuse` | the curator's facts, required, and "kept 30 days in the bin" | `ModerationService::trashSubmission()`, `RouteModerationService::trashProposal()` / `::trashSuggestion()` |
+| A place retired because a rider's new place replaced it | retired | `duplicate` | a system line | `ModerationService::approveNew()` |
+| A place retired on the duplicates desk | retired | `duplicate` | the curator's note on the finding, and a system line | `ModerateDataController::apply()` |
+| A photo removed on a report (reports desk, or a stranger's takedown granted) | removed | the report's rule | the curator's note; when the report had hidden the photo on its own, a system line that says so (`dsa_statement.facts.report_upheld_hidden`) | `MediaTakedownService::removeOnReport()` / `::grant()` |
+| A photo an urgent report hid, put back after review (Rejected on the reports desk, or dismissed as abuse by an administrator) | hidden, then put back | the report's ground (`intimate_or_child`) | a system line (`dsa_statement.facts.hidden_restored`); automated, because our checks hid it; it rides the `media_restored_after_review` message | `MediaTakedownService::decline()` / `::dismissAsAbuse()` |
+| A file refused by the upload checks | not published | `file_refused` | a system line; automated | `ScanAndReleaseUploadHandler::refuse()` |
+| Any other upheld report with an author | changed or removed | the report's rule | the decision note | `ContentReportService::tellAuthor()` |
+| An account suspended or removed for a breach | account suspended / removed | the administrator's pick | the administrator's facts, required | `UserAdminService`, account-and-auth.md §6.8 |
+
+**Which send none, and why:**
+
+- **Trash as spam**: Article 17(2) does not apply to deceptive high-volume
+  commercial content, and a statement would tell a spammer what got caught.
+- **Needs-info** decides nothing: the rider is asked a question.
+- **A dismissed route correction** (without photos): the correction is a
+  suggestion to curators, never published, so nothing of the rider's was
+  restricted. It still sends its plain "dismissed" message.
+- **An uploader's own takedown granted**: they asked for it.
+- **Escalation (legal hold)**: the content is hidden while an administrator
+  deals with the authorities (photo-uploads.md §6d). A statement then could
+  warn somebody under investigation; the decision after the hold is the one
+  explained.
+- **The urgent hide, at the moment it happens** (owner 2026-10-09): a report
+  on a ground that hides a photo at once (`ReportGround::autoWithholds()`,
+  only `intimate_or_child`) hides it, and the uploader is sent nothing: no
+  statement and no message. For the same reason as the legal hold, a word
+  then would warn somebody the report suspects, and since the report form
+  says which ground hides at once, even a neutral "your photo is hidden"
+  names it. The hide is explained once a curator has decided: removed, the
+  removal's statement says the photo was hidden when it was reported; put
+  back, the `media_restored_after_review` message carries a statement for
+  the hide (it restricted the photo for as long as it lasted, DSA Article
+  17(1)(a)); escalated, nothing while the hold lasts, and the decision after
+  it carries the statement. The uploader's own view of the photo page shows
+  the ordinary unpublished text, never "your removal request"
+  (`PhotoPageController`). A statement or message stored before this rule
+  still renders: `StatementDecision::Hidden`, `dsa_statement.facts.hidden_urgent`
+  and the `media_hidden_pending_review` kind and copy stay for those rows.
+  Pinned by `ReportStatementTest`, `ThirdPartyReportTest`,
+  `MediaTakedownEndpointTest::testAnUrgentReportShowsTheUploaderTheOrdinaryUnpublishedPage`.
+  The rider's data export follows the same rule (owner 2026-10-09): it
+  never carries the reporter's own words, and leaves out the ground of a
+  report a curator has not decided yet and a curator's note on why a photo is
+  held, while it is held (`DataExportService::withoutOthersWords()`).
+- **Edits**: an approved edit, or a curator's own edit, changes a place many
+  riders contribute to; it restricts nothing of one rider's.
+- **A closure that ran out** (`ClosureExpiryService`): the rider stated the
+  end date themselves.
+- **Restoring from Trash** sends nothing, as before.
+
+**For an upheld report**, the statement goes **only once**
+(`ContentReport::isAuthorTold()`) and only for an upheld decision
+(`ReportStatus::owesStatementOfReasons()`). The desk sends it whenever the
+resolver finds an author (§8); there is no box to tick. A photo's uploader is
+told by the removal itself: the reports desk builds the statement from the
+report (its rule ground, the note, the report id as reference) and hands it to
+`MediaTakedownService::removeOnReport()`, which attaches it to the
+`media_removed_on_report` message, with the "hidden when it was reported"
+system line when the report had hidden the photo; `tellAuthor()` then only
+records that the author was told. A rejected report on a photo it had hidden
+sends no statement of its own either: the photo's return carries the
+statement for the hide (`MediaTakedownService::decline()`). Pinned by `ReportStatementTest`, `SubmissionStatementTest`,
+`RouteStatementTest`, `StatementOfReasonsTest`.
 
 **For `copyright`, the uploader can answer.** The statement links to
 `/report/{id}/answer` (`content_report_answer`, signed in, the author only),

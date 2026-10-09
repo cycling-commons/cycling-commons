@@ -8,7 +8,9 @@ namespace App\Account;
 
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
+use App\Media\MediaAction;
 use App\Media\MediaStorage;
+use App\Media\MediaTakedownSource;
 use Doctrine\DBAL\Connection;
 use Psr\Clock\ClockInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -239,7 +241,8 @@ final class DataExportService
             'SELECT id, continent, storage_bucket, revision, status, width, height, bytes,
                     taken_at, gps_distance_m,
                     submission_id, item_id, route_id, route_suggestion_id, created_at, decided_at, objects_deleted_at,
-                    takedown_requested_at, takedown_reason
+                    takedown_requested_at, takedown_reason,
+                    takedown_source, takedown_resolved_at, escalated_at
              FROM media_upload WHERE user_id = ? ORDER BY created_at',
             [$userId],
         );
@@ -254,6 +257,7 @@ final class DataExportService
                  WHERE media_id = ? ORDER BY created_at',
                 [$uuid],
             );
+            $upload = self::withoutOthersWords($upload);
             $upload['file'] = null;
 
             $source = (null !== $upload['objects_deleted_at'] || null === $upload['revision'])
@@ -286,6 +290,43 @@ final class DataExportService
         $zip->addFromString('photos/index.json', $this->json($index));
 
         return $staged;
+    }
+
+    /**
+     * What a photo's row may tell its uploader about a report or a hold
+     * (content-reports.md §7, owner 2026-10-09).
+     *
+     * A report by somebody else never brings the reporter's own words: they
+     * are the reporter's data (GDPR Art. 15(4)). While that report waits for a
+     * curator, its ground stays out too, so an urgent hide warns nobody before
+     * anybody has looked; the decision's statement of reasons names it. While
+     * the photo is held for the authorities, the curator's note on why stays
+     * out for the same reason. That a report or a hold exists is not hidden.
+     *
+     * @param array<string, mixed> $upload
+     *
+     * @return array<string, mixed>
+     */
+    private static function withoutOthersWords(array $upload): array
+    {
+        $thirdParty = MediaTakedownSource::ThirdParty === $upload['takedown_source'];
+        $reportPending = $thirdParty && null !== $upload['takedown_requested_at'] && null === $upload['takedown_resolved_at'];
+        $held = null !== $upload['escalated_at'];
+        if ($thirdParty) {
+            $upload['takedown_reason'] = null;
+        }
+        /** @var list<array{action: string, note: ?string, created_at: string}> $history */
+        $history = $upload['history'];
+        foreach ($history as $i => $event) {
+            if (($reportPending && MediaAction::ThirdPartyReported === $event['action'])
+                || ($held && MediaAction::Escalated === $event['action'])) {
+                $history[$i]['note'] = null;
+            }
+        }
+        $upload['history'] = $history;
+        unset($upload['takedown_source'], $upload['takedown_resolved_at'], $upload['escalated_at']);
+
+        return $upload;
     }
 
     /** @param list<string> $paths */

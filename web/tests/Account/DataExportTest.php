@@ -156,6 +156,17 @@ final class DataExportTest extends WebTestCase
         return [$zip, $bytes];
     }
 
+    /** Every entry of the archive, unpacked: the raw download is compressed, so a search in it proves nothing. */
+    private function unpacked(\ZipArchive $zip): string
+    {
+        $text = '';
+        for ($i = 0; $i < $zip->numFiles; ++$i) {
+            $text .= (string) $zip->getFromIndex($i)."\n";
+        }
+
+        return $text;
+    }
+
     /** @return array<array-key, mixed> */
     private function entry(\ZipArchive $zip, string $name): array
     {
@@ -346,6 +357,90 @@ final class DataExportTest extends WebTestCase
 
         $zip->close();
         self::assertStringNotContainsString('Somebody else', $bytes);
+    }
+
+    /**
+     * A report by somebody else: the uploader never gets the reporter's own
+     * words (GDPR Art. 15(4), the reporter's rights), and gets the ground only
+     * once a curator has decided, so an urgent hide warns nobody
+     * (docs/specs/content-reports.md §7, owner 2026-10-09).
+     */
+    public function testAPendingReportShowsNeitherTheReportersWordsNorTheGround(): void
+    {
+        $client = $this->client();
+        $user = $this->login($client, 'reported');
+        $upload = $this->seed($user);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $upload->reportThirdParty('intimate_or_child', 'REPORTER-OWN-WORDS', null, 'hash', true);
+        $em->persist(new MediaModerationEvent($upload->getId(), null, MediaAction::ThirdPartyReported, 'intimate_or_child (auto-withheld)'));
+        $em->flush();
+
+        [$zip] = $this->download($client, $this->exportToken($client));
+        $index = $this->entry($zip, 'photos/index.json');
+        $text = $this->unpacked($zip);
+        $zip->close();
+
+        self::assertNull($index[0]['takedown_reason']);
+        self::assertContains(MediaAction::ThirdPartyReported, array_column($index[0]['history'], 'action'), 'that a report exists is not hidden');
+        self::assertStringNotContainsString('REPORTER-OWN-WORDS', $text);
+        self::assertStringNotContainsString('intimate_or_child', $text);
+    }
+
+    public function testADecidedReportShowsTheGroundButNeverTheReportersWords(): void
+    {
+        $client = $this->client();
+        $user = $this->login($client, 'decided');
+        $upload = $this->seed($user);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $upload->reportThirdParty('intimate_or_child', 'REPORTER-OWN-WORDS', null, 'hash', true);
+        $em->persist(new MediaModerationEvent($upload->getId(), null, MediaAction::ThirdPartyReported, 'intimate_or_child (auto-withheld)'));
+        $upload->declineTakedown();
+        $em->flush();
+
+        [$zip] = $this->download($client, $this->exportToken($client));
+        $text = $this->unpacked($zip);
+        $zip->close();
+
+        self::assertStringContainsString('intimate_or_child', $text);
+        self::assertStringNotContainsString('REPORTER-OWN-WORDS', $text);
+    }
+
+    public function testTheUploadersOwnRemovalRequestIsTheirs(): void
+    {
+        $client = $this->client();
+        $user = $this->login($client, 'own-request');
+        $upload = $this->seed($user);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $upload->requestTakedown('MY-OWN-WORDS');
+        $em->flush();
+
+        [$zip] = $this->download($client, $this->exportToken($client));
+        $index = $this->entry($zip, 'photos/index.json');
+        $zip->close();
+
+        self::assertSame('MY-OWN-WORDS', $index[0]['takedown_reason']);
+    }
+
+    public function testAHeldPhotoDoesNotShowWhyItIsHeld(): void
+    {
+        $client = $this->client();
+        $user = $this->login($client, 'held');
+        $upload = $this->seed($user);
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->getConnection()->executeStatement('UPDATE media_upload SET escalated_at = NOW() WHERE id = ?', [$upload->getId()->toRfc4122()]);
+        $em->persist(new MediaModerationEvent($upload->getId(), null, MediaAction::Escalated, 'CURATOR-SUSPECTS-A-CRIME'));
+        $em->flush();
+
+        [$zip] = $this->download($client, $this->exportToken($client));
+        $text = $this->unpacked($zip);
+        $zip->close();
+
+        self::assertStringContainsString('escalated', $text, 'the archive was read');
+        self::assertStringNotContainsString('CURATOR-SUSPECTS-A-CRIME', $text);
     }
 
     /**
