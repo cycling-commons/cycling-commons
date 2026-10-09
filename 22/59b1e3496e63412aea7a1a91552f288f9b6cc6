@@ -1,0 +1,19 @@
+Dockerfile.worker
+  s_5f6021118ee302::t_9b5669d4879ec1 46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2259b1e3496e63412aea7a1a91552f288f9b6cc6",
+  "prompts": {},
+  "sessions": {
+    "s_5f6021118ee302": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b49c6c85-7523-4338-ace0-16d58fff84c1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
