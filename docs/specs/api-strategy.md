@@ -102,8 +102,8 @@ There are exactly two sanctioned ways to obtain Commons data. Both are
 non-scraping; scraping the site/tiles/endpoints outside these remains prohibited
 (osm-data-architecture.md §7).
 
-**Status today.** Neither channel exists in the form below yet. What is live
-is a free, unkeyed, read-only proof of concept of the API
+**Status today.** The bulk export (§3.1) is built. The metered API (§3.2) is
+not; what is live is a free, unkeyed, read-only proof of concept of the API
 ([public-api.md §2.2](public-api.md)): `/v1/map-config` and `/v1/search`,
 declared `security: []` in `web/public/api/openapi.yaml`, open to anonymous
 callers (`^/v1/` is `PUBLIC_ACCESS` in `web/config/packages/security.yaml`)
@@ -111,22 +111,149 @@ and throttled per IP address to 120 requests a minute (the `public_api_read`
 limiter in `web/config/packages/rate_limiter.yaml`). `/v1/search` already
 answers a worldwide name search (`q`), adds routes on request
 (`routes=include`) and gives each hit its region's public slug
-(`region_id`). The bulk export (§3.1), API keys and quota tiers (§3.2, §4)
-remain proposed.
+(`region_id`). API keys and quota tiers (§3.2, §4) remain proposed.
 
-### 3.1 Periodic bulk export: free, open, ODbL
+### 3.1 Periodic bulk export: free, open, ODbL *(built 2026-10-09)*
 
-A published, downloadable snapshot of the non-personal Commons dataset (our
-enrichment + our own data; `osm_ref`s, not republished OSM tags/geometry, per
-osm-data-architecture.md §7) as GeoJSON / PMTiles / PostGIS dump on the CC
-bucket. One deliberate download, self-hosted by the consumer. **This is how a
-third party self-hosts without touching our live service.** It is the ODbL-honest
+A published, downloadable snapshot of the non-personal Commons dataset. One
+deliberate download, self-hosted by the consumer. **This is how a third party
+self-hosts without touching our live service.** It is the ODbL-honest
 baseline and satisfies the "the data is genuinely open" promise.
 
 Key lever: **ODbL obliges us to license openly *if* we distribute. It does not
 force us to distribute *live* or *fresh*.** The free export is therefore
 deliberately **periodic (stale)**; live freshness is the paid product (§3.2,
-§4). Cadence is an open decision (§10).
+§4).
+
+**As built.** `app:export:build` (`App\BulkExport\BulkExportBuilder`) writes
+one snapshot; the worker host runs it weekly from a timer
+([operations.md §1](operations.md)). The page is `/developers/export`
+(`data_export`, five localised paths), linked from `/developers`; the files
+are served under `/data/export/` in no language. `/developers` shows the
+`latest` download link only once a snapshot is published
+(`bulk_export_published()`, `App\Twig\BulkExportExtension`); before that it
+says the first export is on its way, so no page of ours links to a 404.
+
+- **Files.** `places.geojson.gz` and `routes.geojson.gz`: gzip-compressed
+  GeoJSON `FeatureCollection`s in WGS84, one feature per line, with the
+  foreign members `licence` (`ODbL-1.0`), `attribution` and
+  `generated_at`. A file's `attribution` is the string on `/developers`
+  (`BulkExportBuilder::ATTRIBUTION`) followed by `Source credits:` and the
+  registry credit of every source with a row in that file, each once, ours
+  first: a CC BY credit such as "Tourisme Wallonie (CC-BY)" travels inside
+  the file that holds those rows, not only in the manifest. The file is
+  written in two passes (features to a scratch file, then the head and the
+  features behind it), so the credits are the sources actually written.
+  Coordinates carry six decimals. Beside them `manifest.json`: `format`
+  (1), `snapshot` (the UTC build stamp, `20261009T133900Z`),
+  `generated_at`, the dataset `licence` (ODbL 1.0, contents DbCL 1.0),
+  `attribution`, one `sources` entry per source (registry name, licence,
+  licence code, attribution, homepage, place and route counts), `left_out`
+  (per source, why and how many), and `files` (name, content type, feature
+  count, bytes, sha256).
+- **What a place carries.** Exactly the properties of the API's
+  `ItemFeature` (`id`, `letter`, `name`, `tier`, the trust envelope,
+  `region_id`), plus `country`, `osm_ref` and `source`. A route carries its
+  whole line with `id`, `letter` (`R`), `name`, `tier`, `distance_m`,
+  `ascent_m`, `region_id` and `source`. No `attributes`, no photos.
+- **Which rows.** What `/v1/search` serves: items in a served state
+  (`unverified`, `verified`), minus untouched OSM coverage rows
+  (`CoverageRetirement`) and places reported gone (`GoneRows`), and served
+  recommended routes that are not in Trash. The row as approved: an edit still
+  waiting in `submission` is not applied to `item`, so it is not exported.
+  Submitted, rejected, retired and trashed rows never are.
+- **Nothing personal** ([public-api-personal-data-boundary.md §1.5](public-api-personal-data-boundary.md)):
+  no user id, display name, email, IP hash, proposer, curator note,
+  moderation state or free-text attribute. Pinned by
+  `tests/BulkExport/BulkExportBuilderTest.php`, which seeds those values and
+  fails if any of them reaches a file.
+- **Per source, per licence.** Every row is filed under one `source`:
+  `cycling-commons` for our own rows (`user`, `scout`, `manual`, `auto`,
+  ODbL), `osm` and `wikidata` for the mirrored copies (licensed by their
+  registry rows: ODbL and CC0), and the registry key for an `authority` row
+  (`item.provider_id`). A source travels only when its licence passes the
+  licence test of [data-source-register.md §1](data-source-register.md)
+  (`App\BulkExport\BulkExportLicences`: ODbL, CC0, PDDL, PDM, public domain,
+  CC BY 4.0 and the attribution-only government licences). CC BY-SA, NC, ND,
+  per-photo, Copernicus and every unknown code stay out, and so does an
+  authority row whose registry row is gone. Left-out rows are counted in the
+  manifest and on the page. On 2026-10-09 that sends `osm`, `wikidata`,
+  `wallonie-pivot` (CC BY 4.0, attribution "Tourisme Wallonie (CC-BY)") and
+  `rivm-drinkwater` (PDM) out with our own rows, and leaves nothing out.
+- **OpenStreetMap-derived data.** A curated OSM copy travels with
+  `source: osm` and its `osm_ref`, under the ODbL with `© OpenStreetMap
+  contributors`, never as ours ([osm-data-architecture.md §3.3, §7](osm-data-architecture.md)).
+  Route lines are traced on OSM ways; the dataset attribution names
+  OpenStreetMap for that reason.
+- **Consistency.** All reads run in one read-only, repeatable-read
+  transaction. The files go to storage first and `latest.json` last, so a
+  reader never meets a pointer to a half-written snapshot. A build that fails
+  after its first write deletes `snapshots/<stamp>/` again before it exits
+  (a failed delete is a warning; the next build's prune removes it). One
+  build runs at a time: the builder holds a Postgres advisory lock
+  (`pg_try_advisory_lock(hashtext(BulkExportBuilder::LOCK))`) for the whole
+  build, and a second run exits 1 with "already running" and writes nothing.
+  The repository has no Symfony Lock component; the database is the one thing
+  every host that could start a build shares, which a file lock is not. A
+  stamp that already holds a manifest is refused, because a published
+  snapshot never changes.
+- **Storage and serving.** Object storage, because the worker writes and
+  either web frontend serves: one private bucket per environment, named by
+  `DATA_EXPORT_BUCKET` and reached with the media S3 client
+  ([media-storage-architecture.md §2](media-storage-architecture.md)). The
+  site streams every byte (`BulkExportDownloadController`), so the bucket
+  needs no anonymous read and its name never reaches a browser. A
+  snapshot's files never change: `Cache-Control: public, max-age=604800,
+  s-maxage=604800, immutable`, the file's sha256 as `ETag`, the build time
+  as `Last-Modified`, `Content-Length`, a 304 on a matching
+  `If-None-Match`. `/data/export/latest/{file}` redirects (302, five
+  minutes) to the newest snapshot; while nothing is published it answers
+  404 with the export page, which says the first snapshot is on its way.
+  `DATA_EXPORT_BUCKET` empty or still the committed placeholder `replace-me`
+  (`BulkExportStorage::UNSET_PLACEHOLDER`) means no bucket: nothing is read,
+  nothing is logged, and the command refuses.
+- **Lookups.** `App\BulkExport\BulkExportCatalog` caches, in the shared
+  cache for ten minutes, the newest manifest, the list of known snapshots
+  (every `snapshots/<stamp>/` that holds a `manifest.json`, read with one
+  listing, plus the newest), and the manifest of each known snapshot. The
+  builder drops the first two after it publishes and again after it prunes
+  (`forget()`). A stamp in a download URL is checked against the known list
+  first: any other stamp is a 404 with no storage call, no cache entry and
+  no limiter count, so a loop over made-up stamps costs neither the bucket
+  nor the Redis that holds every rate limiter. Storage that fails is
+  remembered for a minute (the pages then say nothing is published) and
+  logged as a warning at most once an hour.
+- **Limiter.** Every request for a known snapshot, whatever the file
+  (manifest included) and whether GET, HEAD or a conditional GET that ends
+  in a 304, counts against a per-address limiter (`bulk_export_download`)
+  before anything is read; a refused request gets a plain-text 429 with
+  `Retry-After`. The number is never stated in public copy.
+- **Retention.** The newest four snapshots that hold a manifest
+  (`BulkExportBuilder::KEEP`, a month of weekly builds) are kept; each build
+  deletes the older ones, and every manifest-less directory older than the
+  snapshot it just published (what a build that died halfway left). A
+  directory without a manifest never counts among the four. Pruning runs
+  after the site has been told of the new snapshot; a pruning failure is a
+  warning and does not fail the build.
+- **Taking a snapshot down.** Delete `snapshots/<stamp>/` from the bucket,
+  rebuild if it was the newest, and purge the nginx cache on both frontends
+  (operations.md, "Taking a bulk export snapshot down").
+
+**Cache lifetime, decided 2026-10-09.** A week (`max-age` and `s-maxage`
+604800), not a year. A takedown can delete a snapshot from storage at once,
+but a copy in the nginx cache would be served until it expires, and the
+frontends have no per-path purge from the app. A week matches the build
+cadence, and a year bought nothing: a snapshot is kept four weeks, a mirror
+fetches each snapshot once, and after the week a matching `ETag` still
+costs a 304 and no bytes. `immutable` stays, since nothing within the week
+should revalidate.
+
+**Cadence and format, decided 2026-10-09.** Weekly, because the developer
+page promised a periodic export without a number and weekly matches the
+coverage harvest's rhythm. GeoJSON only: PMTiles already exist per country
+for display (public-api.md §2.1), and a PostGIS dump would expose our schema,
+which is not a contract. A CSV was not asked for by any spec and would split
+route lines from their geometry.
 
 ### 3.2 Metered self-serve API: free tier plus paid quotas
 
@@ -164,8 +291,8 @@ data itself (the periodic dump is always free and open, §3.1).
 
 We do **not** court big platforms. No outbound BD, no design-partner program, no
 sales team. Publish the free dump, ship a self-serve keyed API with quota tiers,
-and let consumers find it. (Today only the unkeyed proof of concept is live,
-§3.) This matches a small team and is the owner's stated
+and let consumers find it. (Today the dump is published weekly and only the
+unkeyed proof of concept of the API is live, §3.) This matches a small team and is the owner's stated
 intention. Inbound commercial use is welcome on the standard tiers; it is not
 solicited.
 
@@ -241,17 +368,11 @@ defended by a clause.
 
 ## 10. Open decisions (pending owner)
 
-- **Bulk-export cadence and format** (§3.1): monthly? quarterly? which
-  artifacts (GeoJSON / PMTiles / PostGIS)?
 - **Quota thresholds and prices** (§4): concrete request ceilings and €/month
   per tier.
 - **Billable unit** (§4): API calls, tile requests, or a blended metric.
 - **Fresh-export tier** (§4): is incremental/fresh bulk a paid tier feature, and
   at what freshness gap vs. the free dump?
-- Reconcile osm-data-architecture.md §7's "programmatic access **only** via the
-  public API" wording with the §3.1 bulk-export channel (a published artifact,
-  not live programmatic access). That is a one-line clarification there once
-  §3.1 is ratified.
 
 ## Relationship to other specs
 

@@ -191,6 +191,16 @@ final class LocalizedPath
         'es' => '/desarrolladores/api',
     ];
 
+    /** The bulk export's page (api-strategy.md §3.1). The files themselves live under `/data/export/`, in no language. */
+    /** @var array<string, string> */
+    public const array DEVELOPERS_EXPORT = [
+        'en' => '/developers/export',
+        'fr' => '/developpeurs/export',
+        'nl' => '/ontwikkelaars/export',
+        'de' => '/entwickler/export',
+        'es' => '/desarrolladores/exportacion',
+    ];
+
     /** @var array<string, string> */
     public const array JOIN = [
         'en' => '/join',

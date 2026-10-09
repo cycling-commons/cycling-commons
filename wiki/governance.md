@@ -63,8 +63,8 @@ BikeCoders            the company: open-data steward (→ independent foundation
   back, exactly as Thunderforest's OpenCycleMap builds on OpenStreetMap. No app owns the data in any
   way it could later enclose, and the Commons carries no app's branding.
 - The Commons is openly licensed and architecturally separate from day one: its own schema, **its own
-  accounts**, its own read API (live in an early, two-endpoint form). Bulk exports are part of the
-  design, not yet live.
+  accounts**, its own read API (live in an early, two-endpoint form) and a weekly bulk export of
+  the open data.
 
 ## The path to independence
 
@@ -76,8 +76,8 @@ ownership. The commitment, public from the start:
 1. **Open licences from day one**: ODbL for the data, AGPL-3.0-only for the code. In force. The
    code was source-available (PolyForm Shield) until September 2026, and the public history says
    so plainly.
-2. **Architectural separation from day one**: independent data, accounts and API. Bulk exports are
-   part of the same design.
+2. **Architectural separation from day one**: independent data, accounts and API. The weekly bulk
+   export, which lets anyone hold the whole dataset, is part of the same separation.
 3. **Spin out into an independent foundation** (following established open-data foundation
    precedents) at a defined, checkable milestone, whichever comes first: **25 unique external
    contributors** with a reviewed contribution to the project — code, translation, curation,

@@ -513,10 +513,11 @@ contributors`, ODbL) is permitted and may be offered as a developer
 convenience. All OSM-derived responses carry OSM attribution.
 
 **Access terms.** Programmatic access to Commons data is **only** via the public
-API. **Scraping** the site, tiles, or endpoints outside the API is **prohibited**
+API and the weekly bulk export ([api-strategy.md §3.1](api-strategy.md)), a
+published file rather than live access. **Scraping** the site, tiles, or endpoints outside the API is **prohibited**
 by the user terms. This governs the presentation layer, not the openness of the
-data: our own data (ODbL) is provided openly *through the API*, which is the
-sanctioned channel, and OSM-derived detail is obtained from OSM, so the
+data: our own data (ODbL) is provided openly *through the API and the export*,
+which are the sanctioned channels, and OSM-derived detail is obtained from OSM, so the
 no-scraping rule does not restrict any ODbL right over the underlying open data.
 The user terms state both the API-only access rule and the scraping
 prohibition (`pages/terms.html.twig`).

@@ -188,6 +188,12 @@ security.yaml. Responses are built by `Api\V1\PublicItemsProvider` through the
 dedicated Postgres role half stays deferred. The consumer-facing explanation
 lives at `wiki/developers/api/`.
 
+**Bulk use has its own channel.** A consumer that wants everything takes the
+weekly bulk export instead of paging the API: GeoJSON files of every place
+and route `/v1/search` serves, in the same property shape, with a manifest
+of sources, licences and checksums, at `/developers/export`
+([api-strategy.md §3.1](api-strategy.md) owns it).
+
 **The map is a consumer of `/v1/search`.** The Commons map holds only the
 regions on screen (catalog-data-model.md §9.1), so its "Search everywhere"
 asks `/v1/search?q=` for our own items and loads the region a picked hit's

@@ -73,6 +73,8 @@ final class SitemapController extends AbstractController
         // with alternates like any other page: the URL is per language even
         // where the words are not.
         ['developers_api', 'monthly'],
+        // The bulk export's page: a new snapshot every week.
+        ['data_export', 'weekly'],
         // The blog index. Its posts are listed separately, below, because a
         // post is reachable in some languages and not others.
         ['blog', 'weekly'],

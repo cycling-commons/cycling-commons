@@ -79,6 +79,7 @@ final readonly class PublicPageCacheSubscriber implements EventSubscriberInterfa
         'about',
         'developers',
         'developers_api',
+        'data_export',
         'licenses',
         'credits',
         'privacy',

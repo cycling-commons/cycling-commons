@@ -240,7 +240,7 @@ way in that counts as fully active; the other two exist or are designed, and
 are named here so nobody mistakes the map for the product:
 - **Map**: [/map](https://cyclingcommons.org/map), with toggleable layers. **Fully active.**
 - **Query API**: `/v1/search`, filtered by **type + bounding box**, like OSM Overpass: "all drinking-water points in this bbox," "climbs in this bbox." A bbox is required and capped in size. Live in an early, two-endpoint form; country and region as API filters are design, not built.
-- **Bulk export** (design, not built): per-country / per-region open dumps for anyone to download and build on (ODbL).
+- **Bulk export**: the whole open dataset, every place and route the map shows, as GeoJSON with a manifest of sources and licences, rebuilt every week at [cyclingcommons.org/developers/export](https://cyclingcommons.org/developers/export) for anyone to download and build on (ODbL). Per-country and per-region files are design, not built.
 
 The intent is that "per country" is a first-class query, not a map-only view: that is what makes it a commons rather than a feature.
 

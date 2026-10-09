@@ -49,7 +49,7 @@ tiles.
 - **Rate limits.** REST endpoints are limited per client address
   ([how many requests a minute](../numbers.md)). Well-behaved map apps stay far under this; the
   limit exists to keep bulk scraping off a transport that was never meant for it. Bulk use wants the
-  [open data exports](../../data-catalog.md), not the API. When you do cross the limit the response
+  [weekly bulk export](https://cyclingcommons.org/developers/export), not the API. When you do cross the limit the response
   is a `429` carrying a **`Retry-After`** header in seconds: read it and wait, rather than retrying
   on a timer of your own.
 - **Attribution.** Every response derives from Open Database License (ODbL) data. Your map must

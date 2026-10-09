@@ -205,6 +205,14 @@ services:
             $privateBucket: '%env(MEDIA_S3_PRIVATE_BUCKET)%'
             $publicBase: '%media.public_base%'
 
+    # The bulk export's bucket (api-strategy.md §3.1): the FULL bucket name,
+    # reached with the media S3 client. No anonymous read: the site streams
+    # every download. Empty = nothing published, and app:export:build refuses.
+    App\BulkExport\BulkExportStorage:
+        arguments:
+            $client: '@media.s3_client'
+            $bucket: '%env(DATA_EXPORT_BUCKET)%'
+
     # The release gate's scanner (media-storage-architecture.md §3.1). "No scanner" throws in
     # every environment: no file is stored or decoded without a verdict.
     App\Media\Scan\VirusScannerInterface: '@App\Media\Scan\ClamAvScanner'
@@ -289,6 +297,20 @@ when@test:
                 $filesystems:
                     'test-bucket-eu-01': '@media.storage.eu01'
                     'test-bucket-private': '@media.storage.private'
+
+        # The bulk export writes to an in-memory bucket in the suite. A
+        # literal, not %env()%, for the same reason as MediaStorage above.
+        App\BulkExport\BulkExportStorage:
+            public: true
+            arguments:
+                $client: null
+                $bucket: 'test-data-export'
+                $filesystem: '@bulk_export.storage.memory'
+
+        # Fetched directly by the export tests.
+        App\BulkExport\BulkExportBuilder:
+            public: true
+            autowire: true
 
         App\Media\ContinentResolver:
             public: true

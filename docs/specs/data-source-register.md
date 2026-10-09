@@ -56,6 +56,13 @@ the software. A source's terms are judged here only against **ODbL**.
 | No licence stated | **No, until asked.** Silence is not permission: an endpoint that answers without a 401 has granted nothing (the Esri imagery case, §5) |
 | Terms of service forbidding bulk reuse | **No**, regardless of how the data itself is licensed (Google) |
 
+The weekly bulk export applies this test again at build time, per row, from
+the registry row's `licence_code` (`App\BulkExport\BulkExportLicences`,
+[api-strategy.md §3.1](api-strategy.md)): a source whose code is not on the
+"Yes" side, or is unknown, is left out of the export and counted in its
+manifest. A registry code for a licence this table accepts must be added
+there before its rows travel.
+
 **Verdict vocabulary used in every table below:**
 
 - **Ingest.** The licence permits taking the data into our dataset, with whatever

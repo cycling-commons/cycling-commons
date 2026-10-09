@@ -50,10 +50,14 @@ info:
 
     ## Bulk export
 
-    For bulk or offline use, take the free **periodic bulk export** from the
-    Commons bucket and self-host it instead of crawling the live API —
-    scraping the service is prohibited. The export is the sanctioned
-    self-hosting channel and is always free and open (ODbL).
+    For bulk or offline use, take the free **weekly bulk export** and
+    self-host it instead of crawling the live API; scraping the service is
+    prohibited. Every place and route this API serves, as gzip-compressed
+    GeoJSON with a manifest of sources, licences and sha256 checksums, at
+    https://cyclingcommons.org/developers/export (the newest files always at
+    `/data/export/latest/places.geojson.gz`, `routes.geojson.gz` and
+    `manifest.json`). The export is the sanctioned self-hosting channel and is
+    always free and open (ODbL).
   contact:
     name: Cycling Commons
     email: info@cyclingcommons.org

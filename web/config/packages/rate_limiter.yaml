@@ -70,6 +70,8 @@ framework:
                 adapter: cache.app
             cache.public_api_limiter:
                 adapter: cache.app
+            cache.bulk_export_limiter:
+                adapter: cache.app
             cache.pow_challenge_limiter:
                 adapter: cache.app
             cache.season_vote_limiter:
@@ -339,6 +341,15 @@ framework:
             limit: 120
             interval: '1 minute'
             cache_pool: cache.public_api_limiter
+        # Bulk export downloads (api-strategy.md §3.1). Every byte streams
+        # through PHP from storage, so a loop that fetches the same file over
+        # and over ties up workers; a mirror needs three files a week. Never
+        # stated in public copy.
+        bulk_export_download:
+            policy: sliding_window
+            limit: 30
+            interval: '1 hour'
+            cache_pool: cache.bulk_export_limiter
         # Minting a proof-of-work challenge for the bug button
         # (page-caching.md §3.1). The panel asks for one when a rider opens it,
         # so a real reporter needs one or two; the ceiling is here because the

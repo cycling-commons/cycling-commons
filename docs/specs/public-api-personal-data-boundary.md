@@ -226,6 +226,22 @@ base-table grant when they land:
 
 Until then the endpoint reads them through the default connection (§3.2).
 
+### 1.5 What the bulk export reads
+
+`app:export:build` (`App\BulkExport\BulkExportBuilder`,
+[api-strategy.md §3.1](api-strategy.md)) reads exactly what `/v1/search`
+reads (§1.4) and nothing more: `item`, `region`, `recommended_route`,
+`change_history`, `data_provider`, and `item_confirmation` and `submission`
+only inside the trust envelope and the retirement filter, as counts and
+existence tests. It joins no account table, writes the API's own
+`ItemFeature` properties plus `country`, `osm_ref` and `source`, and never
+copies `attributes`, `proposed_by`, `trashed_by` or any free text a person
+wrote beyond the public name of a place or route. The same move to the
+`cc_api_read` role (§2) covers it when that lands.
+`tests/BulkExport/BulkExportBuilderTest.php` is its response-contract test
+(§5.2): a closed property list, and seeded account values, notes and an
+unapplied edit that must not appear in any file.
+
 ---
 
 ## 2. Layer 1 — the `cc_api_read` Postgres role

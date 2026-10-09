@@ -1,0 +1,88 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# The bulk export (docs/specs/api-strategy.md §3.1): the newest snapshot, its
+   files with sizes and checksums, what it holds per source and licence, and
+   what it leaves out. Every number on it comes from the published manifest. #}
+{% extends 'base.html.twig' %}
+{% block head_styles %}
+<link rel="stylesheet" href="{{ asset('styles/page/pages/developers.css') }}">
+{% endblock %}
+{% macro size(bytes) -%}
+  {%- if bytes >= 1048576 -%}{{ (bytes / 1048576)|number_format(1) }} MB
+  {%- elseif bytes >= 1024 -%}{{ (bytes / 1024)|number_format(0) }} kB
+  {%- else -%}{{ bytes }} B{%- endif -%}
+{%- endmacro %}
+{% block body %}
+
+<div class="dhero"><div class="wrap">
+  <div class="kicker" style="color:var(--trail)">{{ 'data_export.kicker'|trans }}</div>
+  <h1 class="disp">{{ 'data_export.title'|trans }}</h1>
+  <p class="lead" style="margin-top:1rem">{{ 'data_export.lead'|trans }}</p>
+</div></div>
+
+<section class="pad"><div class="wrap">
+  <div class="kicker">{{ 'data_export.latest_kicker'|trans }}</div>
+  {% if manifest is null %}
+    <p data-export-empty style="margin-top:.8rem">{{ 'data_export.empty'|trans }}</p>
+  {% else %}
+    <p style="margin-top:.8rem">{{ 'data_export.built'|trans({'%when%': manifest.generated_at|date('Y-m-d H:i', 'UTC') ~ ' UTC'}) }}</p>
+    {% for f in manifest.files %}
+      <div class="ep" data-export-file>
+        <span class="verb">GET</span>
+        <a class="path" href="{{ path('data_export_file', {stamp: manifest.snapshot, file: f.name}) }}" download>{{ f.name }}</a>
+        <span class="desc">{% if f.name starts with 'routes' %}{{ 'data_export.file_routes'|trans({'%n%': f.features|number_format}) }}{% else %}{{ 'data_export.file_places'|trans({'%n%': f.features|number_format}) }}{% endif %} · {{ _self.size(f.bytes) }}<br><code style="font-size:.75rem;word-break:break-all">sha256 {{ f.sha256 }}</code></span>
+      </div>
+    {% endfor %}
+    <div class="ep">
+      <span class="verb">GET</span>
+      <a class="path" href="{{ path('data_export_file', {stamp: manifest.snapshot, file: 'manifest.json'}) }}">manifest.json</a>
+      <span class="desc">{{ 'data_export.manifest_desc'|trans }}</span>
+    </div>
+    <p style="margin-top:1.2rem;font-size:.90rem;color:#595c4d">{{ 'data_export.latest_links'|trans }} <code>{{ path('data_export_latest', {file: 'places.geojson.gz'}) }}</code></p>
+  {% endif %}
+</div></section>
+
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap">
+  <div class="two">
+    <div>
+      <div class="kicker">{{ 'data_export.holds_kicker'|trans }}</div>
+      <p style="margin-top:.8rem">{{ 'data_export.holds_body'|trans|rich }}</p>
+      {% if manifest is not null %}
+        {% for s in manifest.sources %}
+          <div class="ep" data-export-source="{{ s.key }}">
+            <span class="path">{{ s.name }}</span>
+            <span class="desc">{{ s.licence }}{% if s.attribution %} · {{ s.attribution }}{% endif %} · {{ 'data_export.source_counts'|trans({'%places%': s.places|number_format, '%routes%': s.routes|number_format}) }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+    <div>
+      <div class="kicker">{{ 'data_export.leaves_kicker'|trans }}</div>
+      <p style="margin-top:.8rem">{{ 'data_export.leaves_body'|trans|rich }}</p>
+      {% if manifest is not null and manifest.left_out is not empty %}
+        {% for s in manifest.left_out %}
+          <div class="ep">
+            <span class="path">{{ s.name ?? 'data_export.left_out_unknown'|trans }}</span>
+            <span class="desc">{{ s.licence_code ?? '-' }} · {{ 'data_export.source_counts'|trans({'%places%': s.places|number_format, '%routes%': s.routes|number_format}) }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</div></section>
+
+<section class="pad"><div class="wrap">
+  <div class="two">
+    <div>
+      <div class="kicker">{{ 'data_export.attr_kicker'|trans }}</div>
+      <div class="code">{{ attribution }}</div>
+      <p style="margin-top:.8rem">{{ 'data_export.licence_body'|trans|rich }} <a href="{{ path('licenses') }}">{{ 'licenses.kicker'|trans({}, 'licenses') }}</a>.</p>
+    </div>
+    <div>
+      <div class="kicker">{{ 'data_export.cadence_kicker'|trans }}</div>
+      <p style="margin-top:.8rem">{{ 'data_export.cadence_body'|trans({'%keep%': keep}) }}</p>
+      <p style="margin-top:.8rem">{{ 'data_export.format_body'|trans|rich }}</p>
+      <p style="margin-top:.8rem"><a href="{{ path('developers') }}">{{ 'data_export.back'|trans }}</a></p>
+    </div>
+  </div>
+</div></section>
+{% endblock %}

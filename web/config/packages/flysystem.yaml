@@ -7,8 +7,8 @@
 # per bucket would have to be repointed or grown as generations advance, which
 # is exactly the coupling the recorded-bucket-name model removes.
 #
-# when@test is the one exception: the suite preloads these two in-memory
-# filesystems into MediaStorage under fixture bucket names, keeping tests
+# when@test is the one exception: the suite preloads these in-memory
+# filesystems into MediaStorage and BulkExportStorage, keeping tests
 # hermetic; an unknown bucket name is then a refusal, which tests rely on.
 flysystem:
     storages: []
@@ -19,4 +19,7 @@ when@test:
             media.storage.eu01:
                 adapter: 'memory'
             media.storage.private:
+                adapter: 'memory'
+            # The bulk export's bucket (App\BulkExport\BulkExportStorage).
+            bulk_export.storage.memory:
                 adapter: 'memory'

@@ -292,7 +292,7 @@ a leak.
 Same for every logged-out visitor, cheap to prove, and the ones a flood would
 aim at (`PublicPageCacheSubscriber::CACHEABLE_ROUTES`, English paths shown):
 
-`/`, `/about`, `/developers`, `/developers/api`, `/licenses`, `/credits`,
+`/`, `/about`, `/developers`, `/developers/api`, `/developers/export`, `/licenses`, `/credits`,
 `/privacy`, `/terms`, `/accessibility`, `/contributors-and-curators`,
 `/roadmap`, `/whats-new`, `/regions`, `/regions/{slug}`,
 `/regions/outlines.json`, `/blog`, `/blog/{slug}`, `/known-issues`, `/pages`,

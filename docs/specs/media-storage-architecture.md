@@ -69,6 +69,7 @@ the provider's policy support for source conditions is verified).
 |---|---|---|
 | one private bucket per environment | private | quarantine (unscanned bytes) and photos under legal hold (§2.2) |
 | one public bucket per shard per environment, numbered | anonymous-read via proxy | published derivatives only |
+| one bulk-export bucket per environment (`DATA_EXPORT_BUCKET`) | private, streamed by the site | the weekly open-data snapshots ([api-strategy.md §3.1](api-strategy.md)); not media, listed here because it shares the media S3 client |
 
 Each environment owns its own buckets (owner 2026-08-18): a staging mistake
 can never touch production objects. The variable NAMES are identical across environments; only the
