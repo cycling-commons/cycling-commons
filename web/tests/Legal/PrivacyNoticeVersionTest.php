@@ -103,7 +103,7 @@ final class PrivacyNoticeVersionTest extends WebTestCase
             $catalogue = $translator->getCatalogue($locale);
             foreach (PrivacyNoticeVersions::all() as $v) {
                 foreach ($v['changes'] as $key) {
-                    self::assertTrue($catalogue->defines($key), $locale.': '.$key);
+                    self::assertTrue($catalogue->defines($key, 'privacy'), $locale.': '.$key);
                 }
             }
         }

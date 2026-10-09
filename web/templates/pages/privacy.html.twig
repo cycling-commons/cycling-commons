@@ -1,5 +1,8 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {% extends 'base.html.twig' %}
+{# The notice's text is translations/privacy.<locale>.yaml, its own domain,
+   outside the in-site translation system (docs/specs/privacy-notice.md). #}
+{% trans_default_domain 'privacy' %}
 {#
   `/settings` is behind the firewall, so linking it to a signed-out reader sends
   them to a login form for a page they were only being told about (owner,
@@ -9,9 +12,9 @@
 #}
 {% macro settings_link(key) %}
   {%- if app.user -%}
-    <a href="{{ path('settings') }}">{{ key|trans }}</a>
+    <a href="{{ path('settings') }}">{{ key|trans({}, 'privacy') }}</a>
   {%- else -%}
-    {{ key|trans }}
+    {{ key|trans({}, 'privacy') }}
   {%- endif -%}
 {% endmacro %}
 {% import _self as priv %}
@@ -31,11 +34,11 @@
 
     <h2>{% trans %}privacy.h_responsible{% endtrans %}</h2>
     <p>{% trans %}privacy.responsible_p1_pre{% endtrans %} <b>{% trans %}privacy.responsible_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}privacy.responsible_p1_mid{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}privacy.responsible_p1_governance{% endtrans %}</a>{{ 'privacy.responsible_p1_post'|trans|rich }}</p>
-    <p>{% trans %}privacy.responsible_p2_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans }}</a>){% trans %}privacy.responsible_p2_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.responsible_p2_ap{% endtrans %}</a>{% trans %}privacy.responsible_p2_post{% endtrans %}</p>
+    <p>{% trans %}privacy.responsible_p2_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans({}, 'messages') }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans({}, 'messages') }}</a>){% trans %}privacy.responsible_p2_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.responsible_p2_ap{% endtrans %}</a>{% trans %}privacy.responsible_p2_post{% endtrans %}</p>
     {# GDPR Art. 37 does not oblige us to appoint a DPO, but a notice that says
        nothing leaves the reader guessing. Saying "no, and here is the address
        instead" is the convention and answers the question outright. #}
-    <p>{{ 'privacy.dpo_pre'|trans|rich }} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans }}</a>){% trans %}privacy.dpo_post{% endtrans %}</p>
+    <p>{{ 'privacy.dpo_pre'|trans|rich }} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans({}, 'messages') }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans({}, 'messages') }}</a>){% trans %}privacy.dpo_post{% endtrans %}</p>
 
     <h2>{% trans %}privacy.h_collect{% endtrans %}</h2>
     <p>{% trans %}privacy.collect_intro{% endtrans %}</p>
@@ -278,7 +281,7 @@
          depend on having an account, and this page must not imply it does. #}
       <li>{{ 'privacy.rights_third_party_photo'|trans|rich }}</li>
     </ul>
-    <p>{% trans %}privacy.rights_contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans }}</a>){% trans %}privacy.rights_contact_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.rights_contact_ap{% endtrans %}</a>{% trans %}privacy.rights_contact_post{% endtrans %}</p>
+    <p>{% trans %}privacy.rights_contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans({}, 'messages') }} <a href="{{ path('contact') }}?topic=privacy">{{ 'support.contact.title_short'|trans({}, 'messages') }}</a>){% trans %}privacy.rights_contact_mid{% endtrans %} <a href="https://autoriteitpersoonsgegevens.nl/">{% trans %}privacy.rights_contact_ap{% endtrans %}</a>{% trans %}privacy.rights_contact_post{% endtrans %}</p>
 
     <h2>{% trans %}privacy.h_children{% endtrans %}</h2>
     <p>{{ 'privacy.children_body'|trans|rich }}</p>
@@ -299,13 +302,9 @@
         {% endfor %}
       </ol>
     </div>
-    {# The page promised a new date on change and kept no history, so "we
-       updated it" was unverifiable. The platform is open source, so the
-       history already exists in public - this only points at it. The branch in
-       the URL is `main` because that is what `symfony-base-clean` becomes at go-live
-       (go-live-and-deploy-strategy); until then the link 404s, and so does the
-       route it sits on. #}
-    <p>{% trans %}privacy.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/templates/pages/privacy.html.twig">{% trans %}privacy.changes_versions_link{% endtrans %}</a>{% trans %}privacy.changes_versions_post{% endtrans %}</p>
+    {# The history of this language's text file: every change to the notice
+       in this language, line by line, with its date and commit message. #}
+    <p>{% trans %}privacy.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/translations/privacy.{{ app.request.locale }}.yaml">{% trans %}privacy.changes_versions_link{% endtrans %}</a>{% trans %}privacy.changes_versions_post{% endtrans %}</p>
 
     <div class="disc" style="margin:2rem 0 0">{% trans %}privacy.footer_disc_pre{% endtrans %} <a href="{{ path('terms') }}">{% trans %}privacy.footer_disc_terms{% endtrans %}</a> {% trans %}privacy.footer_disc_mid{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}privacy.footer_disc_licences{% endtrans %}</a>{% trans %}privacy.footer_disc_post{% endtrans %}</div>
   </div>

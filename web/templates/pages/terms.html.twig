@@ -1,5 +1,8 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {% extends 'base.html.twig' %}
+{# The terms' text is translations/terms.<locale>.yaml, its own domain,
+   outside the in-site translation system (docs/specs/translations.md §6). #}
+{% trans_default_domain 'terms' %}
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('styles/page/pages/terms.css') }}">
 {% endblock %}
@@ -12,7 +15,7 @@
 
 <section class="pad"><div class="wrap">
   <div class="legal">
-    <p class="upd">{% trans %}terms.last_updated{% endtrans %}</p>
+    <p class="upd" data-terms-version="{{ terms_current.number }}">{{ 'terms.version_line'|trans({'%n%': terms_current.number, '%date%': terms_current.date|cc_date}) }}</p>
 
     <h2><span class="n">1</span>{% trans %}terms.h1_accepting{% endtrans %}</h2>
     <p>{% trans %}terms.accepting_p1_pre{% endtrans %} <a href="{{ path('privacy') }}">{% trans %}terms.accepting_p1_privacy{% endtrans %}</a>{% trans %}terms.accepting_p1_mid{% endtrans %} <b>{% trans %}terms.accepting_p1_bikecoders{% endtrans %}</b> (<a href="https://bikecoders.life">bikecoders.life</a>){% trans %}terms.accepting_p1_mid2{% endtrans %} <a href="https://wiki.cyclingcommons.org/governance/">{% trans %}terms.accepting_p1_governance{% endtrans %}</a>{% trans %}terms.accepting_p1_post{% endtrans %}</p>
@@ -40,7 +43,7 @@
     </ul>
 
     <h2><span class="n">5</span>{% trans %}terms.h5_contributions{% endtrans %}</h2>
-    <p>{% trans %}terms.contributions_p1_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/blob/main/licenses/COMMONS-TERMS-CLAUSE.md">{% trans %}terms.contributions_p1_link{% endtrans %}</a>{{ 'terms.contributions_p1_mid'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_odbl{% endtrans %}</a>{{ 'terms.contributions_p1_mid2'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_ccbysa{% endtrans %}</a>{{ 'terms.contributions_p1_mid3'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_agpl{% endtrans %}</a>{% trans %}terms.contributions_p1_post{% endtrans %}</p>
+    <p>{% trans %}terms.contributions_p1_pre{% endtrans %} <a href="{{ path('licenses') }}#full-texts">{% trans %}terms.contributions_p1_link{% endtrans %}</a>{{ 'terms.contributions_p1_mid'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_odbl{% endtrans %}</a>{{ 'terms.contributions_p1_mid2'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_ccbysa{% endtrans %}</a>{{ 'terms.contributions_p1_mid3'|trans|rich }} <a href="{{ path('licenses') }}">{% trans %}terms.contributions_p1_agpl{% endtrans %}</a>{% trans %}terms.contributions_p1_post{% endtrans %}</p>
     <p>{% trans %}terms.contributions_p2{% endtrans %}</p>
 
     <h2><span class="n">6</span>{% trans %}terms.h6_opendata{% endtrans %}</h2>
@@ -124,9 +127,21 @@
 
     <h2><span class="n">15</span>{% trans %}terms.h15_changes{% endtrans %}</h2>
     <p>{% trans %}terms.changes_body{% endtrans %}</p>
+    {# Every version, newest first, with what changed (App\Legal\TermsVersions). #}
+    <div id="changes">
+      <ol class="pversions">
+        {% for v in terms_versions %}
+          <li data-version="{{ v.number }}">
+            <b>{{ 'terms.version_line'|trans({'%n%': v.number, '%date%': v.date|cc_date}) }}</b>
+            <ul>{% for c in v.changes %}<li>{{ c|trans|rich }}</li>{% endfor %}</ul>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+    <p>{% trans %}terms.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/translations/terms.{{ app.request.locale }}.yaml">{% trans %}terms.changes_versions_link{% endtrans %}</a>{% trans %}terms.changes_versions_post{% endtrans %}</p>
 
     <h2><span class="n">16</span>{% trans %}terms.h16_contact{% endtrans %}</h2>
-    <p>{% trans %}terms.contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans }} <a href="{{ path('contact') }}">{{ 'support.contact.title_short'|trans }}</a>){% trans %}terms.contact_post{% endtrans %}</p>
+    <p>{% trans %}terms.contact_pre{% endtrans %} <a href="mailto:info@cyclingcommons.org">info@cyclingcommons.org</a> ({{ 'support.legal.or_form'|trans({}, 'messages') }} <a href="{{ path('contact') }}">{{ 'support.contact.title_short'|trans({}, 'messages') }}</a>){% trans %}terms.contact_post{% endtrans %}</p>
 
     <div class="disc" style="margin:2rem 0 0">{% trans %}terms.footer_disc_pre{% endtrans %} <a href="{{ path('privacy') }}">{% trans %}terms.footer_disc_privacy{% endtrans %}</a> {% trans %}terms.footer_disc_mid{% endtrans %} <a href="{{ path('licenses') }}">{% trans %}terms.footer_disc_licences{% endtrans %}</a>{% trans %}terms.footer_disc_post{% endtrans %}</div>
   </div>

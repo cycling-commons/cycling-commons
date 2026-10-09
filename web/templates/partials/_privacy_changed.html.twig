@@ -4,8 +4,8 @@
 {% set _privacy = cc_privacy_unseen() %}
 {% if _privacy %}
 <div class="privacy-changed" data-privacy-changed role="status">
-  <span>{{ 'privacy.changed_bar'|trans({'%date%': _privacy.date|cc_date}) }}</span>
-  <a href="{{ path('privacy') }}#changes">{{ 'privacy.changed_read'|trans }}</a>
+  <span>{{ 'privacy.changed_bar'|trans({'%date%': _privacy.date|cc_date}, 'privacy') }}</span>
+  <a href="{{ path('privacy') }}#changes">{{ 'privacy.changed_read'|trans({}, 'privacy') }}</a>
 </div>
 <link rel="stylesheet" href="{{ asset('styles/page/partials/_privacy_changed.css') }}">
 {% endif %}

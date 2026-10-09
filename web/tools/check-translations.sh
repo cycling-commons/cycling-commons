@@ -5,7 +5,9 @@
 # Fails if any enabled non-default locale's catalog is missing keys (or has
 # extra keys) compared to the default locale (en). This keeps every user-facing
 # string translated across en/fr/nl/de/es, so an untranslated key can never ship
-# silently. Run as part of `make app-test` / CI.
+# silently. Every domain is checked: `messages`, and the privacy notice and
+# the terms, which are one file per page per language (`privacy`, `terms`).
+# Run as part of `make app-test` / CI.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -33,25 +35,28 @@ function flat(array $a, string $p = ''): array
     return $o;
 }
 
-$base = flat(Yaml::parseFile("$dir/messages.$default.yaml"));
 $fail = 0;
 
-foreach ($locales as $l) {
-    $t = flat(Yaml::parseFile("$dir/messages.$l.yaml"));
-    $missing = array_diff_key($base, $t);
-    $extra = array_diff_key($t, $base);
+foreach (['messages', 'privacy', 'terms'] as $domain) {
+    $base = flat(Yaml::parseFile("$dir/$domain.$default.yaml"));
 
-    if ($missing || $extra) {
-        $fail = 1;
-        fwrite(STDERR, sprintf("[%s] FAIL — %d missing, %d extra vs %s\n", $l, count($missing), count($extra), $default));
-        foreach (array_keys($missing) as $k) {
-            fwrite(STDERR, "  - missing: $k\n");
+    foreach ($locales as $l) {
+        $t = flat(Yaml::parseFile("$dir/$domain.$l.yaml"));
+        $missing = array_diff_key($base, $t);
+        $extra = array_diff_key($t, $base);
+
+        if ($missing || $extra) {
+            $fail = 1;
+            fwrite(STDERR, sprintf("[%s %s] FAIL: %d missing, %d extra vs %s\n", $domain, $l, count($missing), count($extra), $default));
+            foreach (array_keys($missing) as $k) {
+                fwrite(STDERR, "  - missing: $k\n");
+            }
+            foreach (array_keys($extra) as $k) {
+                fwrite(STDERR, "  + extra:   $k\n");
+            }
+        } else {
+            printf("[%s %s] OK: %d keys, in parity with %s\n", $domain, $l, count($t), $default);
         }
-        foreach (array_keys($extra) as $k) {
-            fwrite(STDERR, "  + extra:   $k\n");
-        }
-    } else {
-        printf("[%s] OK — %d keys, in parity with %s\n", $l, count($t), $default);
     }
 }
 

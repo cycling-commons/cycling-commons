@@ -3,8 +3,17 @@
 > **Law cited here is listed with its source in [`legal-sources.md`](legal-sources.md).** Article numbers are named in the text; the link goes to the act, because EUR-Lex article anchors do not survive consolidation.
 
 
-Canonical. Covers `/privacy` (`web/templates/pages/privacy.html.twig`) and the
-`privacy.*` keys in `web/translations/messages.*.yaml`, in all five locales.
+Canonical. Covers `/privacy` (`web/templates/pages/privacy.html.twig`) and its
+text, one file per language: `web/translations/privacy.<locale>.yaml` (domain
+`privacy`, all five locales).
+
+**One file per language, outside the in-site translation system** (owner
+2026-10-09). The notice is not part of the `messages` domain, so it cannot be
+proposed, overlaid or marked in translate mode (translations.md §6.2). Every
+change goes through git, so the history of `privacy.<locale>.yaml` is the
+record of every change to the notice in that language, line by line, with its
+date and reason; the page links the history of its own language's file
+(`LegalPagesSourceTest`). The same file can be offered as a download later.
 
 Related: [security-architecture.md](security-architecture.md) for the CSP host
 list this page mirrors, [account-and-auth.md](account-and-auth.md) for deletion
@@ -34,7 +43,7 @@ nobody thought of `/privacy`.
 | Mail kept 24 months after a thread ends | policy, owner 2026-08-27 | the mailbox policy changes |
 | Contact-form messages deleted 24 months after they were answered or closed (`privacy.retention_mail`) | `App\Support\ContactMessageRetention`, daily in `app:media:gc` (contact-and-support.md §4) | the sweep stops running, or its clock stops being `updated_at` on an answered or closed message |
 | A bug reporter's address deleted 24 months after the outcome, kept while the bug is open (`privacy.retention_bugs`) | `App\Support\BugReporterEmailRetention`, daily in `app:media:gc` (contact-and-support.md §5) | the sweep stops running, or it touches an open report |
-| Traffic summaries are sent only when the rider sends them from Scout's review, hold per road piece the distance, passes, car speeds, part of the day and a day group (never the date), never the ride or its first and last 500 m, and name no rider; they wait encrypted until their road has enough rides, then join plain totals (`privacy.collect_contribute_traffic`, `privacy.banner_body`) | `assets/lib/traffic-ride.js` builds the lines in the browser; `TrafficLine` refuses track-shaped keys; `TrafficPool` seals each waiting line with AES-256-GCM (`TrafficCipher`) under a random id and releases a road's block only whole; `TrafficStore` keeps HMAC dedupe codes and the plain totals (traffic-measurements.md §3, §4) | a line field is added that carries a position, a date or a finer time, a line or total gains anything naming a rider, or lines skip the waiting room |
+| Traffic summaries are sent only when the rider sends them from Scout's review, hold per road piece the distance, passes, car speeds, part of the day and a day group (never the date), never the ride or anything within 500 m of its start or end, and name no rider; they wait encrypted until their road has enough rides, then join plain totals (`privacy.collect_contribute_traffic`, `privacy.banner_body`) | `assets/lib/traffic-ride.js` builds the lines in the browser; `TrafficLine` refuses track-shaped keys; `TrafficPool` seals each waiting line with AES-256-GCM (`TrafficCipher`) under a random id and releases a road's block whole, up to 1000 lines per release; `TrafficStore` keeps HMAC dedupe codes and the plain totals (traffic-measurements.md §3, §4) | a line field is added that carries a position, a date or a finer time, a line or total gains anything naming a rider, or lines skip the waiting room |
 | A waiting line is deleted once it joins the totals; the totals hold no rider, so nothing in them is deleted with an account (`privacy.retention_traffic`) | `TrafficPool::releaseOne()`, `TrafficStore::addToTotal()` (traffic-measurements.md §4.3, §4.7); `TrafficAccountDeletionTest` | a table gains anything naming a rider |
 | A content reporter's or photo requester's address deleted 90 days after the decision, kept while open and under legal hold (`privacy.retention_reports`) | `App\Support\ReportContactRetention` and `MediaTakedownService::purgeExpiredContacts()`, daily in `app:media:gc` (content-reports.md §10) | either sweep stops running, or the 90 days change |
 | The base location is stored as a random point up to 2.5 km from the picked point (`privacy.collect_account_base`) | `App\Service\BaseLocationJitter` (uniform over the disc), applied by `BaseLocationService::apply()` to a new point only: a point equal to the stored one is kept, so a radius-only change does not move it again | the radius changes, or a save path writes the picked point without the shift |

@@ -287,6 +287,12 @@ miss it:
 - A documented **required attribution string** consumers must display, published
   alongside this contract.
 
+Photos are not ODbL: each carries its own licence (CC BY-SA in one of its
+versions) and its creator. The string to reuse on `/developers` and `/licenses`
+says so: "Photos © their creators, under the licence named with each photo"
+(owner 2026-10-09). When photos reach the API, every photo travels with its
+licence and its credit, so a consumer can show both.
+
 Per [api-strategy.md §7](api-strategy.md) the reward for compliance is
 visibility and goodwill; no attribution-policing machinery is built now, and
 enforcement is reserved case-by-case.

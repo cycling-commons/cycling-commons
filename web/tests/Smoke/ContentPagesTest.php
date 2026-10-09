@@ -61,7 +61,7 @@ final class ContentPagesTest extends WebTestCase
         self::assertStringNotContainsString('any record of where you ride', $html);
         self::assertStringNotContainsString('your route never leave', $html, 'which roads you rode is sent');
         self::assertStringContainsString('which roads you rode, with the part of the day, does', $html);
-        self::assertStringContainsString('The first and last 500 m of every ride are never sent', $html);
+        self::assertStringContainsString('Nothing within 500 m of where a ride starts or ends is ever sent', $html);
         self::assertStringNotContainsString('quarter hour', $html, 'no time finer than a part of the day is sent');
         self::assertStringContainsString('Nothing we store names you or codes you', $html);
         self::assertStringNotContainsString('rider code', $html, 'no rider code of any kind');
@@ -164,7 +164,7 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorExists('footer.foot');
         self::assertSelectorTextContains('h1', 'The deal, in plain language');
         self::assertStringContainsString(
-            'UI translations',
+            'code, user interface and translations',
             (string) $client->getResponse()->getContent(),
         );
     }

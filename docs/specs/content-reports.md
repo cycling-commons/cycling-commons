@@ -111,7 +111,7 @@ be choosing from the rules we actually apply:
 | `untrue` | Things that are simply not true |
 | `abuse` | Harassment, threats, content aimed at a person |
 | `advertising` | The Commons is not a listings site |
-| `generated` | Photographs that are not photographs |
+| `generated` | Photographs that are not photographs, or a real scene with something added or removed ("AI-generated or altered and presented as real") |
 
 The other three:
 

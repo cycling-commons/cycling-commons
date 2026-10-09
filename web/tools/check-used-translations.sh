@@ -9,19 +9,24 @@
 # translation extractor which keys the code uses and fails on any that en
 # lacks; parity then carries the answer to fr/nl/de/es.
 #
-# Only the `messages` domain is checked: the extractor files form-constraint
-# messages under `validators` and dynamic keys under `_undefined`, which are
-# translated from `messages` at runtime and would read as false misses here.
+# The `messages` domain is checked, and the two page domains, `privacy` and
+# `terms` (one file per page per language). `validators` and `_undefined` are
+# not: the extractor files form-constraint messages and dynamic keys there,
+# which are translated from `messages` at runtime and would read as false
+# misses here.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-out="$(php -d memory_limit=1G bin/console debug:translation en --only-missing --domain=messages 2>&1 || true)"
-missing="$(printf '%s\n' "$out" | awk '$1 == "missing" { print $3 }')"
+fail=0
+for domain in messages privacy terms; do
+    out="$(php -d memory_limit=1G bin/console debug:translation en --only-missing --domain="$domain" 2>&1 || true)"
+    missing="$(printf '%s\n' "$out" | awk '$1 == "missing" { print $3 }')"
+    if [ -n "$missing" ]; then
+        echo "Translation keys used in code but missing from $domain.en.yaml:" >&2
+        printf '  - %s\n' $missing >&2
+        fail=1
+    fi
+done
+[ "$fail" -eq 0 ] || exit 1
 
-if [ -n "$missing" ]; then
-    echo "Translation keys used in code but missing from messages.en.yaml:" >&2
-    printf '  - %s\n' $missing >&2
-    exit 1
-fi
-
-echo "Every messages key used in code exists in messages.en.yaml."
+echo "Every key used in code exists in its en catalogue (messages, privacy, terms)."

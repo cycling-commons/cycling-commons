@@ -829,6 +829,23 @@ because it is the only written description of how one should behave.
        the translation shows as behind the English on the target.
        Suppressing that would hide real work.
 
+
+### 6.2 The privacy notice and the terms are not translated on the site
+
+The privacy notice and the terms of use are legal texts. Each is one file per
+page per language, in its own domain: `translations/privacy.<locale>.yaml`
+and `translations/terms.<locale>.yaml` (owner 2026-10-09). The in-site
+translation system works on the `messages` domain only (`CatalogueSync`,
+`OverlayTranslator`, `MarkedTranslator`, the DeepL draft tool), so these pages
+cannot be proposed, overlaid or marked in translate mode; a change to them is a
+change in git, by a developer, reviewed like code. The history of one file is
+then the record of every change to that page in that language, and each page
+links its own file's history (privacy-notice.md). Both pages carry a version
+number and date with what changed, newest first (`PrivacyNoticeVersions`,
+`TermsVersions`); the terms started at version 1 of 1 August 2026. The parity gate and the
+used-keys check cover both domains (`web/tools/check-translations.sh`,
+`web/tools/check-used-translations.sh`).
+
 ---
 
 ## 7. DeepL as a developer tool

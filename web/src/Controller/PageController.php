@@ -707,6 +707,8 @@ final class PageController extends AbstractController
             'page_title' => 'meta.terms_title',
             'page_description' => 'meta.terms_description',
             'nav_active' => '',
+            'terms_versions' => \App\Legal\TermsVersions::all(),
+            'terms_current' => \App\Legal\TermsVersions::current(),
         ]);
     }
 
