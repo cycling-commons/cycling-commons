@@ -199,6 +199,20 @@ final class SeedWikidataPlacesCommandTest extends KernelTestCase
         self::assertSame('waterfall', $this->attributes('wikidata:Q3')['type'] ?? null);
     }
 
+    public function testAnOldArtifactsHeritageSiteIsSeededAsTheCastleItWas(): void
+    {
+        // The same reading Version20261007140000 gives the rows already seeded,
+        // so a re-seed does not undo it: Q23413 (castle) was the only class filed as Heritage site.
+        $castle = $this->place('Q4', 'Burg test', 50.16, 5.16);
+        $castle['type'] = 'Heritage site';
+        $this->artifact('be', [], [$castle]);
+
+        $this->run_()->assertCommandIsSuccessful();
+        $this->run_()->assertCommandIsSuccessful();
+
+        self::assertSame('castle', $this->attributes('wikidata:Q4')['type'] ?? null);
+    }
+
     /** @param array<string, mixed> $args */
     private function run_(array $args = []): CommandTester
     {

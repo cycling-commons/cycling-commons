@@ -15,32 +15,37 @@ use Doctrine\Migrations\AbstractMigration;
  *
  * Per item, the first answer wins:
  * 1. the linked OSM point's tag (`coverage_poi`, joined on `osm_ref`, else an
- *    OSM `source_ref`), when the pipeline's table exists;
- * 2. the Type, when one old label is one kind (Museum / culture → museum; the
- *    own kinds keep their labels: Natural feature, Heritage site, Architecture),
- *    or Viewpoint / high point on a Scout row: only the device's VIEW wrote it;
+ *    OSM `source_ref`), when the pipeline's table exists; a harvested kind
+ *    before one the harvest leaves out, as the pipeline reads it;
+ * 2. the Type, when it is a kind already, or one old label is one kind
+ *    (Museum / culture → museum; the own kinds keep their labels: Natural
+ *    feature, Heritage site, Architecture), or Viewpoint / high point on a
+ *    Scout row: only the device's VIEW wrote it;
  * 3. the import's `t` label (Castle → castle).
- * A Heritage site whose name says castle ("… Castle", "Castle of …",
- * "Château …", "Castello …") is a castle (owner 2026-10-08): the Wikidata
- * harvest filed its castles as Heritage site.
+ * Heritage site on a `wikidata` row is a castle: Q23413 (castle) was the only
+ * Wikidata class the harvest (tools/wikimedia/country_places.py) ever filed
+ * under it. A person's own change to that Type keeps Heritage site.
  * No answer clears the Type: a label naming two OSM kinds (Viewpoint / high
  * point: a viewpoint or a peak; Religious site: a monastery or a place of
- * worship) leaves the decision to a curator.
+ * worship) leaves the decision to a curator. A second run changes nothing.
  *
- * Pending submissions get the same reading of their proposed Type. Decided
- * submissions and change history keep what was said then.
+ * Submissions a curator can still approve (pending, needs info, and those in
+ * Trash from either) get the same reading of their proposed Type, in the
+ * payload and in `changes`, which an approval applies. Decided submissions and
+ * change history keep what was said then.
  *
  * The tables are a frozen copy of App\Catalog\PlaceKind on this date.
  */
 final class Version20261007140000 extends AbstractMigration
 {
-    /** Letter → [OSM key, value, kind], in match order. */
+    /** Letter → [OSM key, value, kind], in match order: harvested kinds first. */
     private const array RULES = [
         'P' => [
-            ['tourism', 'viewpoint', 'viewpoint'], ['natural', 'peak', 'peak'],
+            ['tourism', 'viewpoint', 'viewpoint'],
             ['waterway', 'waterfall', 'waterfall'], ['waterway', 'rapids', 'rapids'],
             ['natural', 'cliff', 'cliff'], ['natural', 'cave_entrance', 'cave'],
             ['natural', 'arch', 'arch'], ['natural', 'rock', 'rock'], ['natural', 'stone', 'stone'],
+            ['natural', 'peak', 'peak'],
         ],
         'Q' => [
             ['historic', 'castle', 'castle'], ['historic', 'fort', 'fort'], ['historic', 'ruins', 'ruins'],
@@ -66,14 +71,11 @@ final class Version20261007140000 extends AbstractMigration
         ],
     ];
 
-    /** A name that says castle, in the Wikidata harvest's English labels. */
-    private const string CASTLE_NAME = '/\bcastle\b|^ch[aâ]teau\b|^castello\b/iu';
+    /** The Wikidata harvest's Heritage site: its one class, Q23413, is a castle. */
+    private const string WIKIDATA_HERITAGE = 'Heritage site';
 
-    /** Kind → the old label `down()` restores. */
-    private const array DOWN = [
-        'P' => ['viewpoint' => 'Viewpoint / high point', 'nature' => 'Natural feature', '*' => 'Natural feature'],
-        'Q' => ['museum' => 'Museum / culture', 'worship' => 'Religious site', 'monument' => 'Monument', 'architecture' => 'Architecture', 'heritage' => 'Heritage site', '*' => 'Heritage site'],
-    ];
+    /** Submissions a curator can still approve, directly or once restored from Trash. */
+    private const string OPEN_SUBMISSION_SQL = "(status IN ('pending', 'needs_info') OR (status = 'trashed' AND trashed_from IN ('pending', 'needs_info')))";
 
     #[\Override]
     public function getDescription(): string
@@ -90,19 +92,19 @@ final class Version20261007140000 extends AbstractMigration
             : '';
         $tags = $withOsm ? 'cp.tags::text' : 'NULL';
         $rows = $this->connection->fetchAllAssociative(
-            "SELECT i.id, i.letter, i.name, i.source, i.attributes->>'type' AS type, i.attributes->>'t' AS t, {$tags} AS tags
+            "SELECT i.id, i.letter, i.source, i.attributes->>'type' AS type, i.attributes->>'t' AS t, {$tags} AS tags,
+                    EXISTS (SELECT 1 FROM change_history h WHERE h.item_id = i.id AND h.field = 'type' AND h.changed_by <> 0) AS type_chosen
                FROM item i {$osm} WHERE i.letter IN ('P', 'Q')"
         );
         foreach ($rows as $row) {
             $letter = (string) $row['letter'];
+            $type = null !== $row['type'] ? (string) $row['type'] : null;
             $tagList = null !== $row['tags'] ? json_decode((string) $row['tags'], true) : [];
-            $scoutView = 'scout' === $row['source'] && 'P' === $letter && 'Viewpoint / high point' === $row['type'] ? 'viewpoint' : null;
+            $castle = 'wikidata' === $row['source'] && self::WIKIDATA_HERITAGE === $type && !$row['type_chosen'] ? 'castle' : null;
             $kind = $this->fromTags($letter, \is_array($tagList) ? $tagList : [])
-                ?? self::LABELS[$letter][(string) $row['type']] ?? $scoutView ?? self::LABELS[$letter][(string) $row['t']] ?? null;
-            if ('heritage' === $kind && 1 === preg_match(self::CASTLE_NAME, (string) $row['name'])) {
-                $kind = 'castle';
-            }
-            if ($kind === $row['type'] || (null === $kind && null === $row['type'])) {
+                ?? $this->fromType($letter, $type, 'scout' === $row['source'], $castle)
+                ?? self::LABELS[$letter][(string) $row['t']] ?? null;
+            if ($kind === $type) {
                 continue;
             }
             $this->addSql(
@@ -114,21 +116,22 @@ final class Version20261007140000 extends AbstractMigration
             );
         }
 
-        $pending = $this->connection->fetchAllAssociative(
-            "SELECT id, letter, payload->>'via' AS via, payload->'details'->>'type' AS type FROM submission
-              WHERE letter IN ('P', 'Q') AND status = 'pending' AND payload->'details'->'type' IS NOT NULL"
+        $open = $this->connection->fetchAllAssociative(
+            "SELECT id, letter, payload->>'via' AS via, COALESCE(payload->'details'->>'type', changes->'type'->>'now') AS type FROM submission
+              WHERE letter IN ('P', 'Q') AND ".self::OPEN_SUBMISSION_SQL."
+                AND (payload->'details'->'type' IS NOT NULL OR changes->'type'->'now' IS NOT NULL)"
         );
-        foreach ($pending as $row) {
-            $kind = self::LABELS[(string) $row['letter']][(string) $row['type']]
-                ?? ('scout' === $row['via'] && 'P' === $row['letter'] && 'Viewpoint / high point' === $row['type'] ? 'viewpoint' : null);
-            if ($kind === $row['type']) {
+        foreach ($open as $row) {
+            $type = null !== $row['type'] ? (string) $row['type'] : null;
+            $kind = $this->fromType((string) $row['letter'], $type, 'scout' === $row['via'], null);
+            if ($kind === $type) {
                 continue;
             }
             $this->addSql(
                 null === $kind
                     ? "UPDATE submission SET payload = payload #- '{details,type}', changes = changes - 'type' WHERE id = :id"
-                    : "UPDATE submission SET payload = jsonb_set(payload, '{details,type}', to_jsonb(CAST(:kind AS text))),
-                              changes = CASE WHEN changes->'type' IS NOT NULL THEN jsonb_set(changes, '{type,now}', to_jsonb(CAST(:kind AS text))) ELSE changes END
+                    : "UPDATE submission SET payload = CASE WHEN payload->'details'->'type' IS NOT NULL THEN jsonb_set(payload, '{details,type}', to_jsonb(CAST(:kind AS text))) ELSE payload END,
+                              changes = CASE WHEN changes->'type'->'now' IS NOT NULL THEN jsonb_set(changes, '{type,now}', to_jsonb(CAST(:kind AS text))) ELSE changes END
                         WHERE id = :id",
                 null === $kind ? ['id' => $row['id']] : ['id' => $row['id'], 'kind' => $kind],
             );
@@ -138,20 +141,27 @@ final class Version20261007140000 extends AbstractMigration
     #[\Override]
     public function down(Schema $schema): void
     {
-        foreach (self::DOWN as $letter => $labels) {
-            foreach ($labels as $kind => $label) {
-                if ('*' === $kind) {
-                    continue;
-                }
-                $this->addSql("UPDATE item SET attributes = jsonb_set(attributes, '{type}', to_jsonb(CAST(:label AS text)))
-                               WHERE letter = :letter AND attributes->>'type' = :kind", ['label' => $label, 'letter' => $letter, 'kind' => $kind]);
-            }
-            $this->addSql("UPDATE item SET attributes = jsonb_set(attributes, '{type}', to_jsonb(CAST(:label AS text)))
-                           WHERE letter = :letter AND attributes->>'type' = ANY(CAST(:kinds AS text[]))", [
-                'label' => $labels['*'], 'letter' => $letter,
-                'kinds' => '{'.implode(',', array_diff(array_column(self::RULES[$letter], 2), array_keys($labels))).'}',
-            ]);
+        $this->throwIrreversibleMigrationException(
+            'P/Q kinds cannot become the old Types again: several labels read as one kind, broad labels were cleared, and submissions were rewritten. Restore a backup taken before this migration.'
+        );
+    }
+
+    /**
+     * The kind a stored or proposed Type says: a kind is its own answer, then
+     * the Wikidata castle, an exact label, or a Scout viewpoint.
+     */
+    private function fromType(string $letter, ?string $type, bool $scout, ?string $castle): ?string
+    {
+        if (null === $type) {
+            return null;
         }
+        if (\in_array($type, self::LABELS[$letter], true)) {
+            return $type;
+        }
+
+        return $castle
+            ?? self::LABELS[$letter][$type]
+            ?? ($scout && 'P' === $letter && 'Viewpoint / high point' === $type ? 'viewpoint' : null);
     }
 
     /** @param array<string, mixed> $tags */

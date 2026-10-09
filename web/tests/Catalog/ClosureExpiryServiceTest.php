@@ -161,6 +161,48 @@ final class ClosureExpiryServiceTest extends KernelTestCase
         self::assertSame([], $this->service()->due());
     }
 
+    public function testAnImpossibleStoredDateFallsBackToTheUploadAndBreaksNothing(): void
+    {
+        // A hand-made payload can hold any string: one bad row must not stop every sweep.
+        $bad = $this->hazard('scout-nodate', ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Days'], '2026-05-30 08:00:00');
+        $this->creatingSubmission($bad, '2026-02-30');
+        $stale = $this->hazard('scout-stale', ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Days'], '2026-03-01 08:00:00');
+
+        $due = $this->service()->due();
+
+        self::assertSame([(int) $stale->getId()], array_column($due, 'id'), 'the bad date reads as the upload, two days ago');
+    }
+
+    public function testADeviceClockFarBehindIsIgnored(): void
+    {
+        // The FIT epoch: a device with no clock fix. Taken at its word, a closure seen yesterday would retire at once.
+        $item = $this->hazard('scout-epoch', ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Days'], '2026-05-31 08:00:00');
+        $this->creatingSubmission($item, '1989-12-31');
+
+        self::assertSame([], $this->service()->due());
+    }
+
+    public function testADeviceClockAheadIsClampedToTheUpload(): void
+    {
+        // Taken at its word, 2099 would keep the closure on the map for ever.
+        $item = $this->hazard('scout-ahead', ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Days'], '2026-03-01 08:00:00');
+        $this->creatingSubmission($item, '2099-01-01');
+
+        $due = $this->service()->due();
+
+        self::assertSame([(int) $item->getId()], array_column($due, 'id'));
+        self::assertSame('2026-03-01', $due[0]['observedAt']);
+    }
+
+    public function testTheNewestObservationComesFirst(): void
+    {
+        $older = $this->hazard('order-old', ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Today'], '2026-02-01 08:00:00');
+        $newer = $this->hazard('order-new', ['hazardType' => ClosureLifetime::CLOSED_TYPE, 'closedFor' => 'Today'], '2026-05-31 08:00:00');
+        $this->creatingSubmission($newer, '2026-04-01');
+
+        self::assertSame([(int) $newer->getId(), (int) $older->getId()], array_column($this->service()->due(), 'id'));
+    }
+
     private function creatingSubmission(Item $item, string $observedAt): void
     {
         $user = new User();

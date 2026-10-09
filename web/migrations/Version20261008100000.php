@@ -39,6 +39,8 @@ final class Version20261008100000 extends AbstractMigration
     #[\Override]
     public function down(Schema $schema): void
     {
-        // The merge is many to one: the earlier types cannot be told apart again.
+        $this->throwIrreversibleMigrationException(
+            'The stay type merge is many to one: a guest house, a chalet or a hostel cannot be told apart from a merged B&B, gîte or budget stay again.'
+        );
     }
 }

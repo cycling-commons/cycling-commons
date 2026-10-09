@@ -80,7 +80,7 @@ final class LinkOsmCommand extends Command
         $review = [];
         $taken = [];
         foreach ($rows as $row) {
-            $found = '' !== trim((string) $row['name'])
+            $found = (bool) $row['named']
                 ? $this->linker->candidateFor(
                     (string) $row['letter'], (string) $row['name'],
                     (float) $row['lat'], (float) $row['lng'],
@@ -136,7 +136,10 @@ final class LinkOsmCommand extends Command
 
     /**
      * An unnamed legacy OSM row: its position is the OSM point's own, so the
-     * point it sits on (OsmLinker::ON_TOP_M, no name) is the one.
+     * nearest point within OsmLinker::ON_TOP_M (no name) is the one. When
+     * another row claims it, this row is that row's duplicate: the caller
+     * reports it as claimed, and a point a few metres further is never taken
+     * in its place.
      *
      * @param array<string, mixed> $row
      *
@@ -144,7 +147,7 @@ final class LinkOsmCommand extends Command
      */
     private function onTop(array $row): ?array
     {
-        $ref = $this->linker->onTopOf((string) $row['letter'], (float) $row['lat'], (float) $row['lng'], (int) $row['id']);
+        $ref = $this->linker->nearestOnTop((string) $row['letter'], (float) $row['lat'], (float) $row['lng']);
 
         return null === $ref ? null : ['ref' => $ref, 'name' => '', 'distanceM' => 0.0, 'confident' => true];
     }
@@ -172,14 +175,16 @@ final class LinkOsmCommand extends Command
         // An `osm` row whose source_ref IS an OSM ref needs no link; one from a
         // legacy import keeps a made-up ref (`fx:water:50.47447,5.86273`) and
         // does. `auto` rows are pipeline-derived with no real-world
-        // counterpart to link.
-        $sql = "SELECT i.id, i.letter, i.source, i.name,
+        // counterpart to link. A name of only whitespace is no name, here and
+        // in execute(), which reads `named`: only an OSM row links by position.
+        $named = "COALESCE(i.name ~ '[^[:space:]]', false)";
+        $sql = "SELECT i.id, i.letter, i.source, i.name, {$named} AS named,
                        ST_Y(ST_Centroid(i.geom)) AS lat, ST_X(ST_Centroid(i.geom)) AS lng
                   FROM item i
                  WHERE i.source <> 'auto'
                    AND NOT (i.source = 'osm' AND i.source_ref ~ '^(node|way|relation)/[0-9]+$')
                    AND i.state IN ".ItemState::servedSqlTuple()."
-                   AND (COALESCE(i.name, '') <> '' OR i.source = 'osm')
+                   AND ({$named} OR i.source = 'osm')
                    AND i.geom IS NOT NULL";
         $params = [];
         if (!$relink) {

@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Scout;
 
 use App\Catalog\CatalogFormRegistry;
+use App\Catalog\ClosureExpiryService;
 use App\Catalog\Entity\Item;
 use App\Catalog\Entity\Submission;
 use App\Catalog\ItemSource;
@@ -102,9 +103,10 @@ final class ScoutIntakeTest extends WebTestCase
         $client = static::createClient();
         $this->login($client, 'date');
 
+        $tapped = new \DateTimeImmutable('-20 days', new \DateTimeZone('UTC'));
         $this->post($client, [
             'tag' => 'scenery', 'letter' => 'P', 'lat' => 50.51, 'lng' => 6.06,
-            'observedAt' => '2026-01-12T14:03:00Z',
+            'observedAt' => $tapped->format('Y-m-d').'T14:03:00Z',
             'details' => ['name' => 'Vue sur la vallée', 'type' => 'viewpoint'],
         ]);
 
@@ -112,7 +114,40 @@ final class ScoutIntakeTest extends WebTestCase
         $em = static::getContainer()->get(EntityManagerInterface::class);
         $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Vue sur la vallée']);
         self::assertNotNull($submission);
-        self::assertSame('2026-01-12', $submission->getPayload()['observedAt'] ?? null);
+        self::assertSame($tapped->format('Y-m-d'), $submission->getPayload()['observedAt'] ?? null);
+    }
+
+    public function testAnImplausibleObservationDateIsNotKept(): void
+    {
+        // A device with no clock fix reports the FIT epoch, 1989-12-31; one
+        // set ahead reports a year that has not come. Neither may start, or
+        // stop, a closure's clock (ClosureExpiryService): the upload date stands.
+        $client = static::createClient();
+        $this->login($client, 'baddate');
+        $ancient = new \DateTimeImmutable('-'.(ClosureExpiryService::OBSERVED_MAX_AGE_DAYS + 2).' days', new \DateTimeZone('UTC'));
+        $dates = [
+            'epoch' => '1989-12-31T00:00:00Z',
+            'future' => '2099-01-01T08:00:00Z',
+            'tomorrow+' => (new \DateTimeImmutable('+3 days'))->format('Y-m-d\\TH:i:s\\Z'),
+            'old' => $ancient->format('Y-m-d').'T08:00:00Z',
+            'nodate' => '2026-02-30',
+            'words' => 'yesterday',
+        ];
+        foreach ($dates as $name => $observed) {
+            $this->post($client, [
+                'tag' => 'notice', 'letter' => 'E', 'lat' => 50.52, 'lng' => 6.07,
+                'observedAt' => $observed,
+                'details' => ['name' => 'Date test '.$name, 'hazardType' => 'Road closed'],
+            ]);
+            self::assertResponseIsSuccessful();
+        }
+
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        foreach (array_keys($dates) as $name) {
+            $submission = $em->getRepository(Submission::class)->findOneBy(['title' => 'Date test '.$name]);
+            self::assertNotNull($submission, $name);
+            self::assertNull($submission->getPayload()['observedAt'] ?? null, $name.' is not a date the rider was there');
+        }
     }
 
     /** @return array{a: array{float, float}, b: array{float, float}, line: list<array{float, float}>} */

@@ -191,6 +191,44 @@ final class CoverageQueryTest extends WebTestCase
         self::assertSame('waterfall', $results[0]['kind'] ?? null);
     }
 
+    public function testAShelterOrStayItemsKindShowsInSearchAndNearby(): void
+    {
+        // osm-data-architecture.md §5a: every typed letter (PlaceKind::TYPED_LETTERS) carries its kind, G and O included.
+        $client = static::createClient();
+        self::ensureCoverageSchema($this->db());
+        $item = $this->item('manual:abri-kind', 'Abri du col test', 50.4, 5.8, 'G');
+        $item->setAttributes(['type' => 'lean_to']);
+        $stay = $this->item('manual:stay-kind', 'Abri hotel test', 50.4005, 5.8, 'O');
+        $stay->setAttributes(['type' => 'hotel']);
+        static::getContainer()->get(EntityManagerInterface::class)->flush();
+
+        $hits = $this->getJson($client, '/map/coverage/search?q=Abri')['results'];
+        $byLetter = array_column($hits, null, 'letter');
+        self::assertSame('lean_to', $byLetter['G']['kind'] ?? null);
+        self::assertSame('hotel', $byLetter['O']['kind'] ?? null);
+
+        $groups = array_column($this->getJson($client, '/map/coverage/nearby?lat=50.4&lng=5.8&km=1')['groups'], null, 'letter');
+        self::assertSame('lean_to', $groups['G']['items'][0]['kind'] ?? null);
+        self::assertSame('hotel', $groups['O']['items'][0]['kind'] ?? null);
+    }
+
+    public function testACommunityPointsKindComesFromItsTagsUntilThePipelineStampsIt(): void
+    {
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, ['ref' => 'node/9311', 'letter' => 'G', 'name' => 'Hutte test', 'tags' => ['amenity' => 'shelter', 'shelter_type' => 'basic_hut'], 'lat' => 50.4, 'lng' => 5.8]);
+        self::insertCoveragePoi($db, ['ref' => 'node/9312', 'letter' => 'O', 'name' => 'Hutte hotel test', 'tags' => ['tourism' => 'hotel'], 'lat' => 50.4001, 'lng' => 5.8]);
+
+        $hits = array_column($this->getJson($client, '/map/coverage/search?q=Hutte')['results'], null, 'letter');
+        self::assertSame('basic_hut', $hits['G']['kind'] ?? null);
+        self::assertSame('hotel', $hits['O']['kind'] ?? null);
+
+        $groups = array_column($this->getJson($client, '/map/coverage/nearby?lat=50.4&lng=5.8&km=1')['groups'], null, 'letter');
+        self::assertSame('basic_hut', $groups['G']['items'][0]['kind'] ?? null);
+        self::assertSame('hotel', $groups['O']['items'][0]['kind'] ?? null, 'nearby reads the tags too, as search and the drawer do');
+    }
+
     public function testSearchSaysWhereEachHitIsAndWhatKindItIs(): void
     {
         // Five castles share the name "Château Gaillard": the region tells them

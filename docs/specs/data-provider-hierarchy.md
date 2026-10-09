@@ -806,10 +806,16 @@ row and the registry, in this order: a verified row is ours (the riders, or a
 curator, took it at the threshold); a provider row whose `data_provider.letters`
 carries the row's letter is specialty; any other provider row is gross; an
 `osm` or `wikidata` row with no registry row of its own is gross until a person
-changes it (a `change_history` row by someone other than the system clock, a
-verification aside) and ours from then on, still with its "?" until somebody
-stands there (owner 2026-10-08: a copy we changed is our own item); everything
-else (a rider's, Scout's or a curator's own row) is ours. `imported_at` counts
+changes it and ours from then on, still with its "?" until somebody stands
+there (owner 2026-10-08: if we change anything on an OSM item it becomes our
+own item). A change is either a `change_history` row on a field by someone
+other than the system clock (a `state` row, the verification or an approval,
+is none), or an approved submission (in Trash or not) by a person whose
+`changes` hold a field whose `now` differs from its `was`. The second is how a
+place a rider added from an OSM point counts: it is written at intake, and its
+approval records only the `state`. A place taken from an OSM point with its
+values as they were stays gross. Everything else (a rider's, Scout's or a
+curator's own row) is ours. `imported_at` counts
 as an upstream sighting only on a provider row.
 
 **One resolver, two readers.** `ItemEvidenceResolver::selectSql()` names the

@@ -48,6 +48,34 @@ final class PlaceKindTest extends TestCase
         self::assertSame('castle', PlaceKind::fromOsmTags('Q', ['historic' => 'castle', 'tourism' => 'museum']));
     }
 
+    public function testAHarvestedKindBeatsOneTheHarvestLeavesOut(): void
+    {
+        // The pipeline knows harvested kinds only: a waterfall on a summit is a waterfall on both sides.
+        self::assertSame('waterfall', PlaceKind::fromOsmTags('P', ['natural' => 'peak', 'waterway' => 'waterfall']));
+        self::assertSame('castle', PlaceKind::fromOsmTags('Q', ['amenity' => 'place_of_worship', 'historic' => 'castle']));
+        foreach (PlaceKind::TYPED_LETTERS as $letter) {
+            $tags = [];
+            foreach (array_keys(PlaceKind::harvestRules($letter)) as $rule) {
+                [$key, $value] = explode('=', $rule, 2);
+                $tags[$key] ??= $value;
+            }
+            $first = PlaceKind::fromOsmTags($letter, $tags);
+            self::assertContains($first, PlaceKind::harvestRules($letter), $letter.': a harvested kind answers first');
+        }
+    }
+
+    public function testAWikidataHeritageSiteIsACastle(): void
+    {
+        // Q23413 (castle) was the only class tools/wikimedia/country_places.py filed under Heritage site.
+        self::assertSame('castle', PlaceKind::fromWikidataLabel('Q', 'Heritage site'));
+        self::assertSame('castle', PlaceKind::fromWikidataLabel('Q', 'castle'));
+        self::assertSame('monument', PlaceKind::fromWikidataLabel('Q', 'Monument'));
+        self::assertNull(PlaceKind::fromWikidataLabel('Q', 'Religious site'));
+        self::assertSame('nature', PlaceKind::fromWikidataLabel('P', 'Natural feature'));
+        self::assertNull(PlaceKind::fromWikidataLabel('P', 'Viewpoint / high point'));
+        self::assertNull(PlaceKind::fromWikidataLabel('P', null));
+    }
+
     public function testOldLabelsMapOnlyWhereTheyAreExact(): void
     {
         self::assertSame('viewpoint', PlaceKind::fromLabel('P', 'Viewpoint'));

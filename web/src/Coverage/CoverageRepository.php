@@ -331,7 +331,7 @@ final class CoverageRepository
         /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, region: string|null, rid: int|string|null, lat: string|float, lng: string|float}> $curated */
         $curated = $this->db->fetchAllAssociative(
             "SELECT i.id AS item_id, i.source_ref AS ref, i.letter, i.name,
-                    COALESCE(i.attributes->>'serviceKind', CASE WHEN i.letter IN ('P', 'Q') THEN i.attributes->>'type' END) AS kind,
+                    COALESCE(i.attributes->>'serviceKind', CASE WHEN i.letter IN ".self::placeLettersSql()." THEN i.attributes->>'type' END) AS kind,
                     r.name AS region, i.region_id AS rid,
                     ST_Y(i.geom) AS lat, ST_X(i.geom) AS lng
              FROM item i
@@ -358,9 +358,10 @@ final class CoverageRepository
             $covParams = ['like' => $like, 'q' => $q, 'limit' => $remaining];
             $covTypes = ['limit' => ParameterType::INTEGER];
             $this->scopeBind($covParams, $covTypes, $rids, $cc);
-            /** @var list<array{ref: string, letter: string, name: string|null, kind: string|null, region: string|null, tags: string, lat: string|float, lng: string|float}> $coverage */
+            /** @var list<array{ref: string, letter: string, name: string|null, kind: string|null, region: string|null, tags: string|null, lat: string|float, lng: string|float}> $coverage */
             $coverage = $this->db->fetchAllAssociative(
-                'SELECT cp.ref, cp.letter, cp.name, cp.kind, r.name AS region, cp.tags::text AS tags, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
+                // Tags are read only where the pipeline has not stamped the kind.
+                'SELECT cp.ref, cp.letter, cp.name, cp.kind, r.name AS region, CASE WHEN cp.kind IS NULL THEN cp.tags::text END AS tags, ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng
                  FROM coverage_poi cp
                  LEFT JOIN region r ON r.id = cp.region_id
                  WHERE cp.name ILIKE :like
@@ -402,7 +403,7 @@ final class CoverageRepository
         /** @var list<array{item_id: int|string, ref: string, letter: string, name: string, kind: string|null, lat: string|float, lng: string|float}> $curated */
         $curated = $this->db->fetchAllAssociative(
             "SELECT i.id AS item_id, i.source_ref AS ref, i.letter, i.name,
-                    COALESCE(i.attributes->>'serviceKind', CASE WHEN i.letter IN ('P', 'Q') THEN i.attributes->>'type' END) AS kind,
+                    COALESCE(i.attributes->>'serviceKind', CASE WHEN i.letter IN ".self::placeLettersSql()." THEN i.attributes->>'type' END) AS kind,
                     ST_Y(i.geom) AS lat, ST_X(i.geom) AS lng
              FROM item i
              WHERE i.letter IN ".self::POI_LETTERS_SQL.'
@@ -416,10 +417,10 @@ final class CoverageRepository
             $curatedTypes,
         );
 
-        /** @var list<array{letter: string, ref: string, name: string|null, kind: string|null, lat: string|float, lng: string|float, letter_total: int|string}> $community */
+        /** @var list<array{letter: string, ref: string, name: string|null, kind: string|null, tags: string|null, lat: string|float, lng: string|float, letter_total: int|string}> $community */
         $community = $this->db->fetchAllAssociative(
-            "SELECT letter, ref, name, kind, lat, lng, letter_total FROM (
-                 SELECT cp.letter, cp.ref, cp.name, cp.kind,
+            "SELECT letter, ref, name, kind, tags, lat, lng, letter_total FROM (
+                 SELECT cp.letter, cp.ref, cp.name, cp.kind, CASE WHEN cp.kind IS NULL THEN cp.tags::text END AS tags,
                         ST_Y(cp.geom) AS lat, ST_X(cp.geom) AS lng,
                         ROW_NUMBER() OVER (PARTITION BY cp.letter ORDER BY ST_Distance(cp.geom::geography, $point), cp.id) AS rn,
                         COUNT(*) OVER (PARTITION BY cp.letter) AS letter_total
@@ -530,14 +531,23 @@ final class CoverageRepository
     }
 
     /**
-     * A P or Q point's kind from its OSM tags, for a row the pipeline has not
-     * stamped yet (osm-data-architecture.md §5a).
+     * A typed letter's kind from its OSM tags, for a row the pipeline has not
+     * stamped yet (osm-data-architecture.md §5a). Every letter with a kind
+     * Type (PlaceKind::TYPED_LETTERS) serves it in search, nearby and the
+     * drawer alike: the map draws a glyph where KindIcons has one (G, P, Q),
+     * and the wizard opened on an OSM stay starts on its type (O).
      *
      * @param array<string, mixed> $tags
      */
     private static function placeKindOf(string $letter, array $tags): ?string
     {
         return \in_array($letter, PlaceKind::TYPED_LETTERS, true) ? PlaceKind::fromOsmTags($letter, $tags) : null;
+    }
+
+    /** PlaceKind::TYPED_LETTERS as an SQL tuple: the letters whose Type is the served kind. */
+    private static function placeLettersSql(): string
+    {
+        return "('".implode("', '", PlaceKind::TYPED_LETTERS)."')";
     }
 
     /**

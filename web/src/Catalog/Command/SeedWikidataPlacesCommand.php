@@ -224,8 +224,7 @@ final class SeedWikidataPlacesCommand extends Command
             'photo' => self::commonsPhoto($photo['file'], $photo['credit'], $photo['user'], $photo['license'], $photo['camera'] ?? null),
         ];
         // A P or Q Type is a kind, one OSM tag (osm-data-architecture.md §5a): a broad label is left for a curator.
-        $rawType = (string) ($place['type'] ?? '');
-        $kind = null !== PlaceKind::label($type->letter(), $rawType) ? $rawType : PlaceKind::fromLabel($type->letter(), $rawType);
+        $kind = PlaceKind::fromWikidataLabel($type->letter(), \is_string($place['type'] ?? null) ? $place['type'] : null);
         if (null !== $kind) {
             $attributes['type'] = $kind;
         }

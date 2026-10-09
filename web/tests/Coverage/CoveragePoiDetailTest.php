@@ -274,6 +274,23 @@ final class CoveragePoiDetailTest extends WebTestCase
         self::assertSame('ruins', $data['kind']);
     }
 
+    public function testEveryTypedLetterNamesItsKindFromItsTags(): void
+    {
+        // osm-data-architecture.md §5a: G and O too (PlaceKind::TYPED_LETTERS); an O point has no glyph, but the wizard starts on its type.
+        $client = static::createClient();
+        $db = $this->db();
+        self::ensureCoverageSchema($db);
+        self::insertCoveragePoi($db, [
+            'ref' => 'node/8802', 'letter' => 'O', 'name' => 'Hotel test', 'tags' => ['tourism' => 'hotel'],
+        ]);
+        self::insertCoveragePoi($db, [
+            'ref' => 'node/8803', 'letter' => 'G', 'name' => 'Abri test', 'tags' => ['amenity' => 'shelter', 'shelter_type' => 'lean_to'],
+        ]);
+
+        self::assertSame('hotel', $this->getJson($client, '/map/coverage/poi/node/8802')['kind']);
+        self::assertSame('lean_to', $this->getJson($client, '/map/coverage/poi/node/8803')['kind']);
+    }
+
     public function testCuratedOverlayMergesItemFieldsAndConfirmations(): void
     {
         $client = static::createClient();

@@ -63,8 +63,25 @@ final class ItemEvidenceResolver
                            WHERE ev_dp.id = {$i}.provider_id AND ev_dp.survey_date_attribute IS NOT NULL),
                          {$i}.attributes->>'check_date') AS ev_witness,
                 {$i}.custody_reclaimed_at AS ev_reclaimed,
-                EXISTS (SELECT 1 FROM change_history ev_h WHERE ev_h.item_id = {$i}.id
-                         AND ev_h.changed_by <> ".ChangeHistory::SYSTEM_ACTOR." AND ev_h.field <> 'state') AS ev_edited";
+                (EXISTS (SELECT 1 FROM change_history ev_h WHERE ev_h.item_id = {$i}.id
+                          AND ev_h.changed_by <> ".ChangeHistory::SYSTEM_ACTOR." AND ev_h.field <> 'state')
+                 OR EXISTS (SELECT 1 FROM submission ev_s
+                              CROSS JOIN LATERAL jsonb_each(CASE WHEN jsonb_typeof(ev_s.changes) = 'object' THEN ev_s.changes ELSE '{}'::jsonb END) ev_f
+                             WHERE ev_s.item_id = {$i}.id AND ev_s.user_id <> ".ChangeHistory::SYSTEM_ACTOR.'
+                               AND '.self::approvedSql('ev_s')."
+                               AND ev_f.value->'was' IS DISTINCT FROM ev_f.value->'now')) AS ev_edited";
+    }
+
+    /**
+     * An approved submission, in Trash or not: what it changed was applied.
+     * A place a rider added from an OSM point is written at intake and its
+     * approval records only the `state`, so its submission is the edit.
+     */
+    private static function approvedSql(string $s): string
+    {
+        $approved = "'".SubmissionStatus::Approved->value."'";
+
+        return "({$s}.status = {$approved} OR ({$s}.status = '".SubmissionStatus::Trashed->value."' AND {$s}.trashed_from = {$approved}))";
     }
 
     /**

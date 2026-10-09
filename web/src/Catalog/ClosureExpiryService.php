@@ -17,12 +17,26 @@ use Symfony\Contracts\Cache\ItemInterface;
 /**
  * Retires closures whose stated window has run out. Clock starts at last observation, not created_at. Retire, never delete. `form` confirmations do not count.
  *
+ * The observation is the Scout tap date when it is a plausible one
+ * (observedDate()), never later than the upload; anything else is the upload
+ * itself. One bad payload never breaks the sweep: the date is read in PHP,
+ * never cast in SQL.
+ *
  * @see docs/specs/edit-items/E-hazards.md (Closures expire themselves)
  *
  * @api
  */
 final class ClosureExpiryService
 {
+    /**
+     * How far before its upload a Scout tap may be: a year of rides. A device
+     * with no clock fix reports the FIT epoch (1989-12-31), far outside it.
+     */
+    public const int OBSERVED_MAX_AGE_DAYS = 366;
+
+    /** How far past its upload a tap may claim to be: a device clock a little ahead, or a time zone. */
+    public const int OBSERVED_FUTURE_SKEW_HOURS = 24;
+
     private const string CACHE_KEY = 'catalog.closure_expiry.last_sweep';
     private const int CACHE_TTL_SECONDS = 3600;
 
@@ -35,6 +49,37 @@ final class ClosureExpiryService
     }
 
     /**
+     * The day a rider says they were there, when it is one: an ISO date (a
+     * time may follow) that is a real calendar day, no more than
+     * OBSERVED_MAX_AGE_DAYS before `$reference` and no more than
+     * OBSERVED_FUTURE_SKEW_HOURS after it. Null otherwise. The Scout intake
+     * keeps only such a date; the sweep reads a stored one the same way.
+     */
+    public static function observedDate(string $raw, \DateTimeImmutable $reference): ?\DateTimeImmutable
+    {
+        if (1 !== preg_match('/^(\d{4})-(\d{2})-(\d{2})(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/', $raw, $m)
+            || !checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+            return null;
+        }
+        try {
+            $at = new \DateTimeImmutable($raw, new \DateTimeZone('UTC'));
+        } catch (\Exception) {
+            return null;
+        }
+        // A time PHP had to roll over (25:00) is no time.
+        if (false !== \DateTimeImmutable::getLastErrors()) {
+            return null;
+        }
+        $day = new \DateTimeImmutable($at->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d'), new \DateTimeZone('UTC'));
+        if ($at > $reference->modify(sprintf('+%d hours', self::OBSERVED_FUTURE_SKEW_HOURS))
+            || $day < $reference->setTime(0, 0)->modify(sprintf('-%d days', self::OBSERVED_MAX_AGE_DAYS))) {
+            return null;
+        }
+
+        return $day;
+    }
+
+    /**
      * Every served closure that is past its window, newest observation first.
      *
      * @return list<array{id: int, name: string, closedFor: string, observedAt: string, expiresAt: string}>
@@ -43,28 +88,25 @@ final class ClosureExpiryService
     {
         $now = $this->clock->now();
 
-        /** @var list<array{id: int, name: string, attributes: string, observed_at: string}> $rows */
+        /** @var list<array{id: int|string, name: string, attributes: string, created_at: string, tapped: string|null, confirmed: string|null}> $rows */
         $rows = $this->db->fetchAllAssociative(
             // The last sighting: the tap a Scout ride recorded (`observedAt` on
             // the submission that created the row), else the creation date, or
-            // a later existence confirmation. The creation date is no floor: a
-            // ride uploaded days after the tap starts its clock at the tap.
-            "SELECT i.id, i.name, i.attributes,
-                    GREATEST(
-                        COALESCE((SELECT (s.payload->>'observedAt')::timestamp FROM submission s
-                                   WHERE s.item_id = i.id AND s.type = 'new'
-                                     AND s.payload->>'observedAt' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                                   ORDER BY s.id LIMIT 1), i.created_at),
-                        COALESCE((SELECT MAX(c.created_at) FROM item_confirmation c
-                                   WHERE c.item_id = i.id
-                                     AND c.stance = 'exists'
-                                     AND c.source <> 'form'), '-infinity'::timestamp)
-                    ) AS observed_at
+            // a later existence confirmation. The tap is read raw and judged in
+            // PHP: a payload is free text, and one impossible date cast here
+            // would stop the sweep for every closure.
+            "SELECT i.id, i.name, i.attributes, i.created_at,
+                    (SELECT s.payload->>'observedAt' FROM submission s
+                      WHERE s.item_id = i.id AND s.type = 'new'
+                      ORDER BY s.id LIMIT 1) AS tapped,
+                    (SELECT MAX(c.created_at) FROM item_confirmation c
+                      WHERE c.item_id = i.id
+                        AND c.stance = 'exists'
+                        AND c.source <> 'form') AS confirmed
              FROM item i
              WHERE i.letter = 'E'
                AND i.state IN ".ItemState::servedSqlTuple()."
-               AND i.attributes->>'hazardType' = :closed
-             ORDER BY observed_at DESC",
+               AND i.attributes->>'hazardType' = :closed",
             ['closed' => ClosureLifetime::CLOSED_TYPE],
         );
 
@@ -72,7 +114,7 @@ final class ClosureExpiryService
         foreach ($rows as $row) {
             /** @var array<string, mixed> $attrs */
             $attrs = json_decode($row['attributes'], true, 512, \JSON_THROW_ON_ERROR);
-            $observedAt = new \DateTimeImmutable($row['observed_at']);
+            $observedAt = $this->lastSighting($row['created_at'], $row['tapped'], $row['confirmed']);
             $expiresAt = ClosureLifetime::expiresAt($attrs, $observedAt);
             if ($expiresAt > $now) {
                 continue;
@@ -83,10 +125,30 @@ final class ClosureExpiryService
                 'closedFor' => (string) ($attrs[ClosureLifetime::FIELD] ?? 'Unknown'),
                 'observedAt' => $observedAt->format('Y-m-d'),
                 'expiresAt' => $expiresAt->format('Y-m-d'),
+                'at' => $observedAt,
             ];
         }
+        usort($due, static fn (array $a, array $b): int => [$b['at'], $a['id']] <=> [$a['at'], $b['id']]);
 
-        return $due;
+        return array_map(static function (array $d): array {
+            unset($d['at']);
+
+            return $d;
+        }, $due);
+    }
+
+    /**
+     * The upload, or the plausible tap before it, or a later confirmation:
+     * whichever is newest. A tap is never later than the upload.
+     */
+    private function lastSighting(string $createdAt, ?string $tapped, ?string $confirmed): \DateTimeImmutable
+    {
+        $created = new \DateTimeImmutable($createdAt);
+        $tap = null !== $tapped ? self::observedDate($tapped, $created) : null;
+        $sighting = null !== $tap ? min($tap, $created) : $created;
+        $confirmedAt = null !== $confirmed ? new \DateTimeImmutable($confirmed) : null;
+
+        return null !== $confirmedAt && $confirmedAt > $sighting ? $confirmedAt : $sighting;
     }
 
     /**

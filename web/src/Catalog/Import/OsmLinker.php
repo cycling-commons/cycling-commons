@@ -149,38 +149,34 @@ final readonly class OsmLinker
 
     /**
      * The OSM object a moved pin now sits on top of, if any: the nearest of
-     * its letter within ON_TOP_M that no other served row claims. Name is
+     * its letter within ON_TOP_M, when no other served row claims it. Name is
      * not consulted, because the rows this exists for have none (a register
-     * tap moved onto the spot a rider found it at).
+     * tap moved onto the spot a rider found it at). A claimed nearest object
+     * makes the pin a duplicate of its holder, never a link to the next one.
      */
     public function onTopOf(string $letter, float $lat, float $lng, int $exceptItemId): ?string
     {
-        /** @var list<string> $refs */
-        $refs = $this->db->fetchFirstColumn(
+        $ref = $this->nearestOnTop($letter, $lat, $lng);
+
+        return null !== $ref && !$this->refIsTaken($ref, $letter, $exceptItemId) ? $ref : null;
+    }
+
+    /** The nearest OSM object of this letter within ON_TOP_M, claimed or not. */
+    public function nearestOnTop(string $letter, float $lat, float $lng): ?string
+    {
+        $ref = $this->db->fetchOne(
             'SELECT cp.ref
                FROM coverage_poi cp
               WHERE cp.letter = :letter
                 AND ST_DWithin(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)
-              ORDER BY ST_Distance(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography)
-              LIMIT 3',
+              ORDER BY ST_Distance(cp.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography), cp.ref
+              LIMIT 1',
             ['letter' => $letter, 'lat' => $lat, 'lng' => $lng, 'radius' => self::ON_TOP_M],
         );
-        foreach ($refs as $ref) {
-            if (!$this->refIsTaken($ref, $letter, $exceptItemId)) {
-                return $ref;
-            }
-        }
 
-        return null;
+        return false === $ref ? null : (string) $ref;
     }
 
-    /**
-     * True when another served row of this letter already claims that OSM object.
-     *
-     * Identity is exclusive: two served rows pointing at one OSM object are a
-     * duplicate wearing a link. The linker refuses rather than creating one,
-     * and the duplicate desk is where that pair gets sorted out.
-     */
     /**
      * The served row of this letter that already claims that OSM object, if any.
      *
@@ -203,6 +199,13 @@ final readonly class OsmLinker
         return false === $id ? null : (int) $id;
     }
 
+    /**
+     * True when another served row of this letter already claims that OSM object.
+     *
+     * Identity is exclusive: two served rows pointing at one OSM object are a
+     * duplicate wearing a link. The linker refuses rather than creating one,
+     * and the duplicate desk is where that pair gets sorted out.
+     */
     public function refIsTaken(string $osmRef, string $letter, int $exceptItemId): bool
     {
         return (bool) $this->db->fetchOne(

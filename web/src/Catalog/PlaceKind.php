@@ -14,7 +14,8 @@ namespace App\Catalog;
  *
  * The kind is the stored Type (`attributes.type`), the coverage point's
  * `kind`, and the map glyph (KindIcons). Order matters: a point carrying two
- * tags is the first kind in this list, as in the tiles' `t` label.
+ * tags is the first harvested kind in this list, as in the tiles' `t` label,
+ * and a kind the harvest leaves out only after every harvested one.
  *
  * @see docs/specs/osm-data-architecture.md §5a
  *
@@ -119,6 +120,14 @@ final class PlaceKind
         'Q' => ['Museum / culture' => 'museum'],
     ];
 
+    /**
+     * Types older Wikidata artifacts wrote that mean one kind there and
+     * another anywhere else: Heritage site was only ever Q23413 (castle).
+     *
+     * @var array<string, array<string, string>>
+     */
+    private const array WIKIDATA_LABELS = ['Q' => ['Heritage site' => 'castle']];
+
     /** @return array<string, string> kind → English label, in list order */
     public static function labels(string $letter): array
     {
@@ -135,16 +144,24 @@ final class PlaceKind
         return self::KINDS[$letter][$kind][1] ?? null;
     }
 
-    /** @param array<string, mixed> $tags raw OSM tags */
+    /**
+     * The kind of a point with these tags: the harvested kinds first, in list
+     * order, as the pipeline reads them; then the kinds only our own places
+     * have. A summit tagged with its waterfall is a waterfall on both sides.
+     *
+     * @param array<string, mixed> $tags raw OSM tags
+     */
     public static function fromOsmTags(string $letter, array $tags): ?string
     {
-        foreach (self::KINDS[$letter] ?? [] as $kind => [$tag]) {
-            if (null === $tag) {
-                continue;
-            }
-            [$key, $value] = explode('=', $tag, 2);
-            if (($tags[$key] ?? null) === $value) {
-                return $kind;
+        foreach ([true, false] as $harvestedPass) {
+            foreach (self::KINDS[$letter] ?? [] as $kind => [$tag, , $harvested]) {
+                if (null === $tag || $harvested !== $harvestedPass) {
+                    continue;
+                }
+                [$key, $value] = explode('=', $tag, 2);
+                if (($tags[$key] ?? null) === $value) {
+                    return $kind;
+                }
             }
         }
 
@@ -160,6 +177,24 @@ final class PlaceKind
         $kind = array_search($label, self::labels($letter), true);
 
         return false !== $kind ? $kind : (self::LEGACY_LABELS[$letter][$label] ?? null);
+    }
+
+    /**
+     * A kind from a Type in a Wikidata artifact (tools/wikimedia/country_places.py):
+     * a kind or label as fromLabel() reads it, except Heritage site, which the
+     * harvest wrote for one class only, Q23413 (castle). The same reading
+     * Version20261007140000 gives the rows seeded from older artifacts.
+     */
+    public static function fromWikidataLabel(string $letter, ?string $label): ?string
+    {
+        if (null === $label) {
+            return null;
+        }
+        if (null !== self::label($letter, $label)) {
+            return $label;
+        }
+
+        return self::WIKIDATA_LABELS[$letter][$label] ?? self::fromLabel($letter, $label);
     }
 
     /**

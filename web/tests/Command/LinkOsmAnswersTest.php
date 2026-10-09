@@ -92,6 +92,45 @@ final class LinkOsmAnswersTest extends KernelTestCase
         self::assertSame('node/77002', $this->row($id)['osm_ref']);
     }
 
+    public function testWhenTheNearestPointIsClaimedTheRowIsADuplicateNotALinkToTheNext(): void
+    {
+        // Two points within OsmLinker::ON_TOP_M: the nearest is another row's,
+        // so this row is that row's duplicate, whatever lies a few metres on.
+        $this->db->executeStatement(
+            "INSERT INTO coverage_poi (ref, letter, name, geom, tags, country_code)
+             VALUES ('node/77010', 'P', NULL, ST_SetSRID(ST_MakePoint(4.97, 50.57), 4326), '{}', 'BE'),
+                    ('node/77011', 'P', NULL, ST_SetSRID(ST_MakePoint(4.97, 50.57007), 4326), '{}', 'BE')",
+        );
+        $holder = $this->seed('Holder', 50.57, 4.97);
+        $this->db->executeStatement("UPDATE item SET osm_ref = 'node/77010', osm_checked_at = NOW() WHERE id = :id", ['id' => $holder]);
+        $id = $this->seed('', 50.57001, 4.97, ItemSource::Osm);
+
+        $display = $this->runCommand(['--write' => true])->getDisplay();
+
+        self::assertNull($this->row($id)['osm_ref'], 'node/77011 is a neighbour, not this row');
+        self::assertMatchesRegularExpression('/already claimed.*\\n.*#'.$id.'\\b.*node\/77010/s', $display);
+        self::assertStringContainsString('1 already claimed', $display);
+    }
+
+    public function testAWhitespaceNameIsNoName(): void
+    {
+        // Unnamed is one rule in SQL and PHP: only an OSM row links by position
+        // alone; another source with a blank name has nothing to match on.
+        $this->db->executeStatement(
+            "INSERT INTO coverage_poi (ref, letter, name, geom, tags, country_code)
+             VALUES ('node/77020', 'P', NULL, ST_SetSRID(ST_MakePoint(4.99, 50.59), 4326), '{}', 'BE'),
+                    ('node/77021', 'P', NULL, ST_SetSRID(ST_MakePoint(4.91, 50.51), 4326), '{}', 'BE')",
+        );
+        $user = $this->seed("  \t ", 50.59001, 4.99);
+        $osm = $this->seed('   ', 50.51001, 4.91, ItemSource::Osm);
+
+        $display = $this->runCommand(['--write' => true])->getDisplay();
+
+        self::assertNull($this->row($user)['osm_ref'], 'a blank name on a rider\'s row is not a position-only match');
+        self::assertStringNotContainsString('#'.$user.' ', $display);
+        self::assertSame('node/77021', $this->row($osm)['osm_ref']);
+    }
+
     public function testACuratorsNotInOsmIsNeverReconsidered(): void
     {
         $id = $this->seed('Panorama Testberg', 50.5001, 4.9);

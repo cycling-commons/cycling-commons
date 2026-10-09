@@ -464,9 +464,14 @@ alphabet with an OSM ref. So the link is made three ways, in this order:
    - **within `OsmLinker::TIGHT_M` (100 m, owner) with an identical name key**:
      linked automatically. Close enough and named the same is not a judgement
      call. An unnamed legacy `osm` row sits on its OSM point's own position, so
-     it links to the point of its letter within `OsmLinker::ON_TOP_M` (15 m)
-     that no other served row claims, with no name to compare
-     (`OsmLinker::onTopOf()`).
+     it links to the nearest point of its letter within `OsmLinker::ON_TOP_M`
+     (15 m), with no name to compare (`OsmLinker::nearestOnTop()`). When
+     another served row claims that nearest point, the row is that row's
+     duplicate and is reported as already claimed (below); a point a few
+     metres further is never linked in its place. A name of only whitespace
+     is no name, in the candidate query and in the command alike, and only an
+     `osm` row links by position: an unnamed row of another source has
+     nothing to match on.
    - **100 m to `OsmLinker::LOOSE_M` (250 m)**: never written here. It becomes
      an `OsmLink` finding on the curator data desk.
    - **the OSM object is already claimed by another served row**: that is a
@@ -545,9 +550,10 @@ is where a new place is approved. Both post to `/moderate/osm-answer`.
 `App\Catalog\Import\OsmCandidates` owns it: intake computes it when the row
 is created (`refresh()`), an approved pin move recomputes it at the new point
 (`refreshAt()`, ModerationService, answered or not: the old answer was about
-the old spot) and, when the new point lies within `OsmLinker::ON_TOP_M` (15 m)
-of an OSM object of its letter that no other served row claims, links the row
-to it (`onTopOf()`, `answerOsm()`, a `change_history` row on `osmRef`), for
+the old spot) and, when the nearest OSM object of its letter within
+`OsmLinker::ON_TOP_M` (15 m) of the new point is one no other served row
+claims, links the row to it (`onTopOf()`, `answerOsm()`, a `change_history`
+row on `osmRef`); a claimed nearest object links nothing, never the next one, for
 every letter (owner 2026-09-05: "when location is changed it must also look if
 it is now on top of an OSM spot"). The desk reads the list with (`forItems()`),
 computing only where the column is NULL. The pipeline's per-region swap

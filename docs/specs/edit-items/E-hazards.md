@@ -60,6 +60,10 @@ Months 180. Past it, the item is moved to `retired` and stops being served.
   `ClosureExpiryService` reads it there in place of the row's creation date; a
   later existence confirmation still restarts the window
   (`ClosureExpiryServiceTest::testTheScoutTapDateStartsTheClockNotTheUpload`).
+  A tap date has to be a real calendar date, at most a year old and at most a
+  day ahead of the upload (`ClosureExpiryService::observedDate()`); anything
+  else is not kept, and the row's creation date starts the clock. A device
+  with a wrong clock can neither retire a closure at once nor keep it forever.
 - **Unknown is bounded, not forever.** It is the one answer with no duration in
   it, and letting it mean "never expires" would reproduce exactly the lie
   principle VII of `wiki/manifesto.md` names, so it gets the longest window and then has to be

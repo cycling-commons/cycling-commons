@@ -3676,7 +3676,7 @@ trapped in.
 | **Tags with no GPS fix** | Counted and named in the panel, never dropped silently. |
 | **An unterminated stretch** | The parser closes it at the ride's end and flags it; the card says "No END tap" and it is not sent until the rider decides (above). |
 | **A stray END with no start** | Ignored by the parser, as on the device. |
-| **The observation date** | Sent as `observedAt` and kept as a date in the submission's raw payload, which the moderator reads; not a first-class attribute. |
+| **The observation date** | Sent as `observedAt` and kept as a date in the submission's raw payload, which the moderator reads; not a first-class attribute. Kept only when it is a date the rider can have been there (`ClosureExpiryService::observedDate()`): an ISO date that is a real calendar day, at most `OBSERVED_MAX_AGE_DAYS` (366) before the upload and at most `OBSERVED_FUTURE_SKEW_HOURS` (24) after it. A device with no clock fix reports the FIT epoch, 1989-12-31; that date, one in a year to come, or a day like 2026-02-30 is dropped and the tag still goes, with the upload as its date. A closure's clock reads a stored date the same way, never later than the row's creation, so a bad payload falls back to the upload and never stops the sweep. |
 
 Everything else (NOTICE, CLOSURE, SCENERY, RESUPPLY, OTHER, with or without a
 sub-menu value) goes through the ordinary intake, with the sub-menu deciding

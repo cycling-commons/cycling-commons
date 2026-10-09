@@ -133,7 +133,7 @@ not a URL, because anyone with write access to a page could then publish a proxy
 acceptance that section 14 makes permanently binding.
 
 Copyright is held by **BikeCoders** (https://bikecoders.life), the trading name
-of the sole owner, and is expected to move to a Dutch stichting within about a
+of the sole owner, and is expected to move to a Dutch foundation (stichting) within about a
 year. Contributors are **not** asked to assign copyright: Dutch law needs a
 signed deed for that, which a checkbox in a repository cannot be. They grant a
 non-exclusive licence through a DCO sign-off (`git commit -s`), gated in CI.
@@ -328,8 +328,13 @@ all harvested, plus bus shelter (`shelter_type=public_transport`) and
 defibrillator (`emergency=defibrillator`), which are not. It replaces the
 free `shelterType` list. G draws a glyph per kind and the contract's
 `placeKind` holds its rules, like P and Q. Migration `Version20261008110000`
-gave existing shelters their Type from the linked OSM point's `shelter_type`,
-else the old `shelterType` or `t` label, and removed `shelterType`.
+gave existing shelters their Type: a Type a shelter already had, else the
+linked OSM point's `shelter_type` (one of the eleven harvested values), else
+the old `shelterType` or `t` label; bus shelter and defibrillator come from
+those labels only, since the harvest stores neither tag. It removed
+`shelterType`. Submissions a curator can still approve (pending, needs info,
+and those in Trash from either) propose the Type instead, in the payload and
+in `changes` as `{was, now}`, which is what an approval applies.
 
 **O · Where to sleep** has a Type by the same rule (owner 2026-10-08), every
 one an OSM `tourism` tag, so every stay can go back to OSM: hotel, motel,
@@ -345,6 +350,7 @@ its stay icon from it (`StayKind::fromType()`). Migration
 `Version20261008090000` gave existing places their Type: the linked OSM point's
 `tourism` tag, else the `t` label; `Version20261008100000` folds the three
 types an earlier reading kept apart (bnb, gite, budget) into the OSM ones.
+O had no Type field before, so no submission proposed one.
 
 The G, P and Q kinds are used the same way everywhere:
 
@@ -357,7 +363,16 @@ The G, P and Q kinds are used the same way everywhere:
 - **Harvested:** the pipeline stamps `coverage_poi.kind` from the contract's
   `placeKind` rules, and the tiles carry it as `kind`, the same way D carries
   `serviceKind`. A point with two matching tags is the first kind in the
-  contract order, as in the tile's `t` label.
+  contract order, as in the tile's `t` label. `PlaceKind::fromOsmTags()` reads
+  tags the same way: the harvested kinds first, in table order, and a kind the
+  harvest leaves out only after them, so a summit tagged with its waterfall
+  is a waterfall in PHP and in the pipeline alike.
+- **Served:** the coverage search, nearby list and drawer
+  (`CoverageRepository`) give every letter in `PlaceKind::TYPED_LETTERS`
+  (G, O, P, Q) its `kind`: our item's Type, or the coverage point's stamped
+  `kind`, else read from its tags. The tags are decoded only where the
+  pipeline has not stamped the kind. The map draws a glyph where `KindIcons`
+  has one; an O stay has none, and its kind starts the wizard on its type.
 - **Drawn:** one glyph per kind on the category disc (`KindIcons`), on OSM
   points and our own places alike, in both legends and on search rows. A tile
   from before the stamp still names its kind in its `t` label (the contract's
@@ -365,6 +380,10 @@ The G, P and Q kinds are used the same way everywhere:
   (`window.CC_PLACE_KIND_LABELS`).
 - **Converted:** materialize-on-edit (§6) and the one-tap OSM confirm fill the
   Type from the point's kind.
+- **Seeded:** `app:catalog:seed-wikidata` reads an artifact's Type through
+  `PlaceKind::fromWikidataLabel()`: a kind or an exact label as above, and
+  Heritage site as a castle, the same reading `Version20261007140000` gives
+  rows already seeded, so a re-seed keeps it.
 - **Scout:** SCENERY · VIEW is a viewpoint. NATURE, HISTORY, CULTURE and
   ARCHITECT name several kinds, so the ride review asks the rider which one,
   with the own kind first where there is one (NATURE: Natural feature), and a
@@ -372,15 +391,24 @@ The G, P and Q kinds are used the same way everywhere:
   ([moderation-and-contribution.md](moderation-and-contribution.md), Scout intake).
 
 Migration `Version20261007140000` turned the older Types into kinds. Per item:
-the linked OSM point's tag first, then an old label that is exactly one kind
-(Museum / culture is a museum; Natural feature, Heritage site and Architecture
-keep their own kinds; Viewpoint / high point only on a Scout row, where the
-device's VIEW wrote it), then an import's `t` label. A Heritage site whose
-name says castle ("… Castle", "Castle of …", "Château …", "Castello …") became a
-castle: the Wikidata harvest had filed its castles as Heritage site. A label
-naming two OSM kinds (Viewpoint / high point, Religious site) was cleared for a
-curator. Decided submissions and change history keep the old
-labels, because they record what was said then.
+the linked OSM point's tag first (a harvested kind before one the harvest
+leaves out), then the Type when it is a kind already or an old label that is
+exactly one kind (Museum / culture is a museum; Natural feature, Heritage site
+and Architecture keep their own kinds; Viewpoint / high point only on a Scout
+row, where the device's VIEW wrote it), then an import's `t` label. Heritage
+site on a `wikidata` row became a castle: Q23413 (castle) was the only
+Wikidata class `tools/wikimedia/country_places.py` ever filed under it. A row
+whose Type a person chose keeps Heritage site, and the name decides nothing
+on any source. A label naming two OSM kinds (Viewpoint / high point, Religious
+site) was cleared for a curator. Submissions a curator can still approve
+(pending, needs info, and those in Trash from either) got the same reading of
+their proposed Type, in the payload and in `changes`. Decided submissions and
+change history keep the old labels, because they record what was said then.
+
+All four Type migrations can run twice with the same result, and none goes
+down: each `down()` throws `IrreversibleMigration`, because a many-to-one
+reading and a removed field cannot be undone from the data. Going back means
+restoring a backup taken before them.
 
 ## 6. Materialize-on-edit lifecycle
 

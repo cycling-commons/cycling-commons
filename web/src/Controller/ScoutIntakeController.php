@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Catalog\ClosureExpiryService;
 use App\Catalog\Entity\Item;
 use App\Catalog\LocationMode;
 use App\Catalog\PlaceKind;
@@ -13,6 +14,7 @@ use App\Catalog\SurfaceVocabulary;
 use App\Contribution\CatalogContributionService;
 use App\Entity\User;
 use App\Scout\ScoutTag;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,6 +40,7 @@ final class ScoutIntakeController extends AbstractController
 
     public function __construct(
         private readonly CatalogContributionService $contributions,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -131,10 +134,13 @@ final class ScoutIntakeController extends AbstractController
             return new JsonResponse(['error' => 'name_required'], 400);
         }
 
-        $observed = (string) ($payload['observedAt'] ?? '');
-        $observedDate = ('' !== $observed && false !== strtotime($observed))
-            ? gmdate('Y-m-d', (int) strtotime($observed))
+        // A date the rider can have been there, or none: a device clock with
+        // no fix (the FIT epoch) or set ahead must not start or stop a
+        // closure's clock (ClosureExpiryService). The tag itself still goes.
+        $observed = \is_string($payload['observedAt'] ?? null)
+            ? ClosureExpiryService::observedDate($payload['observedAt'], $this->clock->now())
             : null;
+        $observedDate = $observed?->format('Y-m-d');
 
         /** @var User $user */
         $user = $this->getUser();
