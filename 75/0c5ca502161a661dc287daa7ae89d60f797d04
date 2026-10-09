@@ -1,0 +1,120 @@
+web/src/Legal/LegalNotice.php
+  s_985749378da6fe::t_1d445b74d5b52f 33-34,51,111
+  s_985749378da6fe::t_da9739b5aff9ba 10,12,28-30,45-46,54-56,58,66-70,83,86-98,106
+  s_985749378da6fe::t_393b18ae2a4d37 1-9,11,13-18,31-32,35-44,47-50,52-53,57,59-65,71-82,84-85,99-105,107-110,112-134
+  s_985749378da6fe::t_49c37c22851678 19-27
+docs/specs/translations.md
+  s_985749378da6fe::t_e7493a5a5cab4b 862-892
+  s_985749378da6fe::t_f39e211bcbaf2e 840-846,898-899,909-911,936-937
+  s_985749378da6fe::t_f054cad8d4e1ad 847-850
+  s_985749378da6fe::t_d542980d567dab 894-897,900-908,912-927,935
+  s_985749378da6fe::t_1da79266d96dcc 928-934
+  s_985749378da6fe::t_ccb8bae492e753 144,664-666
+  s_985749378da6fe::t_656957a5e06225 851-861,893,938-940
+web/templates/pages/terms.html.twig
+  s_985749378da6fe::t_29f689bf0df8d8 5,18-19
+  s_985749378da6fe::t_930fd438fed917 142
+web/tests/Legal/LegalNoticeTest.php
+  s_985749378da6fe::t_6fadec0da0e306 1-10,12-16,20-23,30-114,117-120,122,129-133,135-136,242-243,245-266,309,338-339
+  s_985749378da6fe::t_b5c5989fe7e2d2 11,17-19,24-29,115-116,121,123-128,134,137-161,176-241,244,267-308,310-337
+  s_985749378da6fe::t_5d6f09a8aeff5e 162-175
+web/config/services.yaml
+  s_985749378da6fe::t_db246fbaf7cc22 189-194
+web/src/Controller/PageController.php
+  s_985749378da6fe::t_1d445b74d5b52f 22-24
+  s_985749378da6fe::t_92c4d34223baf1 688,690,692-693,696,702-705,710,712-719,724-727
+web/src/Legal/LegalVersions.php
+  s_985749378da6fe::t_d542980d567dab 23-30
+  s_985749378da6fe::t_1d445b74d5b52f 75-77
+  s_985749378da6fe::t_c8f6c57428347e 1-22,31-74,78-91
+web/templates/pages/_legal_upcoming.html.twig
+  s_985749378da6fe::t_29f689bf0df8d8 1-15
+web/config/table_comments.yaml
+  s_985749378da6fe::t_e911e9bac4d4d6 19-23
+web/translations/terms.es.yaml
+  s_985749378da6fe::t_7bc6c5cac5fb61 10-16
+  s_985749378da6fe::t_d63a9a06a856da 110,126
+web/translations/terms.de.yaml
+  s_985749378da6fe::t_7bc6c5cac5fb61 10-16
+  s_985749378da6fe::t_4a9ef52a0a1195 110,126
+web/src/Entity/User.php
+  s_985749378da6fe::t_92c4d34223baf1 169-172,722-733
+web/templates/emails/legal_change.html.twig
+  s_985749378da6fe::t_67be5a0ca03013 1-23
+web/src/Legal/Command/AnnounceLegalChangeCommand.php
+  s_985749378da6fe::t_1a68b81ca38713 24-27,75,81-87
+  s_985749378da6fe::t_e4d6963e1ef134 1-21,28-74,76-80,88-91
+  s_985749378da6fe::t_9264644d07db69 22-23
+web/templates/pages/privacy.html.twig
+  s_985749378da6fe::t_29f689bf0df8d8 5,33-34
+  s_985749378da6fe::t_b3e6b7d62ba2fa 308
+web/translations/terms.en.yaml
+  s_985749378da6fe::t_7bc6c5cac5fb61 10-16
+  s_985749378da6fe::t_979c0b9784a15a 110,126
+web/src/Twig/PrivacyNoticeExtension.php
+  s_985749378da6fe::t_29f689bf0df8d8 10,12-13,27,34-37,40,44-67,71
+web/migrations/Version20261009030000.php
+  s_985749378da6fe::t_db246fbaf7cc22 1-41
+web/src/Legal/LegalPageView.php
+  s_985749378da6fe::t_b7bc6728a0b455 15-20,52-53,59,61
+  s_985749378da6fe::t_6ba0abe3e03c54 1-14,21-25,29-30,41-51,54-58,60,62-64
+  s_985749378da6fe::t_e8bedd76d37daf 26-28,31-40
+web/config/packages/doctrine.yaml
+  s_985749378da6fe::t_5687c60ea5f5e1 10-12
+web/translations/terms.nl.yaml
+  s_985749378da6fe::t_7bc6c5cac5fb61 10-16
+  s_985749378da6fe::t_206a1215101bca 110,126
+web/assets/styles/page/partials/_privacy_changed.css
+  s_985749378da6fe::t_29f689bf0df8d8 2
+web/src/Legal/PrivacyNoticeVersions.php
+  s_985749378da6fe::t_c73ac5f35fe219 10-13,17
+web/tests/Legal/LegalPageViewTest.php
+  s_985749378da6fe::t_01a9bec5bc97fe 1-134
+web/src/Account/DataExportService.php
+  s_985749378da6fe::t_92c4d34223baf1 88
+web/translations/terms.fr.yaml
+  s_985749378da6fe::t_7bc6c5cac5fb61 10-16
+  s_985749378da6fe::t_d619f16f168c8f 110,126
+web/src/Controller/RegistrationController.php
+  s_985749378da6fe::t_92c4d34223baf1 72
+web/templates/partials/_privacy_changed.html.twig
+  s_985749378da6fe::t_29f689bf0df8d8 2-4,6,9,12-19
+web/src/Legal/TermsVersions.php
+  s_985749378da6fe::t_8b944151903657 17
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_7d143458322182 5112-5122
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_7afc7249ac39e7 5129-5139
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_f251e9029b7b06 5139-5149
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_d0add79fa0dbba 5104-5114
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_605bc7cc3e9b69 5111-5121
+web/translations/privacy.de.yaml
+  s_985749378da6fe::t_09ad8eb6096fa1 148,159-163,173
+web/translations/privacy.en.yaml
+  s_985749378da6fe::t_9bcbcbd5a07e53 148,159-163,173
+web/translations/privacy.es.yaml
+  s_985749378da6fe::t_44cdde0fac46ad 148,159-163,173
+web/translations/privacy.fr.yaml
+  s_985749378da6fe::t_1e16d372335734 148,159-163,173
+web/translations/privacy.nl.yaml
+  s_985749378da6fe::t_e59c1c6828aaa1 148,159-163,173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "750c5ca502161a661dc287daa7ae89d60f797d04",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
