@@ -1,0 +1,68 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   Unsent statements (docs/specs/account-and-auth.md §6.8): account statements
+   of reasons whose email did not go out, each shown whole, oldest first, with
+   Send again and Discard. Expects `rows` (list of UnsentStatement) and
+   `csrf_token_id`.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}{{ 'account_suspension.unsent.title'|trans }}{% endblock %}
+
+{% block main %}
+    <div class="col-lg-10">
+        <p>{{ 'account_suspension.unsent.lead'|trans }}</p>
+
+        {% if rows is empty %}
+            <p>{{ 'account_suspension.unsent.empty'|trans }}</p>
+        {% else %}
+            <table class="table table-sm align-top">
+                <thead>
+                    <tr>
+                        <th>{{ 'account_suspension.unsent.col_statement'|trans }}</th>
+                        <th>{{ 'account_suspension.unsent.col_to'|trans }}</th>
+                        <th>{{ 'account_suspension.unsent.col_tries'|trans }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        {% set s = row.statement %}
+                        <tr>
+                            <td>
+                                {% if s %}
+                                    <strong>{{ s.decision.headlineKey|trans }}</strong> · {{ s.reference }}<br>
+                                    <span class="text-muted">{{ 'account_suspension.unsent.ground'|trans }}:</span> {{ s.ground.label|trans }}<br>
+                                    <span class="text-muted">{{ 'account_suspension.unsent.facts'|trans }}:</span> {{ s.facts }}
+                                {% else %}
+                                    <em>{{ 'account_suspension.unsent.unreadable'|trans }}</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ row.name }} &lt;{{ row.address }}&gt;<br>
+                                <span class="text-muted">{{ row.locale ?? '-' }} · {{ row.timeZone ?? '-' }}</span>
+                            </td>
+                            <td>
+                                {{ 'account_suspension.unsent.tries'|trans({'%count%': row.attempts, '%first%': row.createdAt|cc_datetime, '%last%': row.lastAttemptAt|cc_datetime}) }}
+                            </td>
+                            <td class="text-nowrap">
+                                <form method="post" class="d-inline unsent-resend">
+                                    <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+                                    <input type="hidden" name="id" value="{{ row.id }}">
+                                    <input type="hidden" name="op" value="resend">
+                                    <button type="submit" class="btn btn-sm btn-primary">{{ 'account_suspension.unsent.resend'|trans }}</button>
+                                </form>
+                                <form method="post" class="d-inline unsent-discard">
+                                    <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+                                    <input type="hidden" name="id" value="{{ row.id }}">
+                                    <input type="hidden" name="op" value="discard">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger action-confirm" data-confirm="{{ 'account_suspension.unsent.discard_confirm'|trans }}">{{ 'account_suspension.unsent.discard'|trans }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

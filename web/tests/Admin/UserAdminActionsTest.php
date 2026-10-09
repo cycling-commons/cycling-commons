@@ -103,7 +103,7 @@ final class UserAdminActionsTest extends WebTestCase
         static::createClient();
         $router = static::getContainer()->get('router');
 
-        // MODERATOR_AREAS and GRANT_CURATOR are deliberately exempt: each
+        // MODERATOR_AREAS, GRANT_CURATOR, SUSPEND and REMOVE_FOR_BREACH are deliberately exempt: each
         // renders a form page (GET) before the admin submits it (POST), unlike
         // every other entry here, which is a one-click mutation with no
         // intermediate page, so they are GET+POST by design, not a CSRF gap
@@ -114,6 +114,7 @@ final class UserAdminActionsTest extends WebTestCase
             UserAdminService::REVOKE_CURATOR,
             UserAdminService::GRANT_ADMIN, UserAdminService::REVOKE_ADMIN,
             UserAdminService::REMOVE_ACCOUNT, UserAdminService::CANCEL_REMOVAL,
+            UserAdminService::LIFT_SUSPENSION,
         ];
         foreach ($actions as $action) {
             $route = $router->getRouteCollection()->get('admin_user_'.$action);
@@ -328,6 +329,80 @@ final class UserAdminActionsTest extends WebTestCase
         $client->request('POST', $this->actionUrl(UserAdminService::GRANT_CURATOR, (int) $rider->getId()), ['token' => 'forged', 'all_areas' => '1']);
 
         self::assertNotContains('ROLE_CURATOR', $this->reload('rider@example.com')->getRoles());
+    }
+
+    // ── Suspension and removal for a breach (account-and-auth.md §6.8) ──────
+
+    public function testSuspendOpensAFormAndSuspendsWithTheReasons(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider@example.com');
+        $client->loginUser($admin);
+
+        $link = $this->detailCrawler($client, (int) $rider->getId())->filter('a.action-'.UserAdminService::SUSPEND);
+        self::assertCount(1, $link, 'Suspend opens a form page');
+        $page = $client->request('GET', (string) $link->attr('href'));
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('form input[name="days"]');
+        self::assertSelectorExists('form select[name="ground"] option[value="abuse"]');
+        self::assertSelectorNotExists('form select[name="ground"] option[value="not_accepted"]');
+        self::assertSelectorExists('form textarea[name="facts"]');
+        self::assertFalse($this->reload('rider@example.com')->isSuspendedAt(new \DateTimeImmutable()), 'opening the form suspends nothing');
+
+        $client->request('POST', $this->actionUrl(UserAdminService::SUSPEND, (int) $rider->getId()), [
+            'token' => (string) $page->filter('form input[name="token"]')->attr('value'),
+            'days' => '7',
+            'ground' => 'abuse',
+            'facts' => 'Threats to other riders.',
+        ]);
+        self::assertResponseRedirects();
+        self::assertTrue($this->reload('rider@example.com')->isSuspendedAt(new \DateTimeImmutable()));
+
+        $detail = $this->detailCrawler($client, (int) $rider->getId());
+        self::assertCount(1, $detail->filter('button.action-'.UserAdminService::LIFT_SUSPENSION.', form button:contains("Lift suspension")'));
+    }
+
+    public function testASuspensionWithoutFactsIsRefusedWithAFlash(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider@example.com');
+        $client->loginUser($admin);
+
+        $page = $client->request('GET', $this->actionUrl(UserAdminService::SUSPEND, (int) $rider->getId()));
+        $client->request('POST', $this->actionUrl(UserAdminService::SUSPEND, (int) $rider->getId()), [
+            'token' => (string) $page->filter('form input[name="token"]')->attr('value'),
+            'days' => '7',
+            'ground' => 'abuse',
+            'facts' => '',
+        ]);
+        self::assertResponseRedirects();
+        $client->followRedirect();
+        self::assertSelectorTextContains('[class*="danger"]', 'Write the facts');
+        self::assertFalse($this->reload('rider@example.com')->isSuspendedAt(new \DateTimeImmutable()));
+    }
+
+    public function testRemoveForABreachDeletesTheAccount(): void
+    {
+        $client = static::createClient();
+        $admin = $this->createUser('admin@example.com', ['ROLE_ADMIN'], admin2fa: true);
+        $rider = $this->createUser('rider@example.com');
+        $client->loginUser($admin);
+
+        $link = $this->detailCrawler($client, (int) $rider->getId())->filter('a.action-'.UserAdminService::REMOVE_FOR_BREACH);
+        self::assertCount(1, $link);
+        $page = $client->request('GET', (string) $link->attr('href'));
+        self::assertResponseIsSuccessful();
+        $client->request('POST', $this->actionUrl(UserAdminService::REMOVE_FOR_BREACH, (int) $rider->getId()), [
+            'token' => (string) $page->filter('form input[name="token"]')->attr('value'),
+            'ground' => 'misuse',
+            'facts' => 'Scraped the map with a script.',
+        ]);
+        self::assertResponseRedirects();
+
+        static::getContainer()->get(EntityManagerInterface::class)->clear();
+        self::assertNull(static::getContainer()->get(UserRepository::class)->findByEmail('rider@example.com'));
     }
 
     // ── Moderator areas (assign) ─────────────────────────────────────────────

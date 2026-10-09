@@ -58,6 +58,7 @@ roles.
 | Email verification | `emailVerified`, `emailVerifiedAt` | token flow is signed-URL (§2), no stored token column |
 | 2FA | `twoFaEnabled`, `totpSecret` (encrypted at rest, §4), `backupCodes` (json, keyed hashes) | |
 | Lockout | `failedLoginAttempts`, `lockedUntil`, `isLocked()` | §3 |
+| Suspension | `suspendedUntil`, `suspendedAt`, `suspensionGround` (a `StatementGround`), `suspensionFacts`, `suspendedBy` (user id, foreign key `ON DELETE SET NULL`), `isSuspendedAt()` | §6.8 |
 | Deletion | `deletionCode`, `deletionRequestedAt` | §10 |
 | Governance | `publicProfile` (bool, opt-in, default false) | §7 |
 | Preferences | `bikeTypes` (json), `ridingStyles` (json), `defaultMapMode` (string, default `auto`; `auto \| everything \| confirmed \| curated`), `mapTheme` (string, default `dark`; map-and-search.md), `dateFormat`/`timeFormat` (string, default `auto`), `timeZone`/`detectedTimeZone` (nullable), `distanceUnit` (string, default `km`), `elevationUnit` (string, default `m`), `rowsPerPage` (string, default `auto`, §9.4) | §9 |
@@ -658,6 +659,9 @@ can bypass the guardrails and audit log. Actions are conditionally displayed
 | Revoke admin | has role | remove it (guardrails) | yes |
 | Execute account removal | `deletionRequestedAt != null` | §6.3, the rider's own request: no statement of reasons, they asked | yes |
 | Cancel pending removal | `deletionRequestedAt != null` | clear code + timestamp | no |
+| Suspend account | not suspended now | form page: days (1 to 365), ground, facts, "this followed reports"; suspends and emails the statement of reasons (§6.8) | form page |
+| Lift suspension | suspended now | ends the suspension now; nothing is sent | no |
+| Remove account for a breach | always | form page: ground, facts, "this followed reports"; removes as §6.3 and emails the statement of reasons (§6.8) | form page |
 | Moderator areas | has `ROLE_CURATOR` | replace `moderator_area` rows (contract in [moderation-and-contribution.md](moderation-and-contribution.md) §9) | form page |
 
 **Transport convention (standing rule):** every state-changing support action
@@ -666,10 +670,12 @@ is a **POST-only `#[AdminRoute]` with a CSRF token** (shared token id
 through a custom form template instead of EA's GET link, and the handler
 re-validates the token, defence in depth). Enforced by
 `testEverySupportActionRouteIsPostOnly` in
-`web/tests/Admin/UserAdminActionsTest.php`. The two sanctioned exceptions are
-`moderator_areas` and `grant_curator`: each is a genuine intermediate form page
-(the area picker), GET (render) + POST (submit, same CSRF token). See
-[moderation-and-contribution.md](moderation-and-contribution.md) §9.4.
+`web/tests/Admin/UserAdminActionsTest.php`. The four sanctioned exceptions are
+`moderator_areas` and `grant_curator` (the area picker, see
+[moderation-and-contribution.md](moderation-and-contribution.md) §9.4), and
+`suspend` and `remove_for_breach` (the ground-and-facts form, §6.8): each is a
+genuine intermediate form page, GET (render) + POST (submit, same CSRF
+token).
 
 **A second door onto the same grant path.** Curator applications
 ([moderation-and-contribution.md](moderation-and-contribution.md) §11) let a
@@ -823,6 +829,19 @@ until 2FA has passed. Once per browser session, not per request, because the
 authenticator only runs while there is no session token yet. Pinned by
 `SecurityTest::testComingBackOnTheRememberMeCookieCountsAsASignIn`.
 
+**A suspended account is not swept while it cannot sign in.** Its idle time
+counts from the later of the last sign-in and the end of the suspension
+(`DormancySweep::idleSince()`), so a suspension still running never makes an
+account a candidate, and suspending clears the three notices as a sign-in does
+(`User::suspend()`): notices sent before it named a closing date the
+suspension moved.
+
+**A deletion code that still works pauses the sweep, an abandoned one does
+not.** A rider who asked to close their account is left alone for the code's
+lifetime (`UserDeletionService::CODE_MINUTES`); after that the request is
+abandoned and the account is a candidate like any other. Pinned by
+`DormancySweepTest::testAnAbandonedDeletionCodeDoesNotExemptAnAccount`.
+
 **Administrators are never swept.** `DormancySweep::candidates()` drops
 `ROLE_ADMIN` accounts before any notice or deletion. There may be exactly one,
 and a sweep that closes the last operator of the site is a lockout, not
@@ -851,7 +870,7 @@ consequences, including that a dry run changes nothing).
 `password`, `totpSecret`, `backupCodes`, and
 `ResetPasswordRequest.hashedToken`/`selector`. The User CRUD exposes only:
 email, displayName, roles, emailVerified, twoFaEnabled (read-only),
-lockedUntil, publicProfile, createdAt, plus a read-only moderator-areas
+lockedUntil, suspendedUntil (read-only, §6.8), publicProfile, createdAt, plus a read-only moderator-areas
 descriptor on detail. Roles/emailVerified/lockedUntil display but are not
 form-editable: changes go through the audited actions only.
 
@@ -895,7 +914,95 @@ Deleted when all of these hold:
   hand (`app:user:create`), never through the sign-up form.
 
 Deletion is `UserDeletionService::purge()`, the same path as §6.5 and a
-rider's own request. Pinned by `UnverifiedSweepTest`.
+rider's own request, one account per transaction (§6.3). Pinned by
+`UnverifiedSweepTest`.
+
+### 6.8 Suspension and removal for a breach: notice and reasons (DSA Article 17(1)(c))
+
+An administrator may suspend an account for a number of days, or remove it,
+when it is used for abuse, to break the terms, or to harm the Commons or the
+people who use it. Either decision owes the holder a statement of reasons
+([content-reports.md](content-reports.md) §7), so each opens a form on the
+User CRUD (`admin/user_account_decision.html.twig`) that asks for what the
+statement states: the **ground** (`StatementGround::forAccounts()`: abuse,
+spam, unlawful, misuse of the service, false account details, untrue
+contributions, advertising, personal data about others), the **facts** in the
+administrator's own words (required, at most 2000 characters, read by the
+holder as written), and whether **reports** led to it.
+
+**Suspend** (`UserAdminService::suspend()`): 1 to 365 days
+(`SUSPENSION_MAX_DAYS`). Writes `suspended_until` (now plus the days),
+`suspended_at`, `suspension_ground`, `suspension_facts` and `suspended_by` on
+the account, and the audit row `suspend` with the end and the ground but not
+the facts (`until <date> UTC · ground=<ground>`), in one transaction. Then,
+after the commit, the statement of reasons goes to the account's address
+(`StatementOfReasonsMailer`): "Your account is suspended", the end date in the
+holder's language and time zone on the 24-hour clock, the ground, the facts,
+"An administrator made this decision", and "reply to this email". Guardrails
+as §6.4: never one's own account, never the last administrator.
+
+**While it runs**, signing in is refused, by password and by the remember-me
+cookie: `App\Security\SuspensionChecker`, a post-auth user checker chained
+after `VerifiedEmailChecker` (`security.user_checker.chain.main`), so only
+somebody who typed the right password learns that the account is suspended
+and until when ("This account is suspended until ...; we sent the reasons to
+its email address"). The right password on a suspended account is not counted
+as a failed attempt (`LoginThrottleListener`). A session already signed in
+ends on its next request that reads the user:
+`App\Security\SuspendedSessionProvider` decorates the user provider and
+answers "no such user" when the session's user is reloaded, which drops the
+session without making the firewall read it on pages that never ask who is
+signed in, and leaves the reason for the sign-in page. Contributions stay
+where they are.
+
+**It ends by itself** at `suspended_until`: nothing runs, the check compares
+with the clock. **Lift suspension** (`liftSuspension()`, POST) ends it now by
+setting `suspended_until` to the moment of lifting, audited
+`lift_suspension`; nothing is sent. The five columns stay as the record of the
+last suspension until the next suspension replaces them or the account is
+deleted; `suspended_by` is cleared by its foreign key when that
+administrator's account is deleted (§6.3, pinned by `AccountErasureTest`).
+They are in the rider's data export (`account.json`: `suspended_until`,
+`suspended_at`, `suspension_ground`, `suspension_facts`; not who decided,
+§11). The dormancy sweep counts idle time from the end of a suspension (§6.5).
+`Version20261009050000` adds the columns.
+
+**Remove for a breach** (`removeAccountForBreach()`): reads the address,
+display name, language and time zone, then removes the account through
+`UserDeletionService::purge()` exactly as §6.3, with the audit row
+`remove_for_breach` (`Removed account #<id> · ground=<ground>`, no address).
+After the removal commits, the statement of reasons goes to the address read
+before it: "We removed your account", what the removal deletes and keeps, the
+ground, the facts and how to contest it. A failed purge sends nothing. The
+reference in both statements is `ACCOUNT-<id>`.
+
+**When the email does not go out.** Both decisions stand, and the statement is
+not lost: after a removal the address and the facts exist nowhere else.
+`suspend()` and `removeAccountForBreach()` return whether the mail went out
+(`App\Moderation\UnsentStatements::send()`); when the transport refuses it,
+the whole statement is kept in `unsent_statement` (address, name, language,
+time zone, and the statement as stored on a message: decision, ground,
+facts, reference, end of a suspension). The administrator who decided is
+told at once, with a warning instead of the success message ("The account is
+removed, but the email with the reasons did not go out. The statement waits
+under Unsent statements, with the address and the facts: send it again from
+there."). **Unsent statements** (`/admin/unsent-statements`, a red count in
+the admin menu while any wait) lists each one whole, oldest first, with
+**Send again** (delivered, it leaves the list, audited
+`statement_resent <reference>`; refused again, it stays with one more try
+counted) and **Discard** (when the address cannot be reached any more; the
+address goes, the audit row `statement_discarded <reference>` stays). The
+audit names the reference, never the address. `user_id` is the account while
+it exists, with a foreign key that deletes the row with the account; NULL
+after a removal. Ruling (2026-10-09): an outbox, not only a warning, because
+a warning alone loses the statement the moment the administrator navigates
+away; a removed account's address is then kept only until the statement is
+sent or discarded, which is what Article 17 asks of us. Migration
+`Version20261009050100`. Pinned by `tests/Admin/UnsentStatementTest.php`.
+
+Pinned by `tests/Account/AccountSuspensionTest.php` (signing in by password
+and by the remember-me cookie alone is refused while it runs) and the
+suspension tests in `tests/Admin/UserAdminActionsTest.php`.
 
 ## 7. Public rider profile
 
@@ -1677,7 +1784,7 @@ subject *provided*, while Art. 15 access is broader. Making a rider choose
 between two downloads would be a worse answer to both, so this is the superset
 and the README inside says which part is which.
 
-**What it holds.** `account.json`, `contributions.json` (submissions plus the
+**What it holds.** `account.json` (with the last suspension, if any: until, since, ground and facts, §6.8), `contributions.json` (submissions plus the
 `change_history` rows they produced), `community.json` (confirmations, season
 votes with the name of what each was for, rides, correction suggestions,
 country requests, curator applications, moderator areas), `messages.json`, `consent.json`, `translations.json`, and

@@ -18,7 +18,7 @@ security:
         main:
             lazy: true
             provider: app_users
-            user_checker: App\Security\VerifiedEmailChecker  # no sign-in before the address is confirmed
+            user_checker: security.user_checker.chain.main  # VerifiedEmailChecker (no sign-in before the address is confirmed), then SuspensionChecker (none while suspended)
             form_login:
                 login_path: login
                 check_path: login

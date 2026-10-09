@@ -11,9 +11,14 @@ use App\Entity\User;
 use App\Messaging\MessageService;
 use App\Messaging\UserMessageKind;
 use App\Moderation\Entity\ModeratorArea;
+use App\Moderation\StatementDecision;
+use App\Moderation\StatementGround;
+use App\Moderation\StatementOfReasons;
+use App\Moderation\UnsentStatements;
 use App\Repository\UserRepository;
 use App\World\Entity\Country;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 
 /**
  * Admin mutations on a User. Every change flushes and is audited.
@@ -35,6 +40,12 @@ final class UserAdminService
     public const string REMOVE_ACCOUNT = 'remove_account';
     public const string CANCEL_REMOVAL = 'cancel_removal';
     public const string MODERATOR_AREAS = 'moderator_areas';
+    public const string SUSPEND = 'suspend';
+    public const string LIFT_SUSPENSION = 'lift_suspension';
+    public const string REMOVE_FOR_BREACH = 'remove_for_breach';
+
+    /** The longest suspension an administrator can set, in days. */
+    public const int SUSPENSION_MAX_DAYS = 365;
 
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -42,6 +53,12 @@ final class UserAdminService
         private readonly AdminActionLogger $logger,
         private readonly UserDeletionService $deletion,
         private readonly MessageService $messages,
+        // An account decision is explained by email: a suspended account
+        // cannot sign in to read its messages, a removed one has none
+        // (DSA Article 17(1)(c), docs/specs/account-and-auth.md §6.8). One
+        // that does not go out is kept for an administrator to send again.
+        private readonly UnsentStatements $statements,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -135,10 +152,118 @@ final class UserAdminService
 
         $this->em->wrapInTransaction(function () use ($actor, $target): void {
             // Personal data goes; contributions are anonymised (docs/specs/account-and-auth.md §6.3).
-            $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account: '.$email);
+            // The trail names the account by id: an erased address is not kept here either.
+            $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account #'.(int) $target->getId());
             $this->deletion->purge($target);
             $this->em->flush();
         });
+    }
+
+    /**
+     * Suspend an account for a number of days, and email its holder the
+     * statement of reasons (docs/specs/account-and-auth.md §6.8).
+     *
+     * The decision and its audit row commit together; the email goes after
+     * the commit, so a rolled-back suspension tells nobody. The audit row
+     * names the ground and the end, never the facts: those are on the
+     * account, which the holder can download. An email the transport
+     * refuses is kept whole under Unsent statements ({@see UnsentStatements}).
+     *
+     * @param bool $fromReports the decision followed reports about the account (Article 17(3)(b))
+     *
+     * @return bool whether the statement went out; false means it waits under Unsent statements
+     *
+     * @throws GuardrailViolationException on the administrator's own account or the last administrator
+     * @throws \InvalidArgumentException   with a catalogue key: days out of range, a ground accounts do not take, no facts
+     */
+    public function suspend(User $target, User $actor, int $days, StatementGround $ground, string $facts, bool $fromReports = false): bool
+    {
+        $this->assertNotSelf($target, $actor);
+        $this->assertNotLastAdmin($target);
+        if ($days < 1 || $days > self::SUSPENSION_MAX_DAYS) {
+            throw new \InvalidArgumentException('account_suspension.admin.error_days');
+        }
+        $facts = $this->accountFacts($ground, $facts);
+
+        $now = $this->clock->now();
+        $until = $now->modify(sprintf('+%d days', $days));
+        $target->suspend($until, $ground, $facts, $actor->getId(), $now);
+        $this->commit($actor, self::SUSPEND, $target, sprintf('until %s UTC · ground=%s', $until->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i'), $ground->value));
+
+        return $this->statements->send(
+            $target->getId(),
+            $target->getEmail(),
+            $target->getDisplayName(),
+            $target->getLocale(),
+            $target->getTimeZone() ?? $target->getDetectedTimeZone(),
+            new StatementOfReasons(StatementDecision::AccountSuspended, $ground, $facts, 'ACCOUNT-'.(int) $target->getId(), fromReport: $fromReports, until: $until),
+        );
+    }
+
+    /** End a running suspension now. The holder can sign in again; nothing is sent. */
+    public function liftSuspension(User $target, User $actor): void
+    {
+        $target->liftSuspension($this->clock->now());
+        $this->commit($actor, self::LIFT_SUSPENSION, $target);
+    }
+
+    /**
+     * Remove an account for a breach of the terms, and tell its holder why
+     * (DSA Article 17(1)(c), docs/specs/account-and-auth.md §6.8).
+     *
+     * The address, name and language are read before the purge, and the
+     * statement goes once the removal has committed: a failed purge sends
+     * nothing that claims a removal. The deletion is the ordinary one
+     * ({@see removeAccount()}). After it the address and the facts exist
+     * nowhere else, so an email the transport refuses is kept whole under
+     * Unsent statements ({@see UnsentStatements}) until it is sent again.
+     *
+     * @param bool $fromReports the decision followed reports about the account (Article 17(3)(b))
+     *
+     * @return bool whether the statement went out; false means it waits under Unsent statements
+     *
+     * @throws GuardrailViolationException on the administrator's own account or the last administrator
+     * @throws \InvalidArgumentException   with a catalogue key: a ground accounts do not take, no facts
+     */
+    public function removeAccountForBreach(User $target, User $actor, StatementGround $ground, string $facts, bool $fromReports = false): bool
+    {
+        $this->assertNotSelf($target, $actor);
+        $this->assertNotLastAdmin($target);
+        $facts = $this->accountFacts($ground, $facts);
+
+        $address = $target->getEmail();
+        $name = $target->getDisplayName();
+        $locale = $target->getLocale();
+        $zone = $target->getTimeZone() ?? $target->getDetectedTimeZone();
+        $id = (int) $target->getId();
+
+        $this->em->wrapInTransaction(function () use ($actor, $target, $ground, $id): void {
+            $this->logger->log($actor, self::REMOVE_FOR_BREACH, $target, sprintf('Removed account #%d · ground=%s', $id, $ground->value));
+            $this->deletion->purge($target);
+            $this->em->flush();
+        });
+
+        return $this->statements->send(null, $address, $name, $locale, $zone, new StatementOfReasons(StatementDecision::AccountRemoved, $ground, $facts, 'ACCOUNT-'.$id, fromReport: $fromReports));
+    }
+
+    /**
+     * The facts of an account decision, checked: a ground accounts take, and
+     * the administrator's own words, which the holder reads.
+     */
+    private function accountFacts(StatementGround $ground, string $facts): string
+    {
+        if (!\in_array($ground, StatementGround::forAccounts(), true)) {
+            throw new \InvalidArgumentException('account_suspension.admin.error_ground');
+        }
+        $facts = trim($facts);
+        if ('' === $facts) {
+            throw new \InvalidArgumentException('account_suspension.admin.error_facts');
+        }
+        if (mb_strlen($facts) > StatementOfReasons::FACTS_MAX) {
+            throw new \InvalidArgumentException('moderate.error.note_too_long');
+        }
+
+        return $facts;
     }
 
     public function cancelPendingRemoval(User $target, User $actor): void

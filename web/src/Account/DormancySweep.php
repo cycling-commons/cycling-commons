@@ -116,8 +116,14 @@ final class DormancySweep
             ->from(User::class, 'u')
             ->where('u.lastLoginAt IS NOT NULL')
             ->andWhere('u.lastLoginAt <= :cutoff')
-            // A rider already on their way out has their own clock running.
-            ->andWhere('u.deletionRequestedAt IS NULL')
+            // A suspended account could not sign in: its idle time counts from
+            // the end of the suspension, so one still running is never a
+            // candidate (account-and-auth.md §6.8).
+            ->andWhere('u.suspendedUntil IS NULL OR u.suspendedUntil <= :cutoff')
+            // A rider already on their way out has their own clock running,
+            // for as long as their deletion code works. A code nobody typed
+            // is an abandoned request and exempts nobody.
+            ->andWhere('u.deletionRequestedAt IS NULL OR u.deletionRequestedAt <= :codeExpired')
             ->setParameter('cutoff', $now->modify(sprintf('-%d months', $firstRung)))
             ->setParameter('codeExpired', $now->modify(sprintf('-%d minutes', UserDeletionService::CODE_MINUTES)))
             ->orderBy('u.id')
@@ -137,7 +143,7 @@ final class DormancySweep
 
     private function monthsIdle(User $user, \DateTimeImmutable $now): int
     {
-        $last = $user->getLastLoginAt();
+        $last = self::idleSince($user);
         if (null === $last) {
             return 0;
         }
@@ -145,6 +151,22 @@ final class DormancySweep
         $diff = $last->diff($now);
 
         return ($diff->y * 12) + $diff->m;
+    }
+
+    /**
+     * When the account was last in its holder's hands: the last sign-in, or
+     * the end of a suspension after it, since a suspended account cannot be
+     * signed into.
+     */
+    private static function idleSince(User $user): ?\DateTimeImmutable
+    {
+        $last = $user->getLastLoginAt();
+        $suspended = $user->getSuspendedUntil();
+        if (null === $last || null === $suspended) {
+            return $last;
+        }
+
+        return max($last, $suspended);
     }
 
     /**
@@ -156,7 +178,7 @@ final class DormancySweep
      */
     private function warn(User $user, string $notice, int $idle): void
     {
-        $last = $user->getLastLoginAt();
+        $last = self::idleSince($user);
         $closesOn = $last?->modify(sprintf('+%d months', DormancyLadder::DELETE_AFTER_MONTHS));
 
         $email = (new TemplatedEmail())

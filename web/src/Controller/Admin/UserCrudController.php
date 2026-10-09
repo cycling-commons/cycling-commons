@@ -10,6 +10,7 @@ use App\Catalog\Entity\Region;
 use App\Entity\User;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationScopeProvider;
+use App\Moderation\StatementGround;
 use App\Routing\Languages;
 use App\Service\GuardrailViolationException;
 use App\Service\UserAdminService;
@@ -111,6 +112,8 @@ final class UserCrudController extends AbstractCrudController
         yield BooleanField::new('emailVerified', 'Email Verified')->hideOnForm();
         yield BooleanField::new('twoFaEnabled', '2FA Enabled')->hideOnForm();
         yield $this->riderDateTime('lockedUntil', 'Locked Until')->setRequired(false)->hideOnForm();
+        // account-and-auth.md §6.8: changed only through Suspend and Lift suspension.
+        yield $this->riderDateTime('suspendedUntil', $this->translator->trans('account_suspension.admin.field_suspended_until'))->setRequired(false)->hideOnForm();
         yield BooleanField::new('publicProfile', 'Public Profile');
         yield $this->riderDateTime('createdAt', 'Registered')->hideOnForm();
         yield TextField::new('email', $this->t('admin.field.mod_areas'))
@@ -147,6 +150,15 @@ final class UserCrudController extends AbstractCrudController
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REVOKE_ADMIN, 'admin.action.revoke_admin', 'fa fa-user-minus', true, fn (User $u) => $this->svc->hasRole($u, 'ROLE_ADMIN')))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::REMOVE_ACCOUNT, 'admin.action.remove_account', 'fa fa-trash', true, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
             ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::CANCEL_REMOVAL, 'admin.action.cancel_removal', 'fa fa-rotate-left', false, static fn (User $u) => null !== $u->getDeletionRequestedAt()))
+            // A suspension or a removal for a breach owes its holder a
+            // statement of reasons, so each opens a form for the ground and
+            // the facts (account-and-auth.md §6.8).
+            ->add(Crud::PAGE_DETAIL, Action::new(UserAdminService::SUSPEND, $this->t('account_suspension.admin.action_suspend'), 'fa fa-user-clock')
+                ->linkToCrudAction(UserAdminService::SUSPEND)
+                ->displayIf(static fn (User $u) => !$u->isSuspendedAt(new \DateTimeImmutable())))
+            ->add(Crud::PAGE_DETAIL, $mk(UserAdminService::LIFT_SUSPENSION, 'account_suspension.admin.action_lift', 'fa fa-user-check', false, static fn (User $u) => $u->isSuspendedAt(new \DateTimeImmutable())))
+            ->add(Crud::PAGE_DETAIL, Action::new(UserAdminService::REMOVE_FOR_BREACH, $this->t('account_suspension.admin.action_remove'), 'fa fa-user-xmark')
+                ->linkToCrudAction(UserAdminService::REMOVE_FOR_BREACH))
             ->add(Crud::PAGE_DETAIL, Action::new(UserAdminService::MODERATOR_AREAS, $this->t('admin.action.moderator_areas'), 'fa fa-map')
                 ->linkToCrudAction(UserAdminService::MODERATOR_AREAS)
                 ->displayIf(fn (User $u) => $this->svc->hasRole($u, 'ROLE_CURATOR')))
@@ -257,6 +269,108 @@ final class UserCrudController extends AbstractCrudController
     public function remove_account(AdminContext $context): RedirectResponse
     {
         return $this->run($context, fn (User $t, User $a) => $this->svc->removeAccount($t, $a), 'admin.flash.account_removed', backToIndex: true);
+    }
+
+    /**
+     * Suspend for a number of days. GET shows the form (days, ground, facts),
+     * POST suspends and emails the statement of reasons.
+     *
+     * @see docs/specs/account-and-auth.md §6.8
+     *
+     * @param AdminContext<User> $context
+     */
+    #[AdminRoute(options: ['methods' => ['GET', 'POST']])]
+    public function suspend(AdminContext $context, Request $request): Response
+    {
+        /** @var User $target */
+        $target = $context->getEntity()->getInstance();
+        if (!$request->isMethod('POST')) {
+            return $this->renderAccountDecision($target, UserAdminService::SUSPEND);
+        }
+
+        return $this->decideAccount($request, $target, UserAdminService::SUSPEND, fn (User $actor, StatementGround $ground, string $facts, bool $reports) => $this->svc->suspend(
+            $target, $actor, $request->request->getInt('days'), $ground, $facts, $reports,
+        ), 'account_suspension.admin.flash_suspended', 'account_suspension.admin.flash_suspended_unsent');
+    }
+
+    /** @param AdminContext<User> $context */
+    #[AdminRoute(options: ['methods' => ['POST']])]
+    public function lift_suspension(AdminContext $context): RedirectResponse
+    {
+        return $this->run($context, fn (User $t, User $a) => $this->svc->liftSuspension($t, $a), 'account_suspension.admin.flash_lifted');
+    }
+
+    /**
+     * Remove an account for a breach of the terms. GET shows the form (ground,
+     * facts), POST removes it and emails the statement of reasons.
+     *
+     * @see docs/specs/account-and-auth.md §6.8
+     *
+     * @param AdminContext<User> $context
+     */
+    #[AdminRoute(options: ['methods' => ['GET', 'POST']])]
+    public function remove_for_breach(AdminContext $context, Request $request): Response
+    {
+        /** @var User $target */
+        $target = $context->getEntity()->getInstance();
+        if (!$request->isMethod('POST')) {
+            return $this->renderAccountDecision($target, UserAdminService::REMOVE_FOR_BREACH);
+        }
+
+        return $this->decideAccount($request, $target, UserAdminService::REMOVE_FOR_BREACH, fn (User $actor, StatementGround $ground, string $facts, bool $reports) => $this->svc->removeAccountForBreach(
+            $target, $actor, $ground, $facts, $reports,
+        ), 'account_suspension.admin.flash_removed', 'account_suspension.admin.flash_removed_unsent', backToIndex: true);
+    }
+
+    private function renderAccountDecision(User $target, string $action): Response
+    {
+        return $this->render('admin/user_account_decision.html.twig', [
+            'target' => $target,
+            'action' => $action,
+            'grounds' => StatementGround::forAccounts(),
+            'max_days' => UserAdminService::SUSPENSION_MAX_DAYS,
+        ]);
+    }
+
+    /**
+     * The POST half of Suspend and Remove for a breach: CSRF, then the
+     * decision; a refusal goes back to the form with the reason. When the
+     * statement's email did not go out, the administrator is told so at once,
+     * and where it waits to be sent again (Unsent statements).
+     *
+     * @param callable(User, StatementGround, string, bool): bool $decide returns whether the statement went out
+     */
+    private function decideAccount(Request $request, User $target, string $action, callable $decide, string $successKey, string $unsentKey, bool $backToIndex = false): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid(self::CSRF_TOKEN_ID, (string) $request->request->get('token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token for a user support action.');
+        }
+        /** @var User $actor */
+        $actor = $this->getUser();
+        $ground = StatementGround::tryFrom((string) $request->request->get('ground'));
+
+        try {
+            if (null === $ground) {
+                throw new \InvalidArgumentException('account_suspension.admin.error_ground');
+            }
+            if ($decide($actor, $ground, (string) $request->request->get('facts', ''), $request->request->getBoolean('from_reports'))) {
+                $this->addFlash('success', $this->translator->trans($successKey));
+            } else {
+                $this->addFlash('warning', $this->translator->trans($unsentKey));
+            }
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('danger', $this->translator->trans($e->getMessage(), ['%max%' => UserAdminService::SUSPENSION_MAX_DAYS]));
+
+            return $this->redirect($this->urls->setController(self::class)->setAction($action)->setEntityId($target->getId())->generateUrl());
+        } catch (GuardrailViolationException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        if ($backToIndex) {
+            return $this->redirect($this->urls->setController(self::class)->setAction(Action::INDEX)->generateUrl());
+        }
+
+        return $this->redirect($this->urls->setController(self::class)->setAction(Action::DETAIL)->setEntityId($target->getId())->generateUrl());
     }
 
     /** @param AdminContext<User> $context */

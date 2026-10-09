@@ -21,6 +21,7 @@ use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationService;
+use App\Moderation\UnsentStatements;
 use App\Ops\DailyJobs;
 use App\Ops\JobHealth;
 use App\Pagination\Pager;
@@ -119,6 +120,10 @@ final class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.moderation_activity'), 'fa fa-chart-column', 'admin_moderation_activity');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.coverage_runs'), 'fa fa-list-check', 'admin_coverage_runs');
         yield MenuItem::linkToRoute(new TranslatableMessage('admin.menu.escalated'), 'fa fa-shield-halved', 'admin_escalated');
+        // Account statements of reasons whose email did not go out (account-and-auth.md §6.8).
+        $unsent = $this->unsentStatements->count();
+        $item = MenuItem::linkToRoute(new TranslatableMessage('admin.menu.unsent_statements'), 'fa fa-envelope-open-text', 'admin_unsent_statements');
+        yield $unsent > 0 ? $item->setBadge($unsent, 'danger') : $item;
     }
 
     /**

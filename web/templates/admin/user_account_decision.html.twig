@@ -1,0 +1,50 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+  Suspend an account, or remove it for a breach (docs/specs/account-and-auth.md
+  §6.8). Either decision owes the holder a statement of reasons (DSA Article
+  17(1)(c)), so the form asks for what it states: the ground, the facts in the
+  administrator's own words, and whether reports led to it. The holder reads
+  the facts exactly as written here.
+
+  Expects `target`, `action` (UserAdminService::SUSPEND or ::REMOVE_FOR_BREACH),
+  `grounds` (StatementGround::forAccounts()) and `max_days`.
+#}
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% set suspend = action == constant('App\\Service\\UserAdminService::SUSPEND') %}
+
+{% block page_title %}{{ (suspend ? 'account_suspension.admin.title_suspend' : 'account_suspension.admin.title_remove')|trans }} · {{ target.displayName }} (#{{ target.id }}){% endblock %}
+
+{% block main %}
+  <p>{{ (suspend ? 'account_suspension.admin.suspend_warning' : 'account_suspension.admin.remove_warning')|trans }}</p>
+  <form method="post">
+    <input type="hidden" name="token" value="{{ csrf_token(constant('App\\Controller\\Admin\\UserCrudController::CSRF_TOKEN_ID')) }}">
+    {% if suspend %}
+      <div class="mb-3">
+        <label class="form-label" for="decision-days">{{ 'account_suspension.admin.days'|trans }}</label>
+        <input class="form-control" type="number" id="decision-days" name="days" min="1" max="{{ max_days }}" value="7" required>
+        <div class="form-text">{{ 'account_suspension.admin.days_help'|trans({'%max%': max_days}) }}</div>
+      </div>
+    {% endif %}
+    <div class="mb-3">
+      <label class="form-label" for="decision-ground">{{ 'account_suspension.admin.ground'|trans }}</label>
+      <select class="form-select" id="decision-ground" name="ground" required>
+        <option value="">{{ 'account_suspension.admin.ground_pick'|trans }}</option>
+        {% for g in grounds %}
+          <option value="{{ g.value }}">{{ g.label|trans }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="decision-facts">{{ 'account_suspension.admin.facts'|trans }}</label>
+      <textarea class="form-control" id="decision-facts" name="facts" rows="5" maxlength="2000" required></textarea>
+      <div class="form-text">{{ 'account_suspension.admin.facts_help'|trans }}</div>
+    </div>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="decision-reports" name="from_reports" value="1">
+      <label class="form-check-label" for="decision-reports">{{ 'account_suspension.admin.from_reports'|trans }}</label>
+    </div>
+    <button type="submit" class="btn {{ suspend ? 'btn-primary' : 'btn-danger' }}">{{ (suspend ? 'account_suspension.admin.submit_suspend' : 'account_suspension.admin.submit_remove')|trans }}</button>
+    <a class="btn btn-secondary" href="{{ ea_url().setController('App\\Controller\\Admin\\UserCrudController').setAction('detail').setEntityId(target.id) }}">{{ 'account_suspension.admin.cancel'|trans }}</a>
+  </form>
+{% endblock %}

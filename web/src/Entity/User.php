@@ -19,6 +19,7 @@ use App\Catalog\RiderPseudonym;
 use App\Catalog\RidingStyle;
 use App\Form\CatalogFieldConstraints;
 use App\Map\MapHint;
+use App\Moderation\StatementGround;
 use App\Repository\UserRepository;
 use App\Validator\MailableEmail;
 use App\Validator\PlainDisplayName;
@@ -46,6 +47,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
 #[ORM\UniqueConstraint(name: 'uniq_users_uuid', columns: ['uuid'])]
 #[ORM\UniqueConstraint(name: 'uniq_users_pseudonym', columns: ['pseudonym'])]
+#[ORM\Index(name: 'idx_users_suspended_by', columns: ['suspended_by'])]
 #[ORM\HasLifecycleCallbacks]
 class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface, BackupCodeInterface
 {
@@ -217,6 +219,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private ?\DateTimeImmutable $deletionRequestedAt = null;
 
     /**
+     * An administrator's suspension (docs/specs/account-and-auth.md §6.8):
+     * signing in is refused before this moment, and it ends by itself at it.
+     * The four columns after it are the last suspension's record, as its
+     * statement of reasons stated it; they stay until the next suspension
+     * replaces them or the account is deleted.
+     */
+    #[ORM\Column(name: 'suspended_until', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $suspendedUntil = null;
+
+    #[ORM\Column(name: 'suspended_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $suspendedAt = null;
+
+    #[ORM\Column(name: 'suspension_ground', type: 'string', length: 32, nullable: true, enumType: StatementGround::class)]
+    private ?StatementGround $suspensionGround = null;
+
+    #[ORM\Column(name: 'suspension_facts', type: 'text', nullable: true)]
+    private ?string $suspensionFacts = null;
+
+    /** The administrator who decided it; a foreign key clears it when their account goes (§6.3). */
+    #[ORM\Column(name: 'suspended_by', type: 'integer', nullable: true)]
+    private ?int $suspendedBy = null;
+
+    /**
      * When the rider declared they were 16+. Null if the gate did not apply.
      *
      * @see docs/specs/account-and-auth.md §2
@@ -381,6 +406,67 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function isLocked(): bool
     {
         return null !== $this->lockedUntil && $this->lockedUntil > new \DateTimeImmutable();
+    }
+
+    /**
+     * Suspend the account until a moment (docs/specs/account-and-auth.md §6.8).
+     *
+     * A suspension restarts the dormancy clock as a sign-in does: the holder
+     * could not sign in while it lasted, so the notices sent before it no
+     * longer say when the account would close ({@see \App\Account\DormancySweep}).
+     */
+    public function suspend(\DateTimeImmutable $until, StatementGround $ground, string $facts, ?int $by, \DateTimeImmutable $at): static
+    {
+        $this->suspendedUntil = $until;
+        $this->suspendedAt = $at;
+        $this->suspensionGround = $ground;
+        $this->suspensionFacts = $facts;
+        $this->suspendedBy = $by;
+        $this->inactivity12mAt = null;
+        $this->inactivity22mAt = null;
+        $this->inactivity23mAt = null;
+
+        return $this;
+    }
+
+    /** End a running suspension now; the record of it stays. */
+    public function liftSuspension(\DateTimeImmutable $at): static
+    {
+        if ($this->isSuspendedAt($at)) {
+            $this->suspendedUntil = $at;
+        }
+
+        return $this;
+    }
+
+    public function isSuspendedAt(\DateTimeImmutable $now): bool
+    {
+        return null !== $this->suspendedUntil && $this->suspendedUntil > $now;
+    }
+
+    public function getSuspendedUntil(): ?\DateTimeImmutable
+    {
+        return $this->suspendedUntil;
+    }
+
+    public function getSuspendedAt(): ?\DateTimeImmutable
+    {
+        return $this->suspendedAt;
+    }
+
+    public function getSuspensionGround(): ?StatementGround
+    {
+        return $this->suspensionGround;
+    }
+
+    public function getSuspensionFacts(): ?string
+    {
+        return $this->suspensionFacts;
+    }
+
+    public function getSuspendedBy(): ?int
+    {
+        return $this->suspendedBy;
     }
 
     public function getId(): ?int

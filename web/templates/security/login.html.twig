@@ -27,6 +27,9 @@
             {{ 'security.login.error_unverified'|trans }}
             <a href="{{ path('verify_resend') }}">{{ 'security.login.resend_link'|trans }}</a>
           </div>
+        {% elseif error.messageKey == constant('App\\Security\\SuspensionChecker::SUSPENDED') %}
+          {# docs/specs/account-and-auth.md §6.8: until when, and where the reasons went. #}
+          <div class="alert-error" role="alert">{{ error.messageKey|trans(error.messageData) }}</div>
         {% else %}
           <div class="alert-error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
         {% endif %}

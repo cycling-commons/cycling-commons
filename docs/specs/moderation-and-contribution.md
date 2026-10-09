@@ -1837,7 +1837,7 @@ those citations resolve to.
 | M9 | Trash, the curators' bin. | §6 |
 | M10 | `user_message.user_id` carries a real user FK: messages are correspondence *to* a person, not contributed content. | §7.6 |
 | M11 | Message and note bodies have an explicit length cap (`MessageService::BODY_TEXT_MAX_LENGTH`, 2000) and are HTML-escaped on every render. | §7.2, §7.4 |
-| M12 | Account lock/ban is **not** part of this system. Trash handles the content; the account is the admin desk's job. | §7.8 |
+| M12 | Account lock/ban is **not** part of this system. Trash handles the content; the account is the admin desk's job (suspension and removal for a breach, [account-and-auth.md](account-and-auth.md) §6.8). | §7.8 |
 
 ### 7.1 `UserMessage` (entity `App\Messaging\Entity\UserMessage`): M1
 

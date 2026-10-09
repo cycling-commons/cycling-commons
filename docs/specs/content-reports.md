@@ -518,10 +518,11 @@ note produces a legally required message that explains nothing. Its
 placeholder says so in one line: "Your reason, in plain words. The reporter
 reads it."
 
-**Telling the author is a checkbox, not automatic.** Only the curator knows
-whether the person the resolver found is really the person whose words were
-restricted, and the statement is not a message you can unsend. It is offered
-only when there is an author and they have not already been told.
+**Telling the author is automatic.** Article 17 is owed, not offered, so an
+upheld decision sends the statement whenever the resolver finds an author, and
+the form says so under the note ("If the report is upheld, NAME is sent a
+statement of reasons with your note"). It goes once per report and cannot be
+unsent.
 
 The detail page lists **other open reports about the same thing**. Ten reports
 about one route is a different fact from one report.

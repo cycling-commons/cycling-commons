@@ -88,6 +88,7 @@ final class DataExportService
                     u.updates_opt_in, u.updates_cadence, u.time_zone, u.detected_time_zone, u.privacy_version_seen, u.terms_version_seen, u.closed_hints,
                     u.base_place, u.base_radius_km, u.base_region_ids, u.base_country_codes,
                     ST_Y(u.base_point::geometry) AS base_lat, ST_X(u.base_point::geometry) AS base_lng,
+                    u.suspended_until, u.suspended_at, u.suspension_ground, u.suspension_facts,
                     u.created_at, u.updated_at, u.roles, c.iso2 AS country
              FROM users u
              LEFT JOIN world_country c ON c.id = u.country_id

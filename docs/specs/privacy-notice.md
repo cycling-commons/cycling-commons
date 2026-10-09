@@ -40,6 +40,9 @@ nobody thought of `/privacy`.
 | Turning a profile off takes the name down at once | same, resolved per render; no controller sets `Cache-Control` | a photo page is ever given a shared cache |
 | An account unused for 24 months is deleted, after three emails at 12, 22 and 23 months, and one sign-in keeps it (`privacy.retention_account`) | `App\Account\DormancySweep` and `DormancyLadder` (`app:accounts:dormancy --force`, a daily timer on the worker host; account-and-auth.md §6.5) | the ladder changes, or the timer is not installed (then nothing is deleted for silence and the sentence overstates) |
 | Messages about a rider's contributions kept while the account exists and deleted with it, with the rider's rejected and withdrawn contributions; approved ones stay without a name; a held one stays with its messages (`privacy.retention_messages`) | `App\Moderation\ContributionDeletionHook` on `UserDeletionService::purge()`; no sweep deletes them by age (moderation-and-contribution.md §8) | a time-based sweep is added back, or a deletion path skips the hooks |
+| Statements of reasons are stored as messages, kept while the account exists and deleted with it, in the data export, and emailed; one about the account goes by email only (`privacy.retention_messages`, `privacy.rights_portability`, `privacy.why_legal`) | `App\Moderation\StatementOfReasons`, stored under the `_statement` body param of the decision's message or as a `statement_of_reasons` message on channel `statement` (`MessageService::sendSystem()`, `::sendStatement()`); no sweep touches that channel; `ContributionDeletionHook` deletes every message addressed to the rider; `DataExportService::messages()` exports `body_params`; `StatementOfReasonsMailer` emails each one; account decisions call the mailer alone (content-reports.md §7) | a statement is stored outside `user_message`, a sweep deletes the `statement` channel by age, the export drops `body_params`, or an account statement starts being stored |
+| A suspension keeps its start, end, ground, facts as sent and the deciding administrator on the account until a later suspension replaces them or the account is deleted; the administrator link is cleared when that account is deleted; the export holds all but who decided; the admin log holds the account, the ground and the end, never the facts or the address (`privacy.retention_suspension`) | `User::suspend()`: `suspended_until`, `suspended_at`, `suspension_ground`, `suspension_facts`, `suspended_by` (FK `ON DELETE SET NULL`, `Version20261009050000`); `DataExportService::account()` selects the first four; `UserAdminService::suspend()` audit note `until <date> UTC · ground=<ground>` on the target row (account-and-auth.md §6.8) | a suspension column is added, the export gains `suspended_by` or loses a column, or the audit note gains the facts or an address |
+| A removal for a breach reads the address before the purge and uses it once, after, for the statement; if that mail fails, the address is kept with the statement until an administrator sends it again or discards it, then both are deleted (`privacy.retention_account`) | `UserAdminService::removeAccountForBreach()` holds the address in a local variable through `UserDeletionService::purge()` and hands it to `StatementOfReasonsMailer::send()`; on failure `App\Moderation\UnsentStatements` stores it in `unsent_statement` (resend or discard on /admin/unsent-statements deletes the row); the audit note is `Removed account #<id> · ground=<ground>`; a transport failure logs the reference, the decision and the error, not the address | the address is written anywhere else (the audit log, a log line), or an unsent row outlives its resend or discard |
 | Mail kept 24 months after a thread ends | policy, owner 2026-08-27 | the mailbox policy changes |
 | Contact-form messages deleted 24 months after they were answered or closed (`privacy.retention_mail`) | `App\Support\ContactMessageRetention`, daily in `app:media:gc` (contact-and-support.md §4) | the sweep stops running, or its clock stops being `updated_at` on an answered or closed message |
 | A bug reporter's address deleted 24 months after the outcome, kept while the bug is open (`privacy.retention_bugs`) | `App\Support\BugReporterEmailRetention`, daily in `app:media:gc` (contact-and-support.md §5) | the sweep stops running, or it touches an open report |
@@ -55,6 +58,8 @@ nobody thought of `/privacy`.
 | Browser-contacted services | `security-architecture.md` 2.3, `connect-src` + `img-src` | a CSP host is added |
 | Cookie names and lifetimes | `config/packages/framework.yaml` (session), `config/packages/security.yaml` `remember_me.lifetime` | either is configured differently |
 | Account deletion is immediate | `App\Service\UserDeletionService::confirmDeletion()` | a real grace period is ever built |
+| On deletion, gone: account details, messages, season votes (closed rounds keep their totals), curator applications, and rejected or withdrawn contributions. A country request stays only as an anonymous count: the row keeps country, region and date, and loses the account, the note and the offer to curate. Kept without any link to the account: approved and pending contributions, item confirmations, "I rode this" marks (except marks on a route the rider proposed, which never counted toward its rider count, `RouteCommunityService`, and are deleted), change history, bug reports, translations, licence consents. Approved photos stay credited to an anonymous rider unless the profile is public and the rider chose to keep the name (`keep_media_credit`) (`privacy.rights_erase`, `privacy.retention_messages`, `privacy.retention_contributions`, `privacy.retention_bugs`; terms `suspension_p2`) | the `UserDeletionHookInterface` hooks run by `UserDeletionService::purge()`: `ContributionDeletionHook`, `MediaDeletionHook` (`MediaDisposalService::anonymizeFor()`), `SeasonVoteDeletionHook`, `TranslationDeletionHook`, `CommunityDeletionHook` (deletes curator applications; sets `country_interest.user_id`, `note` to NULL and `willing_to_curate` to false), `CatalogDeletionHook` (confirmations, "I rode this" marks (`route_ride`: unlinked, or deleted on the rider's own route), change history, contributions, curator columns), `SupportDeletionHook` (bug reports), `BlogDeletionHook`; pinned by `AccountErasureTest` (account-and-auth.md §6.3) | a table that references a user is added without a hook, or a hook's outcome changes |
+| Licence consents for photos and translations are kept indefinitely; account deletion removes the account reference (`privacy.retention_consent`) | `App\Media\ConsentService`, `App\Translation\TranslationConsentService` (one ledger, photo-uploads.md §4, translations.md §4); `MediaDeletionHook` clears `consent_record.user_id` | another consent kind joins the ledger |
 | Backups roll off in at most 90 days | infra (restic to Scaleway), owner-confirmed 2026-08-27 | the restic retention policy changes |
 | Server logs kept at most 90 days | infra, `operations.md` 2a | any log path is ever allowed to outlive 90 days |
 | Server logs, full IP addresses included, are deleted within 90 days (`privacy.retention_logs`); the shorter full-address window and the shortening method are not stated | infra, owner-confirmed 2026-09-20 and 2026-10-09; operations.md 2a | a log, full address included, can live longer than 90 days |
@@ -154,9 +159,24 @@ Two things the page says that are easy to get wrong:
   and test only and must never be listed. Anyone verifying the page with curl
   against the dev stack will see them; that is not a finding.
 
-Local storage is disclosed alongside the table, because the ePrivacy question
-is about storage on the reader's device and not about the word "cookie". The
-keys live in `assets/map/theme.js`, `scope.js`, `catalog.js` and `panels.js`.
+Browser storage is disclosed alongside the table (`privacy.cookies_local_body`),
+because the ePrivacy question is about storage on the reader's device and not
+about the word "cookie". The copy names kinds, not keys, so a new preference
+does not make it false:
+
+- **localStorage:** display and map preferences (`assets/map/theme.js`,
+  `scope.js` area, `catalog.js` and `panels.js` map mode and filters,
+  `mapillary.js` dock height, `search-ui.js`, `pages/directory-view.js`,
+  `templates/moderate/_card_script.html.twig`), and the anonymous home area
+  (`scope.js` `LS_AREA_KEY`, set from `panels.js`, rounded to 2 decimals).
+- **IndexedDB:** the unsent bug report draft with its screenshots
+  (`assets/support/bug-fab.js`; its words fall back to localStorage).
+- **sessionStorage:** editing state: translate mode (`assets/js/translate-mode.js`)
+  and the surface stretch seed for the wizard (`surface-tiles.js`, `improve.js`).
+
+None of it is read by the server; a draft reaches us only when it is sent. A
+new kind of storage, or anything stored that is not a preference, a draft or
+editing state, changes the copy.
 
 No consent banner: both cookies are strictly necessary for a service the reader
 asked for. This is stated on the page on purpose, so the absence reads as a

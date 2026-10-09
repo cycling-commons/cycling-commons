@@ -87,10 +87,10 @@ final class LoginThrottleListener
     #[AsEventListener(event: LoginFailureEvent::class)]
     public function onLoginFailure(LoginFailureEvent $event): void
     {
-        // The right password on an unconfirmed account is not a guess.
+        // The right password on an unconfirmed or suspended account is not a guess.
         $exception = $event->getException();
         if ($exception instanceof CustomUserMessageAccountStatusException
-            && VerifiedEmailChecker::UNVERIFIED === $exception->getMessageKey()) {
+            && \in_array($exception->getMessageKey(), [VerifiedEmailChecker::UNVERIFIED, SuspensionChecker::SUSPENDED], true)) {
             return;
         }
 

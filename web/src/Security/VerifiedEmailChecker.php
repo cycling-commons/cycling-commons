@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Security;
 
 use App\Entity\User;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
@@ -20,8 +21,11 @@ use Symfony\Component\Security\Core\User\UserInterface;
  *
  * @see docs/specs/account-and-auth.md §2
  *
+ * One of the firewall's chained user checkers, with {@see SuspensionChecker}.
+ *
  * @api
  */
+#[AutoconfigureTag('security.user_checker.main')]
 final class VerifiedEmailChecker implements UserCheckerInterface
 {
     public const string UNVERIFIED = 'security.login.error_unverified';
