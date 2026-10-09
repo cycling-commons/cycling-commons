@@ -1,0 +1,25 @@
+wiki/developers/gis/spatial-questions.md
+  s_985749378da6fe::t_bebe1c61d0c1ae 443-452
+docs/specs/route-domain.md
+  s_985749378da6fe::t_f08d3ecc0edcb6 652,688,720
+web/tests/Catalog/SeedManualCatalogCommandTest.php
+  s_985749378da6fe::t_f08d3ecc0edcb6 317,324
+web/src/Catalog/Command/SeedManualCatalogCommand.php
+  s_985749378da6fe::t_f08d3ecc0edcb6 117,198,206,215,224,232,241,250,255,260,266,276,297,316
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7a87adadccbe90291b84fa45d031bdb34837c67b",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
