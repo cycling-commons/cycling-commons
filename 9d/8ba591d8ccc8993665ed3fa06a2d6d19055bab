@@ -1,0 +1,35 @@
+web/tests/js/drawer-auto-translated.test.mjs
+  s_985749378da6fe::t_4fdb3fe9904f9b 1-25
+web/src/Controller/MapController.php
+  s_985749378da6fe::t_6fb38352138226 450
+web/assets/map/drawer.js
+  s_985749378da6fe::t_6fb38352138226 777
+docs/specs/privacy-notice.md
+  s_985749378da6fe::t_be77a0fe5078bf 367
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_08c4c7150e6a92 1380
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_b7fe3e2712815b 1993
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_312d04e7002a3c 2000
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_363200f5834636 1375
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_c3344961d9c616 1377
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9d8ba591d8ccc8993665ed3fa06a2d6d19055bab",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
