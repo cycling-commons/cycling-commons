@@ -5,8 +5,9 @@
 # Fails if any enabled non-default locale's catalog is missing keys (or has
 # extra keys) compared to the default locale (en). This keeps every user-facing
 # string translated across en/fr/nl/de/es, so an untranslated key can never ship
-# silently. Every domain is checked: `messages`, and the privacy notice and
-# the terms, which are one file per page per language (`privacy`, `terms`).
+# silently. Every domain is checked: `messages`, and the privacy notice, the
+# terms and the licences page, which are one file per page per language
+# (`privacy`, `terms`, `licenses`).
 # Run as part of `make app-test` / CI.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -37,7 +38,15 @@ function flat(array $a, string $p = ''): array
 
 $fail = 0;
 
-foreach (['messages', 'privacy', 'terms'] as $domain) {
+// An announced legal version's text (docs/specs/translations.md §6.2) joins while it exists.
+$domains = ['messages', 'privacy', 'terms', 'licenses'];
+foreach (['privacy_next', 'terms_next'] as $next) {
+    if (is_file("$dir/$next.$default.yaml")) {
+        $domains[] = $next;
+    }
+}
+
+foreach ($domains as $domain) {
     $base = flat(Yaml::parseFile("$dir/$domain.$default.yaml"));
 
     foreach ($locales as $l) {

@@ -1,5 +1,8 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
 {% extends 'base.html.twig' %}
+{# The page's text is translations/licenses.<locale>.yaml, its own domain,
+   outside the in-site translation system (docs/specs/translations.md §6.2). #}
+{% trans_default_domain 'licenses' %}
 {% block head_styles %}
 <link rel="stylesheet" href="{{ asset('styles/page/pages/licenses.css') }}">
 {% endblock %}

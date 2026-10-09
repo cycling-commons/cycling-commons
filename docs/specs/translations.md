@@ -691,6 +691,7 @@ is the detail for translations and defers to it.
 | English keys and English values; developer-shipped locale YAML | **AGPL-3.0-only** (the software) | `web/translations/messages.*.yaml` in git |
 | A rider's proposed / approved string | **AGPL-3.0-only** | `translation_proposal` / `translation_overlay` in the database, then git YAML once backported (§6.1) |
 | A curator's or admin's in-site English edit | **AGPL-3.0-only** (product copy) | `translation_overlay` with locale `en`, until git absorbs it |
+| The privacy notice, the terms and the licences page | **AGPL-3.0-only** | `web/translations/{privacy,terms,licenses}.*.yaml` in git only, never in the database (§6.2) |
 
 A translation is a derivative of the English string it renders: its key, its
 placeholders and its plural rules only mean something inside the program. So
@@ -831,11 +832,12 @@ because it is the only written description of how one should behave.
        Suppressing that would hide real work.
 
 
-### 6.2 The privacy notice and the terms are not translated on the site
+### 6.2 The privacy notice, the terms and the licences page are not translated on the site
 
-The privacy notice and the terms of use are legal texts. Each is one file per
-page per language, in its own domain: `translations/privacy.<locale>.yaml`
-and `translations/terms.<locale>.yaml` (owner 2026-10-09). The in-site
+The privacy notice, the terms of use and the licences page are legal texts.
+Each is one file per page per language, in its own domain:
+`translations/privacy.<locale>.yaml`, `translations/terms.<locale>.yaml` and
+`translations/licenses.<locale>.yaml` (owner 2026-10-09). The in-site
 translation system works on the `messages` domain only (`CatalogueSync`,
 `OverlayTranslator`, `MarkedTranslator`, the DeepL draft tool, the curator
 desk), so these pages cannot be proposed, overlaid or marked in translate

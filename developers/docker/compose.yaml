@@ -139,6 +139,12 @@ services:
       # and finds SECURITY.md; here SecurityTxtTest failed for that reason and
       # nothing else. One file, read-only, and the two environments agree.
       - ../../SECURITY.md:/SECURITY.md:ro
+      # The texts the terms include by reference (TermsIncludedTextsTest,
+      # docs/specs/translations.md §6.2), read-only, so the pin check runs
+      # here as it does in CI instead of skipping them.
+      - ../../LICENSE:/LICENSE:ro
+      - ../../TRADEMARK.md:/TRADEMARK.md:ro
+      - ../../licenses:/licenses:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"   # so the container can reach the host's Mailpit
       # The same name the cluster uses for Valhalla (web/.env, climb elevation):

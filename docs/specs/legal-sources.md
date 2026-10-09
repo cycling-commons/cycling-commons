@@ -73,6 +73,10 @@ name and the logo, which are deliberately not open.
 | GDPR Art. 6(1)(c) | legal obligation | records we must keep; the statement of reasons (DSA Art. 17) and what an administrator gives the authorities under DSA Art. 18 (`privacy.why_legal`, `privacy.share_authorities`, privacy-notice.md §2) |
 | GDPR Art. 6(1)(f) | legitimate interests | abuse prevention, aggregate analytics |
 | GDPR Arts. 15 to 22 | the data subject's rights | `/privacy`, and the export archive |
+| DSA Art. 11 | a single point of contact for Member State authorities, the Commission and the Board | terms §16: the contact page, in the five site languages |
+| DSA Art. 12 | a single point of contact for recipients, by electronic means, not only automated tools | terms §16: the contact page, read by a person, in the five site languages |
+| DSA Art. 14(1) | the terms state the moderation policies, procedures and tools, including algorithmic decision-making and human review, and complaint handling | terms §12 (grounds, who decides, what software does on its own, what you are told, appeal, reports) and §13 (where machines are involved) |
+| DSA Art. 14(2) | tell recipients about any significant change to the terms | terms §15; `App\Legal\LegalNotice` emails every account at least 30 days ahead (`emails/legal_change.html.twig`); texts the terms include by reference are pinned by hash to the terms version that last accepted them (`TermsIncludedTexts`, `TermsIncludedTextsTest`, translations.md §6.2) |
 | DSA Art. 16(1) | notice and action, any person, no account | `/report/{type}/{id}` sits outside the firewall |
 | DSA Art. 16(2)(c) | a notice carries the reporter's name and email, except for content involving Arts. 3 to 7 of Directive 2011/93/EU | the address is required, except on the `intimate_or_child` ground |
 | DSA Art. 16(4) | acknowledge receipt | `emails/report_acknowledged.html.twig` |
