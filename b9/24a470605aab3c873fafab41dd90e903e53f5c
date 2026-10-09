@@ -1,0 +1,33 @@
+CONTRIBUTING.md
+  s_985749378da6fe::t_82ea16807d6089 133-135,147
+TRADEMARK.md
+  s_985749378da6fe::t_82ea16807d6089 129
+GOVERNANCE.md
+  s_985749378da6fe::t_82ea16807d6089 16,43,64
+tools/signoff-prepare-commit-msg.sh
+  s_985749378da6fe::t_82ea16807d6089 9
+.pre-commit-config.yaml
+  s_985749378da6fe::t_82ea16807d6089 40
+README.md
+  s_985749378da6fe::t_82ea16807d6089 237
+wiki/governance.md
+  s_985749378da6fe::t_82ea16807d6089 95
+.github/workflows/dco.yml
+  s_985749378da6fe::t_82ea16807d6089 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b924a470605aab3c873fafab41dd90e903e53f5c",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
