@@ -831,7 +831,14 @@ internal note, not the page they stood on. Nothing syncs back: status lives on
 the desk, closing the issue is a git act. The button is absent when the two
 settings (`GITHUB_REPO`, `GITHUB_TOKEN`) are empty, and a curator who is not
 an admin gets 403 on the route.
-Pinned by `GitHubIssuesTest` and `BugDeskNotesTest`.
+The public wording names nobody (rulebook RB-BUG-07). One check,
+`App\Support\PublicBugWording`, runs when a curator publishes a bug and when an
+admin opens it on GitHub: wording that holds the reporter's email address is
+refused every time; wording that holds their account name as a whole word (three
+letters or more) is refused until the curator ticks that the word is not about
+them (`public_name_ok` on the decide form, `name_ok` on the GitHub button,
+shown only after a refusal), because a display name can be an ordinary word.
+Other names it cannot know; the rule covers them. Pinned by `GitHubIssuesTest` and `BugDeskNotesTest`.
 
 ### One row, one size
 

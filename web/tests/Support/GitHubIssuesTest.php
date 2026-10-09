@@ -57,6 +57,67 @@ final class GitHubIssuesTest extends TestCase
         $issues->open($this->bug());
     }
 
+    public function testAPublicTextWithTheReportersAddressIsRefusedBeforeAnyRequest(): void
+    {
+        $client = new MockHttpClient(static fn (): MockResponse => throw new \LogicException('no request may be made'));
+        $issues = new GitHubIssues($client, 'cycling/commons', 'k-1', 'https://example.test');
+        $report = $this->bug();
+        $report->setPublic(true);
+        $report->setPublicTitle('The map freezes');
+        $report->setPublicBody('Reported by Somebody@Example.test after a zoom.');
+        $report->setReporterEmail('somebody@example.test');
+
+        $this->expectExceptionMessage('names_person');
+        $issues->open($report);
+    }
+
+    public function testAPublicTextThatNamesTheReporterIsRefusedBeforeAnyRequest(): void
+    {
+        $client = new MockHttpClient(static fn (): MockResponse => throw new \LogicException('no request may be made'));
+        $issues = new GitHubIssues($client, 'cycling/commons', 'k-1', 'https://example.test');
+        $report = $this->bug();
+        $report->setPublic(true);
+        $report->setPublicTitle('Ann Rider cannot save a route');
+
+        $this->expectExceptionMessage('names_person');
+        $issues->open($report, 'ann rider');
+    }
+
+    public function testANameTheAdminHasCheckedMayStay(): void
+    {
+        $client = new MockHttpClient(static fn (): MockResponse => new MockResponse(json_encode(['number' => 8], \JSON_THROW_ON_ERROR), ['http_code' => 201]));
+        $issues = new GitHubIssues($client, 'cycling/commons', 'k-1', 'https://example.test');
+        $report = $this->bug();
+        $report->setPublic(true);
+        $report->setPublicTitle('The Map layer flickers');
+
+        self::assertSame(8, $issues->open($report, 'Map', nameChecked: true));
+    }
+
+    public function testAnAddressIsRefusedEvenWhenTheNameWasChecked(): void
+    {
+        $client = new MockHttpClient(static fn (): MockResponse => throw new \LogicException('no request may be made'));
+        $issues = new GitHubIssues($client, 'cycling/commons', 'k-1', 'https://example.test');
+        $report = $this->bug();
+        $report->setPublic(true);
+        $report->setPublicTitle('somebody@example.test sees a grey map');
+        $report->setReporterEmail('somebody@example.test');
+
+        $this->expectExceptionMessage('names_person');
+        $issues->open($report, null, nameChecked: true);
+    }
+
+    public function testANameInsideAnotherWordIsNoMatch(): void
+    {
+        $client = new MockHttpClient(static fn (): MockResponse => new MockResponse(json_encode(['number' => 7], \JSON_THROW_ON_ERROR), ['http_code' => 201]));
+        $issues = new GitHubIssues($client, 'cycling/commons', 'k-1', 'https://example.test');
+        $report = $this->bug();
+        $report->setPublic(true);
+        $report->setPublicTitle('Annotations vanish on the map');
+
+        self::assertSame(7, $issues->open($report, 'Ann'));
+    }
+
     public function testUnconfiguredMeansNoButtonAndNoRequest(): void
     {
         $client = new MockHttpClient(static fn (): MockResponse => throw new \LogicException('no request may be made'));

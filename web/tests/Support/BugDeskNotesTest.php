@@ -165,6 +165,55 @@ final class BugDeskNotesTest extends WebTestCase
         self::assertSame(77, $this->em()->find(BugReport::class, $report->getId())?->getGithubIssue());
     }
 
+    // -- public wording names nobody (RB-BUG-07) ---------------------------
+
+    public function testPublishingWordingThatHoldsTheReportersAddressIsRefused(): void
+    {
+        $client = $this->client();
+        $report = $this->bug(email: 'reporter-ann@example.test');
+        $client->loginUser($this->curator());
+
+        $this->decide($client, $report, [
+            'status' => 'in_progress',
+            'is_public' => '1',
+            'public_title' => 'reporter-ann@example.test sees a grey map',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('data-public-wording-error', (string) $client->getResponse()->getContent());
+        $this->em()->clear();
+        self::assertFalse($this->em()->find(BugReport::class, $report->getId())?->isPublic(), 'nothing was published');
+    }
+
+    public function testPublishingWordingThatHoldsTheReportersNameAsksOnce(): void
+    {
+        $client = $this->client();
+        $reporter = (new User())->setEmail('mapper-reporter@example.test');
+        $reporter->setPassword('x');
+        $reporter->setDisplayName('Mapper');
+        $this->em()->persist($reporter);
+        $this->em()->flush();
+        $report = $this->bug();
+        $report->setUserId($reporter->getId());
+        $this->em()->flush();
+        $client->loginUser($this->curator());
+
+        $fields = ['status' => 'in_progress', 'is_public' => '1', 'public_title' => 'The Mapper view loses its layers'];
+        $this->decide($client, $report, $fields);
+        self::assertResponseStatusCodeSame(422);
+        $page = $client->getCrawler();
+        self::assertCount(1, $page->filter('input[name="public_name_ok"]'), 'the curator can confirm the word is not about the reporter');
+        $this->em()->clear();
+        self::assertFalse($this->em()->find(BugReport::class, $report->getId())?->isPublic());
+
+        $report = $this->em()->find(BugReport::class, $report->getId());
+        self::assertInstanceOf(BugReport::class, $report);
+        $this->decide($client, $report, $fields + ['public_name_ok' => '1']);
+        self::assertResponseRedirects();
+        $this->em()->clear();
+        self::assertTrue($this->em()->find(BugReport::class, $report->getId())?->isPublic(), 'confirmed, it is published');
+    }
+
     // -- the internal note stays internal ---------------------------------
 
     public function testTheInternalNoteIsSavedAndShownToACurator(): void

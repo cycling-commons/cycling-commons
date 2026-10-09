@@ -78,6 +78,9 @@
         <dd>
           <form method="post" action="{{ path('moderate_bugs_github', {id: report.id}) }}" class="github-open">
             <input type="hidden" name="_token" value="{{ csrf_token('bug-desk-decide') }}">
+            {% if app.request.query.get('name_check') %}
+              <label class="github-name-ok"><input type="checkbox" name="name_ok" value="1"> {{ 'support.bugs.name_ok'|trans }}</label>
+            {% endif %}
             <button type="submit" class="linkbtn">{{ 'support.bugs.github_open'|trans }}</button>
           </form>
         </dd>
@@ -236,6 +239,17 @@
         <label for="d-pbody">{{ 'support.bugs.public_body'|trans }}</label>
         <textarea id="d-pbody" name="public_body" maxlength="2000" rows="10"
                   placeholder="{{ 'support.bugs.public_body_placeholder'|trans }}">{{ d.public_body ?? report.publicBody }}</textarea>
+        {# RB-BUG-07: the reporter's address never passes; their account name
+           passes once the curator confirms it is not about them. #}
+        {% if wording %}
+          <p class="ferr" data-public-wording-error>{{ (wording.kind == 'address' ? 'support.bugs.public_names_address' : 'support.bugs.public_names_name')|trans({'%name%': wording.name}) }}</p>
+          {% if wording.kind == 'name' %}
+            <div class="check">
+              <input type="checkbox" id="d-name-ok" name="public_name_ok" value="1">
+              <label for="d-name-ok">{{ 'support.bugs.name_ok'|trans }}</label>
+            </div>
+          {% endif %}
+        {% endif %}
       </div>
 
       <p class="dact"><button type="submit" class="btn btn-p">{{ 'support.inbox.save'|trans }}</button></p>

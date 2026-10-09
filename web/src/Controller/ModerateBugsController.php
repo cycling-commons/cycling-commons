@@ -16,6 +16,7 @@ use App\Support\BugStatus;
 use App\Support\Entity\BugReport;
 use App\Support\Entity\BugScreenshot;
 use App\Support\GitHubIssues;
+use App\Support\PublicBugWording;
 use App\Support\SupportIntake;
 use App\Support\SupportMailer;
 use App\Support\SupportRepository;
@@ -171,11 +172,22 @@ final class ModerateBugsController extends AbstractController
             return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id]);
         }
         try {
-            $report->setGithubIssue($this->github->open($report));
+            $report->setGithubIssue($this->github->open($report, $this->reporterName($report), $request->request->getBoolean('name_ok')));
             $this->em->flush();
             $this->addFlash('notice', 'support.bugs.github_opened');
         } catch (\RuntimeException $e) {
-            $this->addFlash('notice', 'not_public' === $e->getMessage() ? 'support.bugs.github_not_public' : 'support.bugs.github_failed');
+            if ('names_person_name' === $e->getMessage()) {
+                // The name may be an ordinary word: the button comes back
+                // with one box to confirm it is not about the reporter.
+                $this->addFlash('notice', 'support.bugs.github_names_name');
+
+                return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id, 'name_check' => 1]);
+            }
+            $this->addFlash('notice', match ($e->getMessage()) {
+                'not_public' => 'support.bugs.github_not_public',
+                'names_person' => 'support.bugs.github_names_person',
+                default => 'support.bugs.github_failed',
+            });
         }
 
         return $this->redirectToRoute('moderate_bugs_detail', ['id' => $id]);
@@ -229,22 +241,21 @@ final class ModerateBugsController extends AbstractController
             // still in the form. The browser normally stops this submit first
             // (the field is `required` for these statuses); this is the same
             // rule for a browser without scripting.
-            return $this->renderDetail($report, [
-                'status' => $status->value,
-                'severity' => (string) $request->request->get('severity', $report->getSeverity()->value),
-                'area' => (string) $request->request->get('area', $report->getArea()->value),
-                'internal_note' => (string) $request->request->get('internal_note', ''),
-                'fix_release' => (string) $request->request->get('fix_release', ''),
-                'outcome_note' => (string) $request->request->get('outcome_note', ''),
-                'outcome_default' => $wantsDefault,
-                'is_public' => $request->request->getBoolean('is_public'),
-                'public_title' => (string) $request->request->get('public_title', ''),
-                'public_body' => (string) $request->request->get('public_body', ''),
-            ], 'support.bugs.outcome_missing', Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->renderDetail($report, $this->draft($request, $report, $status, $wantsDefault), 'support.bugs.outcome_missing', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $publicTitle = trim((string) $request->request->get('public_title', ''));
         $wantsPublic = $request->request->getBoolean('is_public');
+        // Public wording names nobody (RB-BUG-07). The address never passes;
+        // the account name passes once the curator confirms it is not about
+        // the reporter, because a display name can be an ordinary word.
+        if ($wantsPublic) {
+            $reporterName = $this->reporterName($report);
+            $named = PublicBugWording::check($publicTitle."\n".(string) $request->request->get('public_body', ''), $report->getReporterEmail(), $reporterName);
+            if (PublicBugWording::ADDRESS === $named || (PublicBugWording::NAME === $named && !$request->request->getBoolean('public_name_ok'))) {
+                return $this->renderDetail($report, $this->draft($request, $report, $status, $wantsDefault), null, Response::HTTP_UNPROCESSABLE_ENTITY, ['kind' => $named, 'name' => (string) $reporterName]);
+            }
+        }
         // Read BEFORE the setters below, so the flash can say what changed
         // rather than what is now true.
         $wasPublic = $report->isPublic();
@@ -329,10 +340,42 @@ final class ModerateBugsController extends AbstractController
      * `$draft` is what the curator submitted, shown in place of the row's own
      * values so a refused save loses nothing they typed. `$noteError` is the
      * translation key for the reason beside the reply field.
-     *
-     * @param array{status: string, severity: string, area: string, internal_note: string, fix_release: string, outcome_note: string, outcome_default: bool, is_public: bool, public_title: string, public_body: string}|null $draft
      */
-    private function renderDetail(BugReport $report, ?array $draft = null, ?string $noteError = null, int $status = Response::HTTP_OK): Response
+    /** The reporter's account name, or null for a report sent without an account or by a deleted one. */
+    private function reporterName(BugReport $report): ?string
+    {
+        $id = $report->getUserId();
+        $user = null !== $id ? $this->em->find(User::class, $id) : null;
+
+        return $user?->getDisplayName();
+    }
+
+    /**
+     * What the curator typed, for the page shown again on a refused save.
+     *
+     * @return array<string, string|bool>
+     */
+    private function draft(Request $request, BugReport $report, BugStatus $status, bool $wantsDefault): array
+    {
+        return [
+            'status' => $status->value,
+            'severity' => (string) $request->request->get('severity', $report->getSeverity()->value),
+            'area' => (string) $request->request->get('area', $report->getArea()->value),
+            'internal_note' => (string) $request->request->get('internal_note', ''),
+            'fix_release' => (string) $request->request->get('fix_release', ''),
+            'outcome_note' => (string) $request->request->get('outcome_note', ''),
+            'outcome_default' => $wantsDefault,
+            'is_public' => $request->request->getBoolean('is_public'),
+            'public_title' => (string) $request->request->get('public_title', ''),
+            'public_body' => (string) $request->request->get('public_body', ''),
+        ];
+    }
+
+    /**
+     * @param array<string, string|bool>|null        $draft   what the curator typed, on a refused save
+     * @param array{kind: string, name: string}|null $wording the public wording names the reporter (RB-BUG-07)
+     */
+    private function renderDetail(BugReport $report, ?array $draft = null, ?string $noteError = null, int $status = Response::HTTP_OK, ?array $wording = null): Response
     {
         $response = $this->render('moderate/bug_detail.html.twig', [
             'github' => $this->github,
@@ -344,6 +387,7 @@ final class ModerateBugsController extends AbstractController
             'report' => $report,
             'draft' => $draft,
             'note_error' => $noteError,
+            'wording' => $wording,
             'reference' => $this->mailer->bugReference($report),
             'statuses' => BugStatus::all(),
             'severities' => BugSeverity::all(),

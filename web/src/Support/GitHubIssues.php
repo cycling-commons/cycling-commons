@@ -58,9 +58,14 @@ final readonly class GitHubIssues
     /**
      * Opens the issue and returns its number.
      *
-     * @throws \RuntimeException when the desk is not configured, the bug is not public, or GitHub refused
+     * The public wording never names a person (rulebook RB-BUG-07): a title or
+     * text that holds the reporter's address is refused before anything is
+     * sent, and so is one that holds `$reporterName` as a whole word unless an
+     * admin has checked that the word is not about them (`$nameChecked`).
+     *
+     * @throws \RuntimeException when the desk is not configured, the bug is not public, the wording names the reporter ('names_person', or 'names_person_name' for a name only), or GitHub refused
      */
-    public function open(BugReport $report): int
+    public function open(BugReport $report, ?string $reporterName = null, bool $nameChecked = false): int
     {
         if (!$this->isConfigured()) {
             throw new \RuntimeException('not_configured');
@@ -70,6 +75,13 @@ final readonly class GitHubIssues
             throw new \RuntimeException('not_public');
         }
         $body = trim((string) $report->getPublicBody());
+        $named = PublicBugWording::check($title."\n".$body, $report->getReporterEmail(), $reporterName);
+        if (PublicBugWording::ADDRESS === $named) {
+            throw new \RuntimeException('names_person');
+        }
+        if (PublicBugWording::NAME === $named && !$nameChecked) {
+            throw new \RuntimeException('names_person_name');
+        }
         $footer = sprintf(
             "\n\n---\nFiled from the Cycling Commons bugs desk, where it is public: %s/known-issues (desk #%d, %s, %s).",
             rtrim($this->siteUrl, '/'),
