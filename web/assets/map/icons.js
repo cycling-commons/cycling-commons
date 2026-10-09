@@ -178,7 +178,8 @@ export function miniIcon(key, glyph, suffix, badge){
   x.beginPath(); x.arc(R,R,9.5*S,0,Math.PI*2);
   x.fillStyle=color; x.fill();
   x.lineWidth=1.6*S; x.strokeStyle='rgba(20,22,14,.85)'; x.stroke();
-  const drawn = !glyph && (key==='scenic' ? CAMERA_PATH : key==='toilets' ? TOILET_PATH : key==='climbs' ? MOUNTAIN_PATH : null);
+  // The category's drawn glyph (ItemType::svgPath()), the same one its DOM pin draws; text only without one.
+  const drawn = !glyph && TYPE_SVG((layer||{}).letter||'');
   if(drawn){
     const side=13*S, sc=side/24;
     x.save();
@@ -334,11 +335,17 @@ export function pinScale(zoom){
 const SUMMIT_MIN_ZOOM=11;
 /* The zoom-driven pin styles, on the map container: the disc and teardrop
    scales, and the class that hides summit chips zoomed out. */
+let _zoomStyleKey='';
 function syncZoomStyles(){
   const el=map.getContainer(), z=map.getZoom();
-  el.style.setProperty('--disc-s', discScale(z).toFixed(3));
-  el.style.setProperty('--pin-s', pinScale(z).toFixed(3));
-  el.classList.toggle('cc-z-lt11', z < SUMMIT_MIN_ZOOM);
+  const disc=discScale(z).toFixed(2), pin=pinScale(z).toFixed(2), low=z < SUMMIT_MIN_ZOOM;
+  // Written only when a value moves: a write restyles every pin, and this runs on every zoom frame.
+  const key=disc+'|'+pin+'|'+low;
+  if(key===_zoomStyleKey) return;
+  _zoomStyleKey=key;
+  el.style.setProperty('--disc-s', disc);
+  el.style.setProperty('--pin-s', pin);
+  el.classList.toggle('cc-z-lt11', low);
 }
 map.on('zoom', syncZoomStyles);
 syncZoomStyles();

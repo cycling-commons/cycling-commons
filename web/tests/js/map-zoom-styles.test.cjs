@@ -33,18 +33,19 @@ function liftPinScale() {
 
 test('a disc pin of an OpenStreetMap place waits for its category icon zoom', () => {
   assert.match(pools, /import \{[^}]*\biconMinZoom\b[^}]*\} from '\.\/icons\.js';/);
-  assert.match(pools, /if\(!p\.cluster && map\.getZoom\(\) < iconMinZoom\(st\.key\) && pinClasses\(p\)\.includes\('disc'\)\) continue;/);
+  assert.match(pools, /if\(!p\.cluster && poolDiscWaits\(st\.key, p, map\.getZoom\(\)/);
 });
 
 test('the coverage icons are lifted above every line, the selected icon on top', () => {
   const lift = (render.match(/export function liftInfoLayersAboveRoutes\(\)\{[\s\S]*?\n\}/) || [''])[0];
-  assert.match(lift, /\.filter\(id=>\/-cov\$\/\.test\(id\)\)\.forEach\(id=>map\.moveLayer\(id\)\)/);
+  assert.match(lift, /coverageIconLayerIds\(map\.getStyle\(\)\.layers\.map\(l=>l\.id\)\)\.forEach\(id=>map\.moveLayer\(id\)\)/);
   assert.match(lift, /if\(map\.getLayer\('cov-sel-icon'\)\) map\.moveLayer\('cov-sel-icon'\);\s*\n\}$/);
 });
 
 test('the summit chip shows from z11', () => {
   assert.match(icons, /const SUMMIT_MIN_ZOOM=11;/);
-  assert.match(icons, /classList\.toggle\('cc-z-lt11', z < SUMMIT_MIN_ZOOM\)/);
+  assert.match(icons, /low=z < SUMMIT_MIN_ZOOM/);
+  assert.match(icons, /classList\.toggle\('cc-z-lt11', low\)/);
   assert.match(mapCss, /\.cc-z-lt11 \.cc-summit,/);
 });
 
@@ -55,13 +56,14 @@ test('our teardrops grow from 70% at z8 to full size at z14', () => {
   assert.ok(Math.abs(at(11) - 0.85) < 1e-9);
   assert.equal(at(14), 1);
   assert.equal(at(17), 1);
-  assert.match(icons, /setProperty\('--pin-s', pinScale\(z\)\.toFixed\(3\)\)/);
+  assert.match(icons, /pin=pinScale\(z\)\.toFixed\(2\)/);
+  assert.match(icons, /setProperty\('--pin-s', pin\)/);
   assert.match(pins, /\.cc-pin\{--p:var\(--pin-s, ?1\);[^}]*width:calc\(30px \* var\(--p\)\);height:calc\(30px \* var\(--p\)\)/);
   assert.match(pins, /\.cc-pin\.q::after\{[^}]*width:calc\(15px \* var\(--p\)\)/);
 });
 
 test('the gradient chip hides with the summit chip, below z11', () => {
-  assert.match(mapCss, /\.cc-z-lt11 \.cc-summit,\s*\.cc-z-lt11 \.cc-steep\{display:none\}/);
+  assert.match(mapCss, /\.cc-z-lt11 \.cc-summit,\s*\.cc-z-lt11 \.cc-steep:not\(\.cc-steep-pending\)\{display:none\}/);
 });
 
 test('a shelter glyph is white on its purple', () => {

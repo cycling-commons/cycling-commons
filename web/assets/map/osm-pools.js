@@ -86,7 +86,14 @@ export function poolPinDrawn(key, id){
   if(!st || !active.has(key) || id == null) return false;
   const f = st.confirmed.find(x => x.properties && x.properties.id === id);
   if(!f || !poolVisible(f, st.layer)) return false;
+  if(poolDiscWaits(key, f.properties, map.getZoom(), _listed.has(placeKey((st.layer||{}).letter, id)))) return false;
   return poolChipsPass(st.layer, key, f.properties);
+}
+/* An OpenStreetMap place drawn as a small disc waits for its category's icon
+   zoom, as the tile icons do (docs/specs/map-and-search.md); a place a list
+   shows (a ride check, a route's places) always shows. */
+export function poolDiscWaits(key, props, zoom, listed){
+  return !listed && zoom < iconMinZoom(key) && pinClasses(props||{}).includes('disc');
 }
 /* The one chip a pool pin answers to: stays accessibility. A place shown anyway
    (render.js showPlaceAnyway, docs/specs/map-and-search.md §9) passes. */
@@ -214,14 +221,20 @@ export function updateConfMarkers(){
       if(next[key]) continue;
       if(!p.cluster && !poolChipsPass(st.layer, st.key, p)) continue;
       // An OpenStreetMap place (the small disc) waits for its category's icon zoom, like the tile icons.
-      if(!p.cluster && map.getZoom() < iconMinZoom(st.key) && pinClasses(p).includes('disc')) continue;
+      if(!p.cluster && poolDiscWaits(st.key, p, map.getZoom(), _listed.has(placeKey((st.layer||{}).letter, p.id)))) continue;
       let m=on[key];
       if(!m){
         if(p.cluster){
           const el=clusterEl(st.layer, p.point_count_abbreviated); el.style.cursor='pointer';
           // MapLibre ≥3: getClusterExpansionZoom is a Promise (callback form is ignored).
           // stopPropagation: same click-to-scope note as confLeafPin.
-          el.addEventListener('click', e=>{ e.stopPropagation(); map.getSource(srcId).getClusterExpansionZoom(p.cluster_id).then(z=>map.easeTo({center:co, zoom:z+0.2})).catch(()=>{}); });
+          // A bubble that holds discs opens at least where they show, or it opens onto an empty map.
+          el.addEventListener('click', e=>{ e.stopPropagation(); const src=map.getSource(srcId);
+            Promise.all([src.getClusterExpansionZoom(p.cluster_id), src.getClusterLeaves(p.cluster_id, 200, 0)])
+              .then(([z, leaves])=>{
+                const discs=leaves.some(l=>pinClasses(l.properties||{}).includes('disc'));
+                map.easeTo({center:co, zoom:(discs ? Math.max(z, iconMinZoom(st.key)) : z)+0.2});
+              }).catch(()=>{}); });
           m=new maplibregl.Marker({element:el, anchor:'center'}).setLngLat(co).addTo(map);
         } else {
           m=fanPin(new maplibregl.Marker({element:confLeafPin(st, p, co), anchor:'bottom'}).setLngLat(co).addTo(map),

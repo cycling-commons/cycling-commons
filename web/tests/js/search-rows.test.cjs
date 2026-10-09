@@ -27,9 +27,9 @@ test('a long name gets two lines before it is cut', () => {
 
 test('returning to a search box that still holds a query brings the list back', () => {
   assert.match(src, /sBox\.addEventListener\('focus', reopenS\);/);
-  assert.match(src, /const reopenS=\(\)=>\{ if\(!sRes\.hidden \|\| !sBox\.value\.trim\(\)\) return;/);
+  assert.match(src, /const reopenS=\(\)=>\{ const q=sBox\.value\.trim\(\); if\(!sRes\.hidden \|\| !q\) return;/);
 });
 
 test('a hit that is our own item opens the item, never an OSM view of it', () => {
-  assert.match(src, /go:\(\)=>h\.itemId!=null \? openApiHit\(h\.letter, h\.itemId, h\.rid\) : openCoverageByRef\(h\.ref, h\.letter, h\.ll, h\.n\)/);
+  assert.match(src, /go:\(\)=>h\.itemId!=null && h\.rid!=null \? openApiHit\(h\.letter, h\.itemId, h\.rid\) : openCoverageByRef\(h\.ref, h\.letter, h\.ll, h\.n\)/);
 });

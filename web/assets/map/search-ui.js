@@ -255,7 +255,7 @@ export function initSearchUi(){
               return {name:h.n, key:slug(h.n), kind:layer.label, badge:(h.kind && kindGlyphSvg(h.letter, h.kind, layer.color, 15)) || layerGlyph(layer), color:layer.color,
                 letter:h.letter, ll:h.ll, cov:1, osm:!h.curated, itemId:h.itemId, where:h.region||'',
                 // Our own item opens as itself (its region loads first), never as an OSM point.
-                go:()=>h.itemId!=null ? openApiHit(h.letter, h.itemId, h.rid) : openCoverageByRef(h.ref, h.letter, h.ll, h.n)}; });
+                go:()=>h.itemId!=null && h.rid!=null ? openApiHit(h.letter, h.itemId, h.rid) : openCoverageByRef(h.ref, h.letter, h.ll, h.n)}; });
           _covSQ=slug(q);
           if(!sRes.hidden) runS();
         })
@@ -387,14 +387,16 @@ export function initSearchUi(){
       if(e.target.closest('button[data-widen]')){ e.stopPropagation(); widenSearch(); return; }
       const b=e.target.closest('button[data-i]'); if(b) pickS(+b.dataset.i);
     });
-    let _sDeb=null, _phDeb=null, _covDeb=null;
-    sBox.addEventListener('input', ()=>{ clearTimeout(_sDeb); _sDeb=setTimeout(runS,150);
+    let _sDeb=null, _phDeb=null, _covDeb=null, _lastQ='';
+    sBox.addEventListener('input', ()=>{ _lastQ=sBox.value.trim(); clearTimeout(_sDeb); _sDeb=setTimeout(runS,150);
       clearTimeout(_phDeb); _phDeb=setTimeout(()=>runPhoton(sBox.value),350);
       clearTimeout(_covDeb); _covDeb=setTimeout(()=>{ runCoverageSearch(sBox.value); runItemSearch(sBox.value); },250); });
     /* Back in a box that still holds a query (after picking a hit, or after
        the panel closed): the list comes back without retyping. */
-    const reopenS=()=>{ if(!sRes.hidden || !sBox.value.trim()) return;
-      runPhoton(sBox.value); runCoverageSearch(sBox.value); runItemSearch(sBox.value); runS(); };
+    const reopenS=()=>{ const q=sBox.value.trim(); if(!sRes.hidden || !q) return;
+      // The same query: its results are still here, so the list redraws with no new requests.
+      if(q===_lastQ){ runS(); return; }
+      _lastQ=q; runPhoton(sBox.value); runCoverageSearch(sBox.value); runItemSearch(sBox.value); runS(); };
     sBox.addEventListener('focus', reopenS);
     sBox.addEventListener('click', reopenS);
     sBox.addEventListener('keydown', e=>{

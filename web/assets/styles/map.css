@@ -1661,9 +1661,10 @@
     box-shadow:0 2px 7px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
   .cc-summit::before{content:"⚑";font-size:.72rem;color:#FF5A1F}
   .cc-summit:focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}
-  /* The summit and gradient chips show from z11 (icons.js SUMMIT_MIN_ZOOM); wider, the climbs' chips piled up. */
+  /* The summit and gradient chips show from z11 (icons.js SUMMIT_MIN_ZOOM); wider, the climbs' chips piled up.
+     A curator previewing a pending climb shape keeps its marker at every zoom. */
   .cc-z-lt11 .cc-summit,
-  .cc-z-lt11 .cc-steep{display:none}
+  .cc-z-lt11 .cc-steep:not(.cc-steep-pending){display:none}
   /* Where a search result is: above every pin (owner 2026-09-28). Pins stack
      in the order they were added, with no z-index of their own, so without
      this the town pin, the hover ring or a revealed hit could sit under the

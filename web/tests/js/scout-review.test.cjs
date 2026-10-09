@@ -56,3 +56,20 @@ test('VIEW arrives with its kind already picked', () => {
 test('the rest of the kind list is in alphabetical order of the rider\'s language', () => {
   assert.match(fn(review, 'kindChoices'), /\.sort\(\(a, b\) => all\[a\]\.localeCompare\(all\[b\]\)\)/);
 });
+
+// Run, not matched: the kind list on a Scout card (review round 2026-10-09).
+test('the pick\'s kinds come first, the rest follow alphabetically, and a kind outside the list still needs one', () => {
+  const srcAll = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', '..', 'assets', 'map', 'scout-review.js'), 'utf8');
+  const fn = name => (srcAll.match(new RegExp(`function ${name}\\(entry[^)]*\\) \\{[\\s\\S]*?\\n\\}`)) || [''])[0];
+  const c = { window: { CC_SCOUT_KINDS: {
+    labels: { P: { viewpoint: 'Viewpoint', waterfall: 'Waterfall', cave: 'Cave entrance', nature: 'Natural feature' } },
+    byPick: { scenery: { 1: ['nature', 'waterfall'] } },
+  } } };
+  require('node:vm').createContext(c);
+  require('node:vm').runInContext(fn('kindChoices') + '\n' + fn('needsKind') + '\nthis.kc=kindChoices; this.nk=needsKind;', c);
+  const keys = JSON.parse(JSON.stringify(c.kc({ letter: 'P', tag: 'scenery', detail: 1 }).map(([k]) => k)));
+  assert.deepEqual(keys, ['nature', 'waterfall', 'cave', 'viewpoint']);
+  assert.equal(c.nk({ letter: 'P', tag: 'scenery', detail: 1, kind: 'castle' }), true, 'a Q kind on a P card is not a P kind');
+  assert.equal(c.nk({ letter: 'P', tag: 'scenery', detail: 1, kind: 'cave' }), false);
+  assert.equal(c.kc({ letter: 'B', tag: 'water', detail: 1 }), null, 'a letter without kinds asks for none');
+});

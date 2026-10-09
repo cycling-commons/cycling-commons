@@ -11,7 +11,7 @@ import { openClimbProfile } from './climb-profile.js';
 import { uKm, uM, uElev, uKmValue, uElevValue, uDistUnit } from './units.js';
 import { map } from './map-init.js';
 import { CATALOG, CITIES } from './catalog.js';
-import { layerGlyph, pinEl, waterKind } from './icons.js';
+import { layerGlyph, pinEl, waterKind, pinScale } from './icons.js';
 import { itemLinks } from './links.js';
 import { sheet } from './sheet.js';
 import { openLightbox } from './lightbox.js';
@@ -25,7 +25,7 @@ import { watchCommonsPhoto, photoWaitRef } from './commons-photo.js';
 import { wantsHiddenPhotos, hiddenPhotosHtml, galleryWithConfirmed, pinMoveHidesHtml } from './hidden-photos.js';
 import { osmQuestionHtml, replacesHtml } from './osm-question.js';
 import { townPinSvg } from './town-pin.js';
-import { fanPin, fanRingFor } from './pin-fan.js';
+import { fanPin, fanRingFor, pinElFor } from './pin-fan.js';
 import { setSurfaceTiles, surfaceTilesVisible, surfaceTilesConfigured } from './surface-tiles.js';
 import { isPicking, cancelPicking } from './picking.js';
 import { openCity, openRouteById, bumpPlaceReq } from './places.js';
@@ -1338,15 +1338,26 @@ export function highlightAt(ll, offset, key){
   _hl={ll, offset:offset||[0,0], key:key==null ? null : key};
   placeHighlight();
 }
+/* The ring on a bottom-anchored pin: half the height the pin is drawn at
+   (pins scale with the zoom), or the default offset at the pin scale when no
+   pin for it is on screen. A flat dot (offset 0) stays centred. */
+export function ringOffset(offset, pinHeight, scale){
+  if(offset[0]===0 && offset[1]===0) return [0, 0];
+  return [offset[0], pinHeight > 0 ? -pinHeight/2 : offset[1]*scale];
+}
 function placeHighlight(){
   if(!hlMarker){ const el=document.createElement('div'); el.className='cc-highlight'; hlMarker=new maplibregl.Marker({element:el,anchor:'center'}); }
-  const {ll, offset, key}=_hl;
+  const {ll, key}=_hl;
+  const pin = pinElFor(key);
+  const offset = ringOffset(_hl.offset, pin ? pin.offsetHeight : 0, pinScale(map.getZoom()));
   const onPin = offset[0]!==0 || offset[1]!==0;
   const fan = onPin ? fanRingFor(key, ll) : null;
   const off = fan==='point' ? [0,0] : fan ? [offset[0]+fan[0], offset[1]+fan[1]] : offset;
   hlMarker.setOffset(off).setLngLat([ll[1],ll[0]]).addTo(map);
 }
 document.addEventListener('cc:fanout', ()=>{ if(_hl) placeHighlight(); });
+// Pins grow and shrink with the zoom; the ring follows them.
+map.on('zoom', ()=>{ if(_hl) placeHighlight(); });
 export function clearHighlight(){ _hl=null; if(hlMarker) hlMarker.remove(); }
 // docs/specs/map-and-search.md §12 — reveal pin for a non-drawn search hit in Curated; never force Everything.
 let _revealMarker=null;

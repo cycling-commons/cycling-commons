@@ -161,8 +161,13 @@ export function liftInfoLayersAboveRoutes(){
   dynamicIds.filter(id=>id.startsWith('route-climbs-')).forEach(liftGroup);
   ['mly-cov','mly-img'].forEach(id=>{ if(map.getLayer(id)) map.moveLayer(id); });
   // The coverage icons over every line (owner 2026-10-08), the selected icon on top of them.
-  map.getStyle().layers.map(l=>l.id).filter(id=>/-cov$/.test(id)).forEach(id=>map.moveLayer(id));
+  coverageIconLayerIds(map.getStyle().layers.map(l=>l.id)).forEach(id=>map.moveLayer(id));
   if(map.getLayer('cov-sel-icon')) map.moveLayer('cov-sel-icon');
+}
+/* The coverage icon layers (`<key>-<cc>-cov`) among style layer ids; Mapillary's
+   `mly-cov` is a line layer and stays under them. */
+export function coverageIconLayerIds(ids){
+  return ids.filter(id=>/-cov$/.test(id) && !/^mly-/.test(id));
 }
 /* Surface selection halo: dedicated geojson source (segments share one consolidated source). */
 export function showSurfaceSelection(path){
@@ -591,7 +596,16 @@ function closeHint(h){
   const H=window.CC_HINTS||{};
   H.closed=[...(H.closed||[]), h]; window.CC_HINTS=H;
   updateZoomHint();
-  if(H.url) fetch(H.url.replace('HINT', h), {method:'POST', headers:{'X-CSRF-Token':H.token}}).catch(()=>{});
+  // The button is gone with the note: focus goes back to the map, not to the page.
+  map.getCanvas().focus();
+  if(H.url) fetch(H.url.replace('HINT', h), {method:'POST', headers:{'X-CSRF-Token':H.token}})
+    .then(r=>{ if(!r.ok) reopenHint(h); }).catch(()=>reopenHint(h));
+}
+/* The account did not store it (signed out, expired form): the note comes back, true to what the next page shows. */
+function reopenHint(h){
+  const H=window.CC_HINTS||{};
+  H.closed=(H.closed||[]).filter(x=>x!==h);
+  updateZoomHint();
 }
 
 /* Zoom hint when coverage is on but the tileset/icon floor hides POIs. */
@@ -616,15 +630,20 @@ export function updateZoomHint(){
     : !anyCoverage ? ''
     : z < 6 ? (I18N.zoomForCoverage || 'Zoom in to see the full-coverage layers')
     : '';
-  el.replaceChildren(document.createTextNode(msg));
   const closable = pendingShown && !!(window.CC_HINTS||{}).url;
-  el.classList.toggle('has-x', closable);
-  if(closable){
-    const x=document.createElement('button');
-    x.type='button'; x.className='zoom-hint-x'; x.textContent='✕';
-    x.setAttribute('aria-label', I18N.areaDismiss||'Dismiss');
-    x.onclick=()=>closeHint(hintKey);
-    el.append(x);
+  // Rebuilt only when it changes: every zoom and render calls this, and a rebuild drops keyboard focus on the button.
+  const state = msg+'|'+(closable ? hintKey : '');
+  if(el.dataset.state!==state){
+    el.dataset.state = state;
+    el.replaceChildren(document.createTextNode(msg));
+    el.classList.toggle('has-x', closable);
+    if(closable){
+      const x=document.createElement('button');
+      x.type='button'; x.className='zoom-hint-x'; x.textContent='✕';
+      x.setAttribute('aria-label', I18N.areaDismiss||'Dismiss');
+      x.onclick=()=>closeHint(hintKey);
+      el.append(x);
+    }
   }
   el.hidden = !msg;
 

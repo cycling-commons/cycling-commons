@@ -7,7 +7,7 @@ import { showTip, hideTip } from './sheet.js';
 import { layerByKey, active, mode, LETTER_KEY, KEY_LETTER } from './catalog.js';
 import { liftScopeForHit } from './scope-ui.js';
 import { mintKindIcons, miniIcon, iconMinZoom, SERVICE_GLYPH, coverageIconId, kindImageId, covIconSizes, DISC_SIZES, DROP_SIZES, witnessCutoff, KIND_ICONS, PLACE_LETTER, PLACE_KIND_LABELS, kindOfLabel } from './icons.js';
-import { updateCounts, applyStaysAccessFilter } from './render.js';
+import { updateCounts, applyStaysAccessFilter, liftInfoLayersAboveRoutes } from './render.js';
 import { openDrawer, renderDrawerBody, osmDrawer, waterDrawer, revealPinAt } from './drawer.js';
 import { isPicking } from './picking.js';
 import { osmLayers } from './osm-pools.js';
@@ -231,6 +231,8 @@ export function addCoverage(){
   const mount = () => mountInView(map, 'coverage', 'points', COVERAGE_MIN_ZOOM, (key, src) => {
     (key === '*' ? COVERAGE_CCS : [key]).forEach(cc => addCoverageLayers(cc, src));
     updateCoverageScopeFilter(); syncCoverageLayers();
+    // A country mounted after the first render lands at the top: its haze goes back under the lines, its icons over them.
+    liftInfoLayersAboveRoutes();
   });
   mount();
   map.on('moveend', mount);

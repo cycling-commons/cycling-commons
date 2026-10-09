@@ -1882,7 +1882,10 @@ stores the name in
 `users.closed_hints`, through `POST /map/hint/{hint}/close` (stateless CSRF id
 `map-hint`; 401 signed out, 404 for a name that is not a `MapHint`, 204 once
 stored). The page hands the list back as `window.CC_HINTS.closed`, so the note
-stays closed on every device. No settings screen shows the list, and nothing
+stays closed on every device. If the account refuses the write (signed out, an
+expired form), the note comes back, true to what the next page shows. Focus
+goes to the map after closing, and the note is rebuilt only when its text or
+its close changes, so keyboard focus on the button survives a zoom. No settings screen shows the list, and nothing
 reopens a closed hint; the data export carries it with the other account
 settings. The orange curator-mode ring stays: it says which mode the map is
 in, the note only explains it.
@@ -1983,8 +1986,16 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
     class `.cc-z-lt11`); zoomed out, the chips of every climb piled up.
   - An OpenStreetMap place waits for its category's icon zoom
     (`iconMinZoom()`: water z11, the rest z12), on a tile and also when it is
-    one of our pool rows drawn as a small disc pin (`updateConfMarkers()`).
-    A count bubble still counts such rows.
+    one of our pool rows drawn as a small disc pin (`poolDiscWaits()` in
+    `updateConfMarkers()` and `poolPinDrawn()`). A place a list shows (a ride
+    check, a route's places) always shows. A count bubble still counts such
+    rows, and a bubble that holds one opens at least at its icon zoom, so the
+    click never lands on an empty map.
+  - The selection ring sits on the pin as it is drawn at this zoom: half the
+    height of the pin on screen (`ringOffset()`, `pinElFor()`), following the
+    pin as the map zooms.
+  - The coverage icon layers are lifted over every line; Mapillary's `mly-cov`
+    line is not one of them (`coverageIconLayerIds()`).
 - **Coverage renders as a density heatmap at overview, individual icons from
   z11 (water) and z12 (the rest), no clustering, phantom-free at every zoom.**
   A coverage POI's icon is drawn by its tile `<key>-<cc>-cov` layer (`minzoom`

@@ -673,7 +673,7 @@ the thinned, density-preserving sample of points (`--drop-densest-as-needed`,
 of individual icons, with the rail's exact `/map/coverage/counts` carrying the
 precise "how much" alongside it. Individual icons render **from z11 for
 water and z12 for every other category** (`COV_ICON_MIN_ZOOM`,
-`iconMinZoom()` in `coverage.js`), where `-r1` keeps every point, so a
+`iconMinZoom()` in `icons.js`), where `-r1` keeps every point, so a
 category's icons arrive complete. At z9 every category popped in at once and
 buried the map, and between the fading haze and the icons the map showed
 nothing (owner 2026-10-08). Each category's heatmap now holds at full
@@ -840,8 +840,11 @@ non-empty) is NOT prop-less — it hides under a region scope (matching
   `addCoverage()` calls `tile-sources.js`'s `mountInView(map, 'coverage',
   'points', COVERAGE_MIN_ZOOM, ...)`, and only when a country's (or the `*`
   world entry's) tile source is newly mounted does `addCoverageLayers(cc, src)`
-  build that country's icon (`<key>-<cc>-cov`, `minzoom: 9`) and heatmap
-  (`<key>-<cc>-heat`, `maxzoom: 9`) layer pair against it - there is no
+  build that country's icon (`<key>-<cc>-cov`, `minzoom: iconMinZoom(key)`)
+  and heatmap (`<key>-<cc>-heat`, `maxzoom` that plus 0.75) layer pair against
+  it, then re-stacks the map (`liftInfoLayersAboveRoutes()`), so a country
+  mounted after the first render has its haze under the lines and its icons
+  over them - there is no
   `-cov-cl` cluster-bubble sublayer to wire. `updateCoverageScopeFilter`
   guards every `map.setFilter` call on `map.getLayer(id)`, so it is safe to
   call before every country's layers exist yet: the `ridtok`/`cctok` scope

@@ -64,6 +64,14 @@ export function fanOffsetOf(el){
  * fanned pins share the point and none is named: the ring then sits on the
  * point itself, where the leaders meet.
  */
+/** The pin element drawn for `letter:id`, or null when none is on screen. */
+export function pinElFor(key){
+  if(key == null) return null;
+  for(const e of pins.values()){
+    if(e.el.isConnected && e.key === String(key)) return e.el;
+  }
+  return null;
+}
 export function fanRingFor(key, ll){
   let byPoint = null, n = 0;
   for(const e of pins.values()){
