@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Traffic;
 
 use App\Entity\User;
+use App\Traffic\TrafficIntake;
 use App\Traffic\TrafficStore;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -190,6 +191,40 @@ final class TrafficControllerTest extends WebTestCase
         $totals = iterator_to_array(static::getContainer()->get(TrafficStore::class)->totals(), false);
         self::assertCount(1, $totals);
         self::assertSame(5, $totals[0]['lines']);
+    }
+
+    /** @return list<array<string, mixed>> lines carrying $codes fresh codes between them, 85 per line */
+    private static function linesWithCodes(int $codes): array
+    {
+        $lines = [];
+        for ($left = $codes; $left > 0; $left -= 85) {
+            $lines[] = self::line(['blocks' => array_map(static fn (int $i): string => hash('sha256', $i.random_bytes(16)), range(1, min(85, $left)))]);
+        }
+
+        return $lines;
+    }
+
+    public function testARequestWithMoreCodesThanTheLimitIsRefused(): void
+    {
+        $client = static::createClient();
+        $this->rider($client, 'codes');
+        $body = $this->post($client, ['v' => 2, 'lines' => self::linesWithCodes(TrafficIntake::MAX_CODES + 1)]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame('too_many_codes', $body['error']);
+        self::assertSame(0, $this->waiting());
+        self::assertSame(0, (int) static::getContainer()->get(\Doctrine\DBAL\Connection::class)->fetchOne('SELECT COUNT(*) FROM traffic_seen'), 'no code is claimed');
+    }
+
+    public function testARequestAtTheCodeLimitIsTaken(): void
+    {
+        $client = static::createClient();
+        $this->rider($client, 'codes-ok');
+        $lines = self::linesWithCodes(TrafficIntake::MAX_CODES);
+        $body = $this->post($client, ['v' => 2, 'lines' => $lines]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(\count($lines), $body['added']);
     }
 
     public function testThePasswordCheckIsGone(): void

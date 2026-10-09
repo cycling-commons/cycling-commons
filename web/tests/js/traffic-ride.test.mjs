@@ -8,7 +8,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { summariseRide, makeChunks, sendChunks, CHUNK_MAX, unmatchedStops } from '../../assets/lib/traffic-ride.js';
+import { summariseRide, makeChunks, sendChunks, CHUNK_MAX, CHUNK_CODES, unmatchedStops } from '../../assets/lib/traffic-ride.js';
+import { blockCode } from '../../assets/lib/traffic-summary.js';
 
 const TILE = gunzipSync(readFileSync(new URL('./fixtures/roadpieces-14-8419-5411.mvt', import.meta.url)));
 const ENTRIES = { nl: { tiles: { roadpieces: 'https://t/nl.pmtiles' }, bounds: [3.3, 50.7, 7.2, 53.6] } };
@@ -208,4 +209,29 @@ test('a sent line carries its day group and never its date; the chunks keep the 
   assert.ok(sent.every(l => !('day' in l) && l.dayGroup === 9));
   assert.ok(chunks.every(c => c.lines.every(l => l.day === 20708)));
   assert.ok(sent.every(l => !('rider' in l)), 'no rider code of any kind');
+});
+
+test('the dedupe codes of a cut ride come from its kept fixes only', async () => {
+  // A 48 m cut keeps seconds 10 to 29; the whole ride lies in the block from T0.
+  const got = await summariseRide(fitRide(), { ...deps, trimM: 48 });
+  assert.ok(got.lines.length >= 1);
+  const firstKept = { t: T0 + 10, latSemi: semi(52.0011 + 10 * 5 / 111_320), lonSemi: semi(5.0011) };
+  assert.deepEqual([...new Set(got.lines.flatMap(l => l.blocks))], [await blockCode(T0, firstKept)]);
+});
+
+test('rides with many blocks and few lines are packed so a request stays within the server\'s code limit', async () => {
+  // Long lines on few roads: 10 lines of 81 blocks per ride, 20 rides, 16,020 codes in 200 lines.
+  const longRide = salt => {
+    const code = k => (salt + 'x' + k.toString(16)).padStart(64, '0').replace(/[^0-9a-f]/g, 'e');
+    return Array.from({ length: 10 }, (_, j) => line(j, Array.from({ length: 81 }, (_, b) => code(j * 80 + b))));
+  };
+  const lines = Array.from({ length: 20 }, (_, r) => longRide('r' + r)).flat();
+  const chunks = makeChunks(lines);
+  const codes = c => new Set(c.lines.flatMap(l => l.blocks)).size;
+  assert.ok(chunks.length >= 4, `${chunks.length} requests`);
+  assert.ok(chunks.every(c => codes(c) <= CHUNK_CODES), 'each request within ' + CHUNK_CODES + ' codes: ' + chunks.map(codes).join(','));
+  assert.ok(chunks.every(c => c.lines.length % 10 === 0), 'each ride whole');
+  const server = fakeServer();
+  const got = await sendChunks(chunks, server.post);
+  assert.deepEqual([got.added, got.duplicate], [200, 0]);
 });

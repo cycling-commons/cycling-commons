@@ -8,6 +8,8 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Security\TwoFactorPolicy;
+use App\Settings\SettingsProviderInterface;
+use App\Settings\SettingsRegistry;
 use App\Traffic\TrafficDisclosure;
 use App\Traffic\TrafficIntake;
 use App\Traffic\TrafficPayloadRefused;
@@ -63,16 +65,21 @@ final class TrafficController extends AbstractController
      *
      * The two-factor check lives here because /map is outside the setup
      * redirect (TwoFactorSetupEnforcer), as for every curator route under /map.
+     * While the system setting traffic.map_layer_live is 0 the list does not
+     * exist: the map carries no layer to show it.
      *
      * @see docs/specs/traffic-measurements.md §4.6
      */
     #[Route('/map/traffic', name: 'map_traffic', methods: ['GET'])]
     #[IsGranted('ROLE_CURATOR')]
-    public function shown(TrafficView $view, TwoFactorPolicy $twoFactorPolicy): JsonResponse
+    public function shown(TrafficView $view, TwoFactorPolicy $twoFactorPolicy, SettingsProviderInterface $settings): JsonResponse
     {
         $user = $this->getUser();
         if (!$user instanceof User || $twoFactorPolicy->requiresSetup($user)) {
             throw $this->createAccessDeniedException();
+        }
+        if (1 !== $settings->get(SettingsRegistry::TRAFFIC_MAP_LAYER_LIVE)) {
+            throw $this->createNotFoundException();
         }
 
         $response = new JsonResponse([

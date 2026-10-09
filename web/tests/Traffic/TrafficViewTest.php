@@ -113,17 +113,36 @@ final class TrafficViewTest extends WebTestCase
     public function testACuratorWithTwoFactorGetsThePrivateList(): void
     {
         $client = static::createClient();
+        $settings = static::getContainer()->get(SystemSettingsWriter::class);
+        $settings->set(SettingsRegistry::TRAFFIC_MAP_LAYER_LIVE, 1, null);
+        try {
+            $this->fiveRiders();
+            $this->user($client, ['ROLE_CURATOR'], true);
+
+            $client->request('GET', '/map/traffic');
+
+            self::assertResponseIsSuccessful();
+            self::assertStringContainsString('no-store', (string) $client->getResponse()->headers->get('Cache-Control'));
+            self::assertStringContainsString('private', (string) $client->getResponse()->headers->get('Cache-Control'));
+            $body = json_decode((string) $client->getResponse()->getContent(), true);
+            self::assertSame(['workday', 'weekend'], $body['groups']);
+            self::assertSame(4521877, $body['shown'][0]['way']);
+        } finally {
+            $settings->set(SettingsRegistry::TRAFFIC_MAP_LAYER_LIVE, 0, null);
+        }
+    }
+
+    /** Switched off until it is in use (§4.6): the list does not exist while the layer is off. */
+    public function testWhileTheLayerIsOffTheListIsNotFound(): void
+    {
+        $client = static::createClient();
         $this->fiveRiders();
         $this->user($client, ['ROLE_CURATOR'], true);
 
         $client->request('GET', '/map/traffic');
 
-        self::assertResponseIsSuccessful();
-        self::assertStringContainsString('no-store', (string) $client->getResponse()->headers->get('Cache-Control'));
-        self::assertStringContainsString('private', (string) $client->getResponse()->headers->get('Cache-Control'));
-        $body = json_decode((string) $client->getResponse()->getContent(), true);
-        self::assertSame(['workday', 'weekend'], $body['groups']);
-        self::assertSame(4521877, $body['shown'][0]['way']);
+        self::assertResponseStatusCodeSame(404);
+        self::assertArrayNotHasKey('shown', (array) json_decode((string) $client->getResponse()->getContent(), true));
     }
 
     public function testACuratorWithoutTwoFactorOrARiderIsRefused(): void

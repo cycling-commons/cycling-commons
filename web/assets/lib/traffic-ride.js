@@ -15,6 +15,12 @@ import { buildLines, recordsFromFit, localOffsetSeconds, zoneOffsetSeconds, trim
 export const CHUNK_LINES = 500;
 /** The server's limit per request (TrafficIntake::MAX_LINES). */
 export const CHUNK_MAX = 2000;
+/**
+ * Distinct dedupe codes a request aims for; a ride is never split to meet it.
+ * The server refuses a request above TrafficIntake::MAX_CODES (10,000), and a
+ * ride, a few hundred five-minute blocks, never comes near that alone.
+ */
+export const CHUNK_CODES = 4000;
 
 function metres(a, b) {
   const kx = 111_320 * Math.cos(((a.lat + b.lat) / 2) * Math.PI / 180);
@@ -55,7 +61,7 @@ export async function fetchHolidays(cc) {
   return holidayCache.get(cc);
 }
 
-/** Metres cut from each end of a ride: where a rider lives or works. */
+/** Metres cut around each end of a ride, in a straight line: where a rider lives or works. */
 export const TRIM_M = 500;
 
 /**
@@ -72,8 +78,8 @@ export async function summariseRide(fit, { entries, fetchTile, fetchHolidays: ho
   const records = recordsFromFit(fit);
   const points = records.filter(r => r.lat != null).map(r => [r.lon, r.lat]);
   const { pieces } = await loadPieces(points, entries, fetchTile);
-  // The first and last metres never become lines: a cut record counts as no
-  // road, but is not "unmatched" either.
+  // Nothing near the ride's first or last fix becomes a line: a cut record
+  // counts as no road, but is not "unmatched" either, and feeds no dedupe code.
   const keep = trimEnds(records, trimM);
   const matches = matchRide(records, pieces).map((m, i) => (keep[i] ? m : { ...m, way: null, label: null, dir: null }));
 
@@ -89,7 +95,7 @@ export async function summariseRide(fit, { entries, fetchTile, fetchHolidays: ho
     ?? (first && mainCc ? zoneOffsetSeconds(first.t, mainCc[0], first.lon, first.lat) : null)
     ?? 0;
 
-  const lines = await buildLines({ records, matches, passes: radar.passes, offsetS, holidays });
+  const lines = await buildLines({ records, matches, keep, passes: radar.passes, offsetS, holidays });
 
   // Per car, in the radar's order: passed the rider, only nearby (beside a
   // cycle path), or null on a part with no road. For the map markers only.
@@ -173,31 +179,39 @@ function groupsByCode(lines) {
   return [...groups.values()];
 }
 
+/** Distinct dedupe codes of some lines. */
+function codeCount(lines) {
+  return new Set(lines.flatMap(l => l.blocks)).size;
+}
+
 /**
  * Requests to send, each a whole number of rides. Lines that share a dedupe
  * code always travel together: the server counts a line as a duplicate once
  * another request claimed one of its codes, so a ride split over two requests
- * would lose its second half. Rides are shuffled before packing and lines
- * inside each request, so neither order says anything about when or where.
+ * would lose its second half. A request holds about CHUNK_LINES lines and
+ * CHUNK_CODES codes. Rides are shuffled before packing and lines inside each
+ * request, so neither order says anything about when or where.
  *
  * @returns {Array<{lines: Array, sent: boolean}>}
  */
 export function makeChunks(lines) {
   const chunks = [];
   let current = [];
+  let codes = 0;
+  const flush = () => {
+    chunks.push(current);
+    current = [];
+    codes = 0;
+  };
   for (const group of shuffled(groupsByCode(lines))) {
-    if (current.length && current.length + group.length > CHUNK_LINES) {
-      chunks.push(current);
-      current = [];
-    }
-    // A group past the server's limit has to be cut; a single ride never is.
+    const groupCodes = codeCount(group);
+    if (current.length && (current.length + group.length > CHUNK_LINES || codes + groupCodes > CHUNK_CODES)) flush();
+    // A group past the server's line limit has to be cut; a single ride never is.
     for (let i = 0; i < group.length; i += CHUNK_MAX) {
       const part = group.slice(i, i + CHUNK_MAX);
-      if (current.length && current.length + part.length > CHUNK_MAX) {
-        chunks.push(current);
-        current = [];
-      }
+      if (current.length && current.length + part.length > CHUNK_MAX) flush();
       current.push(...part);
+      codes += part.length === group.length ? groupCodes : codeCount(part);
     }
   }
   if (current.length) chunks.push(current);

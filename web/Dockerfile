@@ -53,6 +53,12 @@ RUN { \
       echo 'post_max_size = 20M'; \
     } > "$PHP_INI_DIR/conf.d/cc-uploads.ini"
 
+# Stack traces carry no call arguments, so an exception reported to the error
+# tracker never holds a raw block code or a plain traffic line
+# (traffic-measurements.md §4.2). The image ships no php.ini, and PHP's own
+# default for this is Off.
+RUN echo 'zend.exception_ignore_args = On' > "$PHP_INI_DIR/conf.d/cc-errors.ini"
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app

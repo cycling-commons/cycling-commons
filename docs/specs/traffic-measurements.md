@@ -22,9 +22,10 @@ Related: [moderation-and-contribution.md](moderation-and-contribution.md)
 ## 1. Principles
 
 1. **The ride never leaves the browser.** The server never receives a GPS
-   track, a ride file, the first or last 500 m of a ride, a time finer than a
-   part of the day (§3.4), a date (only one of 16 day groups of its quarter)
-   or the order of a ride, not even in memory. The browser matches the ride to
+   track, a ride file, anything within 500 m of a ride's first or last fix, a
+   time finer than a part of the day (§3.4), a date (only a day group of its
+   quarter, each standing for at least four dates) or the order of a ride, not
+   even in memory. The browser matches the ride to
    road pieces and sends per-piece summaries only. The Scout rule that a
    track-shaped payload is refused, not ignored, applies to the new endpoint
    too.
@@ -203,10 +204,13 @@ position along the piece's vertex order increases, else `b`.
 
 ### 3.4 The summary (`assets/lib/traffic-summary.js`, pure, node-tested)
 
-First the ends are cut: records whose ridden distance from the first fix, or to
-the last fix, is under 500 m are dropped before matching counts anything
-(`trimEnds()`), because that is where a rider lives or works. They are not
-shown as unmatched either; the review says the ends are never sent.
+First the ends are cut: every record within 500 m in a straight line of the
+ride's first fix or of its last fix is dropped before matching counts anything,
+wherever in the ride it lies (`trimEnds()`), because that is where a rider
+lives or works. GPS drift at the door, a loop round the block and a pass by the
+door halfway through the ride are all cut. A record without a fix takes the
+verdict of the last fix before it. Cut records are not shown as unmatched
+either; the review says the ends are never sent.
 
 Records are grouped by **key** = (way, direction, label, band, day type,
 quarter, day), counting only seconds where the radar field is present:
@@ -227,9 +231,13 @@ quarter, day), counting only seconds where the radar field is present:
 - **quarter**: `YYYY-Qn` of the local date.
 - **day**: the local date as days since 1970-01-01. It splits lines by day
   and stays in the browser, which shows it in "Show what is sent". What is sent
-  is **dayGroup**: the day's place in its quarter (0 for the quarter's first
-  day) modulo 16, so each of the 16 groups holds 5 or 6 dates of the quarter
-  and the server never receives a date. It feeds the several-days rule (§4.4).
+  is **dayGroup** (`dayGroupOf()`): how many dates of the same day type come
+  before the day in its quarter, modulo 12 for a workday and modulo 4 for a
+  weekend day (`DAY_GROUPS`). A quarter has at least 58 workdays and 26
+  weekend dates in every country with a holiday list, so a workday group stands
+  for at least 4 workdays and a weekend group for at least 6 weekend dates, and
+  the server never receives a date. Consecutive dates of one day type fall in
+  different groups. It feeds the several-days rule (§4.4).
 
 Per key: `distanceM` (sum of distances between consecutive radar-on records on
 the same piece and direction, counted on the later record's line so a band
@@ -244,8 +252,8 @@ closing speed plus the rider's GPS speed; omitted when no pass has a speed).
 
 **Dedupe codes.** For every clock-aligned 5-minute block a line covers:
 `sha256("cc-traffic-block-v1|" + blockStartUnix + "|" + firstRecordUnix + "|" +
-latSemicircles + "|" + lonSemicircles)` of the first record inside the block,
-full precision. The same file, edited or cut differently, yields the same codes;
+latSemicircles + "|" + lonSemicircles)` of the first kept record inside the
+block (never one the end cut dropped), full precision. The same file, edited or cut differently, yields the same codes;
 two riders riding together yield different ones. A line lists the codes of its
 blocks (a band holds up to 84).
 
@@ -253,7 +261,8 @@ Lines that share a block code, which in practice is one ride, always travel in
 the same request: the server counts a line as a duplicate once another request
 claimed one of its codes, so a ride split over two requests would lose its
 second half. Rides are shuffled and packed into requests of about 500 lines
-(never above 2000), and lines are shuffled inside each request
+(never above 2000) and about 4,000 distinct codes (`CHUNK_CODES`; the server
+takes up to 10,000), and lines are shuffled inside each request
 (`web/assets/lib/traffic-ride.js`: `makeChunks()`, `sendChunks()`). The review
 keeps which requests were acknowledged, so sending again after a failure
 resends only the rest.
@@ -290,15 +299,17 @@ used for that limit only and is never written next to the data. JSON:
 **Refused (422):** any top-level or line key in the Scout track list
 (`track`, `points`, `trkpt`, `polyline`, `records`, `route`, `coordinates`,
 `gpx`, `fit`, plus `lat`, `lng`, `lon`, `time`, `timestamp`); unknown keys,
-`day`, `slot`, `season` and `rider` among them; more than 2000 lines; `v` other
-than 2.
+`day`, `slot`, `season` and `rider` among them; more than 2000 lines; more
+than `TrafficIntake::MAX_CODES = 10000` distinct block codes in the accepted
+lines (error `too_many_codes`); `v` other than 2.
 
 **Plausibility, per line (line dropped, counted in the response):**
 `timeS` from 1 to the band's length plus 5 s (the one interval a band
 boundary hands to the later line); `distanceM` ≤ 200000; average speed 3..80 km/h; `passes` and
 `nearby` each ≤ 60 per km ridden and ≤ 300; `passes` 0 on a `p` line and
 `nearby` 0 (or absent) on an `l` or `r` line; `carSpeedBins` 16 non-negative integers summing to
-≤ `passes` + `nearby`; `band` 0..4; `dayGroup` 0..15; `quarter` from 2010-Q1 to
+≤ `passes` + `nearby`; `band` 0..4; `dayGroup` 0..11 on a workday line and
+0..3 on a weekend line (`TrafficLine::DAY_GROUPS`); `quarter` from 2010-Q1 to
 the quarter of tomorrow in UTC (a zone east of Greenwich may already be in the
 next one); 1 to 85 block codes of 64 hex characters; `label` in `p`, `l`, `r`;
 `dir` in `f`, `b`; `region` absent, null or an integer ≥ 1.
@@ -318,40 +329,57 @@ committed values in staging and production, and refuses an empty or short key
 everywhere. Losing it makes the lines still waiting unreadable (the totals are
 plain), so it is in the deploy secrets checklist (operations.md).
 
+PHP runs with `zend.exception_ignore_args = On`, so a stack trace, and with it
+an error report, never holds a call's arguments: no raw block code and no
+plain line. The app image sets it (`web/Dockerfile`, `conf.d/cc-errors.ini`;
+the image ships no `php.ini`, and PHP's own default is Off). Production hosts
+must run with it On.
+
 ### 4.3 Tables
 
 | Table | Columns | Holds |
 |---|---|---|
 | `traffic_pool` | `id bytea PK` (16 random bytes), `block_key bytea`, `payload bytea` | the waiting room: one row per waiting line, encrypted; no account, no time column |
-| `traffic_total` | `way`, `dir`, `band`, `day_type`, `quarter` (the key), `label`, `region`, `distance_m`, `time_s`, `passes`, `nearby`, `speed_sum`, `speed_passes`, `bins` (16 integers), `lines`, `days` (a 16-bit set of day groups) | plain totals per road, direction, part of the day, day type and quarter; no rider |
+| `traffic_total` | `way`, `dir`, `band`, `day_type`, `quarter` (the key), `label`, `region`, `distance_m`, `time_s`, `passes`, `nearby`, `speed_sum`, `speed_passes`, `bins` (16 integers), `lines`, `days` (a 16-bit set of day groups); the sums are BIGINT, so a busy road never overflows | plain totals per road, direction, part of the day, day type and quarter; no rider |
 | `traffic_seen` | `code bytea PK` | HMAC of each block code received; kept for good |
 
 A **block** is one road, direction, part of the day and day type, across
 quarters: the unit a line waits in. `block_key` = HMAC(`block`, way + dir +
 band + day type), so the waiting room says how many lines wait per block and
 nothing about which road or time. A pool payload holds the whole line (without
-its block codes), sealed with AES-GCM, bound to its row id as associated data and
+its block codes), sealed with AES-GCM, bound to its row id and its block key as
+associated data (a row moved to another block does not open) and
 padded to a multiple of 256 bytes. `seen` code = HMAC(`seen`, the client's
 block hash).
 
 **Write path** (`TrafficIntake`), one transaction per request:
 
-1. Claim the request's codes, in sorted order, with `INSERT … ON CONFLICT DO
-   NOTHING`. A code another request holds, even one not yet committed, is not
-   claimed (the insert waits for that request), so a retry of a request still
-   in flight counts nothing twice.
+1. Refuse the request when its accepted lines carry more than
+   `MAX_CODES = 10000` distinct codes. Claim the codes, in the order of their
+   stored form, with multi-row `INSERT … ON CONFLICT DO NOTHING RETURNING` of
+   up to 1000 rows each (`TrafficStore::claimCodes()`). A code another request
+   holds, even one not yet committed, is not claimed (the insert waits for that
+   request), so a retry of a request still in flight counts nothing twice.
 2. A line with any code this request did not claim is a duplicate.
 3. Each accepted line goes into the waiting room as its own row, in random
    order, under a random id.
-4. Then at most **one** block leaves the waiting room: among the blocks with at
-   least `TrafficPool::MIN_LINES = 5` lines whose (quarter, day group) pairs
-   number at least `MIN_DAY_GROUPS = 3`, one chosen at random. Its lines are
-   added to their totals rows (`TrafficStore::addToTotal()`) in quarter order,
-   random within a quarter, and deleted from the waiting room
-   (`TrafficPool::releaseOne()`). Any block can be the one, not only this request's, so which totals
-   change says nothing about who sent; one block per request means a ride's
-   roads reach the totals at different moments, usually with other riders'
-   lines. A block that waits on is moved by a later send.
+4. Then at most **one** block leaves the waiting room. The call draws at most
+   `TrafficPool::MAX_CANDIDATES = 32` blocks at random among those with at
+   least `MIN_LINES = 5` rows, so the work of a send stays bounded however full
+   the waiting room is; of those, one whose lines number at least 5 and whose
+   (quarter, day group) pairs number at least `MIN_DAY_GROUPS = 3` leaves.
+   A block of up to `MAX_RELEASE = 1000` lines leaves whole; a bigger one
+   leaves `MAX_RELEASE` lines drawn at random that meet the same rule, and the
+   rest waits. The lines are added to their totals rows
+   (`TrafficStore::addToTotal()`) in quarter order, random within a quarter,
+   and deleted from the waiting room (`TrafficPool::releaseOne()`). Any block
+   can be the one, not only this request's, so which totals change says
+   nothing about who sent; one block per request means a ride's roads reach
+   the totals at different moments, usually with other riders' lines. A block
+   that waits on is moved by a later send. A block whose chosen rows include
+   one that does not open (another key, or sealed for another row or block) is
+   passed over, neither released nor deleted, and a warning naming no row,
+   block or content is logged.
 
 ### 4.4 Disclosure rules (`TrafficDisclosure`)
 
@@ -388,7 +416,8 @@ default is `daytype`. Changing it is an admin action, logged.
 `traffic.map_layer_live` (default 0, system-configuration.md) decides whether
 a curator's map carries the layer at all: at 0 the template leaves out the
 *Measured traffic* row and its controls, at 1 they show as described here.
-The ride review's traffic step and `/moderate/traffic` do not depend on it.
+At 0 `GET /map/traffic` answers 404 as well. The ride review's traffic step
+and `/moderate/traffic` do not depend on it.
 
 `GET /map/traffic` (`ROLE_CURATOR`, two-factor checked in the controller as
 for every `/map` curator route, `Cache-Control: private, no-store`) returns
@@ -459,8 +488,8 @@ Pipeline: `pipeline/coverage/roadpieces.py`, `tiles.build_roadpieces_pmtiles`,
 `TrafficIntake`, `TrafficDisclosure`, `TrafficView`, `TrafficProgress`, the
 holidays and dump commands), `TrafficController`, `ModerateTrafficController`,
 `RoadPiecesManifest`. Migrations: `Version20261005020000` (`traffic_seen`),
-`Version20261005030000`, `Version20261007120000` and `Version20261007130000`
-(`traffic_pool`, `traffic_total`). Tests: `web/tests/Traffic/`,
+`Version20261005030000`, `Version20261007120000`, `Version20261007130000`
+(`traffic_pool`, `traffic_total`) and `Version20261009010000` (BIGINT sums). Tests: `web/tests/Traffic/`,
 `web/tests/js/traffic-*`, `road-pieces`, `ride-archive`, `ride-batch`,
 `scout-traffic`, `pipeline/tests/test_roadpieces.py`.
 
@@ -482,7 +511,8 @@ Owner decisions, 2026-10-05 to 2026-10-07, after three security reviews:
   codes are kept for good, so archives of any age can be sent.
 - Time is stored as five parts of the day, day type (holidays count as
   weekend) and quarter; the shown groups are chosen from those (§4.5). The
-  browser cuts the first and last 500 m of every ride and sends a day group
+  browser cuts everything within 500 m of the start and the end of every
+  ride and sends a day group
   instead of the date.
 - No rider code. A code cannot stop a modified client from posing as many
   riders, it brings a password or recovery step to every rider, and a
@@ -506,7 +536,8 @@ Owner decisions, 2026-10-05 to 2026-10-07, after three security reviews:
 - Curators first, as a map layer plus a comparison table. Bulk mode for
   archives, traffic only.
 - The error tracker never receives a request body
-  (`max_request_body_size: never`); curator views refresh on a fixed cadence;
+  (`max_request_body_size: never`) and stack traces carry no call arguments
+  (§4.2); curator views refresh on a fixed cadence;
   copy says the GPS track stays on the device and which roads were ridden is
   sent.
 - Accepted, and to revisit when there is more data: a road ridden by one

@@ -101,6 +101,38 @@ final class TrafficStoreTest extends KernelTestCase
         self::assertSame(2, (int) $this->db->fetchOne('SELECT COUNT(*) FROM traffic_seen'));
     }
 
+    public function testATotalsRowCountsPastTheIntegerRange(): void
+    {
+        $types = $this->db->fetchAllKeyValue("SELECT column_name, data_type FROM information_schema.columns
+            WHERE table_name = 'traffic_total' AND column_name IN ('distance_m', 'time_s', 'passes', 'nearby', 'speed_passes', 'lines')");
+        ksort($types);
+        self::assertSame(array_fill_keys(['distance_m', 'lines', 'nearby', 'passes', 'speed_passes', 'time_s'], 'bigint'), $types);
+
+        $this->store->addToTotal(self::line());
+        $this->db->executeStatement('UPDATE traffic_total SET passes = 2147483600, speed_passes = 2147483600, lines = 2147483647');
+        $this->store->addToTotal(self::line());
+
+        $t = $this->totals()[0];
+        self::assertSame(2147483607, $t['passes']);
+        self::assertSame(2147483607, $t['speedPasses']);
+        self::assertSame(2147483648, $t['lines']);
+    }
+
+    public function testCodesAreClaimedInAFewStatementsNotOneEach(): void
+    {
+        $codes = array_map(static fn (int $i): string => hash('sha256', 'claim-'.$i), range(1, 2500));
+        $holder = static::getContainer()->get('doctrine.debug_data_holder');
+        $holder->reset();
+
+        self::assertCount(2500, $this->store->claimCodes($codes));
+        $inserts = array_filter($holder->getData()['default'] ?? [],
+            static fn (array $q): bool => str_starts_with(ltrim((string) $q['sql']), 'INSERT INTO traffic_seen'));
+        self::assertLessThanOrEqual(3, \count($inserts), 'multi-row inserts in chunks');
+
+        $fresh = hash('sha256', 'fresh');
+        self::assertSame([$fresh], $this->store->claimCodes([...\array_slice($codes, 0, 10), $fresh]), 'only the new code is claimed');
+    }
+
     public function testNoTableHoldsARiderOrADate(): void
     {
         $columns = $this->db->fetchFirstColumn("SELECT column_name FROM information_schema.columns WHERE table_name = 'traffic_total'");

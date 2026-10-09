@@ -21,7 +21,26 @@ const SPEED_BINS = 16;
 /** Local hours at which bands 1-4 start: night, morning rush, day, evening rush, evening. */
 const BAND_STARTS = [6, 9, 16, 19];
 
+/**
+ * Day groups per day type (traffic-measurements.md §3.4): enough for the
+ * several-days rule, few enough that each group of a quarter holds at least
+ * four dates of its day type.
+ */
+export const DAY_GROUPS = Object.freeze({ workday: 12, weekend: 4 });
+
 const pad = n => String(n).padStart(2, '0');
+
+/** The local date of a day number, YYYY-MM-DD. */
+function isoOf(day) {
+  const d = new Date(day * 86400000);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}
+
+/** Saturday, Sunday and the holidays of the ride country count as weekend. */
+function isWeekend(day, holidays) {
+  const weekday = new Date(day * 86400000).getUTCDay();
+  return weekday === 0 || weekday === 6 || Boolean(holidays && holidays.has(isoOf(day)));
+}
 
 /**
  * The time key of one moment: part of the local day (band 0-4), day type,
@@ -35,50 +54,57 @@ const pad = n => String(n).padStart(2, '0');
 export function timeKey(unixS, offsetS, _lat, holidays) {
   const local = unixS + offsetS;
   const d = new Date(local * 1000);
-  const month = d.getUTCMonth();
-  const iso = `${d.getUTCFullYear()}-${pad(month + 1)}-${pad(d.getUTCDate())}`;
-  const weekday = d.getUTCDay();
+  const day = Math.floor(local / 86400);
   return {
     band: BAND_STARTS.filter(h => d.getUTCHours() >= h).length,
-    dayType: weekday === 0 || weekday === 6 || (holidays && holidays.has(iso)) ? 'weekend' : 'workday',
-    quarter: `${d.getUTCFullYear()}-Q${Math.floor(month / 3) + 1}`,
-    day: Math.floor(local / 86400),
+    dayType: isWeekend(day, holidays) ? 'weekend' : 'workday',
+    quarter: `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}`,
+    day,
   };
 }
 
 /**
- * A day as one of 16 groups: its place in its quarter (0 on the quarter's first
- * day) modulo 16. Each group holds 5 or 6 dates of the quarter, so a group sent
- * in place of the date names none of them.
+ * A day as one of the groups of its day type: how many dates of the same day
+ * type come before it in its quarter, modulo DAY_GROUPS of that type. A
+ * quarter has at least 58 workdays and 26 weekend dates, so each workday group
+ * holds at least 4 workdays and each weekend group at least 6 weekend dates,
+ * and a group sent in place of the date names none of them. Consecutive dates
+ * of one day type fall in different groups, so the several-days rule (§4.4)
+ * sees a week of rides as several days.
  *
  * @param {number} day local date as days since 1970-01-01
+ * @param {Set<string>|null} holidays local dates (YYYY-MM-DD) that count as weekend
  */
-export function dayGroupOf(day) {
+export function dayGroupOf(day, holidays = null) {
   const d = new Date(day * 86400000);
   const first = Date.UTC(d.getUTCFullYear(), Math.floor(d.getUTCMonth() / 3) * 3, 1) / 86400000;
-  return (day - first) % 16;
+  const weekend = isWeekend(day, holidays);
+  let before = 0;
+  for (let x = first; x < day; x++) {
+    if (isWeekend(x, holidays) === weekend) before++;
+  }
+  return before % DAY_GROUPS[weekend ? 'weekend' : 'workday'];
 }
 
 /**
- * Which records to keep: those at least `cut` metres of ridden distance from the
- * ride's first fix and from its last one. The ends are where a rider lives or
- * works, so they never become lines. A record without a fix takes the
- * distance of the last fix before it.
+ * Which records to keep: those at least `cut` metres in a straight line from
+ * the ride's first fix and from its last one, wherever in the ride they are.
+ * The ends are where a rider lives or works, so nothing near them becomes a
+ * line: not GPS drift at the door, not a loop round the block, not a pass by
+ * the door halfway. A record without a fix takes the verdict of the last fix
+ * before it; one before the first fix is cut.
  *
  * @returns {boolean[]} one per record
  */
 export function trimEnds(records, cut = 500) {
-  const at = [];
-  let run = 0;
-  let prev = null;
-  for (const r of records) {
-    if (r.lat != null && r.lon != null) {
-      if (prev) run += metres(prev, r);
-      prev = r;
-    }
-    at.push(run);
-  }
-  return at.map(m => m >= cut && run - m >= cut);
+  const fixed = r => r.lat != null && r.lon != null;
+  const first = records.find(fixed);
+  const last = records.findLast(fixed);
+  let kept = false;
+  return records.map(r => {
+    if (fixed(r)) kept = metres(first, r) >= cut && metres(last, r) >= cut;
+    return kept;
+  });
 }
 
 /**
@@ -161,17 +187,19 @@ function carSpeed(pass, record) {
  * @param {object} input
  * @param {Array<{t: number, lat: number|null, lon: number|null, latSemi?: number, lonSemi?: number, kmh: number|null, radar: boolean}>} input.records
  * @param {Array<{way: number|null, label: string|null, dir: string|null, cc?: string|null}>} input.matches one per record
+ * @param {boolean[]} [input.keep] one per record, from trimEnds(); a record not kept never feeds a dedupe code
  * @param {Array<{time: Date, speed: number|null, ground: number|null}>} input.passes
  * @param {number} input.offsetS local offset from UTC
  * @param {Object<string, Set<string>>} input.holidays per country code
  */
-export async function buildLines({ records, matches, passes, offsetS, holidays }) {
+export async function buildLines({ records, matches, keep = null, passes, offsetS, holidays }) {
   const byKey = new Map();
   const keyOf = i => {
     const m = matches[i];
     const r = records[i];
     if (!m || m.way === null || r.lat == null || r.lon == null) return null;
-    const tk = timeKey(r.t, offsetS, r.lat, (holidays && holidays[m.cc]) || null);
+    const dates = (holidays && holidays[m.cc]) || null;
+    const tk = timeKey(r.t, offsetS, r.lat, dates);
     const key = [m.way, m.dir, m.label, tk.band, tk.dayType, tk.quarter, tk.day].join('|');
     if (!byKey.has(key)) {
       byKey.set(key, {
@@ -179,7 +207,7 @@ export async function buildLines({ records, matches, passes, offsetS, holidays }
           // The region adds nothing the way id does not already say; the
           // curator page counts roads per region by it.
           way: m.way, region: m.region ?? null, dir: m.dir, label: m.label, band: tk.band, dayType: tk.dayType,
-          quarter: tk.quarter, dayGroup: dayGroupOf(tk.day),
+          quarter: tk.quarter, dayGroup: dayGroupOf(tk.day, dates),
           // Shown to the rider in "Show what is sent"; never sent (traffic-ride.js wire()).
           day: tk.day,
           distanceM: 0, timeS: 0, passes: 0, nearby: 0, avgSpeedKmh: null, carSpeedBins: null, blocks: [],
@@ -192,9 +220,11 @@ export async function buildLines({ records, matches, passes, offsetS, holidays }
     return key;
   };
 
-  // The first fix of every clock block, over the whole ride.
+  // The first kept fix of every clock block: a fix in the cut zone never
+  // feeds a code.
   const firstInBlock = new Map();
-  records.forEach(r => {
+  records.forEach((r, i) => {
+    if (keep && !keep[i]) return;
     if (r.lat == null || r.lon == null || r.latSemi == null || r.lonSemi == null) return;
     const b = Math.floor(r.t / SECONDS_PER_BLOCK) * SECONDS_PER_BLOCK;
     if (!firstInBlock.has(b)) firstInBlock.set(b, r);

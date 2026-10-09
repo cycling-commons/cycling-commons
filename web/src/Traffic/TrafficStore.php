@@ -24,6 +24,8 @@ use Doctrine\DBAL\ParameterType;
 final class TrafficStore
 {
     public const int SPEED_BINS = 16;
+    /** Codes per insert statement when claiming. */
+    public const int CLAIM_CHUNK = 1000;
 
     public function __construct(
         private readonly Connection $db,
@@ -35,23 +37,31 @@ final class TrafficStore
      * Claims the codes for this request and returns those it claimed. A code
      * another request already holds, committed or still in flight, is not
      * returned: the insert waits for that request and then finds the row.
+     * Codes go in as multi-row inserts of up to CLAIM_CHUNK rows, in the order
+     * of their stored form, one lock order for every request.
      *
      * @param list<string> $codes 64-hex codes from the browser
      *
-     * @return list<string> the codes this request inserted, as given
+     * @return list<string> the codes this request inserted, as given, sorted
      */
     public function claimCodes(array $codes): array
     {
+        $byStored = [];
+        foreach ($codes as $code) {
+            $byStored[$this->keys->seenCode($code)] = $code;
+        }
+        ksort($byStored, \SORT_STRING);
         $claimed = [];
-        $unique = array_values(array_unique($codes));
-        sort($unique);   // one lock order for every request
-        foreach ($unique as $code) {
-            $inserted = $this->db->executeStatement('INSERT INTO traffic_seen (code) VALUES (?) ON CONFLICT DO NOTHING',
-                [$this->keys->seenCode($code)], [ParameterType::BINARY]);
-            if (1 === $inserted) {
-                $claimed[] = $code;
+        foreach (array_chunk($byStored, self::CLAIM_CHUNK, true) as $chunk) {
+            $n = \count($chunk);
+            $inserted = $this->db->fetchFirstColumn(
+                'INSERT INTO traffic_seen (code) VALUES '.implode(', ', array_fill(0, $n, '(?)')).' ON CONFLICT DO NOTHING RETURNING code',
+                array_map(strval(...), array_keys($chunk)), array_fill(0, $n, ParameterType::BINARY));
+            foreach ($inserted as $stored) {
+                $claimed[] = $chunk[\is_resource($stored) ? (string) stream_get_contents($stored) : (string) $stored];
             }
         }
+        sort($claimed);
 
         return $claimed;
     }

@@ -30,8 +30,12 @@ final class TrafficLine
 
     private const array KEYS = ['way', 'region', 'dir', 'label', 'band', 'dayType', 'quarter', 'dayGroup',
         'distanceM', 'timeS', 'passes', 'nearby', 'avgSpeedKmh', 'carSpeedBins', 'blocks'];
-    /** Day groups of a quarter (traffic-measurements.md §3.4): the date is never sent. */
-    public const int DAY_GROUPS = 16;
+    /**
+     * Day groups of a quarter per day type (traffic-measurements.md §3.4): the
+     * date is never sent, and each group stands for at least four dates of its
+     * day type. The totals keep them as bits of one 16-bit set.
+     */
+    public const array DAY_GROUPS = ['workday' => 12, 'weekend' => 4];
     private const array LABELS = ['p', 'l', 'r'];
     private const array DIRS = ['f', 'b'];
     private const array DAY_TYPES = ['workday', 'weekend'];
@@ -89,10 +93,11 @@ final class TrafficLine
             return null;
         }
         if (!\is_int($way) || $way < 1 || !\is_int($band) || !isset(self::BAND_SECONDS[$band])
-            || !\is_int($dayGroup) || $dayGroup < 0 || $dayGroup >= self::DAY_GROUPS || !\is_int($distance) || !\is_int($time) || !\is_int($passes) || !\is_int($nearby)
+            || !\is_int($dayGroup) || $dayGroup < 0 || !\is_int($distance) || !\is_int($time) || !\is_int($passes) || !\is_int($nearby)
             || !\in_array($line['dir'] ?? null, self::DIRS, true)
             || !\in_array($line['label'] ?? null, self::LABELS, true)
-            || !\in_array($line['dayType'] ?? null, self::DAY_TYPES, true)) {
+            || !\in_array($line['dayType'] ?? null, self::DAY_TYPES, true)
+            || $dayGroup >= self::DAY_GROUPS[$line['dayType']]) {
             return null;
         }
 

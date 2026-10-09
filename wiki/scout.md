@@ -102,9 +102,9 @@ Nothing else leaves your device.
   times and your ride file stay on your device; which roads you rode, with the
   part of the day, is what the summary sends. You see every line before you
   send.
-- **Nothing names you.** A summary carries no account and no code for you. The
-  first and last 500 m of every ride are never sent, and the date goes only as
-  a group of about six days. Each road waits until enough rides from several
+- **Nothing names you.** A summary carries no account and no code for you. Nothing
+  within 500 m of where a ride starts or ends is ever sent, and the date goes
+  only as a group of at least four days of the same kind (workday or weekend). Each road waits until enough rides from several
   days have come in, so your ride reaches the totals in pieces, mixed with
   other rides.
 - **No road says who rides it.** A road shows measured traffic only once enough

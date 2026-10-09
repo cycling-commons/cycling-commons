@@ -25,6 +25,12 @@ use Symfony\Component\Clock\ClockInterface;
 final class TrafficIntake
 {
     public const int MAX_LINES = 2000;
+    /**
+     * Distinct block codes one request may claim. The review packs about 4,000
+     * per request (traffic-ride.js CHUNK_CODES), and one ride, a few hundred
+     * five-minute blocks, never comes near it alone.
+     */
+    public const int MAX_CODES = 10000;
 
     public function __construct(
         private readonly Connection $db,
@@ -67,11 +73,16 @@ final class TrafficIntake
             null === $line ? ++$dropped : $valid[] = $line;
         }
 
-        return $this->db->transactional(function () use ($valid, $dropped): array {
+        $codes = array_values(array_unique(array_merge([], ...array_column($valid, 'blocks'))));
+        if (\count($codes) > self::MAX_CODES) {
+            throw new TrafficPayloadRefused('too_many_codes');
+        }
+
+        return $this->db->transactional(function () use ($valid, $codes, $dropped): array {
             // Claim first: a code another request holds, even one still in
             // flight, is not claimed here, so a retry of a request that has
             // not finished yet counts nothing twice.
-            $claimed = array_flip($this->store->claimCodes(array_values(array_unique(array_merge([], ...array_column($valid, 'blocks'))))));
+            $claimed = array_flip($this->store->claimCodes($codes));
             $fresh = [];
             $duplicate = 0;
             foreach ($valid as $line) {

@@ -57,6 +57,9 @@ final class TrafficLineTest extends TestCase
         yield 'band 5' => [self::line(['band' => 5])];
         yield 'band as text' => [self::line(['band' => '3'])];
         yield 'day group 16' => [self::line(['dayGroup' => 16])];
+        yield 'workday group 12' => [self::line(['dayGroup' => 12])];
+        yield 'weekend group 4' => [self::line(['dayType' => 'weekend', 'dayGroup' => 4])];
+        yield 'negative day group' => [self::line(['dayGroup' => -1])];
         yield 'day group as text' => [self::line(['dayGroup' => '9'])];
         yield 'no day group' => [array_diff_key(self::line(), ['dayGroup' => true])];
         yield 'unknown label' => [self::line(['label' => 'x'])];
@@ -121,6 +124,8 @@ final class TrafficLineTest extends TestCase
     {
         self::assertSame(9, TrafficLine::accept(self::line(), self::now())['dayGroup'] ?? null);
         self::assertSame(0, TrafficLine::accept(self::line(['dayGroup' => 0]), self::now())['dayGroup'] ?? null);
+        self::assertSame(11, TrafficLine::accept(self::line(['dayGroup' => 11]), self::now())['dayGroup'] ?? null, 'the last of 12 workday groups');
+        self::assertSame(3, TrafficLine::accept(self::line(['dayType' => 'weekend', 'dayGroup' => 3]), self::now())['dayGroup'] ?? null, 'the last of 4 weekend groups');
     }
 
     public function testANewQuarterAlreadyBegunEastOfGreenwichIsKept(): void

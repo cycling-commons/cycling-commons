@@ -4,9 +4,9 @@
 // the time key, the per-piece lines, and the dedupe codes.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { parseFit } from '../../assets/lib/scout-fit.js';
-import { timeKey, buildLines, blockCode, localOffsetSeconds, zoneOffsetSeconds, recordsFromFit, dayGroupOf, trimEnds } from '../../assets/lib/traffic-summary.js';
+import { timeKey, buildLines, blockCode, localOffsetSeconds, zoneOffsetSeconds, recordsFromFit, dayGroupOf, trimEnds, DAY_GROUPS } from '../../assets/lib/traffic-summary.js';
 
 const NONE = new Set();
 // Monday 5 October 2026 17:59:30 UTC.
@@ -200,22 +200,58 @@ test('zones inside a country follow the place', () => {
   assert.equal(zoneOffsetSeconds(MON, 'es', -3.7, 40.4), 7200);
 });
 
-test('the day group is the day\'s place in its quarter, modulo 16', () => {
-  const day = (y, m, d) => Date.UTC(y, m - 1, d) / 86400000;
-  assert.equal(dayGroupOf(day(2026, 7, 1)), 0, 'the first day of Q3');
-  assert.equal(dayGroupOf(day(2026, 9, 12)), 9, '12 September is day 73 of Q3: 73 = 4 x 16 + 9');
-  assert.equal(dayGroupOf(day(2026, 7, 17)), 0, 'day 16 starts the groups again');
-  assert.equal(dayGroupOf(day(2026, 10, 1)), 0, 'a new quarter starts at 0');
-  const sizes = new Array(16).fill(0);
-  for (let d = day(2026, 7, 1); d <= day(2026, 9, 30); d++) sizes[dayGroupOf(d)]++;
-  assert.ok(sizes.every(n => n === 5 || n === 6), 'each group holds 5 or 6 dates: ' + sizes.join(','));
+const DAY = (y, m, d) => Date.UTC(y, m - 1, d) / 86400000;
+const pad2 = n => String(n).padStart(2, '0');
+const isoOf = day => { const d = new Date(day * 86400000); return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`; };
+
+test('the day group counts the dates of its day type in the quarter: 12 workday groups, 4 weekend groups', () => {
+  assert.equal(dayGroupOf(DAY(2026, 7, 1)), 0, 'Wednesday 1 July, the first workday of Q3');
+  assert.equal(dayGroupOf(DAY(2026, 7, 2)), 1, 'the next workday');
+  assert.equal(dayGroupOf(DAY(2026, 7, 6)), 3, 'the weekend in between is not counted');
+  assert.equal(dayGroupOf(DAY(2026, 7, 4)), 0, 'Saturday 4 July, the first weekend date of Q3');
+  assert.equal(dayGroupOf(DAY(2026, 7, 5)), 1, 'its Sunday');
+  assert.equal(dayGroupOf(DAY(2026, 7, 25)), 2, 'the seventh weekend date: 6 mod 4');
+  assert.equal(dayGroupOf(DAY(2026, 10, 1)), 0, 'a new quarter starts at 0');
+  assert.equal(dayGroupOf(DAY(2026, 4, 27), new Set(['2026-04-27'])), 0, 'a holiday counts among the weekend dates: eight before it in Q2, 8 mod 4');
+});
+
+test('every (quarter, day group, day type) stands for at least 4 dates, in every country and quarter', () => {
+  const dir = new URL('../../public/data/holidays/', import.meta.url);
+  const calendars = [['calendar only', new Set()], ...readdirSync(dir).map(f => [f, new Set(JSON.parse(readFileSync(new URL(f, dir), 'utf8')).dates)])];
+  for (const [name, holidays] of calendars) {
+    const least = { workday: Infinity, weekend: Infinity };
+    for (let y = 2015; y <= 2027; y++) {
+      for (let q = 0; q < 4; q++) {
+        const counts = new Map();
+        for (let d = DAY(y, q * 3 + 1, 1); d < Date.UTC(y, q * 3 + 3, 1) / 86400000; d++) {
+          const type = timeKey(d * 86400 + 43200, 0, 52, holidays).dayType;
+          const group = dayGroupOf(d, holidays);
+          assert.ok(group >= 0 && group < DAY_GROUPS[type], `${name} ${isoOf(d)}: group ${group} out of range for ${type}`);
+          counts.set(type + '|' + group, (counts.get(type + '|' + group) || 0) + 1);
+        }
+        for (const [k, n] of counts) least[k.split('|')[0]] = Math.min(least[k.split('|')[0]], n);
+      }
+    }
+    assert.ok(least.workday >= 4, `${name}: a workday group holds only ${least.workday} dates`);
+    assert.ok(least.weekend >= 4, `${name}: a weekend group holds only ${least.weekend} dates`);
+  }
 });
 
 test('a line carries its day group, and keeps its day only for the rider\'s own view', async () => {
-  const { records, matches } = ride({ start: Date.UTC(2026, 8, 12, 9) / 1000, seconds: 30 });
+  // Thursday 10 September 2026: 51 workdays of Q3 come before it, 51 mod 12 = 3.
+  const { records, matches } = ride({ start: Date.UTC(2026, 8, 10, 9) / 1000, seconds: 30 });
   const [line] = await buildLines({ records, matches, passes: [], offsetS: 0, holidays: {} });
-  assert.equal(line.dayGroup, 9);
-  assert.equal(line.day, Date.UTC(2026, 8, 12) / 86400000);
+  assert.equal(line.dayType, 'workday');
+  assert.equal(line.dayGroup, 3);
+  assert.equal(line.day, DAY(2026, 9, 10));
+});
+
+test('the day group of a holiday follows the holiday list of the ride country', async () => {
+  const { records, matches } = ride({ start: Date.UTC(2026, 3, 27, 9) / 1000, seconds: 30 });
+  const [line] = await buildLines({ records, matches, passes: [], offsetS: 7200, holidays: { nl: new Set(['2026-04-27']) } });
+  assert.equal(line.dayType, 'weekend');
+  assert.equal(line.dayGroup, dayGroupOf(DAY(2026, 4, 27), new Set(['2026-04-27'])));
+  assert.ok(line.dayGroup < DAY_GROUPS.weekend);
 });
 
 test('the first and last 500 m of a ride are cut, wherever the ride starts', () => {
@@ -237,4 +273,56 @@ test('records without a fix take the cut of the fixes around them', () => {
   const keep = trimEnds(records, 500);
   assert.equal(keep[51], false, 'a fixless record near the start is cut too');
   assert.equal(keep[201], true);
+});
+
+// A fix `east` and `north` metres from 52 N, 5 E.
+const at = (t, east, north) => ({ t, lat: 52 + north / 111_320, lon: 5 + east / (111_320 * Math.cos(52 * Math.PI / 180)) });
+
+test('GPS drift at the door is cut however far it wanders along the track', () => {
+  // Five minutes of jitter within 40 m of the start: about 2 km along the track.
+  const records = [];
+  for (let s = 0; s < 300; s++) records.push(at(s, s % 2 ? 40 : -40, s % 3 ? 30 : -30));
+  for (let s = 0; s < 400; s++) records.push(at(300 + s, 0, s * 5));   // then 2 km due north
+  const keep = trimEnds(records, 500);
+  assert.ok(records.slice(0, 300).every((_, i) => !keep[i]), 'no drift record is kept');
+  assert.equal(keep[300 + 101], true, 'the ride is kept once it is 500 m from the door');
+});
+
+test('a loop near home at the start is cut', () => {
+  // A 200 m radius loop through the start (about 1.3 km along the track, never
+  // more than 400 m from the door), then away.
+  const records = [];
+  for (let s = 0; s < 360; s++) {
+    const a = s * Math.PI / 180;
+    records.push(at(s, 200 * Math.sin(a), 200 - 200 * Math.cos(a)));
+  }
+  for (let s = 0; s < 400; s++) records.push(at(360 + s, 0, -s * 5));
+  const keep = trimEnds(records, 500);
+  assert.equal(keep.slice(0, 360).filter(Boolean).length, 0, 'the whole loop lies within 500 m of the start');
+});
+
+test('passing the start point in the middle of a ride is cut there too', () => {
+  // 3 km west, back east past the door, 3 km east, then north: the door lies mid-ride.
+  const records = [];
+  let t = 0;
+  for (let m = 0; m <= 3000; m += 5) records.push(at(t++, -m, 0));
+  for (let m = -3000; m <= 3000; m += 5) records.push(at(t++, m, 0));
+  for (let m = 0; m <= 3000; m += 5) records.push(at(t++, 3000, m));
+  const keep = trimEnds(records, 500);
+  const pass = records.map((r, i) => i).filter(i => i > 601 && i < 601 + 1201);
+  const near = pass.filter(i => Math.abs(records[i].lon - 5) * 111_320 * Math.cos(52 * Math.PI / 180) < 499);
+  const far = pass.filter(i => Math.abs(records[i].lon - 5) * 111_320 * Math.cos(52 * Math.PI / 180) > 501);
+  assert.ok(near.length > 150, 'the ride passes the door');
+  assert.ok(near.every(i => !keep[i]), 'every record within 500 m of the start is cut, mid-ride as well');
+  assert.ok(far.every(i => keep[i]), 'the rest of the pass is kept');
+});
+
+test('the dedupe codes come only from records that are kept', async () => {
+  // Block 09:00-09:05: the first 150 s are cut, the rest is kept.
+  const { records, matches } = ride({ start: Date.UTC(2026, 9, 5, 9) / 1000, seconds: 300 });
+  const keep = records.map((_, i) => i >= 150);
+  matches.forEach((m, i) => { if (!keep[i]) Object.assign(m, { way: null, label: null, dir: null }); });
+  const [line] = await buildLines({ records, matches, keep, passes: [], offsetS: 0, holidays: {} });
+  assert.deepEqual(line.blocks, [await blockCode(Date.UTC(2026, 9, 5, 9) / 1000, records[150])],
+    'the code hashes the first kept fix of the block, never a fix in the cut zone');
 });
