@@ -344,9 +344,9 @@ final class TrashBin
     }
 
     /** @return array{name: ?string, uuid: ?string} */
-    private function rider(int $userId): array
+    private function rider(?int $userId): array
     {
-        $row = $this->db->fetchAssociative(
+        $row = null === $userId ? false : $this->db->fetchAssociative(
             'SELECT pseudonym, display_name, public_profile, uuid FROM users WHERE id = :id',
             ['id' => $userId],
         );

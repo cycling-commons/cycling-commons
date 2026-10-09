@@ -67,6 +67,27 @@ final class CommunityProgressTest extends KernelTestCase
         self::assertSame(3, $this->progress()->dataPoints());
     }
 
+    /**
+     * A deleted account's acts stay, unlinked (account-and-auth.md §6.3). Two
+     * erased riders who both stood behind one place are two backings: rows
+     * without an account are never merged with each other.
+     */
+    public function testActsOfErasedAccountsAreNotMergedIntoOne(): void
+    {
+        $item = $this->item();
+        foreach ([1, 2] as $_) {
+            $this->db->executeStatement(
+                "INSERT INTO item_confirmation (item_id, user_id, stance, created_at, updated_at) VALUES (:i, NULL, 'exists', NOW(), NOW())",
+                ['i' => $item->getId()],
+            );
+        }
+        $this->approvedSubmission($this->user('carol@example.test')->getId(), $item->getId());
+        $this->db->executeStatement('UPDATE submission SET user_id = NULL WHERE item_id = :i', ['i' => $item->getId()]);
+
+        self::assertSame(3, $this->progress()->dataPoints(), 'with staff excluded');
+        self::assertSame(3, (new CommunityProgress($this->db, 25, 12500, [], [], []))->dataPoints(), 'with nobody excluded');
+    }
+
     public function testDataPointsExcludeStaffAccounts(): void
     {
         $staff = $this->user('staff@example.test');

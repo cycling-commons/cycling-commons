@@ -38,8 +38,9 @@ class CountryInterest
     #[ORM\Column(type: Types::BIGINT)]
     private ?int $id = null;
 
-    #[ORM\Column(name: 'user_id', type: Types::BIGINT)]
-    private int $userId;
+    /** users.id of the rider; NULL once their account is deleted (docs/specs/account-and-auth.md §6.3). */
+    #[ORM\Column(name: 'user_id', type: Types::BIGINT, nullable: true)]
+    private ?int $userId;
 
     #[ORM\Column(name: 'country_code', type: Types::STRING, length: 2)]
     private string $countryCode;
@@ -77,7 +78,7 @@ class CountryInterest
         return $this->id;
     }
 
-    public function getUserId(): int
+    public function getUserId(): ?int
     {
         return $this->userId;
     }

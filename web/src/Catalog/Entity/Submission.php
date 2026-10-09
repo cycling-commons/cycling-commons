@@ -41,8 +41,9 @@ class Submission
     #[ORM\Column(type: 'bigint', nullable: true)]
     private ?int $itemId = null;
 
-    #[ORM\Column(type: 'bigint')]
-    private int $userId = 0;
+    /** users.id of the rider, 0 for the system, NULL once the rider's account is deleted. */
+    #[ORM\Column(type: 'bigint', nullable: true)]
+    private ?int $userId = 0;
 
     #[ORM\Column(type: 'string', length: 12, enumType: SubmissionStatus::class)]
     private SubmissionStatus $status = SubmissionStatus::Pending;
@@ -164,7 +165,7 @@ class Submission
         return $this;
     }
 
-    public function getUserId(): int
+    public function getUserId(): ?int
     {
         return $this->userId;
     }

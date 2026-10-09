@@ -133,7 +133,9 @@ final class RouteModerationService
      */
     public function editMetadata(int $routeId, array $changes, User $curator, ?int $author = null, ?int $suggestionId = null): RecommendedRoute
     {
-        $creditTo = $author ?? $curator->getId();
+        // A correction credits its author, and nobody once that account is
+        // deleted; never the curator who applied it.
+        $creditTo = null !== $suggestionId ? $author : ($author ?? $curator->getId());
 
         return $this->em->wrapInTransaction(function () use ($routeId, $changes, $curator, $creditTo, $suggestionId): RecommendedRoute {
             $route = $this->load($routeId);
@@ -142,7 +144,7 @@ final class RouteModerationService
 
             foreach ($changes as $field => $raw) {
                 if (RouteMetadata::NAME_FIELD === $field) {
-                    $this->renameRoute($route, $raw, (int) $creditTo, $suggestionId);
+                    $this->renameRoute($route, $raw, $creditTo, $suggestionId);
                     continue;
                 }
                 // The registry is the whole editable surface: nothing else reaches `attributes`.
@@ -159,7 +161,7 @@ final class RouteModerationService
                 } else {
                     $attributes[$field] = $new;
                 }
-                $this->em->persist(new RouteChangeHistory((int) $route->getId(), $field, $current, $new, (int) $creditTo, $suggestionId));
+                $this->em->persist(new RouteChangeHistory((int) $route->getId(), $field, $current, $new, $creditTo, $suggestionId));
             }
             $route->setAttributes($attributes);
 
@@ -231,7 +233,7 @@ final class RouteModerationService
     }
 
     /** History files a rename under `name`, the column it changes. */
-    private function renameRoute(RecommendedRoute $route, mixed $raw, int $creditTo, ?int $suggestionId): void
+    private function renameRoute(RecommendedRoute $route, mixed $raw, ?int $creditTo, ?int $suggestionId): void
     {
         $name = \is_string($raw) ? trim($raw) : '';
         if ('' === $name) {
@@ -268,8 +270,10 @@ final class RouteModerationService
                 $this->decidePhotos($route, (int) $s->getId(), $status->value, $curator, null, $rejectMediaIds);
                 $this->applyMetadata($route, $s, $status, $curator);
             }
-            // A curator's own correction applied at once owes nobody a message.
-            if ($s->getUserId() === $curator->getId()) {
+            // A curator's own correction applied at once owes nobody a message,
+            // and neither does one whose rider deleted their account.
+            $riderId = $s->getUserId();
+            if (null === $riderId || $riderId === $curator->getId()) {
                 return $s;
             }
 
@@ -457,7 +461,8 @@ final class RouteModerationService
     /** Outcome message rides the decision transaction; skipped for imported routes. */
     private function notifyProposer(RecommendedRoute $route, UserMessageKind $kind, ?string $note): void
     {
-        if (null === $route->getProposedBy()) {
+        $proposer = $route->getProposedBy();
+        if (null === $proposer) {
             return;
         }
         $this->messages->sendSystem(

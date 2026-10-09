@@ -275,6 +275,25 @@ final class ModerationService
     }
 
     /** The place a NEW-place submission created, if it still exists. */
+    /**
+     * A report led to a decision on this submission: one on the new place it
+     * put on the map, or on what its rider wrote in its thread. An edit is
+     * not public before it is approved, so a report on its place is about
+     * somebody else's text.
+     */
+    private function followsReport(Submission $submission): bool
+    {
+        $newPlace = SubmissionType::NewItem === $submission->getType() ? $submission->getItemId() : null;
+
+        return $this->reported->followsReport(
+            null !== $newPlace ? ReportTarget::Item : null,
+            null !== $newPlace ? (string) $newPlace : null,
+            'submission',
+            (int) $submission->getId(),
+            $submission->getUserId(),
+        );
+    }
+
     private function newPlaceOf(Submission $submission): ?Item
     {
         if (SubmissionType::NewItem !== $submission->getType() || null === $submission->getItemId()) {
@@ -307,11 +326,13 @@ final class ModerationService
     private function carryOwnAnswer(Item $item, Submission $submission): void
     {
         $stance = self::stanceFromAnswer($submission->getChanges()['potable']['now'] ?? null);
-        if (null === $stance || ItemType::WaterFood !== ItemType::fromParam($item->getLetter())) {
+        $riderId = $submission->getUserId();
+        // A rider whose account is deleted stands behind no answer any more.
+        if (null === $stance || null === $riderId || ItemType::WaterFood !== ItemType::fromParam($item->getLetter())) {
             return;
         }
 
-        $this->confirmations->recordFromSubmission($item, $submission->getUserId(), $stance);
+        $this->confirmations->recordFromSubmission($item, $riderId, $stance);
     }
 
     /** Potability answer as a stance, or null when it is not a claim either way. */

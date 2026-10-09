@@ -62,7 +62,7 @@ final class UnverifiedSweepTest extends KernelTestCase
         return null !== $this->em->find(User::class, $id);
     }
 
-    /** @return array{deleted: int, considered: int} */
+    /** @return array{deleted: int, failed: int, considered: int} */
     private function sweep(bool $dryRun = false): array
     {
         $result = self::getContainer()->get(UnverifiedSweep::class)->run($this->now, $dryRun);
@@ -111,6 +111,29 @@ final class UnverifiedSweepTest extends KernelTestCase
 
         $this->sweep();
         self::assertTrue($this->exists($id));
+    }
+
+    /**
+     * Each account is erased in its own transaction: one that fails is rolled
+     * back whole, logged by id without its address, and the sweep goes on,
+     * also after a failed flush closed the EntityManager.
+     */
+    public function testOneFailedDeletionRollsBackThatAccountOnlyAndTheSweepGoesOn(): void
+    {
+        $throws = $this->account('sweep-throws@example.com', daysOld: 9);
+        $flushFails = $this->account('sweep-flush-fails@example.com', daysOld: 9);
+        $fine = $this->account('sweep-fine@example.com', daysOld: 9);
+        $logger = new SabotagedErasure();
+        $deletions = SabotagedErasure::deletions(self::getContainer(), [$throws => 'throw', $flushFails => 'flush'], $logger);
+
+        $result = (new UnverifiedSweep($this->em, $deletions))->run($this->now);
+
+        self::assertSame(['deleted' => 1, 'failed' => 2], array_intersect_key($result, ['deleted' => 1, 'failed' => 1]));
+        self::assertTrue($this->exists($throws));
+        self::assertTrue($this->exists($flushFails));
+        self::assertFalse($this->exists($fine));
+        self::assertSame([$throws, $flushFails], array_map(static fn (array $r): mixed => $r['context']['user_id'] ?? null, $logger->records));
+        self::assertStringNotContainsString('@example.com', json_encode($logger->records, JSON_THROW_ON_ERROR));
     }
 
     public function testADryRunCountsButDeletesNothing(): void

@@ -8,18 +8,22 @@ namespace App\Media;
 
 use App\Entity\User;
 use App\Service\UserDeletionHookInterface;
+use Doctrine\DBAL\Connection;
 
 /**
  * Account deletion: drop unmoderated work; anonymize approved credit.
  *
  * @see docs/specs/photo-uploads.md §6
+ * @see docs/specs/account-and-auth.md §6.3
  *
  * @api
  */
 final class MediaDeletionHook implements UserDeletionHookInterface
 {
-    public function __construct(private readonly MediaDisposalService $disposal)
-    {
+    public function __construct(
+        private readonly MediaDisposalService $disposal,
+        private readonly Connection $db,
+    ) {
     }
 
     #[\Override]

@@ -111,14 +111,15 @@ final readonly class TownSummaryRepository
      * answered, marked edited, and no fetch touches it again. Creates the row
      * when no reader has opened that language yet.
      *
-     * `$userId` wrote the text; `$approvedBy` let it onto the card (the same
+     * `$userId` wrote the text, null when the writer's account is deleted;
+     * `$approvedBy` let it onto the card (the same
      * curator when they wrote it on the town page or proposed it inside their
      * area); `$submissionId` is the approved proposal, null for the town page.
      * `$derived` says the text is based on the Wikipedia article, so the card
      * keeps the article's link and credit; it stands only where the row has an
      * article to credit (fail-closed, as a region's lead).
      */
-    public function overrideText(string $osmRef, string $lang, string $extract, bool $derived, int $userId, ?string $title, int $approvedBy, ?int $submissionId = null): void
+    public function overrideText(string $osmRef, string $lang, string $extract, bool $derived, ?int $userId, ?string $title, int $approvedBy, ?int $submissionId = null): void
     {
         $this->db->executeStatement(
             'INSERT INTO town_summary (osm_ref, lang, answered, title, extract, cycling, facts, derived, edited_by, approved_by, submission_id, edited_at, checked_at)

@@ -64,10 +64,10 @@ final class ItemEvidenceResolver
                          {$i}.attributes->>'check_date') AS ev_witness,
                 {$i}.custody_reclaimed_at AS ev_reclaimed,
                 (EXISTS (SELECT 1 FROM change_history ev_h WHERE ev_h.item_id = {$i}.id
-                          AND ev_h.changed_by <> ".ChangeHistory::SYSTEM_ACTOR." AND ev_h.field <> 'state')
+                          AND ev_h.changed_by IS DISTINCT FROM ".ChangeHistory::SYSTEM_ACTOR." AND ev_h.field <> 'state')
                  OR EXISTS (SELECT 1 FROM submission ev_s
                               CROSS JOIN LATERAL jsonb_each(CASE WHEN jsonb_typeof(ev_s.changes) = 'object' THEN ev_s.changes ELSE '{}'::jsonb END) ev_f
-                             WHERE ev_s.item_id = {$i}.id AND ev_s.user_id <> ".ChangeHistory::SYSTEM_ACTOR.'
+                             WHERE ev_s.item_id = {$i}.id AND ev_s.user_id IS DISTINCT FROM ".ChangeHistory::SYSTEM_ACTOR.'
                                AND '.self::approvedSql('ev_s')."
                                AND ev_f.value->'was' IS DISTINCT FROM ev_f.value->'now')) AS ev_edited";
     }

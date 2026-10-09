@@ -41,9 +41,12 @@ class RouteChangeHistory
     #[ORM\Column(name: 'new_value', type: Types::JSON, nullable: true)]
     private mixed $newValue;
 
-    /** The rider whose word this is, which on an approved correction is its author, not its approver. */
-    #[ORM\Column(name: 'changed_by', type: Types::BIGINT)]
-    private int $changedBy;
+    /**
+     * The rider whose word this is, which on an approved correction is its
+     * author, not its approver. NULL once that account is deleted.
+     */
+    #[ORM\Column(name: 'changed_by', type: Types::BIGINT, nullable: true)]
+    private ?int $changedBy;
 
     /** The correction whose approval wrote this row; NULL for a curator's own desk edit. */
     #[ORM\Column(name: 'suggestion_id', type: Types::BIGINT, nullable: true)]
@@ -52,7 +55,7 @@ class RouteChangeHistory
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    public function __construct(int $routeId, string $field, mixed $oldValue, mixed $newValue, int $changedBy, ?int $suggestionId = null)
+    public function __construct(int $routeId, string $field, mixed $oldValue, mixed $newValue, ?int $changedBy, ?int $suggestionId = null)
     {
         $this->routeId = $routeId;
         $this->field = $field;
@@ -88,7 +91,7 @@ class RouteChangeHistory
         return $this->newValue;
     }
 
-    public function getChangedBy(): int
+    public function getChangedBy(): ?int
     {
         return $this->changedBy;
     }

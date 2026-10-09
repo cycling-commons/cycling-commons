@@ -33,6 +33,12 @@ use Symfony\Component\Mime\Address;
  *   than cascaded and a photo licence survives exactly as it does today. A
  *   second deletion path would have drifted from the first within a year.
  *
+ * Each account is erased in its own transaction
+ * ({@see UserDeletionService::eraseInBatch()}): one whose deletion fails stays
+ * whole, is logged by id and counted as failed, and the sweep goes on. A
+ * notice is recorded right after its email goes, so a later failure cannot
+ * lose the record and send the same notice again tomorrow.
+ *
  * @see docs/specs/account-and-auth.md §6.5
  *
  * @api
@@ -47,22 +53,30 @@ final class DormancySweep
     }
 
     /**
-     * @return array{notified: array<string, int>, deleted: int, considered: int}
+     * @return array{notified: array<string, int>, deleted: int, failed: int, considered: int}
      */
     public function run(\DateTimeImmutable $now, bool $dryRun = false): array
     {
         $notified = array_fill_keys(array_keys(DormancyLadder::NOTICES), 0);
         $deleted = 0;
+        $failed = 0;
         $considered = 0;
 
-        foreach ($this->candidates($now) as $user) {
+        $ids = array_map(static fn (User $user): int => (int) $user->getId(), $this->candidates($now));
+        foreach ($ids as $id) {
+            // By id: a failed deletion before this one detached every loaded account.
+            $user = $this->em->find(User::class, $id);
+            if (!$user instanceof User) {
+                continue;
+            }
             ++$considered;
             $idle = $this->monthsIdle($user, $now);
             $sent = $user->dormancyNoticesSent();
 
             if (DormancyLadder::isDeletable($idle, $sent)) {
-                if (!$dryRun) {
-                    $this->deletions->purge($user);
+                if (!$dryRun && !$this->deletions->eraseInBatch($user)) {
+                    ++$failed;
+                    continue;
                 }
                 ++$deleted;
                 continue;
@@ -76,15 +90,12 @@ final class DormancySweep
             if (!$dryRun) {
                 $this->warn($user, $due, $idle);
                 $user->recordDormancyNotice($due, $now);
+                $this->em->flush();
             }
             ++$notified[$due];
         }
 
-        if (!$dryRun) {
-            $this->em->flush();
-        }
-
-        return ['notified' => $notified, 'deleted' => $deleted, 'considered' => $considered];
+        return ['notified' => $notified, 'deleted' => $deleted, 'failed' => $failed, 'considered' => $considered];
     }
 
     /**
@@ -108,6 +119,8 @@ final class DormancySweep
             // A rider already on their way out has their own clock running.
             ->andWhere('u.deletionRequestedAt IS NULL')
             ->setParameter('cutoff', $now->modify(sprintf('-%d months', $firstRung)))
+            ->setParameter('codeExpired', $now->modify(sprintf('-%d minutes', UserDeletionService::CODE_MINUTES)))
+            ->orderBy('u.id')
             ->getQuery()
             ->getResult();
 

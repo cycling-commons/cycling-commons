@@ -149,19 +149,26 @@ final class CommunityProgress
      * approved submissions, drawer confirmations, rode-it checks — and one
      * account on one place counts once no matter how many acts it spent.
      * Item ids and route ids share a number space, hence the kind tag.
+     *
+     * An act whose account was deleted keeps no user id (account-and-auth.md
+     * §6.3), and nothing tells two erased accounts apart, so each such act
+     * counts on its own: two erased riders on one place are two backings,
+     * never merged into one.
      */
     public function dataPoints(): int
     {
         $excluded = $this->excludedEmailsLower();
         $sql = <<<'SQL'
-            SELECT COUNT(*) FROM (
+            SELECT COUNT(DISTINCT (backed.uid, backed.kind, backed.ref)) FILTER (WHERE backed.uid IS NOT NULL)
+                 + COUNT(*) FILTER (WHERE backed.uid IS NULL)
+            FROM (
                 SELECT s.user_id AS uid, 'i' AS kind, s.item_id AS ref
                 FROM submission s
                 WHERE s.status = 'approved' AND s.type IN ('new', 'edit', 'hazard')
                   AND s.item_id IS NOT NULL
-                UNION
+                UNION ALL
                 SELECT c.user_id, 'i', c.item_id FROM item_confirmation c
-                UNION
+                UNION ALL
                 SELECT r.user_id, 'r', r.route_id FROM route_ride r
             ) backed
             SQL;
@@ -170,7 +177,7 @@ final class CommunityProgress
         }
 
         return (int) $this->db->executeQuery(
-            $sql.' WHERE backed.uid NOT IN (SELECT id FROM users WHERE LOWER(email) IN (:excluded))',
+            $sql.' WHERE backed.uid IS NULL OR backed.uid NOT IN (SELECT id FROM users WHERE LOWER(email) IN (:excluded))',
             ['excluded' => $excluded],
             ['excluded' => ArrayParameterType::STRING],
         )->fetchOne();

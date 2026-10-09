@@ -37,7 +37,7 @@ final class ItemEvidenceCustodyTest extends KernelTestCase
         );
     }
 
-    private function history(int $item, string $field, int $by): void
+    private function history(int $item, string $field, ?int $by): void
     {
         $this->db()->executeStatement(
             "INSERT INTO change_history (item_id, field, old_value, new_value, changed_by, changed_at)
@@ -47,7 +47,7 @@ final class ItemEvidenceCustodyTest extends KernelTestCase
     }
 
     /** @param array<string, mixed> $changes */
-    private function submission(int $item, string $status, array $changes, int $by = self::RIDER, ?string $trashedFrom = null): void
+    private function submission(int $item, string $status, array $changes, ?int $by = self::RIDER, ?string $trashedFrom = null): void
     {
         $this->db()->executeStatement(
             "INSERT INTO submission (type, letter, item_id, user_id, status, title, geom, country_code, changes, payload, created_at, trashed_from)
@@ -81,6 +81,18 @@ final class ItemEvidenceCustodyTest extends KernelTestCase
         $this->history($item, 'name', self::RIDER);
 
         self::assertSame(CustodyTier::Ours, $this->custody($item));
+    }
+
+    public function testAnEditOrASubmissionByADeletedAccountStillMakesItOurs(): void
+    {
+        self::bootKernel();
+        $edited = $this->osmRow();
+        $this->history($edited, 'name', null);
+        $submitted = $this->osmRow();
+        $this->submission($submitted, 'approved', ['note' => ['was' => null, 'now' => 'A fine view']], null);
+
+        self::assertSame(CustodyTier::Ours, $this->custody($edited), 'the edit stays when the editor goes');
+        self::assertSame(CustodyTier::Ours, $this->custody($submitted), 'and so does the approved change');
     }
 
     public function testTheSystemClockOrAStateRowLeavesItGross(): void

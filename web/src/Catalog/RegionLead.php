@@ -84,15 +84,16 @@ final class RegionLead
     /**
      * `$curated` with one locale's lead set, the other locales untouched.
      *
-     * `$by` wrote it, `$approvedBy` let it onto the page (the same curator when
-     * they wrote it on the Regions desk or proposed it inside their area),
-     * `$submissionId` is the approved proposal, null for the desk.
+     * `$by` wrote it (null when the writer's account is deleted), `$approvedBy`
+     * let it onto the page (the same curator when they wrote it on the Regions
+     * desk or proposed it inside their area), `$submissionId` is the approved
+     * proposal, null for the desk.
      *
      * @param array<string, mixed>|null $curated decoded `region.context_curated`
      *
      * @return array<string, mixed>
      */
-    public static function withEntry(?array $curated, string $locale, string $text, bool $derived, int $by, int $approvedBy, ?int $submissionId, \DateTimeImmutable $at): array
+    public static function withEntry(?array $curated, string $locale, string $text, bool $derived, ?int $by, int $approvedBy, ?int $submissionId, \DateTimeImmutable $at): array
     {
         $curated ??= [];
         $curated[$locale] = [

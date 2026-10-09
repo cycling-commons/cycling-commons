@@ -165,8 +165,6 @@ final class MediaEscalationService
             if (null === $at) {
                 continue;
             }
-            $by = $upload->getEscalatedById();
-            $curator = null !== $by ? $this->em->find(User::class, $by) : null;
             $cards[] = [
                 'uuid' => $upload->getId()->toRfc4122(),
                 'reason' => $upload->getEscalatedReason() ?? '',
@@ -210,6 +208,11 @@ final class MediaEscalationService
             $attributes['photos'] = $kept;
         }
         $item->setAttributes($attributes);
+    }
+
+    private function displayName(?int $userId): string
+    {
+        return (null !== $userId ? $this->em->find(User::class, $userId) : null)?->getDisplayName() ?? '';
     }
 
     private function itemName(MediaUpload $upload): string

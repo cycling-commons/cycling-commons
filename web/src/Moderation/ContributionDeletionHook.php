@@ -28,7 +28,11 @@ use Doctrine\DBAL\Connection;
  *
  * Legal hold overrides all of it (docs/specs/photo-uploads.md §6d): a held
  * submission and its whole thread stay. The thread's messages to the rider
- * keep a NULL recipient (user_message.user_id is ON DELETE SET NULL).
+ * keep a NULL recipient (user_message.user_id is ON DELETE SET NULL), and the
+ * rider's replies on it keep a NULL sender.
+ *
+ * A message the account wrote as a curator to another rider stays in that
+ * rider's inbox, from nobody (`sender_id` NULL).
  * Photos are MediaDeletionHook's: it drops what was never approved.
  *
  * @see docs/specs/account-and-auth.md §6.3

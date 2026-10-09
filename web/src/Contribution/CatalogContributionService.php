@@ -807,7 +807,7 @@ final class CatalogContributionService implements ContributionStubInterface
             "SELECT created_at FROM submission
               WHERE item_id = :item
                 AND status IN ('pending', 'needs_info')
-                AND user_id <> :uid
+                AND user_id IS DISTINCT FROM :uid
               ORDER BY created_at
               LIMIT 1",
             ['item' => $itemId, 'uid' => null !== $by ? (int) $by->getId() : 0],

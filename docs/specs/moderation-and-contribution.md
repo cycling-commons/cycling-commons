@@ -678,7 +678,7 @@ LATERAL join the submissions desk uses (route-domain.md §7.1).
 | `type` | varchar(8), enum `SubmissionType` | `new` \| `edit` \| `hazard` \| `photo` \| `text`; queue renders all five, intake produces `new`/`edit` and `text` (§3.1b) |
 | `letter` | varchar(1) | effective range A–G, N–Q (R bypasses this table: a rider asks for a route change through `route_suggestion`, route-domain.md §7.1); `''` for `text`, which has no catalog kind |
 | `item_id` | bigint NULL | set for `edit` at submit; set for `new` when the item row is created in the same transaction; NULL for `text` |
-| `user_id` | bigint | submitter, deliberately **no FK** (survives account deletion as anonymous data; see §8) |
+| `user_id` | bigint NULL | submitter, deliberately **no FK** (`0` is the system actor). Account deletion sets it to NULL, so the row survives as anonymous data (account-and-auth.md §6.3, `CatalogDeletionHook`) |
 | `status` | varchar(12), enum `SubmissionStatus` | `pending` \| `approved` \| `rejected` \| `needs_info` \| `withdrawn` (§3.4) \| `trashed` (§6) |
 | `title` | varchar(200) | queue/drawer display |
 | `geom` | geometry(Geometry, 4326) | pending-pin location — always a Point in practice |
@@ -2859,7 +2859,7 @@ Entity `App\Community\Entity\CountryInterest`, table `country_interest`:
 | column | type | notes |
 |---|---|---|
 | `id` | bigint identity | |
-| `user_id` | bigint | no FK (house convention, §3.1) |
+| `user_id` | bigint NULL | no FK (house convention, moderation-and-contribution.md §3.1). Account deletion sets it to NULL and clears `note` and `willing_to_curate`, so the area still counts as asked for (`CommunityDeletionHook`, account-and-auth.md §6.3) |
 | `country_code` | varchar(2) | ISO 3166-1 alpha-2 |
 | `region_name` | varchar(120), default `''` | the area asked for; `''` is the whole country |
 | `willing_to_curate` | boolean, default false | the contact list for onboarding |
@@ -3001,7 +3001,7 @@ Entity `App\Community\Entity\CuratorApplication`, table `curator_application`:
 | column | type | notes |
 |---|---|---|
 | `id` | bigint identity | |
-| `user_id` | bigint | no FK |
+| `user_id` | bigint | no FK. Account deletion deletes the applicant's rows, any status (`CommunityDeletionHook`, account-and-auth.md §6.3) |
 | `country_code` | varchar(2) | must already have `region` rows (`CuratorApplicationService::countryIsOnboarded()`) |
 | `requested_region_id` | bigint, nullable | null = whole country; set = one division, validated to belong to `country_code` |
 | `osm_username` | varchar(64), nullable | charset-checked before use (`OsmUserVerifier::isWellFormed()`) |

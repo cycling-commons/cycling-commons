@@ -18,6 +18,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\Table(name: 'change_history')]
 #[ORM\Index(name: 'idx_history_item_time', columns: ['item_id', 'changed_at'])]
+#[ORM\Index(name: 'idx_change_history_changed_by', columns: ['changed_by'])]
 class ChangeHistory
 {
     /**
@@ -46,8 +47,9 @@ class ChangeHistory
     #[ORM\Column(type: 'json', nullable: true, options: ['jsonb' => true])]
     private mixed $newValue = null;
 
-    #[ORM\Column(type: 'bigint')]
-    private int $changedBy = 0;
+    /** users.id of the editor, SYSTEM_ACTOR for the system, NULL once the editor's account is deleted. */
+    #[ORM\Column(type: 'bigint', nullable: true)]
+    private ?int $changedBy = 0;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $changedAt;
@@ -122,12 +124,12 @@ class ChangeHistory
         return $this;
     }
 
-    public function getChangedBy(): int
+    public function getChangedBy(): ?int
     {
         return $this->changedBy;
     }
 
-    public function setChangedBy(int $changedBy): static
+    public function setChangedBy(?int $changedBy): static
     {
         $this->changedBy = $changedBy;
 

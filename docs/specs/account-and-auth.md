@@ -691,16 +691,23 @@ outlive removed accounts), `note`, `createdAt`. Contract points:
 - **Mutation and audit row are one transaction** (`wrapInTransaction` in
   `UserAdminService::commit()` / `removeAccount()`): they can never diverge:
   the trail can neither miss a change nor claim a removal that rolled back.
-- On removal the row is written first (target still resolvable) and the
-  target's email is snapshotted into `note` for traceability after the FK
-  nulls out.
+- On removal the row is written first (target still resolvable) and its
+  `note` reads `Removed account #<id>`: the trail names the removed account by
+  id, never by email address, because an erased address kept in the trail
+  would be personal data coming back. `Version20261009040000` stripped the
+  address from the notes written before (`Removed account: <email>` became
+  `Removed account`).
 - Surfaced as a read-only EA CRUD ("Activity" menu;
   `AdminActionLogCrudController` disables NEW/EDIT/DELETE/BATCH_DELETE).
 
 ### 6.3 Account removal: anonymize, not delete
 
 Commons rule: contributed data is community-owned and **never cascade-deletes
-with an account**. Removal targets personal data only.
+with an account**. Removal targets personal data only. Owner 2026-10-09:
+deleted personal data does not come back, and contributions stay without
+naming the person. After a deletion no row anywhere holds the account's id:
+what is personal and worth nothing without the person is deleted, and what
+stays as a contribution or as a record loses the id (NULL).
 
 - Admin removal (`UserAdminService::removeAccount()`), self-service
   deletion (§10), the dormancy and unconfirmed sweeps (§6.5, §6.7) and the
@@ -735,6 +742,9 @@ with an account**. Removal targets personal data only.
   whole thread. Contract and table in moderation-and-contribution.md §8;
   pinned by `tests/Moderation/ContributionRetentionTest.php` for the rider's
   own deletion and the dormancy sweep.
+  The same hook clears `user_message.sender_id` on what is left: a message
+  the account wrote as a curator to another rider stays in that rider's
+  inbox, from nobody.
 - **`App\Vote\SeasonVoteDeletionHook`**: stores the result of every closed
   season list the rider voted in, then deletes all the rider's `season_vote`
   rows. A closed season keeps its totals, which name nobody; the open round
@@ -813,7 +823,10 @@ column. Pinned by `DormancySweepTest::testAnAdministratorIsNeverWarnedNorDeleted
 `UserDeletionService::purge()`, the same path a rider's own request takes, so
 contributions are anonymised rather than cascaded and a photo licence consent
 survives exactly as on a rider's own deletion. A second deletion path would
-drift from the first.
+drift from the first. Each account goes in its own transaction (§6.3): one
+whose deletion fails stays whole and is counted as failed, and the command
+exits with a failure. A notice is recorded right after its email goes, so a
+later failure in the same run cannot lose the record and send it again.
 
 **Dry by default, `--force` to act.** For a command whose failure mode is
 deleting somebody's account, the cron entry should have to opt in.
@@ -1625,8 +1638,8 @@ POST + CSRF:
 2. `settings_delete_confirm`: code validated with `hash_equals`
    (case-insensitive via uppercasing), **expires 1 hour** after the request
    (`+1 hour` in `UserDeletionService::confirmDeletion()`). On success:
-   `purge()` (the shared hook seam, §6.3), flush, session invalidated,
-   redirect home.
+   `erase()`: `purge()` (the shared hook seam, §6.3) and the flush in one
+   transaction, then session invalidated, redirect home.
 
 A pending self-request is what arms the admin **Execute account removal** /
 **Cancel pending removal** actions (§6.1): an admin path through the same
@@ -1639,7 +1652,9 @@ contributions given to the open map (with provenance), and
 the consent ledger, the evidence that a licence was granted at all (CC BY-SA
 4.0 for a photo; for a translation, whichever consent version the translator
 ticked, translations.md §6), kept under Art. 17(3)(e) and disclosed under
-Art. 13(2)(a). Neither identifies the person once the `users` row is gone.
+Art. 13(2)(a). Neither identifies the person once the `users` row is gone:
+every reference to the account is cleared (§6.3), so a grant stays linked to
+the photo or translation it licenses and to nobody.
 
 ---
 

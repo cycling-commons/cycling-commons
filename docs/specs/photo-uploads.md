@@ -286,8 +286,10 @@ design preference of its own:
 `id (uuid) · user_id · kind ('media-cc-by-sa') · version (tag of the
 consent wording) · text_hash (sha256 of the exact text shown) ·
 consented_at`. One row per consent act (each modal tick); the uploads made
-under it reference it. Rows are immutable and are never deleted — the
-licence grant survives the account. When the phase-2 write API lands,
+under it reference it. Rows are never deleted, and the licence grant
+survives the account. Account deletion sets `user_id` to NULL
+(`MediaDeletionHook`, account-and-auth.md §6.3); the record stays linked to
+its photo or translation through `consent_record_id`. When the phase-2 write API lands,
 external consent rows are keyed `api_app_id` + `external_author_ref` instead
 of `user_id` ([public-api.md §8](public-api.md)): the partner app presents
 the same contract wording and asserts the version its user ticked in-app.

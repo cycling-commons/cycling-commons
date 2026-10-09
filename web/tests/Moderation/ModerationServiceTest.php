@@ -306,7 +306,7 @@ final class ModerationServiceTest extends KernelTestCase
         [, $sub] = $this->seedNew();
         $this->service->decide($sub->getId(), 'approve', $this->curator, null);
         $this->expectException(AlreadyDecidedException::class);
-        $this->service->decide($sub->getId(), 'reject', $this->curator, null);
+        $this->service->decide($sub->getId(), 'reject', $this->curator, 'Not this place.');
     }
 
     public function testHistoryIsAppendOnlyAcrossDecisions(): void

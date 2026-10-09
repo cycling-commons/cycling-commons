@@ -49,6 +49,12 @@ final class UnverifiedSweepCommand extends Command
         if ($dryRun) {
             $io->note('Dry run: nothing deleted. Pass --force to act.');
         }
+        if ($result['failed'] > 0) {
+            $io->error(sprintf('%d unconfirmed account(s) were deleted; %d could not be and were left untouched (the log names them by id).', $result['deleted'], $result['failed']));
+
+            return Command::FAILURE;
+        }
+
         $io->success(sprintf(
             '%d unconfirmed account(s) older than %d days %s deleted (%d considered).',
             $result['deleted'],

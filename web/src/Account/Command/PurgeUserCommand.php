@@ -25,7 +25,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * The same deletion a rider asks for. It goes through
  * {@see UserDeletionService::purge()}, so every pre-delete hook runs and
  * contributions are anonymised rather than cascaded (account-and-auth.md
- * §6.3). The admin desk offers no delete on purpose: an admin removes an
+ * §6.3). Each account goes in its own transaction: one whose removal fails
+ * stays whole, is logged by id, and the others are still removed; the command
+ * then exits with a failure. The admin desk offers no delete on purpose: an admin removes an
  * account only after the rider asked, and this command is the one exception,
  * for the operator at the console.
  *
@@ -91,12 +93,29 @@ final class PurgeUserCommand extends Command
             return Command::SUCCESS;
         }
 
-        foreach ($targets as $user) {
-            $this->deletions->purge($user);
+        $ids = array_map(static fn (User $u): int => (int) $u->getId(), $targets);
+        $removed = 0;
+        $failed = [];
+        foreach ($ids as $id) {
+            // By id: a failed removal before this one detached every loaded account.
+            $user = $this->em->find(User::class, $id);
+            if (!$user instanceof User) {
+                continue;
+            }
+            if ($this->deletions->eraseInBatch($user)) {
+                ++$removed;
+            } else {
+                $failed[] = $id;
+            }
         }
-        $this->em->flush();
 
-        $io->success(\sprintf('%d account(s) removed. Their submissions stay, under the anonymous former-contributor identity.', \count($targets)));
+        $done = \sprintf('%d account(s) removed. Their submissions stay, under the anonymous former-contributor identity.', $removed);
+        if ([] !== $failed) {
+            $io->error(\sprintf('%s Removing account id(s) %s failed and was rolled back: those accounts are untouched; the log has the error.', $done, implode(', ', $failed)));
+
+            return Command::FAILURE;
+        }
+        $io->success($done);
 
         return Command::SUCCESS;
     }

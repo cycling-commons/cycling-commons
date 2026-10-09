@@ -121,6 +121,7 @@ final class TranslationDeletionHookTest extends KernelTestCase
 
         $keptConsent = $em->find(ConsentRecord::class, Uuid::fromString($consentId));
         self::assertNotNull($keptConsent, 'consent_record rows must survive Art. 17(3)(e)');
-        self::assertSame($riderId, $keptConsent->getUserId());
+        self::assertNull($keptConsent->getUserId(), 'the grant stays and names nobody');
+        self::assertSame($consentId, (string) $keptProposal->getConsentRecordId(), 'still linked to the translation it licenses');
     }
 }

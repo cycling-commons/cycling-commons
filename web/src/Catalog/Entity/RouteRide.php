@@ -31,8 +31,9 @@ class RouteRide
     #[ORM\Column(name: 'route_id', type: Types::BIGINT)]
     private int $routeId;
 
-    #[ORM\Column(name: 'user_id', type: Types::BIGINT)]
-    private int $userId;
+    /** users.id of the rider; NULL once their account is deleted (docs/specs/account-and-auth.md §6.3). */
+    #[ORM\Column(name: 'user_id', type: Types::BIGINT, nullable: true)]
+    private ?int $userId;
 
     #[ORM\Column(name: 'bike_type', type: Types::STRING, length: 12, enumType: BikeType::class)]
     private BikeType $bikeType;
@@ -58,7 +59,7 @@ class RouteRide
         return $this->routeId;
     }
 
-    public function getUserId(): int
+    public function getUserId(): ?int
     {
         return $this->userId;
     }

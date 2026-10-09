@@ -21,7 +21,10 @@ use Doctrine\ORM\EntityManagerInterface;
  * Left alone: an account that ever signed in (it did, before sign-in needed a
  * confirmed address) and any account with a role beyond ROLE_USER (operators
  * make those by hand). Deletion is the same {@see UserDeletionService::purge()}
- * a rider asks for.
+ * a rider asks for, one account per transaction
+ * ({@see UserDeletionService::eraseInBatch()}): an account whose deletion
+ * fails stays whole, is logged by id and counted as failed, and the sweep goes
+ * on.
  *
  * @see docs/specs/account-and-auth.md §6.7
  *
@@ -38,7 +41,7 @@ final class UnverifiedSweep
     }
 
     /**
-     * @return array{deleted: int, considered: int}
+     * @return array{deleted: int, failed: int, considered: int}
      */
     public function run(\DateTimeImmutable $now, bool $dryRun = false): array
     {
@@ -50,25 +53,35 @@ final class UnverifiedSweep
             ->andWhere('u.lastLoginAt IS NULL')
             ->andWhere('u.createdAt <= :cutoff')
             ->setParameter('cutoff', $now->modify(sprintf('-%d days', self::DAYS)))
+            ->orderBy('u.id')
             ->getQuery()
             ->getResult();
 
+        // Roles live in a JSON column; the list is short, so filter here.
+        $ids = array_map(
+            static fn (User $user): int => (int) $user->getId(),
+            array_filter($candidates, static fn (User $user): bool => [] === array_diff($user->getRoles(), ['ROLE_USER'])),
+        );
+
         $deleted = 0;
-        foreach ($candidates as $user) {
-            // Roles live in a JSON column; the list is short, so filter here.
-            if ([] !== array_diff($user->getRoles(), ['ROLE_USER'])) {
+        $failed = 0;
+        foreach ($ids as $id) {
+            if ($dryRun) {
+                ++$deleted;
                 continue;
             }
-            if (!$dryRun) {
-                $this->deletions->purge($user);
+            // By id: a failed deletion before this one detached every loaded account.
+            $user = $this->em->find(User::class, $id);
+            if (!$user instanceof User) {
+                continue;
             }
-            ++$deleted;
+            if ($this->deletions->eraseInBatch($user)) {
+                ++$deleted;
+            } else {
+                ++$failed;
+            }
         }
 
-        if (!$dryRun) {
-            $this->em->flush();
-        }
-
-        return ['deleted' => $deleted, 'considered' => \count($candidates)];
+        return ['deleted' => $deleted, 'failed' => $failed, 'considered' => \count($candidates)];
     }
 }

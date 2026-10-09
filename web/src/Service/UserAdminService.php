@@ -133,8 +133,7 @@ final class UserAdminService
         $this->assertNotSelf($target, $actor);
         $this->assertNotLastAdmin($target);
 
-        $email = $target->getEmail();
-        $this->em->wrapInTransaction(function () use ($actor, $target, $email): void {
+        $this->em->wrapInTransaction(function () use ($actor, $target): void {
             // Personal data goes; contributions are anonymised (docs/specs/account-and-auth.md §6.3).
             $this->logger->log($actor, self::REMOVE_ACCOUNT, $target, 'Removed account: '.$email);
             $this->deletion->purge($target);

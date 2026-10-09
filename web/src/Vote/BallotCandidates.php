@@ -335,8 +335,8 @@ final class BallotCandidates
             return [
                 'from' => $from,
                 'where' => $where,
-                'count' => '(SELECT COUNT(DISTINCT rr.user_id) FROM route_ride rr
-                              WHERE rr.route_id = s.id AND rr.user_id <> COALESCE(s.proposed_by, -1))',
+                'count' => '(SELECT COUNT(*) FROM route_ride rr
+                              WHERE rr.route_id = s.id AND (rr.user_id IS NULL OR rr.user_id <> COALESCE(s.proposed_by, -1)))',
                 'params' => $params,
             ];
         }

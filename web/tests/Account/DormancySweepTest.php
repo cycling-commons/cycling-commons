@@ -9,6 +9,7 @@ use App\Account\DormancySweep;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Mailer\MailerInterface;
 
 /**
  * The sweep that actually sends the mail and closes the accounts.
@@ -90,6 +91,31 @@ final class DormancySweepTest extends KernelTestCase
         self::assertNull($this->em->find(User::class, $id), 'the account is gone');
     }
 
+    /** One account whose deletion fails is rolled back and logged; the next is still deleted and warned. */
+    public function testOneFailedDeletionDoesNotStopTheSweep(): void
+    {
+        $failing = $this->warnedRider();
+        $deletable = $this->warnedRider();
+        $toWarn = $this->rider(monthsIdle: 12);
+        $failingId = (int) $failing->getId();
+        $deletableId = (int) $deletable->getId();
+        $toWarnId = (int) $toWarn->getId();
+        $logger = new SabotagedErasure();
+        $deletions = SabotagedErasure::deletions(self::getContainer(), [$failingId => 'flush'], $logger);
+        $sweep = new DormancySweep($this->em, $deletions, self::getContainer()->get(MailerInterface::class));
+
+        $result = $sweep->run($this->now);
+
+        self::assertSame(1, $result['deleted']);
+        self::assertSame(1, $result['failed']);
+        self::assertSame(1, $result['notified']['m12']);
+        $this->em->clear();
+        self::assertNotNull($this->em->find(User::class, $failingId), 'the failed one is untouched');
+        self::assertNull($this->em->find(User::class, $deletableId), 'the next one is gone');
+        self::assertTrue($this->em->find(User::class, $toWarnId)?->dormancyNoticesSent()['m12'], 'and the notice is on file');
+        self::assertSame($failingId, $logger->records[0]['context']['user_id'] ?? null);
+    }
+
     public function testADryRunChangesNothing(): void
     {
         $user = $this->rider(monthsIdle: 25);
@@ -148,6 +174,27 @@ final class DormancySweepTest extends KernelTestCase
         $this->em->flush();
 
         self::assertSame(0, $this->sweep->run($this->now)['considered']);
+    }
+
+    public function testAnAbandonedDeletionCodeDoesNotExemptAnAccount(): void
+    {
+        // The code lives an hour; a rider who never typed it is still a rider.
+        $user = $this->rider(monthsIdle: 25);
+        $user->setDeletionRequestedAt($this->now->modify('-2 hours'));
+        $this->em->flush();
+
+        self::assertSame(1, $this->sweep->run($this->now)['considered']);
+    }
+
+    private function warnedRider(): User
+    {
+        $user = $this->rider(monthsIdle: 25);
+        foreach (['m12', 'm22', 'm23_final'] as $code) {
+            $user->recordDormancyNotice($code, $this->now);
+        }
+        $this->em->flush();
+
+        return $user;
     }
 
     private function rider(int $monthsIdle): User

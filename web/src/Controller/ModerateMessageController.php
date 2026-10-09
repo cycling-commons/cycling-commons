@@ -105,12 +105,14 @@ final class ModerateMessageController extends AbstractController
     private function resolveSubmission(int $id): ?array
     {
         $submission = $this->em->find(Submission::class, $id);
-        // A row in Trash has no thread to write to (moderation-and-contribution.md §6).
-        if (null === $submission || $submission->isTrashed()) {
+        // A row in Trash has no thread to write to (moderation-and-contribution.md §6);
+        // a row whose rider deleted their account has nobody to write to.
+        $riderId = $submission?->getUserId();
+        if (null === $submission || null === $riderId || $submission->isTrashed()) {
             return null;
         }
 
-        return [$submission->getUserId(), 'SUB-'.$id, $submission->getRegionId()];
+        return [$riderId, 'SUB-'.$id, $submission->getRegionId()];
     }
 
     /** @return array{0: int, 1: string, 2: ?int}|null */
@@ -129,14 +131,15 @@ final class ModerateMessageController extends AbstractController
     private function resolveCorrection(int $id): ?array
     {
         $suggestion = $this->em->find(RouteSuggestion::class, $id);
-        if (null === $suggestion || $suggestion->isTrashed()) {
+        $riderId = $suggestion?->getUserId();
+        if (null === $suggestion || null === $riderId || $suggestion->isTrashed()) {
             return null;
         }
 
         $route = $this->em->find(RecommendedRoute::class, $suggestion->getRouteId());
         $routeName = $route?->getName() ?? sprintf('route-%d', $suggestion->getRouteId());
 
-        return [$suggestion->getUserId(), $routeName, $route?->getRegionId()];
+        return [$riderId, $routeName, $route?->getRegionId()];
     }
 
     /**

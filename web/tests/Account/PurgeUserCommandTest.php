@@ -6,11 +6,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Account;
 
+use App\Account\Command\PurgeUserCommand;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
@@ -119,5 +121,29 @@ final class PurgeUserCommandTest extends KernelTestCase
         self::assertSame(1, $tester->getStatusCode());
         self::assertStringContainsString('last ROLE_ADMIN', $tester->getDisplay());
         self::assertNotNull($this->find('only-admin@example.test'));
+    }
+
+    /**
+     * Each account goes in its own transaction: one that fails stays whole,
+     * the others are still removed, and the command reports the failure.
+     */
+    public function testOneFailedRemovalLeavesThatAccountAndRemovesTheOthers(): void
+    {
+        $failing = (int) $this->makeUser('purge-fails@example.test')->getId();
+        $this->makeUser('purge-goes@example.test');
+        $c = static::getContainer();
+        $command = new PurgeUserCommand(
+            $c->get(UserRepository::class),
+            SabotagedErasure::deletions($c, [$failing => 'flush']),
+            $this->em,
+        );
+        $tester = new CommandTester($command);
+
+        $tester->execute(['email' => ['purge-fails@example.test', 'purge-goes@example.test'], '--force' => true]);
+
+        self::assertSame(Command::FAILURE, $tester->getStatusCode());
+        self::assertStringContainsString('1 account(s) removed', $tester->getDisplay());
+        self::assertNotNull($this->find('purge-fails@example.test'));
+        self::assertNull($this->find('purge-goes@example.test'));
     }
 }

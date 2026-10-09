@@ -40,6 +40,13 @@ final class RouteCommunityService
     ) {
     }
 
+    /**
+     * Riders other than the proposer who rode the route. One row per rider is
+     * a database constraint, so a count of rows is a count of people. A ride
+     * whose rider deleted their account (user_id NULL) still counts.
+     */
+    private const string INDEPENDENT_RIDES = 'SELECT COUNT(*) FROM route_ride WHERE route_id = :r AND (user_id IS NULL OR user_id <> :p)';
+
     public function rideVerifyThreshold(): int
     {
         return $this->settings->get(SettingsRegistry::ROUTE_RIDE_VERIFY_THRESHOLD);
@@ -53,7 +60,7 @@ final class RouteCommunityService
         $routeId = (int) $route->getId();
 
         $rideCount = (int) $this->db->fetchOne(
-            'SELECT COUNT(DISTINCT user_id) FROM route_ride WHERE route_id = :r AND user_id <> :p',
+            self::INDEPENDENT_RIDES,
             ['r' => $routeId, 'p' => $route->getProposedBy() ?? -1],
         );
         $iRode = (bool) $this->db->fetchOne(
@@ -88,7 +95,7 @@ final class RouteCommunityService
 
         if (ItemState::Unverified === $route->getState()) {
             $independent = (int) $this->db->fetchOne(
-                'SELECT COUNT(DISTINCT user_id) FROM route_ride WHERE route_id = :r AND user_id <> :p',
+                self::INDEPENDENT_RIDES,
                 ['r' => $routeId, 'p' => $route->getProposedBy() ?? -1],
             );
             $isProposer = null !== $route->getProposedBy() && $route->getProposedBy() === $user->getId();

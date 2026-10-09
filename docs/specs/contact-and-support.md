@@ -948,7 +948,9 @@ comes from `Version20260908160000`.
 
 `bug_report.user_id` is nullable with **no foreign key** to `users`: anybody may
 file without an account, and a deleted account leaves the report standing
-because the fix still helps everybody. Same pattern as `country_interest`.
+because the fix still helps everybody. Deletion clears `user_id`,
+`reporter_email` and `ip_hash` and keeps the report (`SupportDeletionHook`,
+account-and-auth.md §6.3). Same pattern as `country_interest`.
 
 A partial index carries the overdue query, the one a curator runs most:
 `(due_at) WHERE due_at IS NOT NULL AND status IN ('new','open')`.

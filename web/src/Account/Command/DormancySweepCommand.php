@@ -68,6 +68,12 @@ final class DormancySweepCommand extends Command
             $io->note('Dry run: no mail sent, no account deleted. Pass --force to act.');
         }
 
+        if ($result['failed'] > 0) {
+            $io->error(sprintf('%d account(s) could not be deleted and were left untouched; the log names them by id. %d dormant account(s) considered.', $result['failed'], $result['considered']));
+
+            return Command::FAILURE;
+        }
+
         $io->success(sprintf('%d dormant account(s) considered.', $result['considered']));
 
         return Command::SUCCESS;

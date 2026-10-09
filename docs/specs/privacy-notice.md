@@ -57,7 +57,9 @@ nobody thought of `/privacy`.
 | Account deletion is immediate | `App\Service\UserDeletionService::confirmDeletion()` | a real grace period is ever built |
 | Backups roll off in at most 90 days | infra (restic to Scaleway), owner-confirmed 2026-08-27 | the restic retention policy changes |
 | Server logs kept at most 90 days | infra, `operations.md` 2a | any log path is ever allowed to outlive 90 days |
-| Full IP addresses are held "only briefly" | infra, owner-confirmed 2026-09-20 | the short full-address window changes |
+| Server logs, full IP addresses included, are deleted within 90 days (`privacy.retention_logs`); the shorter full-address window and the shortening method are not stated | infra, owner-confirmed 2026-09-20 and 2026-10-09; operations.md 2a | a log, full address included, can live longer than 90 days |
+| An account deleted for dormancy stays in the backups until they rotate out, at most 90 days, the same as a deletion the rider asks for (`privacy.retention_account`) | `App\Account\DormancySweep` deletes through `UserDeletionService`; infra (restic retention) | the backup retention changes |
+| Photon receives what the rider types in a place search and the page language, plus, from the map search, the bbox and country code of the selected scope; from the map search, the contribution wizard and the base location field in settings (`privacy.bs_photon_what`, `privacy.bs_photon_sees`) | `assets/map/search-ui.js` (`runPhoton()`, `CCScope.photonParams()`), `assets/contribute/improve.js` (`geocode()`), `assets/settings/base-location.js` | another caller is added, or a request carries more than the query, the language and the scope's box |
 | TOTP secret AES-256-GCM, key outside the DB | `App\Doctrine\EncryptedStringType`, `ENCRYPTION_SECRET` | see `account-and-auth.md` 4 |
 | Backup codes are keyed hashes | `User::hashBackupCode()` | |
 | HSTS | nginx, `operations.md` 4 ownership table | |
@@ -170,8 +172,11 @@ on.
 
 **There is no grace period after account closure.**
 `UserDeletionService::confirmDeletion()` verifies a code that expires after one
-hour and then calls `purge()`, which removes the row. `deletionRequestedAt` is
-the code's clock, not a countdown to deletion; nothing scheduled ever reads it.
+hour and then calls `erase()`, which runs `purge()` and removes the row in one
+transaction. `deletionRequestedAt` is
+the code's clock (`UserDeletionService::CODE_MINUTES`), not a countdown to
+deletion. The dormancy sweep reads it only to leave an account alone while its
+code still works; an abandoned request exempts nobody.
 
 The page says so: deletion is immediate, and the only lag is the encrypted
 nightly backups, which roll off in at most 90 days.

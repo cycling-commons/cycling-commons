@@ -135,7 +135,7 @@ final class ItemEvidenceResolverTest extends TestCase
     {
         $sql = ItemEvidenceResolver::selectSql('i');
         self::assertStringContainsString('AS ev_edited', $sql);
-        self::assertStringContainsString('changed_by <> '.ChangeHistory::SYSTEM_ACTOR, $sql, 'the closure clock is not an edit');
+        self::assertStringContainsString('changed_by IS DISTINCT FROM '.ChangeHistory::SYSTEM_ACTOR, $sql, 'the closure clock is not an edit; a deleted account\'s edit is');
         self::assertStringContainsString("field <> 'state'", $sql, 'a verification is counted by the state, not as an edit');
     }
 

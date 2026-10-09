@@ -186,7 +186,8 @@ final class UserAdminServiceTest extends KernelTestCase
         $logs = static::getContainer()->get(\App\Repository\AdminActionLogRepository::class)
             ->findBy(['action' => UserAdminService::REMOVE_ACCOUNT]);
         self::assertCount(1, $logs);
-        self::assertStringContainsString('gone@example.com', (string) $logs[0]->getNote());
+        self::assertSame('Removed account #'.$id, $logs[0]->getNote(), 'the trail names the account by id');
+        self::assertStringNotContainsString('gone@example.com', (string) $logs[0]->getNote(), 'an erased address is not kept in the trail');
         self::assertNull($logs[0]->getTargetUser(), 'FK is SET NULL after the target row is removed.');
     }
 

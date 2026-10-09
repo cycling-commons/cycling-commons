@@ -33,8 +33,9 @@ class ItemConfirmation
     #[ORM\Column(name: 'item_id', type: Types::BIGINT)]
     private int $itemId;
 
-    #[ORM\Column(name: 'user_id', type: Types::BIGINT)]
-    private int $userId;
+    /** users.id of the rider; NULL once their account is deleted (docs/specs/account-and-auth.md §6.3). */
+    #[ORM\Column(name: 'user_id', type: Types::BIGINT, nullable: true)]
+    private ?int $userId;
 
     #[ORM\Column(type: Types::STRING, length: 20, enumType: ConfirmationStance::class)]
     private ConfirmationStance $stance;
@@ -89,7 +90,7 @@ class ItemConfirmation
         return $this->itemId;
     }
 
-    public function getUserId(): int
+    public function getUserId(): ?int
     {
         return $this->userId;
     }

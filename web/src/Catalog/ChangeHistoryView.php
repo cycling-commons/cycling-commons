@@ -66,7 +66,8 @@ final class ChangeHistoryView
                 'oldValue' => $this->decode($r['old_value'], $field),
                 'newValue' => $this->decode($r['new_value'], $field),
                 // SYSTEM_ACTOR must not mint a rider# handle. Public profiles are credited by name; others stay a pseudonym.
-                'who' => ChangeHistory::SYSTEM_ACTOR === (int) $r['changed_by']
+                // NULL is a deleted account, never the system.
+                'who' => null !== $r['changed_by'] && ChangeHistory::SYSTEM_ACTOR === (int) $r['changed_by']
                     ? self::SYSTEM_LABEL
                     : ($r['public_profile'] && \is_string($r['display_name']) && '' !== $r['display_name']
                         ? $r['display_name']
