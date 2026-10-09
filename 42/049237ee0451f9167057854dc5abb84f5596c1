@@ -1,0 +1,159 @@
+web/src/Catalog/Entity/RouteChangeHistory.php
+  s_985749378da6fe::t_d2e5bf81909435 44-49,58,94
+docs/specs/moderation-and-contribution.md
+  s_985749378da6fe::t_b79375b5d2ccc9 681
+  s_985749378da6fe::t_d59f57c43d82a6 2862,3004
+web/migrations/Version20261009040000.php
+  s_985749378da6fe::t_da7a6ef0bb1d77 23-26
+  s_985749378da6fe::t_eeba40215efff4 45
+  s_985749378da6fe::t_0c871ef2c4ee4e 1-22,27-44,46-67,69-82
+  s_985749378da6fe::t_febc2ab67f591c 68
+web/tests/Account/SabotagedErasure.php
+  s_985749378da6fe::t_c3f0d74e781e98 1-76
+web/src/Contribution/CatalogContributionService.php
+  s_985749378da6fe::t_f677b0507cefed 810
+web/src/Service/UserAdminService.php
+  s_985749378da6fe::t_c31bc91c0a48d6 136
+web/tests/Account/UnverifiedSweepTest.php
+  s_985749378da6fe::t_70819ee3c3e0fc 65,116-136
+  s_985749378da6fe::t_d2862b421d9d39 138
+  s_985749378da6fe::t_95123eeaf6f8a0 137
+web/src/Catalog/ItemEvidenceResolver.php
+  s_985749378da6fe::t_d2862b421d9d39 67,70
+web/src/Catalog/Entity/RouteSuggestion.php
+  s_985749378da6fe::t_d2e5bf81909435 36-38,115
+docs/specs/contact-and-support.md
+  s_985749378da6fe::t_b79375b5d2ccc9 951-952
+  s_985749378da6fe::t_6c404c89f3a9cd 953
+web/src/Account/DormancySweep.php
+  s_985749378da6fe::t_38723a80f817d2 36-41,56,62,65-71,77-79,93,98,123
+  s_985749378da6fe::t_583a6efd5bbcd0 122
+web/src/Media/MediaEscalationService.php
+  s_985749378da6fe::t_d2862b421d9d39 214-217
+  s_985749378da6fe::t_fa1d67118261d0 213
+web/tests/Catalog/ItemEvidenceResolverTest.php
+  s_985749378da6fe::t_219c04de900df4 138
+web/src/Moderation/RouteModerationService.php
+  s_985749378da6fe::t_d2862b421d9d39 464-465
+  s_985749378da6fe::t_e9802e004ad826 136-138,147,164,236,273-274
+  s_985749378da6fe::t_d41bd668598eea 275-276
+web/tests/Community/CommunityProgressTest.php
+  s_985749378da6fe::t_b4a408c43901df 70-90
+web/src/Town/TownSummaryRepository.php
+  s_985749378da6fe::t_030291abe39bac 114-115
+  s_985749378da6fe::t_e9802e004ad826 122
+web/tests/Account/PurgeUserCommandTest.php
+  s_985749378da6fe::t_70819ee3c3e0fc 9,15,125-147
+  s_985749378da6fe::t_d2862b421d9d39 148
+web/src/Service/UserDeletionService.php
+  s_985749378da6fe::t_972de6470c445d 8,10-11,19-22,37-38,76,82-128,132
+  s_985749378da6fe::t_583a6efd5bbcd0 29-31,67
+  s_985749378da6fe::t_d2862b421d9d39 129-131
+web/src/Media/Entity/ConsentRecord.php
+  s_985749378da6fe::t_d2e5bf81909435 29-31,63
+web/tests/Translation/TranslationDeletionHookTest.php
+  s_985749378da6fe::t_5234b639cef718 124-125
+docs/specs/privacy-notice.md
+  s_985749378da6fe::t_448faeb3895f88 60
+  s_985749378da6fe::t_480b9113e4a0ce 61-62,175-179
+web/migrations/Version20261009040100.php
+  s_985749378da6fe::t_63d2f46681d8cb 1-145
+web/tests/Moderation/ModerationServiceTest.php
+  s_985749378da6fe::t_f405c4d2edd893 309
+web/tests/Catalog/ItemEvidenceCustodyTest.php
+  s_985749378da6fe::t_219c04de900df4 40,50,86-95
+  s_985749378da6fe::t_0f8f0fe7b282bf 96-97
+web/src/Account/Command/PurgeUserCommand.php
+  s_985749378da6fe::t_38723a80f817d2 28-30,96-109,112-118
+web/src/Account/Command/DormancySweepCommand.php
+  s_985749378da6fe::t_38723a80f817d2 71-76
+web/src/Catalog/RegionLead.php
+  s_985749378da6fe::t_e9802e004ad826 96
+  s_985749378da6fe::t_030291abe39bac 87-90
+web/src/Blog/BlogDeletionHook.php
+  s_985749378da6fe::t_0e04df45bc7f19 1-32
+web/src/Vote/BallotCandidates.php
+  s_985749378da6fe::t_f677b0507cefed 338-339
+web/src/Media/MediaDeletionHook.php
+  s_985749378da6fe::t_9bab8756602c75 11,17,23-26
+web/src/Account/UnverifiedSweep.php
+  s_985749378da6fe::t_38723a80f817d2 24-27,44,56,60-65,67-70,73-75,78-81,85
+  s_985749378da6fe::t_d2862b421d9d39 76-77
+docs/specs/account-and-auth.md
+  s_985749378da6fe::t_3e2adef81902b3 694,1642
+  s_985749378da6fe::t_d2862b421d9d39 1641,1655-1657
+  s_985749378da6fe::t_8ef7e93fdf2b0d 695-699,706-710,745-747,826-829
+web/src/Community/CommunityProgress.php
+  s_985749378da6fe::t_73553a6a18ee24 152-156,162-164,169,171
+  s_985749378da6fe::t_f677b0507cefed 180
+web/src/Community/Entity/CountryInterest.php
+  s_985749378da6fe::t_d2e5bf81909435 41-43,81
+web/src/Catalog/Entity/ChangeHistory.php
+  s_985749378da6fe::t_d2e5bf81909435 50-52,127,132
+  s_985749378da6fe::t_5687c60ea5f5e1 21
+web/src/Moderation/ModerationService.php
+  s_985749378da6fe::t_14b4e2e4f6fb3d 278-285,330
+  s_985749378da6fe::t_8221efd38e2070 286-296,329,331,335
+web/src/Catalog/CatalogDeletionHook.php
+  s_985749378da6fe::t_1e727887282fe8 1-27,30-52,54-103
+  s_985749378da6fe::t_43b3292ff86a8e 28-29,53
+web/src/Controller/ModerateMessageController.php
+  s_985749378da6fe::t_e9802e004ad826 108-109
+  s_985749378da6fe::t_9262d775ff0993 110-111,115,134-135,142
+web/src/Moderation/TrashBin.php
+  s_985749378da6fe::t_e9802e004ad826 347,349
+web/src/Account/Command/UnverifiedSweepCommand.php
+  s_985749378da6fe::t_38723a80f817d2 52-57
+web/src/Moderation/ContributionDeletionHook.php
+  s_985749378da6fe::t_75f8475c252660 31-35
+web/src/Community/CommunityDeletionHook.php
+  s_985749378da6fe::t_4a862e8aefb3c2 1-48
+web/src/Catalog/Entity/RouteRide.php
+  s_985749378da6fe::t_d2e5bf81909435 34-36,62
+web/src/Catalog/ChangeHistoryView.php
+  s_985749378da6fe::t_d2862b421d9d39 69-70
+docs/specs/photo-uploads.md
+  s_985749378da6fe::t_b79375b5d2ccc9 289-291
+  s_985749378da6fe::t_353b4fdf0c24a3 292
+web/src/Support/SupportDeletionHook.php
+  s_985749378da6fe::t_7af4fdbc1dec9d 1-45,51-54
+  s_985749378da6fe::t_2b419bee7fd11f 46-50
+web/src/Moderation/PlaceTextWriter.php
+  s_985749378da6fe::t_e9802e004ad826 102
+web/tests/Account/DormancySweepTest.php
+  s_985749378da6fe::t_70819ee3c3e0fc 94-118,189-197
+  s_985749378da6fe::t_76a0a40940e5eb 12
+  s_985749378da6fe::t_d2862b421d9d39 198-199
+  s_985749378da6fe::t_7201beff721124 179-188
+web/src/Catalog/Entity/Submission.php
+  s_985749378da6fe::t_d2e5bf81909435 44-46,168
+web/src/Catalog/Entity/ItemConfirmation.php
+  s_985749378da6fe::t_d2e5bf81909435 36-38,93
+web/tests/Admin/UserAdminServiceTest.php
+  s_985749378da6fe::t_61d98ec58da2df 189-190
+web/tests/Account/AccountErasureTest.php
+  s_985749378da6fe::t_bc40b3e95d284d 177-179,356-361
+  s_985749378da6fe::t_8fd21373bf4318 346-348
+  s_985749378da6fe::t_bf71932f359d4c 66
+  s_985749378da6fe::t_c459f80dc7e404 195-250
+  s_985749378da6fe::t_cd76b639f8ec18 1-53,55-65,67-176,180-194,251-345,349-355,362-396
+  s_985749378da6fe::t_d78efc57488a9b 54
+web/src/Community/RouteCommunityService.php
+  s_985749378da6fe::t_f677b0507cefed 43-49,63,98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "42049237ee0451f9167057854dc5abb84f5596c1",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
