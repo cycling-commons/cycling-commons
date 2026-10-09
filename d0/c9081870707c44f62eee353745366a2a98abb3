@@ -1,0 +1,47 @@
+docs/specs/coverage-provider.md
+  s_985749378da6fe::t_7bb6e0eec9741c 676,843-847
+web/assets/map/coverage.js
+  s_985749378da6fe::t_7961c986754c48 10,234-235
+web/tests/js/search-rows.test.cjs
+  s_985749378da6fe::t_7bb6e0eec9741c 30,34
+web/tests/js/map-zoom-styles.test.cjs
+  s_985749378da6fe::t_84600dafa7f1e0 36,41,47-48,59-60,66
+web/assets/map/render.js
+  s_985749378da6fe::t_7961c986754c48 164,167-171,599-608,634-646
+web/tests/js/scout-review.test.cjs
+  s_985749378da6fe::t_766075d86e884b 59-69,71-75
+  s_985749378da6fe::t_6b6a30bec73fbb 70
+web/assets/map/drawer.js
+  s_985749378da6fe::t_3b94d12ddae3cd 28
+  s_985749378da6fe::t_7961c986754c48 14,1341-1347,1350-1352,1359-1360
+web/assets/styles/map.css
+  s_985749378da6fe::t_7961c986754c48 1664-1665,1667
+web/assets/map/osm-pools.js
+  s_985749378da6fe::t_7961c986754c48 89,92-97,224,231-237
+docs/specs/map-and-search.md
+  s_985749378da6fe::t_7bb6e0eec9741c 1885-1888,1989-1998
+web/assets/map/pin-fan.js
+  s_985749378da6fe::t_7961c986754c48 67-74
+web/assets/map/search-ui.js
+  s_985749378da6fe::t_7961c986754c48 258,390-391,396-399
+web/assets/map/icons.js
+  s_985749378da6fe::t_7961c986754c48 181-182,338,341-348
+web/tests/js/map-review-fixes.test.cjs
+  s_985749378da6fe::t_22e234e0bdbdf2 1-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d0c9081870707c44f62eee353745366a2a98abb3",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
