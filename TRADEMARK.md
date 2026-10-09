@@ -126,6 +126,6 @@ solved by a rename or a sentence of clarification.
 ## 8. Ownership
 
 The Marks are held by BikeCoders (<https://bikecoders.life>), the current
-steward of the Cycling Commons. They will pass to the Dutch stichting that will
+steward of the Cycling Commons. They will pass to the Dutch foundation (stichting) that will
 hold the project, along with the copyright in the software, when it is
 incorporated. See [`GOVERNANCE.md`](GOVERNANCE.md).

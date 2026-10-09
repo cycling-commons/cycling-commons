@@ -130,9 +130,9 @@ In plain terms, what signing off does:
 
 Copyright in this code is held today by BikeCoders (<https://bikecoders.life>), a
 trading name of the project's sole owner. Within about a year stewardship moves to a
-Dutch stichting (foundation) created for the purpose. By signing off your commits you
-also agree that the licence you grant may be exercised by that stichting, and that the
-section 14 proxy designation passes to the stichting on its incorporation.
+Dutch foundation (stichting) created for the purpose. By signing off your commits you
+also agree that the licence you grant may be exercised by that foundation, and that the
+section 14 proxy designation passes to the foundation on its incorporation.
 
 **Why the clause exists.** Without it, the handover would have to be assembled by hand:
 every past contributor asked, individually, for personal consent. One author who has
@@ -144,7 +144,7 @@ everybody staying reachable forever.
 even if the project wanted it. Under Dutch law, art. 2 Auteurswet together with the Wet
 versterking auteurscontractenrecht in force since 2026-01-01, transferring copyright
 takes a signed written deed. A checkbox in a repository is not a deed and cannot be
-made into one. You keep your copyright. The stichting inherits exactly the
+made into one. You keep your copyright. The foundation inherits exactly the
 non-exclusive licence you granted, and nothing beyond it.
 
 ### The check

@@ -6,7 +6,7 @@
 #
 # The trailer is the inbound licence grant (CONTRIBUTING.md): it is the author
 # saying the work is theirs to give, and agreeing that the licence they grant
-# passes to the stichting. .github/workflows/dco.yml refuses any pull-request
+# passes to the foundation. .github/workflows/dco.yml refuses any pull-request
 # commit without one, and requires it to name that commit's own author.
 #
 # This hook only ADDS the line. It verifies nothing. A hook runs on the machine

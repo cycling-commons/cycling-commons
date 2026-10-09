@@ -234,7 +234,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>.
 
 Xander Koevoet is designated the proxy under section 14 of the GNU Affero
 General Public License, and may decide whether future versions of that licence
-apply to this program. This designation passes to the Dutch stichting that will
+apply to this program. This designation passes to the Dutch foundation (stichting) that will
 hold the project once it is incorporated.
 ```
 

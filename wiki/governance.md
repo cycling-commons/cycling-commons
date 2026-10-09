@@ -92,7 +92,7 @@ ownership. The commitment, public from the start:
    everyone else on the same terms. What the spin-out still has to move by
    hand is everything the AGPL does not reach: the domain, the name, the logo and the wordmark (see
    [TRADEMARK.md](https://github.com/cycling-commons/cycling-commons/blob/main/TRADEMARK.md), which
-    already names the stichting as where the marks are going), the accounts, and operational
+    already names the foundation as where the marks are going), the accounts, and operational
     custody of the running service.
 5. **The handover waits for a funding runway.** Until the foundation exists, BikeCoders pays the
    hosting bills; before the keys move, twelve months of those costs stand committed as sponsorship —

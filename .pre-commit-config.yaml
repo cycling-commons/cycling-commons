@@ -37,7 +37,7 @@ repos:
       #
       # The sign-off is this project's inbound licence grant (CONTRIBUTING.md).
       # Without it a merged commit has no recorded grant and no agreement to the
-      # stichting succession clause, which turns the handover into a hunt for
+      # foundation succession clause, which turns the handover into a hunt for
       # every past author. Typing `-s` every time is a rule people keep until
       # the day they are in a hurry, so the hook types it for them.
       - id: signoff

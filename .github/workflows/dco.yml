@@ -15,7 +15,7 @@
 #
 # Why it must never be switched off: the sign-off also carries the contributor's
 # agreement to the succession clause in CONTRIBUTING.md, which is what lets the
-# project move to a stichting later without going back to every author for
+# project move to a Dutch foundation (stichting) later without going back to every author for
 # personal consent. A commit merged without a sign-off is a commit that has to
 # be chased down by hand at incorporation.
 name: DCO

@@ -13,7 +13,7 @@ independence in practice.
 ## Who stewards it
 
 ```
-BikeCoders            the company: open-data steward (→ independent stichting)
+BikeCoders            the company: open-data steward (→ independent foundation)
    │
    ├── Cycling Commons   the open data initiative: ODbL, neutral, for everyone
    │
@@ -40,7 +40,7 @@ and the Commons carries no app's branding.
    in force.
 2. **Architectural separation from day one:** the Commons keeps its own schema, accounts, API,
    and bulk exports, independent of any app built on it.
-3. **Spin-out to an independent foundation:** a Dutch stichting, formalised at a defined
+3. **Spin-out to an independent foundation:** a Dutch foundation (stichting), formalised at a defined
    milestone (real external contributors, or a threshold of verified data) and expected within
    about a year. It takes over stewardship, the copyright BikeCoders holds, and the designation
    of the proxy under section 14 of the AGPL. The public pre-commitment plus the open licence is
@@ -61,4 +61,4 @@ and the same commitments above.
 - Contributor licensing terms (inbound grant, warranty): [`licenses/COMMONS-TERMS-CLAUSE.md`](licenses/COMMONS-TERMS-CLAUSE.md)
 - Sign your commits off with `git commit -s`. Contributions come in under the Developer
   Certificate of Origin: you keep your own copyright and license the work in, and nothing is
-  assigned to BikeCoders or to the stichting that follows it.
+  assigned to BikeCoders or to the foundation that follows it.
