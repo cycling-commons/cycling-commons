@@ -226,7 +226,8 @@ quarter, day), counting only seconds where the radar field is present:
 - **day type**: `weekend` on Saturday, Sunday and the public holidays of the
   ride's country (`web/public/data/holidays/<cc>.json`, official holidays only,
   built by `app:traffic:holidays` from the Yasumi library for 2010 to two years
-  ahead; rerun yearly), else `workday`. Chile and Rwanda have no provider and
+  ahead; rerun yearly and commit the files: `HolidayFilesAheadTest` turns red
+  when a file ends less than 12 months ahead), else `workday`. Chile and Rwanda have no provider and
   use the calendar only.
 - **quarter**: `YYYY-Qn` of the local date.
 - **day**: the local date as days since 1970-01-01. It splits lines by day
