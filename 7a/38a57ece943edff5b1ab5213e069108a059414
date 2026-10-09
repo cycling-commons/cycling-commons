@@ -1,0 +1,115 @@
+web/tests/Admin/UserAdminActionsTest.php
+  s_985749378da6fe::t_ef185629393985 106,117,334-350,352-406
+  s_985749378da6fe::t_3408ac51b3defe 351
+  s_985749378da6fe::t_bd96c670230201 407
+web/migrations/Version20261009050000.php
+  s_985749378da6fe::t_ca58e0297d6533 1-53
+web/src/Security/VerifiedEmailChecker.php
+  s_985749378da6fe::t_02b03b89070e49 10,24-25,28
+web/templates/admin/user_account_decision.html.twig
+  s_985749378da6fe::t_ea3f8b03217c72 1-50
+web/migrations/Version20261009050100.php
+  s_985749378da6fe::t_7619e317b6b825 1-55
+web/src/Doctrine/MigrationOwnedForeignKeys.php
+  s_985749378da6fe::t_1414e287cfe7f0 1-63
+web/src/Moderation/UnsentStatements.php
+  s_985749378da6fe::t_4568b2ce18efc9 1-11,13-55,74-109,111-115,117-133
+  s_985749378da6fe::t_0c894852aca950 110
+  s_985749378da6fe::t_0c22860d558139 116
+  s_985749378da6fe::t_bbd8e7cac05835 12,56-73
+web/tests/Account/AccountSuspensionTest.php
+  s_985749378da6fe::t_3483b44e258728 152-173,179-189
+  s_985749378da6fe::t_0f36a52cbb6ea5 1-151,190-322
+  s_985749378da6fe::t_cc3745b73349eb 174-178
+web/src/Account/DormancySweep.php
+  s_985749378da6fe::t_2c99622f582de9 119-121,146,156-171,181
+  s_985749378da6fe::t_583a6efd5bbcd0 124-126
+  s_985749378da6fe::t_1c1717b7d053a3 122-123
+web/src/Account/DataExportService.php
+  s_985749378da6fe::t_628bad4db3b148 91
+docs/specs/moderation-and-contribution.md
+  s_985749378da6fe::t_a35af1d8b227f8 1840
+web/src/Entity/User.php
+  s_985749378da6fe::t_64b8aff24812d2 22,50,221,411-470
+  s_985749378da6fe::t_187e3fc99a0350 222-243
+  s_985749378da6fe::t_d40f26992888b3 471
+web/src/Service/UserAdminService.php
+  s_985749378da6fe::t_c31bc91c0a48d6 155-156
+  s_985749378da6fe::t_7b7d830c062310 17,58-60,169-170,174-175,179,193-194,217-219,222-223,228,246
+  s_985749378da6fe::t_1d6a1e665a8847 172-173,199,221,224
+  s_985749378da6fe::t_7b3d5be0287a04 176-177,225-226
+  s_985749378da6fe::t_87eb1c4d9d8878 14-16,21,43-48,56-57,61,157-168,171,178,180-192,195-198,200-216,220,227,229-241,245,247-266
+web/src/Security/SuspendedSessionProvider.php
+  s_985749378da6fe::t_cefc6de8d06c1e 1-87
+web/src/Security/LoginThrottleListener.php
+  s_985749378da6fe::t_bef162b8c44c38 90,93
+web/src/Controller/Admin/UnsentStatementController.php
+  s_985749378da6fe::t_8a93f8fd484d24 1-68
+web/src/Moderation/Entity/UnsentStatement.php
+  s_985749378da6fe::t_1394338e162577 1-137
+web/config/packages/security.yaml
+  s_985749378da6fe::t_02b03b89070e49 21
+web/src/Controller/Admin/DashboardController.php
+  s_985749378da6fe::t_7e317e585e0b12 123-124,126
+  s_985749378da6fe::t_63f615225b038b 24,125
+docs/specs/privacy-notice.md
+  s_985749378da6fe::t_b4ab379a5cec6d 45
+  s_985749378da6fe::t_221ddb0b24f6fd 43-44
+  s_985749378da6fe::t_93e70d3bb5ee9a 61-62,162-179
+docs/specs/content-reports.md
+  s_985749378da6fe::t_a35af1d8b227f8 521-525
+web/templates/moderate/rulebook.html.twig
+  s_985749378da6fe::t_8076845dfd5edc 389
+web/templates/security/login.html.twig
+  s_985749378da6fe::t_bef162b8c44c38 30-32
+web/tests/Admin/UnsentStatementTest.php
+  s_985749378da6fe::t_509ed1b0352288 1-45,48-53,55-138,142-189,191-194,196-197,203-204,223-228,230-259
+  s_985749378da6fe::t_f8498ef118cc03 46-47,54,190,195,198-202,205-222,229
+  s_985749378da6fe::t_59dad7bb034263 139-141
+docs/specs/account-and-auth.md
+  s_985749378da6fe::t_9a6e3b559d22df 920-921
+  s_985749378da6fe::t_ef296fe3d2ba55 842-844
+  s_985749378da6fe::t_a35af1d8b227f8 1787
+  s_985749378da6fe::t_773d20ca2d3e33 982-1005
+  s_985749378da6fe::t_19fed64914b59a 61,662-664,673-678,832-841,923-981
+  s_985749378da6fe::t_ed0e2d85fda4f2 922
+  s_985749378da6fe::t_4dfd536dab103b 873,917-919
+web/templates/admin/unsent_statements.html.twig
+  s_985749378da6fe::t_f1d310767448c7 55,59
+  s_985749378da6fe::t_2c80a06f1549ef 1-54,56-58,60-68
+web/src/Controller/Admin/UserCrudController.php
+  s_985749378da6fe::t_f1102501d094de 293,322,337-339,341,343,356-360
+  s_985749378da6fe::t_3c44dc68c2ea1a 13,115,153-161,274-292,294-321,323-336,340,342,344-355,361-373
+  s_985749378da6fe::t_67f4bbd9ba51b9 116
+  s_985749378da6fe::t_a35af1d8b227f8 374-375
+web/src/Security/SuspensionChecker.php
+  s_985749378da6fe::t_7b3d5be0287a04 56
+  s_985749378da6fe::t_e89e7224b484ed 1-53,55,57-58
+  s_985749378da6fe::t_02b03b89070e49 54
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_46e8219154c38c 4026,5237-5285
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_0406588f3e25e6 4043,5254-5302
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_ac28abeb83df9a 4052,5264-5312
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_16dc4417941505 4018,5229-5277
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_6fefe19c15fbef 4025,5236-5284
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7a38a57ece943edff5b1ab5213e069108a059414",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
