@@ -1372,6 +1372,7 @@ map:
   d_src_manual: 'Sélectionné à la main'
   d_src_rider: 'Contribué par un cycliste'
   d_src_scout: 'Balisé en roulant, avec Scout'
+  d_auto_translated: 'traduit automatiquement'
   d_source: 'Source'
   d_edit_item: 'Modifier cet élément'
   d_fix_location: 'Corriger l''emplacement'

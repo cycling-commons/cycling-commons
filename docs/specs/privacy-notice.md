@@ -364,7 +364,7 @@ legal basis. Putting it here would have implied all three.
 
 | What | Where | Disclosed |
 |---|---|---|
-| MyMemory machine translation | `tools/wallonia/enrich.py`, harvest pipeline only | `/terms` 13, `/credits`, and an `auto-translated` label on every description it produced |
+| MyMemory machine translation | `tools/wallonia/enrich.py`, harvest pipeline only | `/terms` 13, `/credits`, and an `auto-translated` label (`d_auto_translated`, in the reader's language) on every description it produced |
 | Catalogue scanner | `App\Catalog\CatalogScanner` | `/terms` 13 and 12: it flags, a curator decides |
 
 Nothing else. No chatbot, no generated text, no automated decision about a

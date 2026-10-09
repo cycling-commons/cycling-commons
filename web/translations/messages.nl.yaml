@@ -1374,6 +1374,7 @@ map:
   d_src_manual: 'Met de hand samengesteld'
   d_src_rider: 'Bijgedragen door een renner'
   d_src_scout: 'Onderweg getagd, met Scout'
+  d_auto_translated: 'automatisch vertaald'
   d_source: 'Bron'
   d_edit_item: 'Dit element bewerken'
   d_fix_location: 'Locatie corrigeren'

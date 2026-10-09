@@ -1377,6 +1377,7 @@ map:
   d_src_manual: 'Von Hand kuratiert'
   d_src_rider: 'Von Fahrern beigetragen'
   d_src_scout: 'Unterwegs getaggt, mit Scout'
+  d_auto_translated: 'automatisch übersetzt'
   d_source: 'Quelle'
   d_edit_item: 'Dieses Element bearbeiten'
   d_fix_location: 'Position korrigieren'

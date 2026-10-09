@@ -1997,6 +1997,7 @@ map:
   d_src_manual: 'Seleccionado a mano'
   d_src_rider: 'Aportado por un ciclista'
   d_src_scout: 'Etiquetado sobre la marcha, con Scout'
+  d_auto_translated: 'traducido automáticamente'
   d_source: 'Fuente'
   d_edit_item: 'Editar este elemento'
   d_fix_location: 'Corregir la ubicación'

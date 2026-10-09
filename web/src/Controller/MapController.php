@@ -447,7 +447,7 @@ final class MapController extends AbstractController
             'gapsShare' => 'd_gaps_share', 'gapsRoads' => 'd_gaps_roads',
             'gapsHint' => 'd_gaps_hint',
             'surface' => 'd_surface', 'roadType' => 'd_road_type',
-            'surfaceConfirm' => 'd_surface_confirm', 'srcScout' => 'd_src_scout',
+            'surfaceConfirm' => 'd_surface_confirm', 'srcScout' => 'd_src_scout', 'autoTranslated' => 'd_auto_translated',
             'smoothness' => 'd_smoothness', 'mtbScale' => 'd_mtb_scale',
             'notRecorded' => 'd_not_recorded',
             'length' => 'd_length',

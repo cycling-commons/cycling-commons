@@ -774,7 +774,7 @@ function buildRecord(layer, f){
   const act = grp(confirmPanel + vote, 'cc-d-grp-community')
     + grp(edit, 'cc-d-grp-edit')
     + grp(osmConfirm + stateRow, 'cc-d-grp-state');
-  const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· auto-translated</span>`:''}</p>` : '';
+  const desc = f.desc ? `<p class="cc-d-desc">${escPend(f.desc)}${f.descTr?` <span class="cc-d-tr">· ${escPend(D.autoTranslated || 'auto-translated')}</span>`:''}</p>` : '';
   // History slot: real DB ids only; filled async by loadItemHistory (race-guarded).
   const histSlot = f.id!=null ? `<div class="cc-d-hist" id="cc-d-hist-slot" data-item="${f.id}"></div>` : '';
   // Curator-only: rider photos this scenic view hides, filled by loadHiddenPhotos (photo-uploads.md §5g).

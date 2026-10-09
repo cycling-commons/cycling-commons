@@ -1990,6 +1990,7 @@ map:
   d_src_manual: 'Hand-curated'
   d_src_rider: 'Rider-contributed'
   d_src_scout: 'Tagged while riding, with Scout'
+  d_auto_translated: 'auto-translated'
   d_source: 'Source'
   d_edit_item: 'Edit this item'
   d_fix_location: 'Fix location'
