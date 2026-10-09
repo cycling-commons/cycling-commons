@@ -1,0 +1,89 @@
+web/tests/Scout/ScoutIntakeTest.php
+  s_985749378da6fe::t_6fdedc86767253 10,106,109,117-150
+web/tests/Migrations/StayTypeMigrationTest.php
+  s_985749378da6fe::t_e2837eef4789d2 96,98-105
+  s_985749378da6fe::t_3a69b1d39cd6ba 1-95,97,106-107
+web/migrations/Version20261008100000.php
+  s_985749378da6fe::t_452a629eef85dc 42-44
+web/migrations/Version20261008110000.php
+  s_985749378da6fe::t_7bb6e0eec9741c 16-27,33,38,50-52,66,68,70,73-74,76-78,89-93,95,97-107,109-110,118-125
+web/tests/Catalog/ItemEvidenceCustodyTest.php
+  s_985749378da6fe::t_937de4cda903f9 1-130
+web/src/Catalog/PlaceKind.php
+  s_985749378da6fe::t_50fb864faac914 17-18,123-130,147-153,156-164,182-197
+  s_985749378da6fe::t_d6c300351bf662 198-199
+web/tests/Catalog/ClosureExpiryServiceTest.php
+  s_985749378da6fe::t_6fdedc86767253 164-205
+web/tests/Command/SeedWikidataPlacesCommandTest.php
+  s_985749378da6fe::t_357b808f509d9d 202-215
+web/tests/Coverage/CoveragePoiDetailTest.php
+  s_985749378da6fe::t_62796f760a7603 277,279,290
+  s_985749378da6fe::t_567433d9ca4a8f 278,280-289,291-293
+web/src/Catalog/ItemEvidenceResolver.php
+  s_985749378da6fe::t_551cb2522b7184 66-84
+web/src/Catalog/Command/LinkOsmCommand.php
+  s_985749378da6fe::t_46c77f077096c2 83,139-142,150,178-181,187
+web/tests/Migrations/PlaceKindMigrationTest.php
+  s_985749378da6fe::t_1de1ae04df2faa 127
+  s_985749378da6fe::t_8412a9d7064a92 1-126,128-165
+web/src/Catalog/Import/OsmLinker.php
+  s_985749378da6fe::t_46c77f077096c2 152,154-155,159-167,172-173,177,202-208
+web/tests/Coverage/CoverageQueryTest.php
+  s_985749378da6fe::t_567433d9ca4a8f 195,197-207,209-211,213-224,226-228,230-231
+  s_985749378da6fe::t_62796f760a7603 194,196,208,212,225,229
+web/tests/Catalog/Import/OsmLinkerOnTopTest.php
+  s_985749378da6fe::t_de533db6a6852e 1-41
+web/tests/Catalog/PlaceKindTest.php
+  s_985749378da6fe::t_e2837eef4789d2 58
+  s_985749378da6fe::t_357b808f509d9d 51-57,59-78
+docs/specs/catalog-data-model.md
+  s_985749378da6fe::t_d28519b24fe8bb 467-474,553-556
+web/src/Catalog/Command/SeedWikidataPlacesCommand.php
+  s_985749378da6fe::t_50fb864faac914 227
+docs/specs/edit-items/E-hazards.md
+  s_985749378da6fe::t_ccb010b5803d3c 63-66
+web/src/Coverage/CoverageRepository.php
+  s_985749378da6fe::t_62796f760a7603 534-538,547,550
+  s_985749378da6fe::t_b644efc95de0a3 334,361,363-364,406,420,422-423,548-549
+  s_985749378da6fe::t_1e711f28f926d0 551-552
+web/migrations/Version20261007140000.php
+  s_985749378da6fe::t_8559fde7bd5c2b 95-96,101,103,105-107,119-122,124-127,133-134,144-156,158-164
+  s_985749378da6fe::t_2b72a5359587db 18-23,25-27,30,32-35,41,44,48,74-75,77-78
+docs/specs/moderation-and-contribution.md
+  s_985749378da6fe::t_677f1ab5f11941 3679
+web/tests/Command/LinkOsmAnswersTest.php
+  s_985749378da6fe::t_e759fb6221c09d 95-133
+web/src/Controller/ScoutIntakeController.php
+  s_985749378da6fe::t_31cc8ab92c4df4 9,17,43,137-141,143
+web/migrations/Version20261008090000.php
+  s_985749378da6fe::t_452a629eef85dc 20-21,77-79
+web/src/Catalog/ClosureExpiryService.php
+  s_985749378da6fe::t_bf2a8b0fe045f4 20-24,31-39,51-81,91,95-105,109,117,128,131-149,151
+web/tests/Migrations/ShelterTypeMigrationTest.php
+  s_985749378da6fe::t_5176cb82e65946 1-87,89-125
+  s_985749378da6fe::t_2b143b4a088041 88
+docs/specs/osm-data-architecture.md
+  s_985749378da6fe::t_a62b9c810b5933 331-337,353,366-375,383-386,394-411
+  s_985749378da6fe::t_82ea16807d6089 136
+web/tests/Migrations/MigrationHarness.php
+  s_985749378da6fe::t_dcc72bafea2293 1-20,26-34,40-99
+  s_985749378da6fe::t_e2837eef4789d2 21-25,35-39
+docs/specs/data-provider-hierarchy.md
+  s_985749378da6fe::t_f5dea40168cfa9 809-818
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9b1025adf11aaae7cde92866d39bd641dbe3d6bc",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
