@@ -67,7 +67,10 @@
       <dd>{{ report.status.label|trans }}</dd>
       {% if held %}
         <dt>{{ 'report.desk.held_label'|trans }}</dt>
-        <dd class="held">{{ 'report.desk.held_since'|trans({'%when%': held_since ? held_since|cc_datetime : ''}) }}</dd>
+        <dd class="held">{{ 'report.desk.held_since'|trans({'%when%': held_since ? held_since|cc_datetime : ''}) }}
+          {# DSA Art. 18 (operations.md §7): the fact and the date only; which
+             authority and its reference stay on the admin's page. #}
+          {% if held_notified_at %}<br>{{ 'art18.desk_notified'|trans({'%when%': held_notified_at|cc_datetime}) }}{% endif %}</dd>
       {% endif %}
       <dt>{{ 'support.inbox.received'|trans }}</dt>
       <dd>{{ report.createdAt|cc_datetime }}</dd>

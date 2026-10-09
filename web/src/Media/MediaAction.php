@@ -38,6 +38,8 @@ final class MediaAction
     /** Legal hold on / off. @see docs/specs/photo-uploads.md §6d */
     public const string Escalated = 'escalated';
     public const string EscalationReleased = 'escalation_released';
+    /** An administrator recorded a DSA Art. 18 notification. @see docs/specs/operations.md §7 */
+    public const string AuthorityNotified = 'authority_notified';
     /** A curator confirmed the photo was taken at the pin. @see docs/specs/photo-uploads.md §5g */
     public const string LocationConfirmed = 'location_confirmed';
 }

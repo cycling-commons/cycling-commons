@@ -159,6 +159,8 @@ final class ModerateReportsController extends AbstractController
             // Under legal hold: shown as such, with nothing left to decide.
             'held' => $held,
             'held_since' => $photo?->getEscalatedAt(),
+            // When an administrator recorded that the authority was informed (DSA Art. 18).
+            'held_notified_at' => $held ? $photo->getAuthorityNotifiedAt() : null,
             // Escalate is offered for a photo that still has files to hold.
             'can_escalate' => !$held && null !== $photo && null === $photo->getObjectsDeletedAt(),
             // Named the way every desk names people (DeskRider).

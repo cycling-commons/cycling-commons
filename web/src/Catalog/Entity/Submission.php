@@ -105,6 +105,24 @@ class Submission
     private ?string $escalatedReason = null;
 
     /**
+     * DSA Art. 18: when an administrator informed the competent authority.
+     *
+     * @see docs/specs/operations.md §7
+     */
+    #[ORM\Column(name: 'authority_notified_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $authorityNotifiedAt = null;
+
+    /** users.id of the administrator who recorded it; NULL once their account is deleted. */
+    #[ORM\Column(name: 'authority_notified_by_id', type: 'bigint', nullable: true)]
+    private ?int $authorityNotifiedById = null;
+
+    #[ORM\Column(name: 'authority_name', type: 'string', length: 200, nullable: true)]
+    private ?string $authorityName = null;
+
+    #[ORM\Column(name: 'authority_reference', type: 'string', length: 200, nullable: true)]
+    private ?string $authorityReference = null;
+
+    /**
      * In the curators' Trash since then; deleted for good TrashBin::TRASH_DAYS later.
      *
      * @see docs/specs/moderation-and-contribution.md §6
@@ -306,11 +324,45 @@ class Submission
         return $this->createdAt;
     }
 
+    /** A new hold is a new case: it starts without an authority notification. */
     public function escalate(int $curatorId, string $reason): void
     {
         $this->escalatedAt = new \DateTimeImmutable();
         $this->escalatedById = $curatorId;
         $this->escalatedReason = $reason;
+        $this->authorityNotifiedAt = null;
+        $this->authorityNotifiedById = null;
+        $this->authorityName = null;
+        $this->authorityReference = null;
+    }
+
+    /** DSA Art. 18 record. @see docs/specs/operations.md §7 */
+    public function recordAuthorityNotice(\DateTimeImmutable $at, int $adminId, string $authority, ?string $reference): void
+    {
+        $this->authorityNotifiedAt = $at;
+        $this->authorityNotifiedById = $adminId;
+        $this->authorityName = $authority;
+        $this->authorityReference = $reference;
+    }
+
+    public function getAuthorityNotifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->authorityNotifiedAt;
+    }
+
+    public function getAuthorityNotifiedById(): ?int
+    {
+        return $this->authorityNotifiedById;
+    }
+
+    public function getAuthorityName(): ?string
+    {
+        return $this->authorityName;
+    }
+
+    public function getAuthorityReference(): ?string
+    {
+        return $this->authorityReference;
     }
 
     /** An admin has decided it was not what it looked like; normal moderation resumes. */

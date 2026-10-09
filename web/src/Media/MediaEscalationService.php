@@ -8,6 +8,7 @@ namespace App\Media;
 
 use App\Entity\User;
 use App\Media\Entity\MediaUpload;
+use App\Moderation\AuthorityNotifications;
 use App\Moderation\EscalationAlert;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -145,7 +146,11 @@ final class MediaEscalationService
     /**
      * Everything currently held, newest first.
      *
-     * @return list<array{uuid: string, reason: string, escalatedAt: \DateTimeImmutable, escalatedBy: string, itemName: string}>
+     * Each card carries the DSA Art. 18 record (docs/specs/operations.md §7):
+     * when, by whom, which authority and its reference, and whether the hold
+     * is overdue for one.
+     *
+     * @return list<array{uuid: string, reason: string, escalatedAt: \DateTimeImmutable, escalatedBy: string, itemName: string, submissionId: ?int, notifiedAt: ?\DateTimeImmutable, notifiedBy: string, authority: ?string, reference: ?string, overdue: bool}>
      */
     public function held(int $page = 1, int $perPage = self::PER_PAGE): array
     {
@@ -169,8 +174,14 @@ final class MediaEscalationService
                 'uuid' => $upload->getId()->toRfc4122(),
                 'reason' => $upload->getEscalatedReason() ?? '',
                 'escalatedAt' => $at,
-                'escalatedBy' => $curator?->getDisplayName() ?? '',
+                'escalatedBy' => $this->displayName($upload->getEscalatedById()),
                 'itemName' => $this->itemName($upload),
+                'submissionId' => $upload->getSubmissionId(),
+                'notifiedAt' => $upload->getAuthorityNotifiedAt(),
+                'notifiedBy' => $this->displayName($upload->getAuthorityNotifiedById()),
+                'authority' => $upload->getAuthorityName(),
+                'reference' => $upload->getAuthorityReference(),
+                'overdue' => AuthorityNotifications::isOverdue($at, $upload->getAuthorityNotifiedAt()),
             ];
         }
 

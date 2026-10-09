@@ -14,6 +14,16 @@
         </div>
     {% endif %}
 
+    {# A held photo or submission with no DSA Art. 18 notification recorded in
+       time (operations.md §7). #}
+    {% if art18_overdue|default(0) > 0 %}
+        <div class="alert alert-danger" role="alert" data-art18-overdue>
+            <strong>{{ 'art18.overdue_b'|trans({'%count%': art18_overdue}) }}</strong>
+            {{ 'art18.overdue'|trans({'%hours%': art18_hours}) }}
+            <a href="{{ path('admin_escalated') }}">{{ 'art18.overdue_link'|trans }}</a>
+        </div>
+    {% endif %}
+
     {# The daily jobs run from timers outside this repository; a late one is
        found here rather than by somebody noticing stale data (operations.md). #}
     {% set late_jobs = jobs|default([])|filter(j => j.late) %}

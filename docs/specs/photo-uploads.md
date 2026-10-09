@@ -1600,6 +1600,22 @@ critical and the photo stays held. The caching proxy in front of the public
 bucket can still hold a copy of the old URL; purging it is an operations step,
 since the proxy is configured outside this repository.
 
+**The authority notification is recorded on the held row** (DSA Art. 18,
+[operations.md §7](operations.md)). Each card on `/admin/escalated` carries a
+form an administrator fills in once, after informing the competent
+authority: which authority, its reference if it gave one, and when (the
+form's time, or now). The row keeps it with who recorded it
+(`authority_notified_at`, `authority_notified_by_id`, `authority_name`,
+`authority_reference`, through `App\Moderation\AuthorityNotifications`);
+the photo's history gets an `authority_notified` event and the admin action
+log a content-free line. Recording it on a submission records it on the
+submission's held photos too. Once recorded the card shows it instead of the
+form, and a held photo's report on the Reports desk shows the date (not the
+authority). A held row with no record 24 hours after it was escalated is
+overdue: a red banner on the admin dashboard and on `/admin/escalated`, and a
+badge on the card. A release keeps the record; a new escalation starts a new
+case without one.
+
 **Curator welfare is part of the design.** The escalating curator is not asked
 to look again, and no other curator ever sees it. The one thing they are asked
 for is a sentence in their own words, because that is all an admin has before

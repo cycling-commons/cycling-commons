@@ -19,6 +19,7 @@ use App\Media\HeldPhotoNotRestored;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\UrgentWithholdBreaker;
+use App\Moderation\AuthorityNotifications;
 use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\ModerationService;
 use App\Moderation\UnsentStatements;
@@ -69,6 +70,8 @@ final class DashboardController extends AbstractDashboardController
         private readonly AdminDashboardStats $stats,
         private readonly AlertRecipients $alertRecipients,
         private readonly JobHealth $jobHealth,
+        private readonly AuthorityNotifications $authorityNotifications,
+        private readonly UnsentStatements $unsentStatements,
     ) {
     }
 
@@ -81,6 +84,9 @@ final class DashboardController extends AbstractDashboardController
             'alerts_unconfigured' => !$this->alertRecipients->isConfigured(),
             'jobs' => $this->jobHealth->report(),
             'jobs_max_age' => DailyJobs::MAX_AGE_HOURS,
+            // Held rows with no DSA Art. 18 notification recorded in time (operations.md §7).
+            'art18_overdue' => $this->authorityNotifications->overdueCount(),
+            'art18_hours' => AuthorityNotifications::OVERDUE_HOURS,
         ]);
     }
 
@@ -566,9 +572,12 @@ final class DashboardController extends AbstractDashboardController
 
     /**
      * Photos and submissions under legal hold. Release puts the objects back
-     * under their public key and lifts the hold; it deletes nothing.
+     * under their public key and lifts the hold; it deletes nothing. The
+     * notify form records that the competent authority was informed (DSA
+     * Art. 18), once per hold.
      *
      * @see docs/specs/photo-uploads.md §6d
+     * @see docs/specs/operations.md §7
      */
     #[AdminRoute('/escalated', 'escalated', options: ['methods' => ['GET', 'POST']])]
     public function escalated(Request $request, MediaEscalationService $escalations, ModerationService $moderation, EntityManagerInterface $em, TranslatorInterface $translator, PageSize $pageSize): Response
@@ -578,7 +587,12 @@ final class DashboardController extends AbstractDashboardController
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid(self::ESCALATED_CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
-                throw $this->createAccessDeniedException('Invalid CSRF token for an escalation release.');
+                throw $this->createAccessDeniedException('Invalid CSRF token on the legal-hold page.');
+            }
+            if ('notify' === $request->request->get('action')) {
+                $this->recordAuthorityNotice($request, $actor, $em, $translator);
+
+                return $this->redirectToRoute('admin_escalated');
             }
             $note = trim((string) $request->request->get('note', '')) ?: null;
             $submissionId = (int) $request->request->get('submission', 0);
@@ -618,6 +632,46 @@ final class DashboardController extends AbstractDashboardController
             'csrf_token_id' => self::ESCALATED_CSRF_TOKEN_ID,
             'pager' => $pager,
             'submission_pager' => $submissionPager,
+            'art18_overdue' => $this->authorityNotifications->overdueCount(),
+            'art18_hours' => AuthorityNotifications::OVERDUE_HOURS,
+            'art18_max' => AuthorityNotifications::TEXT_MAX,
         ]);
+    }
+
+    /**
+     * The DSA Art. 18 record from the notify form: the authority, its
+     * reference and when it was informed (the form's time, or now).
+     */
+    private function recordAuthorityNotice(Request $request, User $actor, EntityManagerInterface $em, TranslatorInterface $translator): void
+    {
+        $authority = (string) $request->request->get('authority', '');
+        $reference = (string) $request->request->get('reference', '');
+        $when = trim((string) $request->request->get('notified_at', ''));
+        // The form's local time is the administrator's own zone, as the page shows times.
+        $at = '' !== $when ? \DateTimeImmutable::createFromFormat('!Y-m-d\\TH:i', $when, new \DateTimeZone($actor->effectiveTimeZone())) : null;
+        if (false === $at) {
+            $this->addFlash('danger', $translator->trans('art18.error.when'));
+
+            return;
+        }
+
+        try {
+            $submissionId = (int) $request->request->get('submission', 0);
+            if ($submissionId > 0) {
+                $this->authorityNotifications->recordSubmission($submissionId, $actor, $authority, $reference, $at);
+            } else {
+                $uuid = (string) $request->request->get('media');
+                $upload = Uuid::isValid($uuid) ? $em->find(MediaUpload::class, Uuid::fromString($uuid)) : null;
+                if (null === $upload) {
+                    throw $this->createNotFoundException('No such photo.');
+                }
+                $this->authorityNotifications->recordPhoto($upload, $actor, $authority, $reference, $at);
+            }
+        } catch (\InvalidArgumentException $e) {
+            $this->addFlash('danger', $translator->trans($e->getMessage(), ['%max%' => AuthorityNotifications::TEXT_MAX]));
+
+            return;
+        }
+        $this->addFlash('success', $translator->trans('art18.recorded'));
     }
 }

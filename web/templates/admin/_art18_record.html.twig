@@ -1,0 +1,46 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   The DSA Art. 18 record of one held row (operations.md §7), on
+   /admin/escalated: what was recorded, or the form that records it once.
+
+   row:   a card from MediaEscalationService::held() or
+          ModerationService::heldSubmissions()
+   ref:   the row's reference, for the form's data attribute and field ids
+   field: the hidden field naming the row ('media' or 'submission')
+   value: that field's value
+#}
+<div class="border rounded p-2 mb-3" data-art18-record>
+    <h4 class="h6 mb-2">
+        {{ 'art18.heading'|trans }}
+        {% if row.overdue %}<span class="badge bg-danger ms-1">{{ 'art18.overdue_badge'|trans }}</span>{% endif %}
+    </h4>
+    {% if row.notifiedAt %}
+        <p class="small mb-0">
+            {{ 'art18.recorded_line'|trans({'%authority%': row.authority, '%when%': row.notifiedAt|cc_datetime, '%who%': row.notifiedBy ?: ('art18.who_unknown'|trans)}) }}
+            {% if row.reference %}<br>{{ 'art18.reference_line'|trans({'%reference%': row.reference}) }}{% endif %}
+        </p>
+    {% else %}
+        <form method="post" data-art18-form="{{ ref }}">
+            <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+            <input type="hidden" name="action" value="notify">
+            <input type="hidden" name="{{ field }}" value="{{ value }}">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <label class="form-label small" for="art18-authority-{{ ref }}">{{ 'art18.authority_label'|trans }}</label>
+                    <input type="text" class="form-control form-control-sm" id="art18-authority-{{ ref }}" name="authority"
+                           maxlength="{{ art18_max }}" required list="art18-authorities">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small" for="art18-reference-{{ ref }}">{{ 'art18.reference_label'|trans }}</label>
+                    <input type="text" class="form-control form-control-sm" id="art18-reference-{{ ref }}" name="reference" maxlength="{{ art18_max }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small" for="art18-when-{{ ref }}">{{ 'art18.when_label'|trans }}</label>
+                    <input type="datetime-local" class="form-control form-control-sm" id="art18-when-{{ ref }}" name="notified_at">
+                </div>
+            </div>
+            <p class="form-text mb-2">{{ 'art18.form_help'|trans }}</p>
+            <button type="submit" class="btn btn-sm btn-primary">{{ 'art18.record'|trans }}</button>
+        </form>
+    {% endif %}
+</div>

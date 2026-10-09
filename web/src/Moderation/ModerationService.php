@@ -650,7 +650,9 @@ final class ModerationService
     /**
      * Held submissions for the admin area, newest first.
      *
-     * @return list<array{id: int, title: string, reason: string, escalatedAt: \DateTimeImmutable, escalatedBy: string}>
+     * Each carries the DSA Art. 18 record, as MediaEscalationService::held() does.
+     *
+     * @return list<array{id: int, title: string, reason: string, escalatedAt: \DateTimeImmutable, escalatedBy: string, notifiedAt: ?\DateTimeImmutable, notifiedBy: string, authority: ?string, reference: ?string, overdue: bool}>
      */
     public function heldSubmissions(int $page = 1, int $perPage = self::HELD_PER_PAGE): array
     {
@@ -676,6 +678,11 @@ final class ModerationService
                 'reason' => $submission->getEscalatedReason() ?? '',
                 'escalatedAt' => $at,
                 'escalatedBy' => $curator?->getDisplayName() ?? '',
+                'notifiedAt' => $submission->getAuthorityNotifiedAt(),
+                'notifiedBy' => (null !== ($admin = $submission->getAuthorityNotifiedById()) ? $this->em->find(User::class, $admin) : null)?->getDisplayName() ?? '',
+                'authority' => $submission->getAuthorityName(),
+                'reference' => $submission->getAuthorityReference(),
+                'overdue' => AuthorityNotifications::isOverdue($at, $submission->getAuthorityNotifiedAt()),
             ];
         }
 

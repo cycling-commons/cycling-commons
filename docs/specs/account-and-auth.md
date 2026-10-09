@@ -766,16 +766,97 @@ stays as a contribution or as a record loses the id (NULL).
   rows. A closed season keeps its totals, which name nobody; the open round
   loses the vote (route-domain.md §8d). Pinned by
   `tests/Vote/SeasonVotePrivacyTest.php`.
-- **One intended `user_id` DB cascade:** `moderator_area` (scoping
-  assignments, meaningless without the curator, moderation-and-contribution.md
-  §9). `user_message.user_id` is `ON DELETE SET NULL` since
-  `Version20261001210000`: the hook above deletes the correspondence, and only
-  a held submission's thread reaches the `SET NULL` (moderation-and-contribution.md
-  §7.6, §8). `admin_action_log` FKs are `ON DELETE SET NULL`;
-  `reset_password_request.user_id` is a restrictive FK (see above); everything
-  else holds plain ids.
-- Admin removal is only offered when the user has a pending self-requested
-  deletion (`deletionRequestedAt` set).
+- **`App\Community\CommunityDeletionHook`** deletes the rider's curator
+  applications, whatever their status (about text, OSM username, social link),
+  and keeps their country and area requests as a count of one rider: the row
+  loses the account, the note and the offer to curate.
+- **`App\Catalog\CatalogDeletionHook`** (runs last, priority -100, because
+  the hooks above find rows by the ids it clears) deletes the rider's rides on
+  routes they proposed themselves, which never counted, and unlinks every other
+  catalog reference (table below), including the curator ids inside a text
+  proposal's payload (`_credit.by`, `_corrected.by`) and inside a region lead
+  (`region.context_curated`, `userId` and `approvedBy` per language).
+- **`App\Support\SupportDeletionHook`** keeps the rider's bug reports and
+  clears their account, reply address and address hash; unlinks contact
+  messages, which keep the address the sender typed until their own 24-month
+  clock deletes the whole row (contact-and-support.md §4); and unlinks what the
+  account handled or decided as a curator.
+- **`App\Blog\BlogDeletionHook`**: a post outlives its author and names
+  nobody.
+
+What happens to each table holding a user id.
+
+Deleted with the account:
+
+- `curator_application`, the rider's own (CommunityDeletionHook).
+- `route_ride` on a route the rider proposed (CatalogDeletionHook).
+- Rejected and withdrawn `submission` rows, dismissed `route_suggestion` rows,
+  and `user_message` rows to or from the rider (ContributionDeletionHook).
+- `season_vote` (SeasonVoteDeletionHook), unmoderated `media_upload` rows
+  (MediaDeletionHook), `reset_password_request` (ResetPasswordCleanupHook).
+- By database cascade: `moderator_area`, `moderation_seen`,
+  `curator_post_read`, `legal_notice_sent`, `unsent_statement` (a suspension's
+  statement of reasons still waiting to be sent, §6.8), and `curator_post`
+  addressed to the account.
+
+Kept, with the account cleared (NULL):
+
+- Evidence: `item_confirmation.user_id` (still counts toward verification) and
+  `route_ride.user_id` (still counts as a ride).
+- History: `change_history.changed_by` and `route_change_history.changed_by`;
+  the edit stays and names nobody, and `0` stays the system actor.
+- Contributions: `submission.user_id` (approved, pending),
+  `route_suggestion.user_id` (applied, pending), `recommended_route.proposed_by`,
+  `town_summary.edited_by`, a region lead's `userId`, `media_upload.user_id` on
+  approved photos (MediaDeletionHook), `blog_post.author_id`.
+- Administrator work: `users.suspended_by`, by its foreign key (a suspension
+  the account decided stays on the other account, decided by nobody).
+- Curator work: `submission.decided_by` / `escalated_by_id` /
+  `authority_notified_by_id` / `trashed_by`,
+  `route_suggestion.resolved_by` / `trashed_by`, `recommended_route.trashed_by`,
+  `catalog_finding.decided_by`, `curator_application.decided_by`,
+  `town_summary.approved_by`, a region lead's `approvedBy`, a text proposal's
+  `_credit.by` and `_corrected.by`, `content_report.decided_by_id`,
+  `media_upload.escalated_by_id` / `authority_notified_by_id` /
+  `location_confirmed_by`,
+  `media_moderation_event.actor_id`, `bug_report.handled_by_user_id`,
+  `contact_message.handled_by_user_id`, `user_message.sender_id`.
+- Requests and records: `country_interest.user_id` (with `note` cleared and
+  `willing_to_curate` false), `bug_report.user_id` (with `reporter_email` and
+  `ip_hash` cleared), `contact_message.user_id`, `consent_record.user_id` (the
+  licence grant stays).
+- By `ON DELETE SET NULL`: `user_message.user_id` (a held thread only),
+  `admin_action_log` actor and target, `curator_post.author_id`,
+  `curator_post_image.uploader_id`, `data_provider_change.changed_by`,
+  `system_setting.updated_by_id`, and the translation rows' FKs.
+
+Readers count an unlinked row: a route's independent rides are counted as
+rows (one per rider is a constraint), with a NULL rider counted;
+`ItemEvidenceResolver` treats `changed_by` and `submission.user_id` NULL as a
+person's edit (`IS DISTINCT FROM 0`); the history drawer names nobody for NULL
+and keeps the system label for `0`. A pending submission or correction whose
+rider is gone can still be decided: no message is sent, no confirmation is
+recorded from its answer, and the history credits nobody, never the curator.
+
+`Version20261009040000` made the NOT NULL user columns nullable (schema only,
+so its exclusive locks are brief). `Version20261009040100` applied the same
+rule to every id left behind by deletions before it (an id with no `users`
+row counts as a deleted account; `0` stays the system) and built
+`idx_change_history_changed_by`, outside a transaction: each statement
+commits on its own, the index is built `CONCURRENTLY`, and every statement
+touches only rows still naming a missing account, so running it again
+finishes a run that stopped halfway.
+
+Pinned by `tests/Account/AccountErasureTest.php`: one account with a row in
+every such table, as rider and as curator, deleted through
+`UserDeletionService`; afterwards no column holds its id, the personal rows are
+gone and the contributions are still there. The same test fails when a new
+integer user-id column (`*user_id`, `*_by`, `*_by_id`, `author_id`,
+`actor_id`, ...) has neither a foreign key to `users` nor a place in its list
+of hook-cleared columns.
+- Executing a removal the rider asked for is offered only when the user has a
+  pending self-requested deletion (`deletionRequestedAt` set). Removing an
+  account for a breach of the terms is offered on every account and is §6.8.
 
 ### 6.4 Guardrails (baked into `UserAdminService`, not optional)
 

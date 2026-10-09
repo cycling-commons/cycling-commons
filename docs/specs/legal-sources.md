@@ -36,6 +36,7 @@ while the ELI URL is.
 |---|---|---|
 | GDPR, RGPD, AVG, DSGVO | Regulation (EU) 2016/679, general data protection | <https://eur-lex.europa.eu/eli/reg/2016/679/oj> |
 | DSA | Regulation (EU) 2022/2065, Digital Services Act | <https://eur-lex.europa.eu/eli/reg/2022/2065/oj> |
+| DSA Art. 18 contact points | The European Commission's list of national contact points for Art. 18 notifications, kept with the European Board for Digital Services | <https://digital-strategy.ec.europa.eu/en/library/points-contact-notifying-suspected-criminal-offences> |
 | The child-abuse directive | Directive 2011/93/EU | <https://eur-lex.europa.eu/eli/dir/2011/93/oj> |
 | AGPL-3.0-only | GNU Affero General Public License v3, for the code and the interface, translations included | <https://www.gnu.org/licenses/agpl-3.0.html> |
 | ODbL 1.0 | Open Database License, for the data | <https://opendatacommons.org/licenses/odbl/1-0/> |
@@ -69,7 +70,7 @@ name and the logo, which are deliberately not open.
 |---|---|---|
 | GDPR Art. 6(1)(a) | consent | showing a name, release emails |
 | GDPR Art. 6(1)(b) | performance of a contract | the account itself |
-| GDPR Art. 6(1)(c) | legal obligation | records we must keep |
+| GDPR Art. 6(1)(c) | legal obligation | records we must keep; the statement of reasons (DSA Art. 17) and what an administrator gives the authorities under DSA Art. 18 (`privacy.why_legal`, `privacy.share_authorities`, privacy-notice.md §2) |
 | GDPR Art. 6(1)(f) | legitimate interests | abuse prevention, aggregate analytics |
 | GDPR Arts. 15 to 22 | the data subject's rights | `/privacy`, and the export archive |
 | DSA Art. 16(1) | notice and action, any person, no account | `/report/{type}/{id}` sits outside the firewall |

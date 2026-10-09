@@ -583,7 +583,9 @@ it on the same clock. Pinned by `ReportContactRetentionTest` and
   gets a hold of its own, such a report is decided here like any other, with
   the change made where that thing is normally moderated, and a suspected
   crime against a person goes to law enforcement by the administrator (DSA
-  Article 18) outside the app.
+  Article 18), who writes the authority, its reference and the date in the
+  report's decision note (operations.md §7). A held photo's report shows the
+  date an administrator recorded the notification.
 * **No transparency report yet.** Articles 15 and 24 want published numbers.
   `SupportRepository::reportCountsByStatus()` already computes them for the
   desk chips; publishing them is a page, not a data problem.
