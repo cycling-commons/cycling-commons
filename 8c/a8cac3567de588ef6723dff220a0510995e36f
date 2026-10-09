@@ -1,0 +1,78 @@
+web/tests/Traffic/TrafficStoreTest.php
+  s_985749378da6fe::t_00e67782362bb2 121-135
+  s_985749378da6fe::t_772f393d62dbf6 108-109
+  s_985749378da6fe::t_3161c3dc4d7be4 104-107,110-120
+docs/specs/traffic-measurements.md
+  s_985749378da6fe::t_558c1b97f3879f 25-28,207-213,234-240,255-256,264-265,302-304,311-312,332-337,343,350-351,357-362,366-382,419-420,491-492,514-515,539-540
+web/assets/lib/traffic-summary.js
+  s_985749378da6fe::t_a352876a773a32 24-30
+  s_985749378da6fe::t_95f44826effcae 33-44,57,60-62,67-73,76,78,81-86,90-95,100-107,190,195,201-202,210,223-224,226-227
+web/tests/Traffic/TrafficPoolTest.php
+  s_985749378da6fe::t_85e34f079a07a2 237
+  s_985749378da6fe::t_cc9b97f3a678c9 9-10,14-15,48-55,57-61,145-179,224-236
+  s_985749378da6fe::t_ab1e6455cb0df9 180-223
+  s_985749378da6fe::t_eae93dea36bc49 56
+web/tests/Traffic/TrafficViewTest.php
+  s_985749378da6fe::t_a64270e3e0e3a9 145
+  s_985749378da6fe::t_4b6d743a804c80 116-136,144
+  s_985749378da6fe::t_d8295b85538dd8 114-115
+web/src/Traffic/TrafficStore.php
+  s_985749378da6fe::t_dc884016a8da01 27-28,40-41,45,49-53,55-61,64
+web/tests/Traffic/TrafficControllerTest.php
+  s_985749378da6fe::t_4d89e7b8c0527b 201
+  s_985749378da6fe::t_85e34f079a07a2 228-229
+  s_985749378da6fe::t_2a2e85d8aeeb79 10,196-200,202-227
+wiki/scout.md
+  s_985749378da6fe::t_7bb6e0eec9741c 105-107
+web/tests/js/traffic-ride.test.mjs
+  s_985749378da6fe::t_0ab81e62fdf4af 11,220-236
+  s_985749378da6fe::t_f442eca1a64035 12,213-219
+  s_985749378da6fe::t_85e34f079a07a2 237
+web/src/Traffic/TrafficLine.php
+  s_985749378da6fe::t_1bbbab3d96734d 33-38,96,99-100
+web/src/Traffic/TrafficIntake.php
+  s_985749378da6fe::t_2a2e85d8aeeb79 28-33
+  s_985749378da6fe::t_3ede75c88df645 76-81,85
+web/src/Traffic/TrafficPool.php
+  s_985749378da6fe::t_c21f3dd4514b4f 127-128
+  s_985749378da6fe::t_ab1e6455cb0df9 37-40
+  s_985749378da6fe::t_d8b4d4af9af7bc 63-67,74-75,77-80,84-86,124-126,132,135
+  s_985749378da6fe::t_275f08a76d2b89 12,26,30,47,56,58,81,87,112-114,116-117,123,129-131,137-138,140-145,165-166,168
+  s_985749378da6fe::t_4563d974e194f2 19-21,27-29
+  s_985749378da6fe::t_d3518a77a13246 115,139
+web/migrations/Version20261009010000.php
+  s_985749378da6fe::t_555c143af71d70 1-37
+web/assets/lib/traffic-ride.js
+  s_985749378da6fe::t_6292224ec1f191 98
+  s_985749378da6fe::t_e592f643be714e 18-23
+  s_985749378da6fe::t_7ca08abfdc6b2b 64,81-82,182-186,191-193,200-205,207-209,212,214
+web/tests/js/traffic-summary.test.mjs
+  s_985749378da6fe::t_6b6a30bec73fbb 277-291,294-296,298-327
+  s_985749378da6fe::t_766075d86e884b 215,241,245
+  s_985749378da6fe::t_1dfbf85b775fc8 7,9,203-214,216-237,242,244,246-254
+  s_985749378da6fe::t_7bb6e0eec9741c 292-293,297
+  s_985749378da6fe::t_85e34f079a07a2 328
+web/tests/Traffic/TrafficLineTest.php
+  s_985749378da6fe::t_4584f2172b2299 60-62,127-128
+web/src/Controller/TrafficController.php
+  s_985749378da6fe::t_f49ebb16d9a747 11-12,68-69,75,81-82
+  s_985749378da6fe::t_3b806da26dfd50 83
+web/Dockerfile
+  s_985749378da6fe::t_8780138af4fc49 56-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8ca8cac3567de588ef6723dff220a0510995e36f",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
