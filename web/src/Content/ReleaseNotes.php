@@ -96,6 +96,8 @@ final class ReleaseNotes
                     'changelog.v095_search',
                     'changelog.v095_privacy',
                     'changelog.v095_terms',
+                    'changelog.v095_reasons',
+                    'changelog.v095_export',
                     'changelog.v095_security',
                     'changelog.v095_fixes',
                 ],
