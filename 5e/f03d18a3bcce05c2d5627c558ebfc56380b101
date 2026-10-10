@@ -1,0 +1,34 @@
+wiki/developers/numbers.md
+  s_95c012021edfad::t_784eba752fa509 28
+web/assets/map/catalog.js
+  s_95c012021edfad::t_8ec359818eb860 47-48
+  s_95c012021edfad::t_56a7fe44f7334d 45-46,65
+web/tests/js/search-gate.test.mjs
+  s_95c012021edfad::t_5ad8fbd1aa20d3 1-111
+web/assets/map/search-ui.js
+  s_95c012021edfad::t_df04d6d83146f8 35
+  s_95c012021edfad::t_ad30479704c71f 6-8,10,51,203,209,212,243,292,314,318,322,324,330,340
+docs/specs/map-and-search.md
+  s_95c012021edfad::t_12e91e29bd09cf 3439-3440
+  s_95c012021edfad::t_39b05fe61c2a40 2405,2603-2604,2725-2735,2747-2748,2755,2765,3436-3438
+web/assets/map/search-gate.js
+  s_95c012021edfad::t_8967bf7277f7b6 1-29
+web/tests/js/town-quick-picks.test.mjs
+  s_95c012021edfad::t_56a7fe44f7334d 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5ef03d18a3bcce05c2d5627c558ebfc56380b101",
+  "prompts": {},
+  "sessions": {
+    "s_95c012021edfad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77d4f221-603d-452c-8abd-7d60275678da",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
