@@ -1,0 +1,55 @@
+docs/specs/api-strategy.md
+  s_985749378da6fe::t_191fc0dc249181 161
+  s_985749378da6fe::t_dbf6fbbc7f745f 160,162-164
+mkdocs.yml
+  s_985749378da6fe::t_43f4201b894cd5 125
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_ca0506f51a02dc 547
+  s_985749378da6fe::t_191fc0dc249181 559
+  s_985749378da6fe::t_2dfcb86272233b 550,563-564,3426,4718
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_ca0506f51a02dc 547
+  s_985749378da6fe::t_191fc0dc249181 559
+  s_985749378da6fe::t_733c2796e44fce 550,563-564,3440,4735
+docs/specs/osm-data-architecture.md
+  s_985749378da6fe::t_dbf6fbbc7f745f 520-522
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_ca0506f51a02dc 547
+  s_985749378da6fe::t_191fc0dc249181 559
+  s_985749378da6fe::t_fdff082b387fe5 550,563-564,3425,4717
+web/templates/pages/developers_export.html.twig
+  s_985749378da6fe::t_ca0506f51a02dc 69-70
+  s_985749378da6fe::t_06e76886f131fc 71
+wiki/developers/api/openstreetmap-data.md
+  s_985749378da6fe::t_de55465b3564eb 1-6,9-92,94-109
+  s_985749378da6fe::t_191fc0dc249181 7-8
+  s_985749378da6fe::t_ed62158d13ab53 93
+pipeline/tests/test_osm_filters.py
+  s_985749378da6fe::t_6ea9b8765a9e7c 1-54
+pipeline/osm_filters.py
+  s_985749378da6fe::t_17087fc6dc13fb 1-61
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_ca0506f51a02dc 545
+  s_985749378da6fe::t_191fc0dc249181 557
+  s_985749378da6fe::t_380325d7585623 548,561-562,3421,4713
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_ca0506f51a02dc 549
+  s_985749378da6fe::t_191fc0dc249181 561
+  s_985749378da6fe::t_80de7f065db380 552,565-566,3448,4745
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "985abcadb81bb5f9900e0aac03a4f9d84e9f060f",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
