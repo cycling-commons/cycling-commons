@@ -88,7 +88,7 @@ final class ReleaseNotes
     public const array RELEASES = [
         [
             'version' => '0.9.5-beta',
-            'date' => '2026-10-09',
+            'date' => '2026-10-10',
             'sections' => [
                 'public' => [
                     'changelog.v095_kinds',
