@@ -1,0 +1,82 @@
+docs/specs/legal-sources.md
+  s_985749378da6fe::t_a476e9f75a628a 119
+  s_985749378da6fe::t_e4ea29454761dc 138
+  s_985749378da6fe::t_d6a336a1276717 82,94-118,120-137
+web/translations/terms.en.yaml
+  s_985749378da6fe::t_a6d83dbd19addc 65,82-84,103,105,107,109,111-112,117-118,127,152,154
+web/translations/terms.de.yaml
+  s_985749378da6fe::t_a6d83dbd19addc 65,82-84,103,105,107,109,111-112,117-118,127,152,154
+web/translations/privacy.nl.yaml
+  s_985749378da6fe::t_3510acfe6f9e7c 26,30,32,36,43,46,58,74,90,103,111,114,119,143-144
+  s_985749378da6fe::t_a942bdf253f2d0 37,54,107,124
+  s_985749378da6fe::t_bb53a06e8a4bdc 34
+  s_985749378da6fe::t_a79de1c04e43f0 76,109,183
+  s_985749378da6fe::t_5de78f8661c8c0 33
+docs/specs/content-reports.md
+  s_985749378da6fe::t_d6a336a1276717 399-401,419-420
+docs/specs/privacy-notice.md
+  s_985749378da6fe::t_b67a949a98242f 67
+  s_985749378da6fe::t_635e7f5bfd700e 89
+  s_985749378da6fe::t_c5cecdb7e3559d 58,141-143,152
+  s_985749378da6fe::t_f622c20471bda7 41,52,56,60,62-63,65,72-73,78,86-88,373-391
+  s_985749378da6fe::t_32e4f1b2ac8702 59,66
+  s_985749378da6fe::t_8e59f452d17089 49
+web/translations/terms.fr.yaml
+  s_985749378da6fe::t_a6d83dbd19addc 65,82-84,103,105,107,109,111-112,117-118,127,152,154
+web/translations/terms.nl.yaml
+  s_985749378da6fe::t_a6d83dbd19addc 65,82-84,103,105,107,109,111-112,117-118,127,152,154
+docs/specs/photo-uploads.md
+  s_985749378da6fe::t_f5eb35a567d3c2 1434-1437
+docs/specs/scenic-views.md
+  s_985749378da6fe::t_d6a336a1276717 87-89
+web/translations/terms.es.yaml
+  s_985749378da6fe::t_a6d83dbd19addc 65,82-84,103,105,107,109,111-112,117-118,127,152,154
+web/translations/privacy.fr.yaml
+  s_985749378da6fe::t_5de78f8661c8c0 33
+  s_985749378da6fe::t_bb53a06e8a4bdc 34
+  s_985749378da6fe::t_3510acfe6f9e7c 26,30,32,36,43,46,58,74,90,103,111,114,119,143-144
+  s_985749378da6fe::t_a942bdf253f2d0 37,54,107,124
+  s_985749378da6fe::t_a79de1c04e43f0 76,109,183
+web/templates/pages/terms.html.twig
+  s_985749378da6fe::t_8a70c34e4d3236 82-87,142
+web/translations/privacy.de.yaml
+  s_985749378da6fe::t_bb53a06e8a4bdc 34
+  s_985749378da6fe::t_a942bdf253f2d0 37,54,107,124
+  s_985749378da6fe::t_3510acfe6f9e7c 26,30,32,36,43,46,58,74,90,103,111,114,119,143-144
+  s_985749378da6fe::t_5de78f8661c8c0 33
+  s_985749378da6fe::t_a79de1c04e43f0 76,109,183
+web/tests/Smoke/ContentPagesTest.php
+  s_985749378da6fe::t_bb53a06e8a4bdc 59-60,62,65-70
+docs/specs/account-and-auth.md
+  s_985749378da6fe::t_d6a336a1276717 884-886,1012-1014
+web/translations/privacy.en.yaml
+  s_985749378da6fe::t_bb53a06e8a4bdc 34
+  s_985749378da6fe::t_5de78f8661c8c0 33
+  s_985749378da6fe::t_3510acfe6f9e7c 26,30,32,36,43,46,58,74,90,103,111,114,119,143-144
+  s_985749378da6fe::t_a942bdf253f2d0 37,54,107,124
+  s_985749378da6fe::t_a79de1c04e43f0 76,109,183
+web/translations/privacy.es.yaml
+  s_985749378da6fe::t_bb53a06e8a4bdc 34
+  s_985749378da6fe::t_a79de1c04e43f0 76,109,183
+  s_985749378da6fe::t_a942bdf253f2d0 37,54,107,124
+  s_985749378da6fe::t_3510acfe6f9e7c 26,30,32,36,43,46,58,74,90,103,111,114,119,143-144
+  s_985749378da6fe::t_5de78f8661c8c0 33
+docs/specs/api-strategy.md
+  s_985749378da6fe::t_d6a336a1276717 138-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "399014a46f852995c9532b2ddd8aa0f9b02bc4e1",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
