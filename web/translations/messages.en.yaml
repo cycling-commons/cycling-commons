@@ -538,9 +538,7 @@ developers:
   attr_kicker: 'Required attribution'
   rules_kicker: 'The rules'
   rules_body: '<b>Fair use.</b> Reads are open to anybody, with no key and no account, within a rate limit per address that a normal app stays well below. For bulk or offline use, download the <b>weekly bulk export</b> and host it yourself instead of hammering the live API; scraping the service is not allowed. Licences: data <b>ODbL 1.0</b>, media <b>CC BY-SA 4.0</b>. Attribute, share alike, keep open. Commercial use is fine. See the plain-language summary:'
-  ep_export_desc: 'the whole dataset as GeoJSON, rebuilt every week:'
-  export_link: 'bulk export'
-  ep_export_pending: 'Bulk export: the whole dataset as GeoJSON, rebuilt every week. The first export is on its way.'
+  export_page_link: 'The bulk export: what is in it, the licence and the snapshots'
 data_export:
   # The bulk export's page (docs/specs/api-strategy.md section 3.1).
   meta_title: 'Cycling Commons bulk export'
@@ -550,7 +548,7 @@ data_export:
   lead: 'The Commons catalogue in two files: the places and routes that riders, curators and our open-data sources added, as GeoJSON, rebuilt every week. Download it once and host it yourself, instead of crawling the site or the API.'
   latest_kicker: 'Latest snapshot'
   empty: 'No snapshot has been published yet. The first one appears here after the first weekly build.'
-  built: 'Built %when%.'
+  built: 'Built %when%, week %week% of %year%.'
   file_places: '%n% places'
   file_routes: '%n% routes'
   manifest_desc: 'what the snapshot holds: build time, licence and attribution per source, counts, sizes and sha256 checksums'

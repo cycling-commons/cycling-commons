@@ -25,13 +25,9 @@
   <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep5_path'|trans }}</span><span class="desc">{% trans %}developers.ep5_desc{% endtrans %}</span></div>
   <div class="ep"><span class="verb">GET</span><span class="path">{{ 'developers.ep6_path'|trans }}</span><span class="desc">{% trans %}developers.ep6_desc{% endtrans %}</span></div>
   <div class="ep"><span class="verb">POST</span><span class="path">{{ 'developers.ep7_path'|trans }}</span><span class="desc">{% trans %}developers.ep7_desc{% endtrans %}</span></div>
-  {# The download link only once a snapshot is published: before that it would
-     end in a 404 (api-strategy.md §3.1). #}
-  {% if bulk_export_published() %}
-  <div class="ep" data-export-link><span class="verb">GET</span><a class="path" href="{{ path('data_export_latest', {file: 'places.geojson.gz'}) }}">{{ path('data_export_latest', {file: 'places.geojson.gz'}) }}</a><span class="desc">{{ 'developers.ep_export_desc'|trans }} <a href="{{ path('data_export') }}">{{ 'developers.export_link'|trans }}</a></span></div>
-  {% else %}
-  <p data-export-pending style="margin-top:1rem;font-size:.90rem;color:#595c4d">{{ 'developers.ep_export_pending'|trans }}</p>
-  {% endif %}
+  {# The bulk export is a page of its own (snapshots, licence, what is in it,
+     api-strategy.md §3.1), not one more endpoint row. #}
+  <p data-export-page style="margin-top:.6rem"><a href="{{ path('data_export') }}">{{ 'developers.export_page_link'|trans }} &rarr;</a></p>
 
   <div class="two" style="margin-top:2.4rem">
     <div>

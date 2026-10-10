@@ -538,9 +538,7 @@ developers:
   attr_kicker: 'Verplichte naamsvermelding'
   rules_kicker: 'De regels'
   rules_body: '<b>Fair use.</b> Lezen staat open voor iedereen, zonder sleutel en zonder account, binnen een snelheidslimiet per adres waar een gewone app ver onder blijft. Voor bulk of offline gebruik: download de <b>wekelijkse bulkexport</b> en host die zelf, in plaats van de live API te belasten; het scrapen van de dienst is niet toegestaan. Licenties: data <b>ODbL 1.0</b>, media <b>CC BY-SA 4.0</b>. Vermeld de bron, deel onder dezelfde voorwaarden, houd het open. Commercieel gebruik mag. Zie de samenvatting in gewone taal:'
-  ep_export_desc: 'de hele dataset als GeoJSON, elke week opnieuw gebouwd:'
-  export_link: 'bulkexport'
-  ep_export_pending: 'Bulkexport: de hele dataset als GeoJSON, elke week opnieuw gebouwd. De eerste export komt eraan.'
+  export_page_link: 'De bulkexport: wat erin zit, de licentie en de momentopnamen'
 data_export:
   # The bulk export's page (docs/specs/api-strategy.md section 3.1).
   meta_title: 'Bulkexport van Cycling Commons'
@@ -550,7 +548,7 @@ data_export:
   lead: 'De catalogus van de Commons in twee bestanden: de plekken en routes die fietsers, regiobeheerders en onze open-databronnen toevoegden, als GeoJSON, elke week opnieuw gebouwd. Download hem één keer en host hem zelf, in plaats van de site of de API af te struinen.'
   latest_kicker: 'Nieuwste momentopname'
   empty: 'Er is nog geen momentopname gepubliceerd. De eerste verschijnt hier na de eerste wekelijkse bouw.'
-  built: 'Gebouwd op %when%.'
+  built: 'Gebouwd op %when%, week %week% van %year%.'
   file_places: '%n% plekken'
   file_routes: '%n% routes'
   manifest_desc: 'wat de momentopname bevat: bouwtijd, licentie en naamsvermelding per bron, aantallen, groottes en sha256-controlesommen'

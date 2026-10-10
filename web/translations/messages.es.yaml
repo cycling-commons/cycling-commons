@@ -540,9 +540,7 @@ developers:
   attr_kicker: 'Atribución obligatoria'
   rules_kicker: 'Las reglas'
   rules_body: '<b>Uso razonable.</b> La lectura está abierta a cualquiera, sin clave ni cuenta, dentro de un límite de peticiones por dirección que una aplicación normal no llega ni a rozar. Para uso masivo o sin conexión, descarga la <b>exportación semanal</b> y alójala tú, en lugar de castigar la API en vivo; hacer scraping del servicio no está permitido. Licencias: datos <b>ODbL 1.0</b>, medios <b>CC BY-SA 4.0</b>. Atribuye, comparte igual, mantenlo abierto. El uso comercial está bien. Consulta el resumen en lenguaje claro:'
-  ep_export_desc: 'todo el conjunto de datos en GeoJSON, reconstruido cada semana:'
-  export_link: 'exportación masiva'
-  ep_export_pending: 'Exportación masiva: todo el conjunto de datos en GeoJSON, reconstruido cada semana. La primera exportación está en camino.'
+  export_page_link: 'La exportación masiva: qué contiene, la licencia y las instantáneas'
 data_export:
   # The bulk export's page (docs/specs/api-strategy.md section 3.1).
   meta_title: 'Exportación masiva de Cycling Commons'
@@ -552,7 +550,7 @@ data_export:
   lead: 'El catálogo del Commons en dos archivos: los lugares y rutas que añadieron ciclistas, curadores y nuestras fuentes de datos abiertos, en GeoJSON, reconstruidos cada semana. Descárgalo una vez y alójalo tú, en lugar de rastrear el sitio o la API.'
   latest_kicker: 'Última instantánea'
   empty: 'Todavía no se ha publicado ninguna instantánea. La primera aparecerá aquí tras la primera construcción semanal.'
-  built: 'Construida el %when%.'
+  built: 'Construida el %when%, semana %week% de %year%.'
   file_places: '%n% lugares'
   file_routes: '%n% rutas'
   manifest_desc: 'lo que contiene la instantánea: hora de construcción, licencia y atribución por fuente, recuentos, tamaños y sumas de comprobación sha256'

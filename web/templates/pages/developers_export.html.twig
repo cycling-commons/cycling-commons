@@ -24,7 +24,7 @@
   {% if manifest is null %}
     <p data-export-empty style="margin-top:.8rem">{{ 'data_export.empty'|trans }}</p>
   {% else %}
-    <p style="margin-top:.8rem">{{ 'data_export.built'|trans({'%when%': manifest.generated_at|date('Y-m-d H:i', 'UTC') ~ ' UTC'}) }}</p>
+    <p style="margin-top:.8rem" data-export-built>{{ 'data_export.built'|trans({'%when%': manifest.generated_at|cc_datetime, '%week%': manifest.generated_at|date('W', 'UTC')|number_format, '%year%': manifest.generated_at|date('o', 'UTC')}) }}</p>
     {% for f in manifest.files %}
       <div class="ep" data-export-file>
         <span class="verb">GET</span>

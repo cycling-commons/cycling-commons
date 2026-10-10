@@ -318,14 +318,14 @@
     <p>{% trans %}privacy.changes_body{% endtrans %}</p>
     {# Every version, newest first, with what changed (App\Legal\PrivacyNoticeVersions). #}
     <div id="changes">
-      <ol class="pversions">
+      <div class="pversions">
         {% for v in privacy_versions %}
-          <li data-version="{{ v.number }}">
+          <div class="pversion" data-version="{{ v.number }}">
             <b>{{ 'privacy.version_line'|trans({'%n%': v.number, '%date%': v.effective|cc_date}) }}</b>
             <ul>{% for c in v.changes %}<li>{{ c|trans|rich }}</li>{% endfor %}</ul>
-          </li>
+          </div>
         {% endfor %}
-      </ol>
+      </div>
     </div>
     {# The history of this language's text file: every change to the notice
        in this language, line by line, with its date and commit message. #}

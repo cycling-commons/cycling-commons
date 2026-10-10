@@ -42,8 +42,7 @@ final class BulkExportControllerTest extends WebTestCase
         foreach (['/developers', '/fr/developpeurs', '/nl/ontwikkelaars', '/de/entwickler', '/es/desarrolladores'] as $path) {
             $client->request('GET', $path);
             self::assertResponseIsSuccessful($path);
-            self::assertSelectorNotExists('[data-export-link]');
-            self::assertSelectorExists('[data-export-pending]');
+            self::assertSelectorExists('[data-export-page] a', 'the export page is linked before the first snapshot too');
             self::assertStringNotContainsString('/data/export/', (string) $client->getResponse()->getContent(), $path);
         }
     }
@@ -56,8 +55,22 @@ final class BulkExportControllerTest extends WebTestCase
         $client->request('GET', '/developers');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('[data-export-link] a[href="/data/export/latest/places.geojson.gz"]');
-        self::assertSelectorNotExists('[data-export-pending]');
+        self::assertSelectorExists('[data-export-page] a[href="/developers/export"]');
+        // The downloads are listed on the export page, not as a row among the API endpoints.
+        self::assertStringNotContainsString('/data/export/', (string) $client->getResponse()->getContent());
+    }
+
+    public function testTheBuildTimeNamesItsWeek(): void
+    {
+        $client = $this->client();
+        $this->build('2026-10-09 13:39:00 UTC');
+
+        $client->request('GET', '/developers/export');
+
+        // 2026-10-09 falls in ISO week 41.
+        self::assertSelectorTextContains('[data-export-built]', 'week 41');
+        // In the reader's own date format (cc_datetime): a visitor gets the language's default.
+        self::assertSelectorTextContains('[data-export-built]', 'Oct 9, 2026');
     }
 
     public function testThePageListsTheNewestSnapshotInEveryLanguage(): void

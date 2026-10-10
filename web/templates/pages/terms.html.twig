@@ -157,14 +157,14 @@
     <p>{% trans %}terms.changes_included{% endtrans %}</p>
     {# Every version, newest first, with what changed (App\Legal\TermsVersions). #}
     <div id="changes">
-      <ol class="pversions">
+      <div class="pversions">
         {% for v in terms_versions %}
-          <li data-version="{{ v.number }}">
+          <div class="pversion" data-version="{{ v.number }}">
             <b>{{ 'terms.version_line'|trans({'%n%': v.number, '%date%': v.effective|cc_date}) }}</b>
             <ul>{% for c in v.changes %}<li>{{ c|trans|rich }}</li>{% endfor %}</ul>
-          </li>
+          </div>
         {% endfor %}
-      </ol>
+      </div>
     </div>
     <p>{% trans %}terms.changes_versions_pre{% endtrans %} <a href="https://github.com/cycling-commons/cycling-commons/commits/main/web/translations/{{ text_domain }}.{{ app.request.locale }}.yaml">{% trans %}terms.changes_versions_link{% endtrans %}</a>{% trans %}terms.changes_versions_post{% endtrans %}</p>
 
