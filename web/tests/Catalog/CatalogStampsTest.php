@@ -127,26 +127,6 @@ final class CatalogStampsTest extends KernelTestCase
     }
 
     /**
-     * A link is withheld from every payload once it is unsafe
-     * (LinkVerdictStore::withhold()). The checker rewrites every verdict it
-     * rechecks; only a link crossing into or out of unsafe counts.
-     */
-    public function testOnlyALinkCrossingUnsafeMovesTheStamps(): void
-    {
-        $before = $this->stamps->regionStamps();
-        $this->db->executeStatement("INSERT INTO link_verdict (url_hash, url, verdict, checked_at) VALUES ('h1', 'https://example.org/a', 'ok', now())");
-        $this->db->executeStatement("UPDATE link_verdict SET verdict = 'ok', checked_at = now() WHERE url_hash = 'h1'");
-        self::assertSame($before, $this->stamps->regionStamps(), 'a safe link is printed as it was');
-
-        $this->db->executeStatement("UPDATE link_verdict SET verdict = 'unsafe' WHERE url_hash = 'h1'");
-        $unsafe = $this->stamps->regionStamps();
-        self::assertNotSame($before[$this->rid], $unsafe[$this->rid], 'an unsafe link leaves every payload');
-
-        $this->db->executeStatement("UPDATE link_verdict SET verdict = 'unsafe', checked_at = now() WHERE url_hash = 'h1'");
-        self::assertSame($unsafe, $this->stamps->regionStamps(), 'a recheck that finds it unsafe again changes nothing');
-    }
-
-    /**
      * A route row names every region its line passes through, read from the
      * outlines (CatalogProvider::routeRegionsSql()). Only a moved outline
      * counts; a rename, or a rewrite of the same outline, prints nothing new.

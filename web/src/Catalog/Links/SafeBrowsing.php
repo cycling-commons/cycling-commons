@@ -10,7 +10,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
- * Safe Browsing for rider-submitted links. Submit fails open; render fails closed. Flag, never silently reject. Off without `SAFE_BROWSING_KEY`.
+ * Safe Browsing for rider-submitted links, asked when a submission is sent in so the curator who reviews it is warned. Fails open, flags and never rejects. Off without `SAFE_BROWSING_KEY`.
  *
  * @see docs/specs/catalog-data-model.md §7
  *

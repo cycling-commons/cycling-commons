@@ -6,7 +6,6 @@ declare(strict_types=1);
 
 namespace App\Catalog;
 
-use App\Catalog\Links\LinkVerdictStore;
 use App\Coverage\CoverageRepository;
 use App\Media\PhotoPlace;
 use App\Media\PhotoValidator;
@@ -32,7 +31,6 @@ final class CatalogProvider
     public function __construct(
         private readonly Connection $db,
         private readonly ConfirmationFreshness $freshness,
-        private readonly LinkVerdictStore $linkVerdicts,
         // Who published each authority row, sent with the payload so the map
         // never holds a table of providers in a constant
         // (data-provider-hierarchy.md §7).
@@ -806,7 +804,9 @@ final class CatalogProvider
     }
 
     /**
-     * Decode attributes and fail-closed strip UNSAFE `links`. UNKNOWN still renders.
+     * Decode a JSON column. `links` are served as approved: the Safe Browsing
+     * verdict is for the curator reviewing a submission, never a filter on
+     * what visitors see (catalog-data-model.md §7).
      *
      * @return array<string, mixed>
      */
@@ -814,12 +814,6 @@ final class CatalogProvider
     {
         /** @var array<string, mixed> $attrs */
         $attrs = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
-        if (isset($attrs['links'])) {
-            $attrs['links'] = $this->linkVerdicts->withhold($attrs['links']);
-            if ([] === $attrs['links']) {
-                unset($attrs['links']);
-            }
-        }
 
         return $attrs;
     }

@@ -67,9 +67,9 @@ tables:
         Where a town lies, one row per OpenStreetMap ref: the point the first town card
         reader's map named for it, kept once. It decides which region a town text belongs to.
     link_verdict: >-
-        Google Safe Browsing verdict for one URL, keyed by a hash of it. A fact about a URL and
-        not about an item, so every item pointing at the same page shares one row and the
-        scheduled re-check sweeps distinct URLs.
+        Google Safe Browsing verdict for one URL, keyed by a hash of it, asked when a rider sends
+        the link in and shown to the curator who reviews it. A fact about a URL and not about a
+        submission, so every submission pointing at the same page shares one row.
 
     # Hand-written migrations.
     system_setting: >-

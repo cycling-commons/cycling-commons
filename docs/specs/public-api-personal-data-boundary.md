@@ -50,8 +50,7 @@ The public data model of [public-api.md §1](public-api.md):
 `recommended_route`, `change_history`, `route_change_history`,
 `world_continent`, `world_country`, `world_subdivision`, `world_division`,
 `data_provider`, `coverage_count`, `commons_photo`, `wikidata_image`,
-`town_summary`, `link_verdict`, `catalog_change`, `translation_entry`,
-`release_tag`.
+`town_summary`, `catalog_change`, `translation_entry`, `release_tag`.
 
 The later rows are public by content: `world_division` holds Overture
 boundaries; `data_provider` is the provider registry the credits page and the
@@ -59,9 +58,9 @@ map cite (names, licences, letters, rank; no person); `coverage_count` is kept
 counts of visible rows per bucket; `commons_photo` and `wikidata_image` cache
 Wikimedia Commons and Wikidata answers; `town_summary` caches Wikipedia
 answers and also holds local texts written or approved by a curator;
-`link_verdict` is a Safe Browsing verdict per URL; `catalog_change` is an
-append-only count per region, written by triggers; `translation_entry` is the
-English interface strings; `release_tag` is the list of release names.
+`catalog_change` is an append-only count per region, written by triggers;
+`translation_entry` is the English interface strings; `release_tag` is the
+list of release names.
 
 Four of these tables carry an account id beside public content:
 `recommended_route.proposed_by` and `trashed_by`, `change_history.changed_by`,
@@ -285,7 +284,7 @@ GRANT SELECT ON item, region, heat_point, coverage_poi, coverage_source,
   recommended_route, change_history, route_change_history,
   world_continent, world_country, world_subdivision, world_division,
   data_provider, coverage_count, commons_photo, wikidata_image, town_summary,
-  link_verdict, catalog_change, translation_entry, release_tag TO cc_api_read;
+  catalog_change, translation_entry, release_tag TO cc_api_read;
 -- §1.2 aggregate views are granted here as they are created.
 ```
 

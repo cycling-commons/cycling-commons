@@ -19,7 +19,6 @@ final class DailyJobs
         'app:accounts:dormancy',
         'app:media:gc',
         'app:moderation:gc',
-        'app:links:recheck',
         'app:catalog:link-osm',
         'app:catalog:findings',
         'app:vote:freeze',

@@ -299,8 +299,8 @@
      (catalog-data-model.md §7). FLAG, never a silent rejection: the submission
      is here either way, and a curator about to click a rider's link is
      entitled to know what the check said - including that it could not answer.
-     The map already withholds an `unsafe` url from readers, so this is a
-     warning to a curator, not the control. #}
+     The warning is there to keep the curator from opening the site; the map
+     shows an approved link as it is. #}
   {% if item.linkFlag is defined and item.linkFlag in ['unsafe', 'unknown'] %}
     <p class="q-link-flag q-link-{{ item.linkFlag }}">
       <strong>{{ ('moderate.links.' ~ item.linkFlag)|trans }}</strong>

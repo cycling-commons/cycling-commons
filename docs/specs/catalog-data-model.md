@@ -809,43 +809,51 @@ by name, and `OutboundLinks::LOCALES` accepts every built language so the edit
 posts it back unchanged (`links-editor-locales.test.cjs`). Pinned by
 `OutboundLinksEditorTest`.
 
-**2. Google Safe Browsing, at submit AND at render (built).** Both, and the
-pair is the point: a URL that was clean when it was submitted is how a link
-farm gets past a one-time check, and a check only at render lets a hostile URL
-sit in the moderation queue where a curator clicks it first.
-`App\Catalog\Links\SafeBrowsing` is the reusable core: batched Lookup-API
-calls, a three-state verdict (`safe`/`unsafe`/`unknown`) so an outage can never
-read as clean, a suffix-matched host allowlist (`wikipedia.org`,
-`wikimedia.org`, `wikidata.org`, `openstreetmap.org`) that a look-alike domain
-cannot spoof and that spends no quota on a known answer, `worst()` for the
-queue card, and OFF with an empty `SAFE_BROWSING_KEY` rather than quietly
-passing everything. Pinned by `SafeBrowsingTest`.
+**2. Google Safe Browsing, at submit, for the curator (built).** The check
+exists to protect curators (owner 2026-10-10): a link in a submission is
+checked when the submission is sent in, and the curator who reviews it sees a
+warning before clicking it. Nothing else reads the verdict. A visitor is
+protected by their own browser's Safe Browsing, so the map, the drawer and the
+API show an approved link as it was approved, and nothing checks a link again
+after approval. `App\Catalog\Links\SafeBrowsing` is the core: batched
+Lookup-API calls, a three-state verdict (`safe`/`unsafe`/`unknown`) so an
+outage can never read as clean, a suffix-matched host allowlist
+(`wikipedia.org`, `wikimedia.org`, `wikidata.org`, `openstreetmap.org`) that a
+look-alike domain cannot spoof and that spends no quota on a known answer,
+`worst()` for the queue card, and OFF with an empty `SAFE_BROWSING_KEY` rather
+than quietly passing everything. Pinned by `SafeBrowsingTest`.
 
 **The verdict lives in its own table, keyed by url** (`link_verdict`,
 `App\Catalog\Links\LinkVerdictStore`, `Version20260816220000`). A verdict
 written inside the `links` attribute would flow through the wizard's change
 diff and surface on a moderation card as a rider-made edit, manufacturing
 curator work out of a background check. Keying by url also makes the fact
-shared by every item pointing at the same page, which turns the scheduled
-re-check into ONE sweep over distinct urls rather than one per item. The
-primary key is a sha256 of the url, because a btree key over unbounded TEXT has
-a size limit a long url could cross, and a rider's save must never be lost to
-an index detail.
+shared by every submission pointing at the same page. The primary key is a
+sha256 of the url, because a btree key over unbounded TEXT has a size limit a
+long url could cross, and a rider's save must never be lost to an index
+detail.
 
-**Fail OPEN at submit, fail CLOSED at render.** A rider must not lose their
-contribution because a Google endpoint is down; on the public map an unknown
-must not become a clean bill of health. A flagged submission still reaches the
+**Fail OPEN, flag, never reject.** A rider must not lose their contribution
+because a Google endpoint is down. A flagged submission still reaches the
 queue, carrying the verdict on the card, because a false positive that
-vanishes is indistinguishable from a bug. The four call sites:
+vanishes is indistinguishable from a bug; an `unknown` verdict (an outage, or
+no key) reads "could not be checked", never clean. The two call sites:
 
 | where | direction | what it does |
 |---|---|---|
 | **submit** (`CatalogContributionService::checkLinks`) | fail OPEN, never blocks | asks, records whatever comes back, and swallows every error: nothing about a background check may cost a rider their save |
-| **the queue card** (`SubmissionQueue::linkFlags`, `linkFlag` on the row) | flag, never reject | shows the worst verdict for the links THIS submission proposes, `unsafe` and `unknown` differently, on both the desk template and the map drawer |
-| **the map payload** (`CatalogProvider::decode()`) | fail CLOSED | strips a url whose last verdict is `unsafe` out of `links` before it can reach an `<a href>`; an entry left with no urls disappears. One chokepoint, because a withhold any forgotten path could skip is not a withhold |
-| **the sweep** (`app:links:recheck`, a daily job, operations.md §1) | - | re-asks about verdicts older than a week AND about urls in served items that were never checked at all; a no-op when the key is empty, so nothing is ever stamped as if it had been checked |
+| **the queue card** (`SubmissionQueue::linkFlags`, `linkFlag` on the row) | flag, never reject | shows the worst verdict for the links THIS submission proposes, `unsafe` ("A link in this submission is on a known-unsafe list. Do not click it.") and `unknown` differently, on both the desk template and the map drawer |
 
 `SAFE_BROWSING_KEY` is on the deploy-prerequisites list (operations.md §3).
+
+A curator who finds a link bad removes it by hand: an ordinary decision, with
+the ordinary statement of reasons (content-reports.md §7, curator rulebook
+RB-APPROVE-14). Software never hides a link on its own, so links are not in
+the legal-sources.md inventory of what software does on its own; the terms
+(§13, `terms.ai_checks`) say the check is there to warn the curator. Pinned by
+`UnsafeLinkShownTest`: an approved link whose verdict is `unsafe` is in the
+drawer feature and in the region document the map loads, and the review card
+warns the curator.
 
 **3. urlscan.io preview on the queue card (specified, not built).** The
 look-without-visiting option, worth building only after (2): a screenshot is a
@@ -1087,7 +1095,7 @@ region holds, and `-1` for a change every region prints.
 | `data_provider` | row, only when a printed column changes; insert, delete | every region |
 | `world_subdivision` | row, only when `name` changes | every region |
 | `region` | row, only when `geom` changes; statement insert, delete (a route's `rids`) | every region |
-| `link_verdict` | row, only when a URL enters or leaves `unsafe` | every region |
+| `link_verdict` | none: the payload does not read this table, and Version20261010020000 dropped its three triggers (pinned by `LinkVerdictStoreTest::testAVerdictNeverMovesTheMapsCatalogStamps`) | nothing |
 | `coverage_poi` | statement, only when it touched a row; installed by `catalog_change_install()`, which the pipeline calls after it creates the table | every region |
 
 `CatalogChangeCoverageTest` reads the payload's SQL from the source and fails

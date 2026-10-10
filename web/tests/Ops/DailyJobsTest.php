@@ -104,6 +104,6 @@ final class DailyJobsTest extends KernelTestCase
         self::assertSame(DailyJobs::COMMANDS, array_keys($report));
         self::assertFalse($report['app:media:gc']);
         self::assertTrue($report['app:moderation:gc']);
-        self::assertTrue($report['app:links:recheck'], 'never ran');
+        self::assertTrue($report['app:catalog:findings'], 'never ran');
     }
 }

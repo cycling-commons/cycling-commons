@@ -31,7 +31,7 @@ final class CatalogStamps
     /** The rows that belong to no region: region slice 0 serves them (regionSql()). */
     public const int NO_REGION = 0;
 
-    /** A change every region's rows serialize (a public name, a citation, an unsafe link). */
+    /** A change every region's rows serialize (a public name, a citation). */
     public const int EVERY_REGION = -1;
 
     private const string COMPACT_KEY = 'catalog.change.last_compact';

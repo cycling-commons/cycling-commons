@@ -29,7 +29,6 @@ final class CatalogChangeCoverageTest extends KernelTestCase
         'src/Catalog/CoverageRetirement.php',
         'src/Catalog/GoneRows.php',
         'src/Provider/ProviderCitations.php',
-        'src/Catalog/Links/LinkVerdictStore.php',
     ];
 
     /**
