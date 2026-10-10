@@ -29,6 +29,8 @@ html{scroll-behavior:smooth}
    stylesheet, so its full-screen layout is untouched. */
 body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased;
   min-height:100vh;display:flex;flex-direction:column}
+/* Bold at 600, not the browser's 700: at 700 it reads near-black against the ink of running text (owner 2026-10-10). */
+b,strong{font-weight:600}
 /* Flex items with `margin: 0 auto` do NOT stretch - an auto cross-axis margin
    switches stretching off - so `.wrap` collapsed to its content width and every
    page written against block flow came out narrow and off-centre (owner-spotted

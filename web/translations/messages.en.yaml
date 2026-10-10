@@ -568,7 +568,6 @@ data_export:
   earlier_kicker: 'Earlier snapshots'
   earlier_body: 'The recent weeks, and the first snapshot of every month, kept for good. Each is a complete export of its day, under the same licence.'
   earlier_week: 'week %week%'
-  earlier_archived: 'kept for good'
   format_body: 'Each file is a gzip-compressed GeoJSON <code>FeatureCollection</code> in WGS84 (EPSG:4326), one feature per line, with <code>licence</code> and <code>attribution</code> at the top. Coordinates have six decimals.'
   back: 'Back to the developer page'
 regions:

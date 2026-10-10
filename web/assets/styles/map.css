@@ -63,6 +63,8 @@
   *{margin:0;padding:0;box-sizing:border-box}
   html{height:100%;overflow:hidden}   /* never let the page itself scroll (drawer/dock translate off-screen → would otherwise create scroll, shoving the overlay off the top) */
   body{font-family:var(--sans);color:var(--ink);height:100svh;overflow:hidden;display:flex;flex-direction:column}
+  /* Bold at 600, not the browser's 700: at 700 it reads near-black against the ink of running text (owner 2026-10-10). */
+  b,strong{font-weight:600}
   /* Rail, drawer and map sit side by side and the drawer animates its own
      width, so this is a flex row rather than the old fixed 340px grid. */
   .app{display:flex;flex:1;min-height:0}

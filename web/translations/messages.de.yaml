@@ -568,7 +568,6 @@ data_export:
   earlier_kicker: 'Frühere Schnappschüsse'
   earlier_body: 'Die letzten Wochen und der erste Schnappschuss jedes Monats, dauerhaft erhalten. Jeder ist ein vollständiger Export seines Tages, unter derselben Lizenz.'
   earlier_week: 'Woche %week%'
-  earlier_archived: 'dauerhaft erhalten'
   format_body: 'Jede Datei ist eine gzip-komprimierte GeoJSON-<code>FeatureCollection</code> in WGS84 (EPSG:4326), ein Feature pro Zeile, mit <code>licence</code> und <code>attribution</code> am Anfang. Koordinaten haben sechs Nachkommastellen.'
   back: 'Zurück zur Entwicklerseite'
 regions:

@@ -277,9 +277,9 @@ says the first export is on its way, so no page of ours links to a 404.
   every manifest-less directory older than the snapshot it just published
   (what a build that died halfway left). A directory without a manifest never
   counts as published. The export page lists every kept snapshot but the
-  newest under "Earlier snapshots", newest first, marking the monthly ones
-  "kept for good" (`BulkExportCatalog::earlier()`, cached like the newest
-  manifest and cleared by `forget()`). Pruning runs
+  newest under "Earlier snapshots", newest first, with date, week and files;
+  the monthly ones carry `data-archived` (`BulkExportCatalog::earlier()`,
+  cached like the newest manifest and cleared by `forget()`). Pruning runs
   after the site has been told of the new snapshot; a pruning failure is a
   warning and does not fail the build.
 - **Taking a snapshot down.** Delete `exports/snapshots/<stamp>/` from the

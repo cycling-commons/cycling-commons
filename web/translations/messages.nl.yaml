@@ -568,7 +568,6 @@ data_export:
   earlier_kicker: 'Eerdere momentopnamen'
   earlier_body: 'De recente weken, en de eerste momentopname van elke maand, voorgoed bewaard. Elke is een volledige export van die dag, onder dezelfde licentie.'
   earlier_week: 'week %week%'
-  earlier_archived: 'voorgoed bewaard'
   format_body: 'Elk bestand is een met gzip gecomprimeerde GeoJSON-<code>FeatureCollection</code> in WGS84 (EPSG:4326), één feature per regel, met <code>licence</code> en <code>attribution</code> bovenaan. Coördinaten hebben zes decimalen.'
   back: 'Terug naar de ontwikkelaarspagina'
 regions:

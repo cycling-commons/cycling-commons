@@ -26,13 +26,13 @@
   {% else %}
     <p style="margin-top:.8rem" data-export-built>{{ 'data_export.built'|trans({'%when%': manifest.generated_at|cc_datetime, '%week%': manifest.generated_at|date('W', 'UTC')|number_format, '%year%': manifest.generated_at|date('o', 'UTC')}) }}</p>
     {% for f in manifest.files %}
-      <div class="ep" data-export-file>
+      <div class="ep ep-file" data-export-file>
         <span class="verb">GET</span>
         <a class="path" href="{{ bulk_export_file(manifest.snapshot, f.name) }}" download>{{ f.name }}</a>
         <span class="desc">{% if f.name starts with 'routes' %}{{ 'data_export.file_routes'|trans({'%n%': f.features|number_format}) }}{% else %}{{ 'data_export.file_places'|trans({'%n%': f.features|number_format}) }}{% endif %} · {{ _self.size(f.bytes) }}<br><code style="font-size:.75rem;word-break:break-all">sha256 {{ f.sha256 }}</code></span>
       </div>
     {% endfor %}
-    <div class="ep">
+    <div class="ep ep-file">
       <span class="verb">GET</span>
       <a class="path" href="{{ bulk_export_file(manifest.snapshot, 'manifest.json') }}">manifest.json</a>
       <span class="desc">{{ 'data_export.manifest_desc'|trans }}</span>
@@ -45,12 +45,12 @@
     <div class="kicker" style="margin-top:2.2rem">{{ 'data_export.earlier_kicker'|trans }}</div>
     <p style="margin-top:.8rem">{{ 'data_export.earlier_body'|trans }}</p>
     {% for s in earlier %}
-      <div class="ep" data-export-earlier="{{ s.stamp }}"{% if s.archived %} data-archived{% endif %}>
+      <div class="ep ep-compact" data-export-earlier="{{ s.stamp }}"{% if s.archived %} data-archived{% endif %}>
         <span class="path">{{ s.built_at|cc_date }} · {{ 'data_export.earlier_week'|trans({'%week%': s.built_at|date('W', 'UTC')|number_format}) }}</span>
         <span class="desc">
           <a href="{{ bulk_export_file(s.stamp, 'places.geojson.gz') }}" download>places.geojson.gz</a> ·
           <a href="{{ bulk_export_file(s.stamp, 'routes.geojson.gz') }}" download>routes.geojson.gz</a> ·
-          <a href="{{ bulk_export_file(s.stamp, 'manifest.json') }}">manifest.json</a>{% if s.archived %} · {{ 'data_export.earlier_archived'|trans }}{% endif %}
+          <a href="{{ bulk_export_file(s.stamp, 'manifest.json') }}">manifest.json</a>
         </span>
       </div>
     {% endfor %}
@@ -64,7 +64,7 @@
       <p style="margin-top:.8rem">{{ 'data_export.holds_body'|trans|rich }}</p>
       {% if manifest is not null %}
         {% for s in manifest.sources %}
-          <div class="ep" data-export-source="{{ s.key }}">
+          <div class="ep ep-tight" data-export-source="{{ s.key }}">
             <span class="path">{{ s.name }}</span>
             <span class="desc">{{ s.licence }}{% if s.attribution %} · {{ s.attribution }}{% endif %} · {{ 'data_export.source_counts'|trans({'%places%': s.places|number_format, '%routes%': s.routes|number_format}) }}</span>
           </div>
@@ -76,7 +76,7 @@
       <p style="margin-top:.8rem">{{ 'data_export.leaves_body'|trans|rich }}</p>
       {% if manifest is not null and manifest.left_out is not empty %}
         {% for s in manifest.left_out %}
-          <div class="ep">
+          <div class="ep ep-tight">
             <span class="path">{{ s.name ?? 'data_export.left_out_unknown'|trans }}</span>
             <span class="desc">{{ s.licence_code ?? '-' }} · {{ 'data_export.source_counts'|trans({'%places%': s.places|number_format, '%routes%': s.routes|number_format}) }}</span>
           </div>

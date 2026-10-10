@@ -570,7 +570,6 @@ data_export:
   earlier_kicker: 'Instantáneas anteriores'
   earlier_body: 'Las semanas recientes, y la primera instantánea de cada mes, conservada para siempre. Cada una es una exportación completa de su día, bajo la misma licencia.'
   earlier_week: 'semana %week%'
-  earlier_archived: 'conservada para siempre'
   format_body: 'Cada archivo es una <code>FeatureCollection</code> GeoJSON comprimida con gzip, en WGS84 (EPSG:4326), una entidad por línea, con <code>licence</code> y <code>attribution</code> al principio. Las coordenadas tienen seis decimales.'
   back: 'Volver a la página para desarrolladores'
 regions:
