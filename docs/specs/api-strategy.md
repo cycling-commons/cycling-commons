@@ -269,11 +269,17 @@ says the first export is on its way, so no page of ours links to a 404.
   HEAD, a range or a conditional request. The number is never stated in
   public copy; the privacy notice names the export among the counters that
   use the address itself ([privacy-notice.md §2](privacy-notice.md)).
-- **Retention.** The newest four snapshots that hold a manifest
-  (`BulkExportBuilder::KEEP`, a month of weekly builds) are kept; each build
-  deletes the older ones, and every manifest-less directory older than the
-  snapshot it just published (what a build that died halfway left). A
-  directory without a manifest never counts among the four. Pruning runs
+- **Retention** (owner 2026-10-10, `App\BulkExport\BulkExportRetention`). The
+  newest four snapshots that hold a manifest (`RECENT`, a month of weekly
+  builds), and the first snapshot of every calendar month (UTC) for good: a
+  monthly archive that stays small, because every kept snapshot is one more
+  copy a takedown has to reach. Each build deletes the other older ones, and
+  every manifest-less directory older than the snapshot it just published
+  (what a build that died halfway left). A directory without a manifest never
+  counts as published. The export page lists every kept snapshot but the
+  newest under "Earlier snapshots", newest first, marking the monthly ones
+  "kept for good" (`BulkExportCatalog::earlier()`, cached like the newest
+  manifest and cleared by `forget()`). Pruning runs
   after the site has been told of the new snapshot; a pruning failure is a
   warning and does not fail the build.
 - **Taking a snapshot down.** Delete `exports/snapshots/<stamp>/` from the

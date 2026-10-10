@@ -58,7 +58,7 @@ use Psr\Log\LoggerInterface;
 final class BulkExportBuilder
 {
     /** How many snapshots stay in storage: four weekly builds, a month to fall back on. */
-    public const int KEEP = 4;
+    public const int KEEP = BulkExportRetention::RECENT;
 
     public const string PLACES = 'places.geojson.gz';
     public const string ROUTES = 'routes.geojson.gz';
@@ -544,14 +544,15 @@ final class BulkExportBuilder
     }
 
     /**
-     * Keeps the newest KEEP snapshots that hold a manifest. Deletes the older
-     * ones, and every directory without a manifest that is older than the
-     * snapshot just published: what a build that died halfway left behind.
+     * Keeps what {@see BulkExportRetention::kept()} keeps: the newest KEEP
+     * snapshots that hold a manifest, and the first of every month. Deletes
+     * the other older ones, and every directory without a manifest that is
+     * older than the snapshot just published: what a build that died halfway
+     * left behind.
      */
     private function prune(string $newest): void
     {
-        $published = $this->storage->published();
-        $keep = \array_slice($published, -self::KEEP);
+        $keep = BulkExportRetention::kept($this->storage->published());
         foreach ($this->storage->snapshots() as $stamp) {
             if (!\in_array($stamp, $keep, true) && $stamp < $newest) {
                 $this->storage->deleteSnapshot($stamp);

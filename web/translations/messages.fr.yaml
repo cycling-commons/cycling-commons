@@ -562,7 +562,11 @@ data_export:
   attr_kicker: 'Attribution obligatoire'
   licence_body: 'La base de données est sous <b>Open Database License 1.0</b>, son contenu sous <b>Database Contents License 1.0</b>. Utilisez-la pour tout, y compris commercialement : créditez-la comme indiqué, partagez sous la même licence une base de données que vous en tirez, et gardez-la ouverte. Les sources qui demandent leur propre crédit sont listées ci-dessus et dans le manifeste. Voir le résumé en langage clair :'
   cadence_kicker: 'À quelle fréquence'
-  cadence_body: 'Un nouvel instantané est construit chaque semaine. Les %keep% plus récents restent disponibles, les plus anciens sont supprimés. Un instantané ne change jamais une fois publié : une somme de contrôle que vous avez notée reste valable. Pour des données de moins d''une semaine, utilisez l''API.'
+  cadence_body: 'Un nouvel instantané est construit chaque semaine. Les %keep% plus récents restent disponibles, et le premier instantané de chaque mois est conservé définitivement ; les autres sont supprimés. Un instantané ne change jamais une fois publié : une somme de contrôle que vous avez notée reste valable. Pour des données de moins d''une semaine, utilisez l''API.'
+  earlier_kicker: 'Instantanés précédents'
+  earlier_body: 'Les semaines récentes, et le premier instantané de chaque mois, conservé définitivement. Chacun est un export complet de son jour, sous la même licence.'
+  earlier_week: 'semaine %week%'
+  earlier_archived: 'conservé définitivement'
   format_body: 'Chaque fichier est une <code>FeatureCollection</code> GeoJSON compressée en gzip, en WGS84 (EPSG:4326), une entité par ligne, avec <code>licence</code> et <code>attribution</code> en tête. Les coordonnées ont six décimales.'
   back: 'Retour à la page développeurs'
 regions:

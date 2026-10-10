@@ -564,7 +564,11 @@ data_export:
   attr_kicker: 'Erforderliche Attribution'
   licence_body: 'Die Datenbank steht unter der <b>Open Database License 1.0</b>, ihr Inhalt unter der <b>Database Contents License 1.0</b>. Nutze sie für alles, auch kommerziell: nenne sie wie angegeben, teile eine daraus abgeleitete Datenbank unter derselben Lizenz und halte sie offen. Quellen, die eine eigene Nennung verlangen, stehen oben und im Manifest. Siehe die Zusammenfassung in einfacher Sprache:'
   cadence_kicker: 'Wie oft'
-  cadence_body: 'Jede Woche wird ein neuer Schnappschuss erstellt. Die neuesten %keep% bleiben verfügbar, ältere werden gelöscht. Ein Schnappschuss ändert sich nach der Veröffentlichung nie mehr, eine notierte Prüfsumme bleibt also gültig. Für Daten, die frischer als eine Woche sind, nutze die API.'
+  cadence_body: 'Jede Woche wird ein neuer Schnappschuss erstellt. Die neuesten %keep% bleiben verfügbar, und der erste Schnappschuss jedes Monats bleibt dauerhaft erhalten; die anderen werden gelöscht. Ein Schnappschuss ändert sich nach der Veröffentlichung nie mehr, eine notierte Prüfsumme bleibt also gültig. Für Daten, die frischer als eine Woche sind, nutze die API.'
+  earlier_kicker: 'Frühere Schnappschüsse'
+  earlier_body: 'Die letzten Wochen und der erste Schnappschuss jedes Monats, dauerhaft erhalten. Jeder ist ein vollständiger Export seines Tages, unter derselben Lizenz.'
+  earlier_week: 'Woche %week%'
+  earlier_archived: 'dauerhaft erhalten'
   format_body: 'Jede Datei ist eine gzip-komprimierte GeoJSON-<code>FeatureCollection</code> in WGS84 (EPSG:4326), ein Feature pro Zeile, mit <code>licence</code> und <code>attribution</code> am Anfang. Koordinaten haben sechs Nachkommastellen.'
   back: 'Zurück zur Entwicklerseite'
 regions:

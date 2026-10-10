@@ -564,7 +564,11 @@ data_export:
   attr_kicker: 'Verplichte naamsvermelding'
   licence_body: 'De database valt onder de <b>Open Database License 1.0</b>, de inhoud onder de <b>Database Contents License 1.0</b>. Gebruik hem waarvoor je wilt, ook commercieel: vermeld de bron zoals aangegeven, deel een database die je ervan afleidt onder dezelfde licentie, en houd hem open. Bronnen die een eigen vermelding vragen staan hierboven en in het manifest. Zie de samenvatting in gewone taal:'
   cadence_kicker: 'Hoe vaak'
-  cadence_body: 'Elke week wordt een nieuwe momentopname gebouwd. De nieuwste %keep% blijven beschikbaar, oudere worden verwijderd. Een momentopname verandert na publicatie nooit meer, dus een controlesom die je bewaarde blijft geldig. Voor data die verser is dan een week: gebruik de API.'
+  cadence_body: 'Elke week wordt een nieuwe momentopname gebouwd. De nieuwste %keep% blijven beschikbaar, en de eerste momentopname van elke maand blijft voorgoed bewaard; de andere worden verwijderd. Een momentopname verandert na publicatie nooit meer, dus een controlesom die je bewaarde blijft geldig. Voor data die verser is dan een week: gebruik de API.'
+  earlier_kicker: 'Eerdere momentopnamen'
+  earlier_body: 'De recente weken, en de eerste momentopname van elke maand, voorgoed bewaard. Elke is een volledige export van die dag, onder dezelfde licentie.'
+  earlier_week: 'week %week%'
+  earlier_archived: 'voorgoed bewaard'
   format_body: 'Elk bestand is een met gzip gecomprimeerde GeoJSON-<code>FeatureCollection</code> in WGS84 (EPSG:4326), één feature per regel, met <code>licence</code> en <code>attribution</code> bovenaan. Coördinaten hebben zes decimalen.'
   back: 'Terug naar de ontwikkelaarspagina'
 regions:

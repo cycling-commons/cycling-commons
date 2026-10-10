@@ -60,6 +60,23 @@ final class BulkExportControllerTest extends WebTestCase
         self::assertStringNotContainsString('/data/export/', (string) $client->getResponse()->getContent());
     }
 
+    public function testEarlierSnapshotsAreListedWithTheMonthlyOnesMarked(): void
+    {
+        $client = $this->client();
+        $this->build('2026-08-30 05:07:00 UTC');
+        $this->build('2026-09-06 05:07:00 UTC');
+        $newest = $this->build('2026-09-13 05:07:00 UTC');
+
+        $crawler = $client->request('GET', '/developers/export');
+
+        $rows = $crawler->filter('[data-export-earlier]');
+        self::assertCount(2, $rows, 'every kept snapshot but the newest');
+        self::assertSame('20260906T050700Z', $rows->eq(0)->attr('data-export-earlier'), 'newest first');
+        self::assertCount(2, $crawler->filter('[data-export-earlier][data-archived]'), 'both are the first of their month');
+        self::assertSelectorExists('[data-export-earlier] a[href="/data/export/20260830T050700Z/places.geojson.gz"]');
+        self::assertStringNotContainsString('data-export-earlier="'.$newest['snapshot'].'"', (string) $client->getResponse()->getContent());
+    }
+
     public function testTheBuildTimeNamesItsWeek(): void
     {
         $client = $this->client();

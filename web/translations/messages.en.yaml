@@ -564,7 +564,11 @@ data_export:
   attr_kicker: 'Required attribution'
   licence_body: 'The database is licensed under the <b>Open Database License 1.0</b> and its contents under the <b>Database Contents License 1.0</b>. Use it for anything, commercial use included: credit it as shown, share a database you build from it under the same licence, and keep it open. Sources that ask for their own credit are listed above and in the manifest. See the plain-language summary:'
   cadence_kicker: 'How often'
-  cadence_body: 'A new snapshot is built every week. The newest %keep% stay available and older ones are deleted. A snapshot never changes once published, so a checksum you kept stays valid. For data fresher than a week, use the API.'
+  cadence_body: 'A new snapshot is built every week. The newest %keep% stay available, and the first snapshot of each month is kept for good; the others are deleted. A snapshot never changes once published, so a checksum you kept stays valid. For data fresher than a week, use the API.'
+  earlier_kicker: 'Earlier snapshots'
+  earlier_body: 'The recent weeks, and the first snapshot of every month, kept for good. Each is a complete export of its day, under the same licence.'
+  earlier_week: 'week %week%'
+  earlier_archived: 'kept for good'
   format_body: 'Each file is a gzip-compressed GeoJSON <code>FeatureCollection</code> in WGS84 (EPSG:4326), one feature per line, with <code>licence</code> and <code>attribution</code> at the top. Coordinates have six decimals.'
   back: 'Back to the developer page'
 regions:

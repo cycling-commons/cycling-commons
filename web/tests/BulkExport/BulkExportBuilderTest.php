@@ -176,17 +176,18 @@ final class BulkExportBuilderTest extends KernelTestCase
         );
     }
 
-    public function testOnlyTheNewestSnapshotsAreKept(): void
+    public function testTheRecentSnapshotsAndTheFirstOfEachMonthAreKept(): void
     {
         self::bootKernel();
         $builder = $this->builder();
         $stamps = [];
-        for ($day = 1; $day <= BulkExportBuilder::KEEP + 2; ++$day) {
-            $stamps[] = $builder->build(new \DateTimeImmutable(sprintf('2026-09-%02d 03:00:00 UTC', $day)))['snapshot'];
+        foreach (['2026-08-30', '2026-08-31', '2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05', '2026-09-06'] as $day) {
+            $stamps[] = $builder->build(new \DateTimeImmutable($day.' 03:00:00 UTC'))['snapshot'];
         }
 
-        self::assertSame(\array_slice($stamps, -BulkExportBuilder::KEEP), $this->storage()->snapshots());
-        foreach (\array_slice($stamps, 0, 2) as $gone) {
+        // August's first and September's first for good, and the newest four.
+        self::assertSame([$stamps[0], $stamps[2], $stamps[4], $stamps[5], $stamps[6], $stamps[7]], $this->storage()->snapshots());
+        foreach ([$stamps[1], $stamps[3]] as $gone) {
             self::assertFalse($this->storage()->has($gone.'/places.geojson.gz'), "{$gone} is past the retention and deleted");
         }
         $latest = json_decode($this->storage()->read('latest.json'), true, 512, \JSON_THROW_ON_ERROR);
@@ -294,7 +295,8 @@ final class BulkExportBuilderTest extends KernelTestCase
         self::assertTrue($spy->fileExists('exports/snapshots/20260906T030000Z/manifest.json'));
         self::assertTrue($spy->fileExists('exports/snapshots/20260906T030000Z/places.geojson.gz'));
         self::assertTrue($spy->fileExists('exports/snapshots/20260906T030000Z/routes.geojson.gz'));
-        self::assertFalse($spy->fileExists('exports/snapshots/20260901T030000Z/places.geojson.gz'), 'pruned');
+        self::assertTrue($spy->fileExists('exports/snapshots/20260901T030000Z/places.geojson.gz'), 'the first of September stays for good');
+        self::assertFalse($spy->fileExists('exports/snapshots/20260902T030000Z/places.geojson.gz'), 'pruned');
         self::assertFalse($spy->fileExists('exports/snapshots/20260910T030000Z/places.geojson.gz'), 'cleaned up');
     }
 
@@ -330,33 +332,35 @@ final class BulkExportBuilderTest extends KernelTestCase
             $good[] = $builder->build(new \DateTimeImmutable(sprintf('2026-09-%02d 03:00:00 UTC', $day)))['snapshot'];
         }
 
-        self::assertSame(\array_slice($good, -BulkExportBuilder::KEEP), $storage->snapshots(), 'four good snapshots kept, no leftover counted among them or kept');
+        // The first good one is September's first, kept for good; the other four are the newest.
+        self::assertSame($good, $storage->snapshots(), 'every good snapshot kept, no leftover counted among them or kept');
     }
 
     public function testAPruneFailureIsAWarningAndTheSnapshotIsStillPublished(): void
     {
         self::bootKernel();
         [$builder, $spy, $storage, $catalog, $logger] = $this->spiedBuilder();
-        for ($day = 1; $day <= BulkExportBuilder::KEEP; ++$day) {
-            $builder->build(new \DateTimeImmutable(sprintf('2026-09-%02d 03:00:00 UTC', $day)));
+        // Enough that the next build has one to prune: 31 August is neither recent nor a month's first.
+        foreach (['2026-08-30', '2026-08-31', '2026-09-01', '2026-09-02', '2026-09-03'] as $day) {
+            $builder->build(new \DateTimeImmutable($day.' 03:00:00 UTC'));
         }
         // The site has read the newest manifest, so a stale cache would hide the new snapshot.
-        self::assertSame('20260904T030000Z', $catalog->latest()['snapshot'] ?? null);
+        self::assertSame('20260903T030000Z', $catalog->latest()['snapshot'] ?? null);
         $spy->failWhen = static function (string $operation, string $path): void {
             if ('deleteDirectory' === $operation) {
                 throw UnableToDeleteDirectory::atLocation($path, 'storage went away');
             }
         };
 
-        $manifest = $builder->build(new \DateTimeImmutable('2026-09-08 03:00:00 UTC'));
+        $manifest = $builder->build(new \DateTimeImmutable('2026-09-04 03:00:00 UTC'));
 
-        self::assertSame('20260908T030000Z', $manifest['snapshot']);
+        self::assertSame('20260904T030000Z', $manifest['snapshot']);
         $latest = $catalog->latest();
         self::assertNotNull($latest);
-        self::assertSame('20260908T030000Z', $latest['snapshot'], 'the site sees the new snapshot although pruning failed');
+        self::assertSame('20260904T030000Z', $latest['snapshot'], 'the site sees the new snapshot although pruning failed');
         self::assertTrue($logger->hasWarningThatContains('storage went away'));
         self::assertSame([], array_values(array_filter($logger->records, static fn (array $r): bool => \in_array($r['level'], ['error', 'critical'], true))));
-        self::assertCount(BulkExportBuilder::KEEP + 1, $storage->snapshots(), 'the next build prunes what this one could not');
+        self::assertContains('20260831T030000Z', $storage->snapshots(), 'the next build prunes what this one could not');
     }
 
     public function testASecondBuildWhileOneRunsIsRefused(): void

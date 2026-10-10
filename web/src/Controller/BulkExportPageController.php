@@ -30,24 +30,26 @@ final class BulkExportPageController extends AbstractController
     #[Route(LocalizedPath::DEVELOPERS_EXPORT, name: 'data_export')]
     public function __invoke(BulkExportCatalog $catalog): Response
     {
-        return $this->render('pages/developers_export.html.twig', self::context($catalog->latest()));
+        return $this->render('pages/developers_export.html.twig', self::context($catalog->latest(), $catalog->earlier()));
     }
 
     /**
      * What the page template needs; also rendered, with a 404, by the
      * `latest` links while nothing is published.
      *
-     * @param Manifest|null $manifest
+     * @param Manifest|null                                                $manifest
+     * @param list<array{stamp: string, built_at: string, archived: bool}> $earlier
      *
      * @return array<string, mixed>
      */
-    public static function context(?array $manifest): array
+    public static function context(?array $manifest, array $earlier = []): array
     {
         return [
             'page_title' => 'data_export.meta_title',
             'page_description' => 'data_export.meta_description',
             'nav_active' => 'developers',
             'manifest' => $manifest,
+            'earlier' => $earlier,
             'keep' => BulkExportBuilder::KEEP,
             'attribution' => BulkExportBuilder::ATTRIBUTION,
         ];

@@ -60,10 +60,49 @@ final class BulkExportCatalog
         return $this->manifest('latest', BulkExportStorage::LATEST);
     }
 
-    /** Drops the newest manifest: the next read sees what storage holds now. */
+    /**
+     * Every kept snapshot but the newest, newest first, each with its build
+     * time and whether it is the first of its month (kept for good,
+     * {@see BulkExportRetention}). One listing of the folder, cached like the
+     * newest manifest; empty while storage is unconfigured or unreadable.
+     *
+     * @return list<array{stamp: string, built_at: string, archived: bool}>
+     */
+    public function earlier(): array
+    {
+        if (!$this->storage->isConfigured()) {
+            return [];
+        }
+
+        return $this->cache->get(self::KEY.'earlier', function (ItemInterface $item): array {
+            $item->expiresAfter(self::TTL);
+            try {
+                $published = $this->storage->published();
+            } catch (FilesystemException $e) {
+                $item->expiresAfter(self::RETRY);
+                $this->warn('snapshots/', $e->getMessage());
+
+                return [];
+            }
+            $rows = [];
+            foreach (\array_slice(array_reverse($published), 1) as $stamp) {
+                $built = \DateTimeImmutable::createFromFormat('Ymd\THis\Z', $stamp, new \DateTimeZone('UTC'));
+                $rows[] = [
+                    'stamp' => $stamp,
+                    'built_at' => false !== $built ? $built->format(\DateTimeInterface::ATOM) : $stamp,
+                    'archived' => BulkExportRetention::isMonthlyFirst($stamp, $published),
+                ];
+            }
+
+            return $rows;
+        });
+    }
+
+    /** Drops what the pages cached: the next read sees what storage holds now. */
     public function forget(): void
     {
         $this->cache->delete(self::KEY.'latest');
+        $this->cache->delete(self::KEY.'earlier');
     }
 
     /**

@@ -39,6 +39,22 @@
     </div>
     <p style="margin-top:1.2rem;font-size:.90rem;color:#595c4d">{{ 'data_export.latest_links'|trans }} <code>{{ path('data_export_latest', {file: 'places.geojson.gz'}) }}</code></p>
   {% endif %}
+  {# The other kept snapshots: the recent weeks, and the first of every month
+     for good (App\BulkExport\BulkExportRetention). #}
+  {% if earlier is not empty %}
+    <div class="kicker" style="margin-top:2.2rem">{{ 'data_export.earlier_kicker'|trans }}</div>
+    <p style="margin-top:.8rem">{{ 'data_export.earlier_body'|trans }}</p>
+    {% for s in earlier %}
+      <div class="ep" data-export-earlier="{{ s.stamp }}"{% if s.archived %} data-archived{% endif %}>
+        <span class="path">{{ s.built_at|cc_date }} · {{ 'data_export.earlier_week'|trans({'%week%': s.built_at|date('W', 'UTC')|number_format}) }}</span>
+        <span class="desc">
+          <a href="{{ bulk_export_file(s.stamp, 'places.geojson.gz') }}" download>places.geojson.gz</a> ·
+          <a href="{{ bulk_export_file(s.stamp, 'routes.geojson.gz') }}" download>routes.geojson.gz</a> ·
+          <a href="{{ bulk_export_file(s.stamp, 'manifest.json') }}">manifest.json</a>{% if s.archived %} · {{ 'data_export.earlier_archived'|trans }}{% endif %}
+        </span>
+      </div>
+    {% endfor %}
+  {% endif %}
 </div></section>
 
 <section class="pad" style="background:var(--paper-deep)"><div class="wrap">
