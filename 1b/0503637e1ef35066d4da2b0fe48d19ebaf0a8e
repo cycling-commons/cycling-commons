@@ -1,0 +1,47 @@
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_e3ce5daa0edb27 569-573
+web/src/Controller/BulkExportPageController.php
+  s_985749378da6fe::t_f06bda038e70c1 33,41,45,52
+  s_985749378da6fe::t_149f6e564ef9e5 40
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_e3ce5daa0edb27 565-569
+docs/specs/api-strategy.md
+  s_985749378da6fe::t_149f6e564ef9e5 272-282
+web/tests/BulkExport/BulkExportBuilderTest.php
+  s_985749378da6fe::t_2d1ce56d0ffefa 179,184-185,188-190,335-336
+  s_985749378da6fe::t_09c3adf2daf1be 298-299,343-345,348,355,357,360,363
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_e3ce5daa0edb27 567-571
+web/src/BulkExport/BulkExportBuilder.php
+  s_985749378da6fe::t_f06bda038e70c1 61,547-551,555
+web/src/BulkExport/BulkExportCatalog.php
+  s_985749378da6fe::t_f06bda038e70c1 63-101,105
+web/templates/pages/developers_export.html.twig
+  s_985749378da6fe::t_f06bda038e70c1 42-57
+web/tests/BulkExport/BulkExportControllerTest.php
+  s_985749378da6fe::t_2d1ce56d0ffefa 63-79
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_e3ce5daa0edb27 567-571
+web/tests/BulkExport/BulkExportRetentionTest.php
+  s_985749378da6fe::t_2d1ce56d0ffefa 1-48
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_e3ce5daa0edb27 567-571
+web/src/BulkExport/BulkExportRetention.php
+  s_985749378da6fe::t_f06bda038e70c1 1-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1b0503637e1ef35066d4da2b0fe48d19ebaf0a8e",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
