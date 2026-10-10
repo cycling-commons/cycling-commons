@@ -84,6 +84,9 @@ of the pin.**
   curator confirms it at the new pin. The person moving the pin is told how
   many photos that hides before saving.
 - Details, sources and where it is enforced: §8.
+- The terms (§12, `terms.mod_auto_scenic`) say "taken too far from the pin"
+  and state no distance, so this rule can change without a new terms version
+  (owner 2026-10-10).
 
 **Rule 5: a rider may add a scenic view farther than 250 m from a bike way,
 after a warning.**

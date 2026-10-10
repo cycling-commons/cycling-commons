@@ -79,7 +79,7 @@ name and the logo, which are deliberately not open.
 | GDPR Arts. 15 to 22 | the data subject's rights | `/privacy`, and the export archive |
 | DSA Art. 11 | a single point of contact for Member State authorities, the Commission and the Board | terms §16: the contact page, in the five site languages |
 | DSA Art. 12 | a single point of contact for recipients, by electronic means, not only automated tools | terms §16: the contact page, read by a person, in the five site languages |
-| DSA Art. 14(1) | the terms state the moderation policies, procedures and tools, including algorithmic decision-making and human review, and complaint handling | terms §12 (grounds, who decides, what software does on its own, what you are told, appeal, reports) and §13 (where machines are involved) |
+| DSA Art. 14(1) | the terms state the moderation policies, procedures and tools, including algorithmic decision-making and human review, and complaint handling | terms §12 (the grounds in full; who decides; what software does on its own and which decisions send a statement, as rules with examples; appeal; reports) and §13 (where machines are involved); the full lists are under "The terms: the rule on the page" below |
 | DSA Art. 14(2) | tell recipients about any significant change to the terms | terms §15; `App\Legal\LegalNotice` emails every account at least 30 days ahead (`emails/legal_change.html.twig`); texts the terms include by reference are pinned by hash to the terms version that last accepted them (`TermsIncludedTexts`, `TermsIncludedTextsTest`, translations.md §6.2) |
 | DSA Art. 16(1) | notice and action, any person, no account | `/report/{type}/{id}` sits outside the firewall |
 | DSA Art. 16(2)(c) | a notice carries the reporter's name and email, except for content involving Arts. 3 to 7 of Directive 2011/93/EU | the address is required, except on the `intimate_or_child` ground |
@@ -90,6 +90,51 @@ name and the logo, which are deliberately not open.
 | AI Act Art. 50 | transparency about content a machine generated or manipulated | terms §13: machine-translated descriptions are labelled where they appear, generated photos are a ground for removal; no compliance claimed |
 | Brussels Ia Art. 18 | a consumer may sue in their own courts, and can be sued only there | terms §14 |
 | Rome I Art. 6(2) | a chosen law cannot take away the mandatory protection of the consumer's own law | terms §14, worded as C-191/15 asks |
+
+## The terms: the rule on the page, the full list in the specs
+
+Owner, 2026-10-10: "every detail is a promise; this is getting to be too big
+an administration, and possibly needless constant updates to the terms or
+privacy document." Where `/terms` would list every case of something, it
+states the rule and one to three examples, and the spec named below holds the
+full list and the code. A change the rule already covers updates that spec,
+not the terms. The privacy notice follows the same rule (privacy-notice.md §9).
+
+Kept exact on the page, because the law asks for them or readers rely on them:
+the grounds a report can name (terms §12, `terms.mod_std1` to `mod_std9`:
+DSA Art. 14(1) asks for the restrictions themselves, the list is nine lines
+and stable, and `ReportGround` and the report form mirror it word for word);
+the 1 to 365 days of a suspension and that the ground and the facts are
+stated; that every decision restricting a rider's content or account carries a
+statement of reasons, with its Art. 17(3) elements; the reply route for
+contesting a decision; the Art. 18 duty and its fallback authority; the single
+point of contact and its languages; the change rules (versions, the 30-day
+email, the included texts); and the licence names.
+
+| On the page | Rule and examples | The full list |
+|---|---|---|
+| Which decisions send a statement of reasons (`terms.mod_told_post`) | every decision that restricts something a rider added, with four examples; the elements of the statement in full | content-reports.md §7, "Which decisions send one" |
+| Which decisions send none (`terms.mod_told_p2`) | spam to the bin, a legal hold, edits, and content with no single author, each as a rule; the urgent hide's statement after review | content-reports.md §7, "Which send none, and why" |
+| The ground of a suspension or removal (`terms.suspension_admin`) | "we always name the ground, such as spam, unlawful content or misuse of the service" | `StatementGround::forAccounts()`, account-and-auth.md §6.8 |
+| What software does on its own (`terms.mod_who`, `mod_automated`, `mod_auto_*`, `ai_checks`, `ai_none`) | four kinds as examples (files, scenic photos, urgent reports, accounts); §13 says the unsafe-link check only warns the curator who reviews a submission, and hides nothing | the inventory below; the link check is catalog-data-model.md §7 |
+| Dormant accounts (`terms.suspension_dormant`) | "we email you first, more than once" | `DormancyLadder::NOTICES`, account-and-auth.md §6.5 |
+| What stays after closing an account (`terms.suspension_p2`) | three examples, and the privacy notice for the rest | privacy-notice.md §2, the deletion row |
+| The bulk export (`terms.opendata_export_post`) | "the data of the Commons, such as its places and routes", its licences, and what it never holds; no file format | api-strategy.md §3.1 |
+| Scenic photos (`terms.mod_auto_scenic`) | "taken too far from the pin"; no distance | scenic-views.md rule 4 |
+| The urgent hide (`terms.mod_auto_urgent`) | "safeguards stop the report form from being used to take photos down in bulk"; no budget, and not what happens over it | photo-uploads.md §6c, `UrgentWithholdBreaker` |
+
+**What software does on its own, in full.** Terms §12 and §13 give examples.
+A new case of a kind listed here updates this table; a new kind of decision
+changes the terms first, as `terms.ai_none` says.
+
+| What | Code |
+|---|---|
+| An upload that is infected, unreadable, or not an accepted format or size is refused, with an automated statement of reasons | `ScanAndReleaseUploadHandler::refuse()` (content-reports.md §7) |
+| A scenic-view photo taken more than 250 m from the pin, or with no known camera position, stays hidden on that place until a curator confirms it | `PhotoLocationConfirmation` (scenic-views.md rule 4) |
+| A report on the intimate-imagery-or-child ground hides the photo at once, within a site-wide budget | `ReportGround::autoWithholds()`, `UrgentWithholdBreaker` (photo-uploads.md §6c) |
+| An account whose address is not confirmed within 7 days is deleted | `UnverifiedSweep` (account-and-auth.md §6.7) |
+| An account unused for 24 months is deleted after the warnings | `DormancySweep` (account-and-auth.md §6.5) |
+| Repeated failed sign-ins pause signing in to an account | account-and-auth.md §3 |
 
 ## What we are NOT bound by, and say so
 

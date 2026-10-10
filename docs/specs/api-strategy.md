@@ -135,7 +135,11 @@ bucket, and PHP serves only the page and the `latest` redirects. `/developers` s
 (`bulk_export_published()`, `App\Twig\BulkExportExtension`); before that it
 says the first export is on its way, so no page of ours links to a 404.
 
-- **Files.** `places.geojson.gz` and `routes.geojson.gz`: gzip-compressed
+- **Files.** The terms (§6, `terms.opendata_export_post`) name the contents
+  ("the data of the Commons, such as its places and routes"), the licences and
+  what the export never holds, not the files or the format, so a new file or
+  format needs no new terms version (owner 2026-10-10).
+  `places.geojson.gz` and `routes.geojson.gz`: gzip-compressed
   GeoJSON `FeatureCollection`s in WGS84, one feature per line, with the
   foreign members `licence` (`ODbL-1.0`), `attribution` and
   `generated_at`. A file's `attribution` is the string on `/developers`

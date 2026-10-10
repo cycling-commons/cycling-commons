@@ -881,7 +881,9 @@ than designed here.
 | 24 | the account is deleted |
 
 `App\Account\DormancyLadder` holds the schedule, `DormancySweep` applies it,
-`app:accounts:dormancy` runs it. Meant for a daily timer on the worker host.
+`app:accounts:dormancy` runs it. `/privacy` and `/terms` say only that we
+email first, more than once, each time with the date, so the schedule can
+change without a new version of either page (owner 2026-10-10). Meant for a daily timer on the worker host.
 
 **Each notice fires inside a one-month window**, not "at or past". That is the
 property worth protecting: an account already dormant for years when this ships
@@ -1007,7 +1009,9 @@ people who use it. Either decision owes the holder a statement of reasons
 User CRUD (`admin/user_account_decision.html.twig`) that asks for what the
 statement states: the **ground** (`StatementGround::forAccounts()`: abuse,
 spam, unlawful, misuse of the service, false account details, untrue
-contributions, advertising, personal data about others), the **facts** in the
+contributions, advertising, personal data about others; terms §11,
+`terms.suspension_admin`, names three as examples and says the ground is
+always named, so this list is the full one), the **facts** in the
 administrator's own words (required, at most 2000 characters, read by the
 holder as written), and whether **reports** led to it.
 

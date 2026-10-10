@@ -79,10 +79,12 @@
 
     {# DSA Article 14: the terms state the content-moderation policies,
        procedures and tools in clear and plain language, including what
-       software does without a person (the mod_auto_* list) and human review,
-       and the rules of complaint handling. The grounds are every
-       App\Support\ReportGround the report form offers, and what a rider is
-       told is App\Moderation\StatementOfReasons (content-reports.md §7). #}
+       software does on its own and review by a curator, and the rules of
+       complaint handling. The grounds are every App\Support\ReportGround the
+       report form offers, in full. What software does on its own (mod_auto_*)
+       and which decisions send a statement of reasons (mod_told_*) are rules
+       with examples; the full lists are in docs/specs/legal-sources.md ("The
+       terms: the rule on the page") and content-reports.md §7. #}
     <h2><span class="n">12</span>{% trans %}terms.h12_moderation{% endtrans %}</h2>
     <p>{% trans %}terms.mod_intro{% endtrans %}</p>
 
@@ -137,7 +139,7 @@
        statement is: say what is true, do not claim a duty that may not apply,
        and do not claim compliance with anything. It names no translation tool
        or source language, so it stays true when either changes; what software
-       does without a person is listed once, in section 12. #}
+       does on its own is described once, in section 12. #}
     <h2><span class="n">13</span>{% trans %}terms.h13_ai{% endtrans %}</h2>
     <p>{% trans %}terms.ai_intro{% endtrans %}</p>
     <ul>

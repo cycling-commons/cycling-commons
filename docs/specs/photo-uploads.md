@@ -1431,7 +1431,10 @@ photo report as moot while its request is still pending.
    its members are not genuine, while the isolated real report never comes near
    the cap. Whether a request withheld is **stored** on the row
    (`takedown_withheld`), never recomputed from the category — with the breaker
-   open an urgent report legitimately leaves the photo up.
+   open an urgent report legitimately leaves the photo up. The terms (§12,
+   `terms.mod_auto_urgent`) say only that safeguards stop the report form
+   being used to take photos down in bulk: no budget, and not what happens
+   over it (owner 2026-10-10).
 2. Per-IP limiters: `content_report` 15/IP/day for every report from
    `/report`, photos included, and `media_report_urgent` 1/IP/day
    ([security-architecture.md §7](security-architecture.md)). These price a

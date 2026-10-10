@@ -56,14 +56,19 @@ final class ContentPagesTest extends WebTestCase
         $client->request('GET', '/privacy');
         $html = (string) $client->getResponse()->getContent();
 
+        // The short form the owner chose (2026-10-10): the promises, not the
+        // field list; the field list is docs/specs/privacy-notice.md.
         self::assertStringContainsString('Traffic summaries', $html);
-        self::assertStringContainsString('which roads you rode and in which part of the day', $html);
+        self::assertStringContainsString('which roads you rode and in which part of the day', $html, 'the banner names what is sent');
         self::assertStringNotContainsString('any record of where you ride', $html);
         self::assertStringNotContainsString('your route never leave', $html, 'which roads you rode is sent');
-        self::assertStringContainsString('which roads you rode, with the part of the day, does', $html);
-        self::assertStringContainsString('Nothing within 500 m of where a ride starts or ends is ever sent', $html);
+        self::assertStringContainsString('holds per road you rode', $html);
+        self::assertStringContainsString('a part of the day, never the hour or the date', $html);
+        self::assertStringContainsString('It holds no GPS track, nothing near where your ride starts or ends', $html);
+        self::assertStringContainsString('nothing that names you or links your rides together', $html, 'no rider code of any kind');
+        self::assertStringContainsString('anonymous totals per road', $html);
+        self::assertStringContainsString('also sends that stretch of your ride', $html, 'a stretch tag does send part of the ride');
         self::assertStringNotContainsString('quarter hour', $html, 'no time finer than a part of the day is sent');
-        self::assertStringContainsString('Nothing we store names you or codes you', $html);
         self::assertStringNotContainsString('rider code', $html, 'no rider code of any kind');
         self::assertStringNotContainsString('coded entry', $html, 'no entry per rider is kept');
     }

@@ -396,7 +396,9 @@ report, their own place retired as a duplicate), no statement is built; the
 plain decision message, where the decision has one, still goes. Pinned by
 `StatementRecipientTest`.
 
-**Which decisions send one** (every path that restricts what a rider added):
+**Which decisions send one** (every path that restricts what a rider added).
+Terms §12 (`terms.mod_told_post`) states the rule and names four examples;
+this table is the full list (owner 2026-10-10, legal-sources.md):
 
 | Decision | Decision line | Ground | Facts | Code |
 |---|---|---|---|---|
@@ -414,7 +416,8 @@ plain decision message, where the decision has one, still goes. Pinned by
 | Any other upheld report with an author | changed or removed | the report's rule | the decision note | `ContentReportService::tellAuthor()` |
 | An account suspended or removed for a breach | account suspended / removed | the administrator's pick | the administrator's facts, required | `UserAdminService`, account-and-auth.md §6.8 |
 
-**Which send none, and why:**
+**Which send none, and why.** Terms §12 (`terms.mod_told_p2`) states each
+as a rule, with examples:
 
 - **Trash as spam**: Article 17(2) does not apply to deceptive high-volume
   commercial content, and a statement would tell a spammer what got caught.
