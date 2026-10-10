@@ -227,7 +227,7 @@ says the first export is on its way, so no page of ours links to a 404.
 
   | Object | Content-Type | Cache-Control | Content-Disposition |
   |---|---|---|---|
-  | `places.geojson.gz`, `routes.geojson.gz` | `application/gzip` | `public, max-age=604800, immutable` | `attachment; filename="cycling-commons-places-<stamp>.geojson.gz"` (and `routes`) |
+  | `places.geojson.gz`, `routes.geojson.gz` | `application/gzip` | `public, max-age=604800, immutable` | `attachment; filename="cycling-commons-places.geojson.gz"` (and `routes`) |
   | `snapshots/<stamp>/manifest.json` | `application/json` | `public, max-age=604800, immutable` | none |
   | `latest.json` | `application/json` | `no-cache` | none |
 

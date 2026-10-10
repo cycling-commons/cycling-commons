@@ -313,8 +313,8 @@ final class BulkExportBuilderTest extends KernelTestCase
         $snapshot = 'exports/snapshots/'.$stamp.'/';
         $immutable = 'public, max-age=604800, immutable';
         self::assertSame([
-            $snapshot.'places.geojson.gz' => ['ContentType' => 'application/gzip', 'CacheControl' => $immutable, 'ContentDisposition' => 'attachment; filename="cycling-commons-places-20261009T133900Z.geojson.gz"'],
-            $snapshot.'routes.geojson.gz' => ['ContentType' => 'application/gzip', 'CacheControl' => $immutable, 'ContentDisposition' => 'attachment; filename="cycling-commons-routes-20261009T133900Z.geojson.gz"'],
+            $snapshot.'places.geojson.gz' => ['ContentType' => 'application/gzip', 'CacheControl' => $immutable, 'ContentDisposition' => 'attachment; filename="cycling-commons-places.geojson.gz"'],
+            $snapshot.'routes.geojson.gz' => ['ContentType' => 'application/gzip', 'CacheControl' => $immutable, 'ContentDisposition' => 'attachment; filename="cycling-commons-routes.geojson.gz"'],
             $snapshot.'manifest.json' => ['ContentType' => 'application/json', 'CacheControl' => $immutable],
             'exports/latest.json' => ['ContentType' => 'application/json', 'CacheControl' => 'no-cache'],
         ], $spy->metadata);

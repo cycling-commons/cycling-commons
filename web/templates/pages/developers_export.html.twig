@@ -37,7 +37,8 @@
       <a class="path" href="{{ path('data_export_latest', {name: 'manifest'}) }}">{{ path('data_export_latest', {name: 'manifest'}) }}</a>
       <span class="desc">{{ 'data_export.manifest_desc'|trans }}</span>
     </div>
-    <p style="margin-top:1.2rem;font-size:.90rem;color:#595c4d">{{ 'data_export.latest_links'|trans }} <code>{{ path('data_export_latest', {file: 'places.geojson.gz'}) }}</code></p>
+    <p style="margin-top:1.2rem;font-size:.90rem;color:#595c4d" data-export-latest-note>{{ 'data_export.latest_links'|trans|rich }}</p>
+    <p style="margin-top:.4rem;font-size:.90rem;color:#595c4d" data-export-curl>{{ 'data_export.latest_example'|trans }} <code>curl -L -o cycling-commons-places.geojson.gz {{ url('data_export_latest', {name: 'places'}) }}</code></p>
   {% endif %}
   {# The other kept snapshots: the recent weeks, and the first of every month
      for good (App\BulkExport\BulkExportRetention). #}

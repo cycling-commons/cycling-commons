@@ -62,7 +62,7 @@ final class BulkExportBuildCommand extends Command
                 array_map(static fn (array $s): array => [$s['key'], $s['licence_code'] ?? '-', $s['reason'], $s['places'], $s['routes']], $manifest['left_out']),
             );
         }
-        $io->success(sprintf('Published snapshot %s (kept: the newest %d).', $manifest['snapshot'], BulkExportBuilder::KEEP));
+        $io->success(sprintf('Published snapshot %s (kept: the newest %d, and the first of every month).', $manifest['snapshot'], BulkExportBuilder::KEEP));
 
         return Command::SUCCESS;
     }

@@ -59,7 +59,7 @@ final class BulkExportStorageTest extends TestCase
         self::assertSame('http://storage.test/tiles/exports/snapshots/20261009T133900Z/places.geojson.gz', $places['url']);
         self::assertSame('application/gzip', $places['headers']['content-type'] ?? null);
         self::assertSame('public, max-age=604800, immutable', $places['headers']['cache-control'] ?? null);
-        self::assertSame('attachment; filename="cycling-commons-places-20261009T133900Z.geojson.gz"', $places['headers']['content-disposition'] ?? null);
+        self::assertSame('attachment; filename="cycling-commons-places.geojson.gz"', $places['headers']['content-disposition'] ?? null);
         self::assertArrayNotHasKey('content-encoding', $places['headers'], 'the gzip file is the payload');
 
         self::assertSame('http://storage.test/tiles/exports/snapshots/20261009T133900Z/manifest.json', $manifest['url']);

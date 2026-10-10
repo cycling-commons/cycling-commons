@@ -198,7 +198,10 @@ final class BulkExportStorage
             return [
                 'ContentType' => 'application/gzip',
                 'CacheControl' => self::IMMUTABLE,
-                'ContentDisposition' => sprintf('attachment; filename="cycling-commons-%s-%s.geojson.gz"', $m[2], $m[1]),
+                // One name every week, so a script that keeps the server's name
+                // overwrites last week's file; the date is in the path and in
+                // the file's own `generated_at` (owner 2026-10-10).
+                'ContentDisposition' => sprintf('attachment; filename="cycling-commons-%s.geojson.gz"', $m[2]),
             ];
         }
         if (str_ends_with($path, '.json')) {
