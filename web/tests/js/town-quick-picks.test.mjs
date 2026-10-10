@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //
-// The CITIES quick-picks (catalog.js) open the same town card as every other
-// town (docs/specs/map-and-search.md §6.5): each carries its OpenStreetMap
+// The CITIES towns (catalog.js), which the demo rides link, open the same
+// town card as every other town (docs/specs/map-and-search.md §6.5): each carries its OpenStreetMap
 // element, and the card fetches its text per language from /map/town/{ref},
 // with the curators' own text and the "!" that reports it. No town carries a
 // fixed text of its own (owner-reported 2026-09-30: Spa had an English

@@ -2402,7 +2402,7 @@ became that", wherever a reader meets it.
 
 `openPlace(name, meta)` renders a place card in the same drawer: place type
 chip (City ◉ / Town ◎), the town's own text (below: fetched per language by
-its OpenStreetMap element, which a Photon hit and every `CITIES` quick-pick
+its OpenStreetMap element, which a Photon hit and every `CITIES` town
 carry as `meta.osm`; a pasted coordinate has none and shows no text), and
 **"In the Commons nearby · ≤ 5 km"**: every indexed item within 5 km, grouped by letter,
 nearest-first within each group. **A · road-surface segments are excluded**
@@ -2600,7 +2600,8 @@ read from OpenStreetMap by the server (`town_place`,
 moderation-and-contribution.md §3.1b), and the text form's link carries no
 point either. Pinned by `tests/js/town-text.test.mjs` and `TownControllerTest`.
 
-Every town takes this one path, the `CITIES` quick-picks included, so every
+Every town takes this one path, the `CITIES` towns of the demo rides' town
+links included, so every
 town text can be reported and rewritten. Each `CITIES` entry is
 `{t?, ll, osm}` and nothing else. `osm` is the place element a Photon search
 for the town returns, checked on the OpenStreetMap API for its name and a
@@ -2721,6 +2722,17 @@ the results the map holds; ticked, they stay, and the worldwide lookup asks
 the example in the empty search box names routes too
 (`map.search_placeholder_routes`: "A climb, town, viewpoint, route…").
 
+**Where the search looks is one gate** (`search-gate.js` `searchGate(scope,
+reach)`, owner 2026-10-11: a search in North Holland listed Spa, in Belgium,
+with the reach off). Every source of rows asks it: the map's own items (by
+region id), the Photon request and its answer (§7.2), the coverage search (the
+scope's `rids`/`cc`, §4.5), the server's `/v1/search` (asked only with the
+reach on) and the scope rows (inside the country on the map). The search box
+has no list and no scope test of its own. With the reach off nothing outside
+the scope is listed; with it on every source looks everywhere. Pinned by
+`tests/js/search-gate.test.mjs`, which runs each source against North Holland
+with a Belgian row.
+
 ### 7.2 Any-town place search — Photon policy
 
 - **Photon (komoot), never Nominatim, for type-ahead**: Nominatim's usage
@@ -2732,18 +2744,15 @@ the example in the empty search box names routes too
 - Debounced (350 ms; the local index re-ranks at 150 ms, both `setTimeout`
   constants in `search-ui.js`), ≥ 3 chars, one in-flight request
   (stale ones aborted), bbox-biased to the region, filtered to place types
-  (`place:city|town|village|hamlet|municipality`), capped at 6 with local
-  quick-picks winning over their Photon twin.
+  (`place:city|town|village|hamlet|municipality`), capped at 6. Photon is
+  the only source of town rows: the search keeps no fixed town list.
 - **Names in the reader's language** (owner 2026-09-07). Photon takes `lang`, and speaks only `default`,
   `de`, `en` and `fr`; `util.js photonLang()` maps the page language to one
   of those, and every language Photon lacks (nl, es) gets `default`, the
   place's own `name` tag, which is "Antwerpen" for a Dutch reader and
   "Anvers" for a French one. The town card, its Wikipedia lookup and the
   drawer title all carry that name. Pinned by `tests/js/photon-lang.test.mjs`.
-- The hardcoded `CITIES` constants remain instant quick-picks (matched first,
-  no network). Each carries an OpenStreetMap ref, so a quick-pick opens the
-  same town card as the Photon hit it hides (§6.5).
-- **Failure mode: silent degradation** to index + quick-picks: no toast, no
+- **Failure mode: silent degradation** to the item index: no toast, no
   error state, no "place search unavailable" row (see Open questions).
 - **Scoped to the active country.** Photon results filter to the scope's
   country (`CCScope.photonParams()`: `properties.countrycode` is the precise
@@ -2753,7 +2762,7 @@ the example in the empty search box names routes too
 
 ### 7.3 Dropdown presentation
 
-Grouped and scrollable: **Places first** (local towns, then geocoded ones),
+Grouped and scrollable: **Places first** (Photon's towns),
 then items grouped by catalog letter (A–G, N–R) with colour chips, **total cap 30**
 (`CAP` in `search-ui.js` `runS()`). Prefix matches rank above substring matches. The
 flat `sMatches` list preserves display order so keyboard navigation
@@ -3424,3 +3433,8 @@ The coverage tiles themselves are specified in
 - **The fallback camera is a Wallonia box.** With no scope box (`CCScope.bbox()`
   null), `catalog-load.js` opens the map on fixed Wallonia `bounds`. Whether a
   worldwide default should replace it has no owner yet.
+- **Instant town rows per country or region.** The search lists towns only
+  from Photon, about 350 ms after typing. The owner's idea (2026-10-11): a top
+  of the most searched towns for every country or region, listed at once and
+  kept to the scope by the search gate (§7.1). Counting searches is a
+  data-handling change, so it needs a new privacy notice version. Not built.

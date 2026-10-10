@@ -42,10 +42,10 @@ export function routePathById(id){
   return f && f.geom && f.geom.path ? f.geom.path : null;
 }
 
-/* The towns the demo routes name, and the instant quick-picks the town search
-   lists before Photon answers (docs/specs/map-and-search.md §7.2). Each
-   carries its OpenStreetMap element, the ref a Photon hit carries, so it
-   opens the one town card every town gets (docs/specs/map-and-search.md
+/* The towns the demo routes name in their town links (map.js RIDE_CITIES);
+   the search lists towns from Photon only (docs/specs/map-and-search.md
+   §7.2). Each carries its OpenStreetMap element, the ref a Photon hit
+   carries, so it opens the one town card every town gets (docs/specs/map-and-search.md
    §6.5): Wikipedia and Wikidata in the reader's language, the curators' own
    text, and the "!" that reports it. `ll` is the point the card lands on and
    measures "nearby" from. */
@@ -62,22 +62,7 @@ export const CITIES = {
   'Chevron':{ll:[50.3823,5.7315], osm:'node/737588485'},
   'La Gleize':{ll:[50.4150,5.8500], osm:'relation/19160156'},
   'Trois-Ponts':{ll:[50.3700,5.8730], osm:'relation/2436185'},
-  'Tiège':{ll:[50.5212,5.9097], osm:'node/860608364'},
-  'Namur':{t:'City', ll:[50.4674,4.8720], osm:'relation/1405439'},
-  'Liège':{t:'City', ll:[50.6451,5.5736], osm:'relation/1681788'},
-  'Charleroi':{t:'City', ll:[50.4109,4.4447], osm:'relation/2113725'},
-  'Mons':{t:'City', ll:[50.4542,3.9563], osm:'relation/1949374'},
-  'Tournai':{t:'City', ll:[50.6071,3.3892], osm:'relation/2162970'},
-  'Arlon':{t:'City', ll:[49.6839,5.8113], osm:'relation/2431399'},
-  'Bastogne':{t:'City', ll:[50.0028,5.7186], osm:'relation/2426390'},
-  'Dinant':{t:'City', ll:[50.2605,4.9118], osm:'relation/2268360'},
-  'Verviers':{t:'City', ll:[50.5911,5.8625], osm:'relation/2396836'},
-  'Huy':{t:'City', ll:[50.5186,5.2393], osm:'relation/2002638'},
-  'Marche-en-Famenne':{t:'City', ll:[50.2275,5.3450], osm:'relation/2437396'},
-  'La Roche-en-Ardenne':{t:'City', ll:[50.1827,5.5765], osm:'relation/2566321'},
-  'Wavre':{t:'City', ll:[50.7173,4.6122], osm:'relation/224757'},
-  'Nivelles':{t:'City', ll:[50.5977,4.3270], osm:'relation/1149724'},
-  'Malmedy':{t:'City', ll:[50.4259,6.0283], osm:'relation/2409000'}
+  'Tiège':{ll:[50.5212,5.9097], osm:'node/860608364'}
 };
 // docs/specs/security-architecture.md §4.2 — fail-closed if a payload name ever reaches this.
 export const cityLink = name => `<a class="cc-city" data-city="${escPend(name)}">${escPend(name)}</a>`;

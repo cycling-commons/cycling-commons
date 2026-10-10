@@ -3,10 +3,11 @@
    @see docs/specs/map-and-search.md §7 */
 import { I18N, D, tpl } from './i18n.js';
 import { escPend, slug, txtOn, photonLang, COORD_COLOR } from './util.js';
-import { CATALOG, CITIES, layerByKey, LETTER_KEY } from './catalog.js';
-import { inScope, scopeLabel, liftScopeForHit, noteCoverageSearchHit } from './scope-ui.js';
+import { CATALOG, layerByKey, LETTER_KEY } from './catalog.js';
+import { searchGate } from './search-gate.js';
+import { scopeLabel, liftScopeForHit, noteCoverageSearchHit } from './scope-ui.js';
 import { itemIndex, idxIds, rebuildItemIndex, dropPendingFromIndex } from './item-index.js';
-import { openPlace, openCity, openFeatureById, openRouteById } from './places.js';
+import { openPlace, openFeatureById, openRouteById } from './places.js';
 import { COVERAGE_ON, covScopeIsZero, covScopeQuery, openCoverageByRef } from './coverage.js';
 import { layerGlyph, kindGlyphSvg } from './icons.js';
 import { mapToast } from './drawer.js';
@@ -22,9 +23,6 @@ export function initSearchUi(){
   const sBox=document.getElementById('search'), sRes=document.getElementById('searchRes');
   if(sBox && sRes){
     const escH = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    // docs/specs/map-and-search.md §7.1 — towns first, then the unified item index.
-    const TOWNS=Object.keys(CITIES).map(name=>{ const big=CITIES[name].t==='City';
-      return {name, key:slug(name), kind: big?(D.city||'City'):(D.town||'Town'), badge: big?'◉':'◎', color: big?'#C8923A':'#3E7D8C', town:true, go:()=>openCity(name)}; });
     rebuildItemIndex();
     /* The item half follows the catalog: every region the map loads later (a
        new scope, the worldwide document) rebuilds the item index
@@ -34,7 +32,7 @@ export function initSearchUi(){
       const idx=itemIndex();
       if(idx!==_idxFrom){
         _idxFrom=idx;
-        _searchIdx=TOWNS.concat(idx.filter(e=>!e.unnamed));  // docs/specs/map-and-search.md §7.1 — unnamed POIs stay off text search
+        _searchIdx=idx.filter(e=>!e.unnamed);  // docs/specs/map-and-search.md §7.1: unnamed POIs stay off text search
       }
       return _searchIdx;
     };
@@ -50,6 +48,7 @@ export function initSearchUi(){
        Earth to search them was what made the browser sluggish (owner,
        2026-09-06), so Everywhere lives here and nowhere else. */
     let _worldwide=false;
+    const gate=()=>searchGate(window.CCScope||null, _worldwide);
     /* The switch beside the title says the reach out loud and lets the rider
        set it before typing. Same state as the results' last row. */
     const reachBtn=document.getElementById('searchReach');
@@ -201,17 +200,16 @@ export function initSearchUi(){
       if(q.length<3){ _phHits=[]; _phQ=''; return; }
       if(_phAbort) _phAbort.abort();
       const ctl=new AbortController(); _phAbort=ctl;
-      const pp = (window.CCScope && !_worldwide) ? window.CCScope.photonParams() : {bbox:null, countrycode:null};
+      const g=gate(), pp=g.photon;
       const url = PH_BASE + '&lang=' + photonLang(document.documentElement.lang) + (pp.bbox ? '&bbox='+pp.bbox.join(',') : '') + '&q='+encodeURIComponent(q);
       fetch(url, {signal:ctl.signal})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
         .then(d=>{
           if(ctl.signal.aborted) return;
-          const seen=new Set(Object.keys(CITIES).map(n=>slug(n)));
+          const seen=new Set();
           _phHits=(d.features||[])
             .filter(f=>f && f.properties && f.properties.name && f.geometry && Array.isArray(f.geometry.coordinates))
-            // docs/specs/map-and-search.md §7.2 — countrycode is the precise gate; bbox spills borders.
-            .filter(f=>!pp.countrycode || String(f.properties.countrycode||'').toLowerCase()===pp.countrycode)
+            .filter(g.photonHit)
             .filter(f=>{ const k=slug(f.properties.name); if(!k || seen.has(k)) return false; seen.add(k); return true; })
             .map(f=>{ const c=f.geometry.coordinates, p=f.properties, name=p.name;
               // docs/specs/map-and-search.md §6.5: the element ref is what the town card's Wikipedia lookup is keyed by.
@@ -242,7 +240,7 @@ export function initSearchUi(){
         return;
       }
       const ctl=new AbortController(); _covAbort=ctl;
-      const sq=_worldwide ? '' : covScopeQuery();
+      const sq=gate().coverageScoped ? covScopeQuery() : '';
       fetch('/map/coverage/search?q='+encodeURIComponent(q)+(sq?('&'+sq):''), {signal:ctl.signal, headers:{'Accept':'application/json'}})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
         .then(d=>{
@@ -291,7 +289,7 @@ export function initSearchUi(){
       const q=qRaw.trim();
       if(_apiAbort) _apiAbort.abort();
       // Three letters: the server's name index starts there (/v1/search q).
-      if(!_worldwide || coordPoint(q) || q.length<3){ _apiHits=[]; _apiQ=''; return; }
+      if(!gate().askServer || coordPoint(q) || q.length<3){ _apiHits=[]; _apiQ=''; return; }
       const ctl=new AbortController(); _apiAbort=ctl;
       fetch('/v1/search?limit=30'+(_routes?'&routes=include':'')+'&q='+encodeURIComponent(q), {signal:ctl.signal, headers:{'Accept':'application/geo+json'}})
         .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
@@ -313,24 +311,23 @@ export function initSearchUi(){
     function runS(){
       const q=slug(sBox.value.trim());
       if(!q){ closeS(); return; }
-      const starts=[], has=[];
+      const g=gate(), starts=[], has=[];
       for(const it of searchIdx()){
         // docs/specs/map-and-search.md §4.5 — hidden pins must not resurface as
         // search rows, unless this search was widened to the whole world.
-        if(!_worldwide && !it.town && !inScope(it.rid)) continue;
+        if(!g.item(it.rid)) continue;
         if(!_routes && it.letter==='R') continue;
         const i=it.key.indexOf(q); if(i===0) starts.push(it); else if(i>0) has.push(it);
       }
-      const ranked=starts.concat(has);
+      const items=starts.concat(has);
       // docs/specs/map-and-search.md §7.3 — places first, then A–K, cap 30.
-      const towns=ranked.filter(m=>m.town), items=ranked.filter(m=>!m.town);
-      if(_phQ===q) towns.push(..._phHits.slice(0, Math.max(0, 6-towns.length)));
+      const towns=_phQ===q ? _phHits.slice(0, 6) : [];
       const byLetter={};
       items.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       if(_covSQ===q) _covHits.forEach(m=>{ (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       // One place, one row: our own item can come back from both searches.
       const covIds = _covSQ===q ? new Set(_covHits.filter(m=>m.itemId!=null).map(m=>m.letter+':'+m.itemId)) : new Set();
-      if(_worldwide && _apiQ===q) _apiHits.forEach(m=>{ if(covIds.has(m.letter+':'+m.id)) return; (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
+      if(g.askServer && _apiQ===q) _apiHits.forEach(m=>{ if(covIds.has(m.letter+':'+m.id)) return; (byLetter[m.letter]=byLetter[m.letter]||[]).push(m); });
       Object.keys(byLetter).forEach(L=>byLetter[L].sort((a,b)=>(secondRow(a)?1:0)-(secondRow(b)?1:0)));
       // A · one row per route name (up to "·"); other letters keep same-named distinct places.
       if(byLetter.A){
@@ -340,12 +337,7 @@ export function initSearchUi(){
       // Scope hits stay inside the country on the map unless the reach is on:
       // a search in the Netherlands must not surface a French region (owner,
       // 2026-09-06). With the reach on, any region or country can be typed.
-      const scopeHits = (window.CCScope ? window.CCScope.searchScopes(sBox.value) : []).filter(h=>{
-        if(_worldwide) return true;
-        const cur=window.CCScope.get();
-        const ccs = cur && cur.kind==='myArea' && cur.myArea ? cur.myArea.countryCodes : (cur && cur.countryCode ? [cur.countryCode] : []);
-        return !!h.cc && ccs.indexOf(h.cc)!==-1;
-      });
+      const scopeHits = (window.CCScope ? window.CCScope.searchScopes(sBox.value) : []).filter(g.scopeHit);
       const groups=[];
       // The typed point leads the list: it is the one row that is certainly what was asked for.
       const coord=coordHit(sBox.value);
