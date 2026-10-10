@@ -1,0 +1,40 @@
+web/tests/BulkExport/BulkExportBuilderTest.php
+  s_985749378da6fe::t_58820ce4fbc68e 316-317
+web/translations/messages.nl.yaml
+  s_985749378da6fe::t_21f9b099b0e0af 555-556
+web/templates/pages/developers_export.html.twig
+  s_985749378da6fe::t_21f9b099b0e0af 41
+  s_985749378da6fe::t_3b5919b705a26a 40
+web/translations/messages.de.yaml
+  s_985749378da6fe::t_21f9b099b0e0af 555-556
+web/translations/messages.fr.yaml
+  s_985749378da6fe::t_21f9b099b0e0af 553-554
+web/translations/messages.en.yaml
+  s_985749378da6fe::t_21f9b099b0e0af 555-556
+web/src/BulkExport/BulkExportStorage.php
+  s_985749378da6fe::t_21f9b099b0e0af 201-204
+web/tests/BulkExport/BulkExportStorageTest.php
+  s_985749378da6fe::t_58820ce4fbc68e 62
+docs/specs/api-strategy.md
+  s_985749378da6fe::t_21f9b099b0e0af 230
+web/src/BulkExport/Command/BulkExportBuildCommand.php
+  s_985749378da6fe::t_037dc9b8c980ca 65
+web/translations/messages.es.yaml
+  s_985749378da6fe::t_21f9b099b0e0af 557-558
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bb5058f02cc76e53d35705ef5837339293ab1ae4",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
