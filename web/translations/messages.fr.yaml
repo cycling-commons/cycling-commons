@@ -542,10 +542,10 @@ developers:
 data_export:
   # The bulk export's page (docs/specs/api-strategy.md section 3.1).
   meta_title: 'Export en masse de Cycling Commons'
-  meta_description: 'Téléchargez toutes les données ouvertes de Cycling Commons en GeoJSON, reconstruites chaque semaine, sous Open Database License.'
+  meta_description: 'Téléchargez le catalogue de Cycling Commons en GeoJSON, reconstruit chaque semaine, sous Open Database License.'
   kicker: 'Construisez sur le Commons'
   title: 'L''export en masse'
-  lead: 'Toutes les données ouvertes en deux fichiers : chaque lieu et chaque itinéraire de la carte, en GeoJSON, reconstruits chaque semaine. Téléchargez-les une fois et hébergez-les vous-même, plutôt que de parcourir le site ou l''API.'
+  lead: 'Le catalogue du Commons en deux fichiers : les lieux et itinéraires ajoutés par les cyclistes, les curateurs et nos sources de données ouvertes, en GeoJSON, reconstruits chaque semaine. Téléchargez-les une fois et hébergez-les vous-même, plutôt que de parcourir le site ou l''API.'
   latest_kicker: 'Dernier instantané'
   empty: 'Aucun instantané n''a encore été publié. Le premier apparaîtra ici après la première construction hebdomadaire.'
   built: 'Construit le %when%.'
@@ -554,10 +554,12 @@ data_export:
   manifest_desc: 'ce que contient l''instantané : date de construction, licence et attribution par source, nombres, tailles et sommes de contrôle sha256'
   latest_links: 'Pour les scripts, un lien qui mène toujours au dernier instantané :'
   holds_kicker: 'Ce qu''il contient'
-  holds_body: 'Chaque lieu et chaque itinéraire que montre la carte, avec les champs que leur donne l''API : nom, lettre de type, position ou tracé, niveau, degré de confiance et les preuves qui le fondent, région, pays, et la référence OpenStreetMap quand il y en a une. Chaque enregistrement indique sa <b>source</b>, pour que vous puissiez créditer comme sa licence le demande.'
+  holds_body: 'Les lieux et itinéraires du Commons lui-même, avec les champs que leur donne l''API : nom, lettre de type, position ou tracé, niveau, degré de confiance et les preuves qui le fondent, région, pays, et la référence OpenStreetMap quand il y en a une. Chaque enregistrement indique sa <b>source</b>, pour que vous puissiez créditer comme sa licence le demande.'
   source_counts: '%places% lieux, %routes% itinéraires'
   leaves_kicker: 'Ce qu''il laisse de côté'
   leaves_body: 'Rien sur les personnes : ni comptes, ni noms, ni adresses e-mail, ni notes, ni dossiers de modération. Rien qu''un curateur n''ait laissé sur la carte : aucune contribution en attente, refusée ou à la corbeille, et aucune modification encore en attente de relecture. Pas de photos. Et aucun enregistrement dont la licence de la source ne permet pas le partage sous ODbL ; ceux-là sont comptés ici.'
+  osm_body: '<b>Ce qu''il ne contient pas : les éléments OpenStreetMap que la carte montre aussi</b>, de loin la plus grande partie : points d''eau, commerces, abris, revêtements, itinéraires cyclables et bien plus. Obtenez-les auprès d''OpenStreetMap, avec les mêmes filtres que nous :'
+  osm_link: 'comment obtenir les données OpenStreetMap que nous utilisons'
   left_out_unknown: 'Source sans licence connue'
   attr_kicker: 'Attribution obligatoire'
   licence_body: 'La base de données est sous <b>Open Database License 1.0</b>, son contenu sous <b>Database Contents License 1.0</b>. Utilisez-la pour tout, y compris commercialement : créditez-la comme indiqué, partagez sous la même licence une base de données que vous en tirez, et gardez-la ouverte. Les sources qui demandent leur propre crédit sont listées ci-dessus et dans le manifeste. Voir le résumé en langage clair :'
@@ -3416,7 +3418,7 @@ meta:
   coverage_title: 'Cycling Commons — Couverture'
   coverage_description: 'Quelle est la complétude de la carte ? Découvrez ce qui est couvert, ce qui manque et où vous pouvez aider — un suivi transparent du Commons cycliste ouvert.'
   developers_title: 'Cycling Commons — Développeurs'
-  developers_description: 'Une API ouverte, gratuite pour tous. Interrogez le Commons par type et zone, ou téléchargez l''ensemble des données, reconstruit chaque semaine. Ouvert par défaut.'
+  developers_description: 'Une API ouverte, gratuite pour tous. Interrogez le Commons par type et zone, ou téléchargez son catalogue, reconstruit chaque semaine. Ouvert par défaut.'
   licenses_title: 'Cycling Commons — Licence'
   licenses_description: 'En bref et en langage clair, ce que vous pouvez faire avec les données, les médias, les traductions d''interface et le code du Commons. Données ODbL, médias CC BY-SA 4.0, code et traductions d''interface AGPL-3.0-only.'
   credits_title: 'Cycling Commons — Crédits'
@@ -4708,7 +4710,7 @@ changelog:
   v095_privacy: "<b>Une politique de confidentialité plus claire, qui vous dit quand elle change.</b> Elle a un numéro de version et une liste de ce qui a changé. Si vous êtes connecté, un avis s'affiche jusqu'à ce que vous ayez lu la nouvelle version. Elle utilise des mots simples, nomme chaque service hors de l'UE et ce qu'il voit, et chaque article du RGPD renvoie directement à cet article."
   v095_terms: "<b>Des conditions et un consentement photo qui disent la même chose.</b> Les conditions affichent un numéro de version, sa date et ce qui a changé, comme la politique de confidentialité, et les deux renvoient à tout leur historique des révisions. Le consentement photo dit désormais ce que disent les conditions : une retouche ordinaire comme le recadrage est permise, ajouter ou retirer des éléments ne l'est pas. Vous le cochez une fois de plus lors de votre prochain envoi. Si vous êtes connecté, un avis s'affiche jusqu'à ce que vous ayez lu les nouvelles conditions. Un changement important de l'une ou l'autre page vous est envoyé par e-mail au moins 30 jours avant de s'appliquer."
   v095_reasons: "<b>Une explication pour chaque décision sur ce que vous avez ajouté.</b> Quand un curateur refuse, masque ou retire quelque chose que vous avez ajouté, vous recevez un message et un e-mail qui disent ce qui a été décidé, pourquoi, quelle règle s'applique et comment le contester. Un compte peut maintenant être suspendu pour une durée fixe au lieu d'être supprimé, et son titulaire apprend pourquoi."
-  v095_export: "<b>Toute la carte en téléchargement hebdomadaire.</b> Chaque lieu et chaque itinéraire de la carte se trouvent sur la page développeurs dans un seul téléchargement GeoJSON, refait chaque semaine, sous l'Open Database License."
+  v095_export: "<b>Le catalogue du Commons en téléchargement hebdomadaire.</b> Les lieux et itinéraires ajoutés par les cyclistes, les curateurs et nos sources de données ouvertes se trouvent sur la page développeurs dans un seul téléchargement GeoJSON, refait chaque semaine, sous l'Open Database License. Un guide sur le wiki développeurs explique comment obtenir les données OpenStreetMap que la carte utilise aussi, avec les mêmes filtres."
   v095_security: "<b>Plusieurs améliorations de sécurité et de confidentialité.</b>"
   v095_fixes: "<b>Parmi les petites corrections :</b> chaque section des conditions a son propre numéro, l'enregistrement d'une description de photo fonctionne de nouveau, le surlignage rouge se place sur le lieu choisi, et les icônes d'abri figurent dans la légende."
   v095_traffic: "<b>Montrez à quel point une route est fréquentée.</b> Si vous roulez avec un radar arrière, la vérification de sortie de Scout peut envoyer un résumé du trafic : par route, la distance parcourue, le nombre de voitures qui vous ont dépassé et la vitesse de ces voitures, et si vous étiez sur une piste cyclable, une bande cyclable ou la route. Votre fichier de sortie et votre trace GPS restent sur votre appareil. Vous choisissez pour chaque sortie."

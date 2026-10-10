@@ -517,7 +517,9 @@ API and the weekly bulk export ([api-strategy.md §3.1](api-strategy.md)), a
 published file rather than live access. **Scraping** the site, tiles, or endpoints outside the API is **prohibited**
 by the user terms. This governs the presentation layer, not the openness of the
 data: our own data (ODbL) is provided openly *through the API and the export*,
-which are the sanctioned channels, and OSM-derived detail is obtained from OSM, so the
+which are the sanctioned channels, and OSM-derived detail is obtained from OSM (the developer
+wiki's guide `wiki/developers/api/openstreetmap-data.md` gives the exact filters through
+`pipeline/osm_filters.py`, held to the real passes by `pipeline/tests/test_osm_filters.py`), so the
 no-scraping rule does not restrict any ODbL right over the underlying open data.
 The user terms state both the API-only access rule and the scraping
 prohibition (`pages/terms.html.twig`).

@@ -157,6 +157,11 @@ says the first export is on its way, so no page of ours links to a 404.
   `region_id`), plus `country`, `osm_ref` and `source`. A route carries its
   whole line with `id`, `letter` (`R`), `name`, `tier`, `distance_m`,
   `ascent_m`, `region_id` and `source`. No `attributes`, no photos.
+- **What it is not.** The OpenStreetMap coverage the map also shows (`coverage_poi`,
+  by far the largest part of the map, and the surface and route layers) is not republished: the pages say
+  so (`data_export.osm_body`) and link the wiki guide that gives the exact OpenStreetMap
+  filters (`wiki/developers/api/openstreetmap-data.md`, `pipeline/osm_filters.py`). The
+  copy calls the export the Commons catalogue, never "the whole map" (owner 2026-10-10).
 - **Which rows.** What `/v1/search` serves: items in a served state
   (`unverified`, `verified`), minus untouched OSM coverage rows
   (`CoverageRetirement`) and places reported gone (`GoneRows`), and served

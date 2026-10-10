@@ -544,10 +544,10 @@ developers:
 data_export:
   # The bulk export's page (docs/specs/api-strategy.md section 3.1).
   meta_title: 'Cycling Commons bulk export'
-  meta_description: 'Download the whole open Cycling Commons dataset as GeoJSON, rebuilt every week, under the Open Database License.'
+  meta_description: 'Download the Cycling Commons catalogue as GeoJSON, rebuilt every week, under the Open Database License.'
   kicker: 'Build on the Commons'
   title: 'The bulk export'
-  lead: 'The whole open dataset in two files: every place and every route on the map, as GeoJSON, rebuilt every week. Download it once and host it yourself, instead of crawling the site or the API.'
+  lead: 'The Commons catalogue in two files: the places and routes that riders, curators and our open-data sources added, as GeoJSON, rebuilt every week. Download it once and host it yourself, instead of crawling the site or the API.'
   latest_kicker: 'Latest snapshot'
   empty: 'No snapshot has been published yet. The first one appears here after the first weekly build.'
   built: 'Built %when%.'
@@ -556,10 +556,12 @@ data_export:
   manifest_desc: 'what the snapshot holds: build time, licence and attribution per source, counts, sizes and sha256 checksums'
   latest_links: 'For scripts, a link that always leads to the newest snapshot:'
   holds_kicker: 'What it holds'
-  holds_body: 'Every place and route the map shows, with the fields the API gives them: name, type letter, position or line, tier, grade and the evidence behind it, region, country, and the OpenStreetMap reference where there is one. Each record names its <b>source</b>, so you can give the credit its licence asks for.'
+  holds_body: 'The places and routes of the Commons itself, with the fields the API gives them: name, type letter, position or line, tier, grade and the evidence behind it, region, country, and the OpenStreetMap reference where there is one. Each record names its <b>source</b>, so you can give the credit its licence asks for.'
   source_counts: '%places% places, %routes% routes'
   leaves_kicker: 'What it leaves out'
   leaves_body: 'Nothing about people: no accounts, names, email addresses, notes or moderation records. Nothing a curator has not let onto the map: no pending, rejected or trashed contributions, and no edit still waiting for review. No photos. And no record whose source licence does not let it be shared under the ODbL; those are counted here.'
+  osm_body: '<b>Not in it: the OpenStreetMap features the map also shows</b>, by far the largest part of it: water taps, shops, shelters, road surfaces, cycle routes and much more. Get them from OpenStreetMap itself, with the same filters we use:'
+  osm_link: 'how to get the OpenStreetMap data we use'
   left_out_unknown: 'Source with no licence on record'
   attr_kicker: 'Required attribution'
   licence_body: 'The database is licensed under the <b>Open Database License 1.0</b> and its contents under the <b>Database Contents License 1.0</b>. Use it for anything, commercial use included: credit it as shown, share a database you build from it under the same licence, and keep it open. Sources that ask for their own credit are listed above and in the manifest. See the plain-language summary:'
@@ -3435,7 +3437,7 @@ meta:
   coverage_title: 'Cycling Commons — Coverage'
   coverage_description: 'How complete is the map? See what''s covered, what''s thin, and where to help — transparent monitoring of the open cycling Commons.'
   developers_title: 'Cycling Commons — Developers'
-  developers_description: 'An open API, free for anyone to build on. Query the Commons by type and area, or download the whole dataset, rebuilt every week. Open by default.'
+  developers_description: 'An open API, free for anyone to build on. Query the Commons by type and area, or download its catalogue, rebuilt every week. Open by default.'
   licenses_title: 'Cycling Commons — Licence'
   licenses_description: 'The short version, in plain language: what you can do with Commons data, media, UI translations and code. ODbL data, CC BY-SA 4.0 media, AGPL-3.0-only code and UI translations.'
   credits_title: 'Cycling Commons — Credits'
@@ -4730,7 +4732,7 @@ changelog:
   v095_privacy: "<b>A clearer privacy notice that tells you when it changes.</b> It has a version number and a list of what changed. If you are signed in, you see a notice until you have read the new version. It uses plain words, names each service outside the EU and what it sees, and every GDPR article links straight to that article."
   v095_terms: "<b>Terms and photo consent that say the same.</b> The terms show a version number, its date and what changed, like the privacy notice, and both link their full revision history. The photo consent now says what the terms say: ordinary editing such as cropping is fine, adding or removing things is not. You tick it once more on your next upload. If you are signed in, you see a notice until you have read new terms. A big change to either page is emailed to you at least 30 days before it applies."
   v095_reasons: "<b>Reasons for every decision about what you added.</b> When a curator turns down, hides or removes something you added, you get a message and an email that says what was decided, why, which rule applies and how to contest it. An account can now be suspended for a set time instead of removed, and the holder is told why."
-  v095_export: "<b>The whole map as a weekly download.</b> Every place and route the map shows is on the developer page as one GeoJSON download, rebuilt every week, under the Open Database License."
+  v095_export: "<b>The Commons catalogue as a weekly download.</b> The places and routes that riders, curators and our open-data sources added are on the developer page as one GeoJSON download, rebuilt every week, under the Open Database License. A guide on the developer wiki shows how to get the OpenStreetMap data the map also uses, with the same filters."
   v095_security: "<b>Several security and privacy improvements.</b>"
   v095_fixes: "<b>Among smaller fixes:</b> every section of the terms has its own number, saving a photo description works again, the red highlight sits on the place you picked, and the shelter icons are in the map key."
   v095_traffic: "<b>Show how busy a road really is.</b> Ride with a rear radar, and Scout's ride review can send a traffic summary: per road, how far you rode, how many cars passed you and how fast those cars were going, and whether you were on a cycle path, a cycle lane or the road. Your ride file and GPS track stay on your device. You choose for every ride."

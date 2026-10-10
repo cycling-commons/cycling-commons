@@ -66,6 +66,9 @@
           </div>
         {% endfor %}
       {% endif %}
+      {# The OpenStreetMap coverage on the map is not ours to republish: the
+         wiki guide gives the exact filters (pipeline/osm_filters.py). #}
+      <p style="margin-top:.8rem" data-export-osm>{{ 'data_export.osm_body'|trans|rich }} <a href="https://wiki.cyclingcommons.org/developers/api/openstreetmap-data/">{{ 'data_export.osm_link'|trans }}</a>.</p>
     </div>
   </div>
 </div></section>
