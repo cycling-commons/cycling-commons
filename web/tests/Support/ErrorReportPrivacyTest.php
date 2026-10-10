@@ -10,9 +10,12 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * The privacy notice says an error report never holds an IP address, a name,
- * an email address or what was typed into a form (`privacy.collect_auto_errors`,
- * docs/specs/privacy-notice.md). These are the settings that make it true.
+ * The privacy notice says an error report never holds an IP address, holds
+ * what an ordinary form sent with its secrets hidden, and nothing from the
+ * forms with really personal content (`privacy.collect_auto_errors`,
+ * docs/specs/privacy-notice.md). These are the settings that make it true;
+ * the scrubbing itself is pinned by SentryRequestScrubberTest and
+ * SentryBeforeSendTest.
  */
 final class ErrorReportPrivacyTest extends TestCase
 {
@@ -31,8 +34,9 @@ final class ErrorReportPrivacyTest extends TestCase
         self::assertFalse($this->options()['send_default_pii'] ?? null);
     }
 
-    public function testAnErrorReportCarriesNoFormContents(): void
+    public function testABodyTravelsOnlyThroughTheScrubber(): void
     {
-        self::assertSame('never', $this->options()['max_request_body_size'] ?? null);
+        self::assertSame('medium', $this->options()['max_request_body_size'] ?? null, 'up to 10 KB, enough to replay a form');
+        self::assertSame('App\\Support\\SentryBeforeSend', $this->options()['before_send'] ?? null, 'every event passes the scrubber');
     }
 }

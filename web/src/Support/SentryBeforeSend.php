@@ -8,10 +8,12 @@ namespace App\Support;
 
 use Sentry\Event;
 use Sentry\EventHint;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * The Sentry bundle's `before_send` (config/packages/sentry.yaml): drops what
- * SentryNoise calls noise, and names the build on everything else.
+ * SentryNoise calls noise, scrubs the request by the route that handled it
+ * ({@see SentryRequestScrubber}), and names the build on everything else.
  *
  * @see docs/specs/operations.md §1
  *
@@ -22,6 +24,7 @@ final readonly class SentryBeforeSend
     public function __construct(
         private SentryNoise $noise,
         private SentryRelease $release,
+        private RequestStack $requests,
     ) {
     }
 
@@ -29,6 +32,11 @@ final readonly class SentryBeforeSend
     {
         if ($this->noise->isNoise($hint?->exception)) {
             return null;
+        }
+        $request = $event->getRequest();
+        if ([] !== $request) {
+            $route = $this->requests->getMainRequest()?->attributes->get('_route');
+            $event->setRequest(SentryRequestScrubber::scrub($request, \is_string($route) ? $route : null));
         }
 
         return ($this->release)($event);

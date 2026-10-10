@@ -11,10 +11,12 @@ sentry:
     options:
         environment: '%env(APP_ENV)%'
         send_default_pii: false
-        # No request body, ever. The SDK attaches bodies up to 10 KB by default
-        # whatever send_default_pii says, and bodies here carry traffic
-        # summaries, tag positions, messages and passwords.
-        max_request_body_size: never
+        # The request body, up to 10 KB, so a failure can be replayed locally
+        # and an abuse attempt read (owner 2026-10-10). SentryBeforeSend runs
+        # it through App\Support\SentryRequestScrubber: secret fields masked
+        # everywhere, and no body or query at all from the forms with really
+        # personal content (sign-in, account, contact, messages, Scout, ...).
+        max_request_body_size: medium
         # Drops the site answering a stranger correctly (a scanner's Host, a
         # bot's 404, the login page for a visitor not signed in) and names
         # the build on everything else: cyclingcommons@<tag>+<sha12>. No
