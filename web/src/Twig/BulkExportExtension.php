@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
-use App\BulkExport\BulkExportCatalog;
+use App\Controller\BulkExportLatestController;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -14,9 +14,9 @@ use Twig\TwigFunction;
  * `bulk_export_published()`: whether `/developers` may offer the bulk
  * export's download links (docs/specs/api-strategy.md §3.1).
  *
- * Until the first snapshot is published those links would end in a 404, so
- * the page says the first export is on its way instead. One cache read
- * ({@see BulkExportCatalog::latest()}), no storage call.
+ * `bulk_export_file(stamp, file)`: the path of a snapshot's file. nginx
+ * serves it from the bucket, so it has no route to generate it from
+ * ({@see BulkExportLatestController::fileUrl()}).
  *
  * @api
  */

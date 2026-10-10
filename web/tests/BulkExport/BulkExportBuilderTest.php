@@ -16,6 +16,7 @@ use App\Tests\Translation\RecordingLogger;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManagerInterface;
+use League\Flysystem\Config;
 use League\Flysystem\Filesystem;
 use League\Flysystem\UnableToDeleteDirectory;
 use League\Flysystem\UnableToWriteFile;
@@ -244,6 +245,79 @@ final class BulkExportBuilderTest extends KernelTestCase
         self::assertSame($good['snapshot'], $latest['snapshot'], 'the latest pointer still names the last good snapshot');
     }
 
+    public function testTheExportTouchesNothingOutsideItsFolder(): void
+    {
+        self::bootKernel();
+        [$builder, $spy] = $this->spiedBuilder();
+        // The bucket is shared: the map's tiles, and anything else beside the export.
+        $foreign = [
+            'coverage/manifest.json' => '{}',
+            'coverage/be/20261001-0300/osm.pmtiles' => 'tiles',
+            'latest.json' => '{"snapshot":"20200101T000000Z"}',
+            'snapshots/20260801T010000Z/places.geojson.gz' => 'not the export',
+            'snapshots/20260801T010000Z/manifest.json' => '{}',
+            'exportsx/latest.json' => 'a neighbour',
+        ];
+        foreach ($foreign as $path => $contents) {
+            $spy->write($path, $contents, new Config());
+        }
+        $spy->calls = [];
+
+        // Enough builds to prune, then one that fails and cleans up after itself.
+        for ($day = 1; $day <= BulkExportBuilder::KEEP + 2; ++$day) {
+            $builder->build(new \DateTimeImmutable(sprintf('2026-09-%02d 03:00:00 UTC', $day)));
+        }
+        $spy->failWhen = static function (string $operation, string $path): void {
+            if ('write' === $operation && str_ends_with($path, '/manifest.json')) {
+                throw UnableToWriteFile::atLocation($path, 'storage went away');
+            }
+        };
+        try {
+            $builder->build(new \DateTimeImmutable('2026-09-10 03:00:00 UTC'));
+            self::fail('the build whose manifest cannot be written fails');
+        } catch (UnableToWriteFile) {
+        }
+        $spy->failWhen = null;
+        $calls = $spy->calls;
+
+        foreach ($calls as $call) {
+            self::assertStringStartsWith('exports/', explode(' ', $call, 2)[1], $call);
+        }
+        $operations = array_unique(array_map(static fn (string $call): string => explode(' ', $call, 2)[0], $calls));
+        foreach (['listContents', 'fileExists', 'write', 'writeStream', 'deleteDirectory'] as $operation) {
+            self::assertContains($operation, $operations, "the builds above {$operation}");
+        }
+        foreach ($foreign as $path => $contents) {
+            self::assertSame($contents, $spy->read($path), "{$path} is not the export's and stays as it was");
+        }
+        self::assertTrue($spy->fileExists('exports/latest.json'));
+        self::assertTrue($spy->fileExists('exports/snapshots/20260906T030000Z/manifest.json'));
+        self::assertTrue($spy->fileExists('exports/snapshots/20260906T030000Z/places.geojson.gz'));
+        self::assertTrue($spy->fileExists('exports/snapshots/20260906T030000Z/routes.geojson.gz'));
+        self::assertFalse($spy->fileExists('exports/snapshots/20260901T030000Z/places.geojson.gz'), 'pruned');
+        self::assertFalse($spy->fileExists('exports/snapshots/20260910T030000Z/places.geojson.gz'), 'cleaned up');
+    }
+
+    public function testEveryObjectCarriesTheHeadersNginxPassesThrough(): void
+    {
+        self::bootKernel();
+        [$builder, $spy] = $this->spiedBuilder();
+
+        $stamp = $builder->build(new \DateTimeImmutable('2026-10-09 13:39:00 UTC'))['snapshot'];
+
+        // nginx serves the snapshot files straight from the bucket and sends
+        // these headers as they are; the gzip file is the payload, never a
+        // transfer encoding.
+        $snapshot = 'exports/snapshots/'.$stamp.'/';
+        $immutable = 'public, max-age=604800, immutable';
+        self::assertSame([
+            $snapshot.'places.geojson.gz' => ['ContentType' => 'application/gzip', 'CacheControl' => $immutable, 'ContentDisposition' => 'attachment; filename="cycling-commons-places-20261009T133900Z.geojson.gz"'],
+            $snapshot.'routes.geojson.gz' => ['ContentType' => 'application/gzip', 'CacheControl' => $immutable, 'ContentDisposition' => 'attachment; filename="cycling-commons-routes-20261009T133900Z.geojson.gz"'],
+            $snapshot.'manifest.json' => ['ContentType' => 'application/json', 'CacheControl' => $immutable],
+            'exports/latest.json' => ['ContentType' => 'application/json', 'CacheControl' => 'no-cache'],
+        ], $spy->metadata);
+    }
+
     public function testPruneKeepsTheNewestSnapshotsWithAManifestAndClearsOlderLeftovers(): void
     {
         self::bootKernel();
@@ -266,8 +340,8 @@ final class BulkExportBuilderTest extends KernelTestCase
         for ($day = 1; $day <= BulkExportBuilder::KEEP; ++$day) {
             $builder->build(new \DateTimeImmutable(sprintf('2026-09-%02d 03:00:00 UTC', $day)));
         }
-        // The site has read the list, so a stale cache would hide the new snapshot.
-        self::assertTrue($catalog->isKnown('20260904T030000Z'));
+        // The site has read the newest manifest, so a stale cache would hide the new snapshot.
+        self::assertSame('20260904T030000Z', $catalog->latest()['snapshot'] ?? null);
         $spy->failWhen = static function (string $operation, string $path): void {
             if ('deleteDirectory' === $operation) {
                 throw UnableToDeleteDirectory::atLocation($path, 'storage went away');
@@ -280,7 +354,6 @@ final class BulkExportBuilderTest extends KernelTestCase
         $latest = $catalog->latest();
         self::assertNotNull($latest);
         self::assertSame('20260908T030000Z', $latest['snapshot'], 'the site sees the new snapshot although pruning failed');
-        self::assertTrue($catalog->isKnown('20260908T030000Z'));
         self::assertTrue($logger->hasWarningThatContains('storage went away'));
         self::assertSame([], array_values(array_filter($logger->records, static fn (array $r): bool => \in_array($r['level'], ['error', 'critical'], true))));
         self::assertCount(BulkExportBuilder::KEEP + 1, $storage->snapshots(), 'the next build prunes what this one could not');

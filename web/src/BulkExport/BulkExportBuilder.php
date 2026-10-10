@@ -135,7 +135,6 @@ final class BulkExportBuilder
         $this->catalog->forget();
         try {
             $this->prune($manifest['snapshot']);
-            $this->catalog->forget();
         } catch (FilesystemException|\RuntimeException $e) {
             // Published is published: the next build prunes what this one could not.
             $this->logger->warning('Bulk export {snapshot} published, but deleting old snapshots failed: {message}', ['snapshot' => $manifest['snapshot'], 'message' => $e->getMessage()]);

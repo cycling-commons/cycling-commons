@@ -28,13 +28,13 @@
     {% for f in manifest.files %}
       <div class="ep" data-export-file>
         <span class="verb">GET</span>
-        <a class="path" href="{{ path('data_export_file', {stamp: manifest.snapshot, file: f.name}) }}" download>{{ f.name }}</a>
+        <a class="path" href="{{ bulk_export_file(manifest.snapshot, f.name) }}" download>{{ f.name }}</a>
         <span class="desc">{% if f.name starts with 'routes' %}{{ 'data_export.file_routes'|trans({'%n%': f.features|number_format}) }}{% else %}{{ 'data_export.file_places'|trans({'%n%': f.features|number_format}) }}{% endif %} · {{ _self.size(f.bytes) }}<br><code style="font-size:.75rem;word-break:break-all">sha256 {{ f.sha256 }}</code></span>
       </div>
     {% endfor %}
     <div class="ep">
       <span class="verb">GET</span>
-      <a class="path" href="{{ path('data_export_file', {stamp: manifest.snapshot, file: 'manifest.json'}) }}">manifest.json</a>
+      <a class="path" href="{{ bulk_export_file(manifest.snapshot, 'manifest.json') }}">manifest.json</a>
       <span class="desc">{{ 'data_export.manifest_desc'|trans }}</span>
     </div>
     <p style="margin-top:1.2rem;font-size:.90rem;color:#595c4d">{{ 'data_export.latest_links'|trans }} <code>{{ path('data_export_latest', {file: 'places.geojson.gz'}) }}</code></p>

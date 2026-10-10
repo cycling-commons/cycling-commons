@@ -64,8 +64,9 @@ security:
         # AbstractSessionListener rewrites the controller's `public, max-age=3600`
         # into `private, must-revalidate`. Caught by RoadmapChangelogTest.
         - { path: '^(/[a-z]{2})?/changelog\.atom$', roles: PUBLIC_ACCESS }
-        # The bulk export's files (api-strategy.md §3.1), for the same reason:
-        # immutable public downloads that a session read would turn private.
+        # The bulk export's `latest` links (api-strategy.md §3.1), for the same
+        # reason: a public 302 that a session read would turn private. The
+        # snapshot files under this prefix are nginx's, served from the bucket.
         - { path: ^/data/export/, roles: PUBLIC_ACCESS }
         # One click from an email, from somebody who by definition is not signed
         # in and may never sign in again. Asking them to log in first to stop

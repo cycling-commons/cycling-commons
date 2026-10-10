@@ -117,8 +117,9 @@ services:
       MEDIA_S3_PUBLIC_BUCKET_OC: "${MEDIA_S3_PUBLIC_BUCKET_OC:-cc-media-oc-01}"
       MEDIA_S3_PUBLIC_BUCKET_SA: "${MEDIA_S3_PUBLIC_BUCKET_SA:-cc-media-sa-01}"
       MEDIA_S3_PRIVATE_BUCKET: "${MEDIA_S3_PRIVATE_BUCKET:-cc-media-private}"
-      # The bulk export (api-strategy.md section 3.1): private, streamed by the site.
-      DATA_EXPORT_BUCKET: "${DATA_EXPORT_BUCKET:-cc-data-export}"
+      # The bulk export (api-strategy.md section 3.1) keeps its `exports/`
+      # folder in the dev tile bucket; nginx/app.conf serves the files from it.
+      DATA_EXPORT_BUCKET: "${DATA_EXPORT_BUCKET:-cc-maps}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9102/img}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9102}"
       MESSENGER_TRANSPORT_DSN: "${MESSENGER_TRANSPORT_DSN:-doctrine://default?queue_name=async&redeliver_timeout=900}"
@@ -217,8 +218,9 @@ services:
       MEDIA_S3_PUBLIC_BUCKET_OC: "${MEDIA_S3_PUBLIC_BUCKET_OC:-cc-media-oc-01}"
       MEDIA_S3_PUBLIC_BUCKET_SA: "${MEDIA_S3_PUBLIC_BUCKET_SA:-cc-media-sa-01}"
       MEDIA_S3_PRIVATE_BUCKET: "${MEDIA_S3_PRIVATE_BUCKET:-cc-media-private}"
-      # The bulk export (api-strategy.md section 3.1): private, streamed by the site.
-      DATA_EXPORT_BUCKET: "${DATA_EXPORT_BUCKET:-cc-data-export}"
+      # The bulk export (api-strategy.md section 3.1) keeps its `exports/`
+      # folder in the dev tile bucket; nginx/app.conf serves the files from it.
+      DATA_EXPORT_BUCKET: "${DATA_EXPORT_BUCKET:-cc-maps}"
       MEDIA_PUBLIC_BASE: "${MEDIA_PUBLIC_BASE:-http://localhost:9102/img}"
       MEDIA_CSP_HOST: "${MEDIA_CSP_HOST:-http://localhost:9102}"
     volumes:
@@ -386,8 +388,6 @@ services:
   # not created here — pipeline/coverage/publish.py::ensure_bucket already does
   # that for itself, and duplicating it would give two owners for one bucket.
   #
-  # The bulk export's bucket is private too: the site streams every download.
-  #
   # The PRIVATE bucket gets NO anonymous policy, and that is the point: an
   # unscanned upload sits there world-unreadable until the worker's clean
   # verdict physically moves derivatives to the public bucket
@@ -416,8 +416,7 @@ services:
       mc anonymous set download cc/${MEDIA_S3_PUBLIC_BUCKET_OC:-cc-media-oc-01} &&
       mc mb --ignore-existing cc/${MEDIA_S3_PUBLIC_BUCKET_SA:-cc-media-sa-01} &&
       mc anonymous set download cc/${MEDIA_S3_PUBLIC_BUCKET_SA:-cc-media-sa-01} &&
-      mc mb --ignore-existing cc/${MEDIA_S3_PRIVATE_BUCKET:-cc-media-private} &&
-      mc mb --ignore-existing cc/${DATA_EXPORT_BUCKET:-cc-data-export}
+      mc mb --ignore-existing cc/${MEDIA_S3_PRIVATE_BUCKET:-cc-media-private}
       "
 
   # Serves MediaStorage::url()'s <base>/<shard>/<key> shape, which MinIO cannot

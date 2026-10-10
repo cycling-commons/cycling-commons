@@ -10,14 +10,22 @@ use League\Flysystem\Config;
 use League\Flysystem\InMemory\InMemoryFilesystemAdapter;
 
 /**
- * An in-memory bucket that counts every call made to it and can be told to
- * fail one: the export tests use it to prove that a request touches no
- * storage, and that a build failing halfway leaves nothing behind.
+ * An in-memory bucket that counts every call made to it, keeps the object
+ * metadata each write asked for, and can be told to fail one: the export
+ * tests use it to prove that a request touches no storage, that a build
+ * failing halfway leaves nothing behind, and that every object carries the
+ * headers nginx passes through.
  */
 final class SpyStorageAdapter extends InMemoryFilesystemAdapter
 {
     /** @var list<string> "operation path", in call order */
     public array $calls = [];
+
+    /** The write options the S3 adapter forwards as object metadata. */
+    private const array METADATA = ['ContentType', 'CacheControl', 'ContentDisposition', 'ContentEncoding'];
+
+    /** @var array<string, array<string, mixed>> path => the metadata options of its last write */
+    public array $metadata = [];
 
     /** @var (\Closure(string, string): void)|null throws to make a call fail */
     public ?\Closure $failWhen = null;
@@ -42,6 +50,7 @@ final class SpyStorageAdapter extends InMemoryFilesystemAdapter
     public function write(string $path, string $contents, Config $config): void
     {
         $this->hit('write', $path);
+        $this->keep($path, $config);
         parent::write($path, $contents, $config);
     }
 
@@ -49,6 +58,7 @@ final class SpyStorageAdapter extends InMemoryFilesystemAdapter
     public function writeStream(string $path, $contents, Config $config): void
     {
         $this->hit('writeStream', $path);
+        $this->keep($path, $config);
         parent::writeStream($path, $contents, $config);
     }
 
@@ -88,6 +98,17 @@ final class SpyStorageAdapter extends InMemoryFilesystemAdapter
         $this->hit('listContents', $path);
 
         return parent::listContents($path, $deep);
+    }
+
+    private function keep(string $path, Config $config): void
+    {
+        $this->metadata[$path] = [];
+        foreach (self::METADATA as $option) {
+            $value = $config->get($option);
+            if (null !== $value) {
+                $this->metadata[$path][$option] = $value;
+            }
+        }
     }
 
     private function hit(string $operation, string $path): void

@@ -18,8 +18,8 @@ use Symfony\Component\Clock\MockClock;
 
 /**
  * What the web frontends read about the published snapshots
- * (docs/specs/api-strategy.md §3.1): from the shared cache, never from storage
- * for an address nobody published, and quietly when storage is unset or down.
+ * (docs/specs/api-strategy.md §3.1): the newest manifest, from the shared
+ * cache, and quietly nothing when storage is unset or down.
  */
 final class BulkExportCatalogTest extends TestCase
 {
@@ -48,46 +48,29 @@ final class BulkExportCatalogTest extends TestCase
         $this->catalog = new BulkExportCatalog($this->storage, $this->cache, $this->logger);
     }
 
-    public function testAStampNobodyPublishedCostsNoStorageCallAndNoCacheKey(): void
-    {
-        $this->publish('20261002T050700Z');
-        $this->publish('20261009T050700Z', latest: true);
-        self::assertSame('20261009T050700Z', $this->catalog->latest()['snapshot'] ?? null);
-        self::assertSame('20261002T050700Z', $this->catalog->snapshot('20261002T050700Z')['snapshot'] ?? null);
-        $calls = \count($this->spy->calls);
-        $keys = array_keys($this->cache->getValues());
-
-        for ($i = 0; $i < 50; ++$i) {
-            $stamp = sprintf('%04d%02d%02dT%02d%02d%02dZ', random_int(2000, 2025), random_int(1, 12), random_int(1, 28), random_int(0, 23), random_int(0, 59), random_int(0, 59));
-            self::assertFalse($this->catalog->isKnown($stamp), $stamp);
-            self::assertNull($this->catalog->snapshot($stamp), $stamp);
-        }
-        self::assertNull($this->catalog->snapshot('../latest.json'));
-
-        self::assertSame([], \array_slice($this->spy->calls, $calls), 'no storage call for an unknown stamp');
-        self::assertSame($keys, array_keys($this->cache->getValues()), 'no cache key for an unknown stamp');
-    }
-
-    public function testOnlySnapshotsWithAManifestAreKnown(): void
-    {
-        $this->publish('20261009T050700Z', latest: true);
-        // A build that died halfway: files, no manifest.
-        $this->storage->write('20261010T050700Z/places.geojson.gz', 'partial');
-
-        self::assertTrue($this->catalog->isKnown('20261009T050700Z'));
-        self::assertFalse($this->catalog->isKnown('20261010T050700Z'));
-    }
-
-    public function testANewSnapshotIsKnownOnceTheBuilderForgetsTheList(): void
+    public function testTheNewestManifestIsReadOnceFromTheExportFolder(): void
     {
         $this->publish('20261002T050700Z', latest: true);
-        self::assertFalse($this->catalog->isKnown('20261009T050700Z'));
+        $this->publish('20261009T050700Z');
+        $this->spy->calls = [];
+
+        self::assertSame('20261002T050700Z', $this->catalog->latest()['snapshot'] ?? null);
+        self::assertSame(['fileExists exports/latest.json', 'read exports/latest.json'], $this->spy->calls);
+
+        // Cached: the next page view asks no storage.
+        self::assertSame('20261002T050700Z', $this->catalog->latest()['snapshot'] ?? null);
+        self::assertCount(2, $this->spy->calls);
+    }
+
+    public function testANewSnapshotIsSeenOnceTheBuilderForgetsTheCache(): void
+    {
+        $this->publish('20261002T050700Z', latest: true);
+        self::assertSame('20261002T050700Z', $this->catalog->latest()['snapshot'] ?? null);
 
         $this->publish('20261009T050700Z', latest: true);
-        self::assertFalse($this->catalog->isKnown('20261009T050700Z'), 'cached until the builder says otherwise');
+        self::assertSame('20261002T050700Z', $this->catalog->latest()['snapshot'] ?? null, 'cached until the builder says otherwise');
         $this->catalog->forget();
 
-        self::assertTrue($this->catalog->isKnown('20261009T050700Z'));
         self::assertSame('20261009T050700Z', $this->catalog->latest()['snapshot'] ?? null);
     }
 
@@ -99,7 +82,6 @@ final class BulkExportCatalogTest extends TestCase
         };
 
         self::assertNull($this->catalog->latest());
-        self::assertFalse($this->catalog->isKnown('20261009T050700Z'));
         self::assertSame(['warning'], $this->levels(), 'a storage failure is one warning, never an error');
 
         // Remembered for a short while: no storage call on the next page view.
@@ -122,7 +104,6 @@ final class BulkExportCatalogTest extends TestCase
         $this->spy->failWhen = null;
         $this->clock->sleep(61);
         self::assertSame('20261009T050700Z', $this->catalog->latest()['snapshot'] ?? null);
-        self::assertTrue($this->catalog->isKnown('20261009T050700Z'));
     }
 
     public function testAPlaceholderBucketIsNotConfigured(): void
@@ -135,12 +116,11 @@ final class BulkExportCatalogTest extends TestCase
 
             $catalog = new BulkExportCatalog($storage, $this->cache, $this->logger);
             self::assertNull($catalog->latest());
-            self::assertFalse($catalog->isKnown('20261009T050700Z'));
         }
         self::assertSame([], $this->logger->records, 'an unset bucket is not an error');
         self::assertSame([], $this->cache->getValues());
 
-        self::assertTrue((new BulkExportStorage($client, 'cc-data-export'))->isConfigured());
+        self::assertTrue((new BulkExportStorage($client, 'cc-maps'))->isConfigured());
     }
 
     private function publish(string $stamp, bool $latest = false): void

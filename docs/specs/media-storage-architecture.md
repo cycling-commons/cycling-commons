@@ -69,7 +69,7 @@ the provider's policy support for source conditions is verified).
 |---|---|---|
 | one private bucket per environment | private | quarantine (unscanned bytes) and photos under legal hold (§2.2) |
 | one public bucket per shard per environment, numbered | anonymous-read via proxy | published derivatives only |
-| one bulk-export bucket per environment (`DATA_EXPORT_BUCKET`) | private, streamed by the site | the weekly open-data snapshots ([api-strategy.md §3.1](api-strategy.md)); not media, listed here because it shares the media S3 client |
+| no bucket of its own: the `exports/` folder in the environment's map tile bucket (`DATA_EXPORT_BUCKET` names that bucket) | read only by our own software: nginx on the web frontends serves the snapshot files from the folder, PHP reads `exports/latest.json` | the weekly open-data snapshots ([api-strategy.md §3.1](api-strategy.md)); not media, listed here because it is written with the media S3 client, whose credentials need write and delete rights on the folder. Nothing of the export lives outside `exports/`, and the export touches nothing else in the bucket |
 
 Each environment owns its own buckets (owner 2026-08-18): a staging mistake
 can never touch production objects. The variable NAMES are identical across environments; only the

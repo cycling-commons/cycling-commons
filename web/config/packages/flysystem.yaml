@@ -20,6 +20,6 @@ when@test:
                 adapter: 'memory'
             media.storage.private:
                 adapter: 'memory'
-            # The bulk export's bucket (App\BulkExport\BulkExportStorage).
+            # The bucket the bulk export keeps its folder in (App\BulkExport\BulkExportStorage).
             bulk_export.storage.memory:
                 adapter: 'memory'

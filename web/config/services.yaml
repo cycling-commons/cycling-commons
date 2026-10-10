@@ -205,9 +205,11 @@ services:
             $privateBucket: '%env(MEDIA_S3_PRIVATE_BUCKET)%'
             $publicBase: '%media.public_base%'
 
-    # The bulk export's bucket (api-strategy.md §3.1): the FULL bucket name,
-    # reached with the media S3 client. No anonymous read: the site streams
-    # every download. Empty = nothing published, and app:export:build refuses.
+    # The bucket the bulk export keeps its `exports/` folder in
+    # (api-strategy.md §3.1): the FULL name of an existing bucket (the map tile
+    # bucket in production), reached with the media S3 client. nginx serves
+    # the snapshot files from that folder. Empty = nothing published, and
+    # app:export:build refuses.
     App\BulkExport\BulkExportStorage:
         arguments:
             $client: '@media.s3_client'

@@ -129,7 +129,8 @@ deliberately **periodic (stale)**; live freshness is the paid product (§3.2,
 one snapshot; the worker host runs it weekly from a timer
 ([operations.md §1](operations.md)). The page is `/developers/export`
 (`data_export`, five localised paths), linked from `/developers`; the files
-are served under `/data/export/` in no language. `/developers` shows the
+are served under `/data/export/` in no language, by nginx straight from the
+bucket, and PHP serves only the page and the `latest` redirects. `/developers` shows the
 `latest` download link only once a snapshot is published
 (`bulk_export_published()`, `App\Twig\BulkExportExtension`); before that it
 says the first export is on its way, so no page of ours links to a 404.
@@ -188,7 +189,7 @@ says the first export is on its way, so no page of ours links to a 404.
 - **Consistency.** All reads run in one read-only, repeatable-read
   transaction. The files go to storage first and `latest.json` last, so a
   reader never meets a pointer to a half-written snapshot. A build that fails
-  after its first write deletes `snapshots/<stamp>/` again before it exits
+  after its first write deletes `exports/snapshots/<stamp>/` again before it exits
   (a failed delete is a warning; the next build's prune removes it). One
   build runs at a time: the builder holds a Postgres advisory lock
   (`pg_try_advisory_lock(hashtext(BulkExportBuilder::LOCK))`) for the whole
@@ -197,37 +198,72 @@ says the first export is on its way, so no page of ours links to a 404.
   every host that could start a build shares, which a file lock is not. A
   stamp that already holds a manifest is refused, because a published
   snapshot never changes.
-- **Storage and serving.** Object storage, because the worker writes and
-  either web frontend serves: one private bucket per environment, named by
-  `DATA_EXPORT_BUCKET` and reached with the media S3 client
-  ([media-storage-architecture.md §2](media-storage-architecture.md)). The
-  site streams every byte (`BulkExportDownloadController`), so the bucket
-  needs no anonymous read and its name never reaches a browser. A
-  snapshot's files never change: `Cache-Control: public, max-age=604800,
-  s-maxage=604800, immutable`, the file's sha256 as `ETag`, the build time
-  as `Last-Modified`, `Content-Length`, a 304 on a matching
-  `If-None-Match`. `/data/export/latest/{file}` redirects (302, five
-  minutes) to the newest snapshot; while nothing is published it answers
-  404 with the export page, which says the first snapshot is on its way.
-  `DATA_EXPORT_BUCKET` empty or still the committed placeholder `replace-me`
-  (`BulkExportStorage::UNSET_PLACEHOLDER`) means no bucket: nothing is read,
-  nothing is logged, and the command refuses.
-- **Lookups.** `App\BulkExport\BulkExportCatalog` caches, in the shared
-  cache for ten minutes, the newest manifest, the list of known snapshots
-  (every `snapshots/<stamp>/` that holds a `manifest.json`, read with one
-  listing, plus the newest), and the manifest of each known snapshot. The
-  builder drops the first two after it publishes and again after it prunes
-  (`forget()`). A stamp in a download URL is checked against the known list
-  first: any other stamp is a 404 with no storage call, no cache entry and
-  no limiter count, so a loop over made-up stamps costs neither the bucket
-  nor the Redis that holds every rate limiter. Storage that fails is
-  remembered for a minute (the pages then say nothing is published) and
-  logged as a warning at most once an hour.
-- **Limiter.** Every request for a known snapshot, whatever the file
-  (manifest included) and whether GET, HEAD or a conditional GET that ends
-  in a 304, counts against a per-address limiter (`bulk_export_download`)
-  before anything is read; a refused request gets a plain-text 429 with
-  `Retry-After`. The number is never stated in public copy.
+- **Storage: a folder in an existing bucket** (owner 2026-10-10). The export
+  has no bucket of its own. Everything it writes and reads sits under
+  `exports/` in the bucket `DATA_EXPORT_BUCKET` names, the map tile bucket in
+  production, reached with the media S3 client
+  ([media-storage-architecture.md §2](media-storage-architecture.md)), whose
+  credentials need write and delete rights there:
+
+      exports/latest.json                            the newest manifest, written last
+      exports/snapshots/<stamp>/manifest.json
+      exports/snapshots/<stamp>/places.geojson.gz
+      exports/snapshots/<stamp>/routes.geojson.gz
+
+  `App\BulkExport\BulkExportStorage` lists, writes and deletes nothing outside
+  `exports/` (pruning and the cleanup of a failed build included), and deletes
+  a snapshot only by a well-formed stamp; pinned by
+  `BulkExportBuilderTest::testTheExportTouchesNothingOutsideItsFolder` and
+  `BulkExportStorageTest`. `DATA_EXPORT_BUCKET` empty or still the committed
+  placeholder `replace-me` (`BulkExportStorage::UNSET_PLACEHOLDER`) means no
+  bucket: nothing is read, nothing is logged, and the command refuses.
+- **Object metadata.** Each object is written with the headers it is served
+  with, so the proxy passes them through untouched:
+
+  | Object | Content-Type | Cache-Control | Content-Disposition |
+  |---|---|---|---|
+  | `places.geojson.gz`, `routes.geojson.gz` | `application/gzip` | `public, max-age=604800, immutable` | `attachment; filename="cycling-commons-places-<stamp>.geojson.gz"` (and `routes`) |
+  | `snapshots/<stamp>/manifest.json` | `application/json` | `public, max-age=604800, immutable` | none |
+  | `latest.json` | `application/json` | `no-cache` | none |
+
+  No Content-Encoding: the data files are gzip files to save, not JSON sent
+  compressed. The S3 adapter forwards these as write options
+  (`ContentType`, `CacheControl`, `ContentDisposition`); pinned by
+  `BulkExportStorageTest`, which checks the PUT that reaches S3.
+- **Serving: nginx, from the bucket.** Nobody but our own software addresses
+  the bucket. nginx on each web frontend answers exactly
+  `^/data/export/(\d{8}T\d{6}Z)/(places\.geojson\.gz|routes\.geojson\.gz|manifest\.json)$`
+  from `exports/snapshots/$1/$2` in the bucket, before PHP: it passes
+  Content-Type, Content-Length, ETag, Last-Modified, Cache-Control and
+  Content-Disposition as stored, supports HEAD, Range (206) and conditional
+  requests (304, against the bucket's ETag and the upload time), strips the
+  storage's `x-amz-*` headers, sends the visitor's cookies and credentials
+  nowhere, and turns the bucket's 403 or 404 into a plain 404 that names no
+  bucket. Every other path under `/data/export/` goes to PHP. The app has no
+  route for a snapshot's file
+  (`BulkExportControllerTest::testTheAppHasNoRouteForASnapshotsFiles`);
+  `BulkExportLatestController::fileUrl()` and the Twig function
+  `bulk_export_file()` build the path for links. Dev runs the same location
+  in `developers/docker/nginx/app.conf`, proxying MinIO's `cc-maps` bucket;
+  production's lives in the frontends' nginx config.
+- **The page and the `latest` links (PHP).** `/developers/export` reads
+  `exports/latest.json` through the S3 client. `/data/export/latest/{file}`
+  redirects (302, public, five minutes) to `/data/export/<stamp>/<file>`, the
+  same URL shape as before, which nginx then serves; while nothing is
+  published it answers 404 with the export page, which says the first
+  snapshot is on its way (`BulkExportLatestController`).
+- **Lookups.** `App\BulkExport\BulkExportCatalog` caches the newest manifest
+  in the shared cache for ten minutes; the builder drops it once it has
+  published (`forget()`). Storage that fails is remembered for a minute (the
+  pages then say nothing is published) and logged as a warning at most once
+  an hour. Nothing in PHP reads a snapshot's files.
+- **Limiter: nginx's.** The download limit is an nginx `limit_req` zone on
+  that location, keyed on the visitor's address and held in nginx's memory
+  only (never in Redis, a database or a file); a refused request gets a 429.
+  Every request to the location counts, whatever the file and whether GET,
+  HEAD, a range or a conditional request. The number is never stated in
+  public copy; the privacy notice names the export among the counters that
+  use the address itself ([privacy-notice.md §2](privacy-notice.md)).
 - **Retention.** The newest four snapshots that hold a manifest
   (`BulkExportBuilder::KEEP`, a month of weekly builds) are kept; each build
   deletes the older ones, and every manifest-less directory older than the
@@ -235,18 +271,19 @@ says the first export is on its way, so no page of ours links to a 404.
   directory without a manifest never counts among the four. Pruning runs
   after the site has been told of the new snapshot; a pruning failure is a
   warning and does not fail the build.
-- **Taking a snapshot down.** Delete `snapshots/<stamp>/` from the bucket,
-  rebuild if it was the newest, and purge the nginx cache on both frontends
-  (operations.md, "Taking a bulk export snapshot down").
+- **Taking a snapshot down.** Delete `exports/snapshots/<stamp>/` from the
+  bucket and rebuild if it was the newest. nginx answers from the bucket, so
+  the site serves a 404 for it at once; copies already in browsers or
+  downstream caches may live out their week (operations.md, "Taking a bulk
+  export snapshot down").
 
-**Cache lifetime, decided 2026-10-09.** A week (`max-age` and `s-maxage`
-604800), not a year. A takedown can delete a snapshot from storage at once,
-but a copy in the nginx cache would be served until it expires, and the
-frontends have no per-path purge from the app. A week matches the build
-cadence, and a year bought nothing: a snapshot is kept four weeks, a mirror
-fetches each snapshot once, and after the week a matching `ETag` still
-costs a 304 and no bytes. `immutable` stays, since nothing within the week
-should revalidate.
+**Cache lifetime, decided 2026-10-09.** A week (`max-age=604800`), not a
+year, now carried as the objects' own Cache-Control. A takedown deletes a
+snapshot from storage at once, but a copy downstream lives until it expires.
+A week matches the build cadence, and a year bought nothing: a snapshot is
+kept four weeks, a mirror fetches each snapshot once, and after the week a
+matching `ETag` still costs a 304 and no bytes. `immutable` stays, since
+nothing within the week should revalidate.
 
 **Cadence and format, decided 2026-10-09.** Weekly, because the developer
 page promised a periodic export without a number and weekly matches the
