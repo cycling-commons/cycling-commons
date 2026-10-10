@@ -14,8 +14,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * The bulk export's `latest` links (docs/specs/api-strategy.md §3.1): a 302
- * to the newest snapshot's file, held for {@see LATEST} seconds.
+ * The bulk export's `latest` links (docs/specs/api-strategy.md §3.1):
+ * `/developers/export/latest/places`, `/routes` and `/manifest`, each a 302 to
+ * the newest snapshot's file, held for {@see LATEST} seconds. They are the
+ * addresses a script keeps; the dated file they lead to names its build time
+ * in its path and in its `generated_at`; its download name stays the same.
  *
  * The snapshot files themselves, `/data/export/<stamp>/<file>`, have no route
  * here: nginx on the web frontends answers that path from the bucket's
@@ -35,6 +38,9 @@ final class BulkExportLatestController extends AbstractController
     /** How long a `latest` redirect may be held. */
     private const int LATEST = 300;
 
+    /** A latest link's name => the snapshot file it leads to. */
+    public const array LATEST_FILES = ['places' => 'places.geojson.gz', 'routes' => 'routes.geojson.gz', 'manifest' => 'manifest.json'];
+
     private const string PREFIX = '/data/export/';
 
     public function __construct(private readonly BulkExportCatalog $catalog)
@@ -51,9 +57,10 @@ final class BulkExportLatestController extends AbstractController
         return self::PREFIX.$stamp.'/'.$file;
     }
 
-    #[Route(self::PREFIX.'latest/{file}', name: 'data_export_latest', requirements: ['file' => self::FILE], methods: ['GET', 'HEAD'])]
-    public function latest(string $file): Response
+    #[Route('/developers/export/latest/{name}', name: 'data_export_latest', requirements: ['name' => 'places|routes|manifest'], methods: ['GET', 'HEAD'])]
+    public function latest(string $name): Response
     {
+        $file = self::LATEST_FILES[$name];
         $manifest = $this->catalog->latest();
         if (null === $manifest) {
             // Not an error: the export page, saying the first snapshot is on

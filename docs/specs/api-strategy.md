@@ -252,11 +252,17 @@ says the first export is on its way, so no page of ours links to a 404.
   in `developers/docker/nginx/app.conf`, proxying MinIO's `cc-maps` bucket;
   production's lives in the frontends' nginx config.
 - **The page and the `latest` links (PHP).** `/developers/export` reads
-  `exports/latest.json` through the S3 client. `/data/export/latest/{file}`
-  redirects (302, public, five minutes) to `/data/export/<stamp>/<file>`, the
-  same URL shape as before, which nginx then serves; while nothing is
-  published it answers 404 with the export page, which says the first
-  snapshot is on its way (`BulkExportLatestController`).
+  `exports/latest.json` through the S3 client. The latest links,
+  `/developers/export/latest/places`, `/routes` and `/manifest` (owner
+  2026-10-10: the addresses a script keeps), redirect (302, public, five
+  minutes) to `/data/export/<stamp>/<file>`, which nginx then serves; while
+  nothing is published they answer 404 with the export page, which says the
+  first snapshot is on its way (`BulkExportLatestController`). The page offers
+  the newest snapshot by these links only; its dated paths appear for the
+  earlier snapshots. Every file names its build time: `generated_at` at the
+  top of each GeoJSON file and in the manifest, and the stamp in the path.
+  The download name is the same every week (`cycling-commons-places.geojson.gz`),
+  so a script that keeps the server's name overwrites last week's file.
 - **Lookups.** `App\BulkExport\BulkExportCatalog` caches the newest manifest
   in the shared cache for ten minutes; the builder drops it once it has
   published (`forget()`). Storage that fails is remembered for a minute (the

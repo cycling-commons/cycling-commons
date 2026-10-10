@@ -52,11 +52,11 @@ info:
 
     For bulk or offline use, take the free **weekly bulk export** and
     self-host it instead of crawling the live API; scraping the service is
-    prohibited. Every place and route this API serves, as gzip-compressed
-    GeoJSON with a manifest of sources, licences and sha256 checksums, at
+    prohibited. The Commons catalogue, as gzip-compressed GeoJSON with a
+    manifest of sources, licences and sha256 checksums, at
     https://cyclingcommons.org/developers/export (the newest files always at
-    `/data/export/latest/places.geojson.gz`, `routes.geojson.gz` and
-    `manifest.json`). The export is the sanctioned self-hosting channel and is
+    `/developers/export/latest/places`, `/developers/export/latest/routes` and
+    `/developers/export/latest/manifest`). The export is the sanctioned self-hosting channel and is
     always free and open (ODbL).
   contact:
     name: Cycling Commons

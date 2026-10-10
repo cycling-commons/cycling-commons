@@ -34,7 +34,7 @@ final class BulkExportControllerTest extends WebTestCase
         self::assertSelectorNotExists('[data-export-file]');
 
         // A clean 404: the export page saying the first snapshot is on its way.
-        $client->request('GET', '/data/export/latest/places.geojson.gz');
+        $client->request('GET', '/developers/export/latest/places');
         self::assertResponseStatusCodeSame(404);
         self::assertSelectorExists('[data-export-empty]');
 
@@ -99,8 +99,11 @@ final class BulkExportControllerTest extends WebTestCase
             $crawler = $client->request('GET', $path);
             self::assertResponseIsSuccessful($path);
             self::assertCount(2, $crawler->filter('[data-export-file]'), $path);
-            self::assertSelectorExists('a[href="/data/export/'.$manifest['snapshot'].'/places.geojson.gz"]');
-            self::assertSelectorExists('a[href="/data/export/'.$manifest['snapshot'].'/manifest.json"]');
+            // The newest snapshot is offered by its latest links, the ones a script keeps.
+            foreach (['places', 'routes', 'manifest'] as $name) {
+                self::assertSelectorExists('a[href="/developers/export/latest/'.$name.'"]', $path);
+            }
+            self::assertStringNotContainsString('href="/data/export/'.$manifest['snapshot'].'/', (string) $client->getResponse()->getContent(), $path);
             self::assertStringContainsString($manifest['files'][0]['sha256'], (string) $client->getResponse()->getContent());
         }
     }
@@ -110,17 +113,20 @@ final class BulkExportControllerTest extends WebTestCase
         $client = $this->client();
         $manifest = $this->build('2026-10-09 13:39:00 UTC');
 
-        foreach (['places.geojson.gz', 'routes.geojson.gz', 'manifest.json'] as $file) {
+        foreach (['places' => 'places.geojson.gz', 'routes' => 'routes.geojson.gz', 'manifest' => 'manifest.json'] as $name => $file) {
             foreach (['GET', 'HEAD'] as $method) {
-                $client->request($method, '/data/export/latest/'.$file);
-                self::assertResponseRedirects('/data/export/'.$manifest['snapshot'].'/'.$file, 302, "{$method} {$file}");
+                $client->request($method, '/developers/export/latest/'.$name);
+                self::assertResponseRedirects('/data/export/'.$manifest['snapshot'].'/'.$file, 302, "{$method} {$name}");
                 $cache = (string) $client->getResponse()->headers->get('Cache-Control');
                 self::assertStringContainsString('public', $cache);
                 self::assertStringContainsString('max-age=300', $cache);
             }
         }
 
-        $client->request('GET', '/data/export/latest/users.csv');
+        $client->request('GET', '/developers/export/latest/users');
+        self::assertResponseStatusCodeSame(404);
+        // The long form is gone: one address per file.
+        $client->request('GET', '/data/export/latest/places.geojson.gz');
         self::assertResponseStatusCodeSame(404);
     }
 

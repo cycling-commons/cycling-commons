@@ -66,8 +66,9 @@ security:
         - { path: '^(/[a-z]{2})?/changelog\.atom$', roles: PUBLIC_ACCESS }
         # The bulk export's `latest` links (api-strategy.md §3.1), for the same
         # reason: a public 302 that a session read would turn private. The
-        # snapshot files under this prefix are nginx's, served from the bucket.
-        - { path: ^/data/export/, roles: PUBLIC_ACCESS }
+        # snapshot files they lead to, under /data/export/, are nginx's,
+        # served from the bucket; PHP has no route there.
+        - { path: ^/developers/export/latest/, roles: PUBLIC_ACCESS }
         # One click from an email, from somebody who by definition is not signed
         # in and may never sign in again. Asking them to log in first to stop
         # mail they did not want is the opposite of what the law asks for.
