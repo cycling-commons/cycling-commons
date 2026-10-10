@@ -1,0 +1,45 @@
+web/tests/Support/SentryRequestScrubberTest.php
+  s_985749378da6fe::t_8cc6f4cb77ddcc 1-79,93-102
+  s_985749378da6fe::t_b67fa6e124adee 80-92
+web/tests/Support/ErrorReportPrivacyTest.php
+  s_985749378da6fe::t_bdeeae36b5573c 13-18,37,39-40
+web/config/packages/sentry.yaml
+  s_985749378da6fe::t_b757e822e2b85d 14-19
+web/src/Support/SentryRequestScrubber.php
+  s_985749378da6fe::t_39826779a5050b 25-28,45-47,58-65
+  s_985749378da6fe::t_ed0bbd426624b3 49
+  s_985749378da6fe::t_79f6f4a6b53b0f 1-24,29-44,48,50-57,66-110
+web/src/Support/SentryBeforeSend.php
+  s_985749378da6fe::t_b757e822e2b85d 11,15-16,27,36-39
+  s_985749378da6fe::t_98ea94c55732e6 40
+web/tests/Support/SentryBeforeSendTest.php
+  s_985749378da6fe::t_eb44cecd660c16 1-50
+web/tests/Security/ErrorTrackerBodyTest.php
+  s_985749378da6fe::t_bb53a06e8a4bdc 13-17,21,25-26,28-29
+web/translations/privacy.de.yaml
+  s_985749378da6fe::t_a10342b5cedc9f 44,114
+web/translations/privacy.en.yaml
+  s_985749378da6fe::t_5d020e0ce53723 44,114
+web/translations/privacy.es.yaml
+  s_985749378da6fe::t_7f4c90fd079f3f 44,114
+web/translations/privacy.fr.yaml
+  s_985749378da6fe::t_950ed2507086b1 44,114
+web/translations/privacy.nl.yaml
+  s_985749378da6fe::t_dabaa888297141 44,114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b5816a23ba16eda8647b01f66dc1f711fc368fa1",
+  "prompts": {},
+  "sessions": {
+    "s_985749378da6fe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f7b21945-f190-4061-b2df-446630711b70",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
