@@ -48,6 +48,8 @@ enum UserMessageKind: string
     case TranslationNeedsInfo = 'translation_needs_info';
     /** A curator answered a bug report (docs/specs/contact-and-support.md §9). */
     case BugOutcome = 'bug_outcome';
+    /** A country the rider asked for went live (moderation-and-contribution.md §11.1). */
+    case CountryLive = 'country_live';
     /**
      * A statement of reasons on its own (DSA Article 17): a contribution moved
      * to Trash as abuse, a place taken off the map, an upheld report

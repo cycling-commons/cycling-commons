@@ -64,6 +64,13 @@ class CountryInterest
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
+    /**
+     * When the rider was told the country went live; null until then
+     * ({@see \App\Community\CountryInterestService::notifyLive()}).
+     */
+    #[ORM\Column(name: 'notified_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $notifiedAt = null;
+
     public function __construct(int $userId, string $countryCode, string $regionName = '')
     {
         $this->userId = $userId;
@@ -114,6 +121,11 @@ class CountryInterest
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function getNotifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->notifiedAt;
     }
 
     public function getNote(): ?string

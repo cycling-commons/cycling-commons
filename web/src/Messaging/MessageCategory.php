@@ -52,6 +52,7 @@ enum MessageCategory: string
             ],
             self::General => [
                 UserMessageKind::BugOutcome,
+                UserMessageKind::CountryLive,
                 UserMessageKind::CuratorMessage,
                 UserMessageKind::CuratorApplicationReceived,
                 UserMessageKind::ModeratorAreasChanged,

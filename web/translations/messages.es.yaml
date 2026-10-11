@@ -492,6 +492,7 @@ join:
     approved: 'Your application to curate %scope% was approved. Welcome to the paceline.'
     received: 'Gracias por ofrecerte a cuidar %scope%. Tu solicitud ha llegado y un curador la leerá. Su respuesta aparecerá en tu página de mensajes, y te avisaremos por correo cuando lo haga.'
     declined: 'Your application to curate %scope% was not approved this time.'
+    country_live: "%country% ya está en el mapa de Cycling Commons. Nos lo pediste, así que te avisamos. Ya puedes ver lo que hay y añadir lo que sabes."
 contributors:
   kicker: 'Colaboradores'
   title: 'Hecho por ciclistas.'
@@ -2987,6 +2988,7 @@ messages:
   kind_curator_app_received: 'Tu solicitud de curador'
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'Sobre el error que informaste'
+  kind_country_live: "Un país que pediste ya está en el mapa"
   kind_statement_of_reasons: 'Una decisión sobre algo que añadiste'
   kind_curator_message: 'Mensaje de un curador'
   kind_rider_reply: 'Respuesta del ciclista'
@@ -4190,6 +4192,9 @@ admin:
     note: 'Lo que dijeron'
     when: 'Última solicitud'
     whole_country: 'todo el país'
+    notify_btn: "Avisar a quienes lo pidieron de que %country% ya está activo (%n%)"
+    notify_done: "Se avisó a %n% ciclistas de que %country% ya está activo."
+    told: "Avisado del lanzamiento: %date%"
   curator:
     title: 'Solicitudes de curaduría'
     empty: 'No hay solicitudes pendientes.'

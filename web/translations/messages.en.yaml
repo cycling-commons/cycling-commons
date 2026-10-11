@@ -490,6 +490,7 @@ join:
     approved: 'Your application to curate %scope% was approved. Welcome to the paceline.'
     received: 'Thank you for offering to look after %scope%. Your application has arrived and a curator will read it. Their answer will appear on your messages page, and we will email you when it does.'
     declined: 'Your application to curate %scope% was not approved this time.'
+    country_live: "%country% is now on the Cycling Commons map. You asked us to add it, so we are letting you know. You can now see what is there and add what you know."
 contributors:
   kicker: 'Contributors'
   title: 'Built by riders.'
@@ -2979,6 +2980,7 @@ messages:
   kind_curator_app_received: 'Your curator application'
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'About the bug you reported'
+  kind_country_live: "A country you asked for is on the map"
   kind_statement_of_reasons: 'A decision about something you added'
   kind_curator_message: 'Message from a curator'
   kind_rider_reply: 'Reply from the rider'
@@ -4181,6 +4183,9 @@ admin:
     note: 'What they said'
     when: 'Last asked'
     whole_country: 'the whole country'
+    notify_btn: "Tell the riders who asked that %country% is live (%n%)"
+    notify_done: "%n% riders were told that %country% is live."
+    told: "Told it is live: %date%"
   curator:
     title: 'Curator applications'
     empty: 'No pending applications.'

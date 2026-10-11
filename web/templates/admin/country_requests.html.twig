@@ -41,6 +41,14 @@
       </span>
     </summary>
     <div class="body">
+      {# Only for a live country with riders still waiting to hear: each is
+         told once, in their own language, and the table then dates it. #}
+      {% if c.notifiable > 0 %}
+        <form method="post" class="creq-notify">
+          <input type="hidden" name="_token" value="{{ csrf_token(csrf_token_id) }}">
+          <button type="submit" name="notify" value="{{ c.code }}" class="btn btn-primary">{{ 'admin.country_requests.notify_btn'|trans({'%n%': c.notifiable, '%country%': c.name}) }}</button>
+        </form>
+      {% endif %}
       {% if c.areas is not empty %}
         <table class="areas">
           <thead><tr>
@@ -82,7 +90,7 @@
             </td>
             <td>{% if p.regionName %}{{ p.regionName }}{% else %}<span class="whole">{{ 'admin.country_requests.whole_country'|trans }}</span>{% endif %}</td>
             <td class="note">{{ p.note ?? '' }}</td>
-            <td class="when">{{ p.updatedAt|slice(0, 10) }}</td>
+            <td class="when">{{ p.updatedAt|slice(0, 10) }}{% if p.notifiedAt %}<br><span class="told">{{ 'admin.country_requests.told'|trans({'%date%': p.notifiedAt|slice(0, 10)}) }}</span>{% endif %}</td>
           </tr>
         {% endfor %}
         </tbody>

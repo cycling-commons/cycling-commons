@@ -63,6 +63,7 @@ final class DashboardController extends AbstractDashboardController
 
     /** CSRF token id for the curator-applications decision form (session-backed, same-origin). */
     public const string CURATOR_APPS_CSRF_TOKEN_ID = 'curator-applications';
+    public const string COUNTRY_REQUESTS_CSRF_TOKEN_ID = 'country-requests';
     public const string WITHHELD_PHOTOS_CSRF_TOKEN_ID = 'withheld-photos';
     public const string ESCALATED_CSRF_TOKEN_ID = 'escalated-photos';
 
@@ -391,11 +392,32 @@ final class DashboardController extends AbstractDashboardController
      * The named areas sit under their country, since a country total cannot
      * say which part of France or the United States is being asked for.
      *
+     * Once a country is live, its block offers to tell the riders who asked
+     * for it (a POST of `notify` with the country code), once each.
+     *
      * @see docs/specs/moderation-and-contribution.md §11.1
      */
-    #[AdminRoute('/country-requests', 'country_requests', options: ['methods' => ['GET']])]
-    public function countryRequests(CountryInterestService $interests): Response
+    #[AdminRoute('/country-requests', 'country_requests', options: ['methods' => ['GET', 'POST']])]
+    public function countryRequests(Request $request, CountryInterestService $interests, TranslatorInterface $translator): Response
     {
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid(self::COUNTRY_REQUESTS_CSRF_TOKEN_ID, (string) $request->request->get('_token'))) {
+                throw $this->createAccessDeniedException('Invalid CSRF token for a country notice.');
+            }
+            $cc = strtoupper((string) $request->request->get('notify'));
+            if (1 !== preg_match('/^[A-Z]{2}$/', $cc)) {
+                throw new BadRequestHttpException('notify must be a country code.');
+            }
+            $told = $interests->notifyLive($cc);
+            $this->addFlash('success', $translator->trans('admin.country_requests.notify_done', [
+                '%n%' => $told,
+                '%country%' => Countries::exists($cc) ? Countries::getName($cc) : $cc,
+            ]));
+
+            return $this->redirectToRoute('admin_country_requests');
+        }
+
+        $notifiable = $interests->notifiable();
         $countries = [];
         foreach ($interests->requests() as $row) {
             $cc = $row['countryCode'];
@@ -404,6 +426,7 @@ final class DashboardController extends AbstractDashboardController
                 'name' => Countries::exists($cc) ? Countries::getName($cc) : $cc,
                 'total' => 0,
                 'willing' => 0,
+                'notifiable' => $notifiable[$cc] ?? 0,
                 'areas' => [],
                 'people' => [],
             ];
@@ -432,6 +455,7 @@ final class DashboardController extends AbstractDashboardController
 
         return $this->render('admin/country_requests.html.twig', [
             'countries' => $countries,
+            'csrf_token_id' => self::COUNTRY_REQUESTS_CSRF_TOKEN_ID,
         ]);
     }
 

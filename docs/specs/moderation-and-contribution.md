@@ -2296,7 +2296,7 @@ that is the question a reader is actually asking when they reach for a filter.
 |---|---|---|
 | **Contributions** | an answer to something the rider offered or asked for | submission approved/rejected/needs-info, route approved/rejected/retired, correction done/dismissed, **and** takedown granted/declined |
 | **Notices** | something the platform did that the rider did not start | photo removed on report, hidden pending review, restored after review, a statement of reasons sent on its own |
-| **General** | a person wrote to them | curator message |
+| **General** | a person wrote to them, or the project answered them outside a contribution | curator message, bug outcome, curator application received, moderation areas changed, a country they asked for went live |
 
 The takedown split is the case worth stating: a rider who *asked* for their own
 photo to come down is being answered, so that files under Contributions; a
@@ -2905,6 +2905,7 @@ Entity `App\Community\Entity\CountryInterest`, table `country_interest`:
 | `willing_to_curate` | boolean, default false | the contact list for onboarding |
 | `note` | varchar(280), nullable | hardened per §11.3 |
 | `created_at` / `updated_at` | timestamp | |
+| `notified_at` | timestamp NULL | when the rider was told the country went live; set once |
 
 `UNIQUE (user_id, country_code, region_name)`.
 `CountryInterestService::record()` upserts: re-submitting for an area already
@@ -2942,7 +2943,27 @@ per distinct area it names, never the same one twice. No per-country throttle on
 top: it would drop the second rider's request from the inbox, and the running
 total in the next mail cannot say who that was.
 
-Migration `Version20260913200000`.
+**Telling the riders who asked (owner 2026-10-11).** Once a country is `live`,
+its block on `/admin/country-requests` shows a button, "Tell the riders who
+asked that Denmark is live (2)", counting riders, not requests
+(`CountryInterestService::notifiable()`). Pressing it (a POST of `notify` with
+the country code, CSRF token `country-requests`) runs
+`CountryInterestService::notifyLive()`. A request counts when the rider still
+has an account, has no `notified_at`, and was made **before** the country's
+`live_at`. A request made after that asks for more inside a live country
+(Ohio in the United States), which the country going live did not answer, so it
+is left alone. Each rider gets **one** inbox message, kind `country_live` on
+the General shelf (§7.9), channel `country_live`, however many of their rows
+match. The message emails them like every inbox message, in their own
+language, with the country named in that language (`join.message.country_live`).
+It is a reply to their own request, like the curator receipt, so it does not
+wait on the news opt-in. In the same transaction every matched row gets
+`notified_at`, so a second press, or two at once, tells nobody twice. After
+that, the table shows "Told it is live" with the date under "Last asked", and
+the button is gone. Telling riders about a new area inside a live country is
+not built.
+
+Migration `Version20260913200000`; `notified_at` is `Version20261011150000`.
 
 ### 11.1a Which areas are offered: `App\World\CuratorScopes`
 

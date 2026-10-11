@@ -168,7 +168,7 @@ final class DataExportService
                 [$userId],
             ), ['segments']),
             'country_requests' => $this->db->fetchAllAssociative(
-                'SELECT id, country_code, willing_to_curate, note, created_at, updated_at
+                'SELECT id, country_code, willing_to_curate, note, created_at, updated_at, notified_at
                  FROM country_interest WHERE user_id = ? ORDER BY created_at',
                 [$userId],
             ),

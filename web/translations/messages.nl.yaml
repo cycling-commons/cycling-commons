@@ -490,6 +490,7 @@ join:
     approved: 'Your application to curate %scope% was approved. Welcome to the paceline.'
     received: 'Fijn dat je %scope% wilt beheren. Je aanmelding is binnen en een regiobeheerder leest hem. Het antwoord verschijnt op je berichtenpagina, en we mailen je zodra het er is.'
     declined: 'Your application to curate %scope% was not approved this time.'
+    country_live: "%country% staat nu op de kaart van de Cycling Commons. Je vroeg ons erom, dus laten we het je weten. Je kunt nu zien wat er is en toevoegen wat jij weet."
 contributors:
   kicker: 'Bijdragers'
   title: 'Gebouwd door fietsers.'
@@ -2964,6 +2965,7 @@ messages:
   kind_curator_app_received: 'Je aanmelding als regiobeheerder'
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'Over de bug die je meldde'
+  kind_country_live: "Een land waar je om vroeg staat op de kaart"
   kind_statement_of_reasons: 'Een besluit over iets dat je hebt toegevoegd'
   kind_curator_message: 'Bericht van een regiobeheerder'
   kind_rider_reply: 'Antwoord van de fietser'
@@ -4163,6 +4165,9 @@ admin:
     note: 'Wat ze zeiden'
     when: 'Laatst gevraagd'
     whole_country: 'het hele land'
+    notify_btn: "Laat de aanvragers weten dat %country% live is (%n%)"
+    notify_done: "%n% fietsers hebben gehoord dat %country% live is."
+    told: "Gemeld dat het live is: %date%"
   curator:
     title: 'Regiobeheerdersaanvragen'
     empty: 'Geen aanvragen in behandeling.'

@@ -133,6 +133,14 @@ Production never queries Overture. `app:country:export DK` writes the live stagi
 reads it on production (from stdin, or `--file`) into a plan. The same apply, repair, check and live
 sequence then runs there, so production gets staging's exact slugs, labels and borders.
 
+## Telling the riders who asked
+
+Once the country is live on production, its block on `/admin/country-requests` shows a button that
+tells the riders who asked for it. Each rider gets one inbox message, which also emails them in
+their own language, and is never told twice. Only requests made before the country went live count:
+a later request asks for more inside a country that is already on the map. The same moment, the
+country appears under "Next release" on "What's new", until the next release names it.
+
 ## Fixing a label
 
 Region and country labels are rows (`region.labels`, `country.labels`), so the in-site translation

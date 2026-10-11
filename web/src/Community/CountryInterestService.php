@@ -8,9 +8,14 @@ namespace App\Community;
 
 use App\Community\Entity\CountryInterest;
 use App\Entity\User;
+use App\Messaging\MessageService;
+use App\Messaging\UserMessageKind;
 use App\Support\SupportMailer;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Intl\Countries;
 
 /**
  * Country-interest upsert. Counts stay owner-only for v1.
@@ -24,11 +29,26 @@ final class CountryInterestService
     /** A place name, not a paragraph: "Texas", "Provence-Alpes-Cote d'Azur". */
     public const int MAX_REGION = 120;
 
+    /** The inbox channel of a "your country is live" message (varchar(12)). */
+    public const string LIVE_CHANNEL = 'country_live';
+
+    /**
+     * The requests a "your country is live" message answers: the rider still
+     * has an account, has not been told, and asked before the country went
+     * live. A request made after that asks for more inside a live country
+     * (Ohio in the United States), which the country going live did not answer.
+     */
+    private const string NOTIFIABLE = "ci.user_id IS NOT NULL AND ci.notified_at IS NULL
+        AND c.status = 'live' AND ci.created_at < c.live_at";
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
         private readonly PublicNoteFilter $notes,
         private readonly SupportMailer $mailer,
+        private readonly MessageService $messages,
+        #[Autowire('%kernel.default_locale%')]
+        private readonly string $defaultLocale,
     ) {
     }
 
@@ -167,13 +187,13 @@ final class CountryInterestService
      * always has one, and it is how somebody who offered to curate is
      * actually reached.
      *
-     * @return list<array{id: int, countryCode: string, regionName: string, willing: bool, note: ?string, displayName: ?string, email: ?string, updatedAt: string}>
+     * @return list<array{id: int, countryCode: string, regionName: string, willing: bool, note: ?string, displayName: ?string, email: ?string, updatedAt: string, notifiedAt: ?string}>
      */
     public function requests(): array
     {
         $rows = $this->db->fetchAllAssociative(
             'SELECT ci.id, ci.country_code, ci.region_name, ci.willing_to_curate, ci.note,
-                    ci.updated_at, u.display_name, u.email
+                    ci.updated_at, ci.notified_at, u.display_name, u.email
                FROM country_interest ci
                LEFT JOIN users u ON u.id = ci.user_id
               ORDER BY ci.updated_at DESC, ci.id DESC',
@@ -189,9 +209,87 @@ final class CountryInterestService
                 'displayName' => null === $r['display_name'] ? null : (string) $r['display_name'],
                 'email' => null === $r['email'] ? null : (string) $r['email'],
                 'updatedAt' => (string) $r['updated_at'],
+                'notifiedAt' => null === $r['notified_at'] ? null : (string) $r['notified_at'],
             ],
             $rows,
         );
+    }
+
+    /**
+     * Per live country, how many riders are waiting to hear it went live.
+     *
+     * @return array<string, int> country code => riders
+     */
+    public function notifiable(): array
+    {
+        /** @var array<string, int|string> $rows */
+        $rows = $this->db->fetchAllKeyValue(
+            'SELECT ci.country_code, COUNT(DISTINCT ci.user_id)
+               FROM country_interest ci JOIN country c ON c.code = ci.country_code
+              WHERE '.self::NOTIFIABLE.'
+              GROUP BY ci.country_code',
+        );
+
+        return array_map(intval(...), $rows);
+    }
+
+    /**
+     * Tell every rider who asked for a country that it is live, once.
+     *
+     * One inbox message per rider, which also emails them, in their own
+     * language; a rider who asked for the country and for an area inside it
+     * hears once. The rows are stamped in the same transaction as the
+     * messages, so pressing the button again, or twice at once, tells nobody
+     * twice. A reply to the rider's own request, like the curator receipt,
+     * so it does not wait on the news opt-in.
+     *
+     * @return int the riders told
+     */
+    public function notifyLive(string $countryCode): int
+    {
+        $cc = strtoupper(trim($countryCode));
+
+        return $this->em->wrapInTransaction(function () use ($cc): int {
+            /** @var list<array{id: int|string, user_id: int|string, locale: ?string}> $rows */
+            $rows = $this->db->fetchAllAssociative(
+                'SELECT ci.id, ci.user_id, u.locale
+                   FROM country_interest ci
+                   JOIN country c ON c.code = ci.country_code
+                   JOIN users u ON u.id = ci.user_id
+                  WHERE ci.country_code = :cc AND '.self::NOTIFIABLE.'
+                  ORDER BY ci.id
+                    FOR UPDATE OF ci',
+                ['cc' => $cc],
+            );
+            if ([] === $rows) {
+                return 0;
+            }
+
+            $riders = [];
+            foreach ($rows as $r) {
+                $riders[(int) $r['user_id']] ??= ['id' => (int) $r['id'], 'locale' => $r['locale'] ?? $this->defaultLocale];
+            }
+            foreach ($riders as $userId => $rider) {
+                $this->messages->sendSystem(
+                    $userId,
+                    UserMessageKind::CountryLive,
+                    self::LIVE_CHANNEL,
+                    $rider['id'],
+                    $cc,
+                    'join.message.country_live',
+                    ['%country%' => Countries::exists($cc) ? Countries::getName($cc, $rider['locale']) : $cc],
+                );
+            }
+
+            $this->db->executeStatement(
+                'UPDATE country_interest SET notified_at = NOW() WHERE id IN (:ids)',
+                ['ids' => array_map(static fn (array $r): int => (int) $r['id'], $rows)],
+                ['ids' => ArrayParameterType::INTEGER],
+            );
+            $this->em->flush();
+
+            return \count($riders);
+        });
     }
 
     /** Every request on file for one country, the named areas included, as the admin desk counts them. */

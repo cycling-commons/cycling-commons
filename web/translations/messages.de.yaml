@@ -490,6 +490,7 @@ join:
     approved: 'Your application to curate %scope% was approved. Welcome to the paceline.'
     received: 'Schön, dass du dich um %scope% kümmern willst. Deine Bewerbung ist angekommen und ein Kurator liest sie. Die Antwort erscheint auf deiner Nachrichtenseite, und wir schicken dir eine E-Mail, sobald sie da ist.'
     declined: 'Your application to curate %scope% was not approved this time.'
+    country_live: "%country% ist jetzt auf der Karte der Cycling Commons. Du hattest uns darum gebeten, deshalb sagen wir dir Bescheid. Du kannst jetzt sehen, was dort ist, und ergänzen, was du weißt."
 contributors:
   kicker: 'Beitragende'
   title: 'Von Fahrern gebaut.'
@@ -2965,6 +2966,7 @@ messages:
   kind_curator_app_received: 'Deine Bewerbung als Kurator'
   kind_areas_changed: 'Your moderation areas'
   kind_bug_outcome: 'Zu dem Fehler, den Sie gemeldet haben'
+  kind_country_live: "Ein Land, das du dir gewünscht hast, ist auf der Karte"
   kind_statement_of_reasons: 'Eine Entscheidung über etwas, das du hinzugefügt hast'
   kind_curator_message: 'Nachricht von einem Kurator'
   kind_rider_reply: 'Antwort des Fahrers'
@@ -4164,6 +4166,9 @@ admin:
     note: 'Was sie schrieben'
     when: 'Zuletzt gefragt'
     whole_country: 'das ganze Land'
+    notify_btn: "Den Anfragenden sagen, dass %country% live ist (%n%)"
+    notify_done: "%n% Radfahrende wissen jetzt, dass %country% live ist."
+    told: "Über den Start informiert: %date%"
   curator:
     title: 'Kuratorbewerbungen'
     empty: 'Keine ausstehenden Bewerbungen.'
