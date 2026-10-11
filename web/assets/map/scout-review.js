@@ -26,6 +26,8 @@ const SEG_CASE = 'cc-scout-seg-case';
 const SEG_CLS = ['paved', 'pave', 'gravel', 'dirt', 'rock'];
 const RED = '#D92D20';
 let passMarkers = [];
+/* The step on screen: 1 the tags, 2 the traffic (setStep()). */
+let step = 1;
 
 /** Tag markers, in file order. Each is {tag, lngLat, marker, at, approved}. */
 let tags = [];
@@ -1017,14 +1019,7 @@ function openBareTaps() {
 /* Notices shrink as the rider fixes things and vanish with the last fix. */
 let noEndText = '';
 function refreshNotices() {
-  const box = el('scoutFacts');
-  const bareLine = el('scoutBareFact');
-  if (bareLine) {
-    const n = openBareTaps().length;
-    bareLine.firstChild.textContent = tplCount(t('scoutBareSurface', 'Surface taps with no type (grey ?): {n}'), n);
-    bareLine.hidden = 0 === n;
-  }
-  if (box) box.hidden = ![...box.children].some(c => !c.hidden);
+  syncBareLine();
 
   const out = el('scoutMsg');
   if (noEndText && out && out.textContent === noEndText) {
@@ -1115,9 +1110,23 @@ function show(parsed) {
   msg(nothing ? t('scoutNothing', 'Nothing in this ride to send.') : '', nothing);
 }
 
+/* The no-type taps are a tags matter: their line shows on step 1 only, like
+   the grey pins it points at. */
+function syncBareLine() {
+  const box = el('scoutFacts');
+  const bareLine = el('scoutBareFact');
+  if (bareLine) {
+    const n = openBareTaps().length;
+    bareLine.firstChild.textContent = tplCount(t('scoutBareSurface', 'Surface taps with no type (grey ?): {n}'), n);
+    bareLine.hidden = 0 === n || 2 === step;
+  }
+  if (box) box.hidden = ![...box.children].some(c => !c.hidden);
+}
+
 /* Step 1 shows the tags, step 2 the cars and the road pieces the ride was
    matched to; never both, so each step's map says only what that step sends. */
 function setStep(n) {
+  step = n;
   const rideHasTags = tags.length > 0 || stretches.length > 0;
   const tagsBtn = el('scoutStepTags');
   const trafficBtn = el('scoutStepTraffic');
@@ -1135,6 +1144,7 @@ function setStep(n) {
   showCars(2 === n);
   showTagLayers(1 === n);
   showMatchedPieces(2 === n);
+  syncBareLine();
 }
 
 function showCars(on) {

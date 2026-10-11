@@ -134,9 +134,14 @@ street turned off halfway does not run on past the turn), and the step's "Map ke
 box when the rider folded it. The map's Key panel has the same group on the
 review page (`#mk-scout`), and /map-key lists it. The car lines of the ride
 facts (the radar total, and how many cars had no GPS fix) show in step 2 only,
-like the cars on the map; step 1 is about the tags. In step 2 the radar total
+like the cars on the map; step 1 is about the tags. The "Surface taps with no
+type (grey ?)" line is a tags matter and shows in step 1 only, like the grey
+pins it points at (owner 2026-10-11). In step 2 the radar total
 line is hidden when the step has lines to send, because the step's own line
 adds up to it.
+While the ride is being matched to roads, which takes a moment on a long ride,
+step 2's line reads "Matching the ride to roads…" beside the map's spinner
+(`.cc-d-spin`), until the facts replace it (owner 2026-10-11).
 Step 2 states, in one line, the matched kilometres and the cars that passed
 the rider, then the cars only nearby beside a cycle path and the cars on parts
 not sent, when there are any ("52 km matched to roads, 37 cars passed you,

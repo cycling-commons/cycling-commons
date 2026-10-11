@@ -182,6 +182,24 @@ function removePieces() {
   if (map.getSource(UNMATCHED_SRC)) map.removeSource(UNMATCHED_SRC);
 }
 
+/* While the ride is matched to roads, which takes a moment on a long ride:
+   the map's own spinner beside the words, until render() replaces them. */
+function showLoading(facts) {
+  const spin = document.createElement('span');
+  spin.className = 'cc-d-spin';
+  spin.setAttribute('aria-hidden', 'true');
+  facts.replaceChildren(spin, t('scoutTrafficLoading', 'Matching the ride to roads…'));
+  facts.classList.add('is-loading');
+}
+
+function stopLoading() {
+  const facts = el('scoutTrafficFacts');
+  if (facts && facts.classList.contains('is-loading')) {
+    facts.classList.remove('is-loading');
+    facts.textContent = '';
+  }
+}
+
 function render() {
   const facts = el('scoutTrafficFacts');
   const unmatched = el('scoutTrafficUnmatched');
@@ -189,6 +207,7 @@ function render() {
   const list = el('scoutTrafficLines');
   const send = el('scoutTrafficSend');
   if (!facts || !summary) return;
+  facts.classList.remove('is-loading');
   const noTiles = !summary.lines.length && !Object.keys((window.CC_TILES || {}).roadpieces || {}).length;
   if (noTiles) {
     facts.textContent = t('scoutTrafficNoTiles', 'Road data is not available yet, so no traffic summary can be made.');
@@ -262,6 +281,7 @@ export function prepareTraffic(fit) {
     })
     .catch(() => {
       if (pending !== mine) return;
+      stopLoading();
       say(t('scoutTrafficNothing', 'No part of this ride with the radar on lies on a road we know, so there is nothing to send.'), true);
     });
   pending = mine;
@@ -277,6 +297,7 @@ export function resetTraffic() {
   chunks = null;
   removePieces();
   say('');
+  stopLoading();
   ['scoutTrafficFacts', 'scoutTrafficLines'].forEach(id => { const n = el(id); if (n) n.textContent = ''; });
   ['scoutTrafficUnmatched', 'scoutTrafficPreview', 'scoutTrafficSend'].forEach(id => { const n = el(id); if (n) n.hidden = true; });
   syncScoutKey();
@@ -289,7 +310,7 @@ export function showTrafficStep(on) {
   if (box) box.hidden = !on;
   if (on && !summary && pending) {
     const facts = el('scoutTrafficFacts');
-    if (facts) facts.textContent = t('scoutTrafficLoading', 'Matching the ride to roads…');
+    if (facts) showLoading(facts);
   }
 }
 

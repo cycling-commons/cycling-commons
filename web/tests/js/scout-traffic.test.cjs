@@ -384,3 +384,20 @@ test('the five parts of the day reach the script', () => {
   for (const n of [0, 1, 2, 3, 4]) assert.match(controller, new RegExp(`'scoutBand${n}' => 'd_scout_band_${n}'`));
   assert.match(controller, /'scoutDayGroup' => 'd_scout_day_group'/);
 });
+
+test('the no-type surface taps line shows on the tags step only', () => {
+  const sync = fn(review, 'syncBareLine');
+  assert.match(sync, /bareLine\.hidden = 0 === n \|\| 2 === step/);
+  const step = fn(review, 'setStep');
+  assert.match(step, /step = n;/);
+  assert.match(step, /syncBareLine\(\);/, 'switching steps re-hides or re-shows it');
+});
+
+test('matching a ride to roads shows a spinner until the facts arrive', () => {
+  assert.match(fn(traffic, 'showTrafficStep'), /showLoading\(facts\)/);
+  const loading = fn(traffic, 'showLoading');
+  assert.match(loading, /cc-d-spin/);
+  assert.match(loading, /aria-hidden/, 'the words are what a screen reader hears');
+  assert.match(fn(traffic, 'render'), /classList\.remove\('is-loading'\)/);
+  assert.match(fn(traffic, 'resetTraffic'), /stopLoading\(\)/);
+});
