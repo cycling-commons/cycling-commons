@@ -55,7 +55,13 @@ final class UserDeletionService
         $this->mailer->send($email);
     }
 
-    public function confirmDeletion(User $user, string $code): bool
+    /**
+     * Erase the account when the code is right and fresh.
+     *
+     * The photo-credit choice from the same form is stored only then, before
+     * the hooks read it (photo-uploads.md §6): a refused code changes nothing.
+     */
+    public function confirmDeletion(User $user, string $code, ?bool $keepMediaCredit = null): bool
     {
         $storedCode = $user->getDeletionCode();
         $requestedAt = $user->getDeletionRequestedAt();
@@ -73,6 +79,9 @@ final class UserDeletionService
             return false;
         }
 
+        if (null !== $keepMediaCredit) {
+            $user->setKeepMediaCredit($keepMediaCredit);
+        }
         $this->erase($user);
 
         return true;

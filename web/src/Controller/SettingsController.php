@@ -261,11 +261,9 @@ final class SettingsController extends AbstractController
 
         $code = (string) $request->request->get('deletion_code', '');
 
-        // docs/specs/photo-uploads.md §6 — credit choice must be on the entity before purge.
-        $user->setKeepMediaCredit($request->request->getBoolean('keep_media_credit'));
-        $this->em->flush();
-
-        if (!$this->deletionService->confirmDeletion($user, $code)) {
+        // docs/specs/photo-uploads.md §6: the credit choice is stored with a
+        // right code only, before the purge reads it.
+        if (!$this->deletionService->confirmDeletion($user, $code, $request->request->getBoolean('keep_media_credit'))) {
             $this->addFlash('error', 'flash.deletion_code_invalid');
 
             return $this->redirectToRoute('settings', ['tab' => 'security']);
