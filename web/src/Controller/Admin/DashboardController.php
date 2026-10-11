@@ -430,12 +430,16 @@ final class DashboardController extends AbstractDashboardController
                 'total' => 0,
                 'willing' => 0,
                 'notifiable' => $notifiable[$cc] ?? 0,
+                'told' => 0,
                 'areas' => [],
                 'people' => [],
             ];
             ++$countries[$cc]['total'];
             if ($row['willing']) {
                 ++$countries[$cc]['willing'];
+            }
+            if (null !== $row['notifiedAt']) {
+                ++$countries[$cc]['told'];
             }
             if ('' !== $row['regionName']) {
                 $area = $row['regionName'];

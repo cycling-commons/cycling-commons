@@ -4187,6 +4187,8 @@ admin:
     notify_btn: "Den Anfragenden sagen, dass %country% live ist (%n%)"
     notify_done: "%n% Radfahrende wissen jetzt, dass %country% live ist."
     told: "Über den Start informiert: %date%"
+    told_n: "Über den Start informiert: %n%"
+    to_tell_n: "Noch nicht informiert: %n%"
   curator:
     title: 'Kuratorbewerbungen'
     empty: 'Keine ausstehenden Bewerbungen.'

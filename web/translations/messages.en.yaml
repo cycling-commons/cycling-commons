@@ -4204,6 +4204,8 @@ admin:
     notify_btn: "Tell the riders who asked that %country% is live (%n%)"
     notify_done: "%n% riders were told that %country% is live."
     told: "Told it is live: %date%"
+    told_n: "Told it is live: %n%"
+    to_tell_n: "Not told yet: %n%"
   curator:
     title: 'Curator applications'
     empty: 'No pending applications.'

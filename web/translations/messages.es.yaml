@@ -4213,6 +4213,8 @@ admin:
     notify_btn: "Avisar a quienes lo pidieron de que %country% ya está activo (%n%)"
     notify_done: "Se avisó a %n% ciclistas de que %country% ya está activo."
     told: "Avisado del lanzamiento: %date%"
+    told_n: "Avisados del lanzamiento: %n%"
+    to_tell_n: "Aún sin avisar: %n%"
   curator:
     title: 'Solicitudes de curaduría'
     empty: 'No hay solicitudes pendientes.'

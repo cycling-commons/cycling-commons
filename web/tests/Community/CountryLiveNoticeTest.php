@@ -113,6 +113,7 @@ final class CountryLiveNoticeTest extends WebTestCase
         $crawler = $client->request('GET', '/admin/country-requests');
         $button = $crawler->filter('button[name="notify"][value="DK"]');
         self::assertCount(1, $button);
+        self::assertSame('2', $crawler->filter('summary [data-to-tell]')->attr('data-to-tell'), 'the summary says who still waits');
         $client->submit($button->form());
         self::assertResponseRedirects();
 
@@ -138,6 +139,8 @@ final class CountryLiveNoticeTest extends WebTestCase
         $crawler = $client->request('GET', '/admin/country-requests');
         self::assertCount(0, $crawler->filter('button[name="notify"][value="DK"]'));
         self::assertStringContainsString('Told it is live', $crawler->html());
+        self::assertSame('3', $crawler->filter('summary [data-told]')->attr('data-told'), 'and, closed, that the message went out');
+        self::assertCount(0, $crawler->filter('summary [data-to-tell]'));
     }
 
     public function testARequestMadeAfterTheCountryWentLiveIsNotAnswered(): void

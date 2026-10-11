@@ -38,6 +38,10 @@
       <span class="num">
         <span>{{ 'admin.country_requests.asked'|trans({'%n%': c.total}) }}</span>
         {% if c.willing > 0 %}<span class="yes">{{ 'admin.country_requests.willing'|trans({'%n%': c.willing}) }}</span>{% endif %}
+        {# Whether the "your country is live" message went out, seen without
+           opening the country (owner 2026-10-11). #}
+        {% if c.told > 0 %}<span class="told-sum" data-told="{{ c.told }}">{{ 'admin.country_requests.told_n'|trans({'%n%': c.told}) }}</span>{% endif %}
+        {% if c.notifiable > 0 %}<span class="to-tell" data-to-tell="{{ c.notifiable }}">{{ 'admin.country_requests.to_tell_n'|trans({'%n%': c.notifiable}) }}</span>{% endif %}
       </span>
     </summary>
     <div class="body">

@@ -4182,6 +4182,8 @@ admin:
     notify_btn: "Prévenir les demandeurs que %country% est en ligne (%n%)"
     notify_done: "%n% cyclistes ont appris que %country% est en ligne."
     told: "Prévenu de la mise en ligne : %date%"
+    told_n: "Prévenus de la mise en ligne : %n%"
+    to_tell_n: "Pas encore prévenus : %n%"
   curator:
     title: 'Candidatures de curateurs'
     empty: 'Aucune candidature en attente.'

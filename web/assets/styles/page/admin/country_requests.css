@@ -6,7 +6,9 @@
 .creq[open] > summary::before{content:'▾'}
 .creq .cname{font-weight:600}
 .creq .cc{font-family:monospace;opacity:.6;font-size:.85em}
-.creq .num{margin-left:auto;display:flex;gap:.9rem;font-size:.9em}
+.creq .num{display:flex;gap:.9rem;font-size:.9em;margin-left:.6rem}
+.creq .told-sum{color:#1a7f37;font-weight:600}
+.creq .to-tell{color:#b35c00;font-weight:600}
 .creq .num b{font-weight:600}
 .creq .body{padding:0 .9rem .9rem}
 .creq table{width:100%;font-size:.9em;border-collapse:collapse}

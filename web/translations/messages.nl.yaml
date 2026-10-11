@@ -4186,6 +4186,8 @@ admin:
     notify_btn: "Laat de aanvragers weten dat %country% live is (%n%)"
     notify_done: "%n% fietsers hebben gehoord dat %country% live is."
     told: "Gemeld dat het live is: %date%"
+    told_n: "Gemeld dat het live is: %n%"
+    to_tell_n: "Nog niet gemeld: %n%"
   curator:
     title: 'Regiobeheerdersaanvragen'
     empty: 'Geen aanvragen in behandeling.'
