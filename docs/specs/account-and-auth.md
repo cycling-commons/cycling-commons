@@ -953,8 +953,10 @@ consequences, including that a dry run changes nothing).
 `password`, `totpSecret`, `backupCodes`, and
 `ResetPasswordRequest.hashedToken`/`selector`. The User CRUD exposes only:
 email, displayName, roles, emailVerified, twoFaEnabled (read-only),
-lockedUntil, suspendedUntil (read-only, §6.8), publicProfile, createdAt, plus a read-only moderator-areas
-descriptor on detail. Roles/emailVerified/lockedUntil display but are not
+lockedUntil, suspendedUntil (read-only, §6.8), publicProfile, the profile
+country and the newsletter flag (`updatesOptIn`, both read-only, owner
+2026-10-11; the list filters on country and on the newsletter), createdAt,
+plus a read-only moderator-areas descriptor on detail. Roles/emailVerified/lockedUntil display but are not
 form-editable: changes go through the audited actions only.
 
 `ResetPasswordRequestCrudController` is a read-only diagnostics list (target

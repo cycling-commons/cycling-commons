@@ -88,6 +88,7 @@ final class UserCrudController extends AbstractCrudController
         return $filters
             ->add(BooleanFilter::new('emailVerified', 'Email verified'))
             ->add(BooleanFilter::new('publicProfile', 'Public profile'))
+            ->add(BooleanFilter::new('updatesOptIn', 'Newsletter'))
             ->add(EntityFilter::new('country'))
             // The languages this deployment serves. A rider whose stored
             // language is no longer served is not offered as a filter; the
@@ -115,6 +116,13 @@ final class UserCrudController extends AbstractCrudController
         // account-and-auth.md §6.8: changed only through Suspend and Lift suspension.
         yield $this->riderDateTime('suspendedUntil', $this->translator->trans('account_suspension.admin.field_suspended_until'))->setRequired(false)->hideOnForm();
         yield BooleanField::new('publicProfile', 'Public Profile');
+        // The country a rider set on their profile, and whether they are on
+        // the release list (the newsletter, roadmap-and-changelog.md §4). Read
+        // only: both are the rider's own choice, made in their settings.
+        yield TextField::new('country', 'Country')
+            ->formatValue(static fn ($v, User $u): string => $u->getCountry()?->getName() ?? '')
+            ->hideOnForm();
+        yield BooleanField::new('updatesOptIn', 'Newsletter')->renderAsSwitch(false)->hideOnForm();
         yield $this->riderDateTime('createdAt', 'Registered')->hideOnForm();
         yield TextField::new('email', $this->t('admin.field.mod_areas'))
             ->onlyOnDetail()
