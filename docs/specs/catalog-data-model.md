@@ -603,6 +603,13 @@ chips carry the place filter, the form carries the kind, and a decision
 returns to the same view. Example: `/moderate/data?kind=duplicate&country=NL`
 shows only duplicate findings on Dutch rows.
 
+**A decision needs both rows in the curator's area.** The list is scoped by
+the finding's first row, but a duplicate scan is a radius, not a region, so a
+pair can straddle a border, and deciding it writes both rows.
+`CatalogFindingRepository::isInScope()` therefore checks the related row too,
+and a curator who holds only one side gets 403; a curator with a wider area,
+or an admin, decides it (audit 2026-10-04).
+
 **Keeping one row retires the other**, and when a rider added the retired row
 (`App\Catalog\PlaceAuthor`: the approved new-place submission that created it)
 and the row kept is not theirs too, they are sent a statement of reasons

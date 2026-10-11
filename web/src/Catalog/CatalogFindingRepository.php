@@ -172,16 +172,25 @@ final readonly class CatalogFindingRepository
     {
         $params = ['id' => $findingId];
         $types = [];
-        $sql = 'SELECT 1 FROM catalog_finding f JOIN item i ON i.id = f.item_id WHERE f.id = :id';
+        // Both rows of a pair: a duplicate scan is a radius, not a region, so
+        // a pair can straddle a border, and deciding it writes both (one is
+        // retired, the other may take its OpenStreetMap identity).
+        $sql = 'SELECT 1 FROM catalog_finding f JOIN item i ON i.id = f.item_id
+                LEFT JOIN item r ON r.id = f.related_item_id WHERE f.id = :id';
+        $related = $this->scopeArm($scope, $params, $types, 'r');
 
-        return (bool) $this->db->fetchOne($sql.$this->scopeArm($scope, $params, $types).' LIMIT 1', $params, $types);
+        return (bool) $this->db->fetchOne(
+            $sql.$this->scopeArm($scope, $params, $types).' AND (r.id IS NULL OR (TRUE'.$related.')) LIMIT 1',
+            $params,
+            $types,
+        );
     }
 
     /**
      * @param array<string, mixed>              $params
      * @param array<string, ArrayParameterType> $types
      */
-    private function scopeArm(ModerationScope $scope, array &$params, array &$types): string
+    private function scopeArm(ModerationScope $scope, array &$params, array &$types, string $alias = 'i'): string
     {
         if ($scope->global) {
             return '';
@@ -194,12 +203,12 @@ final readonly class CatalogFindingRepository
 
         $arms = [];
         if ([] !== $scope->regionIds) {
-            $arms[] = 'i.region_id IN (:rids)';
+            $arms[] = $alias.'.region_id IN (:rids)';
             $params['rids'] = $scope->regionIds;
             $types['rids'] = ArrayParameterType::INTEGER;
         }
         if ([] !== $scope->countryCodes) {
-            $arms[] = 'i.country_code IN (:ccs)';
+            $arms[] = $alias.'.country_code IN (:ccs)';
             $params['ccs'] = $scope->countryCodes;
             $types['ccs'] = ArrayParameterType::STRING;
         }

@@ -18,6 +18,7 @@ use App\Catalog\SubmissionType;
 use App\Entity\User;
 use App\Messaging\Entity\UserMessage;
 use App\Messaging\UserMessageKind;
+use App\Moderation\Entity\ModeratorArea;
 use App\Moderation\StatementDecision;
 use App\Moderation\StatementOfReasons;
 use Doctrine\ORM\EntityManagerInterface;
@@ -219,6 +220,37 @@ final class ModerateDataDeskTest extends WebTestCase
         $this->em()->clear();
         self::assertSame(ItemState::Unverified, $this->reload($loser)->getState());
         self::assertSame(ItemState::Retired, $this->reload($keeper)->getState());
+    }
+
+    /**
+     * A duplicate pair can straddle a border: the scan is a radius, not a
+     * region. Deciding it writes both rows (one retired, the other may take its
+     * OpenStreetMap identity), so a curator must hold both (audit 2026-10-04).
+     */
+    public function testAPairAcrossTheCuratorsBorderCannotBeDecidedByThem(): void
+    {
+        $client = static::createClient();
+        [$keeper, $loser] = $this->pair('border');
+        $keeper->setCountryCode('NL');
+        $this->em()->flush();
+        $finding = $this->finding(FindingKind::Duplicate, $loser, $keeper);
+
+        $curator = $this->curator('data-border@test.test');
+        $this->em()->persist(new ModeratorArea((int) $curator->getId(), null, 'BE'));
+        $this->em()->flush();
+        $client->loginUser($curator);
+        $token = $this->deskToken($client);
+
+        // Keep the Belgian row, which would retire the Dutch one.
+        $client->request('POST', '/moderate/data/decide', [
+            '_token' => $token, 'finding' => (string) $finding->getId(),
+            'keep' => (string) $loser->getId(),
+        ]);
+
+        self::assertResponseStatusCodeSame(403);
+        $this->em()->clear();
+        self::assertSame(ItemState::Unverified, $this->reload($keeper)->getState(), 'the row outside their area is untouched');
+        self::assertSame(ItemState::Unverified, $this->reload($loser)->getState());
     }
 
     public function testAKeepThatNamesNeitherRowChangesNothing(): void
