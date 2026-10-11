@@ -394,10 +394,13 @@ interpolation into `innerHTML`. Its contract:
   descriptions, attribute/record values, history rows, photo credits and
   uploader names: item fields survive OSM/Wikidata import and are treated
   as hostile.
-- **URLs pass through `safeHref()`** (`map.js`): only `http(s)://` or
+- **URLs pass through `safeHref()`** (`map/util.js`): only `http(s)://` or
   root-relative single-slash paths survive; anything else (incl.
-  `javascript:`, protocol-relative `//`) collapses to `'#'`. The survivor is
-  then entity-escaped.
+  `javascript:`, protocol-relative `//`) collapses to `'#'`, and so does any
+  string with a backslash or a control character in it, because a browser reads
+  `/\host` as `//host` and drops a tab or a newline before it reads. The
+  survivor is then entity-escaped. The report form's `from` path
+  (`ContentReportController::cleanPath()`) follows the same rule.
 
 The CSP (security-architecture.md §2) is the backstop for this layer: a
 payload that slips past `escPend()` lands as un-nonced inline script and does

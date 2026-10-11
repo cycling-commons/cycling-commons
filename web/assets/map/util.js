@@ -21,8 +21,15 @@ export const curatorMayEdit = (regionId, scope) => {
   return Array.isArray(regions) && regions.some(r => String(r) === String(regionId));
 };
 
-// docs/specs/security-architecture.md §4.2 — http(s) or site-relative only; else '#'.
-export const safeHref = u => { const s = String(u ?? '').trim(); return (/^https?:\/\//i.test(s) || (s.startsWith('/') && !s.startsWith('//'))) ? escPend(s) : '#'; };
+// docs/specs/security-architecture.md §4.2: http(s) or a path on this site; else '#'.
+// A browser reads a backslash as a slash and drops tabs and newlines, so
+// `/\host` or `/<tab>/host` would leave the site: no backslash and no control
+// character may appear anywhere.
+export const safeHref = u => {
+  const s = String(u ?? '').trim();
+  if (/[\\\x00-\x1f]/.test(s)) return '#';
+  return (/^https?:\/\//i.test(s) || (s.startsWith('/') && !s.startsWith('//'))) ? escPend(s) : '#';
+};
 /* A person named on the pending card as the curator desks name them
    (App\Moderation\DeskRider): the name linked to their profile when the
    server sent a uuid (a public profile), plain text otherwise. A null name is

@@ -288,6 +288,11 @@ final class ContentReportController extends AbstractController
         if (!str_starts_with($candidate, '/') || str_starts_with($candidate, '//')) {
             return null;
         }
+        // A browser reads a backslash as a slash and drops tabs and newlines,
+        // so `/\host` or `/<tab>/host` would be a link to another site.
+        if (1 === preg_match('/[\\\\\x00-\x1f]/', $candidate)) {
+            return null;
+        }
 
         return mb_substr(explode('?', $candidate)[0], 0, 500);
     }
