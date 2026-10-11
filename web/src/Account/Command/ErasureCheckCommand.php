@@ -6,6 +6,9 @@ declare(strict_types=1);
 
 namespace App\Account\Command;
 
+use App\Account\DormancyLadder;
+use App\Account\DormancySweep;
+use App\Account\UnverifiedSweep;
 use App\Community\Entity\CountryInterest;
 use App\Entity\User;
 use App\Service\UserDeletionService;
@@ -36,8 +39,12 @@ use Symfony\Component\Uid\Uuid;
  * for the address. It may stay only where the privacy notice keeps it on its
  * own clock ({@see self::KEPT_ON_A_CLOCK}). Those rows are then moved past
  * their clocks and the real retention code runs, after which the address may
- * be nowhere at all. Any other hit names the table and column and fails the
- * run. The whole check runs inside one transaction that is always rolled
+ * be nowhere at all. Then the two account clocks: an unconfirmed account 8
+ * days old and an account idle for 25 months that got all three notices go
+ * through the real sweeps ({@see UnverifiedSweep}, {@see DormancySweep}),
+ * which must pick them and delete them, leaving their addresses nowhere. Only
+ * those throwaway accounts are handled; every real one is left alone. Any
+ * other hit names the table and column and fails the run. The whole check runs inside one transaction that is always rolled
  * back, so nothing it wrote is ever seen, kept, mailed or shown on a desk.
  *
  * A failed run is not recorded as a good one, so the admin dashboard marks
@@ -76,6 +83,8 @@ final class ErasureCheckCommand extends Command
         private readonly UserDeletionService $deletion,
         private readonly ContactMessageRetention $contactRetention,
         private readonly ReportContactRetention $reportRetention,
+        private readonly UnverifiedSweep $unverified,
+        private readonly DormancySweep $dormancy,
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct();
@@ -113,6 +122,9 @@ final class ErasureCheckCommand extends Command
             foreach ($this->search($address) as $kept) {
                 $hits[] = $kept.' (past its clock)';
             }
+
+            // The account clocks, through the real sweeps.
+            array_push($hits, ...$this->unconfirmedClock(), ...$this->dormancyClock());
         } finally {
             // Always: the check leaves nothing behind, pass or fail.
             if ($this->db->isTransactionActive()) {
@@ -128,9 +140,73 @@ final class ErasureCheckCommand extends Command
             return Command::FAILURE;
         }
 
-        $output->writeln('A deleted account left its address only where a clock keeps it, and the clocks removed it.');
+        $output->writeln('A deleted account left its address only where a clock keeps it; the clocks, and the unconfirmed and idle account sweeps, removed every address.');
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * An account whose address was never confirmed goes after
+     * {@see UnverifiedSweep::DAYS} days.
+     *
+     * @return list<string> what went wrong, if anything
+     */
+    private function unconfirmedClock(): array
+    {
+        $address = 'erasure-check-'.bin2hex(random_bytes(6)).'@'.self::DOMAIN;
+        $user = (new User())->setEmail($address)->setDisplayName('Erasure check');
+        $user->setPassword('!');
+        $this->em->persist($user);
+        $this->em->flush();
+        $id = (int) $user->getId();
+        $this->db->executeStatement(
+            \sprintf("UPDATE users SET created_at = NOW() - INTERVAL '%d days' WHERE id = ?", UnverifiedSweep::DAYS + 1),
+            [$id],
+        );
+        $this->em->clear();
+
+        if (!\in_array($id, $this->unverified->candidateIds(new \DateTimeImmutable()), true)) {
+            return ['an unconfirmed account was not picked after its clock'];
+        }
+        if (true !== $this->unverified->handle($id)) {
+            return ['an unconfirmed account could not be deleted'];
+        }
+
+        return array_map(static fn (string $c): string => $c.' (unconfirmed account)', $this->search($address));
+    }
+
+    /**
+     * An account nobody signed into for {@see DormancyLadder::DELETE_AFTER_MONTHS}
+     * months, told three times, goes.
+     *
+     * @return list<string> what went wrong, if anything
+     */
+    private function dormancyClock(): array
+    {
+        $now = new \DateTimeImmutable();
+        $address = 'erasure-check-'.bin2hex(random_bytes(6)).'@'.self::DOMAIN;
+        $user = (new User())->setEmail($address)->setDisplayName('Erasure check');
+        $user->setPassword('!');
+        $user->setEmailVerified(true);
+        $user->recordLogin($now->modify(\sprintf('-%d months', DormancyLadder::DELETE_AFTER_MONTHS + 1)));
+        // All three notices, each in its own month, as the sweep sends them.
+        foreach (DormancyLadder::NOTICES as $code => $months) {
+            $user->recordDormancyNotice($code, $now->modify(\sprintf('-%d months', DormancyLadder::DELETE_AFTER_MONTHS + 1 - $months)));
+        }
+        $this->em->persist($user);
+        $this->em->flush();
+        $id = (int) $user->getId();
+        $this->em->clear();
+
+        if (!\in_array($id, $this->dormancy->candidateIds($now), true)) {
+            return ['an idle account was not picked after its clock'];
+        }
+        $outcome = $this->dormancy->handle($id, $now);
+        if ('deleted' !== $outcome) {
+            return ['an idle account told three times was not deleted ('.($outcome ?? 'gone').')'];
+        }
+
+        return array_map(static fn (string $c): string => $c.' (idle account)', $this->search($address));
     }
 
     /** What a signed-in rider can file, each carrying the account's address. */

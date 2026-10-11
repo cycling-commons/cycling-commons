@@ -62,40 +62,71 @@ final class DormancySweep
         $failed = 0;
         $considered = 0;
 
-        $ids = array_map(static fn (User $user): int => (int) $user->getId(), $this->candidates($now));
-        foreach ($ids as $id) {
-            // By id: a failed deletion before this one detached every loaded account.
-            $user = $this->em->find(User::class, $id);
-            if (!$user instanceof User) {
+        foreach ($this->candidateIds($now) as $id) {
+            $outcome = $this->handle($id, $now, $dryRun);
+            if (null === $outcome) {
                 continue;
             }
             ++$considered;
-            $idle = $this->monthsIdle($user, $now);
-            $sent = $user->dormancyNoticesSent();
-
-            if (DormancyLadder::isDeletable($idle, $sent)) {
-                if (!$dryRun && !$this->deletions->eraseInBatch($user)) {
-                    ++$failed;
-                    continue;
-                }
-                ++$deleted;
-                continue;
-            }
-
-            $due = DormancyLadder::noticeDue($idle, $sent);
-            if (null === $due) {
-                continue;
-            }
-
-            if (!$dryRun) {
-                $this->warn($user, $due, $idle);
-                $user->recordDormancyNotice($due, $now);
-                $this->em->flush();
-            }
-            ++$notified[$due];
+            match ($outcome) {
+                'deleted' => ++$deleted,
+                'failed' => ++$failed,
+                'none' => null,
+                default => ++$notified[$outcome],
+            };
         }
 
         return ['notified' => $notified, 'deleted' => $deleted, 'failed' => $failed, 'considered' => $considered];
+    }
+
+    /**
+     * The accounts the sweep looks at, by id.
+     *
+     * Public, with {@see handle()}, so the daily erasure check can follow one
+     * throwaway account through the real sweep and leave every other alone.
+     *
+     * @return list<int>
+     */
+    public function candidateIds(\DateTimeImmutable $now): array
+    {
+        return array_map(static fn (User $user): int => (int) $user->getId(), $this->candidates($now));
+    }
+
+    /**
+     * One account: delete it, warn it, or leave it.
+     *
+     * @return string|null `deleted`, `failed`, a notice code, `none`, or null for an account that is gone
+     */
+    public function handle(int $id, \DateTimeImmutable $now, bool $dryRun = false): ?string
+    {
+        // By id: a failed deletion before this one detached every loaded account.
+        $user = $this->em->find(User::class, $id);
+        if (!$user instanceof User) {
+            return null;
+        }
+        $idle = $this->monthsIdle($user, $now);
+        $sent = $user->dormancyNoticesSent();
+
+        if (DormancyLadder::isDeletable($idle, $sent)) {
+            if (!$dryRun && !$this->deletions->eraseInBatch($user)) {
+                return 'failed';
+            }
+
+            return 'deleted';
+        }
+
+        $due = DormancyLadder::noticeDue($idle, $sent);
+        if (null === $due) {
+            return 'none';
+        }
+
+        if (!$dryRun) {
+            $this->warn($user, $due, $idle);
+            $user->recordDormancyNotice($due, $now);
+            $this->em->flush();
+        }
+
+        return $due;
     }
 
     /**

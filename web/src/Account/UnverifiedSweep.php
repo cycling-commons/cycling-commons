@@ -45,6 +45,57 @@ final class UnverifiedSweep
      */
     public function run(\DateTimeImmutable $now, bool $dryRun = false): array
     {
+        $candidates = $this->candidates($now);
+        $deleted = 0;
+        $failed = 0;
+        foreach ($this->eligibleIds($candidates) as $id) {
+            if ($dryRun) {
+                ++$deleted;
+                continue;
+            }
+            $outcome = $this->handle($id);
+            if (true === $outcome) {
+                ++$deleted;
+            } elseif (false === $outcome) {
+                ++$failed;
+            }
+        }
+
+        return ['deleted' => $deleted, 'failed' => $failed, 'considered' => \count($candidates)];
+    }
+
+    /**
+     * The accounts the sweep deletes, by id.
+     *
+     * Public, with {@see handle()}, so the daily erasure check can follow one
+     * throwaway account through the real sweep and leave every other alone.
+     *
+     * @return list<int>
+     */
+    public function candidateIds(\DateTimeImmutable $now): array
+    {
+        return $this->eligibleIds($this->candidates($now));
+    }
+
+    /**
+     * Delete one account.
+     *
+     * @return bool|null whether it was deleted, or null for an account that is gone
+     */
+    public function handle(int $id): ?bool
+    {
+        // By id: a failed deletion before this one detached every loaded account.
+        $user = $this->em->find(User::class, $id);
+        if (!$user instanceof User) {
+            return null;
+        }
+
+        return $this->deletions->eraseInBatch($user);
+    }
+
+    /** @return list<User> */
+    private function candidates(\DateTimeImmutable $now): array
+    {
         /** @var list<User> $candidates */
         $candidates = $this->em->createQueryBuilder()
             ->select('u')
@@ -57,31 +108,20 @@ final class UnverifiedSweep
             ->getQuery()
             ->getResult();
 
+        return $candidates;
+    }
+
+    /**
+     * @param list<User> $candidates
+     *
+     * @return list<int>
+     */
+    private function eligibleIds(array $candidates): array
+    {
         // Roles live in a JSON column; the list is short, so filter here.
-        $ids = array_map(
+        return array_values(array_map(
             static fn (User $user): int => (int) $user->getId(),
             array_filter($candidates, static fn (User $user): bool => [] === array_diff($user->getRoles(), ['ROLE_USER'])),
-        );
-
-        $deleted = 0;
-        $failed = 0;
-        foreach ($ids as $id) {
-            if ($dryRun) {
-                ++$deleted;
-                continue;
-            }
-            // By id: a failed deletion before this one detached every loaded account.
-            $user = $this->em->find(User::class, $id);
-            if (!$user instanceof User) {
-                continue;
-            }
-            if ($this->deletions->eraseInBatch($user)) {
-                ++$deleted;
-            } else {
-                ++$failed;
-            }
-        }
-
-        return ['deleted' => $deleted, 'failed' => $failed, 'considered' => \count($candidates)];
+        ));
     }
 }

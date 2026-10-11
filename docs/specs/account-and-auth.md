@@ -798,6 +798,13 @@ where a clock keeps it (`contact_message.email`, `content_report.
 reporter_contact`). It then moves those rows past their clocks (closed 25
 months ago, decided 91 days ago), runs `ContactMessageRetention` and
 `ReportContactRetention`, and searches again: now the address may be nowhere.
+Then the two account clocks (owner 2026-10-11): an unconfirmed account made 8
+days ago and an account last signed into 25 months ago, with all three
+notices recorded, must each be picked by its sweep (`UnverifiedSweep::
+candidateIds()`, `DormancySweep::candidateIds()`) and deleted by it
+(`handle()`, the same per-account step the daily runs use), leaving its
+address nowhere. Only those throwaway accounts are handled, so no real
+account is warned or deleted by the check.
 It runs in one transaction that is always rolled back, so nothing it writes is
 kept, mailed or shown. A hit names the `table.column`, logs a critical line
 and fails the run; a failed run is not recorded, so the admin dashboard marks
