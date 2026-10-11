@@ -1,0 +1,21 @@
+web/tests/BulkExport/BulkExportCommandTest.php
+  s_2612073477a315::t_efbb88f6ae9b29 49-52
+web/tests/BulkExport/BulkExportBuilderTest.php
+  s_2612073477a315::t_efbb88f6ae9b29 380-383
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "660582d95a6e221a07844c8bd5e01605cda6fb38",
+  "prompts": {},
+  "sessions": {
+    "s_2612073477a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c06bea5c-9d93-4477-bcdb-4ad73cf20ae4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
