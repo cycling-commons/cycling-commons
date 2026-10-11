@@ -51,10 +51,13 @@ final class MediaTakedownService
      * desk holds the button, because two desks that can both decide the same
      * row is exactly how a reporter ends up never hearing back.
      *
+     * A photo whose legal hold was released waits here too, withheld, for a
+     * curator to put it back or remove it (photo-uploads.md §6d).
+     *
      * @see docs/specs/content-reports.md §9
      */
     private const string PENDING_DQL = "m.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
-               AND m.escalatedAt IS NULL AND m.takedownSource = 'uploader'";
+               AND m.escalatedAt IS NULL AND m.takedownSource IN ('uploader', 'legal_hold')";
 
     /** Recovery desk: withheld third-party reports still waiting. */
     private const string WITHHELD_THIRD_PARTY_DQL = 'm.takedownRequestedAt IS NOT NULL AND m.objectsDeletedAt IS NULL
@@ -259,8 +262,10 @@ final class MediaTakedownService
             return;
         }
 
-        $thirdParty = MediaTakedownSource::ThirdParty === $upload->getTakedownSource();
-        $hiddenFirst = $thirdParty && $upload->isTakedownWithheld();
+        // Anything but the uploader's own request is a removal they are owed
+        // the reasons for: a stranger's report, or a released legal hold.
+        $thirdParty = MediaTakedownSource::Uploader !== $upload->getTakedownSource();
+        $hiddenFirst = MediaTakedownSource::ThirdParty === $upload->getTakedownSource() && $upload->isTakedownWithheld();
         $this->detach($upload);
         $upload->resolveTakedown();
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownGranted, $note);
@@ -330,6 +335,7 @@ final class MediaTakedownService
         }
 
         $thirdParty = MediaTakedownSource::ThirdParty === $upload->getTakedownSource();
+        $releasedHold = MediaTakedownSource::LegalHold === $upload->getTakedownSource();
         $wasHidden = $upload->isTakedownWithheld();
         if ($wasHidden) {
             $this->restoreBytes($upload);
@@ -337,7 +343,9 @@ final class MediaTakedownService
         $upload->declineTakedown();
         $this->reattach($upload);
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownDeclined, $note);
-        if (!$thirdParty) {
+        if ($releasedHold) {
+            // The hold told the uploader nothing, so its end does not either.
+        } elseif (!$thirdParty) {
             $this->notify($upload, UserMessageKind::MediaTakedownDeclined, 'messages.body.media_takedown_declined', $note);
         } elseif ($wasHidden) {
             $this->notify($upload, UserMessageKind::MediaRestoredAfterReview, 'messages.body.media_restored_after_review', null, $this->hideStatement($upload));

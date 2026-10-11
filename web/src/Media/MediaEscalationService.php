@@ -38,6 +38,12 @@ final class MediaEscalationService
     ) {
     }
 
+    /**
+     * The reason a released photo carries on the takedown desk. Fixed words,
+     * never the escalating curator's: those stay with the admin.
+     */
+    public const string RELEASED_REASON = 'Released from a legal hold. Decide whether it goes back on the map.';
+
     /** @throws \InvalidArgumentException when the curator gave no reason */
     public function escalate(MediaUpload $upload, User $curator, string $reason): void
     {
@@ -62,10 +68,10 @@ final class MediaEscalationService
     }
 
     /**
-     * Lift the hold; do not put the photo back on the map.
+     * Lift the hold; put nothing back by itself.
      *
      * @throws HeldPhotoNotRestored when the objects could not go back to their
-     *                              public key; the hold then stays
+     *                              public key; the hold stays
      */
     public function release(MediaUpload $upload, User $admin, ?string $note = null): bool
     {
@@ -73,12 +79,35 @@ final class MediaEscalationService
             return false;
         }
 
-        $this->restoreObjects($upload);
-        $upload->releaseEscalation();
+        $this->handBack($upload);
         $this->events->append($upload->getId(), (int) $admin->getId(), MediaAction::EscalationReleased, $note);
         $this->em->flush();
 
         return true;
+    }
+
+    /**
+     * Hand a held photo back to normal moderation (owner 2026-10-11).
+     *
+     * A published photo goes to the takedown desk, withheld, its variants
+     * still private: the photo page and the image address stay closed until a
+     * curator declines (it returns to the map) or grants (it goes). One never
+     * published goes back to its submission's queue as it was, its objects
+     * where the row says. Flushes nothing.
+     *
+     * @throws HeldPhotoNotRestored when an unpublished photo's objects could not move back
+     */
+    public function handBack(MediaUpload $upload): void
+    {
+        if (MediaStatus::Approved === $upload->getStatus() && null !== $upload->getRevision() && null === $upload->getObjectsDeletedAt()) {
+            $upload->releaseEscalation();
+            $upload->holdForReview(self::RELEASED_REASON);
+
+            return;
+        }
+
+        $this->restoreObjects($upload);
+        $upload->releaseEscalation();
     }
 
     /**

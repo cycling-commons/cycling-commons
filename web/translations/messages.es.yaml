@@ -2509,6 +2509,7 @@ moderate:
     breaker_open: 'El presupuesto de ocultación automática de todo el sitio está agotado, así que las denuncias urgentes de fotos ahora esperan en el escritorio de Denuncias en lugar de retirar fotos por su cuenta. Decídelas tú y avisa al responsable del sitio: este patrón es o un ataque contra el formulario de denuncia o algo que está ocurriendo a gran escala.'
     source_uploader: 'Solicitado por quien la subió'
     source_third_party: 'Informe de un tercero'
+    source_legal_hold: "Liberada de una retención legal"
     state_withheld: 'foto oculta'
     state_published: 'foto todavía publicada'
     reply_to: 'Responde a %email% desde el buzón del proyecto, en el plazo de un mes.'

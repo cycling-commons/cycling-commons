@@ -17,4 +17,6 @@ final class MediaTakedownSource
 {
     public const string Uploader = 'uploader';
     public const string ThirdParty = 'third_party';
+    /** A photo whose legal hold was released, waiting for a curator (photo-uploads.md §6d). */
+    public const string LegalHold = 'legal_hold';
 }

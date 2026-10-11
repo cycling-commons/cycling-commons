@@ -2488,6 +2488,7 @@ moderate:
     breaker_open: 'Das seitenweite Budget für automatisches Zurückhalten ist aufgebraucht: Dringende Fotomeldungen warten jetzt am Meldungen-Pult, statt Fotos von selbst zu entfernen. Entscheide sie selbst und informiere die Eigentümerseite: Dieses Muster ist entweder ein Angriff auf das Meldeformular oder etwas, das in großem Maßstab passiert.'
     source_uploader: 'Von der hochladenden Person beantragt'
     source_third_party: 'Meldung von Dritten'
+    source_legal_hold: "Aus einer rechtlichen Sperre freigegeben"
     state_withheld: 'Foto verborgen'
     state_published: 'Foto noch veröffentlicht'
     reply_to: 'Antwort an %email% über das Projektpostfach, innerhalb eines Monats.'

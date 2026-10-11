@@ -62,7 +62,7 @@
           <a href="{{ t.lg }}" target="_blank" rel="noopener" title="{{ 'moderate.takedown.open_large'|trans }}"><img class="td-img" src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}"></a>
           <div class="q-headwrap">
             <div class="q-head">
-              <span class="q-tag q-tag--photo">{{ (t.source == 'third_party' ? 'moderate.takedown.source_third_party' : 'moderate.takedown.source_uploader')|trans }}</span>
+              <span class="q-tag q-tag--photo">{{ ({third_party: 'moderate.takedown.source_third_party', legal_hold: 'moderate.takedown.source_legal_hold'}[t.source] ?? 'moderate.takedown.source_uploader')|trans }}</span>
               <h3 class="q-title">{{ t.itemName ?: ('moderate.takedown.no_item'|trans) }}
                 {%- if row_unseen %}{% include 'partials/_unseen.html.twig' %}{% endif %}</h3>
               <span class="q-when">{{ 'moderate.takedown.asked'|trans({'%when%': t.requestedAt|cc_datetime}) }}</span>

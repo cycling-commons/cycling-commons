@@ -633,14 +633,13 @@ final class ModerationService
         }
 
         $uploads = $this->em->getRepository(MediaUpload::class)->findBy(['submissionId' => $id]);
-        // Objects first: if one cannot go back, the whole hold stays.
+        // Objects first: if one cannot go back, the whole hold stays. A
+        // published photo keeps its objects private and goes to the takedown
+        // desk instead (MediaEscalationService::handBack()).
         foreach ($uploads as $upload) {
-            $this->mediaEscalations->restoreObjects($upload);
+            $this->mediaEscalations->handBack($upload);
         }
         $submission->releaseEscalation();
-        foreach ($uploads as $upload) {
-            $upload->releaseEscalation();
-        }
         $this->adminLog->log($admin, self::ACTION_ESCALATE_RELEASE, null, sprintf('SUB-%d%s', $id, null !== $note ? ' · '.$note : ''));
         $this->em->flush();
 

@@ -310,9 +310,13 @@ final class DataExportService
     private static function withoutOthersWords(array $upload): array
     {
         $thirdParty = MediaTakedownSource::ThirdParty === $upload['takedown_source'];
+        $releasedHold = MediaTakedownSource::LegalHold === $upload['takedown_source'];
         $reportPending = $thirdParty && null !== $upload['takedown_requested_at'] && null === $upload['takedown_resolved_at'];
-        $held = null !== $upload['escalated_at'];
-        if ($thirdParty) {
+        // A released hold waiting for a curator is still a hold to the rider:
+        // nothing of it is theirs to read yet.
+        $held = null !== $upload['escalated_at']
+            || ($releasedHold && null !== $upload['takedown_requested_at'] && null === $upload['takedown_resolved_at']);
+        if ($thirdParty || $releasedHold) {
             $upload['takedown_reason'] = null;
         }
         /** @var list<array{action: string, note: ?string, created_at: string}> $history */

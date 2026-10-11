@@ -658,6 +658,27 @@ class MediaUpload
         $this->takedownWithheld = true;
     }
 
+    /**
+     * A released legal hold hands the photo to the takedown desk, withheld:
+     * release puts nothing back by itself, and a curator decides whether it
+     * returns (decline) or goes (grant). A takedown already waiting stays the
+     * one decided, withheld now. @see docs/specs/photo-uploads.md §6d
+     */
+    public function holdForReview(string $reason): void
+    {
+        if ($this->isTakedownPending()) {
+            $this->takedownWithheld = true;
+
+            return;
+        }
+        $this->takedownRequestedAt = new \DateTimeImmutable();
+        $this->takedownReason = $reason;
+        $this->takedownSource = MediaTakedownSource::LegalHold;
+        $this->takedownCategory = null;
+        $this->takedownResolvedAt = null;
+        $this->takedownWithheld = true;
+    }
+
     /** Third-party report; withhold is the service's call. @see docs/specs/photo-uploads.md §6c */
     public function reportThirdParty(string $category, string $reason, ?string $contact, string $reporterHash, bool $withheld): void
     {

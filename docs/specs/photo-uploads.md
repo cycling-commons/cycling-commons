@@ -1343,8 +1343,7 @@ on it opens the large one in a new tab, for every card, withheld or not. A decli
 dismissed, moves the variants back before the photo returns to the map; if
 they cannot move, nothing changes and the curator is told
 (`moderate.takedown.restore_failed`). A grant deletes the held copy with the
-rest. A legal hold released on a photo that is also withheld leaves the
-variants private. The caching proxy may still hold the old URL; purging it is
+rest. A released legal hold leaves the variants private (§6d). The caching proxy may still hold the old URL; purging it is
 an operations step. **Only a curator removes anything** — granting is the sole
 path that deletes objects. Every user-facing surface says *hidden*, never *removed*, for
 the automatic action, because a contributor who reads "removed" reasonably
@@ -1608,11 +1607,20 @@ past it. A held submission's own text is deliberately not rendered there
 either: an admin reads the curator's description and decides whether to go
 looking. The page shows a held photo through
 `/admin/escalated/photo/{uuid}`, which reads the private copy and answers
-`Cache-Control: private, no-store`. **Releasing** moves the variants back under
-their public key, lifts the hold and hands the row back to normal moderation;
-it puts nothing back on the map and deletes nothing, because when the material
-had to be reported, the authority it was reported to decides when it may go. If
-the variants cannot move back, the hold stays and the admin is told. The move
+`Cache-Control: private, no-store`. **Releasing** lifts the hold and hands the
+row back to normal moderation (`MediaEscalationService::handBack()`, owner
+2026-10-11); it puts nothing back by itself and deletes nothing, because when
+the material had to be reported, the authority it was reported to decides when
+it may go. A published photo goes to the curator takedown desk as a withheld
+request with source `legal_hold` and the fixed reason "Released from a legal
+hold", never the escalating curator's words; its variants stay private, so
+its page and its image address stay closed. A curator declines (the variants
+move back and it returns to the map; the uploader is told nothing, as the hold
+told them nothing) or grants (it is removed, with a statement of reasons, as
+for an upheld report). A photo that already had a takedown waiting keeps that
+one, withheld now. A photo never published goes back to its submission's
+queue; if its variants cannot move back, the hold stays and the admin is
+told. The move
 out runs after the hold is stored and never blocks it: a failure is logged as
 critical and the photo stays held. The caching proxy in front of the public
 bucket can still hold a copy of the old URL; purging it is an operations step,

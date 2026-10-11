@@ -22,15 +22,19 @@ use App\Media\MediaEventLog;
 use App\Media\MediaStorage;
 use App\Media\MediaTakedownCategory;
 use App\Media\MediaTakedownService;
+use App\Media\MediaTakedownSource;
 use App\Media\PhotoGallery;
 use App\Media\ProcessedPhoto;
-use App\Moderation\EscalationAlert;
+use App\Media\UrgentWithholdBreaker;
+use App\Messaging\MessageService;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\UnableToWriteFile;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -201,7 +205,7 @@ final class MediaEscalationTest extends KernelTestCase
         $this->escalations->escalate($upload, $curator, '  ');
     }
 
-    public function testReleasingLiftsTheHoldWithoutRepublishingOrDeleting(): void
+    public function testReleasingHandsThePhotoToTheTakedownDeskStillWithheld(): void
     {
         $curator = $this->rider('escalate-release@example.com');
         $admin = $this->rider('escalate-release-admin@example.com');
@@ -211,15 +215,16 @@ final class MediaEscalationTest extends KernelTestCase
         self::assertTrue($this->escalations->release($upload, $admin, 'False alarm.'));
 
         self::assertFalse($upload->isEscalated());
-        // Deliberately NOT back on the map: it was the desk's decision before
-        // the hold and it is the desk's decision again.
+        // Release puts nothing back by itself (owner 2026-10-11): the photo
+        // waits on the takedown desk, withheld, for a curator to decide.
+        self::assertTrue($upload->isTakedownWithheld());
+        self::assertSame(MediaTakedownSource::LegalHold, $upload->getTakedownSource());
+        self::assertSame(MediaEscalationService::RELEASED_REASON, $upload->getTakedownReason(), 'the desk reads fixed words, never the escalating curator\'s');
         self::assertArrayNotHasKey('photos', $this->itemOf($upload)->getAttributes());
-        // The objects are back where the row says they are, so the desk,
-        // Trash and the retention sweep find them; the held copy is gone.
-        foreach (MediaStorage::VARIANTS as $variant) {
-            self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/'.$variant.'.webp'), "public {$variant} is back");
-        }
-        self::assertSame(0, $this->storage->heldVariantsExist($upload->getPathPrefix()));
+        // The bytes stay private, so neither the photo page nor the image address serves it.
+        self::assertSame(0, $this->storage->variantsExist('test-bucket-eu-01', $upload->getPathPrefix()));
+        self::assertSame(3, $this->storage->heldVariantsExist($upload->getPathPrefix()));
+        self::assertContains($upload->getId()->toRfc4122(), array_column($this->takedowns->pendingCards(), 'uuid'));
         $actions = array_map(
             static fn (\App\Media\Entity\MediaModerationEvent $e): string => $e->getAction(),
             $this->em->getRepository(\App\Media\Entity\MediaModerationEvent::class)->findBy(['mediaId' => $upload->getId()], ['id' => 'ASC']),
@@ -270,34 +275,76 @@ final class MediaEscalationTest extends KernelTestCase
         self::assertSame('S', stream_get_contents($stream));
     }
 
-    public function testAFailedMoveBackKeepsTheHold(): void
+    public function testDecliningAReleasedPhotoPutsItBackQuietly(): void
+    {
+        $curator = $this->rider('release-decline@example.com');
+        $owner = $this->rider('release-decline-owner@example.com');
+        $upload = $this->approved($owner);
+        $this->escalations->escalate($upload, $curator, 'Escalating.');
+        $this->escalations->release($upload, $this->rider('release-decline-admin@example.com'));
+
+        $this->takedowns->decline($upload, $curator, 'Fine to show.');
+
+        self::assertFalse($upload->isTakedownPending());
+        self::assertCount(1, $this->itemOf($upload)->getAttributes()['photos'] ?? [], 'back on the map');
+        self::assertSame(3, $this->storage->variantsExist('test-bucket-eu-01', $upload->getPathPrefix()), 'and its address works again');
+        self::assertSame(0, $this->storage->heldVariantsExist($upload->getPathPrefix()));
+        // The hold told the uploader nothing, so its end does not either.
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM user_message WHERE user_id = ?', [$owner->getId()]));
+    }
+
+    public function testGrantingAReleasedPhotoRemovesItWithTheReasons(): void
+    {
+        $curator = $this->rider('release-grant@example.com');
+        $owner = $this->rider('release-grant-owner@example.com');
+        $upload = $this->approved($owner);
+        $this->escalations->escalate($upload, $curator, 'Escalating.');
+        $this->escalations->release($upload, $this->rider('release-grant-admin@example.com'));
+
+        $this->takedowns->grant($upload, $curator, 'It shows a person who did not agree.');
+
+        self::assertNotNull($upload->getObjectsDeletedAt());
+        self::assertSame(0, $this->storage->heldVariantsExist($upload->getPathPrefix()), 'gone everywhere');
+        self::assertSame(1, (int) $this->em->getConnection()->fetchOne(
+            "SELECT COUNT(*) FROM user_message WHERE user_id = ? AND kind = 'media_removed_on_report'",
+            [$owner->getId()],
+        ), 'a removal of what they added comes with its statement of reasons');
+    }
+
+    public function testAFailedMoveBackOnDeclineKeepsThePhotoWithheld(): void
     {
         $curator = $this->rider('escalate-stuck@example.com');
         $admin = $this->rider('escalate-stuck-admin@example.com');
         $upload = $this->approved($this->rider('escalate-stuck-owner@example.com'));
         $this->escalations->escalate($upload, $curator, 'Escalating.');
+        $this->escalations->release($upload, $admin);
 
         // The public shard refuses writes, so the variants cannot go back.
         $brokenPublic = $this->createStub(FilesystemOperator::class);
         $brokenPublic->method('writeStream')->willThrowException(UnableToWriteFile::atLocation('x', 'shard down'));
         $c = static::getContainer();
-        $escalations = new MediaEscalationService(
+        $takedowns = new MediaTakedownService(
             $this->em,
+            $c->get(Connection::class),
             $c->get(MediaEventLog::class),
+            $this->disposal,
             $c->get(MediaDecisionService::class),
             $c->get(PhotoGallery::class),
-            $c->get(EscalationAlert::class),
+            $c->get(MessageService::class),
+            $c->get(UrgentWithholdBreaker::class),
             new MediaStorage(null, [], 'test-bucket-private', 'https://img.test', ['test-bucket-eu-01' => $brokenPublic, 'test-bucket-private' => $this->private]),
             new NullLogger(),
+            $c->get(UrlGeneratorInterface::class),
+            'test-secret',
         );
 
         try {
-            $escalations->release($upload, $admin, 'Done.');
-            self::fail('a release whose objects cannot go back must not lift the hold');
+            $takedowns->decline($upload, $curator, 'Fine.');
+            self::fail('a decline whose objects cannot go back must change nothing');
         } catch (HeldPhotoNotRestored) {
         }
 
-        self::assertTrue($upload->isEscalated());
+        self::assertTrue($upload->isTakedownWithheld());
         self::assertSame(3, $this->storage->heldVariantsExist($upload->getPathPrefix()), 'the held copy is untouched');
     }
 }

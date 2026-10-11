@@ -2483,6 +2483,7 @@ moderate:
     breaker_open: 'Le budget de retrait automatique du site est épuisé : les signalements urgents de photos attendent désormais sur le bureau Signalements au lieu de retirer les photos d''eux-mêmes. Tranchez-les vous-même et prévenez le propriétaire du site : ce schéma est soit une attaque sur le formulaire de signalement, soit un phénomène de grande ampleur.'
     source_uploader: 'Demandé par le téléverseur'
     source_third_party: 'Signalement tiers'
+    source_legal_hold: "Libérée d'un blocage juridique"
     state_withheld: 'photo masquée'
     state_published: 'photo toujours publiée'
     reply_to: 'Répondre à %email% via la boîte du projet, sous un mois.'

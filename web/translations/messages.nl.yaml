@@ -2487,6 +2487,7 @@ moderate:
     breaker_open: 'Het sitebrede budget voor automatisch offline halen is op: dringende fotomeldingen wachten nu op de Meldingen-desk in plaats van zelf foto''s weg te halen. Beslis ze zelf en waarschuw de site-eigenaar: dit patroon is ofwel een aanval op het meldformulier, ofwel iets dat op grote schaal gebeurt.'
     source_uploader: 'Gevraagd door de uploader'
     source_third_party: 'Melding van een derde'
+    source_legal_hold: "Vrijgegeven uit een juridische blokkade"
     state_withheld: 'foto verborgen'
     state_published: 'foto nog gepubliceerd'
     reply_to: 'Antwoord naar %email% via de projectmailbox, binnen een maand.'
