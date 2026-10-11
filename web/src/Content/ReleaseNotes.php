@@ -48,7 +48,6 @@ final class ReleaseNotes
         ['key' => 'roadmap.item_going_live', 'status' => 'now'],
         ['key' => 'roadmap.item_provider_refresh', 'status' => 'now'],
         ['key' => 'roadmap.item_roadmap_votes', 'status' => 'next'],
-        ['key' => 'roadmap.item_region_vote', 'status' => 'next'],
         ['key' => 'roadmap.item_more_countries', 'status' => 'next'],
         ['key' => 'roadmap.item_scout_devices', 'status' => 'next'],
         ['key' => 'roadmap.item_route_export', 'status' => 'next'],

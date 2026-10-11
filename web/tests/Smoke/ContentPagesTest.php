@@ -291,14 +291,14 @@ final class ContentPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'The whole Commons');
     }
 
-    /** The vote card's footnote says what is: the ballot is built and switched off until launch. */
-    public function testTheVoteFootnoteSaysTheBallotIsBuilt(): void
+    /** The season vote is live: its card carries no note that it opens later. */
+    public function testTheVoteCardCarriesNoPreLaunchNote(): void
     {
         $client = static::createClient();
-        $client->request('GET', '/pages');
+        $crawler = $client->request('GET', '/pages');
 
-        self::assertSelectorTextContains('.dirnote', 'The season vote is built and opens after launch.');
-        self::assertSelectorTextNotContains('.dirnote', 'not built');
+        self::assertSelectorNotExists('.dirnote');
+        self::assertStringNotContainsString('after launch', $crawler->filter('body')->text());
     }
 
     /**

@@ -2,7 +2,6 @@
 .phero{background:var(--ink);color:var(--paper);padding:3rem 0}
 /* The toggle: two links that read as one control. */
 .dirbar{display:flex;justify-content:flex-end;margin-bottom:1.4rem}
-.dirnote{font-size:.85rem;color:#4a4d40;margin-top:1.2rem}
 /* The toggle: two chips (atlas.css), the current view in ink. */
 .dirtoggle{margin:0}
 /* The map. The wide drawing needs 820px and never shrinks to a smudge; at 880px of window or

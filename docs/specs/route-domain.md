@@ -1002,8 +1002,9 @@ would offer a search engine a page of invented results.
 
 ### 8c. The season ballot and its ranking (decided 2026-10-02)
 
-**Status: built, switched off until after launch** (`community.voting_live`;
-how it is built: route-domain.md §8d). While it is off, `/best` shows the
+**Status: live on production** (`community.voting_live` = 1; the setting's
+default is 0, so a fresh install starts with the ballot off; how it is built:
+route-domain.md §8d). While it is off, `/best` shows the
 simulated result of route-domain.md §8b. This section is the rule the
 ballot and the real ranking are built to. Owner 2026-10-02: "a good voting
 system per season. It must hold up with a low number of voters and seasonal

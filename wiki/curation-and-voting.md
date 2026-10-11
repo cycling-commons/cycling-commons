@@ -2,12 +2,6 @@
 
 # Curation & Voting
 
-!!! warning "Built, switched on after launch"
-    The map's three view modes and the route path (propose, curator review, *I rode this*
-    verification) are live. The season ballot described below is built and stays switched off
-    until after launch: until then `/vote` shows the lists without vote buttons and `/best`
-    shows a simulated result.
-
 **Curation over completeness** is one of the things that set the Cycling Commons apart. It is an
 important part of the Commons, not the whole of its intention: what the Commons is for, and the
 principles under it, are in the [Manifesto](manifesto.md). The Commons doesn't try to list *every*

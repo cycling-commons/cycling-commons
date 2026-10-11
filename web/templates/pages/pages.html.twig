@@ -34,7 +34,7 @@
     {id: 'improve',      href: path('improve'),       x: 790, y: 95, t: {x: 225, y: 390, lp: 'right'},  capital: false, lp: 'above', h: 'pages.card_improve_h'|trans,      p: 'pages.card_improve_p'|trans},
     {id: 'addclimb',     href: path('improve', {type: 'climbs', mode: 'add'}), x: 730, y: 140, t: {x: 185, y: 430}, capital: false, h: 'pages.card_addclimb_h'|trans, p: 'pages.card_addclimb_p'|trans},
     {id: 'route',        href: path('propose_route'), x: 620, y: 200, t: {x: 135, y: 380, lp: 'left'}, capital: false, h: 'pages.card_route_h'|trans,        p: 'pages.card_route_p'|trans},
-    {id: 'vote',         href: path('vote'),          x: 790, y: 210, t: {x: 125, y: 430, lp: 'left'}, capital: false, note: true, h: 'pages.card_vote_h'|trans, p: 'pages.card_vote_p'|trans},
+    {id: 'vote',         href: path('vote'),          x: 790, y: 210, t: {x: 125, y: 430, lp: 'left'}, capital: false, h: 'pages.card_vote_h'|trans, p: 'pages.card_vote_p'|trans},
     {id: 'join',         href: path('join'),          x: 900, y: 80, t: {x: 240, y: 450, lp: 'right'},  capital: false, lp: 'above', h: 'pages.card_join_h'|trans,         p: 'pages.card_join_p'|trans},
     {id: 'contributors', href: path('contributors'),  x: 930, y: 190, t: {x: 200, y: 520, lp: 'left'}, capital: false, lp: 'left', h: 'pages.card_contributors_h'|trans, p: 'pages.card_contributors_p'|trans},
     {id: 'wiki',         href: 'https://wiki.cyclingcommons.org/', x: 860, y: 150, t: {x: 270, y: 500, lp: 'right'}, capital: false, h: 'pages.card_wiki_h'|trans, p: ''},
@@ -166,7 +166,7 @@
         {% endfor %}
         {% for g in groups %}{% for p in g.pages %}
         {% set pos = tall ? p.t : p %}{% set x = pos.x %}{% set y = pos.y %}{% set lp = pos.lp ?? 'below' %}
-        {% set label = p.h ~ (p.note|default(false) ? '*' : '') %}
+        {% set label = p.h %}
         {# Greedy word wrap: a line takes the next word while it stays within `wrap` characters. #}
         {% set lines = [label] %}
         {% if lay.wrap > 0 and label|length > lay.wrap %}
@@ -208,13 +208,12 @@
       <h2 id="pgc-{{ g.id }}">{{ g.name }}</h2>
       <div class="pg">
         {% for p in g.pages %}
-        <a href="{{ p.href }}"><div class="card"><h4>{{ p.h }}{% if p.note|default(false) %}*{% endif %}</h4>{% if p.p %}<p>{{ p.p }}</p>{% endif %}</div></a>
+        <a href="{{ p.href }}"><div class="card"><h4>{{ p.h }}</h4>{% if p.p %}<p>{{ p.p }}</p>{% endif %}</div></a>
         {% endfor %}
       </div>
     </section>
     {% endfor %}
   </div>
-  <p class="dirnote">* {% trans %}pages.footnote_vote{% endtrans %}</p>
 </div></section>
 {% endblock %}
 {% block body_scripts %}
