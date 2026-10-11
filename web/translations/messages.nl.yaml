@@ -4699,6 +4699,9 @@ changelog:
   title: 'Wat er nieuw is.'
   lead: 'Elke uitgave, nieuwste eerst, in gewone woorden. De versie hier is dezelfde als die onderaan elke pagina staat, dus je weet altijd waar je naar kijkt.'
   feed_title: 'Cycling Commons: wat er nieuw is'
+  upcoming_v: "Volgende release"
+  upcoming_d: "Al live"
+  country_live: "%country% staat op de kaart."
   feed_subtitle: 'Uitgaves van het Cycling Commons-platform.'
   feed_pre: 'Volg het zonder account: abonneer je op de'
   feed_link: 'Atom-feed'

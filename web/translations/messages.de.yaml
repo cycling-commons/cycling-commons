@@ -4700,6 +4700,9 @@ changelog:
   title: 'Was neu ist.'
   lead: 'Jede Version, die neueste zuerst, in einfachen Worten. Die Version hier ist dieselbe, die am Fuß jeder Seite steht, du weißt also immer, was du vor dir hast.'
   feed_title: 'Cycling Commons: was neu ist'
+  upcoming_v: "Nächste Version"
+  upcoming_d: "Schon live"
+  country_live: "%country% ist auf der Karte."
   feed_subtitle: 'Versionen der Cycling-Commons-Plattform.'
   feed_pre: 'Ohne Konto mitlesen: abonniere den'
   feed_link: 'Atom-Feed'

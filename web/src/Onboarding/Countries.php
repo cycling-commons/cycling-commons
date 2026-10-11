@@ -136,6 +136,26 @@ final class Countries
         );
     }
 
+    /**
+     * The countries that went live after a day, oldest first: what the next
+     * release will list, shown on "What's new" until it is cut
+     * (roadmap-and-changelog.md §6b).
+     *
+     * @param string $date a release date, `Y-m-d`
+     *
+     * @return list<string> country codes
+     */
+    public function liveAfter(string $date): array
+    {
+        /** @var list<string> $codes */
+        $codes = $this->db->fetchFirstColumn(
+            "SELECT code FROM country WHERE status = 'live' AND live_at >= CAST(:d AS date) + 1 ORDER BY live_at, code",
+            ['d' => $date],
+        );
+
+        return $codes;
+    }
+
     public function markLive(string $cc): bool
     {
         return 1 === $this->db->executeStatement(

@@ -4695,6 +4695,9 @@ changelog:
   title: 'Ce qui est nouveau.'
   lead: 'Chaque version, la plus récente d''abord, en mots simples. La version indiquée ici est celle imprimée au pied de chaque page : vous savez toujours ce que vous regardez.'
   feed_title: 'Cycling Commons : ce qui est nouveau'
+  upcoming_v: "Prochaine version"
+  upcoming_d: "Déjà en ligne"
+  country_live: "%country% est sur la carte."
   feed_subtitle: 'Versions de la plateforme Cycling Commons.'
   feed_pre: 'Suivez sans compte : abonnez-vous au'
   feed_link: 'flux Atom'

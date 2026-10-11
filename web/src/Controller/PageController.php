@@ -22,6 +22,7 @@ use App\Entity\User;
 use App\Legal\LegalPageView;
 use App\Legal\PrivacyNoticeVersions;
 use App\Legal\TermsVersions;
+use App\Onboarding\Countries as OnboardedCountries;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Routing\LocalePrefix;
@@ -89,18 +90,26 @@ final class PageController extends AbstractController
     }
 
     /**
-     * What shipped, newest first.
+     * What shipped, newest first, under what is live already and waits for
+     * the next release: the countries that went live since the last one.
      *
-     * @see docs/specs/roadmap-and-changelog.md
+     * @see docs/specs/roadmap-and-changelog.md §6b
      */
     #[Route(LocalizedPath::CHANGELOG, name: 'changelog')]
-    public function changelog(): Response
+    public function changelog(Request $request, OnboardedCountries $onboarded): Response
     {
+        $locale = $request->getLocale();
+        $upcoming = array_map(
+            static fn (string $cc): string => Countries::exists($cc) ? Countries::getName($cc, $locale) : $cc,
+            $onboarded->liveAfter(ReleaseNotes::latestRelease()['date']),
+        );
+
         return $this->render('pages/changelog.html.twig', [
             'page_title' => 'meta.changelog_title',
             'page_description' => 'meta.changelog_description',
             'nav_active' => '',
             'releases' => ReleaseNotes::releases(),
+            'upcoming_countries' => $upcoming,
         ]);
     }
 

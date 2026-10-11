@@ -178,7 +178,9 @@ catches the symptom whatever causes it next time.
 1. Add an entry at the **top** of `ReleaseNotes::RELEASES`, with its notes
    under `sections` (see below), and set `APP_BUILD_VERSION` in `web/.env`
    to the same version with its leading `v`.
-2. Add its keys to `messages.en.yaml`, then the other four.
+2. Add its keys to `messages.en.yaml`, then the other four. Name each country
+   in the "Next release" block (§6b): it leaves that block when this release
+   is dated.
 3. `app:translations:sync`.
 4. Move anything it finished off `ReleaseNotes::ROADMAP`.
 5. Tag it `v<version>` so the footer agrees with the page.
@@ -209,6 +211,19 @@ page shows no numbers. An item that shipped is removed the day it ships,
 whether or not a release has been tagged yet; the changelog names it at the
 next tag (§6 step 4). Fifteen items is the size it has now; it should stay
 short, because a list nobody reads to the end is not a roadmap.
+
+## 6b. Countries live since the last release
+
+A country that went live after the newest release's `date`
+(`Countries::liveAfter()`, from `country.live_at`) is listed at the top of
+"What's new" in a **Next release** block (`#next`, "Already live"), under the
+public heading, as "Denmark is on the map." (`changelog.country_live`, the
+name in the page's language). Nothing is written to `RELEASES` for it: the
+block is read from the database, so it appears the moment `app:country:mark-live`
+runs, on staging and production alike. Cutting the next release moves its date
+past those countries and the block empties, so that release's notes must name
+them (§6 step 2). The feed does not carry the block: it lists releases only.
+Owner 2026-10-11.
 
 ## 7. Deliberately not built
 

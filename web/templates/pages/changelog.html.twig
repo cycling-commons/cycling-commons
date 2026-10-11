@@ -26,6 +26,21 @@
 
 <section class="pad"><div class="wrap">
   <div class="cwrap">
+    {# Live already, listed by no release yet: the countries that went live
+       since the last one (roadmap-and-changelog.md §6b). Cutting the next
+       release dates past them, and its own notes take them over. #}
+    {% if upcoming_countries is not empty %}
+      <div class="crel" id="next">
+        <div class="crel-head">
+          <span class="crel-v">{% trans %}changelog.upcoming_v{% endtrans %}</span>
+          <span class="crel-d">{% trans %}changelog.upcoming_d{% endtrans %}</span>
+        </div>
+        <h3 class="csec">{{ 'changelog.section_public'|trans }}</h3>
+        {% for name in upcoming_countries %}
+          <div class="cline"><p>{{ 'changelog.country_live'|trans({'%country%': name}) }}</p></div>
+        {% endfor %}
+      </div>
+    {% endif %}
     {% for release in releases %}
       {# Anchored by git tag (`#v0.9.0`), so a fixed bug on /known-issues can
          link to the release it shipped in. #}

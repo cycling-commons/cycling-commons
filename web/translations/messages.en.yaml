@@ -4717,6 +4717,9 @@ changelog:
   title: 'What is new.'
   lead: 'Every release, newest first, in plain words. The version here is the same one printed at the foot of every page, so you can always tell which one you are looking at.'
   feed_title: 'Cycling Commons: what is new'
+  upcoming_v: "Next release"
+  upcoming_d: "Already live"
+  country_live: "%country% is on the map."
   feed_subtitle: 'Releases of the Cycling Commons platform.'
   feed_pre: 'Follow along without an account: subscribe to the'
   feed_link: 'Atom feed'
