@@ -7,7 +7,10 @@ declare(strict_types=1);
 namespace App\Provider;
 
 use App\Catalog\ConfirmationStance;
+use App\Catalog\CustodyTier;
+use App\Catalog\Entity\ChangeHistory;
 use App\Catalog\Entity\Item;
+use App\Catalog\ItemEvidenceResolver;
 use App\Catalog\ItemSource;
 use App\Catalog\ItemState;
 use App\Provider\Entity\DataProvider;
@@ -81,17 +84,18 @@ final class ProviderHarvest
     public function __construct(
         private readonly Connection $db,
         private readonly ProviderCitations $citations,
+        private readonly ItemEvidenceResolver $evidence,
     ) {
     }
 
     /**
      * @param list<array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null}> $features
      *
-     * @return array{attached: int, inserted: int, updated: int, moved: int, skipped_rider: int, stale: int, contested: int, reclaimed: int}
+     * @return array{attached: int, inserted: int, updated: int, moved: int, skipped_rider: int, retired_beside_ours: int, stale: int, contested: int, reclaimed: int}
      */
     public function apply(DataProvider $provider, array $features, \DateTimeImmutable $now = new \DateTimeImmutable()): array
     {
-        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'stale' => 0, 'contested' => 0, 'reclaimed' => 0];
+        $counts = ['attached' => 0, 'inserted' => 0, 'updated' => 0, 'moved' => 0, 'skipped_rider' => 0, 'retired_beside_ours' => 0, 'stale' => 0, 'contested' => 0, 'reclaimed' => 0];
         // Every ref this run carries, known up front: a row whose ref is not
         // among them and that sits near a ref nobody has is a point that MOVED.
         $refs = array_map(static fn (array $f): string => $f['ref'], $features);
@@ -101,8 +105,15 @@ final class ProviderHarvest
             $ref = $feature['ref'];
             $seen[] = $ref;
 
-            if (null !== $this->riderRowAt($feature)) {
+            // `skipped_rider` counts every place the map already shows as
+            // ours, a rider's or a copy a person made ours.
+            if (null !== $this->oursAt($feature, $now)) {
                 ++$counts['skipped_rider'];
+                // A row this register added before the place became ours goes,
+                // unless a person has worked on it.
+                if ($this->retireBesideOurs($ref, $now)) {
+                    ++$counts['retired_beside_ours'];
+                }
                 continue;
             }
 
@@ -173,7 +184,13 @@ final class ProviderHarvest
     }
 
     /**
-     * The rider row holding this place, if one does.
+     * The row holding this place that the map shows as ours, if one does.
+     *
+     * A rider's row always is (§4 rule 1). So is an OpenStreetMap or Wikidata
+     * copy once a person changed or confirmed it (owner 2026-10-08): the same
+     * custody the map draws, read from ItemEvidenceResolver, so the import
+     * and the map cannot disagree. A copy nobody touched stays the provider's
+     * rung below the register, and the register record is added as before.
      *
      * Matched by distance alone rather than by name: a rider naming a tap
      * "Fontein" and a register naming it "Openbare drinkwaterkraan" are still
@@ -181,28 +198,72 @@ final class ProviderHarvest
      *
      * @param array{ref: string, letter: string, name: string, lat: float, lng: float, attributes: array<string, mixed>, country_code?: string|null} $feature
      */
-    private function riderRowAt(array $feature): ?int
+    private function oursAt(array $feature, \DateTimeImmutable $now): ?int
     {
-        $id = $this->db->fetchOne(
-            'SELECT i.id
+        $rows = $this->db->fetchAllAssociative(
+            'SELECT i.id, i.state, i.source, i.imported_at, '.ItemEvidenceResolver::selectSql('i').'
                FROM item i
               WHERE i.letter = :letter
-                AND i.source IN (:sources)
+                AND i.provider_id IS NULL
+                AND i.state <> :retired
                 AND i.geom IS NOT NULL
                 AND ST_DWithin(i.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)
               ORDER BY ST_Distance(i.geom::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography)
-              LIMIT 1',
+              LIMIT 5',
             [
                 'letter' => $feature['letter'],
-                'sources' => self::RIDER_SOURCES,
+                'retired' => ItemState::Retired->value,
                 'lat' => $feature['lat'],
                 'lng' => $feature['lng'],
                 'radius' => 50,
             ],
-            ['sources' => \Doctrine\DBAL\ArrayParameterType::STRING],
         );
 
-        return false === $id ? null : (int) $id;
+        foreach ($rows as $row) {
+            if (\in_array($row['source'], self::RIDER_SOURCES, true)) {
+                return (int) $row['id'];
+            }
+            if (CustodyTier::Ours === $this->evidence->fromRow($row, $now)->custody) {
+                return (int) $row['id'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retire this register's own row for a place that has become ours, when no
+     * person has changed or confirmed it. A person's work is never retired by
+     * an import; such a row stays, for a curator to settle. The retirement is
+     * on record in change_history, by the system.
+     */
+    private function retireBesideOurs(string $ref, \DateTimeImmutable $now): bool
+    {
+        $id = $this->existingRef($ref);
+        if (null === $id) {
+            return false;
+        }
+        $touched = $this->db->fetchOne(
+            "SELECT 1 FROM item i WHERE i.id = :id AND (
+                 i.state = :retired
+                 OR EXISTS (SELECT 1 FROM change_history h WHERE h.item_id = i.id AND h.changed_by IS DISTINCT FROM :system AND h.field <> 'state')
+                 OR EXISTS (SELECT 1 FROM item_confirmation c WHERE c.item_id = i.id AND c.source <> 'form'))",
+            ['id' => $id, 'retired' => ItemState::Retired->value, 'system' => ChangeHistory::SYSTEM_ACTOR],
+        );
+        if (false !== $touched) {
+            return false;
+        }
+
+        $old = (string) $this->db->fetchOne('SELECT state FROM item WHERE id = ?', [$id]);
+        $this->db->executeStatement('UPDATE item SET state = :retired, updated_at = :now WHERE id = :id', [
+            'retired' => ItemState::Retired->value, 'now' => $now->format('Y-m-d H:i:s'), 'id' => $id,
+        ]);
+        $this->db->executeStatement(
+            "INSERT INTO change_history (item_id, field, old_value, new_value, changed_by, changed_at) VALUES (:id, 'state', :old, :new, :system, :now)",
+            ['id' => $id, 'old' => json_encode($old), 'new' => json_encode(ItemState::Retired->value), 'system' => ChangeHistory::SYSTEM_ACTOR, 'now' => $now->format('Y-m-d H:i:s')],
+        );
+
+        return true;
     }
 
     /**

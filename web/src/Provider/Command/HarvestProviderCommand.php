@@ -128,8 +128,8 @@ final class HarvestProviderCommand extends Command
         }
 
         $io->table(
-            ['read', 'inserted', 'attached to OSM', 'updated', 'moved', 'left to riders', 'contested node', 'stale upstream', 'custody reclaimed'],
-            [[\count($features), $counts['inserted'], $counts['attached'], $counts['updated'], $counts['moved'], $counts['skipped_rider'], $counts['contested'], $counts['stale'], $counts['reclaimed']]],
+            ['read', 'inserted', 'attached to OSM', 'updated', 'moved', 'left to ours', 'retired beside ours', 'contested node', 'stale upstream', 'custody reclaimed'],
+            [[\count($features), $counts['inserted'], $counts['attached'], $counts['updated'], $counts['moved'], $counts['skipped_rider'], $counts['retired_beside_ours'], $counts['contested'], $counts['stale'], $counts['reclaimed']]],
         );
 
         if (!$write) {

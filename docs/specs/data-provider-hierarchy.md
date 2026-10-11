@@ -239,8 +239,19 @@ For each upstream feature:
    - **Not found: insert.** Write the item row with `osm_ref` NULL and
      `osm_checked_at` set, which is the existing tri-state "we looked and there
      is nothing" (catalog-data-model.md, `osm_ref IS NULL` vs never-checked).
-4. **Never touch a rider row.** If the matched item is `manual`, `user` or
-   `scout`, the authority record is dropped for that place. Rule 1 of §4.
+4. **Never touch a row that is ours.** If an item within 50 m of the record,
+   of the same letter and not a provider's, is `manual`, `user` or `scout`, or
+   an `osm`/`wikidata` copy the map shows as ours (a person changed or
+   confirmed it, custody from `ItemEvidenceResolver`; owner 2026-10-08), the
+   authority record is dropped for that place (`ProviderHarvest::oursAt()`,
+   counted `skipped_rider`, "left to ours"). Rule 1 of §4. A copy nobody
+   touched stays a rung below the register and the record is added as before.
+   A row this register added before the place became ours is retired on the
+   next run, with a `state` change_history row by the system, unless a person
+   changed or confirmed it (`retireBesideOurs()`, counted
+   `retired_beside_ours`). Found on production 2026-10-11: an RIVM tap 13 m
+   beside a confirmed OSM copy ("Waterpunt Geestmerambacht"), because the rule
+   named rider sources only; pinned by `HarvestBesideOursTest`.
 5. **Removals.** A feature that vanishes upstream does not delete the item row.
    It is left in place and counted as `stale` in the run summary
    (`countVanished()`), because "the publisher dropped it" and "the publisher's
