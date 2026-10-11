@@ -115,7 +115,9 @@ final class MediaEscalationService
      */
     public function restoreObjects(MediaUpload $upload): void
     {
-        if (null === $upload->getRevision()) {
+        // A photo also withheld by a takedown keeps its bytes private: they
+        // come back with the photo, when a curator declines the takedown.
+        if (null === $upload->getRevision() || $upload->isTakedownWithheld()) {
             return;
         }
 

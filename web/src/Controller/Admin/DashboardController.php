@@ -493,8 +493,13 @@ final class DashboardController extends AbstractDashboardController
                     continue;
                 }
                 $upload = $em->find(MediaUpload::class, Uuid::fromString($uuid));
-                if (null !== $upload && $takedowns->dismissAsAbuse($upload, $actor, $note)) {
-                    ++$restored;
+                try {
+                    if (null !== $upload && $takedowns->dismissAsAbuse($upload, $actor, $note)) {
+                        ++$restored;
+                    }
+                } catch (HeldPhotoNotRestored) {
+                    // That one stays withheld; the others still go through.
+                    $this->addFlash('danger', $translator->trans('moderate.takedown.restore_failed'));
                 }
             }
 

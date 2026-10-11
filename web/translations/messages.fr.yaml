@@ -2502,6 +2502,7 @@ moderate:
     log_by: 'par %who%'
     granted: 'La photo a été retirée et le cycliste prévenu.'
     declined: 'La demande a été refusée et la photo est de nouveau publiée.'
+    restore_failed: "La photo n'a pas pu revenir du stockage privé, elle reste donc masquée. Réessayez plus tard."
   translation:
     kicker: 'Modération · traductions'
     heading: 'Examiner les propositions de traduction'

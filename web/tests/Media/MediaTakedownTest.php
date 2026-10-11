@@ -128,8 +128,10 @@ final class MediaTakedownTest extends KernelTestCase
         // `f.photos || [f.photo]` and [] is truthy.
         self::assertArrayNotHasKey('photos', $this->itemOf($upload)->getAttributes());
         self::assertContains(MediaAction::TakedownRequested, $this->actions($upload));
-        // Withheld, not destroyed — the curator still has to see it.
-        self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
+        // Withheld, not destroyed: the bytes leave the public bucket for the
+        // private one, where the curator's desk still reads them.
+        self::assertFalse($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
+        self::assertSame(3, static::getContainer()->get(MediaStorage::class)->heldVariantsExist($upload->getPathPrefix()));
     }
 
     public function testAnEmptyReasonIsRefused(): void

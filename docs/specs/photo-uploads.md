@@ -1329,9 +1329,22 @@ quite possibly with no account. Art. 17 does not require one, so the route is
 open to everyone, through a form rather than a mailbox.
 
 **Hidden is not removed.** Withholding detaches a photo from the map and
-404s its page; the objects stay in the bucket and the row stays in the
-database. **Only a curator removes anything** — granting is the sole path that
-deletes objects. Every user-facing surface says *hidden*, never *removed*, for
+404s its page, and its variants move from the public shard to the private
+bucket, under `held/<prefix>`, the same move a legal hold makes (§6d;
+`MediaTakedownService::withholdBytes()`, audit 2026-10-04): an approved
+photo's URL was public and sits in cached tiles, so unlinking alone left the
+bytes one request away. This holds for the uploader's own request (§6b) and
+for an urgent report that hides at once. The row stays in the database. The
+curator who decides sees the photo through `/moderate/withheld-photo/{uuid}`,
+curator-only and `private, no-store`, which the takedown desk and the
+withheld-photos desk use for their cards. A decline, or an abusive report
+dismissed, moves the variants back before the photo returns to the map; if
+they cannot move, nothing changes and the curator is told
+(`moderate.takedown.restore_failed`). A grant deletes the held copy with the
+rest. A legal hold released on a photo that is also withheld leaves the
+variants private. The caching proxy may still hold the old URL; purging it is
+an operations step. **Only a curator removes anything** — granting is the sole
+path that deletes objects. Every user-facing surface says *hidden*, never *removed*, for
 the automatic action, because a contributor who reads "removed" reasonably
 concludes their work is gone. **The hide itself sends the contributor
 nothing** (owner 2026-10-09): a message or a statement at that moment would

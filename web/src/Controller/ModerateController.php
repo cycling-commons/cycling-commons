@@ -17,6 +17,7 @@ use App\Community\ItemConfirmationService;
 use App\Entity\User;
 use App\Form\ModerationDecisionType;
 use App\Media\Entity\MediaUpload;
+use App\Media\HeldPhotoNotRestored;
 use App\Media\MediaEscalationService;
 use App\Media\MediaTakedownService;
 use App\Media\PhotoLocationConfirmation;
@@ -561,6 +562,32 @@ final class ModerateController extends AbstractController
         return $this->em->find(Submission::class, $submissionId)?->getRegionId();
     }
 
+    /**
+     * A withheld photo, for the curator who decides its takedown. Its bytes
+     * wait in the private bucket while it is withheld, so the desk cards read
+     * them here; never cached, and nothing for a photo that is not withheld.
+     *
+     * @see docs/specs/photo-uploads.md §6b, §6c
+     */
+    #[Route('/moderate/withheld-photo/{uuid}', name: 'moderate_withheld_photo', requirements: ['uuid' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'], methods: ['GET'])]
+    public function withheldPhoto(string $uuid): Response
+    {
+        $upload = $this->em->find(MediaUpload::class, Uuid::fromString($uuid));
+        $stream = null !== $upload ? $this->takedowns->withheldStream($upload) : null;
+        if (null === $stream) {
+            throw $this->createNotFoundException();
+        }
+
+        $bytes = (string) stream_get_contents($stream);
+        fclose($stream);
+
+        return new Response($bytes, Response::HTTP_OK, [
+            'Content-Type' => 'image/webp',
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     #[Route('/moderate/takedown', name: 'moderate_takedown', methods: ['POST'])]
     public function takedown(Request $request): Response
     {
@@ -579,8 +606,13 @@ final class ModerateController extends AbstractController
                 $this->takedowns->grant($upload, $curator, $note);
                 $this->addFlash('success', 'moderate.takedown.granted');
             } else {
-                $this->takedowns->decline($upload, $curator, $note);
-                $this->addFlash('success', 'moderate.takedown.declined');
+                try {
+                    $this->takedowns->decline($upload, $curator, $note);
+                    $this->addFlash('success', 'moderate.takedown.declined');
+                } catch (HeldPhotoNotRestored) {
+                    // Nothing changed: the photo stays withheld until its bytes can move back.
+                    $this->addFlash('error', 'moderate.takedown.restore_failed');
+                }
             }
         }
 

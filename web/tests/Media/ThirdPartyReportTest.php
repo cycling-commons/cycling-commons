@@ -159,8 +159,10 @@ final class ThirdPartyReportTest extends KernelTestCase
 
         self::assertTrue($upload->isTakedownWithheld());
         self::assertArrayNotHasKey('photos', $this->itemOf($upload)->getAttributes());
-        // Withheld, not destroyed — the curator still has to see it.
-        self::assertTrue($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
+        // Withheld, not destroyed: the bytes leave the public bucket for the
+        // private one, where the curator's desk still reads them.
+        self::assertFalse($this->filesystem->fileExists($upload->getPathPrefix().'/sm.webp'));
+        self::assertSame(3, static::getContainer()->get(MediaStorage::class)->heldVariantsExist($upload->getPathPrefix()));
 
         $events = $this->em->getRepository(MediaModerationEvent::class)->findBy(['mediaId' => $upload->getId()], ['id' => 'ASC']);
         $report = array_values(array_filter($events, static fn (MediaModerationEvent $e): bool => MediaAction::ThirdPartyReported === $e->getAction()));

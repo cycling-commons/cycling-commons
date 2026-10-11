@@ -20,7 +20,9 @@ use App\Security\PseudonymousKey;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -68,6 +70,9 @@ final class MediaTakedownService
         private readonly PhotoGallery $gallery,
         private readonly MessageService $messages,
         private readonly UrgentWithholdBreaker $breaker,
+        private readonly MediaStorage $storage,
+        private readonly LoggerInterface $logger,
+        private readonly UrlGeneratorInterface $urls,
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
     ) {
@@ -94,6 +99,7 @@ final class MediaTakedownService
         $this->detach($upload);
         $this->events->append($upload->getId(), $upload->getUserId(), MediaAction::TakedownRequested, $reason);
         $this->em->flush();
+        $this->withholdBytes($upload);
     }
 
     /**
@@ -148,6 +154,83 @@ final class MediaTakedownService
             },
         );
         $this->em->flush();
+        if ($withheld) {
+            $this->withholdBytes($upload);
+        }
+    }
+
+    /**
+     * Take a withheld photo's bytes out of the public bucket.
+     *
+     * Unlinking the gallery entry is not enough: an approved photo's URL was
+     * public, sits in cached tiles and in logs. Runs after the withhold is
+     * stored, so the row says withheld whatever happens here; a failed move is
+     * logged as critical and never thrown, because the withhold itself must
+     * still happen. The caching proxy may still hold the old URL; purging it
+     * is an operations step.
+     */
+    private function withholdBytes(MediaUpload $upload): void
+    {
+        if (null === $upload->getRevision()) {
+            return;   // never published: the bytes are in quarantine, which is private
+        }
+        try {
+            $done = $this->storage->withhold($upload->getStorageBucket(), $upload->getPathPrefix());
+        } catch (ShardUnavailable) {
+            $done = false;
+        }
+        if (!$done) {
+            $this->logger->critical('A withheld photo is still in the public bucket.', ['media' => $upload->getId()->toRfc4122()]);
+        }
+    }
+
+    /**
+     * Put a withheld photo's bytes back under their public key before it goes
+     * back on the map. Nothing changes when they cannot move: the photo stays
+     * withheld and the curator is told.
+     *
+     * @throws HeldPhotoNotRestored when the move back is incomplete
+     */
+    private function restoreBytes(MediaUpload $upload): void
+    {
+        if (null === $upload->getRevision()) {
+            return;
+        }
+        try {
+            $done = $this->storage->unwithhold($upload->getStorageBucket(), $upload->getPathPrefix());
+        } catch (ShardUnavailable $e) {
+            throw new HeldPhotoNotRestored($upload->getId()->toRfc4122(), $e);
+        }
+        if (!$done) {
+            throw new HeldPhotoNotRestored($upload->getId()->toRfc4122());
+        }
+    }
+
+    /**
+     * The small image a desk card shows: the public URL, or for a withheld
+     * photo, whose bytes are private, the curator-only view of the held copy.
+     */
+    private function cardImage(MediaUpload $upload): string
+    {
+        if ($upload->isTakedownWithheld() && null !== $upload->getRevision()) {
+            return $this->urls->generate('moderate_withheld_photo', ['uuid' => $upload->getId()->toRfc4122()]);
+        }
+
+        return (string) $this->decisions->describe($upload)['sm'];
+    }
+
+    /**
+     * The small variant of a withheld photo, for the curator desks only.
+     *
+     * @return resource|null
+     */
+    public function withheldStream(MediaUpload $upload)
+    {
+        if (!$upload->isTakedownWithheld() || null === $upload->getRevision()) {
+            return null;
+        }
+
+        return $this->storage->readHeldStream($upload->getPathPrefix(), 'sm');
     }
 
     /** Keyed reporter-IP hash: volume, not identity. @see \App\Security\PseudonymousKey */
@@ -247,6 +330,9 @@ final class MediaTakedownService
 
         $thirdParty = MediaTakedownSource::ThirdParty === $upload->getTakedownSource();
         $wasHidden = $upload->isTakedownWithheld();
+        if ($wasHidden) {
+            $this->restoreBytes($upload);
+        }
         $upload->declineTakedown();
         $this->reattach($upload);
         $this->events->append($upload->getId(), (int) $curator->getId(), MediaAction::TakedownDeclined, $note);
@@ -277,6 +363,9 @@ final class MediaTakedownService
         }
 
         $wasHidden = $upload->isTakedownWithheld();
+        if ($wasHidden) {
+            $this->restoreBytes($upload);
+        }
         $upload->dismissTakedownAsAbuse();
         $this->reattach($upload);
         $this->events->append($upload->getId(), (int) $admin->getId(), MediaAction::TakedownDismissedAsAbuse, $note);
@@ -314,7 +403,7 @@ final class MediaTakedownService
             }
             $cards[] = [
                 'uuid' => $upload->getId()->toRfc4122(),
-                'sm' => (string) $this->decisions->describe($upload)['sm'],
+                'sm' => $this->cardImage($upload),
                 'reason' => $upload->getTakedownReason() ?? '',
                 'requestedAt' => $requestedAt,
                 'itemName' => $this->item($upload)?->getName() ?? '',
@@ -488,7 +577,7 @@ final class MediaTakedownService
             }
             $cards[] = [
                 'uuid' => $upload->getId()->toRfc4122(),
-                'sm' => (string) $this->decisions->describe($upload)['sm'],
+                'sm' => $this->cardImage($upload),
                 'reason' => $upload->getTakedownReason() ?? '',
                 'requestedAt' => $requestedAt,
                 'itemName' => $this->item($upload)?->getName() ?? '',

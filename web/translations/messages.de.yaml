@@ -2507,6 +2507,7 @@ moderate:
     log_by: 'von %who%'
     granted: 'Das Foto wurde entfernt und die Person benachrichtigt.'
     declined: 'Der Antrag wurde abgelehnt und das Foto ist wieder veröffentlicht.'
+    restore_failed: "Das Foto konnte nicht aus dem privaten Speicher zurückgeholt werden, es bleibt also verborgen. Bitte versuche es später erneut."
   translation:
     kicker: 'Moderation · Übersetzungen'
     heading: 'Übersetzungsvorschläge prüfen'

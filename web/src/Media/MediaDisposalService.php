@@ -70,12 +70,18 @@ final class MediaDisposalService
         $this->events->append($upload->getId(), null, MediaAction::ObjectsDeleted);
     }
 
-    /** Quarantine always; published prefix only if a revision exists. @see docs/specs/media-storage-architecture.md §2 */
+    /**
+     * Quarantine always; the published prefix and its private held copy only
+     * if a revision exists: a withheld photo's bytes wait in the private bucket.
+     *
+     * @see docs/specs/media-storage-architecture.md §2
+     */
     private function destroyObjects(MediaUpload $upload): void
     {
         $this->storage->deleteQuarantine($upload->getQuarantineKey());
         if ($upload->hasPublishedObjects()) {
             $this->storage->deletePrefix($upload->getStorageBucket(), $upload->getPathPrefix());
+            $this->storage->deleteHeld($upload->getPathPrefix());
         }
     }
 

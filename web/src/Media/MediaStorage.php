@@ -199,6 +199,12 @@ final class MediaStorage
         return $this->move($this->filesystemFor($this->privateBucket), self::HELD_PREFIX.$prefix, $this->filesystemFor($bucket), $prefix);
     }
 
+    /** Delete a photo's private held copy. Idempotent, like {@see deletePrefix()}. */
+    public function deleteHeld(string $prefix): void
+    {
+        $this->deletePrefix($this->privateBucket, self::HELD_PREFIX.$prefix);
+    }
+
     /**
      * Open one variant of a held photo, or null if missing. For the admin's
      * legal-hold page only: the private bucket has no public URL.
