@@ -312,7 +312,10 @@ Two emails, both only when an address was given. Both are best effort, like
 every support mail ([contact-and-support.md](contact-and-support.md) §7): the
 report or the decision is committed first, and a mail server that is down, or
 an address the mailer refuses, is logged and never answered with an error
-(`ContentReportService::send()`, audit 2026-10-04).
+(`ContentReportService::send()`, audit 2026-10-04). A report filed signed in
+carries the account's address; deleting the account clears it
+(`SupportDeletionHook`, owner 2026-10-11), and the outcome email then has
+nobody to go to.
 
 **On filing**, immediately, `emails/report_acknowledged.html.twig`. Article
 16(4) wants a confirmation "without undue delay", so it is sent when the row is

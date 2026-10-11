@@ -777,10 +777,26 @@ stays as a contribution or as a record loses the id (NULL).
   proposal's payload (`_credit.by`, `_corrected.by`) and inside a region lead
   (`region.context_curated`, `userId` and `approvedBy` per language).
 - **`App\Support\SupportDeletionHook`** keeps the rider's bug reports and
-  clears their account, reply address and address hash; unlinks contact
-  messages, which keep the address the sender typed until their own 24-month
-  clock deletes the whole row (contact-and-support.md §4); and unlinks what the
-  account handled or decided as a curator.
+  clears their account, reply address and address hash; keeps the contact
+  messages the account sent for their own 24-month clock and clears their
+  account, address (emptied: the column takes no NULL) and name; clears the
+  reporter contact of every content report whose contact is the account's
+  address, so its reporter is not told the outcome (owner 2026-10-11); and
+  unlinks what the account handled or decided as a curator.
+
+**A running check proves it on the live database** (owner 2026-10-11:
+"a real life test ... so we always keep a running check if that system still
+works"). `app:privacy:erasure-check`, a daily job (`DailyJobs`), creates a
+throwaway account on `erasure-check.invalid`, files a contact message, a
+content report, a bug report and a country request with its address, deletes
+it through `UserDeletionService::erase()`, and searches every text, varchar
+and JSON column of every table for the address, case-insensitively, leaving
+out large derived data (`coverage_`, `traffic_`, `world_`, `region`,
+`roadpiece`, `topology`). It runs in one transaction that is always rolled
+back, so nothing it writes is kept, mailed or shown. A hit names the
+`table.column`, logs a critical line and fails the run; a failed run is not
+recorded, so the admin dashboard marks the job late. Its timer, like the other
+daily jobs', is defined in the private infrastructure repository.
 - **`App\Blog\BlogDeletionHook`**: a post outlives its author and names
   nobody.
 

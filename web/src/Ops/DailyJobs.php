@@ -17,6 +17,8 @@ final class DailyJobs
     public const array COMMANDS = [
         'app:accounts:purge-unverified',
         'app:accounts:dormancy',
+        // A daily proof that deleting an account takes its address with it.
+        'app:privacy:erasure-check',
         'app:media:gc',
         'app:moderation:gc',
         'app:catalog:link-osm',

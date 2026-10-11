@@ -979,7 +979,10 @@ comes from `Version20260908160000`.
 file without an account, and a deleted account leaves the report standing
 because the fix still helps everybody. Deletion clears `user_id`,
 `reporter_email` and `ip_hash` and keeps the report (`SupportDeletionHook`,
-account-and-auth.md §6.3). Same pattern as `country_interest`.
+account-and-auth.md §6.3). Same pattern as `country_interest`. A contact
+message the account sent keeps its row for its 24-month clock and loses
+`user_id`, `name` and `email` (emptied). `app:privacy:erasure-check` checks
+all of it daily (account-and-auth.md §6.3).
 
 A partial index carries the overdue query, the one a curator runs most:
 `(due_at) WHERE due_at IS NOT NULL AND status IN ('new','open')`.
