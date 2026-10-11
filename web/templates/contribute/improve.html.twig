@@ -461,8 +461,8 @@
                  same split: the direct route refuses a non-owner, and the
                  suggestion route refuses the owner. #}
               {% if p.id is defined and app.user %}
-                {# The uploader, or a curator, writes straight through (photo-uploads.md 5e). #}
-                {% set mine = (p.id in own_photo_ids|default([])) or is_granted('ROLE_CURATOR') %}
+                {# The uploader, or a curator in their own areas, writes straight through (photo-uploads.md 5e). #}
+                {% set mine = (p.id in own_photo_ids|default([])) or curator_writes_here|default(false) %}
                 <label class="cur-alt{{ mine ? '' : ' suggests' }}" data-photo="{{ p.id }}"
                        data-mine="{{ mine ? '1' : '0' }}">
                   <span class="vh">{{ 'media.alt.label'|trans }}</span>

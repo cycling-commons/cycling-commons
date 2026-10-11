@@ -23,6 +23,7 @@ use App\Media\Message\ScanAndReleaseUpload;
 use App\Media\PhotoGallery;
 use App\Media\PhotoProcessor;
 use App\Media\ShardUnavailable;
+use App\Moderation\ModerationScopeProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -68,6 +69,7 @@ final class MediaController extends AbstractController
         private readonly MediaDecisionService $decisions,
         private readonly PhotoGallery $gallery,
         private readonly CatalogContributionService $contributions,
+        private readonly ModerationScopeProvider $scopes,
     ) {
     }
 
@@ -229,12 +231,13 @@ final class MediaController extends AbstractController
         $this->requireCsrf($request);
 
         $upload = Uuid::isValid($id) ? $this->em->find(MediaUpload::class, Uuid::fromString($id)) : null;
-        // The uploader, or a curator: a curator's word applies at once here as
-        // it does on every other edit (moderation-and-contribution.md 1.6;
-        // owner 2026-09-08: "has nothing to do with who added the photo").
-        // Anybody else gets the same 404 an unknown id gets, so the route is
-        // not an oracle for whose photo this is.
-        if (null === $upload || ($upload->getUserId() !== (int) $user->getId() && !$this->isGranted('ROLE_CURATOR'))) {
+        // The uploader, or a curator in their own areas: a curator's word
+        // applies at once there, as it does on every other edit
+        // (moderation-and-contribution.md 1.6; owner 2026-09-08: "has nothing
+        // to do with who added the photo"). Outside them it is a suggestion
+        // like anyone's. Anybody else gets the same 404 an unknown id gets, so
+        // the route is not an oracle for whose photo this is.
+        if (null === $upload || ($upload->getUserId() !== (int) $user->getId() && !$this->curatorWritesHere($user, $upload))) {
             return $this->json(['error' => 'not_found'], Response::HTTP_NOT_FOUND);
         }
 
@@ -304,6 +307,21 @@ final class MediaController extends AbstractController
         $submission = $this->contributions->suggestPhotoAlt($item, $upload, '' === $alt ? null : $alt, $user);
 
         return $this->json(['submission' => $submission->getId()]);
+    }
+
+    /**
+     * A curator whose areas hold the photo's place. A photo on no place yet
+     * has no region, which every scope holds (ModerationScopeProvider).
+     */
+    private function curatorWritesHere(User $user, MediaUpload $upload): bool
+    {
+        if (!$this->isGranted('ROLE_CURATOR')) {
+            return false;
+        }
+        $itemId = $upload->getItemId();
+        $item = $this->gallery->holderOf($upload) ?? (null === $itemId ? null : $this->em->find(Item::class, $itemId));
+
+        return $this->scopes->allowsRegion($this->scopes->scopeFor($user), $item?->getRegionId());
     }
 
     /**

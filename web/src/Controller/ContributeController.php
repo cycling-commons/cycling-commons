@@ -29,6 +29,7 @@ use App\Form\ImproveType;
 use App\Media\Entity\MediaUpload;
 use App\Media\PhotoLocationConfirmation;
 use App\Media\PhotoValidator;
+use App\Moderation\ModerationScopeProvider;
 use App\Moderation\ReplacedPlaces;
 use App\Routing\LocalePrefix;
 use App\Service\ContributionReceipt;
@@ -445,7 +446,7 @@ final class ContributeController extends AbstractController
 
     #[Route('/improve', name: 'improve')]
     #[IsGranted('ROLE_USER')]
-    public function improve(Request $request, EntityManagerInterface $em, CoverageRepository $coverage, TranslatorInterface $translator, ItemConfirmationService $confirmations): Response
+    public function improve(Request $request, EntityManagerInterface $em, CoverageRepository $coverage, TranslatorInterface $translator, ItemConfirmationService $confirmations, ModerationScopeProvider $scopes): Response
     {
         // docs/specs/moderation-and-contribution.md §1.4 — non-numeric item is unbound, never a 400.
         $item = null;
@@ -625,6 +626,10 @@ final class ContributeController extends AbstractController
             'form' => $form,
             'current' => $current,
             'own_photo_ids' => $this->ownPhotoIds($current),
+            // A curator writes photo descriptions straight through only in
+            // their own areas (photo-uploads.md §5e); elsewhere they suggest.
+            'curator_writes_here' => $user instanceof User && $this->isGranted('ROLE_CURATOR')
+                && $scopes->allowsRegion($scopes->scopeFor($user), $item->getRegionId()),
             'pending_submission_id' => $pendingSubmissionId,
             'own_pending' => $ownPending,
             'other_pending_since' => $otherPendingSince,

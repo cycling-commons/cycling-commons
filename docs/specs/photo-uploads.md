@@ -1686,7 +1686,7 @@ both ways:
 | Who | Route | What happens |
 |---|---|---|
 | the uploader | `POST /media/photos/{id}/alt` | written straight through, both copies |
-| a curator, on anybody's photo | `POST /media/photos/{id}/alt` | the same, at once: a curator's word applies (moderation-and-contribution.md 1.6; owner 2026-09-08) |
+| a curator, on anybody's photo in their own areas | `POST /media/photos/{id}/alt` | the same, at once: a curator's word applies (moderation-and-contribution.md 1.6; owner 2026-09-08). Outside their areas they are anybody else, below (audit 2026-10-04): the area is the region of the photo's place, and a photo on no place yet is in every area |
 | anybody else signed in | `POST /media/photos/{id}/alt-suggestion` | an edit on the place, in the ordinary review queue |
 | signed out | neither | no field is rendered |
 
@@ -1700,8 +1700,9 @@ caption reads as live, anybody else's carries a small "proposed" tag
 (`.rm-item.is-proposed`, `improve.step4.proposed`), since a suggestion has not
 changed anything until a curator has seen it.
 
-The direct route refuses anybody but the uploader and a curator, and the
-suggestion route refuses the owner,
+The direct route refuses anybody but the uploader and a curator in their own
+areas (`MediaController::curatorWritesHere()`, and `curator_writes_here` on the
+edit page), and the suggestion route refuses the owner,
 so the `data-mine` attribute the template writes only chooses which 404 a
 tampered request gets. A suggestion is a normal `Edit` submission whose change
 key is `photoAlt:<uuid>` (`App\Media\PhotoAltSuggestion`), namespaced with a
