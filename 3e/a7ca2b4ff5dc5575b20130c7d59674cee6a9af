@@ -1,0 +1,25 @@
+web/assets/styles/map.css
+  s_95c012021edfad::t_1e7e323d70bcef 542-544,1692-1696,1699
+docs/specs/map-and-search.md
+  s_95c012021edfad::t_1342b5b4ec62c6 1977-1983
+web/tests/js/marker-position.test.cjs
+  s_95c012021edfad::t_daae49c4ebd319 17,31-32
+  s_95c012021edfad::t_29d9433e5a5fc8 1-16,18-26,29-30,33-35,37-60
+  s_95c012021edfad::t_237b6018d96460 27-28,36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3ea7ca2b4ff5dc5575b20130c7d59674cee6a9af",
+  "prompts": {},
+  "sessions": {
+    "s_95c012021edfad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77d4f221-603d-452c-8abd-7d60275678da",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
