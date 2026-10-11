@@ -61,7 +61,7 @@ survive being cached, and each is handled as below.
 ### 3.1 The proof-of-work challenge
 
 A challenge is **single use**: `ProofOfWork::verify()` records it in the
-`cache.pow_spent` pool and refuses it a second time
+`pow_spent` table and refuses it a second time
 ([contact-and-support.md §3](contact-and-support.md)). A cached page carrying
 one would hand the same challenge to every visitor for that minute: the first
 person to send anything spends it, and everybody else is rejected after solving

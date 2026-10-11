@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace App\Security;
 
-use Psr\Cache\CacheItemPoolInterface;
+use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -50,8 +50,10 @@ final class ProofOfWork
     public function __construct(
         #[Autowire('%kernel.secret%')]
         private readonly string $secret,
-        #[Autowire(service: 'cache.pow_spent')]
-        private readonly CacheItemPoolInterface $spent,
+        // The spent set is a Postgres table, not a cache: a cache can only
+        // read and then write, so two requests with the same solution at the
+        // same moment both passed (audit 2026-10-04).
+        private readonly Connection $db,
     ) {
     }
 
@@ -88,14 +90,16 @@ final class ProofOfWork
             return false;
         }
 
-        $item = $this->spent->getItem('pow_'.hash('sha256', $challenge));
-        if ($item->isHit()) {
-            return false;
-        }
-        $item->set(true)->expiresAfter(max(1, (int) $expiry - $now->getTimestamp()));
-        $this->spent->save($item);
+        // The spend is one statement: whichever request inserts the row
+        // first is the one that passes, on any web host. Rows past their
+        // challenge's expiry are of no further use and go first.
+        $this->db->executeStatement('DELETE FROM pow_spent WHERE expires_at < NOW()');
 
-        return true;
+        return 1 === (int) $this->db->executeStatement(
+            'INSERT INTO pow_spent (challenge_hash, expires_at) VALUES (?, to_timestamp(?))
+             ON CONFLICT (challenge_hash) DO NOTHING',
+            [hash('sha256', $challenge), (int) $expiry],
+        );
     }
 
     /**

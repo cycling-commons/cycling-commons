@@ -57,11 +57,6 @@ framework:
                 adapter: cache.app
             cache.media_urgent_alert_limiter:
                 adapter: cache.app
-            # Renamed from cache.media_pow when ProofOfWork moved out of the
-            # media domain: the contact form and the bug report use the same
-            # spent-challenge set (contact-and-support.md §3).
-            cache.pow_spent:
-                adapter: cache.app
             cache.contact_form_limiter:
                 adapter: cache.app
             cache.bug_report_limiter:
@@ -430,8 +425,6 @@ when@test:
                 cache.media_urgent_breaker_limiter:
                     adapter: cache.adapter.array
                 cache.media_urgent_alert_limiter:
-                    adapter: cache.adapter.array
-                cache.pow_spent:
                     adapter: cache.adapter.array
                 cache.contact_form_limiter:
                     adapter: cache.adapter.array

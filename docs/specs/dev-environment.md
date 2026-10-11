@@ -458,7 +458,6 @@ frontends therefore may not live on a node's disk:
 | Sessions | log in on node A, logged out on node B |
 | Every rate limiter | counters per node, so every published limit doubles |
 | `media_urgent_breaker_limiter` | the **site-wide** auto-withhold budget promised by photo-uploads.md §6c, and the emergency stop, would be per node |
-| `cache.pow_spent` | a proof-of-work challenge issued by one node could not be verified by the other, so the anonymous photo-report route would fail intermittently, and it is the one route that must never bounce someone reporting a photo of themselves |
 
 All of it goes through Redis, addressed by a single `REDIS_URL`:
 

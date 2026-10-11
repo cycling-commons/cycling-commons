@@ -102,9 +102,12 @@ Notes that matter if you change any of this:
 * **The rate-limit key is `hmac(secret, ip)`, never the address.** This is the
   code half of the promise the privacy page makes under "Rate-limit counters".
 * **A challenge is spent once.** Without that the proof of work is a one-off
-  toll rather than a per-message cost. Pinned by `ProofOfWorkSpentTest`, which
-  is a kernel test rather than a functional one because Symfony's service
-  resetter clears the test `ArrayAdapter` between requests.
+  toll rather than a per-message cost. The spend is one
+  `INSERT ... ON CONFLICT DO NOTHING` on the `pow_spent` primary key (the
+  challenge's sha256), so whichever request inserts first passes, on either web
+  host, also when two carry the same solution at the same moment (audit
+  2026-10-04; migration `Version20261011190000`). Rows past their challenge's
+  expiry are deleted on the next spend. Pinned by `ProofOfWorkSpentTest`.
 * **A challenge is fetched, never baked into the page.** `GET /form-challenge`
   (`App\Controller\FormChallengeController`) issues one when a visitor starts
   filling a form in; the markup ships an empty `pow_challenge` field that the
@@ -132,7 +135,7 @@ Notes that matter if you change any of this:
   `BugReportTest`.
 * **`App\Security\ProofOfWork` is shared** by the contact form, the bug forms
   and the urgent photo report (content-reports.md §5); spent challenges live in
-  the `cache.pow_spent` pool.
+  the `pow_spent` table.
 
 A rider with JavaScript off cannot solve the challenge, and the server refuses
 the post. That is a real cost, which is why the address is published beside the
