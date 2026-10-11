@@ -1,0 +1,33 @@
+web/src/Ops/DailyJobs.php
+  s_2612073477a315::t_56ae8be28cfd8e 20-21
+web/tests/Account/ErasureCheckCommandTest.php
+  s_2612073477a315::t_56ae8be28cfd8e 1-42
+docs/specs/account-and-auth.md
+  s_2612073477a315::t_f0da502cd4b3fe 780-799
+web/src/Account/Command/ErasureCheckCommand.php
+  s_2612073477a315::t_36b392add0fdd6 1-171
+docs/specs/content-reports.md
+  s_2612073477a315::t_f0da502cd4b3fe 315-318
+web/src/Support/SupportDeletionHook.php
+  s_2612073477a315::t_bc69052ab656f0 14,18-26,30-31,52-59
+docs/specs/privacy-notice.md
+  s_2612073477a315::t_f0da502cd4b3fe 72
+docs/specs/contact-and-support.md
+  s_2612073477a315::t_f0da502cd4b3fe 982-985
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7c68a344d64da942f28b9ef4c579d44c4269dc96",
+  "prompts": {},
+  "sessions": {
+    "s_2612073477a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c06bea5c-9d93-4477-bcdb-4ad73cf20ae4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
