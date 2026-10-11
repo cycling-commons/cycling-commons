@@ -1,0 +1,66 @@
+web/translations/messages.en.yaml
+  s_2612073477a315::t_c2f3ef22e8a5ec 3353-3356
+web/src/Support/MessageHandler/SendReportDigestHandler.php
+  s_2612073477a315::t_a995f5b0b38cb1 1-26,28-32
+  s_2612073477a315::t_a9ee8901a87088 27
+web/translations/messages.fr.yaml
+  s_2612073477a315::t_c2f3ef22e8a5ec 3334-3337
+web/config/packages/messenger.yaml
+  s_2612073477a315::t_c2f3ef22e8a5ec 44
+web/tests/Support/ReportAlertTest.php
+  s_2612073477a315::t_588e51582d9348 33
+  s_2612073477a315::t_4df25c0e4c08d3 1-32,34-87
+web/src/Support/Message/SendReportDigest.php
+  s_2612073477a315::t_a9db85658c8719 1-21
+web/tests/Support/ContentReportTest.php
+  s_2612073477a315::t_f4ab60f0561c78 165
+  s_2612073477a315::t_5ba1b28b57e78b 161,164,166,806
+web/translations/messages.nl.yaml
+  s_2612073477a315::t_c2f3ef22e8a5ec 3338-3341
+web/tests/Support/ReportMailReplyToTest.php
+  s_2612073477a315::t_5ba1b28b57e78b 100-104
+  s_2612073477a315::t_9579fa2375d5d7 19,162
+web/src/Support/ContentReportService.php
+  s_2612073477a315::t_c2f3ef22e8a5ec 56
+  s_2612073477a315::t_83994cd0629d43 126-128
+  s_2612073477a315::t_9f422b958c98c3 129
+docs/specs/contact-and-support.md
+  s_2612073477a315::t_3c1f144e8409b3 553-556,564-581
+web/src/Support/SupportMailer.php
+  s_2612073477a315::t_c2f3ef22e8a5ec 14,288-323
+  s_2612073477a315::t_4dd034e4b48f66 324-325
+web/translations/messages.de.yaml
+  s_2612073477a315::t_c2f3ef22e8a5ec 3339-3342
+web/src/Support/SupportRepository.php
+  s_2612073477a315::t_29132dc4551dea 125-126,128,130,132-143,146-147,152
+  s_2612073477a315::t_c2f3ef22e8a5ec 124,127,129,131,144-145,148-151,153-154
+docs/specs/content-reports.md
+  s_2612073477a315::t_e6292fc32c4462 303-308
+web/templates/emails/report_notify.html.twig
+  s_2612073477a315::t_7a49d5d1134a55 1-36
+web/src/Support/Entity/ContentReport.php
+  s_2612073477a315::t_29132dc4551dea 104-112
+web/migrations/Version20261011170000.php
+  s_2612073477a315::t_fc092aa8eca35e 1-39
+web/translations/messages.es.yaml
+  s_2612073477a315::t_c2f3ef22e8a5ec 3361-3364
+web/src/Support/ReportAlert.php
+  s_2612073477a315::t_47c463bd4f8825 1-21,25-83,89-90,92-93
+  s_2612073477a315::t_29132dc4551dea 22-24,84-88,91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5db9ee672fc6c3d18b78e2a8c7105290f76d6af6",
+  "prompts": {},
+  "sessions": {
+    "s_2612073477a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c06bea5c-9d93-4477-bcdb-4ad73cf20ae4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
