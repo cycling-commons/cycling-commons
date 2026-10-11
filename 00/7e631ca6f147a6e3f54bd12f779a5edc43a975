@@ -1,0 +1,49 @@
+docs/specs/moderation-and-contribution.md
+  s_2612073477a315::t_c7130a73e337cf 2960-2962
+web/src/Moderation/StatementOfReasonsMailer.php
+  s_2612073477a315::t_b5d66b70820b63 73-75
+web/templates/emails/statement_of_reasons.txt.twig
+  s_2612073477a315::t_2db7b4184849df 40-42
+web/translations/messages.nl.yaml
+  s_2612073477a315::t_2db7b4184849df 2953,5307-5310
+web/translations/messages.de.yaml
+  s_2612073477a315::t_2db7b4184849df 2954,5308-5311
+web/translations/messages.en.yaml
+  s_2612073477a315::t_2db7b4184849df 2968,5325-5328
+web/templates/emails/message.txt.twig
+  s_2612073477a315::t_2db7b4184849df 21-26
+web/src/Messaging/MessageMailer.php
+  s_2612073477a315::t_b5d66b70820b63 104-106
+  s_2612073477a315::t_2db7b4184849df 114-115,118-120
+docs/specs/account-and-auth.md
+  s_2612073477a315::t_c7130a73e337cf 305-309
+  s_2612073477a315::t_b5d66b70820b63 310-313
+web/tests/Community/CountryLiveNoticeTest.php
+  s_2612073477a315::t_a495431d7168ad 136
+  s_2612073477a315::t_89c25551335438 131-135
+web/translations/messages.fr.yaml
+  s_2612073477a315::t_2db7b4184849df 2949,5303-5306
+web/templates/emails/message.html.twig
+  s_2612073477a315::t_2db7b4184849df 54-55
+web/translations/messages.es.yaml
+  s_2612073477a315::t_2db7b4184849df 2976,5335-5338
+web/templates/emails/_base.html.twig
+  s_2612073477a315::t_90c252773dfa28 30-31
+  s_2612073477a315::t_2db7b4184849df 26-29,32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "007e631ca6f147a6e3f54bd12f779a5edc43a975",
+  "prompts": {},
+  "sessions": {
+    "s_2612073477a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c06bea5c-9d93-4477-bcdb-4ad73cf20ae4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
