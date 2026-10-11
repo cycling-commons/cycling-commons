@@ -158,10 +158,12 @@ final class ContentReportTest extends WebTestCase
         self::assertStringNotContainsString('locked', $page->text());
 
         $this->file($client, type: 'town', id: 'node-777001', follow: false, extra: ['name' => $lure]);
-        self::assertEmailCount(1, null, 'the Article 16(4) acknowledgement');
+        self::assertEmailCount(2, null, 'the Article 16(4) acknowledgement and the team\'s report alert');
         $body = (string) $this->getMailerMessage()?->getHtmlBody();
         self::assertStringContainsString('We have your report', $body);
-        self::assertStringNotContainsString('locked', $body);
+        foreach (self::getMailerMessages() as $mail) {
+            self::assertStringNotContainsString('account is locked', (string) $mail->getHtmlBody());
+        }
         self::assertNull($this->reports()[0]->getTargetLabel());
     }
 
@@ -801,7 +803,7 @@ final class ContentReportTest extends WebTestCase
 
         // Asserted here, not after the desk requests: the mailer collector is
         // per request, so a later GET clears what the POST before it sent.
-        self::assertEmailCount(1, null, 'the Article 16(4) acknowledgement');
+        self::assertEmailCount(2, null, 'the Article 16(4) acknowledgement and the team\'s report alert');
 
         $client->loginUser($this->curator());
         $report = $this->reports()[0];

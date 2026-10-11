@@ -101,6 +101,15 @@ class ContentReport
     #[ORM\Column(name: 'author_told_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $authorToldAt = null;
 
+    /**
+     * When the support address was told this report arrived; claimed in one
+     * statement by {@see \App\Support\SupportRepository::claimUntoldReports()}.
+     *
+     * @psalm-suppress UnusedProperty
+     */
+    #[ORM\Column(name: 'team_told_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $teamToldAt = null;
+
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 

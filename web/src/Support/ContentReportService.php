@@ -53,6 +53,7 @@ final class ContentReportService
 
     public function __construct(
         private readonly EntityManagerInterface $em,
+        private readonly ReportAlert $alert,
         private readonly MailerInterface $mailer,
         private readonly ClockInterface $clock,
         // A photo report on the one withholding ground is handed to the media
@@ -121,6 +122,10 @@ final class ContentReportService
                 'report' => $report,
             ]);
         }
+
+        // The team hears of it too, after the reporter, at most one mail per
+        // window (ReportAlert).
+        $this->alert->reportFiled();
 
         return $report;
     }

@@ -3331,6 +3331,10 @@ support:
     country_notify_kind: 'Demande de pays'
     profile_none: 'Aucun'
     country_total_label: 'Demandes pour ce pays'
+    reports_kind: "Nouveaux signalements"
+    reports_head: "%new% nouveaux depuis le dernier e-mail, %open% ouverts au total"
+    reports_open_one: "Ouvrir"
+    reports_more: "et %n% de plus au bureau"
     answer_yes: 'Oui'
     answer_no: 'Non'
 

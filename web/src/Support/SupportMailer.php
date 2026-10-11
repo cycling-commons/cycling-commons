@@ -11,6 +11,7 @@ use App\Community\Entity\CuratorApplication;
 use App\Entity\User;
 use App\Support\Entity\BugReport;
 use App\Support\Entity\ContactMessage;
+use App\Support\Entity\ContentReport;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -282,6 +283,44 @@ final readonly class SupportMailer
         }
 
         $this->send($email, 'country request notification', ['country_interest_id' => $interest->getId()]);
+    }
+
+    /**
+     * Reports arrived: the ones since the last such mail, and the open total.
+     *
+     * The caller decides when ({@see ReportAlert}); this only writes it. The
+     * mail carries what was reported, on what ground and when, with a link to
+     * each on the desk, and never the reporter's words or the item's name.
+     *
+     * @param list<ContentReport> $reports  the newest first, at most {@see ReportAlert::LIST_MAX}
+     * @param int                 $newCount every report since the last mail, listed or not
+     */
+    public function notifyReports(array $reports, int $newCount, int $openCount): void
+    {
+        $to = $this->recipients->all();
+        if ([] === $to) {
+            $this->logger->warning('Reports arrived with no support recipients configured.', ['reports' => $newCount]);
+
+            return;
+        }
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($this->fromEmail, $this->fromName()))
+            ->subject(\sprintf('[Cycling Commons] %d new %s, %d open', $newCount, 1 === $newCount ? 'report' : 'reports', $openCount))
+            ->htmlTemplate('emails/report_notify.html.twig')
+            ->context([
+                'locale' => $this->defaultLocale,
+                'reports' => $reports,
+                'new_count' => $newCount,
+                'open_count' => $openCount,
+                'site_url' => rtrim($this->siteUrl, '/'),
+                'desk_url' => rtrim($this->siteUrl, '/').$this->urls->generate('moderate_reports'),
+            ]);
+        foreach ($to as $address) {
+            $email->addTo($address);
+        }
+
+        $this->send($email, 'report notification', ['reports' => $newCount]);
     }
 
     /** The country's English name for the team, or the code when Intl has none. */

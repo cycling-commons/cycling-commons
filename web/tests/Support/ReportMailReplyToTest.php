@@ -16,6 +16,7 @@ use App\Moderation\StatementGround;
 use App\Moderation\StatementOfReasons;
 use App\Moderation\StatementOfReasonsMailer;
 use App\Support\ContentReportService;
+use App\Support\ReportAlert;
 use App\Support\ReportGround;
 use App\Support\ReportStatus;
 use App\Support\ReportTarget;
@@ -96,6 +97,11 @@ final class ReportMailReplyToTest extends WebTestCase
         $out = [];
         foreach (self::getMailerMessages() as $message) {
             self::assertInstanceOf(Email::class, $message);
+            // The team's report alert goes to our own address, not to a
+            // reporter or a rider, so it is no mail they could reply to.
+            if (1 === preg_match('/^\[Cycling Commons\] \d+ new reports?, /', (string) $message->getSubject())) {
+                continue;
+            }
             $out[] = $message;
         }
 
@@ -153,6 +159,7 @@ final class ReportMailReplyToTest extends WebTestCase
         $container = static::getContainer();
         $service = new ContentReportService(
             $container->get(EntityManagerInterface::class),
+            $container->get(ReportAlert::class),
             $container->get(MailerInterface::class),
             $container->get(ClockInterface::class),
             $container->get(MediaTakedownService::class),

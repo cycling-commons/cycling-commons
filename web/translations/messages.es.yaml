@@ -3358,6 +3358,10 @@ support:
     country_notify_kind: 'Solicitud de país'
     profile_none: 'Ninguno'
     country_total_label: 'Solicitudes para este país'
+    reports_kind: "Denuncias nuevas"
+    reports_head: "%new% nuevas desde el último correo, %open% abiertas en total"
+    reports_open_one: "Abrir"
+    reports_more: "y %n% más en el escritorio"
     answer_yes: 'Sí'
     answer_no: 'No'
 

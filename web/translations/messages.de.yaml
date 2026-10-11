@@ -3336,6 +3336,10 @@ support:
     country_notify_kind: 'Länderanfrage'
     profile_none: 'Keins'
     country_total_label: 'Anfragen für dieses Land'
+    reports_kind: "Neue Meldungen"
+    reports_head: "%new% neu seit der letzten E-Mail, %open% offen insgesamt"
+    reports_open_one: "Öffnen"
+    reports_more: "und %n% weitere am Schreibtisch"
     answer_yes: 'Ja'
     answer_no: 'Nein'
 

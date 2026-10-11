@@ -3335,6 +3335,10 @@ support:
     country_notify_kind: 'Landaanvraag'
     profile_none: 'Geen'
     country_total_label: 'Aanvragen voor dit land'
+    reports_kind: "Nieuwe meldingen"
+    reports_head: "%new% nieuw sinds de vorige mail, %open% open in totaal"
+    reports_open_one: "Openen"
+    reports_more: "en nog %n% op het bureau"
     answer_yes: 'Ja'
     answer_no: 'Nee'
 

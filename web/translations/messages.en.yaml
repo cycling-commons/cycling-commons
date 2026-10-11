@@ -3350,6 +3350,10 @@ support:
     country_notify_kind: 'Country request'
     profile_none: 'None'
     country_total_label: 'Requests for this country'
+    reports_kind: "New reports"
+    reports_head: "%new% new since the last mail, %open% open in total"
+    reports_open_one: "Open"
+    reports_more: "and %n% more on the desk"
     answer_yes: 'Yes'
     answer_no: 'No'
 

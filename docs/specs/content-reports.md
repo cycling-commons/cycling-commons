@@ -300,6 +300,12 @@ which is nearly all of them, costs no challenge at all. Pinned by
 The drawer link renders for **real database ids only**. A coverage POI we do not
 store has nothing of ours to report, and its words belong to OpenStreetMap.
 
+**The team is told too.** After the acknowledgement, `ReportAlert` mails the
+support address, at most once per 15 minutes, with every report not yet told
+about (`content_report.team_told_at`): the kind, the ground and a desk link,
+never the reason, the reporter's address or the target's label
+([contact-and-support.md](contact-and-support.md) §7).
+
 ## 6. What the reporter is told
 
 Two emails, both only when an address was given.

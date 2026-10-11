@@ -121,6 +121,37 @@ final readonly class SupportRepository
         return $out;
     }
 
+    /**
+     * Every report the support address has not been told about, stamped as
+     * told in the same statement, so two alerts at once cannot both claim one.
+     *
+     * @return array{reports: list<ContentReport>, count: int} the newest `$limit` of them, and how many there were
+     */
+    public function claimUntoldReports(int $limit): array
+    {
+        /** @var list<array{id: string, created_at: string}> $rows */
+        $rows = $this->em->getConnection()->fetchAllAssociative(
+            'UPDATE content_report SET team_told_at = NOW() WHERE team_told_at IS NULL RETURNING id, created_at',
+        );
+        if ([] === $rows) {
+            return ['reports' => [], 'count' => 0];
+        }
+        usort($rows, static fn (array $a, array $b): int => [$b['created_at'], $b['id']] <=> [$a['created_at'], $a['id']]);
+        $ids = array_map(static fn (array $r): string => $r['id'], \array_slice($rows, 0, $limit));
+
+        /** @var list<ContentReport> $reports */
+        $reports = $this->em->createQueryBuilder()
+            ->select('r')
+            ->from(ContentReport::class, 'r')
+            ->where('r.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->orderBy('r.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return ['reports' => $reports, 'count' => \count($rows)];
+    }
+
     /** Badge on the moderator tab. Only Open counts: the rest are answered. */
     public function openReportCount(): int
     {

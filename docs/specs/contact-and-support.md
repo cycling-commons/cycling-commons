@@ -550,9 +550,10 @@ the address published on the contact page itself. That last step matters in
 practice: a deployment that has filled in its legal identity block has, by
 definition, published an address it reads.
 
-**What the support address receives.** Four notifications, all from
-{@see App\Support\SupportMailer}, all in the site's default language, all with
-the sender's address on Reply-To and a link to the desk that handles them:
+**What the support address receives.** Five notifications, all from
+{@see App\Support\SupportMailer}, all in the site's default language, each with
+a link to the desk that handles it; the first four put the sender's address on
+Reply-To:
 
 | mail | subject | sent when | links to |
 |---|---|---|---|
@@ -560,6 +561,24 @@ the sender's address on Reply-To and a link to the desk that handles them:
 | `notifyBug` | `[Cycling Commons] Bug in <area>: <title>` (`CRITICAL bug` for a critical one) | a bug report is committed | `/moderate/bugs/<id>` |
 | `notifyCuratorApplication` | `[Cycling Commons] Curator application: [<region or area>, ]<country>` | a curator application and the applicant's receipt are committed ([moderation-and-contribution.md](moderation-and-contribution.md) §11.2) | `/admin/curator-applications` |
 | `notifyCountryRequest` | `[Cycling Commons] Country request: [<area>, ]<country>[ (would curate)]` | a country request is committed and says something new ([moderation-and-contribution.md](moderation-and-contribution.md) §11.1) | `/admin/country-requests` |
+| `notifyReports` | `[Cycling Commons] <n> new report(s), <m> open` | a content report is committed, at most one mail per 15 minutes (below) | `/moderate/reports`, and each report's own page |
+
+**Reports, at most one mail per window (owner 2026-10-11).**
+{@see App\Support\ReportAlert} runs after a report and its acknowledgement
+are committed. The first report after a quiet 15 minutes is mailed at once.
+Every report in the next 15 minutes waits for one follow-up, a delayed
+`SendReportDigest` message on the async transport that the worker runs when
+the window closes, so a flood of reports is one mail and none goes unmentioned.
+Each mail claims every report not yet told about in one statement
+(`UPDATE content_report SET team_told_at = NOW() WHERE team_told_at IS NULL
+RETURNING id`), so two alerts at once cannot list one report twice. The window
+lives in the shared app cache (Redis), one for both web hosts. The mail lists
+the newest 20 with the time (UTC), what kind of thing was reported and the
+ground, each linking to its page on the desk, then "and N more", and the open
+total. It never carries the reporter's words, their address or the reported
+item's name: a report can be about a rider's name or about unlawful material.
+It has no Reply-To, because there is nobody to reply to. Reports filed before
+this existed count as told (migration `Version20261011170000`).
 
 The last two exist so a volunteer or a request does not wait unseen on an admin
 page nobody has open (owner 2026-10-02). The curator application mail carries

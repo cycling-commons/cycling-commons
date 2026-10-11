@@ -1,0 +1,36 @@
+{# SPDX-License-Identifier: AGPL-3.0-only #}
+{# "Reports arrived." Sent to whoever is on duty (SupportRecipients) by
+   ReportAlert: at once for the first report after a quiet window, then one
+   mail for everything that came in during the window.
+
+   Only what kind of thing was reported, on what ground, and when, with a link
+   to each on the desk. Never the reporter's words or address, and never the
+   reported item's name: a report can be about a rider's name or about
+   unlawful material, and a mailbox is no place for either. In the site's
+   default language, like every other mail to the team. #}
+{% extends 'emails/_base.html.twig' %}
+
+{% block title %}{{ 'support.email.reports_kind'|trans([], null, locale) }} · {{ new_count }}{% endblock %}
+
+{% block content %}
+  <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3f">{{ 'support.email.reports_kind'|trans([], null, locale) }}</p>
+  <p style="margin:0 0 16px;font-size:19px;font-weight:600">{{ 'support.email.reports_head'|trans({'%new%': new_count, '%open%': open_count}, null, locale) }}</p>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px">
+    {% for report in reports %}
+      <tr>
+        <td style="padding:4px 14px 4px 0;font-size:13px;color:#5b5446;white-space:nowrap">{{ report.createdAt|date('j M, H:i', 'UTC') }} UTC</td>
+        <td style="padding:4px 14px 4px 0;font-size:14px">{{ report.targetType.label|trans([], null, locale) }}</td>
+        <td style="padding:4px 14px 4px 0;font-size:14px">{{ report.ground.label|trans([], null, locale) }}</td>
+        <td style="padding:4px 0;font-size:14px"><a href="{{ site_url ~ path('moderate_reports_detail', {id: report.id}) }}" style="color:#14160e">{{ 'support.email.reports_open_one'|trans([], null, locale) }}</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  {% if new_count > reports|length %}
+    <p style="margin:0 0 18px;font-size:14px">{{ 'support.email.reports_more'|trans({'%n%': new_count - reports|length}, null, locale) }}</p>
+  {% endif %}
+
+  <p style="margin:24px 0 0">
+    <a href="{{ desk_url }}" style="display:inline-block;background:#14160e;color:#fdfaf1;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:14px">{{ 'support.email.notify_cta'|trans([], null, locale) }}</a>
+  </p>
+{% endblock %}
