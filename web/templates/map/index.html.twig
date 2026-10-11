@@ -1117,9 +1117,10 @@ window.CC_VENDOR = {{ {
 {{ importmap([], {nonce: csp_nonce()}) }}
 {# Preload the WHOLE module graph, not just the entry: browsers do not walk
    import graphs for modulepreload, so a single map.js preload left the other
-   ~25 modules downloading in serial dependency waves after the catalog landed.
-   The list is maintained by hand, a module
-   missing here still works, it just loads one wave later. Preloading does not
+   modules downloading in serial dependency waves after the catalog landed.
+   The list is read from AssetMapper's import graph (cc_module_graph, every
+   static import, nearest first), so a new module is preloaded the day it is
+   imported; a hand-kept list had drifted to 30 of 76. Preloading does not
    execute anything, so the catalog gate below is untouched. #}
 {# MapLibre is ~1 MB of module across two files, and the second is only
    discovered once the first has been parsed, so both are preloaded to put them
@@ -1139,36 +1140,9 @@ window.CC_VENDOR = {{ {
    below, which needs one). #}
 <link rel="modulepreload" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl.mjs') }}" />
 <link rel="modulepreload" href="{{ asset('lib/maplibre-gl/6.8.0/maplibre-gl-shared.mjs') }}" />
-<link rel="modulepreload" href="{{ asset('map/catalog.js') }}">
-<link rel="modulepreload" href="{{ asset('map/climb-profile.js') }}">
-<link rel="modulepreload" href="{{ asset('map/community.js') }}">
-<link rel="modulepreload" href="{{ asset('map/corrections.js') }}">
-<link rel="modulepreload" href="{{ asset('map/coverage-notice.js') }}">
-<link rel="modulepreload" href="{{ asset('map/coverage.js') }}">
-<link rel="modulepreload" href="{{ asset('map/drawer.js') }}">
-<link rel="modulepreload" href="{{ asset('map/filters.js') }}">
-<link rel="modulepreload" href="{{ asset('map/i18n.js') }}">
-<link rel="modulepreload" href="{{ asset('map/icons.js') }}">
-<link rel="modulepreload" href="{{ asset('map/item-index.js') }}">
-<link rel="modulepreload" href="{{ asset('map/lightbox.js') }}">
-<link rel="modulepreload" href="{{ asset('map/map-init.js') }}">
-<link rel="modulepreload" href="{{ asset('map/map.js') }}">
-<link rel="modulepreload" href="{{ asset('map/mapillary.js') }}">
-<link rel="modulepreload" href="{{ asset('map/osm-pools.js') }}">
-<link rel="modulepreload" href="{{ asset('map/panels.js') }}">
-<link rel="modulepreload" href="{{ asset('map/pending-shape.js') }}">
-<link rel="modulepreload" href="{{ asset('map/picking.js') }}">
-<link rel="modulepreload" href="{{ asset('map/places.js') }}">
-<link rel="modulepreload" href="{{ asset('map/render.js') }}">
-<link rel="modulepreload" href="{{ asset('map/ride-check.js') }}">
-<link rel="modulepreload" href="{{ asset('map/scope-ui.js') }}">
-<link rel="modulepreload" href="{{ asset('map/search-ui.js') }}">
-<link rel="modulepreload" href="{{ asset('map/shell.js') }}">
-<link rel="modulepreload" href="{{ asset('map/sheet.js') }}">
-<link rel="modulepreload" href="{{ asset('map/spotlight.js') }}">
-<link rel="modulepreload" href="{{ asset('map/tile-sources.js') }}">
-<link rel="modulepreload" href="{{ asset('map/units.js') }}">
-<link rel="modulepreload" href="{{ asset('map/util.js') }}">
+{% for module in cc_module_graph('map/map.js') %}
+<link rel="modulepreload" href="{{ module }}">
+{% endfor %}
 {# And the catalog's first read: catalog-load.js asks for the region stamps
    before it knows which region URLs to fetch, and starts only after the
    vendor scripts execute; the preload puts the stamps in flight from the

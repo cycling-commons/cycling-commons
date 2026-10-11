@@ -87,6 +87,17 @@ Implementation surfaces: `web/assets/map/map.js` (all client behaviour),
   head preloads both halves of the library (`maplibre-gl.mjs` and the
   `maplibre-gl-shared.mjs` it imports) with `modulepreload`, because the second
   is otherwise only discovered once the first has been parsed.
+- **Every module of the map's static import graph is preloaded**, read from
+  AssetMapper's import graph by `cc_module_graph('map/map.js')`
+  (`App\Twig\ModuleGraphExtension`, owner 2026-10-11): the entry first, then
+  each static import, nearest first, never a lazy `import()`. A browser does not
+  walk an import graph for `modulepreload`, so each module left off is fetched a
+  round trip later, once the module importing it has been read; the hand-kept
+  list this replaced had drifted to 30 of the 76. In production the list is
+  cached in the system cache, keyed by the compiled asset manifest, so a deploy
+  with new files builds a new list; without a compiled manifest (development) it
+  is walked on every request. `ModuleGraphExtensionTest` pins that the page
+  preloads the whole graph, each module once.
 - **The import map must come before every module script AND every
   `modulepreload`, and that is a hard constraint, not a preference.** A browser
   honours an import map only while no module load has been triggered yet. A
