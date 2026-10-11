@@ -216,6 +216,15 @@ final class CountryInterestService
     }
 
     /**
+     * Requests nobody has answered yet: every row without `notified_at`,
+     * including a deleted account's, which still counts as asked for.
+     */
+    public function openCount(): int
+    {
+        return (int) $this->db->fetchOne('SELECT COUNT(*) FROM country_interest WHERE notified_at IS NULL');
+    }
+
+    /**
      * Per live country, how many riders are waiting to hear it went live.
      *
      * @return array<string, int> country code => riders

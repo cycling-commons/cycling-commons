@@ -4009,6 +4009,17 @@ admin:
   confirm_irreversible: 'Diese Aktion ist unwiderruflich. Fortfahren?'
   dashboard:
     title: 'Dashboard'
+    queues: "Wartet auf jemanden"
+    accounts: "Konten"
+    q_country_requests: "Offene Länderanfragen"
+    q_country_ready: "%n% Radfahrende können erfahren, dass ihr Land live ist"
+    q_curator_apps: "Kuratorenbewerbungen zu entscheiden"
+    q_escalated_submissions: "Eskalierte Beiträge"
+    q_escalated_photos: "Eskalierte Fotos"
+    q_reports: "Offene Meldungen zu einer Seite oder einem Foto"
+    q_reports_split: "%photos% zu einem Foto, %pages% zu einer Seite"
+    q_clear: "Nichts wartet:"
+    q_none: "Nichts wartet. Alles erledigt:"
     members: 'Mitglieder'
     curators: 'Kuratoren'
     admins: 'Administratoren'

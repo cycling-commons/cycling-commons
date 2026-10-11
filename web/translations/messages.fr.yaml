@@ -4004,6 +4004,17 @@ admin:
   confirm_irreversible: 'Cette action est irréversible. Continuer ?'
   dashboard:
     title: 'Tableau de bord'
+    queues: "En attente de quelqu'un"
+    accounts: "Comptes"
+    q_country_requests: "Demandes de pays ouvertes"
+    q_country_ready: "%n% cyclistes peuvent apprendre que leur pays est en ligne"
+    q_curator_apps: "Candidatures de curateur à trancher"
+    q_escalated_submissions: "Contributions escaladées"
+    q_escalated_photos: "Photos escaladées"
+    q_reports: "Signalements ouverts sur une page ou une photo"
+    q_reports_split: "%photos% sur une photo, %pages% sur une page"
+    q_clear: "Rien en attente :"
+    q_none: "Rien n'attend. Tout est à jour :"
     members: 'Membres'
     curators: 'Curateurs'
     admins: 'Admins'

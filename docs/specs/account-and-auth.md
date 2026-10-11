@@ -969,6 +969,21 @@ unverified / locked / pending-removal + 10 recent signups). Honesty rule: no
 fabricated or stale stats on the dashboard: a metric joins only when its
 source is real.
 
+Above the account counts sits **Waiting for someone** (`App\Service\AdminQueueCounts`,
+owner 2026-10-11): five queues, each linking to the desk that handles it. A
+queue with something in it is a row with its count and an orange edge; the
+empty ones fold into one line of links ("Nothing waiting: ..."). Below it the
+account counts are one strip, the daily jobs and the privacy versions sit side
+by side, and the recent signups close the page. Every colour is mixed from the
+text colour (`styles/page/admin/dashboard.css`), so the page keeps its
+contrast in EasyAdmin's light and dark themes. The queues: open country requests (no `notified_at`,
+moderation-and-contribution.md §11.1, with a line naming how many riders can be
+told their country is live), curator applications still `pending`, escalated
+submissions and escalated photos (`escalated_at` set; a submission's photos are
+held with it, so they count in both), and open reports (`open` or
+`in_progress`, split into photo and page reports). Each count comes from the
+helper its desk uses, so the two cannot disagree.
+
 It also lists the daily jobs with their last good run (`App\Ops\JobHealth`),
 and shows a red warning at the top while one is late (operations.md §1).
 

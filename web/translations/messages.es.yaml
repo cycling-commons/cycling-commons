@@ -4035,6 +4035,17 @@ admin:
   confirm_irreversible: 'Esta acción es irreversible. ¿Continuar?'
   dashboard:
     title: 'Panel'
+    queues: "Esperando a alguien"
+    accounts: "Cuentas"
+    q_country_requests: "Solicitudes de país abiertas"
+    q_country_ready: "%n% ciclistas pueden saber que su país ya está activo"
+    q_curator_apps: "Solicitudes de curador por decidir"
+    q_escalated_submissions: "Aportaciones escaladas"
+    q_escalated_photos: "Fotos escaladas"
+    q_reports: "Denuncias abiertas sobre una página o una foto"
+    q_reports_split: "%photos% sobre una foto, %pages% sobre una página"
+    q_clear: "Nada pendiente:"
+    q_none: "No hay nada pendiente. Todo al día:"
     members: 'Miembros'
     curators: 'Curadores'
     admins: 'Administradores'

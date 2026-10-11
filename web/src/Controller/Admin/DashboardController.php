@@ -28,6 +28,7 @@ use App\Ops\JobHealth;
 use App\Pagination\Pager;
 use App\Pagination\PageSize;
 use App\Service\AdminDashboardStats;
+use App\Service\AdminQueueCounts;
 use App\Settings\SettingsRegistry;
 use App\Settings\SystemSettings;
 use App\Settings\SystemSettingsWriter;
@@ -73,6 +74,7 @@ final class DashboardController extends AbstractDashboardController
         private readonly JobHealth $jobHealth,
         private readonly AuthorityNotifications $authorityNotifications,
         private readonly UnsentStatements $unsentStatements,
+        private readonly AdminQueueCounts $queues,
     ) {
     }
 
@@ -81,6 +83,7 @@ final class DashboardController extends AbstractDashboardController
     {
         return $this->render('admin/dashboard.html.twig', [
             'stats' => $this->stats->collect(),
+            'queues' => $this->queues->collect(),
             // No recipient means every alert is only a log line.
             'alerts_unconfigured' => !$this->alertRecipients->isConfigured(),
             'jobs' => $this->jobHealth->report(),

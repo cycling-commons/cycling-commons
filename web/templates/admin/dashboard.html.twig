@@ -1,9 +1,21 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
+{#
+   The admin's morning check: what needs somebody now, then the state of the
+   accounts and the daily jobs.
+
+   Colours are mixed from the inherited text colour (styles/page/admin/
+   dashboard.css), so the page reads the same in EasyAdmin's light and dark
+   themes; only the "waiting" edge carries the trail orange.
+#}
 {% extends '@EasyAdmin/page/content.html.twig' %}
 
 {% block content_title %}{{ 'admin.dashboard.title'|trans }}{% endblock %}
 
 {% block main %}
+{# No nonce: style-src is 'self' + 'unsafe-inline' (docs/specs/page-caching.md §3.2). #}
+<link rel="stylesheet" href="{{ asset('styles/page/admin/dashboard.css') }}">
+
+<div class="ccd">
     {% if alerts_unconfigured|default(false) %}
         {# AlertRecipients is empty: escalations, an opened circuit breaker and
            server errors are written to the log and mailed to nobody. #}
@@ -34,76 +46,122 @@
         </div>
     {% endif %}
 
-    <div class="row">
-        {% set cards = [
-            { label: 'admin.dashboard.members', value: stats.members },
-            { label: 'admin.dashboard.curators', value: stats.curators },
-            { label: 'admin.dashboard.admins', value: stats.admins },
-            { label: 'admin.dashboard.unverified', value: stats.unverified },
-            { label: 'admin.dashboard.locked', value: stats.locked },
-            { label: 'admin.dashboard.pending_removal', value: stats.pendingRemoval },
-        ] %}
-        {% for card in cards %}
-            <div class="col-md-4 col-sm-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="fs-2 fw-bold">{{ card.value }}</div>
-                        <div class="text-muted">{{ card.label|trans }}</div>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
+    {# What is waiting for somebody. A queue with something in it is a row with
+       its count, linking to the desk that handles it; the empty ones fold into
+       one quiet line, so the eye lands on work, not on zeros. #}
+    {% set queue_list = [
+        { key: 'reports', value: queues.reports, href: path('moderate_reports'),
+          sub: 'admin.dashboard.q_reports_split'|trans({'%photos%': queues.photoReports, '%pages%': queues.reports - queues.photoReports}) },
+        { key: 'escalated_submissions', value: queues.escalatedSubmissions, href: path('admin_escalated'), sub: null },
+        { key: 'escalated_photos', value: queues.escalatedPhotos, href: path('admin_escalated'), sub: null },
+        { key: 'curator_apps', value: queues.curatorApplications, href: path('admin_curator_applications'), sub: null },
+        { key: 'country_requests', value: queues.countryRequests, href: path('admin_country_requests'),
+          sub: queues.countryReady > 0 ? 'admin.dashboard.q_country_ready'|trans({'%n%': queues.countryReady}) : null },
+    ] %}
+    {% set waiting = queue_list|filter(q => q.value > 0) %}
+    {% set clear = queue_list|filter(q => q.value == 0) %}
+
+    <section class="ccd-block" data-queues>
+        <h2 class="ccd-h">{{ 'admin.dashboard.queues'|trans }}</h2>
+        {% if waiting is not empty %}
+            <ul class="ccd-queue">
+                {% for q in waiting %}
+                    <li>
+                        <a href="{{ q.href }}" data-queue="{{ q.key }}" data-count="{{ q.value }}">
+                            <span class="ccd-n">{{ q.value }}</span>
+                            <span class="ccd-what">
+                                <span class="ccd-label">{{ ('admin.dashboard.q_' ~ q.key)|trans }}</span>
+                                {% if q.sub %}<span class="ccd-sub">{{ q.sub }}</span>{% endif %}
+                            </span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if clear is not empty %}
+            <p class="ccd-clear">
+                {{ (waiting is empty ? 'admin.dashboard.q_none' : 'admin.dashboard.q_clear')|trans }}
+                {% for q in clear %}
+                    <a href="{{ q.href }}" data-queue="{{ q.key }}" data-count="0">{{ ('admin.dashboard.q_' ~ q.key)|trans }}</a>{{ not loop.last ? ',' }}
+                {% endfor %}
+            </p>
+        {% endif %}
+    </section>
+
+    <section class="ccd-block">
+        <h2 class="ccd-h">{{ 'admin.dashboard.accounts'|trans }}</h2>
+        <dl class="ccd-stats">
+            {% for stat in [
+                { label: 'admin.dashboard.members', value: stats.members },
+                { label: 'admin.dashboard.curators', value: stats.curators },
+                { label: 'admin.dashboard.admins', value: stats.admins },
+                { label: 'admin.dashboard.unverified', value: stats.unverified },
+                { label: 'admin.dashboard.locked', value: stats.locked },
+                { label: 'admin.dashboard.pending_removal', value: stats.pendingRemoval },
+            ] %}
+                <div><dt>{{ stat.label|trans }}</dt><dd>{{ stat.value }}</dd></div>
+            {% endfor %}
+        </dl>
+    </section>
+
+    <div class="ccd-pair">
+        <section class="ccd-block">
+            <h2 class="ccd-h">{{ 'admin.dashboard.jobs'|trans }}</h2>
+            <table class="ccd-table">
+                <thead><tr><th>{{ 'admin.dashboard.col_job'|trans }}</th><th>{{ 'admin.dashboard.col_job_last'|trans }}</th><th>{{ 'admin.dashboard.col_job_state'|trans }}</th></tr></thead>
+                <tbody>
+                    {% for job in jobs|default([]) %}
+                        <tr data-job="{{ job.command }}" data-job-state="{{ job.late ? 'late' : 'ok' }}">
+                            <td><code>{{ job.command }}</code></td>
+                            <td>{{ job.lastRun ? job.lastRun|cc_datetime : 'admin.dashboard.job_never'|trans }}</td>
+                            <td><span class="ccd-state {{ job.late ? 'is-late' : 'is-ok' }}">{{ (job.late ? 'admin.dashboard.job_late' : 'admin.dashboard.job_ok')|trans }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        {# Who has seen which privacy notice version (privacy-notice.md). #}
+        <section class="ccd-block">
+            <h2 class="ccd-h">{{ 'admin.dashboard.privacy_versions'|trans }}</h2>
+            <table class="ccd-table" data-privacy-versions>
+                <thead><tr><th>{{ 'admin.dashboard.col_privacy_version'|trans }}</th><th class="num">{{ 'admin.dashboard.col_accounts'|trans }}</th></tr></thead>
+                <tbody>
+                    {% for row in stats.privacyVersions %}
+                        <tr>
+                            <td>{{ row.version is null ? 'admin.dashboard.privacy_none'|trans : row.version }}</td>
+                            <td class="num">{{ row.accounts }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
     </div>
 
-    {# Who has seen which privacy notice version (privacy-notice.md). #}
-    <h2 class="h5 mt-4">{{ 'admin.dashboard.privacy_versions'|trans }}</h2>
-    <table class="table table-sm w-auto" data-privacy-versions>
-        <thead><tr><th>{{ 'admin.dashboard.col_privacy_version'|trans }}</th><th>{{ 'admin.dashboard.col_accounts'|trans }}</th></tr></thead>
-        <tbody>
-            {% for row in stats.privacyVersions %}
+    <section class="ccd-block">
+        <h2 class="ccd-h">{{ 'admin.dashboard.recent'|trans }}</h2>
+        <table class="table ccd-table">
+            <thead>
                 <tr>
-                    <td>{{ row.version is null ? 'admin.dashboard.privacy_none'|trans : row.version }}</td>
-                    <td>{{ row.accounts }}</td>
+                    <th>{{ 'admin.col_id'|trans }}</th>
+                    <th>{{ 'admin.dashboard.col_user'|trans }}</th>
+                    <th>{{ 'admin.dashboard.col_country'|trans }}</th>
+                    <th>{{ 'admin.dashboard.col_registered'|trans }}</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <h2 class="h5 mt-4">{{ 'admin.dashboard.jobs'|trans }}</h2>
-    <table class="table table-sm w-auto">
-        <thead><tr><th>{{ 'admin.dashboard.col_job'|trans }}</th><th>{{ 'admin.dashboard.col_job_last'|trans }}</th><th>{{ 'admin.dashboard.col_job_state'|trans }}</th></tr></thead>
-        <tbody>
-            {% for job in jobs|default([]) %}
-                <tr data-job="{{ job.command }}" data-job-state="{{ job.late ? 'late' : 'ok' }}">
-                    <td><code>{{ job.command }}</code></td>
-                    <td>{{ job.lastRun ? job.lastRun|cc_datetime : 'admin.dashboard.job_never'|trans }}</td>
-                    <td>{% if job.late %}<span class="badge bg-danger">{{ 'admin.dashboard.job_late'|trans }}</span>{% else %}<span class="badge bg-success">{{ 'admin.dashboard.job_ok'|trans }}</span>{% endif %}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <h2 class="h5 mt-4">{{ 'admin.dashboard.recent'|trans }}</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>{{ 'admin.col_id'|trans }}</th>
-                <th>{{ 'admin.dashboard.col_user'|trans }}</th>
-                <th>{{ 'admin.dashboard.col_country'|trans }}</th>
-                <th>{{ 'admin.dashboard.col_registered'|trans }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for u in stats.recent %}
-                <tr>
-                    <td>{{ u.id }}</td>
-                    <td>{{ u.displayName }} &middot; <span class="text-muted">{{ u.email }}</span></td>
-                    <td>{{ u.country ? u.country.name : '—' }}</td>
-                    <td>{{ u.createdAt ? u.createdAt|cc_datetime : '—' }}</td>
-                </tr>
-            {% else %}
-                <tr><td colspan="4" class="text-muted">{{ 'admin.dashboard.no_recent'|trans }}</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for u in stats.recent %}
+                    <tr>
+                        <td>{{ u.id }}</td>
+                        <td>{{ u.displayName }} <span class="ccd-soft">{{ u.email }}</span></td>
+                        <td>{{ u.country ? u.country.name : '' }}</td>
+                        <td>{{ u.createdAt ? u.createdAt|cc_datetime : '' }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4" class="ccd-soft">{{ 'admin.dashboard.no_recent'|trans }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
 {% endblock %}

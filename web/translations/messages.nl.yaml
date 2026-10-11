@@ -4008,6 +4008,17 @@ admin:
   confirm_irreversible: 'Deze actie is onomkeerbaar. Doorgaan?'
   dashboard:
     title: 'Dashboard'
+    queues: "Wacht op iemand"
+    accounts: "Accounts"
+    q_country_requests: "Open landaanvragen"
+    q_country_ready: "%n% fietsers kunnen horen dat hun land live is"
+    q_curator_apps: "Aanmeldingen als regiobeheerder om te beslissen"
+    q_escalated_submissions: "Geëscaleerde bijdragen"
+    q_escalated_photos: "Geëscaleerde foto's"
+    q_reports: "Open meldingen over een pagina of foto"
+    q_reports_split: "%photos% over een foto, %pages% over een pagina"
+    q_clear: "Niets wacht:"
+    q_none: "Er wacht niets. Alles bij:"
     members: 'Leden'
     curators: 'Regiobeheerders'
     admins: 'Beheerders'

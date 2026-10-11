@@ -4026,6 +4026,17 @@ admin:
   confirm_irreversible: 'This action is irreversible. Continue?'
   dashboard:
     title: 'Dashboard'
+    queues: "Waiting for someone"
+    accounts: "Accounts"
+    q_country_requests: "Open country requests"
+    q_country_ready: "%n% riders can be told their country is live"
+    q_curator_apps: "Curator applications to decide"
+    q_escalated_submissions: "Escalated submissions"
+    q_escalated_photos: "Escalated photos"
+    q_reports: "Open reports on a page or photo"
+    q_reports_split: "%photos% on a photo, %pages% on a page"
+    q_clear: "Nothing waiting:"
+    q_none: "Nothing is waiting. All clear:"
     members: 'Members'
     curators: 'Curators'
     admins: 'Admins'
