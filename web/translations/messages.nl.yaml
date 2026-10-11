@@ -959,7 +959,8 @@ export:
 scout:
   kicker: 'Scout · de CC Tagger'
   title: 'Markeer wat je ziet, terwijl je rijdt.'
-  lead: 'Scout is een veldrecorder met één druk op de knop, voor je fietscomputer. Markeer een gevaar, een afsluiting, een verandering van ondergrond of een waterpunt op het moment dat je erlangs rijdt — zonder te stoppen, zonder telefoon, zonder typen. Elke markering wordt rechtstreeks in je ritbestand geschreven, in een open, gedocumenteerd formaat.'
+  lead: "Scout is een veldrecorder met één druk op de knop, voor je fietscomputer. Markeer een gevaar, een afsluiting, een verandering van ondergrond of een waterpunt op het moment dat je erlangs rijdt: zonder te stoppen, zonder telefoon, zonder typen. Elke markering wordt rechtstreeks in je ritbestand geschreven, in een open, gedocumenteerd formaat. Met een achterradar telt Scout ook de voertuigen die je passeren, om het verkeer te meten op de wegen waar je fietst."
+  plat_get: "Verkrijgbaar via:"
   plat_garmin: 'Garmin Edge'
   plat_garmin_badge: 'Garmin Edge: beschikbaar in de Connect IQ Store'
   plat_android: 'Android'
@@ -1009,6 +1010,9 @@ scout:
   tag_other_p: 'Al het andere. Eén druk, geen submenu — thuis bepaal je wat het was.'
   tag_radar: 'Inhalers'
   tag_radar_p: 'Met een Varia-compatibele radar gekoppeld telt Scout automatisch de voertuigen die je passeren. Dat is het dichtst bij een objectieve maat voor hoe druk een weg echt is.'
+  traffic_h: "Scout meet ook verkeer"
+  traffic_p1: "Met een achterradar op je fiets, zoals een Garmin Varia, telt Scout ook de voertuigen die je passeren. Je hoeft niets extra te doen: de radar telt terwijl je rijdt."
+  traffic_p2: "Thuis kan het nakijken van je rit een <b>verkeerssamenvatting</b> per weg sturen, als je dat wilt: hoe ver je er reed en hoeveel voertuigen je passeerden. Samenvattingen van veel fietsers laten zien welke wegen rustig zijn en welke druk. Je route wordt niet verstuurd, en niets bij het begin of eind van je rit."
   privacy_h: 'Je rit blijft van jou'
   review_title: 'Een rit nakijken'
   review_pick: 'Kies een ritbestand'
@@ -1275,7 +1279,7 @@ map:
   ride_check_intro: 'Upload een route die je wilt rijden en zie alles wat we in de buurt hebben.'
   locked_hint: 'Log in om dit te gebruiken.'
   scout_heading: 'Verkenning'
-  scout_review: 'Voeg je verkende rit toe'
+  scout_review: "Een Scout-rit toevoegen"
   scout_hint: 'Markeringen en trajecten uit je ritbestand worden inzendingen voor de Cycling Commons.'
   propose_route_go: 'Upload je route'
   propose_route_note: 'Deel een lus die het rijden waard is.'

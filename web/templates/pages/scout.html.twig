@@ -16,7 +16,14 @@
   <h1 class="disp">{% trans %}scout.title{% endtrans %}</h1>
   <p class="lead" style="color:rgba(239,230,212,.85);margin-top:.8rem;max-width:70ch">{{ 'scout.lead'|trans|rich }}</p>
 
+  <p class="sget">{% trans %}scout.plat_get{% endtrans %}</p>
   {{ include('partials/_scout_platforms.html.twig') }}
+
+  {# Back home with a ride: straight to the review on the map, the same
+     button the map's Scout tool shows. A guest passes through login. #}
+  <div class="scta">
+    <a class="btn btn-p" href="{{ path('scout_review') }}">{{ 'map.scout_review'|trans }} <span aria-hidden="true">→</span></a>
+  </div>
   </div>
   {# The review screen, where a ride's tags become submissions (owner
      2026-09-18). Four widths; the browser takes the one its layout needs.
@@ -79,7 +86,15 @@
   </table>
 </div></section>
 
-<section class="pad"><div class="wrap">
+{# The radar's second use: per-road traffic summaries from the ride review
+   (docs/specs/traffic-measurements.md). #}
+<section class="pad" id="traffic"><div class="wrap">
+  <h2 style="max-width:none">{% trans %}scout.traffic_h{% endtrans %}</h2>
+  <p class="note">{% trans %}scout.traffic_p1{% endtrans %}</p>
+  <p class="note" style="margin-top:.9rem">{{ 'scout.traffic_p2'|trans|rich }}</p>
+</div></section>
+
+<section class="pad" style="background:var(--paper-deep)"><div class="wrap">
   <h2 style="max-width:none">{% trans %}scout.privacy_h{% endtrans %}</h2>
   <p class="note">{{ 'scout.privacy_p'|trans|rich }}</p>
 </div></section>

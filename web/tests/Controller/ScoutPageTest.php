@@ -75,6 +75,23 @@ final class ScoutPageTest extends WebTestCase
         }
     }
 
+    /**
+     * A rider back home goes from the hero straight to the ride review on the
+     * map, and the page says the radar also measures traffic.
+     */
+    #[DataProvider('locales')]
+    public function testTheHeroLinksTheRideReviewAndThePageExplainsTraffic(string $prefix): void
+    {
+        $client = static::createClient();
+        $crawler = $client->request('GET', $prefix.'/scout');
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('.shero .scta a[href="/scout/review"]'));
+        self::assertSelectorExists('.shero .sget + .plats');
+        self::assertSelectorExists('#traffic h2');
+        self::assertSelectorExists('#traffic b');
+    }
+
     /** The homepage entry point must actually reach the page. */
     public function testTheHomepageCtaPointsAtTheScoutPage(): void
     {

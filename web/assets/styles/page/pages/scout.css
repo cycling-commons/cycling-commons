@@ -34,3 +34,7 @@
 .szoom-dlg img{display:block;max-width:96vw;max-height:94vh;width:auto;height:auto;border-radius:8px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
 .szoom-x{position:absolute;top:.6rem;right:.6rem;width:2.4rem;height:2.4rem;border-radius:50%;border:0;background:var(--paper);color:var(--ink);font-size:1.4rem;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4)}
 .szoom-x:focus-visible{outline:2px solid var(--trail);outline-offset:2px}
+.scta{margin-top:1.4rem}
+/* The label over the platform badges; the badges row drops its own top gap. */
+.sget{margin:1.8rem 0 0;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.6)}
+.sget + .plats{margin-top:.7rem}

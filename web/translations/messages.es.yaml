@@ -962,7 +962,8 @@ export:
 scout:
   kicker: 'Scout · el CC Tagger'
   title: 'Marca lo que ves, mientras ruedas.'
-  lead: 'Scout es un registrador de campo de un solo toque para tu ciclocomputador. Marca un peligro, un corte, un cambio de firme o una fuente justo cuando pasas por delante — sin parar, sin móvil, sin escribir. Cada marca se escribe directamente en el archivo de tu ruta, en un formato abierto y documentado.'
+  lead: "Scout es un registrador de campo de un solo toque para tu ciclocomputador. Marca un peligro, un corte, un cambio de firme o una fuente justo cuando pasas por delante: sin parar, sin móvil, sin escribir. Cada marca se escribe directamente en el archivo de tu ruta, en un formato abierto y documentado. Con un radar trasero, Scout también cuenta los vehículos que te adelantan, para medir el tráfico en las carreteras por las que circulas."
+  plat_get: "Consíguelo en:"
   plat_garmin: 'Garmin Edge'
   plat_garmin_badge: 'Garmin Edge: disponible en la Connect IQ Store'
   plat_android: 'Android'
@@ -1012,6 +1013,9 @@ scout:
   tag_other_p: 'Todo lo demás. Un toque, sin submenú — ya decidirás qué era al llegar a casa.'
   tag_radar: 'Adelantamientos'
   tag_radar_p: 'Con un radar compatible con Varia emparejado, Scout cuenta automáticamente los vehículos que te adelantan. Es lo más parecido que hay a una medida objetiva del tráfico real de una carretera.'
+  traffic_h: "Scout también mide el tráfico"
+  traffic_p1: "Con un radar trasero en la bici, como un Garmin Varia, Scout también cuenta los vehículos que te adelantan. No tienes que hacer nada más: el radar cuenta mientras pedaleas."
+  traffic_p2: "Ya en casa, la revisión de la salida puede enviar un <b>resumen del tráfico</b> por carretera, si quieres: cuánto recorriste por ella y cuántos vehículos te adelantaron. Los resúmenes de muchos ciclistas muestran qué carreteras son tranquilas y cuáles tienen mucho tráfico. Tu recorrido no se envía, ni nada cerca del inicio o el final de tu salida."
   privacy_h: 'Tu ruta sigue siendo tuya'
   review_title: 'Revisar una salida'
   review_pick: 'Elegir un archivo'
@@ -1898,7 +1902,7 @@ map:
   ride_check_intro: 'Sube una ruta que piensas hacer y verás todo lo que tenemos cerca de ella.'
   locked_hint: 'Inicia sesión para usar esta herramienta.'
   scout_heading: 'Exploración'
-  scout_review: 'Añade tu salida de exploración'
+  scout_review: "Añadir una salida de Scout"
   scout_hint: 'Las marcas y tramos de tu archivo de salida se convierten en propuestas para el Cycling Commons.'
   propose_route_go: 'Sube tu ruta'
   propose_route_note: 'Comparte un circuito que merezca la pena.'

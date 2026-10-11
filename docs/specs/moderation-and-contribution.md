@@ -3554,7 +3554,12 @@ outstanding, in order. It reads **Send all** until the first tag has gone
   credited on `/credits`) sits in its chip; Hammerhead and Apple marks need
   their owners' permission, so those chips stay text. A store badge appears
   only once the app is live in that store. The homepage keeps two, small and
-  decorative.
+  decorative. A "Get it at:" label sits over the chips, and under them an
+  "Add a Scout ride" button opens `/scout/review`. The map's Scout tool shows
+  the same label and link to everyone, with no locked state or login text: a
+  guest passes through login and comes back to the review.
+  A section after the tag table says the radar also feeds per-road traffic
+  summaries from the same review ([traffic-measurements.md](traffic-measurements.md)).
 - **The category dropdown is opaque.** A translucent control would mix with the
   system white behind the native popup, so both the closed control and its
   `option`s state their own colours.

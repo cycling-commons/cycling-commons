@@ -957,7 +957,8 @@ export:
 scout:
   kicker: 'Scout · le CC Tagger'
   title: 'Marquez ce que vous voyez, en roulant.'
-  lead: 'Scout est un enregistreur de terrain à une pression, pour votre compteur. Signalez un danger, une route fermée, un changement de revêtement ou un point d''eau au moment où vous passez — sans vous arrêter, sans téléphone, sans rien taper. Chaque marqueur est écrit directement dans le fichier de votre sortie, dans un format ouvert et documenté.'
+  lead: "Scout est un enregistreur de terrain à une pression, pour votre compteur. Signalez un danger, une route fermée, un changement de revêtement ou un point d'eau au moment où vous passez : sans vous arrêter, sans téléphone, sans rien taper. Chaque marqueur est écrit directement dans le fichier de votre sortie, dans un format ouvert et documenté. Avec un radar arrière, Scout compte aussi les véhicules qui vous dépassent, pour mesurer le trafic sur les routes où vous roulez."
+  plat_get: "Disponible sur :"
   plat_garmin: 'Garmin Edge'
   plat_garmin_badge: 'Garmin Edge : disponible sur le Connect IQ Store'
   plat_android: 'Android'
@@ -1007,6 +1008,9 @@ scout:
   tag_other_p: 'Tout le reste. Une pression, pas de sous-menu — vous déciderez de quoi il s''agissait en rentrant.'
   tag_radar: 'Dépassements'
   tag_radar_p: 'Avec un radar compatible Varia appairé, Scout compte automatiquement les véhicules qui vous dépassent. C''est ce qui se rapproche le plus d''une mesure objective du trafic réel d''une route.'
+  traffic_h: "Scout mesure aussi le trafic"
+  traffic_p1: "Avec un radar arrière sur votre vélo, comme un Garmin Varia, Scout compte aussi les véhicules qui vous dépassent. Rien à faire de plus : le radar compte pendant que vous roulez."
+  traffic_p2: "De retour chez vous, la revue de la sortie peut envoyer un <b>résumé du trafic</b> par route, si vous le souhaitez : la distance parcourue et le nombre de véhicules qui vous ont dépassé. Les résumés de nombreux cyclistes montrent quelles routes sont calmes et lesquelles sont chargées. Votre tracé n'est pas envoyé, ni rien près du départ ou de l'arrivée."
   privacy_h: 'Votre sortie reste la vôtre'
   review_title: 'Revoir une sortie'
   review_pick: 'Choisir un fichier'
@@ -1273,7 +1277,7 @@ map:
   ride_check_intro: 'Chargez un parcours que vous comptez rouler et voyez tout ce que nous avons à proximité.'
   locked_hint: 'Connectez-vous pour utiliser cet outil.'
   scout_heading: 'Reconnaissance'
-  scout_review: 'Ajouter votre sortie de reconnaissance'
+  scout_review: "Ajouter une sortie Scout"
   scout_hint: 'Les repères et tronçons de votre fichier de sortie deviennent des propositions au Cycling Commons.'
   propose_route_go: 'Charger votre parcours'
   propose_route_note: 'Partagez une boucle qui vaut le détour.'

@@ -953,7 +953,8 @@ export:
 scout:
   kicker: 'Scout · the CC Tagger'
   title: 'Tag what you see, while you ride.'
-  lead: 'Scout is a one-tap field recorder for your bike computer. Mark a hazard, a closure, a surface change or a water stop as you pass it — no stopping, no phone, no typing. Every tag is written straight into your ride file, in an open, documented format.'
+  lead: "Scout is a one-tap field recorder for your bike computer. Mark a hazard, a closure, a surface change or a water stop as you pass it: no stopping, no phone, no typing. Every tag is written straight into your ride file, in an open, documented format. With a rear radar, Scout also counts the vehicles that pass you, to measure the traffic on the roads you ride."
+  plat_get: "Get it at:"
   plat_garmin: 'Garmin Edge'
   plat_garmin_badge: 'Garmin Edge: available on the Connect IQ Store'
   plat_android: 'Android'
@@ -1003,6 +1004,9 @@ scout:
   tag_other_p: 'Everything else. Single tap, no submenu — decide what it was when you get home.'
   tag_radar: 'Overtakes'
   tag_radar_p: 'With a Varia-compatible radar paired, Scout counts the vehicles that pass you, automatically. It is the closest thing there is to an objective measure of how busy a road really feels.'
+  traffic_h: "Scout also measures traffic"
+  traffic_p1: "With a rear radar on your bike, such as a Garmin Varia, Scout also counts the vehicles that pass you. You do nothing extra: the radar counts while you ride."
+  traffic_p2: "Back home, the ride review can send a <b>traffic summary</b> per road, if you choose: how far you rode there and how many vehicles passed you. Summaries from many riders show which roads are quiet to ride and which are busy. Your ride line is not sent, and nothing near the start or end of your ride."
   privacy_h: 'Your ride stays yours'
   review_title: 'Review a ride'
   review_pick: 'Choose a ride file'
@@ -1891,7 +1895,7 @@ map:
   ride_check_intro: 'Upload a route you plan to ride and see everything we have near it.'
   locked_hint: 'Log in to use this.'
   scout_heading: 'Scout'
-  scout_review: 'Add your scouted ride'
+  scout_review: "Add a Scout ride"
   scout_hint: 'Tags and stretches from your ride file become submissions to the Cycling Commons.'
   propose_route_go: 'Upload your route'
   propose_route_note: 'Share a loop worth riding.'

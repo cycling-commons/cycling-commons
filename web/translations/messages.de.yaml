@@ -962,7 +962,8 @@ export:
 scout:
   kicker: 'Scout · der CC Tagger'
   title: 'Markiere, was du siehst — während du fährst.'
-  lead: 'Scout ist ein Feldrekorder mit einem Fingertipp, für deinen Radcomputer. Markiere eine Gefahrenstelle, eine Sperrung, einen Belagswechsel oder eine Wasserstelle genau dann, wenn du vorbeifährst — ohne anzuhalten, ohne Handy, ohne Tippen. Jede Markierung wird direkt in deine Aufzeichnung geschrieben, in einem offenen, dokumentierten Format.'
+  lead: "Scout ist ein Feldrekorder mit einem Fingertipp, für deinen Radcomputer. Markiere eine Gefahrenstelle, eine Sperrung, einen Belagswechsel oder eine Wasserstelle genau dann, wenn du vorbeifährst: ohne anzuhalten, ohne Handy, ohne Tippen. Jede Markierung wird direkt in deine Aufzeichnung geschrieben, in einem offenen, dokumentierten Format. Mit einem Rückradar zählt Scout auch die Fahrzeuge, die dich überholen, und misst so den Verkehr auf den Straßen, die du fährst."
+  plat_get: "Erhältlich bei:"
   plat_garmin: 'Garmin Edge'
   plat_garmin_badge: 'Garmin Edge: erhältlich im Connect IQ Store'
   plat_android: 'Android'
@@ -1012,6 +1013,9 @@ scout:
   tag_other_p: 'Alles andere. Ein Tippen, kein Untermenü — was es war, entscheidest du zu Hause.'
   tag_radar: 'Überholvorgänge'
   tag_radar_p: 'Mit gekoppeltem Varia-kompatiblem Radar zählt Scout automatisch die Fahrzeuge, die dich überholen. Das ist das Nächste an einem objektiven Maß dafür, wie viel Verkehr eine Straße wirklich hat.'
+  traffic_h: "Scout misst auch den Verkehr"
+  traffic_p1: "Mit einem Rückradar am Rad, etwa einem Garmin Varia, zählt Scout auch die Fahrzeuge, die dich überholen. Du musst nichts weiter tun: Das Radar zählt, während du fährst."
+  traffic_p2: "Zu Hause kann die Durchsicht der Fahrt eine <b>Verkehrszusammenfassung</b> pro Straße senden, wenn du willst: wie weit du dort gefahren bist und wie viele Fahrzeuge dich überholt haben. Zusammenfassungen vieler Radfahrender zeigen, welche Straßen ruhig sind und welche voll. Deine Strecke wird nicht gesendet, und nichts nahe Start oder Ziel deiner Fahrt."
   privacy_h: 'Deine Fahrt bleibt deine'
   review_title: 'Eine Fahrt durchsehen'
   review_pick: 'Fahrtdatei wählen'
@@ -1278,7 +1282,7 @@ map:
   ride_check_intro: 'Lade eine geplante Route hoch und sieh alles, was wir in ihrer Nähe haben.'
   locked_hint: 'Zum Verwenden bitte anmelden.'
   scout_heading: 'Erkundung'
-  scout_review: 'Deine erkundete Tour hinzufügen'
+  scout_review: "Eine Scout-Fahrt hinzufügen"
   scout_hint: 'Markierungen und Abschnitte aus deiner Tourdatei werden zu Einreichungen für die Cycling Commons.'
   propose_route_go: 'Deine Route hochladen'
   propose_route_note: 'Teile eine Runde, die sich lohnt.'
