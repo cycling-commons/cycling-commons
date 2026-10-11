@@ -9,10 +9,12 @@ namespace App\Account\Command;
 use App\Community\Entity\CountryInterest;
 use App\Entity\User;
 use App\Service\UserDeletionService;
+use App\Support\ContactMessageRetention;
 use App\Support\ContactTopic;
 use App\Support\Entity\BugReport;
 use App\Support\Entity\ContactMessage;
 use App\Support\Entity\ContentReport;
+use App\Support\ReportContactRetention;
 use App\Support\ReportGround;
 use App\Support\ReportTarget;
 use Doctrine\DBAL\Connection;
@@ -25,13 +27,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The running check that deleting an account takes its address with it.
+ * The running check that a deleted account's address goes, and when.
  *
  * Every day, on the real database: a throwaway account files what a rider
  * files (a contact message, a content report, a bug report, a country
  * request), the account is deleted through the same UserDeletionService a
- * rider's own deletion runs, and then every text column of every table is
- * searched for the address. A hit names the table and column and fails the
+ * rider's own deletion runs, and every text column of every table is searched
+ * for the address. It may stay only where the privacy notice keeps it on its
+ * own clock ({@see self::KEPT_ON_A_CLOCK}). Those rows are then moved past
+ * their clocks and the real retention code runs, after which the address may
+ * be nowhere at all. Any other hit names the table and column and fails the
  * run. The whole check runs inside one transaction that is always rolled
  * back, so nothing it wrote is ever seen, kept, mailed or shown on a desk.
  *
@@ -43,7 +48,7 @@ use Symfony\Component\Uid\Uuid;
  *
  * @api
  */
-#[AsCommand(name: 'app:privacy:erasure-check', description: 'Check on the live database that deleting an account removes its address everywhere')]
+#[AsCommand(name: 'app:privacy:erasure-check', description: 'Check on the live database that a deleted account leaves its address only where a clock keeps it, and that the clocks remove it')]
 final class ErasureCheckCommand extends Command
 {
     /**
@@ -54,6 +59,14 @@ final class ErasureCheckCommand extends Command
      */
     private const array SKIP_TABLE_PREFIXES = ['coverage_', 'traffic_', 'world_', 'region', 'roadpiece', 'topology', 'doctrine_migration'];
 
+    /**
+     * Where a deleted account's address stays on purpose, until a clock
+     * (privacy notice v3, owner 2026-10-11): a contact message for 24 months
+     * after it closed, a content report's contact for 90 days after the
+     * decision, so the reporter is told the outcome.
+     */
+    private const array KEPT_ON_A_CLOCK = ['contact_message.email', 'content_report.reporter_contact'];
+
     /** A domain that can never receive mail (RFC 2606). */
     private const string DOMAIN = 'erasure-check.invalid';
 
@@ -61,6 +74,8 @@ final class ErasureCheckCommand extends Command
         private readonly EntityManagerInterface $em,
         private readonly Connection $db,
         private readonly UserDeletionService $deletion,
+        private readonly ContactMessageRetention $contactRetention,
+        private readonly ReportContactRetention $reportRetention,
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct();
@@ -81,7 +96,23 @@ final class ErasureCheckCommand extends Command
             $this->deletion->erase($user);
             $this->em->clear();
 
-            $hits = $this->search($address);
+            // Right after the deletion: only where a clock keeps it.
+            $hits = array_values(array_diff($this->search($address), self::KEPT_ON_A_CLOCK));
+
+            // Then past those clocks, through the real retention code.
+            $this->db->executeStatement(
+                "UPDATE contact_message SET status = 'closed', updated_at = NOW() - INTERVAL '25 months' WHERE email = ?",
+                [$address],
+            );
+            $this->db->executeStatement(
+                "UPDATE content_report SET status = 'rejected', decided_at = NOW() - INTERVAL '91 days' WHERE reporter_contact = ?",
+                [$address],
+            );
+            $this->contactRetention->purgeExpiredMessages();
+            $this->reportRetention->purgeExpiredContacts();
+            foreach ($this->search($address) as $kept) {
+                $hits[] = $kept.' (past its clock)';
+            }
         } finally {
             // Always: the check leaves nothing behind, pass or fail.
             if ($this->db->isTransactionActive()) {
@@ -97,7 +128,7 @@ final class ErasureCheckCommand extends Command
             return Command::FAILURE;
         }
 
-        $output->writeln('A deleted account left its address nowhere.');
+        $output->writeln('A deleted account left its address only where a clock keeps it, and the clocks removed it.');
 
         return Command::SUCCESS;
     }
@@ -159,7 +190,7 @@ final class ErasureCheckCommand extends Command
         $needle = '%'.addcslashes($address, '%_\\').'%';
         foreach ($byTable as $table => $cols) {
             foreach ($cols as $col) {
-                $sql = \sprintf('SELECT 1 FROM %s WHERE CAST(%s AS text) ILIKE ? LIMIT 1', $this->db->quoteIdentifier($table), $this->db->quoteIdentifier($col));
+                $sql = \sprintf('SELECT 1 FROM %s WHERE CAST(%s AS text) ILIKE ? LIMIT 1', $this->db->quoteSingleIdentifier($table), $this->db->quoteSingleIdentifier($col));
                 if (false !== $this->db->fetchOne($sql, [$needle])) {
                     $hits[] = $table.'.'.$col;
                 }

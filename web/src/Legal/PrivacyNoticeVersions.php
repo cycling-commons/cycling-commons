@@ -17,12 +17,14 @@ namespace App\Legal;
 final class PrivacyNoticeVersions extends LegalVersions
 {
     public const string PAGE = 'privacy';
-    public const int CURRENT = 2;
+    public const int CURRENT = 3;
 
     #[\Override]
     protected static function entries(): array
     {
         return [
+            // Not significant: it states how long an address already kept stays after an account is deleted (owner 2026-10-11).
+            ['number' => 3, 'date' => '2026-10-11', 'effective' => '2026-10-11', 'significant' => false, 'changes' => ['privacy.change.v3_kept_address']],
             // Significant (traffic summaries are new processing), published before the notice rule (owner 2026-10-09).
             ['number' => 2, 'date' => '2026-10-09', 'effective' => '2026-10-09', 'significant' => true, 'changes' => ['privacy.change.v2_traffic', 'privacy.change.v2_time_zone', 'privacy.change.v2_pseudonym', 'privacy.change.v2_base_location', 'privacy.change.v2_clearer', 'privacy.change.v2_errors', 'privacy.change.v2_notice', 'privacy.change.v2_more', 'privacy.change.v2_statements', 'privacy.change.v2_suspension', 'privacy.change.v2_authorities']],
             ['number' => 1, 'date' => '2026-10-04', 'effective' => '2026-10-04', 'significant' => false, 'changes' => ['privacy.change.v1_first']],

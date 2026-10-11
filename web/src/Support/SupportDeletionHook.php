@@ -11,23 +11,23 @@ use App\Service\UserDeletionHookInterface;
 use Doctrine\DBAL\Connection;
 
 /**
- * Account deletion: what the rider filed stays, without their address.
+ * Account deletion: bug reports stay without their reporter; support rows lose
+ * the account.
  *
  * - A bug report the rider filed stays, because the fix helps everybody. It
  *   loses the account, the reply address and the address hash.
- * - A contact message the account sent stays for its own 24-month clock
- *   (ContactMessageRetention), as the record of what was asked, and loses
- *   the account, the address and the name now (owner 2026-10-11). The column
- *   takes no NULL, so the address is emptied; nothing mails a contact message
- *   after its first receipt.
- * - A content report keeps its DSA record and loses a reporter contact that
- *   is the account's address: such a report was filed signed in, with that
- *   address. Its reporter is then not told the outcome, which is the price of
- *   the erasure the rider asked for (owner 2026-10-11).
+ * - A contact message keeps the address the sender typed until its own
+ *   24-month clock deletes the whole row (ContactMessageRetention); it loses
+ *   the account link now.
+ * - A content report keeps its reporter's address until 90 days after its
+ *   decision (ReportContactRetention), so the reporter is still told the
+ *   outcome the law owes them (DSA Art. 16(5)), also after deleting the
+ *   account they filed it from (owner 2026-10-11, privacy notice v3).
  * - What the account did as a curator (handling a bug report or a contact
  *   message, deciding a content report) stays and names nobody.
  *
- * `app:privacy:erasure-check` proves it daily on the live database.
+ * `app:privacy:erasure-check` proves daily, on the live database, that the
+ * address is left nowhere else, and that those two clocks remove it.
  *
  * @see docs/specs/account-and-auth.md §6.3
  * @see docs/specs/contact-and-support.md §4, §5
@@ -48,14 +48,6 @@ final class SupportDeletionHook implements UserDeletionHookInterface
         $this->db->executeStatement(
             'UPDATE bug_report SET user_id = NULL, reporter_email = NULL, ip_hash = NULL WHERE user_id = :u',
             ['u' => $id],
-        );
-        $this->db->executeStatement(
-            "UPDATE contact_message SET email = '', name = NULL WHERE user_id = :u",
-            ['u' => $id],
-        );
-        $this->db->executeStatement(
-            'UPDATE content_report SET reporter_contact = NULL WHERE lower(reporter_contact) = lower(:e)',
-            ['e' => $user->getEmail()],
         );
         foreach ([
             ['bug_report', 'handled_by_user_id'],

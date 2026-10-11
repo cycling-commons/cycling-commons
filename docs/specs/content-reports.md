@@ -313,9 +313,10 @@ every support mail ([contact-and-support.md](contact-and-support.md) §7): the
 report or the decision is committed first, and a mail server that is down, or
 an address the mailer refuses, is logged and never answered with an error
 (`ContentReportService::send()`, audit 2026-10-04). A report filed signed in
-carries the account's address; deleting the account clears it
-(`SupportDeletionHook`, owner 2026-10-11), and the outcome email then has
-nobody to go to.
+carries the account's address, and deleting the account leaves it for the
+report's own clock, 90 days after the decision, so the reporter is still told
+the outcome (owner 2026-10-11, privacy notice v3; checked daily by
+`app:privacy:erasure-check`).
 
 **On filing**, immediately, `emails/report_acknowledged.html.twig`. Article
 16(4) wants a confirmation "without undue delay", so it is sent when the row is

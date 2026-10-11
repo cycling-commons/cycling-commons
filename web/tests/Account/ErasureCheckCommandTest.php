@@ -21,7 +21,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  */
 final class ErasureCheckCommandTest extends KernelTestCase
 {
-    public function testADeletedAccountLeavesItsAddressNowhereAndTheCheckLeavesNoTrace(): void
+    public function testTheAddressStaysOnlyOnItsClocksAndTheCheckLeavesNoTrace(): void
     {
         $kernel = self::bootKernel();
         $tester = new CommandTester((new Application($kernel))->find('app:privacy:erasure-check'));
