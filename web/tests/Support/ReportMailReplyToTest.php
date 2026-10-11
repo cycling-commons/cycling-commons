@@ -161,6 +161,7 @@ final class ReportMailReplyToTest extends WebTestCase
             $container->get(EntityManagerInterface::class),
             $container->get(ReportAlert::class),
             $container->get(MailerInterface::class),
+            $container->get(LoggerInterface::class),
             $container->get(ClockInterface::class),
             $container->get(MediaTakedownService::class),
             $container->get(MediaEscalationService::class),

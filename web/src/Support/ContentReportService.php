@@ -21,9 +21,12 @@ use App\Security\PseudonymousKey;
 use App\Support\Entity\ContentReport;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Exception\RfcComplianceException;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Uid\Uuid;
 
@@ -55,6 +58,7 @@ final class ContentReportService
         private readonly EntityManagerInterface $em,
         private readonly ReportAlert $alert,
         private readonly MailerInterface $mailer,
+        private readonly LoggerInterface $logger,
         private readonly ClockInterface $clock,
         // A photo report on the one withholding ground is handed to the media
         // service rather than reimplemented here: the circuit breaker, the
@@ -465,9 +469,18 @@ final class ContentReportService
     private function send(string $to, string $template, string $subject, array $context): void
     {
         $replyTo = trim($this->replyTo);
+        try {
+            $recipient = new Address($to);
+        } catch (RfcComplianceException) {
+            // An address the form accepted and the mailer does not: there is
+            // nobody we can write to, and the report stands without a mail.
+            $this->logger->warning('A report mail had an address the mailer refuses.', ['template' => $template]);
+
+            return;
+        }
         $email = (new TemplatedEmail())
             ->from(new Address($this->fromEmail, 'Cycling Commons'))
-            ->to(new Address($to))
+            ->to($recipient)
             ->subject($subject)
             ->htmlTemplate($template)
             // The templates print the reply sentences only when there is
@@ -477,6 +490,18 @@ final class ContentReportService
             $email->replyTo(new Address($replyTo));
         }
 
-        $this->mailer->send($email);
+        // Best effort, like every support mail (contact-and-support.md §7):
+        // the report or the decision is already committed and stands, so a
+        // mail server that is down is logged, never thrown at the reporter or
+        // the curator.
+        try {
+            $this->mailer->send($email);
+        } catch (TransportExceptionInterface $e) {
+            $this->logger->error('Could not send a report mail.', [
+                'template' => $template,
+                'report' => isset($context['report']) && $context['report'] instanceof ContentReport ? $context['report']->getId()->toRfc4122() : null,
+                'transport_error' => $e->getMessage(),
+            ]);
+        }
     }
 }
