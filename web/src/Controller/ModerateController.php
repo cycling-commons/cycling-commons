@@ -484,7 +484,8 @@ final class ModerateController extends AbstractController
 
         /** @var User $curator */
         $curator = $this->getUser();
-        $upload = $this->em->find(MediaUpload::class, Uuid::fromString((string) $request->request->get('media')));
+        $raw = (string) $request->request->get('media', '');
+        $upload = Uuid::isValid($raw) ? $this->em->find(MediaUpload::class, Uuid::fromString($raw)) : null;
         if (null === $upload) {
             throw $this->createNotFoundException();
         }

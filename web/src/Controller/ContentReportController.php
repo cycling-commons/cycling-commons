@@ -84,7 +84,8 @@ final class ContentReportController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function answer(string $id, Request $request): Response
     {
-        $report = $this->em->find(ContentReport::class, Uuid::fromString($id));
+        // The route only checks the characters; a malformed id is not found.
+        $report = Uuid::isValid($id) ? $this->em->find(ContentReport::class, Uuid::fromString($id)) : null;
         $user = $this->getUser();
         if (!$report instanceof ContentReport || !$user instanceof User) {
             throw $this->createNotFoundException();
