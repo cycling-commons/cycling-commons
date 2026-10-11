@@ -566,7 +566,7 @@ Endpoints (unlocalized paths, `App\Controller\RouteCommunityController` +
 | `GET /routes/{id}/community` | auth (401) | SERVED | snapshot `{state, rideCount, threshold, iRode}` + `token` (CSRF) |
 | `POST /routes/{id}/rode-it` | auth + CSRF | SERVED (unverified **and** verified) | `{ok: true}` + fresh snapshot |
 | `POST /routes/{id}/suggest` | auth + CSRF | SERVED | `{ok: true}` |
-| `GET /routes/{id}/corrections` | auth + `ROLE_CURATOR` (else 403) | SERVED | pending corrections + segments (route-domain.md §7) |
+| `GET /routes/{id}/corrections` | auth + `ROLE_CURATOR` with two-factor set up, and the route's region in the curator's areas (else 403: `/routes/` skips the setup redirect, so the endpoint checks both itself; audit 2026-10-04) | SERVED | pending corrections + segments (route-domain.md §7) |
 | `GET /routes/{id}.gpx` | public | SERVED | GPX 1.1 of the stored geometry, ODbL `<copyright>` header, `Cache-Control: public, max-age=3600` |
 
 Any other route state → 404 (defence-in-depth: non-SERVED routes are never

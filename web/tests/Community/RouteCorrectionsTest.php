@@ -13,6 +13,7 @@ use App\Catalog\ItemState;
 use App\Catalog\RouteSuggestionReason;
 use App\Catalog\RouteSuggestionStatus;
 use App\Entity\User;
+use App\Moderation\Entity\ModeratorArea;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -143,5 +144,51 @@ final class RouteCorrectionsTest extends WebTestCase
         self::assertCount(1, $data['corrections']);
         self::assertSame('broken-track', $data['corrections'][0]['reason']);
         self::assertSame([[0.2, 0.4]], $this->normalizeSegments($data['corrections'][0]['segments']));
+    }
+
+    /**
+     * The notes are for the curators of the route's region, as on the Routes
+     * desk, and only once their two-factor setup is done: `/routes/` skips the
+     * setup redirect because its other endpoints are public (audit 2026-10-04).
+     */
+    public function testCorrectionsStayWithTheRoutesOwnCuratorsAndNeedTwoFactor(): void
+    {
+        $client = static::createClient();
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $db = $em->getConnection();
+        $region = static fn (string $slug): int => (int) $db->fetchOne(
+            "INSERT INTO region (slug, name, geom, area_km2, country_code, admin_level, created_at, updated_at)
+             VALUES (?, ?, ST_SetSRID(ST_MakeEnvelope(5.0, 50.0, 6.0, 51.0), 4326), 100, 'BE', 4, NOW(), NOW()) RETURNING id",
+            [$slug, $slug],
+        );
+        $routeRegion = $region('corrections-route-region');
+        $otherRegion = $region('corrections-other-region');
+
+        $route = $this->route($em);
+        $route->setRegionId($routeRegion);
+        $em->persist(new RouteSuggestion((int) $route->getId(), 5, RouteSuggestionReason::Other, 'a note for the curators', null));
+        $em->flush();
+        $rid = $route->getId();
+
+        $elsewhere = $this->user($em, 'cur-elsewhere@test.test', ['ROLE_CURATOR']);
+        $em->persist(new ModeratorArea((int) $elsewhere->getId(), $otherRegion, null));
+        $em->flush();
+        $client->loginUser($elsewhere);
+        $client->request('GET', '/routes/'.$rid.'/corrections');
+        self::assertResponseStatusCodeSame(403, 'a curator of another region');
+
+        $unenrolled = $this->user($em, 'cur-no2fa@test.test', ['ROLE_CURATOR']);
+        $unenrolled->setTwoFaEnabled(false)->setTotpSecret(null);
+        $em->flush();
+        $client->loginUser($unenrolled);
+        $client->request('GET', '/routes/'.$rid.'/corrections');
+        self::assertResponseStatusCodeSame(403, 'a curator who has not set up two-factor yet');
+
+        $own = $this->user($em, 'cur-own@test.test', ['ROLE_CURATOR']);
+        $em->persist(new ModeratorArea((int) $own->getId(), $routeRegion, null));
+        $em->flush();
+        $client->loginUser($own);
+        $client->request('GET', '/routes/'.$rid.'/corrections');
+        self::assertResponseIsSuccessful();
     }
 }

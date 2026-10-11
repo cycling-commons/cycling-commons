@@ -13,6 +13,8 @@ use App\Catalog\RouteMetadata;
 use App\Catalog\RouteSuggestionReason;
 use App\Community\RouteCommunityService;
 use App\Entity\User;
+use App\Moderation\ModerationScopeProvider;
+use App\Security\TwoFactorPolicy;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -175,13 +177,19 @@ final class RouteCommunityController extends AbstractController
      * @see docs/specs/route-domain.md §7
      */
     #[Route('/routes/{id}/corrections', name: 'route_corrections', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function corrections(int $id, Connection $db): JsonResponse
+    public function corrections(int $id, Connection $db, ModerationScopeProvider $scopes, TwoFactorPolicy $twoFactor): JsonResponse
     {
-        $this->requireUser();
-        if (!$this->isGranted('ROLE_CURATOR')) {
+        $user = $this->requireUser();
+        // Curators only, with their two-factor setup done: `/routes/` skips the
+        // setup redirect for its public endpoints, so this one checks itself.
+        if (!$this->isGranted('ROLE_CURATOR') || $twoFactor->requiresSetup($user)) {
             throw new HttpException(Response::HTTP_FORBIDDEN, 'curator_only');
         }
-        $this->activeRoute($id);
+        $route = $this->activeRoute($id);
+        // The riders' notes go to the route's own curators, as on the Routes desk.
+        if (!$scopes->allowsRegion($scopes->scopeFor($user), $route->getRegionId())) {
+            throw new HttpException(Response::HTTP_FORBIDDEN, 'out_of_scope');
+        }
 
         /** @var list<array{id:int|string, reason:string, note:?string, segments:?string}> $rows */
         $rows = $db->fetchAllAssociative(
