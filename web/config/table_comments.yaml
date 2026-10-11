@@ -101,6 +101,10 @@ tables:
     job_run: >-
         Last good run of each daily console job; the admin dashboard warns when one is late.
 
+    pow_spent: >-
+        One row per spent proof-of-work challenge (its sha256), inserted in one statement so
+        a solution works once on either web host; rows go once their challenge has expired.
+
     # Entities whose docblock does not stand alone.
     reset_password_request: >-
         One outstanding password-reset request: a hashed selector, its expiry, and the account it
