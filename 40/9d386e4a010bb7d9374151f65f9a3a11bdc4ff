@@ -1,0 +1,54 @@
+web/tests/Community/CountryLiveNoticeTest.php
+  s_2612073477a315::t_6a7278e93faa90 197-198
+  s_2612073477a315::t_ca9b4af233423d 1-196,199-200
+wiki/developers/data-ops/onboarding-a-country.md
+  s_2612073477a315::t_b89c990341b517 136-143
+web/src/Controller/Admin/DashboardController.php
+  s_2612073477a315::t_f77ceea6db32b4 66,395-397,400-401,403-420,429,458
+web/templates/admin/country_requests.html.twig
+  s_2612073477a315::t_f77ceea6db32b4 44-51,93
+web/translations/messages.es.yaml
+  s_2612073477a315::t_7b6c4b89aa8a32 495,2991,4195-4197
+web/src/Account/DataExportService.php
+  s_2612073477a315::t_a1ee6286419874 171
+web/src/Community/Entity/CountryInterest.php
+  s_2612073477a315::t_8cfc7cd1bec97a 67-73,126-128
+  s_2612073477a315::t_afbf8392b2c600 129-130
+web/src/Messaging/MessageCategory.php
+  s_2612073477a315::t_85ef4c6c31f3e4 55
+docs/specs/moderation-and-contribution.md
+  s_2612073477a315::t_a1ee6286419874 2299
+  s_2612073477a315::t_bc48e52b366889 2908,2946-2966
+web/translations/messages.nl.yaml
+  s_2612073477a315::t_7b6c4b89aa8a32 493,2968,4168-4170
+web/translations/messages.de.yaml
+  s_2612073477a315::t_7b6c4b89aa8a32 493,2969,4169-4171
+web/translations/messages.en.yaml
+  s_2612073477a315::t_7b6c4b89aa8a32 493,2983,4186-4188
+web/src/Community/CountryInterestService.php
+  s_2612073477a315::t_85ef4c6c31f3e4 11-12,14,17-18,32-43,49-51,190,196,212,218-293
+  s_2612073477a315::t_0d9b21748d970f 294
+web/migrations/Version20261011150000.php
+  s_2612073477a315::t_8cfc7cd1bec97a 1-37
+web/src/Messaging/UserMessageKind.php
+  s_2612073477a315::t_85ef4c6c31f3e4 52
+  s_2612073477a315::t_fb434786cda18d 51
+web/translations/messages.fr.yaml
+  s_2612073477a315::t_7b6c4b89aa8a32 491,2964,4164-4166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "409d386e4a010bb7d9374151f65f9a3a11bdc4ff",
+  "prompts": {},
+  "sessions": {
+    "s_2612073477a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c06bea5c-9d93-4477-bcdb-4ad73cf20ae4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
