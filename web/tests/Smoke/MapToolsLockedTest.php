@@ -44,13 +44,23 @@ final class MapToolsLockedTest extends WebTestCase
         $crawler = $client->request('GET', '/map');
         self::assertResponseIsSuccessful();
 
-        // Three, not four: ride check is open to everyone on purpose. It is the
+        // Two, not four: ride check is open to everyone on purpose. It is the
         // tool that earns the account rather than requiring one.
         $locked = $crawler->filter('#p-tools .cc-locked');
-        self::assertSame(3, $locked->count(), 'scout, add-climb and propose-route are locked');
+        self::assertSame(2, $locked->count(), 'add-climb and propose-route are locked');
         foreach ($locked as $node) {
             self::assertStringContainsString('/login', (string) $node->getAttribute('href'));
         }
+        self::assertStringNotContainsString('Log in to use this', $crawler->filter('#p-tools')->text());
+    }
+
+    /** Scout shows one plain link to everyone; a guest passes through login and comes back. */
+    public function testLoggedOutScoutLinksTheReviewWithNoLoginText(): void
+    {
+        $client = $this->client();
+        $crawler = $client->request('GET', '/map');
+
+        self::assertSame(1, $crawler->filter('#p-tools a.cc-addclimb-go[href="/scout/review"]')->count());
     }
 
     public function testRideCheckIsUsableWithoutAnAccount(): void

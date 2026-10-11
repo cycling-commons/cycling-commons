@@ -1893,7 +1893,6 @@ map:
   filters_narrowing: 'Filters are narrowing this map'
   filters_show_all: 'Show all'
   ride_check_intro: 'Upload a route you plan to ride and see everything we have near it.'
-  locked_hint: 'Log in to use this.'
   scout_heading: 'Scout'
   scout_review: "Add a Scout ride"
   scout_hint: 'Tags and stretches from your ride file become submissions to the Cycling Commons.'

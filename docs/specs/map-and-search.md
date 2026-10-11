@@ -2925,9 +2925,11 @@ as a normal user").
 
 - **Where:** a `.grp.cc-addclimb` block in the Ride tools panel, under ride-check
   and Scout, inside the same `ROLE_USER` gate. The panel's order (owner
-  2026-09-18): Check my ride, Scout (with the Scout mark, "Add your scouted
-  ride"), Add a climb, Propose a route (its own item, `ROLE_USER`, locked when
-  logged out), and Contribute last as the catch-all. Its actions carry the map's
+  2026-09-18): Check my ride, Scout (with the Scout mark, "Add a Scout ride",
+  one link for everyone), Add a climb, Propose a route (its own item,
+  `ROLE_USER`, locked when logged out), and Contribute last as the catch-all.
+  A locked tool shows the same orange button as the others, linking to login,
+  with no hint text under it (owner 2026-10-11). Its actions carry the map's
   button colour as an accent: orange outline, panel-coloured text, filled
   orange with ink text (5.5:1) on hover. Every tool's text sits above its
   button, so a rider reads what it does (and, for ride check, that the GPX is

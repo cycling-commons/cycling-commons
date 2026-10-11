@@ -1871,15 +1871,6 @@
      button above it does (owner, 2026-08-28). */
   .cc-addclimb-note{margin:0 0 .65rem;font-size:.82rem;line-height:1.5;color:rgb(var(--chrome-fg) / .75)}
 
-  /* A tool that needs an account: muted, but a real link and a real target —
-     dimmed enough to read as not-yet-yours, never below the contrast floor. */
-  .cc-locked{display:inline-flex;align-items:center;min-height:32px;font-family:var(--mono);font-size:.74rem;
-    letter-spacing:.08em;text-transform:uppercase;padding:.42rem .75rem;
-    border:1px dashed rgb(var(--chrome-fg) / .3);border-radius:30px;
-    color:rgb(var(--chrome-fg) / .72);transition:all .18s}
-  .cc-locked:hover,.cc-locked:focus-visible{border-style:solid;border-color:var(--trail);color:var(--trail)}
-  .cc-locked-hint{margin:.4rem 0 0;font-size:.72rem;line-height:1.4;color:rgb(var(--chrome-fg) / .68)}
-
 /* vestibular safety: the same kill-switch the sibling contribute templates
    carry */
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

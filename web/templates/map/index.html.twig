@@ -407,16 +407,12 @@
 
       {# Scout: the same ride file, read the other way round. Ride check asks
          what is already near a route; scout turns what a rider SAW on it into
-         submissions. /scout/review is ROLE_USER, so logged out this renders
-         locked rather than as a link that would land on a login wall. #}
+         submissions. One link for everyone: /scout/review is ROLE_USER, so a
+         guest passes through login and comes back to the review. #}
       <div class="grp">
         <h3 class="tool-h-logo">{{ include('partials/_scout_logo.html.twig', {size: 26, decorative: true}) }}{{ 'map.scout_heading'|trans }}</h3>
         <p class="cc-addclimb-note">{{ 'map.scout_hint'|trans }}</p>
-        {% if is_granted('ROLE_USER') %}
         <a class="cc-addclimb-go" href="{{ path('scout_review') }}">{{ 'map.scout_review'|trans }}</a>
-        {% else %}
-        {% include 'map/_locked_tool.html.twig' with {label: 'map.scout_review'|trans} only %}
-        {% endif %}
       </div>
 
       {# "Add a climb here" (owner asked 2026-08-14: "how do we add a new climb

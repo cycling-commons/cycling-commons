@@ -1277,7 +1277,6 @@ map:
   filters_narrowing: 'Filters beperken deze kaart'
   filters_show_all: 'Toon alles'
   ride_check_intro: 'Upload een route die je wilt rijden en zie alles wat we in de buurt hebben.'
-  locked_hint: 'Log in om dit te gebruiken.'
   scout_heading: 'Verkenning'
   scout_review: "Een Scout-rit toevoegen"
   scout_hint: 'Markeringen en trajecten uit je ritbestand worden inzendingen voor de Cycling Commons.'

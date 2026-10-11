@@ -1,5 +1,6 @@
 {# SPDX-License-Identifier: AGPL-3.0-only #}
-{# A tool a visitor cannot use yet: named, and offering the one action that
-   unlocks it. Hiding it instead teaches nobody that it exists. #}
-<a class="cc-locked" href="{{ path('login') }}">{{ label }}</a>
-<p class="cc-locked-hint">{{ 'map.locked_hint'|trans }}</p>
+{# A tool a visitor cannot use yet: named, and a link to login, the one
+   action that unlocks it. Hiding it instead teaches nobody that it exists.
+   It wears the same orange button as every other tool; .cc-locked only marks
+   it. #}
+<a class="cc-addclimb-go cc-locked" href="{{ path('login') }}">{{ label }}</a>

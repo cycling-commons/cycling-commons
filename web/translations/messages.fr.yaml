@@ -1275,7 +1275,6 @@ map:
   filters_narrowing: 'Les filtres restreignent cette carte'
   filters_show_all: 'Tout afficher'
   ride_check_intro: 'Chargez un parcours que vous comptez rouler et voyez tout ce que nous avons à proximité.'
-  locked_hint: 'Connectez-vous pour utiliser cet outil.'
   scout_heading: 'Reconnaissance'
   scout_review: "Ajouter une sortie Scout"
   scout_hint: 'Les repères et tronçons de votre fichier de sortie deviennent des propositions au Cycling Commons.'

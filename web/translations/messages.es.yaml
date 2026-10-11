@@ -1900,7 +1900,6 @@ map:
   filters_narrowing: 'Los filtros están limitando este mapa'
   filters_show_all: 'Mostrar todo'
   ride_check_intro: 'Sube una ruta que piensas hacer y verás todo lo que tenemos cerca de ella.'
-  locked_hint: 'Inicia sesión para usar esta herramienta.'
   scout_heading: 'Exploración'
   scout_review: "Añadir una salida de Scout"
   scout_hint: 'Las marcas y tramos de tu archivo de salida se convierten en propuestas para el Cycling Commons.'

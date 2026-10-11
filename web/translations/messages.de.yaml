@@ -1280,7 +1280,6 @@ map:
   filters_narrowing: 'Filter schränken diese Karte ein'
   filters_show_all: 'Alle anzeigen'
   ride_check_intro: 'Lade eine geplante Route hoch und sieh alles, was wir in ihrer Nähe haben.'
-  locked_hint: 'Zum Verwenden bitte anmelden.'
   scout_heading: 'Erkundung'
   scout_review: "Eine Scout-Fahrt hinzufügen"
   scout_hint: 'Markierungen und Abschnitte aus deiner Tourdatei werden zu Einreichungen für die Cycling Commons.'
