@@ -2951,6 +2951,7 @@ messages:
   from_curator: 'Von einem Kurator'
   email_cta: 'In deinen Nachrichten öffnen'
   email_why: 'Du bekommst das, weil es um einen deiner Beiträge geht. Der ganze Austausch steht auf deiner Nachrichtenseite.'
+  email_why_country: "Du bekommst das, weil du uns gebeten hast, dieses Land oder diese Region aufzunehmen. Es steht auch auf deiner Nachrichtenseite."
   state_read: 'Gelesen'
   open: 'Nachricht öffnen'
   open_in_form: 'Im Bearbeitungsformular öffnen'
@@ -5245,7 +5246,6 @@ dsa_statement:
   email:
     greeting: 'Hallo %name%,'
     intro: 'Diese E-Mail erklärt eine Entscheidung, die wir über dich getroffen haben. Darauf hast du nach Artikel 17 des EU-Gesetzes über digitale Dienste ein Recht.'
-    signoff: 'Das Cycling-Commons-Team'
   desk:
     reject_note_required: 'Schreib der fahrenden Person eine Notiz, bevor du ablehnst: Das ist die Begründung, die sie bekommt.'
     trash_ground: 'Warum kommt es in den Papierkorb?'
@@ -5305,3 +5305,7 @@ account_suspension:
     flash_failed: 'Die E-Mail ist wieder nicht rausgegangen. Die Begründung bleibt hier.'
     flash_discarded: 'Die Begründung ist verworfen. Das Admin-Protokoll behält ihre Referenz.'
     gone: 'Diese Begründung ist nicht mehr hier.'
+
+email:
+  signoff_greeting: "Rückenwind und Sonnenschein,"
+  signoff_team: "Team Cycling Commons"

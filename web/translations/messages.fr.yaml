@@ -2946,6 +2946,7 @@ messages:
   from_curator: 'D''un curateur'
   email_cta: 'Ouvrir dans vos messages'
   email_why: 'Vous recevez ceci parce que cela concerne une contribution que vous avez faite. L''échange complet se trouve sur votre page Messages.'
+  email_why_country: "Vous recevez ceci parce que vous nous avez demandé d'ajouter ce pays ou cette région. C'est aussi sur votre page de messages."
   state_read: 'Lu'
   open: 'Ouvrir le message'
   open_in_form: 'L''ouvrir dans le formulaire de modification'
@@ -5240,7 +5241,6 @@ dsa_statement:
   email:
     greeting: 'Bonjour %name%,'
     intro: 'Cet e-mail vous explique une décision que nous avons prise à votre sujet, comme l’article 17 du règlement européen sur les services numériques vous y donne droit.'
-    signoff: 'L’équipe Cycling Commons'
   desk:
     reject_note_required: 'Écrivez une note au cycliste avant de rejeter : c’est la raison qui lui est envoyée.'
     trash_ground: 'Pourquoi part-il à la corbeille ?'
@@ -5300,3 +5300,7 @@ account_suspension:
     flash_failed: 'L’e-mail n’est toujours pas parti. L’exposé des motifs reste ici.'
     flash_discarded: 'L’exposé des motifs est abandonné. Le journal d’administration garde sa référence.'
     gone: 'Cet exposé des motifs n’est plus ici.'
+
+email:
+  signoff_greeting: "Vent dans le dos et soleil,"
+  signoff_team: "L'équipe Cycling Commons"

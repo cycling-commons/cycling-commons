@@ -101,7 +101,9 @@ final readonly class MessageMailer
                 (new TemplatedEmail())
                     ->from(new Address('noreply@cyclingcommons.org', 'Cycling Commons'))
                     ->to(new Address($email, $user->getDisplayName()))
-                    ->subject('[Cycling Commons] '.$headline)
+                    // No "[Cycling Commons]": the sender's name already says it; the
+                    // prefix stays on mail to the team, where it sorts (owner 2026-10-11).
+                    ->subject($headline)
                     ->htmlTemplate('emails/message.html.twig')
                     ->textTemplate('emails/message.txt.twig')
                     ->context([
@@ -109,10 +111,13 @@ final readonly class MessageMailer
                         'body' => $body,
                         'body_text' => $bodyText,
                         'note' => $message->getBodyText(),
-                        'reference' => $message->getRefLabel(),
+                        // A code a rider can quote (SUB-12); a country code is no such thing.
+                        'reference' => UserMessageKind::CountryLive === $message->getKind() ? null : $message->getRefLabel(),
                         'messages_url' => rtrim($this->siteUrl, '/').$this->inboxPath($locale),
                         'cta' => $this->translator->trans('messages.email_cta', [], null, $locale),
-                        'why' => $this->translator->trans('messages.email_why', [], null, $locale),
+                        // Why this mail came: most answer something the rider
+                        // contributed; a country going live answers a request.
+                        'why' => $this->translator->trans(UserMessageKind::CountryLive === $message->getKind() ? 'messages.email_why_country' : 'messages.email_why', [], null, $locale),
                         'locale' => $locale,
                     ])
             );

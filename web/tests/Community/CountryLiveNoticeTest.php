@@ -128,6 +128,12 @@ final class CountryLiveNoticeTest extends WebTestCase
         }
         self::assertStringContainsString('Denmark is now on the Cycling Commons map', $bodies['dk-en@example.test'] ?? '');
         self::assertStringContainsString('Denemarken staat nu op de kaart', $bodies['dk-nl@example.test'] ?? '');
+        $enMail = $bodies['dk-en@example.test'] ?? '';
+        self::assertStringContainsString('you asked us to add this country or region', $enMail, 'it says why it came');
+        self::assertStringNotContainsString('contribution you made', $enMail, 'a request is not a contribution');
+        self::assertDoesNotMatchRegularExpression('/^DK$/m', $enMail, 'no bare country code at the end');
+        self::assertStringContainsString("Tailwinds and Sunshine,\n\nTeam Cycling Commons", $enMail, 'every mail ends the same way');
+        self::assertStringContainsString('Rugwind en zonneschijn,', $bodies['dk-nl@example.test'] ?? '', 'in the rider\'s language');
 
         self::assertSame(3, (int) $this->db()->fetchOne(
             "SELECT COUNT(*) FROM country_interest WHERE country_code = 'DK' AND notified_at IS NOT NULL",

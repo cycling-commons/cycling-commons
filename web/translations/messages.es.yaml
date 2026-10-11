@@ -2973,6 +2973,7 @@ messages:
   from_curator: 'De un curador'
   email_cta: 'Abrirlo en tus mensajes'
   email_why: 'Recibes esto porque trata sobre una aportación tuya. El intercambio completo está en tu página de mensajes.'
+  email_why_country: "Recibes esto porque nos pediste añadir este país o esta región. También está en tu página de mensajes."
   state_read: 'Leído'
   open: 'Abrir mensaje'
   open_in_form: 'Abrirlo en el formulario de edición'
@@ -5272,7 +5273,6 @@ dsa_statement:
   email:
     greeting: 'Hola, %name%:'
     intro: 'Este correo te explica una decisión que tomamos sobre ti, a la que tienes derecho según el artículo 17 del Reglamento de Servicios Digitales de la UE.'
-    signoff: 'El equipo de Cycling Commons'
   desk:
     reject_note_required: 'Escribe una nota al ciclista antes de rechazar: es el motivo que recibe.'
     trash_ground: '¿Por qué va a la Papelera?'
@@ -5332,3 +5332,7 @@ account_suspension:
     flash_failed: 'El correo volvió a no salir. La exposición de motivos se queda aquí.'
     flash_discarded: 'La exposición de motivos está descartada. El registro de administración guarda su referencia.'
     gone: 'Esa exposición de motivos ya no está aquí.'
+
+email:
+  signoff_greeting: "Viento a favor y sol,"
+  signoff_team: "El equipo de Cycling Commons"

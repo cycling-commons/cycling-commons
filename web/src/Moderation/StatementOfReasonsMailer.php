@@ -70,14 +70,15 @@ final readonly class StatementOfReasonsMailer
         $email = (new TemplatedEmail())
             ->from(new Address($this->fromEmail, 'Cycling Commons'))
             ->to(new Address($address, $name))
-            ->subject('[Cycling Commons] '.$lines['headline'])
+            // No "[Cycling Commons]": the sender's name already says it; the
+            // prefix stays on mail to the team, where it sorts (owner 2026-10-11).
+            ->subject($lines['headline'])
             ->htmlTemplate('emails/statement_of_reasons.html.twig')
             ->textTemplate('emails/statement_of_reasons.txt.twig')
             ->context([
                 's' => $lines,
                 'greeting' => $this->translator->trans('dsa_statement.email.greeting', ['%name%' => $name], null, $locale),
                 'intro' => $this->translator->trans('dsa_statement.email.intro', [], null, $locale),
-                'signoff' => $this->translator->trans('dsa_statement.email.signoff', [], null, $locale),
                 'labels' => $this->labels($locale),
                 'terms_url' => StatementOfReasons::termsUrl($site, $locale),
                 'contact_url' => StatementOfReasons::contactUrl($site, $locale),

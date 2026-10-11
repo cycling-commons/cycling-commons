@@ -2957,7 +2957,9 @@ the General shelf (§7.9), channel `country_live`, however many of their rows
 match. The message emails them like every inbox message, in their own
 language, with the country named in that language (`join.message.country_live`).
 It is a reply to their own request, like the curator receipt, so it does not
-wait on the news opt-in. In the same transaction every matched row gets
+wait on the news opt-in. Its email says why it came ("because you asked us to
+add this country or region", `messages.email_why_country`), not the
+contribution line the other inbox mails carry, and prints no reference code. In the same transaction every matched row gets
 `notified_at`, so a second press, or two at once, tells nobody twice. After
 that, the table shows "Told it is live" with the date under "Last asked", and
 the button is gone. Telling riders about a new area inside a live country is

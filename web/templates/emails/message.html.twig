@@ -51,7 +51,7 @@
   </table>
 
   <p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8a8d7a">
-    {{ why }}<br>
-    <span style="font-family:monospace;font-size:12px">{{ reference }}</span>
+    {{ why }}
+    {% if reference %}<br><span style="font-family:monospace;font-size:12px">{{ reference }}</span>{% endif %}
   </p>
 {% endblock %}

@@ -2965,6 +2965,7 @@ messages:
   from_curator: 'From a curator'
   email_cta: 'Open it in your messages'
   email_why: 'You are getting this because it is about a contribution you made. The full exchange lives on your messages page.'
+  email_why_country: "You are getting this because you asked us to add this country or region. It is also on your messages page."
   state_read: 'Read'
   open: 'Open message'
   open_in_form: 'Open it in the edit form'
@@ -5262,7 +5263,6 @@ dsa_statement:
   email:
     greeting: 'Hello %name%,'
     intro: 'This email explains a decision we made about you, which is your right under Article 17 of the EU Digital Services Act.'
-    signoff: 'The Cycling Commons team'
   desk:
     reject_note_required: 'Write the rider a note before rejecting: it is the reason they are sent.'
     trash_ground: 'Why is it going to Trash?'
@@ -5322,3 +5322,7 @@ account_suspension:
     flash_failed: 'The email did not go out again. The statement stays here.'
     flash_discarded: 'The statement is discarded. The admin log keeps its reference.'
     gone: 'That statement is no longer here.'
+
+email:
+  signoff_greeting: "Tailwinds and Sunshine,"
+  signoff_team: "Team Cycling Commons"

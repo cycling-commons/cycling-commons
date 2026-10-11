@@ -18,7 +18,12 @@
 {{ cta }}: {{ messages_url }}
 
 {{ why }}
-{{ reference }}
+{% if reference %}{{ reference }}
+{% endif %}
+
+{{ 'email.signoff_greeting'|trans([], null, locale|default(null)) }}
+
+{{ 'email.signoff_team'|trans([], null, locale|default(null)) }}
 
 --
 Cycling Commons · open cycling atlas · https://cyclingcommons.org

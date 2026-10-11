@@ -302,7 +302,15 @@ Email templates use email-client-safe markup only: presentation tables + inline
 styles, paper backdrop, ink header band carrying the wide wordmark
 (`assets/brand/logo-email.png`, a PNG render of the nav SVG since mail
 clients strip SVG), orange action button. Copy lives in the extending
-templates; the shell owns layout and the footer.
+templates; the shell owns layout, the footer and the sign-off. **Every email
+ends with "Tailwinds and Sunshine," and "Team Cycling Commons"** (owner
+2026-10-11; `email.signoff_greeting`, `email.signoff_team`, in the mail's
+language when the mailer passes `locale`); the plain-text parts
+(`message.txt.twig`, `statement_of_reasons.txt.twig`) end the same way, and
+no template carries a sign-off of its own. Mail to a rider has no
+"[Cycling Commons]" subject prefix (the sender's name already says it:
+`MessageMailer`, `StatementOfReasonsMailer`); mail to the team keeps it, where
+it sorts a shared inbox (owner 2026-10-11).
 
 Under the action button, the verification and password reset emails print the
 same link as text ("Button not working? Paste this link into your

@@ -2950,6 +2950,7 @@ messages:
   from_curator: 'Van een regiobeheerder'
   email_cta: 'Openen in je berichten'
   email_why: 'Je krijgt dit omdat het over een bijdrage van jou gaat. Het volledige gesprek staat op je berichtenpagina.'
+  email_why_country: "Je krijgt dit omdat je ons vroeg dit land of deze regio toe te voegen. Het staat ook op je berichtenpagina."
   state_read: 'Gelezen'
   open: 'Bericht openen'
   open_in_form: 'Open het in het bewerkformulier'
@@ -5244,7 +5245,6 @@ dsa_statement:
   email:
     greeting: 'Hallo %name%,'
     intro: 'Deze e-mail legt een besluit uit dat we over je hebben genomen. Daar heb je recht op onder artikel 17 van de Europese digitaledienstenverordening.'
-    signoff: 'Het Cycling Commons-team'
   desk:
     reject_note_required: 'Schrijf de fietser een notitie voordat je afwijst: dat is de reden die hij krijgt.'
     trash_ground: 'Waarom gaat het naar de prullenbak?'
@@ -5304,3 +5304,7 @@ account_suspension:
     flash_failed: 'De e-mail is weer niet verstuurd. De motivering blijft hier.'
     flash_discarded: 'De motivering is weggegooid. Het beheerlogboek bewaart de referentie.'
     gone: 'Die motivering staat hier niet meer.'
+
+email:
+  signoff_greeting: "Rugwind en zonneschijn,"
+  signoff_team: "Team Cycling Commons"

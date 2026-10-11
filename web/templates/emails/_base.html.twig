@@ -23,6 +23,13 @@
         <tr>
           <td style="background:#fdfaf1;border-radius:0 0 12px 12px;padding:36px 40px 32px;font-family:Helvetica,Arial,sans-serif;color:#14160e;font-size:14px;line-height:1.6">
             {% block content %}{% endblock %}
+            {# Every email ends the same way (owner 2026-10-11), in the
+               mail's language when the mailer passes one. #}
+            {% block signoff %}
+            <p style="margin:24px 0 0">{{ 'email.signoff_greeting'|trans([], null, locale|default(null)) }}</p>
+            {# One empty line between the two, as in a letter: 14px at 1.6 line height. #}
+            <p style="margin:22px 0 0">{{ 'email.signoff_team'|trans([], null, locale|default(null)) }}</p>
+            {% endblock %}
           </td>
         </tr>
         <tr>
