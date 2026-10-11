@@ -539,8 +539,9 @@
   .cc-g svg,.cc-near-k svg,.search-res .sw svg,.cc-d-rec .v svg{vertical-align:-2px}
   /* one-off reveal pin (decision C): the "?" pin plus the selection pulse */
   /* The town pointer (map-and-search.md §6.5): the site's own mark, ink pin
-     with the wheel, standing on the town point; the reveal pin's pulse under it. */
-  .cc-town-pin{position:relative;width:26px;height:43px;color:var(--ink);--wheel:var(--paper);--spoke:var(--clay);pointer-events:none;
+     with the wheel, standing on the town point; the reveal pin's pulse under it.
+     Only ever a map marker: MapLibre's position:absolute holds its pulse. */
+  .cc-town-pin{width:26px;height:43px;color:var(--ink);--wheel:var(--paper);--spoke:var(--clay);pointer-events:none;
     filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
   .cc-town-pin svg{display:block}
   .cc-town-pin::before{content:"";position:absolute;left:50%;bottom:-2px;width:26px;height:26px;margin-left:-13px;border-radius:50%;border:2px solid rgba(255,90,31,.6);animation:cc-pulse 1.25s infinite;z-index:-1}
@@ -1688,10 +1689,14 @@
      spread repaint every frame over the map canvas. */
   /* Selection halo: a transparent-centre glowing ring + expanding pulse, so the
      selected marker (WebGL icon, painted beneath all DOM overlays) shows THROUGH
-     the middle and reads as sitting on top of the pulse. */
-  .cc-highlight{position:relative;width:24px;height:24px;border-radius:50%;background:transparent;pointer-events:none;box-shadow:0 0 10px 3px rgba(255,90,31,.5),inset 0 0 0 2px rgba(255,90,31,.55)}
+     the middle and reads as sitting on top of the pulse. On the map, MapLibre
+     makes the ring position:absolute and places it with a transform; a
+     relative ring would sit in page flow below the markers added before it
+     (the town pin) and drift by their height. Only the Map key's ring needs it. */
+  .cc-highlight{width:24px;height:24px;border-radius:50%;background:transparent;pointer-events:none;box-shadow:0 0 10px 3px rgba(255,90,31,.5),inset 0 0 0 2px rgba(255,90,31,.55)}
   .cc-highlight::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,90,31,.6);
     animation:cc-pulse 1.25s infinite;z-index:-1}
+  .cc-highlight:not(.maplibregl-marker){position:relative}
   @keyframes cc-pulse{0%{transform:scale(1);opacity:.9}70%{transform:scale(2.6);opacity:0}100%{transform:scale(1);opacity:0}}
   /* ---- Curator duplicate resolve (?finding=<id>) --------------------------
      Two pins for what may be one place. Numbered rather than coloured: the

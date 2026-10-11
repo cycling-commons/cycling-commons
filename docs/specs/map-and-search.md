@@ -1974,6 +1974,13 @@ The geometry is pure (`web/assets/map/fan-out.js`, tested in
   The halo offset is anchor-aware: `[0,-16]` for bottom-anchored teardrop pins
   (confirmed/curated/pending — the halo rings the icon, not the ground point;
   climbs use the foot vertex), `[0,0]` for centred canvas dots and lines.
+  No DOM marker's own class sets a `position` on the map: MapLibre places
+  each one with `position:absolute` and a transform, and a relative one sits
+  in page flow below the markers added before it, so the hover ring on a town
+  card drifted the town pin's 43 px south of its point (owner 2026-10-11,
+  Ardennes Bike in Spa). Off the map (the Map key) the ring and the pin take
+  `position:relative` through `:not(.maplibregl-marker)`. Pinned by
+  `tests/js/marker-position.test.cjs`.
   Routes get the line highlight instead of a point halo. The halo persists
   while the drawer is open; `closeDrawer()` clears halo, route highlight, and
   any corrections overlay.
