@@ -1,0 +1,32 @@
+web/tests/js/safe-href.test.mjs
+  s_2612073477a315::t_abd95c388f3239 1-15,17-33
+  s_2612073477a315::t_566063651f047f 16
+web/assets/map/util.js
+  s_2612073477a315::t_87d45135bd8e8a 24-25,28-29,31-32
+  s_2612073477a315::t_566063651f047f 26-27
+  s_2612073477a315::t_8fdfd80b64198c 30
+web/tests/Security/ReportFromPathTest.php
+  s_2612073477a315::t_3fae01e6c5597f 1-47,50-51
+  s_2612073477a315::t_6afb58d9b03818 48-49
+web/src/Controller/ContentReportController.php
+  s_2612073477a315::t_87d45135bd8e8a 291-292,294-295
+  s_2612073477a315::t_37f5a7af9eb90b 293
+docs/specs/security-architecture.md
+  s_2612073477a315::t_a4c4ef8cb3669d 397,399-403
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e3bcf7167396200625097dfc1c3109ff10df2865",
+  "prompts": {},
+  "sessions": {
+    "s_2612073477a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c06bea5c-9d93-4477-bcdb-4ad73cf20ae4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
