@@ -1,0 +1,30 @@
+wiki/contributing.md
+  s_95c012021edfad::t_b537006987454b 16
+wiki/index.md
+  s_95c012021edfad::t_b537006987454b 16-17,35
+docs/specs/route-domain.md
+  s_95c012021edfad::t_b537006987454b 1005-1007
+web/templates/pages/pages.html.twig
+  s_95c012021edfad::t_b537006987454b 37,169,211
+web/tests/Smoke/ContentPagesTest.php
+  s_95c012021edfad::t_e7c353e0906499 301
+  s_95c012021edfad::t_b537006987454b 294-295,298,300
+wiki/governance.md
+  s_95c012021edfad::t_b537006987454b 120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "907fb9dfdbde90c70f5b63a9c0f5fa683420af43",
+  "prompts": {},
+  "sessions": {
+    "s_95c012021edfad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77d4f221-603d-452c-8abd-7d60275678da",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
