@@ -2529,6 +2529,7 @@ moderate:
     granted: 'La foto se ha retirado y se ha avisado al ciclista.'
     declined: 'La solicitud se ha rechazado y la foto vuelve a estar publicada.'
     restore_failed: "La foto no se pudo devolver desde el almacenamiento privado, así que sigue oculta. Inténtalo más tarde."
+    open_large: "Abrir la foto grande"
   translation:
     kicker: 'Moderación · traducciones'
     heading: 'Revisar propuestas de traducción'

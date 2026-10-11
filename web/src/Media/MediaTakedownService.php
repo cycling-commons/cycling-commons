@@ -207,30 +207,31 @@ final class MediaTakedownService
     }
 
     /**
-     * The small image a desk card shows: the public URL, or for a withheld
-     * photo, whose bytes are private, the curator-only view of the held copy.
+     * An image a desk card shows, `sm` in the card and `lg` behind a click:
+     * the public URL, or for a withheld photo, whose bytes are private, the
+     * curator-only view of the held copy.
      */
-    private function cardImage(MediaUpload $upload): string
+    private function cardImage(MediaUpload $upload, string $variant): string
     {
         if ($upload->isTakedownWithheld() && null !== $upload->getRevision()) {
-            return $this->urls->generate('moderate_withheld_photo', ['uuid' => $upload->getId()->toRfc4122()]);
+            return $this->urls->generate('moderate_withheld_photo', ['uuid' => $upload->getId()->toRfc4122(), 'variant' => $variant]);
         }
 
-        return (string) $this->decisions->describe($upload)['sm'];
+        return (string) $this->decisions->describe($upload)[$variant];
     }
 
     /**
-     * The small variant of a withheld photo, for the curator desks only.
+     * One variant of a withheld photo, `sm` or `lg`, for the curator desks only.
      *
      * @return resource|null
      */
-    public function withheldStream(MediaUpload $upload)
+    public function withheldStream(MediaUpload $upload, string $variant = 'sm')
     {
-        if (!$upload->isTakedownWithheld() || null === $upload->getRevision()) {
+        if (!$upload->isTakedownWithheld() || null === $upload->getRevision() || !\in_array($variant, ['sm', 'lg'], true)) {
             return null;
         }
 
-        return $this->storage->readHeldStream($upload->getPathPrefix(), 'sm');
+        return $this->storage->readHeldStream($upload->getPathPrefix(), $variant);
     }
 
     /** Keyed reporter-IP hash: volume, not identity. @see \App\Security\PseudonymousKey */
@@ -380,7 +381,7 @@ final class MediaTakedownService
     /**
      * Recovery desk: withheld third-party reports, newest first.
      *
-     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, category: ?string, categoryLabel: ?string, reporter: string}>
+     * @return list<array{uuid: string, sm: string, lg: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, category: ?string, categoryLabel: ?string, reporter: string}>
      */
     public function withheldThirdPartyCards(int $page = 1, int $perPage = self::PER_PAGE): array
     {
@@ -403,7 +404,8 @@ final class MediaTakedownService
             }
             $cards[] = [
                 'uuid' => $upload->getId()->toRfc4122(),
-                'sm' => $this->cardImage($upload),
+                'sm' => $this->cardImage($upload, 'sm'),
+                'lg' => $this->cardImage($upload, 'lg'),
                 'reason' => $upload->getTakedownReason() ?? '',
                 'requestedAt' => $requestedAt,
                 'itemName' => $this->item($upload)?->getName() ?? '',
@@ -565,7 +567,7 @@ final class MediaTakedownService
     /**
      * Pending desk cards; not region-scoped.
      *
-     * @return list<array{uuid: string, sm: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, source: string, category: ?string, categoryLabel: ?string, contact: ?string, withheld: bool}>
+     * @return list<array{uuid: string, sm: string, lg: string, reason: string, requestedAt: \DateTimeImmutable, itemName: string, source: string, category: ?string, categoryLabel: ?string, contact: ?string, withheld: bool}>
      */
     public function pendingCards(int $page = 1, int $perPage = self::PER_PAGE): array
     {
@@ -577,7 +579,8 @@ final class MediaTakedownService
             }
             $cards[] = [
                 'uuid' => $upload->getId()->toRfc4122(),
-                'sm' => $this->cardImage($upload),
+                'sm' => $this->cardImage($upload, 'sm'),
+                'lg' => $this->cardImage($upload, 'lg'),
                 'reason' => $upload->getTakedownReason() ?? '',
                 'requestedAt' => $requestedAt,
                 'itemName' => $this->item($upload)?->getName() ?? '',

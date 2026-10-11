@@ -2507,6 +2507,7 @@ moderate:
     granted: 'De foto is verwijderd en de fietser is op de hoogte gebracht.'
     declined: 'Het verzoek is afgewezen en de foto is weer gepubliceerd.'
     restore_failed: "De foto kon niet terug uit de privéopslag, dus hij blijft verborgen. Probeer het later opnieuw."
+    open_large: "Open de grote foto"
   translation:
     kicker: 'Moderatie · vertalingen'
     heading: 'Vertaalvoorstellen beoordelen'

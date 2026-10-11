@@ -1335,9 +1335,11 @@ bucket, under `held/<prefix>`, the same move a legal hold makes (§6d;
 photo's URL was public and sits in cached tiles, so unlinking alone left the
 bytes one request away. This holds for the uploader's own request (§6b) and
 for an urgent report that hides at once. The row stays in the database. The
-curator who decides sees the photo through `/moderate/withheld-photo/{uuid}`,
-curator-only and `private, no-store`, which the takedown desk and the
-withheld-photos desk use for their cards. A decline, or an abusive report
+curator who decides sees the photo through `/moderate/withheld-photo/{uuid}`
+(the small variant) and `/moderate/withheld-photo/{uuid}/lg` (the large one),
+curator-only and `private, no-store`, never the original. The takedown desk
+and the withheld-photos desk show the small one in their cards, and a click
+on it opens the large one in a new tab, for every card, withheld or not. A decline, or an abusive report
 dismissed, moves the variants back before the photo returns to the map; if
 they cannot move, nothing changes and the curator is told
 (`moderate.takedown.restore_failed`). A grant deletes the held copy with the

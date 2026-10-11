@@ -113,9 +113,14 @@ final class TakedownWithholdBytesTest extends KernelTestCase
         $cards = array_values(array_filter($this->takedowns->pendingCards(), static fn (array $c): bool => $c['uuid'] === $upload->getId()->toRfc4122()));
         self::assertCount(1, $cards);
         self::assertSame('/moderate/withheld-photo/'.$upload->getId()->toRfc4122(), $cards[0]['sm']);
+        self::assertSame('/moderate/withheld-photo/'.$upload->getId()->toRfc4122().'/lg', $cards[0]['lg'], 'a click opens the large one');
         $stream = $this->takedowns->withheldStream($upload);
         self::assertIsResource($stream, 'the view reads the private copy');
         self::assertSame('S', stream_get_contents($stream));
+        $large = $this->takedowns->withheldStream($upload, 'lg');
+        self::assertIsResource($large);
+        self::assertSame('L', stream_get_contents($large));
+        self::assertNull($this->takedowns->withheldStream($upload, 'orig'), 'never the original');
     }
 
     public function testADeclineBringsTheBytesBack(): void

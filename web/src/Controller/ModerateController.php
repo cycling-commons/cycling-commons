@@ -565,15 +565,22 @@ final class ModerateController extends AbstractController
     /**
      * A withheld photo, for the curator who decides its takedown. Its bytes
      * wait in the private bucket while it is withheld, so the desk cards read
-     * them here; never cached, and nothing for a photo that is not withheld.
+     * them here: the small variant in the card, the large one behind a click.
+     * Never cached, and nothing for a photo that is not withheld.
      *
      * @see docs/specs/photo-uploads.md §6b, §6c
      */
-    #[Route('/moderate/withheld-photo/{uuid}', name: 'moderate_withheld_photo', requirements: ['uuid' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'], methods: ['GET'])]
-    public function withheldPhoto(string $uuid): Response
+    #[Route(
+        '/moderate/withheld-photo/{uuid}/{variant}',
+        name: 'moderate_withheld_photo',
+        requirements: ['uuid' => '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', 'variant' => 'sm|lg'],
+        defaults: ['variant' => 'sm'],
+        methods: ['GET'],
+    )]
+    public function withheldPhoto(string $uuid, string $variant): Response
     {
         $upload = $this->em->find(MediaUpload::class, Uuid::fromString($uuid));
-        $stream = null !== $upload ? $this->takedowns->withheldStream($upload) : null;
+        $stream = null !== $upload ? $this->takedowns->withheldStream($upload, $variant) : null;
         if (null === $stream) {
             throw $this->createNotFoundException();
         }

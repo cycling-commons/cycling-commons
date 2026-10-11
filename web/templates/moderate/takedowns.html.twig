@@ -57,7 +57,9 @@
       {% set row_unseen = unseen_ids[t.uuid] is defined %}
       <article class="q-item {{ row_unseen ? 'is-unseen' }}" data-media="{{ t.uuid }}">
         <div class="q-top">
-          <img class="td-img" src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}">
+          {# The large variant behind a click: a report is hard to judge from
+             a thumbnail. A withheld photo's both come from the curator-only view. #}
+          <a href="{{ t.lg }}" target="_blank" rel="noopener" title="{{ 'moderate.takedown.open_large'|trans }}"><img class="td-img" src="{{ t.sm }}" width="110" height="82" alt="{{ 'moderate.takedown.alt'|trans }}"></a>
           <div class="q-headwrap">
             <div class="q-head">
               <span class="q-tag q-tag--photo">{{ (t.source == 'third_party' ? 'moderate.takedown.source_third_party' : 'moderate.takedown.source_uploader')|trans }}</span>

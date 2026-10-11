@@ -2508,6 +2508,7 @@ moderate:
     granted: 'Das Foto wurde entfernt und die Person benachrichtigt.'
     declined: 'Der Antrag wurde abgelehnt und das Foto ist wieder veröffentlicht.'
     restore_failed: "Das Foto konnte nicht aus dem privaten Speicher zurückgeholt werden, es bleibt also verborgen. Bitte versuche es später erneut."
+    open_large: "Das große Foto öffnen"
   translation:
     kicker: 'Moderation · Übersetzungen'
     heading: 'Übersetzungsvorschläge prüfen'

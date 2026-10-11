@@ -2522,6 +2522,7 @@ moderate:
     granted: 'The photo has been removed and the rider told.'
     declined: 'The request was declined and the photo is published again.'
     restore_failed: "The photo could not be moved back from private storage, so it stays hidden. Try again later."
+    open_large: "Open the large photo"
   translation:
     kicker: 'Moderation · translations'
     heading: 'Review translation proposals'

@@ -48,7 +48,7 @@
                         {% for card in cards %}
                             <tr>
                                 <td><input type="checkbox" name="media[]" value="{{ card.uuid }}" checked></td>
-                                <td><img src="{{ card.sm }}" alt="" style="width:6rem;height:auto;border-radius:4px"></td>
+                                <td><a href="{{ card.lg }}" target="_blank" rel="noopener" title="{{ 'moderate.takedown.open_large'|trans }}"><img src="{{ card.sm }}" alt="" style="width:6rem;height:auto;border-radius:4px"></a></td>
                                 {# media_upload's key is a UUID, so the ID is that. #}
                                 <td><code class="small">{{ card.uuid }}</code></td>
                                 <td>
