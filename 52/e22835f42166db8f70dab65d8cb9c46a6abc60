@@ -1,0 +1,23 @@
+docs/specs/account-and-auth.md
+  s_2612073477a315::t_8fc754df270060 956-959
+web/tests/Admin/UserListProfileColumnsTest.php
+  s_2612073477a315::t_6cd0b49c3ee307 1-66
+web/src/Controller/Admin/UserCrudController.php
+  s_2612073477a315::t_8fc754df270060 91,119-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "52e22835f42166db8f70dab65d8cb9c46a6abc60",
+  "prompts": {},
+  "sessions": {
+    "s_2612073477a315": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c06bea5c-9d93-4477-bcdb-4ad73cf20ae4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "X. Koevoet <development@bikecoders.life>"
+    }
+  }
+}
