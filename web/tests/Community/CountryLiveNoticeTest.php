@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace App\Tests\Community;
 
 use App\Community\CountryInterestService;
+use App\Content\ReleaseNotes;
 use App\Controller\Admin\DashboardController;
 use App\Entity\User;
 use Doctrine\DBAL\Connection;
@@ -181,7 +182,8 @@ final class CountryLiveNoticeTest extends WebTestCase
     public function testTheChangelogListsACountryLiveSinceTheLastRelease(): void
     {
         $client = static::createClient();
-        $this->country('DK', 'NOW()');
+        // The day after the newest release, so the test holds on any release date.
+        $this->country('DK', "TIMESTAMPTZ '".ReleaseNotes::latestRelease()['date']." 12:00:00+00' + INTERVAL '1 day'");
         // Live before the last release: that release's own notes cover it.
         $this->country('SE', "TIMESTAMPTZ '2026-01-01 12:00:00+00'");
 
