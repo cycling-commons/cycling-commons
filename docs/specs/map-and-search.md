@@ -690,7 +690,11 @@ languages.
   sea, admin-2 borders, no names, no relief (owner: "more simple, rest of the
   world one colour"), from the same planet vector tiles, and the countries lie
   flat (owner: "revert to normal flatland"). The coverage globe shares the
-  basemap. MapLibre's globe projection, framed close on Europe, or on
+  basemap. On `/coverage` the country card shows the reference-item total in
+  ink, not grey, and the explanation of reference and catalog items sits below
+  both views, so the globe is explained as the table is; a catalog item marked
+  OSM is "copied from OpenStreetMap when someone changed it here" (owner
+  2026-10-11). MapLibre's globe projection, framed close on Europe, or on
   a signed-in rider's base when they have one (owner: "turn the globe already
   to their home base"; the page is private for them, so nothing personal is
   cached); no zoom (no buttons, wheel or pinch; owner: "without a zoom

@@ -58,6 +58,7 @@ td .flag{width:1.1rem;height:.8rem;vertical-align:-1px;margin-right:.45rem;borde
 .ccard dd{margin:0}
 .ccard dd .mono{font-size:.8rem}
 .ccard dd .dens{margin-top:.1rem}
+.ccard dd .dens.tot{color:var(--ink)}
 .ccard .more{display:inline-block;margin-top:1rem;font-size:.88rem;color:var(--trail);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(184,90,53,.45)}
 .ccard .more:hover{color:var(--clay);text-decoration-color:currentColor}
 /* Five steps of one hue, light to dark, and a sixth swatch outside the

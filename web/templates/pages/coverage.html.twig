@@ -55,7 +55,9 @@
         <dl>
           <dt>{% trans %}coverage.th_regions{% endtrans %}</dt><dd class="mono">{{ c.regions }}</dd>
           <dt>{% trans %}coverage.th_pois{% endtrans %}</dt>
-          <dd><span class="mono">{{ _dens }}</span><span class="dens">{{ c.coveragePois|number_format(0, '.', ',') }} {% trans %}coverage.sort_total{% endtrans %}</span></dd>
+          {# The total in ink, not grey: it is the count of OpenStreetMap
+             places a reader comes looking for (owner 2026-10-11). #}
+          <dd><span class="mono">{{ _dens }}</span><span class="dens tot">{{ c.coveragePois|number_format(0, '.', ',') }} {% trans %}coverage.sort_total{% endtrans %}</span></dd>
           <dt>{% trans %}coverage.th_items{% endtrans %}</dt>
           <dd><span class="mono">{{ c.items|number_format(0, '.', ',') }}</span> <span style="color:#595c4d">· {{ 'coverage.items_verified'|trans({'%count%': c.itemsVerified}) }}</span>
             {% if c.sources is not empty %}<span class="dens">
@@ -137,15 +139,16 @@
     <tr><td colspan="5">{% trans %}coverage.table_empty{% endtrans %}</td></tr>
     {% endfor %}
   </table>
-  {# Below the table, not above it: the numbers are what the reader came for,
-     and three paragraphs of vocabulary in front of them is a toll gate. They
-     are here for whoever wants to know what a column means. #}
+  </div>
+  {# Below both views, not above them: the numbers are what the reader came
+     for, and three paragraphs of vocabulary in front of them is a toll gate.
+     Outside the table, so the globe's card is explained too (owner
+     2026-10-11). #}
   <ul class="tnote">
     <li>{% trans %}coverage.terms_reference{% endtrans %}</li>
     <li>{{ 'coverage.terms_bars'|trans({'%u%': cc_area_suffix()})|rich }}</li>
     <li>{% trans %}coverage.terms_catalog{% endtrans %}</li>
   </ul>
-  </div>
 </div></section>
 
 <section class="pad" style="background:var(--paper-deep)"><div class="wrap">

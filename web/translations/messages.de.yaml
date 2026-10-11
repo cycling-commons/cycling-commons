@@ -129,7 +129,7 @@ coverage:
   kpi_countries: 'Gestartete Länder'
   table_kicker: 'Abdeckung nach Land'
   terms_reference: '<b>Referenzeinträge</b>: die Basis, die wir je Gebiet erfassen. Heute stammen sie alle aus OpenStreetMap; sobald wir mit weiteren offenen Datensätzen zusammenarbeiten (fahrradfreundliche Unterkünfte, Trinkwasserverzeichnisse), landen sie hier.'
-  terms_catalog: '<b>Katalogeinträge</b>: das, was der Commons selbst kuratiert, mit eigenen Attributen, Historie und Bestätigungen. Die zweite Zeile sagt, woher diese Einträge stammen: <b>OSM</b> aus OpenStreetMap übernommen, <b>Partner</b> aus einem offenen Datensatz importiert, den jemand anderes pflegt, <b>Fahrende</b> hier beigetragen, <b>abgeleitet</b> von der Pipeline berechnet.'
+  terms_catalog: '<b>Katalogeinträge</b>: das, was der Commons selbst kuratiert, mit eigenen Attributen, Historie und Bestätigungen. Die zweite Zeile sagt, woher diese Einträge stammen: <b>OSM</b> aus OpenStreetMap kopiert, als jemand es hier geändert hat (jeder andere Ort aus OpenStreetMap ist ein Referenzeintrag), <b>Partner</b> aus einem offenen Datensatz importiert, den jemand anderes pflegt, <b>Fahrende</b> hier beigetragen, <b>abgeleitet</b> von der Pipeline berechnet.'
   terms_bars: '<b>Pro %u%</b>: Dichte über die angebundene Fläche, damit ein kleines Land fair neben einem großen steht. Der Balken ist dieselbe Zahl, skaliert am dichtesten Land.'
   th_country: 'Land'
   th_regions: 'Regionen'

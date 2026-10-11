@@ -129,7 +129,7 @@ coverage:
   kpi_countries: 'Countries started'
   table_kicker: 'Coverage by country'
   terms_reference: '<b>Reference items</b>: the baseline we track for each area, harvested from OpenStreetMap. This layer is OSM top to bottom; data from other sources is imported as catalog items instead, where it keeps its own provenance.'
-  terms_catalog: '<b>Catalog items</b>: what the Commons curates itself, with its own attributes, history and confirmations. The second line says where those rows came from: <b>OSM</b> mirrored from OpenStreetMap, <b>partner</b> imported from an open dataset somebody else maintains, <b>riders</b> contributed here, <b>derived</b> computed by the pipeline.'
+  terms_catalog: '<b>Catalog items</b>: what the Commons curates itself, with its own attributes, history and confirmations. The second line says where those rows came from: <b>OSM</b> copied from OpenStreetMap when someone changed it here (every other OpenStreetMap place is a reference item), <b>partner</b> imported from an open dataset somebody else maintains, <b>riders</b> contributed here, <b>derived</b> computed by the pipeline.'
   terms_bars: '<b>Per %u%</b>: density over the onboarded area, so a small country stands next to a big one fairly. The bar is that same figure, scaled against the densest country.'
   th_country: 'Country'
   th_regions: 'Regions'

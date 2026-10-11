@@ -127,7 +127,7 @@ coverage:
   kpi_countries: 'Pays démarrés'
   table_kicker: 'Couverture par pays'
   terms_reference: '<b>Éléments de référence</b> : la base que nous suivons pour chaque zone, moissonnée depuis OpenStreetMap. Cette couche est intégralement OSM ; les données d''autres sources sont importées comme éléments du catalogue, où elles conservent leur propre provenance.'
-  terms_catalog: '<b>Éléments du catalogue</b> : ce que le Commons cure lui-même, avec ses propres attributs, historique et confirmations. La deuxième ligne indique d''où viennent ces entrées : <b>OSM</b> repris d''OpenStreetMap, <b>partenaire</b> importé d''un jeu de données ouvert maintenu par quelqu''un d''autre, <b>cyclistes</b> contribué ici, <b>dérivé</b> calculé par le pipeline.'
+  terms_catalog: '<b>Éléments du catalogue</b> : ce que le Commons cure lui-même, avec ses propres attributs, historique et confirmations. La deuxième ligne indique d''où viennent ces entrées : <b>OSM</b> copié d''OpenStreetMap quand quelqu''un l''a modifié ici (tout autre lieu d''OpenStreetMap est un élément de référence), <b>partenaire</b> importé d''un jeu de données ouvert maintenu par quelqu''un d''autre, <b>cyclistes</b> contribué ici, <b>dérivé</b> calculé par le pipeline.'
   terms_bars: '<b>Par %u%</b> : la densité sur la zone intégrée, pour qu''un petit pays se compare équitablement à un grand. La barre est ce même chiffre, mis à l''échelle du pays le plus dense.'
   th_country: 'Pays'
   th_regions: 'Régions'
