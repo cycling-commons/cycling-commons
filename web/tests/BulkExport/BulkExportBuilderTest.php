@@ -377,6 +377,10 @@ final class BulkExportBuilderTest extends KernelTestCase
             }
             self::assertSame([], array_values(array_filter($spy->calls, static fn (string $c): bool => !str_starts_with($c, 'fileExists') && !str_starts_with($c, 'listContents'))), 'the refused build wrote nothing');
         } finally {
+            // Released by name, not by closing: an advisory lock lives as long
+            // as its session, and the test bundle may keep a closed
+            // connection's session open.
+            $other->executeStatement('SELECT pg_advisory_unlock(hashtext(:k))', ['k' => BulkExportBuilder::LOCK]);
             $other->close();
         }
 

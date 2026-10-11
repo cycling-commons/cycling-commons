@@ -46,6 +46,10 @@ final class BulkExportCommandTest extends KernelTestCase
 
             $tester->execute([]);
         } finally {
+            // Released by name, not by closing: an advisory lock lives as long
+            // as its session, and the test bundle may keep a closed
+            // connection's session open.
+            $other->executeStatement('SELECT pg_advisory_unlock(hashtext(:k))', ['k' => BulkExportBuilder::LOCK]);
             $other->close();
         }
 
