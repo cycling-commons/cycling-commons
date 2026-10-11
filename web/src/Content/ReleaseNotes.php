@@ -86,6 +86,28 @@ final class ReleaseNotes
      */
     public const array RELEASES = [
         [
+            'version' => '0.9.6-beta',
+            'date' => '2026-10-11',
+            'sections' => [
+                'public' => [
+                    'changelog.v096_denmark',
+                    'changelog.v096_scout',
+                    'changelog.v096_tools',
+                    'changelog.v096_next',
+                    'changelog.v096_privacy',
+                    'changelog.v096_security',
+                    'changelog.v096_fixes',
+                ],
+                'rider' => [
+                    'changelog.v096_country_live',
+                ],
+                'curator' => [
+                    'changelog.v096_curator_areas',
+                    'changelog.v096_takedowns',
+                ],
+            ],
+        ],
+        [
             'version' => '0.9.5-beta',
             'date' => '2026-10-10',
             'sections' => [
