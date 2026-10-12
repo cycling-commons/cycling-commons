@@ -4763,6 +4763,7 @@ changelog:
   section_public: "Public site"
   section_rider: "Rider account"
   section_curator: "Curator account"
+  v097_karoo: "<b>Scout on the Hammerhead Karoo, for testers.</b> The Karoo app is in beta. On the Scout page, 'Join as tester' opens the download page, and the zip there holds the install steps."
   v096_denmark: "<b>Denmark is on the map.</b> You can now find and add places, climbs and routes there."
   v096_scout: "<b>Add a ride from the Scout page.</b> An 'Add a Scout ride' button opens the ride review on the map. The page also says where to get the app, and that with a rear radar Scout also measures the traffic on the roads you ride."
   v096_tools: "<b>Every ride tool on the map looks the same.</b> 'Scout', 'Add a climb' and 'Propose a route' each have the same orange button. Without an account, the button takes you to log in first."

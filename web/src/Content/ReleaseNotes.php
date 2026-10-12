@@ -86,6 +86,15 @@ final class ReleaseNotes
      */
     public const array RELEASES = [
         [
+            'version' => '0.9.7-beta',
+            'date' => '2026-10-13',
+            'sections' => [
+                'public' => [
+                    'changelog.v097_karoo',
+                ],
+            ],
+        ],
+        [
             'version' => '0.9.6-beta',
             'date' => '2026-10-11',
             'sections' => [

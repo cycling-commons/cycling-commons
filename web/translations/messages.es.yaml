@@ -4773,6 +4773,7 @@ changelog:
   section_public: "Sitio público"
   section_rider: "Cuenta de ciclista"
   section_curator: "Cuenta de curador"
+  v097_karoo: "<b>Scout en el Hammerhead Karoo, para probadores.</b> La app para Karoo está en beta. En la página de Scout, 'Hazte probador' abre la página de descarga, y el zip de allí trae los pasos de instalación."
   v096_denmark: "<b>Dinamarca está en el mapa.</b> Ya puedes encontrar y añadir lugares, puertos y rutas allí."
   v096_scout: "<b>Añade una salida desde la página de Scout.</b> Un botón 'Añadir una salida de Scout' abre la revisión de la salida en el mapa. La página también dice dónde conseguir la app, y que con un radar trasero Scout también mide el tráfico de las carreteras por las que circulas."
   v096_tools: "<b>Todas las herramientas de salida del mapa se ven igual.</b> 'Exploración', 'Añadir un puerto' y 'Proponer una ruta' tienen el mismo botón naranja. Sin cuenta, el botón te lleva primero a iniciar sesión."
