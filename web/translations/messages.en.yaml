@@ -964,6 +964,8 @@ scout:
   plat_available: 'Available now'
   plat_soon: 'Coming soon'
   plat_planned: 'Planned'
+  plat_beta: "Join as tester"
+  plat_karoo_beta_note: "Karoo testers: get the Scout-Karoo zip from the release page. The install steps are inside."
   shot_garmin_alt: 'The Scout tag menu on a Garmin Edge, showing the six tag types and an overtake count'
   logo_alt: 'The Scout logo'
   shot_garmin_cap: 'On the bars'

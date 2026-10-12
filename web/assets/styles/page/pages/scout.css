@@ -38,3 +38,5 @@
 /* The label over the platform badges; the badges row drops its own top gap. */
 .sget{margin:1.8rem 0 0;font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,230,212,.6)}
 .sget + .plats{margin-top:.7rem}
+/* Where Karoo testers find the install steps, under the badges. */
+.sbeta{margin:.8rem 0 0;max-width:60ch;font-size:.85rem;line-height:1.5;color:rgba(239,230,212,.72)}

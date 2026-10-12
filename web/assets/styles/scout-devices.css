@@ -11,9 +11,10 @@
 .scout-devices svg{display:block;height:auto;filter:drop-shadow(0 12px 18px rgba(0,0,0,.28))}
 .scout-devices figcaption{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:#3f4236;text-align:center;line-height:1.5}
 .scout-devices figcaption .st{display:block;color:#7a7d6c}
-.scout-devices .dev-garmin figcaption .st{color:#B8431A}
-/* Not out yet: the device greys back; its caption stays at full contrast. */
-.scout-devices .dev:not(.dev-garmin) svg{filter:grayscale(.85) drop-shadow(0 12px 18px rgba(0,0,0,.18));opacity:.55}
+.scout-devices .dev-garmin figcaption .st,.scout-devices .dev-karoo figcaption .st{color:#B8431A}
+/* Not out yet: the device greys back; its caption stays at full contrast.
+   Garmin is live and Karoo is in beta for testers, so both stay in colour. */
+.scout-devices .dev:not(.dev-garmin):not(.dev-karoo) svg{filter:grayscale(.85) drop-shadow(0 12px 18px rgba(0,0,0,.18));opacity:.55}
 /* Real-size ratios: a bike computer is squatter than a phone, so the widths differ. */
 .dev-garmin svg{width:118px}
 .dev-karoo svg{width:124px}
@@ -51,6 +52,8 @@ a.plat:hover{border-color:var(--trail);background:rgba(200,146,58,.12)}
 .scout-devices .dev-badge .plat{border-color:rgba(20,22,14,.22);color:var(--ink);padding:.3rem .55rem;min-height:36px;font-size:.58rem;gap:.35rem}
 .scout-devices .dev-badge .nm{display:flex;flex-direction:column;line-height:1.3;text-align:left}
 .scout-devices .dev-badge .plat .st{font-size:.54rem;color:#6a6d5c}
+.scout-devices .dev-badge .plat.live .st{color:#B8431A}
+.scout-devices .dev-badge a.plat:focus-visible,.plats a.plat:focus-visible{outline:2px solid var(--trail);outline-offset:3px}
 .scout-devices .dev-badge .plat-logo{height:.9rem}
 .scout-devices .dev-badge .plat-badge img{height:36px}
 @media(max-width:560px){

@@ -18,6 +18,8 @@
 
   <p class="sget">{% trans %}scout.plat_get{% endtrans %}</p>
   {{ include('partials/_scout_platforms.html.twig') }}
+  {# The asterisk ties this line to the Karoo chip's "Join as tester". #}
+  <p class="sbeta"><span aria-hidden="true">*</span>{% trans %}scout.plat_karoo_beta_note{% endtrans %}</p>
 
   {# Back home with a ride: straight to the review on the map, the same
      button the map's Scout tool shows. A guest passes through login. #}

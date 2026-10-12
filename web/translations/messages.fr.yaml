@@ -968,6 +968,8 @@ scout:
   plat_available: 'Disponible'
   plat_soon: 'Bientôt'
   plat_planned: 'Prévu'
+  plat_beta: "Devenir testeur"
+  plat_karoo_beta_note: "Testeurs Karoo : téléchargez le zip Scout-Karoo sur la page de la version. Les étapes d'installation sont dedans."
   shot_garmin_alt: 'Le menu de marqueurs Scout sur un Garmin Edge, avec les six types et un compteur de dépassements'
   logo_alt: 'Le logo de Scout'
   shot_garmin_cap: 'Sur le cintre'

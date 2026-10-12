@@ -970,6 +970,8 @@ scout:
   plat_available: 'Nu beschikbaar'
   plat_soon: 'Binnenkort'
   plat_planned: 'Gepland'
+  plat_beta: "Word tester"
+  plat_karoo_beta_note: "Karoo-testers: download de Scout-Karoo-zip van de releasepagina. De installatiestappen zitten erin."
   shot_garmin_alt: 'Het Scout-markeermenu op een Garmin Edge, met de zes soorten en een teller voor inhalers'
   logo_alt: 'Het Scout-logo'
   shot_garmin_cap: 'Op het stuur'

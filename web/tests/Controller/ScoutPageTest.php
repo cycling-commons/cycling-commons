@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 final class ScoutPageTest extends WebTestCase
 {
     private const string GARMIN_URL = 'https://apps.garmin.com/apps/7849af70-3769-4143-bea7-8c1ea5e5f847';
+    private const string KAROO_RELEASES_URL = 'https://github.com/cycling-commons/scout/releases';
 
     /** @return iterable<string, array{string}> */
     public static function locales(): iterable
@@ -48,11 +49,11 @@ final class ScoutPageTest extends WebTestCase
 
     /**
      * The go-live gate's prototype-honesty rule, pinned: a platform that has not
-     * shipped must not look clickable. Android is "coming soon" and the Karoo is
-     * merely planned — rendering either as a link would be a CTA leading
-     * nowhere, which is exactly the fake-mechanism pattern the gate exists to
-     * catch, and it fails silently because a dead-looking link still looks like
-     * a link.
+     * shipped must not look clickable. Android is "coming soon" and the iPhone is
+     * planned: rendering either as a link would be a CTA leading nowhere, the
+     * fake-mechanism pattern the gate exists to catch. The Karoo beta is out for
+     * testers, so its chip links the GitHub releases that hold the app and the
+     * install steps.
      */
     public function testUnreleasedPlatformsAreNotLinks(): void
     {
@@ -69,6 +70,11 @@ final class ScoutPageTest extends WebTestCase
             $text = (string) $node->textContent;
             if (str_contains($text, 'Garmin')) {
                 self::assertTrue($isLink, 'Garmin has shipped and must link');
+                continue;
+            }
+            if (str_contains($text, 'Karoo')) {
+                self::assertTrue($isLink, 'the Karoo beta is out for testers and must link');
+                self::assertSame(self::KAROO_RELEASES_URL, $node instanceof \DOMElement ? $node->getAttribute('href') : null);
                 continue;
             }
             self::assertFalse($isLink, 'an unreleased platform must not be a link: '.trim($text));

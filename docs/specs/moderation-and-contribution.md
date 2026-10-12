@@ -3568,9 +3568,14 @@ outstanding, in order. It reads **Send all** until the first tag has gone
   Under the three steps sit **four drawn devices** (`_scout_devices.html.twig`,
   inline SVG, no maker's wordmark): Garmin Edge (the real app screen, cut
   from the Connect IQ store screenshot, `assets/scout/garmin-screen.webp`),
-  Android, Hammerhead Karoo and iPhone, each captioned with its status. Those
-  not out yet are greyed; their captions keep full contrast. The hero's
-  platform chips list the same four. Brand marks follow each owner's rules
+  Hammerhead Karoo, Android and iPhone, each captioned with its status. Those
+  not out yet (Android, iPhone) are greyed; their captions keep full
+  contrast. The hero's platform chips list the same four. The Karoo app is a
+  beta for testers (owner 2026-10-12): its chip reads "Join as tester" and
+  links the GitHub releases (`github.com/cycling-commons/scout/releases`),
+  where the release holds the app and a `Scout-Karoo-<version>.zip` with the
+  install steps. A line under the chips on `/scout` tells testers the steps
+  are in that zip. Brand marks follow each owner's rules
   (owner 2026-09-18): Garmin's own "Available on the Connect IQ Store" badge
   (unaltered, `LicenseRef-Garmin-Connect-IQ-Badge`) replaces the Garmin chip
   and links the live store page; the Android robot (Google, CC BY 3.0,
