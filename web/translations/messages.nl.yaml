@@ -4746,6 +4746,7 @@ changelog:
   section_rider: "Fietsersaccount"
   section_curator: "Curatoraccount"
   v097_karoo: "<b>Scout op de Hammerhead Karoo, voor testers.</b> De Karoo-app is in bèta. Op de Scout-pagina opent 'Word tester' de downloadpagina, en de zip daar bevat de installatiestappen."
+  v097_fixes: "<b>Onder de kleinere verbeteringen:</b> een kraan uit een register staat niet meer naast dezelfde kraan die fietsers bevestigden, en de dekkingspagina legt haar aantallen uit onder zowel de wereldbol als de tabel."
   v096_denmark: "<b>Denemarken staat op de kaart.</b> Je kunt er nu plekken, klimmen en routes vinden en toevoegen."
   v096_scout: "<b>Voeg een rit toe vanaf de Scout-pagina.</b> Een knop 'Een Scout-rit toevoegen' opent het nakijken van je rit op de kaart. De pagina zegt ook waar je de app krijgt, en dat Scout met een achterradar ook het verkeer meet op de wegen waar je fietst."
   v096_tools: "<b>Elk ritgereedschap op de kaart ziet er hetzelfde uit.</b> 'Verkenning', 'Klim toevoegen' en 'Stel een route voor' hebben elk dezelfde oranje knop. Zonder account brengt de knop je eerst naar het inloggen."

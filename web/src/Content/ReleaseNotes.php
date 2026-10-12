@@ -91,6 +91,7 @@ final class ReleaseNotes
             'sections' => [
                 'public' => [
                     'changelog.v097_karoo',
+                    'changelog.v097_fixes',
                 ],
             ],
         ],

@@ -4742,6 +4742,7 @@ changelog:
   section_rider: "Compte cycliste"
   section_curator: "Compte curateur"
   v097_karoo: "<b>Scout sur le Hammerhead Karoo, pour les testeurs.</b> L'application Karoo est en bêta. Sur la page Scout, 'Devenir testeur' ouvre la page de téléchargement, et le zip qui s'y trouve contient les étapes d'installation."
+  v097_fixes: "<b>Parmi les petites corrections :</b> un point d'eau du registre n'apparaît plus à côté du même point d'eau confirmé par des cyclistes, et la page de couverture explique ses chiffres sous le globe comme sous le tableau."
   v096_denmark: "<b>Le Danemark est sur la carte.</b> Vous pouvez maintenant y trouver et y ajouter des lieux, des cols et des itinéraires."
   v096_scout: "<b>Ajoutez une sortie depuis la page Scout.</b> Un bouton 'Ajouter une sortie Scout' ouvre la revue de la sortie sur la carte. La page dit aussi où obtenir l'application, et qu'avec un radar arrière Scout mesure aussi le trafic sur les routes où vous roulez."
   v096_tools: "<b>Chaque outil de sortie sur la carte a le même aspect.</b> 'Reconnaissance', 'Ajouter un col' et 'Proposer un itinéraire' ont chacun le même bouton orange. Sans compte, le bouton vous mène d'abord à la connexion."

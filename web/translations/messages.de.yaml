@@ -4747,6 +4747,7 @@ changelog:
   section_rider: "Fahrerkonto"
   section_curator: "Kuratorkonto"
   v097_karoo: "<b>Scout auf dem Hammerhead Karoo, für Tester.</b> Die Karoo-App ist in der Beta. Auf der Scout-Seite öffnet 'Tester werden' die Download-Seite, und die ZIP dort enthält die Installationsschritte."
+  v097_fixes: "<b>Unter den kleineren Korrekturen:</b> ein Wasserhahn aus einem Register steht nicht mehr neben demselben Wasserhahn, den Radfahrende bestätigt haben, und die Abdeckungsseite erklärt ihre Zahlen unter dem Globus wie unter der Tabelle."
   v096_denmark: "<b>Dänemark ist auf der Karte.</b> Du kannst dort jetzt Orte, Anstiege und Routen finden und hinzufügen."
   v096_scout: "<b>Füge eine Fahrt von der Scout-Seite aus hinzu.</b> Ein Knopf 'Eine Scout-Fahrt hinzufügen' öffnet die Durchsicht der Fahrt auf der Karte. Die Seite sagt auch, wo es die App gibt, und dass Scout mit einem Rückradar auch den Verkehr auf deinen Straßen misst."
   v096_tools: "<b>Jedes Fahrtwerkzeug auf der Karte sieht gleich aus.</b> 'Erkundung', 'Anstieg hinzufügen' und 'Route vorschlagen' haben denselben orangen Knopf. Ohne Konto führt der Knopf dich zuerst zur Anmeldung."
