@@ -202,7 +202,13 @@ account": what a signed-in rider's own account pages gain) and `curator`
 heading is `changelog.section_<name>`; an empty section is left out. Releases
 before 0.9.4-beta keep their flat `keys` and show no headings.
 `ReleaseNotes::releases()` gives the page and the feed one shape for both:
-an older release is one group named `''`. The feed puts each heading in an
+an older release is one group named `''`. Every note also carries its kind in
+`kinds`, one of `ReleaseNotes::KINDS` (`new`, `improved`, `fixed`; owner
+2026-10-13, older releases labelled the same day): small coloured letters at
+the end of the note's bold lead on the page (`changelog.kind_*`), and `[New]`
+before it in the feed.
+`RoadmapChangelogTest` fails on a note without a kind, a kind for a note the
+release does not have, or an unknown kind. The feed puts each heading in an
 `<h3>` above its list. A note says what the reader gains ("See where a climb
 hurts most"), not what is on the screen; the details go in a blog article.
 

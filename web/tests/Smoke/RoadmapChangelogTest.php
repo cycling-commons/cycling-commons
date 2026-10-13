@@ -87,6 +87,34 @@ final class RoadmapChangelogTest extends WebTestCase
             ['s' => \Doctrine\DBAL\ArrayParameterType::STRING],
         );
         self::assertSame([], $unknown, 'An item with a status not in STATUSES renders nowhere at all.');
+
+        $noText = $db->fetchFirstColumn(
+            "SELECT i.id FROM roadmap_item i WHERE i.state = 'live'
+               AND NOT EXISTS (SELECT 1 FROM roadmap_item_text t WHERE t.item_id = i.id)",
+        );
+        self::assertSame([], $noText, 'A live item without any text renders as an empty row.');
+    }
+
+    /**
+     * Every note carries its kind (new, improved, fixed), the label beside it
+     * on the page and in the feed; no label names a note the release does not
+     * have, and every label reads in every locale.
+     */
+    public function testEveryNoteHasAKnownKind(): void
+    {
+        self::bootKernel();
+        $translator = static::getContainer()->get('translator');
+        foreach (ReleaseNotes::releases() as $release) {
+            $notes = array_merge(...array_values($release['sections']));
+            self::assertSame([], array_values(array_diff($notes, array_keys($release['kinds']))), $release['version'].': notes without a kind');
+            self::assertSame([], array_values(array_diff(array_keys($release['kinds']), $notes)), $release['version'].': kinds for notes it does not have');
+            self::assertSame([], array_values(array_diff($release['kinds'], ReleaseNotes::KINDS)), $release['version'].': unknown kinds');
+        }
+        foreach (ReleaseNotes::KINDS as $kind) {
+            foreach (['en', 'fr', 'nl', 'de', 'es'] as $locale) {
+                self::assertNotSame('changelog.kind_'.$kind, $translator->trans('changelog.kind_'.$kind, [], null, $locale), $locale.': changelog.kind_'.$kind);
+            }
+        }
     }
 
     /**
@@ -176,5 +204,16 @@ final class RoadmapChangelogTest extends WebTestCase
         self::assertResponseIsSuccessful();
         $client->request('GET', '/changelog.atom');
         self::assertResponseIsSuccessful('the feed keeps its address');
+    }
+
+    /** A note's own markup renders as markup, labelled or not, never as escaped text. */
+    public function testNotesRenderTheirBoldLeadAsMarkup(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/whats-new');
+        self::assertResponseIsSuccessful();
+        $html = (string) $client->getResponse()->getContent();
+        self::assertStringNotContainsString('&lt;b&gt;', $html);
+        self::assertStringNotContainsString('&amp;#039;', $html);
     }
 }

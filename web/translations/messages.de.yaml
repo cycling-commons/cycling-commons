@@ -4883,6 +4883,9 @@ roadmap:
     error_action: "Wähle, was geschehen soll."
 changelog:
   kicker: 'Änderungsprotokoll'
+  kind_new: "Neu"
+  kind_improved: "Verbessert"
+  kind_fixed: "Behoben"
   title: 'Was neu ist.'
   lead: 'Jede Version, die neueste zuerst, in einfachen Worten. Die Version hier ist dieselbe, die am Fuß jeder Seite steht, du weißt also immer, was du vor dir hast.'
   feed_title: 'Cycling Commons: was neu ist'
@@ -4905,6 +4908,11 @@ changelog:
   section_rider: "Fahrerkonto"
   section_curator: "Kuratorkonto"
   v097_karoo: "<b>Scout auf dem Hammerhead Karoo, für Tester.</b> Die Karoo-App ist in der Beta. Auf der Scout-Seite öffnet 'Tester werden' die Download-Seite, und die ZIP dort enthält die Installationsschritte."
+  v097_roadmap: "<b>Red beim Fahrplan mit.</b> Stimm für das, was dir wichtig ist, und folge einem Punkt, um zu erfahren, wenn er weiterkommt oder fertig ist. Du kannst auch einen eigenen Vorschlag schicken: Sobald wir ihn auf Missbrauch geprüft haben, steht er im neuen Reiter Vorschläge, wo alle dafür stimmen können, und die besten kommen auf den Fahrplan."
+  v097_privacy: "<b>Die Datenschutzerklärung deckt den Fahrplan ab.</b> Sie sagt, was wir speichern, wenn du stimmst, folgst oder einen Vorschlag schickst, dass ein Vorschlag ohne deinen Namen erscheint und sein Bild nur, wenn du es erlaubt hast."
+  v097_proposals: "<b>Deine Vorschläge an einem Ort.</b> Die Vorschlagsseite zeigt alles, was du für den Fahrplan geschickt hast, was wir entschieden haben und warum."
+  v097_mail_why: "<b>Jede E-Mail sagt, warum sie kommt.</b> Die Antwort auf eine Fehlermeldung, eine Kurations-Bewerbung oder eine Änderung deiner Gebiete sagt nicht mehr, es gehe um einen Beitrag von dir."
+  v097_curator_proposals: "<b>Lies die Fahrplan-Vorschläge der Fahrenden.</b> Die Kuration sieht die Vorschläge, die Fahrende schicken, samt Bildern, bevor sie öffentlich werden."
   v097_fixes: "<b>Unter den kleineren Korrekturen:</b> ein Wasserhahn aus einem Register steht nicht mehr neben demselben Wasserhahn, den Radfahrende bestätigt haben, und die Abdeckungsseite erklärt ihre Zahlen unter dem Globus wie unter der Tabelle."
   v096_denmark: "<b>Dänemark ist auf der Karte.</b> Du kannst dort jetzt Orte, Anstiege und Routen finden und hinzufügen."
   v096_scout: "<b>Füge eine Fahrt von der Scout-Seite aus hinzu.</b> Ein Knopf 'Eine Scout-Fahrt hinzufügen' öffnet die Durchsicht der Fahrt auf der Karte. Die Seite sagt auch, wo es die App gibt, und dass Scout mit einem Rückradar auch den Verkehr auf deinen Straßen misst."

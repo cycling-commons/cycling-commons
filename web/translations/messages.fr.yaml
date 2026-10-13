@@ -4878,6 +4878,9 @@ roadmap:
     error_action: "Choisissez quoi faire."
 changelog:
   kicker: 'Nouveautés'
+  kind_new: "Nouveau"
+  kind_improved: "Amélioré"
+  kind_fixed: "Corrigé"
   title: 'Ce qui est nouveau.'
   lead: 'Chaque version, la plus récente d''abord, en mots simples. La version indiquée ici est celle imprimée au pied de chaque page : vous savez toujours ce que vous regardez.'
   feed_title: 'Cycling Commons : ce qui est nouveau'
@@ -4900,6 +4903,11 @@ changelog:
   section_rider: "Compte cycliste"
   section_curator: "Compte curateur"
   v097_karoo: "<b>Scout sur le Hammerhead Karoo, pour les testeurs.</b> L'application Karoo est en bêta. Sur la page Scout, 'Devenir testeur' ouvre la page de téléchargement, et le zip qui s'y trouve contient les étapes d'installation."
+  v097_roadmap: "<b>Donnez votre avis sur la feuille de route.</b> Votez pour ce qui compte pour vous, et suivez un élément pour être prévenu quand il avance ou sort. Vous pouvez aussi envoyer votre propre proposition : dès que nous avons vérifié qu'elle n'est pas abusive, elle apparaît dans le nouvel onglet Propositions, où tout le monde peut voter pour elle, et les meilleures passent sur la feuille de route."
+  v097_privacy: "<b>La politique de confidentialité couvre la feuille de route.</b> Elle dit ce que nous gardons quand vous votez, suivez ou envoyez une proposition, qu'une proposition apparaît sans votre nom, et que son image n'apparaît que si vous l'avez permis."
+  v097_proposals: "<b>Vos propositions au même endroit.</b> La page des propositions liste tout ce que vous avez envoyé pour la feuille de route, ce que nous avons décidé et pourquoi."
+  v097_mail_why: "<b>Chaque e-mail dit pourquoi il arrive.</b> La réponse à un signalement de bug, une candidature à la curation ou un changement de vos zones ne dit plus qu'elle concerne une contribution de votre part."
+  v097_curator_proposals: "<b>Lisez les propositions des cyclistes pour la feuille de route.</b> La curation voit les propositions envoyées par les cyclistes, images comprises, avant qu'elles deviennent publiques."
   v097_fixes: "<b>Parmi les petites corrections :</b> un point d'eau du registre n'apparaît plus à côté du même point d'eau confirmé par des cyclistes, et la page de couverture explique ses chiffres sous le globe comme sous le tableau."
   v096_denmark: "<b>Le Danemark est sur la carte.</b> Vous pouvez maintenant y trouver et y ajouter des lieux, des cols et des itinéraires."
   v096_scout: "<b>Ajoutez une sortie depuis la page Scout.</b> Un bouton 'Ajouter une sortie Scout' ouvre la revue de la sortie sur la carte. La page dit aussi où obtenir l'application, et qu'avec un radar arrière Scout mesure aussi le trafic sur les routes où vous roulez."

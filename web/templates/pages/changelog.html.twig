@@ -55,7 +55,19 @@
         {% for name, keys in release.sections %}
           {% if name %}<h3 class="csec">{{ ('changelog.section_' ~ name)|trans }}</h3>{% endif %}
           {% for key in keys %}
-            <div class="cline"><p>{{ key|trans|rich }}</p></div>
+            {# The kind label sits at the end of the bold lead. The note is
+               sanitised by |rich first and only then cut at its first </b>,
+               so both halves are sanitised output (security-architecture.md
+               §4.1, |rich output). #}
+            {% set kind = release.kinds[key] ?? null %}
+            {% set note = key|trans|rich %}
+            {% set cut = kind ? note|split('</b>', 2) : [] %}
+            {% set label %}<span class="ckind ckind--{{ kind }}">{{ ('changelog.kind_' ~ kind)|trans }}</span>{% endset %}
+            <div class="cline"><p>
+              {%- if cut|length == 2 -%}{{ cut[0]|raw }} {{ label }}</b>{{ cut[1]|raw }}
+              {%- elseif kind -%}{{ key|trans|rich }} {{ label }}
+              {%- else -%}{{ key|trans|rich }}{%- endif -%}
+            </p></div>
           {% endfor %}
         {% endfor %}
       </div>

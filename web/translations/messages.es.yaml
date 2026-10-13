@@ -4910,6 +4910,9 @@ roadmap:
     error_action: "Elige qué hacer."
 changelog:
   kicker: 'Registro de cambios'
+  kind_new: "Nuevo"
+  kind_improved: "Mejorado"
+  kind_fixed: "Corregido"
   title: 'Qué hay de nuevo.'
   lead: 'Cada versión, la más reciente primero, en palabras llanas. La versión que ves aquí es la misma que aparece al pie de cada página, así que siempre sabes qué estás mirando.'
   feed_title: 'Cycling Commons: qué hay de nuevo'
@@ -4932,6 +4935,11 @@ changelog:
   section_rider: "Cuenta de ciclista"
   section_curator: "Cuenta de curador"
   v097_karoo: "<b>Scout en el Hammerhead Karoo, para probadores.</b> La app para Karoo está en beta. En la página de Scout, 'Hazte probador' abre la página de descarga, y el zip de allí trae los pasos de instalación."
+  v097_roadmap: "<b>Opina sobre la hoja de ruta.</b> Vota lo que te importa y sigue un punto para saber cuándo avanza o sale. También puedes enviar tu propia propuesta: en cuanto comprobemos que no es abusiva, aparece en la nueva pestaña Propuestas, donde todos pueden votarla, y las mejores pasan a la hoja de ruta."
+  v097_privacy: "<b>El aviso de privacidad cubre la hoja de ruta.</b> Dice qué guardamos cuando votas, sigues o envías una propuesta, que una propuesta aparece sin tu nombre y que su imagen solo aparece si lo permitiste."
+  v097_proposals: "<b>Tus propuestas en un solo lugar.</b> La página de propuestas muestra todo lo que enviaste para la hoja de ruta, qué decidimos y por qué."
+  v097_mail_why: "<b>Cada correo dice por qué llega.</b> La respuesta a un informe de error, una solicitud de curaduría o un cambio en tus zonas ya no dice que trata de una contribución tuya."
+  v097_curator_proposals: "<b>Lee las propuestas de los ciclistas para la hoja de ruta.</b> La curaduría ve las propuestas que envían los ciclistas, imágenes incluidas, antes de que sean públicas."
   v097_fixes: "<b>Entre los arreglos menores:</b> una fuente de un registro ya no aparece junto a la misma fuente que confirmaron ciclistas, y la página de cobertura explica sus cifras bajo el globo y bajo la tabla."
   v096_denmark: "<b>Dinamarca está en el mapa.</b> Ya puedes encontrar y añadir lugares, puertos y rutas allí."
   v096_scout: "<b>Añade una salida desde la página de Scout.</b> Un botón 'Añadir una salida de Scout' abre la revisión de la salida en el mapa. La página también dice dónde conseguir la app, y que con un radar trasero Scout también mide el tráfico de las carreteras por las que circulas."

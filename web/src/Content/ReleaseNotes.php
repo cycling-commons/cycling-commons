@@ -36,6 +36,13 @@ final class ReleaseNotes
     public const array SECTIONS = ['public', 'rider', 'curator'];
 
     /**
+     * What kind of change a note is, shown as a small label beside it
+     * (owner 2026-10-13): something that was not there before, something that
+     * works better, or something that was broken.
+     */
+    public const array KINDS = ['new', 'improved', 'fixed'];
+
+    /**
      * Released versions, newest first.
      *
      * `version` is the git tag without the `v`, so the footer stamp and this
@@ -43,9 +50,10 @@ final class ReleaseNotes
      * means tagging `v0.8.0-beta` is what makes both say the same thing.
      * `date` is the release date, ISO, and it is also the feed's timestamp.
      * `sections` holds the notes by {@see self::SECTIONS}; a release from
-     * before sections has `keys`, one list without a heading.
+     * before sections has `keys`, one list without a heading. `kinds`
+     * names each note's kind ({@see self::KINDS}).
      *
-     * @var list<array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>}>
+     * @var list<array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>, kinds?: array<string, string>}>
      */
     public const array RELEASES = [
         [
@@ -53,9 +61,27 @@ final class ReleaseNotes
             'date' => '2026-10-13',
             'sections' => [
                 'public' => [
+                    'changelog.v097_roadmap',
                     'changelog.v097_karoo',
+                    'changelog.v097_privacy',
                     'changelog.v097_fixes',
                 ],
+                'rider' => [
+                    'changelog.v097_proposals',
+                    'changelog.v097_mail_why',
+                ],
+                'curator' => [
+                    'changelog.v097_curator_proposals',
+                ],
+            ],
+            'kinds' => [
+                'changelog.v097_roadmap' => 'new',
+                'changelog.v097_karoo' => 'new',
+                'changelog.v097_privacy' => 'improved',
+                'changelog.v097_fixes' => 'fixed',
+                'changelog.v097_proposals' => 'new',
+                'changelog.v097_mail_why' => 'fixed',
+                'changelog.v097_curator_proposals' => 'new',
             ],
         ],
         [
@@ -78,6 +104,18 @@ final class ReleaseNotes
                     'changelog.v096_curator_areas',
                     'changelog.v096_takedowns',
                 ],
+            ],
+            'kinds' => [
+                'changelog.v096_denmark' => 'new',
+                'changelog.v096_scout' => 'new',
+                'changelog.v096_tools' => 'improved',
+                'changelog.v096_next' => 'new',
+                'changelog.v096_privacy' => 'improved',
+                'changelog.v096_security' => 'improved',
+                'changelog.v096_fixes' => 'fixed',
+                'changelog.v096_country_live' => 'new',
+                'changelog.v096_curator_areas' => 'improved',
+                'changelog.v096_takedowns' => 'improved',
             ],
         ],
         [
@@ -109,6 +147,26 @@ final class ReleaseNotes
                     'changelog.v095_grant',
                 ],
             ],
+            'kinds' => [
+                'changelog.v095_kinds' => 'new',
+                'changelog.v095_map' => 'improved',
+                'changelog.v095_search' => 'improved',
+                'changelog.v095_privacy' => 'improved',
+                'changelog.v095_terms' => 'improved',
+                'changelog.v095_reasons' => 'new',
+                'changelog.v095_export' => 'new',
+                'changelog.v095_security' => 'improved',
+                'changelog.v095_fixes' => 'fixed',
+                'changelog.v095_traffic' => 'new',
+                'changelog.v095_rides' => 'new',
+                'changelog.v095_scout_tags' => 'fixed',
+                'changelog.v095_time_zone' => 'new',
+                'changelog.v095_base' => 'improved',
+                'changelog.v095_hints' => 'improved',
+                'changelog.v095_traffic_desk' => 'new',
+                'changelog.v095_curator_kinds' => 'improved',
+                'changelog.v095_grant' => 'improved',
+            ],
         ],
         [
             'version' => '0.9.4-beta',
@@ -133,6 +191,20 @@ final class ReleaseNotes
                     'changelog.v094_desk',
                 ],
             ],
+            'kinds' => [
+                'changelog.v094_ballot' => 'new',
+                'changelog.v094_best' => 'new',
+                'changelog.v094_fair' => 'new',
+                'changelog.v094_climbs' => 'new',
+                'changelog.v094_map' => 'improved',
+                'changelog.v094_security' => 'improved',
+                'changelog.v094_fixes' => 'fixed',
+                'changelog.v094_name' => 'new',
+                'changelog.v094_confirmations' => 'improved',
+                'changelog.v094_bugs' => 'improved',
+                'changelog.v094_providers' => 'new',
+                'changelog.v094_desk' => 'improved',
+            ],
         ],
         [
             'version' => '0.9.3-beta',
@@ -149,6 +221,18 @@ final class ReleaseNotes
                 'changelog.v093_fixes',
                 'changelog.v093_curators',
             ],
+            'kinds' => [
+                'changelog.v093_climbs' => 'improved',
+                'changelog.v093_texts' => 'new',
+                'changelog.v093_contributions' => 'improved',
+                'changelog.v093_signin' => 'improved',
+                'changelog.v093_updates' => 'new',
+                'changelog.v093_privacy' => 'improved',
+                'changelog.v093_messages' => 'improved',
+                'changelog.v093_access' => 'improved',
+                'changelog.v093_fixes' => 'fixed',
+                'changelog.v093_curators' => 'improved',
+            ],
         ],
         [
             'version' => '0.9.2-beta',
@@ -164,6 +248,17 @@ final class ReleaseNotes
                 'changelog.v092_confirm',
                 'changelog.v092_strava',
             ],
+            'kinds' => [
+                'changelog.v092_area' => 'improved',
+                'changelog.v092_search' => 'improved',
+                'changelog.v092_fresh' => 'new',
+                'changelog.v092_key' => 'improved',
+                'changelog.v092_similar' => 'new',
+                'changelog.v092_bugs' => 'improved',
+                'changelog.v092_speed' => 'improved',
+                'changelog.v092_confirm' => 'improved',
+                'changelog.v092_strava' => 'new',
+            ],
         ],
         [
             'version' => '0.9.1-beta',
@@ -176,6 +271,14 @@ final class ReleaseNotes
                 'changelog.v091_bugs',
                 'changelog.v091_safety',
             ],
+            'kinds' => [
+                'changelog.v091_banner' => 'new',
+                'changelog.v091_climbs' => 'new',
+                'changelog.v091_languages' => 'improved',
+                'changelog.v091_reset' => 'improved',
+                'changelog.v091_bugs' => 'improved',
+                'changelog.v091_safety' => 'improved',
+            ],
         ],
         [
             'version' => '0.9.0-beta',
@@ -186,6 +289,13 @@ final class ReleaseNotes
                 'changelog.v090_surface',
                 'changelog.v090_photos',
                 'changelog.v090_accounts',
+            ],
+            'kinds' => [
+                'changelog.v090_towns' => 'new',
+                'changelog.v090_fresh' => 'improved',
+                'changelog.v090_surface' => 'improved',
+                'changelog.v090_photos' => 'improved',
+                'changelog.v090_accounts' => 'improved',
             ],
         ],
         [
@@ -200,6 +310,15 @@ final class ReleaseNotes
                 'changelog.v080_languages',
                 'changelog.v080_legal',
             ],
+            'kinds' => [
+                'changelog.v080_map' => 'new',
+                'changelog.v080_photos' => 'new',
+                'changelog.v080_routes' => 'new',
+                'changelog.v080_contribute' => 'new',
+                'changelog.v080_accounts' => 'new',
+                'changelog.v080_languages' => 'new',
+                'changelog.v080_legal' => 'new',
+            ],
         ],
     ];
 
@@ -209,7 +328,7 @@ final class ReleaseNotes
      * one lists its groups in {@see self::SECTIONS} order and leaves out an
      * empty one.
      *
-     * @return list<array{version: string, date: string, sections: array<string, list<string>>}>
+     * @return list<array{version: string, date: string, sections: array<string, list<string>>, kinds: array<string, string>}>
      */
     public static function releases(): array
     {
@@ -221,9 +340,9 @@ final class ReleaseNotes
      * the constant, so static analysis reads the declared shape and not the
      * entries the list happens to hold today.
      *
-     * @param array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>} $release
+     * @param array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>, kinds?: array<string, string>} $release
      *
-     * @return array{version: string, date: string, sections: array<string, list<string>>}
+     * @return array{version: string, date: string, sections: array<string, list<string>>, kinds: array<string, string>}
      */
     private static function grouped(array $release): array
     {
@@ -238,7 +357,7 @@ final class ReleaseNotes
             }
         }
 
-        return ['version' => $release['version'], 'date' => $release['date'], 'sections' => $sections];
+        return ['version' => $release['version'], 'date' => $release['date'], 'sections' => $sections, 'kinds' => $release['kinds'] ?? []];
     }
 
     /**
@@ -249,7 +368,7 @@ final class ReleaseNotes
      * constant has an entry in it, which is why the caller still treats the
      * result as optional and the template guards on it.
      *
-     * @return array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>}
+     * @return array{version: string, date: string, keys?: list<string>, sections?: array<string, list<string>>, kinds?: array<string, string>}
      */
     public static function latestRelease(): array
     {

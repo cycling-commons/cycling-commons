@@ -4900,6 +4900,9 @@ roadmap:
     error_action: "Pick what to do."
 changelog:
   kicker: 'Changelog'
+  kind_new: "New"
+  kind_improved: "Improved"
+  kind_fixed: "Fixed"
   title: 'What is new.'
   lead: 'Every release, newest first, in plain words. The version here is the same one printed at the foot of every page, so you can always tell which one you are looking at.'
   feed_title: 'Cycling Commons: what is new'
@@ -4922,6 +4925,11 @@ changelog:
   section_rider: "Rider account"
   section_curator: "Curator account"
   v097_karoo: "<b>Scout on the Hammerhead Karoo, for testers.</b> The Karoo app is in beta. On the Scout page, 'Join as tester' opens the download page, and the zip there holds the install steps."
+  v097_roadmap: "<b>Have your say on the roadmap.</b> Vote for the items that matter to you, and follow one to hear when it moves or ships. You can also send a proposal of your own: once we have checked it for abuse, it shows on the new Proposals tab, where everyone can vote for it, and the best ones move onto the roadmap."
+  v097_privacy: "<b>The privacy notice covers the roadmap.</b> It says what we keep when you vote, follow or send a proposal, that a proposal shows without your name, and that its picture shows only if you allowed it."
+  v097_proposals: "<b>Your proposals in one place.</b> The proposal page lists everything you sent for the roadmap, what we decided and why."
+  v097_mail_why: "<b>Every email says why it came.</b> The answer to a bug report, a curator application or a change to your areas no longer says it is about a contribution you made."
+  v097_curator_proposals: "<b>Read riders' roadmap proposals.</b> Curators see the proposals riders send, pictures included, before they go public."
   v097_fixes: "<b>Among smaller fixes:</b> a register tap no longer stands beside the same tap that riders confirmed, and the coverage page explains its counts under both the globe and the table."
   v096_denmark: "<b>Denmark is on the map.</b> You can now find and add places, climbs and routes there."
   v096_scout: "<b>Add a ride from the Scout page.</b> An 'Add a Scout ride' button opens the ride review on the map. The page also says where to get the app, and that with a rear radar Scout also measures the traffic on the roads you ride."

@@ -4882,6 +4882,9 @@ roadmap:
     error_action: "Kies wat je wilt doen."
 changelog:
   kicker: 'Wijzigingslogboek'
+  kind_new: "Nieuw"
+  kind_improved: "Verbeterd"
+  kind_fixed: "Opgelost"
   title: 'Wat er nieuw is.'
   lead: 'Elke uitgave, nieuwste eerst, in gewone woorden. De versie hier is dezelfde als die onderaan elke pagina staat, dus je weet altijd waar je naar kijkt.'
   feed_title: 'Cycling Commons: wat er nieuw is'
@@ -4904,6 +4907,11 @@ changelog:
   section_rider: "Fietsersaccount"
   section_curator: "Curatoraccount"
   v097_karoo: "<b>Scout op de Hammerhead Karoo, voor testers.</b> De Karoo-app is in bèta. Op de Scout-pagina opent 'Word tester' de downloadpagina, en de zip daar bevat de installatiestappen."
+  v097_roadmap: "<b>Praat mee over de routekaart.</b> Stem op wat jij belangrijk vindt, en volg een punt om te horen wanneer het verschuift of af is. Je kunt ook zelf een voorstel sturen: zodra we het op misbruik hebben gecontroleerd, komt het bij het nieuwe tabblad Voorstellen, waar iedereen erop kan stemmen, en de beste gaan naar de routekaart."
+  v097_privacy: "<b>De privacyverklaring gaat ook over de routekaart.</b> Ze zegt wat we bewaren als je stemt, volgt of een voorstel stuurt, dat een voorstel zonder je naam getoond wordt, en dat de afbeelding alleen getoond wordt als je dat toestond."
+  v097_proposals: "<b>Je voorstellen op één plek.</b> De voorstelpagina toont alles wat je voor de routekaart stuurde, wat we besloten en waarom."
+  v097_mail_why: "<b>Elke e-mail zegt waarom je hem krijgt.</b> Het antwoord op een probleemmelding, een aanmelding als regiobeheerder of een wijziging van je gebieden zegt niet meer dat het over een bijdrage van jou gaat."
+  v097_curator_proposals: "<b>Lees de voorstellen van rijders voor de routekaart.</b> Regiobeheerders zien de voorstellen die rijders sturen, met afbeeldingen, voordat ze openbaar worden."
   v097_fixes: "<b>Onder de kleinere verbeteringen:</b> een kraan uit een register staat niet meer naast dezelfde kraan die fietsers bevestigden, en de dekkingspagina legt haar aantallen uit onder zowel de wereldbol als de tabel."
   v096_denmark: "<b>Denemarken staat op de kaart.</b> Je kunt er nu plekken, klimmen en routes vinden en toevoegen."
   v096_scout: "<b>Voeg een rit toe vanaf de Scout-pagina.</b> Een knop 'Een Scout-rit toevoegen' opent het nakijken van je rit op de kaart. De pagina zegt ook waar je de app krijgt, en dat Scout met een achterradar ook het verkeer meet op de wegen waar je fietst."
