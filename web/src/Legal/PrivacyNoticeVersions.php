@@ -17,12 +17,14 @@ namespace App\Legal;
 final class PrivacyNoticeVersions extends LegalVersions
 {
     public const string PAGE = 'privacy';
-    public const int CURRENT = 3;
+    public const int CURRENT = 4;
 
     #[\Override]
     protected static function entries(): array
     {
         return [
+            // Not significant: votes, follows and ideas are new, optional and only kept when a rider uses them; nothing changes for data already given.
+            ['number' => 4, 'date' => '2026-10-13', 'effective' => '2026-10-13', 'significant' => false, 'changes' => ['privacy.change.v4_roadmap']],
             // Not significant: it states how long an address already kept stays after an account is deleted (owner 2026-10-11).
             ['number' => 3, 'date' => '2026-10-11', 'effective' => '2026-10-11', 'significant' => false, 'changes' => ['privacy.change.v3_kept_address']],
             // Significant (traffic summaries are new processing), published before the notice rule (owner 2026-10-09).

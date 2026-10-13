@@ -118,7 +118,15 @@ final class PrivacyNoticeVersionTest extends WebTestCase
 
     public function testTheKeptAddressAfterDeletionIsAnnounced(): void
     {
-        self::assertSame(3, PrivacyNoticeVersions::current()['number']);
-        self::assertContains('privacy.change.v3_kept_address', PrivacyNoticeVersions::current()['changes']);
+        $v3 = array_values(array_filter(PrivacyNoticeVersions::all(), static fn (array $v): bool => 3 === $v['number']));
+        self::assertCount(1, $v3);
+        self::assertContains('privacy.change.v3_kept_address', $v3[0]['changes']);
+    }
+
+    public function testRoadmapVotesFollowsAndIdeasAreAnnounced(): void
+    {
+        $v4 = array_values(array_filter(PrivacyNoticeVersions::all(), static fn (array $v): bool => 4 === $v['number']));
+        self::assertCount(1, $v4);
+        self::assertContains('privacy.change.v4_roadmap', $v4[0]['changes']);
     }
 }
